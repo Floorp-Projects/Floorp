@@ -687,6 +687,8 @@ public:
                        TextPaintStyle& aStyle,
                        nscoord aX, nscoord aY);
 
+  // The passed-in rendering context must have its color set to the color the
+  // text should be rendered in.
   void RenderString(nsIRenderingContext& aRenderingContext,
                     nsStyleContext* aStyleContext,
                     nsPresContext* aPresContext,
@@ -2827,6 +2829,11 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
   PRUnichar* runStart = bp;
   nscoord charWidth, width = 0;
   PRInt32 countSoFar = 0;
+  // Save the color we want to use for the text, since calls to
+  // PaintTextDecorations in this method will call SetColor() on the rendering
+  // context.
+  nscolor textColor;
+  aRenderingContext.GetColor(textColor);
   for (; --aLength >= 0; aBuffer++) {
     nsIFontMetrics* nextFont;
     nscoord glyphWidth;
@@ -2905,8 +2912,9 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     if (nextFont != lastFont) {
       pendingCount = bp - runStart;
       if (0 != pendingCount) {
+        // Render the text with the color specified first.
+        aRenderingContext.SetColor(textColor);
         // Measure previous run of characters using the previous font
-        aRenderingContext.SetColor(aTextStyle.mColor->mColor);
         aRenderingContext.DrawString(runStart, pendingCount,
                                      aX, aY + mAscent, -1,
                                      spacing ? sp0 : nsnull);
@@ -2933,6 +2941,8 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
   }
   pendingCount = bp - runStart;
   if (0 != pendingCount) {
+    // Render the text with the color specified first.
+    aRenderingContext.SetColor(textColor);
     // Measure previous run of characters using the previous font
     aRenderingContext.DrawString(runStart, pendingCount, aX, aY + mAscent, -1,
                                  spacing ? sp0 : nsnull);
