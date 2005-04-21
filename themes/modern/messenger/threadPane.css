@@ -99,15 +99,15 @@ treechildren::-moz-tree-cell-text(priorityCol, selected, focus) {
 
 /* ..... thread column ..... */
 
-treecol.threadColumnHeader {
+.threadColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/threadcol-unthreaded.gif");
 }
 
-treecol.threadColumnHeader[sortDirection="ascending"]  {
+.threadColumnHeader[sortDirection="ascending"]  {
   list-style-image: url("chrome://messenger/skin/icons/threadcol-threaded.gif");
 }
 
-treecol.threadColumnHeader[sortDirection="descending"] {
+.threadColumnHeader[sortDirection="descending"] {
   list-style-image: url("chrome://messenger/skin/icons/threadcol-threaded.gif");
 }
 
@@ -155,7 +155,7 @@ treechildren::-moz-tree-image(news, threadCol, container, hasUnread, ignore, off
 
 /* ..... read column ..... */
 
-treecol.readColumnHeader {
+.readColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/readcol-unread.gif");
 }
 
@@ -171,7 +171,7 @@ treechildren::-moz-tree-image(unreadButtonColHeader, unread) {
 
 /* ..... flag column ..... */
 
-treecol.flagColumnHeader {
+.flagColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/flagcol-flagged.gif");
 }
 
@@ -187,7 +187,7 @@ treechildren::-moz-tree-image(flaggedCol, flagged) {
 
 /* ..... junkStatus column ..... */
 
-treecol.junkStatusHeader {
+.junkStatusHeader {
   list-style-image: url("chrome://messenger/skin/icons/message-junk-other.gif");
 }
 
