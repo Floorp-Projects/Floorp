@@ -46,7 +46,11 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&fontsDialog.title;"
             dlgbuttons="accept,cancel"
+#ifdef XP_MACOSX
+            style="width: &window.macWidth; !important;">
+#else
             style="width: &window.width; !important;">
+#endif
 
   <prefpane id="FontsDialogPane">
   

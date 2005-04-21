@@ -1,5 +1,6 @@
 <!ENTITY  fontsDialog.title                       "Fonts">
 <!ENTITY  window.width                            "39em">
+<!ENTITY  window.macWidth                         "43em">
 
 <!ENTITY  language.label                          "Fonts for:">
 <!ENTITY  language.accesskey                      "t">
