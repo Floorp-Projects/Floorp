@@ -74,13 +74,11 @@
                 accesskey="&viewImageCmd.accesskey;"
                 oncommand="gContextMenu.viewImage(event);"
                 onclick="checkForMiddleClick(this, event);"/>
-#ifndef XP_UNIX
-#ifndef XP_OS2
+#ifdef CONTEXT_COPY_IMAGE_CONTENTS
       <menuitem id="context-copyimage-contents"
                 label="&copyImageContentsCmd.label;"
                 accesskey="&copyImageContentsCmd.accesskey;"
                 command="cmd_copyImageContents"/>
-#endif
 #endif
       <menuitem id="context-copyimage"
                 label="&copyImageCmd.label;"
