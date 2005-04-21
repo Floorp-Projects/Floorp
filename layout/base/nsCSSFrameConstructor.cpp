@@ -1223,7 +1223,8 @@ nsFrameConstructorState::PushFloatContainingBlock(nsIFrame* aNewFloatContainingB
   // XXXbz we should probably just be able to assert that
   // aNewFloatContainingBlock is a float containing block... see XXX comment at
   // the top of ProcessChildren.
-  NS_PRECONDITION(aNewFloatContainingBlock->GetContentInsertionFrame()->
+  NS_PRECONDITION(!aNewFloatContainingBlock ||
+                  aNewFloatContainingBlock->GetContentInsertionFrame()->
                     IsFloatContainingBlock(),
                   "Please push a real float containing block!");
   aSaveState.mItems = &mFloatedItems;
