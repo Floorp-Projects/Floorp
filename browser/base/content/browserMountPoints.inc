@@ -1,9 +1,5 @@
 <stringbundleset id="stringbundleset"/>
 
-<commandset id="globalEditCommandSet"/>
-<commandset id="selectEditCommandSet"/>
-<commandset id="undoEditCommandSet"/>
-<commandset id="pasteCommandSet"/>
 <commandset id="mainCommandSet"/>
 <commandset id="baseMenuCommandSet"/>
 
