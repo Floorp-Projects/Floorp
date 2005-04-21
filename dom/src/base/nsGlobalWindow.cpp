@@ -4777,17 +4777,45 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         // dialog is open.
         nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
 
+        nsCOMPtr<nsIDOMChromeWindow> chrome_win =
+          do_QueryInterface(NS_STATIC_CAST(nsIDOMWindow *, this));
+
+        nsCOMPtr<nsIJSContextStack> stack;
+        JSContext *cx = nsnull;
+
+        if (IsCallerChrome() && !chrome_win) {
+          // open() is called from chrome on a non-chrome window, push
+          // the context of the callee onto the context stack to
+          // prevent the caller's priveleges from leaking into code
+          // that runs while opening the new window.
+
+          cx = (JSContext *)mContext->GetNativeContext();
+
+          stack = do_GetService(sJSStackContractID);
+          if (stack && cx) {
+            stack->Push(cx);
+          }
+        }
+
         if (argc) {
           nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
-          NS_ENSURE_TRUE(pwwatch, NS_ERROR_UNEXPECTED);
+          if (pwwatch) {
+            PRUint32 extraArgc = argc >= 3 ? argc - 3 : 0;
+            rv = pwwatch->OpenWindowJS(this, url.get(), name_ptr, options_ptr,
+                                       aDialog, extraArgc, argv + 3,
+                                       getter_AddRefs(domReturn));
+          } else {
+            NS_ERROR("WindowWatcher service not a nsPIWindowWatcher!");
 
-          PRUint32 extraArgc = argc >= 3 ? argc - 3 : 0;
-          rv = pwwatch->OpenWindowJS(this, url.get(), name_ptr, options_ptr,
-                                     aDialog, extraArgc, argv + 3,
-                                     getter_AddRefs(domReturn));
+            rv = NS_ERROR_UNEXPECTED;
+          }
         } else {
           rv = wwatch->OpenWindow(this, url.get(), name_ptr, options_ptr,
                                   aExtraArgument, getter_AddRefs(domReturn));
+        }
+
+        if (stack && cx) {
+          stack->Pop(nsnull);
         }
       }
     }
