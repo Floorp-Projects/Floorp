@@ -122,6 +122,7 @@ MODULES_toolkit :=                              \
 LOCALES_toolkit :=                              \
   $(LOCALES_core)                               \
   toolkit                                       \
+  security/manager                              \
   $(NULL)
 
 MODULES_suite :=                                \
@@ -143,6 +144,8 @@ MODULES_browser :=                              \
 LOCALES_browser :=                              \
   $(LOCALES_toolkit)                            \
   browser                                       \
+  other-licenses/branding/firefox               \
+  extensions/reporter                           \
   $(NULL)
 
 BOOTSTRAP_browser := mozilla/browser/config/mozconfig
