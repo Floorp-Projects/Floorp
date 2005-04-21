@@ -2001,7 +2001,13 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             // in our tree?
             // Make sure to not send WillPaint notifications while scrolling
             nsViewManager* rootVM = RootViewManager();
-            if (rootVM->mScrollCnt == 0) {
+
+            nsIWidget *widget = mRootView->GetWidget();
+            PRBool translucentWindow = PR_FALSE;
+            if (widget)
+                widget->GetWindowTranslucency(translucentWindow);
+
+            if (rootVM->mScrollCnt == 0 && !translucentWindow) {
               nsIViewObserver* observer = GetViewObserver();
               if (observer) {
                 // Do an update view batch.  Make sure not to do it DEFERRED,

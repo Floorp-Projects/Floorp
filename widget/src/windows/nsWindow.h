@@ -594,6 +594,7 @@ protected:
   PRPackedBool  mIsInMouseWheelProcessing;
   PRPackedBool  mUnicodeWidget;
 
+  PRPackedBool  mPainting;
   char          mLeadByte;
   PRUint32      mBlurEventSuppressionLevel;
   nsContentType mContentType;
