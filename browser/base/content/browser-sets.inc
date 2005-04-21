@@ -267,17 +267,12 @@
 #ifndef XP_MACOSX
     <key keycode="VK_BACK" command="cmd_handleBackspace"/>
     <key keycode="VK_BACK" command="Browser:Forward" modifiers="shift"/>
-#endif
-#ifdef XP_UNIX
-    <key key="&goBackCmd.commandKey;" command="Browser:Back" modifiers="accel"/>
-    <key key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
-#endif
-#ifdef XP_MACOSX
-    <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="accel"/>
-    <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="accel"/>
-#else
     <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
     <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
+#endif
+#ifdef XP_UNIX
+    <key id="goBackKb2" key="&goBackCmd.commandKey;" command="Browser:Back" modifiers="accel"/>
+    <key id="goForwardKb2" key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
 #endif
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
     <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>

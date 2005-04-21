@@ -318,14 +318,22 @@
               <menupopup id="goPopup" onpopupshowing="updateGoMenu(this);" onpopuphiding="onGoMenuHidden();">
                 <menuitem label="&backCmd.label;"
                           accesskey="&backCmd.accesskey;"
+#ifdef XP_MACOSX
+                          key="goBackKb2"
+#else
                           key="goBackKb"
+#endif
                           oncommand="BrowserBack(event, true)"
                           onclick="checkForMiddleClick(this, event);">
                   <observes element="Browser:Back" attribute="disabled" />
                 </menuitem>
                 <menuitem label="&forwardCmd.label;" 
                           accesskey="&forwardCmd.accesskey;"
-                          key="goForwardKb" 
+#ifdef XP_MACOSX
+                          key="goForwardKb2"
+#else
+                          key="goForwardKb"
+#endif
                           oncommand="BrowserForward(event, true)"
                           onclick="checkForMiddleClick(this, event);">
                   <observes element="Browser:Forward" attribute="disabled" />
