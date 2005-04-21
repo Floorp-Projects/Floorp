@@ -882,6 +882,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mLastSize.height    = 0;
   mOldStyle           = 0;
   mOldExStyle         = 0;
+  mPainting           = 0;
 
   mLeadByte = '\0';
   mBlurEventSuppressionLevel = 0;
@@ -3072,7 +3073,7 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 #endif // NS_DEBUG
 
 #ifdef MOZ_XUL
-    if (mIsTranslucent && IsAlphaTranslucencySupported())
+    if (mIsTranslucent && IsAlphaTranslucencySupported() && !mPainting)
       OnPaint(w2k.mMemoryDC);
     else
 #endif
@@ -3105,7 +3106,7 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 #endif // NS_DEBUG
 
 #ifdef MOZ_XUL
-    if (mIsTranslucent && IsAlphaTranslucencySupported())
+    if (mIsTranslucent && IsAlphaTranslucencySupported() && !mPainting)
       OnPaint(w2k.mMemoryDC);
     else
 #endif
@@ -3132,7 +3133,7 @@ nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
   nsresult rv = NS_OK;
   if (mWnd) {
 #ifdef MOZ_XUL
-    if (mIsTranslucent && IsAlphaTranslucencySupported())
+    if (mIsTranslucent && IsAlphaTranslucencySupported() && !mPainting)
       OnPaint(w2k.mMemoryDC);
     else
 #endif
@@ -5584,6 +5585,8 @@ PRBool nsWindow::OnPaint(HDC aDC)
   PAINTSTRUCT ps;
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
+  mPainting = PR_TRUE;
+
 #ifdef NS_DEBUG
   HRGN debugPaintFlashRegion = NULL;
   HDC debugPaintFlashDC = NULL;
@@ -5695,6 +5698,8 @@ PRBool nsWindow::OnPaint(HDC aDC)
     ::DeleteObject(debugPaintFlashRegion);
   }
 #endif // NS_DEBUG
+
+  mPainting = PR_FALSE;
 
   return result;
 }
