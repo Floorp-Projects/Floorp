@@ -102,7 +102,6 @@ function jsDateToDateTime(date)
 {
     var newDate = createDateTime();
     newDate.jsDate = date;
-    debug ("date: " + date + " newDate: " + newDate + " newDate.jsDate: "+ newDate.jsDate + "\n");
     return newDate;
 }
 
