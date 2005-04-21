@@ -607,10 +607,7 @@ function processStartupURLs()
 
     if (client.viewsArray.length > 1 && !isStartupURL("irc://"))
     {
-        var tb = getTabForObject(client);
-        deleteTab(tb);
-        client.deck.removeChild(client.frame);
-        client.deck.selectedIndex = 0;
+        dispatch("delete-view", {view: client});
     }
 }
 
