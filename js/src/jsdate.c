@@ -623,7 +623,9 @@ date_parseString(JSString *str, jsdouble *result)
                 tzoffset = n;
             } else if (n >= 70 ||
                        (prevc == '/' && mon >= 0 && mday >= 0 && year < 0)) {
-                if (year >= 0)
+                if (mday < 0)
+                    mday = n;
+                else if (year >= 0)
                     goto syntax;
                 else if (c <= ' ' || c == ',' || c == '/' || i >= limit)
                     year = n < 100 ? n + 1900 : n;
