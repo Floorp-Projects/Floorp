@@ -1239,16 +1239,9 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
       nsCOMPtr<nsIDOMRange> range (do_CreateInstance("@mozilla.org/content/range;1", &rv));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsCOMPtr<nsIContent> content(do_QueryInterface(rootElement));
-      if (content)
-      {
-        PRInt32 children = content->GetChildCount();
+      rv = range->SelectNodeContents(rootElement);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = range->SetStart(rootElement, 0);
-        NS_ENSURE_SUCCESS(rv, rv);
-        rv = range->SetEnd(rootElement, children);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
       rv = docEncoder->SetRange(range);
       NS_ENSURE_SUCCESS(rv, rv);
     }
