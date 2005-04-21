@@ -37,21 +37,8 @@
 #ifndef TestCommon_h__
 #define TestCommon_h__
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
-#include <gtk/gtk.h>
-#endif //MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2
-
 inline int test_common_init(int *argc, char ***argv)
 {
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
-#if defined(MOZ_WIDGET_GTK)
-  gtk_set_locale();
-#endif
-  gtk_init(argc, argv);
-
-  gtk_widget_set_default_visual(gdk_rgb_get_visual());
-  gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
-#endif /* MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2 */
   return 0;
 }
 
