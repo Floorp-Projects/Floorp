@@ -804,15 +804,20 @@ nsXFormsModelElement::GetTypeForControl(nsIXFormsControl  *aControl,
   }
 
   nsAutoString schemaTypeName, schemaTypeNamespace;
-  nsresult rv = GetTypeAndNSFromNode(boundNode, schemaTypeName, 
+  nsresult rv = GetTypeAndNSFromNode(boundNode, schemaTypeName,
                                      schemaTypeNamespace);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsXFormsSchemaValidator validator;
+
   nsCOMPtr<nsISchemaCollection> schemaColl = do_QueryInterface(mSchemas);
-  nsCOMPtr<nsISchema> schema;
-  schemaColl->GetSchema(schemaTypeNamespace, getter_AddRefs(schema));
-  validator.LoadSchema(schema);
+  if (schemaColl) {
+    nsCOMPtr<nsISchema> schema;
+    schemaColl->GetSchema(schemaTypeNamespace, getter_AddRefs(schema));
+    // if no schema found, then we will only handle built-in types.
+    if (schema)
+      validator.LoadSchema(schema);
+  }
 
   return validator.GetType(schemaTypeName, schemaTypeNamespace, aType);
 }
@@ -937,9 +942,13 @@ nsXFormsModelElement::ValidateNode(nsIDOMNode *aInstanceNode, PRBool *aResult)
 
   nsXFormsSchemaValidator validator;
   nsCOMPtr<nsISchemaCollection> schemaColl = do_QueryInterface(mSchemas);
-  nsCOMPtr<nsISchema> schema;
-  schemaColl->GetSchema(schemaTypeNamespace, getter_AddRefs(schema));
-  validator.LoadSchema(schema);
+  if (schemaColl) {
+    nsCOMPtr<nsISchema> schema;
+    schemaColl->GetSchema(schemaTypeNamespace, getter_AddRefs(schema));
+    // if no schema found, then we will only handle built-in types.
+    if (schema)
+      validator.LoadSchema(schema);
+  }
 
   nsAutoString value;
   nsXFormsUtils::GetNodeValue(aInstanceNode, value);
