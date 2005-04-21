@@ -104,6 +104,14 @@
 <!ENTITY calendar.about.label                   "À propos de Calendar">
 <!ENTITY calendar.about.accesskey               "a">
 
+<!ENTITY calendar.undo.label                    "Annuler">
+<!ENTITY calendar.undo.key                      "Z">
+<!ENTITY calendar.undo.accesskey                "u">
+
+<!ENTITY calendar.redo.label                    "Refaire">
+<!ENTITY calendar.redo.key                      "Y">
+<!ENTITY calendar.redo.accesskey                "r">
+
 <!ENTITY calendar.cut.label                     "Couper">
 <!ENTITY calendar.cut.key                       "X">
 <!ENTITY calendar.cut.accesskey                 "c">
