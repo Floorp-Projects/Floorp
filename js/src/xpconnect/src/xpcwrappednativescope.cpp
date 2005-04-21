@@ -193,10 +193,7 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
         }
         else
         {
-#if defined(DEBUG_jband) || defined(DEBUG_jst)
-//            NS_ERROR("Can't get globalObject.Object.prototype");
-            NS_WARNING("Can't get globalObject.Object.prototype");
-#endif
+            NS_ERROR("Can't get globalObject.Object.prototype");
         }
     }
 }

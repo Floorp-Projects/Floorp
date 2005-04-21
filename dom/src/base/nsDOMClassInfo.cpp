@@ -5044,27 +5044,28 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   nsIScriptContext *my_context = sgo->GetContext();
 
-  if (!my_context || !my_context->IsContextInitialized()) {
-    // The context is not yet initialized so there's nothing we can do
-    // here yet.
-
-    return NS_OK;
-  }
-
   nsresult rv = NS_OK;
 
   // It is not worth calling JS_ResolveStandardClass() if we are
   // resolving for assignment, since only read-write properties
   // get dealt with there.
   if (!(flags & JSRESOLVE_ASSIGNING)) {
-    JSContext *my_cx = (JSContext *) my_context->GetNativeContext();
-    JSBool did_resolve = JS_FALSE;
+    // Resolve standard classes on my_context's JSContext (or on cx,
+    // if we don't have a my_context yet), in case the two contexts
+    // have different origins.  We want lazy standard class
+    // initialization to behave as if it were done eagerly, on each
+    // window's own context (not on some other window-caller's
+    // context).
+ 
+    JSContext *my_cx;
 
-    // Resolve standard classes on my_context's JSContext, not on
-    // cx, in case the two contexts have different origins.  We want
-    // lazy standard class initialization to behave as if it were
-    // done eagerly, on each window's own context (not on some other
-    // window-caller's context).
+    if (!my_context) {
+      my_cx = cx;
+    } else {
+      my_cx = (JSContext *)my_context->GetNativeContext();
+    }
+
+    JSBool did_resolve = JS_FALSE;
 
     if (!::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve)) {
       *_retval = JS_FALSE;
@@ -5085,6 +5086,14 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       return ResolveConstructor(cx, obj, objp);
     }
   }
+
+  if (!my_context || !my_context->IsContextInitialized()) {
+    // The context is not yet initialized so there's nothing we can do
+    // here yet.
+
+    return NS_OK;
+  }
+
 
   // Hmm, we do an awful lot of QIs here; maybe we should add a
   // method on an interface that would let us just call into the
