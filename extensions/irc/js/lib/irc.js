@@ -2352,7 +2352,7 @@ function serv_cact (e)
 CIRCServer.prototype.onCTCPTime =
 function serv_cping (e)
 {
-    e.user.ctcp("TIME", fromUnicode(new Date(), this), "NOTICE");
+    e.user.ctcp("TIME", new Date(), "NOTICE");
 
     return true;
 }
