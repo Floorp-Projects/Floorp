@@ -358,7 +358,9 @@ function initApplicationCompatibility()
 
 function initNetworks()
 {
-    client.addNetwork("moznet",[{name: "irc.mozilla.org", port: 6667}]);
+    client.addNetwork("moznet",
+                      [{name: "irc.mozilla.org", port:6667}, 
+                       {name: "irc.mozilla.org", port:6697, isSecure:true}]);
     client.addNetwork("hybridnet", [{name: "irc.ssc.net", port: 6667}]);
     client.addNetwork("slashnet", [{name: "irc.slashnet.org", port:6667}]);
     client.addNetwork("dalnet", [{name: "irc.dal.net", port:6667}]);
@@ -366,7 +368,8 @@ function initNetworks()
     client.addNetwork("webbnet", [{name: "irc.webbnet.info", port:6667}]);
     client.addNetwork("quakenet", [{name: "irc.quakenet.org", port:6667}]);
     client.addNetwork("freenode", [{name: "irc.freenode.net", port:6667}]);
-    client.addNetwork("serenia", [{name: "chat.serenia.net", port:9999, isSecure:true}]);
+    client.addNetwork("serenia", 
+                      [{name: "chat.serenia.net", port:9999, isSecure:true}]);
     client.addNetwork("efnet",
                       [{name: "irc.prison.net", port: 6667},
                        {name: "irc.magic.ca", port: 6667}]);

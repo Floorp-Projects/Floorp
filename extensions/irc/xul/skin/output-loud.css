@@ -141,7 +141,8 @@ body {
 
 }
 
-.msg-data[msgtype="ERROR"] {
+.msg-data[msgtype="ERROR"],
+.msg-data[msgtype="DISCONNECT"] {
 
     background: red;
 	color: white;

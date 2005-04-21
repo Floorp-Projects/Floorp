@@ -1570,6 +1570,10 @@ function my_neterror (e)
                 msg = MSG_ERR_OFFLINE;
                 break;
 
+            case JSIRC_ERR_NO_SECURE:
+                msg = getMsg(MSG_ERR_NO_SECURE, this.unicodeName);
+                break;
+
             case JSIRC_ERR_CANCELLED:
                 msg = MSG_ERR_CANCELLED;
                 type = "INFO";
@@ -1641,10 +1645,10 @@ function my_netdisconnect (e)
                      [this.getURL(), e.server.getURL()]);
     }
 
-    // e.quitting signals the disconnect was intended: use "INFO", not "ERROR".
+    // e.quitting signals the disconnect was intended: don't use "ERROR".
     if (e.quitting)
     {
-        msgType = "INFO";
+        msgType = "DISCONNECT";
         msg = getMsg(MSG_CONNECTION_QUIT, [this.getURL(), e.server.getURL()]);
     }
 

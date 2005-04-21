@@ -40,6 +40,7 @@
 const JSIRC_ERR_NO_SOCKET = "JSIRCE:NS";
 const JSIRC_ERR_EXHAUSTED = "JSIRCE:E";
 const JSIRC_ERR_CANCELLED = "JSIRCE:C";
+const JSIRC_ERR_NO_SECURE = "JSIRCE:NO_SECURE";
 const JSIRC_ERR_OFFLINE   = "JSIRCE:OFFLINE";
 
 function userIsMe (user)
@@ -181,11 +182,38 @@ function net_addsrv(host, port, isSecure, password)
     this.serverList.push(new CIRCServer(this, host, port, isSecure, password));
 }
 
+// Checks if a network has a secure server in its list.
+CIRCNetwork.prototype.hasSecureServer =
+function net_hasSecure()
+{
+    for (var i = 0; i < this.serverList.length; i++)
+    {
+        if (this.serverList[i].isSecure)
+            return true;
+    }
+
+    return false;
+}
+
 CIRCNetwork.prototype.connect =
 function net_connect(requireSecurity)
 {
     if ("primServ" in this && this.primServ.isConnected)
         return;
+
+    // We need to test for secure servers in the network object here,
+    // because without them all connection attempts will fail anyway.
+    if (requireSecurity && !this.hasSecureServer())
+    {
+        // No secure server, cope.
+        ev = new CEvent ("network", "error", this, "onError");
+        ev.server = this;
+        ev.debug = "No connection attempted: no secure servers in list";
+        ev.errorCode = JSIRC_ERR_NO_SECURE;
+        this.eventPump.addEvent(ev);
+
+        return false;
+    }
 
     this.state = NET_CONNECTING;
     this.connectAttempt = 0;
@@ -194,6 +222,7 @@ function net_connect(requireSecurity)
     var ev = new CEvent("network", "do-connect", this, "onDoConnect");
     ev.password = null;
     this.eventPump.addEvent(ev);
+    return true;
 }
 
 CIRCNetwork.prototype.quit =
@@ -321,7 +350,9 @@ function net_doconnect(e)
     }
     else
     {
-        /* server doesn't use SSL as requested, try next one.  */
+        /* Server doesn't use SSL as requested, try next one.
+         * In the meantime, correct the connection attempt counter  */
+        this.connectAttempt--;
         ev = new CEvent ("network", "do-connect", this, "onDoConnect");
         this.eventPump.addEvent (ev);
     }

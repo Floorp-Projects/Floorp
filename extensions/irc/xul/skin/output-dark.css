@@ -154,7 +154,8 @@ a.chatzilla-link:visited {
     color: yellow;
 }
 
-.msg[msg-type="ERROR"] .msg-data {
+.msg[msg-type="ERROR"] .msg-data,
+.msg[msg-type="DISCONNECT"] .msg-data {
     background: red;
     color: white;
 }

@@ -109,7 +109,8 @@ a.chatzilla-link {
     color: #11c411;
 }
 
-.msg[msg-type="ERROR"] .msg-data a.chatzilla-link {
+.msg[msg-type="ERROR"] .msg-data a.chatzilla-link,
+.msg[msg-type="DISCONNECT"] .msg-data a.chatzilla-link {
     font-weight: bold;
     color: white;
 }
@@ -183,7 +184,8 @@ a.chatzilla-link {
     font-weight: bold;
 }
 
-.msg[msg-type="ERROR"] .msg-data {
+.msg[msg-type="ERROR"] .msg-data,
+.msg[msg-type="DISCONNECT"] .msg-data {
     -moz-border-radius: 5px 5px 5px 5px;
     background: #a8221e;
     color: white;
