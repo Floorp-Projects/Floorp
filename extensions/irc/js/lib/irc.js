@@ -91,7 +91,7 @@ delete i;
 /*
  * irc network
  */
-function CIRCNetwork (name, serverList, eventPump)
+function CIRCNetwork (name, serverList, eventPump, temporary)
 {
     this.unicodeName = name;
     this.viewName = name;
@@ -102,6 +102,7 @@ function CIRCNetwork (name, serverList, eventPump)
     this.ignoreList = new Object();
     this.ignoreMaskCache = new Object();
     this.state = NET_OFFLINE;
+    this.temporary = Boolean(temporary);
 
     for (var i = 0; i < serverList.length; ++i)
     {
@@ -133,12 +134,8 @@ CIRCNetwork.prototype.TYPE = "IRCNetwork";
 CIRCNetwork.prototype.getURL =
 function net_geturl(target)
 {
-    if (this.serverList.length == 1 &&
-        this.serverList[0].unicodeName == this.unicodeName &&
-        this.serverList[0].port != 6667)
-    {
+    if (this.temporary)
         return this.serverList[0].getURL(target);
-    }
 
     if (!target)
         target = "";

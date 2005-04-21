@@ -2908,10 +2908,10 @@ function filterOutput (msg, msgtype)
 }
 
 client.addNetwork =
-function cli_addnet(name, serverList)
+function cli_addnet(name, serverList, temporary)
 {
     client.networks[name] =
-        new CIRCNetwork (name, serverList, client.eventPump);
+        new CIRCNetwork (name, serverList, client.eventPump, temporary);
 }
 
 client.connectToNetwork =

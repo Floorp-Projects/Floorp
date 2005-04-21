@@ -1320,7 +1320,7 @@ function cmdServer(e)
         /* if there wasn't already a network created for this server,
          * make one. */
         client.addNetwork(name, [{name: e.hostname, port: e.port,
-                                        password: e.password}]);
+                                        password: e.password}], true);
     }
     else if (e.password)
     {
@@ -1354,7 +1354,7 @@ function cmdSSLServer(e)
         /* if there wasn't already a network created for this server,
          * make one. */
         client.addNetwork(name, [{name: e.hostname, port: e.port,
-                                  password: e.password, isSecure: true}]);
+                                  password: e.password, isSecure: true}], true);
     }
     else if (e.password)
     {
