@@ -386,6 +386,11 @@ nsXBLContentSink::HandleCDataSection(const PRUnichar *aData,
   return nsXMLContentSink::HandleCDataSection(aData, aLength);
 }
 
+#define ENSURE_XBL_STATE(_cond)                                                       \
+  PR_BEGIN_MACRO                                                                      \
+    if (!(_cond)) { ReportUnexpectedElement(aTagName, aLineNumber); return PR_TRUE; } \
+  PR_END_MACRO
+
 PRBool 
 nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts, 
                                   PRUint32 aAttsCount, 
@@ -397,148 +402,146 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
     return PR_TRUE;
   }
   
-  PRBool ret = PR_TRUE;
-  if (aNameSpaceID == kNameSpaceID_XBL) {
-    if (aTagName == nsXBLAtoms::bindings) {
-      if (mState != eXBL_InDocument) {
-        ReportUnexpectedElement(aTagName, aLineNumber);
-        return PR_TRUE;
-      }
-      
-      NS_NewXBLDocumentInfo(mDocument, &mDocInfo);
-      if (!mDocInfo) {
-        mState = eXBL_Error;
-        return PR_TRUE;
-      }
-
-      mDocument->BindingManager()->PutXBLDocumentInfo(mDocInfo);
-
-      nsIURI *uri = mDocument->GetDocumentURI();
-      
-      PRBool isChrome = PR_FALSE;
-      PRBool isRes = PR_FALSE;
-
-      uri->SchemeIs("chrome", &isChrome);
-      uri->SchemeIs("resource", &isRes);
-      mIsChromeOrResource = isChrome || isRes;
-      
-      nsIXBLDocumentInfo* info = mDocInfo;
-      NS_RELEASE(info); // We keep a weak ref. We've created a cycle between doc/binding manager/doc info.
-      mState = eXBL_InBindings; 
-    }
-    else if (aTagName == nsXBLAtoms::binding) {
-      if (mState != eXBL_InBindings) {
-        ReportUnexpectedElement(aTagName, aLineNumber);
-        return PR_TRUE;
-      }
-      mState = eXBL_InBinding;
-    }
-    else if (aTagName == nsXBLAtoms::handlers) {
-      if (mState != eXBL_InBinding || !mBinding) {
-        ReportUnexpectedElement(aTagName, aLineNumber);
-        return PR_TRUE;
-      }
-      mState = eXBL_InHandlers;
-      ret = PR_FALSE; // The XML content sink should not do anything with <handlers>.
-    }
-    else if (aTagName == nsXBLAtoms::handler) {
-      if (mState != eXBL_InHandlers) {
-        ReportUnexpectedElement(aTagName, aLineNumber);
-        return PR_TRUE;
-      }
-      mSecondaryState = eXBL_InHandler;
-      ConstructHandler(aAtts, aLineNumber);
-      ret = PR_FALSE;
-    }
-    else if (aTagName == nsXBLAtoms::resources) {
-      if (mState != eXBL_InBinding || !mBinding) {
-        ReportUnexpectedElement(aTagName, aLineNumber);
-        return PR_TRUE;
-      }
-      mState = eXBL_InResources;
-      ret = PR_FALSE; // The XML content sink should ignore all <resources>.
-    }
-    else if (mState == eXBL_InResources) {
-      NS_ASSERTION(mBinding, "Must have binding here");
-      if (aTagName == nsXBLAtoms::stylesheet || aTagName == nsXBLAtoms::image)
-        ConstructResource(aAtts, aTagName);
-      ret = PR_FALSE; // The XML content sink should ignore everything within a <resources> block.
-    }
-    else if (aTagName == nsXBLAtoms::implementation) {
-      if (mState != eXBL_InBinding || !mBinding) {
-        ReportUnexpectedElement(aTagName, aLineNumber);
-        return PR_TRUE;
-      }
-      mState = eXBL_InImplementation;
-      ConstructImplementation(aAtts);
-      ret = PR_FALSE; // The XML content sink should ignore the <implementation>.
-    }
-    else if (mState == eXBL_InImplementation) {
-      NS_ASSERTION(mBinding, "Must have binding here");
-      if (aTagName == nsXBLAtoms::constructor) {
-        mSecondaryState = eXBL_InConstructor;
-        nsXBLProtoImplAnonymousMethod* newMethod =
-          new nsXBLProtoImplAnonymousMethod();
-        if (newMethod) {
-          newMethod->SetLineNumber(aLineNumber);
-          mBinding->SetConstructor(newMethod);
-          AddMember(newMethod);
-        }
-      }
-      else if (aTagName == nsXBLAtoms::destructor) {
-        mSecondaryState = eXBL_InDestructor;
-        nsXBLProtoImplAnonymousMethod* newMethod =
-          new nsXBLProtoImplAnonymousMethod();
-        if (newMethod) {
-          newMethod->SetLineNumber(aLineNumber);
-          mBinding->SetDestructor(newMethod);
-          AddMember(newMethod);
-        }
-      }
-      else if (aTagName == nsXBLAtoms::field) {
-        mSecondaryState = eXBL_InField;
-        ConstructField(aAtts, aLineNumber);
-      }
-      else if (aTagName == nsXBLAtoms::property) {
-        mSecondaryState = eXBL_InProperty;
-        ConstructProperty(aAtts);
-      }
-      else if (aTagName == nsXBLAtoms::getter) {
-        if (mSecondaryState != eXBL_InProperty || !mProperty) {
-          ReportUnexpectedElement(aTagName, aLineNumber);
-          return PR_TRUE;
-        }
-        mProperty->SetGetterLineNumber(aLineNumber);
-        mSecondaryState = eXBL_InGetter;
-      }
-      else if (aTagName == nsXBLAtoms::setter) {
-        if (mSecondaryState != eXBL_InProperty || !mProperty) {
-          ReportUnexpectedElement(aTagName, aLineNumber);
-          return PR_TRUE;
-        }
-        mProperty->SetSetterLineNumber(aLineNumber);
-        mSecondaryState = eXBL_InSetter;
-      }
-      else if (aTagName == nsXBLAtoms::method) {
-        mSecondaryState = eXBL_InMethod;
-        ConstructMethod(aAtts);
-      }
-      else if (aTagName == nsXBLAtoms::parameter)
-        ConstructParameter(aAtts);
-      else if (aTagName == nsXBLAtoms::body) {
-        if (mSecondaryState == eXBL_InMethod && mMethod) {
-          // stash away the line number
-          mMethod->SetLineNumber(aLineNumber);
-        }
-        mSecondaryState = eXBL_InBody;
-      }
-
-      ret = PR_FALSE; // Ignore everything we encounter inside an <implementation> block.
-    }
+  if (aNameSpaceID != kNameSpaceID_XBL) {
+    // Construct non-XBL nodes
+    return PR_TRUE;
   }
 
-  return ret;
+  PRBool ret = PR_TRUE;
+  if (aTagName == nsXBLAtoms::bindings) {
+    ENSURE_XBL_STATE(mState == eXBL_InDocument);
+      
+    NS_NewXBLDocumentInfo(mDocument, &mDocInfo);
+    if (!mDocInfo) {
+      mState = eXBL_Error;
+      return PR_TRUE;
+    }
+
+    mDocument->BindingManager()->PutXBLDocumentInfo(mDocInfo);
+
+    nsIURI *uri = mDocument->GetDocumentURI();
+      
+    PRBool isChrome = PR_FALSE;
+    PRBool isRes = PR_FALSE;
+
+    uri->SchemeIs("chrome", &isChrome);
+    uri->SchemeIs("resource", &isRes);
+    mIsChromeOrResource = isChrome || isRes;
+      
+    nsIXBLDocumentInfo* info = mDocInfo;
+    NS_RELEASE(info); // We keep a weak ref. We've created a cycle between doc/binding manager/doc info.
+    mState = eXBL_InBindings;
+  }
+  else if (aTagName == nsXBLAtoms::binding) {
+    ENSURE_XBL_STATE(mState == eXBL_InBindings);
+    mState = eXBL_InBinding;
+  }
+  else if (aTagName == nsXBLAtoms::handlers) {
+    ENSURE_XBL_STATE(mState == eXBL_InBinding && mBinding);
+    mState = eXBL_InHandlers;
+    ret = PR_FALSE;
+  }
+  else if (aTagName == nsXBLAtoms::handler) {
+    ENSURE_XBL_STATE(mState == eXBL_InHandlers);
+    mSecondaryState = eXBL_InHandler;
+    ConstructHandler(aAtts, aLineNumber);
+    ret = PR_FALSE;
+  }
+  else if (aTagName == nsXBLAtoms::resources) {
+    ENSURE_XBL_STATE(mState == eXBL_InBinding && mBinding);
+    mState = eXBL_InResources;
+    // Note that this mState will cause us to return false, so no need
+    // to set ret to false.
+  }
+  else if (aTagName == nsXBLAtoms::stylesheet || aTagName == nsXBLAtoms::image) {
+    ENSURE_XBL_STATE(mState == eXBL_InResources);
+    NS_ASSERTION(mBinding, "Must have binding here");
+    ConstructResource(aAtts, aTagName);
+  }
+  else if (aTagName == nsXBLAtoms::implementation) {
+    ENSURE_XBL_STATE(mState == eXBL_InBinding && mBinding);
+    mState = eXBL_InImplementation;
+    ConstructImplementation(aAtts);
+    // Note that this mState will cause us to return false, so no need
+    // to set ret to false.
+  }
+  else if (aTagName == nsXBLAtoms::constructor) {
+    ENSURE_XBL_STATE(mState == eXBL_InImplementation &&
+                     mSecondaryState == eXBL_None);
+    NS_ASSERTION(mBinding, "Must have binding here");
+      
+    mSecondaryState = eXBL_InConstructor;
+    nsXBLProtoImplAnonymousMethod* newMethod =
+      new nsXBLProtoImplAnonymousMethod();
+    if (newMethod) {
+      newMethod->SetLineNumber(aLineNumber);
+      mBinding->SetConstructor(newMethod);
+      AddMember(newMethod);
+    }
+  }
+  else if (aTagName == nsXBLAtoms::destructor) {
+    ENSURE_XBL_STATE(mState == eXBL_InImplementation &&
+                     mSecondaryState == eXBL_None);
+    NS_ASSERTION(mBinding, "Must have binding here");
+    mSecondaryState = eXBL_InDestructor;
+    nsXBLProtoImplAnonymousMethod* newMethod =
+      new nsXBLProtoImplAnonymousMethod();
+    if (newMethod) {
+      newMethod->SetLineNumber(aLineNumber);
+      mBinding->SetDestructor(newMethod);
+      AddMember(newMethod);
+    }
+  }
+  else if (aTagName == nsXBLAtoms::field) {
+    ENSURE_XBL_STATE(mState == eXBL_InImplementation &&
+                     mSecondaryState == eXBL_None);
+    NS_ASSERTION(mBinding, "Must have binding here");
+    mSecondaryState = eXBL_InField;
+    ConstructField(aAtts, aLineNumber);
+  }
+  else if (aTagName == nsXBLAtoms::property) {
+    ENSURE_XBL_STATE(mState == eXBL_InImplementation &&
+                     mSecondaryState == eXBL_None);
+    NS_ASSERTION(mBinding, "Must have binding here");
+    mSecondaryState = eXBL_InProperty;
+    ConstructProperty(aAtts);
+  }
+  else if (aTagName == nsXBLAtoms::getter) {
+    ENSURE_XBL_STATE(mSecondaryState == eXBL_InProperty && mProperty);
+    NS_ASSERTION(mState == eXBL_InImplementation, "Unexpected state");
+    mProperty->SetGetterLineNumber(aLineNumber);
+    mSecondaryState = eXBL_InGetter;
+  }
+  else if (aTagName == nsXBLAtoms::setter) {
+    ENSURE_XBL_STATE(mSecondaryState == eXBL_InProperty && mProperty);
+    NS_ASSERTION(mState == eXBL_InImplementation, "Unexpected state");
+    mProperty->SetSetterLineNumber(aLineNumber);
+    mSecondaryState = eXBL_InSetter;
+  }
+  else if (aTagName == nsXBLAtoms::method) {
+    ENSURE_XBL_STATE(mState == eXBL_InImplementation &&
+                     mSecondaryState == eXBL_None);
+    NS_ASSERTION(mBinding, "Must have binding here");
+    mSecondaryState = eXBL_InMethod;
+    ConstructMethod(aAtts);
+  }
+  else if (aTagName == nsXBLAtoms::parameter) {
+    ENSURE_XBL_STATE(mSecondaryState == eXBL_InMethod && mMethod);
+    NS_ASSERTION(mState == eXBL_InImplementation, "Unexpected state");
+    ConstructParameter(aAtts);
+  }
+  else if (aTagName == nsXBLAtoms::body) {
+    ENSURE_XBL_STATE(mSecondaryState == eXBL_InMethod && mMethod);
+    NS_ASSERTION(mState == eXBL_InImplementation, "Unexpected state");
+    // stash away the line number
+    mMethod->SetLineNumber(aLineNumber);
+    mSecondaryState = eXBL_InBody;
+  }
+
+  return ret && mState != eXBL_InResources && mState != eXBL_InImplementation;
 }
+
+#undef ENSURE_XBL_STATE
 
 nsresult
 nsXBLContentSink::ConstructBinding()
