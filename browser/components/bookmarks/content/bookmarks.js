@@ -36,6 +36,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
+#ifdef XP_MACOSX
+const ADD_BM_DIALOG_FEATURES = "centerscreen,chrome,dialog,resizable,modal";
+#else
+const ADD_BM_DIALOG_FEATURES = "centerscreen,chrome,dialog,resizable,dependent";
+#endif
+
 var gNC_NS, gWEB_NS, gRDF_NS, gXUL_NS, gNC_NS_CMD;
 
 // definition of the services frequently used for bookmarks

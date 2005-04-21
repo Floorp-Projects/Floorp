@@ -57,6 +57,13 @@ const nsIWebNavigation   = nsCI.nsIWebNavigation;
 
 const MAX_HISTORY_MENU_ITEMS = 15;
 
+// bookmark dialog features
+#ifdef XP_MACOSX
+const BROWSER_ADD_BM_FEATURES = "centerscreen,chrome,dialog,resizable,modal";
+#else
+const BROWSER_ADD_BM_FEATURES = "centerscreen,chrome,dialog,resizable,dependent";
+#endif
+
 var gRDF = null;
 var gGlobalHistory = null;
 var gURIFixup = null;
@@ -1535,7 +1542,7 @@ function addBookmarkForTabBrowser(aTabBrowser, aSelect)
   var dialogArgs = currentTabInfo;
   dialogArgs.objGroup = tabsInfo;
   openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-             ADD_BM_DIALOG_FEATURES, dialogArgs);
+             BROWSER_ADD_BM_FEATURES, dialogArgs);
 }
 
 function addBookmarkForBrowser(aDocShell, aIsWebPanel)
@@ -2438,7 +2445,7 @@ var bookmarksButtonObserver = {
         url: url
       }
       openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                 ADD_BM_DIALOG_FEATURES, dialogArgs);
+                 BROWSER_ADD_BM_FEATURES, dialogArgs);
     }
   },
 
@@ -4649,7 +4656,7 @@ function asyncOpenWebPanel(event)
            bWebPanel: true
          }
          openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                    ADD_BM_DIALOG_FEATURES, dialogArgs);
+                    BROWSER_ADD_BM_FEATURES, dialogArgs);
          event.preventDefault();
          return false;
        }
@@ -5486,7 +5493,7 @@ function AddKeywordForSearchField()
     description: BookmarksUtils.getDescriptionFromDocument(node.ownerDocument)
   }
   openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-             ADD_BM_DIALOG_FEATURES, dialogArgs);
+             BROWSER_ADD_BM_FEATURES, dialogArgs);
 }
 
 /////////////// livemark handling

@@ -41,13 +41,6 @@
  * for shared application glue for the Communicator suite of applications
  **/
 
-// bookmark dialog features
-#ifdef XP_MACOSX
-const ADD_BM_DIALOG_FEATURES = "centerscreen,chrome,dialog,resizable,modal";
-#else
-const ADD_BM_DIALOG_FEATURES = "centerscreen,chrome,dialog,resizable,dependent";
-#endif
-
 var goPrefWindow = 0;
 var gBidiUI = false;
 
