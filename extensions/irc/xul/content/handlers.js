@@ -1946,7 +1946,8 @@ function my_cjoin (e)
 
     if (userIsMe(e.user))
     {
-        this.display (getMsg(MSG_YOU_JOINED, e.channel.unicodeName), "JOIN",
+        var params = [e.user.unicodeName, e.channel.unicodeName];
+        this.display (getMsg(MSG_YOU_JOINED, params), "JOIN", 
                       e.server.me, this);
         if (client.globalHistory)
             client.globalHistory.addPage(this.getURL());
@@ -1993,8 +1994,8 @@ function my_cpart (e)
 
     if (userIsMe (e.user))
     {
-        this.display (getMsg(MSG_YOU_LEFT, e.channel.unicodeName), "PART",
-                      e.user, this);
+        var params = [e.user.unicodeName, e.channel.unicodeName];
+        this.display (getMsg(MSG_YOU_LEFT, params), "PART", e.user, this);
 
         if (client.currentObject == this)
             /* hide the tree while we remove (possibly tons) of nodes */
@@ -2046,15 +2047,15 @@ function my_ckick (e)
         if (e.user)
         {
             this.display (getMsg(MSG_YOURE_GONE,
-                                 [e.channel.unicodeName, e.user.unicodeName,
-                                  e.reason]),
+                                 [e.lamer.unicodeName, e.channel.unicodeName,
+                                  e.user.unicodeName, e.reason]),
                           "KICK", e.user, this);
         }
         else
         {
             this.display (getMsg(MSG_YOURE_GONE,
-                                 [e.channel.unicodeName, MSG_SERVER,
-                                  e.reason]),
+                                 [e.lamer.unicodeName, e.channel.unicodeName, 
+                                  MSG_SERVER, e.reason]),
                           "KICK", (void 0), this);
         }
 
@@ -2154,8 +2155,8 @@ function my_cquit (e)
     if (userIsMe(e.user))
     {
         /* I dont think this can happen */
-        this.display (getMsg(MSG_YOU_QUIT, [e.server.parent.unicodeName, e.reason]),
-                      "QUIT", e.user, this);
+        var pms = [e.user.unicodeName, e.server.parent.unicodeName, e.reason];
+        this.display (getMsg(MSG_YOU_QUIT, pms),"QUIT", e.user, this);
     }
     else
     {
