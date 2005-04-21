@@ -156,7 +156,7 @@ class CopyToLowerCase
               gCaseConv->ToLower(aSource, dest, len);
           else {
               NS_WARNING("No case converter: only copying");
-              memcpy((void*)aSource, (void*)dest, len * sizeof(*aSource));
+              memcpy(dest, aSource, len * sizeof(*aSource));
           }
           mIter.advance(len);
           return len;
@@ -242,7 +242,7 @@ class CopyToUpperCase
               gCaseConv->ToUpper(aSource, dest, len);
           else {
               NS_WARNING("No case converter: only copying");
-              memcpy((void*)aSource, (void*)dest, len * sizeof(*aSource));
+              memcpy(dest, aSource, len * sizeof(*aSource));
           }
           mIter.advance(len);
           return len;
