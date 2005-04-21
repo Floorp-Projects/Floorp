@@ -207,20 +207,8 @@ nsDownloadListener::GetTargetFile(nsILocalFile ** aTargetFile)
 
 #pragma mark -
 
-/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
-NS_IMETHODIMP 
-nsDownloadListener::OnProgressChange(nsIWebProgress *aWebProgress, 
-                                      nsIRequest *aRequest, 
-                                      PRInt32 aCurSelfProgress, 
-                                      PRInt32 aMaxSelfProgress, 
-                                      PRInt32 aCurTotalProgress, 
-                                      PRInt32 aMaxTotalProgress)
-{
-  [mDownloadDisplay setProgressTo:aCurTotalProgress ofMax:aMaxTotalProgress];
-  return NS_OK;
-}
-
-/* void onProgressChange64 (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long long aCurSelfProgress, in long long aMaxSelfProgress, in long long aCurTotalProgress, in long long aMaxTotalProgress); */
+/* void onProgressChange64 (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long long aCurSelfProgress, in long long aMaxSelfProgress, in long long a
+CurTotalProgress, in long long aMaxTotalProgress); */
 NS_IMETHODIMP 
 nsDownloadListener::OnProgressChange64(nsIWebProgress *aWebProgress, 
                                        nsIRequest *aRequest, 
@@ -229,11 +217,22 @@ nsDownloadListener::OnProgressChange64(nsIWebProgress *aWebProgress,
                                        PRInt64 aCurTotalProgress, 
                                        PRInt64 aMaxTotalProgress)
 {
-  // XXX truncates 64-bit to 32-bit
-  return OnProgressChange(aWebProgress, aRequest,
-                          PRInt32(aCurSelfProgress), PRInt32(aMaxSelfProgress),
-                          PRInt32(aCurTotalProgress), PRInt32(aMaxTotalProgress));
+  [mDownloadDisplay setProgressTo:aCurTotalProgress ofMax:aMaxTotalProgress];
+  return NS_OK;
+}
 
+/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
+NS_IMETHODIMP 
+nsDownloadListener::OnProgressChange(nsIWebProgress *aWebProgress, 
+                                     nsIRequest *aRequest, 
+                                     PRInt32 aCurSelfProgress, 
+                                     PRInt32 aMaxSelfProgress, 
+                                     PRInt32 aCurTotalProgress, 
+                                     PRInt32 aMaxTotalProgress)
+{
+  return OnProgressChange64(aWebProgress, aRequest,
+                            aCurSelfProgress, aMaxSelfProgress,
+                            aCurTotalProgress, aMaxTotalProgress);
 }
 
 /* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */

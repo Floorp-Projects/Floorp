@@ -78,8 +78,8 @@ enum {
     
   NSTimeInterval  mDownloadTime; // only set when done
 
-  long            mCurrentProgress; // if progress bar is indeterminate, can still calc stats.
-  long            mDownloadSize;
+  long long       mCurrentProgress; // if progress bar is indeterminate, can still calc stats.
+  long long       mDownloadSize;
   
   NSString        *mSourceURL;
   NSString        *mDestPath;

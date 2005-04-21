@@ -194,7 +194,7 @@ class nsISupportsArray;
 // CHBrowserListener messages
 - (void)onLoadingStarted;
 - (void)onLoadingCompleted:(BOOL)succeeded;
-- (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes;
+- (void)onProgressChange:(long long)currentBytes outOf:(long long)maxBytes;
 - (void)onLocationChange:(NSString*)urlSpec;
 - (void)onStatusChange:(NSString*)aMessage;
 - (void)onSecurityStateChange:(unsigned long)newState;

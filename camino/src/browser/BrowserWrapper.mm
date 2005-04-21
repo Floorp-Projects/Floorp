@@ -460,7 +460,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   }
 }
 
-- (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes 
+- (void)onProgressChange:(long long)currentBytes outOf:(long long)maxBytes 
 {
   if (maxBytes > 0)
   {

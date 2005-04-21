@@ -458,7 +458,7 @@ enum {
   [mProgressWindowController didEndDownload:self];
 }
 
--(void)setProgressTo:(long)aCurProgress ofMax:(long)aMaxProgress
+-(void)setProgressTo:(long long)aCurProgress ofMax:(long long)aMaxProgress
 {
   mCurrentProgress = aCurProgress;         // fall back for stat calcs
   mDownloadSize = aMaxProgress;

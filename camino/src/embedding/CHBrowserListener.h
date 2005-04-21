@@ -42,7 +42,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIWebProgressListener.h"
+#include "nsIWebProgressListener2.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIWindowCreator.h"
 #include "nsIDOMEventListener.h"
@@ -57,7 +57,7 @@ class CHBrowserListener : public nsSupportsWeakReference,
                                public nsIWebBrowserChrome,
                                public nsIWindowCreator,
                                public nsIEmbeddingSiteWindow2,
-                               public nsIWebProgressListener,
+                               public nsIWebProgressListener2,
                                public nsIContextMenuListener,
                                public nsIDOMEventListener,
                                public nsITooltipListener
@@ -73,6 +73,7 @@ public:
   NS_DECL_NSIEMBEDDINGSITEWINDOW
   NS_DECL_NSIEMBEDDINGSITEWINDOW2
   NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSIWEBPROGRESSLISTENER2
   NS_DECL_NSICONTEXTMENULISTENER
   NS_DECL_NSITOOLTIPLISTENER
   NS_DECL_NSIDOMEVENTLISTENER

@@ -79,13 +79,14 @@ CHBrowserListener::~CHBrowserListener()
   [mContainer release];
 }
 
-NS_IMPL_ISUPPORTS10(CHBrowserListener,
+NS_IMPL_ISUPPORTS11(CHBrowserListener,
                    nsIInterfaceRequestor,
                    nsIWebBrowserChrome,
                    nsIWindowCreator,
                    nsIEmbeddingSiteWindow,
                    nsIEmbeddingSiteWindow2,
                    nsIWebProgressListener,
+                   nsIWebProgressListener2,
                    nsISupportsWeakReference,
                    nsIContextMenuListener,
                    nsIDOMEventListener,
@@ -525,6 +526,26 @@ CHBrowserListener::GetSiteWindow(void * *aSiteWindow)
   return NS_OK;
 }
 
+//
+// Implementation of nsIWebProgressListener2
+//
+
+/* void onProgressChange64 (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long long aCurSelfProgress, in long long aMaxSelfProgress, in long long aCurTotalProgress, in long long aMaxTotalProgress); */
+NS_IMETHODIMP 
+CHBrowserListener::OnProgressChange64(nsIWebProgress *aWebProgress,
+                                      nsIRequest *aRequest, 
+                                      PRInt64 aCurSelfProgress,
+                                      PRInt64 aMaxSelfProgress, 
+                                      PRInt64 aCurTotalProgress,
+                                      PRInt64 aMaxTotalProgress)
+{
+  NSEnumerator* enumerator = [mListeners objectEnumerator];
+  id<CHBrowserListener> obj;
+  while ((obj = [enumerator nextObject]))
+    [obj onProgressChange:aCurTotalProgress outOf:aMaxTotalProgress];
+  
+  return NS_OK;
+}
 
 //
 // Implementation of nsIWebProgressListener
@@ -560,12 +581,9 @@ CHBrowserListener::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aR
                                           PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
                                           PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
-  NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id<CHBrowserListener> obj;
-  while ((obj = [enumerator nextObject]))
-    [obj onProgressChange:aCurTotalProgress outOf:aMaxTotalProgress];
-  
-  return NS_OK;
+  return OnProgressChange64(aWebProgress, aRequest,
+                            aCurSelfProgress,  aMaxSelfProgress,
+                            aCurTotalProgress, aMaxTotalProgress);
 }
 
 /* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */

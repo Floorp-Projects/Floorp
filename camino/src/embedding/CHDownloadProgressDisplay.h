@@ -112,7 +112,7 @@ class CHDownloader;
 - (void)onStartDownload:(BOOL)isFileSave;
 - (void)onEndDownload:(BOOL)completedOK;
 
-- (void)setProgressTo:(long)aCurProgress ofMax:(long)aMaxProgress;
+- (void)setProgressTo:(long long)aCurProgress ofMax:(long long)aMaxProgress;
 
 - (void)setDownloadListener:(CHDownloader*)aDownloader;
 - (void)setSourceURL:(NSString*)aSourceURL;
