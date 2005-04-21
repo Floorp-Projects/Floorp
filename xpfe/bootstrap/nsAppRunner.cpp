@@ -119,8 +119,12 @@
 #include "nsTraceMalloc.h"
 #endif
 
-#if defined(DEBUG) && defined(XP_WIN32)
+#ifdef XP_WIN32
+#include <windows.h>
+
+#ifdef DEBUG
 #include <malloc.h>
+#endif
 #endif
 
 #if defined (XP_MACOSX)
@@ -1570,12 +1574,19 @@ int main(int argc, char* argv[])
   NS_TIMELINE_MARK("enter main");
   int i; //Moved here due to portability guideline 20. See bug 258055
 
-#if defined(DEBUG) && defined(XP_WIN32)
+#ifdef XP_WIN32
+  // Suppress the "DLL Foo could not be found" dialog, such that if dependent
+  // libraries (such as GDI+) are not preset, we gracefully fail to load those
+  // XPCOM components, instead of being ungraceful.
+  SetErrorMode(SEM_FAILCRITICALERRORS);
+
+#ifdef DEBUG
   // Disable small heap allocator to get heapwalk() giving us
   // accurate heap numbers. Win2k non-debug does not use small heap allocator.
   // Win2k debug seems to be still using it.
   // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vclib/html/_crt__set_sbh_threshold.asp
   _set_sbh_threshold(0);
+#endif
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
