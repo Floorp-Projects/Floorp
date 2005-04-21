@@ -61,6 +61,9 @@ public:
     // XXX document ownership
     // XXX can you call SetSurface more than once?
     // What happens to the current drawing state if you do that? or filters?
+    // XXX need a fast way to save and restore the current translation as
+    // we traverse the frame hierarchy. adding and subtracting an offset
+    // can create inconsistencies due to FP phenomena.
     void SetSurface(gfxASurface* surface);
     gfxASurface* CurrentSurface();
 
@@ -177,7 +180,11 @@ public:
 
     // filters
     // Start rendering under the filter. We guarantee not to draw outside 'maxArea'.
-    void PushFilter(gfxFilter& filter, gfxRect& maxArea);
+    enum FilterHints {
+        // Future drawing will completely cover the specified maxArea
+        FILTER_OPAQUE_DRAW
+    };
+    void PushFilter(gfxFilter& filter, FilterHints hints, gfxRect& maxArea);
 
     // Completed rendering under the filter, composite what we rendered back to the
     // underlying surface using the filter.

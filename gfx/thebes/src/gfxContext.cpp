@@ -276,7 +276,7 @@ void gfxContext::DrawString(gfxTextRun& text, int pos, int len)
 }
 
 // filters
-void gfxContext::PushFilter(gfxFilter& filter, gfxRect& maxArea)
+void gfxContext::PushFilter(gfxFilter& filter, FilterHints hints, gfxRect& maxArea)
 {
 
 }
