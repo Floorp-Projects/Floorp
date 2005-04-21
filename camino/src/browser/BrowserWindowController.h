@@ -87,7 +87,6 @@ typedef enum
 
 @class BookmarkViewController;
 @class BookmarkToolbar;
-@class HistoryDataSource;
 @class BrowserTabView;
 @class PageProxyIcon;
 @class BrowserContentView;

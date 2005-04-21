@@ -52,7 +52,6 @@
 #import "BrowserContentViews.h"
 #import "BrowserWrapper.h"
 #import "PreferenceManager.h"
-#import "HistoryDataSource.h"
 #import "BrowserTabView.h"
 #import "UserDefaults.h"
 #import "PageProxyIcon.h"

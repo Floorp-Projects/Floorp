@@ -39,8 +39,9 @@
 
 #import <Appkit/Appkit.h>
 
-@interface GoMenu : NSMenu {
-
+@interface GoMenu : NSMenu 
+{
+  NSMutableDictionary* mBuckets;     // cached history menu objects, rebuilt every time the menu is reopened, STRONG
 }
 
 - (void) emptyHistoryItems;

@@ -38,28 +38,94 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "NSString+Utils.h"
+#import "NSDate+Utils.h"
 
 #import "GoMenu.h"
 #import "MainController.h"
 #import "BrowserWindowController.h"
-#import "BrowserWrapper.h"
-#import "CHBrowserView.h"
 #import "ChimeraUIConstants.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsIWebBrowser.h"
-#include "nsISHistory.h"
-#include "nsIWebNavigation.h"
-#include "nsIHistoryEntry.h"
-#include "nsCRT.h"
+
+#include "nsIBrowserHistory.h"
+#include "nsIHistoryItems.h"
+#include "nsISimpleEnumerator.h"
+#include "nsIServiceManager.h"
 
 // the maximum number of history entry menuitems to display
-static const int kMaxItems = 15;
+//static const int kMaxItems = 15;
 // the maximum number of characters in a menu title before cropping it
 static const unsigned int kMaxTitleLength = 80;
 
+
+//
+// HistoryMenuItem
+//
+// An object that passes some data between the menu items and the history data source. This
+// item lives longer than the lifetime of the tracking of the menu.
+//
+
+@interface HistoryMenuItem : NSObject
+{
+@private
+  NSString* mURL;    // strong
+  NSString* mTitle;  // strong
+  PRTime    mLastVisit;
+}
+-(id)initWithURL:(NSString*)inURL title:(NSString*)inTitle lastVisit:(PRTime)inLastVisit;
+-(NSString*)url;
+-(NSString*)title;
+@end
+
+@implementation HistoryMenuItem
+
+-(id)initWithURL:(NSString*)inURL title:(NSString*)inTitle lastVisit:(PRTime)inLastVisit
+{
+  if ((self = [super init])) {
+    mURL = [inURL retain];
+    mTitle = [inTitle retain];
+    mLastVisit = inLastVisit;
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  [mURL release];
+  [mTitle release];
+}
+
+-(NSString*)url
+{
+  return mURL;
+}
+
+-(NSString*)title
+{
+  return mTitle;
+}
+
+- (NSComparisonResult)compare:(HistoryMenuItem *)inItem
+{
+  if (inItem->mLastVisit > mLastVisit)
+    return NSOrderedAscending;
+  if (inItem->mLastVisit < mLastVisit)
+    return NSOrderedDescending;
+  return NSOrderedSame;
+}
+
+@end
+
+#pragma mark -
+
 @implementation GoMenu
+
+- (void)dealloc
+{
+  [mBuckets autorelease];
+  [super dealloc];
+}
 
 - (void) update
 {
@@ -69,83 +135,110 @@ static const unsigned int kMaxTitleLength = 80;
   [super update];
 }
 
-- (nsIWebNavigation*) currentWebNavigation
-{
-  // get controller for current window
-  BrowserWindowController *controller = [(MainController *)[NSApp delegate] getMainWindowBrowserController];
-  if (!controller) return nsnull;
-  return [controller currentWebNavigation];
-}
-
 - (void) historyItemAction:(id)sender
 {
-  // get web navigation for current browser
-  nsIWebNavigation* webNav = [self currentWebNavigation];
-  if (!webNav) return;
-  
-  // browse to the history entry for the menuitem that was selected
-  PRInt32 historyIndex = ([sender tag] - 1) - kDividerTag;
-  webNav->GotoIndex(historyIndex);
+  NSString* urlToLoad = [[sender representedObject] url];
+  BrowserWindowController* bwc = [(MainController *)[NSApp delegate] getMainWindowBrowserController];
+  if (bwc)
+    [bwc loadURL:urlToLoad referrer:nil activate:YES allowPopups:NO];
+  else
+    [(MainController *)[NSApp delegate] openNewWindowOrTabWithURL:urlToLoad andReferrer:nil];
 }
 
 - (void) emptyHistoryItems
-{
+{ 
   // remove every history item after the insertion point
   int insertionIndex = [self indexOfItemWithTag:kDividerTag];
   for (int i = [self numberOfItems]-1; i > insertionIndex ; --i) {
     [self removeItemAtIndex:i];
   }
+  [mBuckets autorelease];
 }
 
 - (void) addHistoryItems
 {
-  // get session history for current browser
-  nsIWebNavigation* webNav = [self currentWebNavigation];
-  if (!webNav) return;
-  nsCOMPtr<nsISHistory> sessionHistory;
-  webNav->GetSessionHistory(getter_AddRefs(sessionHistory));
+  // first grab all the items in the history and put them into buckets based on
+  // the last visit date. we'll then sort each bucket. each bucket becomes a menu.
+  // XXX if there is just one menu and there are less than, say, 10 items, show them inline.
+  // XXX optimize by building once, then saving the results and observing additions/removals
   
-  PRInt32 count;
-  sessionHistory->GetCount(&count);
-  PRInt32 currentIndex;
-  sessionHistory->GetIndex(&currentIndex);
+  // |mBuckets| is a dictionary of arrays. Each array represents a menu of all the
+  // websites for a given day in sorted order. The key for the array is the corresponding
+  // NSDate for that day. This lives until the menu is rebuilt so we don't have any
+  // lifetime issues.
+  mBuckets = [[NSMutableDictionary dictionary] retain];
 
-  // determine the range of items to display
-  int rangeStart, rangeEnd;
-  int above = kMaxItems/2;
-  int below = (kMaxItems-above)-1;
-  if (count <= kMaxItems) {
-    // if the whole history fits within our menu, fit range to show all
-    rangeStart = count-1;
-    rangeEnd = 0;
-  } else {
-    // if the whole history is too large for menu, try to put current index as close to 
-    // the middle of the list as possible, so the user can see both back and forward in session
-    rangeStart = currentIndex + above;
-    rangeEnd = currentIndex - below;
-    if (rangeStart >= count-1) {
-      rangeEnd -= (rangeStart-count)+1; // shift overflow to the end
-      rangeStart = count-1;
-    } else if (rangeEnd < 0) {
-      rangeStart -= rangeEnd; // shift overflow to the start
-      rangeEnd = 0;
+  nsCOMPtr<nsIBrowserHistory> globalHist = do_GetService("@mozilla.org/browser/global-history;2");
+  nsCOMPtr<nsIHistoryItems> history = do_QueryInterface(globalHist);
+  if (history) {
+    // walk the list of history items placing them into buckets by day.
+    nsCOMPtr<nsISimpleEnumerator> items;
+    history->GetItemEnumerator(getter_AddRefs(items));
+    PRBool hasMore = PR_FALSE;
+    while (NS_SUCCEEDED(items->HasMoreElements(&hasMore)) && hasMore) {
+      nsCOMPtr<nsISupports> supp;
+      if (NS_FAILED(items->GetNext(getter_AddRefs(supp))))
+        break;
+      nsCOMPtr<nsIHistoryItem> historyItem = do_QueryInterface(supp);
+
+      // the key for the elements of |mBuckets| is the date with the hours/minutes/seconds
+      // stripped off so that all visits that fall on the same day will map down to the same hash key.
+      // we then map back to a date object so it can be used to display a pretty date and sorted below.
+      PRTime lastVisit;
+      historyItem->GetLastVisitDate(&lastVisit);
+      NSDate* dateKey = [NSDate dateWithString:
+                          [[NSDate dateWithPRTime:lastVisit] descriptionWithCalendarFormat:@"%Y-%m-%d 00:00:00 +0000"
+                                                                timeZone:nil locale:nil]];
+      NSMutableArray* bucket = [mBuckets objectForKey:dateKey];
+      if (!bucket) {
+        bucket = [NSMutableArray array];
+        [mBuckets setObject:bucket forKey:dateKey];
+      }
+      
+      // create the HistoryMenuItem which we store until the next time the menu is built. The ordering
+      // of the array isn't really useful for us, we'll have to sort it later.
+      nsCString url;
+      historyItem->GetURL(url);
+      NSString* urlStr = [NSString stringWith_nsACString:url];
+      nsString title;
+      historyItem->GetTitle(title);
+      NSString* titleStr = [NSString stringWith_nsAString:title];
+      HistoryMenuItem* menuObject = [[[HistoryMenuItem alloc] initWithURL:urlStr title:titleStr lastVisit:lastVisit] autorelease];
+      [bucket addObject:menuObject];
     }
   }
+  
+  // Now that the buckets of days are built, we need to build up the actual menu. First sort the keys then
+  // walk them in order, building the top level items and their submenus
+  
+  NSArray* sortedKeys = [[mBuckets allKeys] sortedArrayUsingSelector:@selector(compare:)];
+  NSEnumerator* e = [sortedKeys reverseObjectEnumerator];  // most recent at the top
+  NSDate* dateKey = nil;
+  while ((dateKey = [e nextObject])) {
+    // we sort the items in the bucket which sorts them by the full last visit date. Since we want the
+    // most recent (highest time) at the top, we need to use a reverse enumerator below as well.
+    NSMutableArray* bucket = [[mBuckets objectForKey:dateKey] sortedArrayUsingSelector:@selector(compare:)];
+    
+    // create a toplevel menu with the date for |dateKey|
+    NSString* menuTitle = [dateKey descriptionWithCalendarFormat:NSLocalizedString(@"HistoryMenuDateFormat",nil) timeZone:nil locale:nil];
+    NSMenuItem* newItem = [self addItemWithTitle:menuTitle action:nil keyEquivalent:@""];
 
-  // create a new menu item for each history entry (up to MAX_MENUITEM entries)
-  for (PRInt32 i = rangeStart; i >= rangeEnd; --i) {
-    nsCOMPtr<nsIHistoryEntry> entry;
-    sessionHistory->GetEntryAtIndex(i, PR_FALSE, getter_AddRefs(entry));
-
-    nsXPIDLString textStr;
-    entry->GetTitle(getter_Copies(textStr));
-    NSString* title = [[NSString stringWith_nsAString: textStr] stringByTruncatingTo:kMaxTitleLength at:kTruncateAtMiddle];    
-    NSMenuItem *newItem = [self addItemWithTitle:title action:@selector(historyItemAction:) keyEquivalent:@""];
-    [newItem setTarget:self];
-    [newItem setTag:kDividerTag+1+i];
-    if (currentIndex == i)
-      [newItem setState:NSOnState];
-  }
+    // build the child menu with all the history urls for this day We tie back to the url for the action by
+    // setting the represented object on the menu item (it's a weak ref, but means that the
+    // |menuObject| must outlive the duration of the time the menu is being tracked, which it 
+    // certainly is).
+    NSMenu* childMenu = [[[NSMenu allocWithZone:[NSMenu menuZone]] initWithTitle:@""] autorelease];
+    NSEnumerator* e2 = [bucket reverseObjectEnumerator];
+    HistoryMenuItem* menuObject = nil;
+    while ((menuObject = [e2 nextObject])) {
+      NSString* itemTitle = [[menuObject title] stringByTruncatingTo:kMaxTitleLength at:kTruncateAtMiddle];
+      NSMenuItem* childMenuItem = [childMenu addItemWithTitle:itemTitle action:@selector(historyItemAction:) keyEquivalent:@""];
+      [childMenuItem setRepresentedObject:menuObject];
+      [childMenuItem setTarget:self];
+    }
+    
+    [self setSubmenu:childMenu forItem:newItem];
+  }  
 }
 
 @end
