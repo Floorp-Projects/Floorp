@@ -313,8 +313,9 @@ function ep_stepevents()
     en = new Date();
 
     // i == number of items handled this time.
-    // We only want to do this if we handled at least 25% of our step-limit.
-    if (i * 4 >= this.eventsPerStep)
+    // We only want to do this if we handled at least 25% of our step-limit
+    // and if we have a sane interval between st and en (not zero).
+    if ((i * 4 >= this.eventsPerStep) && (en - st > 0))
     {
         // Calculate the number of events that can be processed in 400ms.
         var newVal = (400 * i) / (en - st);
