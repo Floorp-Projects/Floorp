@@ -40,8 +40,7 @@
 #include "nsIMsgAttachment.idl"
 #include "nsISupportsArray.idl"
 
-
-[scriptable, uuid(ABEFCAD2-47E9-4363-A3AA-8A76E7D96CE4)]
+[scriptable, uuid(5BE51577-90EA-43ae-B9AC-71993E9AA285)]
 interface nsIMsgCompFields : nsISupports {
 
   attribute AString from;
