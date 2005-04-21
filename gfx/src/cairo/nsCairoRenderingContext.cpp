@@ -91,9 +91,9 @@ nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
     mDeviceContext = aContext;
     mWidget = aWidget;
 
-    nsCOMPtr<nsIDrawingSurface> ids;
-    cairoDC->GetSurfaceManager()->GetDrawingSurfaceForWidget (cairoDC,  aWidget, getter_AddRefs(ids));
-    mDrawingSurface = ((nsCairoDrawingSurface*) (ids.get()));
+    mDrawingSurface = new nsCairoDrawingSurface();
+    nsNativeWidget nativeWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);
+    mDrawingSurface->Init (cairoDC, nativeWidget);
 
     mCairo = cairo_create ();
     cairo_set_target_surface (mCairo, mDrawingSurface->GetCairoSurface());
@@ -200,6 +200,20 @@ nsCairoRenderingContext::GetDrawingSurface(nsIDrawingSurface **aSurface)
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsCairoRenderingContext::PushTranslation(PushedTranslation* aState)
+{
+    // XXX this is slow!
+    PushState();
+}
+
+NS_IMETHODIMP
+nsCairoRenderingContext::PopTranslation(PushedTranslation* aState)
+{
+    // XXX this is slow!
+    PopState();
+}
+
 NS_IMETHODIMP
 nsCairoRenderingContext::GetHints(PRUint32& aResult)
 {
@@ -249,7 +263,7 @@ nsCairoRenderingContext::DoCairoClip()
 
     cairo_init_clip (mCairo);
 
-    float pixToTwip = mDeviceContext->DevUnitsToTwips();
+    float pixToTwip = mDeviceContext->DevUnitsToAppUnits();
 
     if (cplx == eRegionComplexity_rect) {
         PRInt32 x, y, w, h;
@@ -836,38 +850,6 @@ nsCairoRenderingContext::DrawImage(imgIContainer *aImage,
                                    const nsRect &aSrcRect,
                                    const nsRect &aDestRect)
 {
-    // from nsRenderingContextImpl.cpp
-
-    double x,y,w,h;
-
-    nsRect dr = aDestRect;
-    x = dr.x; y = dr.y; w = dr.width; h = dr.height;
-    cairo_transform_point(mCairo, &x, &y);
-    cairo_transform_distance(mCairo, &w, &h);
-    dr.x = (int) x; dr.y = (int) y; dr.width = (int) w; dr.height = (int) h;
-
-    nsRect sr = aSrcRect;
-    x = sr.x; y = sr.y; w = sr.width; h = sr.height;
-    cairo_transform_point(mCairo, &x, &y);
-    cairo_transform_distance(mCairo, &w, &h);
-    sr.x = (int) x; sr.y = (int) y; sr.width = (int) w; sr.height = (int) h;
-  
-    if (sr.IsEmpty() || dr.IsEmpty())
-        return NS_OK;
-
-    
-    /* What the heck? 
-     * sr.x = aSrcRect.x;
-     * sr.y = aSrcRect.y;
-     * mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
-     */
-    x = sr.x;
-    y = sr.y;
-    cairo_transform_distance(mCairo, &x, &y);
-    sr.x = (int) x;
-    sr.y = (int) y;
-    /* .. not sure what that's for .. */
-
     nsCOMPtr<gfxIImageFrame> iframe;
     aImage->GetCurrentFrame(getter_AddRefs(iframe));
     if (!iframe) return NS_ERROR_FAILURE;
@@ -875,58 +857,37 @@ nsCairoRenderingContext::DrawImage(imgIContainer *aImage,
     nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
     if (!img) return NS_ERROR_FAILURE;
 
-    nsIDrawingSurface *surface = nsnull;
-    GetDrawingSurface(&surface);
-    if (!surface) return NS_ERROR_FAILURE;
-
     // For Bug 87819
     // iframe may want image to start at different position, so adjust
     nsRect iframeRect;
     iframe->GetRect(iframeRect);
   
-    if (iframeRect.x > 0) {
-        // Adjust for the iframe offset before we do scaling.
-        sr.x -= iframeRect.x;
+    // aSrcRect is always in appunits, it has
+    // nothing to do with the current transform
+    float app2dev;
+    app2dev = mDeviceContext->AppUnitsToDevUnits();
+    nsRect sr;
+    sr.x = NSToIntRound(app2dev*aSrcRect.x);
+    sr.y = NSToIntRound(app2dev*aSrcRect.y);
+    sr.width = NSToIntRound(app2dev*aSrcRect.XMost()) - sr.x;
+    sr.height = NSToIntRound(app2dev*aSrcRect.YMost()) - sr.y;
+    
+    nsRect dr = aDestRect;
+    if (iframeRect != sr) {
+        double xscale = double(aDestRect.width)/sr.width;
+        double yscale = double(aDestRect.height)/sr.height;
+        nsRect scaledUpIRect;
+        scaledUpIRect.x = NSToCoordRound(iframeRect.x*xscale);
+        scaledUpIRect.y = NSToCoordRound(iframeRect.y*yscale);
+        scaledUpIRect.width = NSToCoordRound(iframeRect.XMost()*xscale) - scaledUpIRect.x;
+        scaledUpIRect.height = NSToCoordRound(iframeRect.YMost()*yscale) - scaledUpIRect.y;
 
-        nscoord scaled_x = sr.x;
-        if (dr.width != sr.width) {
-            PRFloat64 scale_ratio = PRFloat64(dr.width) / PRFloat64(sr.width);
-            scaled_x = NSToCoordRound(scaled_x * scale_ratio);
-        }
-        if (sr.x < 0) {
-            dr.x -= scaled_x;
-            sr.width += sr.x;
-            dr.width += scaled_x;
-            if (sr.width <= 0 || dr.width <= 0)
-                return NS_OK;
-            sr.x = 0;
-        } else if (sr.x > iframeRect.width) {
-            return NS_OK;
-        }
+        sr.IntersectRect(sr, iframeRect);
+        dr.IntersectRect(dr, scaledUpIRect);
     }
 
-    if (iframeRect.y > 0) {
-        // Adjust for the iframe offset before we do scaling.
-        sr.y -= iframeRect.y;
-
-        nscoord scaled_y = sr.y;
-        if (dr.height != sr.height) {
-            PRFloat64 scale_ratio = PRFloat64(dr.height) / PRFloat64(sr.height);
-            scaled_y = NSToCoordRound(scaled_y * scale_ratio);
-        }
-        if (sr.y < 0) {
-            dr.y -= scaled_y;
-            sr.height += sr.y;
-            dr.height += scaled_y;
-            if (sr.height <= 0 || dr.height <= 0)
-                return NS_OK;
-            sr.y = 0;
-        } else if (sr.y > iframeRect.height) {
-            return NS_OK;
-        }
-    }
-
-    return img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height,
+    return img->Draw(*this, mDrawingSurface, sr.x - iframeRect.x, sr.y - iframeRect.y,
+                     sr.width, sr.height,
                      dr.x, dr.y, dr.width, dr.height);
 }
 
@@ -964,17 +925,13 @@ nsCairoRenderingContext::DrawTile(imgIContainer *aImage,
     nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
     if (!img) return NS_ERROR_FAILURE;
 
-    nsIDrawingSurface *surface = nsnull;
-    GetDrawingSurface(&surface);
-    if (!surface) return NS_ERROR_FAILURE;
-
     /* bug 113561 - frame can be smaller than container */
     nsRect iframeRect;
     iframe->GetRect(iframeRect);
     PRInt32 padx = width - iframeRect.width;
     PRInt32 pady = height - iframeRect.height;
 
-    return img->DrawTile(*this, surface,
+    return img->DrawTile(*this, mDrawingSurface,
                          xOffset - iframeRect.x, yOffset - iframeRect.y,
                          padx, pady,
                          dr);

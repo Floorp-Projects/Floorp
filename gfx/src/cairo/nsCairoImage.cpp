@@ -45,11 +45,52 @@
 
 #include "nsIServiceManager.h"
 
+static void ARGBToThreeChannel(PRUint32* aARGB, PRUint8* aData) {
+    PRUint8 r = (PRUint8)(*aARGB >> 16);
+    PRUint8 g = (PRUint8)(*aARGB >> 8);
+    PRUint8 b = (PRUint8)*aARGB;
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+    // BGR format; assume little-endian system
+#ifndef IS_LITTLE_ENDIAN
+#error Strange big-endian/OS combination
+#endif
+    // BGR, blue byte first
+    aData[0] = b; aData[1] = g; aData[2] = r;
+#else
+    // RGB, red byte first
+    aData[0] = r; aData[1] = g; aData[2] = b;
+#endif
+}
+
+static void ThreeChannelToARGB(PRUint8* aData, PRUint32* aARGB) {
+    PRUint32 v = *aARGB & 0xFF000000;
+    PRUint8 r, g, b;
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+    // BGR format; assume little-endian system
+#ifndef IS_LITTLE_ENDIAN
+#error Strange big-endian/OS combination
+#endif
+    // BGR, blue byte first
+    b = aData[0]; g = aData[1]; r = aData[2];
+#else
+    // RGB, red byte first
+    r = aData[0]; g = aData[1]; b = aData[2];
+#endif
+    v |= (r << 16) | (g << 8) | b;
+    *aARGB = v;
+}
+
 nsCairoImage::nsCairoImage()
  : mWidth(0),
    mHeight(0),
+   mDecoded(0,0,0,0),
    mImageSurface(nsnull),
-   mImageSurfaceData(nsnull)
+   mImageSurfaceBuf(nsnull),
+   mImageSurfaceData(nsnull),
+   mImageSurfaceAlpha(nsnull),
+   mAlphaDepth(0),
+   mHadAnyAlphaValues(PR_FALSE),
+   mHadAnyPixelValues(PR_FALSE)
 {
 }
 
@@ -59,6 +100,8 @@ nsCairoImage::~nsCairoImage()
         cairo_surface_destroy(mImageSurface);
     // XXXX - totally not safe. mImageSurface should own data,
     // but it doesn't.
+    if (mImageSurfaceBuf)
+        nsMemory::Free(mImageSurfaceBuf);
     if (mImageSurfaceData)
         nsMemory::Free(mImageSurfaceData);
     if (mImageSurfaceAlpha)
@@ -69,7 +112,6 @@ NS_IMPL_ISUPPORTS1(nsCairoImage, nsIImage)
 
 //////////////////////////////////////////////
 //// nsIImage
-
 nsresult
 nsCairoImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements)
 {
@@ -79,31 +121,36 @@ nsCairoImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequir
     switch(aMaskRequirements)
     {
     case nsMaskRequirements_kNeeds1Bit:
+        mAlphaDepth = 1;
+        mCairoFormat = CAIRO_FORMAT_ARGB32;
         break;
     case nsMaskRequirements_kNeeds8Bit:
+        mAlphaDepth = 8;
+        mCairoFormat = CAIRO_FORMAT_ARGB32;
         break;
     default:
+        mAlphaDepth = 0;
+        // this should be able to be RGB24, but that doesn't seem to work
+        mCairoFormat = CAIRO_FORMAT_ARGB32;
         break;
     }
 
-    if (aDepth == 24 || aDepth == 32) {
-        mImageSurfaceData = (char *) nsMemory::Alloc(aWidth * aHeight * 4);
-        mImageSurfaceAlpha = (char *) nsMemory::Alloc(aWidth * aHeight);
-        mImageSurface = cairo_image_surface_create_for_data
-            (mImageSurfaceData,
-             CAIRO_FORMAT_ARGB32,
-             mWidth,
-             mHeight,
-             aWidth * 4);
-    }
+    PRInt32 size = aWidth*aHeight*4;
+    mImageSurfaceBuf = (PRUint32*)nsMemory::Alloc(size);
+    // Fill it in. Setting alpha to FF is important for images with no
+    // alpha of their own
+    memset(mImageSurfaceBuf, 0xFF, size);
 
+    mImageSurface = cairo_image_surface_create_for_data
+        ((char*)mImageSurfaceBuf, mCairoFormat, mWidth, mHeight, aWidth * 4);
     return NS_OK;
 }
 
 PRInt32
 nsCairoImage::GetBytesPix()
 {
-    return 4;
+    // not including alpha, I guess
+    return 3;
 }
 
 PRBool
@@ -133,41 +180,37 @@ nsCairoImage::GetBits()
 PRInt32
 nsCairoImage::GetLineStride()
 {
-    return mWidth * 4;
+    return mWidth*3;
 }
 
 PRBool
 nsCairoImage::GetHasAlphaMask()
 {
-    /* imglib is such a piece of crap! */
-    return PR_TRUE;
+    return mAlphaDepth > 0;
 }
 
 PRUint8 *
 nsCairoImage::GetAlphaBits()
 {
-    /* eugh */
-    /* imglib is such a piece of crap! */
     return (PRUint8 *) mImageSurfaceAlpha;
 }
 
 PRInt32
 nsCairoImage::GetAlphaLineStride()
 {
-    /* imglib is such a piece of crap! */
-    return mWidth;
+    return mAlphaDepth == 1 ? (mWidth+7)/8 : mWidth;
 }
 
 void
 nsCairoImage::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
+    mDecoded.UnionRect(mDecoded, *aUpdateRect);
 }
 
 PRBool
 nsCairoImage::GetIsImageComplete()
 {
-  /* TODO: nsCairoImage needs to store coords of decoded data */
-  return PR_TRUE;
+    return mDecoded == nsRect(0, 0, mWidth, mHeight);
 }
 
 nsresult
@@ -207,30 +250,21 @@ nsCairoImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
 
     cairo_t *dstCairo = cairoContext->GetCairo();
 
-    cairo_save(dstCairo);
+    cairo_pattern_t *pat = cairo_pattern_create_for_surface (mImageSurface);
+    cairo_matrix_t* matrix = cairo_matrix_create();
+    if (matrix) {
+        cairo_matrix_set_affine(matrix, double(aSWidth)/aDWidth, 0,
+                                0, double(aSHeight)/aDHeight, aSX, aSY);
+        cairo_pattern_set_matrix(pat, matrix);
+        cairo_matrix_destroy(matrix);
+    }
+    cairo_set_pattern (dstCairo, pat);
+    cairo_pattern_destroy (pat);
 
-    // just in case this needs setting
-    cairo_set_target_surface(dstCairo, dstSurf->GetCairoSurface());
-
-    // the coords here are absolute
-    cairo_identity_matrix(dstCairo);
-
-    // clip to target
-    cairo_rectangle(dstCairo, double(aDX), double(aDY), double(aDWidth), double(aDHeight));
-    cairo_clip(dstCairo);
-
-    // scale up to the size difference
-    cairo_scale(dstCairo, double(aDWidth)/double(aSWidth), double(aDHeight)/double(aSHeight));
-
-    // move to where we need to start the image rectangle, so that
-    // it gets clipped to the right place
-    cairo_translate(dstCairo, double(aDX - aSX), double(aDY - aSY));
-
-    // show it
-    cairo_show_surface (dstCairo, mImageSurface, mWidth, mHeight);
-
-    cairo_restore(dstCairo);
-
+    cairo_new_path(dstCairo);
+    cairo_rectangle (dstCairo, aDX, aDY, aDWidth, aDHeight);
+    cairo_fill (dstCairo);
+    
     return NS_OK;
 }
 
@@ -243,8 +277,6 @@ nsCairoImage::DrawTile(nsIRenderingContext &aContext,
 {
     if (aPadX || aPadY)
         fprintf (stderr, "Warning: nsCairoImage::DrawTile given padX(%d)/padY(%d), ignoring\n", aPadX, aPadY);
-    if (aSXOffset || aSYOffset)
-        fprintf (stderr, "Warning: nsCairoImage::DrawTile given XOffset(%d)/YOffset(%d), ignoring\n", aSXOffset, aSYOffset);
 
     nsCairoDrawingSurface *dstSurf = NS_STATIC_CAST(nsCairoDrawingSurface*, aSurface);
     nsCairoRenderingContext *cairoContext = NS_STATIC_CAST(nsCairoRenderingContext*, &aContext);
@@ -261,9 +293,18 @@ nsCairoImage::DrawTile(nsIRenderingContext &aContext,
 
     cairo_pattern_t *pat = cairo_pattern_create_for_surface (mImageSurface);
     cairo_pattern_set_extend (pat, CAIRO_EXTEND_REPEAT);
+    if (aSXOffset != 0 || aSYOffset != 0) {
+        cairo_matrix_t* matrix = cairo_matrix_create();
+        if (matrix) {
+            cairo_matrix_set_affine(matrix, 1, 0, 0, 1, aSXOffset, aSYOffset);
+            cairo_pattern_set_matrix(pat, matrix);
+            cairo_matrix_destroy(matrix);
+        }
+    }
     cairo_set_pattern (dstCairo, pat);
     cairo_pattern_destroy (pat);
 
+    cairo_new_path(dstCairo);
     cairo_rectangle (dstCairo, aTileRect.x, aTileRect.y, aTileRect.width, aTileRect.height);
     cairo_fill (dstCairo);
     
@@ -303,7 +344,7 @@ nsCairoImage::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32
 PRInt8
 nsCairoImage::GetAlphaDepth()
 {
-    return 8;
+    return mAlphaDepth;
 }
 
 void *
@@ -315,11 +356,106 @@ nsCairoImage::GetBitInfo()
 NS_IMETHODIMP
 nsCairoImage::LockImagePixels(PRBool aMaskPixels)
 {
+    PRInt32 count = mWidth*mHeight;
+    if (aMaskPixels) {
+        NS_ASSERTION(!mImageSurfaceAlpha, "already locked alphas");
+        NS_ASSERTION(mAlphaDepth == 1 || mAlphaDepth == 8,
+                     "Bad alpha depth");
+        PRInt32 size = mHeight*(mAlphaDepth == 1 ? ((mWidth+7)/8) : mWidth);
+        mImageSurfaceAlpha = (PRUint8*)nsMemory::Alloc(size);
+        if (!mImageSurfaceAlpha)
+            return NS_ERROR_OUT_OF_MEMORY;
+        if (mHadAnyAlphaValues) {
+            // fill from existing ARGB buffer
+            if (mAlphaDepth == 8) {
+                for (PRInt32 i = 0; i < count; ++i) {
+                    mImageSurfaceAlpha[i] = (PRUint8)(mImageSurfaceBuf[i] >> 24);
+                }
+            } else {
+                PRInt32 i = 0;
+                for (PRInt32 row = 0; row < mHeight; ++row) {
+                    PRUint8 alphaBits = 0;
+                    for (PRInt32 col = 0; col < mWidth; ++col) {
+                        PRUint8 mask = 1 << (7 - (col&7));
+                        if (mImageSurfaceBuf[row*mWidth + col] & 0xFF000000) {
+                            alphaBits |= mask;
+                        }
+                        if (mask == 0x01) {
+                            // This mask byte is complete, write it back
+                            mImageSurfaceAlpha[i] = alphaBits;
+                            alphaBits = 0;
+                            ++i;
+                        }
+                    }
+                    if (mWidth & 7) {
+                        // write back the incomplete alpha mask
+                        mImageSurfaceAlpha[i] = alphaBits;
+                        ++i;
+                    }
+                }
+            }
+        }
+    } else {
+        NS_ASSERTION(!mImageSurfaceData, "already locked pixels");
+        mImageSurfaceData = (PRUint8*)nsMemory::Alloc(mWidth * mHeight * 3);
+        if (!mImageSurfaceData)
+            return NS_ERROR_OUT_OF_MEMORY;
+        if (mHadAnyPixelValues) {
+            // fill from existing ARGB buffer
+            for (PRInt32 i = 0; i < count; ++i) {
+                ARGBToThreeChannel(&mImageSurfaceBuf[i], &mImageSurfaceData[i*3]);
+            }
+        }
+    }
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCairoImage::UnlockImagePixels(PRBool aMaskPixels)
 {
+    PRInt32 count = mWidth*mHeight;
+    if (aMaskPixels) {
+        NS_ASSERTION(mImageSurfaceAlpha, "alpha values not locked");
+        NS_ASSERTION(mAlphaDepth == 1 || mAlphaDepth == 8,
+                     "Bad alpha depth");
+        if (mAlphaDepth == 8) {
+            for (PRInt32 i = 0; i < count; ++i) {
+                PRInt32 v = mImageSurfaceBuf[i] & 0xFFFFFF;
+                v |= mImageSurfaceAlpha[i] << 24;
+                mImageSurfaceBuf[i] = v;
+            }
+        } else {
+            PRInt32 i = 0;
+            for (PRInt32 row = 0; row < mHeight; ++row) {
+                for (PRInt32 col = 0; col < mWidth; ++col) {
+                    PRInt32 index = row*mWidth + col;
+                    PRInt32 v = mImageSurfaceBuf[index] & 0xFFFFFF;
+                    PRUint8 mask = 1 << (7 - (col&7));
+                    if (mImageSurfaceAlpha[i] & mask) {
+                        v |= 0xFF000000;
+                    }
+                    mImageSurfaceBuf[index] = v;
+                    if (mask == 0x01) {
+                        ++i;
+                    }
+                }
+                if (mWidth & 7) {
+                    ++i;
+                }
+            }
+        }
+
+        nsMemory::Free(mImageSurfaceAlpha);
+        mImageSurfaceAlpha = nsnull;
+        mHadAnyAlphaValues = PR_TRUE;
+    } else {
+        NS_ASSERTION(mImageSurfaceData, "had not locked pixels");
+        for (PRInt32 i = 0; i < count; ++i) {
+            ThreeChannelToARGB(&mImageSurfaceData[i*3], &mImageSurfaceBuf[i]);
+        }
+        nsMemory::Free(mImageSurfaceData);
+        mImageSurfaceData = nsnull;
+        mHadAnyPixelValues = PR_TRUE;
+    }
     return NS_OK;
 }
