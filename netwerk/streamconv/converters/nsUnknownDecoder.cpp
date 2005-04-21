@@ -192,7 +192,8 @@ nsUnknownDecoder::OnDataAvailable(nsIRequest* request,
     }
   }
 
-  if (aCount) {
+  // Must not fire ODA again if it failed once
+  if (aCount && NS_SUCCEEDED(rv)) {
     NS_ASSERTION(!mContentType.IsEmpty(), 
                  "Content type should be known by now.");
 
@@ -575,25 +576,30 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
 
   if (!mNextListener) return NS_ERROR_FAILURE;
 
-  if (!mBuffer) return NS_ERROR_OUT_OF_MEMORY;
-
   nsCOMPtr<nsIViewSourceChannel> viewSourceChannel = do_QueryInterface(request);
   if (viewSourceChannel) {
     rv = viewSourceChannel->SetOriginalContentType(mContentType);
   } else {
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request, &rv);
-    if (NS_FAILED(rv)) return rv;
-    
-    // Set the new content type on the channel...
-    rv = channel->SetContentType(mContentType);
+    if (NS_SUCCEEDED(rv)) {
+      // Set the new content type on the channel...
+      rv = channel->SetContentType(mContentType);
+    }
   }
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to set content type on channel!");
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    // Cancel the request to make sure it has the correct status if
+    // mNextListener looks at it.
+    request->Cancel(rv);
+    mNextListener->OnStartRequest(request, aCtxt);
     return rv;
+  }
 
   // Fire the OnStartRequest(...)
   rv = mNextListener->OnStartRequest(request, aCtxt);
+
+  if (!mBuffer) return NS_ERROR_OUT_OF_MEMORY;
 
   // Fire the first OnDataAvailable for the data that was read from the
   // stream into the sniffer buffer...
@@ -612,7 +618,7 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
         if (len == mBufferLen) {
           rv = mNextListener->OnDataAvailable(request, aCtxt, in, 0, len);
         } else {
-          NS_ASSERTION(0, "Unable to write all the data into the pipe.");
+          NS_ERROR("Unable to write all the data into the pipe.");
           rv = NS_ERROR_FAILURE;
         }
       }
