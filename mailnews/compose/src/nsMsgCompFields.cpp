@@ -69,6 +69,7 @@ nsMsgCompFields::nsMsgCompFields()
   m_returnReceipt = PR_FALSE;
   m_receiptHeaderType = nsIMsgMdnGenerator::eDntType;
   m_bodyIsAsciiOnly = PR_FALSE;
+  m_forceMsgEncoding = PR_FALSE;
   m_needToCheckCharset = PR_TRUE;
 
   // Get the default charset from pref, use this as a mail charset.
@@ -414,6 +415,19 @@ NS_IMETHODIMP nsMsgCompFields::SetForcePlainText(PRBool value)
 NS_IMETHODIMP nsMsgCompFields::GetForcePlainText(PRBool *_retval)
 {
   *_retval = m_forcePlainText;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompFields::SetForceMsgEncoding(PRBool value)
+{
+  m_forceMsgEncoding = value;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompFields::GetForceMsgEncoding(PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = m_forceMsgEncoding;
   return NS_OK;
 }
 

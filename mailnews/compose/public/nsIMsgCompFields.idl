@@ -84,6 +84,7 @@ interface nsIMsgCompFields : nsISupports {
   attribute boolean useMultipartAlternative;
   attribute boolean uuEncodeAttachments;
   attribute boolean bodyIsAsciiOnly;
+  attribute boolean forceMsgEncoding;
 
   attribute AString otherRandomHeaders;
 

@@ -279,8 +279,22 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset, nsIMsgSend *mime_deliv
      */
     
     PRBool encode_p;
+    PRBool force_p = PR_FALSE;
     
-    if (m_max_column > 900)
+    /*
+      force quoted-printable if the sender does not allow
+      conversion to 7bit
+    */
+    if (mCompFields) {
+      if (mCompFields->GetForceMsgEncoding())
+        force_p = PR_TRUE;
+    }
+    else if (mime_delivery_state) {
+      if (((nsMsgComposeAndSend *)mime_delivery_state)->mCompFields->GetForceMsgEncoding())
+        force_p = PR_TRUE;
+    }
+    
+    if (force_p || (m_max_column > 900))
       encode_p = PR_TRUE;
     else if (UseQuotedPrintable() && m_unprintable_count)
       encode_p = PR_TRUE;

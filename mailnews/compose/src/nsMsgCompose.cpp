@@ -869,6 +869,9 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
                                       nsnull, &isAsciiOnly);
           if (NS_SUCCEEDED(rv)) 
           {
+            if (m_compFields->GetForceMsgEncoding());
+              isAsciiOnly = PR_FALSE;
+              
             m_compFields->SetBodyIsAsciiOnly(isAsciiOnly);
             bodyString = outCString;
             newBody = PR_TRUE;
@@ -984,6 +987,8 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
                                   msgBody.get(), getter_Copies(outCString),
                                   getter_Copies(fallbackCharset), &isAsciiOnly);
       SET_SIMULATED_ERROR(SIMULATED_SEND_ERROR_14, rv, NS_ERROR_UENC_NOMAPPING);
+      if (m_compFields->GetForceMsgEncoding())
+        isAsciiOnly = PR_FALSE;
       if (NS_SUCCEEDED(rv) && !outCString.IsEmpty())
       {
         // body contains characters outside the repertoire of the current 

@@ -829,6 +829,9 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   if (m_attachment1_body)
     mCompFields->GetBodyIsAsciiOnly(&body_is_us_ascii);
 
+  if (mCompFields->GetForceMsgEncoding())
+    body_is_us_ascii = PR_FALSE;
+
   if (nsMsgI18Nstateful_charset(mCompFields->GetCharacterSet()) ||
       body_is_us_ascii)
     m_attachment1_encoding = PL_strdup (ENCODING_7BIT);
@@ -1748,7 +1751,11 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     rv = nsMsgI18NSaveAsCharset(mCompFields->GetForcePlainText() ? TEXT_PLAIN : attachment1_type, 
                                 aCharset, bodyText, getter_Copies(outCString), nsnull, &isAsciiOnly);
 
+    if (mCompFields->GetForceMsgEncoding())
+      isAsciiOnly = PR_FALSE;
+
     mCompFields->SetBodyIsAsciiOnly(isAsciiOnly);
+      
     // body contains characters outside the current mail charset,
     // ask whether to convert to UTF-8 (bug 233361). do this only for text/plain
     if ((NS_ERROR_UENC_NOMAPPING == rv) && mCompFields->GetForcePlainText()) {
@@ -2995,6 +3002,7 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   mCompFields->SetUuEncodeAttachments(fields->GetUuEncodeAttachments());
 
   mCompFields->SetBodyIsAsciiOnly(fields->GetBodyIsAsciiOnly());
+  mCompFields->SetForceMsgEncoding(fields->GetForceMsgEncoding());
 
   nsCOMPtr<nsISupports> secInfo;
   fields->GetSecurityInfo(getter_AddRefs(secInfo));

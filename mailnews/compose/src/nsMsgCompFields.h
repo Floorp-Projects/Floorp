@@ -161,6 +161,7 @@ public:
   PRBool GetUseMultipartAlternative() {return m_useMultipartAlternative;}
   PRBool GetUuEncodeAttachments() {return m_uuEncodeAttachments;}
   PRBool GetBodyIsAsciiOnly() {return m_bodyIsAsciiOnly;}
+  PRBool GetForceMsgEncoding() {return m_forceMsgEncoding;}
 
   nsresult SetBody(const char *value);
   const char* GetBody();
@@ -177,6 +178,7 @@ protected:
   PRBool      m_uuEncodeAttachments;
   PRBool      m_returnReceipt;
   PRBool      m_bodyIsAsciiOnly;
+  PRBool      m_forceMsgEncoding;
   PRInt32     m_receiptHeaderType;        /* receipt header type */
   nsCString   m_DefaultCharacterSet;
   PRBool      m_needToCheckCharset;
