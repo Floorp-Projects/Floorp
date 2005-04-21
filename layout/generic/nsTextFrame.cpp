@@ -1688,8 +1688,8 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
 #endif // IBMBIDI
       break;
     }
-    // for ::first-letter, the content is chopped
-    if (mState & TEXT_FIRST_LETTER) {
+    // for ::first-letter or bidi, the content may be chopped
+    if (mState & (TEXT_FIRST_LETTER | NS_FRAME_IS_BIDI)) {
       // XXX: doesn't support the case where the first-letter expands, e.g.,
       // with text-transform:capitalize, the German szlig; becomes SS.
       if (contentLen > n) {
