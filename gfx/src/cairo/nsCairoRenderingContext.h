@@ -187,6 +187,10 @@ public:
     NS_IMETHOD ReleaseBackbuffer(void);
     NS_IMETHOD DestroyCachedBackbuffer(void);
     NS_IMETHOD UseBackbuffer(PRBool* aUseBackbuffer);
+
+    NS_IMETHOD PushTranslation(PushedTranslation* aState);
+    NS_IMETHOD PopTranslation(PushedTranslation* aState);
+
 #ifdef MOZ_MATHML
     NS_IMETHOD GetBoundingMetrics(const char* aString, PRUint32 aLength, nsBoundingMetrics& aBoundingMetrics);
     NS_IMETHOD GetBoundingMetrics(const PRUnichar* aString, PRUint32 aLength,

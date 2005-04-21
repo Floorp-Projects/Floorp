@@ -109,8 +109,6 @@ nsCairoDeviceContext::nsCairoDeviceContext()
     mZoom = 1.0f;
     mTextZoom = 1.0f;
 
-    mSurfaceManager = nsnull;
-
 #ifdef MOZ_ENABLE_XLIB
     mXlibRgbHandle = xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE);
 #endif
@@ -118,7 +116,6 @@ nsCairoDeviceContext::nsCairoDeviceContext()
 
 nsCairoDeviceContext::~nsCairoDeviceContext()
 {
-    delete mSurfaceManager;
 }
 
 int
@@ -161,8 +158,6 @@ nsCairoDeviceContext::Init(nsNativeWidget aWidget)
 
     mWidth = -1;
     mHeight = -1;
-
-    mSurfaceManager = new nsCairoSurfaceManager();
 
     return NS_OK;
 }

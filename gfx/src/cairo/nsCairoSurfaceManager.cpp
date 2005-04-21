@@ -86,7 +86,7 @@ nsCairoSurfaceManager::GetDrawingSurfaceForNativeWidget (nsCairoDeviceContext *a
     WidgetToSurfaceMap::iterator iter = mSurfaceMap.find(aWidget);
 
     /* cached? */
-    if (iter == mSurfaceMap.end()) {
+    if (PR_TRUE || iter == mSurfaceMap.end()) {
         /* nope. */
         surf = new nsCairoDrawingSurface();
         NS_ADDREF(surf);         // our own reference for map

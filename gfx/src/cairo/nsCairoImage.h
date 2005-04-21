@@ -91,10 +91,19 @@ public:
 protected:
     PRInt32 mWidth;
     PRInt32 mHeight;
+    nsRect mDecoded;
 
     cairo_surface_t *mImageSurface;
-    char *mImageSurfaceData;
-    char *mImageSurfaceAlpha;
+    cairo_format_t mCairoFormat;
+    // Where the mImageSurface data lives (in the mCairoFormat)
+    PRUint32* mImageSurfaceBuf;
+    // Where gfxIImageFrame data lives temporarily during LockImagePixels
+    PRUint8* mImageSurfaceData;
+    PRUint8* mImageSurfaceAlpha;
+
+    PRUint8 mAlphaDepth;
+    PRPackedBool mHadAnyAlphaValues;
+    PRPackedBool mHadAnyPixelValues;
 };
 
 #endif // NSCAIROIMAGE__H__
