@@ -108,7 +108,9 @@ private:
                                     PRUint32 argc, jsval *argv);
   static nsresult   ConvertSupportsTojsvals(nsIDOMWindow *aWindow,
                                             nsISupports *aArgs,
-                                            PRUint32 *aArgc, jsval **aArgv);
+                                            PRUint32 *aArgc, jsval **aArgv,
+                                            JSContext **aUsedContext,
+                                            void **aMarkp);
   static nsresult   AddSupportsTojsvals(nsISupports *aArg,
                                         JSContext *cx, jsval *aArgv);
   static nsresult   AddInterfaceTojsvals(nsISupports *aArg,
