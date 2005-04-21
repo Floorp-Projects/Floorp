@@ -25,10 +25,18 @@
 <!ENTITY  useDefault.label          "Restore Default">
 <!ENTITY  useDefault.accesskey      "R">
 
-<!ENTITY  toolbarIntro.label        "Select the buttons you want to see in the toolbars">
+<!ENTITY  toolbarIntro.label        "Select the buttons you want to see in the toolbars:">
 
-<!ENTITY  bookmarksButton.label     "Bookmarks">
+<!ENTITY  navToolbarIntro.label     "Navigation Toolbar">
 <!ENTITY  goButton.label            "Go">
-<!ENTITY  homeButton.label          "Home">
-<!ENTITY  printButton.label         "Print">
+<!ENTITY  goButton.accesskey        "o">
 <!ENTITY  searchButton.label        "Search">
+<!ENTITY  searchButton.accesskey    "S">
+<!ENTITY  printButton.label         "Print">
+<!ENTITY  printButton.accesskey     "P">
+
+<!ENTITY  persToolbarIntro.label    "Personal Toolbar">
+<!ENTITY  homeButton.label          "Home">
+<!ENTITY  homeButton.accesskey      "e">
+<!ENTITY  bookmarksButton.label     "Bookmarks">
+<!ENTITY  bookmarksButton.accesskey "k">
