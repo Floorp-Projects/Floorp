@@ -259,35 +259,50 @@ calDateTime::SetTimeInTimezone(PRTime aTime, const char *aTimezone)
 NS_IMETHODIMP
 calDateTime::GetInTimezone(const char *aTimezone, calIDateTime **aResult)
 {
-    struct icaltimetype icalt;
-    icaltimezone *destzone;
+    calDateTime *cdt = nsnull;
 
-    ToIcalTime(&icalt);
-
-    if (!aTimezone) {
-        destzone = icaltimezone_get_utc_timezone();
+    if (mIsDate) {
+        // if it's a date, we really just want to make a copy of this
+        // and set the timezone.
+        cdt = new calDateTime(*this);
+        if (aTimezone) {
+            cdt->mTimezone.Assign(aTimezone);
+            cdt->mIsUtc = PR_FALSE;
+        } else {
+            cdt->mTimezone.Truncate();
+            cdt->mIsUtc = PR_TRUE;
+        }
     } else {
-        nsCOMPtr<calIICSService> ics = do_GetService(kCalICSService);
-        nsCOMPtr<calIIcalComponent> tz;
+        struct icaltimetype icalt;
+        icaltimezone *destzone;
 
-        ics->GetTimezone(nsDependentCString(aTimezone), getter_AddRefs(tz));
-        if (!tz)
-            return NS_ERROR_FAILURE;
+        ToIcalTime(&icalt);
 
-        icalcomponent *zonecomp = tz->GetIcalComponent();
-        destzone = icalcomponent_get_timezone(zonecomp, aTimezone);
+        if (!aTimezone) {
+            destzone = icaltimezone_get_utc_timezone();
+        } else {
+            nsCOMPtr<calIICSService> ics = do_GetService(kCalICSService);
+            nsCOMPtr<calIIcalComponent> tz;
+
+            ics->GetTimezone(nsDependentCString(aTimezone), getter_AddRefs(tz));
+            if (!tz)
+                return NS_ERROR_FAILURE;
+
+            icalcomponent *zonecomp = tz->GetIcalComponent();
+            destzone = icalcomponent_get_timezone(zonecomp, aTimezone);
+        }
+
+        /* If there's a zone, we need to convert; otherwise, we just
+         * assign, since this item is floating */
+        if (icalt.zone) {
+            icaltimezone_convert_time(&icalt, (icaltimezone*) icalt.zone, destzone);
+            icalt.zone = destzone;
+        } else {
+            icalt.zone = destzone;
+        }
+
+        cdt = new calDateTime(&icalt);
     }
-
-    /* If there's a zone, we need to convert; otherwise, we just
-     * assign, since this item is floating */
-    if (icalt.zone) {
-        icaltimezone_convert_time(&icalt, (icaltimezone*) icalt.zone, destzone);
-        icalt.zone = destzone;
-    } else {
-        icalt.zone = destzone;
-    }
-
-    calDateTime *cdt = new calDateTime(&icalt);
 
     NS_ADDREF (*aResult = cdt);
     return NS_OK;
