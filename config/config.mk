@@ -199,7 +199,7 @@ NSS_LIBS	= \
 	-lsoftokn3 \
 	$(NULL)
 
-ifneq (,$(filter OS2 WINNT, $(OS_ARCH)))
+ifneq (,$(filter OS2 WINNT WINCE, $(OS_ARCH)))
 ifndef GNU_CC
 NSS_LIBS	= \
 	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
@@ -496,7 +496,8 @@ endif
 
 # Force _all_ exported methods to be |_declspec(dllexport)| when we're
 # building them into the executable.
-ifeq ($(OS_ARCH),WINNT)
+
+ifeq (,$(filter-out WINNT WINCE, $(OS_ARCH)))
 ifdef MOZ_STATIC_COMPONENT_LIBS
 DEFINES += \
         -D_IMPL_NS_GFX \
@@ -525,6 +526,11 @@ XPIDL_LINK	= $(CYGWIN_WRAPPER) $(DIST)/host/bin/host_xpt_link$(HOST_BIN_SUFFIX)
 else
 XPIDL_COMPILE 	= $(CYGWIN_WRAPPER) $(DIST)/bin/xpidl$(BIN_SUFFIX)
 XPIDL_LINK	= $(CYGWIN_WRAPPER) $(DIST)/bin/xpt_link$(BIN_SUFFIX)
+endif
+
+ifeq (,$(filter-out WINCE,$(OS_ARCH)))
+XPIDL_COMPILE 	= $(CYGWIN_WRAPPER) $(topsrcdir)/../tools/xpidl.exe
+XPIDL_LINK	    = $(CYGWIN_WRAPPER) $(topsrcdir)/../tools/xpt_link.exe
 endif
 
 # Java macros
@@ -631,7 +637,9 @@ COMPILE_CXXFLAGS = $(VISIBILITY_FLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFI
 
 ifneq ($(MOZ_OS2_TOOLS),VACPP)
 ifneq (WINNT_,$(OS_ARCH)_$(GNU_CC))
+ifneq (,$(filter-out WINCE,$(OS_ARCH)))
 LIBS_DIR	= -L$(DIST)/bin -L$(DIST)/lib
+endif
 endif
 endif
 
@@ -685,12 +693,17 @@ endif
 PBBUILD=NEXT_ROOT= $(PBBUILD_BIN)
 endif
 
+
+ifeq (,$(filter-out WINCE,$(OS_ARCH)))
+MKDEPEND	= mkdepend.exe
+else
 ifdef MOZ_NATIVE_MAKEDEPEND
 MKDEPEND_DIR	=
 MKDEPEND	= $(CYGWIN_WRAPPER) $(MOZ_NATIVE_MAKEDEPEND)
 else
 MKDEPEND_DIR	= $(CONFIG_TOOLS)/mkdepend
 MKDEPEND	= $(CYGWIN_WRAPPER) $(MKDEPEND_DIR)/mkdepend$(BIN_SUFFIX)
+endif
 endif
 
 # Set link flags according to whether we want a console.
@@ -796,6 +809,11 @@ INSTALL		= $(NSINSTALL) -R
 endif
 endif
 endif # WINNT
+
+ifeq (,$(filter-out WINCE,$(OS_ARCH)))
+NSINSTALL	= $(CYGWIN_WRAPPER) nsinstall
+INSTALL     = $(CYGWIN_WRAPPER) nsinstall 
+endif
 
 # Use nsinstall in copy mode to install files on the system
 SYSINSTALL	= $(NSINSTALL) -t
