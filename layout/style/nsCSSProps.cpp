@@ -533,7 +533,6 @@ const PRInt32 nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword__moz_deck,          NS_STYLE_DISPLAY_DECK,
   eCSSKeyword__moz_popup,         NS_STYLE_DISPLAY_POPUP,
   eCSSKeyword__moz_groupbox,      NS_STYLE_DISPLAY_GROUPBOX,
-  eCSSKeyword__moz_page_break,    NS_STYLE_DISPLAY_PAGE_BREAK,
   eCSSKeyword_UNKNOWN,-1
 };
 

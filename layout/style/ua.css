@@ -176,7 +176,7 @@
 }
 
 *|*::-moz-pagebreak {
-  display: -moz-page-break !important;
+  display: block !important;
 }
 
 *|*::-moz-anonymous-positioned-block {
