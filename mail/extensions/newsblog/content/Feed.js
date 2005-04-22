@@ -156,7 +156,7 @@ Feed.prototype =
 
     this.request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                    .createInstance(Components.interfaces.nsIXMLHttpRequest);
-    this.request.onprogress = Feed.onProgress; // must be set before calling .open
+    this.request.onprogress = this.onProgress; // must be set before calling .open
     this.request.open("GET", this.url, true);
 
     var lastModified = this.lastModified;
