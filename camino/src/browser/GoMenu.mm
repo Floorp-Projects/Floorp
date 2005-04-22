@@ -48,16 +48,27 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
+#define USE_GO_MENU 1
+
+#if USE_GO_MENU
+#include "nsIWebBrowser.h"
+#include "nsISHistory.h"
+#include "nsIWebNavigation.h"
+#include "nsIHistoryEntry.h"
+#include "nsCRT.h"
+#else
 #include "nsIBrowserHistory.h"
 #include "nsIHistoryItems.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIServiceManager.h"
+#endif
 
 // the maximum number of history entry menuitems to display
-//static const int kMaxItems = 15;
+static const int kMaxItems = 15;
 // the maximum number of characters in a menu title before cropping it
 static const unsigned int kMaxTitleLength = 80;
 
+#if !USE_GO_MENU
 
 //
 // HistoryMenuItem
@@ -117,15 +128,19 @@ static const unsigned int kMaxTitleLength = 80;
 
 @end
 
+#endif
+
 #pragma mark -
 
 @implementation GoMenu
 
+#if !USE_GO_MENU
 - (void)dealloc
 {
   [mBuckets autorelease];
   [super dealloc];
 }
+#endif
 
 - (void) update
 {
@@ -135,14 +150,36 @@ static const unsigned int kMaxTitleLength = 80;
   [super update];
 }
 
+#if USE_GO_MENU
+
+- (nsIWebNavigation*) currentWebNavigation
+{
+  // get controller for current window
+  BrowserWindowController *controller = [(MainController *)[NSApp delegate] getMainWindowBrowserController];
+  if (!controller) return nsnull;
+  return [controller currentWebNavigation];
+}
+
+#endif
+
 - (void) historyItemAction:(id)sender
 {
+#if USE_GO_MENU
+  // get web navigation for current browser
+  nsIWebNavigation* webNav = [self currentWebNavigation];
+  if (!webNav) return;
+  
+  // browse to the history entry for the menuitem that was selected
+  PRInt32 historyIndex = ([sender tag] - 1) - kDividerTag;
+  webNav->GotoIndex(historyIndex);
+#else
   NSString* urlToLoad = [[sender representedObject] url];
   BrowserWindowController* bwc = [(MainController *)[NSApp delegate] getMainWindowBrowserController];
   if (bwc)
     [bwc loadURL:urlToLoad referrer:nil activate:YES allowPopups:NO];
   else
     [(MainController *)[NSApp delegate] openNewWindowOrTabWithURL:urlToLoad andReferrer:nil];
+#endif
 }
 
 - (void) emptyHistoryItems
@@ -152,11 +189,62 @@ static const unsigned int kMaxTitleLength = 80;
   for (int i = [self numberOfItems]-1; i > insertionIndex ; --i) {
     [self removeItemAtIndex:i];
   }
+#if !USE_GO_MENU
   [mBuckets autorelease];
+#endif
 }
 
 - (void) addHistoryItems
 {
+#if USE_GO_MENU
+  // get session history for current browser
+  nsIWebNavigation* webNav = [self currentWebNavigation];
+  if (!webNav) return;
+  nsCOMPtr<nsISHistory> sessionHistory;
+  webNav->GetSessionHistory(getter_AddRefs(sessionHistory));
+  
+  PRInt32 count;
+  sessionHistory->GetCount(&count);
+  PRInt32 currentIndex;
+  sessionHistory->GetIndex(&currentIndex);
+
+  // determine the range of items to display
+  int rangeStart, rangeEnd;
+  int above = kMaxItems/2;
+  int below = (kMaxItems-above)-1;
+  if (count <= kMaxItems) {
+    // if the whole history fits within our menu, fit range to show all
+    rangeStart = count-1;
+    rangeEnd = 0;
+  } else {
+    // if the whole history is too large for menu, try to put current index as close to 
+    // the middle of the list as possible, so the user can see both back and forward in session
+    rangeStart = currentIndex + above;
+    rangeEnd = currentIndex - below;
+    if (rangeStart >= count-1) {
+      rangeEnd -= (rangeStart-count)+1; // shift overflow to the end
+      rangeStart = count-1;
+    } else if (rangeEnd < 0) {
+      rangeStart -= rangeEnd; // shift overflow to the start
+      rangeEnd = 0;
+    }
+  }
+
+  // create a new menu item for each history entry (up to MAX_MENUITEM entries)
+  for (PRInt32 i = rangeStart; i >= rangeEnd; --i) {
+    nsCOMPtr<nsIHistoryEntry> entry;
+    sessionHistory->GetEntryAtIndex(i, PR_FALSE, getter_AddRefs(entry));
+
+    nsXPIDLString textStr;
+    entry->GetTitle(getter_Copies(textStr));
+    NSString* title = [[NSString stringWith_nsAString: textStr] stringByTruncatingTo:kMaxTitleLength at:kTruncateAtMiddle];    
+    NSMenuItem *newItem = [self addItemWithTitle:title action:@selector(historyItemAction:) keyEquivalent:@""];
+    [newItem setTarget:self];
+    [newItem setTag:kDividerTag+1+i];
+    if (currentIndex == i)
+      [newItem setState:NSOnState];
+  }
+#else
   // first grab all the items in the history and put them into buckets based on
   // the last visit date. we'll then sort each bucket. each bucket becomes a menu.
   // XXX if there is just one menu and there are less than, say, 10 items, show them inline.
@@ -239,6 +327,7 @@ static const unsigned int kMaxTitleLength = 80;
     
     [self setSubmenu:childMenu forItem:newItem];
   }  
+#endif
 }
 
 @end
