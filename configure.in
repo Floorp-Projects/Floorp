@@ -295,7 +295,7 @@ AC_PROG_AWK
 dnl Special win32 checks
 dnl ========================================================
 case "$target" in
-*-cygwin*|*-mingw*|*-msvc*|*-mks*)
+*-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince)
     if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
         _WIN32_MSVC=1
@@ -624,6 +624,7 @@ if test -n "$CROSS_COMPILE"; then
         linux*)       OS_ARCH=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT ;;
+        wince*)       OS_ARCH=WINCE ;;
     esac
 else
     OS_TARGET=`uname -s`
@@ -674,6 +675,9 @@ elif test "`echo $OS_ARCH | egrep -c '^(CYGWIN_9|CYGWIN_ME)' 2>/dev/null`" != 0;
 elif test "$OS_ARCH" = "OS_2"; then
     OS_ARCH=OS2
     OS_TARGET=OS2
+elif test "$OS_ARCH" = "WINCE"; then
+    OS_ARCH=WINCE
+    OS_TARGET=WINCE
 fi
 
 #
@@ -870,7 +874,7 @@ case "$host" in
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
-*cygwin*|*mingw*|*mks*|*msvc*)
+*cygwin*|*mingw*|*mks*|*msvc*|*wince)
     if test -n "$_WIN32_MSVC"; then
         HOST_CFLAGS="$HOST_CFLAGS -TC -nologo"
     else
@@ -1153,6 +1157,90 @@ case "$target" in
     esac
     ;;
 
+*-wince*)
+
+    AR_LIST="$AR /list"
+    AR_EXTRACT="$AR /extract"
+    AR_DELETE="$AR d"
+    AR_FLAGS='-OUT:"$@"'
+
+    DSO_CFLAGS=
+    DSO_PIC_CFLAGS=
+    DLL_SUFFIX=.dll
+    BIN_SUFFIX='.exe'
+    RC=rc.exe
+    # certain versions of cygwin's makedepend barf on the 
+    # #include <string> vs -I./dist/include/string issue so don't use it
+    SYSTEM_MAKEDEPEND=
+
+    HOST_CC=cl
+    HOST_CXX=cl
+    HOST_LD=link
+    HOST_AR='lib /OUT:$@'
+        
+	MOZ_OPTIMIZE_FLAGS='-O1'
+    AR_FLAGS='/NOLOGO /OUT:"$@"'
+    ASM_SUFFIX=asm
+    CFLAGS="$CFLAGS -W3 -Gy -Fd\$(PDBFILE)"
+    CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(PDBFILE)"
+    DLL_PREFIX=
+    DOXYGEN=:
+    DSO_LDOPTS=/SUBSYSTEM:WINDOWSCE
+    DYNAMIC_XPCOM_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xpcom_core.lib'
+    GARBAGE=
+    IMPORT_LIB_SUFFIX=lib
+    LIBS="$LIBS"
+    LIBXUL_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xul.lib'
+    LIB_PREFIX=
+    LIB_SUFFIX=lib 
+    MKCSHLIB='$(LD) /NOLOGO /DLL /OUT:$@ $(DSO_LDOPTS)'
+    MKSHLIB='$(LD) /NOLOGO /DLL /OUT:$@ $(DSO_LDOPTS)'
+    MKSHLIB_FORCE_ALL=
+    MKSHLIB_UNFORCE_ALL=
+    MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
+    MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
+    MOZ_DEBUG_FLAGS='-Zi'
+    MOZ_DEBUG_LDFLAGS='/DEBUG /DEBUGTYPE:CV'
+    MOZ_FIX_LINK_PATHS=
+    MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.lib'
+    MOZ_JS_LIBS='$(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
+    MOZ_OPTIMIZE_FLAGS='-O1'
+    MOZ_PNG_LIBS='$(DIST)/lib/mozpng.lib'
+    MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcom_compat.lib'
+    MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.lib'
+    OBJ_SUFFIX=obj
+    RANLIB='echo not_ranlib'
+    STRIP='echo not_strip'
+    TARGET_NSPR_MDCPUCFG='\"md/_wince.cfg\"'
+    UNZIP=unzip
+    XARGS=xargs
+    XPCOM_FROZEN_LDOPTS='$(DIST)/lib/xpcom.lib'
+    XPCOM_GLUE_LDOPTS='$(DIST)/lib/xpcomglue_s.lib $(DIST)/lib/xpcom.lib'
+    XPCOM_STANDALONE_GLUE_LDOPTS='$(DIST)/lib/xpcomglue.lib'
+    ZIP=zip
+
+    AC_DEFINE(HAVE_SNPRINTF)
+    AC_DEFINE(_WINDOWS)
+    AC_DEFINE(_WIN32)
+    AC_DEFINE(WIN32)
+    AC_DEFINE(XP_WIN)
+    AC_DEFINE(XP_WIN32)
+    AC_DEFINE(HW_THREADS)
+    AC_DEFINE_UNQUOTED(WINVER,0x400)
+    AC_DEFINE(STDC_HEADERS)
+    AC_DEFINE(NEW_H, <new>)
+    AC_DEFINE(WIN32_LEAN_AND_MEAN)
+
+    TARGET_MD_ARCH=win32
+    _PLATFORM_DEFAULT_TOOLKIT='windows'
+    BIN_SUFFIX='.exe'
+    USE_SHORT_LIBNAME=1
+    MOZ_ENABLE_COREXFONTS=
+    MOZ_ENABLE_POSTSCRIPT=
+    MOZ_USER_DIR="Mozilla"
+;;
+
+
 *-mingw*|*-cygwin*|*-msvc*|*-mks*)
     DSO_CFLAGS=
     DSO_PIC_CFLAGS=
@@ -1247,6 +1335,7 @@ case "$target" in
 
     dnl Hardcode to win95 for now - cls
     TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
+
     dnl set NO_X11 defines here as the general check is skipped on win32
     no_x=yes
     AC_DEFINE(NO_X11)
@@ -1669,7 +1758,7 @@ case "$target" in
 *-openvms*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
-*-msvc*|*-mks*|*-mingw*|*-cygwin*)
+*-msvc*|*-mks*|*-mingw*|*-cygwin*|*-wince)
     if test -z "$GNU_CC"; then
         NO_LD_ARCHIVE_FLAGS=
     fi
@@ -1726,7 +1815,7 @@ case "$target" in
           AC_MSG_RESULT(no)
         fi
         ;;
-    *-cygwin*|*-mingw*|*-mks*|*-msvc)
+    *-cygwin*|*-mingw*|*-mks*|*-msvc|*-wince)
         if test -n "$GNU_CC"; then
            MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         fi
@@ -2449,7 +2538,7 @@ if test "$ac_cv_func_gnu_get_libc_version" = "yes"; then
 fi
 
 case $target_os in
-    os2*|msvc*|mks*|cygwin*|mingw*|darwin*)
+    os2*|msvc*|mks*|cygwin*|mingw*|darwin*|wince*)
         ;;
     *)
     
@@ -3035,6 +3124,9 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     # explicitly set libs for Visual Age C++ for OS/2
     if test "$OS_ARCH" = "OS2" -a "$VACPP" = "yes"; then
         NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
+    elif test "$OS_ARCH" = "WINCE"; then
+        NSPR_CFLAGS='-I$(DIST)/include/nspr'
+        NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '
     elif test "$OS_ARCH" = "WINNT"; then
         NSPR_CFLAGS='-I$(DIST)/include/nspr'
         if test -n "$GNU_CC"; then
@@ -3957,7 +4049,7 @@ MOZ_ARG_DISABLE_BOOL(crypto,
     MOZ_PSM=,
     MOZ_PSM=1 )
 case $target in
-*-cygwin*|*-mingw*|*-msvc*|*-mks*)
+*-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince)
     if test -n "$MOZ_PSM" -a ! -e "$AS_BIN"; then
         AC_MSG_ERROR([Building crypto support requires a valid version of the standalone assembler (ml.exe for MSVC).])
     fi
@@ -4399,7 +4491,7 @@ dnl Image decoders
 dnl ========================================================
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm"
 case "$target_os" in
-cygwin*|mingw*|msvc*|mks*|os2*)
+cygwin*|mingw*|msvc*|mks*|os2*|wince*)
     MOZ_IMG_DECODERS_DEFAULT="$MOZ_IMG_DECODERS_DEFAULT icon"
     ;;
 darwin*)
@@ -4531,7 +4623,7 @@ dnl ========================================================
 dnl Installer
 dnl ========================================================
 case "$target_os" in
-    aix*|solaris*|linux*|msvc*|mks*|cygwin*|mingw*|os2*)
+    aix*|solaris*|linux*|msvc*|mks*|cygwin*|mingw*|os2*|wince*)
         MOZ_INSTALLER=1
         ;;
 esac
@@ -4552,7 +4644,7 @@ dnl ========================================================
 MOZ_NO_ACTIVEX_SUPPORT=1
 MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 case "$target_os" in
-    msvc*|mks*|cygwin*|mingw*)
+    msvc*|mks*|cygwin*|mingw*|wince*)
         if test -z "$GNU_CC"; then 
             MOZ_NO_ACTIVEX_SUPPORT=
             MOZ_ACTIVEX_SCRIPTING_SUPPORT=1
@@ -4707,7 +4799,7 @@ MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
     beos*)
         MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USER}"
         ;;
-    msvc*|mks*|cygwin*|mingw*|os2*)
+    msvc*|mks*|cygwin*|mingw*|os2*|wince*)
         MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
         ;;
     *) 
@@ -5460,7 +5552,7 @@ MOZ_ARG_DISABLE_BOOL(md,
   [_cpp_md_flag=],
   [_cpp_md_flag=1],
   [dnl Default is to turn on -MD if using GNU-compatible compilers
-   if test "$GNU_CC" -a "$GNU_CXX" -a "$OS_ARCH" != "WINNT"; then
+   if test "$GNU_CC" -a "$GNU_CXX" -a "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "WINCE"; then
      _cpp_md_flag=1
    fi])
 if test "$_cpp_md_flag"; then
@@ -5568,7 +5660,7 @@ fi
 dnl Check for GLib and libIDL.
 dnl ========================================================
 case "$target_os" in
-msvc*|mks*|cygwin*|mingw*)
+msvc*|mks*|cygwin*|mingw*|wince*)
     SKIP_IDL_CHECK="yes"
     ;;
 *)
@@ -5676,7 +5768,7 @@ mk_add_options MOZ_CO_MODULE=mozilla/other-licenses/libart_lgpl])
   dnl answer should be anyway
   MOZ_LIBART_CFLAGS='-I${DIST}/include/libart_lgpl'
   case "$target_os" in
-  msvc*|mks*|cygwin*|mingw*)
+  msvc*|mks*|cygwin*|mingw*|wince*)
       MOZ_LIBART_LIBS='$(DIST)/lib/$(LIB_PREFIX)moz_art_lgpl.$(IMPORT_LIB_SUFFIX)' 
       ;;
   os2*)
@@ -6079,6 +6171,8 @@ AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_REORDER)
 AC_SUBST(MOZ_TIMELINE)
+AC_SUBST(WINCE)
+AC_SUBST(TARGET_DEVICE)
 
 AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_DISPLAYNAME)
@@ -6263,7 +6357,7 @@ elif test "$OS_ARCH" = "Darwin"; then
   MOZ_MOVEMAIL=1
 elif test "$OS_ARCH" = "OpenVMS"; then
   AC_DEFINE(XP_UNIX)
-elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2"; then
+elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2" -a "$OS_ARCH" != "WINCE"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
   MOZ_MOVEMAIL=1
@@ -6484,11 +6578,11 @@ fi
 if test -z "$MOZ_NATIVE_NSPR"; then
     # Hack to deal with the fact that we use NSPR_CFLAGS everywhere
     AC_MSG_WARN([Recreating autoconf.mk with updated nspr-config output])
-    if test ! "$VACPP" && test "$OS_ARCH" != "WINNT"; then
+    if test ! "$VACPP" && test "$OS_ARCH" != "WINNT" && test "$OS_ARCH" != "WINCE"; then
         NSPR_LIBS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --libs`
         $PERL -pi.bak -e '$v = q|$\\(DIST\\)|; $v = `./nsprpub/config/nspr-config --prefix=$v --exec-prefix=$v --libs`; s {^NSPR_LIBS\s*=.*} {NSPR_LIBS = $v }' config/autoconf.mk
     fi
-    if test "$OS_ARCH" != "WINNT"; then
+    if test "$OS_ARCH" != "WINNT" && test "$OS_ARCH" != "WINCE" ; then
         NSPR_CFLAGS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --cflags`
         $PERL -pi.bak -e '$v = q|$\\(DIST\\)|; $v = `./nsprpub/config/nspr-config --prefix=$v --exec-prefix=$v --cflags`; s {^NSPR_CFLAGS\s*=.*} {NSPR_CFLAGS = $v }' config/autoconf.mk
     fi

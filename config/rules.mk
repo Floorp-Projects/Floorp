@@ -73,14 +73,14 @@ endif
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 _LIBNAME_RELATIVE_PATHS=1
 else
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 ifndef GNU_CC
 _LIBNAME_RELATIVE_PATHS=1
 endif
 endif
 endif
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 PWD := $(shell pwd)
 _VPATH_SRCS = $(if $(filter /%,$<),$<,$(PWD)/$<)
 else
@@ -111,7 +111,7 @@ endif
 
 ifndef LIBRARY
 ifdef LIBRARY_NAME
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
 ifdef SHORT_LIBNAME
 LIBRARY_NAME		:= $(SHORT_LIBNAME)
 endif
@@ -140,7 +140,7 @@ ifeq ($(OS_ARCH),OS2)
 DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
 endif
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
 IMPORT_LIBRARY		:= $(LIB_PREFIX)$(LIBRARY_NAME).$(IMPORT_LIB_SUFFIX)
 endif
 
@@ -172,7 +172,7 @@ LIBRARY			:= $(NULL)
 endif
 endif
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 ifndef GNU_CC
 
 ifdef LIBRARY_NAME
@@ -549,6 +549,13 @@ else
 OUTOPTION = -o # eol
 endif # WINNT && !GNU_CC
 endif # VACPP
+ifneq (,$(filter WINCE,$(OS_ARCH)))
+OUTOPTION = -Fo# eol
+endif
+
+ifeq ($(OS_TARGET), WINCE)
+OUTOPTION = -Fo# eol
+endif
 
 ifdef GRE_MODULE
 ifndef DISABLE_DIST_GRE
@@ -627,7 +634,6 @@ tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	    $(UPDATE_TITLE) \
 	    $(MAKE) -C $$d libs; \
 	done
-
 
 #
 # Rule to create list of libraries for final link
@@ -729,7 +735,8 @@ ifdef BEOS_ADDON_WORKAROUND
 endif
 endif
 endif # GRE_MODULE
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+
+ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
 	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
 else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
@@ -868,9 +875,13 @@ alltags:
 # creates OBJS, links with LIBS to create Foo
 #
 $(PROGRAM): $(PROGOBJS) $(LIBS_DEPS) $(EXTRA_DEPS) $(EXE_DEF_FILE) $(RESFILE) Makefile Makefile.in
+ifeq (WINCE,$(OS_ARCH))
+	$(LD) /NOLOGO /OUT:$@ $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+else
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LD) -OUT:$@ $(LDFLAGS) $(PROGOBJS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS) $(EXE_DEF_FILE) /ST:0x100000
 else
+
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(LD) /NOLOGO /OUT:$@ /PDB:$(PDBFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 else
@@ -881,6 +892,8 @@ else # ! CPP_PROG_LINK
 endif # CPP_PROG_LINK
 endif # WINNT && !GNU_CC
 endif # OS2
+endif # WINCE
+
 ifdef ENABLE_STRIP
 	$(STRIP) $@
 endif
@@ -898,6 +911,11 @@ $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_LIBS_DEPS) $(HOST_EXTRA_DEPS) Makefile 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LD) -OUT:$@ $(LDFLAGS) $(HOST_OBJS) $(HOST_LIBS) $(EXTRA_LIBS) /ST:0x100000
 else
+
+ifeq (WINCE,$(OS_ARCH))
+	$(HOST_LD) /NOLOGO /OUT:$@ $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(EXTRA_LIBS)
+endif
+
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(HOST_LD) /NOLOGO /OUT:$@ /PDB:$(PDBFILE) $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(EXTRA_LIBS)
 else
@@ -914,6 +932,9 @@ endif
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
 $(SIMPLE_PROGRAMS): %$(BIN_SUFFIX): %.$(OBJ_SUFFIX) $(LIBS_DEPS) $(EXTRA_DEPS) Makefile Makefile.in
+ifeq (WINCE,$(OS_ARCH))
+	$(LD) /nologo  /entry:main /out:$@ $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+else
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LD) /Out:$@ $< $(LDFLAGS) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
 else
@@ -927,6 +948,8 @@ else
 endif # CPP_PROG_LINK
 endif # WINNT && !GNU_CC
 endif # OS/2 VACPP
+endif # WINCE
+
 ifdef ENABLE_STRIP
 	$(STRIP) $@
 endif
@@ -967,7 +990,7 @@ endif
 # that are built using other static libraries.  Confused...?
 #
 ifdef SHARED_LIBRARY_LIBS
-ifeq (,$(GNU_LD)$(filter-out OS2 WINNT, $(OS_ARCH)))
+ifeq (,$(GNU_LD)$(filter-out OS2 WINNT WINCE, $(OS_ARCH)))
 ifneq (,$(BUILD_STATIC_LIBS)$(FORCE_STATIC_LIB))
 LOBJS	+= $(SHARED_LIBRARY_LIBS)
 endif
@@ -984,7 +1007,7 @@ endif
 
 $(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) Makefile Makefile.in
 	rm -f $@
-ifneq (,$(GNU_LD)$(filter-out OS2 WINNT, $(OS_ARCH)))
+ifneq (,$(GNU_LD)$(filter-out OS2 WINNT WINCE, $(OS_ARCH)))
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
@@ -994,7 +1017,7 @@ endif
 	$(RANLIB) $@
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE, $(OS_ARCH)))
 $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 endif
 
@@ -1086,7 +1109,7 @@ ifndef COMPILER_DEPEND
 #
 _MDDEPFILE = $(MDDEPDIR)/$(@F).pp
 
-ifeq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
+ifeq (,$(CROSS_COMPILE)$(filter-out WINCE WINNT,$(OS_ARCH)))
 _dos_srcdir := $(shell cygpath -w $(srcdir) | sed 's|\\|/|g')
 define MAKE_DEPS_AUTO
 if test -d $(@D); then \
