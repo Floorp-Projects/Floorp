@@ -795,11 +795,23 @@ XRE_GetFileFromPath(const char *aPath, nsILocalFile* *aResult)
     CFRelease(fullPath);
     return rv;
 
-#elif defined(XP_UNIX) || defined(XP_OS2)
+#elif defined(XP_UNIX)
     char fullPath[MAXPATHLEN];
 
     if (!realpath(aPath, fullPath))
         return NS_ERROR_FAILURE;
+
+    return NS_NewNativeLocalFile(nsDependentCString(fullPath), PR_TRUE,
+                                 aResult);
+#elif defined(XP_OS2)
+    char fullPath[MAXPATHLEN];
+
+    if (!realpath(aPath, fullPath))
+        return NS_ERROR_FAILURE;
+
+    // realpath on OS/2 returns a unix-ized path, so re-native-ize
+    for (char* ptr = strchr(fullPath, '/'); ptr; ptr = strchr(ptr, '/'))
+        *ptr = '\\';
 
     return NS_NewNativeLocalFile(nsDependentCString(fullPath), PR_TRUE,
                                  aResult);
