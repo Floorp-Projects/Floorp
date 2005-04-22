@@ -144,9 +144,13 @@ XPIDLSRCS	= \
 		nsIAsyncOutputStream.idl \
 		$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+XPIDLSRCS	+= nsILocalFileOS2.idl
+else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 XPIDLSRCS	+= nsILocalFileMac.idl
-endif
+endif # mac
+endif # os2
 
 SDK_XPIDLSRCS   = \
 		nsIDirectoryService.idl \
