@@ -55,9 +55,9 @@
     </content>
 
     <implementation>
-      <field name="mPixPerMin">2.0</field>
+      <field name="mPixPerMin">1.2</field>
       <field name="mStartMin">8*60</field>
-      <field name="mEndMin">16*60</field>
+      <field name="mEndMin">20*60</field>
 
       <constructor>
 	this.relayout();
@@ -98,7 +98,7 @@
 
       <method name="relayout">
 	<body><![CDATA[
-          dump ("calendar-time-bar: relayout\n");
+          //dump ("calendar-time-bar: relayout\n");
 	  function createXULElement(el) {
               return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
           }
@@ -112,8 +112,6 @@
           dump ("calendar-time-bar: orient: " + orient + " other: " + otherorient + "\n");
 
           function makeTimeBox(timestr, size) {
-              //dump ("calendar-time-bar: making box for: " + timestr + " size: " + size + "\n");
-
               var box = createXULElement("box");
               box.setAttribute("orient", orient);
 
@@ -136,25 +134,32 @@
           while (topbox.lastChild)
               topbox.removeChild(topbox.lastChild);
 
-          var firstDur = this.mStartMin % 60;
-          var theHour = Math.floor(this.mStartMin / 60);
-          //dump ("firstDur: " + firstDur + "\n");
-          if (firstDur != 0) {
-              var box = makeTimeBox("", firstDur);
-              box.setAttribute("class", "calendar-time-bar-box-" + (theHour % 2 == 0 ? "even" : "odd"));
-              topbox.appendChild(box);
-              theHour++;
-          }
+          var theMin = this.mStartMin;
+          var theHour = Math.floor(theMin / 60);
+          var durLeft = this.mEndMin - this.mStartMin;
 
-          //dump ("ppm: " + this.mPixPerMin + " startmin: " + this.mStartMin + " end: " + this.mEndMin + "\n");
-          var durLeft = this.mEndMin  - (this.mStartMin + firstDur);
-          //dump ("durLeft: " + durLeft + "\n");
           while (durLeft > 0) {
-              var box = makeTimeBox(String(theHour) + ":00",
-                                    this.mPixPerMin * ((durLeft > 60) ? 60 : durLeft));
+              var dur;
+              if (this.mEndMin - theMin < 60) {
+                  dur = this.mEndMin - theMin;
+              } else {
+                  dur = theMin % 60;
+              }
+              theMin += dur;
+              if (dur == 0) dur = 60;
+
+              var box;
+              if (dur != 60) {
+                  box = makeTimeBox("", dur * this.mPixPerMin);
+              } else {
+                  box = makeTimeBox(String(theHour) + ":00", dur * this.mPixPerMin);
+              }
+
               box.setAttribute("class", "calendar-time-bar-box-" + (theHour % 2 == 0 ? "even" : "odd"));
               topbox.appendChild(box);
-              durLeft -= 60;
+
+              durLeft -= dur;
+              theMin += dur;
               theHour++;
           }
 	]]></body>
@@ -241,8 +246,11 @@
     -->
   <binding id="calendar-event-column">
     <content>
-      <xul:box anonid="topbox" flex="1">
-      </xul:box>
+      <xul:stack anonid="boxstack" flex="1">
+	<xul:box anonid="bgbox" flex="1"/>
+	<xul:box anonid="topbox" flex="1"/>
+	<xul:box anonid="fgbox" flex="1"/>
+      </xul:stack>
     </content>
 
     <implementation>
@@ -251,7 +259,7 @@
       ]]></constructor>
 
       <!-- fields -->
-      <field name="mPixPerMin">2.0</field>
+      <field name="mPixPerMin">1.2</field>
       <field name="mStartMin">8*60</field>
       <field name="mEndMin">20*60</field>
       <field name="mEvents">new Array()</field>
@@ -303,6 +311,22 @@
 	readonly="true">
 	<getter><![CDATA[
 	  return document.getAnonymousElementByAttribute(this, "anonid", "topbox");
+	]]></getter>
+      </property>
+
+      <property
+	name="bgbox"
+	readonly="true">
+	<getter><![CDATA[
+	  return document.getAnonymousElementByAttribute(this, "anonid", "bgbox");
+	]]></getter>
+      </property>
+
+      <property
+	name="fgbox"
+	readonly="true">
+	<getter><![CDATA[
+	  return document.getAnonymousElementByAttribute(this, "anonid", "fgbox");
 	]]></getter>
       </property>
 
@@ -439,8 +463,12 @@
 
       <method name="clear">
 	<body><![CDATA[
+	  while (this.bgbox.lastChild)
+              this.bgbox.removeChild(this.bgbox.lastChild);
 	  while (this.topbox.lastChild)
               this.topbox.removeChild(this.topbox.lastChild);
+	  while (this.fgbox.lastChild)
+              this.fgbox.removeChild(this.fgbox.lastChild);
 	]]></body>
       </method>
 
@@ -458,6 +486,35 @@
 	  if (!orient) orient = "horizontal";
           if (orient == "vertical") otherorient = "horizontal";
 
+	  // bgbox is used mainly for drawing the grid.  at some point it may
+	  // also be used for all-day events.
+	  this.bgbox.setAttribute("orient", orient);
+
+          var theMin = this.mStartMin;
+          while (theMin < this.mEndMin) {
+              var dur = theMin % 60;
+              theMin += dur;
+              if (dur == 0) dur = 60;
+
+              var box = createXULElement("box");
+              box.setAttribute("orient", orient);
+              box.setAttribute("class", "calendar-event-column-linebox");
+
+              if (orient == "vertical")
+                  box.setAttribute("height", dur * this.mPixPerMin);
+              else
+                  box.setAttribute("width", dur * this.mPixPerMin);
+
+              this.bgbox.appendChild(box);
+              theMin += 60;
+          }
+
+	  // fgbox is used for dragging events
+	  this.fgbox.setAttribute("orient", orient);
+
+	  // this one is set to otherorient, since it will contain
+	  // child boxes set to "orient" (one for each set of
+	  // overlapping event areas)
 	  this.topbox.setAttribute("orient", otherorient);
 
           this.mEventMap = this.computeEventMap();
@@ -810,7 +867,6 @@
     <implementation implements="calICalendarView">
 
       <constructor><![CDATA[
-	dump ("+++++++++ calendar-multiday-view\n");
         this.reorient();
       ]]></constructor>
 
@@ -852,7 +908,7 @@
                 this.calView.refresh();
             },
             onAddItem: function (aItem) {
-                dump ("++ AddItem\n");
+                //dump ("++ AddItem\n");
                 if (!(aItem instanceof Components.interfaces.calIEvent))
                     return;
                 aItem = aItem.QueryInterface(Components.interfaces.calIEvent);
@@ -1075,7 +1131,7 @@
               headerbox.setAttribute("height", 50);
               headerbox.removeAttribute("width");
 
-              labelbox.setAttribute("height", 50);
+              labelbox.setAttribute("height", 30);
               labelbox.removeAttribute("width");
 
               var timebarWidth = 50;
@@ -1196,18 +1252,36 @@
 
               dayHeaderBox.setAttribute("orient", orient);
 
-              var dayLabelBox = createXULElement("label");
-              dayLabelBox.setAttribute("flex", "1");
-              dayLabelBox.setAttribute("align", "center");
-              dayLabelBox.setAttribute("value", (d.month + 1) + "/" + d.day);
-              labeldaybox.appendChild(dayLabelBox);
+              var labelbox = createXULElement("box");
+              labelbox.setAttribute("flex", "1");
+              labelbox.setAttribute("orient", orient);
+              labelbox.setAttribute("class", "calendar-day-label-box");
+
+              var label;
+              label = createXULElement("label");
+              //label.setAttribute("flex", "1");
+              label.setAttribute("value", (d.month + 1) + "/" + d.day);
+              label.setAttribute("class", "calendar-day-label-date");
+              labelbox.appendChild(label);
+
+              // XXX Localize me, get me out of here
+              var dayNames = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ];
+              var dayNamesShort = [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ];
+
+              label = createXULElement("label");
+              //label.setAttribute("flex", "1");
+              label.setAttribute("value", dayNamesShort[d.weekday]);
+              label.setAttribute("class", "calendar-day-label-name");
+              labelbox.appendChild(label);
               
+              labeldaybox.appendChild(labelbox);
+
               d.isDate = true;
 
               if (!d.isUtc)
                   d = d.getInTimezone(null);
 
-              this.mDateColumns.push ( { date: d, column: dayEventsBox, header: dayHeaderBox, label: dayLabelBox } );
+              this.mDateColumns.push ( { date: d, column: dayEventsBox, header: dayHeaderBox } );
           }
 
 	  daybox.removeAttribute("flex");
@@ -1241,7 +1315,7 @@
       <method name="doAddEvent">
 	<parameter name="aEvent"/>
 	<body><![CDATA[
-	  dump ("++ doAddevent\n");
+                     //dump ("++ doAddevent\n");
           var col = this.findColumnForEvent(aEvent);
           if (!col)
               return;

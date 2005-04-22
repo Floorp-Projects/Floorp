@@ -8,11 +8,21 @@ calendar-event-column {
 }
 
 calendar-event-column { 
-  border: 1px solid #888888;
+  border-left: 1px solid #999999;
+  border-top: 1px solid #999999;
 }
 
 .calendar-event-column-header { 
-  border: 1px solid #888888;
+  border-left: 1px solid #999999;
+  border-top: 1px solid #999999;
+}
+
+.calendar-event-column-linebox[orient="horizontal"] {
+  border-right: 1px solid #aaaaaa;
+}
+
+.calendar-event-column-linebox[orient="vertical"] {
+  border-bottom: 1px solid #aaaaaa;
 }
 
 /*== calendar-event-box ==*/
@@ -22,13 +32,22 @@ calendar-event-box {
 }
 
 .calendar-event-box-container {
-  background: #777799;
+  background: #4e84c2;
   padding: 2px;
 }
 
-.calendar-event-box-container[parentorient=vertical] {
-  background: #777799;
-  padding: 2px;
+.calendar-event-box-container[parentorient="vertical"] {
+  border-left: 1px solid #2e4e73;
+  border-right: 1px solid #2e4e73;
+  border-top: none;
+  border-bottom: none;
+}
+
+.calendar-event-box-container[parentorient="horizontal"] {
+  border-left: none;
+  border-right: none;
+  border-top: 1px solid #2e4e73;
+  border-bottom: 1px solid #2e4e73;
 }
 
 /*== calendar-event-gripbar ==*/
@@ -70,6 +89,8 @@ calendar-event-gripbar {
 /*== calendar-time-bar ==*/
 calendar-time-bar { 
   -moz-binding: url(chrome://calendar/content/calendar-multiday-view.xml#calendar-time-bar);
+  /* border-right: 1px solid #999999; */
+  /* border-bottom: 1px solid #999999; */
 }
 
 .calendar-time-bar-label { 
@@ -77,14 +98,31 @@ calendar-time-bar {
 }
 
 .calendar-time-bar-box-odd {
-  background: #6666ff;
+  border-top: 1px solid #999999;
+  background: #dddddd;
 }
 
 .calendar-time-bar-box-even {
-  background: #ff6666;
+  border-top: 1px solid #999999;
+  background: #dddddd;
 }
 
 /*== calendar-multiday-view ==*/
 calendar-multiday-view { 
   -moz-binding: url(chrome://calendar/content/calendar-multiday-view.xml#calendar-multiday-view);
+}
+
+.calendar-day-label-box { 
+  background: #dddddd;
+}
+
+.calendar-day-label-date {
+  font-weight: bold;
+  text-align: center;
+}
+
+.calendar-day-label-name {
+  font-weight: bold;
+  font-size: large;
+  text-align: center;
 }
