@@ -74,6 +74,18 @@ class nsIWordBreaker;
   || ((_ch) >= CH_LRE && (_ch) <= CH_RLO))
 #endif // IBMBIDI
 
+// For now, we have only a couple of characters to strip out. If we get
+// any more, change this to use a bitset to lookup into.
+//   CH_SHY - soft hyphen (discretionary hyphen)
+#ifdef IBMBIDI
+// added BIDI formatting codes
+#define IS_DISCARDED(_ch) \
+  (((_ch) == CH_SHY) || ((_ch) == '\r') || IS_BIDI_CONTROL(_ch))
+#else
+#define IS_DISCARDED(_ch) \
+  (((_ch) == CH_SHY) || ((_ch) == '\r'))
+#endif
+
 #define IS_ASCII_CHAR(ch) ((ch&0xff80) == 0)
 
 #define NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE 128 // used to be 256

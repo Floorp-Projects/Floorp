@@ -1742,15 +1742,8 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     else {
       PRInt32 i = contentLen;
       if (nsnull != indexp) {
-        // Point mapping indicies at each content index in the word
-        if (1 == wordLen && contentLen == 2 && IS_CJ_CHAR(*bp)) {
-          // if all these condition meets, we have a '\n' between CJK chars, 
-          // and this '\n' should be removed.
-          while (--i >= 0) {
-            *indexp++ = strInx;
-          }
-          strInx++;
-        } else if (!wasTransformed) {
+        // Point mapping indices at each content index in the word
+        if (!wasTransformed) {
           while (--i >= 0) {
             *indexp++ = strInx++;
           }
@@ -1760,16 +1753,20 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
             textTransform == NS_STYLE_TEXT_TRANSFORM_UPPERCASE ||
             textTransform == NS_STYLE_TEXT_TRANSFORM_CAPITALIZE;
           while (--i >= 0) {
+            PRUnichar ch = aTX.GetContentCharAt(mContentOffset +
+                             indexp - aIndexBuffer->mBuffer);
+            if (IS_DISCARDED(ch) || ch == '\n') {
+              *indexp++ = strInx;
+              continue;
+            }
             *indexp++ = strInx++;
             // Point any capitalized German &szlig; to 'SS'
-            if (caseChanged && *tp == PRUnichar('S') &&
-                aTX.GetContentCharAt(mContentOffset +
-                  indexp - aIndexBuffer->mBuffer - 1) == kSZLIG) {
+            if (caseChanged && ch == kSZLIG && *tp == PRUnichar('S')) {
               ++strInx;
               ++tp;
             }
             ++tp;
-          }          
+          }
         }
       }
     }
