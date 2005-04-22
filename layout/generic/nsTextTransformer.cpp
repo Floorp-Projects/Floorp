@@ -160,18 +160,6 @@ nsTextTransformer::Shutdown()
   NS_IF_RELEASE(gCaseConv);
 }
 
-// For now, we have only a couple of characters to strip out. If we get
-// any more, change this to use a bitset to lookup into.
-//   CH_SHY - soft hyphen (discretionary hyphen)
-#ifdef IBMBIDI
-// added BIDI formatting codes
-#define IS_DISCARDED(_ch) \
-  (((_ch) == CH_SHY) || ((_ch) == '\r') || IS_BIDI_CONTROL(_ch))
-#else
-#define IS_DISCARDED(_ch) \
-  (((_ch) == CH_SHY) || ((_ch) == '\r'))
-#endif
-
 
 #define MAX_UNIBYTE 127
 
