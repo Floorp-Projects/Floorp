@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Henry Sobotka <sobotka@axess.com>
  *   IBM Corp.
+ *   Rich Walsh <dragtext@e-vertise.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -58,6 +59,8 @@
 #include "prproces.h"
 #include "prthread.h"
 
+#include "nsISupportsPrimitives.h"
+#include "nsArray.h"
 
 static unsigned char* PR_CALLBACK
 _mbschr( const unsigned char* stringToSearch, int charToSearchFor);
@@ -239,6 +242,108 @@ class nsDirEnumerator : public nsISimpleEnumerator
 
 NS_IMPL_ISUPPORTS1(nsDirEnumerator, nsISimpleEnumerator)
 
+//---------------------------------------------------------------------
+// class TypeEaEnumerator - a convenience for accessing
+// a file's .TYPE extended attribute
+//---------------------------------------------------------------------
+
+// this struct describes the first entry for an MVMT or MVST EA;
+// .TYPE is supposed to be MVMT but is sometimes malformed as MVST
+
+typedef struct _MVHDR {
+    USHORT  usEAType;
+    USHORT  usCodePage;
+    USHORT  usNumEntries;
+    USHORT  usDataType;
+    USHORT  usDataLth;
+    char    data[1];
+} MVHDR;
+
+typedef MVHDR *PMVHDR;
+
+
+class TypeEaEnumerator
+{
+public:
+    TypeEaEnumerator() : mEaBuf(nsnull) { }
+    ~TypeEaEnumerator() { if (mEaBuf) NS_Free(mEaBuf); }
+
+    nsresult Init(nsLocalFile * aFile);
+    char *   GetNext(PRUint32 *lth);
+
+private:
+    char *  mEaBuf;
+    char *  mpCur;
+    PMVHDR  mpMvh;
+    USHORT  mLth;
+    USHORT  mCtr;
+};
+
+
+nsresult TypeEaEnumerator::Init(nsLocalFile * aFile)
+{
+#define EABUFSIZE 512
+
+    // provide a buffer for the results
+    mEaBuf = (char*)NS_Alloc(EABUFSIZE);
+    if (!mEaBuf)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PFEA2LIST   pfea2list = (PFEA2LIST)mEaBuf;
+    pfea2list->cbList = EABUFSIZE;
+
+    // ask for the .TYPE extended attribute
+    nsresult rv = aFile->GetEA(".TYPE", pfea2list);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // point at the data - it starts immediately after the EA's name;
+    // then confirm the EA is MVMT (correct) or MVST (acceptable)
+    mpMvh = (PMVHDR)&(pfea2list->list[0].szName[pfea2list->list[0].cbName+1]);
+    if (mpMvh->usEAType != EAT_MVMT)
+        if (mpMvh->usEAType != EAT_MVST || mpMvh->usDataType != EAT_ASCII)
+            return NS_ERROR_FAILURE;
+
+    // init the variables that tell us where we are in the lsit
+    mLth = 0;
+    mCtr = 0;
+    mpCur = (char*)(mpMvh->usEAType == EAT_MVMT ?
+                    &mpMvh->usDataType : &mpMvh->usDataLth);
+
+    return NS_OK;
+}
+
+
+char *   TypeEaEnumerator::GetNext(PRUint32 *lth)
+{
+    char *  result = nsnull;
+
+    // this is a loop so we can skip invalid entries if needed;
+    // normally, it will break out on the first iteration
+    while (mCtr++ < mpMvh->usNumEntries) {
+
+        // advance to the next entry
+        mpCur += mLth;
+
+        // if MVMT, ensure the datatype is OK, then advance
+        // to the length field present in both formats
+        if (mpMvh->usEAType == EAT_MVMT) {
+            if (*((PUSHORT)mpCur) != EAT_ASCII)
+                continue;
+            mpCur += sizeof(USHORT);
+        }
+
+        // get the data's length, point at the data itself, then exit
+        mLth = *lth = *((PUSHORT)mpCur);
+        mpCur += sizeof(USHORT);
+        result = mpCur;
+        break;
+    }
+
+    return result;
+}
+
+//---------------------------------------------------------------------
 
 nsLocalFile::nsLocalFile()
 {
@@ -253,7 +358,7 @@ nsLocalFile::nsLocalFile(const nsLocalFile& other)
 }
 
 /* nsISupports interface implementation. */
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsLocalFile, nsILocalFile, nsIFile)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsLocalFile, nsILocalFile, nsIFile, nsILocalFileOS2)
 
 NS_METHOD
 nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
@@ -539,6 +644,128 @@ nsLocalFile::GetNativePath(nsACString &_retval)
     _retval = mWorkingPath;
     return NS_OK;
 }
+
+//---------------------------------------------------------------------
+
+// get any single extended attribute for the current file or directory
+
+nsresult
+nsLocalFile::GetEA(const char *eaName, PFEA2LIST pfea2list)
+{
+    // ensure we have an out-buffer whose length is specified
+    if (!pfea2list || !pfea2list->cbList)
+        return NS_ERROR_FAILURE;
+
+    // the gea2list's name field is only 1 byte long;
+    // this expands its allocation to hold a 33 byte name
+    union {
+        GEA2LIST    gea2list;
+        char        dummy[sizeof(GEA2LIST)+32];
+    };
+    EAOP2       eaop2;
+
+    eaop2.fpFEA2List = pfea2list;
+    eaop2.fpGEA2List = &gea2list;
+
+    // fill in the request structure
+    dummy[sizeof(GEA2LIST)+31] = 0;
+    gea2list.list[0].oNextEntryOffset = 0;
+    strcpy(gea2list.list[0].szName, eaName);
+    gea2list.list[0].cbName = strlen(gea2list.list[0].szName);
+    gea2list.cbList = sizeof(GEA2LIST) + gea2list.list[0].cbName;
+
+    // see what we get - this will succeed even if the EA doesn't exist
+    APIRET rc = DosQueryPathInfo(mWorkingPath.get(), FIL_QUERYEASFROMLIST,
+                                 &eaop2, sizeof(eaop2));
+    if (rc)
+        return ConvertOS2Error(rc);
+
+    // if the data length is zero, requested EA doesn't exist
+    if (!pfea2list->list[0].cbValue)
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}
+
+
+// return an array of file types or null if there are none
+
+NS_IMETHODIMP
+nsLocalFile::GetFileTypes(nsIArray **_retval)
+{
+    NS_ENSURE_ARG(_retval);
+    *_retval = 0;
+
+    // fetch the .TYPE ea & prepare for enumeration
+    TypeEaEnumerator typeEnum;
+    nsresult rv = typeEnum.Init(this);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // create an array that's scriptable
+    nsCOMPtr<nsIMutableArray> mutArray;
+    rv = NS_NewArray(getter_AddRefs(mutArray));
+    if (NS_FAILED(rv))
+        return rv;
+
+    PRInt32  cnt;
+    PRUint32 lth;
+    char *   ptr;
+
+    // get each file type, convert to a CString, then add to the array
+    for (cnt=0, ptr=typeEnum.GetNext(&lth); ptr; ptr=typeEnum.GetNext(&lth)) {
+        nsCOMPtr<nsISupportsCString> typeString(
+                    do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv));
+        if (NS_SUCCEEDED(rv)) {
+            nsCAutoString temp;
+            temp.Assign(ptr, lth);
+            typeString->SetData(temp);
+            mutArray->AppendElement(typeString, PR_FALSE);
+            cnt++;
+        }
+    }
+
+    // if the array has any contents, addref & return it
+    if (cnt) {
+        *_retval = mutArray;
+        NS_ADDREF(*_retval);
+        rv = NS_OK;
+    }
+    else
+        rv = NS_ERROR_FAILURE;
+
+    return rv;
+}
+
+
+// see if the file is of the requested type
+
+NS_IMETHODIMP
+nsLocalFile::IsFileType(const nsACString& fileType, PRBool *_retval)
+{
+    NS_ENSURE_ARG(_retval);
+    *_retval = PR_FALSE;
+
+    // fetch the .TYPE ea & prepare for enumeration
+    TypeEaEnumerator typeEnum;
+    nsresult rv = typeEnum.Init(this);
+    if (NS_FAILED(rv))
+        return rv;
+
+    PRUint32 lth;
+    char *   ptr;
+
+    // compare each type to the request;  if there's a match, exit
+    for (ptr = typeEnum.GetNext(&lth); ptr; ptr = typeEnum.GetNext(&lth))
+        if (fileType.EqualsASCII(ptr, lth)) {
+            *_retval = PR_TRUE;
+            break;
+        }
+
+    return NS_OK;
+}
+
+//---------------------------------------------------------------------
 
 nsresult
 nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const nsACString &newName, PRBool move)

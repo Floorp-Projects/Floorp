@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Rich Walsh <dragtext@e-vertise.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -53,6 +54,7 @@
 #include "nsCRT.h"
 #include "nsIFile.h"
 #include "nsIFactory.h"
+#include "nsILocalFileOS2.h"
 
 #define INCL_DOSFILEMGR
 #define INCL_DOSERRORS
@@ -66,7 +68,9 @@
 
 #include <os2.h>
 
-class NS_COM nsLocalFile : public nsILocalFile
+class TypeEaEnumerator;
+
+class NS_COM nsLocalFile : public nsILocalFileOS2
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
@@ -83,6 +87,9 @@ public:
     
     // nsILocalFile interface
     NS_DECL_NSILOCALFILE
+
+    // nsILocalFileOS2 interface
+    NS_DECL_NSILOCALFILEOS2
 
 public:
     static void GlobalInit();
@@ -108,6 +115,9 @@ private:
     nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const nsACString &newName, PRBool move);
 
     nsresult SetModDate(PRInt64 aLastModifiedTime);
+
+    nsresult GetEA(const char *eaName, PFEA2LIST pfea2list);
+    friend class TypeEaEnumerator;
 };
 
 #endif
