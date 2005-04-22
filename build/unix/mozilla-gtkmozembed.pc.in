@@ -6,6 +6,6 @@ includedir=%includedir%
 Name: Mozilla Gtk Embedding Widget
 Description: Mozilla Embedding Widget for Gtk+
 Version: %MOZILLA_VERSION%
-Requires: mozilla-xpcom = %MOZILLA_VERSION%
+Requires: %MOZ_APP_NAME%-xpcom = %MOZILLA_VERSION%
 Libs: -L${libdir} -lgtkembedmoz %SUPERWIN_LIBS%
 Cflags: -I${includedir}/gtkembedmoz

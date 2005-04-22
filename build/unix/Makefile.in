@@ -88,6 +88,7 @@ $(MOZ_APP_NAME)-%.pc : mozilla-%.pc.in Makefile.in Makefile $(DEPTH)/config/auto
 	-e "s|%includedir%|$(includedir)|" \
 	-e "s|%libdir%|$(mozappdir)|" \
 	-e "s|%idldir%|$(idldir)|" \
+	-e "s|%MOZ_APP_NAME%|$(MOZ_APP_NAME)|" \
 	-e "s|%MOZILLA_VERSION%|$(MOZ_APP_VERSION)|" \
 	-e "s|%SUPERWIN_LIBS%|$(SUPERWIN_LIBS)|" \
 	-e "s|%DEFS%|$(_DEFS)|" \

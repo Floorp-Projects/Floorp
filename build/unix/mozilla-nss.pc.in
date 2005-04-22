@@ -6,6 +6,6 @@ includedir=%includedir%
 Name: NSS
 Description: Mozilla Network Security Services
 Version: %MOZILLA_VERSION%
-Requires: mozilla-nspr = %MOZILLA_VERSION%
+Requires: %MOZ_APP_NAME%-nspr = %MOZILLA_VERSION%
 Libs: -L${libdir} -lnss3 -lsmime3 -lssl3 -lsoftokn3
 Cflags: -I${includedir}/nss
