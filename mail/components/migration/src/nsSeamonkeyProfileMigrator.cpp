@@ -422,7 +422,6 @@ nsSeamonkeyProfileMigrator::PrefTransform gTransforms[] = {
   MAKESAMETYPEPREFTRANSFORM("mail.biff.play_sound.type",                Int),
   MAKESAMETYPEPREFTRANSFORM("mail.biff.play_sound.url",                 String),
   MAKESAMETYPEPREFTRANSFORM("mail.biff.show_alert",                     Bool),
-  MAKESAMETYPEPREFTRANSFORM("signon.rememberSignons",                   Bool),
   MAKESAMETYPEPREFTRANSFORM("network.proxy.type",                       Int),
   MAKESAMETYPEPREFTRANSFORM("network.proxy.http",                       String),
   MAKESAMETYPEPREFTRANSFORM("network.proxy.http_port",                  Int),
