@@ -96,6 +96,8 @@ const DEFAULT_ALARM_LENGTH = 15; //default number of time units, an alarm goes o
 */
 function loadCalendarEventDialog()
 {
+    const kDefaultTimezone = calendarDefaultTimezone();
+
     // Get arguments, see description at top of file
     var args = window.arguments[0];
 
@@ -120,12 +122,16 @@ function loadCalendarEventDialog()
     // fill in fields from the event
     switch(componentType) {
     case "event":
-        var startDate = event.startDate.jsDate;
+        var startDate = event.startDate.getInTimezone(kDefaultTimezone).jsDate;
         setElementValue("start-datetime", startDate);
+        dump(startDate + "\n");
 
         // only events have end dates. todos have due dates
-        var endDate   = event.endDate.jsDate;
+        var endDate   = event.endDate.getInTimezone(kDefaultTimezone).jsDate;
         var displayEndDate = new Date(endDate);
+
+        dump(displayEndDate + "\n");
+
         /*
         if (event.isAllDay) {
             //displayEndDate == icalEndDate - 1, in the case of allday events
@@ -424,13 +430,13 @@ function loadCalendarEventDialog()
     var calendarField = document.getElementById('server-field');
     var calendars = getCalendarManager().getCalendars({});
     for (i in calendars) {
-        var menuitem = calendarField.appendItem(calendars[i].name,
-                                                calendars[i].uri);
-        menuitem.calendar = calendars[i];
-        // compare cal.uri because there may be multiple instances of
-        // calICalendar or uri for the same spec, and those instances are
-        // not ==.
         try {
+            var menuitem = calendarField.appendItem(calendars[i].name,
+                                                    calendars[i].uri);
+            menuitem.calendar = calendars[i];
+            // compare cal.uri because there may be multiple instances of
+            // calICalendar or uri for the same spec, and those instances are
+            // not ==.
             if (eventCalendar && eventCalendar.uri.equals(calendars[i].uri))
                 calendarField.selectedIndex = i;
         } catch(ex) {

@@ -1,3 +1,4 @@
+/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -133,10 +134,35 @@ function calendarDefaultTimezone() {
         try {
             gDefaultTimezone = prefobj.getCharPref("timezone.local");
         } catch (e) {
-            gDefaultTimezone = null;
+            gDefaultTimezone = guessSystemTimezone();
+            dump("gDefaultTimezone: " + gDefaultTimezone);
         }
     }
-
+    
     return gDefaultTimezone;
 }
 
+// XXX this should probably live somewhere else
+
+// XXX this table needs a _lot_ more stuff in it.
+const tzTable = {
+    "GMT-0700 Pacific Daylight Time" : "/mozilla.org/20050126_1/America/Los_Angeles",
+    "GMT-0800 Pacific Standard Time" : "/mozilla.org/20050126_1/America/Los_Angeles"
+};
+
+// returns a ICS timezone string
+function guessSystemTimezone()
+{
+    var m = (new Date()).toString().match(/[^(]* ([^ ]*) \(([^)]+)\)/);
+    var offset = m[1];
+    var timezone = m[2];
+
+    dump("Guessing system timezone:\n");
+    dump("offset  : " + offset + "\ntimezone: " + timezone + "\n");
+
+    try {
+        return tzTable[offset + " " + timezone];
+    } catch(ex) {
+        return null;
+    }
+}
