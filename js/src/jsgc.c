@@ -909,6 +909,7 @@ gc_dump_thing(JSGCThing *thing, uint8 flags, GCMarkNode *prev, FILE *fp)
         fprintf(fp, "object %8p %s", privateThing, className);
         break;
       }
+#if JS_HAS_XML_SUPPORT
       case GCX_NAMESPACE:
       {
         JSXMLNamespace *ns = (JSXMLNamespace *)thing;
@@ -931,6 +932,7 @@ gc_dump_thing(JSGCThing *thing, uint8 flags, GCMarkNode *prev, FILE *fp)
         fprintf(fp, "xml %8p %s", xml, js_xml_class_str[xml->xml_class]);
         break;
       }
+#endif
       case GCX_DOUBLE:
         fprintf(fp, "double %g", *(jsdouble *)thing);
         break;
