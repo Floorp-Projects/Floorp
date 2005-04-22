@@ -248,8 +248,8 @@
     <content>
       <xul:stack anonid="boxstack" flex="1">
 	<xul:box anonid="bgbox" flex="1"/>
-	<xul:box anonid="topbox" flex="1"/>
 	<xul:box anonid="fgbox" flex="1"/>
+	<xul:box anonid="topbox" flex="1"/>
       </xul:stack>
     </content>
 

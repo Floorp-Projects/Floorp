@@ -54,36 +54,35 @@ calendar-event-box {
 
 calendar-event-gripbar { 
   -moz-binding: url(chrome://calendar/content/calendar-multiday-view.xml#calendar-event-gripbar);
+
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  
+  min-height: 3px;
+  min-width: 3px;
+
+  /* background: #4e84c2;*/
+  background: #2e4e73;
 }
 
 calendar-event-gripbar[parentorient="vertical"] {
   -moz-box-align: center;
   -moz-box-pack: center;
 
-  border-top: 1px dotted #888888;
-  border-bottom: 1px dotted #888888;
+/*  border-top: 1px dotted #2e4e73;
+  border-bottom: 1px dotted #2e4e73; */
 
   cursor: n-resize;
-
-  min-height: 3px;
-  min-width: 3px;
-
-  background: #aaaaaa;
 }
 
-calendar-event-gripbar {
+calendar-event-gripbar[parentorient="horizontal"] {
   -moz-box-align: center;
   -moz-box-pack: center;
 
-  border-left: 1px dotted #888888;
-  border-right: 1px dotted #888888;
+/*  border-left: 1px dotted #2e4e73;
+  border-right: 1px dotted #2e4e73; */
 
   cursor: e-resize;
-
-  min-height: 3px;
-  min-width: 3px;
-
-  background: #aaaaaa;
 }
 
 /*== calendar-time-bar ==*/
