@@ -1289,7 +1289,6 @@ function FillAttachmentListPopup(popup)
 {
   // the FE sometimes call this routine TWICE...I haven't been able to figure out why yet...
   // protect against it...
-
   if (!gBuildAttachmentPopupForCurrentMsg) return; 
 
   var attachmentIndex = 0;
@@ -1327,7 +1326,6 @@ function GetNumberOfAttachmentsForDisplayedMessage()
 // private method used to build up a menu list of attachments
 function addAttachmentToPopup(popup, attachment, attachmentIndex) 
 { 
-  dump("in addAttachmentToPopup\n");
   if (popup)
   { 
     var item = document.createElement('menu');
@@ -1339,8 +1337,14 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       // insert the item just before the separator...the separator is the 2nd to last element in the popup.
       item.setAttribute('class', 'menu-iconic');
       setApplicationIconForAttachment(attachment,item, false);
+      
       var numItemsInPopup = popup.childNodes.length;
-      item = popup.insertBefore(item, popup.childNodes[numItemsInPopup-2]);
+      // find the separator
+      var indexOfSeparator = 0;
+      while (popup.childNodes[indexOfSeparator].localName != 'menuseparator')
+        indexOfSeparator++;
+
+      item = popup.insertBefore(item, popup.childNodes[indexOfSeparator]);
 
       var formattedDisplayNameString = gMessengerBundle.getFormattedString("attachmentDisplayNameFormat",
                                        [attachmentIndex, attachment.displayName]);

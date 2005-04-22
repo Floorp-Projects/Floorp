@@ -77,7 +77,6 @@
 
 <popup id="attachmentMenuList">
   <menuseparator/>
-  <menuitem label="&saveAllAttachmentsCmd.label;" accesskey="&saveAllAttachmentsCmd.accesskey;" oncommand="SaveAllAttachments();"/>
   <menuitem id="file-saveAllAttachments" label="&saveAllAttachmentsCmd.label;" 
     accesskey="&saveAllAttachmentsCmd.accesskey;" oncommand="HandleAllAttachments('save');"/>
   <menuitem id="file-detachAllAttachments" label="&detachAllAttachmentsCmd.label;" 
