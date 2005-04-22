@@ -47,7 +47,6 @@
 #include "nsSVGCairoCanvas.h"
 #include "nsSVGCairoRegion.h"
 #include "nsSVGCairoSurface.h"
-#include "nsIGenericFactory.h"
 
 /**
  * \addtogroup cairo_renderer Cairo Rendering Engine
@@ -157,17 +156,3 @@ nsSVGRendererCairo::CreateSurface(PRUint32 width, PRUint32 height,
 {
   return NS_NewSVGCairoSurface(_retval, width, height);
 }
-
-
-/* Component manager stuff */
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSVGRendererCairo)
-
-static const nsModuleComponentInfo gComponents[] = {
-  { "SVG Cairo Renderer",
-    NS_SVG_RENDERER_CAIRO_CID,
-    NS_SVG_RENDERER_CAIRO_CONTRACTID,
-    nsSVGRendererCairoConstructor }
-};
-
-NS_IMPL_NSGETMODULE(nsSVGRendererCairo, gComponents)
