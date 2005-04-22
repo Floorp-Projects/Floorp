@@ -39,6 +39,9 @@
 #ifndef MOZCE_SHUNT_H
 #define MOZCE_SHUNT_H
 
+// This is to silence the #pragma deprecated warnings
+#pragma warning(disable: 4068)
+
 #include "mozce_defs.h"
 
 #include <commdlg.h>
@@ -962,6 +965,21 @@
 #endif
 #define RegQueryValueExA          mozce_RegQueryValueExA
 
+#ifdef RegSetValueExA
+#undef RegSetValueExA
+#endif
+#define RegSetValueExA            mozce_RegSetValueExA
+
+#ifdef RegCreateKeyExA
+#undef RegCreateKeyExA
+#endif
+#define RegCreateKeyExA           mozce_RegCreateKeyExA
+
+#ifdef RegDeleteValueA
+#undef RegDeleteValueA
+#endif
+#define RegDeleteValueA           mozce_RegDeleteValueA
+
 #ifdef RegisterClassA
 #undef RegisterClassA
 #endif
@@ -1327,6 +1345,12 @@ extern "C" {
   MOZCE_SHUNT_API LONG mozce_RegEnumKeyExA(HKEY inKey, DWORD inIndex, LPSTR outName, LPDWORD inoutName, LPDWORD inReserved, LPSTR outClass, LPDWORD inoutClass, PFILETIME inLastWriteTime);
   MOZCE_SHUNT_API LONG mozce_RegOpenKeyExA(HKEY inKey, LPCSTR inSubKey, DWORD inOptions, REGSAM inSAM, PHKEY outResult);
   MOZCE_SHUNT_API LONG mozce_RegQueryValueExA(HKEY inKey, LPCSTR inValueName, LPDWORD inReserved, LPDWORD outType, LPBYTE inoutBData, LPDWORD inoutDData);
+
+  MOZCE_SHUNT_API LONG mozce_RegSetValueExA(HKEY hKey, const char *valname, DWORD dwReserved, DWORD dwType, const BYTE* lpData, DWORD dwSize);
+  MOZCE_SHUNT_API LONG mozce_RegCreateKeyExA(HKEY hKey, const char *subkey, DWORD dwRes, LPSTR lpszClass, DWORD ulOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES sec_att, PHKEY phkResult, DWORD *lpdwDisp);
+
+  MOZCE_SHUNT_API LONG mozce_RegDeleteValueA(HKEY hKey, LPCTSTR lpValueName);
+
   MOZCE_SHUNT_API LRESULT mozce_DefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
   MOZCE_SHUNT_API LRESULT mozce_PostMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
   MOZCE_SHUNT_API LRESULT mozce_SendMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);

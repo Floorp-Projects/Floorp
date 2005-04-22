@@ -405,6 +405,74 @@ MOZCE_SHUNT_API LONG mozce_RegQueryValueExA(HKEY inKey, LPCSTR inValueName, LPDW
     return retval;
 }
 
+
+
+MOZCE_SHUNT_API LONG mozce_RegSetValueExA(HKEY hKey, const char *valname, DWORD dwReserved, DWORD dwType, LPBYTE lpData, DWORD dwSize)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_RegSetValueExA called\n");
+#endif
+
+  wchar_t valnamew[256];
+  LONG res;
+
+  LPBYTE lpDataNew = lpData;
+  DWORD dwDataSize = dwSize;
+
+  MultiByteToWideChar(CP_ACP, 0, valname, -1, valnamew, charcount(valnamew));
+
+  if(dwType == REG_SZ || dwType == REG_EXPAND_SZ)
+  {
+      dwDataSize = dwSize * 2;
+      lpDataNew = (LPBYTE) malloc(dwDataSize);
+      
+      MultiByteToWideChar(CP_ACP, 0, (const char*) lpData, -1, (wchar_t *)lpDataNew, dwDataSize);
+  }
+
+  res = RegSetValueExW(hKey, valnamew, dwReserved, dwType, lpDataNew, dwDataSize);
+
+  free(lpDataNew);
+
+  return res;
+
+}
+
+MOZCE_SHUNT_API LONG mozce_RegCreateKeyExA(HKEY hKey, const char *subkey, DWORD dwRes, LPSTR lpszClass, DWORD ulOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES sec_att, PHKEY phkResult, DWORD *lpdwDisp)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_RegCreateKeyExA called\n");
+#endif
+
+  LPTSTR wName = a2w_malloc(subkey, -1, NULL);
+
+  long res = RegCreateKeyExW(hKey, wName, dwRes, NULL, ulOptions, samDesired, NULL, phkResult, lpdwDisp);
+
+  free(wName);
+  return res;
+}
+
+
+MOZCE_SHUNT_API LONG mozce_RegDeleteValueA(HKEY hKey, LPCSTR lpValueName)
+{
+  MOZCE_PRECHECK
+        
+#ifdef DEBUG
+  mozce_printf("mozce_RegDeleteValueA called\n");
+#endif
+
+  LPTSTR wName = a2w_malloc(lpValueName, -1, NULL);
+  long res = RegDeleteKeyW(hKey, wName);
+  
+  free(wName);
+  return res;
+}
+
+
+
 MOZCE_SHUNT_API int mozce_MessageBoxA(HWND inWnd, LPCSTR inText, LPCSTR inCaption, UINT uType)
 {
     MOZCE_PRECHECK
