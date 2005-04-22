@@ -55,7 +55,7 @@
     </content>
 
     <implementation>
-      <field name="mPixPerMin">1.2</field>
+      <field name="mPixPerMin">0.6</field>
       <field name="mStartMin">8*60</field>
       <field name="mEndMin">20*60</field>
 
@@ -259,7 +259,7 @@
       ]]></constructor>
 
       <!-- fields -->
-      <field name="mPixPerMin">1.2</field>
+      <field name="mPixPerMin">0.6</field>
       <field name="mStartMin">8*60</field>
       <field name="mEndMin">20*60</field>
       <field name="mEvents">new Array()</field>
