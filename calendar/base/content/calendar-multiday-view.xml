@@ -848,7 +848,10 @@
       <xul:box anonid="mainbox" flex="1">
 	<!-- this thing is tricky; its width/height need to be programatically set based on the orientation -->
 	<xul:box anonid="labelbox">
-	  <xul:box anonid="labeltimespacer"/>
+	  <xul:box anonid="labeltimespacer">
+	    <xul:button style="min-width: 10px; padding: 1px; background: red;" label="R"
+             oncommand="var e=this.parentNode.parentNode.parentNode.parentNode; if (e.orient == 'horizontal') e.orient = 'vertical'; else e.orient = 'horizontal';" align="center"/>
+	  </xul:box>
           <xul:box anonid="labeldaybox" flex="1" equalsize="always" />
 	</xul:box>
 	<xul:box anonid="headerbox">
@@ -1103,6 +1106,31 @@
 
       <!-- private -->
 
+      <property name="orient">
+	<getter>return this.getAttribute("orient");</getter>
+	<setter>return this.setAttribute("orient", val);</setter>
+      </property>
+
+      <method name="setAttribute">
+	<parameter name="aAttr"/>
+	<parameter name="aVal"/>
+	<body><![CDATA[
+	  if (aAttr == "orient") {
+              if (this.getAttribute("orient") != aVal)
+                  needsrelayout = true;
+          }
+
+	  // this should be done using lookupMethod(), see bug 286629
+	  var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
+
+          if (needsrelayout) {
+              this.reorient();
+          }
+
+          return ret;
+	]]></body>
+      </method>
+
       <method name="reorient">
 	<body><![CDATA[
           var orient = this.getAttribute("orient");
@@ -1110,6 +1138,11 @@
           if (!orient) orient = "horizontal";
           if (orient == "vertical") otherorient = "horizontal";
 
+          if (orient == "horizontal")
+              this.setPixelsPerMin(1.5);
+          else
+              this.setPixelsPerMin(0.6);
+          
 	  var normalelems = ['mainbox', 'timebar'];
 	  var otherelems = ['labelbox', 'labeldaybox', 'headerbox', 'headerdaybox', 'childbox', 'daybox'];
 
@@ -1351,6 +1384,17 @@
 	]]></body>
       </method>
 
+      <method name="setPixelsPerMin">
+	<parameter name="pixPerMin"/>
+	<body><![CDATA[
+	  var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
+	  timebar.pixelsPerMinute = pixPerMin;
+
+	  for each (col in this.mDateColumns) {
+              col.column.pixelsPerMinute = pixPerMin;
+          }
+	]]></body>
+      </method>
     </implementation>
 
     <handlers>
