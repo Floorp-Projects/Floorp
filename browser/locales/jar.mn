@@ -70,4 +70,4 @@
     locale/branding/brand.dtd         (%chrome/branding/brand.dtd)
     locale/branding/brand.properties  (%chrome/branding/brand.properties)
 #endif
-#includesubst @AB_CD@/extra-jar.mn
+#includesubst @LOCALE_SRCDIR@/extra-jar.mn
