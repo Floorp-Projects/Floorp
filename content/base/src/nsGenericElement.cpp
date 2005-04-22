@@ -3683,7 +3683,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
 {
   NS_PRECONDITION(IsInDoc(), "bad content");
 
-  PRUint32 index;
+  PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
   nsAutoString buf;
