@@ -162,6 +162,7 @@ Feed.prototype =
     var lastModified = this.lastModified;
     if (lastModified)
       this.request.setRequestHeader("If-Modified-Since", lastModified);
+
     this.request.overrideMimeType("text/xml");
     this.request.onload = this.onDownloaded;
     this.request.onerror = this.onDownloadError;
@@ -389,7 +390,7 @@ Feed.prototype =
   // otherwise it triggers a download done notification to the UI
   storeNextItem: function()
   {
-    if (!this.itemsToStore.length)
+    if (!this.itemsToStore ||  !this.itemsToStore.length)
     {
       this.createFolder();
       return this.cleanupParsingState(this);
