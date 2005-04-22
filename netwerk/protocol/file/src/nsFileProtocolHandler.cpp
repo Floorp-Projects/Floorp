@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Rich Walsh <dragtext@e-vertise.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,6 +59,13 @@
 #endif
 #endif
 
+// URL file handling for OS/2
+#ifdef XP_OS2
+#include "prio.h"
+#include "nsIFileURL.h"
+#include "nsILocalFileOS2.h"
+#endif
+
 //-----------------------------------------------------------------------------
 
 nsFileProtocolHandler::nsFileProtocolHandler()
@@ -78,11 +86,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsFileProtocolHandler,
 //-----------------------------------------------------------------------------
 // nsIProtocolHandler methods:
 
+#if defined(XP_WIN)
 NS_IMETHODIMP
 nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
 {
 // IUniformResourceLocator isn't supported by VC5 (bless its little heart)
-#if !defined(XP_WIN) || _MSC_VER < 1200 || defined (WINCE)
+#if _MSC_VER < 1200 || defined (WINCE)
     return NS_ERROR_NOT_AVAILABLE;
 #else
     nsAutoString path;
@@ -131,8 +140,60 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
     }
     return rv;
 
-#endif
+#endif //_MSC_VER < 1200 || defined (WINCE)
 }
+
+#elif defined(XP_OS2)
+NS_IMETHODIMP
+nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsILocalFileOS2> os2File (do_QueryInterface(aFile, &rv));
+    if (NS_FAILED(rv))
+        return NS_ERROR_NOT_AVAILABLE;
+
+    // see if this file is a WPS UrlObject
+    PRBool isUrl;
+    rv = os2File->IsFileType(NS_LITERAL_CSTRING("UniformResourceLocator"),
+                             &isUrl);
+    if (NS_FAILED(rv) || !isUrl)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    // if so, open it & get its size
+    PRFileDesc *file;
+    rv = os2File->OpenNSPRFileDesc(PR_RDONLY, 0, &file);
+    if (NS_FAILED(rv))
+        return NS_ERROR_NOT_AVAILABLE;
+
+    PRInt64 fileSize;
+    os2File->GetFileSize(&fileSize);
+    rv = NS_ERROR_NOT_AVAILABLE;
+
+    // get a buffer, read the entire file, then create
+    // an nsURI;  we assume the string is already escaped
+    char * buffer = (char*)NS_Alloc(fileSize+1);
+    if (buffer) {
+        PRInt32 cnt = PR_Read(file, buffer, fileSize);
+        if (cnt > 0) {
+            buffer[cnt] = '\0';
+            if (NS_SUCCEEDED(NS_NewURI(aURI, nsDependentCString(buffer))))
+                rv = NS_OK;
+        }
+        NS_Free(buffer);
+    }
+    PR_Close(file);
+
+    return rv;
+}
+
+#else // other platforms
+NS_IMETHODIMP
+nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
+{
+    return NS_ERROR_NOT_AVAILABLE;
+}
+#endif // ReadURLFile()
 
 NS_IMETHODIMP
 nsFileProtocolHandler::GetScheme(nsACString &result)
