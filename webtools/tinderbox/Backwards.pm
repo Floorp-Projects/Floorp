@@ -43,8 +43,7 @@ sub new {
 
 # seek to the end of the file
 
-	sysseek( $handle, 0, 2 ) ;
-	$seek_pos = tell( $handle ) ;
+	$seek_pos = sysseek( $handle, 0, 2 ) ;
 
 # get the size of the first block to read,
 # either a trailing partial one (the % size) or full sized one (max read size)
