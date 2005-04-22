@@ -124,7 +124,7 @@ ifneq (,$(filter reporter,$(MOZ_EXTENSIONS)))
 	@$(MAKE) -C ../../extensions/reporter/locales libs AB_CD=$* XPI_NAME=locale-$*
 endif
 ifdef MOZ_USE_OFFICIAL_BRANDING
-	@$(MAKE) -C ../../other-licenses/branding/firefox/locales libs-$*
+	@$(MAKE) -C ../../other-licenses/branding/firefox/locales AB_CD=$* XPI_NAME=locale-$*
 endif
 
 PACKAGER_NO_LIBS = 1
