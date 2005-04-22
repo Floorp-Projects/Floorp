@@ -1673,6 +1673,7 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
     case NS_COMPOSITION_EVENT:
     case NS_RECONVERSION_EVENT:
     case NS_QUERYCARETRECT_EVENT:
+    case NS_SCROLLPORT_EVENT:
       return NS_NewDOMUIEvent(aDOMEvent, aPresContext,
                               NS_STATIC_CAST(nsGUIEvent*,aEvent));
     case NS_KEY_EVENT:
