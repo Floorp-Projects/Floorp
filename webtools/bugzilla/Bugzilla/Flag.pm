@@ -320,9 +320,9 @@ sub validate {
         # - The flag is unchanged
         next if ($status eq $flag->{status});
 
-        # - User in the $request_gid group can clear pending requests
-        next if ($status eq 'X'
-                 && $flag->{status} eq '?'
+        # - User in the $request_gid group can clear pending requests and set flags
+        #   and can rerequest set flags.
+        next if (($status eq 'X' || $status eq '?')
                  && (!$flag->{type}->{request_gid}
                      || $user->in_group(&::GroupIdToName($flag->{type}->{request_gid}))));
 

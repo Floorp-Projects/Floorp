@@ -442,12 +442,10 @@
     [% title = "Flag Modification Denied" %]
     You tried to [% IF status == "+" %] grant [% ELSIF status == "-" %] deny
     [% ELSIF status == "X" %] clear [% ELSE %] request [% END %]
-    <code>[% name FILTER html %]</code>
-    [% IF status == "?" && old_status != "X" %], but this flag is already
-    set[% END %].
-    Only a sufficiently empowered user [% IF status == "X" %] or the user who
-    set <code>[% name FILTER html %][% old_status FILTER html %]</code> in
-    the first place [% END %] can make this change.
+    <code>[% name FILTER html %]
+          [% IF status == "X" %][% old_status FILTER html %][% END %]</code>.
+
+    Only a sufficiently empowered user can make this change.
 
   [% ELSIF error == "format_not_found" %]
     [% title = "Format Not Found" %]
