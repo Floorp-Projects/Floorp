@@ -38,6 +38,9 @@
 #ifndef nspr_os2_defs_h___
 #define nspr_os2_defs_h___
 
+#ifndef NO_LONG_LONG
+#define INCL_LONGLONG
+#endif
 #define INCL_DOS
 #define INCL_DOSPROCESS
 #define INCL_DOSERRORS
@@ -151,7 +154,10 @@ struct _MDSegment {
 
 struct _MDDir {
     HDIR           d_hdl;
-    FILEFINDBUF3  d_entry;
+    union {
+        FILEFINDBUF3  small;
+        FILEFINDBUF3L large;
+    } d_entry;
     PRBool           firstEntry;     /* Is this the entry returned
                                       * by FindFirstFile()? */
     PRUint32         magic;          /* for debugging */
