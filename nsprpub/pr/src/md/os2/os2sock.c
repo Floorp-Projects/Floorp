@@ -64,12 +64,6 @@
 #define _OS2_IOCTL so_ioctl
 #endif
 
-void
-_PR_MD_INIT_IO()
-{
-    sock_init();
-}
-
 /* --- SOCKET IO --------------------------------------------------------- */
 
 
