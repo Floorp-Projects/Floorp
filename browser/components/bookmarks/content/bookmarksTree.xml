@@ -684,7 +684,8 @@
             return false;
 
           var selection = BookmarksUtils.getSelectionFromXferData(dragSession);
-          if (selection.containsImmutable)
+          var isBookmark = dragSession.isDataFlavorSupported("moz/rdfitem");
+          if (isBookmark && selection.containsImmutable)
             return false;
           if (orientation == BookmarksUtils.DROP_ON)
             return true;
