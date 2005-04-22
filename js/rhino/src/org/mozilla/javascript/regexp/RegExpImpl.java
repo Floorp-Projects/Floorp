@@ -324,9 +324,22 @@ public class RegExpImpl implements RegExpProxy {
             }
             args[parenCount+1] = new Integer(reImpl.leftContext.length);
             args[parenCount+2] = rdata.str;
-            Scriptable parent = ScriptableObject.getTopLevelScope(scope);
-            Object result = rdata.lambda.call(cx, parent, parent, args);
-            lambdaStr = ScriptRuntime.toString(result);
+            // This is a hack to prevent expose of reImpl data to
+            // JS function which can run new regexps modifing
+            // regexp that are used later by the engine.
+            // TODO: redesign is necessary
+            if (reImpl != ScriptRuntime.getRegExpProxy(cx)) Kit.codeBug();
+            RegExpImpl re2 = new RegExpImpl();
+            re2.multiline = reImpl.multiline;
+            re2.input = reImpl.input;
+            ScriptRuntime.setRegExpProxy(cx, re2);
+            try {
+                Scriptable parent = ScriptableObject.getTopLevelScope(scope);
+                Object result = rdata.lambda.call(cx, parent, parent, args);
+                lambdaStr = ScriptRuntime.toString(result);
+            } finally {
+                ScriptRuntime.setRegExpProxy(cx, reImpl);
+            }
             replen = lambdaStr.length();
         } else {
             lambdaStr = null;

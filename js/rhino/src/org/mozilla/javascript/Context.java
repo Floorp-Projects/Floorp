@@ -2411,7 +2411,7 @@ public class Context
     private SecurityController securityController;
     private ClassShutter classShutter;
     private ErrorReporter errorReporter;
-    private RegExpProxy regExpProxy;
+    RegExpProxy regExpProxy;
     private Locale locale;
     private boolean generatingDebug;
     private boolean generatingDebugChanged;

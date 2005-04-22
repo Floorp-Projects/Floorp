@@ -3314,6 +3314,12 @@ public class ScriptRuntime {
         return cx.getRegExpProxy();
     }
 
+    public static void setRegExpProxy(Context cx, RegExpProxy proxy)
+    {
+        if (proxy == null) throw new IllegalArgumentException();
+        cx.regExpProxy = proxy;
+    }
+
     public static RegExpProxy checkRegExpProxy(Context cx)
     {
         RegExpProxy result = getRegExpProxy(cx);
