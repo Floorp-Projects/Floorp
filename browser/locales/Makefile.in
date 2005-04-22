@@ -217,5 +217,5 @@ installers-%:
 	@$(MAKE) langpack-$*
 	@$(MAKE) repackage-zip-$*
 ifeq (WINNT,$(OS_ARCH))
-	@$(MAKE) win32-installer-$*
+	@$(MAKE) repackage-win32-installer-$*
 endif
