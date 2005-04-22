@@ -1486,26 +1486,47 @@ nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
         return NS_OK;
     }
 
-    // First, check whether both URIs are nsIFileURLs.  If they are, compare
-    // the nsIFiles, since that will do case things appropriately for the OS
-    // we're running on.
+    // First, check whether one URIs is an nsIFileURL while the other
+    // is not.  If that's the case, they're different.
     if (mSupportsFileURL != other->mSupportsFileURL) {
         *result = PR_FALSE;
         return NS_OK;
     }
 
+    // Next check parts of a URI that, if different, automatically make the
+    // URIs different
+    if (!SegmentIs(mScheme, other->mSpec.get(), other->mScheme) ||
+        // Check for host manually, since conversion to file will
+        // ignore the host!
+        !SegmentIs(mHost, other->mSpec.get(), other->mHost) ||
+        !SegmentIs(mQuery, other->mSpec.get(), other->mQuery) ||
+        !SegmentIs(mRef, other->mSpec.get(), other->mRef) ||
+        !SegmentIs(mUsername, other->mSpec.get(), other->mUsername) ||
+        !SegmentIs(mPassword, other->mSpec.get(), other->mPassword) ||
+        Port() != other->Port() ||
+        !SegmentIs(mParam, other->mSpec.get(), other->mParam)) {
+        // No need to compare files or other URI parts -- these are different
+        // beasties
+        *result = PR_FALSE;
+        return NS_OK;
+    }
+    
+    // Then check for exact identity of URIs.  If we have it, they're equal
+    if (SegmentIs(mDirectory, other->mSpec.get(), other->mDirectory) &&
+        SegmentIs(mBasename, other->mSpec.get(), other->mBasename) &&
+        SegmentIs(mExtension, other->mSpec.get(), other->mExtension)) {
+        *result = PR_TRUE;
+        return NS_OK;
+    }
+
+    // At this point, the URIs are not identical, but they only differ in the
+    // directory/filename/extension.  If these are file URLs, then get the
+    // corresponding file objects and compare those, since two filenames that
+    // differ, eg, only in case could still be equal.
     if (mSupportsFileURL) {
         // Assume not equal for failure cases... but failures in GetFile are
-        // really failures, so propagate them to caller.
+        // really failures, more or less, so propagate them to caller.
         *result = PR_FALSE;
-
-        if (!SegmentIs(mScheme, other->mSpec.get(), other->mScheme) ||
-            !SegmentIs(mRef, other->mSpec.get(), other->mRef) ||
-            !SegmentIs(mParam, other->mSpec.get(), other->mParam) ||
-            !SegmentIs(mQuery, other->mSpec.get(), other->mQuery)) {
-            // No need to compare files -- these are different beasties
-            return NS_OK;
-        }
         
         rv = EnsureFile();
         if (NS_FAILED(rv)) {
@@ -1524,18 +1545,9 @@ nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
         return mFile->Equals(other->mFile, result);
     }
 
-    *result = 
-        SegmentIs(mScheme, other->mSpec.get(), other->mScheme) &&
-        SegmentIs(mDirectory, other->mSpec.get(), other->mDirectory) &&
-        SegmentIs(mBasename, other->mSpec.get(), other->mBasename) &&
-        SegmentIs(mExtension, other->mSpec.get(), other->mExtension) &&
-        SegmentIs(mHost, other->mSpec.get(), other->mHost) &&
-        SegmentIs(mQuery, other->mSpec.get(), other->mQuery) &&
-        SegmentIs(mRef, other->mSpec.get(), other->mRef) &&
-        SegmentIs(mUsername, other->mSpec.get(), other->mUsername) &&
-        SegmentIs(mPassword, other->mSpec.get(), other->mPassword) &&
-        SegmentIs(mParam, other->mSpec.get(), other->mParam) &&
-        (Port() == other->Port());
+    // The URLs are not identical, and they do not correspond to the
+    // same file, so they are different.
+    *result = PR_FALSE;
 
     return NS_OK;
 }
