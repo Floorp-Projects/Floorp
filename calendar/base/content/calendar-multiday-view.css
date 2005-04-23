@@ -98,11 +98,13 @@ calendar-time-bar {
 
 .calendar-time-bar-box-odd {
   border-top: 1px solid #999999;
+  border-left: 1px solid #999999;
   background: #dddddd;
 }
 
 .calendar-time-bar-box-even {
   border-top: 1px solid #999999;
+  border-left: 1px solid #999999;
   background: #dddddd;
 }
 

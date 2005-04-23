@@ -882,6 +882,7 @@
       <!-- array of { date: calIDatetime, col: column item } -->
       <field name="mDateColumns">null</field>
       <field name="mBatchCount">0</field>
+      <field name="mPixPerMin">0.6</field>
 
       <field name="mObserver"><![CDATA[
         // the calIObserver, and calICompositeObserver
@@ -1103,6 +1104,11 @@
            return dates;
 	]]></body>
       </method>
+
+      <property name="pixelsPerMinute">
+	<getter>return this.mPixPerMin</getter>
+	<setter>this.setPixelsPerMin(val); return val;</setter>
+      </property>
 
       <!-- private -->
 
