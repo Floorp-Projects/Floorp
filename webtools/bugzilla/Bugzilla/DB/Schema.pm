@@ -1434,11 +1434,16 @@ sub get_alter_column_ddl {
               $column - The name of the column being changed.
               \%definition - The new definition for the column,
                   in standard C<ABSTRACT_SCHEMA> format.
+              $set_nulls_to - A value to set NULL values to, if
+                  your new definition is NOT NULL and contains
+                  no DEFAULT, and when there is a possibility
+                  that the column could contain NULLs. $set_nulls_to
+                  should be already SQL-quoted if necessary.
  Returns:     An array of SQL statements.
 
 =cut
 
-    my ($self, $table, $column, $new_def) = @_;
+    my ($self, $table, $column, $new_def, $set_nulls_to) = @_;
 
     my @statements;
     my $old_def = $self->get_column_abstract($table, $column);
@@ -1489,10 +1494,17 @@ sub get_alter_column_ddl {
     # If we went from NULL to NOT NULL
     # OR if we changed the type and we are NOT NULL
     if ( (!$old_def->{NOTNULL} && $new_def->{NOTNULL}) ||
-         ($typechange && $new_def->{NOTNULL}) ) {
-        if (exists $new_def->{DEFAULT}) {
-            # Handle any fields that were NULL before, if we have a default.
-            push(@statements, "UPDATE $table SET $column = $default"
+         ($typechange && $new_def->{NOTNULL}) ) 
+    {
+        my $setdefault;
+        # Handle any fields that were NULL before, if we have a default,
+        $setdefault = $new_def->{DEFAULT} if exists $new_def->{DEFAULT};
+        # But if we have a set_nulls_to, that overrides the DEFAULT 
+        # (although nobody would usually specify both a default and 
+        # a set_nulls_to.)
+        $setdefault = $set_nulls_to if defined $set_nulls_to;
+        if (defined $setdefault) {
+            push(@statements, "UPDATE $table SET $column = $setdefault"
                             . "  WHERE $column IS NULL");
         }
         push(@statements, "ALTER TABLE $table ALTER COLUMN $column"

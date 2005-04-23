@@ -151,9 +151,14 @@ sub _get_create_index_ddl {
 
 # MySQL has a simpler ALTER TABLE syntax than ANSI.
 sub get_alter_column_ddl {
-    my ($self, $table, $column, $new_def) = @_;
+    my ($self, $table, $column, $new_def, $set_nulls_to) = @_;
     my $new_ddl = $self->get_type_ddl($new_def);
-    return (("ALTER TABLE $table CHANGE COLUMN $column $column $new_ddl"));
+    my @statements;
+    push(@statements, "UPDATE $table SET $column = $set_nulls_to
+                        WHERE $column IS NULL") if defined $set_nulls_to;
+    push(@statements, "ALTER TABLE $table CHANGE COLUMN 
+                       $column $column $new_ddl");
+    return @statements;
 }
 
 sub get_drop_index_ddl {
@@ -281,6 +286,8 @@ sub column_info_to_column {
 sub get_rename_column_ddl {
     my ($self, $table, $old_name, $new_name) = @_;
     my $def = $self->get_type_ddl($self->get_column($table, $old_name));
+    # MySQL doesn't like having the PRIMARY KEY statement in a rename.
+    $def =~ s/PRIMARY KEY//i;
     return ("ALTER TABLE $table CHANGE COLUMN $old_name $new_name $def");
 }
 

@@ -361,24 +361,29 @@ sub bz_add_column {
 }
 
 sub bz_alter_column {
-    my ($self, $table, $name, $new_def) = @_;
+    my ($self, $table, $name, $new_def, $set_nulls_to) = @_;
 
     my $current_def = $self->bz_column_info($table, $name);
 
     if (!$self->_bz_schema->columns_equal($current_def, $new_def)) {
-        # You can't change a column to be NOT NULL if you have no DEFAULT,
-        # if there are any NULL values in that column.
-        if ($new_def->{NOTNULL} && !exists $new_def->{DEFAULT}) {
+        # You can't change a column to be NOT NULL if you have no DEFAULT
+        # and no value for $set_nulls_to, if there are any NULL values 
+        # in that column.
+        if ($new_def->{NOTNULL} && 
+            !exists $new_def->{DEFAULT} && !defined $set_nulls_to)
+        {
             # Check for NULLs
             my $any_nulls = $self->selectrow_array(
                 "SELECT 1 FROM $table WHERE $name IS NULL");
             if ($any_nulls) {
                 die "You cannot alter the ${table}.${name} column to be"
-                    . " NOT NULL without\nspecifying a default, because"
-                    . " there are NULL values currently in it.";
+                    . " NOT NULL without\nspecifying a default or"
+                    . " something for \$set_nulls_to, because"
+                    . " there are\nNULL values currently in it.";
             }
         }
-        $self->bz_alter_column_raw($table, $name, $new_def, $current_def);
+        $self->bz_alter_column_raw($table, $name, $new_def, $current_def,
+                                   $set_nulls_to);
         $self->_bz_real_schema->set_column($table, $name, $new_def);
         $self->_bz_store_real_schema;
     }
@@ -402,12 +407,15 @@ sub bz_alter_column {
 #              $current_def - (optional) The current definition of the
 #                             column. Will be used in the output message,
 #                             if given.
+#              $set_nulls_to - The same as the param of the same name
+#                              from bz_alter_column.
 # Returns:     nothing
 #
 sub bz_alter_column_raw {
-    my ($self, $table, $name, $new_def, $current_def) = @_;
+    my ($self, $table, $name, $new_def, $current_def, $set_nulls_to) = @_;
     my @statements = $self->_bz_real_schema->get_alter_column_ddl(
-        $table, $name, $new_def);
+        $table, $name, $new_def,
+        defined $set_nulls_to ? $self->quote($set_nulls_to) : undef);
     my $new_ddl = $self->_bz_schema->get_type_ddl($new_def);
     print "Updating column $name in table $table ...\n";
     if (defined $current_def) {
@@ -418,27 +426,13 @@ sub bz_alter_column_raw {
     $self->do($_) foreach (@statements);
 }
 
-
-# XXX - Need to make this cross-db compatible
-# XXX - This shouldn't print stuff to stdout
-sub bz_add_field ($$$) {
-    my ($self, $table, $field, $definition) = @_;
-
-    my $ref = $self->bz_get_field_def($table, $field);
-    return if $ref; # already added?
-
-    print "Adding new field $field to table $table ...\n";
-    $self->do("ALTER TABLE $table
-              ADD COLUMN $field $definition");
-}
-
 sub bz_add_index {
     my ($self, $table, $name, $definition) = @_;
 
     my $index_exists = $self->bz_index_info($table, $name);
 
     if (!$index_exists) {
-        $self->_bz_add_index_raw($table, $name, $definition);
+        $self->bz_add_index_raw($table, $name, $definition);
         $self->_bz_real_schema->set_index($table, $name, $definition);
         $self->_bz_store_real_schema;
     }
@@ -502,31 +496,6 @@ sub _bz_add_table_raw {
     $self->do($_) foreach (@statements);
 }
 
-# XXX - Need to make this cross-db compatible
-# XXX - This shouldn't print stuff to stdout
-sub bz_change_field_type ($$$) {
-    my ($self, $table, $field, $newtype) = @_;
-
-    my $ref = $self->bz_get_field_def($table, $field);
-
-    my $oldtype = $ref->[1];
-    if (! $ref->[2]) {
-        $oldtype .= qq{ not null};
-    }
-    if ($ref->[4]) {
-        $oldtype .= qq{ default "$ref->[4]"};
-    }
-
-    if ($oldtype ne $newtype) {
-        print "Updating field type $field in table $table ...\n";
-        print "old: $oldtype\n";
-        print "new: $newtype\n";
-        $self->do("ALTER TABLE $table
-                  CHANGE $field
-                  $field $newtype");
-    }
-}
-
 sub bz_drop_column {
     my ($self, $table, $column) = @_;
 
@@ -544,26 +513,13 @@ sub bz_drop_column {
     }
 }
 
-# XXX - Need to make this cross-db compatible
-# XXX - This shouldn't print stuff to stdout
-sub bz_drop_field ($$) {
-    my ($self, $table, $field) = @_;
-
-    my $ref = $self->bz_get_field_def($table, $field);
-    return unless $ref; # already dropped?
-
-    print "Deleting unused field $field from table $table ...\n";
-    $self->do("ALTER TABLE $table
-              DROP COLUMN $field");
-}
-
 sub bz_drop_index {
     my ($self, $table, $name) = @_;
 
     my $index_exists = $self->bz_index_info($table, $name);
 
     if ($index_exists) {
-        $self->_bz_drop_index_raw($table, $name);
+        $self->bz_drop_index_raw($table, $name);
         $self->_bz_real_schema->delete_index($table, $name);
         $self->_bz_store_real_schema;        
     }
@@ -607,37 +563,6 @@ sub bz_drop_table {
     }
 }
 
-
-# XXX - Needs to be made cross-db compatible
-sub bz_drop_table_indexes ($) {
-    my ($self, $table) = @_;
-    my %seen;
-
-    # get the list of indexes
-    my $sth = $self->prepare("SHOW INDEX FROM $table");
-    $sth->execute;
-
-    # drop each index
-    while ( my $ref = $sth->fetchrow_arrayref) {
-
-      # note that some indexes are described by multiple rows in the
-      # index table, so we may have already dropped the index described
-      # in the current row.
-      next if exists $seen{$$ref[2]};
-
-      if ($$ref[2] eq 'PRIMARY') {
-          # The syntax for dropping a PRIMARY KEY is different
-          # from the normal DROP INDEX syntax.
-          $self->do("ALTER TABLE $table DROP PRIMARY KEY");
-      }
-      else {
-          $self->do("ALTER TABLE $table DROP INDEX $$ref[2]");
-      }
-      $seen{$$ref[2]} = 1;
-
-    }
-}
-
 sub bz_rename_column {
     my ($self, $table, $old_name, $new_name) = @_;
 
@@ -657,24 +582,6 @@ sub bz_rename_column {
         }
         $self->_bz_real_schema->rename_column($table, $old_name, $new_name);
         $self->_bz_store_real_schema;
-    }
-}
-
-# XXX - Needs to be made cross-db compatible
-sub bz_rename_field ($$$) {
-    my ($self, $table, $field, $newname) = @_;
-
-    my $ref = $self->bz_get_field_def($table, $field);
-    return unless $ref; # already renamed?
-
-    if ($$ref[1] ne $newname) {
-        print "Updating field $field in table $table ...\n";
-        my $type = $$ref[1];
-        $type .= " NOT NULL" if !$$ref[2];
-        $type .= " auto_increment" if $$ref[5] =~ /auto_increment/;
-        $self->do("ALTER TABLE $table
-                  CHANGE $field
-                  $newname $type");
     }
 }
 
@@ -726,69 +633,9 @@ sub bz_table_info {
 }
 
 
-# XXX - Needs to be made cross-db compatible.
-sub bz_get_field_def ($$) {
-    my ($self, $table, $field) = @_;
-
-    if ($self->bz_table_exists($table)) {
-
-        my $sth = $self->prepare("SHOW COLUMNS FROM $table");
-        $sth->execute;
-
-        while (my $ref = $sth->fetchrow_arrayref) {
-            next if $$ref[0] ne $field;
-            return $ref;
-        }
-    }
-    return undef;
-}
-
-# XXX - Needs to be made cross-db compatible
-sub bz_get_index_count ($) {
-    my ($self, $table) = @_;
-
-    my $sth = $self->prepare("SHOW INDEX FROM $table");
-    $sth->execute;
-
-    if ( $sth->rows == -1 ) {
-      die ("Unexpected response while counting indexes in $table:" .
-           " \$sth->rows == -1");
-    }
-
-    return ($sth->rows);
-}
-
-# XXX - Needs to be made cross-db compatible.
-sub bz_get_index_def ($$) {
-    my ($self, $table, $field) = @_;
-    my $sth = $self->prepare("SHOW INDEX FROM $table");
-    $sth->execute;
-
-    while (my $ref = $sth->fetchrow_arrayref) {
-        next if $$ref[4] ne $field;
-        return $ref;
-   }
-}
-
-# XXX - Should be updated to use _bz_real_schema when we have that,
-#       if we ever need it.
 sub bz_table_columns {
     my ($self, $table) = @_;
     return $self->_bz_schema->get_table_columns($table);
-}
-
-# XXX - Needs to be made cross-db compatible
-sub bz_table_exists ($) {
-   my ($self, $table) = @_;
-   my $exists = 0;
-   my $sth = $self->prepare("SHOW TABLES");
-   $sth->execute;
-   while (my ($dbtable) = $sth->fetchrow_array ) {
-      if ($dbtable eq $table) {
-         $exists = 1;
-      }
-   }
-   return $exists;
 }
 
 #####################################################################
@@ -1046,26 +893,16 @@ Bugzilla::DB - Database access routines, using L<DBI>
   $dbh->bz_add_table($name);
   $dbh->bz_drop_index($table, $name);
   $dbh->bz_drop_table($name);
-  $dbh->bz_alter_column($table, $name, \%new_def);
+  $dbh->bz_alter_column($table, $name, \%new_def, $set_nulls_to);
   $dbh->bz_drop_column($table, $column);
   $dbh->bz_rename_column($table, $old_name, $new_name);
-
-  # Schema Modification (DEPRECATED)
-  $dbh->bz_add_field($table, $column, $definition);
-  $dbh->bz_change_field_type($table, $column, $newtype);
-  $dbh->bz_drop_field($table, $column);
-  $dbh->bz_drop_table_indexes($table);
-  $dbh->bz_rename_field($table, $column, $newname);
 
   # Schema Information
   my $column = $dbh->bz_column_info($table, $column);
   my $index  = $dbh->bz_index_info($table, $index);
 
-  # Schema Information (DEPRECATED)
+  # General Information
   my @fields    = $dbh->bz_get_field_defs();
-  my @fieldinfo = $dbh->bz_get_field_def($table, $column);
-  my @indexinfo = $dbh->bz_get_index_def($table, $field);
-  my $exists    = $dbh->bz_table_exists($table);
 
 =head1 DESCRIPTION
 
@@ -1412,7 +1249,7 @@ C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
  Params:      $name - The name of the table to drop.
  Returns:     nothing
 
-=item C<bz_alter_column($table, $name, \%new_def)>
+=item C<bz_alter_column($table, $name, \%new_def, $set_nulls_to)>
 
  Description: Changes the data type of a column in a table. Prints out
               the changes being made to stdout. If the new type is the
@@ -1422,6 +1259,11 @@ C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
               $name    = the name of the column you want to change
               $new_def = An abstract column definition for the new 
                          data type of the columm
+              $set_nulls_to = (Optional) If you are changing the column
+                              to be NOT NULL, you probably also want to
+                              set any existing NULL columns to a particular
+                              value. Specify that value here. 
+                              NOTE: The value should not already be SQL-quoted.
  Returns:     nothing
 
 =item C<bz_drop_column($table, $column)>
@@ -1445,61 +1287,6 @@ C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
                           you want to rename
               $new_name = The new name of the column
  Returns:     nothing
-
-=back
-
-
-=head2 Deprecated Schema Modification Methods
-
-These methods modify the current Bugzilla schema, for MySQL only. 
-Do not use them in new code.
-
-=over 4
-
-=item C<bz_add_field>
-
- Description: Adds a new column to a table in the database. Prints out
-              a brief statement that it did so, to stdout.
- Params:      $table = the table where the column is being added
-              $column = the name of the new column
-              $definition = SQL for defining the new column
- Returns:     none
-
-=item C<bz_change_field_type>
-
- Description: Changes the data type of a column in a table. Prints out 
-              the changes being made to stdout. If the new type is the 
-              same as the old type, the function returns without changing
-              anything.
- Params:      $table = the table where the column is
-              $column = the name of the column you want to change
-              $newtype = the new data type of the column, in SQL format.
- Returns:     none
-
-=item C<bz_drop_field>
-
- Description: Removes a column from a database table. If the column 
-              doesn't exist, we return without doing anything. If we do
-              anything, we print a short message to stdout about the change.
- Params:      $table = The table where the column is
-              $column = The name of the column you want to drop
- Returns:     none
-
-=item C<bz_drop_table_indexes>
-
- Description: Drops all indexes on a given table.
- Params:      $table = the table on which you wish to remove all indexes
- Returns:     none
-
-=item C<bz_rename_field>
-
- Description: Renames a column in a database table. If the column 
-              doesn't exist, or if the new name is the same as the 
-              old name, we return without changing anything.
- Params:      $table = the table where the column is that you want to rename
-              $column = the name of the column you want to rename
-              $newname = the new name of the column
- Returns:     none
 
 =back
 
@@ -1550,53 +1337,6 @@ MySQL only.
               contains hashes, with a 'name' key and a 'description' key.
  Params:      none
  Returns:     List of all the "bug" fields
-
-=item C<bz_get_field_def>
-
- Description: Returns information about a column in a table in the database.
- Params:      $table = name of table containing the column (scalar)
-              $column = column you want info about (scalar)
- Returns:     An reference to an array containing information about the
-              field, with the following information in each array place:
-              0 = column name
-              1 = column type
-              2 = 'YES' if the column can be NULL, empty string otherwise
-              3 = The type of key, either 'MUL', 'UNI', 'PRI, or ''.
-              4 = The default value
-              5 = An "extra" column, per MySQL docs. Don't use it.
-              If the column does not exist, the function returns undef.
-
-=item C<bz_get_index_count>
-
- Description: Returns the number of indexes on a certain table.
- Params:      $table = the table that you want to count indexes on
- Returns:     The number of indexes on the table.
-
-=item C<bz_get_index_def($table, $field)>
-
- Description: Returns information about an index on a table in the database.
- Params:      $table = name of table containing the index (scalar)
-              $field = name of a field that the index is on (scalar)
- Returns:     A reference to an array containing information about the
-              index, with the following information in each array place:
-              0 = name of the table that the index is on
-              1 = 0 if unique, 1 if not unique
-              2 = name of the index
-              3 = seq_in_index (either 1 or 0)
-              4 = Name of ONE column that the index is on
-              5 = 'Collation' of the index. Usually 'A'.
-              6 = Cardinality. Either a number or undef.
-              7 = sub_part. Usually undef. Sometimes 1.
-              8 = "packed". Usually undef.
-              9 = comments. Usually an empty string. Sometimes 'FULLTEXT'.
-              If the index does not exist, the function returns undef.
-
-=item C<bz_table_exists>
-
- Description: Returns whether or not the specified table exists in the DB.
- Params:      $table = the name of the table you're checking the existence
-                       of (scalar)
- Returns:     A true value if the table exists, a false value otherwise.
 
 =head2 Transaction Methods
 

@@ -359,7 +359,7 @@ sub bz_setup_database {
                     # Fix the name to fit in with the new naming scheme.
                     my $new_name = $table . "_" .
                                    $index->{FIELDS}->[0] . "_idx";
-                    print "Renaming index $column to to $new_name...\n";
+                    print "Renaming index $column to $new_name...\n";
                     # Unfortunately, MySQL has no way to rename an index. :-(
                     # So we have to drop and recreate the indexes.
                     $self->bz_drop_index_raw($table, $column, "silent");
@@ -370,6 +370,11 @@ sub bz_setup_database {
         } # foreach table
     } # if old-name indexes
 
+
+    # And now we create the tables and the Schema object.
+    $self->SUPER::bz_setup_database();
+
+
     # The old timestamp fields need to be adjusted here instead of in
     # checksetup. Otherwise the UPDATE statements inside of bz_add_column
     # will cause accidental timestamp updates.
@@ -378,8 +383,8 @@ sub bz_setup_database {
     # 2002-08-14 - bbaetz@student.usyd.edu.au - bug 153578
     # attachments creation time needs to be a datetime, not a timestamp
     my $attach_creation = 
-        $self->bz_get_field_def("attachments", "creation_ts");
-    if ($attach_creation && $attach_creation->[1] =~ /^timestamp/) {
+        $self->bz_column_info("attachments", "creation_ts");
+    if ($attach_creation && $attach_creation->{TYPE} =~ /^TIMESTAMP/i) {
         print "Fixing creation time on attachments...\n";
 
         my $sth = $self->prepare("SELECT COUNT(attach_id) FROM attachments");
@@ -424,26 +429,26 @@ sub bz_setup_database {
         }
         print "Done - converted $i attachments\n";
 
-        $self->bz_change_field_type("attachments", "creation_ts", 
-            'datetime NOT NULL');
+        $self->bz_alter_column("attachments", "creation_ts", 
+                               {TYPE => 'DATETIME', NOTNULL => 1});
     }
 
     # 2004-08-29 - Tomas.Kopal@altap.cz, bug 257303
     # Change logincookies.lastused type from timestamp to datetime
-    my $login_lastused = $self->bz_get_field_def("logincookies", "lastused");
-    if ($login_lastused && $login_lastused->[1] =~ /^timestamp/) {
-        $self->bz_change_field_type('logincookies', 'lastused', 
-                                    'DATETIME NOT NULL');
+    my $login_lastused = $self->bz_column_info("logincookies", "lastused");
+    if ($login_lastused && $login_lastused->{TYPE} =~ /^TIMESTAMP/i) {
+        $self->bz_alter_column('logincookies', 'lastused', 
+                               { TYPE => 'DATETIME',  NOTNULL => 1});
     }
 
     # 2005-01-17 - Tomas.Kopal@altap.cz, bug 257315
     # Change bugs.delta_ts type from timestamp to datetime 
-    my $bugs_deltats = $self->bz_get_field_def("bugs", "delta_ts");
-    if ($bugs_deltats && $bugs_deltats->[1] =~ /^timestamp/) {
-        $self->bz_change_field_type('bugs', 'delta_ts', 'DATETIME NOT NULL');
+    my $bugs_deltats = $self->bz_column_info("bugs", "delta_ts");
+    if ($bugs_deltats && $bugs_deltats->{TYPE} =~ /^TIMESTAMP/i) {
+        $self->bz_alter_column('bugs', 'delta_ts', 
+                               {TYPE => 'DATETIME', NOTNULL => 1});
     }
 
-    $self->SUPER::bz_setup_database();
 }
 
 
