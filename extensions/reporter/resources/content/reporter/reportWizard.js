@@ -60,21 +60,6 @@ var gFaultCode;
 var gFaultMessage;
 var gSOAPerror = false;
 
-function product(){
-  // only works on > 1.7.5.  Sorry SeaMonkey of old
-  if ('nsIChromeRegistrySea' in Components.interfaces) {
-    return 'SeaMonkey/'+
-    Components.classes['@mozilla.org/network/io-service;1']
-              .getService(Components.interfaces.nsIIOService)
-              .getProtocolHandler('http')
-              .QueryInterface(Components.interfaces.nsIHttpProtocolHandler).misc.substring(3);
-  }
-  else {
-    return navigator.vendor+'/'+navigator.vendorSub;
-  }
-}
-
-
 function initPrivacyNotice(){
   // If they agreed, we continue on
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
@@ -90,7 +75,6 @@ function initPrivacyNotice(){
   // Don't let users rewind, and default to checked.
   document.getElementById('reportWizard').canRewind= false;
   document.getElementById("dontShowPrivacyStatement").setAttribute("checked", "true");
-  document.getElementById('mustagree').collapsed = true;  // only shown if checkbox is unchecked.
 
   // Load Privacy Policy
   var strbundle=document.getElementById("strings");
@@ -98,88 +82,23 @@ function initPrivacyNotice(){
 }
 
 function privacyPolicyCheckbox(){
-  var showDetail = makeIntBool(document.getElementById('dontShowPrivacyStatement').checked);
-  if (showDetail){
+  if (document.getElementById('dontShowPrivacyStatement').checked){
     // hide message and enable forward button
     document.getElementById('reportWizard').canAdvance= true;
-    document.getElementById('mustagree').collapsed = true;
   } else {
     // show message, and disable forward button
     document.getElementById('reportWizard').canAdvance= false;
-    document.getElementById('mustagree').collapsed = false;
   }
 }
 
 function setPrivacyPref(){
-  var dontShowPrivacyStatement = makeIntBool(document.getElementById('dontShowPrivacyStatement').checked);
-
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefService)
                    	.getBranch("extensions.reporter.");
 
-  if (dontShowPrivacyStatement){
+  if (document.getElementById('dontShowPrivacyStatement').checked){
     prefs.setBoolPref("hidePrivacyStatement", true);
   }
-}
-
-function initRegistration(){
-  // if the user already registered, they can skip this page, otherwise they need to do so
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                           getService(Components.interfaces.nsIPrefService).
-                     	   getBranch("extensions.reporter.");
-  try
-  {
-    if (prefs.getPrefType("sysid") == prefs.PREF_STRING)
-    {
-      var sysid = prefs.getCharPref("sysid");
-      if (sysid.length == 10)
-      {
-      	document.getElementById('reportWizard').advance();
-        return;
-      }
-    }
-  }
-  catch (e) {}
-
-  // XXX sigh... we should let the user go back, but yea, see what initPrivacyNotice() does to see why that's a loopy idea ;-)
-  document.getElementById('reportWizard').canRewind= false;
-  document.getElementById('reportWizard').canAdvance= false;
-}
-
-function register(){
-  var param = new Array();;
-  param[0] = new SOAPParameter(gLanguage,"language");
-
-  var strbundle=document.getElementById("strings");
-  var submitResult = document.getElementById('registrationProgressDescription');
-  var meter = document.getElementById('registrationProgressIndicator');
-
-  // get sysID
-  meter.setAttribute("value","1%");
-  submitResult.setAttribute("value",strbundle.getString("registerSendingRequest")); // Sending Request
-  callReporter("register",param,setValSysID);
-  meter.setAttribute("value","90%");
-
-  // saving
-  submitResult.setAttribute("value",strbundle.getString("registerSavingID")); // Saving ID
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefService)
-                     	.getBranch("extensions.reporter.");
-
-  if (gSysID != undefined){
-    prefs.setCharPref("sysid", gSysID);
-  } else {
-    submitResult.setAttribute("value",strbundle.getString("registerSavingFailed")); // Failed
-    return;
-  }
-
-  // success
-  meter.setAttribute("value","100%");
-  submitResult.setAttribute("value",strbundle.getString("registerSuccess")); // Success
-  document.getElementById('registerButton').disabled = true;
-
-  // user can now go forward
-  document.getElementById('reportWizard').canAdvance= true;
 }
 
 function initForm(){
@@ -198,6 +117,46 @@ function validateForm() {
     document.getElementById('reportWizard').canAdvance= false;
 }
 
+function registerSysID(){
+  var param = new Array();;
+  param[0] = new SOAPParameter(gLanguage,"language");
+
+  // get sysID
+  callReporter("register",param,setValSysID);
+
+  // saving
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService)
+                     	.getBranch("extensions.reporter.");
+
+  if (gSysID != undefined){
+    prefs.setCharPref("sysid", gSysID);
+      alert("new sysid: "+gSysID);
+    return gSysID;
+  } else {
+    return;
+  }
+}
+
+function getSysID() {
+  // SysID
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService)
+                     	.getBranch("extensions.reporter.");
+  try
+  {
+    if (prefs.getPrefType("sysid") == prefs.PREF_STRING && prefs.getCharPref("sysid") != "")
+    {
+      alert("using sysid: "+prefs.getCharPref("sysid"));
+      return prefs.getCharPref("sysid");
+    }
+    else {
+      return registerSysID();
+    }
+  }
+  catch (e) {}
+}
+
 function sendReport(){
   // we control the user path from here.
   document.getElementById('reportWizard').canRewind = false;
@@ -212,23 +171,12 @@ function sendReport(){
   // Data from form we need
   var descriptionStri = document.getElementById('description').value;
   var problemTypeStri = document.getElementById('problem_type').value;
-  var behindLoginStri = makeIntBool(document.getElementById('behind_login').checked);
+  var behindLoginStri = document.getElementById('behind_login').checked;
   var emailStri = document.getElementById('email').value;
 
   var buildConfig = getBuildConfig();
 
-  // SysID
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefService)
-                     	.getBranch("extensions.reporter.");
-  try
-  {
-    if (prefs.getPrefType("sysid") == prefs.PREF_STRING)
-    {
-      var sysid = prefs.getCharPref("sysid");
-    }
-  }
-  catch (e) {}
+  var sysid = getSysID()
   // SOAP params
   var param = new Array();
   param[0] = new SOAPParameter(gRMOvers,"rmoVers");
@@ -306,8 +254,7 @@ function sendReport(){
 }
 
 function showdetail(){
-  var showDetail = makeIntBool(document.getElementById('showDetail').checked);
-  if (showDetail){
+  if (document.getElementById('showDetail').checked){
     document.getElementById('finishExtendedFrame').collapsed = false;
   } else {
     document.getElementById('finishExtendedFrame').collapsed = true;
@@ -347,13 +294,6 @@ function getBuildConfig() {
   } catch(ex) {
     alert(ex);
   }
-}
-
-function makeIntBool(boolStr){
-  if (boolStr)
-    return 1;
-  else
-    return 0;
 }
 
 /*  NEW WEB SERVICE MODULE */
@@ -409,3 +349,18 @@ function setValReportID(results)
     gReportID = params[i].value;
   }
 }
+
+function product(){
+  // only works on > 1.7.5.  Sorry SeaMonkey of old
+  if ('nsIChromeRegistrySea' in Components.interfaces) {
+    return 'SeaMonkey/'+
+    Components.classes['@mozilla.org/network/io-service;1']
+              .getService(Components.interfaces.nsIIOService)
+              .getProtocolHandler('http')
+              .QueryInterface(Components.interfaces.nsIHttpProtocolHandler).misc.substring(3);
+  }
+  else {
+    return navigator.vendor+'/'+navigator.vendorSub;
+  }
+}
+
