@@ -268,7 +268,7 @@ CERT_FinishCertificateRequestAttributes(CERTCertificateRequest *req)
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
-    if (req->attributes == NULL)
+    if (req->attributes == NULL || req->attributes[0] == NULL)
         return SECSuccess;
 
     extlist = SEC_ASN1EncodeItem(req->arena, NULL, &req->attributes,
