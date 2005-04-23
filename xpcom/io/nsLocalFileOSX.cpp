@@ -41,6 +41,7 @@
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsIDirectoryEnumerator.h"
 #include "nsISimpleEnumerator.h"
 #include "nsITimelineService.h"
 #include "nsVoidArray.h"
@@ -116,7 +117,8 @@ class StFollowLinksState
 #pragma mark -
 #pragma mark [nsDirEnumerator]
 
-class nsDirEnumerator : public nsISimpleEnumerator
+class nsDirEnumerator : public nsISimpleEnumerator,
+                        public nsIDirectoryEnumerator
 {
     public:
 
@@ -185,6 +187,8 @@ class nsDirEnumerator : public nsISimpleEnumerator
             } 
           }
           *result = mNext != nsnull;
+          if (!*result)
+            Close();
           return NS_OK;
         }
 
@@ -205,13 +209,36 @@ class nsDirEnumerator : public nsISimpleEnumerator
             return NS_OK;
         }
 
+        NS_IMETHOD GetNextFile(nsIFile **result)
+        {
+            *result = nsnull;
+            PRBool hasMore = PR_FALSE;
+            nsresult rv = HasMoreElements(&hasMore);
+            if (NS_FAILED(rv) || !hasMore)
+                return rv;
+            *result = mNext;
+            NS_IF_ADDREF(*result);
+            mNext = nsnull;
+            return NS_OK;
+        }
+
+        NS_IMETHOD Close()
+        {
+          if (mIterator) {
+            ::FSCloseIterator(mIterator);
+            mIterator = nsnull;
+          }
+          if (mFSRefsArray) {
+            nsMemory::Free(mFSRefsArray);
+            mFSRefsArray = nsnull;
+          }
+          return NS_OK;
+        }
+
     private:
         ~nsDirEnumerator() 
         {
-          if (mIterator)
-            ::FSCloseIterator(mIterator);
-          if (mFSRefsArray)
-            nsMemory::Free(mFSRefsArray);
+          Close();
         }
 
     protected:
@@ -228,7 +255,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
         PRInt32                 mArrayCnt, mArrayIndex;
 };
 
-NS_IMPL_ISUPPORTS1(nsDirEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS2(nsDirEnumerator, nsISimpleEnumerator, nsIDirectoryEnumerator)
 
 #pragma mark -
 #pragma mark [StAEDesc]

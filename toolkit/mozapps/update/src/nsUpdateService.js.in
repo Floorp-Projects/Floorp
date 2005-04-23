@@ -962,50 +962,50 @@ function UpdateItem ()
 UpdateItem.prototype = {
   init: function UpdateItem_init (aID, 
                                   aVersion, 
+                                  aInstallLocationKey,
                                   aMinAppVersion, 
                                   aMaxAppVersion, 
                                   aName, 
-                                  aRow, 
                                   aXPIURL, 
                                   aIconURL, 
                                   aUpdateRDF, 
                                   aType)
   {
-    this._id            = aID;
-    this._version       = aVersion;
-    this._minAppVersion = aMinAppVersion;
-    this._maxAppVersion = aMaxAppVersion;
-    this._name          = aName;
-    this._row           = aRow;
-    this._xpiURL        = aXPIURL;
-    this._iconURL       = aIconURL;
-    this._updateRDF     = aUpdateRDF;
-    this._type          = aType;
+    this._id                  = aID;
+    this._version             = aVersion;
+    this._installLocationKey  = aInstallLocationKey;
+    this._minAppVersion       = aMinAppVersion;
+    this._maxAppVersion       = aMaxAppVersion;
+    this._name                = aName;
+    this._xpiURL              = aXPIURL;
+    this._iconURL             = aIconURL;
+    this._updateRDF           = aUpdateRDF;
+    this._type                = aType;
   },
   
-  get id()            { return this._id;            },
-  get version()       { return this._version;       },
-  get minAppVersion() { return this._minAppVersion; },
-  get maxAppVersion() { return this._maxAppVersion; },
-  get name()          { return this._name;          },
-  get row()           { return this._row;           },
-  get xpiURL()        { return this._xpiURL;        },
-  get iconURL()       { return this._iconURL        },
-  get updateRDF()     { return this._updateRDF;     },
-  get type()          { return this._type;          },
+  get id()                { return this._id;                },
+  get version()           { return this._version;           },
+  get installLocationKey(){ return this._installLocationKey;},
+  get minAppVersion()     { return this._minAppVersion;     },
+  get maxAppVersion()     { return this._maxAppVersion;     },
+  get name()              { return this._name;              },
+  get xpiURL()            { return this._xpiURL;            },
+  get iconURL()           { return this._iconURL            },
+  get updateRDF()         { return this._updateRDF;         },
+  get type()              { return this._type;              },
 
   get objectSource()
   {
-    return { id             : this._id, 
-             version        : this._version, 
-             minAppVersion  : this._minAppVersion,
-             maxAppVersion  : this._maxAppVersion,
-             name           : this._name, 
-             row            : this._row, 
-             xpiURL         : this._xpiURL, 
-             iconURL        : this._iconURL, 
-             updateRDF      : this._updateRDF,
-             type           : this._type 
+    return { id                 : this._id, 
+             version            : this._version, 
+             installLocationKey : this._installLocationKey,
+             minAppVersion      : this._minAppVersion,
+             maxAppVersion      : this._maxAppVersion,
+             name               : this._name, 
+             xpiURL             : this._xpiURL, 
+             iconURL            : this._iconURL, 
+             updateRDF          : this._updateRDF,
+             type               : this._type 
            }.toSource();
   },
 
@@ -1148,20 +1148,7 @@ nsVersionChecker.prototype = {
   
   isValidVersion: function nsVersionChecker_isValidVersion (aVersion)
   {
-    var parts = aVersion.split(".");
-    if (parts.length == 0)
-      return false;
-    for (var i = 0; i < parts.length; ++i) {
-      var part = parts[i];
-      if (i == parts.length - 1) {
-        if (part.lastIndexOf("+") != -1) 
-          parts[i] = part.substr(0, part.length - 1);
-      }
-      var integer = parseInt(part);
-      if (isNaN(integer))
-        return false;
-    }
-    return true;
+    return /^([0-9]\.){1,3}[0-9]\+?$/.test(aVersion);
   },
 
   /////////////////////////////////////////////////////////////////////////////

@@ -505,7 +505,8 @@ extern "C" void RunInstallOnThread(void *data)
             nsIExtensionManager* em = installInfo->GetExtensionManager();
             if (em)
             {
-                rv = em->InstallExtension(jarpath, nsIExtensionManager::FLAG_INSTALL_PROFILE);
+                rv = em->InstallItemFromFile(jarpath, 
+                                             NS_INSTALL_LOCATION_APPPROFILE);
                 if (NS_FAILED(rv))
                     finalStatus = nsInstall::EXECUTION_ERROR;
             } else {
@@ -660,7 +661,8 @@ extern "C" void RunChromeInstallOnThread(void *data)
                 rv = hZip->Test("install.rdf");
                 nsIExtensionManager* em = info->GetExtensionManager();
                 if (NS_SUCCEEDED(rv) && em) {
-                    rv = em->InstallTheme(info->GetFile(), nsIExtensionManager::FLAG_INSTALL_PROFILE);
+                    rv = em->InstallItemFromFile(info->GetFile(), 
+                                                 NS_INSTALL_LOCATION_APPPROFILE);
                     if (NS_SUCCEEDED(rv)) {
                         installed = PR_TRUE;
                         info->GetFile()->Remove(PR_FALSE);

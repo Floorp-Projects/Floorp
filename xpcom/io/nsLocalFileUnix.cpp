@@ -78,6 +78,7 @@
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
 #include "prproces.h"
+#include "nsIDirectoryEnumerator.h"
 #include "nsISimpleEnumerator.h"
 #include "nsITimelineService.h"
 
@@ -110,7 +111,8 @@
 
 /* directory enumerator */
 class NS_COM
-nsDirEnumeratorUnix : public nsISimpleEnumerator
+nsDirEnumeratorUnix : public nsISimpleEnumerator,
+                      public nsIDirectoryEnumerator
 {
     public:
     nsDirEnumeratorUnix();
@@ -120,6 +122,9 @@ nsDirEnumeratorUnix : public nsISimpleEnumerator
 
     // nsISimpleEnumerator interface
     NS_DECL_NSISIMPLEENUMERATOR
+
+    // nsIDirectoryEnumerator interface
+    NS_DECL_NSIDIRECTORYENUMERATOR
 
     NS_IMETHOD Init(nsLocalFile *parent, PRBool ignored);
 
@@ -142,11 +147,10 @@ nsDirEnumeratorUnix::nsDirEnumeratorUnix() :
 
 nsDirEnumeratorUnix::~nsDirEnumeratorUnix()
 {
-    if (mDir)
-        closedir(mDir);
+    Close();
 }
 
-NS_IMPL_ISUPPORTS1(nsDirEnumeratorUnix, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS2(nsDirEnumeratorUnix, nsISimpleEnumerator, nsIDirectoryEnumerator)
 
 NS_IMETHODIMP
 nsDirEnumeratorUnix::Init(nsLocalFile *parent, PRBool resolveSymlinks /*ignored*/)
@@ -170,29 +174,20 @@ NS_IMETHODIMP
 nsDirEnumeratorUnix::HasMoreElements(PRBool *result)
 {
     *result = mDir && mEntry;
+    if (!*result)
+        Close();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDirEnumeratorUnix::GetNext(nsISupports **_retval)
 {
-    nsresult rv;
-    if (!mDir || !mEntry) {
-        *_retval = nsnull;
-        return NS_OK;
-    }
-
-    nsLocalFile* file = new nsLocalFile();
-    if (!file)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (NS_FAILED(rv = file->InitWithNativePath(mParentPath)) ||
-        NS_FAILED(rv = file->AppendNative(nsDependentCString(mEntry->d_name)))) {
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = GetNextFile(getter_AddRefs(file));
+    if (NS_FAILED(rv))
         return rv;
-    }
-    *_retval = NS_STATIC_CAST(nsISupports *, file);
-    NS_ADDREF(*_retval);
-    return GetNextEntry();
+    NS_IF_ADDREF(*_retval = file);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -211,6 +206,39 @@ nsDirEnumeratorUnix::GetNextEntry()
             (mEntry->d_name[1] == '\0'    ||   // .\0
             (mEntry->d_name[1] == '.'     &&
             mEntry->d_name[2] == '\0')));      // ..\0
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDirEnumeratorUnix::GetNextFile(nsIFile **_retval)
+{
+    nsresult rv;
+    if (!mDir || !mEntry) {
+        *_retval = nsnull;
+        return NS_OK;
+    }
+
+    nsLocalFile* file = new nsLocalFile();
+    if (!file)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (NS_FAILED(rv = file->InitWithNativePath(mParentPath)) ||
+        NS_FAILED(rv = file->AppendNative(nsDependentCString(mEntry->d_name)))) {
+        delete file;
+        return rv;
+    }
+    *_retval = file;
+    NS_ADDREF(*_retval);
+    return GetNextEntry();
+}
+
+NS_IMETHODIMP 
+nsDirEnumeratorUnix::Close()
+{
+    if (mDir) {
+        closedir(mDir);
+        mDir = nsnull;
+    }
     return NS_OK;
 }
 

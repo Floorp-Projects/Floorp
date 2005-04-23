@@ -41,54 +41,106 @@
 
 interface nsIDOMWindowInternal;
 
-[scriptable, uuid(37648f86-0f77-4007-929e-673a75d5438f)]
+/**
+ * An item managed by the Extension or Software Update System. Contains
+ * metadata that describes the item.
+ */
+[scriptable, uuid(415edb0a-4f2d-485c-9e10-f262b065ab33)]
 interface nsIUpdateItem : nsISupports
 {
-  readonly attribute string   id;
-  readonly attribute string   version;
-  readonly attribute string   minAppVersion;
-  readonly attribute string   maxAppVersion;
-  readonly attribute wstring  name;
-  readonly attribute long     row;
-  readonly attribute wstring  xpiURL;
-  readonly attribute wstring  iconURL;
-  readonly attribute wstring  updateRDF;
+  /**
+   * The GUID of the item.
+   */
+  readonly attribute AString  id;
+
+  /**
+   * The Version of the item, in FVF format.
+   */
+  readonly attribute AString  version;
+
+  /**
+   * The minimum version of the application that this item works with, 
+   * in FVF format.
+   */
+  readonly attribute AString  minAppVersion;
+
+  /**
+   * The maximum version of the application that this item works with,
+   * in FVF format.
+   */
+  readonly attribute AString  maxAppVersion;
+
+  /**
+   * The name of the Install Location where this item is installed.
+   */
+  readonly attribute AString  installLocationKey;
+
+  /**
+   * The name of this item.
+   */
+  readonly attribute AString  name;
+
+  /**
+   * The URL of the XPI where this item can be downloaded.
+   */
+  readonly attribute AString  xpiURL;
+
+  /**
+   * The URL of the icon that can be shown for this item.
+   */
+  readonly attribute AString  iconURL;
+
+  /**
+   * The URL of the update RDF file for this item.
+   */
+  readonly attribute AString  updateRDF;
   
-  const unsigned short TYPE_APP         = 0x01;
-  const unsigned short TYPE_EXTENSION   = 0x02;
-  const unsigned short TYPE_THEME       = 0x04;
-  const unsigned short TYPE_LOCALE      = 0x08;
-  const unsigned short TYPE_ADDON       = TYPE_EXTENSION + TYPE_THEME + TYPE_LOCALE;
-  const unsigned short TYPE_ANY         = TYPE_APP + TYPE_ADDON;
+  const unsigned long TYPE_APP         = 0x01;
+  const unsigned long TYPE_EXTENSION   = 0x02;
+  const unsigned long TYPE_THEME       = 0x04;
+  const unsigned long TYPE_LOCALE      = 0x08;
+  const unsigned long TYPE_PLUGIN      = 0x10;
+  const unsigned long TYPE_ADDON       = TYPE_EXTENSION + TYPE_THEME + TYPE_LOCALE + TYPE_PLUGIN;
+  const unsigned long TYPE_ANY         = TYPE_APP + TYPE_ADDON;
 
-  readonly attribute long     type;
+  /**
+   * The type of this item.
+   */
+  readonly attribute long type;
 
-  void init(in string aID, in string aVersion, in string aMinAppVersion, 
-            in string aMaxAppVersion, in wstring aName, 
-            in long aRow, in wstring aUpdateURL, in wstring aIconURL, 
-            in wstring aUpdateRDF, in long aType);
+  /**
+   * Initializes this Item object.
+   */
+  void init(in AString aID, in AString aVersion, 
+            in AString aInstallLocationKey, in AString aMinAppVersion, 
+            in AString aMaxAppVersion, in AString aName,
+            in AString aUpdateURL, in AString aIconURL,
+            in AString aUpdateRDF, in long aType);
 
-  readonly attribute wstring objectSource;
+  /**
+   * Returns a JS Object source representing an nsIUpdateItem.
+   */
+  readonly attribute AString objectSource;
 };
 
 [scriptable, uuid(24aee3ca-a274-4247-bd3b-d0acbb5a98aa)]
 interface nsIAppUpdateInfoItem : nsISupports
 {
-  readonly attribute wstring internalName;
-  readonly attribute wstring name;
-  readonly attribute wstring URL;
-  readonly attribute wstring infoURL;
-  readonly attribute wstring description;
+  readonly attribute AString internalName;
+  readonly attribute AString name;
+  readonly attribute AString URL;
+  readonly attribute AString infoURL;
+  readonly attribute AString description;
 };
 
 [scriptable, uuid(2daab124-9bc7-4c35-bb7b-0fecdea03ce8)]
 interface nsIAppUpdateInfo : nsISupports
 {
-  readonly attribute wstring updateVersion;
-  readonly attribute wstring updateDisplayVersion;
-  readonly attribute wstring updateInfoURL;
+  readonly attribute AString updateVersion;
+  readonly attribute AString updateDisplayVersion;
+  readonly attribute AString updateInfoURL;
 
-  void getCollection(in string aCollectionName, out unsigned long aItemCount,
+  void getCollection(in AString aCollectionName, out unsigned long aItemCount,
                      [retval, array, size_is(aItemCount)] out nsIAppUpdateInfoItem aItems);
 };
 
@@ -132,8 +184,8 @@ interface nsIVersionChecker : nsISupports
   // -ve      if B is newer
   // equal    if A == B
   // +ve      if A is newer
-  long compare(in string aVersionA, in string aVersionB);
+  long compare(in AString aVersionA, in AString aVersionB);
 
-  boolean isValidVersion(in string aVersion);
+  boolean isValidVersion(in AString aVersion);
 };
 

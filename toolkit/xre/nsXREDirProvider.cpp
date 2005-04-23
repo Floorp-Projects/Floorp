@@ -368,35 +368,41 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
   nsCOMPtr<nsILocalFile> lf(do_QueryInterface(aComponentsList));
   parser.Init(lf);
 
+  nsresult rv;
   char parserBuf[MAXPATHLEN];
-  nsresult rv = parser.GetString(aSection, "Count", parserBuf, MAXPATHLEN);
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 count = atoi(parserBuf);
-    char buf[18];
-    nsCOMPtr<nsIFile> parent;
-    aComponentsList->GetParent(getter_AddRefs(parent));
-    nsCOMPtr<nsILocalFile> lfParent (do_QueryInterface(parent));
+  char buf[18];
+  PRInt32 i = 0;
+  do {
+    sprintf(buf, "Extension%d", i++);
 
-    for (PRInt32 i = 0; i < count; ++i) {
-      sprintf(buf, "Extension%d", i);
+    rv = parser.GetString(aSection, buf, parserBuf, MAXPATHLEN);
+    if (NS_FAILED(rv))
+      break;
 
-      rv = parser.GetString(aSection, buf, parserBuf, MAXPATHLEN);
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsILocalFile> dir(do_CreateInstance("@mozilla.org/file/local;1"));
-        dir->SetRelativeDescriptor(lfParent, nsDependentCString(parserBuf));
-        const char* const* a = aAppendList;
-        while (*a) {
-          dir->AppendNative(nsDependentCString(*a));
-          ++a;
-        }
-
-        PRBool exists;
-        rv = dir->Exists(&exists);
-        if (NS_SUCCEEDED(rv) && exists)
-          aDirectories.AppendObject(dir);
-      }
+    nsCOMPtr<nsILocalFile> dir(do_CreateInstance("@mozilla.org/file/local;1"));
+    rv = dir->SetPersistentDescriptor(nsDependentCString(parserBuf));
+    if (NS_FAILED(rv)) {
+      // Must be a relative descriptor, relative to the profile directory, 
+      // try that instead.
+      nsCOMPtr<nsIFile> profileDir;
+      aComponentsList->GetParent(getter_AddRefs(profileDir));
+      nsCOMPtr<nsILocalFile> lfProfileDir(do_QueryInterface(profileDir));
+      rv = dir->SetRelativeDescriptor(lfProfileDir, nsDependentCString(parserBuf));
+      if (NS_FAILED(rv))
+        continue;
     }
+    const char* const* a = aAppendList;
+    while (*a) {
+      dir->AppendNative(nsDependentCString(*a));
+      ++a;
+    }
+
+    PRBool exists;
+    rv = dir->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && exists)
+      aDirectories.AppendObject(dir);
   }
+  while (PR_TRUE);
 }
 
 static const char *const kAppendChromeManifests[] =
@@ -453,13 +459,6 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
     }
 
     static const char *const kAppendPrefDir[] = { "defaults", "preferences", nsnull };
-
-    nsCOMPtr<nsIFile> appFile;
-    mAppDir->Clone(getter_AddRefs(appFile));
-    appFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
-    LoadDirsIntoArray(appFile, "ExtensionDirs",
-                      kAppendPrefDir, directories);
-
     nsCOMPtr<nsIFile> profileFile;
     if (mProfileDir) {
       mProfileDir->Clone(getter_AddRefs(profileFile));
@@ -487,12 +486,6 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
         manifests.AppendObject(file);
     }
     
-    nsCOMPtr<nsIFile> appFile;
-    mAppDir->Clone(getter_AddRefs(appFile));
-    appFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
-    LoadDirsIntoArray(appFile, "ExtensionDirs",
-                      kAppendChromeManifests, manifests);
-
     if (mProfileDir) {
       nsCOMPtr<nsIFile> profileFile;
       mProfileDir->Clone(getter_AddRefs(profileFile));
@@ -506,13 +499,6 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
   }  
   else if (!strcmp(aProperty, NS_SKIN_MANIFESTS_FILE_LIST)) {
     nsCOMArray<nsIFile> manifests;
-
-    nsCOMPtr<nsIFile> appFile;
-    mAppDir->Clone(getter_AddRefs(appFile));
-    appFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
-    LoadDirsIntoArray(appFile, "ThemeDirs",
-                      kAppendChromeManifests, manifests);
-
     if (mProfileDir) {
       nsCOMPtr<nsIFile> profileFile;
       mProfileDir->Clone(getter_AddRefs(profileFile));

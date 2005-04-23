@@ -66,6 +66,13 @@ pref("update.extensions.enabled", true);
 pref("update.extensions.wsdl", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+// Developers can set this to |true| if they are constantly changing files in their 
+// extensions directory so that the extension system does not constantly think that
+// their extensions are being updated and thus reregistered every time the app is
+// started.
+pref("extensions.ignoreMTimeChanges", false);
+// Enables some extra Extension System Logging (can reduce performance)
+pref("extensions.logging.enabled", false);
 
 // App-specific update preferences
 pref("app.update.enabled", true);               // Whether or not app updates are enabled

@@ -78,7 +78,6 @@
 
 const nsIUpdateItem       = Components.interfaces.nsIUpdateItem;
 const nsIUpdateService    = Components.interfaces.nsIUpdateService;
-const nsIExtensionManager = Components.interfaces.nsIExtensionManager;
 
 const PREF_UPDATE_APP_UPDATESAVAILABLE          = "app.update.updatesAvailable";
 const PREF_UPDATE_APP_PERFORMED                 = "app.update.performed";
@@ -271,7 +270,8 @@ var gUpdateWizard = {
   {
     var errors = [];
     for (var i = 0; i < this.errorItems.length; ++i)
-      errors.push({ name: this.errorItems[i].name, error: true });
+      errors.push({ name: this.errorItems[i].name, error: true, 
+                    item: this.errorItems[i] });
 
     if (this.errorOnApp) {
       var brandShortName = document.getElementById("brandStrings").getString("brandShortName");
@@ -371,9 +371,9 @@ var gUpdatePage = {
       this._totalCount = gUpdateWizard.items.length;
       if (this._totalCount == 0) {
         var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                            .getService(Components.interfaces.nsIExtensionManager);
-        var extensionCount = em.getItemList(null, nsIUpdateItem.TYPE_EXTENSION, {}).length;
-        var themeCount = em.getItemList(null, nsIUpdateItem.TYPE_THEME, {}).length;
+                           .getService(Components.interfaces.nsIExtensionManager);
+        var extensionCount = em.getItemList(nsIUpdateItem.TYPE_EXTENSION, {}).length;
+        var themeCount = em.getItemList(nsIUpdateItem.TYPE_THEME, {}).length;
 
         this._totalCount = extensionCount + themeCount + 1;
       }

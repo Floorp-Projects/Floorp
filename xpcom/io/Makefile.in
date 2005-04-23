@@ -127,6 +127,7 @@ XPIDLSRCS	= \
 		nsIBinaryInputStream.idl \
 		nsIBinaryOutputStream.idl  \
 		nsIByteArrayInputStream.idl \
+		nsIDirectoryEnumerator.idl \
 		nsIFastLoadFileControl.idl \
 		nsIFastLoadService.idl \
 		nsIInputStreamTee.idl \

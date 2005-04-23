@@ -44,6 +44,7 @@
 #include "nsMemory.h"
 
 #include "nsLocalFile.h"
+#include "nsIDirectoryEnumerator.h"
 #include "nsNativeCharsetUtils.h"
 
 #include "nsISimpleEnumerator.h"
@@ -310,7 +311,8 @@ IsShortcutPath(const char *path)
 // nsDirEnumerator
 //-----------------------------------------------------------------------------
 
-class nsDirEnumerator : public nsISimpleEnumerator
+class nsDirEnumerator : public nsISimpleEnumerator,
+                        public nsIDirectoryEnumerator
 {
     public:
 
@@ -382,6 +384,8 @@ class nsDirEnumerator : public nsISimpleEnumerator
                 mNext = do_QueryInterface(file);
             }
             *result = mNext != nsnull;
+            if (!*result) 
+                Close();
             return NS_OK;
         }
 
@@ -399,15 +403,37 @@ class nsDirEnumerator : public nsISimpleEnumerator
             return NS_OK;
         }
 
-        // dtor can be non-virtual since there are no subclasses, but must be
-        // public to use the class on the stack.
-        ~nsDirEnumerator()
+        NS_IMETHOD GetNextFile(nsIFile **result)
+        {
+            *result = nsnull;
+            PRBool hasMore = PR_FALSE;
+            nsresult rv = HasMoreElements(&hasMore);
+            if (NS_FAILED(rv) || !hasMore)
+                return rv;
+            *result = mNext;
+            NS_IF_ADDREF(*result);
+            mNext = nsnull;
+            return NS_OK;
+        }
+
+        NS_IMETHOD Close()
         {
             if (mDir)
             {
                 PRStatus status = PR_CloseDir(mDir);
                 NS_ASSERTION(status == PR_SUCCESS, "close failed");
+                if (status != PR_SUCCESS)
+                    return NS_ERROR_FAILURE;
+                mDir = nsnull;
             }
+            return NS_OK;
+        }
+
+        // dtor can be non-virtual since there are no subclasses, but must be
+        // public to use the class on the stack.
+        ~nsDirEnumerator()
+        {
+            Close();
         }
 
     protected:
@@ -416,7 +442,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
         nsCOMPtr<nsILocalFile>  mNext;
 };
 
-NS_IMPL_ISUPPORTS1(nsDirEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS2(nsDirEnumerator, nsISimpleEnumerator, nsIDirectoryEnumerator)
 
 
 //-----------------------------------------------------------------------------

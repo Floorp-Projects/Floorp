@@ -73,7 +73,13 @@ XPInstallConfirm.init = function ()
   var introString = bundle.getString("itemWarningIntroSingle");
   if (numItemsToInstall > 4)
     introString = bundle.getFormattedString("itemWarningIntroMultiple", [numItemsToInstall / 4]);
-  document.getElementById("itemWarningIntro").setAttribute("value", introString);  
+  if (this._param.objects && this._param.objects.length)
+    introString = this._param.objects.queryElementAt(0, Components.interfaces.nsISupportsString).data;
+  var textNode = document.createTextNode(introString);
+  var introNode = document.getElementById("itemWarningIntro");
+  while (introNode.hasChildNodes())
+    introNode.removeChild(introNode.firstChild);
+  introNode.appendChild(textNode);
   
   var okButton = document.documentElement.getButton("accept");
   okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [this._installCountdown]);
