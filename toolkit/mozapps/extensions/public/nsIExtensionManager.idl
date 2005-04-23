@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Ben Goodger <ben@bengoodger.com>
+ *  Ben Goodger <ben@mozilla.org> (Google Inc.)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,80 +42,398 @@ interface nsIFile;
 interface nsIRDFDataSource;
 interface nsIUpdateItem;
 interface nsICommandLine;
+interface nsISimpleEnumerator;
+interface nsIDirectoryEnumerator;
 
-[scriptable, uuid(9048223f-ec50-49e5-9866-80ee8f26179d)]
-interface nsIExtensionDownloadProgressListener : nsISupports
+/**
+ * Interface representing a location where extensions, themes etc are 
+ * installed.
+ */
+[scriptable, uuid(a93bc6e0-b841-4f34-ac33-6b1cef1f4742)]
+interface nsIInstallLocation : nsISupports
 {
-  void onStateChange(in wstring aURL, in short aState, in long aValue);
+  /**
+   * The string identifier of this Install Location
+   */
+  readonly attribute AString name;
+  
+  /**
+   * An enumeration of nsIFiles for:
+   * - locations that contain items
+   * - potential dropped-in XPIs
+   * Note: This enumeration resolves Text Links to the directories they
+   *       refer to.
+   */
+  readonly attribute nsIDirectoryEnumerator itemLocations;
 
-  void onProgress(in wstring aURL, in unsigned long aValue, in unsigned long aMaxValue);
+  /**
+   * The file system location where items live. Items can be dropped in
+   * at this location. Can be null for Install Locations that don't have
+   * a file system presence. 
+   * Note: This is a clone of the actual location which the caller can 
+   *       modify freely.
+   */
+  readonly attribute nsIFile location;
+
+  /**
+   * Whether or not this Install Location is on an area of the file system
+   * that could be restricted on a restricted-access account, regardless
+   * of whether or not the location is restricted with the current user
+   * privileges. 
+   */
+  readonly attribute boolean restricted;
+
+  /**
+   * Whether or not the user can write to the Install Location with the
+   * current access privileges. This is different from restricted because
+   * it's not whether or not the location *might* be restricted, it's 
+   * whether or not it actually *is* restricted right now.
+   */
+  readonly attribute boolean canAccess;
+
+  /**
+   * Whether or not the install location is functioning properly. If the
+   * location is not functioning properly, this probably suggests the
+   * user has deleted files/registry keys etc by hand and we need to 
+   * flush the various data sets and rebuild them. 
+   * e.g. for a Directory Install Location this is whether or not the
+   *      directory that contains the items exists. For a registry based
+   *      location this is whether or not the key exists.
+   */
+  readonly attribute boolean isFunctioning;
+
+  /**
+   * Constants representing priority of some default Install Locations.
+   * XXXben - priority ranking of user-level items vs. global-level items
+   *          here is debatable. Should app-system-global trump 
+   *          xre-system-user?
+   * You should not use the exact values here, you should offset from
+   * these values each time you create a new Install Location. Offsetting
+   * can be brittle but you should know what Install Locations are being
+   * defined for your own application.
+   */
+  const unsigned long PRIORITY_APP_PROFILE        = 0;
+  const unsigned long PRIORITY_APP_SYSTEM_USER    = 10;
+  const unsigned long PRIORITY_XRE_SYSTEM_USER    = 100;
+  const unsigned long PRIORITY_APP_SYSTEM_GLOBAL  = 1000;
+  const unsigned long PRIORITY_XRE_SYSTEM_GLOBAL  = 10000;
+    
+  /**
+   * The priority level of this Install Location in loading. 
+   */
+  readonly attribute long priority;
+  
+  /**
+   * Gets the directory that contains an item.
+   * @param   id
+   *          The GUID of the item.
+   * @returns The location of the item. 
+   */
+  nsIFile getItemLocation(in AString id);
+
+  /**
+   * Gets a nsIFile object for a file within an item's directory structure.
+   * @param   id
+   *          The GUID of the item.
+   * @param   path
+   *          The path to the file beneath an Extension's directory
+   * @returns A file object at the requested location. The file does not
+   *          necessarily have to exist.
+   */
+  nsIFile getItemFile(in AString id, in AString path);
 };
 
-[scriptable, uuid(1a1e274d-c675-4177-99d3-4d153d1b795e)]
+/**
+ * Interface for handling download and install notifications for Extensions
+ * and Themes.
+ */
+[scriptable, uuid(9048223f-ec50-49e5-9866-80ee8f26179d)]
+interface nsIExtensionDownloadListener : nsISupports
+{
+  /**
+   * Install/Download state has changed
+   * @param   url
+   *          The url that state changed for
+   * @param   state
+   *          The new state. States are defined in nsIXPIProgressDialog
+   * @param   value
+   *          Some data about the new state
+   */
+  void onStateChange(in AString url, in short state, in long value);
+
+  /**
+   * Progress occurred in the download/install operation
+   * @param   url
+   *          The url that progress occurred for
+   * @param   value
+   *          The value of the current progress
+   * @param   maxValue
+   *          The maximum value |value| can reach
+   */
+  void onProgress(in AString url, in unsigned long value, 
+                  in unsigned long maxValue);
+};
+
+/**
+ * Interface representing a system for the installation and management of
+ * Extensions, Themes etc. 
+ *
+ * XXXben - Some of this stuff should go into a management-ey interface, 
+ *          some into an app-startup-ey interface.
+ */
+[scriptable, uuid(7b77761f-6737-4b77-abed-c82f35a57a90)]
 interface nsIExtensionManager : nsISupports
 {
-  // Apprunner hooks
-  boolean start(in nsICommandLine aCmdLine, in boolean aIsDirty);
+  /**
+   * Starts the Extension Manager, initializing Safe Mode, checking for 
+   * item changes, additions and removals, and finishing pending operations.
+   * @param   commandLine
+   *          The command line the application was started with.
+   * @param   isDirty
+   *          Whether or not the extensions list changed since the last start.
+   *          This is not the last word in whether or not items have been
+   *          added or removed since it only tracks items installed through
+   *          the UI. 
+   * @returns true if the application has rewritten the extensions.ini file
+   *          and needs to restart to register components/chrome etc, 
+   *          false otherwise
+   */
+  boolean start(in nsICommandLine commandLine, in boolean isDirty);
 
   /** 
-   * Returns true if mismatches were found and the app needs to restart. 
+   * Determines if there are incompatible items installed (and offers to
+   * upgrade them to newer versions if available, via a UI). 
+   * @returns true if there were incompatible items that were disabled
+   *          and the application needs to restart to re-register components,
+   *          chrome etc, false otherwise.
    */
   boolean checkForMismatches();
 
+  /**
+   * Handle command line flags, e.g. -install-global-[extension|theme]
+   * @param   cmdLine
+   *          the command line the application was started with
+   * XXXben - move this off this API - currently it is only used for 
+   *          global installation, and the apprunner can do this directly
+   *          with |installItemFromFile|
+   */
   void handleCommandLineArgs(in nsICommandLine cmdline);
 
-  void register();
+  /**
+   * Gets the Install Location for an item
+   * @param   id
+   *          The GUID of the item
+   * @returns The Install Location where the item is installed.
+   */
+  nsIInstallLocation getInstallLocation(in AString id);
 
-  // Installing Extensions
-  const unsigned long FLAG_INSTALL_PROFILE = 0x01;
-  const unsigned long FLAG_INSTALL_GLOBAL  = 0x02;
+  /**
+   * An enumeration of all registered Install Items
+   */
+  readonly attribute nsISimpleEnumerator installLocations;
 
-  void installExtension(in nsIFile aXPIFile, in unsigned long aFlags);
-  void uninstallExtension(in string aExtensionID);
-  void enableExtension(in string aExtensionID);
-  void disableExtension(in string aExtensionID);
+  /**
+   * Installs an item from a XPI/JAR file into the location specified. 
+   * @param   xpiFile
+   *          The source file to install from. This function stages a copy
+   *          of this file for persistence across potential application 
+   *          restarts, you are responsible for removing the file you pass
+   *          in. 
+   * @param   installLocationKey
+   *          The name identifier of an Install Location to install into.
+   */
+  void installItemFromFile(in nsIFile xpiFile, in AString installLocationKey);
 
-  // Installing Themes
-  void installTheme(in nsIFile aJARFile, in unsigned long aFlags);
-  void uninstallTheme(in string aThemeID);
-  void enableTheme(in string aThemeID);
-  void disableTheme(in string aThemeID);
+  /**
+   * Uninstalls an item
+   * @param   id
+   *          The GUID of the item.
+   */
+  void uninstallItem(in AString id);
 
-  // Downloads
-  void addDownloads([array, size_is(aItemCount)] in nsIUpdateItem aItems,
-                    in unsigned long aItemCount);
-  void removeDownload(in wstring aURL, in unsigned short aType);
-  long addDownloadObserver(in nsIExtensionDownloadProgressListener aObserver);
-  void removeDownloadObserverAt(in long aIndex);
+  /**
+   * Enables a disabled item
+   * @param   id
+   *          The GUID of the item.
+   */
+  void enableItem(in AString id);
 
+  /**
+   * Disables an enabled item
+   * @param   id
+   *          The GUID of the item.
+   */
+  void disableItem(in AString id);
+
+  /**
+   * Checks for updates to a list of items.
+   * @param   items
+   *          An array of nsIUpdateItems to check for updates for.
+   * @param   itemCount
+   *          The length of |items|
+   * @param   versionUpdateOnly
+   *          false if this check should find the newest versions available,
+   *          true if it should only find newer target application compatibility
+   *          information for the currently installed version.
+   */
+  void update([array, size_is(itemCount)] in nsIUpdateItem items,
+               in unsigned long itemCount, 
+               in unsigned long versionUpdateOnly);
+
+  /**
+   * Whether or not the application is currently in safe mode.
+   */
   readonly attribute boolean inSafeMode;
 
-  // Updates
-  void update([array, size_is(aItemCount)] in nsIUpdateItem aItems,
-               in unsigned long aItemCount, 
-               in unsigned long aVersionUpdateOnly);
+  /**
+   * Gets a nsIUpdateItem for the item with the specified id.
+   * @param   id
+   *          The GUID of the item to construct a nsIUpdateItem for.
+   * @returns The nsIUpdateItem representing the item.
+   */
+  nsIUpdateItem getItemForID(in AString id);
 
-  // Management
-  void getItemList(in string aItemID, 
-                   in unsigned short aType, 
-                   out unsigned long aItemCount,
-                   [retval, array, size_is(aItemCount)] out nsIUpdateItem aItems);
+  /**
+   * Retrieves a list of visible nsIUpdateItems of items matching the 
+   * specified type.
+   * @param   type
+   *          The type of item to return.
+   * @param   countRef
+   *          The XPCJS reference to the number of items returned.
+   * @returns An array of nsIUpdateItems matching the id/type filter.
+   *
+   * XXXben - it would be good if this function took an optional 
+   *          install location.
+   */
+  void getItemList(in unsigned long type, out unsigned long itemCount,
+                   [retval, array, size_is(itemCount)] out nsIUpdateItem items);
 
-  void moveUp(in string aItemID);
-  void moveDown(in string aItemID);
-  void moveTop(in string aItemID);
-
+  /**
+   * The Extensions Datasource
+   * XXXben - the datasource should be registered with the RDF system, so it 
+   *          can be accessed via rdf:extensions, and not exposed through the API
+   *          like this.
+   */
   readonly attribute nsIRDFDataSource datasource;
+
+  /**
+   * Adds active download entries to the UI
+   * @param   items
+   *          A list of nsIUpdateItems to entries to add
+   * @param   itemCount
+   *          The length of |items|
+   */
+  void addDownloads([array, size_is(itemCount)] in nsIUpdateItem items,
+                    in unsigned long itemCount);
+
+  /**
+   * Removes an active download from the UI
+   * @param   url
+   *          The URL of the active download to remove
+   */
+  void removeDownload(in AString url);
+
+  /**
+   * Adds a download progress listener so the front end can listen to download
+   * and install progress.
+   * @param   listener
+   *          The listener to add
+   * @returns the index of the added listen in the listener list. 
+   */
+  long addDownloadListener(in nsIExtensionDownloadListener listener);
+
+  /**
+   * Removes a download progress listener.
+   * @param   index
+   *          The index of the listener to remove.
+   */
+  void removeDownloadListenerAt(in long index);
+
+  /** 
+  /**
+   * Move an item up a notch in its container
+   * @param   id
+   *          The GUID of the item to move
+   */
+  void moveUp(in AString id);
+
+  /**
+   * Move an item down a notch in its container
+   * @param   id
+   *          The GUID of the item to move
+   */
+  void moveDown(in AString id);
+
+  /**
+   * Move an item to the start of its container.
+   * @param   id
+   *          The GUID of the item to move
+   */
+  void moveTop(in AString id);
 };
 
+/**
+ * Interface representing an object that can update a set of Extensions,
+ * Themes etc. 
+ */
 [scriptable, uuid(c0b7517f-0b3a-41a2-bde8-ba3ac8a5af47)]
 interface nsIExtensionItemUpdater : nsISupports
 {
-  void checkForUpdates([array, size_is(aItemCount)] in nsIUpdateItem aItems,
-                       in unsigned long aItemCount, 
-                       in boolean aVersionUpdateOnly);
+  /**
+   * Checks for updates to a list of items.
+   * @param   items
+   *          An array of nsIUpdateItems to check for updates for.
+   * @param   itemCount
+   *          The length of |items|
+   * @param   versionUpdateOnly
+   *          false if this check should find the newest versions available,
+   *          true if it should only find newer target application compatibility
+   *          information for the currently installed version.
+   */
+  void checkForUpdates([array, size_is(itemCount)] in nsIUpdateItem items,
+                       in unsigned long itemCount, 
+                       in boolean versionUpdateOnly);
 
+  /**
+   * The event that spawned the update check. Types defined in 
+   * nsIUpdateService
+   */
   readonly attribute unsigned short sourceEvent;
-  readonly attribute unsigned short updateTypes;
+
+  /**
+   * The nsIUpdateItem types being checked for updates to.
+   */
+  readonly attribute unsigned long updateTypes;
 };
+
+%{ C++
+/**
+ * Install Location Key for Application-Global Items
+ */
+#define NS_INSTALL_LOCATION_APPGLOBAL NS_LITERAL_STRING("app-global")
+
+/**
+ * Install Location Key for Application-Profile Items
+ */
+#define NS_INSTALL_LOCATION_APPPROFILE NS_LITERAL_STRING("app-profile")
+
+/** 
+ * The category that contains a list of contract-ids to Install Location 
+ * services.
+ */
+#define CATEGORY_INSTALL_LOCATIONS "extension-install-locations"
+
+/**
+ * The observer topic to listen to for actions performed on installed
+ * items.
+ */
+#define EM_ACTION_REQUESTED_TOPIC "em-action-requested"
+
+#define EM_ITEM_INSTALLED   "item-installed"
+#define EM_ITEM_UPGRADED    "item-upgraded"
+#define EM_ITEM_UNINSTALLED "item-uninstalled"
+#define EM_ITEM_ENABLED     "item-enabled"
+#define EM_ITEM_DISABLED    "item-disabled"
+
+%}
 

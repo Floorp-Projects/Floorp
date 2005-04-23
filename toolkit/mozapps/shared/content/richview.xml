@@ -16,13 +16,12 @@
 #
 # The Original Code is the Rich ScrollView.
 #
-# The Initial Developer of the Original Code is
-# Ben Goodger.
+# The Initial Developer of the Original Code is Ben Goodger.
 # Portions created by the Initial Developer are Copyright (C) 2003-2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Ben Goodger <ben@bengoodger.com>
+#   Ben Goodger <ben@mozilla.org> (Google Inc.)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -109,7 +108,7 @@
         <body>
         <![CDATA[
           for (var temp = aElement; temp; temp = temp.nextSibling) {
-            if ("fireEvent" in temp) {
+            if ("fireEvent" in temp && !temp.hidden) {
               this.selected = temp;
               break;
             }
@@ -123,7 +122,7 @@
         <body>
         <![CDATA[
           for (var temp = aElement; temp; temp = temp.previousSibling) {
-            if ("fireEvent" in temp) {
+            if ("fireEvent" in temp && !temp.hidden) {
               this.selected = temp;
               break;
             }

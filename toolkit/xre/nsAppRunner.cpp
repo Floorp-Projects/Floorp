@@ -1631,14 +1631,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       NS_ENSURE_TRUE(chromeReg, 1);
 
       chromeReg->CheckForNewChrome();
-
-      if (gAppData->flags & NS_XRE_ENABLE_EXTENSION_MANAGER) {
-        nsCOMPtr<nsIExtensionManager> em
-          (do_GetService("@mozilla.org/extensions/manager;1"));
-        NS_ENSURE_TRUE(em, 1);
-
-        em->Register();
-      }
     }
     return 0;
   }
@@ -1884,9 +1876,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         nsCOMPtr<nsIExtensionManager> em(do_GetService("@mozilla.org/extensions/manager;1"));
         NS_ENSURE_TRUE(em, 1);
 
-        if (CheckArg("install-global-extension") || 
-            CheckArg("install-global-theme") || CheckArg("list-global-items") || 
-            CheckArg("lock-item") || CheckArg("unlock-item")) {
+        if (CheckArg("install-global-extension") || CheckArg("install-global-theme")) {
           // Do the required processing and then shut down.
           em->HandleCommandLineArgs(cmdLine);
           return 0;

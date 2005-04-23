@@ -47,6 +47,7 @@
 #include "nsNativeCharsetUtils.h"
 
 #include "nsISimpleEnumerator.h"
+#include "nsIDirectoryEnumerator.h"
 #include "nsIComponentManager.h"
 #include "prtypes.h"
 #include "prio.h"
@@ -135,7 +136,8 @@ myLL_L2II(PRInt64 result, PRInt32 *hi, PRInt32 *lo )
 }
 
 
-class nsDirEnumerator : public nsISimpleEnumerator
+class nsDirEnumerator : public nsISimpleEnumerator,
+                        public nsIDirectoryEnumerator
 {
     public:
 
@@ -207,6 +209,8 @@ class nsDirEnumerator : public nsISimpleEnumerator
                 mNext = do_QueryInterface(file);
             }
             *result = mNext != nsnull;
+            if (!*result)
+                Close();
             return NS_OK;
         }
 
@@ -224,14 +228,34 @@ class nsDirEnumerator : public nsISimpleEnumerator
             return NS_OK;
         }
 
-    private:
-        ~nsDirEnumerator() 
+        NS_IMETHOD GetNextFile(nsIFile **result)
         {
-            if (mDir) 
+            *result = nsnull;
+            PRBool hasMore = PR_FALSE;
+            nsresult rv = HasMoreElements(&hasMore);
+            if (NS_FAILED(rv) || !hasMore)
+                return rv;
+            *result = mNext;
+            NS_IF_ADDREF(*result);
+            mNext = nsnull;
+            return NS_OK;
+        }
+
+        NS_IMETHOD Close()
+        {
+            if (mDir)
             {
                 PRStatus status = PR_CloseDir(mDir);
                 NS_ASSERTION(status == PR_SUCCESS, "close failed");
+                mDir = nsnull;
             }
+            return NS_OK;
+        }
+
+    private:
+        ~nsDirEnumerator() 
+        {
+            Close();
         }
 
     protected:
@@ -240,7 +264,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
         nsCOMPtr<nsILocalFile>  mNext;
 };
 
-NS_IMPL_ISUPPORTS1(nsDirEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS2(nsDirEnumerator, nsISimpleEnumerator, nsIDirectoryEnumerator)
 
 //---------------------------------------------------------------------
 // class TypeEaEnumerator - a convenience for accessing

@@ -51,6 +51,14 @@
 
   <script type="application/x-javascript">
   <![CDATA[
+    function LOG(string) 
+    {
+      dump("*** " + string + "\n");
+      var console = Components.classes["@mozilla.org/consoleservice;1"]
+                              .getService(Components.interfaces.nsIConsoleService);  
+      console.logStringMessage(string);
+    }
+
     function init()
     {
       var state = window.arguments[0].state;
@@ -65,6 +73,11 @@
       var listbox = document.getElementById("extensions");
       for (var i = 0; i < items.length; ++i) {
         if (items[i].error) {
+          if (items[i].error == -207) {
+            LOG("Error -207 (\"Not a valid install package\") generally implies\r\n" + 
+                "a 404 at the URL specified for the update. Check for typos in\r\n" + 
+                "your update manifest.");
+          }
           var listitem = document.createElement("listitem");
           try {
             var errorString = xpinstallStrings.getString("error" + items[i].error);
