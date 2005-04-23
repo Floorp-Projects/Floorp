@@ -2184,7 +2184,10 @@ CreateCert(
 	}
         
         if (certReq->attributes != NULL &&
-            SECOID_FindOIDTag(&(*certReq->attributes)->attrType)
+	    certReq->attributes[0] != NULL &&
+	    certReq->attributes[0]->attrType.data != NULL &&
+	    certReq->attributes[0]->attrType.len   > 0    &&
+            SECOID_FindOIDTag(&certReq->attributes[0]->attrType)
                 == SEC_OID_PKCS9_EXTENSION_REQUEST) {
             rv = CERT_GetCertificateRequestExtensions(certReq, &CRexts);
             if (rv != SECSuccess)
