@@ -272,8 +272,11 @@ OPDEF(JSOP_ANONFUNOBJ,  128, "anonfunobj",  NULL,     3,  0,  1, 12,  JOF_CONST)
 /* ECMA ed. 3 named function expression. */
 OPDEF(JSOP_NAMEDFUNOBJ, 129, "namedfunobj", NULL,     3,  0,  1, 12,  JOF_CONST)
 
-/* Like JSOP_INITPROP, but specialized to make a DontDelete property for ECMA ed. 3 catch variables. */
-OPDEF(JSOP_INITCATCHVAR,130, "initcatchvar",NULL,     3,  1,  0,  0,  JOF_CONST|JOF_PROP)
+/*
+ * Like JSOP_INITPROP, but specialized to make a DontDelete property for ECMA
+ * Edition 3 catch variables.
+ */
+OPDEF(JSOP_INITCATCHVAR,130, "initcatchvar",NULL,     3,  1,  0,  0,  JOF_CONST)
 
 /* ECMA-mandated parenthesization opcode, which nulls the reference base register, obj; see jsinterp.c. */
 OPDEF(JSOP_GROUP,       131, "group",       NULL,     1,  0,  0,  0,  JOF_BYTE)
@@ -366,8 +369,19 @@ OPDEF(JSOP_XMLELTEXPR,    179,"xmleltexpr", NULL,     1,  1,  1, 12,  JOF_BYTE)
 OPDEF(JSOP_XMLOBJECT,     180,"xmlobject",  NULL,     3,  0,  1, 12,  JOF_CONST)
 OPDEF(JSOP_XMLCDATA,      181,"xmlcdata",   NULL,     3,  0,  1, 12,  JOF_CONST)
 OPDEF(JSOP_XMLCOMMENT,    182,"xmlcomment", NULL,     3,  0,  1, 12,  JOF_CONST)
-OPDEF(JSOP_XMLPI,         183,"xmlpi",      NULL,     5,  0,  1, 12,  JOF_CONST2)
+OPDEF(JSOP_XMLPI,         183,"xmlpi",      NULL,     3,  1,  1, 12,  JOF_CONST)
 OPDEF(JSOP_GETMETHOD,     184,"getmethod",  NULL,     3,  1,  1, 11,  JOF_CONST|JOF_PROP)
 OPDEF(JSOP_GETFUNNS,      185,"getfunns",   NULL,     1,  0,  1, 12,  JOF_BYTE)
 OPDEF(JSOP_FOREACH,       186,"foreach",    NULL,     1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 10,  JOF_BYTE |JOF_ELEM|JOF_DEL)
+
+/*
+ * Opcodes for extended literal addressing, using unsigned 24-bit immediate
+ * operands to hold integer operands (JSOP_UINT24), extended atom indexes in
+ * script->atomMap (JSOP_LITERAL, JSOP_FINDNAME), and ops prefixed by such
+ * atom index immediates (JSOP_LITOPX).  See jsemit.c, EmitAtomIndexOp.
+ */
+OPDEF(JSOP_UINT24,        188,"uint24",     NULL,     4,  0,  1, 12,  JOF_UINT24)
+OPDEF(JSOP_LITERAL,       189,"literal",    NULL,     4,  0,  1, 12,  JOF_UINT24)
+OPDEF(JSOP_FINDNAME,      190,"findname",   NULL,     4,  0,  2,  0,  JOF_UINT24)
+OPDEF(JSOP_LITOPX,        191,"litopx",     NULL,     5,  0,  0, 12,  JOF_LITOPX)
