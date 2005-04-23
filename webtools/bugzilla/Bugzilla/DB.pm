@@ -304,26 +304,15 @@ sub bz_get_field_defs {
 sub bz_setup_database {
     my ($self) = @_;
 
-    # Get a list of the existing tables (if any) in the database
-    my @current_tables = $self->bz_table_list_real();
+    # If we haven't ever stored a serialized schema,
+    # set up the bz_schema table and store it.
+    $self->_bz_init_schema_storage();
+    
     my @desired_tables = $self->_bz_schema->get_table_list();
 
     foreach my $table_name (@desired_tables) {
-        next if grep($_ eq $table_name, @current_tables);
-        print "Creating table $table_name ...\n";
-
-        my @table_sql = $self->_bz_schema->get_table_ddl($table_name);
-        foreach my $sql_statement (@table_sql) {
-            $self->do($sql_statement);
-        }
+        $self->bz_add_table($table_name);
     }
-
-    # And now, if we haven't already stored the serialized schema,
-    # store the ABSTRACT_SCHEMA from Bugzilla::DB::Schema.
-    # XXX - The code is not ready for this yet, but once
-    #       all the deps of bug 285111 are checked-in and 
-    #       tested, this should be uncommented.
-    #$self->_bz_init_schema_storage();
 }
 
 #####################################################################
@@ -775,17 +764,42 @@ These methods really are private. Do not override them in subclasses.
 sub _bz_init_schema_storage {
     my ($self) = @_;
 
-    my $table_size = $self->selectrow_array("SELECT COUNT(*) FROM bz_schema");
+    my $table_size;
+    eval {
+        $table_size = 
+            $self->selectrow_array("SELECT COUNT(*) FROM bz_schema");
+    };
 
-    if ($table_size == 0) {
+    if (!$table_size) {
+        my $init_schema = $self->_bz_get_initial_schema;
+        my $store_me = $init_schema->serialize_abstract();
+        my $schema_version = $init_schema->SCHEMA_VERSION;
+
+        # If table_size is not defined, then we hit an error reading the
+        # bz_schema table, which means it probably doesn't exist yet. So,
+        # we have to create it. If we failed above for some other reason,
+        # we'll see the failure here.
+        # However, we must create the table after we do get_initial_schema,
+        # because some versions of get_initial_schema read that the table
+        # exists and then add it to the Schema, where other versions don't.
+        if (!defined $table_size) {
+            $self->_bz_add_table_raw('bz_schema');
+        }
+
         print "Initializing the new Schema storage...\n";
-        my $store_me = $self->_bz_schema->serialize_abstract();
-        my $schema_version = $self->_bz_schema->SCHEMA_VERSION;
         my $sth = $self->prepare("INSERT INTO bz_schema "
                                  ." (schema_data, version) VALUES (?,?)");
         $sth->bind_param(1, $store_me, $self->BLOB_TYPE);
-        $sth->bind_param(2, Bugzilla::DB::Schema::SCHEMA_VERSION);
+        $sth->bind_param(2, $schema_version);
         $sth->execute();
+
+        # And now we have to update the on-disk schema to hold the bz_schema
+        # table, if the bz_schema table didn't exist when we were called.
+        if (!defined $table_size) {
+            $self->_bz_real_schema->add_table('bz_schema',
+                $self->_bz_schema->get_table_abstract('bz_schema'));
+            $self->_bz_store_real_schema;
+        }
     } 
     # Sanity check
     elsif ($table_size > 1) {

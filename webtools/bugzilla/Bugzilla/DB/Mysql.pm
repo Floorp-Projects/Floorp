@@ -198,6 +198,12 @@ sub bz_rollback_transaction {
     die("Attempt to rollback transaction on DB without transaction support");
 }
 
+
+sub _bz_get_initial_schema {
+    my ($self) = @_;
+    return $self->_bz_build_schema_from_disk();
+}
+
 #####################################################################
 # Database Setup
 #####################################################################
