@@ -65,7 +65,7 @@ ac_add_options --disable-logging
 ac_add_options --disable-tests
 
 # build crypto module (PSM + NSS)
-# ac_add_options --enable-crypto
+ac_add_options --disable-crypto
 
 # build minimal set of protocol handlers
 ac_add_options --enable-necko-protocols=http,file,res,jar
