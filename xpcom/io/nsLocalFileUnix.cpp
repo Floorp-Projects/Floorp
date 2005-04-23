@@ -218,15 +218,14 @@ nsDirEnumeratorUnix::GetNextFile(nsIFile **_retval)
         return NS_OK;
     }
 
-    nsLocalFile* file = new nsLocalFile();
+    nsCOMPtr<nsILocalFile> file = new nsLocalFile();
     if (!file)
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (NS_FAILED(rv = file->InitWithNativePath(mParentPath)) ||
-        NS_FAILED(rv = file->AppendNative(nsDependentCString(mEntry->d_name)))) {
-        delete file;
+        NS_FAILED(rv = file->AppendNative(nsDependentCString(mEntry->d_name))))
         return rv;
-    }
+
     *_retval = file;
     NS_ADDREF(*_retval);
     return GetNextEntry();
