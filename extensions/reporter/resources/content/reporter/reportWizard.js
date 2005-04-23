@@ -131,7 +131,6 @@ function registerSysID(){
 
   if (gSysID != undefined){
     prefs.setCharPref("sysid", gSysID);
-      alert("new sysid: "+gSysID);
     return gSysID;
   } else {
     return;
@@ -147,7 +146,6 @@ function getSysID() {
   {
     if (prefs.getPrefType("sysid") == prefs.PREF_STRING && prefs.getCharPref("sysid") != "")
     {
-      alert("using sysid: "+prefs.getCharPref("sysid"));
       return prefs.getCharPref("sysid");
     }
     else {
