@@ -43,9 +43,10 @@
 
 @interface OrgMozillaChimeraPreferenceTabs : PreferencePaneBase
 {
-  IBOutlet id radioOpenTabsForCommand;
-  IBOutlet id radioOpenForAE;
+  IBOutlet NSMatrix* radioOpenTabsForCommand;
+  IBOutlet NSMatrix* radioOpenForAE;
   IBOutlet NSButton *checkboxLoadTabsInBackground;
+  IBOutlet NSButton* mTabBarVisiblity;
 }
 
 - (IBAction)checkboxClicked:(id)sender;

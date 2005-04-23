@@ -81,6 +81,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsNetUtil.h"
+#include "nsIPref.h"
 
 #include "nsIClipboardCommands.h"
 #include "nsICommandManager.h"
@@ -124,6 +125,9 @@ static NSString* const NewTabToolbarItemIdentifier      = @"New Tab Toolbar Item
 static NSString* const CloseTabToolbarItemIdentifier    = @"Close Tab Toolbar Item";
 static NSString* const SendURLToolbarItemIdentifier     = @"Send URL Toolbar Item";
 static NSString* const DLManagerToolbarItemIdentifier   = @"Download Manager Toolbar Item";
+
+int TabBarVisiblePrefChangedCallback(const char* pref, void* data);
+static const char* const gTabBarVisiblePref = "camino.tab_bar_always_visible";
 
 
 static NSString* const NavigatorWindowFrameSaveName = @"NavigatorWindow";
@@ -498,6 +502,10 @@ enum BWCOpenDest {
     NS_IF_RELEASE(mGlobalHistory);
     NS_IF_RELEASE(mURIFixer);
   } // matters
+
+  nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
+  if ( pref )
+    pref->UnregisterCallback(gTabBarVisiblePref, TabBarVisiblePrefChangedCallback, self);
   
   // Tell the BrowserTabView the window is closed
   [mTabBrowser windowClosed];
@@ -660,7 +668,15 @@ enum BWCOpenDest {
     
     [self setupToolbar];
 
-
+    // set up autohide behavior on tab browser and register for changes on that pref. The
+    // default is for it to hide when only 1 tab is visible, so if no pref is found, it will
+    // be NO, and that works.
+    BOOL tabBarAlwaysVisible = [[PreferenceManager sharedInstance] getBooleanPref:gTabBarVisiblePref withSuccess:nil];
+    [mTabBrowser setBarAlwaysVisible:tabBarAlwaysVisible];
+    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
+    if (pref)
+      pref->RegisterCallback(gTabBarVisiblePref, TabBarVisiblePrefChangedCallback, self);
+    
 //  03/03/2002 mlj Changing strategy a bit here.  The addTab: method was
 //  duplicating a lot of the code found here.  I have moved it to that method.
 //  We now remove the IB tab, then add one of our own.
@@ -3432,3 +3448,22 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
 }
 
 @end
+
+#pragma mark -
+
+//
+// TabBarVisiblePrefChangedCallback
+//
+// Pref callback to tell us when the pref values for the visibility of the tab
+// view with just one tab open.
+//
+int TabBarVisiblePrefChangedCallback(const char* inPref, void* inBWC)
+{
+  if (strcmp(inPref, gTabBarVisiblePref) == 0) {
+    BOOL newValue = [[PreferenceManager sharedInstance] getBooleanPref:gTabBarVisiblePref withSuccess:nil];
+    BrowserWindowController* bwc = (BrowserWindowController*)inBWC;
+    [bwc->mTabBrowser setBarAlwaysVisible:newValue];
+  }
+  return NS_OK;
+}
+

@@ -42,12 +42,11 @@
 
 #import "BrowserTabView.h"
 #import "BrowserWrapper.h"
-#import "BrowserWindowController.h"
 #import "BookmarkFolder.h"
 #import "Bookmark.h"
-#import "BookmarkToolbar.h"
 #import "BookmarkManager.h"
 #import "BrowserTabBarView.h"
+#import "BrowserWindowController.h"
 #import "MainController.h"
 
 
@@ -80,7 +79,7 @@
 - (id)initWithFrame:(NSRect)frameRect
 {
     if ( (self = [super initWithFrame:frameRect]) ) {
-      autoHides = YES;
+      mBarAlwaysVisible = NO;
       //mVisible = YES;
     }
     return self;
@@ -88,6 +87,7 @@
 
 - (void)awakeFromNib
 {
+    mBarAlwaysVisible = NO;
     mVisible = YES;
     [self showOrHideTabsAsAppropriate];
     [self registerForDraggedTypes:[NSArray arrayWithObjects:
@@ -166,14 +166,19 @@
 /*** Accessor Methods                   ***/
 /******************************************/
 
-- (BOOL)autoHides
+- (BOOL)barAlwaysVisible
 {
-    return autoHides;
+  return mBarAlwaysVisible;
 }
 
-- (void)setAutoHides:(BOOL)newSetting
+- (void)setBarAlwaysVisible:(BOOL)newSetting
 {
-    autoHides = newSetting;
+  BOOL oldSetting = mBarAlwaysVisible;
+  mBarAlwaysVisible = newSetting;
+  
+  // if there was a change, make sure we update immediately
+  if (newSetting != oldSetting)
+    [self showOrHideTabsAsAppropriate];
 }
 
 /******************************************/
@@ -203,11 +208,16 @@
     BOOL tabsVisible = [mTabBar isVisible];
     int numItems = [[self tabViewItems] count];
     
-    if (numItems < 2 && tabsVisible) {
+    // if the number of tabs gets below a minimum threshold, we want to 
+    // close the bar. That threshold is two if the user has auto-hide on,
+    // otherwise it is one (meaning don't hide it at all).
+    const short minTabThreshold = [self barAlwaysVisible] ? 1 : 2;
+    
+    if (numItems < minTabThreshold && tabsVisible) {
       tabVisibilityChanged = YES;
       // hide the tabs and give the view a chance to kill its tracking rects
       [mTabBar setVisible:NO];
-    } else if (numItems >= 2 && !tabsVisible) {
+    } else if (numItems >= minTabThreshold && !tabsVisible) {
       // show the tabs allow the view to set up tracking rects
       [mTabBar setVisible:YES];
       tabVisibilityChanged = YES;

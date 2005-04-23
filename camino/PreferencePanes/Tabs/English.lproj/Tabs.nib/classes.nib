@@ -14,12 +14,13 @@
         }, 
         {
             ACTIONS = {checkboxClicked = id; }; 
-            CLASS = OrgMozillaChimeraPreferenceTabbedBrowsing; 
+            CLASS = OrgMozillaChimeraPreferenceTabs; 
             LANGUAGE = ObjC; 
             OUTLETS = {
                 checkboxLoadTabsInBackground = NSButton; 
-                radioOpenForAE = id; 
-                radioOpenTabsForCommand = id; 
+                mTabBarVisiblity = NSButton; 
+                radioOpenForAE = NSMatrix; 
+                radioOpenTabsForCommand = NSMatrix; 
             }; 
             SUPERCLASS = PreferencePaneBase; 
         }, 

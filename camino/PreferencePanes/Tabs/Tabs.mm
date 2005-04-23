@@ -63,6 +63,7 @@
   [radioOpenTabsForCommand selectCellWithTag:[self getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:&gotPref]];
   [radioOpenForAE selectCellWithTag:[self getIntPref:"browser.reuse_window" withSuccess:&gotPref]];
   [checkboxLoadTabsInBackground setState:[self getBooleanPref:"browser.tabs.loadInBackground" withSuccess:&gotPref]];
+  [mTabBarVisiblity setState:[self getBooleanPref:"camino.tab_bar_always_visible" withSuccess:&gotPref]];
 }
 
 - (IBAction)checkboxClicked:(id)sender
@@ -78,6 +79,9 @@
   }
   else if (sender == checkboxLoadTabsInBackground) {
     [self setPref:"browser.tabs.loadInBackground" toBoolean:[sender state]];
+  }
+  else if (sender == mTabBarVisiblity) {
+    [self setPref:"camino.tab_bar_always_visible" toBoolean:[sender state]];
   }
 }
 

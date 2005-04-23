@@ -43,7 +43,7 @@
 
 @interface BrowserTabView : NSTabView
 {
-  BOOL autoHides;
+  BOOL mBarAlwaysVisible;
   BOOL mIsDropTarget;
   BOOL mLastClickIsPotentialDrag;
   BOOL mVisible; // YES if the view is in the hierarchy
@@ -52,11 +52,10 @@
 
 + (BrowserTabViewItem*)makeNewTabItem;
 
-//  Behavior: Autohiding overrides the default tab visibility state.
-//            To switch back to usual tabView behavior, setAutoHides:NO.
-//			  Initial value is read from defaults.
-- (BOOL)autoHides;
-- (void)setAutoHides:(BOOL)newSetting;
+// get and set whether the tab bar is always visible, even when it gets down to a single tab. The 
+// default is hide when displaying only one tab. 
+- (BOOL)barAlwaysVisible;
+- (void)setBarAlwaysVisible:(BOOL)newSetting;
 
 - (void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer;
 
