@@ -1955,6 +1955,9 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     if (!proto)
         return NULL;
 
+    if (!js_EnterLocalRootScope(cx))
+        goto bad2;
+
     if (!constructor) {
         /* Lacking a constructor, name the prototype (e.g., Math). */
         named = OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom),
@@ -2015,11 +2018,15 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         (static_fs && !JS_DefineFunctions(cx, ctor, static_fs))) {
         goto bad;
     }
+    js_LeaveLocalRootScope(cx);
     return proto;
 
 bad:
+    js_LeaveLocalRootScope(cx);
     if (named)
         (void) OBJ_DELETE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &rval);
+
+bad2:
     cx->newborn[GCX_OBJECT] = NULL;
     return NULL;
 }
@@ -3773,7 +3780,7 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
     if (OBJECT_IS_XML(cx, obj)) {
         JSXMLObjectOps *ops;
         JSAtom *atom;
- 
+
         ops = (JSXMLObjectOps *) obj->map->ops;
         atom = js_Atomize(cx, name, strlen(name), 0);
         if (!atom)
