@@ -1857,6 +1857,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     jsbytecode *endpc, *pc2;
     JSOp op, op2;
     const JSCodeSpec *cs;
+    jsatomid atomIndex;
     JSAtom *atom;
     uintN argc, slot, attrs;
     jsval *vp, lval, rval, ltmp, rtmp;
@@ -2682,9 +2683,17 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         }                                                                     \
     JS_END_MACRO
 
-          case JSOP_SETCONST:
+#define BEGIN_LITOPX_CASE(OP,PCOFF)                                           \
+          case OP:                                                            \
+            atomIndex = GET_ATOM_INDEX(pc + PCOFF);                           \
+          do_##OP:                                                            \
+            atom = js_GetAtom(cx, &script->atomMap, atomIndex);
+
+#define END_LITOPX_CASE                                                       \
+            break;                                                            \
+
+          BEGIN_LITOPX_CASE(JSOP_SETCONST, 0)
             obj = fp->varobj;
-            atom = GET_ATOM(cx, script, pc);
             rval = FETCH_OPND(-1);
             SAVE_SP(fp);
             ok = OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), rval,
@@ -2695,10 +2704,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             if (!ok)
                 goto out;
             STORE_OPND(-1, rval);
-            break;
+          END_LITOPX_CASE
 
-          case JSOP_BINDNAME:
-            atom = GET_ATOM(cx, script, pc);
+          BEGIN_LITOPX_CASE(JSOP_BINDNAME, 0)
             SAVE_SP(fp);
             obj = js_FindIdentifierBase(cx, ATOM_TO_JSID(atom));
             if (!obj) {
@@ -2706,7 +2714,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 goto out;
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-            break;
+          END_LITOPX_CASE
 
           case JSOP_SETNAME:
             atom = GET_ATOM(cx, script, pc);
@@ -3708,16 +3716,78 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             PUSH_OPND(rval);
             obj = NULL;
             break;
+ 
+          case JSOP_UINT24:
+            i = (jsint) GET_LITERAL_INDEX(pc);
+            rval = INT_TO_JSVAL(i);
+            PUSH_OPND(rval);
+            break;
 
-          case JSOP_NUMBER:
-          case JSOP_STRING:
-          case JSOP_OBJECT:
-            atom = GET_ATOM(cx, script, pc);
+          case JSOP_LITERAL:
+            atomIndex = GET_LITERAL_INDEX(pc);
+            atom = js_GetAtom(cx, &script->atomMap, atomIndex);
             PUSH_OPND(ATOM_KEY(atom));
             obj = NULL;
             break;
 
-          case JSOP_REGEXP:
+          case JSOP_FINDNAME:
+            atomIndex = GET_LITERAL_INDEX(pc);
+            atom = js_GetAtom(cx, &script->atomMap, atomIndex);
+            SAVE_SP(fp);
+            obj = js_FindIdentifierBase(cx, ATOM_TO_JSID(atom));
+            if (!obj) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            PUSH_OPND(OBJECT_TO_JSVAL(obj));
+            PUSH_OPND(ATOM_KEY(atom));
+            break;
+
+          case JSOP_LITOPX:
+            atomIndex = GET_LITERAL_INDEX(pc);
+            op = pc[1 + LITERAL_INDEX_LEN];
+            switch (op) {
+              case JSOP_ANONFUNOBJ:   goto do_JSOP_ANONFUNOBJ;
+              case JSOP_BINDNAME:     goto do_JSOP_BINDNAME;
+              case JSOP_CLOSURE:      goto do_JSOP_CLOSURE;
+              case JSOP_DEFCONST:     goto do_JSOP_DEFCONST;
+              case JSOP_DEFFUN:       goto do_JSOP_DEFFUN;
+              case JSOP_DEFLOCALFUN:  goto do_JSOP_DEFLOCALFUN;
+              case JSOP_DEFVAR:       goto do_JSOP_DEFVAR;
+              case JSOP_EXPORTNAME:   goto do_JSOP_EXPORTNAME;
+              case JSOP_GETMETHOD:    goto do_JSOP_GETMETHOD;
+              case JSOP_INITCATCHVAR: goto do_JSOP_INITCATCHVAR;
+              case JSOP_NAMEDFUNOBJ:  goto do_JSOP_NAMEDFUNOBJ;
+              case JSOP_NUMBER:       goto do_JSOP_NUMBER;
+              case JSOP_OBJECT:       goto do_JSOP_OBJECT;
+              case JSOP_QNAMECONST:   goto do_JSOP_QNAMECONST;
+              case JSOP_QNAMEPART:    goto do_JSOP_QNAMEPART;
+              case JSOP_REGEXP:       goto do_JSOP_REGEXP;
+              case JSOP_SETCONST:     goto do_JSOP_SETCONST;
+              case JSOP_STRING:       goto do_JSOP_STRING;
+              case JSOP_XMLCDATA:     goto do_JSOP_XMLCDATA;
+              case JSOP_XMLCOMMENT:   goto do_JSOP_XMLCOMMENT;
+              case JSOP_XMLOBJECT:    goto do_JSOP_XMLOBJECT;
+              case JSOP_XMLPI:        goto do_JSOP_XMLPI;
+              default:                JS_ASSERT(0);
+            }
+            /* NOTREACHED */
+            break;
+
+          case JSOP_NUMBER:
+          case JSOP_STRING:
+          case JSOP_OBJECT:
+            atomIndex = GET_ATOM_INDEX(pc);
+
+          do_JSOP_NUMBER:
+          do_JSOP_STRING:
+          do_JSOP_OBJECT:
+            atom = js_GetAtom(cx, &script->atomMap, atomIndex);
+            PUSH_OPND(ATOM_KEY(atom));
+            obj = NULL;
+            break;
+
+          BEGIN_LITOPX_CASE(JSOP_REGEXP, 0)
           {
             JSRegExp *re;
             JSObject *funobj;
@@ -3746,7 +3816,6 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              * need a similar op for other kinds of object literals, we should
              * push cloning down under JSObjectOps and reuse code here.
              */
-            atom = GET_ATOM(cx, script, pc);
             JS_ASSERT(ATOM_IS_OBJECT(atom));
             obj = ATOM_TO_OBJECT(atom);
             JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_RegExpClass);
@@ -3829,8 +3898,8 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
             PUSH_OPND(rval);
             obj = NULL;
-            break;
           }
+          END_LITOPX_CASE
 
           case JSOP_ZERO:
             PUSH_OPND(JSVAL_ZERO);
@@ -4062,8 +4131,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
             break;
 
-          case JSOP_EXPORTNAME:
-            atom = GET_ATOM(cx, script, pc);
+          BEGIN_LITOPX_CASE(JSOP_EXPORTNAME, 0)
             id   = ATOM_TO_JSID(atom);
             obj  = fp->varobj;
             SAVE_SP(fp);
@@ -4083,7 +4151,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
             if (!ok)
                 goto out;
-            break;
+          END_LITOPX_CASE
 
           case JSOP_IMPORTALL:
             id = (jsid) JSVAL_VOID;
@@ -4244,10 +4312,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
           case JSOP_DEFCONST:
           case JSOP_DEFVAR:
-          {
-            jsatomid atomIndex;
-
             atomIndex = GET_ATOM_INDEX(pc);
+
+          do_JSOP_DEFCONST:
+          do_JSOP_DEFVAR:
             atom = js_GetAtom(cx, &script->atomMap, atomIndex);
             obj = fp->varobj;
             attrs = JSPROP_ENUMERATE;
@@ -4298,11 +4366,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
             OBJ_DROP_PROPERTY(cx, obj2, prop);
             break;
-          }
 
-          case JSOP_DEFFUN:
+          BEGIN_LITOPX_CASE(JSOP_DEFFUN, 0)
           {
-            jsatomid atomIndex;
             uintN flags;
 
             atomIndex = GET_ATOM_INDEX(pc);
@@ -4416,11 +4482,11 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
 #endif
             OBJ_DROP_PROPERTY(cx, parent, prop);
-            break;
           }
+          END_LITOPX_CASE
 
 #if JS_HAS_LEXICAL_CLOSURE
-          case JSOP_DEFLOCALFUN:
+          BEGIN_LITOPX_CASE(JSOP_DEFLOCALFUN, VARNO_LEN)
             /*
              * Define a local function (i.e., one nested at the top level of
              * another function), parented by the current scope chain, and
@@ -4428,15 +4494,14 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              * This is an optimization over JSOP_DEFFUN that avoids requiring
              * a call object for the outer function's activation.
              */
-            pc2 = pc;
-            slot = GET_VARNO(pc2);
-            pc2 += VARNO_LEN;
-            atom = GET_ATOM(cx, script, pc2);
+            slot = GET_VARNO(pc);
+            atom = js_GetAtom(cx, &script->atomMap, atomIndex);
             obj = ATOM_TO_OBJECT(atom);
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
 
             parent = fp->scopeChain;
             if (OBJ_GET_PARENT(cx, obj) != parent) {
+                SAVE_SP(fp);
                 obj = js_CloneFunctionObject(cx, obj, parent);
                 if (!obj) {
                     ok = JS_FALSE;
@@ -4444,16 +4509,16 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 }
             }
             fp->vars[slot] = OBJECT_TO_JSVAL(obj);
-            break;
+          END_LITOPX_CASE
 
-          case JSOP_ANONFUNOBJ:
+          BEGIN_LITOPX_CASE(JSOP_ANONFUNOBJ, 0)
             /* Push the specified function object literal. */
-            atom = GET_ATOM(cx, script, pc);
             obj = ATOM_TO_OBJECT(atom);
 
             /* If re-parenting, push a clone of the function object. */
             parent = fp->scopeChain;
             if (OBJ_GET_PARENT(cx, obj) != parent) {
+                SAVE_SP(fp);
                 obj = js_CloneFunctionObject(cx, obj, parent);
                 if (!obj) {
                     ok = JS_FALSE;
@@ -4462,11 +4527,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             obj = NULL;
-            break;
+          END_LITOPX_CASE
 
-          case JSOP_NAMEDFUNOBJ:
+          BEGIN_LITOPX_CASE(JSOP_NAMEDFUNOBJ, 0)
             /* ECMA ed. 3 FunctionExpression: function Identifier [etc.]. */
-            atom = GET_ATOM(cx, script, pc);
             rval = ATOM_KEY(atom);
             JS_ASSERT(JSVAL_IS_FUNCTION(cx, rval));
 
@@ -4552,12 +4616,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              */
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             obj = NULL;
-            break;
+          END_LITOPX_CASE
 
-          case JSOP_CLOSURE:
-          {
-            jsatomid atomIndex;
-
+          BEGIN_LITOPX_CASE(JSOP_CLOSURE, 0)
             /*
              * ECMA ed. 3 extension: a named function expression in a compound
              * statement (not at the top statement level of global code, or at
@@ -4566,8 +4627,6 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              * Get immediate operand atom, which is a function object literal.
              * From it, get the function to close.
              */
-            atomIndex = GET_ATOM_INDEX(pc);
-            atom = js_GetAtom(cx, &script->atomMap, atomIndex);
             JS_ASSERT(JSVAL_IS_FUNCTION(cx, ATOM_KEY(atom)));
             obj = ATOM_TO_OBJECT(atom);
 
@@ -4638,8 +4697,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
 #endif
             OBJ_DROP_PROPERTY(cx, parent, prop);
-            break;
-          }
+          END_LITOPX_CASE
 #endif /* JS_HAS_LEXICAL_CLOSURE */
 
 #if JS_HAS_GETTER_SETTER
@@ -4898,13 +4956,12 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             /* let the code at out try to catch the exception. */
             goto out;
 
-          case JSOP_INITCATCHVAR:
+          BEGIN_LITOPX_CASE(JSOP_INITCATCHVAR, 0)
             /* Load the value into rval, while keeping it live on stack. */
             JS_ASSERT(sp - fp->spbase >= 2);
             rval = FETCH_OPND(-1);
 
             /* Get the immediate catch variable name into id. */
-            atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
 
             /* Find the object being initialized at top of stack. */
@@ -4921,7 +4978,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
             /* Now that we're done with rval, pop it. */
             sp--;
-            break;
+          END_LITOPX_CASE
 #endif /* JS_HAS_EXCEPTIONS */
 
 #if JS_HAS_INSTANCEOF
@@ -4998,13 +5055,11 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             PUSH_OPND(rval);
             break;
 
-          case JSOP_QNAMEPART:
-            atom = GET_ATOM(cx, script, pc);
+          BEGIN_LITOPX_CASE(JSOP_QNAMEPART, 0)
             PUSH_OPND(ATOM_KEY(atom));
-            break;
+          END_LITOPX_CASE
 
-          case JSOP_QNAMECONST:
-            atom = GET_ATOM(cx, script, pc);
+          BEGIN_LITOPX_CASE(JSOP_QNAMECONST, 0)
             rval = ATOM_KEY(atom);
             lval = FETCH_OPND(-1);
             SAVE_SP(fp);
@@ -5014,7 +5069,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 goto out;
             }
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
-            break;
+          END_LITOPX_CASE
 
           case JSOP_QNAME:
             rval = FETCH_OPND(-1);
@@ -5194,8 +5249,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             STORE_OPND(-1, STRING_TO_JSVAL(str));
             break;
 
-          case JSOP_XMLOBJECT:
-            atom = GET_ATOM(cx, script, pc);
+          BEGIN_LITOPX_CASE(JSOP_XMLOBJECT, 0)
             SAVE_SP(fp);
             obj = js_CloneXMLObject(cx, ATOM_TO_OBJECT(atom));
             if (!obj) {
@@ -5204,10 +5258,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             obj = NULL;
-            break;
+          END_LITOPX_CASE
 
-          case JSOP_XMLCDATA:
-            atom = GET_ATOM(cx, script, pc);
+          BEGIN_LITOPX_CASE(JSOP_XMLCDATA, 0)
             str = ATOM_TO_STRING(atom);
             obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_TEXT, NULL, str);
             if (!obj) {
@@ -5215,10 +5268,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 goto out;
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-            break;
+          END_LITOPX_CASE
 
-          case JSOP_XMLCOMMENT:
-            atom = GET_ATOM(cx, script, pc);
+          BEGIN_LITOPX_CASE(JSOP_XMLCOMMENT, 0)
             str = ATOM_TO_STRING(atom);
             obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_COMMENT, NULL, str);
             if (!obj) {
@@ -5226,13 +5278,13 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 goto out;
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-            break;
+          END_LITOPX_CASE
 
-          case JSOP_XMLPI:
-            atom = GET_ATOM(cx, script, pc);
+          BEGIN_LITOPX_CASE(JSOP_XMLPI, 0)
             str = ATOM_TO_STRING(atom);
-            atom = GET_ATOM(cx, script, pc + ATOM_INDEX_LEN);
-            str2 = ATOM_TO_STRING(atom);
+            rval = FETCH_OPND(-1);
+            str2 = JSVAL_TO_STRING(rval);
+            SAVE_SP(fp);
             obj = js_NewXMLSpecialObject(cx,
                                          JSXML_CLASS_PROCESSING_INSTRUCTION,
                                          str, str2);
@@ -5240,12 +5292,11 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 ok = JS_FALSE;
                 goto out;
             }
-            PUSH_OPND(OBJECT_TO_JSVAL(obj));
-            break;
+            STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
+          END_LITOPX_CASE
 
-          case JSOP_GETMETHOD:
+          BEGIN_LITOPX_CASE(JSOP_GETMETHOD, 0)
             /* Get an immediate atom naming the property. */
-            atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
             FETCH_OBJECT(cx, -1, lval, obj);
             SAVE_SP(fp);
@@ -5264,7 +5315,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             if (!ok)
                 goto out;
             STORE_OPND(-1, rval);
-            break;
+          END_LITOPX_CASE
 
           case JSOP_GETFUNNS:
             ok = js_GetFunctionNamespace(cx, &rval);

@@ -74,7 +74,10 @@ typedef enum JSOp {
 #define JOF_JUMPX         9       /* signed 32-bit jump offset immediate */
 #define JOF_TABLESWITCHX  10      /* extended (32-bit offset) table switch */
 #define JOF_LOOKUPSWITCHX 11      /* extended (32-bit offset) lookup switch */
-#define JOF_CONST2        12      /* 2 unsigned 16-bit constant pool indexes */
+#define JOF_UINT24        12      /* extended unsigned 24-bit literal (index) */
+#define JOF_LITOPX        13      /* JOF_UINT24 followed by op being extended,
+                                     where op if JOF_CONST has no unsigned 16-
+                                     bit immediate operand */
 #define JOF_TYPEMASK      0x000f  /* mask for above immediate types */
 #define JOF_NAME          0x0010  /* name operation */
 #define JOF_PROP          0x0020  /* obj.prop operation */
@@ -145,16 +148,36 @@ typedef enum JSOp {
 #define JUMPX_OFFSET_MIN        ((int32)0x80000000)
 #define JUMPX_OFFSET_MAX        ((int32)0x7fffffff)
 
-/* A literal is indexed by a per-script atom map. */
+/*
+ * A literal is indexed by a per-script atom map.  Most scripts have relatively
+ * few literals, so the standard JOF_CONST format specifies a fixed 16 bits of
+ * immediate operand index.  A script with more than 64K literals must push all
+ * high-indexed literals on the stack using JSOP_LITERAL, then use JOF_ELEM ops
+ * instead of JOF_PROP, etc.
+ */
 #define ATOM_INDEX_LEN          2
-#define ATOM_INDEX_HI(index)    ((jsbytecode)((index) >> 8))
-#define ATOM_INDEX_LO(index)    ((jsbytecode)(index))
+#define ATOM_INDEX_HI(i)        ((jsbytecode)((i) >> 8))
+#define ATOM_INDEX_LO(i)        ((jsbytecode)(i))
 #define GET_ATOM_INDEX(pc)      ((jsatomid)(((pc)[1] << 8) | (pc)[2]))
-#define SET_ATOM_INDEX(pc,index)((pc)[1] = ATOM_INDEX_HI(index),              \
-                                 (pc)[2] = ATOM_INDEX_LO(index))
+#define SET_ATOM_INDEX(pc,i)    ((pc)[1] = ATOM_INDEX_HI(i),                  \
+                                 (pc)[2] = ATOM_INDEX_LO(i))
 #define GET_ATOM(cx,script,pc)  js_GetAtom((cx), &(script)->atomMap,          \
                                            GET_ATOM_INDEX(pc))
-#define ATOM_INDEX_LIMIT_LOG2   16
+
+/* A full atom index for JSOP_LITERAL uses 24 bits of immediate operand. */
+#define LITERAL_INDEX_LEN       3
+#define LITERAL_INDEX_HI(i)     ((jsbytecode)((i) >> 16))
+#define LITERAL_INDEX_MID(i)    ((jsbytecode)((i) >> 8))
+#define LITERAL_INDEX_LO(i)     ((jsbytecode)(i))
+#define GET_LITERAL_INDEX(pc)   ((jsatomid)(((pc)[1] << 16) |                 \
+                                            ((pc)[2] << 8) |                  \
+                                            (pc)[3]))
+#define SET_LITERAL_INDEX(pc,i) ((pc)[1] = LITERAL_INDEX_HI(i),               \
+                                 (pc)[2] = LITERAL_INDEX_MID(i),              \
+                                 (pc)[3] = LITERAL_INDEX_LO(i))
+
+/* Atom index limit is determined by SN_3BYTE_OFFSET_FLAG, see jsemit.h. */
+#define ATOM_INDEX_LIMIT_LOG2   23
 #define ATOM_INDEX_LIMIT        ((uint32)1 << ATOM_INDEX_LIMIT_LOG2)
 
 /* Actual argument count operand format helpers. */
