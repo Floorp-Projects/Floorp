@@ -2261,26 +2261,43 @@ function toggleAffectedChrome(aHide)
   //   (*) menubar
   //   (*) navigation bar
   //   (*) bookmarks toolbar
+  //   (*) browser messages
   //   (*) sidebar
   //   (*) find bar
   //   (*) statusbar
 
   var navToolbox = document.getElementById("navigator-toolbox");
   navToolbox.hidden = aHide;
-  var statusbar = document.getElementById("status-bar");
-  statusbar.hidden = aHide;
   if (aHide)
   {
     gChromeState = {};
     var sidebar = document.getElementById("sidebar-box");
     gChromeState.sidebarOpen = !sidebar.hidden;
     gSidebarCommand = sidebar.getAttribute("sidebarcommand");
+
+    var message = gBrowser.getMessageForBrowser(gBrowser.selectedBrowser, "top");
+    gChromeState.messageOpen = !message.hidden;
+    message.hidden = aHide;
+
+    var statusbar = document.getElementById("status-bar");
+    gChromeState.statusbarOpen = !statusbar.hidden;
+    statusbar.hidden = aHide;
       
     var findBar = document.getElementById("FindToolbar");
     gChromeState.findOpen = !findBar.hidden;
     closeFindBar();
   }
   else {
+    if (gChromeState.messageOpen) {
+      var message = gBrowser.getMessageForBrowser(gBrowser.selectedBrowser, "top");
+      message.hidden = aHide;
+    }
+
+    if (gChromeState.statusbarOpen) {
+      var statusbar = document.getElementById("status-bar");
+      statusbar.hidden = aHide;
+    }
+
     if (gChromeState.findOpen)
       openFindBar();
   }
