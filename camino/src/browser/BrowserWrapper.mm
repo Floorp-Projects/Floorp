@@ -460,12 +460,21 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   }
 }
 
-- (void)onProgressChange:(long long)currentBytes outOf:(long long)maxBytes 
+- (void)onProgressChange64:(long long)currentBytes outOf:(long long)maxBytes 
 {
   if (maxBytes > 0)
   {
     mProgress = ((double)currentBytes / (double)maxBytes) * 100.0;
-    [mDelegate  setLoadingProgress:mProgress];
+    [mDelegate setLoadingProgress:mProgress];
+  }
+}
+
+- (void)onProgressChange:(long)currentBytes outOf:(long)maxBytes 
+{
+  if (maxBytes > 0)
+  {
+    mProgress = ((double)currentBytes / (double)maxBytes) * 100.0;
+    [mDelegate setLoadingProgress:mProgress];
   }
 }
 
