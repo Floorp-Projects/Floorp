@@ -51,32 +51,13 @@
               onpageadvanced="setPrivacyPref()"
               label = "&privacyNotice.label;">
     <description>&reportWizardPrivacy.description;</description>
-    <description id="mustagree">&reportWizardMustAgree.description;</description>
     <vbox id="privacyFrame" flex="1">
       <iframe id="privacyStatement" type="content" flex="1" src="" />
     </vbox>
+    <description id="mustAgree">&reportWizardMustAgree.description;</description>
     <vbox>
       <checkbox id="dontShowPrivacyStatement" label="&dontShowPrivacyStatement.label;" oncommand="privacyPolicyCheckbox()" />
     </vbox>
-  </wizardpage>
-
-<!-- Registration -->
-  <wizardpage id="registration"
-              onpageshow="initRegistration()"
-              label = "&registration.label;">
-    <description>&registration.description;</description>
-    <separator />
-    <description id="registrationProgressDescription"/>
-    <progressmeter id="registrationProgressIndicator" mode="undetermined" value="0%"/>
-    <separator />
-    <hbox>
-    <button
-      id="registerButton"
-      label="&registration.registerButton.label;"
-      default="true"
-      accesskey="&registration.registerButton.accesskey;"
-      oncommand="register()"/>
-    </hbox>
   </wizardpage>
 
 <!-- Report Form -->

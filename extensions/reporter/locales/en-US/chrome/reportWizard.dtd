@@ -7,11 +7,6 @@
 
 <!ENTITY dontShowPrivacyStatement.label             "Don't Show Privacy Statement Again">
 
-<!ENTITY registration.label                         "Get Unique ID">
-<!ENTITY registration.description                   "We will now contact the reporter server to retrieve a unique identifier.  This is only used to tell how many distinct people use this system.  Rest assured we respect your privacy, this can not be used to track you personally.">
-<!ENTITY registration.registerButton.label          "Generate ID">
-<!ENTITY registration.registerButton.accesskey      "G">
-
 <!ENTITY reportForm.label                           "Fill out Report">
 
 <!ENTITY reportForm.description                     "Tell us a little about the problem you encountered:">
