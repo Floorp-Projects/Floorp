@@ -248,8 +248,15 @@
     <content>
       <xul:stack anonid="boxstack" flex="1">
 	<xul:box anonid="bgbox" flex="1"/>
-	<xul:box anonid="fgbox" flex="1"/>
 	<xul:box anonid="topbox" flex="1"/>
+	<xul:box anonid="fgbox" flex="1" class="fgdragcontainer">
+	  <xul:box anonid="fgdragspacer" style="display: inherit;">
+	    <xul:spacer flex="1"/>
+	    <xul:label anonid="fgdragbox-startlabel" class="fgdragbox-label"/>
+	  </xul:box>
+	  <xul:box anonid="fgdragbox" class="fgdragbox" />
+          <xul:label anonid="fgdragbox-endlabel" class="fgdragbox-label"/>
+	</xul:box>
       </xul:stack>
     </content>
 
@@ -467,8 +474,6 @@
               this.bgbox.removeChild(this.bgbox.lastChild);
 	  while (this.topbox.lastChild)
               this.topbox.removeChild(this.topbox.lastChild);
-	  while (this.fgbox.lastChild)
-              this.fgbox.removeChild(this.fgbox.lastChild);
 	]]></body>
       </method>
 
@@ -496,7 +501,8 @@
               theMin += dur;
               if (dur == 0) dur = 60;
 
-              var box = createXULElement("box");
+              var box = createXULElement("spacer");
+              // we key off this in a CSS selector
               box.setAttribute("orient", orient);
               box.setAttribute("class", "calendar-event-column-linebox");
 
@@ -511,6 +517,7 @@
 
 	  // fgbox is used for dragging events
 	  this.fgbox.setAttribute("orient", orient);
+          document.getAnonymousElementByAttribute(this, "anonid", "fgdragspacer").setAttribute("orient", orient);
 
 	  // this one is set to otherorient, since it will contain
 	  // child boxes set to "orient" (one for each set of
@@ -564,7 +571,7 @@
 
                       chunkBox.occurrence = chunk.event.event;
                   } else {
-                      var chunkBox = createXULElement("box");
+                      var chunkBox = createXULElement("spacer");
                       chunkBox.setAttribute("orient", orient);
                       chunkBox.setAttribute("class", "calendar-empty-space-box");
                       xulColumn.appendChild(chunkBox);
@@ -741,9 +748,150 @@
           }
 
           return eventMap;
-      ]]></body>
+        ]]></body>
       </method>
 
+      <!--
+         - Event sweep handlers
+        -->
+      <method name="onEventSweepMouseMove">
+        <parameter name="event"/>
+        <body><![CDATA[
+          var col = document.calendarEventColumnDragging;
+          if (!col) return;
+
+          var pos;
+          var sizeattr;
+	  if (col.getAttribute("orient") == "vertical") {
+              pos = event.clientY - col.parentNode.boxObject.y;
+              sizeattr = "height";
+          } else {
+              pos = event.clientX - col.parentNode.boxObject.x;
+              sizeattr = "width";
+          }
+          // don't let pos go outside the window edges
+          if (pos < 0)
+              pos = 0;
+
+	  // snap to 15 minute intervals
+          var interval = col.mPixPerMin * 15;
+	  var curmin = Math.floor(pos/interval);
+	  var deltamin = curmin - col.mOrigDragMin;
+          if (deltamin == 0)
+              deltamin = 1;
+
+          var fgdragspacer = document.getAnonymousElementByAttribute(col, "anonid", "fgdragspacer");
+          var fgdragbox = document.getAnonymousElementByAttribute(col, "anonid", "fgdragbox");
+	  var fgdragstartlabel = document.getAnonymousElementByAttribute(col, "anonid", "fgdragbox-startlabel");
+	  var fgdragendlabel = document.getAnonymousElementByAttribute(col, "anonid", "fgdragbox-endlabel");
+
+	  //dump ("curmin: " + curmin + "deltamin: " + deltamin + " spacer: " + fgdragspacer.getAttribute("height") + " box: " + fgdragbox.getAttribute("height") + "\n");
+
+          if (deltamin < 0) {
+              // add 1 here since we'll always start off with at least 1 interval-sized
+              // area selected, and we want that to remain consistent whether we drag up
+              // or drag down
+              fgdragspacer.setAttribute(sizeattr, (curmin+1) * interval);
+	  }
+	  fgdragbox.setAttribute(sizeattr, Math.abs(deltamin * interval));
+
+          if (deltamin < 0) {
+              col.mStartDragMin = col.mOrigDragMin + deltamin;
+              col.mEndDragMin = col.mOrigDragMin + 1;
+          } else {
+              col.mStartDragMin = col.mOrigDragMin;
+              col.mEndDragMin = col.mOrigDragMin + deltamin;
+          }
+
+	  // update the label
+	  var realstartmin = (col.mStartDragMin*15) + col.mStartMin;
+	  var starthr = Math.floor(realstartmin / 60);
+	  var startmin = realstartmin % 60;
+
+	  var realendmin = (col.mEndDragMin*15) + col.mStartMin;
+	  var endhr = Math.floor(realendmin / 60);
+	  var endmin = realendmin % 60;
+
+          fgdragstartlabel.setAttribute("value", starthr + ":" + (startmin < 10 ? "0" : "") + startmin);
+          fgdragendlabel.setAttribute("value", endhr + ":" + (endmin < 10 ? "0" : "") + endmin);
+        ]]></body>
+      </method>
+
+      <method name="onEventSweepMouseUp">
+        <parameter name="event"/>
+        <body><![CDATA[
+          var col = document.calendarEventColumnDragging;
+          if (!col) return;
+
+	  var fgbox = document.getAnonymousElementByAttribute(col, "anonid", "fgbox");
+          var fgdragspacer = document.getAnonymousElementByAttribute(col, "anonid", "fgdragspacer");
+          var fgdragbox = document.getAnonymousElementByAttribute(col, "anonid", "fgdragbox");
+
+          fgdragbox.removeAttribute("dragging");
+	  fgbox.removeAttribute("dragging");
+
+          window.removeEventListener("mousemove", col.onEventSweepMouseMove, true);
+          window.removeEventListener("mouseup", col.onEventSweepMouseUp, true);
+
+	  document.calendarEventColumnDragging = null;
+
+          col.createNewSweptEvent(col.mStartDragMin * 15, col.mEndDragMin * 15);
+        ]]></body>
+      </method>
+
+      <method name="createNewSweptEvent">
+	<parameter name="aStartMin"/>
+	<parameter name="aEndMin"/>
+	<body><![CDATA[
+                     /* 
+	  var eventCreationListener = {
+              col: this,
+              onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
+                  if (!Components.isSuccessCode(aStatus) ||
+                      !(aDetail instanceof Components.interfaces.calIEvent))
+                  {
+                      dump ("++++ Error occurred: " + aDetail);
+                      return;
+                  }
+
+                  var item = aDetail;
+
+                  var thisday = this.col.mDate.clone();
+                  var nextday = this.col.mDate.clone();
+                  nextday.day += 1;
+                  nextday.normalize();
+
+                  var occs = aItem.getOccurrencesBetween(thisday,
+                                                         nextday,
+                                                         {});
+                  for each (occ in occs) {
+                      this.calView.doAddEvent(occ);
+                  }
+
+              },
+              onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) { }
+              },
+	  };
+                     */
+
+          var estart = this.mDate.clone();
+          estart.isDate = false;
+          estart.hour = 0;
+          estart.minute = (this.mStartDragMin * 15) + this.mStartMin;
+          estart.normalize();
+
+          var eend = this.mDate.clone();
+          eend.isDate = false;
+          eend.hour = 0;
+          eend.minute = (this.mEndDragMin * 15) + this.mStartMin;
+          eend.normalize();
+
+          this.calendarView.controller.createNewEvent(this.calendarView.displayCalendar,
+                                                      estart,
+                                                      eend);
+        ]]></body>
+      </method>
+	
     </implementation>
 
     <handlers>
@@ -753,6 +901,39 @@
                                                          this.mDate);
 	}
       ]]></handler>
+
+      <handler event="mousedown" button="0"><![CDATA[
+	//dump("evx: " + event.clientX + " evy: " + event.clientY + "\n");
+	//dump("column " + this.mDate + " mousedown\n");
+
+	var fgbox = document.getAnonymousElementByAttribute(this, "anonid", "fgbox");
+	var fgdragspacer = document.getAnonymousElementByAttribute(this, "anonid", "fgdragspacer");
+	var fgdragbox = document.getAnonymousElementByAttribute(this, "anonid", "fgdragbox");
+
+	// snap to 15 minute intervals
+	var interval = this.mPixPerMin * 15;
+
+        if (this.getAttribute("orient") == "vertical") {
+            this.mOrigDragMin = Math.floor((event.clientY - this.parentNode.boxObject.y)/interval);
+            fgdragspacer.setAttribute("height", this.mOrigDragMin * interval);
+        } else {
+            this.mOrigDragMin = Math.floor((event.clientX - this.parentNode.boxObject.x)/interval);
+            fgdragspacer.setAttribute("width", this.mOrigDragMin * interval);
+        }
+
+	fgbox.setAttribute("dragging", "true");
+        fgdragbox.setAttribute("dragging", "true");
+
+        // cheat and call the sweep move event handler;
+        // this will take care of setting up the sizes right for everything
+        document.calendarEventColumnDragging = this;
+        this.onEventSweepMouseMove(event);
+
+        window.addEventListener("mousemove", this.onEventSweepMouseMove, false);
+        window.addEventListener("mouseup", this.onEventSweepMouseUp, false);
+      ]]></handler>
+
+      
     </handlers>
   </binding>
 
@@ -925,7 +1106,7 @@
                 }
             },
             onModifyItem: function (aOldItem, aNewItem) {
-                dump ("++ ModifyItem\n");
+                //dump ("++ ModifyItem\n");
                 if (!(aOldItem instanceof Components.interfaces.calIEvent))
                     return;
 

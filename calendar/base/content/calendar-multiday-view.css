@@ -25,6 +25,30 @@ calendar-event-column {
   border-bottom: 1px solid #aaaaaa;
 }
 
+.fgdragbox {
+  -moz-box-orient: inherit;
+  display: none;
+}
+
+.fgdragbox[dragging="true"] {
+  display: -moz-box;
+  background: blue;
+  opacity: 0.5;
+}
+
+.fgdragcontainer {
+  -moz-box-orient: inherit;
+  display: none;
+}
+
+.fgdragcontainer[dragging="true"] {
+  display: -moz-box;
+}
+
+.fgdragbox-label {
+  font-weight: bold;
+}
+
 /*== calendar-event-box ==*/
 
 calendar-event-box { 
