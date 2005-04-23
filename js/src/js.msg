@@ -279,3 +279,4 @@ MSG_DEF(JSMSG_BAD_XML_NCR,            196, 1, JSEXN_TYPEERR, "malformed XML char
 MSG_DEF(JSMSG_UNDEFINED_XML_NAME,     197, 1, JSEXN_TYPEERR, "reference to undefined XML name {0}")
 MSG_DEF(JSMSG_DUPLICATE_XML_ATTR,     198, 1, JSEXN_TYPEERR, "duplicate XML attribute {0}")
 MSG_DEF(JSMSG_TOO_MANY_FUN_VARS,      199, 0, JSEXN_SYNTAXERR, "too many local variables")
+MSG_DEF(JSMSG_ARRAY_INIT_TOO_BIG,     200, 0, JSEXN_INTERNALERR, "array initialiser too large")

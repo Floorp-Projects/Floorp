@@ -3768,7 +3768,14 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         matched = js_MatchToken(cx, ts, TOK_RB);
         ts->flags &= ~TSF_OPERAND;
         if (!matched) {
-            for (atomIndex = 0; atomIndex < ATOM_INDEX_LIMIT; atomIndex++) {
+            for (atomIndex = 0; ; atomIndex++) {
+                if (atomIndex == ATOM_INDEX_LIMIT) {
+                    js_ReportCompileErrorNumber(cx, ts,
+                                                JSREPORT_TS | JSREPORT_ERROR,
+                                                JSMSG_ARRAY_INIT_TOO_BIG);
+                    return NULL;
+                }
+
                 ts->flags |= TSF_OPERAND;
                 tt = js_PeekToken(cx, ts);
                 ts->flags &= ~TSF_OPERAND;
