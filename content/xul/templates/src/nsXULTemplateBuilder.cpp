@@ -126,6 +126,8 @@
 static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 
+#define PARSE_TYPE_INTEGER  "Integer"
+
 //----------------------------------------------------------------------
 //
 // nsXULTemplateBuilder
@@ -1778,6 +1780,35 @@ nsXULTemplateBuilder::CompileCondition(nsIAtom* aTag,
 }
 
 nsresult
+nsXULTemplateBuilder::ParseLiteral(const nsString& aParseType, 
+                                   const nsString& aValue,
+                                   nsIRDFNode** aResult)
+{
+    nsresult rv = NS_OK;
+    *aResult = nsnull;
+
+    if (aParseType.EqualsLiteral(PARSE_TYPE_INTEGER)) {
+        nsCOMPtr<nsIRDFInt> intLiteral;
+        PRInt32 errorCode;
+        PRInt32 intValue = aValue.ToInteger(&errorCode);
+        if (NS_FAILED(errorCode))
+            return NS_ERROR_FAILURE;
+        rv = gRDFService->GetIntLiteral(intValue, getter_AddRefs(intLiteral));
+        if (NS_FAILED(rv)) 
+            return rv;
+        rv = CallQueryInterface(intLiteral, aResult);
+    }
+    else {
+        nsCOMPtr<nsIRDFLiteral> literal;
+        rv = gRDFService->GetLiteral(aValue.get(), getter_AddRefs(literal));
+        if (NS_FAILED(rv)) 
+            return rv;
+        rv = CallQueryInterface(literal, aResult);
+    }
+    return rv;
+}
+
+nsresult
 nsXULTemplateBuilder::CompileTripleCondition(nsTemplateRule* aRule,
                                              nsIContent* aCondition,
                                              InnerNode* aParentNode,
@@ -1834,9 +1865,11 @@ nsXULTemplateBuilder::CompileTripleCondition(nsTemplateRule* aRule,
         onode = do_QueryInterface(resource);
     }
     else {
-        nsCOMPtr<nsIRDFLiteral> literal;
-        gRDFService->GetLiteral(object.get(), getter_AddRefs(literal));
-        onode = do_QueryInterface(literal);
+        nsAutoString parseType;
+        aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::parsetype, parseType);
+        nsresult rv = ParseLiteral(parseType, object, getter_AddRefs(onode));
+        if (NS_FAILED(rv))
+            return rv;
     }
 
     nsRDFPropertyTestNode* testnode = nsnull;
@@ -2152,25 +2185,11 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
                 target = do_QueryInterface(resource);
             }
             else {                
-                if (aRuleElement->HasAttr(kNameSpaceID_None, nsXULAtoms::parsetype)) {
-                   nsAutoString parseType;
-                   aRuleElement->GetAttr(kNameSpaceID_None, nsXULAtoms::parsetype, parseType);
-                   if (parseType.EqualsLiteral("Integer")) {                     
-                     nsCOMPtr<nsIRDFInt> intLiteral;
-                     PRInt32 errorCode = nsnull;                     
-                     rv = gRDFService->GetIntLiteral(value.ToInteger(&errorCode), getter_AddRefs(intLiteral));
-                     if (NS_FAILED(rv)) return rv;
-                     
-                     target = do_QueryInterface(intLiteral);
-                   }
-                }
-                else {
-                   nsCOMPtr<nsIRDFLiteral> literal;
-                   rv = gRDFService->GetLiteral(value.get(), getter_AddRefs(literal));
-                   if (NS_FAILED(rv)) return rv;
-
-                   target = do_QueryInterface(literal);
-                }
+              nsAutoString parseType;
+              aRuleElement->GetAttr(kNameSpaceID_None, nsXULAtoms::parsetype, parseType);
+              rv = ParseLiteral(parseType, value, getter_AddRefs(target));
+              if (NS_FAILED(rv))
+                  return rv;
             }
 
             testnode = new nsRDFPropertyTestNode(aParentNode, mConflictSet, mDB, mMemberVar, property, target);

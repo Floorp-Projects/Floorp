@@ -213,6 +213,15 @@ public:
                                     const nsAString& aValue,
                                     InnerNode* aParentNode,
                                     TestNode** aResult);
+
+    /**
+     * Parse the value of a property test assertion for a condition or a simple
+     * rule based on the parseType attribute into the appropriate literal type.
+     */
+    nsresult ParseLiteral(const nsString& aParseType, 
+                          const nsString& aValue,
+                          nsIRDFNode** aResult);
+    
     /**
      * Add automatic bindings for simple rules
      */
