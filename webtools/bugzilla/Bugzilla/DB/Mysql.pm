@@ -277,17 +277,30 @@ sub bz_setup_database {
         # Certain indexes had names in Schema that did not easily conform
         # to a standard. We store those names here, so that they
         # can be properly renamed.
+        # Also, sometimes an old mysqldump would incorrectly rename
+        # unique indexes to "PRIMARY", so we address that here, also.
         my $bad_names = {
             # 'when' is a possible leftover from Bugzillas before 2.8
             bugs_activity => ['when', 'bugs_activity_bugid_idx',
                 'bugs_activity_bugwhen_idx'],
+            cc => ['PRIMARY'],
             longdescs => ['longdescs_bugid_idx',
                'longdescs_bugwhen_idx'],
             flags => ['flags_bidattid_idx'],
             flaginclusions => ['flaginclusions_tpcid_idx'],
             flagexclusions => ['flagexclusions_tpc_id_idx'],
+            keywords => ['PRIMARY'],
+            milestones => ['PRIMARY'],
             profiles_activity => ['profiles_activity_when_idx'],
-            group_control_map => ['group_control_map_gid_idx']
+            group_control_map => ['group_control_map_gid_idx', 'PRIMARY'],
+            user_group_map => ['PRIMARY'],
+            group_group_map => ['PRIMARY'],
+            email_setting => ['PRIMARY'],
+            bug_group_map => ['PRIMARY'],
+            category_group_map => ['PRIMARY'],
+            watch => ['PRIMARY'],
+            namedqueries => ['PRIMARY'],
+            series_data => ['PRIMARY'],
             # series_categories is dealt with below, not here.
         };
 
