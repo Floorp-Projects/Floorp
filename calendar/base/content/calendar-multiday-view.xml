@@ -1003,7 +1003,10 @@
               // we need to set a mouse offset, since we're not dragging from
               // one end of the element
               if (aEventBox) {
-                  this.mDragState.mouseOffset = aMouseY - aEventBox.boxObject.y;
+                  if (this.getAttribute("orient") == "vertical")
+                      this.mDragState.mouseOffset = aMouseY - aEventBox.boxObject.y;
+                  else
+                      this.mDragState.mouseOffset = aMouseX - aEventBox.boxObject.x;
               }
           } else {
               dump ("+++ Invalid grabbed element: '" + aGrabbedElement + "'\n");
