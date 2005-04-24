@@ -74,6 +74,14 @@ calendar-event-box {
   border-bottom: 1px solid #2e4e73;
 }
 
+textbox.editable-label { 
+  font-size: x-small;
+  background: transparent !important;
+  border: none;
+  padding: 0px;
+  -moz-appearance: none;
+}
+
 /*== calendar-event-gripbar ==*/
 
 calendar-event-gripbar { 

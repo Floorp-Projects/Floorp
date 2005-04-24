@@ -41,6 +41,7 @@
 
 <bindings id="calendar-multiday-view-bindings"
   xmlns="http://www.mozilla.org/xbl"
+  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:xbl="http://www.mozilla.org/xbl">
 
@@ -946,7 +947,9 @@
       <xul:box anonid="eventbox" xbl:inherits="orient,width,height" flex="1">
 	<xul:calendar-event-gripbar anonid="gripbar1" xbl:inherits="parentorient=orient"/>
 	<xul:vbox class="calendar-event-box-container" xbl:inherits="parentorient=orient" flex="1" align="left">
-	  <xul:label style="font-size: x-small;" anonid="event-name" flex="1" crop="right"/>
+	  <xul:label anonid="event-name" flex="1" crop="right"/>
+          <!-- for some reason, textboxes suck ass for reflow. -->
+	  <!-- <xul:textbox class="editable-label" anonid="event-name" flex="1" crop="right"/> -->
 	</xul:vbox>
 	<xul:calendar-event-gripbar anonid="gripbar2" xbl:inherits="parentorient=orient"/>
       </xul:box>
@@ -1022,6 +1025,21 @@
       <property name="endMinute" readonly="true"
 	onget="if (!this.mOccurrence) return 0; return this.mOccurrence.occurrenceEndDate.hour * 60 + this.mOccurrence.occurrenceEndDate.minute"/>
     </implementation>
+
+    <handlers>
+      <handler event="mousedown">
+	dump ("event select\n");
+	event.preventBubble();
+      </handler>
+
+      <handler event="dblclick"><![CDATA[
+	if (this.calendarView.controller && this.mOccurrence) {
+            this.calendarView.controller.modifyEvent(this.mOccurrence.item.parent,
+                                                     this.mOccurrence.item);
+        }
+	event.preventBubble();
+      ]]></handler>
+    </handlers>
   </binding>
 
   <binding id="calendar-multiday-view">
