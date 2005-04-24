@@ -342,7 +342,6 @@ nsDownloadListener::DownloadDone(nsresult aStatus)
   // break the reference cycle
   mCancelable = nsnull;
   
-  mHelperAppLauncher = nsnull;
   mDownloadStatus = aStatus;
   
   if (NS_FAILED(aStatus))
