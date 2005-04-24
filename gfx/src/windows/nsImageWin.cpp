@@ -437,46 +437,6 @@ void nsImageWin::CreateImageWithAlphaBits(HDC TheHDC)
   mIsOptimized = PR_TRUE;
 }
 
-
-/** ---------------------------------------------------
- *  See documentation in nsIImageWin.h  
- *  @update 3/27/00 dwc
- */
-void 
-nsImageWin :: CreateDDB(nsIDrawingSurface* aSurface)
-{
-  HDC TheHDC;
-
-
-  ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
-
-
-  if (TheHDC != NULL){
-    // Temporary fix for bug 135226 until we do better decode-time
-    // dithering and paletized storage of images. Bail on the 
-    // optimization to DDB if we're on a paletted device.
-    int rasterCaps = ::GetDeviceCaps(TheHDC, RASTERCAPS);
-    if (RC_PALETTE == (rasterCaps & RC_PALETTE)) {
-      ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
-      return;
-    }
-    
-    if (mSizeImage > 0){
-       if (mAlphaDepth == 8) {
-         CreateImageWithAlphaBits(TheHDC);
-       } else {
-         mHBitmap = ::CreateDIBitmap(TheHDC, mBHead, CBM_INIT, mImageBits,
-                                     (LPBITMAPINFO)mBHead,
-                                     256 == mNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS);
-         mIsOptimized = (mHBitmap != 0);
-       }
-      if (mIsOptimized)
-        CleanUpDIB();
-    }
-    ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
-  }
-}
-
 /** ---------------------------------------------------
  *  See documentation in nsIImageWin.h  
  *  @update 3/27/00 dwc

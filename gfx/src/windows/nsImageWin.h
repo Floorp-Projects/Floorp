@@ -171,13 +171,6 @@ private:
 
   void CreateImageWithAlphaBits(HDC TheHDC);
 
-  /** 
-   * Create a Device Dependent bitmap from a drawing surface
-   * @update dc - 10/29/98
-   * @param aSurface - The drawingsurface to create the DDB from.
-   */
-  void CreateDDB(nsIDrawingSurface* aSurface);
-
   void DrawComposited24(unsigned char *aBits,
                         PRUint8 *aImageRGB, PRUint32 aStrideRGB,
                         PRUint8 *aImageAlpha, PRUint32 aStrideAlpha,
