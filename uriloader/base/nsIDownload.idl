@@ -41,11 +41,11 @@
 interface nsIURI;
 interface nsILocalFile;
 interface nsIObserver;
-interface nsIWebBrowserPersist;
+interface nsICancelable;
 interface nsIWebProgressListener;
 interface nsIMIMEInfo;
 
-[scriptable, uuid(4584178b-ebbd-4d5e-91d3-aa676c2291d2)]
+[scriptable, uuid(1cb42fb4-f092-4a0e-8930-6c06a524da07)]
 interface nsIDownload : nsITransfer {
     
     /**
@@ -81,13 +81,10 @@ interface nsIDownload : nsITransfer {
     readonly attribute nsIURI target;
  
     /**
-     * Optional. If set, it will be used for cancellation, and the transfer
-     * will be set as its listener.  If not, |observer| should be set to listen
-     * and respond accordingly to topics like oncancel, and the client promises
-     * to set the transfer item as the listener for whatever transfer component
-     * is being used.
+     * Object that can be used to cancel the download.
+     * Will be null after the download is finished.
      */
-    readonly attribute nsIWebBrowserPersist persist;
+    readonly attribute nsICancelable cancelable;
 
     /**
      * The user-readable description of the transfer.

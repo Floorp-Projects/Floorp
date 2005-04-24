@@ -321,8 +321,7 @@ protected:
  * data using a helper app.
  */
 class nsExternalAppHandler : public nsIStreamListener,
-                             public nsIHelperAppLauncher,
-                             public nsIObserver
+                             public nsIHelperAppLauncher
 {
 public:
   NS_DECL_ISUPPORTS
@@ -330,7 +329,6 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIHELPERAPPLAUNCHER
   NS_DECL_NSICANCELABLE
-  NS_DECL_NSIOBSERVER
 
   /**
    * @param aMIMEInfo      MIMEInfo object, representing the type of the

@@ -64,21 +64,19 @@ NS_IMPL_ISUPPORTS_INHERITED4(nsDownloadListener, CHDownloader, nsIDownload,
 
 #pragma mark -
 
-/* void init (in nsIURI aSource, in nsILocalFile aTarget, in wstring aDisplayName, in wstring openingWith, in long long startTime, in nsIWebBrowserPersist aPersist); */
+/* void init (in nsIURI aSource, in nsILocalFile aTarget, in AString aDisplayName, in wstring openingWith, in long long startTime, in nsICancelable aCancelable); */
 NS_IMETHODIMP
-nsDownloadListener::Init(nsIURI *aSource, nsILocalFile *aTarget, const PRUnichar *aDisplayName,
-        nsIMIMEInfo *aMIMEInfo, PRInt64 startTime, nsIWebBrowserPersist *aPersist)
+nsDownloadListener::Init(nsIURI *aSource, nsILocalFile *aTarget, const nsAString &aDisplayName,
+        nsIMIMEInfo *aMIMEInfo, PRInt64 startTime, nsICancelable* aCancelable)
 { 
   CreateDownloadDisplay(); // call the base class to make the download UI
-  
-  if (aPersist)  // only true for File->Save As.
-  {
-    mWebPersist = aPersist;
-    mWebPersist->SetProgressListener(this);   // we form a cycle here, since we're a listener.
-                                              // we'll break this cycle in DownloadDone()
-  }
-  
-  SetIsFileSave(aPersist != NULL);
+
+  // Note: This forms a cycle, which will be broken in DownloadDone
+  mCancelable = aCancelable;
+
+  // This is a file save if the cancelable object is a webbrowserpersist
+  nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(aCancelable));
+  SetIsFileSave(persist != NULL);
   
   mDestination = aTarget;
   mURI = aSource;
@@ -106,12 +104,12 @@ nsDownloadListener::GetTarget(nsILocalFile * *aTarget)
   return NS_OK;
 }
 
-/* readonly attribute nsIWebBrowserPersist persist; */
+/* readonly attribute nsICancelable cancelable; */
 NS_IMETHODIMP
-nsDownloadListener::GetPersist(nsIWebBrowserPersist * *aPersist)
+nsDownloadListener::GetCancelable(nsICancelable * *aCancelable)
 {
-  NS_ENSURE_ARG_POINTER(aPersist);
-  NS_IF_ADDREF(*aPersist = mWebPersist);
+  NS_ENSURE_ARG_POINTER(aCancelable);
+  NS_IF_ADDREF(*aCancelable = mCancelable);
   return NS_OK;
 }
 
@@ -170,19 +168,6 @@ nsDownloadListener::GetListener(nsIWebProgressListener * *aListener)
 
 NS_IMETHODIMP
 nsDownloadListener::SetListener(nsIWebProgressListener * aListener)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute nsIObserver observer; */
-NS_IMETHODIMP
-nsDownloadListener::GetObserver(nsIObserver * *aObserver)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDownloadListener::SetObserver(nsIObserver * aObserver)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

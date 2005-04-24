@@ -1348,7 +1348,6 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIHelperAppLauncher)   
    NS_INTERFACE_MAP_ENTRY(nsICancelable)
-   NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
@@ -1389,17 +1388,6 @@ nsExternalAppHandler::~nsExternalAppHandler()
   // Not using NS_RELEASE, since we don't want to set sSrv to NULL
   sSrv->Release();
 }
-
-NS_IMETHODIMP nsExternalAppHandler::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData )
-{
-  if (strcmp(aTopic, "oncancel") == 0)
-  {
-    // User pressed cancel button on dialog.
-    return Cancel(NS_BINDING_ABORTED);
-  }
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListener2 * aWebProgressListener)
 { 
@@ -2013,9 +2001,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
   // This nsITransfer object holds a reference to us (we are its observer), so
   // we need to release the reference to break a reference cycle (and therefore
   // to prevent leaking)
-  nsCOMPtr<nsITransfer> tr(do_QueryInterface(mWebProgressListener));
-  if (tr)
-    tr->SetObserver(nsnull);
   mWebProgressListener = nsnull;
 
   return NS_OK;
@@ -2100,11 +2085,9 @@ nsresult nsExternalAppHandler::InitializeDownload(nsITransfer* aTransfer)
   rv = NS_NewFileURI(getter_AddRefs(target), mFinalFileDestination);
   if (NS_FAILED(rv)) return rv;
   
-  rv = aTransfer->Init(mSourceUrl, target, nsnull,
-                       mMimeInfo, mTimeDownloadStarted, nsnull);
+  rv = aTransfer->Init(mSourceUrl, target, EmptyString(),
+                       mMimeInfo, mTimeDownloadStarted, this);
   if (NS_FAILED(rv)) return rv;
-  
-  rv = aTransfer->SetObserver(this);
 
   // Tell the listener about the location of the target file
   nsCOMPtr<nsIObserver> obs(do_QueryInterface(aTransfer));
@@ -2457,9 +2440,6 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel(nsresult aReason)
 
   // Release the listener, to break the reference cycle with it (we are the
   // observer of the listener).
-  nsCOMPtr<nsITransfer> tr(do_QueryInterface(mWebProgressListener));
-  if (tr)
-    tr->SetObserver(nsnull);
   mWebProgressListener = nsnull;
 
   return NS_OK;

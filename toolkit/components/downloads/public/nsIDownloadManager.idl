@@ -45,13 +45,13 @@ interface nsIDOMWindow;
 interface nsIURI;
 interface nsILocalFile;
 interface nsIDownload;
-interface nsIWebBrowserPersist;
+interface nsICancelable;
 interface nsIMIMEInfo;
 interface nsIRDFDataSource;
 interface nsIDownloadProgressListener;
 interface nsISupportsArray;
 
-[scriptable, uuid(9be66cc0-1dd1-11b2-8617-e3a3ed26e3b0)]
+[scriptable, uuid(31e8cfdc-52c7-4a36-b1c2-8038a12c271d)]
 interface nsIDownloadManager : nsISupports {
   // Download States
   const short DOWNLOAD_NOTSTARTED       = -1;
@@ -68,30 +68,32 @@ interface nsIDownloadManager : nsISupports {
   /**
    * Creates an nsIDownload and adds it to be managed by the download manager.
    *
-   * @param aSource The source (nsIURI) of the download.
+   * @param aSource The source URI of the transfer. Must not be null.
    *
-   * @param aTarget The local file to which the download is being saved.
+   * @param aTarget The target URI of the transfer. Must not be null.
    *
-   * @param aDisplayName The user-readable description of the download.
+   * @param aDisplayName The user-readable description of the transfer.
+   *                     Can be empty.
    *
-   * @param aPersist The "persist" used to transfer the download.  If set,
-   *                 the manager will set its listener to the download item
-   *                 and use it for cancellation.  If not set, the client
-   *                 is expected to set the download item as the listener on
-   *                 whatever transfer component is being used, and to
-   *                 set an observer on the download item that listens for
-   *                 the "oncancel" topic and cancels the download.
+   * @param aMIMEInfo The MIME info associated with the target,
+   *                  including MIME type and helper app when appropriate.
+   *                  This parameter is optional.
+   *
+   * @param startTime Time when the download started
+   *
+   * @param aCancelable An object that can be used to abort the download.
+   *                    Must not be null.
    *
    * @return The newly created download item with the passed-in properties.
    */
   nsIDownload addDownload(in short aDownloadType, 
                           in nsIURI aSource,
                           in nsIURI aTarget,
-                          in wstring aDisplayName,
-                          in wstring aIconURL,
+                          in AString aDisplayName,
+                          in AString aIconURL,
                           in nsIMIMEInfo aMIMEInfo,
-                          in long long aStartTime,
-                          in nsIWebBrowserPersist aPersist);
+                          in PRTime aStartTime,
+                          in nsICancelable aCancelable);
 
   /**
    *  Retrieves an in-progress download managed by the download manager.
@@ -108,11 +110,8 @@ interface nsIDownloadManager : nsISupports {
 
   /**
    * Cancels the download with the specified persistent descriptor if it's
-   * currently in progress.  If a "persist" was specified for the download,
-   * nsIWebBrowserPersist::CancelSave will be called.  If an observer was set
-   * on the nsIDownload, it will be notified with the "oncancel" topic.  Clients
-   * that don't provide a "persist" must listen for this topic and cancel the
-   * download. 
+   * currently in progress. This calls cancel(NS_BINDING_ABORTED) on the
+   * nsICancelable provided for the download.
    *
    * @param aPersistentDescriptor The persistent descriptor of the download to
    *                              be cancelled.
