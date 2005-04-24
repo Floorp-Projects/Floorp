@@ -181,9 +181,8 @@ private:
   static PRBool CanAlphaBlend(void);
 
   /** 
-   * Create a Device Dependent bitmap from a drawing surface
-   * @update dc - 05/20/99
-   * @param aSurface - The drawingsurface to create the DIB from.
+   * Recreate a device independent image from a device dependent image (DDB)
+   * Does not remove the DDB
    */
   nsresult ConvertDDBtoDIB();
 
