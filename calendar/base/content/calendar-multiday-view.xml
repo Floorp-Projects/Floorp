@@ -249,7 +249,7 @@
     <content>
       <xul:stack anonid="boxstack" flex="1">
 	<xul:box anonid="bgbox" flex="1"/>
-	<xul:box anonid="topbox" flex="1"/>
+	<xul:box anonid="topbox" flex="1" equalsize="always"/>
 	<xul:box anonid="fgbox" flex="1" class="fgdragcontainer">
 	  <xul:box anonid="fgdragspacer" style="display: inherit;">
 	    <xul:spacer flex="1"/>
