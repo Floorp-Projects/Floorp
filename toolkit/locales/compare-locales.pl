@@ -105,7 +105,7 @@ sub readProperties
 
     $contents =~ s/\\$$//gm;
 
-    return $contents =~ /^\s*([\w\.]+)\s*[=:]/gm;
+    return $contents =~ /^\s*([^#!\s\r\n][^=:\r\n]*?)\s*[=:]/gm;
 }
 
 sub compareProperties
