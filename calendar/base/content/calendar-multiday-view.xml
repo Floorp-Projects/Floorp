@@ -837,6 +837,15 @@
 
 	  document.calendarEventColumnDragging = null;
 
+          // if the user didn't sweep out at least 1 interval's worth of pixels, ignore.
+          if (col.getAttribute("orient") == "vertical") {
+              if (Math.abs(event.clientY - col.mOrigDragLoc) < (col.mPixPerMin * 15))
+                  return;
+          } else {
+              if (Math.abs(event.clientX - col.mOrigDragLoc) < (col.mPixPerMin * 15))
+                  return;
+          }
+
           col.createNewSweptEvent(col.mStartDragMin * 15, col.mEndDragMin * 15);
         ]]></body>
       </method>
@@ -916,9 +925,11 @@
 	var interval = this.mPixPerMin * 15;
 
         if (this.getAttribute("orient") == "vertical") {
+            this.mOrigDragLoc = event.clientY;
             this.mOrigDragMin = Math.floor((event.clientY - this.parentNode.boxObject.y)/interval);
             fgdragspacer.setAttribute("height", this.mOrigDragMin * interval);
         } else {
+            this.mOrigDragLoc = event.clientX;
             this.mOrigDragMin = Math.floor((event.clientX - this.parentNode.boxObject.x)/interval);
             fgdragspacer.setAttribute("width", this.mOrigDragMin * interval);
         }
