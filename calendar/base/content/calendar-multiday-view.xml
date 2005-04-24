@@ -373,6 +373,51 @@
 
       <!-- methods -->
 
+      <method name="selectOccurrence">
+	<parameter name="aOccurrence"/>
+	<body><![CDATA[
+	  // if we're being asked to unselect, and we
+	  // don't have a selection, return.
+	  if (aOccurrence == null && !this.mCurrentSelection)
+              return;
+
+	  if (this.mCurrentSelection) {
+              // XXX FIXME don't unconditionally removeAttribute("class"), instead
+              // just remove the "selected" class.
+              this.mCurrentSelection.eventbox.removeAttribute("class");
+              this.mCurrentSelection = null;
+	  }
+
+          if (aOccurrence) {
+              var chunk = this.findChunkForOccurrence(aOccurrence);
+              if (!chunk) {
+                  dump ("++ Couldn't find chunk to select!!!\n");
+                  return;
+              }
+
+              chunk.eventbox.setAttribute("class", "selected");
+	      this.mCurrentSelection = chunk;
+          }
+	]]></body>
+      </method>
+
+
+      <method name="findChunkForOccurrence">
+	<parameter name="aOccurrence"/>
+	<body><![CDATA[
+	  for each (chunk in this.mEvents) {
+              if (chunk.event.item == aOccurrence.item &&
+                  chunk.event.occurrenceStartDate.compare(aOccurrence.occurrenceStartDate) == 0 &&
+                  chunk.event.occurrenceEndDate.compare(aOccurrence.occurrenceEndDate) == 0)
+              {
+                  return chunk;
+              }
+	  }
+
+          return null;
+	]]></body>
+      </method>
+
       <method name="setAttribute">
 	<parameter name="aAttr"/>
 	<parameter name="aVal"/>
@@ -572,6 +617,8 @@
 
                       chunkBox.calendarView = this.calendarView;
                       chunkBox.occurrence = chunk.event.event;
+
+                      chunk.event.eventbox = chunkBox;
                   } else {
                       var chunkBox = createXULElement("spacer");
                       chunkBox.setAttribute("orient", orient);
@@ -1041,6 +1088,7 @@
     <handlers>
       <handler event="mousedown">
 	dump ("event select\n");
+	this.calendarView.selectedOccurrence = this.mOccurrence;
 	event.preventBubble();
       </handler>
 
@@ -1094,6 +1142,7 @@
       <field name="mDateColumns">null</field>
       <field name="mBatchCount">0</field>
       <field name="mPixPerMin">0.6</field>
+      <field name="mSelectedOccurrence">null</field>
 
       <field name="mObserver"><![CDATA[
         // the calIObserver, and calICompositeObserver
@@ -1315,6 +1364,30 @@
            return dates;
 	]]></body>
       </method>
+
+      <property name="selectedOccurrence">
+	<getter><![CDATA[
+	  return this.mSelectedOccurrence;
+	]]></getter>
+	<setter><![CDATA[
+	  if (this.mSelectedOccurrence != val) {
+              if (this.mSelectedOccurrence) {
+                  var col = this.findColumnForEvent(this.mSelectedOccurrence);
+                  col.column.selectOccurrence(null);
+              }
+
+              if (val) {
+                  var col = this.findColumnForEvent(val);
+                  if (col)
+                      col.column.selectOccurrence(val);
+                  else
+                      val = null;
+              }
+
+              return (this.mSelectedOccurrence = val);
+	  }
+	]]></setter>
+      </property>
 
       <property name="pixelsPerMinute">
 	<getter>return this.mPixPerMin</getter>

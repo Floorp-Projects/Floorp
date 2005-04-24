@@ -82,6 +82,10 @@ textbox.editable-label {
   -moz-appearance: none;
 }
 
+calendar-event-box.selected .calendar-event-box-container { 
+  background: #ffdb67 !important;
+}
+
 /*== calendar-event-gripbar ==*/
 
 calendar-event-gripbar { 
