@@ -2,6 +2,22 @@
 
 const CI = Components.interfaces;
 
+function makeTableRow(val) {
+    return "<tr><td>" + val[0] + "</td><td>" + val[1] + "</td></tr>\n";
+}
+
+function makeButton(type, content) {
+    return "<button type='submit' value='" + type + "'>" + content + "</button>";
+}
+
+function startForm(calendarData) {
+    var form = "<form method='GET' action='moz-cal-handle-itip:'>\n";
+    form += "<input type='hidden' name='preferredCalendar' value=''>\n";
+    // We use escape instead of encodeURI*, because we need to deal with single quotes, sigh
+    form += "<input type='hidden' name='data' value='" + escape(calendarData) + "'>\n";
+    return form;
+}
+
 function ltnMimeConverter() { }
 
 ltnMimeConverter.prototype = {
@@ -14,21 +30,33 @@ ltnMimeConverter.prototype = {
     },
 
     convertToHTML: function(contentType, data) {
-        dump("converting " + contentType + " to HTML\n");
+        // dump("converting " + contentType + " to HTML\n");
 
         var event = Components.classes["@mozilla.org/calendar/event;1"]
             .createInstance(CI.calIEvent);
         event.icalString = data;
 
-        var html = "<center><table bgcolor='#CCFFFF'>\n";
+        var html = "<script src='chrome://lightning/content/text-calendar-handler.js'></script>\n";
+        html += "<center>\n";
+        html += startForm(data);
+        html += "<table bgcolor='#CCFFFF'>\n";
         var organizer = event.organizer;
-        html += "<tr><td>Invitation from</td><td><a href='" +
-          organizer.id + "'>" + organizer.commonName + "</a></td></tr>\n";
-        html += "<tr><td>Subject:</td><td>" + event.title + "</td></tr>\n";
-        html += "</table></center>";
+        var rows = [["Invitation from", "<a href='" + organizer.id + "'>" + 
+                                        organizer.commonName + "</a>"],
+                    ["Topic:", event.title],
+                    ["Start:", event.startDate.jsDate.toLocaleTimeString()],
+                    ["End:", event.endDate.jsDate.toLocaleTimeString()]];
+        html += rows.map(makeTableRow).join("\n");
+        html += "<tr><td colspan='2'>";
+        html += makeButton("accept", "Accept meeting") + " ";
+        html += makeButton("decline", "Decline meeting") + " ";
+        html += "</td></tr>\n";
+        html += "</table>\n</form>\n</center>";
 
+        // dump("Generated HTML:\n\n" + html + "\n\n");
         return html;
-    }
+    },
+    
 };
 
 var myModule = {
@@ -61,17 +89,9 @@ var myModule = {
 
     myCID: Components.ID("{c70acb08-464e-4e55-899d-b2c84c5409fa}"),
 
-    /* ProgID for this class */
     myContractID: "@mozilla.org/lightning/mime-converter;1",
 
-    /* factory object */
     myFactory: {
-        /*
-         * Construct an instance of the interface specified by iid, possibly
-         * aggregating it with the provided outer.  (If you don't know what
-         * aggregation is all about, you don't need to.  It reduces even the
-         * mightiest of XPCOM warriors to snivelling cowards.)
-         */
         createInstance: function (outer, iid) {
             if (outer != null)
                 throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -80,17 +100,6 @@ var myModule = {
         }
     },
 
-    /*
-     * The canUnload method signals that the component is about to be unloaded.
-     * C++ components can return false to indicate that they don't wish to be
-     * unloaded, but the return value from JS components' canUnload is ignored:
-     * mark-and-sweep will keep everything around until it's no longer in use,
-     * making unconditional ``unload'' safe.
-     *
-     * You still need to provide a (likely useless) canUnload method, though:
-     * it's part of the nsIModule interface contract, and the JS loader _will_
-     * call it.
-     */
     canUnload: function(compMgr) {
         return true;
     }

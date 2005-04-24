@@ -47,6 +47,7 @@ MODULE           = lightning
 
 EXTRA_COMPONENTS = \
 	lightningTextCalendarConverter.js \
+	calItipProtocolHandler.js \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
