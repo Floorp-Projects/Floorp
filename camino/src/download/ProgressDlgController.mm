@@ -84,6 +84,8 @@ static id gSharedProgressController = nil;
     mSelectionPivotIndex = -1;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(DLInstanceSelected:)
                                                  name:@"DownloadInstanceSelected" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(DLInstanceOpened:)
+                                                 name:@"DownloadInstanceOpened" object:nil];
   }
   return self;
 }
@@ -191,6 +193,17 @@ static id gSharedProgressController = nil;
     [self removeDownload:[mProgressViewControllers objectAtIndex:i]]; // remove the download
   }
   mSelectionPivotIndex = -1;
+}
+
+//
+// -DLInstanceOpened:
+// 
+// Called when one of the ProgressView's should be opened (dbl clicked, for example). Open all of the
+// selected instances with the Finder.
+//
+-(void)DLInstanceOpened:(NSNotification*)notification
+{
+  [self open:self];
 }
 
 // calculate what buttons should be enabled/disabled because the user changed the selection state
