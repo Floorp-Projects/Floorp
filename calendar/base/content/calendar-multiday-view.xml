@@ -215,23 +215,19 @@
     </implementation>
 
     <handlers>
-      <handler event="mousedown" phase="capturing" button="0"><![CDATA[
-	this.mResizing = true;
-	this.mSizeStartX = event.screenX;
-	this.mSizeStartY = event.screenY;
-	event.preventDefault();
-      ]]></handler>
+      <handler event="mousedown" button="0"><![CDATA[
+	var whichside = this.getAttribute("whichside");
+	if (!whichside)
+            return;
 
-      <handler event="mousemove" phase="capturing"><![CDATA[
-	if (!this.mResizing)
-	  return;
-      ]]></handler>
-
-      <handler event="mouseup" phase="capturing"><![CDATA[
-	if (!this.mResizing)
-	  return;
-	this.mResizing = false;
-	event.target.boxObject.captureMouseEvents = false;
+        // we make assumptions about our position in the tree here;
+        // specifically, this should get us to a <calendar-event-box>
+        var evbox = this.parentNode.parentNode;
+        // still select it (since we'll preventBubble())
+        evbox.calendarView.selectedOccurrence = evbox.mOccurrence;
+        // then start dragging it
+        evbox.parentColumn.startSweepingToModifyEvent(evbox, evbox.mOccurrence, whichside, event.clientX, event.clientY);
+	event.preventBubble();
       ]]></handler>
     </handlers>
   </binding>
@@ -270,6 +266,7 @@
       <field name="mCalendarView">null</field>
       <field name="mDate">null</field>
       <field name="mTimezone">null</field>
+      <field name="mDragState">null</field>
 
       <!-- properties -->
       <property name="pixelsPerMinute">
@@ -325,11 +322,21 @@
 	]]></getter>
       </property>
 
+      <field name="mFgboxes">null</field>
       <property
-	name="fgbox"
+	name="fgboxes"
 	readonly="true">
 	<getter><![CDATA[
-	  return document.getAnonymousElementByAttribute(this, "anonid", "fgbox");
+	  if (this.mFgboxes == null) {
+	      this.mFgboxes = {
+                  box: document.getAnonymousElementByAttribute(this, "anonid", "fgbox"),
+                  dragbox: document.getAnonymousElementByAttribute(this, "anonid", "fgdragbox"),
+                  dragspacer: document.getAnonymousElementByAttribute(this, "anonid", "fgdragspacer"),
+                  startlabel: document.getAnonymousElementByAttribute(this, "anonid", "fgdragbox-startlabel"),
+                  endlabel: document.getAnonymousElementByAttribute(this, "anonid", "fgdragbox-endlabel")
+              };
+          }
+	  return this.mFgboxes;
 	]]></getter>
       </property>
 
@@ -401,10 +408,7 @@
 	<parameter name="aOccurrence"/>
 	<body><![CDATA[
 	  for each (chunk in this.mEvents) {
-              if (chunk.event.item == aOccurrence.item &&
-                  chunk.event.occurrenceStartDate.compare(aOccurrence.occurrenceStartDate) == 0 &&
-                  chunk.event.occurrenceEndDate.compare(aOccurrence.occurrenceEndDate) == 0)
-              {
+              if (chunk.event.equals(aOccurrence)) {
                   return chunk;
               }
 	  }
@@ -441,10 +445,7 @@
            var i;
            for (i = 0; i < this.mEvents.length; i++) {
                occ = this.mEvents[i].event;
-               if (occ.item == aOccurrence.item &&
-                   occ.occurrenceStartDate.compare(aOccurrence.occurrenceStartDate) == 0 &&
-                   occ.occurrenceEndDate.compare(aOccurrence.occurrenceEndDate) == 0)
-               {
+               if (occ.equals(aOccurrence)) {
                    itemIndex = i;
                    break;
                }
@@ -564,7 +565,7 @@
           }
 
 	  // fgbox is used for dragging events
-	  this.fgbox.setAttribute("orient", orient);
+	  this.fgboxes.box.setAttribute("orient", orient);
           document.getAnonymousElementByAttribute(this, "anonid", "fgdragspacer").setAttribute("orient", orient);
 
 	  // this one is set to otherorient, since it will contain
@@ -619,6 +620,7 @@
 
                       chunkBox.calendarView = this.calendarView;
                       chunkBox.occurrence = chunk.event.event;
+                      chunkBox.parentColumn = this;
 
                       chunk.event.eventbox = chunkBox;
                   } else {
@@ -811,13 +813,15 @@
           var col = document.calendarEventColumnDragging;
           if (!col) return;
 
+          var dragState = col.mDragState;
+
           var pos;
           var sizeattr;
 	  if (col.getAttribute("orient") == "vertical") {
-              pos = event.clientY - col.parentNode.boxObject.y;
+              pos = event.clientY - col.parentNode.boxObject.y - dragState.mouseOffset;
               sizeattr = "height";
           } else {
-              pos = event.clientX - col.parentNode.boxObject.x;
+              pos = event.clientX - col.parentNode.boxObject.x - dragState.mouseOffset;
               sizeattr = "width";
           }
           // don't let pos go outside the window edges
@@ -826,45 +830,48 @@
 
 	  // snap to 15 minute intervals
           var interval = col.mPixPerMin * 15;
-	  var curmin = Math.floor(pos/interval);
-	  var deltamin = curmin - col.mOrigDragMin;
-          if (deltamin == 0)
-              deltamin = 1;
+	  var curmin = Math.floor(pos/interval) * 15;
+	  var deltamin = curmin - dragState.origMin;
 
-          var fgdragspacer = document.getAnonymousElementByAttribute(col, "anonid", "fgdragspacer");
-          var fgdragbox = document.getAnonymousElementByAttribute(col, "anonid", "fgdragbox");
-	  var fgdragstartlabel = document.getAnonymousElementByAttribute(col, "anonid", "fgdragbox-startlabel");
-	  var fgdragendlabel = document.getAnonymousElementByAttribute(col, "anonid", "fgdragbox-endlabel");
+          if (dragState.dragType == "new") {
+              if (deltamin < 0) {
+                  dragState.startMin = dragState.origMin + deltamin;
+                  dragState.endMin = dragState.origMin;
+              } else {
+                  dragState.startMin = dragState.origMin;
+                  dragState.endMin = dragState.origMin + deltamin;
+              }
+          } else if (dragState.dragType == "move") {
+              // if we're moving, we can only move the start, and the end has to be exactly start+duration
+              dragState.startMin = dragState.origMin + deltamin;
+              dragState.endMin = dragState.startMin + dragState.limitDurationMin;
+          } else if (dragState.dragType == "modify-start") {
+              // if we're modifying the start, the end time is fixed.
+              dragState.startMin = dragState.origMin + deltamin;
+              dragState.endMin = dragState.limitEndMin;
 
-	  //dump ("curmin: " + curmin + "deltamin: " + deltamin + " spacer: " + fgdragspacer.getAttribute("height") + " box: " + fgdragbox.getAttribute("height") + "\n");
+              // but we need to not go past the end; if we hit
+              // the end, then we'll clamp to the previous 15-min interval
+              if (dragState.endMin <= dragState.startMin)
+                  dragState.startMin = Math.floor((dragState.endMin - 15) / 15) * 15;
+          } else if (dragState.dragType == "modify-end") {
+              // if we're modifying the end, the start time is fixed, and we'll always
+              // set the spacer to a constant size.
+              dragState.startMin = dragState.limitStartMin;
+              dragState.endMin = dragState.origMin + deltamin;
 
-          if (deltamin < 0) {
-              // add 1 here since we'll always start off with at least 1 interval-sized
-              // area selected, and we want that to remain consistent whether we drag up
-              // or drag down
-              fgdragspacer.setAttribute(sizeattr, (curmin+1) * interval);
-	  }
-	  fgdragbox.setAttribute(sizeattr, Math.abs(deltamin * interval));
-
-          if (deltamin < 0) {
-              col.mStartDragMin = col.mOrigDragMin + deltamin;
-              col.mEndDragMin = col.mOrigDragMin + 1;
-          } else {
-              col.mStartDragMin = col.mOrigDragMin;
-              col.mEndDragMin = col.mOrigDragMin + deltamin;
+              // but we need to not go past the start; if we hit
+              // the start, then we'll clamp to the next 15-min interval
+              if (dragState.endMin <= dragState.startMin)
+                  dragState.endMin = Math.floor((dragState.startMin + 15) / 15) * 15;
           }
 
+          // update the box sizes
+          col.fgboxes.dragspacer.setAttribute(sizeattr, dragState.startMin * col.mPixPerMin);
+          col.fgboxes.dragbox.setAttribute(sizeattr, Math.abs((dragState.endMin - dragState.startMin) * col.mPixPerMin));
+
 	  // update the label
-	  var realstartmin = (col.mStartDragMin*15) + col.mStartMin;
-	  var starthr = Math.floor(realstartmin / 60);
-	  var startmin = realstartmin % 60;
-
-	  var realendmin = (col.mEndDragMin*15) + col.mStartMin;
-	  var endhr = Math.floor(realendmin / 60);
-	  var endmin = realendmin % 60;
-
-          fgdragstartlabel.setAttribute("value", starthr + ":" + (startmin < 10 ? "0" : "") + startmin);
-          fgdragendlabel.setAttribute("value", endhr + ":" + (endmin < 10 ? "0" : "") + endmin);
+          col.updateDragLabels();
         ]]></body>
       </method>
 
@@ -874,12 +881,10 @@
           var col = document.calendarEventColumnDragging;
           if (!col) return;
 
-	  var fgbox = document.getAnonymousElementByAttribute(col, "anonid", "fgbox");
-          var fgdragspacer = document.getAnonymousElementByAttribute(col, "anonid", "fgdragspacer");
-          var fgdragbox = document.getAnonymousElementByAttribute(col, "anonid", "fgdragbox");
+          var dragState = col.mDragState;
 
-          fgdragbox.removeAttribute("dragging");
-	  fgbox.removeAttribute("dragging");
+          col.fgboxes.dragbox.removeAttribute("dragging");
+	  col.fgboxes.box.removeAttribute("dragging");
 
           window.removeEventListener("mousemove", col.onEventSweepMouseMove, true);
           window.removeEventListener("mouseup", col.onEventSweepMouseUp, true);
@@ -888,70 +893,164 @@
 
           // if the user didn't sweep out at least 1 interval's worth of pixels, ignore.
           if (col.getAttribute("orient") == "vertical") {
-              if (Math.abs(event.clientY - col.mOrigDragLoc) < (col.mPixPerMin * 15))
+              if (Math.abs(event.clientY - dragState.origLoc) < (col.mPixPerMin * 15))
                   return;
           } else {
-              if (Math.abs(event.clientX - col.mOrigDragLoc) < (col.mPixPerMin * 15))
+              if (Math.abs(event.clientX - dragState.origLoc) < (col.mPixPerMin * 15))
                   return;
           }
 
-          col.createNewSweptEvent(col.mStartDragMin * 15, col.mEndDragMin * 15);
-        ]]></body>
-      </method>
-
-      <method name="createNewSweptEvent">
-	<parameter name="aStartMin"/>
-	<parameter name="aEndMin"/>
-	<body><![CDATA[
-                     /* 
-	  var eventCreationListener = {
-              col: this,
-              onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
-                  if (!Components.isSuccessCode(aStatus) ||
-                      !(aDetail instanceof Components.interfaces.calIEvent))
-                  {
-                      dump ("++++ Error occurred: " + aDetail);
-                      return;
-                  }
-
-                  var item = aDetail;
-
-                  var thisday = this.col.mDate.clone();
-                  var nextday = this.col.mDate.clone();
-                  nextday.day += 1;
-                  nextday.normalize();
-
-                  var occs = aItem.getOccurrencesBetween(thisday,
-                                                         nextday,
-                                                         {});
-                  for each (occ in occs) {
-                      this.calView.doAddEvent(occ);
-                  }
-
-              },
-              onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) { }
-              },
-	  };
-                     */
-
-          var estart = this.mDate.clone();
+          // XXX ok, yeah, this stuff needs some JS helper love
+          var estart = col.mDate.clone();
           estart.isDate = false;
           estart.hour = 0;
-          estart.minute = (this.mStartDragMin * 15) + this.mStartMin;
+          estart.minute = dragState.startMin + col.mStartMin;
           estart.normalize();
 
-          var eend = this.mDate.clone();
+          var eend = col.mDate.clone();
           eend.isDate = false;
           eend.hour = 0;
-          eend.minute = (this.mEndDragMin * 15) + this.mStartMin;
+          eend.minute = dragState.endMin + col.mStartMin;
           eend.normalize();
 
-          this.calendarView.controller.createNewEvent(this.calendarView.displayCalendar,
-                                                      estart,
-                                                      eend);
+          if (dragState.dragType == "new") {
+              col.calendarView.controller.createNewEvent(col.calendarView.displayCalendar,
+                                                         estart,
+                                                         eend);
+          } else if (dragState.dragType == "move" ||
+                     dragState.dragType == "modify-start" ||
+                     dragState.dragType == "modify-end")
+          {
+              col.calendarView.controller.modifyOccurrence(dragState.dragOccurrence, estart, eend);
+          }
+          col.mDragState = null;
         ]]></body>
       </method>
-	
+
+      <!-- This is called by an event box when a grippy on either side is dragged,
+         - or when the middle is pressed to drag the event to move it.  We create
+         - the same type of view that we use to sweep out a new event, but we
+         - initialize it based on the event's values and what type of dragging
+         - we're doing.  In addition, we constrain things like not being able to
+         - drag the end before the start and vice versa.
+        -->
+      <method name="startSweepingToModifyEvent">
+	<parameter name="aEventBox"/>
+	<parameter name="aOccurrence"/>
+	<!-- "start", "end", "middle" -->
+	<parameter name="aGrabbedElement"/>
+	<!-- mouse clientX/clientY from the event -->
+	<parameter name="aMouseX"/>
+	<parameter name="aMouseY"/>
+	<body><![CDATA[
+          dump ("startSweepingToModify\n");
+	  this.mDragState = {
+              dragOccurrence: aOccurrence,
+              mouseOffset: 0
+          };
+
+          var interval = this.mPixPerMin * 15;
+          var sizeattr;
+
+          dump ("AMY: " + aMouseY + " boY: " + this.parentNode.boxObject.y + "\n");
+          var frameloc;
+          if (this.getAttribute("orient") == "vertical") {
+              this.mDragState.origLoc = aMouseY;
+              frameloc = aMouseY - this.parentNode.boxObject.y;
+              sizeattr = "height";
+          } else {
+              this.mDragState.origLoc = aMouseX;
+              frameloc = aMouseX - this.parentNode.boxObject.x;
+              sizeattr = "width";
+          }
+
+          var mins = this.getStartEndMinutesForOccurrence(aOccurrence);
+
+          // these are only used to compute durations or to compute UI
+          // sizes, so offset by this.mStartMin for sanity here (at the
+          // expense of possible insanity later)
+          mins.start -= this.mStartMin;
+          mins.end -= this.mStartMin;
+
+          if (aGrabbedElement == "start") {
+              this.mDragState.dragType = "modify-start";
+              this.mDragState.limitEndMin = mins.end;
+
+              // snap start
+              this.mDragState.origMin = Math.floor(mins.start/15) * 15;
+              this.fgboxes.dragspacer.setAttribute(sizeattr, this.mDragState.origMin * this.mPixPerMin);
+              this.fgboxes.dragbox.setAttribute(sizeattr, (mins.end - this.mDragState.origMin) * this.mPixPerMin);
+          } else if (aGrabbedElement == "end") {
+              this.mDragState.dragType =  "modify-end";
+              this.mDragState.limitStartMin = mins.start;
+
+              // snap end
+              this.mDragState.origMin = Math.floor(mins.end/15) * 15;
+              this.fgboxes.dragspacer.setAttribute(sizeattr, mins.start * this.mPixPerMin);
+              this.fgboxes.dragbox.setAttribute(sizeattr, (this.mDragState.origMin - mins.start) * this.mPixPerMin);
+          } else if (aGrabbedElement == "middle") {
+              this.mDragState.dragType = "move";
+              this.mDragState.limitDurationMin = mins.end - mins.start;
+
+              // in a move, origMin will be the min of the start element;
+              // so we snap start again, but we keep the duration the same
+              // (we move the end based on the duration of the event,
+              // not including our snap)
+              this.mDragState.origMin = Math.floor(mins.start/15) * 15;
+              this.fgboxes.dragspacer.setAttribute(sizeattr, this.mDragState.origMin * this.mPixPerMin);
+              this.fgboxes.dragbox.setAttribute(sizeattr, (mins.end - mins.start) * this.mPixPerMin);
+
+              // we need to set a mouse offset, since we're not dragging from
+              // one end of the element
+              if (aEventBox) {
+                  this.mDragState.mouseOffset = aMouseY - aEventBox.boxObject.y;
+              }
+          } else {
+              dump ("+++ Invalid grabbed element: '" + aGrabbedElement + "'\n");
+          }
+
+          this.fgboxes.box.setAttribute("dragging", "true");
+          this.fgboxes.dragbox.setAttribute("dragging", "true");
+
+          // cheat and call the sweep move event handler;
+          // this will take care of setting up the sizes right for everything
+          document.calendarEventColumnDragging = this;
+          //this.onEventSweepMouseMove(event);
+
+          dump (">>> drag is: " + this.mDragState.dragType + "\n");
+
+          window.addEventListener("mousemove", this.onEventSweepMouseMove, false);
+          window.addEventListener("mouseup", this.onEventSweepMouseUp, false);
+        ]]></body>
+      </method>
+
+      <method name="updateDragLabels">
+	<body><![CDATA[
+	  if (!this.mDragState) return;
+
+          var realstartmin = this.mDragState.startMin + this.mStartMin;
+	  var realendmin = this.mDragState.endMin + this.mStartMin;
+
+
+	  if (this.mDragState.dragType == "move") {
+              realendmin = realstartmin + this.mDragState.limitDurationMin;
+          } else if (this.mDragState.dragType == "start") {
+              realendmin = this.mDragState.limitEndMin;
+          } else if (this.mDragState.dragType == "end") {
+              realstartmin = this.mDragSTate.limitStartMin;
+          }
+
+          var starthr = Math.floor(realstartmin / 60);
+          var startmin = realstartmin % 60;
+
+	  var endhr = Math.floor(realendmin / 60);
+	  var endmin = realendmin % 60;
+
+          this.fgboxes.startlabel.setAttribute("value", starthr + ":" + (startmin < 10 ? "0" : "") + startmin);
+          this.fgboxes.endlabel.setAttribute("value", endhr + ":" + (endmin < 10 ? "0" : "") + endmin);
+   
+	]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -962,29 +1061,30 @@
 	}
       ]]></handler>
 
+      <!-- mouse down handler, in empty event column regions.  Starts sweeping out a new
+         - event.
+        -->
       <handler event="mousedown" button="0"><![CDATA[
-	//dump("evx: " + event.clientX + " evy: " + event.clientY + "\n");
-	//dump("column " + this.mDate + " mousedown\n");
-
-	var fgbox = document.getAnonymousElementByAttribute(this, "anonid", "fgbox");
-	var fgdragspacer = document.getAnonymousElementByAttribute(this, "anonid", "fgdragspacer");
-	var fgdragbox = document.getAnonymousElementByAttribute(this, "anonid", "fgdragbox");
-
 	// snap to 15 minute intervals
 	var interval = this.mPixPerMin * 15;
 
+        this.mDragState = {
+            dragType: "new",
+            mouseOffset: 0
+        };
+
         if (this.getAttribute("orient") == "vertical") {
-            this.mOrigDragLoc = event.clientY;
-            this.mOrigDragMin = Math.floor((event.clientY - this.parentNode.boxObject.y)/interval);
-            fgdragspacer.setAttribute("height", this.mOrigDragMin * interval);
+            this.mDragState.origLoc = event.clientY;
+            this.mDragState.origMin = Math.floor((event.clientY - this.parentNode.boxObject.y)/interval) * 15;
+            this.fgboxes.dragspacer.setAttribute("height", this.mDragState.origMin * this.mPixPerMin);
         } else {
-            this.mOrigDragLoc = event.clientX;
-            this.mOrigDragMin = Math.floor((event.clientX - this.parentNode.boxObject.x)/interval);
-            fgdragspacer.setAttribute("width", this.mOrigDragMin * interval);
+            this.mDragState.origLoc = event.clientX;
+            this.mDragState.origMin = Math.floor((event.clientX - this.parentNode.boxObject.x)/interval) * 15;
+            this.fgboxes.dragspacer.setAttribute("width", this.mDragState.origMin * this.mPixPerMin);
         }
 
-	fgbox.setAttribute("dragging", "true");
-        fgdragbox.setAttribute("dragging", "true");
+	this.fgboxes.box.setAttribute("dragging", "true");
+        this.fgboxes.dragbox.setAttribute("dragging", "true");
 
         // cheat and call the sweep move event handler;
         // this will take care of setting up the sizes right for everything
@@ -1006,13 +1106,13 @@
 
     <content>
       <xul:box anonid="eventbox" xbl:inherits="orient,width,height" flex="1">
-	<xul:calendar-event-gripbar anonid="gripbar1" xbl:inherits="parentorient=orient"/>
+	<xul:calendar-event-gripbar anonid="gripbar1" whichside="start" xbl:inherits="parentorient=orient"/>
 	<xul:vbox class="calendar-event-box-container" xbl:inherits="parentorient=orient" flex="1" align="left">
 	  <xul:label anonid="event-name" flex="1" crop="right"/>
           <!-- for some reason, textboxes suck ass for reflow. -->
 	  <!-- <xul:textbox class="editable-label" anonid="event-name" flex="1" crop="right"/> -->
 	</xul:vbox>
-	<xul:calendar-event-gripbar anonid="gripbar2" xbl:inherits="parentorient=orient"/>
+	<xul:calendar-event-gripbar anonid="gripbar2" whichside="end" xbl:inherits="parentorient=orient"/>
       </xul:box>
     </content>
 
@@ -1026,7 +1126,7 @@
 
       <!-- fields -->
       <field name="mOccurrence">null</field>
-
+      <field name="mParentColumn">null</field>
       <field name="mCalendarView">null</field>
       <property name="calendarView"
 	onget="return this.mCalendarView;"
@@ -1080,6 +1180,10 @@
 	]]></setter>
       </property>
 
+      <property name="parentColumn"
+	onget="return this.mParentColumn;"
+	onset="return (this.mParentColumn = val);"/>
+
       <property name="startMinute" readonly="true"
 	onget="if (!this.mOccurrence) return 0; return this.mOccurrence.occurrenceStartDate.hour * 60 + this.mOccurrence.occurrenceStartDate.minute"/>
 
@@ -1088,10 +1192,33 @@
     </implementation>
 
     <handlers>
-      <handler event="mousedown">
+      <handler event="mousedown"><![CDATA[
 	this.calendarView.selectedOccurrence = this.mOccurrence;
+
+	this.mInMouseDown = true;
+	this.mMouseX = event.clientX;
+	this.mMouseY = event.clientY;
+        this.mMouseTime = event.timeStamp;
 	event.preventBubble();
-      </handler>
+      ]]></handler>
+
+      <handler event="mousemove"><![CDATA[
+	if (!this.mInMouseDown)
+            return;
+        var dx = Math.abs(event.clientX - this.mMouseX);
+        var dy = Math.abs(event.clientY - this.mMouseY);
+        // more than a 3 pixel move?
+        if ((dx*dx + dy*dy) > 9) {
+            if (this.parentColumn) {
+                this.parentColumn.startSweepingToModifyEvent(this, this.mOccurrence, "middle", this.mMouseX, this.mMouseY);
+                this.mInMouseDown = false;
+            }
+        }
+      ]]></handler>
+
+      <handler event="mouseup"><![CDATA[
+	this.mInMouseDown = false;
+      ]]></handler>
 
       <handler event="dblclick"><![CDATA[
 	if (this.calendarView.controller && this.mOccurrence) {
@@ -1184,7 +1311,7 @@
                     this.calView.doAddEvent(occ);
                 }
             },
-            onModifyItem: function (aOldItem, aNewItem) {
+            onModifyItem: function (aNewItem, aOldItem) {
                 //dump ("++ ModifyItem\n");
                 if (!(aOldItem instanceof Components.interfaces.calIEvent))
                     return;
