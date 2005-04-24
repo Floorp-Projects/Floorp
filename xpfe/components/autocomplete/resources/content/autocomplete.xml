@@ -1537,8 +1537,10 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
            var row = {}; var col = {}; var obj = {};
-           var x = aEvent.screenX - this.boxObject.screenX + this.boxObject.x;
-           var y = aEvent.screenY - this.boxObject.screenY + this.boxObject.y;
+           // XXXbz We really want client*, but event.client* is bogus inside a
+           // popup!
+           var x = aEvent.screenX - document.documentElement.boxObject.screenX;
+           var y = aEvent.screenY - document.documentElement.boxObject.screenY;
            this.textbox.view.treeBoxObject.getCellAt(x, y, row, col, obj);
            if (row.value >= 0)
              return {row: row.value, column: col.value.id};
