@@ -106,6 +106,7 @@ var ltnCalendarViewController = {
 
         if (aNewStartTime && aNewEndTime && !aNewStartTime.isDate && !aNewEndTime.isDate) {
             var event = aOccurrence.item.clone();
+            event = event.QueryInterface(Components.interfaces.calIEvent);
             event.startDate = aNewStartTime;
             event.endDate = aNewEndTime;
             event.parent.modifyItem(event, null);
