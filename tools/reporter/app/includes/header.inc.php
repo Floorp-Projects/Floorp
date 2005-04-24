@@ -57,10 +57,6 @@ header('Content-Type: text/html; charset=utf-8');
 
  <link rel="icon" href="images/mozilla-16.png" type="image/png">
 
- <link rel="alternate" type="application/rss+xml" title="Mozilla Announcements" href="http://www.mozilla.org/news.rdf">
- <link rel="alternate" type="application/rss+xml" title="Mozilla Weblogs" href="http://planet.mozilla.org/rss10.xml">
- <link rel="alternate" type="application/rss+xml" title="mozillaZine News" href="http://www.mozillazine.org/atom.xml">
-
  <link rel="home" title="Home" href="http://www.mozilla.org/">
 </head>
 
@@ -72,22 +68,16 @@ header('Content-Type: text/html; charset=utf-8');
 <div id="header">
  <h1><a href="/" title="Return to home page" accesskey="1">Mozilla</a></h1>
  <ul>
-  <li id="menu_aboutus"><a href="about/" title="Getting the most out of your online experience">About</a></li>
-
-  <li id="menu_developers"><a href="developer/" title="Using Mozilla's products for your own applications">Developers</a></li>
-  <li id="menu_store"><a href="http://www.mozillastore.com/?r=mozorg1" title="Shop for Mozilla products on CD and other merchandise">Store</a></li>
-  <li id="menu_support"><a href="support/" title="Installation, trouble-shooting, and the knowledge base">Support</a></li>
-  <li id="menu_products"><a href="products/" title="All software Mozilla currently offers">Products</a></li>
+  <li id="login"><a href="/app/login" title="Admin Login">Login</a></li>
+  <li id="top_25"><a href="/app/query/?show=25&count=on&&submit_query=Search" title="Top 25 Hosts">Top 25</a></li>
+  <li id="query"><a href="/app" title="Create a new Query">Query</a></li>
  </ul>
- <form id="search" method="get" action="http://www.google.com/custom" title="Mozilla.org Search">
+ <form id="search" method="get" action="http://reporter-test.mozilla.org/app/report/" title="Get Report">
  <div>
 
-  <label for="q" title="Search mozilla.org&quot;s sites">search mozilla:</label>
-  <input type="hidden" name="cof" value="LW:174;LH:60;L:http://www.mozilla.org/images/mlogosm.gif;GIMP:#cc0000;T:black;ALC:#0000ff;GFNT:grey;LC:#990000;BGC:white;AH:center;VLC:purple;GL:0;GALT:#666633;AWFID:9262c37cefe23a86;">
-  <input type="hidden" name="domains" value="mozilla.org">
-  <input type="hidden" name="sitesearch" value="mozilla.org">
-  <input type="text" id="q" name="q" accesskey="s" size="30">
-  <input type="submit" id="submit" value="Go">
+  <label for="report_id" title="Pull up report number">get report:</label>
+  <input type="text" id="report_id" name="report_id" accesskey="g" size="30">
+  <input type="submit" id="submit" value="Lookup">
  </div>
  </form>
 
