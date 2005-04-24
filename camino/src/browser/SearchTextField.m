@@ -219,15 +219,27 @@
         // If the user hit tab, go to the next key view
       case NSTabTextMovement:
       {
-//        [[self window] selectKeyViewFollowingView:self];
         // we should be able to just select the next key view, but at some point we have
         // to break the cycle and kick the user off the toolbar. Do it here. Selecting
-        // the window allows us to tab into the content area.
-        NSWindow* wind = [self window];
-        [wind makeFirstResponder:wind];
-
-//        if ([[self window] firstResponder] == [self window])
-//          [self selectText:self];
+        // the window allows us to tab into the content area (assuming we're on a toolbar).
+        BOOL isOnToolbar = NO;
+        NSView* parent = [self superview];
+        while (parent) {
+          if ([parent isKindOfClass:[NSToolbar class]])
+            isOnToolbar = YES;
+          parent = [parent superview];
+        }
+        if (isOnToolbar) {
+          // HACK: we're on a toolbar, make life not suck
+          NSWindow* wind = [self window];
+          [wind makeFirstResponder:wind];
+        }
+        else {
+          // do the normal key loop thang
+          [[self window] selectKeyViewFollowingView:self];
+          if ([[self window] firstResponder] == [self window])
+            [self selectText:self];
+        }
       }
           break;
 
