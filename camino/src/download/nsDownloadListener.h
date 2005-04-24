@@ -80,10 +80,8 @@ public:
     
 private:
 
-    // These two are mutually exclusive
-    nsCOMPtr<nsIWebBrowserPersist>  mWebPersist;        // Our web persist object.
-    nsCOMPtr<nsIHelperAppLauncher>  mHelperAppLauncher; // If we're talking to uriloader
-    
+    nsCOMPtr<nsICancelable>         mCancelable;        // Object to cancel the download
+
     nsCOMPtr<nsIURI>                mURI;               // The URI of our source file. Null if we're saving a complete document.
     nsCOMPtr<nsIURI>                mDestination;       // Our destination URL.
     nsCOMPtr<nsILocalFile>          mDestinationFile;   // Our destination file.

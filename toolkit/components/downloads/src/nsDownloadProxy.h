@@ -60,18 +60,18 @@ public:
 
   NS_IMETHODIMP Init(nsIURI* aSource,
                      nsIURI* aTarget,
-                     const PRUnichar* aDisplayName,
+                     const nsAString& aDisplayName,
                      nsIMIMEInfo *aMIMEInfo,
-                     PRInt64 aStartTime,
-                     nsIWebBrowserPersist* aPersist) {
+                     PRTime aStartTime,
+                     nsICancelable* aCancelable) {
     nsresult rv;
     nsCOMPtr<nsIDownloadManager> dm = do_GetService("@mozilla.org/download-manager;1", &rv);
     if (NS_FAILED(rv))
       return rv;
     
-    rv = dm->AddDownload(nsIDownloadManager::DOWNLOAD_TYPE_DOWNLOAD, aSource, aTarget, 
-                         aDisplayName, nsnull, aMIMEInfo, aStartTime, aPersist, 
-                         getter_AddRefs(mInner));
+    rv = dm->AddDownload(nsIDownloadManager::DOWNLOAD_TYPE_DOWNLOAD, aSource,
+                         aTarget, aDisplayName, EmptyString(), aMIMEInfo,
+                         aStartTime, aCancelable, getter_AddRefs(mInner));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
@@ -142,19 +142,9 @@ public:
     return mInner->GetSize(aSize);
   }
 
-  NS_IMETHODIMP GetObserver(nsIObserver** aObserver)
+  NS_IMETHODIMP GetCancelable(nsICancelable** aCancelable)
   {
-    return mInner->GetObserver(aObserver);
-  }
-
-  NS_IMETHODIMP SetObserver(nsIObserver* aObserver)
-  {
-    return mInner->SetObserver(aObserver);
-  }
-   
-  NS_IMETHODIMP GetPersist(nsIWebBrowserPersist** aPersist)
-  {
-    return mInner->GetPersist(aPersist);
+    return mInner->GetCancelable(aCancelable);
   }
 
   NS_IMETHODIMP GetTargetFile(nsILocalFile** aTargetFile)

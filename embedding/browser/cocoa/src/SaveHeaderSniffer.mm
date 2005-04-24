@@ -341,8 +341,10 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
   
   nsCOMPtr<nsIDownload> downloader = do_CreateInstance(NS_TRANSFER_CONTRACTID);
   // dlListener attaches to its progress dialog here, which gains ownership
-  rv = downloader->Init(inOriginalURI, destFile, inFileName.get(), nsnull, timeNow, webPersist);
+  rv = downloader->Init(inOriginalURI, destFile, inFileName, nsnull, timeNow, webPersist);
   if (NS_FAILED(rv)) return rv;
+
+  webPersist->SetProgressListener(downloader);
     
   PRInt32 flags = nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION | 
                   nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES;

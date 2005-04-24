@@ -432,10 +432,10 @@ nsDownloadManager::AssertProgressInfoFor(const nsACString& aTargetPath)
 NS_IMETHODIMP
 nsDownloadManager::AddDownload(nsIURI* aSource,
                                nsIURI* aTarget,
-                               const PRUnichar* aDisplayName,
+                               const nsAString& aDisplayName,
                                nsIMIMEInfo *aMIMEInfo,
-                               PRInt64 aStartTime,
-                               nsIWebBrowserPersist* aPersist,
+                               PRTime aStartTime,
+                               nsICancelable* aCancelable,
                                nsIDownload** aDownload)
 {
   NS_ENSURE_ARG_POINTER(aSource);
@@ -446,7 +446,8 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   nsresult rv = GetDownloadsContainer(getter_AddRefs(downloads));
   if (NS_FAILED(rv)) return rv;
 
-  nsDownload* internalDownload = new nsDownload(this, aTarget, aSource);
+  // this will create a cycle that will be broken in nsDownload::OnStateChange
+  nsDownload* internalDownload = new nsDownload(this, aTarget, aSource, aCancelable);
   if (!internalDownload)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -528,13 +529,6 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   rv = remote->Flush();
   if (NS_FAILED(rv)) return rv;
 
-  // if a persist object was specified, set the download item as the progress listener
-  // this will create a cycle that will be broken in nsDownload::OnStateChange
-  if (aPersist) {
-    internalDownload->SetPersist(aPersist);
-    aPersist->SetProgressListener(internalDownload);
-  }
-
   mCurrDownloads.Put(utf8Path, internalDownload);
 
   return rv;
@@ -555,45 +549,11 @@ nsDownloadManager::GetDownload(const nsACString & aTargetPath, nsIDownload** aDo
 NS_IMETHODIMP
 nsDownloadManager::CancelDownload(const nsACString & aTargetPath)
 {
-  nsresult rv = NS_OK;
   nsRefPtr<nsDownload> internalDownload = mCurrDownloads.GetWeak(aTargetPath);
   if (!internalDownload)
     return NS_ERROR_FAILURE;
 
-  // Don't cancel if download is already finished
-  if (internalDownload->GetDownloadState() == FINISHED)
-    return NS_OK;
-  
-  internalDownload->SetDownloadState(CANCELED);
-
-  // if a persist was provided, we can do the cancel ourselves.
-  nsCOMPtr<nsIWebBrowserPersist> persist;
-  internalDownload->GetPersist(getter_AddRefs(persist));
-  if (persist) {
-    rv = persist->CancelSave();
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  // if an observer was provided, notify that the download was cancelled.
-  // if no persist was provided, this is necessary so that whatever transfer
-  // component being used can cancel the download itself.
-  nsCOMPtr<nsIObserver> observer;
-  internalDownload->GetObserver(getter_AddRefs(observer));
-  if (observer) {
-    rv = observer->Observe(NS_STATIC_CAST(nsIDownload*, internalDownload), "oncancel", nsnull);
-    if (NS_FAILED(rv)) return rv;
-  }
-  
-  DownloadEnded(aTargetPath, nsnull);
-  
-  // if there's a progress dialog open for the item,
-  // we have to notify it that we're cancelling
-  observer = do_QueryInterface(internalDownload->GetDialog());
-  if (observer) {
-    rv = observer->Observe(NS_STATIC_CAST(nsIDownload*, internalDownload), "oncancel", nsnull);
-  }
-  
-  return rv;
+  return internalDownload->Cancel();
 }
 
 NS_IMETHODIMP
@@ -801,7 +761,7 @@ nsDownloadManager::OpenProgressDialogFor(nsIDownload* aDownload, nsIDOMWindow* a
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
   aDownload->GetMIMEInfo(getter_AddRefs(mimeInfo));
 
-  dialog->Init(source, target, nsnull, mimeInfo, startTime, nsnull); 
+  dialog->Init(source, target, EmptyString(), mimeInfo, startTime, nsnull); 
   dialog->SetObserver(internalDownload);
 
   // now set the listener so we forward notifications to the dialog
@@ -927,10 +887,12 @@ NS_IMPL_ISUPPORTS5(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener,
 
 nsDownload::nsDownload(nsDownloadManager* aManager,
                        nsIURI* aTarget,
-                       nsIURI* aSource) :
+                       nsIURI* aSource,
+                       nsICancelable* aCancelable) :
                          mDownloadManager(aManager),
                          mTarget(aTarget),
                          mSource(aSource),
+                         mCancelable(aCancelable),
                          mDownloadState(NOTSTARTED),
                          mPercentComplete(0),
                          mCurrBytes(0),
@@ -955,6 +917,35 @@ nsDownload::Suspend()
   if (!mRequest)
     return NS_ERROR_UNEXPECTED;
   return mRequest->Suspend();
+}
+
+nsresult
+nsDownload::Cancel()
+{
+  // Don't cancel if download is already finished or canceled
+  if (GetDownloadState() == FINISHED || GetDownloadState() == CANCELED)
+    return NS_OK;
+
+  nsresult rv = mCancelable->Cancel(NS_BINDING_ABORTED);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  SetDownloadState(CANCELED);
+
+  nsCAutoString path;
+  rv = GetFilePathUTF8(mTarget, path);
+  if (NS_FAILED(rv))
+    return rv;
+  mDownloadManager->DownloadEnded(path, nsnull);
+  
+  // if there's a progress dialog open for the item,
+  // we have to notify it that we're cancelling
+  nsCOMPtr<nsIObserver> observer = do_QueryInterface(GetDialog());
+  if (observer) {
+    rv = observer->Observe(NS_STATIC_CAST(nsIDownload*, this), "oncancel", nsnull);
+  }
+  
+  return rv;
 }
 
 nsresult
@@ -1001,11 +992,7 @@ nsDownload::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* 
   if (strcmp(aTopic, "oncancel") == 0) {
     SetDialog(nsnull);
 
-    nsCAutoString path;
-    nsresult rv = GetFilePathUTF8(mTarget, path);
-    // XXX why can't nsDownload cancel itself without help from the dl manager?
-    if (NS_SUCCEEDED(rv))
-      mDownloadManager->CancelDownload(path);
+    Cancel();
     // Ignoring return value; this function will get called twice,
     // and bad things happen if we return a failure code the second time.
     return NS_OK;
@@ -1268,8 +1255,12 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
     }
 
     // break the cycle we created in AddDownload
-    if (mPersist)
-      mPersist->SetProgressListener(nsnull);
+    mCancelable = nsnull;
+    // and the one with the progress dialog
+    if (mDialog) {
+      mDialog->SetObserver(nsnull);
+      mDialog = nsnull;
+    }
   }
 
   if (mDownloadManager->MustUpdateUI()) {
@@ -1279,8 +1270,13 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       internalListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus, this);
   }
 
-  if (mDialogListener)
+  if (mDialogListener) {
     mDialogListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
+    if (aStateFlags & STATE_STOP) {
+      // Break this cycle, too
+      mDialogListener = nsnull;
+    }
+  }
 
   return rv;
 }
@@ -1308,12 +1304,12 @@ nsDownload::OnSecurityChange(nsIWebProgress *aWebProgress,
 NS_IMETHODIMP
 nsDownload::Init(nsIURI* aSource,
                  nsIURI* aTarget,
-                 const PRUnichar* aDisplayName,
+                 const nsAString& aDisplayName,
                  nsIMIMEInfo *aMIMEInfo,
-                 PRInt64 aStartTime,
-                 nsIWebBrowserPersist* aPersist)
+                 PRTime aStartTime,
+                 nsICancelable* aCancelable)
 {
-  NS_WARNING("Huh...how did we get here?!");
+  NS_NOTREACHED("Huh...how did we get here?!");
   return NS_OK;
 }
 
@@ -1321,6 +1317,14 @@ NS_IMETHODIMP
 nsDownload::GetDisplayName(PRUnichar** aDisplayName)
 {
   *aDisplayName = ToNewUnicode(mDisplayName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownload::GetCancelable(nsICancelable** aCancelable)
+{
+  *aCancelable = mCancelable;
+  NS_IF_ADDREF(*aCancelable);
   return NS_OK;
 }
 
@@ -1337,14 +1341,6 @@ nsDownload::GetSource(nsIURI** aSource)
 {
   *aSource = mSource;
   NS_IF_ADDREF(*aSource);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownload::GetPersist(nsIWebBrowserPersist** aPersist)
-{
-  *aPersist = mPersist;
-  NS_IF_ADDREF(*aPersist);
   return NS_OK;
 }
 
@@ -1373,21 +1369,6 @@ NS_IMETHODIMP
 nsDownload::GetSize(PRUint64* aSize)
 {
   *aSize = mMaxBytes;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownload::SetObserver(nsIObserver* aObserver)
-{
-  mObserver = aObserver;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownload::GetObserver(nsIObserver** aObserver)
-{
-  *aObserver = mObserver;
-  NS_IF_ADDREF(*aObserver);
   return NS_OK;
 }
 

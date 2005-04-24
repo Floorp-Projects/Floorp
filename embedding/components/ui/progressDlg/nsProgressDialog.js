@@ -498,7 +498,8 @@ nsProgressDialog.prototype = {
         // Cancel the download, if not completed.
         if ( !this.completed ) {
             if ( this.operation ) {
-                this.operation.cancelSave();
+                const NS_BINDING_ABORTED = 0x804b0002;
+                this.operation.cancel(NS_BINDING_ABORTED);
                 // XXX We're supposed to clean up files/directories.
             }
             if ( this.observer ) {

@@ -51,7 +51,6 @@
 #include "nsIRDFContainerUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsIURI.h"
-#include "nsIWebBrowserPersist.h"
 #include "nsILocalFile.h"
 #include "nsRefPtrHashtable.h"
 #include "nsIRequest.h"
@@ -114,9 +113,11 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_ISUPPORTS
 
-  nsDownload(nsDownloadManager* aManager, nsIURI* aTarget, nsIURI* aSource);
+  nsDownload(nsDownloadManager* aManager, nsIURI* aTarget, nsIURI* aSource,
+             nsICancelable* aCancelable);
   ~nsDownload();
 
+  nsresult Cancel();
   nsresult Suspend();
   nsresult SetDisplayName(const PRUnichar* aDisplayName);
   nsresult Resume();
@@ -131,9 +132,6 @@ public:
   // May return null
   nsIProgressDialog* GetDialog() {
     return mDialog;
-  }
-  void SetPersist(nsIWebBrowserPersist* aPersist) {
-    mPersist = aPersist;
   }
 
   struct TransferInformation {
@@ -167,10 +165,9 @@ private:
   nsCOMPtr<nsIURI> mTarget;
   nsCOMPtr<nsIURI> mSource;
   nsCOMPtr<nsIWebProgressListener2> mDialogListener;
-  nsCOMPtr<nsIWebBrowserPersist> mPersist;
+  nsCOMPtr<nsICancelable> mCancelable;
   nsCOMPtr<nsIRequest> mRequest;
   nsCOMPtr<nsIProgressDialog> mDialog;
-  nsCOMPtr<nsIObserver> mObserver;
   nsCOMPtr<nsIMIMEInfo> mMIMEInfo;
   DownloadState mDownloadState;
 

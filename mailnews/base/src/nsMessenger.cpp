@@ -253,7 +253,7 @@ class nsSaveAllAttachmentsState;
 class nsSaveMsgListener : public nsIUrlListener,
                           public nsIMsgCopyServiceListener,
                           public nsIStreamListener,
-                          public nsIObserver
+                          public nsICancelable
 {
 public:
     nsSaveMsgListener(nsIFileSpec* fileSpec, nsMessenger* aMessenger);
@@ -265,7 +265,7 @@ public:
     NS_DECL_NSIMSGCOPYSERVICELISTENER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSIOBSERVER
+    NS_DECL_NSICANCELABLE
 
     nsCOMPtr<nsIFileSpec> m_fileSpec;
     nsCOMPtr<nsIOutputStream> m_outputStream;
@@ -1714,15 +1714,13 @@ nsSaveMsgListener::~nsSaveMsgListener()
 // 
 // nsISupports
 //
-NS_IMPL_ISUPPORTS4(nsSaveMsgListener, nsIUrlListener, nsIMsgCopyServiceListener, nsIStreamListener, nsIObserver)
+NS_IMPL_ISUPPORTS4(nsSaveMsgListener, nsIUrlListener, nsIMsgCopyServiceListener, nsIStreamListener, nsICancelable)
 
 
 NS_IMETHODIMP
-nsSaveMsgListener::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+nsSaveMsgListener::Cancel(nsresult status)
 {
-  if (!nsCRT::strcmp(aTopic, "oncancel"))
-      mCanceled = PR_TRUE;
-
+  mCanceled = PR_TRUE;
   return NS_OK;
 }
 
@@ -1862,9 +1860,8 @@ nsresult nsSaveMsgListener::InitializeDownload(nsIRequest * aRequest, PRInt32 aB
 
           nsCOMPtr<nsIURI> url;
           channel->GetURI(getter_AddRefs(url));
-          rv = tr->Init(url, outputURI, nsnull, mimeinfo, timeDownloadStarted, nsnull);
+          rv = tr->Init(url, outputURI, EmptyString(), mimeinfo, timeDownloadStarted, this);
 
-          tr->SetObserver(this);
           // now store the web progresslistener 
           mTransfer = tr;
         }

@@ -219,7 +219,7 @@ protected:
   nsresult GetDialogListener(nsIWebProgressListener** aInternalListener);
   nsresult SetDialog(nsIProgressDialog* aDialog);
   nsresult GetDialog(nsIProgressDialog** aDialog);
-  nsresult SetPersist(nsIWebBrowserPersist* aPersist);
+  nsresult SetCancelable(nsICancelable* aCancelable);
   nsresult SetTarget(nsIURI* aTarget);
   nsresult SetDisplayName(const PRUnichar* aDisplayName);
   nsresult SetSource(nsIURI* aSource);
@@ -238,10 +238,9 @@ private:
 
   nsCOMPtr<nsIURI> mSource;
   nsCOMPtr<nsIWebProgressListener> mDialogListener;
-  nsCOMPtr<nsIWebBrowserPersist> mPersist;
+  nsCOMPtr<nsICancelable> mCancelable;
   nsCOMPtr<nsIRequest> mRequest;
   nsCOMPtr<nsIProgressDialog> mDialog;
-  nsCOMPtr<nsIObserver> mObserver;
   nsCOMPtr<nsIMIMEInfo> mMIMEInfo;
   
   DownloadState mDownloadState;

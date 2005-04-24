@@ -39,47 +39,44 @@
 #include "nsIWebProgressListener2.idl"
 
 interface nsIURI;
-interface nsIObserver;
-interface nsIWebBrowserPersist;
+interface nsICancelable;
 interface nsIMIMEInfo;
 
-[scriptable, uuid(4af66079-938d-4093-9cc4-561dac709c7b)]
+[scriptable, uuid(0721AAF2-28AC-46cd-BCFA-5F8CA2A8B99B)]
 interface nsITransfer : nsIWebProgressListener2 {
 
     /**
      * Initializes the transfer with certain properties.  This function must
      * be called prior to accessing any properties on this interface.
      *
-     * @param aSource The source URI of the transfer.
+     * @param aSource The source URI of the transfer. Must not be null.
      *
-     * @param aTarget The target URI of the transfer.
+     * @param aTarget The target URI of the transfer. Must not be null.
      *
      * @param aDisplayName The user-readable description of the transfer.
+     *                     Can be empty.
      *
      * @param aMIMEInfo The MIME info associated with the target,
      *                  including MIME type and helper app when appropriate.
      *                  This parameter is optional.
      *
-     * @param aPersist The "persist" used for this transfer.  If set,
-     *                 the manager will set its listener to the transfer item
-     *                 and use it for cancellation.  If not set, the client
-     *                 is expected to set the transfer item as the listener on
-     *                 whatever transfer component is being used, and to
-     *                 set an observer on the transfer item that listens for
-     *                 the "oncancel" topic and cancels the transfer.
+     * @param startTime Time when the download started (ie, when the first
+     *                  response from the server was received)
+     *                  XXX presumably wbp and exthandler do this differently
+     *
+     * @param aCancelable An object that can be used to abort the download.
+     *                    Must not be null.
+     *                    Implementations are expected to hold a strong
+     *                    reference to this object until the download is
+     *                    finished, at which point they should release the
+     *                    reference.
      */
     void init(in nsIURI aSource,
               in nsIURI aTarget,
-              in wstring aDisplayName,
+              in AString aDisplayName,
               in nsIMIMEInfo aMIMEInfo,
-              in long long startTime,
-              in nsIWebBrowserPersist aPersist);
-
-    /**
-     * If set, receives notifications of events like cancel ("oncancel").
-     * Must be set if no persist object is specified (see above).
-     */
-    attribute nsIObserver observer;
+              in PRTime startTime,
+              in nsICancelable aCancelable);
 };
 
 %{C++
@@ -88,7 +85,7 @@ interface nsITransfer : nsIWebProgressListener2 {
  * started, and nsITransfer::Init will be called on it and an observer will be set.
  *
  * Notifications of the download progress will happen via
- * nsIWebProgressListener.
+ * nsIWebProgressListener/nsIWebProgressListener2.
  *
  * If nsIObserver is implemented, the component may get a notification with
  * topic "temp-file" and an nsILocalFile instance as subject, which indicates
@@ -98,9 +95,13 @@ interface nsITransfer : nsIWebProgressListener2 {
  * INTERFACES THAT MUST BE IMPLEMENTED:
  *   nsITransfer
  *   nsIWebProgressListener
+ *   nsIWebProgressListener2
  *
  * INTERFACES THAT MAY BE IMPLEMENTED:
  *   nsIObserver
+ *
+ * XXX move this to nsEmbedCID.h once the interfaces (and the contract ID) are
+ * frozen.
  */
 #define NS_TRANSFER_CONTRACTID "@mozilla.org/transfer;1"
 %}

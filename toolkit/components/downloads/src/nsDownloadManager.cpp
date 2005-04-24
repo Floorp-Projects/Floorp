@@ -495,11 +495,11 @@ NS_IMETHODIMP
 nsDownloadManager::AddDownload(DownloadType aDownloadType, 
                                nsIURI* aSource,
                                nsIURI* aTarget,
-                               const PRUnichar* aDisplayName,
-                               const PRUnichar* aIconURL, 
+                               const nsAString& aDisplayName,
+                               const nsAString& aIconURL, 
                                nsIMIMEInfo *aMIMEInfo,
-                               PRInt64 aStartTime,
-                               nsIWebBrowserPersist* aPersist,
+                               PRTime aStartTime,
+                               nsICancelable* aCancelable,
                                nsIDownload** aDownload)
 {
   NS_ENSURE_ARG_POINTER(aSource);
@@ -610,10 +610,9 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   }
   
   // Assert icon information
-  if (aIconURL) {
+  if (!aIconURL.IsEmpty()) {
     nsCOMPtr<nsIRDFResource> iconURIRes;
-    nsDependentString iconURL(aIconURL);
-    gRDFService->GetUnicodeResource(iconURL, getter_AddRefs(iconURIRes));
+    gRDFService->GetUnicodeResource(aIconURL, getter_AddRefs(iconURIRes));
     mDataSource->GetTarget(downloadRes, gNC_IconURL, PR_TRUE, getter_AddRefs(node));
     if (node)
       rv = mDataSource->Change(downloadRes, gNC_IconURL, node, iconURIRes);
@@ -655,13 +654,8 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
     return rv;
   }
 
-  // if a persist object was specified, set the download item as the progress listener
   // this will create a cycle that will be broken in nsDownload::OnStateChange
-  if (aPersist) {
-    internalDownload->SetPersist(aPersist);
-    nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(*aDownload);
-    aPersist->SetProgressListener(listener);
-  }
+  internalDownload->SetCancelable(aCancelable);
 
   // If this is an install operation, ensure we have a progress listener for the
   // install and track this download separately. 
@@ -717,23 +711,11 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
 
   internalDownload->SetDownloadState(nsIDownloadManager::DOWNLOAD_CANCELED);
 
-  // if a persist was provided, we can do the cancel ourselves.
-  nsCOMPtr<nsIWebBrowserPersist> persist;
-  internalDownload->GetPersist(getter_AddRefs(persist));
-  if (persist) {
-    rv = persist->CancelSave();
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  // if an observer was provided, notify that the download was cancelled.
-  // if no persist was provided, this is necessary so that whatever transfer
-  // component being used can cancel the download itself.
-  nsCOMPtr<nsIObserver> observer;
-  internalDownload->GetObserver(getter_AddRefs(observer));
-  if (observer) {
-    rv = observer->Observe(internalDownload, "oncancel", nsnull);
-    if (NS_FAILED(rv)) return rv;
-  }
+  // Cancel using the provided object
+  nsCOMPtr<nsICancelable> cancelable;
+  internalDownload->GetCancelable(getter_AddRefs(cancelable));
+  if (cancelable)
+    cancelable->Cancel(NS_BINDING_ABORTED);
  
   DownloadEnded(aPath, nsnull);
 
@@ -744,7 +726,7 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
   nsCOMPtr<nsIProgressDialog> dialog;
   internalDownload->GetDialog(getter_AddRefs(dialog));
   if (dialog) {
-    observer = do_QueryInterface(dialog);
+    nsCOMPtr<nsIObserver> observer = do_QueryInterface(dialog);
     rv = observer->Observe(internalDownload, "oncancel", nsnull);
     if (NS_FAILED(rv)) return rv;
   }
@@ -1878,9 +1860,9 @@ nsDownload::SetDownloadType(DownloadType aType)
 }
 
 nsresult
-nsDownload::SetPersist(nsIWebBrowserPersist* aPersist)
+nsDownload::SetCancelable(nsICancelable* aCancelable)
 {
-  mPersist = aPersist;
+  mCancelable = aCancelable;
   return NS_OK;
 }
 
@@ -2066,7 +2048,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
   if (aStateFlags & STATE_START)    
     mStartTime = PR_Now();  
 
-  // When we break the ref cycle with mPersist, we don't want to lose
+  // When we break the ref cycle with mCancelable, we don't want to lose
   // access to out member vars!
   nsCOMPtr<nsIDownload> kungFuDeathGrip;
   CallQueryInterface(this, NS_STATIC_CAST(nsIDownload**,
@@ -2141,8 +2123,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
     gObserverService->NotifyObservers(NS_STATIC_CAST(nsIDownload *, this), "dl-done", nsnull);
 
     // break the cycle we created in AddDownload
-    if (mPersist)
-      mPersist->SetProgressListener(nsnull);
+    mCancelable = nsnull;
 
     // Now remove the download if the user's retention policy is "Remove when Done"
     if (mDownloadManager->GetRetentionBehavior() == 0) {
@@ -2177,10 +2158,10 @@ nsDownload::OnSecurityChange(nsIWebProgress *aWebProgress,
 NS_IMETHODIMP
 nsDownload::Init(nsIURI* aSource,
                  nsIURI* aTarget,
-                 const PRUnichar* aDisplayName,
+                 const nsAString& aDisplayName,
                  nsIMIMEInfo *aMIMEInfo,
-                 PRInt64 aStartTime,
-                 nsIWebBrowserPersist* aPersist)
+                 PRTime aStartTime,
+                 nsICancelable* aCancelable)
 {
   NS_WARNING("Huh...how did we get here?!");
   return NS_OK;
@@ -2190,6 +2171,14 @@ NS_IMETHODIMP
 nsDownload::GetDisplayName(PRUnichar** aDisplayName)
 {
   *aDisplayName = ToNewUnicode(mDisplayName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownload::GetCancelable(nsICancelable** aCancelable)
+{
+  *aCancelable = mCancelable;
+  NS_IF_ADDREF(*aCancelable);
   return NS_OK;
 }
 
@@ -2206,14 +2195,6 @@ nsDownload::GetSource(nsIURI** aSource)
 {
   *aSource = mSource;
   NS_IF_ADDREF(*aSource);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownload::GetPersist(nsIWebBrowserPersist** aPersist)
-{
-  *aPersist = mPersist;
-  NS_IF_ADDREF(*aPersist);
   return NS_OK;
 }
 
@@ -2242,21 +2223,6 @@ NS_IMETHODIMP
 nsDownload::GetSize(PRUint64* aSize)
 {
   *aSize = mMaxBytes;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownload::SetObserver(nsIObserver* aObserver)
-{
-  mObserver = aObserver;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownload::GetObserver(nsIObserver** aObserver)
-{
-  *aObserver = mObserver;
-  NS_IF_ADDREF(*aObserver);
   return NS_OK;
 }
 
