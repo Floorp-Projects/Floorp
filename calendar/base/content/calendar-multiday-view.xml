@@ -61,53 +61,53 @@
       <field name="mEndMin">20*60</field>
 
       <constructor>
-	this.relayout();
+        this.relayout();
       </constructor>
 
       <method name="setAttribute">
-	<parameter name="aAttr"/>
-	<parameter name="aVal"/>
-	<body><![CDATA[
-	  var needsrelayout = false;
-	  if (aAttr == "orient") {
+        <parameter name="aAttr"/>
+        <parameter name="aVal"/>
+        <body><![CDATA[
+          var needsrelayout = false;
+          if (aAttr == "orient") {
               if (this.getAttribute("orient") != aVal)
                   needsrelayout = true;
           }
 
-	  // this should be done using lookupMethod(), see bug 286629
-	  var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
+          // this should be done using lookupMethod(), see bug 286629
+          var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
 
           if (needsrelayout) {
               this.relayout();
           }
 
           return ret;
-	]]></body>
+        ]]></body>
       </method>
 
       <property name="pixelsPerMinute"
-	onget="return this.mPixPerMin"
-	onset="if (this.mPixPerMin != val) { this.mPixPerMin = val; this.relayout(); } return val;"/>
+        onget="return this.mPixPerMin"
+        onset="if (this.mPixPerMin != val) { this.mPixPerMin = val; this.relayout(); } return val;"/>
 
       <property name="startMinute"
-	onget="return this.mStartMin"
-	onset="if (this.mStartMin != val) { this.mStartMin = val; this.relayout(); } return val;"/>
+        onget="return this.mStartMin"
+        onset="if (this.mStartMin != val) { this.mStartMin = val; this.relayout(); } return val;"/>
 
       <property name="endMinute"
-	onget="return this.mEndMin"
-	onset="if (this.mEndMin != val) { this.mEndMin = val; this.relayout(); } return val;"/>
+        onget="return this.mEndMin"
+        onset="if (this.mEndMin != val) { this.mEndMin = val; this.relayout(); } return val;"/>
 
       <method name="relayout">
-	<body><![CDATA[
+        <body><![CDATA[
           //dump ("calendar-time-bar: relayout\n");
-	  function createXULElement(el) {
+          function createXULElement(el) {
               return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
           }
 
           var topbox = document.getAnonymousElementByAttribute(this, "anonid", "topbox");
           var orient = topbox.getAttribute("orient");
           var otherorient = "vertical";
-	  if (!orient) orient = "horizontal";
+          if (!orient) orient = "horizontal";
           if (orient == "vertical") otherorient = "horizontal";
 
           dump ("calendar-time-bar: orient: " + orient + " other: " + otherorient + "\n");
@@ -163,7 +163,7 @@
               theMin += dur;
               theHour++;
           }
-	]]></body>
+        ]]></body>
       </method>
     </implementation>
   </binding>
@@ -183,18 +183,18 @@
       <field name="eventElement">null</field>
 
       <property name="parentorient">
-	<getter><![CDATA[
-	  return this.getAttribute("parentorient");
-	]]></getter>
-	<setter><![CDATA[
-	  this.setAttribute("parentorient", val);
-	  var thebox = document.getAnonymousElementByAttribute(this, "anonid", "thebox");
-	  if (val == "vertical")
+        <getter><![CDATA[
+          return this.getAttribute("parentorient");
+        ]]></getter>
+        <setter><![CDATA[
+          this.setAttribute("parentorient", val);
+          var thebox = document.getAnonymousElementByAttribute(this, "anonid", "thebox");
+          if (val == "vertical")
               thebox.setAttribute("orient", "horizontal");
-	  else
+          else
               thebox.setAttribute("orient", "vertical");
           return val;
-	]]></setter>
+        ]]></setter>
       </property>
 
       <!-- private -->
@@ -205,9 +205,9 @@
       <field name="mSizeStartY">0</field>
 
       <constructor><![CDATA[
-	if (this.getAttribute("side") == "top")
+        if (this.getAttribute("side") == "top")
             this.mSide = "top";
-	else if (this.getAttribute("side") == "bottom")
+        else if (this.getAttribute("side") == "bottom")
             this.mSide = "bottom";
         this.parentorient = this.getAttribute("parentorient");
       ]]></constructor>
@@ -216,8 +216,8 @@
 
     <handlers>
       <handler event="mousedown" button="0"><![CDATA[
-	var whichside = this.getAttribute("whichside");
-	if (!whichside)
+        var whichside = this.getAttribute("whichside");
+        if (!whichside)
             return;
 
         // we make assumptions about our position in the tree here;
@@ -227,7 +227,7 @@
         evbox.calendarView.selectedOccurrence = evbox.mOccurrence;
         // then start dragging it
         evbox.parentColumn.startSweepingToModifyEvent(evbox, evbox.mOccurrence, whichside, event.clientX, event.clientY);
-	event.preventBubble();
+        event.preventBubble();
       ]]></handler>
     </handlers>
   </binding>
@@ -239,22 +239,22 @@
   <binding id="calendar-event-column">
     <content>
       <xul:stack anonid="boxstack" flex="1">
-	<xul:box anonid="bgbox" flex="1"/>
-	<xul:box anonid="topbox" flex="1" equalsize="always"/>
-	<xul:box anonid="fgbox" flex="1" class="fgdragcontainer">
-	  <xul:box anonid="fgdragspacer" style="display: inherit;">
-	    <xul:spacer flex="1"/>
-	    <xul:label anonid="fgdragbox-startlabel" class="fgdragbox-label"/>
-	  </xul:box>
-	  <xul:box anonid="fgdragbox" class="fgdragbox" />
+        <xul:box anonid="bgbox" flex="1"/>
+        <xul:box anonid="topbox" flex="1" equalsize="always"/>
+        <xul:box anonid="fgbox" flex="1" class="fgdragcontainer">
+          <xul:box anonid="fgdragspacer" style="display: inherit;">
+            <xul:spacer flex="1"/>
+            <xul:label anonid="fgdragbox-startlabel" class="fgdragbox-label"/>
+          </xul:box>
+          <xul:box anonid="fgdragbox" class="fgdragbox" />
           <xul:label anonid="fgdragbox-endlabel" class="fgdragbox-label"/>
-	</xul:box>
+        </xul:box>
       </xul:stack>
     </content>
 
     <implementation>
       <constructor><![CDATA[
-	this.mEvents = Array();
+        this.mEvents = Array();
       ]]></constructor>
 
       <!-- fields -->
@@ -270,10 +270,10 @@
 
       <!-- properties -->
       <property name="pixelsPerMinute">
-	<getter><![CDATA[
+        <getter><![CDATA[
           return this.mPixPerMin;
         ]]></getter>
-	<setter><![CDATA[
+        <setter><![CDATA[
           if (val <= 0.0)
             throw "Bad pixpermin";
           if (val != this.mPixPerMin) {
@@ -284,51 +284,51 @@
       </property>
 
       <property name="date">
-	<getter><![CDATA[
-	  return this.mDate;
-	]]></getter>
-	<setter><![CDATA[
-	  this.mDate = val;
+        <getter><![CDATA[
+          return this.mDate;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mDate = val;
 
-	  if (val.timezone != this.mTimezone) {
+          if (val.timezone != this.mTimezone) {
               //dump ("++ column tz: " + val.timezone + "\n");
               this.mTimezone = val.timezone;
               this.recalculateStartEndMinutes();
-	  }
+          }
 
-	  return val;
-	]]></setter>
+          return val;
+        ]]></setter>
       </property>
 
         onget="return this.mDate;"
         onset="return (this.mDate = val);" />
       <property name="calendarView"
-	onget="return this.mCalendarView;"
-	onset="return (this.mCalendarView = val);" />
+        onget="return this.mCalendarView;"
+        onset="return (this.mCalendarView = val);" />
 
       <property
-	name="topbox"
-	readonly="true">
-	<getter><![CDATA[
-	  return document.getAnonymousElementByAttribute(this, "anonid", "topbox");
-	]]></getter>
+        name="topbox"
+        readonly="true">
+        <getter><![CDATA[
+          return document.getAnonymousElementByAttribute(this, "anonid", "topbox");
+        ]]></getter>
       </property>
 
       <property
-	name="bgbox"
-	readonly="true">
-	<getter><![CDATA[
-	  return document.getAnonymousElementByAttribute(this, "anonid", "bgbox");
-	]]></getter>
+        name="bgbox"
+        readonly="true">
+        <getter><![CDATA[
+          return document.getAnonymousElementByAttribute(this, "anonid", "bgbox");
+        ]]></getter>
       </property>
 
       <field name="mFgboxes">null</field>
       <property
-	name="fgboxes"
-	readonly="true">
-	<getter><![CDATA[
-	  if (this.mFgboxes == null) {
-	      this.mFgboxes = {
+        name="fgboxes"
+        readonly="true">
+        <getter><![CDATA[
+          if (this.mFgboxes == null) {
+              this.mFgboxes = {
                   box: document.getAnonymousElementByAttribute(this, "anonid", "fgbox"),
                   dragbox: document.getAnonymousElementByAttribute(this, "anonid", "fgdragbox"),
                   dragspacer: document.getAnonymousElementByAttribute(this, "anonid", "fgdragspacer"),
@@ -336,20 +336,20 @@
                   endlabel: document.getAnonymousElementByAttribute(this, "anonid", "fgdragbox-endlabel")
               };
           }
-	  return this.mFgboxes;
-	]]></getter>
+          return this.mFgboxes;
+        ]]></getter>
       </property>
 
       <property
-	name="events"
-	readonly="true"
-	onget="return this.mEvents"/>
+        name="events"
+        readonly="true"
+        onget="return this.mEvents"/>
 
       <property name="startMinute">
-	<getter><![CDATA[
+        <getter><![CDATA[
           return this.mStartMin;
         ]]></getter>
-	<setter><![CDATA[
+        <setter><![CDATA[
           if (val < 0)
             throw "Bad start minute";
           if (val != this.mStartMin) {
@@ -360,10 +360,10 @@
       </property>
 
       <property name="endMinute">
-	<getter><![CDATA[
+        <getter><![CDATA[
           return this.mEndMin;
         ]]></getter>
-	<setter><![CDATA[
+        <setter><![CDATA[
           if (val < 0)
             throw "Bad end minute";
           if (val != this.mEndMin) {
@@ -376,19 +376,19 @@
       <!-- methods -->
 
       <method name="selectOccurrence">
-	<parameter name="aOccurrence"/>
-	<body><![CDATA[
-	  // if we're being asked to unselect, and we
-	  // don't have a selection, return.
-	  if (aOccurrence == null && !this.mCurrentSelection)
+        <parameter name="aOccurrence"/>
+        <body><![CDATA[
+          // if we're being asked to unselect, and we
+          // don't have a selection, return.
+          if (aOccurrence == null && !this.mCurrentSelection)
               return;
 
-	  if (this.mCurrentSelection) {
+          if (this.mCurrentSelection) {
               // XXX FIXME don't unconditionally removeAttribute("class"), instead
               // just remove the "selected" class.
               this.mCurrentSelection.eventbox.removeAttribute("class");
               this.mCurrentSelection = null;
-	  }
+          }
 
           if (aOccurrence) {
               var chunk = this.findChunkForOccurrence(aOccurrence);
@@ -398,49 +398,49 @@
               }
 
               chunk.eventbox.setAttribute("class", "selected");
-	      this.mCurrentSelection = chunk;
+              this.mCurrentSelection = chunk;
           }
-	]]></body>
+        ]]></body>
       </method>
 
 
       <method name="findChunkForOccurrence">
-	<parameter name="aOccurrence"/>
-	<body><![CDATA[
-	  for each (chunk in this.mEvents) {
+        <parameter name="aOccurrence"/>
+        <body><![CDATA[
+          for each (chunk in this.mEvents) {
               if (chunk.event.equals(aOccurrence)) {
                   return chunk;
               }
-	  }
+          }
 
           return null;
-	]]></body>
+        ]]></body>
       </method>
 
       <method name="setAttribute">
-	<parameter name="aAttr"/>
-	<parameter name="aVal"/>
-	<body><![CDATA[
-	  var needsrelayout = false;
-	  if (aAttr == "orient") {
+        <parameter name="aAttr"/>
+        <parameter name="aVal"/>
+        <body><![CDATA[
+          var needsrelayout = false;
+          if (aAttr == "orient") {
               if (this.getAttribute("orient") != aVal)
                   needsrelayout = true;
           }
 
-	  // this should be done using lookupMethod(), see bug 286629
-	  var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
+          // this should be done using lookupMethod(), see bug 286629
+          var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
 
           if (needsrelayout) {
               this.relayout();
           }
 
           return ret;
-	]]></body>
+        ]]></body>
       </method>
 
       <method name="internalDeleteEvent">
-	<parameter name="aOccurrence"/>
-	<body><![CDATA[
+        <parameter name="aOccurrence"/>
+        <body><![CDATA[
            var itemIndex = -1;
            var i;
            for (i = 0; i < this.mEvents.length; i++) {
@@ -460,12 +460,12 @@
            } else {
                return false;
            }
-	]]></body>
+        ]]></body>
       </method>
 
       <method name="recalculateStartEndMinutes">
-	<body><![CDATA[
-	  for each (chunk in this.mEvents) {
+        <body><![CDATA[
+          for each (chunk in this.mEvents) {
               var mins = this.getStartEndMinutesForOccurrence(chunk.event);
               chunk.startMinute = mins.start;
               chunk.endMinute = mins.end;
@@ -476,8 +476,8 @@
       </method>
 
       <method name="getStartEndMinutesForOccurrence">
-	<parameter name="aOccurrence"/>
-	<body><![CDATA[
+        <parameter name="aOccurrence"/>
+        <body><![CDATA[
            var stdate = aOccurrence.occurrenceStartDate;
            var enddate = aOccurrence.occurrenceEndDate;
 
@@ -493,8 +493,8 @@
       </method>
 
       <method name="addEvent">
-	<parameter name="aOccurrence"/>
-	<body><![CDATA[
+        <parameter name="aOccurrence"/>
+        <body><![CDATA[
            this.internalDeleteEvent(aOccurrence);
 
            var mins = this.getStartEndMinutesForOccurrence(aOccurrence);
@@ -506,43 +506,43 @@
            };
            this.mEvents.push(chunk);
            this.relayout();
-	]]></body>
+        ]]></body>
       </method>
 
       <method name="deleteEvent">
-	<parameter name="aOccurrence"/>
-	<body><![CDATA[
+        <parameter name="aOccurrence"/>
+        <body><![CDATA[
            if (this.internalDeleteEvent(aOccurrence))
-	     this.relayout();
-	]]></body>
+             this.relayout();
+        ]]></body>
       </method>
 
       <method name="clear">
-	<body><![CDATA[
-	  while (this.bgbox.lastChild)
+        <body><![CDATA[
+          while (this.bgbox.lastChild)
               this.bgbox.removeChild(this.bgbox.lastChild);
-	  while (this.topbox.lastChild)
+          while (this.topbox.lastChild)
               this.topbox.removeChild(this.topbox.lastChild);
-	]]></body>
+        ]]></body>
       </method>
 
       <method name="relayout">
-	<body><![CDATA[
+        <body><![CDATA[
 
-	  function createXULElement(el) {
+          function createXULElement(el) {
               return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
           }
 
-	  this.clear();
+          this.clear();
 
           var orient = this.getAttribute("orient");
           var otherorient = "vertical";
-	  if (!orient) orient = "horizontal";
+          if (!orient) orient = "horizontal";
           if (orient == "vertical") otherorient = "horizontal";
 
-	  // bgbox is used mainly for drawing the grid.  at some point it may
-	  // also be used for all-day events.
-	  this.bgbox.setAttribute("orient", orient);
+          // bgbox is used mainly for drawing the grid.  at some point it may
+          // also be used for all-day events.
+          this.bgbox.setAttribute("orient", orient);
 
           var theMin = this.mStartMin;
           while (theMin < this.mEndMin) {
@@ -564,18 +564,18 @@
               theMin += 60;
           }
 
-	  // fgbox is used for dragging events
-	  this.fgboxes.box.setAttribute("orient", orient);
+          // fgbox is used for dragging events
+          this.fgboxes.box.setAttribute("orient", orient);
           document.getAnonymousElementByAttribute(this, "anonid", "fgdragspacer").setAttribute("orient", orient);
 
-	  // this one is set to otherorient, since it will contain
-	  // child boxes set to "orient" (one for each set of
-	  // overlapping event areas)
-	  this.topbox.setAttribute("orient", otherorient);
+          // this one is set to otherorient, since it will contain
+          // child boxes set to "orient" (one for each set of
+          // overlapping event areas)
+          this.topbox.setAttribute("orient", otherorient);
 
           this.mEventMap = this.computeEventMap();
 
-	  for each (column in this.mEventMap) {
+          for each (column in this.mEventMap) {
               var xulColumn = createXULElement("box");
               xulColumn.setAttribute("orient", orient);
               xulColumn.setAttribute("flex", "1");
@@ -645,11 +645,11 @@
                   this.topbox.removeChild(xulColumn);
               }
           }
-	]]></body>
+        ]]></body>
       </method>
 
       <method name="computeEventMap">
-	<body><![CDATA[
+        <body><![CDATA[
                      //dump ("computeEventMap\n");
           // we need to build a layout data structure
           // that looks like this:
@@ -682,7 +682,7 @@
               //if (event.occurrenceStartDate.isDate)
               //    continue;
 
-	      if (event.startMinute == null || event.endMinute == null || event.event == null)
+              if (event.startMinute == null || event.endMinute == null || event.event == null)
                   continue;
 
               //dump ("=== event: " + event + " " + event.startMinute + "-" + event.endMinute + "\n");
@@ -817,7 +817,7 @@
 
           var pos;
           var sizeattr;
-	  if (col.getAttribute("orient") == "vertical") {
+          if (col.getAttribute("orient") == "vertical") {
               pos = event.clientY - col.parentNode.boxObject.y - dragState.mouseOffset;
               sizeattr = "height";
           } else {
@@ -828,10 +828,10 @@
           if (pos < 0)
               pos = 0;
 
-	  // snap to 15 minute intervals
+          // snap to 15 minute intervals
           var interval = col.mPixPerMin * 15;
-	  var curmin = Math.floor(pos/interval) * 15;
-	  var deltamin = curmin - dragState.origMin;
+          var curmin = Math.floor(pos/interval) * 15;
+          var deltamin = curmin - dragState.origMin;
 
           if (dragState.dragType == "new") {
               if (deltamin < 0) {
@@ -870,7 +870,7 @@
           col.fgboxes.dragspacer.setAttribute(sizeattr, dragState.startMin * col.mPixPerMin);
           col.fgboxes.dragbox.setAttribute(sizeattr, Math.abs((dragState.endMin - dragState.startMin) * col.mPixPerMin));
 
-	  // update the label
+          // update the label
           col.updateDragLabels();
         ]]></body>
       </method>
@@ -884,12 +884,12 @@
           var dragState = col.mDragState;
 
           col.fgboxes.dragbox.removeAttribute("dragging");
-	  col.fgboxes.box.removeAttribute("dragging");
+          col.fgboxes.box.removeAttribute("dragging");
 
           window.removeEventListener("mousemove", col.onEventSweepMouseMove, true);
           window.removeEventListener("mouseup", col.onEventSweepMouseUp, true);
 
-	  document.calendarEventColumnDragging = null;
+          document.calendarEventColumnDragging = null;
 
           // if the user didn't sweep out at least 1 interval's worth of pixels, ignore.
           if (col.getAttribute("orient") == "vertical") {
@@ -935,16 +935,16 @@
          - drag the end before the start and vice versa.
         -->
       <method name="startSweepingToModifyEvent">
-	<parameter name="aEventBox"/>
-	<parameter name="aOccurrence"/>
-	<!-- "start", "end", "middle" -->
-	<parameter name="aGrabbedElement"/>
-	<!-- mouse clientX/clientY from the event -->
-	<parameter name="aMouseX"/>
-	<parameter name="aMouseY"/>
-	<body><![CDATA[
+        <parameter name="aEventBox"/>
+        <parameter name="aOccurrence"/>
+        <!-- "start", "end", "middle" -->
+        <parameter name="aGrabbedElement"/>
+        <!-- mouse clientX/clientY from the event -->
+        <parameter name="aMouseX"/>
+        <parameter name="aMouseY"/>
+        <body><![CDATA[
           dump ("startSweepingToModify\n");
-	  this.mDragState = {
+          this.mDragState = {
               dragOccurrence: aOccurrence,
               mouseOffset: 0
           };
@@ -1028,14 +1028,14 @@
       </method>
 
       <method name="updateDragLabels">
-	<body><![CDATA[
-	  if (!this.mDragState) return;
+        <body><![CDATA[
+          if (!this.mDragState) return;
 
           var realstartmin = this.mDragState.startMin + this.mStartMin;
-	  var realendmin = this.mDragState.endMin + this.mStartMin;
+          var realendmin = this.mDragState.endMin + this.mStartMin;
 
 
-	  if (this.mDragState.dragType == "move") {
+          if (this.mDragState.dragType == "move") {
               realendmin = realstartmin + this.mDragState.limitDurationMin;
           } else if (this.mDragState.dragType == "start") {
               realendmin = this.mDragState.limitEndMin;
@@ -1046,30 +1046,30 @@
           var starthr = Math.floor(realstartmin / 60);
           var startmin = realstartmin % 60;
 
-	  var endhr = Math.floor(realendmin / 60);
-	  var endmin = realendmin % 60;
+          var endhr = Math.floor(realendmin / 60);
+          var endmin = realendmin % 60;
 
           this.fgboxes.startlabel.setAttribute("value", starthr + ":" + (startmin < 10 ? "0" : "") + startmin);
           this.fgboxes.endlabel.setAttribute("value", endhr + ":" + (endmin < 10 ? "0" : "") + endmin);
    
-	]]></body>
+        ]]></body>
       </method>
     </implementation>
 
     <handlers>
       <handler event="dblclick"><![CDATA[
-	if (this.calendarView.controller) {
+        if (this.calendarView.controller) {
             this.calendarView.controller.createNewEvent (this.mCalendarView.displayCalendar,
                                                          this.mDate);
-	}
+        }
       ]]></handler>
 
       <!-- mouse down handler, in empty event column regions.  Starts sweeping out a new
          - event.
         -->
       <handler event="mousedown" button="0"><![CDATA[
-	// snap to 15 minute intervals
-	var interval = this.mPixPerMin * 15;
+        // snap to 15 minute intervals
+        var interval = this.mPixPerMin * 15;
 
         this.mDragState = {
             dragType: "new",
@@ -1086,7 +1086,7 @@
             this.fgboxes.dragspacer.setAttribute("width", this.mDragState.origMin * this.mPixPerMin);
         }
 
-	this.fgboxes.box.setAttribute("dragging", "true");
+        this.fgboxes.box.setAttribute("dragging", "true");
         this.fgboxes.dragbox.setAttribute("dragging", "true");
 
         // cheat and call the sweep move event handler;
@@ -1109,13 +1109,13 @@
 
     <content>
       <xul:box anonid="eventbox" xbl:inherits="orient,width,height" flex="1">
-	<xul:calendar-event-gripbar anonid="gripbar1" whichside="start" xbl:inherits="parentorient=orient"/>
-	<xul:vbox class="calendar-event-box-container" xbl:inherits="parentorient=orient" flex="1" align="left">
-	  <xul:label anonid="event-name" flex="1" crop="right"/>
+        <xul:calendar-event-gripbar anonid="gripbar1" whichside="start" xbl:inherits="parentorient=orient"/>
+        <xul:vbox class="calendar-event-box-container" xbl:inherits="parentorient=orient" flex="1" align="left">
+          <xul:label anonid="event-name" flex="1" crop="right"/>
           <!-- for some reason, textboxes suck ass for reflow. -->
-	  <!-- <xul:textbox class="editable-label" anonid="event-name" flex="1" crop="right"/> -->
-	</xul:vbox>
-	<xul:calendar-event-gripbar anonid="gripbar2" whichside="end" xbl:inherits="parentorient=orient"/>
+          <!-- <xul:textbox class="plain" style="background: transparent !important" anonid="event-name" flex="1" crop="right"/> -->
+        </xul:vbox>
+        <xul:calendar-event-gripbar anonid="gripbar2" whichside="end" xbl:inherits="parentorient=orient"/>
       </xul:box>
     </content>
 
@@ -1123,7 +1123,7 @@
       <constructor><![CDATA[
          this.orient = this.getAttribute("orient");
           var otherorient = "vertical";
-	  if (!orient) orient = "horizontal";
+          if (!orient) orient = "horizontal";
           if (orient == "vertical") otherorient = "horizontal";
       ]]></constructor>
 
@@ -1132,22 +1132,22 @@
       <field name="mParentColumn">null</field>
       <field name="mCalendarView">null</field>
       <property name="calendarView"
-	onget="return this.mCalendarView;"
-	onset="return (this.mCalendarView = val);" />
+        onget="return this.mCalendarView;"
+        onset="return (this.mCalendarView = val);" />
 
       <!-- methods/properties -->
       <method name="setAttribute">
-	<parameter name="aAttr"/>
-	<parameter name="aVal"/>
-	<body><![CDATA[
-	  var needsrelayout = false;
-	  if (aAttr == "orient") {
+        <parameter name="aAttr"/>
+        <parameter name="aVal"/>
+        <body><![CDATA[
+          var needsrelayout = false;
+          if (aAttr == "orient") {
               if (this.getAttribute("orient") != aVal)
                   needsrelayout = true;
           }
 
-	  // this should be done using lookupMethod(), see bug 286629
-	  var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
+          // this should be done using lookupMethod(), see bug 286629
+          var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
 
           if (needsrelayout) {
               var otherorient = "vertical";
@@ -1163,50 +1163,50 @@
           }
 
           return ret;
-	]]></body>
+        ]]></body>
       </method>
 
       <property name="eventNameLabel" readonly="true"
-	onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name');"/>
+        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name');"/>
 
       <property name="occurrence">
-	<getter><![CDATA[
-	  return this.mOccurrence;
-	]]></getter>
-	<setter><![CDATA[
-	  this.mOccurrence = val;
-	  if (val && val.item)
+        <getter><![CDATA[
+          return this.mOccurrence;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mOccurrence = val;
+          if (val && val.item)
               this.eventNameLabel.setAttribute('value', val.item.title);
           else
               this.eventNameLabel.setAttribute('value', 'Untitled Event');
-	  return val;
-	]]></setter>
+          return val;
+        ]]></setter>
       </property>
 
       <property name="parentColumn"
-	onget="return this.mParentColumn;"
-	onset="return (this.mParentColumn = val);"/>
+        onget="return this.mParentColumn;"
+        onset="return (this.mParentColumn = val);"/>
 
       <property name="startMinute" readonly="true"
-	onget="if (!this.mOccurrence) return 0; return this.mOccurrence.occurrenceStartDate.hour * 60 + this.mOccurrence.occurrenceStartDate.minute"/>
+        onget="if (!this.mOccurrence) return 0; return this.mOccurrence.occurrenceStartDate.hour * 60 + this.mOccurrence.occurrenceStartDate.minute"/>
 
       <property name="endMinute" readonly="true"
-	onget="if (!this.mOccurrence) return 0; return this.mOccurrence.occurrenceEndDate.hour * 60 + this.mOccurrence.occurrenceEndDate.minute"/>
+        onget="if (!this.mOccurrence) return 0; return this.mOccurrence.occurrenceEndDate.hour * 60 + this.mOccurrence.occurrenceEndDate.minute"/>
     </implementation>
 
     <handlers>
       <handler event="mousedown"><![CDATA[
-	this.calendarView.selectedOccurrence = this.mOccurrence;
+        this.calendarView.selectedOccurrence = this.mOccurrence;
 
-	this.mInMouseDown = true;
-	this.mMouseX = event.clientX;
-	this.mMouseY = event.clientY;
+        this.mInMouseDown = true;
+        this.mMouseX = event.clientX;
+        this.mMouseY = event.clientY;
         this.mMouseTime = event.timeStamp;
-	event.preventBubble();
+        event.preventBubble();
       ]]></handler>
 
       <handler event="mousemove"><![CDATA[
-	if (!this.mInMouseDown)
+        if (!this.mInMouseDown)
             return;
         var dx = Math.abs(event.clientX - this.mMouseX);
         var dy = Math.abs(event.clientY - this.mMouseY);
@@ -1220,14 +1220,14 @@
       ]]></handler>
 
       <handler event="mouseup"><![CDATA[
-	this.mInMouseDown = false;
+        this.mInMouseDown = false;
       ]]></handler>
 
       <handler event="dblclick"><![CDATA[
-	if (this.calendarView.controller && this.mOccurrence) {
+        if (this.calendarView.controller && this.mOccurrence) {
             this.calendarView.controller.modifyOccurrence(this.mOccurrence);
         }
-	event.preventBubble();
+        event.preventBubble();
       ]]></handler>
     </handlers>
   </binding>
@@ -1235,24 +1235,24 @@
   <binding id="calendar-multiday-view">
     <content>
       <xul:box anonid="mainbox" flex="1">
-	<!-- this thing is tricky; its width/height need to be programatically set based on the orientation -->
-	<xul:box anonid="labelbox">
-	  <xul:box anonid="labeltimespacer">
-	    <xul:button style="min-width: 10px; padding: 1px; background: red;" label="R"
+        <!-- this thing is tricky; its width/height need to be programatically set based on the orientation -->
+        <xul:box anonid="labelbox">
+          <xul:box anonid="labeltimespacer">
+            <xul:button style="min-width: 10px; padding: 1px; background: red;" label="R"
              oncommand="var e=this.parentNode.parentNode.parentNode.parentNode; if (e.orient == 'horizontal') e.orient = 'vertical'; else e.orient = 'horizontal';" align="center"/>
-	  </xul:box>
+          </xul:box>
           <xul:box anonid="labeldaybox" flex="1" equalsize="always" />
-	</xul:box>
-	<xul:box anonid="headerbox">
-	  <xul:box anonid="headertimespacer"/>
+        </xul:box>
+        <xul:box anonid="headerbox">
+          <xul:box anonid="headertimespacer"/>
           <xul:box anonid="headerdaybox" flex="1" equalsize="always" />
-	</xul:box>
+        </xul:box>
         <xul:splitter collapse="before"><xul:grippy/></xul:splitter>
-	<xul:box anonid="childbox" flex="1">
-	  <!-- the orient of the calendar-time-bar needs to be the opposite of the parent -->
-	  <xul:calendar-time-bar xbl:inherits="orient" anonid="timebar"/>
-	  <xul:box anonid="daybox" flex="1" equalsize="always" />
-	</xul:box>
+        <xul:box anonid="childbox" flex="1">
+          <!-- the orient of the calendar-time-bar needs to be the opposite of the parent -->
+          <xul:calendar-time-bar xbl:inherits="orient" anonid="timebar"/>
+          <xul:box anonid="daybox" flex="1" equalsize="always" />
+        </xul:box>
       </xul:box>
     </content>
 
@@ -1395,71 +1395,71 @@
 
       <!-- calICalendarView -->
       <property name="supportsDisjointDates"
-	onget="return true"/>
+        onget="return true"/>
       <property name="hasDisjointDates"
-	onget="return (this.mDateList != null);"/>
+        onget="return (this.mDateList != null);"/>
 
       <property name="controller"
-	onget="return this.mController;"
-	onset="return (this.mController = val);" />
+        onget="return this.mController;"
+        onset="return (this.mController = val);" />
 
       <property name="displayCalendar">
-	<getter><![CDATA[
-	  return this.mCalendar;
-	]]></getter>
-	<setter><![CDATA[
-	  if (this.mCalendar)
+        <getter><![CDATA[
+          return this.mCalendar;
+        ]]></getter>
+        <setter><![CDATA[
+          if (this.mCalendar)
               this.mCalendar.removeObserver (this.mObserver);
           this.mCalendar = val;
           this.mCalendar.addObserver (this.mObserver);
 
           this.refresh();
-	]]></setter>
+        ]]></setter>
       </property>
 
       <property name="startDate">
-	<getter><![CDATA[
-	  if (this.mStartDate) return this.mStartDate;
-	  else if (this.mDateList && this.mDateList.length > 0) return this.mDateList[0];
-	  else return null;
-	]]></getter>
+        <getter><![CDATA[
+          if (this.mStartDate) return this.mStartDate;
+          else if (this.mDateList && this.mDateList.length > 0) return this.mDateList[0];
+          else return null;
+        ]]></getter>
       </property>
 
       <property name="endDate">
-	<getter><![CDATA[
-	  if (this.mEndDate) return this.mEndDate;
-	  else if (this.mDateList && this.mDateList.length > 0) return this.mDateList[this.mDateList.length-1];
-	  else return null;
-	]]></getter>
+        <getter><![CDATA[
+          if (this.mEndDate) return this.mEndDate;
+          else if (this.mDateList && this.mDateList.length > 0) return this.mDateList[this.mDateList.length-1];
+          else return null;
+        ]]></getter>
       </property>
 
       <method name="setDateRange">
-	<parameter name="aStartDate"/>
-	<parameter name="aEndDate"/>
-	<body><![CDATA[
-	  //dump ("setDateRange\n");
-	  this.mDateList = null;
-	  this.mStartDate = aStartDate.clone();
+        <parameter name="aStartDate"/>
+        <parameter name="aEndDate"/>
+        <body><![CDATA[
+          //dump ("setDateRange\n");
+          this.mDateList = null;
+          this.mStartDate = aStartDate.clone();
           this.mStartDate.makeImmutable();
-	  this.mEndDate = aEndDate.clone();
+          this.mEndDate = aEndDate.clone();
           this.mEndDate.makeImmutable();
 
           // this function needs to be smarter, and needs to compare
           // the current date range and add/remove, instead of just
           // replacing.
 
-	  this.refresh();
-	]]></body>
+          this.refresh();
+        ]]></body>
       </method>
 
       <method name="setDateList">
-	<parameter name="aCount"/>
-	<parameter name="aDates"/>
-	<body><![CDATA[
-	  this.mStartDate = null;
-	  this.mEndDate = null;
+        <parameter name="aCount"/>
+        <parameter name="aDates"/>
+        <body><![CDATA[
+          this.mStartDate = null;
+          this.mEndDate = null;
 
-	  if (aCount == 0) {
+          if (aCount == 0) {
               this.mDateList = null;
           } else {
               aDates.sort (function(a, b) { return a.compare(b); });
@@ -1472,12 +1472,12 @@
           }
 
           this.refresh();
-	]]></body>
+        ]]></body>
       </method>
 
       <method name="getDateList">
-	<parameter name="aCount"/>
-	<body><![CDATA[
+        <parameter name="aCount"/>
+        <body><![CDATA[
            var dates = new Array();
            if (this.mStartDate && this.mEndDate) {
                var d = this.mStartDate.clone();
@@ -1493,15 +1493,15 @@
 
            aCount.value = dates.length;
            return dates;
-	]]></body>
+        ]]></body>
       </method>
 
       <property name="selectedOccurrence">
-	<getter><![CDATA[
-	  return this.mSelectedOccurrence;
-	]]></getter>
-	<setter><![CDATA[
-	  if (this.mSelectedOccurrence != val) {
+        <getter><![CDATA[
+          return this.mSelectedOccurrence;
+        ]]></getter>
+        <setter><![CDATA[
+          if (this.mSelectedOccurrence != val) {
               if (this.mSelectedOccurrence) {
                   var col = this.findColumnForEvent(this.mSelectedOccurrence);
                   col.column.selectOccurrence(null);
@@ -1516,44 +1516,44 @@
               }
 
               return (this.mSelectedOccurrence = val);
-	  }
-	]]></setter>
+          }
+        ]]></setter>
       </property>
 
       <property name="pixelsPerMinute">
-	<getter>return this.mPixPerMin</getter>
-	<setter>this.setPixelsPerMin(val); return val;</setter>
+        <getter>return this.mPixPerMin</getter>
+        <setter>this.setPixelsPerMin(val); return val;</setter>
       </property>
 
       <!-- private -->
 
       <property name="orient">
-	<getter>return this.getAttribute("orient");</getter>
-	<setter>return this.setAttribute("orient", val);</setter>
+        <getter>return this.getAttribute("orient");</getter>
+        <setter>return this.setAttribute("orient", val);</setter>
       </property>
 
       <method name="setAttribute">
-	<parameter name="aAttr"/>
-	<parameter name="aVal"/>
-	<body><![CDATA[
-	  if (aAttr == "orient") {
+        <parameter name="aAttr"/>
+        <parameter name="aVal"/>
+        <body><![CDATA[
+          if (aAttr == "orient") {
               if (this.getAttribute("orient") != aVal)
                   needsrelayout = true;
           }
 
-	  // this should be done using lookupMethod(), see bug 286629
-	  var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
+          // this should be done using lookupMethod(), see bug 286629
+          var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
 
           if (needsrelayout) {
               this.reorient();
           }
 
           return ret;
-	]]></body>
+        ]]></body>
       </method>
 
       <method name="reorient">
-	<body><![CDATA[
+        <body><![CDATA[
           var orient = this.getAttribute("orient");
           var otherorient = "vertical";
           if (!orient) orient = "horizontal";
@@ -1564,24 +1564,24 @@
           else
               this.setPixelsPerMin(0.6);
           
-	  var normalelems = ['mainbox', 'timebar'];
-	  var otherelems = ['labelbox', 'labeldaybox', 'headerbox', 'headerdaybox', 'childbox', 'daybox'];
+          var normalelems = ['mainbox', 'timebar'];
+          var otherelems = ['labelbox', 'labeldaybox', 'headerbox', 'headerdaybox', 'childbox', 'daybox'];
 
-	  for each (id in normalelems) {
+          for each (id in normalelems) {
               document.getAnonymousElementByAttribute(this, "anonid", id).setAttribute("orient", orient);
           }
 
-	  for each (id in otherelems) {
+          for each (id in otherelems) {
               document.getAnonymousElementByAttribute(this, "anonid", id).setAttribute("orient", otherorient);
           }
 
           var labelbox = document.getAnonymousElementByAttribute(this, "anonid", "labelbox");
-	  var labeltimespacer = document.getAnonymousElementByAttribute(this, "anonid", "labeltimespacer");
+          var labeltimespacer = document.getAnonymousElementByAttribute(this, "anonid", "labeltimespacer");
           var headerbox = document.getAnonymousElementByAttribute(this, "anonid", "headerbox");
-	  var headertimespacer = document.getAnonymousElementByAttribute(this, "anonid", "headertimespacer");
+          var headertimespacer = document.getAnonymousElementByAttribute(this, "anonid", "headertimespacer");
           var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
 
-	  if (orient == "vertical") {
+          if (orient == "vertical") {
               headerbox.setAttribute("height", 50);
               headerbox.removeAttribute("width");
 
@@ -1611,8 +1611,8 @@
               labeltimespacer.removeAttribute("width");
           }
 
-	  var boxes = ["daybox", "headerdaybox", "labeldaybox"];
-	  for each (boxname in boxes) {
+          var boxes = ["daybox", "headerdaybox", "labeldaybox"];
+          for each (boxname in boxes) {
               var box = document.getAnonymousElementByAttribute(this, "anonid", boxname);
               var child = box.firstChild;
               while (child) {
@@ -1620,15 +1620,15 @@
                   child = child.nextSibling;
               }
           }
-	]]></body>
+        ]]></body>
       </method>
 
       <method name="refresh">
-	<body><![CDATA[
-	  // recreate our columns as necessary
-	  this.relayout();
+        <body><![CDATA[
+          // recreate our columns as necessary
+          this.relayout();
 
-	  if (!this.mCalendar)
+          if (!this.mCalendar)
               return;
 
           // start our items query; for a disjoint date range
@@ -1642,12 +1642,12 @@
                                   this.startDate,
                                   this.endDate,
                                   this.mOperationListener);
-	]]></body>
+        ]]></body>
       </method>
 
       <method name="relayout">
-	<body><![CDATA[
-	  function createXULElement(el) {
+        <body><![CDATA[
+          function createXULElement(el) {
               return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
           }
 
@@ -1738,16 +1738,16 @@
               this.mDateColumns.push ( { date: d, column: dayEventsBox, header: dayHeaderBox } );
           }
 
-	  daybox.removeAttribute("flex");
-	  daybox.setAttribute("flex", "1");
-	]]></body>
+          daybox.removeAttribute("flex");
+          daybox.setAttribute("flex", "1");
+        ]]></body>
       </method>
 
       <method name="findColumnForEvent">
-	<parameter name="aEvent"/>
-	<body><![CDATA[
-	  var estart = aEvent.occurrenceStartDate;
-	  var eend = aEvent.occurrenceEndDate;
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var estart = aEvent.occurrenceStartDate;
+          var eend = aEvent.occurrenceEndDate;
 
           var eday = estart.clone();
           eday.isDate = true;
@@ -1756,19 +1756,19 @@
 
           var column = null;
           var header = null;
-	  for each (col in this.mDateColumns) {
+          for each (col in this.mDateColumns) {
               if (col.date.compare(eday) == 0) { 
                   return col;
               }
           }
 
           return null;
-	]]></body>
+        ]]></body>
       </method>
 
       <method name="doAddEvent">
-	<parameter name="aEvent"/>
-	<body><![CDATA[
+        <parameter name="aEvent"/>
+        <body><![CDATA[
           //dump ("++ doAddevent\n");
           var col = this.findColumnForEvent(aEvent);
           if (!col)
@@ -1777,18 +1777,18 @@
           var column = col.column;
           var header = col.header;
 
-	  var estart = aEvent.occurrenceStartDate;
+          var estart = aEvent.occurrenceStartDate;
           if (estart.isDate) {
               // add it to header
           } else {
               column.addEvent(aEvent);
           }
-	]]></body>
+        ]]></body>
       </method>
 
       <method name="doDeleteEvent">
-	<parameter name="aEvent"/>
-	<body><![CDATA[
+        <parameter name="aEvent"/>
+        <body><![CDATA[
           var col = this.findColumnForEvent(aEvent);
           if (!col)
               return;
@@ -1796,32 +1796,32 @@
           var column = col.column;
           var header = col.header;
 
-	  var estart = aEvent.occurrenceStartDate;
+          var estart = aEvent.occurrenceStartDate;
           if (estart.isDate) {
               // remove from header
           } else {
               column.deleteEvent(aEvent);
           }
-	]]></body>
+        ]]></body>
       </method>
 
       <method name="setPixelsPerMin">
-	<parameter name="pixPerMin"/>
-	<body><![CDATA[
-	  var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
-	  timebar.pixelsPerMinute = pixPerMin;
+        <parameter name="pixPerMin"/>
+        <body><![CDATA[
+          var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
+          timebar.pixelsPerMinute = pixPerMin;
 
-	  for each (col in this.mDateColumns) {
+          for each (col in this.mDateColumns) {
               col.column.pixelsPerMinute = pixPerMin;
           }
-	]]></body>
+        ]]></body>
       </method>
     </implementation>
 
     <handlers>
       <handler event="keypress"><![CDATA[
-	const kKE = Components.interfaces.nsIDOMKeyEvent;
-	if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
+        const kKE = Components.interfaces.nsIDOMKeyEvent;
+        if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
             event.keyCode == kKE.DOM_VK_DELETE)
         {
             if (this.selectedOccurrence && this.controller) {
@@ -1832,3 +1832,5 @@
     </handlers>
   </binding>
 </bindings>
+
+<!-- -*- Mode: xml; indent-tabs-mode: nil; -*- -->
