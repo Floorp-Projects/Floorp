@@ -713,7 +713,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     // Skip the first 'X:\' for the first form, and skip the first full
     // '\\machine\volume\' segment for the second form.
 
-    const unsigned char* path = (const unsigned char*) mResolvedPath.get();
+    unsigned char* path = (unsigned char*) mResolvedPath.BeginWriting();
 
     if (path[0] == '\\' && path[1] == '\\')
     {
@@ -809,7 +809,7 @@ nsLocalFile::AppendNativeInternal(const nsAFlatCString &node, PRBool multipleCom
         // can't contain .. as a path component. Ensure that the valid components 
         // "foo..foo", "..foo", and "foo.." are not falsely detected, but the invalid
         // paths "..\", "foo\..", "foo\..\foo", "..\foo", etc are.
-        unsigned char * doubleDot = _mbsstr(nodePath, (unsigned char *)"\\..");
+        const unsigned char * doubleDot = _mbsstr(nodePath, (const unsigned char *)"\\..");
         while (doubleDot)
         {
             doubleDot += 3;
