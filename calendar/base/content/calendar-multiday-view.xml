@@ -570,6 +570,7 @@
 
                       xulColumn.appendChild(chunkBox);
 
+                      chunkBox.calendarView = this.calendarView;
                       chunkBox.occurrence = chunk.event.event;
                   } else {
                       var chunkBox = createXULElement("spacer");

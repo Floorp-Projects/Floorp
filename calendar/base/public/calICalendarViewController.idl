@@ -72,12 +72,12 @@ interface calICalendarViewController : nsISupports
 		       in calIDateTime aEndTime);
 
   /**
-   * Modify aEvent to start at aNewStartTime and end at
-   * aNewEndTime.
+   * Modify aEvent.  If aNewStartTime and aNewEndTime are given,
+   * update the event to those times.  Otherwise ask the user to modify.
    */
-  void modifyEventTime (in calICalendar aCalendar,
-			in calIEvent aEvent,
-			in calIDateTime aNewStartTime,
-			in calIDateTime aNewEndTime);
+  void modifyEvent (in calICalendar aCalendar,
+		    in calIEvent aEvent,
+		    in calIDateTime aNewStartTime,
+		    in calIDateTime aNewEndTime);
 };
 

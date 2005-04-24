@@ -96,14 +96,14 @@ function modifyEventWithDialog(event)
         // not ==.
         if (!originalEvent.parent || 
             (originalEvent.parent.uri.equals(calendar.uri)))
-            calendar.modifyItem(calendarEvent, null);
+            calendar.modifyItem(event, null);
         else {
-            originalEvent.parent.deleteItem(calendarEvent, null);
-            calendar.addItem(calendarEvent, null);
+            originalEvent.parent.deleteItem(event, null);
+            calendar.addItem(event, null);
         }
     }
 
-    openEventDialog(event, calendar, "modify", onModifyEvent);
+    openEventDialog(event, event.parent, "modify", onModifyEvent);
 }
 
 function openEventDialog(calendarEvent, calendar, mode, callback)

@@ -80,11 +80,33 @@ var ltnCalendarViewController = {
     },
 
     createNewEvent: function (aCalendar, aStartTime, aEndTime) {
-        createEventWithDialog(aCalendar, aStartTime, aEndTime);
+        // if we're given both times, skip the dialog
+        if (aStartTime && aEndTime && !aStartTime.isDate && !aEndTime.isDate) {
+            var event = createEvent();
+            event.startDate = aStartTime;
+            event.endDate = aEndTime;
+            event.title = "New Event";
+            aCalendar.addItem(event, null);
+        } else if (aStartTime && aStartTime.isDate) {
+            var event = createEvent();
+            event.isAllDay = true;
+            event.startDate = aStartTime;
+            aCalendar.addItem(event, null);
+        } else {
+            // default pop up the dialog
+            createEventWithDialog(aCalendar, aStartTime, aEndTime);
+        }
     },
 
-    modifyEventTime: function (aCalendar, aEvent, aNewStartTime, aNewEndTime) {
-        dump ("+++ modifyEvent!\n");
+    modifyEvent: function (aCalendar, aEvent, aNewStartTime, aNewEndTime) {
+        if (aNewStartTime && aNewEndTime && !aNewStartTime.isDate && !aNewEndTime.isDate) {
+            var event = aEvent.clone();
+            event.startDate = aNewStartTime;
+            event.endDate = aNewEndTime;
+            aEvent.parent.modifyItem(event, null);
+        } else {
+            modifyEventWithDialog(aEvent);
+        }
     }
 };
 
