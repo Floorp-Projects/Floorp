@@ -42,9 +42,6 @@
 #include "nsDeviceContextWin.h"
 #include "imgScaler.h"
 
-static nsresult BuildDIB(LPBITMAPINFOHEADER *aBHead, PRInt32 aWidth,
-                         PRInt32 aHeight, PRInt32 aDepth, PRInt8 *aNumBitPix);
-
 static PRInt32 GetPlatform()
 {
   OSVERSIONINFO versionInfo;
@@ -1615,111 +1612,45 @@ nsImageWin::PrintDDB(nsIDrawingSurface* aSurface,
 
 
 /** ----------------------------------------------------------------
- * See documentation in nsIImage.h
- * @update - dwc 5/20/99
+ * recreate a device independent image from a device dependent image (DDB)
+ * Does not remove the DDB
+ *
  * @return the result of the operation, if NS_OK a DIB was created.
  */
 nsresult 
 nsImageWin::ConvertDDBtoDIB()
 {
-  PRInt32             numbytes,tWidth,tHeight;
-  BITMAP              srcinfo;
   HDC                 memPrDC;
-  UINT                palType;
 
+  if (mImageBits)
+    return NS_OK;
 
-  if (mIsOptimized == PR_TRUE) {
+  if (!mInitialized || mHBitmap == nsnull)
+    return NS_ERROR_FAILURE;
 
-    if (mHBitmap != nsnull){
-      memPrDC = ::CreateDC("DISPLAY",NULL,NULL,NULL);
+  // mSizeImage might be 0, so use a temporary variable and set mSizeImage
+  // after we succeed with creating mImageBits.
+  PRUint32 newImageSize = mRowBytes * mBHead->biHeight; // no compression
 
-      numbytes = ::GetObject(mHBitmap,sizeof(BITMAP),&srcinfo);
-      
-      tWidth = mBHead->biWidth;
-      tHeight = mBHead->biHeight;
+  // Allocate the image bits
+  mImageBits = new unsigned char[newImageSize];
+  if (!mImageBits)
+    return NS_ERROR_FAILURE;
 
-      if (nsnull != mBHead){
-        delete[] mBHead;
-      }
-      BuildDIB(&mBHead,tWidth,tHeight,mNumBytesPixel * 8,&mNumBytesPixel);
-      mRowBytes = CalcBytesSpan(mBHead->biWidth);
-      mSizeImage = mRowBytes * mBHead->biHeight; // no compression
+  mSizeImage = newImageSize;
 
+  memPrDC = ::CreateDC("DISPLAY", NULL, NULL, NULL);
+  if (!memPrDC)
+    return NS_ERROR_FAILURE;
 
-      // Allocate the image bits
-      mImageBits = new unsigned char[mSizeImage];
+  PRInt32 retVal = 
+    ::GetDIBits(memPrDC, mHBitmap, 0, mBHead->biHeight,
+                mImageBits, (LPBITMAPINFO)mBHead,
+                256 == mNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS);
 
+  ::DeleteDC(memPrDC);
 
-      if (mBHead->biBitCount == 8) {
-        palType = DIB_PAL_COLORS;
-      } else {
-        palType = DIB_RGB_COLORS;
-      }
-
-      numbytes = ::GetDIBits(memPrDC, mHBitmap, 0, srcinfo.bmHeight, mImageBits,
-                             (LPBITMAPINFO)mBHead, palType);
-      DeleteDC(memPrDC);
-    }
-  }
-
-  return NS_OK;
-}
-
-
-/** ----------------------------------------------------------------
- * Build A DIB header and allocate memory 
- * @update dc - 11/20/98
- * @return void
- */
-nsresult
-BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHeight,PRInt32 aDepth,PRInt8 *aNumBytesPix)
-{
-  PRInt16 numPaletteColors;
-
-
-  if (8 == aDepth) {
-    numPaletteColors = 256;
-    *aNumBytesPix = 1;
-  } else if (16 == aDepth) {
-    numPaletteColors = 0;
-    *aNumBytesPix = 2; 
-  } else if (24 == aDepth) {
-    numPaletteColors = 0;
-    *aNumBytesPix = 3;
-  } else if (32 == aDepth) {
-    numPaletteColors = 0;  
-    *aNumBytesPix = 4;
-  } else {
-    NS_ASSERTION(PR_FALSE, "unexpected image depth");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-
-  if (0 == numPaletteColors) {
-    // space for the header only (no color table)
-    (*aBHead) = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFO)];
-  } else {
-    // Space for the header and the palette. Since we'll be using DIB_PAL_COLORS
-    // the color table is an array of 16-bit unsigned integers that specify an
-    // index into the currently realized logical palette
-    (*aBHead) = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFOHEADER) + (256 * sizeof(WORD))];
-  }
-
-
-  (*aBHead)->biSize = sizeof(BITMAPINFOHEADER);
-  (*aBHead)->biWidth = aWidth;
-  (*aBHead)->biHeight = aHeight;
-  (*aBHead)->biPlanes = 1;
-  (*aBHead)->biBitCount = (WORD)aDepth;
-  (*aBHead)->biCompression = BI_RGB;
-  (*aBHead)->biSizeImage = 0;            // not compressed, so we dont need this to be set
-  (*aBHead)->biXPelsPerMeter = 0;
-  (*aBHead)->biYPelsPerMeter = 0;
-  (*aBHead)->biClrUsed = numPaletteColors;
-  (*aBHead)->biClrImportant = numPaletteColors;
-
-
-  return NS_OK;
+  return (retVal == 0) ? NS_ERROR_FAILURE : NS_OK;
 }
 
 
