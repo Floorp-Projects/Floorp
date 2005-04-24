@@ -98,7 +98,7 @@ interface calICalendar : nsISupports
      ITEM_FILTER_TYPE_JOURNAL);
 
   /** 
-   * If set, return calIOccurence items, otherwise return subclasses of
+   * If set, return calIItemOccurence items, otherwise return subclasses of
    * calIItemBase.
    */
   const unsigned long ITEM_FILTER_CLASS_OCCURRENCES = 1 << 5;

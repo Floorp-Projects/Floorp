@@ -216,25 +216,20 @@
 
     <handlers>
       <handler event="mousedown" phase="capturing" button="0"><![CDATA[
-	dump("mousedown\n");
 	this.mResizing = true;
 	this.mSizeStartX = event.screenX;
 	this.mSizeStartY = event.screenY;
-	dump ("ev.t: " + event.target + " bo: " + event.target.boxObject + "\n");
-	event.target.boxObject.captureMouseEvents = true;
 	event.preventDefault();
       ]]></handler>
 
       <handler event="mousemove" phase="capturing"><![CDATA[
 	if (!this.mResizing)
 	  return;
-	dump("mousemove\n");
       ]]></handler>
 
       <handler event="mouseup" phase="capturing"><![CDATA[
 	if (!this.mResizing)
 	  return;
-	dump("mouseup\n");
 	this.mResizing = false;
 	event.target.boxObject.captureMouseEvents = false;
       ]]></handler>
@@ -445,13 +440,20 @@
            var itemIndex = -1;
            var i;
            for (i = 0; i < this.mEvents.length; i++) {
-               if (this.mEvents[i].event == aOccurrence) {
+               occ = this.mEvents[i].event;
+               if (occ.item == aOccurrence.item &&
+                   occ.occurrenceStartDate.compare(aOccurrence.occurrenceStartDate) == 0 &&
+                   occ.occurrenceEndDate.compare(aOccurrence.occurrenceEndDate) == 0)
+               {
                    itemIndex = i;
                    break;
                }
            }
 
            if (itemIndex != -1) {
+               if (this.mSelectedOccurrence == this.mEvents[itemIndex])
+                   this.mSelectedOccurrence = null;
+
                this.mEvents.splice(itemIndex, 1);
                return true;
            } else {
@@ -1087,15 +1089,13 @@
 
     <handlers>
       <handler event="mousedown">
-	dump ("event select\n");
 	this.calendarView.selectedOccurrence = this.mOccurrence;
 	event.preventBubble();
       </handler>
 
       <handler event="dblclick"><![CDATA[
 	if (this.calendarView.controller && this.mOccurrence) {
-            this.calendarView.controller.modifyEvent(this.mOccurrence.item.parent,
-                                                     this.mOccurrence.item);
+            this.calendarView.controller.modifyOccurrence(this.mOccurrence);
         }
 	event.preventBubble();
       ]]></handler>
@@ -1192,22 +1192,23 @@
                 if (!(aNewItem instanceof Components.interfaces.calIEvent))
                     return;
 
-                var occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
-                                                          this.calView.endDate,
-                                                          {});
+                var occs;
+                occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
+                                                      this.calView.endDate,
+                                                      {});
                 for each (occ in occs) {
                     this.calView.doDeleteEvent(occ);
                 }
 
-                var occs = aNewItem.getOccurrencesBetween(this.calView.startDate,
-                                                          this.calView.endDate,
-                                                          {});
+                occs = aNewItem.getOccurrencesBetween(this.calView.startDate,
+                                                      this.calView.endDate,
+                                                      {});
                 for each (occ in occs) {
                     this.calView.doAddEvent(occ);
                 }
             },
             onDeleteItem: function (aItem) {
-                dump ("++ DeleteItem\n");
+                //dump ("++ DeleteItem\n");
                 if (!(aItem instanceof Components.interfaces.calIEvent))
                     return;
 
@@ -1227,12 +1228,12 @@
             // XXXvv we can be smarter about how we handle this stuff
             //
             onCalendarAdded: function (aCalendar) {
-                dump ("view onCalendarAdded\n");
+                //dump ("view onCalendarAdded\n");
                 this.calView.refresh();
             },
 
             onCalendarRemoved: function (aCalendar) {
-                dump ("view onCalendarRemoved\n");
+                //dump ("view onCalendarRemoved\n");
                 this.calView.refresh();
             },
 
@@ -1248,7 +1249,7 @@
 
           onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
               // nothing to do
-              dump ("+++ OnOperationComplete (detail: " + aDetail + ")");
+              //dump ("+++ OnOperationComplete (detail: " + aDetail + ")\n");
           },
           onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
               if (!Components.isSuccessCode(aStatus))
@@ -1306,7 +1307,7 @@
 	<parameter name="aStartDate"/>
 	<parameter name="aEndDate"/>
 	<body><![CDATA[
-	  dump ("setDateRange\n");
+	  //dump ("setDateRange\n");
 	  this.mDateList = null;
 	  this.mStartDate = aStartDate.clone();
           this.mStartDate.makeImmutable();
@@ -1503,7 +1504,7 @@
           // start our items query; for a disjoint date range
           // we get all the items, and just filter out the ones we don't
           // care about in addItem
-          dump ("+++++++++ Calling getItems\n");
+          //dump ("+++++++++ Calling getItems\n");
           this.mCalendar.getItems(this.mCalendar.ITEM_FILTER_COMPLETED_ALL |
                                   this.mCalendar.ITEM_FILTER_TYPE_EVENT |
                                   this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES,
@@ -1638,7 +1639,7 @@
       <method name="doAddEvent">
 	<parameter name="aEvent"/>
 	<body><![CDATA[
-                     //dump ("++ doAddevent\n");
+          //dump ("++ doAddevent\n");
           var col = this.findColumnForEvent(aEvent);
           if (!col)
               return;
@@ -1688,6 +1689,16 @@
     </implementation>
 
     <handlers>
+      <handler event="keypress"><![CDATA[
+	const kKE = Components.interfaces.nsIDOMKeyEvent;
+	if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
+            event.keyCode == kKE.DOM_VK_DELETE)
+        {
+            if (this.selectedOccurrence && this.controller) {
+                this.controller.deleteOccurrence(this.selectedOccurrence);
+            }
+        }
+      ]]></handler>
     </handlers>
   </binding>
 </bindings>

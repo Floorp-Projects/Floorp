@@ -42,6 +42,7 @@
 interface calICalendar;
 interface calIDateTime;
 interface calIEvent;
+interface calIItemOccurrence;
 
 [scriptable, uuid(1f783898-f4c2-4b2d-972e-360e0de38237)]
 interface calICalendarViewController : nsISupports
@@ -72,12 +73,18 @@ interface calICalendarViewController : nsISupports
 		       in calIDateTime aEndTime);
 
   /**
-   * Modify aEvent.  If aNewStartTime and aNewEndTime are given,
+   * Modify aOccurrence.  If aNewStartTime and aNewEndTime are given,
    * update the event to those times.  Otherwise ask the user to modify.
    */
-  void modifyEvent (in calICalendar aCalendar,
-		    in calIEvent aEvent,
-		    in calIDateTime aNewStartTime,
-		    in calIDateTime aNewEndTime);
+  void modifyOccurrence (in calIItemOccurrence aOccurrence,
+			 in calIDateTime aNewStartTime,
+			 in calIDateTime aNewEndTime);
+
+  /**
+   * Delete the given event.  This should prompt whether to delete
+   * just this occurrence or all occurrences, and do whatever else
+   * is appropriate.
+   */
+  void deleteOccurrence (in calIItemOccurrence aOccurrence);
 };
 

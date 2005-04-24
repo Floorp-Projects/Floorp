@@ -98,15 +98,30 @@ var ltnCalendarViewController = {
         }
     },
 
-    modifyEvent: function (aCalendar, aEvent, aNewStartTime, aNewEndTime) {
+    modifyOccurrence: function (aOccurrence, aNewStartTime, aNewEndTime) {
+        if (aOccurrence.recurrenceInfo) {
+            dump ("*** Don't know what to do in modifyOccurrence for a recurring event!\n");
+            return;
+        }
+
         if (aNewStartTime && aNewEndTime && !aNewStartTime.isDate && !aNewEndTime.isDate) {
-            var event = aEvent.clone();
+            var event = aOccurrence.item.clone();
             event.startDate = aNewStartTime;
             event.endDate = aNewEndTime;
-            aEvent.parent.modifyItem(event, null);
+            event.parent.modifyItem(event, null);
         } else {
-            modifyEventWithDialog(aEvent);
+            modifyEventWithDialog(aOccurrence.item);
         }
+    },
+
+    deleteOccurrence: function (aOccurrence) {
+        dump ("+++ deleteOccurrence\n");
+        if (aOccurrence.recurrenceInfo) {
+            dump ("*** Don't know what do in deleteOccurrence for a recurring event!\n");
+            return;
+        }
+
+        aOccurrence.item.parent.deleteItem(aOccurrence.item, null);
     }
 };
 
