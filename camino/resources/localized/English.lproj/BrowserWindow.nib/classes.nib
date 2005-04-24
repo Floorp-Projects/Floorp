@@ -282,6 +282,7 @@
         {CLASS = RDFOutlineViewItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = RolloverTrackingCell; LANGUAGE = ObjC; SUPERCLASS = NSCell; }, 
         {CLASS = SearchTextField; LANGUAGE = ObjC; SUPERCLASS = NSTextField; }, 
+        {CLASS = StatusBarView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {CLASS = TabButtonCell; LANGUAGE = ObjC; SUPERCLASS = RolloverTrackingCell; }, 
         {CLASS = ThrobberHandler; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = TruncatingTextAndImageCell; LANGUAGE = ObjC; SUPERCLASS = NSCell; }

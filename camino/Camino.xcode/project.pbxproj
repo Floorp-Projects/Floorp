@@ -2491,6 +2491,7 @@
 				0F13A30F07D7F3930034B176,
 				0F4752D407DC0F4D002AEE9F,
 				0F5FD71C07F48CDC00E8EDBD,
+				3FFFEC1E081C3F0B00843C07,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3606,6 +3607,7 @@
 				0F13A31007D7F3930034B176,
 				0F4752D507DC0F4D002AEE9F,
 				0F5FD71F07F48CE500E8EDBD,
+				3FFFEC1F081C3F0B00843C07,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6341,6 +6343,7 @@
 				0F13A31107D7F3930034B176,
 				0F4752D607DC0F4D002AEE9F,
 				0F5FD71D07F48CDC00E8EDBD,
+				3FFFEC20081C3F0B00843C07,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7457,6 +7460,7 @@
 				0F13A31207D7F3930034B176,
 				0F4752D707DC0F4D002AEE9F,
 				0F5FD72007F48CE500E8EDBD,
+				3FFFEC21081C3F0B00843C07,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10496,6 +10500,48 @@
 			settings = {
 			};
 		};
+		3FFFEC1C081C3F0B00843C07 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = StatusBarView.h;
+			path = src/browser/StatusBarView.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FFFEC1D081C3F0B00843C07 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = StatusBarView.mm;
+			path = src/browser/StatusBarView.mm;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FFFEC1E081C3F0B00843C07 = {
+			fileRef = 3FFFEC1C081C3F0B00843C07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FFFEC1F081C3F0B00843C07 = {
+			fileRef = 3FFFEC1D081C3F0B00843C07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FFFEC20081C3F0B00843C07 = {
+			fileRef = 3FFFEC1C081C3F0B00843C07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FFFEC21081C3F0B00843C07 = {
+			fileRef = 3FFFEC1D081C3F0B00843C07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //3F0
 //3F1
 //3F2
@@ -12213,6 +12259,8 @@
 				3FF08EF806E7CF3F001C9B19,
 				F5BF71460231B8BC010001CA,
 				F5B950BD030C83B601A96654,
+				3FFFEC1C081C3F0B00843C07,
+				3FFFEC1D081C3F0B00843C07,
 				3003B8890445124400B85BF3,
 				F558137B030AEF9B0176F207,
 			);
