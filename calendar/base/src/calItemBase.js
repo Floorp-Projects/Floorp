@@ -456,6 +456,18 @@ calItemOccurrence.prototype = {
         return null;
     },
 
+    equals: function(aOther) {
+        if (this.item.id != aOther.item.id)
+            return false;
+
+        if (this.occurrenceStartDate.compare(aOther.occurrenceStartDate) != 0)
+            return false;
+
+        if (this.occurrenceEndDate.compare(aOther.occurrenceEndDate) != 0)
+            return false;
+
+        return true;
+    }
 };
 
 makeMemberAttr(calItemBase, "mGeneration", 0, "generation");

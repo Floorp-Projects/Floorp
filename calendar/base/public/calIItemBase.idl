@@ -216,5 +216,8 @@ interface calIItemOccurrence : nsISupports
   readonly attribute calIItemOccurrence next;
   // same as item.getPreviousOccurrence(occurrenceStartDate)
   readonly attribute calIItemOccurrence previous;
+
+  // is this occurrence equal to the other
+  boolean equals (in calIItemOccurrence aOther);
 };
 
