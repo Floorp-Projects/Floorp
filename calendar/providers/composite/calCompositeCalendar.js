@@ -79,22 +79,22 @@ calCompositeCalendarObserverHelper.prototype = {
 
     onModifyItem: function(aNewItem, aOldItem) {
         for each (obs in this.compCalendar.mObservers)
-            obs.onAddItem(aNewItem, aOldItem);
+            obs.onModifyItem(aNewItem, aOldItem);
     },
 
     onDeleteItem: function(aDeletedItem) {
         for each (obs in this.compCalendar.mObservers)
-            obs.onAddItem(aDeletedItem);
+            obs.onDeleteItem(aDeletedItem);
     },
 
     onAlarm: function(aAlarmItem) {
         for each (obs in this.compCalendar.mObservers)
-            obs.onAddItem(aAlarmItem);
+            obs.onAlarm(aAlarmItem);
     },
 
     onError: function(aErrNo, aMessage) {
         for each (obs in this.compCalendar.mObservers)
-            obs.onAddItem(aErrNo, aMessage);
+            obs.onError(aErrNo, aMessage);
     }
 };
 
