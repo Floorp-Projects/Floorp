@@ -815,6 +815,24 @@
 
           var dragState = col.mDragState;
 
+	  // check if we need to jump a column
+	  if (dragState.dragType == "move") {
+              newcol = col.calendarView.findColumnForClientPoint(event.clientX, event.clientY);
+              if (newcol && newcol != col) {
+                  // kill our drag state
+                  col.fgboxes.dragbox.removeAttribute("dragging");
+                  col.fgboxes.box.removeAttribute("dragging");
+                  
+                  // jump ship
+                  newcol.acceptInProgressSweep(dragState);
+
+                  // restart event handling
+                  col.onEventSweepMouseMove(event);
+
+                  return;
+              }
+	  }
+
           var pos;
           var sizeattr;
           if (col.getAttribute("orient") == "vertical") {
@@ -1024,6 +1042,24 @@
 
           window.addEventListener("mousemove", this.onEventSweepMouseMove, false);
           window.addEventListener("mouseup", this.onEventSweepMouseUp, false);
+        ]]></body>
+      </method>
+
+      <!-- called by sibling columns to tell us to take over the sweeping
+         - of an event.  Used by "move".
+        -->
+      <method name="acceptInProgressSweep">
+	<parameter name="aDragState"/>
+        <body><![CDATA[
+	  this.mDragState = aDragState;
+	  document.calendarEventColumnDragging = this;
+
+	  this.fgboxes.box.setAttribute("dragging", "true");
+	  this.fgboxes.dragbox.setAttribute("dragging", "true");
+
+	  // the same event handlers are still valid,
+	  // because they use document.calendarEventColumnDragging.
+	  // So we really don't have anything to do here.
         ]]></body>
       </method>
 
@@ -1763,6 +1799,26 @@
           }
 
           return null;
+        ]]></body>
+      </method>
+
+      <!-- for the given client-coord-system point, return
+         - the calendar-event-column that contains it.  If
+         - no column contains it, return null.
+        -->
+      <method name="findColumnForClientPoint">
+	<parameter name="aClientX"/>
+	<parameter name="aClientY"/>
+        <body><![CDATA[
+          for each (col in this.mDateColumns) {
+              var bo = col.column.topbox.boxObject;
+              if ((aClientX >= bo.x) && (aClientX < (bo.x + bo.width)) &&
+                  (aClientY >= bo.y) && (aClientY < (bo.y + bo.height)))
+              {
+                  return col.column;
+              }
+	  }
+	  return null;
         ]]></body>
       </method>
 
