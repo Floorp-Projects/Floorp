@@ -49,6 +49,7 @@ const float STFSymbolYOffset = 4.0;
 + (NSImage *)cachedMiddleImage;
 + (NSImage *)cachedRightImage;
 + (NSImage *)cachedPopUpImage;
++ (NSImage *)cachedNoPopUpImage;
 + (NSImage *)cachedCancelImage;
 
 @end
@@ -66,6 +67,7 @@ const float STFSymbolYOffset = 4.0;
   _middleImage = [[coder decodeObject] retain];
   _rightImage = [[coder decodeObject] retain];
   _popUpImage = [[coder decodeObject] retain];
+  _noPopUpImage = [[coder decodeObject] retain];
   _cancelImage = [[coder decodeObject] retain];
   [coder decodeValueOfObjCType:@encode(BOOL) at:&_shouldShowCancelButton];
   [coder decodeValueOfObjCType:@encode(BOOL) at:&_shouldShowSelectedPopUpItem];
@@ -84,6 +86,7 @@ const float STFSymbolYOffset = 4.0;
   [coder encodeObject:_middleImage];
   [coder encodeObject:_rightImage];
   [coder encodeObject:_popUpImage];
+  [coder encodeObject:_noPopUpImage];
   [coder encodeObject:_cancelImage];
   [coder encodeValueOfObjCType:@encode(BOOL) at:&_shouldShowCancelButton];
   [coder encodeValueOfObjCType:@encode(BOOL) at:&_shouldShowSelectedPopUpItem];
@@ -99,6 +102,7 @@ const float STFSymbolYOffset = 4.0;
   _middleImage  = [[SearchTextFieldCell cachedMiddleImage] copy];
   _rightImage   = [[SearchTextFieldCell cachedRightImage] copy];
   _popUpImage   = [[SearchTextFieldCell cachedPopUpImage] copy];
+  _noPopUpImage   = [[SearchTextFieldCell cachedNoPopUpImage] copy];
   _cancelImage  = [[SearchTextFieldCell cachedCancelImage] copy];
 
   hasPopUpButton = YES;
@@ -125,6 +129,7 @@ const float STFSymbolYOffset = 4.0;
   [_rightImage release];
   [_middleImage release];
   [_popUpImage release];
+  [_noPopUpImage release];
   [_cancelImage release];
 
   [super dealloc];
@@ -192,12 +197,14 @@ const float STFSymbolYOffset = 4.0;
   [_middleImage compositeToPoint:_middleImageOrigin operation:NSCompositeSourceOver];
 
   // If we have a popUp button, draw it on the widget
-  if (hasPopUpButton) {
-    _popUpImageOrigin = cellFrame.origin;
-    _popUpImageOrigin.x += STFSymbolXOffset;
-    _popUpImageOrigin.y += [_popUpImage size].height + STFSymbolXOffset;
+  _popUpImageOrigin = cellFrame.origin;
+  _popUpImageOrigin.x += STFSymbolXOffset;
+  _popUpImageOrigin.y += [_popUpImage size].height + STFSymbolXOffset;
+   
+  if (hasPopUpButton) 
     [_popUpImage compositeToPoint:_popUpImageOrigin operation:NSCompositeSourceOver];
-  }
+  else
+    [_noPopUpImage compositeToPoint:_popUpImageOrigin operation:NSCompositeSourceOver];
 
   // If we should show the cancel button, draw the button in the proper rect
   if (_shouldShowCancelButton) {
@@ -359,8 +366,7 @@ const float STFSymbolYOffset = 4.0;
 
   // If we have a popup, make a little room for its icon, else just make enough
   // room for the left end cap
-  float startWidth = hasPopUpButton ?
-    [_popUpImage size].width + STFSymbolXOffset : [_leftImage size].width;
+  float startWidth = [_popUpImage size].width + STFSymbolXOffset;
 
   // Make room for the cancel image and give it just a little extra padding (1.0)
   float endWidth = [_cancelImage size].width + STFSymbolXOffset + 1.0;
@@ -425,6 +431,16 @@ const float STFSymbolYOffset = 4.0;
     cachedPopUpImage = [[NSImage imageNamed:@"SearchPopUp"] retain];
 
   return cachedPopUpImage;
+}
+
++ (NSImage *)cachedNoPopUpImage
+{
+  static NSImage *cachedNoPopUpImage = nil;
+  
+  if (cachedNoPopUpImage == nil)
+    cachedNoPopUpImage = [[NSImage imageNamed:@"SearchNoPopUp"] retain];
+  
+  return cachedNoPopUpImage;
 }
 
 

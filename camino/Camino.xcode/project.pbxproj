@@ -3089,6 +3089,7 @@
 				0FFE0A81079B147F00966027,
 				0FFE0A82079B147F00966027,
 				0FFE0A83079B147F00966027,
+				3FFFEBDA081C2CC500843C07,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6938,6 +6939,7 @@
 				0FFE0A84079B147F00966027,
 				0FFE0A85079B147F00966027,
 				0FFE0A86079B147F00966027,
+				3FFFEBDB081C2CC500843C07,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10474,6 +10476,26 @@
 			settings = {
 			};
 		};
+		3FFFEBD9081C2CC500843C07 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = SearchNoPopUp.tiff;
+			path = resources/images/chrome/SearchNoPopUp.tiff;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FFFEBDA081C2CC500843C07 = {
+			fileRef = 3FFFEBD9081C2CC500843C07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FFFEBDB081C2CC500843C07 = {
+			fileRef = 3FFFEBD9081C2CC500843C07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //3F0
 //3F1
 //3F2
@@ -11972,6 +11994,7 @@
 				3003B89D044514B600B85BF3,
 				3003B89E044514B600B85BF3,
 				3003B89F044514B600B85BF3,
+				3FFFEBD9081C2CC500843C07,
 				3003B8A0044514B600B85BF3,
 				3FB2BAE90545EBF2002B9691,
 				3FB2BAEA0545EBF2002B9691,

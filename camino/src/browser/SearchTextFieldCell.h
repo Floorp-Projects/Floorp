@@ -54,6 +54,7 @@
   NSImage *_middleImage;
   NSImage *_rightImage;
   NSImage *_popUpImage;
+  NSImage *_noPopUpImage;
   NSImage *_cancelImage;
 
   BOOL _shouldShowCancelButton;
