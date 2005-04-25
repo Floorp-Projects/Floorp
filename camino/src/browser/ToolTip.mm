@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Richard Schreyer
+ *   Josh Aas <joshmoz@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,31 +45,35 @@
 @end
 
 const float kBorderPadding = 2.0;
+const float kMaxTextFieldWidth = 250.0;
+const float kVOffset = 20.0;
 
 @implementation ToolTip
 
 - (id)init
 {
-  
   self = [super init];
   if (self) {
-    mPanel = [[NSPanel alloc] initWithContentRect: NSMakeRect(0.0, 0.0, 200.0, 200.0) styleMask: NSBorderlessWindowMask backing: NSBackingStoreBuffered defer: YES];
+    mPanel = [[NSPanel alloc] initWithContentRect:NSMakeRect(0.0, 0.0, kMaxTextFieldWidth, 0.0) styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:YES];
     
     // Create a textfield as the content of our new window.
     // Field occupies all but the top 2 and bottom 2 pixels of the panel (bug 149635)
-    mTextField = [[NSTextField alloc] initWithFrame: NSMakeRect(0.0, kBorderPadding, 200.0, 200 - 2*kBorderPadding)];
+    mTextView = [[NSTextView alloc] initWithFrame:NSMakeRect(0.0, kBorderPadding, kMaxTextFieldWidth, 0.0)];
+    [[mPanel contentView] addSubview:mTextView];
+    [mTextView release]; // window holds ref
     
-    [[mPanel contentView] addSubview: mTextField];
-    [mTextField release]; //window holds ref
-    [mPanel setHasShadow: YES];
-    [mPanel setBackgroundColor: [NSColor colorWithCalibratedRed: 1.0 green: 1.0 blue: .81 alpha: 1.0]];
+    // set up the panel
+    [mPanel setHasShadow:YES];
+    [mPanel setBackgroundColor:[NSColor colorWithCalibratedRed:1.0 green:1.0 blue:0.81 alpha:1.0]];
     
-    [mTextField setDrawsBackground: NO];
-    [mTextField setEditable: NO];
-    [mTextField setSelectable: NO];
-    [mTextField setFont: [NSFont toolTipsFontOfSize: [NSFont smallSystemFontSize]]];
-    [mTextField setBezeled: NO];
-    [mTextField setBordered: NO];
+    // set up the text view
+    [mTextView setDrawsBackground:NO];
+    [mTextView setEditable:NO];
+    [mTextView setSelectable:NO];
+    [mTextView setFont:[NSFont toolTipsFontOfSize:[NSFont smallSystemFontSize]]];
+    [mTextView setMinSize:NSMakeSize(0.0, 0.0)];
+    [mTextView setHorizontallyResizable:YES];
+    [mTextView setVerticallyResizable:YES];
   }
   return self;
 }
@@ -85,43 +90,51 @@ const float kBorderPadding = 2.0;
   if ([string length] == 0)
     return;
 
-  NSScreen* screen = [NSScreen screenForPoint: point];
+  NSScreen* screen = [NSScreen screenForPoint:point];
   if (!screen)
     screen = [NSScreen mainScreen];
 
   if (screen) {
     NSRect screenFrame = [screen visibleFrame];
     NSSize screenSize = screenFrame.size;
-    //  set up the panel
-    [mTextField setStringValue: string];
-    [mTextField sizeToFit];
-    NSRect fieldFrame = [mTextField frame];
-    NSSize textSize = fieldFrame.size;
+    
+    // set up the text view
+    [mTextView setMaxSize:NSMakeSize(kMaxTextFieldWidth, screenSize.height - 2 * kBorderPadding)]; // do this here since we know screen size
+    [mTextView setString:string]; // do this after setting max size, before setting costrained frame size, 
+                                  // reset to max width - it will not grow horizontally when resizing, only vertically
+    [mTextView setConstrainedFrameSize:NSMakeSize(kMaxTextFieldWidth, 0.0)];
+    [mTextView sizeToFit];
+    
+    // set the origin back where its supposed to be
+    NSRect textViewFrame = [mTextView frame];
+    [mTextView setFrame:NSMakeRect(0, kBorderPadding, textViewFrame.size.width, textViewFrame.size.height)];
+    
+    // size the panel correctly, taking border into account
+    NSSize textSize = textViewFrame.size;
     textSize.height += kBorderPadding + kBorderPadding;
-    [mPanel setContentSize: textSize];
+    [mPanel setContentSize:textSize];
     
-    // the given point is right where the mouse pointer is.  We want the tooltip's
-    // top left corner somewhere below that, but not if that'll put it off the monitor. There
-    // is no way that we can go off the top of the monitor because cocoa won't let us position a window
-    // that way
-    const int kVOffset = 20;
-    if ( point.y - kVOffset - textSize.height > NSMinY(screenFrame) )
+    // We try to put the top left point right below the cursor. If that doesn't fit
+    // on screen, put the bottom left point above the cursor.
+    if (point.y - kVOffset - textSize.height > NSMinY(screenFrame)) {
       point.y -= kVOffset;
-    else
-      point.y += kVOffset;
-    [mPanel setFrameTopLeftPoint: point];
+      [mPanel setFrameTopLeftPoint:point];
+    }
+    else {
+      point.y += kVOffset / 2.5;
+      [mPanel setFrameOrigin:point];
+    }
     
-    //  if it goes off the edge of the screen, shift around to put it all on the screen
-
+    // if it doesn't fit on screen horizontally, adjust so that it does
     float amountOffScreenX = NSMaxX(screenFrame) - NSMaxX([mPanel frame]);
     if (amountOffScreenX < 0) {
       NSRect movedFrame = [mPanel frame];
       movedFrame.origin.x += amountOffScreenX;
-      [mPanel setFrame: movedFrame display: NO];
+      [mPanel setFrame:movedFrame display:NO];
     }
     
-    //  show the panel
-    [mPanel orderFront: nil];
+    // show the panel
+    [mPanel orderFront:nil];
   }
 }
 
