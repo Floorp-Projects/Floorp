@@ -23,3 +23,5 @@ PATCHES:
   dash-dos.diff - prevent DOS attack with dasharray.
 
   icformat.diff - upstream patch to select appropriate depth
+
+  alphablend.diff - check for AlphaBlend usability at runtime (win32)

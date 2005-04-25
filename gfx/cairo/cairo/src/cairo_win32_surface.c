@@ -552,6 +552,38 @@ _cairo_win32_surface_clone_similar (void             *surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+// AlphaBlend is not available or useable on older versions of Win32
+
+/* for compatibility with VC++ 5 */
+#if !defined(AC_SRC_OVER)
+#define AC_SRC_OVER                 0x00
+#define AC_SRC_ALPHA                0x01
+#pragma pack(1)
+typedef struct {
+    BYTE   BlendOp;
+    BYTE   BlendFlags;
+    BYTE   SourceConstantAlpha;
+    BYTE   AlphaFormat;
+}BLENDFUNCTION;
+#pragma pack()
+#endif
+
+typedef BOOL (WINAPI *ALPHABLENDPROC)(
+  HDC hdcDest,
+  int nXOriginDest,
+  int nYOriginDest,
+  int nWidthDest,
+  int hHeightDest,
+  HDC hdcSrc,
+  int nXOriginSrc,
+  int nYOriginSrc,
+  int nWidthSrc,
+  int nHeightSrc,
+  BLENDFUNCTION blendFunction);
+
+static unsigned gAlphaBlendChecked = FALSE;
+static ALPHABLENDPROC gAlphaBlend;
+
 static cairo_int_status_t
 _cairo_win32_surface_composite (cairo_operator_t	operator,
 				cairo_pattern_t       	*pattern,
@@ -572,6 +604,21 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
     int alpha;
     int integer_transform;
     int itx, ity;
+
+    if (!gAlphaBlendChecked) {
+        OSVERSIONINFO os;
+    
+        os.dwOSVersionInfoSize = sizeof(os);
+        GetVersionEx(&os);
+        // If running on Win98, disable using AlphaBlend()
+        // to avoid Win98 AlphaBlend() bug
+        if (VER_PLATFORM_WIN32_WINDOWS != os.dwPlatformId ||
+            os.dwMajorVersion != 4 || os.dwMinorVersion != 10) {
+            gAlphaBlend = (ALPHABLENDPROC)GetProcAddress(LoadLibrary("msimg32"),
+                                                         "AlphaBlend");
+        }
+        gAlphaBlendChecked = PR_TRUE;
+    }
 
     if (pattern->type != CAIRO_PATTERN_SURFACE ||
 	pattern->extend != CAIRO_EXTEND_NONE)
@@ -627,7 +674,10 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
 	blend_function.SourceConstantAlpha = alpha;
 	blend_function.AlphaFormat = src->format == CAIRO_FORMAT_ARGB32 ? AC_SRC_ALPHA : 0;
 
-	if (!AlphaBlend (dst->dc,
+	if (!gAlphaBlend)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	if (!gAlphaBlend(dst->dc,
 			 dst_x, dst_y,
 			 width, height,
 			 src->dc,
