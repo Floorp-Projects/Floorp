@@ -113,7 +113,7 @@ interface nsIXPCConstructor : nsISupports
 /**
 * interface of JavaScript's 'Components' object
 */
-[scriptable, uuid(a6035b0c-3e28-42ad-95b9-e60d33cb075d)]
+[scriptable, uuid(155809f1-71f1-47c5-be97-d812ba560405)]
 interface nsIXPCComponents : nsISupports
 {
     readonly attribute nsIScriptableInterfaces      interfaces;
@@ -144,6 +144,17 @@ interface nsIXPCComponents : nsISupports
      * any other use.
      */
     void lookupMethod();
+
+    /* reportError is designed to be called from JavaScript only.
+     *
+     * It will report a JS Error object to the JS console, and return. It
+     * is meant for use in exception handler blocks which want to "eat"
+     * an exception, but still want to report it to the console.
+     *
+     * It must be called with one param, an object which was caught by the
+     * exception handler.
+     */
+    void reportError();
 
     /* 'lastResult' is accessable via JavaScript only */
     /* 'returnCode' is accessable via JavaScript only */
