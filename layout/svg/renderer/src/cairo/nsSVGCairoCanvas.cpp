@@ -180,16 +180,12 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
                   dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
 
-// the following should be done for all platforms, but clipping
-// is broken in the cairo quartz backend as of cairo-0.3.0
-#ifndef XP_MACOSX
   // clip to dirtyRect
   cairo_new_path(mCR);
   cairo_rectangle(mCR,
                   dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
   cairo_clip(mCR);
   cairo_new_path(mCR);
-#endif
 
   mRenderMode = SVG_RENDER_MODE_NORMAL;
 
@@ -387,6 +383,7 @@ nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface)
 
   cairo_save(mCR);
   cairo_default_matrix(mCR);
+  cairo_init_clip(mCR);
   cairo_set_target_surface(mCR, cairoSurface->GetSurface());
 
   return NS_OK;
