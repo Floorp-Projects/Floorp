@@ -56,10 +56,6 @@ static char copyright[] = "@(#) Copyright (c) 1995 Regents of the University of 
 #define INADDR_LOOPBACK	((unsigned long) 0x7f000001)
 #endif
 
-#ifndef MAXHOSTNAMELEN
-#define MAXHOSTNAMELEN  64
-#endif
-
 #ifdef LDAP_DEBUG
 int	ldap_debug = 0;
 #endif
