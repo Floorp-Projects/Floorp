@@ -94,6 +94,11 @@
 - (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)item;
 @end
 
+@interface NSObject (CHOutlneViewDataSourceInlineEditing)
+- (BOOL)outlineView:(NSOutlineView*)inOutlineView columnHasIcon:(NSTableColumn*)inColumn;
+@end
+
 @interface NSObject (CHOutlineViewContextMenus)
 - (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item;
 @end
+

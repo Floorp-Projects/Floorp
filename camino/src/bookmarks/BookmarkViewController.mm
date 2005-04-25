@@ -1390,6 +1390,14 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   return [[BookmarkManager sharedBookmarkManager] contextMenuForItem:item fromView:outlineView target:self];
 }
 
+- (BOOL)outlineView:(NSOutlineView*)inOutlineView columnHasIcon:(NSTableColumn*)inColumn
+{
+  BOOL hasIcon = NO;
+  if ([[inColumn identifier] isEqualToString:@"title"])
+    hasIcon = YES;
+  return hasIcon;
+}
+
 - (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren
 {
   if (mBookmarkUpdatesDisabled)

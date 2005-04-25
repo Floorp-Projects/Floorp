@@ -352,16 +352,26 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
   if (wasFirstResponder && wasMainWindow && newRow >= 0 && ([theEvent type] == NSLeftMouseDown)) {
 
     // Check whether the click was inside the text part of a cell. For now, we do
-    // this a bit hackishly and assume the cell image is set and has width 20,
-    // and there is a gap of 3 pixels between image and label.
+    // this a bit hackishly and assume the cell image has width 20, and there is a
+    // gap of 3 pixels between image and label.
     NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
     int clickedRow = [self rowAtPoint:point];
     mColumnToBeEdited = [self columnAtPoint:point];
+    id dataSource = [self dataSource];
+    BOOL offsetForIcon = NO;
+    if ([dataSource respondsToSelector:@selector(outlineView:columnHasIcon:)]) {
+      NSTableColumn* tableCol = [[self tableColumns] objectAtIndex:mColumnToBeEdited];
+      offsetForIcon = [dataSource outlineView:self columnHasIcon:tableCol];
+    }
     if (clickedRow >= 0 && mColumnToBeEdited >= 0)
     {
       NSRect rect = [self frameOfCellAtColumn:mColumnToBeEdited row:clickedRow];
-      rect.size.width = 20.0 + 3.0;
-      wasClickInTextPartOfCell = ! NSPointInRect(point, rect);
+      if (offsetForIcon) {
+        rect.size.width = 20.0 + 3.0;
+        wasClickInTextPartOfCell = ! NSPointInRect(point, rect);
+      }
+      else
+        wasClickInTextPartOfCell = NSPointInRect(point, rect);
     }
     
     // Do not start editing for clicks on the icon part (to match Finder's behaviour).
