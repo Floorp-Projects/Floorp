@@ -274,11 +274,3 @@ $(BUILD_DATE_TS): FORCE
 $(BUILD_DATE):: gbdate.pl $(BUILD_DATE_TS)
 	$(RM) $@
 	$(PERL) $(srcdir)/gbdate.pl > $@
-
-ifdef MOZ_ENABLE_CAIRO
-ifndef MOZ_SVG_RENDERER_CAIRO
-ifeq ($(MOZ_WIDGET_TOOLKIT), windows)
-EXTRA_DSO_LDOPTS += msimg32.lib
-endif
-endif
-endif
