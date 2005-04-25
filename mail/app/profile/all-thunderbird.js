@@ -342,13 +342,10 @@ pref("news.directory",                  "");
 pref("autoupdate.enabled",              true);
 pref("browser.editor.disabled", false);
 pref("spellchecker.dictionary", "");
-pref("profile.allow_automigration", false);   // setting to false bypasses automigration in the profile code
-// profile.migration_behavior determines how the profiles root is set
-// 0 - use NS_APP_USER_PROFILES_ROOT_DIR
-// 1 - create one based on the NS4.x profile root
-// 2 - use, if not empty, profile.migration_directory otherwise same as 0 
-pref("profile.migration_behavior",0);
-pref("profile.migration_directory", "");
+// profile.force.migration can be used to bypass the migration wizard, forcing migration from a particular
+// mail application without any user intervention. Possible values are: 
+// dogbert (4.x), seamonkey (mozilla suite), eudora, oexpress, outlook. 
+pref("profile.force.migration", "");
 
 // Customizable toolbar stuff
 pref("custtoolbar.personal_toolbar_folder", "");

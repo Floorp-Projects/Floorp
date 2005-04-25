@@ -44,14 +44,10 @@ var MigrationWizard = {
   _selectedProfile: null,       // Selected Profile name to import from
   _wiz: null,
   _migrator: null,
-  _windowInitialized: false,
   _autoMigrate: null,
 
   init: function ()
   {
-    if (this._windowInitialized)
-      return;
-	  
     var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
     os.addObserver(this, "Migration:Started", false);
     os.addObserver(this, "Migration:ItemBeforeMigrate", false);
@@ -63,7 +59,8 @@ var MigrationWizard = {
 
     if ("arguments" in window) {
       this._source = window.arguments[0];
-      this._autoMigrate = window.arguments[1].QueryInterface(kIPStartup);
+      this._migrator = window.arguments[1] ? window.arguments[1].QueryInterface(kIMig) : null;
+      this._autoMigrate = window.arguments[2].QueryInterface(kIPStartup);
       
       // Show the "nothing" option in the automigrate case to provide an
       // easily identifiable way to avoid migration and create a new profile.
@@ -71,7 +68,21 @@ var MigrationWizard = {
       nothing.hidden = false;      
     }
 	
-    this._windowInitialized = true;
+    // Behavior alert! If we were given a migrator already, then we are going to perform migration
+    // with that migrator, skip the wizard screen where we show all of the migration sources and 
+    // jump right into migration.
+    if (this._migrator)
+    {
+      if (this._migrator.sourceHasMultipleProfiles)
+        this._wiz.goTo("selectProfile");
+      else 
+      {
+        var sourceProfiles = this._migrator.sourceProfiles;
+        var profileName = sourceProfiles.QueryElementAt(0, Components.interfaces.nsISupportsString);
+        this._selectedProfile = profileName.data;
+        this._wiz.goTo("migrating");
+      }
+    }
   },
   
   uninit: function ()
@@ -87,9 +98,6 @@ var MigrationWizard = {
   // 1 - Import Source
   onImportSourcePageShow: function ()
   {
-    if (!this._windowInitialized)
-      this.init();
-	  
     document.documentElement.getButton("back").disabled = true;
     
     // Figure out what source apps are are available to import from:
@@ -133,14 +141,14 @@ var MigrationWizard = {
       this._itemsFlags = kIMig.ALL;
       this._selectedProfile = null;
     }
-    if (!this._autoMigrate)
+    
       this._source = newSource;
       
     // check for more than one source profile
     if (this._migrator.sourceHasMultipleProfiles)
       this._wiz.currentPage.next = "selectProfile";
     else {
-      this._wiz.currentPage.next = this._autoMigrate ? "migrating" : "importItems";
+      this._wiz.currentPage.next = "migrating";
       var sourceProfiles = this._migrator.sourceProfiles;
       if (sourceProfiles && sourceProfiles.Count() == 1) {
         var profileName = sourceProfiles.QueryElementAt(0, Components.interfaces.nsISupportsString);

@@ -64,10 +64,10 @@ public:
 protected:
   ~nsProfileMigrator() { };
 
-  void GetDefaultMailMigratorKey(nsACString& key);
+  nsresult GetDefaultMailMigratorKey(nsACString& key, nsCOMPtr<nsIMailProfileMigrator>& mailMigrator);
 
   /**
-   * Import profiles from ~/.firefox/ or ~/.phoenix/
+   * Import profiles from ~/.thunderbird/ 
    * @return PR_TRUE if any profiles imported.
    */
   PRBool ImportRegistryProfiles(const nsACString& aAppName);
