@@ -226,7 +226,7 @@
         // still select it (since we'll preventBubble())
         evbox.calendarView.selectedOccurrence = evbox.mOccurrence;
         // then start dragging it
-        evbox.parentColumn.startSweepingToModifyEvent(evbox, evbox.mOccurrence, whichside, event.clientX, event.clientY);
+        evbox.parentColumn.startSweepingToModifyEvent(evbox, evbox.mOccurrence, whichside, event.screenX, event.screenY);
         event.preventBubble();
       ]]></handler>
     </handlers>
@@ -817,7 +817,7 @@
 
 	  // check if we need to jump a column
 	  if (dragState.dragType == "move") {
-              newcol = col.calendarView.findColumnForClientPoint(event.clientX, event.clientY);
+              newcol = col.calendarView.findColumnForClientPoint(event.screenX, event.screenY);
               if (newcol && newcol != col) {
                   // kill our drag state
                   col.fgboxes.dragbox.removeAttribute("dragging");
@@ -836,10 +836,10 @@
           var pos;
           var sizeattr;
           if (col.getAttribute("orient") == "vertical") {
-              pos = event.clientY - col.parentNode.boxObject.y - dragState.mouseOffset;
+              pos = event.screenY - col.parentNode.boxObject.screenY - dragState.mouseOffset;
               sizeattr = "height";
           } else {
-              pos = event.clientX - col.parentNode.boxObject.x - dragState.mouseOffset;
+              pos = event.screenX - col.parentNode.boxObject.screenX - dragState.mouseOffset;
               sizeattr = "width";
           }
           // don't let pos go outside the window edges
@@ -911,10 +911,10 @@
 
           // if the user didn't sweep out at least 1 interval's worth of pixels, ignore.
           if (col.getAttribute("orient") == "vertical") {
-              if (Math.abs(event.clientY - dragState.origLoc) < (col.mPixPerMin * 15))
+              if (Math.abs(event.screenY - dragState.origLoc) < (col.mPixPerMin * 15))
                   return;
           } else {
-              if (Math.abs(event.clientX - dragState.origLoc) < (col.mPixPerMin * 15))
+              if (Math.abs(event.screenX - dragState.origLoc) < (col.mPixPerMin * 15))
                   return;
           }
 
@@ -957,7 +957,7 @@
         <parameter name="aOccurrence"/>
         <!-- "start", "end", "middle" -->
         <parameter name="aGrabbedElement"/>
-        <!-- mouse clientX/clientY from the event -->
+        <!-- mouse screenX/screenY from the event -->
         <parameter name="aMouseX"/>
         <parameter name="aMouseY"/>
         <body><![CDATA[
@@ -970,15 +970,15 @@
           var interval = this.mPixPerMin * 15;
           var sizeattr;
 
-          dump ("AMY: " + aMouseY + " boY: " + this.parentNode.boxObject.y + "\n");
+          dump ("AMY: " + aMouseY + " boY: " + this.parentNode.boxObject.screenY + "\n");
           var frameloc;
           if (this.getAttribute("orient") == "vertical") {
               this.mDragState.origLoc = aMouseY;
-              frameloc = aMouseY - this.parentNode.boxObject.y;
+              frameloc = aMouseY - this.parentNode.boxObject.screenY;
               sizeattr = "height";
           } else {
               this.mDragState.origLoc = aMouseX;
-              frameloc = aMouseX - this.parentNode.boxObject.x;
+              frameloc = aMouseX - this.parentNode.boxObject.screenX;
               sizeattr = "width";
           }
 
@@ -1022,9 +1022,9 @@
               // one end of the element
               if (aEventBox) {
                   if (this.getAttribute("orient") == "vertical")
-                      this.mDragState.mouseOffset = aMouseY - aEventBox.boxObject.y;
+                      this.mDragState.mouseOffset = aMouseY - aEventBox.boxObject.screenY;
                   else
-                      this.mDragState.mouseOffset = aMouseX - aEventBox.boxObject.x;
+                      this.mDragState.mouseOffset = aMouseX - aEventBox.boxObject.screenX;
               }
           } else {
               dump ("+++ Invalid grabbed element: '" + aGrabbedElement + "'\n");
@@ -1113,12 +1113,12 @@
         };
 
         if (this.getAttribute("orient") == "vertical") {
-            this.mDragState.origLoc = event.clientY;
-            this.mDragState.origMin = Math.floor((event.clientY - this.parentNode.boxObject.y)/interval) * 15;
+            this.mDragState.origLoc = event.screenY;
+            this.mDragState.origMin = Math.floor((event.screenY - this.parentNode.boxObject.screenY)/interval) * 15;
             this.fgboxes.dragspacer.setAttribute("height", this.mDragState.origMin * this.mPixPerMin);
         } else {
-            this.mDragState.origLoc = event.clientX;
-            this.mDragState.origMin = Math.floor((event.clientX - this.parentNode.boxObject.x)/interval) * 15;
+            this.mDragState.origLoc = event.screenX;
+            this.mDragState.origMin = Math.floor((event.screenX - this.parentNode.boxObject.screenX)/interval) * 15;
             this.fgboxes.dragspacer.setAttribute("width", this.mDragState.origMin * this.mPixPerMin);
         }
 
@@ -1235,8 +1235,8 @@
         this.calendarView.selectedOccurrence = this.mOccurrence;
 
         this.mInMouseDown = true;
-        this.mMouseX = event.clientX;
-        this.mMouseY = event.clientY;
+        this.mMouseX = event.screenX;
+        this.mMouseY = event.screenY;
         this.mMouseTime = event.timeStamp;
         event.preventBubble();
       ]]></handler>
@@ -1244,8 +1244,8 @@
       <handler event="mousemove"><![CDATA[
         if (!this.mInMouseDown)
             return;
-        var dx = Math.abs(event.clientX - this.mMouseX);
-        var dy = Math.abs(event.clientY - this.mMouseY);
+        var dx = Math.abs(event.screenX - this.mMouseX);
+        var dy = Math.abs(event.screenY - this.mMouseY);
         // more than a 3 pixel move?
         if ((dx*dx + dy*dy) > 9) {
             if (this.parentColumn) {
@@ -1812,8 +1812,8 @@
         <body><![CDATA[
           for each (col in this.mDateColumns) {
               var bo = col.column.topbox.boxObject;
-              if ((aClientX >= bo.x) && (aClientX < (bo.x + bo.width)) &&
-                  (aClientY >= bo.y) && (aClientY < (bo.y + bo.height)))
+              if ((aClientX >= bo.screenX) && (aClientX < (bo.screenX + bo.width)) &&
+                  (aClientY >= bo.screenY) && (aClientY < (bo.screenY + bo.height)))
               {
                   return col.column;
               }
