@@ -91,7 +91,8 @@ public class JSSE_SSLServer extends ClassServer {
             SSLServerSocketFactory ssf =
                     JSSE_SSLServer.getServerSocketFactory(type);
             SSLServerSocket ss = (SSLServerSocket)ssf.createServerSocket(port);
-            ss.setSoTimeout(120 * 1000);
+            // Set server socket timeout to 15 sec
+            ss.setSoTimeout(15 * 1000);
             
             // Based on J2SE version, enable appropriate ciphers
             if ( (System.getProperty("java.version")).indexOf("1.4") != -1 ) {
@@ -114,9 +115,9 @@ public class JSSE_SSLServer extends ClassServer {
         }
         
         // Put the main thread to sleep.  In case we do not get any
-        // response within 120 sec (2 min), then we shutdown the server.
+        // response within 35 sec, then we shutdown the server.
         try {
-            Thread.currentThread().sleep(12000);
+            Thread.currentThread().sleep(3500);
         } catch (InterruptedException e) {
             System.out.println("Thread Interrupted, exiting normally ...\n");
             System.exit(0);

@@ -72,9 +72,9 @@ public class JSS_SSLServer  {
         } catch (Exception e) {}
         
         // Put the main thread to sleep.  In case we do not get any
-        // response within 120 sec (2 min), then we shutdown the server.
+        // response within 35 sec, then we shutdown the server.
         try {
-            Thread.currentThread().sleep(12000);
+            Thread.currentThread().sleep(3500);
             sock.close();
             serverSock.close();
         } catch (InterruptedException e) {

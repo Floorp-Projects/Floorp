@@ -228,7 +228,8 @@ public class JSS_SSLClient {
             System.out.println("client connected");
         }
         
-        sock.setSoTimeout(30 * 1000);
+        // Set socket timeout to 10 sec
+        sock.setSoTimeout(10 * 1000);
         sock.addHandshakeCompletedListener(
                 new HandshakeListener("client",this));
         
@@ -355,7 +356,13 @@ public class JSS_SSLClient {
                     jssTest.setEOF(testCipher);
                     jssTest.doIt();
                     while (!jssTest.isHandshakeCompleted()) {
-                        //Do nothing
+                        // Put the main thread to sleep.  In case we do not
+                        // get any response within 10 sec, then we shutdown.
+                        try {
+                            Thread.currentThread().sleep(1000);
+                        } catch (InterruptedException e) {
+                            System.out.println("Thread Interrupted ...\n");
+                        }
                     }
                     jssTest.clearHandshakeCompleted();
                 } catch (Exception ex) {
@@ -365,7 +372,13 @@ public class JSS_SSLClient {
                 jssTest.setEOF("null");
                 jssTest.doIt();
                 while (!jssTest.isHandshakeCompleted()) {
-                    //Do nothing
+                    // Put the main thread to sleep.  In case we do not
+                    // get any response within 10 sec, then we shutdown.
+                    try {
+                        Thread.currentThread().sleep(1000);
+                    } catch (InterruptedException e) {
+                        System.out.println("Thread Interrupted ...\n");
+                    }
                 }
                 jssTest.clearHandshakeCompleted();
             } else {
@@ -376,7 +389,13 @@ public class JSS_SSLClient {
                                 Constants.jssCipherSuites[i]).toString());
                         jssTest.doIt();
                         while (!jssTest.isHandshakeCompleted()) {
-                            //Do nothing
+                            // Put the main thread to sleep.  In case we do not
+                            // get any response within 10 sec, then we shutdown.
+                            try {
+                                Thread.currentThread().sleep(1000);
+                            } catch (InterruptedException e) {
+                                System.out.println("Thread Interrupted ...\n");
+                            }
                         }
                         jssTest.clearHandshakeCompleted();
                     } catch (Exception ex) {
