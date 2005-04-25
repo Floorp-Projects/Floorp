@@ -389,21 +389,24 @@ nsSVGCairoPathGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_retv
     nsISVGGeometrySource::UPDATEMASK_FILL_PAINT_TYPE    |
     nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT_TYPE;
 
+  nsCOMPtr<nsISVGRendererRegion> before = mCoveredRegion;
+
   if (updatemask & coveredregionmask) {
     nsCOMPtr<nsISVGRendererRegion> after;
     GetCoveredRegion(getter_AddRefs(after));
 
     if (mCoveredRegion) {
       if (after)
-        after->Combine(mCoveredRegion, _retval);
+        after->Combine(before, _retval);
     } else {
       *_retval = after;
       NS_IF_ADDREF(*_retval);
     }
     mCoveredRegion = after;
   }
-  else if (updatemask != nsISVGGeometrySource::UPDATEMASK_NOTHING) {
-    *_retval = mCoveredRegion;
+
+  if (!*_retval) {
+    *_retval = before;
     NS_IF_ADDREF(*_retval);
   }
 
