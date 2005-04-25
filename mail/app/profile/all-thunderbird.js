@@ -58,6 +58,13 @@ pref("app.update.lastUpdateDate", 0);           // UTC offset when last App upda
 pref("app.update.performed", false);            // Whether or not an update has been 
                                                 // performed this session. 
 
+// Developers can set this to |true| if they are constantly changing files in their
+// extensions directory so that the extension system does not constantly think that
+// their extensions are being updated and thus reregistered every time the app is started
+pref("extensions.ignoreMTimeChanges", false);
+// Enables some extra Extension System Logging (can reduce performance) 
+pref("extensions.logging.enabled", false); 
+
 // Symmetric (can be overridden by individual extensions) update preferences.
 // e.g.
 //  extensions.{GUID}.update.enabled
