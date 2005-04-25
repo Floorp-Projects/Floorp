@@ -87,7 +87,7 @@ main(int argc, char **argv)
   }
   args[i] = NULL;
 
-  dumpargs(args);
+  //  dumpargs(args);
 
   iRetVal = _spawnv( _P_WAIT, CL_PATH, args);
   if (iRetVal == -1)
