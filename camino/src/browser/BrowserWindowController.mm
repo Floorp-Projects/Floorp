@@ -670,13 +670,20 @@ enum BWCOpenDest {
 
     // set up autohide behavior on tab browser and register for changes on that pref. The
     // default is for it to hide when only 1 tab is visible, so if no pref is found, it will
-    // be NO, and that works.
-    BOOL tabBarAlwaysVisible = [[PreferenceManager sharedInstance] getBooleanPref:gTabBarVisiblePref withSuccess:nil];
-    [mTabBrowser setBarAlwaysVisible:tabBarAlwaysVisible];
-    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-    if (pref)
-      pref->RegisterCallback(gTabBarVisiblePref, TabBarVisiblePrefChangedCallback, self);
-    
+    // be NO, and that works. However, if any of the JS chrome flags are set, we don't want
+    // to let the tab bar show so leave it off and don't register for the pref updates.
+    BOOL allowTabBar = YES;
+    if (mChromeMask && (!(mChromeMask & nsIWebBrowserChrome::CHROME_STATUSBAR) ||
+                          !(mChromeMask & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR)))
+      allowTabBar = NO;
+    if (allowTabBar) {
+      BOOL tabBarAlwaysVisible = [[PreferenceManager sharedInstance] getBooleanPref:gTabBarVisiblePref withSuccess:nil];
+      [mTabBrowser setBarAlwaysVisible:tabBarAlwaysVisible];
+      nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
+      if (pref)
+        pref->RegisterCallback(gTabBarVisiblePref, TabBarVisiblePrefChangedCallback, self);
+    }
+
 //  03/03/2002 mlj Changing strategy a bit here.  The addTab: method was
 //  duplicating a lot of the code found here.  I have moved it to that method.
 //  We now remove the IB tab, then add one of our own.
