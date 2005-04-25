@@ -135,6 +135,9 @@ myLL_L2II(PRInt64 result, PRInt32 *hi, PRInt32 *lo )
     LL_L2I(*lo, a64);
 }
 
+//-----------------------------------------------------------------------------
+// nsDirEnumerator
+//-----------------------------------------------------------------------------
 
 class nsDirEnumerator : public nsISimpleEnumerator,
                         public nsIDirectoryEnumerator
@@ -166,7 +169,7 @@ class nsDirEnumerator : public nsISimpleEnumerator,
             if (mDir == nsnull)    // not a directory?
                 return NS_ERROR_FAILURE;
 
-            mParent          = parent;    
+            mParent = parent;
             return NS_OK;
         }
 
@@ -247,13 +250,16 @@ class nsDirEnumerator : public nsISimpleEnumerator,
             {
                 PRStatus status = PR_CloseDir(mDir);
                 NS_ASSERTION(status == PR_SUCCESS, "close failed");
+                if (status != PR_SUCCESS)
+                    return NS_ERROR_FAILURE;
                 mDir = nsnull;
             }
             return NS_OK;
         }
 
-    private:
-        ~nsDirEnumerator() 
+        // dtor can be non-virtual since there are no subclasses, but must be
+        // public to use the class on the stack.
+        ~nsDirEnumerator()
         {
             Close();
         }
@@ -961,36 +967,34 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool mov
         if (NS_FAILED(rv))
             return rv;
         
-        nsDirEnumerator* dirEnum = new nsDirEnumerator();
-        if (!dirEnum)
-            return NS_ERROR_OUT_OF_MEMORY;
+        nsDirEnumerator dirEnum;
         
-        rv = dirEnum->Init(this);
-
-        nsCOMPtr<nsISimpleEnumerator> iterator = do_QueryInterface(dirEnum);
+        rv = dirEnum.Init(this);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("dirEnum initalization failed");
+            return rv;
+        }
 
         PRBool more;
-        iterator->HasMoreElements(&more);
-        while (more)
+        while (NS_SUCCEEDED(dirEnum.HasMoreElements(&more)) && more)
         {
             nsCOMPtr<nsISupports> item;
             nsCOMPtr<nsIFile> file;
-            iterator->GetNext(getter_AddRefs(item));
+            dirEnum.GetNext(getter_AddRefs(item));
             file = do_QueryInterface(item);
-            PRBool isDir, isLink;
-            
-            file->IsDirectory(&isDir);
-
-            if (move)
+	    if (file)
             {
-                rv = file->MoveToNative(target, EmptyCString());
+                if (move)
+                {
+                    rv = file->MoveToNative(target, EmptyCString());
+                    NS_ENSURE_SUCCESS(rv,rv);		    
+                }
+                else
+                {   
+                    rv = file->CopyToNative(target, EmptyCString());
+                    NS_ENSURE_SUCCESS(rv,rv);		    
+                }
             }
-            else
-            {   
-                rv = file->CopyToNative(target, EmptyCString());
-            }
-                    
-            iterator->HasMoreElements(&more);
         }
         // we've finished moving all the children of this directory
         // in the new directory.  so now delete the directory
@@ -1000,7 +1004,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool mov
         // to the new location.  nothing should be left in the folder.
         if (move)
         {
-          rv = Remove(PR_FALSE);
+          rv = Remove(PR_FALSE /* recursive */);
           NS_ENSURE_SUCCESS(rv,rv);
         }
     }
@@ -1088,26 +1092,20 @@ nsLocalFile::Remove(PRBool recursive)
     {
         if (recursive)
         {
-            nsDirEnumerator* dirEnum = new nsDirEnumerator();
-            if (dirEnum == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-        
-            rv = dirEnum->Init(this);
+            nsDirEnumerator dirEnum;
 
-            nsCOMPtr<nsISimpleEnumerator> iterator = do_QueryInterface(dirEnum);
-        
+            rv = dirEnum.Init(this);
+            if (NS_FAILED(rv))
+                return rv;
+
             PRBool more;
-            iterator->HasMoreElements(&more);
-            while (more)
+            while (NS_SUCCEEDED(dirEnum.HasMoreElements(&more)) && more)
             {
                 nsCOMPtr<nsISupports> item;
-                nsCOMPtr<nsIFile> file;
-                iterator->GetNext(getter_AddRefs(item));
-                file = do_QueryInterface(item);
-    
-                file->Remove(recursive);
-                
-                iterator->HasMoreElements(&more);
+                dirEnum.GetNext(getter_AddRefs(item));
+                nsCOMPtr<nsIFile> file = do_QueryInterface(item);
+                if (file)
+                    file->Remove(recursive);
             }
         }
         rv = rmdir(filePath) == -1 ? NSRESULT_FOR_ERRNO() : NS_OK;
