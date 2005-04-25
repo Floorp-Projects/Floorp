@@ -228,6 +228,24 @@ function EM_I(integer) {
   return gRDF.GetIntLiteral(integer);
 }
 
+function getCharPrefWithDefault(aPrefName, aDefault) {
+  try {
+    return gPref.getCharPref(aPrefName);
+  }
+  catch (e) {
+    return aDefault;
+  }
+}
+
+function getBoolPrefWithDefault(aPrefName, aDefault) {
+  try {
+    return gPref.getBoolPref(aPrefName);
+  }
+  catch (e) {
+    return aDefault;
+  }
+}
+
 /**
  * Initializes a RDF Container at a URI in a datasource.
  * @param   datasource
@@ -529,21 +547,6 @@ function getURIFromFile(file) {
   var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
                          .getService(Components.interfaces.nsIIOService);
   return ioServ.newFileURI(file);
-}
-
-/**
- * Ensure the Extensions Datasource file exists in the app-profile directory.
- */
-function ensureExtensionsFiles() {
-  var extensionsFile  = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS]);
-
-  // If the file does not exist at the current location, copy the default
-  // version over so we can access the various roots. 
-  if (extensionsFile && !extensionsFile.exists()) {
-    var defaultFile = getFile(KEY_DEFAULTS, 
-                              [DIR_DEFAULTS_EXTENSIONS, FILE_EXTENSIONS]);
-    defaultFile.copyTo(extensionsFile.parent, extensionsFile.leafName);
-  }
 }
 
 /**
@@ -1128,6 +1131,8 @@ Installer.prototype = {
    */
   get metadataDS() {
     if (!this._metadataDS) {
+      if (!this._metadataFile.exists()) 
+        return null;
       this._metadataDS = getInstallManifest(this._metadataFile);
       if (!this._metadataDS) {
         LOG("Installer::install: metadata datasource for extension " + 
@@ -1150,6 +1155,10 @@ Installer.prototype = {
     if (file && file.exists()) {
       this._installExtensionFiles(file);
     }
+
+    if (!this.metadataDS)
+      return;
+
     // Upgrade old-style contents.rdf Chrome Manifests if necessary.
     this.upgradeChrome();
     // Add metadata for the extension to the global extension metadata set
@@ -1187,8 +1196,15 @@ Installer.prototype = {
       while (entries.hasMoreElements()) {
         var entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
         var targetFile = installLocation.getItemFile(extensionID, entry.name);
-        if (!targetFile.exists()) 
-          targetFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+        if (!targetFile.exists()) {
+          try {
+            targetFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+          }
+          catch (e) {
+            LOG("extractExtensionsFiles: failed to create target file for extraction " + 
+                " file = " + targetFile.path + ", exception = " + e + "\n");
+          }
+        }
         zipReader.extract(entry.name, targetFile);
       }
       zipReader.close();
@@ -1639,6 +1655,7 @@ var StartupCache = {
    *  "descriptor"    The location on disk of the item
    *  "mtime"         The time the location was last modified
    *  "op"            Any pending operations on this item.
+   *  "location"      The Install Location name where the item is installed.
    */
   entries: { },
 
@@ -1671,6 +1688,7 @@ var StartupCache = {
       this.entries[key][id].descriptor = getDescriptorFromInstallLocation(installLocation, itemLocation);
       this.entries[key][id].mtime = itemMTime;
       this.entries[key][id].op = op;
+      this.entries[key][id].location = key;
     }
     else
       this.entries[key][id] = null;
@@ -1687,6 +1705,21 @@ var StartupCache = {
     var key = installLocation.name;
     if (key in this.entries && id in this.entries[key])
       this.entries[key][id] = null;
+  },
+  
+  /**
+   * Get all the startup cache entries for a particular ID.
+   * @param   id
+   *          The GUID of the item to locate.
+   * @returns An array of Startup Cache entries for the specified ID.
+   */
+  findEntries: function(id) {
+    var entries = [];
+    for (var key in this.entries) {
+      if (id in this.entries[key]) 
+        entries.push(this.entries[key][id]);
+    }
+    return entries;
   },
   
   /** 
@@ -1722,12 +1755,11 @@ var StartupCache = {
           // We hash on guid second, because we want a way to quickly determine
           // item GUID during a check loop that runs on every startup.
           var parts = line.value.split("\t");
-          if (!(parts[0] in this.entries)) 
-            this.entries[parts[0]] = { };
+          var location = InstallLocations.get(parts[0]);
+          if (!location)
+            continue;
           var op = parts[4];
-          this.entries[parts[0]][parts[1]] = { descriptor : parts[2], 
-                                               mtime      : parseInt(parts[3]),
-                                               op         : op };
+          this.put(location, parts[1], op, true);
           if (op)
             PendingOperations.addItem(op, { locationKey: parts[0], id: parts[1] });
         }
@@ -1774,9 +1806,9 @@ function ExtensionManager() {
                    .getService(Components.interfaces.nsIXULAppInfo);
   gPref = Components.classes["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefBranch2);
-  gLoggingEnabled = gPref.getBoolPref(PREF_EM_LOGGING_ENABLED);
+  gLoggingEnabled = getBoolPrefWithDefault(PREF_EM_LOGGING_ENABLED, false);
   gPref.addObserver(PREF_EM_LOGGING_ENABLED, this, false);
-                    
+
   gOS = Components.classes["@mozilla.org/observer-service;1"]
                   .getService(Components.interfaces.nsIObserverService);
   gOS.addObserver(this, "xpcom-shutdown", false);
@@ -1849,7 +1881,7 @@ ExtensionManager.prototype = {
    * the preference settting.
    */
   _loggingToggled: function() {
-    gLoggingEnabled = gPref.getBoolPref(PREF_EM_LOGGING_ENABLED);
+    gLoggingEnabled = getBoolPrefWithDefault(PREF_EM_LOGGING_ENABLED, false);
   },
 
   /**
@@ -1945,7 +1977,8 @@ ExtensionManager.prototype = {
       // package) and re-select the default theme ("classic/1.0")
       if (!gPref.prefHasUserValue(PREF_EM_LAST_SELECTED_SKIN)) {
         gPref.setCharPref(PREF_EM_LAST_SELECTED_SKIN,
-                          gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN));
+                          getCharPrefWithDefault(PREF_GENERAL_SKINS_SELECTEDSKIN,
+                                                 "classic/1.0"));
         if (gPref.prefHasUserValue(PREF_GENERAL_SKINS_SELECTEDSKIN))
           gPref.clearUserPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
       }
@@ -2163,8 +2196,12 @@ ExtensionManager.prototype = {
           LOG("... success, item is compatible");
           callback(installManifest, installData.id, location, installData.type);
         }
-        else
+        else {
           LOG("... failure, item is not compatible");
+          // Add the item to the Startup Cache anyway, so we don't re-detect it
+          // every time the app starts.
+          StartupCache.put(location, id, OP_NONE, true);
+        }
       }      
     }
   
@@ -2265,12 +2302,8 @@ ExtensionManager.prototype = {
     }
     
     var needsRestart = false;
-    try {
-      var ignoreMTimeChanges = gPref.getBoolPref(PREF_EM_IGNOREMTIMECHANGES);
-    }
-    catch (e) {
-      ignoreMTimeChanges = false;
-    }
+    var ignoreMTimeChanges = getBoolPrefWithDefault(PREF_EM_IGNOREMTIMECHANGES,
+                                                    false);
     StartupCache.read();
     
     var droppedInFiles = [];
@@ -2344,6 +2377,14 @@ ExtensionManager.prototype = {
             // it properly. 
             LOG("Item Uninstalled via file removal from: " + StartupCache.entries[location.name][id].descriptor + 
                 " Item ID: " + id + " Location Key: " + location.name + ", uninstalling item.");
+            
+            // Load the Extensions Datasource and force this item into the visible
+            // items list if it is not already. This allows us to handle the case 
+            // where there is an entry for an item in the Startup Cache but not
+            // in the extensions.rdf file - in that case the item will not be in
+            // the visible list and calls to |getInstallLocation| will mysteriously
+            // fail.
+            this.datasource.updateVisibleList(id, location.name, false);
             this.uninstallItem(id);
             needsRestart = true;
           }
@@ -2419,8 +2460,15 @@ ExtensionManager.prototype = {
       var manifest = itemLocation.clone();
       manifest.append(FILE_CHROME_MANIFEST);
       if (!manifest.exists()) {
-        (new Installer(ds, e.id, this.getInstallLocation(e.id), 
-                       nsIUpdateItem.TYPE_EXTENSION)).upgradeChrome();
+        var installLocation = this.getInstallLocation(e.id);
+        if (installLocation) {
+          var itemLocation = installLocation.getItemLocation(e.id);
+          if (itemLocation.exists() && itemLocation.isDirectory()) {
+            var installer = new Installer(ds, e.id, installLocation, 
+                                          nsIUpdateItem.TYPE_EXTENSION);
+            installer.upgradeChrome();
+          }
+        }
         checkForNewChrome = true;
       }
     }
@@ -2437,17 +2485,20 @@ ExtensionManager.prototype = {
     var checkForNewChrome = false;
     var themes = this._getActiveItems(nsIUpdateItem.TYPE_THEME);
     for (i = 0; i < themes.length; ++i) {
-      var e = themes[i];
-      var itemLocation = e.location.getItemLocation(e.id);
+      var item = themes[i];
+      var itemLocation = item.location.getItemLocation(item.id);
       var manifest = itemLocation.clone();
       manifest.append(FILE_CHROME_MANIFEST);
       if (!manifest.exists()) {
         var entries;
         try {
           var manifestURI = getURIFromFile(manifest);
-          var itemLocation = e.location.getItemLocation(e.id);
+          var itemLocation = item.location.getItemLocation(item.id);
           var chromeDir = itemLocation.clone();
           chromeDir.append(DIR_CHROME);
+          
+          if (!chromeDir.exists() || !chromeDir.isDirectory()) 
+            continue;
 
           // We're relying on the fact that there is only one JAR file
           // in the "chrome" directory. This is a hack, but it works.
@@ -2463,10 +2514,11 @@ ExtensionManager.prototype = {
             cr.processContentsManifest(contentsURI, manifestURI, false, true);
           }
         }
-        catch (err) {
-          LOG("Exception trying to upgrade theme manifest: " + err +
-              "The theme will be disabled.");
-          this.disableItem(e.id);
+        catch (e) {
+          LOG("_upgradeThemeChrome: failed to upgrade contents manifest for " + 
+              "theme: " + item.id + ", exception: " + e + "... The theme will be " + 
+              "disabled.");
+          this.disableItem(item.id);
         }
         finally {
           try {
@@ -2603,14 +2655,12 @@ ExtensionManager.prototype = {
    */
   checkForMismatches: function() {
     var needsRestart = false;
-        
+
     // Check to see if the version of the application that is being started
     // now is the same one that was started last time. 
-    var currAppVersion = gPref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
-    try {
-      var lastAppVersion = gPref.getCharPref(PREF_EM_LAST_APP_VERSION);
-    }
-    catch (e) {}
+    var currAppVersion = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
+                                                gApp.version);
+    var lastAppVersion = getCharPrefWithDefault(PREF_EM_LAST_APP_VERSION, "");
     if (currAppVersion != lastAppVersion) {
       // Version mismatch, we're have to load the extensions datasource
       // and do version checking. Time hit here doesn't matter since this 
@@ -3296,6 +3346,19 @@ ExtensionManager.prototype = {
       return;
     }
     var installLocation = this.getInstallLocation(id);
+    if (!installLocation) {
+      // If the install location is null, that means we've reached the finalize
+      // state without the item ever having metadata added for it, which implies
+      // bogus data in the Startup Cache. Clear the entries and don't do anything
+      // else.
+      var entries = StartupCache.findEntries(id);
+      for (var i = 0; i < entries.length; ++i) {
+        var location = InstallLocations.get(entries[i].location);
+        StartupCache.clearEntry(location, id);
+        PendingOperations.clearItem(OP_NEEDS_INSTALL, id);
+      }
+      return;
+    }
     var itemLocation = installLocation.getItemLocation(id);
 
     if (!file)
@@ -3526,7 +3589,8 @@ ExtensionManager.prototype = {
    */
   update: function(items, itemCount, versionUpdateOnly) {
     var appID = gApp.ID;
-    var appVersion = gPref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
+    var appVersion = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
+                                            gApp.version);
 
     if (items.length == 0) {
       var addonType = nsIUpdateItem.TYPE_ADDON;
@@ -3851,7 +3915,6 @@ ExtensionManager.prototype = {
   _ensureDS: function() {
     if (!this._ds) {
       dump("*** loading the extensions datasource\n");
-      ensureExtensionsFiles();
       this._ds = new ExtensionsDataSource(this);
       if (this._ds)
         this._ds.loadExtensions();
@@ -4091,7 +4154,8 @@ ExtensionItemUpdater.prototype = {
   },
   
   _isValidUpdate: function(aLocalItem, aRemoteItem) {
-    var appExtensionsVersion = gPref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
+    var appExtensionsVersion =
+      getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION, gApp.version);
 
     // Check if the update will only run on a newer version of Firefox. 
     if (aRemoteItem.minAppVersion && 
@@ -4495,7 +4559,8 @@ ExtensionsDataSource.prototype = {
     if (source.EqualsNode(this._defaultTheme))
       return true;
       
-    var appVersion = gPref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
+    var appVersion = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
+                                            gApp.version);
     var appID = gApp.ID;
     
     var targets = datasource.GetTargets(source, EM_R("targetApplication"), true);
@@ -4669,7 +4734,8 @@ ExtensionsDataSource.prototype = {
   getTargetApplicationInfo: function(id, datasource) {
     // The default theme is always compatible. 
     if (getResourceForID(id).EqualsNode(this._defaultTheme)) {
-      var ver = gPref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
+      var ver = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
+                                       gApp.version);
       return { minVersion: ver, maxVersion: ver };
     }
     var appID = gApp.ID;
@@ -5154,6 +5220,11 @@ ExtensionsDataSource.prototype = {
   loadExtensions: function() {
     var extensionsFile  = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS]);
     this._inner = gRDF.GetDataSourceBlocking(getURLSpecFromFile(extensionsFile));
+
+    var cu = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                       .getService(Components.interfaces.nsIRDFContainerUtils);
+    cu.MakeSeq(this._inner, this._itemRoot);
+
     this._buildVisibleItemList();
   },
   
@@ -5296,7 +5367,8 @@ ExtensionsDataSource.prototype = {
       return EM_L("false");
     getVersionChecker();
     
-    var appVersion = gPref.getCharPref(PREF_EM_APP_EXTENSIONS_VERSION);
+    var appVersion = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
+                                            gApp.version);
     if (gVersionChecker.compare(targetAppInfo.maxVersion, appVersion) < 0 || 
         gVersionChecker.compare(appVersion, targetAppInfo.minVersion) < 0) {
       // OK, this item is incompatible. 

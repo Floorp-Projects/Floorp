@@ -233,7 +233,7 @@ function Startup()
                      .getService(Components.interfaces.nsIObserverService);
   os.addObserver(gDownloadManager, "xpinstall-download-started", false);
 
-  gObserverIndex = gExtensionManager.addDownloadObserver(gDownloadManager);
+  gObserverIndex = gExtensionManager.addDownloadListener(gDownloadManager);
   
   if ("arguments" in window) {
     try {
@@ -259,7 +259,7 @@ function Shutdown()
   if (gWindowState != "extensions")
     gExtensionsView.removeEventListener("richview-select", onThemeSelect, false);
   
-  gExtensionManager.removeDownloadObserverAt(gObserverIndex);
+  gExtensionManager.removeDownloadListenerAt(gObserverIndex);
 
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Components.interfaces.nsIObserverService);
