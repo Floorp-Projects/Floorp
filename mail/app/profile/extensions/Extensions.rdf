@@ -3,7 +3,6 @@
 <RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
      xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 
-  <Seq about="urn:mozilla:extension:root"/>
-  <Seq about="urn:mozilla:theme:root"/>
+  <Seq about="urn:mozilla:item:root"/> 
 
 </RDF>
