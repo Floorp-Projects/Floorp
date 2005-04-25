@@ -524,9 +524,10 @@ nsSVGGDIPlusGlyphGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_r
       NS_IF_ADDREF(*_retval);
     }
   }
-  else if (updatemask != nsISVGGeometrySource::UPDATEMASK_NOTHING) {
+
+  if (!*_retval) {
     // region hasn't changed, but something has. so invalidate whole area:
-    *_retval = mCoveredRegion;
+    *_retval = regionBefore;
     NS_IF_ADDREF(*_retval);
   }    
       

@@ -362,21 +362,24 @@ nsSVGCairoGlyphGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_ret
     nsISVGGlyphGeometrySource::UPDATEMASK_Y       |
     nsISVGGeometrySource::UPDATEMASK_CANVAS_TM;
 
+  nsCOMPtr<nsISVGRendererRegion> before = mCoveredRegion;
+
   if ((updatemask & regionsmask) || (updatemask & strokemask)) {
     nsCOMPtr<nsISVGRendererRegion> after;
     GetCoveredRegion(getter_AddRefs(after));
 
     if (mCoveredRegion) {
       if (after)
-        after->Combine(mCoveredRegion, _retval);
+        after->Combine(before, _retval);
     } else {
       *_retval = after;
       NS_IF_ADDREF(*_retval);
     }
     mCoveredRegion = after;
   }
-  else if (updatemask != nsISVGGeometrySource::UPDATEMASK_NOTHING) {
-    *_retval = mCoveredRegion;
+
+  if (!*_retval) {
+    *_retval = before;
     NS_IF_ADDREF(*_retval);
   }
 

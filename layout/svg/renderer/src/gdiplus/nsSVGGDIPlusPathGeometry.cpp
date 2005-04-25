@@ -530,7 +530,8 @@ nsSVGGDIPlusPathGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_re
     if (after)
       after->Combine(before, _retval);
   }
-  else if (updatemask != nsISVGGeometrySource::UPDATEMASK_NOTHING) {
+
+  if (!*_retval) {
     *_retval = before;
     NS_IF_ADDREF(*_retval);
   }
