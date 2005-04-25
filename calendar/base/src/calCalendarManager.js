@@ -203,7 +203,13 @@ calCalendarManager.prototype = {
         while (stmt.step()) {
             var id = stmt.row.id;
             if (!this.mCache[id]) {
-                this.mCache[id] = this.createCalendar(stmt.row.name, stmt.row.type, makeURI(stmt.row.uri));
+                try {
+                    this.mCache[id] = this.createCalendar(stmt.row.name, stmt.row.type, makeURI(stmt.row.uri));
+                } catch (e) {
+                    dump("Can't create calendar for " + id + " (" + stmt.row.name + ", " + stmt.row.type + ", " + 
+                        stmt.row.uri + "): " + e.toString + "\n");
+                    continue;
+                }
             }
             calendars.push(this.mCache[id]);
         }
