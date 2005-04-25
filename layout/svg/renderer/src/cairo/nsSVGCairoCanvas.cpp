@@ -56,11 +56,6 @@
 extern "C" {
 #include <cairo-quartz.h>
 }
-#elif defined(XP_WIN)
-#include "nsDrawingSurfaceWin.h"
-extern "C" {
-#include <cairo-win32.h>
-}
 #else
 #include "nsRenderingContextGTK.h"
 #include <gdk/gdkx.h>
@@ -159,13 +154,6 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
   cairo_set_target_quartz_context(mCR, mQuartzRef,
                                   portRect.right - portRect.left,
                                   portRect.bottom - portRect.top);
-#elif defined(XP_WIN)
-  nsDrawingSurfaceWin *surface;
-  HDC hdc;
-  ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);
-  surface->GetDimensions(&mWidth, &mHeight);
-  surface->GetDC(&hdc);
-  cairo_set_target_win32(mCR, hdc);
 #else
   nsDrawingSurfaceGTK *surface;
   ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);
