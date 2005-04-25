@@ -40,8 +40,32 @@
 //
 function calAttachment() { }
 
+calAttachmentClassInfo = {
+    getInterfaces: function (count) {
+        var ifaces = [
+            Components.interfaces.nsISupports,
+            Components.interfaces.calIAttachment
+        ];
+        count.value = ifaces.length;
+        return ifaces;
+    },
+
+    getHelperForLanguage: function (language) {
+        return null;
+    },
+
+    contractID: "@mozilla.org/calendar/attachment;1",
+    classDescription: "Calendar Item Attachment",
+    classID: Components.ID("{5f76b352-ab75-4c2b-82c9-9206dbbf8571}"),
+    implementationLanguage: Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
+    flags: 0
+};
+
 calAttachment.prototype = {
     QueryInterface: function (aIID) {
+        if (aIID.equals(Components.interfaces.nsIClassInfo))
+            return calAttachmentClassInfo;
+
         if (!aIID.equals(Components.interfaces.nsISupports) &&
             !aIID.equals(Components.interfaces.calIAttachment))
         {

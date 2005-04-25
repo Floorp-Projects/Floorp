@@ -53,12 +53,37 @@ function calEvent() {
 // var trickery to suppress lib-as-component errors from loader
 var calItemBase;
 
+calEventClassInfo = {
+    getInterfaces: function (count) {
+        var ifaces = [
+            Components.interfaces.nsISupports,
+            Components.interfaces.calIItemBase,
+            Components.interfaces.calIEvent
+        ];
+        count.value = ifaces.length;
+        return ifaces;
+    },
+
+    getHelperForLanguage: function (language) {
+        return null;
+    },
+
+    contractID: "@mozilla.org/calendar/event;1",
+    classDescription: "Calendar Event",
+    classID: Components.ID("{974339d5-ab86-4491-aaaf-2b2ca177c12b}"),
+    implementationLanguage: Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
+    flags: 0
+};
+
 calEvent.prototype = {
     __proto__: calItemBase ? (new calItemBase()) : {},
 
     QueryInterface: function (aIID) {
         if (aIID.equals(Components.interfaces.calIEvent))
             return this;
+
+        if (aIID.equals(Components.interfaces.nsIClassInfo))
+            return calEventClassInfo;
 
         return this.__proto__.__proto__.QueryInterface.call(this, aIID);
     },

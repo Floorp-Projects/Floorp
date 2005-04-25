@@ -422,8 +422,32 @@ function calItemOccurrence () {
     this.occurrenceEndDate = new CalDateTime();
 }
 
+calItemOccurrenceClassInfo = {
+    getInterfaces: function (count) {
+        var ifaces = [
+            Components.interfaces.nsISupports,
+            Components.interfaces.calIItemOccurrence
+        ];
+        count.value = ifaces.length;
+        return ifaces;
+    },
+
+    getHelperForLanguage: function (language) {
+        return null;
+    },
+
+    contractID: "@mozilla.org/calendar/item-occurrence;1",
+    classDescription: "Calendar Item Occurrence",
+    classID: Components.ID("{bad672b3-30b8-4ecd-8075-7153313d1f2c}"),
+    implementationLanguage: Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
+    flags: 0
+};
+
 calItemOccurrence.prototype = {
     QueryInterface: function (aIID) {
+        if (aIID.equals(Components.interfaces.nsIClassInfo))
+            return calItemOccurrenceClassInfo;
+
         if (!aIID.equals(Components.interfaces.nsISupports) &&
             !aIID.equals(Components.interfaces.calIItemOccurrence))
         {

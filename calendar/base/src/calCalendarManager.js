@@ -66,8 +66,32 @@ function makeURI(uriString)
     return ioservice.newURI(uriString, null, null);
 }
 
+calCalendarManagerClassInfo = {
+    getInterfaces: function (count) {
+        var ifaces = [
+            Components.interfaces.nsISupports,
+            Components.interfaces.calICalendarManager
+        ];
+        count.value = ifaces.length;
+        return ifaces;
+    },
+
+    getHelperForLanguage: function (language) {
+        return null;
+    },
+
+    contractID: "@mozilla.org/calendar/manager;1",
+    classDescription: "Calendar Manager",
+    classID: Components.ID("{f42585e7-e736-4600-985d-9624c1c51992}"),
+    implementationLanguage: Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
+    flags: 0
+};
+
 calCalendarManager.prototype = {
     QueryInterface: function (aIID) {
+        if (aIID.equals(Components.interfaces.nsIClassInfo))
+            return calCalendarManagerClassInfo;
+
         if (!aIID.equals(Components.interfaces.nsISupports) &&
             !aIID.equals(Components.interfaces.calICalendarManager))
         {

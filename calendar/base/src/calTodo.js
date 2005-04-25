@@ -52,12 +52,37 @@ function calTodo() {
 // var trickery to suppress lib-as-component errors from loader
 var calItemBase;
 
+calTodoClassInfo = {
+    getInterfaces: function (count) {
+        var ifaces = [
+            Components.interfaces.nsISupports,
+            Components.interfaces.calIItemBase,
+            Components.interfaces.calITodo
+        ];
+        count.value = ifaces.length;
+        return ifaces;
+    },
+
+    getHelperForLanguage: function (language) {
+        return null;
+    },
+
+    contractID: "@mozilla.org/calendar/todo;1",
+    classDescription: "Calendar Todo",
+    classID: Components.ID("{7af51168-6abe-4a31-984d-6f8a3989212d}"),
+    implementationLanguage: Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
+    flags: 0
+};
+
 calTodo.prototype = {
     __proto__: calItemBase ? (new calItemBase()) : {},
 
     QueryInterface: function (aIID) {
         if (aIID.equals(Components.interfaces.calITodo))
             return this;
+
+        if (aIID.equals(Components.interfaces.nsIClassInfo))
+            return calTodoClassInfo;
 
         return this.__proto__.__proto__.QueryInterface.apply(this, aIID);
     },
