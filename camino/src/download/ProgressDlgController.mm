@@ -203,7 +203,8 @@ static id gSharedProgressController = nil;
 //
 -(void)DLInstanceOpened:(NSNotification*)notification
 {
-  [self open:self];
+  if ([self shouldAllowOpenAction])
+    [self open:self];
 }
 
 // calculate what buttons should be enabled/disabled because the user changed the selection state
