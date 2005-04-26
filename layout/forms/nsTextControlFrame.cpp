@@ -124,6 +124,7 @@
 #include "nsIDOMEventGroup.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsINativeKeyBindings.h"
+#include "nsIJSContextStack.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -3003,6 +3004,7 @@ NS_IMETHODIMP
 nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap)
 {
   aValue.Truncate();  // initialize out param
+  nsresult rv = NS_OK;
   
   if (mEditor && mUseEditor) 
   {
@@ -3017,7 +3019,7 @@ nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap)
 
     if (!aIgnoreWrap) {
       nsFormControlHelper::nsHTMLTextWrap wrapProp;
-      nsresult rv = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
+      rv = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
       if (rv != NS_CONTENT_ATTR_NOT_THERE) {
         if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard)
         {
@@ -3026,7 +3028,30 @@ nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap)
       }
     }
 
-    mEditor->OutputToString(NS_LITERAL_STRING("text/plain"), flags, aValue);
+    // What follows is a bit of a hack.  The problem is that we could be in
+    // this method because we're being destroyed for whatever reason while
+    // script is executing.  If that happens, editor will run with the
+    // privileges of the executing script, which means it may not be able to
+    // access its own DOM nodes!  Let's try to deal with that by pushing a null
+    // JSContext on the JSContext stack to make it clear that we're native
+    // code.  Note that any script that's directly trying to access our value
+    // has to be going through some scriptable object to do that and that
+    // already does the relevant security checks.
+    // XXXbz if we could just get the textContent of our anonymous content (eg
+    // if plaintext editor didn't create <br> nodes all over), we wouldn't need
+    // this.
+    nsCOMPtr<nsIJSContextStack> stack =
+      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+    PRBool pushed = stack && NS_SUCCEEDED(stack->Push(nsnull));
+      
+    rv = mEditor->OutputToString(NS_LITERAL_STRING("text/plain"), flags,
+                                 aValue);
+
+    if (pushed) {
+      JSContext* cx;
+      stack->Pop(&cx);
+      NS_ASSERTION(!cx, "Unexpected JSContext popped!");
+    }
   }
   else
   {
@@ -3034,7 +3059,7 @@ nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap)
     nsCOMPtr<nsIDOMHTMLInputElement> inputControl = do_QueryInterface(mContent);
     if (inputControl)
     {
-      inputControl->GetValue(aValue);
+      rv = inputControl->GetValue(aValue);
     }
     else
     {
@@ -3042,12 +3067,12 @@ nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap)
           = do_QueryInterface(mContent);
       if (textareaControl)
       {
-        textareaControl->GetValue(aValue);
+        rv = textareaControl->GetValue(aValue);
       }
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 
@@ -3056,6 +3081,8 @@ nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap)
 void
 nsTextControlFrame::SetValue(const nsAString& aValue)
 {
+  // XXX this method should actually propagate errors!  It'd make debugging it
+  // so much easier...
   if (mEditor && mUseEditor) 
   {
     nsAutoString currentValue;
@@ -3067,15 +3094,6 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
     // this is necessary to avoid infinite recursion
     if (!currentValue.Equals(aValue))
     {
-      nsCOMPtr<nsISelection> domSel;
-      nsCOMPtr<nsISelectionPrivate> selPriv;
-      mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
-      if (domSel)
-      {
-        selPriv = do_QueryInterface(domSel);
-        if (selPriv)
-          selPriv->StartBatchChanges();
-      }
       // \r is an illegal character in the dom, but people use them,
       // so convert windows and mac platform linebreaks to \n:
       // Unfortunately aValue is declared const, so we have to copy
@@ -3087,9 +3105,34 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       nsresult rv = mEditor->GetDocument(getter_AddRefs(domDoc));
       if (NS_FAILED(rv)) return;
       if (!domDoc) return;
+
+      // Time to mess with our security context... See comments in GetValue()
+      // for why this is needed.  Note that we have to do this up here, because
+      // otherwise SelectAll() will fail.
+      nsCOMPtr<nsIJSContextStack> stack =
+        do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+      PRBool pushed = stack && NS_SUCCEEDED(stack->Push(nsnull));
+
+      nsCOMPtr<nsISelection> domSel;
+      nsCOMPtr<nsISelectionPrivate> selPriv;
+      mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
+      if (domSel)
+      {
+        selPriv = do_QueryInterface(domSel);
+        if (selPriv)
+          selPriv->StartBatchChanges();
+      }
+
       mSelCon->SelectAll();
       nsCOMPtr<nsIPlaintextEditor> htmlEditor = do_QueryInterface(mEditor);
-      if (!htmlEditor) return;
+      if (!htmlEditor) {
+        NS_WARNING("Somehow not a plaintext editor?");
+        if (pushed) {
+          JSContext* cx;
+          stack->Pop(&cx);
+          NS_ASSERTION(!cx, "Unexpected JSContext popped!");
+        }        
+      }
 
       // Since this code does not handle user-generated changes to the text,
       // make sure we don't fire oninput when the editor notifies us.
@@ -3110,6 +3153,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
       flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
       mEditor->SetFlags(flags);
+
       if (currentValue.Length() < 1)
         mEditor->DeleteSelection(nsIEditor::eNone);
       else {
@@ -3117,9 +3161,16 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
         if (textEditor)
           textEditor->InsertText(currentValue);
       }
+
       mEditor->SetFlags(savedFlags);
       if (selPriv)
         selPriv->EndBatchChanges();
+
+      if (pushed) {
+        JSContext* cx;
+        stack->Pop(&cx);
+        NS_ASSERTION(!cx, "Unexpected JSContext popped!");
+      }
 
       if (outerTransaction)
         mNotifyOnInput = PR_TRUE;
