@@ -478,7 +478,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
     
     if (aOutputContentType)
     {
-        mContentType.AssignWithConversion(aOutputContentType);
+        mContentType.AssignASCII(aOutputContentType);
     }
 
     rv = SaveDocumentInternal(aDocument, fileAsURI, datapathAsURI);
@@ -779,6 +779,11 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
             stateFlags |= nsIWebProgressListener::STATE_IS_NETWORK;
         }
         mProgressListener->OnStateChange(nsnull, request, stateFlags, status);
+    }
+    if (completed)
+    {
+        mProgressListener = nsnull;
+        mProgressListener2 = nsnull;
     }
 
     return NS_OK;
