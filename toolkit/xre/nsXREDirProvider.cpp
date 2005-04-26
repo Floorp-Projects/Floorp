@@ -190,17 +190,29 @@ nsXREDirProvider::Initialize(nsIFile *aXULAppDir)
 }
 
 nsresult
-nsXREDirProvider::SetProfileDir(nsIFile* aDir)
+nsXREDirProvider::SetProfile(nsIFile* aDir, nsIFile* aLocalDir)
 {
-  NS_ASSERTION(aDir, "We don't support no-profile apps yet!");
+  NS_ASSERTION(aDir && aLocalDir, "We don't support no-profile apps yet!");
 
 #ifdef DEBUG_bsmedberg
-  nsCAutoString path;
+  nsCAutoString path, path2;
   aDir->GetNativePath(path);
-  printf("nsXREDirProvider::SetProfileDir('%s')\n", path.get());
+  aLocalDir->GetNativePath(path2);
+  printf("nsXREDirProvider::SetProfile('%s', '%s')\n", path.get(), path2.get());
 #endif
 
+  nsresult rv;
+  
+  rv = EnsureDirectoryExists(aDir);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = EnsureDirectoryExists(aLocalDir);
+  if (NS_FAILED(rv))
+    return rv;
+
   mProfileDir = aDir;
+  mProfileLocalDir = aLocalDir;
   return NS_OK;
 }
 
@@ -265,6 +277,16 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
     // We must create the profile directory here if it does not exist.
     rv |= EnsureDirectoryExists(file);
   }
+  else if (!strcmp(aProperty, NS_APP_USER_PROFILES_LOCAL_ROOT_DIR)) {
+    rv = GetUserLocalDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
+
+#if !defined(XP_UNIX) || defined(XP_MACOSX)
+    rv |= file->AppendNative(NS_LITERAL_CSTRING("Profiles"));
+#endif
+
+    // We must create the profile directory here if it does not exist.
+    rv |= EnsureDirectoryExists(file);
+  }
   else if (mXULAppDir && !strcmp(aProperty, "resource:app")) {
     rv = mXULAppDir->Clone(getter_AddRefs(file));
   }
@@ -290,6 +312,9 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
       if (!strcmp(aProperty, NS_APP_USER_PROFILE_50_DIR) ||
           !strcmp(aProperty, NS_APP_PREFS_50_DIR)) {
         return mProfileDir->Clone(aFile);
+      }
+      else if (!strcmp(aProperty, NS_APP_USER_PROFILE_LOCAL_50_DIR)) {
+        return mProfileLocalDir->Clone(aFile);
       }
       else if (!strcmp(aProperty, NS_APP_PREFS_50_FILE)) {
         rv = mProfileDir->Clone(getter_AddRefs(file));
@@ -641,7 +666,7 @@ GetProfileFolderName(char* aProfileFolderName, const char* aSource)
 }
 
 nsresult
-nsXREDirProvider::GetUserAppDataDirectory(nsILocalFile** aFile)
+nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
 {
   NS_ASSERTION(gAppData, "gAppData not initialized!");
 
@@ -650,13 +675,19 @@ nsXREDirProvider::GetUserAppDataDirectory(nsILocalFile** aFile)
   nsCOMPtr<nsILocalFile> localDir;
 
 #if defined(XP_MACOSX)
-   FSRef fsRef;
+  FSRef fsRef;
+  OSType folderType;
+  if (aLocal) {
+    folderType = kCachedDataFolderType;
+  } else {
 #ifdef MOZ_THUNDERBIRD 
-  OSErr err = ::FSFindFolder(kUserDomain, kDomainLibraryFolderType, kCreateFolder, &fsRef);
+    folderType = kDomainLibraryFolderType;
 #else
-  OSErr err = ::FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &fsRef);
+    folderType = kApplicationSupportFolderType;
 #endif 
-  if (err) return NS_ERROR_FAILURE;
+  }
+  OSErr err = ::FSFindFolder(kUserDomain, folderType, kCreateFolder, &fsRef);
+  NS_ENSURE_TRUE(err, NS_ERROR_FAILURE);
 
   rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(localDir));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -681,7 +712,9 @@ nsXREDirProvider::GetUserAppDataDirectory(nsILocalFile** aFile)
 
   char appDataPath[MAXPATHLEN];
 
-  if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, CSIDL_APPDATA, &pItemIDList)) &&
+  int folder = aLocal ? CSIDL_LOCAL_APPDATA : CSIDL_APPDATA;
+
+  if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, folder, &pItemIDList)) &&
       SUCCEEDED(SHGetPathFromIDList(pItemIDList, appDataPath))) {
   } else {
     if (!GetWindowsDirectory(appDataPath, MAXPATHLEN)) {
@@ -804,7 +837,7 @@ nsXREDirProvider::EnsureDirectoryExists(nsIFile* aDirectory)
   nsresult rv = aDirectory->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!exists)
-    rv = aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0775);
+    rv = aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0700);
 
   return rv;
 }

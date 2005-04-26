@@ -253,7 +253,8 @@ nsProfileMigrator::ImportRegistryProfiles(const nsACString& aAppName)
     if (NS_FAILED(rv)) continue;
 
     nsCOMPtr<nsIToolkitProfile> tprofile;
-    profileSvc->CreateProfile(profileFile, nsDependentCString(profileName),
+    profileSvc->CreateProfile(profileFile, nsnull,
+                              nsDependentCString(profileName),
                               getter_AddRefs(tprofile));
     migrated = PR_TRUE;
   }

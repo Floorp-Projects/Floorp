@@ -110,12 +110,8 @@ private:
      *  Private methods
      */
 
-    nsresult    GetCacheTrashDirectory(nsIFile ** result);
     nsresult    OpenDiskCache();
     nsresult    ClearDiskCache();
-    nsresult    DeleteFiles(nsCOMArray<nsIFile> * fileList);
-    nsresult    ListTrashContents(nsCOMArray<nsIFile> ** result);
-    nsresult    MoveCacheToTrash(nsIFile ** result);
     nsresult    InitializeCacheDirectory();
 
 
@@ -129,7 +125,6 @@ private:
     PRUint32                mCacheCapacity;     // XXX need soft/hard limits, currentTotal
     nsDiskCacheMap *        mCacheMap;
     PRPackedBool            mInitialized;
-    PRPackedBool            mFirstInit;
 };
 
 #endif // _nsDiskCacheDevice_h_

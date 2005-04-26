@@ -64,8 +64,6 @@
 #include "private/pprio.h"
 #endif
 
-
-
 #include "nsDiskCacheDevice.h"
 #include "nsDiskCacheEntry.h"
 #include "nsDiskCacheMap.h"
@@ -75,6 +73,8 @@
 
 #include "nsCacheService.h"
 #include "nsCache.h"
+
+#include "nsDeleteDir.h"
 
 #include "nsICacheVisitor.h"
 #include "nsReadableUtils.h"
@@ -335,7 +335,6 @@ nsDiskCacheDevice::nsDiskCacheDevice()
     : mCacheCapacity(0)
     , mCacheMap(nsnull)
     , mInitialized(PR_FALSE)
-    , mFirstInit(PR_TRUE)
 {
 }
 
@@ -367,7 +366,6 @@ nsDiskCacheDevice::Init()
     }
 
     mInitialized = PR_TRUE;
-    mFirstInit   = PR_FALSE;
     return NS_OK;
 
 error_exit:
@@ -814,22 +812,6 @@ nsDiskCacheDevice::EvictEntries(const char * clientID)
 #endif
 
 
-// "Cache.Trash" directory is a sibling of the "Cache" directory
-nsresult
-nsDiskCacheDevice::GetCacheTrashDirectory(nsIFile ** result)
-{
-    nsCOMPtr<nsIFile> cacheTrashDir;
-    nsresult rv = mCacheDirectory->Clone(getter_AddRefs(cacheTrashDir));
-    if (NS_FAILED(rv))  return rv;
-    rv = cacheTrashDir->SetNativeLeafName(NS_LITERAL_CSTRING("Cache.Trash"));
-    if (NS_FAILED(rv))  return rv;
-    
-    *result = cacheTrashDir.get();
-    NS_ADDREF(*result);
-    return rv;
-}
-
-
 nsresult
 nsDiskCacheDevice::OpenDiskCache()
 {
@@ -838,48 +820,46 @@ nsDiskCacheDevice::OpenDiskCache()
     // Try opening cache map file.
     NS_ASSERTION(mCacheMap == nsnull, "leaking mCacheMap");
     mCacheMap = new nsDiskCacheMap;
-    if (!mCacheMap) {
+    if (!mCacheMap)
         return NS_ERROR_OUT_OF_MEMORY;
-    }
     
     // if we don't have a cache directory, create one and open it
-    PRBool  cacheDirExists;
-    rv = mCacheDirectory->Exists(&cacheDirExists);
-    if (NS_FAILED(rv))  return rv;
+    PRBool exists;
+    rv = mCacheDirectory->Exists(&exists);
+    if (NS_FAILED(rv))
+        return rv;
 
-    if (cacheDirExists) {
+    PRBool trashing = PR_FALSE;
+    if (exists) {
         rv = mCacheMap->Open(mCacheDirectory);        
         // move "corrupt" caches to trash
         if (rv == NS_ERROR_FILE_CORRUPTED) {
-            rv = MoveCacheToTrash(nsnull); // ignore returned dir name
-            if (NS_FAILED(rv))  return rv;
-            cacheDirExists = PR_FALSE;
-
-        } else if (NS_FAILED(rv))  return rv;
+            rv = DeleteDir(mCacheDirectory, PR_TRUE);
+            if (NS_FAILED(rv))
+                return rv;
+            exists = PR_FALSE;
+            trashing = PR_TRUE;
+        }
+        else if (NS_FAILED(rv))
+            return rv;
     }
 
     // if we don't have a cache directory, create one and open it
-    if (!cacheDirExists) {
+    if (!exists) {
         rv = InitializeCacheDirectory();
-        if (NS_FAILED(rv))  return rv;
+        if (NS_FAILED(rv))
+            return rv;
     }
 
-    if (! mFirstInit)  return NS_OK;  // we're done
-
-    // Empty Cache Trash
-    PRBool trashDirExists;
-    nsCOMPtr<nsIFile> trashDir;
-    rv = GetCacheTrashDirectory(getter_AddRefs(trashDir));
-    if (NS_FAILED(rv))  return rv;
-    rv = trashDir->Exists(&trashDirExists);
-    if (NS_FAILED(rv))  return rv;
-    if (trashDirExists) {
-        nsCOMArray<nsIFile> * trashList;
-        rv = ListTrashContents(&trashList);
-        if (NS_FAILED(rv))  return rv;
-
-        rv = DeleteFiles(trashList);       // spin up thread to delete contents
-        if (NS_FAILED(rv))  return rv;
+    if (!trashing) {
+        // delete any trash files leftover from a previous run
+        nsCOMPtr<nsIFile> trashDir;
+        GetTrashDir(mCacheDirectory, &trashDir);
+        if (trashDir) {
+            PRBool exists;
+            if (NS_SUCCEEDED(trashDir->Exists(&exists)) && exists)
+                DeleteDir(trashDir, PR_FALSE);
+        }
     }
 
     return NS_OK;
@@ -889,193 +869,18 @@ nsDiskCacheDevice::OpenDiskCache()
 nsresult
 nsDiskCacheDevice::ClearDiskCache()
 {
-    if (mBindery.ActiveBindings())  return NS_ERROR_CACHE_IN_USE;
+    if (mBindery.ActiveBindings())
+        return NS_ERROR_CACHE_IN_USE;
 
-    nsresult              rv;
-    nsCOMPtr<nsIFile>     trashDir;
-    nsCOMArray<nsIFile> * deleteList = new nsCOMArray<nsIFile>;
-    if (!deleteList)  return NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = Shutdown_Private(PR_FALSE);  // false: don't bother flushing
+    if (NS_FAILED(rv))
+        return rv;
 
-    rv = Shutdown_Private(PR_FALSE);  // false = don't bother flushing
-    if (NS_FAILED(rv))  goto error_exit;
+    rv = DeleteDir(mCacheDirectory, PR_TRUE);
+    if (NS_FAILED(rv))
+        return rv;
 
-    rv = MoveCacheToTrash(getter_AddRefs(trashDir));
-    if (NS_FAILED(rv))  goto error_exit;
-    rv = deleteList->AppendObject(trashDir);
-    if (NS_FAILED(rv))  goto error_exit;
-    rv = DeleteFiles(deleteList);
-    if (NS_FAILED(rv))  goto error_exit;
-
-    rv = Init();
-    return rv;
-
- error_exit:
-    delete deleteList;
-    return rv;
-}
-
-
-// function passed to PR_CreateThread
-static void PR_CALLBACK
-DoDeleteFileList(void *arg)
-{
-    nsCOMArray<nsIFile> * fileList = NS_STATIC_CAST(nsCOMArray<nsIFile> *, arg);
-    nsresult              rv;
-
-    // iterate over items in fileList, recursively deleting each
-    PRInt32  count = fileList->Count();
-    for (PRInt32 i=0; i<count; i++) {
-        nsIFile * item = fileList->ObjectAt(i);
-        CACHE_LOG_PATH(PR_LOG_ALWAYS, "deleting: %s\n", item);
-
-        rv = item->Remove(PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv),"failure cleaning up cache");
-    }
-
-    delete fileList; // destroy nsCOMArray
-}
-
-
-#define DEFAULT_STACK_SIZE  0
-
-nsresult
-nsDiskCacheDevice::DeleteFiles(nsCOMArray<nsIFile> * fileList)
-{
-    // start up another thread to delete deleteDir
-    PRThread  * thread;
-    thread = PR_CreateThread(PR_USER_THREAD,
-                             DoDeleteFileList,
-                             fileList,
-                             PR_PRIORITY_NORMAL,
-                             PR_GLOBAL_THREAD,
-                             PR_UNJOINABLE_THREAD,
-                             DEFAULT_STACK_SIZE);
-
-    if (!thread)  return NS_ERROR_UNEXPECTED;
-    return NS_OK;
-}
-
-
-/**
- *  ListTrashContents - return pointer to array of nsIFile to delete
- */
-nsresult
-nsDiskCacheDevice::ListTrashContents(nsCOMArray<nsIFile> ** result)
-{
-    nsresult           rv;
-    nsCOMPtr<nsIFile>  trashDir;
-    *result = nsnull;
-    
-    // does "Cache.Trash" directory exist?
-    rv = GetCacheTrashDirectory(getter_AddRefs(trashDir));
-    if (NS_FAILED(rv))  return rv;
-    PRBool exists;
-    rv = trashDir->Exists(&exists);
-    if (NS_FAILED(rv))  return rv;
-    if (!exists) {
-        return NS_OK;
-    }
-
-    nsCOMArray<nsIFile> * array = new nsCOMArray<nsIFile>;
-    if (!array)  return NS_ERROR_OUT_OF_MEMORY;
-    
-    // iterate over trash directory building array of directory objects
-    nsCOMPtr<nsISimpleEnumerator> dirEntries;
-    nsCOMPtr<nsIFile> item;
-    PRBool            more, success;
-
-    rv = trashDir->GetDirectoryEntries(getter_AddRefs(dirEntries));
-    if (NS_FAILED(rv) || !dirEntries)  goto error_exit; // !dirEntries returns NS_OK
-
-    rv = dirEntries->HasMoreElements(&more);
-    if (NS_FAILED(rv))  goto error_exit;
-
-    while (more) {
-        rv = dirEntries->GetNext(getter_AddRefs(item));
-        if (NS_FAILED(rv))  goto error_exit;
-
-        success = array->AppendObject(item);
-        if (!success) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            goto error_exit;
-        }
-
-        rv = dirEntries->HasMoreElements(&more);
-        if (NS_FAILED(rv))  goto error_exit;
-    }
-    
-    // return resulting array
-    *result = array;
-    return NS_OK;
-    
- error_exit:
-    delete array;
-    return rv;
-}
-
-
-// Move 'Cache' dir into unique directory inside 'Cache.Trash', return name of unique directory
-nsresult
-nsDiskCacheDevice::MoveCacheToTrash(nsIFile ** result)
-{
-    nsresult          rv;
-    nsCOMPtr<nsIFile> trashDir;
-
-    if (result) *result = nsnull;
-
-    rv = GetCacheTrashDirectory(getter_AddRefs(trashDir));
-    if (NS_FAILED(rv))  return rv;
-
-    // verify cache.trash exists and is a directory
-    PRBool  exists;
-    rv = trashDir->Exists(&exists);
-    if (NS_FAILED(rv))  return rv;
-    if (exists) {
-        PRBool  isDirectory;
-        rv = trashDir->IsDirectory(&isDirectory);
-        if (NS_FAILED(rv))  return rv;
-        if (!isDirectory) {
-            // delete file or fail
-            rv = trashDir->Remove(PR_FALSE);
-            if (NS_FAILED(rv))  return rv;
-            exists = PR_FALSE;
-        }
-    }
-
-    if (!exists) {
-        // cache.trash doesn't exists, so create it
-        rv = trashDir->Create(nsIFile::DIRECTORY_TYPE, 0777);
-        if (NS_FAILED(rv))  return rv;
-    }
-
-    // create unique directory
-    nsCOMPtr<nsIFile>  uniqueDir;
-    rv = trashDir->Clone(getter_AddRefs(uniqueDir));
-    if (NS_FAILED(rv))  return rv;
-    rv = uniqueDir->AppendNative(NS_LITERAL_CSTRING("Trash"));
-    if (NS_FAILED(rv))  return rv;
-    rv = uniqueDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0777);
-    if (NS_FAILED(rv))  return rv;
-
-    // move cache directory into unique trash directory
-    nsCOMPtr<nsIFile> parentDir;
-
-    rv = mCacheDirectory->GetParent(getter_AddRefs(parentDir));
-    if (NS_FAILED(rv))  return rv;
-    
-    rv = mCacheDirectory->MoveToNative(uniqueDir, EmptyCString());
-    if (NS_FAILED(rv))  return rv;
-    
-    // set mCacheDirectory to point to parentDir/Cache/ again
-    rv = parentDir->AppendNative(NS_LITERAL_CSTRING("Cache"));
-    if (NS_FAILED(rv))  return rv;
-    
-    mCacheDirectory = do_QueryInterface(parentDir);
-
-    // return unique directory, in case caller wants specifically delete it
-    if (result)
-        NS_ADDREF(*result = uniqueDir);
-    return NS_OK;
+    return Init();
 }
 
 

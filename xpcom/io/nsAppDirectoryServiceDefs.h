@@ -69,7 +69,8 @@
                                                                 // installed locale. Second choice
                                                                 // when above is not available.
                                                                                                                        
-#define NS_APP_USER_PROFILES_ROOT_DIR           "DefProfRt"     // The dir where user profile dirs get created.
+#define NS_APP_USER_PROFILES_ROOT_DIR           "DefProfRt"     // The dir where user profile dirs live.
+#define NS_APP_USER_PROFILES_LOCAL_ROOT_DIR     "DefProfLRt"  // The dir where user profile temp dirs live.
 
 #define NS_APP_RES_DIR                          "ARes"
 #define NS_APP_CHROME_DIR                       "AChrom"
@@ -96,6 +97,7 @@
 #define NS_APP_PREFS_DEFAULTS_DIR_LIST          "PrefDL"
         
 #define NS_APP_USER_PROFILE_50_DIR              "ProfD"
+#define NS_APP_USER_PROFILE_LOCAL_50_DIR        "ProfLD"
         
 #define NS_APP_USER_CHROME_DIR                  "UChrm"
          
