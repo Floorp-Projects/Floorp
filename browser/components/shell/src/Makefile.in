@@ -55,6 +55,7 @@ REQUIRES	= \
 		  imglib2 \
 		  browsercomps \
 		  gfx \
+                  widget \
 		  pref \
 		  $(NULL)
 

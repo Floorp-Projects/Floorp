@@ -55,7 +55,9 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "nsIImage.h"
+#ifdef MOZ_WIDGET_GTK2
 #include "nsIGdkPixbufImage.h"
+#endif
 #include "nsColor.h"
 
 #include <glib.h>
@@ -348,6 +350,9 @@ WriteImage(const nsCString& aPath, gfxIImageFrame* aImage)
   if (!img)
       return NS_ERROR_NOT_AVAILABLE;
 
+#ifndef MOZ_WIDGET_GTK2
+  return NS_ERROR_NOT_AVAILABLE;
+#else
   nsCOMPtr<nsIGdkPixbufImage> pixImg(do_QueryInterface(img));
   if (!pixImg)
       return NS_ERROR_NOT_AVAILABLE;
@@ -361,6 +366,7 @@ WriteImage(const nsCString& aPath, gfxIImageFrame* aImage)
   aImage->UnlockImageData();
   g_object_unref(pixbuf);
   return res ? NS_OK : NS_ERROR_FAILURE;
+#endif
 }
                  
 NS_IMETHODIMP
