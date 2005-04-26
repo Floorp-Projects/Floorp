@@ -616,6 +616,7 @@ calStorageCalendar.prototype = {
             if (selectSchemaVersion.step()) {
                 version = selectSchemaVersion.row.version;
             }
+            selectSchemaVersion.reset();
         } catch (e) {
             // either the cal_calendar_schema_version table is not
             // found, or something else happened
