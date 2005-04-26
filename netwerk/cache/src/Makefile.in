@@ -83,6 +83,7 @@ CPPSRCS += \
 	nsDiskCacheEntry.cpp \
 	nsDiskCacheMap.cpp \
 	nsDiskCacheStreams.cpp \
+	nsDeleteDir.cpp \
 	$(NULL)
 endif
 endif

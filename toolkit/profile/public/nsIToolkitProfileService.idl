@@ -64,17 +64,25 @@ interface nsIToolkitProfileService : nsISupports
      * Lock an arbitrary path as a profile. If the path does not exist, it
      * will be created and the defaults copied from the application directory.
      */
-    nsIProfileLock lockProfilePath(in nsILocalFile aDirectory);
+    nsIProfileLock lockProfilePath(in nsILocalFile aDirectory,
+                                   in nsILocalFile aTempDirectory);
 
     /**
      * Create a new profile.
      * 
-     * @param rootDir  The profile directory. May be null, in which case a suitable
-     *                 default will be chosen based on the profile name.
-     * @param name     The profile name.
+     * @param aRootDir
+     *        The profile directory. May be null, in which case a suitable
+     *        default will be chosen based on the profile name.
+     * @param aTempDir
+     *        The profile temporary directory. May be null, in which case a
+     *        suitable default will be chosen based either on the profile name
+     *        if aRootDir is null or aRootDir itself.
+     * @param aName
+     *        The profile name.
      */
-    nsIToolkitProfile createProfile(in nsILocalFile rootDir,
-                                    in AUTF8String name);
+    nsIToolkitProfile createProfile(in nsILocalFile aRootDir,
+                                    in nsILocalFile aTempDir,
+                                    in AUTF8String aName);
 
     /**
      * Returns the number of profiles.

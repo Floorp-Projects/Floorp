@@ -1054,7 +1054,8 @@ static const char kProfileProperties[] =
   "chrome://mozapps/locale/profile/profileSelection.properties";
 
 static nsresult
-ProfileLockedDialog(nsILocalFile* aProfileDir, nsIProfileUnlocker* aUnlocker,
+ProfileLockedDialog(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
+                    nsIProfileUnlocker* aUnlocker,
                     nsINativeAppSupport* aNative, nsIProfileLock* *aResult)
 {
   nsresult rv;
@@ -1113,7 +1114,7 @@ ProfileLockedDialog(nsILocalFile* aProfileDir, nsIProfileUnlocker* aUnlocker,
       rv = aUnlocker->Unlock(nsIProfileUnlocker::FORCE_QUIT);
       if (NS_FAILED(rv)) return rv;
 
-      return NS_LockProfilePath(aProfileDir, nsnull, aResult);
+      return NS_LockProfilePath(aProfileDir, aProfileLocalDir, nsnull, aResult);
     }
 
     return NS_ERROR_ABORT;
@@ -1129,7 +1130,7 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
 {
   nsresult rv;
 
-  nsCOMPtr<nsILocalFile> lf;
+  nsCOMPtr<nsILocalFile> profD, profLD;
 
   {
     ScopedXPCOMStartup xpcom;
@@ -1181,19 +1182,26 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
                                     getter_AddRefs(lock));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = lock->GetDirectory(getter_AddRefs(lf));
+      rv = lock->GetDirectory(getter_AddRefs(profD));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = lock->GetLocalDirectory(getter_AddRefs(profLD));
       NS_ENSURE_SUCCESS(rv, rv);
 
       lock->Unlock();
     }
   }
 
-  nsCAutoString path;
-  lf->GetNativePath(path);
+  nsCAutoString path1;
+  nsCAutoString path2;
+  profD->GetNativePath(path1);
+  profLD->GetNativePath(path2);
 
-  static char kEnvVar[MAXPATHLEN];
-  sprintf(kEnvVar, "XRE_PROFILE_PATH=%s", path.get());
-  PR_SetEnv(kEnvVar);
+  static char kEnvVar1[MAXPATHLEN], kEnvVar2[MAXPATHLEN];
+  sprintf(kEnvVar1, "XRE_PROFILE_PATH=%s", path1.get());
+  sprintf(kEnvVar2, "XRE_PROFILE_LOCAL_PATH=%s", path2.get());
+  PR_SetEnv(kEnvVar1);
+  PR_SetEnv(kEnvVar2);
 
   PRBool offline = PR_FALSE;
   aProfileSvc->GetStartOffline(&offline);
@@ -1264,7 +1272,17 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
                                getter_AddRefs(lf));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return NS_LockProfilePath(lf, nsnull, aResult);
+    nsCOMPtr<nsILocalFile> localDir;
+    arg = PR_GetEnv("XRE_PROFILE_LOCAL_PATH");
+    if (arg && *arg) {
+      rv = NS_NewNativeLocalFile(nsDependentCString(arg), PR_TRUE,
+                                 getter_AddRefs(localDir));
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      localDir = lf;
+    }
+
+    return NS_LockProfilePath(lf, localDir, nsnull, aResult);
   }
 
   if (CheckArg("migration"))
@@ -1282,11 +1300,13 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
 
     nsCOMPtr<nsIProfileUnlocker> unlocker;
 
-    rv = NS_LockProfilePath(lf, getter_AddRefs(unlocker), aResult);
+    // If a profile path is specified directory on the command line, then
+    // assume that the temp directory is the same as the given directory.
+    rv = NS_LockProfilePath(lf, lf, getter_AddRefs(unlocker), aResult);
     if (NS_SUCCEEDED(rv))
       return rv;
 
-    return ProfileLockedDialog(lf, unlocker, aNative, aResult);
+    return ProfileLockedDialog(lf, lf, unlocker, aNative, aResult);
   }
 
   nsCOMPtr<nsIToolkitProfileService> profileSvc;
@@ -1311,10 +1331,12 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
         return rv;
       }
       
-      rv = profileSvc->CreateProfile(lf, nsDependentCSubstring(arg, delim),
+      // As with -profile, assume that the given path will be used for both the
+      // main profile directory and the temp profile directory.
+      rv = profileSvc->CreateProfile(lf, lf, nsDependentCSubstring(arg, delim),
                                      getter_AddRefs(profile));
     } else {
-      rv = profileSvc->CreateProfile(nsnull, nsDependentCString(arg),
+      rv = profileSvc->CreateProfile(nsnull, nsnull, nsDependentCString(arg),
                                      getter_AddRefs(profile));
     }
     if (NS_SUCCEEDED(rv)) {
@@ -1332,6 +1354,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     prefsJSFile->Exists(&exists);
     if (!exists)
       prefsJSFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+    // XXXdarin perhaps 0600 would be better?
 
     return rv;
   }
@@ -1340,9 +1363,11 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
   rv = profileSvc->GetProfileCount(&count);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  arg = PR_GetEnv("XRE_IMPORT_PROFILES");
-  if (!count && (!arg || !*arg)) {
-    return ImportProfiles(profileSvc, aNative);
+  if (gAppData->flags & NS_XRE_ENABLE_PROFILE_MIGRATOR) {
+    arg = PR_GetEnv("XRE_IMPORT_PROFILES");
+    if (!count && (!arg || !*arg)) {
+      return ImportProfiles(profileSvc, aNative);
+    }
   }
 
   ar = CheckArg("p", &arg);
@@ -1363,7 +1388,12 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
       rv = profile->GetRootDir(getter_AddRefs(profileDir));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      return ProfileLockedDialog(profileDir, unlocker, aNative, aResult);
+      nsCOMPtr<nsILocalFile> profileLocalDir;
+      rv = profile->GetLocalDir(getter_AddRefs(profileLocalDir));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return ProfileLockedDialog(profileDir, profileLocalDir, unlocker,
+                                 aNative, aResult);
     }
 
     return ShowProfileManager(profileSvc, aNative);
@@ -1379,6 +1409,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     // create a default profile
     nsCOMPtr<nsIToolkitProfile> profile;
     nsresult rv = profileSvc->CreateProfile(nsnull, // choose a default dir for us
+                                            nsnull, // choose a default dir for us
                                             NS_LITERAL_CSTRING("default"),
                                             getter_AddRefs(profile));
     if (NS_SUCCEEDED(rv)) {
@@ -1407,7 +1438,12 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
       rv = profile->GetRootDir(getter_AddRefs(profileDir));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      return ProfileLockedDialog(profileDir, unlocker, aNative, aResult);
+      nsCOMPtr<nsILocalFile> profileLocalDir;
+      rv = profile->GetRootDir(getter_AddRefs(profileLocalDir));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return ProfileLockedDialog(profileDir, profileLocalDir, unlocker,
+                                 aNative, aResult);
     }
   }
 
@@ -1524,6 +1560,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
   nsresult rv;
   NS_TIMELINE_MARK("enter main");
+
+#ifdef DEBUG
+  if (PR_GetEnv("XRE_MAIN_BREAK"))
+    NS_BREAK();
+#endif
 
 #ifdef XP_WIN32
   // Suppress the "DLL Foo could not be found" dialog, such that if dependent
@@ -1742,11 +1783,15 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       rv == NS_ERROR_ABORT) return 0;
   if (NS_FAILED(rv)) return 1;
 
-  nsCOMPtr<nsILocalFile> lf;
-  rv = profileLock->GetDirectory(getter_AddRefs(lf));
+  nsCOMPtr<nsILocalFile> profD;
+  rv = profileLock->GetDirectory(getter_AddRefs(profD));
   NS_ENSURE_SUCCESS(rv, 1);
 
-  rv = dirProvider.SetProfileDir(lf);
+  nsCOMPtr<nsILocalFile> profLD;
+  rv = profileLock->GetLocalDirectory(getter_AddRefs(profLD));
+  NS_ENSURE_SUCCESS(rv, 1);
+
+  rv = dirProvider.SetProfile(profD, profLD);
   NS_ENSURE_SUCCESS(rv, 1);
 
   //////////////////////// NOW WE HAVE A PROFILE ////////////////////////
@@ -1758,7 +1803,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // profile was started with.  The format of the version stamp is defined
   // by the BuildVersion function.
   char lastVersion[MAXPATHLEN];
-  GetVersion(lf, lastVersion, MAXPATHLEN);
+  GetVersion(profD, lastVersion, MAXPATHLEN);
 
   // Build the version stamp for the running application.
   nsCAutoString version;
@@ -1772,13 +1817,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // re-generated to prevent mysterious component loading failures.
   // 
   if (version.Equals(lastVersion)) {
-    componentsListChanged = ComponentsListChanged(lf);
+    componentsListChanged = ComponentsListChanged(profD);
     if (componentsListChanged) {
       // Remove compreg.dat and xpti.dat, forcing component re-registration,
       // with the new list of additional components directories specified
       // in "components.ini" which we have just discovered changed since the
       // last time the application was run. 
-      RemoveComponentRegistries(lf);
+      RemoveComponentRegistries(profD);
     }
     // Nothing need be done for the normal startup case.
   }
@@ -1786,7 +1831,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     // Remove compreg.dat and xpti.dat, forcing component re-registration
     // with the default set of components (this disables any potentially
     // troublesome incompatible XPCOM components). 
-    RemoveComponentRegistries(lf);
+    RemoveComponentRegistries(profD);
 
     // Tell the Extension Manager it should check for incompatible 
     // Extensions and re-write the Components manifest ("components.ini")
@@ -1794,7 +1839,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     upgraded = PR_TRUE;
 
     // Write out version
-    WriteVersion(lf, version);
+    WriteVersion(profD, version);
   }
 
   PRBool needsRestart = PR_FALSE;
@@ -1907,6 +1952,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         // clear out any environment variables which may have been set 
         // during the relaunch process now that we know we won't be relaunching.
         PR_SetEnv("XRE_PROFILE_PATH=");
+        PR_SetEnv("XRE_PROFILE_TEMP_PATH=");
         PR_SetEnv("XRE_START_OFFLINE=");
         PR_SetEnv("XRE_IMPORT_PROFILES=");
         PR_SetEnv("NO_EM_RESTART=");
@@ -1997,12 +2043,15 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     // After this restart, we don't want to restart any more!
     PR_SetEnv("NO_EM_RESTART=1");
 
-    nsCAutoString path;
-    lf->GetNativePath(path);
+    nsCAutoString path1, path2;
+    profD->GetNativePath(path1);
+    profLD->GetNativePath(path2);
 
-    static char kEnvVar[MAXPATHLEN];
-    sprintf(kEnvVar, "XRE_PROFILE_PATH=%s", path.get());
-    PR_SetEnv(kEnvVar);
+    static char kEnvVar1[MAXPATHLEN], kEnvVar2[MAXPATHLEN];
+    sprintf(kEnvVar1, "XRE_PROFILE_PATH=%s", path1.get());
+    sprintf(kEnvVar2, "XRE_PROFILE_LOCAL_PATH=%s", path2.get());
+    PR_SetEnv(kEnvVar1);
+    PR_SetEnv(kEnvVar2);
 
     return LaunchChild(nativeApp) == NS_ERROR_LAUNCHED_CHILD_PROCESS ? 0 : 1;
   }

@@ -64,23 +64,31 @@ public:
   // that is the responsibility of the toolkit profile service.
   // We also don't fire profile-changed notifications... that is
   // the responsibility of the apprunner.
-  nsresult SetProfileDir(nsIFile* aProfileDir);
+  nsresult SetProfile(nsIFile* aProfileDir, nsIFile* aProfileLocalDir);
 
   void DoShutdown();
 
   nsresult GetProfileDefaultsDir(nsIFile* *aResult);
-  static nsresult GetUserAppDataDirectory(nsILocalFile* *aFile);
+
+  static nsresult GetUserAppDataDirectory(nsILocalFile* *aFile) {
+    return GetUserDataDirectory(aFile, PR_FALSE);
+  }
+  static nsresult GetUserLocalDataDirectory(nsILocalFile* *aFile) {
+    return GetUserDataDirectory(aFile, PR_TRUE);
+  }
 
   /* make sure you clone it, if you need to do stuff to it */
   nsIFile* GetAppDir() { return mAppDir; }
 
 protected:
+  static nsresult GetUserDataDirectory(nsILocalFile* *aFile, PRBool aLocal);
   static nsresult EnsureDirectoryExists(nsIFile* aDirectory);
   void EnsureProfileFileExists(nsIFile* aFile);
 
   nsCOMPtr<nsILocalFile> mAppDir;
   nsCOMPtr<nsIFile>      mXULAppDir;
   nsCOMPtr<nsIFile>      mProfileDir;
+  nsCOMPtr<nsIFile>      mProfileLocalDir;
   PRBool                 mProfileNotified;
 };
 

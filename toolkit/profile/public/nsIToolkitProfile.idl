@@ -45,11 +45,27 @@ interface nsIProfileUnlocker;
  * Hold on to a profile lock. Once you release the last reference to this
  * interface, the profile lock is released.
  */
-[scriptable, uuid(6f987826-e4dd-453d-bb66-a1e46088fced)]
+[scriptable, uuid(50e07b0a-f338-4da3-bcdb-f4bb0db94dbe)]
 interface nsIProfileLock : nsISupports
 {
+    /**
+     * The main profile directory.
+     */
     readonly attribute nsILocalFile directory;
+    
+    /**
+     * A directory corresponding to the main profile directory that exists for
+     * the purpose of storing data on the local filesystem, including cache
+     * files or other data files that may not represent critical user data.
+     * (e.g., this directory may not be included as part of a backup scheme.)
+     *
+     * In some cases, this directory may just be the main profile directory.
+     */
+    readonly attribute nsILocalFile localDirectory;
 
+    /**
+     * Unlock the profile.
+     */
     void unlock();
 };
 
@@ -58,12 +74,32 @@ interface nsIProfileLock : nsISupports
  * @note THIS INTERFACE SHOULD BE IMPLEMENTED BY THE TOOLKIT CODE ONLY! DON'T
  *       EVEN THINK ABOUT IMPLEMENTING THIS IN JAVASCRIPT!
  */
-[scriptable, uuid(0008686a-ee99-4a27-8f1b-190596f535b1)]
+[scriptable, uuid(7422b090-4a86-4407-972e-75468a625388)]
 interface nsIToolkitProfile : nsISupports
 {
+    /**
+     * The location of the profile directory.
+     */
     readonly attribute nsILocalFile rootDir;
+
+    /**
+     * The location of the profile local directory, which may be the same as
+     * the root directory.  See nsIProfileLock::localDirectory.
+     */
+    readonly attribute nsILocalFile localDir;
+
+    /**
+     * The name of the profile.
+     */
     attribute AUTF8String name;
 
+    /**
+     * Removes the profile from the registry of profiles.
+     *
+     * @param removeFiles
+     *        Indicates whether or not the profile directory should be
+     *        removed in addition.
+     */
     void remove(in boolean removeFiles);
 
     /**

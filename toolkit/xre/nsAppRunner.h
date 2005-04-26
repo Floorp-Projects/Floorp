@@ -87,9 +87,26 @@ nsresult NS_CreateNativeAppSupport(nsINativeAppSupport* *aResult);
 NS_HIDDEN_(nsresult)
 NS_NewToolkitProfileService(nsIToolkitProfileService* *aResult);
 
+/**
+ * Try to acquire exclusive access to the specified profile directory.
+ *
+ * @param aPath
+ *        The profile directory to lock.
+ * @param aTempPath
+ *        The corresponding profile temporary directory.
+ * @param aUnlocker
+ *        A callback interface used to attempt to unlock a profile that
+ *        appears to be locked.
+ * @param aResult
+ *        The resulting profile lock object (or null if the profile could
+ *        not be locked).
+ *
+ * @return NS_ERROR_FILE_ACCESS_DENIED to indicate that the profile
+ *         directory cannot be unlocked.
+ */
 NS_HIDDEN_(nsresult)
-NS_LockProfilePath(nsILocalFile* aPath, nsIProfileUnlocker* *aUnlocker,
-                   nsIProfileLock* *aResult);
+NS_LockProfilePath(nsILocalFile* aPath, nsILocalFile* aTempPath,
+                   nsIProfileUnlocker* *aUnlocker, nsIProfileLock* *aResult);
 
 #define NS_NATIVEAPPSUPPORT_CONTRACTID "@mozilla.org/toolkit/native-app-support;1"
 

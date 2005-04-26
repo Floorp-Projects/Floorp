@@ -135,10 +135,21 @@ nsresult
 nsFastLoadService::NewFastLoadFile(const char* aBaseName, nsIFile* *aResult)
 {
     nsresult rv;
-    nsCOMPtr<nsIFile> file;
 
+    nsCOMPtr<nsIFile> profFile;
     rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                getter_AddRefs(profFile));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsIFile> file;
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
                                 getter_AddRefs(file));
+    if (NS_FAILED(rv))
+        file = profFile;
+
+    PRBool sameDir;
+    rv = file->Equals(profFile, &sameDir);
     if (NS_FAILED(rv))
         return rv;
 
@@ -148,6 +159,15 @@ nsFastLoadService::NewFastLoadFile(const char* aBaseName, nsIFile* *aResult)
     rv = file->AppendNative(name);
     if (NS_FAILED(rv))
         return rv;
+
+    if (!sameDir) {
+        // Cleanup any pre-existing fastload files that may live in the profile
+        // directory from previous versions of the code that didn't store them
+        // in the profile temp directory.
+        rv = profFile->AppendNative(name);
+        if (NS_SUCCEEDED(rv))
+            profFile->Remove(PR_FALSE);  // OK if this fails
+    }
 
     *aResult = file;
     NS_ADDREF(*aResult);

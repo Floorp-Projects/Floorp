@@ -66,6 +66,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsVoidArray.h"
+#include "nsDeleteDir.h"
 
 
 
@@ -342,16 +343,34 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
                                     getter_AddRefs(directory));
         if (NS_FAILED(rv)) {
             // try to get the profile directory (there may not be a profile yet)
-            rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                        getter_AddRefs(directory));
-#if DEBUG
-            if (NS_FAILED(rv)) {
-                // use current process directory during development
-                rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
-                                            getter_AddRefs(directory));
+            nsCOMPtr<nsIFile> profDir;
+            NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                   getter_AddRefs(profDir));
+            NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
+                                   getter_AddRefs(directory));
+            if (!directory)
+                directory = profDir;
+            else if (profDir) {
+                PRBool same;
+                if (NS_SUCCEEDED(profDir->Equals(directory, &same)) && !same) {
+                    // We no longer store the cache directory in the main
+                    // profile directory, so we should cleanup the old one.
+                    rv = profDir->AppendNative(NS_LITERAL_CSTRING("Cache"));
+                    if (NS_SUCCEEDED(rv)) {
+                        PRBool exists;
+                        if (NS_SUCCEEDED(profDir->Exists(&exists)) && exists)
+                            DeleteDir(profDir, PR_FALSE);
+                    }
+                }
             }
-#endif
         }
+#if DEBUG
+        if (!directory) {
+            // use current process directory during development
+            rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                                        getter_AddRefs(directory));
+        }
+#endif
         if (directory)
             mDiskCacheParentDirectory = do_QueryInterface(directory, &rv);
     }
