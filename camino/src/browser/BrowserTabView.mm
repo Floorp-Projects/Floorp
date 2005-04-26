@@ -217,12 +217,20 @@
       tabVisibilityChanged = YES;
       // hide the tabs and give the view a chance to kill its tracking rects
       [mTabBar setVisible:NO];
-    } else if (numItems >= minTabThreshold && !tabsVisible) {
+    } 
+    else if (numItems >= minTabThreshold && !tabsVisible) {
       // show the tabs allow the view to set up tracking rects
       [mTabBar setVisible:YES];
       tabVisibilityChanged = YES;
     }
     tabsVisible = [mTabBar isVisible];
+    
+    // We don't want to have the close button enabled on the only open tab, so make
+    // sure we keep its state current depending on the number of tabs.
+    if (tabsVisible && [self barAlwaysVisible]) {
+      BOOL initialCloseButtonEnabled = (numItems > 1);
+      [[[[self tabViewItems] objectAtIndex:0] closeButton] setEnabled:initialCloseButtonEnabled];
+    }
     
     if (tabVisibilityChanged) {
       // tell the tabs that visibility changed
