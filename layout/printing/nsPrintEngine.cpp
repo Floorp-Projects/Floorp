@@ -495,15 +495,12 @@ nsPrintEngine::GetSeqFrameAndCountPagesInternal(nsPrintObject*  aPO,
 
   // Finds the SimplePageSequencer frame
   // in PP mPrtPreview->mPrintObject->mSeqFrame is null
-  aSeqFrame  = nsnull;
-  nsIFrame *curFrame = aPO->mPresShell->FrameManager()->GetRootFrame();
-  while (curFrame != nsnull) {
-    nsIPageSequenceFrame * sqf = nsnull;
-    if (NS_SUCCEEDED(CallQueryInterface(curFrame, &sqf)) && sqf) {
-      aSeqFrame = curFrame;
-      break;
-    }
-    curFrame = curFrame->GetFirstChild(nsnull);
+  nsIPageSequenceFrame* seqFrame = nsnull;
+  aPO->mPresShell->GetPageSequenceFrame(&seqFrame);
+  if (seqFrame) {
+    CallQueryInterface(seqFrame, &aSeqFrame);
+  } else {
+    aSeqFrame = nsnull;
   }
   if (aSeqFrame == nsnull) return NS_ERROR_FAILURE;
 
