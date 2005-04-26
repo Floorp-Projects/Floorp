@@ -691,7 +691,7 @@ nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
 #endif 
   }
   OSErr err = ::FSFindFolder(kUserDomain, folderType, kCreateFolder, &fsRef);
-  NS_ENSURE_TRUE(err, NS_ERROR_FAILURE);
+  NS_ENSURE_FALSE(err, NS_ERROR_FAILURE);
 
   rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(localDir));
   NS_ENSURE_SUCCESS(rv, rv);
