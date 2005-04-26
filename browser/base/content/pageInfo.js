@@ -290,6 +290,8 @@ function onLoadPageInfo()
   }
 
   document.title = docTitle;
+  
+  document.getElementById("main-window").setAttribute("relatedUrl", theDocument.location.toString());
 
   // do the easy stuff first
   makeGeneralTab();

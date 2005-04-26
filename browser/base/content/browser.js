@@ -31,6 +31,7 @@
 #   Joe Hewitt <hewitt@netscape.com>
 #   Alec Flett <alecf@netscape.com>
 #   Asaf Romano <mozilla.mano@sent.com>
+#   Jason Barnabe <jason_barnabe@fastmail.fm>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1892,10 +1893,11 @@ function BrowserViewSourceOfURL(url, charset, pageCookie)
 // doc=null for regular page info, doc=owner document for frame info.
 function BrowserPageInfo(doc)
 {
-  window.openDialog("chrome://browser/content/pageInfo.xul",
-                    "_blank",
-                    "chrome,dialog=no",
-                    doc);
+  toOpenDialogByTypeAndUrl("Browser:page-info", 
+                           doc ? doc.location : window.content.document.location, 
+                           "chrome://browser/content/pageInfo.xul", 
+                           "chrome,dialog=no",
+                           doc);
 }
 
 #ifdef DEBUG
@@ -2763,6 +2765,27 @@ function toOpenWindowByType(inType, uri, features)
     window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
 }
 
+function toOpenDialogByTypeAndUrl(inType, relatedUrl, windowUri, features, extraArgument)
+{
+  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
+  var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
+  var windows = windowManagerInterface.getEnumerator(inType);
+
+  // Check for windows matching the url  
+  while (windows.hasMoreElements()) {
+    var currentWindow = windows.getNext();
+    if (currentWindow.document.firstChild.getAttribute("relatedUrl") == relatedUrl) {
+    	currentWindow.focus();
+    	return;
+    }
+  }
+
+  // We didn't find a matching window, so open a new one.
+  if (features)
+    window.openDialog(windowUri, "_blank", features, extraArgument);
+  else
+    window.openDialog(windowUri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar", extraArgument);
+}
 
 function OpenBrowserWindow()
 {
