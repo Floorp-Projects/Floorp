@@ -90,13 +90,22 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollTo(PRInt32 x, PRInt32 y)
   if (!scrollableView)
     return NS_ERROR_FAILURE;
   
-  return scrollableView->ScrollTo(x,y, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+  float pixelsToTwips = mPresShell->GetPresContext()->PixelsToTwips();
+
+  return scrollableView->ScrollTo(NSToIntRound(x * pixelsToTwips),
+                                  NSToIntRound(y * pixelsToTwips),
+                                  NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 }
 
 /* void scrollBy (in long dx, in long dy); */
 NS_IMETHODIMP nsScrollBoxObject::ScrollBy(PRInt32 dx, PRInt32 dy)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 x, y;
+  nsresult rv = GetPosition(&x, &y);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return ScrollTo(x + dx, y + dy);
 }
 
 /* void scrollByLine (in long dlines); */
@@ -231,8 +240,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
        return NS_ERROR_FAILURE;
 
     // prepare for twips
-    float pixelsToTwips = 0.0;
-    pixelsToTwips = mPresShell->GetPresContext()->PixelsToTwips();
+    float pixelsToTwips = mPresShell->GetPresContext()->PixelsToTwips();
     
     nsIFrame* scrolledBox = GetScrolledBox(this);
     if (!scrolledBox)
@@ -293,8 +301,18 @@ NS_IMETHODIMP nsScrollBoxObject::GetPosition(PRInt32 *x, PRInt32 *y)
   nsIScrollableView* scrollableView = GetScrollableView();
   if (!scrollableView)
     return NS_ERROR_FAILURE;
-  
-  return scrollableView->GetScrollPosition(*x,*y);
+
+  nscoord xc, yc;
+  nsresult rv = scrollableView->GetScrollPosition(xc, yc);
+  if (NS_FAILED(rv))
+    return rv;
+
+  float twipsToPixels = mPresShell->GetPresContext()->TwipsToPixels();
+
+  *x = NSToIntRound(xc * twipsToPixels);
+  *y = NSToIntRound(yc * twipsToPixels);
+
+  return NS_OK;  
 }
 
 /* void getScrolledSize (out long width, out long height); */
