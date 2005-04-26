@@ -45,6 +45,7 @@
 #include "mimetype/nsIMIMEInfo.h"
 #include "nsIURI.h"
 #include "nsILocalFile.h"
+#include "nsIComponentRegistrar.h"
 
 #include "EmbedPrivate.h"
 #include "PtMozilla.h"

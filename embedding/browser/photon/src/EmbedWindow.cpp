@@ -594,7 +594,7 @@ NS_IMETHODIMP EmbedWindow::OnFound(nsISupports *ctxt, const char *hostname, nsHo
 #endif
 
 /* void OnStopLookup (in nsISupports ctxt, in string hostname, in nsresult status); */
-NS_IMETHODIMP EmbedWindow::OnLookupComplete(nsIDNSRequest *aRequest, nsIDNSRecord *aRecord, nsresult aStatus)
+NS_IMETHODIMP EmbedWindow::OnLookupComplete(nsICancelable *aRequest, nsIDNSRecord *aRecord, nsresult aStatus)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

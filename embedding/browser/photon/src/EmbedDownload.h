@@ -39,7 +39,7 @@
 #ifndef EMBEDDOWNLOAD_EMB
 #define EMBEDDOWNLOAD_EMB
 
-#include "nsIWebProgressListener.h"
+#include "nsIWebProgressListener2.h"
 #include "nsIWebBrowserPersist.h"
 #include "EmbedPrivate.h"
 #include "PtMozilla.h"

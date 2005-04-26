@@ -83,6 +83,8 @@ CPPSRCS		= \
 		HeaderSniffer.cpp \
 		nsUnknownContentTypeHandler.cpp
 
+DEFINES += -DMOZILLA_INTERNAL_API=1
+
 # Force applications to be built non-statically
 # when building the mozcomps meta component
 ifneq (,$(filter mozcomps,$(MOZ_META_COMPONENTS)))
