@@ -7146,7 +7146,6 @@ nsCSSFrameConstructor::SVGSwitchProcessChildren(nsFrameConstructorState& aState,
                                                 nsFrameItems&            aFrameItems)
 {
   nsresult rv = NS_OK;
-  PRBool isFinished = PR_FALSE;
   PRBool hasRequiredExtensions = PR_FALSE;
   PRBool hasRequiredFeatures = PR_FALSE;
   PRBool hasSystemLanguage = PR_FALSE;
@@ -7160,18 +7159,23 @@ nsCSSFrameConstructor::SVGSwitchProcessChildren(nsFrameConstructorState& aState,
   // elements in order, and then processes and renders the first child for
   // which these attributes evaluate to true. All others will be bypassed and
   // therefore not rendered.
-  ChildIterator iter, last;
-  for (ChildIterator::Init(aContent, &iter, &last);
-       (iter != last) && (! isFinished);
-       ++iter) {
+  PRInt32 childCount = aContent->GetChildCount();
+  for (PRInt32 i = 0; i < childCount; ++i) {
+    nsIContent* child = aContent->GetChildAt(i);
 
-    nsCOMPtr<nsIContent> child(*iter);
+    // Skip over children that aren't elements
+    if (!child->IsContentOfType(nsIContent::eELEMENT)) {
+      continue;
+    }
 
     rv = TestSVGConditions(child,
                            hasRequiredExtensions,
                            hasRequiredFeatures,
                            hasSystemLanguage);
 #ifdef DEBUG_scooter
+    nsAutoString str;
+    child->Tag()->ToString(str);
+    printf("Child tag: %s\n", NS_ConvertUCS2toUTF8(str).get());
     printf("SwitchProcessChildren: Required Extentions = %s, Required Features = %s, System Language = %s\n",
             hasRequiredExtensions ? "true" : "false",
             hasRequiredFeatures ? "true" : "false",
@@ -7184,15 +7188,14 @@ nsCSSFrameConstructor::SVGSwitchProcessChildren(nsFrameConstructorState& aState,
         hasRequiredFeatures &&
         hasSystemLanguage) {
 
-      rv = ConstructFrame(aState, nsCOMPtr<nsIContent>(*iter),
+      rv = ConstructFrame(aState, child,
                           aFrame, aFrameItems);
 
       if (NS_FAILED(rv))
         return rv;
 
-      if (child->IsContentOfType(nsIContent::eELEMENT)) {
-        break;
-      }
+      // No errors -- break out of loop (only render the first matching element)
+      break;
     }
   }
 
