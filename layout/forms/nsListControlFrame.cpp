@@ -1365,20 +1365,7 @@ nsListControlFrame::CaptureMouseEvents(nsPresContext* aPresContext, PRBool aGrab
   if (aGrabMouseEvents && IsInDropDownMode() && nsComboboxControlFrame::ToolkitHasNativePopup())
     return NS_OK;
 
-  nsIView* view = nsnull;
-  if (IsInDropDownMode()) {
-    view = GetView();
-  } else {
-    nsIFrame* scrolledFrame = GetScrolledFrame();
-    NS_ASSERTION(scrolledFrame, "No scrolled frame found");
-    NS_ENSURE_TRUE(scrolledFrame, NS_ERROR_FAILURE);
-    
-    nsIFrame* scrollport = scrolledFrame->GetParent();
-    NS_ASSERTION(scrollport, "No scrollport found");
-    NS_ENSURE_TRUE(scrollport, NS_ERROR_FAILURE);
-
-    view = scrollport->GetView();
-  }
+  nsIView* view = GetScrolledFrame()->GetView();
 
   NS_ASSERTION(view, "no view???");
   NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
