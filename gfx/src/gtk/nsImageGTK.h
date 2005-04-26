@@ -44,7 +44,9 @@
 #include <X11/Xutil.h>
 #include <gdk/gdk.h>
 #include "nsRegion.h"
+#ifdef MOZ_WIDGET_GTK2
 #include "nsIGdkPixbufImage.h"
+#endif
 
 class nsDrawingSurfaceGTK;
 
