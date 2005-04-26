@@ -205,6 +205,7 @@ nsCairoRenderingContext::PushTranslation(PushedTranslation* aState)
 {
     // XXX this is slow!
     PushState();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -212,6 +213,7 @@ nsCairoRenderingContext::PopTranslation(PushedTranslation* aState)
 {
     // XXX this is slow!
     PopState();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -896,18 +898,6 @@ nsCairoRenderingContext::DrawTile(imgIContainer *aImage,
                                   nscoord aXOffset, nscoord aYOffset,
                                   const nsRect * aTargetRect)
 {
-    // from nsRenderingContextImpl.cpp
-
-    nsRect dr(*aTargetRect);
-    double x = dr.x, y = dr.y, w = dr.width, h = dr.height;
-    cairo_transform_point(mCairo, &x, &y);
-    cairo_transform_distance(mCairo, &w, &h);
-    dr.x = (int) x; dr.y = (int) y; dr.width = (int) w; dr.height = (int) h;
-
-    x = aXOffset; y = aYOffset;
-    cairo_transform_point(mCairo, &x, &y);
-    aXOffset = (int) x; aYOffset = (int) y;
-
     nscoord width, height;
     aImage->GetWidth(&width);
     aImage->GetHeight(&height);
@@ -915,9 +905,6 @@ nsCairoRenderingContext::DrawTile(imgIContainer *aImage,
     if (width == 0 || height == 0)
         return PR_FALSE;
 
-    nscoord xOffset = (dr.x - aXOffset) % width;
-    nscoord yOffset = (dr.y - aYOffset) % height;
-    
     nsCOMPtr<gfxIImageFrame> iframe;
     aImage->GetCurrentFrame(getter_AddRefs(iframe));
     if (!iframe) return NS_ERROR_FAILURE;
@@ -925,16 +912,24 @@ nsCairoRenderingContext::DrawTile(imgIContainer *aImage,
     nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
     if (!img) return NS_ERROR_FAILURE;
 
-    /* bug 113561 - frame can be smaller than container */
+    // For Bug 87819
+    // iframe may want image to start at different position, so adjust
     nsRect iframeRect;
     iframe->GetRect(iframeRect);
+  
+    // offsets are always in appunits, they have
+    // nothing to do with the current transform
+    float app2dev;
+    app2dev = mDeviceContext->AppUnitsToDevUnits();
+    nsPoint s;
+    s.x = NSToIntRound(app2dev*aXOffset);
+    s.y = NSToIntRound(app2dev*aYOffset);
+    
     PRInt32 padx = width - iframeRect.width;
     PRInt32 pady = height - iframeRect.height;
 
-    return img->DrawTile(*this, mDrawingSurface,
-                         xOffset - iframeRect.x, yOffset - iframeRect.y,
-                         padx, pady,
-                         dr);
+    return img->DrawTile(*this, mDrawingSurface, s.x - iframeRect.x, s.y - iframeRect.y,
+                         padx, pady, *aTargetRect);
 }
 
 //
