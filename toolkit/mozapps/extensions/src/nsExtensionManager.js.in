@@ -4673,8 +4673,8 @@ ExtensionsDataSource.prototype = {
     
     var targetAppInfo = this.getTargetApplicationInfo(id, this);
     return makeItem(id, 
-                    this.getItemProperty(id, "installLocation"),
                     this.getItemProperty(id, "version"), 
+                    this.getItemProperty(id, "installLocation"),
                     targetAppInfo ? targetAppInfo.minVersion : "",
                     targetAppInfo ? targetAppInfo.maxVersion : "",
                     this.getItemProperty(id, "name"),
