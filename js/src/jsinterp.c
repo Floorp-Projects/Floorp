@@ -2449,6 +2449,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 if (!obj) {
                     /* End of property list -- terminate loop. */
                     rval = JSVAL_FALSE;
+#if JS_HAS_XML_SUPPORT
+                    foreach = JS_FALSE;
+#endif
                     goto end_forinloop;
                 }
 
