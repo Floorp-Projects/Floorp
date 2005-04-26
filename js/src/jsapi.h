@@ -1065,6 +1065,18 @@ JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
                          uintN *attrsp, JSBool *foundp);
 
 /*
+ * The same, but if the property is native, return its getter and setter via
+ * *getterp and *setterp, respectively (and only if the out parameter pointer
+ * is not null).
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_GetPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
+                                   const char *name,
+                                   uintN *attrsp, JSBool *foundp,
+                                   JSPropertyOp *getterp,
+                                   JSPropertyOp *setterp);
+
+/*
  * Set the attributes of a property on a given object.
  *
  * If the object does not have a property by that name, *foundp will be
@@ -1127,6 +1139,18 @@ extern JS_PUBLIC_API(JSBool)
 JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj,
                            const jschar *name, size_t namelen,
                            uintN *attrsp, JSBool *foundp);
+
+/*
+ * The same, but if the property is native, return its getter and setter via
+ * *getterp and *setterp, respectively (and only if the out parameter pointer
+ * is not null).
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_GetUCPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
+                                     const jschar *name, size_t namelen,
+                                     uintN *attrsp, JSBool *foundp,
+                                     JSPropertyOp *getterp,
+                                     JSPropertyOp *setterp);
 
 /*
  * Set the attributes of a property on a given object.
