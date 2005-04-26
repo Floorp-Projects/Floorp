@@ -1023,6 +1023,15 @@ DirectoryInstallLocation.prototype = {
   /**
    * See nsIExtensionManager.idl
    */
+  itemIsManagedIndependently: function(id) {
+    var itemLocation = this.location;
+    itemLocation.append(id);
+    return itemLocation.exists() && !itemLocation.isDirectory();      
+  },
+  
+  /**
+   * See nsIExtensionManager.idl
+   */
   getItemFile: function(id, filePath) {
     var itemLocation = this.getItemLocation(id).clone();
     var parts = filePath.split("/");
@@ -2197,7 +2206,25 @@ ExtensionManager.prototype = {
           callback(installManifest, installData.id, location, installData.type);
         }
         else {
-          LOG("... failure, item is not compatible");
+          /**
+           * Turns an error code into a message for logging
+           * @param   error
+           *          an Install Error code
+           * @returns A string message to be logged.
+           */
+          function translateErrorMessage(error) {
+            switch (error) {
+            case INSTALLERROR_INVALID_GUID:
+              return "Invalid GUID";
+            case INSTALLERROR_INVALID_VERSION:
+              return "Invalid Version";
+            case INSTALLERROR_INCOMPATIBLE_VERSION:
+              return "Incompatible Version";
+            }
+          }
+          LOG("... failure, item is not compatible, error: " + 
+              translateErrorMessage(installData.error));
+
           // Add the item to the Startup Cache anyway, so we don't re-detect it
           // every time the app starts.
           StartupCache.put(location, id, OP_NONE, true);
@@ -2326,10 +2353,12 @@ ExtensionManager.prototype = {
         if (entry.isDirectory()) {
           var installRDF = entry.clone();
           installRDF.append(FILE_INSTALL_MANIFEST);
-          if (!installRDF.exists()) 
+
+          var id = location.getIDForLocation(entry);
+          if (!installRDF.exists() && 
+              !location.itemIsManagedIndependently(id)) 
             continue;
           
-          var id = location.getIDForLocation(entry);
           actualItems[id] = entry;
         }
         else {
@@ -5053,7 +5082,7 @@ ExtensionsDataSource.prototype = {
    *          The GUID of the item to move
    */
   moveTop: function(id) {
-    var extensions = gRDF.GetResource("urn:mozilla:extension:root");
+    var extensions = gRDF.GetResource(RDFURI_ITEM_ROOT);
     var item = getResourceForID(id);
     var ctr = getContainer(this._inner, extensions);
     var index = ctr.IndexOf(item);
@@ -5070,7 +5099,7 @@ ExtensionsDataSource.prototype = {
    *          The GUID of the item to move
    */
   moveUp: function(id) {
-    var extensions = gRDF.GetResource("urn:mozilla:extension:root");
+    var extensions = gRDF.GetResource(RDFURI_ITEM_ROOT);
     var ctr = getContainer(this._inner, extensions);
     var item = getResourceForID(id);
     var index = ctr.IndexOf(item);
@@ -5087,7 +5116,7 @@ ExtensionsDataSource.prototype = {
    *          The GUID of the item to move
    */
   moveDown: function(id) {
-    var extensions = gRDF.GetResource("urn:mozilla:extension:root");
+    var extensions = gRDF.GetResource(RDFURI_ITEM_ROOT);
     var ctr = getContainer(this._inner, extensions);
     var item = getResourceForID(id);
     var index = ctr.IndexOf(item);
