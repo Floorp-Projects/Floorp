@@ -486,6 +486,11 @@ NS_IMETHODIMP nsAbBSDirectory::ModifyDirectory(nsIAbDirectory *directory, nsIAbD
     nsCOMPtr<nsIAbDirectory> modifiedDir;
     getDirectories.directories->GetElementAt (0, getter_AddRefs(modifiedDir));
 
+    // First tell the directory it's new name
+    rv = modifiedDir->SetDirName(description.get());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Then tell everyone else.
     nsCOMPtr<nsIAddrBookSession> abSession = 
               do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
 
