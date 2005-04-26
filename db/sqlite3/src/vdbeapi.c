@@ -624,6 +624,44 @@ int sqlite3_bind_parameter_index(sqlite3_stmt *pStmt, const char *zName){
 }
 
 /*
+** Transfer any existing parameter bindings from pOldStmt to pNewStmt.
+** They both must have the exact same number of parameters.  They must
+** both be created against the same database.  Neither must be
+** currently in a running state.  The bindings of pOldStmt are lost
+** after this.
+**/
+int sqlite3_transfer_bindings(
+  sqlite3_stmt *pOldStmt,
+  sqlite3_stmt *pNewStmt
+){
+  Vdbe *pold = (Vdbe*)pOldStmt;
+  Vdbe *pnew = (Vdbe*)pNewStmt;
+  int rc, i;
+
+  if( pold->db!=pnew->db ){
+    sqlite3Error(pold->db, SQLITE_MISUSE, 0);
+    return SQLITE_MISUSE;
+  }
+  if( pold==0 || pold->magic!=VDBE_MAGIC_RUN || pold->pc>=0 ){
+    sqlite3Error(pold->db, SQLITE_MISUSE, 0);
+    return SQLITE_MISUSE;
+  }
+  if( pnew==0 || pnew->magic!=VDBE_MAGIC_RUN || pnew->pc>=0 ){
+    sqlite3Error(pnew->db, SQLITE_MISUSE, 0);
+    return SQLITE_MISUSE;
+  }
+  if( pold->nVar != pnew->nVar ){
+    sqlite3Error(pold->db, SQLITE_MISUSE, 0);
+    return SQLITE_MISUSE;
+  }
+  for(i=0; i < pold->nVar; i++) {
+    pnew->aVar[i] = pold->aVar[i];
+    pold->aVar[i].flags = MEM_Null;
+  }
+  return SQLITE_OK;
+}
+
+/*
 ** Given a wildcard parameter name, return the set of indexes of the
 ** variables with that name.  If there are no variables with the given
 ** name, return 0.  Otherwise, return the number of indexes returned
