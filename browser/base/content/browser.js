@@ -2668,7 +2668,7 @@ function FillHistoryMenu(aParent, aMenu)
         case "forward":
           end  = ((count-index) > MAX_HISTORY_MENU_ITEMS) ? index + MAX_HISTORY_MENU_ITEMS : count;
           if ((index + 1) >= end) return false;
-          for (j = index + 1; j < end; j++)
+          for (j = index + 1; j <= end; j++)
             {
               entry = sessionHistory.getEntryAtIndex(j, false);
               if (entry)
