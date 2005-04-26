@@ -588,10 +588,9 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
   switch (tag)
   {
     case nsXPTType::T_I8:
-    case nsXPTType::T_U8:
     {
       if (!aParamInfo.IsOut()) {  // 'in'
-        aJValue.b = aVariant.val.u8;
+        aJValue.b = aVariant.val.i8;
         aMethodSig.Append('B');
       } else {  // 'inout' & 'out'
         if (aVariant.val.p) {
@@ -612,10 +611,11 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     break;
 
     case nsXPTType::T_I16:
-    case nsXPTType::T_U16:
+    case nsXPTType::T_U8:
     {
       if (!aParamInfo.IsOut()) {  // 'in'
-        aJValue.s = aVariant.val.u16;
+        aJValue.s = (tag == nsXPTType::T_I16) ? aVariant.val.i16 :
+                                                aVariant.val.u8;
         aMethodSig.Append('S');
       } else {  // 'inout' & 'out'
         if (aVariant.val.p) {
@@ -636,10 +636,11 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     break;
 
     case nsXPTType::T_I32:
-    case nsXPTType::T_U32:
+    case nsXPTType::T_U16:
     {
       if (!aParamInfo.IsOut()) {  // 'in'
-        aJValue.i = aVariant.val.u32;
+        aJValue.i = (tag == nsXPTType::T_I32) ? aVariant.val.i32 :
+                                                aVariant.val.u16;
         aMethodSig.Append('I');
       } else {  // 'inout' & 'out'
         if (aVariant.val.p) {
@@ -660,10 +661,11 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     break;
 
     case nsXPTType::T_I64:
-    case nsXPTType::T_U64:
+    case nsXPTType::T_U32:
     {
       if (!aParamInfo.IsOut()) {  // 'in'
-        aJValue.j = aVariant.val.u64;
+        aJValue.j = (tag == nsXPTType::T_I64) ? aVariant.val.i64 :
+                                                aVariant.val.u32;
         aMethodSig.Append('J');
       } else {  // 'inout' & 'out'
         if (aVariant.val.p) {
@@ -706,10 +708,13 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     }
     break;
 
+    // XXX how do we handle unsigned 64-bit values?
+    case nsXPTType::T_U64:
     case nsXPTType::T_DOUBLE:
     {
       if (!aParamInfo.IsOut()) {  // 'in'
-        aJValue.d = aVariant.val.d;
+        aJValue.d = (tag == nsXPTType::T_DOUBLE) ? aVariant.val.d :
+                                                   aVariant.val.u64;
         aMethodSig.Append('D');
       } else {  // 'inout' & 'out'
         if (aVariant.val.p) {
@@ -1041,22 +1046,21 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
   switch (tag)
   {
     case nsXPTType::T_I8:
-    case nsXPTType::T_U8:
       aRetvalSig.Append('B');
       break;
 
     case nsXPTType::T_I16:
-    case nsXPTType::T_U16:
+    case nsXPTType::T_U8:
       aRetvalSig.Append('S');
       break;
 
     case nsXPTType::T_I32:
-    case nsXPTType::T_U32:
+    case nsXPTType::T_U16:
       aRetvalSig.Append('I');
       break;
 
     case nsXPTType::T_I64:
-    case nsXPTType::T_U64:
+    case nsXPTType::T_U32:
       aRetvalSig.Append('J');
       break;
 
@@ -1064,6 +1068,7 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
       aRetvalSig.Append('F');
       break;
 
+    case nsXPTType::T_U64:
     case nsXPTType::T_DOUBLE:
       aRetvalSig.Append('D');
       break;
@@ -1128,57 +1133,69 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
   switch (tag)
   {
     case nsXPTType::T_I8:
+    {
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        *((PRInt8 *) aVariant.val.p) = aJValue.b;
+      } else if (aJValue.l) {  // 'inout' & 'out'
+        mJavaEnv->GetByteArrayRegion((jbyteArray) aJValue.l, 0, 1,
+                                     (PRInt8 *) aVariant.val.p);
+      }
+    }
+    break;
+
     case nsXPTType::T_U8:
-    {
-      if (aParamInfo.IsRetval()) {  // 'retval'
-        *((PRUint8 *) aVariant.val.p) = aJValue.b;
-      } else {  // 'inout' & 'out'
-        if (aJValue.l) {
-          mJavaEnv->GetByteArrayRegion((jbyteArray) aJValue.l, 0, 1,
-                                       (jbyte*) aVariant.val.p);
-        }
-      }
-    }
-    break;
-
     case nsXPTType::T_I16:
+    {
+      jshort value = 0;
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        value = aJValue.s;
+      } else if (aJValue.l) {  // 'inout' & 'out'
+        mJavaEnv->GetShortArrayRegion((jshortArray) aJValue.l, 0, 1, &value);
+      }
+
+      if (aVariant.val.p) {
+        if (tag == nsXPTType::T_U8)
+          *((PRUint8 *) aVariant.val.p) = value;
+        else
+          *((PRInt16 *) aVariant.val.p) = value;
+      }
+    }
+    break;
+
     case nsXPTType::T_U16:
-    {
-      if (aParamInfo.IsRetval()) {  // 'retval'
-        *((PRUint16 *) aVariant.val.p) = aJValue.s;
-      } else {  // 'inout' & 'out'
-        if (aJValue.l) {
-          mJavaEnv->GetShortArrayRegion((jshortArray) aJValue.l, 0, 1,
-                                        (jshort*) aVariant.val.p);
-        }
-      }
-    }
-    break;
-
     case nsXPTType::T_I32:
-    case nsXPTType::T_U32:
     {
+      jint value = 0;
       if (aParamInfo.IsRetval()) {  // 'retval'
-        *((PRUint32 *) aVariant.val.p) = aJValue.i;
-      } else {  // 'inout' & 'out'
-        if (aJValue.l) {
-          mJavaEnv->GetIntArrayRegion((jintArray) aJValue.l, 0, 1,
-                                      (jint*) aVariant.val.p);
-        }
+        value = aJValue.i;
+      } else if (aJValue.l) {  // 'inout' & 'out'
+        mJavaEnv->GetIntArrayRegion((jintArray) aJValue.l, 0, 1, &value);
+      }
+
+      if (aVariant.val.p) {
+        if (tag == nsXPTType::T_U16)
+          *((PRUint16 *) aVariant.val.p) = value;
+        else
+          *((PRInt32 *) aVariant.val.p) = value;
       }
     }
     break;
 
+    case nsXPTType::T_U32:
     case nsXPTType::T_I64:
-    case nsXPTType::T_U64:
     {
+      jlong value = 0;
       if (aParamInfo.IsRetval()) {  // 'retval'
-        *((PRUint64 *) aVariant.val.p) = aJValue.j;
-      } else {  // 'inout' & 'out'
-        if (aJValue.l) {
-          mJavaEnv->GetLongArrayRegion((jlongArray) aJValue.l, 0, 1,
-                                       (jlong*) aVariant.val.p);
-        }
+        value = aJValue.j;
+      } else if (aJValue.l) {  // 'inout' & 'out'
+        mJavaEnv->GetLongArrayRegion((jlongArray) aJValue.l, 0, 1, &value);
+      }
+
+      if (aVariant.val.p) {
+        if (tag == nsXPTType::T_U32)
+          *((PRUint32 *) aVariant.val.p) = value;
+        else
+          *((PRInt64 *) aVariant.val.p) = value;
       }
     }
     break;
@@ -1187,24 +1204,29 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       if (aParamInfo.IsRetval()) {  // 'retval'
         *((float *) aVariant.val.p) = aJValue.f;
-      } else {  // 'inout' & 'out'
-        if (aJValue.l) {
-          mJavaEnv->GetFloatArrayRegion((jfloatArray) aJValue.l, 0, 1,
-                                        (jfloat*) aVariant.val.p);
-        }
+      } else if (aJValue.l) {  // 'inout' & 'out'
+        mJavaEnv->GetFloatArrayRegion((jfloatArray) aJValue.l, 0, 1,
+                                      (jfloat*) aVariant.val.p);
       }
     }
     break;
 
+    // XXX how do we handle 64-bit values?
+    case nsXPTType::T_U64:
     case nsXPTType::T_DOUBLE:
     {
+      jdouble value = 0;
       if (aParamInfo.IsRetval()) {  // 'retval'
-        *((double *) aVariant.val.p) = aJValue.d;
-      } else {  // 'inout' & 'out'
-        if (aJValue.l) {
-          mJavaEnv->GetDoubleArrayRegion((jdoubleArray) aJValue.l, 0, 1,
-                                         (jdouble*) aVariant.val.p);
-        }
+        value = aJValue.d;
+      } else if (aJValue.l) {  // 'inout' & 'out'
+        mJavaEnv->GetDoubleArrayRegion((jdoubleArray) aJValue.l, 0, 1, &value);
+      }
+
+      if (aVariant.val.p) {
+        if (tag == nsXPTType::T_DOUBLE)
+          *((double *) aVariant.val.p) = value;
+        else
+          *((PRUint64 *) aVariant.val.p) = NS_STATIC_CAST(PRUint64, value);
       }
     }
     break;
@@ -1213,11 +1235,9 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       if (aParamInfo.IsRetval()) {  // 'retval'
         *((PRBool *) aVariant.val.p) = aJValue.z;
-      } else {  // 'inout' & 'out'
-        if (aJValue.l) {
-          mJavaEnv->GetBooleanArrayRegion((jbooleanArray) aJValue.l, 0, 1,
-                                          (jboolean*) aVariant.val.p);
-        }
+      } else if (aJValue.l) {  // 'inout' & 'out'
+        mJavaEnv->GetBooleanArrayRegion((jbooleanArray) aJValue.l, 0, 1,
+                                        (jboolean*) aVariant.val.p);
       }
     }
     break;
@@ -1230,23 +1250,21 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
           *((char *) aVariant.val.p) = aJValue.c;
         else
           *((PRUnichar *) aVariant.val.p) = aJValue.c;
-      } else {  // 'inout' & 'out'
-        if (aJValue.l) {
-          jchar* array = mJavaEnv->GetCharArrayElements((jcharArray) aJValue.l,
-                                                        nsnull);
-          if (!array) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
-
-          if (type.TagPart() == nsXPTType::T_CHAR)
-            *((char *) aVariant.val.p) = array[0];
-          else
-            *((PRUnichar *) aVariant.val.p) = array[0];
-
-          mJavaEnv->ReleaseCharArrayElements((jcharArray) aJValue.l, array,
-                                             JNI_ABORT);
+      } else if (aJValue.l) {  // 'inout' & 'out'
+        jchar* array = mJavaEnv->GetCharArrayElements((jcharArray) aJValue.l,
+                                                      nsnull);
+        if (!array) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          break;
         }
+
+        if (type.TagPart() == nsXPTType::T_CHAR)
+          *((char *) aVariant.val.p) = array[0];
+        else
+          *((PRUnichar *) aVariant.val.p) = array[0];
+
+        mJavaEnv->ReleaseCharArrayElements((jcharArray) aJValue.l, array,
+                                           JNI_ABORT);
       }
     }
     break;
@@ -1589,11 +1607,9 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       if (aParamInfo.IsRetval()) {  // 'retval'
         *((PRUint32 *) aVariant.val.p) = aJValue.i;
-      } else {  // 'inout' & 'out'
-        if (aJValue.l) {
-          mJavaEnv->GetIntArrayRegion((jintArray) aJValue.l, 0, 1,
-                                      (jint*) aVariant.val.p);
-        }
+      } else if (aJValue.l) {  // 'inout' & 'out'
+        mJavaEnv->GetIntArrayRegion((jintArray) aJValue.l, 0, 1,
+                                    (jint*) aVariant.val.p);
       }
     }
     break;
