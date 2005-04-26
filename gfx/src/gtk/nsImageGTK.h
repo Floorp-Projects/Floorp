@@ -190,7 +190,7 @@ private:
   inline void SetupGCForAlpha(GdkGC *aGC, PRInt32 aX, PRInt32 aY);
 
   void SlowTile(nsDrawingSurfaceGTK *aSurface, const nsRect &aTileRect,
-                PRInt32 aSXOffset, PRInt32 aSYOffset);
+                PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect& aRect, PRBool aIsValid);
 
   PRUint8      *mImageBits;
   GdkPixmap    *mImagePixmap;
