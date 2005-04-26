@@ -1196,7 +1196,9 @@ static void SortByZOrder(DisplayZTreeNode *aNode, nsVoidArray &aBuffer, nsVoidAr
         e = eNext;
       }
     }
-  } else if (aForceSort || !autoZIndex) {
+  } else if (aForceSort || !autoZIndex || aNode->mView->IsTopMost()) {
+    // We must do a sort now if we're going to update all the topmost bits
+    // below
     ApplyZOrderStableSort(aBuffer, aMergeTmp, sortStartIndex, sortEndIndex);
   }
 
