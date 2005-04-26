@@ -41,6 +41,7 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+OBJDIR          = $(shell cygpath -t mixed -ai $(DEPTH))
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -51,7 +52,7 @@ INSTALLER_URL = "http://ftp.mozilla.org/pub/mozilla.org/pub/mozilla/nightly/late
 endif
 
 installer:
-	$(PERL) $(srcdir)/makeall.pl -aurl $(INSTALLER_URL) 
+	$(PERL) $(srcdir)/makeall.pl -aurl $(INSTALLER_URL) -objdir $(OBJDIR) 
 
 include $(topsrcdir)/config/rules.mk
 
