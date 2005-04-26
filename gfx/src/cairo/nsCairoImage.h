@@ -88,6 +88,8 @@ public:
     NS_IMETHOD LockImagePixels(PRBool aMaskPixels);
     NS_IMETHOD UnlockImagePixels(PRBool aMaskPixels);
 
+    void UpdateFromImageData();
+
 protected:
     PRInt32 mWidth;
     PRInt32 mHeight;
@@ -97,13 +99,13 @@ protected:
     cairo_format_t mCairoFormat;
     // Where the mImageSurface data lives (in the mCairoFormat)
     PRUint32* mImageSurfaceBuf;
-    // Where gfxIImageFrame data lives temporarily during LockImagePixels
+    // Where gfxIImageFrame data lives while the image data is dirty
+    // (from LockImagePixels(Alpha) to the next paint)
     PRUint8* mImageSurfaceData;
     PRUint8* mImageSurfaceAlpha;
 
     PRUint8 mAlphaDepth;
-    PRPackedBool mHadAnyAlphaValues;
-    PRPackedBool mHadAnyPixelValues;
+    PRPackedBool mHadAnyData;
 };
 
 #endif // NSCAIROIMAGE__H__
