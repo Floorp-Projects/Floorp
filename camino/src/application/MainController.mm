@@ -203,6 +203,10 @@ const int kReuseWindowOnAE = 2;
   // initialize prefs if we haven't already.
   PreferenceManager *pm = [PreferenceManager sharedInstance];
 
+  // To work around a bug on Tiger where the view hookup order has been changed from postfix to prefix
+  // order, we need to set a user default to return to the old behavior.
+  [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"NSViewSetAncestorsWindowFirst"];
+  
   // register for window layering changes, so that we can update the bookmarks menu
   NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
   [notificationCenter addObserver:self selector:@selector(windowLayeringDidChange:) name:NSWindowDidBecomeKeyNotification object:nil];
