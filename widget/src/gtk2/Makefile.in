@@ -102,6 +102,7 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_GTK2_LIBS)
 
 EXPORTS		= \
+                nsIGdkPixbufImage.h \
 		mozdrawingarea.h \
 		mozcontainer.h \
 		$(NULL)

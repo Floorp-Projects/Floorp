@@ -47,8 +47,6 @@
 
 #include "nspr.h"
 
-#include "nsIGdkPixbufImage.h"
-
 #define IsFlagSet(a,b) ((a) & (b))
 
 #define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
