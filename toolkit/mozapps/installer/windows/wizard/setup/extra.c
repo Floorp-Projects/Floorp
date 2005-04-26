@@ -7889,6 +7889,8 @@ HRESULT ParseInstallIni()
 {
   LOGFONT lf;
   NONCLIENTMETRICS ncm;
+  char fontName[MAX_BUF];
+  char fontSize[MAX_BUF];
 
   /* get system font */
   memset(&ncm, 0, sizeof(ncm));
@@ -7905,7 +7907,21 @@ HRESULT ParseInstallIni()
   lf.lfHeight = -MulDiv(atoi(sgInstallGui.szFontSize), GetDeviceCaps(GetDC(NULL), LOGPIXELSY), 72);
   lf.lfCharSet = atoi(sgInstallGui.szCharSet);
   sgInstallGui.definedFont = CreateFontIndirect( &lf ); 
-  
+
+  /* get welcome title font */
+  GetPrivateProfileString("General", "WELCOMETITLEFONTNAME", "", fontName, sizeof(fontName), szFileIniInstall);
+#ifdef MOZ_THUNDERBIRD
+  GetPrivateProfileString("General", "WELCOMETITLEFONTSIZE_THUNDERBIRD", "", fontSize, sizeof(fontSize), szFileIniInstall);
+#else
+  GetPrivateProfileString("General", "WELCOMETITLEFONTSIZE", "", fontSize, sizeof(fontSize), szFileIniInstall);
+#endif
+  memset(&lf, 0, sizeof(lf));
+  strcpy(lf.lfFaceName, fontName);
+  lf.lfHeight = -MulDiv(atoi(fontSize), GetDeviceCaps(GetDC(NULL), LOGPIXELSY), 72);
+  lf.lfWeight = GetPrivateProfileInt("General", "WELCOMETITLEFONTWEIGHT", 0, szFileIniInstall);
+  lf.lfCharSet = atoi(sgInstallGui.szCharSet);
+  sgInstallGui.welcomeTitleFont = CreateFontIndirect( &lf ); 
+
   GetPrivateProfileString("General", "OK_", "", sgInstallGui.szOk_, sizeof(sgInstallGui.szOk_), szFileIniInstall);
   GetPrivateProfileString("General", "OK", "", sgInstallGui.szOk, sizeof(sgInstallGui.szOk), szFileIniInstall);
   GetPrivateProfileString("General", "CANCEL_", "", sgInstallGui.szCancel_, sizeof(sgInstallGui.szCancel_), szFileIniInstall);
@@ -9248,6 +9264,7 @@ void DeInitialize()
   FreeMemory(&szEStringNull);
   DeleteObject(sgInstallGui.systemFont);
   DeleteObject(sgInstallGui.definedFont);
+  DeleteObject(sgInstallGui.welcomeTitleFont);
 
   FreeLibrary(hSetupRscInst);
   if (hGREAppInstallerProxyDLL != NULL) 

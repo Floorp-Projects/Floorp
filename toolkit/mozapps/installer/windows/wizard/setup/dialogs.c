@@ -233,15 +233,6 @@ void InitSequence(HINSTANCE hInstance)
   psh.nPages            = count;
 
 
-  // Create the Font for Intro/End page headers.
-#ifdef MOZ_THUNDERBIRD
-  // The title text "Welcome to Mozilla Thunderbird" is too large to fit on the screen with a 14 pt
-  // font. For now, use a 12 pt font to prevent the text from getting clipped because it is too big.
-  sgInstallGui.welcomeTitleFont = MakeFont(TEXT("Trebuchet MS Bold"), 12, FW_BOLD);
-#else
-  sgInstallGui.welcomeTitleFont = MakeFont(TEXT("Trebuchet MS Bold"), 14, FW_BOLD);
-#endif
-
   // Start the Wizard.
   if (psh.nPages > 0) {
     PropertySheet(&psh);
@@ -282,8 +273,6 @@ void InitSequence(HINSTANCE hInstance)
       ProcessFileOpsForAll(T_DEPEND_REBOOT);
     }
   }
-
-  DeleteObject(sgInstallGui.welcomeTitleFont);
 }
 
 HFONT MakeFont(TCHAR* aFaceName, int aFontSize, LONG aWeight) 
@@ -356,14 +345,9 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   char szBuf[MAX_BUF];
   LPNMHDR notifyMessage;
-  HWND hControl;
-  
+
   switch(msg) {
   case WM_INITDIALOG:
-    // The header on the welcome page uses a larger font.
-    hControl = GetDlgItem(hDlg, IDC_STATIC_TITLE);
-    SendMessage(hControl, WM_SETFONT, (WPARAM)sgInstallGui.welcomeTitleFont, (LPARAM)TRUE);
-
     // UI Text, from localized config files
     wsprintf(szBuf, diWelcome.szMessageWelcome, sgProduct.szProductName);
     SetDlgItemText(hDlg, IDC_STATIC_TITLE, szBuf);
@@ -374,7 +358,9 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
     wsprintf(szBuf, diWelcome.szMessage3, sgProduct.szProductName);
     SetDlgItemText(hDlg, IDC_STATIC3, szBuf);
 
-    SendDlgItemMessage(hDlg, IDC_STATIC_TITLE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    // The header on the welcome page uses another font.
+    SendDlgItemMessage(hDlg, IDC_STATIC_TITLE, WM_SETFONT, (WPARAM)sgInstallGui.welcomeTitleFont, 0L);
+
     SendDlgItemMessage(hDlg, IDC_STATIC0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     SendDlgItemMessage(hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     SendDlgItemMessage(hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
@@ -2039,7 +2025,6 @@ BOOL InstallFiles(HWND hDlg)
 LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   LPNMHDR notifyMessage;
-  char szBuf[MAX_BUF];
 
   switch (msg) {
   case WM_INITDIALOG:
@@ -2118,7 +2103,6 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
 {
   char szBuf[MAX_BUF];
   LPNMHDR notifyMessage;
-  HWND ctrl;
   static BOOL launchAppChecked = TRUE;
   static BOOL resetHomepageChecked = TRUE;
   DWORD result;
@@ -2126,10 +2110,6 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
   
   switch(msg) {
   case WM_INITDIALOG:
-    // The header on the welcome page uses a larger font.
-    ctrl = GetDlgItem(hDlg, IDC_STATIC_TITLE);
-    SendMessage(ctrl, WM_SETFONT, (WPARAM)sgInstallGui.welcomeTitleFont, (LPARAM)TRUE);
-
     // UI Text, from localized config files
     SetDlgItemText(hDlg, IDC_STATIC_TITLE, diInstallSuccessful.szMessageHeader);
     wsprintf(szBuf, diInstallSuccessful.szMessage0, sgProduct.szProductName);
@@ -2139,7 +2119,9 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
     SetDlgItemText(hDlg, IDC_START_APP, szBuf);
     SetDlgItemText(hDlg, IDC_RESET_HOMEPAGE, diInstallSuccessful.szResetHomepage);
 
-    SendDlgItemMessage(hDlg, IDC_STATIC_TITLE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    // The header on the welcome page uses another font.
+    SendDlgItemMessage(hDlg, IDC_STATIC_TITLE, WM_SETFONT, (WPARAM)sgInstallGui.welcomeTitleFont, 0L);
+
     SendDlgItemMessage(hDlg, IDC_STATIC0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     SendDlgItemMessage(hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     SendDlgItemMessage(hDlg, IDC_START_APP, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
