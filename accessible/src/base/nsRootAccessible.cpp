@@ -614,8 +614,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
                               treeItemAccessible, nsnull);
     return NS_OK;
   }
+  else 
 #endif
-  else if (eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
+  if (eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
     nsCOMPtr<nsIAccessible> containerAccessible = accessible;
     PRUint32 containerState = 0;
     do {
