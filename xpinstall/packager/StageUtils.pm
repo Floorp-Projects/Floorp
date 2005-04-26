@@ -322,6 +322,8 @@ sub GetProductBuildID
       $buildID =~ s/..*$aDefine\s+//;
       # strip out any quote characters
       $buildID =~ s/\"//g;
+      # get rid of whitespace - chomp misses ^M on cygwin
+      $buildID =~ s/\s//sg;
       chomp ($buildID);
     }
   }
