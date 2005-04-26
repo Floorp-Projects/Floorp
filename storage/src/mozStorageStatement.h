@@ -70,6 +70,9 @@ protected:
     PRUint32 mResultColumnCount;
     nsStringArray mColumnNames;
     PRBool mExecuting;
+
+    // recreate the statement, and transfer bindings
+    nsresult Recreate();
 };
 
 #endif /* _MOZSTORAGESTATEMENT_H_ */

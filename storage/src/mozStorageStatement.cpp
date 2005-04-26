@@ -260,6 +260,8 @@ mozStorageStatement::Reset()
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
 
+    PR_LOG(gStorageLog, PR_LOG_DEBUG, ("Resetting statement: '%s'", nsPromiseFlatCString(mStatementString).get()));
+
     sqlite3_reset(mDBStatement);
     mExecuting = PR_FALSE;
 
@@ -444,16 +446,22 @@ mozStorageStatement::ExecuteStep(PRBool *_retval)
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
     nsresult rv;
 
+    if (mExecuting == PR_FALSE) {
+        // check if we need to recreate this statement before executing
+        if (sqlite3_expired(mDBStatement)) {
+            PR_LOG(gStorageLog, PR_LOG_DEBUG, ("Statement expired, recreating before step"));
+            rv = Recreate();
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+    }
+
     int nRetries = 0;
 
     while (nRetries < 2) {
         int srv = sqlite3_step (mDBStatement);
 
 #ifdef PR_LOGGING
-        if (((srv == SQLITE_SCHEMA || srv == SQLITE_ERROR) && nRetries != 0) ||
-            (srv != SQLITE_SCHEMA &&
-             srv != SQLITE_ROW &&
-             srv != SQLITE_DONE))
+        if (srv != SQLITE_ROW && srv != SQLITE_DONE)
         {
             nsCAutoString errStr;
             mDBConnection->GetLastErrorString(errStr);
@@ -478,43 +486,33 @@ mozStorageStatement::ExecuteStep(PRBool *_retval)
             mExecuting = PR_FALSE;
             return NS_ERROR_FAILURE;
         } else if (srv == SQLITE_SCHEMA) {
-            // if we're already mid-execute, we can't do much
-            // to fix SQLITE_SCHEMA errors, so we just pass them
-            // back.
-            if (mExecuting == PR_TRUE) {
-                mExecuting = PR_FALSE;
-                return NS_ERROR_FAILURE;
-            }
-
-            // otherwise, we reset the statement and try again
-            rv = Initialize(mDBConnection, mStatementString);
-            NS_ENSURE_SUCCESS(rv, rv);
-            nRetries++;
+            // step should never return SQLITE_SCHEMA
+            NS_NOTREACHED("sqlite3_step returned SQLITE_SCHEMA!");
+            return NS_ERROR_FAILURE;
         } else if (srv == SQLITE_ERROR) {
-            // so we may end up with a SQLITE_SCHEMA only after
-            // we finalize, because SQLite's error reporting story
+            // so we may end up with a SQLITE_ERROR/SQLITE_SCHEMA only after
+            // we reset, because SQLite's error reporting story
             // sucks.
             if (mExecuting == PR_TRUE) {
+                PR_LOG(gStorageLog, PR_LOG_ERROR, ("SQLITE_ERROR after mExecuting was true!"));
+
                 mExecuting = PR_FALSE;
                 return NS_ERROR_FAILURE;
             }
 
-            srv = sqlite3_finalize(mDBStatement);
-            mDBStatement = nsnull;
-
-            rv = Initialize(mDBConnection, mStatementString);
-            NS_ENSURE_SUCCESS(rv, rv);
-
+            srv = sqlite3_reset(mDBStatement);
             if (srv == SQLITE_SCHEMA) {
+                rv = Recreate();
+                NS_ENSURE_SUCCESS(rv, rv);
+
                 nRetries++;
             } else {
                 return NS_ERROR_FAILURE;
             }
-
         } else {
             // something that shouldn't happen happened
             NS_ERROR ("sqlite3_step returned an error code we don't know about!");
-        } 
+        }
     }
 
     // shouldn't get here
@@ -538,6 +536,31 @@ mozStorageStatement::GetState(PRInt32 *_retval)
         *_retval = MOZ_STORAGE_STATEMENT_EXECUTING;
     } else {
         *_retval = MOZ_STORAGE_STATEMENT_READY;
+    }
+
+    return NS_OK;
+}
+
+nsresult
+mozStorageStatement::Recreate()
+{
+    nsresult rv;
+    int srv;
+    sqlite3_stmt *savedStmt = mDBStatement;
+    mDBStatement = nsnull;
+    rv = Initialize(mDBConnection, mStatementString);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // copy over the param bindings
+    srv = sqlite3_transfer_bindings(savedStmt, mDBStatement);
+
+    // we're always going to finalize this, so no need to
+    // error check
+    sqlite3_finalize(savedStmt);
+
+    if (srv != SQLITE_OK) {
+        PR_LOG(gStorageLog, PR_LOG_ERROR, ("sqlite3_transfer_bindings returned: %d", srv));
+        return NS_ERROR_FAILURE;
     }
 
     return NS_OK;
