@@ -1684,7 +1684,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 void nsImageGTK::TilePixmap(GdkPixmap *src, GdkPixmap *dest, 
                             PRInt32 aSXOffset, PRInt32 aSYOffset,
                             const nsRect &destRect, 
-                            const nsRect &clipRect, PRBool useClip)
+                            const nsRect &clipRect, PRBool aHaveClip)
 {
   GdkGC *gc;
   GdkGCValues values;
@@ -1697,7 +1697,7 @@ void nsImageGTK::TilePixmap(GdkPixmap *src, GdkPixmap *dest,
   valuesMask = GdkGCValuesMask(GDK_GC_FILL | GDK_GC_TILE | GDK_GC_TS_X_ORIGIN | GDK_GC_TS_Y_ORIGIN);
   gc = gdk_gc_new_with_values(src, &values, valuesMask);
 
-  if (useClip) {
+  if (aHaveClip) {
     GdkRectangle gdkrect = {clipRect.x, clipRect.y, clipRect.width, clipRect.height};
     gdk_gc_set_clip_rectangle(gc, &gdkrect);
   }
@@ -1718,7 +1718,8 @@ void nsImageGTK::TilePixmap(GdkPixmap *src, GdkPixmap *dest,
 
 void nsImageGTK::SlowTile(nsDrawingSurfaceGTK *aSurface,
                           const nsRect &aTileRect,
-                          PRInt32 aSXOffset, PRInt32 aSYOffset)
+                          PRInt32 aSXOffset, PRInt32 aSYOffset,
+                          const nsRect& aClipRect, PRBool aHaveClip)
 {
   GdkPixmap *tileImg;
   GdkPixmap *tileMask;
@@ -1730,6 +1731,7 @@ void nsImageGTK::SlowTile(nsDrawingSurfaceGTK *aSurface,
 #ifdef MOZ_WIDGET_GTK2
   gdk_drawable_set_colormap(GDK_DRAWABLE(tileImg), gdk_rgb_get_colormap());
 #endif
+
   TilePixmap(mImagePixmap, tileImg, aSXOffset, aSYOffset, tmpRect,
              tmpRect, PR_FALSE);
 
@@ -1743,10 +1745,16 @@ void nsImageGTK::SlowTile(nsDrawingSurfaceGTK *aSurface,
   gdk_gc_set_clip_mask(fgc, (GdkBitmap*)tileMask);
   gdk_gc_set_clip_origin(fgc, aTileRect.x, aTileRect.y);
 
+  nsRect drawRect = aTileRect;
+  if (aHaveClip) {
+    drawRect.IntersectRect(drawRect, aClipRect);
+  }
+
   // and copy it back
-  gdk_window_copy_area(aSurface->GetDrawable(), fgc, aTileRect.x,
-                       aTileRect.y, tileImg, 0, 0,
-                       aTileRect.width, aTileRect.height);
+  gdk_window_copy_area(aSurface->GetDrawable(), fgc, drawRect.x,
+                       drawRect.y, tileImg,
+                       drawRect.x - aTileRect.x, drawRect.y - aTileRect.y,
+                       drawRect.width, drawRect.height);
   gdk_gc_unref(fgc);
 
   gdk_pixmap_unref(tileImg);
@@ -1843,9 +1851,16 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     return NS_OK;
   }
 
+  nsRect clipRect;
+  PRBool isNonEmpty;
+  PRBool haveClip = NS_SUCCEEDED(aContext.GetClipRect(clipRect, isNonEmpty));
+  if (haveClip && !isNonEmpty) {
+    return NS_OK;
+  }
+    
   if (mAlphaDepth == 1) {
     if (sNeedSlowTile) {
-      SlowTile(drawing, aTileRect, aSXOffset, aSYOffset);
+      SlowTile(drawing, aTileRect, aSXOffset, aSYOffset, clipRect, haveClip);
       return NS_OK;
     }
 
@@ -1864,6 +1879,13 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
                                  GDK_GC_TS_X_ORIGIN | GDK_GC_TS_Y_ORIGIN);
     tileGC = gdk_gc_new_with_values(drawing->GetDrawable(), &values, valuesMask);
     
+    if (haveClip) {
+      GdkRectangle gdkrect = {clipRect.x + aTileRect.x - aSXOffset,
+                              clipRect.y + aTileRect.y - aSYOffset,
+                              clipRect.width, clipRect.height};
+      gdk_gc_set_clip_rectangle(tileGC, &gdkrect);
+    }
+
     gdk_draw_rectangle(drawing->GetDrawable(), tileGC, PR_TRUE,
                        aTileRect.x, aTileRect.y,
                        aTileRect.width, aTileRect.height);
@@ -1878,15 +1900,9 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
 
     gdk_gc_unref(tileGC);
   } else {
-
     // In the non-alpha case, gdk can tile for us
-
-    nsRect clipRect;
-    PRBool isValid;
-    aContext.GetClipRect(clipRect, isValid);
-
     TilePixmap(mImagePixmap, drawing->GetDrawable(), aSXOffset, aSYOffset,
-               aTileRect, clipRect, PR_FALSE);
+               aTileRect, clipRect, haveClip);
   }
 
   mFlags = 0;
