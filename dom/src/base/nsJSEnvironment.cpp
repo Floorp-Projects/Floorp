@@ -848,7 +848,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
       ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
                                               (JSObject *)aScopeObject,
                                               jsprin,
-                                              (jschar*)(const PRUnichar*)PromiseFlatString(aScript).get(),
+                                              (jschar*)PromiseFlatString(aScript).get(),
                                               aScript.Length(),
                                               aURL,
                                               aLineNo,
@@ -1028,7 +1028,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
       ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
                                               (JSObject *)aScopeObject,
                                               jsprin,
-                                              (jschar*)(const PRUnichar*)PromiseFlatString(aScript).get(),
+                                              (jschar*)PromiseFlatString(aScript).get(),
                                               aScript.Length(),
                                               aURL,
                                               aLineNo,
@@ -1280,7 +1280,7 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
   JSFunction* fun =
       ::JS_CompileUCFunctionForPrincipals(mContext, target, jsprin,
                                           charName, 1, argList,
-                                          (jschar*)(const PRUnichar*)PromiseFlatString(aBody).get(),
+                                          (jschar*)PromiseFlatString(aBody).get(),
                                           aBody.Length(),
                                           aURL, aLineNo);
 
@@ -1332,7 +1332,7 @@ nsJSContext::CompileFunction(void* aTarget,
       ::JS_CompileUCFunctionForPrincipals(mContext, target, jsprin,
                                           PromiseFlatCString(aName).get(),
                                           aArgCount, aArgArray,
-                                          (jschar*)(const PRUnichar*)PromiseFlatString(aBody).get(),
+                                          (jschar*)PromiseFlatString(aBody).get(),
                                           aBody.Length(),
                                           aURL, aLineNo);
 
@@ -2022,9 +2022,18 @@ DOMGCCallback(JSContext *cx, JSGCStatus status)
 {
   if (status == JSGC_BEGIN && PR_GetCurrentThread() != gDOMThread)
     return JS_FALSE;
+
+  JSBool result = gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
+
+  // XPCJSRuntime::GCCallback does marking from the JSGC_MARK_END callback.
+  // we need to call EndGCMark *after* marking is finished.
+  // XXX This relies on our callback being registered after
+  // XPCJSRuntime's, although if they were registered the other way
+  // around the ordering there would be correct.
   if (status == JSGC_MARK_END)
     nsDOMClassInfo::EndGCMark();
-  return gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
+
+  return result;
 }
 
 //static
@@ -2067,7 +2076,6 @@ nsJSEnvironment::Init()
   // Let's make sure that our main thread is the same as the xpcom main thread.
   {
     nsCOMPtr<nsIThread> t;
-    nsresult rv;
     PRThread* mainThread;
     rv = nsIThread::GetMainThread(getter_AddRefs(t));
     NS_ASSERTION(NS_SUCCEEDED(rv) && t, "bad");
@@ -2098,6 +2106,7 @@ nsJSEnvironment::Init()
   if (manager) {
     PRBool started = PR_FALSE;
     rv = manager->StartupLiveConnect(sRuntime, started);
+    // XXX Did somebody mean to check |rv| ?
   }
 #endif /* OJI */
 
