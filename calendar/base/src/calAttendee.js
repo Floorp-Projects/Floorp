@@ -66,7 +66,7 @@ calAttendeeClassInfo = {
 
 calAttendee.prototype = {
     QueryInterface: function (aIID) {
-        if (aIID.equals(Components.interfaces.nsIClassInfo)
+        if (aIID.equals(Components.interfaces.nsIClassInfo))
             return calAttendeeClassInfo;
 
         if (!aIID.equals(Components.interfaces.nsISupports) &&
