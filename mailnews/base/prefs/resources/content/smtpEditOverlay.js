@@ -126,6 +126,7 @@ function disableIfLocked( prefstrArray )
         document.getElementById("smtp.neverSecure").setAttribute("disabled", "true");
         document.getElementById("smtp.sometimesSecure").setAttribute("disabled", "true");
         document.getElementById("smtp.alwaysSecure").setAttribute("disabled", "true");
+        document.getElementById("smtp.alwaysSmtpSSL").setAttribute("disabled", "true");
       }
       else
         element.setAttribute("disabled", "true");
