@@ -1349,32 +1349,43 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   // Compute final height
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
     if (NS_FRAME_IS_COMPLETE(aState.mReflowStatus)) {
-      // Calculate the total unconstrained height including borders and padding. A continuation 
-      // will have the same value as the first-in-flow, since the reflow state logic is based on
-      // style and doesn't alter mComputedHeight based on prev-in-flows.
-      aMetrics.height = borderPadding.top + aReflowState.mComputedHeight + borderPadding.bottom;
+      // Figure out how much of the computed height should be
+      // applied to this frame.
+      nscoord computedHeightLeftOver = aReflowState.mComputedHeight;
       if (mPrevInFlow) {
-        // Reduce the height by the height of prev-in-flows. The last-in-flow will automatically
-        // pick up the bottom border/padding, since it was part of the original aMetrics.height.
+        // Reduce the height by the computed height of prev-in-flows.
         for (nsIFrame* prev = mPrevInFlow; prev; prev = prev->GetPrevInFlow()) {
-          aMetrics.height -= prev->GetRect().height;
-          // XXX: All block level next-in-flows have borderPadding.top applied to them (bug 174688). 
-          // The following should be removed when this gets fixed. bug 174688 prevents us from honoring 
-          // a style height (exactly) and this hack at least compensates by increasing the height by the
-          // excessive borderPadding.top.
-          aMetrics.height += borderPadding.top;
+          nscoord contentHeight = prev->GetRect().height;
+          if (prev == mPrevInFlow) {
+            // subtract off the style top borderpadding to get the
+            // content height
+            contentHeight -= aReflowState.mComputedBorderPadding.top;
+          }
+          computedHeightLeftOver -= contentHeight;
         }
-        aMetrics.height = PR_MAX(0, aMetrics.height);
+        // We may have stretched the frame beyond its computed height. Oh well.
+        computedHeightLeftOver = PR_MAX(0, computedHeightLeftOver);
       }
-      if (aMetrics.height > aReflowState.availableHeight) {
-        // Take up the available height; continuations will take up the rest.
+
+      aMetrics.height = borderPadding.top + computedHeightLeftOver + borderPadding.bottom;
+      if (computedHeightLeftOver > 0 &&
+          aMetrics.height > aReflowState.availableHeight) {
+        // We don't fit and we consumed some of the computed height,
+        // so we should consume all the available height and then
+        // break.  If our bottom border/padding straddles the break
+        // point, then this will increase our height and push the
+        // border/padding to the next page/column.
         aMetrics.height = aReflowState.availableHeight;
-        aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
+        aState.mReflowStatus |= NS_FRAME_NOT_COMPLETE;
       }
     }
     else {
       // Use the current height; continuations will take up the rest.
-      aMetrics.height = aState.mY + nonCarriedOutVerticalMargin;
+      // Do extend the height to at least consume the available
+      // height, otherwise our left/right borders (for example) won't
+      // extend all the way to the break.
+      aMetrics.height = PR_MAX(aReflowState.availableHeight,
+                               aState.mY + nonCarriedOutVerticalMargin);
     }
 
     // Don't carry out a bottom margin when our height is fixed.

@@ -70,6 +70,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mFlags(0),
     mFloatBreakType(NS_STYLE_CLEAR_NONE)
 {
+  SetFlag(BRS_ISFIRSTINFLOW, aFrame->GetPrevInFlow() == nsnull);
+
   const nsMargin& borderPadding = BorderPadding();
 
   if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
