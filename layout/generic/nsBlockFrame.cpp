@@ -4941,10 +4941,12 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
                 // down in our descendants.
                 NS_ASSERTION(nsLayoutUtils::IsProperAncestorFrame(prevBlock, fpif),
                              "bad prev-in-flow ancestor chain");
-                // Find the first ancestor of f's prev-in-flow that has a next in flow.
+                // Find the first ancestor of f's prev-in-flow that has a next in flow
+                // that can contain the float.
                 // That next in flow should become f's parent.
                 nsIFrame* fpAncestor;
-                for (fpAncestor = fpif->GetParent(); !fpAncestor->GetNextInFlow();
+                for (fpAncestor = fpif->GetParent();
+                     !fpAncestor->GetNextInFlow() || !fpAncestor->IsFloatContainingBlock();
                      fpAncestor = fpAncestor->GetParent())
                   ;
                 if (fpAncestor == prevBlock) {
