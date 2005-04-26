@@ -187,10 +187,13 @@ function calendarInit()
    prepareCalendarToDoUnifinder();
    
    update_date();
-   	
+
    checkForMailNews();
 
-   updateColors();
+   initCalendarManager();
+
+   //XXX Reimplement this function so that eventboxes will be colored
+   //updateColors();
 }
 
 function updateColors()
@@ -655,39 +658,16 @@ function newToDoCommand()
   newToDo( null, null ); // new task button defaults to undated todo
 }
 
-function getCalendar()
-{
-   var calendarList = document.getElementById("list-calendars-listbox");
-   try {
-       var selectedCalendar = calendarList.selectedItem.calendar;
-       return selectedCalendar;
-   } catch(e) {
-       newCalendarDialog();
-       selectedCalendar = calendarList.selectedItem.calendar;
-       return selectedCalendar;
-   }
-}
-
 function newCalendarDialog()
 {
-    openCalendarWizard(afterCreateWizardFinish);
+    openCalendarWizard();
 }
 
-var gDisplayComposite;
-
-function getDisplayComposite()
+function editCalendarDialog(event)
 {
-    if (!gDisplayComposite) {
-       gDisplayComposite = Components.classes["@mozilla.org/calendar/calendar;1?type=composite"]
-                                     .createInstance(Components.interfaces.calICompositeCalendar);
-       var calMgr = getCalendarManager();
-       var calList = calMgr.getCalendars({});
-       for (i in calList) {
-           gDisplayComposite.addCalendar(calList[i]);
-       }
-    }
-    return gDisplayComposite;
+    openCalendarProperties(document.popupNode.calendar, null);
 }
+
 
 function appendCalendars(to, froms, listener)
 {
@@ -1201,7 +1181,7 @@ function publishEntireCalendarDialogResponse( CalendarPublishObject )
 {
     var icsURL = makeURL(CalendarPublishObject.remotePath);
 
-    var oldCalendar = getCalendar(); // get the currently selected calendar
+    var oldCalendar = getDefaultCalendar(); // get the currently selected calendar
 
     // create an ICS calendar, but don't register it
     var calManager = getCalendarManager();
@@ -1209,7 +1189,7 @@ function publishEntireCalendarDialogResponse( CalendarPublishObject )
         var newCalendar = calManager.createCalendar(oldCalendar.name, "ics", icsURL);
     } catch (ex) {
         dump(ex);
-        return false;
+        return;
     }
 
     var getListener = {
@@ -1435,26 +1415,6 @@ function CalendarToolboxCustomizeDone(aToolboxChanged)
   // XXX Shouldn't have to do this, but I do
   window.focus();
 }
-
-/* Called from doCreateWizardFinished after the calendar is created. */
-function afterCreateWizardFinish(newCalendar)
-{
-    addCalendarToUI(window.opener.document, newCalendar);
-}
-
-function addCalendarToUI(doc, calendar)
-{
-    var listItem = doc.createElement("listitem");
-    var listCell = doc.createElement("listcell");
-    listCell.setAttribute("label", calendar.name);
-    listItem.appendChild(listCell);
-    listItem.calendar = calendar;
-    var calendarList = doc.getElementById("list-calendars-listbox");
-    calendarList.appendChild(listItem);
-    if (calendarList.selectedIndex == -1)
-        calendarList.selectedIndex = 0;
-}
-
 
 /**
  * Pick whichever of "black" or "white" will look better when used as a text

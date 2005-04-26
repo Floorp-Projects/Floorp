@@ -39,15 +39,39 @@
  * Utility functions used by all calendar hosts (Sunbird, Lightning, etc.).
  * Functions in this file must _not_ depend on functions in any other files.
  */
-
+ 
 function getCalendarManager()
 {
-    return Components.classes["@mozilla.org/calendar/manager;1"].getService(Components.interfaces.calICalendarManager);
+    var calendarManager = Components.classes["@mozilla.org/calendar/manager;1"]
+                                    .getService(Components.interfaces.calICalendarManager);
+    return calendarManager;
+}
+
+var gDisplayComposite = null;
+function getDisplayComposite()
+{
+    if (!gDisplayComposite) {
+       gDisplayComposite = Components.classes["@mozilla.org/calendar/calendar;1?type=composite"]
+                                     .createInstance(Components.interfaces.calICompositeCalendar);
+       var calMgr = getCalendarManager();
+       var calList = calMgr.getCalendars({});
+       for (i in calList) {
+           gDisplayComposite.addCalendar(calList[i]);
+       }
+    }
+    return gDisplayComposite;
 }
 
 function openCalendarWizard(callback)
 {
     openDialog("chrome://calendar/content/calendarCreation.xul", "caEditServer", "chrome,titlebar,modal", callback);
+}
+
+function openCalendarProperties(aCalendar, callback)
+{
+    openDialog("chrome://calendar/content/calendarProperties.xul",
+               "caEditServer", "chrome,titlebar,modal",
+               {calendar: aCalendar, onOk: callback});
 }
 
 function makeURL(uriString)

@@ -258,7 +258,7 @@ var calendarViewDNDObserver = {
               }
             }
           }
-          getCalendar().getItem(dropEvent.id, operationListener);
+          getDisplayComposite().getItem(dropEvent.id, operationListener);
         } else {
           dump("failed\n");
         }

@@ -101,13 +101,9 @@
   <command id="modify_todo_command" oncommand="modifyToDoCommand( event )"/>
   <command id="delete_todo_command" oncommand="deleteToDoCommand()" disabled="true"/>
 
-  <command id="new_local_calendar_command" oncommand="newCalendarDialog()"/>
-  <command id="open_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchOpenCalendarFileDialog()"/>
-  <command id="edit_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>
-  <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddRemoteCalendarDialog()"/>
-  <command id="edit_server_command" oncommand="gCalendarWindow.calendarManager.launchEditRemoteCalendarDialog()"/>
-  <command id="delete_server_command" oncommand="deleteCalendar()"/>
-  <command id="find_new_calendar_command" oncommand="goFindNewCalendars()"/>
+  <command id="new_calendar_command" oncommand="newCalendarDialog()"/>
+  <command id="edit_calendar_command" oncommand="editCalendarDialog(event)"/>
+  <command id="delete_calendar_command" oncommand="deleteCalendar()"/>
 
   <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
   <command id="previous_command" oncommand="gCalendarWindow.currentView.goToPrevious()"/>
@@ -212,7 +208,7 @@
 <script type="application/x-javascript" src="chrome://calendar/content/dragDrop.js"/>
 
 <!-- NEEDED FOR MULTIPLE CALENDAR SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/calendarManager.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/calendarManagement.js"/>
 
 <!-- NEEDED FOR CLIPBOARD SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/clipboard.js"/>
@@ -408,13 +404,13 @@
 <popup id="calendarlist-context-menu">
   <menuitem label="&calendar.context.newserver.label;"
             accesskey="&calendar.context.newserver.accesskey;"
-            observes="new_local_calendar_command"/>
+            observes="new_calendar_command"/>
   <menuitem label="&calendar.context.editserver.label;"
             accesskey="&calendar.context.editserver.accesskey;"
-            observes="edit_local_calendar_command"/>
+            observes="edit_calendar_command"/>
   <menuitem label="&calendar.context.deleteserver.label;"
             accesskey="&calendar.context.deleteserver.accesskey;"
-            observes="delete_server_command"/>
+            observes="delete_calendar_command"/>
   <menuitem label="&calendar.context.reloadserver.label;"
             accesskey="&calendar.context.reloadserver.accesskey;"
             observes="reload_remote_calendars"/>
@@ -530,13 +526,10 @@
             <!--<vbox id="left-hand-above-splitter" flex="1">-->
             <listbox id="list-calendars-listbox" class="unifinder-tree-class" flex="1" 
                      contextmenu="calendarlist-context-menu">
-              <listhead>
-                <listheader flex="1" crop="end" label="&calendar.calendarlistbox.label;"/>
-                <listheader/>
-              </listhead>
               <listcols>
-                <listcol flex="1"/>
                 <listcol/>
+                <listcol/>
+                <listcol flex="1"/>
               </listcols>
             </listbox>
             <!--</vbox>-->

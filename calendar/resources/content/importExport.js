@@ -178,7 +178,7 @@ function loadEventsFromFile()
         };
 
 
-        appendCalendars(getCalendar(), [tmpCalendar], listener);
+        appendCalendars(getDefaultCalendar(), [tmpCalendar], listener);
 
         return true;
 

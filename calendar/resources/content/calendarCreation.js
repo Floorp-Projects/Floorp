@@ -91,9 +91,5 @@ function doCreateCalendar()
     
     calManager.setCalendarPref(newCalendar, 'color', cal_color);
 
-    // XXX This requires the caller to have calendar.js to be included.
-    // It should use observers to the calendar manager.
-    addCalendarToUI(window.opener.document, newCalendar);
-
     return true;
 }

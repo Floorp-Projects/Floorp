@@ -138,7 +138,6 @@ var unifinderObserver = {
 
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
-            !aIID.equals(Components.interfaces.calICompositeObserver) &&
             !aIID.equals(Components.interfaces.calIObserver))
         {
             throw Components.results.NS_ERROR_NO_INTERFACE;

@@ -138,14 +138,6 @@ function CalendarWindow( )
    
    var calendarWindow = this;
 
-    // fill in the calendars list
-    dump("\n\n\nlooking for calendars!!\n\n\n");
-    var calendars = getCalendarManager().getCalendars({});
-    for (var i = 0; i < calendars.length; i++) {
-        dump(calendars[i]);
-        addCalendarToUI(document, calendars[i]);
-    }
-
     var savedThis = this;
     var calendarObserver = {
         mInBatch: false,
@@ -176,92 +168,8 @@ function CalendarWindow( )
         onAlarm: function(aAlarmItem) {},
         onError: function(aMessage) {}
     }
-    var calendar = getCalendar();
-    calendar.addObserver(calendarObserver, calendar.ITEM_FILTER_TYPE_ALL);
-
-
-
-
-
-
-
-/*
-   this.calendarEventDataSourceObserver =
-   {
-      
-      onLoad   : function()
-      {
-         //this is basically useless, since the calendar window is not yet made yet.
-      },
-      onStartBatch   : function()
-      {
-      },
-      onEndBatch   : function()
-      {
-         calendarWindow.currentView.refreshEvents( );
-      },
-      
-      onAddItem : function( calendarEvent )
-      {
-         if( !gICalLib.batchMode )
-         {
-             if( calendarEvent )
-             {
-                calendarWindow.setSelectedEvent( calendarEvent );
-
-                calendarWindow.currentView.refreshEvents( );
-             }
-         }
-      },
-   
-      onModifyItem : function( calendarEvent, originalEvent )
-      {
-        if( !gICalLib.batchMode )
-        {
-             calendarWindow.currentView.refreshEvents( );
-        }
-      },
-   
-      onDeleteItem : function( calendarEvent, nextEvent )
-      {
-         //if you put this outside of the batch mode, deleting all events
-         //puts the calendar into an infinite loop.
-           
-         if( !gICalLib.batchMode )
-         {
-            calendarWindow.currentView.refreshEvents( );
-            
-            if ( nextEvent ) 
-            {
-               calendarWindow.setSelectedEvent( nextEvent );
-            }
-            else
-            {
-               //get the tree, see if there are items to highlight.
-
-               var today = new Date( );
-
-               //calendarWindow.setSelectedDate( getNextOrPreviousRecurrence( calendarEvent ) );
-               calendarWindow.setSelectedDate( today );
-
-               if( "hiliteSelectedDate" in calendarWindow.currentView )
-                  calendarWindow.currentView.hiliteSelectedDate( );
-            }
-         }
-      },
-      onAlarm : function( calendarEvent )
-      {
-      
-      },
-      onError : function()
-      {
-      }
-   };
-   
-   // add the observer to the event source
-   
-   //gICalLib.addObserver( this.calendarEventDataSourceObserver );
-*/
+    var ccalendar = getDisplayComposite();
+    ccalendar.addObserver(calendarObserver);
 }
 
 /** PUBLIC
