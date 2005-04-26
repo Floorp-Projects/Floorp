@@ -374,12 +374,6 @@ nsMenuPopupFrame::GetLayoutFlags(PRUint32& aFlags)
   aFlags = NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_VISIBILITY;
 }
 
-static PRBool ParentIsScrollableView(nsIView* aStartView)
-{
-  nsIView* scrollportView = aStartView->GetParent();
-  return scrollportView != nsnull && scrollportView->ToScrollableView() != nsnull;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // GetViewOffset
 //   Retrieves the offset of the given view with the root view, in the 
@@ -394,71 +388,11 @@ nsMenuPopupFrame::GetViewOffset(nsIView* aView, nsPoint& aPoint)
   //      nsMenuPopupFrame::Init())
   //   3) The coordinates that we return are the total distance between 
   //      the top left of the start view and the origin of the root view.
-  //      Note that for extremely tall menus there can be negative bounds
-  //      as the menupopup may fall north of the client area (e.g. above
-  //      the titlebar). We must take this into account for correct positioning,
-  //      however, negative bounds due to views that are the canvas in a 
-  //      ScrollPortView must be ignored (as this has no bearing on 
-  //      view offset), hence the call to ParentIsScrollableView. 
-  //      
   
-  aPoint.x = 0;
-  aPoint.y = 0;
- 
   // Keep track of the root view so that we know to stop there
   nsIView* rootView;
   aView->GetViewManager()->GetRootView(rootView);
-
-  nsIView *parent;
-
-  parent = aView;
-  while (parent) {
-    nsRect bounds = parent->GetBounds();
-    if ((bounds.y >= 0 && bounds.x >= 0) || !ParentIsScrollableView(parent)) {
-      //
-      // The Extremely Tall Menu: 
-      //           +----+---------------------------------------
-      //           |    |             +--------------------+  -       -
-      //           |    |             |    (Decoration)    |  | <-(4) | <-(3)
-      // (0, 0) -> +----+-------------+                    |  +       |
-      //           | _File    _Edit   +--------------------+  |       +
-      //           +------------------|  (ScrollPortView)  |  |       |
-      //           |                  |                    |  |       |
-      //           |                  |                    |  | <-(1) | <-(2)
-      //           |                  |                    |  |       |
-      //           |<---------------->|                    |  |       |
-      //           |        (5)       |====================|  -       -
-      //           |                  | MenuFrame         >|
-      //           |                  |====================|
-      // 
-      // Typically, we want to ignore negative view bounds as these imply
-      // a canvas view inside a scrollport view. However in other cases this
-      // means the view falls outside the positive quadrant of the root view,
-      // and has negative y-axis bounds. We still want to add this negative
-      // bounds as when positioning the menu, the following calculation can
-      // be performed:
-      // 
-      //   (1) = (2) + (3) + (4) 
-      //
-      // (1) - the position on the y-axis in the coordinate system of the root
-      //       view at which to position the popup
-      // (2) - the offset of the invoking MenuFrame from the top of the scroll-
-      //       port view (adjusted for canvas area scrolled out of view)
-      // (3) - the bounds of the scrollport view with respect to the popup's
-      //       view (at this point, aPoint.y)
-      // (4) - the bounds of the popup's view with respect to the root view
-      //       (a negative value for extremely tall popups)
-      //  
-      // (5) - the position on the x-axis in the coordinate system of the root
-      //       view at which to position the popup.
-  
-      aPoint.y += bounds.y;
-      aPoint.x += bounds.x;
-    }
-    if (parent == rootView)
-      break;
-    parent = parent->GetParent();
-  }
+  aPoint = aView->GetOffsetTo(rootView);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -830,41 +764,6 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
   //   or, the view associated with this frame. 
   nsIView* view = GetView();
 
-  ///////////////////////////////////////////////////////////////////////////////
-  //
-  //  (0,-y)    +- - - - - - - - - - - - - - - - - - - - - -+  _            _
-  //            |   (part of canvas scrolled off the top)   |  |  bounds.y  |
-  //  (0, 0) -> +-------------------------------------------+  +            |
-  //            |                                           |  |            | offset
-  //            |  (part of canvas visible through parent   |  |  dY        |
-  //            |   nsIScrollableView (nsScrollPortView) )  |  |            |
-  //            |                                           |  |            |
-  //            |===========================================|  -            -
-  //            | aFrame                                  > |
-  //            |===========================================|
-  //            |                                           |
-  //            +-------------------------------------------+
-  //            |                                           |
-  //            +- - - - - - - - - - - - - - - - - - - - - -+
-  //
-  // Explanation: 
-  //
-  // If the frame we're trying to align this popup to is on a canvas inside
-  // a scrolled viewport (that is, the containing view of the frame is
-  // the child of a scrolling view, nsIScrollableView) the offset y 
-  // dimension of that view contains matter that is not onscreen (scrolled 
-  // up out of view) and must be adjusted when positioning the popup. 
-  // The y dimension on the bounds of the containing view is negative if 
-  // any content is offscreen, and the size of this dimension represents 
-  // the amount we must adjust the offset by. For most submenus this is 0, and
-  // so the offset is unchanged. For toplevel menus whose containing view is 
-  // a window or other view, whose bounds should not be taken into account. 
-  //
-  if (ParentIsScrollableView(containingView)) {
-    nsRect bounds = containingView->GetBounds();
-    offset += nsPoint(bounds.x, bounds.y);
-  }
-  
   // |parentPos|
   //   The distance between the containingView and the root view. This provides
   //   a hint as to where to position the menu relative to the window. 
