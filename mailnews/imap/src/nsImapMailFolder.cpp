@@ -2593,7 +2593,9 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     if (mDatabase) 
     {
       mDatabase->ListAllKeys(existingKeys);
-      if (mDatabase->ListAllOfflineDeletes(&existingKeys) > 0)
+      PRInt32 keyCount = existingKeys.GetSize();
+      mDatabase->ListAllOfflineDeletes(&existingKeys);
+      if (keyCount < existingKeys.GetSize())
         existingKeys.QuickSort();
     }
     PRInt32 folderValidity;
