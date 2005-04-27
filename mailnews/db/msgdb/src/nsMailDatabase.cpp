@@ -558,33 +558,6 @@ NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create,
       *offlineOp = new nsMsgOfflineImapOperation(this, offlineOpRow);
       if (*offlineOp)
         (*offlineOp)->SetMessageKey(msgKey);
-      nsCOMPtr <nsIMsgDBHdr> msgHdr;
-
-      // GetMsgHdrForKey will return an empty header if no header exists,
-      // so we only want to get the hdr if the db contains a hdr for
-      // that key - otherwise, we'll crunch the new flags.
-      PRBool containsKey;
-      rv = ContainsKey(msgKey , &containsKey);
-
-      if (NS_SUCCEEDED(rv) && containsKey)
-        GetMsgHdrForKey(msgKey, getter_AddRefs(msgHdr));
-      if (msgHdr)
-      {
-        imapMessageFlagsType imapFlags = kNoImapMsgFlag;
-        PRUint32 msgHdrFlags;
-        msgHdr->GetFlags(&msgHdrFlags);
-        if (msgHdrFlags & MSG_FLAG_READ)
-          imapFlags |= kImapMsgSeenFlag;
-        if (msgHdrFlags & MSG_FLAG_REPLIED)
-          imapFlags |= kImapMsgAnsweredFlag;
-        if (msgHdrFlags & MSG_FLAG_MARKED)
-          imapFlags |= kImapMsgFlaggedFlag;
-        if (msgHdrFlags & MSG_FLAG_FORWARDED)
-          imapFlags |= kImapMsgForwardedFlag;
-        if (msgHdrFlags & MSG_FLAG_IMAP_DELETED)
-          imapFlags |= kImapMsgDeletedFlag;
-        (*offlineOp)->SetNewFlags(imapFlags);
-      }
       NS_IF_ADDREF(*offlineOp);
     }
     if (!hasOid && m_dbFolderInfo)
