@@ -829,8 +829,11 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 // which assume prefs.js exists after -CreateProfile.
                 nsCOMPtr<nsIFile> newProfileDir;
                 GetProfileDir(currProfileName.get(), getter_AddRefs(newProfileDir));
-                if (newProfileDir) 
-                  gDirServiceProvider->SetProfileDir(newProfileDir);
+                if (newProfileDir) {
+                  nsCOMPtr<nsIFile> localDir;
+                  GetLocalProfileDir(currProfileName.get(), getter_AddRefs(localDir));
+                  gDirServiceProvider->SetProfileDir(newProfileDir, localDir);
+                }
                 rv = LoadNewProfilePrefs();
                 gProfileDataAccess->mProfileDataChanged = PR_TRUE;
                 gProfileDataAccess->UpdateRegistry(nsnull);
@@ -1230,7 +1233,9 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     // Do the profile switch
     localLock.Unlock(); // gDirServiceProvider will get and hold its own lock
 #endif
-    gDirServiceProvider->SetProfileDir(profileDir);  
+    nsCOMPtr<nsIFile> localDir;
+    GetLocalProfileDir(aCurrentProfile, getter_AddRefs(localDir));
+    gDirServiceProvider->SetProfileDir(profileDir, localDir);
     mCurrentProfileName.Assign(aCurrentProfile);    
     gProfileDataAccess->SetCurrentProfile(aCurrentProfile);
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
@@ -2600,4 +2605,26 @@ nsProfile::GetRegStrings(const PRUnichar *aProfileName,
      delete profileVal;
 
      return NS_OK;
+}
+
+nsresult nsProfile::GetLocalProfileDir(const PRUnichar* aProfileName,
+                                       nsIFile** aLocalDir)
+{
+  *aLocalDir = nsnull;
+  nsresult rv;
+  nsCOMPtr<nsIProperties> directoryService = 
+    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIFile> localDir;
+  rv = directoryService->Get(NS_APP_USER_PROFILES_LOCAL_ROOT_DIR,
+                             NS_GET_IID(nsIFile),
+                             getter_AddRefs(localDir));
+  if (NS_FAILED(rv))
+    return rv;
+  rv = localDir->Append(nsDependentString(aProfileName));
+  if (NS_FAILED(rv))
+    return rv;
+  localDir.swap(*aLocalDir);
+  return NS_OK;
 }

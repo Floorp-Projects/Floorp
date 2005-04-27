@@ -383,6 +383,7 @@ nsIAtom*  nsDirectoryService::sCommon_Programs = nsnull;
 nsIAtom*  nsDirectoryService::sCommon_Startup = nsnull;
 nsIAtom*  nsDirectoryService::sCommon_Desktopdirectory = nsnull;
 nsIAtom*  nsDirectoryService::sAppdata = nsnull;
+nsIAtom*  nsDirectoryService::sLocalAppdata = nsnull;
 nsIAtom*  nsDirectoryService::sPrinthood = nsnull;
 nsIAtom*  nsDirectoryService::sWinCookiesDirectory = nsnull;
 #elif defined (XP_UNIX)
@@ -486,6 +487,7 @@ static const nsStaticAtom directory_atoms[] = {
     { NS_WIN_COMMON_STARTUP_DIR,   &nsDirectoryService::sCommon_Startup },
     { NS_WIN_COMMON_DESKTOP_DIRECTORY, &nsDirectoryService::sCommon_Desktopdirectory },
     { NS_WIN_APPDATA_DIR,          &nsDirectoryService::sAppdata },
+    { NS_WIN_LOCAL_APPDATA_DIR,    &nsDirectoryService::sLocalAppdata },
     { NS_WIN_PRINTHOOD,            &nsDirectoryService::sPrinthood },
     { NS_WIN_COOKIES_DIR,          &nsDirectoryService::sWinCookiesDirectory },
 #elif defined (XP_UNIX)
@@ -1070,6 +1072,10 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     else if (inAtom == nsDirectoryService::sAppdata)
     {
         rv = GetSpecialSystemDirectory(Win_Appdata, getter_AddRefs(localFile)); 
+    }
+    else if (inAtom == nsDirectoryService::sLocalAppdata)
+    {
+        rv = GetSpecialSystemDirectory(Win_LocalAppdata, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sPrinthood)
     {

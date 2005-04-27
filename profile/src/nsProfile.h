@@ -85,6 +85,8 @@ private:
     nsresult MigrateProfileInternal(const PRUnichar *profileName,
                                     nsIFile *oldProfDir, nsIFile *newProfDir);
 
+    nsresult GetLocalProfileDir(const PRUnichar *profileName, nsIFile** localDir);
+
     PRBool mStartingUp;
     PRBool mAutomigrate;
     PRBool mOutofDiskSpace;

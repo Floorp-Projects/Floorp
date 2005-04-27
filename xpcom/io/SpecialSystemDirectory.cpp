@@ -75,6 +75,11 @@
 #include <string.h>
 #include <direct.h>
 
+// This is not defined by VC6. 
+#ifndef CSIDL_LOCAL_APPDATA
+#define CSIDL_LOCAL_APPDATA             0x001C
+#endif
+
 #elif defined(XP_OS2)
 
 #define MAX_PATH _MAX_PATH
@@ -647,6 +652,11 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         case Win_Appdata:
         {
             return GetWindowsFolder(CSIDL_APPDATA, aFile);
+        }
+
+        case Win_LocalAppdata:
+        {
+            return GetWindowsFolder(CSIDL_LOCAL_APPDATA, aFile);
         }
 #endif  // XP_WIN
 

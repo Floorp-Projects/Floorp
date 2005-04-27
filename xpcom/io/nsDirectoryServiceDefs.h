@@ -177,6 +177,7 @@
     #define NS_WIN_COMMON_STARTUP_DIR           "CmStrt"
     #define NS_WIN_COMMON_DESKTOP_DIRECTORY     "CmDeskP"
     #define NS_WIN_APPDATA_DIR                  "AppData"
+    #define NS_WIN_LOCAL_APPDATA_DIR            "LocalAppData"
     #define NS_WIN_PRINTHOOD                    "PrntHd"
     #define NS_WIN_COOKIES_DIR                  "CookD"
 #elif defined (XP_UNIX)
