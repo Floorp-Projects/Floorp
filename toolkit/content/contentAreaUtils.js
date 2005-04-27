@@ -358,7 +358,7 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     persist.saveDocument(persistArgs.source, persistArgs.target, filesFolder, 
                          persistArgs.contentType, encodingFlags, kWrapColumn);
   } else {
-    tr.init(source, persistArgs.target, null, "", null, persist);
+    tr.init(source, persistArgs.target, "", null, null, persist);
     persist.progressListener = tr;
     var referrer = aData.referrer || getReferrer(document)
     persist.saveURI(source, null, referrer, persistArgs.postData, null, persistArgs.target);
