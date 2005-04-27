@@ -55,10 +55,23 @@ MOZCE_SHUNT_API char *mozce_fullpath(char *absPath, const char *relPath, size_t 
 
 #ifdef LOG_CALLS
 #ifdef DEBUG
-    mozce_printf("*mozce_fullpath called\n");
+    mozce_printf("mozce_fullpath called\n");
 #endif
 #endif
-    return 0;
+
+    if (relPath[0] != '\\') 
+    {
+        unsigned short dir[MAX_PATH];
+        GetModuleFileName(GetModuleHandle (NULL), dir, MAX_PATH);
+        for (int i = _tcslen(dir); i && dir[i] != TEXT('\\'); i--) {}
+        
+        dir[i + 1] = TCHAR('\0');
+        
+        w2a_buffer(dir, -1, absPath, maxLength);
+    }
+    strcat(absPath, relPath);
+    
+    return absPath;
 }
 
 MOZCE_SHUNT_API void mozce_splitpath(const char* inPath, char* outDrive, char* outDir, char* outFname, char* outExt)
