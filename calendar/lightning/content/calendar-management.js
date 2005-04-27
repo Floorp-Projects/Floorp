@@ -80,6 +80,9 @@ var ltnCalendarViewController = {
     },
 
     createNewEvent: function (aCalendar, aStartTime, aEndTime) {
+        // XXX If we're adding an item from the view, let's make sure that
+        // XXX the calendar in question is visible!
+        
         // if we're given both times, skip the dialog
         if (aStartTime && aEndTime && !aStartTime.isDate && !aEndTime.isDate) {
             var event = createEvent();
@@ -159,6 +162,18 @@ function getCalendars()
 function ltnNewCalendar()
 {
     openCalendarWizard(ltnSetTreeView);
+}
+
+function ltnRemoveCalendar(cal)
+{
+    // XXX in the future, we should ask the user if they want to delete the
+    // XXX files associated with this calendar or not!
+    getCalendarManager().unregisterCalendar(cal);
+}
+
+function ltnEditCalendarProperties(cal)
+{
+    return openCalendarProperties(cal, function() { });
 }
 
 var ltnCalendarTreeView = {
@@ -257,3 +272,5 @@ function ltnSetTreeView()
 }
 
 window.addEventListener("load", ltnSetTreeView, false);
+// Wire up the calendar observers.
+window.addEventListener("load", getCalendarManager, false);

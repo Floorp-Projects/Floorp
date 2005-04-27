@@ -1,3 +1,26 @@
+function ltnSidebarCalendarSelected(tree)
+{
+    var disabled = tree.view.selection.count == 0;
+    document.getElementById("cal-sidebar-edit-calendar").disabled = disabled;
+    document.getElementById("cal-sidebar-delete-calendar").disabled = disabled;
+}
+
+function ltnSelectedCalendar()
+{
+    var index = document.getElementById("calendarTree").currentIndex;
+    return getCalendars()[index]; 
+}
+
+function ltnDeleteSelectedCalendar()
+{
+    ltnRemoveCalendar(ltnSelectedCalendar());
+}
+
+function ltnEditSelectedCalendar()
+{
+    ltnEditCalendarProperties(ltnSelectedCalendar());
+}
+
 function selectedCalendarPane(event)
 {
     dump("selecting calendar pane\n");
