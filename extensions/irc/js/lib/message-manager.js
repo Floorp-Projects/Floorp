@@ -47,7 +47,8 @@ function MessageManager(entities)
         Components.classes[UC_CTRID].getService(nsIUnicodeConverter);
     this.defaultBundle = null;
     this.bundleList = new Array();
-    this.entities = entities;
+    // Provide a fallback so we don't break getMsg and related constants later.
+    this.entities = entities || {};
 }
 
 MessageManager.prototype.loadBrands =

@@ -99,6 +99,7 @@ function PrefGlobal()
     this.networks = new Object();
     this.commandManager = new Object();
     this.commandManager.defineCommand = function() {};
+    this.entities = new Object();
 }
 PrefGlobal.prototype.TYPE = "PrefGlobal";
 
