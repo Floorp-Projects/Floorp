@@ -1201,10 +1201,10 @@ nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aPara
 
   // Log the message to JavaScript Console
 #ifdef DEBUG
-  nsresult rv = errorObject->Init(msg.get(), srcFile.get(), srcLine.get(),
-                                  0, 0, aErrorFlag, "XForms");
   printf("ERR: %s\n", NS_ConvertUCS2toUTF8(msg).get());
 #endif
+  nsresult rv = errorObject->Init(msg.get(), srcFile.get(), srcLine.get(),
+                                  0, 0, aErrorFlag, "XForms");
   if (NS_SUCCEEDED(rv)) {
     consoleService->LogMessage(errorObject);
   }
