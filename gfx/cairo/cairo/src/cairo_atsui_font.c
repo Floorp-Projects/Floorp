@@ -252,7 +252,6 @@ _cairo_atsui_font_text_to_glyphs(void *abstract_font,
     ATSLayoutRecord *layoutRecords;
     ItemCount glyphCount, charCount;
     UniChar *theText;
-    ATSUStyle style;
 
     err = ATSUCreateTextLayout(&textLayout);
 
@@ -316,8 +315,6 @@ _cairo_atsui_font_text_to_glyphs(void *abstract_font,
                                         (void *) &layoutRecords);
 
     ATSUDisposeTextLayout(textLayout);
-
-    ATSUDisposeStyle(style);
 
 
     return CAIRO_STATUS_SUCCESS;
