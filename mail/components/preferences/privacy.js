@@ -86,8 +86,8 @@ var gPrivacyPane = {
 
   viewPasswords: function()
   {
-    document.documentElement.openSubDialog("chrome://messenger/content/preferences/viewpasswords.xul",
-                                           "", null);
+    document.documentElement.openWindow("Toolkit:PasswordManager", "chrome://messenger/content/preferences/viewpasswords.xul",
+                                        "", null);
   },
 
   changeMasterPassword: function ()
