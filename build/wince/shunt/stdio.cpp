@@ -129,9 +129,17 @@ MOZCE_SHUNT_API char* mozce_getcwd(char* buff, size_t size)
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("mozce_getcwd called.  NOT IMPLEMENTED!!\n");
+    mozce_printf("mozce_getcwd called.\n");
 #endif
-    return NULL;
+
+	unsigned short dir[MAX_PATH];
+	GetModuleFileName(GetModuleHandle (NULL), dir, MAX_PATH);
+	for (int i = _tcslen(dir); i && dir[i] != TEXT('\\'); i--) {}
+	dir[i + 1] = TCHAR('\0');
+
+	w2a_buffer(dir, -1, buff, size);
+
+    return buff;
 }
 
 MOZCE_SHUNT_API int mozce_printf(const char * format, ...)

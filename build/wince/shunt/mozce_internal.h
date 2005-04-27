@@ -154,7 +154,7 @@ void dumpMemoryInfo();
 extern "C" {
 #endif
 
-	MOZCE_SHUNT_API int mozce_printf(const char *, ...);
+  MOZCE_SHUNT_API int mozce_printf(const char *, ...);
 
 #ifdef __cplusplus
 };
