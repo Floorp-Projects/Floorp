@@ -68,14 +68,6 @@ public:
   // nsISVGContainerFrame interface:
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 
-  // nsIFrame interface:
-  NS_IMETHOD
-  Init(nsPresContext*   aPresContext,
-       nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsStyleContext*  aContext,
-       nsIFrame*        aPrevInFlow);
-
   /**
    * Get the "type" of the frame
    *
@@ -173,27 +165,6 @@ nsSVGUseFrame::GetType() const
 NS_INTERFACE_MAP_BEGIN(nsSVGUseFrame)
   NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGUseFrameBase)
-
-//----------------------------------------------------------------------
-// nsIFrame methods
-  
-NS_IMETHODIMP
-nsSVGUseFrame::Init(nsPresContext*  aPresContext,
-                    nsIContent*     aContent,
-                    nsIFrame*       aParent,
-                    nsStyleContext* aContext,
-                    nsIFrame*       aPrevInFlow)
-{
-  mContent = aContent;
-  NS_IF_ADDREF(mContent);
-  mParent = aParent;
-
-  InitSVG();
-  
-  SetStyleContext(aPresContext, aContext);
-    
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsISVGContainerFrame methods:
