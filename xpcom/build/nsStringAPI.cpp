@@ -122,6 +122,24 @@ NS_StringGetData(const nsAString &aStr, const PRUnichar **aData,
   return begin.size_forward();
 }
 
+NS_STRINGAPI(PRUint32)
+NS_StringGetMutableData(nsAString &aStr, PRUint32 aDataLength,
+                        PRUnichar **aData)
+{
+  if (aDataLength != PR_UINT32_MAX) {
+    aStr.SetLength(aDataLength);
+    if (aStr.Length() != aDataLength) {
+      *aData = nsnull;
+      return 0;
+    }
+  }
+
+  nsAString::iterator begin;
+  aStr.BeginWriting(begin);
+  *aData = begin.get();
+  return begin.size_forward();
+}
+
 NS_STRINGAPI(PRUnichar *)
 NS_StringCloneData(const nsAString &aStr)
 {
@@ -248,6 +266,23 @@ NS_CStringGetData(const nsACString &aStr, const char **aData,
 
   nsACString::const_iterator begin;
   aStr.BeginReading(begin);
+  *aData = begin.get();
+  return begin.size_forward();
+}
+
+NS_STRINGAPI(PRUint32)
+NS_CStringGetMutableData(nsACString &aStr, PRUint32 aDataLength, char **aData)
+{
+  if (aDataLength != PR_UINT32_MAX) {
+    aStr.SetLength(aDataLength);
+    if (aStr.Length() != aDataLength) {
+      *aData = nsnull;
+      return 0;
+    }
+  }
+
+  nsACString::iterator begin;
+  aStr.BeginWriting(begin);
   *aData = begin.get();
   return begin.size_forward();
 }

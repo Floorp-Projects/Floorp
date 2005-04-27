@@ -52,6 +52,7 @@
 # define NS_StringContainerInit2          NS_StringContainerInit2_P
 # define NS_StringContainerFinish         NS_StringContainerFinish_P
 # define NS_StringGetData                 NS_StringGetData_P
+# define NS_StringGetMutableData          NS_StringGetMutableData_P
 # define NS_StringCloneData               NS_StringCloneData_P
 # define NS_StringSetData                 NS_StringSetData_P
 # define NS_StringSetDataRange            NS_StringSetDataRange_P
@@ -60,6 +61,7 @@
 # define NS_CStringContainerInit2         NS_CStringContainerInit2_P
 # define NS_CStringContainerFinish        NS_CStringContainerFinish_P
 # define NS_CStringGetData                NS_CStringGetData_P
+# define NS_CStringGetMutableData         NS_CStringGetMutableData_P
 # define NS_CStringCloneData              NS_CStringCloneData_P
 # define NS_CStringSetData                NS_CStringSetData_P
 # define NS_CStringSetDataRange           NS_CStringSetDataRange_P
@@ -246,6 +248,39 @@ NS_STRINGAPI(PRUint32)
 NS_StringGetData
   (const nsAString &aStr, const PRUnichar **aData,
    PRBool *aTerminated = nsnull);
+
+/**
+ * NS_StringGetMutableData
+ *
+ * This function provides mutable access to a string's internal buffer.  It
+ * returns a pointer to an array of characters that may be modified.  The
+ * returned pointer remains valid until the string object is passed to some
+ * other string function.
+ *
+ * Optionally, this function may be used to resize the string's internal
+ * buffer.  The aDataLength parameter specifies the requested length of the
+ * string's internal buffer.  By passing some value other than PR_UINT32_MAX,
+ * the caller can request that the buffer be resized to the specified number of
+ * characters before returning.  The caller is not responsible for writing a
+ * null-terminator.
+ *
+ * @param aStr          abstract string reference
+ * @param aDataLength   number of characters to resize the string's internal
+ *                      buffer to or PR_UINT32_MAX if no resizing is needed
+ * @param aData         out param that upon return holds the address of aStr's
+ *                      internal buffer or null if the function failed
+ * @return              number of characters or zero if the function failed
+ *
+ * This function does not necessarily null-terminate aStr after resizing its
+ * internal buffer.  The behavior depends on the implementation of the abstract
+ * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
+ * will be null-terminated by this function.
+ *
+ * @status FROZEN
+ */
+NS_STRINGAPI(PRUint32)
+NS_StringGetMutableData
+  (nsAString &aStr, PRUint32 aDataLength, PRUnichar **aData);
 
 /**
  * NS_StringCloneData
@@ -520,6 +555,39 @@ NS_CStringGetData
    PRBool *aTerminated = nsnull);
 
 /**
+ * NS_CStringGetMutableData
+ *
+ * This function provides mutable access to a string's internal buffer.  It
+ * returns a pointer to an array of characters that may be modified.  The
+ * returned pointer remains valid until the string object is passed to some
+ * other string function.
+ *
+ * Optionally, this function may be used to resize the string's internal
+ * buffer.  The aDataLength parameter specifies the requested length of the
+ * string's internal buffer.  By passing some value other than PR_UINT32_MAX,
+ * the caller can request that the buffer be resized to the specified number of
+ * characters before returning.  The caller is not responsible for writing a
+ * null-terminator.
+ *
+ * @param aStr          abstract string reference
+ * @param aDataLength   number of characters to resize the string's internal
+ *                      buffer to or PR_UINT32_MAX if no resizing is needed
+ * @param aData         out param that upon return holds the address of aStr's
+ *                      internal buffer or null if the function failed
+ * @return              number of characters or zero if the function failed
+ *
+ * This function does not necessarily null-terminate aStr after resizing its
+ * internal buffer.  The behavior depends on the implementation of the abstract
+ * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
+ * will be null-terminated by this function.
+ *
+ * @status FROZEN
+ */
+NS_STRINGAPI(PRUint32)
+NS_CStringGetMutableData
+  (nsACString &aStr, PRUint32 aDataLength, char **aData);
+
+/**
  * NS_CStringCloneData
  *
  * This function returns a null-terminated copy of the string's
@@ -782,6 +850,20 @@ public:
     return data + len;
   }
 
+  NS_HIDDEN_(char_type*) BeginWriting()
+  {
+    char_type *data;
+    NS_StringGetMutableData(*this, PR_UINT32_MAX, &data);
+    return data;
+  }
+
+  NS_HIDDEN_(PRBool) SetLength(PRUint32 aLen)
+  {
+    char_type *data;
+    NS_StringGetMutableData(*this, aLen, &data);
+    return data != nsnull;
+  }
+
   NS_HIDDEN_(size_type) Length() const
   {
     const char_type* data;
@@ -867,6 +949,20 @@ public:
     const char_type *data;
     PRUint32 len = NS_CStringGetData(*this, &data);
     return data + len;
+  }
+
+  NS_HIDDEN_(char_type*) BeginWriting()
+  {
+    char_type *data;
+    NS_CStringGetMutableData(*this, PR_UINT32_MAX, &data);
+    return data;
+  }
+
+  NS_HIDDEN_(PRBool) SetLength(PRUint32 aLen)
+  {
+    char_type *data;
+    NS_CStringGetMutableData(*this, aLen, &data);
+    return data != nsnull;
   }
 
   NS_HIDDEN_(size_type) Length() const

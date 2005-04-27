@@ -317,6 +317,16 @@ NS_StringGetData(const nsAString &aStr, const PRUnichar **aBuf, PRBool *aTerm)
     return xpcomFunctions.stringGetData(aStr, aBuf, aTerm);
 }
 
+extern "C" NS_COM PRUint32
+NS_StringGetMutableData(nsAString &aStr, PRUint32 aLen, PRUnichar **aBuf)
+{
+    if (!xpcomFunctions.stringGetMutableData) {
+        *aBuf = nsnull;
+        return 0;
+    }
+    return xpcomFunctions.stringGetMutableData(aStr, aLen, aBuf);
+}
+
 extern "C" NS_COM PRUnichar *
 NS_StringCloneData(const nsAString &aStr)
 {
@@ -386,6 +396,16 @@ NS_CStringGetData(const nsACString &aStr, const char **aBuf, PRBool *aTerm)
         return 0;
     }
     return xpcomFunctions.cstringGetData(aStr, aBuf, aTerm);
+}
+
+extern "C" NS_COM PRUint32
+NS_CStringGetMutableData(nsACString &aStr, PRUint32 aLen, char **aBuf)
+{
+    if (!xpcomFunctions.cstringGetMutableData) {
+        *aBuf = nsnull;
+        return 0;
+    }
+    return xpcomFunctions.cstringGetMutableData(aStr, aLen, aBuf);
 }
 
 extern "C" NS_COM char *

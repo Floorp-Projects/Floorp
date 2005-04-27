@@ -207,6 +207,7 @@ void XXXNeverCalled()
     NS_CStringContainerInit2(sc1, nsnull, 0, 0);
     NS_CStringContainerFinish(sc1);
     NS_CStringGetData(str2, nsnull, nsnull);
+    NS_CStringGetMutableData(str2, 0, nsnull);
     NS_CStringSetData(str2, nsnull, 0);
     NS_CStringSetDataRange(str2, 0, 0, nsnull, 0);
     NS_CStringCopy(str2, str2);
@@ -216,6 +217,7 @@ void XXXNeverCalled()
     NS_StringContainerInit2(sc2, nsnull, 0, 0);
     NS_StringContainerFinish(sc2);
     NS_StringGetData(str1, nsnull, nsnull);
+    NS_StringGetMutableData(str1, 0, nsnull);
     NS_StringSetData(str1, nsnull, 0);
     NS_StringSetDataRange(str1, 0, 0, nsnull, 0);
     NS_StringCopy(str1, str1);
