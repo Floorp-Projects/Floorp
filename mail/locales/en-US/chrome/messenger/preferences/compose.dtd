@@ -16,6 +16,10 @@
 <!ENTITY spellCheck.accesskey                 "C">
 <!ENTITY spellCheckInline.label               "Enable spell as you type">
 <!ENTITY spellCheckInline.accesskey           "n">
+<!ENTITY languagePopup.label                  "Dictionary Language:">
+<!ENTITY languagePopup.accessKey              "y">
+<!ENTITY downloadDictionaries.label           "Download More Dictionaries">
+
 <!ENTITY useMIME.label                        "For messages that contain 8-bit characters, use 'quoted printable' MIME encoding">
 <!ENTITY useMIME.accesskey                    "o">
 <!ENTITY warnOnSendAccelKey.label             "Confirm when using keyboard shortcut to send message">

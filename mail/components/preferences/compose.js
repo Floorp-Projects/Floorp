@@ -42,6 +42,7 @@ var gComposePane = {
   mInitialized: false,
   mDirectories: null,
   mLDAPPrefsService: null,
+  mSpellChecker: null,
 
   init: function ()
   {
@@ -50,6 +51,10 @@ var gComposePane = {
 
     this.createDirectoriesList();
     this.enableAutocomplete();
+
+    this.initLanguageMenu();
+
+    document.getElementById('downloadDictionaries').setAttribute('href', xlateURL('urn:clienturl:composer:spellcheckers'));
 
     var preference = document.getElementById("mail.preferences.compose.selectedTabIndex");
     if (preference.value)
@@ -250,6 +255,88 @@ var gComposePane = {
     this.mDirectories = null;
     this.loadDirectories(popup);
     gRefresh = false;
-  }
+  },
 
+  initLanguageMenu: function ()
+  {
+    this.mSpellChecker = Components.classes['@mozilla.org/spellchecker/myspell;1'].createInstance(Components.interfaces.mozISpellCheckingEngine);
+    var o1 = {};
+    var o2 = {};
+    var languageMenuList = document.getElementById('LanguageMenulist');
+
+    // Get the list of dictionaries from
+    // the spellchecker.
+
+    this.mSpellChecker.getDictionaryList(o1, o2);
+
+    var dictList = o1.value;
+    var count    = o2.value;
+
+    // Load the string bundles that will help us map
+    // RFC 1766 strings to UI strings.
+
+    // Load the language string bundle.
+    var languageBundle = document.getElementById("languageBundle");
+    var regionBundle;
+    // If we have a language string bundle, load the region string bundle.
+    if (languageBundle)
+      regionBundle = document.getElementById("regionBundle");
+  
+    var menuStr2;
+    var isoStrArray;
+    var defaultItem = null;
+    var langId;
+    var i;
+
+    for (i = 0; i < dictList.length; i++)
+    {
+      try {
+        langId = dictList[i];
+        isoStrArray = dictList[i].split("-");
+
+        dictList[i] = new Array(2); // first subarray element - pretty name
+        dictList[i][1] = langId;    // second subarray element - language ID
+
+        if (languageBundle && isoStrArray[0])
+          dictList[i][0] = languageBundle.getString(isoStrArray[0].toLowerCase());
+
+        if (regionBundle && dictList[i][0] && isoStrArray.length > 1 && isoStrArray[1])
+        {
+          menuStr2 = regionBundle.getString(isoStrArray[1].toLowerCase());
+          if (menuStr2)
+            dictList[i][0] = dictList[i][0] + "/" + menuStr2;
+        }
+
+        if (!dictList[i][0])
+          dictList[i][0] = dictList[i][1];
+      } catch (ex) {
+        // GetString throws an exception when
+        // a key is not found in the bundle. In that
+        // case, just use the original dictList string.
+
+        dictList[i][0] = dictList[i][1];
+      }
+    }
+  
+    // note this is not locale-aware collation, just simple ASCII-based sorting
+    // we really need to add loacel-aware JS collation, see bug XXXXX
+    dictList.sort();
+
+    var curLang  = languageMenuList.value;
+
+    // now select the dictionary we are currently using
+    for (i = 0; i < dictList.length; i++)
+    {
+      var item = languageMenuList.appendItem(dictList[i][0], dictList[i][1]);
+      if (curLang && dictList[i][1] == curLang)
+        defaultItem = item;
+    }
+
+    // Now make sure the correct item in the menu list is selected.
+    if (defaultItem)
+      languageMenuList.selectedItem = defaultItem;
+    else
+      languageMenuList.selectedIndex = 0;
+      
+  },
 };

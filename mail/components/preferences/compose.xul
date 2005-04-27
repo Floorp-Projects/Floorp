@@ -45,10 +45,15 @@
 <overlay id="ComposePaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
          xmlns:nc="http://home.netscape.com/NC-rdf#"
+         xmlns:html="http://www.w3.org/1999/xhtml"
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
            
   <prefpane id="paneCompose" onpaneload="gComposePane.init();">
     <script type="application/x-javascript" src="chrome://messenger/content/preferences/compose.js"/>
+    <script type="application/x-javascript" src="chrome://communicator/content/builtinURLs.js"/>
+
+    <stringbundle id="languageBundle" src="chrome://global/locale/languageNames.properties"/>
+    <stringbundle id="regionBundle" src="chrome://global/locale/regionNames.properties"/>
 
     <preferences>
       <preference id="mail.preferences.compose.selectedTabIndex" name="mail.preferences.compose.selectedTabIndex" type="int"/>
@@ -65,6 +70,7 @@
       <preference id="ldap_2.autoComplete.directoryServer" name="ldap_2.autoComplete.directoryServer" type="string"/>
       <preference id="mail.collect_email_address_outgoing" name="mail.collect_email_address_outgoing" type="bool"/>
       <preference id="mail.collect_addressbook" name="mail.collect_addressbook" type="string"/>
+      <preference id="spellchecker.dictionary"  name="spellchecker.dictionary"   type="wstring"/>
     </preferences>
 
     <tabbox id="composePrefs" flex="1" onselect="gComposePane.tabSelectionChanged();">
@@ -186,6 +192,24 @@
             <checkbox id="inlineSpellCheck" label="&spellCheckInline.label;"
                       preference="mail.spellcheck.inline"
                       accesskey="&spellCheckInline.accesskey;"/>
+
+            <separator class="thin"/>
+
+            <hbox align="center" pack="start">
+              <label value ="&languagePopup.label;" control="LanguageMenulist" accesskey="&languagePopup.accessKey;"/>
+              <menulist id="LanguageMenulist" preference="spellchecker.dictionary">
+                <menupopup>
+                  <!-- dynamic content populated by JS -->
+                </menupopup>
+              </menulist>
+              <spring flex="1"/>
+            </hbox>
+
+            <separator/>
+
+            <html:a id="downloadDictionaries" 
+                    style="display: block; color: blue; text-decoration: underline; margin-left: 5px;">&downloadDictionaries.label;</html:a>
+
          </tabpanel>
        </tabpanels>
     </tabbox>  
