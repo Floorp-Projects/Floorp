@@ -127,7 +127,7 @@ sub add_setting {
 
 sub get_all_settings {
     my ($user_id) = @_;
-    my $settings;
+    my $settings = {};
     my $dbh = Bugzilla->dbh;
 
     my $sth = $dbh->prepare(
@@ -162,7 +162,7 @@ sub get_all_settings {
 
 sub get_defaults {
     my $dbh = Bugzilla->dbh;
-    my $default_settings;
+    my $default_settings = {};
 
     my $sth = $dbh->prepare(q{SELECT name, default_value, is_enabled
                                 FROM setting

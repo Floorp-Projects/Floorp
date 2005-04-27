@@ -84,6 +84,7 @@
 #     add more database-related checks                 --DATABASE--
 #     change table definitions                         --TABLE--
 #     add more groups                                  --GROUPS--
+#     add user-adjustable sttings                      --SETTINGS--
 #     create initial administrator account             --ADMIN--
 #
 # Note: sometimes those special comments occur more than once. For
@@ -3772,9 +3773,6 @@ if($dbh->bz_column_info('bugs', 'lastdiffed')->{NOTNULL}) {
     $dbh->bz_alter_column('bugs', 'lastdiffed', {TYPE => 'DATETIME'});
 }
 
-# 2005-03-03 travis@sedsystems.ca -- Bug 41972
-add_setting ("display_quips", {"on" => 1, "off" => 2 }, "on" );
-
 # 2005-03-09 qa_contact should be NULL instead of 0, bug 285534
 if ($dbh->bz_column_info('bugs', 'qa_contact')->{NOTNULL}) {
     $dbh->bz_alter_column('bugs', 'qa_contact', {TYPE => 'INT3'});
@@ -3923,13 +3921,6 @@ if ( $dbh->isa('Bugzilla::DB::Mysql') ) {
     }
 }
 
-# 2005-03-10 travis@sedsystems.ca -- Bug 199048
-add_setting ("comment_sort_order", {"oldest_to_newest" => 1,
-                                    "newest_to_oldest" => 2,
-                                    "newest_to_oldest_desc_first" => 3}, 
-             "oldest_to_newest" );
-
-
 # 2005-04-07 - alt@sonic.net, bug 289455
 # make classification_id field type be consistent with DB:Schema
 $dbh->bz_alter_column('products', 'classification_id',
@@ -4009,6 +4000,19 @@ if (!GroupDoesExist('bz_canusewhines')) {
              "VALUES (${whineatothers_group}, ${whine_group}, " .
              GROUP_MEMBERSHIP . ")") unless $group_exists;
 }
+
+###########################################################################
+# Create --SETTINGS-- users can adjust
+###########################################################################
+
+# 2005-03-03 travis@sedsystems.ca -- Bug 41972
+add_setting ("display_quips", {"on" => 1, "off" => 2 }, "on" );
+
+# 2005-03-10 travis@sedsystems.ca -- Bug 199048
+add_setting ("comment_sort_order", {"oldest_to_newest" => 1,
+                                    "newest_to_oldest" => 2,
+                                    "newest_to_oldest_desc_first" => 3}, 
+             "oldest_to_newest" );
 
 ###########################################################################
 # Create Administrator  --ADMIN--
