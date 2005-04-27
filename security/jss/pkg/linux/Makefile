@@ -38,13 +38,13 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: Makefile,v 1.16 2005/04/20 00:18:25 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.17 2005/04/27 20:28:26 christophe.ravel.bugs%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
 
 NAME        = sun-jss
-RELEASE     = 4
+RELEASE     = 5
 VERSION     = `grep JSS_VERSION $(CORE_DEPTH)/jss/org/mozilla/jss/util/jssver.h \
 		| sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//'`
 PWD         = `pwd`
