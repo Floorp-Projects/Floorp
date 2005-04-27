@@ -218,6 +218,10 @@ private:
 
     static void PrefsChanged(nsIPrefBranch *prefs, const char *pref);
 
+    // IDN routines
+    static nsresult ACEtoUTF8(const nsCSubstring &in, nsCString &out);
+    static nsresult NormalizeUTF8(const nsCSubstring &in, nsCString &out);
+
     // mSpec contains the normalized version of the URL spec (UTF-8 encoded).
     nsCString mSpec;
     PRInt32   mDefaultPort;
@@ -262,11 +266,12 @@ private:
 
     // global objects.  don't use COMPtr as its destructor will cause a
     // coredump if we leak it.
-    static nsIIDNService               *gIDNService;
+    static nsIIDNService               *gIDN;
     static nsICharsetConverterManager  *gCharsetMgr;
     static PRBool                       gInitialized;
     static PRBool                       gEscapeUTF8;
     static PRBool                       gAlwaysEncodeInUTF8;
+    static PRBool                       gShowPunycode;
 };
 
 #define NS_THIS_STANDARDURL_IMPL_CID                 \
