@@ -56,7 +56,6 @@ static const PRUint32 kMaxDNSNodeLen = 63;
 
 #define NS_NET_PREF_IDNTESTBED      "network.IDN_testbed"
 #define NS_NET_PREF_IDNPREFIX       "network.IDN_prefix"
-#define NS_NET_PREF_IDNSHOWPUNYCODE "network.IDN_show_punycode"
 
 //-----------------------------------------------------------------------------
 // nsIDNService
@@ -74,7 +73,6 @@ nsresult nsIDNService::Init()
   if (prefInternal) {
     prefInternal->AddObserver(NS_NET_PREF_IDNTESTBED, this, PR_TRUE); 
     prefInternal->AddObserver(NS_NET_PREF_IDNPREFIX, this, PR_TRUE); 
-    prefInternal->AddObserver(NS_NET_PREF_IDNSHOWPUNYCODE, this, PR_TRUE); 
     prefsChanged(prefInternal, nsnull);
   }
   return NS_OK;
@@ -105,11 +103,6 @@ void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const PRUnichar *pref
     if (NS_SUCCEEDED(rv) && prefix.Length() <= kACEPrefixLen)
       PL_strncpyz(nsIDNService::mACEPrefix, prefix.get(), kACEPrefixLen + 1);
   }
-  if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNSHOWPUNYCODE).Equals(pref)) {
-    PRBool val;
-    if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_IDNSHOWPUNYCODE, &val)))
-      mShowPunycode = val;
-  }
 }
 
 nsIDNService::nsIDNService()
@@ -121,7 +114,6 @@ nsIDNService::nsIDNService()
   strcpy(mACEPrefix, kIDNSPrefix);
 
   mMultilingualTestBed = PR_FALSE;
-  mShowPunycode = PR_FALSE;
 
   if (idn_success != idn_nameprep_create(NULL, &mNamePrepHandle))
     mNamePrepHandle = nsnull;
@@ -192,7 +184,7 @@ NS_IMETHODIMP nsIDNService::ConvertACEtoUTF8(const nsACString & input, nsACStrin
   // ToUnicode never fails.  If any step fails, then the original input
   // sequence is returned immediately in that step.
 
-  if (mShowPunycode || !IsASCII(input)) {
+  if (!IsASCII(input)) {
     _retval.Assign(input);
     return NS_OK;
   }
@@ -254,9 +246,6 @@ NS_IMETHODIMP nsIDNService::Normalize(const nsACString & input, nsACString & out
 {
   // protect against bogus input
   NS_ENSURE_TRUE(IsUTF8(input), NS_ERROR_UNEXPECTED);
-
-  if (mShowPunycode)
-    return ConvertUTF8toACE(input, output);
 
   NS_ConvertUTF8toUTF16 inUTF16(input);
   normalizeFullStops(inUTF16);

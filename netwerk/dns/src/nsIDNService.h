@@ -77,7 +77,6 @@ private:
   void prefsChanged(nsIPrefBranch *prefBranch, const PRUnichar *pref);
   
   PRBool mMultilingualTestBed;  // if true generates extra node for mulitlingual testbed 
-  PRBool mShowPunycode;
   idn_nameprep_t mNamePrepHandle;
   nsCOMPtr<nsIUnicodeNormalizer> mNormalizer;
   char mACEPrefix[kACEPrefixLen+1];

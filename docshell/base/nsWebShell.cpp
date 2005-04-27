@@ -119,9 +119,6 @@
 #include "nsCExternalHandlerService.h"
 
 #include "nsIIDNService.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#define NS_NET_PREF_IDNSHOWPUNYCODE "network.IDN_show_punycode"
 
 #ifdef NS_DEBUG
 /**
@@ -734,30 +731,26 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
         if(keywordsEnabled && (kNotFound == dotLoc)) {
           // only send non-qualified hosts to the keyword server
           nsCAutoString keywordSpec("keyword:");
-          nsCOMPtr<nsIPrefBranch> prefBranch = 
-              do_GetService(NS_PREFSERVICE_CONTRACTID);
-          PRBool showPunycode = PR_FALSE;
-          if (prefBranch && 
-              NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_IDNSHOWPUNYCODE, 
-                           &showPunycode)) && showPunycode) {
-              prefBranch->SetBoolPref(NS_NET_PREF_IDNSHOWPUNYCODE, PR_FALSE);
-              nsCOMPtr<nsIIDNService> idnSrv =
-                  do_GetService(NS_IDNSERVICE_CONTRACTID);
-              if (idnSrv) {
-                  PRBool isACE;
-                  nsCAutoString utf8Host;
-                  if (NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
-                      NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host)))
-                      keywordSpec.Append(utf8Host);
-                  else
-                      keywordSpec.Append(host);
-              }
-              else 
-                  keywordSpec.Append(host);
-              prefBranch->SetBoolPref(NS_NET_PREF_IDNSHOWPUNYCODE, PR_TRUE);
-          }
-          else 
-              keywordSpec.Append(host);
+          //
+          // If this string was passed through nsStandardURL by chance, then it
+          // may have been converted from UTF-8 to ACE, which would result in a
+          // completely bogus keyword query.  Here we try to recover the
+          // original Unicode value, but this is not 100% correct since the
+          // value may have been normalized per the IDN normalization rules.
+          //
+          // Since we don't have access to the exact original string that was
+          // entered by the user, this will just have to do.
+          //
+          PRBool isACE;
+          nsCAutoString utf8Host;
+          nsCOMPtr<nsIIDNService> idnSrv =
+              do_GetService(NS_IDNSERVICE_CONTRACTID);
+          if (idnSrv &&
+              NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
+              NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host)))
+            keywordSpec.Append(utf8Host);
+          else
+            keywordSpec.Append(host);
 
           NS_NewURI(getter_AddRefs(newURI),
                     keywordSpec, nsnull);

@@ -58,11 +58,12 @@
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_STANDARDURL_IMPL_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
-nsIIDNService *nsStandardURL::gIDNService = nsnull;
+nsIIDNService *nsStandardURL::gIDN = nsnull;
 nsICharsetConverterManager *nsStandardURL::gCharsetMgr = nsnull;
 PRBool nsStandardURL::gInitialized = PR_FALSE;
 PRBool nsStandardURL::gEscapeUTF8 = PR_TRUE;
 PRBool nsStandardURL::gAlwaysEncodeInUTF8 = PR_TRUE;
+PRBool nsStandardURL::gShowPunycode = PR_FALSE;
 
 #if defined(PR_LOGGING)
 //
@@ -135,6 +136,7 @@ end:
 #define NS_NET_PREF_ESCAPEUTF8         "network.standard-url.escape-utf8"
 #define NS_NET_PREF_ENABLEIDN          "network.enableIDN"
 #define NS_NET_PREF_ALWAYSENCODEINUTF8 "network.standard-url.encode-utf8"
+#define NS_NET_PREF_SHOWPUNYCODE       "network.IDN_show_punycode"
 
 NS_IMPL_ISUPPORTS1(nsStandardURL::nsPrefObserver, nsIObserver)
 
@@ -297,6 +299,7 @@ nsStandardURL::InitGlobalObjects()
         prefBranch->AddObserver(NS_NET_PREF_ESCAPEUTF8, obs.get(), PR_FALSE); 
         prefBranch->AddObserver(NS_NET_PREF_ALWAYSENCODEINUTF8, obs.get(), PR_FALSE);
         prefBranch->AddObserver(NS_NET_PREF_ENABLEIDN, obs.get(), PR_FALSE); 
+        prefBranch->AddObserver(NS_NET_PREF_SHOWPUNYCODE, obs.get(), PR_FALSE); 
 
         PrefsChanged(prefBranch, nsnull);
     }
@@ -305,7 +308,7 @@ nsStandardURL::InitGlobalObjects()
 void
 nsStandardURL::ShutdownGlobalObjects()
 {
-    NS_IF_RELEASE(gIDNService);
+    NS_IF_RELEASE(gIDN);
     NS_IF_RELEASE(gCharsetMgr);
 }
 
@@ -379,16 +382,16 @@ nsStandardURL::NormalizeIDN(const nsCSubstring &host, nsCString &result)
 
     if (IsASCII(host)) {
         PRBool isACE;
-        if (gIDNService &&
-            NS_SUCCEEDED(gIDNService->IsACE(host, &isACE)) && isACE &&
-            NS_SUCCEEDED(gIDNService->ConvertACEtoUTF8(host, result))) {
+        if (gIDN &&
+            NS_SUCCEEDED(gIDN->IsACE(host, &isACE)) && isACE &&
+            NS_SUCCEEDED(ACEtoUTF8(host, result))) {
             mHostEncoding = eEncoding_UTF8;
             return PR_TRUE;
         }
     }
     else {
         mHostEncoding = eEncoding_UTF8;
-        if (gIDNService && NS_SUCCEEDED(gIDNService->Normalize(host, result))) {
+        if (gIDN && NS_SUCCEEDED(NormalizeUTF8(host, result))) {
             // normalization could result in an ASCII only hostname
             if (IsASCII(result))
                 mHostEncoding = eEncoding_ASCII;
@@ -806,14 +809,14 @@ nsStandardURL::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 #define GOT_PREF(p, b) (NS_SUCCEEDED(prefs->GetBoolPref(p, &b)))
 
     if (PREF_CHANGED(NS_NET_PREF_ENABLEIDN)) {
-        NS_IF_RELEASE(gIDNService);
+        NS_IF_RELEASE(gIDN);
         if (GOT_PREF(NS_NET_PREF_ENABLEIDN, val) && val) {
             // initialize IDN
             nsCOMPtr<nsIIDNService> serv(do_GetService(NS_IDNSERVICE_CONTRACTID));
             if (serv)
-                NS_ADDREF(gIDNService = serv.get());
+                NS_ADDREF(gIDN = serv.get());
         }
-        LOG(("IDN support %s\n", gIDNService ? "enabled" : "disabled"));
+        LOG(("IDN support %s\n", gIDN ? "enabled" : "disabled"));
     }
     
     if (PREF_CHANGED(NS_NET_PREF_ESCAPEUTF8)) {
@@ -827,9 +830,36 @@ nsStandardURL::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             gAlwaysEncodeInUTF8 = val;
         LOG(("encode in UTF-8 %s\n", gAlwaysEncodeInUTF8 ? "enabled" : "disabled"));
     }
+
+    if (PREF_CHANGED(NS_NET_PREF_SHOWPUNYCODE)) {
+        if (GOT_PREF(NS_NET_PREF_SHOWPUNYCODE, val))
+            gShowPunycode = val;
+        LOG(("show punycode %s\n", gShowPunycode ? "enabled" : "disabled"));
+    }
 #undef PREF_CHANGED
 #undef GOT_PREF
 }
+
+/* static */ nsresult
+nsStandardURL::ACEtoUTF8(const nsCSubstring &host, nsCString &result)
+{
+    if (gShowPunycode) {
+        result = host;
+        return NS_OK;
+    }
+
+    return gIDN->ConvertACEtoUTF8(host, result);
+}
+
+/* static */ nsresult
+nsStandardURL::NormalizeUTF8(const nsCSubstring &host, nsCString &result)
+{
+    if (gShowPunycode)
+        return gIDN->ConvertUTF8toACE(host, result);
+
+    return gIDN->Normalize(host, result);
+}
+
 //----------------------------------------------------------------------------
 // nsStandardURL::nsISupports
 //----------------------------------------------------------------------------
@@ -987,9 +1017,9 @@ nsStandardURL::GetAsciiHost(nsACString &result)
         return NS_OK;
     }
 
-    if (gIDNService) {
+    if (gIDN) {
         nsresult rv;
-        rv = gIDNService->ConvertUTF8toACE(Host(), result);
+        rv = gIDN->ConvertUTF8toACE(Host(), result);
         if (NS_SUCCEEDED(rv)) {
             mHostA = ToNewCString(result);
             return NS_OK;
