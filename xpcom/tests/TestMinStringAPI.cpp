@@ -431,6 +431,39 @@ static PRBool test_adopt_sub()
     return rv;
   }
 
+static PRBool test_mutation()
+  {
+    nsCStringContainer s;
+    NS_CStringContainerInit(s);
+
+    const char kText[] = "Every good boy does fine.";
+
+    char *buf;
+    PRUint32 len = NS_CStringGetMutableData(s, sizeof(kText) - 1, &buf);
+    if (!buf || len != sizeof(kText) - 1)
+      return PR_FALSE;
+    memcpy(buf, kText, sizeof(kText));
+
+    const char *data;
+    NS_CStringGetData(s, &data);
+    if (strcmp(data, kText) != 0)
+      return PR_FALSE;
+
+    PRUint32 newLen = len + 1;
+    len = NS_CStringGetMutableData(s, newLen, &buf);
+    if (!buf || len != newLen)
+      return PR_FALSE;
+
+    buf[len - 1] = '.';
+
+    NS_CStringGetData(s, &data);
+    if (strncmp(data, kText, len - 1) != 0 || data[len - 1] != '.')
+      return PR_FALSE;
+
+    NS_CStringContainerFinish(s);
+    return PR_TRUE;
+  }
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -452,6 +485,7 @@ tests[] =
     { "test_depend_sub", test_depend_sub },
     { "test_adopt", test_adopt },
     { "test_adopt_sub", test_adopt_sub },
+    { "test_mutation", test_mutation },
     { nsnull, nsnull }
   };
 

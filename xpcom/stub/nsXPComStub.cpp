@@ -82,7 +82,9 @@ static const XPCOMFunctions kFrozenFunctions = {
     &NS_Realloc_P,
     &NS_Free_P,
     &NS_StringContainerInit2_P,
-    &NS_CStringContainerInit2_P
+    &NS_CStringContainerInit2_P,
+    &NS_StringGetMutableData_P,
+    &NS_CStringGetMutableData_P
 };  
 
 extern "C" NS_EXPORT nsresult
@@ -259,6 +261,13 @@ NS_StringGetData(const nsAString &aStr, const PRUnichar **aBuf, PRBool *aTerm)
   return NS_StringGetData_P(aStr, aBuf, aTerm);
 }
 
+#undef NS_StringGetMutableData
+extern "C" NS_EXPORT PRUint32
+NS_StringGetMutableData(nsAString &aStr, PRUint32 aLen, PRUnichar **aBuf)
+{
+  return NS_StringGetMutableData_P(aStr, aLen, aBuf);
+}
+
 #undef NS_StringCloneData
 extern "C" NS_EXPORT PRUnichar *
 NS_StringCloneData(const nsAString &aStr)
@@ -317,6 +326,13 @@ extern "C" NS_EXPORT PRUint32
 NS_CStringGetData(const nsACString &aStr, const char **aBuf, PRBool *aTerm)
 {
   return NS_CStringGetData_P(aStr, aBuf, aTerm);
+}
+
+#undef NS_CStringGetMutableData
+extern "C" NS_EXPORT PRUint32
+NS_CStringGetMutableData(nsACString &aStr, PRUint32 aLen, char **aBuf)
+{
+  return NS_CStringGetMutableData_P(aStr, aLen, aBuf);
 }
 
 #undef NS_CStringCloneData

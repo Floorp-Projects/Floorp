@@ -99,6 +99,7 @@ typedef nsresult   (* StringContainerInitFunc)(nsStringContainer&);
 typedef nsresult   (* StringContainerInit2Func)(nsStringContainer&, const PRUnichar *, PRUint32, PRUint32);
 typedef void       (* StringContainerFinishFunc)(nsStringContainer&);
 typedef PRUint32   (* StringGetDataFunc)(const nsAString&, const PRUnichar**, PRBool*);
+typedef PRUint32   (* StringGetMutableDataFunc)(nsAString&, PRUint32, PRUnichar**);
 typedef PRUnichar* (* StringCloneDataFunc)(const nsAString&);
 typedef nsresult   (* StringSetDataFunc)(nsAString&, const PRUnichar*, PRUint32);
 typedef nsresult   (* StringSetDataRangeFunc)(nsAString&, PRUint32, PRUint32, const PRUnichar*, PRUint32);
@@ -108,6 +109,7 @@ typedef nsresult   (* CStringContainerInitFunc)(nsCStringContainer&);
 typedef nsresult   (* CStringContainerInit2Func)(nsCStringContainer&, const char *, PRUint32, PRUint32);
 typedef void       (* CStringContainerFinishFunc)(nsCStringContainer&);
 typedef PRUint32   (* CStringGetDataFunc)(const nsACString&, const char**, PRBool*);
+typedef PRUint32   (* CStringGetMutableDataFunc)(nsACString&, PRUint32, char**);
 typedef char*      (* CStringCloneDataFunc)(const nsACString&);
 typedef nsresult   (* CStringSetDataFunc)(nsACString&, const char*, PRUint32);
 typedef nsresult   (* CStringSetDataRangeFunc)(nsACString&, PRUint32, PRUint32, const char*, PRUint32);
@@ -168,6 +170,8 @@ typedef struct XPCOMFunctions{
     FreeFunc freeFunc;
     StringContainerInit2Func stringContainerInit2;
     CStringContainerInit2Func cstringContainerInit2;
+    StringGetMutableDataFunc stringGetMutableData;
+    CStringGetMutableDataFunc cstringGetMutableData;
    
 } XPCOMFunctions;
 
