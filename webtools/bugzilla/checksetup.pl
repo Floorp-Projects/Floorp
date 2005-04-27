@@ -3606,8 +3606,9 @@ if (!$dbh->bz_column_info('longdescs', 'already_wrapped')) {
 # standard varchars in the bugs table.
 $dbh->bz_alter_column('bugs', 'bug_status', 
                       {TYPE => 'varchar(64)', NOTNULL => 1});
+# 2005-03-23 Tomas.Kopal@altap.cz - add default value to resolution, bug 286695
 $dbh->bz_alter_column('bugs', 'resolution',
-                      {TYPE => 'varchar(64)', NOTNULL => 1});
+                      {TYPE => 'varchar(64)', NOTNULL => 1, DEFAULT => "''"});
 $dbh->bz_alter_column('bugs', 'priority',
                       {TYPE => 'varchar(64)', NOTNULL => 1});
 $dbh->bz_alter_column('bugs', 'bug_severity',
