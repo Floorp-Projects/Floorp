@@ -3836,6 +3836,9 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsFrameConstructorState& aStat
   ConstructFrame(aState, aContent, parentFrame, childItems);
   // dont care about return value as ConstructFrame will not append a child if it fails.
 
+  if (!aState.mPseudoFrames.IsEmpty()) {
+    ProcessPseudoFrames(aState, childItems);
+  }
   // restore the pseudo frame state
   aState.mPseudoFrames = prevPseudoFrames;
 
