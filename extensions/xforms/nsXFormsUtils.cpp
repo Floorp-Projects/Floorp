@@ -1132,74 +1132,81 @@ nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aPara
   nsCOMPtr<nsIConsoleService> consoleService =
     do_GetService(NS_CONSOLESERVICE_CONTRACTID);
 
-  if (consoleService && errorObject) {
-    nsAutoString msg, srcFile, srcLine;
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
 
-    // get the string from the bundle (xforms.properties)
-    nsCOMPtr<nsIStringBundleService> bundleService =
-      do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-    if (!bundleService)
-      return;
+  if (!(consoleService && errorObject && bundleService))
+    return;
+  
+  nsAutoString msg, srcFile, srcLine;
 
-    nsCOMPtr<nsIStringBundle> bundle;
-    bundleService->CreateBundle("chrome://xforms/locale/xforms.properties",
-                                getter_AddRefs(bundle));
-    if (!bundle)
-      return;
+  // get the string from the bundle (xforms.properties)
+  nsCOMPtr<nsIStringBundle> bundle;
+  bundleService->CreateBundle("chrome://xforms/locale/xforms.properties",
+                              getter_AddRefs(bundle));
+  nsXPIDLString message;
+  if (aParams) {
+    bundle->FormatStringFromName(aMessageName.get(), aParams, aParamLength,
+                                 getter_Copies(message));
+    msg.Append(message);
+  } else {
+    bundle->GetStringFromName(aMessageName.get(),
+                              getter_Copies(message));
+    msg.Append(message);
+  }
 
-    nsXPIDLString message;
-    if (aParams) {
-      bundle->FormatStringFromName(aMessageName.get(), aParams, aParamLength,
-                                   getter_Copies(message));
-      msg.Append(message);
-    } else {
-      bundle->GetStringFromName(aMessageName.get(),
-                                getter_Copies(message));
-      msg.Append(message);
+  if (msg.IsEmpty()) {
+#ifdef DEBUG
+    printf("nsXFormsUtils::ReportError() Failed to get message string for message id '%s'!\n",
+           NS_ConvertUCS2toUTF8(aMessageName).get());
+#endif
+    return;
+  }
+
+  // if a context was defined, we clone (not deep) it, serialize it and append
+  // to the message.
+  if (aContext) {
+    nsCOMPtr<nsIDOMSerializer> ds = do_GetService(NS_XMLSERIALIZER_CONTRACTID);
+    if (ds) {
+      nsAutoString contextMsg;
+      nsCOMPtr<nsIDOMNode> tmpNode;
+      // SerializeToString always does a deep serialize, so we do a non-deep
+      // clone so that we don't serialize any children.
+      aContext->CloneNode(PR_FALSE, getter_AddRefs(tmpNode));
+      ds->SerializeToString(tmpNode, srcLine);
     }
+  }
 
-    // if a context was defined, we clone (not deep) it, serialize it and append
-    // to the message.
-    if (aContext) {
-      nsCOMPtr<nsIDOMSerializer> ds = do_GetService(NS_XMLSERIALIZER_CONTRACTID);
-      if (ds) {
-        nsAutoString contextMsg;
-        nsCOMPtr<nsIDOMNode> tmpNode;
-        // SerializeToString always does a deep serialize, so we do a non-deep
-        // clone so that we don't serialize any children.
-        aContext->CloneNode(PR_FALSE, getter_AddRefs(tmpNode));
-        ds->SerializeToString(tmpNode, srcLine);
-      }
-    }
+  // if aElement is defined, we use it to figure out the location of the file
+  // that caused the error.
+  if (aElement) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aElement->GetOwnerDocument(getter_AddRefs(domDoc));
 
-    // if aElement is defined, we use it to figure out the location of the file
-    // that caused the error.
-    if (aElement) {
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      aElement->GetOwnerDocument(getter_AddRefs(domDoc));
+    if (domDoc) {
+      nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDoc));
 
-      if (domDoc) {
-        nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDoc));
+      if (nsDoc) {
+        nsCOMPtr<nsIDOMLocation> domLoc;
+        nsDoc->GetLocation(getter_AddRefs(domLoc));
 
-        if (nsDoc) {
-          nsCOMPtr<nsIDOMLocation> domLoc;
-          nsDoc->GetLocation(getter_AddRefs(domLoc));
-
-          if (domLoc) {
-            nsAutoString location;
-            domLoc->GetHref(srcFile);
-          }
+        if (domLoc) {
+          nsAutoString location;
+          domLoc->GetHref(srcFile);
         }
       }
     }
+  }
 
-    if (!msg.IsEmpty()) {
-      nsresult rv = errorObject->Init(msg.get(), srcFile.get(), srcLine.get(),
-                                      0, 0, aErrorFlag, "XForms");
-      if (NS_SUCCEEDED(rv)) {
-        consoleService->LogMessage(errorObject);
-      }
-    }
+
+  // Log the message to JavaScript Console
+#ifdef DEBUG
+  nsresult rv = errorObject->Init(msg.get(), srcFile.get(), srcLine.get(),
+                                  0, 0, aErrorFlag, "XForms");
+  printf("ERR: %s\n", NS_ConvertUCS2toUTF8(msg).get());
+#endif
+  if (NS_SUCCEEDED(rv)) {
+    consoleService->LogMessage(errorObject);
   }
 }
 
