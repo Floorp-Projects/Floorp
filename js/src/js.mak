@@ -90,6 +90,7 @@ CLEAN :
 	-@erase "$(INTDIR)\jsstr.obj"
 	-@erase "$(INTDIR)\jsutil.obj"
 	-@erase "$(INTDIR)\jsxdrapi.obj"
+	-@erase "$(INTDIR)\jsxml.obj"
 	-@erase "$(INTDIR)\prmjtime.obj"
 	-@erase "$(OUTDIR)\js32.dll"
 	-@erase "$(OUTDIR)\js32.exp"
@@ -180,6 +181,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\jsstr.obj" \
 	"$(INTDIR)\jsutil.obj" \
 	"$(INTDIR)\jsxdrapi.obj" \
+	"$(INTDIR)\jsxml.obj" \
 	"$(INTDIR)\prmjtime.obj" \
 	"$(OUTDIR)\fdlibm.lib"
 
@@ -238,9 +240,8 @@ CLEAN :
 	-@erase "$(INTDIR)\jsstr.obj"
 	-@erase "$(INTDIR)\jsutil.obj"
 	-@erase "$(INTDIR)\jsxdrapi.obj"
+	-@erase "$(INTDIR)\jsxml.obj"
 	-@erase "$(INTDIR)\prmjtime.obj"
-	-@erase "$(INTDIR)\vc40.idb"
-	-@erase "$(INTDIR)\vc40.pdb"
 	-@erase "$(OUTDIR)\js32.dll"
 	-@erase "$(OUTDIR)\js32.exp"
 	-@erase "$(OUTDIR)\js32.ilk"
@@ -332,6 +333,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\jsstr.obj" \
 	"$(INTDIR)\jsutil.obj" \
 	"$(INTDIR)\jsxdrapi.obj" \
+	"$(INTDIR)\jsxml.obj" \
 	"$(INTDIR)\prmjtime.obj" \
 	"$(OUTDIR)\fdlibm.lib"
 
@@ -434,8 +436,6 @@ ALL : "js - Win32 Debug" "$(OUTDIR)\jsshell.exe"
 
 CLEAN : 
 	-@erase "$(INTDIR)\js.obj"
-	-@erase "$(INTDIR)\vc40.idb"
-	-@erase "$(INTDIR)\vc40.pdb"
 	-@erase "$(OUTDIR)\jsshell.exe"
 	-@erase "$(OUTDIR)\jsshell.ilk"
 	-@erase "$(OUTDIR)\jsshell.pdb"
@@ -749,6 +749,7 @@ DEP_CPP_JSAPI=\
 	".\jsstr.h"\
 	".\jstypes.h"\
 	".\jsutil.h"\
+	".\jsxml.h"\
 	{$(INCLUDE)}"\sys\types.h"\
 	
 NODEP_CPP_JSAPI=\
@@ -803,6 +804,7 @@ DEP_CPP_JSAPI=\
 	".\jsstr.h"\
 	".\jstypes.h"\
 	".\jsutil.h"\
+	".\jsxml.h"\
 	{$(INCLUDE)}"\sys\types.h"\
 	
 NODEP_CPP_JSAPI=\
@@ -1880,6 +1882,7 @@ DEP_CPP_JSGC_=\
 	".\jsstr.h"\
 	".\jstypes.h"\
 	".\jsutil.h"\
+	".\jsxml.h"\
 	{$(INCLUDE)}"\sys\types.h"\
 	
 NODEP_CPP_JSGC_=\
@@ -1923,6 +1926,7 @@ DEP_CPP_JSGC_=\
 	".\jsstr.h"\
 	".\jstypes.h"\
 	".\jsutil.h"\
+	".\jsxml.h"\
 	{$(INCLUDE)}"\sys\types.h"\
 	
 NODEP_CPP_JSGC_=\
@@ -2029,6 +2033,7 @@ DEP_CPP_JSINT=\
 	".\jsstr.h"\
 	".\jstypes.h"\
 	".\jsutil.h"\
+	".\jsxml.h"\
 	{$(INCLUDE)}"\sys\types.h"\
 	
 NODEP_CPP_JSINT=\
@@ -2077,6 +2082,7 @@ DEP_CPP_JSINT=\
 	".\jsstr.h"\
 	".\jstypes.h"\
 	".\jsutil.h"\
+	".\jsxml.h"\
 	{$(INCLUDE)}"\sys\types.h"\
 	
 NODEP_CPP_JSINT=\
@@ -2947,6 +2953,7 @@ DEP_CPP_JSSCA=\
 	".\jsstr.h"\
 	".\jstypes.h"\
 	".\jsutil.h"\
+	".\jsxml.h"\
 	{$(INCLUDE)}"\sys\types.h"\
 	
 NODEP_CPP_JSSCA=\
@@ -2993,6 +3000,7 @@ DEP_CPP_JSSCA=\
 	".\jsstr.h"\
 	".\jstypes.h"\
 	".\jsutil.h"\
+	".\jsxml.h"\
 	{$(INCLUDE)}"\sys\types.h"\
 	
 NODEP_CPP_JSSCA=\
@@ -3426,6 +3434,88 @@ NODEP_CPP_JSXDR=\
 	
 
 "$(INTDIR)\jsxdrapi.obj" : $(SOURCE) $(DEP_CPP_JSXDR) "$(INTDIR)"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\jsxml.c
+
+!IF  "$(CFG)" == "js - Win32 Release"
+
+DEP_CPP_JSXML=\
+	".\js.msg"\
+	".\jsapi.h"\
+	".\jsarray.h"\
+	".\jsatom.h"\
+	".\jsbit.h"\
+	".\jsbool.h"\
+	".\jscntxt.h"\
+	".\jsfun.h"\
+	".\jsgc.h"\
+	".\jsinterp.h"\
+	".\jslock.h"\
+	".\jsnum.h"\
+	".\jsobj.h"\
+	".\jsopcode.h"\
+	".\jsparse.h"\
+	".\jsprf.h"\
+	".\jsscan.h"\
+	".\jsscope.h"\
+	".\jsscript.h"\
+	".\jsstr.h"\
+	".\jstypes.h"\
+	".\jsutil.h"\
+	".\jsxml.h"\
+	{$(INCLUDE)}"\sys\types.h"\
+	
+NODEP_CPP_JSXML=\
+	".\jsautocfg.h"\
+	".\prcvar.h"\
+	".\prlock.h"\
+	
+
+"$(INTDIR)\jsxml.obj" : $(SOURCE) $(DEP_CPP_JSXML) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "js - Win32 Debug"
+
+DEP_CPP_JSXML=\
+	".\js.msg"\
+	".\jsapi.h"\
+	".\jsarray.h"\
+	".\jsatom.h"\
+	".\jsbit.h"\
+	".\jsbool.h"\
+	".\jscntxt.h"\
+	".\jsfun.h"\
+	".\jsgc.h"\
+	".\jsinterp.h"\
+	".\jslock.h"\
+	".\jsnum.h"\
+	".\jsobj.h"\
+	".\jsopcode.h"\
+	".\jsparse.h"\
+	".\jsscan.h"\
+	".\jsscope.h"\
+	".\jsscript.h"\
+	".\jsstr.h"\
+	".\jstypes.h"\
+	".\jsutil.h"\
+	".\jsxml.h"\
+	".\jsprf.h"\
+	{$(INCLUDE)}"\sys\types.h"\
+	
+NODEP_CPP_JSXML=\
+	".\jsautocfg.h"\
+	".\prcvar.h"\
+	".\prlock.h"\
+	
+
+"$(INTDIR)\jsxml.obj" : $(SOURCE) $(DEP_CPP_JSXML) "$(INTDIR)"
 
 
 !ENDIF 
