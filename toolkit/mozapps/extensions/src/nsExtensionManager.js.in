@@ -3129,10 +3129,12 @@ ExtensionManager.prototype = {
                                                    this._installManifest);
 
             // Try and install again, but use the updated compatibility DB
-            em.installItemFromFileInternal(this._xpi, this._installManifest, 
-                                           aInstallLocationKey);
+            em.installItemFromFileInternal(this._xpi, aInstallLocationKey, 
+                                           this._installManifest);
             // We are responsible for cleaning up this file!
             InstallLocations.get(aInstallLocationKey).removeFile(this._xpi);
+          } else {
+            showIncompatibleError(installData);
           }
           break;
         case "Update:Extension:Ended":
@@ -3182,9 +3184,8 @@ ExtensionManager.prototype = {
           installManifestFile.remove(false);
           return;
         }
-        var stagedFile = installLocation.stageFile(aXPIFile, installData.id);
         (new IncompatibleObserver(this)).checkForUpdates(installManifest, 
-                                                         installData, stagedFile);
+                                                         installData, aXPIFile);
       }
       else {
         // XXXben Look up XULRunnerSettingsThingy to see if there is a registered
@@ -4822,7 +4823,7 @@ ExtensionsDataSource.prototype = {
           continue;
         
         this._setProperty(targetDataSource, targetApp, EM_R("minVersion"), EM_L(minVersion));
-        this._setProperty(targetDataSource, targetApp, EM_R("maxVersion"), EM_L(minVersion));
+        this._setProperty(targetDataSource, targetApp, EM_R("maxVersion"), EM_L(maxVersion));
         
         // If we were setting these properties on the main datasource, flush
         // it now. (Don't flush changes set on Install Manifests - they are
