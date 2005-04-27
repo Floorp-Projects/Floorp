@@ -927,18 +927,25 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool mov
         }
     }
 
-    // check to see if we are a directory, if so enumerate it.
-
+    // Try different ways to move/copy files/directories
+    PRBool done = PR_FALSE;
     PRBool isDir;
     IsDirectory(&isDir);
 
-    if (!isDir)
+    // Try to move the file or directory, or try to copy a single file 
+    if (move || !isDir)
     {
+        // when moving things, first try to just MoveFile it, even if it is a directory
         rv = CopySingleFile(this, newParentDir, newName, move);
-        if (NS_FAILED(rv))
-            return rv;
+        done = NS_SUCCEEDED(rv);
+        // If we are moving a directory and that fails, fallback on directory
+        // enumeration.  See bug 231300 for details.
+        if (!done && !(move && isDir))
+            return rv;  
     }
-    else
+    
+    // Not able to copy or move directly, so enumerate it
+    if (!done)
     {
         // create a new target destination in the new parentDir;
         nsCOMPtr<nsIFile> target;
