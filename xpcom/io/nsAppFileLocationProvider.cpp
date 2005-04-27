@@ -193,6 +193,10 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
     {
         rv = GetDefaultUserProfileRoot(getter_AddRefs(localFile));
     }
+    else if (nsCRT::strcmp(prop, NS_APP_USER_PROFILES_LOCAL_ROOT_DIR) == 0)
+    {
+        rv = GetDefaultUserProfileRoot(getter_AddRefs(localFile), PR_TRUE);
+    }
     else if (nsCRT::strcmp(prop, NS_APP_RES_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
@@ -331,7 +335,7 @@ NS_METHOD nsAppFileLocationProvider::CloneMozBinDirectory(nsILocalFile **aLocalF
 // WIN    : <Application Data folder on user's machine>\Mozilla
 // Mac    : :Documents:Mozilla:
 //----------------------------------------------------------------------------------------
-NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFile)
+NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFile, PRBool aLocal)
 {
     NS_ENSURE_ARG_POINTER(aLocalFile);
 
@@ -351,7 +355,8 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
     if (NS_FAILED(rv)) return rv;
 #elif defined(XP_MACOSX)
     FSRef fsRef;
-    OSErr err = ::FSFindFolder(kUserDomain, kDomainLibraryFolderType, kCreateFolder, &fsRef);
+    OSType folderType = aLocal ? kCachedDataFolderType : kDomainLibraryFolderType;
+    OSErr err = ::FSFindFolder(kUserDomain, folderType, kCreateFolder, &fsRef);
     if (err) return NS_ERROR_FAILURE;
     NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localDir));
     if (!localDir) return NS_ERROR_FAILURE;
@@ -371,7 +376,8 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
     nsCOMPtr<nsIProperties> directoryService = 
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    rv = directoryService->Get(NS_WIN_APPDATA_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
+    const char* prop = aLocal ? NS_WIN_LOCAL_APPDATA_DIR : NS_WIN_APPDATA_DIR;
+    rv = directoryService->Get(prop, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
     if (NS_SUCCEEDED(rv))
         rv = localDir->Exists(&exists);
     if (NS_FAILED(rv) || !exists)
@@ -422,14 +428,14 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
 // WIN    : <Application Data folder on user's machine>\Mozilla\Profiles
 // Mac    : :Documents:Mozilla:Profiles:
 //----------------------------------------------------------------------------------------
-NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
+NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aLocalFile, PRBool aLocal)
 {
     NS_ENSURE_ARG_POINTER(aLocalFile);
 
     nsresult rv;
     nsCOMPtr<nsILocalFile> localDir;
 
-    rv = GetProductDirectory(getter_AddRefs(localDir));
+    rv = GetProductDirectory(getter_AddRefs(localDir), aLocal);
     if (NS_FAILED(rv)) return rv;
 
 #if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_OS2) || defined(XP_WIN)

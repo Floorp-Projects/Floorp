@@ -90,8 +90,11 @@ nsProfileDirServiceProvider::~nsProfileDirServiceProvider()
 }
 
 nsresult
-nsProfileDirServiceProvider::SetProfileDir(nsIFile* aProfileDir)
+nsProfileDirServiceProvider::SetProfileDir(nsIFile* aProfileDir,
+                                           nsIFile* aLocalProfileDir)
 {
+  if (!aLocalProfileDir)
+    aLocalProfileDir = aProfileDir;
   if (mProfileDir) {
     PRBool isEqual;
     if (aProfileDir &&
@@ -105,12 +108,18 @@ nsProfileDirServiceProvider::SetProfileDir(nsIFile* aProfileDir)
     UndefineFileLocations();
   }
   mProfileDir = aProfileDir;
+  mLocalProfileDir = aLocalProfileDir;
   if (!mProfileDir)
     return NS_OK;
 
   nsresult rv = InitProfileDir(mProfileDir);
   if (NS_FAILED(rv))
     return rv;
+
+  // Make sure that the local profile dir exists
+  // we just try to create it - if it exists already, that'll fail; ignore
+  // errors
+  mLocalProfileDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
 
 #ifdef MOZ_PROFILESHARING
   if (mSharingEnabled) {
@@ -233,6 +242,9 @@ nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFi
   }
   else if (strcmp(prop, NS_APP_USER_PROFILE_50_DIR) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
+  }
+  else if (strcmp(prop, NS_APP_USER_PROFILE_LOCAL_50_DIR) == 0) {
+    rv = mLocalProfileDir->Clone(getter_AddRefs(localFile));
   }
   else if (strcmp(prop, NS_APP_USER_CHROME_DIR) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));

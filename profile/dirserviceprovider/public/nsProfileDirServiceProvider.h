@@ -75,9 +75,13 @@ public:
     *                      It does not need to exist before calling this
     *                      method. If it does not, it will be created and
     *                      defaults will be copied to it. 
+    * @param aLocalProfileDir
+    *                      Directory for local profile data, e.g. Cache.
+    *                      If null, aProfileDir will be used for this purpose.
     */
 
-   virtual nsresult        SetProfileDir(nsIFile* aProfileDir);
+   virtual nsresult        SetProfileDir(nsIFile* aProfileDir,
+                                         nsIFile* aLocalProfileDir = nsnull);
 
   /**
    * Register
@@ -112,6 +116,7 @@ protected:
 protected:
 
   nsCOMPtr<nsIFile>        mProfileDir;
+  nsCOMPtr<nsIFile>        mLocalProfileDir;
   nsProfileLock*           mProfileDirLock;
   PRPackedBool             mNotifyObservers;
 
