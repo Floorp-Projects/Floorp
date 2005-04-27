@@ -442,7 +442,7 @@ function loadCalendarEventDialog()
         } catch(ex) {
             dump("eventCalendar.uri not found...\n");
         }
-    }    
+    }
 
     // update enabling and disabling
     updateRepeatItemEnabled();

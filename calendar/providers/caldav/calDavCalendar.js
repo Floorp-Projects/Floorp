@@ -73,6 +73,10 @@ const calITodo = Components.interfaces.calITodo;
 const calEventClass = Components.classes["@mozilla.org/calendar/event;1"];
 const calIItemOccurrence = Components.interfaces.calIItemOccurrence;
 
+const kCalCalendarManagerContractID = "@mozilla.org/calendar/manager;1";
+const kCalICalendarManager = Components.interfaces.calICalendarManager;
+
+
 function makeOccurrence(item, start, end)
 {
     var occ = Components.classes["@mozilla.org/calendar/item-occurrence;1"].
@@ -80,6 +84,16 @@ function makeOccurrence(item, start, end)
     occ.initialize(item, start, end);
 
     return occ;
+}
+
+var activeCalendarManager = null;
+function getCalendarManager()
+{
+    if (!activeCalendarManager) {
+        activeCalendarManager = 
+            Components.classes[kCalCalendarManagerContractID].getService(kCalICalendarManager);
+    }
+    return activeCalendarManager;
 }
   
 // END_OF_TIME needs to be the max value a PRTime can be
@@ -104,7 +118,12 @@ calDavCalendar.prototype = {
     //
 
     // attribute AUTF8String name;
-    name: "",
+    get name() {
+        return getCalendarManager().getCalendarPref(this, "NAME");
+    },
+    set name(name) {
+        getCalendarManager().setCalendarPref(this, "NAME", name);
+    },
 
     // readonly attribute AUTF8String type;
     get type() { return "caldav"; },

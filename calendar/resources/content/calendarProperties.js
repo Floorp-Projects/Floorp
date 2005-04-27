@@ -71,6 +71,7 @@ function onOKCommand()
        gCalendar.uri = newUri;
 
    var calManager = getCalendarManager();
+
    calManager.setCalendarPref(gCalendar, 'color',
                               document.getElementById("calendar-color").color);
    

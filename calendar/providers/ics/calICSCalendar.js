@@ -47,6 +47,19 @@
 
 const calIOperationListener = Components.interfaces.calIOperationListener;
 const calICalendar = Components.interfaces.calICalendar;
+const calCalendarManagerContractID = "@mozilla.org/calendar/manager;1";
+const calICalendarManager = Components.interfaces.calICalendarManager;
+
+var activeCalendarManager = null;
+function getCalendarManager()
+{
+    if (!activeCalendarManager) {
+        activeCalendarManager = 
+            Components.classes[calCalendarManagerContractID].getService(calICalendarManager);
+    }
+    return activeCalendarManager;
+}
+
 
 function calICSCalendar () {
     this.wrappedJSObject = this;
@@ -84,7 +97,12 @@ calICSCalendar.prototype = {
         this.mMemoryCalendar.addObserver(this.mObserver);
     },
 
-    name: "",
+    get name() {
+        return getCalendarManager().getCalendarPref(this, "NAME");
+    },
+    set name(name) {
+        getCalendarManager().setCalendarPref(this, "NAME", name);
+    },
 
     get type() { return "ics"; },
 

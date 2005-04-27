@@ -102,8 +102,8 @@ calCalendarManager.prototype = {
     },
 
     initDB: function() {
-        var sqlTables = { cal_calendars: "id INTEGER PRIMARY KEY, name STRING, type STRING, uri STRING",
-                          cal_calendars_prefs: "id INTEGER PRIMARY KEY, calendar INTERGER, name STRING, value STRING"
+        var sqlTables = { cal_calendars: "id INTEGER PRIMARY KEY, type STRING, uri STRING",
+                          cal_calendars_prefs: "id INTEGER PRIMARY KEY, calendar INTEGER, name STRING, value STRING"
         };
 
         var dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
@@ -124,12 +124,12 @@ calCalendarManager.prototype = {
 
         this.mFindCalendar = createStatement (
             this.mDB,
-            "SELECT id FROM cal_calendars WHERE name = :name AND type = :type AND uri = :uri");
+            "SELECT id FROM cal_calendars WHERE type = :type AND uri = :uri");
 
         this.mRegisterCalendar = createStatement (
             this.mDB,
-            "INSERT INTO cal_calendars (name, type, uri) " +
-            "VALUES (:name, :type, :uri)"
+            "INSERT INTO cal_calendars (type, uri) " +
+            "VALUES (:type, :uri)"
             );
 
         this.mUnregisterCalendar = createStatement (
@@ -150,14 +150,12 @@ calCalendarManager.prototype = {
             "INSERT INTO cal_calendars_prefs (calendar, name, value) " +
             "VALUES (:calendar, :name, :value)");
 
-
     },
 
     findCalendarID: function(calendar) {
         var stmt = this.mFindCalendar;
         stmt.reset();
         var pp = stmt.params;
-        pp.name = calendar.name;
         pp.type = calendar.type;
         pp.uri = calendar.uri.spec;
 
@@ -173,9 +171,8 @@ calCalendarManager.prototype = {
     /**
      * calICalendarManager interface
      */
-    createCalendar: function(name, type, uri) {
+    createCalendar: function(type, uri) {
         var calendar = Components.classes["@mozilla.org/calendar/calendar;1?type=" + type].createInstance(Components.interfaces.calICalendar);
-        calendar.name = name;
         calendar.uri = uri;
         return calendar;
     },
@@ -186,7 +183,6 @@ calCalendarManager.prototype = {
             throw Components.results.NS_ERROR_FAILURE;
 
         var pp = this.mRegisterCalendar.params;
-        pp.name = calendar.name;
         pp.type = calendar.type;
         pp.uri = calendar.uri.spec;
 
@@ -228,9 +224,9 @@ calCalendarManager.prototype = {
             var id = stmt.row.id;
             if (!this.mCache[id]) {
                 try {
-                    this.mCache[id] = this.createCalendar(stmt.row.name, stmt.row.type, makeURI(stmt.row.uri));
+                    this.mCache[id] = this.createCalendar(stmt.row.type, makeURI(stmt.row.uri));
                 } catch (e) {
-                    dump("Can't create calendar for " + id + " (" + stmt.row.name + ", " + stmt.row.type + ", " + 
+                    dump("Can't create calendar for " + id + " (" + stmt.row.type + ", " + 
                         stmt.row.uri + "): " + e + "\n");
                     continue;
                 }

@@ -40,6 +40,19 @@
 // calMemoryCalendar.js
 //
 
+const calCalendarManagerContractID = "@mozilla.org/calendar/manager;1";
+const calICalendarManager = Components.interfaces.calICalendarManager;
+
+var activeCalendarManager = null;
+function getCalendarManager()
+{
+    if (!activeCalendarManager) {
+        activeCalendarManager = 
+            Components.classes[calCalendarManagerContractID].getService(calICalendarManager);
+    }
+    return activeCalendarManager;
+}
+
 function calMemoryCalendar() {
     this.wrappedJSObject = this;
     this.initMemoryCalendar();
@@ -83,7 +96,12 @@ calMemoryCalendar.prototype = {
     //
 
     // attribute AUTF8String name;
-    name: "",
+    get name() {
+        return getCalendarManager().getCalendarPref(this, "NAME");
+    },
+    set name(name) {
+        getCalendarManager().setCalendarPref(this, "NAME", name);
+    },
 
     // readonly attribute AUTF8String type;
     get type() { return "memory"; },

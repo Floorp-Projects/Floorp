@@ -45,6 +45,9 @@ const kStorageServiceIID = Components.interfaces.mozIStorageService;
 
 const kCalICalendar = Components.interfaces.calICalendar;
 
+const kCalCalendarManagerContractID = "@mozilla.org/calendar/manager;1";
+const kCalICalendarManager = Components.interfaces.calICalendarManager;
+
 const kCalEventContractID = "@mozilla.org/calendar/event;1";
 const kCalIEvent = Components.interfaces.calIEvent;
 var CalEvent;
@@ -184,6 +187,16 @@ function makeOccurrence(item, start, end)
 // calStorageCalendar
 //
 
+var activeCalendarManager = null;
+function getCalendarManager()
+{
+    if (!activeCalendarManager) {
+        activeCalendarManager = 
+            Components.classes[kCalCalendarManagerContractID].getService(kCalICalendarManager);
+    }
+    return activeCalendarManager;
+}
+
 function calStorageCalendar() {
     this.wrappedJSObject = this;
 }
@@ -216,8 +229,12 @@ calStorageCalendar.prototype = {
     //
 
     // attribute AUTF8String name;
-    name: "",
-
+    get name() {
+        return getCalendarManager().getCalendarPref(this, "NAME");
+    },
+    set name(name) {
+        getCalendarManager().setCalendarPref(this, "NAME", name);
+    },
     // readonly attribute AUTF8String type;
     get type() { return "storage"; },
 

@@ -47,10 +47,9 @@ interface calICalendarManager : nsISupports
 {
   /* 
    * create a new calendar
-   * aName is the display name of the calendar
    * aType is the type ("caldav", "storage", etc)
    */
-  calICalendar createCalendar(in AUTF8String aName, in AUTF8String aType, in nsIURI aURL);
+  calICalendar createCalendar(in AUTF8String aType, in nsIURI aURL);
 
   /* register a newly created calendar with the calendar service */
   void registerCalendar(in calICalendar aCalendar);

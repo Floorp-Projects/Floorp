@@ -82,13 +82,15 @@ function doCreateCalendar()
 
     var calManager = getCalendarManager();
     try {
-        var newCalendar = calManager.createCalendar(cal_name, provider, makeURL(uri));
+        var newCalendar = calManager.createCalendar(provider, makeURL(uri));
     } catch (ex) {
         dump(ex);
         return false;
     }
     calManager.registerCalendar(newCalendar);
     
+    newCalendar.name = cal_name;
+
     calManager.setCalendarPref(newCalendar, 'color', cal_color);
 
     return true;
