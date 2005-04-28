@@ -405,7 +405,7 @@ function openAboutDialog()
 #endif
 }
 
-function openPreferences()
+function openPreferences(paneID)
 {
   var instantApply = getBoolPref("browser.preferences.instantApply", false);
   var features = "chrome,titlebar,toolbar,centerscreen" + (instantApply ? ",dialog=no" : ",modal");
@@ -413,11 +413,16 @@ function openPreferences()
   var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                      .getService(Components.interfaces.nsIWindowMediator);
   var win = wm.getMostRecentWindow("Browser:Preferences");
-  if (win)
+  if (win) {
     win.focus();
-  else 
-    openDialog("chrome://browser/content/preferences/preferences.xul", 
-               "Preferences", features);
+    if (paneID) {
+      var pane = win.document.getElementById(paneID);
+      win.document.documentElement.showPane(pane);
+    }
+  }
+  else
+    openDialog("chrome://browser/content/preferences/preferences.xul",
+               "Preferences", features, paneID);
 }
 
 function getUILink(item)
