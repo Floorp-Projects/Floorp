@@ -886,16 +886,16 @@
   
   <binding id="browsermessage" extends="xul:hbox">
     <content align="center">
-      <xul:hbox anonid="messagePopupContainer" align="center" flex="1">
+      <xul:hbox align="center" flex="1">
         <xul:image       anonid="messageImage"   class="messageImage"/>
         <xul:description anonid="messageText"    class="messageText" flex="1"/>
       </xul:hbox>
-      <xul:button       anonid="messageButton"  class="messageButton"/>
+      <xul:button anonid="messageButton" class="messageButton"/>
       <xul:spacer class="tabs-right"/>
-      <xul:hbox hidden="true" anonid="messageClose" class="tabs-closebutton-box" 
+      <xul:hbox hidden="true" anonid="messageClose" class="tabs-closebutton-box"
                 align="center" pack="end">
-        <xul:toolbarbutton ondblclick="event.preventBubble();" 
-                           class="tabs-closebutton close-button" 
+        <xul:toolbarbutton ondblclick="event.preventBubble();"
+                           class="tabs-closebutton close-button"
                            oncommand="this.parentNode.parentNode.hide();"/>
       </xul:hbox>
     </content>
@@ -925,7 +925,7 @@
           <![CDATA[
             this._imageElement.setAttribute("src", val);
             return val;
-          ]]>        
+          ]]>
         </setter>
       </property>
       
@@ -935,19 +935,30 @@
       <field name="source">
         "";
       </field>
+
+      <field name="_popup">
+        "";
+      </field>
       <property name="popup">
         <setter>
           <![CDATA[
-            if (val)
-              document.getAnonymousElementByAttribute(this, "anonid", "messagePopupContainer").setAttribute("popup", val);
-            else
-              document.getAnonymousElementByAttribute(this, "anonid", "messagePopupContainer").removeAttribute("popup");
+           this._popup = val;
+
+           // store scope
+           var myThis = this;
+           var lambda = function (event) {myThis.showPopup(event);}
+
+           if (val) {
+              document.getAnonymousElementByAttribute(this, "anonid", "messageButton").addEventListener("command", lambda, false);
+            } else {
+              document.getAnonymousElementByAttribute(this, "anonid", "messageButton").removeEventListener("command", lambda, false);
+            }
             return val;
           ]]>
         </setter>
         <getter>
           <![CDATA[
-            return document.getAnonymousElementByAttribute(this, "anonid", "messagePopupContainer").getAttribute("popup");
+            return this._popup;
           ]]>
         </getter>
       </property>
@@ -971,7 +982,7 @@
               this._textElement.removeChild(this._textElement.firstChild);
             this._textElement.appendChild(document.createTextNode(val));
             return val;
-          ]]>        
+          ]]>
         </setter>
       </property>
       
@@ -993,7 +1004,7 @@
             else
               this._buttonElement.setAttribute("style", "max-width: 1px; visibility: hidden;");
             return val;
-          ]]>        
+          ]]>
         </setter>
       </property>
       <property name="closeButton">
@@ -1007,7 +1018,7 @@
             var elm = document.getAnonymousElementByAttribute(this, "anonid", "messageClose");
             elm.hidden = !val;
             return val;
-          ]]>        
+          ]]>
         </setter>
       </property>
       <method name="hide">
@@ -1017,6 +1028,15 @@
           ]]>
         </body>
       </method>
+      <method name="showPopup">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            document.getElementById(this.popup).showPopup(event.originalTarget, -1, -1, "popup", "bottomleft", "topleft");
+          ]]>
+        </body>
+      </method>
+
     </implementation>
     <handlers>
       <handler event="command">

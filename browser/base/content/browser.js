@@ -218,12 +218,14 @@ const gPopupBlockerObserver = {
         var brandShortName = brandBundle.getString("brandShortName");
         var message;
         var popupCount = gBrowser.selectedBrowser.pageReport.length;
+        var popupButtonText = bundle_browser.getString("popupWarningButton");
         if (popupCount > 1) 
           message = bundle_browser.getFormattedString("popupWarningMultiple", [brandShortName, popupCount]);
         else
           message = bundle_browser.getFormattedString("popupWarning", [brandShortName]);
+
         gBrowser.showMessage(gBrowser.selectedBrowser, "chrome://browser/skin/Info.png", 
-                             message, "", null, null, "blockedPopupOptions", "top", true);
+                             message, popupButtonText, null, null, "blockedPopupOptions", "top", true);
       }
     }
     else
@@ -5784,7 +5786,7 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   var messageString = bundle_browser.getString("missingpluginsMessage.title");
   var buttonString = bundle_browser.getString("missingpluginsMessage.button.label");
 
-  tabbrowser.showMessage(browser, iconURL, messageString, buttonString, 
+  tabbrowser.showMessage(browser, iconURL, messageString, buttonString,
                          "", "missing-plugin", null, "top", true);
 }
 
