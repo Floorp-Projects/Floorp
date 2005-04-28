@@ -129,16 +129,8 @@
   display: block !important;
 }
 
-*|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas {
-  display: block !important;
-  background-color: inherit;
-}
-
-*|*::-moz-viewport-scroll {
-  overflow: auto;
-}
-
-*|*::-moz-scrolled-content { 
+*|*::-moz-scrolled-content, *|*::-moz-scrolled-canvas,
+*|*::-moz-scrolled-page-sequence {
   /* e.g., text inputs, select boxes */
   padding: inherit;
   display: inherit;
@@ -155,6 +147,15 @@
   float: none !important;
 }
 
+*|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas, *|*::-moz-scrolled-canvas {
+  display: block !important;
+  background-color: inherit;
+}
+
+*|*::-moz-viewport-scroll {
+  overflow: auto;
+}
+
 *|*::-moz-column-content { 
   /* the column boxes inside a column-flowed block */
   /* make unicode-bidi inherit, otherwise it has no effect on column boxes */
@@ -166,7 +167,7 @@
   height: 100%;
 }
 
-*|*::-moz-page, *|*::-moz-page-sequence {
+*|*::-moz-page, *|*::-moz-page-sequence, *|*::-moz-scrolled-page-sequence {
   display: block !important;
   background: transparent;
 }
@@ -199,7 +200,8 @@
     cursor: default !important;
   }
 
-  *|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas {
+  *|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas,
+  *|*::-moz-scrolled-canvas {
     background-color: #737373 !important;
   }
 

@@ -4577,6 +4577,14 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
                                                       rootPseudo,
                                                       viewportPseudoStyle);
   } else {
+      if (rootPseudo == nsCSSAnonBoxes::canvas) {
+        rootPseudo = nsCSSAnonBoxes::scrolledCanvas;
+      } else {
+        NS_ASSERTION(rootPseudo == nsCSSAnonBoxes::pageSequence,
+                     "Unknown root pseudo");
+        rootPseudo = nsCSSAnonBoxes::scrolledPageSequence;
+      }
+
       // Build the frame. We give it the content we are wrapping which is the document,
       // the root frame, the parent view port frame, and we should get back the new
       // frame and the scrollable view if one was created.
@@ -6280,14 +6288,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
   aNewFrame = gfxScrollFrame;
 
   // we used the style that was passed in. So resolve another one.
-  nsRefPtr<nsStyleContext> scrollPseudoStyle;
   nsStyleSet *styleSet = mPresShell->StyleSet();
-
-  scrollPseudoStyle = styleSet->ResolvePseudoStyleFor(aContent,
-                                                      nsCSSAnonBoxes::scrolledContent,
-                                                      contentStyle);
-
-  contentStyle = scrollPseudoStyle;
   nsStyleContext* aScrolledChildStyle = styleSet->ResolvePseudoStyleFor(aContent,
                                                                         aScrolledPseudo,
                                                                         contentStyle).get();
