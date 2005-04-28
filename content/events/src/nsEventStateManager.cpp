@@ -4225,6 +4225,10 @@ nsEventStateManager::ContentRemoved(nsIContent* aContent)
     mDragOverContent = nsnull;
   }
 
+  if (aContent == mLastMouseOverElement) {
+    mLastMouseOverElement = nsnull;
+  }
+
   return NS_OK;
 }
 
