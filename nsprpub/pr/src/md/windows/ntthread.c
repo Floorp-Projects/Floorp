@@ -38,8 +38,6 @@
 #include "primpl.h"
 #include <process.h>  /* for _beginthreadex() */
 
-extern void _PR_Win32InitTimeZone(void);  /* defined in ntmisc.c */
-
 /* --- globals ------------------------------------------------ */
 PRLock                       *_pr_schedLock = NULL;
 _PRInterruptTable             _pr_interruptTable[] = { { 0 } };
@@ -116,7 +114,6 @@ _PR_MD_EARLY_INIT()
     _MD_NEW_LOCK( &_nt_idleLock );
     _nt_idleCount = 0;
     PR_INIT_CLIST(&_nt_idleList);
-    _PR_Win32InitTimeZone();
 
 #if 0
     /* Make the clock tick at least once per millisecond */

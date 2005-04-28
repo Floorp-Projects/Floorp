@@ -68,8 +68,6 @@ PRIntn _PR_MD_PUT_ENV(const char *name)
  **************************************************************************
  */
 
-#include <sys/timeb.h>
-
 /*
  *-----------------------------------------------------------------------
  *
@@ -93,71 +91,6 @@ PR_Now(void)
     GetSystemTimeAsFileTime(&ft);
     _PR_FileTimeToPRTime(&ft, &prt);
     return prt;       
-}
-
-/*
- * The following code works around a bug in NT (Netscape Bugsplat
- * Defect ID 47942).
- *
- * In Windows NT 3.51 and 4.0, if the local time zone does not practice
- * daylight savings time, e.g., Arizona, Taiwan, and Japan, the global
- * variables that _ftime() and localtime() depend on have the wrong
- * default values:
- *     _tzname[0]  "PST"
- *     _tzname[1]  "PDT"
- *     _daylight   1
- *     _timezone   28800
- *
- * So at startup time, we need to invoke _PR_Win32InitTimeZone(), which
- * on NT sets these global variables to the correct values (obtained by
- * calling GetTimeZoneInformation().
- */
-
-#include <time.h>     /* for _tzname, _daylight, _timezone */
-
-void
-_PR_Win32InitTimeZone(void)
-{
-    OSVERSIONINFO version;
-    TIME_ZONE_INFORMATION tzinfo;
-
-    version.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    if (GetVersionEx(&version) != FALSE) {
-        /* Only Windows NT needs this hack */
-        if (version.dwPlatformId != VER_PLATFORM_WIN32_NT) {
-            return;
-        }
-    }
-
-    if (GetTimeZoneInformation(&tzinfo) == 0xffffffff) {
-        return;  /* not much we can do if this failed */
-    }
- 
-    /* 
-     * I feel nervous about modifying these globals.  I hope that no
-     * other thread is reading or modifying these globals simultaneously
-     * during nspr initialization.
-     *
-     * I am assuming that _tzname[0] and _tzname[1] point to static buffers
-     * and that the buffers are at least 32 byte long.  My experiments show
-     * this is true, but of course this is undocumented.  --wtc
-     *
-     * Convert time zone names from WCHAR to CHAR and copy them to
-     * the static buffers pointed to by _tzname[0] and _tzname[1].
-     * Ignore conversion errors, because it is _timezone and _daylight
-     * that _ftime() and localtime() really depend on.
-     */
-
-    WideCharToMultiByte(CP_ACP, 0, tzinfo.StandardName, -1, _tzname[0],
-            32, NULL, NULL);
-    WideCharToMultiByte(CP_ACP, 0, tzinfo.DaylightName, -1, _tzname[1],
-            32, NULL, NULL);
-
-    /* _timezone is in seconds.  tzinfo.Bias is in minutes. */
-
-    _timezone = tzinfo.Bias * 60;
-    _daylight = tzinfo.DaylightBias ? 1 : 0;
-    return;
 }
 
 /*
@@ -691,8 +624,8 @@ PRInt32 _MD_GetMemMapAlignment(void)
     return info.dwAllocationGranularity;
 }
 
-#include "prlog.h"
 extern PRLogModuleInfo *_pr_shma_lm;
+
 void * _MD_MemMap(
     PRFileMap *fmap,
     PROffset64 offset,

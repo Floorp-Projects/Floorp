@@ -38,8 +38,6 @@
 #include "primpl.h"
 #include <process.h>  /* for _beginthreadex() */
 
-extern void _PR_Win32InitTimeZone(void);  /* defined in ntmisc.c */
-
 /* --- globals ------------------------------------------------ */
 #ifdef _PR_USE_STATIC_TLS
 __declspec(thread) struct PRThread  *_pr_thread_last_run;
@@ -56,8 +54,6 @@ _PRInterruptTable             _pr_interruptTable[] = { { 0 } };
 void
 _PR_MD_EARLY_INIT()
 {
-    _PR_Win32InitTimeZone();
-
 #ifndef _PR_USE_STATIC_TLS
     _pr_currentThreadIndex = TlsAlloc();
     _pr_lastThreadIndex = TlsAlloc();
