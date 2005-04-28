@@ -822,7 +822,7 @@ nsCommonWidget::CaptureRollupEvents(nsIRollupListener*, PRBool, PRBool)
 void
 nsCommonWidget::DispatchGotFocusEvent(void)
 {
-    nsGUIEvent event(NS_GOTFOCUS, this);
+    nsGUIEvent event(PR_TRUE, NS_GOTFOCUS, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
 }
@@ -830,7 +830,7 @@ nsCommonWidget::DispatchGotFocusEvent(void)
 void
 nsCommonWidget::DispatchLostFocusEvent(void)
 {
-    nsGUIEvent event(NS_LOSTFOCUS, this);
+    nsGUIEvent event(PR_TRUE, NS_LOSTFOCUS, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
 }
@@ -838,7 +838,7 @@ nsCommonWidget::DispatchLostFocusEvent(void)
 void
 nsCommonWidget::DispatchActivateEvent(void)
 {
-    nsGUIEvent event(NS_ACTIVATE, this);
+    nsGUIEvent event(PR_TRUE, NS_ACTIVATE, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
 }
@@ -846,7 +846,7 @@ nsCommonWidget::DispatchActivateEvent(void)
 void
 nsCommonWidget::DispatchDeactivateEvent(void)
 {
-    nsGUIEvent event(NS_DEACTIVATE, this);
+    nsGUIEvent event(PR_TRUE, NS_DEACTIVATE, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
 }
@@ -854,7 +854,7 @@ nsCommonWidget::DispatchDeactivateEvent(void)
 void
 nsCommonWidget::DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus)
 {
-    nsSizeEvent event(NS_SIZE, this);
+    nsSizeEvent event(PR_TRUE, NS_SIZE, this);
 
     event.windowSize = &aRect;
     event.point.x = aRect.x;
@@ -884,7 +884,7 @@ nsCommonWidget::mousePressEvent(QMouseEvent *e)
         break;
     }
 
-    nsMouseEvent event(eventType, this);
+    nsMouseEvent event(PR_TRUE, eventType, this, nsMouseEvent::eReal);
 
     InitMouseEvent(&event, e, 1);
 
@@ -893,7 +893,8 @@ nsCommonWidget::mousePressEvent(QMouseEvent *e)
 
     // right menu click on linux should also pop up a context menu
     if (eventType == NS_MOUSE_RIGHT_BUTTON_DOWN) {
-        nsMouseEvent contextMenuEvent(NS_CONTEXTMENU, this);
+        nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, this,
+                                      nsMouseEvent::eReal);
         InitMouseEvent(&contextMenuEvent, e, 1);
         DispatchEvent(&contextMenuEvent, status);
     }
@@ -919,7 +920,7 @@ nsCommonWidget::mouseReleaseEvent(QMouseEvent *e)
         break;
     }
 
-    nsMouseEvent event(eventType, this);
+    nsMouseEvent event(PR_TRUE, eventType, this, nsMouseEvent::eReal);
 
     InitMouseEvent(&event, e, 1);
 
@@ -946,7 +947,7 @@ nsCommonWidget::mouseDoubleClickEvent(QMouseEvent *e)
         break;
     }
 
-    nsMouseEvent event(eventType, this);
+    nsMouseEvent event(PR_TRUE, eventType, this, nsMouseEvent::eReal);
 
     InitMouseEvent(&event, e, 2);
     //pressed
@@ -958,7 +959,7 @@ nsCommonWidget::mouseDoubleClickEvent(QMouseEvent *e)
 bool
 nsCommonWidget::mouseMoveEvent(QMouseEvent *e)
 {
-    nsMouseEvent event(NS_MOUSE_MOVE, this);
+    nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
 
     InitMouseEvent(&event, e, 0);
     nsEventStatus status;
@@ -969,7 +970,7 @@ nsCommonWidget::mouseMoveEvent(QMouseEvent *e)
 bool
 nsCommonWidget::wheelEvent(QWheelEvent *e)
 {
-    nsMouseScrollEvent nsEvent(NS_MOUSE_SCROLL, this);
+    nsMouseScrollEvent nsEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
 
     InitMouseWheelEvent(&nsEvent, e);
 
@@ -991,14 +992,14 @@ nsCommonWidget::keyPressEvent(QKeyEvent *e)
     // release.  gtk2 already filters the extra key release events for
     // us.
 
-    nsKeyEvent pressEvent(NS_KEY_PRESS, this);
+    nsKeyEvent pressEvent(PR_TRUE, NS_KEY_PRESS, this);
     InitKeyEvent(&pressEvent, e);
     pressEvent.charCode = (PRInt32)e->text()[0].unicode();
 
     if (!e->isAutoRepeat()) {
 
         // send the key down event
-        nsKeyEvent downEvent(NS_KEY_DOWN, this);
+        nsKeyEvent downEvent(PR_TRUE, NS_KEY_DOWN, this);
         InitKeyEvent(&downEvent, e);
         DispatchEvent(&downEvent, status);
         if (ignoreEvent(status)) { // If prevent default on keydown, do same for keypress
@@ -1009,7 +1010,7 @@ nsCommonWidget::keyPressEvent(QKeyEvent *e)
     // before we dispatch a key, check if it's the context menu key.
     // If so, send a context menu key event instead.
     if (isContextMenuKey(pressEvent)) {
-        nsMouseEvent contextMenuEvent;
+        nsMouseEvent contextMenuEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
         keyEventToContextMenuEvent(&pressEvent, &contextMenuEvent);
         DispatchEvent(&contextMenuEvent, status);
     }
@@ -1024,7 +1025,7 @@ nsCommonWidget::keyPressEvent(QKeyEvent *e)
 bool
 nsCommonWidget::keyReleaseEvent(QKeyEvent *e)
 {
-    nsKeyEvent event(NS_KEY_UP, this);
+    nsKeyEvent event(PR_TRUE, NS_KEY_UP, this);
 
     InitKeyEvent(&event, e);
 
@@ -1067,7 +1068,7 @@ nsCommonWidget::focusOutEvent(QFocusEvent *)
 bool
 nsCommonWidget::enterEvent(QEvent *)
 {
-    nsMouseEvent event(NS_MOUSE_ENTER, this);
+    nsMouseEvent event(PR_TRUE, NS_MOUSE_ENTER, this);
 
     QPoint pt = QCursor::pos();
 
@@ -1082,7 +1083,7 @@ nsCommonWidget::enterEvent(QEvent *)
 bool
 nsCommonWidget::leaveEvent(QEvent *aEvent)
 {
-    nsMouseEvent event(NS_MOUSE_EXIT, this);
+    nsMouseEvent event(PR_TRUE, NS_MOUSE_EXIT, this);
 
     QPoint pt = QCursor::pos();
 
@@ -1110,7 +1111,7 @@ nsCommonWidget::paintEvent(QPaintEvent *e)
     nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
 
     // Generate XPFE paint event
-    nsPaintEvent event(NS_PAINT, this);
+    nsPaintEvent event(PR_TRUE, NS_PAINT, this);
     event.point.x = 0;
     event.point.y = 0;
     event.rect = &rect;
@@ -1156,7 +1157,7 @@ nsCommonWidget::moveEvent(QMoveEvent *e)
 #endif
     }
 
-    nsGUIEvent event(NS_MOVE, this);
+    nsGUIEvent event(PR_TRUE, NS_MOVE, this);
     event.point.x = pos.x();
     event.point.y = pos.y();
 
@@ -1193,7 +1194,7 @@ nsCommonWidget::resizeEvent(QResizeEvent *e)
 bool
 nsCommonWidget::closeEvent(QCloseEvent *)
 {
-    nsGUIEvent event(NS_XUL_CLOSE, this);
+    nsGUIEvent event(PR_TRUE, NS_XUL_CLOSE, this);
 
     event.point.x = 0;
     event.point.y = 0;
@@ -1272,7 +1273,7 @@ nsCommonWidget::showEvent(QShowEvent *)
 
     nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
        // Generate XPFE paint event
-    nsPaintEvent event(NS_PAINT, this);
+    nsPaintEvent event(PR_TRUE, NS_PAINT, this);
     event.point.x = 0;
     event.point.y = 0;
     event.rect = &rect;

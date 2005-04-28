@@ -632,10 +632,11 @@ nsXMLDocument::EndLoad()
   mLoopingForSyncLoad = PR_FALSE;
 
   if (mLoadedAsData || mLoadedAsInteractiveData) {
-    // Generate a document load event for the case when an XML document was loaded
-    // as pure data without any presentation attached to it.
+    // Generate a document load event for the case when an XML
+    // document was loaded as pure data without any presentation
+    // attached to it.
+    nsEvent event(PR_TRUE, NS_PAGE_LOAD);
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event(NS_PAGE_LOAD);
 
     nsIScriptGlobalObject* sgo = nsnull;
     nsCOMPtr<nsIScriptGlobalObjectOwner> container =

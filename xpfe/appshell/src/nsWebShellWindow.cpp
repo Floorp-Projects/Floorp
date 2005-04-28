@@ -543,7 +543,7 @@ void nsWebShellWindow::LoadNativeMenus(nsIDOMDocument *aDOMDoc,
   nsCOMPtr<nsIMenuListener> menuListener = do_QueryInterface(pnsMenuBar);
 
   // fake event
-  nsMenuEvent fake;
+  nsMenuEvent fake(PR_TRUE, 0, nsnull);
   menuListener->MenuConstruct(fake, aParentWindow, menubarNode, mDocShell);
 }
 
@@ -810,7 +810,8 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
       docViewer->GetPresContext(getter_AddRefs(presContext));
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsMouseEvent event(NS_XUL_CLOSE);
+      nsMouseEvent event(PR_TRUE, NS_XUL_CLOSE, nsnull,
+                         nsMouseEvent::eReal);
 
       nsresult rv = globalObject->HandleDOMEvent(presContext, &event, nsnull,
                                                  NS_EVENT_FLAG_INIT, &status);

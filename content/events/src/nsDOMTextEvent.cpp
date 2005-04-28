@@ -40,8 +40,10 @@
 #include "nsContentUtils.h"
 #include "nsPrivateTextRange.h"
 
-nsDOMTextEvent::nsDOMTextEvent(nsPresContext* aPresContext, nsTextEvent* aEvent)
-: nsDOMUIEvent(aPresContext, aEvent ? aEvent : new nsTextEvent())
+nsDOMTextEvent::nsDOMTextEvent(nsPresContext* aPresContext,
+                               nsTextEvent* aEvent)
+  : nsDOMUIEvent(aPresContext, aEvent ? aEvent :
+                 new nsTextEvent(PR_FALSE, 0, nsnull))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_TEXT_EVENT, "event type mismatch");
 

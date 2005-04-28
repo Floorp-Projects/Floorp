@@ -41,8 +41,10 @@
 #include "nsContentUtils.h"
 
 
-nsDOMKeyboardEvent::nsDOMKeyboardEvent(nsPresContext* aPresContext, nsKeyEvent* aEvent)
-: nsDOMUIEvent(aPresContext, aEvent ? aEvent : new nsKeyEvent())
+nsDOMKeyboardEvent::nsDOMKeyboardEvent(nsPresContext* aPresContext,
+                                       nsKeyEvent* aEvent)
+  : nsDOMUIEvent(aPresContext, aEvent ? aEvent :
+                 new nsKeyEvent(PR_FALSE, 0, nsnull))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_KEY_EVENT, "event type mismatch");
 

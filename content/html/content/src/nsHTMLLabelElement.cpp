@@ -261,7 +261,7 @@ nsHTMLLabelElement::HandleDOMEvent(nsPresContext* aPresContext,
         // Since focus doesn't bubble, this is basically the second part
         // of redirecting |SetFocus|.
         {
-          nsEvent event(NS_FOCUS_CONTENT);
+          nsEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_FOCUS_CONTENT);
           nsEventStatus status = *aEventStatus;
           rv = DispatchEvent(aPresContext, &event, content, PR_TRUE, &status);
           // Do we care about the status this returned?  I don't think we do...

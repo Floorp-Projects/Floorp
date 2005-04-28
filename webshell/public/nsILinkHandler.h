@@ -44,7 +44,7 @@ class nsIDocShell;
 class nsIRequest;
 class nsIContent;
 class nsString;
-struct nsGUIEvent;
+class nsGUIEvent;
 
 // Interface ID for nsILinkHandler
 #define NS_ILINKHANDLER_IID \

@@ -139,7 +139,6 @@ public:
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
   virtual void ScrollIntoView(nsPresContext* aPresContext);
-  virtual void MouseClicked(nsPresContext* aPresContext);
   virtual nscoord GetVerticalInsidePadding(nsPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;

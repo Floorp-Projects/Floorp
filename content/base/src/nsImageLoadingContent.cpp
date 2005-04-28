@@ -642,7 +642,7 @@ HandleImagePLEvent(PLEvent* aEvent)
     eventMsg = NS_IMAGE_ERROR;
   }
 
-  nsEvent event(eventMsg);
+  nsEvent event(PR_TRUE, eventMsg);
   evt->mContent->HandleDOMEvent(evt->mPresContext, &event, nsnull,
                                 NS_EVENT_FLAG_INIT, &estatus);
 

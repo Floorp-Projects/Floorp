@@ -252,9 +252,8 @@ protected:
    * that were set when the user first pressed the mouse button (stored by
    * BeginTrackingDragGesture). aEvent->widget must be
    * mCurrentTarget->GetWindow().
-   * @param aIsTrusted if true, we set the trusted flag in the event
    */
-  void FillInEventFromGestureDown(nsMouseEvent* aEvent, PRBool aIsTrusted);
+  void FillInEventFromGestureDown(nsMouseEvent* aEvent);
 
   PRBool mSuppressFocusChange; // Used only for Ender text fields to suppress a focus firing on mouse down
 

@@ -1064,7 +1064,7 @@ PRBool nsWidget::OnDeleteWindow(void)
 PRBool nsWidget::DispatchDestroyEvent(void) {
   PRBool result = PR_FALSE;
   if (nsnull != mEventCallback) {
-    nsGUIEvent event(NS_DESTROY, this);
+    nsGUIEvent event(PR_TRUE, NS_DESTROY, this);
     AddRef();
     result = DispatchWindowEvent(event);
     Release();

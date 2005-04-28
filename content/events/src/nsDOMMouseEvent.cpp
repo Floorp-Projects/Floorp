@@ -43,8 +43,12 @@
 #include "nsIEventStateManager.h"
 #include "nsContentUtils.h"
 
-nsDOMMouseEvent::nsDOMMouseEvent(nsPresContext* aPresContext, nsInputEvent* aEvent)
-: nsDOMUIEvent(aPresContext, aEvent ? aEvent : new nsMouseEvent()), mButton(-1)
+nsDOMMouseEvent::nsDOMMouseEvent(nsPresContext* aPresContext,
+                                 nsInputEvent* aEvent)
+  : nsDOMUIEvent(aPresContext, aEvent ? aEvent :
+                 new nsMouseEvent(PR_FALSE, 0, nsnull,
+                                  nsMouseEvent::eReal)),
+    mButton(-1)
 {
   // There's no way to make this class' ctor allocate an nsMouseScrollEvent.
   // It's not that important, though, since a scroll event is not a real

@@ -60,10 +60,8 @@ void nsQScrollBar::slotValueChanged(int aValue)
 
 void nsQScrollBar::ScrollBarMoved(int aMessage,int aValue)
 {
-    nsScrollbarEvent nsEvent;
+    nsScrollbarEvent nsEvent(PR_TRUE, aMessage, nsnull);
 
-    nsEvent.message         = aMessage;
-    nsEvent.widget          = 0;
     nsEvent.eventStructType = NS_SCROLLBAR_EVENT;
     nsEvent.position        = aValue;
 

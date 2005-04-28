@@ -61,6 +61,7 @@
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOM3EventTarget.h"
+#include "nsIDOMNSEventTarget.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMNSLocation.h"
 #include "nsIDOMWindowInternal.h"
@@ -121,6 +122,7 @@ class nsGlobalWindow : public nsIScriptGlobalObject,
                        public nsIScriptObjectPrincipal,
                        public nsIDOMEventReceiver,
                        public nsIDOM3EventTarget,
+                       public nsIDOMNSEventTarget,
                        public nsIDOMViewCSS,
                        public nsSupportsWeakReference,
                        public nsIInterfaceRequestor
@@ -173,6 +175,9 @@ public:
 
   // nsIDOM3EventTarget
   NS_DECL_NSIDOM3EVENTTARGET
+
+  // nsIDOMNSEventTarget
+  NS_DECL_NSIDOMNSEVENTTARGET
 
   // nsIDOMEventReceiver
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,

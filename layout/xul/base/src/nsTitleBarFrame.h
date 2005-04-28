@@ -64,7 +64,7 @@ public:
 
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
 
-  virtual void MouseClicked (nsPresContext* aPresContext);
+  virtual void MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent);
 
 protected:
 

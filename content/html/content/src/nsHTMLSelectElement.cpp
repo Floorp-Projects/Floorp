@@ -61,6 +61,7 @@
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMNSHTMLOptionCollectn.h"
 #include "nsGUIEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIBoxObject.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentEvent.h"
@@ -2002,9 +2003,15 @@ nsHTMLSelectElement::DispatchDOMEvent(const nsAString& aName)
   nsCOMPtr<nsIDOMDocumentEvent> domDoc = do_QueryInterface(GetOwnerDoc());
   if (domDoc) {
     nsCOMPtr<nsIDOMEvent> selectEvent;
-    domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(selectEvent));
-    if (selectEvent) {
+    domDoc->CreateEvent(NS_LITERAL_STRING("Events"),
+                        getter_AddRefs(selectEvent));
+
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(selectEvent));
+
+    if (privateEvent) {
       selectEvent->InitEvent(aName, PR_TRUE, PR_TRUE);
+      privateEvent->SetTrusted(PR_TRUE);
+
       nsCOMPtr<nsIDOMEventTarget> target =
         do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this));
       PRBool defaultActionEnabled;

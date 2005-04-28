@@ -498,6 +498,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMEventRTTearoff)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
 NS_INTERFACE_MAP_END_AGGREGATED(mContent)
 
 NS_IMPL_ADDREF(nsDOMEventRTTearoff)
@@ -698,6 +699,27 @@ NS_IMETHODIMP
 nsDOMEventRTTearoff::IsRegisteredHere(const nsAString & type, PRBool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// nsIDOMNSEventTarget
+NS_IMETHODIMP
+nsDOMEventRTTearoff::AddEventListener(const nsAString& aType,
+                                      nsIDOMEventListener *aListener,
+                                      PRBool aUseCapture,
+                                      PRBool aWantsUntrusted)
+{
+  nsCOMPtr<nsIEventListenerManager> listener_manager;
+  nsresult rv = mContent->GetListenerManager(getter_AddRefs(listener_manager));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+  if (aWantsUntrusted) {
+    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+  }
+
+  return listener_manager->AddEventListenerByType(aListener, aType, flags,
+                                                  nsnull);
 }
 
 //----------------------------------------------------------------------
@@ -2680,7 +2702,7 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
     }
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-      nsMutationEvent mutation(NS_MUTATION_NODEINSERTED, aKid);
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED, aKid);
       mutation.mRelatedNode = do_QueryInterface(this);
 
       nsEventStatus status = nsEventStatus_eIgnore;
@@ -2722,7 +2744,7 @@ nsGenericElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
     }
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-      nsMutationEvent mutation(NS_MUTATION_NODEINSERTED, aKid);
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED, aKid);
       mutation.mRelatedNode = do_QueryInterface(this);
 
       nsEventStatus status = nsEventStatus_eIgnore;
@@ -2742,7 +2764,7 @@ nsGenericElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
-      nsMutationEvent mutation(NS_MUTATION_NODEREMOVED, oldKid);
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED, oldKid);
       mutation.mRelatedNode = do_QueryInterface(this);
 
       nsEventStatus status = nsEventStatus_eIgnore;
@@ -3241,6 +3263,8 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
                                  nsDOMEventRTTearoff::Create(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
+                                 nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
 NS_INTERFACE_MAP_END
 
@@ -3342,7 +3366,21 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
   }
 
   if (manager) {
-    rv = manager->AddScriptEventListener(target, aAttribute, aValue, defer);
+    nsIDocument *ownerDoc = GetOwnerDoc();
+
+    PRBool permitUntrustedEvents = PR_FALSE;
+
+    nsIURI *docUri;
+    if (ownerDoc && (docUri = ownerDoc->GetDocumentURI())) {
+      PRBool isChrome = PR_TRUE;
+      rv = docUri->SchemeIs("chrome", &isChrome);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      permitUntrustedEvents = !isChrome;
+    }
+
+    rv = manager->AddScriptEventListener(target, aAttribute, aValue, defer,
+                                         permitUntrustedEvents);
   }
 
   return rv;
@@ -3512,8 +3550,9 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       binding->AttributeChanged(aName, aNamespaceID, PR_FALSE, aNotify);
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
-      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-      nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, node);
+      nsCOMPtr<nsIDOMEventTarget> node =
+        do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED, node);
 
       nsAutoString attrName;
       aName->ToString(attrName);
@@ -3609,8 +3648,9 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
-      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-      nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, node);
+      nsCOMPtr<nsIDOMEventTarget> node =
+        do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED, node);
 
       nsAutoString attrName;
       aName->ToString(attrName);

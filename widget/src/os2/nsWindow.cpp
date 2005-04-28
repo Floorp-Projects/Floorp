@@ -532,7 +532,7 @@ PRBool nsWindow::DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus) {
 
 PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 {
-  nsGUIEvent event(aMsg, this);
+  nsGUIEvent event(PR_TRUE, aMsg, this);
   InitEvent(event);
 
   PRBool result = DispatchWindowEvent(&event);
@@ -547,7 +547,7 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 //-------------------------------------------------------------------------
 PRBool nsWindow::DispatchAppCommandEvent(PRUint32 aEventCommand)
 {
-  nsAppCommandEvent event(NS_APPCOMMAND_START, this);
+  nsAppCommandEvent event(PR_TRUE, NS_APPCOMMAND_START, this);
 
   InitEvent(event);
   event.appCommand = NS_APPCOMMAND_START + aEventCommand;
@@ -2464,7 +2464,7 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 //
 PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
 {
-   nsKeyEvent pressEvent;
+   nsKeyEvent pressEvent(PR_TRUE, 0, nsnull);
    USHORT     fsFlags = SHORT1FROMMP(mp1);
    USHORT     usVKey = SHORT2FROMMP(mp2);
    USHORT     usChar = SHORT1FROMMP(mp2);
@@ -2504,7 +2504,8 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    // have the unicode charcode in.
 
    nsPoint point(0,0);
-   nsKeyEvent event((fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN, this);
+   nsKeyEvent event(PR_TRUE, (fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN,
+                    this);
    InitEvent( event, &point);
    event.keyCode   = WMChar2KeyCode( mp1, mp2);
    event.isShift   = (fsFlags & KC_SHIFT) ? PR_TRUE : PR_FALSE;
@@ -2611,7 +2612,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
 
 void nsWindow::ConstrainZLevel(HWND *aAfter) {
 
-  nsZLevelEvent  event(NS_SETZLEVEL, this);
+  nsZLevelEvent  event(PR_TRUE, NS_SETZLEVEL, this);
   nsWindow      *aboveWindow = 0;
 
   InitEvent(event);
@@ -2659,7 +2660,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
 //#if 0
         case WM_COMMAND: // fire off menu selections
         {
-           nsMenuEvent event(NS_MENU_SELECTED, this);
+           nsMenuEvent event(PR_TRUE, NS_MENU_SELECTED, this);
            event.mCommand = SHORT1FROMMP(mp1);
            InitEvent(event);
            result = DispatchWindowEvent(&event);
@@ -2684,7 +2685,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
 #if 0  // Tooltips appear to be gone
         case WMU_SHOW_TOOLTIP:
         {
-          nsTooltipEvent event(NS_SHOW_TOOLTIP, this);
+          nsTooltipEvent event(PR_TRUE, NS_SHOW_TOOLTIP, this);
           InitEvent( event );
           event.tipIndex = LONGFROMMP(mp1);
           result = DispatchWindowEvent(&event);
@@ -2761,7 +2762,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
         case WM_QUERYCONVERTPOS:
           {
             PRECTL pCursorRect = (PRECTL)mp1;
-            nsCompositionEvent event(NS_COMPOSITION_QUERY, this);
+            nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_QUERY, this);
             nsPoint point;
             point.x = 0;
             point.y = 0;
@@ -2850,7 +2851,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
                   (WinQuerySysValue(HWND_DESKTOP, SV_CYMOTIONSTART) / 2))
               isCopy = TRUE;
 
-            nsKeyEvent event(NS_KEY_PRESS, this);
+            nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
             nsPoint point(0,0);
             InitEvent( event, &point);
 
@@ -3163,7 +3164,7 @@ void nsWindow::OnDestroy()
 PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 {            
   // Params here are in XP-space for the desktop
-  nsGUIEvent event(NS_MOVE, this);
+  nsGUIEvent event(PR_TRUE, NS_MOVE, this);
   InitEvent( event);
   event.point.x = aX;
   event.point.y = aY;
@@ -3214,7 +3215,7 @@ PRBool nsWindow::OnPaint()
           // call the event callback 
           if (mEventCallback) 
           {
-              nsPaintEvent event(NS_PAINT, this);
+              nsPaintEvent event(PR_TRUE, NS_PAINT, this);
               InitEvent(event);
      
               // build XP rect from in-ex window rect
@@ -3312,7 +3313,7 @@ PRBool nsWindow::DispatchResizeEvent( PRInt32 aX, PRInt32 aY)
 {
    PRBool result;
    // call the event callback 
-   nsSizeEvent event(NS_SIZE, this);
+   nsSizeEvent event(PR_TRUE, NS_SIZE, this);
    nsRect      rect( 0, 0, aX, aY);
 
    InitEvent( event);
@@ -3338,7 +3339,7 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
     return result;
   }
 
-  nsMouseEvent event(aEventType, this);
+  nsMouseEvent event(PR_TRUE, aEventType, this, nsMouseEvent::eReal);
 
   // Mouse leave & enter messages don't seem to have position built in.
   if( aEventType && aEventType != NS_MOUSE_ENTER && aEventType != NS_MOUSE_EXIT)
@@ -3563,7 +3564,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocu
 {
   // call the event callback 
   if (mEventCallback) {
-    nsFocusEvent event(aEventType, this);
+    nsFocusEvent event(PR_TRUE, aEventType, this);
     InitEvent(event);
 
     //focus and blur event should go to their base widget loc, not current mouse pos
@@ -3612,7 +3613,7 @@ PRBool nsWindow::OnScroll( ULONG msgid, MPARAM mp1, MPARAM mp2)
 PRBool nsWindow::OnVScroll( MPARAM mp1, MPARAM mp2)
 {
     if (nsnull != mEventCallback) {
-        nsMouseScrollEvent scrollEvent(NS_MOUSE_SCROLL, this);
+        nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
         InitEvent(scrollEvent);
         scrollEvent.isShift = WinIsKeyDown( VK_SHIFT);
         scrollEvent.isControl = WinIsKeyDown( VK_CTRL);
@@ -3647,7 +3648,7 @@ PRBool nsWindow::OnVScroll( MPARAM mp1, MPARAM mp2)
 PRBool nsWindow::OnHScroll( MPARAM mp1, MPARAM mp2)
 {
     if (nsnull != mEventCallback) {
-        nsMouseScrollEvent scrollEvent(NS_MOUSE_SCROLL, this);
+        nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
         InitEvent(scrollEvent);
         scrollEvent.isShift = WinIsKeyDown( VK_SHIFT);
         scrollEvent.isControl = WinIsKeyDown( VK_CTRL);

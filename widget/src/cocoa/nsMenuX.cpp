@@ -747,7 +747,7 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
     if (listener) {
       MenuRef menuRef;
       ::GetEventParameter(event, kEventParamDirectObject, typeMenuRef, NULL, sizeof(menuRef), NULL, &menuRef);
-      nsMenuEvent menuEvent(NS_MENU_SELECTED);
+      nsMenuEvent menuEvent(PR_TRUE, NS_MENU_SELECTED, nsnull);
       menuEvent.time = PR_IntervalNow();
       menuEvent.mCommand = (PRUint32) menuRef;
       if (kind == kEventMenuOpening) {
@@ -973,8 +973,9 @@ PRBool
 nsMenuX::OnCreate()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(NS_XUL_POPUP_SHOWING);
-  
+  nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWING, nsnull,
+                     nsMouseEvent::eReal);
+
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
 
@@ -1056,7 +1057,7 @@ PRBool
 nsMenuX::OnCreated()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(NS_XUL_POPUP_SHOWN);
+  nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWN, nsnull, nsMouseEvent::eReal);
   
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
@@ -1092,7 +1093,8 @@ nsMenuX::OnDestroy()
     return PR_TRUE;
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(NS_XUL_POPUP_HIDING);
+  nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDING, nsnull,
+                     nsMouseEvent::eReal);
   
   nsCOMPtr<nsIDocShell>  docShell = do_QueryReferent(mDocShellWeakRef);
   if (!docShell) {
@@ -1122,7 +1124,8 @@ PRBool
 nsMenuX::OnDestroyed()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(NS_XUL_POPUP_HIDDEN);
+  nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDDEN, nsnull,
+                     nsMouseEvent::eReal);
   
   nsCOMPtr<nsIDocShell>  docShell = do_QueryReferent(mDocShellWeakRef);
   if (!docShell) {

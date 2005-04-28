@@ -374,7 +374,7 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
          }
  
          if (pSwp->fl & (SWP_MAXIMIZE | SWP_MINIMIZE | SWP_RESTORE)) {
-	    nsSizeModeEvent event(NS_SIZEMODE, this);
+           nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
             if (pSwp->fl & SWP_MAXIMIZE)
               event.mSizeMode = nsSizeMode_Maximized;
             else if (pSwp->fl & SWP_MINIMIZE)

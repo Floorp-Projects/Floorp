@@ -102,15 +102,18 @@ public:
   NS_IMETHOD AddScriptEventListener(nsISupports *aObject,
                                     nsIAtom *aName,
                                     const nsAString& aFunc,
-                                    PRBool aDeferCompilation) = 0;
+                                    PRBool aDeferCompilation,
+                                    PRBool aPermitUntrustedEvents) = 0;
 
 
   NS_IMETHOD RemoveScriptEventListener(nsIAtom *aName) = 0;
 
   /**
   * Registers an event listener that already exists on the given
-  * script object with the event listener manager.
-  * @param an event listener
+  * script object with the event listener manager. If the event
+  * listener is registerd from chrome code, the event listener will
+  * only ever receive trusted events.
+  * @param the name of an event listener
   */
   NS_IMETHOD RegisterScriptEventListener(nsIScriptContext *aContext,
                                          nsISupports *aObject,

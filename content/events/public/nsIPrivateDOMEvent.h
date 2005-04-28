@@ -52,10 +52,10 @@ class nsPresContext;
 
 class nsIDOMEventTarget;
 class nsIDOMEvent;
-struct nsEvent;
+class nsEvent;
 
-class nsIPrivateDOMEvent : public nsISupports {
-
+class nsIPrivateDOMEvent : public nsISupports
+{
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATEDOMEVENT_IID)
 
@@ -70,20 +70,20 @@ public:
 };
 
 nsresult
-NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, struct nsEvent *aEvent);
+NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent *aEvent);
 nsresult
-NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, struct nsGUIEvent *aEvent);
+NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsGUIEvent *aEvent);
 nsresult
-NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, struct nsInputEvent *aEvent);
+NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsInputEvent *aEvent);
 nsresult
-NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, struct nsKeyEvent *aEvent);
+NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsKeyEvent *aEvent);
 nsresult
-NS_NewDOMMutationEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, struct nsMutationEvent* aEvent);
+NS_NewDOMMutationEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsMutationEvent* aEvent);
 nsresult
-NS_NewDOMPopupBlockedEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, struct nsPopupBlockedEvent* aEvent);
+NS_NewDOMPopupBlockedEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsPopupBlockedEvent* aEvent);
 nsresult
-NS_NewDOMTextEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, struct nsTextEvent* aEvent);
+NS_NewDOMTextEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsTextEvent* aEvent);
 nsresult
-NS_NewDOMBeforeUnloadEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, struct nsBeforePageUnloadEvent* aEvent);
+NS_NewDOMBeforeUnloadEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsBeforePageUnloadEvent* aEvent);
 
 #endif // nsIPrivateDOMEvent_h__

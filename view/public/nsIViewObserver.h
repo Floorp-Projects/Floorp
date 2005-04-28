@@ -43,7 +43,7 @@
 
 class nsIRenderingContext;
 struct nsRect;
-struct nsGUIEvent;
+class nsGUIEvent;
 
 #define NS_IVIEWOBSERVER_IID   \
 { 0x0f4bc34a, 0xc93b, 0x4699, \

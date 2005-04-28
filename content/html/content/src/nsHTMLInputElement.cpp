@@ -957,13 +957,14 @@ nsHTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
     if (submitControl) {
       // Fire the button's onclick handler and let the button handle
       // submitting the form.
-      nsMouseEvent event(NS_MOUSE_LEFT_CLICK);
+      nsMouseEvent event(PR_TRUE, NS_MOUSE_LEFT_CLICK, nsnull,
+                         nsMouseEvent::eReal);
       nsEventStatus status = nsEventStatus_eIgnore;
       shell->HandleDOMEventWithTarget(submitControl, &event, &status);
     } else if (numTextControlsFound == 1) {
       // If there's only one text control, just submit the form
       nsCOMPtr<nsIContent> form = do_QueryInterface(mForm);
-      nsFormEvent event(NS_FORM_SUBMIT);
+      nsFormEvent event(PR_TRUE, NS_FORM_SUBMIT);
       nsEventStatus status  = nsEventStatus_eIgnore;
       shell->HandleDOMEventWithTarget(form, &event, &status);
     }
@@ -1023,7 +1024,7 @@ nsHTMLInputElement::FireOnChange()
   // Since the value is changing, send out an onchange event (bug 23571)
   //
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event(NS_FORM_CHANGE);
+  nsEvent event(PR_TRUE, NS_FORM_CHANGE);
   nsCOMPtr<nsPresContext> presContext = GetPresContext();
   HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 }
@@ -1134,8 +1135,8 @@ nsHTMLInputElement::Select()
     
     //If already handling select event, don't dispatch a second.
     if (!GET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT)) {
-      nsEvent event(NS_FORM_SELECTED);
-  
+      nsEvent event(nsContentUtils::IsCallerChrome(), NS_FORM_SELECTED);
+
       SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, PR_TRUE);
       rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
                           &status);
@@ -1223,8 +1224,13 @@ nsHTMLInputElement::Click()
       nsCOMPtr<nsPresContext> context = shell->GetPresContext();
 
       if (context) {
+        // Click() is never called from native code, but it may be
+        // called from chrome JS. Mark this event trusted if Click()
+        // is called from chrome code.
+        nsMouseEvent event(nsContentUtils::IsCallerChrome(),
+                           NS_MOUSE_LEFT_CLICK, nsnull,
+                           nsMouseEvent::eReal);
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event(NS_MOUSE_LEFT_CLICK);
 
         SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
 
@@ -1379,7 +1385,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
   if (*aEventStatus != nsEventStatus_eConsumeNoDefault &&
       !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
       aEvent->message == NS_MOUSE_LEFT_CLICK && mType != NS_FORM_INPUT_TEXT) {
-    nsUIEvent actEvent(NS_UI_ACTIVATE, 1);
+    nsUIEvent actEvent(NS_IS_TRUSTED_EVENT(aEvent), NS_UI_ACTIVATE, 1);
 
     nsIPresShell *shell = aPresContext->GetPresShell();
     if (shell) {
@@ -1490,8 +1496,11 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
               case NS_FORM_INPUT_SUBMIT:
               case NS_FORM_INPUT_IMAGE: // Bug 34418
               {
+                nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent),
+                                   NS_MOUSE_LEFT_CLICK, nsnull,
+                                   nsMouseEvent::eReal);
                 nsEventStatus status = nsEventStatus_eIgnore;
-                nsMouseEvent event(NS_MOUSE_LEFT_CLICK);
+
                 rv = HandleDOMEvent(aPresContext, &event, nsnull,
                                     NS_EVENT_FLAG_INIT, &status);
               } // case
@@ -1519,7 +1528,9 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
                     rv = selectedRadioButton->Focus();
                     if (NS_SUCCEEDED(rv)) {
                       nsEventStatus status = nsEventStatus_eIgnore;
-                      nsMouseEvent event(NS_MOUSE_LEFT_CLICK);
+                      nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent),
+                                         NS_MOUSE_LEFT_CLICK, nsnull,
+                                         nsMouseEvent::eReal);
                       rv = radioContent->HandleDOMEvent(aPresContext, &event,
                                                         nsnull, NS_EVENT_FLAG_INIT, 
                                                         &status);
@@ -1635,7 +1646,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
         case NS_FORM_INPUT_SUBMIT:
         case NS_FORM_INPUT_IMAGE:
           if (mForm) {
-            nsFormEvent event((mType == NS_FORM_INPUT_RESET) ?
+            nsFormEvent event(PR_TRUE, (mType == NS_FORM_INPUT_RESET) ?
                               NS_FORM_RESET : NS_FORM_SUBMIT);
             event.originator      = this;
             nsEventStatus status  = nsEventStatus_eIgnore;
@@ -2045,8 +2056,15 @@ nsHTMLInputElement::FireEventForAccessibility(nsPresContext* aPresContext,
   nsCOMPtr<nsIEventListenerManager> manager;
   GetListenerManager(getter_AddRefs(manager));
   if (manager &&
-      NS_SUCCEEDED(manager->CreateEvent(aPresContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
+      NS_SUCCEEDED(manager->CreateEvent(aPresContext, nsnull,
+                                        NS_LITERAL_STRING("Events"),
+                                        getter_AddRefs(event)))) {
     event->InitEvent(aEventType, PR_TRUE, PR_TRUE);
+
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+    if (privateEvent) {
+      privateEvent->SetTrusted(PR_TRUE);
+    }
 
     nsISupports *target = NS_STATIC_CAST(nsIDOMHTMLInputElement*, this);
     PRBool defaultActionEnabled;

@@ -132,7 +132,6 @@ public:
   NS_IMETHOD GetName(nsAString* aName);//*
   virtual void SetFocus(PRBool aOn , PRBool aRepaint); 
   virtual void ScrollIntoView(nsPresContext* aPresContext);
-  virtual void MouseClicked(nsPresContext* aPresContext);
   virtual nscoord GetVerticalInsidePadding(nsPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;

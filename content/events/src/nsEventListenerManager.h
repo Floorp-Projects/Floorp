@@ -126,7 +126,8 @@ public:
   NS_IMETHOD AddScriptEventListener(nsISupports *aObject,
                                     nsIAtom *aName,
                                     const nsAString& aFunc,
-                                    PRBool aDeferCompilation); 
+                                    PRBool aDeferCompilation,
+                                    PRBool aPermitUntrustedEvents);
   NS_IMETHOD RegisterScriptEventListener(nsIScriptContext *aContext,
                                          nsISupports *aObject,
                                          nsIAtom* aName);
@@ -199,7 +200,7 @@ protected:
   nsListenerStruct* FindJSEventListener(EventArrayType aType);
   nsresult SetJSEventListener(nsIScriptContext *aContext,
                               nsISupports *aObject, nsIAtom* aName,
-                              PRBool aIsString);
+                              PRBool aIsString, PRBool aPermitUntrustedEvents);
   nsresult AddEventListener(nsIDOMEventListener *aListener, 
                             EventArrayType aType, 
                             PRInt32 aSubType,

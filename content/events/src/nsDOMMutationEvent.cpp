@@ -42,8 +42,10 @@
 
 class nsPresContext;
 
-nsDOMMutationEvent::nsDOMMutationEvent(nsPresContext* aPresContext, nsMutationEvent* aEvent)
-  :nsDOMEvent(aPresContext, aEvent ? aEvent : new nsMutationEvent())
+nsDOMMutationEvent::nsDOMMutationEvent(nsPresContext* aPresContext,
+                                       nsMutationEvent* aEvent)
+  : nsDOMEvent(aPresContext, aEvent ? aEvent :
+               new nsMutationEvent(PR_FALSE, 0))
 {  
   if ( aEvent ) {
     mEventIsInternal = PR_FALSE;

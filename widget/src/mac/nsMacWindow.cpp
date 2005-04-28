@@ -1694,7 +1694,7 @@ nsMacWindow::Idle()
 NS_IMETHODIMP
 nsMacWindow::ComeToFront()
 {
-  nsZLevelEvent  event(NS_SETZLEVEL, this);
+  nsZLevelEvent event(PR_TRUE, NS_SETZLEVEL, this);
 
   event.point.x = mBounds.x;
   event.point.y = mBounds.y;

@@ -327,6 +327,7 @@ NS_INTERFACE_MAP_BEGIN(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMViewCSS)
   NS_INTERFACE_MAP_ENTRY(nsIDOMAbstractView)
@@ -949,7 +950,7 @@ nsGlobalWindow::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
       // onload event for the frame element.
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event(NS_PAGE_LOAD);
+      nsEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_PAGE_LOAD);
 
       // Most of the time we could get a pres context to pass in here,
       // but not always (i.e. if this window is not shown there won't
@@ -4153,6 +4154,25 @@ nsGlobalWindow::IsRegisteredHere(const nsAString & type, PRBool *_retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsGlobalWindow::AddEventListener(const nsAString& aType,
+                                 nsIDOMEventListener *aListener,
+                                 PRBool aUseCapture, PRBool aWantsUntrusted)
+{
+  nsCOMPtr<nsIEventListenerManager> manager;
+  nsresult rv = GetListenerManager(getter_AddRefs(manager));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+  if (aWantsUntrusted) {
+    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+  }
+
+  return manager->AddEventListenerByType(aListener, aType, flags, nsnull);
+}
+
+
 //*****************************************************************************
 // nsGlobalWindow::nsIDOMEventReceiver
 //*****************************************************************************
@@ -4398,7 +4418,7 @@ nsGlobalWindow::Activate()
 
   nsEventStatus status;
 
-  nsGUIEvent guiEvent(NS_ACTIVATE, widget);
+  nsGUIEvent guiEvent(PR_TRUE, NS_ACTIVATE, widget);
   guiEvent.time = PR_IntervalNow();
 
   vm->DispatchEvent(&guiEvent, &status);
@@ -4426,7 +4446,7 @@ nsGlobalWindow::Deactivate()
 
   nsEventStatus status;
 
-  nsGUIEvent guiEvent(NS_DEACTIVATE, widget);
+  nsGUIEvent guiEvent(PR_TRUE, NS_DEACTIVATE, widget);
   guiEvent.time = PR_IntervalNow();
 
   vm->DispatchEvent(&guiEvent, &status);

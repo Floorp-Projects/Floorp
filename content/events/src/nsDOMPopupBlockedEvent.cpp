@@ -41,8 +41,10 @@
 #include "nsIURI.h"
 #include "nsContentUtils.h"
 
-nsDOMPopupBlockedEvent::nsDOMPopupBlockedEvent(nsPresContext* aPresContext, nsPopupBlockedEvent* aEvent)
-: nsDOMEvent(aPresContext, aEvent ? aEvent : new nsPopupBlockedEvent())
+nsDOMPopupBlockedEvent::nsDOMPopupBlockedEvent(nsPresContext* aPresContext,
+                                               nsPopupBlockedEvent* aEvent)
+  : nsDOMEvent(aPresContext, aEvent ? aEvent :
+               new nsPopupBlockedEvent(PR_FALSE, 0))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_POPUPBLOCKED_EVENT, "event type mismatch");
 

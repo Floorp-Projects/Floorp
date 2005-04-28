@@ -1681,7 +1681,7 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 		return;
 
 	// initialize the paint event
-	nsPaintEvent paintEvent(NS_PAINT, this);
+	nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, this);
 	paintEvent.renderingContext = aContext;         // nsPaintEvent
 	paintEvent.rect             = &aRect;
 
@@ -1949,7 +1949,7 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
 PRBool nsWindow::ReportDestroyEvent()
 {
 	// nsEvent
-	nsGUIEvent moveEvent(NS_DESTROY, this);
+	nsGUIEvent moveEvent(PR_TRUE, NS_DESTROY, this);
 	moveEvent.message			= NS_DESTROY;
 	moveEvent.time				= PR_IntervalNow();
 
@@ -1964,7 +1964,7 @@ PRBool nsWindow::ReportDestroyEvent()
 PRBool nsWindow::ReportMoveEvent()
 {
 	// nsEvent
-	nsGUIEvent moveEvent(NS_MOVE, this);
+	nsGUIEvent moveEvent(PR_TRUE, NS_MOVE, this);
 	moveEvent.point.x			= mBounds.x;
 	moveEvent.point.y			= mBounds.y;
 	moveEvent.time				= PR_IntervalNow();
@@ -1980,7 +1980,7 @@ PRBool nsWindow::ReportMoveEvent()
 PRBool nsWindow::ReportSizeEvent()
 {
 	// nsEvent
-	nsSizeEvent sizeEvent(NS_SIZE, this);
+	nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
 	sizeEvent.time				= PR_IntervalNow();
 
 	// nsSizeEvent

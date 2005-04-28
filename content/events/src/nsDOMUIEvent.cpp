@@ -53,8 +53,9 @@
 #include "nsIFrame.h"
 
 nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
-  : nsDOMEvent(aPresContext, aEvent ? NS_STATIC_CAST(nsEvent*, aEvent)
-                                    : NS_STATIC_CAST(nsEvent*, new nsUIEvent()))
+  : nsDOMEvent(aPresContext, aEvent ?
+               NS_STATIC_CAST(nsEvent *, aEvent) :
+               NS_STATIC_CAST(nsEvent *, new nsUIEvent(PR_FALSE, 0, 0)))
 {
   if (aEvent) {
     mEventIsInternal = PR_FALSE;
@@ -64,7 +65,8 @@ nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
     mEvent->time = PR_Now();
   }
   
-  // Fill mDetail and mView according to the mEvent (widget-generated event) we've got
+  // Fill mDetail and mView according to the mEvent (widget-generated
+  // event) we've got
   switch(mEvent->eventStructType)
   {
     case NS_UI_EVENT:
@@ -413,9 +415,8 @@ NS_IMETHODIMP
 nsDOMUIEvent::GetPreventDefault(PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = mEvent ?
-    ((mEvent->flags & NS_EVENT_FLAG_NO_DEFAULT) ? PR_TRUE : PR_FALSE) :
-    PR_FALSE;
+  *aReturn = mEvent && (mEvent->flags & NS_EVENT_FLAG_NO_DEFAULT);
+
   return NS_OK;
 }
 

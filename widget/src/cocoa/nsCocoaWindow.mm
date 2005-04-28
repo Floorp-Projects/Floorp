@@ -1498,7 +1498,7 @@ PRBool nsCocoaWindow::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UIn
 //-------------------------------------------------------------------------
 void nsCocoaWindow::ComeToFront() {
 #if 0
-  nsZLevelEvent  event(NS_SETZLEVEL, this);
+  nsZLevelEvent  event(PR_TRUE, NS_SETZLEVEL, this);
 
   event.point.x = mBounds.x;
   event.point.y = mBounds.y;
@@ -1564,7 +1564,8 @@ nsCocoaWindow::DispatchEvent ( void* anEvent, void* aView, PRBool *_retval )
   
   ChildView* view = NS_REINTERPRET_CAST(ChildView*, aView);
   
-  nsMouseEvent geckoEvent(0, view ? [view widget] : this)
+  nsMouseEvent geckoEvent(PR_TRUE, 0, view ? [view widget] : this,
+                          nsMouseEvent::eReal)
   
   geckoEvent.nativeMsg = anEvent;
   geckoEvent.time = PR_IntervalNow();
@@ -1660,7 +1661,7 @@ void
 nsCocoaWindow::ReportSizeEvent()
 {
   // nsEvent
-  nsSizeEvent sizeEvent(NS_SIZE, this);
+  nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
   sizeEvent.time        = PR_IntervalNow();
 
   // nsSizeEvent
