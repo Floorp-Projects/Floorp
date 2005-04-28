@@ -761,8 +761,8 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   for (i = 0; i < count; i++) {
     nsCOMPtr<nsIContent> content = mChildren[i];
 
-    content->UnbindFromTree();
     ContentRemoved(nsnull, content, i);
+    content->UnbindFromTree();
   }
   mChildren.Clear();
 
@@ -964,6 +964,9 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 void
 nsDocument::StopDocumentLoad()
 {
+  if (mParser) {
+    mParser->Terminate();
+  }
 }
 
 NS_IMETHODIMP
@@ -1971,6 +1974,9 @@ GetDocumentFromDocShellTreeItem(nsIDocShellTreeItem *aDocShell,
 void
 nsDocument::EndLoad()
 {
+  // Drop the ref to our parser, if any
+  mParser = nsnull;
+  
   PRInt32 i;
   for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*)mObservers[i];

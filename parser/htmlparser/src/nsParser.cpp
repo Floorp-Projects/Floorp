@@ -1388,22 +1388,28 @@ void nsParser::SetUnusedInput(nsString& aBuffer)
 NS_IMETHODIMP nsParser::Terminate(void)
 {
   nsresult result = NS_OK;
+  // XXX - [ until we figure out a way to break parser-sink circularity ]
+  // Hack - Hold a reference until we are completely done...
+  nsCOMPtr<nsIParser> kungFuDeathGrip(this); 
+  mInternalState = result = NS_ERROR_HTMLPARSER_STOPPARSING;
+
+  // CancelParsingEvents must be called to avoid leaking the nsParser object
+  // @see bug 108049
+  // If NS_PARSER_FLAG_PENDING_CONTINUE_EVENT is set then CancelParsingEvents 
+  // will reset it so DidBuildModel will call DidBuildModel on the DTD. Note: 
+  // The IsComplete() call inside of DidBuildModel looks at the pendingContinueEvents flag.
+  CancelParsingEvents();
+
   if (mParserContext && mParserContext->mDTD) {
     mParserContext->mDTD->Terminate();
-    // XXX - [ until we figure out a way to break parser-sink circularity ]
-    // Hack - Hold a reference until we are completely done...
-    nsCOMPtr<nsIParser> kungFuDeathGrip(this); 
-    mInternalState = result = NS_ERROR_HTMLPARSER_STOPPARSING;
-
-    // CancelParsingEvents must be called to avoid leaking the nsParser object
-    // @see bug 108049
-    // If NS_PARSER_FLAG_PENDING_CONTINUE_EVENT is set then CancelParsingEvents 
-    // will reset it so DidBuildModel will call DidBuildModel on the DTD. Note: 
-    // The IsComplete() call inside of DidBuildModel looks at the pendingContinueEvents flag.
-    CancelParsingEvents();
     DidBuildModel(result);
   }
-  return result;
+  else if (mSink) {
+    // We have no parser context or no DTD yet (so we got terminated before we
+    // got any data).  Manually break the reference cycle with the sink.
+    mSink->SetParser(nsnull);
+  }
+  return NS_OK;
 }
 
 

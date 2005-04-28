@@ -44,7 +44,6 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsIParser.h"
 #include "jsapi.h"
 #include "rdf.h"
 #include "nsRDFCID.h"
@@ -97,8 +96,6 @@ public:
                                      nsIStreamListener **aDocListener,
                                      PRBool aReset = PR_TRUE,
                                      nsIContentSink* aSink = nsnull);
-
-  virtual void StopDocumentLoad();
 
   virtual void EndLoad();
 
@@ -269,8 +266,6 @@ protected:
   nsCOMPtr<nsIDOMHTMLCollection> mLinks;
   nsCOMPtr<nsIDOMHTMLCollection> mAnchors;
   nsRefPtr<nsContentList> mForms;
-
-  nsCOMPtr<nsIParser> mParser;
 
   /** # of forms in the document, synchronously set */
   PRInt32 mNumForms;

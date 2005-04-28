@@ -63,6 +63,7 @@
 #include "nsGenericDOMNodeList.h"
 #include "nsIDOM3Node.h"
 #include "nsIPrincipal.h"
+#include "nsIParser.h"
 #include "nsIBindingManager.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMDocumentEvent.h"
@@ -564,6 +565,10 @@ protected:
 
   // Array of owning references to all children
   nsCOMArray<nsIContent> mChildren;
+
+  // Pointer to our parser if we're currently in the process of being
+  // parsed into.
+  nsCOMPtr<nsIParser> mParser;
 
   nsCOMArray<nsIStyleSheet> mStyleSheets;
   nsCOMArray<nsIStyleSheet> mCatalogSheets;
