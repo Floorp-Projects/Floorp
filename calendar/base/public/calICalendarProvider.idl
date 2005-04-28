@@ -71,8 +71,8 @@ interface calICalendarProvider : nsISupports
                       in calIProviderListener aListener);
 
   /**
-   * Delete a calendar. This typically deletes a file with calendar
-   * data
+   * Delete a calendar. Deletes the actual underlying calendar, which
+   * could be (for example) a file or a calendar on a server
    * 
    * @param aCalendar   the calendar to delete
    * @param aListener   where to call the results back to
