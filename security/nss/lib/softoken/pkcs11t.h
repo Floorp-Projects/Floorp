@@ -658,16 +658,16 @@ typedef CK_ULONG          CK_MECHANISM_TYPE;
 #define CKM_RIPEMD160_HMAC_GENERAL     0x00000242
 
 #define CKM_SHA256                     0x00000250	/* v2.20 */
-#define CKM_SHA256_HMAC_GENERAL        0x00000251	/* v2.20 */
-#define CKM_SHA256_HMAC                0x00000252	/* v2.20 */
+#define CKM_SHA256_HMAC                0x00000251	/* v2.20 */
+#define CKM_SHA256_HMAC_GENERAL        0x00000252	/* v2.20 */
 
 #define CKM_SHA384                     0x00000260	/* v2.20 */
-#define CKM_SHA384_HMAC_GENERAL        0x00000261	/* v2.20 */
-#define CKM_SHA384_HMAC                0x00000262	/* v2.20 */
+#define CKM_SHA384_HMAC                0x00000261	/* v2.20 */
+#define CKM_SHA384_HMAC_GENERAL        0x00000262	/* v2.20 */
 
 #define CKM_SHA512                     0x00000270	/* v2.20 */
-#define CKM_SHA512_HMAC_GENERAL        0x00000271	/* v2.20 */
-#define CKM_SHA512_HMAC                0x00000272	/* v2.20 */
+#define CKM_SHA512_HMAC                0x00000271	/* v2.20 */
+#define CKM_SHA512_HMAC_GENERAL        0x00000272	/* v2.20 */
 
 /* All of the following mechanisms are new for v2.0 */
 /* Note that CAST128 and CAST5 are the same algorithm */
@@ -786,9 +786,9 @@ typedef CK_ULONG          CK_MECHANISM_TYPE;
 #define CKM_ECDSA_SHA1                 0x00001042
 
 /* ECDH1 is new for 2.11 */
-#define CKM_ECDH1_DERIVE               0x00001043
-#define CKM_ECDH1_COFACTOR_DERIVE      0x00001044
-#define CKM_ECMQV_DERIVE               0x00001045
+#define CKM_ECDH1_DERIVE               0x00001050
+#define CKM_ECDH1_COFACTOR_DERIVE      0x00001051
+#define CKM_ECMQV_DERIVE               0x00001052
 
 #define CKM_JUNIPER_KEY_GEN            0x00001060
 #define CKM_JUNIPER_ECB128             0x00001061
