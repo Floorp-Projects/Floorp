@@ -54,6 +54,7 @@ class nsIAtom;
 class nsIDocument;
 class nsIScrollFrameInternal;
 class nsPresState;
+struct ScrollReflowState;
 
 class nsGfxScrollFrameInner : public nsIScrollPositionListener {
 public:
@@ -61,7 +62,7 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  nsGfxScrollFrameInner(nsBoxFrame* aOuter, PRBool aIsRoot);
+  nsGfxScrollFrameInner(nsContainerFrame* aOuter, PRBool aIsRoot);
 
   typedef nsIScrollableFrame::ScrollbarStyles ScrollbarStyles;
   ScrollbarStyles GetScrollbarStylesFromFrame() const;
@@ -95,31 +96,14 @@ public:
   PRBool SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow=PR_TRUE);
   PRInt32 GetIntegerAttribute(nsIBox* aFrame, nsIAtom* atom, PRInt32 defaultValue);
 
-  nsresult Layout(nsBoxLayoutState& aState);
-  nsresult LayoutBox(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
-  void LayoutScrollArea(nsBoxLayoutState& aState, const nsRect& aRect);
-
+  /**
+   * If RTL, then this will scroll to the right during initial layout.
+   */
+  void AdjustHorizontalScrollbar();
+ 
   // Like ScrollPositionDidChange, but initiated by this frame rather than from the
   // scrolling view
   void InternalScrollPositionDidChange(nscoord aX, nscoord aY);
-
-  PRBool AddRemoveScrollbar(PRBool& aHasScrollbar, 
-                            nscoord& aXY, 
-                            nscoord& aSize, 
-                            nscoord aSbSize, 
-                            PRBool aOnRightOrBottom, 
-                            PRBool aAdd);
-  
-  PRBool AddRemoveScrollbar(nsBoxLayoutState& aState, 
-                            nsRect& aScrollAreaSize, 
-                            PRBool aOnTop, 
-                            PRBool aHorizontal, 
-                            PRBool aAdd);
-  
-  PRBool AddHorizontalScrollbar   (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
-  PRBool AddVerticalScrollbar     (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
-  void RemoveHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
-  void RemoveVerticalScrollbar  (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
 
   nsIScrollableView* GetScrollableView() const { return mScrollableView; }
 
@@ -134,21 +118,24 @@ public:
 
   void ScrollbarChanged(nsPresContext* aPresContext, nscoord aX, nscoord aY, PRUint32 aFlags);
 
-  void SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisible);
+  static void SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisible);
 
   nsSize GetScrolledSize() const;
   nsMargin GetActualScrollbarSizes() const;
-  void AdjustReflowStateForPrintPreview(nsBoxLayoutState& aState, PRBool& aSetBack);
-  void AdjustReflowStateBack(nsBoxLayoutState& aState, PRBool aSetBack);
+  nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
+  PRBool IsScrollbarOnRight();
+  void LayoutScrollbars(nsBoxLayoutState& aState,
+                        const nsRect& aContentArea,
+                        const nsRect& aOldScrollArea,
+                        const nsRect& aScrollArea);
 
   nsIScrollableView* mScrollableView;
   nsIBox* mHScrollbarBox;
   nsIBox* mVScrollbarBox;
   nsIFrame* mScrolledFrame;
   nsIBox* mScrollCornerBox;
+  nsContainerFrame* mOuter;
   nscoord mOnePixel;
-  nsBoxFrame* mOuter;
-  nscoord mMaxElementWidth;
 
   nsRect mRestoreRect;
   nsPoint mLastPos;
@@ -165,8 +152,6 @@ public:
   PRPackedBool mViewInitiatedScroll:1;
   PRPackedBool mFrameInitiatedScroll:1;
   PRPackedBool mDidHistoryRestore:1;
-  PRPackedBool mHorizontalOverflow:1;
-  PRPackedBool mVerticalOverflow:1;
   // Is this the scrollframe for the document's viewport?
   PRPackedBool mIsRoot:1;
 };
@@ -180,7 +165,7 @@ public:
  * Scroll frames don't support incremental changes, i.e. you can't replace
  * or remove the scrolled frame
  */
-class nsHTMLScrollFrame : public nsBoxFrame,
+class nsHTMLScrollFrame : public nsHTMLContainerFrame,
                           public nsIScrollableFrame,
                           public nsIAnonymousContentCreator,
                           public nsIStatefulFrame {
@@ -188,13 +173,30 @@ public:
   friend nsresult NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, 
                                         PRBool aIsRoot);
 
+  NS_DECL_ISUPPORTS
+
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
   NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
+  PRBool TryLayout(ScrollReflowState* aState,
+                   const nsHTMLReflowMetrics& aKidMetrics,
+                   const nsMargin& aKidPadding,
+                   PRBool aAssumeVScroll, PRBool aAssumeHScroll,
+                   PRBool aForce);
+  nsresult ReflowScrolledFrame(const ScrollReflowState& aState,
+                               PRBool aAssumeVScroll,
+                               nsHTMLReflowMetrics* aMetrics,
+                               nsMargin* aKidPadding,
+                               PRBool aFirstPass);
+  nsresult ReflowContents(ScrollReflowState* aState,
+                          const nsHTMLReflowMetrics& aDesiredSize);
+  PRBool IsRTLTextControl();
+  void PlaceScrollArea(const ScrollReflowState& aState);
+
+   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                   nsHTMLReflowMetrics&     aDesiredSize,
                   const nsHTMLReflowState& aReflowState,
                   nsReflowStatus&          aStatus);
@@ -248,17 +250,6 @@ public:
   NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
                             nsIContent *      aContent,
                             nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
-
-  // nsIBox methods
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
-
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
-  NS_IMETHOD GetPadding(nsMargin& aPadding);
 
   // nsIScrollableFrame
   virtual nsIFrame* GetScrolledFrame() const;
@@ -412,6 +403,30 @@ public:
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD GetPadding(nsMargin& aPadding);
 
+  nsresult Layout(nsBoxLayoutState& aState);
+  void LayoutScrollArea(nsBoxLayoutState& aState, const nsRect& aRect);
+
+  static PRBool AddRemoveScrollbar(PRBool& aHasScrollbar, 
+                                   nscoord& aXY, 
+                                   nscoord& aSize, 
+                                   nscoord aSbSize, 
+                                   PRBool aOnRightOrBottom, 
+                                   PRBool aAdd);
+  
+  PRBool AddRemoveScrollbar(nsBoxLayoutState& aState, 
+                            nsRect& aScrollAreaSize, 
+                            PRBool aOnTop, 
+                            PRBool aHorizontal, 
+                            PRBool aAdd);
+  
+  PRBool AddHorizontalScrollbar (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
+  PRBool AddVerticalScrollbar   (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
+  void RemoveHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
+  void RemoveVerticalScrollbar  (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
+
+  static void AdjustReflowStateForPrintPreview(nsBoxLayoutState& aState, PRBool& aSetBack);
+  static void AdjustReflowStateBack(nsBoxLayoutState& aState, PRBool aSetBack);
+
   // nsIScrollableFrame
   virtual nsIFrame* GetScrolledFrame() const;
   virtual nsIScrollableView* GetScrollableView();
@@ -467,6 +482,9 @@ protected:
 private:
   friend class nsGfxScrollFrameInner;
   nsGfxScrollFrameInner mInner;
+  nscoord mMaxElementWidth;
+  PRPackedBool mHorizontalOverflow;
+  PRPackedBool mVerticalOverflow;
 };
 
 #endif /* nsGfxScrollFrame_h___ */

@@ -1266,25 +1266,16 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     }
 
     // Apply min/max values
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxWidth) {
-      nscoord computedMaxWidth = aReflowState.mComputedMaxWidth +
-        borderPadding.left + borderPadding.right;
-      if (computedWidth > computedMaxWidth) {
-        computedWidth = computedMaxWidth;
-      }
-    }
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMinWidth) {
+    computedWidth -= borderPadding.left + borderPadding.right;
+    aReflowState.ApplyMinMaxConstraints(&computedWidth, nsnull);
+    computedWidth += borderPadding.left + borderPadding.right;
+    if (aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH)) {
       nscoord computedMinWidth = aReflowState.mComputedMinWidth +
         borderPadding.left + borderPadding.right;
-      if (computedWidth < computedMinWidth) {
-        computedWidth = computedMinWidth;
-      }
-      if (aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH) && 
-          maxElementWidth < computedMinWidth &&
+      if (maxElementWidth < computedMinWidth &&
           GetStylePosition()->mMinWidth.GetUnit() != eStyleUnit_Percent) {
-          maxElementWidth = computedMinWidth;
+        maxElementWidth = computedMinWidth;
       }
-
     }
     aMetrics.width = computedWidth;
 
@@ -1414,25 +1405,12 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
           autoHeight < ymost)
         autoHeight = ymost;
     }
-    autoHeight += borderPadding.bottom;
 
     // Apply min/max values
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxHeight) {
-      nscoord computedMaxHeight = aReflowState.mComputedMaxHeight +
-        borderPadding.top + borderPadding.bottom;
-      if (autoHeight > computedMaxHeight) {
-        autoHeight = computedMaxHeight;
-      }
-    }
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMinHeight) {
-      nscoord computedMinHeight = aReflowState.mComputedMinHeight +
-        borderPadding.top + borderPadding.bottom;
-      if (autoHeight < computedMinHeight) {
-        autoHeight = computedMinHeight;
-      }
-    }
+    autoHeight -= borderPadding.top;
+    aReflowState.ApplyMinMaxConstraints(nsnull, &autoHeight);
+    autoHeight += borderPadding.top + borderPadding.bottom;
     aMetrics.height = autoHeight;
-
   }
 
   aMetrics.ascent = mAscent;

@@ -166,11 +166,6 @@ NS_IMETHODIMP nsScrollPortView::SetWidget(nsIWidget *aWidget)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollPortView::ComputeScrollOffsets(PRBool aAdjustWidgets)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsScrollPortView::GetContainerSize(nscoord *aWidth, nscoord *aHeight) const
 {
   if (!aWidth || !aHeight)

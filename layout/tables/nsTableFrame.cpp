@@ -1909,8 +1909,8 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
           mTableLayoutStrategy->Initialize(aReflowState);
         }
       }
+      SetHadInitialReflow(PR_TRUE);
       if (!mPrevInFlow) {
-        SetHadInitialReflow(PR_TRUE);
         SetNeedStrategyBalance(PR_TRUE); // force a balance and then a pass2 reflow 
         if ((nextReason != eReflowReason_StyleChange) || IsAutoLayout()) 
           nextReason = eReflowReason_Resize;

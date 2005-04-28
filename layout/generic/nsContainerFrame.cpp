@@ -850,7 +850,7 @@ nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
  */
 nsresult
 nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
-                              nsPresContext*          aPresContext,
+                              nsPresContext*           aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nscoord                  aX,
@@ -966,7 +966,7 @@ nsContainerFrame::PositionChildViews(nsIFrame* aFrame)
  */
 nsresult
 nsContainerFrame::FinishReflowChild(nsIFrame*                 aKidFrame,
-                                    nsPresContext*           aPresContext,
+                                    nsPresContext*            aPresContext,
                                     const nsHTMLReflowState*  aReflowState,
                                     nsHTMLReflowMetrics&      aDesiredSize,
                                     nscoord                   aX,

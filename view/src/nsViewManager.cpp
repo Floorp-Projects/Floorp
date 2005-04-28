@@ -700,14 +700,6 @@ NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::ResetScrolling(void)
-{
-  if (nsnull != mRootScrollable)
-    mRootScrollable->ComputeScrollOffsets(PR_TRUE);
-
-  return NS_OK;
-}
-
 /* Check the prefs to see whether we should do double buffering or not... */
 static
 PRBool DoDoubleBuffering(void)

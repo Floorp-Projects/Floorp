@@ -4793,24 +4793,6 @@ nsFrame::SetIncludeOverflow(PRBool aInclude)
   return NS_OK;
 }
 
-static PRBool
-UseHTMLReflowConstraints(nsFrame* aFrame, nsBoxLayoutState& aState) {
-  nsSize constrainedSize = aState.ScrolledBlockSizeConstraint();
-  if (constrainedSize.width < 0 || constrainedSize.height < 0) {
-    return PR_FALSE;
-  }
-
-  nsIFrame* parentFrame = aFrame->GetParent();
-  if (!parentFrame) {
-    return PR_FALSE;
-  }
-  if (parentFrame->GetType() != nsLayoutAtoms::scrollFrame) {
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
-}
-
 NS_IMETHODIMP
 nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
 {
@@ -4838,8 +4820,6 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
     nsHTMLReflowMetrics desiredSize(PR_FALSE);
     nsReflowReason reason;
 
-    PRBool useHTMLConstraints = UseHTMLReflowConstraints(this, aState);
-
     // See if we an set the max element size and return the reflow states new reason. Sometimes reflow states need to 
     // be changed. Incremental dirty reflows targeted at us can be converted to Resize if we are not dirty. So make sure
     // we look at the reason returned.
@@ -4852,9 +4832,8 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
     // If we don't have any HTML constraints and its a resize, then nothing in the block
     // could have changed, so no refresh is necessary.
     nsBoxLayoutMetrics* metrics = BoxMetrics();
-    if (!DoesNeedRecalc(metrics->mBlockPrefSize) && reason == eReflowReason_Resize
-        && !useHTMLConstraints)
-     return NS_OK;
+    if (!DoesNeedRecalc(metrics->mBlockPrefSize) && reason == eReflowReason_Resize)
+      return NS_OK;
 
     // get the old rect.
     nsRect oldRect = GetRect();
@@ -4873,11 +4852,6 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
       // uncontrained.
       rect.width = NS_UNCONSTRAINEDSIZE;
       rect.height = NS_UNCONSTRAINEDSIZE;
-    }
-    if (useHTMLConstraints) {
-      nsSize constrained = aState.ScrolledBlockSizeConstraint();
-      rect.width = constrained.width;
-      rect.height = constrained.height;
     }
 
     // Create a child reflow state, fix-up the reason and the
@@ -4951,11 +4925,6 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
       metrics->mBlockMinSize.width = 0;
       metrics->mBlockMinSize.height = desiredSize.height;
     }
-    if (useHTMLConstraints) {
-      // set the preferred metrics to exactly what the block asked for
-      metrics->mBlockPrefSize.width = desiredSize.width;
-      metrics->mBlockPrefSize.height = desiredSize.height;
-    }
 
     metrics->mBlockAscent = desiredSize.ascent;
 
@@ -4977,7 +4946,7 @@ nsFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   // If the size is cached, and there are no HTML constraints that we might
   // be depending on, then we just return the cached size.
   nsBoxLayoutMetrics *metrics = BoxMetrics();
-  if (!DoesNeedRecalc(metrics->mPrefSize) && !UseHTMLReflowConstraints(this, aState)) {
+  if (!DoesNeedRecalc(metrics->mPrefSize)) {
      aSize = metrics->mPrefSize;
      return NS_OK;
   }
@@ -5016,7 +4985,7 @@ nsFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   // Don't use the cache if we have HTMLReflowState constraints --- they might have changed
   nsBoxLayoutMetrics *metrics = BoxMetrics();
-  if (!DoesNeedRecalc(metrics->mMinSize) && !UseHTMLReflowConstraints(this, aState)) {
+  if (!DoesNeedRecalc(metrics->mMinSize)) {
      aSize = metrics->mMinSize;
      return NS_OK;
   }
@@ -5051,7 +5020,7 @@ nsFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   // Don't use the cache if we have HTMLReflowState constraints --- they might have changed
   nsBoxLayoutMetrics *metrics = BoxMetrics();
-  if (!DoesNeedRecalc(metrics->mMaxSize) && !UseHTMLReflowConstraints(this, aState)) {
+  if (!DoesNeedRecalc(metrics->mMaxSize)) {
      aSize = metrics->mMaxSize;
      return NS_OK;
   }

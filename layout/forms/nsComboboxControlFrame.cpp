@@ -581,9 +581,6 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
     rect.x = rect.y = 0;
     viewManager->ResizeView(view, rect);
     nsIScrollableView* scrollingView = view->ToScrollableView();
-    if (scrollingView) {
-      scrollingView->ComputeScrollOffsets(PR_TRUE);
-    }
     viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
   } else {
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);

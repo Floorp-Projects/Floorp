@@ -79,10 +79,6 @@ public:
   nsIPresShell*   PresShell() { return mPresContext->PresShell(); }
   nscoord* GetMaxElementWidth() { return mReflowState ? mMaxElementWidth : nsnull; }
 
-  nsSize ScrolledBlockSizeConstraint() const
-  { return mScrolledBlockSizeConstraint; }
-  void SetScrolledBlockSizeConstraint(const nsSize& aSize)
-  { mScrolledBlockSizeConstraint = aSize; }
   PRUint32 LayoutFlags() const { return mLayoutFlags; }
   void SetLayoutFlags(PRUint32 aFlags) { mLayoutFlags = aFlags; }
 
@@ -111,9 +107,8 @@ private:
 
   nsCOMPtr<nsPresContext> mPresContext;
   const nsHTMLReflowState* mReflowState;
-  eBoxLayoutReason mType;
   nscoord* mMaxElementWidth;
-  nsSize mScrolledBlockSizeConstraint;
+  eBoxLayoutReason mType;
   PRUint32 mLayoutFlags;
   PRBool mPaintingDisabled;
 };

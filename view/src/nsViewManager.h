@@ -168,8 +168,6 @@ public:
   NS_IMETHOD  GetWindowDimensions(nscoord *width, nscoord *height);
   NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height);
 
-  NS_IMETHOD  ResetScrolling(void);
-
   NS_IMETHOD  Composite(void);
 
   NS_IMETHOD  UpdateView(nsIView *aView, PRUint32 aUpdateFlags);
