@@ -536,13 +536,10 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
 
   document.getElementById("moreInfoLink").addEventListener("click", function() { gPluginInstaller.loadURL("https://pfs.mozilla.org/plugins/" + notInstalledList) }, false);
 
-  // clear the tab's plugin list
-  this.mTab.missingPlugins = null;
-
   this.canAdvance(true);
   this.canRewind(false);
   this.canCancel(false);
-} 
+}
 
 nsPluginInstallerWizard.prototype.loadURL = function (aUrl){
   // Check if the page where the plugin came from can load aUrl before
@@ -621,10 +618,14 @@ function wizardInit(){
 
 function wizardFinish(){
   // don't refresh if no plugins were found or installed
-  if ((gPluginInstaller.mSuccessfullPluginInstallation > 0) && 
-      (gPluginInstaller.mPluginInfoArray.length != 0) && 
+  if ((gPluginInstaller.mSuccessfullPluginInstallation > 0) &&
+      (gPluginInstaller.mPluginInfoArray.length != 0) &&
       gPluginInstaller.mTab) {
+    // clear the tab's plugin list only if we installed at least one plugin
+    gPluginInstaller.mTab.missingPlugins = null;
+    // reset UI
     window.opener.getBrowser().hideMessage(window.opener.getBrowser().selectedBrowser, "top");
+    // reload the browser to make the new plugin show
     window.opener.getBrowser().reloadTab(gPluginInstaller.mTab);
   }
 
