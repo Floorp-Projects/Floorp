@@ -496,18 +496,24 @@
           keyClose.parentNode.removeChild(keyClose);          
         }
         var panes = this.preferencePanes;
-        var lastPane = this.lastSelected ? document.getElementById(this.lastSelected) : panes[0];
+
+        var paneToLoad;
+        if ("arguments" in window && window.arguments[0])
+          paneToLoad = document.getElementById(window.arguments[0]);
+        else if (this.lastSelected)
+          paneToLoad = document.getElementById(this.lastSelected);
+        else
+          paneToLoad = panes[0];
+
         for (var i = 0; i < panes.length; ++i) {
-          var button = this._makePaneButton(panes[i]);
-          if (lastPane == panes[i])
-            this._selector.selectedItem = button;
+          this._makePaneButton(panes[i]);
           if (panes[i].loaded) {
             // Inline pane content, fire load event to force initialization.
             this._fireEvent("paneload", panes[i]);
           }
         }
-        this.showPane(lastPane);
-        
+        this.showPane(paneToLoad);
+
         if (panes.length == 1)
           this._selector.setAttribute("collapsed", "true");
       ]]>
@@ -557,6 +563,7 @@
         <parameter name="aPaneElement"/>
         <body>
         <![CDATA[
+          this._selector.selectedItem = document.getAnonymousElementByAttribute(this, "pane", aPaneElement.id);
           if (!aPaneElement.loaded) {
             function OverlayLoadObserver(aPane)
             {

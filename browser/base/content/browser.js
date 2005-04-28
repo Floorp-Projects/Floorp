@@ -482,16 +482,7 @@ const gXPInstallObserver = {
       }
       break;
     case "xpinstall-install-edit-prefs":
-      wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                     .getService(Components.interfaces.nsIWindowMediator);
-      var optionsWindow = wm.getMostRecentWindow("Browser:Options");
-      if (optionsWindow) {
-        optionsWindow.focus();
-        optionsWindow.switchPage("catFeaturesbutton");
-      }
-      else
-        openDialog("chrome://browser/content/pref/pref.xul", "PrefWindow",
-                   "chrome,titlebar,resizable,modal", "catFeaturesbutton");
+      openPreferences("paneContent");
       tabbrowser = getBrowser();
       tabbrowser.hideMessage(tabbrowser.selectedBrowser, "top");
       break;
