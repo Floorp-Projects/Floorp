@@ -75,11 +75,8 @@ public:
    * available space is relative to our coordinate system (0,0) is our
    * upper left corner.
    */
-  void GetAvailableSpace() {
-    GetAvailableSpace(mY);
-  }
-
-  void GetAvailableSpace(nscoord aY);
+  void GetAvailableSpace() { GetAvailableSpace(mY, PR_FALSE); }
+  void GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint);
 
   /*
    * The following functions all return PR_TRUE if they were able to
@@ -93,11 +90,12 @@ public:
                   nsPlaceholderFrame* aPlaceholderFrame,
                   PRBool              aInitialReflow,
                   nsReflowStatus&     aReflowStatus);
-  PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats);
-  PRBool FlowAndPlaceFloat(nsFloatCache* aFloatCache,
+  PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats, PRBool aForceFit);
+  PRBool FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
                            PRBool*         aIsLeftFloat,
-                           nsReflowStatus& aReflowStatus);
-  PRBool PlaceBelowCurrentLineFloats(nsFloatCacheList& aFloats);
+                           nsReflowStatus& aReflowStatus,
+                           PRBool          aForceFit);
+  PRBool PlaceBelowCurrentLineFloats(nsFloatCacheList& aFloats, PRBool aForceFit);
 
   // Returns the first coordinate >= aY that clears the
   // indicated floats.

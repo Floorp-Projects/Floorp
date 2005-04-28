@@ -1999,7 +1999,7 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
     //    XXXPerf: An optimization: if the line was and is completely
     //    impacted by a float and the float hasn't changed size,
     //    then we don't need to mark the line dirty.
-    aState.GetAvailableSpace(aLine->mBounds.y + aDeltaY);
+    aState.GetAvailableSpace(aLine->mBounds.y + aDeltaY, PR_FALSE);
     PRBool wasImpactedByFloat = aLine->IsImpactedByFloat();
     PRBool isImpactedByFloat = aState.IsImpactedByFloat();
 #ifdef REALLY_NOISY_REFLOW
@@ -4507,6 +4507,9 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     return PR_TRUE;
   }
 
+  // May be needed below
+  PRBool wasAdjacentWIthTop = aState.IsAdjacentWithTop();
+
   aState.mY = newY;
   
   // If we're reflowing the line just to incrementally update the
@@ -4541,13 +4544,14 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   if (aState.mBelowCurrentLineFloats.NotEmpty()) {
     // Reflow the below-current-line floats, then add them to the
     // lines float list if there aren't any truncated floats.
-    if (aState.PlaceBelowCurrentLineFloats(aState.mBelowCurrentLineFloats)) {
+    if (aState.PlaceBelowCurrentLineFloats(aState.mBelowCurrentLineFloats,
+                                           wasAdjacentWIthTop)) {
       aLine->AppendFloats(aState.mBelowCurrentLineFloats);
     }
     else { 
       // At least one float is truncated, so fix up any placeholders that got split and 
       // push the line. XXX It may be better to put the float on the next line, but this 
-      // is not common enough to justify the complexity.
+      // is not common enough to justify the complexity. Or maybe it is now...
 
       // If we just want to calculate the maximum width, then don't push the line.
       // We'll reflow it again and then it will get pushed if necessary.
@@ -5731,7 +5735,7 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
 nsresult
 nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
                           nsPlaceholderFrame* aPlaceholder,
-                          nsFloatCache*     aFloatCache,
+                          nsFloatCache*       aFloatCache,
                           nsReflowStatus&     aReflowStatus)
 {
   // Reflow the float.
@@ -6190,7 +6194,7 @@ nsBlockFrame::Paint(nsPresContext*      aPresContext,
       nscoord y = 0;
       while (y < mRect.height) {
         nsRect availArea;
-        band.GetAvailableSpace(y, availArea);
+        band.GetAvailableSpace(y, PR_FALSE, availArea);
   
         // Render a box and a diagonal line through the band
         aRenderingContext.SetColor(NS_RGB(0,255,0));

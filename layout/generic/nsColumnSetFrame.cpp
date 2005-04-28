@@ -448,7 +448,8 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       nsHTMLReflowState kidReflowState(GetPresContext(), aReflowState, child,
                                        availSize, availSize.width,
                                        aReflowState.mComputedHeight, tmpReason);
-                                       
+      kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
+          
 #ifdef DEBUG_roc
       printf("*** Reflowing child #%d %p: reason = %d, availHeight=%d\n",
              columnCount, (void*)child, tmpReason, availSize.height);

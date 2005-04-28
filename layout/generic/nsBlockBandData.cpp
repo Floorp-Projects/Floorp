@@ -79,10 +79,11 @@ nsBlockBandData::Init(nsSpaceManager* aSpaceManager,
 // available space is relative to our coordinate system (0,0) is our
 // upper left corner.
 nsresult
-nsBlockBandData::GetAvailableSpace(nscoord aY, nsRect& aResult)
+nsBlockBandData::GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint,
+                                   nsRect& aResult)
 {
   // Get the raw band data for the given Y coordinate
-  nsresult rv = GetBandData(aY);
+  nsresult rv = GetBandData(aY, aRelaxHeightConstraint);
   if (NS_FAILED(rv)) { return rv; }
 
   // Compute the bounding rect of the available space, i.e. space
@@ -104,11 +105,15 @@ nsBlockBandData::GetAvailableSpace(nscoord aY, nsRect& aResult)
  * They should always call nsBlockBandData::GetBandData() instead.
  */
 nsresult
-nsBlockBandData::GetBandData(nscoord aY)
+nsBlockBandData::GetBandData(nscoord aY, PRBool aRelaxHeightConstraint)
 {
   NS_ASSERTION(mSpaceManager, "bad state, no space manager");
   PRInt32 iterations =0;
-  nsresult rv = mSpaceManager->GetBandData(aY, mSpace, *this);
+  nsSize space = mSpace;
+  if (aRelaxHeightConstraint) {
+    space.height = NS_UNCONSTRAINEDSIZE;
+  }
+  nsresult rv = mSpaceManager->GetBandData(aY, space, *this);
   while (NS_FAILED(rv)) {
     iterations++;
     if (iterations>ERROR_TOO_MANY_ITERATIONS)
@@ -131,7 +136,7 @@ nsBlockBandData::GetBandData(nscoord aY)
       return NS_ERROR_OUT_OF_MEMORY;
     }
     mSize = newSize;
-    rv = mSpaceManager->GetBandData(aY, mSpace, *this);
+    rv = mSpaceManager->GetBandData(aY, space, *this);
   }
   NS_POSTCONDITION(mCount<=mSize, "bad state, count > size");
   return NS_OK;
