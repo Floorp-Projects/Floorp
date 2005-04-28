@@ -145,7 +145,7 @@ function loadEventsFromFile()
         var fromFileNames = "";
 
         // create a temp memory calendar to put all the events and todos in to
-        var tmpCalendar = getCalendarManager().createCalendar("tmpcal", "memory", null);
+        var tmpCalendar = getCalendarManager().createCalendar("memory", null);
 
         while (filesToAppend.hasMoreElements()) {
             currentFile = filesToAppend.getNext().QueryInterface(Components.interfaces.nsILocalFile);

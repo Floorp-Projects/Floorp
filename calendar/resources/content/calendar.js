@@ -1186,7 +1186,7 @@ function publishEntireCalendarDialogResponse( CalendarPublishObject )
     // create an ICS calendar, but don't register it
     var calManager = getCalendarManager();
     try {
-        var newCalendar = calManager.createCalendar(oldCalendar.name, "ics", icsURL);
+        var newCalendar = calManager.createCalendar("ics", icsURL);
     } catch (ex) {
         dump(ex);
         return;
