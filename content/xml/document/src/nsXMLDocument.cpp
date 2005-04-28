@@ -116,19 +116,15 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
 
   *aInstancePtrResult = nsnull;
 
-  nsXMLDocument* doc = new nsXMLDocument();
+  nsRefPtr<nsXMLDocument> doc = new nsXMLDocument();
   if (!doc)
     return NS_ERROR_OUT_OF_MEMORY;
 
   rv = doc->Init();
 
   if (NS_FAILED(rv)) {
-    delete doc;
-
     return rv;
   }
-
-  nsCOMPtr<nsIDOMDocument> kungFuDeathGrip(doc);
 
   doc->nsIDocument::SetDocumentURI(aBaseURI);
   doc->SetBaseURI(aBaseURI);
@@ -164,18 +160,16 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
   nsXMLDocument* doc = new nsXMLDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
 
+  NS_ADDREF(doc);
   nsresult rv = doc->Init();
 
   if (NS_FAILED(rv)) {
-    delete doc;
-
-    return rv;
+    NS_RELEASE(doc);
   }
 
   *aInstancePtrResult = doc;
-  NS_ADDREF(*aInstancePtrResult);
 
-  return NS_OK;
+  return rv;
 }
 
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
