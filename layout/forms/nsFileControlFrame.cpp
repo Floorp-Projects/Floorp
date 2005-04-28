@@ -119,11 +119,19 @@ void
 nsFileControlFrame::PreDestroy(nsPresContext* aPresContext)
 {
   // Toss the value into the control from the anonymous content, which is about
-  // to get lost.
+  // to get lost.  Note that if the page is being torn down then the anonymous
+  // content may no longer have access to its frame.  But _we_ can access that
+  // frame.  So if it's there, get the value from the frame
   if (mTextContent) {
-    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(mTextContent);
     nsAutoString value;
-    input->GetValue(value);
+    if (mTextFrame) {
+      // Second arg doesn't really matter here...
+      mTextFrame->GetValue(value, PR_TRUE);
+    } else {
+      // Get from the content
+      nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(mTextContent);
+      input->GetValue(value);
+    }
 
     // Have it take the value, just like when input type=text goes away
     nsCOMPtr<nsITextControlElement> fileInput = do_QueryInterface(mContent);
