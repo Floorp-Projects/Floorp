@@ -21,9 +21,6 @@
       case "chrome://communicator/content/pref/pref-appearance.xul":
         _elementIDs.push("generalStartupMail");
         break;
-      case "chrome://communicator/content/pref/pref-images.xul":
-        _elementIDs.push("networkImageDisableImagesInMailNews");
-        break;
       }
     }
   ]]>
@@ -51,15 +48,6 @@
               pref="true" preftype="bool" prefstring="general.startup.mail"
               prefattribute="checked"/>         
   </groupbox>
-  <!--- image toggle for mail/news -->
-  <groupbox id="imagesArea">
-    <checkbox id="networkImageDisableImagesInMailNews"
-              label="&disableImageInMailNews.label;" accesskey="&disableImageInMailNews.accesskey;"
-              pref="true" preftype="bool" prefstring="mailnews.message_display.disable_remote_image"
-              prefattribute="checked" insertafter="networkImagesBehaviorSeparator"/>
-  </groupbox>
-
-
 
   <!-- category tree entries for mail/news -->
   <treechildren id="panelChildren">
@@ -68,11 +56,6 @@
         <treecell url="chrome://messenger/content/pref-mailnews.xul" label="&mail.label;"/> 
       </treerow>
       <treechildren id="messengerChildren">
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://messenger/content/pref-windows.xul" label="&windows.label;"/> 
-          </treerow>
-        </treeitem>
         <treeitem>
           <treerow>
             <treecell url="chrome://messenger/content/pref-viewing_messages.xul" label="&viewingMessages.label;"/> 

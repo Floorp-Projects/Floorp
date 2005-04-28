@@ -444,9 +444,10 @@
 <ul>
   <li>Open the View menu and choose Show/Hide to show or hide the Mail toolbar,
     search bar, or the status bar.</li>
+  <li>Open the View menu and choose Layout to select the type of three-pane
+    window layout to use.</li>
   <li>Expand and collapse any pane to switch between a three-pane or two-pane
-    view. Choose a <a href="#windows">default view</a> in the Mail and
-    Newsgroups Preferences panel.</li>
+    view.</li>
 </ul>
 
 <p>[<a href="#reading_messages">Return to beginning of section</a>]</p>
@@ -467,6 +468,13 @@
 <ul>
   <li>Click and drag a column heading to the left or right to reposition the
     column.</li>
+</ul>
+
+<p>To change which columns are displayed, begin from the Mail window:</p>
+
+<ul>
+  <li>Click the Show/Hide Columns icon <img src="images/columns.png" alt=""/>
+    and select the column to be added/removed from the list.</li>
 </ul>
 
 <p>To group messages by threading (subject), so each message is grouped with
@@ -534,17 +542,18 @@
 <h2 id="controlling_images_scripts_and_plug-ins">Controlling Images, Scripts,
   and Plug-ins</h2>
 
-<p>By default, you can view remote images in the mail messages you receive.
-  To avoid downloading images embedded in web pages sent as message
-  attachments:</p>
+<p>By default, remote images and other remote content are displayed in
+  messages you receive. To avoid downloading images and other content
+  embedded in web pages sent as message attachments:</p>
 
 <ol>
   <li>Open the <span class="mac">&brandShortName;</span>
     <span class="noMac">Edit</span> menu and choose Preferences.</li>
-  <li>Under the Privacy &amp; Security category, click Images. (If no
-    subcategories are visible, double-click Privacy &amp; Security to
+  <li>Under the Mail &amp; Newsgroups category, click Message Display. (If
+    no subcategories are visible, double-click Mail &amp; Newsgroups to
     expand the list.)</li>
-  <li>Check <q>Do not load remote images in Mail &amp; Newsgroup messages</q>.</li>
+  <li>Uncheck <q>Allow messages to load and display remote images and other
+    content</q>.</li>
   <li>Click OK to have your change take affect.</li>
 </ol>
 
@@ -4262,7 +4271,6 @@ to filter unwanted mail.</p>
 <div class="contentsBox">In this section:
   <ul>
     <li><a href="#mail_and_newsgroups">Mail &amp; Newsgroups</a></li>
-    <li><a href="#windows">Windows</a></li>
     <li><a href="#message_display">Message Display</a></li>
     <li><a href="#notifications">Notifications</a></li>
     <li><a href="#composition">Composition</a></li>
@@ -4323,30 +4331,6 @@ to filter unwanted mail.</p>
 <p>[<a href="#mail_and_newsgroup_preferences">Return to beginning of
   section</a>]</p>
 
-<h2 id="windows">Mail &amp; Newsgroups Preferences - Windows</h2>
-
-<p>Windows preferences allow you to adjust the window layout and
-  handling.</p>
-
-<ol>
-  <li>Open the <span class="mac">&brandShortName;</span>
-    <span class="noMac">Edit</span> menu and choose Preferences.</li>
-  <li>Under the Mail &amp; Newsgroups category, click Windows. (If no
-    subcategories are visible, double-click Mail &amp; Newsgroups to expand
-    the list.)</li>
-</ol>
-
-<ul>
-  <li><strong>Select the window layout you prefer for Mail</strong>: Choose the
-    type of three-pane layout to use for the Mail window.</li>
-  <li><strong>When opening messages, display them in</strong>: Here you can
-    choose if you want to reuse a message window for the next mail or if you
-    want to open a new one for each.</li>
-</ul>
-
-<p>[<a href="#mail_and_newsgroup_preferences">Return to beginning of
-  section</a>]</p>
-
 <h2 id="message_display">Mail &amp; Newsgroups Preferences - Message
   Display</h2>
 
@@ -4364,6 +4348,36 @@ to filter unwanted mail.</p>
 </ol>
 
 <ul>
+  <li><strong>When opening messages, display them in</strong>: Here you can
+    choose if you want to reuse a message window for the next mail or if you
+    want to open a new one for each.</li>
+  <li><strong>Allow messages to load and display remote images and other
+    content</strong>: Deselect this checkbox if you want to avoid downloading
+    images and other content embedded in web pages sent as message attachments.
+    (This checkbox is selected by default.)</li>
+  <li><strong>Wait ___ seconds before marking a message as read</strong>:
+    Choose this option if you do not want a message to be marked as read when
+    you are only taking a brief look at it. Enter the number of seconds you
+    want a message to be displayed before it gets marked as read automatically.
+
+    <p><strong>Tip</strong>: If you do not want Mail &amp; Newsgroups to mark
+      your messages as read automatically at all, you can select this option
+      and enter a very large number of seconds.</p>
+  </li>
+  <li><strong>Default Character Encoding</strong>: Click this drop-down list to
+    select the character encoding you want Mail &amp; Newsgroups to use as the
+    default for incoming mail and newsgroup messages. This is recommended if
+    it&apos;s likely you might receive messages in which the character encoding
+    (MIME charset) is not indicated, such as when reading messages in
+    international newsgroups.</li>
+  <li><strong>Apply default to all messages</strong>: Select this to apply the
+    default character encoding to all messages.
+
+    <p><strong>Tip</strong>: You can later view or change the character
+      encoding for a specific folder. In the Mail window, select a folder from
+      the list of Mail folders. Open the View menu, and choose Character
+      Encoding.</p>
+  </li>
   <li><strong>Plain Text Messages</strong>: Select the font you prefer for
     viewing plain-text messages: fixed width or variable width. Choosing a font
     style, size, and color for quoted plain-text messages can help you more
@@ -4408,29 +4422,6 @@ to filter unwanted mail.</p>
         </table>
       </li>
     </ul>
-  </li>
-  <li><strong>Wait ___ seconds before marking a message as read</strong>:
-    Choose this option if you do not want a message to be marked as read when
-    you are only taking a brief look at it. Enter the number of seconds you
-    want a message to be displayed before it gets marked as read automatically.
-
-    <p><strong>Tip</strong>: If you do not want Mail &amp; Newsgroups to mark
-      your messages as read automatically at all, you can select this option
-      and enter a very large number of seconds.</p>
-  </li>
-  <li><strong>Default Character Encoding</strong>: Click this drop-down list to
-    select the character encoding you want Mail &amp; Newsgroups to use as the
-    default for incoming mail and newsgroup messages. This is recommended if
-    it&apos;s likely you might receive messages in which the character encoding
-    (MIME charset) is not indicated, such as when reading messages in
-    international newsgroups.</li>
-  <li><strong>Apply default to all messages</strong>: Select this to apply the
-    default character encoding to all messages.
-
-    <p><strong>Tip</strong>: You can later view or change the character
-      encoding for a specific folder. In the Mail window, select a folder from
-      the list of Mail folders. Open the View menu, and choose Character
-      Encoding.</p>
   </li>
 </ul>
 

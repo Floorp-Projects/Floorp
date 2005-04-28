@@ -4,12 +4,8 @@
 <!ENTITY enbPluginCheckMailNews.label     "Mail &amp; Newsgroups">
 <!ENTITY enbPluginCheckMailNews.accesskey "p">
 
-<!ENTITY disableImageInMailNews.label       "Do not load remote images in Mail &amp; Newsgroup messages">
-<!ENTITY disableImageInMailNews.accesskey   "i">
-
 <!ENTITY mail.label "Mail &amp; Newsgroups">
 <!ENTITY mail.accesskey "m">
-<!ENTITY windows.label "Windows">
 <!ENTITY viewingMessages.label "Message Display">
 <!ENTITY notifications.label "Notifications">
 <!ENTITY address.label "Addressing">

@@ -23,7 +23,6 @@
     <RDF:li resource="chrome://communicator/content/pref/pref-appearance.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/pref-scripts.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/pref-cookies.xul"/>
-    <RDF:li resource="chrome://communicator/content/pref/pref-images.xul"/>
     <RDF:li resource="chrome://navigator/content/navigatorOverlay.xul"/>
     <RDF:li resource="chrome://messenger/content/messenger.xul"/>
     <RDF:li resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul"/>
@@ -52,11 +51,6 @@
 
   <!-- messenger cookie toggle pref -->
   <RDF:Seq about="chrome://communicator/content/pref/pref-cookies.xul">
-    <RDF:li>chrome://messenger/content/mailPrefsOverlay.xul</RDF:li>
-  </RDF:Seq>
-
-  <!-- messenger image toggle pref -->
-  <RDF:Seq about="chrome://communicator/content/pref/pref-images.xul">
     <RDF:li>chrome://messenger/content/mailPrefsOverlay.xul</RDF:li>
   </RDF:Seq>
 
