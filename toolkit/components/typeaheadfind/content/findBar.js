@@ -40,6 +40,10 @@ const FIND_NORMAL = 0;
 const FIND_TYPEAHEAD = 1;
 const FIND_LINKS = 2;
 
+const CHAR_CODE_SPACE = " ".charCodeAt(0);
+const CHAR_CODE_SLASH = "/".charCodeAt(0);
+const CHAR_CODE_APOSTROPHE = "'".charCodeAt(0);
+
 // Global find variables
 var gFindMode = FIND_NORMAL;
 var gQuickFindTimeout = null;
@@ -382,7 +386,7 @@ function onBrowserKeyPress(evt)
   
   var findField = document.getElementById("find-field");
   if (gFindMode != FIND_NORMAL && gQuickFindTimeout) {    
-    if (evt.keyCode == 8) { // Backspace
+    if (evt.keyCode == KeyEvent.DOM_VK_BACK_SPACE) {
       if (findField.value) {
         findField.value = findField.value.substr(0, findField.value.length - 1);
         gIsBack = true;   
@@ -397,12 +401,12 @@ function onBrowserKeyPress(evt)
         
       find(findField.value);
     }
-    else if (evt.keyCode == 27) { // Escape
+    else if (evt.keyCode == KeyEvent.DOM_VK_ESCAPE) {
       closeFindBar();
       evt.preventDefault();
     }
     else if (evt.charCode) {
-      if (evt.charCode == 32) // Space
+      if (evt.charCode == CHAR_CODE_SPACE)
         evt.preventDefault();
         
       findField.value += String.fromCharCode(evt.charCode);
@@ -411,12 +415,17 @@ function onBrowserKeyPress(evt)
     return;
   }
   
-  if (evt.charCode == 39 /* ' */ || evt.charCode == 47 /* / */ || (gUseTypeAheadFind && evt.charCode && evt.charCode != 32)) {   
-    gFindMode = (evt.charCode == 39 || (gTypeAheadLinksOnly && evt.charCode != 47)) ? FIND_LINKS : FIND_TYPEAHEAD;
+  if (evt.charCode == CHAR_CODE_APOSTROPHE || evt.charCode == CHAR_CODE_SLASH ||
+      (gUseTypeAheadFind && evt.charCode && evt.charCode != CHAR_CODE_SPACE)) {
+    gFindMode = (evt.charCode == CHAR_CODE_APOSTROPHE ||
+                 (gTypeAheadLinksOnly && evt.charCode != CHAR_CODE_SLASH))
+                ? FIND_LINKS : FIND_TYPEAHEAD;
     toggleLinkFocus(true);
     if (openFindBar()) {      
       setFindCloseTimeout();      
-      if (gUseTypeAheadFind && evt.charCode != 39 && evt.charCode != 47) {
+      if (gUseTypeAheadFind &&
+          evt.charCode != CHAR_CODE_APOSTROPHE &&
+          evt.charCode != CHAR_CODE_SLASH) {
         gTypeAheadFindBuffer += String.fromCharCode(evt.charCode);        
         findField.value = gTypeAheadFindBuffer;
         find(findField.value);
@@ -427,6 +436,7 @@ function onBrowserKeyPress(evt)
     }
     else {
       if (gFindMode == FIND_NORMAL) {
+        // XXXldb This code appears unreachable.
         selectFindBar();      
         focusFindBar();
       }
@@ -446,7 +456,7 @@ function toggleLinkFocus(aFocusLinks)
 
 function onBrowserKeyUp(evt)
 {
-  if (evt.keyCode == 8)
+  if (evt.keyCode == KeyEvent.DOM_VK_BACK_SPACE)
     gIsBack = false;
 }
 
