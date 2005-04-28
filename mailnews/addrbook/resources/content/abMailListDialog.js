@@ -438,6 +438,9 @@ function awAppendNewRow(setFocus)
       input[0].setAttribute("value", "");
       input[0].setAttribute("id", "addressCol1#" + top.MAX_RECIPIENTS);
       
+      //this copies the autocomplete sessions list from recipient#1 
+      input[0].syncSessions(document.getElementById('addressCol1#1'));
+      
       if (input[0].getAttribute('focused') != '')
         input[0].removeAttribute('focused');
     }

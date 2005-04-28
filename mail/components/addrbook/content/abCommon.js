@@ -1036,3 +1036,263 @@ function restoreSearchFocusAfterClear()
   gSearchInput.clearButtonHidden = 'true';
   gQuickSearchFocusEl = null;
 }
+
+var gIsOffline;
+var gSessionAdded;
+var gCurrentAutocompleteDirectory;
+var gAutocompleteSession;
+var gSetupLdapAutocomplete;
+var gLDAPSession;
+
+function setupLdapAutocompleteSession()
+{
+    var autocompleteLdap = false;
+    var autocompleteDirectory = null;
+    var prevAutocompleteDirectory = gCurrentAutocompleteDirectory;
+    var i;
+
+    autocompleteLdap = gPrefs.getBoolPref("ldap_2.autoComplete.useDirectory");
+    if (autocompleteLdap)
+        autocompleteDirectory = gPrefs.getCharPref(
+            "ldap_2.autoComplete.directoryServer");
+
+
+    // use a temporary to do the setup so that we don't overwrite the
+    // global, then have some problem and throw an exception, and leave the
+    // global with a partially setup session.  we'll assign the temp
+    // into the global after we're done setting up the session
+    //
+    var LDAPSession;
+    if (gLDAPSession) {
+        LDAPSession = gLDAPSession;
+    } else {
+        LDAPSession = Components.classes[
+            "@mozilla.org/autocompleteSession;1?type=ldap"].createInstance()
+            .QueryInterface(Components.interfaces.nsILDAPAutoCompleteSession);
+    }
+            
+    if (autocompleteDirectory && !gIsOffline) { 
+        // the compose window code adds an observer on the directory server
+        // prefs, but I don't think we need this here.
+        gCurrentAutocompleteDirectory = autocompleteDirectory;
+        
+        // fill in the session params if there is a session
+        //
+        if (LDAPSession) {
+            var serverURL = Components.classes[
+                "@mozilla.org/network/ldap-url;1"].
+                createInstance().QueryInterface(
+                    Components.interfaces.nsILDAPURL);
+
+            try {
+                serverURL.spec = gPrefs.getComplexValue(autocompleteDirectory +".uri",
+                                           Components.interfaces.nsISupportsString).data;
+            } catch (ex) {
+                dump("ERROR: " + ex + "\n");
+            }
+            LDAPSession.serverURL = serverURL;
+
+            // get the login to authenticate as, if there is one
+            //
+            var login = "";
+            try {
+                login = gPrefs.getComplexValue(
+                    autocompleteDirectory + ".auth.dn",
+                    Components.interfaces.nsISupportsString).data;
+            } catch (ex) {
+                // if we don't have this pref, no big deal
+            }
+
+            // find out if we need to authenticate, and if so, tell the LDAP
+            // autocomplete session how to prompt for a password.  This window
+            // (the compose window) is being used to parent the authprompter.
+            //
+            LDAPSession.login = login;
+            if (login != "") {
+                var windowWatcherSvc = Components.classes[
+                    "@mozilla.org/embedcomp/window-watcher;1"]
+                    .getService(Components.interfaces.nsIWindowWatcher);
+                var domWin = 
+                    window.QueryInterface(Components.interfaces.nsIDOMWindow);
+                var authPrompter = 
+                    windowWatcherSvc.getNewAuthPrompter(domWin);
+
+                LDAPSession.authPrompter = authPrompter;
+            }
+
+            // don't search on non-CJK strings shorter than this
+            //
+            try { 
+                LDAPSession.minStringLength = gPrefs.getIntPref(
+                    autocompleteDirectory + ".autoComplete.minStringLength");
+            } catch (ex) {
+                // if this pref isn't there, no big deal.  just let
+                // nsLDAPAutoCompleteSession use its default.
+            }
+
+            // don't search on CJK strings shorter than this
+            //
+            try { 
+                LDAPSession.cjkMinStringLength = gPrefs.getIntPref(
+                  autocompleteDirectory + ".autoComplete.cjkMinStringLength");
+            } catch (ex) {
+                // if this pref isn't there, no big deal.  just let
+                // nsLDAPAutoCompleteSession use its default.
+            }
+
+            // we don't try/catch here, because if this fails, we're outta luck
+            //
+            var ldapFormatter = Components.classes[
+                "@mozilla.org/ldap-autocomplete-formatter;1?type=addrbook"]
+                .createInstance().QueryInterface(
+                    Components.interfaces.nsIAbLDAPAutoCompFormatter);
+
+            // override autocomplete name format?
+            //
+            try {
+                ldapFormatter.nameFormat = 
+                    gPrefs.getComplexValue(autocompleteDirectory + 
+                                      ".autoComplete.nameFormat",
+                                      Components.interfaces.nsISupportsString).data;
+            } catch (ex) {
+                // if this pref isn't there, no big deal.  just let
+                // nsAbLDAPAutoCompFormatter use its default.
+            }
+
+            // override autocomplete mail address format?
+            //
+            try {
+                ldapFormatter.addressFormat = 
+                    gPrefs.getComplexValue(autocompleteDirectory + 
+                                      ".autoComplete.addressFormat",
+                                      Components.interfaces.nsISupportsString).data;
+            } catch (ex) {
+                // if this pref isn't there, no big deal.  just let
+                // nsAbLDAPAutoCompFormatter use its default.
+            }
+
+            try {
+                // figure out what goes in the comment column, if anything
+                //
+                // 0 = none
+                // 1 = name of addressbook this card came from
+                // 2 = other per-addressbook format
+                //
+                var showComments = 0;
+                showComments = gPrefs.getIntPref(
+                    "mail.autoComplete.commentColumn");
+
+                switch (showComments) {
+
+                case 1:
+                    // use the name of this directory
+                    //
+                    ldapFormatter.commentFormat = gPrefs.getComplexValue(
+                                autocompleteDirectory + ".description",
+                                Components.interfaces.nsISupportsString).data;
+                    break;
+
+                case 2:
+                    // override ldap-specific autocomplete entry?
+                    //
+                    try {
+                        ldapFormatter.commentFormat = 
+                            gPrefs.getComplexValue(autocompleteDirectory + 
+                                        ".autoComplete.commentFormat",
+                                        Components.interfaces.nsISupportsString).data;
+                    } catch (innerException) {
+                        // if nothing has been specified, use the ldap
+                        // organization field
+                        ldapFormatter.commentFormat = "[o]";
+                    }
+                    break;
+
+                case 0:
+                default:
+                    // do nothing
+                }
+            } catch (ex) {
+                // if something went wrong while setting up comments, try and
+                // proceed anyway
+            }
+
+            // set the session's formatter, which also happens to
+            // force a call to the formatter's getAttributes() method
+            // -- which is why this needs to happen after we've set the
+            // various formats
+            //
+            LDAPSession.formatter = ldapFormatter;
+
+            // override autocomplete entry formatting?
+            //
+            try {
+                LDAPSession.outputFormat = 
+                    gPrefs.getComplexValue(autocompleteDirectory + 
+                                      ".autoComplete.outputFormat",
+                                      Components.interfaces.nsISupportsString).data;
+
+            } catch (ex) {
+                // if this pref isn't there, no big deal.  just let
+                // nsLDAPAutoCompleteSession use its default.
+            }
+
+            // override default search filter template?
+            //
+            try { 
+                LDAPSession.filterTemplate = gPrefs.getComplexValue(
+                    autocompleteDirectory + ".autoComplete.filterTemplate",
+                    Components.interfaces.nsISupportsString).data;
+
+            } catch (ex) {
+                // if this pref isn't there, no big deal.  just let
+                // nsLDAPAutoCompleteSession use its default
+            }
+
+            // override default maxHits (currently 100)
+            //
+            try { 
+                // XXXdmose should really use .autocomplete.maxHits,
+                // but there's no UI for that yet
+                // 
+                LDAPSession.maxHits = 
+                    gPrefs.getIntPref(autocompleteDirectory + ".maxHits");
+            } catch (ex) {
+                // if this pref isn't there, or is out of range, no big deal. 
+                // just let nsLDAPAutoCompleteSession use its default.
+            }
+
+            if (!gSessionAdded) {
+                // if we make it here, we know that session initialization has
+                // succeeded; add the session for all recipients, and 
+                // remember that we've done so
+                var autoCompleteWidget;
+                for (i=1; i <= awGetMaxRecipients(); i++)
+                {
+                    autoCompleteWidget = document.getElementById("addressCol1#" + i);
+                    if (autoCompleteWidget)
+                    {
+                      autoCompleteWidget.addSession(LDAPSession);
+                      // ldap searches don't insert a default entry with the default domain appended to it
+                      // so reduce the minimum results for a popup to 2 in this case. 
+                      autoCompleteWidget.minResultsForPopup = 2;
+
+                    }
+                 }
+                gSessionAdded = true;
+            }
+        }
+    } else {
+      if (gCurrentAutocompleteDirectory) {
+        gCurrentAutocompleteDirectory = null;
+      }
+      if (gLDAPSession && gSessionAdded) {
+        for (i=1; i <= awGetMaxRecipients(); i++) 
+          document.getElementById("addressCol1#" + i).
+              removeSession(gLDAPSession);
+        gSessionAdded = false;
+      }
+    }
+
+    gLDAPSession = LDAPSession;
+    gSetupLdapAutocomplete = true;
+}
