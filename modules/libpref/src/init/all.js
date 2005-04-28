@@ -1634,7 +1634,6 @@ pref("applications.telnet", "xterm -e telnet %h %p");
 pref("applications.tn3270", "xterm -e tn3270 %h");
 pref("applications.rlogin", "xterm -e rlogin %h");
 pref("applications.rlogin_with_user", "xterm -e rlogin %h -l %u");
-// On Solaris/IRIX, this should be "lp"
 pref("print.print_command", "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
 pref("print.printer_list", ""); // list of printers, separated by spaces
 pref("print.print_reversed", false);
@@ -2050,4 +2049,12 @@ pref("font.name.sans-serif.x-unicode", "dt-interface system-ucs2.cjk_japan-0");
 pref("font.name.monospace.x-unicode", "dt-interface user-ucs2.cjk_japan-0");
 
 # AIX
+#endif
+
+#ifdef SOLARIS
+
+pref("print.postscript.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+'-d '}${MOZ_PRINTER_NAME}");
+pref("print.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+'-d '}${MOZ_PRINTER_NAME}");
+
+# Solaris
 #endif
