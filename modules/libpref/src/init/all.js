@@ -888,7 +888,7 @@ pref("editor.positioning.offset",            0);
 
 pref("dom.max_script_run_time", 5);
 
-pref("svg.enabled", false);
+pref("svg.enabled", true);
 
 #ifdef XP_WIN
 pref("font.name.serif.ar", "Times New Roman");
