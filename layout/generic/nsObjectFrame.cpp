@@ -1434,7 +1434,11 @@ nsObjectFrame::HandleChild(nsPresContext*           aPresContext,
   // style context, so we simply want to reflow the child with pretty
   // much our own reflow state, in the case of a broken plugin, the
   // child has its own style context, so we create a new reflow
-  // state....  XXXbz maybe we should always have a different style context?
+  // state....
+  // XXXbz maybe we should always have a different style context?
+  // XXXroc no, that seems to break things. But as is, this causes
+  // an assertion failure in nsContainerFrame because the reflow
+  // state isn't built for the right frame.
 
   nsReflowStatus status;
 

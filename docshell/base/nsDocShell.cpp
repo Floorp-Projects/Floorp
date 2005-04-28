@@ -1608,12 +1608,6 @@ nsDocShell::SetZoom(float zoom)
     nsIViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
-    // get the root scrollable view
-    nsIScrollableView *scrollableView = nsnull;
-    vm->GetRootScrollableView(&scrollableView);
-    if (scrollableView)
-        scrollableView->ComputeScrollOffsets();
-
     // get the root view
     nsIView *rootView = nsnull; // views are not ref counted
     vm->GetRootView(rootView);

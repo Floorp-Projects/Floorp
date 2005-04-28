@@ -554,7 +554,7 @@ CanvasFrame::Reflow(nsPresContext*          aPresContext,
         kidReflowState.mComputedMargin.top +
         kidReflowState.mComputedMargin.bottom;
     }
-
+    aDesiredSize.mOverflowArea.SetRect(0, 0, aDesiredSize.width, aDesiredSize.height);
     aDesiredSize.ascent = aDesiredSize.height;
     aDesiredSize.descent = 0;
     // XXX Don't completely ignore NS_FRAME_OUTSIDE_CHILDREN for child frames

@@ -54,7 +54,6 @@ nsBoxLayoutState::nsBoxLayoutState(nsPresContext* aPresContext):mPresContext(aPr
                                                                  mReflowState(nsnull), 
                                                                  mType(Dirty),
                                                                  mMaxElementWidth(nsnull),
-                                                                 mScrolledBlockSizeConstraint(-1,-1),
                                                                  mLayoutFlags(0),
                                                                  mPaintingDisabled(PR_FALSE)
 {
@@ -67,7 +66,6 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
   mType        = aState.mType;
   mReflowState = aState.mReflowState;
   mMaxElementWidth = aState.mMaxElementWidth;
-  mScrolledBlockSizeConstraint = aState.mScrolledBlockSizeConstraint;
   mLayoutFlags = aState.mLayoutFlags;
   mPaintingDisabled = aState.mPaintingDisabled;
 
@@ -77,7 +75,6 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
 nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull), 
                                                          mType(Dirty),
                                                          mMaxElementWidth(nsnull),
-                                                         mScrolledBlockSizeConstraint(-1,-1),
                                                          mLayoutFlags(0),
                                                          mPaintingDisabled(PR_FALSE)
 {
@@ -91,7 +88,6 @@ nsBoxLayoutState::nsBoxLayoutState(nsPresContext* aPresContext,
                                                                       mReflowState(&aReflowState),                                                                    
                                                                       mType(Dirty),
                                                                       mMaxElementWidth(nsnull),
-                                                                      mScrolledBlockSizeConstraint(-1,-1),
                                                                       mLayoutFlags(0),
                                                                       mPaintingDisabled(PR_FALSE)
 

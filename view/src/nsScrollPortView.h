@@ -63,7 +63,6 @@ public:
 
   //nsIScrollableView interface
   NS_IMETHOD  CreateScrollControls(nsNativeWidget aNative = nsnull);
-  NS_IMETHOD  ComputeScrollOffsets(PRBool aAdjustWidgets = PR_TRUE);
   NS_IMETHOD  GetContainerSize(nscoord *aWidth, nscoord *aHeight) const;
   NS_IMETHOD  SetScrolledView(nsIView *aScrolledView);
   NS_IMETHOD  GetScrolledView(nsIView *&aScrolledView) const;

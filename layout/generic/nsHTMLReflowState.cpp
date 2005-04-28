@@ -1713,7 +1713,11 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       mComputedPadding.left   = aPadding->left;
     }
     else {
-      ComputePadding(aContainingBlockWidth, cbrs);
+      if (frame->GetType() == nsLayoutAtoms::scrollFrame) {
+        mComputedPadding.SizeTo(0, 0, 0, 0);
+      } else {
+        ComputePadding(aContainingBlockWidth, cbrs);
+      }
     }
     if (aBorder) {  // border is an input arg
       mComputedBorderPadding.top    = aBorder->top;
@@ -2446,6 +2450,25 @@ nsHTMLReflowState::ComputePadding(nscoord aContainingBlockWidth,
 }
 
 void
+nsHTMLReflowState::ApplyMinMaxConstraints(nscoord* aFrameWidth,
+                                          nscoord* aFrameHeight) const
+{
+  if (aFrameWidth) {
+    if (NS_UNCONSTRAINEDSIZE != mComputedMaxWidth) {
+      *aFrameWidth = PR_MIN(*aFrameWidth, mComputedMaxWidth);
+    }
+    *aFrameWidth = PR_MAX(*aFrameWidth, mComputedMinWidth);
+  }
+
+  if (aFrameHeight) {
+    if (NS_UNCONSTRAINEDSIZE != mComputedMaxHeight) {
+      *aFrameHeight = PR_MIN(*aFrameHeight, mComputedMaxHeight);
+    }
+    *aFrameHeight = PR_MAX(*aFrameHeight, mComputedMinHeight);
+  }
+}
+
+void
 nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
                                        nscoord aContainingBlockHeight,
                                        const nsHTMLReflowState* aContainingBlockRS)
@@ -2569,6 +2592,7 @@ void nsHTMLReflowState::AdjustComputedWidth(PRBool aAdjustForBoxSizing)
     if(mComputedWidth < 0) mComputedWidth = 0;
   }
 }
+
 #ifdef IBMBIDI
 PRBool
 nsHTMLReflowState::IsBidiFormControl(nsPresContext* aPresContext)

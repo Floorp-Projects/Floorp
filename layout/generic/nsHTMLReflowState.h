@@ -386,6 +386,12 @@ struct nsHTMLReflowState {
   void CalculateBlockSideMargins(nscoord aAvailWidth,
                                  nscoord aComputedWidth);
 
+  /**
+   * Apply the mComputed(Min/Max)(Width/Height) values to the content
+   * size computed so far. If a passed-in pointer is null, we skip
+   * adjusting that dimension.
+   */
+  void ApplyMinMaxConstraints(nscoord* aContentWidth, nscoord* aContentHeight) const;
 
 protected:
 
