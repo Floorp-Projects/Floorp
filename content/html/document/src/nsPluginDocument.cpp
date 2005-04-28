@@ -262,14 +262,14 @@ NS_NewPluginDocument(nsIDocument** aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  NS_ADDREF(doc);
   nsresult rv = doc->Init();
 
   if (NS_FAILED(rv)) {
-    delete doc;
-    return rv;
+    NS_RELEASE(doc);
   }
 
-  NS_ADDREF(*aResult = doc);
+  *aResult = doc;
 
-  return NS_OK;
+  return rv;
 }

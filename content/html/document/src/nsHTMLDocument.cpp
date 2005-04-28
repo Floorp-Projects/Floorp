@@ -193,18 +193,16 @@ NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
   nsHTMLDocument* doc = new nsHTMLDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
 
+  NS_ADDREF(doc);
   nsresult rv = doc->Init();
 
   if (NS_FAILED(rv)) {
-    delete doc;
-
-    return rv;
+    NS_RELEASE(doc);
   }
 
   *aInstancePtrResult = doc;
-  NS_ADDREF(*aInstancePtrResult);
 
-  return NS_OK;
+  return rv;
 }
 
 class IdAndNameMapEntry : public PLDHashEntryHdr
