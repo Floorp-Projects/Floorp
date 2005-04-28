@@ -1201,20 +1201,37 @@ Installer.prototype = {
       zipReader.init(xpiFile);
       zipReader.open();
       
-      var entries = zipReader.findEntries("*");
+      // create directories first
+      var entries = zipReader.findEntries("*/");
       while (entries.hasMoreElements()) {
         var entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
-        var targetFile = installLocation.getItemFile(extensionID, entry.name);
-        if (!targetFile.exists()) {
+        var target = installLocation.getItemFile(extensionID, entry.name);
+        if (!target.exists()) {
           try {
-            targetFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+            target.create(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
           }
           catch (e) {
-            LOG("extractExtensionsFiles: failed to create target file for extraction " + 
-                " file = " + targetFile.path + ", exception = " + e + "\n");
+            LOG("extractExtensionsFiles: failed to create target directory for extraction " + 
+                " file = " + target.path + ", exception = " + e + "\n");
           }
         }
-        zipReader.extract(entry.name, targetFile);
+      }
+
+      entries = zipReader.findEntries("*");
+      while (entries.hasMoreElements()) {
+        entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
+        target = installLocation.getItemFile(extensionID, entry.name);
+        if (target.exists())
+          continue;
+
+        try {
+          target.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+        }
+        catch (e) {
+          LOG("extractExtensionsFiles: failed to create target file for extraction " + 
+              " file = " + target.path + ", exception = " + e + "\n");
+        }
+        zipReader.extract(entry.name, target);
       }
       zipReader.close();
     }
