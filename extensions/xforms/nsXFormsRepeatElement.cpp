@@ -232,6 +232,11 @@ protected:
    * The currently selected repeat (nested repeats)
    */
   nsCOMPtr<nsIXFormsRepeatElement> mCurrentRepeat;
+
+  /**
+   * Array of controls using the repeat-index
+   */
+  nsCOMArray<nsIXFormsControl>     mIndexUsers;
   
    /**
    * Retrieves an integer attribute and checks its type.
@@ -369,6 +374,7 @@ NS_IMETHODIMP
 nsXFormsRepeatElement::OnDestroyed()
 {
   mHTMLElement = nsnull;
+  mIndexUsers.Clear();
 
   return nsXFormsControlStub::OnDestroyed();
 }
@@ -490,6 +496,9 @@ nsXFormsRepeatElement::SetIndex(PRUint32 *aIndex,
   // Set current index to new value
   mCurrentIndex = *aIndex;
 
+  // Inform of index change
+  mParent ? mParent->IndexHasChanged() : IndexHasChanged();
+
   return NS_OK;
 }
 
@@ -529,6 +538,42 @@ nsXFormsRepeatElement::SetCurrentRepeat(nsIXFormsRepeatElement *aRepeat,
   }
   mCurrentRepeat = aRepeat;
   mCurrentIndex = aIndex;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXFormsRepeatElement::AddIndexUser(nsIXFormsControl *aControl)
+{
+  nsresult rv = NS_OK;
+  if (mIndexUsers.IndexOf(aControl) == -1 && !mIndexUsers.AppendObject(aControl))
+    rv = NS_ERROR_FAILURE;
+  
+  return rv;
+}
+
+NS_IMETHODIMP
+nsXFormsRepeatElement::RemoveIndexUser(nsIXFormsControl *aControl)
+{
+  return mIndexUsers.RemoveObject(aControl) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsXFormsRepeatElement::IndexHasChanged()
+{
+  ///
+  /// @bug We need to handle \<bind\> elements too (XXX)
+
+  // copy the index array, as index users might add/remove themselves when
+  // they are rebound and refreshed().
+  nsCOMArray<nsIXFormsControl> indexes(mIndexUsers);
+
+  for (PRInt32 i = 0; i < indexes.Count(); ++i) {
+    nsCOMPtr<nsIXFormsControl> control = indexes[i];
+    control->Bind();
+    control->Refresh();
+  }
+
   return NS_OK;
 }
 

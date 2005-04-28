@@ -47,6 +47,7 @@
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsVoidArray.h"
 
 /**
  * This class analyzes an XPath Expression parse tree (nsXFormsXPathNode), and
@@ -58,11 +59,12 @@
 class nsXFormsXPathAnalyzer {
 private:
   nsCOMPtr<nsIXFormsXPathEvaluator>  mEvaluator;
-  nsCOMPtr<nsIDOMNode>            mResolver;
+  nsCOMPtr<nsIDOMNode>               mResolver;
 
-  nsCOMArray<nsIDOMNode>         *mCurSet;
-  nsCOMPtr<nsIDOMXPathExpression> mCurExpression;
-  const nsAString                *mCurExprString;
+  nsCOMArray<nsIDOMNode>            *mCurSet;
+  nsCOMPtr<nsIDOMXPathExpression>    mCurExpression;
+  const nsAString                   *mCurExprString;
+  nsStringArray                      mIndexesUsed;
 
   nsresult AnalyzeRecursively(nsIDOMNode              *aContextNode,
                               const nsXFormsXPathNode *aNode,
@@ -78,4 +80,6 @@ public:
                    nsIDOMXPathExpression   *aExpression,
                    const nsAString         *aExprString,
                    nsCOMArray<nsIDOMNode>  *aSet);
+
+  const nsStringArray& IndexesUsed() const;
 };

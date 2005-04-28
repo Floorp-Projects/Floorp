@@ -47,11 +47,9 @@
 
 MOZ_DECL_CTOR_COUNTER(nsXFormsXPathAnalyzer)
 
-nsXFormsXPathAnalyzer::nsXFormsXPathAnalyzer(
-                                          nsIXFormsXPathEvaluator  *aEvaluator,
-                                          nsIDOMNode               *aResolver)
-  : mEvaluator(aEvaluator),
-    mResolver(aResolver)
+nsXFormsXPathAnalyzer::nsXFormsXPathAnalyzer(nsIXFormsXPathEvaluator  *aEvaluator,
+                                             nsIDOMNode               *aResolver)
+  : mEvaluator(aEvaluator), mResolver(aResolver)
 {
   MOZ_COUNT_CTOR(nsXFormsXPathAnalyzer);
 }
@@ -119,6 +117,7 @@ nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
     printf("\tChild: %p, Sibling: %p\n", (void*) aNode->mChild, (void*) aNode->mSibling);
     printf("\tIndex: %d - %d\n", aNode->mStartIndex, aNode->mEndIndex);
     printf("\tCon: %d, Predicate: %d, Literal: %d\n", aNode->mCon, aNode->mPredicate, aNode->mLiteral);
+    printf("\tIsIndex: %d\n", aNode->mIsIndex);
 #endif
 
     if (aNode->mEndIndex < 0 || aNode->mStartIndex >= aNode->mEndIndex) {
@@ -176,6 +175,24 @@ nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
     rv = result->GetResultType(&type);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    if (aNode->mIsIndex) {
+      // Extract index parameter, xp is "index(parameter)"
+      const PRUint32 indexSize = sizeof("index(") - 1;
+      nsDependentSubstring indexExpr = Substring(xp,
+                                                 indexSize,
+                                                 xp.Length() - indexSize - 1); // remove final ')' too
+      nsCOMPtr<nsIDOMXPathResult> stringRes;
+      rv = mEvaluator->Evaluate(indexExpr, aContextNode, mResolver,
+                                nsIDOMXPathResult::STRING_TYPE,
+                                nsnull, getter_AddRefs(stringRes));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsAutoString indexId;
+      rv = stringRes->GetStringValue(indexId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      mIndexesUsed.AppendString(indexId);
+    }
+
     // We are only interested in nodes
     if (   type != nsIDOMXPathResult::UNORDERED_NODE_ITERATOR_TYPE
         && type != nsIDOMXPathResult::ORDERED_NODE_ITERATOR_TYPE) {
@@ -203,4 +220,10 @@ nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
+}
+
+const nsStringArray&
+nsXFormsXPathAnalyzer::IndexesUsed() const
+{
+  return mIndexesUsed;
 }

@@ -279,49 +279,64 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement           *aElement,
       *aContextSize = 1;
     if (aContextPosition)
       *aContextPosition = 1;
-    
-    return FindBindContext(*aBindElement,
-                           aOuterBind,
-                           aModel,
-                           aContextNode);
-  }
 
-  if (aElementFlags & ELEMENT_WITH_MODEL_ATTR) {
-    // CASE 2: Use @model
-    // If bind did not set model, and the element has a model attribute we use this
-    nsAutoString modelId;
-    NS_NAMED_LITERAL_STRING(modelStr, "model");
-    aElement->GetAttribute(modelStr, modelId);
-    
-    if (!modelId.IsEmpty()) {
-      nsCOMPtr<nsIDOMElement> modelElement;
-      domDoc->GetElementById(modelId, getter_AddRefs(modelElement));
-      nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelElement);
+    *aOuterBind = GetParentModel(*aBindElement, aModel);
+    NS_ENSURE_STATE(*aModel);
+  } else {
+    if (aElementFlags & ELEMENT_WITH_MODEL_ATTR) {
+      // CASE 2: Use @model
+      // If bind did not set model, and the element has a model attribute we use this
+      nsAutoString modelId;
+      NS_NAMED_LITERAL_STRING(modelStr, "model");
+      aElement->GetAttribute(modelStr, modelId);
       
-      // No element found, or element not a \<model\> element
-      if (!model) {
-        const PRUnichar *strings[] = { modelId.get(), modelStr.get() };
-        nsXFormsUtils::ReportError(NS_LITERAL_STRING("idRefError"),
-                                   strings, 2, aElement, aElement);
-        nsXFormsUtils::DispatchEvent(aElement, eEvent_BindingException);        
-        return NS_ERROR_FAILURE;
+      if (!modelId.IsEmpty()) {
+        nsCOMPtr<nsIDOMElement> modelElement;
+        domDoc->GetElementById(modelId, getter_AddRefs(modelElement));
+        nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelElement);
+        
+        // No element found, or element not a \<model\> element
+        if (!model) {
+          const PRUnichar *strings[] = { modelId.get(), modelStr.get() };
+          nsXFormsUtils::ReportError(NS_LITERAL_STRING("idRefError"),
+                                     strings, 2, aElement, aElement);
+          nsXFormsUtils::DispatchEvent(aElement, eEvent_BindingException);        
+          return NS_ERROR_FAILURE;
+        }
+        
+        NS_ADDREF(*aModel = model);
       }
-
-      NS_ADDREF(*aModel = model);
     }
+
+    // Search for a parent setting context for us
+    nsresult rv = FindParentContext(aElement,
+                                    aModel,
+                                    aContextNode,
+                                    aContextPosition,
+                                    aContextSize);
+    // CASE 3/4: Use parent's model / first model in document.
+    // If FindParentContext() does not find a parent context but |aModel| is not
+    // set, it sets the model to the first model in the document.
+  
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Search for a parent setting context for us
-  nsresult rv = FindParentContext(aElement,
-                                  aModel,
-                                  aContextNode,
-                                  aContextPosition,
-                                  aContextSize);
-  // CASE 3/4: Use parent's model / first model in document.
-  // If FindParentContext() does not find a parent context but |aModel| is not
-  // set, it sets the model to the first model in the document.
-  
-  NS_ENSURE_SUCCESS(rv, rv);    
+  // if context node is not set, it's the document element of the model's
+  // default instance
+  if (!*aContextNode) {
+    nsCOMPtr<nsIXFormsModelElement> modelInt = do_QueryInterface(*aModel);
+    NS_ENSURE_STATE(modelInt);
+
+    nsCOMPtr<nsIDOMDocument> instanceDoc;
+    modelInt->GetInstanceDocument(NS_LITERAL_STRING(""),
+                                  getter_AddRefs(instanceDoc));
+    NS_ENSURE_STATE(instanceDoc);
+
+    nsIDOMElement* docElement;
+    instanceDoc->GetDocumentElement(&docElement); // addrefs
+    NS_ENSURE_STATE(docElement);
+    *aContextNode = docElement; // addref'ed above
+  }  
 
   return NS_OK;
 }
@@ -358,7 +373,8 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
                              PRUint16                aResultType,
                              PRInt32                 aContextPosition,
                              PRInt32                 aContextSize,
-                             nsCOMArray<nsIDOMNode> *aSet)
+                             nsCOMArray<nsIDOMNode> *aSet,
+                             nsStringArray          *aIndexesUsed)
 {
   nsCOMPtr<nsIDOMDocument> doc;
   aContextNode->GetOwnerDocument(getter_AddRefs(doc));
@@ -397,13 +413,15 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
       nsXFormsXPathParser parser;
       nsXFormsXPathAnalyzer analyzer(eval, aResolverNode);
       nsAutoPtr<nsXFormsXPathNode> xNode(parser.Parse(aExpression));
-
       rv = analyzer.Analyze(aContextNode,
                             xNode,
                             expression,
                             &aExpression,
                             aSet);
       NS_ENSURE_SUCCESS(rv, nsnull);
+
+      if (aIndexesUsed) 
+        *aIndexesUsed = analyzer.IndexesUsed();
     }
     CallQueryInterface(supResult, &result);  // addrefs
   }
@@ -422,36 +440,6 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
 }
 
 /* static */ nsresult
-nsXFormsUtils::FindBindContext(nsIDOMElement           *aBindElement,
-                               PRBool                  *aOuterBind,
-                               nsIModelElementPrivate **aModel,
-                               nsIDOMNode             **aContextNode)
-{
-  NS_ENSURE_ARG_POINTER(aContextNode);
-  *aContextNode = nsnull;
-  
-  // 1) Find the model for the bind
-  *aOuterBind = GetParentModel(aBindElement, aModel);
-  NS_ENSURE_STATE(*aModel);
-
-  // 2) Find the context node
-  nsCOMPtr<nsIXFormsModelElement> modelInt = do_QueryInterface(*aModel);
-  NS_ENSURE_STATE(modelInt);
-
-  nsCOMPtr<nsIDOMDocument> instanceDoc;
-  modelInt->GetInstanceDocument(NS_LITERAL_STRING(""),
-                                getter_AddRefs(instanceDoc));
-  NS_ENSURE_STATE(instanceDoc);
-
-  nsIDOMElement* docElement;
-  instanceDoc->GetDocumentElement(&docElement); // addrefs
-  NS_ENSURE_STATE(docElement);
-  *aContextNode = docElement; // addref'ed above
-
-  return NS_OK;
-}
-
-/* static */ nsresult
 nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
                                    PRUint32                 aElementFlags,
                                    const nsString          &aBindingAttr,
@@ -459,7 +447,8 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
                                    PRUint16                 aResultType,
                                    nsIModelElementPrivate **aModel,
                                    nsIDOMXPathResult      **aResult,
-                                   nsCOMArray<nsIDOMNode>  *aDeps)
+                                   nsCOMArray<nsIDOMNode>  *aDeps,
+                                   nsStringArray           *aIndexesUsed)
 {
   if (!aElement || !aModel || !aResult) {
     return NS_OK;
@@ -484,6 +473,10 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
 
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (!contextNode) {
+    return NS_OK;   // this will happen if the doc is still loading
+  }
+
   nsAutoString expr;
   if (bindElement) {
     if (!outerBind) {
@@ -507,26 +500,6 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
         return NS_OK;
 
       expr.Assign(aDefaultRef);
-    } 
-
-    if (!contextNode) {
-      nsCOMPtr<nsIDOMDocument> instanceDoc;
-      nsCOMPtr<nsIXFormsModelElement> model = do_QueryInterface(*aModel);
-      
-      NS_ENSURE_STATE(model); // The referenced model is not actually a model element, or does not exist.
-    
-      model->GetInstanceDocument(NS_LITERAL_STRING(""),
-                                 getter_AddRefs(instanceDoc));
-    
-      NS_ENSURE_STATE(instanceDoc);
-    
-      nsCOMPtr<nsIDOMElement> docElement;
-      instanceDoc->GetDocumentElement(getter_AddRefs(docElement));
-      contextNode = docElement;
-    
-      if (!contextNode) {
-        return NS_OK;   // this will happen if the doc is still loading
-      }
     }
   }
 
@@ -537,7 +510,8 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
                                                   aResultType,
                                                   contextSize,
                                                   contextPosition,
-                                                  aDeps);
+                                                  aDeps,
+                                                  aIndexesUsed);
 
   res.swap(*aResult); // exchanges ref
 

@@ -49,6 +49,7 @@
 
 #include "nsIModelElementPrivate.h"
 #include "nsIXFormsControl.h"
+#include "nsIXFormsRepeatElement.h"
 #include "nsXFormsStubElement.h"
 #include "nsXFormsUtils.h"
 
@@ -143,22 +144,27 @@ public:
 
 protected:
   /** The nsIXTFXMLVisualWrapper */
-  nsCOMPtr<nsIDOMElement>          mElement;
+  nsCOMPtr<nsIDOMElement>             mElement;
 
   /** The node that the control is bound to. */
-  nsCOMPtr<nsIDOMNode>             mBoundNode;
+  nsCOMPtr<nsIDOMNode>                mBoundNode;
 
   /** Array of nsIDOMNodes that the control depends on. */
-  nsCOMArray<nsIDOMNode>           mDependencies;
+  nsCOMArray<nsIDOMNode>              mDependencies;
 
   /** The model for the control */
-  nsCOMPtr<nsIModelElementPrivate> mModel;
+  nsCOMPtr<nsIModelElementPrivate>    mModel;
 
   /** This event listener is used to create xforms-hint and xforms-help events. */
-  nsCOMPtr<nsIDOMEventListener>    mEventListener;
+  nsCOMPtr<nsIDOMEventListener>       mEventListener;
 
   /** State that tells whether control has a parent or not */
-  PRBool                           mHasParent;
+  PRBool                              mHasParent;
+
+  /**
+   * Array of repeat-elements of which the control uses repeat-index.
+   */
+  nsCOMArray<nsIXFormsRepeatElement>  mIndexesUsed;
 
   /** 
    * Used to keep track of whether this control has any single node binding
@@ -219,6 +225,9 @@ protected:
    * @param aValue - value that the attribute is being changed to.
    */
   void MaybeRemoveFromModel(nsIAtom *aName, const nsAString &aValue); 
+
+  /** Removes the index change event listeners */
+  void RemoveIndexListeners();
 };
 
 #endif

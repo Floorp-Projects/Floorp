@@ -47,6 +47,7 @@
 #include "nsIDOMXPathResult.h"
 #include "nsIModelElementPrivate.h"
 #include "nsIScriptError.h"
+#include "nsVoidArray.h"
 
 class nsIDOMElement;
 class nsIXFormsModelElement;
@@ -210,18 +211,9 @@ public:
                         PRUint16                 aResultType,
                         nsIModelElementPrivate **aModel,
                         nsIDOMXPathResult      **aResult,
-                        nsCOMArray<nsIDOMNode>  *aDeps = nsnull);
+                        nsCOMArray<nsIDOMNode>  *aDeps = nsnull,
+                        nsStringArray           *aIndexesUsed = nsnull);
 
-  /**
-   * Given a bind element |aBindElement|, find the model and the context node
-   * for it. |aOuterBind| tells whether the bind element is an outermost bind.
-   */
-  static NS_HIDDEN_(nsresult)
-    FindBindContext(nsIDOMElement           *aBindElement,
-                    PRBool                  *aOuterBind,
-                    nsIModelElementPrivate **aModel,
-                    nsIDOMNode             **aContextNode);
-  
   /**
    * Convenience method for doing XPath evaluations.  This gets a
    * nsIXFormsXPathEvaluator from |aContextNode|'s ownerDocument, and calls
@@ -235,7 +227,8 @@ public:
                   PRUint16                aResultType,
                   PRInt32                 aContextPosition = 1,
                   PRInt32                 aContextSize = 1,
-                  nsCOMArray<nsIDOMNode> *aSet = nsnull);
+                  nsCOMArray<nsIDOMNode> *aSet = nsnull,
+                  nsStringArray          *aIndexesUsed = nsnull);
 
   /**
    * Given a node in the instance data, get its string value according

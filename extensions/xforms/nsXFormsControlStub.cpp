@@ -41,6 +41,7 @@
 #include "nsXFormsControlStub.h"
 #include "nsXFormsMDGEngine.h"
 
+#include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventTarget.h"
@@ -106,10 +107,27 @@ nsXFormsControlStub::GetElement(nsIDOMElement **aElement)
   return NS_OK;  
 }
 
+void
+nsXFormsControlStub::RemoveIndexListeners()
+{
+  if (!mIndexesUsed.Count())
+    return;
+
+  for (PRInt32 i = 0; i < mIndexesUsed.Count(); ++i) {
+    nsCOMPtr<nsIXFormsRepeatElement> rep = mIndexesUsed[i];
+    rep->RemoveIndexUser(this);
+  }
+
+  mIndexesUsed.Clear();
+}
+
 NS_IMETHODIMP
 nsXFormsControlStub::ResetBoundNode()
 {
+  // Clear existing bound node, etc.
   mBoundNode = nsnull;
+  mDependencies.Clear();
+  RemoveIndexListeners();
 
   if (!mHasParent || !mBindAttrsCount)
     return NS_OK;
@@ -157,7 +175,7 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
                                         nsIDOMXPathResult      **aResult,
                                         nsIModelElementPrivate **aModel)
 {
-  mDependencies.Clear();
+  nsStringArray indexesUsed;
 
   nsresult rv;
   rv = nsXFormsUtils::EvaluateNodeBinding(mElement,
@@ -167,12 +185,32 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
                                           aResultType,
                                           getter_AddRefs(mModel),
                                           aResult,
-                                          &mDependencies);
+                                          &mDependencies,
+                                          &indexesUsed);
+  NS_ENSURE_STATE(mModel);
+  
+  mModel->AddFormControl(this);
+  if (aModel)
+    NS_ADDREF(*aModel = mModel);
 
-  if (mModel) {
-    mModel->AddFormControl(this);
-    if (aModel) {
-      NS_ADDREF(*aModel = mModel);
+  if (NS_SUCCEEDED(rv) && indexesUsed.Count()) {
+    // add index listeners on repeat elements
+    nsCOMPtr<nsIDOMDocument> doc;
+    mElement->GetOwnerDocument(getter_AddRefs(doc));
+    NS_ENSURE_STATE(doc);
+    
+    for (PRInt32 i = 0; i < indexesUsed.Count(); ++i) {
+      // Find the repeat element and add |this| as a listener
+      nsCOMPtr<nsIDOMElement> repElem;
+      doc->GetElementById(*(indexesUsed[i]), getter_AddRefs(repElem));
+      nsCOMPtr<nsIXFormsRepeatElement> rep(do_QueryInterface(repElem));
+      NS_ENSURE_STATE(rep);
+      rv = rep->AddIndexUser(this);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      rv = mIndexesUsed.AppendObject(rep);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
@@ -314,6 +352,7 @@ NS_IMETHODIMP
 nsXFormsControlStub::OnDestroyed()
 {
   ResetHelpAndHint(PR_FALSE);
+  RemoveIndexListeners();
 
   if (mModel) {
     mModel->RemoveFormControl(this);

@@ -43,6 +43,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIXFormsControl;
+
 [uuid(419e780d-4f31-4aa4-bae8-a18099d77bb6)]
 interface nsIXFormsRepeatElement : nsISupports
 {
@@ -88,4 +90,20 @@ interface nsIXFormsRepeatElement : nsISupports
    */
   void setCurrentRepeat(in nsIXFormsRepeatElement aCurrentRepeat,
                         in unsigned long          aIndex);
+
+  /**
+   * Add user of repeat-index. The control will have Bind() and Refresh()
+   * called on it, when the index changes.
+   */
+  void addIndexUser(in nsIXFormsControl aControl);
+
+  /**
+   * Remove user of repeat-index.
+   */
+  void removeIndexUser(in nsIXFormsControl aControl);
+
+  /**
+   * Informs repeat-index users of index change.
+   */
+  void indexHasChanged();
 };

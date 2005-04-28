@@ -354,12 +354,13 @@ nsXFormsXPathParser::FilterExpr()
 void
 nsXFormsXPathParser::FunctionCall()
 {
-  if (!mUsesDynamicFunc) {
-    nsDependentSubstring fname = Substring(mScanner.Expression(), mScanner.Offset() + 1, mScanner.Offset() + mScanner.Length() + 1);
-    if (fname.Equals(NS_LITERAL_STRING("now"))) {
-      mUsesDynamicFunc = PR_TRUE;
-    }
+  nsDependentSubstring fname = Substring(mScanner.Expression(),
+                                         mScanner.Offset() + 1,
+                                         mScanner.Length());
+  if (!mUsesDynamicFunc && fname.Equals(NS_LITERAL_STRING("now"))) {
+    mUsesDynamicFunc = PR_TRUE;
   }
+
   PopToken();
   PopToken();
   nsXFormsXPathScanner::XPATHTOKEN t = PeekToken();
@@ -367,18 +368,22 @@ nsXFormsXPathParser::FunctionCall()
   PRBool con = t == nsXFormsXPathScanner::RPARAN ? PR_FALSE : PR_TRUE;
   while (con) {
     if (t == nsXFormsXPathScanner::XPATHEOF) {
-      XPathCompilerException("Expected ) got EOF", mScanner.Expression(), mScanner.Offset(), mScanner.Length());
+      XPathCompilerException("Expected ) got EOF",
+                             mScanner.Expression(),
+                             mScanner.Offset(),
+                             mScanner.Length());
     }
     nsXFormsXPathNode* c = JustContext();
     Expr();
+    if (fname.Equals(NS_LITERAL_STRING("index"))) {
+      c->mIsIndex = PR_TRUE;
+    }
     PushContext(c);
 
     t = PeekToken();
-    if (t == nsXFormsXPathScanner::COMMA) {
+    con = (t == nsXFormsXPathScanner::COMMA);
+    if (con) {
       PopToken(); // Another Argument
-      con = PR_TRUE;
-    } else {
-      con = PR_FALSE;
     }
   }
 

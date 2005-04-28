@@ -56,6 +56,7 @@ public:
   PRBool mCon;
   PRBool mPredicate;
   PRBool mLiteral;
+  PRBool mIsIndex;  
   
   nsXFormsXPathNode(nsXFormsXPathNode* aParent, PRBool aContinue = PR_FALSE);
   ~nsXFormsXPathNode();
