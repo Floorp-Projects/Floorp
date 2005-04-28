@@ -1915,11 +1915,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 {
   *aStatus = nsEventStatus_eIgnore;
 
-  // Mark all events coming through here as trusted events, as the
-  // only code that calls this is the widget code that translates OS
-  // events into mozilla events.
-  aEvent->internalAppFlags |= NS_APP_EVENT_FLAG_TRUSTED;
-
   switch(aEvent->message)
     {
     case NS_SIZE:
@@ -4424,7 +4419,7 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
          this, mMouseLocation.x, mMouseLocation.y);
 #endif
 
-  nsMouseEvent event(NS_MOUSE_MOVE, mRootView->GetWidget(),
+  nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, mRootView->GetWidget(),
                      nsMouseEvent::eSynthesized);
   event.point = mMouseLocation;
   event.time = PR_IntervalNow();

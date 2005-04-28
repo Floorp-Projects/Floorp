@@ -777,6 +777,13 @@ nsXMLHttpRequest::CreateEvent(nsEvent* aEvent, nsIDOMEvent** aDOMEvent)
   privevent->SetCurrentTarget(this);
   privevent->SetOriginalTarget(this);
 
+  // We're not marking these events trusted as there is no way for us
+  // to tell if we're called through the code that normally calls us
+  // (i.e. necko) or if script on a webpage QI'd this object to say,
+  // nsIProgressEventSink and called onProgress(...).
+  //
+  // privevent->SetTrusted(?);
+
   return NS_OK;
 }
 
@@ -1339,7 +1346,7 @@ nsXMLHttpRequest::RequestCompleted()
   }
 
   // We need to create the event before nulling out mDocument
-  nsEvent evt(NS_PAGE_LOAD);
+  nsEvent evt(PR_TRUE, NS_PAGE_LOAD);
   nsCOMPtr<nsIDOMEvent> domevent;
   rv = CreateEvent(&evt, getter_AddRefs(domevent));
 
@@ -1711,7 +1718,7 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
   // We need to create the event before nulling out mDocument
   nsCOMPtr<nsIDOMEvent> event(do_QueryInterface(aEvent));
   // There is no NS_PAGE_ERROR event but NS_SCRIPT_ERROR should be ok.
-  nsEvent evt(NS_SCRIPT_ERROR);
+  nsEvent evt(PR_TRUE, NS_SCRIPT_ERROR);
   if (!event) {
     CreateEvent(&evt, getter_AddRefs(event));
   }
@@ -1836,7 +1843,7 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint
   if (mOnProgressListener)
   {
     nsCOMPtr<nsIDOMEvent> event;
-    nsEvent evt(NS_EVENT_NULL ); // what name do we make up here? 
+    nsEvent evt(PR_TRUE, NS_EVENT_NULL); // what name do we make up here? 
     nsresult rv = CreateEvent(&evt, getter_AddRefs(event));
     NS_ENSURE_SUCCESS(rv, rv);
     

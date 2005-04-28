@@ -40,7 +40,7 @@
 
 #include "nsISupports.h"
 
-struct nsGUIEvent;
+class nsGUIEvent;
 
 /**
  * Event listener interface.

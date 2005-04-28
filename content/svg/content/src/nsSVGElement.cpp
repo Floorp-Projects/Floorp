@@ -230,8 +230,19 @@ nsSVGElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
     nsCOMPtr<nsIEventListenerManager> manager;
     GetListenerManager(getter_AddRefs(manager));
     if (manager) {
+      nsIDocument *ownerDoc = GetOwnerDoc();
+
+      PRBool permitUntrustedEvents = PR_FALSE;
+
+      nsIURI *docUri;
+      if (ownerDoc && (docUri = ownerDoc->GetDocumentURI())) {
+        PRBool isChrome = PR_TRUE;
+        rv = docUri->SchemeIs("chrome", &isChrome);
+        permitUntrustedEvents = NS_SUCCEEDED(rv) && !isChrome;
+      }
+ 
       manager->AddScriptEventListener(NS_STATIC_CAST(nsIContent*, this), aName,
-                                      aValue, PR_TRUE);
+                                      aValue, PR_TRUE, permitUntrustedEvents);
     }
   }
   
@@ -665,7 +676,7 @@ nsSVGElement::SetAttrAndNotify(PRInt32 aNamespaceID, nsIAtom* aAttribute,
 
     if (aFireMutation) {
       nsCOMPtr<nsIDOMEventTarget> node = do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
-      nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, node);
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED, node);
 
       nsAutoString attrName;
       aAttribute->ToString(attrName);

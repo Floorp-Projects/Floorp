@@ -3079,7 +3079,7 @@ PresShell::FireResizeEvent()
     return;
 
   //Send resize event from here.
-  nsEvent event(NS_RESIZE_EVENT);
+  nsEvent event(PR_TRUE, NS_RESIZE_EVENT);
   nsEventStatus status = nsEventStatus_eIgnore;
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj = mDocument->GetScriptGlobalObject();

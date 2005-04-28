@@ -163,9 +163,6 @@ public:
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
 
-  // nsIFormMouseListener
-  virtual void MouseClicked(nsPresContext* aPresContext);
-
   //nsIComboboxControlFrame
   NS_IMETHOD IsDroppedDown(PRBool * aDoDropDown) { *aDoDropDown = mDroppedDown; return NS_OK; }
   NS_IMETHOD ShowDropDown(PRBool aDoDropDown);

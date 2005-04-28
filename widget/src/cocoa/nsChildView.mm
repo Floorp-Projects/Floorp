@@ -1500,7 +1500,7 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
   StPortSetter port(curPort);
   
   // initialize the paint event
-  nsPaintEvent paintEvent(NS_PAINT, this);
+  nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, this);
   paintEvent.renderingContext = aContext;       // nsPaintEvent
   paintEvent.rect             = &aRect;
 
@@ -1791,7 +1791,7 @@ PRBool nsChildView::DispatchMouseEvent(nsMouseEvent &aEvent)
 PRBool nsChildView::ReportDestroyEvent()
 {
   // nsEvent
-  nsGUIEvent event(NS_DESTROY, this);
+  nsGUIEvent event(PR_TRUE, NS_DESTROY, this);
   event.time        = PR_IntervalNow();
 
   // dispatch event
@@ -1805,7 +1805,7 @@ PRBool nsChildView::ReportDestroyEvent()
 PRBool nsChildView::ReportMoveEvent()
 {
   // nsEvent
-  nsGUIEvent moveEvent(NS_MOVE, this);
+  nsGUIEvent moveEvent(PR_TRUE, NS_MOVE, this);
   moveEvent.point.x     = mBounds.x;
   moveEvent.point.y     = mBounds.y;
   moveEvent.time        = PR_IntervalNow();
@@ -1821,7 +1821,7 @@ PRBool nsChildView::ReportMoveEvent()
 PRBool nsChildView::ReportSizeEvent()
 {
   // nsEvent
-  nsSizeEvent sizeEvent(NS_SIZE, this);
+  nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
   sizeEvent.time        = PR_IntervalNow();
 
   // nsSizeEvent
@@ -2131,7 +2131,7 @@ nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseG
     return NS_OK;
   }
   
-  nsMouseEvent geckoEvent;
+  nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   
   // we're given the point in global coordinates. We need to convert it to
   // window coordinates for convert:message:toGeckoEvent
@@ -2192,7 +2192,7 @@ nsChildView::Idle()
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
 {
   // Fire the context menu event into Gecko.
-  nsMouseEvent geckoEvent;
+  nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convert:theEvent message:NS_CONTEXTMENU toGeckoEvent:&geckoEvent];
   
   // send event into Gecko by going directly to the
@@ -2580,7 +2580,7 @@ nsChildView::Idle()
   [self performSelector:@selector(clickHoldCallback:) withObject:theEvent afterDelay:2.0];
 #endif
 
-  nsMouseEvent geckoEvent;
+  nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convert:theEvent message:NS_MOUSE_LEFT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
   
@@ -2610,7 +2610,7 @@ nsChildView::Idle()
     [self stopHandScroll:theEvent];
     return;
   }
-  nsMouseEvent geckoEvent;
+  nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convert:theEvent message:NS_MOUSE_LEFT_BUTTON_UP toGeckoEvent:&geckoEvent];
   
   NSPoint mouseLoc = [theEvent locationInWindow];
@@ -2645,7 +2645,7 @@ nsChildView::Idle()
   if ([ChildView  areHandScrollModifiers:[theEvent modifierFlags]]) {
     return;
   }
-  nsMouseEvent geckoEvent;
+  nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convert:theEvent message:NS_MOUSE_MOVE toGeckoEvent:&geckoEvent];
 
   NSPoint mouseLoc = [theEvent locationInWindow];
@@ -2673,7 +2673,7 @@ nsChildView::Idle()
     [self updateHandScroll:theEvent];
     return;
   }
-  nsMouseEvent geckoEvent;
+  nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convert:theEvent message:NS_MOUSE_MOVE toGeckoEvent:&geckoEvent];
 
   EventRecord macEvent;
@@ -2717,7 +2717,7 @@ nsChildView::Idle()
 {
   // The right mouse went down.  Fire off a right mouse down and
   // then send the context menu event.
-  nsMouseEvent geckoEvent;
+  nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
 
   [self convert: theEvent message: NS_MOUSE_RIGHT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
 
@@ -2738,7 +2738,7 @@ nsChildView::Idle()
 
 - (void)rightMouseUp:(NSEvent *)theEvent
 {
-  nsMouseEvent geckoEvent;
+  nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
 
   [self convert: theEvent message: NS_MOUSE_RIGHT_BUTTON_UP toGeckoEvent:&geckoEvent];
 
@@ -2759,7 +2759,7 @@ nsChildView::Idle()
 
 - (void)otherMouseDown:(NSEvent *)theEvent
 {
-  nsMouseEvent geckoEvent;
+  nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convert:theEvent message:NS_MOUSE_MIDDLE_BUTTON_DOWN toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
   
@@ -2772,7 +2772,7 @@ nsChildView::Idle()
 
 - (void)otherMouseUp:(NSEvent *)theEvent
 {
-  nsMouseEvent geckoEvent;
+  nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convert:theEvent message:NS_MOUSE_MIDDLE_BUTTON_UP toGeckoEvent:&geckoEvent];
   
   // send event into Gecko by going directly to the
@@ -2789,7 +2789,7 @@ const PRInt32 kNumLines = 4;
   // Gecko as the number of lines to scroll.  We go ahead and use a 
   // default kNumLines of 4 for now (until I learn how we can get settings from
   // the OS). --dwh
-  nsMouseScrollEvent geckoEvent;
+  nsMouseScrollEvent geckoEvent(PR_TRUE, 0, nsnull);
 
   [self convert:theEvent message:NS_MOUSE_SCROLL toGeckoEvent:&geckoEvent];
   PRInt32 incomingDeltaX = (PRInt32)[theEvent deltaX];
@@ -2930,7 +2930,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 #endif
 
   // static void init_composition_event( *aEvent, int aType)
-  nsCompositionEvent event(aEventType, mGeckoChild);
+  nsCompositionEvent event(PR_TRUE, aEventType, mGeckoChild);
   event.time = PR_IntervalNow();
   mGeckoChild->DispatchWindowEvent(event);
   return event.theReply.mCursorPosition;
@@ -2947,7 +2947,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   NSLog(@" markRange = %d, %d;  selRange = %d, %d\n", markRange.location, markRange.length, selRange.location, selRange.length);
 #endif
 
-  nsTextEvent textEvent(NS_TEXT_TEXT, mGeckoChild);
+  nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, mGeckoChild);
   textEvent.time = PR_IntervalNow();
   textEvent.theText = aBuffer;
   if (!doCommit)
@@ -2981,7 +2981,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   if (len == 1 && !mInComposition)
   {
     // dispatch keypress event with char instead of textEvent
-    nsKeyEvent geckoEvent(NS_KEY_PRESS, mGeckoChild);
+    nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, mGeckoChild);
     geckoEvent.time      = PR_IntervalNow();
     geckoEvent.charCode  = bufPtr[0]; // gecko expects OS-translated unicode
     geckoEvent.isChar    = PR_TRUE;
@@ -3116,7 +3116,8 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   NSLog(@" selectedRange = %d, %d\n", mSelectedRange.location, mSelectedRange.length);
 #endif
 
-  nsReconversionEvent reconversionEvent(NS_RECONVERSION_QUERY, mGeckoChild);
+  nsReconversionEvent reconversionEvent(PR_TRUE, NS_RECONVERSION_QUERY,
+                                        mGeckoChild);
   reconversionEvent.time = PR_IntervalNow();
 
   nsresult rv = mGeckoChild->DispatchWindowEvent(reconversionEvent);
@@ -3235,7 +3236,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   if (!isARepeat && nonDeadKeyPress)
   {
     // Fire a key down.
-    nsKeyEvent geckoEvent;
+    nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
     geckoEvent.point.x = geckoEvent.point.y = 0;
     [self convert: theEvent message: NS_KEY_DOWN
           isChar: &isChar
@@ -3264,7 +3265,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   if (nonDeadKeyPress)
   {
     // Fire a key press.
-    nsKeyEvent geckoEvent;
+    nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
     geckoEvent.point.x = geckoEvent.point.y = 0;
     isChar = PR_FALSE;
     [self convert: theEvent message: NS_KEY_PRESS
@@ -3319,7 +3320,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     return;
 
   // Fire a key up.
-  nsKeyEvent geckoEvent;
+  nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
   geckoEvent.point.x = geckoEvent.point.y = 0;
   PRBool isChar;
   [self convert: theEvent message: NS_KEY_UP
@@ -3363,7 +3364,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 // This method is called when we are about to be focused.
 - (BOOL)becomeFirstResponder
 {
-  nsFocusEvent event(NS_GOTFOCUS, mGeckoChild);
+  nsFocusEvent event(PR_TRUE, NS_GOTFOCUS, mGeckoChild);
 
   mGeckoChild->DispatchWindowEvent(event);
   return [super becomeFirstResponder];
@@ -3372,7 +3373,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 // This method is called when are are about to lose focus.
 - (BOOL)resignFirstResponder
 {
-  nsFocusEvent event(NS_LOSTFOCUS, mGeckoChild);
+  nsFocusEvent event(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
 
   mGeckoChild->DispatchWindowEvent(event);
 

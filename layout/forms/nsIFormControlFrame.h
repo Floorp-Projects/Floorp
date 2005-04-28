@@ -69,8 +69,6 @@ public:
 
   virtual void ScrollIntoView(nsPresContext* aPresContext) = 0;  
 
-  virtual void MouseClicked(nsPresContext* aPresContext) = 0;
-
   /**
    * Set the suggested size for the form element. 
    * This is used to control the size of the element during reflow if it hasn't had it's size

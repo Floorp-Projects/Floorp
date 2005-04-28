@@ -492,7 +492,7 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
           nsAutoString menuIDstring;
           menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::id, menuIDstring);
           if ( menuIDstring.EqualsLiteral("menu_Help") ) {
-            nsMenuEvent event;
+            nsMenuEvent event(PR_TRUE, 0, nsnull);
             MenuHandle handle = nsnull;
             event.mCommand = (unsigned int) handle;
             nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(pnsMenu));
@@ -970,7 +970,7 @@ MenuHelpersX::DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
   MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext));
 
   nsEventStatus status = nsEventStatus_eConsumeNoDefault;
-  nsMouseEvent event(NS_XUL_COMMAND);
+  nsMouseEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull, nsMouseEvent::eReal);
 
   // FIXME: Should probably figure out how to init this with the actual
   // pressed keys, but this is a big old edge case anyway. -dwh

@@ -217,7 +217,8 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetChildCount(PRInt32 *aAccChildCount)
       }
       // fire a popup dom event
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsMouseEvent event(NS_XUL_POPUP_SHOWING);
+      nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWING, nsnull,
+                         nsMouseEvent::eReal);
 
       nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
       nsCOMPtr<nsIContent> content(do_QueryInterface(childNode));

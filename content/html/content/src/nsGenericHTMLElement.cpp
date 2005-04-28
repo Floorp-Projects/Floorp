@@ -1426,7 +1426,8 @@ nsGenericHTMLElement::DispatchClickEvent(nsPresContext* aPresContext,
   NS_PRECONDITION(aSourceEvent, "Must have source event");
   NS_PRECONDITION(aStatus, "Null out param?");
 
-  nsMouseEvent event(NS_MOUSE_LEFT_CLICK, aSourceEvent->widget);
+  nsMouseEvent event(NS_IS_TRUSTED_EVENT(aSourceEvent), NS_MOUSE_LEFT_CLICK,
+                     aSourceEvent->widget, nsMouseEvent::eReal);
   event.point = aSourceEvent->point;
   event.refPoint = aSourceEvent->refPoint;
   PRUint32 clickCount = 1;
@@ -1438,8 +1439,6 @@ nsGenericHTMLElement::DispatchClickEvent(nsPresContext* aPresContext,
   event.isControl = aSourceEvent->isControl;
   event.isAlt = aSourceEvent->isAlt;
   event.isMeta = aSourceEvent->isMeta;
-  event.internalAppFlags |=
-    aSourceEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED;
 
   return DispatchEvent(aPresContext, &event, aTarget, aFullDispatch, aStatus);
 }
@@ -1555,7 +1554,8 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
           // The default action is simply to dispatch DOMActivate
           nsIPresShell *shell = aPresContext->GetPresShell();
           if (shell) {
-            nsUIEvent actEvent(NS_UI_ACTIVATE, 1); // single-click
+            // single-click
+            nsUIEvent actEvent(NS_IS_TRUSTED_EVENT(aEvent), NS_UI_ACTIVATE, 1);
             nsEventStatus status = nsEventStatus_eIgnore;
 
             ret = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
@@ -1766,7 +1766,7 @@ nsGenericHTMLElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     if (aFireMutation) {
       nsCOMPtr<nsIDOMEventTarget> node =
         do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
-      nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, node);
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED, node);
 
       nsAutoString attrName;
       aAttribute->ToString(attrName);

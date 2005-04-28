@@ -99,8 +99,8 @@ nsScrollbarButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 NS_IMETHODIMP
 nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext, 
-                                      nsGUIEvent* aEvent,
-                                      nsEventStatus* aEventStatus)
+                                    nsGUIEvent* aEvent,
+                                    nsEventStatus* aEventStatus)
 {  
   // XXX hack until handle release is actually called in nsframe.
   if (aEvent->message == NS_MOUSE_EXIT_SYNTH|| aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP || aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
@@ -112,8 +112,8 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsScrollbarButtonFrame::HandlePress(nsPresContext* aPresContext, 
-                     nsGUIEvent*     aEvent,
-                     nsEventStatus*  aEventStatus)
+                                    nsGUIEvent*     aEvent,
+                                    nsEventStatus*  aEventStatus)
 {
   MouseClicked();
   nsRepeatService::GetInstance()->Start(this);
@@ -122,8 +122,8 @@ nsScrollbarButtonFrame::HandlePress(nsPresContext* aPresContext,
 
 NS_IMETHODIMP 
 nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext, 
-                                 nsGUIEvent*     aEvent,
-                                 nsEventStatus*  aEventStatus)
+                                      nsGUIEvent*     aEvent,
+                                      nsEventStatus*  aEventStatus)
 {
   nsRepeatService::GetInstance()->Stop();
   return NS_OK;

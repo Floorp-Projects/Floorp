@@ -384,9 +384,6 @@ nsGfxButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
   // Override the HandleEvent to prevent the nsFrame::HandleEvent
   // from being called. The nsFrame::HandleEvent causes the button label
   // to be selected (Drawn with an XOR rectangle over the label)
- 
-  // Do nothing here, nsHTMLInputElement::HandleDOMEvent
-  // takes cares of calling MouseClicked for us.
 
   // do we have user-input style?
   const nsStyleUserInterface* uiStyle = GetStyleUserInterface();

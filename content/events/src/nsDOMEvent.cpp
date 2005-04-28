@@ -106,7 +106,7 @@ nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent)
           ...
         }
      */
-    mEvent = new nsEvent();
+    mEvent = new nsEvent(PR_FALSE, 0);
     mEvent->time = PR_Now();
   }
 
@@ -364,7 +364,7 @@ nsDOMEvent::PreventCapture()
 NS_IMETHODIMP
 nsDOMEvent::GetIsTrusted(PRBool *aIsTrusted)
 {
-  *aIsTrusted = (mEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED) != 0;
+  *aIsTrusted = NS_IS_TRUSTED_EVENT(mEvent);
 
   return NS_OK;
 }
@@ -633,7 +633,7 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
     }
     break;
   case NS_KEY_EVENT :
-    if (aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED) {
+    if (NS_IS_TRUSTED_EVENT(aEvent)) {
       PRUint32 key = NS_STATIC_CAST(nsKeyEvent *, aEvent)->keyCode;
       switch(aEvent->message) {
       case NS_KEY_PRESS :
@@ -658,7 +658,7 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
     }
     break;
   case NS_MOUSE_EVENT :
-    if (aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED) {
+    if (NS_IS_TRUSTED_EVENT(aEvent)) {
       switch(aEvent->message) {
       case NS_MOUSE_LEFT_BUTTON_UP :
         if (::PopupAllowedForEvent("mouseup"))

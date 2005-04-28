@@ -552,7 +552,7 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
 {
   if (!aIsInline && NS_FAILED(aResult)) {
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsScriptErrorEvent event(NS_SCRIPT_ERROR);
+    nsScriptErrorEvent event(PR_TRUE, NS_SCRIPT_ERROR);
 
     event.lineNr = aLineNo;
 
@@ -585,7 +585,8 @@ nsHTMLScriptElement::ScriptEvaluated(nsresult aResult,
   nsresult rv = NS_OK;
   if (!aIsInline) {
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event(NS_SUCCEEDED(aResult) ? NS_SCRIPT_LOAD : NS_SCRIPT_ERROR);
+    nsEvent event(PR_TRUE,
+                  NS_SUCCEEDED(aResult) ? NS_SCRIPT_LOAD : NS_SCRIPT_ERROR);
     nsCOMPtr<nsPresContext> presContext = GetPresContext();
     rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
                         &status);

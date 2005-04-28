@@ -1463,9 +1463,10 @@ nsGfxScrollFrameInner::ScrollToRestoredPosition()
 void
 nsGfxScrollFrameInner::PostScrollPortEvent(PRBool aOverflow, nsScrollPortEvent::orientType aType)
 {
-  nsScrollPortEvent* event = new nsScrollPortEvent(aOverflow ?
+  nsScrollPortEvent* event = new nsScrollPortEvent(PR_TRUE, aOverflow ?
                                                    NS_SCROLLPORT_OVERFLOW :
-                                                   NS_SCROLLPORT_UNDERFLOW);
+                                                   NS_SCROLLPORT_UNDERFLOW,
+                                                   nsnull);
   event->orient = aType;
   mOuter->GetPresContext()->PresShell()->PostDOMEvent(mOuter->GetContent(), event);
 }
@@ -1713,7 +1714,7 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent, PRInt32
       // Fire the onScroll event now that we have scrolled
       nsIPresShell *presShell = mOuter->GetPresContext()->GetPresShell();
       if (presShell) {
-        nsScrollbarEvent event(NS_SCROLL_EVENT);
+        nsScrollbarEvent event(PR_TRUE, NS_SCROLL_EVENT, nsnull);
         nsEventStatus status = nsEventStatus_eIgnore;
         // note if hcontent is non-null then hframe must be non-null.
         // likewise for vcontent and vframe. Thus targetFrame will always

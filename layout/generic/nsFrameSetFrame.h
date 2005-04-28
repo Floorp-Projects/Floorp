@@ -53,7 +53,7 @@ struct nsHTMLReflowState;
 struct nsSize;
 class  nsIAtom;
 class  nsHTMLFramesetBorderFrame;
-struct nsGUIEvent;
+class  nsGUIEvent;
 class  nsHTMLFramesetFrame;
 
 #define NS_IFRAMESETFRAME_IID \

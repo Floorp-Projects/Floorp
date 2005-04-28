@@ -57,25 +57,25 @@ enum nsEventStatus {
   nsEventStatus_eConsumeDoDefault  
 };
 
-struct nsEvent;
+class nsEvent;
 
-struct nsGUIEvent;
-struct nsSizeEvent;
-struct nsSizeModeEvent;
-struct nsZLevelEvent;
-struct nsPaintEvent;
-struct nsScrollbarEvent;
-struct nsScrollPortEvent;
-struct nsInputEvent;
-struct nsMouseEvent;
-struct nsAccessibleEvent;
-struct nsKeyEvent;
-struct nsTextEvent;
-struct nsCompositionEvent;
-struct nsMouseScrollEvent;
-struct nsReconversionEvent;
-struct nsTooltipEvent;
-struct nsMenuEvent;
+class nsGUIEvent;
+class nsSizeEvent;
+class nsSizeModeEvent;
+class nsZLevelEvent;
+class nsPaintEvent;
+class nsScrollbarEvent;
+class nsScrollPortEvent;
+class nsInputEvent;
+class nsMouseEvent;
+class nsAccessibleEvent;
+class nsKeyEvent;
+class nsTextEvent;
+class nsCompositionEvent;
+class nsMouseScrollEvent;
+class nsReconversionEvent;
+class nsTooltipEvent;
+class nsMenuEvent;
 
 struct nsTextEventReply;
 struct nsReconversionEventReply;

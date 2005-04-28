@@ -276,6 +276,9 @@ nsXFormsTriggerElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
                        aView,
                        1); // Simple click
 
+  // XXX: What about uiEvent->SetTrusted(?), should these events be
+  // trusted or not?
+
   PRBool cancelled;
   return target->DispatchEvent(uiEvent, &cancelled);
 }

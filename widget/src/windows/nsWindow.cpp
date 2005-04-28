@@ -1214,7 +1214,7 @@ PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event, nsEventStatus &aStatus) 
 
 PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 {
-  nsGUIEvent event(aMsg, this);
+  nsGUIEvent event(PR_TRUE, aMsg, this);
   InitEvent(event);
 
   PRBool result = DispatchWindowEvent(&event);
@@ -1229,7 +1229,7 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 //-------------------------------------------------------------------------
 PRBool nsWindow::DispatchAppCommandEvent(PRUint32 aEventCommand)
 {
-  nsAppCommandEvent event(NS_APPCOMMAND_START, this);
+  nsAppCommandEvent event(PR_TRUE, NS_APPCOMMAND_START, this);
 
   InitEvent(event);
   event.appCommand = NS_APPCOMMAND_START + aEventCommand;
@@ -3433,7 +3433,7 @@ UINT nsWindow::MapFromNativeToDOM(UINT aNativeKeyCode)
 PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode, 
                                   LPARAM aKeyData, PRUint32 aFlags)
 {
-  nsKeyEvent event(aEventType, this);
+  nsKeyEvent event(PR_TRUE, aEventType, this);
   nsPoint point(0, 0);
 
   InitEvent(event, &point); // this add ref's event.widget
@@ -3728,7 +3728,7 @@ BOOL nsWindow::OnChar(UINT charCode, PRUint32 aFlags)
 
 void nsWindow::ConstrainZLevel(HWND *aAfter)
 {
-  nsZLevelEvent  event(NS_SETZLEVEL, this);
+  nsZLevelEvent  event(PR_TRUE, NS_SETZLEVEL, this);
   nsWindow      *aboveWindow = 0;
 
   InitEvent(event);
@@ -4267,13 +4267,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     {
       WORD wNotifyCode = HIWORD(wParam); // notification code
       if ((CBN_SELENDOK == wNotifyCode) || (CBN_SELENDCANCEL == wNotifyCode)) { // Combo box change
-        nsGUIEvent event(NS_CONTROL_CHANGE, this);
+        nsGUIEvent event(PR_TRUE, NS_CONTROL_CHANGE, this);
         nsPoint point(0,0);
         InitEvent(event, &point); // this add ref's event.widget
         result = DispatchWindowEvent(&event);
         NS_RELEASE(event.widget);
       } else if (wNotifyCode == 0) { // Menu selection
-        nsMenuEvent event(NS_MENU_SELECTED, this);
+        nsMenuEvent event(PR_TRUE, NS_MENU_SELECTED, this);
         event.mCommand = LOWORD(wParam);
         InitEvent(event);
         result = DispatchWindowEvent(&event);
@@ -4661,7 +4661,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             mLastKeyboardLayout = gKeyboardLayout;
         } else {
           gJustGotActivate = PR_TRUE;
-          nsMouseEvent event(NS_MOUSE_ACTIVATE, this);
+          nsMouseEvent event(PR_TRUE, NS_MOUSE_ACTIVATE, this,
+                             nsMouseEvent::eReal);
           InitEvent(event);
 
           event.acceptActivation = PR_TRUE;
@@ -4828,7 +4829,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         pl.length = sizeof(pl);
         ::GetWindowPlacement(mWnd, &pl);
 
-        nsSizeModeEvent event(NS_SIZEMODE, this);
+        nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
         if (pl.showCmd == SW_SHOWMAXIMIZED)
           event.mSizeMode = nsSizeMode_Maximized;
         else if (pl.showCmd == SW_SHOWMINIMIZED)
@@ -5161,7 +5162,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #endif
         }
 
-        nsMouseScrollEvent scrollEvent(NS_MOUSE_SCROLL, this);
+        nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
         scrollEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
         if (ulScrollLines == WHEEL_PAGESCROLL) {
           scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
@@ -5563,7 +5564,7 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
   mBounds.x = aX;
   mBounds.y = aY;
 
-  nsGUIEvent event(NS_MOVE, this);
+  nsGUIEvent event(PR_TRUE, NS_MOVE, this);
   InitEvent(event);
   event.point.x = aX;
   event.point.y = aY;
@@ -5618,7 +5619,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
     // call the event callback
     if (mEventCallback)
     {
-      nsPaintEvent event(NS_PAINT, this);
+      nsPaintEvent event(PR_TRUE, NS_PAINT, this);
 
       InitEvent(event);
 
@@ -5714,7 +5715,7 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
 {
   // call the event callback
   if (mEventCallback) {
-    nsSizeEvent event(NS_SIZE, this);
+    nsSizeEvent event(PR_TRUE, NS_SIZE, this);
     InitEvent(event);
     event.windowSize = &aWindowRect;
     RECT r;
@@ -5746,7 +5747,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
     return result;
   }
 
-  nsMouseEvent event(aEventType, this);
+  nsMouseEvent event(PR_TRUE, aEventType, this, nsMouseEvent::eReal);
   if (aEventType == NS_CONTEXTMENU_KEY) {
     nsPoint zero(0, 0);
     InitEvent(event, &zero);
@@ -6032,7 +6033,7 @@ PRBool nsWindow::DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aA
 
   *aAcc = nsnull;
 
-  nsAccessibleEvent event(aEventType, this);
+  nsAccessibleEvent event(PR_TRUE, aEventType, this);
   InitEvent(event, aPoint);
 
   event.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
@@ -6062,7 +6063,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocu
 {
   // call the event callback
   if (mEventCallback) {
-    nsFocusEvent event(aEventType, this);
+    nsFocusEvent event(PR_TRUE, aEventType, this);
     InitEvent(event);
 
     //focus and blur event should go to their base widget loc, not current mouse pos
@@ -6288,7 +6289,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   if (!sIMECompUnicode)
     return;
 
-  nsTextEvent event(NS_TEXT_TEXT, this);
+  nsTextEvent event(PR_TRUE, NS_TEXT_TEXT, this);
   nsPoint point(0, 0);
 
   InitEvent(event, &point);
@@ -6379,7 +6380,7 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
   if (sIMEIsComposing)
     return PR_TRUE;
 
-  nsCompositionEvent event(NS_COMPOSITION_START, this);
+  nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_START, this);
   nsPoint point(0, 0);
   CANDIDATEFORM candForm;
 
@@ -6439,7 +6440,7 @@ void
 nsWindow::HandleEndComposition(void)
 {
   NS_ASSERTION(sIMEIsComposing, "conflict state");
-  nsCompositionEvent event(NS_COMPOSITION_END, this);
+  nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_END, this);
   nsPoint point(0, 0);
 
   if (gPinYinIMECaretCreated)
@@ -7005,7 +7006,7 @@ PRBool nsWindow::OnIMEReconvert(LPARAM aData, LRESULT *oResult, PRBool aUseUnico
     }
 
     // Get reconversion string
-    nsReconversionEvent event(NS_RECONVERSION_QUERY, this);
+    nsReconversionEvent event(PR_TRUE, NS_RECONVERSION_QUERY, this);
     nsPoint point(0, 0);
 
     InitEvent(event, &point);
@@ -7096,7 +7097,7 @@ PRBool nsWindow::OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult, PRBool a
       return PR_FALSE;
     }
     nsPoint point(0, 0);
-    nsQueryCaretRectEvent event(NS_QUERYCARETRECT, this);
+    nsQueryCaretRectEvent event(PR_TRUE, NS_QUERYCARETRECT, this);
     InitEvent(event, &point);
     DispatchWindowEvent(&event);
     // The active widget doesn't support this event.
@@ -7407,7 +7408,7 @@ PRBool nsWindow::IMECompositionHitTest(PRUint32 aEventType, POINT * ptPos)
 
 void nsWindow::GetCompositionWindowPos(HIMC hIMC, PRUint32 aEventType, COMPOSITIONFORM *cpForm)
 {
-  nsTextEvent event;
+  nsTextEvent event(PR_TRUE, 0, this);
   POINT point;
   point.x = 0;
   point.y = 0;

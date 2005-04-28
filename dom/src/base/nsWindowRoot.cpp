@@ -71,7 +71,13 @@ nsWindowRoot::~nsWindowRoot()
 {
 }
 
-NS_IMPL_ISUPPORTS5(nsWindowRoot, nsIDOMEventReceiver, nsIChromeEventHandler, nsPIWindowRoot, nsIDOMEventTarget, nsIDOM3EventTarget)
+NS_IMPL_ISUPPORTS6(nsWindowRoot,
+                   nsIDOMEventReceiver,
+                   nsIChromeEventHandler,
+                   nsPIWindowRoot,
+                   nsIDOMEventTarget,
+                   nsIDOM3EventTarget,
+                   nsIDOMNSEventTarget)
 
 NS_IMETHODIMP
 nsWindowRoot::AddEventListener(const nsAString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)
@@ -145,6 +151,24 @@ NS_IMETHODIMP
 nsWindowRoot::IsRegisteredHere(const nsAString & type, PRBool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsWindowRoot::AddEventListener(const nsAString& aType,
+                               nsIDOMEventListener *aListener,
+                               PRBool aUseCapture, PRBool aWantsUntrusted)
+{
+  nsCOMPtr<nsIEventListenerManager> manager;
+  nsresult rv = GetListenerManager(getter_AddRefs(manager));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+  if (aWantsUntrusted) {
+    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+  }
+
+  return manager->AddEventListenerByType(aListener, aType, flags, nsnull);
 }
 
 NS_IMETHODIMP

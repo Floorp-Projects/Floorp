@@ -590,7 +590,9 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
 
   // fire a popup dom event
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(aShowPopup ? NS_XUL_POPUP_SHOWING : NS_XUL_POPUP_HIDING);
+  nsMouseEvent event(PR_TRUE, aShowPopup ?
+                     NS_XUL_POPUP_SHOWING : NS_XUL_POPUP_HIDING, nsnull,
+                     nsMouseEvent::eReal);
 
   nsIPresShell *shell = mPresContext->GetPresShell();
   if (shell) 
@@ -635,16 +637,6 @@ nsComboboxControlFrame::ShowList(nsPresContext* aPresContext, PRBool aShowList)
   if (widget)
     widget->CaptureRollupEvents((nsIRollupListener *)this, mDroppedDown, aShowList);
 
-}
-
-
-//-------------------------------------------------------------
-// this is in response to the MouseClick from the containing browse button
-// XXX: TODO still need to get filters from accept attribute
-void 
-nsComboboxControlFrame::MouseClicked(nsPresContext* aPresContext)
-{
-   //ToggleList(aPresContext);
 }
 
 nsresult
@@ -2490,6 +2482,10 @@ void nsComboboxControlFrame::FireValueChangeEvent()
   if (manager &&
       NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
     event->InitEvent(NS_LITERAL_STRING("ValueChange"), PR_TRUE, PR_TRUE);
+
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+    privateEvent->SetTrusted(PR_TRUE);
+
     PRBool defaultActionEnabled;
     presContext->EventStateManager()->DispatchNewEvent(mContent, event,
                                                        &defaultActionEnabled);

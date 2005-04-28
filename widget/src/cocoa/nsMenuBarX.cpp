@@ -401,7 +401,7 @@ nsMenuBarX :: ExecuteCommand ( nsIContent* inDispatchTo )
     nsCOMPtr<nsPresContext> presContext;
     MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext));
 
-    nsMouseEvent event(NS_XUL_COMMAND);
+    nsMouseEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull, nsMouseEvent::eReal);
 
     inDispatchTo->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 	}
@@ -489,7 +489,7 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
           nsAutoString menuIDstring;
           menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::id, menuIDstring);
           if ( menuIDstring.EqualsLiteral("menu_Help") ) {
-            nsMenuEvent event;
+            nsMenuEvent event(PR_TRUE, 0, nsnull);
             MenuHandle handle = nsnull;
 #if !TARGET_CARBON
             ::HMGetHelpMenuHandle(&handle);

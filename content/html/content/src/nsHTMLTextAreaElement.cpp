@@ -278,8 +278,9 @@ nsHTMLTextAreaElement::Select()
   nsCOMPtr<nsPresContext> presContext = GetPresContext();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsGUIEvent event(NS_FORM_SELECTED);
-  rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  nsGUIEvent event(PR_TRUE, NS_FORM_SELECTED, nsnull);
+  rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
+                      &status);
 
   // If the DOM event was not canceled (e.g. by a JS event handler
   // returning false)

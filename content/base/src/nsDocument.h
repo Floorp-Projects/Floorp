@@ -55,6 +55,7 @@
 #include "nsStubDocumentObserver.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOM3EventTarget.h"
+#include "nsIDOMNSEventTarget.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMEventTarget.h"
@@ -194,6 +195,7 @@ class nsDocument : public nsIDocument,
                    public nsSupportsWeakReference,
                    public nsIDOMEventReceiver,
                    public nsIDOM3EventTarget,
+                   public nsIDOMNSEventTarget,
                    public nsIScriptObjectPrincipal,
                    public nsIRadioGroupContainer
 {
@@ -499,6 +501,9 @@ public:
 
   // nsIDOM3EventTarget
   NS_DECL_NSIDOM3EVENTTARGET
+
+  // nsIDOMNSEventTarget
+  NS_DECL_NSIDOMNSEVENTTARGET
 
   // nsIScriptObjectPrincipal
   // virtual nsIPrincipal* GetPrincipal();

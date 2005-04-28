@@ -251,7 +251,7 @@ public:
   PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
   inline PRBool     DispatchStandardEvent(PRUint32 aMsg)
 		{
-		nsGUIEvent event;
+		nsGUIEvent event(PR_TRUE, 0, nsnull);
 		InitEvent(event, aMsg);
 		return DispatchWindowEvent(&event);
 		}

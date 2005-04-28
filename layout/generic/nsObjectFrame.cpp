@@ -600,6 +600,9 @@ FirePluginNotFoundEvent(nsIContent *aTarget)
       rv = event->InitEvent(NS_LITERAL_STRING("PluginNotFound"), PR_TRUE,
                             PR_TRUE);
       if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+        privateEvent->SetTrusted(PR_TRUE);
+
         PRBool defaultActionEnabled;
         target->DispatchEvent(event, &defaultActionEnabled);
       }
@@ -3504,7 +3507,9 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
     nsEvent * theEvent;
     privateEvent->GetInternalNSEvent(&theEvent);
     if (theEvent) {
-      nsGUIEvent focusEvent(theEvent->message); // we only care about the message in ProcessEvent
+      // we only care about the message in ProcessEvent
+      nsGUIEvent focusEvent(NS_IS_TRUSTED_EVENT(theEvent), theEvent->message,
+                            nsnull);
       nsEventStatus rv = ProcessEvent(focusEvent);
       if (nsEventStatus_eConsumeNoDefault == rv) {
         aFocusEvent->PreventDefault();

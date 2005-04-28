@@ -62,7 +62,7 @@ struct  nsFont;
 class   nsIMenuBar;
 class   nsIEventListener;
 class   nsIRollupListener;
-struct  nsGUIEvent;
+class   nsGUIEvent;
 struct  nsColorMap;
 class   imgIContainer;
 

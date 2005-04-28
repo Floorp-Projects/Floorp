@@ -158,6 +158,7 @@
 // Event related includes
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOMNSEventTarget.h"
 
 // CSS related includes
 #include "nsIDOMStyleSheet.h"
@@ -1074,6 +1075,7 @@ jsval nsDOMClassInfo::sOpener_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sAdd_id             = JSVAL_VOID;
 jsval nsDOMClassInfo::sAll_id             = JSVAL_VOID;
 jsval nsDOMClassInfo::sTags_id            = JSVAL_VOID;
+jsval nsDOMClassInfo::sAddEventListener_id= JSVAL_VOID;
 
 const JSClass *nsDOMClassInfo::sObjectClass = nsnull;
 
@@ -1169,7 +1171,6 @@ GetInternedJSVal(JSContext *cx, const char *str)
   return STRING_TO_JSVAL(s);
 }
 
-
 // static
 nsresult
 nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
@@ -1247,6 +1248,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sAdd_id,             cx, "add");
   SET_JSVAL_TO_STRING(sAll_id,             cx, "all");
   SET_JSVAL_TO_STRING(sTags_id,            cx, "tags");
+  SET_JSVAL_TO_STRING(sAddEventListener_id,cx, "addEventListener");
 
   return NS_OK;
 }
@@ -1506,7 +1508,6 @@ nsDOMClassInfo::RegisterExternalClasses()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)                                  \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
-
 
 #define DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLElement)                              \
@@ -5561,15 +5562,116 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
   return PR_FALSE;
 }
 
+// static
+JSBool JS_DLL_CALLBACK
+nsEventReceiverSH::AddEventListenerHelper(JSContext *cx, JSObject *obj,
+                                          uintN argc, jsval *argv, jsval *rval)
+{
+  if (argc < 3 || argc > 4) {
+    ThrowJSException(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
+
+    return JS_FALSE;
+  }
+
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+  nsresult rv =
+    sXPConnect->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
+  if (NS_FAILED(rv)) {
+    nsDOMClassInfo::ThrowJSException(cx, rv);
+
+    return JS_FALSE;
+  }
+
+  if (JSVAL_IS_PRIMITIVE(argv[1])) {
+    // The second argument must be a function, or a
+    // nsIDOMEventListener. Throw an error.
+    ThrowJSException(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
+
+    return JS_FALSE;
+  }
+
+  JSString* jsstr = JS_ValueToString(cx, argv[0]);
+  if (!jsstr) {
+    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
+
+    return JS_FALSE;
+  }
+
+  nsDependentJSString type(jsstr);
+
+  nsCOMPtr<nsIDOMEventListener> listener;
+
+  {
+    nsCOMPtr<nsISupports> tmp;
+    sXPConnect->WrapJS(cx, JSVAL_TO_OBJECT(argv[1]),
+                       NS_GET_IID(nsIDOMEventListener), getter_AddRefs(tmp));
+
+    listener = do_QueryInterface(tmp, &rv);
+    if (NS_FAILED(rv)) {
+      ThrowJSException(cx, rv);
+
+      return JS_FALSE;
+    }
+  }
+
+  JSBool useCapture;
+  if (!JS_ValueToBoolean(cx, argv[2], &useCapture)) {
+    return JS_FALSE;
+  }
+
+  if (argc == 4) {
+    JSBool wantsUntrusted;
+    if (!JS_ValueToBoolean(cx, argv[3], &wantsUntrusted)) {
+      return JS_FALSE;
+    }
+
+    nsresult rv;
+    nsCOMPtr<nsIDOMNSEventTarget> eventTarget(do_QueryWrappedNative(wrapper,
+                                                                    &rv));
+    if (NS_FAILED(rv)) {
+      ThrowJSException(cx, rv);
+
+      return JS_FALSE;
+    }
+
+    rv = eventTarget->AddEventListener(type, listener, useCapture,
+                                       wantsUntrusted);
+    if (NS_FAILED(rv)) {
+      ThrowJSException(cx, rv);
+
+      return JS_FALSE;
+    }
+  } else {
+    nsresult rv;
+    nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryWrappedNative(wrapper,
+                                                                  &rv));
+    if (NS_FAILED(rv)) {
+      ThrowJSException(cx, rv);
+
+      return JS_FALSE;
+    }
+
+    rv = eventTarget->AddEventListener(type, listener, useCapture);
+    if (NS_FAILED(rv)) {
+      ThrowJSException(cx, rv);
+
+      return JS_FALSE;
+    }
+  }
+  
+  return JS_TRUE;
+}
+
 nsresult
 nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
                                           JSContext *cx, JSObject *obj,
                                           jsval id, PRBool compile,
                                           PRBool remove,
-                                          PRBool *did_compile)
+                                          PRBool *did_define)
 {
-  NS_PRECONDITION(!compile || !remove, "Can't both compile and remove at the same time");
-  *did_compile = PR_FALSE;
+  NS_PRECONDITION(!compile || !remove,
+                  "Can't both compile and remove at the same time");
+  *did_define = PR_FALSE;
 
   if (!IsEventName(id)) {
     return NS_OK;
@@ -5582,7 +5684,6 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   NS_ENSURE_TRUE(receiver, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIEventListenerManager> manager;
-
   receiver->GetListenerManager(getter_AddRefs(manager));
   NS_ENSURE_TRUE(manager, NS_ERROR_UNEXPECTED);
 
@@ -5593,7 +5694,7 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
 
   if (compile) {
     rv = manager->CompileScriptEventListener(script_cx, receiver, atom,
-                                             did_compile);
+                                             did_define);
   } else if (remove) {
     rv = manager->RemoveScriptEventListener(atom);
   } else {
@@ -5614,13 +5715,23 @@ nsEventReceiverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
-  PRBool did_compile = PR_FALSE;
+  if (id == sAddEventListener_id && !(flags & JSRESOLVE_ASSIGNING)) {
+    JSString *str = JSVAL_TO_STRING(id);
+    JSFunction *fnc =
+      ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(str),
+                          AddEventListenerHelper, 0, JSPROP_ENUMERATE);
 
+    *objp = obj;
+
+    return fnc ? NS_OK : NS_ERROR_UNEXPECTED;
+  }
+
+  PRBool did_define = PR_FALSE;
   nsresult rv = RegisterCompileHandler(wrapper, cx, obj, id, PR_TRUE, PR_FALSE,
-                                       &did_compile);
+                                       &did_define);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (did_compile) {
+  if (did_define) {
     *objp = obj;
   }
 
@@ -5634,7 +5745,7 @@ nsEventReceiverSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
                                jsval *vp, PRBool *_retval)
 {
   if ((::JS_TypeOfValue(cx, *vp) != JSTYPE_FUNCTION && !JSVAL_IS_NULL(*vp)) ||
-      !JSVAL_IS_STRING(id)) {
+      !JSVAL_IS_STRING(id) || id == sAddEventListener_id) {
     return NS_OK;
   }
 

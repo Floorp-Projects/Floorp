@@ -720,6 +720,9 @@ nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent)
   event->InitEvent(NS_ConvertUTF8toUTF16(data->name),
                    data->canBubble, data->canCancel);
 
+  // XXX: What about event->SetTrusted(?) here? Should all these
+  // events be trusted? Right now they're never trusted.
+
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTarget);
   NS_ENSURE_STATE(target);
 

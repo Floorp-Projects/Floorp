@@ -41,7 +41,9 @@
 
 nsDOMBeforeUnloadEvent::nsDOMBeforeUnloadEvent(nsPresContext* aPresContext,
                                                nsBeforePageUnloadEvent* aEvent)
-  : nsDOMEvent(aPresContext, aEvent ? aEvent : new nsBeforePageUnloadEvent(NS_BEFORE_PAGE_UNLOAD))
+  : nsDOMEvent(aPresContext, aEvent ? aEvent :
+               new nsBeforePageUnloadEvent(PR_FALSE,
+                                           NS_BEFORE_PAGE_UNLOAD_EVENT))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_BEFORE_PAGE_UNLOAD_EVENT,
                "event type mismatch");

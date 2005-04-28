@@ -1052,7 +1052,7 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
 
         // This is the right <observes> element. Execute the
         // |onbroadcast| event handler
-        nsEvent event(NS_XUL_BROADCAST);
+        nsEvent event(PR_TRUE, NS_XUL_BROADCAST);
 
         PRInt32 j = mPresShells.Count();
         while (--j >= 0) {

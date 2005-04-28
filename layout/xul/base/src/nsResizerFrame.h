@@ -77,7 +77,7 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
-  virtual void MouseClicked (nsPresContext* aPresContext);
+  virtual void MouseClicked(nsPresContext* aPresContext, nsGUIEvent *aEvent);
 
 protected:
 	PRBool GetInitialDirection(eDirection& aDirection);

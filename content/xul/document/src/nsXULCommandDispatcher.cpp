@@ -379,7 +379,9 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
 
       // Handle the DOM event
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event(NS_XUL_COMMAND_UPDATE);
+
+      nsEvent event(PR_TRUE, NS_XUL_COMMAND_UPDATE);
+
       content->HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
   }

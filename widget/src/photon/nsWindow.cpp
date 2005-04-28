@@ -600,7 +600,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 		}
 
 	if( mIsToplevel || mListenForResizes ) {
-		nsSizeEvent sevent;
+		nsSizeEvent sevent(PR_TRUE, 0, nsnull);
 		sevent.message = NS_SIZE;
 		sevent.widget = this;
 		
@@ -631,7 +631,7 @@ int nsWindow::WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t 
 			  NS_ADDREF(win);
 			  
 			  // dispatch an "onclose" event. to delete immediately, call win->Destroy()
-			  nsGUIEvent event;
+			  nsGUIEvent event(PR_TRUE, 0, nsnull);
 			  nsEventStatus status;
 			  
 			  event.message = NS_XUL_CLOSE;
@@ -671,7 +671,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   nsWindow  * pWin = (nsWindow*) GetInstance( pWidget );
   nsresult    result;
   PhTile_t  * dmg = NULL;
-  nsPaintEvent pev;
+  nsPaintEvent pev(PR_TRUE, 0, nsnull);
   PhRect_t   extent;
 
   if( !pWin || !pWin->mContext ) return;

@@ -981,7 +981,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   // Now, fire either an OnLoad or OnError event to the document...
   if(NS_SUCCEEDED(aStatus)) {
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event(NS_PAGE_LOAD);
+    nsEvent event(PR_TRUE, NS_PAGE_LOAD);
 
     rv = global->HandleDOMEvent(mPresContext, &event, nsnull,
                                 NS_EVENT_FLAG_INIT, &status);
@@ -1060,7 +1060,7 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
   // Now, fire an BeforeUnload event to the document and see if it's ok
   // to unload...
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsBeforePageUnloadEvent event(NS_BEFORE_PAGE_UNLOAD);
+  nsBeforePageUnloadEvent event(PR_TRUE, NS_BEFORE_PAGE_UNLOAD);
   nsresult rv = NS_OK;
 
   {
@@ -1160,7 +1160,7 @@ DocumentViewerImpl::Unload()
 
   // Now, fire an Unload event to the document...
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event(NS_PAGE_UNLOAD);
+  nsEvent event(PR_TRUE, NS_PAGE_UNLOAD);
 
   // Never permit popups from the unload handler, no matter how we get
   // here.

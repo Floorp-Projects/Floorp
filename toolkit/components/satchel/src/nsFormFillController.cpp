@@ -53,6 +53,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMKeyEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMCompositionListener.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -453,6 +454,15 @@ nsFormFillController::OnTextEntered(PRBool *_retval)
   }
 
   event->InitEvent(NS_LITERAL_STRING("DOMAutoComplete"), PR_TRUE, PR_TRUE);
+
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+  if (privateEvent) {
+    // XXXjst: We mark this event as a trusted event, it's up to the
+    // callers of this to ensure that it's only called from trusted
+    // code.
+    privateEvent->SetTrusted(PR_TRUE);
+  }
+
   nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(mFocusedInput);
 
   PRBool defaultActionEnabled;

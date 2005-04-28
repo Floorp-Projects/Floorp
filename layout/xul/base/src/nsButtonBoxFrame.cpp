@@ -150,7 +150,7 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 void 
-nsButtonBoxFrame::MouseClicked (nsPresContext* aPresContext, nsGUIEvent* aEvent) 
+nsButtonBoxFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent) 
 {
   // Don't execute if we're disabled.
   nsAutoString disabled;
@@ -160,7 +160,8 @@ nsButtonBoxFrame::MouseClicked (nsPresContext* aPresContext, nsGUIEvent* aEvent)
 
   // Execute the oncommand event handler.
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(NS_XUL_COMMAND);
+  nsMouseEvent event(aEvent ? NS_IS_TRUSTED_EVENT(aEvent) : PR_FALSE,
+                     NS_XUL_COMMAND, nsnull, nsMouseEvent::eReal);
   if(aEvent) {
     event.isShift = ((nsInputEvent*)(aEvent))->isShift;
     event.isControl = ((nsInputEvent*)(aEvent))->isControl;

@@ -697,19 +697,12 @@ nsFormControlFrame::HandleEvent(nsPresContext* aPresContext,
   // unfortunately native widgets don't seem to handle this right. 
   // so use the old code for native stuff. -EDV
   switch (aEvent->message) {
-     case NS_MOUSE_LEFT_CLICK:
-        MouseClicked(aPresContext);
-     break;
-
 	   case NS_KEY_DOWN:
 	    if (NS_KEY_EVENT == aEvent->eventStructType) {
 	      nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
 	      if (NS_VK_RETURN == keyEvent->keyCode) {
 	        EnterPressed(aPresContext);
 	      }
-	      //else if (NS_VK_SPACE == keyEvent->keyCode) {
-	      //  MouseClicked(aPresContext);
-	      //}
 	    }
 	    break;
   }
