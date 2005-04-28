@@ -212,11 +212,10 @@ private:
              (eCSSProperty_COUNT_no_shorthands + (kPropertiesSetChunkSize-1)) /
              kPropertiesSetChunkSize };
     /*
-     * mPropertiesSet stores a bit for every property that may be
-     * present, to optimize compression of blocks with small numbers of
-     * properties (the norm).  The code does not rely on it to be exact;
-     * it is allowable, although slower, if a bit is erroneously set
-     * even though the property is not present.
+     * mPropertiesSet stores a bit for every property that is present,
+     * to optimize compression of blocks with small numbers of
+     * properties (the norm) and to allow quickly checking whether a
+     * property is set in this block.
      */
     property_set_type mPropertiesSet[kPropertiesSetChunkCount];
     /*
