@@ -818,7 +818,8 @@ nsHttpTransaction::HandleContent(char *buf,
         // NOT persistent, we simply accept everything in |buf|.
         if (mConnection->IsPersistent()) {
             nsInt64 remaining = mContentLength - mContentRead;
-            *contentRead = PR_MIN(nsInt64(count), remaining);
+            nsInt64 count64 = count;
+            *contentRead = PR_MIN(count64, remaining);
             *contentRemaining = count - *contentRead;
         }
         else {
