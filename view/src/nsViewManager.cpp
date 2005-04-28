@@ -2512,6 +2512,9 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
       // we'll crash in the next iteration. Oh well. The old code would have crashed too.
     }
   }
+  // Need to restore the event point here because someone may use it later.
+  // In particular Windows seems to need this.
+  aEvent->point = pt;
 
   PL_FreeArenaPool(&displayArena);
   PL_FinishArenaPool(&displayArena);
