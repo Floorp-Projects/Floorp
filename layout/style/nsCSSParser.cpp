@@ -248,18 +248,23 @@ protected:
   PRBool ParseDeclaration(nsresult& aErrorCode,
                           nsCSSDeclaration* aDeclaration,
                           PRBool aCheckForBraces,
+                          PRBool aMustCallValueAppended,
                           PRBool* aChanged);
   // After a parse error parsing |aPropID|, clear the data in
   // |mTempData|.
   void ClearTempData(nsCSSProperty aPropID);
   // After a successful parse of |aPropID|, transfer data from
   // |mTempData| to |mData|.  Set |*aChanged| to true if something
-  // changed, but leave it unmodified otherwise.
+  // changed, but leave it unmodified otherwise.  If aMustCallValueAppended
+  // is false, will not call ValueAppended on aDeclaration if the property
+  // is already set in it.
   void TransferTempData(nsCSSDeclaration* aDeclaration,
                         nsCSSProperty aPropID, PRBool aIsImportant,
+                        PRBool aMustCallValueAppended,
                         PRBool* aChanged);
   void DoTransferTempData(nsCSSDeclaration* aDeclaration,
                           nsCSSProperty aPropID, PRBool aIsImportant,
+                          PRBool aMustCallValueAppended,
                           PRBool* aChanged);
   PRBool ParseProperty(nsresult& aErrorCode, nsCSSProperty aPropID);
   PRBool ParseSingleValueProperty(nsresult& aErrorCode, nsCSSValue& aValue, 
@@ -781,7 +786,10 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
   }
 
   do {
-    if (!ParseDeclaration(errorCode, aDeclaration, PR_FALSE, aChanged)) {
+    // If we cleared the old decl, then we want to be calling
+    // ValueAppended as we parse.
+    if (!ParseDeclaration(errorCode, aDeclaration, PR_FALSE,
+                          aClearOldDecl, aChanged)) {
       NS_ASSERTION(errorCode != nsresult(-1), "-1 is no longer used for EOF");
       rv = errorCode;
 
@@ -882,7 +890,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   aDeclaration->ExpandTo(&mData);
   nsresult result = NS_OK;
   if (ParseProperty(errorCode, aPropID)) {
-    TransferTempData(aDeclaration, aPropID, PR_FALSE, aChanged);
+    TransferTempData(aDeclaration, aPropID, PR_FALSE, PR_FALSE, aChanged);
   } else {
     NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
     const PRUnichar *params[] = {
@@ -2697,7 +2705,7 @@ CSSParserImpl::ParseDeclarationBlock(nsresult& aErrorCode,
     for (;;) {
       PRBool changed;
       if (!ParseDeclaration(aErrorCode, declaration, aCheckForBraces,
-                            &changed)) {
+                            PR_TRUE, &changed)) {
         if (!SkipDeclaration(aErrorCode, aCheckForBraces)) {
           break;
         }
@@ -3075,6 +3083,7 @@ PRBool
 CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
                                 nsCSSDeclaration* aDeclaration,
                                 PRBool aCheckForBraces,
+                                PRBool aMustCallValueAppended,
                                 PRBool* aChanged)
 {
   mTempData.AssertInitialState();
@@ -3148,7 +3157,8 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
       ClearTempData(propID);
       return PR_FALSE;
     }
-    TransferTempData(aDeclaration, propID, isImportant, aChanged);
+    TransferTempData(aDeclaration, propID, isImportant,
+                     aMustCallValueAppended, aChanged);
     return PR_TRUE;
   }
   else {
@@ -3193,12 +3203,14 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
       ClearTempData(propID);
       return PR_FALSE;
     }
-    TransferTempData(aDeclaration, propID, isImportant, aChanged);
+    TransferTempData(aDeclaration, propID, isImportant,
+                     aMustCallValueAppended, aChanged);
     return PR_TRUE;
   } 
   if (eCSSToken_Symbol == tk->mType) {
     if (';' == tk->mSymbol) {
-      TransferTempData(aDeclaration, propID, isImportant, aChanged);
+      TransferTempData(aDeclaration, propID, isImportant,
+                       aMustCallValueAppended, aChanged);
       return PR_TRUE;
     }
     if (!aCheckForBraces) {
@@ -3212,7 +3224,8 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
     }
     if ('}' == tk->mSymbol) {
       UngetToken();
-      TransferTempData(aDeclaration, propID, isImportant, aChanged);
+      TransferTempData(aDeclaration, propID, isImportant,
+                       aMustCallValueAppended, aChanged);
       return PR_TRUE;
     }
   }
@@ -3242,14 +3255,17 @@ CSSParserImpl::ClearTempData(nsCSSProperty aPropID)
 void
 CSSParserImpl::TransferTempData(nsCSSDeclaration* aDeclaration,
                                 nsCSSProperty aPropID, PRBool aIsImportant,
+                                PRBool aMustCallValueAppended,
                                 PRBool* aChanged)
 {
   if (nsCSSProps::IsShorthand(aPropID)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
-      DoTransferTempData(aDeclaration, *p, aIsImportant, aChanged);
+      DoTransferTempData(aDeclaration, *p, aIsImportant,
+                         aMustCallValueAppended, aChanged);
     }
   } else {
-    DoTransferTempData(aDeclaration, aPropID, aIsImportant, aChanged);
+    DoTransferTempData(aDeclaration, aPropID, aIsImportant,
+                       aMustCallValueAppended, aChanged);
   }
   mTempData.AssertInitialState();
 }
@@ -3260,6 +3276,7 @@ CSSParserImpl::TransferTempData(nsCSSDeclaration* aDeclaration,
 void
 CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
                                   nsCSSProperty aPropID, PRBool aIsImportant,
+                                  PRBool aMustCallValueAppended,
                                   PRBool* aChanged)
 {
   NS_ASSERTION(mTempData.HasPropertyBit(aPropID), "oops");
@@ -3273,10 +3290,13 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
       return;
     }
   }
+
+  if (aMustCallValueAppended || !mData.HasPropertyBit(aPropID)) {
+    aDeclaration->ValueAppended(aPropID);
+  }
+
   mData.SetPropertyBit(aPropID);
   mTempData.ClearPropertyBit(aPropID);
-
-  aDeclaration->ValueAppended(aPropID);
 
   /*
    * Save needless copying and allocation by calling the destructor in
@@ -3294,6 +3314,12 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
       dest->~nsCSSValue();
       memcpy(dest, source, sizeof(nsCSSValue));
       new (source) nsCSSValue();
+      if (dest->GetUnit() == eCSSUnit_Null) {
+        // Some of our property parsers actually want to _clear_ properties in
+        // mData (eg the "font" shorthand parser does for system fonts).  We've
+        // cleared the data; now clear the bit too.
+        mData.ClearPropertyBit(aPropID);
+      }
     } break;
 
     case eCSSType_Rect: {
@@ -5346,6 +5372,13 @@ PRBool CSSParserImpl::ParseFont(nsresult& aErrorCode)
       else {
         AppendValue(eCSSProperty_font_family, family);  // keyword value overrides everything else
         nsCSSValue empty;
+        // XXXbz this is actually _clearing_ the values for the following
+        // properties in mTempData, but setting the bit for them.  We need that
+        // because we want to clear out the values in mData when all is said
+        // and done.  See the code in TransferTempData that handles this.  The
+        // end result is that mData always has its property bits set like it
+        // should, but mTempData can, in fact, have bits set for properties
+        // that are not set...
         AppendValue(eCSSProperty_font_style, empty);
         AppendValue(eCSSProperty_font_variant, empty);
         AppendValue(eCSSProperty_font_weight, empty);

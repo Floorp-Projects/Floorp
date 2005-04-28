@@ -136,6 +136,7 @@ public:
       mImportantData->Destroy();
       mImportantData = nsnull;
     }
+    mOrder.Clear();
   }
 
 #ifdef DEBUG

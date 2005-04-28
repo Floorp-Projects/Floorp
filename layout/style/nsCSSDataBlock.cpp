@@ -646,35 +646,42 @@ nsCSSExpandedDataBlock::ComputeSize()
             PRUint32 increment = 0;
             switch (nsCSSProps::kTypeTable[iProp]) {
                 case eCSSType_Value: {
+#ifdef DEBUG
                     nsCSSValue* val = NS_STATIC_CAST(nsCSSValue*, prop);
-                    if (val->GetUnit() != eCSSUnit_Null) {
-                        increment = CDBValueStorage_advance;
-                    }
+                    NS_ASSERTION(val->GetUnit() != eCSSUnit_Null,
+                                 "null value while computing size");
+#endif
+                    increment = CDBValueStorage_advance;
                 } break;
 
                 case eCSSType_Rect: {
+#ifdef DEBUG
                     nsCSSRect* val = NS_STATIC_CAST(nsCSSRect*, prop);
-                    if (val->HasValue()) {
-                        increment = CDBRectStorage_advance;
-                    }
+                    NS_ASSERTION(val->HasValue(),
+                                 "Valueless rect while computing size");
+#endif
+                    increment = CDBRectStorage_advance;
                 } break;
 
                 case eCSSType_ValuePair: {
+#ifdef DEBUG
                     nsCSSValuePair* val = NS_STATIC_CAST(nsCSSValuePair*, prop);
-                    if (val->mXValue.GetUnit() != eCSSUnit_Null ||
-                        val->mYValue.GetUnit() != eCSSUnit_Null) {
-                        increment = CDBValuePairStorage_advance;
-                    }
+                    NS_ASSERTION(val->mXValue.GetUnit() != eCSSUnit_Null ||
+                                 val->mYValue.GetUnit() != eCSSUnit_Null,
+                                 "Valueless pair while computing size");
+#endif
+                    increment = CDBValuePairStorage_advance;
                 } break;
 
                 case eCSSType_ValueList:
                 case eCSSType_CounterData:
                 case eCSSType_Quotes:
                 case eCSSType_Shadow: {
+#ifdef DEBUG
                     void* val = *NS_STATIC_CAST(void**, prop);
-                    if (val) {
-                        increment = CDBPointerStorage_advance;
-                    }
+                    NS_ASSERTION(val, "Null pointer while computing size");
+#endif
+                    increment = CDBPointerStorage_advance;
                 } break;
             }
             if ((mPropertiesImportant[iHigh] & (1 << iLow)) == 0)
@@ -732,7 +739,6 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
             NS_ASSERTION(0 <= iProp && iProp < eCSSProperty_COUNT_no_shorthands,
                          "out of range");
             void *prop = PropertyAt(iProp);
-            PRBool present = PR_FALSE;
             PRBool important =
                 (mPropertiesImportant[iHigh] & (1 << iLow)) != 0;
             char *&cursor = important ? cursor_important : cursor_normal;
@@ -741,42 +747,39 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
             switch (nsCSSProps::kTypeTable[iProp]) {
                 case eCSSType_Value: {
                     nsCSSValue* val = NS_STATIC_CAST(nsCSSValue*, prop);
-                    if (val->GetUnit() != eCSSUnit_Null) {
-                        CDBValueStorage *storage =
-                            NS_REINTERPRET_CAST(CDBValueStorage*, cursor);
-                        storage->property = iProp;
-                        memcpy(&storage->value, val, sizeof(nsCSSValue));
-                        new (val) nsCSSValue();
-                        cursor += CDBValueStorage_advance;
-                        present = PR_TRUE;
-                    }
+                    NS_ASSERTION(val->GetUnit() != eCSSUnit_Null,
+                                 "Null value while compressing");
+                    CDBValueStorage *storage =
+                        NS_REINTERPRET_CAST(CDBValueStorage*, cursor);
+                    storage->property = iProp;
+                    memcpy(&storage->value, val, sizeof(nsCSSValue));
+                    new (val) nsCSSValue();
+                    cursor += CDBValueStorage_advance;
                 } break;
 
                 case eCSSType_Rect: {
                     nsCSSRect* val = NS_STATIC_CAST(nsCSSRect*, prop);
-                    if (val->HasValue()) {
-                        CDBRectStorage *storage =
-                            NS_REINTERPRET_CAST(CDBRectStorage*, cursor);
-                        storage->property = iProp;
-                        memcpy(&storage->value, val, sizeof(nsCSSRect));
-                        new (val) nsCSSRect();
-                        cursor += CDBRectStorage_advance;
-                        present = PR_TRUE;
-                    }
+                    NS_ASSERTION(val->HasValue(),
+                                 "Valueless rect while compressing");
+                    CDBRectStorage *storage =
+                        NS_REINTERPRET_CAST(CDBRectStorage*, cursor);
+                    storage->property = iProp;
+                    memcpy(&storage->value, val, sizeof(nsCSSRect));
+                    new (val) nsCSSRect();
+                    cursor += CDBRectStorage_advance;
                 } break;
 
                 case eCSSType_ValuePair: {
                     nsCSSValuePair* val = NS_STATIC_CAST(nsCSSValuePair*, prop);
-                    if (val->mXValue.GetUnit() != eCSSUnit_Null ||
-                        val->mYValue.GetUnit() != eCSSUnit_Null) {
-                        CDBValuePairStorage *storage =
-                            NS_REINTERPRET_CAST(CDBValuePairStorage*, cursor);
-                        storage->property = iProp;
-                        memcpy(&storage->value, val, sizeof(nsCSSValuePair));
-                        new (val) nsCSSValuePair();
-                        cursor += CDBValuePairStorage_advance;
-                        present = PR_TRUE;
-                    }
+                    NS_ASSERTION(val->mXValue.GetUnit() != eCSSUnit_Null ||
+                                 val->mYValue.GetUnit() != eCSSUnit_Null,
+                                 "Valueless pair while compressing");
+                    CDBValuePairStorage *storage =
+                        NS_REINTERPRET_CAST(CDBValuePairStorage*, cursor);
+                    storage->property = iProp;
+                    memcpy(&storage->value, val, sizeof(nsCSSValuePair));
+                    new (val) nsCSSValuePair();
+                    cursor += CDBValuePairStorage_advance;
                 } break;
 
                 case eCSSType_ValueList:
@@ -784,21 +787,17 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
                 case eCSSType_Quotes:
                 case eCSSType_Shadow: {
                     void*& val = *NS_STATIC_CAST(void**, prop);
-                    if (val) {
-                        CDBPointerStorage *storage =
-                            NS_REINTERPRET_CAST(CDBPointerStorage*, cursor);
-                        storage->property = iProp;
-                        storage->value = val;
-                        val = nsnull;
-                        cursor += CDBPointerStorage_advance;
-                        present = PR_TRUE;
-                    }
+                    NS_ASSERTION(val, "Null pointer while compressing");
+                    CDBPointerStorage *storage =
+                        NS_REINTERPRET_CAST(CDBPointerStorage*, cursor);
+                    storage->property = iProp;
+                    storage->value = val;
+                    val = nsnull;
+                    cursor += CDBPointerStorage_advance;
                 } break;
             }
-            if (present) {
-                result->mStyleBits |= nsCachedStyleData::GetBitForSID(
-                                                 nsCSSProps::kSIDTable[iProp]);
-            }
+            result->mStyleBits |=
+                nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[iProp]);
         }
     }
 
