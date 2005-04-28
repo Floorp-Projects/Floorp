@@ -181,7 +181,7 @@ table[align="right"] {
   text-align: start;
 }
 
-table[rules] {
+table[rules]:not([rules="all"]):not([rules="none"]) {
   border-collapse: collapse;
 }
    
