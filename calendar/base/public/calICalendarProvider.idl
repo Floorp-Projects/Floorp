@@ -60,7 +60,8 @@ interface calICalendarProvider : nsISupports
   readonly attribute AUTF8String displayName;
 
   /**
-   * Create a new empty calendar
+   * Create a new empty calendar. This will typically create a new empty
+   * file, and then call getCalendar()
    *
    * @param aName      the display name of the calendar to be created
    * @param aURL       URL of the calendar to be created.
@@ -70,13 +71,21 @@ interface calICalendarProvider : nsISupports
                       in calIProviderListener aListener);
 
   /**
-   * Delete a calendar
+   * Delete a calendar. This typically deletes a file with calendar
+   * data
    * 
    * @param aCalendar   the calendar to delete
    * @param aListener   where to call the results back to
    */
   void deleteCalendar(in calICalendar aCalendar,
                       in calIProviderListener aListener);
+
+  /**
+   * Get a new calendar object with existing calendar data
+   *
+   * @param aURL       URL of the calendar to be created.
+   */
+  calICalendar getCalendar(in nsIURI aURL);
 };
 
 [scriptable, uuid(0eebe99e-a22d-11d9-87a6-000b7d081f44)]
