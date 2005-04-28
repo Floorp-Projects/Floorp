@@ -1348,7 +1348,6 @@ nsEventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
 void
 nsEventStateManager::StopTrackingDragGesture()
 {
-  mGestureDownPoint = nsPoint(0,0);
   mGestureDownContent = nsnull;
 }
 
