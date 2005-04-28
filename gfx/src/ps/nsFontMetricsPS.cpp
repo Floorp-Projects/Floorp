@@ -1068,10 +1068,6 @@ nsFontPSXft::GetWidth(const char* aString, PRUint32 aLength)
 nscoord
 nsFontPSXft::GetWidth(const PRUnichar* aString, PRUint32 aLength)
 {
-  FT_UInt glyph_index;
-  FT_Glyph glyph;
-  double origin_x = 0;
-
   // get the face/size from the FreeType cache
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
@@ -1079,15 +1075,15 @@ nsFontPSXft::GetWidth(const PRUnichar* aString, PRUint32 aLength)
     return 0;
 
   // XXX : we might need some caching here
+  double em_size = 1.0 * face->units_per_EM;
+  double x_scale = face->size->metrics.x_ppem / em_size;
+  double origin_x = 0;
   for (PRUint32 i=0; i<aLength; i++) {
-    glyph_index = FT_Get_Char_Index((FT_Face)face, aString[i]);
-    if (FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT) ||
-        FT_Get_Glyph(face->glyph, &glyph)) {
-      origin_x += FT_REG_TO_16_16(face->size->metrics.x_ppem/2 + 2);
-      continue;
-    }
-    origin_x += glyph->advance.x;
-    FT_Done_Glyph(glyph);
+    FT_UInt glyph_index = FT_Get_Char_Index((FT_Face)face, aString[i]);
+    if (FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_SCALE ))
+      origin_x += face->size->metrics.x_ppem/2 + 2;
+    else
+      origin_x += (face->glyph->advance.x) * x_scale;
   }
 
   NS_ENSURE_TRUE(mFontMetrics, 0);
@@ -1095,10 +1091,7 @@ nsFontPSXft::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   nsDeviceContextPS* dc = mFontMetrics->GetDeviceContext();
   NS_ENSURE_TRUE(dc, 0);
 
-  float dev2app;
-  dev2app = dc->DevUnitsToAppUnits();
-  origin_x *= dev2app;
-  origin_x /= FT_REG_TO_16_16(1);
+  origin_x *= dc->DevUnitsToAppUnits();
 
   return NSToCoordRound((nscoord)origin_x);
 }
