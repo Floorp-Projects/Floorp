@@ -33,29 +33,29 @@
   </tr>
   [% canseeprivate = !Param("insidergroup") || UserInGroup(Param("insidergroup")) %]
   [% FOREACH attachment = attachments %]
-        [% IF !attachment.isprivate || canseeprivate %]
-    <tr [% "class=\"bz_private\"" IF attachment.isprivate %]>
-      <td valign="top">
-        <a href="attachment.cgi?id=[% attachment.attachid %]">[% attachment.description FILTER html FILTER obsolete(attachment.isobsolete) %]</a>
-      </td>
-
-      <td valign="top">
-        [% IF attachment.ispatch %]
-          <i>patch</i>
-        [% ELSE %]
-          [% attachment.contenttype FILTER html %]
-        [% END %]
-      </td>
-
-      <td valign="top">[% attachment.date FILTER time %]</td>
-      <td valign="top">[% attachment.datasize FILTER unitconvert %]</td>
-
-      [% IF show_attachment_flags %]
+    [% IF !attachment.isprivate || canseeprivate %]
+      <tr [% "class=\"bz_private\"" IF attachment.isprivate %]>
         <td valign="top">
-          [% IF attachment.flags.size == 0 %]
-            <i>none</i>
+          <a href="attachment.cgi?id=[% attachment.attachid %]">[% attachment.description FILTER html FILTER obsolete(attachment.isobsolete) %]</a>
+        </td>
+
+        <td valign="top">
+          [% IF attachment.ispatch %]
+            <i>patch</i>
           [% ELSE %]
-            [% FOREACH flag = attachment.flags %]
+            [% attachment.contenttype FILTER html %]
+          [% END %]
+        </td>
+
+        <td valign="top">[% attachment.date FILTER time %]</td>
+        <td valign="top">[% attachment.datasize FILTER unitconvert %]</td>
+
+        [% IF show_attachment_flags %]
+          <td valign="top">
+            [% IF attachment.flags.size == 0 %]
+              <i>none</i>
+            [% ELSE %]
+              [% FOREACH flag = attachment.flags %]
                 [% IF flag.setter %]
                   [% flag.setter.nick FILTER html %]:
                 [% END %]
@@ -63,24 +63,19 @@
                 [%+ IF flag.status == "?" && flag.requestee %]
                   ([% flag.requestee.nick FILTER html %])
                 [% END %]<br>
+              [% END %]
             [% END %]
+          </td>
+        [% END %]
+
+        <td valign="top">
+          <a href="attachment.cgi?id=[% attachment.attachid %]&amp;action=edit">Edit</a>
+          [% IF attachment.ispatch && patchviewerinstalled %]
+            | <a href="attachment.cgi?id=[% attachment.attachid %]&amp;action=diff">Diff</a>
           [% END %]
         </td>
-      [% END %]
-      
-      <td valign="top">
-        [% IF attachment.canedit %]
-          <a href="attachment.cgi?id=[% attachment.attachid %]&amp;action=edit">Edit</a>
-        [% END %]
-        [% IF attachment.ispatch && patchviewerinstalled %]
-          [% IF attachment.canedit %]
-            |
-          [% END %]
-          <a href="attachment.cgi?id=[% attachment.attachid %]&amp;action=diff">Diff</a>
-        [% END %]
-      </td>
-    </tr>
-        [% END %]
+      </tr>
+    [% END %]
   [% END %]
 
   <tr>

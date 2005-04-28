@@ -64,34 +64,28 @@ sub new {
 sub query
 {
   # Retrieves and returns an array of attachment records for a given bug. 
-  # This data should be given to attachment/list.atml in an
+  # This data should be given to attachment/list.html.tmpl in an
   # "attachments" variable.
   my ($bugid) = @_;
 
   my $dbh = Bugzilla->dbh;
 
-  my $in_editbugs = UserInGroup("editbugs");
-  &::SendSQL("SELECT product_id
-           FROM bugs 
-           WHERE bug_id = $bugid");
-  my $productid = &::FetchOneColumn();
-  my $caneditproduct = &::CanEditProductId($productid);
-
   # Retrieve a list of attachments for this bug and write them into an array
   # of hashes in which each hash represents a single attachment.
-  &::SendSQL("SELECT attach_id, " .
-             $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') .
-             ", mimetype, description, ispatch, isobsolete, isprivate, 
-              submitter_id, LENGTH(thedata)
-              FROM attachments WHERE bug_id = $bugid ORDER BY attach_id
-            ");
+  my $list = $dbh->selectall_arrayref("SELECT attach_id, " .
+                                      $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') .
+                                      ", mimetype, description, ispatch,
+                                      isobsolete, isprivate, LENGTH(thedata)
+                                      FROM attachments
+                                      WHERE bug_id = ? ORDER BY attach_id",
+                                      undef, $bugid);
+
   my @attachments = ();
-  while (&::MoreSQLData()) {
+  foreach my $row (@$list) {
     my %a;
-    my $submitter_id;
-    ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, $a{'description'},
-     $a{'ispatch'}, $a{'isobsolete'}, $a{'isprivate'}, $submitter_id, 
-     $a{'datasize'}) = &::FetchSQLData();
+    ($a{'attachid'}, $a{'date'}, $a{'contenttype'},
+     $a{'description'}, $a{'ispatch'}, $a{'isobsolete'},
+     $a{'isprivate'}, $a{'datasize'}) = @$row;
 
     # Retrieve a list of flags for this attachment.
     $a{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a{'attachid'},
@@ -107,16 +101,9 @@ sub query
             close(AH);
         }
     }
-    
-    # We will display the edit link if the user can edit the attachment;
-    # ie the are the submitter, or they have canedit.
-    # Also show the link if the user is not logged in - in that cae,
-    # They'll be prompted later
-    $a{'canedit'} = ($::userid == 0 || (($submitter_id == $::userid ||
-                     $in_editbugs) && $caneditproduct));
     push @attachments, \%a;
   }
-  
+
   return \@attachments;  
 }
 

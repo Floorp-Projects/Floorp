@@ -197,13 +197,6 @@ sub validateCanEdit
 {
     my ($attach_id) = (@_);
 
-    # If the user is not logged in, claim that they can edit. This allows
-    # the edit screen to be displayed to people who aren't logged in.
-    # People not logged in can't actually commit changes, because that code
-    # calls Bugzilla->login with LOGIN_REQUIRED, not with LOGIN_NORMAL,
-    # before calling this sub
-    return unless Bugzilla->user;
-
     # People in editbugs can edit all attachments
     return if UserInGroup("editbugs");
 
@@ -1057,16 +1050,14 @@ sub insert
     || ThrowTemplateError($template->error());
 }
 
-# Edit an attachment record.  Users with "editbugs" privileges, (or the
-# original attachment's submitter) can edit the attachment's description,
-# content type, ispatch and isobsolete flags, and statuses, and they can
-# also submit a comment that appears in the bug.
-# Users cannot edit the content of the attachment itself.
+# Displays a form for editing attachment properties.
+# Any user is allowed to access this page, unless the attachment
+# is private and the user does not belong to the insider group.
+# Validations are done later when the user submits changes.
 sub edit
 {
   # Retrieve and validate parameters
   my ($attach_id) = validateID();
-  validateCanEdit($attach_id);
 
   # Retrieve the attachment from the database.
   SendSQL("SELECT description, mimetype, filename, bug_id, ispatch, isobsolete, isprivate, LENGTH(thedata)
@@ -1124,7 +1115,11 @@ sub edit
     || ThrowTemplateError($template->error());
 }
 
-# Updates an attachment record.
+# Updates an attachment record. Users with "editbugs" privileges, (or the
+# original attachment's submitter) can edit the attachment's description,
+# content type, ispatch and isobsolete flags, and statuses, and they can
+# also submit a comment that appears in the bug.
+# Users cannot edit the content of the attachment itself.
 sub update
 {
   my $dbh = Bugzilla->dbh;
