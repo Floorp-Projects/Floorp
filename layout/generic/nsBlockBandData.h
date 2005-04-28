@@ -58,7 +58,8 @@ public:
 
   // Get some available space. Note that aY is relative to the current
   // space manager translation.
-  nsresult GetAvailableSpace(nscoord aY, nsRect& aResult);
+  nsresult GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint,
+                             nsRect& aResult);
 
   // Get the raw trapezoid count for this band.
   PRInt32 GetTrapezoidCount() const {
@@ -95,7 +96,7 @@ protected:
     * They should always call this method instead so data members
     * mTrapezoid, mCount, and mSize all get managed properly.
     */
-  nsresult GetBandData(nscoord aY);
+  nsresult GetBandData(nscoord aY, PRBool aRelaxHeightConstraint);
 
   // The spacemanager we are getting space from
   nsSpaceManager* mSpaceManager;
