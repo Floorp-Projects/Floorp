@@ -312,7 +312,7 @@ static void io_wstart(void *arg)
 PRThreadPool *tp = (PRThreadPool *) arg;
 int pollfd_cnt, pollfds_used;
 int rv;
-PRCList *qp;
+PRCList *qp, *nextqp;
 PRPollDesc *pollfds;
 PRJob **polljobs;
 int poll_timeout;
@@ -365,7 +365,8 @@ PRIntervalTime now;
 		 * fill in the pollfd array
 		 */
 		PR_Lock(tp->ioq.lock);
-		for (qp = tp->ioq.list.next; qp != &tp->ioq.list; qp = qp->next) {
+		for (qp = tp->ioq.list.next; qp != &tp->ioq.list; qp = nextqp) {
+			nextqp = qp->next;
 			jobp = JOB_LINKS_PTR(qp);
 			if (jobp->cancel_io) {
 				CANCEL_IO_JOB(jobp);
@@ -489,7 +490,8 @@ PRIntervalTime now;
 		 */
 		now = PR_IntervalNow();
 		PR_Lock(tp->ioq.lock);
-		for (qp = tp->ioq.list.next; qp != &tp->ioq.list; qp = qp->next) {
+		for (qp = tp->ioq.list.next; qp != &tp->ioq.list; qp = nextqp) {
+			nextqp = qp->next;
 			jobp = JOB_LINKS_PTR(qp);
 			if (jobp->cancel_io) {
 				CANCEL_IO_JOB(jobp);
