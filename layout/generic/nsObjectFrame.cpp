@@ -819,6 +819,18 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
   viewMan->AllowDoubleBuffering(doubleBuffer);
 #endif
   
+  //this is ugly. it was ripped off from didreflow(). MMP
+  // Position and size view relative to its parent, not relative to our
+  // parent frame (our parent frame may not have a view).
+  
+  nsIView* parentWithView;
+  nsPoint origin;
+  nsRect r(0, 0, mRect.width, mRect.height);
+
+  GetOffsetFromView(origin, &parentWithView);
+  viewMan->ResizeView(view, r);
+  viewMan->MoveViewTo(view, origin.x, origin.y);
+
   if (!aViewOnly && !view->HasWidget()) {
     nsresult rv = CreateWidgetForView(view);
     if (NS_FAILED(rv)) {
@@ -841,22 +853,9 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
       }
     }
 
-    
-    //this is ugly. it was ripped off from didreflow(). MMP
-    // Position and size view relative to its parent, not relative to our
-    // parent frame (our parent frame may not have a view).
-
-    nsIView* parentWithView;
-    nsPoint origin;
-    nsRect r(0, 0, mRect.width, mRect.height);
-
-    GetOffsetFromView(origin, &parentWithView);
-    viewMan->ResizeView(view, r);
-    viewMan->MoveViewTo(view, origin.x, origin.y);
-    viewMan->SetViewVisibility(view, nsViewVisibility_kShow);
   }
 
-  SetView(view);
+  viewMan->SetViewVisibility(view, nsViewVisibility_kShow);
 
   return NS_OK;
 }

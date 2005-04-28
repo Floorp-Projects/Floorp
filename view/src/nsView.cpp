@@ -602,13 +602,12 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
 {
   nsIDeviceContext  *dx;
   nsRect            trect = mDimBounds;
-  float             scale;
 
   NS_ASSERTION(!mWindow, "We already have a window for this view? BAD");
   NS_IF_RELEASE(mWindow);
 
   mViewManager->GetDeviceContext(dx);
-  scale = dx->AppUnitsToDevUnits();
+  float scale = dx->AppUnitsToDevUnits();
 
   trect *= scale;
 
@@ -641,8 +640,10 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
           GetParent()->GetViewManager() != mViewManager)
           initData.mListenForResizes = PR_TRUE;
 
-        nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(nsnull)
+        nsPoint offset(0, 0);
+        nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(&offset)
           : nsnull;
+        trect += offset;
         if (aWidgetInitData->mWindowType == eWindowType_popup) {
           mWindow->Create(parentWidget->GetNativeData(NS_NATIVE_WIDGET), trect,
                           ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
