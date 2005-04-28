@@ -817,18 +817,19 @@ nsHttpTransaction::HandleContent(char *buf,
         // allowances for a possibly invalid Content-Length header. Thus, if
         // NOT persistent, we simply accept everything in |buf|.
         if (mConnection->IsPersistent()) {
-            *contentRead = mContentLength - mContentRead;
-            *contentRead = PR_MIN(count, *contentRead);
+            nsInt64 remaining = mContentLength - mContentRead;
+            *contentRead = PR_MIN(nsInt64(count), remaining);
+            *contentRemaining = count - *contentRead;
         }
         else {
             *contentRead = count;
             // mContentLength might need to be increased...
-            if (nsInt64(*contentRead) + mContentRead > mContentLength) {
-                mContentLength = nsInt64(*contentRead) + mContentRead;
+            nsInt64 position = mContentRead + nsInt64(count);
+            if (position > mContentLength) {
+                mContentLength = position;
                 //mResponseHead->SetContentLength(mContentLength);
             }
         }
-        *contentRemaining = (count - *contentRead);
     }
     else {
         // when we are just waiting for the server to close the connection...
