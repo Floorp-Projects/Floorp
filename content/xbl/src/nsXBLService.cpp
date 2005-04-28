@@ -426,17 +426,6 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
       nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
       req->DocumentLoaded(mBindingDocument);
     }
-
-    // All reqs normally have the same binding doc.  Force a synchronous
-    // reflow on this binding doc to deal with the fact that iframes
-    // don't construct or load their subdocs until they get a reflow.
-    // XXXbz this is still needed for <xul:iframe>.  We need to fix that.
-    if (count > 0) {
-      nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(0);
-      nsIDocument* document = req->mBoundElement->GetCurrentDoc();
-      if (document)
-        document->FlushPendingNotifications(Flush_Layout);
-    }
   }
   
   for (i = 0; i < count; i++) {

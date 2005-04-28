@@ -2150,12 +2150,6 @@ nsXULDocument::StartLayout(void)
 
         shell->InitialReflow(r.width, r.height);
 
-        // This is done because iframes don't load their subdocs until
-        // they get reflowed.  If we reflow asynchronously, our onload
-        // will fire too early. -- hyatt
-        // XXXbz this is still needed for <xul:iframe>.  We need to fix that.
-        FlushPendingNotifications(Flush_Layout);
-
         // Start observing the document _after_ we do the initial
         // reflow. Otherwise, we'll get into an trouble trying to
         // create kids before the root frame is established.
