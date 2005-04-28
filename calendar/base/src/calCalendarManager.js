@@ -262,6 +262,7 @@ calCalendarManager.prototype = {
 
         var pp = this.mDeletePref.params;
         pp.calendar = calendarID;
+        pp.name = name;
         this.mDeletePref.step();
         this.mDeletePref.reset();
 
