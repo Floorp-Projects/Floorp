@@ -913,14 +913,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   return rv;
 }
 
-void
-nsHTMLDocument::StopDocumentLoad()
-{
-  if (mParser) {
-    mParser->Terminate();
-  }
-}
-
 // static
 void
 nsHTMLDocument::DocumentWriteTerminationFunc(nsISupports *aRef)
@@ -987,7 +979,6 @@ nsHTMLDocument::EndLoad()
     }
   }
 
-  mParser = nsnull;
   nsDocument::EndLoad();
 }
 

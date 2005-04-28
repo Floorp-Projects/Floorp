@@ -51,6 +51,7 @@
 class nsIParser;
 class nsIDOMNode;
 class nsIURI;
+class nsIChannel;
 
 class nsXMLDocument : public nsDocument,
                       public nsIInterfaceRequestor,
@@ -63,6 +64,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+  virtual void ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup);
 
   virtual nsresult StartDocumentLoad(const char* aCommand, nsIChannel* channel,
                                      nsILoadGroup* aLoadGroup,
@@ -99,6 +101,13 @@ protected:
   nsCOMPtr<nsIEventQueueService> mEventQService;
 
   nsCOMPtr<nsIScriptContext> mScriptContext;
+
+  // mPendingChannel is the channel that we're currently asynchronously loading
+  // (via document.load() or normal load).  It's set when we first find out
+  // about the channel (at the end of StartDocumentLoad) and cleared in EndLoad
+  // or if ResetToURI() is called.  In the latter case it's also cancelled.
+  nsCOMPtr<nsIChannel> mPendingChannel;
+  
   PRPackedBool mCrossSiteAccessEnabled;
   PRPackedBool mLoadedAsData;
   PRPackedBool mLoadedAsInteractiveData;

@@ -228,6 +228,18 @@ nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   mScriptContext = nsnull;
 }
 
+void
+nsXMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
+{
+  if (mPendingChannel) {
+    StopDocumentLoad();
+    mPendingChannel->Cancel(NS_BINDING_ABORTED);
+    mPendingChannel = nsnull;
+  }
+  
+  nsDocument::ResetToURI(aURI, aLoadGroup);
+}
+
 /////////////////////////////////////////////////////
 // nsIInterfaceRequestor methods:
 //
@@ -499,9 +511,13 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
     return rv;
   }
 
+  // After this point, if we error out of this method we should clear
+  // mPendingChannel.
+
   // Start an asynchronous read of the XML document
   rv = channel->AsyncOpen(listener, nsnull);
   if (NS_FAILED(rv)) {
+    mPendingChannel = nsnull;
     if (modalEventQueue) {
       mEventQService->PopThreadEventQueue(modalEventQueue);
     }
@@ -581,7 +597,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
   static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
-  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
+  mParser = do_CreateInstance(kCParserCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIXMLContentSink> sink;
@@ -601,14 +617,16 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   // Set the parser as the stream listener for the document loader...
-  rv = CallQueryInterface(parser, aDocListener);
+  rv = CallQueryInterface(mParser, aDocListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mPendingChannel = aChannel;
+
   SetDocumentCharacterSet(charset);
-  parser->SetDocumentCharset(charset, charsetSource);
-  parser->SetCommand(aCommand);
-  parser->SetContentSink(sink);
-  parser->Parse(aUrl, nsnull, PR_FALSE, (void *)this);
+  mParser->SetDocumentCharset(charset, charsetSource);
+  mParser->SetCommand(aCommand);
+  mParser->SetContentSink(sink);
+  mParser->Parse(aUrl, nsnull, PR_FALSE, (void *)this);
 
   return NS_OK;
 }
@@ -616,6 +634,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 void
 nsXMLDocument::EndLoad()
 {
+  mPendingChannel = nsnull;
   mLoopingForSyncLoad = PR_FALSE;
 
   if (mLoadedAsData || mLoadedAsInteractiveData) {
