@@ -168,8 +168,10 @@
 #define NS_CALLBACK_(_type, _name) _type (__stdcall * _name)
 #define NS_STDCALL __stdcall
 
-// These are needed to mark static members in exported classes, due to
-// gcc bug XXX insert bug# here.
+/*
+  These are needed to mark static members in exported classes, due to
+  gcc bug XXX insert bug# here.
+ */
 
 #define NS_EXPORT_STATIC_MEMBER_(type) type
 #define NS_IMPORT_STATIC_MEMBER_(type) type
