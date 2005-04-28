@@ -204,7 +204,9 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
       nsCOMPtr<nsIDOMElement> repElem;
       doc->GetElementById(*(indexesUsed[i]), getter_AddRefs(repElem));
       nsCOMPtr<nsIXFormsRepeatElement> rep(do_QueryInterface(repElem));
-      NS_ENSURE_STATE(rep);
+      if (!rep)
+        continue;
+
       rv = rep->AddIndexUser(this);
       if (NS_FAILED(rv)) {
         return rv;

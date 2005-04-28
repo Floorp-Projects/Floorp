@@ -457,39 +457,43 @@ nsXFormsModelElement::Rebuild()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // 2. Re-attach all elements
+  if (mDocumentLoaded) { // if it's not during initializing phase
+    // Copy the form control list as it stands right now.
+    nsVoidArray *oldFormList = new nsVoidArray();
+    NS_ENSURE_TRUE(oldFormList, NS_ERROR_OUT_OF_MEMORY);
+    *oldFormList = mFormControls;
+  
+    // Clear out mFormControls so that we can rebuild the list.  We'll go control 
+    // by control over the old list and rebind the controls.
+    mFormControls.Clear(); // if this happens on a documentchange
 
-  // Copy the form control list as it stands right now.
-  nsVoidArray *oldFormList = new nsVoidArray();
-  *oldFormList = mFormControls;
+    PRInt32 controlCount = oldFormList->Count();
+    for (PRInt32 i = 0; i < controlCount; ++i) {
+      nsIXFormsControl* control = NS_STATIC_CAST(nsIXFormsControl*, 
+                                                 (*oldFormList)[i]);
+      /// @todo If a control is removed because of previous control has been
+      /// refreshed, we do, obviously, not need to refresh it. So mFormControls
+      /// should have weak bindings to the controls I guess? (XXX)
+      ///
+      /// This could happen for \<repeatitem\>s for example.
+      if (!control) {
+        continue;
+      }
 
-  // Clear out mFormControls so that we can rebuild the list.  We'll go control 
-  // by control over the old list and rebind the controls.
-  mFormControls.Clear();
-
-  PRInt32 controlCount = oldFormList->Count();
-  for (PRInt32 i = 0; i < controlCount; ++i) {
-    nsIXFormsControl* control = NS_STATIC_CAST(nsIXFormsControl*, 
-                                               (*oldFormList)[i]);
-    /// @todo If a control is removed because of previous control has been
-    /// refreshed, we do, obviously, not need to refresh it. So mFormControls
-    /// should have weak bindings to the controls I guess? (XXX)
-    ///
-    /// This could happen for \<repeatitem\>s for example.
-    if (!control) {
-      continue;
+      // run bind to reset mBoundNode for all of these controls and also, in the
+      // process, they will be added to the model that they should be bound to.
+      control->Bind();
     }
+    
+    delete oldFormList;
 
-    // run bind to reset mBoundNode for all of these controls and also, in the
-    // process, they will be added to the model that they should be bound to.
-    control->Bind();
+    // Triggers a refresh of all controls
+    mNeedsRefresh = PR_TRUE;
   }
 
   // 3. Rebuild graph
   rv = ProcessBindElements();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Triggers a refresh of all controls
-  mNeedsRefresh = PR_TRUE;
 
   return mMDG.Rebuild();
 }
@@ -563,108 +567,112 @@ nsXFormsModelElement::Revalidate()
   // Revalidate nodes
   mMDG.Revalidate(&mChangedNodes);
 
-  // Iterate over all form controls
-  PRInt32 controlCount = mFormControls.Count();
-  for (PRInt32 i = 0; i < controlCount; ++i) {
-    nsIXFormsControl* control = NS_STATIC_CAST(nsIXFormsControl*, mFormControls[i]);
-    /// @todo If a control is removed because of previous control has been
-    /// refreshed, we do, obviously, not need to refresh it. So mFormControls
-    /// should have weak bindings to the controls I guess? (XXX)
-    ///
-    /// This could happen for \<repeatitem\>s for example.
-    if (!control) {
-      continue;
-    }
+  // Iterate over all form controls if not during initialization phase (then
+  // this is handled in InitializeControls())
+  if (mDocumentLoaded) {
+    PRInt32 controlCount = mFormControls.Count();
+    for (PRInt32 i = 0; i < controlCount; ++i) {
+      nsIXFormsControl* control = NS_STATIC_CAST(nsIXFormsControl*, mFormControls[i]);
+      /// @todo If a control is removed because of previous control has been
+      /// refreshed, we do, obviously, not need to refresh it. So mFormControls
+      /// should have weak bindings to the controls I guess? (XXX)
+      ///
+      /// This could happen for \<repeatitem\>s for example.
+      if (!control) {
+        continue;
+      }
 
-    // Get bound node
-    nsCOMPtr<nsIDOMNode> boundNode;
-    control->GetBoundNode(getter_AddRefs(boundNode));
+      // Get bound node
+      nsCOMPtr<nsIDOMNode> boundNode;
+      control->GetBoundNode(getter_AddRefs(boundNode));
 
-    PRBool rebind = PR_FALSE;
-    PRBool refresh = PR_FALSE;
+      PRBool rebind = PR_FALSE;
+      PRBool refresh = PR_FALSE;
 
-    if (mNeedsRefresh) {
-      refresh = PR_TRUE;
-    } else {
-      // Get dependencies
-      nsCOMArray<nsIDOMNode> *deps = nsnull;
-      control->GetDependencies(&deps);    
+      if (mNeedsRefresh) {
+        refresh = PR_TRUE;
+      } else {
+        // Get dependencies
+        nsCOMArray<nsIDOMNode> *deps = nsnull;
+        control->GetDependencies(&deps);    
 
 #ifdef DEBUG_MODEL
-      PRUint32 depCount = deps ? deps->Count() : 0;
-      nsCOMPtr<nsIDOMElement> controlElement;
-      control->GetElement(getter_AddRefs(controlElement));
-      if (controlElement) {
-        printf("Checking control: ");      
-        //DBG_TAGINFO(controlElement);
-        nsAutoString boundName;
-        if (boundNode)
-          boundNode->GetNodeName(boundName);
-        printf("\tDependencies: %d, Bound to: '%s' [%p]\n",
-               depCount,
-               NS_ConvertUCS2toUTF8(boundName).get(),
-               (void*) boundNode);
+        PRUint32 depCount = deps ? deps->Count() : 0;
+        nsCOMPtr<nsIDOMElement> controlElement;
+        control->GetElement(getter_AddRefs(controlElement));
+        if (controlElement) {
+          printf("Checking control: ");      
+          //DBG_TAGINFO(controlElement);
+          nsAutoString boundName;
+          if (boundNode)
+            boundNode->GetNodeName(boundName);
+          printf("\tDependencies: %d, Bound to: '%s' [%p]\n",
+                 depCount,
+                 NS_ConvertUCS2toUTF8(boundName).get(),
+                 (void*) boundNode);
 
-        nsAutoString depNodeName;
-        for (PRUint32 t = 0; t < depCount; ++t) {
-          nsCOMPtr<nsIDOMNode> tmpdep = deps->ObjectAt(t);
-          if (tmpdep) {
-            tmpdep->GetNodeName(depNodeName);
-            printf("\t\t%s [%p]\n",
-                   NS_ConvertUCS2toUTF8(depNodeName).get(),
-                   (void*) tmpdep);
+          nsAutoString depNodeName;
+          for (PRUint32 t = 0; t < depCount; ++t) {
+            nsCOMPtr<nsIDOMNode> tmpdep = deps->ObjectAt(t);
+            if (tmpdep) {
+              tmpdep->GetNodeName(depNodeName);
+              printf("\t\t%s [%p]\n",
+                     NS_ConvertUCS2toUTF8(depNodeName).get(),
+                     (void*) tmpdep);
+            }
           }
         }
-      }
 #endif
 
-      nsCOMPtr<nsIDOM3Node> curChanged;
+        nsCOMPtr<nsIDOM3Node> curChanged;
 
-      for (PRInt32 j = 0; j < mChangedNodes.Count(); ++j) {
-        curChanged = do_QueryInterface(mChangedNodes[j]);
+        for (PRInt32 j = 0; j < mChangedNodes.Count(); ++j) {
+          curChanged = do_QueryInterface(mChangedNodes[j]);
 
-        // Check whether the bound node is dirty. If so, we need to refresh the
-        // control (get updated node value from the bound node)
-        if (!refresh && boundNode) {
-          curChanged->IsSameNode(boundNode, &refresh);
+          // Check whether the bound node is dirty. If so, we need to refresh the
+          // control (get updated node value from the bound node)
+          if (!refresh && boundNode) {
+            curChanged->IsSameNode(boundNode, &refresh);
         
-          if (refresh)
-            // We need to refresh the control. We cannot break out of the loop
-            // as we need to check dependencies
-            continue;
-        }
+            if (refresh)
+              // We need to refresh the control. We cannot break out of the loop
+              // as we need to check dependencies
+              continue;
+          }
 
-        // Check whether any dependencies are dirty. If so, we need to rebind
-        // the control (re-evaluate it's binding expression)
-        for (PRInt32 k = 0; k < deps->Count(); ++k) {
-          /// @note beaufour: I'm not to happy about this ...
-          /// O(mChangedNodes.Count() * deps->Count()), but using the pointers
-          /// for sorting and comparing does not work...
-          curChanged->IsSameNode(deps->ObjectAt(k), &rebind);
-          if (rebind)
-            // We need to rebind the control, no need to check any more
-            break;
+          // Check whether any dependencies are dirty. If so, we need to rebind
+          // the control (re-evaluate it's binding expression)
+          for (PRInt32 k = 0; k < deps->Count(); ++k) {
+            /// @note beaufour: I'm not to happy about this ...
+            /// O(mChangedNodes.Count() * deps->Count()), but using the pointers
+            /// for sorting and comparing does not work...
+            curChanged->IsSameNode(deps->ObjectAt(k), &rebind);
+            if (rebind)
+              // We need to rebind the control, no need to check any more
+              break;
+          }
         }
-      }
 #ifdef DEBUG_MODEL
-      printf("\trebind: %d, refresh: %d\n", rebind, refresh);    
+        printf("\trebind: %d, refresh: %d\n", rebind, refresh);    
 #endif    
+      }
+
+      if (rebind) {
+        control->Bind();
+        control->GetBoundNode(getter_AddRefs(boundNode));
+      }
+      if (rebind || refresh) {
+        DispatchEvents(control, boundNode);
+        if (mControlsNeedingRefresh.IndexOf(control) == -1)
+          mControlsNeedingRefresh.AppendElement(control);
+      }
     }
 
-    if (rebind) {
-      control->Bind();
-      control->GetBoundNode(getter_AddRefs(boundNode));
-    }
-    if (rebind || refresh) {
-      DispatchEvents(control, boundNode);
-      if (mControlsNeedingRefresh.IndexOf(control) == -1)
-        mControlsNeedingRefresh.AppendElement(control);
-    }
+    mChangedNodes.Clear();
+    mNeedsRefresh = PR_FALSE;
   }
-
-  mChangedNodes.Clear();
+  
   mMDG.ClearDispatchFlags();
-  mNeedsRefresh = PR_FALSE;
 
   return NS_OK;
 }
@@ -676,15 +684,17 @@ nsXFormsModelElement::Refresh()
   printf("nsXFormsModelElement::Refresh()\n");
 #endif
 
-  PRInt32 controlCount = mControlsNeedingRefresh.Count();
-  for (PRInt32 i = 0; i < controlCount; ++i) {
-    nsIXFormsControl* control = NS_STATIC_CAST(nsIXFormsControl*,
-                                               mControlsNeedingRefresh[i]);
-    if (control)
-      control->Refresh();
-  }
+  if (mDocumentLoaded) { // if not during initialization phase
+    PRInt32 controlCount = mControlsNeedingRefresh.Count();
+    for (PRInt32 i = 0; i < controlCount; ++i) {
+      nsIXFormsControl* control = NS_STATIC_CAST(nsIXFormsControl*,
+                                                 mControlsNeedingRefresh[i]);
+      if (control)
+        control->Refresh();
+    }
 
-  mControlsNeedingRefresh.Clear();
+    mControlsNeedingRefresh.Clear();
+  }
 
   return NS_OK;
 }
@@ -1181,7 +1191,10 @@ nsXFormsModelElement::InitializeControls()
                                                mFormControls[i]);
     if (!control)
       continue;
-    
+
+    // Rebind
+    control->Bind();
+
     // Get bound node
     nsCOMPtr<nsIDOMNode> boundNode;
     control->GetBoundNode(getter_AddRefs(boundNode));

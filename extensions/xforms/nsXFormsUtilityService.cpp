@@ -232,7 +232,8 @@ nsXFormsUtilityService::GetRepeatIndex(nsIDOMNode *aRepeat, PRUint32 *aIndex)
   *aIndex = 0;
 
   nsCOMPtr<nsIXFormsRepeatElement> repeatEle = do_QueryInterface(aRepeat);
-  NS_ENSURE_TRUE(repeatEle, NS_ERROR_NULL_POINTER);
 
-  return repeatEle->GetIndex(aIndex);
+  /// 
+  /// @bug This should somehow end up in a NaN per the XForms 1.0 Errata (XXX)
+  return repeatEle ? repeatEle->GetIndex(aIndex) : NS_OK;
 }
