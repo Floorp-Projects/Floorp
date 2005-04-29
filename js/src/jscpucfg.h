@@ -87,13 +87,13 @@
 #define JS_BYTES_PER_DWORD_LOG2  3L
 #define PR_WORDS_PER_DWORD_LOG2  1L
 
-#elif defined(XP_WIN) || defined(XP_OS2)
+#elif defined(XP_WIN) || defined(XP_OS2) || defined(WINCE)
 
 #ifdef __WATCOMC__
 #define HAVE_VA_LIST_AS_ARRAY
 #endif
 
-#if defined( _WIN32) || defined(XP_OS2)
+#if defined(_WIN32) || defined(XP_OS2) || defined(WINCE)
 #define IS_LITTLE_ENDIAN 1
 #undef  IS_BIG_ENDIAN
 
@@ -137,7 +137,7 @@
 #define JS_BYTES_PER_WORD_LOG2   2L
 #define JS_BYTES_PER_DWORD_LOG2  3L
 #define PR_WORDS_PER_DWORD_LOG2  1L
-#endif /* _WIN32 || XP_OS2 */
+#endif /* _WIN32 || XP_OS2 || WINCE*/
 
 #if defined(_WINDOWS) && !defined(_WIN32) /* WIN16 */
 #define IS_LITTLE_ENDIAN 1

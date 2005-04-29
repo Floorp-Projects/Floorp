@@ -119,7 +119,7 @@
 #define __P(p)  ()
 #endif
 
-#if defined _WIN32 || defined SUNOS4
+#if (defined _WIN32 && !defined WINCE) || defined SUNOS4
 
 #define fd_acos acos
 #define fd_asin asin

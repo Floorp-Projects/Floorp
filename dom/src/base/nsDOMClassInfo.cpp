@@ -139,7 +139,9 @@
 #include "nsIJVMManager.h"
 
 // Oh, did I mention that I hate Microsoft for doing this to me?
+#ifndef WINCE
 #undef GetClassName
+#endif
 
 #include "nsILiveConnectManager.h"
 #include "nsIJVMPluginInstance.h"

@@ -48,7 +48,9 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = windowwatcher appstartup find webbrowserpersist commandhandler ui jsconsole
 
 ifdef MOZ_XUL
+ifndef WINCE
 DIRS += printingui
+endif
 endif
 
 ifdef MOZ_PROFILESHARING

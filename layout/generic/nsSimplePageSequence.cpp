@@ -461,7 +461,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     // Create current Date/Time String
     if (!mDateFormatter)
       mDateFormatter = do_CreateInstance(kDateTimeFormatCID);
-
+#ifndef WINCE
     NS_ENSURE_TRUE(mDateFormatter, NS_ERROR_FAILURE);
 
     nsAutoString formattedDateString;
@@ -475,7 +475,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
       PRUnichar * uStr = ToNewUnicode(formattedDateString);
       SetDateTimeStr(uStr); // memory will be freed
     }
-
+#endif
   }
 
   // Return our desired size
