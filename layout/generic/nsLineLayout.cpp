@@ -1577,10 +1577,7 @@ nsLineLayout::IsPercentageAwareReplacedElement(nsPresContext *aPresContext,
         return PR_TRUE;
       }
 
-      const nsStyleBorder* border = aFrame->GetStyleBorder();
-      if (IsPercentageUnitSides(&border->mBorder)) {
-        return PR_TRUE;
-      }
+      // Borders aren't percentage aware
 
       const nsStylePosition* pos = aFrame->GetStylePosition();
       if (eStyleUnit_Percent == pos->mWidth.GetUnit()

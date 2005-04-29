@@ -2818,9 +2818,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     if (aColor.mBackgroundClip != NS_STYLE_BG_CLIP_BORDER) {
       NS_ASSERTION(aColor.mBackgroundClip == NS_STYLE_BG_CLIP_PADDING,
                    "unknown background-clip value");
-      nsMargin border;
-      aBorder.GetBorder(border);
-      bgClipArea.Deflate(border);
+      bgClipArea.Deflate(aBorder.GetBorder());
     }
   }
 
@@ -2895,12 +2893,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // Background images are tiled over the 'background-clip' area
   // but the origin of the tiling is based on the 'background-origin' area
   if (aColor.mBackgroundOrigin != NS_STYLE_BG_ORIGIN_BORDER) {
-    nsMargin border;
-    if (!aBorder.GetBorder(border)) {
-      NS_NOTYETIMPLEMENTED("percentage border");
-    }
-
-    bgOriginArea.Deflate(border);
+    bgOriginArea.Deflate(aBorder.GetBorder());
     if (aColor.mBackgroundOrigin != NS_STYLE_BG_ORIGIN_PADDING) {
       nsMargin padding;
       // XXX CalcPaddingFor is deprecated, but we need it for percentage padding
@@ -3035,9 +3028,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
 
         // Take the border out of the frame's rect
         const nsStyleBorder* borderStyle = firstRootElementFrame->GetStyleBorder();
-        nsMargin border;
-        borderStyle->GetBorder(border);
-        firstRootElementFrameArea.Deflate(border);
+        firstRootElementFrameArea.Deflate(borderStyle->GetBorder());
 
         // Get the anchor point
         ComputeBackgroundAnchorPoint(aColor, firstRootElementFrameArea, bgClipArea, tileWidth, tileHeight, anchor);
@@ -3271,9 +3262,7 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
     // to show the parent's background-color instead of its background-color.
     // This seems wrong, but we handle that here by explictly clipping the
     // background to the padding area.
-    nsMargin border;
-    aBorder.GetBorder(border);
-    bgClipArea.Deflate(border);
+    bgClipArea.Deflate(aBorder.GetBorder());
   }
 
   nscolor color = aColor.mBackgroundColor;
@@ -3324,16 +3313,9 @@ nsCSSRendering::PaintRoundedBackground(nsPresContext* aPresContext,
 
     // Get the radius to the outer edge of the padding.
     // -moz-border-radius is the radius to the outer edge of the border.
-    nsMargin border;
-    aBorder.GetBorder(border);
-    aTheRadius[NS_SIDE_TOP]    -= border.top;
-    aTheRadius[NS_SIDE_RIGHT]  -= border.right;
-    aTheRadius[NS_SIDE_BOTTOM] -= border.bottom;
-    aTheRadius[NS_SIDE_LEFT]   -= border.left;
-    for (PRUint8 i = 0; i < 4; ++i) {
-      if (aTheRadius[i] < 0) {
-        aTheRadius[i] = 0;
-      }
+    NS_FOR_CSS_SIDES(side) {
+      aTheRadius[side] -= aBorder.GetBorderWidth(side);
+      aTheRadius[side] = PR_MAX(aTheRadius[side], 0);
     }
   }
 

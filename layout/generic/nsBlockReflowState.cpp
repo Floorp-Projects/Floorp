@@ -258,9 +258,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
             styleMargin->GetMargin(m); // XXX percentage margins
             if (NS_STYLE_FLOAT_EDGE_PADDING == borderStyle->mFloatEdge) {
               // Add in border too
-              nsMargin b;
-              borderStyle->GetBorder(b);
-              m += b;
+              m += borderStyle->GetBorder();
             }
 
             // determine left edge

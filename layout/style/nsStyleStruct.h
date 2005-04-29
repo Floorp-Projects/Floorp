@@ -342,14 +342,11 @@ struct nsStyleBorder: public nsStyleStruct {
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
   void Destroy(nsPresContext* aContext);
 
-  PRBool IsBorderSideVisible(PRUint8 aSide) const;
-  void RecalcData(nsPresContext* aContext);
   nsChangeHint CalcDifference(const nsStyleBorder& aOther) const;
 #ifdef DEBUG
   static nsChangeHint MaxDifference();
 #endif
  
-  nsStyleSides  mBorder;          // [reset] length, enum (see nsStyleConsts.h)
   nsStyleSides  mBorderRadius;    // [reset] length, percent, inherit
   PRUint8       mFloatEdge;       // [reset] see nsStyleConsts.h
   nsBorderColors** mBorderColors; // [reset] multiple levels of color for a border.
@@ -370,13 +367,36 @@ struct nsStyleBorder: public nsStyleStruct {
     }
   }
 
-  PRBool GetBorder(nsMargin& aBorder) const
+  // Return whether aStyle is a visible style.  Invisible styles cause
+  // the relevant computed border width to be 0.
+  static PRBool IsVisibleStyle(PRUint8 aStyle) {
+    return aStyle != NS_STYLE_BORDER_STYLE_NONE &&
+           aStyle != NS_STYLE_BORDER_STYLE_HIDDEN;
+  }
+
+  // aBorderWidth is in twips
+  void SetBorderWidth(PRUint8 aSide, nscoord aBorderWidth)
   {
-    if (mHasCachedBorder) {
-      aBorder = mCachedBorder;
-      return PR_TRUE;
+    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
+    mBorder.side(aSide) = aBorderWidth;
+    if (IsVisibleStyle(GetBorderStyle(aSide))) {
+      mComputedBorder.side(aSide) = aBorderWidth;
     }
-    return PR_FALSE;
+  }
+
+  // Get the computed border, in twips.
+  const nsMargin& GetBorder() const
+  {
+    return mComputedBorder;
+  }
+
+  // Get the computed border width for a particular side, in twips.  Note that
+  // this is zero if and only if there is no border to be painted for this
+  // side.  That is, this value takes into account the border style.
+  nscoord GetBorderWidth(PRUint8 aSide) const
+  {
+    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
+    return mComputedBorder.side(aSide);
   }
 
   PRUint8 GetBorderStyle(PRUint8 aSide) const
@@ -390,7 +410,11 @@ struct nsStyleBorder: public nsStyleStruct {
     NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
     mBorderStyle[aSide] &= ~BORDER_STYLE_MASK; 
     mBorderStyle[aSide] |= (aStyle & BORDER_STYLE_MASK);
-
+    if (IsVisibleStyle(aStyle)) {
+      mComputedBorder.side(aSide) = mBorder.side(aSide);
+    } else {
+      mComputedBorder.side(aSide) = 0;
+    }
   }
 
   void GetBorderColor(PRUint8 aSide, nscolor& aColor,
@@ -451,12 +475,31 @@ struct nsStyleBorder: public nsStyleStruct {
   }
 
   // XXX these are deprecated methods
-  void CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const;
-  void CalcBorderFor(const nsIFrame* aFrame, PRUint8 aSide, nscoord& aWidth) const;
+  void CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const
+  {
+    aBorder = GetBorder();
+  }
+  void CalcBorderFor(const nsIFrame* aFrame, PRUint8 aSide,
+                     nscoord& aWidth) const {
+    aWidth = GetBorderWidth(aSide);
+  }
   
 protected:
-  PRPackedBool  mHasCachedBorder;
-  nsMargin      mCachedBorder;
+  // mComputedBorder holds the CSS2.1 computed border-width values.  In
+  // particular, these widths take into account the border-style for the
+  // relevant side.
+  nsMargin      mComputedBorder;
+
+  // mBorder holds the nscoord values for the border widths as they would be if
+  // all the border-style values were visible (not hidden or none).  This
+  // member exists solely so that when we create structs using the copy
+  // constructor during style resolution the new structs will know what the
+  // specified values of the border were in case they have more specific rules
+  // setting the border style.  Note that this isn't quite the CSS specified
+  // value, since this has had the enumerated border widths converted to
+  // lengths, and all lengths converted to twips.  But it's not quite the
+  // computed value either; mComputedBorder is that.
+  nsMargin      mBorder;
 
   PRUint8       mBorderStyle[4];  // [reset] See nsStyleConsts.h
   nscolor       mBorderColor[4];  // [reset] the colors to use for a simple border.  not used

@@ -40,6 +40,12 @@
 
 #include "nscore.h"
 
+// Side constants for use in various places
+#define NS_SIDE_TOP     0
+#define NS_SIDE_RIGHT   1
+#define NS_SIDE_BOTTOM  2
+#define NS_SIDE_LEFT    3
+
 #ifdef _IMPL_NS_GFX
 #define NS_GFX NS_EXPORT
 #define NS_GFX_(type) NS_EXPORT_(type)

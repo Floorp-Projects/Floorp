@@ -96,13 +96,10 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsPresContext*   aPresContext,
       // The document element's background should cover the entire canvas, so
       // take into account the combined area and any space taken up by
       // absolutely positioned elements
-      nsMargin      border(0,0,0,0);
-      nsMargin      padding(0,0,0,0);
+      nsMargin padding(0,0,0,0);
 
-      // Ignore the return values for these
-      // Typically they are zero and if they fail 
-      // we should keep going anyway, there impact is small
-      kidReflowState.mStyleBorder->GetBorder(border);
+      // XXXbz this screws up percentage padding (sets padding to zero
+      // in the percentage padding case)
       kidReflowState.mStylePadding->GetPadding(padding);
 
       // First check the combined area
@@ -110,7 +107,10 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsPresContext*   aPresContext,
         // The background covers the content area and padding area, so check
         // for children sticking outside the child frame's padding edge
         if (aDesiredSize.mOverflowArea.XMost() > aDesiredSize.width) {
-          mPD->mPageContentXMost =  aDesiredSize.mOverflowArea.XMost() + border.right + padding.right;
+          mPD->mPageContentXMost =
+            aDesiredSize.mOverflowArea.XMost() +
+            kidReflowState.mStyleBorder->GetBorderWidth(NS_SIDE_RIGHT) +
+            padding.right;
         }
       }
 

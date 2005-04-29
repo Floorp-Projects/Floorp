@@ -212,16 +212,10 @@ TableBackgroundPainter::TableBackgroundData::SetBCBorder(nsMargin& aBorder,
     if (!mSynthBorder) return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsStyleCoord coord(aBorder.top);
-  mSynthBorder->mBorder.SetTop(coord);
-  coord.SetCoordValue(aBorder.right);
-  mSynthBorder->mBorder.SetRight(coord);
-  coord.SetCoordValue(aBorder.bottom);
-  mSynthBorder->mBorder.SetBottom(coord);
-  coord.SetCoordValue(aBorder.left);
-  mSynthBorder->mBorder.SetLeft(coord);
-  mSynthBorder->RecalcData(aPainter->mPresContext);
-
+  NS_FOR_CSS_SIDES(side) {
+    mSynthBorder->SetBorderWidth(side, aBorder.side(side));
+  }
+  
   mBorder = mSynthBorder;
   return NS_OK;
 }
@@ -240,16 +234,10 @@ TableBackgroundPainter::TableBackgroundPainter(nsTableFrame*        aTableFrame,
 {
   MOZ_COUNT_CTOR(TableBackgroundPainter);
 
-  mZeroBorder.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_SOLID);
-  mZeroBorder.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_SOLID);
-  mZeroBorder.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_SOLID);
-  mZeroBorder.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_SOLID);
-  nsStyleCoord coord(0);
-  mZeroBorder.mBorder.SetTop(coord);
-  mZeroBorder.mBorder.SetRight(coord);
-  mZeroBorder.mBorder.SetBottom(coord);
-  mZeroBorder.mBorder.SetLeft(coord);
-  mZeroBorder.RecalcData(aPresContext);
+  NS_FOR_CSS_SIDES(side) {
+    mZeroBorder.SetBorderStyle(side, NS_STYLE_BORDER_STYLE_SOLID);
+    mZeroBorder.SetBorderWidth(side, 0);
+  }
 
   mZeroPadding.RecalcData();
 
