@@ -103,6 +103,19 @@ MOZCE_SHUNT_API int mozce_isatty(int inHandle)
     return retval;
 }
 
+MOZCE_SHUNT_API int mozce_fileno(FILE* file)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_fileno called\n");
+#endif
+    
+	// Windows SDK is broken.  _fileno should return an int, but for whatever god forsaken reason, CE returns void*.
+
+    return (int) _fileno(file);
+}
+
 
 #if 0
 {

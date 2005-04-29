@@ -97,6 +97,17 @@
 #endif
 #define isatty		mozce_isatty
 
+
+#ifdef fileno
+#undef fileno
+#endif
+#define fileno		mozce_fileno
+
+#ifdef _fileno
+#undef _fileno
+#endif
+#define _fileno		mozce_fileno
+
 // math.cpp
 /*
   #define fd_acos acos
@@ -1182,6 +1193,7 @@ extern "C" {
   // From io.cpp
   MOZCE_SHUNT_API int mozce_chmod(const char* inFilename, int inMode);
   MOZCE_SHUNT_API int mozce_isatty(int inHandle);
+  MOZCE_SHUNT_API int mozce_fileno(FILE* inHandle);
   
   // From mbstring.cpp
   MOZCE_SHUNT_API unsigned char* mozce_mbsinc(const unsigned char* inCurrent);
