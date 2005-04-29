@@ -269,6 +269,8 @@ calDateTime::SetTimeInTimezone(PRTime aTime, const char *aTimezone)
     }
     FromIcalTime(&icalt);
 
+    mValid = PR_TRUE;
+
     return NS_OK;
 }
 
