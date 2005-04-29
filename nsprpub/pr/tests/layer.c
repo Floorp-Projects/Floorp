@@ -46,6 +46,7 @@
 #include "prwin16.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 /*
 ** Testing layering of I/O

@@ -59,6 +59,7 @@
 #include "nspr.h"
 #include "plgetopt.h"
 #include <stdio.h>
+#include <string.h>
 
 #ifdef XP_MAC
 #define printf PR_LogPrint

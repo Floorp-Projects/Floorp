@@ -49,6 +49,7 @@
 #include "prinrval.h"
 #include "prlog.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 /* The timeouts, in milliseconds */
 #define SHORT_TIMEOUT 1000
