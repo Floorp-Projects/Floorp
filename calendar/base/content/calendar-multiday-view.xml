@@ -909,13 +909,23 @@
 
           document.calendarEventColumnDragging = null;
 
-          // if the user didn't sweep out at least 1 interval's worth of pixels, ignore.
-          if (col.getAttribute("orient") == "vertical") {
-              if (Math.abs(event.screenY - dragState.origLoc) < (col.mPixPerMin * 15))
+          // if the user didn't sweep out at least a few pixels, ignore
+          // unless we're in a different column
+          if (dragState.origColumn == col) {
+              var ignore = false;
+              if (col.getAttribute("orient") == "vertical") {
+                  if (Math.abs(event.screenY - dragState.origLoc) < 3)
+                      ignore = true;
+              } else {
+                  if (Math.abs(event.screenX - dragState.origLoc) < 3)
+                      ignore = true;
+              }
+
+              if (ignore) {
+                  document.calendarEventColumnDragging = null;
+                  col.mDragState = null;
                   return;
-          } else {
-              if (Math.abs(event.screenX - dragState.origLoc) < (col.mPixPerMin * 15))
-                  return;
+              }
           }
 
           // XXX ok, yeah, this stuff needs some JS helper love
@@ -941,6 +951,7 @@
           {
               col.calendarView.controller.modifyOccurrence(dragState.dragOccurrence, estart, eend);
           }
+          document.calendarEventColumnDragging = null;
           col.mDragState = null;
         ]]></body>
       </method>
@@ -963,6 +974,7 @@
         <body><![CDATA[
           dump ("startSweepingToModify\n");
           this.mDragState = {
+              origColumn: this,
               dragOccurrence: aOccurrence,
               mouseOffset: 0
           };
@@ -1108,6 +1120,7 @@
         var interval = this.mPixPerMin * 15;
 
         this.mDragState = {
+            origColumn: this,
             dragType: "new",
             mouseOffset: 0
         };
@@ -1233,6 +1246,12 @@
     <handlers>
       <handler event="mousedown"><![CDATA[
         this.calendarView.selectedOccurrence = this.mOccurrence;
+
+        if (this.mOccurrence.item.recurrenceInfo) {
+            // XXXvv can't drag recurring events yet, FIXME
+            event.preventBubble();
+            return;
+        }
 
         this.mInMouseDown = true;
         this.mMouseX = event.screenX;
