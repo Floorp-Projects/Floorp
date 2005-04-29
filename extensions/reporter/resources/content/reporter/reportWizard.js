@@ -43,8 +43,6 @@
  *   or a reporter.mozilla.org Admin!
  *******************************************************/
 
-const RMOURI = "http://reporter-test.mozilla.org/service/";
-
 const gURL = window.arguments[0];
 const gPlatform = navigator.platform;
 const gUserAgent = navigator.userAgent;
@@ -77,8 +75,13 @@ function initPrivacyNotice(){
   document.getElementById("dontShowPrivacyStatement").setAttribute("checked", "true");
 
   // Load Privacy Policy
-  var strbundle=document.getElementById("strings");
-  document.getElementById("privacyStatement").setAttribute("src", strbundle.getString("privacyStatementURL"));
+  var privacyURL
+  try {
+    privacyURL = prefs.getCharPref("privacyURL");
+  } catch (e) {
+    privacyURL = "http://reporter-test.mozilla.org/privacy/?plain";
+  }
+  document.getElementById("privacyStatement").setAttribute("src", privacyURL);
 }
 
 function privacyPolicyCheckbox(){
@@ -132,9 +135,8 @@ function registerSysID(){
   if (gSysID != undefined){
     prefs.setCharPref("sysid", gSysID);
     return gSysID;
-  } else {
-    return;
   }
+  return;
 }
 
 function getSysID() {
@@ -153,6 +155,7 @@ function getSysID() {
     }
   }
   catch (e) {}
+  return;
 }
 
 function sendReport(){
@@ -198,10 +201,11 @@ function sendReport(){
 
   var finishSummary = document.getElementById('finishSummary');
 
+  var finishExtended
   if (!gSOAPerror)
   {
     // If successful
-    var finishExtended = document.getElementById('finishExtendedSuccess');
+    finishExtended = document.getElementById('finishExtendedSuccess');
     document.getElementById('finishExtendedFailed').setAttribute("class", "hide");
 
     statusIndicator.setAttribute("value","95%");
@@ -233,7 +237,7 @@ function sendReport(){
   } else {
     // If there was an error from the server
 
-    var finishExtended = document.getElementById('finishExtendedFailed');
+    finishExtended = document.getElementById('finishExtendedFailed');
     document.getElementById('finishExtendedSuccess').setAttribute("class", "hide");
 
     document.getElementById('reportWizard').canAdvance= true;
@@ -291,14 +295,25 @@ function getBuildConfig() {
     return text.substring(start);
   } catch(ex) {
     alert(ex);
+    return
   }
 }
 
 /*  NEW WEB SERVICE MODULE */
 /*  Based on Apple's example implementation of SOAP at: developer.apple.com/internet/webservices/mozgoogle_source.html */
 function callReporter(method,params,callback){
+ var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService)
+                     	.getBranch("extensions.reporter.");
+  var serviceURL;
+  try {
+    serviceURL = prefs.getCharPref("serviceURL");
+  } catch (e) {
+    serviceURL = "http://reporter-test.mozilla.org/service/";
+  }
+
   var soapCall = new SOAPCall();
-  soapCall.transportURI = RMOURI;
+  soapCall.transportURI = serviceURL;
   soapCall.encode(0, method, "urn:MozillaReporter", 0, null, params.length, params);
   var response = soapCall.invoke();
   var error = handleSOAPResponse(response);
