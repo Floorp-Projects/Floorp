@@ -127,6 +127,8 @@ private:
   PRUint32 mRowBytes; // How many bytes of the row were already received
   PRInt32 mCurLine;
 
+  nsresult mStatus;
+
   PRUint8* mDecodedBuffer;
   PRUint8* mAlphaBuffer;
   PRPackedBool mIsCursor;
