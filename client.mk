@@ -183,6 +183,10 @@ MODULES_xulrunner :=                            \
   mozilla/xulrunner                             \
   $(NULL)
 
+LOCALES_xulrunner :=                            \
+  $(LOCALES_toolkit)                            \
+  $(NULL)
+
 BOOTSTRAP_xulrunner := mozilla/xulrunner/config/mozconfig
 
 MODULES_macbrowser :=                           \
@@ -479,7 +483,7 @@ MOZCONFIG_MODULES += $(foreach project,$(MOZ_PROJECT_LIST),mozilla/$(project)/lo
 
 LOCALE_CO_DIRS := $(sort $(foreach project,$(MOZ_PROJECT_LIST),$(foreach locale,$(shell cat mozilla/$(project)/locales/all-locales),$(foreach dir,$(LOCALES_$(project)),l10n/$(locale)/$(dir)))))
 else # MOZ_CO_LOCALES != all
-LOCALE_CO_DIRS = $(foreach locale,$(MOZ_CO_LOCALES),$(foreach dir,$(LOCALE_DIRS),l10n/$(locale)/$(dir)))
+LOCALE_CO_DIRS = $(sort $(foreach locale,$(MOZ_CO_LOCALES),$(foreach dir,$(LOCALE_DIRS),l10n/$(locale)/$(dir))))
 endif
 
 CVSCO_LOCALES := $(CVS) $(CVS_FLAGS) -d $(LOCALES_CVSROOT) co $(LOCALES_CO_FLAGS) $(LOCALE_CO_DIRS)
