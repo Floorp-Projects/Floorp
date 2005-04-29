@@ -90,7 +90,8 @@ interface calIDateTime : nsISupports
 
   // an associated timezone that's the preferred way of representing
   // this object.  If this is null/empty, then there is no preferred
-  // timezone, and UTC or localtime is assumed (based on isUtc).
+  // timezone, and UTC or localtime is assumed (based on isUtc).  If
+  // this is non-null when assigned, isUtc is automatically cleared.
   attribute AUTF8String timezone;
 
   // the offset in minutes from UTC that this date is stored in.

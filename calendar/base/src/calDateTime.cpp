@@ -162,7 +162,23 @@ CAL_VALUETYPE_ATTR(calDateTime, PRInt32, TimezoneOffset)
 CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRInt16, Weekday)
 CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRInt16, Yearday)
 
-CAL_STRINGTYPE_ATTR(calDateTime, nsACString, Timezone)
+CAL_STRINGTYPE_ATTR_GETTER(calDateTime, nsACString, Timezone)
+
+NS_IMETHODIMP
+calDateTime::SetTimezone(const nsACString& aTimezone)
+{
+    mTimezone.Assign(aTimezone);
+    if (aTimezone.EqualsLiteral("UTC") ||
+        aTimezone.EqualsLiteral("utc"))
+    {
+        mTimezone.Truncate();
+        mIsUtc = PR_TRUE;
+    } else if (!aTimezone.IsEmpty()) {
+        mIsUtc = PR_FALSE;
+    }
+
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 calDateTime::GetNativeTime(PRTime *aResult)
