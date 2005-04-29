@@ -3,7 +3,6 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 exec_prefix_set=no
-libdir=@libdir@
 
 major_version=@MOD_MAJOR_VERSION@
 minor_version=@MOD_MINOR_VERSION@
@@ -96,7 +95,7 @@ if test "$echo_cflags" = "yes"; then
 fi
 
 if test "$echo_libs" = "yes"; then
-      libdirs=-L${libdir}
+      libdirs=-L${exec_prefix}/lib
       if test -n "$lib_plds"; then
 	libdirs="$libdirs -lplds${major_version}"
       fi
