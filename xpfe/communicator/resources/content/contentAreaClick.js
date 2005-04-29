@@ -246,7 +246,8 @@
         saveModifier = saveModifier ? event.shiftKey : event.altKey;
           
         if (saveModifier) {                                           // if saveModifier is down
-          saveURL(href, linkNode ? gatherTextUnder(linkNode) : "");
+          saveURL(href, linkNode ? gatherTextUnder(linkNode) : "",
+                  "SaveLinkTitle", false, getReferrer(document));
           return true;
         }
         if (event.altKey)                                             // if alt is down
