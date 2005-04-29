@@ -1068,7 +1068,7 @@ nsCommonWidget::focusOutEvent(QFocusEvent *)
 bool
 nsCommonWidget::enterEvent(QEvent *)
 {
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_ENTER, this);
+    nsMouseEvent event(PR_TRUE, NS_MOUSE_ENTER, this, nsMouseEvent::eReal);
 
     QPoint pt = QCursor::pos();
 
@@ -1083,7 +1083,7 @@ nsCommonWidget::enterEvent(QEvent *)
 bool
 nsCommonWidget::leaveEvent(QEvent *aEvent)
 {
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_EXIT, this);
+    nsMouseEvent event(PR_TRUE, NS_MOUSE_EXIT, this, nsMouseEvent::eReal);
 
     QPoint pt = QCursor::pos();
 
