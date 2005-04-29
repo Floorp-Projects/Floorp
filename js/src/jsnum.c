@@ -505,6 +505,7 @@ static jsdouble NaN;
 
 
 #if (defined XP_WIN || defined XP_OS2) &&                                     \
+    !defined WINCE &&                                                         \
     !defined __MWERKS__ &&                                                    \
     (defined _M_IX86 ||                                                       \
      (defined __GNUC__ && !defined __MINGW32__))

@@ -170,9 +170,10 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
   }
 
 #ifdef IBMBIDI
-  PRBool isRTL;
+  PRBool isRTL = PR_FALSE;
   mBidiKeyboard = do_GetService("@mozilla.org/widget/bidikeyboard;1");
-  mBidiKeyboard->IsLangRTL(&isRTL);
+  if (mBidiKeyboard)
+	mBidiKeyboard->IsLangRTL(&isRTL);
   mKeyboardRTL = isRTL;
 #endif
   

@@ -49,7 +49,7 @@ LIBRARY_NAME	= mozjs
 LIB_IS_C_ONLY	= 1
 GRE_MODULE	= 1
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 LIBRARY_NAME	= js$(MOZ_BITS)$(VERSION_NUMBER)
 RESFILE		= js$(MOZ_BITS)40.res
 endif
@@ -145,7 +145,7 @@ EXPORTS		= \
 		jsxml.h \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 EXPORTS		+= jscpucfg.h
 endif
 
@@ -159,7 +159,7 @@ include $(topsrcdir)/config/config.mk
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
-ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+ifeq (,$(filter-out OS2 WINNT WINCE,$(OS_ARCH)))
 SHARED_LIBRARY_LIBS += $(FDLIBM_LIBRARY)
 endif
 
@@ -240,7 +240,7 @@ endif
 LDFLAGS		+= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS))
 
 # BeOS and HP-UX do not require the extra linking of "-lm"
-ifeq (,$(filter BeOS HP-UX WINNT OpenVMS,$(OS_ARCH)))
+ifeq (,$(filter BeOS HP-UX WINNT WINCE OpenVMS,$(OS_ARCH)))
 LDFLAGS		+= -lm
 endif
 
@@ -352,10 +352,15 @@ ifeq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
 jsautocfg.h:
 	touch $@
 else
+ifeq ($(OS_ARCH),WINCE)
+jsautocfg.h:
+	touch $@
+else
 jsautocfg.h: jscpucfg$(HOST_BIN_SUFFIX)
 	@rm -f $@ jsautocfg.tmp
 	./jscpucfg > jsautocfg.tmp
 	mv jsautocfg.tmp $@
+endif
 endif
 
 # jscpucfg is a strange target
@@ -375,7 +380,12 @@ jscpucfg: jscpucfg.o
 	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) -o $@ $<
 endif
 else
+ifeq ($(OS_ARCH),WINCE)
+jscpucfg$(HOST_BIN_SUFFIX):
+	echo no need to build jscpucfg $<
+else
 jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.c Makefile.in
 	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) $(NSPR_CFLAGS) $(OUTOPTION)$@ $<
+endif
 endif
 

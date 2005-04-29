@@ -2741,6 +2741,9 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
                                PRUint32 aHeight,
                                PRUint32 aDepth)
 {
+#ifdef WINCE
+  return NULL;
+#else
   if (aDepth == 8 || aDepth == 4) {
     NS_WARNING("nsWindow::DataToBitmap can't handle 4 or 8 bit images");
     return NULL;
@@ -2790,7 +2793,6 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
     return bmp;
   }
 
-
   BITMAPINFOHEADER head = { 0 };
 
   head.biSize = sizeof(BITMAPINFOHEADER);
@@ -2824,6 +2826,7 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
   ::DeleteObject(tBitmap);
   ::DeleteDC(dc);
   return bmp;
+#endif
 }
 
 // static
@@ -3640,6 +3643,7 @@ BOOL nsWindow::OnChar(UINT charCode, PRUint32 aFlags)
 #ifdef KE_DEBUG
   printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR" , wParam, wParam, lParam);
 #endif
+
   // These must be checked here too as a lone WM_CHAR could be received
   // if a child window didn't handle it (for example Alt+Space in a content window)
   mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
@@ -4398,6 +4402,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
     case WM_SYSKEYUP:
     case WM_KEYUP:
+
 #ifdef KE_DEBUG
       printf("%s\t\twp=%x\tlp=%x\n", (WM_KEYUP==msg) ? "WM_KEYUP" : "WM_SYSKEYUP", wParam, lParam);
 #endif
@@ -5899,7 +5904,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
     result = DispatchWindowEvent(&event);
 
     if (aEventType == NS_MOUSE_MOVE) {
-
       // if we are not in mouse capture mode (mouse down and hold)
       // then use "this" window
       // if we are in mouse capture, then all events are being directed
@@ -5975,7 +5979,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
     // Release the widget with NS_IF_RELEASE() just in case
     // the context menu key code in nsEventListenerManager::HandleEvent()
     // released it already.
-
     NS_IF_RELEASE(event.widget);
     return result;
   }
@@ -6013,6 +6016,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
         break;
     } // switch
   }
+
   NS_RELEASE(event.widget);
   return result;
 }
@@ -6372,6 +6376,9 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
 BOOL
 nsWindow::HandleStartComposition(HIMC hIMEContext)
 {
+#ifdef WINCE
+  return false;
+#endif
   // ATOK send the messages following order at starting composition.
   // 1. WM_IME_COMPOSITION
   // 2. WM_IME_STARTCOMPOSITION

@@ -929,6 +929,7 @@ morkStdioFile::Steal(nsIMdbEnv* ev, nsIMdbFile* ioThief)
 void mork_fileflush(FILE * file)
 {
   fflush(file);
+#ifndef WINCE
   OSVERSIONINFOA vi = { sizeof(OSVERSIONINFOA) };
   if ((GetVersionExA(&vi) && vi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS))
   {
@@ -937,6 +938,7 @@ void mork_fileflush(FILE * file)
     HANDLE fh = (HANDLE)_get_osfhandle(fd);
     FlushFileBuffers(fh);
   }
+#endif
 }
 
 #endif /*MORK_WIN*/

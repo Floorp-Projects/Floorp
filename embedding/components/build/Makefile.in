@@ -97,9 +97,15 @@ SHARED_LIBRARY_LIBS = \
 
 ifdef MOZ_XUL
 SHARED_LIBRARY_LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)printingui_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)jsconsole_s.$(LIB_SUFFIX) \
 	$(NULL)
+
+ifndef WINCE
+SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)printingui_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 endif
 
 LOCAL_INCLUDES	= \

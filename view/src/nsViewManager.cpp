@@ -1681,6 +1681,11 @@ AccumulateIntersectionsIntoDirtyRegion(nsView* aTargetView,
   }
 }
 
+// This gets around an internal compiler error C1001
+// (compiler file 'E:\8799\vc98\p2\src\P2\main.c', line 494)
+#ifdef WINCE
+#pragma optimize( "", off )
+#endif
 void
 nsViewManager::WillBitBlit(nsView* aView, nsPoint aScrollAmount)
 {
@@ -1698,6 +1703,10 @@ nsViewManager::WillBitBlit(nsView* aView, nsPoint aScrollAmount)
   // offset we want to use when accumulating dirty rects.
   AccumulateIntersectionsIntoDirtyRegion(aView, GetRootView(), -aScrollAmount);
 }
+#ifdef WINCE
+#pragma optimize( "", on )
+#endif
+
 
 // Invalidate all widgets which overlap the view, other than the view's own widgets.
 void

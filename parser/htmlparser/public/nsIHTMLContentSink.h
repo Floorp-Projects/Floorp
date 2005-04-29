@@ -88,8 +88,10 @@
 #define NS_IHTML_CONTENT_SINK_IID \
  { 0x59929de5, 0xe60b, 0x48b1,{0x81, 0x69, 0x48, 0x47, 0xb5, 0xc9, 0x44, 0x29}}
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(WINCE) 
 #define MAX_REFLOW_DEPTH  75    //setting to 75 to prevent layout from crashing on mac. Bug 55095.
+                                //We will also change this for WinCE as it usually has a strict
+                                //memory upper limit (no vm, ~32mb)
 #else
 #define MAX_REFLOW_DEPTH  200   //windows and linux (etc) can do much deeper structures.
 #endif
