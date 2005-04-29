@@ -41,10 +41,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= 
-
 ifdef MOZ_SVG_RENDERER_GDIPLUS
-DIRS		+= gdiplus gdiplusshim
+TOOL_DIRS += gdiplus
+DIRS      += gdiplusshim
 endif
 
 ifdef MOZ_SVG_RENDERER_LIBART
