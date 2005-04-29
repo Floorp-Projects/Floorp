@@ -80,12 +80,27 @@ ASFILES		:= xptcinvoke_asm_x86_64.asm xptcstubs_asm_x86_64.asm
 endif
 
 ifeq ($(OS_ARCH),WINCE)
+
+ifeq ($(TARGET_DEVICE),)
+TARGET_DEVICE=device
+endif
+
+ifeq ($(TARGET_DEVICE),device)
 ifeq ($(TARGET_CPU),arm)
 CPPSRCS 	= xptcinvokece.cpp xptcstubsce.cpp 
 ASFILES		= xptc_arm_ceppc.asm
 AS			= $(CYGWIN_WRAPPER) arm-wince-as
 ASFLAGS		+= -I ../../../public
 AS_DASH_C_FLAG = 
+endif
+endif
+
+ifeq ($(TARGET_DEVICE),emulator)
+CPPSRCS 	= xptcinvoke.cpp xptcstubs.cpp 
+ASFILES		= 
+AS		= $(CYGWIN_WRAPPER) arm-wince-as
+ASFLAGS		+= -I ../../../public
+AS_DASH_C_FLAG	= 
 endif
 endif
 
