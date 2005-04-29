@@ -561,11 +561,46 @@ function onOKCommand()
     var alarmType = getElementValue("alarm-type");
     if (alarmType != "" && alarmType != "none") {
         event.hasAlarm = true;
-        event.setProperty("alarmLength",  getElementValue("alarm-length-field"));
-        event.setProperty("alarmUnits",   getElementValue("alarm-length-units"));
-        event.setProperty("alarmRelated", getElementValue("alarm-trigger-relation"));
-        //event.alarmTime = ...
+
+        var alarmLength = getElementValue("alarm-length-field");
+        var alarmUnits = getElementValue("alarm-length-units");
+        var alarmRelated = getElementValue("alarm-trigger-relation");
+
+        event.setProperty("alarmLength",  alarmLength);
+        event.setProperty("alarmUnits",   alarmUnits);
+        event.setProperty("alarmRelated", alarmRelated);
+
+        var alarmTime = null;
+
+        if (alarmRelated == "START") {
+            alarmTime = event.startDate.clone();
+        } else if (alarmRelated == "END") {
+            alarmTime = event.endDate.clone();
+        }
+
+        dump("=============\n" + alarmTime + "\n============\n");
+
+        switch (alarmUnits) {
+        case "minutes":
+            alarmTime.minute -= alarmLength;
+            break;
+        case "hours":
+            alarmTime.hour -= alarmLength;
+            break;
+        case "days":
+            alarmTime.day -= alarmLength;
+            break;
+        }
+
+        alarmTime.normalize();
+
+        dump("=============\n" + alarmTime + "\n============\n");
+
+        event.alarmTime = alarmTime.clone();
+       
+        dump("=============\n" + event.alarmTime + "\n============\n");
     }
+
     if (alarmType == "email")
         event.setProperty("alarmEmailAddress", getElementValue("alarm-email-field"));
     else
