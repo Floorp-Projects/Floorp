@@ -52,11 +52,10 @@ interface nsIPlugin;
 interface nsIURI;
 interface nsIDOMPlugin;
 
-[ref] native nsStringRef(nsString);
 [ptr] native PRLibraryPtr(PRLibrary);
 [ref] native nsIStreamListenerRef(nsIStreamListener *);
 
-[uuid(264c0640-1c31-11d2-a82e-0040959a28c9)]
+[uuid(e740d8c4-fd94-456a-9506-9e044c5da27a)]
 interface nsIPluginHost : nsIFactory
 {
   void init();
@@ -69,7 +68,7 @@ interface nsIPluginHost : nsIFactory
 
   void instantiateEmbededPlugin(in string aMimeType, in nsIURI aURL, in nsIPluginInstanceOwner aOwner);
 
-  void instantiateFullPagePlugin(in string aMimeType, in nsStringRef aURLSpec, in nsIStreamListenerRef aStreamListener, in nsIPluginInstanceOwner aOwner);
+  void instantiateFullPagePlugin(in string aMimeType, in nsIURI aURI, in nsIStreamListenerRef aStreamListener, in nsIPluginInstanceOwner aOwner);
 
   void setUpPluginInstance(in string aMimeType, in nsIURI aURL, in nsIPluginInstanceOwner aOwner);
 

@@ -1363,19 +1363,12 @@ nsObjectFrame::InstantiatePlugin(nsPresContext* aPresContext,
   nsCOMPtr<nsIPluginDocument> pDoc (do_QueryInterface(doc));
 
   if (pDoc) {  /* full-page mode */
-
-    nsCAutoString spec;
-    rv = aURI->GetSpec(spec);
-    if (NS_SUCCEEDED(rv)) {
-      NS_ConvertUTF8toUCS2 url(spec);
-
-      nsCOMPtr<nsIStreamListener> stream;
-      rv = aPluginHost->InstantiateFullPagePlugin(aMimeType, url,
-            /* resulting stream listener */       *getter_AddRefs(stream),
-                                                  mInstanceOwner);
-      if (NS_SUCCEEDED(rv))
-        pDoc->SetStreamListener(stream);
-    }
+    nsCOMPtr<nsIStreamListener> stream;
+    rv = aPluginHost->InstantiateFullPagePlugin(aMimeType, aURI,
+          /* resulting stream listener */       *getter_AddRefs(stream),
+                                                mInstanceOwner);
+    if (NS_SUCCEEDED(rv))
+      pDoc->SetStreamListener(stream);
   } else {   /* embedded mode */
     rv = aPluginHost->InstantiateEmbededPlugin(aMimeType, aURI,
                                                mInstanceOwner);

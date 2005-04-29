@@ -270,7 +270,7 @@ public:
   InstantiateEmbededPlugin(const char *aMimeType, nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
 
   NS_IMETHOD
-  InstantiateFullPagePlugin(const char *aMimeType, nsString& aURLSpec, nsIStreamListener *&aStreamListener, nsIPluginInstanceOwner *aOwner);
+  InstantiateFullPagePlugin(const char *aMimeType, nsIURI* aURI, nsIStreamListener *&aStreamListener, nsIPluginInstanceOwner *aOwner);
 
   NS_IMETHOD
   SetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
