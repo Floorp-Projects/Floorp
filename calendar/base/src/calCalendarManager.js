@@ -150,6 +150,10 @@ calCalendarManager.prototype = {
             "INSERT INTO cal_calendars_prefs (calendar, name, value) " +
             "VALUES (:calendar, :name, :value)");
 
+        this.mDeletePrefs = createStatement (
+            this.mDB,
+            "DELETE FROM cal_calendars_prefs WHERE calendar = :calendar");
+
     },
 
     findCalendarID: function(calendar) {
@@ -200,10 +204,18 @@ calCalendarManager.prototype = {
         for each (obs in this.mObservers)
             obs.onCalendarUnregistering(calendar);
 
+        var calendarID = this.findCalendarID(calendar);
+
         var pp = this.mUnregisterCalendar.params;
-        pp.id = this.findCalendarID(calendar);
+        pp.id = calendarID;
         this.mUnregisterCalendar.step();
         this.mUnregisterCalendar.reset();
+
+        // delete prefs for the calendar too
+        pp = this.mDeletePrefs.params;
+        pp.calendar = calendarID;
+        this.mDeletePrefs.step();
+        this.mDeletePrefs.reset();
     },
 
     deleteCalendar: function(calendar) {
