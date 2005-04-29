@@ -2,6 +2,17 @@
 //  calendar-management.js
 //
 
+function addCalendarToTree(aCalendar)
+{
+    var boxobj = document.getElementById("calendarTree").treeBoxObject;
+    boxobj.rowCountChanged(getCalendars().indexOf(aCalendar), 1);
+}
+
+function removeCalendarFromTree(aCalendar)
+{
+    var boxobj = document.getElementById("calendarTree").treeBoxObject;
+    boxobj.rowCountChanged(getCalendars().indexOf(aCalendar), -1);
+}
 
 var ltnCalendarManagerObserver = {
     QueryInterface: function(aIID) {
@@ -14,15 +25,16 @@ var ltnCalendarManagerObserver = {
     },
 
     onCalendarRegistered: function(aCalendar) {
-        document.getElementById("calendarTree").boxObject.invalidate();
+        addCalendarToTree(aCalendar);
     },
 
     onCalendarUnregistering: function(aCalendar) {
-        document.getElementById("calendarTree").boxObject.invalidate();
+        removeCalendarFromTree(aCalendar);
     },
 
     onCalendarDeleting: function(aCalendar) {
-        document.getElementById("calendarTree").boxObject.invalidate();
+        removeCalendarFromTree(aCalendar); // XXX what else?
+        dump("deleted calendar " + aCalendar.name + "\n");
     },
 
     onCalendarPrefSet: function(aCalendar, aName, aValue) {
@@ -156,7 +168,12 @@ function getCalendarManager()
 
 function getCalendars()
 {
-    return getCalendarManager().getCalendars({});
+    try {
+        return getCalendarManager().getCalendars({});
+    } catch (e) {
+        dump("Error getting calendars: " + e + "\n");
+        return [];
+    }
 }
 
 function ltnNewCalendar()
