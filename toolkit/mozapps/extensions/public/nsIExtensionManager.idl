@@ -350,7 +350,6 @@ interface nsIExtensionManager : nsISupports
   void removeDownloadListenerAt(in long index);
 
   /** 
-  /**
    * Move an item up a notch in its container
    * @param   id
    *          The GUID of the item to move
