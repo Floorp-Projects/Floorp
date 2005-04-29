@@ -253,6 +253,9 @@ calCalendarManager.prototype = {
     },
 
     getCalendarPref: function(calendar, name) {
+        // pref names must be lower case
+        name = name.toLowerCase();
+
         var stmt = this.mGetPref;
         stmt.reset();
         var pp = stmt.params;
@@ -268,6 +271,9 @@ calCalendarManager.prototype = {
     },
 
     setCalendarPref: function(calendar, name, value) {
+        // pref names must be lower case
+        name = name.toLowerCase();
+
         var calendarID = this.findCalendarID(calendar);
 
         this.mDB.beginTransaction();
@@ -292,6 +298,9 @@ calCalendarManager.prototype = {
     },
 
     deleteCalendarPref: function(calendar, name) {
+        // pref names must be lower case
+        name = name.toLowerCase();
+
         for each (obs in this.mObservers)
             obs.onCalendarPrefDeleting(calendar, name);
 

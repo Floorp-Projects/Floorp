@@ -65,6 +65,7 @@ interface calICalendarManager : nsISupports
                     [array, size_is(count), retval] out calICalendar aCalendars);
 
 
+  /* name will be forced to lowercase */
   AUTF8String getCalendarPref(in calICalendar aCalendar, in AUTF8String aName);
   void setCalendarPref(in calICalendar aCalendar, in AUTF8String aName, in AUTF8String aValue);
   void deleteCalendarPref(in calICalendar aCalendar, in AUTF8String aName);
