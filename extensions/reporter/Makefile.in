@@ -51,8 +51,8 @@ DIRS           = \
 include $(topsrcdir)/config/rules.mk
 
 libs::
-  $(INSTALL) $(srcdir)/resources/content/prefs/reporter.js $(DIST)/bin/defaults/pref
+	$(INSTALL) $(srcdir)/resources/content/prefs/reporter.js $(DIST)/bin/defaults/pref
 
 install::
-  $(SYSINSTALL) $(IFLAGS1) $(srcdir)/resources/content/prefs/reporter.js $(DESTDIR)$(mozappdir)/defaults/pref
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/resources/content/prefs/reporter.js $(DESTDIR)$(mozappdir)/defaults/pref
 
