@@ -584,10 +584,7 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
 
   nsSize cbSize(aFrameSize);
     // Containing block is relative to the padding edge
-  nsMargin  border;
-  if (!aReflowState.mStyleBorder->GetBorder(border)) {
-    NS_NOTYETIMPLEMENTED("percentage border");
-  }
+  const nsMargin& border = aReflowState.mStyleBorder->GetBorder();
   cbSize.width -= border.left + border.right;
   cbSize.height -= border.top + border.bottom;
 
@@ -1137,10 +1134,7 @@ IsPercentageAwareChild(const nsIFrame* aFrame)
     return PR_TRUE;
   }
 
-  const nsStyleBorder* border = aFrame->GetStyleBorder();
-  if (nsLineLayout::IsPercentageUnitSides(&border->mBorder)) {
-    return PR_TRUE;
-  }
+  // Note that borders can't be aware of percentages
 
   const nsStylePosition* pos = aFrame->GetStylePosition();
 
@@ -3012,12 +3006,6 @@ nsBlockFrame::AttributeChanged(nsIContent*     aChild,
 }
 
 inline PRBool
-IsBorderZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
-{
-    return ((aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0));
-}
-
-inline PRBool
 IsPaddingZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 {
     return (aUnit == eStyleUnit_Null ||
@@ -3070,12 +3058,8 @@ nsBlockFrame::IsSelfEmpty()
   const nsStyleBorder* border = GetStyleBorder();
   const nsStylePadding* padding = GetStylePadding();
   nsStyleCoord coord;
-  if ((border->IsBorderSideVisible(NS_SIDE_TOP) &&
-       !IsBorderZero(border->mBorder.GetTopUnit(),
-                     border->mBorder.GetTop(coord))) ||
-      (border->IsBorderSideVisible(NS_SIDE_BOTTOM) &&
-       !IsBorderZero(border->mBorder.GetBottomUnit(),
-                     border->mBorder.GetBottom(coord))) ||
+  if (border->GetBorderWidth(NS_SIDE_TOP) != 0 ||
+      border->GetBorderWidth(NS_SIDE_BOTTOM) != 0 ||
       !IsPaddingZero(padding->mPadding.GetTopUnit(),
                     padding->mPadding.GetTop(coord)) ||
       !IsPaddingZero(padding->mPadding.GetBottomUnit(),

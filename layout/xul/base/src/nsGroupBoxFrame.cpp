@@ -128,10 +128,7 @@ nsGroupBoxFrame::Paint(nsPresContext*      aPresContext,
       const nsStyleBorder* borderStyleData = GetStyleBorder();
       const nsStylePadding* paddingStyleData = GetStylePadding();
        
-        nsMargin border;
-        if (!borderStyleData->GetBorder(border)) {
-          NS_NOTYETIMPLEMENTED("percentage border");
-        }
+        const nsMargin& border = borderStyleData->GetBorder();
 
         nscoord yoff = 0;
 

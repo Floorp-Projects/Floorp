@@ -194,17 +194,14 @@ nsFieldSetFrame::Paint(nsPresContext*       aPresContext,
       const nsStyleBorder* borderStyle = GetStyleBorder();
       const nsStylePadding* paddingStyle = GetStylePadding();
        
-      nsMargin border;
-      if (!borderStyle->GetBorder(border)) {
-        NS_NOTYETIMPLEMENTED("percentage border");
-      }
+      nscoord topBorder = borderStyle->GetBorderWidth(NS_SIDE_TOP);
 
       nscoord yoff = 0;
       
       // if the border is smaller than the legend. Move the border down
       // to be centered on the legend. 
-      if (border.top < mLegendRect.height)
-        yoff = (mLegendRect.height - border.top)/2;
+      if (topBorder < mLegendRect.height)
+        yoff = (mLegendRect.height - topBorder)/2;
       
       nsRect rect(0, yoff, mRect.width, mRect.height - yoff);
 
@@ -224,7 +221,7 @@ nsFieldSetFrame::Paint(nsPresContext*       aPresContext,
         // draw left side
         nsRect clipRect(rect);
         clipRect.width = legendRect.x - rect.x;
-        clipRect.height = border.top;
+        clipRect.height = topBorder;
 
         aRenderingContext.PushState();
         aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
@@ -238,7 +235,7 @@ nsFieldSetFrame::Paint(nsPresContext*       aPresContext,
         clipRect = rect;
         clipRect.x = legendRect.x + legendRect.width;
         clipRect.width -= (legendRect.x + legendRect.width);
-        clipRect.height = border.top;
+        clipRect.height = topBorder;
 
         aRenderingContext.PushState();
         aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
@@ -250,8 +247,8 @@ nsFieldSetFrame::Paint(nsPresContext*       aPresContext,
       
         // draw bottom
         clipRect = rect;
-        clipRect.y += border.top;
-        clipRect.height = mRect.height - (yoff + border.top);
+        clipRect.y += topBorder;
+        clipRect.height = mRect.height - (yoff + topBorder);
       
         aRenderingContext.PushState();
         aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);

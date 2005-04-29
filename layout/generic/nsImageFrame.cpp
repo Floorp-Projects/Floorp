@@ -1168,24 +1168,11 @@ struct nsRecessedBorder : public nsStyleBorder {
   nsRecessedBorder(nscoord aBorderWidth)
     : nsStyleBorder()
   {
-    nsStyleCoord  styleCoord(aBorderWidth);
-
-    mBorder.SetLeft(styleCoord);
-    mBorder.SetTop(styleCoord);
-    mBorder.SetRight(styleCoord);
-    mBorder.SetBottom(styleCoord);
-
-    mBorderStyle[0] = NS_STYLE_BORDER_STYLE_INSET;  
-    mBorderStyle[1] = NS_STYLE_BORDER_STYLE_INSET;  
-    mBorderStyle[2] = NS_STYLE_BORDER_STYLE_INSET;  
-    mBorderStyle[3] = NS_STYLE_BORDER_STYLE_INSET;  
-
-    mBorderColor[0] = 0;  
-    mBorderColor[1] = 0;  
-    mBorderColor[2] = 0;  
-    mBorderColor[3] = 0;  
-
-    mHasCachedBorder = PR_FALSE;
+    // Note: use SetBorderStyle here because we want to affect mComputedBorder
+    NS_FOR_CSS_SIDES(side) {
+      mBorder.side(side) = aBorderWidth;
+      SetBorderStyle(side, NS_STYLE_BORDER_STYLE_INSET);
+    }
   }
 };
 

@@ -2776,8 +2776,11 @@ void GetSeparateModelBorderPadding(const nsHTMLReflowState* aReflowState,
                                    nsStyleContext&          aStyleContext,
                                    nsMargin&                aBorderPadding)
 {
+  // XXXbz Either we _do_ have a reflow state and then we can use its
+  // mComputedBorderPadding or we don't and then we get the padding
+  // wrong!
   const nsStyleBorder* border = aStyleContext.GetStyleBorder();
-  border->GetBorder(aBorderPadding);
+  aBorderPadding = border->GetBorder();
   if (aReflowState) {
     aBorderPadding += aReflowState->mComputedPadding;
   }

@@ -54,6 +54,8 @@
 #include "nsStyleContext.h"
 #include "imgIRequest.h"
 
+#include "nsPrintfCString.h"
+
 #ifdef DEBUG
 // #define NOISY_DEBUG
 #endif
@@ -260,12 +262,10 @@ inline const nsStyleStruct* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
 void
 nsStyleContext::GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding)
 {
-  nsMargin border, padding;
-  if (GetStyleBorder()->GetBorder(border)) {
-    if (GetStylePadding()->GetPadding(padding)) {
-      border += padding;
-      aBorderPadding.SetBorderPadding(border);
-    }
+  nsMargin padding;
+  if (GetStylePadding()->GetPadding(padding)) {
+    padding += GetStyleBorder()->GetBorder();
+    aBorderPadding.SetBorderPadding(padding);
   }
 }
 
@@ -660,8 +660,17 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
   
   const nsStyleBorder* border = GetStyleBorder();
-  border->mBorder.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+#ifdef NS_COORD_IS_FLOAT
+  const char format [] = "top: %ftw right: %ftw bottom: %ftw left: %ftw";
+#else
+  const char format [] = "top: %dtw right: %dtw bottom: %dtw left: %dtw";
+#endif
+  nsPrintfCString output(format,
+                         border->GetBorderWidth(NS_SIDE_TOP),
+                         border->GetBorderWidth(NS_SIDE_RIGHT),
+                         border->GetBorderWidth(NS_SIDE_BOTTOM),
+                         border->GetBorderWidth(NS_SIDE_LEFT));
+  fprintf(out, "%s ", output.get());
   border->mBorderRadius.ToString(str);
   fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
   

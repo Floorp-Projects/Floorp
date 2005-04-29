@@ -251,17 +251,6 @@ HasTextFrameDescendantOrInFlow(nsPresContext* aPresContext, nsIFrame* aFrame)
   return PR_FALSE;
 }
 
-#if (NS_SIDE_TOP == 0) && (NS_SIDE_RIGHT == 1) && (NS_SIDE_BOTTOM == 2) && (NS_SIDE_LEFT == 3)
-static nscoord nsMargin::* const nsMarginSides[4] = {
-  &nsMargin::top,
-  &nsMargin::right,
-  &nsMargin::bottom,
-  &nsMargin::left,
-};
-#else
-#error "Somebody changed the side constants."
-#endif
-
 /*virtual*/ void
 nsHTMLContainerFrame::PaintTextDecorationLines(
                    nsIRenderingContext& aRenderingContext, 
@@ -275,7 +264,7 @@ nsHTMLContainerFrame::PaintTextDecorationLines(
   PRIntn skip = GetSkipSides();
   NS_FOR_CSS_SIDES(side) {
     if (skip & (1 << side)) {
-      bp.*(nsMarginSides[side]) = 0;
+      bp.side(side) = 0;
     }
   }
   aRenderingContext.SetColor(aColor);

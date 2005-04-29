@@ -192,21 +192,7 @@ ProcessTableRulesAttribute(nsStyleStruct* aStyleStruct,
       // set the border width to be 1 pixel
       nscoord onePixel =
         NSToCoordRound(aRuleData->mPresContext->ScaledPixelsToTwips());
-      nsStyleCoord coord(onePixel);
-      switch(aSide) {
-      case NS_SIDE_TOP:
-        borderData->mBorder.SetTop(coord);
-        break;
-      case NS_SIDE_RIGHT:
-        borderData->mBorder.SetRight(coord);
-        break;
-      case NS_SIDE_BOTTOM:
-        borderData->mBorder.SetBottom(coord);
-        break;
-      default: // NS_SIDE_LEFT
-        borderData->mBorder.SetLeft(coord);
-        break;
-      }
+      borderData->SetBorderWidth(aSide, onePixel);
     }
   }
 }

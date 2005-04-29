@@ -703,10 +703,7 @@ NS_IMETHODIMP  nsFrame::CalcBorderPadding(nsMargin& aBorderPadding) const {
       const nsStylePadding* paddingStyle = GetStylePadding();
       paddingStyle->CalcPaddingFor(this, aBorderPadding);
       const nsStyleBorder* borderStyle = GetStyleBorder();
-      nsMargin  border;
-      if (borderStyle->GetBorder(border)) {
-        aBorderPadding += border;
-      }
+      aBorderPadding += borderStyle->GetBorder();
     }
     return NS_OK;
   }
@@ -797,14 +794,18 @@ nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
 
   // XXX We don't support the 'overflow-clip' property yet, so just use the
   // content area (which is the default value) as the clip shape
-  nsMargin  border, padding;
 
-  borderStyle->GetBorder(border);
-  clipRect.Deflate(border);
+  clipRect.Deflate(borderStyle->GetBorder());
   // XXX We need to handle percentage padding
+  nsMargin padding;
   if (paddingStyle->GetPadding(padding)) {
     clipRect.Deflate(padding);
   }
+#ifdef DEBUG
+  else {
+    NS_WARNING("Percentage padding and CLIP overflow don't mix yet");
+  }
+#endif
 
   // Set updated clip-rect into the rendering context
   aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
@@ -2617,12 +2618,11 @@ nsFrame::CheckInvalidateSizeChange(nsPresContext* aPresContext,
   // Invalidate the old frame borders if the frame has borders. Those borders
   // may be moving.
   const nsStyleBorder* border = GetStyleBorder();
-  if (border->IsBorderSideVisible(NS_SIDE_LEFT)
-      || border->IsBorderSideVisible(NS_SIDE_RIGHT)
-      || border->IsBorderSideVisible(NS_SIDE_TOP)
-      || border->IsBorderSideVisible(NS_SIDE_BOTTOM)) {
-    Invalidate(nsRect(0, 0, mRect.width, mRect.height));
-    return;
+  NS_FOR_CSS_SIDES(side) {
+    if (border->GetBorderWidth(side) != 0) {
+      Invalidate(nsRect(0, 0, mRect.width, mRect.height));
+      return;
+    }
   }
 
   // Invalidate the old frame background if the frame has a background

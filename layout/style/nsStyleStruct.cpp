@@ -273,10 +273,6 @@ nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont&
   return NS_STYLE_HINT_REFLOW;
 }
 
-static nscoord nsMargin::* const gMarginSides[4] = {
-  &nsMargin::top, &nsMargin::right, &nsMargin::bottom, &nsMargin::left
-};
-
 static PRBool IsFixedData(const nsStyleSides& aSides, PRBool aEnumOK)
 {
   NS_FOR_CSS_SIDES(side) {
@@ -344,7 +340,7 @@ void nsStyleMargin::RecalcData()
   if (IsFixedData(mMargin, PR_FALSE)) {
     nsStyleCoord coord;
     NS_FOR_CSS_SIDES(side) {
-      mCachedMargin.*(gMarginSides[side]) =
+      mCachedMargin.side(side) =
         CalcCoord(mMargin.Get(side, coord), nsnull, 0);
     }
     mHasCachedMargin = PR_TRUE;
@@ -408,7 +404,7 @@ void nsStylePadding::RecalcData()
   if (IsFixedData(mPadding, PR_FALSE)) {
     nsStyleCoord coord;
     NS_FOR_CSS_SIDES(side) {
-      mCachedPadding.*(gMarginSides[side]) =
+      mCachedPadding.side(side) =
         CalcCoord(mPadding.Get(side, coord), nsnull, 0);
     }
     mHasCachedPadding = PR_TRUE;
@@ -444,31 +440,21 @@ nsStylePadding::CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const
 }
 
 nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
+  : mComputedBorder(0, 0, 0, 0)
 {
-  // spacing values not inherited
-  const nsStyleCoord  medium(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated);
-  mBorder.SetLeft(medium);
-  mBorder.SetTop(medium);
-  mBorder.SetRight(medium);
-  mBorder.SetBottom(medium);
-  
-  mBorderStyle[0] = NS_STYLE_BORDER_STYLE_NONE | BORDER_COLOR_FOREGROUND;
-  mBorderStyle[1] = NS_STYLE_BORDER_STYLE_NONE | BORDER_COLOR_FOREGROUND;
-  mBorderStyle[2] = NS_STYLE_BORDER_STYLE_NONE | BORDER_COLOR_FOREGROUND;
-  mBorderStyle[3] = NS_STYLE_BORDER_STYLE_NONE | BORDER_COLOR_FOREGROUND;
-
-  mBorderColor[0] = NS_RGB(0, 0, 0);  
-  mBorderColor[1] = NS_RGB(0, 0, 0);  
-  mBorderColor[2] = NS_RGB(0, 0, 0);  
-  mBorderColor[3] = NS_RGB(0, 0, 0); 
+  nscoord medium =
+    (aPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
+  NS_FOR_CSS_SIDES(side) {
+    mBorder.side(side) = medium;
+    mBorderStyle[side] = NS_STYLE_BORDER_STYLE_NONE | BORDER_COLOR_FOREGROUND;
+    mBorderColor[side] = NS_RGB(0, 0, 0);
+  }
 
   mBorderColors = nsnull;
 
   mBorderRadius.Reset();
 
   mFloatEdge = NS_STYLE_FLOAT_EDGE_CONTENT;
-  
-  mHasCachedBorder = PR_FALSE;
 }
 
 nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
@@ -483,7 +469,6 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
       else
         mBorderColors[i] = nsnull;
   }
-  mHasCachedBorder = PR_FALSE;
 }
 
 void* 
@@ -501,63 +486,25 @@ nsStyleBorder::Destroy(nsPresContext* aContext) {
 }
 
 
-PRBool nsStyleBorder::IsBorderSideVisible(PRUint8 aSide) const
-{
-	PRUint8 borderStyle = GetBorderStyle(aSide);
-	return ((borderStyle != NS_STYLE_BORDER_STYLE_NONE)
-       && (borderStyle != NS_STYLE_BORDER_STYLE_HIDDEN));
-}
-
-void nsStyleBorder::RecalcData(nsPresContext* aContext)
-{
-  PRBool allFixed = PR_TRUE;
-  {NS_FOR_CSS_SIDES(side) {
-    if (IsBorderSideVisible(side) &&
-        !IsFixedUnit(mBorder.GetUnit(side), PR_TRUE)) {
-      allFixed = PR_FALSE;
-      break;
-    }
-  }}
-  if (allFixed) {
-    nsStyleCoord coord;
-    const nscoord* borderWidths = aContext->GetBorderWidthTable();
-    NS_FOR_CSS_SIDES(side) {
-      mCachedBorder.*(gMarginSides[side]) = IsBorderSideVisible(side)
-        ? CalcCoord(mBorder.Get(side, coord), borderWidths, 3)
-        : 0;
-    }
-    mHasCachedBorder = PR_TRUE;
-  }
-  else {
-    mHasCachedBorder = PR_FALSE;
-  }
-}
-
 nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 {
-  if ((mBorder == aOther.mBorder) && 
-      (mFloatEdge == aOther.mFloatEdge)) {
+  // Note that differences in mBorder don't affect rendering (which should only
+  // use mComputedBorder), so don't need to be tested for here.
+  if (mComputedBorder == aOther.mComputedBorder && 
+      mFloatEdge == aOther.mFloatEdge) {
     // Note that mBorderStyle stores not only the border style but also
-    // color-related flags.  So while it's OK to compare entries in
-    // mBorderStyle directly for purposes of finding out whether something at
-    // all changed, any time we want to work with actual border styles we
-    // should use GetBorderStyle().
-    PRBool hasVisualChange = PR_FALSE;
+    // color-related flags.  Given that we've already done an mComputedBorder
+    // comparison, border-style differences can only lead to a VISUAL hint.  So
+    // it's OK to just compare the values directly -- if either the actual
+    // style or the color flags differ we want to repaint.
     NS_FOR_CSS_SIDES(ix) {
-      if ((mBorderStyle[ix] != aOther.mBorderStyle[ix]) || 
-          (mBorderColor[ix] != aOther.mBorderColor[ix])) {
-        if (GetBorderStyle(ix) != aOther.GetBorderStyle(ix) &&
-            (NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(ix) ||
-             NS_STYLE_BORDER_STYLE_NONE == aOther.GetBorderStyle(ix) ||
-             NS_STYLE_BORDER_STYLE_HIDDEN == GetBorderStyle(ix) || // bug 45754
-             NS_STYLE_BORDER_STYLE_HIDDEN == aOther.GetBorderStyle(ix))) {
-          return NS_STYLE_HINT_REFLOW;  // border on or off
-        }
-        hasVisualChange = PR_TRUE;
+      if (mBorderStyle[ix] != aOther.mBorderStyle[ix] || 
+          mBorderColor[ix] != aOther.mBorderColor[ix]) {
+        return NS_STYLE_HINT_VISUAL;
       }
     }
-    if (hasVisualChange ||
-        mBorderRadius != aOther.mBorderRadius ||
+
+    if (mBorderRadius != aOther.mBorderRadius ||
         !mBorderColors != !aOther.mBorderColors) {
       return NS_STYLE_HINT_VISUAL;
     }
@@ -566,8 +513,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
     // aOther.mBorderColors
     if (mBorderColors) {
       NS_FOR_CSS_SIDES(ix) {
-        if (mBorderColors[ix] && !aOther.mBorderColors[ix] ||
-            !mBorderColors[ix] && aOther.mBorderColors[ix]) {
+        if (!mBorderColors[ix] != !aOther.mBorderColors[ix]) {
           return NS_STYLE_HINT_VISUAL;
         } else if (mBorderColors[ix] && aOther.mBorderColors[ix]) {
           if (!mBorderColors[ix]->Equals(aOther.mBorderColors[ix]))
@@ -589,40 +535,6 @@ nsChangeHint nsStyleBorder::MaxDifference()
   return NS_STYLE_HINT_REFLOW;
 }
 #endif
-
-void 
-nsStyleBorder::CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const
-{
-  if (mHasCachedBorder) {
-    aBorder = mCachedBorder;
-  } else {
-    CalcSidesFor(aFrame, mBorder, NS_SPACING_BORDER,
-                 aFrame->GetPresContext()->GetBorderWidthTable(), 3, aBorder);
-  }
-}
-
-void 
-nsStyleBorder::CalcBorderFor(const nsIFrame* aFrame, PRUint8 aSide, nscoord& aWidth) const
-{
-  aWidth = 0;
-  // using mCachedBorder as above, doesn't work properly 
-  nsStyleCoord  coord;
-  switch(aSide) {
-  case NS_SIDE_TOP:
-    coord = mBorder.GetTop(coord);
-    break;
-  case NS_SIDE_RIGHT:
-    coord = mBorder.GetRight(coord);
-    break;
-  case NS_SIDE_BOTTOM:
-    coord = mBorder.GetBottom(coord);
-    break;
-  default: // NS_SIDE_LEFT
-    coord = mBorder.GetLeft(coord);
-  }
-  aWidth = CalcSideFor(aFrame, coord, NS_SPACING_BORDER, aSide,
-                       aFrame->GetPresContext()->GetBorderWidthTable(), 3);
-}
 
 nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
 {

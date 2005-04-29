@@ -665,13 +665,8 @@ GetIntrinsicSizeFor(nsIFrame* aFrame, nsSize& aIntrinsicSize)
 nscoord
 nsHTMLReflowState::CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWidth)
 {
-  nsMargin  border, padding, margin;
-
-  // Get the border
-  if (!mStyleBorder->GetBorder(border)) {
-    // CSS2 has no percentage borders
-    border.SizeTo(0, 0, 0, 0);
-  }
+  const nsMargin& border = mStyleBorder->GetBorder();
+  nsMargin padding, margin;
 
   // See if the style system can provide us the padding directly
   if (!mStylePadding->GetPadding(padding)) {
@@ -1720,16 +1715,10 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       }
     }
     if (aBorder) {  // border is an input arg
-      mComputedBorderPadding.top    = aBorder->top;
-      mComputedBorderPadding.right  = aBorder->right;
-      mComputedBorderPadding.bottom = aBorder->bottom;
-      mComputedBorderPadding.left   = aBorder->left;
+      mComputedBorderPadding = *aBorder;
     }
     else {
-      if (!mStyleBorder->GetBorder(mComputedBorderPadding)) {
-        // CSS2 has no percentage borders
-        mComputedBorderPadding.SizeTo(0, 0, 0, 0);
-      }
+      mComputedBorderPadding = mStyleBorder->GetBorder();
     }
     mComputedBorderPadding += mComputedPadding;
 

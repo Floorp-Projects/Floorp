@@ -225,24 +225,15 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
         }
   
         // For the origin, add in the border for the frame
-        nsStyleCoord coord;
         const nsStyleBorder* border = frame->GetStyleBorder();
-        if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-          origin.x += border->mBorder.GetLeft(coord).GetCoordValue();
-        }
-        if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-          origin.y += border->mBorder.GetTop(coord).GetCoordValue();
-        }
+        origin.x += border->GetBorderWidth(NS_SIDE_LEFT);
+        origin.y += border->GetBorderWidth(NS_SIDE_TOP);
 
         // And subtract out the border for the parent
         if (parent) {
           const nsStyleBorder* parentBorder = parent->GetStyleBorder();
-          if (eStyleUnit_Coord == parentBorder->mBorder.GetLeftUnit()) {
-            origin.x -= parentBorder->mBorder.GetLeft(coord).GetCoordValue();
-          }
-          if (eStyleUnit_Coord == parentBorder->mBorder.GetTopUnit()) {
-            origin.y -= parentBorder->mBorder.GetTop(coord).GetCoordValue();
-          }
+          origin.x -= parentBorder->GetBorderWidth(NS_SIDE_LEFT);
+          origin.y -= parentBorder->GetBorderWidth(NS_SIDE_TOP);
         }
 
         // Get the Presentation Context from the Shell

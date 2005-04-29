@@ -610,14 +610,18 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
       const nsStyleBorder* borderStyle = aStyleContext->GetStyleBorder();
       const nsStylePadding* paddingStyle = aStyleContext->GetStylePadding();
 
-      nsMargin border, padding;
+      nsMargin padding;
       nsRect overflowClipRect(0, 0, frameSize.width, frameSize.height);
-      borderStyle->GetBorder(border);
-      overflowClipRect.Deflate(border);
+      overflowClipRect.Deflate(borderStyle->GetBorder());
       // XXX We need to handle percentage padding
       if (paddingStyle->GetPadding(padding)) {
         overflowClipRect.Deflate(padding);
       }
+#ifdef DEBUG
+      else {
+        NS_WARNING("Percentage padding and CLIP overflow don't mix");
+      }
+#endif
 
       if (hasClip) {
         // If both 'clip' and 'overflow-clip' apply then use the intersection

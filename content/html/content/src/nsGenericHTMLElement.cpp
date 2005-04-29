@@ -761,13 +761,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   // work more like IE if we don't do this, so lets try this and see
   // if people agree.
   const nsStyleBorder* border = frame->GetStyleBorder();
-
-  if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-    origin.x += border->mBorder.GetLeft(coord).GetCoordValue();
-  }
-  if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-    origin.y += border->mBorder.GetTop(coord).GetCoordValue();
-  }
+  origin.x += border->GetBorderWidth(NS_SIDE_LEFT);
+  origin.y += border->GetBorderWidth(NS_SIDE_TOP);
 #endif
 
   // And subtract out the border for the parent
@@ -780,12 +775,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
     
     if (includeBorder) {
       const nsStyleBorder* border = parent->GetStyleBorder();
-      if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-        origin.x -= border->mBorder.GetLeft(coord).GetCoordValue();
-      }
-      if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-        origin.y -= border->mBorder.GetTop(coord).GetCoordValue();
-      }
+      origin.x -= border->GetBorderWidth(NS_SIDE_LEFT);
+      origin.y -= border->GetBorderWidth(NS_SIDE_TOP);
     }
   }
 

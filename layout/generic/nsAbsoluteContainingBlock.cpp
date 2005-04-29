@@ -257,10 +257,6 @@ nsAbsoluteContainingBlock::ReflowingAbsolutesOnly(nsIFrame* aDelegatingFrame,
   return PR_TRUE;
 }
 
-static PRBool IsFixedBorderSize(nsStyleUnit aUnit) {
-  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Enumerated
-    || aUnit == eStyleUnit_Null;
-}
 static PRBool IsFixedPaddingSize(nsStyleUnit aUnit) {
   return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Null;
 }
@@ -298,7 +294,6 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // skip getting style data
     return PR_FALSE;
   }
-  const nsStyleBorder* border = f->GetStyleBorder();
   const nsStylePadding* padding = f->GetStylePadding();
   const nsStyleMargin* margin = f->GetStyleMargin();
   if (aCBWidthChanged) {
@@ -306,11 +301,10 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // If border-left, border-right, padding-left, padding-right,
     // width, min-width, and max-width are all lengths, 'none', or enumerated,
     // then our frame width does not depend on the parent width.
+    // Note that borders never depend on the parent width
     if (pos->mWidth.GetUnit() != eStyleUnit_Coord ||
         pos->mMinWidth.GetUnit() != eStyleUnit_Coord ||
         !IsFixedMaxSize(pos->mMaxWidth.GetUnit()) ||
-        !IsFixedBorderSize(border->mBorder.GetLeftUnit()) ||
-        !IsFixedBorderSize(border->mBorder.GetRightUnit()) ||
         !IsFixedPaddingSize(padding->mPadding.GetLeftUnit()) ||
         !IsFixedPaddingSize(padding->mPadding.GetRightUnit())) {
       return PR_TRUE;
@@ -346,14 +340,13 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // min-height, and max-height are all lengths or 'none',
     // and height is a length or height and bottom are auto and top is not auto,
     // then our frame height does not depend on the parent height.
+    // Note that borders never depend on the parent height
     if (!(pos->mHeight.GetUnit() == eStyleUnit_Coord ||
           (pos->mHeight.GetUnit() == eStyleUnit_Auto &&
            pos->mOffset.GetBottomUnit() == eStyleUnit_Auto &&
            pos->mOffset.GetTopUnit() != eStyleUnit_Auto)) ||
         pos->mMinHeight.GetUnit() != eStyleUnit_Coord ||
         !IsFixedMaxSize(pos->mMaxHeight.GetUnit()) ||
-        !IsFixedBorderSize(border->mBorder.GetTopUnit()) ||
-        !IsFixedBorderSize(border->mBorder.GetBottomUnit()) ||
         !IsFixedPaddingSize(padding->mPadding.GetTopUnit()) ||
         !IsFixedPaddingSize(padding->mPadding.GetBottomUnit())) { 
       return PR_TRUE;
@@ -494,11 +487,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 #endif // DEBUG
 
   nsresult  rv;
-  nsMargin  border;
   // Get the border values
-  if (!aReflowState.mStyleBorder->GetBorder(border)) {
-    NS_NOTYETIMPLEMENTED("percentage border");
-  }
+  const nsMargin& border = aReflowState.mStyleBorder->GetBorder();
 
   nscoord availWidth = aReflowState.mComputedWidth;
   enum { NOT_SHRINK_TO_FIT, SHRINK_TO_FIT_AVAILWIDTH, SHRINK_TO_FIT_MEW };

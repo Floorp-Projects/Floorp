@@ -3498,34 +3498,9 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border, aFrame);
 
   if (border) {
-    nsStyleCoord coord;
-    PRUint8 borderStyle = border->GetBorderStyle(aSide);
-    if (borderStyle == NS_STYLE_BORDER_STYLE_NONE) {
-      coord.SetCoordValue(0);
-    } else {
-      border->mBorder.Get(aSide, coord);
-    }
-
-    switch (coord.GetUnit()) {
-      case eStyleUnit_Coord:
-        val->SetTwips(coord.GetCoordValue());
-        break;
-      case eStyleUnit_Enumerated:
-        {
-          const nsAFlatCString& width=
-            nsCSSProps::ValueToKeyword(coord.GetIntValue(),
-                                       nsCSSProps::kBorderWidthKTable);
-          val->SetIdent(width);
-          break;
-        }
-      case eStyleUnit_Chars:
-        // XXX we need a frame and a rendering context to calculate this, bug 281972, bug 282126.
-        val->SetTwips(0);
-        break;
-      default:
-        NS_ERROR("Unexpected border width unit");
-        break;
-    }
+    nscoord width;
+    border->CalcBorderFor(aFrame, aSide, width);
+    val->SetTwips(width);
   }
 
   return CallQueryInterface(val, aValue);

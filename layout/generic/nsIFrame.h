@@ -1398,8 +1398,10 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
     return NS_OK;
   }
   NS_HIDDEN_(nsresult) GetParentBox(nsIBox** aParent);
+  // Box methods.  Note that these do NOT just get the CSS border, padding,
+  // etc.  They also talk to nsITheme.
   NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
-  NS_IMETHOD GetBorder(nsMargin& aBorderAndPadding)=0;
+  NS_IMETHOD GetBorder(nsMargin& aBorder)=0;
   NS_IMETHOD GetPadding(nsMargin& aBorderAndPadding)=0;
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD GetInset(nsMargin& aInset)=0;

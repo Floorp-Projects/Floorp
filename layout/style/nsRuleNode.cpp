@@ -3382,12 +3382,41 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   { // scope for compilers with broken |for| loop scoping
     NS_FOR_CSS_SIDES(side) {
       const nsCSSValue &value = marginData.mBorderWidth.*(nsCSSRect::sides[side]);
-      if (SetCoord(value, coord, parentCoord, SETCOORD_LE, aContext,
-                   mPresContext, inherited))
-        border->mBorder.Set(side, coord);
+      NS_ASSERTION(eCSSUnit_Percent != value.GetUnit(),
+                   "Percentage borders not implemented yet "
+                   "If implementing, make sure to fix all consumers of "
+                   "nsStyleBorder, the IsPercentageAwareChild method, "
+                   "the nsAbsoluteContainingBlock::FrameDependsOnContainer "
+                   "method, the "
+                   "nsLineLayout::IsPercentageAwareReplacedElement method "
+                   "and probably some other places");
+      if (eCSSUnit_Enumerated == value.GetUnit()) {
+        NS_ASSERTION(value.GetIntValue() == NS_STYLE_BORDER_WIDTH_THIN ||
+                     value.GetIntValue() == NS_STYLE_BORDER_WIDTH_MEDIUM ||
+                     value.GetIntValue() == NS_STYLE_BORDER_WIDTH_THICK,
+                     "Unexpected enum value");
+        border->SetBorderWidth(side,
+                               (mPresContext->GetBorderWidthTable())[value.GetIntValue()]);
+      }
+      else if (SetCoord(value, coord, parentCoord, SETCOORD_LENGTH, aContext,
+                        mPresContext, inherited)) {
+        if (coord.GetUnit() == eStyleUnit_Coord) {
+          border->SetBorderWidth(side, coord.GetCoordValue());
+        }
+#ifdef DEBUG
+        else {
+          NS_ASSERTION(coord.GetUnit() == eStyleUnit_Chars, "unexpected unit");
+          NS_WARNING("Border set in chars; we don't handle that");
+        }
+#endif        
+      }
       else if (eCSSUnit_Inherit == value.GetUnit()) {
         inherited = PR_TRUE;
-        border->mBorder.Set(side, parentBorder->mBorder.Get(side, coord));
+        border->SetBorderWidth(side, parentBorder->GetBorderWidth(side));
+      }
+      else if (eCSSUnit_Initial == value.GetUnit()) {
+        border->SetBorderWidth(side,
+          (mPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM]);
       }
     }
   }
@@ -3401,7 +3430,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
       if (eCSSUnit_Enumerated == unit) {
         border->SetBorderStyle(side, value.GetIntValue());
       }
-      else if (eCSSUnit_None == unit) {
+      else if (eCSSUnit_None == unit || eCSSUnit_Initial == unit) {
         border->SetBorderStyle(side, NS_STYLE_BORDER_STYLE_NONE);
       }
       else if (eCSSUnit_Inherit == unit) {
@@ -3518,7 +3547,6 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
     PropagateDependentBit(NS_STYLE_INHERIT_BIT(Border), aHighestNode);
   }
 
-  border->RecalcData(mPresContext);
   return border;
 }
   

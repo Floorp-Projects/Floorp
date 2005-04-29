@@ -154,16 +154,12 @@ nsInlineFrame::IsSelfEmpty()
   // XXX Top and bottom removed, since they shouldn't affect things, but this
   // doesn't really match with nsLineLayout.cpp's setting of
   // ZeroEffectiveSpanBox, anymore, so what should this really be?
-  if ((border->IsBorderSideVisible(NS_SIDE_RIGHT) &&
-       !IsBorderZero(border->mBorder.GetRightUnit(),
-                     border->mBorder.GetRight(coord))) ||
-      (border->IsBorderSideVisible(NS_SIDE_LEFT) &&
-       !IsBorderZero(border->mBorder.GetLeftUnit(),
-                     border->mBorder.GetLeft(coord))) ||
+  if (border->GetBorderWidth(NS_SIDE_RIGHT) != 0 ||
+      border->GetBorderWidth(NS_SIDE_LEFT) != 0 ||
       !IsPaddingZero(padding->mPadding.GetRightUnit(),
-                    padding->mPadding.GetRight(coord)) ||
+                     padding->mPadding.GetRight(coord)) ||
       !IsPaddingZero(padding->mPadding.GetLeftUnit(),
-                    padding->mPadding.GetLeft(coord)) ||
+                     padding->mPadding.GetLeft(coord)) ||
       !IsMarginZero(margin->mMargin.GetRightUnit(),
                     margin->mMargin.GetRight(coord)) ||
       !IsMarginZero(margin->mMargin.GetLeftUnit(),

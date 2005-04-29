@@ -1161,10 +1161,7 @@ nsMargin*
 nsTableCellFrame::GetBorderWidth(float      aPixelsToTwips,
                                  nsMargin&  aBorder) const
 {
-  aBorder.left = aBorder.right = aBorder.top = aBorder.bottom = 0;
-
-  const nsStyleBorder* borderData = GetStyleBorder();
-  borderData->GetBorder(aBorder);
+  aBorder = GetStyleBorder()->GetBorder();
   return &aBorder;
 }
 
@@ -1320,17 +1317,11 @@ nsBCTableCellFrame::PaintUnderlay(nsPresContext&           aPresContext,
     nsMargin borderWidth;
     GetBorderWidth(p2t, borderWidth);
 
-    nsStyleBorder myBorder = aStyleBorder;
+    nsStyleBorder myBorder(aStyleBorder);
 
-    nsStyleCoord coord(borderWidth.top);
-    myBorder.mBorder.SetTop(coord);
-    coord.SetCoordValue(borderWidth.right);
-    myBorder.mBorder.SetRight(coord);
-    coord.SetCoordValue(borderWidth.bottom);
-    myBorder.mBorder.SetBottom(coord);
-    coord.SetCoordValue(borderWidth.left);
-    myBorder.mBorder.SetLeft(coord);
-    myBorder.RecalcData(&aPresContext);
+    NS_FOR_CSS_SIDES(side) {
+      myBorder.SetBorderWidth(side, borderWidth.side(side));
+    }
 
     nsRect rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(&aPresContext, aRenderingContext, this,
