@@ -170,7 +170,14 @@ calCalendarManager.prototype = {
         stmt.reset();
         return id;
     },
-
+    
+    notifyObservers: function(functionName, args) {
+        function notify(obs) {
+            try { obs[functionName].apply(obs, args);  }
+            catch (e) { }
+        }
+        this.mObservers.forEach(notify);
+    },
 
     /**
      * calICalendarManager interface
@@ -196,13 +203,11 @@ calCalendarManager.prototype = {
         //this.mCache[this.mDB.lastInsertRowID] = calendar;
         this.mCache[this.findCalendarID(calendar)] = calendar;
 
-        for each (obs in this.mObservers)
-            obs.onCalendarRegistered(calendar);
+        this.notifyObservers("onCalendarRegistered", [calendar]);
     },
 
     unregisterCalendar: function(calendar) {
-        for each (obs in this.mObservers)
-            obs.onCalendarUnregistering(calendar);
+        this.notifyObservers("onCalendarUnregistering", [calendar]);
 
         var calendarID = this.findCalendarID(calendar);
 
@@ -223,9 +228,8 @@ calCalendarManager.prototype = {
     deleteCalendar: function(calendar) {
         /* check to see if calendar is unregistered first... */
         /* delete the calendar for good */
-
-        for each (obs in this.mObservers)
-            obs.onCalendarDeleting(calendar);
+        
+        this.notifyObservers("onCalendarDeleting", [calendar]);
     },
 
     getCalendars: function(count) {
@@ -236,7 +240,7 @@ calCalendarManager.prototype = {
 
         while (stmt.step()) {
             var id = stmt.row.id;
-            if (!this.mCache[id]) {
+            if (!(id in this.mCache)) {
                 try {
                     this.mCache[id] = this.createCalendar(stmt.row.type, makeURI(stmt.row.uri));
                 } catch (e) {
@@ -295,16 +299,14 @@ calCalendarManager.prototype = {
 
         this.mDB.commitTransaction();
 
-        for each (obs in this.mObservers)
-            obs.onCalendarPrefSet(calendar, name, value);
+        this.notifyObservers("onCalendarPrefSet", [calendar, name, value])
     },
 
     deleteCalendarPref: function(calendar, name) {
         // pref names must be lower case
         name = name.toLowerCase();
 
-        for each (obs in this.mObservers)
-            obs.onCalendarPrefDeleting(calendar, name);
+        this.mNotifyObservers("onCalendarPrefDeleting", [calendar, name]);
 
         var calendarID = this.findCalendarID(calendar);
 
@@ -316,22 +318,17 @@ calCalendarManager.prototype = {
 
     mObservers: Array(),
     addObserver: function(aObserver) {
-        for each (obs in this.mObservers) {
-            if (obs == aObserver)
-                return;
-        }
+        if (this.mObservers.indexOf(aObserver) != -1)
+            return;
 
         this.mObservers.push(aObserver);
     },
 
     removeObserver: function(aObserver) {
-        var newObs = Array();
-
-        for each (obs in this.mObservers) {
-            if (obs != aObserver)
-                newObs.push(obs);
+        function notThis(v) {
+            return v != aObserver;
         }
-
-        this.mObservers = newObs;
+        
+        this.mObservers = this.mObservers.filter(notThis);
     }
 };
