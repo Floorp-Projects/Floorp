@@ -918,28 +918,11 @@ function OnFolderUnreadColAttrModified(event)
     }
 }
 
-// builds prior to 8-14-2001 did not have the unread and total columns
-// in the folder pane.  so if a user ran an old build, and then
-// upgraded, they get the new columns, and this causes problems
-// because it looks like all the folder names are gone (see bug #96979)
-// to work around this, we hide those columns once, using the 
-// "mail.ui.folderpane.version" pref.
 function UpgradeFolderPaneUI()
 {
-  var folderPaneUIVersion = pref.getIntPref("mail.ui.folderpane.version");
-
-  if (folderPaneUIVersion == 1) {
-    var folderUnreadCol = document.getElementById("folderUnreadCol");
-    folderUnreadCol.setAttribute("hidden", "true");
-    var folderTotalCol = document.getElementById("folderTotalCol");
-    folderTotalCol.setAttribute("hidden", "true");
-    pref.setIntPref("mail.ui.folderpane.version", 2);
-  } // we fall through to the == 2 case so we'll upgrade v 1 profiles correctly
-  if (folderPaneUIVersion <= 2) {
-    var folderSizeCol = document.getElementById("folderSizeCol");
-    folderSizeCol.setAttribute("hidden", "true");
-    pref.setIntPref("mail.ui.folderpane.version", 3);
-  }
+  // placeholder in case any new columns get added to the folder pane
+  // note that this function fails to notice a pane layout switch
+  // var folderPaneUIVersion = pref.getIntPref("mail.ui.folderpane.version");
 }
 
 function OnLoadFolderPane()
@@ -979,7 +962,6 @@ function OnLoadFolderPane()
 // "mailnews.ui.threadpane.version" pref.
 function UpgradeThreadPaneUI()
 {
-  var labelCol;
   var threadPaneUIVersion;
 
   try {
@@ -997,11 +979,6 @@ function UpgradeThreadPaneUI()
           threadTree._reorderColumn(junkCol, beforeCol, true);
         else // subjectCol was the last column, put it after
           threadTree._reorderColumn(junkCol, subjectCol, false);
-
-        if (threadPaneUIVersion == 1) {
-          labelCol = document.getElementById("labelCol");
-          labelCol.setAttribute("hidden", "true");
-        }
       }
 
       var senderCol = document.getElementById("senderCol");
@@ -1016,7 +993,7 @@ function UpgradeThreadPaneUI()
 
       pref.setIntPref("mailnews.ui.threadpane.version", 4);
     }
-	}
+  }
   catch (ex) {
     dump("UpgradeThreadPane: ex = " + ex + "\n");
   }

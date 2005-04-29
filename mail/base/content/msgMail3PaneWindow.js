@@ -1127,12 +1127,6 @@ function UpgradeThreadPaneUI()
           // date column. 
           var dateCol = document.getElementById("dateCol");
           threadTree._reorderColumn(junkCol, dateCol, true);
-
-          // hide labels column by default
-          if (threadPaneUIVersion == 1) {
-            labelCol = document.getElementById("labelCol");
-            labelCol.setAttribute("hidden", "true");
-          }
         }
 
         var senderCol = document.getElementById("senderCol");

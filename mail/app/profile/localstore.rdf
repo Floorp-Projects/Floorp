@@ -2,38 +2,4 @@
 <RDF:RDF
      xmlns:NC="http://home.netscape.com/NC-rdf#"
      xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description about="chrome://messenger/content/messenger.xul#flaggedCol">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messenger.xul#unreadCol">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messenger.xul#totalCol">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messenger.xul#OrderReceivedColumn">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messenger.xul#statusCol">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messenger.xul#sizeCol">
-    <hidden>true</hidden>
-  </RDF:Description>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/addressbook/addressbook.xul">
-    <NC:persist resource="chrome://messenger/content/addressbook/addressbook.xul#abResultsOutliner"/>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/addressbook/addressbook.xul#abResultsOutliner" height="94" />
-  <RDF:Description about="chrome://messenger/content/messenger.xul">
-    <NC:persist resource="chrome://messenger/content/messenger.xul#statusCol"/>
-    <NC:persist resource="chrome://messenger/content/messenger.xul#sizeCol"/>
-    <NC:persist resource="chrome://messenger/content/messenger.xul#unreadCol"/>
-    <NC:persist resource="chrome://messenger/content/messenger.xul#totalCol"/>
-    <NC:persist resource="chrome://messenger/content/messenger.xul#OrderReceivedColumn"/>
-    <NC:persist resource="chrome://messenger/content/messenger.xul#flaggedCol"/>
-    <NC:persist resource="chrome://messenger/content/messenger.xul#messengerWindow"/>
-    <NC:persist resource="chrome://messenger/content/messenger.xul#threadOutliner"/>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messenger.xul#threadOutliner" height="94" />
 </RDF:RDF>

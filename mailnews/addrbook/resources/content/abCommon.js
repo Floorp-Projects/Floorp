@@ -280,30 +280,10 @@ function InitCommonJS()
   gAddressBookBundle = document.getElementById("bundle_addressBook");
 }
 
-// builds prior to 12-08-2001 did not use an tree for
-// the results pane.  so for any existing profiles will 
-// get all columns, whereas new profile only get a select few
-// because we hide them by default in localStore.rdf
-// to work around this, we hide the non-default columns once.
-// there is more than one results pane (addressbook, select addresses,
-// addressbook sidebar channel, etc) so we'll pass in the 
-// the pref so that we'll migrate each of them once.
 function UpgradeAddressBookResultsPaneUI(prefName)
 {
-  try {
-    var resultsPaneUIVersion = gPrefs.getIntPref(prefName);
-    if (resultsPaneUIVersion == 1) {
-      // hide all columns with hiddenbydefault="true" 
-      var elements = document.getElementsByAttribute("hiddenbydefault","true");
-      for (var i=0; i<elements.length; i++) {
-        elements[i].setAttribute("hidden","true");
-      }
-      gPrefs.setIntPref(prefName, 2);
-    }
-  }
-  catch (ex) {
-    dump("UpgradeAddressBookResultsPaneUI " + prefName + " ex = " + ex + "\n");
-  }
+  // placeholder in case any new columns get added to the address book
+  // var resultsPaneUIVersion = gPrefs.getIntPref(prefName);
 }
 
 function SetupAbCommandUpdateHandlers()
