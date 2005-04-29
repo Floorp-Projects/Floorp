@@ -45,6 +45,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 PRIntn  debug = 0;
 PRIntn  verbose = 0;

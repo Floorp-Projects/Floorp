@@ -46,11 +46,12 @@
 ** ... more? ... histogram distribution of random numbers
 */
 
-#include <plgetopt.h> 
-#include <nspr.h> 
-#include <prrng.h> 
+#include "plgetopt.h"
+#include "nspr.h" 
+#include "prrng.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*
 ** Test harness infrastructure

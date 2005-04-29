@@ -136,10 +136,11 @@ static void AcceptThread(void *arg)
         ACCEPT_READ_DATASIZE,
         PR_SecondsToInterval(1));
 
-    if ( bytesRead == -1 && PR_GetError() == PR_IO_TIMEOUT_ERROR )
+    if ( bytesRead == -1 && PR_GetError() == PR_IO_TIMEOUT_ERROR ) {
         if ( debug ) printf("AcceptRead timed out\n");
-    else
+    } else {
         if ( debug ) printf("Oops! read: %d, error: %d\n", bytesRead, PR_GetError());
+    }
 
     while( state != AllDone )  {
         PR_Lock( ml );
