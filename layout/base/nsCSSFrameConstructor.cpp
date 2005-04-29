@@ -3399,6 +3399,14 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsFrameConstructorState& aStat
   // XXXbz should we be passing in a non-null aContentParentFrame?
   nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
 
+  PRBool haveFirstLetterStyle, haveFirstLineStyle;
+  HaveSpecialBlockStyle(aContent, aStyleContext,
+                        &haveFirstLetterStyle, &haveFirstLineStyle);
+
+  // The caption frame is a float container
+  nsFrameConstructorSaveState floatSaveState;
+  aState.PushFloatContainingBlock(aNewFrame, floatSaveState,
+                                  haveFirstLetterStyle, haveFirstLineStyle);
   nsFrameItems childItems;
   // pass in aTableCreator so ProcessChildren will call TableProcessChildren
   rv = ProcessChildren(aState, aContent, aNewFrame,
