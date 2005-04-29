@@ -43,84 +43,108 @@
 
 extern "C" {
 
-nsresult __stdcall
-PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
-                   PRUint32* args, PRUint32* stackBytesToPop)
+
+nsresult
+PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 {
 #define PARAM_BUFFER_COUNT     16
-  
-  nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
-  nsXPTCMiniVariant* dispatchParams = NULL;
-  nsIInterfaceInfo* iface_info = NULL;
-  const nsXPTMethodInfo* info = NULL;
-  PRUint8 paramCount;
-  PRUint8 i;
-  nsresult result = NS_ERROR_FAILURE;
-  
-  // If anything fails before stackBytesToPop can be set then
-  // the failure is completely catastrophic!
-  
-  NS_ASSERTION(self,"no self");
-  
-  self->GetInterfaceInfo(&iface_info);
-  NS_ASSERTION(iface_info,"no interface info");
-  
-  iface_info->GetMethodInfo(PRUint16(methodIndex), &info);
-  NS_ASSERTION(info,"no interface info");
-  
-  paramCount = info->GetParamCount();
-  
-  // setup variant array pointer
-  if(paramCount > PARAM_BUFFER_COUNT)
-    dispatchParams = new nsXPTCMiniVariant[paramCount];
-  else
-    dispatchParams = paramBuffer;
-  NS_ASSERTION(dispatchParams,"no place for params");
-  
-  PRUint32* ap = args;
-  for(i = 0; i < paramCount; i++, ap++)
-  {
-    const nsXPTParamInfo& param = info->GetParam(i);
-    const nsXPTType& type = param.GetType();
-    nsXPTCMiniVariant* dp = &dispatchParams[i];
-    
-    if(param.IsOut() || !type.IsArithmetic())
-    {
-      dp->val.p = (void*) *ap;
-      continue;
-    }
-    // else
-    switch(type)
-    {
-      case nsXPTType::T_I8     : dp->val.i8  = *((PRInt8*)  ap);       break;
-      case nsXPTType::T_I16    : dp->val.i16 = *((PRInt16*) ap);       break;
-      case nsXPTType::T_I32    : dp->val.i32 = *((PRInt32*) ap);       break;
-      case nsXPTType::T_I64    : dp->val.i64 = *((PRInt64*) ap); ap++; break;
-      case nsXPTType::T_U8     : dp->val.u8  = *((PRUint8*) ap);       break;
-      case nsXPTType::T_U16    : dp->val.u16 = *((PRUint16*)ap);       break;
-      case nsXPTType::T_U32    : dp->val.u32 = *((PRUint32*)ap);       break;
-      case nsXPTType::T_U64    : dp->val.u64 = *((PRUint64*)ap); ap++; break;
-      case nsXPTType::T_FLOAT  : dp->val.f   = *((float*)   ap);       break;
-      case nsXPTType::T_DOUBLE : dp->val.d   = *((double*)  ap); ap++; break;
-      case nsXPTType::T_BOOL   : dp->val.b   = *((PRBool*)  ap);       break;
-      case nsXPTType::T_CHAR   : dp->val.c   = *((char*)    ap);       break;
-      case nsXPTType::T_WCHAR  : dp->val.wc  = *((wchar_t*) ap);       break;
-      default:
-        NS_ASSERTION(0, "bad type");
-        break;
-    }
-  }
-  *stackBytesToPop = ((PRUint32)ap) - ((PRUint32)args);
-  
-  result = self->CallMethod((PRUint16)methodIndex, info, dispatchParams);
-  
-  NS_RELEASE(iface_info);
-  
-  if(dispatchParams != paramBuffer)
-    delete [] dispatchParams;
-  
-  return result;
+
+	nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
+	nsXPTCMiniVariant* dispatchParams = NULL;
+	nsIInterfaceInfo* iface_info = NULL;
+	const nsXPTMethodInfo* info;
+	PRUint8 paramCount;
+	PRUint8 i;
+	nsresult result = NS_ERROR_FAILURE;
+
+	NS_ASSERTION(self,"no self");
+
+	self->GetInterfaceInfo(&iface_info);
+	NS_ASSERTION(iface_info,"no interface info");
+
+	iface_info->GetMethodInfo(PRUint16(methodIndex), &info);
+	NS_ASSERTION(info,"no interface info");
+
+	paramCount = info->GetParamCount();
+
+    // setup variant array pointer
+	if(paramCount > PARAM_BUFFER_COUNT)
+		dispatchParams = new nsXPTCMiniVariant[paramCount];
+	else
+		dispatchParams = paramBuffer;
+	NS_ASSERTION(dispatchParams,"no place for params");
+
+	PRUint32* ap = args;
+	for(i = 0; i < paramCount; i++, ap++)
+	{
+		const nsXPTParamInfo& param = info->GetParam(i);
+		const nsXPTType& type = param.GetType();
+		nsXPTCMiniVariant* dp = &dispatchParams[i];
+
+#ifndef AARONTEMP
+		if(i==3)
+		{
+			// PrepareAndDispatch makes an assumption that is causing us problems.  It
+			// assumes that all of the parameters that need to go to the method that we
+			// are resolving are contiguous and on the stack.  However, ARM keeps
+			// parameters 1-3 in registers and pushes parameters 4 and above when it
+			// makes function calls.  This is causing us problems.  In our error scenario,
+			// STACK_ENTRY(x) is called.  All parameters EXCEPT 1-3 come into
+			// STACK_ENTRY(x) on the stack.  When SharedStubs is eventually called, it
+			// will do the push of 1-3 on to the stack.  But to get to SharedStubs,
+			// STACK_ENTRY(x) has to make a c++ function call to 
+			// asmXPTCStubBase_Stub##n().  The preparation of which pushes r0, r12, and
+			// the return address onto the stack, as well as making room for two more
+			// double words on the stack.  For a total of 5 double words on the stack
+			// between parameter 3 and parameter 4.  asmXPTCStubBase_Stub##n() will then
+			// call SharedStubs, which will call PrepareAndDispatch.
+			//
+			// NOTE: this is ARM DEPENDENT.  This should not be compiled for other
+			// processors.
+			//
+			// NOTE: this also assumes that this WinCE PrepareAndDispatch can only be 
+			// called in the sequence mentioned above.
+			ap += 5;
+		}
+#endif /* AARONTEMP */
+
+		if(param.IsOut() || !type.IsArithmetic())
+		{
+			dp->val.p = (void*) *ap;
+			continue;
+		}
+	// else
+		switch(type)
+		{
+			case nsXPTType::T_I8     : dp->val.i8  = *((PRInt8*)  ap);       break;
+			case nsXPTType::T_I16    : dp->val.i16 = *((PRInt16*) ap);       break;
+			case nsXPTType::T_I32    : dp->val.i32 = *((PRInt32*) ap);       break;
+			case nsXPTType::T_I64    : dp->val.i64 = *((PRInt64*) ap); ap++; break;
+			case nsXPTType::T_U8     : dp->val.u8  = *((PRUint8*) ap);       break;
+			case nsXPTType::T_U16    : dp->val.u16 = *((PRUint16*)ap);       break;
+			case nsXPTType::T_U32    : dp->val.u32 = *((PRUint32*)ap);       break;
+			case nsXPTType::T_U64    : dp->val.u64 = *((PRUint64*)ap); ap++; break;
+			case nsXPTType::T_FLOAT  : dp->val.f   = *((float*)   ap);       break;
+			case nsXPTType::T_DOUBLE : dp->val.d   = *((double*)  ap); ap++; break;
+			case nsXPTType::T_BOOL   : dp->val.b   = *((PRBool*)  ap);       break;
+			case nsXPTType::T_CHAR   : dp->val.c   = *((char*)    ap);       break;
+			case nsXPTType::T_WCHAR  : dp->val.wc  = *((wchar_t*) ap);       break;
+			default:
+				NS_ASSERTION(0, "bad type");
+				break;
+		}
+	}
+
+	result = self->CallMethod((PRUint16)methodIndex, info, dispatchParams);
+
+	NS_RELEASE(iface_info);
+
+	if(dispatchParams != paramBuffer)
+		delete [] dispatchParams;
+
+	return result;
 }
+
   
 } // extern "C"
 
