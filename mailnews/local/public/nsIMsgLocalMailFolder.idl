@@ -57,7 +57,7 @@ struct nsLocalFolderScanState;
 
 %}
 
-[scriptable, uuid(94bf4be7-4af2-462b-a7cc-c4298c335829)]
+[scriptable, uuid(ca3be30c-b850-4fec-bdd9-131c39e74805)]
 interface nsIMsgLocalMailFolder : nsISupports {
   /**
    * set the default flags on the subfolders of this folder, such as
@@ -96,6 +96,7 @@ interface nsIMsgLocalMailFolder : nsISupports {
    */
   void deleteDownloadMsg(in nsIMsgDBHdr aMsgHdr, out boolean aDoSelect);
   void selectDownloadMsg();
+  void notifyDelete();
 
   /**
    * functions for grubbing thru a folder to find the Uidl for a

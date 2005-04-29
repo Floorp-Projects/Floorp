@@ -244,6 +244,7 @@ void
 nsPop3Sink::CheckPartialMessages(nsIPop3Protocol *protocol)
 {
   PRUint32 count = m_partialMsgsArray.Count();
+  PRBool deleted = PR_FALSE;
 
   for (PRUint32 i = 0; i < count; i++)
   {
@@ -251,11 +252,19 @@ nsPop3Sink::CheckPartialMessages(nsIPop3Protocol *protocol)
     PRBool found = PR_TRUE;
     partialMsg = NS_STATIC_CAST(partialRecord *,m_partialMsgsArray.ElementAt(i));
     protocol->CheckMessage(partialMsg->m_uidl.get(), &found);
-    if (!found)
+    if (!found) {
       m_newMailParser->m_mailDB->DeleteHeader(partialMsg->m_msgDBHdr, nsnull, PR_FALSE, PR_TRUE);
+      deleted = PR_TRUE;
+    }
     delete partialMsg;
   }
   m_partialMsgsArray.Clear();
+  if (deleted) {
+    nsCOMPtr<nsIMsgLocalMailFolder> localFolder = do_QueryInterface(m_folder);
+    if (localFolder) {
+      localFolder->NotifyDelete();
+    }
+  }
 }
 
 nsresult 
@@ -852,7 +861,8 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow, PRInt32 aSize)
       m_tmpDownloadFileSpec.Truncate(0);
       m_outFileStream->Open(m_tmpDownloadFileSpec, (PR_RDWR | PR_CREATE_FILE));
       m_outFileStream->seek(PR_SEEK_END, 0);
-    }
+    } else
+    	m_newMailParser->PublishMsgHeader(aMsgWindow); 
     if (aSize)
       hdr->SetUint32Property("onlineSize", aSize);
 

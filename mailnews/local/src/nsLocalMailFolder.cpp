@@ -3137,6 +3137,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DownloadMessagesForOffline(
   return localMailServer->GetNewMail(aWindow, this, this, nsnull); 
 }
 
+NS_IMETHODIMP nsMsgLocalMailFolder::NotifyDelete()
+{
+  NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+  return NS_OK;
+}
+
 // TODO:  once we move certain code into the IncomingServer (search for TODO)
 // this method will go away.
 // sometimes this gets called when we don't have the server yet, so

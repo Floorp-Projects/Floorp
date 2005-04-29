@@ -2211,6 +2211,7 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
       }
       else
       {
+        m_pop3ConData->list_done = PR_TRUE;
         m_pop3ConData->next_state = POP3_GET_MSG;
       }
       m_pop3ConData->pause_for_read = PR_FALSE;
@@ -2414,6 +2415,7 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
     // limit the list if fewer entries than given in STAT response
     if(m_listpos < m_pop3ConData->number_of_messages)
       m_pop3ConData->number_of_messages = m_listpos;
+    m_pop3ConData->list_done = PR_TRUE;
     m_pop3ConData->next_state = POP3_GET_MSG;
     m_pop3ConData->pause_for_read = PR_FALSE;
     PR_Free(line);
@@ -2527,6 +2529,7 @@ PRInt32 nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
         // limit the list if fewer entries than given in STAT response
         if(m_listpos < m_pop3ConData->number_of_messages)
           m_pop3ConData->number_of_messages = m_listpos;
+        m_pop3ConData->list_done = PR_TRUE;
         m_pop3ConData->next_state = POP3_GET_MSG;
         m_pop3ConData->pause_for_read = PR_FALSE;
         PR_Free(line);
@@ -3822,7 +3825,8 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
       
     case POP3_ERROR_DONE:
       /*  write out the state */
-      CommitState(PR_TRUE);
+      if(m_pop3ConData->list_done)
+        CommitState(PR_TRUE);
       
       if(m_pop3ConData->msg_closure)
       {

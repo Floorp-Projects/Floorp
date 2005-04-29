@@ -215,6 +215,7 @@ typedef struct _Pop3ConData {
     PRBool pause_for_read;   		/* Pause now for next read? */
     
     PRBool command_succeeded;   /* did the last command succeed? */
+    PRBool list_done;		/* did we get the complete list of msgIDs? */
     PRInt32 first_msg;
 
     PRUint32 obuffer_size;
