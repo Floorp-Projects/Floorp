@@ -345,7 +345,6 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
     } else {
       aNewStr.ReplaceSubstring(kDate.get(), EmptyString().get());
     }
-    return;
   }
 
   // NOTE: Must search for &PT before searching for &P
@@ -358,7 +357,6 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
     PRUnichar * uStr = nsTextFormatter::smprintf(mPD->mPageNumAndTotalsFormat, mPageNum, mTotNumPages);
     aNewStr.ReplaceSubstring(kPageAndTotal.get(), uStr);
     nsMemory::Free(uStr);
-    return;
   }
 
   // Search to see if the page number code is in the string
@@ -368,19 +366,31 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
     PRUnichar * uStr = nsTextFormatter::smprintf(mPD->mPageNumFormat, mPageNum);
     aNewStr.ReplaceSubstring(kPage.get(), uStr);
     nsMemory::Free(uStr);
-    return;
   }
 
   NS_NAMED_LITERAL_STRING(kTitle, "&T");
   if (aStr.Find(kTitle) != kNotFound) {
-    SubstValueForCode(aNewStr, kTitle.get(), mPD->mDocTitle);
-    return;
+    if (mPD->mDocTitle != nsnull) {
+      aNewStr.ReplaceSubstring(kTitle.get(), mPD->mDocTitle);
+    } else {
+      aNewStr.ReplaceSubstring(kTitle.get(), EmptyString().get());
+    }
   }
 
   NS_NAMED_LITERAL_STRING(kDocURL, "&U");
   if (aStr.Find(kDocURL) != kNotFound) {
-    SubstValueForCode(aNewStr, kDocURL.get(), mPD->mDocURL);
-    return;
+    if (mPD->mDocURL != nsnull) {
+      aNewStr.ReplaceSubstring(kDocURL.get(), mPD->mDocURL);
+    } else {
+      aNewStr.ReplaceSubstring(kDocURL.get(), EmptyString().get());
+    }
+  }
+
+  NS_NAMED_LITERAL_STRING(kPageTotal, "&L");
+  if (aStr.Find(kPageTotal) != kNotFound) {
+    PRUnichar * uStr = nsTextFormatter::smprintf(mPD->mPageNumFormat, mTotNumPages);
+    aNewStr.ReplaceSubstring(kPageTotal.get(), uStr);
+    nsMemory::Free(uStr);
   }
 }
 
