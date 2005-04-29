@@ -178,15 +178,21 @@
 
 #else /* Unix */
 
-#define PR_EXPORT(__type) extern __type
-#define PR_EXPORT_DATA(__type) extern __type
-#define PR_IMPORT(__type) extern __type
-#define PR_IMPORT_DATA(__type) extern __type
+#ifdef HAVE_VISIBILITY_PRAGMA
+#define PR_VISIBILITY_DEFAULT __attribute__((visibility("default")))
+#else
+#define PR_VISIBILITY_DEFAULT
+#endif
 
-#define PR_EXTERN(__type) extern __type
-#define PR_IMPLEMENT(__type) __type
-#define PR_EXTERN_DATA(__type) extern __type
-#define PR_IMPLEMENT_DATA(__type) __type
+#define PR_EXPORT(__type) extern PR_VISIBILITY_DEFAULT __type
+#define PR_EXPORT_DATA(__type) extern PR_VISIBILITY_DEFAULT __type
+#define PR_IMPORT(__type) extern PR_VISIBILITY_DEFAULT __type
+#define PR_IMPORT_DATA(__type) extern PR_VISIBILITY_DEFAULT __type
+
+#define PR_EXTERN(__type) extern PR_VISIBILITY_DEFAULT __type
+#define PR_IMPLEMENT(__type) PR_VISIBILITY_DEFAULT __type
+#define PR_EXTERN_DATA(__type) extern PR_VISIBILITY_DEFAULT __type
+#define PR_IMPLEMENT_DATA(__type) PR_VISIBILITY_DEFAULT __type
 #define PR_CALLBACK
 #define PR_CALLBACK_DECL
 #define PR_STATIC_CALLBACK(__x) static __x

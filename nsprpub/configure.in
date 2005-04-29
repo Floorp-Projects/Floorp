@@ -484,6 +484,52 @@ else
     AC_MSG_RESULT([no])
 fi
 
+dnl ===============================================================
+dnl Check for .hidden assembler directive and visibility attribute.
+dnl Borrowed from glibc configure.in
+dnl ===============================================================
+if test "$GNU_CC"; then
+    AC_CACHE_CHECK(for visibility(hidden) attribute,
+        ac_cv_visibility_hidden,
+        [cat > conftest.c <<EOF
+        int foo __attribute__ ((visibility ("hidden"))) = 1;
+EOF
+        ac_cv_visibility_attribute=no
+        if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
+            if grep '\.hidden.*foo' conftest.s >/dev/null; then
+                ac_cv_visibility_hidden=yes
+            fi
+        fi
+        rm -f conftest.[cs]
+        ])
+    if test $ac_cv_visibility_hidden = yes; then
+        AC_DEFINE(HAVE_VISIBILITY_HIDDEN_ATTRIBUTE)
+        AC_CACHE_CHECK(for visibility pragma support,
+            ac_cv_visibility_pragma,
+            [cat > conftest.c <<EOF
+#pragma GCC visibility push(hidden)
+            int foo_hidden = 1;
+#pragma GCC visibility push(default)
+            int foo_default = 1;
+EOF
+            ac_cv_visibility_pragma=no
+            if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
+                if grep '\.hidden.*foo_hidden' conftest.s >/dev/null; then
+                    if ! grep '\.hidden.*foo_default' conftest.s > /dev/null; then
+                        ac_cv_visibility_pragma=yes
+                    fi
+                fi
+            fi
+            rm -f conftest.[cs]
+            ])
+        if test $ac_cv_visibility_pragma = yes; then
+            AC_DEFINE(HAVE_VISIBILITY_PRAGMA)
+            VISIBILITY_FLAGS='-I$(dist_includedir)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
+            WRAP_SYSTEM_INCLUDES=1
+        fi
+    fi
+fi # GNU_CC
+
 fi # SKIP_COMPILER_CHECKS
 
 dnl ========================================================
@@ -2510,6 +2556,8 @@ AC_SUBST(DLLFLAGS)
 AC_SUBST(EXEFLAGS)
 AC_SUBST(OS_DLLFLAGS)
 AC_SUBST(CYGWIN_WRAPPER)
+AC_SUBST(VISIBILITY_FLAGS)
+AC_SUBST(WRAP_SYSTEM_INCLUDES)
 
 dnl ========================================================
 dnl Generate output files.

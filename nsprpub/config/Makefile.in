@@ -46,6 +46,10 @@ include $(MOD_DEPTH)/config/autoconf.mk
 # Indicate that this directory builds build tools.
 INTERNAL_TOOLS	= 1
 
+# For sanity's sake, we compile nsinstall without the wrapped system
+# headers, so that we can use it to set up the wrapped system headers.
+VISIBILITY_FLAGS =
+
 # autoconf.mk must be deleted last (from the top-level directory)
 # because it is included by every makefile.
 DIST_GARBAGE	= nsprincl.mk nsprincl.sh nspr-config
@@ -135,6 +139,13 @@ endef
 
 export:: $(TARGETS)
 	rm -f $(dist_bindir)/nspr-config
+
+ifdef WRAP_SYSTEM_INCLUDES
+export::
+	if test ! -d system_wrappers; then mkdir system_wrappers; fi
+	$(PERL) $(srcdir)/make-system-wrappers.pl system_wrappers < $(srcdir)/system-headers
+	$(INSTALL) system_wrappers $(dist_includedir)
+endif
 
 $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)

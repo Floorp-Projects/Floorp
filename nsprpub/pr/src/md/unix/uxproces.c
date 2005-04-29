@@ -49,7 +49,7 @@
 #if defined(DARWIN)
 #include <crt_externs.h>
 #else
-extern char **environ;
+PR_IMPORT_DATA(char **) environ;
 #endif
 
 /*
