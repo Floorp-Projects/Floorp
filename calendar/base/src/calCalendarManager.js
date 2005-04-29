@@ -216,6 +216,8 @@ calCalendarManager.prototype = {
         pp.calendar = calendarID;
         this.mDeletePrefs.step();
         this.mDeletePrefs.reset();
+
+        delete this.mCache[calendarID];
     },
 
     deleteCalendar: function(calendar) {
