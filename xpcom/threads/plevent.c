@@ -937,13 +937,13 @@ failed:
         continue;
       }
 
-      //found semaphore
+      /* found semaphore */
       if(self->eventport < 0) {
         self->eventport = create_port(200, portname);
       }
       return PR_SUCCESS;
     }
-    //setup the port and semaphore
+    /* setup the port and semaphore */
     if(self->eventport >= 0) 
     {
       delete_port( self->eventport );
@@ -1637,14 +1637,14 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
     sourceContext.info = (void*)eventQueue;
     sourceContext.perform = _md_EventReceiverProc;
 
-    // make a run loop source
+    /* make a run loop source */
     eventQueue->mRunLoopSource = CFRunLoopSourceCreate(kCFAllocatorDefault, 0 /* order */, &sourceContext);
     PR_ASSERT(eventQueue->mRunLoopSource);
     
     eventQueue->mMainRunLoop = CFRunLoopGetCurrent();
     CFRetain(eventQueue->mMainRunLoop);
     
-    // and add it to the run loop.
+    /* and add it to the run loop */
     CFRunLoopAddSource(eventQueue->mMainRunLoop, eventQueue->mRunLoopSource, kCFRunLoopCommonModes);
 
 #elif defined(MAC_USE_CARBON_EVENT)
