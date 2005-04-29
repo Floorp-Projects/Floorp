@@ -2035,7 +2035,7 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_RequestRead: stream=%p\n",
                                      (void*)pstream));
 
-#if PLUGIN_LOGGING
+#ifdef PLUGIN_LOGGING
   for(NPByteRange * range = rangeList; range != nsnull; range = range->next)
     PR_LOG(nsPluginLogging::gNPNLog,PLUGIN_LOG_NOISY,
     ("%i-%i", range->offset, range->offset + range->length - 1));

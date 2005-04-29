@@ -80,7 +80,7 @@
 //    http://www.mozilla.org/projects/nspr/reference/html/prlog.html
 
 
-#if PLUGIN_LOGGING
+#ifdef PLUGIN_LOGGING
 
 class nsPluginLogging
 {
@@ -95,7 +95,7 @@ public:
 #endif  // PR_LOGGING
 
 // Quick-use macros
-#if PLUGIN_LOGGING
+#ifdef PLUGIN_LOGGING
  #define NPN_PLUGIN_LOG(a, b)                              \
    PR_BEGIN_MACRO                                        \
    PR_LOG(nsPluginLogging::gNPNLog, a, b); \
@@ -105,7 +105,7 @@ public:
  #define NPN_PLUGIN_LOG(a, b)
 #endif
 
-#if PLUGIN_LOGGING
+#ifdef PLUGIN_LOGGING
  #define NPP_PLUGIN_LOG(a, b)                              \
    PR_BEGIN_MACRO                                         \
    PR_LOG(nsPluginLogging::gNPPLog, a, b); \
@@ -115,7 +115,7 @@ public:
  #define NPP_PLUGIN_LOG(a, b)
 #endif
 
-#if PLUGIN_LOGGING
+#ifdef PLUGIN_LOGGING
  #define PLUGIN_LOG(a, b)                              \
    PR_BEGIN_MACRO                                         \
    PR_LOG(nsPluginLogging::gPluginLog, a, b); \

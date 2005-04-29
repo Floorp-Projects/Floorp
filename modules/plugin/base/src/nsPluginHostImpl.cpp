@@ -3503,39 +3503,31 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 ////////////////////////////////////////////////////////////////////////
 /* Called by full-page case */
 NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
-                                                          nsString& aURLSpec,
+                                                          nsIURI* aURI,
                                                           nsIStreamListener *&aStreamListener,
                                                           nsIPluginInstanceOwner *aOwner)
 {
+#ifdef PLUGIN_LOGGING
+  nsCAutoString urlSpec;
+  aURI->GetSpec(urlSpec);
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsPluginHostImpl::InstatiateFullPagePlugin Begin mime=%s, owner=%p, url=%s\n",
-  aMimeType, aOwner, NS_LossyConvertUCS2toASCII(aURLSpec).get()));
+  aMimeType, aOwner, urlSpec.get()));
+#endif
 
-  nsresult  rv;
-  nsIURI    *url;
-
-  //create a URL so that the instantiator can do file ext.
-  //based plugin lookups...
-  rv = NS_NewURI(&url, aURLSpec);
-
-  if (rv != NS_OK)
-    url = nsnull;
-
-  if(FindStoppedPluginForURL(url, aOwner) == NS_OK) {
+  if(FindStoppedPluginForURL(aURI, aOwner) == NS_OK) {
     PLUGIN_LOG(PLUGIN_LOG_NOISY,
     ("nsPluginHostImpl::InstatiateFullPagePlugin FoundStopped mime=%s\n",aMimeType));
 
     nsIPluginInstance* instance;
     aOwner->GetInstance(instance);
     if(!aMimeType || PL_strncasecmp(aMimeType, "application/x-java-vm", 21))
-      rv = NewFullPagePluginStream(aStreamListener, instance);
+      NewFullPagePluginStream(aStreamListener, instance);
     NS_IF_RELEASE(instance);
     return NS_OK;
   }
 
-  rv = SetUpPluginInstance(aMimeType, url, aOwner);
-
-  NS_IF_RELEASE(url);
+  nsresult rv = SetUpPluginInstance(aMimeType, aURI, aOwner);
 
   if (NS_OK == rv)
   {
@@ -3565,7 +3557,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsPluginHostImpl::InstatiateFullPagePlugin End mime=%s, rv=%d, owner=%p, url=%s\n",
-  aMimeType, rv, aOwner, NS_LossyConvertUCS2toASCII(aURLSpec).get()));
+  aMimeType, rv, aOwner, urlSpec.get()));
 
   return rv;
 }
@@ -5901,7 +5893,7 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
   if (!aURL)
     return NS_OK;
 
-  nsPluginStreamListenerPeer  *listener = (nsPluginStreamListenerPeer *)new nsPluginStreamListenerPeer();
+  nsPluginStreamListenerPeer  *listener = new nsPluginStreamListenerPeer();
   if (listener == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
