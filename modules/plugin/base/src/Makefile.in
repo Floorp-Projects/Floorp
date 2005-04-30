@@ -100,7 +100,7 @@ ifeq ($(OS_ARCH), BeOS)
 	CPPSRCS += nsPluginsDirBeOS.cpp
 	CPPSRCS += nsPluginNativeWindow.cpp
 else
-ifneq (,$(filter WINNT WINCE,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 	CPPSRCS += nsPluginsDirWin.cpp
 	CPPSRCS += nsPluginNativeWindowWin.cpp
 else
