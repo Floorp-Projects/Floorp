@@ -122,6 +122,8 @@ nsSystemPref::Init(void)
     if (observerService) {
         rv = observerService->AddObserver(this, NS_PREFSERVICE_READ_TOPIC_ID,
                                           PR_FALSE);
+        rv = observerService->AddObserver(this, "profile-before-change",
+                                          PR_FALSE);
         SYSPREF_LOG(("Add Observer for %s\n", NS_PREFSERVICE_READ_TOPIC_ID));
     }
     return(rv);
@@ -211,8 +213,15 @@ nsSystemPref::Observe(nsISupports *aSubject,
                      aTopic, (char*)aData));
         rv = ReadSystemPref(NS_LossyConvertUCS2toASCII(aData).get());
         return NS_OK;
-    }
-    else
+    } else if (!nsCRT::strcmp(aTopic,"profile-before-change")) {
+      //roll back to mozilla prefs
+      if (mEnabled)
+        UseMozillaPrefs();
+      mEnabled = PR_FALSE;
+      mSysPrefService = nsnull;
+      delete [] mSysPrefs;
+      mSysPrefs = nsnull;
+    } else
         SYSPREF_LOG(("Not needed topic Received %s\n", aTopic));
     return rv;
 }
