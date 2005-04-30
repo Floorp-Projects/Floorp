@@ -67,8 +67,7 @@ inline PRBool IsFixedUnit(nsStyleUnit aUnit, PRBool aEnumOK)
 // XXX this is here to support deprecated calc spacing methods only
 // XXXldb Probably shouldn't be inline.
 inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord, 
-                           PRUint8 aSpacing, PRUint8 aSide,
-                           const nscoord* aEnumTable, PRInt32 aNumEnums)
+                           PRUint8 aSpacing, PRUint8 aSide)
 {
   nscoord result = 0;
 
@@ -107,14 +106,6 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
       break;
 
     case eStyleUnit_Enumerated:
-      if (nsnull != aEnumTable) {
-        PRInt32 value = aCoord.GetIntValue();
-        if ((0 <= value) && (value < aNumEnums)) {
-          return aEnumTable[aCoord.GetIntValue()];
-        }
-      }
-      break;
-
     case eStyleUnit_Null:
     case eStyleUnit_Normal:
     case eStyleUnit_Integer:
@@ -133,20 +124,18 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
 
 // XXXldb Probably shouldn't be inline.
 inline void CalcSidesFor(const nsIFrame* aFrame, const nsStyleSides& aSides, 
-                         PRUint8 aSpacing, 
-                         const nscoord* aEnumTable, PRInt32 aNumEnums,
-                         nsMargin& aResult)
+                         PRUint8 aSpacing, nsMargin& aResult)
 {
   nsStyleCoord  coord;
 
-  aResult.left = CalcSideFor(aFrame, aSides.GetLeft(coord), aSpacing, NS_SIDE_LEFT,
-                             aEnumTable, aNumEnums);
-  aResult.top = CalcSideFor(aFrame, aSides.GetTop(coord), aSpacing, NS_SIDE_TOP,
-                            aEnumTable, aNumEnums);
-  aResult.right = CalcSideFor(aFrame, aSides.GetRight(coord), aSpacing, NS_SIDE_RIGHT,
-                              aEnumTable, aNumEnums);
-  aResult.bottom = CalcSideFor(aFrame, aSides.GetBottom(coord), aSpacing, NS_SIDE_BOTTOM,
-                               aEnumTable, aNumEnums);
+  aResult.left = CalcSideFor(aFrame, aSides.GetLeft(coord), aSpacing,
+                             NS_SIDE_LEFT);
+  aResult.top = CalcSideFor(aFrame, aSides.GetTop(coord), aSpacing,
+                            NS_SIDE_TOP);
+  aResult.right = CalcSideFor(aFrame, aSides.GetRight(coord), aSpacing,
+                              NS_SIDE_RIGHT);
+  aResult.bottom = CalcSideFor(aFrame, aSides.GetBottom(coord), aSpacing,
+                               NS_SIDE_BOTTOM);
 }
 
 static PRBool EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
@@ -371,7 +360,7 @@ nsStyleMargin::CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const
   if (mHasCachedMargin) {
     aMargin = mCachedMargin;
   } else {
-    CalcSidesFor(aFrame, mMargin, NS_SPACING_MARGIN, nsnull, 0, aMargin);
+    CalcSidesFor(aFrame, mMargin, NS_SPACING_MARGIN, aMargin);
   }
 }
 
@@ -435,7 +424,7 @@ nsStylePadding::CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const
   if (mHasCachedPadding) {
     aPadding = mCachedPadding;
   } else {
-    CalcSidesFor(aFrame, mPadding, NS_SPACING_PADDING, nsnull, 0, aPadding);
+    CalcSidesFor(aFrame, mPadding, NS_SPACING_PADDING, aPadding);
   }
 }
 
