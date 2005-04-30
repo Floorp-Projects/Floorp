@@ -535,6 +535,9 @@ nsPop3Sink::AbortMailDelivery(nsIPop3Protocol *protocol)
     m_outFileStream = 0;
   }
 
+  if (m_downloadingToTempFile)
+    m_tmpDownloadFileSpec.Delete(PR_FALSE);
+
   /* tell the parser to mark the db valid *after* closing the mailbox.
   we have truncated the inbox, so berkeley mailbox and msf file are in sync*/
   if (m_newMailParser)
@@ -853,8 +856,17 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow, PRInt32 aSize)
       }
       else
       {
+        nsFileSpec destFolderSpec;
+        nsCOMPtr<nsIFileSpec> path;
         // cleanup after mailHdr in source DB because we moved the message.
         m_newMailParser->m_mailDB->RemoveHeaderMdbRow(hdr);
+
+        // if the filter moved the message, it called nsParseMailMessageState::Init
+        // to truncate the source folder, which resets m_envelopePos and m_position.
+        // So set the envelopePos explicitly here.
+        m_folder->GetPath(getter_AddRefs(path));
+        path->GetFileSpec(&destFolderSpec);
+        m_newMailParser->SetEnvelopePos(destFolderSpec.GetFileSize());
       }
       m_newMailParser->m_newMsgHdr = nsnull;
       m_outFileStream->close(); // close so we can truncate.
