@@ -69,9 +69,10 @@ nsMsgSearchSession::nsMsgSearchSession()
 
 nsMsgSearchSession::~nsMsgSearchSession()
 {
-	DestroyResultList ();
-	DestroyScopeList ();
-	DestroyTermList ();
+  InterruptSearch();
+  DestroyResultList ();
+  DestroyScopeList ();
+  DestroyTermList ();
 
   PR_Free (m_pSearchParam);
 }
