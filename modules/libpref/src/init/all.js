@@ -1003,6 +1003,63 @@ pref("font.name.monospace.x-tamil", "Latha");
 pref("font.name-list.serif.x-tamil", "Latha, Code2000");
 pref("font.name-list.monospace.x-tamil", "Latha, Code2000");
 
+# http://www.alanwood.net/unicode/fonts.html
+
+pref("font.name.serif.x-armn", "Sylfaen");
+pref("font.name.sans-serif.x-armn", "Arial AMU");
+pref("font.name.monospace.x-armn", "Arial AMU");
+pref("font.name-list.serif.x-armn", "Sylfaen,Arial Unicode MS, Code2000");
+pref("font.name-list.monospace.x-armn", "Arial AMU, Arial Unicode MS, Code2000");
+
+pref("font.name.serif.x-beng", "Akaash");
+pref("font.name.sans-serif.x-beng", "Likhan");
+pref("font.name.monospace.x-beng", "Mitra Mono");
+pref("font.name-list.serif.x-beng", "Akaash, Ekushey Punarbhaba, Code2000, Arial Unicode MS"); 
+pref("font.name-list.monospace.x-beng", "Likhan, Mukti Narrow, Code 2000, Arial Unicode MS");
+
+pref("font.name.serif.x-cans", "Aboriginal Serif");
+pref("font.name.sans-serif.x-cans", "Aboriginal Sans");
+pref("font.name.monospace.x-cans", "Aboriginal Sans");
+pref("font.name-list.serif.x-cans", "Aboriginal Serif, BJCree Uni");
+pref("font.name-list.monospace.x-cans", "Aboriginal Sans, OskiDakelh, Pigiarniq, Uqammaq");
+
+pref("font.name.serif.x-ethi", "Visual Geez Unicode");
+pref("font.name.sans-serif.x-ethi", "GF Zemen Unicode");
+pref("font.name.cursive.x-ethi", "Visual Geez Unicode Title");
+pref("font.name.monospace.x-ethi", "Ethiopia Jiret");
+pref("font.name-list.serif.x-ethi", "Visual Geez Unicode, Visual Geez Unicode Agazian, Code2000");
+pref("font.name-list.monospace.x-ethi", "Ethiopia Jiret, Code2000");
+
+pref("font.name.serif.x-geor", "Sylfaen");
+pref("font.name.sans-serif.x-geor", "BPG Classic 99U");
+pref("font.name.monospace.x-geor", "Code2000");
+pref("font.name-list.serif.x-geor", "Sylfaen, BPG Paata Khutsuri U, TITUS Cyberbit Basic"); 
+pref("font.name-list.monospace.x-geor", "BPG Classic 99U, Code2000, Arial Unicode MS");
+
+pref("font.name.serif.x-gujr", "Shruti");
+pref("font.name.sans-serif.x-gujr", "Shruti");
+pref("font.name.monospace.x-gujr", "Code2000");
+pref("font.name-list.serif.x-gujr", "Shruti, Code2000, Arial Unicode MS"); 
+pref("font.name-list.monospace.x-gujr", "Code2000, Shruti, Arial Unicode MS");
+
+pref("font.name.serif.x-guru", "Raavi");
+pref("font.name.sans-serif.x-guru", "Code2000");
+pref("font.name.monospace.x-guru", "Code2000");
+pref("font.name-list.serif.x-guru", "Raavi, Saab, Code2000, Arial Unicode MS"); 
+pref("font.name-list.monospace.x-guru", "Code2000, Raavi, Saab, Arial Unicode MS");
+
+pref("font.name.serif.x-khmr", "PhnomPenh OT");
+pref("font.name.sans-serif.x-khmr", "Khmer OS");
+pref("font.name.monospace.x-khmr", "Code2000");
+pref("font.name-list.serif.x-khmr", "PhnomPenh OT,.Mondulkiri U GR 1.5, Khmer OS");
+pref("font.name-list.monospace.x-khmr", "Code2000, Khmer OS, Khmer OS System");
+
+pref("font.name.serif.x-mlym", "Kartika");
+pref("font.name.sans-serif.x-mlym", "Anjali-Beta");
+pref("font.name.monospace.x-mlym", "Code2000");
+pref("font.name-list.serif.x-mlym", "Kartika, ThoolikaUnicode, Code2000, Arial Unicode MS");
+pref("font.name-list.monospace.x-mlym", "Code2000, Anjali-Beta");
+
 pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 13);
@@ -1050,6 +1107,42 @@ pref("font.size.fixed.x-devanagari", 13);
 pref("font.default.x-tamil", "serif");
 pref("font.size.variable.x-tamil", 16);
 pref("font.size.fixed.x-tamil", 13);
+
+pref("font.default.x-armn", "serif");
+pref("font.size.variable.x-armn", 16);
+pref("font.size.fixed.x-armn", 13);
+
+pref("font.default.x-beng", "serif");
+pref("font.size.variable.x-beng", 16);
+pref("font.size.fixed.x-beng", 13);
+
+pref("font.default.x-cans", "serif");
+pref("font.size.variable.x-cans", 16);
+pref("font.size.fixed.x-cans", 13);
+
+pref("font.default.x-ethi", "serif");
+pref("font.size.variable.x-ethi", 16);
+pref("font.size.fixed.x-ethi", 13);
+
+pref("font.default.x-geor", "serif");
+pref("font.size.variable.x-geor", 16);
+pref("font.size.fixed.x-geor", 13);
+
+pref("font.default.x-gujr", "serif");
+pref("font.size.variable.x-gujr", 16);
+pref("font.size.fixed.x-gujr", 13);
+
+pref("font.default.x-guru", "serif");
+pref("font.size.variable.x-guru", 16);
+pref("font.size.fixed.x-guru", 13);
+
+pref("font.default.x-khmr", "serif");
+pref("font.size.variable.x-khmr", 16);
+pref("font.size.fixed.x-khmr", 13);
+
+pref("font.default.x-mlym", "serif");
+pref("font.size.variable.x-mlym", 16);
+pref("font.size.fixed.x-mlym", 13);
 
 pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);

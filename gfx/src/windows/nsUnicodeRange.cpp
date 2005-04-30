@@ -54,7 +54,16 @@ const char *gUnicodeRangeToLangGroupTable[] =
   "zh-CN",
   "zh-TW",
   "x-devanagari",
-  "x-tamil"
+  "x-tamil",
+  "x-armn",
+  "x-beng",
+  "x-cans",
+  "x-ethi",
+  "x-geor",
+  "x-gujr",
+  "x-guru",
+  "x-khmr",
+  "x-mlym"
 };
 
 /**********************************************************************
@@ -243,8 +252,8 @@ static PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
     kRangeKorean,            //u11xx
     kRangeEthiopic,          //u12xx
     kRangeTertiaryTable,     //u13xx
-    kRangeAboriginal,        //u14xx
-    kRangeAboriginal,        //u15xx
+    kRangeCanadian,          //u14xx
+    kRangeCanadian,          //u15xx
     kRangeTertiaryTable,     //u16xx
     kRangeKhmer,             //u17xx
     kRangeMongolian,         //u18xx
@@ -369,11 +378,11 @@ static PRUint8 gUnicodeTertiaryRangeTable[TERTIARY_TABLE_SIZE] =
     kRangeEthiopic,          //u128x  place holder(resolved in the 2ndary tab.)
     kRangeEthiopic,          //u130x  
     kRangeCherokee,          //u138x
-    kRangeAboriginal,        //u140x  place holder(resolved in the 2ndary tab.)
-    kRangeAboriginal,        //u148x  place holder(resolved in the 2ndary tab.)
-    kRangeAboriginal,        //u150x  place holder(resolved in the 2ndary tab.)
-    kRangeAboriginal,        //u158x  place holder(resolved in the 2ndary tab.)
-    kRangeAboriginal,        //u160x  
+    kRangeCanadian,          //u140x  place holder(resolved in the 2ndary tab.)
+    kRangeCanadian,          //u148x  place holder(resolved in the 2ndary tab.)
+    kRangeCanadian,          //u150x  place holder(resolved in the 2ndary tab.)
+    kRangeCanadian,          //u158x  place holder(resolved in the 2ndary tab.)
+    kRangeCanadian,          //u160x  
     kRangeOghamRunic,        //u168x  this contains two scripts, Ogham & Runic
 };
 

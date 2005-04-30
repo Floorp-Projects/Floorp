@@ -69,6 +69,8 @@ typedef enum {
  kGeorgian,
  kHangul,
  kBopomofo,
+ kEthiopic,
+ kCanadian,
  kUserDefinedEncoding,
  
  kUnicodeBlockFixedScriptMax,	
