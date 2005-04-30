@@ -444,6 +444,7 @@ nsCharsetConverterManager::GetCharsetLangGroupRaw(const char * aCharset,
                                                   nsIAtom** aResult)
 {
 
+  *aResult = nsnull;
   if (aCharset == NULL)
     return NS_ERROR_NULL_POINTER;
 
@@ -458,6 +459,8 @@ nsCharsetConverterManager::GetCharsetLangGroupRaw(const char * aCharset,
   nsAutoString langGroup;
   rv = GetBundleValue(mDataBundle, aCharset, NS_LITERAL_STRING(".LangGroup"), langGroup);
 
-  *aResult = NS_NewAtom(langGroup);
+  if (NS_SUCCEEDED(rv))
+    *aResult = NS_NewAtom(langGroup);
+
   return rv;
 }
