@@ -345,7 +345,7 @@ int poll(struct pollfd filedes[], int nfds, int timeout)
 #elif defined(NETBSD)
 int poll(struct pollfd *filedes, nfds_t nfds, int timeout)
 #elif defined(OPENBSD)
-int poll(struct pollfd *filedes, int nfds, int timeout)
+int poll(struct pollfd filedes[], nfds_t nfds, int timeout)
 #elif defined(FREEBSD)
 int poll(struct pollfd *filedes, unsigned nfds, int timeout)
 #else
