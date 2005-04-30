@@ -115,12 +115,6 @@ nsInlineFrame::GetType() const
 }
 
 inline PRBool
-IsBorderZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
-{
-    return ((aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0));
-}
-
-inline PRBool
 IsPaddingZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 {
     return (aUnit == eStyleUnit_Null ||

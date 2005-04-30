@@ -377,7 +377,6 @@ struct nsStyleBorder: public nsStyleStruct {
   // aBorderWidth is in twips
   void SetBorderWidth(PRUint8 aSide, nscoord aBorderWidth)
   {
-    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
     mBorder.side(aSide) = aBorderWidth;
     if (IsVisibleStyle(GetBorderStyle(aSide))) {
       mComputedBorder.side(aSide) = aBorderWidth;
@@ -395,7 +394,6 @@ struct nsStyleBorder: public nsStyleStruct {
   // side.  That is, this value takes into account the border style.
   nscoord GetBorderWidth(PRUint8 aSide) const
   {
-    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
     return mComputedBorder.side(aSide);
   }
 
