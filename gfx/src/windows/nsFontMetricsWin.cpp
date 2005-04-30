@@ -1201,7 +1201,7 @@ static PRUint8 gBitToUnicodeRange[] =
  /* 74 */ kRangeMyanmar,                // 1000 - 109f     Myanmar
  /* 75 */ kRangeEthiopic,               // 1200 - 12bf     Ethiopic
  /* 76 */ kRangeCherokee,               // 13a0 - 13ff     Cherokee
- /* 77 */ kRangeAboriginal,             // 1400 - 14df     Can. Aboriginal Syl.
+ /* 77 */ kRangeCanadian,               // 1400 - 14df     Can. Aboriginal Syl.
  /* 78 */ kRangeOghamRunic,             // 1680 - 169f     Ogham
  /* 79 */ kRangeOghamRunic,             // 16a0 - 16ff     Runic
  /* 80 */ kRangeKhmer,                  // 1780 - 17ff     Khmer
