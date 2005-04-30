@@ -46,5 +46,5 @@ nsresult NS_CreateNativeAppSupport( nsINativeAppSupport **aResult );
 
 // This function is implemented in nsAppRunner.cpp and called from there and
 // from nsNativeAppSupportWin.cpp.
-nsresult DoCommandLines(nsICmdLineService* cmdLine, PRBool heedGeneralStartupPrefs, PRBool *windowOpened);
+nsresult DoCommandLines(nsICmdLineService* cmdLine, PRBool *windowOpened);
 
