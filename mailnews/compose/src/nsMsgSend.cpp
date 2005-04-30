@@ -3944,6 +3944,7 @@ nsMsgComposeAndSend::NotifyListenerOnStopCopy(nsresult aStatus)
     nsMsgAskBooleanQuestionByID(prompt, NS_MSG_ERROR_DOING_FCC, &retry, nsnull /* what title */);
     if (retry)
     {
+      mSendProgress = nsnull; // this was cancelled, so we need to clear it.
       return DoFcc();
     }
 

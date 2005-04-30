@@ -198,6 +198,13 @@ NS_IMETHODIMP nsMsgProgress::OnStateChange(nsIWebProgress *aWebProgress, nsIRequ
   m_pendingStateFlags = aStateFlags;
   m_pendingStateValue = aStatus;
   
+  nsCOMPtr<nsIMsgWindow> msgWindow (do_QueryReferent(m_msgWindow));
+  if (aStateFlags == nsIWebProgressListener::STATE_STOP && msgWindow && NS_FAILED(aStatus))
+  {
+    msgWindow->StopUrls();
+    msgWindow->SetStatusFeedback(nsnull);
+  }
+
   if (m_listenerList)
   {
     PRUint32 count = 0;
@@ -217,13 +224,6 @@ NS_IMETHODIMP nsMsgProgress::OnStateChange(nsIWebProgress *aWebProgress, nsIRequ
     }
   }
   
-  nsCOMPtr<nsIMsgWindow> msgWindow (do_QueryReferent(m_msgWindow));
-  if (aStateFlags == nsIWebProgressListener::STATE_STOP && msgWindow && NS_FAILED(aStatus))
-  {
-    msgWindow->StopUrls();
-    msgWindow->SetStatusFeedback(nsnull);
-  }
-
   return NS_OK;
 }
 
