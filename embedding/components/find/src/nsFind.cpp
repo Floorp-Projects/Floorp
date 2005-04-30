@@ -998,6 +998,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
   aEndPoint->GetEndContainer(getter_AddRefs(endNode));
   aEndPoint->GetEndOffset(&endOffset);
 
+  PRUnichar prevChar = 0;
   while (1)
   {
 #ifdef DEBUG_FIND
@@ -1176,9 +1177,21 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
     else if (!inWhitespace && !mCaseSensitive && IsUpperCase(c))
       c = ToLowerCase(c);
 
+    // a '\n' between CJ characters is ignored
+    if (pindex != (mFindBackward ? patLen : 0) && c != patc && !inWhitespace) {
+      if (c == '\n' && t2b && IS_CJ_CHAR(prevChar)) {
+        PRInt32 nindex = findex + incr;
+        if (mFindBackward ? (nindex >= 0) : (nindex < fragLen)) {
+          if (IS_CJ_CHAR(t2b[nindex]))
+            continue;
+        }
+      }
+    }
+
     // Compare
     if ((c == patc) || (inWhitespace && IsSpace(c)))
     {
+      prevChar = c;
 #ifdef DEBUG_FIND
       if (inWhitespace)
         printf("YES (whitespace)(%d of %d)\n", pindex, patLen);
