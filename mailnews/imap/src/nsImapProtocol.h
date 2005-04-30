@@ -151,7 +151,8 @@ public:
 #define IMAP_CLEAN_UP_URL_STATE       0x00000010 // processing clean up url state
 #define IMAP_ISSUED_LANGUAGE_REQUEST  0x00000020 // make sure we only issue the language request once per connection...
 
-class nsImapProtocol : public nsIImapProtocol, public nsIRunnable, public nsIInputStreamCallback, public nsMsgProtocol
+class nsImapProtocol : public nsIImapProtocol, public nsIRunnable, public nsIInputStreamCallback,
+ public nsSupportsWeakReference, public nsMsgProtocol
 {
 public:
   
@@ -660,6 +661,7 @@ protected:
   nsCOMPtr<nsISupports> mSecurityInfo;
   nsCOMPtr<nsIRequest> mCacheRequest; // the request associated with a read from the cache
   nsCString m_ContentType;
+  nsWeakPtr   m_protocol;
 
   PRBool mChannelClosed;
   PRBool mReadingFromCache;

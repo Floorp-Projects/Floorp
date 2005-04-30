@@ -307,6 +307,7 @@ NS_INTERFACE_MAP_BEGIN(nsImapProtocol)
    NS_INTERFACE_MAP_ENTRY(nsIRunnable)
    NS_INTERFACE_MAP_ENTRY(nsIImapProtocol)
    NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
+   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 static PRInt32 gTooFastTime = 2;
@@ -702,6 +703,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
     m_runningUrl->GetMockChannel(getter_AddRefs(m_mockChannel));
     if (m_mockChannel)
     {   
+      m_mockChannel->SetImapProtocol(this);
       // if we have a listener from a mock channel, over-ride the consumer that was passed in
       nsCOMPtr<nsIStreamListener> channelListener;
       m_mockChannel->GetChannelListener(getter_AddRefs(channelListener));
@@ -800,8 +802,6 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
           // Ensure that the socket can get the notification callbacks
           SetSecurityCallbacksFromChannel(m_transport, m_mockChannel);
 
-          m_transport->SetTimeout(nsISocketTransport::TIMEOUT_CONNECT, gResponseTimeout + 60);
-          m_transport->SetTimeout(nsISocketTransport::TIMEOUT_READ_WRITE, gResponseTimeout);
           // open buffered, blocking input stream
           rv = m_transport->OpenInputStream(nsITransport::OPEN_BLOCKING, 0, 0, getter_AddRefs(m_inputStream));
           if (NS_FAILED(rv)) return rv;
@@ -816,6 +816,8 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 
     if (m_transport && m_mockChannel)
     {
+      m_transport->SetTimeout(nsISocketTransport::TIMEOUT_CONNECT, gResponseTimeout + 60);
+      m_transport->SetTimeout(nsISocketTransport::TIMEOUT_READ_WRITE, gResponseTimeout);
       // set the security info for the mock channel to be the security status for our underlying transport.
       nsCOMPtr<nsISupports> securityInfo;
       m_transport->GetSecurityInfo(getter_AddRefs(securityInfo));
@@ -945,10 +947,6 @@ NS_IMETHODIMP nsImapProtocol::Run()
 // called from UI thread.
 void nsImapProtocol::CloseStreams()
 {
-  if (m_inputStream)
-    m_inputStream->Close();
-  if (m_outputStream)
-    m_outputStream->Close();
   if (m_transport)
   {
       // make sure the transport closes (even if someone is still indirectly
@@ -1263,10 +1261,10 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   m_runningUrl->GetRerunningUrl(&rerunningUrl);
   m_runningUrl->GetExternalLinkUrl(&isExternalUrl);
   m_runningUrl->GetValidUrl(&validUrl);
+  m_runningUrl->GetImapAction(&m_imapAction);
 
   if (isExternalUrl)
   {
-    m_runningUrl->GetImapAction(&m_imapAction);
     if (m_imapAction == nsIImapUrl::nsImapSelectFolder)
     {
       // we need to send a start request so that the doc loader
@@ -4243,6 +4241,12 @@ char* nsImapProtocol::CreateNewLineFromSocket()
   char * newLine = nsnull;
   PRUint32 numBytesInLine = 0;
   nsresult rv = NS_OK;
+  // we hold a ref to the input stream in case we get cancelled from the
+  // ui thread, which releases our ref to the input stream, and can
+  // cause the pipe to get deleted before the monitor the read is
+  // blocked on gets notified. When that happens, the imap thread
+  // will stay blocked.
+  nsCOMPtr <nsIInputStream> kungFuGrip = m_inputStream;
   do
   {
     newLine = m_inputStreamBuffer->ReadNextLine(m_inputStream, numBytesInLine, needMoreData, &rv); 
@@ -4251,6 +4255,7 @@ char* nsImapProtocol::CreateNewLineFromSocket()
 
   } while (!newLine && NS_SUCCEEDED(rv) && !DeathSignalReceived()); // until we get the next line and haven't been interrupted
 
+  kungFuGrip = nsnull;
 
   if (NS_FAILED(rv)) 
   {
@@ -8420,9 +8425,16 @@ NS_IMETHODIMP nsImapMockChannel::GetStatus(nsresult *status)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsImapMockChannel::SetImapProtocol(nsIImapProtocol *aProtocol)
+{
+  m_protocol = do_GetWeakReference(aProtocol);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsImapMockChannel::Cancel(nsresult status)
 {
   m_cancelStatus = status;
+  nsCOMPtr<nsIImapProtocol> imapProtocol = do_QueryReferent(m_protocol);
 
   // if we aren't reading from the cache and we get canceled...doom our cache entry...
   if (m_url)
@@ -8439,7 +8451,10 @@ NS_IMETHODIMP nsImapMockChannel::Cancel(nsresult status)
         cacheEntry->Doom();
     }
   }
-    
+  
+  if (imapProtocol)
+    imapProtocol->TellThreadToDie(PR_FALSE);
+
   return NS_OK;
 }
 

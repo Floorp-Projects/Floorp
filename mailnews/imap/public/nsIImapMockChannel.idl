@@ -63,19 +63,19 @@
 
 interface nsIStreamListener;
 interface nsIProgressEventSink;
-interface nsILoadGroup;
 interface nsIURI;
+interface nsIImapProtocol;
 
-[scriptable, uuid(6EEC5ED3-670F-11d3-989A-001083010E9B)]
+[scriptable, uuid(e0178cd5-d37b-4bde-9ab8-752083536225)]
 
 interface nsIImapMockChannel : nsIChannel
 {
-	attribute nsIProgressEventSink progressEventSink;
-    void GetChannelListener(out nsIStreamListener aChannelListener);
-    void GetChannelContext(out nsISupports aChannelContext);
-    void Close();
+  attribute nsIProgressEventSink progressEventSink;
+  void GetChannelListener(out nsIStreamListener aChannelListener);
+  void GetChannelContext(out nsISupports aChannelContext);
+  void Close();
+  void setImapProtocol(in nsIImapProtocol aProtocol);
+  [noscript] void setSecurityInfo(in nsISupports securityInfo);
 
-	[noscript] void setSecurityInfo(in nsISupports securityInfo);
-
-    void setURI(in nsIURI uri);
+  void setURI(in nsIURI uri);
 };
