@@ -3886,9 +3886,6 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         rv = aOverlayNode->GetAttr(nameSpaceID, attr, value);
         if (NS_FAILED(rv)) return rv;
 
-        nsAutoString tempID;
-        rv = aOverlayNode->GetAttr(kNameSpaceID_None, nsXULAtoms::id, tempID);
-
         // Element in the overlay has the 'removeelement' attribute set
         // so remove it from the actual document.
         if (attr == nsXULAtoms::removeelement &&
