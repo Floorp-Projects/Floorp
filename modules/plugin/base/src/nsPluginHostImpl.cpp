@@ -5906,7 +5906,7 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
   if(aInstance != nsnull)
     rv = listener->InitializeEmbeded(aURL, aInstance);
   else if(aOwner != nsnull)
-    rv = listener->InitializeEmbeded(aURL, nsnull, aOwner, (nsIPluginHost *)this);
+    rv = listener->InitializeEmbeded(aURL, nsnull, aOwner, this);
   else
     rv = NS_ERROR_ILLEGAL_VALUE;
 
@@ -5929,7 +5929,7 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
       // to reject requests without referrer set, see bug 157796
       nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
       if (httpChannel && doc)
-        httpChannel->SetReferrer(doc->GetBaseURI());
+        httpChannel->SetReferrer(doc->GetDocumentURI());
 
       rv = channel->AsyncOpen(listener, nsnull);
       if (NS_SUCCEEDED(rv))
@@ -5946,7 +5946,7 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
 nsresult nsPluginHostImpl::NewFullPagePluginStream(nsIStreamListener *&aStreamListener,
                                                    nsIPluginInstance *aInstance)
 {
-  nsPluginStreamListenerPeer  *listener = (nsPluginStreamListenerPeer *)new nsPluginStreamListenerPeer();
+  nsPluginStreamListenerPeer  *listener = new nsPluginStreamListenerPeer();
   if (listener == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -5954,16 +5954,16 @@ nsresult nsPluginHostImpl::NewFullPagePluginStream(nsIStreamListener *&aStreamLi
 
   rv = listener->InitializeFullPage(aInstance);
 
-  aStreamListener = (nsIStreamListener *)listener;
-  NS_IF_ADDREF(listener);
+  aStreamListener = listener;
+  NS_ADDREF(listener);
 
-      // add peer to list of stream peers for this instance
-    nsActivePlugin * p = mActivePluginList.find(aInstance);
-    if (p) {
-      if (!p->mStreams && (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(p->mStreams)))))
-        return rv;
-      p->mStreams->AppendElement(aStreamListener);
-    }
+  // add peer to list of stream peers for this instance
+  nsActivePlugin * p = mActivePluginList.find(aInstance);
+  if (p) {
+    if (!p->mStreams && (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(p->mStreams)))))
+      return rv;
+    p->mStreams->AppendElement(aStreamListener);
+  }
 
   return rv;
 }
