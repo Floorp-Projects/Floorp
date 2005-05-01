@@ -402,12 +402,6 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
         return NS_ERROR_OUT_OF_MEMORY;
 
     element->mPrototype = aPrototype;
-    if (aDocument) {
-      element->mParentPtrBits |= PARENT_BIT_INDOCUMENT;
-    }
-    else {
-      element->mParentPtrBits &= ~PARENT_BIT_INDOCUMENT;
-    }
 
     aPrototype->AddRef();
 
@@ -530,12 +524,6 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
                                   getter_AddRefs(result));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        // Make sure to unset the "in document" bit we picked up in Create()
-        // while we create our kids.  We'll reset it as needed at the end of
-        // this function.
-        NS_STATIC_CAST(nsXULElement*,
-                      NS_STATIC_CAST(nsIContent*, result.get()))->
-            mParentPtrBits &= ~PARENT_BIT_INDOCUMENT;
         fakeBeingInDocument = IsInDoc();
     } else {
         rv = NS_NewXULElement(getter_AddRefs(result), mNodeInfo);
