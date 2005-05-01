@@ -62,6 +62,7 @@
 #import "MainController.h"
 #import "DraggableImageAndTextCell.h"
 #import "MVPreferencesController.h"
+#import "wallet.h"
 
 #include "nsIWebNavigation.h"
 #include "nsISHistory.h"
@@ -3334,6 +3335,20 @@ enum BWCOpenDest {
     [self performSearch:mSearchBar inView:destination inBackground:loadInBG]; 
   }
   return handled;
+}
+
+//
+// -fillForm:
+//
+// Fills the form on the current web page using wallet
+//
+- (IBAction)fillForm:(id)sender
+{
+  CHBrowserView* browser = [[self getBrowserWrapper] getBrowserView];
+  nsCOMPtr<nsIDOMWindow> domWindow = dont_AddRef([browser getContentWindow]);
+  nsCOMPtr<nsIDOMWindowInternal> internalDomWindow (do_QueryInterface(domWindow));
+  
+  Wallet_Prefill(internalDomWindow);
 }
 
 @end

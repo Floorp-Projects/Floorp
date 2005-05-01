@@ -6,7 +6,12 @@
             SUPERCLASS = ToolbarController; 
         }, 
         {
-            ACTIONS = {addBookmark = id; addBookmarkFolder = id; addBookmarkSeparator = id; }; 
+            ACTIONS = {
+                addBookmark = id; 
+                addBookmarkFolder = id; 
+                addBookmarkSeparator = id; 
+                fillForm = id; 
+            }; 
             CLASS = FirstResponder; 
             LANGUAGE = ObjC; 
             SUPERCLASS = NSObject; 
