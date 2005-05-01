@@ -47,7 +47,8 @@
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
-
+<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/messengercompose/addressingWidgetOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
@@ -85,6 +86,8 @@
   <stringbundle id="bundle_offlinePrompts" src="chrome://messenger/locale/offline.properties"/>
 </stringbundleset>
 
+<script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
@@ -146,6 +149,7 @@
   <!-- View Menu -->
   <command id="cmd_showComposeToolbar" oncommand="goDoCommand('cmd_showComposeToolbar')"/>
   <command id="cmd_showFormatToolbar" oncommand="goDoCommand('cmd_showFormatToolbar')"/>
+  <command id="toggleSidebar"/>
   
   <!-- Options Menu -->
   <command id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
@@ -192,6 +196,7 @@
        modifiers="&accel.emacs_conflict;"
   />
   
+  <key id="showHideSidebar"/>
   <!-- Tab/F6 Keys -->
   <key keycode="VK_TAB" oncommand="SwitchElementFocus(event);" modifiers="control"/>
   <key keycode="VK_TAB" oncommand="SwitchElementFocus(event);" modifiers="control,shift"/>
@@ -202,6 +207,7 @@
 </keyset>
 <keyset id="editorKeys"/>
 
+<popup id="sidebarPopup"/>
 <popup id="msgComposeContext" onpopupshowing="updateEditItems();">
   <menuitem label="&undo.label;" accesskey="&undo.accesskey;" command="cmd_undo"/>
   <menuseparator/>
@@ -288,7 +294,7 @@
       <menu id="menu_View">
         <menupopup id="menu_View_Popup">
           <menu id="menu_Toolbars">
-            <menupopup>
+            <menupopup id="view_toolbars_popup">
               <menuitem id="menu_showComposeToolbar"
                         type="checkbox"
                         label="&showComposeToolbarCmd.label;"
@@ -522,11 +528,18 @@
 
   <splitter id="compose-toolbar-sizer" onmousedown="awSizerListen()" collapse="after"/>
 
+<!-- sidebar/toolbar/content/status -->
+<hbox id="sidebar-parent" flex="1">
+  <!-- From sidebarOverlay.xul -->
+  <vbox id="sidebar-box" class="chromeclass-extrachrome" hidden="true"/>
+  <splitter id="sidebar-splitter" class="chromeclass-extrachrome" hidden="true"/>
+
   <!-- The mail message body frame -->
   <vbox id="appcontent" flex="1">
     <editor type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="1"
             context="msgComposeContext"/>
   </vbox>
+</hbox>
 
   <statusbar id="status-bar" class="chromeclass-status">
     <statusbarpanel id="component-bar"/>

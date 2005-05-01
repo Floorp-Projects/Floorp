@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var gMsgCompose = false;
+
 function GetAbViewListener()
 {
   // the ab panel doesn't care if the total changes, or if the selection changes
@@ -104,6 +106,14 @@ function AbPanelLoad()
                   Components.interfaces.nsIAbListener.directoryRemoved | Components.interfaces.nsIAbListener.changed);
 
   gSearchInput = document.getElementById("searchInput");
+
+  // for the compose window we want to show To, Cc, Bcc and a separator
+  // for all other windows we want to show Compose Mail To
+  var popup = document.getElementById("composeMail");
+  gMsgCompose = parent.document.documentElement.getAttribute("windowtype") == "msgcompose";
+  for (var i = 0; i < 4; i++)
+    popup.childNodes[i].hidden = !gMsgCompose;
+  popup.childNodes[4].hidden = gMsgCompose;
 }
 
 function AbPanelUnload()
@@ -112,6 +122,23 @@ function AbPanelUnload()
   addrbookSession.removeAddressBookListener(gAddressBookPanelAbListener);
 
   CloseAbView();
+}
+
+function AbPanelAdd(addrtype)
+{
+  var cards = GetSelectedAbCards();
+  var count = cards.length;
+
+  for (var i = 0; i < count; i++) {
+    // turn each card into a properly formatted address
+    var address = GenerateAddressFromCard(cards[i]);
+    if (address)
+      top.awAddRecipient(addrtype, address);
+    else if (gPromptService)
+      gPromptService.alert(window,
+                           gAddressBookBundle.getString("emptyEmailAddCardTitle"),
+                           gAddressBookBundle.getString("emptyEmailAddCard"));
+  }
 }
 
 function AbPanelNewCard() 
@@ -137,7 +164,10 @@ function OnClickedCard()
 function AbResultsPaneDoubleClick(card) 
 {
   // double click for ab panel means "send mail to this person / list"
-  AbNewMessage();
+  if (gMsgCompose)
+    AbPanelAdd('addr_to');
+  else
+    AbNewMessage();
 }
 
 function UpdateCardView() 

@@ -70,6 +70,10 @@
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook-panel.js"/>
     
   <popup id="composeMail">
+    <menuitem label="&toButton.label;" accesskey="&toButton.accesskey;" oncommand="AbPanelAdd('addr_to');" default="true"/>
+    <menuitem label="&ccButton.label;" accesskey="&ccButton.accesskey;" oncommand="AbPanelAdd('addr_cc');"/>
+    <menuitem label="&bccButton.label;" accesskey="&bccButton.accesskey;" oncommand="AbPanelAdd('addr_bcc');"/>
+    <menuseparator/>
     <menuitem label="&composeEmail.label;" accesskey="&composeEmail.accesskey;" oncommand="AbNewMessage();" default="true"/>
     <menuitem label="&copyAddress.label;" accesskey="&copyAddress.accesskey;" oncommand="AbCopyAddress();"/>
     <menuitem label="&deleteAddrBookCard.label;" accesskey="&deleteAddrBookCard.accesskey;" oncommand="AbDelete();"/>
