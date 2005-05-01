@@ -173,7 +173,7 @@ var gPrivacyPane = {
   {
     document.documentElement.openWindow("Toolkit:PasswordManager",
                                         "chrome://passwordmgr/content/passwordManager.xul",
-                                        "", "8");
+                                        "", null);
   },
   
   viewCookieExceptions: function ()
