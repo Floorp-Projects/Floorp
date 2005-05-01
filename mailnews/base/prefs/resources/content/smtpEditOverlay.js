@@ -86,7 +86,6 @@ function initSmtpSettings(server) {
     //dump("gSmtpAuthMethod.value = " + gSmtpAuthMethod.getAttribute("value") + "\n");
 
     onUseUsername(gSmtpUseUsername, false);
-    updateControls();
     selectProtocol(1);
     if (gSmtpService.defaultServer)
       onLockPreference();
@@ -100,13 +99,13 @@ function onLockPreference()
 
     var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
 
-    var allPrefElements = [
-      { prefstring:"hostname", id:"smtp.hostname"},
-      { prefstring:"description", id:"smtp.description"},
-      { prefstring:"port", id:"smtp.port"},
-      { prefstring:"use_username", id:"smtp.useUsername"},
-      { prefstring:"try_ssl", id:"smtp.trySSL"}
-    ];
+    var allPrefElements = {
+      hostname:     gSmtpHostname,
+      description:  gSmtpDescription,
+      port:         gSmtpPort,
+      use_username: gSmtpUseUsername,
+      try_ssl:      gSmtpTrySSL
+    };
 
     gSmtpPrefBranch = prefService.getBranch(finalPrefString);
     disableIfLocked( allPrefElements );
@@ -117,21 +116,9 @@ function onLockPreference()
 // stomping on the disabled state indiscriminately.
 function disableIfLocked( prefstrArray )
 {
-  for (var i=0; i<prefstrArray.length; i++) {
-    var id = prefstrArray[i].id;
-    var element = document.getElementById(id);
-    if (gSmtpPrefBranch.prefIsLocked(prefstrArray[i].prefstring)) {
-      if (id == "smtp.trySSL")
-      {
-        document.getElementById("smtp.neverSecure").setAttribute("disabled", "true");
-        document.getElementById("smtp.sometimesSecure").setAttribute("disabled", "true");
-        document.getElementById("smtp.alwaysSecure").setAttribute("disabled", "true");
-        document.getElementById("smtp.alwaysSmtpSSL").setAttribute("disabled", "true");
-      }
-      else
-        element.setAttribute("disabled", "true");
-    }
-  }
+  for (var prefstring in prefstrArray)
+    if (gSmtpPrefBranch.prefIsLocked(prefstring))
+      prefstrArray[prefstring].disabled = true;
 }
 
 function saveSmtpSettings(server)
@@ -174,11 +161,6 @@ function onUseUsername(checkbox, dofocus)
         gSmtpUsername.setAttribute("disabled", "true");
         gSmtpUsernameLabel.setAttribute("disabled", "true");
     }
-}
-
-function updateControls() {
-    if (gSmtpTrySSL.disabled)  // see bug 70033 on why this is necessary for radiobuttons
-        gSmtpTrySSL.disabled = gSmtpTrySSL.disabled;
 }
 
 function selectProtocol(init) {
