@@ -96,7 +96,7 @@ static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 // Define the FreeType2 functions we resolve at run time.
 // see the comment near nsFreeType2::DoneFace() for more info
 //
-#define NS_FT2_OFFSET(f) (int)&((nsFreeType2*)0)->f
+#define NS_FT2_OFFSET(f) (long)&((nsFreeType2*)0)->f
 FtFuncList nsFreeType2::FtFuncs [] = {
   {"FT_Done_Face",            NS_FT2_OFFSET(nsFT_Done_Face),            PR_TRUE},
   {"FT_Done_FreeType",        NS_FT2_OFFSET(nsFT_Done_FreeType),        PR_TRUE},

@@ -145,7 +145,7 @@ nsFreeTypeFace * nsFreeTypeGetFaceID(nsFontCatalogEntry *aFce);
 
 typedef struct {
   const char *FuncName;
-  int  FuncOffset;
+  long  FuncOffset;
   const PRBool Required;
 } FtFuncList;
 
