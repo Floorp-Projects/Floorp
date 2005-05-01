@@ -2550,7 +2550,6 @@ nsPluginHostImpl::nsPluginHostImpl()
   nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
   if (obsService)
   {
-    obsService->AddObserver(this, "quit-application", PR_FALSE);
     obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   }
 
@@ -6120,11 +6119,9 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
 #ifdef NS_DEBUG
   printf("nsPluginHostImpl::Observe \"%s\"\n", aTopic ? aTopic : "");
 #endif
-  if (!nsCRT::strcmp("quit-application", aTopic))
+  if (!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic))
   {
     Destroy();
-  } else if (!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic))
-  {
     UnloadUnusedLibraries();
   }
   return NS_OK;
