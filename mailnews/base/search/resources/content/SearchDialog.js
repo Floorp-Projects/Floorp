@@ -274,6 +274,7 @@ function searchOnLoad()
   HideSearchColumn("flaggedCol");
   HideSearchColumn("idCol");
   HideSearchColumn("junkStatusCol");
+  HideSearchColumn("accountCol");
   
   // we want to show the location column for search
   ShowSearchColumn("locationCol");
