@@ -556,7 +556,8 @@ public:
   /**
    * Get the base URI for any relative URIs within this piece of
    * content. Generally, this is the document's base URI, but certain
-   * content carries a local base for backward compatibility.
+   * content carries a local base for backward compatibility, and XML
+   * supports setting a per-node base URI.
    *
    * @return the base URI
    */

@@ -108,15 +108,13 @@ nsFrameLoader::LoadFrame()
     src.AssignLiteral("about:blank");
   }
 
-  // Make an absolute URI
-  nsIURI *base_uri = doc->GetBaseURI();
-
-  const nsACString &doc_charset = doc->GetDocumentCharacterSet();
+  nsCOMPtr<nsIURI> base_uri = mOwnerContent->GetBaseURI();
+  const nsAFlatCString &doc_charset = doc->GetDocumentCharacterSet();
 
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), src,
-                 doc_charset.IsEmpty() ? nsnull :
-                 PromiseFlatCString(doc_charset).get(), base_uri);
+                 doc_charset.IsEmpty() ? nsnull : doc_charset.get(),
+                 base_uri);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
