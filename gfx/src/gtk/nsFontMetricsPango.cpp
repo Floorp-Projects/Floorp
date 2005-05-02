@@ -144,6 +144,7 @@ nsFontMetricsPango::nsFontMetricsPango()
     mRTLPangoContext = nsnull;
     mPangoAttrList = nsnull;
     mIsRTL = PR_FALSE;
+    mPangoSpaceWidth = 0;
 
     static PRBool initialized = PR_FALSE;
     if (initialized)
@@ -342,6 +343,14 @@ nsFontMetricsPango::CacheFontMetrics(void)
     // mMaxAdvance
     mMaxAdvance = nscoord(xftFont->max_advance_width * f);
 
+    // mPangoSpaceWidth
+    PangoLayout *layout = pango_layout_new(mPangoContext);
+    pango_layout_set_text(layout, " ", 1);
+    int pswidth, psheight;
+    pango_layout_get_size(layout, &pswidth, &psheight);
+    mPangoSpaceWidth = pswidth;
+    g_object_unref(layout);
+
     // mSpaceWidth (width of a space)
     nscoord tmpWidth;
     GetWidth(" ", 1, tmpWidth, NULL);
@@ -475,17 +484,18 @@ nsFontMetricsPango::GetWidth(const char* aString, PRUint32 aLength,
 
     pango_layout_set_text(layout, aString, aLength);
 
+    if (mPangoSpaceWidth)
+        FixupSpaceWidths(layout, aString);
+
     int width, height;
 
     pango_layout_get_size(layout, &width, &height);
-
-    width /= PANGO_SCALE;
 
     g_object_unref(layout);
 
     float f;
     f = mDeviceContext->DevUnitsToAppUnits();
-    aWidth = NSToCoordRound(width * f);
+    aWidth = NSToCoordRound(width * f / PANGO_SCALE);
 
     //    printf("GetWidth (char *) %d\n", aWidth);
 
@@ -516,13 +526,12 @@ nsFontMetricsPango::GetWidth(const PRUnichar* aString, PRUint32 aLength,
     gint width, height;
 
     pango_layout_set_text(layout, text, strlen(text));
+    FixupSpaceWidths(layout, text);
     pango_layout_get_size(layout, &width, &height);
-
-    width /= PANGO_SCALE;
 
     float f;
     f = mDeviceContext->DevUnitsToAppUnits();
-    aWidth = NSToCoordRound(width * f);
+    aWidth = NSToCoordRound(width * f / PANGO_SCALE);
 
     //    printf("GetWidth %d\n", aWidth);
 
@@ -563,6 +572,7 @@ nsFontMetricsPango::GetTextDimensions(const PRUnichar* aString,
         
 
     pango_layout_set_text(layout, text, strlen(text));
+    FixupSpaceWidths(layout, text);
 
     // Get the logical extents
     PangoLayoutLine *line;
@@ -577,9 +587,9 @@ nsFontMetricsPango::GetTextDimensions(const PRUnichar* aString,
     float P2T;
     P2T = mDeviceContext->DevUnitsToAppUnits();
 
-    aDimensions.width = NSToCoordRound(rect.width / PANGO_SCALE * P2T);
-    aDimensions.ascent = NSToCoordRound(PANGO_ASCENT(rect) / PANGO_SCALE * P2T);
-    aDimensions.descent = NSToCoordRound(PANGO_DESCENT(rect) / PANGO_SCALE * P2T);
+    aDimensions.width = NSToCoordRound(rect.width * P2T / PANGO_SCALE);
+    aDimensions.ascent = NSToCoordRound(PANGO_ASCENT(rect) * P2T / PANGO_SCALE);
+    aDimensions.descent = NSToCoordRound(PANGO_DESCENT(rect) * P2T / PANGO_SCALE);
 
     //    printf("GetTextDimensions %d %d %d\n", aDimensions.width,
     //aDimensions.ascent, aDimensions.descent);
@@ -705,6 +715,7 @@ nsFontMetricsPango::DrawString(const char *aString, PRUint32 aLength,
     PangoLayout *layout = pango_layout_new(mPangoContext);
 
     pango_layout_set_text(layout, aString, aLength);
+    FixupSpaceWidths(layout, aString);
 
     int x = aX;
     int y = aY;
@@ -768,6 +779,7 @@ nsFontMetricsPango::DrawString(const PRUnichar* aString, PRUint32 aLength,
     }
 
     pango_layout_set_text(layout, text, strlen(text));
+    FixupSpaceWidths(layout, text);
 
     aContext->GetTranMatrix()->TransformCoord(&x, &y);
 
@@ -837,6 +849,7 @@ nsFontMetricsPango::GetBoundingMetrics(const PRUnichar *aString,
     }
 
     pango_layout_set_text(layout, text, strlen(text));
+    FixupSpaceWidths(layout, text);
 
     // Get the logical extents
     PangoLayoutLine *line;
@@ -853,12 +866,12 @@ nsFontMetricsPango::GetBoundingMetrics(const PRUnichar *aString,
     P2T = mDeviceContext->DevUnitsToAppUnits();
 
     aBoundingMetrics.leftBearing =
-        NSToCoordRound(rect.x / PANGO_SCALE * P2T);
+        NSToCoordRound(rect.x * P2T / PANGO_SCALE);
     aBoundingMetrics.rightBearing =
-        NSToCoordRound(rect.width / PANGO_SCALE * P2T);
-    aBoundingMetrics.width = NSToCoordRound((rect.x + rect.width) / PANGO_SCALE * P2T);
-    aBoundingMetrics.ascent = NSToCoordRound(rect.y / PANGO_SCALE * P2T);
-    aBoundingMetrics.descent = NSToCoordRound(rect.height / PANGO_SCALE * P2T);
+        NSToCoordRound(rect.width * P2T / PANGO_SCALE);
+    aBoundingMetrics.width = NSToCoordRound((rect.x + rect.width) * P2T / PANGO_SCALE);
+    aBoundingMetrics.ascent = NSToCoordRound(rect.y * P2T / PANGO_SCALE);
+    aBoundingMetrics.descent = NSToCoordRound(rect.height * P2T / PANGO_SCALE);
 
  loser:
     g_free(text);
@@ -897,6 +910,237 @@ nsFontMetricsPango::SetRightToLeftText(PRBool aIsRTL)
     return NS_OK;
 }
 
+nsresult
+nsFontMetricsPango::GetClusterInfo(const PRUnichar *aText,
+                                   PRUint32 aLength,
+                                   PRUint8 *aClusterStarts)
+{
+    nsresult rv = NS_OK;
+    PangoLogAttr *attrs = NULL;
+    gint n_attrs = 0;
+    PangoLayout *layout = pango_layout_new(mPangoContext);
+    
+    // Convert the incoming UTF-16 to UTF-8
+    gchar *text = g_utf16_to_utf8(aText, aLength, NULL, NULL, NULL);
+
+    if (!text) {
+#ifdef DEBUG
+        NS_WARNING("nsFontMetricsPango::GetWidth invalid unicode to follow");
+        DUMP_PRUNICHAR(aText, aLength)
+#endif
+        rv = NS_ERROR_FAILURE;
+        goto loser;
+    }
+
+    // Set up the pango layout
+    pango_layout_set_text(layout, text, strlen(text));
+    FixupSpaceWidths(layout, text);
+
+    // Convert back to UTF-16 while filling in the cluster info
+    // structure.
+    pango_layout_get_log_attrs(layout, &attrs, &n_attrs);
+
+    for (PRUint32 pos = 0; pos < aLength; pos++) {
+        if (IS_HIGH_SURROGATE(aText[pos])) {
+            aClusterStarts[pos] = 1;
+            pos++;
+        }
+        else {
+            aClusterStarts[pos] = attrs[pos].is_cursor_position;
+        }
+    }
+
+ loser:
+    if (attrs)
+        g_free(attrs);
+    if (text)
+        g_free(text);
+    if (layout)
+        g_object_unref(layout);
+
+    return rv;
+}
+
+PRInt32
+nsFontMetricsPango::GetPosition(const PRUnichar *aText, PRUint32 aLength,
+                                nsPoint aPt)
+{
+    int trailing = 0;
+    int inx = 0;
+    gboolean found = FALSE;
+    const gchar *curChar;
+    PRInt32 retval = 0;
+
+    float f = mDeviceContext->AppUnitsToDevUnits();
+    
+    PangoLayout *layout = pango_layout_new(mPangoContext);
+    PRUint32 localX = (PRUint32)(aPt.x * PANGO_SCALE * f);
+    PRUint32 localY = (PRUint32)(aPt.y * PANGO_SCALE * f);
+
+    // Convert the incoming UTF-16 to UTF-8
+    gchar *text = g_utf16_to_utf8(aText, aLength, NULL, NULL, NULL);
+
+    if (!text) {
+#ifdef DEBUG
+        NS_WARNING("nsFontMetricsPango::GetWidth invalid unicode to follow");
+        DUMP_PRUNICHAR(aText, aLength)
+#endif
+        retval = -1;
+        goto loser;
+    }
+
+    // Set up the pango layout
+    pango_layout_set_text(layout, text, strlen(text));
+    FixupSpaceWidths(layout, text);
+    
+    found = pango_layout_xy_to_index(layout, localX, localY,
+                                     &inx, &trailing);
+
+    // Convert the index back to the utf-16 index
+    curChar = text;
+
+    // Jump to the end if it's not found.
+    if (!found) {
+        if (inx = 0)
+            retval = 0;
+        else if (trailing)
+            retval = aLength;
+
+        goto loser;
+    }
+
+    for (PRUint32 curOffset=0; curOffset < aLength;
+         curOffset++, curChar = g_utf8_find_next_char(curChar, NULL)) {
+
+        // Check for a match before checking for a surrogate pair
+        if (curChar - text == inx) {
+            retval = curOffset;
+            break;
+        }
+
+        if (IS_HIGH_SURROGATE(aText[curOffset]))
+            curOffset++;
+    }
+
+    // If there was a trailing result, advance the index pointer the
+    // number of characters equal to the trailing result.
+    while (trailing) {
+        retval++;
+        // Yes, this can make aInx > length to indicate the end of the
+        // string.
+        if (retval < (PRInt32)aLength && IS_HIGH_SURROGATE(aText[retval]))
+            retval++;
+        trailing--;
+    }
+
+ loser:
+    if (text)
+        g_free(text);
+    if (layout)
+        g_object_unref(layout);
+
+    return retval;
+}
+
+nsresult
+nsFontMetricsPango::GetRangeWidth(const PRUnichar *aText,
+                                  PRUint32 aLength,
+                                  PRUint32 aStart,
+                                  PRUint32 aEnd,
+                                  PRUint32 &aWidth)
+{
+    nsresult rv = NS_OK;
+    PRUint32 utf8Start = 0;
+    PRUint32 utf8End = 0;
+
+    aWidth = 0;
+
+    // Convert the incoming UTF-16 to UTF-8
+    gchar *text = g_utf16_to_utf8(aText, aLength, NULL, NULL, NULL);
+    gchar *curChar = text;
+
+    if (!text) {
+#ifdef DEBUG
+        NS_WARNING("nsFontMetricsPango::GetWidth invalid unicode to follow");
+        DUMP_PRUNICHAR(aText, aLength)
+#endif
+        rv = NS_ERROR_FAILURE;
+        goto loser;
+    }
+
+    // Convert the utf16 offsets into utf8 offsets
+    for (PRUint32 curOffset = 0; curOffset < aLength;
+         curOffset++, curChar = g_utf8_find_next_char(curChar, NULL)) {
+
+        if (curOffset == aStart)
+            utf8Start = curChar - text;
+
+        if (curOffset == aEnd)
+            utf8End = curChar - text;
+        
+        if (IS_HIGH_SURROGATE(aText[curOffset]))
+            curOffset++;
+    }
+
+    // Special case where the end index is the same as the length
+    if (aLength == aEnd)
+        utf8End = strlen(text);
+
+    rv = GetRangeWidth(text, strlen(text), utf8Start, utf8End, aWidth);
+
+ loser:
+    if (text)
+        g_free(text);
+
+    return rv;
+}
+
+nsresult
+nsFontMetricsPango::GetRangeWidth(const char *aText,
+                                  PRUint32 aLength,
+                                  PRUint32 aStart,
+                                  PRUint32 aEnd,
+                                  PRUint32 &aWidth)
+{
+    nsresult rv = NS_OK;
+    int *ranges = NULL;
+    int n_ranges = 0;
+    float f;
+
+    aWidth = 0;
+
+    PangoLayout *layout = pango_layout_new(mPangoContext);
+
+    if (!aText) {
+        rv = NS_ERROR_FAILURE;
+        goto loser;
+    }
+
+    pango_layout_set_text(layout, aText, aLength);
+    FixupSpaceWidths(layout, aText);
+
+    PangoLayoutLine *line;
+    if (pango_layout_get_line_count(layout) != 1) {
+        printf("Warning: more than one line!\n");
+    }
+    line = pango_layout_get_line(layout, 0);
+
+    pango_layout_line_get_x_ranges(line, aStart, aEnd, &ranges, &n_ranges);
+
+    aWidth = (ranges[((n_ranges - 1) * 2) + 1] - ranges[0]);
+
+    f = mDeviceContext-> DevUnitsToAppUnits();
+    aWidth = nscoord(aWidth * f / PANGO_SCALE);
+
+ loser:
+    if (ranges)
+        g_free(ranges);
+    if (layout)
+        g_object_unref(layout);
+
+    return rv;
+}
+
 /* static */
 PRUint32
 nsFontMetricsPango::GetHints(void)
@@ -904,7 +1148,8 @@ nsFontMetricsPango::GetHints(void)
     return (NS_RENDERING_HINT_BIDI_REORDERING |
             NS_RENDERING_HINT_ARABIC_SHAPING | 
             NS_RENDERING_HINT_FAST_MEASURE |
-            NS_RENDERING_HINT_REORDER_SPACED_TEXT);
+            NS_RENDERING_HINT_REORDER_SPACED_TEXT |
+            NS_RENDERING_HINT_TEXT_CLUSTERS);
 }
 
 /* static */
@@ -1020,6 +1265,10 @@ nsFontMetricsPango::RealizeFont(void)
     mLTRPangoContext = pango_xft_get_context(GDK_DISPLAY(), 0);
     mPangoContext = mLTRPangoContext;
 
+    // Make sure to set the base direction to LTR - if layout needs to
+    // render RTL text it will use ::SetRightToLeftText()
+    pango_context_set_base_dir(mPangoContext, PANGO_DIRECTION_LTR);
+
     // Set the color map so we can draw later.
     gdk_pango_context_set_colormap(mPangoContext, gdk_rgb_get_cmap());
 
@@ -1128,12 +1377,10 @@ nsFontMetricsPango::DrawStringSlowly(const gchar *aText,
         }
 
         /*        printf("    rendering at X coord %d\n", aX + offset); */
-
-        gdk_draw_glyphs(aDrawable, aGC, layoutRun->item->analysis.font,
-                        aX + (gint)(offset / PANGO_SCALE), aY, layoutRun->glyphs);
-
         offset += tmpOffset;
     }
+
+    gdk_draw_layout_line(aDrawable, aGC, aX, aY, aLine);
 
     delete[] utf8spacing;
 }
@@ -1284,6 +1531,26 @@ nsFontMetricsPango::GetTextDimensionsInternal(const gchar*        aString,
            aNumCharsFit); */
 
     return NS_OK;
+}
+
+void
+nsFontMetricsPango::FixupSpaceWidths (PangoLayout *aLayout,
+                                      const char *aString)
+{
+    PangoLayoutLine *line = pango_layout_get_line(aLayout, 0);
+
+    gint curRun = 0;
+
+    for (GSList *tmpList = line->runs; tmpList && tmpList->data;
+         tmpList = tmpList->next, curRun++) {
+        PangoLayoutRun *layoutRun = (PangoLayoutRun *)tmpList->data;
+
+        for (gint i=0; i < layoutRun->glyphs->num_glyphs; i++) {
+            gint thisOffset = (gint)layoutRun->glyphs->log_clusters[i] + layoutRun->item->offset;
+            if (aString[thisOffset] == ' ')
+                layoutRun->glyphs->glyphs[i].geometry.width = mPangoSpaceWidth;
+        }
+    }
 }
 
 /* static */

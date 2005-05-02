@@ -799,6 +799,84 @@ public:
                       nscoord aXImageStart, nscoord aYImageStart,
                       const nsRect * aTargetRect) = 0;
 
+
+  /**
+   * Get cluster details for a chunk of text.
+   *
+   * This will fill in the aClusterStarts array with information about
+   * what characters are the start of clusters for display.  The
+   * information is just a bitfield that is set to 1 if the character
+   * is the start of a cluster.  aClusterStarts must already be
+   * allocated to at least aLength items in length.  Array index zero
+   * being set to one indicates that the first character is the
+   * beginning of a cluster.
+   *
+   * @param aText Text on which to get details.
+   * @param aLength Length of the text.
+   * @param aClusterStarts Array of ints that will be populated
+   *        with information about which characters are the starts
+   *        of clusters.
+   *
+   */
+  NS_IMETHOD GetClusterInfo(const PRUnichar *aText,
+                            PRUint32 aLength,
+                            PRUint8 *aClusterStarts) = 0;
+
+  /**
+   * Find the closest cursor position for a given x coordinate.
+   *
+   * This will find the closest byte index for a given x coordinate.
+   * This takes into account grapheme clusters and bidi text.
+   *
+   * @param aText Text on which to operate.
+   * @param aLength Length of the text.
+   * @param aPt the x/y position in the string to check.
+   *
+   * @return Index where the cursor falls.  If the return is zero,
+   *   it's before the first character, if it falls off the end of
+   *   the string it's the length of the string + 1.
+   *
+   */
+  virtual PRInt32 GetPosition(const PRUnichar *aText,
+                              PRUint32 aLength,
+                              nsPoint aPt) = 0;
+
+  /**
+   * Get the width for the specific range of a given string.
+   *
+   * This function is similar to other GetWidth functions, except that
+   * it gets the width for a part of the string instead of the entire
+   * string.  This is useful when you're interested in finding out the
+   * length of a chunk in the middle of the string.  Lots of languages
+   * require you to include surrounding information to accurately
+   * determine the length of a substring.
+   *
+   * @param aText Text on which to operate
+   * @param aLength Length of the text
+   * @param aStart Start index into the string
+   * @param aEnd End index into the string (inclusive)
+   * @param aWidth Returned with in app coordinates
+   *
+   */
+  NS_IMETHOD GetRangeWidth(const PRUnichar *aText,
+                           PRUint32 aLength,
+                           PRUint32 aStart,
+                           PRUint32 aEnd,
+                           PRUint32 &aWidth) = 0;
+
+  /**
+   * Get the width for the specific range of a given string.
+   *
+   * Same as GetRangeWidth for PRUnichar, but takes a char * as the
+   * text argument.
+   *
+   */
+  NS_IMETHOD GetRangeWidth(const char *aText,
+                           PRUint32 aLength,
+                           PRUint32 aStart,
+                           PRUint32 aEnd,
+                           PRUint32 &aWidth) = 0;
+
   /**
    * Render an encapsulated postscript object onto the current rendering
    * surface.
@@ -856,6 +934,12 @@ public:
  * This bit, when set, indicates that gfx supports GetTextDimensions()
  */
 #define NS_RENDERING_HINT_FAST_MEASURE 0x10
+
+/**
+ * This bit, when set, indicates that the gfx supports describing
+ * cluster information in a string
+ */
+#define NS_RENDERING_HINT_TEXT_CLUSTERS 0x20
 
 /**
  * This bit, when set, indicates that gfx performs glyph reordering of complex

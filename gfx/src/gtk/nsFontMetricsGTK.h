@@ -348,6 +348,26 @@ public:
 
   virtual nsresult SetRightToLeftText(PRBool aIsRTL);
 
+  virtual nsresult GetClusterInfo(const PRUnichar *aText,
+                                  PRUint32 aLength,
+                                  PRUint8 *aClusterStarts);
+
+  virtual PRInt32 GetPosition(const PRUnichar *aText,
+                              PRUint32 aLength,
+                              nsPoint aPt);
+
+  virtual nsresult GetRangeWidth(const PRUnichar *aText,
+                                 PRUint32 aLength,
+                                 PRUint32 aStart,
+                                 PRUint32 aEnd,
+                                 PRUint32 &aWidth);
+
+  virtual nsresult GetRangeWidth(const char *aText,
+                                 PRUint32 aLength,
+                                 PRUint32 aStart,
+                                 PRUint32 aEnd,
+                                 PRUint32 &aWidth);
+
   static nsresult FamilyExists(nsIDeviceContext *aDevice, const nsString& aName);
   static PRUint32 GetHints(void);
 

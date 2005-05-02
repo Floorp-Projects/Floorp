@@ -125,6 +125,25 @@ public:
     // Set the direction of the text rendering
     virtual nsresult SetRightToLeftText(PRBool aIsRTL) = 0;
 
+    virtual nsresult GetClusterInfo(const PRUnichar *aText,
+                                    PRUint32 aLength,
+                                    PRUint8 *aClusterStarts) = 0;
+
+    virtual PRInt32 GetPosition(const PRUnichar *aText,
+                                PRUint32 aLength,
+                                nsPoint aPt) = 0;
+
+    virtual nsresult GetRangeWidth(const PRUnichar *aText,
+                                   PRUint32 aLength,
+                                   PRUint32 aStart,
+                                   PRUint32 aEnd,
+                                   PRUint32 &aWidth) = 0;
+    virtual nsresult GetRangeWidth(const char *aText,
+                                   PRUint32 aLength,
+                                   PRUint32 aStart,
+                                   PRUint32 aEnd,
+                                   PRUint32 &aWidth) = 0;
+
 };
 
 #endif /* __nsIFontMetricsGTK_h */
