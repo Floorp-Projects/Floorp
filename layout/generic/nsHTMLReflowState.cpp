@@ -1708,11 +1708,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       mComputedPadding.left   = aPadding->left;
     }
     else {
-      if (frame->GetType() == nsLayoutAtoms::scrollFrame) {
-        mComputedPadding.SizeTo(0, 0, 0, 0);
-      } else {
-        ComputePadding(aContainingBlockWidth, cbrs);
-      }
+      ComputePadding(aContainingBlockWidth, cbrs);
     }
     if (aBorder) {  // border is an input arg
       mComputedBorderPadding = *aBorder;
