@@ -58,6 +58,9 @@ struct nsMargin {
               nscoord aRight, nscoord aBottom) {left += aLeft; top += aTop;
                                                 right += aRight; bottom += aBottom;}
 
+  nscoord LeftRight() const { return left + right; }
+  nscoord TopBottom() const { return top + bottom; }
+
 #if (NS_SIDE_TOP == 0) && (NS_SIDE_RIGHT == 1) && (NS_SIDE_BOTTOM == 2) && (NS_SIDE_LEFT == 3)
   nscoord& side(PRUint8 aSide) {
     NS_PRECONDITION(aSide <= NS_SIDE_LEFT, "Out of range side");
