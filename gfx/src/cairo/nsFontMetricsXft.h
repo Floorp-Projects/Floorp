@@ -269,6 +269,9 @@ private:
 
     nsCAutoString        mDefaultFont;
 
+    // private to DoMatch and FindFont; this array may contain fonts
+    // for which |GetXftFont| returns null (which are not allowed outside
+    // of those two functions).
     nsVoidArray          mLoadedFonts;
 
     // Xft-related items
