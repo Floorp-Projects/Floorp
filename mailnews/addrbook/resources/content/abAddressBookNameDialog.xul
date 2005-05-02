@@ -50,6 +50,6 @@
 
   <hbox align="center">
     <label control="name" value="&name.label;" accesskey="&name.accesskey;"/>
-    <textbox id="name" flex="1"/>
+    <textbox id="name" oninput="abNameDoOkEnabling();" flex="1"/>
   </hbox>
 </dialog>

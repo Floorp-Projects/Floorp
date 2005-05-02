@@ -50,7 +50,7 @@
 
   <hbox align="center">
     <label control="name" value="&name.label;"/>
-    <textbox tabindex="0" id="name"/>
+    <textbox tabindex="0" oninput="abNameDoOkEnabling();" id="name"/>
   </hbox>
 </dialog>
 

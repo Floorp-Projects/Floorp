@@ -1,10 +1,14 @@
 var okCallback = 0;
 var gCanRename = true;
+var gOkButton;
+var gNameInput;
 
 function abNameOnLoad()
 {
   var abName = "";
   
+  gOkButton = document.documentElement.getButton('accept');
+
 	// look in arguments[0] for parameters
 	if ("arguments" in window && window.arguments[0])
 	{
@@ -22,16 +26,18 @@ function abNameOnLoad()
 	}
 	
 	// focus on input
-	var name = document.getElementById('name');
-  if (name) {
+  gNameInput = document.getElementById('name');
+  if (gNameInput) {
     if (abName)
-      name.value = abName;
+      gNameInput.value = abName;
     
     if (gCanRename)
-      name.focus();
+      gNameInput.focus();
     else
-      name.disabled = true;
+      gNameInput.disabled = true;
   }
+
+  abNameDoOkEnabling()
 
 	moveToAlertPosition();
 }
@@ -39,7 +45,12 @@ function abNameOnLoad()
 function abNameOKButton()
 {
 	if (top.okCallback && gCanRename)
-    top.okCallback(document.getElementById('name').value);
+    top.okCallback(gNameInput.value.replace(/^\s+|\s+$/g, ''));
 	
 	return true;
+}
+
+function abNameDoOkEnabling()
+{
+  gOkButton.disabled = !/\S/.test(gNameInput.value);
 }
