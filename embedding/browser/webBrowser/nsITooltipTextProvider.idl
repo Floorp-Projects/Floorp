@@ -61,7 +61,7 @@ interface nsIDOMNode;
  *
  * @status FROZEN
  */
-[uuid(b128a1e6-44f3-4331-8fbe-5af360ff21ee)]
+[scriptable, uuid(b128a1e6-44f3-4331-8fbe-5af360ff21ee)]
 interface nsITooltipTextProvider : nsISupports
 {
     /**

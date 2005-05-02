@@ -80,8 +80,8 @@ public class TestParams
   static void testArrayParamsIn(ITestParams p)
   {
     int count = 4;
-    byte[] byte_array = new byte[count];
-    for (byte i = 0; i < count; i++) {
+    short[] byte_array = new short[count];
+    for (short i = 0; i < count; i++) {
       byte_array[i] = i;
     }
     p.testSimpleTypeArrayIn(count, byte_array);
@@ -117,7 +117,7 @@ public class TestParams
 
   static void testArrayParamsOut(ITestParams p)
   {
-    int[] count = new int[1];
+    long[] count = new long[1];
     char[][] char_array = new char[1][];
     p.testSimpleTypeArrayOut(count, char_array);
     for (int i = 0; i < count[0]; i++) {
@@ -209,8 +209,8 @@ public class TestParams
 
   static void testArrayParamsRetval(ITestParams p)
   {
-    int[] count = new int[1];
-    int[] int_array = p.returnSimpleTypeArray(count);
+    long[] count = new long[1];
+    long[] int_array = p.returnSimpleTypeArray(count);
     for (int i = 0; i < count[0]; i++) {
       System.out.println("[" + i + "]  " + int_array[i]);
     }

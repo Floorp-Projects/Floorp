@@ -565,12 +565,6 @@ endif
 endif
 endif
 
-ifdef MOZ_ENABLE_JAVAXPCOM
-JAVA_XPIDLSRCS += $(SDK_XPIDLSRCS)
-else
-JAVA_XPIDLSRCS = 
-endif
-
 ################################################################################
 
 # The root makefile doesn't want to do a plain export/libs, because
@@ -1279,11 +1273,6 @@ $(SDK_PUBLIC) $(PUBLIC)::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 endif
 
-ifneq ($(JAVA_XPIDLSRCS),)
-$(JAVA_DIST_DIR)::
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
-endif
-
 ifneq ($(XPI_NAME),)
 export::
 	@if test ! -d $(FINAL_TARGET); then echo Creating $(FINAL_TARGET); rm -fr $(FINAL_TARGET); $(NSINSTALL) -D $(FINAL_TARGET); else true; fi
@@ -1530,38 +1519,6 @@ ifndef NO_INSTALL
 endif
 
 endif # SDK_XPIDLSRCS
-
-
-
-
-ifneq ($(JAVA_XPIDLSRCS),)
-
-# A single IDL file can contain multiple interfaces, which result in multiple
-# Java interface files.  So use hidden dependency files.
-JAVADEPFILES = $(addprefix $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.,$(JAVA_XPIDLSRCS:.idl=.java.pp))
-
-# generate .java files into $(XPIDL_GEN_DIR)
-$(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done: $(XPIDL_GEN_DIR)/.done
-	@if test ! -d $(XPIDL_GEN_DIR)/org/mozilla/xpcom; then echo Creating $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done; rm -rf $(XPIDL_GEN_DIR)/org; mkdir $(XPIDL_GEN_DIR)/org; mkdir $(XPIDL_GEN_DIR)/org/mozilla; mkdir $(XPIDL_GEN_DIR)/org/mozilla/xpcom; fi
-	@touch $@
-
-$(XPIDL_GEN_DIR)/org/mozilla/xpcom/.%.java.pp: %.idl $(JAVA_IDL_COMPILE) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done
-	$(REPORT_BUILD)
-	$(ELOG) $(JAVA_IDL_COMPILE) -m java -p org.mozilla.xpcom -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/$* $(_VPATH_SRCS)
-	@touch $@
-
-
-export:: $(JAVA_DIST_DIR)
-
-# Use a wildcard to install the generated Java files since there is no strict
-# one-to-one mapping between IDL files and Java files (IDL files can have
-# multiple interfaces).
-export:: $(JAVADEPFILES)
-ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/*.java $(JAVA_DIST_DIR)/org/mozilla/xpcom/
-endif
-
-endif # JAVA_XPIDLSRCS
 
 ################################################################################
 # Copy each element of EXTRA_COMPONENTS to $(FINAL_TARGET)/components

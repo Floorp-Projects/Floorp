@@ -60,7 +60,7 @@ interface nsIContextMenuInfo;
  * @status UNDER_REVIEW
  */
  
-[uuid(7fb719b3-d804-4964-9596-77cf924ee314)]
+[scriptable, uuid(7fb719b3-d804-4964-9596-77cf924ee314)]
 interface nsIContextMenuListener2 : nsISupports
 {
   /** Flag. No context. */
@@ -113,7 +113,7 @@ interface nsIContextMenuListener2 : nsISupports
  * @status UNDER_REVIEW
  */
  
-[uuid(2f977d56-5485-11d4-87e2-0010a4e75ef2)]
+[scriptable, uuid(2f977d56-5485-11d4-87e2-0010a4e75ef2)]
 interface nsIContextMenuInfo : nsISupports
 {
   /**

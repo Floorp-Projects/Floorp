@@ -108,7 +108,7 @@ public class TestArray {
     // test IndexOf && LastIndexOf
     int expectedIndex[] = {0, 4, 6, 12, -1};
     int count = 0;
-    int index = array.indexOf(0, foo);
+    long index = array.indexOf(0, foo);
     System.out.println("IndexOf(foo): " + index + "=" + expectedIndex[count] +
                        " " + assertEqual(index, expectedIndex[count]));
     try {
@@ -193,7 +193,7 @@ public class TestArray {
     }
   }
 
-  static String assertEqual(int aValue1, int aValue2)
+  static String assertEqual(long aValue1, long aValue2)
   {
     if (aValue1 == aValue2)
       return "OK";
@@ -203,7 +203,7 @@ public class TestArray {
   static void dumpArray(nsIMutableArray aArray, int aExpectedCount,
                         int[] aElementIDs, int aExpectedTotal)
   {
-    int count = 0;
+    long count = 0;
     if (aArray != null)
       count = aArray.getLength();
 
@@ -214,17 +214,17 @@ public class TestArray {
 
     for (int index = 0; (index < count) && (index < aExpectedCount); index++) {
       IFoo foo = (IFoo) aArray.queryElementAt(index, IFoo.IFOO_IID);
-        System.out.println(index + ": " + aElementIDs[index] + "=" +
-                           foo.getId() + " (" +
-                           Integer.toHexString(foo.hashCode()) + ") " + 
-                           assertEqual(foo.getId(), aElementIDs[index]));
-        foo = null;
-      }
+      System.out.println(index + ": " + aElementIDs[index] + "=" +
+                         foo.getId() + " (" +
+                         Integer.toHexString(foo.hashCode()) + ") " + 
+                         assertEqual(foo.getId(), aElementIDs[index]));
+      foo = null;
+    }
   }
 
-  static int lastIndexOf(nsIMutableArray aArray, nsISupports aElement)
+  static long lastIndexOf(nsIMutableArray aArray, nsISupports aElement)
   {
-    for (int i = aArray.getLength() - 1; i >= 0; i--) {
+    for (long i = aArray.getLength() - 1; i >= 0; i--) {
       IFoo foo = (IFoo) aArray.queryElementAt(i, IFoo.IFOO_IID);
       if (foo == aElement)
         return i;
@@ -242,13 +242,13 @@ public class TestArray {
   /* Removes first instance of given element */
   static void removeElement(nsIMutableArray aArray, nsISupports aElement)
   {
-    int index = aArray.indexOf(0, aElement);
+    long index = aArray.indexOf(0, aElement);
     aArray.removeElementAt(index);
   }
 
   static void removeLastElement(nsIMutableArray aArray, nsISupports aElement)
   {
-    int index = lastIndexOf(aArray, aElement);
+    long index = lastIndexOf(aArray, aElement);
     aArray.removeElementAt(index);
   }
 }

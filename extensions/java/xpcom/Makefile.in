@@ -56,7 +56,7 @@ REQUIRES	= xpcom \
 		  embed_base \
 		  $(NULL)
 
-DIRS = build
+DIRS = tools/genifaces build
 
 CPPSRCS		= \
 		nsAppFileLocProviderProxy.cpp \
@@ -65,19 +65,6 @@ CPPSRCS		= \
 		nsJavaXPTCStub.cpp \
 		nsJavaXPTCStubWeakRef.cpp \
 		nsJavaXPCOMBindingUtils.cpp \
-		$(NULL)
-
-JAVA_SRCS = \
-		XPCOM.java \
-		XPCOMJavaProxy.java \
-		XPCOMJavaProxyBase.java \
-		XPCOMException.java \
-		GeckoEmbed.java \
-		AppFileLocProvider.java \
-		$(NULL)
-
-GEN_JAVA_SRCS = \
-		XPCOMError.java \
 		$(NULL)
 
 LOCAL_INCLUDES	= -I$(JAVA_INCLUDE_PATH)
@@ -103,7 +90,4 @@ include $(topsrcdir)/config/rules.mk
 XPCOMError.java: $(topsrcdir)/xpcom/base/nsError.h gen-nsError.pl Makefile Makefile.in
 	$(PERL) $(srcdir)/gen-nsError.pl < $< > $@
 
-export:: $(GEN_JAVA_SRCS)
-	@$(INSTALL) -m 644 $(addprefix $(srcdir)/,$(JAVA_SRCS)) $(JAVA_DIST_DIR)/org/mozilla/xpcom
-	@$(INSTALL) -m 644 $(GEN_JAVA_SRCS) $(JAVA_DIST_DIR)/org/mozilla/xpcom
-
+export:: XPCOMError.java

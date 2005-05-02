@@ -1384,7 +1384,7 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/java/xpcom/Makefile
             extensions/java/xpcom/build/Makefile
             extensions/java/xpcom/tests/Makefile
-            extensions/java/xpcom/tools/xpidl/Makefile
+            extensions/java/xpcom/tools/genifaces/Makefile
             " ;;
         typeaheadfind ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_typeaheadfind"
