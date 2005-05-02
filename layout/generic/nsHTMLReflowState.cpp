@@ -379,6 +379,64 @@ nsHTMLReflowState::GetContainingBlockContentWidth(const nsHTMLReflowState* aRefl
   return rs->mComputedWidth;
 }
 
+nscoord
+nsHTMLReflowState::AdjustIntrinsicMinContentWidthForStyle(nscoord aWidth) const
+{
+  nsStyleUnit widthUnit = mStylePosition->mWidth.GetUnit();
+  if (eStyleUnit_Percent == widthUnit) {
+    aWidth = 0;
+  } else if (eStyleUnit_Coord == widthUnit) {
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != mComputedWidth,
+                 "Should be a computed width here");
+    aWidth = mComputedWidth;
+  }
+
+  nsStyleUnit maxWidthUnit = mStylePosition->mMaxWidth.GetUnit();
+  if (eStyleUnit_Percent == maxWidthUnit) {
+    aWidth = 0;
+  } else if (eStyleUnit_Coord == maxWidthUnit) {
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != mComputedMaxWidth,
+                 "Should be a computed max-width here");
+    aWidth = PR_MIN(aWidth, mComputedMaxWidth);
+  }
+
+  nsStyleUnit minWidthUnit = mStylePosition->mMinWidth.GetUnit();
+  if (eStyleUnit_Coord == minWidthUnit) { 
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != mComputedMinWidth,
+                 "Should be a computed max-width here");
+    aWidth = PR_MAX(aWidth, mComputedMinWidth);
+  }
+  
+  return aWidth;
+}
+
+nscoord
+nsHTMLReflowState::AdjustIntrinsicContentWidthForStyle(nscoord aWidth) const
+{
+  nsStyleUnit widthUnit = mStylePosition->mWidth.GetUnit();
+  if (eStyleUnit_Coord == widthUnit) {
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != mComputedWidth,
+                 "Should be a computed width here");
+    aWidth = mComputedWidth;
+  }
+
+  nsStyleUnit maxWidthUnit = mStylePosition->mMaxWidth.GetUnit();
+  if (eStyleUnit_Coord == maxWidthUnit) {
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != mComputedMaxWidth,
+                 "Should be a computed max-width here");
+    aWidth = PR_MIN(aWidth, mComputedMaxWidth);
+  }
+
+  nsStyleUnit minWidthUnit = mStylePosition->mMinWidth.GetUnit();
+  if (eStyleUnit_Coord == minWidthUnit) { 
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != mComputedMinWidth,
+                 "Should be a computed max-width here");
+    aWidth = PR_MAX(aWidth, mComputedMinWidth);
+  }
+  
+  return aWidth;
+}
+
 /* static */
 nsIFrame*
 nsHTMLReflowState::GetContainingBlockFor(const nsIFrame* aFrame)
@@ -1708,11 +1766,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       mComputedPadding.left   = aPadding->left;
     }
     else {
-      if (frame->GetType() == nsLayoutAtoms::scrollFrame) {
-        mComputedPadding.SizeTo(0, 0, 0, 0);
-      } else {
-        ComputePadding(aContainingBlockWidth, cbrs);
-      }
+      ComputePadding(aContainingBlockWidth, cbrs);
     }
     if (aBorder) {  // border is an input arg
       mComputedBorderPadding = *aBorder;

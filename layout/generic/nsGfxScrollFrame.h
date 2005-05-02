@@ -183,13 +183,11 @@ public:
 
   PRBool TryLayout(ScrollReflowState* aState,
                    const nsHTMLReflowMetrics& aKidMetrics,
-                   const nsMargin& aKidPadding,
                    PRBool aAssumeVScroll, PRBool aAssumeHScroll,
                    PRBool aForce);
   nsresult ReflowScrolledFrame(const ScrollReflowState& aState,
                                PRBool aAssumeVScroll,
                                nsHTMLReflowMetrics* aMetrics,
-                               nsMargin* aKidPadding,
                                PRBool aFirstPass);
   nsresult ReflowContents(ScrollReflowState* aState,
                           const nsHTMLReflowMetrics& aDesiredSize);
