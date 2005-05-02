@@ -47,7 +47,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "gtkmozembed.h"
+#ifndef minimo_types_h
+#define minimo_types_h
+
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkkeysyms.h>
@@ -56,8 +58,15 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/time.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 #include <signal.h>
+#include <dirent.h>
+
+#include "gtkmozembed.h"
 
 /* MINIMO TOOLBAR STRUCT */
 typedef struct _MinimoToolBar {
@@ -91,44 +100,76 @@ typedef struct _MinimoBrowser {
   GtkWidget  *progressBar;
   gint        totalBytes;
   
+  GtkWidget  *link_menu;
+  GtkWidget  *image_menu;
+  GtkWidget  *doc_menu;
+  GtkWidget  *image_link_menu;
+  GtkWidget  *reload_menu;
+  
   gboolean didFind;
   
 } MinimoBrowser;
 
-/* Global Minimo Variable */
-MinimoBrowser *browser;
+typedef struct _PrefWindow 		/* configuration data struct */
+{
+  GtkWidget *dialog;
+  GtkWidget *okbutton;
+  GtkWidget *cancelbutton;
+  GtkWidget *applybutton;
+  GtkWidget *block_popup;
+  GtkWidget *vbox_popup;
+  GtkWidget *fr_connection;
+  GtkWidget *vbox_connection;
+  GtkWidget *hbox_connection;
+  GtkWidget *hbox_direct_connection;
+  GtkWidget *fr_popup;
+  GtkWidget *lb_popup;
+  
+  GtkWidget *vbox_manual;
+  GtkWidget *rb_manual_connection;
+  GtkWidget *hbox_http;
+  GtkWidget *lb_http;
+  GtkWidget *en_http_proxy;
+  GtkWidget *box_popup;
+  
+  GtkWidget *lb_port_http;
+  GtkWidget *en_http_port;
+  GtkWidget *hbox_ssl;
+  GtkWidget *lb_ssl;
+  GtkWidget *en_ssl;
+  GtkWidget *lb_ssl_port;
+  GtkWidget *en_ssl_port;
+  GtkWidget *hbox_ftp;
+  
+  GtkWidget *lb_ftp;
+  GtkWidget *en_ftp_proxy;
+  GtkWidget *lb_ftp_port;
+  GtkWidget *en_ftp_port;
+  GtkWidget *hbox_noproxy;
+  GtkWidget *lb_connection;
+  
+  GSList *rb_direct_connection_group;
+  GSList *rb_manual_connection_group;
+  GtkWidget *hbox_manual_connection;
+  GtkWidget *rb_direct_connection;
+  
+} PrefWindow;
 
 /* SPECIFIC STRUCT FOR SPECIFY SOME PARAMETERS OF '_open_dialog_params' METHOD */
 typedef struct _open_dialog_params
 {
   GtkWidget* dialog_combo;
-  MinimoBrowser* browser;
+  GtkWidget* main_combo;
 } OpenDialogParams;
 
-/* Minimo's PATH - probably "~/home/current_user/.Minimo" */
-static char *g_profile_path = NULL;
+/* SPECIFIC STRUCT FOR THE RIGHT CLICK BUTTON EMULATION */
+typedef struct _right_button_click
+{
+  GTimer *pressing_timer;
+  gulong sig_handler;
+  gboolean is_connected;
+} RightButtonClick;
 
-/* the list of browser windows currently open */
-GList *browser_list = g_list_alloc();
-
-/* Number of browsers */
-static int num_browsers = 0;
-
-/* store the last expression on find dialog */
-gchar *last_find = NULL;
-
-/* Last clicked URL */
-gchar *g_link_message_url;
-
-/* Auto Complete List */
-GList* g_autocomplete_list = g_list_alloc();
-
-/* Data Struct for make possible the real autocomplete */
-GtkEntryCompletion *minimo_entry_completion;
-GtkListStore *store;
-GtkTreeIter iter;
-
-gchar *user_home;
 
 /****************/
 /* PREFERENCE.H */
@@ -219,10 +260,6 @@ typedef struct _HistoryWindow{
   gchar *title;
 }HistoryWindow;
 
-/* Global variables */
-static gint prot = 0;
-GSList *history = NULL;
-
 /****************/
 /*  BOOKMARK.H  */
 /****************/
@@ -265,9 +302,13 @@ typedef struct _BookmarkWindow {
   GtkCTreeNode *menu_node;
   BookmarkData *menu_node_data;
   BookmarkCTreeData ctree_data;
+  
+  GtkWidget *reload_menu; /* context menu for reload flags */
+  GtkWidget *doc_menu; /* pointer to document popup menu */
+  GtkWidget *image_menu; /* pointer to image popup menu */
+  GtkWidget *link_menu; /* pointer to link popup menu */
+  GtkWidget *image_link_menu; /* pointer to image link popup menu */
+  
 } BookmarkWindow;
 
-/* Global variables */
-FILE *bookmark_file;
-GNode *bookmarks;
-GtkMozEmbed *minEmbed;
+#endif
