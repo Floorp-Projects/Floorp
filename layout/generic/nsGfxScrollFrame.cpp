@@ -2262,7 +2262,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     
   if (mHScrollbarBox) {
     if (!mHasHorizontalScrollbar) {
-      SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, 0);
+      SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, 0);
     }
     SetScrollbarEnabled(mHScrollbarBox, maxX);
     SetAttribute(mHScrollbarBox, nsXULAtoms::maxpos, maxX);
