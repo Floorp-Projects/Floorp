@@ -288,7 +288,7 @@ if (UserInGroup("editbugs") && defined($cgi->param('dependson'))) {
         my @stack = @{$deps{$target}};
         while (@stack) {
             my $i = shift @stack;
-            SendSQL("select $target from dependencies where $me = " .
+            SendSQL("SELECT $target FROM dependencies WHERE $me = " .
                     SqlQuote($i));
             while (MoreSQLData()) {
                 my $t = FetchOneColumn();

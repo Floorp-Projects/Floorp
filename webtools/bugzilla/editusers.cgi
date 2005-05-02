@@ -622,13 +622,14 @@ sub groupsUserMayBless {
         $connector = 'WHERE';
     } else {
         $query = qq{SELECT DISTINCT $fieldList
-                    FROM groups, user_group_map AS ugm
+                    FROM groups
+                    LEFT JOIN user_group_map AS ugm
+                           ON groups.id = ugm.group_id
                     LEFT JOIN group_group_map AS ggm
                            ON ggm.member_id = ugm.group_id
                           AND ggm.grant_type = ?
                     WHERE user_id = ?
-                      AND ((id = group_id AND isbless = 1) OR
-                           (id = grantor_id))
+                      AND (ugm.isbless = 1 OR groups.id = ggm.grantor_id)
                    };
         @bindValues = (GROUP_BLESS, $userid);
         $connector = 'AND';

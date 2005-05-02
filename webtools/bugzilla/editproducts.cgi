@@ -336,14 +336,14 @@ if (!$action && !$product) {
                  FROM products";
 
     if (Param('useclassification')) {
-        $query .= ", classifications";
+        $query .= " INNER JOIN classifications " .
+                  "ON classifications.id = products.classification_id";
     }
 
     $query .= " LEFT JOIN bugs ON products.id = bugs.product_id";
 
     if (Param('useclassification')) {
-        $query .= " WHERE classifications.name = ? " .
-            " AND classifications.id = products.classification_id";
+        $query .= " WHERE classifications.name = ? ";
 
         # trick_taint is OK because we use this in a placeholder in a SELECT
         trick_taint($classification);
@@ -1038,14 +1038,15 @@ if ($action eq 'updategroupcontrols') {
         my @mandatory_groups = ();
         if (@now_mandatory) {
             SendSQL("SELECT groups.name, COUNT(bugs.bug_id) 
-                     FROM bugs, groups
-                     LEFT JOIN bug_group_map
-                     ON bug_group_map.group_id = groups.id
-                     AND bug_group_map.bug_id = bugs.bug_id
-                     WHERE groups.id IN(" . join(', ', @now_mandatory) . ")
-                     AND bugs.product_id = $product_id
-                     AND bug_group_map.bug_id IS NULL " .
-                    $dbh->sql_group_by('groups.name'));
+                       FROM bugs
+                  LEFT JOIN bug_group_map
+                         ON bug_group_map.bug_id = bugs.bug_id
+                 INNER JOIN groups
+                         ON bug_group_map.group_id = groups.id
+                      WHERE groups.id IN(" . join(', ', @now_mandatory) . ")
+                        AND bugs.product_id = $product_id
+                        AND bug_group_map.bug_id IS NULL " .
+                        $dbh->sql_group_by('groups.name'));
             while (MoreSQLData()) {
                 my ($groupname, $bugcount) = FetchSQLData();
                 my %g = ();

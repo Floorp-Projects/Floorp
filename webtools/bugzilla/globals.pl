@@ -171,13 +171,14 @@ sub GenerateVersionTable {
 
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
 
-    SendSQL("select name, description from classifications ORDER BY name");
+    SendSQL("SELECT name, description FROM classifications ORDER BY name");
     while (@line = FetchSQLData()) {
         my ($n, $d) = (@line);
         $::classdesc{$n} = $d;
     }
 
-    SendSQL("select name, description, votesperuser, disallownew$mpart from products ORDER BY name");
+    SendSQL("SELECT name, description, votesperuser, disallownew$mpart " .
+            "FROM products ORDER BY name");
     while (@line = FetchSQLData()) {
         my ($p, $d, $votesperuser, $dis, $u) = (@line);
         $::proddesc{$p} = $d;
@@ -604,7 +605,7 @@ sub DBID_to_name {
     }
     if (!defined $::cachedNameArray{$id}) {
         PushGlobalSQLState();
-        SendSQL("select login_name from profiles where userid = $id");
+        SendSQL("SELECT login_name FROM profiles WHERE userid = $id");
         my $r = FetchOneColumn();
         PopGlobalSQLState();
         if (!defined $r || $r eq "") {
