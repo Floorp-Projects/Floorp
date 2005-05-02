@@ -47,7 +47,7 @@
 ]>
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel(panel);"
-      headertitle="&lHeader;">
+      headertitle="&pref.appearance.title;">
 
   <script type="application/x-javascript">
   <![CDATA[

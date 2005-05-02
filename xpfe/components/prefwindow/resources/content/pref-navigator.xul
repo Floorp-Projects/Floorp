@@ -46,7 +46,7 @@
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       id="pref-navigator"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-navigator.xul');"
-      headertitle="&lHeader;">
+      headertitle="&pref.navigator.title;">
 
   <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-navigator.js"/>

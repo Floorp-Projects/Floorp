@@ -1,4 +1,4 @@
-<!ENTITY  lHeader                   "Navigator">
+<!ENTITY  pref.navigator.title      "Navigator">
 
 <!ENTITY  navRadio                  "Display on">
 <!ENTITY  navStartPageMenu.label    "Navigator Startup">

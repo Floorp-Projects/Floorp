@@ -38,15 +38,15 @@
 <!-- extracted from ./pref-charset.xul -->
 
 <!-- LOCALIZATION NOTE  Character Encoding Preferences Dialog: Do NOT localize the term "Character Encoding"  -->
-<!ENTITY charset.customize.title.label			    "Customize Character Encoding">
-<!ENTITY charset.customize.left.header			    "Character Encoding">
-<!ENTITY charset.customize.right.header		    "Select Supported Character Encodings">
+<!ENTITY charset.customize.title.label          "Customize Character Encoding">
+<!ENTITY charset.customize.left.header          "Character Encoding">
+<!ENTITY charset.customize.right.header         "Select Supported Character Encodings">
 <!ENTITY charset.customize.current.label        "Active Character Encodings:">
 <!ENTITY charset.customize.reorder.label        "Reorder">
 <!ENTITY charset.customize.remove.label         "Remove">
 <!ENTITY charset.customize.additional.label     "Available Character Encodings:">
 <!ENTITY charset.customize.add.label            "Add">
-<!ENTITY charset.customize.cancel.label		      "Cancel">
+<!ENTITY charset.customize.cancel.label         "Cancel">
 <!ENTITY charset.customize.save.label           "Save">
 <!ENTITY charset.customize.save.popup           "Please restart the browser for changes to take effect...">
 <!ENTITY charset.customize.moveUp.label         "Move Up">

@@ -1,6 +1,6 @@
-<!ENTITY title                          "Popup Windows">
+<!ENTITY pref.popups.title              "Popup Windows">
 
-<!ENTITY popupBlocking.label            "Popup Windows">
+<!ENTITY pref.popups.caption            "Popup Windows">
 
 <!ENTITY popupDesc.label                "Specify how to handle popup windows that appear on top of or under the current Navigator window:">
 

@@ -1,4 +1,4 @@
-<!ENTITY lHeader "Keyboard Navigation">
+<!ENTITY pref.keyNav.title "Keyboard Navigation">
 <!ENTITY tabNavigationBehavior.label "Tab Key Navigation">
 <!ENTITY tabNavigationLinks.label "Links">
 <!ENTITY tabNavigationLinks.accesskey "L">

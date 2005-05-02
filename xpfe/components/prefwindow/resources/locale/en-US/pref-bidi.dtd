@@ -1,8 +1,8 @@
 <!-- extracted from content/pref-BidiOptions.xul -->
 
 <!--LOCALIZATION NOTE : FILE Bidi Options prefs dialog -->
-<!ENTITY title.label                         "Bidi Options">
-<!ENTITY lHeader                             "Bidi Options">
+<!ENTITY pref.bidi.title                     "Bidi Options">
+<!ENTITY pref.bidi.desc                      "Bidi Options">
 <!ENTITY direction.label                     "Default Direction">
 <!ENTITY directionLTR.label                  "Left to Right">
 <!ENTITY directionLTR.accesskey              "l">

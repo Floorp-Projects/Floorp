@@ -41,7 +41,7 @@
 <!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-proxies.dtd" >
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-proxies.xul');"
-      headertitle="&lHeader;">
+      headertitle="&pref.proxies.title;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -60,7 +60,7 @@
                 src="chrome://pref/locale/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-proxies.js"/>
 
-  <description>&proxy.description;</description>  
+  <description>&pref.proxies.desc;</description>  
   <groupbox>
     <caption label="&proxyTitle.label;"/>
     <radiogroup id="networkProxyType" prefstring="network.proxy.type" align="stretch">

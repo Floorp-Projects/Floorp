@@ -45,7 +45,7 @@
 
 <page id="cookiesPanel" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="init();"
-      headertitle="&lHeader;">
+      headertitle="&pref.cookies.title;">
 
   <script type="application/x-javascript" src="chrome://communicator/content/permissions/permissionsOverlay.js"/>
 
