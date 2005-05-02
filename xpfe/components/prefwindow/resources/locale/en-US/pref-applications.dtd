@@ -1,8 +1,8 @@
 <!-- extracted from content/pref-applications.xul -->
 
 <!--LOCALIZATION NOTE : FILE The Applications prefs dialog -->
-<!ENTITY lHeader                        "Helper Applications">
-<!ENTITY descript                       "Specify how to handle files of each file type">
+<!ENTITY pref.applications.title        "Helper Applications">
+<!ENTITY pref.applications.caption      "Specify how to handle files of each file type">
 <!ENTITY fileTypes.label                "File types:">
 <!ENTITY aimLaunchSelect.label          "AOL Instant Messenger Launch">
 <!ENTITY newTypeButton.label            "New Type...">

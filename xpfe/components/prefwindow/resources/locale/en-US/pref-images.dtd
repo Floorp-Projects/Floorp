@@ -1,4 +1,4 @@
-<!ENTITY lHeader                        "Images">
+<!ENTITY pref.images.title              "Images">
 
 <!ENTITY imageBlocking.label            "Image Acceptance Policy">
 

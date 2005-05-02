@@ -1,9 +1,9 @@
 <!-- extracted from content/pref-proxies.xul -->
 
 <!--LOCALIZATION NOTE : FILE The Proxies preferences dialog -->
-<!ENTITY  lHeader                       "Proxies">
+<!ENTITY  pref.proxies.title            "Proxies">
+<!ENTITY  pref.proxies.desc             "A Proxy is a network service that can filter and speed up your Internet connection.">
 <!ENTITY  proxyTitle.label              "Configure Proxies to Access the Internet">
-<!ENTITY  proxy.description             "A Proxy is a network service that can filter and speed up your Internet connection.">
 <!ENTITY  directTypeRadio.label         "Direct connection to the Internet">
 <!ENTITY  directTypeRadio.accesskey     "D">
 <!ENTITY  manualTypeRadio.label         "Manual proxy configuration:">

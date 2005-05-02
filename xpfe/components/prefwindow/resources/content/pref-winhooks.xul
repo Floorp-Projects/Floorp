@@ -51,7 +51,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-winhooks.xul');"
-      headertitle="&title.label;">
+      headertitle="&pref.winHooks.title;">
 
     <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-winhooks.js"/>
 

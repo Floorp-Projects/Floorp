@@ -41,7 +41,7 @@
 <!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-fonts.dtd" >
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-fonts.xul');"
-      headertitle="&lHeader;">
+      headertitle="&pref.fonts.title;">
 
   <stringbundle id="bundle_prefutilities"
                 src="chrome://communicator/locale/pref/prefutilities.properties"/>

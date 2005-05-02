@@ -1,6 +1,6 @@
 
 <!--LOCALIZATION NOTE : FILE Theme management prefs -->
-<!ENTITY  lHeader                 "Themes">
+<!ENTITY  pref.themes.title       "Themes">
 
 <!ENTITY  skinIntro.label         "Selecting a new theme changes the look of buttons, dialog boxes, menus, toolbars, and other items. It does not change the way these items function.">
 <!ENTITY  installedThemes.label   "Theme to use:">
@@ -8,8 +8,8 @@
 <!ENTITY  selectSkin.label        "Apply Theme">
 <!ENTITY  selectSkin.accesskey    "a">
 
-<!ENTITY  uninstallSkin.label        "Uninstall Theme">
-<!ENTITY  uninstallSkin.accesskey    "U">
+<!ENTITY  uninstallSkin.label     "Uninstall Theme">
+<!ENTITY  uninstallSkin.accesskey "U">
 
 <!ENTITY  general.label           "General">
 <!ENTITY  preview.label           "Preview Image">

@@ -5,7 +5,7 @@
  
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-smartupdate.xul');"
-      headertitle="&lHeader;">
+      headertitle="&pref.smartUpdate.title;">
   
   <script type="application/x-javascript">
   <![CDATA[
