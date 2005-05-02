@@ -1880,8 +1880,7 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     tileGC = gdk_gc_new_with_values(drawing->GetDrawable(), &values, valuesMask);
     
     if (haveClip) {
-      GdkRectangle gdkrect = {clipRect.x + aTileRect.x - aSXOffset,
-                              clipRect.y + aTileRect.y - aSYOffset,
+      GdkRectangle gdkrect = {clipRect.x, clipRect.y,
                               clipRect.width, clipRect.height};
       gdk_gc_set_clip_rectangle(tileGC, &gdkrect);
     }
