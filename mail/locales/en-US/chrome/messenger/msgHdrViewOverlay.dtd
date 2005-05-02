@@ -37,6 +37,7 @@
 
 <!ENTITY toField.label "To: ">
 <!ENTITY fromField.label "From: ">
+<!ENTITY senderField.label "Sender: ">
 <!ENTITY organizationField.label "Organization: ">
 <!ENTITY replyToField.label "Reply-To: ">
 

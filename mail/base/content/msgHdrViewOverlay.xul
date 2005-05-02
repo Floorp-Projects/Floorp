@@ -146,6 +146,7 @@
         <mail-toggle-headerfield keywordrelated="true" id="expandedsubjectBox" class="subjectvalue" label="&subjectField.label;" ontwistyclick="ToggleHeaderView();" collapsed="true"/>
  
         <mail-emailheaderfield id="expandedfromBox" label="&fromField.label;" collapsed="true"/>
+        <mail-emailheaderfield id="expandedsenderBox" label="&senderField.label;" collapsed="true"/>
         <mail-headerfield id="expandedorganizationBox" label="&organizationField.label;" collapsed="true"/>
         <mail-emailheaderfield id="expandedreply-toBox" label="&replyToField.label;" collapsed="true"/>
 

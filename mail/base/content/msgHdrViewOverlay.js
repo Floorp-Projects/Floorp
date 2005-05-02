@@ -127,6 +127,7 @@ var gCollapsedHeaderList = [ {name:"subject", outputFunction:updateHeaderValueIn
 // We also have an expanded header view. This shows many of your more common (and useful) headers.
 var gExpandedHeaderList = [ {name:"subject"}, 
                             {name:"from", outputFunction:OutputEmailAddresses},
+                            {name:"sender", outputFunction:OutputEmailAddresses},
                             {name:"reply-to", outputFunction:OutputEmailAddresses},
                             {name:"date"},
                             {name:"to", useToggle:true, outputFunction:OutputEmailAddresses},
@@ -358,7 +359,9 @@ var messageHeaderSink = {
     processHeaders: function(headerNameEnumerator, headerValueEnumerator, dontCollectAddress)
     {
       this.onStartHeaders(); 
+      var fromMailbox;
 
+      var index = 0;
       while (headerNameEnumerator.hasMore()) 
       {
         var header = new Object;        
@@ -374,6 +377,11 @@ var messageHeaderSink = {
         if (lowerCaseHeaderName == "x-mailer" || lowerCaseHeaderName == "x-mimeole")
           lowerCaseHeaderName = "user-agent";   
         
+        if (lowerCaseHeaderName == "sender")
+        {
+          if (fromMailbox == header.headerValue)
+            continue;
+        }
         // according to RFC 2822, certain headers
         // can occur "unlimited" times
         if (lowerCaseHeaderName in currentHeaderData)
@@ -393,6 +401,9 @@ var messageHeaderSink = {
 
         if (lowerCaseHeaderName == "from")
         {
+          if (msgHeaderParser && header.value)
+            fromMailbox = msgHeaderParser.extractHeaderAddressMailboxes(null, header.value);
+
           if (header.value) {
             if ((gCollectIncoming && !dontCollectAddress) || 
                 (gCollectNewsgroup && dontCollectAddress))
@@ -687,9 +698,9 @@ function createNewHeaderView(headerName)
   } 
   else
   {
-  newHeader.setAttribute('label', currentHeaderData[headerName].headerName + ':');
-  // all mail-headerfield elements are keyword related
-  newHeader.setAttribute('keywordrelated','true');
+    newHeader.setAttribute('label', currentHeaderData[headerName].headerName + ':');
+    // all mail-headerfield elements are keyword related
+    newHeader.setAttribute('keywordrelated','true');
   }
   
   newHeader.collapsed = true;
@@ -740,7 +751,7 @@ function UpdateMessageHeaders()
     else if (!gCollapsedHeaderViewMode && !gBuiltExpandedView)
     {
       if (headerName in gExpandedHeaderView)
-      headerEntry = gExpandedHeaderView[headerName];
+       headerEntry = gExpandedHeaderView[headerName];
 
       if (!headerEntry && gViewAllHeaders)
       {
@@ -882,6 +893,7 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
       headerEntry.enclosingBox.buildViews(gNumAddressesToShow);
   } // if msgheader parser
 }
+
 
 function setFromBuddyIcon(email)
 {
