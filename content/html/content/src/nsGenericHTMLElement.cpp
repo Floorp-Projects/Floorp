@@ -1335,7 +1335,7 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 already_AddRefed<nsIDOMHTMLFormElement>
-nsGenericHTMLElement::FindForm()
+nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
 {
   nsIContent* content = this;
   while (content) {
@@ -1348,23 +1348,46 @@ nsGenericHTMLElement::FindForm()
       return form;
     }
 
-    nsIContent *tmp = content;
-    content = tmp->GetParent();
+    nsIContent *prevContent = content;
+    content = prevContent->GetParent();
 
+    if (!content && aCurrentForm) {
+      // We got to the root of the subtree we're in, and we're being removed
+      // from the DOM (the only time we get into this method with a non-null
+      // aCurrentForm).  Check whether aCurrentForm is in the same subtree.  If
+      // it is, we want to return aCurrentForm, since this case means that
+      // we're one of those inputs-in-a-table that have a hacked mForm pointer
+      // and a subtree containing both us and the form got removed from the
+      // DOM.
+      nsCOMPtr<nsIContent> formCOMPtr = do_QueryInterface(aCurrentForm);
+      NS_ASSERTION(formCOMPtr, "aCurrentForm isn't an nsIContent?");
+      // Use an nsIContent temporary to reduce addref/releasing as we go up the
+      // tree
+      nsIContent* iter = formCOMPtr;
+      do {
+        iter = iter->GetParent();
+        if (iter == prevContent) {
+          nsIDOMHTMLFormElement* form;
+          CallQueryInterface(aCurrentForm, &form);
+          return form;
+        }
+      } while (iter);
+    }
+    
     if (content) {
-      PRInt32 i = content->IndexOf(tmp);
+      PRInt32 i = content->IndexOf(prevContent);
 
       if (i < 0) {
-        // This means 'tmp' is anonymous content, form controls in
+        // This means 'prevContent' is anonymous content, form controls in
         // anonymous content can't refer to the real form, if they do
         // they end up in form.elements n' such, and that's wrong...
 
-        return NS_OK;
+        return nsnull;
       }
     }
   }
 
-  return NS_OK;
+  return nsnull;
 }
 
 static PRBool
@@ -3260,7 +3283,7 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
       SetForm(nsnull);
     } else {
       // Recheck whether we should still have an mForm.
-      nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm();
+      nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm(mForm);
       if (!form) {
         SetForm(nsnull);
       }

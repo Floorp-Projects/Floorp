@@ -580,9 +580,13 @@ public:
   // Form Helper Routines
   /**
    * Find an ancestor of this content node which is a form (could be null)
-   * @param aForm the form ancestore [OUT]
+   * @param aCurrentForm the current form for this node.  If this is
+   *        non-null, and no ancestor form is found, and the current form is in
+   *        a connected subtree with the node, the current form will be
+   *        returned.  This is needed to handle cases when HTML elements have a
+   *        current form that they're not descendants of.
    */
-  already_AddRefed<nsIDOMHTMLFormElement> FindForm();
+  already_AddRefed<nsIDOMHTMLFormElement> FindForm(nsIForm* aCurrentForm = nsnull);
 
   /**
    * See if the document being tested has nav-quirks mode enabled.
