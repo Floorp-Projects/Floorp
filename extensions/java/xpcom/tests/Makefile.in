@@ -51,20 +51,8 @@ XPIDLSRCS = \
 	ITestParams.idl \
 	$(NULL)
 
-# Since we are creating a component that implements the ITestParams interface
-# (in the 'dll' directory), we need to add the Java interface to the
-# org.mozilla.xpcom package.
-JAVA_XPIDLSRCS += \
-	ITestParams.idl \
-	$(NULL)
-
-# The IFoo interface is not part of the org.mozilla.xpcom package, but we need
-# to create a Java version of it.
-LOCAL_JAVA_XPIDLSRCS = \
-	IFoo.idl \
-	$(NULL)
-
 JAVA_SRCS = \
+	Foo.java \
 	TestArray.java \
 	TestProps.java \
 	TestQI.java \
@@ -80,28 +68,22 @@ else
 SEP = :
 endif
 
-JAVA_CLASSPATH = ./../build$(SEP)$(XPIDL_GEN_DIR)
+_JAVA_CLASSPATH = .$(SEP)./../build$(SEP)$(XPIDL_GEN_DIR)
 
-GARBAGE += *.class
+REBUILD_JAR = .rebuild_jar
+
+GARBAGE += *.class $(REBUILD_JAR)
 
 include $(topsrcdir)/config/rules.mk
-
-$(XPIDL_GEN_DIR)/%.java: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
-	$(REPORT_BUILD)
-	$(ELOG) $(JAVA_IDL_COMPILE) -m java -w -I$(srcdir) -I$(IDL_DIR) \
-			-o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
-
-ifdef JAVA_CLASSPATH
-_JAVA_CLASSPATH = .$(SEP)$(srcdir)$(SEP)$(JAVA_CLASSPATH)
-else
-_JAVA_CLASSPATH = .$(SEP)$(srcdir)
-endif
 
 %.class: %.java Makefile Makefile.in
 	$(REPORT_BUILD)
 	$(ELOG) $(CYGWIN_WRAPPER) $(JAVAC) -classpath $(_JAVA_CLASSPATH) -d . \
 			$(_VPATH_SRCS)
 
-export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.java, $(LOCAL_JAVA_XPIDLSRCS))
+# make sure to rebuild Java interfaces if our XPIDLSRCS change
+$(REBUILD_JAR): $(XPIDLSRCS)
+	@cd ../build; make clean; make
+	@touch $@
 
-libs:: $(JAVA_SRCS:.java=.class)
+libs:: $(REBUILD_JAR) $(JAVA_SRCS:.java=.class)

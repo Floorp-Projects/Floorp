@@ -111,7 +111,7 @@ public class TestProps {
       throw new NoSuchElementException();
 
     // test the "getKeys" method
-    int[] count = new int[1];
+    long[] count = new long[1];
     String[] keys = props.getKeys(count);
     if (keys == null || keys.length != 3) {
       System.out.println("getKeys returned incorrect array.");

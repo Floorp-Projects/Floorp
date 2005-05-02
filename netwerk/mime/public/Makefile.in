@@ -45,10 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mimetype
 XPIDL_MODULE	= mimetype
 
-JAVA_XPIDLSRCS = \
-		nsIMIMEInfo.idl \
-		$(NULL)
-
 XPIDLSRCS	= \
 		nsIMIMEService.idl \
 		nsIMIMEInfo.idl \

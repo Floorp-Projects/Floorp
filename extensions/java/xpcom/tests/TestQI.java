@@ -91,7 +91,7 @@ public class TestQI {
 
 
 /**
- * Dummy class that implements nsIFileUrl.  The inheritance chaing for
+ * Dummy class that implements nsIFileUrl.  The inheritance chain for
  * nsIFileURL is as follows:
  * <pre>
  *   nsIFileURL -> nsIURL -> nsIURI -> nsISupports
@@ -109,11 +109,11 @@ class FooFile implements nsIFileURL {
       return XPCOM.queryInterface(this, aIID);
   }
 
-	public nsISupports getFile() {
+	public nsIFile getFile() {
 		return null;
 	}
 
-	public void setFile(nsISupports aFile) {
+	public void setFile(nsIFile aFile) {
 	}
 
 	public String getFilePath() {

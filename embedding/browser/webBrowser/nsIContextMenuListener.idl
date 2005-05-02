@@ -54,7 +54,7 @@ interface nsIDOMNode;
  *
  * @status FROZEN
  */
-[uuid(3478b6b0-3875-11d4-94ef-0020183bf181)]
+[scriptable, uuid(3478b6b0-3875-11d4-94ef-0020183bf181)]
 interface nsIContextMenuListener : nsISupports
 {
     /** Flag. No context. */

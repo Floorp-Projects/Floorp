@@ -15,7 +15,7 @@
 #
 # The Initial Developer of the Original Code is
 # IBM Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2004
+# Portions created by the Initial Developer are Copyright (C) 2005
 # IBM Corporation. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,65 +35,30 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
+DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/config.mk
 
-JARFILE = mozjava.jar
-JARFILE_SRC = $(patsubst %.jar,%-src.jar,$(JARFILE))
+MODULE = javaxpcom
+MOZILLA_INTERNAL_API=1
 
-GARBAGE += $(JARFILE) $(JARFILE_SRC)
-GARBAGE_DIRS += _javagen org
+REQUIRES = \
+			xpcom \
+			string \
+			necko \
+			$(NULL)
 
-JAVA_SRCS = \
-		XPCOM.java \
-		XPCOMJavaProxy.java \
-		XPCOMJavaProxyBase.java \
-		XPCOMException.java \
-		GeckoEmbed.java \
-		AppFileLocProvider.java \
-		$(NULL)
+CPPSRCS = GenerateJavaInterfaces.cpp
 
-GEN_JAVA_SRCS = \
-		XPCOMError.java \
+SIMPLE_PROGRAMS	= GenerateJavaInterfaces$(BIN_SUFFIX)
+
+LIBS		+= \
+		$(LIBS_DIR) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-ifdef MOZ_DEBUG
-JAVAC_FLAGS = -g
-endif
-
-_javagen/org/mozilla/xpcom/.iface_done:
-	@if test ! -d _javagen/org/mozilla/xpcom; then \
-		touch .done; \
-		$(INSTALL) -m 644 .done _javagen/org/mozilla/xpcom; \
-	fi
-	@echo Copying Java source files
-	@$(INSTALL) -m 644 $(addprefix $(srcdir)/../,$(JAVA_SRCS)) \
-			_javagen/org/mozilla/xpcom
-	@$(INSTALL) -m 644 $(addprefix ../,$(GEN_JAVA_SRCS)) \
-			_javagen/org/mozilla/xpcom
-	@echo Generating Java interface files
-	$(DIST)/bin/run-mozilla.sh $(DIST)/bin/GenerateJavaInterfaces$(BIN_SUFFIX) \
-			-d $(CURDIR)/_javagen/org/mozilla/xpcom
-	@touch $@
-
-org/mozilla/xpcom/.class_done: _javagen/org/mozilla/xpcom/.iface_done
-	@echo Compiling Java interface classes
-	@$(JAVAC) $(JAVAC_FLAGS) -classpath . -d . _javagen/org/mozilla/xpcom/*.java
-	@touch $@
-
-$(JARFILE): org/mozilla/xpcom/.class_done Makefile
-	$(JAR) cf $@ org
-
-$(JARFILE_SRC): $(JARFILE)
-	$(JAR) cf $@ -C _javagen org
-
-libs:: $(JARFILE) $(JARFILE_SRC)
-	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
 
