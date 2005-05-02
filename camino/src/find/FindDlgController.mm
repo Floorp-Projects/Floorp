@@ -118,8 +118,10 @@
 - (IBAction) findNextAndOrderOut: (id)aSender
 {
   [self putFindStringOnPasteboard];
-  if (![self find:NO])
+  if (![self find:NO]) {
     NSBeep();
+    [[self window] makeFirstResponder:mSearchField];
+  }
   else
     [self close];
 }
