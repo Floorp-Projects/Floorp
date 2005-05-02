@@ -794,8 +794,12 @@ static nsresult ToString(const nsDiscriminatedUnion& data,
     // XXX We might want stringified versions of these... ???
 
     case nsIDataType::VTYPE_VOID:
-    case nsIDataType::VTYPE_EMPTY_ARRAY:
     case nsIDataType::VTYPE_EMPTY:
+        outString.Truncate();
+        outString.SetIsVoid(true);
+        return NS_OK;
+
+    case nsIDataType::VTYPE_EMPTY_ARRAY:
     case nsIDataType::VTYPE_ARRAY:
     case nsIDataType::VTYPE_INTERFACE:
     case nsIDataType::VTYPE_INTERFACE_IS:
