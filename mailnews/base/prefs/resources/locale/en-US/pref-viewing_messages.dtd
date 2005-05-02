@@ -51,15 +51,15 @@
 <!ENTITY color.label                      "Color:">
 <!ENTITY color.accesskey                  "C">
 <!ENTITY displayPlainText.label           "When displaying plain text messages">
-<!ENTITY plainTextFont.label              "Use the following font:">
+<!ENTITY plainTextFont.label              "Use the following font width:">
 <!ENTITY displayQuoted.label              "Settings for quoted messages:">
 <!ENTITY sendDefaultCharset.label         "Default Character Encoding:">
 <!ENTITY sendDefaultCharset.accesskey     "r">
 <!ENTITY forceCharsetOverride.label       "Apply default to all messages (ignore character encoding specified by MIME header)">
 <!ENTITY forceCharsetOverride.accesskey   "A">
-<!ENTITY fixedWidth.label                 "Fixed width font">
+<!ENTITY fixedWidth.label                 "Fixed">
 <!ENTITY fixedWidth.accesskey             "F">
-<!ENTITY variableWidth.label              "Variable width font">
+<!ENTITY variableWidth.label              "Variable">
 <!ENTITY variableWidth.accesskey          "V">
 <!ENTITY readingMessagesHeader.label      "For incoming messages">
 <!ENTITY messageWrapping.label            "Message Wrapping">
