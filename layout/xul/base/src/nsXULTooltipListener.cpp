@@ -49,6 +49,7 @@
 #include "nsIPopupBoxObject.h"
 #include "nsIServiceManager.h"
 #ifdef MOZ_XUL
+#include "nsIDOMNSDocument.h"
 #include "nsITreeView.h"
 #endif
 #include "nsGUIEvent.h"
@@ -318,15 +319,38 @@ nsXULTooltipListener::RemoveTooltipSupport(nsIContent* aNode)
 void
 nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
 {
+  if (!mSourceNode)
+    return;
+
+  // get the boxObject of the documentElement of the document the tree is in
+  nsCOMPtr<nsIBoxObject> bx;
+  nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mSourceNode->GetDocument()));
+  if (doc) {
+    nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
+    nsCOMPtr<nsIDOMElement> docElement;
+    doc->GetDocumentElement(getter_AddRefs(docElement));
+    if (nsDoc && docElement) {
+      nsDoc->GetBoxObjectFor(docElement, getter_AddRefs(bx));
+    }
+  }
+
   nsCOMPtr<nsITreeBoxObject> obx;
   GetSourceTreeBoxObject(getter_AddRefs(obx));
-  if (obx) {
+  if (bx && obx) {
     PRInt32 x, y;
-    aMouseEvent->GetClientX(&x);
-    aMouseEvent->GetClientY(&y);
+    aMouseEvent->GetScreenX(&x);
+    aMouseEvent->GetScreenY(&y);
+
     PRInt32 row;
     nsCOMPtr<nsITreeColumn> col;
     nsCAutoString obj;
+
+    // subtract off the documentElement's boxObject
+    PRInt32 boxX, boxY;
+    bx->GetScreenX(&boxX);
+    bx->GetScreenY(&boxY);
+    x -= boxX;
+    y -= boxY;
 
     obx->GetCellAt(x, y, &row, getter_AddRefs(col), obj);
 
@@ -334,8 +358,6 @@ nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
     // XXX check the disabletitletips attribute on the tree content
     mNeedTitletip = PR_FALSE;
     if (row >= 0 && obj.EqualsLiteral("text")) {
-      nsCOMPtr<nsITreeView> view;
-      obx->GetView(getter_AddRefs(view));
       PRBool isCropped;
       obx->IsCellCropped(row, col, &isCropped);
       mNeedTitletip = isCropped;
