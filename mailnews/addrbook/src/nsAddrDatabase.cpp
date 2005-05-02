@@ -269,7 +269,7 @@ NS_IMETHODIMP nsAddrDatabase::RemoveListener(nsIAddrDBListener *listener)
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsAddrDatabase::NotifyCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator)
+NS_IMETHODIMP nsAddrDatabase::NotifyCardAttribChange(PRUint32 abCode)
 {
   if (!m_ChangeListeners)
       return NS_OK;
@@ -279,13 +279,13 @@ NS_IMETHODIMP nsAddrDatabase::NotifyCardAttribChange(PRUint32 abCode, nsIAddrDBL
         nsIAddrDBListener *changeListener =
             (nsIAddrDBListener *) m_ChangeListeners->ElementAt(i);
 
-        nsresult rv = changeListener->OnCardAttribChange(abCode, instigator); 
+        nsresult rv = changeListener->OnCardAttribChange(abCode);
     NS_ENSURE_SUCCESS(rv, rv);
     }
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAddrDatabase::NotifyCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator)
+NS_IMETHODIMP nsAddrDatabase::NotifyCardEntryChange(PRUint32 abCode, nsIAbCard *card)
 {
   if (!m_ChangeListeners)
       return NS_OK;
@@ -298,7 +298,7 @@ NS_IMETHODIMP nsAddrDatabase::NotifyCardEntryChange(PRUint32 abCode, nsIAbCard *
 
     if (changeListener)
     {
-      nsresult rv = changeListener->OnCardEntryChange(abCode, card, instigator); 
+      nsresult rv = changeListener->OnCardEntryChange(abCode, card);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else
@@ -308,7 +308,7 @@ NS_IMETHODIMP nsAddrDatabase::NotifyCardEntryChange(PRUint32 abCode, nsIAbCard *
   return NS_OK;
 }
 
-nsresult nsAddrDatabase::NotifyListEntryChange(PRUint32 abCode, nsIAbDirectory *dir, nsIAddrDBListener *instigator)
+nsresult nsAddrDatabase::NotifyListEntryChange(PRUint32 abCode, nsIAbDirectory *dir)
 {
   if (!m_ChangeListeners)
         return NS_OK;
@@ -320,7 +320,7 @@ nsresult nsAddrDatabase::NotifyListEntryChange(PRUint32 abCode, nsIAbDirectory *
         nsIAddrDBListener *changeListener = 
             (nsIAddrDBListener *) m_ChangeListeners->ElementAt(i);
 
-        nsresult rv = changeListener->OnListEntryChange(abCode, dir, instigator); 
+        nsresult rv = changeListener->OnListEntryChange(abCode, dir); 
     NS_ENSURE_SUCCESS(rv, rv);
     }
     return NS_OK;
@@ -339,7 +339,7 @@ NS_IMETHODIMP nsAddrDatabase::NotifyAnnouncerGoingAway(void)
         nsIAddrDBListener *changeListener =
             (nsIAddrDBListener *) m_ChangeListeners->ElementAt(i);
 
-        nsresult rv = changeListener->OnAnnouncerGoingAway(this); 
+        nsresult rv = changeListener->OnAnnouncerGoingAway(); 
     NS_ENSURE_SUCCESS(rv, rv);
     }
   return NS_OK;
@@ -1551,7 +1551,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
   //  do notification
   if (notify)
   {
-    NotifyCardEntryChange(AB_NotifyInserted, newCard, NULL);
+    NotifyCardEntryChange(AB_NotifyInserted, newCard);
   }
   return rv;
 }
@@ -1631,7 +1631,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewListCardAndAddToDB(nsIAbDirectory *aList,
   addressList->AppendElement(newCard);
 
   if (notify)
-    NotifyCardEntryChange(AB_NotifyInserted, newCard, nsnull); 
+    NotifyCardEntryChange(AB_NotifyInserted, newCard); 
 
     return rv;
 }
@@ -1683,13 +1683,13 @@ NS_IMETHODIMP nsAddrDatabase::AddListCardColumnsToRow
     NS_IF_ADDREF(*pNewCard = newCard);
     
     if (cardWasAdded) {
-      NotifyCardEntryChange(AB_NotifyInserted, newCard, nsnull);
+      NotifyCardEntryChange(AB_NotifyInserted, newCard);
     }
     else if (!aInMailingList) {
-      NotifyCardEntryChange(AB_NotifyInserted, pCard, nsnull);
+      NotifyCardEntryChange(AB_NotifyInserted, pCard);
     }
     else {
-      NotifyCardEntryChange(AB_NotifyPropertyChanged, pCard, nsnull);
+      NotifyCardEntryChange(AB_NotifyPropertyChanged, pCard);
     }
     
     //add a column with address row id to the list row
@@ -1853,7 +1853,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateMailListAndAddToDB(nsIAbDirectory *newList, 
 
         nsCOMPtr<nsIAbCard> listCard;
         CreateABListCard(listRow, getter_AddRefs(listCard));
-        NotifyCardEntryChange(AB_NotifyInserted, listCard, NULL);
+        NotifyCardEntryChange(AB_NotifyInserted, listCard);
 
                 NS_RELEASE(listRow);
         return NS_OK;
@@ -1931,7 +1931,7 @@ NS_IMETHODIMP nsAddrDatabase::DeleteCard(nsIAbCard *card, PRBool notify)
     
   if (NS_SUCCEEDED(err)) {
     if (notify) 
-      NotifyCardEntryChange(AB_NotifyDeleted, card, NULL);
+      NotifyCardEntryChange(AB_NotifyDeleted, card);
   }
   else
     DeleteRowFromDeletedCardsTable(cardRow);
@@ -2020,7 +2020,7 @@ NS_IMETHODIMP nsAddrDatabase::DeleteCardFromMailList(nsIAbDirectory *mailList, n
     
   err = DeleteCardFromListRow(pListRow, cardRowID);
   if (NS_SUCCEEDED(err) && aNotify) {            
-    NotifyCardEntryChange(AB_NotifyDeleted, card, NULL);
+    NotifyCardEntryChange(AB_NotifyDeleted, card);
   }
   NS_RELEASE(pListRow);
   return NS_OK;
@@ -2221,7 +2221,7 @@ NS_IMETHODIMP nsAddrDatabase::EditCard(nsIAbCard *card, PRBool notify)
   NS_ENSURE_SUCCESS(err, err);
   
   if (notify) 
-    NotifyCardEntryChange(AB_NotifyPropertyChanged, card, nsnull);
+    NotifyCardEntryChange(AB_NotifyPropertyChanged, card);
   
   return NS_OK;
 }
@@ -2309,10 +2309,10 @@ NS_IMETHODIMP nsAddrDatabase::EditMailList(nsIAbDirectory *mailList, nsIAbCard *
 
     if (notify)
     {
-        NotifyListEntryChange(AB_NotifyPropertyChanged, mailList, nsnull);
+        NotifyListEntryChange(AB_NotifyPropertyChanged, mailList);
 
     if (listCard) {
-            NotifyCardEntryChange(AB_NotifyPropertyChanged, listCard, nsnull);
+            NotifyCardEntryChange(AB_NotifyPropertyChanged, listCard);
         }
     }
 

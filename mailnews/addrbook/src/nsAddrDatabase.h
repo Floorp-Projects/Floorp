@@ -356,7 +356,7 @@ protected:
 	nsresult CreateCardFromDeletedCardsTable(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbCard **result);
 	nsresult DeleteCardFromListRow(nsIMdbRow* pListRow, mdb_id cardRowID);
 	void DeleteCardFromAllMailLists(mdb_id cardRowID);
-	nsresult NotifyListEntryChange(PRUint32 abCode, nsIAbDirectory *dir, nsIAddrDBListener *instigator);
+	nsresult NotifyListEntryChange(PRUint32 abCode, nsIAbDirectory *dir);
 
 	nsresult AddLowercaseColumn(nsIMdbRow * row, mdb_token columnToken, const char* utf8String);
   nsresult GetRowFromAttribute(const char *aName, const char *aUTF8Value, PRBool aCaseInsensitive, nsIMdbRow	**aCardRow);

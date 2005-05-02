@@ -40,17 +40,14 @@
 
 interface nsIAddrDBAnnouncer;
 
-[scriptable, uuid(A4186D89-1DD0-11d3-A303-001083003D0C)] 
+[scriptable, uuid(96876e1d-50a8-4264-8cd0-953d75d0e81b)] 
 interface nsIAddrDBListener : nsISupports {
 
-	void onCardAttribChange(in unsigned long abCode, 
-							in nsIAddrDBListener instigator);
+	void onCardAttribChange(in unsigned long abCode);
 	void onCardEntryChange (in unsigned long abCode, 
-							in nsIAbCard card, 
-							in nsIAddrDBListener instigator);
+							in nsIAbCard card);
 	void onListEntryChange (in unsigned long abCode, 
-							in nsIAbDirectory list, 
-							in nsIAddrDBListener instigator);
-    void onAnnouncerGoingAway(in nsIAddrDBAnnouncer instigator);
+							in nsIAbDirectory list);
+    void onAnnouncerGoingAway();
 
 };

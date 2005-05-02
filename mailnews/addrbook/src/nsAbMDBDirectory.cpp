@@ -841,13 +841,13 @@ NS_IMETHODIMP nsAbMDBDirectory::EditMailListToDatabase(const char *uri, nsIAbCar
 
 // nsIAddrDBListener methods
 
-NS_IMETHODIMP nsAbMDBDirectory::OnCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator)
+NS_IMETHODIMP nsAbMDBDirectory::OnCardAttribChange(PRUint32 abCode)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP nsAbMDBDirectory::OnCardEntryChange
-(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator)
+(PRUint32 abCode, nsIAbCard *card)
 {
   NS_ENSURE_ARG_POINTER(card);
   nsCOMPtr<nsISupports> cardSupports(do_QueryInterface(card));
@@ -873,7 +873,7 @@ NS_IMETHODIMP nsAbMDBDirectory::OnCardEntryChange
 }
 
 NS_IMETHODIMP nsAbMDBDirectory::OnListEntryChange
-(PRUint32 abCode, nsIAbDirectory *list, nsIAddrDBListener *instigator)
+(PRUint32 abCode, nsIAbDirectory *list)
 {
   nsresult rv = NS_OK;
   
@@ -898,7 +898,7 @@ NS_IMETHODIMP nsAbMDBDirectory::OnListEntryChange
   return rv;
 }
 
-NS_IMETHODIMP nsAbMDBDirectory::OnAnnouncerGoingAway(nsIAddrDBAnnouncer *instigator)
+NS_IMETHODIMP nsAbMDBDirectory::OnAnnouncerGoingAway()
 {
   if (mDatabase)
       mDatabase->RemoveListener(this);

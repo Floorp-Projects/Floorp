@@ -40,17 +40,15 @@
 
 interface nsIAddrDBListener;
 
-[scriptable, uuid(A4186D8A-1DD0-11d3-A303-001083003D0C)] 
+[scriptable, uuid(0d8fe8e3-ad48-4dbd-b0c2-a1d374e39b93)] 
 interface nsIAddrDBAnnouncer : nsISupports {
 
 	void addListener(in nsIAddrDBListener listener);
 	void removeListener(in nsIAddrDBListener listener);
 
-	void notifyCardAttribChange(in unsigned long abCode, 
-								in nsIAddrDBListener instigator);
+	void notifyCardAttribChange(in unsigned long abCode);
 	void notifyCardEntryChange (in unsigned long abCode, 
-								in nsIAbCard card, 
-								in nsIAddrDBListener instigator);
+								in nsIAbCard card);
 
 	void notifyAnnouncerGoingAway();
 };
