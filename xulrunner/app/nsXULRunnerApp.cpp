@@ -51,6 +51,39 @@
 #include "prprf.h"
 
 /**
+ * Output a string to the user.  This method is really only meant to be used to
+ * output last-ditch error messages designed for developers NOT END USERS.
+ *
+ * @param isError
+ *        Pass true to indicate severe errors.
+ * @param fmt
+ *        printf-style format string followed by arguments.
+ */
+static void Output(PRBool isError, const char *fmt, ... )
+{
+  va_list ap;
+  va_start(ap, fmt);
+
+#if defined(XP_WIN) && !MOZ_WINCONSOLE
+  char *msg = PR_vsmprintf(fmt, ap);
+  if (msg)
+  {
+    UINT flags = MB_OK;
+    if (isError)
+      flags |= MB_ICONERROR;
+    else 
+      flags |= MB_ICONINFORMATION;
+    MessageBox(NULL, msg, "XULRunner", flags);
+    PR_smprintf_free(msg);
+  }
+#else
+  vfprintf(stderr, fmt, ap);
+#endif
+
+  va_end(ap);
+}
+
+/**
  * Return true if |arg| matches the given argument name.
  */
 static PRBool IsArg(const char* arg, const char* s)
@@ -127,13 +160,13 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
   char gkVersion[32];
   rv = parser.GetString("Gecko", "MinVersion", gkVersion, sizeof(gkVersion));
   if (NS_FAILED(rv) || !CheckMinVersion(gkVersion)) {
-    fprintf(stderr, "Error: Gecko MinVersion requirement not met.\n");
+    Output(PR_TRUE, "Error: Gecko MinVersion requirement not met.\n");
     return nsnull;
   }
 
   rv = parser.GetString("Gecko", "MaxVersion", gkVersion, sizeof(gkVersion));
   if (NS_SUCCEEDED(rv) && !CheckMaxVersion(gkVersion)) {
-    fprintf(stderr, "Error: Gecko MaxVersion requirement not met.\n");
+    Output(PR_TRUE, "Error: Gecko MaxVersion requirement not met.\n");
     return nsnull;
   }
 
@@ -166,8 +199,8 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
                           string_fields[i].bufLen);
     if (NS_FAILED(rv)) {
       if (string_fields[i].required) {
-        fprintf(stderr, "Error: %x: No \"%s\" field.\n", rv,
-                string_fields[i].key);
+        Output(PR_TRUE, "Error: %x: No \"%s\" field.\n",
+               rv, string_fields[i].key);
         return nsnull;
       } else {
         string_fields[i].buf[0] = '\0';
@@ -216,28 +249,30 @@ int main(int argc, char* argv[])
                 || IsArg(argv[1], "help")
                 || IsArg(argv[1], "?"))
   {
-    printf("Usage: " XULRUNNER_PROGNAME " [OPTIONS] [APP-FILE [APP-OPTIONS...]]\n");
-    if (argc > 1)
-    {
-      // display additional information (XXX make localizable)
-      printf("\n"
-             "OPTIONS\n"
-             "      --app        specify APP-FILE (optional)\n"
-             "  -h, --help       show this message\n"
-             "  -v, --version    show version\n"
-             "\n"
-             "APP-FILE\n"
-             "  Application initialization file.\n"
-             "\n"
-             "APP-OPTIONS\n"
-             "  Application specific options.\n");
-    }
+    // display additional information (XXX make localizable?)
+    Output(PR_FALSE,
+           "Mozilla XULRunner " MOZILLA_VERSION " %d\n\n"
+           "Usage: " XULRUNNER_PROGNAME 
+           " [OPTIONS] [APP-FILE [APP-OPTIONS...]]\n"
+           "\n"
+           "OPTIONS\n"
+           "      --app        specify APP-FILE (optional)\n"
+           "  -h, --help       show this message\n"
+           "  -v, --version    show version\n"
+           "\n"
+           "APP-FILE\n"
+           "  Application initialization file.\n"
+           "\n"
+           "APP-OPTIONS\n"
+           "  Application specific options.\n",
+           BUILD_ID);
     return 0;
   }
 
   if (argc == 2 && (IsArg(argv[1], "v") || IsArg(argv[1], "version")))
   {
-    printf("Mozilla XULRunner %s %d\n", MOZILLA_VERSION, BUILD_ID);
+    Output(PR_FALSE, "Mozilla XULRunner " MOZILLA_VERSION " %d\n",
+           BUILD_ID);
     return 0;
   }
 
@@ -249,7 +284,7 @@ int main(int argc, char* argv[])
   {
     if (argc == 2)
     {
-      fprintf(stderr, "Error: APP-FILE must be specified!\n");
+      Output(PR_TRUE, "Error: APP-FILE must be specified!\n");
       return 1;
     }
     hasAppOption = PR_TRUE;
@@ -264,7 +299,7 @@ int main(int argc, char* argv[])
   const nsXREAppData *appData = LoadAppData(appDataFile);
   if (!appData)
   {
-    fprintf(stderr, "Error: Invalid or missing application data!\n");
+    Output(PR_TRUE, "Error: Invalid or missing application data!\n");
     return 1;
   }
 
