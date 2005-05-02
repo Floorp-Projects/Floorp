@@ -129,6 +129,7 @@ struct nsSOAPStrings
   // used by nsDefaultSOAPEncoder.cpp
   const nsLiteralString  kEmpty;
   const nsLiteralString  kNull;
+  const nsLiteralString  kNil;
   const nsLiteralString  kSOAPArrayTypeAttribute;
   const nsLiteralString  kSOAPArrayOffsetAttribute;
   const nsLiteralString  kSOAPArrayPositionAttribute;

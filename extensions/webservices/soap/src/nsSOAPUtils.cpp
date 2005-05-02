@@ -84,6 +84,7 @@ nsSOAPStrings::nsSOAPStrings()
 
   , NS_LITERAL_STRING_INIT(kEmpty, "")
   , NS_LITERAL_STRING_INIT(kNull, "null")
+  , NS_LITERAL_STRING_INIT(kNil, "nil")
   , NS_LITERAL_STRING_INIT(kSOAPArrayTypeAttribute, "arrayType")
   , NS_LITERAL_STRING_INIT(kSOAPArrayOffsetAttribute, "offset")
   , NS_LITERAL_STRING_INIT(kSOAPArrayPositionAttribute, "position")
