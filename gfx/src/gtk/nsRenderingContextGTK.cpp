@@ -1446,6 +1446,33 @@ NS_IMETHODIMP nsRenderingContextGTK::SetRightToLeftText(PRBool aIsRTL)
   return mFontMetrics->SetRightToLeftText(aIsRTL);
 }
 
+NS_IMETHODIMP nsRenderingContextGTK::GetClusterInfo(const PRUnichar *aText,
+                                                    PRUint32 aLength,
+                                                    PRUint8 *aClusterStarts)
+{
+  return mFontMetrics->GetClusterInfo(aText, aLength, aClusterStarts);
+}
+
+PRInt32 nsRenderingContextGTK::GetPosition(const PRUnichar *aText, PRUint32 aLength,
+                                           nsPoint aPt)
+{
+  return mFontMetrics->GetPosition(aText, aLength, aPt);
+}
+
+NS_IMETHODIMP nsRenderingContextGTK::GetRangeWidth(const PRUnichar *aText, PRUint32 aLength,
+                                                   PRUint32 aStart, PRUint32 aEnd,
+                                                   PRUint32 &aWidth)
+{
+  return mFontMetrics->GetRangeWidth(aText, aLength, aStart, aEnd, aWidth);
+}
+
+NS_IMETHODIMP nsRenderingContextGTK::GetRangeWidth(const char *aText, PRUint32 aLength,
+                                                   PRUint32 aStart, PRUint32 aEnd,
+                                                   PRUint32 &aWidth)
+{
+  return mFontMetrics->GetRangeWidth(aText, aLength, aStart, aEnd, aWidth);
+}
+
 NS_IMETHODIMP nsRenderingContextGTK::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect)
 {
   UpdateGC();

@@ -735,6 +735,42 @@ nsFontMetricsXft::SetRightToLeftText(PRBool aIsRTL)
     return NS_OK;
 }
 
+nsresult
+nsFontMetricsXft::GetClusterInfo(const PRUnichar *aText,
+                                 PRUint32 aLength,
+                                 PRUint8 *aClusterStarts)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+PRInt32
+nsFontMetricsXft::GetPosition(const PRUnichar *aText,
+                              PRUint32 aLength,
+                              nsPoint aPt)
+{
+    return -1;
+}
+
+nsresult
+nsFontMetricsXft::GetRangeWidth(const PRUnichar *aText,
+                                PRUint32 aLength,
+                                PRUint32 aStart,
+                                PRUint32 aEnd,
+                                PRUint32 &aWidth)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsFontMetricsXft::GetRangeWidth(const char *aText,
+                                PRUint32 aLength,
+                                PRUint32 aStart,
+                                PRUint32 aEnd,
+                                PRUint32 &aWidth)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 PRUint32
 nsFontMetricsXft::GetHints(void)
 {

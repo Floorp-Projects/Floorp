@@ -438,6 +438,42 @@ nsRenderingContextImpl::FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoor
 }
 
 NS_IMETHODIMP
+nsRenderingContextImpl::GetClusterInfo(const PRUnichar *aText,
+                                       PRUint32 aLength,
+                                       PRUint8 *aClusterStarts)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+PRInt32
+nsRenderingContextImpl::GetPosition(const PRUnichar *aText,
+                                    PRUint32 aLength,
+                                    nsPoint aPt)
+{
+  return -1;
+}
+
+NS_IMETHODIMP
+nsRenderingContextImpl::GetRangeWidth(const PRUnichar *aText,
+                                      PRUint32 aLength,
+                                      PRUint32 aStart,
+                                      PRUint32 aEnd,
+                                      PRUint32 &aWidth)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsRenderingContextImpl::GetRangeWidth(const char *aText,
+                                      PRUint32 aLength,
+                                      PRUint32 aStart,
+                                      PRUint32 aEnd,
+                                      PRUint32 &aWidth)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsRenderingContextImpl::RenderEPS(const nsRect& aRect, FILE *aDataFile)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -202,6 +202,59 @@ nsAutoIndexBuffer::GrowTo(PRInt32 aAtLeast)
   return NS_OK;
 }
 
+struct nsAutoPRUint8Buffer {
+  nsAutoPRUint8Buffer();
+  ~nsAutoPRUint8Buffer();
+
+  nsresult GrowTo(PRInt32 aAtLeast);
+
+  PRUint8* mBuffer;
+  PRInt32 mBufferLen;
+  PRUint8 mAutoBuffer[TEXT_BUF_SIZE];
+};
+
+nsAutoPRUint8Buffer::nsAutoPRUint8Buffer()
+  : mBuffer(mAutoBuffer),
+    mBufferLen(TEXT_BUF_SIZE)
+{
+#ifdef DEBUG
+  memset(mAutoBuffer, 0xdd, sizeof(mAutoBuffer));
+#endif 
+}
+
+nsAutoPRUint8Buffer::~nsAutoPRUint8Buffer()
+{
+  if (mBuffer && (mBuffer != mAutoBuffer)) {
+    delete [] mBuffer;
+  }
+}
+
+nsresult
+nsAutoPRUint8Buffer::GrowTo(PRInt32 aAtLeast)
+{
+  if (aAtLeast > mBufferLen)
+  {
+    PRInt32 newSize = mBufferLen * 2;
+    if (newSize < mBufferLen + aAtLeast) {
+      newSize = mBufferLen * 2 + aAtLeast;
+    }
+    PRUint8* newBuffer = new PRUint8[newSize];
+    if (!newBuffer) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+#ifdef DEBUG
+    memset(newBuffer, 0xdd, sizeof(PRUint8) * newSize);
+#endif
+    memcpy(newBuffer, mBuffer, sizeof(PRUint8) * mBufferLen);
+    if (mBuffer != mAutoBuffer) {
+      delete [] mBuffer;
+    }
+    mBuffer = newBuffer;
+    mBufferLen = newSize;
+  }
+  return NS_OK;
+}
+
 
 //----------------------------------------------------------------------
 
@@ -808,6 +861,9 @@ protected:
 
   PRBool IsChineseJapaneseLangGroup();
   PRBool IsJustifiableCharacter(PRUnichar aChar, PRBool aLangIsCJ);
+
+  void FillClusterBuffer(nsPresContext *aPresContext, const PRUnichar *aText,
+                         PRUint32 aLength, PRUint8 *aClusterStarts);
 };
 
 #ifdef ACCESSIBILITY
@@ -1594,6 +1650,34 @@ nsTextFrame::IsJustifiableCharacter(PRUnichar aChar, PRBool aLangIsCJ)
      ))
     return PR_TRUE;
   return PR_FALSE;
+}
+
+void
+nsTextFrame::FillClusterBuffer(nsPresContext *aPresContext, const PRUnichar *aText,
+                               PRUint32 aLength, PRUint8 *aClusterStarts)
+{
+  // Fill in the cluster hint information, if it's available.
+  nsCOMPtr<nsIRenderingContext> acx;
+  PRUint32 clusterHint = 0;
+
+  nsIPresShell *shell = aPresContext->GetPresShell();
+  if (shell) {
+    shell->CreateRenderingContext(this, getter_AddRefs(acx));
+
+    // Find the font metrics for this text
+    SetFontFromStyle(acx, mStyleContext);
+
+    if (acx)
+      acx->GetHints(clusterHint);
+    clusterHint &= NS_RENDERING_HINT_TEXT_CLUSTERS;
+  }
+
+  if (clusterHint) {
+    acx->GetClusterInfo(aText, aLength, aClusterStarts);
+  }
+  else {
+    memset(aClusterStarts, 1, sizeof(PRInt8) * aLength);
+  }
 }
 
 inline PRBool IsEndOfLine(nsFrameState aState)
@@ -2396,7 +2480,6 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
   PRBool  isOddLevel = PR_FALSE;
 #endif
 
-
   if (NS_FAILED(GetTextInfoForPainting(aPresContext, 
                                        aRenderingContext,
                                        getter_AddRefs(shell),
@@ -2547,6 +2630,23 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
         sdptr = sdptr->mNext;
       }
       if (!hideStandardSelection) {
+      /*
+       * Text is drawn by drawing the entire string every time, but
+       * using clip regions to control which part of the text is shown
+       * (selected or unselected.)  We do this because you can't
+       * assume that the layout of a part of text will be the same
+       * when it's drawn apart from the entire string.  This is true
+       * in languages like arabic, where shaping affects entire words.
+       * Simply put: length("abcd") != length("ab") + length("cd") in
+       * some languages.
+       */
+
+      // See if this rendering backend supports getting cluster
+      // information.
+      PRUint32 clusterHint = 0;
+      aRenderingContext.GetHints(clusterHint);
+      clusterHint &= NS_RENDERING_HINT_TEXT_CLUSTERS;
+
       //while we have substrings...
       //PRBool drawn = PR_FALSE;
       DrawSelectionIterator iter(content, details,text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext, mStyleContext);
@@ -2567,38 +2667,57 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
           //TextStyle &currentStyle = iter.CurrentStyle();
           nscolor    currentFGColor, currentBKColor;
           PRBool     isCurrentBKColorTransparent;
+
           PRBool     isSelection = iter.GetSelectionColors(&currentFGColor,
                                                            &currentBKColor,
                                                            &isCurrentBKColorTransparent);
-#ifdef IBMBIDI
-          if (currentlength > 0
-            && NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
-          {
 
-            if (isRightToLeftOnBidiPlatform)
-              currentX -= newWidth;
-#else // not IBMBIDI
-          if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
+          if (currentlength > 0)
           {
-#endif
-            if (isSelection && !isPaginated)
-            {//DRAW RECT HERE!!!
-              if (!isCurrentBKColorTransparent) {
-                aRenderingContext.SetColor(currentBKColor);
-                aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
-              }
+            if (clusterHint) {
+              PRUint32 tmpWidth;
+              rv = aRenderingContext.GetRangeWidth(text, textLength, currenttext - text,
+                                                   (currenttext - text) + currentlength,
+                                                   tmpWidth);
+              newWidth = nscoord(tmpWidth);
+            }
+            else {
+              rv = aRenderingContext.GetWidth(currenttext, currentlength,newWidth); //ADJUST FOR CHAR SPACING
+            }
+            if (NS_SUCCEEDED(rv)) {
+              if (isRightToLeftOnBidiPlatform)
+                currentX -= newWidth;
+              if (isSelection && !isPaginated)
+              {//DRAW RECT HERE!!!
+                if (!isCurrentBKColorTransparent) {
+                  aRenderingContext.SetColor(currentBKColor);
+                  aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+                }
+                currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
+             }
+            }
+            else {
+              newWidth = 0;
             }
           }
-          else
-            newWidth =0;
-          
+          else {
+            newWidth = 0;
+          }
+
+          aRenderingContext.PushState();
+
+          nsRect rect(currentX, dy, newWidth, mRect.height);
+          aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect);
+                      
           if (isPaginated && !iter.IsBeforeOrAfter()) {
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
-            aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
+            aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
           } else if (!isPaginated) {
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,canDarkenColor));
-            aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
+            aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
           }
+
+          aRenderingContext.PopState();
 
 #ifdef IBMBIDI
           if (!isRightToLeftOnBidiPlatform)
@@ -3507,6 +3626,16 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
         //ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
         DrawSelectionIterator iter(content, details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle,
                                    selectionValue, aPresContext, mStyleContext);
+
+        // See if this rendering backend supports getting cluster
+        // information.
+        PRUint32 clusterHint = 0;
+        aRenderingContext.GetHints(clusterHint);
+        clusterHint &= NS_RENDERING_HINT_TEXT_CLUSTERS;
+
+        nscoord foo;
+        aRenderingContext.GetWidth(text, textLength, foo);
+
         if (!iter.IsDone() && iter.First())
         {
           nscoord currentX = dx;
@@ -3518,11 +3647,23 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
             //TextStyle &currentStyle = iter.CurrentStyle();
             nscolor    currentFGColor, currentBKColor;
             PRBool     isCurrentBKColorTransparent;
+
+            if (clusterHint) {
+              PRUint32 tmpWidth;
+              rv = aRenderingContext.GetRangeWidth(text, textLength, currenttext - text,
+                                                   (currenttext - text) + currentlength,
+                                                   tmpWidth);
+              newWidth = nscoord(tmpWidth);
+            }
+            else {
+              rv = aRenderingContext.GetWidth(currenttext, currentlength,newWidth); //ADJUST FOR CHAR SPACING
+            }
+
             PRBool     isSelection = iter.GetSelectionColors(&currentFGColor,
                                                              &currentBKColor,
                                                              &isCurrentBKColorTransparent);
-            if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
-            {
+
+            if (NS_SUCCEEDED(rv)) {
               if (isSelection && !isPaginated)
               {//DRAW RECT HERE!!!
                 if (!isCurrentBKColorTransparent) {
@@ -3531,15 +3672,24 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
                 }
               }
             }
-            else
+            else {
               newWidth =0;
+            }
+
+            aRenderingContext.PushState();
+
+            nsRect rect(currentX, dy, newWidth, mRect.height);
+            aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect);
 
             if (isPaginated && !iter.IsBeforeOrAfter()) {
-              aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
+              aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
+              aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
             } else if (!isPaginated) {
-              aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,isPaginated));
-              aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
+              aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,canDarkenColor));
+              aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
             }
+
+            aRenderingContext.PopState();
 
             currentX+=newWidth;//increment twips X start
 
@@ -3725,6 +3875,17 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
         PRInt32 textWidth = 0;
         PRUnichar* text = paintBuffer.mBuffer;
 
+        // See if the font backend will do all the hard work for us.
+        PRUint32 clusterHint = 0;
+        rendContext->GetHints(clusterHint);
+        clusterHint &= NS_RENDERING_HINT_TEXT_CLUSTERS;
+        if (clusterHint) {
+          nsPoint pt;
+          pt.x = aPoint.x - origin.x;
+          pt.y = aPoint.y - origin.y;
+          indx = rendContext->GetPosition(text, textLength, pt);
+        }
+        else {
 #ifdef IBMBIDI
         PRBool getReversedPos = NS_GET_EMBEDDING_LEVEL(this) & 1;
         nscoord posX = (getReversedPos) ?
@@ -3760,6 +3921,7 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
           if ((aPoint.x - origin.x) > textWidth+charWidth) {
             indx++;
           }
+        }
         }
 
         aContentOffset = indx + mContentOffset;
@@ -4200,6 +4362,12 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   }
   PRInt32* ip = indexBuffer.mBuffer;
 
+  nsAutoPRUint8Buffer clusterBuffer;
+  rv = clusterBuffer.GrowTo(mContentLength + 1);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   PRInt32 textLength;
   nsresult result(NS_ERROR_FAILURE);
   aPos->mResultContent = mContent;//do this right off
@@ -4265,8 +4433,12 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           aPos->mContentOffset = 0;
           PRInt32 i;
 
+          FillClusterBuffer(aPresContext, paintBuffer.mBuffer,
+                            (PRUint32)textLength, clusterBuffer.mBuffer);
+
           for (i = aPos->mStartOffset -1 - mContentOffset; i >=0;  i--){
             if ((ip[i] < ip[aPos->mStartOffset - mContentOffset]) &&
+                (clusterBuffer.mBuffer[ip[i] - mContentOffset]) &&
                 (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset])))
             {
               aPos->mContentOffset = i + mContentOffset;
@@ -4317,14 +4489,19 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           PRInt32 i;
           aPos->mContentOffset = mContentLength;
 
-          for (i = aPos->mStartOffset +1 - mContentOffset; i <= mContentLength;  i++){
+          FillClusterBuffer(aPresContext, paintBuffer.mBuffer,
+                            (PRUint32)textLength, clusterBuffer.mBuffer);
+
+          for (i = aPos->mStartOffset - mContentOffset; i <= mContentLength; i++) {
             if ((ip[i] > ip[aPos->mStartOffset - mContentOffset]) &&
-                (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset])))
-            {
+                ((i == mContentLength) ||
+                 (!IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i] - mContentOffset])) &&
+                 (clusterBuffer.mBuffer[ip[i] - mContentOffset]))) {
               aPos->mContentOffset = i + mContentOffset;
               break;
             }
           }
+
   #ifdef SUNCTL
           static NS_DEFINE_CID(kLECID, NS_ULE_CID);
 

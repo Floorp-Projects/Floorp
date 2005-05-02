@@ -193,6 +193,20 @@ public:
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
+  NS_IMETHOD GetClusterInfo(const PRUnichar *aText, PRUint32 aLength,
+                            PRUint8 *aClusterStarts);
+  virtual PRInt32 GetPosition(const PRUnichar *aText, PRUint32 aLength,
+                              nsPoint aPt);
+  NS_IMETHOD GetRangeWidth(const PRUnichar *aText,
+                           PRUint32 aLength,
+                           PRUint32 aStart,
+                           PRUint32 aEnd,
+                           PRUint32 &aWidth);
+  NS_IMETHOD GetRangeWidth(const char *aText,
+                           PRUint32 aLength,
+                           PRUint32 aStart,
+                           PRUint32 aEnd,
+                           PRUint32 &aWidth);
 
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect);
 

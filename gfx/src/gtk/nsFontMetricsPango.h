@@ -195,6 +195,26 @@ public:
 
     virtual nsresult SetRightToLeftText(PRBool aIsRTL);
 
+    virtual nsresult GetClusterInfo(const PRUnichar *aText,
+                                    PRUint32 aLength,
+                                    PRUint8 *aClusterStarts);
+
+    virtual PRInt32 GetPosition(const PRUnichar *aText,
+                                PRUint32 aLength,
+                                nsPoint aPt);
+
+    virtual nsresult GetRangeWidth(const PRUnichar *aText,
+                                   PRUint32 aLength,
+                                   PRUint32 aStart,
+                                   PRUint32 aEnd,
+                                   PRUint32 &aWidth);
+
+    virtual nsresult GetRangeWidth(const char *aText,
+                                   PRUint32 aLength,
+                                   PRUint32 aStart,
+                                   PRUint32 aEnd,
+                                   PRUint32 &aWidth);
+
     // get hints for the font
     static PRUint32    GetHints     (void);
 
@@ -240,6 +260,7 @@ private:
     nscoord                  mMaxDescent;
     nscoord                  mMaxAdvance;
     nscoord                  mSpaceWidth;
+    nscoord                  mPangoSpaceWidth;
     nscoord                  mAveCharWidth;
 
     // Private methods
@@ -266,6 +287,8 @@ private:
                                        PRInt32&            aNumCharsFit,
                                        nsTextDimensions&   aLastWordDimensions,
                                        nsRenderingContextGTK *aContext);
+
+    void FixupSpaceWidths (PangoLayout *aLayout, const char *aString);
 };
 
 class nsFontEnumeratorPango : public nsIFontEnumerator
