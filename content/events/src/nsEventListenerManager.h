@@ -51,11 +51,11 @@ class nsIAtom;
 
 typedef struct {
   nsIDOMEventListener* mListener;
-  PRUint8 mFlags;
-  PRUint8 mSubType;
-  PRUint8 mHandlerIsString;
-  PRUint8 mSubTypeCapture;
+  PRUint16 mFlags;
   PRUint16 mGroupFlags;
+  PRUint8  mSubType;
+  PRUint8  mHandlerIsString;
+  PRUint8  mSubTypeCapture;
 } nsListenerStruct;
 
 //These define the internal type of the EventListenerManager
