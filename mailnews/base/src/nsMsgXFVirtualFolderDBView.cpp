@@ -199,6 +199,11 @@ nsMsgXFVirtualFolderDBView::OnSearchDone(nsresult status)
   dbFolderInfo->SetNumMessages(m_numTotal);
   m_viewFolder->UpdateSummaryTotals(true); // force update from db.
   virtDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+  if (m_sortType != nsMsgViewSortType::byThread)
+  {
+    m_sortValid = PR_FALSE;       //sort the results 
+    Sort(m_sortType, m_sortOrder);
+  }
   return rv;
 }
 
