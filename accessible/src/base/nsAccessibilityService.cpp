@@ -1863,12 +1863,19 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // --- Try creating accessible non-HTML (XUL, etc.) ---
     // XUL elements may implement nsIAccessibleProvider via XBL
     // This allows them to say what kind of accessible to create
+    // Non-HTML elements must have an nsIAccessibleProvider, tabindex
+    // or XHTML2 role or they're not in the accessible tree.
     nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
-    // Non-HTML elements must have an nsIAccessibleProvider or they're not in
-    // accessible tree.
-    if (!accProv)
+    if (accProv) {
+      accProv->GetAccessible(getter_AddRefs(newAcc));
+    }
+    else if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex) ||
+             content->HasAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role)) {
+      newAcc = new nsAccessibleWrap(aNode, aWeakShell); // Create generic accessible
+    }
+    else {
       return NS_ERROR_FAILURE;
-    accProv->GetAccessible(getter_AddRefs(newAcc)); 
+    }
   }
   else {
     // --- Try creating accessible for HTML ---
