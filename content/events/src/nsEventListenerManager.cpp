@@ -758,7 +758,8 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
 
   for (PRInt32 i=0; i<listeners->Count(); i++) {
     ls = (nsListenerStruct*)listeners->ElementAt(i);
-    if (ls->mListener == aListener && ls->mFlags == aFlags) {
+    if (ls->mListener == aListener &&
+        (ls->mFlags & ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED) == aFlags) {
       ls->mSubType &= ~aSubType;
       if (ls->mSubType == NS_EVENT_BITS_NONE) {
         NS_RELEASE(ls->mListener);

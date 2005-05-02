@@ -627,15 +627,21 @@ nsDOMEventRTTearoff::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 
 // nsIDOMEventTarget
 NS_IMETHODIMP
-nsDOMEventRTTearoff::AddEventListener(const nsAString& type,
-                                      nsIDOMEventListener *listener,
+nsDOMEventRTTearoff::AddEventListener(const nsAString& aType,
+                                      nsIDOMEventListener *aListener,
                                       PRBool useCapture)
 {
-  nsCOMPtr<nsIDOMEventReceiver> event_receiver;
-  nsresult rv = GetEventReceiver(getter_AddRefs(event_receiver));
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool permitUntrustedEvents = PR_FALSE;
+  nsIDocument *ownerDoc = mContent->GetOwnerDoc();
+  nsIURI *docUri;
+  if (ownerDoc && (docUri = ownerDoc->GetDocumentURI())) {
+    PRBool isChrome = PR_TRUE;
+    nsresult rv = docUri->SchemeIs("chrome", &isChrome);
+    NS_ENSURE_SUCCESS(rv, rv);
+    permitUntrustedEvents = !isChrome;
+  }
 
-  return event_receiver->AddEventListener(type, listener, useCapture);
+  return AddEventListener(aType, aListener, useCapture, permitUntrustedEvents);
 }
 
 NS_IMETHODIMP
