@@ -42,8 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOZILLA_INTERNAL_API = 1
-
 MODULE		= minimo
 REQUIRES	= gtkembedmoz \
 		  xpcom \
@@ -78,10 +76,15 @@ ifdef NS_TRACE_MALLOC
 REQUIRES	+= tracemalloc
 endif
 
-CPPSRCS		= Minimo.cpp
+CPPSRCS		= Minimo.cpp \
+		minimo_bookmark.cpp \
+		minimo_history.cpp  \
+		minimo_callbacks.cpp \
+		minimo_context.cpp \
+		minimo_preference.cpp \
+		mozilla_api.cpp  
 
-SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=)
-
+PROGRAM = Minimo
 
 LIBS		+= \
 			-lgtkembedmoz \
@@ -114,5 +117,3 @@ EXTRA_LIBS	+= -L$(DEPTH)/dist/lib/components \
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
-
-
