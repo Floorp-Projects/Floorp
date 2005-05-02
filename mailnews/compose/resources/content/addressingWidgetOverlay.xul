@@ -43,13 +43,14 @@
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/addressingWidgetOverlay.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/addressbook/abDragDrop.js"/>
 
   <!-- Addressing Widget -->
   <listbox id="addressingWidget" seltype="multiple" rows="4"
     onkeydown="awKeyDown(event, this)"
     onclick="awClickEmptySpace(event.originalTarget, true)"
-    ondragover="DragOverAddressingWidget(event);"
-    ondragdrop="return DropOnAddressingWidget(event);">
+    ondragover="DragAddressOverTargetControl(event);"
+    ondragdrop="DropAddressOverTargetControl(event);">
     
     <listcols>
       <listcol id="typecol-addressingWidget"/>

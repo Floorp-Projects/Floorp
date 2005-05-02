@@ -370,46 +370,9 @@ function UpdateCardView()
   // in the select address dialog, do nothing
 }
 
-function DragOverBucketPane(event)
+function DropRecipient(address)
 {
-  var dragSession = gDragService.getCurrentSession();
-
-  if (dragSession.isDataFlavorSupported("text/x-moz-address"))
-    dragSession.canDrop = true;
-}
-
-function DropOnBucketPane(event)
-{
-  var dragSession = gDragService.getCurrentSession();
-  var trans;
-  
-  try {
-    trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-    trans.addDataFlavor("text/x-moz-address");
-  }
-  catch (ex) {
-    return;
-  }
-
-  for ( var i = 0; i < dragSession.numDropItems; ++i )
-  {
-    dragSession.getData ( trans, i );
-    var dataObj = new Object();
-    var bestFlavor = new Object();
-    var len = new Object();
-    trans.getAnyTransferData ( bestFlavor, dataObj, len );
-    if ( dataObj )  
-      dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
-    if ( !dataObj ) 
-      continue;
-
-    // pull the address out of the data object
-    var address = dataObj.data.substring(0, len.value);
-    if (!address)
-      continue;
-
-    AddAddressIntoBucket(prefixTo, address, address);
-  }
+  AddAddressIntoBucket(prefixTo, address, address);
 }
 
 function OnReturnHit(event)

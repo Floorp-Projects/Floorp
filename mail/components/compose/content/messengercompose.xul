@@ -78,6 +78,7 @@
 <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
 
 <!-- drag and drop -->
+<script type="application/x-javascript" src="chrome://messenger/content/addressbook/abDragDrop.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 

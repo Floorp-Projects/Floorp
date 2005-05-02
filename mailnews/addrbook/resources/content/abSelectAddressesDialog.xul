@@ -67,6 +67,7 @@
   <stringbundle id="bundle_composeMsgs" src="chrome://messenger/locale/messengercompose/composeMsgs.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abSelectAddressesDialog.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abDragDrop.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
@@ -127,8 +128,8 @@
       <vbox id="bucketBox" flex="1">
         <label value="&addressMessageTo.label;"/>
         <tree id="addressBucket" flex="1" hidecolumnpicker="true"
-            ondragover="DragOverBucketPane(event);"
-            ondragdrop="DropOnBucketPane(event);"
+            ondragover="DragAddressOverTargetControl(event);"
+            ondragdrop="DropAddressOverTargetControl(event);"
             onselect="DialogBucketPaneSelectionChanged();">
           <treecols>
             <treecol id="addressCol" flex="1" hideheader="true"/>

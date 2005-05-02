@@ -197,3 +197,77 @@ var abDirTreeObserver = {
   {
   }
 }
+
+function DragAddressOverTargetControl(event)
+{
+  var dragSession = gDragService.getCurrentSession();
+
+  if (!dragSession.isDataFlavorSupported("text/x-moz-address"))
+     return;
+
+  try {
+    trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+    trans.addDataFlavor("text/x-moz-address");
+  }
+  catch (ex) {
+    return;
+  }
+
+  var canDrop = true;
+
+  for ( var i = 0; i < dragSession.numDropItems; ++i )
+  {
+    dragSession.getData ( trans, i );
+    var dataObj = new Object();
+    var bestFlavor = new Object();
+    var len = new Object();
+    try
+    {
+      trans.getAnyTransferData ( bestFlavor, dataObj, len );
+    }
+    catch (ex)
+    {
+      canDrop = false;
+      break;
+    }
+  }
+  dragSession.canDrop = canDrop;
+}
+
+function DropAddressOverTargetControl(event)
+{
+  var dragSession = gDragService.getCurrentSession();
+  
+  var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+  trans.addDataFlavor("text/x-moz-address");
+
+  for ( var i = 0; i < dragSession.numDropItems; ++i )
+  {
+    dragSession.getData ( trans, i );
+    var dataObj = new Object();
+    var bestFlavor = new Object();
+    var len = new Object();
+
+    // Ensure we catch any empty data that may have slipped through
+    try
+    {
+      trans.getAnyTransferData ( bestFlavor, dataObj, len);
+    }
+    catch (ex)
+    {
+      continue;
+    }
+ 
+    if ( dataObj )  
+      dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
+    if ( !dataObj ) 
+      continue;
+
+    // pull the address out of the data object
+    var address = dataObj.data.substring(0, len.value);
+    if (!address)
+      continue;
+
+    DropRecipient(address);
+  }
+}

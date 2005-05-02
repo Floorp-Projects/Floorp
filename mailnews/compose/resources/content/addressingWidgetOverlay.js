@@ -752,47 +752,7 @@ function awGetNumberOfRecipients()
     return top.MAX_RECIPIENTS;
 }
 
-function DragOverAddressingWidget(event)
-{
-  var validFlavor = false;
-  var dragSession = dragSession = gDragService.getCurrentSession();
-
-  if (dragSession.isDataFlavorSupported("text/x-moz-address")) 
-    validFlavor = true;
-
-  if (validFlavor)
-    dragSession.canDrop = true;
-}
-
-function DropOnAddressingWidget(event)
-{
-  var dragSession = gDragService.getCurrentSession();
-  
-  var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-  trans.addDataFlavor("text/x-moz-address");
-
-  for ( var i = 0; i < dragSession.numDropItems; ++i )
-  {
-    dragSession.getData ( trans, i );
-    var dataObj = new Object();
-    var bestFlavor = new Object();
-    var len = new Object();
-    trans.getAnyTransferData ( bestFlavor, dataObj, len );
-    if ( dataObj )  
-      dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
-    if ( !dataObj ) 
-      continue;
-
-    // pull the address out of the data object
-    var address = dataObj.data.substring(0, len.value);
-    if (!address)
-      continue;
-
-    DropRecipient(event.target, address);
-  }
-}
-
-function DropRecipient(target, recipient)
+function DropRecipient(recipient)
 {
   // break down and add each address
   return parseAndAddAddresses(recipient, awGetPopupElement(top.MAX_RECIPIENTS).selectedItem.getAttribute("value"));

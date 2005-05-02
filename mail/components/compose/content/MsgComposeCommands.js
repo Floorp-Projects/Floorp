@@ -3084,6 +3084,10 @@ var envelopeDragObserver = {
           document.getElementById("attachmentbucket-sizer").hidden=false;
         }
       }
+      else
+      {
+          DragAddressOverTargetControl(aEvent);
+      }
     },
 
   onDragExit: function (aEvent, aDragSession)
