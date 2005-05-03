@@ -126,6 +126,7 @@ static NSString* const NewTabToolbarItemIdentifier      = @"New Tab Toolbar Item
 static NSString* const CloseTabToolbarItemIdentifier    = @"Close Tab Toolbar Item";
 static NSString* const SendURLToolbarItemIdentifier     = @"Send URL Toolbar Item";
 static NSString* const DLManagerToolbarItemIdentifier   = @"Download Manager Toolbar Item";
+static NSString* const FormFillToolbarItemIdentifier    = @"Form Fill Toolbar Item";
 
 int TabBarVisiblePrefChangedCallback(const char* pref, void* data);
 static const char* const gTabBarVisiblePref = "camino.tab_bar_always_visible";
@@ -889,6 +890,7 @@ enum BWCOpenDest {
                                         NSToolbarSpaceItemIdentifier,
                                         NSToolbarSeparatorItemIdentifier,
                                         DLManagerToolbarItemIdentifier,
+                                        FormFillToolbarItemIdentifier,
                                         nil];
 }
 
@@ -1152,6 +1154,14 @@ enum BWCOpenDest {
     [toolbarItem setImage:[NSImage imageNamed:@"dl_manager.tif"]];
     [toolbarItem setTarget:[ProgressDlgController sharedDownloadController]];
     [toolbarItem setAction:@selector(showWindow:)];
+  }
+  else if ([itemIdent isEqual:FormFillToolbarItemIdentifier]) {
+    [toolbarItem setLabel:NSLocalizedString(@"Fill Form", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Fill Form", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"FillFormToolTip", nil)];
+    [toolbarItem setImage:[NSImage imageNamed:@"autofill"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(fillForm:)];
   }
   else {
     toolbarItem = nil;
