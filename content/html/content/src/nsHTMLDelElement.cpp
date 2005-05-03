@@ -94,5 +94,5 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 NS_IMPL_DOM_CLONENODE(nsHTMLModElement)
 
 
-NS_IMPL_STRING_ATTR(nsHTMLModElement, Cite, cite)
+NS_IMPL_URI_ATTR(nsHTMLModElement, Cite, cite)
 NS_IMPL_STRING_ATTR(nsHTMLModElement, DateTime, datetime)
