@@ -80,6 +80,9 @@
 #include "nsIDOM3Node.h"
 #include "nsIConsoleService.h"
 #include "nsIStringBundle.h"
+#include "nsIDOMNSEvent.h"
+#include "nsIURI.h"
+#include "nsIPrivateDOMEvent.h"
 
 #define CANCELABLE 0x01
 #define BUBBLES    0x02
@@ -719,15 +722,73 @@ nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent)
   const EventData *data = &sXFormsEventsEntries[aEvent];
   event->InitEvent(NS_ConvertUTF8toUTF16(data->name),
                    data->canBubble, data->canCancel);
-
-  // XXX: What about event->SetTrusted(?) here? Should all these
-  // events be trusted? Right now they're never trusted.
-
+  
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTarget);
   NS_ENSURE_STATE(target);
 
+  SetEventTrusted(event, aTarget);
+
   PRBool defaultActionEnabled;
   return target->DispatchEvent(event, &defaultActionEnabled);
+}
+
+/* static */ nsresult
+nsXFormsUtils::SetEventTrusted(nsIDOMEvent* aEvent, nsIDOMNode* aRelatedNode)
+{
+  nsCOMPtr<nsIDOMNSEvent> event(do_QueryInterface(aEvent));
+  if (event) {
+    PRBool isTrusted = PR_FALSE;
+    event->GetIsTrusted(&isTrusted);
+    if (!isTrusted && aRelatedNode) {
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      aRelatedNode->GetOwnerDocument(getter_AddRefs(domDoc));
+      nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+      if (doc) {
+        nsIURI* uri = doc->GetDocumentURI();
+        if (uri) {
+          PRBool isChrome = PR_FALSE;
+          uri->SchemeIs("chrome", &isChrome);
+          if (isChrome) {
+            nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aEvent));
+            NS_ENSURE_STATE(privateEvent);
+            privateEvent->SetTrusted(PR_TRUE);
+          }
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+/* static */ PRBool
+nsXFormsUtils::EventHandlingAllowed(nsIDOMEvent* aEvent, nsIDOMNode* aTarget)
+{
+  PRBool allow = PR_FALSE;
+  if (aEvent && aTarget) {
+    nsCOMPtr<nsIDOMNSEvent> related(do_QueryInterface(aEvent));
+    if (related) {
+      PRBool isTrusted = PR_FALSE;
+      if (NS_SUCCEEDED(related->GetIsTrusted(&isTrusted))) {
+        if (isTrusted) {
+          allow = PR_TRUE;
+        } else {
+          nsCOMPtr<nsIDOMDocument> domDoc;
+          aTarget->GetOwnerDocument(getter_AddRefs(domDoc));
+          nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+          if (doc) {
+            nsIURI* uri = doc->GetDocumentURI();
+            if (uri) {
+              PRBool isChrome = PR_FALSE;
+              uri->SchemeIs("chrome", &isChrome);
+              allow = !isChrome;
+            }
+          }
+        }
+      }
+    }
+  }
+  NS_WARN_IF_FALSE(allow, "Event handling not allowed!");
+  return allow;
 }
 
 /* static */ PRBool

@@ -108,11 +108,9 @@ nsXFormsDispatchElement::HandleAction(nsIDOMEvent* aEvent,
   docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
   event->InitEvent(name, bubbles, cancelable);
 
-  // XXX: What about uiEvent->SetTrusted(?), should these events be
-  // trusted or not?
-
   nsCOMPtr<nsIDOMEventTarget> targetEl = do_QueryInterface(el);
   if (targetEl) {
+    nsXFormsUtils::SetEventTrusted(event, el);
     PRBool defaultActionEnabled;
     targetEl->DispatchEvent(event, &defaultActionEnabled);
   }

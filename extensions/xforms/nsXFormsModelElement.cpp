@@ -358,6 +358,9 @@ nsXFormsModelElement::DoneAddingChildren()
 NS_IMETHODIMP
 nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
 {
+  if (!nsXFormsUtils::EventHandlingAllowed(aEvent, mElement))
+    return NS_OK;
+
   *aHandled = PR_TRUE;
 
   nsAutoString type;
@@ -734,6 +737,9 @@ nsXFormsModelElement::OnError(nsresult aStatus,
 NS_IMETHODIMP
 nsXFormsModelElement::HandleEvent(nsIDOMEvent* aEvent)
 {
+  if (!nsXFormsUtils::EventHandlingAllowed(aEvent, mElement))
+    return NS_OK;
+
   nsAutoString type;
   aEvent->GetType(type);
   if (!type.EqualsLiteral("DOMContentLoaded"))

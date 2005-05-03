@@ -349,6 +349,9 @@ nsXFormsSelectElement::TryFocus(PRBool* aOK)
 NS_IMETHODIMP
 nsXFormsSelectElement::HandleEvent(nsIDOMEvent *aEvent)
 {
+  if (!nsXFormsUtils::EventHandlingAllowed(aEvent, mElement))
+    return NS_OK;
+
   nsAutoString type;
   aEvent->GetType(type);
 

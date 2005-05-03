@@ -242,6 +242,9 @@ nsXFormsTriggerElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
     return NS_OK;
   }
 
+  if (!nsXFormsUtils::EventHandlingAllowed(aEvent, mElement))
+    return NS_OK;
+
   nsAutoString type;
   aEvent->GetType(type);
 
@@ -276,8 +279,7 @@ nsXFormsTriggerElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
                        aView,
                        1); // Simple click
 
-  // XXX: What about uiEvent->SetTrusted(?), should these events be
-  // trusted or not?
+  nsXFormsUtils::SetEventTrusted(uiEvent, mElement);
 
   PRBool cancelled;
   return target->DispatchEvent(uiEvent, &cancelled);
@@ -327,6 +329,9 @@ nsXFormsSubmitElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   if (*aHandled) {
     return NS_OK;
   }
+
+  if (!nsXFormsUtils::EventHandlingAllowed(aEvent, mElement))
+    return NS_OK;
 
   nsAutoString type;
   aEvent->GetType(type);

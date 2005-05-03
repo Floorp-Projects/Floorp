@@ -283,6 +283,9 @@ nsXFormsSubmissionElement::OnDestroyed()
 NS_IMETHODIMP
 nsXFormsSubmissionElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
 {
+  if (!nsXFormsUtils::EventHandlingAllowed(aEvent, mElement))
+    return NS_OK;
+
   nsAutoString type;
   aEvent->GetType(type);
   if (type.EqualsLiteral("xforms-submit")) {

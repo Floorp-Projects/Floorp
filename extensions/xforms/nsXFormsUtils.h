@@ -54,6 +54,7 @@ class nsIXFormsModelElement;
 class nsIURI;
 class nsString;
 class nsIMutableArray;
+class nsIDOMEvent;
 
 #define NS_NAMESPACE_XFORMS              "http://www.w3.org/2002/xforms"
 #define NS_NAMESPACE_XHTML               "http://www.w3.org/1999/xhtml"
@@ -257,7 +258,27 @@ public:
    */
   static NS_HIDDEN_(nsresult)
     DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent);
-  
+
+  /**
+   * Sets aEvent trusted if aRelatedNode is in chrome.
+   * When dispatching events in chrome, they should be set trusted
+   * because by default event listeners in chrome handle only trusted
+   * events.
+   * Should be called before any event dispatching in XForms.
+   */
+  static NS_HIDDEN_(nsresult)
+    SetEventTrusted(nsIDOMEvent* aEvent, nsIDOMNode* aRelatedNode);
+
+  /**
+   * Returns PR_TRUE unless aTarget is in chrome and aEvent is not trusted.
+   * This should be used always before handling events. Otherwise if XForms
+   * is used in chrome, it may try to handle events that can be synthesized 
+   * by untrusted content. I.e. content documents may create events using
+   * document.createEvent() and then fire them using target.dispatchEvent();
+   */
+  static NS_HIDDEN_(PRBool)
+    EventHandlingAllowed(nsIDOMEvent* aEvent, nsIDOMNode* aTarget);
+
   /**
    * Returns PR_TRUE, if aEvent is an XForms event, and sets the values
    * of aCancelable and aBubbles parameters according to the event type.

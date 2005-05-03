@@ -174,6 +174,8 @@ nsXFormsContextContainer::HandleDefault(nsIDOMEvent *aEvent,
   if (!type.EqualsLiteral("focus"))
     return nsXFormsControlStub::HandleDefault(aEvent, aHandled);
 
+  if (!nsXFormsUtils::EventHandlingAllowed(aEvent, mElement))
+    return NS_OK;
   /*
    * Either we, or an element we contain, has gotten focus, so we need to set
    * the repeat index. This is done through the \<repeat\> the

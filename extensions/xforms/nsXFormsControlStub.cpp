@@ -66,15 +66,16 @@ nsXFormsHintHelpListener::HandleEvent(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMEventTarget> target;
   aEvent->GetCurrentTarget(getter_AddRefs(target));
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(target));
-
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
-  if (keyEvent) {
-    PRUint32 code = 0;
-    keyEvent->GetKeyCode(&code);
-    if (code == nsIDOMKeyEvent::DOM_VK_F1)
-      nsXFormsUtils::DispatchEvent(targetNode, eEvent_Help);
-  } else {
-    nsXFormsUtils::DispatchEvent(targetNode, eEvent_Hint);
+  if (nsXFormsUtils::EventHandlingAllowed(aEvent, targetNode)) {
+    nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
+    if (keyEvent) {
+      PRUint32 code = 0;
+      keyEvent->GetKeyCode(&code);
+      if (code == nsIDOMKeyEvent::DOM_VK_F1)
+        nsXFormsUtils::DispatchEvent(targetNode, eEvent_Help);
+    } else {
+      nsXFormsUtils::DispatchEvent(targetNode, eEvent_Hint);
+    }
   }
 
   return NS_OK;
@@ -284,7 +285,8 @@ nsXFormsControlStub::HandleDefault(nsIDOMEvent *aEvent,
 {
   NS_ENSURE_ARG(aHandled);
 
-  if (aEvent) {
+  if (nsXFormsUtils::EventHandlingAllowed(aEvent, mElement)) {
+
     // Check that we are the target of the event
     nsCOMPtr<nsIDOMEventTarget> target;
     aEvent->GetTarget(getter_AddRefs(target));

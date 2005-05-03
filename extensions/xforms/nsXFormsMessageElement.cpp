@@ -270,9 +270,8 @@ nsXFormsMessageElement::OnDestroyed()
 NS_IMETHODIMP
 nsXFormsMessageElement::HandleEvent(nsIDOMEvent* aEvent)
 {
-  if (!aEvent) 
-    return NS_ERROR_INVALID_ARG;
-  return HandleAction(aEvent, nsnull);
+  return nsXFormsUtils::EventHandlingAllowed(aEvent, mElement) ?
+           HandleAction(aEvent, nsnull) : NS_OK;
 }
 
 void

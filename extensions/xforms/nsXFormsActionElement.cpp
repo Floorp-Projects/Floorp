@@ -109,9 +109,8 @@ nsXFormsActionElement::OnDestroyed() {
 NS_IMETHODIMP
 nsXFormsActionElement::HandleEvent(nsIDOMEvent* aEvent)
 {
-  if (!aEvent) 
-    return NS_ERROR_INVALID_ARG;
-  return HandleAction(aEvent, nsnull);
+  return nsXFormsUtils::EventHandlingAllowed(aEvent, mElement) ?
+           HandleAction(aEvent, nsnull) : NS_OK;
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator) DoDeferredActions(nsISupports * aModel, 

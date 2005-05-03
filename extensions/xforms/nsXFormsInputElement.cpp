@@ -259,7 +259,10 @@ nsXFormsInputElement::HandleDefault(nsIDOMEvent *aEvent,
   if (*aHandled || !mIncremental) {
     return NS_OK;
   }
-  
+
+  if (!nsXFormsUtils::EventHandlingAllowed(aEvent, mElement))
+    return NS_OK;
+
   nsAutoString type;
   aEvent->GetType(type);
 
@@ -290,7 +293,8 @@ nsXFormsInputElement::Focus(nsIDOMEvent *aEvent)
 NS_IMETHODIMP
 nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
 {
-  return UpdateInstanceData();
+  return nsXFormsUtils::EventHandlingAllowed(aEvent, mElement) ?
+           UpdateInstanceData() : NS_OK;
 }
 
 nsresult

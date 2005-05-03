@@ -211,7 +211,8 @@ nsXFormsUploadElement::Focus(nsIDOMEvent *aEvent)
 NS_IMETHODIMP
 nsXFormsUploadElement::Blur(nsIDOMEvent *aEvent)
 {
-  if (!mInput || !mBoundNode || !mModel)
+  if (!mInput || !mBoundNode || !mModel ||
+      !nsXFormsUtils::EventHandlingAllowed(aEvent, mElement))
     return NS_OK;
 
   nsAutoString value;
