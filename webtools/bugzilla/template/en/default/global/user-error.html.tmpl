@@ -76,8 +76,12 @@
 
   [% ELSIF error == "alias_in_use" %]
     [% title = "Alias In Use" %]
-    [% bug_link FILTER none %] has already taken the alias 
+    [% terms.Bug %] [%+ bug_link FILTER none %] has already taken the alias 
     <em>[% alias FILTER html %]</em>.  Please choose another one.
+
+  [% ELSIF error == "alias_not_defined" %]
+    [% title = "Alias Is Not Defined" %]
+    You did not supply an alias to this [% terms.bug %].
 
   [% ELSIF error == "alias_is_numeric" %]
     [% title = "Alias Is Numeric" %]

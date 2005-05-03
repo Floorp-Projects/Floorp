@@ -144,6 +144,15 @@ my @bug_fields = ("version", "rep_platform",
                   "bug_status", "bug_file_loc", "short_desc",
                   "target_milestone", "status_whiteboard");
 
+if (Param("usebugaliases")) {
+   my $alias = trim($cgi->param('alias') || "");
+   if ($alias ne "") {
+       ValidateBugAlias($alias);
+       $cgi->param('alias', $alias);
+       push (@bug_fields,"alias");
+   }
+}
+
 # Retrieve the default QA contact if the field is empty
 if (Param("useqacontact")) {
     my $qa_contact;

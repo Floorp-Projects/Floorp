@@ -50,7 +50,7 @@ use Bugzilla::Error;
 use base qw(Exporter);
 @Bugzilla::Bug::EXPORT = qw(
     AppendComment ValidateComment
-    bug_alias_to_id
+    bug_alias_to_id ValidateBugAlias
     RemoveVotes CheckIfVotedConfirmed
 );
 
@@ -981,6 +981,58 @@ sub CheckIfVotedConfirmed {
     }
     return $ret;
 }
+
+#
+# Field Validation
+#
+
+# ValidateBugAlias:
+#   Check that the bug alias is valid and not used by another bug.  If 
+#   curr_id is specified, verify the alias is not used for any other
+#   bug id.  
+sub ValidateBugAlias {
+    my ($alias, $curr_id) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    $alias = trim($alias || "");
+    trick_taint($alias);
+
+    if ($alias eq "") {
+        ThrowUserError("alias_not_defined");
+    }
+
+    # Make sure the alias isn't too long.
+    if (length($alias) > 20) {
+        ThrowUserError("alias_too_long");
+    }
+
+    # Make sure the alias is unique.
+    my $query = "SELECT bug_id FROM bugs WHERE alias = ?";
+    if (detaint_natural($curr_id)) {
+        $query .= " AND bug_id != $curr_id";
+    }
+    my $id = $dbh->selectrow_array($query, undef, $alias); 
+
+    my $vars = {};
+    $vars->{'alias'} = $alias;
+    if ($id) {
+        $vars->{'bug_link'} = &::GetBugLink($id, $id);
+        ThrowUserError("alias_in_use", $vars);
+    }
+
+    # Make sure the alias isn't just a number.
+    if ($alias =~ /^\d+$/) {
+        ThrowUserError("alias_is_numeric", $vars);
+    }
+
+    # Make sure the alias has no commas or spaces.
+    if ($alias =~ /[, ]/) {
+        ThrowUserError("alias_has_comma_or_space", $vars);
+    }
+
+    $_[0] = $alias;
+}
+
 
 sub AUTOLOAD {
   use vars qw($AUTOLOAD);

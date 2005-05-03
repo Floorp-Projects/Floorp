@@ -768,47 +768,17 @@ if (Param("usebugaliases") && defined $cgi->param('alias')) {
     # for one bug at a time, so ignore the alias change unless only a single
     # bug is being changed.
     if (scalar(@idlist) == 1) {
-        # Validate the alias if the user entered one.
-        if ($alias ne "") {
-            # Make sure the alias isn't too long.
-            if (length($alias) > 20) {
-                ThrowUserError("alias_too_long");
-            }
-
-            # Make sure the alias is unique.
-            my $escaped_alias = SqlQuote($alias);
-            my $vars = { alias => $alias };
-            
-            SendSQL("SELECT bug_id FROM bugs WHERE alias = $escaped_alias " . 
-                    "AND bug_id != $idlist[0]");
-            my $id = FetchOneColumn();
-            
-            if ($id) {
-                $vars->{'bug_link'} = GetBugLink($id, "Bug $id");
-                ThrowUserError("alias_in_use", $vars);
-            }
-
-            # Make sure the alias isn't just a number.
-            if ($alias =~ /^\d+$/) {
-                ThrowUserError("alias_is_numeric", $vars);
-            }
-
-            # Make sure the alias has no commas or spaces.
-            if ($alias =~ /[, ]/) {
-                ThrowUserError("alias_has_comma_or_space", $vars);
-            }
-        }
-        
         # Add the alias change to the query.  If the field contains the blank 
         # value, make the field be NULL to indicate that the bug has no alias.
         # Otherwise, if the field contains a value, update the record 
         # with that value.
         DoComma();
         $::query .= "alias = ";
-        if ($alias eq "") {
-            $::query .= "NULL";
+        if ($alias ne "") {
+            ValidateBugAlias($alias, $idlist[0]);
+            $::query .= $dbh->quote($alias);
         } else {
-            $::query .= SqlQuote($alias);
+            $::query .= "NULL";
         }
     }
 }
