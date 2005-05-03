@@ -85,6 +85,10 @@ function getCharPref(prefname, aDefault) {
   }
 }
 
+function openPrivacyPolicy() {
+  var url = getCharPref("privacyURL", "http://reporter-test.mozilla.org/privacy/");
+  openDialog("chrome://browser/content/browser.xul", "_blank", "chrome,all,dialog=no", url, null, null);
+}
 
 function initPrivacyNotice() {
   var reportWizard = document.getElementById('reportWizard');
@@ -97,8 +101,8 @@ function initPrivacyNotice() {
     document.getElementById("dontShowPrivacyStatement").setAttribute("checked", "true");
 
     // Load Privacy Policy
-    var privacyURL = getCharPref("privacyURL", "http://reporter-test.mozilla.org/privacy/?plain");
-    document.getElementById("privacyStatement").setAttribute("src", privacyURL);
+    var privacyURL = getCharPref("privacyURL", "http://reporter-test.mozilla.org/privacy/");
+    document.getElementById("privacyStatement").setAttribute("src", privacyURL+"?plain");
   }
 }
 

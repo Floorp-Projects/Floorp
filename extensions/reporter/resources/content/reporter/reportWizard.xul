@@ -107,6 +107,14 @@
           <label control="email" value="&reportForm.email.title;"/>
           <textbox id="email" size="60" class="noborder"/>
         </row>
+        <row>
+          <spacer/>
+          <label id="privacyPolicy"
+                 onclick="openPrivacyPolicy();"
+                 onkeypress="if (event.keyCode == event.DOM_VK_ENTER || event.keyCode == event.DOM_VK_RETURN) openPrivacyPolicy();"
+                 value="&reportForm.privacyPolicy.title;"
+                 tooltiptext="&reportForm.privacyPolicy.tooltip;"/>
+        </row>
       </rows>
     </grid>
   </wizardpage>
