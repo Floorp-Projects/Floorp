@@ -442,9 +442,13 @@
 <!ENTITY calendar.local.calendar.dialog.help.label  "Use this to specify where on your computer the calendar file is stored. This is optional.">
 <!ENTITY calendar.local.calendar.dialog.optional.label "These optional settings are used when publishing this calendar to a remote location.">
 
-<!-- Calendar Coloring -->
-<!ENTITY calendar.server.dialog.color.label "Color:">
-
+<!-- Calendar Properties -->
+<!ENTITY calendarproperties.color.label    "Color:" >
+<!ENTITY calendarproperties.webdav.label   "WebDAV" >
+<!ENTITY calendarproperties.caldav.label   "CalDAV" >
+<!ENTITY calendarproperties.format.label   "Format:" >
+<!ENTITY calendarproperties.location.label "Location:" >
+<!ENTITY calendarproperties.name.label     "Name:" >
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publish Calendar">

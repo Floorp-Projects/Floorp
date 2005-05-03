@@ -1,13 +1,55 @@
 <?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Calendar Code.
+   -
+   - The Initial Developer of the Original Code is Stuart Parmenter.
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Mike Shaver <shaver@mozilla.org> 
+   -                 Michiel van Leeuwen <mvl@exedo.nl>
+   -                 Simon Paquet <bugzilla@babylonsounds.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
 
 <!-- Style sheets -->
 <?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
+<!DOCTYPE dialog 
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/calendarCreation.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+]>
+
 <!-- The Window  -->
 
 <wizard id="calendar-wizard"
-        title="Create New Calendar"
+        title="&wizard.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onwizardfinish=""
         persist="screenX screenY">
@@ -17,27 +59,22 @@
 
    <wizardpage pageid="initialPage" 
                next="locationPage"
-               label="Create a new calendar"
-               description="Locate your calendar"
+               label="&wizard.label;"
+               description="&wizard.description;"
                onpageadvanced="onInitialAdvance();">
-        <description>
-            Your calendar can be stored on your computer or be stored on a server in order to
-            access it remotely or share it with your friends or co-workers. 
-        </description>
+        <description>&initialpage.description;</description>
         <radiogroup id="calendar-type">
-            <radio value="local" label="Local" selected="true" />
-            <radio value="remote" label="Remote"/>
+            <radio value="local" label="&initialpage.local.label;" selected="true" />
+            <radio value="remote" label="&initialpage.remote.label;"/>
         </radiogroup>
    </wizardpage>
 
    <wizardpage pageid="locationPage" 
                next="customizePage"
-               label="Create a new calendar"
+               label="&wizard.label;"
                onpageshow="checkRequired();"
-               description="Locate your calendar">
-        <description>
-            Provide info about what is needed to access your remote calendar 
-        </description>
+               description="&wizard.description;">
+        <description>&locationpage.description;</description>
         <grid>
             <columns>
                 <column/>
@@ -45,27 +82,25 @@
             </columns>
             <rows>
                 <row>
-                    <label value="Format:"/>
+                    <label value="&calendarproperties.format.label;"/>
                     <radiogroup id="calendar-format">
-                        <radio value="webdav" label="WebDav" selected="true" />
-                        <radio value="caldav" label="CalDav"/>
+                        <radio value="webdav" label="&calendarproperties.webdav.label;" selected="true" />
+                        <radio value="caldav" label="&calendarproperties.caldav.label;"/>
                     </radiogroup>
                 </row>
                 <row align="center">
-                    <label value="Location:"/>
+                    <label value="&calendarproperties.location.label;"/>
                     <textbox id="calendar-uri"
                              required="true" onchange="checkRequired();" onkeyup="checkRequired();"/>
                 </row>
                 <!--
-                <description>
-                    Optional: enter an username and password 
-                </description>
+                <description>&locationpage.login.description;</description>
                 <row align="center">
-                    <label value="Username:"/>
+                    <label value="&locationpage.username.label;"/>
                     <textbox id="calendar-username"/>
                 </row>
                 <row align="center">
-                    <label value="Password:"/>
+                    <label value="&locationpage.password.label;"/>
                     <textbox id="calendar-password"/>
                 </row>
                 -->
@@ -74,15 +109,12 @@
    </wizardpage>
 
    <wizardpage pageid="customizePage" 
-               description="Customize your calendar"
-               label="Create a new calendar"
+               description="&custompage.shortdescription;"
+               label="&wizard.label;"
                next="finishPage"
                onpageshow="checkRequired();"
                onpageadvanced="doCreateCalendar();">
-        <description value="Customize your calendar"/>
-        <description>
-            You can give your calendar a nickname and colorize the events from this calendar 
-        </description>
+        <description>&custompage.longdescription;</description>
         <grid>
             <columns>
                 <column/>
@@ -90,12 +122,12 @@
             </columns>
             <rows>
                 <row align="center">
-                    <label value="Name:"/>
+                    <label value="&calendarproperties.name.label;"/>
                     <textbox id="calendar-name"
                              required="true" onchange="checkRequired();" onkeyup="checkRequired();"/>
                 </row>
                 <row align="center">
-                    <label value="Color:"/>
+                    <label value="&calendarproperties.color.label;"/>
                     <hbox align="center">
                         <colorpicker id="calendar-color"
                                      class="small-margin"
@@ -108,8 +140,8 @@
    </wizardpage>
 
    <wizardpage pageid="finishPage" 
-               description="Calendar Created"
-               label="Create a new calendar">
-        <description value="Your calendar has been created"/>
+               description="&finishpage.shortdescription;"
+               label="&wizard.label;">
+        <description>&finishpage.longdescription;</description>
    </wizardpage>
 </wizard>

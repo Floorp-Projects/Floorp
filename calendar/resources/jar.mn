@@ -86,6 +86,7 @@ calendar.jar:
 *   content/calendar/pref/nsPrefWindow.js (content/pref/nsPrefWindow.js)
 *   locale/en-US/calendar/aboutDialog.dtd (locale/en-US/aboutDialog.dtd)
     locale/en-US/calendar/calendar.dtd (locale/en-US/calendar.dtd)
+    locale/en-US/calendar/calendarCreation.dtd (locale/en-US/calendarCreation.dtd)
     locale/en-US/calendar/calendar.properties (locale/en-US/calendar.properties)
     locale/en-US/calendar/categories.properties  (locale/en-US/categories.properties) 
     locale/en-US/calendar/contents.rdf (locale/en-US/contents.rdf)
