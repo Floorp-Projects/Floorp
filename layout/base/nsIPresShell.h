@@ -677,6 +677,8 @@ public:
   virtual void ListStyleSheets(FILE *out, PRInt32 aIndent = 0) = 0;
 #endif
 
+  PRBool IsAccessibilityActive() { return mIsAccessibilityActive; }
+
 protected:
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
@@ -693,6 +695,10 @@ protected:
   nsFrameManagerBase        mFrameManager;  // [OWNS]
 
   PRPackedBool              mStylesHaveChanged;
+
+  // Set to true when the accessibility service is being used to mirror
+  // the dom/layout trees
+  PRPackedBool mIsAccessibilityActive;
 };
 
 /**

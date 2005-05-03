@@ -43,8 +43,9 @@ interface nsIAccessibleEventListener;
 interface nsIDocument;
 interface nsIFrame;
 interface nsObjectFrame;
+interface nsIContent;
 
-[scriptable, uuid(a5f0a449-41a5-4040-bb67-56e2eafcffd7)]
+[scriptable, uuid(3d4b0231-34eb-4ba3-be7e-02d90932afc0)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -114,6 +115,14 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   [noscript] nsIAccessible getAccessible(in nsIDOMNode aNode, in nsIPresShell aPresShell,                          
                               in nsIWeakReference aWeakShell, 
                               inout nsIFrame frameHint, out boolean aIsHidden);
+
+  /**
+   * Invalidate the accessibility cache associated with aPresShell, for accessibles
+   * that were generated for aContainerContent and it's subtree.
+   * The container content node for the change is passed in, rather than the
+   * changed presentation for the content node itself.
+   */
+  [noscript] void invalidateSubtreeFor(in nsIPresShell aPresShell, in nsIContent aContainerContent);
 };
 
 

@@ -110,6 +110,7 @@ class nsDocAccessible : public nsBlockAccessible,
     void AddScrollListener();
     void RemoveScrollListener();
     void HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aEventType);
+    void ShutdownNodes(nsIDOMNode *aStartNode);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
     virtual void CheckForEditor();
 
