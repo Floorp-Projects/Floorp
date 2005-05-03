@@ -1705,16 +1705,6 @@ nsHTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     }
   }
 
-  // If this is radio button which is in a form,
-  // and the parser is still creating the element.
-  // XXXbz hmmm Do we need this BF_PARSER_CREATING thing?  I suspect
-  // we don't and that it was a hackaround around the way-early
-  // SetDocument call in the parser.
-  if (mForm || mType != NS_FORM_INPUT_RADIO ||
-      GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
-    return rv;
-  }
-  
   // Add radio to document if we don't have a form already (if we do it's
   // already been added into that group)
   if (aDocument && !mForm && mType == NS_FORM_INPUT_RADIO) {
@@ -1728,7 +1718,7 @@ void
 nsHTMLInputElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   // If we have a form and are unbound from it,
-  // nsGenericHTMLFormElement::SetDocument() will unset the form and
+  // nsGenericHTMLFormElement::UnbindFromTree() will unset the form and
   // that takes care of form's WillRemove so we just have to take care
   // of the case where we're removing from the document and we don't
   // have a form
@@ -2465,13 +2455,6 @@ nsHTMLInputElement::DoneCreatingElement()
   }
 
   SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, PR_FALSE);
-  
-  //
-  // If the radio button is not in a form, we can add it to
-  // radio group in document here, otherwise we will miss it.
-  //
-  if (!mForm && mType == NS_FORM_INPUT_RADIO)
-    AddedToRadioGroup(PR_FALSE);
 }
 
 PRBool
@@ -2534,6 +2517,7 @@ nsHTMLInputElement::AllowDrop()
 NS_IMETHODIMP
 nsHTMLInputElement::AddedToRadioGroup(PRBool aNotify)
 {
+  // Make sure not to notify if we're still being created by the parser
   if (aNotify)
     aNotify = GET_BOOLBIT(mBitField, BF_PARSER_CREATING) != 0;
 
