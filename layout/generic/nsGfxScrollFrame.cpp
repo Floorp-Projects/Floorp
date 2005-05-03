@@ -424,13 +424,26 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
   aState->mScrollPortRect = nsRect(scrollPortOrigin, scrollPortSize);
   aState->mAscent = aKidMetrics.ascent;
   if (aKidMetrics.mComputeMEW) {
-    aState->mMaxElementWidth = aKidMetrics.mMaxElementWidth + vScrollbarActualWidth;
+    nscoord kidContentMEW = aKidMetrics.mMaxElementWidth -
+      aState->mReflowState.mComputedPadding.LeftRight();
+    NS_ASSERTION(kidContentMEW >= 0, "MEW didn't include padding?");
+    aState->mMaxElementWidth = vScrollbarActualWidth +
+      aState->mReflowState.mComputedPadding.LeftRight() +
+      aState->mReflowState.AdjustIntrinsicMinContentWidthForStyle(kidContentMEW);
+    // borders get added on the way out of Reflow()
   }
   if (aKidMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-    aState->mMaximumWidth = aKidMetrics.mMaximumWidth;
-    if (aState->mMaximumWidth != NS_UNCONSTRAINEDSIZE) {
-      aState->mMaximumWidth += vScrollbarActualWidth;
+    nscoord kidMaxWidth = aKidMetrics.mMaximumWidth;
+    if (kidMaxWidth != NS_UNCONSTRAINEDSIZE) {
+      nscoord kidContentMaxWidth = kidMaxWidth -
+        aState->mReflowState.mComputedPadding.LeftRight();
+      NS_ASSERTION(kidContentMaxWidth >= 0, "max-width didn't include padding?");
+      kidMaxWidth = vScrollbarActualWidth +
+        aState->mReflowState.mComputedPadding.LeftRight() +
+        aState->mReflowState.AdjustIntrinsicContentWidthForStyle(kidContentMaxWidth);
     }
+    aState->mMaximumWidth = kidMaxWidth;
+    // borders get added on the way out of Reflow()
   }
   return PR_TRUE;
 }

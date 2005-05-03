@@ -339,6 +339,17 @@ struct nsHTMLReflowState {
     GetContainingBlockContentWidth(const nsHTMLReflowState* aReflowState);
 
   /**
+   * Adjust content MEW take into account the settings of the CSS
+   * 'width', 'min-width' and 'max-width' properties.
+   */
+  nscoord AdjustIntrinsicMinContentWidthForStyle(nscoord aWidth) const;
+  /**
+   * Adjust content maximum-width take into account the settings of
+   * the CSS 'width', 'min-width' and 'max-width' properties.
+   */
+  nscoord AdjustIntrinsicContentWidthForStyle(nscoord aWidth) const;
+
+  /**
    * Find the containing block of aFrame.  This may return null if
    * there isn't one (but that should really only happen for root
    * frames).
