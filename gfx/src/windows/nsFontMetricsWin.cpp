@@ -501,9 +501,9 @@ nsFontMetricsWin::Destroy()
 }
 
 // The following flag is not defined by MS in the vc include files
-// This flag is document in the following document
+// This flag is documented in the following document
 // HOWTO: Display Graphic Chars on Chinese & Korean Windows (Q171153)
-// http://support.microsoft.com/default.aspx?scid=kb;EN-US;q171153
+// http://support.microsoft.com/?kbid=171153
 // According to the document, this flag will only impact Korean and
 // Chinese window
 #define CLIP_TURNOFF_FONTASSOCIATION 0x40
@@ -515,6 +515,10 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
   float app2dev;
   app2dev = mDeviceContext->AppUnitsToDevUnits();
   logFont->lfHeight = - NSToIntRound(mFont.size * app2dev);
+
+  if (logFont->lfHeight == 0) {
+    logFont->lfHeight = -1;
+  }
 
   // Quick return if we came here just to compute the font size
   if (aSizeOnly) return;
