@@ -10158,8 +10158,10 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           do_GetService("@mozilla.org/accessibilityService;1");
         if (accService) {
           nsCOMPtr<nsIContent> parentContent = content->GetParent();
-          accService->InvalidateSubtreeFor(mPresShell,
-                                           parentContent ? parentContent : content);
+          if (!parentContent) {
+            parentContent = content;
+          }
+          accService->InvalidateSubtreeFor(mPresShell, parentContent);
         }
       }
   #endif
@@ -11669,7 +11671,10 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
     nsCOMPtr<nsIAccessibilityService> accService = 
       do_GetService("@mozilla.org/accessibilityService;1");
     if (accService) {
-      accService->InvalidateSubtreeFor(mPresShell, container ? container : aContent);
+      if (!container) {
+        container = aContent;
+      }
+      accService->InvalidateSubtreeFor(mPresShell, container);
     }
   }
 #endif
