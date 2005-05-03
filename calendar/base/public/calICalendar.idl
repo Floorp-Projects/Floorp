@@ -301,6 +301,13 @@ interface calICompositeCalendar : calICalendar
    * to be added to.
    */
   attribute calICalendar defaultCalendar;
+  
+  /**
+   * If set, the composite will initialize itself from calICalendarManager
+   * prefs keyed off of the provided prefPrefix, and update those prefs to
+   * track changes in calendar membership and default calendar.
+   */
+  attribute ACString prefPrefix;
 };
 
 /**

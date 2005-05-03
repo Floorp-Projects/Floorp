@@ -57,44 +57,45 @@ calCompositeCalendarObserverHelper.prototype = {
         return this;
     },
 
+    // We could actually reach up into our caller for method name
+    // and arguments, but it hardly seems worth it.
+    notifyObservers: function(method, args) {
+        this.compCalendar.mObservers.forEach(function (o) {
+            try { o[method].apply(o, args); }
+            catch (e) { }
+        });
+    },
+    
     onStartBatch: function() {
-        for each (obs in this.compCalendar.mObservers)
-            obs.onStartBatch();
+        this.notifyObservers("onStartBatch");
     },
 
     onEndBatch: function() {
-        for each (obs in this.compCalendar.mObservers)
-            obs.onEndBatch();
+        this.notifyObservers("onEndBatch");
     },
 
     onLoad: function() {
-        for each (obs in this.compCalendar.mObservers)
-            obs.onLoad();
+        this.notifyObservers("onLoad");
     },
 
     onAddItem: function(aItem) {
-        for each (obs in this.compCalendar.mObservers)
-            obs.onAddItem(aItem);
+        this.notifyObservers("onAddItem", arguments);
     },
 
     onModifyItem: function(aNewItem, aOldItem) {
-        for each (obs in this.compCalendar.mObservers)
-            obs.onModifyItem(aNewItem, aOldItem);
+        this.notifyObservers("onModifyItem", arguments);
     },
 
     onDeleteItem: function(aDeletedItem) {
-        for each (obs in this.compCalendar.mObservers)
-            obs.onDeleteItem(aDeletedItem);
+        this.notifyObservers("onDeleteItem", arguments);
     },
 
     onAlarm: function(aAlarmItem) {
-        for each (obs in this.compCalendar.mObservers)
-            obs.onAlarm(aAlarmItem);
+        this.notifyObservers("onAlarm", arguments);
     },
 
     onError: function(aErrNo, aMessage) {
-        for each (obs in this.compCalendar.mObservers)
-            obs.onError(aErrNo, aMessage);
+        this.notifyObservers("onError", arguments);
     }
 };
 
@@ -130,6 +131,40 @@ calCompositeCalendar.prototype = {
 
     mCalendars: Array(),
     mDefaultCalendar: null,
+    mPrefPrefix: null,
+    mDefaultPref: null,
+    mActivePref: null,
+    _mCalMgr: null,
+    get mCalMgr () {
+        if (!this._mCalMgr) {
+            this._mCalMgr = Components.
+                classes["@mozilla.org/calendar/manager;1"].
+                getService(Components.interfaces.calICalendarManager);
+        }
+        return this._mCalMgr;
+    },
+    
+    set prefPrefix (aPrefPrefix) {
+        if (this.mPrefPrefix) {
+            this.mCalendars.forEach(this.removeCalendar, this);
+        }
+        this.mPrefPrefix = aPrefPrefix;
+        this.mActivePref = aPrefPrefix + "-in-composite";
+        this.mDefaultPref = aPrefPrefix + "-default";
+        var mgr = this.mCalMgr;
+        var cals = mgr.getCalendars({});
+
+        cals.forEach(function (c) {
+            if (mgr.getCalendarPref(c, this.mActivePref))
+                this.addCalendar(c);
+            if (mgr.getCalendarPref(c, this.mDefaultPref))
+                this.setDefaultCalendar(c, false);
+        }, this);
+    },
+
+    get prefPrefix () {
+        return this.mPrefPrefix;
+    },
 
     addCalendar: function (aCalendar) {
         // check if the calendar already exists
@@ -144,14 +179,15 @@ calCompositeCalendar.prototype = {
         aCalendar.addObserver(this.mObserverHelper);
 
         this.mCalendars.push(aCalendar);
-
-        this.observeCalendarAdded(aCalendar);
+        if (this.mPrefPrefix) {
+            this.mCalMgr.setCalendarPref(aCalendar, this.mActivePref,
+                                         "true");
+        }
+        this.notifyObservers("onCalendarAdded", [aCalendar]);
 
         // if we have no default calendar, we need one here
-        if (this.mDefaultCalendar == null) {
-            this.mDefaultCalendar = aCalendar;
-            this.observeDefaultCalendarChanged(aCalendar);
-        }
+        if (this.mDefaultCalendar == null)
+            this.setDefaultCalendar(aCalendar, false);
     },
 
     removeCalendar: function (aServer) {
@@ -166,8 +202,14 @@ calCompositeCalendar.prototype = {
 
         if (calToRemove) {
             this.mCalendars = newCalendars;
+            if (this.mPrefPrefix) {
+                this.mCalMgr.deleteCalendarPref(calToRemove,
+                                                this.mActivePref);
+                this.mCalMgr.deleteCalendarPref(calToRemove,
+                                                this.mDefaultPref);
+            }   
             calToRemove.removeObserver(this.mObserverHelper);
-            this.observeCalendarRemoved(calToRemove);
+            this.notifyObservers("onCalendarRemoved", [calToRemove]);
         }
     },
 
@@ -182,6 +224,7 @@ calCompositeCalendar.prototype = {
 
     get calendars() {
         // return a nsISimpleEnumerator of this array.  This sucks.
+        // XXX make this an array, like the calendar manager?
         return null;
     },
 
@@ -189,11 +232,21 @@ calCompositeCalendar.prototype = {
         return this.mDefaultCalendar;
     },
 
-    set defaultCalendar(v) {
-        if (this.mDefaultCalendar != v) {
-            this.mDefaultCalendar = v;
-            this.observeDefaultCalendarChanged (v);
+    setDefaultCalendar: function (cal, usePref) {
+        if (this.mDefaultCalendar == cal) // .equals(uri) ??
+            return;
+        if (usePref && this.mPrefPrefix) {
+            this.mCalMgr.deleteCalendarPref(this.mDefaultCalendar,
+                                            this.mDefaultPref);
+            this.mCalMgr.setCalendarPref(cal, this.mDefaultPref,
+                                         "true");
         }
+        this.mDefaultCalendar = cal;
+        this.notifyObservers("onDefaultCalendarChanged", [cal]);
+    },
+
+    set defaultCalendar(v) {
+        this.setDefaultCalendar(v, true);
     },
 
     //
@@ -285,20 +338,12 @@ calCompositeCalendar.prototype = {
     //
     // observer helpers
     //
-    observeCalendarAdded: function (aCalendar) {
-        for each (obs in this.mCompositeObservers)
-            obs.onCalendarAdded (aCalendar);
+    notifyObservers: function(method, args) {
+        this.mCompositeObservers.forEach(function (o) {
+            try { o[method].apply(o, args); }
+            catch (e) { }
+        });
     },
-
-    observeCalendarRemoved: function (aCalendar) {
-        for each (obs in this.mCompositeObservers)
-            obs.onCalendarRemoved (aCalendar);
-    },
-
-    observeDefaultCalendarChanged: function (aCalendar) {
-        for each (obs in this.mCompositeObservers)
-            obs.onDefaultCalendarChanged (aCalendar);
-    }
 };
 
 // composite listener helper
