@@ -238,3 +238,18 @@ function UpdateCRL()
   crlEntry = crls.queryElementAt(i, nsICRLInfo);
   crlManager.updateCRLFromURL(crlEntry.lastFetchURL, crlEntry.nameInDb);
 }
+
+function ImportCRL()
+{
+  // prompt for the URL to import from
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+  
+  var CRLLocation = {value:null};
+  var dummy = { value: 0 };
+  var strBundle = document.getElementById('pippki_bundle');
+  var addCRL = promptService.prompt(window, strBundle.getString('crlImportNewCRLTitle'), 
+                                    strBundle.getString('crlImportNewCRLLabel'),  CRLLocation, null, dummy);
+
+  if (addCRL)
+    crlManager.updateCRLFromURL(CRLLocation.value, "");
+}

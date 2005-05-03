@@ -59,6 +59,7 @@
         ondialoghelp="openHelp('validation-crl-manage');"
         persist="screenX screenY width height">
 
+  <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://pippki/content/crlManager.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js" />
@@ -95,6 +96,8 @@
     <button id="updateCRL" class="push" disabled="true"
             label="&validation.updatecrl.label;"
             oncommand="UpdateCRL();"/>
+
+    <button id="importCRL" class="push" label="&certmgr.restore.label;" oncommand="ImportCRL();"/>
     <spacer flex="2" />
     <button dlgtype="help"/>
   </hbox>
