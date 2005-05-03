@@ -511,10 +511,7 @@ sub DoSeen {
     }
 }
 
-sub unload {
-    my $self = shift;
-    $self->SUPER::unload(@_);
-    # just to make sure...
+sub Unload {
     untie(%{$seen->{'times'}});
     untie(%{$seen->{'states'}});
 }

@@ -94,9 +94,7 @@ sub Schedule {
     $self->SUPER::Schedule($event);
 }
 
-sub unload {
-    my $self = shift;
-    $self->SUPER::unload(@_);
+sub Unload {
     # just to make sure...
     untie(%{$factoids->{'is'}});
     untie(%{$factoids->{'are'}});

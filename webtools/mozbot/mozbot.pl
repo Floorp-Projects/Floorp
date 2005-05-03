@@ -118,7 +118,6 @@ if ((defined($ARGV[0])) and ($ARGV[0] eq '--chroot')) {
 # important modules
 use Net::IRC 0.7; # 0.7 is not backwards compatible with 0.63 for CTCP responses
 use IO::SecurePipe; # internal based on IO::Pipe
-use IO::Select;
 use Socket;
 use POSIX ":sys_wait_h";
 use Carp qw(cluck confess);
@@ -189,9 +188,10 @@ my $nick = 0;
 my $sleepdelay = 60;
 my $connectTimeout = 120;
 my $delaytime = 1.3; # amount of time to wait between outputs
-my $recentMessageCountLimit = 5; # upper limit
-my $recentMessageCountDecrementRate = 0.2; # how much to take off per $delaytime
-my $recentMessageCountPenalty = 10; # if we hit the limit, bump it up by this much
+my $recentMessageCountThreshold = 3; # threshold before we stop outputting
+my $recentMessageCountPenalty = 10; # if we hit the threshold, bump it up by this much
+my $recentMessageCountLimit = 20; # limit above which the count won't go
+my $recentMessageCountDecrementRate = 0.1; # how much to take off per $delaytime
 my $variablepattern = '[-_:a-zA-Z0-9]+';
 my %users = ('admin' => &newPassword('password')); # default password for admin
 my %userFlags = ('admin' => 3); # bitmask; 0x1 = admin, 0x2 = delete user a soon as other admin authenticates
@@ -1110,8 +1110,8 @@ sub weHaveSaidThisTooManyTimesAlready {
         $key = "$$who,$$do,$$msg";
     }
     my $count = ++$recentMessages{$key};
-    if ($count >= $recentMessageCountLimit and
-        $count < $recentMessageCountLimit + 1 and
+    if ($count >= $recentMessageCountThreshold and
+        $count < $recentMessageCountThreshold + 1 and
         $$do ne 'ctcpSend') {
         $recentMessages{$key} += $recentMessageCountPenalty;
         my $text = $$msg;
@@ -1120,7 +1120,14 @@ sub weHaveSaidThisTooManyTimesAlready {
         }
         $$do = 'me';
         $$msg = "was going to say '$text' but has said it too many times today already";
-    } elsif ($count >= $recentMessageCountLimit) {
+    } elsif ($count >= $recentMessageCountThreshold) {
+        if ($count > $recentMessageCountLimit) {
+            # if the message keeps getting output, we'll get to the
+            # point where if it stops it doesn't matter because the
+            # recent count will be _so_ high we'll never see zero
+            # again. So here we put a cap on the recent message count.
+            $recentMessages{$key} = $recentMessageCountLimit;
+        }
         if ($$do eq 'msg') {
             &debug("MUTED: ->$$who: $$msg");
         } elsif ($$do eq 'me') {
@@ -1247,6 +1254,57 @@ sub bot_select {
     if ($@) {
         # $@ contains the error
         &debug("ERROR!!!", $@);
+    }
+    # prevent any memory leaks by cleaning up all the variables we added
+    foreach (keys %{${$pipe}}) {
+        m/^BotModules_/ && delete(${$pipe}->{$_});
+    }
+}
+
+sub bot_select_data_available {
+    my ($handle) = @_;
+    &debug("Module ${$handle}->{'BotModules_Module'}->{'_name'} received some data");
+    # read data while there is some
+    my $fh = '';
+    vec($fh, fileno($handle), 1) = 1;
+    my $count = 0; # number of bytes read
+    my $ready;
+    my $data = '';
+    my $close = 0;
+    while (select($ready = $fh, undef, undef, 0.1) and
+           vec($ready, fileno($handle), 1) and
+           $count < 1024 and
+           not $close) { # read up to 1kb
+        sysread($handle, $data, 1, length($data)) or $close = 1;
+    } 
+    if (not ${$handle}->{'BotModules_Module'}->{'_shutdown'}) {
+        eval {
+            ${$handle}->{'BotModules_Event'}->{'time'} = time();
+            ${$handle}->{'BotModules_Module'}->DataAvailable(
+                ${$handle}->{'BotModules_Event'},
+                $handle,
+                $data,
+                $close,
+            );
+        };
+        if ($@) {
+            # $@ contains the error
+            &debug("ERROR!!!", $@);
+        }
+    } else {
+        # module doesn't care, it was shut down
+        &debug("Dropping data - module is already shut down.");
+        $close = 1;
+    }
+    if ($close) {
+        # Note: It's the responsibility of the module to actually
+        # close the handle.
+        &debug("Dropping handle...");
+        $irc->removefh($handle);
+        # prevent any memory leaks by cleaning up all the variables we added
+        foreach (keys %{${$handle}}) {
+            m/^BotModules_/ && delete(${$handle}->{$_});
+        }
     }
 }
 
@@ -1507,6 +1565,7 @@ sub DESTROY {
 # so that the bot [eventually] severs its connection with the module.
 sub unload {
     my $self = shift;
+    $self->Unload(); # hook for bot modules to use
     $self->{'_shutdown'} = 1; # see doScheduled and bot_select
 }
 
@@ -1661,7 +1720,7 @@ sub schedule {
 }
 
 # spawnChild - spawns a child process and adds it to the list of file handles to monitor
-# eventually the bot calls ChildCompleted() with the output of the chlid process.
+# eventually the bot calls ChildCompleted() with the output of the child process.
 sub spawnChild {
     my $self = shift;
     my ($event, $command, $arguments, $type, $data) = @_;
@@ -1765,6 +1824,18 @@ sub spawnChild {
         $self->debug("failed to open pipe: $!");
     }
     return 1;
+}
+
+# registerDataHandle - eventually calls DataAvailable
+sub registerDataHandle {
+    my $self = shift;
+    my ($event, $handle, $details) = @_;
+    ${$handle}->{'BotModules_Module'} = $self;
+    ${$handle}->{'BotModules_Event'} = $event;
+    ${$handle}->{'BotModules_Details'} = $details;
+    $irc->addfh($handle, \&::bot_select_data_available);
+    my $fileno = fileno($handle);
+    $self->debug("listening to filehandle or socket $fileno");
 }
 
 # getURI - Downloads a file and then calls GotURI
@@ -2316,6 +2387,14 @@ sub ChildCompleted {
     }
 }
 
+# DataAvailable - Called when a handle registered with
+# registerDataHandle has made data available
+sub DataAvailable {
+    my $self = shift;
+    my ($event, $handle, $data, $close) = @_;
+    # do nothing
+}
+
 # GotURI - Called when a requested URI has been downloaded
 sub GotURI {
     my $self = shift;
@@ -2401,6 +2480,11 @@ sub Get {
 sub Log {
     my $self = shift;
     my ($event) = @_;
+}
+
+# Log - Called for every event
+sub Unload {
+    my $self = shift;
 }
 
 

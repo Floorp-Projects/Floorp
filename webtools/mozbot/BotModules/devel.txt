@@ -473,6 +473,19 @@ set to 1. This won't be a problem if your module only returns 1
  you cannot handle the given '$type'!
 
 
+*** DataAvailable($event, $handle, $data, $closed)
+
+ Called when $handle has data available. See registerDataHandle(). 
+ $data is the string that was read from the handle. Don't perform
+ blocking read I/O on $handle, since all the data that was available
+ has been read. (The handle is only returned because it is expected
+ you will use that as a key to work out who is talking to you.)
+ The $closed argument will be set to true if the handle is now closed.
+
+ No special return values. Make sure to call the inherited function if
+ you did not expect to see data on the specified $handle.
+
+
 *** RegisterConfig()
 
  Called when initialised, should call registerVariables(), which see
@@ -511,7 +524,7 @@ set to 1. This won't be a problem if your module only returns 1
  Always call inherited function if you cannot get the variable yourself!
 
 
-*** unload()
+*** Unload()
 
  Called when the module is unloaded. However, this is not always
  reliably called when the module is unloaded immediately prior to the
@@ -522,13 +535,11 @@ set to 1. This won't be a problem if your module only returns 1
  from databases, where the code executing is not critical, merely good
  manners or helpful.
 
- This method's name may change in a future version of the mozbot API. 
- You are encouraged not to use this method. It is documented for
- completeness only.
+ No special return values. You are encouraged not to use this method. 
+ It is documented for completeness only.
 
- No special return values. Always call inherited function! (Failure to
- do so can result in memory leaks.)
- 
+ Default implementation does nothing.
+
 
 
 The $event variable is a hash with the following keys:
@@ -624,6 +635,9 @@ recommended.
         [ 'ftpSite', 1, 1, 'ftp.mozilla.org' ],
     );
 
+ Only simple scalars, references to arrays of scalars, and references
+ to hashes of scalars, can be stored in registered variables.
+
 
 *** schedule($event, $time, $times, @data)
 
@@ -659,6 +673,13 @@ recommended.
  Example:
     $self->spawnChild($event, '/usr/games/fortune', ['-s', '-o'], 
                       'fortune', [@data]); 
+
+
+*** registerDataHandle($event, $handle)
+
+ Adds $handle to the list of file handles and sockets to watch. When
+ data is available on that socket, DataAvailable() will be called.
+
 
 *** getModule($name)
 
