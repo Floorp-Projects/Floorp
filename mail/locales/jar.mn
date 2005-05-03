@@ -18,7 +18,6 @@
   locale/@AB_CD@/messenger/mailTasksOverlay.dtd                         (%chrome/messenger/mailTasksOverlay.dtd)
   locale/@AB_CD@/messenger/msgAccountCentral.dtd                        (%chrome/messenger/msgAccountCentral.dtd)
   locale/@AB_CD@/messenger/SearchDialog.dtd                             (%chrome/messenger/SearchDialog.dtd)
-* locale/@AB_CD@/messenger/mailPrefsOverlay.dtd                         (%chrome/messenger/mailPrefsOverlay.dtd)
   locale/@AB_CD@/messenger/AccountManager.dtd                           (%chrome/messenger/AccountManager.dtd)
   locale/@AB_CD@/messenger/AccountWizard.dtd                            (%chrome/messenger/AccountWizard.dtd)
   locale/@AB_CD@/messenger/am-advanced.dtd                              (%chrome/messenger/am-advanced.dtd)
