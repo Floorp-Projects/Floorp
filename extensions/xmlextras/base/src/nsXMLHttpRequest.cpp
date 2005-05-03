@@ -489,6 +489,11 @@ nsXMLHttpRequest::DetectCharset(nsACString& aCharset)
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(mReadRequest));
   if (!channel) {
     channel = mChannel;
+    if (!channel) {
+      // There will be no mChannel when we got a necko error in
+      // OnStopRequest or if we were never sent.
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
 
   rv = channel->GetContentCharset(charsetVal);
