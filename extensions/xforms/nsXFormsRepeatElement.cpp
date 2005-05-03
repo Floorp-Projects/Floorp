@@ -916,6 +916,11 @@ nsXFormsRepeatElement::CloneNode(nsIDOMNode  *aSrc,
     }
   }
 
+  // Remove @id, if there
+  nsCOMPtr<nsIDOMElement> targElem(do_QueryInterface(*aTarget));
+  if (targElem)
+    targElem->RemoveAttribute(NS_LITERAL_STRING("id"));
+
   // Clone children of aSrc
   nsCOMPtr<nsIDOMNode> tmp;
   nsCOMPtr<nsIDOMNodeList> childNodes;
