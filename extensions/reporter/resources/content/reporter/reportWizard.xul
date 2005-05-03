@@ -125,7 +125,7 @@
   <wizardpage id="finish"
               label="&finish.label;">
     <textbox id="finishSummary" size="60" readonly="true"/>
-   <checkbox id="showDetail" label="&reportResults.showDetail.title;" oncommand="showdetail()"/>
+   <checkbox id="showDetail" label="&reportResults.showDetail.title;" oncommand="showDetail()"/>
     <vbox id="finishExtendedFrame" flex="1">
       <iframe id="finishExtendedSuccess" type="content" src="report.xhtml" flex="1"/>
       <iframe id="finishExtendedFailed" type="content" src="error.xhtml" flex="1"/>

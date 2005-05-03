@@ -44,9 +44,6 @@
  *******************************************************/
 
 const gURL = window.arguments[0];
-const gPlatform = navigator.platform;
-const gUserAgent = navigator.userAgent;
-const goscpu = navigator.oscpu;
 const geckoStri = "00000000"; //XXX Not used at the moment, 8 0's to ignore
 const gLanguage = window.navigator.language;
 const gRMOvers = "0.2"; // Do not touch without contacting reporter admin!
@@ -57,113 +54,114 @@ var gSysID;
 var gFaultCode;
 var gFaultMessage;
 var gSOAPerror = false;
+var gPrefBranch;
 
-function initPrivacyNotice(){
-  // If they agreed, we continue on
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefService)
-                     	.getBranch("extensions.reporter.");
-  try {
-    if (prefs.getBoolPref("hidePrivacyStatement")){
-      document.getElementById('reportWizard').advance();
-      return;
-    }
-  } catch (e) {}
-
-  // Don't let users rewind, and default to checked.
-  document.getElementById('reportWizard').canRewind= false;
-  document.getElementById("dontShowPrivacyStatement").setAttribute("checked", "true");
-
-  // Load Privacy Policy
-  var privacyURL
-  try {
-    privacyURL = prefs.getCharPref("privacyURL");
-  } catch (e) {
-    privacyURL = "http://reporter-test.mozilla.org/privacy/?plain";
+function getReporterPrefBranch() {
+  if (!gPrefBranch) {
+    gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefService)
+                            .getBranch("extensions.reporter.");
   }
-  document.getElementById("privacyStatement").setAttribute("src", privacyURL);
+  return gPrefBranch;
 }
 
-function privacyPolicyCheckbox(){
-  if (document.getElementById('dontShowPrivacyStatement').checked){
-    // hide message and enable forward button
-    document.getElementById('reportWizard').canAdvance= true;
-  } else {
-    // show message, and disable forward button
-    document.getElementById('reportWizard').canAdvance= false;
+function getBoolPref(prefname, aDefault) {
+  try {
+    var prefs = getReporterPrefBranch();
+    return prefs.getBoolPref(prefname);
   }
+  catch(ex) {
+    return aDefault;
+  }
+}
+
+function getCharPref(prefname, aDefault) {
+  try {
+    var prefs = getReporterPrefBranch();
+    return prefs.getCharPref(prefname);
+  }
+  catch(ex) {
+    return aDefault;
+  }
+}
+
+
+function initPrivacyNotice() {
+  var reportWizard = document.getElementById('reportWizard');
+  // If they agreed, we continue on
+  if (getBoolPref("hidePrivacyStatement", false)) {
+    reportWizard.advance();
+  } else {
+    // Don't let users rewind, and default to checked.
+    reportWizard.canRewind = false;
+    document.getElementById("dontShowPrivacyStatement").setAttribute("checked", "true");
+
+    // Load Privacy Policy
+    var privacyURL = getCharPref("privacyURL", "http://reporter-test.mozilla.org/privacy/?plain");
+    document.getElementById("privacyStatement").setAttribute("src", privacyURL);
+  }
+}
+
+function privacyPolicyCheckbox() {
+  // if checked, hide message and enable forward button, otherwise show the
+  // message and disable the forward button.
+  var canAdvance = document.getElementById('dontShowPrivacyStatement').checked;
+  document.getElementById('reportWizard').canAdvance = canAdvance;
 }
 
 function setPrivacyPref(){
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefService)
-                   	.getBranch("extensions.reporter.");
-
   if (document.getElementById('dontShowPrivacyStatement').checked){
+    var prefs = getReporterPrefBranch();
     prefs.setBoolPref("hidePrivacyStatement", true);
   }
 }
 
-function initForm(){
-  document.getElementById('reportWizard').canRewind = false;
+function initForm() {
+  var reportWizard = document.getElementById('reportWizard');
+  reportWizard.canRewind = false;
 
   document.getElementById('url').value = gURL;
 
   // We don't let the user go forward until they fufill certain requirements - see validateform()
-  document.getElementById('reportWizard').canAdvance= false;
+  reportWizard.canAdvance = false;
 }
 
 function validateForm() {
-  if(document.getElementById('problem_type').value != "0")
-    document.getElementById('reportWizard').canAdvance= true;
-  else
-    document.getElementById('reportWizard').canAdvance= false;
+  var canAdvance = document.getElementById('problem_type').value != "0";
+  document.getElementById('reportWizard').canAdvance = canAdvance;
 }
 
 function registerSysID(){
   var param = new Array();;
-  param[0] = new SOAPParameter(gLanguage,"language");
+  param[0] = new SOAPParameter(gLanguage, "language");
 
   // get sysID
-  callReporter("register",param,setValSysID);
+  callReporter("register", param, setValSysID);
 
   // saving
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefService)
-                     	.getBranch("extensions.reporter.");
-
   if (gSysID != undefined){
+    var prefs = getReporterPrefBranch();
     prefs.setCharPref("sysid", gSysID);
     return gSysID;
   }
-  return;
+  return "";
 }
 
 function getSysID() {
-  // SysID
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefService)
-                     	.getBranch("extensions.reporter.");
-  try
-  {
-    if (prefs.getPrefType("sysid") == prefs.PREF_STRING && prefs.getCharPref("sysid") != "")
-    {
-      return prefs.getCharPref("sysid");
-    }
-    else {
-      return registerSysID();
-    }
-  }
-  catch (e) {}
-  return;
+  var sysId = getCharPref("sysid", "");
+  if (sysId == "")
+    sysId = registerSysID();
+  
+  return sysId;
 }
 
-function sendReport(){
+function sendReport() {
   // we control the user path from here.
-  document.getElementById('reportWizard').canRewind = false;
-  document.getElementById('reportWizard').canAdvance = false;
+  var reportWizard = document.getElementById('reportWizard');
+  reportWizard.canRewind = false;
+  reportWizard.canAdvance = false;
   // why would we need a cancel button?
-  document.getElementById('reportWizard').getButton("cancel").disabled = true;
+  reportWizard.getButton("cancel").disabled = true;
 
   var strbundle=document.getElementById("strings");
   var statusDescription = document.getElementById('sendReportProgressDescription');
@@ -176,107 +174,98 @@ function sendReport(){
   var emailStri = document.getElementById('email').value;
 
   var buildConfig = getBuildConfig();
+  var userAgent = navigator.userAgent;
 
-  var sysid = getSysID()
   // SOAP params
   var param = new Array();
-  param[0] = new SOAPParameter(gRMOvers,"rmoVers");
-  param[1] = new SOAPParameter(gURL,"url");
-  param[2] = new SOAPParameter(problemTypeStri,"problem_type");
-  param[3] = new SOAPParameter(descriptionStri,"description");
-  param[4] = new SOAPParameter(behindLoginStri,"behind_login");
-  param[5] = new SOAPParameter(gPlatform,"platform");
-  param[6] = new SOAPParameter(goscpu,"oscpu");
-  param[7] = new SOAPParameter(geckoStri,"gecko");
-  param[8] = new SOAPParameter(product(),"product");
-  param[9] = new SOAPParameter(gUserAgent,"useragent");
-  param[10] = new SOAPParameter(buildConfig, "buildconfig");
-  param[11] = new SOAPParameter(gLanguage,"language");
-  param[12] = new SOAPParameter(emailStri,"email");
-  param[13] = new SOAPParameter(sysid,"sysid");
+  param[0] = new SOAPParameter(gRMOvers,            "rmoVers");
+  param[1] = new SOAPParameter(gURL,                "url");
+  param[2] = new SOAPParameter(problemTypeStri,     "problem_type");
+  param[3] = new SOAPParameter(descriptionStri,     "description");
+  param[4] = new SOAPParameter(behindLoginStri,     "behind_login");
+  param[5] = new SOAPParameter(navigator.platform,  "platform");
+  param[6] = new SOAPParameter(navigator.oscpu,     "oscpu");
+  param[7] = new SOAPParameter(geckoStri,           "gecko");
+  param[8] = new SOAPParameter(getProduct(),        "product");
+  param[9] = new SOAPParameter(navigator.userAgent, "useragent");
+  param[10] = new SOAPParameter(buildConfig,        "buildconfig");
+  param[11] = new SOAPParameter(gLanguage,          "language");
+  param[12] = new SOAPParameter(emailStri,          "email");
+  param[13] = new SOAPParameter(getSysID(),         "sysid");
 
-  statusIndicator.setAttribute("value","5%");
-  statusDescription.setAttribute("value",strbundle.getString("sendingReport"));
-  callReporter("submitReport",param,setValReportID);
+  statusIndicator.setAttribute("value", "5%");
+  statusDescription.setAttribute("value", strbundle.getString("sendingReport"));
+  callReporter("submitReport", param, setValReportID);
 
   var finishSummary = document.getElementById('finishSummary');
-
-  var finishExtended
-  if (!gSOAPerror)
-  {
+  var finishExtendedFailed = document.getElementById('finishExtendedFailed');
+  var finishExtendedSuccess = document.getElementById('finishExtendedSuccess');
+  if (!gSOAPerror) {
     // If successful
-    finishExtended = document.getElementById('finishExtendedSuccess');
-    document.getElementById('finishExtendedFailed').setAttribute("class", "hide");
+    finishExtendedFailed.setAttribute("class", "hide");
 
-    statusIndicator.setAttribute("value","95%");
-    statusDescription.setAttribute("value",strbundle.getString("reportSent"));
+    statusIndicator.setAttribute("value", "95%");
+    statusDescription.setAttribute("value", strbundle.getString("reportSent"));
 
-    document.getElementById('reportWizard').canAdvance= true;
-    statusIndicator.setAttribute("value","100%");
+    reportWizard.canAdvance = true;
+    statusIndicator.setAttribute("value", "100%");
 
     // Send to the finish page
-    document.getElementById('reportWizard').advance();
+    reportWizard.advance();
 
     // report ID returned from the web service
-    finishSummary.setAttribute("value",strbundle.getString("successfullyCreatedReport") + " " + gReportID);
+    finishSummary.setAttribute("value", strbundle.getString("successfullyCreatedReport") + " " + gReportID);
 
-    finishExtendedDoc = finishExtended.contentDocument;
-    finishExtendedDoc.getElementById('urlStri').textContent = gURL;
+    finishExtendedDoc = finishExtendedSuccess.contentDocument;
+    finishExtendedDoc.getElementById('urlStri').textContent         = gURL;
     finishExtendedDoc.getElementById('problemTypeStri').textContent = document.getElementById('problem_type').label;
     finishExtendedDoc.getElementById('descriptionStri').textContent = descriptionStri;
-    finishExtendedDoc.getElementById('platformStri').textContent = gPlatform;
-    finishExtendedDoc.getElementById('oscpuStri').textContent = goscpu;
-    finishExtendedDoc.getElementById('productStri').textContent = product();
-    finishExtendedDoc.getElementById('geckoStri').textContent = geckoStri;
+    finishExtendedDoc.getElementById('platformStri').textContent    = navigator.platform;
+    finishExtendedDoc.getElementById('oscpuStri').textContent       = navigator.oscpu;
+    finishExtendedDoc.getElementById('productStri').textContent     = getProduct();
+    finishExtendedDoc.getElementById('geckoStri').textContent       = geckoStri;
     finishExtendedDoc.getElementById('buildConfigStri').textContent = buildConfig;
-    finishExtendedDoc.getElementById('userAgentStri').textContent = gUserAgent;
-    finishExtendedDoc.getElementById('langStri').textContent = gLanguage;
-    finishExtendedDoc.getElementById('emailStri').textContent = emailStri;
+    finishExtendedDoc.getElementById('userAgentStri').textContent   = navigator.userAgent;
+    finishExtendedDoc.getElementById('langStri').textContent        = gLanguage;
+    finishExtendedDoc.getElementById('emailStri').textContent       = emailStri;
 
-    document.getElementById('reportWizard').canRewind= false;
+    reportWizard.canRewind = false;
   } else {
     // If there was an error from the server
+    finishExtendedSuccess.setAttribute("class", "hide");
 
-    finishExtended = document.getElementById('finishExtendedFailed');
-    document.getElementById('finishExtendedSuccess').setAttribute("class", "hide");
-
-    document.getElementById('reportWizard').canAdvance= true;
-    document.getElementById('reportWizard').advance();
+    reportWizard.canAdvance = true;
+    reportWizard.advance();
 
     finishSummary.setAttribute("value",strbundle.getString("failedCreatingReport"));
 
-    finishExtendedDoc = finishExtended.contentDocument;
-
+    finishExtendedDoc = finishExtendedFailed.contentDocument;
     finishExtendedDoc.getElementById('faultCode').textContent = gFaultCode;
     finishExtendedDoc.getElementById('faultMessage').textContent = gFaultMessage;
   }
   document.getElementById('finishExtendedFrame').collapsed = true;
-  document.getElementById('reportWizard').canRewind = false;
-  document.getElementById('reportWizard').getButton("cancel").disabled = true;
+  reportWizard.canRewind = false;
+  reportWizard.getButton("cancel").disabled = true;
 }
 
-function showdetail(){
-  if (document.getElementById('showDetail').checked){
-    document.getElementById('finishExtendedFrame').collapsed = false;
-  } else {
-    document.getElementById('finishExtendedFrame').collapsed = true;
-  }
+function showDetail() {
+  var hideDetail = document.getElementById('showDetail').checked ? false : true;
+  document.getElementById('finishExtendedFrame').collapsed = hideDetail;
 }
 
 function getBuildConfig() {
-  // bz and Biesi are my hero's for writing/debugging this chunk.
+  // bz and Biesi are my heroes for writing/debugging this chunk.
   try {
-    netscape.security.PrivilegeManager.
-      enablePrivilege("UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite");
+    netscape.security.PrivilegeManager
+            .enablePrivilege("UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite");
     var ioservice =
-      Components.classes["@mozilla.org/network/io-service;1"].
-        getService(Components.interfaces.nsIIOService);
-    var channel = ioservice.newChannel("chrome://global/content/buildconfig.html",
-                                       null, null);
+      Components.classes["@mozilla.org/network/io-service;1"]
+                .getService(Components.interfaces.nsIIOService);
+    var channel = ioservice.newChannel("chrome://global/content/buildconfig.html", null, null);
     var stream = channel.open();
     var scriptableInputStream =
-      Components.classes["@mozilla.org/scriptableinputstream;1"].
-        createInstance(Components.interfaces.nsIScriptableInputStream);
+      Components.classes["@mozilla.org/scriptableinputstream;1"]
+                .createInstance(Components.interfaces.nsIScriptableInputStream);
     scriptableInputStream.init(stream);
     var data = "";
     var curBit = scriptableInputStream.read(4096);
@@ -294,77 +283,58 @@ function getBuildConfig() {
     var start= text.indexOf('Configure arguments')+19;
     return text.substring(start);
   } catch(ex) {
-    alert(ex);
-    return
+    dump(ex);
+    return;
   }
 }
 
 /*  NEW WEB SERVICE MODULE */
 /*  Based on Apple's example implementation of SOAP at: developer.apple.com/internet/webservices/mozgoogle_source.html */
-function callReporter(method,params,callback){
- var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefService)
-                     	.getBranch("extensions.reporter.");
-  var serviceURL;
-  try {
-    serviceURL = prefs.getCharPref("serviceURL");
-  } catch (e) {
-    serviceURL = "http://reporter-test.mozilla.org/service/";
-  }
+function callReporter(method, params, callback) {
+  var serviceURL = getCharPref("serviceURL", "http://reporter-test.mozilla.org/service/");
 
   var soapCall = new SOAPCall();
   soapCall.transportURI = serviceURL;
   soapCall.encode(0, method, "urn:MozillaReporter", 0, null, params.length, params);
+
   var response = soapCall.invoke();
   var error = handleSOAPResponse(response);
   if (!error)
-  {
     callback(response);
-  }
 }
 
-function handleSOAPResponse (response)
-{
-   var fault = response.fault;
-   if (fault != null) {
-       gSOAPerror = true;
-       gFaultCode = fault.faultCode;
-       gFaultMessage = fault.faultString;
-        return true;
-    } else
-    {
-        return false;
+function handleSOAPResponse (response) {
+  var fault = response.fault;
+  if (fault != null) {
+    gSOAPerror = true;
+    gFaultCode = fault.faultCode;
+    gFaultMessage = fault.faultString;
+    return true;
+  }
+
+  return false;
+}
+
+function setValSysID(results) {
+  if (results) {
+    var params = results.getParameters(false,{});
+    for (var i = 0; i < params.length; i++){
+      gSysID = params[i].value;
     }
-}
-
-function setValSysID(results)
-{
-  if (!results)
-  {
-    return;
-  }
-
-  var params = results.getParameters(false,{});
-  for (var i = 0; i < params.length; i++){
-    gSysID = params[i].value;
   }
 }
 
-function setValReportID(results)
-{
-  if (!results)
-  {
-    return;
-  }
-
-  var params = results.getParameters(false,{});
-  for (var i = 0; i < params.length; i++){
-    gReportID = params[i].value;
+function setValReportID(results) {
+  if (results) {
+    var params = results.getParameters(false,{});
+    for (var i = 0; i < params.length; i++){
+      gReportID = params[i].value;
+    }
   }
 }
 
-function product(){
-  // only works on > 1.7.5.  Sorry SeaMonkey of old
+function getProduct() {
+  // only works on Gecko 1.8 and higher
   if ('nsIChromeRegistrySea' in Components.interfaces) {
     return 'SeaMonkey/'+
     Components.classes['@mozilla.org/network/io-service;1']
@@ -372,8 +342,6 @@ function product(){
               .getProtocolHandler('http')
               .QueryInterface(Components.interfaces.nsIHttpProtocolHandler).misc.substring(3);
   }
-  else {
-    return navigator.vendor+'/'+navigator.vendorSub;
-  }
-}
 
+  return navigator.vendor+'/'+navigator.vendorSub;
+}
