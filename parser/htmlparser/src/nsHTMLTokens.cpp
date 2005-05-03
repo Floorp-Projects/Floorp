@@ -1036,20 +1036,22 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
         mTextValue.Append(aChar);
         ++mNewlineCount;
       }
-      else if (kRightSquareBracket == aChar) {        
+      else if (kRightSquareBracket == aChar) {
+        PRBool canClose = PR_FALSE;
         result=aScanner.GetChar(aChar); //strip off the ]
         mTextValue.Append(aChar);
         result=aScanner.Peek(aChar);    //then see what's next.
         if((NS_OK==result) && (kRightSquareBracket==aChar)) {
           result=aScanner.GetChar(aChar); //strip off the second ]
           mTextValue.Append(aChar);
+          canClose = PR_TRUE;
         }
         // The goal here is to not lose data from the page when encountering
         // markup like: <![endif]-->.  This means that in normal parsing, we
         // allow ']' to end the marked section and just drop everything between
         // it an the '>'.  In view-source mode, we cannot drop things on the
         // floor like that.  In fact, to make view-source of XML with script in
-        // CDATA sections at all bearable, we need to somewhat enforce the ']>'
+        // CDATA sections at all bearable, we need to somewhat enforce the ']]>'
         // terminator for marked sections.  So make the tokenization somewhat
         // different when in view-source _and_ dealing with a CDATA section.
         PRBool inCDATA = (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) &&
@@ -1061,7 +1063,7 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
           result=aScanner.ReadUntil(dummy,kGreaterThan,PR_FALSE);
         }
         if (NS_OK==result &&
-            (!inCDATA || kGreaterThan == aChar)) {
+            (!inCDATA || (canClose && kGreaterThan == aChar))) {
           result=aScanner.GetChar(aChar); //strip off the >
           done=PR_TRUE;
         }
