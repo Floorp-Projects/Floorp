@@ -478,17 +478,13 @@ function onOKCommand()
     // get values from the form and put them into the event
     var componentType = getElementValue("component-type");
 
-    var tzid = calendarDefaultTimezone();
-
     // calIEvent properties
     if (componentType == "event") {
         if (!event.isMutable) // I will cut vlad for making me do this QI
             event = originalEvent.clone().QueryInterface(Components.interfaces.calIEvent);
 
-        event.startDate.jsDate = getElementValue("start-datetime");
-        event.startDate.timezone = tzid;
-        event.endDate.jsDate   = getElementValue("end-datetime");
-        event.endDate.timezone = tzid;
+        event.startDate = jsDateToDateTime(getElementValue("start-datetime"));
+        event.endDate = jsDateToDateTime(getElementValue("end-datetime"));
         event.isAllDay = getElementValue("all-day-event-checkbox", "checked");
         var status = getElementValue("event-status-field");
         if (status)
@@ -499,15 +495,13 @@ function onOKCommand()
             event = originalEvent.clone().QueryInterface(Components.interfaces.calITodo);
 
         if ( getElementValue("start-checkbox", "checked") ) {
-            event.entryDate.jsDate = getElementValue("start-datetime");
-            event.entryDate.timezone = tzid;
+            event.entryDate = jsDateToDateTime(getElementValue("start-datetime"));
         } else {
             event.entryDate.reset();
         }
 
         if ( getElementValue("due-checkbox", "checked") ) {
-            event.dueDate.jsDate = getElementValue("due-datetime");
-            event.dueDate.timezone = tzid;
+            event.dueDate = jsDateToDateTime(getElementValue("due-datetime"));
         } else {
             event.dueDate.reset();
         }
