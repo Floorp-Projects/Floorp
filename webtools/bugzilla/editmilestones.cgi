@@ -116,6 +116,21 @@ sub CheckMilestone ($$)
     }
 }
 
+sub CheckSortkey ($$)
+{
+    my ($milestone, $sortkey) = @_;
+    # Keep a copy in case detaint_signed() clears the sortkey
+    my $stored_sortkey = $sortkey;
+
+    if (!detaint_signed($sortkey) || $sortkey < -32768 || $sortkey > 32767) {
+        ThrowUserError('milestone_sortkey_invalid',
+                       {'name' => $milestone,
+                        'sortkey' => $stored_sortkey});
+    }
+
+    return $sortkey;
+}
+
 #
 # Preliminary checks:
 #
@@ -261,13 +276,8 @@ if ($action eq 'new') {
                        {'name' => $milestone});
     }
 
-    # Need to store in case detaint_natural() clears the sortkey
-    my $stored_sortkey = $sortkey;
-    if (!detaint_natural($sortkey)) {
-        ThrowUserError('milestone_sortkey_invalid',
-                       {'name' => $milestone,
-                        'sortkey' => $stored_sortkey});
-    }
+    $sortkey = CheckSortkey($milestone, $sortkey);
+
     if (TestMilestone($product, $milestone)) {
         ThrowUserError('milestone_already_exists',
                        {'name' => $milestone,
@@ -453,15 +463,8 @@ if ($action eq 'update') {
                          'milestones WRITE',
                          'products WRITE');
 
-    # Need to store because detaint_natural() will delete this if
-    # invalid
-    my $stored_sortkey = $sortkey;
-    if ($sortkey != $sortkeyold) {
-        if (!detaint_natural($sortkey)) {
-            ThrowUserError('milestone_sortkey_invalid',
-                           {'name' => $milestone,
-                            'sortkey' => $stored_sortkey});
-        }
+    if ($sortkey ne $sortkeyold) {
+        $sortkey = CheckSortkey($milestone, $sortkey);
 
         trick_taint($milestoneold);
 

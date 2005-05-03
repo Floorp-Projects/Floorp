@@ -720,7 +720,8 @@
   [% ELSIF error == "milestone_sortkey_invalid" %]
     [% title = "Invalid Milestone Sortkey" %]
     The sortkey '[% sortkey FILTER html %]' for milestone '
-    [% name FILTER html %]' is not a valid (positive) number.
+    [% name FILTER html %]' is not in the range -32768 &le; sortkey
+    &le; 32767.
 
   [% ELSIF error == "misarranged_dates" %]
     [% title = "Misarranged Dates" %]

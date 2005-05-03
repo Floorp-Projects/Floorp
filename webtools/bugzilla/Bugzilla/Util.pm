@@ -30,6 +30,7 @@ use strict;
 
 use base qw(Exporter);
 @Bugzilla::Util::EXPORT = qw(is_tainted trick_taint detaint_natural
+                             detaint_signed
                              html_quote url_quote value_quote xml_quote
                              css_class_quote
                              lsearch max min
@@ -66,6 +67,16 @@ sub trick_taint {
 sub detaint_natural {
     $_[0] =~ /^(\d+)$/;
     $_[0] = $1;
+    return (defined($_[0]));
+}
+
+sub detaint_signed {
+    $_[0] =~ /^([-+]?\d+)$/;
+    $_[0] = $1;
+    # Remove any leading plus sign.
+    if (defined($_[0]) && $_[0] =~ /^\+(\d+)$/) {
+        $_[0] = $1;
+    }
     return (defined($_[0]));
 }
 
@@ -325,6 +336,7 @@ Bugzilla::Util - Generic utility functions for bugzilla
   $rv = is_tainted($var);
   trick_taint($var);
   detaint_natural($var);
+  detaint_signed($var);
 
   # Functions for quoting
   html_quote($var);
@@ -391,6 +403,12 @@ sanity checked in some way and have been determined to be OK.>
 
 This routine detaints a natural number. It returns a true value if the
 value passed in was a valid natural number, else it returns false. You
+B<MUST> check the result of this routine to avoid security holes.
+
+=item C<detaint_signed($num)>
+
+This routine detaints a signed integer. It returns a true value if the
+value passed in was a valid signed integer, else it returns false. You
 B<MUST> check the result of this routine to avoid security holes.
 
 =back

@@ -672,7 +672,7 @@
       <listitem>
         <para>Enter the name of the Milestone in the "Milestone" field. You
         can optionally set the "sortkey", which is a positive or negative
-        number (-255 to 255) that defines where in the list this particular
+        number (-32768 to 32767) that defines where in the list this particular
         milestone appears. This is because milestones often do not 
         occur in alphanumeric order For example, "Future" might be
         after "Release 1.2". Select "Add".</para>
