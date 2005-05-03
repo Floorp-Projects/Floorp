@@ -47,6 +47,9 @@
 
 
 /* Java JNI globals */
+
+JavaVM* gCachedJVM = nsnull;
+
 jclass booleanClass = nsnull;
 jclass charClass = nsnull;
 jclass byteClass = nsnull;
@@ -92,6 +95,24 @@ JavaToXPTCStubMap* gJavaToXPTCStubMap = nsnull;
 PRBool gJavaXPCOMInitialized = PR_FALSE;
 PRLock* gJavaXPCOMLock = nsnull;
 
+
+/******************************
+ *  JNI Load & Unload
+ ******************************/
+extern "C" JX_EXPORT jint JNICALL
+JNI_OnLoad(JavaVM* vm, void* reserved)
+{
+  // Save pointer to JavaVM, which is valid across threads.
+  gCachedJVM = vm;
+
+  // Let the JVM know that we are using JDK 1.2 JNI features.
+  return JNI_VERSION_1_2;
+}
+
+extern "C" JX_EXPORT void JNICALL
+JNI_OnUnload(JavaVM* vm, void* reserved)
+{
+}
 
 /******************************
  *  InitializeJavaGlobals
@@ -777,7 +798,7 @@ GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
     return rv;
 
   // Create XPCOM stub
-  stub = new nsJavaXPTCStub(env, aJavaObject, iinfo);
+  stub = new nsJavaXPTCStub(aJavaObject, iinfo);
   if (!stub) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -848,6 +869,16 @@ GetIIDForMethodParam(nsIInterfaceInfo *iinfo, const nsXPTMethodInfo *methodInfo,
 /*******************************
  *  JNI helper functions
  *******************************/
+
+JNIEnv*
+GetJNIEnv()
+{
+  JNIEnv* env;
+  jint rc = gCachedJVM->GetEnv((void**) &env, JNI_VERSION_1_2);
+  NS_ASSERTION(rc == JNI_OK && env != nsnull,
+               "Current thread not attached to given JVM instance");
+  return env;
+}
 
 void
 ThrowException(JNIEnv* env, const nsresult aErrorCode, const char* aMessage)

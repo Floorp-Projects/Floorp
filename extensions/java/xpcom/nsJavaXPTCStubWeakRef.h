@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -50,14 +50,12 @@ class nsJavaXPTCStub;
 class nsJavaXPTCStubWeakRef : public nsIWeakReference
 {
 public:
-  nsJavaXPTCStubWeakRef(JNIEnv* env, jobject aJavaObject,
-                        nsJavaXPTCStub* aXPTCStub);
+  nsJavaXPTCStubWeakRef(jobject aJavaObject, nsJavaXPTCStub* aXPTCStub);
   virtual ~nsJavaXPTCStubWeakRef();
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEAKREFERENCE
 
 protected:
-  JNIEnv*         mJavaEnv;
   jweak           mWeakRef;
   nsJavaXPTCStub* mXPTCStub;
 };

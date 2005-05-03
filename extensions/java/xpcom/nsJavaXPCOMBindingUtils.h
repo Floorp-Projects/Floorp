@@ -303,6 +303,15 @@ nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
  *******************************/
 
 /**
+ * Returns a pointer to the appropriate JNIEnv structure.  This function is
+ * useful in callbacks or other functions that are not called directly from
+ * Java and therefore do not have the JNIEnv structure passed in.
+ *
+ * @return  pointer to JNIEnv structure for current thread
+ */
+JNIEnv* GetJNIEnv();
+
+/**
  * Constructs and throws an exception.  Some error codes (such as
  * NS_ERROR_OUT_OF_MEMORY) are handled by the appropriate Java exception/error.
  * Otherwise, an instance of XPCOMException is created with the given error

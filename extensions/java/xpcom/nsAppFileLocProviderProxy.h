@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -45,7 +45,7 @@
 class nsAppFileLocProviderProxy : public nsIDirectoryServiceProvider2
 {
 public:
-  nsAppFileLocProviderProxy(JNIEnv* env, jobject aJavaLocProvider);
+  nsAppFileLocProviderProxy(jobject aJavaLocProvider);
   ~nsAppFileLocProviderProxy();
 
   NS_DECL_ISUPPORTS
@@ -53,7 +53,6 @@ public:
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
 
 private:
-  JNIEnv*   mJavaEnv;
   jobject   mJavaLocProvider;
 };
 
