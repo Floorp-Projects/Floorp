@@ -1464,21 +1464,39 @@ sub get_alter_column_ddl {
         # UPDATE the temp column to have the same values as the old column
         push(@statements, "UPDATE $table SET ${column}_ALTERTEMP = " 
                         . " CAST($column AS $type)");
+
+        # Some databases drop a whole index when a column is dropped,
+        # some only remove that column from an index. For consistency,
+        # we manually drop all indexes on the column before dropping the
+        # column.
+        my %col_idx = $self->get_indexes_on_column_abstract($table, $column);
+        foreach my $idx_name (keys %col_idx) {
+            push(@statements, $self->get_drop_index_ddl($table, $idx_name));
+        }
+
         # DROP the old column
         push(@statements, "ALTER TABLE $table DROP COLUMN $column");
         # And rename the temp column to be the new one.
         push(@statements, "ALTER TABLE $table RENAME COLUMN "
                         . " ${column}_ALTERTEMP TO $column");
 
-        # FIXME - And now, we have to regenerate any indexes that got
-        #         dropped, except for the PK index which will be handled
-        #         below.
+        # And now, we have to regenerate any indexes that got
+        # dropped, except for the PK index which will be handled
+        # below.
+        foreach my $idx_name (keys %col_idx) {
+            push(@statements,
+                 $self->get_add_index_ddl($table, $idx_name, $col_idx{$idx_name}));
+        }
     }
 
     my $default = $new_def->{DEFAULT};
     my $default_old = $old_def->{DEFAULT};
+    # This first condition prevents "uninitialized value" errors.
+    if (!defined $default && !defined $default_old) {
+        # Do Nothing
+    }
     # If we went from having a default to not having one
-    if (!defined $default && defined $default_old) {
+    elsif (!defined $default && defined $default_old) {
         push(@statements, "ALTER TABLE $table ALTER COLUMN $column"
                         . " DROP DEFAULT");
     }
@@ -1637,6 +1655,45 @@ sub get_column_abstract {
     return undef;
 }
 
+=item C<get_indexes_on_column_abstract($table, $column)>
+
+ Description: Gets a list of indexes that are on a given column.
+ Params:      $table - The table the column is on.
+              $column - The name of the column.
+ Returns:     Indexes in the standard format of an INDEX
+              entry on a table. That is, key-value pairs
+              where the key is the index name and the value
+              is the index definition.
+              If there are no indexes on that column, we return
+              undef.
+
+=cut
+sub get_indexes_on_column_abstract {
+    my ($self, $table, $column) = @_;
+    my %ret_hash;
+
+    my $table_def = $self->get_table_abstract($table);
+    if ($table_def && exists $table_def->{INDEXES}) {
+        my %indexes = (@{ $table_def->{INDEXES} });
+        foreach my $index_name (keys %indexes) {
+            my $col_list;
+            # Get the column list, depending on whether the index
+            # is in hashref or arrayref format.
+            if (ref($indexes{$index_name}) eq 'HASH') {
+                $col_list = $indexes{$index_name}->{FIELDS};
+            } else {
+                $col_list = $indexes{$index_name};
+            }
+
+            if(grep($_ eq $column, @$col_list)) {
+                $ret_hash{$index_name} = dclone($indexes{$index_name});
+            }
+        }
+    }
+
+    return %ret_hash;
+}
+
 sub get_index_abstract {
 
 =item C<get_index_abstract($table, $index)
@@ -1730,7 +1787,7 @@ sub delete_column {
 
 sub rename_column {
 
-=item C<rename_column($table, $old_name, $new_name>
+=item C<rename_column($table, $old_name, $new_name)>
 
  Description: Renames a column on a table in the Schema object.
               The column that you are renaming must exist.
