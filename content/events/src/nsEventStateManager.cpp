@@ -2570,9 +2570,15 @@ nsEventStateManager::NotifyMouseOut(nsGUIEvent* aEvent, nsIContent* aMovingInto)
   // Store the first mouseOut event we fire and don't refire mouseOut
   // to that element while the first mouseOut is still ongoing.
   mFirstMouseOutEventElement = mLastMouseOverElement;
-  
-  // Unset :hover
-  SetContentState(nsnull, NS_EVENT_STATE_HOVER);
+
+  // Don't touch hover state if aMovingInto is non-null.  Caller will update
+  // hover state itself, and we have optimizations for hover switching between
+  // two nearby elements both deep in the DOM tree that would be defeated by
+  // switching the hover state to null here.
+  if (!aMovingInto) {
+    // Unset :hover
+    SetContentState(nsnull, NS_EVENT_STATE_HOVER);
+  }
   
   // Fire mouseout
   DispatchMouseEvent(aEvent, NS_MOUSE_EXIT_SYNTH,

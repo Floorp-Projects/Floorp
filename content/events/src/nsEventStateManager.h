@@ -180,6 +180,11 @@ protected:
   /**
    * Tell this ESM and ESMs in affected child documents that the mouse
    * has exited this document's currently hovered content.
+   * @param aEvent the event that triggered the mouseout
+   * @param aMovingInto the content node we've moved into.  This is used to set
+   *        the relatedTarget for mouseout events.  Also, if it's non-null
+   *        NotifyMouseOut will NOT change the current hover content to null;
+   *        in that case the caller is responsible for updating hover state.
    */
   void NotifyMouseOut(nsGUIEvent* aEvent, nsIContent* aMovingInto);
   void GenerateDragDropEnterExit(nsPresContext* aPresContext, nsGUIEvent* aEvent);
