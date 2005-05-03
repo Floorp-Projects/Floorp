@@ -425,6 +425,12 @@ if ($action eq 'new') {
 
     # Cleanups and validity checks
 
+    my $classification_id = 1;
+    if (Param('useclassification')) {
+        CheckClassification($classification);
+        $classification_id = get_classification_id($classification);
+    }
+
     unless ($product) {
         print "You must enter a name for the new product. Please press\n";
         print "<b>Back</b> and try again.\n";
@@ -474,11 +480,6 @@ if ($action eq 'new') {
     my $votestoconfirm = $cgi->param('votestoconfirm');
     $votestoconfirm ||= 0;
     my $defaultmilestone = $cgi->param('defaultmilestone') || "---";
-
-    my $classification_id = 1;
-    if (Param('useclassification')) {
-        $classification_id = get_classification_id($classification);
-    }
 
     # Add the new product.
     SendSQL("INSERT INTO products ( " .
