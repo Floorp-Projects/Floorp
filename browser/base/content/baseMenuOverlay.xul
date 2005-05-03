@@ -90,7 +90,7 @@
                       oncommand="openUILink(getUILink('promote'), event, false, true);"
                       onclick="checkForMiddleClick(this, event);"/>
 #ifndef XP_MACOSX
-            <menuseparator/>
+            <menuseparator id="aboutSeparator"/>
 #endif
             <menuitem id="aboutName"
                       accesskey="&aboutCmd.accesskey;"

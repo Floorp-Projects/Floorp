@@ -242,6 +242,7 @@ C3=Component Langpack
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
 C4=Component QFA
+C5=Component RPT
 
 [Dialog Select Components]
 Show Dialog=TRUE
