@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -71,7 +71,7 @@ InitEmbedding_Impl(JNIEnv* env, jobject aMozBinDirectory,
   // create nsAppFileLocProviderProxy from given Java object
   nsAppFileLocProviderProxy* provider = nsnull;
   if (aAppFileLocProvider) {
-    provider = new nsAppFileLocProviderProxy(env, aAppFileLocProvider);
+    provider = new nsAppFileLocProviderProxy(aAppFileLocProvider);
     if (!provider)
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -134,7 +134,7 @@ InitXPCOM_Impl(JNIEnv* env, jobject aMozBinDirectory,
   // create nsAppFileLocProviderProxy from given Java object
   nsAppFileLocProviderProxy* provider = nsnull;
   if (aAppFileLocProvider) {
-    provider = new nsAppFileLocProviderProxy(env, aAppFileLocProvider);
+    provider = new nsAppFileLocProviderProxy(aAppFileLocProvider);
     if (!provider)
       return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -60,8 +60,7 @@ public:
   NS_DECL_NSISUPPORTSWEAKREFERENCE
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_JAVAXPTCSTUB_IID)
 
-  nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
-                 nsIInterfaceInfo *aIInfo);
+  nsJavaXPTCStub(jobject aJavaObject, nsIInterfaceInfo *aIInfo);
 
   virtual ~nsJavaXPTCStub();
 
@@ -120,7 +119,6 @@ private:
                               jvalue &aJValue);
   nsresult SetXPCOMRetval();
 
-  JNIEnv*                     mJavaEnv;
   jweak                       mJavaWeakRef;
   jobject                     mJavaStrongRef;
   nsCOMPtr<nsIInterfaceInfo>  mIInfo;
