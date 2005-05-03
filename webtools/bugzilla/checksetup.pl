@@ -3937,6 +3937,13 @@ $dbh->bz_add_index('flags', 'flags_type_id_idx', [qw(type_id)]);
 # For a short time, the flags_type_id_idx was misnamed in upgraded installs.
 $dbh->bz_drop_index('flags', 'type_id');
 
+# 2005-04-28 - LpSolit@gmail.com - Bug 7233: add an index to versions
+$dbh->bz_alter_column('versions', 'value',
+                      {TYPE => 'varchar(64)', NOTNULL => 1});
+$dbh->bz_add_index('versions', 'versions_product_id_idx',
+                   {TYPE => 'UNIQUE', FIELDS => [qw(product_id value)]});
+
+
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

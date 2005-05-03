@@ -455,8 +455,12 @@ use constant ABSTRACT_SCHEMA => {
 
     versions => {
         FIELDS => [
-            value      =>  {TYPE => 'TINYTEXT'},
+            value      =>  {TYPE => 'varchar(64)', NOTNULL => 1},
             product_id =>  {TYPE => 'INT2', NOTNULL => 1},
+        ],
+        INDEXES => [
+            versions_product_id_idx => {FIELDS => [qw(product_id value)],
+                                        TYPE => 'UNIQUE'},
         ],
     },
 
