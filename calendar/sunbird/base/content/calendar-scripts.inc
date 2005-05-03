@@ -57,7 +57,7 @@
   <script type="application/x-javascript" src="chrome://calendar/content/dragDrop.js"/>
 
   <!-- NEEDED FOR MULTIPLE CALENDAR SUPPORT -->
-  <script type="application/x-javascript" src="chrome://calendar/content/calendarManager.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/calendarManagement.js"/>
 
   <!-- NEEDED FOR CLIPBOARD SUPPORT -->
   <script type="application/x-javascript" src="chrome://calendar/content/clipboard.js"/>
