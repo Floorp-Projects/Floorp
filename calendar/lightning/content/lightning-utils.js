@@ -19,3 +19,6 @@ function ltnGetAtom(str) {
 
     return atomSvc.getAtom(str);
 }
+
+var CalDateTime = new Components.Constructor("@mozilla.org/calendar/datetime;1",
+                                             Components.interfaces.calIDateTime);
