@@ -66,10 +66,20 @@ sub new {
             LEFT JOIN profile_setting
                    ON setting.name = profile_setting.setting_name
                 WHERE name = ?
-                  AND (profile_setting.user_id = ?
-                       OR profile_setting.user_id IS NULL)},
+                  AND profile_setting.user_id = ?},
              undef, 
              $setting_name, $user_id);
+
+        # if not defined, then grab the default value
+        if (! defined $value) {
+            ($default, $is_enabled) =
+              $dbh->selectrow_array(
+                 q{SELECT default_value, is_enabled
+                   FROM setting
+                   WHERE name = ?},
+              undef,
+              $setting_name);
+        }
 
         $self->{'is_enabled'} = $is_enabled;
         $self->{'default_value'} = $default;
@@ -127,7 +137,7 @@ sub add_setting {
 
 sub get_all_settings {
     my ($user_id) = @_;
-    my $settings = {};
+    my $settings = get_defaults($user_id); # first get the defaults
     my $dbh = Bugzilla->dbh;
 
     my $sth = $dbh->prepare(
@@ -136,7 +146,6 @@ sub get_all_settings {
           LEFT JOIN profile_setting
                  ON setting.name = profile_setting.setting_name
               WHERE profile_setting.user_id = ?
-                 OR profile_setting.user_id IS NULL
            ORDER BY name});
 
     $sth->execute($user_id);
@@ -161,8 +170,11 @@ sub get_all_settings {
 }
 
 sub get_defaults {
+    my ($user_id) = @_;
     my $dbh = Bugzilla->dbh;
     my $default_settings = {};
+
+    $user_id ||= 0;
 
     my $sth = $dbh->prepare(q{SELECT name, default_value, is_enabled
                                 FROM setting
@@ -171,7 +183,7 @@ sub get_defaults {
     while (my ($name, $default_value, $is_enabled) = $sth->fetchrow_array()) {
 
         $default_settings->{$name} = new Bugzilla::User::Setting(
-            $name, 0, $is_enabled, $default_value, $default_value, 1);
+            $name, $user_id, $is_enabled, $default_value, $default_value, 1);
     }
 
     return $default_settings;
@@ -297,12 +309,14 @@ Description: Provides the user's choices for each setting in the
 Params:      C<$user_id> - integer - the user id.
 Returns:     a pointer to a hash of settings
 
-=item C<get_defaults>
+=item C<get_defaults($user_id)>
 
 Description: When a user is not logged in, they must use the site
              defaults for every settings; this subroutine provides them.
-Params:      none
-Returns:     A pointer to a hash of settings
+Params:      C<$user_id> (optional) - integer - the user id.  Note that
+             this optional parameter is mainly for internal use only.
+Returns:     A pointer to a hash of settings.  If $user_id was passed, set
+             the user_id value for each setting.
 
 =item C<set_default($setting_name, $default_value, $is_enabled)>
 
