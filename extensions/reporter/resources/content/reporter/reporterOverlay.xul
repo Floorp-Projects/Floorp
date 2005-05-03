@@ -23,7 +23,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -
+   -      Jay Patel <jay@mozilla.org>
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
    - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -47,12 +47,18 @@
 
   <!-- Firefox -->
   <menupopup id="menu_HelpPopup">
-    <menuitem id="menu_HelpPopup_reportertoolmenu" label="&reporterMenu.title;" accesskey="&reporterMenu.accesskey;" insertbefore="aboutName"
+    <menuitem id="menu_HelpPopup_reportertoolmenu" 
+              label="&reporterMenu.title;" 
+              accesskey="&reporterMenu.accesskey;" 
+              insertbefore="aboutSeparator"
               oncommand="loadReporterWizard()"/>
-    <menuseparator insertbefore="aboutName"/>
   </menupopup>
   <toolbarpalette id="BrowserToolbarPalette">
-    <toolbarbutton id="reporterMenuButton" oncommand="loadReporterWizard();" class="toolbarbutton-1" label="&reporterMenu.title;" tooltiptext="&reporterMenu.tooltip;"/>
+    <toolbarbutton id="reporterMenuButton" 
+                   oncommand="loadReporterWizard();" 
+                   class="toolbarbutton-1" 
+                   label="&reporterMenu.title;" 
+                   tooltiptext="&reporterMenu.tooltip;"/>
   </toolbarpalette>
 
   <!-- SeaMonkey -->
