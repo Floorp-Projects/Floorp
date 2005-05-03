@@ -433,6 +433,8 @@ nsXFormsSubmissionElement::GetModel()
 nsresult
 nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
 {
+  NS_ASSERTION(channel, "LoadReplaceInstance called with null channel?");
+
   // replace instance document
 
   nsCString contentType, contentCharset;
@@ -449,13 +451,17 @@ nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
   nsCOMPtr<nsIDOMDocument> newDoc;
   parser->ParseFromStream(mPipeIn, contentCharset.get(), contentLength,
                           contentType.get(), getter_AddRefs(newDoc));
-  NS_ENSURE_STATE(newDoc);
+  // XXX Add URI, etc?
+  if (!newDoc) {
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceParseError"),
+                               mElement);
+    return NS_ERROR_UNEXPECTED;
+  }
   
   // check for parsererror tag?  XXX is this needed?  or, is there a better way?
   nsCOMPtr<nsIDOMElement> docElem;
   newDoc->GetDocumentElement(getter_AddRefs(docElem));
-  if (docElem)
-  {
+  if (docElem) {
     nsAutoString tagName, namespaceURI;
     docElem->GetTagName(tagName);
     docElem->GetNamespaceURI(namespaceURI);
@@ -463,21 +469,28 @@ nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
     // XXX this is somewhat of a hack.  we should instead be listening for an
     // 'error' event from the DOM, but gecko doesn't implement that event yet.
     if (tagName.EqualsLiteral("parsererror") &&
-        namespaceURI.EqualsLiteral("http://www.mozilla.org/newlayout/xml/parsererror.xml"))
-    {
-      NS_WARNING("resulting instance document could not be parsed");
+        namespaceURI.EqualsLiteral("http://www.mozilla.org/newlayout/xml/parsererror.xml")) {
+      nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceParseError"),
+                                 mElement);
       return NS_ERROR_UNEXPECTED;
     }
   }
 
+  // set new instance document
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
-  if (model) {
-    nsCOMPtr<nsIInstanceElementPrivate> instance;
-    model->FindInstanceElement(EmptyString(), getter_AddRefs(instance));
-    if (instance) {
-      instance->SetDocument(newDoc);
-    }
-  }
+  NS_ENSURE_STATE(model);
+  
+  nsCOMPtr<nsIInstanceElementPrivate> instance;
+  model->FindInstanceElement(EmptyString(), getter_AddRefs(instance));
+  NS_ENSURE_STATE(instance);
+
+  instance->SetDocument(newDoc);
+
+  // refresh everything
+  model->Rebuild();
+  model->Recalculate();
+  model->Revalidate();
+  model->Refresh();
 
   return NS_OK;
 }
@@ -718,8 +731,8 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(newDoc, NS_ERROR_UNEXPECTED);
 
-  // We now need to add namespaces to the submission document.
-  // We get them from 2 sources - the main document's documentElement and the
+  // We now need to add namespaces to the submission document.  We get them
+  // from 3 sources - the main document's documentElement, the model and the
   // xforms:instance that contains the submitted instance data node.
 
   // first handle the main document
@@ -740,14 +753,20 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
   rv = AddNameSpaces(newDocElm, node);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // now handle namespaces on the xforms:instance
+  // handle namespaces on the model
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
-  rv = nsXFormsUtils::GetInstanceNodeForData(data, model, getter_AddRefs(node));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  node = do_QueryInterface(model);
+  NS_ENSURE_STATE(node);
   rv = AddNameSpaces(newDocElm, node);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // handle namespaces on the xforms:instance
+  rv = nsXFormsUtils::GetInstanceNodeForData(data, model, getter_AddRefs(node));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = AddNameSpaces(newDocElm, node);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Serialize content
   rv = serializer->SerializeToStream(newDoc, sink,
                                      NS_LossyConvertUTF16toASCII(encoding));
   NS_ENSURE_SUCCESS(rv, rv);
