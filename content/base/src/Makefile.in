@@ -70,6 +70,7 @@ REQUIRES	= xpcom \
 		  webbrowserpersist \
 		  imglib2 \
 		  prefetch \
+		  xuldoc \
 		  $(NULL)
 
 EXPORTS		= \
