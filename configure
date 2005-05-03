@@ -12081,7 +12081,7 @@ mail)
   MOZ_STATIC_MAIL_BUILD=1
   MOZ_COMPOSER=1
   MOZ_APP_VERSION=`cat $topsrcdir/mail/config/version.txt`
-  MOZ_EXTENSIONS_DEFAULT=" wallet spellcheck xmlextras webservices"
+  MOZ_EXTENSIONS_DEFAULT=" wallet spellcheck xmlextras pref webservices"
   cat >> confdefs.h <<\EOF
 #define MOZ_THUNDERBIRD 1
 EOF
