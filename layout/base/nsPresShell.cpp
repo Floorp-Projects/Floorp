@@ -1641,6 +1641,7 @@ PresShell::PresShell()
   : mBidiLevel(BIDI_LEVEL_UNDEFINED)
 #endif
 {
+  mIsAccessibilityActive = PR_FALSE;
   mSelection = nsnull;
 #ifdef MOZ_REFLOW_PERF
   mReflowCountMgr = new ReflowCountMgr();
@@ -6240,6 +6241,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       // We'll make sure the right number of Addref's occur before
       // handing this back to the accessibility client
       NS_STATIC_CAST(nsAccessibleEvent*, aEvent)->accessible = acc;
+      mIsAccessibilityActive = PR_TRUE;
       return NS_OK;
     }
   }

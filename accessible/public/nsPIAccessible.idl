@@ -46,6 +46,10 @@ interface nsPIAccessible : nsISupports
   [noscript] void setParent(in nsIAccessible aAccParent);
   [noscript] void setFirstChild(in nsIAccessible aAccFirstChild);
   [noscript] void setNextSibling(in nsIAccessible aAccNextSibling);
+
+  /**
+   * Set the child count to -1 (unknown) and null out cached child pointers
+   */
   [noscript] void invalidateChildren();
   [noscript] void fireToolkitEvent(in unsigned long aEvent, in nsIAccessible aTarget, in voidPtr aData);
 };

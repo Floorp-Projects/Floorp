@@ -692,7 +692,7 @@ NS_IMETHODIMP nsDocAccessible::Observe(nsISupports *aSubject, const char *aTopic
 // ---------- Mutation event listeners ------------
 NS_IMETHODIMP nsDocAccessible::NodeInserted(nsIDOMEvent* aEvent)
 {
-  HandleMutationEvent(aEvent, nsIAccessibleEvent::EVENT_CREATE);
+  HandleMutationEvent(aEvent, nsIAccessibleEvent::EVENT_SHOW);
 
   return NS_OK;
 }
@@ -701,7 +701,7 @@ NS_IMETHODIMP nsDocAccessible::NodeRemoved(nsIDOMEvent* aEvent)
 {
   // The related node for the event will be the parent of the removed node or subtree
 
-  HandleMutationEvent(aEvent, nsIAccessibleEvent::EVENT_DESTROY);
+  HandleMutationEvent(aEvent, nsIAccessibleEvent::EVENT_HIDE);
 
   return NS_OK;
 }
@@ -871,23 +871,16 @@ NS_IMETHODIMP nsDocAccessible::CharacterDataModified(nsIDOMEvent* aMutationEvent
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIDOMNode *aStartNode)
+void nsDocAccessible::ShutdownNodes(nsIDOMNode *aStartNode)
 {
-  // Invalidate cache subtree
-  // We have to check for accessibles for each dom node by traversing DOM tree
-  // instead of just the accessible tree, although that would be faster
-  // Otherwise we might miss the nsAccessNode's that are not nsAccessible's.
-
-  if (!aStartNode)
-    return NS_ERROR_FAILURE;
   nsCOMPtr<nsIDOMNode> iterNode(aStartNode), nextNode;
   nsCOMPtr<nsIAccessNode> accessNode;
 
   do {
     GetCachedAccessNode(iterNode, getter_AddRefs(accessNode));
     if (accessNode) {
-      // XXX aaronl todo: accessibles that implement their own subtrees,
-      // like html combo boxes and xul trees, need to shutdown all of their own
+      // Accessibles that implement their own subtrees,
+      // like html combo boxes and xul trees must shutdown all of their own
       // children when they override Shutdown()
 
       // Don't shutdown our doc object!
@@ -918,7 +911,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIDOMNode *aStartNode)
     do {
       iterNode->GetParentNode(getter_AddRefs(nextNode));
       if (!nextNode || nextNode == aStartNode) {
-        return NS_OK;
+        return;
       }
       nextNode->GetNextSibling(getter_AddRefs(iterNode));
       if (iterNode)
@@ -927,6 +920,41 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIDOMNode *aStartNode)
     } while (PR_TRUE);
   }
   while (iterNode && iterNode != aStartNode);
+}
+
+NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIDOMNode *aStartNode,
+                                                      PRUint32 aChangeEventType)
+{
+  // Invalidate cache subtree
+  // We have to check for accessibles for each dom node by traversing DOM tree
+  // instead of just the accessible tree, although that would be faster
+  // Otherwise we might miss the nsAccessNode's that are not nsAccessible's.
+
+  if (!aStartNode)
+    return NS_ERROR_FAILURE;
+
+  // Shutdown nsIAccessNode's or nsIAccessibles for any DOM nodes in this subtree
+  ShutdownNodes(aStartNode);
+
+  // We need to get an accessible for the mutation event's target node
+  // If there is no accessible for that node, we need to keep moving up the parent
+  // chain so there is some accessible.
+  // We will use this accessible to fire the accessible mutation event.
+  // We're guaranteed success, because we will eventually end up at the doc accessible,
+  // and there is always one of those.
+
+  nsCOMPtr<nsIAccessible> accessible;
+  GetAccessibleInParentChain(aStartNode, getter_AddRefs(accessible));
+  nsCOMPtr<nsPIAccessible> privateAccessible(do_QueryInterface(accessible));
+  if (privateAccessible) {
+    privateAccessible->InvalidateChildren();
+  }
+
+  // Fire an event so the assistive technology knows the objects it is holding onto
+  // in this part of the subtree are no longer useful and should be released.
+  // However, they still won't crash if the AT tries to use them, because a stub of the
+  // object still exists as long as it is refcounted, even from outside of Gecko.
+  privateAccessible->FireToolkitEvent(aChangeEventType, accessible, nsnull);
 
   return NS_OK;
 }
@@ -937,8 +965,8 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
 {
   nsCOMPtr<nsIAccessibilityService> accService = 
     do_GetService("@mozilla.org/accessibilityService;1");
-  if (!accService)
-    return nsnull;
+  NS_ASSERTION(accService,
+               "No accessibility service while in code created by service");
 
   nsCOMPtr<nsIDOMNode> currentNode(aNode), parentNode;
 
@@ -959,54 +987,29 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
   return NS_OK;
 }
 
-void nsDocAccessible::HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aAccessibleEventType)
+void nsDocAccessible::HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aChangeEventType)
 {
+  NS_ASSERTION(aChangeEventType == nsIAccessibleEvent::EVENT_REORDER ||
+               aChangeEventType == nsIAccessibleEvent::EVENT_SHOW ||
+               aChangeEventType == nsIAccessibleEvent::EVENT_HIDE,
+               "Incorrect aChangeEventType passed in");
+
+
   nsCOMPtr<nsIDOMMutationEvent> mutationEvent(do_QueryInterface(aEvent));
   NS_ASSERTION(mutationEvent, "Not a mutation event!");
 
-  nsCOMPtr<nsIDOMEventTarget> domEventTarget;
-  mutationEvent->GetTarget(getter_AddRefs(domEventTarget));
-
-  nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(domEventTarget));
   nsCOMPtr<nsIDOMNode> subTreeToInvalidate;
   mutationEvent->GetRelatedNode(getter_AddRefs(subTreeToInvalidate));
-  NS_ASSERTION(subTreeToInvalidate, "No old sub tree being replaced in DOMSubtreeModified");
-
-  if (!targetNode) {
-    targetNode = subTreeToInvalidate;
-  }
-  else if (aAccessibleEventType == nsIAccessibleEvent::EVENT_REORDER) {
-    subTreeToInvalidate = targetNode; // targetNode is parent for DOMNodeRemoved event
-  }
-
-  nsCOMPtr<nsIAccessibleDocument> docAccessible = GetDocAccessibleFor(subTreeToInvalidate);
-  if (!docAccessible)
-    return;
-
+  NS_ASSERTION(subTreeToInvalidate, 
+               "No old sub tree being replaced in DOMSubtreeModified");
+  nsCOMPtr<nsIAccessibleDocument> docAccessible =
+    GetDocAccessibleFor(subTreeToInvalidate);
   nsCOMPtr<nsPIAccessibleDocument> privateDocAccessible =
     do_QueryInterface(docAccessible);
-
-  privateDocAccessible->InvalidateCacheSubtree(subTreeToInvalidate);
-
-  // We need to get an accessible for the mutation event's target node
-  // If there is no accessible for that node, we need to keep moving up the parent
-  // chain so there is some accessible.
-  // We will use this accessible to fire the accessible mutation event.
-  // We're guaranteed success, because we will eventually end up at the doc accessible,
-  // and there is always one of those.
-
-  nsCOMPtr<nsIAccessible> accessible;
-  docAccessible->GetAccessibleInParentChain(targetNode, getter_AddRefs(accessible));
-  nsCOMPtr<nsPIAccessible> privateAccessible(do_QueryInterface(accessible));
-  if (!privateAccessible)
-    return;
-  privateAccessible->InvalidateChildren();
-
-#ifdef XP_WIN
-  // Windows MSAA clients crash if they listen to create or destroy events
-  aAccessibleEventType = nsIAccessibleEvent::EVENT_REORDER;
-#endif
-  privateAccessible->FireToolkitEvent(aAccessibleEventType, accessible, nsnull);
+  if (privateDocAccessible) {
+    privateDocAccessible->InvalidateCacheSubtree(subTreeToInvalidate,
+                                                 aChangeEventType);
+  }
 }
 
 NS_IMETHODIMP nsDocAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
