@@ -572,8 +572,6 @@ function onOKCommand()
             alarmTime = event.endDate.clone();
         }
 
-        dump("=============\n" + alarmTime + "\n============\n");
-
         switch (alarmUnits) {
         case "minutes":
             alarmTime.minute -= alarmLength;
@@ -588,11 +586,7 @@ function onOKCommand()
 
         alarmTime.normalize();
 
-        dump("=============\n" + alarmTime + "\n============\n");
-
-        event.alarmTime = alarmTime.clone();
-       
-        dump("=============\n" + event.alarmTime + "\n============\n");
+        event.alarmTime = alarmTime;
     }
 
     if (alarmType == "email")
