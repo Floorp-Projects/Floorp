@@ -50,3 +50,15 @@
 .hide {
   display: none;
 }
+
+#privacyPolicy {
+  color: #0000FF;
+  text-decoration: underline !important;
+  cursor: pointer;
+  text-align: right;
+  -moz-user-focus: normal;
+}
+
+#privacyPolicy:focus {
+  outline: 1px dotted invert ! important;
+}

@@ -31,7 +31,12 @@
 <!ENTITY reportForm.gecko.title                     "Gecko:">
 <!ENTITY reportForm.useragent.title                 "Useragent:">
 <!ENTITY reportForm.language.title                  "Language:">
-<!ENTITY reportForm.email.title                     "Email:">
+
+<!--  Make sure this has "(Optional)" at the end.  This is important for the user to know -->
+<!ENTITY reportForm.email.title                     "Email (Optional):">
+
+<!ENTITY reportForm.privacyPolicy.title             "Privacy Policy">
+<!ENTITY reportForm.privacyPolicy.tooltip           "View Privacy Policy">
 
 <!ENTITY reportResults.showDetail.title             "Show Details">
 
