@@ -183,8 +183,13 @@ nsXFormsInstanceElement::OnChannelRedirect(nsIChannel *OldChannel,
   mElement->GetOwnerDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   NS_ENSURE_STATE(doc);
-  return nsXFormsUtils::CheckSameOrigin(doc->GetDocumentURI(), newURI) ?
-    NS_OK : NS_ERROR_ABORT;
+
+  if (!nsXFormsUtils::CheckSameOrigin(doc->GetDocumentURI(), newURI)) {
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceLoadOrigin"), domDoc);
+    return NS_ERROR_ABORT;
+  }
+
+  return NS_OK;
 }
 
 // nsIStreamListener
@@ -401,6 +406,9 @@ nsXFormsInstanceElement::LoadExternalInstance(const nsAString &aSrc)
               rv = docChannel->AsyncOpen(this, nsnull);
             }
           }
+        } else {
+          nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceLoadOrigin"),
+                                     domDoc);
         }
       }
     }

@@ -364,8 +364,11 @@ nsXFormsSubmissionElement::OnChannelRedirect(nsIChannel *aOldChannel,
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   NS_ENSURE_STATE(doc);
 
-  if (!CheckSameOrigin(doc->GetDocumentURI(), newURI))
+  if (!CheckSameOrigin(doc->GetDocumentURI(), newURI)) {
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("submitSendOrigin"),
+                               mElement);
     return NS_ERROR_ABORT;
+  }
 
   return NS_OK;
 }
@@ -1526,8 +1529,11 @@ nsXFormsSubmissionElement::SendData(const nsCString &uriSpec,
 
   nsresult rv;
 
-  if (!CheckSameOrigin(doc->GetDocumentURI(), uri))
+  if (!CheckSameOrigin(doc->GetDocumentURI(), uri)) {
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("submitSendOrigin"),
+                               mElement);
     return NS_ERROR_ABORT;
+  }
 
   // wrap the entire upload stream in a buffered input stream, so that
   // it can be read in large chunks.

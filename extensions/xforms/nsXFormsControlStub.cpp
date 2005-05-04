@@ -140,16 +140,18 @@ nsXFormsControlStub::ResetBoundNode()
                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
                        getter_AddRefs(result),
                        getter_AddRefs(modelNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  if (!result) {
-    return NS_OK;
+
+  if (NS_SUCCEEDED(rv)) {    
+    if (result) {
+      // Get context node, if any  
+      result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
+    }
+    rv = NS_OK;
+  } else {
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("controlBindError"), mElement);
   }
 
-  // Get context node, if any  
-  result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
-
-  return NS_OK;
+  return rv;
 }
 
 /**
