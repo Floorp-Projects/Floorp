@@ -491,6 +491,15 @@ NS_IMETHODIMP nsView::SetFloating(PRBool aFloatingView)
 	return NS_OK;
 }
 
+void nsView::InvalidateHierarchy()
+{
+  if (mViewManager->GetRootView() == this)
+    mViewManager->InvalidateHierarchy();
+
+  for (nsView *child = mFirstChild; child; child = child->GetNextSibling())
+    child->InvalidateHierarchy();
+}
+
 void nsView::InsertChild(nsView *aChild, nsView *aSibling)
 {
   NS_PRECONDITION(nsnull != aChild, "null ptr");
@@ -512,6 +521,15 @@ void nsView::InsertChild(nsView *aChild, nsView *aSibling)
       mFirstChild = aChild;
     }
     aChild->SetParent(this);
+
+    // If we just inserted a root view, then update the RootViewManager
+    // on all view managers in the new subtree.
+
+    nsViewManager *vm = aChild->GetViewManager();
+    if (vm->GetRootView() == aChild)
+    {
+      aChild->InvalidateHierarchy();
+    }
   }
 }
 
@@ -540,6 +558,15 @@ void nsView::RemoveChild(nsView *child)
 	    kid = kid->GetNextSibling();
     }
     NS_ASSERTION(found, "tried to remove non child");
+
+    // If we just removed a root view, then update the RootViewManager
+    // on all view managers in the removed subtree.
+
+    nsViewManager *vm = child->GetViewManager();
+    if (vm->GetRootView() == child)
+    {
+      child->InvalidateHierarchy();
+    }
   }
 }
 

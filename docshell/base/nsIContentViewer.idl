@@ -1,6 +1,7 @@
 #include "nsISupports.idl"
 
 interface nsIDOMDocument;
+interface nsISHEntry;
 
 
 %{ C++
@@ -13,7 +14,7 @@ struct nsRect;
 [ptr] native nsIDeviceContextPtr(nsIDeviceContext);
 [ref] native nsRectRef(nsRect);
 
-[scriptable, uuid(70b8f22d-135c-4c94-8044-1bd3238d0990)]
+[scriptable, uuid(e2c68a4d-b396-11d9-a3d1-00112478d626)]
 interface nsIContentViewer : nsISupports
 {
 
@@ -68,4 +69,22 @@ interface nsIContentViewer : nsISupports
    */
 
   boolean requestWindowClose();
+
+  /**
+   * Attach the content viewer to its DOM window and docshell.
+   */
+  void open();
+
+  /**
+   * Set the  session history entry for the content viewer.  If this is set,
+   * then the following actions will happen when destroy() is called (*):
+   *  - Sanitize() will be called on the viewer's document
+   *  - The content viewer will set the contentViewer property on the
+   *    history entry, and release its reference (ownership reversal).
+   *  - hide() will be called, and no further destruction will happen.
+   *
+   *  (*) unless the document is currently being printed, in which case
+   *      it will never be saved in session history.
+   */
+  void setHistoryEntry(in nsISHEntry entry);
 };

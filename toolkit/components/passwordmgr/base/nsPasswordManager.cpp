@@ -71,6 +71,9 @@
 #include "nsIAutoCompleteResult.h"
 #include "nsIPK11TokenDB.h"
 #include "nsIPK11Token.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDOMNSEvent.h"
 
 static const char kPMPropertiesURL[] = "chrome://passwordmgr/locale/passwordmgr.properties";
 static PRBool sRememberPasswords = PR_FALSE;
@@ -262,6 +265,37 @@ nsPasswordManager::Init()
   NS_ASSERTION(progress, "docloader service does not implement nsIWebProgress");
 
   progress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
+
+  // Listen for "domwindowopened", this will let us attach our DOMPageRestore
+  // event listener.
+
+  obsService->AddObserver(this, "domwindowopened", PR_FALSE);
+  obsService->AddObserver(this, "domwindowclosed", PR_FALSE);
+
+  // Also register on any open windows that already exist, since we don't
+  // get notifications for those.
+
+  nsCOMPtr<nsIWindowWatcher> watcher =
+    do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+  if (watcher) {
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    watcher->GetWindowEnumerator(getter_AddRefs(enumerator));
+    if (enumerator) {
+      PRBool hasMore;
+
+      while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
+        nsCOMPtr<nsISupports> item;
+        enumerator->GetNext(getter_AddRefs(item));
+
+        nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(item);
+        if (targ) {
+          targ->AddEventListener(NS_LITERAL_STRING("DOMPageRestore"),
+                                 NS_STATIC_CAST(nsIDOMLoadListener*, this),
+                                 PR_FALSE);
+        }
+      }
+    }
+  }
 
   // Now read in the signon file
   nsXPIDLCString signonFile;
@@ -747,6 +781,20 @@ nsPasswordManager::Observe(nsISupports* aSubject,
     NS_ASSERTION(branch == mPrefBranch, "unexpected pref change notification");
 
     branch->GetBoolPref("rememberSignons", &sRememberPasswords);
+  } else if (!strcmp(aTopic, "domwindowopened")) {
+    nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(aSubject);
+    if (targ) {
+      targ->AddEventListener(NS_LITERAL_STRING("DOMPageRestore"),
+                             NS_STATIC_CAST(nsIDOMLoadListener*, this),
+                             PR_FALSE);
+    }
+  } else if (!strcmp(aTopic, "domwindowclosed")) {
+    nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(aSubject);
+    if (targ) {
+      targ->RemoveEventListener(NS_LITERAL_STRING("DOMPageRestore"),
+                                NS_STATIC_CAST(nsIDOMLoadListener*, this),
+                                PR_FALSE);
+    }
   }
 
   return NS_OK;
@@ -765,16 +813,22 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
       !(aStateFlags & nsIWebProgressListener::STATE_STOP))
     return NS_OK;
 
-  // Don't do anything if the global signon pref is disabled
-  if (!SingleSignonEnabled())
-    return NS_OK;
-
   nsCOMPtr<nsIDOMWindow> domWin;
   nsresult rv = aWebProgress->GetDOMWindow(getter_AddRefs(domWin));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return DoPrefill(domWin);
+}
+
+nsresult
+nsPasswordManager::DoPrefill(nsIDOMWindow *aDOMWindow)
+{
+  // Don't do anything if the global signon pref is disabled
+  if (!SingleSignonEnabled())
+    return NS_OK;
+
   nsCOMPtr<nsIDOMDocument> domDoc;
-  domWin->GetDocument(getter_AddRefs(domDoc));
+  aDOMWindow->GetDocument(getter_AddRefs(domDoc));
   NS_ASSERTION(domDoc, "DOM window should always have a document!");
 
   // For now, only prefill forms in HTML documents.
@@ -1565,6 +1619,32 @@ nsPasswordManager::Abort(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsPasswordManager::Error(nsIDOMEvent* aEvent)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPasswordManager::PageRestore(nsIDOMEvent* aEvent)
+{
+  // Only autofill for trusted events.
+  nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aEvent);
+  PRBool trusted = PR_FALSE;
+  if (nsevent)
+    nsevent->GetIsTrusted(&trusted);
+  if (!trusted)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetTarget(getter_AddRefs(target));
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(target);
+  if (doc) {
+    nsCOMPtr<nsIDOMWindow> win =
+      do_QueryInterface(doc->GetScriptGlobalObject());
+    if (win) {
+      return DoPrefill(win);
+    }
+  }
+
   return NS_OK;
 }
 

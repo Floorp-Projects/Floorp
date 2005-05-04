@@ -1538,15 +1538,17 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
             // nothing else.
             nsCOMPtr<nsPIDOMWindow> win =
               do_QueryInterface(document->GetScriptGlobalObject());
-            nsIFocusController *focusController =
-              win->GetRootFocusController();
-            PRBool isActive = PR_FALSE;
-            focusController->GetActive(&isActive);
-            if (!isActive) {
-              nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
-              if(domElement)
-                focusController->SetFocusedElement(domElement);
-              break;
+            if (win) {
+              nsIFocusController *focusController =
+                win->GetRootFocusController();
+              PRBool isActive = PR_FALSE;
+              focusController->GetActive(&isActive);
+              if (!isActive) {
+                nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
+                if(domElement)
+                  focusController->SetFocusedElement(domElement);
+                break;
+              }
             }
   
             aPresContext->EventStateManager()->

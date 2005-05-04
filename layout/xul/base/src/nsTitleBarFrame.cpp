@@ -169,15 +169,10 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 			   nsCOMPtr<nsIDOMWindowInternal>
            window(do_QueryInterface(aPresContext->PresShell()->GetDocument()->GetScriptGlobalObject()));
 
-
-
-				 nsPoint nsMoveBy;
-				 nsMoveBy = aEvent->refPoint - mLastPoint;
-				 
-				 
-				 window->MoveBy(nsMoveBy.x,nsMoveBy.y);
-				 
-				 
+         if (window) {
+           nsPoint nsMoveBy = aEvent->refPoint - mLastPoint;
+           window->MoveBy(nsMoveBy.x,nsMoveBy.y);
+         }
 				 
 				 *aEventStatus = nsEventStatus_eConsumeNoDefault;				
 				 

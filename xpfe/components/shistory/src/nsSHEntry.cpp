@@ -37,11 +37,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef DEBUG_bryner
+#define DEBUG_PAGE_CACHE
+#endif
+
 // Local Includes
 #include "nsSHEntry.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIDocShellLoadInfo.h"
+#include "nsIDocShellTreeItem.h"
 
 static PRUint32 gEntryID = 0;
 
@@ -58,7 +63,9 @@ nsSHEntry::nsSHEntry()
   , mIsFrameNavigation(PR_FALSE)
   , mSaveLayoutState(PR_TRUE)
   , mExpired(PR_FALSE)
+  , mSticky(PR_TRUE)
   , mParent(nsnull)
+  , mViewerBounds(0, 0, 0, 0)
 {
 }
 
@@ -77,10 +84,19 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   , mIsFrameNavigation(other.mIsFrameNavigation)
   , mSaveLayoutState(other.mSaveLayoutState)
   , mExpired(other.mExpired)
+  , mSticky(PR_TRUE)
   // XXX why not copy mContentType?
   , mCacheKey(other.mCacheKey)
   , mParent(other.mParent)
+  , mViewerBounds(0, 0, 0, 0)
 {
+}
+
+nsSHEntry::~nsSHEntry()
+{
+  mChildren.Clear();
+  if (mContentViewer)
+    mContentViewer->Destroy();
 }
 
 //*****************************************************************************
@@ -133,16 +149,32 @@ NS_IMETHODIMP nsSHEntry::SetReferrerURI(nsIURI *aReferrerURI)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetDocument(nsIDOMDocument* aDocument)
+NS_IMETHODIMP
+nsSHEntry::SetContentViewer(nsIContentViewer *aViewer)
 {
-  mDocument = aDocument;
+  mContentViewer = aViewer;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetDocument(nsIDOMDocument** aResult)
+NS_IMETHODIMP
+nsSHEntry::GetContentViewer(nsIContentViewer **aResult)
 {
-  *aResult = mDocument;
+  *aResult = mContentViewer;
   NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SetSticky(PRBool aSticky)
+{
+  mSticky = aSticky;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::GetSticky(PRBool *aSticky)
+{
+  *aSticky = mSticky;
   return NS_OK;
 }
 
@@ -160,7 +192,7 @@ NS_IMETHODIMP nsSHEntry::GetTitle(PRUnichar** aTitle)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetTitle(const PRUnichar* aTitle)
+NS_IMETHODIMP nsSHEntry::SetTitle(const nsAString &aTitle)
 {
   mTitle = aTitle;
   return NS_OK;
@@ -297,14 +329,13 @@ NS_IMETHODIMP nsSHEntry::SetContentType(const nsACString& aContentType)
 }
 
 NS_IMETHODIMP
-nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle,
-                  nsIDOMDocument * aDOMDocument, nsIInputStream * aInputStream,
-                  nsILayoutHistoryState * aHistoryLayoutState,
+nsSHEntry::Create(nsIURI * aURI, const nsAString &aTitle,
+                  nsIInputStream * aInputStream,
+                  nsILayoutHistoryState * aLayoutHistoryState,
                   nsISupports * aCacheKey, const nsACString& aContentType)
 {
   mURI = aURI;
   mTitle = aTitle;
-  mDocument = aDOMDocument;
   mPostData = aInputStream;
   mCacheKey = aCacheKey;
   mContentType = aContentType;
@@ -317,9 +348,9 @@ nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle,
   // all subframe navigations, sets the flag to true.
   mIsFrameNavigation = PR_FALSE;
 
-  // By default we save HistoryLayoutState
+  // By default we save LayoutHistoryState
   mSaveLayoutState = PR_TRUE;
-  mLayoutHistoryState = aHistoryLayoutState;
+  mLayoutHistoryState = aLayoutHistoryState;
 
   //By default the page is not expired
   mExpired = PR_FALSE;
@@ -355,6 +386,34 @@ nsSHEntry::SetParent(nsISHEntry * aParent)
    * XXX this method should not be scriptable if this is the case!!
    */
   mParent = aParent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SetWindowState(nsISupports *aState)
+{
+  mWindowState = aState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::GetWindowState(nsISupports **aState)
+{
+  NS_IF_ADDREF(*aState = mWindowState);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SetViewerBounds(const nsRect &aBounds)
+{
+  mViewerBounds = aBounds;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::GetViewerBounds(nsRect &aBounds)
+{
+  aBounds = mViewerBounds;
   return NS_OK;
 }
 
@@ -414,5 +473,79 @@ nsSHEntry::GetChildAt(PRInt32 aIndex, nsISHEntry ** aResult)
   } else {
     *aResult = nsnull;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::AddChildShell(nsIDocShellTreeItem *aShell)
+{
+  NS_ASSERTION(aShell, "Null child shell added to history entry");
+  mChildShells.AppendElement(aShell);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::ChildShellAt(PRInt32 aIndex, nsIDocShellTreeItem **aShell)
+{
+  NS_IF_ADDREF(*aShell =
+               NS_STATIC_CAST(nsIDocShellTreeItem*,
+                              mChildShells.SafeElementAt(aIndex)));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::ClearChildShells()
+{
+  mChildShells.Clear();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::GetSecurityState(nsISupports **aState)
+{
+  NS_IF_ADDREF(*aState = mSecurityState);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SetSecurityState(nsISupports *aState)
+{
+  mSecurityState = aState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::GetRefreshURIList(nsISupportsArray **aList)
+{
+  NS_IF_ADDREF(*aList = mRefreshURIList);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SetRefreshURIList(nsISupportsArray *aList)
+{
+  mRefreshURIList = aList;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SyncPresentationState()
+{
+  if (mContentViewer && mWindowState) {
+    // If we have a content viewer and a window state, we should be ok.
+    return NS_OK;
+  }
+
+  // If not, then nuke all of the presentation-related members.
+  if (mContentViewer)
+    mContentViewer->SetHistoryEntry(nsnull);
+
+  mContentViewer = nsnull;
+  mSticky = PR_TRUE;
+  mWindowState = nsnull;
+  mViewerBounds.SetRect(0, 0, 0, 0);
+  mChildShells.Clear();
+  mSecurityState = nsnull;
+  mRefreshURIList = nsnull;
   return NS_OK;
 }

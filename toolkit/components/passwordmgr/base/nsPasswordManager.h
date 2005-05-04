@@ -136,6 +136,7 @@ public:
   NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent);
   NS_IMETHOD Abort(nsIDOMEvent* aEvent);
   NS_IMETHOD Error(nsIDOMEvent* aEvent);
+  NS_IMETHOD PageRestore(nsIDOMEvent* aEvent);
 
   // Autocomplete
   PRBool AutoCompleteSearch(const nsAString& aSearchString,
@@ -157,6 +158,7 @@ protected:
   nsresult FillPassword(nsIDOMEvent* aEvent);
   void AttachToInput(nsIDOMHTMLInputElement* aElement);
   PRBool GetPasswordRealm(nsIURI* aURI, nsACString& aRealm);
+  nsresult DoPrefill(nsIDOMWindow *aDOMWindw);
 
   static PLDHashOperator PR_CALLBACK FindEntryEnumerator(const nsACString& aKey,
                                                          SignonHashEntry* aEntry,

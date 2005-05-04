@@ -104,6 +104,7 @@ public:
                                      nsIContentSink*     aSink = nsnull);
 
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
+  virtual void Destroy();
 
   NS_DECL_NSIIMAGEDOCUMENT
 
@@ -289,26 +290,37 @@ nsImageDocument::StartDocumentLoad(const char*         aCommand,
 }
 
 void
+nsImageDocument::Destroy()
+{
+  // Remove our event listener from the image content.
+  if (mImageResizingEnabled) {
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mImageContent);
+    target->RemoveEventListener(NS_LITERAL_STRING("click"), this, PR_FALSE);
+  }
+
+  // Break reference cycle with mImageContent, if we have one
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
+  if (imageLoader) {
+    imageLoader->RemoveObserver(this);
+  }
+
+  mImageContent = nsnull;
+
+  nsMediaDocument::Destroy();
+}
+
+void
 nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 {
-  if (!aScriptGlobalObject) {
-    if (mImageResizingEnabled) {
-      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mImageContent);
-      target->RemoveEventListener(NS_LITERAL_STRING("click"), this, PR_FALSE);
-
-      target = do_QueryInterface(mScriptGlobalObject);
-      target->RemoveEventListener(NS_LITERAL_STRING("resize"), this, PR_FALSE);
-      target->RemoveEventListener(NS_LITERAL_STRING("keypress"), this,
-                                  PR_FALSE);
-    }
-
-    // Break reference cycle with mImageContent, if we have one
-    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
-    if (imageLoader) {
-      imageLoader->RemoveObserver(this);
-    }
-    
-    mImageContent = nsnull;
+  // If the script global object is changing, we need to unhook our event
+  // listeners on the window.
+  nsCOMPtr<nsIDOMEventTarget> target;
+  if (mImageResizingEnabled && mScriptGlobalObject &&
+      aScriptGlobalObject != mScriptGlobalObject) {
+    target = do_QueryInterface(mScriptGlobalObject);
+    target->RemoveEventListener(NS_LITERAL_STRING("resize"), this, PR_FALSE);
+    target->RemoveEventListener(NS_LITERAL_STRING("keypress"), this,
+                                PR_FALSE);
   }
 
   // Set the script global object on the superclass before doing
@@ -316,16 +328,18 @@ nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObjec
   nsHTMLDocument::SetScriptGlobalObject(aScriptGlobalObject);
 
   if (aScriptGlobalObject) {
-    // Create synthetic document
-    nsresult rv = CreateSyntheticDocument();
-    if (NS_FAILED(rv)) {
-      return;
+    if (!mRootContent) {
+      // Create synthetic document
+      nsresult rv = CreateSyntheticDocument();
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create synthetic document");
+
+      if (mImageResizingEnabled) {
+        target = do_QueryInterface(mImageContent);
+        target->AddEventListener(NS_LITERAL_STRING("click"), this, PR_FALSE);
+      }
     }
 
     if (mImageResizingEnabled) {
-      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mImageContent);
-      target->AddEventListener(NS_LITERAL_STRING("click"), this, PR_FALSE);
-
       target = do_QueryInterface(aScriptGlobalObject);
       target->AddEventListener(NS_LITERAL_STRING("resize"), this, PR_FALSE);
       target->AddEventListener(NS_LITERAL_STRING("keypress"), this, PR_FALSE);

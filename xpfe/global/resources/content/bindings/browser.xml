@@ -305,9 +305,9 @@
         null
       </field>
 
-      <field name="securityUI">
-        null
-      </field>
+      <property name="securityUI"
+                onget="return this.docShell.securityUI;"
+                onset="this.docShell.securityUI = val;"/>
 
       <field name="userTypedClear">
         1
@@ -356,8 +356,8 @@
             const SECUREBROWSERUI_CONTRACTID = "@mozilla.org/secure_browser_ui;1";
             if (!this.hasAttribute("disablesecurity") &&
                 SECUREBROWSERUI_CONTRACTID in Components.classes) {
-              this.securityUI = Components.classes[SECUREBROWSERUI_CONTRACTID].createInstance(Components.interfaces.nsISecureBrowserUI);
-              this.securityUI.init(this.contentWindow);
+              var securityUI = Components.classes[SECUREBROWSERUI_CONTRACTID].createInstance(Components.interfaces.nsISecureBrowserUI);
+              securityUI.init(this.contentWindow);
             }
           }
           catch (e) {

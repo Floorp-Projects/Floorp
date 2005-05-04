@@ -4440,3 +4440,22 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
   if (!aFromScroll)
     mSynthMouseMoveEventQueue = nsnull;
 }
+
+void
+nsViewManager::InvalidateHierarchy()
+{
+  if (mRootView) {
+    if (mRootViewManager != this) {
+      NS_IF_RELEASE(mRootViewManager);
+    }
+    nsView *parent = mRootView->GetParent();
+    if (parent) {
+      mRootViewManager = parent->GetViewManager()->RootViewManager();
+      NS_ADDREF(mRootViewManager);
+      NS_ASSERTION(mRootViewManager != this,
+                   "Root view had a parent, but it has the same view manager");
+    } else {
+      mRootViewManager = this;
+    }
+  }
+}

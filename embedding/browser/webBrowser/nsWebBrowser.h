@@ -168,7 +168,6 @@ protected:
    nativeWindow               mParentNativeWindow;
    nsIWebProgressListener    *mProgressListener;
    nsCOMPtr<nsIWebProgress>      mWebProgress;
-   nsCOMPtr<nsISecureBrowserUI> mSecurityUI;
 
    nsCOMPtr<nsIPrintSettings> mPrintSettings;
 

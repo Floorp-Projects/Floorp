@@ -63,6 +63,7 @@ public:
                                      nsIContentSink*     aSink = nsnull);
 
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
+  virtual PRBool CanSavePresentation(nsIRequest *aNewRequest);
 
 protected:
   nsresult CreateSyntheticPluginDocument();
@@ -100,6 +101,15 @@ nsPluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObje
   }
 
   nsMediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
+}
+
+
+PRBool
+nsPluginDocument::CanSavePresentation(nsIRequest *aNewRequest)
+{
+  // Full-page plugins cannot be cached, currently, because we don't have
+  // the stream listener data to feed to the plugin instance.
+  return PR_FALSE;
 }
 
 

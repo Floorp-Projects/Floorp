@@ -121,6 +121,7 @@ protected:
   PRInt32 mSubRequestsNoSecurity;
 
   nsresult UpdateSecurityState(nsIRequest* aRequest);
+  nsresult UpdateSecurityState(lockIconState aNewState, nsIRequest *aRequest);
   nsresult EvaluateAndUpdateSecurityState(nsIRequest *aRequest);
   void UpdateSubrequestMembers(nsIRequest *aRequest);
 
@@ -144,6 +145,7 @@ protected:
   nsresult GetNSSDialogs(nsISecurityWarningDialogs **);
 
   PLDHashTable mTransferringRequests;
+  class State;
 };
 
 

@@ -153,6 +153,7 @@
 
 #include "nsIBindingManager.h"
 #include "nsIXBLService.h"
+#include "nsInt64.h"
 
 // used for popup blocking, needs to be converted to something
 // belonging to the back-end like nsIContentPolicy
@@ -169,6 +170,10 @@ static PRInt32              gRunningTimeoutDepth       = 0;
 
 #ifdef DEBUG_jst
 PRInt32 gTimeoutCnt                                    = 0;
+#endif
+
+#ifdef DEBUG_bryner
+#define DEBUG_PAGE_CACHE
 #endif
 
 #define DOM_MIN_TIMEOUT_VALUE 10 // 10ms
@@ -4301,10 +4306,12 @@ nsGlobalWindow::GetPrivateRoot()
     nsIDocument* doc = chromeElement->GetDocument();
     if (doc) {
       parent = do_QueryInterface(doc->GetScriptGlobalObject());
-      nsCOMPtr<nsIDOMWindow> tempParent;
-      parent->GetTop(getter_AddRefs(tempParent));
-      return NS_STATIC_CAST(nsGlobalWindow *,
-                            NS_STATIC_CAST(nsIDOMWindow*, tempParent));
+      if (parent) {
+        nsCOMPtr<nsIDOMWindow> tempParent;
+        parent->GetTop(getter_AddRefs(tempParent));
+        return NS_STATIC_CAST(nsGlobalWindow *,
+                              NS_STATIC_CAST(nsIDOMWindow*, tempParent));
+      }
     }
   }
 
@@ -5795,6 +5802,387 @@ nsGlobalWindow::EnsureSizeUpToDate()
   if (parent) {
     parent->FlushPendingNotifications(Flush_Layout);
   }
+}
+
+#define WINDOWSTATEHOLDER_IID \
+{0xae1c7401, 0xcdee, 0x404a, {0xbd, 0x63, 0x05, 0xc0, 0x35, 0x0d, 0xa7, 0x72}}
+
+class WindowStateHolder : public nsISupports
+{
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(WINDOWSTATEHOLDER_IID)
+  NS_DECL_ISUPPORTS
+
+  WindowStateHolder(JSContext *cx,  // The JSContext for the window 
+                    JSObject *aObject, // An object to save the properties onto
+                    nsGlobalWindow *aWindow); // The window to operate on
+
+  // This is the property store object that holds the window properties.
+  JSObject* GetObject() { return mJSObj; }
+
+  // Get the listener manager, which holds all event handlers for the window.
+  nsIEventListenerManager* GetListenerManager() { return mListenerManager; }
+
+  // Get the contents of focus memory when the state was saved
+  // (if the focus was inside of this window).
+  nsIDOMElement* GetFocusedElement() { return mFocusedElement; }
+  nsIDOMWindowInternal* GetFocusedWindow() { return mFocusedWindow; }
+
+  // Manage the list of saved timeouts for the window.
+  nsTimeout* GetSavedTimeouts() { return mSavedTimeouts; }
+  nsTimeout** GetTimeoutInsertionPoint() { return mTimeoutInsertionPoint; }
+  void ClearSavedTimeouts() { mSavedTimeouts = nsnull; }
+
+private:
+  ~WindowStateHolder();
+
+  JSRuntime *mRuntime;
+  JSObject *mJSObj;
+  nsCOMPtr<nsIEventListenerManager> mListenerManager;
+  nsCOMPtr<nsIDOMElement> mFocusedElement;
+  nsCOMPtr<nsIDOMWindowInternal> mFocusedWindow;
+  nsTimeout *mSavedTimeouts;
+  nsTimeout **mTimeoutInsertionPoint;
+};
+
+WindowStateHolder::WindowStateHolder(JSContext *cx, JSObject *aObject,
+                                     nsGlobalWindow *aWindow)
+  : mRuntime(::JS_GetRuntime(cx)), mJSObj(aObject)
+{
+  NS_ASSERTION(aWindow, "null window");
+
+  aWindow->GetListenerManager(getter_AddRefs(mListenerManager));
+
+  nsIFocusController *fc = aWindow->GetRootFocusController();
+  NS_ASSERTION(fc, "null focus controller");
+
+  // We want to save the focused element/window only if they are inside of
+  // this window.
+
+  nsCOMPtr<nsIDOMWindowInternal> focusWinInternal;
+  fc->GetFocusedWindow(getter_AddRefs(focusWinInternal));
+
+  nsCOMPtr<nsPIDOMWindow> focusedWindow = do_QueryInterface(focusWinInternal);
+
+  while (focusedWindow) {
+    if (focusedWindow == aWindow) {
+      fc->GetFocusedWindow(getter_AddRefs(mFocusedWindow));
+      fc->GetFocusedElement(getter_AddRefs(mFocusedElement));
+      break;
+    }
+
+    focusedWindow =
+      NS_STATIC_CAST(nsGlobalWindow*,
+                     NS_STATIC_CAST(nsPIDOMWindow*,
+                                    focusedWindow))->GetPrivateParent();
+  }
+
+  aWindow->SuspendTimeouts();
+
+  // Clear the timeout list for aWindow (but we don't need to for children)
+  mSavedTimeouts = aWindow->mTimeouts;
+  mTimeoutInsertionPoint = aWindow->mTimeoutInsertionPoint;
+
+  aWindow->mTimeouts = nsnull;
+  aWindow->mTimeoutInsertionPoint = &aWindow->mTimeouts;
+
+  ::JS_AddNamedRoot(cx, &mJSObj, "WindowStateHolder::mJSObj");
+}
+
+WindowStateHolder::~WindowStateHolder()
+{
+  ::JS_RemoveRootRT(mRuntime, &mJSObj);
+}
+
+NS_IMPL_ISUPPORTS1(WindowStateHolder, WindowStateHolder)
+
+static JSClass sWindowStateClass = {
+  "window state", 0,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+  JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+static nsresult
+CopyJSPropertyArray(JSContext *cx, JSObject *aSource, JSObject *aDest,
+                    JSIdArray *props)
+{
+  jsint length = props->length;
+  for (jsint i = 0; i < length; ++i) {
+    jsval propname_value;
+
+    if (!::JS_IdToValue(cx, props->vector[i], &propname_value) ||
+        !JSVAL_IS_STRING(propname_value)) {
+      NS_WARNING("Failed to copy non-string-named window property");
+      return NS_ERROR_FAILURE;
+    }
+
+    JSString *propname = JSVAL_TO_STRING(propname_value);
+    jschar *propname_str = ::JS_GetStringChars(propname);
+    NS_ENSURE_TRUE(propname_str, NS_ERROR_FAILURE);
+
+    // We exclude the "location" property because restoring it this way is
+    // problematic.  It will "just work" without us explicitly saving or
+    // restoring the value.
+
+    if (!nsCRT::strcmp(NS_STATIC_CAST(PRUnichar*, propname_str),
+                       NS_LITERAL_STRING("location").get())) {
+      continue;
+    }
+
+    size_t propname_len = ::JS_GetStringLength(propname);
+
+    JSPropertyOp getter, setter;
+    uintN attrs;
+    JSBool found;
+    if (!::JS_GetUCPropertyAttrsGetterAndSetter(cx, aSource, propname_str,
+                                                propname_len, &attrs, &found,
+                                                &getter, &setter))
+      return NS_ERROR_FAILURE;
+
+    NS_ENSURE_TRUE(found, NS_ERROR_UNEXPECTED);
+
+    jsval propvalue;
+    if (!::JS_LookupUCProperty(cx, aSource, propname_str,
+                               propname_len, &propvalue))
+      return NS_ERROR_FAILURE;
+
+    PRBool res = ::JS_DefineUCProperty(cx, aDest, propname_str, propname_len,
+                                       propvalue, getter, setter, attrs);
+#ifdef DEBUG_PAGE_CACHE
+    if (res)
+      printf("Copied window property: %s\n",
+             NS_ConvertUTF16toUTF8(NS_STATIC_CAST(PRUnichar*,
+                                                  propname_str)).get());
+#endif
+
+    if (!res) {
+#ifdef DEBUG
+      printf("failed to copy property: %s\n",
+             NS_ConvertUTF16toUTF8(NS_STATIC_CAST(PRUnichar*,
+                                                  propname_str)).get());
+#endif
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return NS_OK;
+}
+
+static nsresult
+CopyJSProperties(JSContext *cx, JSObject *aSource, JSObject *aDest)
+{
+  // Enumerate all of the properties on aSource and install them on aDest.
+
+  JSIdArray *props = ::JS_Enumerate(cx, aSource);
+  if (!props) {
+#ifdef DEBUG_PAGE_CACHE
+    printf("[no properties]\n");
+#endif
+    return NS_OK;
+  }
+
+#ifdef DEBUG_PAGE_CACHE
+  printf("props length = %d\n", props->length);
+#endif
+
+  nsresult rv = CopyJSPropertyArray(cx, aSource, aDest, props);
+  ::JS_DestroyIdArray(cx, props);
+  return rv;
+}
+
+nsresult
+nsGlobalWindow::SaveWindowState(nsISupports **aState)
+{
+  *aState = nsnull;
+
+  if (!mContext || !mJSObject) {
+    // The window may be getting torn down; don't bother saving state.
+    return NS_OK;
+  }
+
+  JSContext *cx = NS_STATIC_CAST(JSContext*, mContext->GetNativeContext());
+  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+
+  JSObject *stateObj = ::JS_NewObject(cx, &sWindowStateClass, NULL, NULL);
+  NS_ENSURE_TRUE(stateObj, NS_ERROR_OUT_OF_MEMORY);
+
+  // The window state object will root the JSObject.
+  *aState = new WindowStateHolder(cx, stateObj, this);
+  NS_ENSURE_TRUE(*aState, NS_ERROR_OUT_OF_MEMORY);
+
+#ifdef DEBUG_PAGE_CACHE
+  printf("saving window state, stateObj = %p\n", stateObj);
+#endif
+  nsresult rv = CopyJSProperties(cx, mJSObject, stateObj);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*aState);
+  return NS_OK;
+}
+
+nsresult
+nsGlobalWindow::RestoreWindowState(nsISupports *aState)
+{
+  if (!mContext || !mJSObject) {
+    // The window may be getting torn down; don't bother restoring state.
+    return NS_OK;
+  }
+
+  JSContext *cx = NS_STATIC_CAST(JSContext*, mContext->GetNativeContext());
+  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+
+  // Note that we don't need to call JS_ClearScope here.  The scope is already
+  // cleared by SetNewDocument(), and calling it again here would remove the
+  // XPConnect properties.
+
+  nsCOMPtr<WindowStateHolder> holder = do_QueryInterface(aState);
+  NS_ENSURE_TRUE(holder, NS_ERROR_FAILURE);
+
+#ifdef DEBUG_PAGE_CACHE
+  printf("restoring window state, stateObj = %p\n", holder->GetObject());
+#endif
+  nsresult rv = CopyJSProperties(cx, holder->GetObject(), mJSObject);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mListenerManager = holder->GetListenerManager();
+
+  nsIDOMElement *focusedElement = holder->GetFocusedElement();
+  nsIDOMWindowInternal *focusedWindow = holder->GetFocusedWindow();
+
+  // If the toplevel window isn't focused, just update the focus controller.
+  nsIFocusController *fc = nsGlobalWindow::GetRootFocusController();
+  NS_ENSURE_TRUE(fc, NS_ERROR_UNEXPECTED);
+
+  PRBool active;
+  fc->GetActive(&active);
+  if (active) {
+    PRBool didFocusContent = PR_FALSE;
+    nsCOMPtr<nsIContent> focusedContent = do_QueryInterface(focusedElement);
+
+    if (focusedContent) {
+      // We don't bother checking whether the element or frame is focusable.
+      // If it was focusable when we stored the presentation, it must be
+      // focusable now.
+      PRBool didFocusContent = PR_FALSE;
+      nsIDocument *doc = focusedContent->GetCurrentDoc();
+      if (doc) {
+        nsIPresShell *shell = doc->GetShellAt(0);
+        if (shell) {
+          nsPresContext *pc = shell->GetPresContext();
+          if (pc) {
+            pc->EventStateManager()->SetContentState(focusedContent,
+                                                     NS_EVENT_STATE_FOCUS);
+            didFocusContent = PR_TRUE;
+          }
+        }
+      }
+    }
+
+    if (!didFocusContent && focusedWindow)
+      focusedWindow->Focus();
+  } else if (focusedWindow) {
+    // Just update the saved focus memory.
+    fc->SetFocusedWindow(focusedWindow);
+    fc->SetFocusedElement(focusedElement);
+  }
+
+  mTimeouts = holder->GetSavedTimeouts();
+  mTimeoutInsertionPoint = holder->GetTimeoutInsertionPoint();
+
+  holder->ClearSavedTimeouts();
+
+  // If our state is being restored from history, we won't be getting an onload
+  // event.  Make sure we're marked as being completely loaded.
+  mIsDocumentLoaded = PR_TRUE;
+
+  return ResumeTimeouts();
+}
+
+void
+nsGlobalWindow::SuspendTimeouts()
+{
+  nsInt64 now = PR_IntervalNow();
+  for (nsTimeout *t = mTimeouts; t; t = t->mNext) {
+    // Change mWhen to be the time remaining for this timer.
+    t->mWhen = PR_MAX(nsInt64(0), nsInt64(t->mWhen) - now);
+
+    // Drop the XPCOM timer; we'll reschedule when restoring the state.
+    if (t->mTimer) {
+      t->mTimer->Cancel();
+      t->mTimer = nsnull;
+    }
+
+    // We don't Release() the timeout because we still need it.
+  }
+
+  // Suspend our children as well.
+  nsCOMPtr<nsIDocShellTreeNode> node = do_QueryInterface(mDocShell);
+  if (node) {
+    PRInt32 childCount = 0;
+    node->GetChildCount(&childCount);
+
+    for (PRInt32 i = 0; i < childCount; ++i) {
+      nsCOMPtr<nsIDocShellTreeItem> childShell;
+      node->GetChildAt(i, getter_AddRefs(childShell));
+      NS_ASSERTION(childShell, "null child shell");
+
+      nsCOMPtr<nsPIDOMWindow> pWin = do_GetInterface(childShell);
+      if (pWin) {
+        nsGlobalWindow *win =
+          NS_STATIC_CAST(nsGlobalWindow*,
+                         NS_STATIC_CAST(nsPIDOMWindow*, pWin));
+
+        win->SuspendTimeouts();
+      }
+    }
+  }
+}
+
+nsresult
+nsGlobalWindow::ResumeTimeouts()
+{
+  // Restore all of the timeouts, using the stored time remaining.
+
+  nsInt64 now = PR_IntervalNow();
+  nsresult rv;
+
+  for (nsTimeout *t = mTimeouts; t; t = t->mNext) {
+    PRInt32 interval = PR_MAX(t->mWhen, DOM_MIN_TIMEOUT_VALUE);
+    t->mWhen = now + nsInt64(t->mWhen);
+
+    t->mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    NS_ENSURE_TRUE(t->mTimer, NS_ERROR_OUT_OF_MEMORY);
+
+    rv = t->mTimer->InitWithFuncCallback(TimerCallback, t, interval,
+                                         nsITimer::TYPE_ONE_SHOT);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Resume our children as well.
+  nsCOMPtr<nsIDocShellTreeNode> node = do_QueryInterface(mDocShell);
+  if (node) {
+    PRInt32 childCount = 0;
+    node->GetChildCount(&childCount);
+
+    for (PRInt32 i = 0; i < childCount; ++i) {
+      nsCOMPtr<nsIDocShellTreeItem> childShell;
+      node->GetChildAt(i, getter_AddRefs(childShell));
+      NS_ASSERTION(childShell, "null child shell");
+
+      nsCOMPtr<nsPIDOMWindow> pWin = do_GetInterface(childShell);
+      if (pWin) {
+        nsGlobalWindow *win =
+          NS_STATIC_CAST(nsGlobalWindow*,
+                         NS_STATIC_CAST(nsPIDOMWindow*, pWin));
+
+        rv = win->ResumeTimeouts();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+  }
+
+  return NS_OK;
 }
 
 // QueryInterface implementation for nsGlobalChromeWindow

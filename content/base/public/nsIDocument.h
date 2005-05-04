@@ -88,10 +88,9 @@ class nsHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
 
 // IID for the nsIDocument interface
-// f01b47c6-6271-4c0d-b786-eb5eee222b45
 #define NS_IDOCUMENT_IID      \
-{ 0xf01b47c6, 0x6271, 0x4c0d, \
-  { 0xb7, 0x86, 0xeb, 0x5e, 0xee, 0x22, 0x2b, 0x45 } }
+{ 0x8bc6ae5f, 0xb396, 0x11d9, \
+  { 0xb1, 0x4f, 0x00, 0x11, 0x24, 0x78, 0xd6, 0x26 } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -664,6 +663,47 @@ public:
   PRUint32 GetPartID() const {
     return mPartID;
   }
+
+  /**
+   * Sanitize the document by resetting all input elements and forms that have
+   * autocomplete=off to their default values.
+   */
+  virtual nsresult Sanitize() = 0;
+
+  /**
+   * Enumerate all subdocuments.
+   * The enumerator callback should return PR_TRUE to continue enumerating, or
+   * PR_FALSE to stop.
+   */
+  typedef PRBool (*nsSubDocEnumFunc)(nsIDocument *aDocument, void *aData);
+  virtual void EnumerateSubDocuments(nsSubDocEnumFunc aCallback,
+                                     void *aData) = 0;
+
+  /**
+   * Check whether it is safe to cache the presentation of this document
+   * and all of its subdocuments. This method checks the following conditions
+   * recursively:
+   *  - Some document types, such as plugin documents, cannot be safely cached.
+   *  - If there are any pending requests, we don't allow the presentation
+   *    to be cached.  Ideally these requests would be suspended and resumed,
+   *    but that is difficult in some cases, such as XMLHttpRequest.
+   *  - If there are any beforeunload or unload listeners, we must fire them
+   *    for correctness, but this likely puts the document into a state where
+   *    it would not function correctly if restored.
+   *
+   * |aNewRequest| should be the request for a new document which will
+   * replace this document in the docshell.  The new document's request
+   * will be ignored when checking for active requests.  If there is no
+   * request associated with the new document, this parameter may be null.
+   */
+  virtual PRBool CanSavePresentation(nsIRequest *aNewRequest) = 0;
+
+  /**
+   * Notify the document that its associated ContentViewer is being destroyed.
+   * This releases circular references so that the document can go away.
+   * Destroy() is only called on documents that have a content viewer.
+   */
+  virtual void Destroy() = 0;
 
 protected:
   ~nsIDocument()

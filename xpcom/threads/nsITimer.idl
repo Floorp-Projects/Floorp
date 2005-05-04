@@ -43,12 +43,12 @@ interface nsIObserver;
 
 %{C++
 /**
- * The signature of the timer callback function passed to initWithCallback. This
- * is the function that will get called when the timer expires if the timer is 
- * initialized via initWithCallback.
+ * The signature of the timer callback function passed to initWithFuncCallback.
+ * This is the function that will get called when the timer expires if the
+ * timer is initialized via initWithFuncCallback.
  *
  * @param aTimer the timer which has expired
- * @param aClosure opaque parameter passed to initWithCallback
+ * @param aClosure opaque parameter passed to initWithFuncCallback
  *
  * Implementers should return the following:
  *
@@ -82,7 +82,7 @@ interface nsITimerCallback : nsISupports
  * delay to avoid the overhead of destroying and creating a timer.  It is not
  * necessary to cancel the timer in that case.
  */
-[scriptable, uuid(29ee628e-a3ea-471f-965d-dc9f11d1c183)]
+[scriptable, uuid(436a83fa-b396-11d9-bcfa-00112478d626)]
 interface nsITimer : nsISupports
 {
   /* Timer types */
@@ -179,9 +179,14 @@ interface nsITimer : nsISupports
   attribute unsigned long type;
 
   /**
-   * The opaque pointer pass to initWithCallback.
+   * The opaque pointer pass to initWithFuncCallback.
    */  
   [noscript] readonly attribute voidPtr closure;
+
+  /**
+   * The nsITimerCallback object passed to initWithCallback.
+   */
+  readonly attribute nsITimerCallback callback;
 };
 
 %{C++

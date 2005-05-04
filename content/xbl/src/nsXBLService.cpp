@@ -229,11 +229,12 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
 
   NS_IMETHOD Load(nsIDOMEvent* aEvent);
-  NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent) { return NS_OK; };
-  NS_IMETHOD Unload(nsIDOMEvent* aEvent) { return NS_OK; };
-  NS_IMETHOD Abort(nsIDOMEvent* aEvent) { return NS_OK; };
-  NS_IMETHOD Error(nsIDOMEvent* aEvent) { return NS_OK; };
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD Unload(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD Abort(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD Error(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD PageRestore(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
 #ifdef MOZ_XUL
   static nsIXULPrototypeCache* gXULCache;

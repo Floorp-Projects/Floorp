@@ -53,9 +53,8 @@ class nsIAtom;
  * Event listener manager interface.
  */
 #define NS_IEVENTLISTENERMANAGER_IID \
-{ /* cd91bcf0-ded9-11d1-bd85-00805f8ae3f4 */ \
-0xcd91bcf0, 0xded9, 0x11d1, \
-{0xbd, 0x85, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
+{0xc23b877c, 0xb396, 0x11d9, \
+{0x86, 0xbd, 0x00, 0x11, 0x24, 0x78, 0xd6, 0x26} }
 
 class nsIEventListenerManager : public nsISupports {
 
@@ -185,6 +184,12 @@ public:
   * Loop pass for evaluation of system event listeners.
   */
   NS_IMETHOD GetSystemEventGroupLM(nsIDOMEventGroup** aGroup) = 0;
+
+  /**
+   * Allows us to quickly determine whether we have unload or beforeunload
+   * listeners registered.
+   */
+  virtual PRBool HasUnloadListeners() = 0;
 };
 
 nsresult

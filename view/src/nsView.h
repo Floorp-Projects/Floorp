@@ -291,6 +291,9 @@ public:
   void SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY);
   nsresult LoadWidget(const nsCID &aClassIID);
 
+  // Update the cached RootViewManager for all view manager descendents.
+  void InvalidateHierarchy();
+
   virtual ~nsView();
 
 protected:

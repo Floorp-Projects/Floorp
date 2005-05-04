@@ -331,6 +331,17 @@ NS_IMETHODIMP nsTimerImpl::GetClosure(void** aClosure)
 }
 
 
+NS_IMETHODIMP nsTimerImpl::GetCallback(nsITimerCallback **aCallback)
+{
+  if (mCallbackType == CALLBACK_TYPE_INTERFACE)
+    NS_IF_ADDREF(*aCallback = mCallback.i);
+  else
+    *aCallback = nsnull;
+
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsTimerImpl::GetIdle(PRBool *aIdle)
 {
   *aIdle = mIdle;

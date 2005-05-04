@@ -115,6 +115,7 @@
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWebBrowserFocus.h"
+#include "nsIURI.h"
 
 // Printer Includes
 #include "nsIWebBrowserPrint.h"

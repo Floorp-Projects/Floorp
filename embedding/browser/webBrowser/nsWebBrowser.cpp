@@ -1215,8 +1215,9 @@ NS_IMETHODIMP nsWebBrowser::Create()
    rv = GetContentDOMWindow(getter_AddRefs(domWindow));
    if (NS_SUCCEEDED(rv))
    {
-       mSecurityUI = do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv);
-       if (NS_SUCCEEDED(rv))mSecurityUI->Init(domWindow);
+       nsCOMPtr<nsISecureBrowserUI> securityUI =
+           do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv);
+       if (NS_SUCCEEDED(rv)) securityUI->Init(domWindow);
    }
 
    mDocShellTreeOwner->AddToWatcher(); // evil twin of Remove in SetDocShell(0)

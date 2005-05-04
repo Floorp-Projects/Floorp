@@ -85,6 +85,7 @@ public:
     eDOMEvents_unload,
     eDOMEvents_abort,
     eDOMEvents_error,
+    eDOMEvents_DOMPageRestore,
     eDOMEvents_submit,
     eDOMEvents_reset,
     eDOMEvents_change,

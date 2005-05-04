@@ -164,6 +164,8 @@ public:
 
   NS_IMETHOD GetSystemEventGroupLM(nsIDOMEventGroup** aGroup);
 
+  virtual PRBool HasUnloadListeners();
+
   static nsresult GetIdentifiersForType(nsIAtom* aType,
                                         EventArrayType* aArrayType,
                                         PRInt32* aSubType);
@@ -301,6 +303,7 @@ protected:
 #define NS_EVENT_BITS_LOAD_ABORT             0x04
 #define NS_EVENT_BITS_LOAD_ERROR             0x08
 #define NS_EVENT_BITS_LOAD_BEFORE_UNLOAD     0x10
+#define NS_EVENT_BITS_LOAD_PAGE_RESTORE      0x20
 
 //nsIDOMXULListener
 #define NS_EVENT_BITS_XUL_NONE               0x00

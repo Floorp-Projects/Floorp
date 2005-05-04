@@ -1070,14 +1070,16 @@ nsHTMLInputElement::SetFocus(nsPresContext* aPresContext)
   // nothing else.
   nsCOMPtr<nsPIDOMWindow> win =
     do_QueryInterface(doc->GetScriptGlobalObject());
-  nsIFocusController *focusController = win->GetRootFocusController();
-  PRBool isActive = PR_FALSE;
-  focusController->GetActive(&isActive);
-  if (!isActive) {
-    focusController->SetFocusedWindow(win);
-    focusController->SetFocusedElement(this);
+  if (win) {
+    nsIFocusController *focusController = win->GetRootFocusController();
+    PRBool isActive = PR_FALSE;
+    focusController->GetActive(&isActive);
+    if (!isActive) {
+      focusController->SetFocusedWindow(win);
+      focusController->SetFocusedElement(this);
 
-    return;
+      return;
+    }
   }
 
   aPresContext->EventStateManager()->SetContentState(this,
@@ -1120,14 +1122,16 @@ nsHTMLInputElement::Select()
     // nothing else.
     nsCOMPtr<nsPIDOMWindow> win =
       do_QueryInterface(doc->GetScriptGlobalObject());
-    nsIFocusController *focusController = win->GetRootFocusController();
-    PRBool isActive = PR_FALSE;
-    focusController->GetActive(&isActive);
-    if (!isActive) {
-      focusController->SetFocusedWindow(win);
-      focusController->SetFocusedElement(this);
-      SelectAll(presContext);
-      return NS_OK;
+    if (win) {
+      nsIFocusController *focusController = win->GetRootFocusController();
+      PRBool isActive = PR_FALSE;
+      focusController->GetActive(&isActive);
+      if (!isActive) {
+        focusController->SetFocusedWindow(win);
+        focusController->SetFocusedElement(this);
+        SelectAll(presContext);
+        return NS_OK;
+      }
     }
 
     // Just like SetFocus() but without the ScrollIntoView()!
