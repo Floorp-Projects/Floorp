@@ -1420,11 +1420,12 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
                                              void *aTargetObj)
 {
-    //-- This check is called for event handlers
+    // This check is called for event handlers
     nsresult rv;
     nsIPrincipal* subject =
-        GetFunctionObjectPrincipal(aCx, (JSObject *)aFunObj, &rv);
-    //-- If subject is null, get a principal from the function object's scope.
+        GetFunctionObjectPrincipal(aCx, (JSObject *)aFunObj, nsnull, &rv);
+
+    // If subject is null, get a principal from the function object's scope.
     if (NS_SUCCEEDED(rv) && !subject)
     {
 #ifdef DEBUG
@@ -1832,6 +1833,7 @@ nsScriptSecurityManager::GetScriptPrincipal(JSContext *cx,
 nsIPrincipal*
 nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
                                                     JSObject *obj,
+                                                    JSStackFrame *fp,
                                                     nsresult *rv)
 {
     NS_PRECONDITION(rv, "Null out param");
@@ -1839,24 +1841,62 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
     JSScript *script = JS_GetFunctionScript(cx, fun);
 
     *rv = NS_OK;
-    if (script)
+    if (!script || JS_GetFunctionObject(fun) != obj)
     {
-        if (JS_GetFunctionObject(fun) != obj)
-        {
-            // Function is a clone, its prototype was precompiled from
-            // brutally shared chrome. For this case only, get the
-            // principals from the clone's scope since there are no
-            // reliable principals compiled into the function.
-            nsIPrincipal* result = doGetObjectPrincipal(cx, obj);
-            if (!result)
-                *rv = NS_ERROR_FAILURE;
-            return result;
-        }
+        // Here, obj is either a native method or a cloned function
+        // object.
+        //
+        // In the native method case, get the object principals of
+        // the particular function object (obj) being called here.
+        // We don't allow the [[Parent]] slot to be set, so instead
+        // of walking up the JS stack to find a scripted caller, it
+        // is necessary and sufficient to get object principals.
+        //
+        // It is necessary because we do allow distinguished chrome
+        // and other privileged trust domains to get and call content
+        // natives.  It is sufficient because we do *not* allow a
+        // non-chrome trust domain to access any other domain's
+        // native function object references.
+        //
+        // This bears repeating: it is crucially important that
+        // unprivileged content not be able to access natives from
+        // any trust domain other than its own.
+        // 
+        // In the cloned function case, the prototype of the clone
+        // (that is, obj.__proto__) was precompiled from brutally
+        // shared chrome, or else it's a lambda or nested function.
+        // The general case here is a function compiled against a
+        // different scope than the one it is parented by at runtime,
+        // hence the creation of a clone to carry the correct scope
+        // chain linkage.
+        //
+        // Since principals follow scope, we must get the object
+        // principal from the clone's scope chain. There are no
+        // reliable principals compiled into the function itself.
 
-        return GetScriptPrincipal(cx, script, rv);
+        nsIPrincipal *result = doGetObjectPrincipal(cx, obj);
+        if (!result)
+            *rv = NS_ERROR_FAILURE;
+        return result;
     }
 
-    return nsnull;
+    JSScript *frameScript = fp ? JS_GetFrameScript(cx, fp) : nsnull;
+
+    if (frameScript && frameScript != script)
+    {
+        // There is a frame script, and it's different from the
+        // function script. In this case we're dealing with either
+        // an eval or a Script object, and in these cases the
+        // principal we want is in the frame's script, not in the
+        // function's script. The function's script is where the
+        // eval-calling code came from, not where the eval or new
+        // Script object came from, and we want the principal of
+        // the eval function object or new Script object.
+
+        script = frameScript;
+    }
+
+    return GetScriptPrincipal(cx, script, rv);
 }
 
 // static
@@ -1874,7 +1914,7 @@ nsScriptSecurityManager::GetFramePrincipal(JSContext *cx,
         return GetScriptPrincipal(cx, script, rv);
     }
 
-    nsIPrincipal* result = GetFunctionObjectPrincipal(cx, obj, rv);
+    nsIPrincipal* result = GetFunctionObjectPrincipal(cx, obj, fp, rv);
 
 #ifdef DEBUG
     if (NS_SUCCEEDED(*rv) && !result)

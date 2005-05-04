@@ -131,6 +131,9 @@ JS_LineNumberToPC(JSContext *cx, JSScript *script, uintN lineno);
 extern JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, JSFunction *fun);
 
+extern JS_PUBLIC_API(JSNative)
+JS_GetFunctionNative(JSContext *cx, JSFunction *fun);
+
 extern JS_PUBLIC_API(JSPrincipals *)
 JS_GetScriptPrincipals(JSContext *cx, JSScript *script);
 
@@ -164,10 +167,11 @@ extern JS_PUBLIC_API(JSPrincipals *)
 JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp);
 
 /*
- * Like JS_StackFramePrincipals(cx, caller), but if cx->findObjectPrincipals
- * is non-null, return the object principals for fp's callee function object
- * (fp->argv[-2]), which is eval, Function, or a similar eval-like method.
- * The caller parameter should be the result of JS_GetScriptedCaller(cx, fp).
+ * This API is like JS_StackFramePrincipals(cx, caller), except that if
+ * cx->runtime->findObjectPrincipals is non-null, it returns the object
+ * principals for fp's callee function object (fp->argv[-2]), which is eval,
+ * Function, or a similar eval-like method.  The caller parameter should be
+ * the result of JS_GetScriptedCaller(cx, fp).
  *
  * All eval-like methods must use JS_EvalFramePrincipals to acquire a weak
  * reference to the correct principals for the eval call to be secure, given

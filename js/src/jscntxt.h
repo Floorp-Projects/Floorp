@@ -224,6 +224,9 @@ struct JSRuntime {
     /* Security principals serialization support. */
     JSPrincipalsTranscoder principalsTranscoder;
 
+    /* Optional hook to find principals for an object in this runtime. */
+    JSObjectPrincipalsFinder findObjectPrincipals;
+
     /* Shared scope property tree, and allocator for its nodes. */
     JSDHashTable        propertyTreeHash;
     JSScopeProperty     *propertyFreeList;
@@ -464,9 +467,6 @@ struct JSContext {
 
     /* PDL of stack headers describing stack slots not rooted by argv, etc. */
     JSStackHeader       *stackHeaders;
-
-    /* Optional hook to find principals for an object being accessed on cx. */
-    JSObjectPrincipalsFinder findObjectPrincipals;
 
     /* Optional stack of scoped local GC roots. */
     JSLocalRootStack    *localRootStack;

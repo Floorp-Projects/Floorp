@@ -651,7 +651,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 
   ++sContextCount;
 
-  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS
+  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS |
+                      JSOPTION_NATIVE_BRANCH_CALLBACK
 #ifdef DEBUG
     | JSOPTION_STRICT   // lint catching for development
 #endif
@@ -2055,6 +2056,30 @@ nsJSEnvironment::Startup()
   gCollation = nsnull;
 }
 
+JS_STATIC_DLL_CALLBACK(JSPrincipals *)
+ObjectPrincipalFinder(JSContext *cx, JSObject *obj)
+{
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv =
+    sSecurityManager->GetObjectPrincipal(cx, obj,
+                                         getter_AddRefs(principal));
+
+  if (NS_FAILED(rv) || !principal) {
+    return nsnull;
+  }
+
+  JSPrincipals *jsPrincipals = nsnull;
+  principal->GetJSPrincipals(cx, &jsPrincipals);
+
+  // nsIPrincipal::GetJSPrincipals() returns a strong reference to the
+  // JS principals, but the caller of this function expects a weak
+  // reference. So we need to release here.
+
+  JSPRINCIPALS_DROP(cx, jsPrincipals);
+
+  return jsPrincipals;
+}
+
 // static
 nsresult
 nsJSEnvironment::Init()
@@ -2087,7 +2112,15 @@ nsJSEnvironment::Init()
   NS_ASSERTION(!gOldJSGCCallback,
                "nsJSEnvironment initialized more than once");
 
+  // Save the old GC callback to chain to it, for GC-observing generality.
   gOldJSGCCallback = ::JS_SetGCCallbackRT(sRuntime, DOMGCCallback);
+
+  // No chaining to a pre-existing callback here, we own this problem space.
+#ifdef NS_DEBUG
+  JSObjectPrincipalsFinder oldfop =
+#endif
+    ::JS_SetObjectPrincipalsFinder(sRuntime, ObjectPrincipalFinder);
+  NS_ASSERTION(!oldfop, " fighting over the findObjectPrincipals callback!");
 
   // Set these global xpconnect options...
   nsIXPConnect *xpc = nsContentUtils::XPConnect();

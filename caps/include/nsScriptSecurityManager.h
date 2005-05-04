@@ -415,9 +415,13 @@ private:
 
     // Returns null if a principal cannot be found.  Note that rv can be NS_OK
     // when this happens -- this means that there was no script associated
-    // with the function object.  Callers MUST pass in a non-null rv here.
+    // with the function object, and no global object associated with the scope
+    // of obj (the last object on its parent chain).  If the caller is walking
+    // the JS stack, fp must point to the current frame in the stack iteration.
+    // Callers MUST pass in a non-null rv here.
     static nsIPrincipal*
-    GetFunctionObjectPrincipal(JSContext* cx, JSObject* obj, nsresult* rv);
+    GetFunctionObjectPrincipal(JSContext* cx, JSObject* obj, JSStackFrame *fp,
+                               nsresult* rv);
 
     // Returns null if a principal cannot be found.  Note that rv can be NS_OK
     // when this happens -- this means that there was no script
