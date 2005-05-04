@@ -124,7 +124,7 @@ interface nsIImportMail : nsISupports
 
 %{ C++
 #define kDestTrashFolderName "Trash"
-#define kDestUnsentMessagesFolderName "Unsent"
+#define kDestUnsentMessagesFolderName "Unsent Messages"
 #define kDestSentFolderName "Sent"
 #define kDestInboxFolderName "Inbox"
 %}
