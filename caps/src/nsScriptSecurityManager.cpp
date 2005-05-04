@@ -1841,7 +1841,29 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
     JSScript *script = JS_GetFunctionScript(cx, fun);
 
     *rv = NS_OK;
-    if (!script || JS_GetFunctionObject(fun) != obj)
+
+    if (!script)
+    {
+        // A native function: skip it in order to find its scripted caller.
+        return nsnull;
+    }
+
+    JSScript *frameScript = fp ? JS_GetFrameScript(cx, fp) : nsnull;
+
+    if (frameScript && frameScript != script)
+    {
+        // There is a frame script, and it's different from the
+        // function script. In this case we're dealing with either
+        // an eval or a Script object, and in these cases the
+        // principal we want is in the frame's script, not in the
+        // function's script. The function's script is where the
+        // eval-calling code came from, not where the eval or new
+        // Script object came from, and we want the principal of
+        // the eval function object or new Script object.
+
+        script = frameScript;
+    }
+    else if (JS_GetFunctionObject(fun) != obj)
     {
         // Here, obj is either a native method or a cloned function
         // object.
@@ -1878,22 +1900,6 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
         if (!result)
             *rv = NS_ERROR_FAILURE;
         return result;
-    }
-
-    JSScript *frameScript = fp ? JS_GetFrameScript(cx, fp) : nsnull;
-
-    if (frameScript && frameScript != script)
-    {
-        // There is a frame script, and it's different from the
-        // function script. In this case we're dealing with either
-        // an eval or a Script object, and in these cases the
-        // principal we want is in the frame's script, not in the
-        // function's script. The function's script is where the
-        // eval-calling code came from, not where the eval or new
-        // Script object came from, and we want the principal of
-        // the eval function object or new Script object.
-
-        script = frameScript;
     }
 
     return GetScriptPrincipal(cx, script, rv);
