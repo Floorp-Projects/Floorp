@@ -246,6 +246,9 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
 
   nsIScriptGlobalObject* sgo = doc->GetScriptGlobalObject();
   nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(sgo);
+  if (!window)
+    return NS_OK;
+
   PRInt32 scrollX, scrollY;
   window->GetScrollX(&scrollX);
   window->GetScrollY(&scrollY);

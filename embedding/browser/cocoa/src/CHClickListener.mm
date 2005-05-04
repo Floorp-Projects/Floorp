@@ -203,30 +203,31 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIScriptGlobalObject> sgo;
     doc->GetScriptGlobalObject(getter_AddRefs(sgo));
     nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(sgo);
-    if (window) {
-      PRInt32 scrollX, scrollY;
-      window->GetScrollX(&scrollX);
-      window->GetScrollY(&scrollY);
-      xDelta += scrollX; // Normal direction.
-      yDelta -= scrollY; // Remember, y is flipped.
+    if (!window)
+      return NS_OK;
+
+    PRInt32 scrollX, scrollY;
+    window->GetScrollX(&scrollX);
+    window->GetScrollY(&scrollY);
+    xDelta += scrollX; // Normal direction.
+    yDelta -= scrollY; // Remember, y is flipped.
     
 #define XMENUOFFSET 20
 #define MENUHEIGHT 20
     
-      xDelta += XMENUOFFSET;
-      yDelta -= MENUHEIGHT*(selIndex+1);
+    xDelta += XMENUOFFSET;
+    yDelta -= MENUHEIGHT*(selIndex+1);
     
-      NSEvent* event = [NSApp currentEvent];
-      NSPoint point = [event locationInWindow];
-      point.x -= xDelta;
-      point.y -= yDelta;
+    NSEvent* event = [NSApp currentEvent];
+    NSPoint point = [event locationInWindow];
+    point.x -= xDelta;
+    point.y -= yDelta;
 
-      NSEvent* mouseEvent = [NSEvent mouseEventWithType: NSLeftMouseDown location: point
-                                          modifierFlags: 0 timestamp: [event timestamp]
-                                           windowNumber: [event windowNumber] context: [event context]
-                                            eventNumber: [event eventNumber] clickCount: [event clickCount] 																						 pressure: [event pressure]];
-      [NSMenu popUpContextMenu: menu withEvent: mouseEvent forView: [[event window] contentView]];
-    }
+    NSEvent* mouseEvent = [NSEvent mouseEventWithType: NSLeftMouseDown location: point
+                                        modifierFlags: 0 timestamp: [event timestamp]
+                                         windowNumber: [event windowNumber] context: [event context]
+                                          eventNumber: [event eventNumber] clickCount: [event clickCount] 																						 pressure: [event pressure]];
+    [NSMenu popUpContextMenu: menu withEvent: mouseEvent forView: [[event window] contentView]];
   }
   return NS_OK;
 }
