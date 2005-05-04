@@ -1865,28 +1865,9 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
     }
     else if (JS_GetFunctionObject(fun) != obj)
     {
-        // Here, obj is either a native method or a cloned function
-        // object.
-        //
-        // In the native method case, get the object principals of
-        // the particular function object (obj) being called here.
-        // We don't allow the [[Parent]] slot to be set, so instead
-        // of walking up the JS stack to find a scripted caller, it
-        // is necessary and sufficient to get object principals.
-        //
-        // It is necessary because we do allow distinguished chrome
-        // and other privileged trust domains to get and call content
-        // natives.  It is sufficient because we do *not* allow a
-        // non-chrome trust domain to access any other domain's
-        // native function object references.
-        //
-        // This bears repeating: it is crucially important that
-        // unprivileged content not be able to access natives from
-        // any trust domain other than its own.
-        // 
-        // In the cloned function case, the prototype of the clone
-        // (that is, obj.__proto__) was precompiled from brutally
-        // shared chrome, or else it's a lambda or nested function.
+        // Here, obj is a cloned function object.  In this case, the
+        // clone's prototype may have been precompiled from brutally
+        // shared chrome, or else it is a lambda or nested function.
         // The general case here is a function compiled against a
         // different scope than the one it is parented by at runtime,
         // hence the creation of a clone to carry the correct scope
