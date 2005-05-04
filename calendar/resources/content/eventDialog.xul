@@ -370,14 +370,14 @@
                         <menupopup id="todo-status-menulist-menupopup">
                           <menuitem label="None"
                                     value="None"/>
-                          <menuitem label="Cancelled"
-                                    value="CANCELLED"/>
-                          <menuitem label="Completed on"
-                                    value="COMPLETED"/>
-                          <menuitem label="In Process"
-                                    value="IN-PROCESS"/>
                           <menuitem label="Needs Action"
                                     value="NEEDS-ACTION"/>
+                          <menuitem label="In Process"
+                                    value="IN-PROCESS"/>
+                          <menuitem label="Completed on"
+                                    value="COMPLETED"/>
+                          <menuitem label="Cancelled"
+                                    value="CANCELLED"/>
                         </menupopup>
                       </menulist>
                       <spacer/>
