@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  docshell \
 		  pref \
+		  gfx \
 		  $(NULL)
 
 CPPSRCS		= nsSHEntry.cpp        \

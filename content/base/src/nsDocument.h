@@ -530,6 +530,14 @@ public:
   virtual NS_HIDDEN_(void*) UnsetProperty(nsIAtom  *aPropertyName,
                                           nsresult *aStatus = nsnull);
 
+  virtual NS_HIDDEN_(nsresult) Sanitize();
+
+  virtual NS_HIDDEN_(void) EnumerateSubDocuments(nsSubDocEnumFunc aCallback,
+                                                 void *aData);
+
+  virtual NS_HIDDEN_(PRBool) CanSavePresentation(nsIRequest *aNewRequest);
+  virtual NS_HIDDEN_(void) Destroy();
+
 protected:
 
   void RetrieveRelevantHeaders(nsIChannel *aChannel);
@@ -592,7 +600,7 @@ protected:
 
   nsHashtable mRadioGroups;
 
-  // True if the document is being destroyed.
+  // True if the document has been detached from its content viewer.
   PRPackedBool mIsGoingAway;
 
   // True if the document is being destroyed.

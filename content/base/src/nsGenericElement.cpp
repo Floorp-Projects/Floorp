@@ -2586,7 +2586,9 @@ nsGenericElement::SetFocus(nsPresContext* aPresContext)
 PRBool
 nsGenericElement::ShouldFocus(nsIContent *aContent)
 {
-  PRBool visible = PR_TRUE;
+  // Default to false, since if the document is not attached to a window,
+  // we should not focus any of its content.
+  PRBool visible = PR_FALSE;
 
   // Figure out if we're focusing an element in an inactive (hidden)
   // tab (whose docshell is not visible), if so, drop this focus

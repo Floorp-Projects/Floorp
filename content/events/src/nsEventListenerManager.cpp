@@ -241,7 +241,8 @@ static const EventDispatchData sLoadEvents[] = {
   {NS_PAGE_UNLOAD, HANDLER(&nsIDOMLoadListener::Unload),NS_EVENT_BITS_LOAD_UNLOAD},
   {NS_IMAGE_ERROR, HANDLER(&nsIDOMLoadListener::Error), NS_EVENT_BITS_LOAD_ERROR},
   {NS_SCRIPT_ERROR,HANDLER(&nsIDOMLoadListener::Error), NS_EVENT_BITS_LOAD_ERROR},
-  {NS_BEFORE_PAGE_UNLOAD,HANDLER(&nsIDOMLoadListener::BeforeUnload), NS_EVENT_BITS_LOAD_BEFORE_UNLOAD}
+  {NS_BEFORE_PAGE_UNLOAD,HANDLER(&nsIDOMLoadListener::BeforeUnload), NS_EVENT_BITS_LOAD_BEFORE_UNLOAD},
+  {NS_PAGE_RESTORE,HANDLER(&nsIDOMLoadListener::PageRestore), NS_EVENT_BITS_LOAD_PAGE_RESTORE}
 };
 
 static const EventDispatchData sPaintEvents[] = {
@@ -890,6 +891,10 @@ nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType,
   else if (aType == nsLayoutAtoms::onerror) {
     *aArrayType = eEventArrayType_Load;
     *aFlags = NS_EVENT_BITS_LOAD_ERROR;
+  }
+  else if (aType == nsLayoutAtoms::onDOMPageRestore) {
+    *aArrayType = eEventArrayType_Load;
+    *aFlags = NS_EVENT_BITS_LOAD_PAGE_RESTORE;
   }
   else if (aType == nsLayoutAtoms::onpaint) {
     *aArrayType = eEventArrayType_Paint;
@@ -2230,6 +2235,26 @@ nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl,
     aTargetPt.x = NSTwipsToIntPixels(frameOrigin.x + extra, t2p);
     aTargetPt.y = NSTwipsToIntPixels(frameOrigin.y + extra, t2p) + extraPixelsY;
   }
+}
+
+PRBool
+nsEventListenerManager::HasUnloadListeners()
+{
+  nsVoidArray *listeners = GetListenersByType(eEventArrayType_Load, nsnull,
+                                              PR_FALSE);
+  if (listeners) {
+    PRInt32 count = listeners->Count();
+    for (PRInt32 i = 0; i < count; ++i) {
+      PRUint32 subtype = NS_STATIC_CAST(nsListenerStruct*,
+                                        listeners->FastElementAt(i))->mSubType;
+      if (subtype == NS_EVENT_BITS_NONE ||
+          subtype & (NS_EVENT_BITS_LOAD_UNLOAD |
+                     NS_EVENT_BITS_LOAD_BEFORE_UNLOAD))
+        return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
 }
 
 nsresult

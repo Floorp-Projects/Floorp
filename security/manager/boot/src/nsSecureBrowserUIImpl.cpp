@@ -206,12 +206,20 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
     rv = svc->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
   }
   
-  /* GetWebProgress(mWindow) */
-  // hook up to the webprogress notifications.
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(mWindow));
   if (!sgo) return NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsIWebProgress> wp(do_GetInterface(sgo->GetDocShell()));
+
+  nsIDocShell *docShell = sgo->GetDocShell();
+
+  // The Docshell will own the SecureBrowserUI object
+  if (!docShell)
+    return NS_ERROR_FAILURE;
+
+  docShell->SetSecurityUI(this);
+
+  /* GetWebProgress(mWindow) */
+  // hook up to the webprogress notifications.
+  nsCOMPtr<nsIWebProgress> wp(do_GetInterface(docShell));
   if (!wp) return NS_ERROR_FAILURE;
   /* end GetWebProgress */
   
@@ -982,12 +990,19 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
     newSecurityState = lis_no_security;
   }
 
+  return UpdateSecurityState(newSecurityState, aRequest);
+}
+
+nsresult
+nsSecureBrowserUIImpl::UpdateSecurityState(lockIconState aNewState,
+                                           nsIRequest *aRequest)
+{
   PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
          ("SecureUI:%p: UpdateSecurityState:  old-new  %d - %d\n", this,
-         mPreviousSecurityState, newSecurityState
+         mPreviousSecurityState, aNewState
           ));
 
-  if (mPreviousSecurityState != newSecurityState)
+  if (mPreviousSecurityState != aNewState)
   {
     // must show alert
     
@@ -1032,7 +1047,7 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
     {
       case lis_no_security:
       case lis_broken_security:
-        switch (newSecurityState)
+        switch (aNewState)
         {
           case lis_no_security:
           case lis_broken_security:
@@ -1049,7 +1064,7 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
     
     if (showWarning)
     {
-      switch (newSecurityState)
+      switch (aNewState)
       {
         case lis_no_security:
         case lis_broken_security:
@@ -1070,9 +1085,9 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
       }
     }
 
-    mPreviousSecurityState = newSecurityState;
+    mPreviousSecurityState = aNewState;
 
-    if (lis_no_security == newSecurityState)
+    if (lis_no_security == aNewState)
     {
       mSSLStatus = nsnull;
       mInfoTooltip.Truncate();
@@ -1083,7 +1098,7 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
   {
     PRUint32 newState = STATE_IS_INSECURE;
 
-    switch (newSecurityState)
+    switch (aNewState)
     {
       case lis_broken_security:
         newState = STATE_IS_BROKEN;
@@ -1482,4 +1497,51 @@ ConfirmPostToInsecureFromSecure()
   if (NS_FAILED(rv)) return PR_FALSE;
 
   return result;
+}
+
+#define NS_SECUREBROWSERUISTATE_IID \
+{0x086c5daf, 0xbb0a, 0x45cb, {0x98, 0x2b, 0xf1, 0x62, 0x49, 0xd5, 0x0e, 0x28}}
+
+class nsSecureBrowserUIImpl::State : public nsISupports
+{
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_SECUREBROWSERUISTATE_IID)
+  NS_DECL_ISUPPORTS
+
+  State(lockIconState aState, nsISupports *aSSLStatus);
+
+  lockIconState GetState() const { return mState; }
+  nsISupports* GetSSLStatus() { return mSSLStatus; }
+
+private:
+  lockIconState mState;
+  nsCOMPtr<nsISupports> mSSLStatus;
+};
+
+NS_IMPL_ISUPPORTS1(nsSecureBrowserUIImpl::State, nsSecureBrowserUIImpl::State)
+
+nsSecureBrowserUIImpl::State::State(lockIconState aState,
+                                    nsISupports *aSSLStatus)
+  : mState(aState), mSSLStatus(aSSLStatus)
+{
+}
+
+NS_IMETHODIMP
+nsSecureBrowserUIImpl::CaptureState(nsISupports **aState)
+{
+  *aState = new State(mPreviousSecurityState, mSSLStatus);
+  NS_ENSURE_TRUE(aState, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*aState);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSecureBrowserUIImpl::TransitionToState(nsISupports *aState)
+{
+  nsCOMPtr<nsSecureBrowserUIImpl::State> state = do_QueryInterface(aState);
+  NS_ENSURE_TRUE(state, NS_ERROR_NULL_POINTER);
+
+  mSSLStatus = state->GetSSLStatus();
+  return UpdateSecurityState(state->GetState(), nsnull);
 }

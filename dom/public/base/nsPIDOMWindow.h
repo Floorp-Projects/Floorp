@@ -124,6 +124,12 @@ public:
     return !mIsDocumentLoaded || mRunningTimeout;
   }
 
+  // Check whether a document is currently loading
+  PRBool IsLoading() const
+  {
+    return !mIsDocumentLoaded;
+  }
+
   PRBool IsHandlingResizeEvent() const
   {
     return mIsHandlingResizeEvent;
@@ -139,6 +145,13 @@ public:
   // Clear all pending timeouts and intervals.
   virtual void ClearAllTimeouts() = 0;
   
+  // Returns an object containing the window's state.  This also suspends
+  // all running timeouts in the window.
+  virtual nsresult SaveWindowState(nsISupports **aState) = 0;
+
+  // Restore the window state from aState.
+  virtual nsresult RestoreWindowState(nsISupports *aState) = 0;
+
 protected:
   nsPIDOMWindow()
     : mRunningTimeout(nsnull), mMutationBits(0), mIsDocumentLoaded(PR_FALSE),

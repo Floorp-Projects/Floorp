@@ -85,6 +85,8 @@ protected:
    nsresult PrintHistory();
 #endif
 
+  void EvictContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex);
+
 protected:
   nsCOMPtr<nsISHTransaction> mListRoot;
   PRInt32 mIndex;

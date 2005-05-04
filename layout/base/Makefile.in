@@ -73,6 +73,7 @@ REQUIRES	= xpcom \
 		  util \
 		  windowwatcher \
 		  accessibility \
+		  shistory \
 		  $(NULL)
 
 XPIDLSRCS	= \

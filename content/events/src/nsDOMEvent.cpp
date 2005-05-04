@@ -58,8 +58,8 @@ static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
   "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "beforeunload", "unload", "abort", "error",
-  "submit", "reset", "change", "select", "input", "paint" ,"text",
-  "compositionstart", "compositionend", "popupshowing", "popupshown",
+  "DOMPageRestore", "submit", "reset", "change", "select", "input", "paint",
+  "text", "compositionstart", "compositionend", "popupshowing", "popupshown",
   "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture", "resize",
   "scroll","overflow", "underflow", "overflowchanged",
@@ -434,6 +434,8 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_IMAGE_ABORT;
     else if (atom == nsLayoutAtoms::onerror)
       mEvent->message = NS_IMAGE_ERROR;
+    else if (atom == nsLayoutAtoms::onDOMPageRestore)
+      mEvent->message = NS_PAGE_RESTORE;
   } else if (mEvent->eventStructType == NS_MUTATION_EVENT) {
     if (atom == nsLayoutAtoms::onDOMAttrModified)
       mEvent->message = NS_MUTATION_ATTRMODIFIED;
@@ -794,6 +796,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_IMAGE_ERROR:
   case NS_SCRIPT_ERROR:
     return sEventNames[eDOMEvents_error];
+  case NS_PAGE_RESTORE:
+    return sEventNames[eDOMEvents_DOMPageRestore];
   case NS_FORM_SUBMIT:
     return sEventNames[eDOMEvents_submit];
   case NS_FORM_RESET:

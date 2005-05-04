@@ -121,3 +121,15 @@ nsLoadListenerProxy::Error(nsIDOMEvent* aEvent)
   
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsLoadListenerProxy::PageRestore(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
+
+  if (listener) {
+    return listener->PageRestore(aEvent);
+  }
+  
+  return NS_OK;
+}

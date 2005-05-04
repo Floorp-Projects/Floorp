@@ -89,8 +89,8 @@ class nsIStyleSheet;
 class nsCSSFrameConstructor;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x3b864134, 0x4e25, 0x4cd0, \
-  {0xa6, 0x9e, 0x34, 0x14, 0x13, 0x18, 0x39, 0x58} }
+{ 0x3861ee48, 0xb397, 0x11d9, \
+  {0x86, 0x9e, 0x00, 0x11, 0x24, 0x78, 0xd6, 0x26} }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -678,6 +678,19 @@ public:
 #endif
 
   PRBool IsAccessibilityActive() { return mIsAccessibilityActive; }
+
+  /**
+   * Stop all active elements (plugins and the caret) in this presentation and
+   * in the presentations of subdocuments.
+   * XXX this should include image animations
+   */
+  virtual void Freeze() = 0;
+
+  /**
+   * Restarts active elements (plugins) in this presentation and in the
+   * presentations of subdocuments.
+   */
+  virtual void Thaw() = 0;
 
 protected:
   // IMPORTANT: The ownership implicit in the following member variables

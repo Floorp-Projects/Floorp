@@ -151,6 +151,9 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
+#include "nsIPluginInstance.h"
+#include "nsIObjectFrame.h"
+#include "nsIPluginHost.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -1204,6 +1207,8 @@ public:
   NS_IMETHOD IsReflowLocked(PRBool* aIsLocked);  
 
   virtual nsresult ReconstructFrames(void);
+  virtual void Freeze();
+  virtual void Thaw();
 
 #ifdef IBMBIDI
   NS_IMETHOD SetCaretBidiLevel(PRUint8 aLevel);
@@ -1513,6 +1518,11 @@ private:
   void FireResizeEvent();
   static void sResizeEventCallback(nsITimer* aTimer, void* aPresShell) ;
   nsCOMPtr<nsITimer> mResizeEventTimer;
+
+  typedef void (*nsPluginEnumCallback)(PresShell*, nsIContent*);
+  void EnumeratePlugins(nsIDOMDocument *aDocument,
+                        const nsString &aPluginTag,
+                        nsPluginEnumCallback aCallback);
 };
 
 #ifdef PR_LOGGING
@@ -6482,6 +6492,103 @@ PresShell::RemoveOverrideStyleSheet(nsIStyleSheet *aSheet)
   return mStyleSet->RemoveStyleSheet(nsStyleSet::eOverrideSheet, aSheet);
 }
 
+static void
+StopPluginInstance(PresShell *aShell, nsIContent *aContent)
+{
+  nsIFrame *frame = aShell->FrameManager()->GetPrimaryFrameFor(aContent);
+
+  nsIObjectFrame *objectFrame = nsnull;
+  if (frame)
+    CallQueryInterface(frame, &objectFrame);
+  if (!objectFrame)
+    return;
+
+  nsCOMPtr<nsIPluginInstance> instance;
+  objectFrame->GetPluginInstance(*getter_AddRefs(instance));
+  if (!instance)
+    return;
+
+  // Check whether the plugin wants SetWindow to be called before or after
+  // Stop/Destroy.  This is similar to nsObjectFrame::Destroy(), but we
+  // don't want to destroy the frame just yet.
+
+  PRBool callSetWindowLast = PR_FALSE;
+  instance->GetValue(nsPluginInstanceVariable_CallSetWindowAfterDestroyBool,
+                     (void *) &callSetWindowLast);
+  if (callSetWindowLast) {
+    instance->Stop();
+    instance->Destroy();
+    instance->SetWindow(nsnull);
+  } else {
+    instance->SetWindow(nsnull);
+    instance->Stop();
+    instance->Destroy();
+  }
+
+  nsCOMPtr<nsIPluginHost> pluginHost =
+    do_GetService("@mozilla.org/plugin/host;1");
+  if (pluginHost)
+    pluginHost->StopPluginInstance(instance);
+}
+
+PR_STATIC_CALLBACK(PRBool)
+FreezeSubDocument(nsIDocument *aDocument, void *aData)
+{
+  nsIPresShell *shell = aDocument->GetShellAt(0);
+  if (shell)
+    shell->Freeze();
+
+  return PR_TRUE;
+}
+
+void
+PresShell::Freeze()
+{
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
+  if (domDoc) {
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("object"), StopPluginInstance);
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("applet"), StopPluginInstance);
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("embed"), StopPluginInstance);
+  }
+
+  if (mCaret)
+    mCaret->SetCaretVisible(PR_FALSE);
+
+  if (mDocument)
+    mDocument->EnumerateSubDocuments(FreezeSubDocument, nsnull);
+}
+
+static void
+StartPluginInstance(PresShell *aShell, nsIContent *aContent)
+{
+  // For now we just reconstruct the frame.
+  aShell->RecreateFramesFor(aContent);
+}
+
+PR_STATIC_CALLBACK(PRBool)
+ThawSubDocument(nsIDocument *aDocument, void *aData)
+{
+  nsIPresShell *shell = aDocument->GetShellAt(0);
+  if (shell)
+    shell->Thaw();
+
+  return PR_TRUE;
+}
+
+void
+PresShell::Thaw()
+{
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
+  if (domDoc) {
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("object"), StartPluginInstance);
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("applet"), StartPluginInstance);
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("embed"), StartPluginInstance);
+  }
+
+  if (mDocument)
+    mDocument->EnumerateSubDocuments(ThawSubDocument, nsnull);
+}
+
 //--------------------------------------------------------
 // Start of protected and private methods on the PresShell
 //--------------------------------------------------------
@@ -7048,6 +7155,29 @@ PresShell::Observe(nsISupports* aSubject,
 
   NS_WARNING("unrecognized topic in PresShell::Observe");
   return NS_ERROR_FAILURE;
+}
+
+void
+PresShell::EnumeratePlugins(nsIDOMDocument *aDocument,
+                            const nsString &aPluginTag,
+                            nsPluginEnumCallback aCallback)
+{
+  nsCOMPtr<nsIDOMNodeList> nodes;
+  aDocument->GetElementsByTagName(aPluginTag, getter_AddRefs(nodes));
+  if (!nodes)
+    return;
+
+  PRUint32 length;
+  nodes->GetLength(&length);
+
+  for (PRUint32 i = 0; i < length; ++i) {
+    nsCOMPtr<nsIDOMNode> node;
+    nodes->Item(i, getter_AddRefs(node));
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+    if (content)
+      aCallback(this, content);
+  }
 }
 
 //------------------------------------------------------

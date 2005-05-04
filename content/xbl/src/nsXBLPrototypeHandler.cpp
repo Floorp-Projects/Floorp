@@ -289,6 +289,8 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
           return NS_ERROR_FAILURE;
 
         privateWindow = do_QueryInterface(doc->GetScriptGlobalObject());
+        if (!privateWindow)
+          return NS_ERROR_FAILURE;
       }
 
       focusController = privateWindow->GetRootFocusController();

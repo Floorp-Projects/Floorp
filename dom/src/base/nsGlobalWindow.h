@@ -105,6 +105,7 @@ class nsNavigator;
 class nsScreen;
 class nsHistory;
 class nsIDocShellLoadInfo;
+class WindowStateHolder;
 
 //*****************************************************************************
 // nsGlobalWindow: Global Object for Scripting
@@ -204,6 +205,8 @@ public:
   virtual NS_HIDDEN_(OpenAllowValue) GetOpenAllow(const nsAString &aName);
 
   virtual NS_HIDDEN_(void) ClearAllTimeouts();
+  virtual NS_HIDDEN_(nsresult) SaveWindowState(nsISupports **aState);
+  virtual NS_HIDDEN_(nsresult) RestoreWindowState(nsISupports *aState);
   
   // nsIDOMViewCSS
   NS_DECL_NSIDOMVIEWCSS
@@ -219,6 +222,8 @@ public:
 
   static void ShutDown();
   static PRBool IsCallerChrome();
+
+  friend class WindowStateHolder;
 
 protected:
   // Object Management
@@ -303,6 +308,9 @@ protected:
   PRBool WindowExists(const nsAString& aName);
 
   already_AddRefed<nsIWidget> GetMainWidget();
+
+  void SuspendTimeouts();
+  nsresult ResumeTimeouts();
 
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable

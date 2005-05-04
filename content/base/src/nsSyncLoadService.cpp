@@ -120,6 +120,7 @@ public:
     NS_IMETHOD Unload(nsIDOMEvent* aEvent);
     NS_IMETHOD Abort(nsIDOMEvent* aEvent);
     NS_IMETHOD Error(nsIDOMEvent* aEvent);
+    NS_IMETHOD PageRestore(nsIDOMEvent* aEvent);
 
     NS_DECL_NSICHANNELEVENTSINK
 
@@ -161,6 +162,7 @@ public:
     NS_IMETHOD Unload(nsIDOMEvent* aEvent);
     NS_IMETHOD Abort(nsIDOMEvent* aEvent);
     NS_IMETHOD Error(nsIDOMEvent* aEvent);
+    NS_IMETHOD PageRestore(nsIDOMEvent* aEvent);
 
 protected:
     nsWeakPtr  mParent;
@@ -244,6 +246,18 @@ txLoadListenerProxy::Error(nsIDOMEvent* aEvent)
 
     if (listener) {
         return listener->Error(aEvent);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+txLoadListenerProxy::PageRestore(nsIDOMEvent* aEvent)
+{
+    nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
+
+    if (listener) {
+        return listener->PageRestore(aEvent);
     }
 
     return NS_OK;
@@ -509,6 +523,12 @@ nsSyncLoader::Error(nsIDOMEvent* aEvent)
         mLoading = PR_FALSE;
     }
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSyncLoader::PageRestore(nsIDOMEvent* aEvent)
+{
     return NS_OK;
 }
 

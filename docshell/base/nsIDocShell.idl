@@ -64,8 +64,9 @@ interface nsIInputStream;
 interface nsIRequest;
 interface nsISHEntry;
 interface nsILayoutHistoryState;
+interface nsISecureBrowserUI;
 
-[scriptable, uuid(BBFDF99E-D675-42FD-B3EA-EA341C2331A6)]
+[scriptable, uuid(b0228925-9242-467b-842f-dc739a6e478f)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -340,5 +341,35 @@ interface nsIDocShell : nsISupports
   attribute nsILayoutHistoryState layoutHistoryState;
 
   readonly attribute boolean shouldSaveLayoutState;
+
+  /**
+   * The SecureBrowserUI object for this docshell.  This is set by XUL
+   * <browser> or nsWebBrowser for their root docshell.
+   */
+  attribute nsISecureBrowserUI securityUI;
+
+  /**
+   * Cancel the XPCOM timers for each meta-refresh URI in this docshell,
+   * and this docshell's children, recursively. The meta-refresh timers can be
+   * restarted using resumeRefreshURIs().  If the timers are already suspended,
+   * this has no effect.
+   */
+  void suspendRefreshURIs();
+
+  /**
+   * Restart the XPCOM timers for each meta-refresh URI in this docshell,
+   * and this docshell's children, recursively.  If the timers are already
+   * running, this has no effect.
+   */
+  void resumeRefreshURIs();
+
+  /**
+   * Fire the onload and DOMPageRestore events as part of restoring a
+   * presentation from sessino history.  The onload event is fired starting
+   * at the chrome event handler; the DOMPageRestore event is fired starting
+   * at the window object.  This first recurses into child docshells so that
+   * events fire in a bottom-up order.
+   */
+  void fireRestoreEvents();
 };
 

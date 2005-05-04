@@ -54,9 +54,14 @@
 #include "nsIDocShellLoadInfo.h"
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
+#include "nsIURI.h"
+#include "nsIContentViewer.h"
 
 #define PREF_SHISTORY_SIZE "browser.sessionhistory.max_entries"
+#define PREF_SHISTORY_VIEWERS "browser.sessionhistory.max_viewers"
+
 static PRInt32  gHistoryMaxSize = 50;
+static PRInt32  gHistoryMaxViewers = 0;
 
 enum HistCmd{
   HIST_CMD_BACK,
@@ -104,11 +109,21 @@ nsSHistory::Init()
 {
   nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
+    // Session history size is only taken from the default prefs branch.
+    // This means that it's only configurable on a per-application basis.
+    // The goal of this is to unbreak users who have inadvertently set their
+    // session history size to -1.
     nsCOMPtr<nsIPrefBranch> defaultBranch;
     prefs->GetDefaultBranch(nsnull, getter_AddRefs(defaultBranch));
     if (defaultBranch) {
       defaultBranch->GetIntPref(PREF_SHISTORY_SIZE, &gHistoryMaxSize);
     }
+
+    // The size of the content viewer cache does not suffer from this problem,
+    // so we allow it to be overridden by user prefs.
+    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+    if (branch)
+      branch->GetIntPref(PREF_SHISTORY_VIEWERS, &gHistoryMaxViewers);
   }
   return NS_OK;
 }
@@ -207,6 +222,7 @@ nsSHistory::GetEntryAtIndex(PRInt32 aIndex, PRBool aModifyIndex, nsISHEntry** aR
     if (NS_SUCCEEDED(rv) && (*aResult)) {
       // Set mIndex to the requested index, if asked to do so..
       if (aModifyIndex) {
+        EvictContentViewers(mIndex, aIndex);
         mIndex = aIndex;
       }
     } //entry
@@ -476,6 +492,14 @@ nsSHistory::GetListener(nsISHistoryListener ** aListener)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSHistory::EvictContentViewers()
+{
+  // This is called after a new entry has been appended to the end of the list.
+  EvictContentViewers(mIndex - 1, mIndex);
+  return NS_OK;
+}
+
 //*****************************************************************************
 //    nsSHistory: nsIWebNavigation
 //*****************************************************************************
@@ -583,12 +607,63 @@ nsSHistory::Reload(PRUint32 aReloadFlags)
 	return LoadEntry(mIndex, loadType, HIST_CMD_RELOAD);
 }
 
+void
+nsSHistory::EvictContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
+{
+  // To enforce the limit on cached content viewers, we need to release all
+  // of the content viewers that are no longer in the "window" that now
+  // ends/begins at aToIndex.
+
+  PRInt32 startIndex, endIndex;
+  if (aToIndex > aFromIndex) { // going forward
+    startIndex = PR_MAX(0, aFromIndex - gHistoryMaxViewers);
+    endIndex = PR_MAX(0, aToIndex - gHistoryMaxViewers);
+  } else { // going backward
+    startIndex = PR_MIN(mLength - 1, aToIndex + gHistoryMaxViewers);
+    endIndex = PR_MIN(mLength - 1, aFromIndex + gHistoryMaxViewers);
+  }
+
+  nsCOMPtr<nsISHTransaction> trans;
+  GetTransactionAtIndex(startIndex, getter_AddRefs(trans));
+
+  for (PRInt32 i = startIndex; trans && i < endIndex; ++i) {
+    nsCOMPtr<nsISHEntry> entry;
+    trans->GetSHEntry(getter_AddRefs(entry));
+    nsCOMPtr<nsIContentViewer> viewer;
+    entry->GetContentViewer(getter_AddRefs(viewer));
+    if (viewer) {
+#ifdef DEBUG_PAGE_CACHE 
+      nsCOMPtr<nsIURI> uri;
+      entry->GetURI(getter_AddRefs(uri));
+      nsCAutoString spec;
+      if (uri)
+        uri->GetSpec(spec);
+
+      printf("Evicting content viewer: %s\n", spec.get());
+#endif
+
+      viewer->Destroy();
+      entry->SetContentViewer(nsnull);
+      entry->SyncPresentationState();
+    }
+
+    nsISHTransaction *temp = trans;
+    temp->GetNext(getter_AddRefs(trans));
+  }
+}
+
 NS_IMETHODIMP
 nsSHistory::UpdateIndex()
 {
   // Update the actual index with the right value. 
-  if (mIndex != mRequestedIndex && mRequestedIndex != -1)
+  if (mIndex != mRequestedIndex && mRequestedIndex != -1) {
+    // We've just finished a history navigation (back or forward), so enforce
+    // the max number of content viewers.
+
+    EvictContentViewers(mIndex, mRequestedIndex);
     mIndex = mRequestedIndex;
+  }
+
   return NS_OK;
 }
 

@@ -267,6 +267,9 @@ public:
   NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll);
   void ProcessSynthMouseMoveEvent(PRBool aFromScroll);
 
+  /* Update the cached RootViewManager pointer on this view manager. */
+  void InvalidateHierarchy();
+
 protected:
   virtual ~nsViewManager();
 

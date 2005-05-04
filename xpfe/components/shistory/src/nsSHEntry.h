@@ -44,9 +44,10 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
+#include "nsVoidArray.h"
 
 // Interfaces needed
-#include "nsIDOMDocument.h"
+#include "nsIContentViewer.h"
 #include "nsIInputStream.h"
 #include "nsILayoutHistoryState.h"
 #include "nsISHEntry.h"
@@ -54,9 +55,10 @@
 #include "nsIURI.h"
 #include "nsIEnumerator.h"
 #include "nsIHistoryEntry.h"
+#include "nsRect.h"
+#include "nsSupportsArray.h"
 
-class nsSHEntry : public nsIHistoryEntry,
-                  public nsISHEntry,
+class nsSHEntry : public nsISHEntry,
                   public nsISHContainer
 {
 public: 
@@ -69,11 +71,11 @@ public:
   NS_DECL_NSISHCONTAINER
 
 private:
-  ~nsSHEntry() { mChildren.Clear(); }
+  ~nsSHEntry();
 
   nsCOMPtr<nsIURI>                mURI;
   nsCOMPtr<nsIURI>                mReferrerURI;
-  nsCOMPtr<nsIDOMDocument>        mDocument;
+  nsCOMPtr<nsIContentViewer>      mContentViewer;
   nsString                        mTitle;
   nsCOMPtr<nsIInputStream>        mPostData;
   nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
@@ -86,9 +88,15 @@ private:
   PRPackedBool                    mIsFrameNavigation;
   PRPackedBool                    mSaveLayoutState;
   PRPackedBool                    mExpired;
+  PRPackedBool                    mSticky;
   nsCString                       mContentType;
   nsCOMPtr<nsISupports>           mCacheKey;
   nsISHEntry *                    mParent;  // weak reference
+  nsCOMPtr<nsISupports>           mWindowState;
+  nsRect                          mViewerBounds;
+  nsVoidArray                     mChildShells;
+  nsCOMPtr<nsISupports>           mSecurityState;
+  nsCOMPtr<nsISupportsArray>      mRefreshURIList;
 };
 
 #endif /* nsSHEntry_h */

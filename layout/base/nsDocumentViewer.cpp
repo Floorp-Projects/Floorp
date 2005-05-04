@@ -148,7 +148,6 @@
 #include "nsISupportsPrimitives.h"
 
 // PrintOptions is now implemented by PrintSettingsService
-static const char sPrintSettingsServiceContractID[] = "@mozilla.org/gfx/printsettings-service;1";
 static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printsettings-service;1";
 
 // Printing Events
@@ -189,6 +188,10 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsISelectionController.h"
 
 #include "nsBidiUtils.h"
+#include "nsISHEntry.h"
+#include "nsISHistory.h"
+#include "nsISHistoryInternal.h"
+#include "nsIWebNavigation.h"
 
 //paint forcing
 #include "prenv.h"
@@ -346,7 +349,6 @@ protected:
   virtual ~DocumentViewerImpl();
 
 private:
-  void ForceRefresh(void);
   nsresult MakeWindow(nsIWidget* aParentWidget,
                       const nsRect& aBounds);
   nsresult InitInternal(nsIWidget* aParentWidget,
@@ -398,29 +400,36 @@ protected:
   nsCOMPtr<nsIDOMFocusListener> mFocusListener;
 
   nsCOMPtr<nsIContentViewer> mPreviousViewer;
-
-  PRPackedBool  mEnableRendering;
-  PRPackedBool  mStopped;
-  PRPackedBool  mLoaded;
-  PRPackedBool  mDeferredWindowClose;
-  PRInt16 mNumURLStarts;
-  PRInt16 mDestroyRefCount;     // a second "refcount" for the document viewer's "destroy"
+  nsCOMPtr<nsISHEntry> mSHEntry;
 
   nsIWidget* mParentWidget;          // purposely won't be ref counted
 
-  PRPackedBool         mInPermitUnload;
+  PRInt16 mNumURLStarts;
+  PRInt16 mDestroyRefCount;    // a second "refcount" for the document viewer's "destroy"
+
+  unsigned      mEnableRendering : 1;
+  unsigned      mStopped : 1;
+  unsigned      mLoaded : 1;
+  unsigned      mDeferredWindowClose : 1;
+  // document management data
+  //   these items are specific to markup documents (html and xml)
+  //   may consider splitting these out into a subclass
+  unsigned      mIsSticky : 1;
+  unsigned      mInPermitUnload : 1;
 
 #ifdef NS_PRINTING
-  PRPackedBool          mClosingWhilePrinting;
-  nsPrintEngine*        mPrintEngine;
-  nsCOMPtr<nsIDOMWindowInternal> mDialogParentWin;
+  unsigned      mClosingWhilePrinting : 1;
+
 #if NS_PRINT_PREVIEW
-  // These data member support delayed printing when the document is loading
+  // These data members support delayed printing when the document is loading
+  unsigned                         mPrintIsPending : 1;
+  unsigned                         mPrintDocIsFullyLoaded : 1;
   nsCOMPtr<nsIPrintSettings>       mCachedPrintSettings;
   nsCOMPtr<nsIWebProgressListener> mCachedPrintWebProgressListner;
-  PRPackedBool                     mPrintIsPending;
-  PRPackedBool                     mPrintDocIsFullyLoaded;
 #endif // NS_PRINT_PREVIEW
+
+  nsPrintEngine*        mPrintEngine;
+  nsCOMPtr<nsIDOMWindowInternal> mDialogParentWin;
 
 #ifdef NS_DEBUG
   FILE* mDebugFile;
@@ -434,10 +443,6 @@ protected:
   nsCString mForceCharacterSet;
   nsCString mPrevDocCharacterSet;
   
-  // document management data
-  //   these items are specific to markup documents (html and xml)
-  //   may consider splitting these out into a subclass
-  PRPackedBool mIsSticky;
 
 };
 
@@ -494,8 +499,8 @@ void DocumentViewerImpl::PrepareToStartLoad()
 // Note: operator new zeros our memory, so no need to init things to null.
 DocumentViewerImpl::DocumentViewerImpl(nsPresContext* aPresContext)
   : mPresContext(aPresContext),
-    mHintCharsetSource(kCharsetUninitialized),
-    mIsSticky(PR_TRUE)
+    mIsSticky(PR_TRUE),
+    mHintCharsetSource(kCharsetUninitialized)
 {
   PrepareToStartLoad();
 }
@@ -511,9 +516,9 @@ NS_IMPL_ISUPPORTS7(DocumentViewerImpl,
 
 DocumentViewerImpl::~DocumentViewerImpl()
 {
-  NS_ASSERTION(!mDocument, "User did not call nsIContentViewer::Close");
   if (mDocument) {
     Close();
+    mDocument->Destroy();
   }
 
   NS_ASSERTION(!mPresShell && !mPresContext,
@@ -795,19 +800,19 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
       makeCX = PR_TRUE;
 #endif
     }
-  }
 
-  if (aDoCreation && mPresContext) {
-    // Create the ViewManager and Root View...
+    if (mPresContext) {
+      // Create the ViewManager and Root View...
 
-    // We must do this before we tell the script global object about
-    // this new document since doing that will cause us to re-enter
-    // into nsSubDocumentFrame code through reflows caused by
-    // FlushPendingNotifications() calls down the road...
+      // We must do this before we tell the script global object about
+      // this new document since doing that will cause us to re-enter
+      // into nsSubDocumentFrame code through reflows caused by
+      // FlushPendingNotifications() calls down the road...
 
-    rv = MakeWindow(aParentWidget, aBounds);
-    NS_ENSURE_SUCCESS(rv, rv);
-    Hide();
+      rv = MakeWindow(aParentWidget, aBounds);
+      NS_ENSURE_SUCCESS(rv, rv);
+      Hide();
+    }
   }
 
   nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(mContainer));
@@ -1171,6 +1176,28 @@ DocumentViewerImpl::Unload()
 }
 
 NS_IMETHODIMP
+DocumentViewerImpl::Open()
+{
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
+
+  nsRect bounds;
+  mWindow->GetBounds(bounds);
+
+  nsresult rv = InitInternal(mParentWidget, mDeviceContext, bounds,
+                             PR_FALSE, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mDocument)
+    mDocument->SetContainer(mContainer);
+
+  SyncParentSubDocMap();
+
+  // XXX re-enable image animations once that works correctly
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 DocumentViewerImpl::Close()
 {
   // All callers are supposed to call close to break circular
@@ -1184,59 +1211,50 @@ DocumentViewerImpl::Close()
   // for an object that can be switched in and out so that we don't need
   // to disable scripts during paint suppression.
 
-  if (mDocument) {
+  if (!mDocument)
+    return NS_OK;
+
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
-    // Turn scripting back on
-    // after PrintPreview had turned it off
-    if (GetIsPrintPreview() && mPrintEngine) {
-      mPrintEngine->TurnScriptingOn(PR_TRUE);
-    }
+  // Turn scripting back on
+  // after PrintPreview had turned it off
+  if (GetIsPrintPreview() && mPrintEngine) {
+    mPrintEngine->TurnScriptingOn(PR_TRUE);
+  }
 #endif
 
-    // Break global object circular reference on the document created
-    // in the DocViewer Init
-    nsIScriptGlobalObject* globalObject = mDocument->GetScriptGlobalObject();
+  // Break global object circular reference on the document created
+  // in the DocViewer Init
+  nsIScriptGlobalObject* globalObject = mDocument->GetScriptGlobalObject();
 
-    if (globalObject) {
-      globalObject->SetNewDocument(nsnull, PR_TRUE, PR_TRUE);
-    }
+  if (globalObject) {
+    globalObject->SetNewDocument(nsnull, PR_TRUE, PR_TRUE);
+  }
 
 #ifdef NS_PRINTING
-    // A Close was called while we were printing
-    // so don't clear the ScriptGlobalObject
-    // or clear the mDocument below
-    // Also, do an extra addref to keep the viewer from going away.
-    if (mPrintEngine && !mClosingWhilePrinting) {
-      mClosingWhilePrinting = PR_TRUE;
-      NS_ADDREF_THIS();
-    } else {
+  // A Close was called while we were printing
+  // so don't clear the ScriptGlobalObject
+  // or clear the mDocument below
+  // Also, do an extra addref to keep the viewer from going away.
+  if (mPrintEngine && !mClosingWhilePrinting) {
+    mClosingWhilePrinting = PR_TRUE;
+    NS_ADDREF_THIS();
+  } else
+#endif
+    {
       // out of band cleanup of webshell
       mDocument->SetScriptGlobalObject(nsnull);
     }
-#else
-    mDocument->SetScriptGlobalObject(nsnull);
-#endif
 
-    if (mFocusListener) {
-      // get the DOM event receiver
-      nsCOMPtr<nsIDOMEventReceiver> erP(do_QueryInterface(mDocument));
-      NS_WARN_IF_FALSE(erP, "No event receiver in document!");
+  if (mFocusListener) {
+    // get the DOM event receiver
+    nsCOMPtr<nsIDOMEventReceiver> erP(do_QueryInterface(mDocument));
+    NS_WARN_IF_FALSE(erP, "No event receiver in document!");
 
-      if (erP) {
-        erP->RemoveEventListenerByIID(mFocusListener,
-                                      NS_GET_IID(nsIDOMFocusListener));
-      }
+    if (erP) {
+      erP->RemoveEventListenerByIID(mFocusListener,
+                                    NS_GET_IID(nsIDOMFocusListener));
     }
   }
-
-#ifdef NS_PRINTING
-  // Don't clear the document if we are printing.
-  if (!mClosingWhilePrinting) {
-    mDocument = nsnull;
-  }
-#else
-    mDocument = nsnull;
-#endif
 
   return NS_OK;
 }
@@ -1244,6 +1262,8 @@ DocumentViewerImpl::Close()
 NS_IMETHODIMP
 DocumentViewerImpl::Destroy()
 {
+  NS_ASSERTION(mDocument, "No document in Destroy()!");
+
 #ifdef NS_PRINTING
   // Here is where we check to see if the docment was still being prepared 
   // for printing when it was asked to be destroy from someone externally
@@ -1258,12 +1278,92 @@ DocumentViewerImpl::Destroy()
   }
 #endif
 
-  // Don't let the document get unloaded while we are printing
-  // this could happen if we hit the back button during printing
+  // Don't let the document get unloaded while we are printing.
+  // this could happen if we hit the back button during printing.
+  // We also keep the viewer from being cached in session history, since
+  // we require all documents there to be sanitized.
   if (mDestroyRefCount != 0) {
     --mDestroyRefCount;
     return NS_OK;
   }
+
+  // If we were told to put ourselves into session history instead of destroy
+  // the presentation, do that now.
+  PRBool updateHistory = (mSHEntry != nsnull);
+
+  if (mSHEntry) {
+    if (mPresShell)
+      mPresShell->Freeze();
+
+    // Make sure the presentation isn't torn down by Hide().
+    mSHEntry->SetSticky(mIsSticky);
+    mIsSticky = PR_TRUE;
+
+    mSHEntry->SetContentViewer(this);
+
+    // Remove our root view from the view hierarchy.
+    if (mPresShell) {
+      nsIViewManager *vm = mPresShell->GetViewManager();
+      if (vm) {
+        nsIView *rootView = nsnull;
+        vm->GetRootView(rootView);
+
+        if (rootView) {
+          nsIView *rootViewParent = rootView->GetParent();
+          if (rootViewParent) {
+            nsIViewManager *parentVM = rootViewParent->GetViewManager();
+            if (parentVM) {
+              parentVM->RemoveChild(rootView);
+            }
+          }
+        }
+      }
+    }
+
+    Hide();
+
+    // This is after Hide() so that the user doesn't see the inputs clear.
+    if (mDocument) {
+      nsresult rv = mDocument->Sanitize();
+      if (NS_FAILED(rv)) {
+        // If we failed to sanitize, remove the document immediately.
+        mSHEntry->SetContentViewer(nsnull);
+        mSHEntry->SyncPresentationState();
+      }
+    }
+
+
+    mSHEntry = nsnull;
+
+    // If we put ourselves into session history, make sure there aren't
+    // too many content viewers around.  Note: if max_viewers is set to 0,
+    // this can reenter Destroy() and dispose of this content viewer!
+
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mContainer);
+    if (webNav) {
+      nsCOMPtr<nsISHistory> history;
+      webNav->GetSessionHistory(getter_AddRefs(history));
+      nsCOMPtr<nsISHistoryInternal> historyInt = do_QueryInterface(history);
+      if (historyInt) {
+        historyInt->EvictContentViewers();
+      }
+    }
+
+    // Break the link from the document/presentation to the docshell, so that
+    // link traversals cannot affect the currently-loaded document.
+    // When the presentation is restored, Open() and InitInternal() will reset
+    // these pointers to their original values.
+
+    if (mDocument)
+      mDocument->SetContainer(nsnull);
+    if (mPresContext)
+      mPresContext->SetLinkHandler(nsnull);
+
+    return NS_OK;
+  }
+
+  mDocument->Destroy();
+  mDocument = nsnull;
 
   // All callers are supposed to call destroy to break circular
   // references.  If we do this stuff in the destructor, the
@@ -1323,7 +1423,7 @@ DocumentViewerImpl::Stop(void)
     mDocument->StopDocumentLoad();
   }
 
-  if (mEnableRendering && (mLoaded || mStopped) && mPresContext)
+  if (mEnableRendering && (mLoaded || mStopped) && mPresContext && !mSHEntry)
     mPresContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
 
   mStopped = PR_TRUE;
@@ -1669,7 +1769,6 @@ DocumentViewerImpl::Hide(void)
     return NS_OK;
   }
 
-  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(mWindow, "null window");
   if (mWindow) {
     mWindow->Show(PR_FALSE);
@@ -1787,6 +1886,13 @@ DocumentViewerImpl::SetSticky(PRBool aSticky)
 }
 
 NS_IMETHODIMP
+DocumentViewerImpl::SetHistoryEntry(nsISHEntry *aEntry)
+{
+  mSHEntry = aEntry;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 DocumentViewerImpl::GetEnableRendering(PRBool* aResult)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
@@ -1809,13 +1915,6 @@ DocumentViewerImpl::RequestWindowClose(PRBool* aCanClose)
     *aCanClose = PR_TRUE;
 
   return NS_OK;
-}
-
-
-void
-DocumentViewerImpl::ForceRefresh()
-{
-  mWindow->Invalidate(PR_TRUE);
 }
 
 NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);

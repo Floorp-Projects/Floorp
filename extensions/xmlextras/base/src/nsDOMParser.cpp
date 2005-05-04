@@ -333,6 +333,12 @@ nsDOMParser::Error(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMParser::PageRestore(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
 nsDOMParser::nsDOMParser()
   : mLoopingForSyncLoad(PR_FALSE)
 {

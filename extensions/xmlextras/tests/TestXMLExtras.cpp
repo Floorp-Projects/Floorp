@@ -78,6 +78,7 @@ public:
   virtual nsresult Unload(nsIDOMEvent* aEvent) {printf("Unload\n"); return NS_OK;}
   virtual nsresult Abort(nsIDOMEvent* aEvent)  {printf("Abort\n"); return NS_OK;}
   virtual nsresult Error(nsIDOMEvent* aEvent)  {printf("Error\n"); return NS_OK;}
+  NS_IMETHOD PageRestore(nsIDOMEvent* aEvent) {printf("PageRestore\n"); return NS_OK;}
 };
 
 NS_IMPL_ADDREF(nsMyListener)

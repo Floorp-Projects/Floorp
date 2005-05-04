@@ -126,6 +126,8 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "nsIScriptContext.h"
 #include "nsBindingManager.h"
+#include "nsIDOMHTMLFormElement.h"
+#include "nsIRequest.h"
 
 #include "nsICharsetAlias.h"
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
@@ -1851,37 +1853,6 @@ nsDocument::GetScriptGlobalObject() const
 void
 nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 {
-  // XXX HACK ALERT! If the script context owner is null, the document
-  // will soon be going away. So tell our content that to lose its
-  // reference to the document. This has to be done before we actually
-  // set the script context owner to null so that the content elements
-  // can remove references to their script objects.
-  if (!aScriptGlobalObject) {
-    PRInt32 count, indx;
-
-    count = mChildren.Count();
-
-    mIsGoingAway = PR_TRUE;
-
-    for (indx = 0; indx < count; ++indx) {
-      mChildren[indx]->UnbindFromTree();
-    }
-
-    // Propagate the out-of-band notification to each PresShell's
-    // anonymous content as well. This ensures that there aren't any
-    // accidental script references left in anonymous content keeping
-    // the document alive. (While not strictly necessary -- the
-    // PresShell owns us -- it's tidy.)
-    for (count = mPresShells.Count() - 1; count >= 0; --count) {
-      nsCOMPtr<nsIPresShell> shell =
-        NS_STATIC_CAST(nsIPresShell*, mPresShells[count]);
-      if (!shell)
-        continue;
-
-      shell->ReleaseAnonymousContent();
-    }
-  }
-
   mScriptGlobalObject = aScriptGlobalObject;
 }
 
@@ -4608,4 +4579,203 @@ void*
 nsDocument::UnsetProperty(nsIAtom *aPropertyName, nsresult *aStatus)
 {
   return mPropertyTable.UnsetProperty(this, aPropertyName, aStatus);
+}
+
+nsresult
+nsDocument::Sanitize()
+{
+  // Sanitize the document by resetting all password fields and any form
+  // fields with autocomplete=off to their default values.  We do this now,
+  // instead of when the presentation is restored, to offer some protection
+  // in case there is ever an exploit that allows a cached document to be
+  // accessed from a different document.
+
+  // First locate all input elements, regardless of whether they are
+  // in a form, and reset the password and autocomplete=off elements.
+
+  nsCOMPtr<nsIDOMNodeList> nodes;
+  nsresult rv = GetElementsByTagName(NS_LITERAL_STRING("input"),
+                                     getter_AddRefs(nodes));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 length = 0;
+  if (nodes)
+    nodes->GetLength(&length);
+
+  nsCOMPtr<nsIDOMNode> item;
+  nsAutoString value;
+  PRUint32 i;
+
+  for (i = 0; i < length; ++i) {
+    nodes->Item(i, getter_AddRefs(item));
+    NS_ASSERTION(item, "null item in node list!");
+
+    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(item);
+    if (!input)
+      continue;
+
+    PRBool resetValue = PR_FALSE;
+
+    input->GetAttribute(NS_LITERAL_STRING("autocomplete"), value);
+    if (value.LowerCaseEqualsLiteral("off")) {
+      resetValue = PR_TRUE;
+    } else {
+      input->GetType(value);
+      if (value.LowerCaseEqualsLiteral("password"))
+        resetValue = PR_TRUE;
+    }
+
+    if (resetValue) {
+      nsCOMPtr<nsIFormControl> fc = do_QueryInterface(input);
+      fc->Reset();
+    }
+  }
+
+  // Now locate all _form_ elements that have autocomplete=off and reset them
+  rv = GetElementsByTagName(NS_LITERAL_STRING("form"), getter_AddRefs(nodes));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  length = 0;
+  if (nodes)
+    nodes->GetLength(&length);
+
+  for (i = 0; i < length; ++i) {
+    nodes->Item(i, getter_AddRefs(item));
+    NS_ASSERTION(item, "null item in nodelist");
+
+    nsCOMPtr<nsIDOMHTMLFormElement> form = do_QueryInterface(item);
+    if (!form)
+      continue;
+
+    form->GetAttribute(NS_LITERAL_STRING("autocomplete"), value);
+    if (value.LowerCaseEqualsLiteral("off"))
+      form->Reset();
+  }
+
+  return NS_OK;
+}
+
+struct SubDocEnumArgs
+{
+  nsIDocument::nsSubDocEnumFunc callback;
+  void *data;
+};
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+SubDocHashEnum(PLDHashTable *table, PLDHashEntryHdr *hdr,
+               PRUint32 number, void *arg)
+{
+  SubDocMapEntry *entry = NS_STATIC_CAST(SubDocMapEntry*, hdr);
+  SubDocEnumArgs *args = NS_STATIC_CAST(SubDocEnumArgs*, arg);
+
+  nsIDocument *subdoc = entry->mSubDocument;
+  PRBool next = subdoc ? args->callback(subdoc, args->data) : PR_TRUE;
+
+  return next ? PL_DHASH_NEXT : PL_DHASH_STOP;
+}
+
+void
+nsDocument::EnumerateSubDocuments(nsSubDocEnumFunc aCallback, void *aData)
+{
+  if (mSubDocuments) {
+    SubDocEnumArgs args = { aCallback, aData };
+    PL_DHashTableEnumerate(mSubDocuments, SubDocHashEnum, &args);
+  }
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+CanCacheSubDocument(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                    PRUint32 number, void *arg)
+{
+  SubDocMapEntry *entry = NS_STATIC_CAST(SubDocMapEntry*, hdr);
+  PRBool *canCacheArg = NS_STATIC_CAST(PRBool*, arg);
+
+  nsIDocument *subdoc = entry->mSubDocument;
+
+  // The aIgnoreRequest we were passed is only for us, so don't pass it on.
+  PRBool canCache = subdoc ? subdoc->CanSavePresentation(nsnull) : PR_FALSE;
+  if (!canCache) {
+    *canCacheArg = PR_FALSE;
+    return PL_DHASH_STOP;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+#ifdef DEBUG_bryner
+#define DEBUG_PAGE_CACHE
+#endif
+
+PRBool
+nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
+{
+  // Check our event listneer manager for unload/beforeunload listeners.
+  nsCOMPtr<nsIDOMEventReceiver> er = do_QueryInterface(mScriptGlobalObject);
+  if (er) {
+    nsCOMPtr<nsIEventListenerManager> manager;
+    er->GetListenerManager(getter_AddRefs(manager));
+    if (manager && manager->HasUnloadListeners()) {
+      return PR_FALSE;
+    }
+  }
+
+  nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
+  if (loadGroup) {
+    nsCOMPtr<nsISimpleEnumerator> requests;
+    loadGroup->GetRequests(getter_AddRefs(requests));
+
+    PRBool hasMore = PR_FALSE;
+
+    while (NS_SUCCEEDED(requests->HasMoreElements(&hasMore)) && hasMore) {
+      nsCOMPtr<nsISupports> elem;
+      requests->GetNext(getter_AddRefs(elem));
+
+      nsCOMPtr<nsIRequest> request = do_QueryInterface(elem);
+      if (request && request != aNewRequest) {
+#ifdef DEBUG_PAGE_CACHE
+        nsCAutoString requestName, docSpec;
+        request->GetName(requestName);
+        if (mDocumentURI)
+          mDocumentURI->GetSpec(docSpec);
+
+        printf("document %s has request %s\n",
+               docSpec.get(), requestName.get());
+#endif
+        return PR_FALSE;
+      }
+    }
+  }
+
+  PRBool canCache = PR_TRUE;
+  if (mSubDocuments)
+    PL_DHashTableEnumerate(mSubDocuments, CanCacheSubDocument, &canCache);
+
+  return canCache;
+}
+
+void
+nsDocument::Destroy()
+{
+  // The ContentViewer wants to release the document now.  So, tell our content
+  // to drop any references to the document so that it can be destroyed.
+  PRInt32 count = mChildren.Count();
+
+  mIsGoingAway = PR_TRUE;
+
+  for (PRInt32 indx = 0; indx < count; ++indx) {
+    mChildren[indx]->UnbindFromTree();
+  }
+
+  // Propagate the out-of-band notification to each PresShell's anonymous
+  // content as well. This ensures that there aren't any accidental references
+  // left in anonymous content keeping the document alive. (While not strictly
+  // necessary -- the PresShell owns us -- it's tidy.)
+  for (count = mPresShells.Count() - 1; count >= 0; --count) {
+    nsCOMPtr<nsIPresShell> shell =
+      NS_STATIC_CAST(nsIPresShell*, mPresShells[count]);
+    if (!shell)
+      continue;
+
+    shell->ReleaseAnonymousContent();
+  }
 }

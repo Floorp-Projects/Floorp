@@ -235,6 +235,7 @@ class nsIURI;
 #define NS_IMAGE_ERROR                  (NS_STREAM_EVENT_START + 4)
 #define NS_SCRIPT_LOAD                  (NS_STREAM_EVENT_START + 5)
 #define NS_BEFORE_PAGE_UNLOAD           (NS_STREAM_EVENT_START + 6)
+#define NS_PAGE_RESTORE                 (NS_STREAM_EVENT_START + 7)
  
 #define NS_FORM_EVENT_START             1200
 #define NS_FORM_SUBMIT                  (NS_FORM_EVENT_START)

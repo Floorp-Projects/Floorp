@@ -4435,10 +4435,11 @@ nsPrintEngine::TurnScriptingOn(PRBool aDoTurnOn)
 
   // get the script global object
   nsIScriptGlobalObject *scriptGlobalObj = mDocument->GetScriptGlobalObject();
-  NS_ASSERTION(scriptGlobalObj, "Can't get nsIScriptGlobalObject");
-  nsIScriptContext *scx = scriptGlobalObj->GetContext();
-  NS_ASSERTION(scx, "Can't get nsIScriptContext");
-  scx->SetScriptsEnabled(aDoTurnOn, PR_TRUE);
+  if (scriptGlobalObj) {
+    nsIScriptContext *scx = scriptGlobalObj->GetContext();
+    NS_ASSERTION(scx, "Can't get nsIScriptContext");
+    scx->SetScriptsEnabled(aDoTurnOn, PR_TRUE);
+  }
 }
 
 //-----------------------------------------------------------------
