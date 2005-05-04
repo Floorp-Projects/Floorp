@@ -2885,30 +2885,51 @@ NS_IMETHODIMP nsMsgAccountManager::LoadVirtualFolders()
           NS_ENSURE_SUCCESS(rv, rv);
           if (virtualFolder)
           {
-            // need to add the folder as a sub-folder of its parent.
-            PRInt32 lastSlash = buffer.RFindChar('/');
-            nsDependentCSubstring parentUri(buffer, 0, lastSlash);
-            rdf->GetResource(parentUri, getter_AddRefs(resource));
-            nsCOMPtr <nsIMsgFolder> parentFolder = do_QueryInterface(resource);
-            if (parentFolder)
+            nsCOMPtr <nsIMsgFolder> grandParent;
+            nsCOMPtr <nsIMsgFolder> oldParent;
+            nsCOMPtr <nsIMsgFolder> parentFolder;
+            PRBool isServer;
+            do
             {
-              nsAutoString currentFolderNameStr;
-              nsCAutoString currentFolderNameCStr(Substring(buffer, lastSlash + 1, buffer.Length()));
-              nsUnescape(currentFolderNameCStr.BeginWriting());
-              CopyUTF8toUTF16(currentFolderNameCStr, currentFolderNameStr);
-              nsCOMPtr <nsIMsgFolder> childFolder;
-              nsCOMPtr <nsIMsgDatabase> db;
-              virtualFolder->GetMsgDatabase(nsnull, getter_AddRefs(db)); // force db to get created.
-              if (db)
-                rv = db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-              else
-                continue;
+              // need to add the folder as a sub-folder of its parent.
+              PRInt32 lastSlash = buffer.RFindChar('/');
+              if (lastSlash == kNotFound)
+                break;
+              nsDependentCSubstring parentUri(buffer, 0, lastSlash);
+              // hold a reference so it won't get deleted before it's parented.
+              oldParent = parentFolder; 
+              
+              rdf->GetResource(parentUri, getter_AddRefs(resource));
+              parentFolder = do_QueryInterface(resource);
+              if (parentFolder)
+              {
+                nsAutoString currentFolderNameStr;
+                nsCAutoString currentFolderNameCStr(Substring(buffer, lastSlash + 1, buffer.Length()));
+                nsUnescape(currentFolderNameCStr.BeginWriting());
+                CopyUTF8toUTF16(currentFolderNameCStr, currentFolderNameStr);
+                nsCOMPtr <nsIMsgFolder> childFolder;
+                nsCOMPtr <nsIMsgDatabase> db;
+                virtualFolder->GetMsgDatabase(nsnull, getter_AddRefs(db)); // force db to get created.
+                if (db)
+                  rv = db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+                else
+                  break;
 
-              parentFolder->AddSubfolder(currentFolderNameStr, getter_AddRefs(childFolder));
-              virtualFolder->SetFlag(MSG_FOLDER_FLAG_VIRTUAL);
-              if (childFolder)
-                parentFolder->NotifyItemAdded(childFolder);
-            }
+                parentFolder->AddSubfolder(currentFolderNameStr, getter_AddRefs(childFolder));
+                virtualFolder->SetFlag(MSG_FOLDER_FLAG_VIRTUAL);
+                if (childFolder)
+                  parentFolder->NotifyItemAdded(childFolder);
+                // here we make sure if our parent is rooted - if not, we're
+                // going to loop and add our parent as a child of its grandparent
+                // and repeat until we get to the server, or a folder that
+                // has its parent set.
+                parentFolder->GetParent(getter_AddRefs(grandParent));
+                parentFolder->GetIsServer(&isServer);
+                buffer.Truncate(lastSlash);
+              }
+              else
+                break;
+            } while (!grandParent && !isServer);
           }
         }
         else if (dbFolderInfo && Substring(buffer, 0, 6).Equals("scope="))
