@@ -271,7 +271,7 @@ public:
     NS_ENSURE_SUCCESS(rv, rv);
 
     // write contents to file
-    rv = WriteHeader(out);
+    rv = WriteHeader(out, iface_name);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = WriteInterfaceStart(out, aIInfo, parentInfo);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -327,15 +327,29 @@ public:
     return out->Close();
   }
 
-  nsresult WriteHeader(nsIOutputStream* out)
+  nsresult WriteHeader(nsIOutputStream* out, const char* aIfaceName)
   {
-    static const char kHeader[] = "/**\n * NOTE: THIS IS A GENERATED FILE. "
-                               "PLEASE CONSULT THE ORIGINAL IDL FILE FOR \n"
-                               " * THE FULL DOCUMENTION AND LICENSE.\n **/\n\n";
+    static const char kHeader1[] =
+      "/**\n"
+      " * NOTE: THIS IS A GENERATED FILE. PLEASE CONSULT THE ORIGINAL IDL FILE\n"
+      " * FOR THE FULL DOCUMENTION AND LICENSE.\n"
+      " *\n"
+      " * @see <a href=\"http://lxr.mozilla.org/mozilla/search?string=";
+    static const char kHeader2[]= "\">\n **/\n\n";
     static const char kPackage[] = "package org.mozilla.xpcom;\n\n";
 
     PRUint32 count;
-    nsresult rv = out->Write(kHeader, sizeof(kHeader) - 1, &count);
+    nsresult rv = out->Write(kHeader1, sizeof(kHeader1) - 1, &count);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCAutoString searchTerm;
+    searchTerm.AppendLiteral("interface+");
+    searchTerm.AppendASCII(aIfaceName);
+    // LXR limits to 29 chars
+    rv = out->Write(searchTerm.get(), PR_MIN(29, searchTerm.Length()), &count);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = out->Write(kHeader2, sizeof(kHeader2) - 1, &count);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = out->Write(kPackage, sizeof(kPackage) - 1, &count);
     return rv;
