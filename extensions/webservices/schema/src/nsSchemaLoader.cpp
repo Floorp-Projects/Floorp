@@ -143,13 +143,29 @@ LoadListener::HandleEvent(nsIDOMEvent *event)
   nsAutoString eventType;
   event->GetType(eventType);
 
-  if ((httpStatus / 100 == 2) && eventType.EqualsLiteral("load")) {
+  PRBool succeeded = (httpStatus / 100 == 2);
+
+  // if we loaded fine, and not http/https, we assume success in loaded the file.
+  if (!succeeded && eventType.EqualsLiteral("load")) {
+    nsCOMPtr<nsIChannel> channel;
+    mRequest->GetChannel(getter_AddRefs(channel));
+    if (channel) {
+      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+
+      // if qi to httpChannel fails, it isn't a http:// or https:// request
+      if (!httpChannel) {
+        succeeded = PR_TRUE;
+      }
+    }
+  }
+
+  if (succeeded && eventType.EqualsLiteral("load")) {
     nsCOMPtr<nsIDOMDocument> document;
-    
+
     rv = mRequest->GetResponseXML(getter_AddRefs(document));
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIDOMElement> element;
-      
+
       if (document)
         document->GetDocumentElement(getter_AddRefs(element));
 
