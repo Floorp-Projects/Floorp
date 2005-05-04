@@ -1355,14 +1355,31 @@ array_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #if JS_HAS_ARRAY_EXTRAS
 static JSBool
 array_indexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-               jsval *rval)
+              jsval *rval)
 {
-    jsuint len, i;
-    
-    if (!js_GetLengthProperty(cx, obj, &len))
+    jsuint length, i;
+    jsint index;
+    jsdouble start;
+
+    if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
     
-    for (i = 0; i < len; i++) {
+    start = 0;
+    if (argc > 1) {
+        if (!js_ValueToNumber(cx, argv[1], &start))
+            return JS_FALSE;
+        start = js_DoubleToInteger(start);
+        if (start < 0) {
+            start += length;
+            if (start < 0)
+                start = 0;
+        } else if (start > length) {
+            start = length;
+        }
+    }
+    
+    index = -1;
+    for (i = (jsuint)start; i < length; i++) {
         jsid id;
         jsval v;
 
@@ -1372,12 +1389,57 @@ array_indexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         }
 
         if (js_StrictlyEqual(v, argv[0])) {
-            *rval = INT_TO_JSVAL(i);
-            return JS_TRUE;
+            index = i;
+            break;
         }
     }
 
-    *rval = INT_TO_JSVAL(-1);
+    *rval = INT_TO_JSVAL(index);
+    return JS_TRUE;
+}
+
+static JSBool
+array_lastIndexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                  jsval *rval)
+{
+    jsuint length;
+    jsint i, index;
+    jsdouble start;
+
+    if (!js_GetLengthProperty(cx, obj, &length))
+        return JS_FALSE;
+    
+    start = length - 1;
+    if (argc > 1) {
+        if (!js_ValueToNumber(cx, argv[1], &start))
+            return JS_FALSE;
+        start = js_DoubleToInteger(start);
+        if (start < 0) {
+            start += length ;
+            if (start < 0)
+                start = 0;
+        } else if (start >= length) {
+            start = length - 1;
+        }
+    }
+    
+    index = -1;
+    for (i = (jsint)start; i >= 0; i--) {
+        jsid id;
+        jsval v;
+
+        if (!IndexToId(cx, (jsuint)i, &id) ||
+            !OBJ_GET_PROPERTY(cx, obj, id, &v)) {
+            return JS_FALSE;
+        }
+
+        if (js_StrictlyEqual(v, argv[0])) {
+            index = i;
+            break;
+        }
+    }
+
+    *rval = INT_TO_JSVAL(index);
     return JS_TRUE;
 }
 
@@ -1394,19 +1456,20 @@ static JSBool
 array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
             ArrayExtraMode mode)
 {
-    jsuint len, newlen, i;
+    jsuint length, newlen, i;
     JSObject *funobj, *thisp, *newarr;
     jsval *sp, *origsp, *oldsp;
     void *mark;
     JSStackFrame *fp;
     JSBool ok, b;
     
-    if (!js_GetLengthProperty(cx, obj, &len))
+    if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
-    if (len == 0 || argc == 0)
-        return JS_TRUE;
-
+    /*
+     * First, get our callee, so that we error out consistently when passed
+     * a non-callable.
+     */
     if (JSVAL_IS_FUNCTION(cx, argv[0])) {
         funobj = JSVAL_TO_OBJECT(argv[0]);
     } else {
@@ -1417,6 +1480,30 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
         argv[0] = OBJECT_TO_JSVAL(funobj);
     }
 
+    /*
+     * Set our initial return condition, used for zero-length array cases
+     * (and pre-size our map return to match our known length, for all cases).
+     */
+    switch (mode) {
+      case MAP:
+      case FILTER:
+        newlen = (mode == MAP) ? length : 0;
+        newarr = js_NewArrayObject(cx, newlen, NULL);
+        if (!newarr)
+            return JS_FALSE;
+        *rval = OBJECT_TO_JSVAL(newarr);
+        break;
+      case SOME:
+      case EVERY:
+        *rval = JSVAL_FALSE;
+        break;
+      case FOREACH:
+        break;
+    }
+
+    if (length == 0)
+        return JS_TRUE;
+    
     if (argc > 1) {
         if (!js_ValueToObject(cx, argv[1], &thisp))
             return JS_FALSE;
@@ -1428,16 +1515,8 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
             thisp = tmp;
     }
 
-    if (mode == MAP || mode == FILTER) {
-        newlen = (mode == MAP ? len : 0);
-        newarr = js_NewArrayObject(cx, newlen, NULL);
-        if (!newarr)
-            return JS_FALSE;
-        *rval = OBJECT_TO_JSVAL(newarr);
-    }
-
-    /* We call with 2 args, value and index, plus room for rval. */
-    origsp = js_AllocStack(cx, 2 + 3, &mark);
+    /* We call with 3 args (value, index, array), plus room for rval. */
+    origsp = js_AllocStack(cx, 2 + 3 + 1, &mark);
     if (!origsp)
         return JS_FALSE;
 
@@ -1445,7 +1524,7 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
     fp = cx->fp;
     oldsp = fp->sp;
 
-    for (i = 0; i < len; i++) {
+    for (i = 0; i < length; i++) {
         jsid id;
         jsval v, rval2;
 
@@ -1462,10 +1541,11 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
         *sp++ = OBJECT_TO_JSVAL(thisp);
         *sp++ = v;
         *sp++ = INT_TO_JSVAL(i);
+        *sp++ = OBJECT_TO_JSVAL(obj);
 
         /* Do the call. */
         fp->sp = sp;
-        ok = js_Invoke(cx, 2, JSINVOKE_INTERNAL);
+        ok = js_Invoke(cx, 3, JSINVOKE_INTERNAL);
         rval2 = fp->sp[-1];
         fp->sp = oldsp;
         if (!ok)
@@ -1594,6 +1674,7 @@ static JSFunctionSpec array_methods[] = {
 
 #if JS_HAS_ARRAY_EXTRAS
     {"indexOf",             array_indexOf,          1,0,0},
+    {"lastIndexOf",         array_lastIndexOf,      1,0,0},
     {"forEach",             array_forEach,          1,0,0},
     {"map",                 array_map,              1,0,0},
     {"filter",              array_filter,           1,0,0},
