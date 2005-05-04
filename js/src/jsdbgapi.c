@@ -630,6 +630,12 @@ JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
     return FUN_SCRIPT(fun);
 }
 
+JS_PUBLIC_API(JSNative)
+JS_GetFunctionNative(JSContext *cx, JSFunction *fun)
+{
+    return FUN_NATIVE(fun);
+}
+
 JS_PUBLIC_API(JSPrincipals *)
 JS_GetScriptPrincipals(JSContext *cx, JSScript *script)
 {
@@ -675,12 +681,16 @@ JS_GetScriptedCaller(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSPrincipals *)
 JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
 {
-    if (fp->fun && cx->findObjectPrincipals) {
-        JSObject *callee = JSVAL_TO_OBJECT(fp->argv[-2]);
+    if (fp->fun) {
+        JSRuntime *rt = cx->runtime;
 
-        if (fp->fun->object != callee)
-            return cx->findObjectPrincipals(cx, callee);
-        /* FALL THROUGH */
+        if (rt->findObjectPrincipals) {
+            JSObject *callee = JSVAL_TO_OBJECT(fp->argv[-2]);
+
+            if (fp->fun->object != callee)
+                return rt->findObjectPrincipals(cx, callee);
+            /* FALL THROUGH */
+        }
     }
     if (fp->script)
         return fp->script->principals;
@@ -690,8 +700,11 @@ JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSPrincipals *)
 JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
 {
-    if (cx->findObjectPrincipals)
-        return cx->findObjectPrincipals(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
+    JSRuntime *rt;
+
+    rt = cx->runtime;
+    if (rt->findObjectPrincipals)
+        return rt->findObjectPrincipals(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
     if (!caller)
         return NULL;
     return JS_StackFramePrincipals(cx, caller);

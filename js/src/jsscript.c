@@ -238,6 +238,7 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSScript *script;
     JSObject *scopeobj, *parent;
     JSStackFrame *fp, *caller;
+    JSRuntime *rt;
     JSPrincipals *scopePrincipals;
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
@@ -299,10 +300,15 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /* Belt-and-braces: check that this script object has access to scopeobj. */
-    if (cx->findObjectPrincipals) {
-        scopePrincipals = cx->findObjectPrincipals(cx, scopeobj);
-        if (scopePrincipals != script->principals)
-            scopeobj = OBJ_GET_PARENT(cx, obj);
+    rt = cx->runtime;
+    if (rt->findObjectPrincipals) {
+        scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
+        if (scopePrincipals != script->principals) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_BAD_INDIRECT_CALL,
+                                 "Script.prototype.exec");
+            return JS_FALSE;
+        }
     }
 
     return js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);

@@ -3132,12 +3132,12 @@ JS_SetPrincipalsTranscoder(JSRuntime *rt, JSPrincipalsTranscoder px)
 }
 
 JS_PUBLIC_API(JSObjectPrincipalsFinder)
-JS_SetObjectPrincipalsFinder(JSContext *cx, JSObjectPrincipalsFinder fop)
+JS_SetObjectPrincipalsFinder(JSRuntime *rt, JSObjectPrincipalsFinder fop)
 {
     JSObjectPrincipalsFinder oldfop;
 
-    oldfop = cx->findObjectPrincipals;
-    cx->findObjectPrincipals = fop;
+    oldfop = rt->findObjectPrincipals;
+    rt->findObjectPrincipals = fop;
     return oldfop;
 }
 
