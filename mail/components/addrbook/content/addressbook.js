@@ -255,6 +255,12 @@ function SetNameColumn(cmd)
 	cvPrefs.prefs.setIntPref("mail.addr_book.lastnamefirst", prefValue);
 }
 
+function onFileMenuInit()
+{
+  goUpdateCommand('cmd_printcard'); 
+  goUpdateCommand('cmd_printcardpreview');
+}
+
 function CommandUpdate_AddressBook()
 {
   goUpdateCommand('cmd_delete');

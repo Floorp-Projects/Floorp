@@ -85,7 +85,7 @@
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abResultsPane.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCardViewOverlay.js"/>
 
-  <commandset id="addressBook">
+<commandset id="addressBook">
   <commandset id="CommandUpdate_AddressBook"
               commandupdater="true"
               events="focus,addrbook-select"
@@ -102,6 +102,8 @@
               commandupdater="true"
               events="focus"
               oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+    <command id="cmd_printcardpreview" oncommand="goDoCommand('cmd_printcardpreview');"/>
+    <command id="cmd_printcard" oncommand="goDoCommand('cmd_printcard');"/>
     <command id="cmd_properties" oncommand="goDoCommand('button_edit');"/>
     <command id="cmd_undo" oncommand="goDoCommand('cmd_undo')" disabled="true"/>
     <command id="cmd_redo" oncommand="goDoCommand('cmd_redo')" disabled="true"/>
@@ -139,7 +141,7 @@
     <key id="key_newCard" key="&newCard.key;" modifiers="accel" oncommand="AbNewCard('dirTree')"/>
 #endif
 
-  <key id="key_printCard" key="&printCardViewCmd.key;" oncommand="AbPrintCard()" modifiers="accel"/>
+  <key id="key_printCard" key="&printCardViewCmd.key;" command="cmd_printcard" modifiers="accel"/>
   <key id="key_close" key="&closeCmd.key;" modifiers="accel" oncommand="AbClose()"/>
   <key id="key_quit" key="&quitApplicationCmd.key;" modifiers="accel" oncommand="goQuitApplication()"/>
   <!-- Edit Menu -->
@@ -232,7 +234,7 @@
    <toolbaritem id="menubar-items" align="center">
      <menubar id="mail-menubar" style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
         <menu id="menu_File" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
-            <menupopup id="menu_FilePopup">
+            <menupopup id="menu_FilePopup" onpopupshowing="onFileMenuInit();">
                 <menu id="menu_New" label="&newMenu.label;" accesskey="&newMenu.accesskey;">
                     <menupopup id="menu_NewPopup">
                       <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" key="key_newCard" oncommand="AbNewCard('dirTree')"/>
@@ -247,10 +249,10 @@
                 <menuseparator/>
                 <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" oncommand="NSPrintSetup()"/>
 #ifndef XP_MACOSX
-                <menuitem id="printPreviewMenuItem" label="&printPreviewCardViewCmd.label;" accesskey="&printPreviewCardViewCmd.accesskey;" oncommand="AbPrintPreviewCard()"/>
+                <menuitem id="printPreviewMenuItem" label="&printPreviewCardViewCmd.label;" accesskey="&printPreviewCardViewCmd.accesskey;" command="cmd_printcardpreview"/>
                 <menuitem id="printPreviewAddressBook" label="&printPreviewAddressBook.label;" accesskey="&printPreviewAddressBook.accesskey;" oncommand="AbPrintPreviewAddressBook()"/>
 #endif
-                <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" oncommand="AbPrintCard()"/>
+                <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" command="cmd_printcard"/>
                 <menuitem id="printAddressBook" label="&printAddressBook.label;" accesskey="&printAddressBook.accesskey;" oncommand="AbPrintAddressBook()"/>
                 <menuseparator id="menu_FileQuitSeparator"/>
                 <menuitem id="menu_FileQuitItem" 

@@ -70,6 +70,8 @@ var ResultsPaneController =
       case "cmd_delete":
       case "button_delete":
       case "button_edit":
+      case "cmd_printcard":
+      case "cmd_printcardpreview":
         return true;
       default:
         return false;
@@ -102,6 +104,8 @@ var ResultsPaneController =
             goSetMenuValue(command, "valueCards");
         }
         return (enabled && (numSelected > 0));
+      case "cmd_printcard":
+      case "cmd_printcardpreview":
       case "button_edit":
         return (GetSelectedCardIndex() != -1);
       default:
@@ -122,6 +126,12 @@ var ResultsPaneController =
         break;
       case "button_edit":
         AbEditSelectedCard();
+        break;
+      case "cmd_printcard":
+        AbPrintCard();
+        break;
+      case "cmd_printcardpreview":
+        AbPrintPreviewCard();
         break;
     }
   },
@@ -145,6 +155,8 @@ var DirPaneController =
       case "cmd_delete":
       case "button_delete":
       case "button_edit":
+      case "cmd_printcard":
+      case "cmd_printcardpreview":
         return true;
       default:
         return false;
@@ -195,6 +207,9 @@ var DirPaneController =
         }
         else
           return false;
+      case "cmd_printcard":
+      case "cmd_printcardpreview":
+        return (GetSelectedCardIndex() != -1);
       case "button_edit":
         return (GetSelectedDirectory() != null);
       default:
@@ -205,6 +220,8 @@ var DirPaneController =
   doCommand: function(command)
   {
     switch (command) {
+      case "cmd_printcard":
+      case "cmd_printcardpreview":
       case "cmd_selectAll":
         SendCommandToResultsPane(command);
         break;
@@ -215,7 +232,7 @@ var DirPaneController =
         break;
       case "button_edit":
         AbEditSelectedDirectory();
-        break;
+        break;       
     }
   },
 
