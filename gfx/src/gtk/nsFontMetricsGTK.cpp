@@ -1815,7 +1815,12 @@ void nsFontMetricsGTK::RealizeFont()
   mMaxAscent = nscoord(fontInfo->ascent * f);
   mMaxDescent = nscoord(fontInfo->descent * f);
 
-  mEmAscent = nscoord(mMaxAscent * mEmHeight / lineSpacing);
+  if (lineSpacing == 0) {
+    mEmAscent = mEmHeight;
+  }
+  else {
+    mEmAscent = nscoord(mMaxAscent * mEmHeight / lineSpacing);
+  }
   mEmDescent = mEmHeight - mEmAscent;
 
   mMaxAdvance = nscoord(fontInfo->max_bounds.width * f);
