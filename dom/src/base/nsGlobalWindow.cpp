@@ -5925,7 +5925,7 @@ CopyJSPropertyArray(JSContext *cx, JSObject *aSource, JSObject *aDest,
     // problematic.  It will "just work" without us explicitly saving or
     // restoring the value.
 
-    if (!nsCRT::strcmp(NS_STATIC_CAST(PRUnichar*, propname_str),
+    if (!nsCRT::strcmp(NS_REINTERPRET_CAST(PRUnichar*, propname_str),
                        NS_LITERAL_STRING("location").get())) {
       continue;
     }
@@ -5952,15 +5952,15 @@ CopyJSPropertyArray(JSContext *cx, JSObject *aSource, JSObject *aDest,
 #ifdef DEBUG_PAGE_CACHE
     if (res)
       printf("Copied window property: %s\n",
-             NS_ConvertUTF16toUTF8(NS_STATIC_CAST(PRUnichar*,
-                                                  propname_str)).get());
+             NS_ConvertUTF16toUTF8(NS_REINTERPRET_CAST(PRUnichar*,
+                                                       propname_str)).get());
 #endif
 
     if (!res) {
 #ifdef DEBUG
       printf("failed to copy property: %s\n",
-             NS_ConvertUTF16toUTF8(NS_STATIC_CAST(PRUnichar*,
-                                                  propname_str)).get());
+             NS_ConvertUTF16toUTF8(NS_REINTERPRET_CAST(PRUnichar*,
+                                                       propname_str)).get());
 #endif
       return NS_ERROR_FAILURE;
     }
