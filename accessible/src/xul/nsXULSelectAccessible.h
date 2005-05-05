@@ -181,6 +181,7 @@ public:
   NS_IMETHOD GetState(PRUint32 *_retval);
 
   NS_IMETHOD GetValue(nsAString& _retval);
+  NS_IMETHOD GetDescription(nsAString& aDescription);
 };
 
 #endif

@@ -203,10 +203,13 @@ public:
   NS_IMETHOD GetLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetValue(nsAString& _retval);
+  NS_IMETHOD GetDescription(nsAString& aDescription);
   NS_IMETHOD Shutdown();
   NS_IMETHOD Init();
 
 protected:
+  already_AddRefed<nsIAccessible> GetFocusedOptionAccessible();
+
   // Hold references to our generated children
   // So that we can shut them down when we need to
   nsCOMPtr<nsIAccessible> mComboboxTextFieldAccessible;
