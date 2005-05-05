@@ -15,7 +15,7 @@
 <script type="application/x-javascript" src="chrome://lightning/content/lightning-utils.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/messenger-overlay-sidebar.js"/>
-
+<script type="application/x-javascript" src="chrome://lightning/content/agenda-tree.js"/>
 <vbox id="folderPaneBox">
   <splitter id="folderpaneCalendarSplitter" collapse="after" persist="state"/>
 
@@ -45,47 +45,12 @@
           <spacer/>
         </hbox>
         <deck id="agenda-viewcustomize-deck" selectedIndex="0" flex="1">
-          <tree id="agendaTree" hidecolumnpicker="true" flex="1">
+          <tree id="agenda-tree" hidecolumnpicker="true" flex="1">
             <treecols>
               <treecol id="col-agenda-item" primary="true" label="Item" flex="3"/>
               <treecol id="col-agenda-when" label="" flex="1"/>
             </treecols>
-            <treechildren>
-    
-              <!-- sample tree content temporary -->
-              <treeitem container="true" open="false">
-              <treerow><treecell label="Recent (1)"/></treerow>
-              <treechildren>
-              <treeitem><treerow><treecell label="File expenses"/><treecell label="Sun"/></treerow></treeitem>
-              </treechildren>
-              </treeitem>
-           
-              <treeitem container="true" open="true">
-              <treerow><treecell label="Today (2)"/></treerow>
-              <treechildren>
-              <treeitem><treerow><treecell label="Meeting"/><treecell label="11am"/></treerow></treeitem>
-              <treeitem><treerow><treecell label="Lunch"/><treecell label="12:30am"/></treerow></treeitem>
-              </treechildren>
-              </treeitem>
-           
-              <treeitem container="true" open="false">
-              <treerow><treecell label="Tomorrow (2)"/></treerow>
-              <treechildren>
-              <treeitem><treerow><treecell label="Lunch with Dad"/><treecell label="11:30am"/></treerow></treeitem>
-              <treeitem><treerow><treecell label="Accountant"/><treecell label="2pm"/></treerow></treeitem>
-              </treechildren>
-              </treeitem>
-           
-              <treeitem container="true" open="false">
-              <treerow><treecell label="Upcoming (3)"/></treerow>
-              <treechildren>
-              <treeitem><treerow><treecell label="OC Night"/><treecell label="Thu 7:30pm"/></treerow></treeitem>
-              <treeitem><treerow><treecell label="ZISC presentation"/><treecell label="May 24"/></treerow></treeitem>
-              <treeitem><treerow><treecell label="Retirement"/><treecell label="2025"/></treerow></treeitem>
-              </treechildren>
-              </treeitem>
-              <!-- end sample tree content. temporary -->
-            </treechildren>
+            <treechildren/>
           </tree>
           <label value="Customize yer views!"/>
         </deck>
