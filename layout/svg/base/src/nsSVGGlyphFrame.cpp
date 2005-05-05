@@ -284,16 +284,15 @@ nsSVGGlyphFrame::Init(nsPresContext*  aPresContext,
   }
   nsCOMPtr<nsISVGRenderer> renderer;
   outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
-  if (!renderer) return NS_ERROR_FAILURE;
-
-  renderer->CreateGlyphMetrics(this, getter_AddRefs(mMetrics));
-  if (!mMetrics) return NS_ERROR_FAILURE;
-  
-  renderer->CreateGlyphGeometry(this, getter_AddRefs(mGeometry));
-  if (!mGeometry) return NS_ERROR_FAILURE;
-  
+  if (renderer) {
+    renderer->CreateGlyphMetrics(this, getter_AddRefs(mMetrics));
+    renderer->CreateGlyphGeometry(this, getter_AddRefs(mGeometry));
+  }
   
   SetStyleContext(aPresContext, aContext);
+
+  if (!renderer || !mMetrics || !mGeometry)
+    return NS_ERROR_FAILURE;
     
   return NS_OK;
 }
