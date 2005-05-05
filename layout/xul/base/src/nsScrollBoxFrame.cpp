@@ -75,15 +75,10 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsStyleContext*  aContext,
-              nsIFrame*        aPrevInFlow);
-
   NS_DECL_NSITIMERCALLBACK
-  nsPresContext* mPresContext;
-  
+
+protected:
+  PRPackedBool mTrustedEvent;
 };
 
 nsresult
@@ -108,17 +103,6 @@ nsAutoRepeatBoxFrame::nsAutoRepeatBoxFrame(nsIPresShell* aPresShell)
 {
 }
 
-NS_IMETHODIMP
-nsAutoRepeatBoxFrame::Init(nsPresContext*  aPresContext,
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsStyleContext*  aContext,
-              nsIFrame*        aPrevInFlow)
-{
-  mPresContext = aPresContext;
-  return nsButtonBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-}
-
 NS_INTERFACE_MAP_BEGIN(nsAutoRepeatBoxFrame)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsButtonBoxFrame)
@@ -135,13 +119,16 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
   {
     case NS_MOUSE_ENTER:
     case NS_MOUSE_ENTER_SYNTH:
-       nsRepeatService::GetInstance()->Start(this);
-    break;
+      nsRepeatService::GetInstance()->Start(this);
+      mTrustedEvent = NS_IS_TRUSTED_EVENT(aEvent);
+      break;
 
     case NS_MOUSE_EXIT:
     case NS_MOUSE_EXIT_SYNTH:
-       nsRepeatService::GetInstance()->Stop();
-    break;
+      nsRepeatService::GetInstance()->Stop();
+      // Not really necessary but do this to be safe
+      mTrustedEvent = PR_FALSE;
+      break;
   }
      
   return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
@@ -150,7 +137,7 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
 NS_IMETHODIMP
 nsAutoRepeatBoxFrame::Notify(nsITimer *timer)
 {
-  MouseClicked(mPresContext, nsnull);
+  DoMouseClick(nsnull, mTrustedEvent);
   return NS_OK;
 }
 

@@ -150,7 +150,7 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 void 
-nsButtonBoxFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent) 
+nsButtonBoxFrame::DoMouseClick(nsGUIEvent* aEvent, PRBool aTrustEvent) 
 {
   // Don't execute if we're disabled.
   nsAutoString disabled;
@@ -160,7 +160,7 @@ nsButtonBoxFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent)
 
   // Execute the oncommand event handler.
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(aEvent ? NS_IS_TRUSTED_EVENT(aEvent) : PR_FALSE,
+  nsMouseEvent event(aEvent ? NS_IS_TRUSTED_EVENT(aEvent) : aTrustEvent,
                      NS_XUL_COMMAND, nsnull, nsMouseEvent::eReal);
   if(aEvent) {
     event.isShift = ((nsInputEvent*)(aEvent))->isShift;
@@ -170,7 +170,7 @@ nsButtonBoxFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   }
 
   // Have the content handle the event, propagating it according to normal DOM rules.
-  nsIPresShell *shell = aPresContext->GetPresShell();
+  nsIPresShell *shell = GetPresContext()->GetPresShell();
   if (shell) {
     shell->HandleDOMEventWithTarget(mContent, &event, &status);
     // shell may no longer be alive, don't use it here unless you keep a ref
