@@ -148,6 +148,7 @@ function getCompositeCalendar()
         activeCompositeCalendar =
             ltnCreateInstance("@mozilla.org/calendar/calendar;1?type=composite",
                               "calICompositeCalendar");
+        activeCompositeCalendar.prefPrefix = "lightning-main";
         activeCompositeCalendar.addObserver(ltnCompositeCalendarObserver, 0);
     }
 
