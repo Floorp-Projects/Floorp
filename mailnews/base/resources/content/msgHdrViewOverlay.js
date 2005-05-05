@@ -322,6 +322,7 @@ var messageHeaderSink = {
     {
       this.onStartHeaders(); 
 
+      var index = 0;
       while (headerNameEnumerator.hasMore()) 
       {
         var header = new Object;        
