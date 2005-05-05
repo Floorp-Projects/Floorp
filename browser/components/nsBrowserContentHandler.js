@@ -84,8 +84,7 @@ function needHomepageOverride(prefb) {
   return true;
 }
 
-function openWindow(parent, url, target, features, args)
-{
+function openWindow(parent, url, target, features, args) {
   var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                          .getService(nsIWindowWatcher);
 
@@ -96,6 +95,18 @@ function openWindow(parent, url, target, features, args)
     argstring.data = args;
   }
   return wwatch.openWindow(parent, url, target, features, argstring);
+}
+
+function openPreferences() {
+  var features = "chrome,titlebar,toolbar,centerscreen,dialog=no";
+  var url = "chrome://browser/content/preferences/preferences.xul";
+
+  var win = getMostRecentWindow("Browser:Preferences");
+  if (win) {
+    win.focus();
+  } else {
+    openWindow(null, url, "_blank", features);
+  }
 }
 
 function getMostRecentWindow(aType) {
@@ -117,6 +128,7 @@ var nsBrowserContentHandler = {
     var prefb = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(nsIPrefBranch);
     this.mChromeURL = prefb.getCharPref("browser.chromeURL");
+
     return this.mChromeURL;
   },
 
@@ -215,8 +227,19 @@ var nsBrowserContentHandler = {
 
     var chromeParam = cmdLine.handleFlagWithParam("chrome", false);
     if (chromeParam) {
-      openWindow(null, chromeParam, "_blank",
-                 "chrome,dialog=no,all" + this.getFeatures(cmdLine), null);
+
+      // Handle the old preference dialog URL separately (bug 285416)
+      if (chromeParam == "chrome://browser/content/pref/pref.xul") {
+        openPreferences();
+      } else {
+        var features = "chrome,dialog=no,all" + this.getFeatures(cmdLine);
+        openWindow(null, chromeParam, "_blank", features, null);
+      }
+
+      cmdLine.preventDefault = true;
+    }
+    if (cmdLine.handleFlag("preferences", false)) {
+      openPreferences();
       cmdLine.preventDefault = true;
     }
   },
