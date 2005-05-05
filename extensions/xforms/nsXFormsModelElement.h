@@ -48,6 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMDocument.h"
 #include "nsXFormsMDGEngine.h"
+#include "nsXFormsUtils.h"
 
 #include "nsISchemaLoader.h"
 #include "nsISchema.h"
@@ -102,32 +103,49 @@ private:
   NS_HIDDEN_(void)     BackupOrRestoreInstanceData(PRBool restore);
 
   /** Initializes the MIPs on all form controls */
-  NS_HIDDEN_(void) InitializeControls();
+  NS_HIDDEN_(nsresult) InitializeControls();
 
   NS_HIDDEN_(nsresult) ProcessBindElements();
   NS_HIDDEN_(nsresult) FinishConstruction();
   NS_HIDDEN_(nsresult) ConstructDone();
   NS_HIDDEN_(void)     MaybeNotifyCompletion();
 
-  NS_HIDDEN_(nsresult)   ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
+  NS_HIDDEN_(nsresult) ProcessBind(nsIXFormsXPathEvaluator   *aEvaluator,
                                    nsIDOMNode                *aContextNode,
-                                   PRInt32                   aContextPosition,
-                                   PRInt32                   aContextSize,
+                                   PRInt32                    aContextPosition,
+                                   PRInt32                    aContextSize,
                                    nsIDOMElement             *aBindElement);
 
   NS_HIDDEN_(void)     RemoveModelFromDocument();
 
   /**
-   * Dispatch the necessary events to a control, aControl, when the instance
-   * node, aNode, it is bound to changes state.
+   * Set the states on the control |aControl| bound to the instance data node
+   * |aNode|. It dispatches the necessary events and sets the pseudo class
+   * states. |aAllStates| determines whether all states should be set, or only
+   * changed.
    *
    * @param aControl          The event target
    * @param aNode             The instance node
-   * @param aInitialize       Send events for all flags
+   * @param aAllStates        Set all states (PR_TRUE), or only changed
    */
-  NS_HIDDEN_(void)     DispatchEvents(nsIXFormsControl *aControl,
-                                      nsIDOMNode       *aNode,
-                                      PRBool            aInitialize = PR_FALSE);
+  NS_HIDDEN_(nsresult) SetStatesInternal(nsIXFormsControl *aControl,
+                                         nsIDOMNode       *aNode,
+                                         PRBool            aAllStates = PR_FALSE);
+
+  /**
+   * Sets the state of a specific state.
+   *
+   * @param aElement          The element to dispatch events to and set states on
+   * @param aState            The state value
+   * @param aOnEvent          The on event for the state.
+   * @param aAttributePos     The position of the "on" attribute in kStateAttributes
+   *
+   * @note aAttributePos is only needed until bug 271720 is landed.
+   */
+  NS_HIDDEN_(void)     SetSingleState(nsIDOMElement *aElement,
+                                      PRBool         aState,
+                                      nsXFormsEvent  aOnEvent,
+                                      PRUint32       aAttributePos);
 
   // Returns true when all external documents have been loaded
   PRBool IsComplete() const { return (mSchemaTotal == mSchemaCount

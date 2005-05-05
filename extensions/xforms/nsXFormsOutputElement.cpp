@@ -211,8 +211,6 @@ nsXFormsOutputElement::Bind()
 {
   if (!mValue || !mHasParent)
     return NS_OK;
-  
-  mBoundNode = nsnull;
 
   nsresult rv;
   rv = mElement->HasAttribute(NS_LITERAL_STRING("ref"), &mHasBinding);
@@ -222,24 +220,19 @@ nsXFormsOutputElement::Bind()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-    nsCOMPtr<nsIDOMXPathResult> result;
   if (mHasBinding) {
-    rv = ProcessNodeBinding(NS_LITERAL_STRING("ref"),
-                            nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                            getter_AddRefs(result));
+    rv = nsXFormsControlStub::Bind();
   } else {
-    rv = ProcessNodeBinding(NS_LITERAL_STRING("value"),
-                            nsIDOMXPathResult::STRING_TYPE,
-                            getter_AddRefs(result));
-  }
-  
+    mBoundNode = nsnull;
+    // This call does a bit too much, as we do the call again in Refresh(),
+    // but we need to clear index listeners, bind to the model, get
+    // evt. context, etc. in Bind().
+    rv = ResetBoundNode(NS_LITERAL_STRING("value"),
+                        nsIDOMXPathResult::STRING_TYPE);
+  }  
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (result) {
-    result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
-  }
-
-  return NS_OK;
+  return rv;
 }
   
 NS_IMETHODIMP
@@ -256,9 +249,9 @@ nsXFormsOutputElement::Refresh()
     }
   } else {
     nsCOMPtr<nsIDOMXPathResult> result;
-    rv = ProcessNodeBinding(NS_LITERAL_STRING("value"),
-                            nsIDOMXPathResult::STRING_TYPE,
-                            getter_AddRefs(result));
+    rv = ResetBoundNode(NS_LITERAL_STRING("value"),
+                        nsIDOMXPathResult::STRING_TYPE,
+                        getter_AddRefs(result));
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (result) {

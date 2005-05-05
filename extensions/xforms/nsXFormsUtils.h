@@ -65,6 +65,9 @@ class nsIDOMEvent;
  * XForms event types
  *
  * @see http://www.w3.org/TR/xforms/slice4.html#rpm-events
+ *
+ * @note nsXFormsModelElement::SetSingleState() assumes a specific order of
+ * the events from eEvent_Valid to eEvent_Disabled.
  */
 
 enum nsXFormsEvent {
@@ -119,6 +122,12 @@ struct EventData
 };
 
 extern const EventData sXFormsEventsEntries[41];
+
+/**
+ * @todo The attribute names used on the elements to reflect the pseudo class
+ * state until bug 271720 is landed. (XXX)
+ */
+extern const nsString kStateAttributes[8];
 
 /**
  * This class has static helper methods that don't fit into a specific place

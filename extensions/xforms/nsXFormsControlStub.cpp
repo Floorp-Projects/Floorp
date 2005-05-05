@@ -123,7 +123,9 @@ nsXFormsControlStub::RemoveIndexListeners()
 }
 
 NS_IMETHODIMP
-nsXFormsControlStub::ResetBoundNode()
+nsXFormsControlStub::ResetBoundNode(const nsString     &aBindAttribute,
+                                    PRUint16            aResultType,
+                                    nsIDOMXPathResult **aResult)
 {
   // Clear existing bound node, etc.
   mBoundNode = nsnull;
@@ -133,35 +135,40 @@ nsXFormsControlStub::ResetBoundNode()
   if (!mHasParent || !mBindAttrsCount)
     return NS_OK;
 
-  nsCOMPtr<nsIModelElementPrivate> modelNode;
   nsCOMPtr<nsIDOMXPathResult> result;
   nsresult rv =
-    ProcessNodeBinding(NS_LITERAL_STRING("ref"),
-                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                       getter_AddRefs(result),
-                       getter_AddRefs(modelNode));
+    ProcessNodeBinding(aBindAttribute,
+                       aResultType,
+                       getter_AddRefs(result));
 
-  if (NS_SUCCEEDED(rv)) {    
-    if (result) {
-      // Get context node, if any  
-      result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
-    }
-    rv = NS_OK;
-  } else {
+  if (NS_FAILED(rv)) {
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("controlBindError"), mElement);
+    return rv;
+  }
+  
+  if (!result)
+    return NS_OK;
+    
+  // Get context node, if any  
+  result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
+
+  if (mBoundNode && mModel) {
+    mModel->SetStates(this, mBoundNode);
   }
 
-  return rv;
+  if (aResult) {
+    *aResult = nsnull;
+    result.swap(*aResult);
+  }
+
+  return NS_OK;
 }
 
-/**
- * @note Refresh() is always called after a Bind(), so if a control decides to
- * do all the work in Refresh() this function implements a NOP Bind().
- */
 NS_IMETHODIMP
 nsXFormsControlStub::Bind()
 {
-  return ResetBoundNode();
+  return ResetBoundNode(NS_LITERAL_STRING("ref"),
+                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE);
 }
 
 NS_IMETHODIMP
@@ -271,21 +278,12 @@ nsXFormsControlStub::GetRelevantState()
   return res;
 }
 
-void  
-nsXFormsControlStub::ToggleProperty(const nsAString &aOn,
-                                    const nsAString &aOff)
-{
-  if (mElement) {
-    mElement->SetAttribute(aOn, NS_LITERAL_STRING("1"));
-    mElement->RemoveAttribute(aOff);
-  }
-}
-
 NS_IMETHODIMP
 nsXFormsControlStub::HandleDefault(nsIDOMEvent *aEvent,
                                    PRBool      *aHandled)
 {
   NS_ENSURE_ARG(aHandled);
+  *aHandled = PR_FALSE;
 
   if (nsXFormsUtils::EventHandlingAllowed(aEvent, mElement)) {
 
@@ -294,7 +292,6 @@ nsXFormsControlStub::HandleDefault(nsIDOMEvent *aEvent,
     aEvent->GetTarget(getter_AddRefs(target));
     nsCOMPtr<nsIDOMElement> targetE(do_QueryInterface(target));
     if (targetE && targetE != mElement) {
-      *aHandled = PR_FALSE;
       return NS_OK;
     }
 
@@ -302,39 +299,8 @@ nsXFormsControlStub::HandleDefault(nsIDOMEvent *aEvent,
     nsAutoString type;
     aEvent->GetType(type);
 
-    *aHandled = PR_TRUE;
-    /// @todo Change to be less cut-n-paste-stylish. Everything can be extraced
-    /// from the sXFormsEventsEntries, only problem is the dash in
-    /// read-only/read-write... (XXX)    
-    if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Valid].name)) {
-      ToggleProperty(NS_LITERAL_STRING("valid"),
-                     NS_LITERAL_STRING("invalid"));
-    } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Invalid].name)) {
-      ToggleProperty(NS_LITERAL_STRING("invalid"),
-                     NS_LITERAL_STRING("valid"));
-    } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Enabled].name)) {
-      ToggleProperty(NS_LITERAL_STRING("enabled"),
-                     NS_LITERAL_STRING("disabled"));
-    } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Disabled].name)) {
-      ToggleProperty(NS_LITERAL_STRING("disabled"),
-                     NS_LITERAL_STRING("enabled"));
-    } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Required].name)) {
-      ToggleProperty(NS_LITERAL_STRING("required"),
-                     NS_LITERAL_STRING("optional"));
-    } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Optional].name)) {
-      ToggleProperty(NS_LITERAL_STRING("optional"),
-                     NS_LITERAL_STRING("required"));
-    } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Readonly].name)) {
-      ToggleProperty(NS_LITERAL_STRING("read-only"),
-                     NS_LITERAL_STRING("read-write"));
-    } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Readwrite].name)) {
-      ToggleProperty(NS_LITERAL_STRING("read-write"),
-                     NS_LITERAL_STRING("read-only"));
-    } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Focus].name)) {
-      PRBool tmp;
-      TryFocus(&tmp);
-    } else {
-      *aHandled = PR_FALSE;
+    if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Focus].name)) {
+      TryFocus(aHandled);
     }
   }
   
@@ -465,16 +431,12 @@ nsXFormsControlStub::ResetProperties()
   if (!mElement) {
     return;
   }
-
-  mElement->RemoveAttribute(NS_LITERAL_STRING("valid"));
-  mElement->RemoveAttribute(NS_LITERAL_STRING("invalid"));
-  mElement->RemoveAttribute(NS_LITERAL_STRING("enabled"));
-  mElement->RemoveAttribute(NS_LITERAL_STRING("disabled"));
-  mElement->RemoveAttribute(NS_LITERAL_STRING("required"));
-  mElement->RemoveAttribute(NS_LITERAL_STRING("optional"));
-  mElement->RemoveAttribute(NS_LITERAL_STRING("read-only"));
-  mElement->RemoveAttribute(NS_LITERAL_STRING("read-write"));
-
+  
+  ///
+  /// @todo removes the attributes we use, until bug 271720 is landed (XXX)
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kStateAttributes); ++i) {
+    mElement->RemoveAttribute(kStateAttributes[i]);
+  }
 }
 
 void

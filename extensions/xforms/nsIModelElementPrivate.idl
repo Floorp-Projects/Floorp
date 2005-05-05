@@ -113,4 +113,10 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    */
   unsigned short handleInstanceDataNode(in nsIDOMNode aInstanceDataNode);
 
+  /**
+   * Set MIP states for given control bound to the given bound node.
+   * @param aControl          The control
+   * @param aBoundNode        The node the control is bound to
+   */
+  void setStates(in nsIXFormsControl aControl, in nsIDOMNode aBoundNode);
 };

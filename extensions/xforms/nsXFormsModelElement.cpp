@@ -396,7 +396,8 @@ nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
 nsresult
 nsXFormsModelElement::ConstructDone()
 {
-  InitializeControls();
+  nsresult rv = InitializeControls();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   /// @bug This is not entirely correct. xforms-ready should be sent when
   /// _all_ models have initialized their controls.
@@ -512,40 +513,61 @@ nsXFormsModelElement::Recalculate()
 }
 
 void
-nsXFormsModelElement::DispatchEvents(nsIXFormsControl *aControl,
-                                     nsIDOMNode       *aNode,
-                                     PRBool           aInitialize)
+nsXFormsModelElement::SetSingleState(nsIDOMElement *aElement,
+                                     PRBool         aState,
+                                     nsXFormsEvent  aOnEvent,
+                                     PRUint32       aAttributePos)
 {
-  if (!aControl || !aNode)
-    return;
+  nsXFormsEvent event = aState ? aOnEvent : (nsXFormsEvent) (aOnEvent + 1);
+
+  // Dispatch event
+  nsXFormsUtils::DispatchEvent(aElement, event);
+
+  // Set pseudo class
+  ///
+  /// @bug Set via attributes right now. Bug 271720. (XXX)
+  aElement->SetAttribute(kStateAttributes[aState ? aAttributePos : aAttributePos + 1],
+                         NS_LITERAL_STRING("1"));
+  aElement->RemoveAttribute(kStateAttributes[aState ? aAttributePos + 1 : aAttributePos]);
+}
+
+nsresult
+nsXFormsModelElement::SetStatesInternal(nsIXFormsControl *aControl,
+                                        nsIDOMNode       *aNode,
+                                        PRBool            aAllStates)
+{
+  NS_ENSURE_ARG(aControl);
+  if (!aNode)
+    return NS_OK;
   
   nsCOMPtr<nsIDOMElement> element;
   aControl->GetElement(getter_AddRefs(element));
+  NS_ENSURE_STATE(element);
 
   const nsXFormsNodeState *ns = mMDG.GetNodeState(aNode);
+  NS_ENSURE_STATE(ns);
 
-  if (!element || !ns)
-    return;
+  /// @todo the last argument (0, 2, 4, and 6) to SetSingleState is the
+  /// position of the attribute in kStateAttributes. It's hacky and only
+  /// temporary, until bug 271720 lands. (XXX)
+  if (aAllStates || ns->ShouldDispatchValid()) {
+    SetSingleState(element, ns->IsValid(), eEvent_Valid, 0);
+  }
+  if (aAllStates || ns->ShouldDispatchReadonly()) {
+    SetSingleState(element, ns->IsReadonly(), eEvent_Readonly, 2);
+  }
+  if (aAllStates || ns->ShouldDispatchRequired()) {
+    SetSingleState(element, ns->IsRequired(), eEvent_Required, 4);
+  }
+  if (aAllStates || ns->ShouldDispatchRelevant()) {
+    SetSingleState(element, ns->IsRelevant(), eEvent_Enabled, 6);
+  }
 
-  if (aInitialize || ns->ShouldDispatchValid()) {
-    nsXFormsUtils::DispatchEvent(element,
-                                 ns->IsValid() ? eEvent_Valid : eEvent_Invalid);
-  }
-  if (aInitialize || ns->ShouldDispatchReadonly()) {
-    nsXFormsUtils::DispatchEvent(element,
-                                 ns->IsReadonly() ? eEvent_Readonly : eEvent_Readwrite);
-  }
-  if (aInitialize || ns->ShouldDispatchRequired()) {
-    nsXFormsUtils::DispatchEvent(element,
-                                 ns->IsRequired() ? eEvent_Required : eEvent_Optional);
-  }
-  if (aInitialize || ns->ShouldDispatchRelevant()) {
-    nsXFormsUtils::DispatchEvent(element,
-                                 ns->IsRelevant() ? eEvent_Enabled : eEvent_Disabled);
-  }
-  if (aInitialize || ns->ShouldDispatchValueChanged()) {
+  if (ns->ShouldDispatchValueChanged()) {
     nsXFormsUtils::DispatchEvent(element, eEvent_ValueChanged);
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -665,7 +687,8 @@ nsXFormsModelElement::Revalidate()
         control->GetBoundNode(getter_AddRefs(boundNode));
       }
       if (rebind || refresh) {
-        DispatchEvents(control, boundNode);
+        nsresult rv = SetStatesInternal(control, boundNode);
+        NS_ENSURE_SUCCESS(rv, rv);
         if (mControlsNeedingRefresh.IndexOf(control) == -1)
           mControlsNeedingRefresh.AppendElement(control);
       }
@@ -1187,10 +1210,11 @@ nsXFormsModelElement::FinishConstruction()
   return NS_OK;
 }
 
-void
+nsresult
 nsXFormsModelElement::InitializeControls()
 {
   PRInt32 controlCount = mFormControls.Count();
+  nsresult rv;
   for (PRInt32 i = 0; i < controlCount; ++i) {
     // Get control
     nsIXFormsControl *control = NS_STATIC_CAST(nsIXFormsControl*,
@@ -1199,17 +1223,24 @@ nsXFormsModelElement::InitializeControls()
       continue;
 
     // Rebind
-    control->Bind();
+    rv = control->Bind();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Get bound node
     nsCOMPtr<nsIDOMNode> boundNode;
-    control->GetBoundNode(getter_AddRefs(boundNode));
-    
-    // Dispatch events
-    DispatchEvents(control, boundNode, PR_TRUE);
+    rv = control->GetBoundNode(getter_AddRefs(boundNode));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Set MIP states on control
+    rv = SetStatesInternal(control, boundNode, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Refresh controls
-    control->Refresh();
-  }  
+    rv = control->Refresh();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 
 
@@ -1446,6 +1477,12 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::SetStates(nsIXFormsControl *aControl, nsIDOMNode *aBoundNode)
+{
+  return SetStatesInternal(aControl, aBoundNode, PR_TRUE);
 }
 
 /* static */ void

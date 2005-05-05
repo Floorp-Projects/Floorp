@@ -88,7 +88,9 @@ public:
   NS_IMETHOD GetBoundNode(nsIDOMNode **aBoundNode);
   NS_IMETHOD GetDependencies(nsCOMArray<nsIDOMNode> **aDependencies);
   NS_IMETHOD GetElement(nsIDOMElement **aElement);
-  NS_IMETHOD ResetBoundNode();
+  NS_IMETHOD ResetBoundNode(const nsString     &aBindAttribute,
+                            PRUint16            aResultType,
+                            nsIDOMXPathResult **aResult = nsnull);
   NS_IMETHOD Bind();
   NS_IMETHOD TryFocus(PRBool* aOK);
 
@@ -188,15 +190,6 @@ protected:
                        nsIDOMXPathResult      **aResult,
                        nsIModelElementPrivate **aModel = nsnull);
   
-  /**
-   * Toggles a property on the control (readonly, relevant, etc.)
-   *
-   * @todo This needs to be implemented using pseudo-classes instead of
-   *       attributes (XXX)
-   */
-  void ToggleProperty(const nsAString &aOn,
-                      const nsAString &aOff);
-
   /**
    *  Reset (and reinitialize) the event listener, which is used to create 
    *  xforms-hint and xforms-help events.
