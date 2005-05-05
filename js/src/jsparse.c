@@ -2163,9 +2163,9 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         ATOM_LIST_SEARCH(ale, &tc->decls, atom);
         if (ale) {
             prevop = ALE_JSOP(ale);
-            if (JS_HAS_STRICT_OPTION(cx) ||
-                pn->pn_op == JSOP_DEFCONST ||
-                prevop == JSOP_DEFCONST) {
+            if (JS_HAS_STRICT_OPTION(cx)
+                ? pn->pn_op != JSOP_DEFVAR || prevop != JSOP_DEFVAR
+                : pn->pn_op == JSOP_DEFCONST || prevop == JSOP_DEFCONST) {
                 const char *name = js_AtomToPrintableString(cx, atom);
                 if (!name ||
                     !js_ReportCompileErrorNumber(cx, ts,
