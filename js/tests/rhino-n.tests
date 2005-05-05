@@ -114,3 +114,7 @@ js1_5/Exceptions/regress-50447-1.js
 # __noSuchMethod__ handler is Spidermonkey only
 #
 js1_5/Object/no-such-method.js
+#
+# Array extras (bug 290592 is spidermonkey only)
+js1_5/Array/array-002.js
+
