@@ -21,6 +21,7 @@
  the Initial Developer. All Rights Reserved.
 
  Contributor(s):
+   Stefan Borggraefe <Stefan.Borggraefe@gmx.de>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,15 +39,13 @@
   
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/pref/pref-fonts.dtd" >
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-fonts.dtd" >
-
-<window id="calibrateScreen"
+<dialog id="calibrateScreen"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&calibrateDialog.title;"
-        class="dialog" 
-        onload="Init();"
+        buttons="accept,cancel"
+        ondialogaccept="return onOK();"
         persist="screenX screenY">
 
   <script type="application/x-javascript" 
@@ -63,8 +62,6 @@
       <label value="&calibrate.instructions;"/>
     </hbox>
       
-    <separator class="thin"/>
-      
     <hbox align="center">
       <textbox id="horizSize" size="5"/>
       <menulist id="units" persist="value">
@@ -73,14 +70,8 @@
           <menuitem value="inches" label="&units.inches;"/>
         </menupopup>
       </menulist>              
-
     </hbox>
     
-    <separator/>
-
-    <keyset id="dialogKeys"/>
-    <hbox id="okCancelButtonsRight"/>
-
   </vbox>
   
-</window>
+</dialog>
