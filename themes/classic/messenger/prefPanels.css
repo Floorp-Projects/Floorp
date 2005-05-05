@@ -44,20 +44,3 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* :::::: layout preference icons ::::: */
-
-#classic {
-  min-height       : 32px;
-  list-style-image : url("chrome://messenger/skin/icons/winclassic.gif");
-}
-
-#wide {
-  min-height       : 32px;
-  list-style-image : url("chrome://messenger/skin/icons/winwide.gif");
-}
-
-#vertical {
-  min-height       : 32px;
-  list-style-image : url("chrome://messenger/skin/icons/winvertical.gif");
-}
-
