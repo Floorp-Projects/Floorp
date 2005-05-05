@@ -49,7 +49,6 @@ interface nsIContentViewer;
 interface nsIURI;
 interface nsIInputStream;
 interface nsIDocShellTreeItem;
-interface nsISecureBrowserUIState;
 interface nsISupportsArray;
 %{C++
 struct nsRect;
