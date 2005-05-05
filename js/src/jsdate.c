@@ -1698,14 +1698,31 @@ date_toLocaleDateString(JSContext *cx, JSObject *obj, uintN argc,
 
 static JSBool
 date_toLocaleTimeString(JSContext *cx, JSObject *obj, uintN argc,
-                    jsval *argv, jsval *rval)
+                        jsval *argv, jsval *rval)
 {
     return date_toLocaleHelper(cx, obj, argc, argv, rval, "%X");
 }
 
 static JSBool
+date_toLocaleFormat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                    jsval *rval)
+{
+    JSString *fmt;
+
+    if (argc == 0)
+        return date_toLocaleString(cx, obj, argc, argv, rval);
+
+    fmt = JS_ValueToString(cx, argv[0]);
+    if (!fmt)
+        return JS_FALSE;
+
+    return date_toLocaleHelper(cx, obj, argc, argv, rval,
+                               JS_GetStringBytes(fmt));
+}
+
+static JSBool
 date_toTimeString(JSContext *cx, JSObject *obj, uintN argc,
-                    jsval *argv, jsval *rval)
+                  jsval *argv, jsval *rval)
 {
     jsdouble *date = date_getProlog(cx, obj, argv);
     if (!date)
@@ -1715,7 +1732,7 @@ date_toTimeString(JSContext *cx, JSObject *obj, uintN argc,
 
 static JSBool
 date_toDateString(JSContext *cx, JSObject *obj, uintN argc,
-                    jsval *argv, jsval *rval)
+                  jsval *argv, jsval *rval)
 {
     jsdouble *date = date_getProlog(cx, obj, argv);
     if (!date)
@@ -1854,6 +1871,7 @@ static JSFunctionSpec date_methods[] = {
     {js_toLocaleString_str, date_toLocaleString,    0,0,0 },
     {"toLocaleDateString",  date_toLocaleDateString,0,0,0 },
     {"toLocaleTimeString",  date_toLocaleTimeString,0,0,0 },
+    {"toLocaleFormat",      date_toLocaleFormat,    1,0,0 },
     {"toDateString",        date_toDateString,      0,0,0 },
     {"toTimeString",        date_toTimeString,      0,0,0 },
 #if JS_HAS_TOSOURCE
