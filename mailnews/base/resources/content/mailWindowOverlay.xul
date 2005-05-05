@@ -200,8 +200,7 @@
 
 <commandset id="mailEditContextMenuItems">
   <command id="cmd_copyLink"/>
-  <command id="cmd_copyImageLocation"/>
-  <command id="cmd_copyImageContents"/>
+  <command id="cmd_copyImage"/>
 </commandset>
 
 <commandset id="mailGoMenuItems"
@@ -1007,7 +1006,7 @@
         <menuitem id="context-copyimage"
                   label="&copyImageCmd.label;"
                   accesskey="&copyImageCmd.accesskey;"
-                  command="cmd_copyImageContents"/>
+                  command="cmd_copyImage"/>
         <menuitem id="context-copyemail"
                   label="&copyEmailCmd.label;"
                   accesskey="&copyEmailCmd.accesskey;"

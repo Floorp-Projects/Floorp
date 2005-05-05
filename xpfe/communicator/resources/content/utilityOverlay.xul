@@ -225,11 +225,8 @@
   <command id="cmd_copyLink"
            oncommand="goDoCommand('cmd_copyLink')"
            disabled="false"/>
-  <command id="cmd_copyImageLocation"
-           oncommand="goDoCommand('cmd_copyImageLocation')"
-           disabled="false"/>
-  <command id="cmd_copyImageContents"
-           oncommand="goDoCommand('cmd_copyImageContents')"
+  <command id="cmd_copyImage"
+           oncommand="goDoCommand('cmd_copyImage')"
            disabled="false"/>
   <command id="cmd_undo" 
            oncommand="goDoCommand('cmd_undo')"

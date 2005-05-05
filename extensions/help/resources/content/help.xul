@@ -47,8 +47,6 @@
     <command id="Browser:Back"    oncommand="goBack();"    observes="canGoBack"/>
     <command id="Browser:Forward" oncommand="goForward();" observes="canGoForward"/>
     <command id="cmd_copyLink"/>
-    <command id="cmd_copyImageLocation"/>
-    <command id="cmd_copyImageContents"/>
   </commandset>
   <commandset id="clipboardEditMenuItems"/>
   <commandset id="viewZoomCommands"/>

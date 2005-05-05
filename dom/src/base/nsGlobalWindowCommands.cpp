@@ -66,6 +66,7 @@ const char * const sSelectAllString = "cmd_selectAll";
 const char * const sSelectNoneString = "cmd_selectNone";
 const char * const sCopyImageLocationString = "cmd_copyImageLocation";
 const char * const sCopyImageContentsString = "cmd_copyImageContents";
+const char * const sCopyImageString = "cmd_copyImage";
 
 const char * const sScrollTopString = "cmd_scrollTop";
 const char * const sScrollBottomString = "cmd_scrollBottom";
@@ -604,6 +605,8 @@ nsClipboardImageCommands::DoClipboardCommand(const char *aCommandName, nsIConten
 {
   if (!nsCRT::strcmp(sCopyImageLocationString, aCommandName))
     return aEdit->CopyImage(nsIContentViewerEdit::COPY_IMAGE_TEXT);
+  if (!nsCRT::strcmp(sCopyImageContentsString, aCommandName))
+    return aEdit->CopyImage(nsIContentViewerEdit::COPY_IMAGE_DATA);
 
   PRInt32 copyFlags = nsIContentViewerEdit::COPY_IMAGE_ALL;
   if (aParams)
@@ -965,7 +968,8 @@ nsWindowCommandRegistration::RegisterWindowCommands(
   NS_REGISTER_ONE_COMMAND(nsClipboardPasteCommand, "cmd_paste");
   NS_REGISTER_ONE_COMMAND(nsClipboardCopyLinkCommand, "cmd_copyLink");
   NS_REGISTER_FIRST_COMMAND(nsClipboardImageCommands, sCopyImageLocationString);
-  NS_REGISTER_LAST_COMMAND(nsClipboardImageCommands, sCopyImageContentsString);
+  NS_REGISTER_NEXT_COMMAND(nsClipboardImageCommands, sCopyImageContentsString);
+  NS_REGISTER_LAST_COMMAND(nsClipboardImageCommands, sCopyImageString);
   NS_REGISTER_FIRST_COMMAND(nsClipboardSelectAllNoneCommands, sSelectAllString);
   NS_REGISTER_LAST_COMMAND(nsClipboardSelectAllNoneCommands, sSelectNoneString);
 
