@@ -160,7 +160,7 @@ OpenKeyForWriting(const char* aKeyName, HKEY* aKey, PRBool aForAllUsers, PRBool 
 //     firefox.exe\DefaultIcon             (default)   REG_SZ  <appname>,0
 //     firefox.exe\shell\open\command      (default)   REG_SZ  <appname>
 //     firefox.exe\shell\properties        (default)   REG_SZ  Firefox &Options
-//     firefox.exe\shell\properties\command(default)   REG_SZ  <appname> -chrome "chrome://browser/content/pref.xul"
+//     firefox.exe\shell\properties\command(default)   REG_SZ  <appname> -preferences
 //
 // - Uninstall Information
 //   ---------------------
@@ -247,7 +247,7 @@ static SETTING gSettings[] = {
     PATH_SUBSTITUTION | EXE_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME1(SMI, "%APPEXE%\\shell\\properties\\command"),
     "", 
-    "%APPPATH% -chrome \"chrome://browser/content/pref/pref.xul\"",   
+    "%APPPATH% -preferences",   
     PATH_SUBSTITUTION | EXE_SUBSTITUTION | NON_ESSENTIAL }
 
   // The value of the menu must be set by hand, since it contains a localized
