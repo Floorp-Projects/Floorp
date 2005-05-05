@@ -47,6 +47,7 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsArrayEnumerator.h"
+#include "nsEnumeratorUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
 #include "nsEscape.h"
@@ -1085,8 +1086,17 @@ nsChromeRegistry::CheckForNewChrome()
   nsCOMPtr<nsISimpleEnumerator> chromeML;
   rv = dirSvc->Get(NS_CHROME_MANIFESTS_FILE_LIST, NS_GET_IID(nsISimpleEnumerator),
                    getter_AddRefs(chromeML));
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) {
+    // ok, then simply load all .manifest files in the app chrome dir.
+    nsCOMPtr<nsIFile> chromeDir;
+    rv = dirSvc->Get(NS_APP_CHROME_DIR, NS_GET_IID(nsIFile),
+                     getter_AddRefs(chromeDir));
+    if (NS_FAILED(rv))
+      return rv;
+    rv = NS_NewSingletonEnumerator(getter_AddRefs(chromeML), chromeDir);
+    if (NS_FAILED(rv))
+      return rv;
+  }
 
   nsCOMPtr<nsISupports> next;
   while (NS_SUCCEEDED(chromeML->HasMoreElements(&exists)) && exists) {
