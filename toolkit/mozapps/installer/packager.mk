@@ -103,7 +103,14 @@ endif
 PKG_SUFFIX	= .dmg
 _ABS_TOPSRCDIR	= $(shell cd $(topsrcdir) && pwd)
 MAKE_PACKAGE	= $(_ABS_TOPSRCDIR)/build/package/mac_osx/make-diskimage $(PKG_BASENAME).dmg $(MOZ_PKG_APPNAME) $(MOZ_APP_DISPLAYNAME)
-UNMAKE_PACKAGE	= $(error XXX Need to implement this!)
+UNMAKE_PACKAGE	= \
+  set -e; \
+  mkdir mount-temp; \
+  hdiutil attach -readonly -mountpoint mount-temp -private -noautoopen $(UNPACKAGE) > hdi.output; \
+  DEV_NAME=`egrep '^/dev' < hdi.output | sed 1q | awk '{print $$1}'`; \
+  rsync -a mount-temp/$(_APPNAME) $(MOZ_PKG_APPNAME); \
+  hdiutil detach $${DEV_NAME}; \
+  $(NULL)
 endif
 
 # dummy macro if we don't have PSM built
