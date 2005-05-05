@@ -54,7 +54,7 @@ prefpane {
 
 .paneSelector radio {
   border-right: 1px solid transparent;
-  border-left: 1px transparent;
+  border-left: 1px solid transparent;
   padding: 3px 0 3px 0;
   margin: 0;
   -moz-appearance: none !important;
