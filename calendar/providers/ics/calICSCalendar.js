@@ -95,6 +95,7 @@ calICSCalendar.prototype = {
 
         this.mObserver = new calICSObserver(this);
         this.mMemoryCalendar.addObserver(this.mObserver);
+        this.mMemoryCalendar.wrappedJSObject.calendarToReturn = this;
     },
 
     get name() {
@@ -109,6 +110,7 @@ calICSCalendar.prototype = {
     mUri: null,
     get uri() { return this.mUri },
     set uri(aUri) {
+        this.mMemoryCalendar.uri = aUri;
         // Lock other changes to the item list.
         this.locked = true;
         // set to prevent writing after loading, without any changes
@@ -142,7 +144,8 @@ calICSCalendar.prototype = {
         // Create a new calendar, to get rid of all the old events
         this.mMemoryCalendar = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"]
                                          .createInstance(Components.interfaces.calICalendar);
-        // And don't forget to add our observer
+        this.mMemoryCalendar.uri = this.mUri;
+        this.mMemoryCalendar.wrappedJSObject.calendarToReturn = this;
         this.mMemoryCalendar.addObserver(this.mObserver);
 
         this.mObserver.onStartBatch();
