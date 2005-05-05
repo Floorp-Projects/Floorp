@@ -51,7 +51,8 @@
 // commdlg.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <commdlg.h>
 
-static WNDPROC OldListBoxWndProc;
+static WNDPROC OldListBoxWndProc = NULL;
+static WNDPROC OldBrowseWndProc  = NULL;
 static BOOL    gbProcessingXpnstallFiles;
 static DWORD   gdwACFlag;
 static DWORD   gdwIndexLastSelected;
@@ -101,6 +102,16 @@ void ClosePreviousDialog()
   sgProduct.lastDialog = NULL;
 }
  
+void UnSubclassWindow(HWND aHwnd, WNDPROC *aWndProc)
+{
+  // Un-subclass the window.
+  if(aHwnd && *aWndProc)
+  {
+    SubclassWindow(aHwnd, *aWndProc);
+    *aWndProc = NULL;
+  }
+}
+
 BOOL AskCancelDlg(HWND hDlg)
 {
   char szDlgQuitTitle[MAX_BUF];
@@ -450,7 +461,7 @@ LRESULT CALLBACK ListBoxBrowseWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
       break;
   }
 
-  return(CallWindowProc(OldListBoxWndProc, hWnd, uMsg, wParam, lParam));
+  return(CallWindowProc(OldBrowseWndProc, hWnd, uMsg, wParam, lParam));
 }
 
 LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -462,15 +473,15 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
   char  szPath[MAX_BUF];
   HWND  hwndLBFolders;
 
+  hwndLBFolders = GetDlgItem(hDlg, 1121);
   switch(message)
   {
     case WM_INITDIALOG:
-      hwndLBFolders  = GetDlgItem(hDlg, 1121);
       SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szTempSetupPath);
 
       RepositionWindow(hDlg, NO_BANNER_IMAGE);
 
-      OldListBoxWndProc    = SubclassWindow(hwndLBFolders, (WNDPROC)ListBoxBrowseWndProc);
+      OldBrowseWndProc     = SubclassWindow(hwndLBFolders, (WNDPROC)ListBoxBrowseWndProc);
       gdwIndexLastSelected = SendDlgItemMessage(hDlg, 1121, LB_GETCURSEL, 0, (LPARAM)0);
 
       SetWindowText(hDlg, sgInstallGui.szSelectDirectory);
@@ -592,6 +603,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 
           lstrcpy(szTempSetupPath, szBuf);
           RemoveBackSlash(szTempSetupPath);
+          UnSubclassWindow(hwndLBFolders, &OldBrowseWndProc);
           EndDialog(hDlg, 0);
           break;
       }
@@ -1348,7 +1360,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
   ULONGLONG           ullDSBuf;
   char                szBuf[MAX_BUF];
 
-  hwndLBComponents  = GetDlgItem(hDlg, IDC_LIST_COMPONENTS);
+  hwndLBComponents = GetDlgItem(hDlg, IDC_LIST_COMPONENTS);
 
   switch(msg)
   {
@@ -1411,6 +1423,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
 
       gdwACFlag = AC_COMPONENTS;
       OldListBoxWndProc = SubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
+      ClosePreviousDialog();
       break;
 
     case WM_DRAWITEM:
@@ -1440,7 +1453,6 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       lstrcat(szBuf, " KB");
       
       SetDlgItemText(hDlg, IDC_DOWNLOAD_SIZE, szBuf);
-      ClosePreviousDialog();
       break;
 
     case WM_COMMAND:
@@ -1455,17 +1467,22 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         case IDWIZNEXT:
           SaveWindowPosition(hDlg);
           sgProduct.lastDialog = hDlg;
+          UnSubclassWindow(hwndLBComponents, &OldListBoxWndProc);
           DlgSequence(NEXT_DLG);
           break;
 
         case IDWIZBACK:
           SaveWindowPosition(hDlg);
           sgProduct.lastDialog = hDlg;
+          UnSubclassWindow(hwndLBComponents, &OldListBoxWndProc);
           DlgSequence(PREV_DLG);
           break;
 
         case IDCANCEL:
-          AskCancelDlg(hDlg);
+          // AskCancelDlg() will return TRUE if the user
+          // chose to really cancel
+          if(AskCancelDlg(hDlg))
+            UnSubclassWindow(hwndLBComponents, &OldListBoxWndProc);
           break;
 
         default:
@@ -1489,7 +1506,7 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
   ULONGLONG           ullDSBuf;
   char                szBuf[MAX_BUF];
 
-  hwndLBComponents  = GetDlgItem(hDlg, IDC_LIST_COMPONENTS);
+  hwndLBComponents = GetDlgItem(hDlg, IDC_LIST_COMPONENTS);
 
   switch(msg)
   {
@@ -1552,6 +1569,7 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
 
       gdwACFlag = AC_ADDITIONAL_COMPONENTS;
       OldListBoxWndProc = SubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
+      ClosePreviousDialog();
       break;
 
     case WM_DRAWITEM:
@@ -1581,7 +1599,6 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
       lstrcat(szBuf, " KB");
       
       SetDlgItemText(hDlg, IDC_DOWNLOAD_SIZE, szBuf);
-      ClosePreviousDialog();
       break;
 
     case WM_COMMAND:
@@ -1596,17 +1613,22 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
         case IDWIZNEXT:
           SaveWindowPosition(hDlg);
           sgProduct.lastDialog = hDlg;
+          UnSubclassWindow(hwndLBComponents, &OldListBoxWndProc);
           DlgSequence(NEXT_DLG);
           break;
 
         case IDWIZBACK:
           SaveWindowPosition(hDlg);
           sgProduct.lastDialog = hDlg;
+          UnSubclassWindow(hwndLBComponents, &OldListBoxWndProc);
           DlgSequence(PREV_DLG);
           break;
 
         case IDCANCEL:
-          AskCancelDlg(hDlg);
+          // AskCancelDlg() will return TRUE if the user
+          // chose to really cancel
+          if(AskCancelDlg(hDlg))
+            UnSubclassWindow(hwndLBComponents, &OldListBoxWndProc);
           break;
 
         default:
@@ -2670,13 +2692,7 @@ void ResizeAndSetString(HWND aDlg, LPARAM lParam)
 
 LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
-  RECT      rDlg;
   HWND      hSTMessage = GetDlgItem(hDlg, IDC_MESSAGE); /* handle to the Static Text message window */
-  HDC       hdcSTMessage;
-  SIZE      sizeString;
-  LOGFONT   logFont;
-  HFONT     hfontTmp;
-  HFONT     hfontOld;
   char      szBuf[MAX_BUF];
   char      szBuf2[MAX_BUF];
   BOOL      wasMinimized = FALSE;
