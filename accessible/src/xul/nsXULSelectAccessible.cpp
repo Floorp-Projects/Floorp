@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXULSelectAccessible.h"
+#include "nsAccessibilityService.h"
 #include "nsArray.h"
 #include "nsIContent.h"
 #include "nsIDOMXULMenuListElement.h"
@@ -581,6 +582,30 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetValue(nsAString& _retval)
     return menuList->GetLabel(_retval);
   }
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsXULComboboxAccessible::GetDescription(nsAString& aDescription)
+{
+  // Use description of currently focused option
+  aDescription.Truncate();
+  nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mDOMNode));
+  if (!menuList) {
+    return NS_ERROR_FAILURE;  // Shut down
+  }
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> focusedOption;
+  menuList->GetSelectedItem(getter_AddRefs(focusedOption));
+  nsCOMPtr<nsIDOMNode> focusedOptionNode(do_QueryInterface(focusedOption));
+  if (focusedOptionNode) {
+    nsCOMPtr<nsIAccessibilityService> accService = 
+      do_GetService("@mozilla.org/accessibilityService;1");
+    NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIAccessible> focusedOptionAccessible;
+    accService->GetAccessibleInWeakShell(focusedOptionNode, mWeakShell, 
+                                        getter_AddRefs(focusedOptionAccessible));
+    NS_ENSURE_TRUE(focusedOptionAccessible, NS_ERROR_FAILURE);
+    return focusedOptionAccessible->GetDescription(aDescription);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULComboboxAccessible::GetChildCount(PRInt32 *aAccChildCount)

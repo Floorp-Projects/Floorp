@@ -2463,9 +2463,9 @@ nsComboboxControlFrame::OnOptionSelected(nsPresContext* aPresContext,
   } else {
     if (aSelected) {
       RedisplayText(aIndex);
-      FireValueChangeEvent();
     } else {
       RedisplaySelectedText();
+      FireValueChangeEvent(); // Fire after old option is unselected
     }
   }
 

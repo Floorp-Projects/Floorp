@@ -869,6 +869,42 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetFirstChild(nsIAccessible **aFirstChil
   return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLComboboxAccessible::GetDescription(nsAString& aDescription)
+{
+  // Use description of currently focused option
+  aDescription.Truncate();
+  nsCOMPtr<nsIAccessible> optionAccessible = GetFocusedOptionAccessible();
+  NS_ENSURE_TRUE(optionAccessible, NS_ERROR_FAILURE);
+  return optionAccessible->GetDescription(aDescription);
+}
+
+already_AddRefed<nsIAccessible>
+nsHTMLComboboxAccessible::GetFocusedOptionAccessible()
+{
+  if (!mWeakShell) {
+    return nsnull;  // Shut down
+  }
+  nsCOMPtr<nsIAccessible> listAccessible;
+  GetLastChild(getter_AddRefs(listAccessible));
+  nsCOMPtr<nsIAccessNode> listAccessNode(do_QueryInterface(listAccessible));
+  NS_ASSERTION(listAccessNode, "No list for combobox");
+  nsCOMPtr<nsIDOMNode> listNode;
+  listAccessNode->GetDOMNode(getter_AddRefs(listNode));
+  NS_ASSERTION(listAccessible, "No dom node for listbox");
+  nsCOMPtr<nsIDOMNode> focusedOptionNode;
+  nsHTMLSelectOptionAccessible::GetFocusedOptionNode(listNode, getter_AddRefs(focusedOptionNode));
+  nsCOMPtr<nsIAccessibilityService> accService = 
+    do_GetService("@mozilla.org/accessibilityService;1");
+  if (!focusedOptionNode || !accService) {
+    return nsnull;
+  }
+
+  nsIAccessible *optionAccessible;
+  accService->GetAccessibleInWeakShell(focusedOptionNode, mWeakShell, 
+                                       &optionAccessible);
+  return optionAccessible;
+}
+
 /**
   * MSAA/ATK accessible value != HTML value, especially not in combo boxes.
   * Our accessible value is the text label for of our ( first ) selected child.
@@ -876,10 +912,10 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetFirstChild(nsIAccessible **aFirstChil
   */
 NS_IMETHODIMP nsHTMLComboboxAccessible::GetValue(nsAString& aValue)
 {
-  nsCOMPtr<nsIAccessible> textFieldAccessible;
-  nsresult rv = GetFirstChild(getter_AddRefs(textFieldAccessible));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return textFieldAccessible->GetFinalValue(aValue);
+  // Use label of currently focused option
+  nsCOMPtr<nsIAccessible> optionAccessible = GetFocusedOptionAccessible();
+  NS_ENSURE_TRUE(optionAccessible, NS_ERROR_FAILURE);
+  return optionAccessible->GetName(aValue);
 }
 
 /** ----- nsHTMLComboboxTextFieldAccessible ----- */
