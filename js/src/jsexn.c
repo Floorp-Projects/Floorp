@@ -824,6 +824,9 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     int i;
     JSObject *protos[JSEXN_LIMIT];
 
+    if (!js_EnterLocalRootScope(cx))
+        return NULL;
+
     /* Initialize the prototypes first. */
     for (i = 0; exceptions[i].name != 0; i++) {
         JSAtom *atom;
@@ -838,19 +841,19 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
                                  : NULL,
                                  obj);
         if (!protos[i])
-            return NULL;
+            break;
 
         /* So exn_finalize knows whether to destroy private data. */
         OBJ_SET_SLOT(cx, protos[i], JSSLOT_PRIVATE, JSVAL_VOID);
 
         atom = js_Atomize(cx, exceptions[i].name, strlen(exceptions[i].name), 0);
         if (!atom)
-            return NULL;
+            break;
 
         /* Make a constructor function for the current name. */
         fun = js_DefineFunction(cx, obj, atom, exceptions[i].native, 3, 0);
         if (!fun)
-            return NULL;
+            break;
 
         /* Make this constructor make objects of class Exception. */
         fun->clasp = &ExceptionClass;
@@ -858,22 +861,26 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         /* Make the prototype and constructor links. */
         if (!js_SetClassPrototype(cx, fun->object, protos[i],
                                   JSPROP_READONLY | JSPROP_PERMANENT)) {
-            return NULL;
+            break;
         }
 
         /* proto bootstrap bit from JS_InitClass omitted. */
         nameString = JS_NewStringCopyZ(cx, exceptions[i].name);
         if (!nameString)
-            return NULL;
+            break;
 
         /* Add the name property to the prototype. */
         if (!JS_DefineProperty(cx, protos[i], js_name_str,
                                STRING_TO_JSVAL(nameString),
                                NULL, NULL,
                                JSPROP_ENUMERATE)) {
-            return NULL;
+            break;
         }
     }
+
+    js_LeaveLocalRootScope(cx);
+    if (exceptions[i].name)
+        return NULL;
 
     /*
      * Add an empty message property.  (To Exception.prototype only,
