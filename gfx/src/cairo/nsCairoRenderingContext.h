@@ -208,6 +208,23 @@ public:
 
     NS_IMETHOD SetRightToLeftText(PRBool aIsRTL) { return NS_OK; }
 
+    NS_IMETHOD GetClusterInfo(const PRUnichar *aText,
+                              PRUint32 aLength,
+                              PRUint8 *aClusterStarts);
+    virtual PRInt32 GetPosition(const PRUnichar *aText,
+                                PRUint32 aLength,
+                                nsPoint aPt);
+    NS_IMETHOD GetRangeWidth(const PRUnichar *aText,
+                             PRUint32 aLength,
+                             PRUint32 aStart,
+                             PRUint32 aEnd,
+                             PRUint32 &aWidth);
+    NS_IMETHOD GetRangeWidth(const char *aText,
+                             PRUint32 aLength,
+                             PRUint32 aStart,
+                             PRUint32 aEnd,
+                             PRUint32 &aWidth);
+
     NS_IMETHOD RenderEPS(const nsRect& aRect, FILE *aDataFile);
 
     // Cairo specific stuff

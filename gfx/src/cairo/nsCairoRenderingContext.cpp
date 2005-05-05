@@ -1122,6 +1122,42 @@ nsCairoRenderingContext::DrawString(const nsString& aString,
 }
 
 NS_IMETHODIMP
+nsCairoRenderingContext::GetClusterInfo(const PRUnichar *aText,
+                                       PRUint32 aLength,
+                                       PRUint8 *aClusterStarts)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+PRInt32
+nsCairoRenderingContext::GetPosition(const PRUnichar *aText,
+                                    PRUint32 aLength,
+                                    nsPoint aPt)
+{
+  return -1;
+}
+
+NS_IMETHODIMP
+nsCairoRenderingContext::GetRangeWidth(const PRUnichar *aText,
+                                      PRUint32 aLength,
+                                      PRUint32 aStart,
+                                      PRUint32 aEnd,
+                                      PRUint32 &aWidth)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCairoRenderingContext::GetRangeWidth(const char *aText,
+                                      PRUint32 aLength,
+                                      PRUint32 aStart,
+                                      PRUint32 aEnd,
+                                      PRUint32 &aWidth)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsCairoRenderingContext::RenderEPS(const nsRect& aRect, FILE *aDataFile)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
