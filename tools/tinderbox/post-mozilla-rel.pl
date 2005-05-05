@@ -400,8 +400,9 @@ sub packit_l10n {
   }
 
   my @locales = <ALL_LOCALES>;
-  chomp @locales;
   close ALL_LOCALES;
+
+  map { /([a-z-]+)/i; $_ = $1 } @locales;
 
   TinderUtils::print_log "Building following locales: @locales\n";
 
@@ -525,14 +526,19 @@ sub packit_l10n {
       }
     }
 
-    $status = run_locale_shell_command "$^X $srcdir/toolkit/locales/compare-locales.pl $srcdir/toolkit/locales/en-US $srcdir/toolkit/locales/$locale";
-    if ($tinderstatus eq 'success' && $status != 0) {
-      $tinderstatus = 'testfailed';
-    }
-
-    $status = run_locale_shell_command "$^X $srcdir/toolkit/locales/compare-locales.pl $srcdir/browser/locales/en-US $srcdir/browser/locales/$locale";
-    if ($tinderstatus eq 'success' && $status != 0) {
-      $tinderstatus = 'testfailed';
+    for my $localetest (@Settings::CompareLocaleDirs) {
+      my $originaldir = "$srcdir/$localetest/locales/en-US";
+      my $localedir;
+      if ($Settings::CompareLocalesAviary) {
+        $localedir = "$srcdir/$localetest/locales/$locale";
+      }
+      else {
+        $localedir = "$srcdir/../l10n/$locale/$localetest";
+      }
+      $status = run_locale_shell_command "$^X $srcdir/toolkit/locales/compare-locales.pl $originaldir $localedir";
+      if ($tinderstatus eq 'success' && $status != 0) {
+        $tinderstatus = 'testfailed';
+      }
     }
     close LOCLOG;
 

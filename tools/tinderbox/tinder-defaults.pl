@@ -59,6 +59,10 @@ $DHTMLPerformanceTest     = 0;  # Tdhtml
 $QATest                   = 0;  
 $XULWindowOpenTest        = 0;  # Txul
 $StartupPerformanceTest   = 0;  # Ts
+@CompareLocaleDirs        = (); # Run compare-locales test on these directories
+# ("network","dom","toolkit","security/manager");
+$CompareLocalesAviary     = 0;  # Should the compare-locales commands use the
+                                # aviary directory structure?
 
 $TestsPhoneHome           = 0;  # Should test report back to server?
 

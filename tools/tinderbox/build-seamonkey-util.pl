@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.296 $ ';
+$::UtilsVersion = '$Revision: 1.297 $ ';
 
 package TinderUtils;
 
@@ -217,6 +217,7 @@ sub PrintExampleConfig {
     open DEFAULTS, $tinder_defaults or print "can't open $tinder_defaults, $!\n";
     while (<DEFAULTS>) {
         s/^\$/\#\$/;
+        s/^\@/\#\@/;
         print;
     }
     close DEFAULTS;
@@ -336,13 +337,13 @@ sub LoadConfig {
         open CONFIG, 'tinder-config.pl' or
             print "can't open tinder-config.pl, $?\n";
 
-        while (<CONFIG>) {
-            package Settings;
-            #warn "config:$_";
-            eval;
-        }
-
+        local $/ = undef;
+        my $config = <CONFIG>;
         close CONFIG;
+
+        package Settings;
+        eval $config;
+
     } else {
         warn "Error: Need tinderbox config file, tinder-config.pl\n";
         warn "       To get started, run the following,\n";
@@ -888,7 +889,7 @@ sub BuildIt {
         unless ($Settings::SkipMozilla) {
           
           # Make sure we have an up-to-date $Settings::moz_client_mk
-            
+          
           # Set CVSROOT here.  We should only need to checkout a new
           # version of $Settings::moz_client_mk once; we might have 
           # more than one cvs tree so set CVSROOT here to avoid confusion.
