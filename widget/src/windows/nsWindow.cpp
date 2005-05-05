@@ -7056,8 +7056,14 @@ PRBool nsWindow::OnIMEReconvert(LPARAM aData, LRESULT *oResult, PRBool aUseUnico
       *oResult = sizeof(RECONVERTSTRING) + len;
     }
 
-    ::ZeroMemory(pReconv, sizeof(RECONVERTSTRING));
-    pReconv->dwSize            = sizeof(RECONVERTSTRING);
+    if (pReconv->dwSize < *oResult) {
+      *oResult = 0;
+      return PR_FALSE;
+    }
+
+    DWORD tmpSize = pReconv->dwSize;
+    ::ZeroMemory(pReconv, tmpSize);
+    pReconv->dwSize            = tmpSize;
     pReconv->dwVersion         = 0;
     pReconv->dwStrLen          = len;
     pReconv->dwStrOffset       = sizeof(RECONVERTSTRING);
