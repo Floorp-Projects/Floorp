@@ -49,7 +49,7 @@ _ABS_DIST := $(shell cd $(DIST) && pwd)
 # below. If you don't understand what this means, talk to bsmedberg
 # before altering this makefile.
 
-AB_CD = $(MOZ_UI_LOCALE)
+AB = $(firstword $(subst -, ,$(AB_CD)))
 
 APP_VERSION := $(shell cat $(srcdir)/../config/version.txt)
 
@@ -119,7 +119,7 @@ install:: $(addsuffix .src,$(SEARCH_PLUGIN_PREFIX)) $(foreach base,$(SEARCH_PLUG
 
 libs-%:
 	@$(MAKE) -C ../../toolkit/locales libs-$*
-	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
 ifneq (,$(filter reporter,$(MOZ_EXTENSIONS)))
 	@$(MAKE) -C ../../extensions/reporter/locales libs AB_CD=$* XPI_NAME=locale-$*
 endif
@@ -169,7 +169,7 @@ repackage-win32-installer-%: $(WIN32_INSTALLER_IN)
 	@$(MAKE) repackage-win32-installer AB_CD=$* WIN32_INSTALLER_IN=$(WIN32_INSTALLER_IN)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/Contents/MacOS
+STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/MacOS
 else
 STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)
 endif
@@ -183,13 +183,18 @@ repackage-zip: $(ZIP_IN)
 	  $(UNMAKE_PACKAGE)
 	$(RM) $(STAGEDIST)/chrome/en-US.jar \
 	  $(STAGEDIST)/chrome/en-US.manifest \
-	  $(STAGEDIST)/chrome/defaults/pref/firefox-l10n.js
+	  $(STAGEDIST)/defaults/pref/firefox-l10n.js
 	$(RM) -r $(STAGEDIST)/searchplugins \
-	  $(STAGEDIST)/defaults/profile
+	  $(STAGEDIST)/defaults/profile \
+	  $(STAGEDIST)/chrome/en-US
 	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
 	$(MAKE) libs-$(AB_CD)
+	$(RM) -r $(DIST)/xpi-stage/locale-$(AB_CD)/chrome/$(AB_CD)
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
 	  tar $(TAR_CREATE_FLAGS) - * | ( cd $(STAGEDIST) && tar -xf - )
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj
+endif
 	cd $(DIST)/l10n-stage; \
 	  $(MAKE_PACKAGE)
 	mv -f $(DIST)/l10n-stage/$(PACKAGE) $(DIST)
