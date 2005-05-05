@@ -115,6 +115,9 @@ extern void
 js_MarkScriptFilename(const char *filename);
 
 extern void
+js_MarkScriptFilenames(JSRuntime *rt);
+
+extern void
 js_SweepScriptFilenames(JSRuntime *rt);
 
 /*

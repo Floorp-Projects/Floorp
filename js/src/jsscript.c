@@ -1034,6 +1034,23 @@ js_MarkScriptFilename(const char *filename)
 }
 
 JS_STATIC_DLL_CALLBACK(intN)
+js_script_filename_marker(JSHashEntry *he, intN i, void *arg)
+{
+    ScriptFilenameEntry *sfe = (ScriptFilenameEntry *) he;
+
+    sfe->mark = JS_TRUE;
+    return HT_ENUMERATE_NEXT;
+}
+
+void
+js_MarkScriptFilenames(JSRuntime *rt)
+{
+    JS_HashTableEnumerateEntries(rt->scriptFilenameTable,
+                                 js_script_filename_marker,
+                                 rt);
+}
+
+JS_STATIC_DLL_CALLBACK(intN)
 js_script_filename_sweeper(JSHashEntry *he, intN i, void *arg)
 {
     ScriptFilenameEntry *sfe = (ScriptFilenameEntry *) he;
