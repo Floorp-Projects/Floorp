@@ -64,10 +64,10 @@
   <input type="hidden" name="id" value="[% type.id %]">
   <input type="hidden" name="target_type" value="[% type.target_type %]">
   [% FOREACH category = type.inclusions %]
-    <input type="hidden" name="inclusions" value="[% category FILTER html %]">
+    <input type="hidden" name="inclusions" value="[% category.value FILTER html %]">
   [% END %]
   [% FOREACH category = type.exclusions %]
-    <input type="hidden" name="exclusions" value="[% category FILTER html %]">
+    <input type="hidden" name="exclusions" value="[% category.value FILTER html %]">
   [% END %]
 
   <table id="form" cellspacing="0" cellpadding="4" border="0">

@@ -184,7 +184,9 @@ sub get_exclusions {
 
 =item C<get_clusions($id, $type)>
 
-Someone please document this
+Return a hash of product/component IDs and names
+associated with the flagtype:
+$clusions{'product_name:component_name'} = "product_ID:component_ID"
 
 =back
 
@@ -192,23 +194,29 @@ Someone please document this
 
 sub get_clusions {
     my ($id, $type) = @_;
-    
-    &::PushGlobalSQLState();
-    &::SendSQL("SELECT products.name, components.name " . 
-               "FROM flagtypes, flag${type}clusions " . 
-               "LEFT OUTER JOIN products ON flag${type}clusions.product_id = products.id " . 
-               "LEFT OUTER JOIN components ON flag${type}clusions.component_id = components.id " . 
-               "WHERE flagtypes.id = $id AND flag${type}clusions.type_id = flagtypes.id");
-    my @clusions = ();
-    while (&::MoreSQLData()) {
-        my ($product, $component) = &::FetchSQLData();
-        $product ||= "Any";
-        $component ||= "Any";
-        push(@clusions, "$product:$component");
+    my $dbh = Bugzilla->dbh;
+
+    my $list =
+        $dbh->selectall_arrayref("SELECT products.id, products.name, " .
+                                 "       components.id, components.name " . 
+                                 "FROM flagtypes, flag${type}clusions " . 
+                                 "LEFT OUTER JOIN products " .
+                                 "  ON flag${type}clusions.product_id = products.id " . 
+                                 "LEFT OUTER JOIN components " .
+                                 "  ON flag${type}clusions.component_id = components.id " . 
+                                 "WHERE flagtypes.id = ? " .
+                                 " AND flag${type}clusions.type_id = flagtypes.id",
+                                 undef, $id);
+    my %clusions;
+    foreach my $data (@$list) {
+        my ($product_id, $product_name, $component_id, $component_name) = @$data;
+        $product_id ||= 0;
+        $product_name ||= "__Any__";
+        $component_id ||= 0;
+        $component_name ||= "__Any__";
+        $clusions{"$product_name:$component_name"} = "$product_id:$component_id";
     }
-    &::PopGlobalSQLState();
-    
-    return \@clusions;
+    return \%clusions;
 }
 
 =pod
