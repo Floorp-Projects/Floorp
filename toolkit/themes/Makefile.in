@@ -52,7 +52,7 @@ include $(DEPTH)/config/autoconf.mk
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS	= pinstripe
 else
-ifdef MOZ_PHOENIX
+ifndef MOZ_THUNDERBIRD
 DIRS	= winstripe
 else
 DIRS    = qute
