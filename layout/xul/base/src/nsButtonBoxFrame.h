@@ -57,9 +57,14 @@ public:
 
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
 
-  virtual void MouseClicked (nsPresContext* aPresContext, nsGUIEvent* aEvent);
+  virtual void MouseClicked (nsPresContext* aPresContext, nsGUIEvent* aEvent)
+  { DoMouseClick(aEvent, PR_FALSE); }
 
-
+  /**
+   * Our implementation of MouseClicked. 
+   * @param aTrustEvent if PR_TRUE and aEvent as null, then assume the event was trusted
+   */
+  void DoMouseClick(nsGUIEvent* aEvent, PRBool aTrustEvent);
 }; // class nsButtonBoxFrame
 
 #endif /* nsButtonBoxFrame_h___ */
