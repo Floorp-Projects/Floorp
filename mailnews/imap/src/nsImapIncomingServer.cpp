@@ -3761,17 +3761,26 @@ nsImapIncomingServer::GetMsgFolderFromURI(nsIMsgFolder *aFolderResource, const c
 
   nsCOMPtr <nsIMsgFolder> msgFolder;
   PRBool namespacePrefixAdded = PR_FALSE;
-
-  // Make sure an specific IMAP folder has correct personal namespace
-  // See bugzilla bug 90494 (http://bugzilla.mozilla.org/show_bug.cgi?id=90494)
   nsXPIDLCString folderUriWithNamespace;
-  GetUriWithNamespacePrefixIfNecessary(kPersonalNamespace, aURI, getter_Copies(folderUriWithNamespace));
-  if (!folderUriWithNamespace.IsEmpty()) {
-    namespacePrefixAdded = PR_TRUE;
-    rv = rootMsgFolder->GetChildWithURI(folderUriWithNamespace, PR_TRUE, PR_FALSE, getter_AddRefs(msgFolder));
-  }
-  else {
-    rv = rootMsgFolder->GetChildWithURI(aURI, PR_TRUE, PR_FALSE, getter_AddRefs(msgFolder));
+
+  // Check if the folder exists as is...Even if we have a personal namespace,
+  // it might be in another namespace (e.g., shared) and this will catch that.
+  rv = rootMsgFolder->GetChildWithURI(aURI, PR_TRUE, PR_FALSE, getter_AddRefs(msgFolder));
+
+  // If we couldn't find the folder as is, check if we need to prepend the
+  // personal namespace
+  if (!msgFolder)
+  {
+    GetUriWithNamespacePrefixIfNecessary(kPersonalNamespace, aURI, getter_Copies(folderUriWithNamespace));
+    if (!folderUriWithNamespace.IsEmpty()) 
+    {
+      namespacePrefixAdded = PR_TRUE;
+      rv = rootMsgFolder->GetChildWithURI(folderUriWithNamespace, PR_TRUE, PR_FALSE, getter_AddRefs(msgFolder));
+    }
+    else 
+    {
+      rv = rootMsgFolder->GetChildWithURI(aURI, PR_TRUE, PR_FALSE, getter_AddRefs(msgFolder));
+    }
   }
 
   if (NS_FAILED(rv) || !msgFolder) {
