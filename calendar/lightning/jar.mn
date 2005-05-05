@@ -4,6 +4,7 @@ lightning.jar:
   content/lightning/messenger-overlay-sidebar.js	(content/messenger-overlay-sidebar.js)
   content/lightning/calendar-management.js		(content/calendar-management.js)
   content/lightning/lightning-widgets.css		(content/lightning-widgets.css)
+  content/lightning/agenda-tree.js			(content/agenda-tree.js)
 
 en-US.jar:
   locale/en-US/lightning/lightning.dtd				(locale/lightning.dtd)
@@ -35,6 +36,7 @@ calendar.jar:
 calendar-en-US.jar:
   locale/en-US/calendar/global.dtd		(/calendar/resources/locale/en-US/global.dtd)
   locale/en-US/calendar/calendar.dtd		(/calendar/resources/locale/en-US/calendar.dtd)
+  locale/en-US/calendar/calendarCreation.dtd		(/calendar/resources/locale/en-US/calendarCreation.dtd)
   locale/en-US/calendar/selectAddresses.dtd	(/calendar/resources/locale/en-US/selectAddresses.dtd)
   locale/en-US/calendar/calendar.properties	(/calendar/resources/locale/en-US/calendar.properties)
   locale/en-US/calendar/dateFormat.properties	(/calendar/resources/locale/en-US/dateFormat.properties)
