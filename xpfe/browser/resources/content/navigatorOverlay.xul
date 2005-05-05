@@ -158,8 +158,7 @@
 
     <!-- Content area context menu -->
     <command id="cmd_copyLink"/>
-    <command id="cmd_copyImageLocation"/>
-    <command id="cmd_copyImageContents"/>
+    <command id="cmd_copyImage"/>
 
     <!-- View Menu -->
     <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(content.document);" observes="isImage"/>
