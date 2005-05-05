@@ -1680,6 +1680,9 @@ restart:
         JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_marker, cx);
     js_MarkAtomState(&rt->atomState, gcflags, gc_mark_atom_key_thing, cx);
     js_MarkWatchPoints(rt);
+    if (gcflags & GC_KEEP_ATOMS)
+        js_MarkScriptFilenames(rt);
+
     iter = NULL;
     while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL) {
         /*
