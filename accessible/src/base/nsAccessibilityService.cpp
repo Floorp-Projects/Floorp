@@ -192,6 +192,7 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
   if (nsAccessNode::gLastFocusedNode) {
     nsCOMPtr<nsIDocShellTreeItem> focusedDocShellTreeItem =
       nsAccessNode::GetDocShellTreeItemFor(nsAccessNode::gLastFocusedNode);
+    NS_ENSURE_TRUE(focusedDocShellTreeItem, NS_ERROR_FAILURE);
     nsCOMPtr<nsIDocShellTreeItem> focusedRootTreeItem;
     focusedDocShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(focusedRootTreeItem));
 

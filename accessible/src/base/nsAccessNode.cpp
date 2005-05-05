@@ -496,6 +496,7 @@ nsAccessNode::GetDocShellTreeItemFor(nsIDOMNode *aStartNode)
     doc = do_QueryInterface(aStartNode);
   }
   NS_ASSERTION(doc, "No document for node passed in");
+  NS_ENSURE_TRUE(doc, nsnull);
   nsCOMPtr<nsISupports> container = doc->GetContainer();
   nsIDocShellTreeItem *docShellTreeItem = nsnull;
   if (container) {
