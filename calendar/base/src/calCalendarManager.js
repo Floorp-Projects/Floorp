@@ -306,7 +306,7 @@ calCalendarManager.prototype = {
         // pref names must be lower case
         name = name.toLowerCase();
 
-        this.mNotifyObservers("onCalendarPrefDeleting", [calendar, name]);
+        this.notifyObservers("onCalendarPrefDeleting", [calendar, name]);
 
         var calendarID = this.findCalendarID(calendar);
 
