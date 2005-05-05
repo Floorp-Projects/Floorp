@@ -1168,9 +1168,13 @@ struct nsRecessedBorder : public nsStyleBorder {
   nsRecessedBorder(nscoord aBorderWidth)
     : nsStyleBorder()
   {
-    // Note: use SetBorderStyle here because we want to affect mComputedBorder
     NS_FOR_CSS_SIDES(side) {
+      // Note: use SetBorderColor here because we want to make sure
+      // the "special" flags are unset.
+      SetBorderColor(side, NS_RGB(0, 0, 0));
       mBorder.side(side) = aBorderWidth;
+      // Note: use SetBorderStyle here because we want to affect
+      // mComputedBorder
       SetBorderStyle(side, NS_STYLE_BORDER_STYLE_INSET);
     }
   }
