@@ -128,12 +128,16 @@ const int kReuseWindowOnAE = 2;
 //
 + (BOOL)isTigerOrHigher
 {
-  BOOL runningOnTiger = NO;
-  long version = 0;
-  ::Gestalt(gestaltSystemVersion, &version);
-  if (version >= 0x00001040) 
-    runningOnTiger = YES;
-  return runningOnTiger;
+  static BOOL sInitTigerOrHigher = NO;
+  static BOOL sRunningOnTiger = NO;
+  if (!sInitTigerOrHigher) {
+    long version = 0;
+    ::Gestalt(gestaltSystemVersion, &version);
+    if (version >= 0x00001040) 
+      sRunningOnTiger = YES;
+    sInitTigerOrHigher = YES;
+  }
+  return sRunningOnTiger;
 }
 
 //

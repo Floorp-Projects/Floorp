@@ -552,8 +552,10 @@ static unsigned gFirstUserCollection = 0;
 - (void)bookmarkAdded:(NSNotification *)note
 {
   BookmarkItem* bmItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
-  if ([bmItem isKindOfClass:[Bookmark class]])
-    [bmItem writeBookmarksMetadataToPath:mMetadataPath];
+  if ([MainController supportsSpotlight]) {
+    if ([bmItem isKindOfClass:[Bookmark class]])
+      [bmItem writeBookmarksMetadataToPath:mMetadataPath];
+  }
   [self bookmarkChanged:nil];
 }
 
@@ -562,7 +564,8 @@ static unsigned gFirstUserCollection = 0;
   [self bookmarkChanged:nil];
   
   BookmarkItem* bmItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
-  [bmItem removeBookmarksMetadataFromPath:mMetadataPath];
+  if ([MainController supportsSpotlight])
+    [bmItem removeBookmarksMetadataFromPath:mMetadataPath];
   if ([bmItem isKindOfClass:[BookmarkFolder class]])
   {
     if ([(BookmarkFolder*)bmItem containsChildItem:mLastUsedFolder])
@@ -578,9 +581,11 @@ static unsigned gFirstUserCollection = 0;
   if (aNote) {
     // have this item rewrite its metadata. |aNote| is non-nil when a bookmark has really
     // changed, not when we're using it from other routines to force a write bookmark notification. 
-    id item = [aNote object];
-    if ([item isKindOfClass:[Bookmark class]])
-      [item writeBookmarksMetadataToPath:mMetadataPath];
+    if ([MainController supportsSpotlight]) {
+      id item = [aNote object];
+      if ([item isKindOfClass:[Bookmark class]])
+        [item writeBookmarksMetadataToPath:mMetadataPath];
+    }
   }
   NSNotificationQueue* nq = [NSNotificationQueue defaultQueue];
   NSNotification *note = [NSNotification notificationWithName:WriteBookmarkNotification object:self userInfo:nil];
