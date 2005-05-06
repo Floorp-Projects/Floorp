@@ -1486,6 +1486,10 @@ static void wallet_InitListFromAppleAddressBook(nsVoidArray** inList)
   ABMultiValue* emails = [me valueForProperty:kABEmailProperty];
   NSString* primaryEmail = [emails valueAtIndex:[emails indexForIdentifier:[emails primaryIdentifier]]];
   wallet_WriteToList("home.email", [primaryEmail UTF8String], dummy, *inList, PR_FALSE);
+  
+  // web
+  NSString* webPage = [me valueForProperty:kABHomePageProperty];
+  wallet_WriteToList("home.uri", [webPage UTF8String], dummy, *inList, PR_FALSE);
 }
 
 /*
