@@ -4890,8 +4890,11 @@ nsDocShell::FireRestoreEvents()
     // want the chrome to see it for chrome/extensions that look for page load.
     // In addition, we need to fire DOMPageRestore on the content window.
 
+    nsresult rv = EnsureContentViewer();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(mContentViewer);
-    NS_ASSERTION(docViewer, "should not be called with a null viewer");
+    NS_ENSURE_TRUE(docViewer, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIPresShell> shell;
     docViewer->GetPresShell(getter_AddRefs(shell));
@@ -4913,9 +4916,8 @@ nsDocShell::FireRestoreEvents()
     nsIDOMEvent *domEvt = nsnull;
     nsPresContext *pc = shell->GetPresContext();
 
-    nsresult rv = handler->HandleChromeEvent(pc, &event, &domEvt,
-                                             flags & NS_EVENT_CAPTURE_MASK,
-                                             &status);
+    rv = handler->HandleChromeEvent(pc, &event, &domEvt,
+                                    flags & NS_EVENT_CAPTURE_MASK, &status);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (domEvt) {
