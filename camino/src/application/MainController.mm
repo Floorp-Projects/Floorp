@@ -249,6 +249,12 @@ const int kReuseWindowOnAE = 2;
   // order, we need to set a user default to return to the old behavior.
   [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"NSViewSetAncestorsWindowFirst"];
   
+  // previous versions would keep the cache in the profile folder. If we find it there, remove it so
+  // that backup apps can more easily back up our profile. This will mean if anyone goes back to 
+  // 0.8.x, they'll lose their favicons and cache, but that's ok.
+  NSString* cacheDir = [[pm newProfilePath] stringByAppendingPathComponent:@"Cache"];
+  [[NSFileManager defaultManager] removeFileAtPath:cacheDir handler:nil];
+
   // register for window layering changes, so that we can update the bookmarks menu
   NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
   [notificationCenter addObserver:self selector:@selector(windowLayeringDidChange:) name:NSWindowDidBecomeKeyNotification object:nil];

@@ -93,6 +93,10 @@ AppDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_
   {
     rv = GetProductDirectory(getter_AddRefs(localFile));
   }
+  else if (strcmp(prop, NS_APP_CACHE_PARENT_DIR) == 0)
+  {
+    rv = GetCacheDirectory(getter_AddRefs(localFile));
+  }
     
   if (localFile && NS_SUCCEEDED(rv))
     return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
@@ -105,15 +109,27 @@ AppDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_
 //*****************************************************************************   
 
 NS_METHOD
-AppDirServiceProvider::GetProductDirectory(nsILocalFile **aLocalFile)
+AppDirServiceProvider::GetProductDirectory(nsILocalFile **outLocalFile)
 {
-  NS_ENSURE_ARG_POINTER(aLocalFile);
-  *aLocalFile = nsnull;
+  return EnsureFolder(kApplicationSupportFolderType, outLocalFile);
+}
+
+nsresult
+AppDirServiceProvider::GetCacheDirectory(nsILocalFile** outCacheFolder)
+{
+  return EnsureFolder(kCachedDataFolderType, outCacheFolder);
+}
+
+nsresult
+AppDirServiceProvider::EnsureFolder(OSType inFolderType, nsILocalFile** outFolder)
+{
+  NS_ENSURE_ARG_POINTER(outFolder);
+  *outFolder = nsnull;
   
   nsresult rv;
   FSRef   foundRef;
   
-  OSErr err = ::FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &foundRef);
+  OSErr err = ::FSFindFolder(kUserDomain, inFolderType, kCreateFolder, &foundRef);
   if (err != noErr)
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsILocalFileMac> localDir(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
@@ -133,9 +149,8 @@ AppDirServiceProvider::GetProductDirectory(nsILocalFile **aLocalFile)
   if (NS_FAILED(rv))
     return rv;
   
-  *aLocalFile = localDir;
-  NS_ADDREF(*aLocalFile);
+  *outFolder = localDir;
+  NS_ADDREF(*outFolder);
   
   return rv; 
 }
-

@@ -43,6 +43,8 @@
 #include "nsILocalFile.h"
 #include "nsString.h"
 
+#include <Carbon/Carbon.h>
+
 class nsIFile;
 
 //*****************************************************************************
@@ -61,8 +63,9 @@ protected:
    virtual              ~AppDirServiceProvider();
 
    NS_METHOD            GetProductDirectory(nsILocalFile **aLocalFile);
-   NS_METHOD            GetDefaultUserProfileRoot(nsILocalFile **aLocalFile);
-     
+   nsresult             GetCacheDirectory(nsILocalFile** outCacheFolder);
+   nsresult             EnsureFolder(OSType inFolderType, nsILocalFile** outFolder);
+
    nsCString            mProductDirName;
 };
 
