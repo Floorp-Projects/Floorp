@@ -1,0 +1,4 @@
+calendar-alarm-widget { 
+  -moz-binding: url(chrome://calendar/content/calendar-alarm-widget.xml#calendar-alarm-widget);
+  -moz-user-focus: normal;
+}

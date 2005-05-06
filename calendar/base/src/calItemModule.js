@@ -87,6 +87,14 @@ const componentData =
      constructor: "calCalendarManager",
      onComponentLoad: "onCalCalendarManagerLoad()"},
 
+    {cid: Components.ID("{7a9200dd-6a64-4fff-a798-c5802186e2cc}"),
+     contractid: "@mozilla.org/calendar/alarm-service;1",
+     script: "calAlarmService.js",
+     constructor: "calAlarmService",
+     category: "app-startup",
+     categoryEntry: "alarm-service-startup",
+     service: true},
+
     {cid: Components.ID("{974339d5-ab86-4491-aaaf-2b2ca177c12b}"),
      contractid: "@mozilla.org/calendar/event;1",
      script: "calEvent.js",
@@ -168,8 +176,14 @@ var calItemModule = {
                                             type);
 
             if (comp.category) {
+                var contractid;
+                if (comp.service)
+                    contractid = "service," + comp.contractid;
+                else
+                    contractid = comp.contractid;
                 catman.addCategoryEntry(comp.category, comp.categoryEntry,
-                                        comp.contractid, true, true);
+                                        contractid, true, true);
+                dump("registering for category stuff\n");
             }
         }
     },

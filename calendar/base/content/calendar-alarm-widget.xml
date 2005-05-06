@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<bindings id="testcases"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xbl="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="calendar-alarm-widget">
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:label xbl:inherits="value=title"/>
+          <xul:label xbl:inherits="value=time"/>
+        </xul:vbox>
+        <xul:vbox pack="start">
+          <xul:button label="snooze" oncommand="var event = document.createEvent('Events'); event.initEvent('snooze', false, false); this.dispatchEvent(event);"/>
+          <xul:button label="dismiss" oncommand="var event = document.createEvent('Events'); event.initEvent('dismiss', false, false); this.dispatchEvent(event);"/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+  </binding>
+</bindings>

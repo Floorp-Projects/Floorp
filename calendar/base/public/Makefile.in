@@ -46,7 +46,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= calbase
 XPIDL_MODULE	= calbase
 
-XPIDLSRCS	= calIAttachment.idl \
+XPIDLSRCS	= calIAlarmService.idl \
+		  calIAttachment.idl \
 		  calIAttendee.idl   \
 		  calICalendar.idl   \
 		  calICalendarManager.idl \

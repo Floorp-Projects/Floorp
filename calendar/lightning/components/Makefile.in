@@ -46,6 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE           = lightning
 
 EXTRA_COMPONENTS = \
+	lightningAlarmMonitor.js \
 	lightningTextCalendarConverter.js \
 	calItipProtocolHandler.js \
 	$(NULL)
