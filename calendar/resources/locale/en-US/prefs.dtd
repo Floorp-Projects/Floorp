@@ -45,7 +45,7 @@
 <!ENTITY calendar.views.label       "Views">
 <!ENTITY calendar.timezone.label    "My Timezone">
 
-<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.title            "Options">
 <!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
 <!ENTITY prefWindow.category         "Category">
 
