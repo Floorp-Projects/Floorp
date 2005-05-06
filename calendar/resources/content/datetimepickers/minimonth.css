@@ -1,14 +1,14 @@
 @import url("chrome://calendar/skin/datetimepickers/minimonth.css");
 
 minimonth {
-	-moz-binding: url("chrome://calendar/content/datetimepickers/minimonth.xbl#minimonth");
+	-moz-binding: url("chrome://calendar/content/datetimepickers/minimonth.xml#minimonth");
 }
 
 .minimonth-navbtn {
-	-moz-binding: url("chrome://calendar/content/datetimepickers/minimonth.xbl#minimonth-navbtn");
+	-moz-binding: url("chrome://calendar/content/datetimepickers/minimonth.xml#minimonth-navbtn");
 }
 
 .minimonth-day {
-	-moz-binding: url("chrome://calendar/content/datetimepickers/minimonth.xbl#minimonth-day");
+	-moz-binding: url("chrome://calendar/content/datetimepickers/minimonth.xml#minimonth-day");
 }
 

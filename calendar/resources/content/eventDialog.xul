@@ -44,7 +44,7 @@
 
 <!-- CSS File with all styles specific to the dialog -->
 <?xml-stylesheet href="chrome://calendar/skin/eventDialog.css" ?>
-<?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepicker.css" ?>
+<?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" ?>
 
 <!-- CSS for selecting contacts to invite to event -->
 <?xml-stylesheet href="chrome://calendar/skin/selectAddresses.css" ?>
