@@ -40,7 +40,7 @@
     <target name="build" description="Compiles Grendel.">
       <mkdir dir="dist"/>
       <unzip dest="dist" overwrite="false">
-        <fileset dir="extlibs">
+        <fileset dir="extlib">
           <include name="**/*.jar"/>
         </fileset>
       </unzip>

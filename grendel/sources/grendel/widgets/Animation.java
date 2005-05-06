@@ -105,7 +105,7 @@ public class Animation extends Component implements Runnable
     for (int i = 0; i < iFrames; i++)
     {
       Integer arg[] = { new Integer(i) };
-      String name = MessageFormat.format(template, arg, null);
+      String name = MessageFormat.format(template, arg);
       fGlyphs[i] = new ImageIcon(name);
     }
   }
