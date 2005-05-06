@@ -1,0 +1,1426 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): 
+   -   Garth Smedley <garths@oeone.com>
+   -   Mike Potter <mikep@oeone.com>
+   -  
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!--
+/*  This defines <datepicker/> <timepicker/> and <datetimepicker/>
+    which all descend from datetimepicker-base to get date/time parsing
+    and consistent behavior.
+    It relies on <minimonth/> for the date picker's drop down.
+    You can be notified of change event as follows:
+      <datepicker id="my-date-picker" onchange="myDatePick( this );"/>
+    May get/set value in javascript with 
+      document.getElementById("my-date-picker").value = new Date();
+    May disable/enable in javascript with
+      document.getElementById("my-date-picker").disabled = true;
+    May also disable/enable a datetimepicker's component
+      datepicker or timepicker individually with 
+      document.getElementById("my-datetimepicker").datepickerdisabled = true;
+      document.getElementById("my-datetimepicker").timepickerdisabled = true;
+
+*/
+-->
+<bindings id="xulDatePicker"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="datepicker" extends="chrome://calendar/content/datetimepickers/datetimepickers.xml#datetimepicker-base">
+    <!-- ::::::::::::::::: CONTENT ::::::::::::::::::::::::: -->
+    <!-- Desired behavior: when user is done editing the date field 
+         and either leaves the field (onblur) or closes the dialog 
+         (13 is enter/return key), parse the date and redisplay it
+         in the date field using the current format to verify
+         whether the date was parsed correctly.
+         This cannot be done with textbox oninput, so use a workaround.
+         This was done with textbox onkeypress="parseTextBoxDate(true)"
+         and onblur="parseTextBoxDate(true)" which worked in Moz1.6, but
+         no longer works in Moz1.7.
+         Therefore constructor stores attribute kDatePicker on the textbox,
+         and the onblur and onkeypress commands navigate to this kDatePicker.
+         xul:Textbox contains an xul:hbox which contains html:input.
+         Onkeypress and onblur are not documented attributes of xul:textbox,
+         but become attributes of the html:input.
+         Not clear how to navigate from the textbox to the input, otherwise 
+         could put kDatePicker property on the input element.
+         [document.getAnonymousNodes(textBox) fails as of Moz1.7b]).
+         So navigate parents to textbox in order to call parseTextBoxDate.
+         [Note: minimonth onmonthchange reshows parent popup to fix title 
+         month/year (bug 973914).  minimonth onpopuplisthidden reshows parent 
+         popup to avoid freeze (bug 278877).]
+         [this comment is outside the <content> so it won't become a
+         node that interferes with navigation to interior nodes.] -->
+    <content>
+      <xul:hbox flex="1" id="hbox" class="datepicker-box-class">
+        <xul:menulist editable="true" sizetopopup="false"
+                      class="datepicker-text-class"
+                      onkeypress="if (event.keyCode == 13) this.kDatePicker.parseTextBoxDate(true);"
+                      xbl:inherits="disabled">
+          <xul:menupopup popupanchor="bottomright" popupalign="topright"
+                         onpopupshowing="this.parentNode.kDatePicker.onPopup()">
+            <xul:minimonth/>
+          </xul:menupopup>
+        </xul:menulist>
+      </xul:hbox>
+    </content>
+
+    <!-- ::::::::::::::::: INTERFACE ::::::::::::::::::::::::: -->
+    <implementation>
+      <constructor>
+        <![CDATA[
+          var hbox = document.getAnonymousNodes(this)[0];
+          this.kTextBox = hbox.firstChild;
+          this.kTextBox.kDatePicker = this; // enable call back to method in Moz1.7
+          this.kTextBox.menupopup.kDatePicker = this;
+          this.kMinimonth = this.kTextBox.menupopup.firstChild;
+          this.mInPopup = false;
+          this.mValue = null;
+          var val = this.getAttribute("value");
+          if (val) {
+            this.value = new Date(val); // setting value property calls update
+          } else {
+            this.value = new Date();
+          }
+          this.kMinimonth.addEventListener("select", this.clickDate, false);
+          this.kMinimonth.addEventListener("monthchange", this.reshowPopup, false);
+          this.kMinimonth.addEventListener("popuplisthidden", this.reshowPopup, false);
+          this.mIsReshowing = false;
+        ]]>
+      </constructor>
+
+      <method name="update">
+        <parameter name="aValue"/>
+        <parameter name="aRefresh"/>
+        <body>
+          <![CDATA[
+            if (aValue != null) {
+              // format fails if year <= 1600 on win2k, so try format first.
+              var formattedValue = null;
+              try { 
+                formattedValue = this.formatDate(aValue);
+              } catch (ex) {} // fall thru
+
+              if (formattedValue) {
+                // format succeeded, safe to set value
+                this.mValue = aValue;
+                this.kTextBox.value = formattedValue;
+                if (aRefresh) {
+                  this.fireEvent("change");
+                  return;
+                }
+              }
+            }
+            // invalid date, revert to previous date
+            // set textBox.value property, not attribute
+            if (this.mValue) {
+              this.kTextBox.value = this.formatDate(this.mValue);
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="onPopup">
+        <body>
+          <![CDATA[
+            // avoid reinitializing during reshow, for bugs 273914 & 278877 workaround
+            if (! this.mIsReshowing) { 
+              this.mInPopup = true;
+              this.kMinimonth.update( this.mValue );
+              this.mInPopup = false;
+              // select all to remove cursor since can't type while popped-up
+              this.select();
+            }
+          ]]>
+        </body>
+      </method>
+
+      <!-- Reshow hides and shows parent popup without reinitializing in onPopup 
+           to workaround bugs 273914 (update title) & 278877 (avoid freeze) -->
+      <method name="reshowPopup">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            var datepicker = aEvent.target.parentNode.parentNode.kDatePicker;
+            datepicker.mIsReshowing = true;
+            try { 
+              aEvent.target.parentNode.hidePopup();
+              aEvent.target.parentNode.showPopup();
+            } finally {
+              datepicker.mIsReshowing = false;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="parseTextBoxDate">
+        <parameter name="aRefresh"/>
+        <body>
+          <![CDATA[
+            this.update(this.parseDateTime(this.kTextBox.value), aRefresh);
+            this.lastDateParseIncludedTime = false;
+          ]]>
+        </body>
+      </method>
+
+      <method name="select">
+        <body>
+          <![CDATA[
+            // select all in text box
+            this.kTextBox.select();
+          ]]>
+        </body>
+      </method>
+
+      <method name="clickDate">
+        <parameter name="aEvent" />
+        <body>
+          <![CDATA[
+            var datepicker = aEvent.target.parentNode.parentNode.kDatePicker;
+            if (! datepicker.mInPopup)
+            {
+              // aEvent.target is the minimonth
+              datepicker.update(new Date(aEvent.target.value), true);
+              // select changed value so no cursor appears (can't type to it).
+              datepicker.select();
+              aEvent.target.parentNode.hidePopup();
+            }
+          ]]>
+        </body>
+      </method>
+
+      </implementation>
+
+      <!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
+      <handlers>
+          <handler event="bindingattached" action="this.initialize();"/>
+
+          <handler event="blur" phase="capturing">
+            <![CDATA[
+              this.parseTextBoxDate(true);
+            ]]>
+          </handler>
+      </handlers>
+
+  </binding>
+    
+  <binding id="timepicker" extends="chrome://calendar/content/datetimepickers/datetimepickers.xml#datetimepicker-base">
+    <!-- ::::::::::::::::: CONTENT ::::::::::::::::::::::::: -->
+    <!-- Desired behavior: when user is done editing the time field 
+         and either leaves the field (onblur) or closes the dialog 
+         (13 is enter/return key), parse the time and redisplay it
+         in the time field using the current format to verify
+         whether the time was parsed correctly.
+         This cannot be done with textbox oninput, so use a workaround.
+         This was done with textbox onkeypress="parseTextBoxTime(true)"
+         and onblur="parseTextBoxTime(true)" which worked in Moz1.6, but
+         no longer works in Moz1.7.
+         Therefore constructor stores attribute kTimePicker on the textbox,
+         and the onblur and onkeypress commands navigate to this kTimePicker.
+         xul:Textbox contains an xul:hbox which contains html:input.
+         Onkeypress and onblur are not documented attributes of xul:textbox,
+         but become attributes of the html:input.
+         Not clear how to navigate from the textbox to the input, otherwise 
+         could put kTimePicker property on the input element.
+         [document.getAnonymousNodes(textBox) fails as of Moz1.7b]).
+         So navigate parents to textbox in order to call parseTextBoxTime.
+         [this comment is outside the <content> so it won't become a
+         node that interferes with navigation to interior nodes.] -->
+    <content id="content">
+      <xul:hbox flex="1" id="hbox" class="timepicker-box-class">
+        <xul:menulist editable="true" sizetopopup="false"
+                      id="timepicker-text"
+                      class="timepicker-text-class"
+                      onkeypress="if (event.keyCode == 13) this.kTimePicker.parseTextBoxTime(true);"
+                      xbl:inherits="disabled">
+          <xul:menupopup popupalign="topright" popupanchor="bottomright"
+                         onpopupshowing="onPopup(this)">
+            <xul:timepicker-grids />
+          </xul:menupopup>
+        </xul:menulist>
+      </xul:hbox>
+    </content>
+
+    <!-- ::::::::::::::::: INTERFACE ::::::::::::::::::::::::: -->
+    <implementation>
+      <constructor>
+        <![CDATA[
+          var hbox = document.getAnonymousNodes(this)[0];
+          this.kTextBox = hbox.childNodes[0];
+          this.kTextBox.kTimePicker = this; // enable call back to method in Moz1.7
+
+          var val = this.getAttribute("value");
+          if (val)
+            this.value = (new Date(val));
+          else
+            this.value = (new Date());
+        ]]>
+      </constructor>
+      
+      <method name="update">
+        <parameter name="aValue"/>
+        <parameter name="aRefresh"/>
+        <body>
+          <![CDATA[
+            if (aValue != null) {
+              this.mValue = aValue;
+            }
+            // set textBox.value property, not attribute
+            this.kTextBox.value = this.formatTime(this.mValue);
+
+            if (aValue != null && aRefresh) {
+              var event = document.createEvent('Events');
+              event.initEvent("change", false, true);
+              this.dispatchEvent(event);;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="parseTextBoxTime">
+        <parameter name="aRefresh"/>
+        <body>
+          <![CDATA[
+            var time = this.parseTime(this.kTextBox.value);
+            this.update(time, aRefresh);
+            return time;
+          ]]>
+        </body>
+      </method>
+
+      <method name="onPopup">
+        <parameter name="aPopup" />
+        <body>
+          <![CDATA[
+            // select all to remove cursor since can't type while popped-up
+            this.select();
+            var timePickerGrid = aPopup.childNodes[0]; 
+            timePickerGrid.onPopupShowing(this, aPopup);
+          ]]>
+        </body>
+      </method>
+
+      <method name="select">
+        <body>
+          <![CDATA[
+            // select all in text box
+            this.kTextBox.select();
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+
+    <!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
+
+    <handlers>
+      <handler event="bindingattached" action="this.initialize();"/>
+      <handler event="blur" phase="capturing">
+        <![CDATA[
+          this.parseTextBoxTime(true);
+        ]]>
+      </handler>
+    </handlers>
+
+  </binding>
+
+  <binding id="timepicker-hour">
+    <content>
+      <xul:vbox anonid="hourbox"
+                onclick="clickHour(this.parentNode, this.parentNode.getAttribute('value'))">
+        <xul:spacer flex="1"/>
+        <xul:box>
+          <xul:label class="time-picker-hour-label" anonid="hourlabel" xbl:inherits="value=label"/>
+        </xul:box> 
+        <xul:spacer flex="1"/>
+      </xul:vbox>
+    </content>
+  </binding>
+  <binding id="timepicker-minute">
+    <content>
+      <xul:vbox anonid="minutebox"
+                xbl:inherits="class"
+                onclick="clickMinute(this.parentNode, this.parentNode.getAttribute('value'))">
+        <xul:spacer flex="1"/>
+        <xul:box>
+          <xul:label class="time-picker-minute-label" anonid="minutelabel" xbl:inherits="value=label"/>
+        </xul:box>
+        <xul:spacer flex="1"/>
+      </xul:vbox>
+    </content>
+  </binding>
+
+  <binding id="timepicker-grids" extends="xul:box">
+    <resources>
+      <stylesheet src="chrome://calendar/skin/datetimepickers/datetimepickers.css"/>
+    </resources>
+    
+    <!-- ::::::::::::::::: CONTENT ::::::::::::::::::::::::: -->
+    <content>
+      <!-- Box to hold time picker internals -->
+      <vbox anonid="time-picker-grids"
+            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        <!-- Hour Grid -->
+        <grid anonid="time-picker-hour-grid">
+          <columns>
+            <column class="time-picker-hour-column-class" flex="1"/>
+            <column class="time-picker-hour-column-class" flex="1"/>
+            <column class="time-picker-hour-column-class" flex="1"/>
+            <column class="time-picker-hour-column-class" flex="1"/>
+            <column class="time-picker-hour-column-class" flex="1"/>
+            <column class="time-picker-hour-column-class" flex="1"/>
+            <column class="time-picker-hour-column-class" flex="1"/>
+            <column class="time-picker-hour-column-class" flex="1"/>
+            <column class="time-picker-hour-column-class" flex="1"/>
+            <column class="time-picker-hour-column-class" flex="1"/>
+            <column class="time-picker-hour-column-class" flex="1"/>
+            <column class="time-picker-hour-column-class" flex="1"/>
+          </columns>
+          <rows>
+            <row flex="1">
+              <timepicker-hour class="time-picker-hour-box-class" value="0"
+                               anonid="time-picker-hour-box-0"    label="0"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="1"
+                               anonid="time-picker-hour-box-1"    label="1"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="2"
+                               anonid="time-picker-hour-box-2"    label="2"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="3"
+                               anonid="time-picker-hour-box-3"    label="3"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="4"
+                               anonid="time-picker-hour-box-4"    label="4"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="5"
+                               anonid="time-picker-hour-box-5"    label="5"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="6"
+                               anonid="time-picker-hour-box-6"    label="6"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="7"
+                               anonid="time-picker-hour-box-7"    label="7"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="8"
+                               anonid="time-picker-hour-box-8"    label="8"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="9" 
+                               anonid="time-picker-hour-box-9"    label="9"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="10"
+                               anonid="time-picker-hour-box-10"   label="10"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="11"
+                               anonid="time-picker-hour-box-11"   label="11"/>
+            </row>
+            <row flex="1">
+              <timepicker-hour class="time-picker-hour-box-class" value="12"
+                               anonid="time-picker-hour-box-12"   label="12"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="13"
+                               anonid="time-picker-hour-box-13"   label="13"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="14"
+                               anonid="time-picker-hour-box-14"   label="14"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="15"
+                               anonid="time-picker-hour-box-15"   label="15"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="16"
+                               anonid="time-picker-hour-box-16"   label="16"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="17"
+                               anonid="time-picker-hour-box-17"   label="17"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="18"
+                               anonid="time-picker-hour-box-18"   label="18"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="19"
+                               anonid="time-picker-hour-box-19"   label="19"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="20"
+                               anonid="time-picker-hour-box-20"   label="20"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="21"
+                               anonid="time-picker-hour-box-21"   label="21"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="22"
+                               anonid="time-picker-hour-box-22"   label="22"/>
+              <timepicker-hour class="time-picker-hour-box-class" value="23"
+                               anonid="time-picker-hour-box-23"   label="23"/>
+            </row>
+          </rows>
+        </grid> <!-- Hour Grid -->
+        <!-- Five  Minute Grid -->
+        <vbox anonid="time-picker-five-minute-grid-box" flex="1">
+          <grid anonid="time-picker-five-minute-grid" flex="1">
+            <columns>
+              <column class="time-picker-five-minute-column-class" flex="1"/>
+              <column class="time-picker-five-minute-column-class" flex="1"/>
+              <column class="time-picker-five-minute-column-class" flex="1"/>
+              <column class="time-picker-five-minute-column-class" flex="1"/>
+              <column class="time-picker-five-minute-column-class" flex="1"/>
+              <column class="time-picker-five-minute-column-class" flex="1"/>
+            </columns>
+            <rows>
+              <row flex="1">
+                <timepicker-minute class="time-picker-five-minute-class"   value="0"
+                                   anonid="time-picker-five-minute-box-0"  label=":00"/>
+                <timepicker-minute class="time-picker-five-minute-class"   value="5"
+                                   anonid="time-picker-five-minute-box-5"  label=":05"/>
+                <timepicker-minute class="time-picker-five-minute-class"   value="10"
+                                   anonid="time-picker-five-minute-box-10" label=":10"/>
+                <timepicker-minute class="time-picker-five-minute-class"   value="15"
+                                   anonid="time-picker-five-minute-box-15" label=":15"/>
+                <timepicker-minute class="time-picker-five-minute-class"   value="20"
+                                   anonid="time-picker-five-minute-box-20" label=":20"/>
+                <timepicker-minute class="time-picker-five-minute-class"   value="25"
+                                   anonid="time-picker-five-minute-box-25" label=":25"/>
+              </row>
+              <row flex="1">
+                <timepicker-minute class="time-picker-five-minute-class"   value="30"
+                                   anonid="time-picker-five-minute-box-30" label=":30"/>
+                <timepicker-minute class="time-picker-five-minute-class"   value="35"
+                                   anonid="time-picker-five-minute-box-35" label=":35"/>
+                <timepicker-minute class="time-picker-five-minute-class"   value="40"
+                                   anonid="time-picker-five-minute-box-40" label=":40"/>
+                <timepicker-minute class="time-picker-five-minute-class"   value="45"
+                                   anonid="time-picker-five-minute-box-45" label=":45"/>
+                <timepicker-minute class="time-picker-five-minute-class"   value="50"
+                                   anonid="time-picker-five-minute-box-50" label=":50"/>
+                <timepicker-minute class="time-picker-five-minute-class"   value="55"
+                                   anonid="time-picker-five-minute-box-55" label=":55"/>
+              </row>
+            </rows>
+          </grid> <!-- Five  Minute Grid -->
+          <hbox class="time-picker-minutes-bottom">
+            <spacer flex="1"/>
+            <label class="time-picker-more-control-label" value="&raquo;" onclick="clickMore()"/>
+          </hbox>
+        </vbox> <!-- Five  Minute Grid Box -->
+        <!-- One  Minute Grid -->
+        <vbox anonid="time-picker-one-minute-grid-box" flex="1" hidden="true">
+          <grid anonid="time-picker-one-minute-grid" flex="1">
+            <columns>
+              <column class="time-picker-one-minute-column-class" flex="1"/>
+              <column class="time-picker-one-minute-column-class" flex="1"/>
+              <column class="time-picker-one-minute-column-class" flex="1"/>
+              <column class="time-picker-one-minute-column-class" flex="1"/>
+              <column class="time-picker-one-minute-column-class" flex="1"/>
+            </columns>
+            <rows >
+              <row flex="1">
+                <timepicker-minute class="time-picker-one-minute-class"   value="0"
+                                   anonid="time-picker-one-minute-box-0"  label=":00"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="1"
+                                   anonid="time-picker-one-minute-box-1"  label=":01"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="2"
+                                   anonid="time-picker-one-minute-box-2"  label=":02"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="3"
+                                   anonid="time-picker-one-minute-box-3"  label=":03"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="4"
+                                   anonid="time-picker-one-minute-box-4"  label=":04"/>
+              </row>
+              <row flex="1">
+                <timepicker-minute class="time-picker-one-minute-class"   value="5"
+                                   anonid="time-picker-one-minute-box-5"  label=":05"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="6"
+                                   anonid="time-picker-one-minute-box-6"  label=":06"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="7"
+                                   anonid="time-picker-one-minute-box-7"  label=":07"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="8"
+                                   anonid="time-picker-one-minute-box-8"  label=":08"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="9"
+                                   anonid="time-picker-one-minute-box-9"  label=":09"/>
+              </row>
+              <row flex="1">
+                <timepicker-minute class="time-picker-one-minute-class"   value="10"
+                                   anonid="time-picker-one-minute-box-10" label=":10"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="11"
+                                   anonid="time-picker-one-minute-box-11" label=":11"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="12"
+                                   anonid="time-picker-one-minute-box-12" label=":12"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="13"
+                                   anonid="time-picker-one-minute-box-13" label=":13"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="14"
+                                   anonid="time-picker-one-minute-box-14" label=":14"/>
+              </row>
+              <row flex="1">
+                <timepicker-minute class="time-picker-one-minute-class"   value="15"
+                                   anonid="time-picker-one-minute-box-15" label=":15"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="16"
+                                   anonid="time-picker-one-minute-box-16" label=":16"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="17"
+                                   anonid="time-picker-one-minute-box-17" label=":17"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="18"
+                                   anonid="time-picker-one-minute-box-18" label=":18"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="19"
+                                   anonid="time-picker-one-minute-box-19" label=":19"/>
+              </row>
+              <row flex="1">
+                <timepicker-minute class="time-picker-one-minute-class"   value="20"
+                                   anonid="time-picker-one-minute-box-20" label=":20"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="21"
+                                   anonid="time-picker-one-minute-box-21" label=":21"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="22"
+                                   anonid="time-picker-one-minute-box-22" label=":22"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="23"
+                                   anonid="time-picker-one-minute-box-23" label=":23"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="24"
+                                   anonid="time-picker-one-minute-box-24" label=":24"/>
+              </row>
+              <row flex="1">
+                <timepicker-minute class="time-picker-one-minute-class"   value="25"
+                                   anonid="time-picker-one-minute-box-25" label=":25"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="26"
+                                   anonid="time-picker-one-minute-box-26" label=":26"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="27"
+                                   anonid="time-picker-one-minute-box-27" label=":27"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="28"
+                                   anonid="time-picker-one-minute-box-28" label=":28"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="29"
+                                   anonid="time-picker-one-minute-box-29" label=":29"/>
+              </row>
+              <row flex="1">
+                <timepicker-minute class="time-picker-one-minute-class"   value="30"
+                                   anonid="time-picker-one-minute-box-30" label=":30"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="31"
+                                   anonid="time-picker-one-minute-box-31" label=":31"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="32"
+                                   anonid="time-picker-one-minute-box-32" label=":32"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="33"
+                                   anonid="time-picker-one-minute-box-33" label=":33"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="34"
+                                   anonid="time-picker-one-minute-box-34" label=":34"/>
+              </row>
+              <row flex="1">
+                <timepicker-minute class="time-picker-one-minute-class"   value="35"
+                                   anonid="time-picker-one-minute-box-35" label=":35"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="36"
+                                   anonid="time-picker-one-minute-box-36" label=":36"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="37"
+                                   anonid="time-picker-one-minute-box-37" label=":37"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="38"
+                                   anonid="time-picker-one-minute-box-38" label=":38"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="39"
+                                   anonid="time-picker-one-minute-box-39" label=":39"/>
+              </row>
+              <row flex="1">
+                <timepicker-minute class="time-picker-one-minute-class"   value="40"
+                                   anonid="time-picker-one-minute-box-40" label=":40"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="41"
+                                   anonid="time-picker-one-minute-box-41" label=":41"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="42"
+                                   anonid="time-picker-one-minute-box-42" label=":42"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="43"
+                                   anonid="time-picker-one-minute-box-43" label=":43"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="44"
+                                   anonid="time-picker-one-minute-box-44" label=":44"/>
+              </row>
+              <row flex="1">
+                <timepicker-minute class="time-picker-one-minute-class"   value="45"
+                                   anonid="time-picker-one-minute-box-45" label=":45"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="46"
+                                   anonid="time-picker-one-minute-box-46" label=":46"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="47"
+                                   anonid="time-picker-one-minute-box-47" label=":47"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="48"
+                                   anonid="time-picker-one-minute-box-48" label=":48"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="49"
+                                   anonid="time-picker-one-minute-box-49" label=":49"/>
+              </row>
+              <row flex="1">
+                <timepicker-minute class="time-picker-one-minute-class"   value="50"
+                                   anonid="time-picker-one-minute-box-50" label=":50"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="51"
+                                   anonid="time-picker-one-minute-box-51" label=":51"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="52"
+                                   anonid="time-picker-one-minute-box-52" label=":52"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="53"
+                                   anonid="time-picker-one-minute-box-53" label=":53"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="54"
+                                   anonid="time-picker-one-minute-box-54" label=":54"/>
+              </row>
+              <row flex="1">
+                <timepicker-minute class="time-picker-one-minute-class"   value="55"
+                                   anonid="time-picker-one-minute-box-55" label=":55"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="56"
+                                   anonid="time-picker-one-minute-box-56" label=":57"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="57"
+                                   anonid="time-picker-one-minute-box-57" label=":57"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="58"
+                                   anonid="time-picker-one-minute-box-58" label=":58"/>
+                <timepicker-minute class="time-picker-one-minute-class"   value="59"
+                                   anonid="time-picker-one-minute-box-59" label=":59"/>
+              </row>
+            </rows>
+          </grid>  <!-- One  Minute Grid -->
+          <hbox class="time-picker-minutes-bottom">
+            <spacer flex="1"/>
+            <label class="time-picker-more-control-label" value="&laquo;" onclick="clickLess()"/>
+          </hbox>
+        </vbox> <!-- One  Minute Grid Box -->
+      </vbox> <!-- Box to hold time picker internals -->
+    </content>
+
+    <!-- ::::::::::::::::: INTERFACE ::::::::::::::::::::::::: -->
+    <implementation>
+      <constructor>
+        <![CDATA[
+          // set by onPopupShowing
+          this.mPicker = null;
+          this.mPopup = null;
+
+          // The currently selected time
+          this.mSelectedTime = new Date(); 
+          // The selected hour and selected minute items
+          this.mSelectedHourItem = null;
+          this.mSelectedMinuteItem = null;
+          // constants use to specify one and five minute view
+          this.kMINUTE_VIEW_FIVE = 5;
+          this.kMINUTE_VIEW_ONE = 1;
+        ]]>
+      </constructor>
+
+      <!-- Set up the picker, called when the popup pops -->
+      <method name="onPopupShowing">
+        <parameter name="aPicker"/>
+        <parameter name="aPopup"/>
+        <body>
+          <![CDATA[
+            this.mPicker = aPicker;
+            this.mPopup = aPopup;
+
+            // if there is a Date object in the popup item's 
+            // value attribute, use it, otherwise use Now.
+            var inputTime = this.mPicker.value;
+            if (inputTime) {
+              this.mSelectedTime = new Date(inputTime);
+            } else {
+              this.mSelectedTime = new Date();
+            }
+
+            // select the hour item
+            var hours24 = this.mSelectedTime.getHours();
+            var hourItemId = "time-picker-hour-box-" + hours24;
+            var hourItem = document.getAnonymousElementByAttribute(this, "anonid", hourItemId);
+            this.selectHourItem( hourItem );
+
+            // Show the five minute view if we are an even five minutes, 
+            // otherwise one minute view
+            var minutesByFive = this.calcNearestFiveMinutes( this.mSelectedTime );
+
+            if (minutesByFive == this.mSelectedTime.getMinutes()) {
+              this.clickLess();
+            } else {
+              this.clickMore();
+            }
+          ]]>
+        </body>
+      </method>
+
+      <!-- Called when the more tab is clicked, and possibly at startup -->
+      <method name="clickMore">
+        <body>
+          <![CDATA[
+            // switch to one minute view
+            this.switchMinuteView( this.kMINUTE_VIEW_ONE );
+
+            // select minute box corresponding to the time
+            var minutes = this.mSelectedTime.getMinutes();
+            var oneMinuteItemId = "time-picker-one-minute-box-" + minutes;
+            var oneMinuteItem = document.getAnonymousElementByAttribute(this, "anonid", oneMinuteItemId);
+            this.selectMinuteItem(oneMinuteItem);
+          ]]>
+        </body>
+      </method>
+
+      <!-- Called when the less tab is clicked, and possibly at startup -->
+      <method name="clickLess">
+        <body>
+          <![CDATA[
+            // switch to five minute view
+            this.switchMinuteView( this.kMINUTE_VIEW_FIVE );
+
+            // select closest five minute box, 
+            // BUT leave the selected time at what may NOT be an even five minutes
+            // So that If they click more again the proper non-even-five minute 
+            // box will be selected
+            var minutesByFive = this.calcNearestFiveMinutes(this.mSelectedTime);
+            var fiveMinuteItemId = "time-picker-five-minute-box-"+minutesByFive;
+            var fiveMinuteItem = document.getAnonymousElementByAttribute(this, "anonid", fiveMinuteItemId);
+            this.selectMinuteItem(fiveMinuteItem);
+          ]]>
+        </body>
+      </method>
+
+      <!-- Called when one of the hour boxes is clicked -->
+      <method name="clickHour">
+        <parameter name="hourItem"/>
+        <parameter name="hourNumber"/>
+        <body>
+          <![CDATA[
+            // select the item
+            this.selectHourItem( hourItem );
+
+            // Change the hour in the selected time. 
+            this.mSelectedTime.setHours( hourNumber );
+
+            this.timeSelected();
+          ]]>
+        </body>
+      </method>
+  
+      <!-- Called when one of the minute boxes is clicked, 
+           Calls the client's onchange and Closes the popup -->
+      <method name="clickMinute">
+        <parameter name="minuteItem"/>
+        <parameter name="minuteNumber"/>
+        <body>
+          <![CDATA[
+            // set the minutes in the selected time
+            this.mSelectedTime.setMinutes(minuteNumber);
+            this.selectMinuteItem(minuteItem);
+            this.timeSelected();
+            // remove the popup grid
+            this.mPopup.hidePopup();
+          ]]>
+        </body>
+      </method>
+
+      <!-- Called by clickMinute when one of the minute boxes is clicked, 
+           Sets the value property and calls the client's onchange. -->
+      <method name="timeSelected">
+        <body>
+          <![CDATA[
+            // Copy picked time to avoid problems changing Date object in place
+            var pickedTime = new Date( this.mSelectedTime );
+
+            // put the picked time in the value property, and update
+            this.mPicker.update(pickedTime, true);
+            // select changed value so no cursor appears (can't type to it).
+            this.mPicker.select();
+          ]]>
+        </body>
+      </method>
+
+      <!-- Helper function to switch between "one" and "five" minute views -->
+      <method name="switchMinuteView">
+        <parameter name="view"/>
+        <body>
+          <![CDATA[
+            var fiveMinuteBox = document.getAnonymousElementByAttribute(this, "anonid", "time-picker-five-minute-grid-box");
+            var oneMinuteBox = document.getAnonymousElementByAttribute(this, "anonid", "time-picker-one-minute-grid-box");
+
+            if (view == this.kMINUTE_VIEW_ONE) {
+              fiveMinuteBox.setAttribute( "hidden", true );
+              oneMinuteBox.setAttribute( "hidden", false );
+            } else {
+              fiveMinuteBox.setAttribute( "hidden", false );
+              oneMinuteBox.setAttribute( "hidden", true );
+            }
+          ]]>
+        </body>
+      </method>
+
+      <!-- Helper function to select an hour item -->
+      <method name="selectHourItem">
+        <parameter name="hourItem"/>
+        <body>
+          <![CDATA[
+            // clear old selection, if there is one
+            if (this.mSelectedHourItem != null)
+              this.mSelectedHourItem.removeAttribute( "selected" );
+            // set selected attribute, to cause the selected style to apply
+            hourItem.setAttribute( "selected" , "true" );
+            // remember the selected item so we can deselect it
+            this.mSelectedHourItem = hourItem;
+          ]]>
+        </body>
+      </method>
+
+      <!-- Helper function to select an minute item -->
+      <method name="selectMinuteItem">
+        <parameter name="minuteItem"/>
+        <body>
+          <![CDATA[
+            // clear old selection, if there is one
+            if (this.mSelectedMinuteItem != null)
+              this.mSelectedMinuteItem.removeAttribute( "selected" );
+            // set selected attribute, to cause the selected style to apply
+            minuteItem.setAttribute( "selected" , "true" );
+            // remember the selected item so we can deselect it
+            this.mSelectedMinuteItem = minuteItem;
+          ]]>
+        </body>
+      </method>
+
+      <!-- Helper function to calulate the nearest even five minutes -->
+      <method name="calcNearestFiveMinutes">
+        <parameter name="time"/>
+        <body>
+          <![CDATA[
+            var minutes = time.getMinutes();
+            var minutesByFive = Math.round( minutes / 5 ) * 5;
+
+            if (minutesByFive > 59)
+              minutesByFive = 55;
+            return minutesByFive;
+          ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
+
+    <handlers>
+      <handler event="bindingattached" action="this.initialize();"/>
+    </handlers>
+
+  </binding>
+  
+  <binding id="datetimepicker" extends="chrome://calendar/content/datetimepickers/datetimepickers.xml#datetimepicker-base"
+           inherits="value,onchange,disabled,datepickerdisabled,timepickerdisabled">
+    <!-- ::::::::::::::::: CONTENT ::::::::::::::::::::::::: -->
+    <!-- onchange was simply "onDatePick()" in Moz1.6, but stopped working in Moz1.7
+         so had to add navigation by parents. -->
+    <content>
+      <xul:hbox flex="1" anonid="hbox">
+        <xul:datepicker anonid="date-picker" 
+                        onchange="this.parentNode.parentNode.onDatePick();"
+                        xbl:inherits="value,disabled,disabled=datepickerdisabled"/>
+        <xul:timepicker anonid="time-picker" 
+                        onchange="this.parentNode.parentNode.onTimePick();"
+                        xbl:inherits="value,disabled,disabled=timepickerdisabled"/>
+      </xul:hbox>
+    </content>
+
+    <!-- ::::::::::::::::: INTERFACE ::::::::::::::::::::::::: -->
+    <implementation>
+      <property name="datepickerdisabled" 
+                onset="if (val) this.kDatePicker.setAttribute('disabled', 'true');
+                       else this.kDatePicker.removeAttribute('disabled');"
+                onget="return this.kDatePicker.getAttribute('disabled')=='true';"/>
+
+      <!-- timepicker may be disabled alone for all day events -->
+      <property name="timepickerdisabled"
+                onset="if (val) this.kTimePicker.setAttribute('disabled', 'true');
+                       else this.kTimePicker.removeAttribute('disabled');"
+                onget="return this.kTimePicker.getAttribute('disabled')=='true';"/>
+
+      <constructor>
+        <![CDATA[
+          this.kDatePicker =
+      document.getAnonymousElementByAttribute(this, "anonid", "date-picker");
+          this.kTimePicker =
+      document.getAnonymousElementByAttribute(this, "anonid", "time-picker");
+
+          var val = this.getAttribute("value");
+          this.mValue = (val ? new Date(val)
+                             : new Date());
+        ]]>
+      </constructor>
+
+      <method name="update">
+        <parameter name="aValue"/>
+        <parameter name="aRefresh"/>
+        <body>
+          <![CDATA[
+            if (aValue != null) {         
+              this.mValue = aValue;
+            }
+            // set textBox.value property, not attribute
+            this.kDatePicker.update(this.mValue, aRefresh);
+            this.kTimePicker.update(this.mValue, aRefresh);
+            if (aRefresh) {
+              this.fireEvent("change");
+            }
+          ]]>
+        </body>
+      </method>
+
+      <!-- Date was changed by gui: update value. -->
+      <method name="onDatePick">
+        <body>
+          <![CDATA[
+            var tempTime;
+            if (this.kDatePicker.lastDateParseIncludedTime)
+              tempTime = new Date(this.kDatePicker.value);
+            else
+              tempTime = new Date(this.mValue);
+            var newDate = new Date(this.kDatePicker.value);
+            // Note: create new date because setting month and date of month in
+            // either order can lead to unexpected results (month may be advanced
+            // automatically if day of month is temporarily out of range).
+            var dateTime = new Date(newDate.getFullYear(),
+                                    newDate.getMonth(),
+                                    newDate.getDate(),
+                                    tempTime.getHours(),
+                                    tempTime.getMinutes(),
+                                    tempTime.getSeconds());
+            this.mValue = dateTime;
+            this.kTimePicker.update(dateTime, false);
+            this.fireEvent("change");
+          ]]>
+        </body>
+      </method>
+
+      <!-- Time was changed by gui: update value -->
+      <method name="onTimePick">
+        <body>
+          <![CDATA[
+            var dateTime = new Date(this.mValue);
+            var newTime = this.kTimePicker.value;
+            dateTime.setHours(newTime.getHours());
+            dateTime.setMinutes(newTime.getMinutes());
+            dateTime.setSeconds(newTime.getSeconds());
+            this.mValue = dateTime;
+            this.kDatePicker.update(dateTime, false);
+            this.fireEvent("change");
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+
+    <!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
+
+    <handlers>
+      <handler event="bindingattached" action="this.initialize();"/>
+    </handlers>
+
+  </binding>
+
+  <binding id="datetimepicker-base" extends="chrome://global/content/bindings/general.xml#basecontrol"
+           inherits="value,onchange">
+    <resources>
+      <stylesheet src="chrome://calendar/skin/datetimepickers/datetimepickers.css"/>
+    </resources>
+    <implementation>
+      <constructor>
+        <![CDATA[
+          this.initDateFormat();
+          this.initTimeFormat();
+        ]]>
+      </constructor>
+
+      <property name="value" 
+                onget="return this.mValue"
+                onset="this.update(val, false)"/>
+
+      <property name="lastDateParseIncludedTime" 
+                onget="return this.mLastDateParseIncludedTime;"
+                onset="this.mLastDateParseIncludedTime = val;" />
+
+      <method name="update">
+        <parameter name="aValue"/>
+        <parameter name="aRefresh"/>
+        <body>
+          <![CDATA[
+            if (aValue != null) {         
+              this.mValue = aValue;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="fireEvent">
+        <parameter name="aEventName"/>
+        <body>
+          <![CDATA[
+            var event = document.createEvent('Events');
+            event.initEvent(aEventName, false, true);
+            this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+
+      <!-- Parameter aValue may be a date or a date time. Dates are
+           read according to locale/OS setting (d-m-y or m-d-y or ...). 
+           (see initDateFormat). Uses parseTime() for times.
+      -->
+      <method name="parseDateTime">
+        <parameter name="aValue"/>
+        <body>
+          <![CDATA[
+            this.mLastDateParseIncludedTime = false;
+            var tempDate = null;
+            if (!this.probeSucceeded)
+              return null; // avoid errors accessing uninitialized data.
+
+            var year = Number.MIN_VALUE; var month = -1; var day = -1; var timeString = null;
+            if (this.alphaMonths == null) {
+              // SHORT NUMERIC DATE, such as 2002-03-04, 4/3/2002, or CE2002Y03M04D.
+              // Made of digits & nonDigits.  (Nondigits may be unicode letters
+              // which do not match \w, esp. in CJK locales.)
+              // (.*)? binds to null if no suffix.
+              var parseNumShortDateRegex = /^\D*(\d+)\D+(\d+)\D+(\d+)(.*)?$/;
+              var dateNumbersArray = parseNumShortDateRegex.exec(aValue);
+              if (dateNumbersArray != null) {
+                year = Number(dateNumbersArray[this.yearIndex]);
+                month = Number(dateNumbersArray[this.monthIndex]) - 1; // 0-based
+                day = Number(dateNumbersArray[this.dayIndex]);
+                timeString = dateNumbersArray[4];
+              }
+            } else {
+              // SHORT DATE WITH ALPHABETIC MONTH, such as "dd MMM yy" or "MMMM dd, yyyy"
+              // (\d+|[^\d\W]) is digits or letters, not both together.
+              // Allows 31dec1999 (no delimiters between parts) if OS does (w2k does not).
+              // Allows Dec 31, 1999 (comma and space between parts)
+              // (Only accepts ASCII month names; JavaScript RegExp does not have an
+              // easy way to describe unicode letters short of a HUGE character range
+              // regexp derived from the Alphabetic ranges in 
+              // http://www.unicode.org/Public/UNIDATA/DerivedCoreProperties.txt)
+              // (.*)? binds to null if no suffix.
+              var parseAlphShortDateRegex = /^\s*(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)(.*)?$/;
+              var datePartsArray = parseAlphShortDateRegex.exec(aValue);
+              if (datePartsArray != null) {
+                year = Number(datePartsArray[this.yearIndex]);
+                var monthString = datePartsArray[this.monthIndex].toUpperCase();
+                for (var m = 0; m < this.alphaMonths.length; m++) {
+                  if (monthString == this.alphaMonths[m]) {
+                    month = m;
+                    break;
+                  }
+                }
+                day = Number(datePartsArray[this.dayIndex]);
+                timeString = datePartsArray[4];
+              }
+            }
+            if (year != Number.MIN_VALUE && month != -1 && day != -1) {
+              // year, month, day successfully parsed
+              if (0 <= year && year < 100) {
+                // If 0 <= year < 100, treat as 2-digit year(like dateService.FormatDate):
+                //   parse year as up to 30 years in future or 69 years in past.
+                //   (Covers 30-year mortgage and most working people's birthdate.)
+                // otherwise will be treated as four digit year.
+                var currentYear = new Date().getFullYear();
+                var currentCentury = currentYear - currentYear % 100;
+                year = currentCentury + year;
+                if (year < currentYear - 69)
+                  year += 100;
+                if (year > currentYear + 30)
+                  year -= 100;
+              }
+              // if time is also present, parse it
+              var hours = 0; var minutes = 0; var seconds = 0;
+              if (timeString != null) {
+                var time = this.parseTime(dateNumbersArray[4]);
+                if (time != null) {
+                  hours = time.getHours();
+                  minutes = time.getMinutes();
+                  seconds = time.getSeconds();
+                  this.mLastDateParseIncludedTime = true;
+                }
+              }
+              tempDate = new Date(year, month, day, hours, minutes, seconds, 0);
+            } //else did not match regex, not a valid date
+            return tempDate;
+          ]]>
+        </body>
+      </method>
+      
+      <!-- Parse a variety of time formats so that cut and paste is likely to work.
+           separator:            ':'         '.'        ' '        symbol        none
+                                 "12:34:56"  "12.34.56" "12 34 56" "12h34m56s"   "123456"
+           seconds optional:     "02:34"     "02.34"    "02 34"    "02h34m"      "0234"
+           minutes optional:     "12"        "12"       "12"       "12h"         "12"
+           1st hr digit optional:"9:34"      " 9.34"     "9 34"     "9H34M"       "934am"
+           skip nondigit prefix  " 12:34"    "t12.34"   " 12 34"   "T12H34M"     "T0234"
+           am/pm optional        "02:34 a.m.""02.34pm"  "02 34 A M" "02H34M P.M." "0234pm"
+           am/pm prefix          "a.m. 02:34""pm02.34"  "A M 02 34" "P.M. 02H34M" "pm0234"
+           am/pm cyrillic        "02:34\u0430.\u043c."  "02 34 \u0420 \u041c"
+           am/pm arabic          "\u063502:34" (RTL 02:34a) "\u0645 02.34" (RTL 02.34 p)
+           above/below noon      "\u4e0a\u534802:34"    "\u4e0b\u5348 02 34"
+           noon before/after     "\u5348\u524d02:34"    "\u5348\u5f8c 02 34"
+      -->
+      <method name="parseTime">
+        <parameter name="aValue"/>
+        <body>
+          <![CDATA[
+            var time = null;
+            var timePartsArray = this.parseTimeRegExp.exec(aValue);
+            const PRE_INDEX=1, HR_INDEX=2, MIN_INDEX=4, SEC_INDEX=6, POST_INDEX=8;
+
+            if (timePartsArray != null) {
+              var hoursString   = timePartsArray[HR_INDEX]
+              var hours         = Number(hoursString);
+              var hoursSuffix   = timePartsArray[HR_INDEX + 1];
+              if (!(0 <= hours && hours < 24)) return null;
+
+              var minutesString = timePartsArray[MIN_INDEX];
+              var minutes       = (minutesString == null? 0 : Number(minutesString));
+              var minutesSuffix = timePartsArray[MIN_INDEX + 1];
+              if (!(0 <= minutes && minutes < 60)) return null;
+
+              var secondsString = timePartsArray[SEC_INDEX];
+              var seconds       = (secondsString == null? 0 : Number(secondsString));
+              var secondsSuffix = timePartsArray[SEC_INDEX + 1];
+              if (!(0 <= seconds && seconds < 60)) return null;
+
+              var ampmCode = null;
+              if (timePartsArray[PRE_INDEX] || timePartsArray[POST_INDEX]) {
+                if (this.ampmIndex && timePartsArray[this.ampmIndex]) {
+                  // try current format order first
+                  var ampmString = timePartsArray[this.ampmIndex];
+                  if (this.amRegExp.test(ampmString)) {
+                    ampmCode = "AM";
+                  } else if (this.pmRegExp.test(ampmString)) {
+                    ampmCode = "PM";
+                  }
+                }
+                if (ampmCode == null) { // not yet found
+                  // try any format order
+                  var preString = timePartsArray[PRE_INDEX];
+                  var postString = timePartsArray[POST_INDEX];
+                  if ((preString && this.amRegExp.test(preString)) ||
+                      (postString && this.amRegExp.test(postString))) {
+                    ampmCode = "AM";
+                  } else if ((preString && this.pmRegExp.test(preString)) ||
+                             (postString && this.pmRegExp.test(postString))) {
+                    ampmCode = "PM";
+                  } // else no match, ignore and treat as 24hour time.
+                }
+              }
+              if (ampmCode == "AM") {
+                if (hours == 12)
+                  hours = 0;
+              } else if (ampmCode == "PM") {
+                if (hours < 12) 
+                  hours += 12;
+              }
+              time = new Date(0, 0, 0, hours, minutes, seconds, 0);
+            }  // else did not match regex, not valid time
+            return time;
+          ]]>
+        </body>
+      </method>
+      
+      <method name="initDateFormat">
+        <body>
+          <![CDATA[
+            // probe the dateformat  
+            this.yearIndex = -1;
+            this.monthIndex = -1;
+            this.dayIndex = -1;
+            this.twoDigitYear = false;
+            this.alphaMonths = null;
+            this.probeSucceeded = false;
+            this.mLastDateParseIncludedTime = false;
+
+            // SHORT NUMERIC DATE, such as 2002-03-04, 4/3/2002, or CE2002Y03M04D.
+            // Made of digits & nonDigits.  (Nondigits may be unicode letters
+            // which do not match \w, esp. in CJK locales.)
+            this.parseShortDateRegex = /^\D*(\d+)\D+(\d+)\D+(\d+)\D?$/;
+            var probeDate = new Date(2002,3-1,4); // month is 0-based
+            var probeString = this.formatDate(probeDate);
+            var probeArray = this.parseShortDateRegex.exec(probeString);
+            if (probeArray != null) { 
+              // Numeric month format
+              for (var i = 1; i <= 3; i++) { 
+                switch (Number(probeArray[i])) {
+                  case 02:    this.twoDigitYear = true; // fall thru
+                  case 2002:  this.yearIndex = i;       break;
+                  case 3:     this.monthIndex = i;      break;
+                  case 4:     this.dayIndex = i;        break;
+                }
+              }
+              // All three indexes are set (not -1) at this point.
+              this.probeSucceeded = true;
+            } else {
+              // SHORT DATE WITH ALPHABETIC MONTH, such as "dd MMM yy" or "MMMM dd, yyyy"
+              // (\d+|[^\d\W]) is digits or letters, not both together.
+              // Allows 31dec1999 (no delimiters between parts) if OS does (w2k does not).
+              // Allows Dec 31, 1999 (comma and space between parts)
+              // (Only accepts ASCII month names; JavaScript RegExp does not have an
+              // easy way to describe unicode letters short of a HUGE character range
+              // regexp derived from the Alphabetic ranges in 
+              // http://www.unicode.org/Public/UNIDATA/DerivedCoreProperties.txt)
+              this.parseShortDateRegex = /^\s*(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\s*$/;
+              probeArray = this.parseShortDateRegex.exec(probeString);
+              if (probeArray != null) {
+                for (var j = 1; j <= 3; j++) { 
+                  switch (Number(probeArray[j])) {
+                    case 02:    this.twoDigitYear = true; // fall thru
+                    case 2002:  this.yearIndex = j;       break;
+                    case 4:     this.dayIndex = j;        break;
+                    default:    this.monthIndex = j;      break;
+                  }
+                }
+                if (this.yearIndex != -1 && this.dayIndex != -1 && this.monthIndex != -1) {
+                  this.probeSucceeded = true;
+                  // Fill this.alphaMonths with month names.
+                  this.alphaMonths = new Array(12);
+                  for (var m = 0; m < 12; m++) {
+                    probeDate.setMonth(m);
+                    probeString = this.dateService.FormatDate(probeDate);
+                    probeArray = this.parseShortDateRegex.exec(probeString);
+                    if (probeArray != null) 
+                      this.alphaMonths[m] = probeArray[this.monthIndex].toUpperCase();
+                    else
+                      this.probeSucceeded = false;
+                  }
+                }
+              }
+            }
+            if (! this.probeSucceeded)
+              dump("\nOperating system short date format is not recognized: "+probeString+"\n");
+          ]]>
+        </body>
+      </method>
+      
+      <!-- Time format in 24-hour format or 12-hour format with am/pm string.
+           Should match formats
+                HH:mm,       H:mm,       HH:mm:ss,       H:mm:ss
+                hh:mm tt,    h:mm tt,    hh:mm:ss tt,    h:mm:ss tt
+             tt hh:mm,    tt h:mm,    tt hh:mm:ss,    tt h:mm:ss
+           where
+           HH is 24 hour digits, with leading 0.  H is 24 hour digits, no leading 0.
+           hh is 12 hour digits, with leading 0.  h is 12 hour digits, no leading 0.
+           mm and ss are is minutes and seconds digits, with leading 0.
+           tt is localized AM or PM string.
+           ':' may be ':' or a units marker such as 'h', 'm', or 's' in  15h12m00s
+           or may be omitted as in 151200.
+      -->
+      <method name="initTimeFormat">
+        <body>
+          <![CDATA[
+            // probe the Time format
+            this.ampmIndex = null;  
+            // Digits         HR       sep      MIN     sep      SEC     sep
+            //   Index:       2        3        4       5        6       7    
+            var digitsExpr = "(\\d?\\d)(\\D)?(?:(\\d\\d)(\\D)?(?:(\\d\\d)(\\D)?)?)?";
+            // any letters or '.': non-digit alphanumeric, period (a.m.), or space (P M)
+            var anyAmPmExpr = "(?:[^\\d\\W]|[. ])+"; 
+            // digitsExpr has 6 captures, so index of first ampmExpr is 1, of last is 8.
+            var probeTimeRegExp =
+              new RegExp("^("+anyAmPmExpr+")?\\s?"+digitsExpr+"("+anyAmPmExpr+")?\\s*$");
+            const PRE_INDEX=1, HR_INDEX=2, MIN_INDEX=4, SEC_INDEX=6, POST_INDEX=8;
+            var amProbeTime = new Date(2000,0,1,6,12,34);
+            var amProbeString = amProbeTime.toLocaleFormat("%X");
+            var pmProbeTime = new Date(2000,0,1,18,12,34);
+            var pmProbeString = pmProbeTime.toLocaleFormat("%X");
+            var amFormatExpr = null, pmFormatExpr = null;
+            if (amProbeString != pmProbeString) {
+              var amProbeArray = probeTimeRegExp.exec(amProbeString);
+              var pmProbeArray = probeTimeRegExp.exec(pmProbeString);
+              if (amProbeArray != null && pmProbeArray != null) {
+                if (amProbeArray[PRE_INDEX] && pmProbeArray[PRE_INDEX] &&
+                    amProbeArray[PRE_INDEX] != pmProbeArray[PRE_INDEX]) {
+                  this.ampmIndex = PRE_INDEX;
+                } else if (amProbeArray[POST_INDEX] && pmProbeArray[POST_INDEX]) {
+                  if (amProbeArray[POST_INDEX] != pmProbeArray[POST_INDEX]) {
+                    this.ampmIndex = POST_INDEX;
+                  } else {
+                    // check if need to append previous character,
+                    // captured by the optional separator pattern after seconds digits,
+                    // or after minutes if no seconds, or after hours if no minutes.
+                    for (var k = SEC_INDEX; k >= HR_INDEX; k -= 2) { 
+                      var nextSepI = k + 1;
+                      var nextDigitsI = k + 2;
+                      if ((k == SEC_INDEX ||
+                           (!amProbeArray[nextDigitsI] && !pmProbeArray[nextDigitsI]))
+                          && amProbeArray[nextSepI] && pmProbeArray[nextSepI]
+                          && amProbeArray[nextSepI] != pmProbeArray[nextSepI])
+                      {
+                        amProbeArray[POST_INDEX] =
+                          amProbeArray[nextSepI] + amProbeArray[POST_INDEX];
+                        pmProbeArray[POST_INDEX] =
+                          pmProbeArray[nextSepI] + pmProbeArray[POST_INDEX];
+                        this.ampmIndex = POST_INDEX;
+                        break;
+                      }
+                    }
+                  }
+                }
+                if (this.ampmIndex) {
+                  var makeFormatRegExp = function(string) {
+                    // make expr to accept either as provided, lowercased, or uppercased
+                    var regExp = string.replace(/(\W)/g, "[$1]"); // escape punctuation
+                    var lowercased = string.toLowerCase();
+                    if (string != lowercased)
+                      regExp += "|"+lowercased;
+                    var uppercased = string.toUpperCase();
+                    if (string != uppercased)
+                      regExp += "|"+uppercased;
+                    return regExp;
+                  };
+                  amFormatExpr = makeFormatRegExp(amProbeArray[this.ampmIndex]);
+                  pmFormatExpr = makeFormatRegExp(pmProbeArray[this.ampmIndex]);
+                }
+              } 
+            }
+            // International formats ([roman, cyrillic]|arabic|chinese/kanji characters)
+            // covering languages of U.N. (en,fr,sp,ru,ar,zh) and G8 (en,fr,de,it,ru,ja).
+            // See examples at parseTimeOfDay.
+            var amExpr =
+              "[Aa\u0410\u0430][. ]?[Mm\u041c\u043c][. ]?|\u0635|\u4e0a\u5348|\u5348\u524d";
+            var pmExpr =
+              "[Pp\u0420\u0440][. ]?[Mm\u041c\u043c][. ]?|\u0645|\u4e0b\u5348|\u5348\u5f8c";
+            if (this.ampmIndex){
+              amExpr = amFormatExpr+"|"+amExpr;
+              pmExpr = pmFormatExpr+"|"+pmExpr;
+            }
+            var ampmExpr = amExpr+"|"+pmExpr;
+            // Must build am/pm formats into parse time regexp so that it can
+            // match them without mistaking the initial char for an optional divider.
+            // (For example, want to be able to parse both "12:34pm" and
+            // "12H34M56Spm" for any characters H,M,S and any language's "pm".
+            // The character between the last digit and the "pm" is optional.
+            // Must recogize "pm" directly, otherwise in "12:34pm" the "S" pattern
+            // matches the "p" character so only "m" is matched as ampm suffix.)
+            //
+            // digitsExpr has 6 captures, so index of first ampmExpr is 1, of last is 8.
+            this.parseTimeRegExp =
+              new RegExp("("+ampmExpr+")?\\s?"+digitsExpr+"("+ampmExpr+")?\\s*$");
+            this.amRegExp = new RegExp("^(?:"+amExpr+")$");
+            this.pmRegExp = new RegExp("^(?:"+pmExpr+")$");
+            // build time display format that mimics "%x" format without seconds
+            var ampmSep = (pmProbeString.indexOf(' ') != -1? " " : "");
+	          this.kTimeFormatString =
+	            (this.ampmIndex == PRE_INDEX?  "%p" + ampmSep + "%I:%M" :
+	             this.ampmIndex == POST_INDEX? "%I:%M" + ampmSep + "%p" : "%H:%M");
+          ]]>
+        </body>
+      </method>
+
+      <method name="formatDate">
+        <parameter name="aValue"/>
+        <body>
+          <![CDATA[
+            return aValue.toLocaleFormat("%x");
+          ]]>
+        </body>
+      </method>
+
+      <method name="formatTime">
+        <parameter name="aValue"/>
+        <body>
+          <![CDATA[
+            // remove leading zero in hours before colon in xx01:23pmxx
+            return aValue.toLocaleFormat(this.kTimeFormatString).replace(/0(\d):/,"$1:");
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+  
+</bindings>
+
