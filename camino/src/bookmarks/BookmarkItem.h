@@ -99,6 +99,7 @@ enum
 -(BOOL) readCaminoXML:(CFXMLTreeRef)aTreeRef;
 
 -(void)writeBookmarksMetadataToPath:(NSString*)inPath;
+-(void)removeBookmarksMetadataFromPath:(NSString*)inPath;
 -(NSDictionary *)writeNativeDictionary;
 -(NSDictionary *)writeSafariDictionary;
 -(NSString *)writeHTML:(unsigned)aPad;

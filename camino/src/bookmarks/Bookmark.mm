@@ -321,6 +321,19 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   [dict writeToFile:path atomically:YES];
 }
 
+//
+// -removeBookmarksMetadataFromPath:
+//
+// Delete the meta data for this bookmark from the cache, which consists of a file with
+// this item's UUID.
+//
+-(void)removeBookmarksMetadataFromPath:(NSString*)inPath
+{
+  NSString* file = [self UUID];
+  NSString* path = [NSString stringWithFormat:@"%@/%@.webbookmark", inPath, file];
+  [[NSFileManager defaultManager] removeFileAtPath:path handler:nil];
+}
+
 // for plist in native format
 -(NSDictionary *)writeNativeDictionary
 {

@@ -60,6 +60,7 @@ enum {
   NSUndoManager*                  mUndoManager;             // handles deletes, adds of bookmarks
   BookmarkImportDlgController*    mImportDlgController;
   NSString*                       mPathToBookmarkFile;
+  NSString*                       mMetadataPath;            // where we store spotlight cache (strong)
   
   // smart folders
   BookmarkFolder*                 mTop10Container;

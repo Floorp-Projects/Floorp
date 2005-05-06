@@ -881,7 +881,7 @@ static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changed
 //
 // -newProfilePath
 //
-// Returns the path for our post 0.8 profiles stored in Application Support/Camino. We
+// Returns the path for our post 0.8 profiles stored in Application Support/Camino.
 // We no longer have distinct profiles. The profile dir is the same as
 // NS_APP_USER_PROFILES_ROOT_DIR - imposed by our own AppDirServiceProvider. Will
 // return |nil| if there is a problem.

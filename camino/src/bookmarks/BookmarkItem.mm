@@ -320,6 +320,11 @@ static BOOL gSuppressAllUpdates = NO;
   // do nothing, subclasses must override
 }
 
+-(void)removeBookmarksMetadataFromPath:(NSString*)inPath
+{
+  // do nothing, subclasses must override
+}
+
 -(NSDictionary *)writeNativeDictionary
 {
   return [NSDictionary dictionary];

@@ -941,6 +941,23 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   }
 }
 
+//
+// -removeBookmarksMetadataFromPath
+//
+// Recursively tell each child to remove its spotlight metadata from the given path. Folders
+// themselves have no metadata.
+//
+-(void)removeBookmarksMetadataFromPath:(NSString*)inPath
+{
+  if (![self isSmartFolder]) {
+    id item;
+    NSEnumerator* enumerator = [mChildArray objectEnumerator];
+    // do it for each child
+    while ((item = [enumerator nextObject]))
+      [item removeBookmarksMetadataFromPath:inPath];
+  }
+}
+
 -(NSDictionary *)writeNativeDictionary
 {
   if (![self isSmartFolder]) {

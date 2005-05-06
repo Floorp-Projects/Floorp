@@ -203,6 +203,11 @@ static unsigned gFirstUserCollection = 0;
     [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
     [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
     [nc addObserver:self selector:@selector(writeBookmarks:) name:WriteBookmarkNotification object:nil];
+
+    // pitch everything in the cache and start over. Changes made from here will be incremental. It's
+    // easier this way in case someone changed the plist directly, we know at startup we always have
+    // the most up-to-date cache.
+    [self writeBookmarksMetadataForSpotlight];
   }
   
   return self;
@@ -220,6 +225,7 @@ static unsigned gFirstUserCollection = 0;
   [mUndoManager release];
   [mRootBookmarks release];
   [mPathToBookmarkFile release];
+  [mMetadataPath release];
   [mSmartFolderManager release];
 
   if (mImportDlgController)
@@ -545,6 +551,9 @@ static unsigned gFirstUserCollection = 0;
 //
 - (void)bookmarkAdded:(NSNotification *)note
 {
+  BookmarkItem* bmItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
+  if ([bmItem isKindOfClass:[Bookmark class]])
+    [bmItem writeBookmarksMetadataToPath:mMetadataPath];
   [self bookmarkChanged:nil];
 }
 
@@ -553,6 +562,7 @@ static unsigned gFirstUserCollection = 0;
   [self bookmarkChanged:nil];
   
   BookmarkItem* bmItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
+  [bmItem removeBookmarksMetadataFromPath:mMetadataPath];
   if ([bmItem isKindOfClass:[BookmarkFolder class]])
   {
     if ([(BookmarkFolder*)bmItem containsChildItem:mLastUsedFolder])
@@ -573,7 +583,6 @@ static unsigned gFirstUserCollection = 0;
 - (void)writeBookmarks:(NSNotification *)note
 {
   [self writePropertyListFile:mPathToBookmarkFile];
-  [self writeBookmarksMetadataForSpotlight];
 }
 
 //
@@ -581,19 +590,26 @@ static unsigned gFirstUserCollection = 0;
 //
 // If we're running on Tiger, write out a flat list of all bookmarks in the caches folder
 // so that Spotlight can parse them. We don't need to write our own metadata plugin, we piggyback
-// the one that Safari uses. It launches the default browser when selected. This is a fairly
-// naive implementation, writing out everything in one go.
+// the one that Safari uses which launches the default browser when selected. This blows
+// away any previous cache and ensures that everything is up-to-date.
 //
 - (void)writeBookmarksMetadataForSpotlight
 {
   if ([MainController supportsSpotlight]) {
-    NSString* metaDataPath = [@"~/Library/Caches/Metadata/Camino" stringByExpandingTildeInPath];
-    [[NSFileManager defaultManager] removeFileAtPath:metaDataPath handler:nil];
-    [[NSFileManager defaultManager] createDirectoryAtPath:metaDataPath attributes:nil];
+    // build up the path and ensure the folders are present along the way. Removes the
+    // previous version entirely.
+    NSString* metadataPath = [@"~/Library/Caches/Metadata" stringByExpandingTildeInPath];
+    [[NSFileManager defaultManager] createDirectoryAtPath:metadataPath attributes:nil];
+    metadataPath = [metadataPath stringByAppendingPathComponent:@"Camino"];
+    [[NSFileManager defaultManager] removeFileAtPath:metadataPath handler:nil];
+    [[NSFileManager defaultManager] createDirectoryAtPath:metadataPath attributes:nil];
     
-    // write the bookmark menu and toolbar only.
-    [[self bookmarkMenuFolder] writeBookmarksMetadataToPath:metaDataPath];
-    [[self toolbarFolder] writeBookmarksMetadataToPath:metaDataPath];
+    // write all the bookmarks except for smart folders. wBMTP ignores smart folders
+    [mRootBookmarks writeBookmarksMetadataToPath:metadataPath];
+    
+    // save the path for later
+    [mMetadataPath autorelease];
+    mMetadataPath = [metadataPath retain];
   }
 }
 
@@ -603,13 +619,8 @@ static unsigned gFirstUserCollection = 0;
 //
 -(BOOL) readBookmarks
 {
-  nsCOMPtr<nsIFile> aDir;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(aDir));
-  if (!aDir) return NO;  // should be smarter
-  nsCAutoString aDirPath;
-  nsresult rv = aDir->GetNativePath(aDirPath);
-  if (NS_FAILED(rv)) return NO; // should be smarter.
-  NSString *profileDir = [NSString stringWithUTF8String:aDirPath.get()];  
+  NSString *profileDir = [[PreferenceManager sharedInstance] newProfilePath];  
+
   //
   // figure out where Bookmarks.plist is and store it as mPathToBookmarkFile
   // if there is a Bookmarks.plist, read it
