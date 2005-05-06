@@ -39,7 +39,7 @@ const CI = Components.interfaces;
 
 function getAlarmService()
 {
-    return Components.classes["@mozilla.org/calendar/alarm-service;1"].getService(Components.interfaces.calIAlarmService);
+    return Components.classes["@mozilla.org/calendar/alarm-service;1"].getService(CI.calIAlarmService);
 }
 
 var gAlarmWindow = null;
@@ -48,7 +48,7 @@ var alarmServiceObserver = {
     onAlarm: function(event) {
 
         if (!gAlarmWindow) {
-            var windowWatcher = Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(Components.interfaces.nsIWindowWatcher);
+            var windowWatcher = Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(CI.nsIWindowWatcher);
             gAlarmWindow = windowWatcher.openWindow(null,
                                                     "chrome://calendar/content/calendar-alarm-dialog.xul",
                                                     "_blank",
@@ -116,7 +116,7 @@ var myModule = {
         if (!cid.equals(this.myCID))
             throw Components.results.NS_ERROR_NO_INTERFACE;
 
-        if (!iid.equals(Components.interfaces.nsIFactory))
+        if (!iid.equals(CI.nsIFactory))
             throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 
         return this.myFactory;
