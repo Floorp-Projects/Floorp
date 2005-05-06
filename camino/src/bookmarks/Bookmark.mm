@@ -147,6 +147,7 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
     mURL = aURL;
     [self setStatus:kBookmarkOKStatus];
     [self refreshIcon];
+    [self itemUpdatedNote];
   }
 }
 

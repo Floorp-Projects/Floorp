@@ -575,6 +575,13 @@ static unsigned gFirstUserCollection = 0;
 
 - (void)bookmarkChanged:(NSNotification *)aNote
 {
+  if (aNote) {
+    // have this item rewrite its metadata. |aNote| is non-nil when a bookmark has really
+    // changed, not when we're using it from other routines to force a write bookmark notification. 
+    id item = [aNote object];
+    if ([item isKindOfClass:[Bookmark class]])
+      [item writeBookmarksMetadataToPath:mMetadataPath];
+  }
   NSNotificationQueue* nq = [NSNotificationQueue defaultQueue];
   NSNotification *note = [NSNotification notificationWithName:WriteBookmarkNotification object:self userInfo:nil];
   [nq enqueueNotification:note postingStyle:NSPostASAP coalesceMask:NSNotificationCoalescingOnName forModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]];   

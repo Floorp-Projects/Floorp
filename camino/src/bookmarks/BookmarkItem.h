@@ -88,7 +88,7 @@ enum
 +(void) setSuppressAllUpdateNotifications:(BOOL)suppressUpdates;
 +(BOOL) allowNotifications;
 -(void) setAccumulateUpdateNotifications:(BOOL)suppressUpdates;
--(void) itemUpdatedNote; //right now, just on title & icon - for BookmarkButton & BookmarkMenu notes
+-(void) itemUpdatedNote; // not everything triggers an item update, only certain properties changing
 
 // Methods called on startup for both bookmark & folder
 -(void) refreshIcon;
