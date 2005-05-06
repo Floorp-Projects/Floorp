@@ -1988,19 +1988,25 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                   case JSOP_BINDNAME:     goto do_JSOP_BINDNAME;
                   case JSOP_CLOSURE:      goto do_JSOP_CLOSURE;
                   case JSOP_EXPORTNAME:   goto do_JSOP_EXPORTNAME;
+#if JS_HAS_XML_SUPPORT
                   case JSOP_GETMETHOD:    goto do_JSOP_GETMETHOD;
+#endif
                   case JSOP_NAMEDFUNOBJ:  goto do_JSOP_NAMEDFUNOBJ;
                   case JSOP_NUMBER:       goto do_JSOP_NUMBER;
                   case JSOP_OBJECT:       goto do_JSOP_OBJECT;
+#if JS_HAS_XML_SUPPORT
                   case JSOP_QNAMECONST:   goto do_JSOP_QNAMECONST;
                   case JSOP_QNAMEPART:    goto do_JSOP_QNAMEPART;
+#endif
                   case JSOP_REGEXP:       goto do_JSOP_REGEXP;
                   case JSOP_SETCONST:     goto do_JSOP_SETCONST;
                   case JSOP_STRING:       goto do_JSOP_STRING;
+#if JS_HAS_XML_SUPPORT
                   case JSOP_XMLCDATA:     goto do_JSOP_XMLCDATA;
                   case JSOP_XMLCOMMENT:   goto do_JSOP_XMLCOMMENT;
                   case JSOP_XMLOBJECT:    goto do_JSOP_XMLOBJECT;
                   case JSOP_XMLPI:        goto do_JSOP_XMLPI;
+#endif
                   default:                JS_ASSERT(0);
                 }
                 /* NOTREACHED */
