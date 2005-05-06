@@ -1401,7 +1401,9 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"button-submit", ROLE_PUSHBUTTON, eNameFromSubtree, eNoValue, STATE_DEFAULT, END_ENTRY},
   {"checkbox", ROLE_CHECKBUTTON, eNameFromSubtree, eNoValue, eNoReqStates,
             {"checked", BOOL_STATE, STATE_CHECKED},
-            {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
+            {"readonly", BOOL_STATE, STATE_READONLY},
+            {"invalid", BOOL_STATE, STATE_INVALID},
+            {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
   {"checkbox-tristate", ROLE_CHECKBUTTON, eNameFromSubtree, eNoValue, eNoReqStates, 
             {"checked", BOOL_STATE, STATE_CHECKED},
             {"checked", "mixed", STATE_MIXED},
@@ -1424,10 +1426,13 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
             {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY },
   {"menu", ROLE_MENUPOPUP, eNameFromTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"menubar", ROLE_MENUBAR, eNameFromTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"menuitem", ROLE_MENUITEM, eNameFromSubtree, eNoValue, eNoReqStates, END_ENTRY},
+  {"menuitem", ROLE_MENUITEM, eNameFromSubtree, eNoValue, eNoReqStates,
+            {"haspopup", BOOL_STATE, STATE_HASPOPUP}, END_ENTRY},
   {"menuitem-radio", ROLE_MENUITEM, eNameFromSubtree, eNoValue, eNoReqStates,
+            {"haspopup", BOOL_STATE, STATE_HASPOPUP},
             {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
   {"menuitem-checkbox", ROLE_MENUITEM, eNameFromSubtree, eNoValue, eNoReqStates,
+            {"haspopup", BOOL_STATE, STATE_HASPOPUP},
             {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
   {"grid", ROLE_TABLE, eNameFromTitle, eNoValue, STATE_FOCUSABLE,
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
@@ -1442,6 +1447,9 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
             {"valuenow", "unknown", STATE_MIXED}, END_ENTRY},
   {"radio", ROLE_RADIOBUTTON, eNameFromSubtree, eNoValue, eNoReqStates, 
             {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
+  {"radiogroup", ROLE_GROUPING, eNameFromTitle, eNoValue, eNoReqStates,
+            {"invalid", BOOL_STATE, STATE_INVALID},
+            {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
   {"rowheader", ROLE_ROWHEADER, eNameFromSubtree, eNoValue, STATE_SELECTABLE,
             {"selected", BOOL_STATE, STATE_SELECTED},
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
@@ -1491,16 +1499,13 @@ nsStateMapEntry nsAccessible::gDisabledStateMap = {"disabled", BOOL_STATE, STATE
 
 NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
 {
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE;  // Node already shut down
-  }
   if (mRoleMapEntry) {
     *aRole = mRoleMapEntry->role;
     if (*aRole != ROLE_NOTHING) {
       return NS_OK;
     }
   }
-  return GetRole(aRole);
+  return mDOMNode ? GetRole(aRole) : NS_ERROR_FAILURE;  // Node already shut down
 }
 
 PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut,
