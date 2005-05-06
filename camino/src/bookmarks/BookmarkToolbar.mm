@@ -480,12 +480,11 @@ static const int kBMBarScanningStep = 5;
              mDragInsertionPosition == CHInsertAfter) { // drop onto toolbar
       destItem = toolbar;
     }
-    if (![bmManager isDropValid:draggedItems toFolder:destItem])
-      return NO;
+    
+    return [bmManager isDropValid:draggedItems toFolder:destItem];
   }
-  else
-    return [draggingPasteboard containsURLData];
 
+  return [draggingPasteboard containsURLData];
 }
 
 // NSDraggingDestination ///////////
