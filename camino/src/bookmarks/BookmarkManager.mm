@@ -553,7 +553,8 @@ static unsigned gFirstUserCollection = 0;
 {
   BookmarkItem* bmItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
   if ([MainController supportsSpotlight]) {
-    if ([bmItem isKindOfClass:[Bookmark class]])
+    BookmarkFolder* addedTo = [note object];
+    if (![addedTo isSmartFolder] && [bmItem isKindOfClass:[Bookmark class]])
       [bmItem writeBookmarksMetadataToPath:mMetadataPath];
   }
   [self bookmarkChanged:nil];
@@ -564,8 +565,11 @@ static unsigned gFirstUserCollection = 0;
   [self bookmarkChanged:nil];
   
   BookmarkItem* bmItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
-  if ([MainController supportsSpotlight])
-    [bmItem removeBookmarksMetadataFromPath:mMetadataPath];
+  if ([MainController supportsSpotlight]) {
+    BookmarkFolder* addedTo = [note object];
+    if (![addedTo isSmartFolder])
+      [bmItem removeBookmarksMetadataFromPath:mMetadataPath];
+  }
   if ([bmItem isKindOfClass:[BookmarkFolder class]])
   {
     if ([(BookmarkFolder*)bmItem containsChildItem:mLastUsedFolder])
