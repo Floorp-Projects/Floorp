@@ -106,22 +106,24 @@
             </listcell>
             <listcell> 
               <button id="newFolderButton" enablefornews="false" label="&newFolderButton.label;" 
-                  accesskey="&newFolderButton.accesskey;" 
-                  oncommand="MsgNewFolder(function (name,uri){ SearchNewFolderOkCallback(name,uri,'actionTargetFolder'); } )"/>
+                      accesskey="&newFolderButton.accesskey;" 
+                      oncommand="gActionTargetElement = gActionTargetMoveElement;
+                                 MsgNewFolder(SearchNewFolderOkCallback);"/>
             </listcell>
           </listitem>
 
           <listitem allowevents="true">
             <listcell>
-              <checkbox id="copyToFolder" enablefornews="false" label="&copyToFolder.label;"/>
+              <checkbox id="copyToFolder" label="&copyToFolder.label;"/>
             </listcell>
             <listcell> 
-              <menulist id="actionTargetFolder2" enablefornews="false" flex="1"/>
+              <menulist id="actionTargetFolder2" flex="1"/>
             </listcell>
             <listcell> 
-              <button id="copyNewFolderButton" enablefornews="false" label="&newFolderButton.label;" 
-                  accesskey="&newFolderButton.accesskey;" 
-                  oncommand="MsgNewFolder(function (name,uri){ SearchNewFolderOkCallback(name,uri,'actionTargetFolder2'); } )"/>
+              <button id="copyNewFolderButton" label="&newFolderButton.label;" 
+                      accesskey="&newFolderButton.accesskey;" 
+                      oncommand="gActionTargetElement = gActionTargetCopyElement;
+                                 MsgNewFolder(SearchNewFolderOkCallback);"/>
             </listcell>
           </listitem>
 

@@ -48,6 +48,7 @@ var gFilter;
 var gFilterList;
 var gFilterNameElement;
 var gActionTargetElement;
+var gActionTargetMoveElement;
 var gActionTargetCopyElement;
 var gActionValueDeck;
 var gActionPriority;
@@ -261,7 +262,7 @@ function setLabelAttributes(labelID, menuItemID)
 function initializeFilterWidgets()
 {
     gFilterNameElement = document.getElementById("filterName");
-    gActionTargetElement = document.getElementById("actionTargetFolder");
+    gActionTargetMoveElement = document.getElementById("actionTargetFolder");
     gActionTargetCopyElement = document.getElementById("actionTargetFolder2");
     gActionValueDeck = document.getElementById("actionValueDeck");
     gActionPriority = document.getElementById("actionValuePriority");
@@ -297,7 +298,7 @@ function initializeDialog(filter)
         gMoveToFolderCheckbox.checked = true;
         var target = filterAction.targetFolderUri;
         if (target) 
-          SetFolderPicker(target, gActionTargetElement.id);
+          SetFolderPicker(target, gActionTargetMoveElement.id);
       }
       else if (filterAction.type == nsMsgFilterAction.CopyToFolder)
       {
@@ -436,8 +437,8 @@ function saveFilter()
 
   if (gMoveToFolderCheckbox.checked)
   {
-    if (gActionTargetElement)
-      targetUri = gActionTargetElement.getAttribute("uri");
+    if (gActionTargetMoveElement)
+      targetUri = gActionTargetMoveElement.getAttribute("uri");
     if (!targetUri || targetUri == "") 
     {
       if (gPromptService)
@@ -678,12 +679,14 @@ function showLabelColorFor(menuitem)
 function GetFirstSelectedMsgFolder()
 {
     var selectedFolder = gActionTargetElement.getAttribute("uri");
+    if (!selectedFolder)
+      return null;
 
     var msgFolder = GetMsgFolderFromUri(selectedFolder, true);
     return msgFolder;
 }
 
-function SearchNewFolderOkCallback(name,uri,targetid)
+function SearchNewFolderOkCallback(name, uri)
 {
   var msgFolder = GetMsgFolderFromUri(uri, true);
   var imapFolder = null;
@@ -719,7 +722,7 @@ function SearchNewFolderOkCallback(name,uri,targetid)
   if (!imapFolder)
   {
     var curFolder = uri+"/"+encodeURIComponent(name);
-    SetFolderPicker(curFolder, targetid);
+    SetFolderPicker(curFolder, gActionTargetElement.id);
   }
 }
 
