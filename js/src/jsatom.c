@@ -63,7 +63,9 @@ js_AtomToPrintableString(JSContext *cx, JSAtom *atom)
     return js_ValueToPrintableString(cx, ATOM_KEY(atom));
 }
 
+#if JS_HAS_ERROR_EXCEPTIONS
 extern const char js_Error_str[];       /* trivial, from jsexn.h */
+#endif
 
 /*
  * Keep this in sync with jspubtd.h -- an assertion below will insist that
@@ -301,7 +303,9 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
     FROB(BooleanAtom,             js_Boolean_str);
     FROB(CallAtom,                js_Call_str);
     FROB(DateAtom,                js_Date_str);
+#if JS_HAS_ERROR_EXCEPTIONS
     FROB(ErrorAtom,               js_Error_str);
+#endif
     FROB(FunctionAtom,            js_Function_str);
     FROB(MathAtom,                js_Math_str);
     FROB(NumberAtom,              js_Number_str);
