@@ -42,8 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = resources
-
 MODULE		= layout
 LIBRARY_NAME	= gksvgbase_s
 LIBXUL_LIBRARY	= 1
