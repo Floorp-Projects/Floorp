@@ -342,7 +342,7 @@ PR_IMPLEMENT(PRUint64) PR_GetPhysicalMemorySize(void)
 
     if (odm_initialize() == 0) {
         int how_many;
-        struct CutAt *obj = getattr("sys0", "realmem", 0, &how_many);
+        struct CuAt *obj = getattr("sys0", "realmem", 0, &how_many);
         if (obj != NULL) {
             PRUint64 kbytes;
             LL_I2L(kbytes, atoi(obj->value));
