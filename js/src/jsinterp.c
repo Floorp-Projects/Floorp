@@ -3757,7 +3757,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
               case JSOP_DEFFUN:       goto do_JSOP_DEFFUN;
               case JSOP_DEFLOCALFUN:  goto do_JSOP_DEFLOCALFUN;
               case JSOP_DEFVAR:       goto do_JSOP_DEFVAR;
+#if JS_HAS_EXPORT_IMPORT
               case JSOP_EXPORTNAME:   goto do_JSOP_EXPORTNAME;
+#endif
 #if JS_HAS_XML_SUPPORT
               case JSOP_GETMETHOD:    goto do_JSOP_GETMETHOD;
 #endif
