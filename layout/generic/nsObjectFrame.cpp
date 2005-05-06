@@ -1670,7 +1670,6 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
     anchorFrame->AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
     
     nsHTMLContainerFrame::CreateViewForFrame(anchorFrame, this, PR_FALSE);
-    mFrames.AppendFrame(this, anchorFrame);
 
     rv = NS_NewImageFrame(shell, &imgFrame);
     if (NS_FAILED(rv))
@@ -1706,6 +1705,9 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
 
     if (textFrame)
       textFrame->Destroy(aPresContext);
+  } else {
+    // Creation of all our anonymous content succeeded.
+    mFrames.AppendFrame(this, anchorFrame);
   }
 
   nsCOMPtr<nsISupportsArray> array;
