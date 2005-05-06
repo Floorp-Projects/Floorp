@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Jamie Zawinski <jwz@netscape.com>, 31 Aug 1997.
  */
@@ -36,6 +36,10 @@ abstract class HeaderFormatter {
   abstract public void formatHeaders(InternetHeaders headers,
                                      StringBuffer output);
 
+  /** The name of the default font to be used in the headers box at the top
+   *of every Grendel email message */
+  private static final String HEADER_FONT_NAME = "Sans-Serif";
+
   /** Translates an RFC-mandated message header name (like "Subject")
       into a localized string which should be presented to the user.
     */
@@ -50,12 +54,12 @@ abstract class HeaderFormatter {
 
   /** Called when beginning to output a header block.  This opens the table. */
   void startHeaderOutput(StringBuffer output) {
-//    output.append("<TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>");
+    output.append("<TABLE CELLPADDING=2 CELLSPACING=0 BORDER=0>");
   }
 
   /** Called when done filling a header block.  This closes the table. */
   void finishHeaderOutput(StringBuffer output) {
-//    output.append("</TABLE>");
+    output.append("</TABLE>");
   }
 
   /*************************************************************************/
@@ -206,12 +210,12 @@ abstract class HeaderFormatter {
 
   boolean writeRandomHeader(String header, StringBuffer value,
                             StringBuffer output) {
-//    output.append("<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP>");
+    output.append("<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP><FONT FACE=" + HEADER_FONT_NAME + ">");
     output.append(localizeHeaderName(header));
-//    output.append(": </TH><TD>");
+    output.append(": </FONT></TH><TD><FONT FACE=" + HEADER_FONT_NAME + ">");
 //    quoteHTML(value);
     output.append(value);
-//    output.append("</TD></TR>");
+    output.append("</FONT></TD></TR>");
     return true;
   }
 }

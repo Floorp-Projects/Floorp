@@ -83,6 +83,9 @@ import calypso.net.URLSource;
 
 import calypso.util.ByteBuf;
 
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 //import netscape.orion.uimanager.IUICmd;
 
 //import lego.document.HTMLDocument;
@@ -91,6 +94,9 @@ import calypso.util.ByteBuf;
 //import mg.edge.embed.jfc.URLComponentFactory;
 //import mg.magellan.document.IDocument;
 
+/**
+ *This is the box where a Grendel email message will be displayed.
+ */
 public class MessagePanel extends GeneralPanel {
   //  JTextArea     fTextArea;
   JEditorPane   fTextArea;
@@ -98,13 +104,19 @@ public class MessagePanel extends GeneralPanel {
   Thread        fMessageLoadThread;
   Message       fMessage;
   MessagePanel  fPanel;
-  boolean useMagellan;
   boolean makeRealHTML;
 
   EventListenerList fListeners = new EventListenerList();
 
   Event              fActions[] = {ActionFactory.GetNewMailAction(),
                                     ActionFactory.GetComposeMessageAction()};
+
+  private static Logger mLogger = Logger.getLogger("grendel.ui.MessagePanel");
+
+  static {
+    mLogger.setLevel(Level.OFF);
+  }
+
   /**
    * Constructs a new message panel.
    */
@@ -112,21 +124,14 @@ public class MessagePanel extends GeneralPanel {
   public MessagePanel() {
     fPanel = this;
 
-    useMagellan = false;
     makeRealHTML = true;
 
-    if (useMagellan) {
-      //    fViewer = (URLComponent) URLComponentFactory.NewURLComponent(null);
-      // Component viewComponent = fViewer.getComponent();
-      // add(viewComponent);
-    } else {
-      fTextArea = new JEditorPane();
-      fTextArea.setEditable(false);
-//      fTextArea.setContentType("text/html");
-      fTextArea.setFont(new Font("Helvetica", Font.PLAIN, 12));
-      fTextArea.setBorder(BorderFactory.createLoweredBevelBorder());
-      add(new JScrollPane(fTextArea));
-    }
+    fTextArea = new JEditorPane();
+    fTextArea.setEditable(false);
+    fTextArea.setContentType("text/html");
+    fTextArea.setFont(new Font("Helvetica", Font.PLAIN, 12));
+    fTextArea.setBorder(BorderFactory.createLoweredBevelBorder());
+    add(new JScrollPane(fTextArea));
   }
 
   /**
@@ -138,7 +143,7 @@ public class MessagePanel extends GeneralPanel {
   public void dispose() {
     synchronized (fPanel) {
       if (fMessageLoadThread != null) {
-     //   System.out.println("Killing msg thread");
+        mLogger.info("Killing msg thread");
         fMessageLoadThread.interrupt();
 				try {
 					fMessageLoadThread.join();
@@ -166,7 +171,7 @@ public class MessagePanel extends GeneralPanel {
 
   public synchronized void setMessage(Message aMessage) {
     if (fMessageLoadThread != null) {
-  //    System.out.println("Killing msg thread");
+      mLogger.info("Killing msg thread");
       fMessageLoadThread.interrupt();
 			try {
 				fMessageLoadThread.join();
@@ -178,7 +183,7 @@ public class MessagePanel extends GeneralPanel {
     }
     fMessageLoadThread =
       new Thread(new LoadMessageThread(aMessage), "msgLoad");
-    System.out.println("Starting msg thread");
+    mLogger.info("Starting msg thread");
     fMessageLoadThread.start();
   }
 
@@ -262,64 +267,34 @@ public class MessagePanel extends GeneralPanel {
       notifyStatus(fLabels.getString("messageLoadingStatus"));
 
       try {
-        if (!useMagellan) {
-          synchronized (fTextArea) {
-            if (fMessage != null) {
-              fTextArea.setText("");
-              try {
-                InputStream stream = mextra.getInputStreamWithHeaders();
-                if (makeRealHTML) {
-                  stream = new MakeItHTML(stream).getHTMLInputStream();
-                }
-                // Okay, let's try to read from the stream and set the
-                // text from the InputStream. We may need to put this
-                // stuff back later. (talisman)
-                //InputStreamReader reader = new InputStreamReader(stream);
-                //  char buff[] = new char[4096];
-                // int count;
-                // while ((count = reader.read(buff, 0, 4096)) != -1) {
-                //   fTextArea.append(new String(buff, 0, count));
-                fTextArea.read(stream, "Message");
-                //  }
-              } catch (MessagingException me) {
-                fTextArea.setText(me.toString());
-                me.printStackTrace();
-              } catch (IOException e) {
-                fTextArea.setText(e.toString());
-                e.printStackTrace();
-              }
-            } else {
-              fTextArea.setText("This space intentionally left blank");
-            }
-          }
-        } else {
-          InputStream in = null;
+        synchronized (fTextArea) {
           if (fMessage != null) {
-            InputStream rawin;
+            fTextArea.setText("");
             try {
-              rawin = mextra.getInputStreamWithHeaders();
+              InputStream stream = mextra.getInputStreamWithHeaders();
               if (makeRealHTML) {
-                in = (new MakeItHTML(rawin)).getHTMLInputStream();
-              } else {
-                in = new StupidHackToMakeHTML(rawin);
+                stream = new MakeItHTML(stream).getHTMLInputStream();
               }
+              // Okay, let's try to read from the stream and set the
+              // text from the InputStream. We may need to put this
+              // stuff back later. (talisman)
+              //InputStreamReader reader = new InputStreamReader(stream);
+              //  char buff[] = new char[4096];
+              // int count;
+              // while ((count = reader.read(buff, 0, 4096)) != -1) {
+              //   fTextArea.append(new String(buff, 0, count));
+              fTextArea.read(stream, "Message");
+              //  }
             } catch (MessagingException me) {
-              throw new Error("Can't get the input stream???  " + me);
+              fTextArea.setText(me.toString());
+              me.printStackTrace();
             } catch (IOException e) {
-              throw new Error("Can't get the input stream???  " + e);
+              fTextArea.setText(e.toString());
+              e.printStackTrace();
             }
           } else {
             fTextArea.setText("This space intentionally left blank");
           }
-
-          // synchronized (fViewer) {
-/* ####
-            URL url = new URL("http://home.netscape.com/");
-            URLSource source = new URLSource(url, null, in);
-            IDocument doc = new HTMLDocument(source);
-            fViewer.goTo(doc);
-*/
-          //    }
         }
       } catch (Exception e) {
         notifyStatus(e.toString());

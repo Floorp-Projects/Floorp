@@ -102,26 +102,21 @@ public class UI extends JFrame {
     label.setBounds(12,294,label.getPreferredSize().width,label.getPreferredSize().height);
     getContentPane().add(label);
 
-    JLabel icon; URL iconUrl;
+    JLabel icon;
     
-    iconUrl = getClass().getResource("images/multi.gif");
-    icon = new JLabel(new ImageIcon(iconUrl));
+    icon = new JLabel(new ImageIcon("prefs/ui/images/multi.gif"));
     icon.setBounds(48,44,icon.getPreferredSize().width,icon.getPreferredSize().height);
     getContentPane().add(icon);
-    iconUrl = getClass().getResource("images/right.gif");
-    icon = new JLabel(new ImageIcon(iconUrl));
+    icon = new JLabel(new ImageIcon("prefs/ui/images/right.gif"));
     icon.setBounds(138,44,icon.getPreferredSize().width,icon.getPreferredSize().height);
     getContentPane().add(icon);
-    iconUrl = getClass().getResource("images/top.gif");
-    icon = new JLabel(new ImageIcon(iconUrl));
+    icon = new JLabel(new ImageIcon("prefs/ui/images/top.gif"));
     icon.setBounds(228,44,icon.getPreferredSize().width,icon.getPreferredSize().height);
     getContentPane().add(icon);
-    iconUrl = getClass().getResource("images/left.gif");
-    icon = new JLabel(new ImageIcon(iconUrl));
+    icon = new JLabel(new ImageIcon("prefs/ui/images/left.gif"));
     icon.setBounds(318,44,icon.getPreferredSize().width,icon.getPreferredSize().height);
     getContentPane().add(icon);
-    iconUrl = getClass().getResource("images/stacked.gif");
-    icon = new JLabel(new ImageIcon(iconUrl));
+    icon = new JLabel(new ImageIcon("prefs/ui/images/stacked.gif"));
     icon.setBounds(408,44,icon.getPreferredSize().width,icon.getPreferredSize().height);
     getContentPane().add(icon);
     
