@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "NSPasteboard+Utils.h"
+#import "NSURL+Utils.h"
 
 NSString* const kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
 NSString* const kCorePasteboardFlavorType_urln = @"CorePasteboardFlavorType 0x75726C6E"; // 'urln'  title
@@ -132,6 +133,41 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
     NSArray* urlAndTitleContainer = [self propertyListForType:kWebURLsWithTitlesPboardType];
     *outUrls = [urlAndTitleContainer objectAtIndex:0];
     *outTitles = [urlAndTitleContainer objectAtIndex:1];
+  } else if ([types containsObject:NSFilenamesPboardType]) {
+    NSArray *files = [self propertyListForType:NSFilenamesPboardType];
+    *outUrls = [NSMutableArray arrayWithCapacity:[files count]];
+    *outTitles = [NSMutableArray arrayWithCapacity:[files count]];
+    for ( unsigned int i = 0; i < [files count]; ++i ) {
+      NSString *file = [files objectAtIndex:i];
+      NSString *ext = [file pathExtension];
+      NSString *urlString = nil;
+      NSString *title = [NSString string];
+      
+      // Check whether the file is a .webloc, a .url, or some other kind of file.
+      if ([ext isEqualToString:@"webloc"]) {
+        NSURL* urlFromWebloc = [NSURL urlFromWebloc:file];
+        if (urlFromWebloc) {
+          urlString = [urlFromWebloc absoluteString];
+          title     = [[file lastPathComponent] stringByDeletingPathExtension];
+        }
+      }  else if ([ext isEqualToString:@"url"]) {
+        NSURL* urlFromIEURLFile = [NSURL urlFromIEURLFile:file];
+        if (urlFromIEURLFile) {
+          urlString = [urlFromIEURLFile absoluteString];
+          title     = [[file lastPathComponent] stringByDeletingPathExtension];
+        }
+      }
+      
+      // Use the filename if not a .webloc or .url file, or if either of the
+      // functions returns nil.
+      if (!urlString) {
+        urlString = file;
+        title     = [file lastPathComponent];
+      }
+
+      [(NSMutableArray*) *outUrls addObject:urlString];
+      [(NSMutableArray*) *outTitles addObject:title];
+    }
   } else if ([types containsObject:NSURLPboardType]) {
     *outUrls = [NSArray arrayWithObject:[[NSURL URLFromPasteboard:self] absoluteString]];
     if ([types containsObject:kCorePasteboardFlavorType_urld])
@@ -170,7 +206,8 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
 {
   NSArray* types = [self types];
   if (    [types containsObject:kWebURLsWithTitlesPboardType]
-       || [types containsObject:NSURLPboardType] )
+       || [types containsObject:NSURLPboardType]
+       || [types containsObject:NSFilenamesPboardType] )
     return YES;
   
   if ([types containsObject:NSStringPboardType]) {

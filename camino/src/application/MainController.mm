@@ -44,6 +44,7 @@
 #import "NSString+Utils.h"
 #import "NSResponder+Utils.h"
 #import "NSMenu+Utils.h"
+#import "NSURL+Utils.h"
 
 #import "ChimeraUIConstants.h"
 #import "MainController.h"
@@ -505,16 +506,12 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 +(NSURL*) decodeLocalFileURL:(NSURL*)url
 {  
   NSString *urlPathString = [url path];
-  if ([[urlPathString pathExtension] isEqualToString:@"url"]) {
-    NSString *decodedURL = [MainController urlStringFromIEURLFile:urlPathString];
-    if (decodedURL)
-      url = [NSURL URLWithString:decodedURL];
-  }
-  else if ([[urlPathString pathExtension] isEqualToString:@"webloc"]) {
-    NSString *decodedURL = [MainController urlStringFromWebloc:urlPathString];
-    if (decodedURL)
-      url = [NSURL URLWithString:decodedURL];
-  }
+
+  if ([[urlPathString pathExtension] isEqualToString:@"url"])
+    url = [NSURL urlFromIEURLFile:urlPathString];
+  else if ([[urlPathString pathExtension] isEqualToString:@"webloc"])
+    url = [NSURL urlFromWebloc:urlPathString];
+
   return url;
 }
 
@@ -1673,57 +1670,6 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
   NSString *pageToLoad = NSLocalizedStringFromTable(@"RendezvousPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"RendezvousPageDefault"])
     [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
-}
-
-// Reads the URL from a .webloc . Returns nil on failure.
-+(NSString*)urlStringFromWebloc:(NSString*)inFile
-{
-  FSRef ref;
-  FSSpec spec;
-  NSString *ret = nil;
-  
-  if (inFile && !FSPathMakeRef((UInt8 *)[inFile fileSystemRepresentation], &ref, NULL) && !FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, &spec, NULL)) {
-    short resRef;
-    
-    resRef = FSpOpenResFile(&spec, fsRdPerm);
-    
-    if (resRef != -1) { // Has resouce fork.
-      Handle urlResHandle;
-      
-      if ((urlResHandle = Get1Resource('url ', 256))) { // Has 'url ' resource with ID 256.
-        long size;
-        
-        size = GetMaxResourceSize(urlResHandle);
-        ret = [NSString stringWithCString:(char *)*urlResHandle length:size];
-      }
-      
-      CloseResFile(resRef);
-    }
-  }
-  
-  return ret;
-}
-
-// Reads the URL from a .url . Returns nil on failure.
-+(NSString*)urlStringFromIEURLFile:(NSString*)inFile
-{
-  NSString *ret = nil;
-  
-  // Is this really an IE .url file? (Is this too strict?)
-  if (inFile) {
-    NSArray *contents = [[NSString stringWithContentsOfFile:inFile] componentsSeparatedByString:@"\r\n"];
-    unsigned idx = [contents indexOfObject:@"[InternetShortcut]"];
-    
-    if (idx != NSNotFound) {
-      NSString *urlline = [contents objectAtIndex:idx + 1];
-      
-      if ([urlline hasPrefix:@"URL="]) {
-        ret = [urlline substringFromIndex:4];
-      }
-    }
-  }
-  
-  return ret;
 }
 
 @end

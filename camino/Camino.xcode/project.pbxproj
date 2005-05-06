@@ -3614,6 +3614,7 @@
 				3FFFEC1F081C3F0B00843C07,
 				3FBDC7DB08252CF300D7F8E0,
 				3FBDC7DC08252CF300D7F8E0,
+				3FE4ECEA082C2D89003BF39E,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7478,6 +7479,7 @@
 				3FFFEC21081C3F0B00843C07,
 				3FBDC7DD08252CF300D7F8E0,
 				3FBDC7DE08252CF300D7F8E0,
+				3FE4ECEB082C2D89003BF39E,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10425,6 +10427,27 @@
 		};
 		3FC949640642ED39008E2E3D = {
 			fileRef = 3FC949600642ED39008E2E3D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FE4ECE9082C2D89003BF39E = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			name = "NSURL+Utils.m";
+			path = "src/extensions/NSURL+Utils.m";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FE4ECEA082C2D89003BF39E = {
+			fileRef = 3FE4ECE9082C2D89003BF39E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FE4ECEB082C2D89003BF39E = {
+			fileRef = 3FE4ECE9082C2D89003BF39E;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -14851,6 +14874,7 @@
 				3FF08EFD06E7CF86001C9B19,
 				3FF08EFE06E7CF86001C9B19,
 				3FF08EFF06E7CF86001C9B19,
+				3FE4ECE9082C2D89003BF39E,
 			);
 			isa = PBXGroup;
 			name = Source;
