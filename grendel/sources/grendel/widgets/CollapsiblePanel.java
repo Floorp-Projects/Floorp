@@ -19,7 +19,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
@@ -42,20 +42,19 @@ import javax.swing.plaf.metal.MetalIconFactory;
 import javax.swing.ImageIcon;
 
 import grendel.ui.ToolBarLayout;
-import grendel.widgets.Animation;
 import grendel.widgets.Collapsible;
 import grendel.widgets.Spring;
 
 /**
  * This is an implementation of the grendel.widgets.Collapsible interface,
  * which provides the standard Communicator-style collapsing toolbar panel.
- * 
+ *
  * @author Jeff Galyan
  * @see Collapsible
  */
 
 public class CollapsiblePanel extends JPanel implements Collapsible {
-    
+
     private boolean collapsed = false;
     private Component myComponents[];
     private int componentCount;
@@ -64,21 +63,21 @@ public class CollapsiblePanel extends JPanel implements Collapsible {
     private GridBagConstraints constraints;
     private Box aBox;
     int width = 10, height = 50;
-    
+
 
     private ToolBarLayout layout;
-    
-  /** 
+
+  /**
    * Constructor
    */
 
     public CollapsiblePanel(boolean isDoubleBuffered) {
 	super(isDoubleBuffered);
-        
+
         constraints = new GridBagConstraints();
         constraints.ipadx = 0;
         constraints.ipady = 0;
-       
+
 	layout = new ToolBarLayout();
         layout.setInsets(new Insets(0,0,0,0));
         layout.setIPadX(0);
@@ -87,7 +86,7 @@ public class CollapsiblePanel extends JPanel implements Collapsible {
         constraints.insets = new Insets(0,0,0,0);
         constraints.anchor = GridBagConstraints.NORTHWEST;
         constraints.fill = GridBagConstraints.NONE;
-        
+
         CollapseButton collapseButton = new CollapseButton(VERTICAL);
 	add(collapseButton, constraints);
         Dimension dim = collapseButton.getSize();
@@ -100,7 +99,7 @@ public class CollapsiblePanel extends JPanel implements Collapsible {
     }
 
   /**
-   * Collapses the panel. 
+   * Collapses the panel.
    */
 
     public void collapse() {
@@ -129,17 +128,17 @@ public class CollapsiblePanel extends JPanel implements Collapsible {
 	add(new Spring(), constraints);
 
 	revalidate();
-	
+
 	collapsed = true;
     }
- 
+
   /**
    * Uncollapses the panel.
    */
-    
+
     public void expand() {
 	Dimension dim = new Dimension(height, width);
-	
+
 	//	layout.defaultConstraints.anchor = GridBagConstraints.WEST;
 	removeAll();
 	Dimension dim2 = getSize();
@@ -149,14 +148,14 @@ public class CollapsiblePanel extends JPanel implements Collapsible {
 	for (int i = 0; i < componentCount; i++) {
 	    add(myComponents[i]);
 	}
-        
+
 	revalidate();
-	
+
 	collapsed = false;
     }
 
   /**
-   * Tells you whether this component is collapsible. 
+   * Tells you whether this component is collapsible.
    * @returns a boolean indicating this component is collapsible.
    */
 
@@ -165,7 +164,7 @@ public class CollapsiblePanel extends JPanel implements Collapsible {
     }
 
   /**
-   * Tells you whether this component is currently collapsed. 
+   * Tells you whether this component is currently collapsed.
    * Useful for checking the component's status.
    * @returns true if this component is collapsed, false if it is not.
    */
@@ -175,7 +174,7 @@ public class CollapsiblePanel extends JPanel implements Collapsible {
     }
 
     class CollapseListener implements ActionListener {
-	
+
 	public void actionPerformed(ActionEvent evt) {
 	    if (isCollapsed() == true) {
 		expand();
@@ -215,12 +214,12 @@ public class CollapsiblePanel extends JPanel implements Collapsible {
 		setRolloverIcon(collapseButtonHorizontalRollover);
 		setPressedIcon(collapseButtonHorizontalPressed);
 	    }
-	    
+
 	    addActionListener(new CollapseListener());
 	}
 
     }
-	
+
 }
-	
-	
+
+

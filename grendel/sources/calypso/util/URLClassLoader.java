@@ -24,6 +24,7 @@ package calypso.util;
 
 import java.net.*;
 import java.util.*;
+import java.util.logging.*;
 import java.util.zip.*;
 import java.io.*;
 

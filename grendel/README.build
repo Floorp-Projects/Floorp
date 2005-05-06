@@ -21,20 +21,8 @@ Building Grendel:
 8. To clean out the dist directory of all build products, type 'ant clean'.
 
 NOTE TO MAC USERS:
-We are no longer supporting JDK 1.4.x, so Grendel will not run on MacOS 9.x or earlier. You'll have
-to upgrade to Mac OS X if you want to run Grendel. Support for building with Project Builder is 
-forthcoming. Please note also that the application settings in Project Builder (especially the
-MRJAppBuilder related settings) should NOT be changed without a VERY compelling reason. Changing 
-these settings may cause Grendel to fail to run in your particular environment. The creator code 
-'GRen' is registered with Apple, so please don't change that setting. If you want to use Icon
-Composer to change the application icons to something you like better than an envelope, go ahead.
-You'll find the Project Builder project and resource files in PBProj/Grendel.pbproj and 
-PBProj/Grendel.icns. Project Builder will put the build products in PBProj/build. You can double-
-click Grendel in the Finder to launch Grendel. Note that I'm still working on figuring out how to 
-get Project Builder to copy the jars from extlib into the right place in the app bundle, so if you
-get a "NoClassDefFound" exception at startup (you'll see it if you run Grendel from within Project 
-Builder after building it), you'll need to use Terminal to copy the jars into 
-Grendel.app/Contents/Resources/Java/ , at least for now.
+We are no longer supporting JDK 1.4.x, so Grendel will not run on MacOS 10.2 or earlier. You'll have
+to upgrade to Mac OS 10.3 if you want to run Grendel.
  
 Happy haquing!
 

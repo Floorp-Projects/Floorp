@@ -36,7 +36,6 @@ import javax.swing.JButton;
 
 import grendel.ui.ToolBarLayout;
 
-import grendel.widgets.Animation;
 import grendel.widgets.Spring;
 
 import com.trfenv.parsers.Event;

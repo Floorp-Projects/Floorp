@@ -145,7 +145,7 @@ public class GeneralFrame extends JFrame
     fPanel = getContentPane();
 
     fAnimation = new Animation();
-    fAnimation.setImageTemplate("/grendel/ui/images/animation/Contest{0,number,00}.gif",
+    fAnimation.setImageTemplate("ui/images/animation/Contest{0,number,00}.gif",
                                 30);
 
     fToolBarPanel = new CollapsiblePanel(true);

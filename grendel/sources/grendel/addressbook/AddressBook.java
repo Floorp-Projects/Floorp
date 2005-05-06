@@ -37,6 +37,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
+import java.util.logging.*;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -66,6 +67,8 @@ public class AddressBook extends GeneralFrame {
   protected String          ColumnName;
   protected int             mColumnSorted;
   Preferences prefs = PreferencesFactory.Get();
+
+  private static final Logger logger = Logger.getLogger("calypso.util");
 
   public static void main(String[] args) {
     AddressBook AddressBookFrame = new AddressBook();
@@ -99,7 +102,7 @@ public class AddressBook extends GeneralFrame {
 
        //              try {
        //open a connection to the LDAP server
-       System.out.println ("Opening server " + mReadableName);
+       logger.info("Opening server " + mReadableName);
        ICardSource Four11AddressBook = getCardSource();
 
 
@@ -109,7 +112,7 @@ public class AddressBook extends GeneralFrame {
        String[] attributes = {"givenName", "sn", "cn", "o", "mail", "telephoneNumber", "city"};
 
        //query the LDAP server.
-       System.out.println ("Send query" + query);
+       logger.info("Send query" + query);
        ICardSet cardSet = Four11AddressBook.getCardSet (query, attributes);
 
        //Sort the list.
@@ -122,7 +125,7 @@ public class AddressBook extends GeneralFrame {
          //enumerate thru the cards.
          for (Enumeration cardEnum = cardSet.getEnumeration();
               cardEnum.hasMoreElements(); ) {
-           System.out.println ("got card");
+           logger.info ("got card");
            //get the addres card
            ICard card = (ICard) cardEnum.nextElement();
            //get the attributes for this card
@@ -181,10 +184,10 @@ public class AddressBook extends GeneralFrame {
        }
        //              }
        //              catch( LDAPException e ) {
-       //                      System.out.println( "Error: " + e.toString() );
+       //                      infologger.info( "Error: " + e.toString() );
        //              }
 
-       System.out.println ("Done.");
+       logger.info ("Done.");
        return retVecVec;
     }
   }
@@ -220,7 +223,7 @@ public class AddressBook extends GeneralFrame {
     }
 
     protected ICardSource getCardSource() {
-       System.out.println("Entering in the getCardSource");
+       logger.info("Entering in the getCardSource");
        return new ACS_Personal (mFileName, false);
     }
     public String   getFileName ()  { return mFileName; }
@@ -570,9 +573,9 @@ public class AddressBook extends GeneralFrame {
           if (!mSortAscending) {
             mSortAscending = true;
             DataModel dm = (DataModel) mTable.getModel ();
-            System.out.println("Column Name is " + ColumnName);
+            logger.info("Column Name is " + ColumnName);
             int colnumber = dm.findColumn(ColumnName);
-            System.out.println("Column Number for " + ColumnName + " is: " + colnumber);
+            logger.info("Column Number for " + ColumnName + " is: " + colnumber);
 
             dm.sortData(colnumber,mSortAscending);
 
@@ -591,13 +594,13 @@ public class AddressBook extends GeneralFrame {
             this.setEnabled(true);
         }
         public void actionPerformed(ActionEvent e) {
-          System.out.println("I'm in sort descending");
+          logger.info("I'm in sort descending");
           if (mSortAscending) {
             DataModel dm = (DataModel) mTable.getModel ();
             mSortAscending = false;
-            System.out.println("Column Name is " + ColumnName);
+            logger.info("Column Name is " + ColumnName);
             int colnumber = dm.findColumn(ColumnName);
-            System.out.println("Column Number for " + ColumnName + " is: " + colnumber);
+            logger.info("Column Number for " + ColumnName + " is: " + colnumber);
 
             dm.sortData(colnumber,mSortAscending);
 
@@ -620,7 +623,7 @@ public class AddressBook extends GeneralFrame {
             ColumnName = myLocalColumnName;
 
             int colnumber = dm.findColumn(ColumnName);
-            System.out.println("Column Number for " + ColumnName + " is: " + colnumber);
+            logger.info("Column Number for " + ColumnName + " is: " + colnumber);
 
             dm.sortData(colnumber,mSortAscending);
 
@@ -723,7 +726,7 @@ public class AddressBook extends GeneralFrame {
     b.setToolTipText(aToolTip);
 
     //        URL iconUrl = getClass().getResource("images/" + gifName + ".gif");
-    //        b.setIcon(new ImageIcon(getClass().getResource(aImageName)));
+    //        b.setIcon(new ImageIcon("getClass().getResource(aImageName)));
 
     File resourceFile = new File(aImageName);
     try {
@@ -731,7 +734,7 @@ public class AddressBook extends GeneralFrame {
          b.setIcon(new ImageIcon(resourceFile.getCanonicalPath()));
       }
     } catch (IOException e) {
-      System.out.println("IOException occured");
+      logger.warning("IOException occured");
     }
     //    iconUrl = getClass().getResource("images/" + gifName + "-disabled.gif");
     //    button.setDisabledIcon(ImageIcon.createImageIcon(iconUrl));
@@ -768,7 +771,7 @@ public class AddressBook extends GeneralFrame {
 
     //              try {
     //open a connection to the LDAP server
-    System.out.println ("Opening server " + aServerName);
+    logger.info ("Opening server " + aServerName);
     ICardSource Four11AddressBook = new LDAP_Server (aServerName);
 
 
@@ -778,7 +781,7 @@ public class AddressBook extends GeneralFrame {
     String[] attributes = {"sn", "cn", "o", "mail", "city"};
 
     //query the LDAP server.
-    System.out.println ("Send query" + query);
+    logger.info ("Send query" + query);
     ICardSet cardSet = Four11AddressBook.getCardSet (query, attributes);
 
     //Sort the list.
@@ -791,7 +794,7 @@ public class AddressBook extends GeneralFrame {
       //enumerate thru the cards.
       for (Enumeration cardEnum = cardSet.getEnumeration();
            cardEnum.hasMoreElements(); ) {
-        System.out.println ("got card");
+        logger.info ("got card");
         //get the addres card
         ICard card = (ICard) cardEnum.nextElement();
         //get the attributes for this card
@@ -850,10 +853,10 @@ public class AddressBook extends GeneralFrame {
     }
     //              }
     //              catch( LDAPException e ) {
-    //                      System.out.println( "Error: " + e.toString() );
+    //                      logger.info( "Error: " + e.toString() );
     //              }
 
-    System.out.println ("Done.");
+    logger.info ("Done.");
     return retVecVec;
   }
   */
@@ -907,9 +910,9 @@ public class AddressBook extends GeneralFrame {
         ColumnValues[row][1] = new Integer(row).toString();
       }
 
-      System.out.println("Values before sorting");
+      logger.info("Values before sorting");
       for(row = 0; row < ColumnValues.length ; ++row) {
-        System.out.println(ColumnValues[row][0] + " row: "
+        logger.info(ColumnValues[row][0] + " row: "
                            + ColumnValues[row][1]);
       }
 
@@ -929,9 +932,9 @@ public class AddressBook extends GeneralFrame {
       });
       sorter.sort(ColumnValues);
 
-      System.out.println("Values after sorting");
+      logger.info("Values after sorting");
       for(row = 0; row < ColumnValues.length ; ++row) {
-        System.out.println(ColumnValues[row][0] + " row: "
+        logger.info(ColumnValues[row][0] + " row: "
                            + ColumnValues[row][1]);
       }
 
