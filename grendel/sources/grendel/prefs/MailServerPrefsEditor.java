@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 16 Oct 1997.
  *
@@ -180,7 +180,9 @@ public class MailServerPrefsEditor implements PropertyEditor
     fHostListModel = new HostListModel();
 
     URL url = getClass().getResource("PrefDialogs.xml");
-    fPanel = new PageUI(url, "id", "serverPrefs", fModel, getClass());
+    //XXXrlk: why does this constructor have parameters?
+//    fPanel = new PageUI(url, "id", "serverPrefs", fModel, getClass());
+    fPanel = new PageUI();
 
     JComponent c;
     ChangeAction ca = new ChangeAction();
@@ -193,7 +195,7 @@ public class MailServerPrefsEditor implements PropertyEditor
 
     c = fPanel.getCtrlByName(kMailDirectoryKey);
     c.addPropertyChangeListener(ca);
-      
+
     c = fPanel.getCtrlByName(kChooseKey);
     c.addPropertyChangeListener(ca);
 
@@ -274,7 +276,7 @@ public class MailServerPrefsEditor implements PropertyEditor
     fListeners.removePropertyChangeListener(l);
   }
 
-  class ListListener 
+  class ListListener
     implements ListSelectionListener {
     public void valueChanged(ListSelectionEvent e) {
       System.out.println("foo");

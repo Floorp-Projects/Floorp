@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 package grendel.composition;
@@ -74,7 +74,7 @@ public class AttachmentsListBeanInfo extends SimpleBeanInfo {
 
             //showDialog requests that the AddressList display its file dialog.
             //public void showDialog () {
-            mthd = beanClass.getMethod ("showDialog", null);
+            mthd = beanClass.getMethod("showDialog");
             MethodDescriptor showDialogDesc = new MethodDescriptor (mthd);
             showDialogDesc.setShortDescription ("Displays the file dialog");
 
@@ -91,7 +91,7 @@ public class AttachmentsListBeanInfo extends SimpleBeanInfo {
 
             //Delets all attachments from the list.
             //public void removeAllAttachments () {
-            mthd = beanClass.getMethod ("removeAllAttachments", null);
+            mthd = beanClass.getMethod ("removeAllAttachments");
             MethodDescriptor removeAllAttachmentsDesc = new MethodDescriptor (mthd);
             removeAllAttachmentsDesc.setShortDescription ("Delets all attachments from the list");
 

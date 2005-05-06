@@ -46,17 +46,17 @@ public class UIFactory {
 
   private UIFactory() {
     fFolderIcon =
-      new ImageIcon(getClass().getResource("images/folder-small.gif"));
+      new ImageIcon("ui/images/folder-small.gif");
     fNewsgroupIcon =
-      new ImageIcon(getClass().getResource("images/newsgroup-small.gif"));
+      new ImageIcon("ui/images/newsgroup-small.gif");
     fLocalStoreIcon =
-      new ImageIcon(getClass().getResource("images/storeLocal-small.gif"));
+      new ImageIcon("ui/images/storeLocal-small.gif");
     fRemoteStoreIcon =
-      new ImageIcon(getClass().getResource("images/storeRemote-small.gif"));
+      new ImageIcon("ui/images/storeRemote-small.gif");
     fInboxIcon =
-      new ImageIcon(getClass().getResource("images/inbox-small.gif"));
+      new ImageIcon("ui/images/inbox-small.gif");
     fConnectedIcon =
-      new ImageIcon(getClass().getResource("images/connected-small.gif"));
+      new ImageIcon("ui/images/connected-small.gif");
   }
 
   public static UIFactory Instance() {

@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
  *
@@ -80,7 +80,6 @@ import grendel.prefs.base.InvisiblePrefs;
 import grendel.prefs.base.ServerArray;
 import grendel.storage.FolderExtraFactory;
 import grendel.storage.SearchResultsFolderFactory;
-import grendel.ui.UIAction;
 import grendel.view.ViewedFolder;
 import grendel.view.ViewedStore;
 import grendel.view.ViewedStoreEvent;
@@ -104,6 +103,8 @@ import grendel.widgets.TreeTableModelBroadcaster;
 import grendel.widgets.TreeTableModelEvent;
 import grendel.widgets.TreeTableModelListener;
 
+import com.trfenv.parsers.Event;
+
 /**
  * Panel to display the <em>contents</em> of a folder.
  */
@@ -117,7 +118,7 @@ public class MasterPanel extends GeneralPanel {
   StoreChangeListener fStoreChangeListener = null;
   ViewedStore         fStores[];
 
-  UIAction            fActions[] = {ActionFactory.GetNewMailAction(),
+  Event            fActions[] = {ActionFactory.GetNewMailAction(),
                                     ActionFactory.GetComposeMessageAction(),
                                     new CopyToClipboardAction(),
                                     new PasteFromClipboardAction(),
@@ -211,7 +212,7 @@ public class MasterPanel extends GeneralPanel {
 
     fStoreChangeListener = new StoreChangeListener();
     StoreFactory.Instance().addChangeListener(fStoreChangeListener);
-    
+
     ActionFactory.SetComposeMessageThread(new ComposeMessageThread());
     fPanel.setFont(new Font("Helvetica", Font.PLAIN, 12));
   }
@@ -228,7 +229,7 @@ public class MasterPanel extends GeneralPanel {
    * Returns the actions associated with this panel.
    */
 
-  public UIAction[] getActions() {
+  public Event[] getActions() {
     return fActions;
   }
 
@@ -341,7 +342,7 @@ public class MasterPanel extends GeneralPanel {
     }
   }
 
-  class NewFolderAction extends UIAction {
+  class NewFolderAction extends Event {
 
     NewFolderAction() {
       super("folderNew");
@@ -360,7 +361,7 @@ public class MasterPanel extends GeneralPanel {
     }
   }
 
-  class DeleteFolderAction extends UIAction {
+  class DeleteFolderAction extends Event {
     DeleteFolderAction() {
       super("folderDelete");
     }
@@ -394,8 +395,8 @@ public class MasterPanel extends GeneralPanel {
       ActionFactory.setIdent(identity);
 
       Composition frame = new Composition();
- 
-      frame.show();
+
+      frame.setVisible(true);
       frame.requestFocus();
     }
   }
@@ -406,7 +407,7 @@ public class MasterPanel extends GeneralPanel {
     }
   }
 
-  class CopyToClipboardAction extends UIAction {
+  class CopyToClipboardAction extends Event {
 
     CopyToClipboardAction() {
       super("copy-to-clipboard");
@@ -424,7 +425,7 @@ public class MasterPanel extends GeneralPanel {
     }
   }
 
-  class PasteFromClipboardAction extends UIAction {
+  class PasteFromClipboardAction extends Event {
 
     PasteFromClipboardAction() {
       super("paste-from-clipboard");
@@ -714,7 +715,7 @@ class FolderModel implements TreeTableDataModel {
     node = getFolder(aNode);
 
     if (aID == MasterPanel.kNameID) {
-      
+
         parent = node.getParent();
     }
       String newName = (String) aValue;
@@ -765,7 +766,7 @@ class FolderModel implements TreeTableDataModel {
     } catch (MessagingException e) {
     }
     }
-  
+
 
   Folder getFolder(Object aObject) {
     Folder res = null;

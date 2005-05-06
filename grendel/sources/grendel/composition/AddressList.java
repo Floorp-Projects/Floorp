@@ -534,7 +534,7 @@ public class AddressList extends JScrollPane implements Serializable {
 
             //create image icon for drag and drop.
 
-                mIcon = new ImageIcon(getClass().getResource("images/card.gif"));
+                mIcon = new ImageIcon("composition/images/card.gif");
         }
 
         public void paint (Graphics g) {

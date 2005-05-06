@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Terry Weissman <terry@netscape.com>, 30 Sep 1997.
  */
@@ -236,7 +236,7 @@ public final class SimpleDB extends BaseDB {
 
 
 
-  public synchronized void assert(String name, String slot, String value)
+  public synchronized void addassert(String name, String slot, String value)
     throws IOException
   {
     int n = LookupString(name, true);

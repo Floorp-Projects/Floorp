@@ -17,11 +17,11 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Jeff Galyan (talisman@anamorphic.com), 20 March, 2001.
  *
- * Contributors: 
+ * Contributors:
  */
 
 package grendel.ui;
@@ -53,10 +53,10 @@ import grendel.filters.FilterMaster;
 */
 
 import grendel.composition.Composition;
-import grendel.ui.UIAction;
 
+import com.trfenv.parsers.Event;
 
-class PreferencesAction extends UIAction {
+class PreferencesAction extends Event {
   PreferencesAction fThis;
 
   public PreferencesAction() {

@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>,  8 Sep 1997.
  *
@@ -55,7 +55,7 @@ import grendel.filters.FilterMaster;
 */
 
 import grendel.composition.Composition;
-import grendel.ui.UIAction;
+import com.trfenv.parsers.Event;
 
 public class ActionFactory {
   static ExitAction fExitAction = new ExitAction();
@@ -69,9 +69,9 @@ public class ActionFactory {
   static RunServerPrefsAction fRunServerPrefsAction = new RunServerPrefsAction();
   static RunGeneralPrefsAction fRunGeneralPrefsAction = new RunGeneralPrefsAction();
   static RunUIPrefsAction fRunUIPrefsAction = new RunUIPrefsAction();
-  
+
   static int fIdent = 0;
-  
+
   static Runnable fComposeMessageThread = new DummyComposeMessageThread();
 
   static public ExitAction GetExitAction() {
@@ -89,7 +89,7 @@ public class ActionFactory {
   static public void SetComposeMessageThread(Runnable aThread) {
     fComposeMessageThread = aThread;
   }
-  
+
   static public void setIdent(int aIdent) {
     System.out.println("setIdent "+aIdent);
     fIdent = aIdent;
@@ -115,11 +115,11 @@ public class ActionFactory {
   static public ShowTooltipsAction GetShowTooltipsAction() {
     return fShowTooltipsAction;
   }
-  
+
   static public RunIdentityPrefsAction GetRunIdentityPrefsAction() {
     return fRunIdentityPrefsAction;
   }
-  
+
   static public RunServerPrefsAction GetRunServerPrefsAction() {
     return fRunServerPrefsAction;
   }
@@ -127,20 +127,20 @@ public class ActionFactory {
   static public RunGeneralPrefsAction GetRunGeneralPrefsAction() {
     return fRunGeneralPrefsAction;
   }
-  
+
   static public RunUIPrefsAction GetRunUIPrefsAction() {
     return fRunUIPrefsAction;
   }
 }
 
-class ExitAction extends UIAction {
+class ExitAction extends Event {
 
   public ExitAction() {
     super("appExit");
 
     setEnabled(true);
   }
-  
+
 
   public void actionPerformed(ActionEvent aEvent) {
     GeneralFrame.CloseAllFrames();
@@ -151,21 +151,21 @@ class ExitAction extends UIAction {
   }
 }
 
-class NewMailAction extends UIAction {
+class NewMailAction extends Event {
 
   public NewMailAction() {
     super("msgGetNew");
 
     setEnabled(true);
   }
-  
+
 
   public void actionPerformed(ActionEvent aEvent) {
     ProgressFactory.NewMailProgress();
   }
 }
 
-class ComposeMessageAction extends UIAction {
+class ComposeMessageAction extends Event {
 
   public ComposeMessageAction() {
     super("msgNew");
@@ -185,55 +185,20 @@ class DummyComposeMessageThread implements Runnable {
   }
 }
 
-class PreferencesAction extends UIAction {
-  PreferencesAction fThis;
-
-  public PreferencesAction() {
-    super("appPrefs");
-    fThis = this;
-
-    setEnabled(true);
-  }
-
-  public void actionPerformed(ActionEvent aEvent) {
-    Object source = aEvent.getSource();
-    if (source instanceof Component) {
-      Frame frame = Util.GetParentFrame((Component) source);
-      if (frame instanceof JFrame) {
-        new Thread(new PrefThread((JFrame) frame), "Prefs").start();
-      }
-    }
-  }
-
-  class PrefThread implements Runnable {
-    JFrame fFrame;
-    PrefThread(JFrame aFrame) {
-      fFrame = aFrame;
-    }
-    public void run() {
-      synchronized(fThis) {
-        setEnabled(false);
-        new PrefsDialog(fFrame);
-        setEnabled(true);
-      }
-    }
-  }
-}
-
-class SearchAction extends UIAction {
+class SearchAction extends Event {
   SearchAction() {
     super("appSearch");
   }
 
   public void actionPerformed(ActionEvent aEvent) {
     Frame frame = new SearchFrame();
-    frame.show();
+    frame.setVisible(true);
     frame.toFront();
     frame.requestFocus();
   }
 }
 
-class RunFiltersAction extends UIAction {
+class RunFiltersAction extends Event {
 
   RunFiltersAction() {
     super("appRunFilters");
@@ -247,7 +212,7 @@ class RunFiltersAction extends UIAction {
   }
 }
 
-class ShowTooltipsAction extends UIAction {
+class ShowTooltipsAction extends Event {
 
   ShowTooltipsAction() {
     super("appShowTooltips");
@@ -266,50 +231,50 @@ class ShowTooltipsAction extends UIAction {
   }
 }
 
-class RunIdentityPrefsAction extends UIAction {
-  
+class RunIdentityPrefsAction extends Event {
+
   RunIdentityPrefsAction() {
     super("prefIds");
   }
-  
+
   public void actionPerformed(ActionEvent aEvent) {
     JFrame prefs = new Identities();
-    prefs.show();
+    prefs.setVisible(true);
   }
 }
 
-class RunServerPrefsAction extends UIAction {
-  
+class RunServerPrefsAction extends Event {
+
   RunServerPrefsAction() {
     super("prefSrvs");
   }
-  
+
   public void actionPerformed(ActionEvent aEvent) {
     JFrame prefs = new Servers();
-    prefs.show();
+    prefs.setVisible(true);
   }
 }
 
-class RunGeneralPrefsAction extends UIAction {
-  
+class RunGeneralPrefsAction extends Event {
+
   RunGeneralPrefsAction() {
     super("prefGeneral");
   }
-  
+
   public void actionPerformed(ActionEvent aEvent) {
     JFrame prefs = new General();
-    prefs.show();
+    prefs.setVisible(true);
   }
 }
 
-class RunUIPrefsAction extends UIAction {
-  
+class RunUIPrefsAction extends Event {
+
   RunUIPrefsAction() {
     super("prefUI");
   }
-  
+
   public void actionPerformed(ActionEvent aEvent) {
     JFrame prefs = new UI();
-    prefs.show();
+    prefs.setVisible(true);
   }
 }

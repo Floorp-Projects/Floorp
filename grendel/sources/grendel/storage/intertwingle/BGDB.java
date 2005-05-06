@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Terry Weissman <terry@netscape.com>, 26 Sep 1997.
  */
@@ -92,7 +92,7 @@ public final class BGDB extends BaseDB implements Runnable {
     thread.start();
   }
 
-  public synchronized void assert(String name, String slot, String value)
+  public synchronized void addassert(String name, String slot, String value)
     throws IOException
   {
     logfid.seek(logfid.length());
@@ -177,7 +177,8 @@ public final class BGDB extends BaseDB implements Runnable {
            c);
     }
     if (c.command.equals("assert")) {
-      base.assert(c.name, c.slot, c.value);
+      //XXXrlk: doing asserts later.
+//      base.assert(c.name, c.slot, c.value);
     } else if (c.command.equals("unassert")) {
       base.unassert(c.name, c.slot, c.value);
     } else {

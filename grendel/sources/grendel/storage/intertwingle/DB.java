@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Terry Weissman <terry@netscape.com>, 26 Sep 1997.
  */
@@ -30,7 +30,7 @@ import java.util.Enumeration;
 /** An interface to a RDF-ish database. */
 
 public interface DB {
-  public void assert(String name, String slot, String value)
+  public void addassert(String name, String slot, String value)
     throws IOException;
   public void unassert(String name, String slot, String value)
     throws IOException;

@@ -1170,8 +1170,8 @@ public class TreeTable extends JComponent implements Scrollable,
   public void updateUI() {
     super.updateUI();
 
-    fPlusIcon = new ImageIcon(getClass().getResource("images/plus.gif"));
-    fMinusIcon = new ImageIcon(getClass().getResource("images/minus.gif"));
+    fPlusIcon = new ImageIcon("widgets/images/plus.gif");
+    fMinusIcon = new ImageIcon("widgets/images/minus.gif");
 
     fWindowColor = UIManager.getColor("window");
     fHighlightColor = UIManager.getColor("textHighlight");

@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Terry Weissman <terry@netscape.com>, 26 Sep 1997.
  */
@@ -124,8 +124,7 @@ final class HackDB extends BaseDB {
   }
 
 
-
-  public synchronized void assert(String name, String slot, String value)
+  public synchronized void addassert(String name, String slot, String value)
     throws IOException
   {
     File s = findSlotFile(slot, false);
@@ -133,7 +132,6 @@ final class HackDB extends BaseDB {
     putone(s, name, value);
     putone(r, value, name);
   }
-
 
 
   public synchronized void unassert(String name, String slot, String value)

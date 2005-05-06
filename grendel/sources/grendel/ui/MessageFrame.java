@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 18 Nov 1997.
  *
@@ -35,10 +35,9 @@ import java.util.Vector;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 
-//import netscape.orion.toolbars.ToolbarFactory;
-//import netscape.orion.toolbars.ToolBarLayout;
-//import netscape.orion.uimanager.AbstractUICmd;
-//import netscape.orion.uimanager.IUICmd;
+import grendel.ui.XMLMenuBuilder;
+
+import com.trfenv.parsers.Event;
 
 public class MessageFrame extends GeneralFrame {
   static Vector fMessageFrames = new Vector();
@@ -56,9 +55,9 @@ public class MessageFrame extends GeneralFrame {
     fPanel.add(fMessagePanel);
     //    fMenu = buildMenu("messageMain", Util.MergeActions(actions,
     //                                           fMessagePanel.getActions()));
-    fMenu = buildMenu("menus.xml", 
-                      Util.MergeActions(actions,
+    XMLMenuBuilder builder = new XMLMenuBuilder(Util.MergeActions(actions,
                                         fMessagePanel.getActions()));
+    fMenu = builder.buildFrom("ui/menus.xml", this);
     getRootPane().setJMenuBar(fMenu);
 
     fToolBar = fMessagePanel.getToolBar();
@@ -128,6 +127,6 @@ public class MessageFrame extends GeneralFrame {
     return null;
   }
 
-  UIAction actions[] = { ActionFactory.GetExitAction(),
+  Event actions[] = { ActionFactory.GetExitAction(),
                        ActionFactory.GetComposeMessageAction() };
 }

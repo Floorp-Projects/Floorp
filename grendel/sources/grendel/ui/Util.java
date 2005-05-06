@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>,  9 Sep 1997.
  *
@@ -50,8 +50,9 @@ import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 
 import grendel.ui.ToolBarLayout;
-import grendel.ui.UIAction;
 import grendel.widgets.GrendelToolBar;
+
+import com.trfenv.parsers.Event;
 
 public class Util {
   static final boolean DEBUG = false;
@@ -108,9 +109,9 @@ public class Util {
     g.drawChars(fChars, first, length, x, y);
   }
 
-  static UIAction FindAction(Vector aVector, String aAction) {
+  static Event FindAction(Vector aVector, String aAction) {
     for (int i = 0; i < aVector.size(); i++) {
-      UIAction action = (UIAction)aVector.elementAt(i);
+      Event action = (Event)aVector.elementAt(i);
       if (action.equals(aAction)) {
         return action;
       }
@@ -118,7 +119,7 @@ public class Util {
     return null;
   }
 
-  static public UIAction[] MergeActions(UIAction aActions1[], UIAction aActions2[]) {
+  static public Event[] MergeActions(Event aActions1[], Event aActions2[]) {
     Vector resVector = new Vector();
     int i;
     if (aActions1 != null) {
@@ -133,7 +134,7 @@ public class Util {
         }
       }
     }
-    UIAction res[] = new UIAction[resVector.size()];
+    Event res[] = new Event[resVector.size()];
     resVector.copyInto(res);
     return res;
   }
@@ -141,7 +142,7 @@ public class Util {
   static public GrendelToolBar MergeToolBars(GrendelToolBar aBar1, GrendelToolBar aBar2) {
     GrendelToolBar res = new GrendelToolBar();
     res.setLayout(new ToolBarLayout());
-    
+
     Component barArray1[] = aBar1.getComponents();
     Component barArray2[] = aBar2.getComponents();
     int count1 = aBar1.getComponentCount();
@@ -193,16 +194,16 @@ public class Util {
         {
           button2 = (JButton) barArray2[j];
         }
-      if (button2 != null) 
+      if (button2 != null)
         {
           res.add(button2);
         }
       j++;
     }
-    
+
     return res;
   }
-  
+
 
   public static void RegisterScrollingKeys(JScrollPane aScrollPane) {
     aScrollPane.registerKeyboardAction(new ScrollAction(aScrollPane, KeyEvent.VK_UP),
@@ -277,7 +278,7 @@ public class Util {
   }
 }
 
-class ScrollAction extends UIAction {
+class ScrollAction extends Event {
   JScrollPane fScrollPane;
   int         fAction;
 

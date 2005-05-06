@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Lester Schueler <lesters@netscape.com>, 14 Nov 1997.
  *
@@ -133,10 +133,10 @@ public class LDAP_Server implements ICardSource, IQueryString {
         LDAPAttributeSet LDAP_attrSet = new LDAPAttributeSet();  //To LDAP
 
         //enumerate thru each attribute and translate from CA attributes into LDAP attributes.
-        for (Enumeration enum = AC_attrSet.getEnumeration(); enum.hasMoreElements() ;) {
+        for (Enumeration enumer = AC_attrSet.getEnumeration(); enumer.hasMoreElements() ;) {
 
             //Get the old
-            IAttribute AC_attr = (IAttribute) enum.nextElement();
+            IAttribute AC_attr = (IAttribute) enumer.nextElement();
             //Create the new
             LDAPAttribute LDAP_attr = new LDAPAttribute(AC_attr.getName(), AC_attr.getValue());
 
@@ -221,8 +221,8 @@ public class LDAP_Server implements ICardSource, IQueryString {
             LDAPModificationSet LDAP_modSet = new LDAPModificationSet();
 
             //enumerate thru each attribute
-            for (Enumeration enum = AC_attrSet.getEnumeration() ; enum.hasMoreElements() ;) {
-                IAttribute AC_attr = (IAttribute) enum.nextElement();
+            for (Enumeration enumer = AC_attrSet.getEnumeration() ; enumer.hasMoreElements() ;) {
+                IAttribute AC_attr = (IAttribute) enumer.nextElement();
                 int LDAP_mod = 0;
                 boolean attributeModified = false;
 

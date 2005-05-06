@@ -42,6 +42,7 @@ import grendel.widgets.GrendelToolBar;
 import grendel.ui.FolderPanel;
 import grendel.ui.GeneralFrame;
 import grendel.ui.StoreFactory;
+import grendel.ui.XMLMenuBuilder;
 
 import javax.mail.Address;
 import javax.mail.Message;
@@ -87,8 +88,8 @@ public class Composition extends GeneralFrame {
         //create menubar (top)
         //  fMenu = buildMenu("mainMenubar",
         //                  mCompositionPanel.getActions());
-        fMenu = buildMenu("menus.xml",
-                          mCompositionPanel.getActions());
+        XMLMenuBuilder builder = new XMLMenuBuilder(mCompositionPanel.getActions());
+        fMenu = builder.buildFrom("ui/menus.xml", (JFrame)this);
 
         getRootPane().setJMenuBar(fMenu);
 
@@ -122,12 +123,14 @@ public class Composition extends GeneralFrame {
         fPanel.add(BorderLayout.NORTH, mBox);
         fStatusBar = buildStatusBar();
         fPanel.add(BorderLayout.SOUTH, fStatusBar);
-        
+
     fPanel.add(mCompositionPanel);
-    
-    restoreBounds();	
-        
+
+    restoreBounds();
+
     mCompositionPanel.AddSignature();
+
+    setSize(670, 490);
   }
 
   public void dispose() {
@@ -194,7 +197,7 @@ public class Composition extends GeneralFrame {
     mCompositionPanel.QuoteOriginalMessage();
   }
 
-  /** Initialize the headers and body of this composition 
+  /** Initialize the headers and body of this composition
       as being a message that is forwarded 'quoted'. */
   public void initializeAsForward(Message msg, int aScope) {
     mCompositionPanel.setReferredMessage(msg);
@@ -213,7 +216,7 @@ public class Composition extends GeneralFrame {
     if (aScope == FolderPanel.kInline) {
       mCompositionPanel.InlineOriginalMessage();
     }
-    
+
   }
 
   class PanelListener implements CompositionPanelListener {

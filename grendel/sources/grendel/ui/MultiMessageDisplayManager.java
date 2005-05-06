@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
  *
@@ -39,10 +39,11 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Store;
 
-import grendel.ui.UIAction;
 import grendel.view.ViewedFolder;
 import grendel.view.ViewedMessage;
 import grendel.widgets.TreePath;
+
+import com.trfenv.parsers.Event;
 
 public class MultiMessageDisplayManager extends MessageDisplayManager {
   MasterFrame     fMasterFrame;
@@ -136,7 +137,8 @@ class MasterFrame extends GeneralFrame {
     fMasterPanel.addMasterPanelListener(new FolderSelectionListener());
     fPanel.add(fMasterPanel);
     //    fMenu = buildMenu("masterMain", actions);
-    fMenu = buildMenu("menus.xml", actions);
+    XMLMenuBuilder builder = new XMLMenuBuilder(actions);
+    fMenu = builder.buildFrom("ui/menus.xml", this);
     getRootPane().setJMenuBar(fMenu);
 
     fToolBar = fMasterPanel.getToolBar();
@@ -200,7 +202,7 @@ class MasterFrame extends GeneralFrame {
 
   // Action array
 
-  UIAction actions[] = { ActionFactory.GetExitAction(),
+  Event actions[] = { ActionFactory.GetExitAction(),
                        ActionFactory.GetNewMailAction(),
                        ActionFactory.GetComposeMessageAction()};
 }

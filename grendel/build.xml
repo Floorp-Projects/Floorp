@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Grendel mail/news client.
+   -
+   - The Initial Developer of the Original Code is
+   - R.J. Keller.
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<project name="Grendel" default="build" basedir=".">
+
+    <target name="build" description="Compiles Grendel.">
+      <mkdir dir="dist"/>
+      <unzip dest="dist" overwrite="false">
+        <fileset dir="extlibs">
+          <include name="**/*.jar"/>
+        </fileset>
+      </unzip>
+
+      <copy todir="dist">
+        <fileset dir="sources/grendel">
+          <include name="**/*.gif"/>
+          <include name="**/*.jpg"/>
+          <include name="**/*.tmpl"/>
+          <include name="**/*.xml"/>
+          <include name="**/*.dtd"/>
+        </fileset>
+      </copy>
+      <copy todir="dist">
+        <fileset dir="sources">
+          <include name="**/*.properties"/>
+        </fileset>
+      </copy>
+      <javac srcdir="." destdir="dist"
+            optimize="false"
+            debug="true"
+            includes="**/*.java"/>
+    </target>
+
+    <target name="unzipResources">
+      <copy todir="dist/resources">
+        <fileset dir="sources/grendel">
+          <include name="**/*.gif"/>
+          <include name="**/*.jpg"/>
+          <include name="**/*.tmpl"/>
+          <include name="**/*.xml"/>
+          <include name="**/*.dtd"/>
+        </fileset>
+      </copy>
+      <copy todir="dist">
+        <fileset dir="sources">
+          <include name="**/*.properties"/>
+        </fileset>
+      </copy>
+    </target>
+
+    <target name="makeJar" description="Pumps all the libs into one big JAR for distribution. Grendel must be built before running this.">
+      <jar destfile="grendel.jar">
+        <fileset dir="dist">
+          <include name="**/*.*"/>
+        </fileset>
+        <manifest>
+          <attribute name="Main-Class" value="grendel.Main"/>
+        </manifest>
+      </jar>
+
+      <zip destfile="dist/grendel.zip">
+        <fileset dir="dist">
+          <include name="images/*.gif"/>
+          <include name="xml/*.xml"/>
+          <include name="dtd/*.dtd"/>
+          <include name="templates/*.tmpl"/>
+          <include name="images/*.jpg"/>
+        </fileset>
+        <fileset dir=".">
+          <include name="*.jar"/>
+        </fileset>
+      </zip>
+
+    </target>
+
+    <target name="run" description="Runs Grendel after compiling.">
+      <java classname="grendel.Main" classpath="dist"/>
+    </target>
+
+    <target name="clean" description="Cleans up generated class files.">
+      <delete dir="dist"/>
+      <delete file="grendel.jar"/>
+      <delete dir="javadoc"/>
+    </target>
+
+    <target name="javadoc" description="Generate JavaDoc API information">
+      <mkdir dir="javadoc"/>
+      <javadoc destdir="javadoc">
+        <fileset dir="." includes="**/*.java"/>
+      </javadoc>
+    </target>
+</project>

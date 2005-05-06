@@ -1,136 +1,89 @@
 <?xml version="1.0"?>
-<xml>
-<head>
-  <link role="stringprops" href="MenuLabels.properties"/>
-</head>
-<body>
+
+<!DOCTYPE window [
+<!ENTITY % menuLabelsDTD SYSTEM "MenuLabels.dtd" >
+%menuLabelsDTD;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<keyset><!--
+  <key modifiers="accel" key="&folderNewAccel;" oncommand="msgNew"/>
+--></keyset>
+
   <menubar id="mail.multi_pane">
-  <menu id="FileMenu" category="file"
-   label="$multiFileLabel" accel="F">
-    <menuitem id="msgNew" category="file" action="msgNew"
-     label="$msgNewLabel" accel="$msgNewAccel"
-     description=""/>
-    <menuitem id="folderNew" category="file" action="folderNew"
-     label="$folderNewLabel" accel="$folderNewAccel"
-     description=""/>
-    <menuitem id="msgOpen" category="file" action="msgOpen"
-     label="$msgOpenLabel" accel="$msgOpenAccel"
-     description=""/>
-    <menuitem id="msgSaveAs" category="file" action="msgSaveAs"
-     label="$msgSaveAsLabel" accel="$msgSaveAsAccel"
-     description=""/>
-    <menuitem type="separator"/>
-    <menuitem id="msgGetNew" category="file" action="msgGetNew"
-     label="$msgGetNewLabel" accel="$msgGetNewAccel"
-     description=""/>
-    <menuitem type="separator"/>
-    <menuitem id="appExit" category="quit" action="appExit"
-     label="$appExitLabel" accel="$appExitAccel"
-     description=""/>
+
+  <menu id="FileMenu" label="&multiFileLabel;" accesskey="&multiFileAccel;">
+    <menupopup>
+      <menuitem id="msgNew" onclick="msgNew" label="&msgNewLabel;" accesskey="&msgNewAccel;"/>
+      <menuitem id="folderNew" onclick="folderNew" label="&folderNewLabel;" accesskey="&folderNewAccel;"/>
+      <menuitem id="msgOpen" onclick="msgOpen" label="&msgOpenLabel;" accesskey="&msgOpenAccel;"/>
+      <menuitem id="msgSaveAs" onclick="msgSaveAs" label="&msgSaveAsLabel;" accesskey="&msgSaveAsAccel;"/>
+      <menuseparator/>
+      <menuitem id="msgGetNew" onclick="msgGetNew" label="&msgGetNewLabel;" accesskey="&msgGetNewAccel;"/>
+      <menuseparator/>
+      <menuitem id="appExit" onclick="appExit" label="&appExitLabel;" accesskey="&appExitAccel;"/>
+    </menupopup>
   </menu>
-  <menu id="EditMenu" category="edit"
-   label="$multiEditLabel" accel="$multiEditAccel">
-    <menuitem id="editUndo" category="edit" action="editUndo"
-     label="$editUndoLabel" accel="$editUndoAccel"
-     description=""/>
-    <menuitem id="editCut" category="edit" action="editCut"
-     label="$editCutLabel" accel="$editCutAccel"
-     description=""/>
-    <menuitem id="editCopy" category="edit" action="editCopy"
-     label="$editCopyLabel" accel="$editCopyAccel"
-     description=""/>
-    <menuitem id="editPaste" category="edit" action="editPaste"
-     label="$editPasteLabel" accel="$editPasteAccel"
-     description=""/>
-    <menuitem type="separator"/>
-    <menuitem id="folderDelete" category="edit" action="folderDelete"
-     label="$folderDeleteLabel" accel="$folderDeleteAccel"
-     description=""/>
-    <menuitem type="separator"/>
-    <menuitem id="appSearch" category="edit" action="appSearch"
-     label="$appSearchLabel" accel="$appSearchAccel"
-     description=""/>
-    <menuitem id="appRunFilters" category="edit" action="appRunFilters"
-     label="$appRunFiltersLabel" accel="$appRunFiltersAccel"
-     description=""/>
+
+  <menu id="EditMenu" label="&multiEditLabel;" accesskey="&multiEditAccel;">
+    <menupopup>
+      <menuitem id="editUndo" onclick="editUndo" label="&editUndoLabel;" accesskey="&editUndoAccel;"/>
+      <menuitem id="editCut" onclick="editCut" label="&editCutLabel;" accesskey="&editCutAccel;"/>
+      <menuitem id="editCopy" onclick="editCopy" label="&editCopyLabel;" accesskey="&editCopyAccel;"/>
+      <menuitem id="editPaste" onclick="editPaste" label="&editPasteLabel;" accesskey="&editPasteAccel;"/>
+      <menuseparator/>
+      <menuitem id="folderDelete" onclick="folderDelete" label="&folderDeleteLabel;" accesskey="&folderDeleteAccel;"/>
+      <menuseparator/>
+      <menuitem id="appSearch" onclick="appSearch" label="&appSearchLabel;" accesskey="&appSearchAccel;"/>
+      <menuitem id="appRunFilters" onclick="appRunFilters" label="&appRunFiltersLabel;" accesskey="&appRunFiltersAccel;"/>
+    </menupopup>
   </menu>
-  <menu id="ViewMenu" category="view"
-   label="$multiViewLabel" accel="$multiViewAccel">
-    <menu id="SortMenu" category="view"
-     label="$viewSortLabel" accel="$viewSortAccel">
-      <menuitem id="toggleThreading" category="view" action="toggleThreading"
-       type="checkbox"
-      label="$toggleThreadingLabel" accel="$toggleThreadingAccel"
-      description=""/>
-      <menuitem type="separator"/>
-      <menuitem id="sortAuthor" category="view" action="sortAuthor"
-       type="radio" group="sort"
-      label="$sortAuthorLabel" accel="$sortAuthorAccel"
-      description=""/>
-      <menuitem id="sortDate" category="view" action="sortDate"
-       type="radio" group="sort"
-      label="$sortDateLabel" accel="$sortDateAccel"
-      description=""/>
-      <menuitem id="sortNumber" category="view" action="sortNumber"
-       type="radio" group="sort"
-      label="$sortNumberLabel" accel="$sortNumberAccel"
-      description=""/>
-      <menuitem id="sortSubject" category="view" action="sortSubject"
-       type="radio" group="sort"
-      label="$sortSubjectLabel" accel="$sortSubjectAccel"
-      description=""/>
-    </menu>
+
+  <menu id="ViewMenu" label="&multiViewLabel;" accesskey="&multiViewAccel;">
+    <menupopup>
+      <menu id="SortMenu" label="&viewSortLabel;" accesskey="&viewSortAccel;">
+        <menupopup>
+          <menuitem id="toggleThreading" onclick="toggleThreading" label="&toggleThreadingLabel;" accesskey="&toggleThreadingAccel;"/>
+          <menuseparator/>
+          <menuitem id="sortAuthor" onclick="sortAuthor" label="&sortAuthorLabel;" accesskey="&sortAuthorAccel;"/>
+          <menuitem id="sortDate" onclick="sortDate" label="&sortDateLabel;" accesskey="&sortDateAccel;"/>
+          <menuitem id="sortNumber" onclick="sortNumber" label="&sortNumberLabel;" accesskey="&sortNumberAccel;"/>
+          <menuitem id="sortSubject" onclick="sortSubject" label="&sortSubjectLabel;" accesskey="&sortSubjectAccel;"/>
+        </menupopup>
+      </menu>
+    </menupopup>
   </menu>
-  <menu id="MessageMenu" category="message"
-   label="$multiMessageLabel" accel="$multiMessageAccel">
-   <menuitem id="msgNew" category="message" action="msgNew"
-    label="$msgNewLabel" accel="$msgNewAccel"
-    description=""/>
-    <menuitem type="separator"/>
-   <menuitem id="msgReply" category="message" action="msgReply"
-    label="$msgReplyLabel" accel="$msgReplyAccel"
-    description=""/>
-   <menuitem id="msgReplyAll" category="message" action="msgReplyAll"
-    label="$msgReplyAllLabel" accel="$msgReplyAllAccel"
-    description=""/>
-   <menuitem id="fwdQuoted" category="message" action="fwdQuoted"
-    label="$fwdQuotedLabel" accel="$fwdQuotedAccel"
-    description=""/>
-   <menuitem id="fwdInline" category="message" action="fwdInline"
-    label="$fwdInlineLabel" accel="$fwdInlineAccel"
-    description=""/>
-   <menuitem id="fwdAttachment" category="message" action="fwdAttachment"
-    label="$fwdAttachmentLabel" accel="$fwdAttachmentAccel"
-    description=""/>
-    <menuitem type="separator"/>
-    <menu id="msgMark" category="message"
-     label="$msgMarkLabel" accel="$msgMarkAccel">
-     <menuitem id="markMsgRead" category="message" action="markMsgRead"
-      label="$markMsgReadLabel" accel="$markMsgReadAccel"
-      description=""/>
-     <menuitem id="markThreadRead" category="message" action="markThreadRead"
-      label="$markThreadReadLabel" accel="$markThreadReadAccel"
-      description=""/>
-     <menuitem id="markAllRead" category="message" action="markAllRead"
-      label="$markAllReadLabel" accel="$markAllReadAccel"
-      description=""/>
-    </menu>
+
+  <menu id="MessageMenu" label="&multiMessageLabel;" accesskey="&multiMessageAccel;">
+    <menupopup>
+      <menuitem id="msgNew" onclick="msgNew" label="&msgNewLabel;" accesskey="&msgNewAccel;"/>
+      <menuseparator/>
+      <menuitem id="msgReply" onclick="msgReply" label="&msgReplyLabel;" accesskey="&msgReplyAccel;"/>
+      <menuitem id="msgReplyAll" onclick="msgReplyAll" label="&msgReplyAllLabel;" accesskey="&msgReplyAllAccel;"/>
+      <menuitem id="fwdQuoted" onclick="fwdQuoted" label="&fwdQuotedLabel;" accesskey="&fwdQuotedAccel;"/>
+      <menuitem id="fwdInline" onclick="fwdInline" label="&fwdInlineLabel;" accesskey="&fwdInlineAccel;"/>
+      <menuitem id="fwdAttachment" onclick="fwdAttachment" label="&fwdAttachmentLabel;" accesskey="&fwdAttachmentAccel;"/>
+      <menuseparator/>
+      <menu id="msgMark" label="&msgMarkLabel;" accesskey="&msgMarkAccel;">
+        <menupopup>     
+          <menuitem id="markMsgRead" onclick="markMsgRead" label="&markMsgReadLabel;" accesskey="&markMsgReadAccel;"/>
+          <menuitem id="markThreadRead" onclick="markThreadRead" label="&markThreadReadLabel;" accesskey="&markThreadReadAccel;"/>
+          <menuitem id="markAllRead" onclick="markAllRead" label="&markAllReadLabel;" accesskey="&markAllReadAccel;"/>
+        </menupopup>
+      </menu>
+    </menupopup>
   </menu>
-  <menu id="PrefsMenu" category="prefs"
-   label="$multiPrefsLabel" accel="$multiPrefsAccel">
-   <menuitem id="prefGeneral" category="prefs" action="prefGeneral"
-    label="$prefGeneralLabel" accel="$prefGeneralAccel"
-    description=""/>
-   <menuitem id="prefIds" category="prefs" action="prefIds"
-    label="$prefIdsLabel" accel="$prefIdsAccel"
-    description=""/>
-   <menuitem id="prefSrvs" category="prefs" action="prefSrvs"
-    label="$prefSrvsLabel" accel="$prefSrvsAccel"
-    description=""/>
-   <menuitem id="prefUI" category="prefs" action="prefUI"
-    label="$prefUILabel" accel="$prefUIAccel"
-    description=""/>
+
+  <menu id="PrefsMenu" label="&multiPrefsLabel;" accesskey="&multiPrefsAccel;">
+    <menupopup>
+      <menuitem id="prefGeneral" onclick="prefGeneral" label="&prefGeneralLabel;" accesskey="&prefGeneralAccel;"/>
+      <menuitem id="prefIds" onclick="prefIds" label="&prefIdsLabel;" accesskey="&prefIdsAccel;"/>
+      <menuitem id="prefSrvs" onclick="prefSrvs" label="&prefSrvsLabel;" accesskey="&prefSrvsAccel;"/>
+      <menuitem id="prefUI" onclick="prefUI" label="&prefUILabel;" accesskey="&prefUIAccel;"/>
+    </menupopup>
   </menu>
+
   </menubar>
-</body>
-</xml>
+
+</window>

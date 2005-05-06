@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 23 Dec 1997.
  *
@@ -85,7 +85,9 @@ public class UIPrefsEditor extends JPanel
 
     // XMLNode root = null;
     URL url = getClass().getResource("PrefDialogs.xml");
-    fPanel = new PageUI(url, "id", "UIPrefs", fModel, getClass());
+    //XXXrlk: why does this constructor have parameters?
+//    fPanel = new PageUI(url, "id", "UIPrefs", fModel, getClass());
+    fPanel = new PageUI();
 
     JComponent c;
     ChangeAction ca = new ChangeAction();
@@ -120,7 +122,7 @@ public class UIPrefsEditor extends JPanel
     String str = (String)l.getSelectedValue();
 
     // sigh. we now search for the LAF
-    UIManager.LookAndFeelInfo[] info = 
+    UIManager.LookAndFeelInfo[] info =
       UIManager.getInstalledLookAndFeels();
     LookAndFeel lf = null;
 
@@ -191,7 +193,7 @@ public class UIPrefsEditor extends JPanel
     LookAndFeel fLAFs[] = null;
 
     LAFListModel() {
-      UIManager.LookAndFeelInfo[] info = 
+      UIManager.LookAndFeelInfo[] info =
         UIManager.getInstalledLookAndFeels();
       fLAFs = new LookAndFeel[info.length];
       for (int i = 0; i < info.length; i++) {

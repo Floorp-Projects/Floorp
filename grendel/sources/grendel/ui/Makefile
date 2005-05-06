@@ -70,5 +70,6 @@ include ../../../rules.mk
 resources::
 	cp *.xml $(DISTDIR)/grendel/ui
 	cp *.properties $(DISTDIR)/grendel/ui
+	cp *.dtd $(DISTDIR)/grendel/ui
 	cp -r images $(DISTDIR)/grendel/ui
 

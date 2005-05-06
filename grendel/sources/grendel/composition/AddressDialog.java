@@ -78,10 +78,10 @@ class AddressDialog extends Dialog implements ActionListener {
         frame.setBackground(Color.lightGray);
 
         AddressDialog aDialog = new AddressDialog(frame);
-        aDialog.show ();
+        aDialog.setVisible(true);
         aDialog.dispose();
 
-        frame.show();
+        frame.setVisible(true);
     }
 
     /**

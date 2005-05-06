@@ -64,8 +64,8 @@ class MessageModel implements TreeTableDataModel {
   Icon                   fMessageReadIcon;
 
   public MessageModel() {
-    fMessageIcon = new ImageIcon(getClass().getResource("images/msg-small.gif"));
-    fMessageReadIcon = new ImageIcon(getClass().getResource("images/msgRead-small.gif"));
+    fMessageIcon = new ImageIcon("ui/images/msg-small.gif");
+    fMessageReadIcon = new ImageIcon("ui/images/msgRead-small.gif");
   }
 
   public void setFolderView(FolderView aView) {

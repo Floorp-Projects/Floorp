@@ -44,7 +44,7 @@ public class NNTPStore extends Store implements StatusSource {
 	 * The default NNTP port.
 	 */
 	public static final int DEFAULT_PORT = 119;
-	
+
 	static int fetchsize = 1024;
 
 	Socket socket;
@@ -92,7 +92,7 @@ public class NNTPStore extends Store implements StatusSource {
 	Hashtable articles = new Hashtable(); // hashtable of articles by message-id
 
 	Vector statusListeners = new Vector();
-	
+
 	/**
 	 * Constructor.
 	 */
@@ -101,7 +101,7 @@ public class NNTPStore extends Store implements StatusSource {
 		String ccs = session.getProperty("mail.nntp.fetchsize");
 		if (ccs!=null) try { fetchsize = Math.max(Integer.parseInt(ccs), 1024); } catch (NumberFormatException e) {}
 	}
-	
+
 	/**
 	 * Connects to the NNTP server and authenticates with the specified parameters.
 	 */
@@ -114,7 +114,7 @@ public class NNTPStore extends Store implements StatusSource {
 			socket = new Socket(host, port);
 			in = new CRLFInputStream(new BufferedInputStream(socket.getInputStream()));
 			out = new CRLFOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-			
+
 			switch (getResponse()) {
 			case READY:
 				postingAllowed = true;
@@ -125,7 +125,7 @@ public class NNTPStore extends Store implements StatusSource {
 			default:
 				throw new MessagingException("unexpected server response: "+response);
 			}
-			
+
 			send("MODE READER"); // newsreader extension
 			switch (getResponse()) {
 			case READY:
@@ -133,9 +133,9 @@ public class NNTPStore extends Store implements StatusSource {
 			case READ_ONLY:
 				break;
 			}
-	
+
 			readNewsrc();
-			
+
 			return true;
 		} catch(UnknownHostException e) {
 			throw new MessagingException("unknown host", e);
@@ -252,7 +252,7 @@ public class NNTPStore extends Store implements StatusSource {
 		if (current!=null && !current.equals(group)) close(current);
 		group.open = false;
 	}
-	
+
     // Returns the (approximate) number of articles in a newsgroup.
 	synchronized int getMessageCount(Newsgroup group) throws MessagingException {
         String name = group.getName();
@@ -317,7 +317,7 @@ public class NNTPStore extends Store implements StatusSource {
 			throw new MessagingException("I/O error", e);
 		}
 	}
-	
+
     // Returns the content for an article.
 	synchronized byte[] getContent(Article article) throws MessagingException {
 		String mid = article.messageId;
@@ -376,7 +376,7 @@ public class NNTPStore extends Store implements StatusSource {
 		for (int i=0; i<a.length; i++)
 			post(article, a[i]);
 	}
-	
+
 	/**
 	 * Returns a Transport that can be used to send articles to this news server.
 	 */
@@ -802,13 +802,13 @@ public class NNTPStore extends Store implements StatusSource {
 			statusListeners.addElement(l);
 		}
 	}
-			
+
 	public void removeStatusListener(StatusListener l) {
 		synchronized (statusListeners) {
 			statusListeners.removeElement(l);
 		}
 	}
-			
+
 	protected void processStatusEvent(StatusEvent event) {
         StatusListener[] listeners;
 		synchronized (statusListeners) {
@@ -830,7 +830,7 @@ public class NNTPStore extends Store implements StatusSource {
             break;
 		}
 	}
-			
+
 	/**
 	 * The root holds the newsgroups in an NNTPStore.
 	 */
@@ -892,7 +892,7 @@ public class NNTPStore extends Store implements StatusSource {
 		 * Returns the permanent flags for this folder.
 		 */
 		public Flags getPermanentFlags() { return new Flags(); }
-	
+
 		/**
 		 * Returns the number of articles in this folder.
 		 */
@@ -904,7 +904,7 @@ public class NNTPStore extends Store implements StatusSource {
 		public Message[] getMessages() throws MessagingException {
 			throw new MessagingException("Folder can't contain messages");
 		}
-	
+
 		/**
 		 * Returns the specified message in this folder.
 		 * Since NNTP articles are not stored in sequential order,
@@ -913,7 +913,7 @@ public class NNTPStore extends Store implements StatusSource {
 		public Message getMessage(int msgnum) throws MessagingException {
 			throw new MessagingException("Folder can't contain messages");
 		}
-	
+
 		/**
 		 * Root folder is read-only.
 		 */
@@ -951,8 +951,8 @@ public class NNTPStore extends Store implements StatusSource {
 		 */
 		public Folder[] listSubscribed() throws MessagingException {
 			Vector groups = new Vector();
-			for (Enumeration enum = newsgroups.elements(); enum.hasMoreElements(); ) {
-				Newsgroup group = (Newsgroup)enum.nextElement();
+			for (Enumeration enumer = newsgroups.elements(); enumer.hasMoreElements(); ) {
+				Newsgroup group = (Newsgroup)enumer.nextElement();
 				if (group.subscribed)
 					groups.addElement(group);
 			}
@@ -1003,21 +1003,21 @@ public class NNTPStore extends Store implements StatusSource {
 		}
 
 	}
-	
+
 	class NNTPTransport extends Transport {
-		
+
 		NNTPTransport(Session session, URLName urlname) {
 			super(session, urlname);
 		}
-		
+
 		public boolean protocolConnect(String host, int port, String user, String password) throws MessagingException {
 			return true;
 		}
-		
+
 		public void sendMessage(Message message, Address[] addresses) throws MessagingException {
 			postArticle(message, addresses);
 		}
-		
+
 	}
 
 }

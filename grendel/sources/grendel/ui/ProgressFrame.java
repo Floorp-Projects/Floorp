@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 26 Sep 1997.
  *
@@ -171,8 +171,8 @@ public abstract class ProgressFrame extends GeneralFrame implements Runnable {
 
     fThread = null;
     // Is this right? (edwin)
-    // this.dispose();  
-    this.hide();  
+    // this.dispose();
+    setVisible(false);
   }
 
   public abstract void progressLoop();

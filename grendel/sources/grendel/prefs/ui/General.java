@@ -12,12 +12,12 @@
  *
  * The Original Code is the Grendel mail/news client.
  *
- * The Initial Developer of the Original Code is Edwin Woudt 
+ * The Initial Developer of the Original Code is Edwin Woudt
  * <edwin@woudt.nl>.  Portions created by Edwin Woudt are
  * Copyright (C) 1999 Edwin Woudt. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 package grendel.prefs.ui;
@@ -51,18 +51,18 @@ public class General extends JFrame {
   GeneralPrefs prefs = GeneralPrefs.GetMaster();
 
   JTextField tfSMTP;
-  
+
   public static void main(String argv[]) {
-    
+
     General ui = new General();
-    ui.show();
-    
+    ui.setVisible(true);
+
   }
- 
+
   public General() {
-    
+
     super();
-    
+
     setSize(500,354);
     setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     getContentPane().setLayout(null);
@@ -88,37 +88,37 @@ public class General extends JFrame {
 
     getData();
   }
-  
+
   void getData() {
     tfSMTP.setText(prefs.getSMTPServer());
   }
-  
+
   void setData() {
     prefs.setSMTPServer(tfSMTP.getText());
   }
-  
+
   class FinishActionListener implements ActionListener {
-  
+
     public void actionPerformed(ActionEvent e) {
-    	
+
       setData();
       prefs.writePrefs();
-      hide();
+      setVisible(false);
       dispose();
-    	
+
     }
-  
-  }  
-  
-  class CancelActionListener implements ActionListener {
-  
-    public void actionPerformed(ActionEvent e) {
-    	
-      hide();
-      dispose();
-    	
-    }
-  
+
   }
-  
+
+  class CancelActionListener implements ActionListener {
+
+    public void actionPerformed(ActionEvent e) {
+
+      setVisible(false);
+      dispose();
+
+    }
+
+  }
+
 }

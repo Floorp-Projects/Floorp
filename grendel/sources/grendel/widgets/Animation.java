@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 23 Oct 1997.
  */
@@ -105,8 +105,8 @@ public class Animation extends Component implements Runnable
     for (int i = 0; i < iFrames; i++)
     {
       Integer arg[] = { new Integer(i) };
-      String name = MessageFormat.format(template, arg);
-      fGlyphs[i] = new ImageIcon(getClass().getResource(name));
+      String name = MessageFormat.format(template, arg, null);
+      fGlyphs[i] = new ImageIcon(name);
     }
   }
 

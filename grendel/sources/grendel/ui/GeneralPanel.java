@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 13 Oct 1997.
  *
@@ -27,7 +27,6 @@
 
 package grendel.ui;
 
-import grendel.ui.UIAction;
 import grendel.ui.ToolBarLayout;
 
 import grendel.widgets.GrendelToolBar;
@@ -50,6 +49,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JButton;
 
+import com.trfenv.parsers.Event;
+
 public class GeneralPanel extends JPanel {
   private final boolean DEBUG = false;
   static ResourceBundle fLabels = ResourceBundle.getBundle("grendel.ui.Labels",
@@ -65,21 +66,21 @@ public class GeneralPanel extends JPanel {
     setFont(new Font("Helvetica", Font.PLAIN, 12));
   }
 
-  public UIAction[] getActions() {
+  public Event[] getActions() {
     return null;
   }
 
-  protected GrendelToolBar buildToolBar(String aToolbar, UIAction[] aActions) {
+  protected GrendelToolBar buildToolBar(String aToolbar, Event[] aActions) {
     GrendelToolBar res = null;
 
     Hashtable commands = new Hashtable();
     for (int i = 0; i < aActions.length; i++)
         {
-           UIAction a = aActions[i];
+           Event a = aActions[i];
            String name = a.getName();
            commands.put(name, a);
         }
-    
+
 
     try {
       res = new GrendelToolBar();
@@ -94,11 +95,11 @@ public class GeneralPanel extends JPanel {
         if (DEBUG) {
           System.out.println("Local token = " + token);
         }
-        UIAction action = (UIAction)commands.get(token);
+        Event action = (Event)commands.get(token);
         String icon = toolbarresources.getString(token + "Icon");
         String label = toolbarresources.getString(token + "Label");
         String tooltip = toolbarresources.getString(token + "Tooltip");
-        
+
         res.addButton(action, icon, label, tooltip);
       }
     } catch (MissingResourceException e) {

@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
  *
@@ -72,7 +72,6 @@ import grendel.composition.Composition;
 import grendel.prefs.base.InvisiblePrefs;
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
-import grendel.ui.UIAction;
 import grendel.view.FolderView;
 import grendel.view.FolderViewFactory;
 import grendel.view.MessageSetView;
@@ -99,6 +98,8 @@ import grendel.widgets.TreeTable;
 import grendel.widgets.TreeTableDataModel;
 
 import calypso.util.Assert;
+
+import com.trfenv.parsers.Event;
 
 /**
  * Panel to display the <em>contents</em> of a folder.
@@ -214,7 +215,7 @@ public class FolderPanel extends GeneralPanel {
   ThreadAction fThreadAction = new ThreadAction();
   // The big action list
 
-  UIAction            fActions[] = {ActionFactory.GetNewMailAction(),
+  Event            fActions[] = {ActionFactory.GetNewMailAction(),
                                     ActionFactory.GetComposeMessageAction(),
                                     fDeleteMessageAction,
                                     fOpenMessageAction,
@@ -273,8 +274,8 @@ public class FolderPanel extends GeneralPanel {
     ToggleCellRenderer renderer;
     ToggleCellEditor editor;
 
-    Icon unreadIcon = new ImageIcon(getClass().getResource("images/unread.gif"));
-    Icon readIcon = new ImageIcon(getClass().getResource("images/read.gif"));
+    Icon unreadIcon = new ImageIcon("ui/images/unread.gif");
+    Icon readIcon = new ImageIcon("ui/images/read.gif");
 
     renderer = new ToggleCellRenderer();
     renderer.getCheckBox().setIcon(unreadIcon);
@@ -292,8 +293,8 @@ public class FolderPanel extends GeneralPanel {
     column.setCellEditor(editor);
     fMessageTree.addColumn(column);
 
-    Icon unflaggedIcon = new ImageIcon(getClass().getResource("images/unflagged.gif"));
-    Icon flaggedIcon = new ImageIcon(getClass().getResource("images/flagged.gif"));
+    Icon unflaggedIcon = new ImageIcon("ui/images/unflagged.gif");
+    Icon flaggedIcon = new ImageIcon("ui/images/flagged.gif");
 
     renderer = new ToggleCellRenderer();
     renderer.getCheckBox().setIcon(unflaggedIcon);
@@ -311,8 +312,8 @@ public class FolderPanel extends GeneralPanel {
     column.setCellEditor(editor);
     fMessageTree.addColumn(column);
 
-    Icon deletedIcon = new ImageIcon(getClass().getResource("images/deleted.gif"));
-    Icon undeletedIcon = new ImageIcon(getClass().getResource("images/unflagged.gif"));
+    Icon deletedIcon = new ImageIcon("ui/images/deleted.gif");
+    Icon undeletedIcon = new ImageIcon("ui/images/unflagged.gif");
 
     renderer = new ToggleCellRenderer();
     renderer.getCheckBox().setIcon(undeletedIcon);
@@ -429,7 +430,7 @@ public class FolderPanel extends GeneralPanel {
    * Returns the actions available for this panel
    */
 
-  public UIAction[] getActions() {
+  public Event[] getActions() {
     return Util.MergeActions(fActions, fSortActions);
   }
 
@@ -751,7 +752,7 @@ public class FolderPanel extends GeneralPanel {
     }
   }
 
-  class OpenMessageAction extends UIAction implements Runnable {
+  class OpenMessageAction extends Event implements Runnable {
 
     OpenMessageAction() {
       super("msgOpen");
@@ -785,7 +786,7 @@ public class FolderPanel extends GeneralPanel {
   // DeleteMessageAction class
   //
 
-  class DeleteMessageAction extends UIAction {
+  class DeleteMessageAction extends Event {
 
     DeleteMessageAction() {
       super("msgDelete");
@@ -801,7 +802,7 @@ public class FolderPanel extends GeneralPanel {
   // CopyMessageAction class
   //
 
-  class CopyMessageAction extends UIAction {
+  class CopyMessageAction extends Event {
 
     Folder fDest;
 
@@ -820,7 +821,7 @@ public class FolderPanel extends GeneralPanel {
   // MoveMessageAction class
   //
 
-  class MoveMessageAction extends UIAction {
+  class MoveMessageAction extends Event {
 
     Folder fDest;
 
@@ -839,7 +840,7 @@ public class FolderPanel extends GeneralPanel {
   // ThreadAction class
   //
 
-  class ThreadAction extends UIAction {
+  class ThreadAction extends Event {
 
     boolean selected;
 
@@ -865,7 +866,7 @@ public class FolderPanel extends GeneralPanel {
   // SortAction class
   //
 
-  class SortAction extends UIAction {
+  class SortAction extends Event {
     int fType;
     boolean selected;
 
@@ -877,7 +878,7 @@ public class FolderPanel extends GeneralPanel {
     public int getType() {
       return fType;
     }
-    
+
     public void setSelected(boolean isSelected) {
       selected = isSelected;
     }
@@ -896,7 +897,7 @@ public class FolderPanel extends GeneralPanel {
   // ReplyAction class
   //
 
-  class ReplyAction extends UIAction {
+  class ReplyAction extends Event {
     boolean replyall;
     public ReplyAction(String aAction, boolean r) {
       super(aAction);
@@ -913,7 +914,7 @@ public class FolderPanel extends GeneralPanel {
       }
       Composition frame = new Composition();
       frame.initializeAsReply((Message) (selection.elementAt(0)), replyall);
-      frame.show();
+      frame.setVisible(true);
       frame.requestFocus();
     }
   }
@@ -922,7 +923,7 @@ public class FolderPanel extends GeneralPanel {
   // ForwardAction class
   //
 
-  class ForwardAction extends UIAction {
+  class ForwardAction extends Event {
     int fScope;
 
     ForwardAction(String aName, int aScope) {
@@ -940,7 +941,7 @@ public class FolderPanel extends GeneralPanel {
       }
       Composition frame = new Composition();
       frame.initializeAsForward((Message) (selection.elementAt(0)), fScope);
-      frame.show();
+      frame.setVisible(true);
       frame.requestFocus();
     }
   }
@@ -949,7 +950,7 @@ public class FolderPanel extends GeneralPanel {
   // MarkAction class
   //
 
-  class MarkAction extends UIAction {
+  class MarkAction extends Event {
     int fScope;
 
     MarkAction(String aName, int aScope) {
@@ -1021,7 +1022,7 @@ public class FolderPanel extends GeneralPanel {
         }
       }
     }
-  
+
 
   //
   // Cut-n-paste stuff
@@ -1033,7 +1034,7 @@ public class FolderPanel extends GeneralPanel {
     }
   }
 
-  class CopyToClipboardAction extends UIAction {
+  class CopyToClipboardAction extends Event {
 
     CopyToClipboardAction() {
       super("copy-to-clipboard");
@@ -1051,7 +1052,7 @@ public class FolderPanel extends GeneralPanel {
     }
   }
 
-  class PasteFromClipboardAction extends UIAction {
+  class PasteFromClipboardAction extends Event {
 
     PasteFromClipboardAction() {
       super("paste-from-clipboard");

@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Lester Schueler <lesters@netscape.com>, 14 Nov 1997.
  *
@@ -77,7 +77,7 @@ public class ACS_Personal implements ICardSource, IQuerySet {
 
         try {
             //write the new value out to the DB.
-            fDB.assert ("Control", "NextCardID", nextCardStrID);
+            fDB.addassert ("Control", "NextCardID", nextCardStrID);
         } catch (IOException ioe) {
         }
 
@@ -94,7 +94,7 @@ public class ACS_Personal implements ICardSource, IQuerySet {
         }
     }
 
-  /** 
+  /**
    * No-op implementations for now (just to get this building properly)
    * (Jeff)
    */
@@ -148,16 +148,16 @@ public class ACS_Personal implements ICardSource, IQuerySet {
         aCard.setID (thisCardID);
 
         //get the set of attributes and enumerate thruough them.
-        AddressCardAttributeSet attrSet = 
+        AddressCardAttributeSet attrSet =
           (AddressCardAttributeSet)aCard.getAttributeSet();
 
-        for (Enumeration enum = attrSet.elements (); enum.hasMoreElements(); ) {
+        for (Enumeration enumer = attrSet.elements (); enumer.hasMoreElements(); ) {
             //get the next attribute
-            AddressCardAttribute attr = (AddressCardAttribute) enum.nextElement ();
+            AddressCardAttribute attr = (AddressCardAttribute) enumer.nextElement ();
 
             //write the attribute to the DB
             try {
-                fDB.assert (thisCardID, attr.getName(), attr.getValue());
+                fDB.addassert (thisCardID, attr.getName(), attr.getValue());
             } catch (IOException ioe) {}
         }
     }
@@ -165,8 +165,8 @@ public class ACS_Personal implements ICardSource, IQuerySet {
     /** Add a set of cards to this addressbook.
      */
     public void add (AddressCardSet aCardSet, boolean OverWrite) {
-        for (Enumeration enum = aCardSet.getCardEnumeration (); enum.hasMoreElements() ;) {
-            AddressCard card = (AddressCard) enum.nextElement();
+        for (Enumeration enumer = aCardSet.getCardEnumeration (); enumer.hasMoreElements() ;) {
+            AddressCard card = (AddressCard) enumer.nextElement();
             add (card, OverWrite);
         }
     }
@@ -196,8 +196,8 @@ public class ACS_Personal implements ICardSource, IQuerySet {
 
         if (null != ACA) {
          try {   //the RDFish DB returns an enumeration of a matching card ID's
-            for (Enumeration enum = fDB.findAll(ACA.getName(), ACA.getValue (), false); enum.hasMoreElements() ;) {
-                retIDSet.addElement (enum.nextElement());
+            for (Enumeration enumer = fDB.findAll(ACA.getName(), ACA.getValue (), false); enumer.hasMoreElements() ;) {
+                retIDSet.addElement (enumer.nextElement());
             }
          } catch (IOException exc) {
            exc.printStackTrace();

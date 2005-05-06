@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Terry Weissman <terry@netscape.com>,  4 Oct 1997.
  */
@@ -82,7 +82,8 @@ public class PhoneTest {
 //                                   value + "'");
                 System.out.print(".");
                 count++;
-                db.assert(name, slot, value);
+//XXXrlk: doing asserts later.
+//                db.assert(name, slot, value);
               } else {
                 name = str;
               }
@@ -135,7 +136,8 @@ public class PhoneTest {
               db.unassert(name.substring(1), slot, value);
               System.out.println("Unasserted.");
             } else {
-              db.assert(name, slot, value);
+//XXXrlk: doing asserts later.
+//              db.assert(name, slot, value);
               System.out.println("Asserted.");
             }
           }

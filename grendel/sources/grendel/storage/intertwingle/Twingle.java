@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Terry Weissman <terry@netscape.com>,  7 Oct 1997.
  */
@@ -81,13 +81,13 @@ public class Twingle implements Runnable {
     thread.start();
   }
 
-  void assert(String name, String slot, String value) {
+  void addassert(String name, String slot, String value) {
     if (name != null && value != null) {
       try {
-        db.assert(name, slot, value);
+        db.addassert(name, slot, value);
       } catch (IOException e) {
         // ### What to do...
-        System.out.println("db.assert() failed in Twingle.assert: " + e);
+        System.out.println("db.addassert() failed in Twingle.assert: " + e);
       }
     }
   }
@@ -142,9 +142,9 @@ public class Twingle implements Runnable {
         addr = str.trim();
       }
       if (name != null) {
-        assert(addr, "fullname", name);
+        addassert(addr, "fullname", name);
       }
-      assert(id, slot, addr);
+      addassert(id, slot, addr);
     }
   }
 
@@ -181,11 +181,11 @@ public class Twingle implements Runnable {
         if (id.charAt(0) == '<' && id.endsWith(">")) {
           id = id.substring(1, id.length() - 1);
         }
-        assert(id, "parent", folder.getName());
+        addassert(id, "parent", folder.getName());
 
         String subj[] = headers.getHeader("Subject");
         if (subj != null && subj.length != 0)
-          assert(id, "subject", subj[0]);
+          addassert(id, "subject", subj[0]);
 
         hackAddressList(id, headers, "from");
         hackAddressList(id, headers, "to");

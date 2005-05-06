@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 18 Nov 1997.
  *
@@ -40,9 +40,10 @@ import grendel.view.ViewedMessage;
 
 import javax.swing.event.ChangeEvent;
 
-import grendel.ui.UIAction;
 import grendel.widgets.StatusEvent;
 import grendel.widgets.TreePath;
+
+import com.trfenv.parsers.Event;
 
 public class FolderFrame extends GeneralFrame {
   static Vector fFolderFrames = new Vector();
@@ -56,8 +57,8 @@ public class FolderFrame extends GeneralFrame {
     fPanel.add(fFolderPanel);
     //    fMenu = buildMenu("folderMain", Util.MergeActions(actions,
     //                                             fFolderPanel.getActions()));
-    fMenu = buildMenu("menus.xml",
-                      Util.MergeActions(actions, fFolderPanel.getActions()));
+    XMLMenuBuilder builder = new XMLMenuBuilder(Util.MergeActions(actions, fFolderPanel.getActions()));
+    fMenu = builder.buildFrom("ui/menus.xml", this);
     getRootPane().setJMenuBar(fMenu);
 
     fToolBar = fFolderPanel.getToolBar();
@@ -142,7 +143,7 @@ public class FolderFrame extends GeneralFrame {
       }
     }
   }
-  UIAction actions[] = { ActionFactory.GetExitAction(),
+  Event actions[] = { ActionFactory.GetExitAction(),
                        ActionFactory.GetNewMailAction(),
                        ActionFactory.GetComposeMessageAction()};
 }

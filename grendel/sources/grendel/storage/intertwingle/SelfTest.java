@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Terry Weissman <terry@netscape.com>, 26 Sep 1997.
  */
@@ -40,12 +40,12 @@ public class SelfTest {
 //    DB db = new HackDB(top);
     DB db = new SimpleDB(top);
     db = new BGDB(db, new File(home, "__hackdb__queue"));
-    db.assert("terry", "fullname", "Terry Weissman");
-    db.assert("jwz", "fullname", "Jamie Zawinski");
-    db.assert("terry", "phone", "650-937-2756");
-    db.assert("terry", "phone", "408-338-8227");
-    db.assert("jwz", "phone", "650-937-2620");
-    db.assert("jwz", "phone", "415-ACRIDHE");
+    db.addassert("terry", "fullname", "Terry Weissman");
+    db.addassert("jwz", "fullname", "Jamie Zawinski");
+    db.addassert("terry", "phone", "650-937-2756");
+    db.addassert("terry", "phone", "408-338-8227");
+    db.addassert("jwz", "phone", "650-937-2620");
+    db.addassert("jwz", "phone", "415-ACRIDHE");
 
     for (int j=0 ; j<2 ; j++) {
 

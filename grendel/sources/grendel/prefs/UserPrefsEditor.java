@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 16 Oct 1997.
  *
@@ -62,7 +62,7 @@ import grendel.ui.XMLPageBuilder;
 import grendel.ui.PageModel;
 import grendel.ui.PageUI;
 
-public class UserPrefsEditor 
+public class UserPrefsEditor
   implements PropertyEditor {
   UserPrefs fPrefs = new UserPrefs();
   PropertyChangeSupport fListeners = new PropertyChangeSupport(this);
@@ -114,7 +114,9 @@ public class UserPrefsEditor
   public UserPrefsEditor() {
     fModel = new UserPrefsModel();
     URL url = getClass().getResource("PrefDialogs.xml");
-    fPanel = new PageUI(url, "id", "userPrefs", fModel, getClass());
+    //XXXrlk: why does this constructor have parameters?
+//    fPanel = new PageUI(url, "id", "userPrefs", fModel, getClass());
+    fPanel = new PageUI();
 
     ChangeAction ca = new ChangeAction();
     JComponent c;

@@ -49,11 +49,11 @@ class BiffIcon extends JLabel implements ChangeListener {
   public BiffIcon() {
     if (fIconUnknown == null) {
       fIconUnknown =
-        new ImageIcon(getClass().getResource("images/biffUnknown.gif"));
+        new ImageIcon("ui/images/biffUnknown.gif");
       fIconNew =
-        new ImageIcon(getClass().getResource("images/biffNew.gif"));
+        new ImageIcon("ui/images/biffNew.gif");
       fIconNone =
-        new ImageIcon(getClass().getResource("images/biffNone.gif"));
+        new ImageIcon("ui/images/biffNone.gif");
     }
     setText(null); // Necessary for icon size to be used for preferred size
     setBiffState(MailDrop.UNKNOWN);

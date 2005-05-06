@@ -94,7 +94,7 @@ class TestMessageThread implements IThreadable, ISortable {
 
       if (start < (L-2) &&
           (subject.charAt(start)   == 'r' || subject.charAt(start)   == 'R') &&
-          (subject.charAt(start+1) == 'e' || subject.charAt(start+1) == 'e')) {
+          (subject.charAt(start+1) == 'e' || subject.charAt(start+1) == 'E')) {
         if (subject.charAt(start+2) == ':') {
           start += 3;       // Skip over "Re:"
           has_re = true;    // yes, we found it.

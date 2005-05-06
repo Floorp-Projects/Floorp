@@ -12,7 +12,7 @@
  *
  * The Original Code is the Grendel mail/news client.
  *
- * The Initial Developer of the Original Code is Jeff Galyan 
+ * The Initial Developer of the Original Code is Jeff Galyan
  * <talisman@anamorphic.com>.  Portions created by Jeff Galyan are
  * Copyright (C) 1997 Jeff Galyan. All
  * Rights Reserved.
@@ -35,14 +35,14 @@ import javax.swing.JToolBar;
 import javax.swing.JButton;
 
 import grendel.ui.ToolBarLayout;
-import grendel.ui.UIAction;
 
 import grendel.widgets.Animation;
 import grendel.widgets.Spring;
-import grendel.widgets.ToolBarButton;
+
+import com.trfenv.parsers.Event;
 
 public class GrendelToolBar extends JToolBar {
-    
+
   private ToolBarLayout layout;
 
   public GrendelToolBar() {
@@ -50,17 +50,19 @@ public class GrendelToolBar extends JToolBar {
     layout = new ToolBarLayout();
     setLayout(layout);
     setFloatable(false);
+
+    setBackground(new java.awt.Color(238,238,238));
   }
 
   public Spring makeNewSpring() {
     return layout.createSpring();
   }
 
-  public void addButton(UIAction aActionListener,
+  public void addButton(Event aActionListener,
                           String aImageName,
                           String aText,
                           String aToolTip) {
-    ToolBarButton b = new ToolBarButton();
+    JButton b = new JButton();
 
     b.setHorizontalTextPosition(JButton.CENTER);
     b.setVerticalTextPosition(JButton.BOTTOM);
@@ -72,9 +74,8 @@ public class GrendelToolBar extends JToolBar {
     b.setRolloverEnabled(true);
     b.setBorder(BorderFactory.createEmptyBorder());
     b.setToolTipText(aToolTip);
-      
-    URL iconUrl = getClass().getResource("toolbar/mozilla/" + aImageName + ".gif");
-    b.setIcon(new ImageIcon(iconUrl));
+
+    b.setIcon(new ImageIcon("widgets/toolbar/mozilla/" + aImageName + ".gif"));
 
     Dimension d=b.getPreferredSize();
     double w=d.getWidth();

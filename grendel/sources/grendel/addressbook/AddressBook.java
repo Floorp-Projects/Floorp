@@ -26,10 +26,12 @@
 package grendel.addressbook;
 
 import grendel.addressbook.addresscard.*;
-import grendel.ui.UIAction;
 import grendel.ui.GeneralFrame;
 import grendel.widgets.*;
+import grendel.ui.XMLMenuBuilder;
 import calypso.util.*;
+
+import com.trfenv.parsers.Event;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -43,8 +45,6 @@ import javax.swing.table.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.border.EmptyBorder;
 
-import netscape.ldap.*;
-
 /**
  *
  * @author  Lester Schueler
@@ -54,7 +54,7 @@ public class AddressBook extends GeneralFrame {
   private Hashtable         mMenuItems;
   //   private ACS_Personal      myLocalAddressBook;
 
-  private MenuBarCtrl      mMenuBarCtrl;
+  private JMenuBar          mMenuBarCtrl;
   private GrendelToolBar    mTtoolbar;
   //    private Component       mStatusbar;
   private JTable            mTable;
@@ -70,7 +70,7 @@ public class AddressBook extends GeneralFrame {
   public static void main(String[] args) {
     AddressBook AddressBookFrame = new AddressBook();
     AddressBookFrame.addWindowListener(new AppCloser());
-    AddressBookFrame.show();
+    AddressBookFrame.setVisible(true);
   }
 
   protected static final class AppCloser extends WindowAdapter {
@@ -96,75 +96,75 @@ public class AddressBook extends GeneralFrame {
     public String            getReadableName ()  { return mReadableName; }
     public Vector   query (String aSearchString) {
        Vector retVecVec = new Vector();   //return vector of vectors.
-   
+
        //              try {
        //open a connection to the LDAP server
        System.out.println ("Opening server " + mReadableName);
        ICardSource Four11AddressBook = getCardSource();
-   
-   
+
+
        //create the query
        ITerm query = new TermEqual (new AC_Attribute ("sn", aSearchString));
-   
+
        String[] attributes = {"givenName", "sn", "cn", "o", "mail", "telephoneNumber", "city"};
-   
+
        //query the LDAP server.
        System.out.println ("Send query" + query);
        ICardSet cardSet = Four11AddressBook.getCardSet (query, attributes);
-   
+
        //Sort the list.
        String[] sortOrder = {"sn", "cn"};
        cardSet.sort (sortOrder);
-   
+
        //hack. I've put the for loop in a try block to catch the exception
        //thrown when cardEnum.hasMoreElements() incorrectly returns true.
        try {
          //enumerate thru the cards.
-         for (Enumeration cardEnum = cardSet.getEnumeration(); 
+         for (Enumeration cardEnum = cardSet.getEnumeration();
               cardEnum.hasMoreElements(); ) {
            System.out.println ("got card");
            //get the addres card
-           ICard card = (ICard) cardEnum.nextElement(); 
+           ICard card = (ICard) cardEnum.nextElement();
            //get the attributes for this card
-           IAttributeSet attrSet = card.getAttributeSet ();  
+           IAttributeSet attrSet = card.getAttributeSet ();
            //create a simple vector to hold the attributes values for this card.
-           Vector thisRow = new Vector(6);                     
-   
+           Vector thisRow = new Vector(6);
+
            String commonName = "";
            String organization = "";
            String mail = "";
            String phone = "";
            String city = "";
            String nickName = "";
-           
+
            // enumerate thru the card attributes.
-           for (Enumeration attEnum = attrSet.getEnumeration(); 
+           for (Enumeration attEnum = attrSet.getEnumeration();
                 attEnum.hasMoreElements(); ) {
              IAttribute attr = (IAttribute) attEnum.nextElement();
              String attrName = attr.getName();
-   
+
              if (attrName.equals ("cn")) {
                commonName = attr.getValue();
              }
-   
+
              else if (attrName.equals ("o")) {
                organization = attr.getValue();
              }
-   
+
              else if (attrName.equals ("mail")) {
                mail = attr.getValue();
              }
-   
+
              else if (attrName.equals ("telephoneNumber")) {
                phone = attr.getValue();
              }
-   
+
              else if (attrName.equals ("city")) {
                city = attr.getValue();
              }
-   
+
            }
-   
+
            //create this row for the table.
            thisRow.addElement (commonName);
            thisRow.addElement (mail);
@@ -172,7 +172,7 @@ public class AddressBook extends GeneralFrame {
            thisRow.addElement (phone);
            thisRow.addElement (city);
            thisRow.addElement (nickName);
-   
+
            //add this row to the table
            retVecVec.addElement (thisRow);
          }
@@ -183,7 +183,7 @@ public class AddressBook extends GeneralFrame {
        //              catch( LDAPException e ) {
        //                      System.out.println( "Error: " + e.toString() );
        //              }
-   
+
        System.out.println ("Done.");
        return retVecVec;
     }
@@ -224,7 +224,7 @@ public class AddressBook extends GeneralFrame {
        return new ACS_Personal (mFileName, false);
     }
     public String   getFileName ()  { return mFileName; }
-       
+
   }
 
   //***************************
@@ -270,17 +270,18 @@ public class AddressBook extends GeneralFrame {
     // FIXME - need to build the menu bar
     // (Jeff)
 
-    mMenuBarCtrl = buildMenu("menus.xml",defaultActions);
+    XMLMenuBuilder builder = new XMLMenuBuilder(defaultActions);
+    mMenuBarCtrl = builder.buildFrom("ui/menus.xml", this);
 
-    JMenuItem aMenuItem = mMenuBarCtrl.getCtrlByName("sortAscending");
+    JMenuItem aMenuItem = (JMenuItem)builder.getElementsAndIDs().get("sortAscending");
     if (aMenuItem != null) {
       aMenuItem.setSelected(true);
-    } 
+    }
 
-    aMenuItem = mMenuBarCtrl.getCtrlByName("byName");
+    aMenuItem = (JMenuItem)builder.getElementsAndIDs().get("byName");
     if (aMenuItem != null) {
       aMenuItem.setSelected(true);
-    } 
+    }
 
     setJMenuBar(mMenuBarCtrl);
 
@@ -398,7 +399,7 @@ public class AddressBook extends GeneralFrame {
   public static final String myAddressBookCardTag     ="myAddressBookCard";
 
   // --- action implementations -----------------------------------
-  private UIAction[] defaultActions = {
+  private Event[] defaultActions = {
     //"File" actions
     new NewCard(),
     //        new NewList(),
@@ -442,9 +443,9 @@ public class AddressBook extends GeneralFrame {
   //-----------------------
   /**
    */
-  class NewCard extends UIAction {
+  class NewCard extends Event {
     NewCard() {
-      super(newCardTag);
+      super(newCardTag, null);
       this.setEnabled(true);
     }
 
@@ -452,14 +453,14 @@ public class AddressBook extends GeneralFrame {
       NewCardDialog aDialog = new NewCardDialog(getParentFrame());
 
       //display the new card dialog
-      aDialog.show ();
+      aDialog.setVisible(true);
       aDialog.dispose();
     }
   }
 
-  class SearchDirectory extends UIAction {
+  class SearchDirectory extends Event {
     SearchDirectory() {
-      super(searchDirectoryTag);
+      super(searchDirectoryTag, null);
       this.setEnabled(true);
     }
 
@@ -467,13 +468,13 @@ public class AddressBook extends GeneralFrame {
       SearchDirectoryDialog aDialog = new SearchDirectoryDialog(getParentFrame());
 
       //display the new card dialog
-      aDialog.show ();
+      aDialog.setVisible(true);
       aDialog.dispose();
     }
   }
 
 
-  class SaveAs extends UIAction {
+  class SaveAs extends Event {
     SaveAs() {
       super(saveAsTag);
       this.setEnabled(true);
@@ -482,12 +483,12 @@ public class AddressBook extends GeneralFrame {
       NewCardDialog aDialog = new NewCardDialog(getParentFrame());
 
       //display the new card dialog
-      aDialog.show ();
+      aDialog.setVisible(true);
       aDialog.dispose();
     }
   }
 
-  class CloseWindow extends UIAction {
+  class CloseWindow extends Event {
     CloseWindow() {
       super(closeWindowTag);
       this.setEnabled(true);
@@ -506,7 +507,7 @@ public class AddressBook extends GeneralFrame {
   //-----------------------
   //"Edit" actions
   //-----------------------
-  class Undo extends UIAction {
+  class Undo extends Event {
     Undo() {
       super(undoTag);
       this.setEnabled(true);
@@ -517,7 +518,7 @@ public class AddressBook extends GeneralFrame {
   //-----------------------
   //"View" actions
   //-----------------------
-  class HideMessageToolbar extends UIAction {
+  class HideMessageToolbar extends Event {
     HideMessageToolbar() {
       super(hideMessageToolbarTag);
       this.setEnabled(true);
@@ -528,7 +529,7 @@ public class AddressBook extends GeneralFrame {
 
   //-----------------------
   //-----------------------
-  class Search extends UIAction {
+  class Search extends Event {
     Search() {
       super(newListTag);
       this.setEnabled(true);
@@ -560,7 +561,7 @@ public class AddressBook extends GeneralFrame {
     //----------------
     // Sort Ascending
     //----------------
-    class SortAscending extends UIAction {
+    class SortAscending extends Event {
         SortAscending() {
             super(sortAscendingTag);
             this.setEnabled(true);
@@ -584,7 +585,7 @@ public class AddressBook extends GeneralFrame {
     //----------------
     // Sort Descending
     //----------------
-    class SortDescending extends UIAction {
+    class SortDescending extends Event {
         SortDescending() {
             super(sortDescendingTag);
             this.setEnabled(true);
@@ -608,7 +609,7 @@ public class AddressBook extends GeneralFrame {
     //----------------------------------
     // Base class for sorting the names
     //----------------------------------
-    class ResultSorter extends UIAction {
+    class ResultSorter extends Event {
         String myLocalColumnName;
         ResultSorter(String Tag){
           super(Tag);
@@ -712,8 +713,8 @@ public class AddressBook extends GeneralFrame {
    * @param aToolTip The buttons tool tip. like "Save the current file".
    * @see createToolbar
    */
-  public void addToolbarButton(GrendelToolBar aToolBar, 
-                               UIAction aActionListener, 
+  public void addToolbarButton(GrendelToolBar aToolBar,
+                               Event aActionListener,
                                String aImageName, String aToolTip) {
     JButton b = new JButton();
 
@@ -747,7 +748,7 @@ public class AddressBook extends GeneralFrame {
     //      b.setPad(new Insets(3,3,3,3));
     if (aActionListener != null) {
       b.addActionListener(aActionListener);}
-    
+
     aToolBar.add(b);
   }
 
@@ -760,7 +761,7 @@ public class AddressBook extends GeneralFrame {
 
   /* This function is now obsolete, the responsible for querying is now
   ** the datasource, so that we can create other types of datasources (files!)
-  public Vector queryLDAP (String aServerName, int aPort, 
+  public Vector queryLDAP (String aServerName, int aPort,
                            String aSearchString) {
 
     Vector retVecVec = new Vector();   //return vector of vectors.
@@ -788,15 +789,15 @@ public class AddressBook extends GeneralFrame {
     //thrown when cardEnum.hasMoreElements() incorrectly returns true.
     try {
       //enumerate thru the cards.
-      for (Enumeration cardEnum = cardSet.getEnumeration(); 
+      for (Enumeration cardEnum = cardSet.getEnumeration();
            cardEnum.hasMoreElements(); ) {
         System.out.println ("got card");
         //get the addres card
-        ICard card = (ICard) cardEnum.nextElement(); 
+        ICard card = (ICard) cardEnum.nextElement();
         //get the attributes for this card
-        IAttributeSet attrSet = card.getAttributeSet ();  
+        IAttributeSet attrSet = card.getAttributeSet ();
         //create a simple vector to hold the attributes values for this card.
-        Vector thisRow = new Vector(6);                     
+        Vector thisRow = new Vector(6);
 
         String commonName = "";
         String organization = "";
@@ -804,7 +805,7 @@ public class AddressBook extends GeneralFrame {
         String phone = "";
         String city = "";
         String nickName = "";
-        
+
         // enumerate thru the card attributes.
         for (Enumeration attEnum = attrSet.getEnumeration();
              attEnum.hasMoreElements(); ) {
@@ -884,7 +885,7 @@ public class AddressBook extends GeneralFrame {
     /* This method is now obsolete, since I moved the query function
     ** from the AddressBook to the datasource
     **
-    public void reloadData (String aServerName, int aPort, 
+    public void reloadData (String aServerName, int aPort,
                             String aSearchString) {
       //reload the data from LDAP.
       mVecVec = queryLDAP (aServerName, aPort, aSearchString);
@@ -981,55 +982,55 @@ public class AddressBook extends GeneralFrame {
   /**
    */
   class AddressPanel extends JPanel {
-    
+
     public AddressPanel(DataSourceList aDataSourceList) {
       //super(true);
-      
+
       setBorder (new EmptyBorder(10,10,10,10));
       this.setLayout (new BorderLayout(10, 5));
-      
+
       add(createSearchPane(aDataSourceList), BorderLayout.NORTH);
       add(createTable(),      BorderLayout.CENTER);
     }
-    
+
     private Box createSearchPane (DataSourceList aDataSourceList) {
       //explaination
       JLabel explaination = new JLabel ("Type in the name you're looking for:");
       explaination.setAlignmentX((float)0.0);        //align left
-      
+
       //text field
       mSearchField = new JTextField (20);
       mSearchField.setAlignmentX((float)0.0);        //align left
-      
+
       //box for explain and text field
       Box innerBoxPane = new Box (BoxLayout.Y_AXIS);
       //            innerBoxPane.setAlignmentY((float)0.0);        //align to bottom
       innerBoxPane.add (explaination);
       innerBoxPane.add (mSearchField);
-      
+
       //drop down combo box
       mSearchSource = new JComboBox();
       mSearchSource.setAlignmentY((float)0.0);        //align to bottom
-      for (Enumeration e = aDataSourceList.getEnumeration() ; 
+      for (Enumeration e = aDataSourceList.getEnumeration() ;
            e.hasMoreElements() ;) {
         DataSource ds = (DataSource) e.nextElement();
         mSearchSource.addItem(ds.getReadableName());
       }
-      
+
       //label
       JLabel lbl = new JLabel ("in:");
       lbl.setAlignmentY((float)0.0);        //align to bottom
-      
+
       //search button
       mSearchButton = new JButton ("Search");
       mSearchButton.addActionListener(new Search());
       mSearchButton.setAlignmentY((float)0.0);         //align to bottom
-      
+
       Dimension spacer = new Dimension (10, 10);
-      
+
       //assemble all the pieces together.
       Box boxPane = new Box (BoxLayout.X_AXIS);
-      
+
       boxPane.add (innerBoxPane);                 //explaination and text field
       boxPane.add (Box.createRigidArea(spacer));  //spacer
       boxPane.add (lbl);                          //"in:" label
@@ -1037,10 +1038,10 @@ public class AddressBook extends GeneralFrame {
       boxPane.add (mSearchSource);                //drop down combo box
       boxPane.add (Box.createRigidArea(spacer));  //spacer
       boxPane.add (mSearchButton);                //search buttton
-      
+
       return boxPane;
     }
-    
+
     private JScrollPane createTable () {
       String[] columnNames = {
         "Name",
@@ -1049,52 +1050,52 @@ public class AddressBook extends GeneralFrame {
         "Phone",
         "City",
         "Nickname"};
-      
+
       //create the data model.
       DataModel dm = new DataModel (columnNames);
-      
+
       //create the table.
       mTable = new JTable(dm);
-      
+
       //              mTable.setAutoCreateColumnsFromModel(false);
-      
+
       // Add our columns into the  column model
       //            for (int columnIndex = 0; columnIndex < columnNames.length; columnIndex++){
       // Create a column object for each column of data
       //                TableColumn newColumn = new TableColumn(columnNames[columnIndex]);
-      
+
       // Set a tool tip for the column header cell
       //              TableCellRenderer renderer2 = newColumn.getHeaderRenderer();
       //              if (renderer2 instanceof DefaultCellRenderer)
       //                    ((DefaultCellRenderer)renderer2).setToolTipText(columnNames[columnIndex]);
-      
+
       //                newColumn.setWidth(200);
       //                mTable.addColumn(newColumn);
       //            }
-      
+
       //no selection, no grid.
       mTable.setColumnSelectionAllowed(false);
       mTable.setShowGrid(false);
-      
+
       // Put the table and header into a scrollPane
       JScrollPane scrollpane = new JScrollPane(mTable);
       //            JTableHeader tableHeader = mTable.getTableHeader();
-      
+
       // create and add the column heading to the scrollpane's
       // column header viewport
       //            JViewport headerViewport = new JViewport();
       //            headerViewport.setLayout(new BoxLayout(headerViewport, BoxLayout.X_AXIS));
       //            headerViewport.add(tableHeader);
       //            scrollpane.setColumnHeader(headerViewport);
-      
+
       // add the table to the viewport
       ///            JViewport mainViewPort = scrollpane.getViewport();
       //            mainViewPort.add(mTable);
       //            mainViewPort.setBackground (Color.white);
-      
+
       // speed up resizing repaints by turning off live cell updates
       //            tableHeader.setUpdateTableInRealTime(false);
-      
+
       //return the JScrollPane with the table in it.
       return scrollpane;
     }

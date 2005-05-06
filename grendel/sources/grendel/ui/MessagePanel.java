@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
  *
@@ -71,10 +71,11 @@ import grendel.mime.parser.MimeParserFactory;
 import grendel.mime.html.MimeHTMLOperatorFactory;
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
-import grendel.ui.UIAction;
 import grendel.widgets.GrendelToolBar;
 
 import grendel.widgets.StatusEvent;
+
+import com.trfenv.parsers.Event;
 
 /* ####
 import calypso.net.URLSource;
@@ -102,7 +103,7 @@ public class MessagePanel extends GeneralPanel {
 
   EventListenerList fListeners = new EventListenerList();
 
-  UIAction              fActions[] = {ActionFactory.GetNewMailAction(),
+  Event              fActions[] = {ActionFactory.GetNewMailAction(),
                                     ActionFactory.GetComposeMessageAction()};
   /**
    * Constructs a new message panel.
@@ -270,7 +271,7 @@ public class MessagePanel extends GeneralPanel {
                 if (makeRealHTML) {
                   stream = new MakeItHTML(stream).getHTMLInputStream();
                 }
-                // Okay, let's try to read from the stream and set the 
+                // Okay, let's try to read from the stream and set the
                 // text from the InputStream. We may need to put this
                 // stuff back later. (talisman)
                 //InputStreamReader reader = new InputStreamReader(stream);

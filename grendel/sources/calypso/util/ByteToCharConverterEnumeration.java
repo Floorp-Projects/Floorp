@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  *  Created: Frank Tang <ftang@netscape.com>
  */
@@ -32,7 +32,7 @@ import java.lang.String;
  * ByteToCharConverterEnumeration return a Enumeration of String which
  * represent ByteToCharConverter available in the classpath
  * @author ftang
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see
  *
  */
@@ -41,7 +41,7 @@ public class ByteToCharConverterEnumeration extends PrefetchEnumeration {
 /*
  *
  * @author ftang
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see
  *
  */
@@ -52,7 +52,7 @@ public class ByteToCharConverterEnumeration extends PrefetchEnumeration {
 /*
  *
  * @author ftang
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see
  *
  */
@@ -69,7 +69,7 @@ public class ByteToCharConverterEnumeration extends PrefetchEnumeration {
 /*
  *
  * @author ftang
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see
  *
  */

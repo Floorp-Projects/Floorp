@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Jeff Galyan. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Jeff Galyan <talisman@anamorphic.com>, 16 Jan 1999
  */
@@ -59,8 +59,8 @@ public class AddressCardSet implements ICardSet {
   }
 
   public void sort(String[] anAttributeArray) {
-    Enumeration enum = getEnumeration();
-    while (enum.hasMoreElements()) {
+    Enumeration enumer = getEnumeration();
+    while (enumer.hasMoreElements()) {
     }
   }
 

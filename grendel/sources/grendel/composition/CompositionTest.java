@@ -50,7 +50,7 @@ class CompositionTest extends JPanel implements ActionListener {
         frame.add (new CompositionTest(), BorderLayout.CENTER);
         //frame.setSize(450, 200);
         frame.pack();
-        frame.show();
+        frame.setVisible(true);
     }
 
     /**
@@ -101,7 +101,7 @@ class CompositionTest extends JPanel implements ActionListener {
             //This is where the compsiton editor is started.
             Composition CompFrame = new Composition();
             CompFrame.pack();
-            CompFrame.show();
+            CompFrame.setVisible(true);
         }
     }
 }

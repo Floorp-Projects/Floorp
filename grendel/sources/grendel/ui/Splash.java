@@ -12,12 +12,12 @@
  *
  * The Original Code is the Grendel mail/news client.
  *
- * The Initial Developer of the Original Code is Netscape Communications  
+ * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): Jeff Galyan <jeffrey.galyan@sun.com> 
+ * Contributor(s): Jeff Galyan <jeffrey.galyan@sun.com>
  */
 
 package grendel.ui;
@@ -34,10 +34,10 @@ public class Splash extends JWindow {
 
   public Splash() {
     super();
-    ImageIcon image = new ImageIcon(getClass().getResource("images/GrendelSplash.jpg"));
+    ImageIcon image = new ImageIcon("ui/images/GrendelSplash.jpg");
     JLabel splashLabel = new JLabel(image);
     getContentPane().add(splashLabel);
-    
+
     Dimension screensize = Toolkit.getDefaultToolkit().getScreenSize();
     setLocation(screensize.width/2 - 150, screensize.height/2 - 150);
 

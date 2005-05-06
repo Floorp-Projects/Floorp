@@ -17,7 +17,7 @@
  * Copyright (C) 1999 Giao Nguyen. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 package grendel.ui;
@@ -59,11 +59,8 @@ import javax.swing.text.JTextComponent;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import com.sun.xml.parser.Resolver;
-import com.sun.xml.parser.Parser;
-import com.sun.xml.tree.XmlDocument;
-import com.sun.xml.tree.XmlDocumentBuilder;
-import com.sun.xml.tree.TreeWalker;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -87,7 +84,7 @@ public class PageUI extends JPanel {
 
   /**
    * Get the model for the page.
-   * 
+   *
    * @return the model
    */
   public PageModel getModel() {
@@ -96,7 +93,7 @@ public class PageUI extends JPanel {
 
   /**
    * Set the model for the page.
-   * 
+   *
    * @param model the model as the backing for the page
    */
   public void setModel(PageModel model) {
@@ -112,7 +109,7 @@ public class PageUI extends JPanel {
     add(component);
   }
 
-  public void addCtrl(String name, JComponent component, 
+  public void addCtrl(String name, JComponent component,
                       Object constraints) {
     System.out.println("addCtrl: "+name);
     if (name != null) table.put(name, component);
@@ -124,7 +121,7 @@ public class PageUI extends JPanel {
 
   /**
    * Get a component by its name.
-   * 
+   *
    * @param key the name of the component to retrieve
    * @param return the component identiified by the key
    */

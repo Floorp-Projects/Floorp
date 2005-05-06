@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
  *
@@ -158,12 +158,8 @@ public class GeneralFrame extends JFrame
     // We need to use Class.forName because getClass() might return a child
     // class in another package.
 
-    try {
-      URL url = Class.forName("grendel.ui.GeneralFrame").getResource("images/GrendelIcon32.gif");
-      setIconImage(getToolkit().getImage(url));
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    }
+    ImageIcon curImage = new ImageIcon("ui/images/GrendelIcon32.gif");
+    setIconImage(curImage.getImage());
 
     fFrameList.addElement(this);
   }
@@ -264,30 +260,6 @@ public class GeneralFrame extends JFrame
       GeneralFrame frame = (GeneralFrame) fFrameList.elementAt(0);
       frame.dispose();
     }
-  }
-
-  /** 
-   * Creates the MenuBar by reading from an XML file
-   *
-   * @param file the XML file to build the menu from
-   * @return a menubar built from the file
-   */
-  protected MenuBarCtrl buildMenu(String file, UIAction[] actions) {
-    MenuBarCtrl menubar = null;
-    URL url;
-    XMLMenuBuilder builder = 
-      new XMLMenuBuilder(this, actions);
-
-    try {
-      url = getClass().getResource(file);
-      builder.buildFrom(url.openStream());
-      menubar = builder.getComponent();
-    } catch (Throwable t) {
-      t.printStackTrace();
-    }
-    
-    menubar.setFont(new Font("Helvetica", Font.PLAIN, 12));
-    return menubar;
   }
 
   protected Component buildStatusBar() {

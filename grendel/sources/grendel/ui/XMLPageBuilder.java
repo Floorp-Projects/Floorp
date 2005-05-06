@@ -56,16 +56,9 @@ import javax.swing.JComboBox;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.Document;
 
-import com.sun.xml.parser.Resolver;
-import com.sun.xml.parser.Parser;
-import com.sun.xml.tree.XmlDocument;
-import com.sun.xml.tree.TreeWalker;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-
-
+import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * Build a panel from an XML data source.
@@ -84,17 +77,17 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   static final String label_tag = "label";
   static final String image_tag = "image";
   static final String layout_attr = "layout";
-  
+
   PageUI component;
   String title;
   String id;
   String attr;
   PageModel model;
   Hashtable group = new Hashtable();
-  
+
   /**
    * Build a menu builder which operates on XML formatted data
-   * 
+   *
    * @param attr attribute
    * @param id the value of the attribute to have a match
    * @param model the page model for the page to be created
@@ -104,34 +97,31 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     this.id = id;
     this.model = model;
   }
-  
+
   /**
    * Read the input stream and build a menubar from it
-   * 
+   *
    * @param stream the stream containing the XML data
    */
   public JComponent buildFrom(InputStream stream) {
-    XmlDocument doc;
-    TreeWalker tree;
+    Document doc;
     Node node;
     URL linkURL;
     Element current;
-    
+
     try {
-      doc = XmlDocument.createXmlDocument(stream, false);
+      doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(stream);
       current = doc.getDocumentElement();
-      tree = new TreeWalker(current);
-      
+
       // get the link tag for this file
       // get into head and get the first element
-      node = 
-        tree.getNextElement("head").getFirstChild().getNextSibling();
-      
+      node = current.getElementsByTagName("head").item(0).getFirstChild().getNextSibling();
+
       // set the configuration contained in this node
       setConfiguration((Element)node);
-      
-      // skip to the body and find the element 
-      current = findTargetElement(tree.getNextElement("body"));
+
+      // skip to the body and find the element
+      current = findTargetElement((Element)current.getElementsByTagName("body").item(0));
 
       if (current != null) {
         component = (PageUI)buildFrom(current);
@@ -142,7 +132,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
 
     return component;
   }
-  
+
   /**
    * Locates the element targeted.
    * @param element the element that contains all nodes to search
@@ -150,7 +140,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
    */
   private Element findTargetElement(Element element) {
     Node node = element.getFirstChild().getNextSibling();
-    
+
     while (node != null) {
       // make sure we're looking at an ELEMENT_NODE
       if (node.getNodeType() == Node.ELEMENT_NODE) {
@@ -183,16 +173,16 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
 
   /**
    * Build a panel.
-   * @param element the panel element 
+   * @param element the panel element
    * @return the panel object as a PageUI type
    */
   public PageUI buildPanel(Element element) {
     Node node = element.getFirstChild().getNextSibling();
-    
+
     PageUI my_component = new PageUI();
 
-    // every pageui in a dialog shares the same model. pageui just 
-    // spec the layout. 
+    // every pageui in a dialog shares the same model. pageui just
+    // spec the layout.
     my_component.setModel(model);
 
     // in the future, we'll determine what the layout manager is. for now,
@@ -212,10 +202,10 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
 
     return my_component;
   }
-  
+
   private int parseGridConstant(String data) {
     int result = 1;
-    
+
     try {
       data = data.trim();
       result = Integer.parseInt(data);
@@ -232,9 +222,9 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
 
   private int parseFillConstant(String fill) {
     int result = GridBagConstraints.NONE;
-    
+
     fill = fill.trim();
-    
+
     if (fill.equals("horizontal")) {
       result = GridBagConstraints.HORIZONTAL;
     } else if (fill.equals("vertical")) {
@@ -248,7 +238,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
 
   private float parseWeightConstant(String weight) {
     float result = 0.0f;
-    
+
     try {
       result = Float.valueOf(weight).floatValue();
     } catch (NumberFormatException nfe) {
@@ -256,7 +246,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       return result;
     }
   }
-  
+
   /**
    * Build a constraint from the element's details.
    *
@@ -265,33 +255,33 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
    */
   protected GridBagConstraints buildConstraints(Element current) {
     GridBagConstraints constraints = new GridBagConstraints();
-    CustomInsets inset = 
+    CustomInsets inset =
       new CustomInsets(current.getAttribute("insets"));
 
-    constraints.weightx = 
+    constraints.weightx =
       parseWeightConstant(current.getAttribute("weightx"));
-    
-    constraints.weighty = 
+
+    constraints.weighty =
       parseWeightConstant(current.getAttribute("weighty"));
-    
+
     // fill
     constraints.fill = parseFillConstant(current.getAttribute("fill"));
-    
-    constraints.gridwidth = 
+
+    constraints.gridwidth =
       parseGridConstant(current.getAttribute("gridwidth"));
-    
-    constraints.gridheight = 
+
+    constraints.gridheight =
       parseGridConstant(current.getAttribute("gridheight"));
-    
+
     constraints.insets = inset;
-    
+
     return constraints;
   }
-  
+
   protected JComponent buildComponent(Element current) {
     JComponent item = null;
     String tag = current.getTagName();
-    
+
     if (tag.equals(input_tag)) { // input tag
       item = buildInput(current);
     } else if (tag.equals(label_tag)) {
@@ -301,18 +291,18 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     } else if (tag.equals(image_tag)) {
       item = buildImage(current);
     }
-    
+
     return item;
   }
-  
+
   protected JPasswordField buildPasswordField(Element current) {
     JPasswordField item = null;
-    
+
     item = new JPasswordField();
     textFieldAdjustments(item, current);
     return item;
   }
-  
+
   private void textFieldAdjustments(JTextField item, Element current) {
     String s = current.getAttribute("columns");
     s = s.trim();
@@ -322,23 +312,23 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     } catch (NumberFormatException nfe) {
     }
   }
-  
+
   protected JTextField buildTextField(Element current) {
     JTextField item = new JTextField();
     textFieldAdjustments(item, current);
-    
+
     return item;
   }
-  
+
   protected JRadioButton buildRadioButton(Element current) {
     JRadioButton item = new JRadioButton();
     String label = getReferencedLabel(current, "title");
     String group_str = current.getAttribute("group");
-    
+
     if (label.length() > 0) {
       item.setText(label);
     }
-    
+
     // button group matters
     if (group_str.length() > 0) {
       ButtonGroup bg;
@@ -350,14 +340,14 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       }
       bg.add(item);
     }
-    
+
     return item;
   }
-  
+
   private JComponent buildInput(Element current) {
     JComponent item = null;
     String type = current.getAttribute("type");
-    
+
     String ID = current.getAttribute("ID");
     if (type.equals("radio")) { // radio type
       item = buildRadioButton(current);
@@ -374,50 +364,50 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     } else if (type.equals("combobox")) {
       item = buildComboBox(current);
     }
-    
+
     return item;
   }
-  
+
   protected JCheckBox buildCheckBox(Element current) {
     return new JCheckBox(getReferencedLabel(current, "title"));
   }
-  
+
   protected JButton buildButton(Element current) {
     JButton button =  new JButton(getReferencedLabel(current, "title"));
     button.addActionListener(model);
     button.setActionCommand(getReferencedLabel(current, "command"));
     return button;
   }
-  
+
   protected JList buildList(Element current) {
     JList list = new JList();
     return list;
   }
-  
+
   protected JComboBox buildComboBox(Element current) {
     JComboBox combobox = new JComboBox();
     return combobox;
   }
-  
+
   protected JLabel buildLabel(Element current) {
     JLabel label = new JLabel(getReferencedLabel(current, "title"));
     return label;
   }
-  
+
   protected JLabel buildImage(Element current) {
     URL iconURL = ref.getResource(getReferencedLabel(current, "href"));
     JLabel label = new JLabel(new ImageIcon(iconURL));
     return label;
   }
-  
+
   public JPanel getComponent() {
     return component;
   }
-  
+
   public String getTitle() {
     return title;
   }
-  
+
   public static void main(String[] args) throws Exception {
     javax.swing.JFrame frame = new javax.swing.JFrame("Foo bar");
     PageModel model = new PageModel();
@@ -426,40 +416,40 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     builder.buildFrom(url.openStream());
     JPanel panel = builder.getComponent();
     JDialog dialog = new JDialog();
-    
+
     dialog.getContentPane().setLayout(new java.awt.GridBagLayout());
     dialog.getContentPane().add(panel, null);
     dialog.setTitle(builder.getTitle());
     dialog.pack();
     dialog.setVisible(true);
   }
-  
+
 }
 
 class CustomInsets extends Insets {
   CustomInsets(String inset) {
     super(0, 0, 0, 0);
-    
+
     inset = inset.trim();
-    
-    if (inset != null && inset.length() >= 9 
-        && (inset.charAt(0) == '[' 
+
+    if (inset != null && inset.length() >= 9
+        && (inset.charAt(0) == '['
 	    || inset.charAt(inset.length() - 1) == ']')) {
       inset = inset.substring(1, inset.length() - 1);
       int[] val = parseInset(inset); // guaranteed to be a length of 4
-      
+
       top = val[0];
       left = val[1];
       bottom = val[2];
       right = val[3];
     }
   }
-  
+
   private int[] parseInset(String inset) {
     // if all else fails, it's 0
     int[] val = { 0, 0, 0, 0 };
     StringTokenizer tok = new StringTokenizer(inset, ",");
-    
+
     // assign the values into
     for (int i = 0; i < val.length; i++) {
       try {

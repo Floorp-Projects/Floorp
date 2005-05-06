@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Class FilterMaster.
  *
@@ -193,7 +193,9 @@ public class FilterMaster extends Object {
   public Folder getFolder(String name) {
         Session session = StoreFactory.Instance().getSession();
         // ### Definitely wrong:
-    Store store = BerkeleyStore.GetDefaultStore(session);
+    //XXXrlk: WARNING, DANGEROUS, BAD, GUARANTEED CRASH HERE
+    //   temporary change to make Grendel compile
+    Store store = null;
         Folder folder;
 
         try {

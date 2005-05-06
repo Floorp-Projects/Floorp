@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 20 Oct 1997.
  *
@@ -89,9 +89,10 @@ import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
 import grendel.ui.ActionFactory;
 import grendel.ui.GeneralPanel;
-import grendel.ui.UIAction;
 import grendel.widgets.CollapsiblePanel;
 import grendel.widgets.GrendelToolBar;
+
+import com.trfenv.parsers.Event;
 
 public class CompositionPanel extends GeneralPanel {
   private Hashtable       mCommands;
@@ -150,7 +151,7 @@ public class CompositionPanel extends GeneralPanel {
    * of actions supported by the embedded JTextComponent
    * augmented with the actions defined locally.
    */
-  public UIAction[] getActions() {
+  public Event[] getActions() {
     return defaultActions;
     // XXX WHS need to translate Actions to UICmds
     // return TextAction.augmentList(mEditor.getActions(), defaultActions);
@@ -187,7 +188,7 @@ public class CompositionPanel extends GeneralPanel {
   public void addCompositionPanelListener(CompositionPanelListener l) {
     mListeners.add(CompositionPanelListener.class, l);
   }
-  
+
   /**
    * Remove a CompositionPanelListener
    */
@@ -199,7 +200,7 @@ public class CompositionPanel extends GeneralPanel {
   /**
    * Quote the orgininal message in a reply
    */
-   
+
   public void QuoteOriginalMessage() {
     QuoteOriginalText qot = new QuoteOriginalText();
     qot.actionPerformed(new ActionEvent(this,0,""));
@@ -208,7 +209,7 @@ public class CompositionPanel extends GeneralPanel {
   /**
    * Inline the orgininal message when forwarding
    */
-   
+
   public void InlineOriginalMessage() {
     InlineOriginalText iot = new InlineOriginalText();
     iot.actionPerformed(new ActionEvent(this,0,""));
@@ -217,7 +218,7 @@ public class CompositionPanel extends GeneralPanel {
   /**
    * Add a signature
    */
-   
+
   public void AddSignature() {
     AddSignatureAction asa = new AddSignatureAction();
     asa.actionPerformed(new ActionEvent(this,0,""));
@@ -316,11 +317,11 @@ public class CompositionPanel extends GeneralPanel {
   public static final String viewAttachmentsTag       ="viewAttachments";
   public static final String viewOptionsTag           ="viewOptions";
   public static final String wrapLongLinesTag         ="wrapLongLines";
-  
+
 
 
   // --- action implementations -----------------------------------
-  private UIAction[] defaultActions = {
+  private Event[] defaultActions = {
     //"File" actions
 //        new SaveDraft(),
     new SaveAs(),
@@ -370,7 +371,7 @@ public class CompositionPanel extends GeneralPanel {
    * Try to save the message to the "draft" mailbox.
    * @see SaveAs
    */
-  class SaveDraft extends UIAction {
+  class SaveDraft extends Event {
     SaveDraft() {
       super(saveDraftTag);
       this.setEnabled(true);
@@ -382,7 +383,7 @@ public class CompositionPanel extends GeneralPanel {
    * Try to save the message to a text file.
    * @see SaveDraft
    */
-  class SaveAs extends UIAction {
+  class SaveAs extends Event {
     SaveAs() {
       super(saveAsTag);
       this.setEnabled(true);
@@ -391,7 +392,7 @@ public class CompositionPanel extends GeneralPanel {
     public void actionPerformed(ActionEvent e) {
       FileDialog fileDialog = new FileDialog (getParentFrame(), "Save As", FileDialog.SAVE);
       fileDialog.setFile("untitled.txt");
-      fileDialog.show();  //blocks
+      fileDialog.setVisible(true); //blocks
 
       String fileName = fileDialog.getFile();
       //check for canel
@@ -420,7 +421,7 @@ public class CompositionPanel extends GeneralPanel {
   /**
    * Send the mail message now.
    */
-  class SendNow extends UIAction {
+  class SendNow extends Event {
     SendNow() {
       super(sendNowTag);
       this.setEnabled(true);
@@ -462,7 +463,7 @@ public class CompositionPanel extends GeneralPanel {
         try {
           IdentityStructure ident = IdentityArray.GetMaster().get(
                             mAddressBar.getOptionsPanel().getSelectedIdentity());
-          
+
           //set who's sending this message.
           msg.setFrom (new InternetAddress(ident.getEMail(), ident.getName()));
 
@@ -492,7 +493,7 @@ public class CompositionPanel extends GeneralPanel {
           msg.setSubject(mSubject.getText());        //set subject from text
                                                      //field.
           msg.setHeader("X-Mailer", "Grendel [development version]");
-                                                     //and proud of it! 
+                                                     //and proud of it!
           msg.setSentDate(new java.util.Date());     //set date to now.
 
           String [] attachments = mAttachmentsList.getAttachments();
@@ -500,7 +501,7 @@ public class CompositionPanel extends GeneralPanel {
             msg.setContent(messageText, "text/plain"); //contents.
           } else {
             MimeMultipart multi = new MimeMultipart();
-              
+
             MimeBodyPart mainText = new MimeBodyPart();
             mainText.setText(messageText);
             multi.addBodyPart(mainText);
@@ -530,7 +531,7 @@ public class CompositionPanel extends GeneralPanel {
                   encName = "base64";
                 }
 
-                att.setText(new String(bs)); 
+                att.setText(new String(bs));
                 att.setHeader("Content-Type", mimeString);
                 att.setHeader("Content-Transfer-Encoding", encName);
                 att.setFileName(new File(attachments[i]).getName());
@@ -553,7 +554,7 @@ public class CompositionPanel extends GeneralPanel {
           } catch (MessagingException exc) {
             exc.printStackTrace();
           }
-                  
+
           success = true;
         } catch (javax.mail.SendFailedException sex) {
           sex.printStackTrace();
@@ -584,7 +585,7 @@ public class CompositionPanel extends GeneralPanel {
    * Quote the original text message into the editor.
    * @see PasteAsQuotation
    */
-  class QuoteOriginalText extends UIAction {
+  class QuoteOriginalText extends Event {
     QuoteOriginalText() {
       super(quoteOriginalTextTag);
       this.setEnabled(true);
@@ -669,7 +670,7 @@ public class CompositionPanel extends GeneralPanel {
    * Inline the original text message into the editor.
    * @see QuoteOriginalText
    */
-  class InlineOriginalText extends UIAction {
+  class InlineOriginalText extends Event {
     InlineOriginalText() {
       super(inlineOriginalTextTag);
       this.setEnabled(true);
@@ -762,7 +763,7 @@ public class CompositionPanel extends GeneralPanel {
   /**
    * Add a signature
    */
-  class AddSignatureAction extends UIAction {
+  class AddSignatureAction extends Event {
     AddSignatureAction() {
       super(addSignatureTag);
       this.setEnabled(true);
@@ -771,7 +772,7 @@ public class CompositionPanel extends GeneralPanel {
 
       Document doc = mEditor.getDocument();
       int oldPosition = mEditor.getCaretPosition();
-      
+
       //remove the old signature
       for (int i=0; i<doc.getLength()-4;i++) {
         try {
@@ -784,10 +785,10 @@ public class CompositionPanel extends GeneralPanel {
           ble.printStackTrace();
         }
       }
-      
+
       //the signature will be added at the end
       int position = doc.getEndPosition().getOffset() - 1;
-      
+
       //compose the string including the separator
       String s = "\n-- \n";
       int ident = mAddressBar.getOptionsPanel().getSelectedIdentity();
@@ -801,13 +802,13 @@ public class CompositionPanel extends GeneralPanel {
           ble.printStackTrace();
         }
       }
-            
+
       mEditor.setCaretPosition(oldPosition);
-      
+
     }
   }
 
-  class SelectAddresses extends UIAction {
+  class SelectAddresses extends Event {
     SelectAddresses() {
       super(selectAddressesTag);
       this.setEnabled(true);
@@ -822,7 +823,7 @@ public class CompositionPanel extends GeneralPanel {
 
       //display the addressee dialog
       aDialog.setAddresses (mAddresses);      //initialize the dialog
-      aDialog.show ();                        //blocks
+      aDialog.setVisible (true);              //blocks
 
       if (false == aDialog.getCanceled()) {
         //get the addresses from dialog
@@ -843,7 +844,7 @@ public class CompositionPanel extends GeneralPanel {
   //-----------------------
   // "file->attach" actions
   //-----------------------
-  class AttachFile extends UIAction {
+  class AttachFile extends Event {
     AttachFile() {
       super(fileTag);
       this.setEnabled(true);
@@ -864,7 +865,7 @@ public class CompositionPanel extends GeneralPanel {
    * Quote and paste whatever string that's on the clipboard into the editor.
    * @see QuoteOriginalText
    */
-  class PasteAsQuotation extends UIAction {
+  class PasteAsQuotation extends Event {
     PasteAsQuotation() {
       super(pasteAsQuotationTag);
       this.setEnabled(true);

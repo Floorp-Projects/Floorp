@@ -118,7 +118,7 @@ public class FolderCombo extends JComboBox {
 
   class FolderRenderer extends JLabel implements ListCellRenderer {
     public FolderRenderer() {
-      setIcon(new ImageIcon(getClass().getResource("/grendel/ui/images/folder-small.gif")));
+      setIcon(new ImageIcon("ui/images/folder-small.gif"));
       setOpaque(true);
     }
 

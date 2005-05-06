@@ -52,13 +52,14 @@ import javax.mail.MessagingException;
 
 import grendel.prefs.base.InvisiblePrefs;
 import grendel.prefs.base.UIPrefs;
-import grendel.ui.UIAction;
 import grendel.view.ViewedMessage;
 import grendel.widgets.CollapsiblePanel;
 import grendel.widgets.GrendelToolBar;
 import grendel.widgets.Spring;
 import grendel.widgets.StatusEvent;
 import grendel.widgets.TreePath;
+
+import com.trfenv.parsers.Event;
 
 /**
  * The legendary three pane UI.
@@ -183,8 +184,8 @@ class UnifiedMessageFrame extends GeneralFrame {
 
     layoutPanels(layout);
 
-    fMenu = buildMenu("menus.xml",  
-                      Util.MergeActions(actions, Util.MergeActions(fFolders.getActions(), Util.MergeActions(fThreads.getActions(), fMessage.getActions()))));
+    XMLMenuBuilder builder = new XMLMenuBuilder(Util.MergeActions(actions, Util.MergeActions(fFolders.getActions(), Util.MergeActions(fThreads.getActions(), fMessage.getActions()))));
+    fMenu = builder.buildFrom("ui/menus.xml", this);
 
     getRootPane().setJMenuBar(fMenu);
 
@@ -205,7 +206,7 @@ class UnifiedMessageFrame extends GeneralFrame {
     fToolBarPanelConstraints.fill = GridBagConstraints.NONE;
     fToolBarPanelConstraints.gridwidth = GridBagConstraints.REMAINDER;
     fToolBarPanelConstraints.anchor = GridBagConstraints.EAST;
-      
+
     fToolBarPanel.add(fAnimation, fToolBarPanelConstraints);
 
     fStatusBar = buildStatusBar();
@@ -225,7 +226,7 @@ class UnifiedMessageFrame extends GeneralFrame {
       fFolders.getSize().width, fFolders.getSize().height,
       fThreads.getSize().width, fThreads.getSize().height
     );
-    
+
     UIPrefs.GetMaster().setMultiPaneLayout(fLayout);
     UIPrefs.GetMaster().writePrefs();
 
@@ -250,7 +251,7 @@ class UnifiedMessageFrame extends GeneralFrame {
       if (fLayout.equals(layout)) {
         return; // nothing to do
       }
-      
+
       fLayout = layout;
       remove(splitter1);
       remove(splitter2);
@@ -275,7 +276,7 @@ class UnifiedMessageFrame extends GeneralFrame {
         threadX = tx;
         threadY = ty;
         // if the try bails, we use default
-      } catch (NumberFormatException nf_ty) { 
+      } catch (NumberFormatException nf_ty) {
         nf_ty.printStackTrace();
       } finally {
         relayout = true;
@@ -299,7 +300,7 @@ class UnifiedMessageFrame extends GeneralFrame {
     } else if (layout.equals(UnifiedMessageDisplayManager.SPLIT_LEFT)) {
       splitter1.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
       splitter2.setOrientation(JSplitPane.VERTICAL_SPLIT);
-      
+
       splitter2.setLeftComponent(fFolders);
       splitter2.setRightComponent(fThreads);
 
@@ -321,7 +322,7 @@ class UnifiedMessageFrame extends GeneralFrame {
 
       splitter2.setLeftComponent(fFolders);
       splitter2.setRightComponent(fThreads);
-      
+
       splitter1.setTopComponent(splitter2);
       splitter1.setBottomComponent(fMessage);
     }
@@ -345,7 +346,7 @@ class UnifiedMessageFrame extends GeneralFrame {
   LayoutAction fStackedLayoutAction =
     new LayoutAction(UnifiedMessageDisplayManager.STACKED);
 
-  UIAction[] actions = { ActionFactory.GetExitAction(),
+  Event[] actions = { ActionFactory.GetExitAction(),
                        ActionFactory.GetNewMailAction(),
                        ActionFactory.GetComposeMessageAction(),
                        ActionFactory.GetPreferencesAction(),
@@ -473,15 +474,14 @@ class UnifiedMessageFrame extends GeneralFrame {
   // LayoutAction class
   //
 
-  class LayoutAction extends UIAction {
+  class LayoutAction extends Event {
     ImageIcon fIcon;
     String action;
     public LayoutAction(String aAction) {
       super(aAction);
       this.setEnabled(true);
       action = aAction;
-      fIcon = new ImageIcon(getClass().getResource("images/" +
-                                                   aAction + ".gif"));
+      fIcon = new ImageIcon("ui/images/" + aAction + ".gif");
     }
 
     public void actionPerformed(ActionEvent aEvent) {
