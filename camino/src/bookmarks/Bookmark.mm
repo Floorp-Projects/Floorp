@@ -303,6 +303,24 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   return YES;
 }
 
+//
+// -writeBookmarksMetaDatatoPath:
+//
+// Writes out the meta data for this bookmark to a file with the name of this item's UUID
+// in the given path. Using the suffix "webbookmark" allows us to pick up on the Spotlight
+// importer already on Tiger for Safari.
+//
+-(void)writeBookmarksMetadataToPath:(NSString*)inPath
+{
+  NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys: 
+                                      mTitle, @"Name",
+                                      mURL, @"URL",
+                                      nil];
+  NSString* file = [self UUID];
+  NSString* path = [NSString stringWithFormat:@"%@/%@.webbookmark", inPath, file];
+  [dict writeToFile:path atomically:YES];
+}
+
 // for plist in native format
 -(NSDictionary *)writeNativeDictionary
 {

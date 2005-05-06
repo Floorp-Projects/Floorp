@@ -204,4 +204,8 @@ typedef enum EBookmarkOpenBehavior
 +(NSString*)urlStringFromWebloc:(NSString*)inFile;
 +(NSString*)urlStringFromIEURLFile:(NSString*)inFile;
 
+// OS feature checks
++ (BOOL)supportsSpotlight;
++ (BOOL)supportsBonjour;
+
 @end

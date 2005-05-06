@@ -924,6 +924,22 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   return noErr;
 }
 
+//
+// -writeBookmarksMetadataToPath:
+//
+// Recursively tells each of its children to write out its spotlight metadata at the
+// given path. Folders themselves aren't written to the metadata store.
+//
+-(void)writeBookmarksMetadataToPath:(NSString*)inPath
+{
+  if (![self isSmartFolder]) {
+    id item;
+    NSEnumerator* enumerator = [mChildArray objectEnumerator];
+    // do it for each child
+    while ((item = [enumerator nextObject]))
+      [item writeBookmarksMetadataToPath:inPath];
+  }
+}
 
 -(NSDictionary *)writeNativeDictionary
 {

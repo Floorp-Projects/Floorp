@@ -121,6 +121,48 @@ const int kReuseWindowOnAE = 2;
 
 @implementation MainController
 
+//
+// +isRunningOnTiger
+//
+// returns YES if we're on 10.4 or better
+//
++ (BOOL)isTigerOrHigher
+{
+  BOOL runningOnTiger = NO;
+  long version = 0;
+  ::Gestalt(gestaltSystemVersion, &version);
+  if (version >= 0x00001040) 
+    runningOnTiger = YES;
+  return runningOnTiger;
+}
+
+//
+// +supportsSpotlight
+//
+// returns YES if we're running on a machine that supports spotlight (tiger or higher)
+//
++ (BOOL)supportsSpotlight
+{
+  return [self isTigerOrHigher];
+}
+
+//
+// +supportsBonjour
+//
+// returns YES if we're running on a machine that supports bonjour (formerly rendezvous, 10.2
+// or higher)
+//
++ (BOOL)supportsBonjour
+{
+  // are we on 10.2.3 or higher? The DNS resolution stuff is broken before 10.2.3
+  BOOL supportsBonjour = NO;
+  long version = 0;
+  ::Gestalt(gestaltSystemVersion, &version);
+  if (version >= 0x00001023) 
+    supportsBonjour = YES;
+  return supportsBonjour;
+}
+
 -(id)init
 {
   if ( (self = [super init]) ) {
@@ -252,10 +294,7 @@ const int kReuseWindowOnAE = 2;
   BOOL doingRendezvous = NO;
   
   if ([pm getBooleanPref:"chimera.enable_rendezvous" withSuccess:&success]) {
-    // are we on 10.2.3 or higher? The DNS resolution stuff is broken before 10.2.3
-    long systemVersion;
-    OSErr err = ::Gestalt(gestaltSystemVersion, &systemVersion);
-    if ((err == noErr) && (systemVersion >= 0x00001023)) {
+    if ([MainController supportsBonjour]) {
       [notificationCenter addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
       [notificationCenter addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
       [notificationCenter addObserver:self selector:@selector(serviceResolutionFailed:) name:NetworkServicesResolutionFailure object:nil];

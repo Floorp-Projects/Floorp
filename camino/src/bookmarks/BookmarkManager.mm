@@ -61,6 +61,7 @@
 - (void)delayedStartupItems;
 - (void)writeBookmarks:(NSNotification *)note;
 - (BookmarkFolder *)findDockMenuFolderInFolder:(BookmarkFolder *)aFolder;
+- (void)writeBookmarksMetadataForSpotlight;
 @end
 
 @implementation BookmarkManager
@@ -572,6 +573,28 @@ static unsigned gFirstUserCollection = 0;
 - (void)writeBookmarks:(NSNotification *)note
 {
   [self writePropertyListFile:mPathToBookmarkFile];
+  [self writeBookmarksMetadataForSpotlight];
+}
+
+//
+// -writeBookmarksMetadataForSpotlight
+//
+// If we're running on Tiger, write out a flat list of all bookmarks in the caches folder
+// so that Spotlight can parse them. We don't need to write our own metadata plugin, we piggyback
+// the one that Safari uses. It launches the default browser when selected. This is a fairly
+// naive implementation, writing out everything in one go.
+//
+- (void)writeBookmarksMetadataForSpotlight
+{
+  if ([MainController supportsSpotlight]) {
+    NSString* metaDataPath = [@"~/Library/Caches/Metadata/Camino" stringByExpandingTildeInPath];
+    [[NSFileManager defaultManager] removeFileAtPath:metaDataPath handler:nil];
+    [[NSFileManager defaultManager] createDirectoryAtPath:metaDataPath attributes:nil];
+    
+    // write the bookmark menu and toolbar only.
+    [[self bookmarkMenuFolder] writeBookmarksMetadataToPath:metaDataPath];
+    [[self toolbarFolder] writeBookmarksMetadataToPath:metaDataPath];
+  }
 }
 
 #pragma mark -
@@ -1075,6 +1098,5 @@ static unsigned gFirstUserCollection = 0;
   if (![dict writeToFile:[pathToFile stringByStandardizingPath] atomically:YES])
     NSLog(@"writePropertyList: Failed to write file %@",pathToFile);
 }
-
 
 @end

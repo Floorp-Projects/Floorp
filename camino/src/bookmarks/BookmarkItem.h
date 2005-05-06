@@ -98,6 +98,7 @@ enum
 -(BOOL) readSafariDictionary:(NSDictionary *)aDict;
 -(BOOL) readCaminoXML:(CFXMLTreeRef)aTreeRef;
 
+-(void)writeBookmarksMetadataToPath:(NSString*)inPath;
 -(NSDictionary *)writeNativeDictionary;
 -(NSDictionary *)writeSafariDictionary;
 -(NSString *)writeHTML:(unsigned)aPad;
