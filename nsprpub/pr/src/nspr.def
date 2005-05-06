@@ -460,3 +460,9 @@ EXPORTS ;-
 		PR_GetAddrInfoByName;
 		PR_GetCanonNameFromAddrInfo;
 ;+} NSPR_4.4;
+;+
+;+NSPR_4.6 {
+;+	global:
+		PR_GetPhysicalMemorySize;
+;+} NSPR_4.5;
+
