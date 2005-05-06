@@ -1987,7 +1987,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                   case JSOP_ANONFUNOBJ:   goto do_JSOP_ANONFUNOBJ;
                   case JSOP_BINDNAME:     goto do_JSOP_BINDNAME;
                   case JSOP_CLOSURE:      goto do_JSOP_CLOSURE;
+#if JS_HAS_EXPORT_IMPORT
                   case JSOP_EXPORTNAME:   goto do_JSOP_EXPORTNAME;
+#endif
 #if JS_HAS_XML_SUPPORT
                   case JSOP_GETMETHOD:    goto do_JSOP_GETMETHOD;
 #endif
