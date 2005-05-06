@@ -1,7 +1,9 @@
-The following packages are required for Grendel:
+The following packages are required for Grendel. You can also download the Grendel
+Library pack (http://mirrors.trfenv.com/rlk/grendel-jar-pack.zip) to get all of
+these JAR files in one big package.
 
-Java 2 (version 1.2 or newer)
-* http://java.sun.com/products/jdk/1.2/
+Java 2 (version 1.5 or newer)
+* http://java.sun.com/j2se/1.5.0/
 
 JavaBeans Activation Framework (JAF) 
 * http://java.sun.com/beans/glasgow/jaf.html
@@ -12,8 +14,8 @@ JavaMail
 Netscape Directory SDK for Java 
 * http://www.mozilla.org/directory/
 
-Java API for XML Processing
-* http://java.sun.com/xml/
-
 ORO Matcher
 * http://www.savarese.org/oro/
+
+MozCreator XUL Parser
+* http://mozcreator.mozdev.org/xulParser.html
