@@ -116,6 +116,22 @@ NSPR_API(PRInt32) PR_GetPageShift(void);
 */
 NSPR_API(PRInt32) PR_GetNumberOfProcessors( void );
 
+/*
+** PR_GetPhysicalMemorySize() -- returns the amount of system RAM
+**
+** Description:
+** PR_GetPhysicalMemorySize() determines the amount of physical RAM
+** in the system and returns the size in bytes.
+**
+** Parameters:
+**   none
+**
+** Returns:
+**   The amount of system RAM, or 0 on failure.
+**
+*/
+NSPR_API(PRUint64) PR_GetPhysicalMemorySize(void);
+
 PR_END_EXTERN_C
 
 #endif /* prsystem_h___ */

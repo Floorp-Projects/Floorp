@@ -41,7 +41,7 @@ case_sensitive=YES
 ! These replace stubs 49-52
 ! --------------------------------------------------------------------------
 ! Ident 2,8 introduced for NSPR 4.6.
-! PR_FindLibrary removed. Replaced by Stub49 (resurrected).
+! PR_FindLibrary removed. Replaced by PR_GetPhysicalMemorySize.
 ! --------------------------------------------------------------------------
 !
 SYMBOL_VECTOR=(PR_Accept=PROCEDURE)
@@ -133,7 +133,7 @@ SYMBOL_VECTOR=(PR_FD_ZERO=PROCEDURE)
 SYMBOL_VECTOR=(PR_FileDesc2NativeHandle=PROCEDURE)
 SYMBOL_VECTOR=(PR_FindFunctionSymbol=PROCEDURE)
 SYMBOL_VECTOR=(PR_FindFunctionSymbolAndLibrary=PROCEDURE)
-SYMBOL_VECTOR=(PR_VMS_Stub49=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetPhysicalMemorySize=PROCEDURE)
 SYMBOL_VECTOR=(PR_FindSymbol=PROCEDURE)
 SYMBOL_VECTOR=(PR_FindSymbolAndLibrary=PROCEDURE)
 SYMBOL_VECTOR=(PR_FloorLog2=PROCEDURE)

@@ -6,6 +6,7 @@ bsd/syscall.h
 bstring.h
 builtin.h
 c_asm.h
+cf.h
 CFBundle.h
 CFData.h
 CFDictionary.h
@@ -54,6 +55,8 @@ machine/builtins.h
 machine/clock.h
 machine/endian.h
 machine/inline.h
+mach/mach_init.h
+mach/mach_host.h
 mach-o/dyld.h
 MacTypes.h
 Math64.h
@@ -105,6 +108,7 @@ support/TLS.h
 synch.h
 sys/atomic_op.h
 syscall.h
+sys/cfgodm.h
 sys/file.h
 sys/filio.h
 sys/immu.h

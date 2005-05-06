@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,6 +38,7 @@
 #include "primpl.h"
 #include "prsystem.h"
 #include "prprf.h"
+#include "prlong.h"
 
 #if defined(BEOS)
 #include <kernel/OS.h>
@@ -45,6 +46,7 @@
 
 #if defined(OS2)
 #define INCL_DOS
+#define INCL_DOSMISC
 #include <os2.h>
 /* define the required constant if it is not already defined in the headers */
 #ifndef QSV_NUMPROCESSORS
@@ -60,13 +62,42 @@
 #include <sys/sysctl.h>
 #endif
 
+#if defined(DARWIN)
+#include <mach/mach_init.h>
+#include <mach/mach_host.h>
+#endif
+
 #if defined(HPUX)
 #include <sys/mpctl.h>
+#include <sys/pstat.h>
 #endif
 
 #if defined(XP_UNIX)
 #include <unistd.h>
 #include <sys/utsname.h>
+#endif
+
+#if defined(AIX)
+#include <cf.h>
+#include <sys/cfgodm.h>
+#endif
+
+#if defined(WIN32)
+/* This struct is not present in VC6 headers, so declare it here */
+typedef struct {
+    DWORD dwLength;
+    DWORD dwMemoryLoad;
+    DWORDLONG ullTotalPhys;
+    DWORDLONG ullAvailPhys;
+    DWORDLONG ullToalPageFile;
+    DWORDLONG ullAvailPageFile;
+    DWORDLONG ullTotalVirtual;
+    DWORDLONG ullAvailVirtual;
+    DWORDLONG ullAvailExtendedVirtual;
+} PR_MEMORYSTATUSEX;
+
+/* Typedef for dynamic lookup of GlobalMemoryStatusEx(). */
+typedef BOOL (WINAPI *GlobalMemoryStatusExFn)(PR_MEMORYSTATUSEX *);
 #endif
 
 PR_IMPLEMENT(char) PR_GetDirectorySeparator(void)
@@ -231,3 +262,101 @@ PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
 #endif
     return(numCpus);
 } /* end PR_GetNumberOfProcessors() */
+
+/*
+** PR_GetPhysicalMemorySize()
+** 
+** Implementation notes:
+**   Every platform does it a bit different.
+**     bytes is the returned value.
+**   for each platform's "if defined" section
+**     declare your local variable
+**     do your thing, assign to bytes.
+** 
+*/
+PR_IMPLEMENT(PRUint64) PR_GetPhysicalMemorySize(void)
+{
+    PRUint64 bytes = LL_ZERO;
+
+#if defined(LINUX) || defined(SOLARIS)
+
+    long pageSize = sysconf(_SC_PAGESIZE);
+    long pageCount = sysconf(_SC_PHYS_PAGES);
+    LL_I2L(bytes, pageSize * pageCount);
+
+#elif defined(HPUX)
+
+    struct pst_static info;
+    int result = pstat_getstatic(&info, sizeof(info), 1, 0);
+    if (result == 1)
+        LL_I2L(bytes, info.physical_memory * info.page_size);
+
+#elif defined(DARWIN)
+
+    struct host_basic_info hInfo;
+    mach_msg_type_number_t count;
+
+    int result = host_info(mach_host_self(),
+                           HOST_BASIC_INFO,
+                           (host_info_t) &hInfo,
+                           &count);
+    if (result == KERN_SUCCESS)
+        LL_I2L(bytes, hInfo.memory_size);
+
+#elif defined(WIN32)
+
+    /* Try to use the newer GlobalMemoryStatusEx API for Windows 2000+. */
+    GlobalMemoryStatusExFn globalMemory = (GlobalMemoryStatusExFn) NULL;
+    HMODULE module = GetModuleHandle("kernel32.dll");
+
+    if (module) {
+        globalMemory = (GlobalMemoryStatusExFn)GetProcAddress(module, "GlobalMemoryStatusEx");
+
+        if (globalMemory) {
+            PR_MEMORYSTATUSEX memStat;
+            memStat.dwLength = sizeof(memStat);
+
+            if (globalMemory(&memStat))
+                LL_UI2L(bytes, memStat.ullTotalPhys);
+        }
+    }
+
+    if (LL_EQ(bytes, LL_ZERO)) {
+        /* Fall back to the older API. */
+        MEMORYSTATUS memStat;
+        memset(&memStat, 0, sizeof(memStat));
+        GlobalMemoryStatus(&memStat);
+        LL_I2L(bytes, memStat.dwTotalPhys);
+    }
+
+#elif defined(OS2)
+
+    ULONG ulPhysMem;
+    DosQuerySysInfo(QSV_TOTPHYSMEM,
+                    QSV_TOTPHYSMEM,
+                    &ulPhysMem,
+                    sizeof(ulPhysMem));
+    LL_I2L(bytes, ulPhysMem);
+
+#elif defined(AIX)
+
+    if (odm_initialize() == 0) {
+        int how_many;
+        struct CutAt *obj = getattr("sys0", "realmem", 0, &how_many);
+        if (obj != NULL) {
+            PRUint64 kbytes;
+            LL_I2L(kbytes, atoi(obj->value));
+            LL_MUL(bytes, kbytes, 1024);
+            free(obj);
+        }
+        odm_terminate();
+    }
+
+#else
+
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+
+#endif
+
+    return bytes;
+} /* end PR_GetPhysicalMemorySize() */
