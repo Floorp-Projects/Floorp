@@ -173,22 +173,8 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
   if (!isHTTP && !isHTTPS)
     return NS_OK;
 
-  PRInt32 port;
-  uri->GetPort(&port);
-
-  nsCAutoString scheme;
-  uri->GetScheme(scheme);
-  
-  nsCAutoString host;
-  uri->GetHost(host);
-  
-  nsCAutoString faviconURI(scheme);
-  faviconURI.Append("://");
-  faviconURI.Append(host);
-  if (port != -1) {
-    faviconURI.Append(':');
-    faviconURI.AppendInt(port);
-  }
+  nsCAutoString faviconURI;
+  uri->GetPrePath(faviconURI);
   faviconURI.Append("/favicon.ico");
 
   outFaviconURI.Assign(NS_ConvertUTF8toUCS2(faviconURI));
