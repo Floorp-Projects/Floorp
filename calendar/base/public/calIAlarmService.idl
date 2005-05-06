@@ -58,8 +58,8 @@ interface calIAlarmService : nsISupports
   void removeObserver(in calIAlarmServiceObserver observer);
 
   /* Call to reschedule an alarm to be notified at a later point.
-     This will _not_ modify the event's alarmTime and will not
-     persist between sessions.
+     This _will_ modify the event's alarmTime.  It will not currently
+     change the way the alarm time was initially computed.
 
      The alarm will instead fire at "now + duration"
 

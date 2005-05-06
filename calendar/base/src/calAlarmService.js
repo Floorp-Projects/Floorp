@@ -175,12 +175,14 @@ calAlarmService.prototype = {
 
     /* calIAlarmService APIs */
     snoozeEvent: function(event, duration) {
-        if (event in this.mEvents) {
-            this.removeAlarm(event);
-        }
+        /* modify the event for a new alarm time */
         var alarmTime = jsDateToDateTime((new Date())).getInTimezone(null);
         alarmTime.addDuration(duration);
-        this.addAlarm(event, alarmTime);
+        newEvent = event.clone();
+        newEvent.alarmTime = alarmTime;
+        // calling modifyItem will cause us to get the right callback
+        // and update the alarm properly
+        newEvent.parent.modifyItem(newEvent, null);
     },
 
     addObserver: function(aObserver) {
