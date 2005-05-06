@@ -75,6 +75,9 @@ toolkit.jar:
         content/global/fontpackage.xul              (resources/content/fontpackage.xul)
         content/global/fontpackage.js               (resources/content/fontpackage.js)
         content/global/XPCNativeWrapper.js          (resources/content/XPCNativeWrapper.js) 
+#ifdef MOZ_SVG
+        content/global/svg/svgBindings.xml          (/layout/svg/base/src/resources/content/svgBindings.xml)
+#endif
 
 #ifndef MOZ_XUL_APP
 en-US.jar:

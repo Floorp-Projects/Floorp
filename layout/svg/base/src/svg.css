@@ -39,7 +39,7 @@
 @namespace url(http://www.w3.org/2000/svg);
 
 a {
-  -moz-binding:url('chrome://svg/content/svgBindings.xml#a'); 
+  -moz-binding:url('chrome://global/content/svg/svgBindings.xml#a'); 
   cursor: pointer;
 }
                
