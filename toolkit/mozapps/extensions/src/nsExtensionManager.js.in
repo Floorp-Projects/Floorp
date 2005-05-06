@@ -47,6 +47,8 @@ const nsIUpdateItem                   = Components.interfaces.nsIUpdateItem;
 const nsILocalFile                    = Components.interfaces.nsILocalFile;
 const nsILineInputStream              = Components.interfaces.nsILineInputStream;
 const nsIInstallLocation              = Components.interfaces.nsIInstallLocation;
+// XXXrstrong calling hasMoreElements on a nsIDirectoryEnumerator after
+// it has been removed will cause a crash on Mac OS X - bug 292823
 const nsIDirectoryEnumerator          = Components.interfaces.nsIDirectoryEnumerator;
 
 const PREF_EM_APP_EXTENSIONS_VERSION  = "app.extensions.version";
@@ -1093,15 +1095,20 @@ DirectoryInstallLocation.prototype = {
     var parent = file.parent;
     var entries = parent.directoryEntries;    
     try {
+      // XXXrstrong calling hasMoreElements on a nsIDirectoryEnumerator after
+      // it has been removed will cause a crash on Mac OS X - bug 292823
       while (parent && !parent.equals(this.location) &&
             !entries.hasMoreElements()) {
         parent.remove(false);
         parent = parent.parent;
+        entries = parent.directoryEntries;
       }
       if (entries instanceof nsIDirectoryEnumerator)
         entries.close();
     }
     catch (e) {
+      LOG("DirectoryInstallLocation::removeFile: failed to remove staged " + 
+          " directory = " + parent.path + ", exception = " + e + "\n");
     }
   },
   
@@ -3409,7 +3416,7 @@ ExtensionManager.prototype = {
     var itemLocation = installLocation.getItemLocation(id);
 
     if (!file)
-      file = installLocation.getStageFile(id, true);
+      file = installLocation.getStageFile(id);
     
     // If |file| is null or does not exist, the installer assumes the item is
     // a dropped-in directory.
