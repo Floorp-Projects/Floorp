@@ -492,8 +492,12 @@ sub bz_column_info_real {
     # so we have to get all the columns on the table and find 
     # the one we want.
     my $info_sth = $self->column_info(undef, undef, $table, '%');
-    my $all_cols = $info_sth->fetchall_hashref("COLUMN_NAME");
-    my $col_data = $all_cols->{$column};
+
+    # Don't use fetchall_hashref as there's a Win32 DBI bug (292821)
+    my $col_data;
+    while ($col_data = $info_sth->fetchrow_hashref) {
+        last if $col_data->{'COLUMN_NAME'} eq $column;
+    }
 
     if (!defined $col_data) {
         return undef;
