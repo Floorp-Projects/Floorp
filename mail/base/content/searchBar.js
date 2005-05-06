@@ -50,6 +50,8 @@ var gSearchInput = null;
 var gDefaultSearchViewTerms = null;
 var gQSViewIsDirty = false;
 var gHighlightedMessageText = false; 
+var gIgnoreFocus = false;
+var gIgnoreClick = false;
 var gNumTotalMessages;
 var gNumUnreadMessages;
 
@@ -523,8 +525,30 @@ function onSearchInputFocus(event)
     gSearchInput.value = "";
     gSearchInput.showingSearchCriteria = false;
   }
+  
+  if (gIgnoreFocus)
+    gIgnoreFocus = false;
+  else
+    gSearchInput.select();
+}
 
-  gSearchInput.select();
+function onSearchInputMousedown(event)
+{
+  if (gSearchInput.hasAttribute("focused")) 
+    gIgnoreClick = true;
+  else 
+  {
+    gIgnoreFocus = true;
+    gIgnoreClick = false;
+    gSearchInput.setSelectionRange(0, 0);
+  }
+}
+
+
+function onSearchInputClick(event)
+{
+  if (!gIgnoreClick && gSearchInput.selectionStart == gSearchInput.selectionEnd)
+    gSearchInput.select();
 }
 
 function onSearchInputBlur(event)
