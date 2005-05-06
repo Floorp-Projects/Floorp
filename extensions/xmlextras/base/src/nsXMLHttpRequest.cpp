@@ -1296,6 +1296,9 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
 
   channel->SetNotificationCallbacks(nsnull);
+  mNotificationCallbacks = nsnull;
+  mChannelEventSink = nsnull;
+  mProgressEventSink = nsnull;
 
   if (NS_FAILED(status)) {
     // This can happen if the server is unreachable. Other possible
@@ -1534,6 +1537,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   }
 
   // Hook us up to listen to redirects and the like
+  mChannel->GetNotificationCallbacks(getter_AddRefs(mNotificationCallbacks));
   mChannel->SetNotificationCallbacks(this);
 
   nsCOMPtr<nsIStreamListener> listener;
@@ -1839,6 +1843,14 @@ nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
       return rv;
   }
 
+  if (mChannelEventSink) {
+    nsresult rv =
+      mChannelEventSink->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
   mChannel = aNewChannel;
 
   return NS_OK;
@@ -1851,8 +1863,7 @@ nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
 NS_IMETHODIMP
 nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint64 aProgress, PRUint64 aProgressMax)
 {
-  if (mOnProgressListener)
-  {
+  if (mOnProgressListener) {
     nsCOMPtr<nsIDOMEvent> event;
     nsEvent evt(PR_TRUE, NS_EVENT_NULL); // what name do we make up here? 
     nsresult rv = CreateEvent(&evt, getter_AddRefs(event));
@@ -1866,13 +1877,21 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint
     NotifyEventListeners(mOnProgressListener, nsnull, event);
   }
 
+  if (mProgressEventSink) {
+    mProgressEventSink->OnProgress(aRequest, aContext, aProgress,
+                                   aProgressMax);
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXMLHttpRequest::OnStatus(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatus, const PRUnichar *aStatusArg)
 {
-  // nothing to do here...
+  if (mProgressEventSink) {
+    mProgressEventSink->OnStatus(aRequest, aContext, aStatus, aStatusArg);
+  }
+
   return NS_OK;
 }
 
@@ -1882,8 +1901,34 @@ nsXMLHttpRequest::OnStatus(nsIRequest *aRequest, nsISupports *aContext, nsresult
 NS_IMETHODIMP
 nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
 {
-  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
-    NS_ENSURE_ARG_POINTER(aResult);
+  // Make sure to return ourselves for the channel event sink interface and
+  // progress event sink interface, no matter what.  We can forward these to
+  // mNotificationCallbacks if it wants to get notifications for them.  But we
+  // need to see these notifications for proper functioning.
+  if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
+    mChannelEventSink = do_GetInterface(mNotificationCallbacks);
+    *aResult = NS_STATIC_CAST(nsIChannelEventSink*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  } else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
+    mProgressEventSink = do_GetInterface(mNotificationCallbacks);
+    *aResult = NS_STATIC_CAST(nsIProgressEventSink*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  // Now give mNotificationCallbacks (if non-null) a chance to return the
+  // desired interface.  Note that this means that it can override our
+  // nsIAuthPrompt impl, but that's fine, if it has a better auth prompt idea.
+  if (mNotificationCallbacks) {
+    nsresult rv = mNotificationCallbacks->GetInterface(aIID, aResult);
+    if (NS_SUCCEEDED(rv)) {
+      NS_ASSERTION(*aResult, "Lying nsIInterfaceRequestor implementation!");
+      return rv;
+    }
+  }
+  
+  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {    
     *aResult = nsnull;
 
     nsresult rv;
