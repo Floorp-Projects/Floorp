@@ -180,7 +180,9 @@ PRBool InitializeMember(JSContext * cx, ITypeInfo * pTypeInfo,
         return PR_FALSE;
     if(nameCount != 1)
         return PR_FALSE;
-    JSString* str = JS_InternUCStringN(cx, name, ::SysStringLen(name));
+    JSString* str = JS_InternUCStringN(cx,
+                                       NS_REINTERPRET_CAST(const jschar *, name),
+                                       ::SysStringLen(name));
     ::SysFreeString(name);
     if(!str)
         return PR_FALSE;

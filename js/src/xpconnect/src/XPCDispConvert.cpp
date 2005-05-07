@@ -283,7 +283,8 @@ JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
                 return JS_FALSE;
             }
 
-            CComBSTR val(JS_GetStringLength(str), chars);
+            CComBSTR val(JS_GetStringLength(str),
+                         NS_REINTERPRET_CAST(const WCHAR *, chars));
             varDest->bstrVal = val.Detach();
         }
         break;
@@ -429,7 +430,9 @@ JSBool XPCDispConvert::COMArrayToJSArray(XPCCallContext& ccx,
 inline
 jsval StringToJSVal(JSContext* cx, const PRUnichar * str, PRUint32 len)
 {
-    JSString * s = JS_NewUCStringCopyN(cx, str, len);
+    JSString * s = JS_NewUCStringCopyN(cx,
+                                       NS_REINTERPRET_CAST(const jschar *, str),
+                                       len);
     if(s)
         return STRING_TO_JSVAL(s);
     else
