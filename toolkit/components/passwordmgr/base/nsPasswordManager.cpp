@@ -1046,6 +1046,8 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
   // This function must never return a failure code or the form submit
   // will be cancelled.
 
+  NS_ENSURE_TRUE(aWindow, NS_OK);
+
   // Don't do anything if the global signon pref is disabled
   if (!SingleSignonEnabled())
     return NS_OK;

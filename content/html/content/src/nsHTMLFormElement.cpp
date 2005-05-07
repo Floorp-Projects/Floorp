@@ -883,6 +883,12 @@ nsHTMLFormElement::SubmitSubmission(nsPresContext* aPresContext,
     return NS_OK;
   }
 
+  // If there is no link handler, then we won't actually be able to submit.
+  if (!aPresContext->GetLinkHandler()) {
+    mIsSubmitting = PR_FALSE;
+    return NS_OK;
+  }
+
   // javascript URIs are not really submissions; they just call a function.
   // Also, they may synchronously call submit(), and we want them to be able to
   // do so while still disallowing other double submissions. (Bug 139798)
