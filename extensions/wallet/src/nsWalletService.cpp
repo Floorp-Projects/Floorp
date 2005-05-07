@@ -230,6 +230,9 @@ NS_IMETHODIMP nsWalletlibService::Notify(nsIContent* formNode, nsIDOMWindowInter
   if (!formNode) {
     return NS_ERROR_FAILURE;
   }
+
+  NS_ENSURE_TRUE(window, NS_OK);
+
   ::WLLT_OnSubmit(formNode, window);
   return NS_OK;
 }
