@@ -1119,10 +1119,24 @@ static unsigned gFirstUserCollection = 0;
     NSLog(@"writeSafariFile: Failed to write file %@",pathToFile);
 }
 
+//
+// -writePropertyListFile:
+//
+// Writes all the bookmarks as a plist to the given file path. Write the file in
+// two steps in case the initial write fails.
+//
 -(void)writePropertyListFile:(NSString *)pathToFile
 {
   NSDictionary* dict = [[self rootBookmarks] writeNativeDictionary];
-  if (![dict writeToFile:[pathToFile stringByStandardizingPath] atomically:YES])
+  NSString* stdPath = [pathToFile stringByStandardizingPath];
+  NSString* backupFile = [NSString stringWithFormat:@"%@.new", stdPath];
+  BOOL success = [dict writeToFile:backupFile atomically:YES];
+  if (success) {
+    NSFileManager* fm = [NSFileManager defaultManager];
+    [fm removeFileAtPath:stdPath handler:nil];               // out with the old...
+    [fm movePath:backupFile toPath:stdPath handler:nil];     //  ... in with the new
+  }
+  else
     NSLog(@"writePropertyList: Failed to write file %@",pathToFile);
 }
 
