@@ -49,7 +49,7 @@
  */
 
 
-[scriptable, uuid(D3B4A420-D5AC-11d2-806A-006008128C4E)]
+[scriptable, uuid(2b165a14-1ac1-4c32-8cc5-72e2937d5be9)]
 interface nsIMsgIdentity : nsISupports {
   /* internal preferences ID */
   attribute string key;
@@ -121,6 +121,11 @@ interface nsIMsgIdentity : nsISupports {
   attribute boolean showSaveMsgDlg;
   attribute string directoryServer;
   attribute boolean overrideGlobalPref;
+  /**
+   * If this is false, don't append the user's domain
+   * to an autocomplete address with no matches
+   */
+   attribute boolean autocompleteToMyDomain;
   /**
    * valid determines if the UI should use this identity
    * and the wizard uses this to determine whether or not

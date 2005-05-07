@@ -326,7 +326,7 @@ pref("mail.identity.default.compose_html", true);
 pref("mail.identity.default.valid", true);
 pref("mail.identity.default.fcc",true);
 pref("mail.identity.default.fcc_folder","mailbox://nobody@Local%20Folders/Sent");
-
+pref("mail.identity.default.autocompleteToMyDomain", false);
 
 // keep these defaults for backwards compatibility and migration
 
@@ -423,6 +423,8 @@ pref("mail.server.default.manualMarkMode",0); // 0 == "move to junk folder", 1 =
 // this number is divided by 100 before it is used. The classifier can be fine tuned
 // by changing this pref. Typical values are .99, .95, .90, .5, etc. 
 pref("mail.adaptivefilters.junk_threshold", 90); 
+
+pref("mail.autoComplete.highlightNonMatches", true);
 
 // if true, we'll use the password from an incoming server with
 // matching username and domain
