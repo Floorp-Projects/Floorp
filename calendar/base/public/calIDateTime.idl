@@ -59,16 +59,18 @@ interface calIDateTime : nsISupports
 
   // this thing's base PRTime value, either as UTC or as timezoneless-
   // local.  Setting this will explode the PRTime value to year/etc
-  // based on the current value of timezoneOffset.
+  // based on the current value of timezone.  PRTime is milliseconds
+  // since the epoch, in UTC.
   attribute PRTime nativeTime;
 
+  //
   // Year, fully exploded (e.g. "1989", "2004")
   attribute short year;
 
   // Month, 0-11
   attribute short month;
 
-  // Day, 1 through whatever XXX - does libical want 1.. or 0..?
+  // Day, 1-[28,29,31]
   attribute short day;
 
   // Hour, 0-23
@@ -80,22 +82,19 @@ interface calIDateTime : nsISupports
   // Second, 0-59
   attribute short second;
 
-  // whether this thing indicates a time in UTC, or in the local time
-  // zone
+  // isUtc and tiemzone together specify the timezone of this file;
+  // - if isUtc is true, timezone is ignored and this datetime is UTC.
+  // - if isUtc is false and timezone is not null, then this datetime
+  //   is in the given timezone
+  // - if isUtc is false and timezone is null, then this datetime
+  //   represents a floating time; the actual nativeTime representation
+  //   will still be as if it was in UTC
   attribute PRBool isUtc;
-
-  // if true, this calIDateTime represents a date (whole day), not a
-  // specific second
-  attribute PRBool isDate;
-
-  // an associated timezone that's the preferred way of representing
-  // this object.  If this is null/empty, then there is no preferred
-  // timezone, and UTC or localtime is assumed (based on isUtc).  If
-  // this is non-null when assigned, isUtc is automatically cleared.
   attribute AUTF8String timezone;
 
-  // the offset in minutes from UTC that this date is stored in.
-  attribute PRInt32 timezoneOffset;
+  // if true, this calIDateTime represents a date (whole day), not a
+  // specific hour/minute/second
+  attribute PRBool isDate;
 
   //
   // computed values
@@ -161,6 +160,12 @@ interface calIDateTime : nsISupports
   readonly attribute ACString icalString;
 
   /* JS only:
+   * // Setting jsDate via a JavaScript Date object will set
+   * // the calIDateTime to the jsDate's time ***in UTC***.
+   * // There's no way for us to recover TZ info from a jsDate,
+   * // so we always pull it out as UTC, and force the calIDateTime's
+   * // timezone to UTC.
    * attribute Date jsDate;
+   *
    */
 };

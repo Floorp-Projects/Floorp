@@ -141,7 +141,6 @@ calDateTime::Reset()
     mIsUtc = PR_FALSE;
     mWeekday = 0;
     mYearday = 0;
-    mTimezoneOffset = 0;
     mIsDate = PR_FALSE;
 
     return NS_OK;
@@ -157,7 +156,6 @@ CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Minute)
 CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Second)
 CAL_VALUETYPE_ATTR(calDateTime, PRBool, IsUtc)
 CAL_VALUETYPE_ATTR(calDateTime, PRBool, IsDate)
-CAL_VALUETYPE_ATTR(calDateTime, PRInt32, TimezoneOffset)
 
 CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRInt16, Weekday)
 CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRInt16, Yearday)
@@ -296,7 +294,7 @@ calDateTime::GetInTimezone(const char *aTimezone, calIDateTime **aResult)
 
         ToIcalTime(&icalt);
 
-        if (!aTimezone) {
+        if (!aTimezone || strcmp(aTimezone, "UTC") == 0 || strcmp(aTimezone, "utc") == 0) {
             destzone = icaltimezone_get_utc_timezone();
         } else {
             nsCOMPtr<calIICSService> ics = do_GetService(kCalICSService);
@@ -596,21 +594,8 @@ calDateTime::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                 LL_MUL(utcTime, utcTime, thousands);
 
                 mIsUtc = PR_TRUE;
-
-                jsval tzoffsetval;
-                if (!JS_CallFunctionName(cx, dobj, "getTimezoneOffset", 0, nsnull, &tzoffsetval)) {
-                    mValid = PR_FALSE;
-                } else {
-                    JS_ValueToECMAInt32(cx, tzoffsetval, (int32*)&mTimezoneOffset);
-                    mTimezone.AssignLiteral("");
-                    nsresult rv = SetNativeTime(utcTime);
-
-                    if (NS_FAILED(rv)) {
-                        mValid = PR_FALSE;
-                    } else {
-                        mValid = PR_TRUE;
-                    }
-                }
+                mTimezone.Truncate();
+                mValid = PR_TRUE;
             }
 
             *_retval = PR_TRUE;

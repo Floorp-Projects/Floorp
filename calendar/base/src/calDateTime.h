@@ -47,6 +47,7 @@
 #include "calIDateTime.h"
 
 struct icaltimetype;
+struct _icaltimezone;
 
 class calDateTime : public calIDateTime,
                     public nsIXPCScriptable
@@ -81,12 +82,12 @@ protected:
     PRBool mIsUtc;
     PRBool mIsDate;
     nsCString mTimezone;
-    PRInt32 mTimezoneOffset;
 
     PRInt16 mWeekday;
     PRInt16 mYearday;
 
     void FromIcalTime(icaltimetype *icalt);
+    struct _icaltimezone* GetIcalTZ(const nsACString& tzid);
 
     PRTime mLastModified;
 };
