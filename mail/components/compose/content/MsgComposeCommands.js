@@ -1423,7 +1423,7 @@ function ComposeStartup(recycled, aParams)
     : 0;
 
   if (gAutoSaveInterval)
-    gAutoSaveTimeout = setTimeout("AutoSave()", gAutoSaveInterval);
+    gAutoSaveTimeout = setTimeout(AutoSave, gAutoSaveInterval);
 }
 
 // The new, nice, simple way of getting notified when a new editor has been created
@@ -1706,6 +1706,10 @@ function GenericSendMessage( msgType )
             return;
          }
 
+         // check if e-mail addresses are complete, in case user
+         // has turned off autocomplete to local domain.
+         if (!CheckValidEmailAddress(msgCompFields.to, msgCompFields.cc, msgCompFields.bcc))
+          return;
          //Check if we have a subject, else ask user for confirmation
          if (subject == "")
          {
@@ -1714,7 +1718,7 @@ function GenericSendMessage( msgType )
              var result = {value:sComposeMsgsBundle.getString("defaultSubject")};
              if (gPromptService.prompt(
                 window,
-                sComposeMsgsBundle.getString("subjectDlogTitle"),
+                sComposeMsgsBundle.getString("sendMsgTitle"),
                 sComposeMsgsBundle.getString("subjectDlogMessage"),
                 result,
                 null,
@@ -1880,6 +1884,28 @@ function GenericSendMessage( msgType )
   }
   else
     dump("###SendMessage Error: composeAppCore is null!\n");
+}
+
+function CheckValidEmailAddress(to, cc, bcc)
+{
+  var invalidStr = null;
+  // crude check that the to, cc, and bcc fields contain at least one '@'.
+  // We could parse each address, but that might be overkill.
+  if (to.length > 0 && (to.indexOf("@") <= 0 || to.indexOf("@") == to.length - 1))
+    invalidStr = to;
+  else if (cc.length > 0 && (cc.indexOf("@") <= 0 || cc.indexOf("@") == cc.length - 1))
+    invalidStr = cc;
+  else if (bcc.length > 0 && (bcc.indexOf("@") <= 0 || bcc.indexOf("@") == bcc.length - 1))
+    invalidStr = bcc;
+  if (invalidStr)
+  {
+    var errorTitle = sComposeMsgsBundle.getString("sendMsgTitle");
+    var errorMsg = sComposeMsgsBundle.getFormattedString("addressInvalid", [invalidStr], 1);
+    if (gPromptService)
+      gPromptService.alert(window, errorTitle, errorMsg);
+    return false;
+  } 
+  return true;
 }
 
 function SendMessage()
@@ -2898,6 +2924,8 @@ function LoadIdentity(startup)
             gAutocompleteSession = Components.classes["@mozilla.org/autocompleteSession;1?type=addrbook"].getService(Components.interfaces.nsIAbAutoCompleteSession);
           if (gAutocompleteSession)
             setDomainName();
+          if (sPrefs.getBoolPref("mail.autoComplete.highlightNonMatches"))
+            document.getElementById('addressCol2#1').highlightNonMatches = true;
 
           try {
               setupLdapAutocompleteSession();
@@ -2913,9 +2941,12 @@ function LoadIdentity(startup)
 
 function setDomainName()
 {
-  var emailAddr = gCurrentIdentity.email;
-  var start = emailAddr.lastIndexOf("@");
-  gAutocompleteSession.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
+  if (gCurrentIdentity.autocompleteToMyDomain)
+  {
+    var emailAddr = gCurrentIdentity.email;
+    var start = emailAddr.lastIndexOf("@");
+    gAutocompleteSession.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
+  }
 }
 
 function setupAutocomplete()
@@ -2931,6 +2962,9 @@ function setupAutocomplete()
       // honor it as well
       //
       try {
+          if (sPrefs.getBoolPref("mail.autoComplete.highlightNonMatches"))
+            document.getElementById('addressCol2#1').highlightNonMatches = true;
+
           if (sPrefs.getIntPref("mail.autoComplete.commentColumn")) {              
               document.getElementById('addressCol2#1').showCommentColumn = true;
           }
@@ -3386,7 +3420,7 @@ function AutoSave()
   if (gMsgCompose.editor && (gContentChanged || gMsgCompose.bodyModified))
     GenericSendMessage(nsIMsgCompDeliverMode.AutoSaveAsDraft);
 
-  gAutoSaveTimeout = setTimeout("AutoSave()", gAutoSaveInterval);
+  gAutoSaveTimeout = setTimeout(AutoSave, gAutoSaveInterval);
 }
 
 function InitEditor()
