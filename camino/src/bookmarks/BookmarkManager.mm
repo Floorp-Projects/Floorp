@@ -197,17 +197,6 @@ static unsigned gFirstUserCollection = 0;
     [[self bookmarkMenuFolder] setTitle:NSLocalizedString(@"Bookmark Menu","Bookmark Menu")]; 
     // don't do this until after we've read in the bookmarks
     mUndoManager = [[NSUndoManager alloc] init];
-    // Generic notifications for Bookmark Client
-    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-    [nc addObserver:self selector:@selector(bookmarkAdded:) name:BookmarkFolderAdditionNotification object:nil];
-    [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
-    [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
-    [nc addObserver:self selector:@selector(writeBookmarks:) name:WriteBookmarkNotification object:nil];
-
-    // pitch everything in the cache and start over. Changes made from here will be incremental. It's
-    // easier this way in case someone changed the plist directly, we know at startup we always have
-    // the most up-to-date cache.
-    [self writeBookmarksMetadataForSpotlight];
   }
   
   return self;
@@ -257,6 +246,20 @@ static unsigned gFirstUserCollection = 0;
       [[allBookmarks objectAtIndex:i] performSelector:@selector(refreshIcon) withObject:nil afterDelay:delay];
     }
   }
+
+  // Generic notifications for Bookmark Client. Don't set these up until after all the smart
+  // folders have loaded. Even though we coalesce bookmark update notifications down into a single
+  // message, there's no need to write out even once for any of these changes.
+  NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+  [nc addObserver:self selector:@selector(bookmarkAdded:) name:BookmarkFolderAdditionNotification object:nil];
+  [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
+  [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
+  [nc addObserver:self selector:@selector(writeBookmarks:) name:WriteBookmarkNotification object:nil];
+
+  // pitch everything in the metadata cache and start over. Changes made from here will be incremental. It's
+  // easier this way in case someone changed the bm plist directly, we know at startup we always have
+  // the most up-to-date cache.
+  [self writeBookmarksMetadataForSpotlight];
 
   // broadcast to everyone interested that we're loaded and ready for public consumption
   [[NSNotificationCenter defaultCenter] postNotificationName:[BookmarkManager managerStartedNotification] object:nil];
@@ -551,13 +554,16 @@ static unsigned gFirstUserCollection = 0;
 //
 - (void)bookmarkAdded:(NSNotification *)note
 {
+  // we only care about additions to non-smart folders.
   BookmarkItem* bmItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
-  if ([MainController supportsSpotlight]) {
-    BookmarkFolder* addedTo = [note object];
-    if (![addedTo isSmartFolder] && [bmItem isKindOfClass:[Bookmark class]])
-      [bmItem writeBookmarksMetadataToPath:mMetadataPath];
+  BookmarkFolder* addedTo = [note object];
+  if (![addedTo isSmartFolder]) {
+    if ([MainController supportsSpotlight]) {
+      if ([bmItem isKindOfClass:[Bookmark class]])
+        [bmItem writeBookmarksMetadataToPath:mMetadataPath];
+    }
+    [self bookmarkChanged:nil];
   }
-  [self bookmarkChanged:nil];
 }
 
 - (void)bookmarkRemoved:(NSNotification *)note
@@ -582,11 +588,14 @@ static unsigned gFirstUserCollection = 0;
 
 - (void)bookmarkChanged:(NSNotification *)aNote
 {
+  // |aNote| is non-nil when a bookmark has really changed, not when we're using
+  // it from other routines to force a write bookmark notification. 
   if (aNote) {
-    // have this item rewrite its metadata. |aNote| is non-nil when a bookmark has really
-    // changed, not when we're using it from other routines to force a write bookmark notification. 
+    // don't write out the bookmark file or metadata for changes in a smart container.
+    id item = [aNote object];
+    if ([[item parent] isSmartFolder])
+      return;
     if ([MainController supportsSpotlight]) {
-      id item = [aNote object];
       if ([item isKindOfClass:[Bookmark class]])
         [item writeBookmarksMetadataToPath:mMetadataPath];
     }
