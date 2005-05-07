@@ -808,7 +808,7 @@ NewControl(const char *pluginType,
             //
             // The first example is the proper way
 
-            const kCLSIDLen = 256;
+            const int kCLSIDLen = 256;
             char szCLSID[kCLSIDLen];
             if (strlen(argv[i]) < sizeof(szCLSID))
             {
