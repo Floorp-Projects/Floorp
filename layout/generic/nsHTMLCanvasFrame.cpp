@@ -63,32 +63,13 @@ nsHTMLCanvasFrame::~nsHTMLCanvasFrame()
 {
 }
 
-NS_IMETHODIMP
-nsHTMLCanvasFrame::Init(nsPresContext*   aPresContext,
-                        nsIContent*      aContent,
-                        nsIFrame*        aParent,
-                        nsStyleContext*  aContext,
-                        nsIFrame*        aPrevInFlow)
-{
-  nsCOMPtr<nsICanvasElement> canvas (do_QueryInterface(aContent));
-  NS_ENSURE_TRUE(canvas, NS_ERROR_FAILURE);
-
-  nsresult rv = canvas->GetCanvasImageContainer(getter_AddRefs(mImageContainer));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mImageContainer) {
-    PRInt32 w, h;
-    mImageContainer->GetWidth(&w);
-    mImageContainer->GetHeight(&h);
-
-    mCanvasSize.SizeTo(w, h);
-  }
-
-  rv = nsSplittableFrame::Init(aPresContext, aContent, aParent,
-                               aContext, aPrevInFlow);
-
-  return rv;
-}
+// We really want a PR_MINMAX to go along with PR_MIN/PR_MAX
+#define MINMAX(_value,_min,_max) \
+    ((_value) < (_min)           \
+     ? (_min)                    \
+     : ((_value) > (_max)        \
+        ? (_max)                 \
+        : (_value)))
 
 NS_IMETHODIMP
 nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
@@ -106,13 +87,43 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
 
+  nsCOMPtr<nsICanvasElement> canvas(do_QueryInterface(GetContent()));
+  NS_ENSURE_TRUE(canvas, NS_ERROR_FAILURE);
+
+  nsresult rv = canvas->GetCanvasImageContainer(getter_AddRefs(mImageContainer));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   float p2t = GetPresContext()->PixelsToTwips();
 
-  aMetrics.width = NSIntPixelsToTwips(mCanvasSize.width, p2t);
-  aMetrics.height = NSIntPixelsToTwips(mCanvasSize.height, p2t);
+  if (mImageContainer) {
+    PRInt32 w, h;
+    mImageContainer->GetWidth(&w);
+    mImageContainer->GetHeight(&h);
 
-  aMetrics.width += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
-  aMetrics.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+    mCanvasSize.SizeTo(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));
+  } else {
+    mCanvasSize.SizeTo(0, 0);
+  }
+
+  if (aReflowState.mComputedWidth == NS_INTRINSICSIZE)
+    aMetrics.width = mCanvasSize.width;
+  else
+    aMetrics.width = aReflowState.mComputedWidth;
+
+  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE)
+    aMetrics.height = mCanvasSize.height;
+  else
+    aMetrics.height = aReflowState.mComputedHeight;
+
+  // clamp
+  aMetrics.height = MINMAX(aMetrics.height, aReflowState.mComputedMinHeight, aReflowState.mComputedMaxHeight);
+  aMetrics.width = MINMAX(aMetrics.width, aReflowState.mComputedMinWidth, aReflowState.mComputedMaxWidth);
+
+  // stash this away so we can compute our inner area later
+  mBorderPadding   = aReflowState.mComputedBorderPadding;
+
+  aMetrics.width += mBorderPadding.left + mBorderPadding.right;
+  aMetrics.height += mBorderPadding.top + mBorderPadding.bottom;
 
   if (mPrevInFlow) {
     nscoord y = GetContinuationOffset(&aMetrics.width);
@@ -144,6 +155,19 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
+// FIXME taken from nsImageFrame, but then had splittable frame stuff
+// removed.  That needs to be fixed.
+nsRect 
+nsHTMLCanvasFrame::GetInnerArea() const
+{
+  nsRect r;
+  r.x = mBorderPadding.left;
+  r.y = mBorderPadding.top;
+  r.width = mRect.width - mBorderPadding.left - mBorderPadding.right;
+  r.height = mRect.height - mBorderPadding.top - mBorderPadding.bottom;
+  return r;
+}
+
 NS_IMETHODIMP
 nsHTMLCanvasFrame::Paint(nsPresContext*       aPresContext,
                          nsIRenderingContext& aRenderingContext,
@@ -162,21 +186,25 @@ nsHTMLCanvasFrame::Paint(nsPresContext*       aPresContext,
       return NS_OK;
     }
 
-    if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
-      nsPoint dstpt = GetPosition();
-      float p2t = aPresContext->PixelsToTwips();
-      nsRect src(0,
-                 0,
-                 NSIntPixelsToTwips(mCanvasSize.width, p2t),
-                 NSIntPixelsToTwips(mCanvasSize.height, p2t));
+    // from nsImageFrame
+    // First paint background and borders, which should be in the
+    // FOREGROUND or BACKGROUND paint layer if the element is
+    // inline-level or block-level, respectively (bug 36710).  (See
+    // CSS2 9.5, which is the rationale for paint layers.)
+    const nsStyleDisplay* display = GetStyleDisplay();
+    nsFramePaintLayer backgroundLayer = display->IsBlockLevel()
+      ? NS_FRAME_PAINT_LAYER_BACKGROUND
+      : NS_FRAME_PAINT_LAYER_FOREGROUND;
 
-      nsRect dst(0, 0, src.width, src.height);
+    if (aWhichLayer == backgroundLayer) {
+      PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
+    }
 
-      if (mImageContainer) {
-        aRenderingContext.DrawImage(mImageContainer, src, dst);
-      } else {
-        aRenderingContext.FillRect(dst);
-      }
+    if ((aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) && mImageContainer) {
+      nsRect inner = GetInnerArea();
+      nsRect src(0, 0, mCanvasSize.width, mCanvasSize.height);
+
+      aRenderingContext.DrawImage(mImageContainer, src, inner);
     }
   }
 
@@ -247,6 +275,12 @@ nsHTMLCanvasFrame::GetAccessible(nsIAccessible** aAccessible)
 #endif
 
 #ifdef DEBUG
+NS_IMETHODIMP
+nsHTMLCanvasFrame::GetFrameName(nsAString& aResult) const
+{
+  return MakeFrameName(NS_LITERAL_STRING("HTMLCanvas"), aResult);
+}
+
 NS_IMETHODIMP
 nsHTMLCanvasFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {

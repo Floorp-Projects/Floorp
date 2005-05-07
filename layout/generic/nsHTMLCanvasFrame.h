@@ -53,12 +53,6 @@ class nsHTMLCanvasFrame : public nsSplittableFrame
 public:
   nsHTMLCanvasFrame();
 
-  // nsISupports
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
-                  nsIFrame*        aPrevInFlow);
   NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
@@ -76,12 +70,15 @@ public:
                                 nsEvent* aEvent,
                                 nsIContent** aContent);
 
+  nsRect GetInnerArea() const;
+
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
 
   virtual nsIAtom* GetType() const;
 #ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
   NS_IMETHOD List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
 #endif
 
