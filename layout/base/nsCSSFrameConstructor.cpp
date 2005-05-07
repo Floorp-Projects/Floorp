@@ -5394,6 +5394,9 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     rv = NS_NewIsIndexFrame(mPresShell, &newFrame);
   }
   else if (nsHTMLAtoms::canvas == aTag) {
+    if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
+      ProcessPseudoFrames(aState, aFrameItems); 
+    }
     isReplaced = PR_TRUE;
     rv = NS_NewHTMLCanvasFrame(mPresShell, &newFrame);
   }
@@ -8484,8 +8487,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   // then don't do any processing now
   nsIAtom* frameType = parentFrame->GetType();
   if (frameType == nsLayoutAtoms::objectFrame ||
-      frameType == nsLayoutAtoms::tableColFrame) {
-    // This handles APPLET, EMBED, OBJECT and COL
+      frameType == nsLayoutAtoms::tableColFrame ||
+      frameType == nsLayoutAtoms::canvasFrame) {
+    // This handles APPLET, EMBED, OBJECT, COL, and CANVAS
     return NS_OK;
   }
   // Deal with inner/outer tables, fieldsets
@@ -9071,8 +9075,9 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     // then don't do any processing now
     nsIAtom* frameType = parentFrame->GetType();
     if (frameType == nsLayoutAtoms::objectFrame ||
-        frameType == nsLayoutAtoms::tableColFrame) {
-      // This handles APPLET, EMBED, OBJECT and COL
+        frameType == nsLayoutAtoms::tableColFrame ||
+        frameType == nsLayoutAtoms::canvasFrame) {
+      // This handles APPLET, EMBED, OBJECT, COL, and CANVAS
       return NS_OK;
     }
     // Deal with inner/outer tables, fieldsets

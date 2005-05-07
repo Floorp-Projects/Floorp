@@ -53,6 +53,9 @@
 
 #include "nsICanvasRenderingContextInternal.h"
 
+#define DEFAULT_CANVAS_WIDTH 300
+#define DEFAULT_CANVAS_HEIGHT 200
+
 class nsHTMLCanvasElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLCanvasElement,
                             public nsICanvasElement
@@ -83,6 +86,7 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   PRBool ParseAttribute(nsIAtom* aAttribute, const nsAString& aValue, nsAttrValue& aResult);
+  nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute, PRInt32 aModType) const;
 
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
@@ -94,11 +98,8 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
-
-  nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                      PRInt32 aModType) const;
 protected:
-  nsSize GetWidthHeight();
+  nsIntSize GetWidthHeight();
   nsresult UpdateImageContainer();
   nsresult UpdateContext();
 
@@ -135,63 +136,35 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_DOM_CLONENODE(nsHTMLCanvasElement)
 
-nsSize
+nsIntSize
 nsHTMLCanvasElement::GetWidthHeight()
 {
-  nsSize size(0,0);
+  nsIntSize size(0,0);
   const nsAttrValue* value;
   PRInt32 k, rv;
 
-  if ((value = GetParsedAttr(nsHTMLAtoms::width))) {
-    if (value->Type() == nsAttrValue::eInteger) {
+  if ((value = GetParsedAttr(nsHTMLAtoms::width)) &&
+      value->Type() == nsAttrValue::eInteger)
+  {
       size.width = value->GetIntegerValue();
-    } else if (value->Type() == nsAttrValue::eString) {
-      k = value->GetStringValue().ToInteger(&rv);
-      if (NS_SUCCEEDED(rv))
-        size.width = k;
-    }
   }
 
-  if ((value = GetParsedAttr(nsHTMLAtoms::height))) {
-    if (value->Type() == nsAttrValue::eInteger) {
+  if ((value = GetParsedAttr(nsHTMLAtoms::height)) &&
+      value->Type() == nsAttrValue::eInteger)
+  {
       size.height = value->GetIntegerValue();
-    } else if (value->Type() == nsAttrValue::eString) {
-      k = value->GetStringValue().ToInteger(&rv);
-      if (NS_SUCCEEDED(rv))
-        size.height = k;
-    }
   }
+
+  if (size.width <= 0)
+    size.width = DEFAULT_CANVAS_WIDTH;
+  if (size.height <= 0)
+    size.height = DEFAULT_CANVAS_HEIGHT;
 
   return size;
 }
 
-NS_IMETHODIMP
-nsHTMLCanvasElement::GetHeight(PRInt32* aHeight)
-{
-  *aHeight = GetWidthHeight().height;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLCanvasElement::SetHeight(PRInt32 aHeight)
-{
-  return nsGenericHTMLElement::SetIntAttr(nsHTMLAtoms::height, aHeight);
-}
-
-NS_IMETHODIMP
-nsHTMLCanvasElement::GetWidth(PRInt32* aWidth)
-{
-  *aWidth = GetWidthHeight().width;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLCanvasElement::SetWidth(PRInt32 aWidth)
-{
-  return nsGenericHTMLElement::SetIntAttr(nsHTMLAtoms::width, aWidth);
-}
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLCanvasElement, Width, width, DEFAULT_CANVAS_WIDTH)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLCanvasElement, Height, height, DEFAULT_CANVAS_HEIGHT)
 
 nsresult
 nsHTMLCanvasElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -204,9 +177,6 @@ nsHTMLCanvasElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       (aName == nsHTMLAtoms::width || aName == nsHTMLAtoms::height))
   {
     rv = UpdateImageContainer();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = UpdateContext();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -222,7 +192,7 @@ nsHTMLCanvasElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::width ||
       aAttribute == nsHTMLAtoms::height)
   {
-    NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
+    NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   }
   return retval;
 }
@@ -231,8 +201,6 @@ static void
 MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
@@ -255,9 +223,7 @@ nsHTMLCanvasElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {
     sCommonAttributeMap,
-    sImageMarginAttributeMap,
-    sImageBorderAttributeMap,
-    sImageAlignAttributeMap
+    sImageMarginAttributeMap
   };
 
   return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
@@ -284,6 +250,8 @@ NS_IMETHODIMP
 nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
                                 nsISupports **aContext)
 {
+  nsresult rv;
+
   if (mCurrentContextId.IsEmpty()) {
     nsCString ctxId;
     ctxId.Assign(NS_LossyConvertUTF16toASCII(aContextId));
@@ -303,8 +271,10 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
     nsCString ctxString("@mozilla.org/content/canvas-rendering-context;1?id=");
     ctxString.Append(ctxId);
 
-    mCurrentContext = do_CreateInstance(nsPromiseFlatCString(ctxString).get());
-    if (!mCurrentContext)
+    mCurrentContext = do_CreateInstance(nsPromiseFlatCString(ctxString).get(), &rv);
+    if (rv == NS_ERROR_OUT_OF_MEMORY)
+      return NS_ERROR_OUT_OF_MEMORY;
+    if (NS_FAILED(rv))
       return NS_ERROR_INVALID_ARG;
 
     nsCOMPtr<nsICanvasRenderingContextInternal> internalctx(do_QueryInterface(mCurrentContext));
@@ -313,17 +283,15 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
       return NS_ERROR_FAILURE;
     }
 
-    nsresult rv = internalctx->Init(this);
+    rv = internalctx->Init(this);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = UpdateImageContainer();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = UpdateContext();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     mCurrentContextId.Assign(aContextId);
   } else if (!mCurrentContextId.Equals(aContextId)) {
+    //XXX eventually allow for more than one active context on a given canvas
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -336,10 +304,7 @@ nsHTMLCanvasElement::UpdateImageContainer()
 {
   nsresult rv = NS_OK;
 
-  nsSize sz = GetWidthHeight();
-  if (sz.width == 0 || sz.height == 0)
-    return NS_OK;
-
+  nsIntSize sz = GetWidthHeight();
   PRInt32 w = 0, h = 0;
 
   if (mImageFrame) {
@@ -365,7 +330,7 @@ nsHTMLCanvasElement::UpdateImageContainer()
     mImageContainer->AppendFrame(mImageFrame);
   }
 
-  return rv;
+  return UpdateContext();
 }
 
 nsresult
@@ -386,8 +351,12 @@ nsHTMLCanvasElement::UpdateContext()
 NS_IMETHODIMP
 nsHTMLCanvasElement::GetCanvasImageContainer (imgIContainer **aImageContainer)
 {
-  if (!mImageContainer)
-    UpdateImageContainer();
+  nsresult rv;
+
+  if (!mImageContainer) {
+    rv = UpdateImageContainer();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   NS_IF_ADDREF(*aImageContainer = mImageContainer);
   return NS_OK;
