@@ -78,7 +78,7 @@ CommonConstructor(JSContext *cx, int name, JSObject *obj, uintN argc,
     }
     PRUint32 len;
     jschar * className = xpc_JSString2String(ccx, argv[0], &len);
-    CComBSTR bstrClassName(len, className);
+    CComBSTR bstrClassName(len, NS_REINTERPRET_CAST(const WCHAR *, className));
     if(!className)
     {
         XPCThrower::Throw(NS_ERROR_XPC_COM_INVALID_CLASS_ID, ccx);
@@ -156,7 +156,7 @@ ActiveXSupports(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     PRUint32 len;
     jschar * className = xpc_JSString2String(ccx, argv[0], &len);
-    CComBSTR bstrClassName(len, className);
+    CComBSTR bstrClassName(len, NS_REINTERPRET_CAST(const WCHAR *, className));
     if(!className)
     {
         XPCThrower::Throw(NS_ERROR_XPC_COM_INVALID_CLASS_ID, ccx);
