@@ -136,7 +136,13 @@
       <property name="autoFillAfterMatch"
                 onset="this.setAttribute('autoFillAfterMatch', val); return val;"
                 onget="return this.getAttribute('autoFillAfterMatch') == 'true';"/>
-                
+
+      <!--  if this attribute is set, allow different style for 
+            non auto-completed lines -->
+      <property name="highlightNonMatches"
+                onset="this.setAttribute('highlightNonMatches', val); return val;"
+                onget="return this.getAttribute('highlightNonMatches') == 'true';"/>
+
       <!-- toggles a second column in the results list which contains
            the string in the comment field of each autocomplete result -->
       <property name="showCommentColumn"
@@ -528,6 +534,7 @@
           this.mFailureCount = 0;
           this.mFailureItems = 0;
           this.mDefaultMatchFilled = false; // clear out our prefill state.
+          this.removeAttribute("noMatchesFound");
 
           // tell each session to start searching...
           for (var name in this.mSessions)
@@ -664,6 +671,9 @@
           else
             this.removeAttribute("nomatch");
           
+          if (!this.mDefaultMatchFilled && this.highlightNonMatches)
+            this.setAttribute("noMatchesFound", true);
+          
           // if we have processed all of our searches, and none of them gave us a default index,
           // then we should try to auto fill the input field with the first match. 
           // note: autoFillInput is smart enough to kick out if we've already prefilled something...
@@ -731,6 +741,7 @@
           }
           
           this.mNeedToComplete = false;
+          this.removeAttribute("noMatchesFound");
           this.clearTimer();
 
           if (aFireTextCommand)
@@ -831,6 +842,7 @@
           var str = this.value;
           this.currentSearchString = str;
           this.resultsPopup.selectedIndex = null;
+          this.removeAttribute("noMatchesFound");
           
           // We want to autocomplete only if the user is editing at the end of the text
           if (this.mInputElt.selectionEnd >= str.length)
