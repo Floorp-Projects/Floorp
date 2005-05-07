@@ -907,7 +907,7 @@ var gExtensionsViewController = {
                              .getService(Components.interfaces.nsIPrefBranch);
         var currentTheme = pref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
         if (aSelectedItem.getAttribute("internalName") == currentTheme)
-          this.cmd_useTheme(document.getElementById("urn:mozilla:theme:{972ce4c6-7e08-4474-a285-3208198ce6fd}"));
+          this.cmd_useTheme(document.getElementById(PREFIX_ITEM_URI + "{972ce4c6-7e08-4474-a285-3208198ce6fd}"));
       }
       gExtensionManager.uninstallItem(getIDFromResourceURI(selectedID));
       
