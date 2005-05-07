@@ -119,17 +119,18 @@ OS_LIBS += -lc
 endif
 
 ifeq ($(OS_ARCH),AIX)
+OS_LIBS		= -lodm -lcfg
 ifeq ($(CLASSIC_NSPR),1)
 ifeq ($(OS_RELEASE),4.1)
-OS_LIBS		= -lsvld -lc
+OS_LIBS		+= -lsvld -lc
 else
-OS_LIBS		= -ldl -lc
+OS_LIBS		+= -ldl -lc
 endif
 else
 ifeq ($(OS_RELEASE),4.1)
-OS_LIBS		= -lpthreads -lsvld -lC_r -lC -lc_r -lm /usr/lib/libc.a
+OS_LIBS		+= -lpthreads -lsvld -lC_r -lC -lc_r -lm /usr/lib/libc.a
 else
-OS_LIBS		= -lpthreads -ldl -lC_r -lC -lc_r -lm /usr/lib/libc.a
+OS_LIBS		+= -lpthreads -ldl -lC_r -lC -lc_r -lm /usr/lib/libc.a
 endif
 endif
 endif
