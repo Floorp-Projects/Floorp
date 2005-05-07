@@ -87,7 +87,7 @@
 ],
 
 'search/search-specific.html.tmpl' => [
-  's',
+  'status.name',
 ],
 
 'search/tabs.html.tmpl' => [

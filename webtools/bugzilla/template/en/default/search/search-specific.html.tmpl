@@ -59,10 +59,13 @@ for "crash secure SSL flash".
     </td>
     <td>
       <select name="bug_status" id="bug_status">
-        [% FOREACH s = ['open', 'closed', 'all'] %]
-            <option value="__[% s %]__" 
-                  [% " selected" IF default.bug_status.0 == "__${s}__" %]>
-            [% s %]
+        [% statuses = [ { name = 'open', label = "Open" },
+                        { name = 'closed', label = "Closed" },
+                        { name = 'all', label = "All" } ] %]
+        [% FOREACH status = statuses %]
+            <option value="__[% status.name %]__" 
+                  [% " selected" IF default.bug_status.0 == "__${status.name}__" %]>
+            [% status.label FILTER html %]
           </option>
         [% END %]
       </select>
