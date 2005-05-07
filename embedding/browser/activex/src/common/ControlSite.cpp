@@ -276,7 +276,7 @@ HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl,
         // Test if the code base ends in #version=a,b,c,d
         DWORD dwFileVersionMS = 0xffffffff;
         DWORD dwFileVersionLS = 0xffffffff;
-        wchar_t *szHash = wcsrchr(szCodebase, wchar_t('#'));
+        const wchar_t *szHash = wcsrchr(szCodebase, wchar_t('#'));
         if (szHash)
         {
             if (wcsnicmp(szHash, L"#version=", 9) == 0)
