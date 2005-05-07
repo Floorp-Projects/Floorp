@@ -564,7 +564,7 @@ BOOL nsAbWinHelper::SetPropertyUString(const nsMapiEntry& aObject, ULONG aProper
 
     value.ulPropTag = aPropertyTag ;
     if (PROP_TYPE(aPropertyTag) == PT_UNICODE) {
-        value.Value.lpszW = NS_CONST_CAST(WORD *, aValue) ;
+        value.Value.lpszW = NS_CONST_CAST(WCHAR *, aValue) ;
     }
     else if (PROP_TYPE(aPropertyTag) == PT_STRING8) {
         alternativeValue.AssignWithConversion(aValue) ;
@@ -592,7 +592,7 @@ BOOL nsAbWinHelper::SetPropertiesUString(const nsMapiEntry& aObject, const ULONG
     for (i = 0 ; i < aNbProperties ; ++ i) {
         values [currentValue].ulPropTag = aPropertiesTag [i] ;
         if (PROP_TYPE(aPropertiesTag [i]) == PT_UNICODE) {
-            values [currentValue ++].Value.lpszW = NS_CONST_CAST(WORD *, aValues [i].get()) ;
+            values [currentValue ++].Value.lpszW = NS_CONST_CAST(WCHAR *, aValues [i].get()) ;
         }
         else if (PROP_TYPE(aPropertiesTag [i]) == PT_STRING8) {
             alternativeValue.AssignWithConversion(aValues [i].get()) ;
@@ -681,7 +681,7 @@ BOOL nsAbWinHelper::CreateEntry(const nsMapiEntry& aParent, nsMapiEntry& aNewEnt
     displayName.ulPropTag = PR_DISPLAY_NAME_W ;
     tempName.AssignLiteral("__MailUser__") ;
     tempName.AppendInt(mEntryCounter ++) ;
-    displayName.Value.lpszW = NS_CONST_CAST(WORD *, tempName.get()) ;
+    displayName.Value.lpszW = NS_CONST_CAST(WCHAR *, tempName.get()) ;
     mLastError = newEntry->SetProps(1, &displayName, &problems) ;
     if (HR_FAILED(mLastError)) {
         PRINTF(("Cannot set temporary name %08x.\n", mLastError)) ;
@@ -744,7 +744,7 @@ BOOL nsAbWinHelper::CreateDistList(const nsMapiEntry& aParent, nsMapiEntry& aNew
     displayName.ulPropTag = PR_DISPLAY_NAME_W ;
     tempName.AssignLiteral("__MailList__") ;
     tempName.AppendInt(mEntryCounter ++) ;
-    displayName.Value.lpszW = NS_CONST_CAST(WORD *, tempName.get()) ;
+    displayName.Value.lpszW = NS_CONST_CAST(WCHAR *, tempName.get()) ;
     mLastError = newEntry->SetProps(1, &displayName, &problems) ;
     if (HR_FAILED(mLastError)) {
         PRINTF(("Cannot set temporary name %08x.\n", mLastError)) ;
