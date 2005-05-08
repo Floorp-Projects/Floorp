@@ -490,9 +490,14 @@ nsHTMLScrollFrame::ReflowScrolledFrame(const ScrollReflowState& aState,
   nsresult rv = ReflowChild(mInner.mScrolledFrame, GetPresContext(), *aMetrics,
                             kidReflowState, 0, 0,
                             NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_MOVE_VIEW, status);
+  // Don't resize or position the view because we're going to resize
+  // it to the correct size anyway in PlaceScrollArea. Allowing it to
+  // resize here would size it to the natural height of the frame,
+  // which will usually be different from the scrollport height;
+  // invalidating the difference will cause unnecessary repainting.
   FinishReflowChild(mInner.mScrolledFrame, GetPresContext(),
                     &kidReflowState, *aMetrics, 0, 0,
-                    NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_MOVE_VIEW);
+                    NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_SIZE_VIEW);
 
   // XXX Some frames (e.g., nsObjectFrame, nsFrameFrame, nsTextFrame) don't bother
   // setting their mOverflowArea. This is wrong because every frame should
