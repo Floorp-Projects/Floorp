@@ -1108,7 +1108,7 @@ function makeURLFromPath( path ) {
 }
 
 function refreshView() {
-  refreshEventTree( getAndSetEventTable() );
+  refreshEventTree();
   refreshToDoTree( false );
   gCalendarWindow.currentView.refreshEvents();
 }

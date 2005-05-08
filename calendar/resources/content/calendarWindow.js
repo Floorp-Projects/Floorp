@@ -361,7 +361,7 @@ CalendarWindow.prototype.setSelectedDate = function calWin_setSelectedDate( date
        document.getElementById( "event-filter-menulist" ).selectedItem.value == "current" )
    {
       //redraw the top tree
-      setTimeout( "refreshEventTree( getAndSetEventTable() );", 150 );
+      setTimeout( "refreshEventTree();", 150 );
    }
    
    if( "hiliteSelectedDate" in this.currentView && noHighlight != false )
@@ -529,7 +529,7 @@ CalendarWindow.prototype.onMouseUpCalendarViewSplitter = function calWinOnMouseU
       //do this because if they started with it collapsed, its not showing anything right now.
 
       //in a setTimeout to give the pull down menu time to draw.
-      setTimeout( "refreshEventTree( getAndSetEventTable() );", 10 );
+      setTimeout( "refreshEventTree();", 10 );
    }
    
    this.doResize();
