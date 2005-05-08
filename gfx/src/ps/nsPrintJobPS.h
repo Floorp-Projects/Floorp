@@ -61,6 +61,8 @@ class nsPrintJobPreviewPS : public nsIPrintJobPS {
         nsresult FinishSubmission()
             { return NS_ERROR_GFX_PRINTING_NOT_IMPLEMENTED; }
 
+        nsresult SetNumCopies(int aNumCopies)
+            { return NS_ERROR_NOT_IMPLEMENTED; }
 
     protected:
         /* See nsIPrintJobPS.h. */
@@ -77,6 +79,9 @@ class nsPrintJobFilePS : public nsIPrintJobPS {
         /* see nsIPrintJobPS.h */
         nsresult StartSubmission(FILE **aHandle);
         nsresult FinishSubmission();
+
+        nsresult SetNumCopies(int aNumCopies)
+            { return NS_ERROR_NOT_IMPLEMENTED; }
 
     protected:
         /* see nsIPrintJobPS.h */
@@ -164,6 +169,7 @@ class nsPrintJobCUPS : public nsPrintJobFilePS {
     public:
         nsresult StartSubmission(FILE **aHandle);
         nsresult FinishSubmission();
+        nsresult SetNumCopies(int aNumCopies);
 
     protected:
         nsresult Init(nsIDeviceContextSpecPS *);
@@ -171,6 +177,7 @@ class nsPrintJobCUPS : public nsPrintJobFilePS {
     private:
         nsCUPSShim mCups;
         nsCString mPrinterName;
+        nsCString mNumCopies;
 };
 #endif  /* VMS */
 

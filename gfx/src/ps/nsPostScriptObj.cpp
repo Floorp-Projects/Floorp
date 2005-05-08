@@ -281,8 +281,8 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     mPrintSetup->color = PR_TRUE;              // Image output 
     mPrintSetup->deep_color = PR_TRUE;         // 24 bit color output 
     mPrintSetup->reverse = 0;                  // Output order, 0 is acsending 
+    mPrintSetup->num_copies = 1;
     if ( aSpec != nsnull ) {
-      aSpec->GetCopies(mPrintSetup->num_copies);
       aSpec->GetGrayscale( isGray );
       if ( isGray == PR_TRUE ) {
         mPrintSetup->color = PR_FALSE; 
@@ -374,6 +374,13 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     } else {
     return NS_ERROR_FAILURE;
     }
+}
+
+void
+nsPostScriptObj::SetNumCopies(int aNumCopies)
+{
+  NS_PRECONDITION(mPrintSetup, "mPrintSetup must not be NULL");
+  mPrintSetup->num_copies = aNumCopies;
 }
 
 /** ---------------------------------------------------
@@ -1854,7 +1861,7 @@ nsPostScriptObj::begin_page()
 {
   fprintf(mScriptFP, "%%%%Page: %d %d\n", mPageNumber, mPageNumber);
   fprintf(mScriptFP, "%%%%BeginPageSetup\n");
-  if(mPrintSetup->num_copies != 1) {
+  if(mPrintSetup->num_copies > 1) {
     fprintf(mScriptFP, 
       "/setpagedevice where\n"
       "{ pop 1 dict dup /NumCopies %d put setpagedevice }\n"

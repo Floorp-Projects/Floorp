@@ -160,10 +160,19 @@ nsDeviceContextPS::SetSpec(nsIDeviceContextSpec* aSpec)
     if (NS_SUCCEEDED(rv))
       rv = nsPrintJobFactoryPS::CreatePrintJob(psSpec, mPrintJob);
   }
-  if (NS_FAILED(rv) && mPSObj) {
+  if (NS_FAILED(rv)) {
     delete mPSObj;
     mPSObj = nsnull;
   }
+  else {
+    // Successfully allocated both PS and print job objects.
+    // Determine which one will handle number-of-copies.
+    int num_copies;
+    psSpec->GetCopies(num_copies);
+    if (NS_FAILED(mPrintJob->SetNumCopies(num_copies)))
+      mPSObj->SetNumCopies(num_copies);
+  }
+
   return rv;
 }
 

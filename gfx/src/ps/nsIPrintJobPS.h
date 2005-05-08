@@ -65,6 +65,21 @@ public:
     friend class nsPrintJobFactoryPS;
 
     /**
+     * Set the number of copies for this print job. Some printing systems
+     * allow setting this out of band, instead of embedding it into the
+     * postscript.
+     * @param aNumCopies Number of copies requested. Values <= 1 are
+     *                   interpreted as "do not specify a copy count to the
+     *                   printing system" when possible, or else as
+     *                   one copy.
+     * @return NS_ERROR_NOT_IMPLEMENTED if this print job class doesn't
+     *                   support the specific copy count requested.
+     * @return NS_OK     The print job class will request the specified
+     *                   number of copies when printing the job.
+     */
+    virtual nsresult SetNumCopies(int aNumCopies) = 0;
+
+    /**
      * Begin submitting a print job. 
      * @param aHandle If the return value is NS_OK, this will be filled
      *                in with a file handle which the caller should use
