@@ -78,7 +78,7 @@ calendarPrefObserver.prototype =
 
             case "calendar.date.format" :
                 this.CalendarPreferences.calendarWindow.currentView.refresh();
-                refreshEventTree( getAndSetEventTable() );
+                refreshEventTree();
                 toDoUnifinderRefresh();
                 break;
 
@@ -94,7 +94,7 @@ calendarPrefObserver.prototype =
                 gDefaultTimezone = subject.getCharPref( prefName );
 
                 this.CalendarPreferences.calendarWindow.currentView.refresh();
-                refreshEventTree( getAndSetEventTable() );
+                refreshEventTree();
                 toDoUnifinderRefresh();
                 break;
 
