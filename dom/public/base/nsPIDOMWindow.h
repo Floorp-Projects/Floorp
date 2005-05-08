@@ -75,8 +75,8 @@ class nsIFocusController;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x91671056, 0xa8ed, 0x4ad3, \
- { 0x8f, 0x19, 0x69, 0xf5, 0x48, 0xbb, 0x9c, 0x4a } }
+{ 0x26c9769c, 0xecfc, 0x46b9, \
+ { 0x9f, 0x62, 0x8e, 0x9b, 0x1a, 0x6c, 0x0d, 0x28 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -142,10 +142,7 @@ public:
   virtual PopupControlState GetPopupControlState() const = 0;
   virtual OpenAllowValue GetOpenAllow(const nsAString &aName) = 0;
 
-  // Clear all pending timeouts and intervals.
-  virtual void ClearAllTimeouts() = 0;
-  
-  // Returns an object containing the window's state.  This also suspends
+    // Returns an object containing the window's state.  This also suspends
   // all running timeouts in the window.
   virtual nsresult SaveWindowState(nsISupports **aState) = 0;
 
