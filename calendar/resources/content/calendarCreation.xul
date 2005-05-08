@@ -61,6 +61,7 @@
                next="locationPage"
                label="&wizard.label;"
                description="&wizard.description;"
+               onpageshow="checkRequired();"
                onpageadvanced="onInitialAdvance();">
         <description>&initialpage.description;</description>
         <radiogroup id="calendar-type">
