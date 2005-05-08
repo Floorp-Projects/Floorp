@@ -12,7 +12,7 @@ Building Grendel:
 
 3. Type 'ant build' and go get a cup of coffee or something. Grendel takes a little while to build.
 5. Binaries and application resources will now be in dist.
-6. Go the the dist directory by typing 'cd dist' and then type 'java Grendel.main' and test that Grendel
+6. Go the the dist directory by typing 'cd dist' and then type 'java grendel.Main' and test that Grendel
    works. If everything built successfully, it should.
 7. If you want to make an executable jar to package up all the application's classes (minus the
    external libraries), type 'ant jar'. Once you've done that, you can type:

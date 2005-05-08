@@ -1,9 +1,12 @@
 The following packages are required for Grendel. You can also download the Grendel
 Library pack (http://mirrors.trfenv.com/rlk/grendel-jar-pack.zip) to get all of
-these JAR files in one big package.
+the dependencies except for Java 1.5 and Ant.
 
 Java 2 (version 1.5 or newer)
 * http://java.sun.com/j2se/1.5.0/
+
+Apache Ant 1.6 or newer (older versions may work)
+* http://ant.apache.org
 
 JavaBeans Activation Framework (JAF) 
 * http://java.sun.com/beans/glasgow/jaf.html
