@@ -1526,7 +1526,7 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
             }
         }
         rv = NS_OK;
-    } else if (format == gfxIFormats::RGB_A8 || format == gfxIFormats::RGB_A8) {
+    } else if (format == gfxIFormats::RGB_A8 || format == gfxIFormats::BGR_A8) {
         useBGR = (format & 1);
         for (PRUint32 j = 0; j < (PRUint32) imgHeight; j++) {
             PRUint8 *inrowrgb;
