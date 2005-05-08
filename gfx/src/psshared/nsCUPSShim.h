@@ -76,6 +76,10 @@ typedef int (PR_CALLBACK *CupsPrintFileType)(const char    *printer,
                                              cups_option_t *options);
 typedef int (PR_CALLBACK *CupsTempFdType)(char *filename,
                                           int   length);
+typedef int (PR_CALLBACK *CupsAddOptionType)(const char    *name,
+                                             const char    *value,
+                                             int           num_options,
+                                             cups_option_t **options);
 
 struct PRLibrary;
 
@@ -103,9 +107,10 @@ class NS_PSSHARED nsCUPSShim {
         /* Function pointers for supported functions. These are only
          * valid after successful initialization.
          */
+        CupsAddOptionType   mCupsAddOption;
+        CupsFreeDestsType   mCupsFreeDests;
         CupsGetDestType     mCupsGetDest;
         CupsGetDestsType    mCupsGetDests;
-        CupsFreeDestsType   mCupsFreeDests;
         CupsPrintFileType   mCupsPrintFile;
         CupsTempFdType      mCupsTempFd;
 

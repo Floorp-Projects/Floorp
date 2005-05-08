@@ -427,6 +427,18 @@ public:
    */
   FILE * GetScriptHandle() { return mScriptFP; }
 
+  /** ---------------------------------------------------
+   *  Set the number of copies attribute for this document.
+   *  If the number of copies is > 1, then the generated
+   *  postscript will contain code to request the specified
+   *  number of copies from the printer.
+   *  This must be called after Init() and before the first
+   *  begin_page() call.
+   *
+   *  @param aNumCopies Number of copies for this document.
+   */
+  void SetNumCopies(int aNumCopies);
+
   PRBool  GetUnixPrinterSetting(const nsCAutoString&, char**);
   PrintSetup            *mPrintSetup;
 private:

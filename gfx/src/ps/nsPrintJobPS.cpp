@@ -367,6 +367,15 @@ nsPrintJobCUPS::Init(nsIDeviceContextSpecPS *aSpec)
 }
 
 nsresult
+nsPrintJobCUPS::SetNumCopies(int aNumCopies)
+{
+    mNumCopies.Truncate();
+    if (aNumCopies > 1)
+        mNumCopies.AppendInt(aNumCopies);
+    return NS_OK;
+}
+
+nsresult
 nsPrintJobCUPS::StartSubmission(FILE **aHandle)
 {
     NS_ENSURE_TRUE(mCups.IsInitialized(), NS_ERROR_NOT_INITIALIZED);
@@ -400,27 +409,31 @@ nsPrintJobCUPS::FinishSubmission()
     fclose(GetDestHandle());
     SetDestHandle(nsnull);
 
-    nsCStringArray* printer = new nsCStringArray;
-    printer->ParseString(mPrinterName.get(),"/");
+    nsCStringArray printer(3);
+    printer.ParseString(mPrinterName.get(),"/");
 
     cups_dest_t *dests, *dest;
     int num_dests = (mCups.mCupsGetDests)(&dests);
     
-    if (printer->Count() == 1) {
-        dest = (mCups.mCupsGetDest)(printer->CStringAt(0)->get(), NULL, num_dests, dests);
+    if (printer.Count() == 1) {
+        dest = (mCups.mCupsGetDest)(printer.CStringAt(0)->get(), NULL, num_dests, dests);
     } else {
-        dest = (mCups.mCupsGetDest)(printer->CStringAt(0)->get(), 
-                                    printer->CStringAt(1)->get(), num_dests, dests);
+        dest = (mCups.mCupsGetDest)(printer.CStringAt(0)->get(), 
+                                    printer.CStringAt(1)->get(), num_dests, dests);
     }
 
     // Setting result just to get rid of compilation warning
     int result=0;
     if (dest != NULL) {
-        result = (mCups.mCupsPrintFile)(printer->CStringAt(0)->get(),
+        if (!mNumCopies.IsEmpty())
+            dest->num_options = (mCups.mCupsAddOption)("copies",
+                                                       mNumCopies.get(),
+                                                       dest->num_options,
+                                                       &dest->options);
+        result = (mCups.mCupsPrintFile)(printer.CStringAt(0)->get(),
                                             GetDestination().get(), "Mozilla print job", 
                                             dest->num_options, dest->options);
     }
-    delete printer;
     (mCups.mCupsFreeDests)(num_dests, dests);
     unlink(GetDestination().get());
 

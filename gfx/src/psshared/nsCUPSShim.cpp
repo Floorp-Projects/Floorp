@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDebug.h"
+#include "nsString.h"
 #include "nsCUPSShim.h"
 #include "prlink.h"
 
@@ -45,9 +46,10 @@
 // Making this an array of arrays instead of pointers allows storing the
 // whole thing in read-only memory.
 static const char gSymName[][sizeof("cupsPrintFile")] = {
+    { "cupsAddOption" },
+    { "cupsFreeDests" },
     { "cupsGetDest" },
     { "cupsGetDests" },
-    { "cupsFreeDests" },
     { "cupsPrintFile" },
     { "cupsTempFd" },
 };
@@ -63,9 +65,10 @@ nsCUPSShim::Init()
 
     // List of symbol pointers. Must match gSymName[] defined above.
     void **symAddr[] = {
+        (void **)&mCupsAddOption,
+        (void **)&mCupsFreeDests,
         (void **)&mCupsGetDest,
         (void **)&mCupsGetDests,
-        (void **)&mCupsFreeDests,
         (void **)&mCupsPrintFile,
         (void **)&mCupsTempFd,
     };
@@ -73,6 +76,11 @@ nsCUPSShim::Init()
     for (int i = gSymNameCt; i--; ) {
         *(symAddr[i]) = PR_FindSymbol(mCupsLib, gSymName[i]);
         if (! *(symAddr[i])) {
+#ifdef DEBUG
+            nsCAutoString msg(gSymName[i]);
+            msg.Append(" not found in CUPS library");
+            NS_WARNING(msg.get());
+#endif
             PR_UnloadLibrary(mCupsLib);
             mCupsLib = nsnull;
             return PR_FALSE;
