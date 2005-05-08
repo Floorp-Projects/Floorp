@@ -646,8 +646,6 @@ extern "C" void RunChromeInstallOnThread(void *data)
     if (reg)
     {
 #ifdef MOZ_XUL_APP
-        PRBool installed = PR_FALSE;
-
         if (info->GetType() == CHROME_SKIN) {
             static NS_DEFINE_CID(kZipReaderCID,  NS_ZIPREADER_CID);
             nsCOMPtr<nsIZipReader> hZip = do_CreateInstance(kZipReaderCID, &rv);
@@ -663,26 +661,13 @@ extern "C" void RunChromeInstallOnThread(void *data)
                 if (NS_SUCCEEDED(rv) && em) {
                     rv = em->InstallItemFromFile(info->GetFile(), 
                                                  NS_INSTALL_LOCATION_APPPROFILE);
-                    if (NS_SUCCEEDED(rv)) {
-                        installed = PR_TRUE;
-                        info->GetFile()->Remove(PR_FALSE);
-                        // Extension Manager copies the theme .jar file to 
-                        // a different location, so remove the temporary file.
-                    }
                 }
-    
-                hZip->Close();
             }
+            hZip->Close();
+            // Extension Manager copies the theme .jar file to 
+            // a different location, so remove the temporary file.
+            info->GetFile()->Remove(PR_FALSE);
         }
-
-        if (!installed) {
-            reg->ProcessContentsManifest(info->GetFileJARURL(),
-                                         info->GetManifestURL(),
-                                         PR_TRUE,
-                                         info->GetType() == CHROME_SKIN);
-            reg->CheckForNewChrome();
-        }
-
 #else
         PRBool isSkin    = (info->GetType() & CHROME_SKIN);
         PRBool isLocale  = (info->GetType() & CHROME_LOCALE);
