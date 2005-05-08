@@ -569,9 +569,16 @@ nsCanvasRenderingContext2D::UpdateImageFrame()
 
                 *outrowalpha++ = a;
 
+#ifdef XP_WIN
+                *outrowrgb++ = b;
+                *outrowrgb++ = g;
+                *outrowrgb++ = r;
+#else
                 *outrowrgb++ = r;
                 *outrowrgb++ = g;
                 *outrowrgb++ = b;
+#endif
+
 #ifdef XP_MACOSX
                 // On the mac, RGB_A8 is really RGBX_A8
                 *outrowrgb++ = 0;
