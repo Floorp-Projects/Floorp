@@ -624,6 +624,7 @@ Description Short=@RPT_SHORT@
 Description Long=@RPT_SHORT@ 
 Archive=reporter.xpi
 $InstallSize$:reporter
+$InstallSizeSystem$
 $InstallSizeArchive$:reporter.xpi
 Attributes=SELECTED|VISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]/chrome/reporter.jar
