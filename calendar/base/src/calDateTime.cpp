@@ -242,7 +242,7 @@ calDateTime::SetTimeInTimezone(PRTime aTime, const char *aTimezone)
 
     icaltimezone *zone = icaltimezone_get_utc_timezone();
 
-    if (aTimezone) {
+    if (aTimezone && strcmp(aTimezone, "UTC") != 0 && strcmp(aTimezone, "utc") != 0) {
         nsCOMPtr<calIICSService> ics = do_GetService(kCalICSService);
         nsCOMPtr<calIIcalComponent> tz;
         ics->GetTimezone(nsDependentCString(aTimezone), getter_AddRefs(tz));
@@ -495,6 +495,7 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
     LL_MUL(temp, temp, million);
     mNativeTime = temp;
 
+    fprintf (stderr, "++ tt: %lld mNativeTime: %lld\n", tt, mNativeTime);
     // reconstruct weekday/yearday
     mWeekday = icaltime_day_of_week(*icalt) - 1;
     mYearday = icaltime_day_of_year(*icalt);
@@ -593,9 +594,14 @@ calDateTime::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                 LL_I2L(thousands, 1000);
                 LL_MUL(utcTime, utcTime, thousands);
 
-                mIsUtc = PR_TRUE;
-                mTimezone.Truncate();
-                mValid = PR_TRUE;
+                nsresult rv = SetNativeTime(utcTime);
+                if (NS_SUCCEEDED(rv)) {
+                    mIsUtc = PR_TRUE;
+                    mTimezone.Truncate();
+                    mValid = PR_TRUE;
+                } else {
+                    mValid = PR_FALSE;
+                }
             }
 
             *_retval = PR_TRUE;
