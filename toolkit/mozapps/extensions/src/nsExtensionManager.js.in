@@ -2059,6 +2059,7 @@ ExtensionManager.prototype = {
     // Clean up after we were in safe mode
     try {
       this._ensureDS();
+      this._updateExtensionsManifest(false);
       
       // Retrieve the skin that was selected prior to entering safe mode
       // and select it. 
@@ -2071,12 +2072,6 @@ ExtensionManager.prototype = {
       catch (e) {
       }
       
-      // Walk the list of extensions and re-activate overlays for packages 
-      // that aren't disabled.
-      var items = this._ds.getItemsWithFlagUnset("disabled", nsIUpdateItem.TYPE_EXTENSION);
-      for (var i = 0; i < items.length; ++i)
-        this._finalizeEnableDisable(items[i]);
-        
       wasInSafeModeFile.remove(false);
     }
     catch (e) {
@@ -2107,16 +2102,14 @@ ExtensionManager.prototype = {
           gPref.clearUserPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
       }
 
-      var items = this._ds.getItemList(nsIUpdateItem.TYPE_EXTENSION, {});
-      for (var i = 0; i < items.length; ++i)
-        this._finalizeEnableDisable(items[i].id);
-        
       this._ds.safeMode = true;
       var needsRestart = true;
 
       var wasInSafeModeFile = getFile(KEY_PROFILEDIR, [DIR_EXTENSIONS, FILE_WASINSAFEMODE]);
-      if (!wasInSafeModeFile.exists())
+      if (!wasInSafeModeFile.exists()) {
         wasInSafeModeFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+        this._updateExtensionsManifest(false);
+      }
       else {
         // If the "Safe Mode" file already exists, then we are in the second launch of an
         // app launched with -safe-mode and so we don't want to provoke any further
@@ -2871,6 +2864,9 @@ ExtensionManager.prototype = {
    * @returns An array of active items of the specified type.
    */
   _getActiveItems: function(type) {
+    if (this.datasource.safeMode)
+      return [];
+
     var allItems = this.getItemList(type, { });
     var activeItems = [];
     var ds = this.datasource;
