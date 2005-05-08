@@ -728,7 +728,7 @@ nsImageDocument::UpdateTitleAndCharset()
   {
     "ImageTitleWithNeitherDimensionsNorFile",
     "ImageTitleWithoutDimensions",
-    "ImageTitleWithDimesions",
+    "ImageTitleWithDimensions",
     "ImageTitleWithDimensionsAndFile",
   };
 
