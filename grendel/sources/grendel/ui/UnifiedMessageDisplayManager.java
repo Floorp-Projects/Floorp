@@ -53,7 +53,6 @@ import javax.mail.MessagingException;
 import grendel.prefs.base.InvisiblePrefs;
 import grendel.prefs.base.UIPrefs;
 import grendel.view.ViewedMessage;
-import grendel.widgets.CollapsiblePanel;
 import grendel.widgets.GrendelToolBar;
 import grendel.widgets.Spring;
 import grendel.widgets.StatusEvent;
@@ -200,14 +199,14 @@ class UnifiedMessageFrame extends GeneralFrame {
 
     fToolBarPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
     fToolBarPanelConstraints.anchor = GridBagConstraints.WEST;
-    fToolBarPanel.add(fToolBar, fToolBarPanelConstraints);
+    fToolBarPanel.setComponent(fToolBar);
     fToolBar.add(fToolBar.makeNewSpring());
     fToolBarPanelConstraints.weightx = 1.0;
     fToolBarPanelConstraints.fill = GridBagConstraints.NONE;
     fToolBarPanelConstraints.gridwidth = GridBagConstraints.REMAINDER;
     fToolBarPanelConstraints.anchor = GridBagConstraints.EAST;
 
-    fToolBarPanel.add(fAnimation, fToolBarPanelConstraints);
+    fToolBar.add(fAnimation, fToolBarPanelConstraints);
 
     fStatusBar = buildStatusBar();
     fPanel.add(BorderLayout.SOUTH, fStatusBar);

@@ -296,7 +296,7 @@ public class AddressBook extends GeneralFrame {
     mTtoolbar = createToolbar();
 
     //collapsible item
-    collapsePanel.add(mTtoolbar);
+    collapsePanel.setComponent(mTtoolbar);
 
     //create status bar (bottom)
     //        mStatusbar = createStatusbar();

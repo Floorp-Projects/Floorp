@@ -37,7 +37,6 @@ import javax.swing.event.*;
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
 import grendel.widgets.Animation;
-import grendel.widgets.CollapsiblePanel;
 import grendel.widgets.GrendelToolBar;
 import grendel.ui.FolderPanel;
 import grendel.ui.GeneralFrame;
@@ -112,7 +111,7 @@ public class Composition extends GeneralFrame {
         fToolBarPanelConstraints.fill = GridBagConstraints.NONE;
         fToolBarPanelConstraints.weightx = 1.0;
         fToolBarPanelConstraints.gridwidth = GridBagConstraints.REMAINDER;
-        fToolBarPanel.add(fAnimation, fToolBarPanelConstraints);
+        fToolBar.add(fAnimation, fToolBarPanelConstraints);
         mBox.add(fToolBarPanel);
         //bottom item
         //  fToolBarPanelConstraints.gridwidth = GridBagConstraints.RELATIVE;

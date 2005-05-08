@@ -20,6 +20,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ *   R.J. Keller <rj.keller@beonex.com>
  *
  * Created: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
@@ -32,6 +33,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.awt.BorderLayout;
 
 import javax.swing.Box;
 import javax.swing.BorderFactory;
@@ -50,176 +52,149 @@ import grendel.widgets.Spring;
  * which provides the standard Communicator-style collapsing toolbar panel.
  *
  * @author Jeff Galyan
+ * @author R.J. Keller
  * @see Collapsible
  */
-
 public class CollapsiblePanel extends JPanel implements Collapsible {
 
-    private boolean collapsed = false;
-    private Component myComponents[];
-    private int componentCount;
-    private final int VERTICAL = 0;
-    private final int HORIZONTAL = 1;
-    private GridBagConstraints constraints;
-    private Box aBox;
-    int width = 10, height = 50;
+
+  private static final int VERTICAL = 0;
+  private static final int HORIZONTAL = 1;
 
 
-    private ToolBarLayout layout;
+  private boolean collapsed = false;
+  private Component curComponent;
 
   /**
    * Constructor
    */
+  public CollapsiblePanel(boolean isDoubleBuffered) {
+    super(isDoubleBuffered);
 
-    public CollapsiblePanel(boolean isDoubleBuffered) {
-	super(isDoubleBuffered);
+    setLayout(new BorderLayout());
+    collapsed = false;
+  }
 
-        constraints = new GridBagConstraints();
-        constraints.ipadx = 0;
-        constraints.ipady = 0;
+  /**
+   *Sets the component that is to be collapsed and uncollapsed. Only one
+   *component can be shown in this panel at one time. For multiple components,
+   *add them all to a JPanel. Since this is usually for toolbars only, it
+   *shouldn't be an issue.
+   */
+  public void setComponent(Component comp) {
+    curComponent = comp;
 
-	layout = new ToolBarLayout();
-        layout.setInsets(new Insets(0,0,0,0));
-        layout.setIPadX(0);
-        layout.setIPadY(0);
-	setLayout(layout);
-        constraints.insets = new Insets(0,0,0,0);
-        constraints.anchor = GridBagConstraints.NORTHWEST;
-        constraints.fill = GridBagConstraints.NONE;
+    removeAll();
 
-        CollapseButton collapseButton = new CollapseButton(VERTICAL);
-	add(collapseButton, constraints);
-        Dimension dim = collapseButton.getSize();
-        collapseButton.reshape(0,0,dim.width,dim.height);
+    CollapseButton collapseButton = new CollapseButton(VERTICAL);
+    add(collapseButton, BorderLayout.WEST);
+    Dimension dim = collapseButton.getSize();
+    collapseButton.reshape(0,0,dim.width,dim.height);
 
-        //    constraints.insets = new Insets(5,5,5,5);
-        constraints.anchor = GridBagConstraints.WEST;
-	collapsed = false;
-        revalidate();
-    }
+    //set the new components background to the panel background.
+    setBackground(comp.getBackground());
+
+    add(comp, BorderLayout.CENTER);
+
+    revalidate();
+  }
+
+  public Component getComponent() {
+    return curComponent;
+  }
 
   /**
    * Collapses the panel.
    */
+  public void collapse() {
+    removeAll();
+    add(new CollapseButton(HORIZONTAL), BorderLayout.WEST);
+    Dimension dim2 = getSize();
+    setSize(new Dimension(dim2.width, 5));
 
-    public void collapse() {
+    add(new Spring(), BorderLayout.CENTER);
 
-	GridBagConstraints constraints = new GridBagConstraints();
+    revalidate();
 
-	Component myComponents2[] = getComponents();
-	componentCount = getComponentCount();
-	myComponents = new Component[componentCount];
-
-	for (int i = 0; i < componentCount; i++) {
-	    myComponents[i] = myComponents2[i];
-	    remove(myComponents2[i]);
-	}
-	constraints.anchor = GridBagConstraints.NORTHWEST;
-	constraints.fill = GridBagConstraints.NONE;
-
-	add(new CollapseButton(HORIZONTAL), constraints);
-	Dimension dim2 = getSize();
-	setSize(new Dimension(dim2.width, 5));
-
-	constraints.fill = GridBagConstraints.HORIZONTAL;
-	constraints.weightx = 10.0;
-	constraints.gridwidth = GridBagConstraints.REMAINDER;
-
-	add(new Spring(), constraints);
-
-	revalidate();
-
-	collapsed = true;
-    }
+    collapsed = true;
+  }
 
   /**
    * Uncollapses the panel.
    */
+  public void expand() {
+    removeAll();
 
-    public void expand() {
-	Dimension dim = new Dimension(height, width);
+    add(new CollapseButton(VERTICAL), BorderLayout.WEST);
+    add(curComponent, BorderLayout.CENTER);
 
-	//	layout.defaultConstraints.anchor = GridBagConstraints.WEST;
-	removeAll();
-	Dimension dim2 = getSize();
-	setSize(dim2.width, 40);
-	myComponents[0] = new CollapseButton(VERTICAL);
+    revalidate();
 
-	for (int i = 0; i < componentCount; i++) {
-	    add(myComponents[i]);
-	}
-
-	revalidate();
-
-	collapsed = false;
-    }
+    collapsed = false;
+  }
 
   /**
    * Tells you whether this component is collapsible.
    * @returns a boolean indicating this component is collapsible.
    */
-
-    public boolean isCollapsible() {
-	return collapsible;
-    }
+  public boolean isCollapsible() {
+    return collapsible;
+  }
 
   /**
    * Tells you whether this component is currently collapsed.
    * Useful for checking the component's status.
    * @returns true if this component is collapsed, false if it is not.
    */
-
-    public boolean isCollapsed() {
-	return collapsed;
-    }
+  public boolean isCollapsed() {
+    return collapsed;
+  }
 
     class CollapseListener implements ActionListener {
 
-	public void actionPerformed(ActionEvent evt) {
-	    if (isCollapsed() == true) {
-		expand();
-	    } else {
-		collapse();
-	    }
-	}
+  public void actionPerformed(ActionEvent evt) {
+      if (isCollapsed() == true) {
+    expand();
+      } else {
+    collapse();
+      }
+  }
     }
 
     class CollapseButton extends JButton {
-	private ImageIcon collapseButtonIconVertical = new ImageIcon("widgets/images/collapseButton-vertical.gif", "regular collapseButton icon");
-	private ImageIcon collapseButtonVerticalRollover = new ImageIcon("widgets/images/collapseButton-vertical-rollover.gif", "vertical rollover icon");
-	private ImageIcon collapseButtonVerticalPressed = new ImageIcon("widgets/images/collapseButton-vertical-pressed.gif", "vertical pressed icon");
-	private ImageIcon collapseButtonIconHorizontal = new ImageIcon("widgets/images/collapseButton-horizontal.gif", "horizontal normal icon");
-	private ImageIcon collapseButtonHorizontalRollover = new ImageIcon("widgets/images/collapseButton-horizontal-rollover.gif", "horizontal rollover icon");
-	private ImageIcon collapseButtonHorizontalPressed = new ImageIcon("widgets/images/collapseButton-horizontal-pressed.gif", "horizontal pressed icon");
+      private ImageIcon collapseButtonIconVertical = new ImageIcon("widgets/images/collapseButton-vertical.gif", "regular collapseButton icon");
+      private ImageIcon collapseButtonVerticalRollover = new ImageIcon("widgets/images/collapseButton-vertical-rollover.gif", "vertical rollover icon");
+      private ImageIcon collapseButtonVerticalPressed = new ImageIcon("widgets/images/collapseButton-vertical-pressed.gif", "vertical pressed icon");
+      private ImageIcon collapseButtonIconHorizontal = new ImageIcon("widgets/images/collapseButton-horizontal.gif", "horizontal normal icon");
+      private ImageIcon collapseButtonHorizontalRollover = new ImageIcon("widgets/images/collapseButton-horizontal-rollover.gif", "horizontal rollover icon");
+      private ImageIcon collapseButtonHorizontalPressed = new ImageIcon("widgets/images/collapseButton-horizontal-pressed.gif", "horizontal pressed icon");
 
-	final int VERTICAL = 0;
-	final int HORIZONTAL = 1;
+      final int VERTICAL = 0;
+      final int HORIZONTAL = 1;
 
-	public CollapseButton(int orientation) {
-	    super();
-	    setRolloverEnabled(true);
-	    setFocusPainted(false);
-            setDefaultCapable(false);
-            setBorder(null);
-            setBorderPainted(false);
-	    setMargin(new Insets(0,0,0,0));
-            setToolTipText("Collapses/Expands the ToolBar");
+      public CollapseButton(int orientation) {
+        super();
+        setRolloverEnabled(true);
+        setFocusPainted(false);
+        setDefaultCapable(false);
+        setBorder(null);
+        setBorderPainted(false);
+        setMargin(new Insets(0,0,0,0));
+        setToolTipText("Collapses/Expands the ToolBar");
 
-	    if (orientation == VERTICAL) {
-		setIcon(collapseButtonIconVertical);
-		setRolloverIcon(collapseButtonVerticalRollover);
-		setPressedIcon(collapseButtonVerticalPressed);
-	    } else {
-		setIcon(collapseButtonIconHorizontal);
-		setRolloverIcon(collapseButtonHorizontalRollover);
-		setPressedIcon(collapseButtonHorizontalPressed);
-	    }
+      if (orientation == VERTICAL) {
+    setIcon(collapseButtonIconVertical);
+    setRolloverIcon(collapseButtonVerticalRollover);
+    setPressedIcon(collapseButtonVerticalPressed);
+      } else {
+    setIcon(collapseButtonIconHorizontal);
+    setRolloverIcon(collapseButtonHorizontalRollover);
+    setPressedIcon(collapseButtonHorizontalPressed);
+      }
 
-	    addActionListener(new CollapseListener());
-	}
+      addActionListener(new CollapseListener());
+  }
 
     }
 
 }
-
-

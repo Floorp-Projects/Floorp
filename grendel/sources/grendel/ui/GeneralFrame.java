@@ -75,19 +75,6 @@ import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.BoxLayout;
 
-//import netscape.orion.toolbars.BarLayout;
-//import netscape.orion.toolbars.CollapsibleToolbarPanel;
-//import netscape.orion.toolbars.NSButton;
-//import netscape.orion.toolbars.NSToolbar;
-//import netscape.orion.toolbars.ToolBarLayout;
-//import netscape.orion.uimanager.AbstractUICmd;
-//import netscape.orion.uimanager.IUICmd;
-//import netscape.orion.uimanager.IUIMMenuBar;
-//import netscape.orion.uimanager.UIMConstants;
-
-//import xml.tree.TreeBuilder;
-//import xml.tree.XMLNode;
-
 import grendel.prefs.base.InvisiblePrefs;
 import grendel.ui.ToolBarLayout;
 import grendel.widgets.*;
@@ -151,7 +138,6 @@ public class GeneralFrame extends JFrame
     fToolBarPanel = new CollapsiblePanel(true);
     fToolBarPanelLayout = new ToolBarLayout();
     fToolBarPanelConstraints = new GridBagConstraints();
-    fToolBarPanel.setLayout(fToolBarPanelLayout);
     fPanel.add(fToolBarPanel, BorderLayout.NORTH);
     //    fUIManager = new netscape.orion.uimanager.UIManager(fToolBarPanel);
 

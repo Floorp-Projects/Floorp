@@ -89,7 +89,6 @@ import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
 import grendel.ui.ActionFactory;
 import grendel.ui.GeneralPanel;
-import grendel.widgets.CollapsiblePanel;
 import grendel.widgets.GrendelToolBar;
 
 import com.trfenv.parsers.Event;
