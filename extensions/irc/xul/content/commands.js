@@ -2701,7 +2701,13 @@ function cmdKick(e)
 
     if (e.command.name == "kick-ban")
     {
-        var hostmask = e.user.host.replace(/^[^.]+/, "*");
+        var hostmask;
+
+        if (e.user.host.match(/^[\d\.]*$/) != null)
+            hostmask = e.user.host.replace(/[^.]+$/, "*");
+        else
+            hostmask = e.user.host.replace(/^[^.]+/, "*");
+
         e.server.sendData("MODE " + e.channel.encodedName + " +b *!" +
                           e.user.name + "@" + hostmask + "\n");
     }
