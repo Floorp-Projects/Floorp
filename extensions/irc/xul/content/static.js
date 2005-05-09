@@ -639,7 +639,7 @@ function isVisible (id)
 }
 
 client.getConnectedNetworks =
-function getConnectedNetworks() 
+function getConnectedNetworks()
 {
     var rv = [];
     for (var n in client.networks)
@@ -2103,6 +2103,9 @@ function updateTitle (obj)
             tstring = getMsg(MSG_TITLE_USER, [nick, source]);
             nick = "me" in o.parent ? o.parent.me.unicodeName : MSG_TITLE_NONICK;
             break;
+
+        case "IRCClient":
+            nick = client.prefs["nickname"];
 
         default:
             tstring = MSG_TITLE_UNKNOWN;

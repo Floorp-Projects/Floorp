@@ -53,6 +53,7 @@ function initCommands()
          ["alias",             cmdAlias,                           CMD_CONSOLE],
          ["attach",            cmdAttach,                          CMD_CONSOLE],
          ["away",              cmdAway,                            CMD_CONSOLE],
+         ["back",              cmdAway,                            CMD_CONSOLE],
          ["cancel",            cmdCancel,           CMD_NEED_NET | CMD_CONSOLE],
          ["charset",           cmdCharset,                         CMD_CONSOLE],
          ["channel-motif",     cmdMotif,           CMD_NEED_CHAN | CMD_CONSOLE],
@@ -71,6 +72,7 @@ function initCommands()
          ["cmd-chatzilla-opts",  "cmd-docommand cmd_chatzillaPrefs",         0],
          ["cmd-docommand",     cmdDoCommand,                                 0],
          ["create-tab-for-view", cmdCreateTabForView,                        0],
+         ["custom-away",       cmdAway,                                      0],
          ["op",                cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
          ["dcc-accept",        cmdDCCAccept,                       CMD_CONSOLE],
          ["dcc-chat",          cmdDCCChat,          CMD_NEED_SRV | CMD_CONSOLE],
@@ -1541,7 +1543,7 @@ function cmdReconnectAll(e)
     var reconnected = false;
     for (var net in client.networks)
     {
-        if (client.networks[net].isConnected() || 
+        if (client.networks[net].isConnected() ||
             ("messages" in client.networks[net]))
         {
             client.networks[net].dispatch("reconnect", { reason: e.reason });
@@ -1843,6 +1845,13 @@ function cmdMsg(e)
 
 function cmdNick(e)
 {
+    if (!e.nickname)
+    {
+        e.nickname = prompt(MSG_NICK_PROMPT);
+        if (e.nickname == null)
+            return;
+    }
+
     if (e.server)
         e.server.changeNick(e.nickname);
 
@@ -2394,21 +2403,32 @@ function cmdAlias(e)
 
 function cmdAway(e)
 {
-    function sendToAllNetworks(reason)
+    function sendToAllNetworks(command, reason)
     {
         for (var n in client.networks)
         {
             if (client.networks[n].primServ &&
                 (client.networks[n].state == NET_ONLINE))
             {
-                client.networks[n].dispatch("away", { reason: reason });
+                client.networks[n].dispatch(command, { reason: reason });
             }
         }
     };
 
-    if (e.reason)
+    if ((e.command.name == "away") || (e.command.name == "custom-away"))
     {
         /* going away */
+        if (e.command.name == "custom-away")
+        {
+            e.reason = prompt(MSG_AWAY_PROMPT);
+            // prompt() returns null for cancelling, a string otherwise (even if empty).
+            if (e.reason == null)
+                return;
+        }
+        // No parameter, or user entered nothing in the prompt.
+        if (!e.reason)
+            e.reason = MSG_AWAY_DEFAULT;
+
         if (e.server)
         {
             if (e.network.state == NET_ONLINE)
@@ -2423,7 +2443,7 @@ function cmdAway(e)
         else
         {
             // Client view, do command for all networks.
-            sendToAllNetworks(e.reason);
+            sendToAllNetworks("away", e.reason);
             display(getMsg(MSG_AWAY_ON, e.reason));
         }
     }
@@ -2444,7 +2464,7 @@ function cmdAway(e)
         else
         {
             // Client view, do command for all networks.
-            sendToAllNetworks(null);
+            sendToAllNetworks("back");
             display(MSG_AWAY_OFF);
         }
     }
@@ -2917,11 +2937,11 @@ function cmdSave(e)
         {
             // Use this to access onStateChange flags
             var requestSpec;
-            try 
+            try
             {
               var channel = aRequest.QueryInterface(nsIChannel);
               requestSpec = channel.URI.spec;
-            } 
+            }
             catch (ex) { }
 
             // Detect end of file saving of any file:
@@ -2930,7 +2950,7 @@ function cmdSave(e)
                 if (aStatus == kErrorBindingAborted)
                     aStatus = 0;
 
-                // We abort saving for all errors except if image src file is 
+                // We abort saving for all errors except if image src file is
                 // not found
                 var abortSaving = (aStatus != 0 && aStatus != kFileNotFound);
                 if (abortSaving)
@@ -2949,8 +2969,8 @@ function cmdSave(e)
                     display(getMsg(MSG_SAVE_SUCCESSFUL, pm), MT_INFO);
                 }
                 /* Check if we've finished. WebBrowserPersist screws up when we
-                 * don't save additional files. Cope when saving html only or 
-                 * text. 
+                 * don't save additional files. Cope when saving html only or
+                 * text.
                  */
                 else if (!requestSpec && saveType > 0)
                 {
@@ -2961,7 +2981,7 @@ function cmdSave(e)
         },
 
         onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress,
-                                  aMaxSelfProgress, aCurTotalProgress, 
+                                  aMaxSelfProgress, aCurTotalProgress,
                                   aMaxTotalProgress) {},
         onLocationChange: function(aWebProgress, aRequest, aLocation) {},
         onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {},
@@ -3000,7 +3020,7 @@ function cmdSave(e)
                       [MSG_SAVE_HTMLONLYVIEW,"*.htm;*.html"],
                       [MSG_SAVE_PLAINTEXTVIEW,"*.txt"], "$noAll"];
     // constants and variables for the wbp.saveDocument call
-    var saveTypes = 
+    var saveTypes =
     {
         complete: 0,
         htmlonly: 1,
@@ -3010,7 +3030,7 @@ function cmdSave(e)
     if (!e.filename)
     {
         dialogTitle = getMsg(MSG_SAVE_DIALOGTITLE, e.sourceObject.viewName);
-        rv = pickSaveAs(dialogTitle, TYPELIST, e.sourceObject.viewName + 
+        rv = pickSaveAs(dialogTitle, TYPELIST, e.sourceObject.viewName +
                         ".html");
         if (rv.file == null)
             return;
@@ -3020,12 +3040,12 @@ function cmdSave(e)
     }
     else
     {
-        try 
+        try
         {
             // Try to use this as a path
             file = nsLocalFile(e.filename);
         }
-        catch (ex) 
+        catch (ex)
         {
             // try to use it as an url
             try
@@ -3035,7 +3055,7 @@ function cmdSave(e)
             catch(ex)
             {
                 // What is the user thinking? It's not rocket science...
-                display(getMsg(MSG_SAVE_ERR_INVALID_PATH, e.filename), 
+                display(getMsg(MSG_SAVE_ERR_INVALID_PATH, e.filename),
                         MT_ERROR);
                 return;
             }
@@ -3079,7 +3099,7 @@ function cmdSave(e)
 
         var askforreplace = (e.isInteractive && file.exists());
         if (askforreplace && !confirm(getMsg(MSG_SAVE_FILEEXISTS, e.filename)))
-            return;        
+            return;
     }
 
     // We don't want to convert anything, leave everything as is and replace
@@ -3132,7 +3152,7 @@ function cmdSave(e)
 
     try
     {
-        wbp.saveDocument(docToBeSaved, file, saveFolder, fileType, flags, 
+        wbp.saveDocument(docToBeSaved, file, saveFolder, fileType, flags,
                          charLimit);
     }
     catch (ex)

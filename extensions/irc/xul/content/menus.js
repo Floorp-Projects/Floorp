@@ -383,6 +383,24 @@ function initMenus()
         ]
     };
 
+    var net          = "cx.network";
+    var netAway      = "cx.network.prefs['away']";
+    var netAwayIsDef = "(cx.network.prefs['away'] == '" + MSG_AWAY_DEFAULT +
+                       "') and " + netAway;
+
+    client.menuSpecs["context:nickname"] = {
+        getContext: getDefaultContext,
+        items:
+        [
+         ["nick"],
+         ["-"],
+         ["back", {type: "checkbox", checkedif: net + " and !" + netAway}],
+         ["away", {type: "checkbox", checkedif: net + " and " + netAwayIsDef}],
+         ["custom-away",
+                  {type: "checkbox", checkedif: net + " and !" + netAwayIsDef}]
+        ]
+    };
+
 }
 
 function createMenus()

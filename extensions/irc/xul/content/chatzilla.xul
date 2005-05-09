@@ -136,7 +136,10 @@
       collapsed="true"/>
   
     <hbox id="input-widgets">
-      <text id="server-nick" value=""/>
+      <flatbutton id="nickname-button" onclick="onNicknamePopup();" align="center">
+        <label id="server-nick" value=""/>
+        <image class="flatbutton-dropmarker"/>
+      </flatbutton>
       <hbox id="multiline-box" flex="1" collapsed="true">
         <textbox id="multiline-input" multiline="true" flex="1" height="100px"
           class="multiline-input-widget" onfocus="onInputFocus();"/>
