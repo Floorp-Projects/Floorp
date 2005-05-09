@@ -38,6 +38,7 @@
 <!ENTITY threadColumn.label "Thread">
 <!ENTITY senderColumn.label "Sender">
 <!ENTITY recipientColumn.label "Recipient">
+<!ENTITY attachmentColumn.label "Attachments">
 <!ENTITY subjectColumn.label "Subject">
 <!ENTITY dateColumn.label "Date">
 <!ENTITY priorityColumn.label "Priority">
@@ -59,6 +60,7 @@
 <!ENTITY threadColumn.tooltip "Click to display message threads"> 
 <!ENTITY senderColumn.tooltip "Click to sort by sender">
 <!ENTITY recipientColumn.tooltip "Click to sort by recipient">
+<!ENTITY attachmentColumn.tooltip "Click to sort by attachments">
 <!ENTITY subjectColumn.tooltip "Click to sort by subject">
 <!ENTITY dateColumn.tooltip "Click to sort by date">
 <!ENTITY priorityColumn.tooltip "Click to sort by priority">
@@ -73,6 +75,3 @@
 <!ENTITY flagColumn.tooltip "Click to sort by flag">
 <!ENTITY locationColumn.tooltip "Click to sort by location">
 <!ENTITY idColumn.tooltip "Click to sort by order received">
-
-
-

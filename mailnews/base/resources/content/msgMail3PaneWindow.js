@@ -918,6 +918,12 @@ function OnFolderUnreadColAttrModified(event)
     }
 }
 
+function OnAttachmentColAttrModified(event)
+{
+  if (event.attrName == "hidden")
+    UpdateAttachmentCol(false);
+}
+
 function UpgradeFolderPaneUI()
 {
   // placeholder in case any new columns get added to the folder pane
@@ -962,36 +968,37 @@ function OnLoadFolderPane()
 // "mailnews.ui.threadpane.version" pref.
 function UpgradeThreadPaneUI()
 {
-  var threadPaneUIVersion;
-
   try {
-    threadPaneUIVersion = pref.getIntPref("mailnews.ui.threadpane.version");
-    if (threadPaneUIVersion < 4) {
-      var threadTree = document.getElementById("threadTree");
-      var junkCol = document.getElementById("junkStatusCol");
-      var beforeCol;
-
-      if (threadPaneUIVersion < 3) {
-        var subjectCol = document.getElementById("subjectCol");
-      
+    var threadTree = document.getElementById("threadTree");
+    var junkCol = document.getElementById("junkStatusCol");
+    var subjectCol = document.getElementById("subjectCol");
+    var beforeCol;
+    switch (pref.getIntPref("mailnews.ui.threadpane.version")) {
+      case 1: // upgrade from 1 to 2
+      case 2: // upgrade from 2 to 3
         beforeCol = subjectCol.boxObject.nextSibling.boxObject.nextSibling;
         if (beforeCol)
           threadTree._reorderColumn(junkCol, beforeCol, true);
         else // subjectCol was the last column, put it after
           threadTree._reorderColumn(junkCol, subjectCol, false);
-      }
 
-      var senderCol = document.getElementById("senderCol");
-      var recipientCol = document.getElementById("recipientCol");
-    
-      beforeCol = junkCol.boxObject.nextSibling.boxObject.nextSibling;
-      if (beforeCol)
-        threadTree._reorderColumn(recipientCol, beforeCol, true);
-      else // junkCol was the last column, put it after
-        threadTree._reorderColumn(recipientCol, junkCol, false);
-      threadTree._reorderColumn(senderCol, recipientCol, true);
+      case 3: // upgrade from 3 to 4
+        var senderCol = document.getElementById("senderCol");
+        var recipientCol = document.getElementById("recipientCol");
+        beforeCol = junkCol.boxObject.nextSibling.boxObject.nextSibling;
+        if (beforeCol)
+          threadTree._reorderColumn(recipientCol, beforeCol, true);
+        else // junkCol was the last column, put it after
+          threadTree._reorderColumn(recipientCol, junkCol, false);
+        threadTree._reorderColumn(senderCol, recipientCol, true);
 
-      pref.setIntPref("mailnews.ui.threadpane.version", 4);
+      case 4: // upgrade from 4 to 5
+        var attachmentCol = document.getElementById("attachmentCol");
+        threadTree._reorderColumn(attachmentCol, subjectCol, true);
+        pref.setIntPref("mailnews.ui.threadpane.version", 5);
+
+      default: // already upgraded
+        break;
     }
   }
   catch (ex) {
@@ -1002,6 +1009,18 @@ function UpgradeThreadPaneUI()
 function OnLoadThreadPane()
 {
     UpgradeThreadPaneUI();
+    UpdateAttachmentCol(true);
+}
+
+function UpdateAttachmentCol(aFirstTimeFlag)
+{
+  var attachmentCol = document.getElementById("attachmentCol");
+  var threadTree = GetThreadTree();
+  threadTree.setAttribute("noattachcol", attachmentCol.getAttribute("hidden"));
+  if (aFirstTimeFlag)
+    attachmentCol.addEventListener("DOMAttrModified", OnAttachmentColAttrModified, false);
+  else
+    threadTree.treeBoxObject.clearStyleAndImageCaches();
 }
 
 function GetFolderDatasource()
