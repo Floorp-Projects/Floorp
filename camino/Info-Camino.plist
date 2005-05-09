@@ -88,7 +88,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Camino</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Camino 0.8+, © 2003-2005 The Mozilla Foundation</string>
+	<string>Camino 0.8+, © 1998-2005 Contributors</string>
 	<key>CFBundleIconFile</key>
 	<string>appicon.icns</string>
 	<key>CFBundleIdentifier</key>
