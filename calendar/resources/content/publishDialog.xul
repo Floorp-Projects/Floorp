@@ -94,7 +94,7 @@
                         <hbox class="field-label-box-class" pack="end">
                             <description>&calendar.publish.url.label;</description>
                         </hbox>
-                        <textbox flex="1" id="publish-remotePath-textbox" onkeypress="checkURLField()"/>
+                        <textbox flex="1" id="publish-remotePath-textbox" oninput="checkURLField()"/>
                     </row>
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end"/>
