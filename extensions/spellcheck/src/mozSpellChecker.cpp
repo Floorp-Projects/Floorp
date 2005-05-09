@@ -209,12 +209,30 @@ mozSpellChecker::Replace(const nsAString &aOldWord, const nsAString &aNewWord, P
     while(( NS_SUCCEEDED(mTsDoc->IsDone(&done)) && !done ) &&(currentBlock < startBlock)){
       mTsDoc->NextBlock();
     }
+
+//After we have moved to the block where the first occurance of replace was done, put the 
+//selection to the next word following it. In case there is no word following it i.e if it happens
+//to be the last word in that block, then move to the next block and put the selection to the 
+//first word in that block, otherwise when the Setupdoc() is called, it queries the LastSelectedBlock()
+//and the selection offset of the last occurance of the replaced word is taken instead of the first 
+//occurance and things get messed up as reported in the bug 244969
+
     if( NS_SUCCEEDED(mTsDoc->IsDone(&done)) && !done ){
-      nsString str;                                // regenerate the offset table 
-      result = mTsDoc->GetCurrentTextBlock(&str);  // this seems necessary.  I'm not 100% sure why
-      mTsDoc->SetSelection(selOffset,0);
+      nsString str;                                
+      result = mTsDoc->GetCurrentTextBlock(&str);  
+      result = mConverter->FindNextWord(str.get(),str.Length(),selOffset,&begin,&end);
+            if(end == -1)
+             {
+                mTsDoc->NextBlock();
+                selOffset=0;
+                result = mTsDoc->GetCurrentTextBlock(&str); 
+                result = mConverter->FindNextWord(str.get(),str.Length(),selOffset,&begin,&end);
+                mTsDoc->SetSelection(begin, 0);
+             }
+         else
+                mTsDoc->SetSelection(begin, 0);
     }
-  }
+ }
   else{
     mTsDoc->InsertText(&newWord);
   }
