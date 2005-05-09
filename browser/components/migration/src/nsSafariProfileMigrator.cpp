@@ -360,7 +360,7 @@ nsSafariProfileMigrator::SetDownloadHandlers(void* aTransform, nsIPrefBranch* aB
         nsCOMPtr<nsIRDFResource> externalApplicationResource(do_QueryInterface(externalApplicationNode));
 
         // Strip the resources down so that the datasource is completely flushed. 
-        if (externalApplicationResource);
+        if (externalApplicationResource)
           CleanResource(mimeTypes, externalApplicationResource);
         
         CleanResource(mimeTypes, handlerPropResource);
