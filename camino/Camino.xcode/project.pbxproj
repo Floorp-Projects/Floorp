@@ -10079,7 +10079,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = text;
 			name = DistinguishedSchema.tbl;
-			path = ../extensions/wallet/src/DistinguishedSchema.tbl;
+			path = wallet/tables/DistinguishedSchema.tbl;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -10088,7 +10088,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = text;
 			name = FieldSchema.tbl;
-			path = ../extensions/wallet/src/FieldSchema.tbl;
+			path = wallet/tables/FieldSchema.tbl;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -10097,7 +10097,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = text;
 			name = PositionalSchema.tbl;
-			path = ../extensions/wallet/src/PositionalSchema.tbl;
+			path = wallet/tables/PositionalSchema.tbl;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -10106,7 +10106,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = text;
 			name = SchemaConcat.tbl;
-			path = ../extensions/wallet/src/SchemaConcat.tbl;
+			path = wallet/tables/SchemaConcat.tbl;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -10115,7 +10115,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = text;
 			name = SchemaStrings.tbl;
-			path = ../extensions/wallet/src/SchemaStrings.tbl;
+			path = wallet/tables/SchemaStrings.tbl;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -10124,7 +10124,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = text;
 			name = StateSchema.tbl;
-			path = ../extensions/wallet/src/StateSchema.tbl;
+			path = wallet/tables/StateSchema.tbl;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -10133,7 +10133,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = text;
 			name = VcardSchema.tbl;
-			path = ../extensions/wallet/src/VcardSchema.tbl;
+			path = wallet/tables/VcardSchema.tbl;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
