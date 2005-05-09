@@ -407,24 +407,12 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 {
   NSMutableArray* itemsArray = [NSMutableArray arrayWithCapacity:[mHistoryOutlineView numberOfSelectedRows]];
   
-#if 0
-  // XXX selectedRowEnumerator seems to have a bug where it is empty if the first item
-  // in the table is selected. work around that here
-  if ([mHistoryOutlineView selectedRow] == 0)
+  NSEnumerator* rowEnum = [mHistoryOutlineView selectedRowEnumerator];
+  NSNumber* currentRow = nil;
+  while ((currentRow = [rowEnum nextObject]))
   {
-    HistoryItem * item = [mHistoryOutlineView itemAtRow:0];
+    HistoryItem * item = [mHistoryOutlineView itemAtRow:[currentRow intValue]];
     [itemsArray addObject:item];
-  }
-  else
-#endif
-  {
-    NSEnumerator* rowEnum = [mHistoryOutlineView selectedRowEnumerator];
-    int currentRow;
-    while ((currentRow = [[rowEnum nextObject] intValue]))
-    {
-      HistoryItem * item = [mHistoryOutlineView itemAtRow:currentRow];
-      [itemsArray addObject:item];
-    }
   }
   
   return itemsArray;
