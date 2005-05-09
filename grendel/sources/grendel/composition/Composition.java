@@ -95,18 +95,13 @@ public class Composition extends GeneralFrame {
         fToolBar = mCompositionPanel.getToolBar();
         fToolBar.add(fToolBar.makeNewSpring());
 
-        //    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
-        //                                                  null));
-//    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(fAnimation, null));
-
-
         mAddressBar = mCompositionPanel.getAddressBar();
 
         //top collapsible item
         fToolBarPanelConstraints.anchor = GridBagConstraints.WEST;
         fToolBarPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
         // fToolBarPanelConstraints.weightx = 1.0;
-        fToolBarPanel.add(fToolBar, fToolBarPanelConstraints);
+        fToolBarPanel.setComponent(fToolBar);
         fToolBarPanelConstraints.anchor = GridBagConstraints.EAST;
         fToolBarPanelConstraints.fill = GridBagConstraints.NONE;
         fToolBarPanelConstraints.weightx = 1.0;

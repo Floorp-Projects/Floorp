@@ -43,7 +43,6 @@ import javax.swing.border.Border;
 import javax.swing.plaf.metal.MetalIconFactory;
 import javax.swing.ImageIcon;
 
-import grendel.ui.ToolBarLayout;
 import grendel.widgets.Collapsible;
 import grendel.widgets.Spring;
 

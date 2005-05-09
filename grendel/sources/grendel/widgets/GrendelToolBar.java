@@ -34,27 +34,21 @@ import javax.swing.ImageIcon;
 import javax.swing.JToolBar;
 import javax.swing.JButton;
 
-import grendel.ui.ToolBarLayout;
-
 import grendel.widgets.Spring;
 
 import com.trfenv.parsers.Event;
 
 public class GrendelToolBar extends JToolBar {
 
-  private ToolBarLayout layout;
-
   public GrendelToolBar() {
     super();
-    layout = new ToolBarLayout();
-    setLayout(layout);
     setFloatable(false);
 
     setBackground(new java.awt.Color(238,238,238));
   }
 
   public Spring makeNewSpring() {
-    return layout.createSpring();
+    return new Spring();
   }
 
   public void addButton(Event aActionListener,

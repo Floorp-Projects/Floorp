@@ -27,8 +27,6 @@
 
 package grendel.ui;
 
-import grendel.ui.ToolBarLayout;
-
 import grendel.widgets.GrendelToolBar;
 
 import java.awt.BorderLayout;
@@ -84,7 +82,6 @@ public class GeneralPanel extends JPanel {
 
     try {
       res = new GrendelToolBar();
-      //  res.setLayout(new ToolBarLayout());
 
       ResourceBundle toolbarresources = ResourceBundle.getBundle(fResourceBase + ".Toolbar");
       ResourceBundle menuresources = ResourceBundle.getBundle(fResourceBase + ".Menus");

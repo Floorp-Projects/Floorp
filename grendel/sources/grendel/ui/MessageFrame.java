@@ -61,9 +61,6 @@ public class MessageFrame extends GeneralFrame {
     getRootPane().setJMenuBar(fMenu);
 
     fToolBar = fMessagePanel.getToolBar();
-    //    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
-    //                                                       null));
-//    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(fAnimation, null));
     fToolBarPanel.setComponent(fToolBar);
 
     fStatusBar = buildStatusBar();

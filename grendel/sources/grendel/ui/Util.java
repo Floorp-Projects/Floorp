@@ -49,7 +49,6 @@ import javax.swing.JScrollPane;
 //import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 
-import grendel.ui.ToolBarLayout;
 import grendel.widgets.GrendelToolBar;
 
 import com.trfenv.parsers.Event;
@@ -141,7 +140,6 @@ public class Util {
 
   static public GrendelToolBar MergeToolBars(GrendelToolBar aBar1, GrendelToolBar aBar2) {
     GrendelToolBar res = new GrendelToolBar();
-    res.setLayout(new ToolBarLayout());
 
     Component barArray1[] = aBar1.getComponents();
     Component barArray2[] = aBar2.getComponents();

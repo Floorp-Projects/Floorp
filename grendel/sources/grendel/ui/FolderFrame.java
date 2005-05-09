@@ -62,9 +62,6 @@ public class FolderFrame extends GeneralFrame {
     getRootPane().setJMenuBar(fMenu);
 
     fToolBar = fFolderPanel.getToolBar();
-    //  fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
-    //                                                       null));
-// fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(fAnimation, null));
     fToolBarPanel.setComponent(fToolBar);
 
     fStatusBar = buildStatusBar();

@@ -76,7 +76,6 @@ import javax.swing.UIManager;
 import javax.swing.BoxLayout;
 
 import grendel.prefs.base.InvisiblePrefs;
-import grendel.ui.ToolBarLayout;
 import grendel.widgets.*;
 
 public class GeneralFrame extends JFrame
@@ -89,7 +88,6 @@ public class GeneralFrame extends JFrame
   protected Animation     fAnimation;
   protected JMenuBar      fMenu;
   protected CollapsiblePanel        fToolBarPanel;
-  protected GridBagLayout fToolBarPanelLayout;
   protected GridBagConstraints fToolBarPanelConstraints;
   protected GrendelToolBar      fToolBar;
   protected Component     fStatusBar;
@@ -136,7 +134,6 @@ public class GeneralFrame extends JFrame
                                 30);
 
     fToolBarPanel = new CollapsiblePanel(true);
-    fToolBarPanelLayout = new ToolBarLayout();
     fToolBarPanelConstraints = new GridBagConstraints();
     fPanel.add(fToolBarPanel, BorderLayout.NORTH);
     //    fUIManager = new netscape.orion.uimanager.UIManager(fToolBarPanel);
