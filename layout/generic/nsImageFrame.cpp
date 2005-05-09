@@ -1794,6 +1794,12 @@ nsImageFrame::GetType() const
 
 #ifdef DEBUG
 NS_IMETHODIMP
+nsImageFrame::GetFrameName(nsAString& aResult) const
+{
+  return MakeFrameName(NS_LITERAL_STRING("ImageFrame"), aResult);
+}
+
+NS_IMETHODIMP
 nsImageFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
