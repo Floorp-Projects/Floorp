@@ -82,8 +82,8 @@
         <td align="left">[% bug.priority FILTER html %]</td>
         <td align="left">[% bug.rep_platform FILTER html %]</td>
         <td align="left">[% bug.$assignee_login_string FILTER html %]</td>
-        <td align="left">[% bug.bug_status FILTER html %]</td>
-        <td align="left">[% bug.resolution FILTER html %]</td>
+        <td align="left">[% status_descs.${bug.bug_status} FILTER html %]</td>
+        <td align="left">[% resolutions.descs.${bug.resolution} FILTER html %]</td>
         <td align="left">[% bug.short_desc FILTER html %]</td>
       </tr>
     [% END %]

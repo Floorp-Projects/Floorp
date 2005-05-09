@@ -21,6 +21,7 @@
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
+[% PROCESS "global/field-descs.none.tmpl" %]
 [% INCLUDE global/header.html.tmpl title = "A $terms.Bug's Life Cycle" %]
 
 <p>
@@ -54,45 +55,45 @@ cycle of [% terms.abug %].
     <td>
       <dl>
         <dt>
-          <b>UNCONFIRMED</b>
+          <b>[% status_descs.UNCONFIRMED FILTER html %]</b>
         </dt>
         <dd>
           This [% terms.bug %] has recently been added to the database. 
           Nobody has validated that this [% terms.bug %] is true. Users
           who have the "canconfirm" permission set may confirm
-          this [% terms.bug %], changing its state to NEW. Or, it may be
-          directly resolved and marked RESOLVED.
+          this [% terms.bug %], changing its state to [% status_descs.NEW FILTER html %]. Or, it may be
+          directly resolved and marked [% status_descs.RESOLVED FILTER html %].
         </dd>
 
         <dt>
-          <b>NEW</b>
+          <b>[% status_descs.NEW FILTER html %]</b>
         </dt>
         <dd>
           This [% terms.bug %] has recently been added to the assignee's
           list of [% terms.bugs %] and must be processed. [% terms.Bugs %] in
-          this state may be accepted, and become <b>ASSIGNED</b>, passed
-          on to someone else, and remain <b>NEW</b>, or resolved and marked
-          <b>RESOLVED</b>.
+          this state may be accepted, and become <b>[% status_descs.ASSIGNED FILTER html %]</b>, passed
+          on to someone else, and remain <b>[% status_descs.NEW FILTER html %]</b>, or resolved and marked
+          <b>[% status_descs.RESOLVED FILTER html %]</b>.
         </dd>
 
         <dt>
-          <b>ASSIGNED</b>
+          <b>[% status_descs.ASSIGNED FILTER html %]</b>
         </dt>
         <dd>
           This [% terms.bug %] is not yet resolved, but is assigned to the 
           proper person. From here [% terms.bugs %] can be given to another 
-          person and become <b>NEW</b>, or resolved and become <b>RESOLVED</b>.
+          person and become <b>[% status_descs.NEW FILTER html %]</b>, or resolved and become <b>[% descs.bug_status_descs.RESOLVED FILTER html  %]</b>.
         </dd>
 
         <dt>
-          <b>REOPENED</b>
+          <b>[% status_descs.REOPENED FILTER html %]</b>
         </dt>
         <dd>
           This [% terms.bug %] was once resolved, but the resolution was 
-          deemed incorrect. For example, a <b>WORKSFORME</b> [% terms.bug %] is
-          <b>REOPENED</b> when more information shows up and
+          deemed incorrect. For example, a <b>[% status_descs.WORKSFORME FILTER html %]</b> [% terms.bug %] is
+          <b>[% status_descs.REOPENED FILTER html %]</b> when more information shows up and
           the [% terms.bug %] is now reproducible. From here [% terms.bugs %] are
-          either marked <b>ASSIGNED</b> or <b>RESOLVED</b>.
+          either marked <b>[% status_descs.ASSIGNED FILTER html %]</b> or <b>[% descs.bug_status_descs.RESOLVED FILTER html %]</b>.
         </dd>
       </dl>
     </td>
@@ -113,33 +114,33 @@ cycle of [% terms.abug %].
     <td>
       <dl>
         <dt>
-          <b>RESOLVED</b>
+          <b>[% status_descs.RESOLVED FILTER html %]</b>
         </dt>
         <dd>
           A resolution has been taken, and it is awaiting verification by
           QA. From here [% terms.bugs %] are either re-opened and become 
-          <b>REOPENED</b>, are marked <b>VERIFIED</b>, or are closed for
-          good and marked <b>CLOSED</b>.
+          <b>[% status_descs.REOPENED FILTER html %]</b>, are marked <b>[% descs.bug_status_descs.VERIFIED FILTER html %]</b>, or are closed for
+          good and marked <b>[% status_descs.CLOSED FILTER html %]</b>.
         </dd>
 
         <dt>
-          <b>VERIFIED</b>
+          <b>[% status_descs.VERIFIED FILTER html %]</b>
         </dt>
         <dd>
           QA has looked at the [% terms.bug %] and the resolution and 
           agrees that the appropriate resolution has been taken. [% terms.Bugs %] remain
           in this state until the product they were reported
           against actually ships, at which point they become
-          <b>CLOSED</b>.
+          <b>[% status_descs.CLOSED FILTER html %]</b>.
         </dd>
 
         <dt>
-          <b>CLOSED</b>
+          <b>[% status_descs.CLOSED FILTER html %]</b>
         </dt>
         <dd>
           The [% terms.bug %] is considered dead, the resolution is correct. 
           Any zombie [% terms.bugs %] who choose to walk the earth again must 
-          do so by becoming <b>REOPENED</b>.
+          do so by becoming <b>[% status_descs.REOPENED FILTER html %]</b>.
         </dd>
       </dl>
     </td>
@@ -147,7 +148,7 @@ cycle of [% terms.abug %].
     <td>
       <dl>
         <dt>
-          <b>FIXED</b>
+          <b>[% resolution_descs.FIXED FILTER html %]</b>
         </dt>
         <dd>
           A fix for this [% terms.bug %] is checked into the tree and 
@@ -155,14 +156,14 @@ cycle of [% terms.abug %].
         </dd>
 
         <dt>
-          <b>INVALID</b>
+          <b>[% resolution_descs.INVALID FILTER html %]</b>
         </dt>
         <dd>
           The problem described is not [% terms.abug %].
         </dd>
 
         <dt>
-          <b>WONTFIX</b>
+          <b>[% resolution_descs.WONTFIX FILTER html %]</b>
         </dt>
         <dd>
           The problem described is [% terms.abug %] which will never be 
@@ -170,7 +171,7 @@ cycle of [% terms.abug %].
         </dd>
 
         <dt>
-         <b>DUPLICATE</b>
+         <b>[% resolution_descs.DUPLICATE FILTER html %]</b>
         </dt>
         <dd>
           The problem is a duplicate of an existing [% terms.bug %].
@@ -180,7 +181,7 @@ cycle of [% terms.abug %].
         </dd>
 
         <dt>
-          <b>WORKSFORME</b>
+          <b>[% resolution_descs.WORKSFORME FILTER html %]</b>
         </dt>
         <dd>
           All attempts at reproducing this [% terms.bug %] were futile, 
@@ -190,7 +191,7 @@ cycle of [% terms.abug %].
         </dd>
 
         <dt>
-          <b>MOVED</b>
+          <b>[% resolution_descs.MOVED FILTER html %]</b>
         </dt>
         <dd>
           The problem was specific to a related product 
@@ -295,12 +296,12 @@ others.
 
 <p>
 This is the person in charge of resolving the [% terms.bug %]. Every time
-this field changes, the status changes to <b>NEW</b> to make it
+this field changes, the status changes to <b>[% status_descs.NEW FILTER html %]</b> to make it
 easy to see which new [% terms.bugs %] have appeared on a person's list.</p>
 
 <p>
-The default status for queries is set to NEW, ASSIGNED and
-REOPENED. When searching for [% terms.bugs %] that have been resolved or
+The default status for queries is set to [% status_descs.NEW FILTER html %], [% descs.bug_status_descs.ASSIGNED FILTER html %] and 
+[% status_descs.REOPENED FILTER html %]. When searching for [% terms.bugs %] that have been resolved or
 verified, remember to set the status field appropriately. 
 </p>
 

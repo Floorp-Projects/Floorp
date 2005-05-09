@@ -22,6 +22,8 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
+[% PROCESS "global/field-descs.none.tmpl" %]
+
 [% PROCESS bug/time.html.tmpl %]
 
   <script type="text/javascript">
@@ -197,9 +199,9 @@
       [% PROCESS select selname => "component" accesskey => "m" %]
 
       <td align="right">
-        <b>Version:</b>
+        <b><u>V</u>ersion:</b>
       </td>
-      [% PROCESS select selname => "version" %]
+      [% PROCESS select selname => "version" accesskey => "v" %]
 
       <td rowspan="4" align="right" valign="top">
         <b>CC:</b>
@@ -226,7 +228,7 @@
           <a href="page.cgi?id=fields.html#status">Status</a>:
         </b>
       </td>
-      <td>[% bug.bug_status FILTER html %]</td>
+      <td>[% status_descs.${bug.bug_status} FILTER html %]</td>
       <td>&nbsp;</td>
 
       <td align="right">
@@ -242,7 +244,7 @@
         </b>
       </td>
       <td>
-        [% bug.resolution FILTER html %]
+        [% resolution_descs.${bug.resolution} FILTER html %]
         [% IF bug.resolution == "DUPLICATE" %]
           of [% terms.bug %] [%+ "${bug.dup_id}" FILTER bug_link(bug.dup_id) %]
         [% END %]
@@ -250,9 +252,9 @@
       <td>&nbsp;</td>
 
       <td align="right">
-        <b><a href="page.cgi?id=fields.html#bug_severity">Severity</a>:</b>
+        <b><a href="page.cgi?id=fields.html#bug_severity">S<u>e</u>verity</a>:</b>
       </td>
-      [% PROCESS select selname = "bug_severity" %]
+      [% PROCESS select selname = "bug_severity" accesskey => "e" %]
 
     </tr>
 
@@ -271,10 +273,10 @@
             [% IF bug.milestoneurl %]
               <a href="[% bug.milestoneurl FILTER html %]">
             [% END %]
-            Target Milestone[% "</a>" IF bug.milestoneurl %]:
+            <u>T</u>arget Milestone[% "</a>" IF bug.milestoneurl %]:
           </b>
         </td>
-        [% PROCESS select selname = "target_milestone" %]
+        [% PROCESS select selname = "target_milestone" accesskey => "t" %]
       [% ELSE %]
         <td colspan="3">&nbsp;</td>
       [% END %]
@@ -442,8 +444,8 @@
 
   <table>
     <tr>
-    [% PROCESS dependencies 
-       dep = { title => "depends on", fieldname => "dependson" } %]
+    [% PROCESS dependencies accesskey = "d"
+       dep = { title => "<u>d</u>epends on", fieldname => "dependson" } %]
       <td rowspan="2">
         <a href="showdependencytree.cgi?id=[% bug.bug_id %]">Show
         dependency tree</a>

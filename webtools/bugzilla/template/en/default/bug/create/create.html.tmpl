@@ -22,6 +22,7 @@
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
+[% PROCESS "global/field-descs.none.tmpl" %]
 
 [% product_name = product FILTER html %]
 [% PROCESS global/header.html.tmpl
@@ -200,7 +201,7 @@ function set_assign_to() {
   <input type="hidden" name="bug_status" 
          value="[% default.bug_status FILTER html %]">
     <td align="right" valign="top"><strong>Initial State:</strong></td>
-    <td valign="top">[% default.bug_status FILTER html %]</td>
+    <td valign="top">[% status_descs.${default.bug_status} FILTER html %]</td>
 [% ELSE %]
     [% sel = { description => 'Initial State', name => 'bug_status' } %]
     [% INCLUDE select %]

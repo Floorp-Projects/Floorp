@@ -27,8 +27,8 @@
   <br>
   <input type="radio" id="knob-leave" name="knob" value="none" checked="checked">
   <label for="knob-leave">
-    Leave as <b>[% bug.bug_status FILTER html %]&nbsp;
-                [% bug.resolution FILTER html %]</b>
+    Leave as <b>[% status_descs.${bug.bug_status} FILTER html %]&nbsp;
+                [% resolution_descs.${bug.resolution} FILTER html %]</b>
   </label>
   <br>
 
@@ -37,7 +37,7 @@
   [% IF bug.isunconfirmed && bug.user.canconfirm %]
     <input type="radio" id="knob-confirm" name="knob" value="confirm">
     <label for="knob-confirm">
-      Confirm [% terms.bug %] (change status to <b>NEW</b>)
+      Confirm [% terms.bug %] (change status to <b>[% status_descs.NEW FILTER html %]</b>)
     </label>
     <br>
     [% knum = knum + 1 %]
@@ -49,7 +49,7 @@
     <label for="knob-accept">
       Accept [% terms.bug %] (
       [% IF bug.isunconfirmed %]confirm [% terms.bug %], and [% END %]change
-      status to <b>ASSIGNED</b>)
+      status to <b>[% status_descs.ASSIGNED FILTER html %]</b>)
     </label>
     <br>
     [% knum = knum + 1 %]
@@ -61,7 +61,7 @@
         <input type="radio" id="knob-clear" name="knob" value="clearresolution">
         <label for="knob-clear">
           Clear the resolution (remove the current resolution of
-          <b>[% bug.resolution FILTER html %]</b>)
+          <b>[% status_descs.${bug.resolution} FILTER html %]</b>)
         </label>
         <br>
         [% knum = knum + 1 %]
@@ -75,7 +75,7 @@
       <select name="resolution"
               onchange="document.changeform.knob[[% knum %]].checked=true">
         [% FOREACH r = bug.choices.resolution %]
-          <option value="[% r FILTER html %]">[% r FILTER html %]</option>
+          <option value="[% r FILTER html %]">[% resolution_descs.${r} FILTER html %]</option>
         [% END %]
       </select>
       <br>
@@ -110,7 +110,7 @@
         [% IF bug.isunconfirmed && bug.user.canconfirm %]
           &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="andconfirm" name="andconfirm">
           <label for="andconfirm">
-            and confirm [% terms.bug %] (change status to <b>NEW</b>)
+            and confirm [% terms.bug %] (change status to <b>[% status_descs.NEW FILTER html %]</b>)
           </label>
           <br>
         [% END %]
@@ -126,7 +126,7 @@
         [% IF bug.isunconfirmed && bug.user.canconfirm %]
           &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="compconfirm" name="compconfirm">
           <label for="compconfirm">
-            and confirm [% terms.bug %] (change status to <b>NEW</b>)
+            and confirm [% terms.bug %] (change status to <b>[% status_descs.NEW FILTER html %]</b>)
           </label>
           <br>
         [% END %]
@@ -145,7 +145,7 @@
       [% IF bug.bug_status == "RESOLVED" %]
         <input type="radio" id="knob-verify" name="knob" value="verify">
         <label for="knob-verify">
-          Mark [% terms.bug %] as <b>VERIFIED</b>
+          Mark [% terms.bug %] as <b>[% status_descs.VERIFIED FILTER html %]</b>
         </label>
         <br>
         [% knum = knum + 1 %]
@@ -153,7 +153,7 @@
       [% IF bug.bug_status != "CLOSED" %]
         <input type="radio" id="knob-close" name="knob" value="close">
         <label for="knob-close">
-          Mark [% terms.bug %] as <b>CLOSED</b>
+          Mark [% terms.bug %] as <b>[% status_descs.CLOSED FILTER html %]</b>
         </label>
         <br>
         [% knum = knum + 1 %]

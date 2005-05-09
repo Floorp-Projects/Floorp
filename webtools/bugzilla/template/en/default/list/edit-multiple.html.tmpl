@@ -245,7 +245,7 @@
   [% knum = knum + 1 %]
   <input id="knob-confirm" type="radio" name="knob" value="confirm">
   <label for="knob-confirm">
-    Confirm [% terms.bugs %] (change status to <b>NEW</b>)
+    Confirm [% terms.bugs %] (change status to <b>[% status_descs.NEW FILTER html %]</b>)
   </label><br>
 [% END %]
 
@@ -255,7 +255,7 @@
   [% knum = knum + 1 %]
   <input id="knob-accept" type="radio" name="knob" value="accept">
   <label for="knob-accept">
-    Accept [% terms.bugs %] (change status to <b>ASSIGNED</b>)
+    Accept [% terms.bugs %] (change status to <b>[% status_descs.ASSIGNED FILTER html %]</b>)
   </label><br>
 
   [% knum = knum + 1 %]
@@ -289,14 +289,14 @@
   [% IF bugstatuses.contains('RESOLVED') %]
     [% knum = knum + 1 %]
     <input id="knob-verify" type="radio" name="knob" value="verify">
-    <label for="knob-verify">Mark [% terms.bugs %] as <b>VERIFIED</b></label><br>
+    <label for="knob-verify">Mark [% terms.bugs %] as <b>[% status_descs.VERIFIED FILTER html %]</b></label><br>
   [% END %]
 [% END %]
 
 [% IF !bugstatuses.containsany(openstates) AND !bugstatuses.contains('CLOSED') %]
   [% knum = knum + 1 %]
   <input id="knob-close" type="radio" name="knob" value="close">
-  <label for="knob-close">Mark [% terms.bugs %] as <b>CLOSED</b></label><br>
+  <label for="knob-close">Mark [% terms.bugs %] as <b>[% status_descs.CLOSED FILTER html %]</b></label><br>
 [% END %]
 
 [% knum = knum + 1 %]
