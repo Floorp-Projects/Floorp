@@ -56,9 +56,12 @@
    <script type="application/x-javascript">
       var labelLong = "&pref.dateformat.long;";      
       var labelShort = "&pref.dateformat.short;";
+      var noneLabel = "&pref.categories.none.label;";
       var addTitle = "&pref.categories.add.title;";
       var editTitle = "&pref.categories.edit.title;";
-      var addPrompt = "&pref.categories.add.prompt;";
+      var overwrite = "&pref.categories.overwrite;";
+      var overwriteTitle = "&pref.categories.overwrite.title;";
+      var noBlankCategories = "&pref.categories.noBlankCategories;";
    </script>
 
    <script type="application/x-javascript">
@@ -83,9 +86,15 @@
          dateFormatMenuList.selectedIndex = selectedIndex;
       }
 
-      // An array to store the categoris in, because taking them from
+      // An array to store the categories in, because taking them from
       // the listbox is unreliable. It might update too late.
       var gCategoryList;
+      //A list of preferences to be reverted when the dialog is cancelled.
+      var backupPrefList = [];
+
+      var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefService);
+      var categoryPrefBranch = prefService.getBranch("calendar.category.color.");
 
       // not in onload, because that will be called too early
       // if this panel is the default to open. and it is.
@@ -94,61 +103,183 @@
         var categories = document.getElementById("categories").value;
         gCategoryList = categories.split(",");
         updateCategoryList();
+        parent.PrefDialogService.registerCancelCallbackFunc(panelOnCancel);
       }
 
       function updateCategoryList()
       {
+        gCategoryList.sort();
         document.getElementById("categories").value = gCategoryList.join(",");
-        var listbox = document.getElementById("categorieslist")
+        var listbox = document.getElementById("categorieslist");
 
         listbox.clearSelection();
-        while (listbox.firstChild)
-            listbox.removeChild(listbox.firstChild);
+        document.getElementById("editCButton").disabled="true";
+        document.getElementById("deleteCButton").disabled="true";
+
+        while(listbox.lastChild.id != "categoryColumns")
+           listbox.removeChild(listbox.lastChild);
 
         for (var i = 0; i < gCategoryList.length; i++) {
-          listbox.appendItem(gCategoryList[i], gCategoryList[i]);
+           var newListItem = document.createElement("listitem");
+           var categoryName = document.createElement("listcell");
+           categoryName.setAttribute("id", gCategoryList[i]);
+           categoryName.setAttribute("label", gCategoryList[i]);
+           var categoryNameFix = fixName(gCategoryList[i]);
+           var categoryColor = document.createElement("listcell");
+           try {
+              var colorCode = categoryPrefBranch.getCharPref(categoryNameFix);
+              categoryColor.setAttribute("id", colorCode);
+              categoryColor.setAttribute("style","background-color: "+colorCode+';');
+           }
+           catch (ex) {
+              categoryColor.setAttribute("label", noneLabel);
+           }
+
+           newListItem.appendChild(categoryName);
+           newListItem.appendChild(categoryColor);
+           listbox.appendChild(newListItem);
         }
       }
 
       function addCategory()
       {
-        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                      .getService(Components.interfaces.nsIPromptService);
-        var result = {value:null};
-        var dummy = { value: 0 };
-        if (promptService.prompt(null, addTitle, addPrompt,
-                                 result, null, dummy) &&
-            result.value.length) {
-          gCategoryList.push(result.value);
-          updateCategoryList();
-        }
+         var list = document.getElementById("categorieslist");
+         list.selectedIndex = -1;
+         document.getElementById("editCButton").disabled = "true";
+         document.getElementById("deleteCButton").disabled = "true";
+         window.openDialog("chrome://calendar/content/pref/editCategory.xul",
+                           "addCategory", "modal,centerscreen,chrome,resizable=no",
+                           "", null, addTitle);
       }
 
       function editCategory()
       {
         var list = document.getElementById("categorieslist");
-        if (list.selectedItem) {
-          var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                        .getService(Components.interfaces.nsIPromptService);
-          var result = {value: gCategoryList[list.selectedIndex]};
-          var dummy = { value: 0 };
-
-          if (promptService.prompt(null, editTitle, addPrompt,
-                                   result, null, dummy) &&
-              result.value.length) {
-            gCategoryList.splice(list.selectedIndex, 1, result.value);
-          }
+        var categoryNameFix=fixName(gCategoryList[list.selectedIndex]);
+        try {
+           var currentColor = categoryPrefBranch.getCharPref(categoryNameFix);
         }
-        updateCategoryList();
+        catch (ex) {
+           var currentColor = null;
+        }
+        if(list.selectedItem)
+           window.openDialog("chrome://calendar/content/pref/editCategory.xul",
+                             "editCategory", "modal,centerscreen,chrome,resizable=no",
+                             gCategoryList[list.selectedIndex], currentColor, editTitle);
       }
 
       function deleteCategory()
       {
         var list = document.getElementById("categorieslist");
         if (list.selectedItem) {
-          gCategoryList.splice(list.selectedIndex, 1);
-          updateCategoryList();
+          var categoryNameFix = fixName(categoryName);
+           try {
+              var currentColor = categoryPrefBranch.getCharPref(categoryNameFix);
+           }
+           catch (ex) {
+              var currentColor = null;
+           }
+           backupData(categoryNameFix, currentColor);
+           try {
+              categoryPrefBranch.clearUserPref(categoryNameFix);
+           }
+           catch (ex) { }
+           gCategoryList.splice(list.selectedIndex, 1);
+           updateCategoryList();
         }
+      }
+
+      function saveCategory(categoryName, categoryColor) {
+         var list = document.getElementById("categorieslist");
+         //Check to make sure another category doesn't have the same name
+         var toBeDeleted = -1;
+         var promptService = 
+             Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                       .getService(Components.interfaces.nsIPromptService);
+         for (var i = 0; i < gCategoryList.length; i++) {
+            if (i == list.selectedIndex)
+               continue;
+            if (categoryName.toLowerCase() == gCategoryList[i].toLowerCase()) {
+               if (promptService.confirm(null, overwriteTitle, overwrite)) {
+                  if(list.selectedIndex != -1)
+                     //Don't delete the old category yet.  It will mess up indices.
+                     toBeDeleted = list.selectedIndex;
+                  list.selectedIndex = i;
+               } else {
+                  return;
+               }
+            }
+         }
+
+         if (categoryName.length == 0) {
+            promptService.alert(null, null, noBlankCategories);
+            return;
+         }
+
+         var categoryNameFix = fixName(categoryName);
+         if (list.selectedIndex == -1) {
+            backupData(categoryNameFix, "##NEW");
+            gCategoryList.push(categoryName);
+            gCategoryList.sort();
+            if (categoryColor)
+               categoryPrefBranch.setCharPref(categoryNameFix, categoryColor);
+         } else {
+            try {
+               var currentColor = categoryPrefBranch.getCharPref(categoryNameFix);
+            }
+            catch (ex) {
+               var currentColor = null;
+            }
+            backupData(categoryNameFix, currentColor);
+            gCategoryList.splice(list.selectedIndex, 1, categoryName);
+            gCategoryList.sort();
+            if(categoryColor)
+               categoryPrefBranch.setCharPref(categoryNameFix, categoryColor);
+            else {
+               try {
+                  categoryPrefBranch.clearUserPref(categoryNameFix);
+               }
+               catch (ex) { }
+            }
+         }
+
+         //If 'Overwrite' was chosen, delete category that was being editted
+         if (toBeDeleted != -1) {
+            list.selectedIndex = toBeDeleted;
+            deleteCategory();
+         }
+         updateCategoryList();
+      }
+
+      function fixName(categoryName) {
+         var categoryNameFix = categoryName.toLowerCase();
+         categoryNameFix = categoryNameFix.replace(' ','_');
+         return categoryNameFix;
+      }
+
+      function enableButtons() {
+        document.getElementById("editCButton").disabled=null;
+        document.getElementById("deleteCButton").disabled=null;
+      }
+
+      function backupData(categoryNameFix, categoryColor) {
+         for(var i = 0; i<backupPrefList.length; i++) {
+            if(categoryNameFix == backupPrefList[i].name)
+                return;
+         }
+         backupPrefList[backupPrefList.length] = {name : categoryNameFix,
+                color : categoryColor};
+      }
+
+      function panelOnCancel() {
+         for(var i = 0; i<backupPrefList.length; i++) {
+            if(backupPrefList[i].name == "##NEW") {
+               categoryPrefBranch.clearUserPref(backupPrefList[i].name)
+            }
+            else
+               categoryPrefBranch.setCharPref(backupPrefList[i].name,
+                       backupPrefList[i].color)
+         }
       }
 
       /* 
@@ -191,12 +322,21 @@
    <groupbox flex="1">
      <caption label="&pref.categories.label;"/>
      <hbox flex="1">
-       <listbox flex="1" id="categorieslist"/>
+       <listbox id="categorieslist" flex="1" onselect="enableButtons()">
+          <listhead>
+             <listheader label="&pref.categories.name.label;"/>
+             <listheader label="&pref.categories.color.label;"/>
+          </listhead>
+          <listcols id="categoryColumns">
+             <listcol flex="1"/>
+             <listcol maxwidth="100" flex="1"/>
+          </listcols>
+       </listbox>
        <vbox>
          <spacer flex="1"/>
          <button label="&add.label;" oncommand="addCategory()"/>
-         <button label="&edit.label;" oncommand="editCategory()"/>
-         <button label="&remove.label;" oncommand="deleteCategory()"/>
+         <button id="editCButton" label="&edit.label;" oncommand="editCategory()"/>
+         <button id="deleteCButton" label="&remove.label;" oncommand="deleteCategory()"/>
        </vbox>
      </hbox>
      <textbox id="categories" prefstring="calendar.categories.names" hidden="true"/>

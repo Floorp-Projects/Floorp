@@ -124,12 +124,15 @@
 
 <!ENTITY pref.categories.label   "Categories" >
 
-<!ENTITY pref.categories.help.description   "Use a comma between each category you want to add.">
-
 <!ENTITY pref.categories.add.title    "Add Category">
-<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
 <!ENTITY pref.categories.edit.title   "Edit Category">
-
+<!ENTITY pref.categories.name.label   "Name">
+<!ENTITY pref.categories.color.label  "Color">
+<!ENTITY pref.categories.usecolor.label   "Use Color">
+<!ENTITY pref.categories.none.label   "(none)">
+<!ENTITY pref.categories.overwrite  "A category already exists with that name. \n Do you want to overwrite it?">
+<!ENTITY pref.categories.overwrite.title  "Warning: Duplicate name">
+<!ENTITY pref.categories.noBlankCategories  "You must enter a category name.">
 
 <!ENTITY pref.reloadonlaunch       "Reload Remote Calendars On Startup">
 
