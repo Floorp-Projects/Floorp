@@ -216,6 +216,7 @@ langpack-%:
 # tinderbox scripts. Alter it with caution.
 
 installers-%:
+	$(NSINSTALL) -D $(DIST)/install
 	@$(MAKE) langpack-$*
 	@$(MAKE) repackage-zip-$*
 ifeq (WINNT,$(OS_ARCH))
