@@ -1353,7 +1353,6 @@ function my_315 (e)
     }
 
     delete this.pendingWhoReply;
-    delete e.server.LIGHTWEIGHT_WHO;
     delete this.whoMatches;
 }
 
