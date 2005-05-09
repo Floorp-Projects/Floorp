@@ -524,9 +524,9 @@ function ClearQSIfNecessary()
 
 function Search(str)
 {
-  viewDebug("in Search str = " + str + "gSearchInput.showingSearchCriteria = " + gSearchInput.showingSearchCriteria + "\n");
-
   GetSearchInput();
+
+  viewDebug("in Search str = " + str + "gSearchInput.showingSearchCriteria = " + gSearchInput.showingSearchCriteria + "\n");
 
   if (str != gSearchInput.value)
   {
