@@ -50,6 +50,8 @@ import grendel.prefs.ui.UI;
 import grendel.storage.MailDrop;
 import grendel.search.SearchFrame;
 
+import grendel.addressbook.AddressBook;
+
 /* Temporarily removed because FilterMaster is broken (edwin)
 import grendel.filters.FilterMaster;
 */
@@ -69,6 +71,7 @@ public class ActionFactory {
   static RunServerPrefsAction fRunServerPrefsAction = new RunServerPrefsAction();
   static RunGeneralPrefsAction fRunGeneralPrefsAction = new RunGeneralPrefsAction();
   static RunUIPrefsAction fRunUIPrefsAction = new RunUIPrefsAction();
+  static ShowAddressBookAction fShowAddressBookAction = new ShowAddressBookAction();
 
   static int fIdent = 0;
 
@@ -130,6 +133,10 @@ public class ActionFactory {
 
   static public RunUIPrefsAction GetRunUIPrefsAction() {
     return fRunUIPrefsAction;
+  }
+
+  static public ShowAddressBookAction GetShowAddressBookAction() {
+    return fShowAddressBookAction;
   }
 }
 
@@ -209,6 +216,18 @@ class RunFiltersAction extends Event {
     FilterMaster fm = FilterMaster.Get();
     fm.applyFiltersToTestInbox();
     */
+  }
+}
+
+class ShowAddressBookAction extends Event {
+
+  ShowAddressBookAction() {
+    super("openAddressBook");
+  }
+
+  public void actionPerformed(ActionEvent aEvent) {
+    AddressBook AddressBookFrame = new AddressBook();
+    AddressBookFrame.setVisible(true);
   }
 }
 

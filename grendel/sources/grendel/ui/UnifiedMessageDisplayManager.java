@@ -351,6 +351,7 @@ class UnifiedMessageFrame extends GeneralFrame {
                        ActionFactory.GetPreferencesAction(),
                        ActionFactory.GetSearchAction(),
                        ActionFactory.GetRunFiltersAction(),
+                       ActionFactory.GetShowAddressBookAction(),
                        ActionFactory.GetShowTooltipsAction(),
                        ActionFactory.GetRunIdentityPrefsAction(),
                        ActionFactory.GetRunServerPrefsAction(),

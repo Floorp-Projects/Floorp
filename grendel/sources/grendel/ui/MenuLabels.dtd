@@ -93,6 +93,9 @@
 
 <!ENTITY editUndoLabel "Undo" >
 <!ENTITY editUndoAccel "U" >
+<!ENTITY editRedoLabel "Redo" >
+<!ENTITY editRedoAccel "R" >
+
 <!ENTITY editCutLabel "Cut" >
 <!ENTITY editCutAccel "t" >
 <!ENTITY editCopyLabel "Copy" >
@@ -109,10 +112,13 @@
 
 <!-- Message menu item labels -->
 
-<!ENTITY folderNewLabel "New Folder..." >
+<!ENTITY folderNewLabel "Folder..." >
 <!ENTITY folderNewAccel "F" >
 <!ENTITY folderDeleteLabel "Delete Folder" >
 <!ENTITY folderDeleteAccel "D" >
+
+<!ENTITY accountNewLabel "Account..." >
+<!ENTITY accountNewAccel "A" >
 
 <!ENTITY msgGetNewLabel "Get New Messages" >
 <!ENTITY msgGetNewAccel "G" >
@@ -120,8 +126,13 @@
 <!ENTITY msgOpenAccel "M" >
 <!ENTITY msgSaveAsLabel "Save As..." >
 <!ENTITY msgSaveAsAccel "A" >
-<!ENTITY msgNewLabel "New Message" >
-<!ENTITY msgNewAccel "N" >
+<!ENTITY newLabel "New" >
+<!ENTITY newAccel "N" >
+<!ENTITY msgNewLabel "Message" >
+<!ENTITY msgNewAccel "M" >
+<!ENTITY msgNewLabel2 "New Message" >
+<!ENTITY msgNewAccel2 "N" >
+
 <!ENTITY msgReplyLabel "Reply" >
 <!ENTITY msgReplyAccel "R" >
 <!ENTITY msgReplyAllLabel "Reply All" >
@@ -177,8 +188,8 @@
 
 <!-- Preferences menu labels -->
 
-<!ENTITY multiPrefsLabel "Preferences" >
-<!ENTITY multiPrefsAccel "P" >
+<!ENTITY multiPrefsLabel "Tools" >
+<!ENTITY multiPrefsAccel "T" >
 
 <!ENTITY prefIdsLabel "Identities" >
 <!ENTITY prefIdsAccel "I" >
@@ -188,3 +199,25 @@
 <!ENTITY prefGeneralAccel "G" >
 <!ENTITY prefUILabel "User interface" >
 <!ENTITY prefUIAccel "U" >
+
+<!ENTITY addressBookLabel "Address Book..." >
+<!ENTITY addressBookAccel "A" >
+
+<!-- view menu labels -->
+<!ENTITY toolbarsLabel "Toolbars" >
+<!ENTITY toolbarsAccel "T" >
+<!ENTITY mailToolbarsLabel "Mail Toolbar" >
+<!ENTITY mailToolbarsAccel "M" >
+<!ENTITY statusbarLabel "Status Bar" >
+<!ENTITY statusbarAccel "S" >
+
+<!-- help menu labels -->
+<!ENTITY helpLabel "Help" >
+<!ENTITY helpAccel "H" >
+
+<!ENTITY contentsLabel "Contents..." >
+<!ENTITY contentsAccel "C" >
+<!ENTITY releaseNotesLabel "Release Notes" >
+<!ENTITY releaseNotesAccel "R" >
+<!ENTITY aboutLabel "About Grendel..." >
+<!ENTITY aboutAccel "A" >
