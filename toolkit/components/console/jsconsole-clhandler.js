@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:sw=4:sr:sta:et:sts: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -21,6 +22,7 @@
  *
  * Contributor(s):
  *   Martijn Pieters <mj@digicool.com>
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,97 +42,115 @@
  * -jsconsole commandline handler; starts up the JavaScript console.
  */
 
-/*
- * Constants
- */
-
-const JSCONSOLEHANDLER_CONTRACTID =
-    "@mozilla.org/commandlinehandler/general-startup;1?type=jsconsole";
-
-const JSCONSOLEHANDLER_CID = 
-    Components.ID('{1698ef18-c128-41a1-b4d0-7f9acd2ae86c}');
+const nsISupports           = Components.interfaces.nsISupports;
+const nsICategoryManager    = Components.interfaces.nsICategoryManager;
+const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
+const nsICommandLine        = Components.interfaces.nsICommandLine;
+const nsICommandLineHandler = Components.interfaces.nsICommandLineHandler;
+const nsIFactory            = Components.interfaces.nsIFactory;
+const nsIModule             = Components.interfaces.nsIModule;
+const nsIWindowWatcher      = Components.interfaces.nsIWindowWatcher;
 
 /*
  * Classes
  */
 
-/* jsConsoleHandler class constructor */
-function jsConsoleHandler() {}
+const jsConsoleHandler = {
+    /* nsISupports */
+    QueryInterface : function clh_QI(iid) {
+        if (iid.equals(nsICommandLineHandler) ||
+            iid.equals(nsIFactory) ||
+            iid.equals(nsISupports))
+            return this;
 
-/* jsConsoleHandler class def */
-jsConsoleHandler.prototype = {
-    commandLineArgument: '-jsconsole',
-    prefNameForStartup: 'general.startup.jsconsole',
-    chromeUrlForTask: 'chrome://global/content/console.xul',
-    helpText: 'Start with Javascript Console',
-    handlesArgs: false,
-    defaultArgs: null,
-    openWindowWithArgs: false
-};
-
-/*
- * Objects
- */
-
-/* jsConsoleHandler Module (for XPCOM registration) */
-var jsConsoleHandlerModule = {
-    registerSelf: function(compMgr, fileSpec, location, type) {
-        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-
-        compMgr.registerFactoryLocation(JSCONSOLEHANDLER_CID, 
-                                        'JS Console Commandline Handler component',
-                                        JSCONSOLEHANDLER_CONTRACTID, 
-                                        fileSpec,
-                                        location, 
-                                        type);
-        var catman = Components.classes["@mozilla.org/categorymanager;1"]
-            .getService(Components.interfaces.nsICategoryManager);
-        catman.addCategoryEntry("command-line-argument-handlers", "jsconsole command line handler",
-            JSCONSOLEHANDLER_CONTRACTID,
-            true, true);
+        throw Components.results.NS_ERROR_NO_INTERFACE;
     },
 
-    unregisterSelf: function(compMgr, fileSpec, location) {
-        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-        compMgr.unregisterFactoryLocation(JSCONSOLEHANDLER_CID, fileSpec);
-        var catman = Components.classes["@mozilla.org/categorymanager;1"]
-            .getService(Components.interfaces.nsICategoryManager);
-        catman.deleteCategoryEntry("command-line-argument-handlers",
-            JSCONSOLEHANDLER_CONTRACTID, true);
+    /* nsICommandLineHandler */
+
+    handle : function clh_handle(cmdLine) {
+        if (!cmdLine.handleFlag("jsconsole", false))
+            return;
+
+        var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                               .getService(nsIWindowWatcher);
+        wwatch.openWindow(null, "chrome://global/content/console.xul", "_blank",
+                          "chrome,dialog=no,all", cmdLine);
     },
 
-    getClassObject: function(compMgr, cid, iid) {
-        if (!cid.equals(JSCONSOLEHANDLER_CID))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
+    helpInfo : "  -jsconsole           Open the JavaScript console.\n",
 
-        if (!iid.equals(Components.interfaces.nsIFactory))
-            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    /* nsIFactory */
 
-        return jsConsoleHandlerFactory;
-    },
-
-    canUnload: function(compMgr) { return true; }
-};
-
-/* jsConsoleHandler Class Factory */
-var jsConsoleHandlerFactory = {
-    createInstance: function(outer, iid) {
+    createInstance : function clh_CI(outer, iid) {
         if (outer != null)
             throw Components.results.NS_ERROR_NO_AGGREGATION;
-    
-        if (!iid.equals(Components.interfaces.nsICmdLineHandler) &&
-            !iid.equals(Components.interfaces.nsISupports))
-            throw Components.results.NS_ERROR_INVALID_ARG;
 
-        return new jsConsoleHandler();
+        return this.QueryInterface(iid);
+    },
+
+    lockFactory : function clh_lock(lock) {
+        /* no-op */
     }
-}
+};
 
-/*
- * Functions
- */
+const clh_contractID = "@mozilla.org/toolkit/console-clh;1";
+const clh_CID = Components.ID("{2cd0c310-e127-44d0-88fc-4435c9ab4d4b}");
+const clh_category = "c-jsconsole";
+
+const jsConsoleHandlerModule = {
+    /* nsISupports */
+
+    QueryInterface : function mod_QI(iid) {
+        if (iid.equals(nsIModule) ||
+            iid.equals(nsISupports))
+            return this;
+
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    },
+
+    /* nsIModule */
+
+    getClassObject : function mod_gch(compMgr, cid, iid) {
+        if (cid.equals(clh_CID))
+            return jsConsoleHandler.QueryInterface(iid);
+
+        throw Components.results.NS_ERROR_NOT_REGISTERED;
+    },
+
+    registerSelf : function mod_regself(compMgr, fileSpec, location, type) {
+        compMgr.QueryInterface(nsIComponentRegistrar);
+
+        compMgr.registerFactoryLocation(clh_CID,
+                                        "jsConsoleHandler",
+                                        clh_contractID,
+                                        fileSpec,
+                                        location,
+                                        type);
+
+        var catMan = Components.classes["@mozilla.org/categorymanager;1"]
+                               .getService(nsICategoryManager);
+        catMan.addCategoryEntry("command-line-handler",
+                                clh_category,
+                                clh_contractID, true, true);
+    },
+
+    unregisterSelf : function mod_unreg(compMgr, location, type) {
+        compMgr.QueryInterface(nsIComponentRegistrar);
+
+        compMgr.unregisterFactoryLocation(clh_CID, location);
+
+        var catMan = Components.classes["@mozilla.org/categorymanager;1"]
+                               .getService(nsICategoryManager);
+        catMan.deleteCategoryEntry("command-line-handler", clh_category);
+    },
+
+    canUnload : function (compMgr) {
+        return true;
+    }
+};
 
 /* module initialisation */
-function NSGetModule(comMgr, fileSpec) { return jsConsoleHandlerModule; }
-
-// vim:sw=4:sr:sta:et:sts:
+function NSGetModule(comMgr, fileSpec) {
+    return jsConsoleHandlerModule;
+}
