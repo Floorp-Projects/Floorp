@@ -105,6 +105,7 @@ _ABS_TOPSRCDIR	= $(shell cd $(topsrcdir) && pwd)
 MAKE_PACKAGE	= $(_ABS_TOPSRCDIR)/build/package/mac_osx/make-diskimage $(PKG_BASENAME).dmg $(MOZ_PKG_APPNAME) $(MOZ_APP_DISPLAYNAME)
 UNMAKE_PACKAGE	= \
   set -e; \
+  unset NEXT_ROOT; \
   mkdir mount-temp; \
   hdiutil attach -readonly -mountpoint mount-temp -private -noautoopen $(UNPACKAGE) > hdi.output; \
   DEV_NAME=`egrep '^/dev' < hdi.output | sed 1q | awk '{print $$1}'`; \
