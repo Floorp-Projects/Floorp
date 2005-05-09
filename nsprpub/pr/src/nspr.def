@@ -465,4 +465,3 @@ EXPORTS ;-
 ;+	global:
 		PR_GetPhysicalMemorySize;
 ;+} NSPR_4.5;
-
