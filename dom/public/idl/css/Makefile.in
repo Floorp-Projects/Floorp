@@ -54,6 +54,7 @@ SDK_XPIDLSRCS = 				\
 	nsIDOMCSSStyleSheet.idl			\
 	nsIDOMCSSValue.idl			\
 	nsIDOMCSSValueList.idl			\
+	nsIDOMElementCSSInlineStyle.idl		\
 	$(NULL)
 
 XPIDLSRCS =					\
@@ -68,7 +69,6 @@ XPIDLSRCS =					\
 	nsIDOMCSSUnknownRule.idl		\
 	nsIDOMCounter.idl			\
 	nsIDOMDocumentCSS.idl			\
-	nsIDOMElementCSSInlineStyle.idl		\
 	nsIDOMRGBColor.idl			\
 	nsIDOMRect.idl				\
 	nsIDOMViewCSS.idl			\
