@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+@import url("chrome://communicator/skin/sidebar/sidebar.css");
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* ::::: primary toolbar buttons ::::: */
