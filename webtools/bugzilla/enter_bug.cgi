@@ -70,7 +70,7 @@ my $cgi = Bugzilla->cgi;
 
 my $product = $cgi->param('product');
 
-if (!defined $product) {
+if (!defined $product || $product eq "") {
     GetVersionTable();
     Bugzilla->login();
 
