@@ -3468,6 +3468,8 @@ NS_IMETHODIMP nsViewManager::RenderOffscreen(nsIView* aView, nsRect aRect,
     return NS_ERROR_FAILURE;
 
   nsRect bounds(nsPoint(0, 0), aRect.Size());
+  bounds.ScaleRoundOut(mTwipsToPixels);
+  
   nsIDrawingSurface* surface;
   nsresult rv
     = tmpContext->CreateDrawingSurface(bounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS,
