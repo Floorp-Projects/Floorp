@@ -58,6 +58,13 @@ interface calICalendarView : nsISupports
   attribute calICalendarViewController controller;
 
   /**
+   * Ensure that the given date is visible; the view is free
+   * to show more dates than the given date (e.g. week view
+   * would show the entire week.
+   */
+  void showDate(in calIDateTime aDate);
+
+  /**
    * Set a date range for the view to display, from aStartDate to
    * aEndDate, inclusive.
    *

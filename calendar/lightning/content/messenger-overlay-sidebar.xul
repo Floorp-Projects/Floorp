@@ -3,9 +3,9 @@
 <!-- DOCTYPE overlay SYSTEM "chrome://lightning/locale/lightning.dtd" -->
 
 <?xml-stylesheet href="chrome://lightning/skin/lightning.css" type="text/css"?>
-<?xml-stylesheet href="chrome://calendar/skin/calendar-views.css" type="text/css"?>
 
 <?xml-stylesheet href="chrome://calendar/content/calendar-multiday-view.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/datetimepickers/minimonth.css" type="text/css"?>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -16,64 +16,72 @@
 <script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/messenger-overlay-sidebar.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/agenda-tree.js"/>
+
 <vbox id="folderPaneBox">
   <splitter id="folderpaneCalendarSplitter" collapse="after" persist="state"/>
 
-  <tabbox flex="1">
-    <tabs>
-      <tab label="Agenda"/>
-      <tab label="Calendars"/>
-    </tabs>
-    <tabpanels flex="1">
-      <vbox>
-        <hbox>
-          <spacer flex="1"/>
-          <label value="View:"/>
-          <menulist label="View" oncommand="updateAgendaView(this);">
-            <menupopup>
-              <menuitem label="All"/>
-              <menuitem label="Events"/>
-              <menuitem label="Tasks"/>
-              <menuitem label="Reminders"/>
-              <menuseparator/>
-              <menuitem label="Home"/>
-              <menuitem label="Work"/>
-              <menuseparator/>
-              <menuitem value="customize" label="Customize..."/>
-            </menupopup>
-          </menulist>
-          <spacer/>
-        </hbox>
-        <deck id="agenda-viewcustomize-deck" selectedIndex="0" flex="1">
-          <tree id="agenda-tree" hidecolumnpicker="true" flex="1">
-            <treecols>
-              <treecol id="col-agenda-item" primary="true" label="Item" flex="3"/>
-              <treecol id="col-agenda-when" label="" flex="1"/>
-            </treecols>
-            <treechildren/>
-          </tree>
-          <label value="Customize yer views!"/>
-        </deck>
-      </vbox> <!-- end of agenda tab panel -->
+  <vbox>
+    <hbox>
+      <minimonth id="ltnMinimonthLeft" onchange="ltnMinimonthPick('left', this);"/>
+      <minimonth id="ltnMinimonthRight" onchange="ltnMinimonthPick('right', this);"/>
+    </hbox>
   
-      <vbox flex="1">
-        <hbox>
-          <button label="New..." oncommand="ltnNewCalendar();"/>
-          <button id="cal-sidebar-edit-calendar" label="Edit..." disabled="true" oncommand="ltnEditSelectedCalendar();"/>
-          <spacer orient="horizontal" flex="5"/>
-          <button id="cal-sidebar-delete-calendar" label="Delete" disabled="true" oncommand="ltnDeleteSelectedCalendar();"/>
-        </hbox>
-        <tree id="calendarTree" hidecolumnpicker="true" seltype="single" onfocus="selectedCalendarPane(event)" flex="1" onselect="ltnSidebarCalendarSelected(this);">
-          <treecols>
-            <treecol id="col-calendar-Checkbox" cycler="true" fixed="true" />
-            <treecol id="col-calendar-Calendar" label="Calendar" flex="1"/>
-          </treecols>
-          <treechildren>
-          </treechildren>
-        </tree>
-      </vbox>
-    </tabpanels>
-  </tabbox>
+    <tabbox flex="1">
+      <tabs>
+        <tab label="Agenda"/>
+        <tab label="Calendars"/>
+      </tabs>
+      <tabpanels flex="1">
+        <vbox>
+          <hbox>
+            <spacer flex="1"/>
+            <label value="View:"/>
+            <menulist label="View" oncommand="updateAgendaView(this);">
+              <menupopup>
+                <menuitem label="All"/>
+                <menuitem label="Events"/>
+                <menuitem label="Tasks"/>
+                <menuitem label="Reminders"/>
+                <menuseparator/>
+                <menuitem label="Home"/>
+                <menuitem label="Work"/>
+                <menuseparator/>
+                <menuitem value="customize" label="Customize..."/>
+              </menupopup>
+            </menulist>
+            <spacer/>
+          </hbox>
+          <deck id="agenda-viewcustomize-deck" selectedIndex="0" flex="1">
+            <tree id="agenda-tree" hidecolumnpicker="true" flex="1">
+              <treecols>
+                <treecol id="col-agenda-item" primary="true" label="Item" flex="3"/>
+                <treecol id="col-agenda-when" label="" flex="1"/>
+              </treecols>
+              <treechildren/>
+            </tree>
+            <label value="Customize yer views!"/>
+          </deck>
+        </vbox> <!-- end of agenda tab panel -->
+    
+        <vbox flex="1">
+          <hbox>
+            <button label="New..." oncommand="ltnNewCalendar();"/>
+            <button id="cal-sidebar-edit-calendar" label="Edit..." disabled="true" oncommand="ltnEditSelectedCalendar();"/>
+            <spacer orient="horizontal" flex="5"/>
+            <button id="cal-sidebar-delete-calendar" label="Delete" disabled="true" oncommand="ltnDeleteSelectedCalendar();"/>
+          </hbox>
+          <tree id="calendarTree" hidecolumnpicker="true" seltype="single" onfocus="selectedCalendarPane(event)" flex="1" onselect="ltnSidebarCalendarSelected(this);">
+            <treecols>
+              <treecol id="col-calendar-Checkbox" cycler="true" fixed="true" />
+              <treecol id="col-calendar-Calendar" label="Calendar" flex="1"/>
+            </treecols>
+            <treechildren>
+            </treechildren>
+          </tree>
+        </vbox>
+      </tabpanels>
+    </tabbox>
+  </vbox>
 </vbox>
 
 <deck id="displayDeck">
@@ -83,3 +91,5 @@
   </vbox>
 </deck>
 </overlay>
+
+<!-- -*- Mode: xml; sgml-ident-step: 2; indent-tabs-mode: nil; -*- -->

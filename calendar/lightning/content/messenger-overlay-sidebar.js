@@ -21,15 +21,65 @@ function ltnEditSelectedCalendar()
     ltnEditCalendarProperties(ltnSelectedCalendar());
 }
 
-function selectedCalendarPane(event)
+function nextMonth(dt)
 {
-    dump("selecting calendar pane\n");
+    var d = new Date(dt);
+    var mo = d.getMonth();
+    if (mo == 11) {
+        d.setMonth(0);
+        d.setYear(d.getYear() + 1);
+    } else {
+        d.setMonth(mo + 1);
+    }
+
+    return d;
+}
+
+var gMiniMonthLoading = false;
+function ltnMinimonthPick(which, minimonth)
+{
+    if (gMiniMonthLoading)
+        return;
+
+    if (which == "left") {
+        // update right
+        var d2 = nextMonth(minimonth.value);
+        document.getElementById("ltnMinimonthRight").showMonth(d2);
+    }
+
+    var cdt = new CalDateTime();
+    cdt.jsDate = minimonth.value;
+    cdt.isDate = true;
+    currentView().showDate(cdt);
+
+    showCalendar(false);
+}
+
+function ltnOnLoad(event)
+{
+    gMiniMonthLoading = true;
+
+    var today = new Date();
+    var nextmo = nextMonth(today);
+
+    document.getElementById("ltnMinimonthLeft").value = today;
+    document.getElementById("ltnMinimonthRight").showMonth(nextmo);
+
+    gMiniMonthLoading = false;
+}
+
+function currentView()
+{
+    return document.getElementById("calendar-multiday-view");
+}
+
+function showCalendar(jumpToToday)
+{
     document.getElementById("displayDeck").selectedPanel =
         document.getElementById("calendar-view-box");
 
-    // give the view the calendar
-    var view = document.getElementById("calendar-multiday-view");
-    if (view.displayCalendar != getCompositeCalendar()) {
+    var view = currentView();
+    if (jumpToToday) {
         var d = Components.classes['@mozilla.org/calendar/datetime;1'].createInstance(Components.interfaces.calIDateTime);
         d.jsDate = new Date();
         d = d.getInTimezone(calendarDefaultTimezone());
@@ -37,9 +87,22 @@ function selectedCalendarPane(event)
         var end = d.endOfWeek;
 
         view.setDateRange(st, end);
+    }
+
+    if (view.displayCalendar != getCompositeCalendar()) {
         view.displayCalendar = getCompositeCalendar();
         view.controller = ltnCalendarViewController;
     }
+}
+
+function selectedCalendarPane(event)
+{
+    dump("selecting calendar pane\n");
+    document.getElementById("displayDeck").selectedPanel =
+        document.getElementById("calendar-view-box");
+
+    // give the view the calendar
+    showCalendar(true);
 }
 
 function LtnObserveDisplayDeckChange(event)
@@ -60,3 +123,5 @@ function LtnObserveDisplayDeckChange(event)
 
 document.getElementById("displayDeck").
     addEventListener("select", LtnObserveDisplayDeckChange, true);
+document.
+    addEventListener("load", ltnOnLoad, true);

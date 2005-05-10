@@ -407,7 +407,7 @@
       <method name="findChunkForOccurrence">
         <parameter name="aOccurrence"/>
         <body><![CDATA[
-          for each (chunk in this.mEvents) {
+          for each (var chunk in this.mEvents) {
               if (chunk.event.equals(aOccurrence)) {
                   return chunk;
               }
@@ -465,7 +465,7 @@
 
       <method name="recalculateStartEndMinutes">
         <body><![CDATA[
-          for each (chunk in this.mEvents) {
+          for each (var chunk in this.mEvents) {
               var mins = this.getStartEndMinutesForOccurrence(chunk.event);
               chunk.startMinute = mins.start;
               chunk.endMinute = mins.end;
@@ -575,7 +575,7 @@
 
           this.mEventMap = this.computeEventMap();
 
-          for each (column in this.mEventMap) {
+          for each (var column in this.mEventMap) {
               var xulColumn = createXULElement("box");
               xulColumn.setAttribute("orient", orient);
               xulColumn.setAttribute("flex", "1");
@@ -584,7 +584,7 @@
               var numBlocksInserted = 0
 
               var curTime = 0;
-              for each (chunk in column) {
+              for each (var chunk in column) {
                   var duration = chunk.duration;
                   //dump ("curTime: " + curTime + " duration: " + duration + " ev: " + chunk.event + "\n");
 
@@ -678,7 +678,7 @@
           var eventMap = []
           eventMap.push(new Array());
 
-          for each (event in this.mEvents) {
+          for each (var event in this.mEvents) {
               //if (event.occurrenceStartDate.isDate)
               //    continue;
 
@@ -1365,7 +1365,7 @@
                 var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                        this.calView.endDate,
                                                        {});
-                for each (occ in occs) {
+                for each (var occ in occs) {
                     this.calView.doAddEvent(occ);
                 }
             },
@@ -1381,14 +1381,14 @@
                 occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
                                                       this.calView.endDate,
                                                       {});
-                for each (occ in occs) {
+                for each (var occ in occs) {
                     this.calView.doDeleteEvent(occ);
                 }
 
                 occs = aNewItem.getOccurrencesBetween(this.calView.startDate,
                                                       this.calView.endDate,
                                                       {});
-                for each (occ in occs) {
+                for each (var occ in occs) {
                     this.calView.doAddEvent(occ);
                 }
             },
@@ -1400,7 +1400,7 @@
                 var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                        this.calView.endDate,
                                                        {});
-                for each (occ in occs) {
+                for each (var occ in occs) {
                     this.calView.doDeleteEvent(occ);
                 }
             },
@@ -1440,7 +1440,7 @@
               if (!Components.isSuccessCode(aStatus))
                   return;
 
-              for each (item in aItems) {
+              for each (var item in aItems) {
                   this.calView.doAddEvent(item);
               }
           }
@@ -1488,6 +1488,33 @@
         ]]></getter>
       </property>
 
+      <method name="showDate">
+	<parameter name="aDate"/>
+	<body><![CDATA[
+	  var targetDate = aDate.clone();
+	  targetDate.isDate = true;
+          if (!targetDate.isUtc)
+              targetDate = targetDate.getInTimezone(null);
+
+	  if (this.mStartDate && this.mEndDate) {
+              if (this.mStartDate.compare(targetDate) <= 0 &&
+                  this.mEndDate.compare(targetDate) >= 0)
+                  return;
+          } else if (this.mDateList) {
+              for each (var d in this.mDateList) {
+                  // if date is already visible, nothing to do
+                  if (d.compare(targetDate) == 0)
+                      return;
+              }
+          }
+
+          var wkStart = aDate.startOfWeek;
+          var wkEnd = aDate.endOfWeek;
+
+          this.setDateRange(wkStart, wkEnd);
+        ]]></body>
+      </method>
+
       <method name="setDateRange">
         <parameter name="aStartDate"/>
         <parameter name="aEndDate"/>
@@ -1518,12 +1545,17 @@
               this.mDateList = null;
           } else {
               aDates.sort (function(a, b) { return a.compare(b); });
-              this.mDateList = new Array();
-              for each (d in aDates) {
-                  var n = d.clone();
-                  n.makeImmutable();
-                  this.mDateList.push(n);
-              }
+              this.mDateList = aDates.map(
+                  function (d) {
+                      if (d.isDate && !d.isMutable)
+                          return d;
+
+                      var newDate = d.clone();
+                      newDate.isDate = true;
+                      newDate.makeImmutable();
+                      return newDate;
+                  }
+              );
           }
 
           this.refresh();
@@ -1542,8 +1574,8 @@
                    d.normalize();
                }
            } else if (this.mDateList) {
-               for each (d in this.mDateList)
-                   dates.push(d.clone);
+               for each (var d in this.mDateList)
+                   dates.push(d.clone());
            }
 
            aCount.value = dates.length;
@@ -1622,11 +1654,11 @@
           var normalelems = ['mainbox', 'timebar'];
           var otherelems = ['labelbox', 'labeldaybox', 'headerbox', 'headerdaybox', 'childbox', 'daybox'];
 
-          for each (id in normalelems) {
+          for each (var id in normalelems) {
               document.getAnonymousElementByAttribute(this, "anonid", id).setAttribute("orient", orient);
           }
 
-          for each (id in otherelems) {
+          for each (var id in otherelems) {
               document.getAnonymousElementByAttribute(this, "anonid", id).setAttribute("orient", otherorient);
           }
 
@@ -1667,7 +1699,7 @@
           }
 
           var boxes = ["daybox", "headerdaybox", "labeldaybox"];
-          for each (boxname in boxes) {
+          for each (var boxname in boxes) {
               var box = document.getAnonymousElementByAttribute(this, "anonid", boxname);
               var child = box.firstChild;
               while (child) {
@@ -1744,7 +1776,7 @@
               return;
 
           var counter = 0;
-          for each (d in computedDateList) {
+          for each (var d in computedDateList) {
               var dayEventsBox = createXULElement("calendar-event-column");
               dayEventsBox.setAttribute("flex", "1");
               dayEventsBox.setAttribute("class", "calendar-event-column-" + (counter % 2 == 0 ? "even" : "odd"));
@@ -1811,7 +1843,7 @@
 
           var column = null;
           var header = null;
-          for each (col in this.mDateColumns) {
+          for each (var col in this.mDateColumns) {
               if (col.date.compare(eday) == 0) { 
                   return col;
               }
@@ -1829,7 +1861,7 @@
 	<parameter name="aClientX"/>
 	<parameter name="aClientY"/>
         <body><![CDATA[
-          for each (col in this.mDateColumns) {
+          for each (var col in this.mDateColumns) {
               var bo = col.column.topbox.boxObject;
               if ((aClientX >= bo.screenX) && (aClientX < (bo.screenX + bo.width)) &&
                   (aClientY >= bo.screenY) && (aClientY < (bo.screenY + bo.height)))
@@ -1886,7 +1918,7 @@
           var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
           timebar.pixelsPerMinute = pixPerMin;
 
-          for each (col in this.mDateColumns) {
+          for each (var col in this.mDateColumns) {
               col.column.pixelsPerMinute = pixPerMin;
           }
         ]]></body>

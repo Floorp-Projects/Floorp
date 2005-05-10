@@ -495,7 +495,6 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
     LL_MUL(temp, temp, million);
     mNativeTime = temp;
 
-    fprintf (stderr, "++ tt: %lld mNativeTime: %lld\n", tt, mNativeTime);
     // reconstruct weekday/yearday
     mWeekday = icaltime_day_of_week(*icalt) - 1;
     mYearday = icaltime_day_of_year(*icalt);

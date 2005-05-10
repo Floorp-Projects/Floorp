@@ -101,7 +101,7 @@ function rebuildAgendaView(invalidate)
 agendaTreeView.__defineGetter__("rowCount",
 function get_rowCount()
 {
-    dump("row count: " + this.events.length + "\n");
+    //dump("row count: " + this.events.length + "\n");
     return this.events.length;
 });
 
