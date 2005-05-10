@@ -117,7 +117,9 @@ endif
 
 ifeq ($(OS_ARCH), SunOS)
 EXTRA_LIBS = -L$(dist_libdir) -l$(LDAP_LIBNAME)
-EXTRA_LIBS += -L$(dist_libdir) $(DYNAMICNSPR)
+# NSPR, NSS, etc. other mozilla components do not put their shared libs
+# in dist_libdir but rather in $(DIST)/$(RELEASE_OBJDIR_NAME)/lib
+EXTRA_LIBS += -L$(DIST)/$(RELEASE_OBJDIR_NAME)/lib $(DYNAMICNSPR)
 endif
 
 ifeq ($(OS_ARCH), WINNT)
