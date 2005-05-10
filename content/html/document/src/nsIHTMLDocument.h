@@ -54,7 +54,7 @@ class nsIContent;
 class nsIDOMHTMLBodyElement;
 
 #define NS_IHTMLDOCUMENT_IID \
-{0x0c548e6b, 0xf3b4, 0x489b, {0xb7, 0xda, 0xac, 0xdb, 0x2c, 0x89, 0xab, 0xc0}}
+{0x83f3c1d2, 0x0a60, 0x42db, {0xaf, 0x75, 0xd5, 0x54, 0xfe, 0x70, 0x8d, 0x25}}
 
 
 /**
@@ -86,12 +86,6 @@ public:
                                nsIDOMHTMLFormElement *aForm,
                                nsISupports **aResult) = 0;
 
-  /*
-   * This method returns null if we run out of memory. Callers should
-   * check for null.
-   */
-  virtual already_AddRefed<nsContentList> GetFormControlElements() = 0;
-  
   /**
    * Called when form->BindToTree() is called so that document knows
    * immediately when a form is added

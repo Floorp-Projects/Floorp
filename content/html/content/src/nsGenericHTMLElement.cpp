@@ -3275,8 +3275,11 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
 void
 nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  // Save state before doing anything
-  SaveState();
+  // If the document is still bound to the window, we should save our state
+  // now.
+  nsIDocument *doc = GetOwnerDoc();
+  if (doc && doc->GetScriptGlobalObject())
+    SaveState();
 
   if (mForm) {
     // Might need to unset mForm
