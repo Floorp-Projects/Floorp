@@ -1369,7 +1369,7 @@ sub init {
         }
     }
 
-    foreach my $field (@fields) {
+    foreach my $field (@fields, @orderby) {
         next if ($field =~ /(AVG|SUM|COUNT|MAX|MIN|VARIANCE)\s*\(/i ||
                  $field =~ /^\d+$/ || $field eq "bugs.bug_id");
         if ($field =~ /.*AS\s+(\w+)$/i) {
