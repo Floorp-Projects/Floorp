@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -281,6 +282,16 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     NS_ENSURE_ARG_POINTER(trans);
     NS_ASSERTION(responseHead, "No response head?");
+
+    // If the server issued an explicit timeout, then we need to close down the
+    // socket transport.  We pass an error code of NS_ERROR_NET_RESET to
+    // trigger the transactions 'restart' mechanism.  We tell it to reset its
+    // response headers so that it will be ready to receive the new response.
+    if (responseHead->Status() == 408) {
+        Close(NS_ERROR_NET_RESET);
+        *reset = PR_TRUE;
+        return NS_OK;
+    }
 
     // we won't change our keep-alive policy unless the server has explicitly
     // told us to do so.
