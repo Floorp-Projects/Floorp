@@ -28,8 +28,8 @@ use lib 't';
 use Support::Files;
 
 BEGIN { 
-	use Test::More tests => 13;
-	use_ok(Bugzilla::Util);
+        use Test::More tests => 14;
+        use_ok(Bugzilla::Util);
 }
 
 # We need to override the the Param() function so we can get an expected
@@ -68,8 +68,7 @@ is(min(@list),2,'min()');
 is(trim(" fg<*\$%>+=~~ "),'fg<*$%>+=~~','trim()');
 
 #format_time();
-is(format_time("20021123140436"),'2002-11-23 14:04 TEST','format_time("20021123140436")');
 is(format_time("2002.11.24 00:05"),'2002-11-24 00:05 TEST','format_time("2002.11.24 00:05")');
 is(format_time("2002.11.24 00:05:56"),'2002-11-24 00:05:56 TEST','format_time("2002.11.24 00:05:56")');
-
-
+is(format_time("2002.11.24 00:05:56", "%Y-%m-%d %R"), '2002-11-24 00:05', 'format_time("2002.11.24 00:05:56", "%Y-%m-%d %R") (with no timezone)');
+is(format_time("2002.11.24 00:05:56", "%Y-%m-%d %R %Z"), '2002-11-24 00:05 TEST', 'format_time("2002.11.24 00:05:56", "%Y-%m-%d %R %Z") (with timezone)');

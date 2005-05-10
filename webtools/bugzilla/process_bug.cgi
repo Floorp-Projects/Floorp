@@ -1185,7 +1185,13 @@ foreach my $id (@idlist) {
     my %formhash;
     foreach my $col (@::log_columns) {
         # Consider NULL db entries to be equivalent to the empty string
-        $oldvalues[$i] = '' unless defined $oldvalues[$i];
+        $oldvalues[$i] = defined($oldvalues[$i]) ? $oldvalues[$i] : '';
+        # Convert the deadline taken from the DB into the YYYY-MM-DD format
+        # for consistency with the deadline provided by the user, if any.
+        # Else CheckCanChangeField() would see them as different in all cases.
+        if ($col eq 'deadline') {
+            $oldvalues[$i] = format_time($oldvalues[$i], "%Y-%m-%d");
+        }
         $oldhash{$col} = $oldvalues[$i];
         $formhash{$col} = $cgi->param($col) if defined $cgi->param($col);
         $i++;
@@ -1717,6 +1723,10 @@ foreach my $id (@idlist) {
     foreach my $col (@::log_columns) {
         # Consider NULL db entries to be equivalent to the empty string
         $newvalues[$i] ||= '';
+        # Convert the deadline to the YYYY-MM-DD format.
+        if ($col eq 'deadline') {
+            $newvalues[$i] = format_time($newvalues[$i], "%Y-%m-%d");
+        }
         $newhash{$col} = $newvalues[$i];
         $i++;
     }
@@ -1777,16 +1787,6 @@ foreach my $id (@idlist) {
                 && IsOpenedState($old) ne IsOpenedState($new))
             {
                 $check_dep_bugs = 1;
-            }
-
-            # Convert deadlines to the YYYY-MM-DD format. We use an
-            # intermediate $xxxtime to prevent errors in the web
-            # server log file when str2time($xxx) is undefined.
-            if ($col eq 'deadline') {
-                my $oldtime = str2time($old);
-                $old = ($oldtime) ? time2str("%Y-%m-%d", $oldtime) : '';
-                my $newtime = str2time($new);
-                $new = ($newtime) ? time2str("%Y-%m-%d", $newtime) : '';
             }
 
             LogActivityEntry($id,$col,$old,$new,$whoid,$timestamp);

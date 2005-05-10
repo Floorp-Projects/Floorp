@@ -249,38 +249,44 @@ sub find_wrap_point ($$) {
     return $wrappoint;
 }
 
-sub format_time {
-    my ($time) = @_;
+sub format_time ($;$) {
+    my ($date, $format) = @_;
 
-    my ($year, $month, $day, $hour, $min, $sec);
-    if ($time =~ m/^\d{14}$/) {
-        # We appear to have a timestamp direct from MySQL
-        $year  = substr($time,0,4);
-        $month = substr($time,4,2);
-        $day   = substr($time,6,2);
-        $hour  = substr($time,8,2);
-        $min   = substr($time,10,2);
-    }
-    elsif ($time =~ m/^(\d{4})[-\.](\d{2})[-\.](\d{2}) (\d{2}):(\d{2})(:(\d{2}))?$/) {
-        $year  = $1;
-        $month = $2;
-        $day   = $3;
-        $hour  = $4;
-        $min   = $5;
-        $sec   = $7;
+    # If $format is undefined, try to guess the correct date format.    
+    my $show_timezone;
+    if (!defined($format)) {
+        if ($date =~ m/^(\d{4})[-\.](\d{2})[-\.](\d{2}) (\d{2}):(\d{2})(:(\d{2}))?$/) {
+            my $sec = $7;
+            if (defined $sec) {
+                $format = "%Y-%m-%d %T";
+            } else {
+                $format = "%Y-%m-%d %R";
+            }
+        } else {
+            # Default date format. See Date::Format for other formats available.
+            $format = "%Y-%m-%d %R";
+        }
+        # By default, we want the timezone to be displayed.
+        $show_timezone = 1;
     }
     else {
-        warn "Date/Time format ($time) unrecogonzied";
+        # Search for %Z or %z, meaning we want the timezone to be displayed.
+        # Till bug 182238 gets fixed, we assume Param('timezone') is used.
+        $show_timezone = ($format =~ s/\s?%Z$//i);
     }
 
-    if (defined $year) {
-        $time = "$year-$month-$day $hour:$min";
-        if (defined $sec) {
-            $time .= ":$sec";
-        }
-        $time .= " " . &::Param('timezone') if &::Param('timezone');
+    # str2time($date) is undefined if $date has an invalid date format.
+    my $time = str2time($date);
+
+    if (defined $time) {
+        $date = time2str($format, $time);
+        $date .= " " . &::Param('timezone') if $show_timezone;
     }
-    return $time;
+    else {
+        # Don't let invalid (time) strings to be passed to templates!
+        $date = '';
+    }
+    return trim($date);
 }
 
 sub format_time_decimal {
@@ -531,10 +537,15 @@ The search starts at $maxpos and goes back to the beginning of the string.
 
 =item C<format_time($time)>
 
-Takes a time and appends the timezone as defined in editparams.cgi.  This routine
-will be expanded in the future to adjust for user preferences regarding what
-timezone to display times in.  In the future, it may also allow for the time to be
-shown in different formats.
+Takes a time, converts it to the desired format and appends the timezone
+as defined in editparams.cgi, if desired. This routine will be expanded
+in the future to adjust for user preferences regarding what timezone to
+display times in.
+
+This routine is mainly called from templates to filter dates, see
+"FILTER time" in Templates.pm. In this case, $format is undefined and
+the routine has to "guess" the date format that was passed to $dbh->sql_date_format().
+
 
 =item C<format_time_decimal($time)>
 
