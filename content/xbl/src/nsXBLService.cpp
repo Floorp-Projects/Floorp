@@ -77,6 +77,7 @@
 #include "nsContentUtils.h"
 #include "nsISyncLoadDOMService.h"
 #include "nsIDOM3Node.h"
+#include "nsContentPolicyUtils.h"
 
 #include "nsIPresShell.h"
 #include "nsIDocumentObserver.h"
@@ -561,6 +562,22 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
     if (NS_FAILED(rv))
       return rv;
   }
+
+  // Content policy check
+  PRInt16 decision = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
+                                 aURL,
+                                 docURI,
+                                 aContent,
+                                 EmptyCString(),  // mime guess
+                                 nsnull,          // extra
+                                 &decision);
+
+  if (NS_SUCCEEDED(rv) && !NS_CP_ACCEPTED(decision))
+    rv = NS_ERROR_NOT_AVAILABLE;
+
+  if (NS_FAILED(rv))
+    return rv;
 
   PRBool ready;
   nsRefPtr<nsXBLBinding> newBinding;
