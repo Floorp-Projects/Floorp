@@ -17,3 +17,8 @@ nsEditorModule
 nsTransactionManagerModule
 appshell
 chromelite
+nsMorkModule
+nsXMLExtrasModule
+TransformiixModule
+nsWebServicesModule
+popuplite

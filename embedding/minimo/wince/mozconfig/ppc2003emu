@@ -28,8 +28,8 @@ ac_add_options --disable-plugins
 WINCE=1
 mk_add_options WINCE=1
 
-TARGET_DEVICE=device
-mk_add_options TARGET_DEVICE=device
+TARGET_DEVICE=emulator
+mk_add_options TARGET_DEVICE=emulator
 
 MINIMO=1
 mk_add_options MINIMO=1
@@ -83,3 +83,6 @@ ac_add_options --disable-shared
 ac_add_options --enable-static
 
 ac_add_options --disable-crypto
+
+# XPCALL Code is busted on the emulator?
+ac_add_options --disable-jsloader
