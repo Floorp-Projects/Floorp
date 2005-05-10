@@ -68,7 +68,7 @@
 /* Box that occupies whole window */
 
 vbox[anonid="time-picker-grids"] {
-  background-color : ffffff;
+  background-color : #ffffff;
   font-size        : 8pt;
   margin-bottom    : 1px;
   margin-right     : 1px;
@@ -156,7 +156,7 @@ grid[anonid="time-picker-five-minute-grid"] {
   border-top       : 1px solid ThreeDShadow; 
   border-left      : 1px solid ThreeDShadow; 
   border-right     : 1px solid ThreeDShadow; 
-  background-color : ffffff;
+  background-color : #ffffff;
 }
 
 
@@ -197,7 +197,7 @@ grid[anonid="time-picker-one-minute-grid"] {
   border-top       : 1px solid ThreeDShadow;
   border-left      : 1px solid ThreeDShadow;
   border-right     : 1px solid ThreeDShadow;
-  background-color : ffffff;
+  background-color : #ffffff;
 }
 
 /* box in one-minute grid elements */
