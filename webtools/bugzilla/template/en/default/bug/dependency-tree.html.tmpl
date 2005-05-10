@@ -99,7 +99,7 @@
         [% IF dep.seen %]
           <i>This [% terms.bug %] appears elsewhere in this tree.</i></a>
         [% ELSE %]
-          [% dep.summary FILTER html %].</a>
+          [%+ dep.summary FILTER html %].</a>
         [% END %]
       [% END %]
       [% INCLUDE display_tree bug_id=dep_id
