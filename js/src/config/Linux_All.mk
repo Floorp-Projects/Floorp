@@ -93,7 +93,7 @@ JS_EDITLINE = 1
 ifeq ($(CPU_ARCH),x86_64)
 # Use VA_COPY() standard macro on x86-64
 # FIXME: better use it everywhere
-OS_CFLAGS += -DHAVE_VA_COPY
+OS_CFLAGS += -DHAVE_VA_COPY -DVA_COPY=va_copy
 endif
 
 ifeq ($(CPU_ARCH),x86_64)

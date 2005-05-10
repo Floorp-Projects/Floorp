@@ -993,6 +993,9 @@ JS_GetClass(JSObject *obj);
 extern JS_PUBLIC_API(JSBool)
 JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv);
 
+extern JS_PUBLIC_API(JSBool)
+JS_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+
 extern JS_PUBLIC_API(void *)
 JS_GetPrivate(JSContext *cx, JSObject *obj);
 
