@@ -753,7 +753,6 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   }
 
   // For the origin, add in the border for the frame
-  nsStyleCoord coord;
 
 #if 0
   // We used to do this to include the border of the frame in the
