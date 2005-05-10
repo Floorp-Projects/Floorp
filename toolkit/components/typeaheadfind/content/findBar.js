@@ -265,7 +265,13 @@ function toggleCaseSensitivity(aCaseSensitive)
   
 function changeSelectionColor(aAttention)
 {
-  var ds = getBrowser().docShell;
+  try {
+    var ds = getBrowser().docShell;
+  } catch(e) {
+    // If we throw here, the browser we were in is already destroyed.
+    // See bug 273200.
+    return;
+  }
   var dsEnum = ds.getDocShellEnumerator(Components.interfaces.nsIDocShellTreeItem.typeContent,
                                         Components.interfaces.nsIDocShell.ENUMERATE_FORWARDS);
   while (dsEnum.hasMoreElements()) {
