@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -735,6 +736,8 @@ nsHttpTransaction::HandleContentStart()
             LOG(("resetting transaction's response head\n"));
             mHaveAllHeaders = PR_FALSE;
             mHaveStatusLine = PR_FALSE;
+            mReceivedData = PR_FALSE;
+            mSentData = PR_FALSE;
             mResponseHead->Reset();
             // wait to be called again...
             return NS_OK;
@@ -802,7 +805,7 @@ nsHttpTransaction::HandleContent(char *buf,
         if (NS_FAILED(rv)) return rv;
         // Do not write content to the pipe if we haven't started streaming yet
         if (!mDidContentStart)
-          return NS_OK;
+            return NS_OK;
     }
 
     if (mChunkedDecoder) {
