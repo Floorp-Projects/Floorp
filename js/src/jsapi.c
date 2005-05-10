@@ -2066,6 +2066,12 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
     return JS_FALSE;
 }
 
+JS_PUBLIC_API(JSBool)
+JS_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+{
+    return js_HasInstance(cx, obj, v, bp);
+}
+
 JS_PUBLIC_API(void *)
 JS_GetPrivate(JSContext *cx, JSObject *obj)
 {
