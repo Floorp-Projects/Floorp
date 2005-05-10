@@ -448,7 +448,10 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	    break;
 #if defined(NET_SSL)
 	case 'P':	/* path to security database */
-	    secure = 1; /* do SSL encryption */
+	    if ( (0 == isZ) && (0 == isZZ) )
+	    {
+		secure = 1; /* do SSL encryption */
+	    }
 	    ssl_certdbpath = strdup( optarg );
 	    if (NULL == ssl_certdbpath)
 	    {
