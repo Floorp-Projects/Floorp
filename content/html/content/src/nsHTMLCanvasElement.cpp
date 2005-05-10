@@ -54,7 +54,7 @@
 #include "nsICanvasRenderingContextInternal.h"
 
 #define DEFAULT_CANVAS_WIDTH 300
-#define DEFAULT_CANVAS_HEIGHT 200
+#define DEFAULT_CANVAS_HEIGHT 150
 
 class nsHTMLCanvasElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLCanvasElement,
@@ -100,7 +100,7 @@ public:
                            PRBool aNotify);
 protected:
   nsIntSize GetWidthHeight();
-  nsresult UpdateImageContainer();
+  nsresult UpdateImageContainer(PRBool forceCreate);
   nsresult UpdateContext();
 
   nsString mCurrentContextId;
@@ -123,6 +123,11 @@ nsHTMLCanvasElement::nsHTMLCanvasElement(nsINodeInfo *aNodeInfo)
 
 nsHTMLCanvasElement::~nsHTMLCanvasElement()
 {
+  if (mCurrentContext) {
+    nsCOMPtr<nsICanvasRenderingContextInternal> internalctx(do_QueryInterface(mCurrentContext));
+    internalctx->SetCanvasElement(nsnull);
+    mCurrentContext = nsnull;
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLCanvasElement, nsGenericElement)
@@ -176,7 +181,7 @@ nsHTMLCanvasElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (NS_SUCCEEDED(rv) && mCurrentContext &&
       (aName == nsHTMLAtoms::width || aName == nsHTMLAtoms::height))
   {
-    rv = UpdateImageContainer();
+    rv = UpdateImageContainer(PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -283,10 +288,10 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
       return NS_ERROR_FAILURE;
     }
 
-    rv = internalctx->Init(this);
+    rv = internalctx->SetCanvasElement(this);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = UpdateImageContainer();
+    rv = UpdateImageContainer(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mCurrentContextId.Assign(aContextId);
@@ -300,9 +305,14 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
 }
 
 nsresult
-nsHTMLCanvasElement::UpdateImageContainer()
+nsHTMLCanvasElement::UpdateImageContainer(PRBool forceCreate)
 {
   nsresult rv = NS_OK;
+
+  // don't create if we don't already have one,
+  // and no frame or context has asked for one.
+  if (!forceCreate && !mImageFrame)
+    return NS_OK;
 
   nsIntSize sz = GetWidthHeight();
   PRInt32 w = 0, h = 0;
@@ -354,7 +364,7 @@ nsHTMLCanvasElement::GetCanvasImageContainer (imgIContainer **aImageContainer)
   nsresult rv;
 
   if (!mImageContainer) {
-    rv = UpdateImageContainer();
+    rv = UpdateImageContainer(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

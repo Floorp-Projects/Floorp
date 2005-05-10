@@ -8488,7 +8488,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   nsIAtom* frameType = parentFrame->GetType();
   if (frameType == nsLayoutAtoms::objectFrame ||
       frameType == nsLayoutAtoms::tableColFrame ||
-      frameType == nsLayoutAtoms::canvasFrame) {
+      frameType == nsLayoutAtoms::HTMLCanvasFrame) {
     // This handles APPLET, EMBED, OBJECT, COL, and CANVAS
     return NS_OK;
   }
@@ -9076,7 +9076,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     nsIAtom* frameType = parentFrame->GetType();
     if (frameType == nsLayoutAtoms::objectFrame ||
         frameType == nsLayoutAtoms::tableColFrame ||
-        frameType == nsLayoutAtoms::canvasFrame) {
+        frameType == nsLayoutAtoms::HTMLCanvasFrame) {
       // This handles APPLET, EMBED, OBJECT, COL, and CANVAS
       return NS_OK;
     }

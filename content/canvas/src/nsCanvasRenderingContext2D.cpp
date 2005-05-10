@@ -185,7 +185,7 @@ public:
     void SetCairoColor(nscolor c);
 
     // nsICanvasRenderingContextInternal
-    NS_IMETHOD Init (nsIDOMHTMLCanvasElement* aParentCanvas);
+    NS_IMETHOD SetCanvasElement(nsIDOMHTMLCanvasElement* aParentCanvas);
     NS_IMETHOD SetTargetImageFrame(gfxIImageFrame* aImageFrame);
 
     // nsISupports interface
@@ -216,8 +216,10 @@ protected:
     // Member vars
     PRInt32 mWidth, mHeight;
 
-    nsCOMPtr<nsIDOMHTMLCanvasElement> mDOMCanvasElement;
-    nsCOMPtr<nsICanvasElement> mCanvasElement;
+    // the canvas element informs us when its going away,
+    // so these are not nsCOMPtrs
+    nsIDOMHTMLCanvasElement* mDOMCanvasElement;
+    nsICanvasElement* mCanvasElement;
 
     // image bits
     nsCOMPtr<gfxIImageFrame> mImageFrame;
@@ -280,7 +282,8 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 }
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
-    : mDirty(PR_TRUE), mCairo(nsnull), mSurface(nsnull), mSurfaceData(nsnull)
+    : mDOMCanvasElement(nsnull), mCanvasElement(nsnull),
+      mDirty(PR_TRUE), mCairo(nsnull), mSurface(nsnull), mSurfaceData(nsnull)
 {
     mColorStyles[STYLE_STROKE] = NS_RGB(0,0,0);
     mColorStyles[STYLE_FILL] = NS_RGB(255,255,255);
@@ -300,7 +303,7 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
 nsIFrame*
 nsCanvasRenderingContext2D::GetCanvasLayoutFrame()
 {
-    if (!mDOMCanvasElement)
+    if (!mCanvasElement)
         return nsnull;
 
     nsIFrame *fr = nsnull;
@@ -606,12 +609,20 @@ nsCanvasRenderingContext2D::UpdateImageFrame()
 //
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::Init(nsIDOMHTMLCanvasElement* aCanvasElement)
+nsCanvasRenderingContext2D::SetCanvasElement(nsIDOMHTMLCanvasElement* aCanvasElement)
 {
+    // don't hold a ref to this!
     mDOMCanvasElement = aCanvasElement;
-    mCanvasElement = do_QueryInterface(mDOMCanvasElement);
+    if (mDOMCanvasElement) {
+        if (NS_SUCCEEDED (CallQueryInterface(mDOMCanvasElement, &mCanvasElement))) {
+            // don't hold a ref to this!
+            mCanvasElement->Release();
+        }
+    } else {
+        mCanvasElement = nsnull;
+    }
 
-    // set up our css parser
+    // set up our css parser, if necessary
     if (!mCSSParser) {
         mCSSParser = do_CreateInstance("@mozilla.org/content/css-parser;1");
     }

@@ -6225,6 +6225,7 @@ void DR_State::InitFrameTypeTable()
   AddFrameTypeInfo(nsLayoutAtoms::brFrame,               "br",        "br");
   AddFrameTypeInfo(nsLayoutAtoms::bulletFrame,           "bullet",    "bullet");
   AddFrameTypeInfo(nsLayoutAtoms::gfxButtonControlFrame, "button",    "gfxButtonControl");
+  AddFrameTypeInfo(nsLayoutAtoms::HTMLCanvasFrame,       "HTMLCanvas","HTMLCanvas");
   AddFrameTypeInfo(nsLayoutAtoms::subDocumentFrame,      "subdoc",    "subDocument");
   AddFrameTypeInfo(nsLayoutAtoms::imageFrame,            "img",       "image");
   AddFrameTypeInfo(nsLayoutAtoms::inlineFrame,           "inline",    "inline");
