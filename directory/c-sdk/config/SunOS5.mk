@@ -108,16 +108,19 @@ ifndef INTERNAL_TOOLS
 ifneq ($(NS_USE_GCC), 1)
 CC			+= -xarch=v9
 CCC			+= -xarch=v9
-endif
-endif
-COMPILER_TAG		= _64
 else
+CC			+= -m64
+CCC			+= -m64
+endif # NS_USE_GCC
+endif # INTERNAL_TOOLS
+COMPILER_TAG		+= _64
+else # USE_64
 ifeq ($(HAVE_CCONF), 1)
 COMPILER_TAG		=
 else
-COMPILER_TAG		= _32
-endif
-endif
+COMPILER_TAG		+= _32
+endif # HAVE_CCONF
+endif # USE_64
 
 RANLIB			= echo
 

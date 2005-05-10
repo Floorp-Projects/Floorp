@@ -4701,6 +4701,7 @@ EOF
             CFLAGS="$CFLAGS -MDupdate \$(DEPENDENCIES)"
             CXXFLAGS="$CXXFLAGS -MDupdate \$(DEPENDENCIES)"
         fi
+	COMPILER_TAG=_gcc
     else
         CC="$CC -xstrconst"
         CXX="$CXX -Qoption cg -xstrconst"
@@ -4712,6 +4713,10 @@ EOF
     if test -n "$USE_64" && test -z "$GNU_CC"; then
         CC="$CC -xarch=v9"
         CXX="$CXX -xarch=v9"
+    fi
+    if test -n "$USE_64" && test "$GNU_CC"; then
+        CC="$CC -m64"
+        CXX="$CXX -m64"
     fi
     if test "$OS_TEST" = "i86pc"; then
         cat >> confdefs.h <<\EOF
@@ -5539,7 +5544,7 @@ else
 fi
 
 if test -n "$USE_64"; then
-    COMPILER_TAG=_64
+    COMPILER_TAG=${COMPILER_TAG}_64
 fi
 
 RELEASE_OBJDIR_NAME="${OS_CONFIG}${CPU_ARCH_TAG}${COMPILER_TAG}${IMPL_STRATEGY}${OBJDIR_TAG}.${OBJDIR_SUFFIX}"
