@@ -68,7 +68,7 @@
 /* Box that occupies whole window */
 
 vbox[anonid="time-picker-grids"] {
-  background-color : #F8F8F8;
+  background-color : ffffff;
   font-size        : 8pt;
   margin-bottom    : 1px;
   margin-right     : 1px;
@@ -77,52 +77,68 @@ vbox[anonid="time-picker-grids"] {
 /* Grid for hours */
 
 grid[anonid="time-picker-hour-grid"] {
-  border-top  : 1px solid #2060c7; 
-  border-left : 1px solid #2060c7; 
-  margin-top  : 1px;
+  background-color : -moz-Dialog;
+  color            : -moz-DialogText;
+  border-top       : 1px solid -moz-DialogText; 
+  border-left      : 1px solid -moz-DialogText; 
+  margin-top       : 1px;
 }
 
 /* Box in each cell of the grid for hours */
 
 .time-picker-hour-box-class {
   -moz-box-align : center;
-  border-right   : 1px solid #2060c7; 
-  border-bottom  : 1px solid #2060c7; 
+  border-right   : 1px solid ThreeDShadow; 
+  border-bottom  : 1px solid ThreeDShadow; 
 }
 
 .time-picker-hour-box-class:hover {
-  color  : #ff0000;
-  cursor : pointer;
+  background-color : InactiveCaption;
+  color            : InactiveCaptionText;
+  cursor           : pointer;
 }
 
 /* selected hour box */
 
 .time-picker-hour-box-class[selected="true"] {
-  background-color : #6699CC;
+  background-color : Highlight;
+  color            : HighlightText;
+}
+
+.time-picker-hour-box-class[selected="true"]:hover {
+  background-color : Highlight;
+  color            : HighlightText;
 }
 
 /* label inside each minute/hour */
 
+.time-picker-minute-label {
+  align : center;
+}
+
+.time-picker-hour-label {
+  align : center;
+}
+
 .time-picker-minute-label:hover {
-  color : #ff0000;
-  cursor: pointer !important;
+  cursor : pointer !important;
 }
 
 .time-picker-hour-label:hover {
-  color : #ff0000;
-  cursor: pointer !important;
+  cursor : pointer !important;
 }
 
 
 .time-picker-minute-box-class {
   -moz-box-align : center;
-  border-right   : 1px solid #2060c7; 
-  border-bottom  : 1px solid #2060c7; 
+  border-right   : 1px solid ThreeDShadow; 
+  border-bottom  : 1px solid ThreeDShadow; 
 }
 
 .time-picker-minute-box-class:hover {
-  color  : #ff0000;
-  cursor : pointer;
+  cursor           : pointer;
+  background-color : -moz-Dialog;
+  color            : -moz-DialogText;
 }
 
 /* box around five minute grid */
@@ -136,29 +152,34 @@ vbox[anonid="time-picker-five-minute-grid-box"] {
 
 grid[anonid="time-picker-five-minute-grid"] {
   margin-top       : 2px;
-  margin-right     : 2px;
-  border-top       : 1px solid #003399; 
-  border-left      : 1px solid #003399; 
-  border-right     : 1px solid #003399; 
-  background-color : #e7eeec;
+  margin-right     : 1px;
+  border-top       : 1px solid ThreeDShadow; 
+  border-left      : 1px solid ThreeDShadow; 
+  border-right     : 1px solid ThreeDShadow; 
+  background-color : ffffff;
 }
 
 
 /* box in five-minute grid elements */
 
-.time-picker-five-minute-class {
-  -moz-box-align : center;
+.time-picker-five-minute-class:hover {
+  background-color : InactiveCaption;
+  color            : InactiveCaptionText;
+  cursor           : pointer;
 }
 
-.time-picker-five-minute-class:hover {
-  color: #ff0000;
-  cursor: pointer;
+.time-picker-minute-label[selected="true"]:hover {
+  background-color : Highlight;
+  color            : HighlightText;
+  cursor           : pointer;
 }
+
 
 /* selected five-minute grid element box */
 
 .time-picker-five-minute-class[selected="true"] {
-  background-color : #6699CC;
+  background-color : Highlight;
+  color            : HighlightText;
 }
 
 /* box around one minute grid */
@@ -172,11 +193,11 @@ vbox[anonid="time-picker-one-minute-grid-box"] {
 
 grid[anonid="time-picker-one-minute-grid"] {
   margin-top       : 2px;
-  margin-right     : 2px;
-  border-top       : 1px solid #003399; 
-  border-left      : 1px solid #003399; 
-  border-right     : 1px solid #003399; 
-  background-color : #e7eeec;
+  margin-right     : 1px;
+  border-top       : 1px solid ThreeDShadow;
+  border-left      : 1px solid ThreeDShadow;
+  border-right     : 1px solid ThreeDShadow;
+  background-color : ffffff;
 }
 
 /* box in one-minute grid elements */
@@ -186,41 +207,54 @@ grid[anonid="time-picker-one-minute-grid"] {
 }
 
 .time-picker-one-minute-class:hover {
-  color: #ff0000;
-  cursor: pointer;
+  background-color : InactiveCaption;
+  color            : InactiveCaptionText;
+  cursor           : pointer;
+}
+
+.time-picker-one-minute-class[selected="true"]>label:hover {
+  background-color : Highlight !important;
+  color            : HighlightText !important;
+  cursor           : pointer;
 }
 
 /* selected one-minute grid element box */
 
-.time-picker-one-minute-class[selected="true"] {
-  background-color : #6699CC;
+.time-picker-one-minute-class[selected="true"]{
+  background-color : Highlight;
+  color            : HighlightText;
 }
 
 .time-picker-more-control-label {
-  background-color : #6699CC;
-  color            : #ffffff;
+  background-color : Highlight;
+  color            : HighlightText;
   font-size        : 12pt;
   height           : 12px;
   min-width        : 40px;
   margin           : 0px;
-  border           : 1px solid #003399; 
+  border           : 1px solid -moz-Dialog; 
   text-align       : center;
 }
 
 .time-picker-more-control-label:hover {
-   background-color : #477eb7;
+  border-top: 1px solid ThreeDHighlight;
+  border-left: 1px solid ThreeDHighlight;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
 }
 
 .time-picker-more-control-label:hover:active {
-   background-color       : #2063a8;
+  border-top: 1px solid ThreeDShadow;
+  border-left: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDHighlight;
 }
 
 /* line across the bottom of the minute boxes, made to line up with more & less tabs */
 
 .time-picker-minutes-bottom {
-   background-color : #e7eeec;
-   border-bottom    : 1px solid #003399; 
-   border-left      : 1px solid #003399; 
-   border-right     : 1px solid #003399; 
-   margin-right     : 2px;
+  background-color : -moz-Dialog;
+  color            : -moz-DialogText;
+  border           : 1px solid ThreeDShadow;
+  margin-right     : 1px;
 }

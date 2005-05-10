@@ -42,7 +42,8 @@
 }
 
 .minimonth-month-box {
-  background-color: #EEEEEE;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
 }
 
 .minimonth-month-name {
@@ -51,8 +52,10 @@
   font-weight: bold;
   color: #000000;
   text-align: center;
-  padding: 1px;
-  border: 1px solid #EEEEEE;
+  padding: 0px 4px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  border: 1px solid -moz-Dialog;
 }
 
 .minimonth-year-name {
@@ -61,14 +64,19 @@
   font-weight: bold;
   color: #000000;
   text-align: center;
-  margin-left: 6px;
-  padding: 1px;
-  border: 1px solid #EEEEEE;
+  padding: 0px 4px;
+  margin-left: 2px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  border: 1px solid -moz-Dialog;
 }
 
 .minimonth-month-name:hover,
 .minimonth-year-name:hover {
-  border: 1px solid #d2d2d2;
+  border-top: 1px solid ThreeDHighlight;
+  border-left: 1px solid ThreeDHighlight;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
 }
 
 .minimonth-navbtn {
@@ -105,6 +113,7 @@
   font-family: Arial;
   color: blue;
   text-align: center;
+  padding-bottom: 2px;
 }
 
 .minimonth-row-body {
@@ -118,32 +127,42 @@
 }
 
 .minimonth-day[othermonth="true"] {
-  color: #d2d2d2;
+  color: GrayText;
 }
 
 .minimonth-day[budy="true"] {
-  font-weight : bold;
+  font-weight: bold;
 }
 
 .minimonth-day[selected="true"] {
-  background-color: #778899;
-  color: #ffffff;
+  background-color: Highlight;
+  color: HighlightText;
 }
 
 .minimonth-day[busy="true"] {
-  font-weight    : bold;
+  font-weight: bold;
 }
 
 .minimonth-day:hover {
-  color: #ff0000;
   cursor: pointer;
-  border: 1px solid #d2d2d2;
+  font-weight: bold;
+  border: 1px solid Highlight;
 }
 
 .minimonth-day:active {
-  background-color: #d2d2d2;
+  background-color: Highlight;
+  color: HighlightText;
 }
 
+.minimonth-list {
+  padding: 2px 4px;
+}
 .minimonth-list[current="true"] {
   font-weight: bold;
+}
+
+.minimonth-list:hover {
+  background-color: Highlight;
+  color: HighlightText;
+  cursor: pointer;
 }

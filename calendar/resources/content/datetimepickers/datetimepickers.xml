@@ -363,27 +363,28 @@
 
   <binding id="timepicker-hour">
     <content>
+      <xul:spacer flex="1"/>
       <xul:vbox anonid="hourbox"
                 onclick="clickHour(this.parentNode, this.parentNode.getAttribute('value'))">
-        <xul:spacer flex="1"/>
         <xul:box>
-          <xul:label class="time-picker-hour-label" anonid="hourlabel" xbl:inherits="value=label"/>
+          <xul:label class="time-picker-hour-label" anonid="hourlabel" xbl:inherits="value=label,selected"/>
         </xul:box> 
         <xul:spacer flex="1"/>
       </xul:vbox>
+      <xul:spacer flex="1"/>
     </content>
   </binding>
+
   <binding id="timepicker-minute">
     <content>
+      <xul:spacer flex="1"/>
       <xul:vbox anonid="minutebox"
-                xbl:inherits="class"
                 onclick="clickMinute(this.parentNode, this.parentNode.getAttribute('value'))">
-        <xul:spacer flex="1"/>
         <xul:box>
-          <xul:label class="time-picker-minute-label" anonid="minutelabel" xbl:inherits="value=label"/>
+          <xul:label class="time-picker-minute-label" anonid="minutelabel" xbl:inherits="value=label,selected"/>
         </xul:box>
-        <xul:spacer flex="1"/>
       </xul:vbox>
+      <xul:spacer flex="1"/>
     </content>
   </binding>
 
@@ -1394,9 +1395,12 @@
             this.pmRegExp = new RegExp("^(?:"+pmExpr+")$");
             // build time display format that mimics "%x" format without seconds
             var ampmSep = (pmProbeString.indexOf(' ') != -1? " " : "");
-	          this.kTimeFormatString =
-	            (this.ampmIndex == PRE_INDEX?  "%p" + ampmSep + "%I:%M" :
-	             this.ampmIndex == POST_INDEX? "%I:%M" + ampmSep + "%p" : "%H:%M");
+	          if (this.ampmIndex == PRE_INDEX)
+              this.kTimeFormatString = "%p" + ampmSep + "%I:%M";
+            else if (this.ampmIndex == POST_INDEX)
+              this.kTimeFormatString = "%I:%M" + ampmSep + "%p";
+            else
+              this.kTimeFormatString = "%H:%M";
           ]]>
         </body>
       </method>
