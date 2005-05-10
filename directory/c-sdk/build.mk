@@ -312,6 +312,10 @@ else
 RPATHFLAG_PREFIX=-Wl,-R,
 endif
 
+ifdef NS_USE_GCC
+USE_CCC_TO_LINK=1
+endif
+
 # flag to pass to ld when linking to set runtime shared library search path
 # this is used like this, for example:   $(LDRPATHFLAG_PREFIX)../..
 LDRPATHFLAG_PREFIX=-R
