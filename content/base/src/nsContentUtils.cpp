@@ -1419,7 +1419,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 
     nsContentList *htmlForms = htmlDocument->GetForms();
     nsRefPtr<nsContentList> htmlFormControls =
-      htmlDocument->GetFormControlElements();
+      GetFormControlElements(aDocument);
 
     NS_ENSURE_TRUE(htmlForms && htmlFormControls, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2304,4 +2304,19 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return sConsoleService->LogMessage(errorObject);
+}
+
+static PRBool MatchFormControls(nsIContent* aContent, PRInt32 aNamespaceID,
+                                nsIAtom* aAtom, const nsAString& aData)
+{
+  return aContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
+}
+
+/* static */ already_AddRefed<nsContentList>
+nsContentUtils::GetFormControlElements(nsIDocument *aDocument)
+{
+  nsContentList *list = new nsContentList(aDocument,
+                                          MatchFormControls, EmptyString());
+  NS_IF_ADDREF(list);
+  return list;
 }

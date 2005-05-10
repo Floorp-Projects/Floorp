@@ -2466,22 +2466,6 @@ nsHTMLDocument::GetNumFormsSynchronous()
   return mNumForms;
 }
 
-PRBool
-nsHTMLDocument::MatchFormControls(nsIContent* aContent, PRInt32 aNamespaceID,
-                                  nsIAtom* aAtom, const nsAString& aData)
-{
-  return aContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
-}
-
-already_AddRefed<nsContentList>
-nsHTMLDocument::GetFormControlElements()
-{
-  nsContentList *list = new nsContentList(this,
-                                          MatchFormControls, EmptyString());
-  NS_IF_ADDREF(list);
-  return list;
-}
-
 nsresult
 nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
                                    PRInt32* aWidth,

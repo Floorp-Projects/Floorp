@@ -52,6 +52,7 @@
 #include "nsIPref.h"
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
+#include "nsContentList.h"
 
 class nsIXPConnect;
 class nsIContent;
@@ -525,6 +526,13 @@ public:
                                         const PRUnichar **aParams,
                                         PRUint32 aParamsLength,
                                         nsXPIDLString& aResult);
+
+  /**
+   * Returns a list containing all elements in the document that are
+   * of type nsIContent::eHTML_FORM_CONTROL.
+   */
+  static already_AddRefed<nsContentList>
+  GetFormControlElements(nsIDocument *aDocument);
 
 
 private:

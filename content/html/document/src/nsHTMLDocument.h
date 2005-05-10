@@ -187,7 +187,6 @@ public:
                          nsIDOMHTMLFormElement *aForm,
                          nsISupports **aResult);
 
-  virtual already_AddRefed<nsContentList> GetFormControlElements();
   virtual void AddedForm();
   virtual void RemovedForm();
   virtual PRInt32 GetNumFormsSynchronous();
@@ -229,8 +228,6 @@ protected:
                              nsIAtom* aAtom, const nsAString& aData);
   static PRBool MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
                                    nsIAtom* aAtom, const nsAString& aData);
-  static PRBool MatchFormControls(nsIContent* aContent, PRInt32 aNamespaceID,
-                                  nsIAtom* aAtom, const nsAString& aData);
 
   static nsIPrincipal *GetCallerPrincipal();
 
