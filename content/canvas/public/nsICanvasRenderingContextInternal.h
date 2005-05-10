@@ -50,7 +50,9 @@ class nsICanvasRenderingContextInternal : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
 
-  NS_IMETHOD Init(nsIDOMHTMLCanvasElement* aParentCanvas) = 0;
+  // This method should NOT hold a ref to aParentCanvas; it will be called
+  // with nsnull when the element is going away.
+  NS_IMETHOD SetCanvasElement(nsIDOMHTMLCanvasElement* aParentCanvas) = 0;
 
   NS_IMETHOD SetTargetImageFrame(gfxIImageFrame* aImageFrame) = 0;
 };

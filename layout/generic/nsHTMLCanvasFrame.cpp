@@ -239,7 +239,7 @@ nsHTMLCanvasFrame::GetContentForEvent(nsPresContext* aPresContext,
 nsIAtom*
 nsHTMLCanvasFrame::GetType() const
 {
-  return nsLayoutAtoms::canvasFrame;
+  return nsLayoutAtoms::HTMLCanvasFrame;
 }
 
 // get the offset into the content area of the image where aImg starts if it is a continuation.
