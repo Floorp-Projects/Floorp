@@ -41,6 +41,7 @@
 #include "nsRenderingContextWin.h"
 #include "nsDeviceContextWin.h"
 #include "imgScaler.h"
+#include "nsComponentManagerUtils.h"
 
 static PRInt32 GetPlatform()
 {
@@ -91,6 +92,8 @@ nsImageWin::nsImageWin()
   , mARowBytes(0)
   , mImageCache(0)
   , mInitialized(PR_FALSE)
+  , mWantsOptimization(PR_FALSE)
+  , mTimer(nsnull)
 {
 }
 
@@ -101,6 +104,9 @@ nsImageWin::nsImageWin()
   */
 nsImageWin :: ~nsImageWin()
 {
+  if (mTimer)
+    mTimer->Cancel();
+
   CleanUpDDB();
   CleanUpDIB();
 
@@ -489,6 +495,8 @@ nsImageWin::Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
   // find out if the surface is a printer.
   PRInt32 canRaster;
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
+
+  CreateDDB();
 
   PRBool didComposite = PR_FALSE;
   if (!mIsOptimized || !mHBitmap) {
@@ -1002,7 +1010,9 @@ nsImageWin::ProgressiveDoubleBlit(nsIDeviceContext *aContext,
     ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
     return PR_FALSE;
   }
-  
+
+  CreateDDB();
+
   nsPaletteInfo palInfo;
   aContext->GetPaletteInfo(palInfo);
   if (palInfo.isPaletteDevice && palInfo.palette) {
@@ -1409,9 +1419,25 @@ PRBool nsImageWin::CanAlphaBlend(void)
  * @update dc - 11/20/98
  * @param aContext - The device context to use for the optimization
  */
-nsresult 
-nsImageWin :: Optimize(nsIDeviceContext* aContext)
+nsresult nsImageWin::Optimize(nsIDeviceContext* aContext)
 {
+  // Do the actual optimizing when we first use the image (draw it)
+  // This saves on GDI resources.
+  mWantsOptimization = PR_TRUE;
+  return NS_OK;
+}
+
+// CreateDDB only if DDB is wanted
+NS_IMETHODIMP nsImageWin::CreateDDB()
+{
+  if (!mWantsOptimization || mIsOptimized) {
+    // Timer only exists when mIsOptimized.  Push timer forwards.
+    if (mTimer)
+      mTimer->SetDelay(GFX_MS_REMOVE_DBB);
+
+    return NS_OK;
+  }
+
   // we used to set a flag because a valid HDC may not be ready, 
   // like at startup, but now we just roll our own HDC for the given screen.
 
@@ -1485,13 +1511,41 @@ nsImageWin :: Optimize(nsIDeviceContext* aContext)
         mIsOptimized = (mHBitmap != 0);
       }
     }
-    if (mIsOptimized)
+    if (mIsOptimized) {
+      ::GdiFlush();
       CleanUpDIB();
+
+      if (mTimer) {
+        mTimer->SetDelay(GFX_MS_REMOVE_DBB);
+      } else {
+        mTimer = do_CreateInstance("@mozilla.org/timer;1");
+        if (mTimer)
+          mTimer->InitWithFuncCallback(nsImageWin::TimerCallBack, this,
+                                       GFX_MS_REMOVE_DBB,
+                                       nsITimer::TYPE_ONE_SHOT);
+      }
+    }
     ::SelectObject(TheHDC,oldbits);
     ::DeleteObject(tBitmap);
     ::DeleteDC(TheHDC);
   }
 
+  return NS_OK;
+}
+
+// Removes the DBB, restoring the imagebits if necessary
+NS_IMETHODIMP nsImageWin::RemoveDDB()
+{
+  if (!mIsOptimized && mHBitmap == nsnull)
+    return NS_OK;
+
+  if (!mImageBits) {
+    nsresult rv = ConvertDDBtoDIB();
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  CleanUpDDB();
   return NS_OK;
 }
 
@@ -1541,13 +1595,6 @@ nsImageWin::CleanUpDIB()
     delete mColorMap;
     mColorMap = nsnull;
   }
-
-
-  //mNumPaletteColors = -1;
-  //mNumBytesPixel = 0;
-  mSizeImage = 0;
-
-
 }
 
 /** ---------------------------------------------------
@@ -1558,6 +1605,11 @@ void
 nsImageWin :: CleanUpDDB()
 {
   if (mHBitmap != nsnull) {
+    if (mTimer) {
+      mTimer->Cancel();
+      mTimer = nsnull;
+    }
+
     ::DeleteObject(mHBitmap);
     mHBitmap = nsnull;
   }
@@ -1617,8 +1669,7 @@ nsImageWin::PrintDDB(nsIDrawingSurface* aSurface,
  *
  * @return the result of the operation, if NS_OK a DIB was created.
  */
-nsresult 
-nsImageWin::ConvertDDBtoDIB()
+nsresult nsImageWin::ConvertDDBtoDIB()
 {
   HDC                 memPrDC;
 
@@ -1628,29 +1679,31 @@ nsImageWin::ConvertDDBtoDIB()
   if (!mInitialized || mHBitmap == nsnull)
     return NS_ERROR_FAILURE;
 
-  // mSizeImage might be 0, so use a temporary variable and set mSizeImage
-  // after we succeed with creating mImageBits.
-  PRUint32 newImageSize = mRowBytes * mBHead->biHeight; // no compression
-
-  // Allocate the image bits
-  mImageBits = new unsigned char[newImageSize];
-  if (!mImageBits)
-    return NS_ERROR_FAILURE;
-
-  mSizeImage = newImageSize;
-
   memPrDC = ::CreateDC("DISPLAY", NULL, NULL, NULL);
   if (!memPrDC)
     return NS_ERROR_FAILURE;
+
+  // Allocate the image bits
+  mImageBits = new unsigned char[mSizeImage];
+  if (!mImageBits) {
+    ::DeleteDC(memPrDC);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   PRInt32 retVal = 
     ::GetDIBits(memPrDC, mHBitmap, 0, mBHead->biHeight,
                 mImageBits, (LPBITMAPINFO)mBHead,
                 256 == mNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS);
 
+  ::GdiFlush();
   ::DeleteDC(memPrDC);
 
-  return (retVal == 0) ? NS_ERROR_FAILURE : NS_OK;
+  if (retVal == 0) {
+    delete [] mImageBits;
+    mImageBits = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 
@@ -1981,5 +2034,22 @@ CompositeBitsInMemory(HDC aTheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
       ::DeleteObject(tmpBitmap);
     }
     ::DeleteDC(memDC);
+  }
+}
+
+void nsImageWin::TimerCallBack(nsITimer *aTimer, void *aClosure)
+{
+  nsImageWin *entry = NS_STATIC_CAST(nsImageWin*, aClosure);
+  if (!entry)
+    return;
+
+  if (NS_FAILED(entry->RemoveDDB())) {
+    // Try again later.  Can't SetDelay while timer is being called, so
+    // create a new timer instead
+    entry->mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (entry->mTimer)
+      entry->mTimer->InitWithFuncCallback(nsImageWin::TimerCallBack, entry,
+                                          GFX_MS_REMOVE_DBB,
+                                          nsITimer::TYPE_ONE_SHOT);
   }
 }
