@@ -268,6 +268,7 @@ private:
   PRPackedBool        mIsOptimized;       // Did we convert our DIB to a HBITMAP
   PRPackedBool        mIsLocked;          // variable to keep track of the locking
   PRPackedBool        mDIBTemp;           // boolean to let us know if DIB was created as temp
+  PRPackedBool        mImagePreMultiplied;// Are the image bits pre-multiplied with alpha?
   PRInt8              mNumBytesPixel;     // number of bytes per pixel
   PRInt16             mNumPaletteColors;  // Number of colors in the pallete 256 
   PRInt32             mSizeImage;         // number of bytes
