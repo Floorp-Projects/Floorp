@@ -149,7 +149,7 @@
 
 #include "nsHTMLCanvasFrame.h"
 
-#ifdef MOZ_ENABLE_CAIRO
+#ifdef MOZ_ENABLE_CANVAS
 #include "nsIDOMCanvasRenderingContext2D.h"
 #endif
 
@@ -450,7 +450,7 @@ nsresult NS_NewIFrameBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 #endif
 
-#ifdef MOZ_ENABLE_CAIRO
+#ifdef MOZ_ENABLE_CANVAS
 nsresult NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult);
 #endif
 
@@ -602,7 +602,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 MAKE_CTOR(CreateSyncLoadDOMService,       nsISyncLoadDOMService,       NS_NewSyncLoadDOMService)
 MAKE_CTOR(CreatePluginDocument,           nsIDocument,                 NS_NewPluginDocument)
 
-#ifdef MOZ_ENABLE_CAIRO
+#ifdef MOZ_ENABLE_CANVAS
 MAKE_CTOR(CreateCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D, NS_NewCanvasRenderingContext2D)
 #endif
 
@@ -1063,7 +1063,7 @@ static const nsModuleComponentInfo gComponents[] = {
     RegisterHTMLOptionElement,
     UnregisterHTMLOptionElement },
 
-#ifdef MOZ_ENABLE_CAIRO
+#ifdef MOZ_ENABLE_CANVAS
   { "Canvas 2D Rendering Context",
     NS_CANVASRENDERINGCONTEXT2D_CID,
     "@mozilla.org/content/canvas-rendering-context;1?id=2d",
