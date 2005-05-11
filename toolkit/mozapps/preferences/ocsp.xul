@@ -49,7 +49,7 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel"
             title="&ocspDialog.title;"
-            style="width: 38em !important;">
+            style="width: &window.width; !important;">
 
   <prefpane id="OCSPDialogPane" onpaneload="gOCSPDialog.init();">
     <script type="application/x-javascript" src="chrome://mozapps/content/preferences/ocsp.js"/>
