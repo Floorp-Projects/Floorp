@@ -138,6 +138,7 @@ var unifinderObserver = {
 
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
+            !aIID.equals(Components.interfaces.calICompositeObserver) &&
             !aIID.equals(Components.interfaces.calIObserver))
         {
             throw Components.results.NS_ERROR_NO_INTERFACE;
@@ -170,7 +171,17 @@ var unifinderObserver = {
             refreshEventTree();
     },
     onAlarm: function(aAlarmItem) {},
-    onError: function(aMessage) {}
+    onError: function(aMessage) {},
+
+    onCalendarAdded: function(aDeletedItem) {
+        if (!this.mInBatch)
+            refreshEventTree();
+    },
+    onCalendarRemoved: function(aDeletedItem) {
+        if (!this.mInBatch)
+            refreshEventTree();
+    },
+    onDefaultCalendarChanged: function(aNewDefaultCalendar) {}
 };
 
 

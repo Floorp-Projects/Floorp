@@ -59,33 +59,57 @@ var gTaskArray = new Array();
 
 var unifinderToDoDataSourceObserver =
 {
-    onStartBatch: function () { },
-    onEndBatch: function () {
+    mInBatch: false,
+
+    QueryInterface: function (aIID) {
+        if (!aIID.equals(Components.interfaces.nsISupports) &&
+            !aIID.equals(Components.interfaces.calICompositeObserver) &&
+            !aIID.equals(Components.interfaces.calIObserver))
+        {
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        }
+
+        return this;
+    },
+
+    onStartBatch: function() {
+        this.mInBatch = true;
+    },
+    onEndBatch: function() {
+        this.mInBatch = false;
         toDoUnifinderRefresh();
     },
-
-    onLoad: function () {
-        toDoUnifinderRefresh();
+    onLoad: function() {
+        if (!this.mInBatch)
+            refreshEventTree();
     },
-
-    onAddItem: function (aItem) {
-        if (aItem instanceof Components.interfaces.calITodo)
+    onAddItem: function(aItem) {
+        if (aItem instanceof Components.interfaces.calITodo &&
+            !this.mInBatch)
             toDoUnifinderRefresh();
     },
-
-    onModifyItem: function (aNewItem, aOldItem) {
-        if (aNewItem instanceof Components.interfaces.calITodo)
+    onModifyItem: function(aNewItem, aOldItem) {
+        if (aNewItem instanceof Components.interfaces.calITodo &&
+            !this.mInBatch)
             toDoUnifinderRefresh();
     },
-
-    onDeleteItem: function (aItem) {
-        if (aItem instanceof Components.interfaces.calITodo)
+    onDeleteItem: function(aDeletedItem) {
+        if (aDeletedItem instanceof Components.interfaces.calITodo &&
+            !this.mInBatch)
             toDoUnifinderRefresh();
     },
+    onAlarm: function(aAlarmItem) {},
+    onError: function(aMessage) {},
 
-    onAlarm: function (aAlarmItem) { },
-
-    onError: function (aErrNo, aMessage) { }
+    onCalendarAdded: function(aDeletedItem) {
+        if (!this.mInBatch)
+            toDoUnifinderRefresh();
+    },
+    onCalendarRemoved: function(aDeletedItem) {
+        if (!this.mInBatch)
+            toDoUnifinderRefresh();
+    },
+    onDefaultCalendarChanged: function(aNewDefaultCalendar) {}
 };
 
 /**

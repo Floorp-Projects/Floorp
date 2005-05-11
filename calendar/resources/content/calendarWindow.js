@@ -140,6 +140,17 @@ function CalendarWindow( )
 
     var savedThis = this;
     var calendarObserver = {
+        QueryInterface: function (aIID) {
+            if (!aIID.equals(Components.interfaces.nsISupports) &&
+                !aIID.equals(Components.interfaces.calICompositeObserver) &&
+                !aIID.equals(Components.interfaces.calIObserver))
+            {
+                throw Components.results.NS_ERROR_NO_INTERFACE;
+            }
+
+            return this;
+        },
+
         mInBatch: false,
 
         onStartBatch: function() {
@@ -166,7 +177,17 @@ function CalendarWindow( )
                 calendarWindow.currentView.refreshEvents();
         },
         onAlarm: function(aAlarmItem) {},
-        onError: function(aMessage) {}
+        onError: function(aMessage) {},
+
+        onCalendarAdded: function(aDeletedItem) {
+            if (!this.mInBatch)
+                calendarWindow.currentView.refreshEvents();
+        },
+        onCalendarRemoved: function(aDeletedItem) {
+            if (!this.mInBatch)
+                calendarWindow.currentView.refreshEvents();
+        },
+        onDefaultCalendarChanged: function(aNewDefaultCalendar) {}
     }
     var ccalendar = getDisplayComposite();
     ccalendar.addObserver(calendarObserver);
