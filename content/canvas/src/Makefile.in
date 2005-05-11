@@ -85,7 +85,7 @@ REQUIRES	= \
 CPPSRCS		= dummy.cpp \
 		$(NULL)
 
-ifdef MOZ_ENABLE_CAIRO
+ifdef MOZ_ENABLE_CANVAS
 CPPSRCS		+= nsCanvasRenderingContext2D.cpp
 endif
 

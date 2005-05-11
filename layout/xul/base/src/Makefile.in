@@ -66,7 +66,7 @@ REQUIRES	= xpcom \
 		  js \
 		  $(NULL)
 
-ifdef MOZ_ENABLE_CAIRO
+ifdef MOZ_ENABLE_CANVAS
 REQUIRES        += \
                 cairo \
                 libpixman \
