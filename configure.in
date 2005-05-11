@@ -2051,7 +2051,7 @@ EOF
                   fi
                   rm -f conftest.[cs]
                  ])
-   if test $ac_cv_visibility_hidden = yes; then
+   if test "$ac_cv_visibility_hidden" = "yes"; then
       AC_DEFINE(HAVE_VISIBILITY_HIDDEN_ATTRIBUTE)
       AC_CACHE_CHECK(for visibility pragma support,
                      ac_cv_visibility_pragma,
@@ -2071,7 +2071,7 @@ EOF
                       fi
                       rm -f conftest.[cs]
                     ])
-      if test $ac_cv_visibility_pragma = yes; then
+      if test "$ac_cv_visibility_pragma" = "yes"; then
         AC_DEFINE(HAVE_VISIBILITY_PRAGMA)
         VISIBILITY_FLAGS='-I$(DIST)/include/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
         WRAP_SYSTEM_INCLUDES=1
