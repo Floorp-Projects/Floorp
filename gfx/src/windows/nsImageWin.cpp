@@ -94,6 +94,7 @@ nsImageWin::nsImageWin()
   , mInitialized(PR_FALSE)
   , mWantsOptimization(PR_FALSE)
   , mTimer(nsnull)
+  , mImagePreMultiplied(PR_FALSE)
 {
 }
 
@@ -418,6 +419,18 @@ void nsImageWin::CreateImageWithAlphaBits(HDC TheHDC)
                            mColorMap->Index[3 * (*imageRow) + 1] * *alphaRow);
         FAST_DIVIDE_BY_255(imageWithAlphaRow[2],
                            mColorMap->Index[3 * (*imageRow) + 2] * *alphaRow);
+        imageWithAlphaRow[3] = *alphaRow;
+      }
+    }
+  } else if (mImagePreMultiplied) {
+    for (int y = 0; y < mBHead->biHeight; y++) {
+      unsigned char *imageWithAlphaRow = imageWithAlphaBits + y * mBHead->biWidth * 4;
+      unsigned char *imageRow = mImageBits + y * mRowBytes;
+      unsigned char *alphaRow = mAlphaBits + y * mARowBytes;
+
+      for (int x = 0; x < mBHead->biWidth;
+          x++, imageWithAlphaRow += 4, imageRow += 3, alphaRow++) {
+        memcpy(imageWithAlphaRow, imageRow, 3);
         imageWithAlphaRow[3] = *alphaRow;
       }
     }
@@ -1703,6 +1716,11 @@ nsresult nsImageWin::ConvertDDBtoDIB()
     mImageBits = nsnull;
     return NS_ERROR_FAILURE;
   }
+  
+  // If we converted a 8 bit alpha back to bits, those bits are pre-multiplied
+  if (mAlphaDepth == 8)
+    mImagePreMultiplied = PR_TRUE;
+
   return NS_OK;
 }
 
