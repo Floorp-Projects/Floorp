@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAbLDAPDirectory.h"
-#include "nsAbLDAPProperties.h"
 
 #include "nsAbQueryStringToExpression.h"
 
@@ -58,6 +57,8 @@
 #include "nsIPrefBranch.h"
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
+#include "nsLDAP.h"
+#include "nsIAbLDAPAttributeMap.h"
 
 nsAbLDAPDirectory::nsAbLDAPDirectory() :
     nsAbDirectoryRDFResource(),
@@ -386,6 +387,23 @@ NS_IMETHODIMP nsAbLDAPDirectory::StartSearch ()
     rv = prefs->GetIntPref(prefName.get(), &maxHits);
     if (NS_FAILED(rv))
       maxHits = 100;
+
+    // get the appropriate ldap attribute map, and pass it in via the
+    // TypeSpecificArgument
+    nsCOMPtr<nsIAbLDAPAttributeMapService> mapSvc = 
+        do_GetService("@mozilla.org/addressbook/ldap-attribute-map-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIAbLDAPAttributeMap> attrMap;
+    rv = mapSvc->GetMapForPrefBranch(prefName, getter_AddRefs(attrMap));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISupports> typeSpecificArg = do_QueryInterface(attrMap, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = arguments->SetTypeSpecificArg(attrMap);
+    NS_ENSURE_SUCCESS(rv, rv);
+
 
     // Perform the query
     rv = DoQuery(arguments, queryListener, maxHits, 0, &mContext);

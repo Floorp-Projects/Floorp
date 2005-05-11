@@ -1,4 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -20,6 +22,7 @@
  *
  * Contributor(s):
  *   Rajiv Dayal <rdayal@netscape.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -54,6 +57,5 @@ public :
   NS_IMETHOD DoReplicationQuery();
   NS_IMETHOD Init(const nsACString & aPrefName, nsIWebProgressListener *aProgressListener);
 };
-
 
 #endif // nsAbLDAPChangeLogQuery_h__

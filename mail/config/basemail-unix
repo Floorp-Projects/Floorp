@@ -76,6 +76,7 @@ defaults/isp/movemail.rdf
 components/libmozldap.so
 components/mozldap.xpt
 components/nsLDAPPrefsService.js
+components/nsAbLDAPAttributeMap.js
 libldap50.so
 libprldap50.so
 

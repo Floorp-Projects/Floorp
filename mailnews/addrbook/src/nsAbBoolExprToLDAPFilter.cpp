@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Created by: Paul Sandoz   <paul.sandoz@sun.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,14 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIAbLDAPAttributeMap.h"
 #include "nsAbBoolExprToLDAPFilter.h"
-#include "nsAbLDAPProperties.h"
 #include "nsXPIDLString.h"
 
 const int nsAbBoolExprToLDAPFilter::TRANSLATE_CARD_PROPERTY = 1 << 0 ;
 const int nsAbBoolExprToLDAPFilter::ALLOW_NON_CONVERTABLE_CARD_PROPERTY = 1 << 1 ;
 
 nsresult nsAbBoolExprToLDAPFilter::Convert (
+    nsIAbLDAPAttributeMap* map,
     nsIAbBooleanExpression* expression,
     nsCString& filter,
     int flags)
@@ -51,7 +53,7 @@ nsresult nsAbBoolExprToLDAPFilter::Convert (
     nsresult rv;
 
     nsCString f;
-    rv = FilterExpression (expression, f, flags);
+    rv = FilterExpression (map, expression, f, flags);
     NS_ENSURE_SUCCESS(rv, rv);
 
     filter = f;
@@ -59,6 +61,7 @@ nsresult nsAbBoolExprToLDAPFilter::Convert (
 }
 
 nsresult nsAbBoolExprToLDAPFilter::FilterExpression (
+    nsIAbLDAPAttributeMap* map,
     nsIAbBooleanExpression* expression,
     nsCString& filter,
     int flags)
@@ -114,17 +117,17 @@ nsresult nsAbBoolExprToLDAPFilter::FilterExpression (
     {
         case nsIAbBooleanOperationTypes::AND:
             filter.AppendLiteral("&");
-            rv = FilterExpressions (childExpressions, filter, flags);
+            rv = FilterExpressions (map, childExpressions, filter, flags);
             break;
         case nsIAbBooleanOperationTypes::OR:
             filter.AppendLiteral("|");
-            rv = FilterExpressions (childExpressions, filter, flags);
+            rv = FilterExpressions (map, childExpressions, filter, flags);
             break;
         case nsIAbBooleanOperationTypes::NOT:
             if (count > 1)
                 return NS_ERROR_FAILURE;
             filter.AppendLiteral("!");
-            rv = FilterExpressions (childExpressions, filter, flags);
+            rv = FilterExpressions (map, childExpressions, filter, flags);
             break;
         default:
             break;
@@ -135,6 +138,7 @@ nsresult nsAbBoolExprToLDAPFilter::FilterExpression (
 }
 
 nsresult nsAbBoolExprToLDAPFilter::FilterExpressions (
+    nsIAbLDAPAttributeMap *map,
     nsISupportsArray* expressions,
     nsCString& filter,
     int flags)
@@ -154,7 +158,7 @@ nsresult nsAbBoolExprToLDAPFilter::FilterExpressions (
         nsCOMPtr<nsIAbBooleanConditionString> childCondition(do_QueryInterface(item, &rv));
         if (NS_SUCCEEDED(rv))
         {
-            rv = FilterCondition (childCondition, filter, flags);
+            rv = FilterCondition (map, childCondition, filter, flags);
             NS_ENSURE_SUCCESS(rv, rv);
             continue;
         }
@@ -162,7 +166,7 @@ nsresult nsAbBoolExprToLDAPFilter::FilterExpressions (
         nsCOMPtr<nsIAbBooleanExpression> childExpression(do_QueryInterface(item, &rv));
         if (NS_SUCCEEDED(rv))
         {
-            rv = FilterExpression (childExpression, filter, flags);
+            rv = FilterExpression (map, childExpression, filter, flags);
             NS_ENSURE_SUCCESS(rv, rv);
             continue;
         }
@@ -172,6 +176,7 @@ nsresult nsAbBoolExprToLDAPFilter::FilterExpressions (
 }
 
 nsresult nsAbBoolExprToLDAPFilter::FilterCondition (
+    nsIAbLDAPAttributeMap* map,
     nsIAbBooleanConditionString* condition,
     nsCString& filter,
     int flags)
@@ -186,14 +191,12 @@ nsresult nsAbBoolExprToLDAPFilter::FilterCondition (
     rv = condition->GetName (getter_Copies (name));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    const char* ldapProperty = name.get ();
+    nsCAutoString ldapAttr(name);
     if (flags & TRANSLATE_CARD_PROPERTY)
     {
-        const MozillaLdapPropertyRelation* p =
-            MozillaLdapPropertyRelator::findLdapPropertyFromMozilla (name.get ());
-        if (p)
-            ldapProperty = p->ldapProperty;
-        else if (!(flags & ALLOW_NON_CONVERTABLE_CARD_PROPERTY))
+        rv = map->GetFirstAttribute (name, ldapAttr);
+        if (!(flags & ALLOW_NON_CONVERTABLE_CARD_PROPERTY) && 
+            !ATTRMAP_FOUND_ATTR(rv, ldapAttr))
             return NS_OK;
     }
 
@@ -206,73 +209,73 @@ nsresult nsAbBoolExprToLDAPFilter::FilterCondition (
     {
         case nsIAbBooleanConditionTypes::DoesNotExist:
             filter += NS_LITERAL_CSTRING("(!(") +
-                      nsDependentCString(ldapProperty) +
+                      ldapAttr +
                       NS_LITERAL_CSTRING("=*))");
             break;
         case nsIAbBooleanConditionTypes::Exists:
             filter += NS_LITERAL_CSTRING("(") +
-                      nsDependentCString(ldapProperty) +
+                      ldapAttr +
                       NS_LITERAL_CSTRING("=*)");
             break;
         case nsIAbBooleanConditionTypes::Contains:
             filter += NS_LITERAL_CSTRING("(") +
-                      nsDependentCString(ldapProperty) +
+                      ldapAttr +
                       NS_LITERAL_CSTRING("=*") +
                       vUTF8 +
                       NS_LITERAL_CSTRING("*)");
             break;
         case nsIAbBooleanConditionTypes::DoesNotContain:
             filter += NS_LITERAL_CSTRING("(!(") +
-                      nsDependentCString(ldapProperty) +
+                      ldapAttr +
                       NS_LITERAL_CSTRING("=*") +
                       vUTF8 +
                       NS_LITERAL_CSTRING("*))");
             break;
         case nsIAbBooleanConditionTypes::Is:
             filter += NS_LITERAL_CSTRING("(") +
-                      nsDependentCString(ldapProperty) +
+                      ldapAttr +
                       NS_LITERAL_CSTRING("=") +
                       vUTF8 +
                       NS_LITERAL_CSTRING(")");
             break;
         case nsIAbBooleanConditionTypes::IsNot:
             filter += NS_LITERAL_CSTRING("(!(") +
-                      nsDependentCString(ldapProperty) +
+                      ldapAttr +
                       NS_LITERAL_CSTRING("=") +
                       vUTF8 +
                       NS_LITERAL_CSTRING("))");
             break;
         case nsIAbBooleanConditionTypes::BeginsWith:
             filter += NS_LITERAL_CSTRING("(") +
-                      nsDependentCString(ldapProperty) +
+                      ldapAttr +
                       NS_LITERAL_CSTRING("=") +
                       vUTF8 +
                       NS_LITERAL_CSTRING("*)");
             break;
         case nsIAbBooleanConditionTypes::EndsWith:
             filter += NS_LITERAL_CSTRING("(") +
-                      nsDependentCString(ldapProperty) +
+                      ldapAttr +
                       NS_LITERAL_CSTRING("=*") +
                       vUTF8 +
                       NS_LITERAL_CSTRING(")");
             break;
         case nsIAbBooleanConditionTypes::LessThan:
             filter += NS_LITERAL_CSTRING("(") +
-                      nsDependentCString(ldapProperty) +
+                      ldapAttr +
                       NS_LITERAL_CSTRING("<=") +
                       vUTF8 +
                       NS_LITERAL_CSTRING(")");
             break;
         case nsIAbBooleanConditionTypes::GreaterThan:
             filter += NS_LITERAL_CSTRING("(") +
-                      nsDependentCString(ldapProperty) +
+                      ldapAttr +
                       NS_LITERAL_CSTRING(">=") +
                       vUTF8 +
                       NS_LITERAL_CSTRING(")");
             break;
         case nsIAbBooleanConditionTypes::SoundsLike:
             filter += NS_LITERAL_CSTRING("(") +
-                      nsDependentCString(ldapProperty) +
+                      ldapAttr +
                       NS_LITERAL_CSTRING("~=") +
                       vUTF8 +
                       NS_LITERAL_CSTRING(")");

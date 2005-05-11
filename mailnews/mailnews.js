@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -274,6 +275,37 @@ pref("ldap_2.servers.history.description",						"chrome://messenger/locale/addre
 pref("ldap_2.servers.history.dirType",							2);
 pref("ldap_2.servers.history.isOffline",						false);
 
+// default mapping of addressbook properties to ldap attributes
+pref("ldap_2.servers.default.attrmap.FirstName", "givenname");
+pref("ldap_2.servers.default.attrmap.LastName", "sn,surname");
+pref("ldap_2.servers.default.attrmap.DisplayName", "displayname,cn,commonname");
+pref("ldap_2.servers.default.attrmap.NickName", "xmozillanickname");
+pref("ldap_2.servers.default.attrmap.PrimaryEmail", "mail");
+pref("ldap_2.servers.default.attrmap.SecondEmail", "xmozillasecondemail");
+pref("ldap_2.servers.default.attrmap.WorkPhone", "telephonenumber");
+pref("ldap_2.servers.default.attrmap.HomePhone", "homephone");
+pref("ldap_2.servers.default.attrmap.FaxNumber", "fax,facsimiletelephonenumber");
+pref("ldap_2.servers.default.attrmap.PagerNumber", "pager,pagerphone");
+pref("ldap_2.servers.default.attrmap.CellularNumber", "mobile,cellphone,carphone");
+pref("ldap_2.servers.default.attrmap.WorkAddress", "streetaddress,postofficebox");
+pref("ldap_2.servers.default.attrmap.WorkCity", "l,locality");
+pref("ldap_2.servers.default.attrmap.WorkState", "st,region");
+pref("ldap_2.servers.default.attrmap.WorkZipCode", "zip,postalcode");
+pref("ldap_2.servers.default.attrmap.WorkCountry", "countryname");
+pref("ldap_2.servers.default.attrmap.JobTitle", "title");
+pref("ldap_2.servers.default.attrmap.Department", "department,departmentnumber,ou,orgunit");
+pref("ldap_2.servers.default.attrmap.Company", "company,o");
+pref("ldap_2.servers.default.attrmap._AimScreenName", "nscpaimscreenname");
+pref("ldap_2.servers.default.attrmap.WebPage1", "workurl");
+pref("ldap_2.servers.default.attrmap.WebPage2", "homeurl");
+pref("ldap_2.servers.default.attrmap.BirthYear", "birthyear");
+pref("ldap_2.servers.default.attrmap.Custom1", "custom1");
+pref("ldap_2.servers.default.attrmap.Custom2", "custom2");
+pref("ldap_2.servers.default.attrmap.Custom3", "custom3");
+pref("ldap_2.servers.default.attrmap.Custom4", "custom4");
+pref("ldap_2.servers.default.attrmap.Notes", "notes,description");
+pref("ldap_2.servers.default.attrmap.PreferMailFormat", "xmozillausehtmlmail");
+pref("ldap_2.servers.default.attrmap.LastModifiedDate", "modifytimestamp");
 
 // A position of zero is a special value that indicates the directory is deleted.
 // These entries are provided to keep the (obsolete) Four11 directory and the

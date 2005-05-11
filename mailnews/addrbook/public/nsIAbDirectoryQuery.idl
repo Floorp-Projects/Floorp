@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Created by: Paul Sandoz   <paul.sandoz@sun.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -77,6 +78,13 @@ interface nsIAbDirectoryQueryArguments : nsISupports
     void getReturnProperties (out unsigned long returnPropertiesSize,
         [retval, array, size_is(returnPropertiesSize)]
         out string returnPropertiesArray);
+
+    /** 
+     * A parameter which can be used to pass in data specific to a particular
+     * type of addressbook.  In particular, the LDAP addressbook will be
+     * passing in an nsIAbLDAPAttributeMap this way.
+     */
+    attribute nsISupports typeSpecificArg;
 };
 
 

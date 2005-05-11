@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Created by: Paul Sandoz   <paul.sandoz@sun.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -205,6 +206,21 @@ NS_IMETHODIMP nsAbDirectoryQueryArguments::GetReturnProperties(PRUint32* returnP
 
     return NS_OK;
 }
+
+NS_IMETHODIMP nsAbDirectoryQueryArguments::GetTypeSpecificArg(nsISupports** aArg)
+{
+    NS_ENSURE_ARG_POINTER(aArg);
+
+    NS_IF_ADDREF(*aArg = mTypeSpecificArg);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsAbDirectoryQueryArguments::SetTypeSpecificArg(nsISupports* aArg)
+{
+    mTypeSpecificArg = aArg;
+    return NS_OK;
+}
+
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirectoryQueryPropertyValue, nsIAbDirectoryQueryPropertyValue)
 

@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
+#include "nsILDAPMessage.h"
 #include "nsAbLDAPReplicationData.h"
 #include "nsLDAP.h"
 #include "nsIAbCard.h"
@@ -45,7 +46,6 @@
 #include "nsAbUtils.h"
 #include "nsAbMDBCard.h"
 #include "nsAbLDAPCard.h"
-#include "nsAbLDAPProperties.h"
 #include "nsAbLDAPReplicationQuery.h"
 #include "nsProxiedService.h"
 #include "nsCPasswordManager.h"
@@ -89,6 +89,15 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::Init(nsIAbLDAPReplicationQuery *qu
        mQuery = nsnull;
        return NS_ERROR_FAILURE;   
    }
+
+   nsCOMPtr<nsIAbLDAPAttributeMapService> mapSvc = 
+       do_GetService("@mozilla.org/addressbook/ldap-attribute-map-service;1",
+                     &rv);
+   NS_ENSURE_SUCCESS(rv, rv);
+
+   rv = mapSvc->GetMapForPrefBranch(
+       nsDependentCString(mDirServerInfo->prefName), getter_AddRefs(mAttrMap));
+   NS_ENSURE_SUCCESS(rv, rv);
 
    mListener = progressListener;
 
@@ -326,19 +335,12 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchEntry(nsILDAPMessage *aMess
         return NS_ERROR_FAILURE;
 
     nsAbLDAPCard card;
-    PRBool hasSetCardProperty = PR_FALSE;
 
-    nsresult rv = MozillaLdapPropertyRelator::createCardPropertyFromLDAPMessage(aMessage,
-                                                                     &card, &hasSetCardProperty);
-    if(NS_FAILED(rv)) {
-        Abort();
-        return rv;
-    }
-
-    if(hasSetCardProperty == PR_FALSE)
+    nsresult rv = mAttrMap->SetCardPropertiesFromLDAPMessage(aMessage, &card);
+    if (NS_FAILED(rv))
     {
         NS_WARNING("nsAbLDAPProcessReplicationData::OnLDAPSearchEntry"
-           "No card Properties found and set");
+           "No card properties could be set");
         // if some entries are bogus for us, continue with next one
         return NS_OK;
     }

@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Rajiv Dayal <rdayal@netscape.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,13 +39,13 @@
 #include "nsAbLDAPChangeLogData.h"
 #include "nsAbLDAPChangeLogQuery.h"
 #include "nsLDAP.h"
+#include "nsILDAPMessage.h"
 #include "nsIAbCard.h"
 #include "nsIAddrBookSession.h"
 #include "nsAbBaseCID.h"
 #include "nsAbUtils.h"
 #include "nsAbMDBCard.h"
 #include "nsAbLDAPCard.h"
-#include "nsAbLDAPProperties.h"
 #include "nsProxiedService.h"
 #include "nsAutoLock.h"
 #include "nsIAuthPrompt.h"

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Created by: Paul Sandoz   <paul.sandoz@sun.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -70,6 +71,7 @@ public:
 
 protected:
     nsCOMPtr<nsISupports> mExpression;
+    nsCOMPtr<nsISupports> mTypeSpecificArg;
     PRBool mQuerySubDirectories;
     nsCStringArray mReturnProperties;
 };

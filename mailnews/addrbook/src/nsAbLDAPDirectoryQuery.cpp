@@ -40,10 +40,12 @@
 
 #include "nsAbLDAPDirectoryQuery.h"
 #include "nsAbBoolExprToLDAPFilter.h"
-#include "nsAbLDAPProperties.h"
+#include "nsILDAPMessage.h"
 #include "nsILDAPErrors.h"
 #include "nsILDAPOperation.h"
+#include "nsIAbLDAPAttributeMap.h"
 #include "nsAbUtils.h"
+#include "nsLDAP.h"
 
 #include "nsIAuthPrompt.h"
 #include "nsIStringBundle.h"
@@ -224,8 +226,8 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
         case nsILDAPMessage::RES_SEARCH_ENTRY:
             if (!mFinished && !mWaitingForPrevQueryToFinish)
             {
-            rv = OnLDAPMessageSearchEntry (aMessage, getter_AddRefs (queryResult));
-            NS_ENSURE_SUCCESS(rv, rv);
+                rv = OnLDAPMessageSearchEntry (aMessage, 
+                                               getter_AddRefs (queryResult));
             }
             break;
         case nsILDAPMessage::RES_SEARCH_RESULT:
@@ -507,106 +509,82 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
         nsIAbDirectoryQueryResult** result)
 {
     nsresult rv;
-    nsCOMPtr<nsISupportsArray> propertyValues;
 
+    // the address book fields that we'll be asking for
     CharPtrArrayGuard properties;
     rv = mQueryArguments->GetReturnProperties (properties.GetSizeAddr(), properties.GetArrayAddr());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    CharPtrArrayGuard attrs;
-    rv = aMessage->GetAttributes(attrs.GetSizeAddr(), attrs.GetArrayAddr());
+    // the map for translating between LDAP attrs <-> addrbook fields
+    nsCOMPtr<nsISupports> iSupportsMap;
+    rv = mQueryArguments->GetTypeSpecificArg(getter_AddRefs(iSupportsMap));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIAbLDAPAttributeMap> map = do_QueryInterface(iSupportsMap, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString propertyName;
-    for (PRUint32 i = 0; i < properties.GetSize(); i++)
-    {
-        propertyName.Assign (properties[i]);
+    // set up variables for handling the property values to be returned
+    nsCOMPtr<nsISupportsArray> propertyValues;
+    nsCOMPtr<nsIAbDirectoryQueryPropertyValue> propertyValue;
+    rv = NS_NewISupportsArray(getter_AddRefs(propertyValues));
+    NS_ENSURE_SUCCESS(rv, rv);
+        
+    if (!strcmp(properties[0], "card:nsIAbCard")) {
+        // Meta property
+        nsCAutoString dn;
+        rv = aMessage->GetDn (dn);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-        nsAbDirectoryQueryPropertyValue* _propertyValue = 0;
-        if (propertyName.Equals("card:nsIAbCard"))
-        {
-            // Meta property
-            nsCAutoString dn;
-            rv = aMessage->GetDn (dn);
-            NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<nsIAbCard> card;
+        rv = mDirectoryQuery->CreateCard (mUrl, dn.get(), getter_AddRefs (card));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-            nsCOMPtr<nsIAbCard> card;
-            rv = mDirectoryQuery->CreateCard (mUrl, dn.get(), getter_AddRefs (card));
-            NS_ENSURE_SUCCESS(rv, rv);
+        rv = map->SetCardPropertiesFromLDAPMessage(aMessage, card);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-            PRBool hasSetCardProperty = PR_FALSE;
-            rv = MozillaLdapPropertyRelator::createCardPropertyFromLDAPMessage (aMessage,
-                    card,
-                    &hasSetCardProperty);
-            NS_ENSURE_SUCCESS(rv, rv);
+        propertyValue = new nsAbDirectoryQueryPropertyValue(properties[0], card);
+        if (!propertyValue) 
+            return NS_ERROR_OUT_OF_MEMORY;
 
-            if (!hasSetCardProperty)
-                continue;
+        rv = propertyValues->AppendElement(propertyValue);
+        NS_ENSURE_SUCCESS(rv, rv);
+    } else {
 
-            _propertyValue = new nsAbDirectoryQueryPropertyValue(propertyName.get (), card);
-            if (_propertyValue == NULL)
-                return NS_ERROR_OUT_OF_MEMORY;
-
-        }
-        else
-        {
-            if (!MozillaLdapPropertyRelator::findLdapPropertyFromMozilla (propertyName.get ()))
-                continue;
-
-            const MozillaLdapPropertyRelation* relation ;
-
-            for (PRUint32 j = 0; j < attrs.GetSize(); j++)
+        for (PRUint32 i = 0; i < properties.GetSize(); i++)
             {
-                relation = MozillaLdapPropertyRelator::findMozillaPropertyFromLdap (attrs[j]);
-                if (!relation)
+                // this is the precedence order list of attrs for this property
+                CharPtrArrayGuard attrs;
+                rv = map->GetAttributes(nsDependentCString(properties[i]),
+                                        attrs.GetSizeAddr(),
+                                        attrs.GetArrayAddr());
+
+                // if there are no attrs for this property, just move on
+                if (NS_FAILED(rv) || !strlen(attrs[0])) {
                     continue;
-                /*
-                 * This change is necessary due to a side effect of #124022. The list of
-                 * requested attributes is created in reverse order than how they appear
-                 * in nsAbLDAPProperties.cpp. Thus while "surname" and "sn" both map to
-                 * LastName, "sn" will be returned by findLdapPropertyFromMozilla() as it
-                 * appears first in the hash table but "surname" will be returned by the 
-                 * request. 
-                 *
-                 * Rather than simply reversing the order, an alternative is to compare
-                 * the mapped Mozilla attributes where a one to one match exists.
-                */
+                }
 
-                if (nsCRT::strcasecmp (relation->mozillaProperty, propertyName.get()) == 0)
-                {
+                // iterate through list, until first property found
+                for (PRUint32 j=0; j < attrs.GetSize(); j++) {
+
+                    // try and get the values for this ldap attribute
                     PRUnicharPtrArrayGuard vals;
-                    rv = aMessage->GetValues (attrs[j], vals.GetSizeAddr(), vals.GetArrayAddr());
-                    NS_ENSURE_SUCCESS(rv, rv);
+                    rv = aMessage->GetValues(attrs[j], vals.GetSizeAddr(),
+                                             vals.GetArrayAddr());
 
-                    if (vals.GetSize() == 0)
+                    if (NS_SUCCEEDED(rv) && vals.GetSize()) {
+                        propertyValue = new nsAbDirectoryQueryPropertyValue(
+                            properties[i], vals[0]);
+                        if (!propertyValue) {
+                            return NS_ERROR_OUT_OF_MEMORY;
+                        }
+
+                        (void)propertyValues->AppendElement (propertyValue);
                         break;
-
-                    _propertyValue = new nsAbDirectoryQueryPropertyValue(propertyName.get (), vals[0]);
-                    if (_propertyValue == NULL)
-                        return NS_ERROR_OUT_OF_MEMORY;
-                    break;
+                    }
                 }
             }
-        }
-
-        if (_propertyValue)
-        {
-            nsCOMPtr<nsIAbDirectoryQueryPropertyValue> propertyValue;
-            propertyValue = _propertyValue;
-
-            if (!propertyValues)
-            {
-                NS_NewISupportsArray(getter_AddRefs(propertyValues));
-            }
-
-            propertyValues->AppendElement (propertyValue);
-        }
     }
 
-    if (!propertyValues)
-        return NS_OK;
-
-    return QueryResultStatus (propertyValues, result,nsIAbDirectoryQueryResult::queryResultMatch);
+    return QueryResultStatus (propertyValues, result, nsIAbDirectoryQueryResult::queryResultMatch);
 }
 nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchResult (nsILDAPMessage *aMessage,
         nsIAbDirectoryQueryResult** result)
@@ -704,7 +682,17 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
 
     nsCOMPtr<nsIAbBooleanExpression> expression (do_QueryInterface (supportsExpression, &rv));
     nsCAutoString filter;
-    rv = nsAbBoolExprToLDAPFilter::Convert (expression, filter);
+
+    // figure out how we map attribute names to addressbook fields for this
+    // query
+    nsCOMPtr<nsISupports> iSupportsMap;
+    rv = arguments->GetTypeSpecificArg(getter_AddRefs(iSupportsMap));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIAbLDAPAttributeMap> map = do_QueryInterface(iSupportsMap, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = nsAbBoolExprToLDAPFilter::Convert (map, expression, filter);
     NS_ENSURE_SUCCESS(rv, rv);
 
     /*
@@ -863,33 +851,51 @@ nsresult nsAbLDAPDirectoryQuery::getLdapReturnAttributes (
     nsresult rv;
 
     CharPtrArrayGuard properties;
-    rv = arguments->GetReturnProperties (properties.GetSizeAddr(), properties.GetArrayAddr());
+    rv = arguments->GetReturnProperties(properties.GetSizeAddr(),
+                                        properties.GetArrayAddr());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString propertyName;
+    // figure out how we map attribute names to addressbook fields for this
+    // query
+    nsCOMPtr<nsISupports> iSupportsMap;
+    rv = arguments->GetTypeSpecificArg(getter_AddRefs(iSupportsMap));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIAbLDAPAttributeMap> map = do_QueryInterface(iSupportsMap, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!strcmp(properties[0], "card:nsIAbCard")) {
+        // Meta property
+        // require all attributes
+        //
+        rv = map->GetAllCardAttributes(returnAttributes);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "GetAllSupportedAttributes failed");
+        return rv;
+    }
+
+    PRBool needComma = PR_FALSE;
     for (PRUint32 i = 0; i < properties.GetSize(); i++)
     {
-        propertyName.Assign (properties[i]);
+        nsCAutoString attrs;
 
-        if (propertyName.Equals("card:nsIAbCard"))
-        {
-            // Meta property
-            // require all attributes
-            //
-            rv = MozillaLdapPropertyRelator::GetAllSupportedLDAPAttributes(returnAttributes);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "GetAllSupportedLDAPAttributes failed");
-            break;
+        // get all the attributes for this property
+        rv = map->GetAttributeList(nsDependentCString(properties[i]), attrs);
+
+        // if there weren't any attrs, just keep going
+        if (NS_FAILED(rv) || attrs.IsEmpty()) {
+            continue;
         }
 
-        const MozillaLdapPropertyRelation* tableEntry=
-            MozillaLdapPropertyRelator::findLdapPropertyFromMozilla (propertyName.get ());
-        if (!tableEntry)
-            continue;
+        // add a comma, if necessary
+        if (needComma) {
+            returnAttributes.Append(PRUnichar (','));
+        }
 
-        if (i)
-            returnAttributes.Append (PRUnichar (','));
+        returnAttributes.Append(attrs);
 
-        returnAttributes.Append (tableEntry->ldapProperty);
+        // since we've added attrs, we definitely need a comma next time
+        // we're here
+        needComma = PR_TRUE;
     }
 
     return rv;

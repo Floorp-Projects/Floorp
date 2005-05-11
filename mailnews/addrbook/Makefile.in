@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Dan Mosedale <dan.mosedale@oracle.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_LDAP_XPCOM
 REQUIRES	+= mozldap necko
-EXTRA_COMPONENTS += src/nsLDAPPrefsService.js
+EXTRA_COMPONENTS += src/nsLDAPPrefsService.js src/nsAbLDAPAttributeMap.js
 endif
 
 DIRS		= public src

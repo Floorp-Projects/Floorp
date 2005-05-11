@@ -1,4 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -41,13 +43,28 @@
 #include "nsAbLDAPChangeLogQuery.h"
 #include "nsAbLDAPReplicationService.h"
 #include "nsAbLDAPChangeLogData.h"
-#include "nsAbLDAPProperties.h"
 #include "nsAutoLock.h"
 #include "nsAbUtils.h"
 #include "prprf.h"
 #include "nsDirPrefs.h"
 #include "nsAbBaseCID.h"
 #include "nsPrintfCString.h"
+
+
+// The tables below were originally in nsAbLDAPProperties.cpp, which has since
+// gone away.
+static const char * sChangeLogRootDSEAttribs[] =
+{ 
+  "changelog", 
+  "firstChangeNumber", 
+  "lastChangeNumber",
+  "dataVersion"
+};
+static const char * sChangeLogEntryAttribs[] =
+{ 
+  "targetdn", 
+  "changetype"
+};
 
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsAbLDAPChangeLogQuery, nsAbLDAPReplicationQuery, nsIAbLDAPChangeLogQuery)
@@ -137,10 +154,9 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryRootDSE()
     nsresult rv = CreateNewLDAPOperation();
     NS_ENSURE_SUCCESS(rv, rv);
     return mOperation->SearchExt(EmptyCString(), nsILDAPURL::SCOPE_BASE, 
-			    NS_LITERAL_CSTRING("objectclass=*"), 
-			    MozillaLdapPropertyRelator::rootDSEAttribCount, 
-			    MozillaLdapPropertyRelator::changeLogRootDSEAttribs,
-			    0, 0);
+                                 NS_LITERAL_CSTRING("objectclass=*"), 
+                                 sizeof(sChangeLogRootDSEAttribs),
+                                 sChangeLogRootDSEAttribs, 0, 0);
 }
 
 NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangeLog(const nsACString & aChangeLogDN, PRInt32 aLastChangeNo)
@@ -159,12 +175,9 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangeLog(const nsACString & aChangeL
     nsresult rv = CreateNewLDAPOperation();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return mOperation->SearchExt(aChangeLogDN, 
-                               nsILDAPURL::SCOPE_ONELEVEL,
-                               filter, 
-                               MozillaLdapPropertyRelator::changeLogEntryAttribCount, 
-                               MozillaLdapPropertyRelator::changeLogEntryAttribs,
-                               0, 0);
+    return mOperation->SearchExt(aChangeLogDN, nsILDAPURL::SCOPE_ONELEVEL, filter, 
+                                 sizeof(sChangeLogEntryAttribs),
+                                 sChangeLogEntryAttribs, 0, 0);
 }
 
 NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangedEntries(const nsACString & aChangedEntryDN)

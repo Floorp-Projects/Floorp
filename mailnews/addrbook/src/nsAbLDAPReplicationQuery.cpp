@@ -44,7 +44,6 @@
 #include "nsAbLDAPReplicationData.h"
 #include "nsILDAPURL.h"
 #include "nsAbBaseCID.h"
-#include "nsAbLDAPProperties.h"
 #include "nsProxiedService.h"
 #include "nsLDAP.h"
 #include "nsAbUtils.h"

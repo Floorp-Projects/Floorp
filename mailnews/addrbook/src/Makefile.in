@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Dan Mosedale <dan.mosedale@oracle.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -138,7 +139,6 @@ REQUIRES    += mozldap \
 CPPSRCS		+= nsAbLDAPDirectory.cpp \
 		nsAbLDAPDirFactory.cpp	\
                 nsAbLDAPCard.cpp \
-                nsAbLDAPProperties.cpp \
                 nsAbLDAPDirectoryQuery.cpp \
                 nsAbBoolExprToLDAPFilter.cpp \
 		nsAbLDAPAutoCompFormatter.cpp \

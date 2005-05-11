@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,6 +46,7 @@
 #include "nsIAddrDatabase.h"
 #include "nsILocalFile.h"
 #include "nsDirPrefs.h"
+#include "nsIAbLDAPAttributeMap.h"
 
 class nsAbLDAPProcessReplicationData : public nsIAbLDAPProcessReplicationData
 {
@@ -76,6 +78,7 @@ protected :
   DIR_Server *    mDirServerInfo;
   nsCString       mAuthDN;      // authDN of the user
   nsCString       mAuthPswd;    // pswd of the authDN user
+  nsCOMPtr<nsIAbLDAPAttributeMap> mAttrMap; // maps ab properties to ldap attrs
   
   virtual nsresult OnLDAPBind(nsILDAPMessage *aMessage);
   virtual nsresult OnLDAPSearchEntry(nsILDAPMessage *aMessage);

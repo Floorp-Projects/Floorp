@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Created by: Paul Sandoz   <paul.sandoz@sun.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -43,6 +44,8 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
+class nsIAbLDAPAttributeMap;
+
 class nsAbBoolExprToLDAPFilter
 {
 public:
@@ -50,20 +53,24 @@ public:
     static const int ALLOW_NON_CONVERTABLE_CARD_PROPERTY ;
 
     static nsresult Convert (
+            nsIAbLDAPAttributeMap* map,
             nsIAbBooleanExpression* expression,
             nsCString& filter,
             int flags = TRANSLATE_CARD_PROPERTY);
 
 protected:
     static nsresult FilterExpression (
+        nsIAbLDAPAttributeMap* map,
         nsIAbBooleanExpression* expression,
         nsCString& filter,
         int flags);
     static nsresult FilterExpressions (
+        nsIAbLDAPAttributeMap* map,
         nsISupportsArray* expressions,
         nsCString& filter,
         int flags);
     static nsresult FilterCondition (
+        nsIAbLDAPAttributeMap* map,
         nsIAbBooleanConditionString* condition,
         nsCString& filter,
         int flags);

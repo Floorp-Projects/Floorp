@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Rajiv Dayal <rdayal@netscape.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
