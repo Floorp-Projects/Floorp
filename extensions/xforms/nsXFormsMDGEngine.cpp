@@ -166,7 +166,7 @@ nsXFormsMDGEngine::AddMIP(ModelItemPropName       aType,
   printf("nsXFormsMDGEngine::AddMIP(aContextNode=%s, aExpression=%p, aDependencies=|%d|,\n",
          NS_ConvertUCS2toUTF8(nodename).get(),
          (void*) aExpression,
-         aDependencies->Count());
+         aDependencies ? aDependencies->Count() : 0);
   printf("                          aContextPos=%d, aContextSize=%d, aType=%s, aDynFunc=%d)\n",
          aContextPos, aContextSize, gMIPNames[aType], aDynFunc);
 #endif
@@ -348,6 +348,7 @@ nsXFormsMDGEngine::Recalculate(nsCOMArray<nsIDOMNode> *aChangedNodes)
     NS_ENSURE_TRUE(ns, NS_ERROR_FAILURE);
     
     PRBool constraint = PR_TRUE;
+    PRBool conChanged;
     // Find MIP-type and handle it accordingly
     switch (g->mType) {
     case eModel_calculate:
@@ -385,9 +386,15 @@ nsXFormsMDGEngine::Recalculate(nsCOMArray<nsIDOMNode> *aChangedNodes)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      if (ns->IsConstraint() != constraint) {
-        ns->Set(eFlag_CONSTRAINT, constraint);
-        ns->Set(eFlag_DISPATCH_VALID_CHANGED, PR_TRUE);
+      conChanged = ns->IsConstraint() != constraint;
+        // On the first calculate after a rebuild (mFirstCalculate) we also
+        // add constraints to the set of changed nodes to trigger validation
+        // of type information if present.
+      if (conChanged || mFirstCalculate) {
+        if (conChanged) {
+          ns->Set(eFlag_CONSTRAINT, constraint);
+          ns->Set(eFlag_DISPATCH_VALID_CHANGED, PR_TRUE);
+        }
         NS_ENSURE_TRUE(aChangedNodes->AppendObject(g->mContextNode),
                        NS_ERROR_FAILURE);
       }
