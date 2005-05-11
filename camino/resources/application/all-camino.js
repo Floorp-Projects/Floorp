@@ -38,6 +38,8 @@
 
 // This file contains Camino-specific default preferences.
 
+pref("accessibility.tabfocus", 3);
+
 // What to load in a new tab: 0 = blank, 1 = homepage, 2 = last page
 pref("browser.tabs.startPage", 0);
 
