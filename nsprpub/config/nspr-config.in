@@ -1,8 +1,6 @@
 #!/bin/sh
 
 prefix=@prefix@
-exec_prefix=@exec_prefix@
-exec_prefix_set=no
 
 major_version=@MOD_MAJOR_VERSION@
 minor_version=@MOD_MINOR_VERSION@
@@ -15,6 +13,8 @@ Usage: nspr-config [OPTIONS] [LIBRARIES]
 Options:
 	[--prefix[=DIR]]
 	[--exec-prefix[=DIR]]
+	[--includedir[=DIR]]
+	[--libdir[=DIR]]
 	[--version]
 	[--libs]
 	[--cflags]
@@ -43,19 +43,27 @@ while test $# -gt 0; do
   case $1 in
     --prefix=*)
       prefix=$optarg
-      if test $exec_prefix_set = no ; then
-        exec_prefix=$optarg
-      fi
       ;;
     --prefix)
       echo_prefix=yes
       ;;
     --exec-prefix=*)
       exec_prefix=$optarg
-      exec_prefix_set=yes
       ;;
     --exec-prefix)
       echo_exec_prefix=yes
+      ;;
+    --includedir=*)
+      includedir=$optarg
+      ;;
+    --includedir)
+      echo_includedir=yes
+      ;;
+    --libdir=*)
+      libdir=$optarg
+      ;;
+    --libdir)
+      echo_libdir=yes
       ;;
     --version)
       echo ${major_version}.${minor_version}.${patch_version}
@@ -82,20 +90,39 @@ while test $# -gt 0; do
   shift
 done
 
+# Set variables that may be dependent upon other variables
+if test -z "$exec_prefix"; then
+    exec_prefix=@exec_prefix@
+fi
+if test -z "$includedir"; then
+    includedir=@includedir@
+fi
+if test -z "$libdir"; then
+    libdir=@libdir@
+fi
+
 if test "$echo_prefix" = "yes"; then
-	echo $prefix
+    echo $prefix
 fi
 
 if test "$echo_exec_prefix" = "yes"; then
-	echo $exec_prefix
+    echo $exec_prefix
+fi
+
+if test "$echo_includedir" = "yes"; then
+    echo $includedir
+fi
+
+if test "$echo_libdir" = "yes"; then
+    echo $libdir
 fi
 
 if test "$echo_cflags" = "yes"; then
-      echo -I${prefix}/include/nspr
+    echo -I$includedir
 fi
 
 if test "$echo_libs" = "yes"; then
-      libdirs=-L${exec_prefix}/lib
+      libdirs=-L$libdir
       if test -n "$lib_plds"; then
 	libdirs="$libdirs -lplds${major_version}"
       fi
