@@ -2594,7 +2594,7 @@ EOF
 fi
 
 echo "$ac_t""$ac_cv_visibility_hidden" 1>&6
-    if test $ac_cv_visibility_hidden = yes; then
+    if test "$ac_cv_visibility_hidden" = "yes"; then
         cat >> confdefs.h <<\EOF
 #define HAVE_VISIBILITY_HIDDEN_ATTRIBUTE 1
 EOF
@@ -2623,7 +2623,7 @@ EOF
 fi
 
 echo "$ac_t""$ac_cv_visibility_pragma" 1>&6
-        if test $ac_cv_visibility_pragma = yes; then
+        if test "$ac_cv_visibility_pragma" = "yes"; then
             cat >> confdefs.h <<\EOF
 #define HAVE_VISIBILITY_PRAGMA 1
 EOF
