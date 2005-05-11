@@ -356,13 +356,13 @@ calICSCalendar.prototype = {
             // use the window watcher service to get a nsIAuthPrompt impl
             return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                              .getService(Components.interfaces.nsIWindowWatcher)
-                             .getNewAuthPrompter(window);
+                             .getNewAuthPrompter(null);
         }
         else if (iid.equals(Components.interfaces.nsIPrompt)) {
             // use the window watcher service to get a nsIPrompt impl
             return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                              .getService(Components.interfaces.nsIWindowWatcher)
-                             .getNewPrompter(window);
+                             .getNewPrompter(null);
         }
         Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
         return null;

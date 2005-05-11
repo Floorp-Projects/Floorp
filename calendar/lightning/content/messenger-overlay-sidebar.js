@@ -121,7 +121,14 @@ function LtnObserveDisplayDeckChange(event)
     }
 }
 
+function ltnPublishCalendar()
+{
+    currentCalendar = ltnSelectedCalendar();
+
+    openDialog("chrome://calendar/content/calendar-publish-dialog.xul", "caPublishEvents", "chrome,titlebar,modal", currentCalendar);
+}
+
 document.getElementById("displayDeck").
     addEventListener("select", LtnObserveDisplayDeckChange, true);
-document.
-    addEventListener("load", ltnOnLoad, true);
+
+document.addEventListener("load", ltnOnLoad, true);

@@ -32,6 +32,8 @@ calendar.jar:
   content/calendar/calendar-alarm-dialog.js	(/calendar/base/content/calendar-alarm-dialog.js)
   content/calendar/calendar-alarm-widget.css	(/calendar/base/content/calendar-alarm-widget.css)
   content/calendar/calendar-alarm-widget.xml	(/calendar/base/content/calendar-alarm-widget.xml)
+  content/calendar/calendar-publish-dialog.js	(/calendar/base/content/calendar-publish-dialog.js)
+  content/calendar/calendar-publish-dialog.xul	(/calendar/base/content/calendar-publish-dialog.xul)
 
 calendar-en-US.jar:
   locale/en-US/calendar/global.dtd		(/calendar/resources/locale/en-US/global.dtd)
