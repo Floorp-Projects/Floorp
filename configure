@@ -5,6 +5,7 @@
 _AUTOCONF_TOOLS_DIR=`dirname $0`/./build/autoconf
 . $_AUTOCONF_TOOLS_DIR/mozconfig2configure
 
+
 # Guess values for system-dependent variables and create Makefiles.
 # Generated automatically using autoconf version 2.13 
 # Copyright (C) 1992, 93, 94, 95, 96 Free Software Foundation, Inc.
