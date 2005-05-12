@@ -80,6 +80,7 @@
 #include "nsIDOMXPathEvaluator.h"
 #include "nsIRadioGroupContainer.h"
 #include "nsIScriptEventManager.h"
+#include "nsILayoutHistoryState.h"
 
 // Put these here so all document impls get them automatically
 #include "nsHTMLStyleSheet.h"
@@ -537,6 +538,7 @@ public:
 
   virtual NS_HIDDEN_(PRBool) CanSavePresentation(nsIRequest *aNewRequest);
   virtual NS_HIDDEN_(void) Destroy();
+  virtual NS_HIDDEN_(already_AddRefed<nsILayoutHistoryState>) GetLayoutHistoryState() const;
 
 protected:
 
@@ -628,6 +630,12 @@ private:
   nsDocument& operator=(const nsDocument& aOther);
 
   nsXPathDocumentTearoff* mXPathDocument;
+
+  // The layout history state that should be used by nodes in this
+  // document.  We only actually store a pointer to it when:
+  // 1)  We have no script global object.
+  // 2)  We haven't had Destroy() called on us yet.
+  nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
 };
 
 

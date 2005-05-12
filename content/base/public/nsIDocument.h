@@ -86,11 +86,12 @@ class nsNodeInfoManager;
 class nsICSSLoader;
 class nsHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
+class nsILayoutHistoryState;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x8bc6ae5f, 0xb396, 0x11d9, \
-  { 0xb1, 0x4f, 0x00, 0x11, 0x24, 0x78, 0xd6, 0x26 } }
+{ 0x5cb398a4, 0xbd6f, 0x4af5, \
+ { 0x81, 0x56, 0x59, 0xfd, 0xcf, 0xe6, 0xab, 0x45 } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -704,6 +705,13 @@ public:
    * Destroy() is only called on documents that have a content viewer.
    */
   virtual void Destroy() = 0;
+
+  /**
+   * Get the layout history state that should be used to save and restore state
+   * for nodes in this document.  This may return null; if that happens state
+   * saving and restoration is not possible.
+   */
+  virtual already_AddRefed<nsILayoutHistoryState> GetLayoutHistoryState() const = 0;
 
 protected:
   ~nsIDocument()

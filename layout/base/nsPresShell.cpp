@@ -3545,22 +3545,13 @@ PresShell::EndLoad(nsIDocument *aDocument)
 
   // Restore frame state for the root scroll frame
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
-  if (!container)
-    return;
-
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-  if (!docShell)
-    return;
-
+  nsCOMPtr<nsILayoutHistoryState> historyState =
+    aDocument->GetLayoutHistoryState();
   // Make sure we don't reenter reflow via the sync paint that happens while
   // we're scrolling to our restored position.  Entering reflow for the
   // scrollable frame will cause it to reenter ScrollToRestoredPosition(), and
   // it'll get all confused.
   ++mChangeNestCount;
-
-  nsCOMPtr<nsILayoutHistoryState> historyState;
-  docShell->GetLayoutHistoryState(getter_AddRefs(historyState));
 
   if (rootFrame && historyState) {
     nsIFrame* scrollFrame = GetRootScrollFrame(rootFrame);
@@ -4798,6 +4789,12 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
 
   NS_PRECONDITION(nsnull != aState, "null state pointer");
 
+  // We actually have to mess with the docshell here, since we want to
+  // store the state back in it.
+  // XXXbz this isn't really right, since this is being called in the
+  // content viewer's Hide() method...  by that point the docshell's
+  // state could be wrong.  We should sort out a better ownership
+  // model for the layout history state.
   nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
   if (!container)
     return NS_ERROR_FAILURE;

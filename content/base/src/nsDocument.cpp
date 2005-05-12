@@ -1854,24 +1854,17 @@ void
 nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 {
   if (mScriptGlobalObject && !aScriptGlobalObject) {
-    // We're detaching from the window.  We need to save our state now,
-    // since the history entry to save it onto may be inaccessible later.
-
-    nsRefPtr<nsContentList> formControls =
-      nsContentUtils::GetFormControlElements(this);
-
-    if (formControls) {
-      PRUint32 length = formControls->Length(PR_TRUE);
-      for (PRUint32 i = 0; i < length; ++i) {
-        nsCOMPtr<nsIFormControl> control = do_QueryInterface(formControls->Item(i, PR_FALSE));
-        if (control) {
-          control->SaveState();
-        }
-      }
-    }
+    // We're detaching from the window.  We need to grab a pointer to
+    // our layout history state now.
+    mLayoutHistoryState = GetLayoutHistoryState();
   }
 
   mScriptGlobalObject = aScriptGlobalObject;
+
+  if (mScriptGlobalObject) {
+    // Go back to using the docshell for the layout history state
+    mLayoutHistoryState = nsnull;
+  }
 }
 
 nsIScriptLoader *
@@ -4796,4 +4789,22 @@ nsDocument::Destroy()
 
     shell->ReleaseAnonymousContent();
   }
+
+  mLayoutHistoryState = nsnull;
+}
+
+already_AddRefed<nsILayoutHistoryState>
+nsDocument::GetLayoutHistoryState() const
+{
+  nsILayoutHistoryState* state = nsnull;
+  if (!mScriptGlobalObject) {
+    NS_IF_ADDREF(state = mLayoutHistoryState);
+  } else {
+    nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocumentContainer));
+    if (docShell) {
+      docShell->GetLayoutHistoryState(&state);
+    }
+  }
+
+  return state;
 }
