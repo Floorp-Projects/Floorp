@@ -190,8 +190,10 @@ calCalendarManager.prototype = {
 
     registerCalendar: function(calendar) {
         // bail if this calendar (or one that looks identical to it) is already registered
-        if (this.findCalendarID(calendar) > 0)
+        if (this.findCalendarID(calendar) > 0) {
+            dump ("registerCalendar: calendar already registered\n");
             throw Components.results.NS_ERROR_FAILURE;
+        }
 
         var pp = this.mRegisterCalendar.params;
         pp.type = calendar.type;
@@ -238,21 +240,28 @@ calCalendarManager.prototype = {
         var stmt = this.mSelectCalendars;
         stmt.reset();
 
+        var newCalendarData = [];
+
         while (stmt.step()) {
             var id = stmt.row.id;
             if (!(id in this.mCache)) {
-                try {
-                    this.mCache[id] = this.createCalendar(stmt.row.type, makeURI(stmt.row.uri));
-                } catch (e) {
-                    dump("Can't create calendar for " + id + " (" + stmt.row.type + ", " + 
-                        stmt.row.uri + "): " + e + "\n");
-                    continue;
-                }
+                newCalendarData.push ({id: id, type: stmt.row.type, uri: stmt.row.uri });
             }
-            calendars.push(this.mCache[id]);
+        }
+        stmt.reset();
+
+        for each (var caldata in newCalendarData) {
+            try {
+                this.mCache[caldata.id] = this.createCalendar(caldata.type, makeURI(caldata.uri));
+            } catch (e) {
+                dump("Can't create calendar for " + caldata.id + " (" + caldata.type + ", " + 
+                     caldata.uri + "): " + e + "\n");
+                continue;
+            }
         }
 
-        stmt.reset();
+        for each (var cal in this.mCache)
+            calendars.push (cal);
 
         count.value = calendars.length;
         return calendars;
