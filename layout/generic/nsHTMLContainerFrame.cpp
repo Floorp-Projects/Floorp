@@ -119,7 +119,8 @@ nsHTMLContainerFrame::PaintDecorationsAndChildren(
       nsCOMPtr<nsIDeviceContext> deviceContext;
       aRenderingContext.GetDeviceContext(*getter_AddRefs(deviceContext));
       nsCOMPtr<nsIFontMetrics> normalFont;
-      deviceContext->GetMetricsFor(font->mFont, *getter_AddRefs(fm));
+      const nsStyleVisibility* visibility = GetStyleVisibility();      
+      deviceContext->GetMetricsFor(font->mFont, visibility->mLangGroup, *getter_AddRefs(fm));
     }
     if (decorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
       PaintTextDecorations(aRenderingContext, fm,
