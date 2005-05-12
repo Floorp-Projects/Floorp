@@ -762,7 +762,8 @@ calStorageCalendar.prototype = {
             // found, or something else happened
             version = -1;
         }
-        selectSchemaVersion.reset();
+        if (selectSchemaVersion)
+            selectSchemaVersion.reset();
 
         return version;
     },
