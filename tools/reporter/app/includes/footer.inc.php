@@ -40,14 +40,14 @@
   <div id="footer">
    <ul id="bn">
     <li><a href="http://planet.mozilla.org">Community Blogs</a></li>
-    <li><a href="sitemap.html">Site Map</a></li>
-    <li><a href="security/">Security Updates</a></li>
+    <li><a href="http://www.mozilla.org/sitemap.html">Site Map</a></li>
+    <li><a href="http://www.mozilla.org/security/">Security Updates</a></li>
 
-    <li><a href="contact/">Contact Us</a></li>
-    <li><a href="foundation/donate.html">Donate</a></li>
+    <li><a href="http://www.mozilla.org/contact/">Contact Us</a></li>
+    <li><a href="http://www.mozilla.org/foundation/donate.html">Donate</a></li>
    </ul>
    <p>International Affiliates: <a href="http://www.mozilla-europe.org/">Mozilla Europe</a> - <a href="http://www.mozilla-japan.org/">Mozilla Japan</a></p>
-   <p>Copyright &copy; 1998-2004 The Mozilla Organization</p>
+   <p>Copyright &copy; 1998-<?php print date("Y"); ?> The Mozilla Organization</p>
 
   </div>
   <!-- closes #footer-->
