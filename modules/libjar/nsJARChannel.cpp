@@ -227,6 +227,22 @@ nsJARChannel::Init(nsIURI *uri)
 {
     nsresult rv;
     mJarURI = do_QueryInterface(uri, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // Prevent loading jar:javascript URIs (see bug 290982).
+    nsCOMPtr<nsIURI> innerURI;
+    rv = mJarURI->GetJARFile(getter_AddRefs(innerURI));
+    if (NS_FAILED(rv))
+        return rv;
+    PRBool isJS;
+    rv = innerURI->SchemeIs("javascript", &isJS);
+    if (NS_FAILED(rv))
+        return rv;
+    if (isJS) {
+        NS_WARNING("blocking jar:javascript:");
+        return NS_ERROR_INVALID_ARG;
+    }
 
 #if defined(PR_LOGGING)
     mJarURI->GetSpec(mSpec);

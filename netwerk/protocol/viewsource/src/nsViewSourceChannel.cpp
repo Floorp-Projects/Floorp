@@ -80,6 +80,17 @@ nsViewSourceChannel::Init(nsIURI* uri)
     nsCOMPtr<nsIIOService> pService(do_GetIOService(&rv));
     if (NS_FAILED(rv)) return rv;
 
+    nsCAutoString scheme;
+    rv = pService->ExtractScheme(path, scheme);
+    if (NS_FAILED(rv))
+      return rv;
+
+    // prevent viewing source of javascript URIs (see bug 204779)
+    if (scheme.LowerCaseEqualsLiteral("javascript")) {
+      NS_WARNING("blocking view-source:javascript:");
+      return NS_ERROR_INVALID_ARG;
+    }
+
     rv = pService->NewChannel(path, nsnull, nsnull, getter_AddRefs(mChannel));
     if (NS_FAILED(rv))
       return rv;
