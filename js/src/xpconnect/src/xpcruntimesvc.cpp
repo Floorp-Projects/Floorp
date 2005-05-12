@@ -155,9 +155,9 @@ nsJSRuntimeServiceImpl::GetBackstagePass(nsIXPCScriptable **bsp)
         nsCOMPtr<nsIScriptSecurityManager> secman = 
             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
         if(!secman)
-            return nsnull;
+            return NS_ERROR_NOT_AVAILABLE;
         if(NS_FAILED(secman->GetSystemPrincipal(getter_AddRefs(sysprin))))
-            return nsnull;
+            return NS_ERROR_NOT_AVAILABLE;
         
         mBackstagePass = new BackstagePass(sysprin);
 #else
