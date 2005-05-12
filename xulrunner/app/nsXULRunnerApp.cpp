@@ -147,12 +147,17 @@ static int LoadAppData(const char* appDataFile, nsXREAppData* aResult)
   if (!lf)
     return 2;
 
-  rv = lf->GetParent(&aResult->appDir);
+  nsCOMPtr<nsIFile> appDir;
+  rv = lf->GetParent(getter_AddRefs(appDir));
   if (NS_FAILED(rv))
     return 2;
-  
+
+  rv = CallQueryInterface(appDir, &aResult->directory);
+  if (NS_FAILED(rv))
+    return 2;
+
   nsINIParser parser;
-  rv = parser.Init(lf)
+  rv = parser.Init(lf);
   if (NS_FAILED(rv))
     return 2;
 
@@ -179,7 +184,7 @@ static int LoadAppData(const char* appDataFile, nsXREAppData* aResult)
   // Read string-valued fields
   const struct {
     const char *key;
-    char      **fill;
+    const char **fill;
     char       *buf;
     size_t      bufLen;
     PRBool      required;
@@ -195,7 +200,7 @@ static int LoadAppData(const char* appDataFile, nsXREAppData* aResult)
     rv = parser.GetString("App", string_fields[i].key, string_fields[i].buf,
                           string_fields[i].bufLen);
     if (NS_SUCCEEDED(rv)) {
-      *fill = string_fields[i].buf;
+      *string_fields[i].fill = string_fields[i].buf;
     }
     else if (string_fields[i].required) {
       Output(PR_TRUE, "Error: %x: No \"%s\" field.\n",
@@ -297,9 +302,9 @@ int main(int argc, char* argv[])
 
   int rv = LoadAppData(appDataFile, &appData);
   if (!rv)
-    rv = XRE_main(argc, argv, appData);
+    rv = XRE_main(argc, argv, &appData);
 
-  NS_IF_RELEASE(appData.appDir);
+  NS_IF_RELEASE(appData.directory);
 
   return rv;
 }
