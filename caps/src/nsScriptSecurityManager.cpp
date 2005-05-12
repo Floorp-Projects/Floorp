@@ -1121,44 +1121,39 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI,
        return NS_ERROR_FAILURE;
 
     nsresult rv;
-    nsCOMPtr<nsIURI> uri(aURI);
 
     //-- get the source scheme
-    rv = uri->GetScheme(aScheme);
+    rv = aURI->GetScheme(aScheme);
     if (NS_FAILED(rv)) return rv;
 
-    //-- If uri is a view-source URI, drill down to the base URI
+    //-- If aURI is a view-source URI, drill down to the base URI
     nsCAutoString path;
-    while (aScheme.EqualsLiteral("view-source"))
+    if (aScheme.EqualsLiteral("view-source"))
     {
-        rv = uri->GetPath(path);
+        rv = aURI->GetPath(path);
         if (NS_FAILED(rv)) return rv;
-        rv = NS_NewURI(getter_AddRefs(uri), path, nsnull, nsnull, sIOService);
+        nsCOMPtr<nsIURI> innerURI;
+        rv = NS_NewURI(getter_AddRefs(innerURI), path, nsnull, nsnull,
+                       sIOService);
         if (NS_FAILED(rv)) return rv;
-        rv = uri->GetScheme(aScheme);
-        if (NS_FAILED(rv)) return rv;
+        return nsScriptSecurityManager::GetBaseURIScheme(innerURI, aScheme);
     }
 
-    //-- If uri is a jar URI, drill down again
-    nsCOMPtr<nsIJARURI> jarURI;
-    PRBool isJAR = PR_FALSE;
-    while ((jarURI = do_QueryInterface(uri)))
+    //-- If aURI is a jar URI, drill down again
+    nsCOMPtr<nsIJARURI> jarURI = do_QueryInterface(aURI);
+    if (jarURI)
     {
-        jarURI->GetJARFile(getter_AddRefs(uri));
-        isJAR = PR_TRUE;
-    }
-    if (!uri) return NS_ERROR_FAILURE;
-    if (isJAR)
-    {
-        rv = uri->GetScheme(aScheme);
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIURI> innerURI;
+        jarURI->GetJARFile(getter_AddRefs(innerURI));
+        if (!innerURI) return NS_ERROR_FAILURE;
+        return nsScriptSecurityManager::GetBaseURIScheme(innerURI, aScheme);
     }
 
-    //-- if uri is an about uri, distinguish 'safe' and 'unsafe' about URIs
+    //-- if aURI is an about uri, distinguish 'safe' and 'unsafe' about URIs
     if(aScheme.EqualsLiteral("about"))
     {
         nsCAutoString path;
-        if(NS_FAILED(uri->GetPath(path)))
+        if(NS_FAILED(aURI->GetPath(path)))
             return NS_ERROR_FAILURE;
         if (path.EqualsLiteral("blank")   ||
             path.IsEmpty()                ||
