@@ -455,7 +455,7 @@ struct MessageWindow {
             ::_snprintf( classNameBuffer,
                          sizeof classNameBuffer,
                          "%s%s",
-                         gAppData->appName,
+                         gAppData->name,
                          "MessageWindow" );
             mClassName = classNameBuffer;
         }
@@ -634,7 +634,7 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
     // Grab mutex first.
 
     // Build mutex name from app name.
-    ::_snprintf( mMutexName, sizeof mMutexName, "%s%s", gAppData->appName, MOZ_STARTUP_MUTEX_NAME );
+    ::_snprintf( mMutexName, sizeof mMutexName, "%s%s", gAppData->name, MOZ_STARTUP_MUTEX_NAME );
     Mutex startupLock = Mutex( mMutexName );
 
     NS_ENSURE_TRUE( startupLock.Lock( MOZ_DDE_START_TIMEOUT ), NS_ERROR_FAILURE );
@@ -761,7 +761,7 @@ nsNativeAppSupportWin::StartDDE() {
                     NS_ERROR_FAILURE );
 
     // Allocate DDE strings.
-    NS_ENSURE_TRUE( ( mApplication = DdeCreateStringHandle( mInstance, (char*) gAppData->appName, CP_WINANSI ) ) && InitTopicStrings(),
+    NS_ENSURE_TRUE( ( mApplication = DdeCreateStringHandle( mInstance, (char*) gAppData->name, CP_WINANSI ) ) && InitTopicStrings(),
                     NS_ERROR_FAILURE );
 
     // Next step is to register a DDE service.

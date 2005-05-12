@@ -152,4 +152,10 @@ NS_AddFastLoadDependency(nsIFile* aFile)
     return NS_OK;
 }
 
+#if defined(XP_UNIX) || defined(XP_BEOS)
+#define PLATFORM_FASL_SUFFIX ".mfasl"
+#elif defined(XP_WIN) || defined(XP_OS2)
+#define PLATFORM_FASL_SUFFIX ".mfl"
+#endif
+
 %}

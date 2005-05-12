@@ -11,11 +11,12 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is XUL bootstrap code.
+ * The Original Code is the Mozilla XUL Toolkit.
  *
  * The Initial Developer of the Original Code is
  * Benjamin Smedberg <benjamin@smedbergs.us>
- * Portions created by the Initial Developer are Copyright (C) 2004
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -37,48 +38,17 @@
 #include "nsISupports.idl"
 
 /**
- * A scriptable interface to the nsXULAppAPI structure. See nsXULAppAPI.h for
- * a detailed description of each attribute.
- *
- * @status UNDER_REVIEW - This interface is under review to be frozen, but
- *                        isn't frozen yet. Use with caution.
+ * Provides information about the XUL runtime.
+ * @status UNSTABLE - This interface is not frozen and will probably change in
+ *                    future releases. If you need this functionality to be
+ *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(1f4e76cb-414f-4c50-b31e-be52c43502ff)]
-interface nsIXULAppInfo : nsISupports
+[scriptable, uuid(28e8652b-3e9e-4e35-a8f7-e65f8d2399e0)]
+interface nsIXULRuntime : nsISupports
 {
   /**
-   * @see nsXREAppData.vendor
-   * @returns an empty string if nsXREAppData.vendor is not set.
+   * Whether the application was launched in safe mode.
    */
-  readonly attribute ACString vendor;
-
-  /**
-   * @see nsXREAppData.name
-   */
-  readonly attribute ACString name;
-
-  /**
-   * @see nsXREAppData.version
-   * @returns an empty string if nsXREAppData.version is not set.
-   */
-  readonly attribute ACString version;
-
-  /**
-   * @see nsXREAppData.ID
-   * @returns an empty string if nsXREAppData.ID is not set.
-   */
-  readonly attribute ACString ID;
-
-  /**
-   * The build ID/date of the application. For xulrunner applications,
-   * this will be different than the build ID of gecko. Be careful
-   * about which one you want.
-   */
-  readonly attribute ACString appBuildID;
-
-  /**
-   * The build ID/date of gecko and the xulrunner.
-   */
-  readonly attribute ACString geckoBuildID;
+  readonly attribute boolean inSafeMode;
 };

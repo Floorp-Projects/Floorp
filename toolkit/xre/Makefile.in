@@ -89,6 +89,7 @@ FORCE_STATIC_LIB = 1
 XPIDLSRCS = \
 	nsINativeAppSupport.idl \
 	nsIXULAppInfo.idl \
+	nsIXULRuntime.idl \
 	$(NULL)
 
 EXPORTS = nsXULAppAPI.h
