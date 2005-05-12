@@ -292,10 +292,7 @@ if ($cloned_bug_id) {
 
 # We need to check and make sure
 # that the user has permission to enter a bug against this product.
-if(!CanEnterProduct($product))
-{
-    ThrowUserError("entry_access_denied", { product => $product});         
-}
+CanEnterProductOrWarn($product);
 
 GetVersionTable();
 

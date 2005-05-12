@@ -85,9 +85,7 @@ if (! defined $cgi->param('product')) {
 
     # We don't want people to be able to view
     # reports for products they don't have permissions for...
-    if (($product ne '-All-') && (!CanEnterProduct($product))) {
-        ThrowUserError("report_access_denied");
-    }
+    if ($product ne '-All-') { CanEnterProductOrWarn($product) }
           
     # We've checked that the product exists, and that the user can see it
     # This means that is OK to detaint

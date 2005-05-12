@@ -60,7 +60,8 @@ use Bugzilla::FlagType;
 
 # Shut up misguided -w warnings about "used only once":
 
-use vars qw(%versions
+use vars qw(@legal_product
+          %versions
           %components
           %legal_opsys
           %legal_platform
@@ -268,9 +269,26 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
         $vars->{'privs'} = $PrivilegesRequired;
         ThrowUserError("illegal_change", $vars);
     }
- 
-    CheckFormField($cgi, 'product', \@::legal_product);
+
     my $prod = $cgi->param('product');
+    trick_taint($prod);
+
+    # If at least one bug does not belong to the product we are
+    # moving to, we have to check whether or not the user is
+    # allowed to enter bugs into that product.
+    # Note that this check must be done early to avoid the leakage
+    # of component, version and target milestone names.
+    my $check_can_enter =
+        $dbh->selectrow_array("SELECT 1 FROM bugs
+                               INNER JOIN products
+                               ON bugs.product_id = products.id
+                               WHERE products.name != ?
+                               AND bugs.bug_id IN
+                               (" . join(',', @idlist) . ") " .
+                               $dbh->sql_limit(1),
+                               undef, $prod);
+
+    if ($check_can_enter) { CanEnterProductOrWarn($prod) }
 
     # note that when this script is called from buglist.cgi (rather
     # than show_bug.cgi), it's possible that the product will be changed
@@ -755,6 +773,7 @@ if ($cgi->param('component') ne $cgi->param('dontchange')) {
                                {name => $cgi->param('component'),
                                 product => $cgi->param('product')});
     
+    $cgi->param('component_id', $comp_id);
     DoComma();
     $::query .= "component_id = $comp_id";
 }
@@ -1164,17 +1183,6 @@ foreach my $id (@idlist) {
             "group_control_map AS oldcontrolmap READ",
             "group_control_map AS newcontrolmap READ",
             "group_control_map READ", "email_setting READ");
-    # Fun hack.  @::log_columns only contains the component_id,
-    # not the name (since bug 43600 got fixed).  So, we need to have
-    # this id ready for the loop below, otherwise anybody can
-    # change the component of a bug (we checked product above).
-    # http://bugzilla.mozilla.org/show_bug.cgi?id=180545
-    my $product_id = get_product_id($cgi->param('product'));
-    
-    if ($cgi->param('component') ne $cgi->param('dontchange')) {
-        $cgi->param('component_id',
-                    get_component_id($product_id, $cgi->param('component')));
-    }
 
     # It may sound crazy to set %formhash for each bug as $cgi->param()
     # will not change, but %formhash is modified below and we prefer
@@ -1258,12 +1266,6 @@ foreach my $id (@idlist) {
                       { product => $oldhash{'product'} });
     }
 
-    if ($cgi->param('product') ne $cgi->param('dontchange')
-        && $cgi->param('product') ne $oldhash{'product'}
-        && !CanEnterProduct($cgi->param('product'))) {
-        ThrowUserError("entry_access_denied",
-                       { product => $cgi->param('product') });
-    }
     if ($requiremilestone) {
         # musthavemilestoneonaccept applies only if at least two
         # target milestones are defined for the current product.

@@ -79,11 +79,10 @@ $template->process($format->{'template'}, $vars, \$comment)
 ValidateComment($comment);
 
 # Check that the product exists and that the user
-# is allowed to submit bugs in this product.
+# is allowed to enter bugs into this product.
 my $product = $cgi->param('product');
-if (!CanEnterProduct($product)) {
-    ThrowUserError("entry_access_denied", {product => $product});
-}
+CanEnterProductOrWarn($product);
+
 my $product_id = get_product_id($product);
 
 # Set cookies

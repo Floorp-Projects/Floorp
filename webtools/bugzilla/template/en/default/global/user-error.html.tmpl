@@ -920,6 +920,11 @@
     Patches cannot be more than [% Param('maxpatchsize') %] KB in size.
     Try breaking your patch into several pieces.
 
+  [% ELSIF error == "product_disabled" %]
+    [% title = BLOCK %]Product closed for [% terms.Bugs %] Entry[% END %]
+    Sorry, entering [% terms.bugs %] into
+    product <em>[% product FILTER html %]</em> has been disabled.
+
   [% ELSIF error == "product_edit_denied" %]
     [% title = "Product Edit Access Denied" %]
     You are not permitted to edit [% terms.bugs %] in product 
