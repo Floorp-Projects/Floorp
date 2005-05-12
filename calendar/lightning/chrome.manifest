@@ -1,6 +1,7 @@
 content lightning	jar:chrome/lightning.jar!/content/lightning/
 locale  lightning en-US jar:chrome/en-US.jar!/locale/en-US/lightning/
 overlay chrome://messenger/content/messenger.xul chrome://lightning/content/messenger-overlay-sidebar.xul
+overlay chrome://lightning/content/lightning-standalone.xul chrome://lightning/content/messenger-overlay-sidebar.xul
 skin	lightning classic/1.0	jar:chrome/classic.jar!/skin/classic/lightning/
 # shared pieces for chrome://calendar/
 content calendar	jar:chrome/calendar.jar!/content/calendar/

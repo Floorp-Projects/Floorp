@@ -5,6 +5,7 @@ lightning.jar:
   content/lightning/calendar-management.js		(content/calendar-management.js)
   content/lightning/lightning-widgets.css		(content/lightning-widgets.css)
   content/lightning/agenda-tree.js			(content/agenda-tree.js)
+  content/lightning/lightning-standalone.xul		(content/lightning-standalone.xul)
 
 en-US.jar:
   locale/en-US/lightning/lightning.dtd				(locale/lightning.dtd)

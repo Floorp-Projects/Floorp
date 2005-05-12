@@ -88,6 +88,7 @@ agendaTreeView.rebuildAgendaView =
 function rebuildAgendaView(invalidate)
 {
     this.rebuildEventsArray();
+/*
     dump("events:\n");
     this.events.forEach(function (e) {
         if (e instanceof Synthetic)
@@ -95,6 +96,7 @@ function rebuildAgendaView(invalidate)
         else
             dump("    " + e.item.title + " @ " + e.occurrenceStartDate + "\n");
     });
+*/
     this.forceTreeRebuild();
 };
 
@@ -211,6 +213,11 @@ function toggleOpenState(row)
     header.open = !header.open;
     this.rebuildAgendaView(); // reconstruct the visible row set
     this.forceTreeRebuild();
+};
+
+agendaTreeView.hasNextSibling =
+function hasNextSibling(row, afterIndex)
+{
 };
 
 agendaTreeView.findPeriodForItem =

@@ -34,7 +34,6 @@ var ltnCalendarManagerObserver = {
 
     onCalendarDeleting: function(aCalendar) {
         removeCalendarFromTree(aCalendar); // XXX what else?
-        dump("deleted calendar " + aCalendar.name + "\n");
     },
 
     onCalendarPrefSet: function(aCalendar, aName, aValue) {

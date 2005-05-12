@@ -172,6 +172,8 @@ function calendarDefaultTimezone() {
 const tzTable = {
     "GMT-0700 Pacific Daylight Time" : "/mozilla.org/20050126_1/America/Los_Angeles",
     "GMT-0800 Pacific Standard Time" : "/mozilla.org/20050126_1/America/Los_Angeles",
+    "GMT-0700 PDT" : "/mozilla.org/20050126_1/America/Los_Angeles",
+    "GMT-0800 PST" : "/mozilla.org/20050126_1/America/Los_Angeles",
     "GMT-0400 EDT" : "/mozilla.org/20050126_1/America/New_York",
     "GMT-0500 EST" : "/mozilla.org/20050126_1/America/New_York",
 };

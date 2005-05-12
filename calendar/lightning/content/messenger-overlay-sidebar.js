@@ -50,6 +50,7 @@ function ltnMinimonthPick(which, minimonth)
     var cdt = new CalDateTime();
     cdt.jsDate = minimonth.value;
     cdt.isDate = true;
+    cdt.timezone = calendarDefaultTimezone();
     currentView().showDate(cdt);
 
     showCalendar(false);
