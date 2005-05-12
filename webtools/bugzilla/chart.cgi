@@ -286,8 +286,7 @@ sub wrap {
     $vars->{'time'} = time();
 
     $vars->{'imagebase'} = $cgi->canonicalise_query(
-                "action", "action-wrap", "ctype", "format", "width", "height",
-                "Bugzilla_login", "Bugzilla_password");
+                "action", "action-wrap", "ctype", "format", "width", "height");
 
     print $cgi->header();
     $template->process("reports/chart.html.tmpl", $vars)

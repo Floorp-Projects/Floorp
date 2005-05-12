@@ -388,11 +388,18 @@ sub SaveSavedSearches() {
 # Live code (not subroutine definitions) starts here
 ###############################################################################
 
+my $cgi = Bugzilla->cgi;
+
+# This script needs direct access to the username and password CGI variables,
+# so we save them before their removal in Bugzilla->login
+my $bugzilla_login    = $cgi->param('Bugzilla_login');
+my $bugzilla_password = $cgi->param('Bugzilla_password');
+
 Bugzilla->login(LOGIN_REQUIRED);
+$cgi->param('Bugzilla_login', $bugzilla_login);
+$cgi->param('Bugzilla_password', $bugzilla_password);
 
 GetVersionTable();
-
-my $cgi = Bugzilla->cgi;
 
 $vars->{'changes_saved'} = $cgi->param('dosave');
 
