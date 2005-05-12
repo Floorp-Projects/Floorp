@@ -7,14 +7,31 @@
 package BotModules::Bugzilla;
 use vars qw(@ISA);
 @ISA = qw(BotModules);
-1;
 
 use XML::LibXML;
+use Fcntl qw(:DEFAULT :flock);
+use File::Basename;
+
+# For parsing bugmail.log records. Must be the same as 
+# FIELD_SEPARATOR in bugmail.pl.
+use constant FIELD_SEPARATOR => '::::';
+# The log file that we read to report bug changes.
+# This will be put in the directory returned by dirname($0).
+use constant BUGMAIL_LOG => 'BotModules/.bugmail.log';
+1;
 
 # there is a minor error in this module: bugsHistory->$target->$bug is
 # accessed even when bugsHistory->$target doesn't yet exist. XXX
 
 # This is ported straight from techbot, so some of the code is a little convoluted. So sue me. I was lazy.
+
+sub Initialise {
+    my $self = shift;
+    my $retval = $self->SUPER::Initialise(@_);
+    my ($throw_away) = $self->GetBugLog();
+    $throw_away->close() if $throw_away;
+    return $retval;
+}
 
 # RegisterConfig - Called when initialised, should call registerVariables
 sub RegisterConfig {
@@ -28,7 +45,25 @@ sub RegisterConfig {
         ['backoffTime', 1, 1, 120], 
         ['ignoreCommentsTo', 1, 1, ['']],
         ['ignoreCommentsFrom', 1, 1, ['|']],
+        ['mailIgnore', 1, 1, []],
         ['skipPrefixFor', 1, 1, []],
+        # The keys for productReportChannels can be in the form of 'Product'
+        # or 'Product::::Component'. The value is a comma-separated list of
+        # channel names.
+        ['productReportChannels', 1, 1, {}],
+        # The fields that you want notifications about.
+        ['reportFields', 1, 1, ['Resolution', 'Flag', 'Attachment Flag', 
+                                'NewBug', 'NewAttach']],
+        # Except in these products, you don't want notifications about
+        # certain fields (key is product name, value is comma-separated
+        # list of fields).
+        ['productMuteFields', 1, 1, {}],
+        # And in these channels, you don't want notifications about certain
+        # fields (the key is the channel name and the value is a 
+        # comma-separated list of fields).
+        ['channelMuteFields', 1, 1, {}],
+        # How frequently we check for new bugmail we've received, in seconds.
+        ['updateDelay', 1, 1, 10],
         ['mutes', 1, 1, ''],  # "channel channel channel"
     );
 }
@@ -40,7 +75,14 @@ sub Help {
         '' => 'The Bugzilla module provides an interface to the bugzilla bug database. It will spot anyone mentioning bugs, too, and report on what they are. For example if someone says \'I think that\'s a dup of bug 5693, the :hover thing\', then this module will display information about bug 5693.',
         'bug' => 'Fetches a summary of bugs from bugzilla. Expert syntax: \'bugzilla [bugnumber[,]]*[&bugzillaparameter=value]*\', bug_status: UNCONFIRMED|NEW|ASSIGNED|REOPENED; *type*=substring|; bugtype: include|exclude; order: Assignee|; chfield[from|to|value] short_desc\'  long_desc\' status_whiteboard\' bug_file_loc\' keywords\'; \'_type; email[|type][1|2] [reporter|qa_contact|assigned_to|cc]',
         'bug-total' => 'Same as bug (which see) but only displays the total line.',
-        'bugs' => 'A simple DWIM search. Not very clever. ;-) Syntax: \'<query string> bugs\' e.g. \'mozbot bugs\'.'
+        'bugs' => q{A simple DWIM search. Not very clever. ;-)}
+                . q{ Syntax: '<query string> bugs' e.g. 'mozbot bugs'.},
+        'ignore' => q{Causes the bot to stop reporting all bug changes}
+                  . q{ made by a particular user in the current channel.}
+                  . q{ Syntax: 'ignore <user@domain.com>' },
+        'unignore' => q{Causes the bot to un-ignore a previously ignored}
+                    . q{ user. See 'ignore'}
+                    . q{ for more details.},
     );
     if ($self->isAdmin($event)) {
         $commands{'mute'} = 'Disable watching for bug numbers in a channel. Syntax: mute bugzilla in <channel>';
@@ -49,10 +91,61 @@ sub Help {
     return \%commands;
 }
 
+# Schedule - called when bot connects to a server, to install any schedulers
+# use $self->schedule($event, $delay, $times, $data)
+# where $times is 1 for a single event, -1 for recurring events,
+# and a +ve number for an event that occurs that many times.
+sub Schedule {
+    my $self = shift;
+    my ($event) = @_;
+    $self->schedule($event, \$self->{'updateDelay'}, -1, 'Bugzilla-BugMail');
+    return $self->SUPER::Schedule($event);
+}
+
+sub Scheduled {
+    my $self = shift;
+    my ($event, @data) = @_;
+    if ($data[0] eq 'Bugzilla-BugMail') {
+        $self->CheckForBugMail($event);
+    } else {
+        return $self->SUPER::Scheduled($event, @data);
+    }
+    return 0;
+}
+
 sub Told {
     my $self = shift;
     my ($event, $message) = @_;
-    if ($message =~ m/^ \s*                      # some optional whitespace
+    if ($message =~ /^\s*ignore (.+)[?!.\s]*$/) {
+        my $user = $1;
+        # If we aren't already ignoring them...
+        if (!grep($_ eq $user, @{$self->{'mailIgnore'}})) {
+            push (@{$self->{'mailIgnore'}}, $user);
+            $self->saveConfig();
+            $self->say($event, 
+                "$event->{'from'}: OK, ignoring changes produced by $user.");
+        }
+        else {
+            $self->say($event, 
+                "$event->{'from'}: $user is already being ignored.");
+        }
+    }
+    elsif ($message =~ /^\s*unignore (.+)[?!.\s]*$/) {
+        my $user = $1;
+        my %ignoredUsers = map { $_ => 1 } @{$self->{'mailIgnore'}};
+        # If we are already ignoring them...
+        if ($ignoredUsers{$user}) {
+            delete $ignoredUsers{$user};
+            $self->{'mailIgnore'} = [keys %ignoredUsers];
+            $self->saveConfig();
+            $self->say($event, 
+                "$event->{'from'}: OK, $user is no longer being ignored.");
+        }
+        else {
+            $self->say($event, "$event->{'from'}: $user wasn't being ignored.");
+        }
+    }
+    elsif ($message =~ m/^ \s*                   # some optional whitespace
                         (?:please\s+)?           # an optional "please", followed optionally by either:
                         (?: (?:could\s+you\s+)?  # 1. an optional "could you",
                             (?:please\s+)?       #    another optional "please",
@@ -391,7 +484,9 @@ sub GotURI {
     }
 
     my $prefix;
-    if (grep {$_ eq $event->{'from'}} @{$self->{'skipPrefixFor'}}) {
+    if ( !$event->{'from'}
+         || grep {$_ eq $event->{'from'}} @{$self->{'skipPrefixFor'}} )
+    {
         # they don't want to have the report prefixed with their name
         $prefix = '';
     } else {
@@ -438,6 +533,131 @@ sub GotURI {
             }
         }
     }
+}
+
+sub CheckForBugMail {
+    my $self = shift;
+    my ($event) = @_;
+
+    my ($bug_log, $bug_file) = $self->GetBugLog();
+
+    my @log_lines;
+    if (defined $bug_log) {
+        # We need LOCK_EX because we're going to truncate it.
+        flock($bug_log, LOCK_EX);
+        @log_lines = $bug_log->getlines();
+        $bug_log->truncate(0)
+            or ($self->debug("Failed to truncate $bug_file: $!") && return);
+        flock($bug_log, LOCK_UN);
+        $bug_log->close() or $self->debug("Failed to close $bug_file: $!");
+        $self->debug("Read " . scalar(@log_lines) . " bugmail log lines.")
+            if @log_lines;
+    }
+    else {
+        # We will have already output a more detailed error from GetBugLog.
+        $self->debug("CheckForBugMail Failed: Couldn't read bugmail log.");
+        return;
+    }
+
+    # Hash to keep track of which channels we've mentioned which bug details 
+    # in, so we don't spew the same bug details over and over.
+    my %said_bug;
+
+    foreach my $line (@log_lines) {
+        chomp($line);
+        #$self->debug("Reading log line: $line");
+        my $sep = FIELD_SEPARATOR;
+        $line =~ /^(.+)$sep(.+)$sep(.+)$sep(.+)$sep(.+)$sep(.*)$sep(.*)$sep(.+)$/;
+        my ($bug_id, $product, $component, $who, $field, $old, $new, $message) =
+            ($1, $2, $3, $4, $5, $6, $7, $8);
+
+        # Skip this line if we never report anything for this field.
+        next if !grep($_ eq $field, @{$self->{'reportFields'}});
+
+        my @prod_mute_fields = 
+            split(/\s*,\s*/, $self->{'productMuteFields'}->{$product});
+        my @chan_list;
+        # Don't report to these channels if this product is muted for this field.
+        push (@chan_list, $self->CreateChannelList($product, $component))
+            unless grep($_ eq $field, @prod_mute_fields);
+
+        if ($field eq 'Product') {
+            my @old_mute_fields = 
+                split(/\s*,\s*/, $self->{'productMuteFields'}->{$old});
+            push(@chan_list, $self->CreateChannelList($old, $component))
+                unless grep($_ eq $field, @old_mute_fields);
+        }
+        elsif ($field eq 'Component') {
+            my @comp_mute_fields = @prod_mute_fields;
+            push(@comp_mute_fields, 
+                ($self->{'productMuteFields'}->{$product. $sep . $component}));
+            # Don't report it if the product is muted for this field, or if
+            # this specific component is muted for this field.
+            push(@chan_list, $self->CreateChannelList($product, $old))
+                unless grep($_ eq $field, @comp_mute_fields);
+        }
+
+        unless ($self->ignoringMailProducedBy($who)) {
+            # Keep track of which channels we've told already, to avoid
+            # duplicate messages.
+            my %said_to;
+            foreach my $channel (@chan_list) {
+                my @chan_mute_fields = 
+                    split(/\s*,\s*/, $self->{'channelMuteFields'}->{$channel});
+                # Don't say it if we've said it before, or if this
+                # field is muted in this channel.
+                unless ( $said_to{$channel} 
+                         || grep($_ eq $field, @chan_mute_fields) ) 
+                {
+                    # We can't use "local" here, or the target doesn't show
+                    # up properly in the GotURI after FetchBug.
+                    $event->{'target'} = $channel;
+                    $self->say($event, $message);
+                    $self->FetchBug($event, $bug_id, 'bug')
+                        unless $said_bug{$channel . $bug_id};
+                    $said_to{$channel} = 1;
+                    $said_bug{$channel . $bug_id} = 1;
+                } # unless $said_to
+            } # foreach @chan_list
+        } # unless ignoringMailProducedBy
+    } # foreach @log_lines
+}
+
+# A helper for CheckForBugMail.
+sub CreateChannelList {
+    my $self = shift;
+    my ($product, $component) = @_;
+
+    my $chan_list = "";
+    ($chan_list .= $self->{'productReportChannels'}->{$product})
+        if $self->{'productReportChannels'}->{$product};
+
+    my $prodcomp = $product . FIELD_SEPARATOR . $component;
+    ($chan_list .= ',' . $self->{'productReportChannels'}->{$prodcomp})
+        if $self->{'productReportChannels'}->{$prodcomp};
+
+    return (split /\s*,\s*/, $chan_list);
+}
+
+# Creates the BUGMAIL_LOG file if it doesn't exist, and returns
+# an open IO::File for it, and also the filename of that file.
+sub GetBugLog {
+    my $self = shift;
+
+    my $file_name = dirname($0) . '/' . BUGMAIL_LOG;
+    # And we generally trust $bug_log to be an OK path, so untaint it now.
+    $file_name =~ /^(.*)$/;
+    $file_name = $1;
+    my $file = new IO::File($file_name, O_RDWR | O_CREAT, 0660)
+            or $self->debug("Could not open/create $file_name for reading" 
+                            . " incoming bugmail: $!");
+    return ($file, $file_name);
+}
+
+sub ignoringMailProducedBy {
+    my $self = shift;
+    my ($who) = @_;
+    return grep($_ eq $who, @{$self->{'mailIgnore'}}) ? 1 : 0;
 }
 
 sub ignoringCommentsTo {

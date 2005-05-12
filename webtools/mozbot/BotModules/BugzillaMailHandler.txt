@@ -1,0 +1,91 @@
+BugzillaMailHandler.pl is a script that takes in mail from a
+Bugzilla installation and possibly reports information about that
+mail to specified channels.
+
+Basically, with BugzillaMailHandler.pl, you can use MozBot to inform
+you about updates to bugs. For the Bugzilla project, we use this to
+inform us whenever a bug is filed, whenever an attachment is added,
+and whenever a bug is fixed. We also have it let us know about certain
+flags, so that we can go handle those flags quickly.
+
+To use BugzillaMailHandler.pl:
+
+1) Start mozbot, and load the Bugzilla.bm module.
+
+2) Set up your MTA (sendmail, postfix, exim, qmail, etc.) to pipe all
+   mail coming to a certain address into the script instead of a local
+   mailbox. 
+
+   Your MTA must be able to write to files owned by the user that mozbot
+   is running as. For example, on my local system, my mozbot is run
+   as a user called "mozbot." I run postfix, so I have postfix become
+   the "mozbot" user before running BugzillaMailHandler.pl.
+
+3) Now, all bugmail coming in to BugzillaMailHandler will start producing
+   input in BotModules/.bugmail.log (a hidden file). Mail that isn't in
+   the standard Bugzilla format will be discarded. Mails that just have
+   comments, or just inform that a dependency has been RESOLVED will be
+   ignored.
+
+4) Now, you need to tell your bot to start reporting certain Bugzilla
+   Products to certain channels. In the future, there will be a command
+   for this, but for now you have to do it manually. There is a variable
+   in the Bugzilla module called "productReportChannels." It's a hash --
+   the keys are names of products, and the values are comma-separated
+   lists of channels.
+
+5)  Once you set that variable, your mozbot will start reporting changes
+    to the specified products, in the specified channels.
+
+    However, it won't report *all* changes -- it will only report the
+    changes to fields that are specified in the "reportFields" variable,
+    which is a list of fields. Most fields have the *name that they would
+    have in a Bugzilla email*, in the "What" column of the table where
+    the mail shows bug changes.
+
+    There are some special fields:
+
+    Attachment Flag - Any attachment flag change.
+    NewBug          - When a new bug is filed.
+    NewAttach       - When a new attachment is posted to a bug.
+
+Now, your mozbot should be up and running and reporting the changes
+that you want!
+
+Other Notes
+-----------
+
+There are a few other features that you can use to fine-tune how MozBot
+reports bug changes. First, anybody (not just a bot admin) can tell the
+bot to temporarily stop reporting changes from a certain Bugzilla user:
+
+   ignore user@domain.com
+
+And to turn back on notifications about that user:
+
+   unignore user@domain.com
+
+There are also some variables you can use to configure how mozbot reports
+changes, and what changes he reports:
+
+   channelMuteFields - A hash, where the key is the name of a channel, and
+                       the value is a comma-separated list of Fields, just
+                       like they would show up in the reportFields var.
+                       Changes to these fields will *not* be reported in
+                       the specified channels, but will still be reported
+                       in the other channels mozbot is configured to announce
+                       things to.
+
+   productMuteFields - A hash, where the key is the name of a Product in
+                       Bugzilla, and the value is a comma-separated list
+                       of Fields, just like they would show up in the
+                       reportFields var.
+                       Changes to the specified Fields on the specified
+                       products will not be reported to any channel, ever.
+
+   updateDelay       - How often mozbot checks for information in the
+                       .bugmail.log file. Usually you can keep this at the
+                       default, unless you want to increase it for some reason.
+
+Questions about this functionality can be asked in #mozwebtools on
+irc.mozilla.org.
