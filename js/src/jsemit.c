@@ -1728,6 +1728,17 @@ LookupArgOrVar(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
         return JS_TRUE;
 
     /*
+     * A Script object can be used to split an eval into a compile step done
+     * at construction time, and an execute step done separately, possibly in
+     * a different scope altogether.  We therefore cannot do any name-to-slot
+     * optimizations, but must lookup names at runtime.  Note that script_exec
+     * ensures that its caller's frame has a Call object, so arg and var name
+     * lookups will succeed.
+     */
+    if (cx->fp->flags & JSFRAME_SCRIPT_OBJECT)
+        return JS_TRUE;
+
+    /*
      * We can't optimize if var and closure (a local function not in a larger
      * expression and not at top-level within another's body) collide.
      * XXX suboptimal: keep track of colliding names and deoptimize only those
