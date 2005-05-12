@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.25 2005/02/24 23:42:48 mkanat%kerio.com Exp $
+# $Id: bug_email.pl,v 1.26 2005/05/12 17:26:26 lpsolit%gmail.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -135,41 +135,41 @@ sub storeAttachments( $$ )
     $submitter_id ||= 0;
 
     foreach my $pairref ( @$listref ) {
-	my ($decoded_file, $mime, $on_disk, $description) = @$pairref;
+        my ($decoded_file, $mime, $on_disk, $description) = @$pairref;
 
 
-	# Size check - mysql has a maximum space for the data ?
-	$maxsize = 1047552;  # should be queried by a system( "mysqld --help" );,
-	# but this seems not to be supported by all current mysql-versions
+        # Size check - mysql has a maximum space for the data ?
+        $maxsize = 1047552;  # should be queried by a system( "mysqld --help" );,
+        # but this seems not to be supported by all current mysql-versions
 
-	# Read data file binary
-	if( $on_disk ) {
-	    if( open( FILE, "$decoded_file" )) {
-		binmode FILE;
-		read FILE, $data, $maxsize;
-		close FILE;
-		$att_count ++;
-	    } else { 
-		print "Error while reading attachment $decoded_file!\n";
-		next;
-	    }
-	    # print "unlinking $datadir/mimedump-tmp/$decoded_file";
-	    # unlink "$datadir/mimedump-tmp/$decoded_file";
-	} else {
-	    # data is in the scalar 
-	    $data = $decoded_file;
-	}
+        # Read data file binary
+        if( $on_disk ) {
+            if( open( FILE, "$decoded_file" )) {
+                binmode FILE;
+                read FILE, $data, $maxsize;
+                close FILE;
+                $att_count ++;
+            } else { 
+                print "Error while reading attachment $decoded_file!\n";
+                next;
+            }
+            # print "unlinking $datadir/mimedump-tmp/$decoded_file";
+            # unlink "$datadir/mimedump-tmp/$decoded_file";
+        } else {
+            # data is in the scalar 
+            $data = $decoded_file;
+        }
 
 
-	# Make SQL-String
-	my $sql = "insert into attachments (bug_id, creation_ts, description, mimetype, ispatch, filename, thedata, submitter_id) values (";
-	$sql .= "$bugid, now(), " . SqlQuote( $description ) . ", ";
-	$sql .= SqlQuote( $mime ) . ", ";
-	$sql .= "0, ";
-	$sql .= SqlQuote( $decoded_file ) . ", ";
-	$sql .= SqlQuote( $data ) . ", ";
-	$sql .= "$submitter_id );";
-	SendSQL( $sql ) unless( $test );
+        # Make SQL-String
+        my $sql = "insert into attachments (bug_id, creation_ts, description, mimetype, ispatch, filename, thedata, submitter_id) values (";
+        $sql .= "$bugid, now(), " . SqlQuote( $description ) . ", ";
+        $sql .= SqlQuote( $mime ) . ", ";
+        $sql .= "0, ";
+        $sql .= SqlQuote( $decoded_file ) . ", ";
+        $sql .= SqlQuote( $data ) . ", ";
+        $sql .= "$submitter_id );";
+        SendSQL( $sql ) unless( $test );
     }
     
     return( $att_count );
@@ -196,9 +196,9 @@ sub CheckPermissions {
 #    SendSQL("select login_name from profiles,groups where groups.name='$GroupName' and profiles.groupset & groups.bit = groups.bit and profiles.login_name=\'$Name\'");
 #    my $NewName = FetchOneColumn();
 #    if ( $NewName eq $Name ) {
-#	return $Name;
+#       return $Name;
 #    } else {
-#	return;
+#       return;
 #    }
 #    my $query = "SELECT login_name FROM profiles WHERE profiles.login_name=\'$Name\'";
 #    SendSQL($query);
@@ -219,9 +219,9 @@ sub CheckProduct {
     SendSQL("select name from products where name = " . SqlQuote($Product));
     my $Result = FetchOneColumn();
     if (lc($Result) eq lc($Product)) {
-	return $Result;
+        return $Result;
     } else {
-	return "";
+        return "";
     }
 }
 
@@ -234,9 +234,9 @@ sub CheckComponent {
     SendSQL("select components.name from components, products where components.product_id = products.id AND products.name=" . SqlQuote($Product) . " and components.name=" . SqlQuote($Component));
     my $Result = FetchOneColumn();
     if (lc($Result) eq lc($Component)) {
-	return $Result;
+        return $Result;
     } else {
-	return "";
+        return "";
     }
 }
 
@@ -249,9 +249,9 @@ sub CheckVersion {
     SendSQL("select value from versions, products where versions.product_id = products.id AND products.name=" . SqlQuote($Product) . " and value=" . SqlQuote($Version));
     my $Result = FetchOneColumn();
     if (lc($Result) eq lc($Version)) {
-	return $Result;
+        return $Result;
     } else {
-	return "";
+        return "";
     }
 }
 
@@ -264,10 +264,10 @@ sub Reply( $$$$ ) {
     die "Cannot find sender-email-address" unless defined( $Sender );
     
     if( $test ) {
-	open( MAIL, '>>', "$datadir/bug_email_test.log" );
+        open( MAIL, '>>', "$datadir/bug_email_test.log" );
     }
     else {
-	open( MAIL, "| /usr/sbin/sendmail -t" );
+        open( MAIL, "| /usr/sbin/sendmail -t" );
     }
 
     print MAIL "To: $Sender\n";
@@ -311,18 +311,18 @@ sub CheckPriority
     my @all_prios = getEnumList( "priority" );
 
     if( $prio eq "" || (lsearch( \@all_prios, $prio ) == -1)  ) {
-	# OK, Prio was not defined - create Answer
-	my $Text = "You sent wrong priority-setting, valid values are:" .
-	    join( "\n\t", @all_prios ) . "\n\n";
-	$Text .= "*  The priority is set to the default value ". 
-	    SqlQuote( Param('defaultpriority')) . "\n";
+        # OK, Prio was not defined - create Answer
+        my $Text = "You sent wrong priority-setting, valid values are:" .
+            join( "\n\t", @all_prios ) . "\n\n";
+        $Text .= "*  The priority is set to the default value ". 
+            SqlQuote( Param('defaultpriority')) . "\n";
 
-	BugMailError( 0, $Text );
+        BugMailError( 0, $Text );
 
-	# set default value from param-file
-	$Control{'priority'} = Param( 'defaultpriority' );
+        # set default value from param-file
+        $Control{'priority'} = Param( 'defaultpriority' );
     } else {
-	# Nothing to do
+        # Nothing to do
     }
 }
 
@@ -335,16 +335,16 @@ sub CheckSeverity
     my @all_sever = getEnumList( "bug_severity" );
 
     if( (lsearch( \@all_sever, $sever ) == -1) || $sever eq "" ) {
-	# OK, Prio was not defined - create Answer
-	my $Text = "You sent wrong bug_severity-setting, valid values are:" .
-	    join( "\n\t", @all_sever ) . "\n\n";
-	$Text .= "*  The bug_severity is set to the default value ". 
-	    SqlQuote( "normal" ) . "\n";
+        # OK, Prio was not defined - create Answer
+        my $Text = "You sent wrong bug_severity-setting, valid values are:" .
+            join( "\n\t", @all_sever ) . "\n\n";
+        $Text .= "*  The bug_severity is set to the default value ". 
+            SqlQuote( "normal" ) . "\n";
 
-	BugMailError( 0, $Text );
+        BugMailError( 0, $Text );
 
-	# set default value from param-file
-	$Control{'bug_severity'} = "normal";
+        # set default value from param-file
+        $Control{'bug_severity'} = "normal";
     } 
 }
 
@@ -357,16 +357,16 @@ sub CheckArea
     my @all= getEnumList( "area" );
 
     if( (lsearch( \@all, $area ) == -1) || $area eq "" ) {
-	# OK, Area was not defined - create Answer
-	my $Text = "You sent wrong area-setting, valid values are:" .
-	    join( "\n\t", @all ) . "\n\n";
-	$Text .= "*  The area is set to the default value ". 
-	    SqlQuote( "BUILD" ) . "\n";
+        # OK, Area was not defined - create Answer
+        my $Text = "You sent wrong area-setting, valid values are:" .
+            join( "\n\t", @all ) . "\n\n";
+        $Text .= "*  The area is set to the default value ". 
+            SqlQuote( "BUILD" ) . "\n";
 
-	BugMailError( 0, $Text );
+        BugMailError( 0, $Text );
 
-	# set default value from param-file
-	$Control{'area'} = "BUILD";
+        # set default value from param-file
+        $Control{'area'} = "BUILD";
     } 
 }
 
@@ -379,16 +379,16 @@ sub CheckPlatform
     my @all = getEnumList( "rep_platform" );
 
     if( (lsearch( \@all, $platform ) == -1) ||  $platform eq "" ) {
-	# OK, Prio was not defined - create Answer
-	my $Text = "You sent wrong platform-setting, valid values are:" .
-	    join( "\n\t", @all ) . "\n\n";
-	$Text .= "*  The rep_platform is set to the default value ". 
-	    SqlQuote( "All" ) . "\n";
+        # OK, Prio was not defined - create Answer
+        my $Text = "You sent wrong platform-setting, valid values are:" .
+            join( "\n\t", @all ) . "\n\n";
+        $Text .= "*  The rep_platform is set to the default value ". 
+            SqlQuote( "All" ) . "\n";
 
-	BugMailError( 0, $Text );
+        BugMailError( 0, $Text );
 
-	# set default value from param-file
-	$Control{'rep_platform'} = "All";
+        # set default value from param-file
+        $Control{'rep_platform'} = "All";
     } 
 }
 
@@ -401,16 +401,16 @@ sub CheckSystem
     my @all = getEnumList( "op_sys" );
 
     if(  (lsearch( \@all, $sys ) == -1) || $sys eq "" ) {
-	# OK, Prio was not defined - create Answer
-	my $Text = "You sent wrong OS-setting, valid values are:" .
-	    join( "\n\t", @all ) . "\n\n";
-	$Text .= "*  The op_sys is set to the default value ". 
-	    SqlQuote( "Linux" ) . "\n";
+        # OK, Prio was not defined - create Answer
+        my $Text = "You sent wrong OS-setting, valid values are:" .
+            join( "\n\t", @all ) . "\n\n";
+        $Text .= "*  The op_sys is set to the default value ". 
+            SqlQuote( "Linux" ) . "\n";
 
-	BugMailError( 0, $Text );
+        BugMailError( 0, $Text );
 
-	# set default value from param-file
-	$Control{'op_sys'} = "Linux";
+        # set default value from param-file
+        $Control{'op_sys'} = "Linux";
     } 
 }
 
@@ -424,7 +424,7 @@ sub FetchAllSQLData( )
     my @res = ();
 
     while( MoreSQLData() ){
-	push( @res, FetchOneColumn() );
+        push( @res, FetchOneColumn() );
     }
     return( @res );
 }
@@ -463,21 +463,21 @@ sub BugMailError($ $ )
 
     # On permission error, dont sent all other Errors back -> just quit !
     if( $errflag == 2 ) {            # Permission-Error
-	Reply( $SenderShort, $Message_ID, "Bugzilla Error", "Permission denied.\n\n" .
-	       "You do not have the permissions to create a new bug. Sorry.\n" );
-	exit;
+        Reply( $SenderShort, $Message_ID, "Bugzilla Error", "Permission denied.\n\n" .
+               "You do not have the permissions to create a new bug. Sorry.\n" );
+        exit;
     }
 
 
     # Warnings - store for the reply mail
     if( $errflag == 0 ) {
-	push( @mailwarnings, $text );
+        push( @mailwarnings, $text );
     }
 
     # Critical Error
     if( $errflag == 1 ) {
-	$critical_err += 1;
-	push( @mailerrors, $text );
+        $critical_err += 1;
+        push( @mailerrors, $text );
     }
 }
 
@@ -546,33 +546,33 @@ _____ snip _____________________________________________________________________
 EOF
     ;
     foreach ( @RequiredLabels ) {
-	$w = "";
-	$w = $Control{$_} if defined( $Control{ $_ } );
-	$ret .= sprintf( "    \@%-15s:  %s\n", $_, $w );
+        $w = "";
+        $w = $Control{$_} if defined( $Control{ $_ } );
+        $ret .= sprintf( "    \@%-15s:  %s\n", $_, $w );
     }
 
     $ret .= "\n";
     # Allowed Labels
     foreach( @AllowedLabels ) {
-	next if( /reporter/    );  # Reporter is not a valid label
-	next if( /assigned_to/ );  # Assigned to is just a number 
-	if( defined( $Control{ $_ } ) && lsearch( \@RequiredLabels, $_ ) == -1 ) {
-	    $ret .=  sprintf( "    \@%-15s:  %s\n", $_,  $Control{ $_ } );
-	}
+        next if( /reporter/    );  # Reporter is not a valid label
+        next if( /assigned_to/ );  # Assigned to is just a number 
+        if( defined( $Control{ $_ } ) && lsearch( \@RequiredLabels, $_ ) == -1 ) {
+            $ret .=  sprintf( "    \@%-15s:  %s\n", $_,  $Control{ $_ } );
+        }
     }
 
     if( $Body eq "" ) {
     $ret .= <<END
-	
+        
    < the bug-description follows here >
 
 _____ snip _______________________________________________________________________
 
 END
     ; } else {
-	$ret .= "\n" . $Body;
+        $ret .= "\n" . $Body;
     }
-	
+        
     return( $ret );
 
 }
@@ -597,47 +597,47 @@ sub dump_entity {
     # Output the body:
     my @parts = $entity->parts;
     if (@parts) {                     # multipart...
-	my $i;
-	foreach $i (0 .. $#parts) {       # dump each part...
-	    dump_entity($parts[$i], ("$name, part ".(1+$i)));
-	}
-    } else {                            # single part...	
+        my $i;
+        foreach $i (0 .. $#parts) {       # dump each part...
+            dump_entity($parts[$i], ("$name, part ".(1+$i)));
+        }
+    } else {                            # single part...        
 
-	# Get MIME type, and display accordingly...
-	my $msg_part = $entity->head->get( 'Content-Disposition' );
-	
-	$msg_part ||= ""; 
+        # Get MIME type, and display accordingly...
+        my $msg_part = $entity->head->get( 'Content-Disposition' );
+        
+        $msg_part ||= ""; 
 
-	my ($type, $subtype) = split('/', $entity->head->mime_type);
-	my $body = $entity->bodyhandle;
-	my ($data, $on_disk );
+        my ($type, $subtype) = split('/', $entity->head->mime_type);
+        my $body = $entity->bodyhandle;
+        my ($data, $on_disk );
 
-	if(  $msg_part =~ /^attachment/ ) {
-	    # Attached File
-	    my $des = $entity->head->get('Content-Description');
-	    $des ||= $entity->head->recommended_filename;
-	    $des ||= "unnamed attachment";
+        if(  $msg_part =~ /^attachment/ ) {
+            # Attached File
+            my $des = $entity->head->get('Content-Description');
+            $des ||= $entity->head->recommended_filename;
+            $des ||= "unnamed attachment";
 
-	    if( defined( $body->path )) { # Data is on disk
-		$on_disk = 1;
-		$data = $body->path;
-		
-	    } else {                      # Data is in core
-		$on_disk = 0;
-		$data = $body->as_string;
-	    }
-	    push ( @attachments, [ $data, $entity->head->mime_type, $on_disk, $des ] );
-	} else {
-	    # Real Message
-	    if ($type =~ /^(text|message)$/) {     # text: display it...
-		if ($IO = $body->open("r")) {
-		    $Body .=  $_ while (defined($_ = $IO->getline));
-		    $IO->close;
-		} else {       # d'oh!
-		    print "$0: couldn't find/open '$name': $!";
-		}
-	    } else { print "Oooops - no Body !\n"; }
-	}
+            if( defined( $body->path )) { # Data is on disk
+                $on_disk = 1;
+                $data = $body->path;
+                
+            } else {                      # Data is in core
+                $on_disk = 0;
+                $data = $body->as_string;
+            }
+            push ( @attachments, [ $data, $entity->head->mime_type, $on_disk, $des ] );
+        } else {
+            # Real Message
+            if ($type =~ /^(text|message)$/) {     # text: display it...
+                if ($IO = $body->open("r")) {
+                    $Body .=  $_ while (defined($_ = $IO->getline));
+                    $IO->close;
+                } else {       # d'oh!
+                    print "$0: couldn't find/open '$name': $!";
+                }
+            } else { print "Oooops - no Body !\n"; }
+        }
     }
 }
 
@@ -658,19 +658,19 @@ sub extractControls( $ )
     # In restricted mode, all lines before the first keyword
     # are skipped.
     if( $restricted ) {
-	while( $lbody[0] =~ /^\s*\@.*/ ){ shift( @lbody );} 
+        while( $lbody[0] =~ /^\s*\@.*/ ){ shift( @lbody );} 
     }
     
     # Filtering for keys
     foreach( @lbody ) {
-	if( /^\s*\@description/ ) {
-	    s/\s*\@description//;
-	    $backbody .= $_;
-	} elsif( /^\s*\@(.*?)(?:\s*=\s*|\s*:\s*|\s+)(.*?)\s*$/ ) {
-	    $Control{lc($1)} = $2;
-	} else {
-	    $backbody .= "$_" . "\n";
-	}
+        if( /^\s*\@description/ ) {
+            s/\s*\@description//;
+            $backbody .= $_;
+        } elsif( /^\s*\@(.*?)(?:\s*=\s*|\s*:\s*|\s+)(.*?)\s*$/ ) {
+            $Control{lc($1)} = $2;
+        } else {
+            $backbody .= "$_" . "\n";
+        }
     }
 
     # thats it.
@@ -768,7 +768,7 @@ $Body = extractControls( $Body );  # fills the Control-Hash
 
 if( $test ) {
     foreach (keys %Control ) {
-	print "$_ => $Control{$_}\n";
+        print "$_ => $Control{$_}\n";
     }
 }
 
@@ -782,14 +782,14 @@ $Control{'short_desc'} ||= $Subject;
 # Check Control-Labels
 # not: reporter !
 @AllowedLabels = ("product", "version", "rep_platform",
-		  "bug_severity", "priority", "op_sys", "assigned_to",
-		  "bug_status", "bug_file_loc", "short_desc", "component",
-		  "status_whiteboard", "target_milestone", "groupset",
-		  "qa_contact");
+                  "bug_severity", "priority", "op_sys", "assigned_to",
+                  "bug_status", "bug_file_loc", "short_desc", "component",
+                  "status_whiteboard", "target_milestone", "groupset",
+                  "qa_contact");
 #my @AllowedLabels = qw{Summary priority platform assign};
 foreach (keys %Control) {
     if ( lsearch( \@AllowedLabels, $_) < 0 ) {
-	BugMailError( 0, "You sent a unknown label: " . $_ );
+        BugMailError( 0, "You sent a unknown label: " . $_ );
     }
 }
 
@@ -802,13 +802,13 @@ $Control{'reporter'} = $SenderShort;
 @RequiredLabels = qw{product version component short_desc};
 foreach my $Label (@RequiredLabels) {
     if ( ! defined $Control{$Label} ) {
-	BugMailError( 0, "You were missing a required label: \@$Label\n" );
-	next;
+        BugMailError( 0, "You were missing a required label: \@$Label\n" );
+        next;
     }
 
     if( $Control{$Label} =~ /^\s*$/  ) {
-	BugMailError( 0, "One of your required labels is empty: $Label" );
-	next;
+        BugMailError( 0, "One of your required labels is empty: $Label" );
+        next;
     }
 }
 
@@ -822,7 +822,7 @@ if ( $Body =~ /^\s*$/s ) {
 # Check Permissions ...
 if (! CheckPermissions("CreateBugs", $SenderShort ) ) {
     BugMailError( 2, "Permission denied.\n\n"  .
-		  "You do not have the permissions to create a new bug. Sorry.\n" );
+                  "You do not have the permissions to create a new bug. Sorry.\n" );
 }
 
 # Set QA
@@ -846,7 +846,7 @@ if ( $Product eq "" ) {
     my $Text = "You didnt send a value for the required key \@product !\n\n";
 
     $Text = "You sent the invalid product \"$Control{'product'}\"!\n\n"
-	if( defined( $Control{ 'product'} ));
+        if( defined( $Control{ 'product'} ));
 
     $Text .= "Valid products are:\n\t";
 
@@ -879,7 +879,7 @@ if ( $Component eq "" ) {
     my $Text = "You did not send a value for the required key \@component!\n\n"; 
 
     if( defined( $Control{ 'component' } )) {
-	$Text = "You sent the invalid component \"$Control{'component'}\" !\n";
+        $Text = "You sent the invalid component \"$Control{'component'}\" !\n";
     }
 
     #
@@ -888,28 +888,28 @@ if ( $Component eq "" ) {
     #            if a product was sent, only reply the components of the sent product
     my @val_components = ();
     foreach my $prod ( @all_products ) {
-	$Text .= "\nValid components for product `$prod' are: \n\t";
+        $Text .= "\nValid components for product `$prod' are: \n\t";
 
-	SendSQL("SELECT components.name FROM components, products WHERE components.product_id=products.id AND products.name = " . SqlQuote($prod));
-	@val_components = FetchAllSQLData();
+        SendSQL("SELECT components.name FROM components, products WHERE components.product_id=products.id AND products.name = " . SqlQuote($prod));
+        @val_components = FetchAllSQLData();
 
-	$Text .= join( "\n\t", @val_components ) . "\n";
+        $Text .= join( "\n\t", @val_components ) . "\n";
     }
     
     # Special: if there is a valid product, maybe it has only one component -> use it !
     # 
     my $amount_of_comps = @val_components;
     if( $product_valid  && $amount_of_comps == 1 ) {
-	$Component = $val_components[0];
-	
-	$Text .= " * You did not send a component, but a valid product " . SqlQuote( $Product ) . ".\n";
-	$Text .= " * This product only has one component ". SqlQuote(  $Component ) .".\n" .
-		" * This component was set by bugzilla for submitting the bug.\n\n";
-	BugMailError( 0, $Text ); # No blocker
+        $Component = $val_components[0];
+        
+        $Text .= " * You did not send a component, but a valid product " . SqlQuote( $Product ) . ".\n";
+        $Text .= " * This product only has one component ". SqlQuote(  $Component ) .".\n" .
+                " * This component was set by bugzilla for submitting the bug.\n\n";
+        BugMailError( 0, $Text ); # No blocker
 
     } else { # The component is really buggy :(
-	$Text  .= horLine();
-	BugMailError( 1, $Text );
+        $Text  .= horLine();
+        BugMailError( 1, $Text );
     }
 }
 $Control{'component'} = $Component;
@@ -932,10 +932,10 @@ if ( defined($Control{'assigned_to'})
 
 if ( $Control{'assigned_to'} == 0 ) {
     my $Text = "Could not resolve key \@assigned_to !\n" .
-	"If you do NOT send a value for assigned_to, the bug will be assigned to\n" .
-	    "the qa-contact for the product and component.\n";
+        "If you do NOT send a value for assigned_to, the bug will be assigned to\n" .
+            "the qa-contact for the product and component.\n";
     $Text .= "This works only if product and component are OK. \n" 
-	. horLine();
+        . horLine();
 
     BugMailError( 1, $Text );
 }
@@ -961,34 +961,34 @@ if ( $Version eq "" ) {
     my $Text = "You did not send a value for the required key \@version!\n\n";
 
     if( defined( $Control{'version'})) {
-	my $Text = "You sent the invalid version \"$Control{'version'}\"!\n";
+        my $Text = "You sent the invalid version \"$Control{'version'}\"!\n";
     }
 
     my $anz_versions;
     my @all_versions;
     # Assemble help text
     foreach my $prod ( @all_products ) {
-	$Text .= "Valid versions for product " . SqlQuote( $prod ) . " are: \n\t";
+        $Text .= "Valid versions for product " . SqlQuote( $prod ) . " are: \n\t";
 
-	SendSQL("select value from versions, products where versions.product_id=products.id AND products.name=" . SqlQuote( $prod ));
-	@all_versions = FetchAllSQLData();
-	$anz_versions = @all_versions;
-	$Text .= join( "\n\t", @all_versions ) . "\n" ; 
+        SendSQL("select value from versions, products where versions.product_id=products.id AND products.name=" . SqlQuote( $prod ));
+        @all_versions = FetchAllSQLData();
+        $anz_versions = @all_versions;
+        $Text .= join( "\n\t", @all_versions ) . "\n" ; 
 
     }
 
     # Check if we could use the only version
     if( $anz_versions == 1 && $product_valid ) {
-	$Version = $all_versions[0];
-	# Fine, there is only one version string
-	$Text .= " * You did not send a version, but a valid product " . SqlQuote( $Product ) . ".\n";
-	$Text .= " * This product has has only the one version ". SqlQuote(  $Version) .".\n" .
-	    " * This version was set by bugzilla for submitting the bug.\n\n";
-	$Text .= horLine();
-	BugMailError( 0, $Text ); # No blocker
+        $Version = $all_versions[0];
+        # Fine, there is only one version string
+        $Text .= " * You did not send a version, but a valid product " . SqlQuote( $Product ) . ".\n";
+        $Text .= " * This product has has only the one version ". SqlQuote(  $Version) .".\n" .
+            " * This version was set by bugzilla for submitting the bug.\n\n";
+        $Text .= horLine();
+        BugMailError( 0, $Text ); # No blocker
     } else {
-	$Text .= horLine();
-	BugMailError( 1, $Text );
+        $Text .= horLine();
+        BugMailError( 1, $Text );
     }
 
 }
@@ -1029,25 +1029,25 @@ if( $GroupSet eq "" ) {
     # Then search for every Literal in the DB - col name
     foreach ( split /\s+|\s*\+\s*|\s*,\s*/, $GroupSet ) {
       SendSQL("select id, Name from groups where name=" . SqlQuote($_));
-	my( $bval, $bname ) = FetchSQLData();
+        my( $bval, $bname ) = FetchSQLData();
 
-	if( defined( $bname ) && $_ eq $bname ) {
+        if( defined( $bname ) && $_ eq $bname ) {
         $GroupArr{$bname} = $bval;
-	} else {
-	    $Text .= "You sent the wrong GroupSet-String $_\n";
-	    $gserr = 1;
-	}
+        } else {
+            $Text .= "You sent the wrong GroupSet-String $_\n";
+            $gserr = 1;
+        }
     }
     
     #
     # Give help if wrong GroupSet-String came
     if( $gserr > 0 ) {
-	# There happend errors 
-	$Text .= "Here are all valid literal Groupsetting-strings:\n\t";
+        # There happend errors 
+        $Text .= "Here are all valid literal Groupsetting-strings:\n\t";
       SendSQL( "select g.name from groups g, user_group_map u where u.user_id=".$Control{'reporter'}.
             " and g.isbuggroup=1 and g.id = u.group_id group by g.name;" );
-	$Text .= join( "\n\t", FetchAllSQLData()) . "\n";
-	BugMailError( 0, $Text );
+        $Text .= join( "\n\t", FetchAllSQLData()) . "\n";
+        BugMailError( 0, $Text );
     }
 } # End of checking groupsets
 delete $Control{'groupset'};
@@ -1086,7 +1086,7 @@ END
     my $reporter = "";
 
     my $query = "insert into bugs (\n" . join(",\n", @used_fields ) . 
-	", bug_status, creation_ts, delta_ts, everconfirmed) values ( ";
+        ", bug_status, creation_ts, delta_ts, everconfirmed) values ( ";
     
     # 'Yuck'. Then again, this whole file should be rewritten anyway...
     $query =~ s/product/product_id/;
@@ -1096,16 +1096,16 @@ END
     my $val;
     foreach my $field (@used_fields) {
       if( $field eq "groupset" ) {
-	$query .= $Control{$field} . ",\n";
+        $query .= $Control{$field} . ",\n";
       } elsif ( $field eq 'product' ) {
           $query .= get_product_id($Control{$field}) . ",\n";
       } elsif ( $field eq 'component' ) {
           $query .= get_component_id(get_product_id($Control{'product'}),
                                      $Control{$field}) . ",\n";
       } else {
-	$query .= SqlQuote($Control{$field}) . ",\n";
+        $query .= SqlQuote($Control{$field}) . ",\n";
       }
-	
+        
       $val = $Control{ $field };
       
       $val = DBID_to_name( $val ) if( $field =~ /reporter|assigned_to|qa_contact/ );
@@ -1113,7 +1113,7 @@ END
       $tmp_reply .= sprintf( "     \@%-15s = %-15s\n", $field, $val );
 
       if ($field eq "reporter") {
-	$reporter = $val;
+        $reporter = $val;
       }
     }
     #
@@ -1150,19 +1150,19 @@ END
     my $id;
 
     if( ! $test ) {
-	SendSQL($query);
+        SendSQL($query);
 
-	$id = Bugzilla->dbh->bz_last_key('bugs', 'bug_id');
+        $id = Bugzilla->dbh->bz_last_key('bugs', 'bug_id');
 
-	my $long_desc_query = "INSERT INTO longdescs SET bug_id=$id, who=$userid, bug_when=\'$bug_when\', thetext=" . SqlQuote($comment);
-	SendSQL($long_desc_query);
+        my $long_desc_query = "INSERT INTO longdescs SET bug_id=$id, who=$userid, bug_when=\'$bug_when\', thetext=" . SqlQuote($comment);
+        SendSQL($long_desc_query);
 
-	# Cool, the mail was successful
+        # Cool, the mail was successful
         # system("./processmail", $id, $SenderShort);
     } else {
         $id = 0xFFFFFFFF;  # TEST !
-	print "\n-------------------------------------------------------------------------\n";
-	print "$query\n";
+        print "\n-------------------------------------------------------------------------\n";
+        print "$query\n";
     }
 
     #
