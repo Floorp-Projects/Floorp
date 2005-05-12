@@ -212,6 +212,41 @@ mozStorageConnection::ExecuteSimpleSQL(const nsACString& aSQLStatement)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+mozStorageConnection::TableExists(const nsACString& aSQLStatement, PRBool *_retval)
+{
+    NS_ENSURE_ARG_POINTER(mDBConn);
+
+    nsCString query("SELECT name FROM sqlite_master WHERE type = 'table' AND name ='");
+    query.Append(aSQLStatement);
+    query.AppendLiteral("'");
+
+    sqlite3_stmt *stmt = nsnull;
+    int srv = sqlite3_prepare (mDBConn, query.get(), query.Length(), &stmt, nsnull);
+    if (srv != SQLITE_OK) {
+        HandleSqliteError(query.get());
+        return NS_ERROR_FAILURE; // XXX error code
+    }
+
+    PRBool exists = PR_FALSE;
+
+    srv = sqlite3_step(stmt);
+    // we just care about the return value from step
+    sqlite3_finalize(stmt);
+
+    if (srv == SQLITE_ROW) {
+        exists = PR_TRUE;
+    } else if (srv == SQLITE_DONE) {
+        exists = PR_FALSE;
+    } else if (srv == SQLITE_ERROR) {
+        HandleSqliteError("TableExists finalize");
+        return NS_ERROR_FAILURE;
+    }
+
+    *_retval = exists;
+    return NS_OK;
+}
+
 /**
  ** Transactions
  **/
