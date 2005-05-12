@@ -69,6 +69,7 @@ class nsIProfileUnlocker;
 
 extern nsXREDirProvider* gDirServiceProvider;
 extern const nsXREAppData* gAppData;
+extern PRBool gSafeMode;
 
 extern int    gArgc;
 extern char **gArgv;

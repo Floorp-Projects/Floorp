@@ -181,7 +181,7 @@ interface nsIExtensionDownloadListener : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface, 
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(7b77761f-6737-4b77-abed-c82f35a57a90)]
+[scriptable, uuid(285adb6e-f2e6-4e19-885d-1fbdad4fb400)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -279,11 +279,6 @@ interface nsIExtensionManager : nsISupports
   void update([array, size_is(itemCount)] in nsIUpdateItem items,
                in unsigned long itemCount, 
                in unsigned long versionUpdateOnly);
-
-  /**
-   * Whether or not the application is currently in safe mode.
-   */
-  readonly attribute boolean inSafeMode;
 
   /**
    * Gets a nsIUpdateItem for the item with the specified id.

@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -135,22 +136,25 @@ static PRBool CheckMaxVersion(const char *versionStr)
 /**
  * Parse application data.
  */
-static const nsXREAppData* LoadAppData(const char* appDataFile)
+static int LoadAppData(const char* appDataFile, nsXREAppData* aResult)
 {
-  static char vendor[256], name[256], version[32], buildID[32], copyright[512];
-  static nsXREAppData data = {
-      vendor, name, version, buildID, {0,0,0,{0,0,0,0,0,0,0,0}}, copyright, 0 };
+  static char vendor[256], name[256], version[32], buildID[32], appID[256], copyright[512];
   
+  nsresult rv;
+
   nsCOMPtr<nsILocalFile> lf;
   XRE_GetFileFromPath(appDataFile, getter_AddRefs(lf));
   if (!lf)
-    return nsnull;
+    return 2;
 
-  nsINIParser parser; 
-  if (NS_FAILED(parser.Init(lf)))
-    return nsnull;
-
-  nsresult rv;
+  rv = lf->GetParent(&aResult->appDir);
+  if (NS_FAILED(rv))
+    return 2;
+  
+  nsINIParser parser;
+  rv = parser.Init(lf)
+  if (NS_FAILED(rv))
+    return 2;
 
   // Gecko version checking
   //
@@ -161,50 +165,42 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
   rv = parser.GetString("Gecko", "MinVersion", gkVersion, sizeof(gkVersion));
   if (NS_FAILED(rv) || !CheckMinVersion(gkVersion)) {
     Output(PR_TRUE, "Error: Gecko MinVersion requirement not met.\n");
-    return nsnull;
+    return 1;
   }
 
   rv = parser.GetString("Gecko", "MaxVersion", gkVersion, sizeof(gkVersion));
   if (NS_SUCCEEDED(rv) && !CheckMaxVersion(gkVersion)) {
     Output(PR_TRUE, "Error: Gecko MaxVersion requirement not met.\n");
-    return nsnull;
-  }
-
-  // Read the app ID, if specified
-  char id[38] = "";
-  rv = parser.GetString("App", "ID", id, sizeof(id));
-  if (NS_SUCCEEDED(rv)) {
-    if(!data.id.Parse(id)) {
-      memset(&data.id, 0, sizeof(data.id));
-    }
+    return 1;
   }
 
   PRUint32 i;
 
   // Read string-valued fields
   const struct {
-    const char* key;
-    char* buf;
-    size_t bufLen;
-    PRBool required;
+    const char *key;
+    char      **fill;
+    char       *buf;
+    size_t      bufLen;
+    PRBool      required;
   } string_fields[] = {
-    { "Vendor",    vendor,    sizeof(vendor),    PR_FALSE },
-    { "Name",      name,      sizeof(name),      PR_TRUE  },
-    { "Version",   version,   sizeof(version),   PR_FALSE },
-    { "BuildID",   buildID,   sizeof(buildID),   PR_TRUE  },
-    { "Copyright", copyright, sizeof(copyright), PR_FALSE }
+    { "Vendor",    &aResult->vendor,    vendor,    sizeof(vendor),    PR_FALSE },
+    { "Name",      &aResult->name,      name,      sizeof(name),      PR_TRUE  },
+    { "Version",   &aResult->version,   version,   sizeof(version),   PR_FALSE },
+    { "BuildID",   &aResult->buildID,   buildID,   sizeof(buildID),   PR_TRUE  },
+    { "ID",        &aResult->ID,        appID,     sizeof(appID),     PR_FALSE },
+    { "Copyright", &aResult->copyright, copyright, sizeof(copyright), PR_FALSE }
   };
   for (i = 0; i < NS_ARRAY_LENGTH(string_fields); ++i) {
     rv = parser.GetString("App", string_fields[i].key, string_fields[i].buf,
                           string_fields[i].bufLen);
-    if (NS_FAILED(rv)) {
-      if (string_fields[i].required) {
-        Output(PR_TRUE, "Error: %x: No \"%s\" field.\n",
-               rv, string_fields[i].key);
-        return nsnull;
-      } else {
-        string_fields[i].buf[0] = '\0';
-      }
+    if (NS_SUCCEEDED(rv)) {
+      *fill = string_fields[i].buf;
+    }
+    else if (string_fields[i].required) {
+      Output(PR_TRUE, "Error: %x: No \"%s\" field.\n",
+	     rv, string_fields[i].key);
+      return 1;
     }
   }
 
@@ -217,7 +213,7 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
     { "EnableExtensionManager", NS_XRE_ENABLE_EXTENSION_MANAGER }
   };
   char buf[6]; // large enough to hold "false"
-  data.flags = 0;
+  aResult->flags = 0;
   for (i = 0; i < NS_ARRAY_LENGTH(boolean_fields); ++i) {
     rv = parser.GetString("XRE", boolean_fields[i].key, buf, sizeof(buf));
     // accept a truncated result since we are only interested in the
@@ -225,22 +221,22 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
     // expanding these boolean attributes to express additional options.
     if ((NS_SUCCEEDED(rv) || rv == NS_ERROR_LOSS_OF_SIGNIFICANT_DATA) &&
         (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T')) {
-      data.flags |= boolean_fields[i].flag;
+      aResult->flags |= boolean_fields[i].flag;
     }
   } 
 
 #ifdef DEBUG
   printf("---------------------------------------------------------\n");
-  printf("     Vendor %s\n", data.appVendor);
-  printf("       Name %s\n", data.appName);
-  printf("    Version %s\n", data.appVersion);
-  printf("    BuildID %s\n", data.appBuildID);
-  printf("  Copyright %s\n", data.copyright);
-  printf("      Flags %08x\n", data.flags);
+  printf("     Vendor %s\n", aResult->appVendor);
+  printf("       Name %s\n", aResult->appName);
+  printf("    Version %s\n", aResult->appVersion);
+  printf("    BuildID %s\n", aResult->appBuildID);
+  printf("  Copyright %s\n", aResult->copyright);
+  printf("      Flags %08x\n", aResult->flags);
   printf("---------------------------------------------------------\n");
 #endif
 
-  return &data;
+  return 0;
 }
 
 int main(int argc, char* argv[])
@@ -278,7 +274,6 @@ int main(int argc, char* argv[])
 
   geckoVersion = ParseVersion(GRE_BUILD_ID);
 
-  PRBool hasAppOption;
   const char *appDataFile;
   if (IsArg(argv[1], "app"))
   {
@@ -287,40 +282,24 @@ int main(int argc, char* argv[])
       Output(PR_TRUE, "Error: APP-FILE must be specified!\n");
       return 1;
     }
-    hasAppOption = PR_TRUE;
     appDataFile = argv[2];
+    argv += 2;
+    argc -= 2;
   }
   else
   {
-    hasAppOption = PR_FALSE;
     appDataFile = argv[1];
+    argv += 1;
+    argc -= 1;
   }
 
-  const nsXREAppData *appData = LoadAppData(appDataFile);
-  if (!appData)
-  {
-    Output(PR_TRUE, "Error: Invalid or missing application data!\n");
-    return 1;
-  }
+  nsXREAppData appData = { sizeof(nsXREAppData), 0 };
 
-  char **argv2 = NULL;
-  if (!hasAppOption)
-  {
-    // fixup argv to start with -app.
-    argv2 = (char **) malloc(sizeof(char*) * (argc + 2));
-    argv2[0] = argv[0];
-    argv2[1] = "-app";
-    for (int i=1; i<argc; ++i)
-      argv2[i+1] = argv[i];
-    argv2[argc+1] = NULL;
-    argv = argv2;
-    argc++;
-  }
+  int rv = LoadAppData(appDataFile, &appData);
+  if (!rv)
+    rv = XRE_main(argc, argv, appData);
 
-  int rv = XRE_main(argc, argv, appData);
-
-  if (argv2)
-    free(argv2);
+  NS_IF_RELEASE(appData.appDir);
 
   return rv;
 }

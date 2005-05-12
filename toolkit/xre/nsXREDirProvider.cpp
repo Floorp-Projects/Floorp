@@ -455,15 +455,9 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
         directories.AppendObject(file);
     }
 
-    static const char *const kAppendCompDir[] = { "components", nsnull };
+    if (mProfileDir && !gSafeMode) {
+      static const char *const kAppendCompDir[] = { "components", nsnull };
 
-    nsCOMPtr<nsIFile> appFile;
-    mAppDir->Clone(getter_AddRefs(appFile));
-    appFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
-    LoadDirsIntoArray(appFile, "ExtensionDirs",
-                      kAppendCompDir, directories);
-
-    if (mProfileDir) {
       nsCOMPtr<nsIFile> profileFile;
       mProfileDir->Clone(getter_AddRefs(profileFile));
       profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
@@ -476,7 +470,7 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
   }
   else if (!strcmp(aProperty, NS_APP_PREFS_DEFAULTS_DIR_LIST)) {
     nsCOMArray<nsIFile> directories;
-      
+
     if (mXULAppDir) {
       nsCOMPtr<nsIFile> file;
       mXULAppDir->Clone(getter_AddRefs(file));
@@ -487,13 +481,15 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
         directories.AppendObject(file);
     }
 
-    static const char *const kAppendPrefDir[] = { "defaults", "preferences", nsnull };
-    nsCOMPtr<nsIFile> profileFile;
-    if (mProfileDir) {
-      mProfileDir->Clone(getter_AddRefs(profileFile));
-      profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
-      LoadDirsIntoArray(profileFile, "ExtensionDirs",
-                        kAppendPrefDir, directories);
+    if (!gSafeMode) {
+      static const char *const kAppendPrefDir[] = { "defaults", "preferences", nsnull };
+      nsCOMPtr<nsIFile> profileFile;
+      if (mProfileDir) {
+        mProfileDir->Clone(getter_AddRefs(profileFile));
+        profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
+        LoadDirsIntoArray(profileFile, "ExtensionDirs",
+                          kAppendPrefDir, directories);
+      }
     }
 
     rv = NS_NewArrayEnumerator(aResult, directories);
@@ -514,8 +510,8 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
       if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
         manifests.AppendObject(file);
     }
-    
-    if (mProfileDir) {
+
+    if (mProfileDir && !gSafeMode) {
       nsCOMPtr<nsIFile> profileFile;
       mProfileDir->Clone(getter_AddRefs(profileFile));
       profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
@@ -528,7 +524,7 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
   }  
   else if (!strcmp(aProperty, NS_SKIN_MANIFESTS_FILE_LIST)) {
     nsCOMArray<nsIFile> manifests;
-    if (mProfileDir) {
+    if (mProfileDir && !gSafeMode) {
       nsCOMPtr<nsIFile> profileFile;
       mProfileDir->Clone(getter_AddRefs(profileFile));
       profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
@@ -554,7 +550,7 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
         directories.AppendObject(file);
     }
 
-    if (mProfileDir) {
+    if (mProfileDir && !gSafeMode) {
       static const char *const kAppendChromeDir[] = { "chrome", nsnull };
 
       nsCOMPtr<nsIFile> profileFile;
@@ -705,7 +701,7 @@ nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
   // Note that MacOS ignores the vendor when creating the profile hierarchy - all
   // application preferences directories live alongside one another in 
   // ~/Library/Application Support/
-  rv = dirFileMac->AppendNative(nsDependentCString(gAppData->appName));
+  rv = dirFileMac->AppendNative(nsDependentCString(gAppData->name));
   NS_ENSURE_SUCCESS(rv, rv);
 #elif defined(XP_WIN)
   LPMALLOC pMalloc;
@@ -734,18 +730,18 @@ nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
                              PR_TRUE, getter_AddRefs(localDir));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (gAppData->appVendor) {
-    rv = localDir->AppendNative(nsDependentCString(gAppData->appVendor));
+  if (gAppData->vendor) {
+    rv = localDir->AppendNative(nsDependentCString(gAppData->vendor));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  rv = localDir->AppendNative(nsDependentCString(gAppData->appName));
+  rv = localDir->AppendNative(nsDependentCString(gAppData->name));
   NS_ENSURE_SUCCESS(rv, rv);
 
 #elif defined(XP_OS2)
 #if 0 /* For OS/2 we want to always use MOZILLA_HOME */
   // we want an environment variable of the form
   // FIREFOX_HOME, etc
-  nsDependentCString envVar(nsDependentCString(gAppData->appName));
+  nsDependentCString envVar(nsDependentCString(gAppData->name));
   envVar.Append("_HOME");
   char *pHome = getenv(envVar.get());
 #endif
@@ -765,11 +761,11 @@ nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (gAppData->appVendor) {
-    rv = localDir->AppendNative(nsDependentCString(gAppData->appVendor));
+  if (gAppData->vendor) {
+    rv = localDir->AppendNative(nsDependentCString(gAppData->vendor));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  rv = localDir->AppendNative(nsDependentCString(gAppData->appName));
+  rv = localDir->AppendNative(nsDependentCString(gAppData->name));
   NS_ENSURE_SUCCESS(rv, rv);
 
 #elif defined(XP_BEOS)
@@ -785,11 +781,11 @@ nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
                              getter_AddRefs(localDir));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (gAppData->appVendor) {
-    rv = localDir->AppendNative(nsDependentCString(gAppData->appVendor));
+  if (gAppData->vendor) {
+    rv = localDir->AppendNative(nsDependentCString(gAppData->vendor));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  rv = localDir->AppendNative(nsDependentCString(gAppData->appName));
+  rv = localDir->AppendNative(nsDependentCString(gAppData->name));
   NS_ENSURE_SUCCESS(rv, rv);
 
 #elif defined(XP_UNIX)
@@ -806,18 +802,18 @@ nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
  
   // Offset 1 for the outermost folder to make it hidden (i.e. using the ".")
   char* writing = profileFolderName + 1;
-  if (gAppData->appVendor) {
-    GetProfileFolderName(writing, gAppData->appVendor);
+  if (gAppData->vendor) {
+    GetProfileFolderName(writing, gAppData->vendor);
     
     rv = localDir->AppendNative(nsDependentCString(profileFolderName));
     NS_ENSURE_SUCCESS(rv, rv);
  
     char temp[MAXPATHLEN];
-    GetProfileFolderName(temp, gAppData->appName);
+    GetProfileFolderName(temp, gAppData->name);
     appNameFolder = temp;
   }
   else {
-    GetProfileFolderName(writing, gAppData->appName);
+    GetProfileFolderName(writing, gAppData->name);
     appNameFolder = profileFolderName;
   }
   rv = localDir->AppendNative(nsDependentCString(appNameFolder));

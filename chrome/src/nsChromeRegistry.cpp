@@ -60,6 +60,7 @@
 #include "nsString.h"
 #include "nsWidgetsCID.h"
 #include "nsXPIDLString.h"
+#include "nsXULAppAPI.h"
 
 #include "nsIAtom.h"
 #include "nsIBindingManager.h"
@@ -94,6 +95,7 @@
 #include "nsIStyleSheet.h"
 #include "nsISupportsArray.h"
 #include "nsIWindowMediator.h"
+#include "nsIXULRuntime.h"
 
 // keep all the RDF stuff together, in case we can remove it in the far future
 #include "rdf.h"
@@ -113,8 +115,6 @@
 #define MATCH_OS_LOCALE_PREF "intl.locale.matchOS"
 #define SELECTED_LOCALE_PREF "general.useragent.locale"
 #define SELECTED_SKIN_PREF   "general.skins.selectedSkin"
-#define DSS_SKIN_TO_SELECT   "extensions.lastSelectedSkin"
-#define DSS_SWITCH_PENDING   "extensions.dss.switchPending"
 
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -476,11 +476,23 @@ nsChromeRegistry::Init()
   // before we are actually fully initialized.
   gChromeRegistry = this;
 
-  nsCOMPtr<nsIPrefBranch2> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
+  PRBool safeMode = PR_FALSE;
+  nsCOMPtr<nsIXULRuntime> xulrun (do_GetService(XULAPPINFO_SERVICE_CONTRACTID));
+  if (xulrun)
+    xulrun->GetInSafeMode(&safeMode);
+  
+  nsCOMPtr<nsIPrefService> prefserv (do_GetService(NS_PREFSERVICE_CONTRACTID));
+  nsCOMPtr<nsIPrefBranch> prefs;
+
+  if (safeMode)
+    prefserv->GetDefaultBranch(nsnull, getter_AddRefs(prefs));
+  else
+    prefs = do_QueryInterface(prefserv);
+
   if (!prefs) {
     NS_WARNING("Could not get pref service!");
   }
-  
+
   PRBool useLocalePref = PR_TRUE;
 
   if (prefs) {
@@ -507,15 +519,18 @@ nsChromeRegistry::Init()
     if (NS_SUCCEEDED(rv))
       mSelectedSkin = provider;
 
-    rv = prefs->AddObserver(SELECTED_SKIN_PREF, this, PR_TRUE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't add skin-switching observer!");
+    nsCOMPtr<nsIPrefBranch2> prefs2 (do_QueryInterface(prefs));
+
+    if (prefs2)
+      rv = prefs2->AddObserver(SELECTED_SKIN_PREF, this, PR_TRUE);
 
     if (useLocalePref) {
       rv = prefs->GetCharPref(SELECTED_LOCALE_PREF, getter_Copies(provider));
       if (NS_SUCCEEDED(rv))
         mSelectedLocale = provider;
-
-      prefs->AddObserver(SELECTED_LOCALE_PREF, this, PR_TRUE);
+      
+      if (prefs2)
+        prefs2->AddObserver(SELECTED_LOCALE_PREF, this, PR_TRUE);
     }
   }
 

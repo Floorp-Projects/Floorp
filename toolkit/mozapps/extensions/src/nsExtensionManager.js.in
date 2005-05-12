@@ -55,7 +55,6 @@ const PREF_EM_APP_EXTENSIONS_VERSION  = "app.extensions.version";
 const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
 const PREF_UPDATE_COUNT               = "extensions.update.count";
 const PREF_UPDATE_DEFAULT_URL         = "extensions.update.url";
-const PREF_EM_WASINSAFEMODE           = "extensions.wasInSafeMode";
 const PREF_EM_IGNOREMTIMECHANGES      = "extensions.ignoreMTimeChanges";
 const PREF_EM_DISABLEDOBSOLETE        = "extensions.disabledObsolete";
 const PREF_EM_LAST_SELECTED_SKIN      = "extensions.lastSelectedSkin";
@@ -83,7 +82,6 @@ const FILE_AUTOREG                    = ".autoreg";
 const FILE_INSTALL_MANIFEST           = "install.rdf";
 const FILE_CONTENTS_MANIFEST          = "contents.rdf";
 const FILE_CHROME_MANIFEST            = "chrome.manifest";
-const FILE_WASINSAFEMODE              = "Safe Mode";
 const FILE_INSTALLED_EXTENSIONS       = "installed-extensions.txt"
 const FILE_INSTALLED_EXTENSIONS_PROCESSED = "installed-extensions-processed.txt"
 #expand const TARGET_OS               = __OSARCH__;
@@ -165,7 +163,7 @@ var gLoggingEnabled       = null;
 /** 
  * Valid GUIDs fit this pattern.
  */
-var gGUIDTest = /(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\})\/?$/i;
+var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)\/?$/i;
 
 /**
  * Creates a Version Checker object.
@@ -552,6 +550,13 @@ function getURIFromFile(file) {
 }
 
 /**
+ * @returns Whether or not we are currently running in safe mode.
+ */
+function inSafeMode() {
+  return gApp.inSafeMode;
+}
+
+/**
  * Extract the string value from a RDF Literal or Resource
  * @param   literalOrResource
  *          RDF String Literal or Resource
@@ -928,7 +933,7 @@ DirectoryInstallLocation.prototype = {
         if (!entry)
           break;
         entry instanceof nsILocalFile;
-        if (!entry.isDirectory() && gGUIDTest.test(entry.leafName)) {
+        if (!entry.isDirectory() && gIDTest.test(entry.leafName)) {
           var linkedDirectory = this._readDirectoryFromFile(entry);
           if (linkedDirectory && linkedDirectory.exists() && 
               linkedDirectory.isDirectory()) {
@@ -956,12 +961,12 @@ DirectoryInstallLocation.prototype = {
    *      actually maintained by this Install Location.
    */
   getIDForLocation: function(file) {
-    var section = file.path;
+    var section = file.leafName;
     var filePD = file.persistentDescriptor;
     if (filePD in this._locationToIDMap) 
       section = this._locationToIDMap[filePD];
     
-    if (gGUIDTest.test(section))
+    if (gIDTest.test(section))
       return RegExp.$1;
     return undefined;
   },
@@ -1896,7 +1901,7 @@ var StartupCache = {
   /**
    * Writes the Startup Cache to disk
    */
-  write: function() {  
+  write: function() {
     var extensionsCacheFile = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS_STARTUP_CACHE]);
     var fos = openSafeFileOutputStream(extensionsCacheFile);
     for (var locationKey in this.entries) {
@@ -1927,7 +1932,8 @@ var StartupCache = {
  */
 function ExtensionManager() {
   gApp = Components.classes["@mozilla.org/xre/app-info;1"]
-                   .getService(Components.interfaces.nsIXULAppInfo);
+                   .getService(Components.interfaces.nsIXULAppInfo)
+                   .QueryInterface(Components.interfaces.nsIXULRuntime);
   gPref = Components.classes["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefBranch2);
   gLoggingEnabled = getBoolPrefWithDefault(PREF_EM_LOGGING_ENABLED, false);
@@ -2045,85 +2051,6 @@ ExtensionManager.prototype = {
   },
   
   /**
-   * Cleans up on the first run after a Safe Mode run - re-enables temporarily
-   * disabled extensions and re-selects the user selected theme.
-   * @returns true if the application was in Safe Mode previously and Extensions
-   *          have been re-enabled (requiring a restart to load their components)
-   *          false if the application was not in Safe Mode.
-   */
-  _cleanupAfterSafeMode: function() {
-    var wasInSafeModeFile = getFile(KEY_PROFILEDIR, [DIR_EXTENSIONS, FILE_WASINSAFEMODE]);
-    if (!wasInSafeModeFile.exists())
-      return false;
-      
-    // Clean up after we were in safe mode
-    try {
-      this._ensureDS();
-      this._updateExtensionsManifest(false);
-      
-      // Retrieve the skin that was selected prior to entering safe mode
-      // and select it. 
-      var lastSelectedSkin = KEY_DEFAULT_THEME;
-      try {
-        lastSelectedSkin = gPref.getCharPref(PREF_EM_LAST_SELECTED_SKIN);
-        gPref.clearUserPref(PREF_EM_LAST_SELECTED_SKIN);
-        gPref.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, lastSelectedSkin);
-      } 
-      catch (e) {
-      }
-      
-      wasInSafeModeFile.remove(false);
-    }
-    catch (e) {
-      LOG("ExtensionManager:start - failure, catching exception ... = " + e);
-    }
-    return true;
-  },
-  
-  /** 
-   * Start the application in Safe Mode (All Extensions disabled for this run, 
-   * using default theme).
-   * @returns true if we are entering safe mode for the first time since a run
-   *          that was NOT a safe mode run (and as such the system needs to 
-   *          restart to unload extension components), false otherwise.
-   */
-  _enterSafeMode: function() {
-    try {    
-      // Enter safe mode
-      this._ensureDS();
-
-      // Save the current theme (assumed to be the theme that styles the global
-      // package) and re-select the default theme ("classic/1.0")
-      if (!gPref.prefHasUserValue(PREF_EM_LAST_SELECTED_SKIN)) {
-        gPref.setCharPref(PREF_EM_LAST_SELECTED_SKIN,
-                          getCharPrefWithDefault(PREF_GENERAL_SKINS_SELECTEDSKIN,
-                                                 "classic/1.0"));
-        if (gPref.prefHasUserValue(PREF_GENERAL_SKINS_SELECTEDSKIN))
-          gPref.clearUserPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
-      }
-
-      this._ds.safeMode = true;
-      var needsRestart = true;
-
-      var wasInSafeModeFile = getFile(KEY_PROFILEDIR, [DIR_EXTENSIONS, FILE_WASINSAFEMODE]);
-      if (!wasInSafeModeFile.exists()) {
-        wasInSafeModeFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-        this._updateExtensionsManifest(false);
-      }
-      else {
-        // If the "Safe Mode" file already exists, then we are in the second launch of an
-        // app launched with -safe-mode and so we don't want to provoke any further
-        // restarts or re-create the file, just continue starting normally.
-        needsRestart = false;
-      }
-    }
-    catch (e) {
-      LOG("nsExtensionManager:start - (safe mode) failure, catching exception ... " + e);
-    }
-    return needsRestart;
-  },
-  
-  /**
    * Check for presence of critical Extension system files. If any is missing, 
    * delete the others and signal that the system needs to rebuild them all
    * from scratch.
@@ -2167,8 +2094,6 @@ ExtensionManager.prototype = {
    * See nsIExtensionManager.idl
    */
   start: function(commandLine, isDirty) {
-    var needsRestart = false;
-
     // Somehow the component list went away, and for that reason the new one
     // generated by this function is going to result in a different compreg.
     // We must force a restart.
@@ -2176,33 +2101,25 @@ ExtensionManager.prototype = {
     if (!componentList.exists())
       isDirty = true;
     
-    var safeMode = commandLine.handleFlag("safe-mode", false);
-    if (!safeMode) {
-      if (this._cleanupAfterSafeMode())
-        needsRestart = true;
-      
-      // Check for missing manifests - e.g. missing extensions.ini, missing
-      // extensions-startup.manifest, extensions.rdf etc. If any of these files 
-      // is missing then we are in some kind of weird or initial state and need
-      // to force a regeneration.
-      if (this._ensureDatasetIntegrity())
-        isDirty = true;
+    // Check for missing manifests - e.g. missing extensions.ini, missing
+    // extensions-startup.manifest, extensions.rdf etc. If any of these files 
+    // is missing then we are in some kind of weird or initial state and need
+    // to force a regeneration.
+    if (this._ensureDatasetIntegrity())
+      isDirty = true;
 
-      // Configure any items that are being installed, uninstalled or upgraded 
-      // by being added, removed or modified by another process. We must do this
-      // on every startup since there is no way we can tell if this has happened
-      // or not!
-      if (this._checkForFileChanges())
-        isDirty = true;
-      
-      // Extension Changes OR exiting Safe Mode (isDirty not set in this case)
-      if (isDirty || needsRestart)
-        needsRestart = needsRestart || this._finishOperations();
-    }
-    else
-      needsRestart = this._enterSafeMode();
+    // Configure any items that are being installed, uninstalled or upgraded 
+    // by being added, removed or modified by another process. We must do this
+    // on every startup since there is no way we can tell if this has happened
+    // or not!
+    if (this._checkForFileChanges())
+      isDirty = true;
 
-    return needsRestart;
+    // Extension Changes
+    if (isDirty)
+        return this._finishOperations();
+
+    return false;
   },
 
   /**
@@ -2585,6 +2502,9 @@ ExtensionManager.prototype = {
    *          otherwise.
    */
   _upgradeExtensionChrome: function() {
+    if (inSafeMode())
+      return false;
+
     var checkForNewChrome = false;
     var ds = this.datasource;
     // If we have extensions that were installed before the new flat chrome
@@ -2619,6 +2539,9 @@ ExtensionManager.prototype = {
    *          otherwise.
    */
   _upgradeThemeChrome: function() {
+    if (inSafeMode())
+      return false;
+
     var checkForNewChrome = false;
     var themes = this._getActiveItems(nsIUpdateItem.TYPE_THEME);
     for (i = 0; i < themes.length; ++i) {
@@ -2838,13 +2761,6 @@ ExtensionManager.prototype = {
   },
   
   /**
-   * @returns Whether or not we are currently running in safe mode.
-   */
-  get inSafeMode() {
-    return this.datasource.safeMode;
-  },
-
-  /**
    * Write the Extensions List and the Startup Cache
    * @param   needsRestart
    *          true if the application needs to restart again, false otherwise.
@@ -2864,7 +2780,7 @@ ExtensionManager.prototype = {
    * @returns An array of active items of the specified type.
    */
   _getActiveItems: function(type) {
-    if (this.datasource.safeMode)
+    if (inSafeMode())
       return [];
 
     var allItems = this.getItemList(type, { });
@@ -2953,7 +2869,8 @@ ExtensionManager.prototype = {
       else if (!autoregFile.exists())
         autoregFile.remove(false);
     }
-    catch (e) {}
+    catch (e) {
+    }
     return val;
   },
   
@@ -3026,14 +2943,14 @@ ExtensionManager.prototype = {
           if (data.id == gApp.ID) 
             installData.currentApp = data;
         }
-        catch (e) { 
+        catch (e) {
           continue;
         }
       }
     }
      
     // Validate the Item ID
-    if (!gGUIDTest.test(installData.id)) {
+    if (!gIDTest.test(installData.id)) {
       installData.error = INSTALLERROR_INVALID_GUID;
       return installData;
     }
@@ -4070,7 +3987,7 @@ ExtensionManager.prototype = {
    */
   get datasource() {
     this._ensureDS();
-    return this._ds;
+    return this._ds.QueryInterface(Components.interfaces.nsIRDFDataSource);
   },
   
   /**
@@ -4555,7 +4472,7 @@ RDFItemUpdater.prototype = {
       if (rv === undefined)
         throw Components.results.NS_ERROR_FAILURE;
     }
-    catch (e) { 
+    catch (e) {
       // XXXben show console message "aProperty" not found on aSourceResource. 
       return null;
     }
@@ -4684,7 +4601,6 @@ function ExtensionsDataSource(em) {
 ExtensionsDataSource.prototype = {
   _inner    : null,
   _em       : null,
-  safeMode  : false,
   _itemRoot     : null,
   _defaultTheme : null,
   
@@ -4702,7 +4618,7 @@ ExtensionsDataSource.prototype = {
     // The Default Theme is always compatible. 
     if (source.EqualsNode(this._defaultTheme))
       return true;
-      
+
     var appVersion = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
                                             gApp.version);
     var appID = gApp.ID;
@@ -5493,18 +5409,15 @@ ExtensionsDataSource.prototype = {
   },
   
   /**
-   * Get the em:disabled property (RDFLiteral true if this item is disabled
-   * because we're in safe mode, null otherwise (read the actual value from
-   * the datasource).
+   * If we're in safe mode, force the generic about dialog for all extensions.
    */
-  _rdfGet_disabled: function(item, property) {
-    // Ensure the Default Theme is always enabled, so the user can switch back
-    // to it easily from Safe Mode. 
-    if (this.safeMode && !item.EqualsNode(this._defaultTheme)) 
-      return EM_L("true");
+  _rdfGet_aboutURL: function(item, property) {
+    if (inSafeMode())
+      return EM_L("");
+
     return null;
-  },   
-  
+  },
+
   /**
    * Get the em:compatible property (whether or not this item is compatible)
    */
@@ -5572,6 +5485,9 @@ ExtensionsDataSource.prototype = {
       return getLiteral("incompatibleExtension", BundleManager.appName, gApp.version);
     }
 
+    if (inSafeMode())
+      return getLiteral("disabledBySafeMode", itemName, BundleManager.appName);
+
     // No special state for this item, so just use the "description" property. 
     return this.GetTarget(item, EM_R("description"), true);
   },
@@ -5629,7 +5545,7 @@ ExtensionsDataSource.prototype = {
   _rdfGet_homepageURL: function(item, property) {
     return this._getLocalizablePropertyValue(item, property);
   },
-  
+
   /**
    * See nsIRDFDataSource.idl
    */

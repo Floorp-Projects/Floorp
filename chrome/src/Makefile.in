@@ -71,6 +71,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  xpconnect \
 		  jar \
+		  xulapp \
 		  $(NULL)
 
 CPPSRCS		= \

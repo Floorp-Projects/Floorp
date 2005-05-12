@@ -71,6 +71,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIEventQueueService.h"
 #include "nsIExtensionManager.h"
+#include "nsIFastLoadService.h" // for PLATFORM_FASL_SUFFIX
 #include "nsIIOService.h"
 #include "nsIObserverService.h"
 #include "nsINativeAppSupport.h"
@@ -89,6 +90,7 @@
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
 #include "nsIXULAppInfo.h"
+#include "nsIXULRuntime.h"
 
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
@@ -339,21 +341,26 @@ CheckArg(const char* aArg, const char **aParam = nsnull)
   return ARG_NONE;
 }
 
+PRBool gSafeMode = PR_FALSE;
+
 /**
  * The nsXULAppInfo object implements nsIFactory so that it can be its own
  * singleton.
  */
 class nsXULAppInfo : public nsIXULAppInfo,
+                     public nsIXULRuntime,
                      public nsIFactory
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXULAPPINFO
+  NS_DECL_NSIXULRUNTIME
   NS_DECL_NSIFACTORY
 };
 
-NS_IMPL_QUERY_INTERFACE2(nsXULAppInfo,
+NS_IMPL_QUERY_INTERFACE3(nsXULAppInfo,
                          nsIXULAppInfo,
+                         nsIXULRuntime,
                          nsIFactory)
 
 NS_IMETHODIMP_(nsrefcnt)
@@ -371,7 +378,7 @@ nsXULAppInfo::Release()
 NS_IMETHODIMP
 nsXULAppInfo::GetVendor(nsACString& aResult)
 {
-  aResult.Assign(gAppData->appVendor ? gAppData->appVendor : "");
+  aResult.Assign(gAppData->vendor);
 
   return NS_OK;
 }
@@ -379,19 +386,15 @@ nsXULAppInfo::GetVendor(nsACString& aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetName(nsACString& aResult)
 {
-  aResult.Assign(gAppData->appName);
+  aResult.Assign(gAppData->name);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::GetID(nsID** aResult)
+nsXULAppInfo::GetID(nsACString& aResult)
 {
-  *aResult = (nsID*) NS_Alloc(sizeof(nsID));
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  **aResult = gAppData->id;
+  aResult.Assign(gAppData->ID);
 
   return NS_OK;
 }
@@ -399,7 +402,7 @@ nsXULAppInfo::GetID(nsID** aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetVersion(nsACString& aResult)
 {
-  aResult.Assign(gAppData->appVersion ? gAppData->appVersion : "");
+  aResult.Assign(gAppData->version);
 
   return NS_OK;
 }
@@ -407,7 +410,7 @@ nsXULAppInfo::GetVersion(nsACString& aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetAppBuildID(nsACString& aResult)
 {
-  aResult.Assign(gAppData->appBuildID ? gAppData->appBuildID : "");
+  aResult.Assign(gAppData->buildID);
 
   return NS_OK;
 }
@@ -417,6 +420,13 @@ nsXULAppInfo::GetGeckoBuildID(nsACString& aResult)
 {
   aResult.Assign(NS_STRINGIFY(BUILD_ID));
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetInSafeMode(PRBool *aResult)
+{
+  *aResult = gSafeMode;
   return NS_OK;
 }
 
@@ -712,13 +722,13 @@ DumpHelp()
   printf("%s-height <value>%sSet height of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-h or -help%sPrint this message.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-width <value>%sSet width of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
-  printf("%s-v or -version%sPrint %s version.\n",HELP_SPACER_1,HELP_SPACER_2, gAppData->appName);
+  printf("%s-v or -version%sPrint %s version.\n",HELP_SPACER_1,HELP_SPACER_2, gAppData->name);
   printf("%s-P <profile>%sStart with <profile>.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-ProfileManager%sStart with profile manager.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-UILocale <locale>%sStart with <locale> resources as UI Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-contentLocale <locale>%sStart with <locale> resources as content Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
 #if defined(XP_WIN) || defined(XP_OS2)
-  printf("%s-console%sStart %s with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2,gAppData->appName);
+  printf("%s-console%sStart %s with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2,gAppData->name);
 #endif
 
   // this works, but only after the components have registered.  so if you drop in a new command line handler, -help
@@ -803,7 +813,7 @@ VerifyInstallation(nsIFile* aAppDir)
 static void
 DumpVersion()
 {
-  printf("%s %s %s, %s\n", gAppData->appVendor, gAppData->appName, gAppData->appVersion, gAppData->copyright);
+  printf("%s %s %s, %s\n", gAppData->vendor, gAppData->name, gAppData->version, gAppData->copyright);
 }
 
 #ifdef MOZ_ENABLE_XREMOTE
@@ -816,7 +826,7 @@ HandleRemoteArgument(const char* remote)
   ArgResult ar;
 
   const char *profile = 0;
-  nsCAutoString program(gAppData->appName);
+  nsCAutoString program(gAppData->name);
   ToLowerCase(program);
   const char *username = getenv("LOGNAME");
 
@@ -873,7 +883,7 @@ RemoteCommandLine()
   nsresult rv;
   ArgResult ar;
 
-  nsCAutoString program(gAppData->appName);
+  nsCAutoString program(gAppData->name);
   ToLowerCase(program);
   const char *username = getenv("LOGNAME");
 
@@ -1078,7 +1088,7 @@ ProfileLockedDialog(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
     sbs->CreateBundle(kProfileProperties, getter_AddRefs(sb));
     NS_ENSURE_TRUE(sbs, NS_ERROR_FAILURE);
 
-    NS_ConvertUTF8toUTF16 appName(gAppData->appName);
+    NS_ConvertUTF8toUTF16 appName(gAppData->name);
     const PRUnichar* params[] = {appName.get(), appName.get()};
 
     nsXPIDLString killMessage;
@@ -1473,9 +1483,9 @@ static void GetVersion(nsIFile* aProfileDir, char* aVersion, int aVersionLength)
 
 static void BuildVersion(nsCString &aBuf)
 {
-  aBuf.Assign(gAppData->appVersion);
+  aBuf.Assign(gAppData->version);
   aBuf.Append('_');
-  aBuf.Append(gAppData->appBuildID);
+  aBuf.Append(gAppData->buildID);
   aBuf.Append('/');
   aBuf.AppendLiteral(GRE_BUILD_ID);
 }
@@ -1519,7 +1529,7 @@ static PRBool ComponentsListChanged(nsIFile* aProfileDir)
   return exists;
 }
 
-static void RemoveComponentRegistries(nsIFile* aProfileDir)
+static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfileDir)
 {
   nsCOMPtr<nsIFile> file;
   aProfileDir->Clone(getter_AddRefs(file));
@@ -1533,6 +1543,13 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir)
   file->Remove(PR_FALSE);
 
   file->SetNativeLeafName(NS_LITERAL_CSTRING(".autoreg"));
+  file->Remove(PR_FALSE);
+
+  aLocalProfileDir->Clone(getter_AddRefs(file));
+  if (!file)
+    return;
+
+  file->AppendNative(NS_LITERAL_CSTRING("XUL" PLATFORM_FASL_SUFFIX));
   file->Remove(PR_FALSE);
 }
 
@@ -1604,6 +1621,14 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   gArgv = argv;
 
   NS_ASSERTION(aAppData, "must specify XUL app data");
+
+  // In the future when nsXREAppData is extended, this check will need to
+  // have more finesse.
+  if (aAppData->size < sizeof(nsXREAppData)) {
+    NS_ERROR("aAppdata.size isn't set properly!");
+    return 1;
+  }
+
   gAppData = aAppData;
 
   gRestartArgc = argc;
@@ -1628,6 +1653,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   NSGetStaticModuleInfo = app_getModuleInfo;
 #endif
 
+  if (CheckArg("safe-mode"))
+    gSafeMode = PR_TRUE;
+
   // Handle -help and -version command line arguments.
   // They should return quickly, so we deal with them here.
   if (CheckArg("h") || CheckArg("help") || CheckArg("?")) {
@@ -1646,16 +1674,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   nsXREDirProvider dirProvider;
   {
-    nsCOMPtr<nsIFile> xulAppDir;
-
-    const char *appDataFile;
-    if (CheckArg("app", &appDataFile) == ARG_FOUND) {
-      nsCOMPtr<nsILocalFile> lf;
-      XRE_GetFileFromPath(appDataFile, getter_AddRefs(lf));
-      lf->GetParent(getter_AddRefs(xulAppDir));
-    }
-
-    rv = dirProvider.Initialize(xulAppDir);
+    rv = dirProvider.Initialize(gAppData->directory);
     if (NS_FAILED(rv))
       return 1;
   }
@@ -1696,7 +1715,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   _g_set_application_name_fn _g_set_application_name =
       (_g_set_application_name_fn)PR_FindFunctionSymbolAndLibrary("g_set_application_name", &glib2);
   if (_g_set_application_name) {
-    _g_set_application_name(gAppData->appName);
+    _g_set_application_name(gAppData->name);
   }
   if (glib2) {
     PR_UnloadLibrary(glib2);
@@ -1815,15 +1834,19 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // there is no need for re-registration.  If the user loads the same
   // profile in different builds the component registry must be
   // re-generated to prevent mysterious component loading failures.
-  // 
-  if (version.Equals(lastVersion)) {
+  //
+  if (gSafeMode) {
+    RemoveComponentRegistries(profD, profLD);
+    WriteVersion(profD, NS_LITERAL_CSTRING("Safe Mode"));
+  }
+  else if (version.Equals(lastVersion)) {
     componentsListChanged = ComponentsListChanged(profD);
     if (componentsListChanged) {
       // Remove compreg.dat and xpti.dat, forcing component re-registration,
       // with the new list of additional components directories specified
       // in "components.ini" which we have just discovered changed since the
       // last time the application was run. 
-      RemoveComponentRegistries(profD);
+      RemoveComponentRegistries(profD, profLD);
     }
     // Nothing need be done for the normal startup case.
   }
@@ -1831,7 +1854,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     // Remove compreg.dat and xpti.dat, forcing component re-registration
     // with the default set of components (this disables any potentially
     // troublesome incompatible XPCOM components). 
-    RemoveComponentRegistries(profD);
+    RemoveComponentRegistries(profD, profLD);
 
     // Tell the Extension Manager it should check for incompatible 
     // Extensions and re-write the Components manifest ("components.ini")
@@ -2001,7 +2024,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           nsCOMPtr<nsIRemoteService> remoteService;
           remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
           if (remoteService)
-            remoteService->Startup(gAppData->appName, nsnull);
+            remoteService->Startup(gAppData->name, nsnull);
 #endif /* MOZ_ENABLE_XREMOTE */
 
           // enable win32 DDE responses and Mac appleevents responses
