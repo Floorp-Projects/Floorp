@@ -209,6 +209,7 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      * tested in jsemit.c and jsscan.c to optimize based on identity of run-
      * and compile-time scope.
      */
+    fp->flags |= JSFRAME_SCRIPT_OBJECT;
     script = JS_CompileUCScriptForPrincipals(cx, scopeobj, principals,
                                              JSSTRING_CHARS(str),
                                              JSSTRING_LENGTH(str),
