@@ -703,14 +703,12 @@
             var origURIStr = safeGetProperty(targetDoc, "documentURI");
             var origURI = ioService.newURI(origURIStr, docCharset, null);
 
-            if (uri.schemeIs("javascript"))
-              return;
-
             const nsIScriptSecMan =
               Components.interfaces.nsIScriptSecurityManager;
 
             try {
-              secMan.checkLoadURI(origURI, uri, nsIScriptSecMan.STANDARD);
+              secMan.checkLoadURI(origURI, uri,
+                                  nsIScriptSecMan.DISALLOW_SCRIPT);
             } catch(e) {
               return;
             }
