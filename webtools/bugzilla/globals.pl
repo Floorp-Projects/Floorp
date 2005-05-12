@@ -894,8 +894,11 @@ sub GetAttachmentLink {
 
 sub GetBugLink {
     my ($bug_num, $link_text, $comment_num) = @_;
-    $bug_num || return "&lt;missing bug number&gt;";
-    detaint_natural($bug_num) || return "&lt;invalid bug number&gt;";
+    if (! defined $bug_num || $bug_num eq "") {
+        return "&lt;missing bug number&gt;";
+    }
+    my $quote_bug_num = html_quote($bug_num);
+    detaint_natural($bug_num) || return "&lt;invalid bug number: $quote_bug_num&gt;";
 
     # If we've run GetBugLink() for this bug number before, %::buglink
     # will contain an anonymous array ref of relevent values, if not
