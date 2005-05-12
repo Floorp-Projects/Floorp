@@ -186,6 +186,12 @@ nsHTMLCanvasFrame::Paint(nsPresContext*       aPresContext,
       return NS_OK;
     }
 
+    // make sure that the rendering context has updated the
+    // image frame
+    nsCOMPtr<nsICanvasElement> canvas(do_QueryInterface(GetContent()));
+    NS_ENSURE_TRUE(canvas, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(canvas->UpdateImageFrame(), NS_ERROR_FAILURE);
+
     // from nsImageFrame
     // First paint background and borders, which should be in the
     // FOREGROUND or BACKGROUND paint layer if the element is

@@ -181,12 +181,12 @@ public:
     virtual ~nsCanvasRenderingContext2D();
 
     nsresult Redraw();
-    nsresult UpdateImageFrame();
     void SetCairoColor(nscolor c);
 
     // nsICanvasRenderingContextInternal
-    NS_IMETHOD SetCanvasElement(nsIDOMHTMLCanvasElement* aParentCanvas);
+    NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas);
     NS_IMETHOD SetTargetImageFrame(gfxIImageFrame* aImageFrame);
+    NS_IMETHOD UpdateImageFrame();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -218,7 +218,6 @@ protected:
 
     // the canvas element informs us when its going away,
     // so these are not nsCOMPtrs
-    nsIDOMHTMLCanvasElement* mDOMCanvasElement;
     nsICanvasElement* mCanvasElement;
 
     // image bits
@@ -282,7 +281,7 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 }
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
-    : mDOMCanvasElement(nsnull), mCanvasElement(nsnull),
+    : mCanvasElement(nsnull),
       mDirty(PR_TRUE), mCairo(nsnull), mSurface(nsnull), mSurfaceData(nsnull)
 {
     mColorStyles[STYLE_STROKE] = NS_RGB(0,0,0);
@@ -466,17 +465,12 @@ nsresult
 nsCanvasRenderingContext2D::Redraw()
 {
     mDirty = PR_TRUE;
-    nsresult rv = UpdateImageFrame();
-    if (NS_FAILED(rv)) {
-        NS_WARNING("Canvas UpdateImageFrame filed");
-        return NS_ERROR_FAILURE;
-    }
 
     nsIFrame *frame = GetCanvasLayoutFrame();
     if (frame) {
         nsRect r = frame->GetRect();
         r.x = r.y = 0;
-        frame->Invalidate(r, PR_TRUE);
+        frame->Invalidate(r, PR_FALSE);
     }
 
     return NS_OK;
@@ -517,7 +511,7 @@ nsCanvasRenderingContext2D::SetTargetImageFrame(gfxIImageFrame* aImageFrame)
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsCanvasRenderingContext2D::UpdateImageFrame()
 {
     nsresult rv;
@@ -609,18 +603,10 @@ nsCanvasRenderingContext2D::UpdateImageFrame()
 //
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetCanvasElement(nsIDOMHTMLCanvasElement* aCanvasElement)
+nsCanvasRenderingContext2D::SetCanvasElement(nsICanvasElement* aCanvasElement)
 {
     // don't hold a ref to this!
-    mDOMCanvasElement = aCanvasElement;
-    if (mDOMCanvasElement) {
-        if (NS_SUCCEEDED (CallQueryInterface(mDOMCanvasElement, &mCanvasElement))) {
-            // don't hold a ref to this!
-            mCanvasElement->Release();
-        }
-    } else {
-        mCanvasElement = nsnull;
-    }
+    mCanvasElement = aCanvasElement;
 
     // set up our css parser, if necessary
     if (!mCSSParser) {
@@ -633,8 +619,12 @@ nsCanvasRenderingContext2D::SetCanvasElement(nsIDOMHTMLCanvasElement* aCanvasEle
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
 {
-    NS_IF_ADDREF(*canvas = mDOMCanvasElement);
-    return NS_OK;
+    if (mCanvasElement == nsnull) {
+        *canvas = nsnull;
+        return NS_OK;
+    }
+
+    return CallQueryInterface(mCanvasElement, canvas);
 }
 
 //
