@@ -1175,10 +1175,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mInsertionContent(nsnull),
     mCreatorIsBlock(PR_FALSE)
 {
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-  if (docShell) 
-    docShell->GetLayoutHistoryState(getter_AddRefs(mFrameState));
+  mFrameState = aPresShell->GetDocument()->GetLayoutHistoryState();
 }
 
 nsFrameConstructorState::~nsFrameConstructorState()

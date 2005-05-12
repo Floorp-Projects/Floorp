@@ -2324,13 +2324,7 @@ nsGenericHTMLElement::GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
   //
   // Get the history (don't bother with the key if the history is not there)
   //
-  nsresult rv;
-  nsCOMPtr<nsISupports> container = doc->GetContainer();
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-  if (docShell) {
-    rv = docShell->GetLayoutHistoryState(aHistory);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  *aHistory = doc->GetLayoutHistoryState().get();
   if (!*aHistory) {
     return NS_OK;
   }
@@ -2338,8 +2332,13 @@ nsGenericHTMLElement::GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
   //
   // Get the state key
   //
-  rv = nsContentUtils::GenerateStateKey(aContent, doc, nsIStatefulFrame::eNoID, aKey);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = nsContentUtils::GenerateStateKey(aContent, doc,
+                                                 nsIStatefulFrame::eNoID,
+                                                 aKey);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(*aHistory);
+    return rv;
+  }
 
   // If the state key is blank, this is anonymous content or for
   // whatever reason we are not supposed to save/restore state.
@@ -3274,11 +3273,8 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
 void
 nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  // If the document is still bound to the window, we should save our state
-  // now.
-  nsIDocument *doc = GetOwnerDoc();
-  if (doc && doc->GetScriptGlobalObject())
-    SaveState();
+  // Save state before doing anything
+  SaveState();
 
   if (mForm) {
     // Might need to unset mForm
