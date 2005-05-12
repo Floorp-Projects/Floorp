@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 17 Dec 1997.
  *
@@ -32,6 +32,8 @@ import java.util.Vector;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeExpansionEvent;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -43,7 +45,7 @@ import grendel.storage.MessageExtraFactory;
 import grendel.view.FolderView;
 import grendel.view.MessageSetViewObserver;
 import grendel.view.ViewedMessage;
-import grendel.widgets.TreePath;
+import javax.swing.tree.TreePath;
 import grendel.widgets.TreeTableDataModel;
 import grendel.widgets.TreeTableModelBroadcaster;
 import grendel.widgets.TreeTableModelEvent;
@@ -111,19 +113,19 @@ class MessageModel implements TreeTableDataModel {
 
   // Attributes
   public void setCollapsed(TreePath aPath, boolean aCollapsed) {
-    TreeTableModelEvent event =
-      new TreeTableModelEvent(this, aPath);
+    TreeExpansionEvent event =
+      new TreeExpansionEvent(this, aPath);
 
     if (aCollapsed) {
       if (fCollapsed.put(aPath, "x") == null) {
         if (fListeners != null) {
-          fListeners.nodeCollapsed(event);
+          fListeners.treeCollapsed(event);
         }
       }
     } else {
       if (fCollapsed.remove(aPath) != null) {
         if (fListeners != null) {
-          fListeners.nodeExpanded(event);
+          fListeners.treeExpanded(event);
         }
       }
     }
@@ -256,7 +258,7 @@ class MessageModel implements TreeTableDataModel {
             path = createTreePath(node.getParent());
             children[0] = node;
 
-            fListeners.nodeInserted(new TreeTableModelEvent(this, path, children));
+            fListeners.treeNodesInserted(new TreeModelEvent(this, path));
           }
         }
         if (deleted != null) {
@@ -267,7 +269,7 @@ class MessageModel implements TreeTableDataModel {
             path = createTreePath(node.getParent());
             children[0] = node;
 
-            fListeners.nodeDeleted(new TreeTableModelEvent(this, path, children));
+            fListeners.treeNodesRemoved(new TreeModelEvent(this, path));
           }
         }
         if (changed != null) {
@@ -278,7 +280,7 @@ class MessageModel implements TreeTableDataModel {
             System.out.println("'" + Util.GetSubject(m) + "' changed");
 
             path = createTreePath(node);
-            fListeners.nodeChanged(new TreeTableModelEvent(this, path, null));
+            fListeners.treeNodesChanged(new TreeModelEvent(this, path));
           }
         }
       }

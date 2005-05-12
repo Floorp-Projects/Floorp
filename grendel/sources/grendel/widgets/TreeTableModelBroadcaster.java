@@ -17,12 +17,16 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 18 Sep 1997.
  */
-
 package grendel.widgets;
+
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeModelEvent;
+
+import grendel.widgets.TreeTableModelListener;
 
 public class TreeTableModelBroadcaster implements TreeTableModelListener {
   TreeTableModelListener a, b;
@@ -61,28 +65,33 @@ public class TreeTableModelBroadcaster implements TreeTableModelListener {
     return add(a2, b2);
   }
 
-  public void nodeExpanded(TreeTableModelEvent aEvent) {
-    a.nodeExpanded(aEvent);
-    b.nodeExpanded(aEvent);
+  public void treeExpanded(TreeExpansionEvent aEvent) {
+    a.treeExpanded(aEvent);
+    b.treeExpanded(aEvent);
   }
 
-  public void nodeCollapsed(TreeTableModelEvent aEvent) {
-    a.nodeCollapsed(aEvent);
-    b.nodeCollapsed(aEvent);
+  public void treeCollapsed(TreeExpansionEvent aEvent) {
+    a.treeCollapsed(aEvent);
+    b.treeCollapsed(aEvent);
   }
 
-  public void nodeInserted(TreeTableModelEvent aEvent) {
-    a.nodeInserted(aEvent);
-    b.nodeInserted(aEvent);
+  public void treeNodesInserted(TreeModelEvent aEvent) {
+    a.treeNodesInserted(aEvent);
+    b.treeNodesInserted(aEvent);
   }
 
-  public void nodeDeleted(TreeTableModelEvent aEvent) {
-    a.nodeDeleted(aEvent);
-    b.nodeDeleted(aEvent);
+  public void treeNodesRemoved(TreeModelEvent aEvent) {
+    a.treeNodesRemoved(aEvent);
+    b.treeNodesRemoved(aEvent);
   }
 
-  public void nodeChanged(TreeTableModelEvent aEvent) {
-    a.nodeChanged(aEvent);
-    b.nodeChanged(aEvent);
+  public void treeNodesChanged(TreeModelEvent aEvent) {
+    a.treeNodesChanged(aEvent);
+    b.treeNodesChanged(aEvent);
+  }
+
+  public void treeStructureChanged(TreeModelEvent aEvent) {
+    a.treeStructureChanged(aEvent);
+    b.treeStructureChanged(aEvent);
   }
 }

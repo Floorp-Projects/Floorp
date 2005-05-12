@@ -93,7 +93,7 @@ import grendel.widgets.SelectionManager;
 import grendel.widgets.StatusEvent;
 import grendel.widgets.ToggleCellEditor;
 import grendel.widgets.ToggleCellRenderer;
-import grendel.widgets.TreePath;
+import javax.swing.tree.TreePath;
 import grendel.widgets.TreeTable;
 import grendel.widgets.TreeTableDataModel;
 
@@ -643,7 +643,7 @@ public class FolderPanel extends GeneralPanel {
     Enumeration messages = selection.getSelection();
     while (messages.hasMoreElements()) {
       TreePath path = (TreePath) messages.nextElement();
-      Message msg = ((ViewedMessage) path.getTip()).getMessage();
+      Message msg = ((ViewedMessage) path.getPath()[path.getPath().length -1]).getMessage();
       if (msg != null) {
         msgVector.insertElementAt(msg, msgVector.size());
       }
@@ -660,7 +660,7 @@ public class FolderPanel extends GeneralPanel {
     Enumeration messages = selection.getSelection();
     while (messages.hasMoreElements()) {
       TreePath path = (TreePath) messages.nextElement();
-      ViewedMessage msg = (ViewedMessage) path.getTip();
+      ViewedMessage msg = (ViewedMessage) path.getPath()[path.getPath().length -1];
       if (msg != null) {
         msgVector.insertElementAt(msg, msgVector.size());
       }

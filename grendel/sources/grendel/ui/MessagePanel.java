@@ -48,7 +48,7 @@ import java.util.ResourceBundle;
 import javax.swing.Action;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
-import javax.swing.JEditorPane;
+import javax.swing.JTextPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -99,7 +99,7 @@ import java.util.logging.Level;
  */
 public class MessagePanel extends GeneralPanel {
   //  JTextArea     fTextArea;
-  JEditorPane   fTextArea;
+  JTextPane   fTextArea;
   //  URLComponent  fViewer;
   Thread        fMessageLoadThread;
   Message       fMessage;
@@ -126,11 +126,12 @@ public class MessagePanel extends GeneralPanel {
 
     makeRealHTML = true;
 
-    fTextArea = new JEditorPane();
+    fTextArea = new JTextPane();
     fTextArea.setEditable(false);
     fTextArea.setContentType("text/html");
     fTextArea.setFont(new Font("Helvetica", Font.PLAIN, 12));
     fTextArea.setBorder(BorderFactory.createLoweredBevelBorder());
+
     add(new JScrollPane(fTextArea));
   }
 
@@ -145,12 +146,12 @@ public class MessagePanel extends GeneralPanel {
       if (fMessageLoadThread != null) {
         mLogger.info("Killing msg thread");
         fMessageLoadThread.interrupt();
-				try {
-					fMessageLoadThread.join();
-				}
-				catch ( InterruptedException ie ) {
-					// ignore
-				}
+        try {
+          fMessageLoadThread.join();
+        }
+        catch ( InterruptedException ie ) {
+          // ignore
+        }
         fMessageLoadThread = null;
       }
     }
@@ -173,12 +174,12 @@ public class MessagePanel extends GeneralPanel {
     if (fMessageLoadThread != null) {
       mLogger.info("Killing msg thread");
       fMessageLoadThread.interrupt();
-			try {
-				fMessageLoadThread.join();
-			}
-			catch ( InterruptedException ie ) {
-				// ignore
-			}
+      try {
+        fMessageLoadThread.join();
+      }
+      catch ( InterruptedException ie ) {
+        // ignore
+      }
       notifyStatus(fLabels.getString("messageLoadedStatus"));
     }
     fMessageLoadThread =

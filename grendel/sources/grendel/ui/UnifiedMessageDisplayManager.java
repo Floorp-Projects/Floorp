@@ -56,7 +56,7 @@ import grendel.view.ViewedMessage;
 import grendel.widgets.GrendelToolBar;
 import grendel.widgets.Spring;
 import grendel.widgets.StatusEvent;
-import grendel.widgets.TreePath;
+import javax.swing.tree.TreePath;
 
 import com.trfenv.parsers.Event;
 
@@ -258,6 +258,8 @@ class UnifiedMessageFrame extends GeneralFrame {
     fPanel.remove(splitter1);
     splitter1 = new JSplitPane();
     splitter2 = new JSplitPane();
+    splitter1.setOneTouchExpandable(true);
+    splitter2.setOneTouchExpandable(true);
 
 
     if (relayout == false) {
@@ -393,7 +395,7 @@ class UnifiedMessageFrame extends GeneralFrame {
       }
       if (path != null && !selection.hasMoreElements()) {
         // not multiple selection
-        ViewedMessage node = (ViewedMessage) path.getTip();
+        ViewedMessage node = (ViewedMessage) path.getPath()[path.getPath().length - 1];
         fMessage.setMessage(node.getMessage());
       } else {
         fMessage.setMessage(null);
@@ -408,7 +410,7 @@ class UnifiedMessageFrame extends GeneralFrame {
       while (selection.hasMoreElements()) {
         path = (TreePath) selection.nextElement();
         if (path != null) {
-          ViewedMessage node = (ViewedMessage) path.getTip();
+          ViewedMessage node = (ViewedMessage) path.getPath()[path.getPath().length - 1];
           master.displayMessage(node.getMessage());
         }
       }
@@ -427,7 +429,7 @@ class UnifiedMessageFrame extends GeneralFrame {
       Folder folder = null;
       if (path != null && !selection.hasMoreElements()) {
         // not multiple selection
-        node = path.getTip();
+        node = path.getPath()[path.getPath().length - 1];
       }
 
       folder = MasterPanel.getFolder(node);

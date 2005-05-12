@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Jamie Zawinski <jwz@netscape.com>, 27 Aug 1997.
  */
@@ -45,8 +45,9 @@ class MimeMessageOperator extends MimeContainerOperator {
     StringBuffer output = new StringBuffer(200);
     formatter.formatHeaders(object.headers(), output);
 //    output.append("<P>");
-    if (object.contentType().equals("text/plain")) {
-      output.append("<pre>");
+    if (object.contentType() == null ||
+        object.contentType().equals("text/plain")) {
+      output.append("<tt>");
     }
 
     getOut().print(output.toString());

@@ -38,10 +38,10 @@ import javax.mail.MessagingException;
 
 import grendel.view.ViewedMessage;
 
+import javax.swing.tree.TreePath;
 import javax.swing.event.ChangeEvent;
 
 import grendel.widgets.StatusEvent;
-import grendel.widgets.TreePath;
 
 import com.trfenv.parsers.Event;
 
@@ -134,7 +134,7 @@ public class FolderFrame extends GeneralFrame {
       while (selection.hasMoreElements()) {
         path = (TreePath) selection.nextElement();
         if (path != null) {
-          ViewedMessage node = (ViewedMessage) path.getTip();
+          ViewedMessage node = (ViewedMessage) path.getPath()[path.getPath().length -1];
           master.displayMessage(node.getMessage());
         }
       }

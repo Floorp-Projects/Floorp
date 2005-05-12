@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 17 Sep 1997.
  */
@@ -25,6 +25,7 @@
 package grendel.widgets;
 
 import java.util.EventObject;
+import javax.swing.tree.TreePath;
 
 /**
  * A TreeTableDataModel event. Used for reporting which node and possibly

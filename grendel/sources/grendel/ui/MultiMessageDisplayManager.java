@@ -41,7 +41,7 @@ import javax.mail.Store;
 
 import grendel.view.ViewedFolder;
 import grendel.view.ViewedMessage;
-import grendel.widgets.TreePath;
+import javax.swing.tree.TreePath;
 
 import com.trfenv.parsers.Event;
 
@@ -176,7 +176,7 @@ class MasterFrame extends GeneralFrame {
         path = (TreePath) selection.nextElement();
 
         if (path != null) {
-          Object node = path.getTip();
+          Object node = path.getPath()[path.getPath().length - 1];
           Folder folder = null;
 
           if (node instanceof ViewedFolder) {

@@ -60,8 +60,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.KeyStroke;
 import javax.swing.ToolTipManager;
+import javax.swing.tree.TreePath;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeModelEvent;
 //import javax.swing.plaf.BorderUIResource;
 
 import calypso.util.ArrayEnumeration;
@@ -96,7 +99,6 @@ import grendel.widgets.SelectionListener;
 import grendel.widgets.SelectionManager;
 import grendel.widgets.StatusEvent;
 import grendel.widgets.TextCellEditor;
-import grendel.widgets.TreePath;
 import grendel.widgets.TreeTable;
 import grendel.widgets.TreeTableDataModel;
 import grendel.widgets.TreeTableModelBroadcaster;
@@ -279,7 +281,7 @@ public class MasterPanel extends GeneralPanel {
     SelectionManager selection = fFolderTree.getSelectionManager();
     if (selection.getSelectionCount() == 1) {
       TreePath path = (TreePath) selection.getSelection().nextElement();
-      res = GetViewedFolder(path.getTip());
+      res = GetViewedFolder(path.getPath()[path.getPath().length - 1]);
     }
     return res;
   }
@@ -290,7 +292,7 @@ public class MasterPanel extends GeneralPanel {
     Enumeration folders = selection.getSelection();
     while (folders.hasMoreElements()) {
       TreePath path = (TreePath) folders.nextElement();
-      Object folder = path.getTip();
+      Object folder = path.getPath()[path.getPath().length - 1];
       if (folder != null) {
         folderVector.insertElementAt(folder, folderVector.size());
       }
@@ -639,19 +641,19 @@ class FolderModel implements TreeTableDataModel {
 
   // Attributes
   public void setCollapsed(TreePath aPath, boolean aCollapsed) {
-    TreeTableModelEvent event =
-      new TreeTableModelEvent(this, aPath);
+    TreeExpansionEvent event =
+      new TreeExpansionEvent(this, aPath);
 
     if (aCollapsed) {
       if (fCollapsed.remove(aPath) != null) {
         if (fListeners != null) {
-          fListeners.nodeCollapsed(event);
+          fListeners.treeCollapsed(event);
         }
       }
     } else {
       if (fCollapsed.put(aPath, "x") == null) {
         if (fListeners != null) {
-          fListeners.nodeExpanded(event);
+          fListeners.treeExpanded(event);
         }
       }
     }
@@ -806,14 +808,14 @@ class FolderModel implements TreeTableDataModel {
   void updateFolder(ViewedFolder aFolder) {
     TreePath path = createTreePath(aFolder);
     if (fListeners != null && path != null) {
-      fListeners.nodeChanged(new TreeTableModelEvent(this, path, null));
+      fListeners.treeNodesChanged(new TreeModelEvent(this, path));
     }
   }
 
   void updateFolderCreated(ViewedFolder aFolder) {
     TreePath path = createTreePath(aFolder.getParentFolder());
     if (fListeners != null && path != null) {
-      fListeners.nodeInserted(new TreeTableModelEvent(this, path,
+      fListeners.treeNodesInserted(new TreeModelEvent(this, path, null,
                                                       new Object[] {aFolder}));
     }
   }
@@ -821,7 +823,7 @@ class FolderModel implements TreeTableDataModel {
   void updateFolderDeleted(ViewedFolder aFolder) {
     TreePath path = createTreePath(aFolder.getParentFolder());
     if (fListeners != null && path != null) {
-      fListeners.nodeDeleted(new TreeTableModelEvent(this, path,
+      fListeners.treeNodesRemoved(new TreeModelEvent(this, path, null,
                                                      new Object[] {aFolder}));
     }
   }

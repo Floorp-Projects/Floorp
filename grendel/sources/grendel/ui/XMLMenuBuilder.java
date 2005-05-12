@@ -29,6 +29,7 @@ import java.awt.event.ActionListener;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.logging.*;
 
 import javax.swing.JMenuBar;
 import javax.swing.JComponent;
@@ -55,6 +56,8 @@ public class XMLMenuBuilder {
   private Element root;
   private JMenuBar mMenuBar;
 
+  private Logger logger = Logger.getLogger("grendel.ui.XMLMenuBuilder");
+
   private Map<String, JComponent> mIDs;
 
   /**
@@ -77,6 +80,8 @@ public class XMLMenuBuilder {
   public JMenuBar buildFrom(String file, JFrame aWindow) {
     XulParser parser = new XulParser(mListener, aWindow);
 
+    logger.info("Parsing XML file: " + file);
+
     Document doc = XulParser.makeDocument(file);
     root = doc.getDocumentElement();
 
@@ -85,6 +90,9 @@ public class XMLMenuBuilder {
     Element menubarTag = (Element)root.getElementsByTagName("menubar").item(0);
     mMenuBar = (JMenuBar)parser.parseTag(null, menubarTag);
     mIDs = parser.getIDs();
+
+    logger.info("Parsing Successful!");
+
     return mMenuBar;
   }
 

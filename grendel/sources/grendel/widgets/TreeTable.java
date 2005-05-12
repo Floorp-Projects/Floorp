@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 21 Aug 1997.
  * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
@@ -61,6 +61,9 @@ import javax.swing.UIManager;
 import javax.swing.plaf.basic.BasicGraphicsUtils;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.tree.TreePath;
 
 import grendel.dnd.DropTarget;
 import grendel.dnd.DropTargetComponent;
@@ -674,7 +677,7 @@ public class TreeTable extends JComponent implements Scrollable,
 
   public int getNodeY(TreePath aPath) {
     Object path[] = aPath.getPath();
-    int length = aPath.getLength();
+    int length = aPath.getPath().length;
     int index = 0;
     int y = 0;
     TreeNode traverse = fRoot;
@@ -787,7 +790,7 @@ public class TreeTable extends JComponent implements Scrollable,
    */
 
   synchronized TreeNode findTreeNode(TreePath aPath) {
-    return findTreeNodeRecurse(fRoot, aPath.getPath(), 0, aPath.getLength() - 1);
+    return findTreeNodeRecurse(fRoot, aPath.getPath(), 0, aPath.getPath().length - 1);
   }
 
   synchronized void resizeAndRepaint() {
@@ -1466,7 +1469,7 @@ public class TreeTable extends JComponent implements Scrollable,
   }
 
   class TreeModelListener implements TreeTableModelListener {
-    public void nodeExpanded(TreeTableModelEvent aEvent) {
+    public void treeExpanded(TreeExpansionEvent aEvent) {
       synchronized (fTreeTable) {
         // We take the leap of faith here that we're not
         // expanding an already expanded node
@@ -1476,7 +1479,7 @@ public class TreeTable extends JComponent implements Scrollable,
       resizeAndRepaintFrom(aEvent.getPath());
     }
 
-    public void nodeCollapsed(TreeTableModelEvent aEvent) {
+    public void treeCollapsed(TreeExpansionEvent aEvent) {
       synchronized (fTreeTable) {
         // We take the leap of faith here that we're not
         // collapsing an already collapsed node
@@ -1495,9 +1498,9 @@ public class TreeTable extends JComponent implements Scrollable,
       resizeAndRepaintFrom(aEvent.getPath());
     }
 
-    public void nodeInserted(TreeTableModelEvent aEvent) {
+    public void treeNodesInserted(TreeModelEvent aEvent) {
       synchronized (fTreeTable) {
-        TreePath path = aEvent.getPath();
+        TreePath path = aEvent.getTreePath();
         if (path.getPath().length == 0) { // something at the root changed
           reload();
           resizeAndRepaint();
@@ -1505,30 +1508,22 @@ public class TreeTable extends JComponent implements Scrollable,
           TreeNode node = findTreeNode(path);
           if (node != null) { // visible node changed
             node.reload(); // Redo everything for now
-            resizeAndRepaintFrom(aEvent.getPath());
+            resizeAndRepaintFrom(aEvent.getTreePath());
           }
         }
       }
     }
 
-    public void nodeDeleted(TreeTableModelEvent aEvent) {
-      synchronized (fTreeTable) {
-        TreePath path = aEvent.getPath();
-        if (path.getPath().length == 0) { // something at the root changed
-          reload();
-          resizeAndRepaint();
-        } else {
-          TreeNode node = findTreeNode(path);
-          if (node != null) { // visible node changed
-            node.reload(); // Redo everything for now
-            resizeAndRepaintFrom(aEvent.getPath());
-          }
-        }
-      }
+    public void treeNodesRemoved(TreeModelEvent aEvent) {
+      treeNodesInserted(aEvent);
     }
 
-    public void nodeChanged(TreeTableModelEvent aEvent) {
-      repaint(aEvent.getPath());
+    public void treeStructureChanged(TreeModelEvent aEvent) {
+      treeNodesInserted(aEvent);
+    }
+
+    public void treeNodesChanged(TreeModelEvent aEvent) {
+      repaint(aEvent.getTreePath());
     }
   }
 

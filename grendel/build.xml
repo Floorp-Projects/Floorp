@@ -114,12 +114,11 @@
     <target name="clean" description="Cleans up generated class files.">
       <delete dir="dist"/>
       <delete file="grendel.jar"/>
-      <delete dir="javadoc"/>
     </target>
 
     <target name="javadoc" description="Generate JavaDoc API information">
-      <mkdir dir="javadoc"/>
-      <javadoc destdir="javadoc">
+      <mkdir dir="docs"/>
+      <javadoc destdir="docs">
         <fileset dir="." includes="**/*.java"/>
       </javadoc>
     </target>

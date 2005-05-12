@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Jamie Zawinski <jwz@netscape.com>, 26 Aug 1997.
  */
@@ -53,7 +53,10 @@ class MimeTextOperator extends MimeLeafOperator {
     buffer.setLength(0);
     decodeBytesToUnicode(b, buffer);
     TextHTMLConverter.quoteForHTML(buffer, true, true);
-    getOut().print(buffer.toString());
+    String strData = buffer.toString();
+    strData = strData.replace(" ", "&nbsp;");
+    strData = strData.replace("\n", "<br>");
+    getOut().print(strData);
   }
 
   public void pushEOF() {

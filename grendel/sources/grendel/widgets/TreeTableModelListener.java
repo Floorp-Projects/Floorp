@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 21 Aug 1997.
  */
@@ -25,11 +25,7 @@
 package grendel.widgets;
 
 import java.util.EventListener;
+import javax.swing.event.*;
 
-public interface TreeTableModelListener extends EventListener {
-  public void nodeExpanded(TreeTableModelEvent aEvent);
-  public void nodeCollapsed(TreeTableModelEvent aEvent);
-  public void nodeInserted(TreeTableModelEvent aEvent);
-  public void nodeDeleted(TreeTableModelEvent aEvent);
-  public void nodeChanged(TreeTableModelEvent aEvent);
+public interface TreeTableModelListener extends TreeExpansionListener, TreeModelListener {
 }

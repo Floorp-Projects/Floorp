@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 21 Aug 1997.
  *
@@ -29,6 +29,7 @@ package grendel.widgets;
 import java.util.Enumeration;
 
 import javax.swing.Icon;
+import javax.swing.tree.TreePath;
 
 /**
  * The <code>TreeTableDataModel</code> interface is used to mediate
