@@ -172,13 +172,10 @@ function dateToText(d) {
 
 function newDateTime(aNativeTime, aTimezone) {
     var t = new CalDateTime();
-    if (aTimezone == "UTC") {
-        t.setTimeInTimezone(aNativeTime, null);
-        t.isUtc = true;
-    } else if (aTimezone) {
-        t.setTimeInTimezone(aNativeTime, aTimezone)
-    } else {
-        t.setTimeInTimezone(aNativeTime, null);
+    t.nativeTime = aNativeTime;
+    if (aTimezone && aTimezone != "UTC") {
+        t = t.getInTimezone(aTimezone);
+    } else if (!aTimezone) {
         t.isUtc = false;
         t.timezone = null;
     }
