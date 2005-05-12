@@ -220,6 +220,15 @@ mozStorageStatementWrapper::Step(PRBool *_retval)
 }
 
 NS_IMETHODIMP
+mozStorageStatementWrapper::Execute()
+{
+    if (!mStatement)
+        return NS_ERROR_FAILURE;
+
+    return mStatement->Execute();
+}
+
+NS_IMETHODIMP
 mozStorageStatementWrapper::GetRow(mozIStorageStatementRow **aRow)
 {
     NS_ENSURE_ARG_POINTER(aRow);

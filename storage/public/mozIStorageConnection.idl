@@ -95,6 +95,14 @@ interface mozIStorageConnection : nsISupports {
    */
   void executeSimpleSQL (in AUTF8String aSQLStatement);
 
+  /**
+   * Check if the given table exists.
+   *
+   * @param aTableName   The table to check
+   * @returns TRUE if table exists, FALSE otherwise.
+   */
+  boolean tableExists (in AUTF8String aTableName);
+
   /*
    * Transactions
    */
