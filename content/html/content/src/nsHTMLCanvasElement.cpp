@@ -80,8 +80,9 @@ public:
   NS_DECL_NSIDOMHTMLCANVASELEMENT
 
   // nsICanvasElement
-  NS_IMETHOD GetCanvasImageContainer (imgIContainer **aImageContainer);
-  NS_IMETHOD GetPrimaryCanvasFrame (nsIFrame **aFrame);
+  NS_IMETHOD GetCanvasImageContainer(imgIContainer **aImageContainer);
+  NS_IMETHOD GetPrimaryCanvasFrame(nsIFrame **aFrame);
+  NS_IMETHOD UpdateImageFrame();
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -104,7 +105,7 @@ protected:
   nsresult UpdateContext();
 
   nsString mCurrentContextId;
-  nsCOMPtr<nsISupports> mCurrentContext;
+  nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
 
   nsCOMPtr<imgIContainer> mImageContainer;
   nsCOMPtr<gfxIImageFrame> mImageFrame;
@@ -146,7 +147,6 @@ nsHTMLCanvasElement::GetWidthHeight()
 {
   nsIntSize size(0,0);
   const nsAttrValue* value;
-  PRInt32 k, rv;
 
   if ((value = GetParsedAttr(nsHTMLAtoms::width)) &&
       value->Type() == nsAttrValue::eInteger)
@@ -282,13 +282,7 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
     if (NS_FAILED(rv))
       return NS_ERROR_INVALID_ARG;
 
-    nsCOMPtr<nsICanvasRenderingContextInternal> internalctx(do_QueryInterface(mCurrentContext));
-    if (!internalctx) {
-      mCurrentContext = nsnull;
-      return NS_ERROR_FAILURE;
-    }
-
-    rv = internalctx->SetCanvasElement(this);
+    rv = mCurrentContext->SetCanvasElement(this);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = UpdateImageContainer(PR_TRUE);
@@ -346,20 +340,14 @@ nsHTMLCanvasElement::UpdateImageContainer(PRBool forceCreate)
 nsresult
 nsHTMLCanvasElement::UpdateContext()
 {
-  nsresult rv;
-
-  if (mCurrentContext) {
-    nsCOMPtr<nsICanvasRenderingContextInternal> internalctx(do_QueryInterface(mCurrentContext));
-
-    rv = internalctx->SetTargetImageFrame(mImageFrame);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  if (mCurrentContext)
+    return mCurrentContext->SetTargetImageFrame(mImageFrame);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLCanvasElement::GetCanvasImageContainer (imgIContainer **aImageContainer)
+nsHTMLCanvasElement::GetCanvasImageContainer(imgIContainer **aImageContainer)
 {
   nsresult rv;
 
@@ -373,8 +361,17 @@ nsHTMLCanvasElement::GetCanvasImageContainer (imgIContainer **aImageContainer)
 }
 
 NS_IMETHODIMP
-nsHTMLCanvasElement::GetPrimaryCanvasFrame (nsIFrame **aFrame)
+nsHTMLCanvasElement::GetPrimaryCanvasFrame(nsIFrame **aFrame)
 {
   *aFrame = GetPrimaryFrame(PR_TRUE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLCanvasElement::UpdateImageFrame()
+{
+  if (mCurrentContext)
+    return mCurrentContext->UpdateImageFrame();
+
   return NS_OK;
 }

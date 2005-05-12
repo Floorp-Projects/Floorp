@@ -41,6 +41,7 @@
 #include "nsISupports.h"
 #include "nsPresContext.h"
 #include "gfxIImageFrame.h"
+#include "nsICanvasElement.h"
 
 // {0be74436-51a3-4be3-8357-ede741750080}
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
@@ -52,9 +53,14 @@ public:
 
   // This method should NOT hold a ref to aParentCanvas; it will be called
   // with nsnull when the element is going away.
-  NS_IMETHOD SetCanvasElement(nsIDOMHTMLCanvasElement* aParentCanvas) = 0;
+  NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas) = 0;
 
+  // Will be called whenever the target image frame changes
   NS_IMETHOD SetTargetImageFrame(gfxIImageFrame* aImageFrame) = 0;
+
+  // Will be called whenever the element needs to be redrawn,
+  // e.g. due to a Redraw on the frame.
+  NS_IMETHOD UpdateImageFrame() = 0;
 };
 
 #endif /* nsICanvasRenderingContextInternal_h___ */

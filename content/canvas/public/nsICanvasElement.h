@@ -60,6 +60,12 @@ public:
    * Ask the canvas Element to return the primary frame, if any
    */
   NS_IMETHOD GetPrimaryCanvasFrame (nsIFrame **aFrame) = 0;
+
+  /**
+   * Ask the canvas element to notify the rendering context to update
+   * the image frame, in preparation for rendering
+   */
+  NS_IMETHOD UpdateImageFrame () = 0;
 };
 
 #endif /* nsICanvasElement_h___ */
