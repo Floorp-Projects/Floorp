@@ -1196,6 +1196,14 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
                                                    PRUint32 aFlags)
 {
     NS_PRECONDITION(aPrincipal, "CheckLoadURIWithPrincipal must have a principal");
+    // If someone passes a flag that we don't understand, we should
+    // fail, because they may need a security check that we don't
+    // provide.
+    NS_ENSURE_FALSE(aFlags & ~(nsIScriptSecurityManager::DISALLOW_FROM_MAIL |
+                               nsIScriptSecurityManager::ALLOW_CHROME |
+                               nsIScriptSecurityManager::DISALLOW_SCRIPT |
+                               nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA),
+                    NS_ERROR_UNEXPECTED);
     NS_ENSURE_ARG_POINTER(aPrincipal);
 
     if (aPrincipal == mSystemPrincipal) {
@@ -1234,8 +1242,11 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     }
 
     //-- Some callers do not allow loading javascript: or data: URLs
-    if ((aFlags & nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA) &&
-        (targetScheme.Equals("javascript") || targetScheme.Equals("data")))
+    if (((aFlags & (nsIScriptSecurityManager::DISALLOW_SCRIPT |
+                    nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA)) &&
+         targetScheme.Equals("javascript")) ||
+        ((aFlags & nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA) &&
+         targetScheme.Equals("data")))
     {
        return NS_ERROR_DOM_BAD_URI;
     }
