@@ -627,8 +627,7 @@ int sqlite3_bind_parameter_index(sqlite3_stmt *pStmt, const char *zName){
 ** Transfer any existing parameter bindings from pOldStmt to pNewStmt.
 ** They both must have the exact same number of parameters.  They must
 ** both be created against the same database.  Neither must be
-** currently in a running state.  The bindings of pOldStmt are lost
-** after this.
+** currently in a running state.
 **/
 int sqlite3_transfer_bindings(
   sqlite3_stmt *pOldStmt,
@@ -655,8 +654,9 @@ int sqlite3_transfer_bindings(
     return SQLITE_MISUSE;
   }
   for(i=0; i < pold->nVar; i++) {
-    pnew->aVar[i] = pold->aVar[i];
-    pold->aVar[i].flags = MEM_Null;
+    int rv=sqlite3VdbeMemCopy(&(pnew->aVar[i]), &(pold->aVar[i]));
+    if(rv!=SQLITE_OK)
+      return rv;
   }
   return SQLITE_OK;
 }
