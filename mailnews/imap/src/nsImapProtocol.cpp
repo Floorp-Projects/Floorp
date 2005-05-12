@@ -5285,6 +5285,11 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
           if (m_imapMailFolderSink)
             m_imapMailFolderSink->SetAppendMsgUid(newKey, m_runningUrl);
 
+          // Courier imap server seems to have problems with recently
+          // appended messages. Noop seems to clear its confusion.
+          if (FolderIsSelected(mailboxName))
+              Noop(); 
+
           nsXPIDLCString oldMsgId;
           rv = m_runningUrl->CreateListOfMessageIdsString(getter_Copies(oldMsgId));
           if (NS_SUCCEEDED(rv) && !oldMsgId.IsEmpty())
@@ -5314,10 +5319,12 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
             // select it.
             if (!FolderIsSelected(mailboxName))
               SelectMailbox(mailboxName);
+            else
+              Noop(); // See if this makes SEARCH work on the newly appended msg.
           
             if (GetServerStateParser().LastCommandSuccessful())
             {
-              command = "SEARCH SEEN HEADER Message-ID ";
+              command = "SEARCH UNDELETED HEADER Message-ID ";
               command.Append(messageId);
             
               // Clean up result sequence before issuing the cmd.
