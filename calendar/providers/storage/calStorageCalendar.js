@@ -621,7 +621,7 @@ calStorageCalendar.prototype = {
                 sp = this.mSelectEventsWithRecurrence.params;
                 sp.cal_id = this.mCalId;
                 while (this.mSelectEventsWithRecurrence.step()) {
-                    var row = this.mSelectEventsByRange.row;
+                    var row = this.mSelectEventsWithRecurrence.row;
                     // did we already deal with this event id?
                     if (handledRecurringEvents[row.id] == true)
                         continue;
