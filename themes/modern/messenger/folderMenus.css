@@ -101,6 +101,10 @@
   list-style-image: url("chrome://messenger/skin/icons/folder-trash-open.gif");
 }
 
+.folderMenuItem[SpecialFolder="Virtual"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-search.gif");
+}
+
 /* ..... servers ..... */
 
 .folderMenuItem[IsServer="true"] {

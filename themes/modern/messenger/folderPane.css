@@ -100,6 +100,12 @@ treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash) {
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.gif");
 }
 
+/* ..... Saved Searches ..... */
+
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Virtual) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-search.gif");
+}
+
 treechildren::-moz-tree-image(folderNameCol, imapShared-true) {
   list-style-image: url("chrome://messenger/skin/icons/folder-share.gif");
 }
