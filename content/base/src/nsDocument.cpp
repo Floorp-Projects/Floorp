@@ -277,6 +277,72 @@ nsDOMStyleSheetList::StyleSheetRemoved(nsIDocument *aDocument,
   }
 }
 
+// nsOnloadBlocker implementation
+NS_IMPL_ISUPPORTS1(nsOnloadBlocker, nsIRequest)
+
+NS_IMETHODIMP
+nsOnloadBlocker::GetName(nsACString &aResult)
+{ 
+  aResult.AssignLiteral("about:document-onload-blocker");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOnloadBlocker::IsPending(PRBool *_retval)
+{
+  *_retval = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOnloadBlocker::GetStatus(nsresult *status)
+{
+  *status = NS_OK;
+  return NS_OK;
+} 
+
+NS_IMETHODIMP
+nsOnloadBlocker::Cancel(nsresult status)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsOnloadBlocker::Suspend(void)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsOnloadBlocker::Resume(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOnloadBlocker::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+  *aLoadGroup = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOnloadBlocker::SetLoadGroup(nsILoadGroup * aLoadGroup)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOnloadBlocker::GetLoadFlags(nsLoadFlags *aLoadFlags)
+{
+  *aLoadFlags = nsIRequest::LOAD_NORMAL;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOnloadBlocker::SetLoadFlags(nsLoadFlags aLoadFlags)
+{
+  return NS_OK;
+}
+
 
 class nsDOMImplementation : public nsIDOMDOMImplementation,
                             public nsIPrivateDOMImplementation
@@ -684,6 +750,9 @@ nsDocument::Init()
   // (static cast to the correct interface pointer)
   mObservers.InsertElementAt(NS_STATIC_CAST(nsIDocumentObserver*, bindingManager), 0);
 
+  mOnloadBlocker = new nsOnloadBlocker();
+  NS_ENSURE_TRUE(mOnloadBlocker, NS_ERROR_OUT_OF_MEMORY);
+  
   NS_NewCSSLoader(this, &mCSSLoader);
   NS_ENSURE_TRUE(mCSSLoader, NS_ERROR_OUT_OF_MEMORY);
   // Assume we're not HTML and not quirky, until we know otherwise
@@ -4807,4 +4876,33 @@ nsDocument::GetLayoutHistoryState() const
   }
 
   return state;
+}
+
+void
+nsDocument::BlockOnload()
+{
+  if (mOnloadBlockCount == 0) {
+    nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
+    if (loadGroup) {
+      loadGroup->AddRequest(mOnloadBlocker, nsnull);
+    }
+  }
+  ++mOnloadBlockCount;      
+}
+
+void
+nsDocument::UnblockOnload()
+{
+  if (mOnloadBlockCount == 0) {
+    return;
+  }
+
+  --mOnloadBlockCount;
+
+  if (mOnloadBlockCount == 0) {
+    nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
+    if (loadGroup) {
+      loadGroup->RemoveRequest(mOnloadBlocker, nsnull, NS_OK);
+    }
+  }    
 }
