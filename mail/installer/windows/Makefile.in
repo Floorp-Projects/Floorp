@@ -43,17 +43,56 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CONFIG_DIR=$(shell cygpath -a $(srcdir))
+include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
+
+CONFIG_DIR=$(shell cygpath -a instgen)
 OBJ_DIR=$(shell cygpath -a $(DEPTH))
 SRC_DIR=$(shell cygpath -a $(topsrcdir))
 
-ifeq (,$(INSTALLER_URL))
-INSTALLER_URL = "http://ftp.mozilla.org/pub/mozilla.org/pub/thunderbird/nightly/latest-trunk/windows-xpi"
-endif
+PP_LOCALIZED_FILES = \
+	basemail-win \
+	uninstall.it \
+	installer.cfg \
+	$(NULL)
+
+INSTALLER_FILES = \
+	config.it \
+	app.tag \
+	adt.jst \
+	mail.jst \
+	newsblog.jst \
+	offline.jst \
+	talkback.jst \
+	xpcom.jst \
+	7zip.bat \
+	$(NULL)
+
+DEFINES += -DAB_CD=$(AB_CD) -DPKG_BASENAME=$(PKG_BASENAME) -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
+
+include $(topsrcdir)/config/config.mk
+
+include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.mk
 
 installer:
-	cd $(topsrcdir)/toolkit/mozapps/installer && perl build_static.pl -config "$(CONFIG_DIR)" -srcDir "$(SRC_DIR)" -objDir "$(OBJ_DIR)" -aurl "$(INSTALLER_URL)" 
-	cd $(topsrcdir)/toolkit/mozapps/installer/windows/msi && perl make-msi.pl -config "$(CONFIG_DIR)" -srcDir "$(SRC_DIR)" -objDir "$(OBJ_DIR)" -project thunderbird
+	$(NSINSTALL) -D instgen
+	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) instgen
+	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $(call EXPAND_LOCALE_SRCDIR,mail/locales)/installer/installer.inc > instgen/installer.inc
+	$(EXIT_ON_ERROR) \
+	for i in $(PP_LOCALIZED_FILES); do \
+	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
+	  $(srcdir)/$$i > instgen/$$i; \
+	done
+	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
+	  $(srcdir)/ab-CD.jst > instgen/$(AB_CD).jst
+	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
+	  -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/install.it \
+	  $(srcdir)/install.it instgen/installer.inc > instgen/install.it
+	cd $(topsrcdir)/toolkit/mozapps/installer && \
+	  perl build_static.pl -config "$(CONFIG_DIR)" -srcDir "$(SRC_DIR)" \
+	  -objDir "$(OBJ_DIR)"
+	cd $(topsrcdir)/toolkit/mozapps/installer/windows/msi && \
+	  perl make-msi.pl -config "$(CONFIG_DIR)" -srcDir "$(SRC_DIR)" \
+	  -objDir "$(OBJ_DIR)" -project thunderbird
 
 include $(topsrcdir)/config/rules.mk
 

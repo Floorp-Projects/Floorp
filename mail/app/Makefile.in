@@ -298,10 +298,7 @@ clean clobber::
 	rm -rf $(DIST)/$(APP_NAME).app
 endif
 
-README_FILE = $(srcdir)/README.txt
-
 libs::
-	$(INSTALL) $(README_FILE) $(DIST)/bin
 	$(INSTALL) $(topsrcdir)/mail/LICENSE.txt $(DIST)/bin
 
 libs:: $(srcdir)/profile/prefs.js

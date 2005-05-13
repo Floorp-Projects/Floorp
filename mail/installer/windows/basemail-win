@@ -1,22 +1,14 @@
+#filter substitution
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Base Thunderbird Package File for Win32
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-[langenus]
-bin\chrome\en-US.jar
-bin\chrome\en-win.jar
-bin\chrome\en-US.manifest
+[@AB_CD@]
+bin\chrome\@AB_CD@.jar
+bin\chrome\@AB_CD@.manifest
 bin\chrome\mail-locales.manifest
-
-[regus]
-bin\defaults\profile\US\localstore.rdf
-bin\defaults\profile\US\mimeTypes.rdf
-
-[deflenus]
 bin\defaults\messenger\mailViews.dat
-bin\defaults\profile\localstore.rdf
-bin\defaults\profile\prefs.js
-bin\defaults\profile\mimeTypes.rdf
 
 [xpcom]
 bin\xpcom.dll
@@ -70,6 +62,10 @@ bin\README.txt
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Mail Specific Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+bin\defaults\profile\localstore.rdf
+bin\defaults\profile\prefs.js
+bin\defaults\profile\mimeTypes.rdf
+
 bin\components\addrbook.xpt
 bin\components\mime.xpt
 bin\components\mailnews.xpt

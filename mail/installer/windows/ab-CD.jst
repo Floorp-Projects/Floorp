@@ -1,3 +1,5 @@
+#filter substitution
+
 // main
 var srDest;
 var err;
@@ -7,16 +9,8 @@ logComment("initInstall");
 // end
 // end - OS type detection
 
-// ----LOCALIZATION NOTE: translate only these ------
-var prettyName = "English (US) Language Pack";
-var chromeNode = "en-US";
-// --- END CHANGABLE STUFF ---
-var regName    = "locales/mozilla/" + chromeNode;
-var chromeName = chromeNode + "-mail.jar";
-var localeName = "locale/" + chromeNode + "/";
-
 srDest = $SpaceRequired$:bin;
-err    = initInstall(prettyName, chromeNode, "$Version$");
+err    = initInstall("@AB_CD@ Langpack", "@AB_CD@", "$Version$");
 logComment("initInstall: " + err);
 
 fProgram = getFolder("Program");

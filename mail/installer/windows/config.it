@@ -182,49 +182,33 @@ Verify Existence=
 
 [Dialog Welcome]
 Show Dialog=TRUE
-;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup
-;*** LOCALIZE ME BABY ***
-MessageWelcome=Welcome to %s!
-;*** LOCALIZE ME BABY ***
-Message0=You are about to install %s $Version$.
-;*** LOCALIZE ME BABY ***
-Message1=It is strongly recommended that you exit all Windows programs before running this Setup program.
-;*** LOCALIZE ME BABY ***
-Message2=Click Cancel to quit Setup and then close any programs you have running.  Click Next to continue the Setup program.
-;*** LOCALIZE ME BABY ***
-Message3=Click Next to continue installing %s $Version$.
+Title={Welcome_Title}
+MessageWelcome={Welcome_MessageWelcome}
+Message0={Welcome_Message0}
+Message1={Welcome_Message1}
+Message2={Welcome_Message2}
+Message3={Welcome_Message3}
 
 [Dialog License]
 Show Dialog=TRUE
-;*** LOCALIZE ME BABY ***
-Title=Software License Agreement
-;*** LOCALIZE ME BABY ***
-Sub Title=Terms and conditions for using this software.
+Title={License_Title}
+Sub Title={License_SubTitle}
 License File=license.txt
-;*** LOCALIZE ME BABY ***
-Message0=Please read the following license agreement. Use the scroll bar to view the rest of this agreement.
-;*** LOCALIZE ME BABY ***
-RadioAccept=I &Accept the terms of the License Agreement
-;*** LOCALIZE ME BABY ***
-RadioDecline=I do NO&T Accept the terms of the License Agreement
+Message0={License_Message0}
+RadioAccept={License_Accept}
+RadioDecline={License_Decline}
 
 [Dialog Setup Type]
 Show Dialog=TRUE
-;*** LOCALIZE ME BABY ***
-Title=Setup Type
-;*** LOCALIZE ME BABY ***
-Sub Title=Choose setup options.
-;*** LOCALIZE ME BABY ***
-Message0=Choose the type of Setup you prefer, then click Next.
+Title={Type_Title}
+Sub Title={Type_SubTitle}
+Message0={Type_Message0}
 
 ; at least one Setup Type needs to be set, and up to 4 can be
 ; set (Setup Type0, Setup Type1, Setup Type2, Setup Type3).
 [Setup Type0]
-;*** LOCALIZE ME BABY ***
-Description Short=&Standard
-;*** LOCALIZE ME BABY ***
-Description Long=Thunderbird will be installed with the most common options.
+Description Short={Standard_Short}
+Description Long={Standard_Long}
 
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
@@ -232,19 +216,16 @@ Description Long=Thunderbird will be installed with the most common options.
 C0=Component XPCOM
 C1=Component Mail
 C2=Component Uninstaller
-C3=Component US English Profile Defaults
-C4=Component En US lang pack
-C5=Component Offline
-C6=Component RSS
+C3=Component Langpack
+C4=Component Offline
+C5=Component RSS
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C7=Component QFA
+C6=Component QFA
 
 [Setup Type1]
-;*** LOCALIZE ME BABY ***
-Description Short=&Custom
-;*** LOCALIZE ME BABY ***
-Description Long=You may choose individual options to be installed. Recommended for experienced users. 
+Description Short={Custom_Short}
+Description Long={Custom_Long}
 
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
@@ -252,32 +233,25 @@ Description Long=You may choose individual options to be installed. Recommended 
 C0=Component XPCOM
 C1=Component Mail
 C2=Component Uninstaller
-C3=Component US English Profile Defaults
-C4=Component En US lang pack
-C5=Component Offline
-C6=Component RSS
+C3=Component Langpack
+C4=Component Offline
+C5=Component RSS
 ;C7=Component ADT
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C7=Component QFA
+C6=Component QFA
 
 [Dialog Select Components]
 Show Dialog=TRUE
-;*** LOCALIZE ME BABY ***
-Title=Select Components
-;*** LOCALIZE ME BABY ***
-Sub Title=Additional components that enhance $ProductName$.
-;*** LOCALIZE ME BABY ***
-Message0=Choose additional components you want to install, then click Next.
+Title={Select_Title}
+Sub Title={Select_SubTitle}
+Message0={Select_Message0}
 
 [Dialog Select Install Path]
 Show Dialog=TRUE
-;*** LOCALIZE ME BABY ***
-Title=Install Folder
-;*** LOCALIZE ME BABY ***
-Sub Title=Where $ProductName$ will be installed.
-;*** LOCALIZE ME BABY ***
-Message0=$ProductName$ will be installed into the following folder:
+Title={Path_Title}
+Sub Title={Path_SubTitle}
+Message0={Path_Message0}
 
 [Dialog Upgrade]
 Show Dialog=FALSE
@@ -312,40 +286,31 @@ Message0=Select or clear the additional components you want to install.
 ; Note - this dialog isn't actually used yet!
 Show Dialog=TRUE
 Registry Key=SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main
-;*** LOCALIZE ME BABY ***
-Title=Set Up Shortcuts
-;*** LOCALIZE ME BABY ***
-Sub Title=Creates Program Icons
-;*** LOCALIZE ME BABY ***
-Message0=Create icons for $ProductShortName$:
-
+Title={Integration_Title}
+Sub Title={Integration_SubTitle}
+Message0={Integration_Message0}
 
 ; Only a maximum of 3 "Windows Integration-Item"s are allowded.  Each Item
 ; shows up as a checkbox in the Windows Integration dialog.
 [Windows Integration-Item0]
 CheckBoxState=FALSE
-;*** LOCALIZE ME BABY ***
-Description=On my Desktop
+Description={Integration_Desktop}
 Archive=
 
 [Windows Integration-Item1]
 CheckBoxState=TRUE 
-;*** LOCALIZE ME BABY ***
-Description=In my Start Menu Programs folder
+Description={Integration_StartMenu}
 Archive=
 
 [Windows Integration-Item2]
 CheckBoxState=TRUE
-;*** LOCALIZE ME BABY ***
-Description=In my Quick Launch bar
+Description={Integration_QuickLaunch}
 Archive=
 
 [Dialog Program Folder]
 Show Dialog=TRUE
-;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Select Program Folder
-;*** LOCALIZE ME BABY ***
-Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folders list.  Click Next to continue.
+Title={SelectFolder_Title}
+Message0={SelectFolder_Message0}
 
 [Dialog Additional Options]
 Show Dialog=TRUE
@@ -364,10 +329,8 @@ Recapture Homepage=FALSE
 
 [Dialog Advanced Settings]
 Show Dialog=TRUE
-;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Advanced Settings
-;*** LOCALIZE ME BABY ***
-Message0=If your Internet connection requires a proxy server, enter your server name and port information.  If your Internet connection doesn't require a proxy server, leave the fields blank.
+Title={Advanced_Title}
+Message0={Advanced_Message0}
 Proxy Server=
 Proxy Port=
 Proxy User=
@@ -406,55 +369,35 @@ Turbo Mode Enabled=TRUE
 
 [Dialog Start Install]
 Show Dialog=TRUE
-;*** LOCALIZE ME BABY ***
-Title=Summary
-;*** LOCALIZE ME BABY ***
-Sub Title=Ready to start installing $ProductName$.
-;*** LOCALIZE ME BABY ***
-Message Install=Setup will now install the following components:
-;*** LOCALIZE ME BABY ***
-Message Download=Setup will now download and install the following components:
-;*** LOCALIZE ME BABY ***
-Message0=Click Next to continue.
+Title={Install_Title}
+Sub Title={Install_SubTitle}
+Message Install={Install_MessageInstall}
+Message Download={Install_MessageDownload}
+Message0={Install_Message0}
 
 [Dialog Downloading]
 Show Dialog=TRUE
-;*** LOCALIZE ME BABY ***
-Title=Downloading
-;*** LOCALIZE ME BABY ***
-Sub Title=Downloading required components...
-;*** LOCALIZE ME BABY ***
-Blurb=Setup is downloading the files required to install $ProductName$.
-;*** LOCALIZE ME BABY ***
-File Name=Currently Downloading:
-;*** LOCALIZE ME BABY ***
-Time Remaining=Time Remaining:
+Title={Downloading_Title}
+Sub Title={Downloading_SubTitle}
+Blurb={Downloading_Blurb}
+File Name={Downloading_FileName}
+Time Remaining={Downloading_Time}
 
 [Dialog Installing]
 Show Dialog=TRUE
-;*** LOCALIZE ME BABY ***
-Title=Installing
-;*** LOCALIZE ME BABY ***
-Sub Title=Installing $ProductName$...
-;*** LOCALIZE ME BABY ***
-Blurb=Setup is installing application files. 
-;*** LOCALIZE ME BABY ***
-Status File=Preparing File:
-;*** LOCALIZE ME BABY ***
-Status Component=Currently Installing:
+Title={Installing_Title}
+Sub Title={Installing_SubTitle}
+Blurb={Installing_Blurb}
+Status File={Installing_Status}
+Status Component={Installing_Component}
 
 [Dialog Install Successful]
 Show Dialog=TRUE
-;*** LOCALIZE ME BABY ***
-Title=Install Complete
-;*** LOCALIZE ME BABY ***
-MessageHeader=Install Complete
-;*** LOCALIZE ME BABY ***
-Message0=%s $Version$ was successfully installed.
-;*** LOCALIZE ME BABY ***
-Message1=Click Finish to complete Setup. 
-;*** LOCALIZE ME BABY ***
-Launch App=Launch %s $Version$ now.
+Title={Success_Title}
+MessageHeader={Success_Header}
+Message0={Success_Message0}
+Message1={Success_Message1}
+Launch App={Success_Launch}
 Launch App Checked=TRUE
 
 [Dialog Download]
@@ -482,12 +425,9 @@ Class Name=ThunderbirdMessageWindow
 Window Name=
 Process Name=$MainExeFile$
 Pretty Name=$ProductNameInternal$
-;*** LOCALIZE ME BABY ***
-Message=Download of $ProductName$ was successful. $ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
-;*** LOCALIZE ME BABY ***
-Message Full Installer=$ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
-;*** LOCALIZE ME BABY ***
-Message wait=Shutting down $ProductNameInternal$.  Please wait...
+Message={Check_Message}
+Message Full Installer={Check_FullMessage}
+Message wait={Check_Wait}
 
 ; This key indicates whether or not to close all the windows associated with
 ; the process id of this app instance window found.
@@ -595,9 +535,8 @@ Extra Cmd0 Parameter=-kill
 ;for it's xpinstall engine from the TEMP dir.  The files that
 ;this component has are already in Component GRE.
 [Component XPCOM]
-Description Short=Cross Platform COM
-;*** LOCALIZE ME BABY ***
-Description Long=Cross Platform COM
+Description Short={Component_XPCOM}
+Description Long={Component_XPCOM}
 Archive=xpcom.xpi
 $InstallSize$:xpcom
 $InstallSizeSystem$
@@ -606,9 +545,8 @@ Attributes=SELECTED|INVISIBLE
 FileCount=$FileCount$
 
 [Component Mail]
-Description Short=$ProductName$ Mail
-;*** LOCALIZE ME BABY ***
-Description Long=The $ProductName$ Mail
+Description Short={Component_Mail}
+Description Long={Component_Mail}
 Archive=mail.xpi
 $InstallSize$:mail
 $InstallSizeSystem$
@@ -618,9 +556,8 @@ Force Upgrade File0=[SETUP PATH]\$MainExeFile$
 FileCount=$FileCount$
 
 [Component Offline]
-Description Short=Offline Support
-;*** LOCALIZE ME BABY ***
-Description Long=Adds Offline support to $ProductName$ Mail. 
+Description Short={Component_Offline}
+Description Long={Component_Offline_Long}
 Archive=offline.xpi
 $InstallSize$:offline
 $InstallSizeArchive$:offline.xpi
@@ -629,9 +566,8 @@ Force Upgrade File0=[SETUP PATH]\chrome\offline.jar
 FileCount=$FileCount$
 
 [Component RSS]
-Description Short=RSS Support
-;*** LOCALIZE ME BABY ***
-Description Long=Adds RSS support to $ProductName$ Mail. 
+Description Short={Component_RSS}
+Description Long={Component_RSS_Long}
 Archive=newsblog.xpi
 $InstallSize$:newsblog
 $InstallSizeArchive$:newsblog.xpi
@@ -652,8 +588,7 @@ FileCount=$FileCount$
 
 [Component Uninstaller]
 Description Short=$CompanyName$ Uninstaller
-;*** LOCALIZE ME BABY ***
-Description Long=Uninstaller for $ProductName$
+Description Long=$CompanyName$ Uninstaller
 Archive=$UninstallFileZip$
 $InstallSize$:$UninstallFileZip$
 $InstallSizeSystem$
@@ -667,35 +602,20 @@ FileCount=$FileCount$
 [Component Uninstaller-Destination Path0]
 Path=[WINDIR]
 
-[Component US English Profile Defaults]
-Description Short=US English Defaults
-;*** LOCALIZE ME BABY ***
-Description Long=US English Default Profile Data
-Archive=deflenus.xpi
-$InstallSize$:deflenus
-$InstallSizeSystem$
-$InstallSizeArchive$:deflenus.xpi
+[Component Langpack]
+Description Short={AB_CD} {LANGPACK_TITLE}
+Description Long={AB_CD} {LANGPACK_TITLE}
+Archive={AB_CD}.xpi
+Install Size=512
+Install Size System=1
+Install Size Archive=512
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\defaults\profile\bookmarks.html
-FileCount=$FileCount$
-
-[Component En US lang pack]
-;*** LOCALIZE ME BABY ***
-Description Short=English (US) Language Pack
-;*** LOCALIZE ME BABY ***
-Description Long=English (US) Language Pack
-Archive=langenus.xpi
-$InstallSize$:langenus
-$InstallSizeSystem$
-$InstallSizeArchive$:langenus.xpi
-Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\chrome\en-US.jar
+Force Upgrade File0=[SETUP PATH]\chrome\{AB_CD}.jar
 FileCount=$FileCount$
 
 [Component QFA]
-Description Short=Quality Feedback Agent
-;*** LOCALIZE ME BABY ***
-Description Long=for reporting $ProductName$ crash information
+Description Short={Component_QFA}
+Description Long={Component_QFA_Long}
 Archive=talkback.xpi
 $InstallSize$:talkback
 $InstallSizeSystem$
@@ -882,7 +802,6 @@ Condition=RecaptureHPChecked
 
 [Windows Registry0]
 Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$
 Name=
 Name Value=
@@ -896,7 +815,6 @@ Timing=pre smartupdate
 
 [Windows Registry1]
 Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$
 Name=
 Name Value=
@@ -910,7 +828,6 @@ Timing=pre smartupdate
 
 [Windows Registry2]
 Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$\$UserAgent$
 Name=
 Name Value=
@@ -924,7 +841,6 @@ Timing=pre smartupdate
 
 [Windows Registry3]
 Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Main
 Name=Program Folder Path
 Name Value=[Default Folder]
@@ -938,7 +854,6 @@ Timing=pre smartupdate
 
 [Windows Registry4]
 Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
 Name=Description
 Name Value=$ProductName$ ($UserAgentShort$)
@@ -952,7 +867,6 @@ Timing=pre smartupdate
 
 [Windows Registry5]
 Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
 Name=Uninstall Log Folder
 Name Value=[SETUP PATH]\uninstall
@@ -966,7 +880,6 @@ Timing=pre smartupdate
 
 [Windows Registry6]
 Root Key=HKEY_CURRENT_USER
-;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$
 Name=
 Name Value=
@@ -980,7 +893,6 @@ Timing=pre smartupdate
 
 [Windows Registry7]
 Root Key=HKEY_CURRENT_USER
-;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$
 Name=
 Name Value=
@@ -994,7 +906,6 @@ Timing=pre smartupdate
 
 [Windows Registry8]
 Root Key=HKEY_CURRENT_USER
-;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$\$UserAgent$
 Name=
 Name Value=
@@ -1008,7 +919,6 @@ Timing=pre smartupdate
 
 [Windows Registry9]
 Root Key=HKEY_CURRENT_USER
-;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Main
 Name=Program Folder Path
 Name Value=[Default Folder]
@@ -1022,7 +932,6 @@ Timing=pre smartupdate
 
 [Windows Registry10]
 Root Key=HKEY_CURRENT_USER
-;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
 Name=Description
 Name Value=$ProductName$ ($UserAgentShort$)
@@ -1036,7 +945,6 @@ Timing=pre smartupdate
 
 [Windows Registry11]
 Root Key=HKEY_CURRENT_USER
-;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
 Name=Uninstall Log Folder
 Name Value=[SETUP PATH]\uninstall
@@ -1065,7 +973,6 @@ Timing=post smartupdate
 Root Key=HKEY_LOCAL_MACHINE
 Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
 Name=UninstallString
-;*** LOCALIZE ME BABY ***
 Name Value=[WINDIR]\$UninstallFile$ /ua "$UserAgent$"
 Type=REG_SZ
 Decrypt Key=FALSE
@@ -1170,7 +1077,6 @@ Timing=post smartupdate
 Root Key=HKEY_LOCAL_MACHINE
 Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
 Name=URLInfoAbout
-;*** LOCALIZE ME BABY ***
 Name Value=http://www.mozilla.org/
 Type=REG_SZ
 Decrypt Key=FALSE
@@ -1184,7 +1090,6 @@ Timing=post smartupdate
 Root Key=HKEY_LOCAL_MACHINE
 Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
 Name=URLUpdateInfo
-;*** LOCALIZE ME BABY ***
 Name Value=http://www.mozilla.org/products/thunderbird/
 Type=REG_SZ
 Decrypt Key=FALSE
