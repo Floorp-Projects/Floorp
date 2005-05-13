@@ -510,7 +510,8 @@ NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
 nsSVGGlyphFrame::GetCoveredRegion()
 {
   nsISVGRendererRegion *region = nsnull;
-  mGeometry->GetCoveredRegion(&region);
+  if (mGeometry)
+    mGeometry->GetCoveredRegion(&region);
   return region;
 }
 

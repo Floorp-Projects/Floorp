@@ -310,6 +310,9 @@ NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
 nsSVGPathGeometryFrame::GetCoveredRegion()
 {
   nsISVGRendererRegion *region = nsnull;
+  if (!GetGeometry())
+    return region;
+
   GetGeometry()->GetCoveredRegion(&region);
 
   nsISVGMarkable *markable;
