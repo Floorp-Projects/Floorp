@@ -832,21 +832,24 @@ var gExtensionsViewController = {
     cmd_movetop: function (aSelectedItem)
     {
       var movingID = aSelectedItem.id;
-      gExtensionManager.moveTop(getIDFromResourceURI(movingID));
+      var moveTopID = gExtensionsView.children[0].id;
+      gExtensionManager.moveToIndexOf(movingID, moveTopID);
       gExtensionsView.selected = document.getElementById(movingID);
     },
     
     cmd_moveup: function (aSelectedItem)
     {
       var movingID = aSelectedItem.id;
-      gExtensionManager.moveUp(getIDFromResourceURI(movingID));
+      var moveAboveID = aSelectedItem.previousSibling.id;
+      gExtensionManager.moveToIndexOf(movingID, moveAboveID);
       gExtensionsView.selected = document.getElementById(movingID);
     },
     
     cmd_movedn: function (aSelectedItem)
     {
       var movingID = aSelectedItem.id;
-      gExtensionManager.moveDown(getIDFromResourceURI(movingID));
+      var moveBelowID = aSelectedItem.nextSibling.id;
+      gExtensionManager.moveToIndexOf(movingID, moveBelowID);
       gExtensionsView.selected = document.getElementById(movingID);
     },
     

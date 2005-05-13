@@ -181,7 +181,7 @@ interface nsIExtensionDownloadListener : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface, 
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(285adb6e-f2e6-4e19-885d-1fbdad4fb400)]
+[scriptable, uuid(24b38775-3ae5-47b1-81e9-915bb0e5a4fb)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -344,26 +344,14 @@ interface nsIExtensionManager : nsISupports
    */
   void removeDownloadListenerAt(in long index);
 
-  /** 
-   * Move an item up a notch in its container
-   * @param   id
-   *          The GUID of the item to move
-   */
-  void moveUp(in AString id);
-
   /**
-   * Move an item down a notch in its container
-   * @param   id
-   *          The GUID of the item to move
+   * Move an Item to the index of another item in its container.
+   * @param   movingID
+   *          The ID of an item to be moved.
+   * @param   destinationID
+   *          The ID of an item to move an item to.
    */
-  void moveDown(in AString id);
-
-  /**
-   * Move an item to the start of its container.
-   * @param   id
-   *          The GUID of the item to move
-   */
-  void moveTop(in AString id);
+  void moveToIndexOf(in AString movingID, in AString destinationID);
 };
 
 /**

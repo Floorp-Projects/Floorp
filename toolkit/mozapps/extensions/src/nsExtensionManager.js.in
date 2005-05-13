@@ -3702,30 +3702,14 @@ ExtensionManager.prototype = {
   },
   
   /**
-   * Move the Item with the GUID specified to the top of the list.
-   * @param   id
-   *          The GUID of the item to be moved.
+   * Move an Item to the index of another item in its container.
+   * @param   movingID
+   *          The ID of the item to be moved.
+   * @param   destinationID
+   *          The ID of an item to move another item to.
    */
-  moveTop: function(id) {
-    this.datasource.moveTop(id);
-  },
-  
-  /**
-   * Move the Item with the GUID specified up in the list.
-   * @param   id
-   *          The GUID of the item to be moved.
-   */
-  moveUp: function(id) {
-    this.datasource.moveUp(id);
-  },
-  
-  /**
-   * Move the Item with the GUID specified down in the list.
-   * @param   id
-   *          The GUID of the item to be moved.
-   */
-  moveDown: function(id) {
-    this.datasource.moveDown(id);
+  moveToIndexOf: function(movingID, destinationID) {
+    this.datasource.moveToIndexOf(movingID, destinationID);
   },
 
   /////////////////////////////////////////////////////////////////////////////    
@@ -5108,57 +5092,26 @@ ExtensionsDataSource.prototype = {
   },
   
   /**
-   * Move an item to the start of its container.
-   * @param   id
-   *          The GUID of the item to move
+   * Move an Item to the index of another item in its container.
+   * @param   movingID
+   *          The ID of the item to be moved.
+   * @param   destinationID
+   *          The ID of an item to move another item to.
    */
-  moveTop: function(id) {
-    var extensions = gRDF.GetResource(RDFURI_ITEM_ROOT);
-    var item = getResourceForID(id);
-    var ctr = getContainer(this._inner, extensions);
-    var index = ctr.IndexOf(item);
-    if (index > 1) {
-      ctr.RemoveElement(item, false);
-      ctr.InsertElementAt(item, 1, true);
-    }
-    this.Flush();
-  },
-  
-  /**
-   * Move an item up a notch in its container
-   * @param   id
-   *          The GUID of the item to move
-   */
-  moveUp: function(id) {
+  moveToIndexOf: function(movingID, destinationID) {
     var extensions = gRDF.GetResource(RDFURI_ITEM_ROOT);
     var ctr = getContainer(this._inner, extensions);
-    var item = getResourceForID(id);
-    var index = ctr.IndexOf(item);
-    if (index > 1) {
-      ctr.RemoveElement(item, false);
-      ctr.InsertElementAt(item, index - 1, true);
-    }
+    var item = gRDF.GetResource(movingID);
+    var index = ctr.IndexOf(gRDF.GetResource(destinationID));
+    if (index == -1)
+      index = 1; // move to the beginning if destinationID is not found
+    this._inner.beginUpdateBatch();
+    ctr.RemoveElement(item, true);
+    ctr.InsertElementAt(item, index, true);
+    this._inner.endUpdateBatch();
     this.Flush();
   },
-  
-  /**
-   * Move an item down a notch in its container
-   * @param   id
-   *          The GUID of the item to move
-   */
-  moveDown: function(id) {
-    var extensions = gRDF.GetResource(RDFURI_ITEM_ROOT);
-    var ctr = getContainer(this._inner, extensions);
-    var item = getResourceForID(id);
-    var index = ctr.IndexOf(item);
-    var count = ctr.GetCount();
-    if (index < count) {
-      ctr.RemoveElement(item, true);
-      ctr.InsertElementAt(item, index + 1, true);
-    }
-    this.Flush();
-  },
-  
+
   /**
    * Determines if an Item is an active download
    * @param   id
