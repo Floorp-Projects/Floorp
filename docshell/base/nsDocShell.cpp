@@ -4722,6 +4722,29 @@ nsDocShell::CreateAboutBlankContentViewer()
 
   mCreatingDocument = PR_TRUE;
 
+  if (mContentViewer) {
+    // We've got a content viewer already. Make sure the user
+    // permits us to discard the current document and replace it
+    // with about:blank. And also ensure we fire the unload events
+    // in the current document.
+
+    PRBool okToUnload;
+    rv = mContentViewer->PermitUnload(&okToUnload);
+
+    if (NS_SUCCEEDED(rv) && !okToUnload) {
+      // The user chose not to unload the page, interrupt the load.
+      return NS_ERROR_FAILURE;
+    }
+
+    // Notify the current document that it is about to be unloaded!!
+    //
+    // It is important to fire the unload() notification *before* any state
+    // is changed within the DocShell - otherwise, javascript will get the
+    // wrong information :-(
+    //
+    (void) FireUnloadNotification();
+  }
+
   // one helper factory, please
   nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
   if (!catMan)
@@ -7150,6 +7173,26 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
     NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)),
                       NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(aEntry->GetContentType(contentType), NS_ERROR_FAILURE);
+
+    PRBool isJavaScript, isViewSource, isData;
+    if ((NS_SUCCEEDED(uri->SchemeIs("javascript", &isJavaScript)) &&
+         isJavaScript) ||
+        (NS_SUCCEEDED(uri->SchemeIs("view-source", &isViewSource)) &&
+         isViewSource) ||
+        (NS_SUCCEEDED(uri->SchemeIs("data", &isData)) && isData)) {
+        // We're loading a javascript: or data: URL from session
+        // history. Replace the current document with about:blank to
+        // prevent anything from the current document from leaking
+        // into any JavaScript code in the URL.
+        rv = CreateAboutBlankContentViewer();
+
+        if (NS_FAILED(rv)) {
+            // The creation of the intermittent about:blank content
+            // viewer failed for some reason (potentially because the
+            // user prevented it). Interrupt the history load.
+            return NS_OK;
+        }
+    }
 
     /* If there is a valid postdata *and* the user pressed
      * reload or shift-reload, take user's permission before we  
