@@ -2583,7 +2583,7 @@ else
   cat > conftest.c <<EOF
         int foo __attribute__ ((visibility ("hidden"))) = 1;
 EOF
-        ac_cv_visibility_attribute=no
+        ac_cv_visibility_hidden=no
         if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
             if grep '\.hidden.*foo' conftest.s >/dev/null; then
                 ac_cv_visibility_hidden=yes
