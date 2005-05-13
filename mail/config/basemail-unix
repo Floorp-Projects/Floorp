@@ -61,6 +61,7 @@ chrome/en-unix.jar
 defaults/pref/*
 greprefs/*
 defaults/messenger/mailViews.dat
+defaults/messenger/SpamAssassin.sfd
 defaults/profile/localstore.rdf
 defaults/profile/mimeTypes.rdf
 defaults/profile/US/localstore.rdf

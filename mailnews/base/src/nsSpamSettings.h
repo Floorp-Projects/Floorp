@@ -73,6 +73,7 @@ private:
   PRBool mUseWhiteList;
   PRBool mMoveOnSpam;
   PRBool mMarkAsReadOnSpam;
+  PRBool mUseServerFilter;
   
   nsCString mActionTargetAccount;
   nsCString mActionTargetFolder;

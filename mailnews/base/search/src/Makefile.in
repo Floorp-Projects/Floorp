@@ -47,6 +47,7 @@ XPIDL_MODULE	= msgsearch
 LIBRARY_NAME	= msgsearch_s
 META_COMPONENT = mail
 MOZILLA_INTERNAL_API = 1
+EXPORT_DIR	= $(DIST)/bin/defaults/messenger
 
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
@@ -65,8 +66,8 @@ REQUIRES	= xpcom \
 		  msgnews \
 		  txmgr \
 		  import \
-                  addrbook \
-      docshell \
+              addrbook \
+      	  docshell \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -86,13 +87,24 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= nsMsgFilterService.h \
-			nsMsgSearchSession.h \
-				nsMsgFilterDataSource.h \
-				nsMsgFilterDelegateFactory.h \
-				$(NULL)
+		 	  nsMsgSearchSession.h \
+			  nsMsgFilterDataSource.h \
+			  nsMsgFilterDelegateFactory.h \
+			  $(NULL)
+
+EXPORT_RESOURCE_FILES	= \
+				  SpamAssassin.sfd \
+			        $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
+GARBAGE += $(addprefix $(EXPORT_DIR)/, $(EXPORT_RESOURCE_FILES)) 
+
+libs:: $(EXPORT_RESOURCE_FILES)
+	 $(INSTALL) $^ $(EXPORT_DIR)
+
+install:: $(EXPORT_RESOURCE_FILES)
+	    $(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/messenger

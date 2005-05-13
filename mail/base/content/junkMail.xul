@@ -105,27 +105,44 @@
     <tabpanels id="junkMailTabsPanels" flex="1">
 
       <!-- JunkMail Tab -->
-      <vbox index="name" flex="1">        
-        <checkbox id="useWhiteList" oncommand="conditionallyEnableUI('useWhiteList')" accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>    
-        <hbox>
-          <spacer width="20px"/>
-          <menulist id="whiteListAbURI">
-            <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" 
-                       datasources="rdf:addressdirectory"
-                       sortActive="true"
-                       sortDirection="ascending"
-                       sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
-              <template>
-                <rule nc:IsWriteable="false"/>
-                <rule nc:IsMailList="false">
-                  <menuitem uri="..."
-                            label="rdf:http://home.netscape.com/NC-rdf#DirName"
-                            value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
-                </rule>
-              </template>
-            </menupopup>
-          </menulist>
-        </hbox> 
+      <vbox index="name" flex="1">          
+        <grid>
+          <columns>
+            <column flex ="1"/>
+            <column/>
+          </columns>
+          
+          <rows>
+            <row>
+              <checkbox id="useWhiteList" oncommand="conditionallyEnableUI('useWhiteList')" accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>
+              <menulist id="whiteListAbURI">
+                <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" 
+                           datasources="rdf:addressdirectory"
+                           sortActive="true"
+                           sortDirection="ascending"
+                           sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
+                  <template>
+                    <rule nc:IsWriteable="false"/>
+                    <rule nc:IsMailList="false">
+                      <menuitem uri="..."
+                                label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                                value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+                    </rule>
+                  </template>
+                </menupopup>
+              </menulist>
+            </row>
+
+            <row>
+              <checkbox id="useServerFilter" oncommand="conditionallyEnableUI('useServerFilter');" label="&ispHeaders.label;" 
+                        accesskey="&ispHeaders.accesskey;"/>
+              <menulist id="useServerFilterList">
+                <menupopup id="useServerFilter-menupopup">
+                </menupopup>
+              </menulist>
+            </row>
+          </rows>
+        </grid>
         
         <separator class="thin"/>   
                     

@@ -1896,6 +1896,15 @@ nsMsgIncomingServer::ConfigureTemporaryServerSpamFilters(nsIMsgFilterList *filte
   nsCOMPtr<nsISpamSettings> spamSettings;
   nsresult rv = GetSpamSettings(getter_AddRefs(spamSettings));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool useServerFilter;
+  rv = spamSettings->GetUseServerFilter(&useServerFilter);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // if we aren't configured to use server filters, then return early.
+  if (!useServerFilter)
+    return NS_OK;
+  
   // For performance reasons, we'll handle clearing of filters if the user turns
   // off the server-side filters from the junk mail controls, in the junk mail controls.
   nsCAutoString serverFilterName;
@@ -2238,6 +2247,12 @@ nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
   rv = SetIntValue("purgeSpamInterval", purgeSpamInterval);
   NS_ENSURE_SUCCESS(rv,rv);
 
+  PRBool useServerFilter;
+  rv = mSpamSettings->GetUseServerFilter(&useServerFilter);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetBoolValue("useServerFilter", useServerFilter);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCAutoString serverFilterName;
   mSpamSettings->GetServerFilterName(serverFilterName);
   SetCharValue("serverFilterName", serverFilterName.get());
@@ -2340,6 +2355,12 @@ nsMsgIncomingServer::GetSpamSettings(nsISpamSettings **aSpamSettings)
     rv = GetIntValue("purgeSpamInterval", &purgeSpamInterval);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = mSpamSettings->SetPurgeInterval(purgeSpamInterval);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    PRBool useServerFilter;
+    rv = GetBoolValue("useServerFilter", &useServerFilter);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mSpamSettings->SetUseServerFilter(useServerFilter);
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsXPIDLCString serverFilterName;

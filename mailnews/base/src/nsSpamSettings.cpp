@@ -68,6 +68,7 @@ nsSpamSettings::nsSpamSettings()
   mUseWhiteList = PR_FALSE;
   mLoggingEnabled = PR_FALSE;
   mManualMark = PR_FALSE;
+  mUseServerFilter = PR_FALSE;
   mManualMarkMode = nsISpamSettings::MANUAL_MARK_MODE_MOVE;
 }
 
@@ -127,6 +128,7 @@ NS_IMPL_GETSET(nsSpamSettings, MoveOnSpam, PRBool, mMoveOnSpam)
 NS_IMPL_GETSET(nsSpamSettings, MarkAsReadOnSpam, PRBool, mMarkAsReadOnSpam)
 NS_IMPL_GETSET(nsSpamSettings, Purge, PRBool, mPurge)
 NS_IMPL_GETSET(nsSpamSettings, UseWhiteList, PRBool, mUseWhiteList)
+NS_IMPL_GETSET(nsSpamSettings, UseServerFilter, PRBool, mUseServerFilter)
 NS_IMPL_GETSET(nsSpamSettings, ManualMark, PRBool, mManualMark)
 
 NS_IMETHODIMP nsSpamSettings::GetWhiteListAbURI(char * *aWhiteListAbURI)
@@ -355,6 +357,7 @@ NS_IMETHODIMP nsSpamSettings::Clone(nsISpamSettings *aSpamSettings)
   (void)aSpamSettings->GetManualMark(&mManualMark); 
   (void)aSpamSettings->GetManualMarkMode(&mManualMarkMode); 
   (void)aSpamSettings->GetPurge(&mPurge); 
+  (void)aSpamSettings->GetUseServerFilter(&mUseServerFilter);
 
   rv = aSpamSettings->GetPurgeInterval(&mPurgeInterval); 
   NS_ENSURE_SUCCESS(rv,rv);

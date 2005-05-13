@@ -37,7 +37,8 @@
 <!ENTITY resetTrainingData.label "Reset Training Data">
 <!ENTITY resetTrainingData.accesskey "R">
 
-<!ENTITY whitelist.label "Do not mark messages as junk mail if the sender is in my address book:">
+<!ENTITY whitelist.label "Do not mark messages as junk if the sender is in: ">
 <!ENTITY whitelist.accesskey "D">
 
-
+<!ENTITY ispHeaders.label "Trust junk mail headers set by: ">
+<!ENTITY ispHeaders.accesskey "T">

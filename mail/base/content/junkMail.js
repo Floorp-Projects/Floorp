@@ -40,6 +40,10 @@ var gSpamSettings = {};
 var gCurrentServer;
 var gMessengerBundle;
 
+const KEY_APPDIR = "XCurProcD";
+const KEY_PROFILEDIR = "PrefD";
+const kDefaultFilterServerName = "SpamAssasin"; // used only to force an initial default value in the combo box (if this entry exists)
+
 // pref service is global
 var gPrefService = null;
 
@@ -47,6 +51,8 @@ const kJunkOnLocalFolderURI = "mailbox://nobody@Local%20Folders/Junk";
 
 function onJunkMailLoad()
 {
+  buildServerFilterMenuList(); 
+
   gMessengerBundle = document.getElementById("bundle_messenger");
   if (window.arguments && window.arguments[0]) {
     setupForAccountFromFolder(window.arguments[0].folder ? window.arguments[0].folder.URI : null);
@@ -151,11 +157,73 @@ function setupForAccountFromFolder(aURI)
   menuitems = abList.getElementsByAttribute("id", obj.settings.whiteListAbURI);
   abList.selectedItem = menuitems[0];
 
+  // set up trusted IP headers
+  document.getElementById("useServerFilter").checked = obj.settings.useServerFilter; // if we have a server filter name...
+  var serverFilterList = document.getElementById("useServerFilterList");
+  var defaultServerItem = serverFilterList.getElementsByAttribute("value", obj.settings.serverFilterName)[0] 
+                         || serverFilterList.getElementsByAttribute("value", kDefaultFilterServerName)[0];
+  if (defaultServerItem)
+    serverFilterList.selectedItem = defaultServerItem;
+  else
+   serverFilterList.selectedIndex = 0;
+
   // set up the manual mark UI
   document.getElementById("manualMark").checked = obj.settings.manualMark;
   document.getElementById("manualMarkMode").selectedItem = document.getElementById("manualMarkMode" + obj.settings.manualMarkMode);
 
   conditionallyEnableUI(null);
+}
+
+function buildServerFilterMenuList()
+{
+  // First, scan the profile directory for any .sfd files we may have there. 
+  var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
+                              .getService(Components.interfaces.nsIProperties);
+
+  var profileDir = fileLocator.get(KEY_PROFILEDIR, Components.interfaces.nsIFile);
+  buildServerFilterListFromDir(profileDir);
+
+  // Then, fall back to defaults\messenger and list the default sfd files we shipped with
+  var appDir = fileLocator.get(KEY_APPDIR, Components.interfaces.nsIFile);
+  appDir.append('defaults');
+  appDir.append('messenger');
+
+  buildServerFilterListFromDir(appDir);
+}
+
+// helper function called by buildServerFilterMenuList. Enumerates over the passed in
+// directory looking for .sfd files. For each entry found, it gets appended to the menu list
+function buildServerFilterListFromDir(aDir)
+{
+  var ispHeaderPopup = document.getElementById('useServerFilter-menupopup');
+
+  // now iterate over each file in the directory looking for .sfd files
+  var entries = aDir.directoryEntries.QueryInterface(Components.interfaces.nsIDirectoryEnumerator);
+
+  while (entries.hasMoreElements())
+  {
+    var entry = entries.nextFile;
+    if (entry.isFile())
+    { 
+      var fileName = entry.leafName;
+      
+      // we only care about files that end in .sfd 
+      if (fileName.length > 4 && (fileName.lastIndexOf('.sfd') == fileName.length - 4))
+      { 
+        fileName = fileName.substring(0, fileName.length - 4);
+
+        // if we've already added an item with this name, then don't add it again.
+        if (ispHeaderPopup.getElementsByAttribute("value", fileName)[0])
+          continue;
+
+        // strip off the extension
+        var menuitem = document.createElement('menuitem');
+        menuitem.setAttribute('label', fileName);
+        menuitem.setAttribute('value', fileName);
+        ispHeaderPopup.appendChild(menuitem);
+      }
+    }
+  }
 }
 
 function junkLog()
@@ -210,6 +278,8 @@ function storeSettings(aSettings, aLoggingEnabled)
 
   aSettings.manualMark = document.getElementById("manualMark").checked;
   aSettings.manualMarkMode = document.getElementById("manualMarkMode").value;
+  aSettings.useServerFilter = document.getElementById("useServerFilter").checked;
+  aSettings.serverFilterName = document.getElementById("useServerFilterList").value;
 }
 
 function conditionallyEnableUI(id)
@@ -261,6 +331,11 @@ function conditionallyEnableUI(id)
   if (id == "purge") {
     enabled = document.getElementById("purge").checked;
     document.getElementById("purgeInterval").disabled = !enabled;
+  }
+
+  if (!id || id == "useServerFilter") {
+    enabled = document.getElementById("useServerFilter").checked;
+    document.getElementById("useServerFilterList").disabled = !enabled;
   }
 
   if (!id || id == "useWhiteList") {

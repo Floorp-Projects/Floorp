@@ -45,7 +45,7 @@ interface nsIOutputStream;
 interface nsIMsgIncomingServer;
 interface nsIMsgDBHdr;
 
-[scriptable, uuid(24ca5ee5-4b0b-4d7b-b53c-13fa2279ccf0)]
+[scriptable, uuid(3D6A6BCF-B374-4c97-B8C7-CDBBFC5E447B)]
 interface nsISpamSettings: nsISupports {
   attribute nsIMsgIncomingServer server;
   
@@ -93,6 +93,7 @@ interface nsISpamSettings: nsISupports {
   /**
    * integrate with server-side spam detection programs
    */
+  attribute boolean useServerFilter;
   attribute ACString serverFilterName;
   const long TRUST_POSITIVES = 1;
   const long TRUST_NEGATIVES = 2;
