@@ -472,12 +472,7 @@ function onFindBarKeyPress(evt)
     var findString = document.getElementById("find-field");
     if (!findString.value)
       return;
-      
-    if (evt.ctrlKey) {
-      document.getElementById("highlight").click();
-      return;
-    }
-    
+
     if (evt.shiftKey)
       findPrevious();
     else

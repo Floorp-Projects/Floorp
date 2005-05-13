@@ -8,13 +8,13 @@
                 onkeypress="onFindBarKeyPress(event);" onblur="onFindBarBlur();"/>
       </hbox>
       <toolbarbutton id="find-next" label="&findNext.label;" tooltiptext="&findNext.tooltip;"
-                     command="cmd_findAgain" disabled="true"/>
+                     command="cmd_findAgain" disabled="true" accesskey="&findNext.accesskey;"/>
       <toolbarbutton id="find-previous" label="&findPrevious.label;" tooltiptext="&findPrevious.tooltip;"
-                     command="cmd_findPrevious" disabled="true"/>
+                     command="cmd_findPrevious" disabled="true" accesskey="&findPrevious.accesskey;"/>
       <toolbarbutton id="highlight" label="&highlight.label;" tooltiptext="&highlight.tooltip;"
                      oncommand="toggleHighlight(!this.checked);
                                 if (gFindMode != FIND_NORMAL) setFindCloseTimeout();"
-                     type="checkbox" disabled="true"/>
+                     type="checkbox" disabled="true" accesskey="&highlight.accesskey;"/>
       <checkbox id="find-case-sensitive" oncommand="toggleCaseSensitivity(this.checked);"
                 label="&caseSensitiveCheckbox.label;" accesskey="&caseSensitiveCheckbox.accesskey;"/>
       <image id="find-status-icon"/>
