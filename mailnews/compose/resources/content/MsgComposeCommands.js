@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ian Neal <bugzilla@arlen.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -604,6 +605,25 @@ function updateComposeItems() {
 
 
   } catch(e) {}
+}
+
+function openEditorContextMenu()
+{
+  // if we have a mispelled word, show spellchecker context
+  // menuitems as well as the usual context menu
+  var spellCheckNoSuggestionsItem = document.getElementById('spellCheckNoSuggestions');
+  var word;
+  var misspelledWordStatus = InlineSpellChecker.updateSuggestionsMenu(document.getElementById('msgComposeContext'),
+                             spellCheckNoSuggestionsItem, word);
+
+  var hideSpellingItems = (misspelledWordStatus == kSpellNoMispelling);
+  spellCheckNoSuggestionsItem.hidden = hideSpellingItems || misspelledWordStatus != kSpellNoSuggestionsFound;
+  document.getElementById('spellCheckAddToDictionary').hidden = hideSpellingItems;
+  document.getElementById('spellCheckIgnoreWord').hidden = hideSpellingItems;
+  document.getElementById('spellCheckAddSep').hidden = hideSpellingItems;
+  document.getElementById('spellCheckSuggestionsSeparator').hidden = hideSpellingItems;
+
+  updateEditItems();
 }
 
 function updateEditItems() {
@@ -1285,6 +1305,8 @@ function ComposeStartup(recycled, aParams)
                                          gMsgCompose.compFields.returnReceipt);
       document.getElementById("cmd_attachVCard").setAttribute('checked', 
                                          gMsgCompose.compFields.attachVCard);
+      document.getElementById("menu_inlineSpellCheck").setAttribute('checked',
+                                         sPrefs.getBoolPref("mail.spellcheck.inline"));
 
       // If recycle, editor is already created
       if (!recycled) 
@@ -1347,8 +1369,7 @@ function ComposeStartup(recycled, aParams)
 
       if (recycled)
       {
-        // This sets charset and does reply quote insertion
-        gMsgCompose.initEditor(GetCurrentEditor(), window.content);
+        InitEditor(GetCurrentEditor());
 
         if (gMsgCompose.composeHTML)
         {
@@ -1395,7 +1416,7 @@ var gMsgEditorCreationObserver =
     {
       var editor = GetCurrentEditor();
       if (editor && GetCurrentCommandManager() == aSubject)
-        gMsgCompose.initEditor(editor, window.content);
+        InitEditor(editor);
     }
   }
 }
@@ -1996,6 +2017,43 @@ function SelectAddress()
   // We have to set focus to the addressingwidget because we seem to loose focus often 
   // after opening the SelectAddresses Dialog- bug # 89950
   AdjustFocus();
+}
+
+// walk through the recipients list and add them to the inline spell checker ignore list
+function addRecipientsToIgnoreList(aAddressesToAdd)
+{
+  if (InlineSpellChecker.inlineSpellChecker && InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell)
+  {
+    // break the list of potentially many recipients back into individual names
+    var hdrParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
+    var emailAddresses = {};
+    var names = {};
+    var fullNames = {};
+    var numAddresses = hdrParser.parseHeadersWithArray(aAddressesToAdd, emailAddresses, names, fullNames);
+    var tokenizedNames = [];
+
+    // each name could consist of multiple words delimited by commas and/or spaces.
+    // i.e. Green Lantern or Lantern,Green.
+    for (var i = 0; i < names.value.length; i++)
+    {
+      var splitNames = names.value[i].match(/[^\s,]+/g);
+      if (splitNames)
+        tokenizedNames = tokenizedNames.concat(splitNames);
+    }
+
+    InlineSpellChecker.inlineSpellChecker.ignoreWords(tokenizedNames, tokenizedNames.length);
+  }
+}
+
+function ToggleInlineSpellChecker(target)
+{
+  if (InlineSpellChecker.inlineSpellChecker)
+  {
+    InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell = !InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell;
+
+    if (InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell)
+      InlineSpellChecker.checkDocument(window.content.document);
+  }
 }
 
 function ToggleReturnReceipt(target)
@@ -2644,6 +2702,9 @@ function LoadIdentity(startup)
               // catch the exception and ignore it, so that if LDAP setup 
               // fails, the entire compose window doesn't end up horked
           }
+
+          // only do this if we aren't starting up....it gets done as part of startup already
+          addRecipientsToIgnoreList(gCurrentIdentity.identityName);
       }
     }
 }
@@ -3061,3 +3122,16 @@ function AutoSave()
   gAutoSaveTimeout = setTimeout(AutoSave, gAutoSaveInterval);
 }
 
+function InitEditor(editor)
+{
+  gMsgCompose.initEditor(editor, window.content);
+  try {
+    InlineSpellChecker.Init(editor, sPrefs.getBoolPref("mail.spellcheck.inline"));
+    // Following line works round bug 292520, look at removing after that is fixed
+    InlineSpellChecker.checkDocument(window.content.document);
+  } catch (e) {
+    // InlineSpellChecker.Init throws if there is no inline spellchecker
+    // so disable menuitem.
+    document.getElementById('menu_inlineSpellCheck').setAttribute('disabled', true);
+  }
+}

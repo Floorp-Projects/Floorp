@@ -510,6 +510,7 @@ pref("mailnews.nav_crosses_folders", 1); // prompt user when crossing folders
 pref("news.cancel.confirm",true);
 pref("news.cancel.alert_on_success",true);
 pref("mail.SpellCheckBeforeSend",false);
+pref("mail.spellcheck.inline",true);
 pref("mail.warn_on_send_accel_key", true);
 pref("mail.enable_autocomplete",true);
 pref("mailnews.html_domains","");

@@ -16,7 +16,7 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["forwardMessageMode", "autoSave",
-                       "autoSaveInterval","spellCheckBeforeSend",
+                       "autoSaveInterval","spellCheckBeforeSend", "inlineSpellCheck",
                        "strictlyMime", "mailWarnOnSendAccelKey",
                        "wrapLength", "sendDefaultCharsetList",
                        "replyInDefaultCharset", "FontSelect",
@@ -28,8 +28,9 @@
 
     function Startup()
     {
-      document.getElementById("spellCheckBeforeSend").hidden =
-        !("@mozilla.org/spellchecker;1" in Components.classes);
+      var hideSpellCheck = !("@mozilla.org/spellchecker;1" in Components.classes);
+      document.getElementById("spellCheckBeforeSend").hidden = hideSpellCheck;
+      document.getElementById("inlineSpellCheck").hidden = hideSpellCheck;
       gAutoSaveInterval = document.getElementById("autoSaveInterval");
       enableTextbox(document.getElementById("autoSave"), gAutoSaveInterval, true);
     }
@@ -86,11 +87,17 @@
                 prefstring="mail.compose.autosaveinterval"/>
       <label value="&autoSaveEnd.label;"/>
     </hbox>
-    
-    <checkbox id="spellCheckBeforeSend" label="&spellCheck.label;"
-              prefstring="mail.SpellCheckBeforeSend"
-              accesskey="&spellCheck.accesskey;"/>
-  
+
+    <hbox align="center">
+      <checkbox id="spellCheckBeforeSend" label="&spellCheck.label;"
+                prefstring="mail.SpellCheckBeforeSend"
+                accesskey="&spellCheck.accesskey;"/>
+
+      <checkbox id="inlineSpellCheck" label="&spellCheckInline.label;"
+                prefstring="mail.spellcheck.inline"
+                accesskey="&spellCheckInline.accesskey;"/>
+    </hbox>
+
     <checkbox id="strictlyMime" label="&useMIME.label;"
               prefstring="mail.strictly_mime"
               accesskey="&useMIME.accesskey;"/>
@@ -100,7 +107,7 @@
                 prefstring="mail.warn_on_send_accel_key"
                 accesskey="&warnOnSendAccelKey.accesskey;" />
     </hbox>
-    
+
 	<hbox align="center">
         <label value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" control="wrapLength"/>
     <textbox id="wrapLength" size="3" preftype="int"

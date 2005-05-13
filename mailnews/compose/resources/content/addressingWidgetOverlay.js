@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ian Neal <bugzilla@arlen.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -57,6 +58,7 @@ var gMimeHeaderParser = null;
  */
 
 var test_addresses_sequence = false;
+
 try {
   if (sPrefs)
     test_addresses_sequence = sPrefs.getBoolPref("mail.debug.test_addresses_sequence");
@@ -238,6 +240,10 @@ function CompFields2Recipients(msgCompFields, msgType)
     parent.replaceChild(newListBoxNode, listbox);
     awFitDummyRows(2);
 
+    // CompFields2Recipients is called whenever a user replies or edits an existing message.
+    // We want to add all of the recipients for this message to the ignore list for spell check 
+    addRecipientsToIgnoreList((gCurrentIdentity ? gCurrentIdentity.identityName + ', ' : '') + msgTo + ', ' + msgCC + ', ' + msgBCC);
+
     gMimeHeaderParser = null; //Release the mime parser
   }
 }
@@ -365,6 +371,9 @@ function awAddRecipient(recipientType, address)
     awAppendNewRow(true);
     awSetInputAndPopupValue(awGetInputElement(top.MAX_RECIPIENTS), "", awGetPopupElement(top.MAX_RECIPIENTS), "addr_to", top.MAX_RECIPIENTS);
   }
+
+  // add the recipient to our spell check ignore list
+  addRecipientsToIgnoreList(address);
 }
 
 function awTestRowSequence()
@@ -491,6 +500,10 @@ function awReturnHit(inputElement)
     nextInput.select();
     awSetFocus(row+1, nextInput);
   }
+
+  // be sure to add the recipient to our ignore list
+  // when the user hits enter in an autocomplete widget...
+  addRecipientsToIgnoreList(inputElement.value);
 }
 
 function awDeleteHit(inputElement)
@@ -725,7 +738,7 @@ function _awSetFocus()
 
 function awTabFromRecipient(element, event)
 {
-  //If we are le last element in the listbox, we don't want to create a new row.
+  //If we are the last element in the listbox, we don't want to create a new row.
   if (element == awGetInputElement(top.MAX_RECIPIENTS))
     top.doNotCreateANewRow = true;
 
@@ -735,6 +748,10 @@ function awTabFromRecipient(element, event)
     var listBox = document.getElementById("addressingWidget");
     listBox.listBoxObject.ensureIndexIsVisible(listBoxRow + 1);
   }
+
+  // be sure to add the recipient to our ignore list
+  // when the user tabs out of an autocomplete line...
+  addRecipientsToIgnoreList(element.value);
 }
 
 function awTabFromMenulist(element, event)

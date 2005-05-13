@@ -117,7 +117,9 @@
 
 <!ENTITY checkSpellingCmd.label "Check Spelling...">
 <!ENTITY checkSpellingCmd.key "K">
-<!ENTITY checkSpellingCmd.accesskey "S">
+<!ENTITY checkSpellingCmd.accesskey "h">
+<!ENTITY enableInlineSpellChecker.label "Spellcheck As You Type">
+<!ENTITY enableInlineSpellChecker.accesskey "S">
 
 <!ENTITY priorityMenu.label "Priority">
 <!ENTITY priorityMenu.accesskey "p">
@@ -197,6 +199,11 @@
 <!ENTITY formatToolbar.underlineChar "U">
 
 <!-- context menu items -->
+<!ENTITY spellCheckNoSuggestions.label "(No Suggestions Found)">
+<!ENTITY spellCheckIgnoreWord.label "Ignore Word">
+<!ENTITY spellCheckIgnoreWord.accesskey "I">
+<!ENTITY spellCheckAddToDictionary.label "Add to Dictionary">
+<!ENTITY spellCheckAddToDictionary.accesskey "n">
 <!ENTITY undo.label "Undo">
 <!ENTITY undo.accesskey "U">
 <!ENTITY cut.label "Cut">
