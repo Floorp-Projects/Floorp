@@ -207,53 +207,86 @@ ScriptCode nsUnicodeMappingUtil::MapLangGroupToScriptCode(const char* aLangGroup
 {
 	if(0==nsCRT::strcmp(aLangGroup,  "x-western")) {
 		return smRoman;
-	} else 
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "x-central-euro")) {
 		return smCentralEuroRoman;
-	} else 
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "x-cyrillic")) {
 		return smCyrillic;
-	} else 
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "el")) {
 		return smGreek;
-	} else 
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "tr")) {
 		return smRoman;
-	} else 
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "he")) {
 		return smHebrew;
-	} else 
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "ar")) {
 		return smArabic;
-	} else 
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "x-baltic")) {
 		return smRoman;
-	} else 
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "th")) {
 		return smThai;
-	} else 
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "ja")) {
 		return smJapanese;
-	} else 
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "zh-CN")) {
 		return smSimpChinese;
-	} else 
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "ko")) {
 		return smKorean;
-	} else 
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "zh-TW")) {
 		return smTradChinese;
-	} else 
-        // No separate script code for zh-HK. Use smTradChinese.
+	}
+    // No separate script code for zh-HK. Use smTradChinese.
 	if(0==nsCRT::strcmp(aLangGroup,  "zh-HK")) {
 		return smTradChinese;
-	} else 
+	}
+	if(0==nsCRT::strcmp(aLangGroup,  "x-devanag")) {
+		return smDevanagari;
+	}
+	if(0==nsCRT::strcmp(aLangGroup,  "x-tamil")) {
+		return smTamil;
+	}
+	if(0==nsCRT::strcmp(aLangGroup,  "x-beng")) {
+		return smBengali;;
+	}
+	if(0==nsCRT::strcmp(aLangGroup,  "x-armn")) {
+		return smArmenian;
+	}
+	if(0==nsCRT::strcmp(aLangGroup,  "x-geor")) {
+		return smGeorgian;;
+	}
+	if(0==nsCRT::strcmp(aLangGroup,  "x-gujr")) {
+		return smGujarati;
+	}
+	if(0==nsCRT::strcmp(aLangGroup,  "x-guru")) {
+		return smGurmukhi;
+	}
+	if(0==nsCRT::strcmp(aLangGroup,  "x-mlym")) {
+		return smMalayalam;
+	}
+	if(0==nsCRT::strcmp(aLangGroup,  "x-khmr")) {
+		return smKhmer;
+	}
+	if(0==nsCRT::strcmp(aLangGroup,  "x-ethi")) {
+		return smEthiopic;
+	}
+	if(0==nsCRT::strcmp(aLangGroup,  "x-cans")) {
+		return (smPseudoUnicode);  // XXX : no script code for UCA
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "x-unicode")) {
 		return (smPseudoUnicode);
-	} else 
+	}
 	if(0==nsCRT::strcmp(aLangGroup,  "x-user-def")) {
 		return (smPseudoUserDef);
-	} else 
+	}
 	{
 		return smRoman;
 	}
@@ -409,7 +442,8 @@ void nsUnicodeMappingUtil::InitBlockToScriptMapping()
 		smGurmukhi, smGujarati, smOriya, 		smTamil, 	
 		smTelugu, 	smKannada,	smMalayalam,	smThai,
 		smLao,		smTibetan,	smGeorgian,		smKorean,
-		smTradChinese,
+		smTradChinese, smEthiopic, smKhmer,
+		smPseudoUnicode,  // for Unified Canadian Syllable
 		smPseudoUserDef,
 		
 		// start the variable section
