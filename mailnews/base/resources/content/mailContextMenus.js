@@ -285,6 +285,7 @@ function fillFolderPaneContextMenu()
   var canSubscribeToFolder = (serverType == "nntp") || (serverType == "imap");
   var isNewsgroup = !isServer && serverType == 'nntp';
   var isMailFolder = !isServer && serverType != 'nntp';
+  var isVirtualFolder = (specialFolder == "Virtual");
   var canGetMessages =  (isServer && (serverType != "nntp") && (serverType !="none")) || isNewsgroup;
 
   EnableMenuItem("folderPaneContext-properties", true);
@@ -298,7 +299,7 @@ function fillFolderPaneContextMenu()
   SetupRemoveMenuItem(folderResource, numSelected, isServer, serverType, specialFolder);
   SetupCompactMenuItem(folderResource, numSelected);
 
-  ShowMenuItem("folderPaneContext-copy-location", !isServer);
+  ShowMenuItem("folderPaneContext-copy-location", !isServer && !isVirtualFolder);
   ShowMenuItem("folderPaneContext-emptyTrash", (numSelected <= 1) && (specialFolder == 'Trash'));
   EnableMenuItem("folderPaneContext-emptyTrash", true);
 
@@ -312,7 +313,7 @@ function fillFolderPaneContextMenu()
 
   SetupNewMenuItem(folderResource, numSelected, isServer, serverType, specialFolder);
 
-  ShowMenuItem("folderPaneContext-subscribe", (numSelected <= 1) && canSubscribeToFolder);
+  ShowMenuItem("folderPaneContext-subscribe", (numSelected <= 1) && canSubscribeToFolder && !isVirtualFolder);
   EnableMenuItem("folderPaneContext-subscribe", true);
 
   ShowMenuItem("folderPaneContext-sep1", (numSelected <= 1) && !isServer);
@@ -325,10 +326,10 @@ function fillFolderPaneContextMenu()
 
 // End of News folder context menu =======================================
 
-  ShowMenuItem("folderPaneContext-markMailFolderAllRead", (numSelected <= 1) && isMailFolder);
+  ShowMenuItem("folderPaneContext-markMailFolderAllRead", (numSelected <= 1) && isMailFolder && !isVirtualFolder);
   EnableMenuItem("folderPaneContext-markMailFolderAllRead", true);
 
-  ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1));
+  ShowMenuItem("folderPaneContext-searchMessages", (numSelected <= 1) && !isVirtualFolder);
   goUpdateCommand('cmd_search');
 
   return(true);

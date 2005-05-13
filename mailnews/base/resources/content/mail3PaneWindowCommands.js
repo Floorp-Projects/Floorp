@@ -844,10 +844,11 @@ function IsRenameFolderEnabled()
 
 function IsCanSearchMessagesEnabled()
 {
-  var folderURI = GetSelectedFolderURI();
-  var server = GetServer(folderURI);
-  return server.canSearchMessages;
+  var folder = GetMsgFolderFromUri(GetSelectedFolderURI(), false);
+  var isVirtualFolder = folder.flags & MSG_FOLDER_FLAG_VIRTUAL;
+  return folder.server.canSearchMessages && !isVirtualFolder;
 }
+
 function IsFolderCharsetEnabled()
 {
   return IsFolderSelected();
