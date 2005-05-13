@@ -1559,7 +1559,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
       nsXPIDLString subject;
       nsXPIDLCString decodedCString;
 
-      if (!charsetOverride)
+      if (!charsetOverride && charset.IsEmpty())
       {
         rv = msgHdr->GetCharset(getter_Copies(charset));
         if (NS_FAILED(rv)) return rv;
