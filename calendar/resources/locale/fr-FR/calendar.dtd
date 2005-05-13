@@ -442,9 +442,13 @@
 <!ENTITY calendar.local.calendar.dialog.help.label  "Vous pouvez utiliser ceci pour indiquer où le fichier d'agenda sera créé sur votre ordinateur. Ceci est optionnel.">
 <!ENTITY calendar.local.calendar.dialog.optional.label "Les options suivantes servent à la publication de l'agenda à une adresse distante.">
 
-<!-- Calendar Coloring -->
-<!ENTITY calendar.server.dialog.color.label "Couleur :">
-
+<!-- Calendar Properties -->
+<!ENTITY calendarproperties.color.label    "Couleur :" >
+<!ENTITY calendarproperties.webdav.label   "WebDAV" >
+<!ENTITY calendarproperties.caldav.label   "CalDAV" >
+<!ENTITY calendarproperties.format.label   "Format :" >
+<!ENTITY calendarproperties.location.label "Emplacement :" >
+<!ENTITY calendarproperties.name.label     "Nom :" >
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publier l'agenda">

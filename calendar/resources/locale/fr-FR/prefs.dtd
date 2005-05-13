@@ -45,7 +45,7 @@
 <!ENTITY calendar.views.label       "Vues">
 <!ENTITY calendar.timezone.label    "Mon fuseau horaire">
 
-<!ENTITY prefWindow.title            "Options de Calendar">
+<!ENTITY prefWindow.title            "Options">
 <!ENTITY prefWindow.size             "width: 59em; height: 35em;">
 <!ENTITY prefWindow.category         "Catégorie">
 
@@ -124,11 +124,15 @@
 
 <!ENTITY pref.categories.label   "Catégories" >
 
-<!ENTITY pref.categories.help.description   "Utilisez une virgule pour séparer les catégories que vous voulez définir.">
-
 <!ENTITY pref.categories.add.title    "Ajouter une catégorie">
-<!ENTITY pref.categories.add.prompt   "Saisissez le nom de la catégorie">
 <!ENTITY pref.categories.edit.title   "Éditer une catégorie">
+<!ENTITY pref.categories.name.label   "Nom">
+<!ENTITY pref.categories.color.label  "Couleur">
+<!ENTITY pref.categories.usecolor.label   "Utiliser la couleur">
+<!ENTITY pref.categories.none.label   "(aucune)">
+<!ENTITY pref.categories.overwrite  "Une catégorie avec ce nom existe déjà. \n Voulez-vous la remplacer ?">
+<!ENTITY pref.categories.overwrite.title  "Attention : Nom en double">
+<!ENTITY pref.categories.noBlankCategories  "Vous devez saisir un nom de catégorie.">
 
 <!ENTITY pref.reloadonlaunch       "Recharger les agendas distants au démarrage">
 
