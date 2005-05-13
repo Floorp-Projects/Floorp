@@ -148,6 +148,8 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
     gradient = CairoLinearGradient(ctx, aGrad);
   else if (type == nsISVGGradient::SVG_RADIAL_GRADIENT)
     gradient = CairoRadialGradient(ctx, aGrad);
+  else 
+    return NULL; // Shouldn't happen
 
   PRUint16 aSpread;
   aGrad->GetSpreadMethod(&aSpread);
