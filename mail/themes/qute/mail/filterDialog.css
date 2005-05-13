@@ -53,8 +53,18 @@ treechildren::-moz-tree-image(activeColumn, Enabled-true) {
  list-style-image: url("chrome://messenger/skin/icons/check.gif");
 }
 
+.small-button {
+  min-width: 3em;
+  padding: 0px;
+  margin: 0px 1px;
+}
+
+listbox {
+  padding-top: 2px;
+}
+
 menulist {
-  min-width: 15em;
+  width: 12em;
 }
 
 menulist > menupopup > menuitem {

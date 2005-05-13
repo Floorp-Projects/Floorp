@@ -58,7 +58,7 @@
         onclose="onSearchStop();"
         windowtype="mailnews:absearch"
         title="&abSearchDialogTitle.label;"
-        style="width: 52em; height: 36em;"
+        style="width: 52em; height: 34em;"
         persist="screenX screenY width height sizemode">
 
   <stringbundleset id="stringbundleset">

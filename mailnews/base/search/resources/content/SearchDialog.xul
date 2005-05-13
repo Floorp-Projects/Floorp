@@ -55,7 +55,7 @@
         onclose="onSearchStop();"
         windowtype="mailnews:search"
         title="&searchDialogTitle.label;"
-        style="width: 52em; height: 36em;"
+        style="width: 52em; height: 34em;"
         persist="screenX screenY width height sizemode">
 
   <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>

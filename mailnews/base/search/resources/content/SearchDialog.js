@@ -262,7 +262,7 @@ function searchOnLoad()
   if (window.arguments && window.arguments[0])
       selectFolder(window.arguments[0].folder);
 
-  onMore(null);
+  onMore(null, 0);
   UpdateMailSearch("onload");
   
   // hide and remove these columns from the column picker.  you can't thread search results

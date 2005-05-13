@@ -1,7 +1,3 @@
-<!ENTITY more.label         "More">
-<!ENTITY more.accesskey     "M">
-<!ENTITY less.label         "Fewer">
-<!ENTITY less.accesskey     "F">
 <!ENTITY matchAll.label     "Match all of the following">
 <!ENTITY matchAll.accesskey "a">
 <!ENTITY matchAny.label     "Match any of the following">
@@ -11,11 +7,7 @@
   Change the values only when the localized strings in the popup menus
   are truncated in the widgets.
  -->
-<!ENTITY searchTermListSpace1FlexValue "1">
-<!ENTITY searchTermListAttributesFlexValue "4">
-<!ENTITY searchTermListSpace2FlexValue "0">
-<!ENTITY searchTermListOperatorsFlexValue "4">
-<!ENTITY searchTermListSpace3FlexValue "0">
-<!ENTITY searchTermListValueFlexValue "4">
-<!ENTITY searchTermListSpace4FlexValue "1">
-
+<!ENTITY searchTermListAttributesFlexValue "5">
+<!ENTITY searchTermListOperatorsFlexValue "5">
+<!ENTITY searchTermListValueFlexValue "5">
+<!ENTITY searchTermListButtonsFlexValue "2">

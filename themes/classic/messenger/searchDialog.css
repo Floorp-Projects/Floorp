@@ -59,7 +59,7 @@
 }
 
 menulist {
-  min-width: 15em;
+  width: 12em;
 }
 
 menulist > menupopup > menuitem {
@@ -68,4 +68,14 @@ menulist > menupopup > menuitem {
 
 textbox {
   margin: 1px 4px;
+}
+
+.small-button {
+  min-width: 3em;
+  padding: 0px;
+  margin: 0px 1px;
+}
+
+listbox {
+  padding-top: 2px;
 }

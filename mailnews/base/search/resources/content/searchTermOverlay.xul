@@ -45,7 +45,7 @@
   <script src="chrome://messenger/content/searchTermOverlay.js"/>
   <script src="chrome://messenger/content/dateFormat.js"/>
 
-  <vbox id="searchTermListBox" >
+  <vbox id="searchTermListBox">
 
     <radiogroup id="booleanAndGroup" orient="horizontal"
                 selectedItem="or" oncommand="booleanChanged(event);">
@@ -57,14 +57,11 @@
       <hbox id="searchterms"/>
       <listbox flex="1" id="searchTermList">
         <listcols>
-          // see bug #183994 for why these cells are hidden
-          <listcol flex="&searchTermListSpace1FlexValue;" hidden="true"/>
           <listcol flex="&searchTermListAttributesFlexValue;"/>
-          <listcol flex="&searchTermListSpace2FlexValue;" hidden="true"/>
           <listcol flex="&searchTermListOperatorsFlexValue;"/>
-          <listcol flex="&searchTermListSpace3FlexValue;" hidden="true"/>
           <listcol flex="&searchTermListValueFlexValue;"/>
-          <listcol flex="&searchTermListSpace4FlexValue;" hidden="true"/>
+          <listcol flex="&searchTermListButtonsFlexValue;"/>
+          <listcol/>
         </listcols>
 
         <!-- this is what the listitems will look like:
@@ -91,10 +88,6 @@
         -->
       </listbox>
       
-    </hbox>
-    <hbox>
-      <button id="more" label="&more.label;" oncommand="onMore(event);" accesskey="&more.accesskey;"/>
-      <button id="less" label="&less.label;" disabled="true" oncommand="onLess(event);" accesskey="&less.accesskey;"/>
     </hbox>
   </vbox>
 
