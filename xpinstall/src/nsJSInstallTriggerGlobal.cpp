@@ -44,6 +44,11 @@
 #include "nsString.h"
 #include "nsIDOMInstallVersion.h"
 #include "nsIDOMInstallTriggerGlobal.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
+#include "nsIDocShell.h"
+#include "nsIObserverService.h"
 #include "nsInstallTrigger.h"
 #include "nsXPITriggerInfo.h"
 
@@ -144,6 +149,59 @@ static JSBool CreateNativeObject(JSContext *cx, JSObject *obj, nsIDOMInstallTrig
 }
 
 //
+// Helper function for URI verification
+//
+static nsresult
+InstallTriggerCheckLoadURIFromScript(JSContext *cx, const nsAString& uriStr)
+{
+    nsresult rv;
+    nsCOMPtr<nsIScriptSecurityManager> secman(
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,&rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // get the script base URI
+    nsCOMPtr<nsIURI> scriptURI;
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = secman->GetSubjectPrincipal(getter_AddRefs(principal));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!principal)
+        return NS_ERROR_FAILURE;
+
+    rv = principal->GetURI(getter_AddRefs(scriptURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!scriptURI) {
+      // No URI reachable from the principal, get one from the calling
+      // window.
+
+      nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
+      NS_ENSURE_TRUE(scx, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIDOMWindow> window =
+        do_QueryInterface(scx->GetGlobalObject());
+      NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      window->GetDocument(getter_AddRefs(domDoc));
+
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+      NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+      scriptURI = doc->GetDocumentURI();
+    }
+
+    // convert the requested URL string to a URI
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), uriStr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // are we allowed to load this one?
+    rv = secman->CheckLoadURI(scriptURI, uri,
+                    nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA);
+    return rv;
+}
+
+//
 // Native method UpdateEnabled
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -215,11 +273,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
   }
 
-  // if we can't create a security manager we might be in the wizard, allow
   PRBool abortLoad = PR_FALSE;
-  nsCOMPtr<nsIScriptSecurityManager> secman(
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-
 
   // parse associative array of installs
   if ( argc >= 1 && JSVAL_IS_OBJECT(argv[0]) )
@@ -267,19 +321,6 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
                 xpiURL = NS_ConvertUTF8toUTF16(resolvedURL);
             }
 
-            // Make sure we're allowed to load this URL
-            if (secman)
-            {
-                nsCOMPtr<nsIURI> uri;
-                nsresult rv = NS_NewURI(getter_AddRefs(uri), xpiURL);
-                if (NS_SUCCEEDED(rv))
-                {
-                    rv = secman->CheckLoadURIFromScript(cx, uri);
-                    if (NS_FAILED(rv))
-                        abortLoad = PR_TRUE;
-                }
-            }
-
             nsAutoString icon(iconURL);
             if (iconURL && baseURL)
             {
@@ -288,13 +329,28 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
                 icon = NS_ConvertUTF8toUTF16(resolvedIcon);
             }
 
-            nsXPITriggerItem *item = new nsXPITriggerItem( name, xpiURL.get(), icon.get() );
-            if ( item )
-            {
-                trigger->Add( item );
-            }
-            else
+            // Make sure we're allowed to load this URL and the icon URL
+            nsresult rv = InstallTriggerCheckLoadURIFromScript(cx, xpiURL);
+            if (NS_FAILED(rv))
                 abortLoad = PR_TRUE;
+
+            if (!abortLoad && iconURL)
+            {
+                rv = InstallTriggerCheckLoadURIFromScript(cx, icon);
+                if (NS_FAILED(rv))
+                    abortLoad = PR_TRUE;
+            }
+
+            if (!abortLoad)
+            {
+                nsXPITriggerItem *item = new nsXPITriggerItem( name, xpiURL.get(), icon.get() );
+                if ( item )
+                {
+                    trigger->Add( item );
+                }
+                else
+                    abortLoad = PR_TRUE;
+            }
         }
         else
             abortLoad = PR_TRUE;
@@ -393,20 +449,9 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
     }
 
     // Make sure caller is allowed to load this url.
-    // if we can't create a security manager we might be in the wizard, allow
-    nsCOMPtr<nsIScriptSecurityManager> secman(
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-    if (secman)
-    {
-        nsCOMPtr<nsIURI> uri;
-        nsresult rv = NS_NewURI(getter_AddRefs(uri), sourceURL);
-        if (NS_SUCCEEDED(rv))
-        {
-            rv = secman->CheckLoadURIFromScript(cx, uri);
-            if (NS_FAILED(rv))
-                return JS_FALSE;
-        }
-    }
+    nsresult rv = InstallTriggerCheckLoadURIFromScript(cx, sourceURL);
+    if (NS_FAILED(rv))
+        return JS_FALSE;
 
     if ( chromeType & CHROME_ALL )
     {
@@ -481,20 +526,9 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
     }
 
     // Make sure caller is allowed to load this url.
-    // if we can't create a security manager we might be in the wizard, allow
-    nsCOMPtr<nsIScriptSecurityManager> secman(
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-    if (secman)
-    {
-        nsCOMPtr<nsIURI> uri;
-        nsresult rv = NS_NewURI(getter_AddRefs(uri), xpiURL);
-        if (NS_SUCCEEDED(rv))
-        {
-            rv = secman->CheckLoadURIFromScript(cx, uri);
-            if (NS_FAILED(rv))
-                return JS_FALSE;
-        }
-    }
+    nsresult rv = InstallTriggerCheckLoadURIFromScript(cx, xpiURL);
+    if (NS_FAILED(rv))
+        return JS_FALSE;
 
     if (argc >= 2 && !JS_ValueToInt32(cx, argv[1], (int32 *)&flags))
     {
