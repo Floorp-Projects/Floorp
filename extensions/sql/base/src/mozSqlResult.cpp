@@ -2218,7 +2218,7 @@ mozSqlResultStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure, PRUi
     aCount = mBuffer.Length() - mPosition;
 
   rv = aWriter(this, aClosure, mBuffer.get() + mPosition, 0, aCount, _retval);
-  if (NS_SUCCEEDED(rv));
+  if (NS_SUCCEEDED(rv))
     mPosition += aCount;
 
   return NS_OK;
