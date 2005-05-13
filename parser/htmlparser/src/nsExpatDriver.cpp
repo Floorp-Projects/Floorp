@@ -168,7 +168,8 @@ Driver_HandleStartDoctypeDecl(void *aUserData,
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    NS_STATIC_CAST(nsExpatDriver*, aUserData)->HandleStartDoctypeDecl();
+    NS_STATIC_CAST(nsExpatDriver*, aUserData)->
+      HandleStartDoctypeDecl(aDoctypeName, aSysid, aPubid, aHasInternalSubset);
   }
 }
 
@@ -333,7 +334,7 @@ NS_NewExpatDriver(nsIDTD** aResult)
 nsExpatDriver::nsExpatDriver()
   : mExpatParser(nsnull),
     mInCData(PR_FALSE),
-    mInDoctype(PR_FALSE),
+    mInInternalSubset(PR_FALSE),
     mInExternalDTD(PR_FALSE),
     mBytePosition(0),
     mInternalState(NS_OK),
@@ -411,9 +412,9 @@ nsExpatDriver::HandleComment(const PRUnichar *aValue)
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
-  if (mInDoctype) {
+  if (mInInternalSubset) {
     if (!mInExternalDTD) {
-      mDoctypeText.Append(aValue);
+      mInternalSubset.Append(aValue);
     }
   }
   else if (mSink) {
@@ -453,9 +454,9 @@ nsExpatDriver::HandleDefault(const PRUnichar *aValue,
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
-  if (mInDoctype) {
+  if (mInInternalSubset) {
     if (!mInExternalDTD) {
-      mDoctypeText.Append(aValue, aLength);
+      mInternalSubset.Append(aValue, aLength);
     }
   }
   else if (mSink) {
@@ -494,47 +495,23 @@ nsExpatDriver::HandleEndCdataSection()
   return NS_OK;
 }
 
-/**
- * DOCTYPE declaration is covered with very strict rules, which
- * makes our life here simpler because the XML parser has already
- * detected errors. The only slightly problematic case is whitespace
- * between the tokens. There MUST be whitespace between the tokens
- * EXCEPT right before > and [.
- *
- * We assume the string will not contain the ending '>'.
- */
-static void
-GetDocTypeToken(nsString& aStr, nsString& aToken, PRBool aQuotedString)
-{
-  // If we don't do this we must look ahead before Cut() and adjust the cut
-  // amount.
-  aStr.Trim(kWhitespace, PR_TRUE, PR_FALSE);
-  if (aQuotedString) {
-    PRInt32 endQuote = aStr.FindChar(aStr[0], 1);
-    aStr.Mid(aToken, 1, endQuote - 1);
-    aStr.Cut(0, endQuote + 1);
-  }
-  else {
-    static const char* kDelimiter = " [\r\n\t"; // Optimized for typical cases
-    PRInt32 tokenEnd = aStr.FindCharInSet(kDelimiter);
-    if (tokenEnd < 0) {
-      tokenEnd = aStr.Length();
-    }
-    if (tokenEnd > 0) {
-      aStr.Left(aToken, tokenEnd);
-      aStr.Cut(0, tokenEnd);
-    }
-  }
-}
-
 nsresult
-nsExpatDriver::HandleStartDoctypeDecl()
+nsExpatDriver::HandleStartDoctypeDecl(const PRUnichar* aDoctypeName,
+                                      const PRUnichar* aSysid,
+                                      const PRUnichar* aPubid,
+                                      PRBool aHasInternalSubset)
 {
-  mInDoctype = PR_TRUE;
-  // Consuming a huge DOCTYPE translates to numerous
-  // allocations. In an effort to avoid too many allocations
-  // setting mDoctypeText's capacity to be 1K ( just a guesstimate! ).
-  mDoctypeText.SetCapacity(1024);
+  mDoctypeName = aDoctypeName;
+  mSystemID = aSysid;
+  mPublicID = aPubid;
+
+  if (aHasInternalSubset) {
+    // Consuming a huge internal subset translates to numerous
+    // allocations. In an effort to avoid too many allocations
+    // setting mInternalSubset's capacity to be 1K ( just a guesstimate! ).
+    mInInternalSubset = PR_TRUE;
+    mInternalSubset.SetCapacity(1024);
+  }
 
   return NS_OK;
 }
@@ -544,7 +521,7 @@ nsExpatDriver::HandleEndDoctypeDecl()
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
-  mInDoctype = PR_FALSE;
+  mInInternalSubset = PR_FALSE;
 
   if (mSink) {
     // let the sink know any additional knowledge that we have about the
@@ -555,36 +532,13 @@ nsExpatDriver::HandleEndDoctypeDecl()
       NS_NewURI(getter_AddRefs(data), mCatalogData->mAgentSheet);
     }
 
-    nsAutoString name;
-    GetDocTypeToken(mDoctypeText, name, PR_FALSE);
-
-    nsAutoString token, publicId, systemId;
-    GetDocTypeToken(mDoctypeText, token, PR_FALSE);
-    if (token.EqualsLiteral("PUBLIC")) {
-      GetDocTypeToken(mDoctypeText, publicId, PR_TRUE);
-      GetDocTypeToken(mDoctypeText, systemId, PR_TRUE);
-    }
-    else if (token.EqualsLiteral("SYSTEM")) {
-      GetDocTypeToken(mDoctypeText, systemId, PR_TRUE);
-    }
-
-    // The rest is the internal subset with [] (minus whitespace)
-    mDoctypeText.Trim(kWhitespace);
-
-    // Take out the brackets too, if any
-    if (mDoctypeText.Length() > 2) {
-      const nsAString& internalSubset = Substring(mDoctypeText, 1,
-                                                  mDoctypeText.Length() - 2);
-      mInternalState = mSink->HandleDoctypeDecl(internalSubset, name, systemId,
-                                                publicId, data);
-    } else {
-      // There's nothing but brackets, don't include them
-      mInternalState = mSink->HandleDoctypeDecl(EmptyString(), name, systemId,
-                                                publicId, data);
-    }
+    // Note: mInternalSubset already doesn't include the [] around it.
+    mInternalState = mSink->HandleDoctypeDecl(mInternalSubset, mDoctypeName,
+                                              mSystemID, mPublicID, data);
+    
   }
-
-  mDoctypeText.SetCapacity(0);
+  
+  mInternalSubset.SetCapacity(0);
 
   return NS_OK;
 }
@@ -617,10 +571,10 @@ nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
                                        const PRUnichar *systemId,
                                        const PRUnichar *publicId)
 {
-  if (mInDoctype && !mInExternalDTD && openEntityNames) {
-    mDoctypeText.Append(PRUnichar('%'));
-    mDoctypeText.Append(nsDependentString(openEntityNames));
-    mDoctypeText.Append(PRUnichar(';'));
+  if (mInInternalSubset && !mInExternalDTD && openEntityNames) {
+    mInternalSubset.Append(PRUnichar('%'));
+    mInternalSubset.Append(nsDependentString(openEntityNames));
+    mInternalSubset.Append(PRUnichar(';'));
   }
 
   // Load the external entity into a buffer.

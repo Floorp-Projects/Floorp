@@ -76,7 +76,10 @@ public:
   nsresult HandleDefault(const PRUnichar *aData, const PRUint32 aLength);
   nsresult HandleStartCdataSection();
   nsresult HandleEndCdataSection();
-  nsresult HandleStartDoctypeDecl();
+  nsresult HandleStartDoctypeDecl(const PRUnichar* aDoctypeName,
+                                  const PRUnichar* aSysid,
+                                  const PRUnichar* aPubid,
+                                  PRBool aHasInternalSubset);
   nsresult HandleEndDoctypeDecl();
 
 private:
@@ -95,9 +98,13 @@ private:
   XML_Parser       mExpatParser;
   nsString         mLastLine;
   nsString         mCDataText;
-  nsString         mDoctypeText;
+  // Various parts of a doctype
+  nsString         mDoctypeName;
+  nsString         mSystemID;
+  nsString         mPublicID;
+  nsString         mInternalSubset;
   PRPackedBool     mInCData;
-  PRPackedBool     mInDoctype;
+  PRPackedBool     mInInternalSubset;
   PRPackedBool     mInExternalDTD;
   PRInt32          mBytePosition;
   nsresult         mInternalState;
