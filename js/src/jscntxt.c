@@ -263,8 +263,9 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
         if (rt->atomState.liveAtoms == 0)
             js_FreeAtomState(cx, &rt->atomState);
 
-        /* Now after the last GC can we free the script filename table. */
-        js_FinishRuntimeScriptState(cx);
+        /* Also free the script filename table if it exists and is empty. */
+        if (rt->scriptFilenameTable && rt->scriptFilenameTable->nentries == 0)
+            js_FinishRuntimeScriptState(cx);
 
         /* Take the runtime down, now that it has no contexts or atoms. */
         JS_LOCK_GC(rt);
