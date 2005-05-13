@@ -54,6 +54,7 @@
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDocument.h"
+#include "nsIEventListenerManager.h"
 #include "nsIHTMLDocument.h"
 #include "nsIFocusController.h"
 #include "nsIFrame.h"
@@ -223,6 +224,9 @@ nsresult nsRootAccessible::AddEventListeners()
     // capture DOM focus events 
     nsresult rv = target->AddEventListener(NS_LITERAL_STRING("focus"), NS_STATIC_CAST(nsIDOMFocusListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+
+    // Fire accessible focus event for pre-existing focus
+    FireCurrentFocusEvent();
 
     // capture Form change events 
     rv = target->AddEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
@@ -502,14 +506,20 @@ void nsRootAccessible::FireCurrentFocusEvent()
       return;  // Could not get a focused document either
     }
   }
-  nsCOMPtr<nsIPresShell> eventShell = GetPresShellFor(focusedNode);
-  NS_ASSERTION(eventShell, "No presshell for focused node");
 
-  nsCOMPtr<nsIAccessible> accessible;
-  mAccService->GetAccessibleInShell(focusedNode, eventShell,
-                                    getter_AddRefs(accessible));
-  if (accessible) {
-    FireAccessibleFocusEvent(accessible, focusedNode);
+  // Simulate a focus event so that we can reuse code that fires focus for container children like treeitems
+  nsIContent *rootContent = mDocument->GetRootContent();
+  nsPresContext *presContext = GetPresContext();
+  if (rootContent && presContext) {
+    nsCOMPtr<nsIDOMEvent> event;
+    nsCOMPtr<nsIEventListenerManager> manager;
+    rootContent->GetListenerManager(getter_AddRefs(manager));
+    if (manager && NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull,
+                                                     NS_LITERAL_STRING("Events"),
+                                                     getter_AddRefs(event))) &&
+        NS_SUCCEEDED(event->InitEvent(NS_LITERAL_STRING("focus"), PR_TRUE, PR_TRUE))) {
+      HandleEvent(event);
+    }
   }
 }
 
@@ -603,15 +613,19 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 #ifndef MOZ_ACCESSIBILITY_ATK
 #ifdef MOZ_XUL
   // tree event
-  if (treeItemAccessible && (eventType.LowerCaseEqualsLiteral("dommenuitemactive") ||
-      eventType.LowerCaseEqualsLiteral("select") ||
-      eventType.LowerCaseEqualsLiteral("focus"))) {
-    FireAccessibleFocusEvent(accessible, targetNode); // Tree has focus
-    privAcc = do_QueryInterface(treeItemAccessible);
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
-                              treeItemAccessible, nsnull);
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION, 
-                              treeItemAccessible, nsnull);
+  if (treeItemAccessible) {
+    if (eventType.LowerCaseEqualsLiteral("focus")) {
+      FireAccessibleFocusEvent(accessible, targetNode); // Tree has focus
+    }
+    else if (eventType.LowerCaseEqualsLiteral("dommenuitemactive") || 
+             eventType.LowerCaseEqualsLiteral("select")) {
+      if (gLastFocusedNode == targetNode) {
+        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
+                                  treeItemAccessible, nsnull);
+      }
+      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION, 
+                               treeItemAccessible, nsnull);
+    }
     return NS_OK;
   }
   else 
