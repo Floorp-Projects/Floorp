@@ -829,6 +829,12 @@ extensions/inspector/build/src/Makefile
 extensions/inspector/resources/Makefile
 "
 
+MAKEFILES_spatialnavigation="
+extensions/spatialnavigation/Makefile
+extensions/spatialnavigation/public/Makefile
+extensions/spatialnavigation/src/Makefile
+"
+
 MAKEFILES_sroaming="
 extensions/sroaming/Makefile
 extensions/sroaming/src/Makefile
@@ -1386,6 +1392,9 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/java/xpcom/tests/Makefile
             extensions/java/xpcom/tools/genifaces/Makefile
             " ;;
+        spatialnavigation ) MAKEFILES_extensions="$MAKEFILES_extensions
+            $MAKEFILES_spatialnavigation"
+            ;;
         typeaheadfind ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_typeaheadfind"
             ;;
