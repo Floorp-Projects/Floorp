@@ -604,17 +604,15 @@ nsImageLoadingContent::StringToURI(const nsAString& aSpec,
  */
 MOZ_DECL_CTOR_COUNTER(ImageEvent)
 
-class ImageEvent : public PLEvent,
-                   public nsDummyLayoutRequest
+class ImageEvent : public PLEvent
 {
 public:
   ImageEvent(nsPresContext* aPresContext, nsIContent* aContent,
-             const nsAString& aMessage, nsILoadGroup *aLoadGroup)
-    : nsDummyLayoutRequest(nsnull),
-      mPresContext(aPresContext),
+             const nsAString& aMessage, nsIDocument* aDocument)
+    : mPresContext(aPresContext),
       mContent(aContent),
       mMessage(aMessage),
-      mLoadGroup(aLoadGroup)
+      mDocument(aDocument)
   {
     MOZ_COUNT_CTOR(ImageEvent);
   }
@@ -626,7 +624,10 @@ public:
   nsCOMPtr<nsPresContext> mPresContext;
   nsCOMPtr<nsIContent> mContent;
   nsString mMessage;
-  nsCOMPtr<nsILoadGroup> mLoadGroup;
+  // Need to hold on to the document in case our event outlives document
+  // teardown... Wantto be able to get back to the document even if the
+  // prescontext and content can't.
+  nsCOMPtr<nsIDocument> mDocument;
 };
 
 PR_STATIC_CALLBACK(void*)
@@ -646,8 +647,6 @@ HandleImagePLEvent(PLEvent* aEvent)
   evt->mContent->HandleDOMEvent(evt->mPresContext, &event, nsnull,
                                 NS_EVENT_FLAG_INIT, &estatus);
 
-  evt->mLoadGroup->RemoveRequest(evt, nsnull, NS_OK);
-
   return nsnull;
 }
 
@@ -655,12 +654,9 @@ PR_STATIC_CALLBACK(void)
 DestroyImagePLEvent(PLEvent* aEvent)
 {
   ImageEvent* evt = NS_STATIC_CAST(ImageEvent*, aEvent);
+  evt->mDocument->UnblockOnload();
 
-  // We're reference counted, and we hold a strong reference to
-  // ourselves while we're a 'live' PLEvent. Now that the PLEvent is
-  // destroyed, release ourselves.
-
-  NS_RELEASE(evt);
+  delete evt;
 }
 
 nsresult
@@ -687,8 +683,6 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
                                            getter_AddRefs(eventQ));
   NS_ENSURE_TRUE(eventQ, rv);
 
-  nsCOMPtr<nsILoadGroup> loadGroup = document->GetDocumentLoadGroup();
-
   nsIPresShell *shell = document->GetShellAt(0);
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
@@ -697,25 +691,19 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
 
   nsCOMPtr<nsIContent> ourContent = do_QueryInterface(this);
   
-  ImageEvent* evt = new ImageEvent(presContext, ourContent, aEventType,
-                                   loadGroup);
+  ImageEvent* evt = new ImageEvent(presContext, ourContent, aEventType, document);
 
   NS_ENSURE_TRUE(evt, NS_ERROR_OUT_OF_MEMORY);
 
   PL_InitEvent(evt, this, ::HandleImagePLEvent, ::DestroyImagePLEvent);
 
-  // The event will own itself while it's in the event queue, once
-  // removed, it will release itself, and if there are no other
-  // references, it will be deleted.
-  NS_ADDREF(evt);
-
+  // Block onload for our event.  Since we unblock in the event destructor, we
+  // want to block now, even if posting will fail.
+  document->BlockOnload();
+  
   rv = eventQ->PostEvent(evt);
 
-  if (NS_SUCCEEDED(rv)) {
-    // Add the dummy request (the ImageEvent) to the load group only
-    // after all the early returns here!
-    loadGroup->AddRequest(evt, nsnull);
-  } else {
+  if (NS_FAILED(rv)) {
     PL_DestroyEvent(evt);
   }
 

@@ -81,6 +81,8 @@
 #include "nsIRadioGroupContainer.h"
 #include "nsIScriptEventManager.h"
 #include "nsILayoutHistoryState.h"
+#include "nsIRequest.h"
+#include "nsILoadGroup.h"
 
 // Put these here so all document impls get them automatically
 #include "nsHTMLStyleSheet.h"
@@ -106,6 +108,7 @@ class nsXPathDocumentTearoff;
 class nsIRadioVisitor;
 class nsIFormControl;
 struct nsRadioGroupStruct;
+class nsOnloadBlocker;
 
 
 class nsDocHeaderData
@@ -172,6 +175,17 @@ protected:
   void*         mScriptObject;
 };
 
+class nsOnloadBlocker : public nsIRequest
+{
+public:
+  nsOnloadBlocker() {}
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUEST
+
+private:
+  ~nsOnloadBlocker() {}
+};
 
 // Base class for our document implementations.
 //
@@ -540,6 +554,9 @@ public:
   virtual NS_HIDDEN_(void) Destroy();
   virtual NS_HIDDEN_(already_AddRefed<nsILayoutHistoryState>) GetLayoutHistoryState() const;
 
+  virtual NS_HIDDEN_(void) BlockOnload();
+  virtual NS_HIDDEN_(void) UnblockOnload();
+
 protected:
 
   void RetrieveRelevantHeaders(nsIChannel *aChannel);
@@ -636,6 +653,9 @@ private:
   // 1)  We have no script global object.
   // 2)  We haven't had Destroy() called on us yet.
   nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
+
+  PRUint32 mOnloadBlockCount;
+  nsCOMPtr<nsIRequest> mOnloadBlocker;
 };
 
 

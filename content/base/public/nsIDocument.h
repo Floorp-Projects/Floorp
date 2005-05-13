@@ -90,8 +90,8 @@ class nsILayoutHistoryState;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x5cb398a4, 0xbd6f, 0x4af5, \
- { 0x81, 0x56, 0x59, 0xfd, 0xcf, 0xe6, 0xab, 0x45 } }
+{ 0x660e9925, 0x30e0, 0x4016, \
+ { 0x8b, 0x7f, 0x0d, 0x70, 0x6e, 0xba, 0xc9, 0x8e } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -712,6 +712,17 @@ public:
    * saving and restoration is not possible.
    */
   virtual already_AddRefed<nsILayoutHistoryState> GetLayoutHistoryState() const = 0;
+
+  /**
+   * Methods that can be used to prevent onload firing while an event that
+   * should block onload is posted.  onload is guaranteed to not fire until
+   * either all calls to BlockOnload() have been matched by calls to
+   * UnblockOnload() or the load has been stopped altogether (by the user
+   * pressing the Stop button, say).  onload may fire synchronously from inside
+   * the UnblockOnload() call.
+   */
+  virtual void BlockOnload() = 0;
+  virtual void UnblockOnload() = 0;
 
 protected:
   ~nsIDocument()
