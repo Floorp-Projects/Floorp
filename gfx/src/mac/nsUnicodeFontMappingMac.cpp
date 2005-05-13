@@ -587,9 +587,12 @@ static nsUnicodeBlock GetBlockU1XXX(PRUnichar aChar)
      case 0x0e00: return kLatin;
      case 0x0f00: return kGreek;
      default:   
+     {
        if ((0x0200 <= aChar) && ( aChar <= 0x037c)) return kEthiopic;
-       else if ((0x0400 <= aChar) && ( aChar <= 0x0676)) return kCanadian;
-       else return kOthers;
+       if ((0x0400 <= aChar) && ( aChar <= 0x0676)) return kCanadian;
+       if ((0x0780 <= aChar) && ( aChar <= 0x07ff)) return kKhmer;
+       return kOthers;
+     }
   }
 }
 //--------------------------------------------------------------------------

@@ -70,6 +70,7 @@ typedef enum {
  kHangul,
  kBopomofo,
  kEthiopic,
+ kKhmer,
  kCanadian,
  kUserDefinedEncoding,
  
