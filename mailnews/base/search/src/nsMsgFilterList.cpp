@@ -829,9 +829,11 @@ nsMsgFilterList::WriteWstrAttr(nsMsgFilterFileAttribValue attrib,
 nsresult nsMsgFilterList::SaveTextFilters(nsIOFileStream *aStream)
 {
 	nsresult	err = NS_OK;
+	const char *attribStr;
 	PRUint32			filterCount;
 	m_filters->Count(&filterCount);
 
+	attribStr = GetStringForAttrib(nsIMsgFilterList::attribVersion);
 	err = WriteIntAttr(nsIMsgFilterList::attribVersion, kFileVersion, aStream);
 	err = WriteBoolAttr(nsIMsgFilterList::attribLogging, m_loggingEnabled, aStream);
 	for (PRUint32 i = 0; i < filterCount; i ++)
