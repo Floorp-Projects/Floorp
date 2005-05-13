@@ -2958,14 +2958,21 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   if (mCaret)
     mCaret->EraseCaret();
 
+  // If we don't have a root frame yet, that means we haven't had our initial
+  // reflow... If that's the case, and aWidth or aHeight is unconstrained,
+  // ignore them altogether.
+  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
+
+  if (!rootFrame &&
+      (aWidth == NS_UNCONSTRAINEDSIZE || aHeight == NS_UNCONSTRAINEDSIZE)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  
   if (mPresContext) {
     nsRect r(0, 0, aWidth, aHeight);
     mPresContext->SetVisibleArea(r);
   }
 
-  // If we don't have a root frame yet, that means we haven't had our initial
-  // reflow...
-  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   if (rootFrame) {
     // Kick off a top-down reflow
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
