@@ -281,7 +281,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeRemoveAl
 }
 
 // Ashu
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 static void event_processor_callback(gpointer data,
                                      gint source,
                                      GdkInputCondition condition) {

@@ -34,7 +34,7 @@
 
 #include "ns_util.h"
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 #include <unistd.h>
 #include "gdksuperwin.h"
 #include "gtkmozarea.h"
@@ -43,7 +43,6 @@ extern "C" {
     static int	    wc_x_error	 (Display     *display, 
 				  XErrorEvent *error);
 }
-
 #endif
 
 PLEventQueue	*NativeWrapperFactory::sActionQueue        = nsnull;
@@ -135,7 +134,7 @@ NativeWrapperFactory::Init(JNIEnv * env, jobject newNativeEventThread)
                ("NativeBrowserControl_Init: get ActionQueue: %d\n",
                 mFailureCode));
         
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
         
         // The gdk_x_error function exits in some cases, we don't 
         // want that.
@@ -171,12 +170,11 @@ NativeWrapperFactory::ProcessEventLoop(void)
         return 0;
     }
     
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     while(gtk_events_pending()) {
         gtk_main_iteration();
     }
-#else
-    // PENDING(mark): Does this work on the Mac?
+#elif !defined(XP_MACOSX)
     MSG msg;
     PRBool wasHandled;
     
@@ -226,7 +224,7 @@ NativeWrapperFactory::IsInitialized(void)
     return sInitComplete;
 }
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 static int
 wc_x_error (Display	 *display,
             XErrorEvent *error)

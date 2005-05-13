@@ -56,7 +56,7 @@
 #include "ns_globals.h"
 
 // Ashu
-#ifdef XP_UNIX
+#if defined(XP_UNIX) &&!defined(XP_MACOSX)
 #include "nsIWidget.h" // for GTKWidget
 #include <gtk/gtk.h>
 #endif

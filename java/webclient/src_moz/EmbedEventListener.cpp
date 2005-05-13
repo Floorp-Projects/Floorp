@@ -217,7 +217,7 @@ EmbedEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
 	return NS_OK;
     // Return FALSE to this function to mark the event as not
     // consumed...
-    PRBool return_val = FALSE;
+    PRBool return_val = PR_FALSE;
 
     PopulatePropertiesFromEvent(aMouseEvent);
 

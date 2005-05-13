@@ -106,9 +106,11 @@ public:
     // Relationship ivars
     // 
     
-#ifdef XP_UNIX
+#if defined(XP_UNIX) &&!defined(XP_MACOSX)
     GtkWidget *                    parentHWnd;
-#else 
+#elif defined(XP_MAC) || defined(XP_MACOSX)
+    void *                         parentHWnd;
+#else !defined(XP_MACOSX)
     HWND                           parentHWnd;
 #endif
     

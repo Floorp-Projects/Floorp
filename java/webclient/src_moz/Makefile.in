@@ -132,6 +132,12 @@ CPPSRCS += \
 	$(NULL)
 DIRS = gtk
 else
+ifeq ($(OS_ARCH),Darwin)
+CMMSRCS = cocoa/CocoaBrowserControlCanvas.mm
+CPPSRCS += cocoa/CocoaBrowserControlCanvasImpl.cpp
+DLL_SUFFIX = .jnilib
+DSO_LDOPTS += -L/System/Library/Frameworks/JavaVM.Framework/Libraries -ljawt
+else
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += \
 	win32/Win32BrowserControlCanvas.cpp \
@@ -141,6 +147,7 @@ CPPSRCS += \
 	gtk/GtkBrowserControlCanvas.cpp \
 	$(NULL)
 DIRS = gtk
+endif
 endif
 endif
 
@@ -193,8 +200,12 @@ ifeq ($(OS_ARCH),WINNT)
 INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/win32 $(INCLUDES) \
        -I../src_share -I.
 else
+ifeq ($(OS_ARCH),Darwin)
+INCLUDES := -I$(MOZ_JDKHOME)/include $(INCLUDES) -I../src_share -I.
+else
 INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/solaris $(INCLUDES) \
 	-I$(DEPTH)/widget/src/gtk -I../src_share
+endif
 endif
 endif
 

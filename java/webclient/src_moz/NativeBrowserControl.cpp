@@ -140,14 +140,16 @@ NativeBrowserControl::Realize(jobject javaBrowserControl,
     mSessionHistory = do_CreateInstance(NS_SHISTORY_CONTRACTID);
     mNavigation->SetSessionHistory(mSessionHistory);
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     PR_ASSERT(PR_FALSE);
     GtkWidget *ownerAsWidget (GTK_WIDGET(parentWinPtr));
     parentHWnd = ownerAsWidget;
     width = ownerAsWidget->allocation.width;
     height = ownerAsWidget->allocation.height;
-#else 
+#elif !defined(XP_MACOSX)
     parentHWnd = (HWND) parentWinPtr;
+#else
+    parentHWnd = parentWinPtr;
 #endif
 
     // create the window

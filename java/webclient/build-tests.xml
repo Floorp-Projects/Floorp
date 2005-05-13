@@ -104,10 +104,17 @@
 	      <src path="${src.manual.test.dir}"/>
 	      <patternset>
 		    <exclude name="**/*Win32*.java" if="build.unix.classes"/>
+		    <exclude name="**/*Cocoa*.java" if="build.unix.classes"/>
 	      </patternset>
 
 	      <patternset>
 		    <exclude name="**/*Gtk*.java" if="build.win32.classes"/>
+		    <exclude name="**/*Cocoa*.java" if="build.win32.classes"/>
+	      </patternset>
+
+       	      <patternset>
+		    <exclude name="**/*Gtk*.java" if="build.mac.classes"/>
+		    <exclude name="**/*Win32*.java" if="build.mac.classes"/>
 	      </patternset>
 
         </javac>

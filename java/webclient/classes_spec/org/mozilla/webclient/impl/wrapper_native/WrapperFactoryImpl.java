@@ -416,6 +416,9 @@ protected String getPlatformCanvasClassName()
         if (-1 != osName.indexOf("indows")) {
             platformCanvasClassName = "org.mozilla.webclient.impl.wrapper_native.Win32BrowserControlCanvas";
         }
+        else if (-1 != osName.indexOf("Mac OS X")) {
+            platformCanvasClassName = "org.mozilla.webclient.impl.wrapper_native.CocoaBrowserControlCanvas";
+        }
         else {
             platformCanvasClassName = "org.mozilla.webclient.impl.wrapper_native.GtkBrowserControlCanvas";
         }

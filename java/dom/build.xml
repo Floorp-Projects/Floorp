@@ -91,6 +91,8 @@
                      executable="gmake"/>
     <exec os="Linux" dir="${basedir}/src" failonerror="yes" 
                      executable="make"/>
+    <exec os="Mac OS X" dir="${basedir}/src" failonerror="yes" 
+                     executable="make"/>
     <exec os="Windows 2000" dir="${basedir}/src" executable="make" 
                      failonerror="yes"/>
 

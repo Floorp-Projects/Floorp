@@ -111,11 +111,13 @@ nsresult
 EmbedWindow::CreateWindow_(PRUint32 width, PRUint32 height)
 {
     nsresult rv;
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     PR_ASSERT(PR_FALSE);
     GtkWidget *ownerAsWidget (GTK_WIDGET(mOwner->parentHWnd));
     width = ownerAsWidget->allocation.width;
     height = ownerAsWidget->allocation.height;
+#elif defined(XP_MACOSX)
+    void *ownerAsWidget = mOwner->parentHWnd;
 #else 
     HWND ownerAsWidget = mOwner->parentHWnd;
 #endif
@@ -645,8 +647,10 @@ EmbedWindow::SetTitle(const PRUnichar *aTitle)
 NS_IMETHODIMP
 EmbedWindow::GetSiteWindow(void **aSiteWindow)
 {
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     GtkWidget *ownerAsWidget (GTK_WIDGET(mOwner->parentHWnd));
+#elif defined(XP_MACOSX)
+   void *ownerAsWidget = mOwner->parentHWnd;
 #else 
     HWND ownerAsWidget = mOwner->parentHWnd;
 #endif

@@ -556,55 +556,8 @@ JNIEnv* nsJavaDOMImpl::GetJNIEnv() {
 
 #ifndef JAVA_DOM_OJI_ENABLE
 void nsJavaDOMImpl::StartJVM(void) {
-  jsize jvmCount;
-  JNI_GetCreatedJavaVMs(&jvm, 1, &jvmCount);
-  if (jvmCount) {
-    return;
-  }
-
-  JNIEnv *env = NULL;	
-  JDK1_1InitArgs vm_args;
-  JNI_GetDefaultJavaVMInitArgs(&vm_args);
-  vm_args.version = 0x00010001;
-  vm_args.verifyMode = JNI_TRUE;
-#ifdef DEBUG
-  vm_args.verbose = JNI_TRUE;
-  vm_args.enableVerboseGC = JNI_TRUE;
-#endif // DEBUG
-  char* cp = PR_GetEnv("CLASSPATH");
-  char* p = new char[strlen(cp) + strlen(vm_args.classpath) + 2];
-  strcpy(p, vm_args.classpath);
-  if (cp) {
-#ifdef XP_PC
-    strcat(p, ";");
-#else
-    strcat(p, ":");
-#endif
-    strcat(p, cp);
-    vm_args.classpath = p;
-  }
-
-#ifdef DISABLE_JIT
-   /* workaround to get java dom to work on Linux */
-   char **props = new char*[2];
-   props[0]="java.compiler=";  
-   props[1]=0;
-   vm_args.properties = props;
-#endif
-
-#ifdef DEBUG
-  printf("classpath is \"%s\"\n", vm_args.classpath);
-#endif // DEBUG
-  jint rv = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
-  if (rv < 0) {
-    printf("\n JAVA DOM: could not start jvm\n");
-  } else {
-    printf("\n JAVA DOM: successfully started jvm\n");
-  }
-  delete[] p;
 }
 #endif /* JAVA_DOM_OJI_ENABLE */
-
 
 #if defined(DEBUG)
 static void dump_document(nsIDOMDocument* domDoc, const char* urlSpec)
