@@ -92,9 +92,9 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 // base class for a 'builder' object. This one just builds a flat list
 @interface HistoryTreeBuilder : NSObject
 {
-  HistoryItem*    mRootItem;
-  SEL             mSortSelector;
-  BOOL            mSortDescending;
+  HistoryCategoryItem*  mRootItem;
+  SEL                   mSortSelector;
+  BOOL                  mSortDescending;
 }
 
 // sets up the tree and sorts it
@@ -103,8 +103,6 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 - (HistoryItem*)rootItem;
 - (HistoryItem*)addItem:(HistorySiteItem*)item;
 - (HistoryItem*)removeItem:(HistorySiteItem*)item;
-
-- (HistoryItem*)parentOfItem:(HistorySiteItem*)item;
 
 - (void)resortWithSelector:(SEL)sortSelector descending:(BOOL)descending;
 
@@ -130,7 +128,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 
 @interface HistoryByDateTreeBuilder : HistoryTreeBuilder
 {
-  NSMutableArray*         mDateCategories;      // array of HistoryCategoryItems ordered recent -> old
+  NSMutableArray*         mDateCategories;        // array of HistoryCategoryItems ordered recent -> old
 }
 
 - (void)setupDateCategories;
@@ -225,21 +223,16 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
   return mRootItem;
 }
 
-- (HistoryItem*)parentOfItem:(HistorySiteItem*)item
-{
-  return mRootItem;
-}
-
 - (HistoryItem*)addItem:(HistorySiteItem*)item
 {
-  [[mRootItem children] addObject:item];
+  [mRootItem addChild:item];
   [self resortFromItem:mRootItem];
   return mRootItem;
 }
 
 - (HistoryItem*)removeItem:(HistorySiteItem*)item
 {
-  [[mRootItem children] removeObject:item];
+  [mRootItem removeChild:item];
   // no need to resort
   return mRootItem;
 }
@@ -248,7 +241,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 {
   mRootItem = [[HistoryCategoryItem alloc] initWithTitle:@"" childCapacity:[items count]];
 
-  [[mRootItem children] addObjectsFromArray:items];
+  [mRootItem addChildren:items];
   [self resortFromItem:mRootItem];
 }
 
@@ -294,11 +287,6 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
   [super dealloc];
 }
 
-- (HistoryItem*)parentOfItem:(HistorySiteItem*)item
-{
-  return [mSiteDictionary objectForKey:[item hostname]];
-}
-
 - (HistoryCategoryItem*)ensureHostCategoryForItem:(HistorySiteItem*)inItem
 {
   NSString* itemHostname = [inItem hostname];
@@ -311,7 +299,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
     
     hostCategory = [[HistorySiteCategoryItem alloc] initWithSite:itemHostname title:itemTitle childCapacity:10];
     [mSiteDictionary setObject:hostCategory forKey:itemHostname];
-    [[mRootItem children] addObject:hostCategory];
+    [mRootItem addChild:hostCategory];
     [hostCategory release];
   }
   return hostCategory;
@@ -320,7 +308,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 - (void)removeSiteCategory:(HistoryCategoryItem*)item forHostname:(NSString*)hostname
 {
   [mSiteDictionary removeObjectForKey:hostname];
-  [[mRootItem children] removeObject:item];
+  [mRootItem removeChild:item];
 }
 
 - (HistoryItem*)addItem:(HistorySiteItem*)item
@@ -331,7 +319,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
   if (!hostCategory)
     hostCategory = [self ensureHostCategoryForItem:item];
 
-  [[hostCategory children] addObject:item];
+  [hostCategory addChild:item];
 
   [self resortFromItem:newHost ? mRootItem : hostCategory];
   return hostCategory;
@@ -341,7 +329,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 {
   NSString* itemHostname = [item hostname];
   HistoryCategoryItem* hostCategory = [mSiteDictionary objectForKey:itemHostname];
-  [[hostCategory children] removeObject:item];
+  [hostCategory removeChild:item];
 
   // is the category is now empty, remove it
   if ([hostCategory numberOfChildren] == 0)
@@ -368,7 +356,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
   while ((item = [itemsEnum nextObject]))
   {
     HistoryCategoryItem* hostCategory = [self ensureHostCategoryForItem:item];
-    [[hostCategory children] addObject:item];
+    [hostCategory addChild:item];
   }
 
   [self resortFromItem:mRootItem];
@@ -385,9 +373,9 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 {
   if ((self = [super init]))
   {
-    mSortSelector = sortSelector;
-    mSortDescending = descending;
-
+    mSortSelector            = sortSelector;
+    mSortDescending          = descending;
+    
     [self setupDateCategories];
     [self buildTreeWithItems:items];
   }
@@ -470,15 +458,10 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
   return nil;
 }
 
-- (HistoryItem*)parentOfItem:(HistorySiteItem*)item
-{
-  return [self categoryItemForDate:[item lastVisit]];
-}
-
 - (HistoryItem*)addItem:(HistorySiteItem*)item
 {
   HistoryCategoryItem* dateCategory = [self categoryItemForDate:[item lastVisit]];
-  [[dateCategory children] addObject:item];
+  [dateCategory addChild:item];
 
   [self resortFromItem:dateCategory];
   return dateCategory;
@@ -487,7 +470,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 - (HistoryItem*)removeItem:(HistorySiteItem*)item
 {
   HistoryCategoryItem* dateCategory = [self categoryItemForDate:[item lastVisit]];
-  [[dateCategory children] removeObject:item];
+  [dateCategory removeChild:item];
   // no need to resort
   return dateCategory;
 }
@@ -499,11 +482,11 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
   while ((item = [itemsEnum nextObject]))
   {
     HistoryCategoryItem* dateCategory = [self categoryItemForDate:[item lastVisit]];
-    [[dateCategory children] addObject:item];
+    [dateCategory addChild:item];
   }
 
   mRootItem = [[HistoryCategoryItem alloc] initWithTitle:@"" childCapacity:[mDateCategories count]];
-  [[mRootItem children] addObjectsFromArray:mDateCategories];
+  [mRootItem addChildren:mDateCategories];
 
   [self resortFromItem:mRootItem];
 }
@@ -633,6 +616,7 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
     mGlobalHistory = globalHist;
     if (!mGlobalHistory)
     {
+      NSLog(@"Failed to initialize HistoryDataSource (couldn't get global history)");
       [self autorelease];
       return nil;
     }
@@ -812,6 +796,11 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
   }
 
   [self rebuildHistory];
+}
+
+- (HistoryItem*)rootItem
+{
+  return [mTreeBuilder rootItem];
 }
 
 - (void)notifyChanged:(HistoryItem*)changeRoot itemOnly:(BOOL)itemOnly

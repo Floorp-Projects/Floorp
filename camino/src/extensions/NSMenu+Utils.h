@@ -53,6 +53,12 @@
 // return the first item (if any) with the given target and action.
 - (id<NSMenuItem>)itemWithTarget:(id)anObject andAction:(SEL)actionSelector;
 
+// remove items after the given item, or all items if nil
+- (void)removeItemsAfterItem:(id<NSMenuItem>)inItem;
+
+// remove all items including and after the given index (i.e. all items if index is 0)
+- (void)removeItemsFromIndex:(int)inItemIndex;
+
 @end
 
 

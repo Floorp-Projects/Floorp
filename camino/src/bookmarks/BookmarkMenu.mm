@@ -40,7 +40,9 @@
 #import "BookmarkMenu.h"
 #import "BookmarkFolder.h"
 #import "Bookmark.h"
+
 #import "NSString+Utils.h"
+#import "NSMenu+Utils.h"
 
 // Definitions
 #define MENU_TRUNCATION_CHARS 60
@@ -118,7 +120,7 @@ const long kOpenInTabsTag = 0xBEEF;
 
 -(void)setFirstItemIndex:(int)anIndex
 {
-  mFirstItemIndex=anIndex;
+  mFirstItemIndex = anIndex;
 }
 
 //
@@ -128,9 +130,7 @@ const long kOpenInTabsTag = 0xBEEF;
 - (void)flushMenu
 {
   int firstItemIndex = [self firstItemIndex];
-  NSMenu *menu = [self menu];
-  while ([menu numberOfItems] > firstItemIndex)
-    [menu removeItemAtIndex:firstItemIndex];
+  [[self menu] removeItemsFromIndex:firstItemIndex];
 }
 
 //

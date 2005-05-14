@@ -109,6 +109,24 @@ enum
   return @"";
 }
 
+- (void)setParentItem:(HistoryItem*)inParent
+{
+  mParentItem = inParent;
+}
+
+- (HistoryItem*)parentItem
+{
+  return mParentItem;
+}
+
+- (BOOL)isDescendentOfItem:(HistoryItem*)inItem
+{
+  if (inItem == mParentItem)
+    return YES;
+
+  return [mParentItem isDescendentOfItem:inItem];
+}
+
 - (NSMutableArray*)children
 {
   return nil;
@@ -233,6 +251,36 @@ enum
   return nil;
 }
 
+- (void)addChild:(HistoryItem*)inChild
+{
+  [mChildren addObject:inChild];
+  [inChild setParentItem:self];
+}
+
+- (void)insertChild:(HistoryItem*)inChild atIndex:(unsigned int)inIndex
+{
+  [mChildren insertObject:inChild atIndex:inIndex];
+  [inChild setParentItem:self];
+}
+
+- (void)removeChild:(HistoryItem*)inChild
+{
+  [mChildren removeObject:inChild];
+  [inChild setParentItem:nil];
+}
+
+- (void)addChildren:(NSArray*)inChildren
+{
+  [inChildren makeObjectsPerformSelector:@selector(setParentItem:) withObject:self];
+  [mChildren addObjectsFromArray:inChildren];
+}
+
+- (void)removeAllChildren
+{
+  [mChildren makeObjectsPerformSelector:@selector(setParentItem:) withObject:nil];
+  [mChildren removeAllObjects];
+}
+
 - (NSComparisonResult)compareURL:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
   // always sort categories before sites
@@ -314,6 +362,11 @@ enum
   return [NSString stringWithFormat:@"site:%d", mSite];
 }
 
+- (NSString*)description
+{
+  return [NSString stringWithFormat:@"HistorySiteCategoryItem %p, site %@", self, mSite];
+}
+
 @end // HistorySiteCategoryItem
 
 #pragma mark -
@@ -341,9 +394,19 @@ enum
   return mStartDate;
 }
 
+- (BOOL)isTodayCategory
+{
+  return (mAgeInDays == 0);
+}
+
 - (NSString*)identifier
 {
   return [NSString stringWithFormat:@"age_in_days:%d", mAgeInDays];
+}
+
+- (NSString*)description
+{
+  return [NSString stringWithFormat:@"HistoryDateCategoryItem %p, start date %@, age %d days", self, mStartDate, mAgeInDays];
 }
 
 - (NSComparisonResult)startDateCompare:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
@@ -378,7 +441,7 @@ enum
     return NSOrderedAscending;
 
   // sort category items on date, always ascending
-  NSComparisonResult result = [[self startDate] compare:[aItem startDate]];
+  NSComparisonResult result = [[self startDate] compare:[(HistoryDateCategoryItem*)aItem startDate]];
   return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
 }
 

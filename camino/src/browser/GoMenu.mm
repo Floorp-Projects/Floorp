@@ -39,295 +39,429 @@
 
 #import "NSString+Utils.h"
 #import "NSDate+Utils.h"
+#import "NSMenu+Utils.h"
 
-#import "GoMenu.h"
 #import "MainController.h"
 #import "BrowserWindowController.h"
 #import "ChimeraUIConstants.h"
+#import "CHBrowserService.h"
+#import "PreferenceManager.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-#define USE_GO_MENU 1
-
-#if USE_GO_MENU
 #include "nsIWebBrowser.h"
 #include "nsISHistory.h"
 #include "nsIWebNavigation.h"
 #include "nsIHistoryEntry.h"
 #include "nsCRT.h"
-#else
-#include "nsIBrowserHistory.h"
-#include "nsIHistoryItems.h"
-#include "nsISimpleEnumerator.h"
-#include "nsIServiceManager.h"
-#endif
+
+#import "HistoryItem.h"
+#import "HistoryDataSource.h"
+
+#import "GoMenu.h"
+
+
 
 // the maximum number of history entry menuitems to display
 static const int kMaxItems = 15;
+
+// the maximum number of "today" items to show on the main menu
+static const int kMaxTodayItems = 12;
+
 // the maximum number of characters in a menu title before cropping it
 static const unsigned int kMaxTitleLength = 80;
 
-#if !USE_GO_MENU
-
-//
-// HistoryMenuItem
-//
-// An object that passes some data between the menu items and the history data source. This
-// item lives longer than the lifetime of the tracking of the menu.
-//
-
-@interface HistoryMenuItem : NSObject
+// this little class manages the singleton history data source, and takes
+// care of shutting it down at XPCOM shutdown time.
+@interface GoMenuHistoryDataSourceOwner : NSObject
 {
-@private
-  NSString* mURL;    // strong
-  NSString* mTitle;  // strong
-  PRTime    mLastVisit;
+  HistoryDataSource*    mHistoryDataSource;
 }
--(id)initWithURL:(NSString*)inURL title:(NSString*)inTitle lastVisit:(PRTime)inLastVisit;
--(NSString*)url;
--(NSString*)title;
+
++ (GoMenuHistoryDataSourceOwner*)sharedGoMenuHistoryDataSourceOwner;
++ (HistoryDataSource*)sharedHistoryDataSource;    // just a shortcut
+
+- (HistoryDataSource*)historyDataSource;
+
 @end
 
-@implementation HistoryMenuItem
 
--(id)initWithURL:(NSString*)inURL title:(NSString*)inTitle lastVisit:(PRTime)inLastVisit
+@implementation GoMenuHistoryDataSourceOwner
+
++ (GoMenuHistoryDataSourceOwner*)sharedGoMenuHistoryDataSourceOwner
 {
-  if ((self = [super init])) {
-    mURL = [inURL retain];
-    mTitle = [inTitle retain];
-    mLastVisit = inLastVisit;
+  static GoMenuHistoryDataSourceOwner* sHistoryOwner = nil;
+  if (!sHistoryOwner)
+    sHistoryOwner = [[GoMenuHistoryDataSourceOwner alloc] init];
+  
+  return sHistoryOwner;
+}
+
++ (HistoryDataSource*)sharedHistoryDataSource
+{
+  return [[GoMenuHistoryDataSourceOwner sharedGoMenuHistoryDataSourceOwner] historyDataSource];
+}
+
+- (id)init
+{
+  if ((self = [super init]))
+  {
+    // register for xpcom shutdown
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(xpcomShutdownNotification:)
+                                                 name:XPCOMShutDownNotificationName
+                                               object:nil];
   }
   return self;
 }
 
 - (void)dealloc
 {
-  [mURL release];
-  [mTitle release];
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [mHistoryDataSource release];
+  [super dealloc];
 }
 
--(NSString*)url
+- (void)xpcomShutdownNotification:(NSNotification*)inNotification
 {
-  return mURL;
+  [mHistoryDataSource release];
+  mHistoryDataSource = nil;
 }
 
--(NSString*)title
+- (HistoryDataSource*)historyDataSource
 {
-  return mTitle;
+  if (!mHistoryDataSource)
+  {
+    mHistoryDataSource = [[HistoryDataSource alloc] init];
+    [mHistoryDataSource setHistoryView:kHistoryViewByDate];
+    [mHistoryDataSource setSortColumnIdentifier:@"last_visit"]; // always sort by last visit
+    [mHistoryDataSource setSortDescending:YES];
+  }
+  return mHistoryDataSource;
 }
 
-- (NSComparisonResult)compare:(HistoryMenuItem *)inItem
+@end // GoMenuHistoryDataSourceOwner
+
+
+#pragma mark -
+
+@interface HistoryMenu(Private)
+
++ (NSString*)menuItemTitleForHistoryItem:(HistoryItem*)inItem;
+
+- (void)setupHistoryMenu;
+- (void)rebuildHistoryItems;
+- (void)historyChanged:(NSNotification*)inNotification;
+- (void)openHistoryItem:(id)sender;
+
+@end
+
+#pragma mark -
+
+@implementation HistoryMenu
+
++ (NSString*)menuItemTitleForHistoryItem:(HistoryItem*)inItem
 {
-  if (inItem->mLastVisit > mLastVisit)
-    return NSOrderedAscending;
-  if (inItem->mLastVisit < mLastVisit)
-    return NSOrderedDescending;
-  return NSOrderedSame;
+  NSString* itemTitle = [inItem title];
+  if ([itemTitle length] == 0)
+    itemTitle = [inItem url];
+
+  return [itemTitle stringByTruncatingTo:kMaxTitleLength at:kTruncateAtMiddle];
+}
+
+- (id)initWithTitle:(NSString *)inTitle
+{
+  if ((self = [super initWithTitle:inTitle]))
+  {
+    mHistoryItemsDirty = YES;
+    // we're making the assumption here that the Go menu only gets awakeFromNib,
+    // and that other history submenus are allocated dynamically later on
+    [self setupHistoryMenu];
+  }
+  return self;
+}
+
+- (void)awakeFromNib
+{
+  mHistoryItemsDirty = YES;
+}
+
+// this should only be called after app launch, when the data source is available
+- (void)setupHistoryMenu
+{
+  // set ourselves up to listen for history changes
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(historyChanged:)
+                                               name:kNotificationNameHistoryDataSourceChanged
+                                             object:[GoMenuHistoryDataSourceOwner sharedHistoryDataSource]];
+}
+
+- (void)dealloc
+{
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [mRootItem release];
+  [mAdditionalItemsParent release];
+  [super dealloc];
+}
+
+- (void)setRootHistoryItem:(HistoryItem*)inRootItem
+{
+  [mRootItem autorelease];
+  mRootItem = [inRootItem retain];
+}
+
+- (HistoryItem*)rootItem
+{
+  return mRootItem;
+}
+
+- (void)setNumLeadingItemsToIgnore:(int)inIgnoreItems
+{
+  mNumIgnoreItems = inIgnoreItems;
+}
+
+- (int)numLeadingItemsToIgnore
+{
+  return mNumIgnoreItems;
+}
+
+- (void)setItemBeforeHistoryItems:(NSMenuItem*)inItem
+{
+  mItemBeforeHistoryItems = inItem;
+}
+
+- (NSMenuItem*)itemBeforeHistoryItems
+{
+  return mItemBeforeHistoryItems;
+}
+
+- (void)historyChanged:(NSNotification*)inNotification
+{
+  id rootChangedItem   =  [[inNotification userInfo] objectForKey:kNotificationHistoryDataSourceChangedUserInfoChangedItem];
+  // We could optimize by only changing single menu items if itemOnlyChanged is true. Normally this will also be a visit
+  // date change, which we can ignore.
+  //BOOL itemOnlyChanged = [[[inNotification userInfo] objectForKey:kNotificationHistoryDataSourceChangedUserInfoChangedItemOnly] boolValue];
+  
+  // If rootChangedItem is nil, the whole history tree is being rebuilt.
+  // We need to clear our root item, because it will become invalid. We'll set it again when we rebuild.
+  if (!rootChangedItem)
+  {
+    [self setRootHistoryItem:nil];
+    [mAdditionalItemsParent release];
+    mAdditionalItemsParent = nil;
+    mHistoryItemsDirty = YES;
+  }
+  else
+  {
+    mHistoryItemsDirty = mRootItem == rootChangedItem ||
+                        [mRootItem isDescendentOfItem:rootChangedItem] ||
+                        [rootChangedItem isDescendentOfItem:mRootItem];
+
+    if (mAdditionalItemsParent)
+      mHistoryItemsDirty |= (rootChangedItem == mAdditionalItemsParent ||
+                            [rootChangedItem parentItem] == mAdditionalItemsParent);
+  }
+}
+
+- (void)rebuildHistoryItems
+{
+  if (!mHistoryItemsDirty)
+    return;
+
+  // remove everything after the "before" item
+  [self removeItemsAfterItem:mItemBeforeHistoryItems];
+  
+  // now iterate through the history items
+  NSEnumerator* childEnum = [[mRootItem children] objectEnumerator];
+
+  // skip the first mNumIgnoreItems items
+  for (int i = 0; i < mNumIgnoreItems; ++i)
+    [childEnum nextObject];
+  
+  BOOL separatorPending = NO;
+  
+  HistoryItem* curChild;
+  while ((curChild = [childEnum nextObject]))
+  {
+    NSMenuItem* newItem = nil;
+
+    // XXX should we impose a max number of items in any one menu, to avoid crazy 2000-item menus?
+    if ([curChild isKindOfClass:[HistorySiteItem class]])
+    {
+      newItem = [[[NSMenuItem alloc] initWithTitle:[HistoryMenu menuItemTitleForHistoryItem:curChild]
+                                            action:@selector(openHistoryItem:)
+                                     keyEquivalent:@""] autorelease];
+
+      [newItem setTarget:self];
+      [newItem setRepresentedObject:curChild];
+    }
+    else if ([curChild isKindOfClass:[HistoryCategoryItem class]] && ([curChild numberOfChildren] > 0))
+    {
+      // The "today" category is special, because we hoist the 10 most recent items up to the parent menu.
+      // This code assumes that we'll hit this first, by virtue of the last visit date sorting.
+      if ([curChild respondsToSelector:@selector(isTodayCategory)] && [(HistoryDateCategoryItem*)curChild isTodayCategory])
+      {
+        // take note of the fact that we're showing children of this item
+        [mAdditionalItemsParent autorelease];
+        mAdditionalItemsParent = [curChild retain];
+
+        NSMutableArray* menuTodayItems = [NSMutableArray arrayWithArray:[curChild children]];
+        while ((int)[menuTodayItems count] > kMaxTodayItems)
+          [menuTodayItems removeObjectAtIndex:kMaxTodayItems];
+
+        NSEnumerator* todayItemsEnum = [menuTodayItems objectEnumerator];
+        HistoryItem* curTodayItem;
+        while ((curTodayItem = [todayItemsEnum nextObject]))
+        {
+          NSMenuItem* todayMenuItem = [[[NSMenuItem alloc] initWithTitle:[HistoryMenu menuItemTitleForHistoryItem:curTodayItem]
+                                                                  action:@selector(openHistoryItem:)
+                                                           keyEquivalent:@""] autorelease];
+
+          [todayMenuItem setTarget:self];
+          [todayMenuItem setRepresentedObject:curTodayItem];
+          [self addItem:todayMenuItem];
+          separatorPending = YES;
+        }
+        
+        // make a submenu for "earlier today"
+        if ([curChild numberOfChildren] > kMaxTodayItems)
+        {
+          if (separatorPending)
+          {
+            [self addItem:[NSMenuItem separatorItem]];
+            separatorPending = NO;
+          }
+
+          NSString* itemTitle = NSLocalizedString(@"GoMenuEarlierToday", @"");
+          newItem = [[[NSMenuItem alloc] initWithTitle:itemTitle
+                                                action:nil
+                                         keyEquivalent:@""] autorelease];
+
+          HistoryMenu* newSubmenu = [[HistoryMenu alloc] initWithTitle:itemTitle];
+          [newSubmenu setRootHistoryItem:curChild];
+          [newSubmenu setNumLeadingItemsToIgnore:kMaxTodayItems];
+
+          [newItem setSubmenu:newSubmenu];
+        }
+      }
+      else
+      {
+        if (separatorPending)
+        {
+          [self addItem:[NSMenuItem separatorItem]];
+          separatorPending = NO;
+        }
+
+        // Not the "today" category, and has entries
+        NSString* itemTitle = [HistoryMenu menuItemTitleForHistoryItem:curChild];
+        newItem = [[[NSMenuItem alloc] initWithTitle:itemTitle
+                                              action:nil
+                                       keyEquivalent:@""] autorelease];
+
+        HistoryMenu* newSubmenu = [[HistoryMenu alloc] initWithTitle:itemTitle];
+        [newSubmenu setRootHistoryItem:curChild];
+        
+        [newItem setSubmenu:newSubmenu];
+      }
+    }
+    
+    if (newItem)
+      [self addItem:newItem];
+  }
+  
+  mHistoryItemsDirty = NO;
+}
+
+- (void)update
+{
+  [self rebuildHistoryItems];
+  [super update];
+}
+
+- (void)openHistoryItem:(id)sender
+{
+  id repObject = [sender representedObject];
+  if ([repObject isKindOfClass:[HistoryItem class]])
+  {
+    NSString* itemURL = [repObject url];
+    
+    // XXX share this logic with MainController and HistoryOutlineViewDelegate
+    BrowserWindowController* bwc = [(MainController *)[NSApp delegate] getMainWindowBrowserController];
+    if (bwc)
+    {
+      if (GetCurrentKeyModifiers() & cmdKey)
+      {
+        BOOL backgroundLoad = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+        if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
+          [bwc openNewTabWithURL:itemURL referrer:nil loadInBackground:backgroundLoad allowPopups:NO];
+        else
+          [bwc openNewWindowWithURL:itemURL referrer: nil loadInBackground:backgroundLoad allowPopups:NO];
+      }
+      else
+      {
+        [bwc loadURL:itemURL referrer:nil activate:YES allowPopups:NO];
+      }
+    }
+    else
+      [(MainController *)[NSApp delegate] openNewWindowOrTabWithURL:itemURL andReferrer:nil];
+  }
 }
 
 @end
 
-#endif
 
 #pragma mark -
 
+@interface GoMenu(Private)
+
+- (void)appLaunchFinished:(NSNotification*)inNotification;
+
+@end
+
 @implementation GoMenu
 
-#if !USE_GO_MENU
+
 - (void)dealloc
 {
-  [mBuckets autorelease];
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
   [super dealloc];
 }
-#endif
 
-- (void) update
+- (void)awakeFromNib
 {
-  [self emptyHistoryItems];
-  [self addHistoryItems];
+  [super awakeFromNib];
 
-  [super update];
+  // listen for app launch completion
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(appLaunchFinished:)
+                                               name:NSApplicationDidFinishLaunchingNotification
+                                             object:nil];
 }
 
-#if USE_GO_MENU
-
-- (nsIWebNavigation*) currentWebNavigation
+- (void)appLaunchFinished:(NSNotification*)inNotification
 {
-  // get controller for current window
-  BrowserWindowController *controller = [(MainController *)[NSApp delegate] getMainWindowBrowserController];
-  if (!controller) return nsnull;
-  return [controller currentWebNavigation];
+  mAppLaunchDone = YES;
+  // setup the history menu after a delay, so that other app launch stuff
+  // finishes first
+  [self performSelector:@selector(setupHistoryMenu) withObject:nil afterDelay:0];
 }
 
-#endif
-
-- (void) historyItemAction:(id)sender
+- (void)update
 {
-#if USE_GO_MENU
-  // get web navigation for current browser
-  nsIWebNavigation* webNav = [self currentWebNavigation];
-  if (!webNav) return;
-  
-  // browse to the history entry for the menuitem that was selected
-  PRInt32 historyIndex = ([sender tag] - 1) - kDividerTag;
-  webNav->GotoIndex(historyIndex);
-#else
-  NSString* urlToLoad = [[sender representedObject] url];
-  BrowserWindowController* bwc = [(MainController *)[NSApp delegate] getMainWindowBrowserController];
-  if (bwc)
-    [bwc loadURL:urlToLoad referrer:nil activate:YES allowPopups:NO];
-  else
-    [(MainController *)[NSApp delegate] openNewWindowOrTabWithURL:urlToLoad andReferrer:nil];
-#endif
-}
-
-- (void) emptyHistoryItems
-{ 
-  // remove every history item after the insertion point
-  int insertionIndex = [self indexOfItemWithTag:kDividerTag];
-  for (int i = [self numberOfItems]-1; i > insertionIndex ; --i) {
-    [self removeItemAtIndex:i];
-  }
-#if !USE_GO_MENU
-  [mBuckets autorelease];
-#endif
-}
-
-- (void) addHistoryItems
-{
-#if USE_GO_MENU
-  // get session history for current browser
-  nsIWebNavigation* webNav = [self currentWebNavigation];
-  if (!webNav) return;
-  nsCOMPtr<nsISHistory> sessionHistory;
-  webNav->GetSessionHistory(getter_AddRefs(sessionHistory));
-  
-  PRInt32 count;
-  sessionHistory->GetCount(&count);
-  PRInt32 currentIndex;
-  sessionHistory->GetIndex(&currentIndex);
-
-  // determine the range of items to display
-  int rangeStart, rangeEnd;
-  int above = kMaxItems/2;
-  int below = (kMaxItems-above)-1;
-  if (count <= kMaxItems) {
-    // if the whole history fits within our menu, fit range to show all
-    rangeStart = count-1;
-    rangeEnd = 0;
-  } else {
-    // if the whole history is too large for menu, try to put current index as close to 
-    // the middle of the list as possible, so the user can see both back and forward in session
-    rangeStart = currentIndex + above;
-    rangeEnd = currentIndex - below;
-    if (rangeStart >= count-1) {
-      rangeEnd -= (rangeStart-count)+1; // shift overflow to the end
-      rangeStart = count-1;
-    } else if (rangeEnd < 0) {
-      rangeStart -= rangeEnd; // shift overflow to the start
-      rangeEnd = 0;
-    }
-  }
-
-  // create a new menu item for each history entry (up to MAX_MENUITEM entries)
-  for (PRInt32 i = rangeStart; i >= rangeEnd; --i) {
-    nsCOMPtr<nsIHistoryEntry> entry;
-    sessionHistory->GetEntryAtIndex(i, PR_FALSE, getter_AddRefs(entry));
-
-    nsXPIDLString textStr;
-    entry->GetTitle(getter_Copies(textStr));
-    NSString* title = [[NSString stringWith_nsAString: textStr] stringByTruncatingTo:kMaxTitleLength at:kTruncateAtMiddle];    
-    NSMenuItem *newItem = [self addItemWithTitle:title action:@selector(historyItemAction:) keyEquivalent:@""];
-    [newItem setTarget:self];
-    [newItem setTag:kDividerTag+1+i];
-    if (currentIndex == i)
-      [newItem setState:NSOnState];
-  }
-#else
-  // first grab all the items in the history and put them into buckets based on
-  // the last visit date. we'll then sort each bucket. each bucket becomes a menu.
-  // XXX if there is just one menu and there are less than, say, 10 items, show them inline.
-  // XXX optimize by building once, then saving the results and observing additions/removals
-  
-  // |mBuckets| is a dictionary of arrays. Each array represents a menu of all the
-  // websites for a given day in sorted order. The key for the array is the corresponding
-  // NSDate for that day. This lives until the menu is rebuilt so we don't have any
-  // lifetime issues.
-  mBuckets = [[NSMutableDictionary dictionary] retain];
-
-  nsCOMPtr<nsIBrowserHistory> globalHist = do_GetService("@mozilla.org/browser/global-history;2");
-  nsCOMPtr<nsIHistoryItems> history = do_QueryInterface(globalHist);
-  if (history) {
-    // walk the list of history items placing them into buckets by day.
-    nsCOMPtr<nsISimpleEnumerator> items;
-    history->GetItemEnumerator(getter_AddRefs(items));
-    PRBool hasMore = PR_FALSE;
-    while (NS_SUCCEEDED(items->HasMoreElements(&hasMore)) && hasMore) {
-      nsCOMPtr<nsISupports> supp;
-      if (NS_FAILED(items->GetNext(getter_AddRefs(supp))))
-        break;
-      nsCOMPtr<nsIHistoryItem> historyItem = do_QueryInterface(supp);
-
-      // the key for the elements of |mBuckets| is the date with the hours/minutes/seconds
-      // stripped off so that all visits that fall on the same day will map down to the same hash key.
-      // we then map back to a date object so it can be used to display a pretty date and sorted below.
-      PRTime lastVisit;
-      historyItem->GetLastVisitDate(&lastVisit);
-      NSDate* dateKey = [NSDate dateWithString:
-                          [[NSDate dateWithPRTime:lastVisit] descriptionWithCalendarFormat:@"%Y-%m-%d 00:00:00 +0000"
-                                                                timeZone:nil locale:nil]];
-      NSMutableArray* bucket = [mBuckets objectForKey:dateKey];
-      if (!bucket) {
-        bucket = [NSMutableArray array];
-        [mBuckets setObject:bucket forKey:dateKey];
-      }
+  if (mAppLaunchDone)
+  {
+    // the root item is nil at launch, and if the history gets totally rebuilt
+    if (!mRootItem)
+    {
+      HistoryDataSource* dataSource = [GoMenuHistoryDataSourceOwner sharedHistoryDataSource];
+      [dataSource loadLazily];
       
-      // create the HistoryMenuItem which we store until the next time the menu is built. The ordering
-      // of the array isn't really useful for us, we'll have to sort it later.
-      nsCString url;
-      historyItem->GetURL(url);
-      NSString* urlStr = [NSString stringWith_nsACString:url];
-      nsString title;
-      historyItem->GetTitle(title);
-      NSString* titleStr = [NSString stringWith_nsAString:title];
-      HistoryMenuItem* menuObject = [[[HistoryMenuItem alloc] initWithURL:urlStr title:titleStr lastVisit:lastVisit] autorelease];
-      [bucket addObject:menuObject];
+      mRootItem = [[dataSource rootItem] retain];
     }
   }
   
-  // Now that the buckets of days are built, we need to build up the actual menu. First sort the keys then
-  // walk them in order, building the top level items and their submenus
-  
-  NSArray* sortedKeys = [[mBuckets allKeys] sortedArrayUsingSelector:@selector(compare:)];
-  NSEnumerator* e = [sortedKeys reverseObjectEnumerator];  // most recent at the top
-  NSDate* dateKey = nil;
-  while ((dateKey = [e nextObject])) {
-    // we sort the items in the bucket which sorts them by the full last visit date. Since we want the
-    // most recent (highest time) at the top, we need to use a reverse enumerator below as well.
-    NSMutableArray* bucket = [[mBuckets objectForKey:dateKey] sortedArrayUsingSelector:@selector(compare:)];
-    
-    // create a toplevel menu with the date for |dateKey|
-    NSString* menuTitle = [dateKey descriptionWithCalendarFormat:NSLocalizedString(@"HistoryMenuDateFormat",nil) timeZone:nil locale:nil];
-    NSMenuItem* newItem = [self addItemWithTitle:menuTitle action:nil keyEquivalent:@""];
-
-    // build the child menu with all the history urls for this day We tie back to the url for the action by
-    // setting the represented object on the menu item (it's a weak ref, but means that the
-    // |menuObject| must outlive the duration of the time the menu is being tracked, which it 
-    // certainly is).
-    NSMenu* childMenu = [[[NSMenu allocWithZone:[NSMenu menuZone]] initWithTitle:@""] autorelease];
-    NSEnumerator* e2 = [bucket reverseObjectEnumerator];
-    HistoryMenuItem* menuObject = nil;
-    while ((menuObject = [e2 nextObject])) {
-      NSString* itemTitle = [[menuObject title] stringByTruncatingTo:kMaxTitleLength at:kTruncateAtMiddle];
-      NSMenuItem* childMenuItem = [childMenu addItemWithTitle:itemTitle action:@selector(historyItemAction:) keyEquivalent:@""];
-      [childMenuItem setRepresentedObject:menuObject];
-      [childMenuItem setTarget:self];
-    }
-    
-    [self setSubmenu:childMenu forItem:newItem];
-  }  
-#endif
+  [super update];
 }
 
 @end

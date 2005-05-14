@@ -39,15 +39,38 @@
 
 #import <Appkit/Appkit.h>
 
-@interface GoMenu : NSMenu 
+@class HistoryDataSource;
+@class HistoryItem;
+
+@interface HistoryMenu : NSMenu
 {
-  NSMutableDictionary* mBuckets;     // cached history menu objects, rebuilt every time the menu is reopened, STRONG
+  IBOutlet NSMenuItem*  mItemBeforeHistoryItems;    // the item after which we add history items. Not retained.
+
+  HistoryItem*          mRootItem;              // root history item for this menu (retained)
+  HistoryItem*          mAdditionalItemsParent; // may also contain children of this item (retained)
+
+  int                   mNumIgnoreItems;        // if > 0, ignore the first N items (for "earlier today")
+  BOOL                  mHistoryItemsDirty;     // whether we need to rebuild the items on next update
 }
 
-- (void) emptyHistoryItems;
-- (void) addHistoryItems;
+- (void)setRootHistoryItem:(HistoryItem*)inRootItem;
+- (HistoryItem*)rootItem;
 
-// NSMenu
-- (void) update;
+- (void)setNumLeadingItemsToIgnore:(int)inIgnoreItems;
+- (int)numLeadingItemsToIgnore;
+
+// specify the item after which history items will be added
+// (they are assumed to go to the end of the menu). If nil,
+// the entire menu is full of history items.
+- (void)setItemBeforeHistoryItems:(NSMenuItem*)inItem;
+- (NSMenuItem*)itemBeforeHistoryItems;
+
+@end
+
+
+@interface GoMenu : HistoryMenu 
+{
+  BOOL                mAppLaunchDone;         // has app launching completed?
+}
 
 @end

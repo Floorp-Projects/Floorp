@@ -39,7 +39,9 @@
 #import "BrowserTabBarView.h"
 #import "BrowserTabViewItem.h"
 #import "TabButtonCell.h"
+
 #import "NSPasteboard+Utils.h"
+#import "NSMenu+Utils.h"
 
 @interface BrowserTabBarView (PRIVATE)
 -(void)layoutButtons;
@@ -410,9 +412,9 @@ static const int kOverflowButtonMargin = 1;
     mOverflowMenu = [[NSMenu alloc] init];
     [mOverflowMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];
   }
+
   // remove any items on the menu other than the dummy item
-  for (int i = [mOverflowMenu numberOfItems]; i > 1; i--)
-    [mOverflowMenu removeItemAtIndex:i-1];
+  [mOverflowMenu removeItemsFromIndex:1];
 }
 
 - (IBAction)overflowMenu:(id)sender

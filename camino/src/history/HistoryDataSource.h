@@ -47,9 +47,9 @@
 class nsIBrowserHistory;
 class nsHistoryObserver;
 
-extern NSString* const kHistoryViewByDate;
-extern NSString* const kHistoryViewBySite;
-extern NSString* const kHistoryViewFlat;
+extern NSString* const kHistoryViewByDate;      // grouped by last visit date
+extern NSString* const kHistoryViewBySite;      // grouped by site
+extern NSString* const kHistoryViewFlat;        // flat
 
 // notification object is the data source.
 extern NSString* const kNotificationNameHistoryDataSourceChanged;
@@ -91,6 +91,7 @@ extern NSString* const kNotificationHistoryDataSourceChangedUserInfoChangedItemO
 
 // XXX remove?
 - (void)loadLazily;
+- (HistoryItem*)rootItem;
 
 // ideally sorting would be on the view, not the data source, but this keeps thing simpler
 - (void)setSortColumnIdentifier:(NSString*)sortColumnIdentifier;

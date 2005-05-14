@@ -290,6 +290,10 @@ static BOOL gMadePrefManager;
     NS_IF_ADDREF(mPrefs);
     
     [self syncMozillaPrefs];
+
+    // send out initted notification
+    [[NSNotificationCenter defaultCenter] postNotificationName:InitEmbeddingNotificationName object:nil];
+
     return YES;
 }
 

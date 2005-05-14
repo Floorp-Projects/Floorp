@@ -47,6 +47,7 @@
 // two shutdown notifcations exist to allow listeners to guarantee ordering of
 // notifcations, such that they can save state before xpcom-reliant data structures
 // are torn down.
+extern NSString* const InitEmbeddingNotificationName;   // embedding was initted
 extern NSString* const TermEmbeddingNotificationName;   // someone called TermEmbedding
 extern NSString* const XPCOMShutDownNotificationName;   // XPCOM is about to shut down
 

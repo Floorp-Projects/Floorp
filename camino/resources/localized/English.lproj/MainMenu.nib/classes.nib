@@ -16,7 +16,13 @@
             LANGUAGE = ObjC; 
             SUPERCLASS = NSObject; 
         }, 
-        {CLASS = GoMenu; LANGUAGE = ObjC; SUPERCLASS = NSMenu; }, 
+        {CLASS = GoMenu; LANGUAGE = ObjC; SUPERCLASS = HistoryMenu; }, 
+        {
+            CLASS = HistoryMenu; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mItemBeforeHistoryItems = NSMenuItem; }; 
+            SUPERCLASS = NSMenu; 
+        }, 
         {
             ACTIONS = {
                 aboutPlugins = id; 

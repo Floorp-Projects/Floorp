@@ -44,6 +44,7 @@ class nsIHistoryItem;
 
 @interface HistoryItem : NSObject
 {
+  HistoryItem*    mParentItem;  // not retained
 }
 
 - (NSString*)title;
@@ -55,6 +56,10 @@ class nsIHistoryItem;
 - (NSDate*)lastVisit;
 - (NSString*)hostname;
 - (NSString*)identifier;
+
+- (void)setParentItem:(HistoryItem*)inParent;
+- (HistoryItem*)parentItem;
+- (BOOL)isDescendentOfItem:(HistoryItem*)inItem;
 
 - (NSMutableArray*)children;
 - (int)numberOfChildren;
@@ -83,6 +88,10 @@ class nsIHistoryItem;
 - (NSString*)title;
 - (NSString*)identifier;    // return UUID for this folder
 
+- (void)addChild:(HistoryItem*)inChild;
+- (void)removeChild:(HistoryItem*)inChild;
+- (void)addChildren:(NSArray*)inChildren;
+
 @end
 
 
@@ -106,6 +115,7 @@ class nsIHistoryItem;
 
 - (id)initWithStartDate:(NSDate*)startDate ageInDays:(int)days title:(NSString*)title childCapacity:(int)capacity;
 - (NSDate*)startDate;
+- (BOOL)isTodayCategory;
 
 @end
 

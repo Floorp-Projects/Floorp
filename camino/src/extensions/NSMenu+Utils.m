@@ -90,6 +90,25 @@
   return [self itemAtIndex:itemIndex];
 }
 
+- (void)removeItemsAfterItem:(id<NSMenuItem>)inItem
+{
+  int firstItemToRemoveIndex = 0;
+
+  if (inItem)
+    firstItemToRemoveIndex = [self indexOfItem:inItem] + 1;
+
+  [self removeItemsFromIndex:firstItemToRemoveIndex];
+}
+
+- (void)removeItemsFromIndex:(int)inItemIndex
+{
+  if (inItemIndex < 0)
+    inItemIndex = 0;
+
+  while ([self numberOfItems] > inItemIndex)
+    [self removeItemAtIndex:inItemIndex];
+}
+
 @end
 
 

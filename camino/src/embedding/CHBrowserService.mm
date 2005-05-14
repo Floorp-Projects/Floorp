@@ -55,6 +55,7 @@
 #include "nsIMIMEInfo.h"
 #include "nsIPref.h"
 
+NSString* const InitEmbeddingNotificationName = @"InitEmebedding";    // this is actually broadcast from MainController
 NSString* const TermEmbeddingNotificationName = @"TermEmbedding";
 NSString* const XPCOMShutDownNotificationName = @"XPCOMShutDown";
 
@@ -109,8 +110,10 @@ CHBrowserService::InitEmbedding()
   static NS_DEFINE_CID(kHelperDlgCID, NS_HELPERAPPLAUNCHERDIALOG_CID);
   nsresult rv = cr->RegisterFactory(kHelperDlgCID, NS_IHELPERAPPLAUNCHERDLG_CLASSNAME, NS_IHELPERAPPLAUNCHERDLG_CONTRACTID,
                             sSingleton);
+  if (NS_FAILED(rv))
+    return rv;
 
-  return rv;
+  return NS_OK;
 }
 
 /* static */

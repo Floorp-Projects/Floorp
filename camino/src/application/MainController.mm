@@ -108,6 +108,7 @@ const int kReuseWindowOnAE = 2;
 @interface MainController(Private)<NetworkServicesClient>
 
 - (void)setupStartpage;
+- (void)setupRendezvous;
 - (void)installBookmarksMenuEnableHandler;
 - (NSMenu*)bookmarksMenu;
 - (BOOL)bookmarksItemsEnabled;
@@ -245,10 +246,13 @@ const int kReuseWindowOnAE = 2;
 
 -(void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-  [self installBookmarksMenuEnableHandler];
-
   // initialize prefs if we haven't already.
   PreferenceManager *pm = [PreferenceManager sharedInstance];
+
+  // register our app components with the embed layer
+  unsigned int numComps = 0;
+  const nsModuleComponentInfo* comps = GetAppComponents(&numComps);
+  CHBrowserService::RegisterAppComponents(comps, numComps);
 
   // To work around a bug on Tiger where the view hookup order has been changed from postfix to prefix
   // order, we need to set a user default to return to the old behavior.
@@ -261,6 +265,7 @@ const int kReuseWindowOnAE = 2;
   [[NSFileManager defaultManager] removeFileAtPath:cacheDir handler:nil];
 
   // register for window layering changes, so that we can update the bookmarks menu
+  [self installBookmarksMenuEnableHandler];
   NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
   [notificationCenter addObserver:self selector:@selector(windowLayeringDidChange:) name:NSWindowDidBecomeKeyNotification object:nil];
   [notificationCenter addObserver:self selector:@selector(windowLayeringDidChange:) name:NSWindowDidResignKeyNotification object:nil];
@@ -274,17 +279,6 @@ const int kReuseWindowOnAE = 2;
 
   [self setupStartpage];
 
-  // register our app components with the embed layer
-  unsigned int numComps = 0;
-  const nsModuleComponentInfo* comps = GetAppComponents(&numComps);
-  CHBrowserService::RegisterAppComponents(comps, numComps);
-
-  // don't open a new browser window if we already have one
-  // (for example, from an GetURL Apple Event)
-  NSWindow* browserWindow = [self getFrontmostBrowserWindow];
-  if (!browserWindow)
-    [self newWindow:self];
-  
   // Initialize offline mode.
   mOffline = NO;
   nsCOMPtr<nsIIOService> ioService(do_GetService(ioServiceContractID));
@@ -302,27 +296,17 @@ const int kReuseWindowOnAE = 2;
   if ([pm getBooleanPref:"chimera.log_js_to_console" withSuccess:&success])
     [JSConsole sharedJSConsole];
 
-  BOOL doingRendezvous = NO;
-  
-  if ([pm getBooleanPref:"chimera.enable_rendezvous" withSuccess:&success]) {
-    if ([MainController supportsBonjour]) {
-      [notificationCenter addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
-      [notificationCenter addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
-      [notificationCenter addObserver:self selector:@selector(serviceResolutionFailed:) name:NetworkServicesResolutionFailure object:nil];
-      doingRendezvous = YES;
-    }
-  }
-  
-  if (!doingRendezvous) {
-    // remove rendezvous items
-    int itemIndex;
-    while ((itemIndex = [mGoMenu indexOfItemWithTag:kRendezvousRelatedItemTag]) != -1)
-      [mGoMenu removeItemAtIndex:itemIndex];
-  }
+  [self setupRendezvous];
   
   // load up the charset dictionary with keys and menu titles.
   NSString* charsetPath = [NSBundle pathForResource:@"Charset" ofType:@"dict" inDirectory:[[NSBundle mainBundle] bundlePath]];
   mCharsets = [[NSDictionary dictionaryWithContentsOfFile:charsetPath] retain];
+
+  // open a new browser window if we don't already have one
+  // (for example, from an GetURL Apple Event)
+  NSWindow* browserWindow = [self getFrontmostBrowserWindow];
+  if (!browserWindow)
+    [self newWindow:self];
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
@@ -387,6 +371,29 @@ const int kReuseWindowOnAE = 2;
       // set the pref to say they've seen it
       [prefManager setPref:"browser.startup_page_override.version" toString:vendorSubString];
     }
+  }
+}
+
+- (void)setupRendezvous // aka "Bonjour"
+{
+  BOOL doingRendezvous = NO;
+  
+  PreferenceManager *pm = [PreferenceManager sharedInstance];
+  if ([pm getBooleanPref:"chimera.enable_rendezvous" withSuccess:NULL]) {
+    if ([MainController supportsBonjour]) {
+      NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
+      [notificationCenter addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
+      [notificationCenter addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
+      [notificationCenter addObserver:self selector:@selector(serviceResolutionFailed:) name:NetworkServicesResolutionFailure object:nil];
+      doingRendezvous = YES;
+    }
+  }
+  
+  if (!doingRendezvous) {
+    // remove rendezvous items
+    int itemIndex;
+    while ((itemIndex = [mGoMenu indexOfItemWithTag:kRendezvousRelatedItemTag]) != -1)
+      [mGoMenu removeItemAtIndex:itemIndex];
   }
 }
 
