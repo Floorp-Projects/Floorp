@@ -563,12 +563,18 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
       return rv;
   }
 
-  // Content policy check
+  // Content policy check.  We have to be careful to not pass aContent as the
+  // context here.  Otherwise, if there is a JS-implemented content policy, we
+  // will attempt to wrap the content node, which will try to load XBL bindings
+  // for it, if any.  Since we're not done loading this binding yet, that will
+  // reenter this method and we'll end up creating a binding and then
+  // immediately clobbering it in our table.  That makes things very confused,
+  // leading to misbehavior and crashes.
   PRInt16 decision = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
                                  aURL,
                                  docURI,
-                                 aContent,
+                                 document,        // context
                                  EmptyCString(),  // mime guess
                                  nsnull,          // extra
                                  &decision);
