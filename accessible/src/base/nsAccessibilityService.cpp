@@ -906,20 +906,6 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
   *_retval = nsnull;
 
 #ifndef MOZ_ACCESSIBILITY_ATK
-  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(node));
-  if (textContent) {
-    // If empty text string, don't include in accessible tree
-    // Items with length 0 are already gone, we also need to check for single NBSP's
-    // or newlines, both of which indicate an empty text object
-    PRInt32 textLength = textContent->TextLength();
-    if (textLength == 1) {
-      PRUnichar theChar = textContent->Text()->CharAt(0);
-      // Check for NBSP (160) or newline
-      if (theChar == 160 || theChar=='\n')
-        return NS_ERROR_FAILURE;
-    }
-  }
-    
   *_retval = new nsHTMLTextAccessible(node, weakShell, frame);
 #else
   // In ATK, we are only creating the accessible object for the text frame that is the FIRST
@@ -1855,8 +1841,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
    */
   if (content->IsContentOfType(nsIContent::eTEXT)) {
     // --- Create HTML for visible text frames ---
-    nsSize frameSize = frame->GetSize();
-    if (frameSize.height == 0 || frameSize.width == 0) {
+    if (frame->IsEmpty()) {
       *aIsHidden = true;
       return NS_ERROR_FAILURE;
     }
