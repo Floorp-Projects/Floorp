@@ -113,7 +113,7 @@
 # (that's for en-US, it might be different for other keyboard layouts)
         <key id="key_openHelpMac"
              oncommand="openHelp('firefox-help');"
-             keycode="&openHelpMac2.commandkey;"
+             key="&openHelpMac2.commandkey;"
              modifiers="&openHelpMac2.modifiers;"/>
         <key id="key_openHelpMacFrontend"
              key="&openHelpMac2.frontendCommandkey;"
