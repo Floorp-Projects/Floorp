@@ -390,7 +390,7 @@
 
         <toolbarbutton id="close-button" class="toolbarbutton-1"
                        tooltiptext="&fullScreenClose.tooltip;"
-                       oncommand="window.close();"/>
+                       oncommand="BrowserTryToCloseWindow();"/>
       </hbox>
 #endif
     </toolbar>
