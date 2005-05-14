@@ -508,7 +508,7 @@ nsCanvasRenderingContext2D::SetTargetImageFrame(gfxIImageFrame* aImageFrame)
 
     mImageFrame = aImageFrame;
 
-    return NS_OK;
+    return ClearRect (0, 0, mWidth, mHeight);
 }
 
 NS_IMETHODIMP
@@ -564,9 +564,29 @@ nsCanvasRenderingContext2D::UpdateImageFrame()
                 PRUint8 r = *inrow++;
                 PRUint8 a = *inrow++;
 
+                // now recover the real bgra from the cairo
+                // premultiplied values
+                if (a == 0) {
+                    // can't do much for us if we're at 0
+                    b = g = r = 0;
+                } else {
+                    // the (a/2) factor is a bias similar to one cairo applies
+                    // when premultiplying
+                    b = (b * 255 + a / 2) / a;
+                    g = (g * 255 + a / 2) / a;
+                    r = (r * 255 + a / 2) / a;
+                }
+
                 *outrowalpha++ = a;
 
+#ifdef XP_MACOSX
+                // On the mac, RGB_A8 is really RGBX_A8
+                *outrowrgb++ = 0;
+#endif
+
 #ifdef XP_WIN
+                // On windows, RGB_A8 is really BGR_A8.
+                // in fact, BGR_A8 is also BGR_A8.
                 *outrowrgb++ = b;
                 *outrowrgb++ = g;
                 *outrowrgb++ = r;
@@ -574,11 +594,6 @@ nsCanvasRenderingContext2D::UpdateImageFrame()
                 *outrowrgb++ = r;
                 *outrowrgb++ = g;
                 *outrowrgb++ = b;
-#endif
-
-#ifdef XP_MACOSX
-                // On the mac, RGB_A8 is really RGBX_A8
-                *outrowrgb++ = 0;
 #endif
             }
         }
@@ -904,17 +919,6 @@ nsCanvasRenderingContext2D::GetShadowColor(nsAString& color)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
 {
-    nsIFrame *fr = GetCanvasLayoutFrame();
-
-    if (fr) {
-        if (fr->GetStyleBackground()->IsTransparent())
-            cairo_set_rgb_color(mCairo, 0.0f, 0.0f, 0.0f);
-        else
-            SetCairoColor(fr->GetStyleBackground()->mBackgroundColor);
-    } else {
-        cairo_set_rgb_color(mCairo, 1.0f, 1.0f, 1.0f);
-    }
-
     DirtyAllStyles();
 
     cairo_save (mCairo);
@@ -1462,22 +1466,24 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
             }
 
             for (PRUint32 i = 0; i < (PRUint32) imgWidth; i++) {
-                // rgb
+                // handle rgb data; no alpha to premultiply
+#ifdef XP_MACOSX
+                // skip extra OSX byte
+                inrowrgb++;
+#endif
+                PRUint8 b = *inrowrgb++;
+                PRUint8 g = *inrowrgb++;
+                PRUint8 r = *inrowrgb++;
+
                 if (useBGR) {
-                    *outData++ = *inrowrgb++;
-                    *outData++ = *inrowrgb++;
-                    *outData++ = *inrowrgb++;
-                } else {
-                    PRUint8 r = *inrowrgb++;
-                    PRUint8 g = *inrowrgb++;
-                    PRUint8 b = *inrowrgb++;
                     *outData++ = b;
                     *outData++ = g;
                     *outData++ = r;
+                } else {
+                    *outData++ = r;
+                    *outData++ = g;
+                    *outData++ = b;
                 }
-#ifdef XP_MACOSX
-                inrowrgb++;
-#endif
 
                 // alpha
                 *outData++ = 255;
@@ -1499,31 +1505,45 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
             }
 
             for (PRUint32 i = 0; i < (PRUint32) imgWidth; i++) {
-                // rgb
-                if (useBGR) {
-                    *outData++ = *inrowrgb++;
-                    *outData++ = *inrowrgb++;
-                    *outData++ = *inrowrgb++;
-                } else {
-                    PRUint8 r = *inrowrgb++;
-                    PRUint8 g = *inrowrgb++;
-                    PRUint8 b = *inrowrgb++;
-                    *outData++ = b;
-                    *outData++ = g;
-                    *outData++ = r;
-                }
-#ifdef XP_MACOSX
-                inrowrgb++;
-#endif
-
-                // alpha
+                // pull out alpha to premultiply
                 PRInt32 bit = i % 8;
                 PRInt32 byte = i / 8;
 
                 PRUint8 a = (inrowalpha[byte] >> bit) & 1;
-                if (a) a = 255;
 
-                *outData++ = a;
+#ifdef XP_MACOSX
+                    // skip extra X8 byte on OSX
+                    inrowrgb++;
+#endif
+
+                // handle rgb data; need to multiply the alpha out,
+                // but we short-circuit that here since we know that a
+                // can only be 0 or 1
+                if (a) {
+                    PRUint8 b = *inrowrgb++;
+                    PRUint8 g = *inrowrgb++;
+                    PRUint8 r = *inrowrgb++;
+
+                    if (useBGR) {
+                        *outData++ = b;
+                        *outData++ = g;
+                        *outData++ = r;
+                    } else {
+                        *outData++ = r;
+                        *outData++ = g;
+                        *outData++ = b;
+                    }
+
+                    *outData++ = 0xff;
+                } else {
+                    // alpha is 0, so we need to write all 0's,
+                    // ignoring input color
+                    inrowrgb += 3;
+                    *outData++ = 0;
+                    *outData++ = 0;
+                    *outData++ = 0;
+                    *outData++ = 0;
+                }
             }
         }
         rv = NS_OK;
@@ -1542,25 +1562,29 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
             }
 
             for (PRUint32 i = 0; i < (PRUint32) imgWidth; i++) {
-                // rgb
+                // pull out alpha; we'll need it to premultiply
+                PRUint8 a = *inrowalpha++;
+
+                // handle rgb data; we need to fully premultiply
+                // with the alpha
+#ifdef XP_MACOSX
+                // skip extra X8 byte on OSX
+                inrowrgb++;
+#endif
+                PRUint8 b = (*inrowrgb++ * a - a / 2) / 255;
+                PRUint8 g = (*inrowrgb++ * a - a / 2) / 255;
+                PRUint8 r = (*inrowrgb++ * a - a / 2) / 255;
+
                 if (useBGR) {
-                    *outData++ = *inrowrgb++;
-                    *outData++ = *inrowrgb++;
-                    *outData++ = *inrowrgb++;
-                } else {
-                    PRUint8 r = *inrowrgb++;
-                    PRUint8 g = *inrowrgb++;
-                    PRUint8 b = *inrowrgb++;
                     *outData++ = b;
                     *outData++ = g;
                     *outData++ = r;
+                } else {
+                    *outData++ = r;
+                    *outData++ = g;
+                    *outData++ = b;
                 }
-#ifdef XP_MACOSX
-                inrowrgb++;
-#endif
-
-                // alpha
-                *outData++ = *inrowalpha++;
+                *outData++ = a;
             }
         }
         rv = NS_OK;
