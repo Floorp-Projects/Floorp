@@ -642,7 +642,8 @@ pref_LoadPrefsInDir(nsIFile* aDir, char const *const *aSpecialFiles, PRUint32 aS
     NS_ASSERTION(!leafName.IsEmpty(), "Failure in default prefs: directory enumerator returned empty file?");
 
     // Skip non-js files
-    if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".js"))) {
+    if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".js"),
+                       nsCaseInsensitiveCStringComparator())) {
       PRBool shouldParse = PR_TRUE;
       // separate out special files
       for (PRUint32 i = 0; i < aSpecialFilesCount; ++i) {
