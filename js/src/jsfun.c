@@ -788,13 +788,16 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     funobj = fp->argv ? JSVAL_TO_OBJECT(fp->argv[-2]) : fp->fun->object;
     if (!funobj)
         return JS_TRUE;
+    JS_ASSERT((JSFunction *) JS_GetPrivate(cx, funobj) == fp->fun);
 
     str = JSVAL_TO_STRING(id);
     atom = js_AtomizeString(cx, str, 0);
     if (!atom)
         return JS_FALSE;
-    if (!js_LookupProperty(cx, funobj, ATOM_TO_JSID(atom), &obj2, &prop))
+    if (!js_LookupPropertyWithFlags(cx, funobj, ATOM_TO_JSID(atom),
+                                    JSLOOKUP_HIDDEN, &obj2, &prop)) {
         return JS_FALSE;
+    }
 
     sprop = (JSScopeProperty *) prop;
     if (sprop && OBJ_IS_NATIVE(obj2)) {
@@ -803,12 +806,17 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         attrs = sprop->attrs & ~JSPROP_SHARED;
         slot = (uintN) sprop->shortid;
         OBJ_DROP_PROPERTY(cx, obj2, prop);
-        if (getter == js_GetArgument || getter == js_GetLocalVariable) {
+
+        /* Ensure we found an arg or var property for the same function. */
+        if ((sprop->flags & SPROP_IS_HIDDEN) &&
+            (obj2 == funobj ||
+             (JSFunction *) JS_GetPrivate(cx, obj2) == fp->fun)) {
             if (getter == js_GetArgument) {
                 vp = fp->argv;
                 nslots = JS_MAX(fp->argc, fp->fun->nargs);
                 getter = setter = NULL;
             } else {
+                JS_ASSERT(getter == js_GetLocalVariable);
                 vp = fp->vars;
                 nslots = fp->nvars;
                 getter = js_GetCallVariable;
@@ -1220,7 +1228,8 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                 if (!js_AddNativeProperty(cx, fun->object, ATOM_TO_JSID(atom),
                                           getter, setter, SPROP_INVALID_SLOT,
                                           attrs | JSPROP_SHARED,
-                                          SPROP_HAS_SHORTID | dupflag,
+                                          SPROP_HAS_SHORTID | SPROP_IS_HIDDEN |
+                                          dupflag,
                                           JSVAL_TO_INT(userid))) {
                     return JS_FALSE;
                 }
@@ -1741,8 +1750,9 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                  * we're assured at this point that it's a valid identifier.
                  */
                 atom = CURRENT_TOKEN(ts).t_atom;
-                if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &obj2,
-                                       &prop)) {
+                if (!js_LookupPropertyWithFlags(cx, obj, ATOM_TO_JSID(atom),
+                                                JSLOOKUP_HIDDEN,
+                                                &obj2, &prop)) {
                     goto bad_formal;
                 }
                 sprop = (JSScopeProperty *) prop;
@@ -1779,7 +1789,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                                           SPROP_INVALID_SLOT,
                                           JSPROP_ENUMERATE | JSPROP_PERMANENT |
                                           JSPROP_SHARED,
-                                          SPROP_HAS_SHORTID | dupflag,
+                                          SPROP_HAS_SHORTID | SPROP_IS_HIDDEN |
+                                          dupflag,
                                           fun->nargs)) {
                     goto bad_formal;
                 }

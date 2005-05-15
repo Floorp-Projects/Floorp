@@ -1511,43 +1511,10 @@ static JSBool
 with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                     JSProperty **propp)
 {
-    JSObject *proto;
-    JSScopeProperty *sprop;
-    JSStackFrame *fp;
-
-    proto = OBJ_GET_PROTO(cx, obj);
+    JSObject *proto = OBJ_GET_PROTO(cx, obj);
     if (!proto)
         return js_LookupProperty(cx, obj, id, objp, propp);
-    if (!OBJ_LOOKUP_PROPERTY(cx, proto, id, objp, propp))
-        return JS_FALSE;
-
-    /*
-     * Check whether id names an argument or local variable in an active
-     * function.  If so, pretend we didn't find it, so that the real arg or
-     * var property can be found in the function's call object, later on in
-     * the scope chain.  But skip unshared arg and var properties -- those
-     * result when a script explicitly sets a function "static" property of
-     * the same name.  See jsinterp.c:SetFunctionSlot.
-     *
-     * XXX blame pre-ECMA reflection of function args and vars as properties
-     */
-    if ((sprop = (JSScopeProperty *) *propp) &&
-        (proto = *objp, OBJ_IS_NATIVE(proto)) &&
-        (sprop->getter == js_GetArgument ||
-         sprop->getter == js_GetLocalVariable) &&
-        (sprop->attrs & JSPROP_SHARED)) {
-        JS_ASSERT(OBJ_GET_CLASS(cx, proto) == &js_FunctionClass);
-        for (fp = cx->fp; fp && (!fp->fun || !fp->fun->interpreted);
-             fp = fp->down) {
-            continue;
-        }
-        if (fp && fp->fun == (JSFunction *) JS_GetPrivate(cx, proto)) {
-            OBJ_DROP_PROPERTY(cx, proto, *propp);
-            *objp = NULL;
-            *propp = NULL;
-        }
-    }
-    return JS_TRUE;
+    return OBJ_LOOKUP_PROPERTY(cx, proto, id, objp, propp);
 }
 
 static JSBool
@@ -2159,7 +2126,7 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
 /* JSVAL_INT_MAX as a string */
 #define JSVAL_INT_MAX_STRING "1073741823"
 
-#define CHECK_FOR_FUNNY_INDEX(id)                                             \
+#define CHECK_FOR_STRING_INDEX(id)                                            \
     JS_BEGIN_MACRO                                                            \
         if (JSID_IS_ATOM(id)) {                                               \
             JSAtom *atom_ = JSID_TO_ATOM(id);                                 \
@@ -2219,7 +2186,7 @@ js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
          * Handle old bug that took empty string as zero index.  Also convert
          * string indices to integers if appropriate.
          */
-        CHECK_FOR_FUNNY_INDEX(id);
+        CHECK_FOR_STRING_INDEX(id);
         sprop = js_AddScopeProperty(cx, scope, id, getter, setter, slot, attrs,
                                     flags, shortid);
     }
@@ -2273,7 +2240,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
      * Handle old bug that took empty string as zero index.  Also convert
      * string indices to integers if appropriate.
      */
-    CHECK_FOR_FUNNY_INDEX(id);
+    CHECK_FOR_STRING_INDEX(id);
 
 #if JS_HAS_GETTER_SETTER
     /*
@@ -2453,7 +2420,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
      * Handle old bug that took empty string as zero index.  Also convert
      * string indices to integers if appropriate.
      */
-    CHECK_FOR_FUNNY_INDEX(id);
+    CHECK_FOR_STRING_INDEX(id);
 
     /* Search scopes starting with obj and following the prototype link. */
     start = obj;
@@ -2587,7 +2554,11 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             }
         }
 
-        if (sprop) {
+        /*
+         * The NXOR expression is optimized to take advantage of the fact that
+         * JSLOOKUP_HIDDEN == SPROP_IS_HIDDEN.  See jsobj.h and jsscope.h.
+         */
+        if (sprop && (~(sprop->flags ^ flags) & SPROP_IS_HIDDEN)) {
             JS_ASSERT(OBJ_SCOPE(obj) == scope);
             *objp = scope->object;      /* XXXbe hide in jsscope.[ch] */
 
@@ -2711,7 +2682,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
      * Handle old bug that took empty string as zero index.  Also convert
      * string indices to integers if appropriate.
      */
-    CHECK_FOR_FUNNY_INDEX(id);
+    CHECK_FOR_STRING_INDEX(id);
 
     if (!js_LookupProperty(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
@@ -2818,7 +2789,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
      * Handle old bug that took empty string as zero index.  Also convert
      * string indices to integers if appropriate.
      */
-    CHECK_FOR_FUNNY_INDEX(id);
+    CHECK_FOR_STRING_INDEX(id);
 
     if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
         return JS_FALSE;
@@ -3064,7 +3035,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
      * Handle old bug that took empty string as zero index.  Also convert
      * string indices to integers if appropriate.
      */
-    CHECK_FOR_FUNNY_INDEX(id);
+    CHECK_FOR_STRING_INDEX(id);
 
     if (!js_LookupProperty(cx, obj, id, &proto, &prop))
         return JS_FALSE;

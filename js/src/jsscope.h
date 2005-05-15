@@ -293,6 +293,14 @@ struct JSScopeProperty {
 #define SPROP_HAS_SHORTID               0x08
 
 /*
+ * SPROP_IS_HIDDEN must not equal any JSRESOLVE_* flag bit, so that we can use
+ * it as the JSLOOKUP_HIDDEN macro's value (see jsobj.h).  This saves a branch
+ * in js_LookupPropertyWithFlags (jsobj.c).
+ */
+#define SPROP_IS_HIDDEN                 0x80    /* a normally-hidden property,
+                                                   e.g., function arg or var */
+
+/*
  * If SPROP_HAS_SHORTID is set in sprop->flags, we use sprop->shortid rather
  * than id when calling sprop's getter or setter.
  */

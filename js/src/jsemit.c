@@ -1822,8 +1822,10 @@ LookupArgOrVar(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
          * NB: We know that JSOP_DELNAME on an argument or variable evaluates
          * to false, due to JSPROP_PERMANENT.
          */
-        if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop))
+        if (!js_LookupPropertyWithFlags(cx, obj, ATOM_TO_JSID(atom),
+                                        JSLOOKUP_HIDDEN, &pobj, &prop)) {
             return JS_FALSE;
+        }
         sprop = (JSScopeProperty *) prop;
         if (sprop) {
             if (pobj == obj) {
@@ -2880,8 +2882,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             uintN slot;
 
             obj = OBJ_GET_PARENT(cx, fun->object);
-            if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(fun->atom), &pobj,
-                                   &prop)) {
+            if (!js_LookupPropertyWithFlags(cx, obj, ATOM_TO_JSID(fun->atom),
+                                            JSLOOKUP_HIDDEN, &pobj, &prop)) {
                 return JS_FALSE;
             }
             JS_ASSERT(prop && pobj == obj);
