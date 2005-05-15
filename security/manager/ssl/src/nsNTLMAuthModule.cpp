@@ -38,6 +38,10 @@
 #include "prlog.h"
 
 #include <stdlib.h>
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsServiceManagerUtils.h"
+#include "nsCOMPtr.h"
 #include "nsNSSShutDown.h"
 #include "nsNTLMAuthModule.h"
 #include "nsNativeCharsetUtils.h"
@@ -122,6 +126,19 @@ static const char NTLM_TYPE3_MARKER[] = { 0x03, 0x00, 0x00, 0x00 };
 
 #define NTLM_HASH_LEN 16
 #define NTLM_RESP_LEN 24
+
+//-----------------------------------------------------------------------------
+
+static PRBool SendLM()
+{
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefs)
+    return PR_FALSE;
+
+  PRBool val;
+  nsresult rv = prefs->GetBoolPref("network.ntlm.send-lm-response", &val);
+  return NS_SUCCEEDED(rv) && val;
+}
 
 //-----------------------------------------------------------------------------
 
@@ -679,13 +696,22 @@ GenerateType3Msg(const nsString &domain,
   }
   else
   {
-    PRUint8 lmHash[LM_HASH_LEN];
-
-    LM_Hash(password, lmHash);
-    LM_Response(lmHash, msg.challenge, lmResp);
-
     NTLM_Hash(password, ntlmHash);
     LM_Response(ntlmHash, msg.challenge, ntlmResp);
+
+    if (SendLM())
+    {
+      PRUint8 lmHash[LM_HASH_LEN];
+      LM_Hash(password, lmHash);
+      LM_Response(lmHash, msg.challenge, lmResp);
+    }
+    else
+    {
+      // According to http://davenport.sourceforge.net/ntlm.html#ntlmVersion2,
+      // the correct way to not send the LM hash is to send the NTLM hash twice
+      // in both the LM and NTLM response fields.
+      LM_Response(ntlmHash, msg.challenge, lmResp);
+    }
   }
 
   //
