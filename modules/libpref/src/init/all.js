@@ -605,6 +605,13 @@ pref("network.negotiate-auth.allow-proxies", true);
 pref("network.automatic-ntlm-auth.allow-proxies", false);
 pref("network.automatic-ntlm-auth.trusted-uris", "");
 
+// This preference controls whether or not the LM hash will be included in
+// response to a NTLM challenge.  By default, this is disabled since servers
+// should almost never need the LM hash, and the LM hash is what makes NTLM
+// authentication less secure.  See bug 250691 for further details.
+// NOTE: automatic-ntlm-auth which leverages the OS-provided NTLM
+//       implementation will not be affected by this preference.
+pref("network.ntlm.send-lm-response", false);
 
 // sspitzer:  change this back to "news" when we get to beta.
 // for now, set this to news.mozilla.org because you can only
