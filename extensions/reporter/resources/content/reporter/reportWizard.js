@@ -87,7 +87,7 @@ function getCharPref(prefname, aDefault) {
 
 function openPrivacyPolicy() {
   var url = getCharPref("privacyURL", "http://reporter-test.mozilla.org/privacy/");
-  openDialog("chrome://browser/content/browser.xul", "_blank", "chrome,all,dialog=no", url, null, null);
+  openDialog(window.opener.getBrowserURL(), "_blank", "chrome,all,dialog=no", url, null, null);
 }
 
 function initPrivacyNotice() {
