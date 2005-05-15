@@ -84,7 +84,6 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsCOMArray.h"
-#include "nsAutoLock.h"
 #include "nsEnumeratorUtils.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
 #include "nsCRT.h"
@@ -100,12 +99,6 @@
 #include "prlog.h"
 #include "rdf.h"
 
-
-#if defined(MOZ_THREADSAFE_RDF)
-#define NS_AUTOLOCK(_lock) nsAutoLock _autolock(_lock)
-#else
-#define NS_AUTOLOCK(_lock)
-#endif
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog = nsnull;
@@ -412,10 +405,6 @@ public:
                  PRBool aTruthValue = PR_TRUE);
 #endif
 
-#ifdef MOZ_THREADSAFE_RDF
-    // This datasource's monitor object.
-    PRLock* mLock;
-#endif
     PRBool  mPropagateChanges;
 };
 
@@ -554,8 +543,6 @@ NS_IMPL_QUERY_INTERFACE1(InMemoryAssertionEnumeratorImpl, nsISimpleEnumerator)
 NS_IMETHODIMP
 InMemoryAssertionEnumeratorImpl::HasMoreElements(PRBool* aResult)
 {
-    NS_AUTOLOCK(mDataSource->mLock);
-
     if (mValue) {
         *aResult = PR_TRUE;
         return NS_OK;
@@ -719,8 +706,6 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
             // its our magical HASH_ENTRY forward hash for assertions
             nsresult rv = NS_NewISupportsArray(getter_AddRefs(mHashArcs));
             if (NS_SUCCEEDED(rv)) {
-                NS_AUTOLOCK(mLock);
-
                 PL_DHashTableEnumerate(mAssertion->u.hash.mPropertyHash,
                     ArcEnumerator, mHashArcs.get());
             }
@@ -765,8 +750,6 @@ InMemoryArcsEnumeratorImpl::HasMoreElements(PRBool* aResult)
         *aResult = PR_TRUE;
         return NS_OK;
     }
-
-    NS_AUTOLOCK(mDataSource->mLock);
 
     if (mHashArcs) {
         PRUint32    itemCount;
@@ -901,9 +884,6 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
 
     mAllocator.Init("nsInMemoryDataSource", kBucketSizes, kNumBuckets, kInitialSize);
 
-#ifdef MOZ_THREADSAFE_RDF
-    mLock = nsnull;
-#endif
     mForwardArcs.ops = nsnull;
     mReverseArcs.ops = nsnull;
     mPropagateChanges = PR_TRUE;
@@ -929,12 +909,6 @@ InMemoryDataSource::Init()
         mReverseArcs.ops = nsnull;
         return NS_ERROR_OUT_OF_MEMORY;
     }
-
-#ifdef MOZ_THREADSAFE_RDF
-    mLock = PR_NewLock();
-    if (! mLock)
-        return NS_ERROR_OUT_OF_MEMORY;
-#endif
 
 #ifdef PR_LOGGING
     if (! gLog)
@@ -966,9 +940,6 @@ InMemoryDataSource::~InMemoryDataSource()
     PR_LOG(gLog, PR_LOG_NOTICE,
            ("InMemoryDataSource(%p): destroyed.", this));
 
-#ifdef MOZ_THREADSAFE_RDF
-    PR_DestroyLock(mLock);
-#endif
 }
 
 PLDHashOperator PR_CALLBACK
@@ -1111,8 +1082,6 @@ InMemoryDataSource::GetSource(nsIRDFResource* property,
     if (! target)
         return NS_ERROR_NULL_POINTER;
 
-    NS_AUTOLOCK(mLock);
-
     for (Assertion* as = GetReverseArcs(target); as; as = as->u.as.mInvNext) {
         if ((property == as->u.as.mProperty) && (tv == as->u.as.mTruthValue)) {
             *source = as->mSource;
@@ -1141,8 +1110,6 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,
     NS_PRECONDITION(target != nsnull, "null ptr");
     if (! target)
         return NS_ERROR_NULL_POINTER;
-
-    NS_AUTOLOCK(mLock);
 
     Assertion *as = GetForwardArcs(source);
     if (as && as->mHashEntry) {
@@ -1189,8 +1156,6 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source,
 
     if (! target)
         return NS_ERROR_NULL_POINTER;
-
-    NS_AUTOLOCK(mLock);
 
     Assertion *as = GetForwardArcs(source);
     if (as && as->mHashEntry) {
@@ -1246,8 +1211,6 @@ InMemoryDataSource::GetSources(nsIRDFResource* aProperty,
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    NS_AUTOLOCK(mLock);
-
     InMemoryAssertionEnumeratorImpl* result =
         InMemoryAssertionEnumeratorImpl::Create(this, nsnull, aProperty,
                                                   aTarget, aTruthValue);
@@ -1278,8 +1241,6 @@ InMemoryDataSource::GetTargets(nsIRDFResource* aSource,
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
-
-    NS_AUTOLOCK(mLock);
 
     InMemoryAssertionEnumeratorImpl* result =
         InMemoryAssertionEnumeratorImpl::Create(this, aSource, aProperty,
@@ -1413,12 +1374,8 @@ InMemoryDataSource::Assert(nsIRDFResource* aSource,
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
-
-    {
-        NS_AUTOLOCK(mLock);
-        rv = LockedAssert(aSource, aProperty, aTarget, aTruthValue);
-        if (NS_FAILED(rv)) return rv;
-    }
+    rv = LockedAssert(aSource, aProperty, aTarget, aTruthValue);
+    if (NS_FAILED(rv)) return rv;
 
     // notify observers
     for (PRInt32 i = (PRInt32)mNumObservers - 1; mPropagateChanges && i >= 0; --i) {
@@ -1572,12 +1529,8 @@ InMemoryDataSource::Unassert(nsIRDFResource* aSource,
 
     nsresult rv;
 
-    {
-        NS_AUTOLOCK(mLock);
-
-        rv = LockedUnassert(aSource, aProperty, aTarget);
-        if (NS_FAILED(rv)) return rv;
-    }
+    rv = LockedUnassert(aSource, aProperty, aTarget);
+    if (NS_FAILED(rv)) return rv;
 
     // Notify the world
     for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
@@ -1620,18 +1573,14 @@ InMemoryDataSource::Change(nsIRDFResource* aSource,
 
     nsresult rv;
 
-    {
-        NS_AUTOLOCK(mLock);
+    // XXX We can implement LockedChange() if we decide that this
+    // is a performance bottleneck.
 
-        // XXX We can implement LockedChange() if we decide that this
-        // is a performance bottleneck.
+    rv = LockedUnassert(aSource, aProperty, aOldTarget);
+    if (NS_FAILED(rv)) return rv;
 
-        rv = LockedUnassert(aSource, aProperty, aOldTarget);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = LockedAssert(aSource, aProperty, aNewTarget, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
-    }
+    rv = LockedAssert(aSource, aProperty, aNewTarget, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
     // Notify the world
     for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
@@ -1674,18 +1623,14 @@ InMemoryDataSource::Move(nsIRDFResource* aOldSource,
 
     nsresult rv;
 
-    {
-        NS_AUTOLOCK(mLock);
+    // XXX We can implement LockedMove() if we decide that this
+    // is a performance bottleneck.
 
-        // XXX We can implement LockedMove() if we decide that this
-        // is a performance bottleneck.
+    rv = LockedUnassert(aOldSource, aProperty, aTarget);
+    if (NS_FAILED(rv)) return rv;
 
-        rv = LockedUnassert(aOldSource, aProperty, aTarget);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = LockedAssert(aNewSource, aProperty, aTarget, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
-    }
+    rv = LockedAssert(aNewSource, aProperty, aTarget, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
     // Notify the world
     for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
@@ -1711,7 +1656,6 @@ InMemoryDataSource::AddObserver(nsIRDFObserver* aObserver)
     if (! aObserver)
         return NS_ERROR_NULL_POINTER;
 
-    NS_AUTOLOCK(mLock);
     mObservers.AppendObject(aObserver);
     mNumObservers = mObservers.Count();
 
@@ -1725,7 +1669,6 @@ InMemoryDataSource::RemoveObserver(nsIRDFObserver* aObserver)
     if (! aObserver)
         return NS_ERROR_NULL_POINTER;
 
-    NS_AUTOLOCK(mLock);
     mObservers.RemoveObject(aObserver);
     // note: use Count() instead of just decrementing
     // in case aObserver wasn't in list, for example
@@ -1737,8 +1680,6 @@ InMemoryDataSource::RemoveObserver(nsIRDFObserver* aObserver)
 NS_IMETHODIMP 
 InMemoryDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
 {
-    NS_AUTOLOCK(mDataSource->mLock);
-
     Assertion* ass = GetReverseArcs(aNode);
     while (ass) {
         nsIRDFResource* elbow = ass->u.as.mProperty;
@@ -1755,8 +1696,6 @@ InMemoryDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *re
 NS_IMETHODIMP 
 InMemoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
 {
-    NS_AUTOLOCK(mDataSource->mLock);
-
     Assertion* ass = GetForwardArcs(aSource);
     if (ass && ass->mHashEntry) {
         PLDHashEntryHdr* hdr = PL_DHashTableOperate(ass->u.hash.mPropertyHash,
@@ -1808,8 +1747,6 @@ InMemoryDataSource::ArcLabelsOut(nsIRDFResource* aSource, nsISimpleEnumerator** 
     if (! aSource)
         return NS_ERROR_NULL_POINTER;
 
-    NS_AUTOLOCK(mLock);
-
     InMemoryArcsEnumeratorImpl* result =
         InMemoryArcsEnumeratorImpl::Create(this, aSource, nsnull);
 
@@ -1843,8 +1780,6 @@ InMemoryDataSource::GetAllResources(nsISimpleEnumerator** aResult)
     nsCOMPtr<nsISupportsArray> values;
     rv = NS_NewISupportsArray(getter_AddRefs(values));
     if (NS_FAILED(rv)) return rv;
-
-    NS_AUTOLOCK(mLock);
 
     // Enumerate all of our entries into an nsISupportsArray.
     PL_DHashTableEnumerate(&mForwardArcs, ResourceEnumerator, values.get());
@@ -1998,8 +1933,6 @@ InMemoryDataSource::Mark(nsIRDFResource* aSource,
     if (! aTarget)
         return NS_ERROR_NULL_POINTER;
 
-    NS_AUTOLOCK(mLock);
-
     Assertion *as = GetForwardArcs(aSource);
     if (as && as->mHashEntry) {
         PLDHashEntryHdr* hdr = PL_DHashTableOperate(as->u.hash.mPropertyHash,
@@ -2063,13 +1996,10 @@ InMemoryDataSource::Sweep()
 {
     SweepInfo info = { nsnull, &mReverseArcs, &mAllocator};
 
-    {
-        // Remove all the assertions while holding the lock, but don't notify anyone.
-        NS_AUTOLOCK(mLock);
-        PL_DHashTableEnumerate(&mForwardArcs, SweepForwardArcsEntries, &info);
-    }
+    // Remove all the assertions, but don't notify anyone.
+    PL_DHashTableEnumerate(&mForwardArcs, SweepForwardArcsEntries, &info);
 
-    // Now we've left the autolock. Do the notification.
+    // Now do the notification.
     Assertion* as = info.mUnassertList;
     while (as) {
 #ifdef PR_LOGGING
