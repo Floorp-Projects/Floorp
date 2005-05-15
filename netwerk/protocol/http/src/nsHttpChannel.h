@@ -181,6 +181,7 @@ private:
     nsresult OnDoneReadingPartialCacheEntry(PRBool *streamDone);
 
     // auth specific methods
+    nsresult PrepareForAuthentication(PRBool proxyAuth);
     nsresult GenCredsAndSetEntry(nsIHttpAuthenticator *, PRBool proxyAuth, const char *scheme, const char *host, PRInt32 port, const char *dir, const char *realm, const char *challenge, const nsHttpAuthIdentity &ident, nsCOMPtr<nsISupports> &session, char **result);
     nsresult GetCredentials(const char *challenges, PRBool proxyAuth, nsAFlatCString &creds);
     nsresult GetCredentialsForChallenge(const char *challenge, const char *scheme,  PRBool proxyAuth, nsIHttpAuthenticator *auth, nsAFlatCString &creds);
@@ -243,6 +244,8 @@ private:
     PRUint32                          mRequestTime;
 
     // auth specific data
+    nsISupports                      *mProxyAuthContinuationState;
+    nsCString                         mProxyAuthType;
     nsISupports                      *mAuthContinuationState;
     nsCString                         mAuthType;
     nsHttpAuthIdentity                mIdent;

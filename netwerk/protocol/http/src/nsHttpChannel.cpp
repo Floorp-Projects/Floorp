@@ -103,6 +103,7 @@ nsHttpChannel::nsHttpChannel()
     , mCacheAccess(0)
     , mPostID(0)
     , mRequestTime(0)
+    , mProxyAuthContinuationState(nsnull)
     , mAuthContinuationState(nsnull)
     , mStartPos(LL_MaxUint())
     , mRedirectionLimit(gHttpHandler->RedirectionLimit())
@@ -142,6 +143,7 @@ nsHttpChannel::~nsHttpChannel()
     NS_IF_RELEASE(mConnectionInfo);
     NS_IF_RELEASE(mTransaction);
 
+    NS_IF_RELEASE(mProxyAuthContinuationState);
     NS_IF_RELEASE(mAuthContinuationState);
 
     // release our reference to the handler
@@ -720,6 +722,13 @@ nsHttpChannel::ProcessResponse()
         CheckForSuperfluousAuth();
         if (mCanceled)
             return CallOnStartRequest();
+
+        if (mAuthContinuationState) {
+            // reset the current continuation state because our last
+            // authentication attempt has been completed successfully
+            NS_RELEASE(mAuthContinuationState);
+            LOG(("  continuation state has been reset"));
+        }
     }
 
     // handle different server response categories.  Note that we handle
@@ -2079,6 +2088,18 @@ nsHttpChannel::GenCredsAndSetEntry(nsIHttpAuthenticator *auth,
     if (NS_FAILED(rv)) return rv;
 
     nsISupports *ss = sessionState;
+
+    // set informations that depend on whether
+    // we're authenticating against a proxy
+    // or a webserver
+    nsISupports **continuationState;
+
+    if (proxyAuth) {
+        continuationState = &mProxyAuthContinuationState;
+    } else {
+        continuationState = &mAuthContinuationState;
+    }
+
     rv = auth->GenerateCredentials(this,
                                    challenge,
                                    proxyAuth,
@@ -2086,8 +2107,9 @@ nsHttpChannel::GenCredsAndSetEntry(nsIHttpAuthenticator *auth,
                                    ident.User(),
                                    ident.Password(),
                                    &ss,
-                                   &mAuthContinuationState,
+                                   &*continuationState,
                                    result);
+
     sessionState.swap(ss);
     if (NS_FAILED(rv)) return rv;
 
@@ -2128,6 +2150,10 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
     const char *challenges;
     PRBool proxyAuth = (httpStatus == 407);
 
+    nsresult rv = PrepareForAuthentication(proxyAuth);
+    if (NS_FAILED(rv))
+        return rv;
+
     if (proxyAuth) {
         // only allow a proxy challenge if we have a proxy server configured.
         // otherwise, we could inadvertantly expose the user's proxy
@@ -2153,7 +2179,7 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
     NS_ENSURE_TRUE(challenges, NS_ERROR_UNEXPECTED);
 
     nsCAutoString creds;
-    nsresult rv = GetCredentials(challenges, proxyAuth, creds);
+    rv = GetCredentials(challenges, proxyAuth, creds);
     if (NS_FAILED(rv))
         LOG(("unable to authenticate\n"));
     else {
@@ -2169,6 +2195,53 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
 }
 
 nsresult
+nsHttpChannel::PrepareForAuthentication(PRBool proxyAuth)
+{
+    LOG(("nsHttpChannel::PrepareForAuthentication [this=%x]\n", this));
+
+    if (!proxyAuth) {
+        // reset the current proxy continuation state because our last
+        // authentication attempt was completed successfully.
+        NS_IF_RELEASE(mProxyAuthContinuationState);
+        LOG(("  proxy continuation state has been reset"));
+    }
+
+    if (!mConnectionInfo->UsingHttpProxy() || mProxyAuthType.IsEmpty())
+        return NS_OK;
+
+    // We need to remove any Proxy_Authorization header left over from a
+    // non-request based authentication handshake (e.g., for NTLM auth).
+
+    nsCAutoString contractId;
+    contractId.Assign(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
+    contractId.Append(mProxyAuthType);
+
+    nsresult rv;
+    nsCOMPtr<nsIHttpAuthenticator> precedingAuth =
+        do_GetService(contractId.get(), &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    PRUint32 precedingAuthFlags;
+    rv = precedingAuth->GetAuthFlags(&precedingAuthFlags);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (!(precedingAuthFlags & nsIHttpAuthenticator::REQUEST_BASED)) {
+        const char *challenges =
+                mResponseHead->PeekHeader(nsHttp::Proxy_Authenticate);
+        if (!challenges) {
+            // delete the proxy authorization header because we weren't
+            // asked to authenticate
+            mRequestHead.ClearHeader(nsHttp::Proxy_Authorization);
+            LOG(("  cleared proxy authorization header"));
+        }
+    }
+
+    return NS_OK;
+}
+
+nsresult
 nsHttpChannel::GetCredentials(const char *challenges,
                               PRBool proxyAuth,
                               nsAFlatCString &creds)
@@ -2178,6 +2251,19 @@ nsHttpChannel::GetCredentials(const char *challenges,
 
     nsCString authType; // force heap allocation to enable string sharing since
                         // we'll be assigning this value into mAuthType.
+
+    // set informations that depend on whether we're authenticating against a
+    // proxy or a webserver
+    nsISupports **currentContinuationState;
+    nsCString *currentAuthType;
+
+    if (proxyAuth) {
+        currentContinuationState = &mProxyAuthContinuationState;
+        currentAuthType = &mProxyAuthType;
+    } else {
+        currentContinuationState = &mAuthContinuationState;
+        currentAuthType = &mAuthType;
+    }
 
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     PRBool gotCreds = PR_FALSE;
@@ -2200,7 +2286,7 @@ nsHttpChannel::GetCredentials(const char *challenges,
             // we find a challenge corresponding to the previously tried auth
             // type.
             //
-            if (!mAuthType.IsEmpty() && authType != mAuthType)
+            if (!currentAuthType->IsEmpty() && authType != *currentAuthType)
                 continue;
 
             //
@@ -2221,22 +2307,26 @@ nsHttpChannel::GetCredentials(const char *challenges,
                                             proxyAuth, auth, creds);
             if (NS_SUCCEEDED(rv)) {
                 gotCreds = PR_TRUE;
-                mAuthType = authType;
+                *currentAuthType = authType;
+
                 break;
             }
 
             // reset the auth type and continuation state
-            mAuthType.Truncate();
-            NS_IF_RELEASE(mAuthContinuationState);
+            NS_IF_RELEASE(*currentContinuationState);
+            currentAuthType->Truncate();
         }
     }
-    if (!gotCreds && !mAuthType.IsEmpty()) {
+
+    if (!gotCreds && !currentAuthType->IsEmpty()) {
         // looks like we never found the auth type we were looking for.
         // reset the auth type and continuation state, and try again.
-        mAuthType.Truncate();
-        NS_IF_RELEASE(mAuthContinuationState);
+        currentAuthType->Truncate();
+        NS_IF_RELEASE(*currentContinuationState);
+
         rv = GetCredentials(challenges, proxyAuth, creds);
     }
+
     return rv;
 }
 
@@ -2272,11 +2362,15 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
     }
     */
 
+    // set informations that depend on whether
+    // we're authenticating against a proxy
+    // or a webserver
     const char *host;
     PRInt32 port;
     nsHttpAuthIdentity *ident;
     nsCAutoString path, scheme;
     PRBool identFromURI = PR_FALSE;
+    nsISupports **continuationState;
 
     if (proxyAuth) {
         NS_ASSERTION (mConnectionInfo->UsingHttpProxy(), "proxyAuth is true, but no HTTP proxy is configured!");
@@ -2285,6 +2379,8 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
         port = mConnectionInfo->ProxyPort();
         ident = &mProxyIdent;
         scheme.AssignLiteral("http");
+
+        continuationState = &mProxyAuthContinuationState;
     }
     else {
         host = mConnectionInfo->Host();
@@ -2303,6 +2399,8 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
             GetIdentityFromURI(authFlags, mIdent);
             identFromURI = !mIdent.IsEmpty();
         }
+
+        continuationState = &mAuthContinuationState;
     }
 
     //
@@ -2327,7 +2425,7 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
                                  challenge,
                                  proxyAuth,
                                  &sessionState,
-                                 &mAuthContinuationState,
+                                 &*continuationState,
                                  &identityInvalid);
     sessionStateGrip.swap(sessionState);
     if (NS_FAILED(rv)) return rv;
@@ -2705,6 +2803,17 @@ nsHttpChannel::SetAuthorizationHeader(nsHttpAuthCache *authCache,
     nsHttpAuthEntry *entry = nsnull;
     nsresult rv;
 
+    // set informations that depend on whether
+    // we're authenticating against a proxy
+    // or a webserver
+    nsISupports **continuationState;
+
+    if (header == nsHttp::Proxy_Authorization) {
+        continuationState = &mProxyAuthContinuationState;
+    } else {
+        continuationState = &mAuthContinuationState;
+    }
+
     rv = authCache->GetAuthEntryForPath(scheme, host, port, path, &entry);
     if (NS_SUCCEEDED(rv)) {
         // if we are trying to add a header for origin server auth and if the
@@ -2747,9 +2856,10 @@ nsHttpChannel::SetAuthorizationHeader(nsHttpAuthCache *authCache,
                                          entry->mMetaData, getter_Copies(temp));
                 if (NS_SUCCEEDED(rv))
                     creds = temp.get();
+
                 // make sure the continuation state is null since we do not
                 // support mixing preemptive and 'multirequest' authentication.
-                NS_IF_RELEASE(mAuthContinuationState);
+                NS_IF_RELEASE(*continuationState);
             }
         }
         if (creds[0]) {
