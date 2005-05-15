@@ -1460,6 +1460,7 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 
         obj = fp->varobj;
         if (obj == fp->scopeChain &&
+            OBJ_IS_NATIVE(obj) &&
             !js_InWithStatement(&cg->treeContext) &&
             !js_InCatchBlock(&cg->treeContext, atom)) {
             ATOM_LIST_SEARCH(ale, &cg->constList, atom);
@@ -1476,7 +1477,8 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
              * nor can prop be deleted.
              */
             prop = NULL;
-            ok = OBJ_LOOKUP_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop);
+            ok = js_LookupPropertyWithFlags(cx, obj, ATOM_TO_JSID(atom),
+                                            JSLOOKUP_HIDDEN, &pobj, &prop);
             if (ok) {
                 if (pobj == obj &&
                     (fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO))) {
