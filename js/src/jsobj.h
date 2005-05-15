@@ -358,11 +358,18 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                   JSProperty **propp);
 
 /*
- * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.
+ * Specialized subroutine that allows caller to preset JSRESOLVE_* flags, and
+ * to pass JSLOOKUP_HIDDEN in the 7th bit of flags.  If JSLOOKUP_HIDDEN is set,
+ * this lookup will match only those properties flagged with SPROP_IS_HIDDEN.
+ * If JSLOOKUP_HIDDEN is not set in flags, funny properties (function arg and
+ * local var props) are ignored.
  */
 extern JSBool
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp);
+
+#define JSLOOKUP_HIDDEN SPROP_IS_HIDDEN /* look for normally-hidden properties,
+                                           e.g., function arg/var props */
 
 extern JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,

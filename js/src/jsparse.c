@@ -816,15 +816,11 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             /*
              * Define a property on the outer function so that LookupArgOrVar
              * can properly optimize accesses.
-             *
-             * XXX Here and in Variables, we use the function object's scope,
-             * XXX arguably polluting it, when we could use a compiler-private
-             * XXX scope structure.  Tradition!
              */
             JS_ASSERT(OBJ_GET_CLASS(cx, varobj) == &js_FunctionClass);
             JS_ASSERT(fp->fun == (JSFunction *) JS_GetPrivate(cx, varobj));
-            if (!js_LookupProperty(cx, varobj, ATOM_TO_JSID(funAtom),
-                                   &pobj, &prop)) {
+            if (!js_LookupPropertyWithFlags(cx, varobj, ATOM_TO_JSID(funAtom),
+                                            JSLOOKUP_HIDDEN, &pobj, &prop)) {
                 return NULL;
             }
             if (prop)
@@ -835,7 +831,9 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                                              js_GetLocalVariable,
                                              js_SetLocalVariable,
                                              JSPROP_ENUMERATE | JSPROP_SHARED,
-                                             SPROP_HAS_SHORTID, fp->fun->nvars,
+                                             SPROP_HAS_SHORTID |
+                                             SPROP_IS_HIDDEN,
+                                             fp->fun->nvars,
                                              NULL)) {
                     return NULL;
                 }
@@ -866,8 +864,10 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             MUST_MATCH_TOKEN(TOK_NAME, JSMSG_MISSING_FORMAL);
             argAtom = CURRENT_TOKEN(ts).t_atom;
             pobj = NULL;
-            if (!js_LookupProperty(cx, fun->object, ATOM_TO_JSID(argAtom),
-                                   &pobj, &prop)) {
+            if (!js_LookupPropertyWithFlags(cx, fun->object,
+                                            ATOM_TO_JSID(argAtom),
+                                            JSLOOKUP_HIDDEN,
+                                            &pobj, &prop)) {
                 return NULL;
             }
             dupflag = 0;
@@ -903,7 +903,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                                       SPROP_INVALID_SLOT,
                                       JSPROP_ENUMERATE | JSPROP_PERMANENT |
                                       JSPROP_SHARED,
-                                      SPROP_HAS_SHORTID | dupflag,
+                                      SPROP_HAS_SHORTID | SPROP_IS_HIDDEN |
+                                      dupflag,
                                       fun->nargs)) {
                 return NULL;
             }
@@ -2210,6 +2211,11 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
         if (!fun) {
             prop = NULL; /* don't lookup global variables at compile time */
+        } else if (OBJ_IS_NATIVE(obj)) {
+            if (!js_LookupPropertyWithFlags(cx, obj, ATOM_TO_JSID(atom),
+                                            JSLOOKUP_HIDDEN, &pobj, &prop)) {
+                return NULL;
+            }
         } else {
             if (!OBJ_LOOKUP_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop))
                 return NULL;
@@ -2299,7 +2305,8 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                           currentGetter, currentSetter,
                                           SPROP_INVALID_SLOT,
                                           pn2->pn_attrs | JSPROP_SHARED,
-                                          SPROP_HAS_SHORTID, fun->nvars)) {
+                                          SPROP_HAS_SHORTID | SPROP_IS_HIDDEN,
+                                          fun->nvars)) {
                     return NULL;
                 }
                 if (fun->nvars == JS_BITMASK(16)) {

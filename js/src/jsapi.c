@@ -3584,7 +3584,8 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                       SPROP_INVALID_SLOT,
                                       JSPROP_ENUMERATE | JSPROP_PERMANENT |
                                       JSPROP_SHARED,
-                                      SPROP_HAS_SHORTID, i)) {
+                                      SPROP_HAS_SHORTID | SPROP_IS_HIDDEN,
+                                      i)) {
                 break;
             }
         }
