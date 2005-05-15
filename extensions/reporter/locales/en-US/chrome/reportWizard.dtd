@@ -5,7 +5,7 @@
 <!ENTITY reportWizardPrivacy.description            "This tool allows you to tell the Evangelism Team about web sites that do not work properly in Firefox, or shut Firefox out. This is your way to help us ensure the best possible experience for Firefox users. Please take a moment to read the following to learn how we use the information we collect should you choose to participate.">
 <!ENTITY reportWizardMustAgree.description          "To continue you need to agree to the privacy policy above.">
 
-<!ENTITY dontShowPrivacyStatement.label             "Don't Show Privacy Statement Again">
+<!ENTITY dontShowPrivacyStatement.label             "I have read and accept the above privacy policy.">
 
 <!ENTITY reportForm.label                           "Fill out Report">
 
