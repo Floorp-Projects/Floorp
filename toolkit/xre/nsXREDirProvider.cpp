@@ -665,6 +665,31 @@ GetProfileFolderName(char* aProfileFolderName, const char* aSource)
   *aProfileFolderName = '\0';
 }
 
+#ifdef XP_WIN
+static nsresult
+GetShellFolderPath(int folder, char result[MAXPATHLEN])
+{
+  LPMALLOC pMalloc;
+  LPITEMIDLIST pItemIDList = NULL;
+
+  if (!SUCCEEDED(SHGetMalloc(&pMalloc)))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv;
+  if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, folder, &pItemIDList)) &&
+      SUCCEEDED(SHGetPathFromIDList(pItemIDList, result))) {
+    rv = NS_OK;
+  } else {
+    rv = NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (pItemIDList)
+    pMalloc->Free(pItemIDList);
+  pMalloc->Release();
+  return rv;
+}
+#endif
+
 nsresult
 nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
 {
@@ -704,29 +729,23 @@ nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
   rv = dirFileMac->AppendNative(nsDependentCString(gAppData->name));
   NS_ENSURE_SUCCESS(rv, rv);
 #elif defined(XP_WIN)
-  LPMALLOC pMalloc;
-  LPITEMIDLIST pItemIDList = NULL;
+  char path[MAXPATHLEN];
 
-  if (!SUCCEEDED(SHGetMalloc(&pMalloc)))
-    return NS_ERROR_OUT_OF_MEMORY;
+  // CSIDL_LOCAL_APPDATA is only defined on newer versions of Windows.  If the
+  // OS does not understand it, then we'll fallback to the regular APPDATA
+  // location.  If neither is defined, then we fallback to the Windows folder.
 
-  char appDataPath[MAXPATHLEN];
+  if (aLocal)
+    rv = GetShellFolderPath(CSIDL_LOCAL_APPDATA, path);
+  if (!aLocal || NS_FAILED(rv))
+    rv = GetShellFolderPath(CSIDL_APPDATA, path);
 
-  int folder = aLocal ? CSIDL_LOCAL_APPDATA : CSIDL_APPDATA;
-
-  if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, folder, &pItemIDList)) &&
-      SUCCEEDED(SHGetPathFromIDList(pItemIDList, appDataPath))) {
-  } else {
-    if (!GetWindowsDirectory(appDataPath, MAXPATHLEN)) {
-      NS_WARNING("Aaah, no windows directory!");
-      return NS_ERROR_FAILURE;
-    }
+  if (NS_FAILED(rv) && !GetWindowsDirectory(path, sizeof(path))) {
+    NS_WARNING("Aaah, no windows directory!");
+    return NS_ERROR_FAILURE;
   }
 
-  if (pItemIDList) pMalloc->Free(pItemIDList);
-  pMalloc->Release();
-
-  rv = NS_NewNativeLocalFile(nsDependentCString(appDataPath),
+  rv = NS_NewNativeLocalFile(nsDependentCString(path),
                              PR_TRUE, getter_AddRefs(localDir));
   NS_ENSURE_SUCCESS(rv, rv);
 
