@@ -4993,6 +4993,22 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
         return NS_OK;
     }
 
+    // We need to make sure the content viewer's container is this docshell.
+    // In subframe navigation, it's possible for the docshell that the
+    // content viewer was originally loaded into to be replaced with a
+    // different one.  We don't currently support restoring the presentation
+    // in that case.
+
+    nsCOMPtr<nsISupports> container;
+    viewer->GetContainer(getter_AddRefs(container));
+    if (!::SameCOMIdentity(container, GetAsSupports(this))) {
+#ifdef DEBUG_PAGE_CACHE
+        printf("No valid container, clearing presentation\n");
+#endif
+        aSHEntry->SetContentViewer(nsnull);
+        return NS_OK;
+    }
+
     NS_ASSERTION(mContentViewer != viewer, "Restoring existing presentation");
 
 #ifdef DEBUG_PAGE_CACHE
