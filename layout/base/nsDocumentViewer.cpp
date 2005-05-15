@@ -192,6 +192,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
 #include "nsIWebNavigation.h"
+#include "nsWeakPtr.h"
 
 //paint forcing
 #include "prenv.h"
@@ -383,7 +384,7 @@ protected:
   // (ie, non owning) references. If you add any members to this
   // class, please make the ownership explicit (pinkerton, scc).
 
-  nsISupports* mContainer; // [WEAK] it owns me!
+  nsWeakPtr mContainer; // it owns me!
   nsCOMPtr<nsIDeviceContext> mDeviceContext;   // ??? can't hurt, but...
 
   // the following six items are explicitly in this order
@@ -561,7 +562,7 @@ DocumentViewerImpl::LoadStart(nsISupports *aDoc)
 nsresult
 DocumentViewerImpl::SyncParentSubDocMap()
 {
-  nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(mContainer));
+  nsCOMPtr<nsIDocShellTreeItem> item(do_QueryReferent(mContainer));
   nsCOMPtr<nsPIDOMWindow> pwin(do_GetInterface(item));
   nsCOMPtr<nsIContent> content;
 
@@ -593,7 +594,7 @@ DocumentViewerImpl::SyncParentSubDocMap()
 NS_IMETHODIMP
 DocumentViewerImpl::SetContainer(nsISupports* aContainer)
 {
-  mContainer = aContainer;
+  mContainer = do_GetWeakReference(aContainer);
   if (mPresContext) {
     mPresContext->SetContainer(aContainer);
   }
@@ -610,9 +611,9 @@ DocumentViewerImpl::GetContainer(nsISupports** aResult)
 {
    NS_ENSURE_ARG_POINTER(aResult);
 
-   *aResult = mContainer;
-   NS_IF_ADDREF(*aResult);
-
+   *aResult = nsnull;
+   nsCOMPtr<nsISupports> container = do_QueryReferent(mContainer);
+   container.swap(*aResult);
    return NS_OK;
 }
 
@@ -815,13 +816,14 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
     }
   }
 
-  nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(mContainer));
+  nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryReferent(mContainer));
   if (requestor) {
     if (mPresContext) {
       nsCOMPtr<nsILinkHandler> linkHandler;
       requestor->GetInterface(NS_GET_IID(nsILinkHandler),
                               getter_AddRefs(linkHandler));
-      mPresContext->SetContainer(mContainer);
+
+      mPresContext->SetContainer(requestor);
       mPresContext->SetLinkHandler(linkHandler);
     }
 
@@ -1083,11 +1085,13 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
     mInPermitUnload = PR_FALSE;
   }
 
+  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryReferent(mContainer));
+
   if (NS_SUCCEEDED(rv) && (event.flags & NS_EVENT_FLAG_NO_DEFAULT ||
                            !event.text.IsEmpty())) {
     // Ask the user if it's ok to unload the current page
 
-    nsCOMPtr<nsIPrompt> prompt(do_GetInterface(mContainer));
+    nsCOMPtr<nsIPrompt> prompt = do_GetInterface(docShellNode);
 
     if (prompt) {
       nsXPIDLString preMsg, postMsg;
@@ -1120,8 +1124,6 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
       }
     }
   }
-
-  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryInterface(mContainer));
 
   if (docShellNode) {
     PRInt32 childCount;
@@ -1180,6 +1182,12 @@ DocumentViewerImpl::Open()
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
 
+  // Our container might have gone away while we were closed.
+  // If this is the case, we must fail to open so we don't crash.
+  nsCOMPtr<nsISupports> container = do_QueryReferent(mContainer);
+  if (!container)
+    return NS_ERROR_NOT_AVAILABLE;
+
   nsRect bounds;
   mWindow->GetBounds(bounds);
 
@@ -1188,7 +1196,7 @@ DocumentViewerImpl::Open()
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mDocument)
-    mDocument->SetContainer(mContainer);
+    mDocument->SetContainer(nsCOMPtr<nsISupports>(do_QueryReferent(mContainer)));
 
   SyncParentSubDocMap();
 
@@ -1339,7 +1347,7 @@ DocumentViewerImpl::Destroy()
     // too many content viewers around.  Note: if max_viewers is set to 0,
     // this can reenter Destroy() and dispose of this content viewer!
 
-    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mContainer);
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryReferent(mContainer);
     if (webNav) {
       nsCOMPtr<nsISHistory> history;
       webNav->GetSessionHistory(getter_AddRefs(history));
@@ -1466,14 +1474,14 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
   if (NS_FAILED(rv)) return rv;
 
   // Set new container
-  newDoc->SetContainer(mContainer);
+  nsCOMPtr<nsISupports> container = do_QueryReferent(mContainer);
+  newDoc->SetContainer(container);
 
   // Replace the old document with the new one
   mDocument = newDoc;
 
   // Set the script global object on the new document
-  nsCOMPtr<nsIScriptGlobalObject> global(do_GetInterface(mContainer));
-
+  nsCOMPtr<nsIScriptGlobalObject> global = do_GetInterface(container);
   if (global) {
     mDocument->SetScriptGlobalObject(global);
     global->SetNewDocument(aDocument, PR_TRUE, PR_TRUE);
@@ -1675,7 +1683,7 @@ DocumentViewerImpl::Show(void)
   if (mDocument && !mPresShell && !mWindow) {
     nsresult rv;
 
-    nsCOMPtr<nsIBaseWindow> base_win(do_QueryInterface(mContainer));
+    nsCOMPtr<nsIBaseWindow> base_win(do_QueryReferent(mContainer));
     NS_ENSURE_TRUE(base_win, NS_ERROR_UNEXPECTED);
 
     base_win->GetParentWidget(&mParentWidget);
@@ -1714,14 +1722,14 @@ DocumentViewerImpl::Show(void)
     if (NS_FAILED(rv))
       return rv;
 
-    if (mPresContext && mContainer) {
-      nsCOMPtr<nsILinkHandler> linkHandler(do_GetInterface(mContainer));
+    if (mPresContext && base_win) {
+      nsCOMPtr<nsILinkHandler> linkHandler(do_GetInterface(base_win));
 
       if (linkHandler) {
         mPresContext->SetLinkHandler(linkHandler);
       }
 
-      mPresContext->SetContainer(mContainer);
+      mPresContext->SetContainer(base_win);
     }
 
     if (mPresContext) {
@@ -1818,7 +1826,7 @@ DocumentViewerImpl::Hide(void)
   }
 #endif
 
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mContainer));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   if (docShell) {
     PRBool saveLayoutState = PR_FALSE;
     docShell->GetShouldSaveLayoutState(&saveLayoutState);
@@ -1840,7 +1848,7 @@ DocumentViewerImpl::Hide(void)
   mDeviceContext = nsnull;
   mParentWidget  = nsnull;
 
-  nsCOMPtr<nsIBaseWindow> base_win(do_QueryInterface(mContainer));
+  nsCOMPtr<nsIBaseWindow> base_win(do_QueryReferent(mContainer));
 
   if (base_win) {
     base_win->SetParentWidget(nsnull);
@@ -1955,7 +1963,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   // The document will fill in the document sheets when we create the presshell
   
   // Handle the user sheets.
-  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(mContainer));
+  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryReferent(mContainer));
   PRInt32 shellType;
   docShell->GetItemType(&shellType);
   nsICSSStyleSheet* sheet = nsnull;
@@ -1971,7 +1979,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
 
   // Append chrome sheets (scrollbars + forms).
   PRBool shouldOverride = PR_FALSE;
-  nsCOMPtr<nsIDocShell> ds(do_QueryInterface(mContainer));
+  nsCOMPtr<nsIDocShell> ds(do_QueryInterface(docShell));
   nsCOMPtr<nsIChromeEventHandler> chromeHandler;
   nsCOMPtr<nsICSSLoader> cssLoader( do_GetService(kCSSLoaderCID) );
   nsCOMPtr<nsIURI> uri;
@@ -2094,7 +2102,7 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
       // but is really just for peace of mind. This check can be removed if we want to support fancy
       // chrome effects like transparent controls floating over content, transparent Web browsers, and
       // things like that, and the perf bugs are fixed.
-      nsCOMPtr<nsIDocShellTreeItem> container(do_QueryInterface(mContainer));
+      nsCOMPtr<nsIDocShellTreeItem> container(do_QueryReferent(mContainer));
       nsCOMPtr<nsIDocShellTreeItem> parentContainer;
       PRInt32 itemType;
       if (nsnull == container
@@ -2452,7 +2460,7 @@ NS_IMETHODIMP DocumentViewerImpl::ScrollToNode(nsIDOMNode* aNode)
 void
 DocumentViewerImpl::CallChildren(CallChildFunc aFunc, void* aClosure)
 {
-  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryInterface(mContainer));
+  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryReferent(mContainer));
   if (docShellNode)
   {
     PRInt32 i;
@@ -2569,7 +2577,7 @@ DocumentViewerImpl::GetAuthorStyleDisabled(PRBool* aStyleDisabled)
 NS_IMETHODIMP
 DocumentViewerImpl::GetDefaultCharacterSet(nsACString& aDefaultCharacterSet)
 {
-  NS_ENSURE_STATE(mContainer);
+  NS_ENSURE_STATE(nsCOMPtr<nsISupports>(do_QueryReferent(mContainer)));
 
   if (mDefaultCharacterSet.IsEmpty())
   {
@@ -2871,7 +2879,7 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
 {
    NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
 
-   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mContainer));
+   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryReferent(mContainer));
    NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIDocShellTreeItem> docShellParent;
@@ -3232,7 +3240,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   }
 #endif
 
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mContainer));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   NS_ASSERTION(docShell, "This has to be a docshell");
 
   // Check to see if this document is still busy
@@ -3285,10 +3293,10 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     NS_ADDREF(mPrintEngine);
 
 #ifdef NS_DEBUG
-    mPrintEngine->Initialize(this, this, mContainer, mDocument, 
+    mPrintEngine->Initialize(this, this, docShell, mDocument, 
                              mDeviceContext, mPresContext, mWindow, mParentWidget, mDebugFile);
 #else
-    mPrintEngine->Initialize(this, this, mContainer, mDocument, 
+    mPrintEngine->Initialize(this, this, docShell, mDocument, 
                              mDeviceContext, mPresContext, mWindow, mParentWidget, nsnull);
 #endif
   }
@@ -3339,13 +3347,16 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
     NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
     NS_ADDREF(mPrintEngine);
 
+    mPrintEngine->Initialize(this, this,
+                             nsCOMPtr<nsISupports>(do_QueryReferent(mContainer)),
+                             mDocument, mDeviceContext, mPresContext,
+                             mWindow, mParentWidget,
 #ifdef NS_DEBUG
-    mPrintEngine->Initialize(this, this, mContainer, mDocument, 
-                             mDeviceContext, mPresContext, mWindow, mParentWidget, mDebugFile);
+                             mDebugFile
 #else
-    mPrintEngine->Initialize(this, this, mContainer, mDocument, 
-                             mDeviceContext, mPresContext, mWindow, mParentWidget, nsnull);
+                             nsnull
 #endif
+                             );
   }
 
   rv = mPrintEngine->PrintPreview(aPrintSettings, aChildDOMWin, aWebProgressListener);
@@ -3733,7 +3744,7 @@ DocumentViewerImpl::SetIsPrinting(PRBool aIsPrinting)
   // Set all the docShells in the docshell tree to be printing.
   // that way if anyone of them tries to "navigate" it can't
   if (mContainer) {
-    nsCOMPtr<nsIDocShellTreeNode> docShellTreeNode(do_QueryInterface(mContainer));
+    nsCOMPtr<nsIDocShellTreeNode> docShellTreeNode(do_QueryReferent(mContainer));
     NS_ASSERTION(docShellTreeNode, "mContainer has to be a nsIDocShellTreeNode");
     SetIsPrintingInDocShellTree(docShellTreeNode, aIsPrinting, PR_TRUE);
   }
@@ -3764,7 +3775,7 @@ DocumentViewerImpl::SetIsPrintPreview(PRBool aIsPrintPreview)
   // Set all the docShells in the docshell tree to be printing.
   // that way if anyone of them tries to "navigate" it can't
   if (mContainer) {
-    nsCOMPtr<nsIDocShellTreeNode> docShellTreeNode(do_QueryInterface(mContainer));
+    nsCOMPtr<nsIDocShellTreeNode> docShellTreeNode(do_QueryReferent(mContainer));
     NS_ASSERTION(docShellTreeNode, "mContainer has to be a nsIDocShellTreeNode");
     SetIsPrintingInDocShellTree(docShellTreeNode, aIsPrintPreview, PR_TRUE);
   }
@@ -3813,7 +3824,7 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
   // In case we have focus focus the parent DocShell
   // which in this case should always be chrome
   nsCOMPtr<nsIDocShellTreeItem>  dstParentItem;
-  nsCOMPtr<nsIDocShellTreeItem>  dstItem(do_QueryInterface(mContainer));
+  nsCOMPtr<nsIDocShellTreeItem>  dstItem(do_QueryReferent(mContainer));
   if (dstItem) {
     dstItem->GetParent(getter_AddRefs(dstParentItem));
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(dstParentItem));
@@ -3916,7 +3927,7 @@ DocumentViewerImpl::InstallNewPresentation()
   // In case we have focus focus the parent DocShell
   // which in this case should always be chrome
   nsCOMPtr<nsIDocShellTreeItem>  dstParentItem;
-  nsCOMPtr<nsIDocShellTreeItem>  dstItem(do_QueryInterface(mContainer));
+  nsCOMPtr<nsIDocShellTreeItem>  dstItem(do_QueryReferent(mContainer));
   if (dstItem) {
     dstItem->GetParent(getter_AddRefs(dstParentItem));
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(dstParentItem));
@@ -4023,7 +4034,8 @@ DocumentViewerImpl::OnDonePrinting()
     // We are done printing, now cleanup 
     if (mDeferredWindowClose) {
       mDeferredWindowClose = PR_FALSE;
-      nsCOMPtr<nsIDOMWindowInternal> win = do_GetInterface(mContainer);
+      nsCOMPtr<nsISupports> container = do_QueryReferent(mContainer);
+      nsCOMPtr<nsIDOMWindowInternal> win = do_GetInterface(container);
       if (win)
         win->Close();
     } else if (mClosingWhilePrinting) {
