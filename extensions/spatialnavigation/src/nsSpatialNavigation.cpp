@@ -312,9 +312,9 @@ void DoTraversal(int aDirection,
 
     if (!frame)
       break;
-
+#ifdef DEBUG_outputframes
     printf("got frame %x\n", frame);
-    
+#endif
     // So, here we want to make sure that the frame that we
     // nav to isn't part of the flow of the currently
     // focused frame

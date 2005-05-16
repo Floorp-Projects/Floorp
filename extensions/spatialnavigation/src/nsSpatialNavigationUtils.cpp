@@ -35,7 +35,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSpatialNavigationPrivate.h"
+
+#ifdef DEBUG_outputframes
 #include "nsIFrameDebug.h"
+#endif
 
 PRBool is_space(char c)
 {
@@ -212,12 +215,12 @@ nsresult createFrameTraversal(PRUint32 type, nsPresContext* presContext,
   if (!frame)
     return NS_ERROR_FAILURE;
 
-
-
+#ifdef DEBUG_outputframes
   nsIFrameDebug* fd;
   frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fd);
   if (fd)
     fd->List(frame->GetPresContext(), stdout, 0);
+#endif
 
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
   
@@ -509,8 +512,10 @@ void getRectOfAreaElement(nsIFrame* f, nsIDOMHTMLAreaElement* e, nsRect* r)
   }
   else if (count >=6)
     poly2Rect(count, coords, &frameRect);
+#ifdef DEBUG_dougt
   else
     printf("area count not supported!! %d\n", count);
+#endif
 
   // find the center of the rect.
 
