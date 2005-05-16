@@ -542,16 +542,16 @@ GetMathMLAttributeStyleSheet(nsPresContext* aPresContext,
   if (!cssSheet)
     return;
   cssSheet->SetURIs(uri, uri);
+  cssSheet->SetTitle(NS_ConvertASCIItoUCS2(kTitle));
+  // all done, no further activity from the net involved, so we better do this
+  cssSheet->SetComplete();
+
   nsCOMPtr<nsIDOMCSSStyleSheet> domSheet(do_QueryInterface(cssSheet));
   if (domSheet) {
     PRUint32 index;
     domSheet->InsertRule(NS_LITERAL_STRING("@namespace url(http://www.w3.org/1998/Math/MathML);"),
                                            0, &index);
   }
-  cssSheet->SetTitle(NS_ConvertASCIItoUCS2(kTitle));
-
-  // all done, no further activity from the net involved, so we better do this
-  cssSheet->SetComplete();
 
   // insert the stylesheet into the styleset without notifying observers
   // XXX Should this be at a different level?
@@ -669,10 +669,12 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
       nsCOMPtr<nsICSSRule> tmpRule;
       cssSheet->GetStyleRuleAt(k, *getter_AddRefs(tmpRule));
       nsCOMPtr<nsICSSStyleRule> tmpStyleRule = do_QueryInterface(tmpRule);
-      tmpStyleRule->GetSelectorText(tmpSelector);
-      if (tmpSelector.Equals(selector)) {
-        k = -1;
-        break;
+      if (tmpStyleRule) {
+        tmpStyleRule->GetSelectorText(tmpSelector);
+        if (tmpSelector.Equals(selector)) {
+          k = -1;
+          break;
+        }
       }
     }
     if (k >= 0) {
