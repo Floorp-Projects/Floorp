@@ -44,11 +44,8 @@ public class CocoaBrowserControlCanvas extends BrowserControlCanvas {
     }
     
     //New method for obtaining access to the Native Peer handle
-    private native int getHandleToPeer(Graphics graphics);
+    private native int getHandleToPeer();
     
-    private int nativeWindow = -1;
-
-
 	/**
 	 * Obtain the native window handle for this
 	 * component's peer.
@@ -56,27 +53,16 @@ public class CocoaBrowserControlCanvas extends BrowserControlCanvas {
 	 * @returns The native window handle. 
 	 */
     protected int getWindow() {
-        WCRunnable runner = new WCRunnable() {
-            public Object run() {
-                Integer result =
-                        new Integer(CocoaBrowserControlCanvas.this.getHandleToPeer(null));
-                return result;
-            }
-        };
-        Integer result = null;
-             
-        this.setVisible(true);
-        repaint();
-        while (-1 == nativeWindow) {
-            result = (Integer) NativeEventThread.instance.pushBlockingWCRunnable(runner);
-            nativeWindow = result.intValue();
-        }
-        return nativeWindow;
+	Integer result = (Integer)
+	    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+		    public Object run() {
+			Integer result = 
+			    new Integer(CocoaBrowserControlCanvas.this.getHandleToPeer());
+			return result;
+		    }
+		});
+	return result.intValue();
     }
-    
-    public void paint(Graphics graphics) {
-        nativeWindow = getHandleToPeer(graphics);
-    }
-    
+        
     
 }

@@ -33,7 +33,7 @@
 
 #include "jni_util.h" //for throwing Exceptions to Java
 
-jint CocoaBrowserControlCanvas::cocoaGetHandleToPeer(JNIEnv *env, jobject canvas, jobject graphics) {
+jint CocoaBrowserControlCanvas::cocoaGetHandleToPeer(JNIEnv *env, jobject canvas) {
     printf("debug: edburns: in CocoaBrowserControlCanvas::nativeGetHandleToPeer\n");
     JAWT awt;
     JAWT_DrawingSurface* ds = NULL;
@@ -77,10 +77,9 @@ jint CocoaBrowserControlCanvas::cocoaGetHandleToPeer(JNIEnv *env, jobject canvas
     printf("debug: edburns: acquired lock: %d\n", lock);
     fflush(stdout);
     
-    if (NULL == lock) {
+    if ((lock & JAWT_LOCK_ERROR) != 0) {
         util_ThrowExceptionToJava(env, "CocoaBrowserControlCanvas: can't lock drawing surface");
     }
-    assert((lock & JAWT_LOCK_ERROR) == 0);
     
     // Get the drawing surface info
     dsi = ds->GetDrawingSurfaceInfo(ds);
