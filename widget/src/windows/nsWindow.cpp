@@ -3575,7 +3575,14 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
            (msg.message == WM_CHAR || msg.message == WM_SYSCHAR || msg.message == WM_DEADCHAR)) {
     // If prevent default set for keydown, do same for keypress
     nsToolkit::mGetMessage(&msg, mWnd, msg.message, msg.message);
-    return (msg.message == WM_DEADCHAR) ? PR_FALSE : OnChar(msg.wParam, extraFlags);
+    if (msg.message == WM_DEADCHAR)
+      return PR_FALSE;
+#ifdef KE_DEBUG
+    printf("%s\tchar=%c\twp=%4x\tlp=%8x\n",
+           (msg.message == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR",
+           msg.wParam, msg.wParam, msg.lParam);
+#endif
+    return OnChar(msg.wParam, extraFlags);
   }
 
   WORD asciiKey = 0;
@@ -3640,10 +3647,6 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 //-------------------------------------------------------------------------
 BOOL nsWindow::OnChar(UINT charCode, PRUint32 aFlags)
 {
-#ifdef KE_DEBUG
-  printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR" , wParam, wParam, lParam);
-#endif
-
   // These must be checked here too as a lone WM_CHAR could be received
   // if a child window didn't handle it (for example Alt+Space in a content window)
   mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
@@ -4396,6 +4399,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     case WM_SYSCHAR:
     case WM_CHAR:
     {
+#ifdef KE_DEBUG
+      printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR", wParam, wParam, lParam);
+#endif
       result = OnChar(wParam);
     }
     break;
