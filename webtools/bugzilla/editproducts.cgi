@@ -746,8 +746,8 @@ one.";
         }
         print "<TABLE BORDER=0 CELLPADDING=20 WIDTH=\"70%\" BGCOLOR=\"red\"><TR><TD>\n",
               "There are bugs entered for this product!  When you delete this ",
-              "product, <B><BLINK>all</BLINK><B> stored bugs will be deleted, too. ",
-              "You could not even see a bug history anymore!\n",
+              "product, <B><BLINK>ALL</BLINK></B> stored bugs and their history will be ",
+              "deleted too.\n",
               "</TD></TR></TABLE>\n";
     }
 
