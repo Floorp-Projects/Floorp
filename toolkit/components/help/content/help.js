@@ -226,7 +226,10 @@ function loadHelpRDF() {
                     NC_DATASOURCES, "rdf:none");
                 datasources = normalizeLinks(helpBaseURI, datasources);
 
-                if (getAttribute(helpFileDS, panelDef, NC_PLATFORM, platform) != platform)
+                var panelPlatforms = getAttribute(helpFileDS, panelDef, NC_PLATFORM, platform);
+                panelPlatforms = panelPlatforms.split(/\s+/);
+
+                if (panelPlatforms.indexOf(platform) == -1)
                    continue; // ignore datasources for other platforms
 
                 // Cache Additional Datasources to Augment Search Datasources.

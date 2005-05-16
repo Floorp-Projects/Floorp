@@ -218,7 +218,11 @@ function loadHelpRDF() {
       var iterator = RDFContainer.GetElements();
       while (iterator.hasMoreElements()) {
         var panelDef = iterator.getNext();
-        if (getAttribute(helpFileDS, panelDef, NC_PLATFORM, platform) != platform)
+
+        var panelPlatforms = getAttribute(helpFileDS, panelDef, NC_PLATFORM, platform);
+        panelPlatforms = panelPlatforms.split(/\s+/);
+
+        if (panelPlatforms.indexOf(platform) == -1)
           continue; // ignore datasources for other platforms.
 
         var panelID = getAttribute(helpFileDS, panelDef, NC_PANELID, null);
