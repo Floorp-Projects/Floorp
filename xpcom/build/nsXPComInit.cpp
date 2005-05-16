@@ -114,6 +114,10 @@
 
 #include "SpecialSystemDirectory.h"
 
+#ifdef XP_WIN
+#include "nsWindowsRegKey.h"
+#endif
+
 #include <locale.h>
 
 // Registry Factory creation function defined in nsRegistry.cpp
@@ -385,6 +389,10 @@ static const nsModuleComponentInfo components[] = {
 
 #define NS_HASH_PROPERTY_BAG_CLASSNAME "Hashtable Property Bag"
     COMPONENT(HASH_PROPERTY_BAG, nsHashPropertyBagConstructor),
+
+#ifdef XP_WIN
+    COMPONENT(WINDOWSREGKEY, nsWindowsRegKeyConstructor),
+#endif
 };
 
 #undef COMPONENT

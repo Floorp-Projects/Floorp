@@ -91,6 +91,7 @@
 #include "nsHashPropertyBag.h"
 #include "nsStringAPI.h"
 #include "nsStringBuffer.h"
+#include "nsWindowsRegKey.h"
 
 void XXXNeverCalled()
 {
@@ -239,4 +240,6 @@ void XXXNeverCalled()
       b.ToString(0, x);
       b.ToString(0, y);
     }
+
+    NS_NewWindowsRegKey(nsnull);
 }
