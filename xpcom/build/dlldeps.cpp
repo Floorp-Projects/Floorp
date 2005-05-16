@@ -91,7 +91,10 @@
 #include "nsHashPropertyBag.h"
 #include "nsStringAPI.h"
 #include "nsStringBuffer.h"
+
+#ifndef WINCE
 #include "nsWindowsRegKey.h"
+#endif
 
 void XXXNeverCalled()
 {
@@ -241,5 +244,7 @@ void XXXNeverCalled()
       b.ToString(0, y);
     }
 
+#ifndef WINCE
     NS_NewWindowsRegKey(nsnull);
+#endif
 }

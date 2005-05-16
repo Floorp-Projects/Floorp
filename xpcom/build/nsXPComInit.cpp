@@ -114,7 +114,7 @@
 
 #include "SpecialSystemDirectory.h"
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
 #include "nsWindowsRegKey.h"
 #endif
 
@@ -390,7 +390,7 @@ static const nsModuleComponentInfo components[] = {
 #define NS_HASH_PROPERTY_BAG_CLASSNAME "Hashtable Property Bag"
     COMPONENT(HASH_PROPERTY_BAG, nsHashPropertyBagConstructor),
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
     COMPONENT(WINDOWSREGKEY, nsWindowsRegKeyConstructor),
 #endif
 };
