@@ -361,17 +361,18 @@ function getFile(key, pathArray) {
 }
 
 /**
- * Gets the path to an item, either as an absolute path (for most Install
- * Locations), or as a relative path (for app-profile items, so that the
- * profile directory can move or become remotely hosted easily, without
- * pain)
- * @param   installLocation
+ * Gets the descriptor of a directory, either as an absolute path (for
+ * most Install Locations), or as a relative path (for app-profile
+ * items, so that the profile directory can move or become remotely
+ * hosted easily, without pain)
+ *
+ * @param   locationKey
  *          The Install Location where the item is stored
  * @param   itemLocation
  *          The nsILocalFile representing the item's directory
- */  
-function getDescriptorFromInstallLocation(installLocation, itemLocation) {
-  if (installLocation.name == KEY_APP_PROFILE)
+ */
+function getDescriptorFromFile(locationKey, itemLocation) {
+  if (locationKey == KEY_APP_PROFILE)
     return itemLocation.getRelativeDescriptor(getDir(KEY_PROFILEDS, []));
   return itemLocation.persistentDescriptor;
 }
@@ -872,13 +873,14 @@ function DirectoryInstallLocation(name, location, restricted, priority) {
   if (location.exists() && !location.isDirectory())
     throw "location must be a directoy!";
   this._location = location;
+  this._locationToIDMap = {};
   this._restricted = restricted;
   this._priority = priority;
 }
 DirectoryInstallLocation.prototype = {
   _name           : "",
   _location       : null,
-  _locationToIDMap: { },
+  _locationToIDMap: null,
   _restricted     : false,
   _priority       : 0,
   
@@ -1134,6 +1136,151 @@ DirectoryInstallLocation.prototype = {
     return this;
   }
 };
+
+#ifdef XP_WIN
+
+const nsIWindowsRegKey = Components.interfaces.nsIWindowsRegKey;
+
+/**
+ * An object that identifies the location of installed items based on entries
+ * in the Windows registry.  For each application a subkey is defined that
+ * contains a set of values, where the name of each value is a GUID and the
+ * contents of the value is a filesystem path identifying a directory
+ * containing an installed item.
+ *
+ * @param   name
+ *          The string identifier of this Install Location.
+ * @param   rootKey
+ *          The root key (one of the ROOT_KEY_ values from nsIWindowsRegKey).
+ * @param   restricted
+ *          Indicates that the location may be restricted (e.g., this is
+ *          usually true of a system level install location).
+ * @param   priority
+ *          The priority of this install location.
+ * @constructor
+ */
+function WinRegInstallLocation(name, rootKey, restricted, priority) {
+  this._name = name;
+  this._rootKey = rootKey;
+  this._restricted = restricted;
+  this._priority = priority;
+  this._IDToDirMap = {};
+  this._DirToIDMap = {};
+
+  // Reading the registry may throw an exception, and that's ok.  In error
+  // cases, we just leave ourselves in the empty state.
+  try {
+    this._readReg();
+  } catch (e) {
+  }
+}
+WinRegInstallLocation.prototype = {
+  _name       : "",
+  _rootKey    : null,
+  _restricted : false,
+  _priority   : 0,
+  _IDToDirMap : null,  // mapping from ID to directory object
+  _DirToIDMap : null,  // mapping from directory path to ID
+
+  /**
+   * Read the registry and build a mapping between GUID and directory for each
+   * installed item.
+   */
+  _readReg: function() {
+    var appVendor = gApp.vendor;
+    var appName = gApp.name;
+
+#ifdef MOZ_THUNDERBIRD
+    // XXX Thunderbird doesn't specify a vendor string!!
+    if (appVendor == "")
+      appVendor = "Mozilla";
+#endif
+  
+    // XULRunner-based apps may intentionally not specify a vendor:
+    if (appVendor != "")
+      appVendor += "\\";
+
+    var path = "SOFTWARE\\" + appVendor + appName + "\\Extensions";
+
+    var key = Components.classes["@mozilla.org/windows-registry-key;1"]
+                        .createInstance(nsIWindowsRegKey);
+    key.open(this._rootKey, path, nsIWindowsRegKey.ACCESS_READ);
+
+    var count = key.valueCount; 
+    for (var i = 0; i < count; ++i) {
+      var id = key.getValueName(i);
+
+      var dir = Components.classes["@mozilla.org/file/local;1"]
+                          .createInstance(nsILocalFile);
+      dir.initWithPath(key.readStringValue(id));
+
+      this._IDToDirMap[id] = dir;
+      this._DirToIDMap[dir.path] = id;
+    }
+  },
+
+  get name() {
+    return this._name;
+  },
+
+  get itemLocations() {
+    var locations = [];
+    for (var id in this._IDToDirMap) {
+      locations.push(this._IDToDirMap[id]);
+    }
+    return new FileEnumerator(locations);
+  },
+
+  get location() {
+    return null;
+  },
+
+  get restricted() {
+    return this._restricted;
+  },
+
+  // not possible to write to this install location
+  get canAccess() {
+    return false;
+  },
+
+  get priority() {
+    return this._priority;
+  },
+
+  get isFunctioning() {
+    return true;
+  },
+
+  getItemLocation: function(id) {
+    return this._IDToDirMap[id];
+  },
+
+  getIDForLocation: function(dir) {
+    return this._DirToIDMap[dir.path];
+  },
+
+  getItemFile: function(id, filePath) {
+    var itemLocation = this.getItemLocation(id).clone();
+    var parts = filePath.split("/");
+    for (var i = 0; i < parts.length; ++i)
+      itemLocation.append(parts[i]);
+    return itemLocation;
+  },
+
+  itemIsManagedIndependently: function(id) {
+    return true;
+  },
+
+  QueryInterface: function(iid) {
+    if (!iid.equals(Components.interfaces.nsIInstallLocation) &&
+        !iid.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
+
+#endif
 
 /**
  * An object which handles the installation of an Extension.
@@ -1801,23 +1948,57 @@ var StartupCache = {
    *          in the cache if one does not already exist. 
    */
   put: function(installLocation, id, op, shouldCreate) {
-    var key = installLocation.name;
+    var itemLocation = installLocation.getItemLocation(id);
+
+    var descriptor = null;
+    var mtime = null;
+    if (itemLocation) {
+      itemLocation.QueryInterface(nsILocalFile);
+      descriptor = getDescriptorFromFile(installLocation.name, itemLocation);
+      if (itemLocation.exists() && itemLocation.isDirectory())
+        mtime = Math.floor(itemLocation.lastModifiedTime / 1000);
+    }
+
+    this._putRaw(installLocation.name, id, descriptor, mtime, op, shouldCreate);
+  },
+
+  /**
+   * Private helper function for putting an entry into the Startup Cache
+   * without relying on the presence of its associated nsIInstallLocation
+   * instance.
+   *
+   * @param key
+   *        The install location name.
+   * @param id
+   *        The ID of the item.
+   * @param descriptor
+   *        Value returned from getDescriptorFromFile.  May be null, in which
+   *        case the descriptor field is not updated.
+   * @param mtime
+   *        The last modified time of the item.  May be null, in which case the
+   *        descriptor field is not updated.
+   * @param op
+   *        The OP code to store with the entry.
+   * @param shouldCreate
+   *        Boolean value indicating whether to create or delete the entry.
+   */
+  _putRaw: function(key, id, descriptor, mtime, op, shouldCreate) {
     if (!(key in this.entries))
       this.entries[key] = { };
     if (!(id in this.entries[key]))
       this.entries[key][id] = { };
     if (shouldCreate) {
-      var itemMTime = 0;
-      var itemLocation = installLocation.getItemLocation(id).QueryInterface(nsILocalFile);
-      if (itemLocation.exists() && itemLocation.isDirectory())
-        itemMTime = Math.floor(itemLocation.lastModifiedTime / 1000);
       if (!this.entries[key][id]) 
         this.entries[key][id] = { };
-        
-      this.entries[key][id].descriptor = getDescriptorFromInstallLocation(installLocation, itemLocation);
-      this.entries[key][id].mtime = itemMTime;
-      this.entries[key][id].op = op;
-      this.entries[key][id].location = key;
+
+      var entry = this.entries[key][id];
+
+      if (descriptor)
+        entry.descriptor = descriptor;
+      if (mtime) 
+        entry.mtime = mtime;
+      entry.op = op;
+      entry.location = key;
     }
     else
       this.entries[key][id] = null;
@@ -1849,6 +2030,17 @@ var StartupCache = {
         entries.push(this.entries[key][id]);
     }
     return entries;
+  },
+
+  /**
+   * Call a function on each entry.  The callback function takes a single
+   * parameter, which is an entry object.
+   */
+  forEachEntry: function(callback) {
+    for (var key in this.entries) {
+      for (id in this.entries[key])
+        callback(this.entries[key][id]);
+    }
   },
   
   /** 
@@ -1884,11 +2076,8 @@ var StartupCache = {
           // We hash on guid second, because we want a way to quickly determine
           // item GUID during a check loop that runs on every startup.
           var parts = line.value.split("\t");
-          var location = InstallLocations.get(parts[0]);
-          if (!location)
-            continue;
           var op = parts[4];
-          this.put(location, parts[1], op, true);
+          this._putRaw(parts[0], parts[1], parts[2], parts[3], op, true);
           if (op)
             PendingOperations.addItem(op, { locationKey: parts[0], id: parts[1] });
         }
@@ -1906,18 +2095,20 @@ var StartupCache = {
     var fos = openSafeFileOutputStream(extensionsCacheFile);
     for (var locationKey in this.entries) {
       for (var id in this.entries[locationKey]) {
-        var entry = this.entries[locationKey][id]
+        var entry = this.entries[locationKey][id];
         if (entry) {
-          var location = InstallLocations.get(locationKey);
-          var itemLocation = location.getItemLocation(id).QueryInterface(nsILocalFile);
+          var itemLocation = getFileFromDescriptor(locationKey, entry.descriptor);
+
+          // Update our knowledge of this item's last-modified-time.
+          // XXXdarin: this may cause us to miss changes in some cases.
           var itemMTime = 0;
           if (itemLocation.exists() && itemLocation.isDirectory())
             itemMTime = Math.floor(itemLocation.lastModifiedTime / 1000);
 
           // Each line in the startup cache manifest is in this form:
-          // location-key\tguid-of-item\tpd-to-extension1\tmtime-of-pd\tpending-op
-          var line = location.name + "\t" + id + "\t" + getDescriptorFromInstallLocation(location, itemLocation);
-          line += "\t" + itemMTime + "\t" + entry.op + "\r\n";
+          // location-key\tid-of-item\tpd-to-extension1\tmtime-of-pd\tpending-op
+          var line = locationKey + "\t" + id + "\t" + entry.descriptor + "\t" +
+                     itemMTime + "\t" + entry.op + "\r\n";
           fos.write(line, line.length);
         }
       }
@@ -1952,7 +2143,7 @@ function ExtensionManager() {
   
   // Register Global Install Location
   var appGlobalExtensions = getDirNoCreate(KEY_APPDIR, [DIR_EXTENSIONS]);
-  var priority = nsIInstallLocation.PRIORITY_APP_SYSTEM_USER;
+  var priority = nsIInstallLocation.PRIORITY_APP_SYSTEM_GLOBAL;
   var globalLocation = new DirectoryInstallLocation(KEY_APP_GLOBAL, 
                                                     appGlobalExtensions, true,
                                                     priority);
@@ -1965,6 +2156,22 @@ function ExtensionManager() {
                                                      appProfileExtensions, false,
                                                      priority);
   InstallLocations.put(profileLocation);
+
+#ifdef XP_WIN
+  // Register HKEY_LOCAL_MACHINE Install Location
+  InstallLocations.put(
+      new WinRegInstallLocation("winreg-app-global",
+                                nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                                true,
+                                nsIInstallLocation.PRIORITY_APP_SYSTEM_GLOBAL + 10));
+
+  // Register HKEY_CURRENT_USER Install Location
+  InstallLocations.put(
+      new WinRegInstallLocation("winreg-app-user",
+                                nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                                false,
+                                nsIInstallLocation.PRIORITY_APP_SYSTEM_USER + 10));
+#endif
 
   // Register Additional Install Locations
   var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
@@ -2093,7 +2300,9 @@ ExtensionManager.prototype = {
   /**
    * See nsIExtensionManager.idl
    */
-  start: function(commandLine, isDirty) {
+  start: function(commandLine) {
+    var isDirty = false;
+    
     // Somehow the component list went away, and for that reason the new one
     // generated by this function is going to result in a different compreg.
     // We must force a restart.
@@ -2113,6 +2322,9 @@ ExtensionManager.prototype = {
     // on every startup since there is no way we can tell if this has happened
     // or not!
     if (this._checkForFileChanges())
+      isDirty = true;
+
+    if (PendingOperations.size != 0)
       isDirty = true;
 
     // Extension Changes
@@ -2258,17 +2470,17 @@ ExtensionManager.prototype = {
     }
   
     /**
-     * Determines if an item can be upgraded based on whether or not the 
-     * location the "upgrade" is being installed into has an equal or higher 
-     * priority than the location where the previous version was installed.
+     * Determines if an item can be used based on whether or not the install
+     * location of the "item" has an equal or higher priority than the install
+     * location where another version may live.
      * @param   id
-     *          The GUID of the item being upgraded.
+     *          The GUID of the item being installed.
      * @param   location
-     *          The location where an item is to be "upgraded".
+     *          The location where an item is to be installed.
      * @returns true if the item can be installed at that location, false 
      *          otherwise.
      */
-    function canUpgrade(id, location) {
+    function canUse(id, location) {
       for (var locationKey in StartupCache.entries) {
         if (locationKey != location.name && 
             id in StartupCache.entries[locationKey]) {
@@ -2353,18 +2565,23 @@ ExtensionManager.prototype = {
       }
     }
     
-    var needsRestart = false;
+    var isDirty = false;
     var ignoreMTimeChanges = getBoolPrefWithDefault(PREF_EM_IGNOREMTIMECHANGES,
                                                     false);
     StartupCache.read();
     
+    // Array of objects with 'location' and 'id' properties to maybe install.
+    var newItems = [];
+
     var droppedInFiles = [];
     var xpinstallStrings = [];
     
+    // Enumerate over the install locations from low to high priority.  The
+    // enumeration returned is pre-sorted.
     var installLocations = this.installLocations;
     while (installLocations.hasMoreElements()) {
       var location = installLocations.getNext().QueryInterface(nsIInstallLocation);
-      
+
       // Hash the set of items actually held by the Install Location.  
       var actualItems = { };
       var entries = location.itemLocations;
@@ -2410,18 +2627,25 @@ ExtensionManager.prototype = {
                                                         getURLSpecFromFile(entry),
                                                         item.iconURL, 
                                                         commonName]);
-            needsRestart = true;
+            isDirty = true;
           }
         }
       }
       
       if (location.name in StartupCache.entries) {
         // Look for items that have been uninstalled by removing their directory.
-        
         for (var id in StartupCache.entries[location.name]) {
           if (!StartupCache.entries[location.name] ||
               !StartupCache.entries[location.name][id]) 
             continue;
+
+          // Force _finishOperations to run if we have enabled or disabled items.
+          // XXXdarin this should be unnecessary now that we check
+          // PendingOperations.size in start()
+          if (StartupCache.entries[location.name][id].op == OP_NEEDS_ENABLE ||
+              StartupCache.entries[location.name][id].op == OP_NEEDS_DISABLE)
+            isDirty = true;
+          
           if (!(id in actualItems) && 
               StartupCache.entries[location.name][id].op != OP_NEEDS_INSTALL &&
               StartupCache.entries[location.name][id].op != OP_NEEDS_UPGRADE) {
@@ -2429,18 +2653,20 @@ ExtensionManager.prototype = {
             // install location, but it no longer exists in the Install Location. 
             // We can infer from this that the item has been removed, so uninstall
             // it properly. 
-            LOG("Item Uninstalled via file removal from: " + StartupCache.entries[location.name][id].descriptor + 
-                " Item ID: " + id + " Location Key: " + location.name + ", uninstalling item.");
-            
-            // Load the Extensions Datasource and force this item into the visible
-            // items list if it is not already. This allows us to handle the case 
-            // where there is an entry for an item in the Startup Cache but not
-            // in the extensions.rdf file - in that case the item will not be in
-            // the visible list and calls to |getInstallLocation| will mysteriously
-            // fail.
-            this.datasource.updateVisibleList(id, location.name, false);
-            this.uninstallItem(id);
-            needsRestart = true;
+            if (canUse(id, location)) {
+              LOG("Item Uninstalled via file removal from: " + StartupCache.entries[location.name][id].descriptor + 
+                  " Item ID: " + id + " Location Key: " + location.name + ", uninstalling item.");
+              
+              // Load the Extensions Datasource and force this item into the visible
+              // items list if it is not already. This allows us to handle the case 
+              // where there is an entry for an item in the Startup Cache but not
+              // in the extensions.rdf file - in that case the item will not be in
+              // the visible list and calls to |getInstallLocation| will mysteriously
+              // fail.
+              this.datasource.updateVisibleList(id, location.name, false);
+              this.uninstallItem(id);
+              isDirty = true;
+            }
           }
           else if (!ignoreMTimeChanges) {
             // Look for items whose mtime has changed, and as such we can assume 
@@ -2452,14 +2678,14 @@ ExtensionManager.prototype = {
               if (actualMTime != StartupCache.entries[location.name][id].mtime) {
                 LOG("Item Location path changed: " + lf.path + " Item ID: " + 
                     id + " Location Key: " + location.name + ", attempting to upgrade item...");
-                if (canUpgrade(id, location)) {
+                if (canUse(id, location)) {
                   installItem(id, location, 
                               function(installManifest, id, location, type) {
                                 em._upgradeItem(installManifest, id, location, 
                                                 type);
                               });
+                  isDirty = true;
                 }
-                needsRestart = true;
               }
             }
             else {
@@ -2476,15 +2702,29 @@ ExtensionManager.prototype = {
         if (!(location.name in StartupCache.entries) || 
             !(id in StartupCache.entries[location.name]) ||
             !StartupCache.entries[location.name][id]) {
-          LOG("Item Installed via directory addition to Install Location: " + 
-              location.name + " Item ID: " + id + ", attempting to register...");
-          installItem(id, location, 
-                      function(installManifest, id, location, type) { 
-                        em._configureForthcomingItem(installManifest, id, location, 
-                                                     type);
-                      });
-          needsRestart = true;
+          // Remember that we've seen this item
+          StartupCache.put(location, id, OP_NONE, true);
+          // Push it on the stack of items to maybe install later
+          newItems.push({location: location, id: id});
         }
+      }
+    }
+
+    // Process any newly discovered items.  We do this here instead of in the
+    // previous loop so that we can be sure that we have a fully populated
+    // StartupCache.
+    for (var i = 0; i < newItems.length; ++i) {
+      var id = newItems[i].id;
+      var location = newItems[i].location;
+      if (canUse(id, location)) {
+        LOG("Item Installed via directory addition to Install Location: " + 
+            location.name + " Item ID: " + id + ", attempting to register...");
+        installItem(id, location, 
+                    function(installManifest, id, location, type) { 
+                      em._configureForthcomingItem(installManifest, id, location, 
+                                                   type);
+                    });
+        isDirty = true;
       }
     }
 
@@ -2492,7 +2732,7 @@ ExtensionManager.prototype = {
     // purposes.
     installDroppedInFiles(droppedInFiles, xpinstallStrings);
     
-    return needsRestart;
+    return isDirty;
   },
   
   /**
@@ -2648,14 +2888,21 @@ ExtensionManager.prototype = {
       PendingOperations.clearItems(OP_NEEDS_ENABLE);
       PendingOperations.clearItems(OP_NEEDS_DISABLE);
 
+      // Reset any startup cache entries with op set to OP_NEEDS_ENABLE or
+      // OP_NEEDS_DISABLE.
+      function resetOp(entry) {
+        if (entry.op == OP_NEEDS_ENABLE || entry.op == OP_NEEDS_DISABLE)
+          entry.op = OP_NONE;
+      }
+      StartupCache.forEachEntry(resetOp);
+
       var needsRestart = false;      
-      var uncoveredItems = [];
       do {
         // Look for extensions that need to be upgraded. The process here is to
         // uninstall the old version of the extension first, then install the
         // new version in its place. 
         var items = PendingOperations.getOperations(OP_NEEDS_UPGRADE);
-        for (var i = 0; i < items.length; ++i) {
+        for (var i = items.length - 1; i >= 0; --i) {
           var id = items[i].id;
           var oldLocation = this.getInstallLocation(id);
           var newLocation = InstallLocations.get(items[i].locationKey);
@@ -2663,25 +2910,25 @@ ExtensionManager.prototype = {
             this._finalizeUpgrade(id);
         }
         PendingOperations.clearItems(OP_NEEDS_UPGRADE);
-          
+
         // Install items
         items = PendingOperations.getOperations(OP_NEEDS_INSTALL);
-        for (var i = 0; i < items.length; ++i) {
+        for (var i = items.length - 1; i >= 0; --i) {
           needsRestart = true;
           this._finalizeInstall(items[i].id, null);
         }
         PendingOperations.clearItems(OP_NEEDS_INSTALL);
+        LOG("After installation: " + PendingOperations.getOperations(OP_NEEDS_INSTALL).length);
 
         // Look for extensions that need to be removed. This MUST be done after
         // the install operations since extensions to be installed may have to be
         // uninstalled if there are errors during the installation process!
         items = PendingOperations.getOperations(OP_NEEDS_UNINSTALL);
-        for (var i = 0; i < items.length; ++i) {
+        for (var i = items.length - 1; i >= 0; --i) {
           var id = items[i].id;
-          if (this._finalizeUninstall(id))
-            needsRestart = true;
-          else
-            this._checkForUncoveredItem(id);
+          this._finalizeUninstall(id);
+          this._checkForUncoveredItem(id);
+          needsRestart = true;
         }
         PendingOperations.clearItems(OP_NEEDS_UNINSTALL);
       }
@@ -2800,7 +3047,9 @@ ExtensionManager.prototype = {
             op == OP_NEEDS_UNINSTALL || op == OP_NEEDS_DISABLE)
           continue;
       }
-      activeItems.push({ id: item.id, location: installLocation });
+      // Suppress items that have been disabled by the user.
+      if (ds.getItemProperty(item.id, "disabled") != "true")
+        activeItems.push({ id: item.id, location: installLocation });
     }
 
     return activeItems;
@@ -2830,7 +3079,7 @@ ExtensionManager.prototype = {
     for (i = 0; i < validExtensions.length; ++i) {
       var e = validExtensions[i];
       var itemLocation = e.location.getItemLocation(e.id).QueryInterface(nsILocalFile);
-      var descriptor = getDescriptorFromInstallLocation(e.location, itemLocation);
+      var descriptor = getDescriptorFromFile(e.location.name, itemLocation);
       var line = "Extension" + i + "=" + descriptor + "\r\n";
       fos.write(line, line.length);
     }
@@ -2840,7 +3089,7 @@ ExtensionManager.prototype = {
     for (i = 0; i < validThemes.length; ++i) {
       var e = validThemes[i];
       var itemLocation = e.location.getItemLocation(e.id).QueryInterface(nsILocalFile);
-      var descriptor = getDescriptorFromInstallLocation(e.location, itemLocation);
+      var descriptor = getDescriptorFromFile(e.location.name, itemLocation);
       var line = "Extension" + i + "=" + descriptor + "\r\n";
       fos.write(line, line.length);
     }
@@ -3422,7 +3671,7 @@ ExtensionManager.prototype = {
     }
     var itemLocation = installLocation.getItemLocation(id);
 
-    if (!file)
+    if (!file && "stageFile" in installLocation)
       file = installLocation.getStageFile(id);
     
     // If |file| is null or does not exist, the installer assumes the item is
@@ -3450,7 +3699,12 @@ ExtensionManager.prototype = {
     var ds = this.datasource;
     var installLocation = this.getInstallLocation(id);
 
-    var stagedFile = installLocation.getStageFile(id);
+    var stagedFile;
+    if ("getStageFile" in installLocation)
+      stagedFile = installLocation.getStageFile(id);
+    else
+      stagedFile = null;
+
     var stagedFileExists = stagedFile && stagedFile.exists();
     if (stagedFileExists)
       var installRDF = extractRDFFileToTempDir(stagedFile, FILE_INSTALL_MANIFEST, true);
@@ -3481,30 +3735,29 @@ ExtensionManager.prototype = {
    * Completes an item's uninstallation.
    * @param   id
    *          The GUID of the item to uninstall.
-   * @returns true if the uninstall failed, and a restart is required because
-   *          we rewrote the extension manifest and need to re-register 
-   *          components and chrome to reactivate the item, false otherwise.
    */
   _finalizeUninstall: function(id) {
     var ds = this.datasource;
     
     var installLocation = this.getInstallLocation(id);
-    try {
-      // Having a callback that does nothing just causes the directory to be
-      // removed.
-      safeInstallOperation(id, installLocation, 
-                           { data: null, callback: function() { } });
-    }
-    catch (e) {
-      LOG("_finalizeUninstall: failed to remove directory for item: " + id + 
-          " at Install Location: " + installLocation.name + ", rolling back uninstall");
-      // Removal of the files failed, reset the uninstalled flag and rewrite
-      // the install manifests so this item's components are registered.
-      // Clear the op flag from the Startup Cache
-      StartupCache.put(installLocation, id, OP_NONE, true);
-      var restartRequired = this.installRequiresRestart(id, ds.getItemProperty(id, "type"))
-      this._updateManifests(restartRequired);
-      return true;
+    if (!installLocation.itemIsManagedIndependently(id)) {
+      try {
+        // Having a callback that does nothing just causes the directory to be
+        // removed.
+        safeInstallOperation(id, installLocation, 
+                             { data: null, callback: function() { } });
+      }
+      catch (e) {
+        LOG("_finalizeUninstall: failed to remove directory for item: " + id + 
+            " at Install Location: " + installLocation.name + ", rolling back uninstall");
+        // Removal of the files failed, reset the uninstalled flag and rewrite
+        // the install manifests so this item's components are registered.
+        // Clear the op flag from the Startup Cache
+        StartupCache.put(installLocation, id, OP_NONE, true);
+        var restartRequired = this.installRequiresRestart(id, ds.getItemProperty(id, "type"))
+        this._updateManifests(restartRequired);
+        return;
+      }
     }
     
     // Clean the item resource
@@ -3517,8 +3770,6 @@ ExtensionManager.prototype = {
     // Clear the op flag from the Startup Cache and the Pending Operations set.
     StartupCache.clearEntry(installLocation, id);
     PendingOperations.clearItem(OP_NEEDS_UNINSTALL, id);
-    
-    return false;
   },
   
   /**
@@ -5002,7 +5253,7 @@ ExtensionsDataSource.prototype = {
         this._inner.Assert(targetRes, property, literal, true);
       }
     }
-    
+
     // Version/Dependency Info
     var versionProps = ["targetApplication", "requires"];
     var idRes = EM_R("id");
@@ -5011,7 +5262,7 @@ ExtensionsDataSource.prototype = {
     for (var i = 0; i < versionProps.length; ++i) {
       var property = EM_R(versionProps[i]);
       var newVersionInfos = installManifest.GetTargets(gInstallManifestRoot, property, true);
-      
+
       var oldVersionInfos = this._inner.GetTargets(targetRes, property, true);
       while (oldVersionInfos.hasMoreElements()) {
         var oldVersionInfo = oldVersionInfos.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
@@ -5749,7 +6000,7 @@ var gModule = {
                factory    : #1#(ExtensionManager)
              }
    },
-  
+
   canUnload: function(componentManager) {
     return true;
   }

@@ -1816,7 +1816,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   //////////////////////// NOW WE HAVE A PROFILE ////////////////////////
 
   PRBool upgraded = PR_FALSE;
-  PRBool componentsListChanged = PR_FALSE;
 
   // Check for version compatibility with the last version of the app this 
   // profile was started with.  The format of the version stamp is defined
@@ -1840,8 +1839,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     WriteVersion(profD, NS_LITERAL_CSTRING("Safe Mode"));
   }
   else if (version.Equals(lastVersion)) {
-    componentsListChanged = ComponentsListChanged(profD);
-    if (componentsListChanged) {
+    if (ComponentsListChanged(profD)) {
       // Remove compreg.dat and xpti.dat, forcing component re-registration,
       // with the new list of additional components directories specified
       // in "components.ini" which we have just discovered changed since the
@@ -1959,7 +1957,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         }
 
         if (!upgraded || !needsRestart)
-          em->Start(cmdLine, componentsListChanged, &needsRestart);
+          em->Start(cmdLine, &needsRestart);
       }
 
       char* noEMRestart = PR_GetEnv("NO_EM_RESTART");

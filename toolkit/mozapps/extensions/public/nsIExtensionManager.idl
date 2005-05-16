@@ -49,7 +49,7 @@ interface nsIDirectoryEnumerator;
  * Interface representing a location where extensions, themes etc are 
  * installed.
  */
-[scriptable, uuid(a93bc6e0-b841-4f34-ac33-6b1cef1f4742)]
+[scriptable, uuid(da11d198-093e-4d0d-8889-3ea0acef996a)]
 interface nsIInstallLocation : nsISupports
 {
   /**
@@ -132,6 +132,17 @@ interface nsIInstallLocation : nsISupports
   nsIFile getItemLocation(in AString id);
 
   /**
+   * Retrieves the GUID for an item at the specified location.
+   * @param   file
+   *          The location where an item might live.
+   * @returns The ID for an item that might live at the location specified.
+   *
+   * N.B. This function makes no promises about whether or not this path is
+   *      actually maintained by this Install Location.
+   */
+  AString getIDForLocation(in nsIFile file);
+
+  /**
    * Gets a nsIFile object for a file within an item's directory structure.
    * @param   id
    *          The GUID of the item.
@@ -141,6 +152,19 @@ interface nsIInstallLocation : nsISupports
    *          necessarily have to exist.
    */
   nsIFile getItemFile(in AString id, in AString path);
+
+  /**
+   * Determines whether or not an item's resources are managed by the Extension
+   * System or by some other user or process. For example, items linked to by
+   * text links are managed by the user, and items linked to from Registry
+   * Install Locations are usually managed by other applications or installers.
+   *
+   * @param   id
+   *          The GUID of the item.
+   * @returns true if the item's resources are managed independently of the
+   *          Extension System, false otherwise.
+   */
+  boolean itemIsManagedIndependently(in AString id);
 };
 
 /**
@@ -181,24 +205,19 @@ interface nsIExtensionDownloadListener : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface, 
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(24b38775-3ae5-47b1-81e9-915bb0e5a4fb)]
+[scriptable, uuid(cb90632b-4838-44c3-991c-0964e918af4b)]
 interface nsIExtensionManager : nsISupports
 {
   /**
-   * Starts the Extension Manager, initializing Safe Mode, checking for 
-   * item changes, additions and removals, and finishing pending operations.
+   * Starts the Extension Manager, checking for item changes, additions and
+   * removals, and finishing pending operations.
    * @param   commandLine
    *          The command line the application was started with.
-   * @param   isDirty
-   *          Whether or not the extensions list changed since the last start.
-   *          This is not the last word in whether or not items have been
-   *          added or removed since it only tracks items installed through
-   *          the UI. 
    * @returns true if the application has rewritten the extensions.ini file
    *          and needs to restart to register components/chrome etc, 
    *          false otherwise
    */
-  boolean start(in nsICommandLine commandLine, in boolean isDirty);
+  boolean start(in nsICommandLine commandLine);
 
   /** 
    * Determines if there are incompatible items installed (and offers to
