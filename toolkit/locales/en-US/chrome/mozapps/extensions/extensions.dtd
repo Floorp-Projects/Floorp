@@ -25,6 +25,7 @@
 <!ENTITY cmd.options.tooltip              "Set Options for the selected Extension">
 <!ENTITY cmd.optionsUnix.label            "Preferences">
 <!ENTITY cmd.optionsUnix.accesskey        "r">
+<!ENTITY cmd.optionsUnix.tooltip          "Edit Preferences for the selected Extension">
 <!ENTITY cmd.homepage.label               "Visit Home Page">
 <!ENTITY cmd.homepage.accesskey           "H">
 <!ENTITY cmd.about.label                  "About this Extension">

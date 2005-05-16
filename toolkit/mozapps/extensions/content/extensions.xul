@@ -278,9 +278,12 @@
                 label="&cmd.update.label;" accesskey="&cmd.update.accesskey;" tooltiptext="&cmd.update.tooltip;"
                 command="cmd_update"/>
         <separator class="commandBarSeparator"/>              
-        <button id="optionsButton"
-                label="&cmd.options.label;" accesskey="&cmd.options.accesskey;" tooltiptext="&cmd.options.tooltip;"
-                command="cmd_options"/>
+        <button id="optionsButton" command="cmd_options"
+#ifdef XP_WIN
+              label="&cmd.options.label;" accesskey="&cmd.options.accesskey;" tooltiptext="&cmd.options.tooltip;"/>
+#else
+              label="&cmd.optionsUnix.label;" accesskey="&cmd.optionsUnix.accesskey;" tooltiptext="&cmd.optionsUnix.tooltip;"/>
+#endif
         <button id="useThemeButton" hidden="true"
                 label="&cmd.useTheme.label;" accesskey="&cmd.useTheme.accesskey;" tooltiptext="&cmd.useTheme.tooltip;"
                 command="cmd_useTheme"/>
