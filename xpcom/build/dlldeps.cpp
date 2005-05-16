@@ -38,6 +38,7 @@
 // Force references to all of the symbols that we want exported from
 // the dll that are located in the .lib files we link with
 
+#include <windows.h>
 #include "nsVoidArray.h"
 #include "nsValueArray.h"
 #include "nsIAtom.h"
