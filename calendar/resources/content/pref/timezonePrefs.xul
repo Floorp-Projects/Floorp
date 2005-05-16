@@ -63,16 +63,13 @@
       "defaultzone"
       ];
 
-
-      
-   </script>
-
+ </script>
 
 <groupbox>
 	<caption label="&pref.calendar.timezone.caption;"/>
-	<description>This doesn't yet do anything.</description>
+	<description>&pref.calendar.timezone.shortdescription;</description>
         <description>&pref.calendar.timezone.description;</description>
-	<hbox  align="center">
+	<hbox align="center">
 		<description>&pref.defaultzone.label;</description>
         <menulist id="defaultzone" preftype="string" prefstring="calendar.timezone.default">
 			<menupopup id="defaultzone">
