@@ -64,6 +64,7 @@ INSTALLER_FILES = \
 	editor.jst \
 	inspector.jst \
 	psm.jst \
+	reporter.jst \
 	talkback.jst \
 	venkman.jst \
 	xpcom.jst \
