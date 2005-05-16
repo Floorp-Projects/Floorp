@@ -12062,7 +12062,7 @@ browser)
   MOZ_XUL_APP=1
   MOZ_PHOENIX=1
   MOZ_APP_VERSION=`cat $topsrcdir/browser/config/version.txt`
-  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc xmlextras pref transformiix universalchardet webservices inspector gnomevfs negotiateauth permissions"
+  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc xmlextras pref transformiix universalchardet webservices inspector gnomevfs negotiateauth permissions reporter"
   cat >> confdefs.h <<\EOF
 #define MOZ_PHOENIX 1
 EOF
