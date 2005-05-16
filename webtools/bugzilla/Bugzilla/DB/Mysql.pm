@@ -260,6 +260,10 @@ sub bz_setup_database {
         # We estimate one minute for each 3000 bugs, plus 3 minutes just
         # to handle basic MySQL stuff.
         my $rename_time = int($bug_count / 3000) + 3;
+        # And 45 minutes for every 15,000 attachments, per some experiments.
+        my ($attachment_count) = 
+            $self->selectrow_array("SELECT COUNT(*) FROM attachments");
+        $rename_time += int(($attachment_count * 45) / 15000);
         # If we're going to take longer than 5 minutes, we let the user know
         # and allow them to abort.
         if ($rename_time > 5) {
@@ -337,6 +341,11 @@ sub bz_setup_database {
 
         # Go through all the tables.
         foreach my $table (@tables) {
+            # Will contain the names of old indexes as keys, and the 
+            # definition of the new indexes as a value. The values
+            # include an extra hash key, NAME, with the new name of 
+            # the index.
+            my %rename_indexes;
             # And go through all the columns on each table.
             my @columns = $self->bz_table_columns_real($table);
 
@@ -359,20 +368,20 @@ sub bz_setup_database {
             foreach my $column (@columns) {
                 # If we have an index named after this column, it's an 
                 # old-style-name index.
-                # This will miss PRIMARY KEY indexes, but that's OK 
-                # because we aren't renaming them.
                 if (my $index = $self->bz_index_info_real($table, $column)) {
                     # Fix the name to fit in with the new naming scheme.
-                    my $new_name = $table . "_" .
-                                   $index->{FIELDS}->[0] . "_idx";
-                    print "Renaming index $column to $new_name...\n";
-                    # Unfortunately, MySQL has no way to rename an index. :-(
-                    # So we have to drop and recreate the indexes.
-                    $self->bz_drop_index_raw($table, $column, "silent");
-                    $self->bz_add_index_raw($table, $new_name, 
-                                             $index, "silent");
+                    $index->{NAME} = $table . "_" .
+                                     $index->{FIELDS}->[0] . "_idx";
+                    print "Renaming index $column to " 
+                          . $index->{NAME} . "...\n";
+                    $rename_indexes{$column} = $index;
                 } # if
             } # foreach column
+
+            my @rename_sql = $self->_bz_schema->get_rename_indexes_ddl(
+                $table, %rename_indexes);
+            $self->do($_) foreach (@rename_sql);
+
         } # foreach table
     } # if old-name indexes
 

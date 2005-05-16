@@ -166,6 +166,30 @@ sub get_drop_index_ddl {
     return ("DROP INDEX \`$name\` ON $table");
 }
 
+# A special function for MySQL, for renaming a lot of indexes.
+# Index renames is a hash, where the key is a string - the 
+# old names of the index, and the value is a hash - the index
+# definition that we're renaming to, with an extra key of "NAME"
+# that contains the new index name.
+# The indexes in %indexes must be in hashref format.
+sub get_rename_indexes_ddl {
+    my ($self, $table, %indexes) = @_;
+    my @keys = keys %indexes or return ();
+
+    my $sql = "ALTER TABLE $table ";
+
+    foreach my $old_name (@keys) {
+        my $name = $indexes{$old_name}->{NAME};
+        my $type = $indexes{$old_name}->{TYPE};
+        $type ||= 'INDEX';
+        my $fields = join(',', @{$indexes{$old_name}->{FIELDS}});
+        $sql .= " ADD $type $name ($fields), DROP INDEX $old_name,";
+    }
+    # Remove the last comma.
+    chop($sql);
+    return ($sql);
+}
+
 # Converts a DBI column_info output to an abstract column definition.
 # Expects to only be called by Bugzila::DB::Mysql::_bz_build_schema_from_disk,
 # although there's a chance that it will also work properly if called
