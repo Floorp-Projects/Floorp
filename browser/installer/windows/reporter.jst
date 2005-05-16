@@ -10,7 +10,6 @@ var jarFolder = getFolder("Chrome", "reporter.jar");
 
 registerChrome(PACKAGE | DELAYED_CHROME, jarFolder, "content/reporter/");
 registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/classic/reporter/");
-//registerChrome(LOCALE | DELAYED_CHROME, jarFolder, "locale/en-US/reporter/");
 
 err = getLastError();
 if (err==SUCCESS)
