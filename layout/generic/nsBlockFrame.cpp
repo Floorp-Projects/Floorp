@@ -1252,11 +1252,6 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // max-element-width values.
       maxElementWidth = aState.mMaxElementWidth +
         borderPadding.left + borderPadding.right;
-      if (computedWidth < maxElementWidth) {
-        // XXXldb It's *compute* max-element-width, not *change size
-        // based on* max-element-width...
-        computedWidth = maxElementWidth;
-      }
     }
 
     // Apply min/max values
