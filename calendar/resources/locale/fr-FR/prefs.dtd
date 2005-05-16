@@ -144,6 +144,7 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Mon fuseau horaire">
 <!ENTITY pref.calendar.timezone.caption "Fuseau horaire">
+<!ENTITY pref.calendar.timezone.shortdescription "Ceci ne fait rien pour le moment.">
 <!ENTITY pref.calendar.timezone.description "Le nom des fuseaux horaires est (continent ou océan)/(ville principale dans la région).">
 <!ENTITY pref.defaultzone.label     "Fuseau horaire par défaut :" >
 
