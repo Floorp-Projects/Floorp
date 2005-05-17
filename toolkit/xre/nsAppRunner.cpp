@@ -241,6 +241,22 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
   extern void InstallUnixSignalHandlers(const char *ProgramName);
 #endif
 
+#if defined(XP_WIN)
+/**
+ * Return a malloc'd copy of the given string surrounded with double quotes.
+ */
+static char *NewQuotedString(const char *input)
+{
+  int len = strlen(input);
+  char *p = (char *) malloc(len + 3);
+  p[0] = '\"';
+  memcpy(&p[1], input, len);
+  p[len + 1] = '\"';
+  p[len + 2] = '\0';
+  return p;
+}
+#endif
+
 int    gArgc;
 char **gArgv;
 
@@ -1637,6 +1653,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   int i;
   for (i = 0; i < argc; ++i) {
+#if defined(XP_WIN)
+    if (strchr(argv[i], ' ')) {
+      gRestartArgv[i] = NewQuotedString(argv[i]);
+      if (!gRestartArgv[i]) return 1;
+    }
+    else
+#endif
     gRestartArgv[i] = argv[i];
   }
   gRestartArgv[argc] = nsnull;
