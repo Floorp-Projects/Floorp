@@ -91,4 +91,11 @@ interface nsIXFormsControl : nsIXFormsContextControl
    * control (XXX)
    */
   readonly attribute nsIDOMElement element;
+
+  /** According to sec 4.1 in the spec, only certain controls are allowed to
+   *  be targets of the interaction and notification events.  The controls
+   *  that inherit from nsXFormsControlStub that SHOULDN'T get these events
+   *  need to override IsEventTarget() and return PR_FALSE
+   */
+  boolean isEventTarget();
 };

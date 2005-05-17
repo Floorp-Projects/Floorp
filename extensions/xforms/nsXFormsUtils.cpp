@@ -722,6 +722,42 @@ nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent)
 {
   if (!aTarget)
     return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIXFormsControl> control = do_QueryInterface(aTarget);
+  if (control) {
+    switch (aEvent) {
+      case eEvent_Previous:
+      case eEvent_Next:
+      case eEvent_Focus:
+      case eEvent_Help:
+      case eEvent_Hint:
+      case eEvent_DOMActivate:
+      case eEvent_ValueChanged:
+      case eEvent_Valid:
+      case eEvent_Invalid:
+      case eEvent_DOMFocusIn:
+      case eEvent_DOMFocusOut:
+      case eEvent_Readonly:
+      case eEvent_Readwrite:
+      case eEvent_Required:
+      case eEvent_Optional:
+      case eEvent_Enabled:
+      case eEvent_Disabled:
+      case eEvent_InRange:
+      case eEvent_OutOfRange:
+        {
+          PRBool acceptableEventTarget = PR_FALSE;
+          control->IsEventTarget(&acceptableEventTarget);
+          if (!acceptableEventTarget) {
+            return NS_OK;
+          }
+          break;
+        }
+      default:
+        break;
+    }
+  }
+
   nsCOMPtr<nsIDOMDocument> domDoc;
   aTarget->GetOwnerDocument(getter_AddRefs(domDoc));
 

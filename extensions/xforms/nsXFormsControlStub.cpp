@@ -180,6 +180,13 @@ nsXFormsControlStub::TryFocus(PRBool* aOK)
   return NS_OK;
 }
   
+NS_IMETHODIMP
+nsXFormsControlStub::IsEventTarget(PRBool *aOK)
+{
+  *aOK = PR_TRUE;
+  return NS_OK;
+}
+  
 
 nsresult
 nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,

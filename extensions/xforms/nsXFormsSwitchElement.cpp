@@ -85,6 +85,7 @@ public:
 
   // nsIXFormsControl
   NS_IMETHOD Refresh();
+  NS_IMETHOD IsEventTarget(PRBool *aOK);
 
 private:
   /**
@@ -409,6 +410,13 @@ nsXFormsSwitchElement::CaseChanged(nsIDOMNode* aCase, PRBool aRemoved)
   element->GetAttribute(NS_LITERAL_STRING("selected"), sel);
   if (sel.EqualsLiteral("true"))
     SetSelected(element, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsXFormsSwitchElement::IsEventTarget(PRBool *aOK)
+{
+  *aOK = PR_FALSE;
+  return NS_OK;
 }
 
 NS_HIDDEN_(nsresult)

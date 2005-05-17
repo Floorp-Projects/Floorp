@@ -317,6 +317,7 @@ public:
   NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
   NS_IMETHOD TryFocus(PRBool* aOK);
+  NS_IMETHOD IsEventTarget(PRBool *aOK);
 
   // nsIXFormsRepeatElement
   NS_DECL_NSIXFORMSREPEATELEMENT
@@ -971,6 +972,13 @@ nsXFormsRepeatElement::TryFocus(PRBool *aOK)
   NS_ENSURE_STATE(control);
 
   return control->TryFocus(aOK);
+}
+
+NS_IMETHODIMP
+nsXFormsRepeatElement::IsEventTarget(PRBool *aOK)
+{
+  *aOK = PR_FALSE;
+  return NS_OK;
 }
 
 /**

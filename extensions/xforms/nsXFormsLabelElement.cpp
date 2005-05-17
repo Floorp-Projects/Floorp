@@ -57,6 +57,7 @@ class nsXFormsLabelElement : public nsXFormsControlStub
 public:
   // nsIXFormsControl
   NS_IMETHOD Refresh();
+  NS_IMETHOD IsEventTarget(PRBool *aOK);
 
   // nsIXTFXMLVisual overrides
   NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
@@ -195,6 +196,13 @@ NS_IMETHODIMP
 nsXFormsLabelElement::Refresh()
 {
   RefreshLabel();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsLabelElement::IsEventTarget(PRBool *aOK)
+{
+  *aOK = PR_FALSE;
   return NS_OK;
 }
 

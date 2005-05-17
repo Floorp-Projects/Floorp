@@ -93,6 +93,7 @@ public:
                             nsIDOMXPathResult **aResult = nsnull);
   NS_IMETHOD Bind();
   NS_IMETHOD TryFocus(PRBool* aOK);
+  NS_IMETHOD IsEventTarget(PRBool *aOK);
 
   // nsIXTFXMLVisual overrides
   /** This sets the notification mask and initializes mElement */

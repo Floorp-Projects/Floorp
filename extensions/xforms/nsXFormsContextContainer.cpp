@@ -97,6 +97,7 @@ public:
   NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
   NS_IMETHOD SetContextNode(nsIDOMNode *aContextNode);
+  NS_IMETHOD IsEventTarget(PRBool *aOK);
 
   // nsIXFormsRepeatItemElement
   NS_DECL_NSIXFORMSREPEATITEMELEMENT
@@ -271,6 +272,13 @@ nsXFormsContextContainer::Bind()
 nsresult
 nsXFormsContextContainer::Refresh()
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsContextContainer::IsEventTarget(PRBool* aOK)
+{
+  *aOK = PR_FALSE;
   return NS_OK;
 }
 
