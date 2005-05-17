@@ -140,7 +140,7 @@ nsSVGRect::GetValueString(nsAString& aValue)
                             NS_LITERAL_STRING("%g %g %g %g").get(),
                             (double)mX, (double)mY,
                             (double)mWidth, (double)mHeight);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
