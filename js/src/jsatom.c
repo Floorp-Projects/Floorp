@@ -473,7 +473,7 @@ js_atom_sweeper(JSHashEntry *he, intN i, void *arg)
         return HT_ENUMERATE_NEXT;
     }
     JS_ASSERT((atom->flags & (ATOM_PINNED | ATOM_INTERNED)) == 0);
-    atom->entry.key = NULL;
+    atom->entry.key = atom->entry.value = NULL;
     atom->flags = 0;
     return HT_ENUMERATE_REMOVE;
 }
@@ -623,6 +623,12 @@ out:
     return atom;
 }
 
+/*
+ * To put an atom into the hidden subspace. XOR its keyHash with this value,
+ * which is (sqrt(2)-1) in 32-bit fixed point.
+ */
+#define HIDDEN_ATOM_SUBSPACE_KEYHASH    0x6A09E667
+
 JSAtom *
 js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 {
@@ -634,6 +640,8 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     JSAtom *atom;
 
     keyHash = js_HashString(str);
+    if (flags & ATOM_HIDDEN)
+        keyHash ^= HIDDEN_ATOM_SUBSPACE_KEYHASH;
     key = STRING_TO_JSVAL(str);
     state = &cx->runtime->atomState;
     JS_LOCK(&state->lock, cx);
@@ -679,7 +687,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     }
 
     atom = (JSAtom *)he;
-    atom->flags |= flags & (ATOM_PINNED | ATOM_INTERNED);
+    atom->flags |= flags & (ATOM_PINNED | ATOM_INTERNED | ATOM_HIDDEN);
     cx->lastAtom = atom;
 out:
     JS_UNLOCK(&state->lock,cx);

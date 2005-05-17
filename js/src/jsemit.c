@@ -1460,7 +1460,6 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 
         obj = fp->varobj;
         if (obj == fp->scopeChain &&
-            OBJ_IS_NATIVE(obj) &&
             !js_InWithStatement(&cg->treeContext) &&
             !js_InCatchBlock(&cg->treeContext, atom)) {
             ATOM_LIST_SEARCH(ale, &cg->constList, atom);
@@ -1477,8 +1476,22 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
              * nor can prop be deleted.
              */
             prop = NULL;
-            ok = js_LookupPropertyWithFlags(cx, obj, ATOM_TO_JSID(atom),
-                                            JSLOOKUP_HIDDEN, &pobj, &prop);
+            if (OBJ_IS_NATIVE(obj)) {
+                ok = js_LookupHiddenProperty(cx, obj, ATOM_TO_JSID(atom),
+                                             &pobj, &prop);
+                if (!ok)
+                    break;
+                if (prop) {
+                    /*
+                     * Any hidden property must be a formal arg or local var,
+                     * which will shadow a global const of the same name.
+                     */
+                    OBJ_DROP_PROPERTY(cx, pobj, prop);
+                    break;
+                }
+            }
+
+            ok = OBJ_LOOKUP_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop);
             if (ok) {
                 if (pobj == obj &&
                     (fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO))) {
@@ -1824,10 +1837,8 @@ LookupArgOrVar(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
          * NB: We know that JSOP_DELNAME on an argument or variable evaluates
          * to false, due to JSPROP_PERMANENT.
          */
-        if (!js_LookupPropertyWithFlags(cx, obj, ATOM_TO_JSID(atom),
-                                        JSLOOKUP_HIDDEN, &pobj, &prop)) {
+        if (!js_LookupHiddenProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop))
             return JS_FALSE;
-        }
         sprop = (JSScopeProperty *) prop;
         if (sprop) {
             if (pobj == obj) {
@@ -2884,8 +2895,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             uintN slot;
 
             obj = OBJ_GET_PARENT(cx, fun->object);
-            if (!js_LookupPropertyWithFlags(cx, obj, ATOM_TO_JSID(fun->atom),
-                                            JSLOOKUP_HIDDEN, &pobj, &prop)) {
+            if (!js_LookupHiddenProperty(cx, obj, ATOM_TO_JSID(fun->atom),
+                                         &pobj, &prop)) {
                 return JS_FALSE;
             }
             JS_ASSERT(prop && pobj == obj);
