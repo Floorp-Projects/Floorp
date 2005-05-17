@@ -361,17 +361,8 @@
         <parameter name="evt"/>
         <body>
         <![CDATA[
-          var target = evt.originalTarget;
-          if ((target.localName == "textarea")&&(target.namespaceURI == "http://www.w3.org/1999/xhtml")) {
+          if (!this.enterDefaultAlways && evt.getPreventDefault())
             return;
-          }
-          // if a button is focused, do nothing, so that activating the button 
-          // doesn't cause the dialog to exit
-          if (!this.enterDefaultAlways) {
-            var focused = document.commandDispatcher.focusedElement;
-            if (focused && focused.localName == "button")
-              return;
-          }
 
           // only accept dialog if accept button is the default
           var btn = this.getButton("accept");
@@ -384,9 +375,14 @@
     </implementation>
     
     <handlers>
-      <handler event="keypress" keycode="VK_ENTER" action="this._hitEnter(event);"/>
-      <handler event="keypress" keycode="VK_RETURN" action="this._hitEnter(event);"/>
-      <handler event="keypress" keycode="VK_ESCAPE" action="this.cancelDialog();"/>
+      <handler event="keypress" keycode="VK_ENTER"
+               group="system" action="this._hitEnter(event);"/>
+      <handler event="keypress" keycode="VK_RETURN"
+               group="system" action="this._hitEnter(event);"/>
+      <handler event="keypress" keycode="VK_ESCAPE" group="system">
+        if (!event.getPreventDefault())
+          this.cancelDialog();
+      </handler>
 #ifdef XP_MACOSX
       <handler event="keypress" key="." modifiers="meta" phase="capturing" action="this.cancelDialog();"/>
 #endif
