@@ -38,6 +38,7 @@
 
 #include <windows.h>
 #include <shlwapi.h>
+#include <stdlib.h>
 #include "nsWindowsRegKey.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsString.h"
