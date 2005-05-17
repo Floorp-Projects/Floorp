@@ -29,6 +29,8 @@
 
 #include <assert.h>
 
+#import <Cocoa/Cocoa.h>
+
 #include "CocoaBrowserControlCanvas.h"
 
 #include "jni_util.h" //for throwing Exceptions to Java
@@ -42,6 +44,8 @@ jint CocoaBrowserControlCanvas::cocoaGetHandleToPeer(JNIEnv *env, jobject canvas
     jboolean result = JNI_FALSE;
     jint lock = 0;
     NSView *view = NULL;
+    NSWindow *win = NULL;
+    void * windowPtr = NULL;
     
     printf("debug: edburns: about to get AWT\n");
     // get the AWT
@@ -98,6 +102,14 @@ jint CocoaBrowserControlCanvas::cocoaGetHandleToPeer(JNIEnv *env, jobject canvas
         
         // Get the corresponding peer from the caller canvas
         view = dsi_mac->cocoaViewRef;
+        printf("debug: edburns: view: %p\n", view);
+        fflush(stdout);
+        win = [view window];
+        printf("debug: edburns: win: %p\n", win);
+        fflush(stdout);
+        windowPtr = [win windowRef];
+        printf("debug: edburns: windowPtr: %p\n", windowPtr);
+        fflush(stdout);
         // Free the DrawingSurfaceInfo
         ds->FreeDrawingSurfaceInfo(dsi);
     }
@@ -109,5 +121,5 @@ jint CocoaBrowserControlCanvas::cocoaGetHandleToPeer(JNIEnv *env, jobject canvas
     // Free the drawing surface (if not caching it)
     awt.FreeDrawingSurface(ds);
 
-    return (jint) view;
+    return (jint) windowPtr;
 }

@@ -136,7 +136,8 @@ ifeq ($(OS_ARCH),Darwin)
 CMMSRCS = cocoa/CocoaBrowserControlCanvas.mm
 CPPSRCS += cocoa/CocoaBrowserControlCanvasImpl.cpp
 DLL_SUFFIX = .jnilib
-DSO_LDOPTS += -L/System/Library/Frameworks/JavaVM.Framework/Libraries -ljawt
+#DSO_LDOPTS += -L/System/Library/Frameworks/JavaVM.Framework/Libraries -ljawt
+DSO_LDOPTS += -framework JavaVM -lobjc
 else
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += \
