@@ -951,6 +951,9 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
         switch ((JSOp) *pc) {
           case JSOP_NAME:
           case JSOP_GETPROP:
+#if JS_HAS_XML_SUPPORT
+          case JSOP_GETMETHOD:
+#endif
             atomIndex = GET_ATOM_INDEX(pc);
             atom = js_GetAtom(cx, &fp->script->atomMap, atomIndex);
             argsobj = js_NewArrayObject(cx, argc, vp + 2);
