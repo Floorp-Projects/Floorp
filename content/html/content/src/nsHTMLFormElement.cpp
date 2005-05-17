@@ -1514,7 +1514,7 @@ nsHTMLFormElement::GetPositionInGroup(nsIDOMHTMLInputElement *aRadio,
 
   nsCOMPtr<nsISupports> itemWithName;
   nsresult rv = ResolveName(name, getter_AddRefs(itemWithName));
-  NS_ENSURE_TRUE(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDOMNodeList> radioNodeList(do_QueryInterface(itemWithName));
 
   // XXX If ResolveName could return an nsContentList instead then we 
