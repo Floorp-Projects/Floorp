@@ -1139,14 +1139,14 @@ done:
     return rv;
 }
 
-#define NEXT_ITERATION() { \
+#define NEXT_USAGE() { \
     i*=2; \
     certUsage++; \
     continue; \
 }
 
 #define VALID_USAGE() { \
-    NEXT_ITERATION(); \
+    NEXT_USAGE(); \
 }
 
 #define INVALID_USAGE() { \
@@ -1156,7 +1156,7 @@ done:
     if (PR_TRUE == requiredUsage) { \
         valid = SECFailure; \
     } \
-    NEXT_ITERATION(); \
+    NEXT_USAGE(); \
 }
 
 /*
@@ -1233,7 +1233,7 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
     for (i=1;i<=certificateUsageHighest && !(SECFailure == valid && !returnedUsages) ;) {
         PRBool requiredUsage = (i & requiredUsages) ? PR_TRUE : PR_FALSE;
         if (PR_FALSE == requiredUsage && PR_FALSE == checkAllUsages) {
-            NEXT_ITERATION();
+            NEXT_USAGE();
         }
         if (returnedUsages) {
             *returnedUsages |= i; /* start off assuming this usage is valid */
@@ -1264,7 +1264,7 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
           case certUsageUserCertImport:
           case certUsageVerifyCA:
               /* these usages cannot be verified */
-              NEXT_ITERATION();
+              NEXT_USAGE();
 
           default:
             PORT_Assert(0);
@@ -1408,7 +1408,7 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
             }
         }
 
-        NEXT_ITERATION();
+        NEXT_USAGE();
     }
     
     return(valid);
