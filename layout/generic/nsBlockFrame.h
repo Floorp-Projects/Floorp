@@ -587,7 +587,7 @@ protected:
 
   PRBool RenumberListsFor(nsPresContext* aPresContext, nsIFrame* aKid, PRInt32* aOrdinal, PRInt32 aDepth);
 
-  PRBool FrameStartsCounterScope(nsIFrame* aFrame);
+  static PRBool FrameStartsCounterScope(nsIFrame* aFrame);
 
   nsresult UpdateBulletPosition(nsBlockReflowState& aState);
 

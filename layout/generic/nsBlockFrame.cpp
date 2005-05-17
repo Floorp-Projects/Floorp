@@ -7080,12 +7080,14 @@ nsBlockFrame::SetInitialChildList(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+// static
 PRBool
 nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
 {
-  if (!mContent->IsContentOfType(nsIContent::eHTML))
+  nsIContent* content = aFrame->GetContent();
+  if (!content || !content->IsContentOfType(nsIContent::eHTML))
     return PR_FALSE;
-  nsINodeInfo *ni = mContent->GetNodeInfo();
+  nsINodeInfo *ni = content->GetNodeInfo();
   return ni->Equals(nsHTMLAtoms::ol) ||
          ni->Equals(nsHTMLAtoms::ul) ||
          ni->Equals(nsHTMLAtoms::dir) ||
