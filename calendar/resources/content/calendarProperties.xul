@@ -76,7 +76,7 @@
            </row>
                     
            <row align="center">
-               <label value="&calendar.server.dialog.color.label;"/>
+               <label value="&calendarproperties.color.label;"/>
                 <hbox align="center">
                     <colorpicker id="calendar-color"
                                  class="small-margin"
