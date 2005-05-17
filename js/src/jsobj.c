@@ -2186,6 +2186,13 @@ HidePropertyName(JSContext *cx, jsid *idp)
     if (!hidden)
         return JS_FALSE;
 
+    /*
+     * Link hidden to unhidden atom to optimize call_enumerate -- this means
+     * the GC must mark a hidden atom's unhidden counterpart (see js_MarkAtom
+     * in jsgc.c).  It overloads the entry.value member, which for unhidden
+     * atoms may point to keyword information.
+     */
+    hidden->entry.value = atom;
     *idp = ATOM_TO_JSID(hidden);
     return JS_TRUE;
 }

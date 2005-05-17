@@ -753,9 +753,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
         JS_ASSERT(JSID_IS_ATOM(sprop->id));
         atom = JSID_TO_ATOM(sprop->id);
         JS_ASSERT(atom->flags & ATOM_HIDDEN);
-        atom = js_AtomizeString(cx, ATOM_TO_STRING(atom), 0);
-        if (!atom)
-            return JS_FALSE;
+        atom = atom->entry.value;
 
         if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &obj, &prop))
             return JS_FALSE;
@@ -1346,7 +1344,7 @@ fun_reserveSlots(JSContext *cx, JSObject *obj)
  * does not bloat every instance, only those on which reserved slots are set,
  * and those on which ad-hoc properties are defined.
  */
-JSClass js_FunctionClass = {
+JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     js_Function_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(2),
     JS_PropertyStub,  JS_PropertyStub,

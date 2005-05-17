@@ -63,7 +63,8 @@ JS_BEGIN_EXTERN_C
 #define ATOM_TMPSTR     0x80            /* internal, to avoid extra string */
 
 struct JSAtom {
-    JSHashEntry         entry;          /* key is jsval, value keyword info */
+    JSHashEntry         entry;          /* key is jsval, value keyword info or
+                                           unhidden atom if ATOM_HIDDEN */
     uint32              flags;          /* pinned, interned, and mark flags */
     jsatomid            number;         /* atom serial number and hash code */
 };

@@ -4984,7 +4984,7 @@ js_AddToSrcNoteDelta(JSContext *cx, JSCodeGenerator *cg, jssrcnote *sn,
     return sn;
 }
 
-uintN
+JS_FRIEND_API(uintN)
 js_SrcNoteLength(jssrcnote *sn)
 {
     uintN arity;

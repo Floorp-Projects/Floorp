@@ -979,6 +979,8 @@ js_MarkAtom(JSContext *cx, JSAtom *atom, void *arg)
 #endif
         GC_MARK(cx, JSVAL_TO_GCTHING(key), name, arg);
     }
+    if (atom->flags & ATOM_HIDDEN)
+        js_MarkAtom(cx, atom->entry.value, arg);
 }
 
 /*
