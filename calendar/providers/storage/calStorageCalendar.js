@@ -1302,7 +1302,8 @@ calStorageCalendar.prototype = {
                 flags |= CAL_ITEM_FLAG_HAS_RECURRENCE;
 
                 var ritems = rec.getRecurrenceItems ({});
-                for each (var ritem in ritems) {
+                for (i in ritems) {
+                    var ritem = ritems[i];
                     ap = this.mInsertRecurrence.params;
                     ap.item_id = item.id;
                     ap.recur_index = i;
