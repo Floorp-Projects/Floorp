@@ -52,3 +52,7 @@ message[level="ephemeral"], hint {
   visibility: hidden !important;
   position: absolute !important;
 }
+
+alert {
+  display: none;
+}

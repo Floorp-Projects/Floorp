@@ -520,15 +520,15 @@ nsXFormsModelElement::SetSingleState(nsIDOMElement *aElement,
 {
   nsXFormsEvent event = aState ? aOnEvent : (nsXFormsEvent) (aOnEvent + 1);
 
-  // Dispatch event
-  nsXFormsUtils::DispatchEvent(aElement, event);
-
   // Set pseudo class
   ///
   /// @bug Set via attributes right now. Bug 271720. (XXX)
   aElement->SetAttribute(kStateAttributes[aState ? aAttributePos : aAttributePos + 1],
                          NS_LITERAL_STRING("1"));
   aElement->RemoveAttribute(kStateAttributes[aState ? aAttributePos + 1 : aAttributePos]);
+  
+  // Dispatch event
+  nsXFormsUtils::DispatchEvent(aElement, event);
 }
 
 nsresult

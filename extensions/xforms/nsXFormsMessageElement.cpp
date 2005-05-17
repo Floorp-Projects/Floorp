@@ -165,6 +165,7 @@ private:
   nsresult HandleModalAndModelessMessage(nsIDOMDocument* aDoc, nsAString& aLevel);
   void CloneNode(nsIDOMNode* aSrc, nsIDOMNode** aTarget);
   void AppendCSSOptions(nsIDOMViewCSS* aViewCSS, nsAString& aOptions);
+  PRBool HandleInlineAlert(nsIDOMEvent* aEvent);
   nsresult ConstructMessageWindowURL(nsAString& aData,
                                      PRBool aIsLink,
                                      /*out*/ nsAString& aURL);
@@ -209,11 +210,13 @@ nsXFormsMessageElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   nsCOMPtr<nsIDOMDocument> domDoc;
   mElement->GetOwnerDocument(getter_AddRefs(domDoc));
   domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                          NS_LITERAL_STRING("div"),
+                          mType == eType_Alert
+                          ? NS_LITERAL_STRING("span")
+                          : NS_LITERAL_STRING("div"),
                           getter_AddRefs(mVisualElement));
-  if (mVisualElement)
-    mVisualElement->SetAttribute(NS_LITERAL_STRING("style"),
-                                 NS_LITERAL_STRING(EPHEMERAL_STYLE_HIDDEN));
+  if (mVisualElement && mType != eType_Alert)
+      mVisualElement->SetAttribute(NS_LITERAL_STRING("style"),
+                                   NS_LITERAL_STRING(EPHEMERAL_STYLE_HIDDEN));
 
   return NS_OK;
 }
@@ -394,6 +397,9 @@ nsXFormsMessageElement::HandleAction(nsIDOMEvent* aEvent,
       level.AssignLiteral("modeless");
       break;
     case eType_Alert:
+      if (HandleInlineAlert(aEvent))
+        return NS_OK;
+
       level.AssignLiteral("modal");
       break;
   }
@@ -407,6 +413,59 @@ nsXFormsMessageElement::HandleAction(nsIDOMEvent* aEvent,
   return level.EqualsLiteral("ephemeral")
     ? HandleEphemeralMessage(doc, aEvent)
     : HandleModalAndModelessMessage(doc, level);
+}
+
+PRBool
+nsXFormsMessageElement::HandleInlineAlert(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMDocument> doc;
+  mElement->GetOwnerDocument(getter_AddRefs(doc));
+  
+  nsCOMPtr<nsIDOMDocumentView> dview(do_QueryInterface(doc));
+  if (!dview)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMAbstractView> aview;
+  dview->GetDefaultView(getter_AddRefs(aview));
+  if (!aview)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMWindowInternal> internal(do_QueryInterface(aview));
+  if (!internal)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMViewCSS> cssView(do_QueryInterface(internal));
+  if (!cssView)
+    return PR_FALSE;
+  
+  nsAutoString tmp;
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> styles;
+  cssView->GetComputedStyle(mElement, tmp, getter_AddRefs(styles));
+  nsCOMPtr<nsIDOMCSSValue> display;
+  styles->GetPropertyCSSValue(NS_LITERAL_STRING("display"),
+                              getter_AddRefs(display));
+  if (display) {
+    nsCOMPtr<nsIDOMCSSPrimitiveValue> displayValue(do_QueryInterface(display));
+    if (displayValue) {
+      nsAutoString type;
+      displayValue->GetStringValue(type);
+      if (type.EqualsLiteral("none"))
+        return PR_FALSE;
+
+      nsAutoString instanceData;
+      PRBool hasBinding = nsXFormsUtils::GetSingleNodeBindingValue(mElement,
+                                                                   instanceData);
+      if (hasBinding) {
+        nsCOMPtr<nsIDOM3Node> visualElement3(do_QueryInterface(mVisualElement));
+        if (visualElement3) {
+          visualElement3->SetTextContent(instanceData);
+        }
+      }
+      return PR_TRUE;
+    }
+    
+  }
+  return PR_FALSE;
 }
 
 nsresult
