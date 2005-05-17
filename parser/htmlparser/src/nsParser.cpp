@@ -1421,9 +1421,8 @@ NS_IMETHODIMP nsParser::Terminate(void)
  */
 NS_IMETHODIMP nsParser::ContinueParsing()
 {    
-  NS_ASSERTION(!(mFlags & NS_PARSER_FLAG_PARSER_ENABLED),
-               "Trying to continue parsing on a unblocked parser.");
   if (mFlags & NS_PARSER_FLAG_PARSER_ENABLED) {
+    NS_WARNING("Trying to continue parsing on a unblocked parser.");
     return NS_OK;
   }
 
@@ -1441,8 +1440,11 @@ NS_IMETHODIMP nsParser::ContinueInterruptedParsing()
   nsresult result=NS_OK;
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
 
-  NS_ASSERTION(mFlags & NS_PARSER_FLAG_PARSER_ENABLED,
-               "Don't call ContinueInterruptedParsing on a blocked parser.");
+#ifdef DEBUG
+  if (!(mFlags & NS_PARSER_FLAG_PARSER_ENABLED)) {
+    NS_WARNING("Don't call ContinueInterruptedParsing on a blocked parser.");
+  }
+#endif
 
   PRBool isFinalChunk = (mParserContext &&
                           mParserContext->mStreamListenerState==eOnStop) ?
@@ -1481,12 +1483,13 @@ NS_IMETHODIMP_(void) nsParser::BlockParser()
  */
 NS_IMETHODIMP_(void) nsParser::UnblockParser()
 {
-  NS_ASSERTION(!(mFlags & NS_PARSER_FLAG_PARSER_ENABLED),
-               "Trying to unblock an unblocked parser.");
   if (!(mFlags & NS_PARSER_FLAG_PARSER_ENABLED)) {
     mFlags |= NS_PARSER_FLAG_PARSER_ENABLED;
     MOZ_TIMER_DEBUGLOG(("Start: Parse Time: nsParser::UnblockParser(), this=%p\n", this));
     MOZ_TIMER_START(mParseTime);
+  }
+  else {
+    NS_WARNING("Trying to unblock an unblocked parser.");
   }
 }
 
