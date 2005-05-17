@@ -47,6 +47,8 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIXTFXMLVisualWrapper.h"
+#include "nsIDocument.h"
+#include "nsXFormsModelElement.h"
 
 /** This class is used to generate xforms-hint and xforms-help events.*/
 class nsXFormsHintHelpListener : public nsIDOMEventListener {
@@ -187,6 +189,25 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
 {
   nsStringArray indexesUsed;
 
+  // let's not go through all of this rigamarol if we don't have a chance
+  // in heck of binding anyhow.  Check to see if the models will be receptive
+  // to some binding.  readyForBindProperty is set when they are.  Make sure
+  // to return NS_OK so that we don't start complaining about binding
+  // failures in this situation.
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  if (!doc) {
+    return NS_OK;
+  }
+  nsIDocument *test = NS_STATIC_CAST(nsIDocument *,
+                        doc->GetProperty(nsXFormsAtoms::readyForBindProperty));
+  if (!test) {
+    nsXFormsModelElement::DeferElementBind(domDoc, this);
+    return NS_OK;
+  }
+
   nsresult rv;
   rv = nsXFormsUtils::EvaluateNodeBinding(mElement,
                                           kElementFlags,
@@ -205,14 +226,11 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
 
   if (NS_SUCCEEDED(rv) && indexesUsed.Count()) {
     // add index listeners on repeat elements
-    nsCOMPtr<nsIDOMDocument> doc;
-    mElement->GetOwnerDocument(getter_AddRefs(doc));
-    NS_ENSURE_STATE(doc);
     
     for (PRInt32 i = 0; i < indexesUsed.Count(); ++i) {
       // Find the repeat element and add |this| as a listener
       nsCOMPtr<nsIDOMElement> repElem;
-      doc->GetElementById(*(indexesUsed[i]), getter_AddRefs(repElem));
+      domDoc->GetElementById(*(indexesUsed[i]), getter_AddRefs(repElem));
       nsCOMPtr<nsIXFormsRepeatElement> rep(do_QueryInterface(repElem));
       if (!rep)
         continue;

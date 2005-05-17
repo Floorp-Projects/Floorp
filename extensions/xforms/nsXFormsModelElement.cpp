@@ -1273,6 +1273,8 @@ nsXFormsModelElement::MaybeNotifyCompletion()
         NS_STATIC_CAST(nsXFormsModelElement *, models->ElementAt(i));
     nsXFormsUtils::DispatchEvent(model->mElement, eEvent_ModelConstructDone);
   }
+
+  nsXFormsModelElement::ProcessDeferredBinds(domDoc);
 }
 
 nsresult
@@ -1495,6 +1497,74 @@ nsXFormsModelElement::Startup()
   sModelPropsList[eModel_calculate] = nsXFormsAtoms::calculate;
   sModelPropsList[eModel_constraint] = nsXFormsAtoms::constraint;
   sModelPropsList[eModel_p3ptype] = nsXFormsAtoms::p3ptype;
+}
+
+static void
+DeleteBindList(void    *aObject,
+               nsIAtom *aPropertyName,
+               void    *aPropertyValue,
+               void    *aData)
+{
+  delete NS_STATIC_CAST(nsCOMArray<nsIXFormsControl> *, aPropertyValue);
+}
+
+/* static */ nsresult
+nsXFormsModelElement::DeferElementBind(nsIDOMDocument *aDoc, 
+                                       nsIXFormsControl *aControl)
+{
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
+
+  if (!doc || !aControl) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMArray<nsIXFormsControl> *deferredBindList =
+      NS_STATIC_CAST(nsCOMArray<nsIXFormsControl> *,
+                    doc->GetProperty(nsXFormsAtoms::deferredBindListProperty));
+
+  if (!deferredBindList) {
+    deferredBindList = new nsCOMArray<nsIXFormsControl>(16);
+    NS_ENSURE_TRUE(deferredBindList, NS_ERROR_OUT_OF_MEMORY);
+
+    doc->SetProperty(nsXFormsAtoms::deferredBindListProperty, deferredBindList,
+                     DeleteBindList);
+  }
+
+  // always append to the end of the list.  We need to keep the elements in
+  // document order when we process the binds later.  Otherwise we have trouble
+  // when an element is trying to bind and should use its parent as a context
+  // for the xpath evaluation but the parent isn't bound yet.
+  deferredBindList->AppendObject(aControl);
+
+  return NS_OK;
+}
+
+/* static */ void
+nsXFormsModelElement::ProcessDeferredBinds(nsIDOMDocument *aDoc)
+{
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
+
+  if (!doc) {
+    return;
+  }
+
+  doc->SetProperty(nsXFormsAtoms::readyForBindProperty, doc);
+
+  nsCOMArray<nsIXFormsControl> *deferredBindList =
+      NS_STATIC_CAST(nsCOMArray<nsIXFormsControl> *,
+                    doc->GetProperty(nsXFormsAtoms::deferredBindListProperty));
+
+  if (deferredBindList) {
+    for (int i = 0; i < deferredBindList->Count(); ++i) {
+      nsIXFormsControl *control = deferredBindList->ObjectAt(i);
+      if (control) {
+        control->Bind();
+        control->Refresh();
+      }
+    }
+
+    doc->DeleteProperty(nsXFormsAtoms::deferredBindListProperty);
+  }
 }
 
 nsresult

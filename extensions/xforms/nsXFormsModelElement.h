@@ -94,6 +94,17 @@ public:
   // Called after nsXFormsAtoms is registered
   static NS_HIDDEN_(void) Startup();
 
+  /**
+   * The models are not ready for binding, so defer the binding of the control
+   * by storing it as a property on the document.  The models will run through
+   * this list when they are ready for binding.
+   *
+   * @param aDoc              Document that contains aElement
+   * @param aControl          XForms control waiting to be bound
+   */
+  static NS_HIDDEN_(nsresult) DeferElementBind(nsIDOMDocument    *aDoc,
+                                               nsIXFormsControl  *aControl);
+
 private:
 
   NS_HIDDEN_(already_AddRefed<nsIDOMDocument>)
@@ -146,6 +157,14 @@ private:
                                       PRBool         aState,
                                       nsXFormsEvent  aOnEvent,
                                       PRUint32       aAttributePos);
+
+  /**
+   * Call the Bind() and Refresh() on controls which was deferred because
+   * the model was not ready.
+   *
+   * @param aDoc              Document that contains the XForms control
+   */
+  static NS_HIDDEN_(void) ProcessDeferredBinds(nsIDOMDocument *aDoc);
 
   // Returns true when all external documents have been loaded
   PRBool IsComplete() const { return (mSchemaTotal == mSchemaCount

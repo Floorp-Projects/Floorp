@@ -64,6 +64,8 @@ class nsXFormsAtoms
   static NS_HIDDEN_(nsIAtom *) incremental;
   static NS_HIDDEN_(nsIAtom *) value;
   static NS_HIDDEN_(nsIAtom *) clazz;
+  static NS_HIDDEN_(nsIAtom *) deferredBindListProperty;
+  static NS_HIDDEN_(nsIAtom *) readyForBindProperty;
 
   static NS_HIDDEN_(void) InitAtoms();
 
