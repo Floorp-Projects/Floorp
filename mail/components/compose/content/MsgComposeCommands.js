@@ -1706,10 +1706,6 @@ function GenericSendMessage( msgType )
             return;
          }
 
-         // check if e-mail addresses are complete, in case user
-         // has turned off autocomplete to local domain.
-         if (!CheckValidEmailAddress(msgCompFields.to, msgCompFields.cc, msgCompFields.bcc))
-          return;
          //Check if we have a subject, else ask user for confirmation
          if (subject == "")
          {
@@ -1771,6 +1767,11 @@ function GenericSendMessage( msgType )
           // Before sending the message, check what to do with HTML message, eventually abort.
           var convert = DetermineConvertibility();
           var action = DetermineHTMLAction(convert);
+         // check if e-mail addresses are complete, in case user
+         // has turned off autocomplete to local domain.
+         if (!CheckValidEmailAddress(msgCompFields.to, msgCompFields.cc, msgCompFields.bcc))
+          return;
+
           if (action == nsIMsgCompSendFormat.AskUser)
           {
             var recommAction = convert == nsIMsgCompConvertible.No
