@@ -159,6 +159,23 @@ sub build {
         copy($debug_source_file, $debug_target_file) or die "Copying file: $!";
     }
 
+    #
+    # generate manifest.mf file in lib dir
+    #
+    my $manifest_file   = "MANIFEST.MF";
+    my $jss_revision   = `grep JSS_VERSION org/mozilla/jss/util/jssver.h`;
+    chop($jss_revision);
+    $jss_revision      = substr($jss_revision, 22, 3);
+    my $build_revision = $jss_revision;
+    system("echo \"Manifest-Version: 1.0\" > $manifest_file");
+    system("echo \"\" >> $manifest_file");
+    system("echo \"Name: org/mozilla/jss/\" >> $manifest_file");
+    system("echo \"Specification-Title: Network Security Services for Java (JSS)\" >> $manifest_file");
+    system("echo \"Specification-Version: $jss_revision\" >> $manifest_file");
+    system("echo \"Specification-Vendor: Mozilla Foundation\" >> $manifest_file");
+    system("echo \"Implementation-Title: org.mozilla.jss\" >> $manifest_file");
+    system("echo \"Implementation-Version: $build_revision\" >> $manifest_file");
+    system("echo \"Implementation-Vendor: Mozilla Foundation\" >> $manifest_file");
 
     #
     # recursively find *.java
@@ -195,7 +212,8 @@ sub build {
         ensure_dir_exists($class_dir);
         print_do("$javac $javac_opt_flag -sourcepath . -d $class_dir " .
             "$classpath " . join(" ",@source_list));
-        print_do("sh -c 'pwd && cd $class_dir && pwd && rm -f $class_jar && pwd && ls -al && ls -al ../../dist && zip -r $class_jar *'");
+        print_do("sh -c 'pwd && cd $class_dir && pwd && rm -f $class_jar && pwd && ls -al && ls -al ../../dist && jar -cvmf ../../security/jss/$manifest_file $class_jar *'");
+        print_do("rm -f $manifest_file");
         print "Exit status was " . ($?>>8) . "\n";
     }
 

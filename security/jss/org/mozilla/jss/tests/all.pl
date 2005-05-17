@@ -53,6 +53,8 @@ my $dist_dir;
 my $pathsep       = ":";
 my $scriptext     = "sh";
 my $exe_suffix    = "";
+my $lib_suffix    = ".so";
+my $lib_jss       = "libjss";
 my $jss_rel_dir   = "";
 my $jss_classpath = "";
 
@@ -70,6 +72,8 @@ sub setup_vars {
         $truncate_lib_path = 0;
         $pathsep = ";";
         $exe_suffix = ".exe";
+        $lib_suffix = ".dll";
+        $lib_jss    = "jss";
     } else {
         $ld_lib_path = "LD_LIBRARY_PATH";
 	$scriptext = "sh";
@@ -269,4 +273,22 @@ print STDERR "============= Start JSSE client tests\n";
 $result = system("$java org.mozilla.jss.tests.JSSE_SSLClient");
 $result >>=8;
 $result and die "JSSE client returned $result";
+
+#
+# Test for JSS jar and library revision
+#
+print STDERR "============= Check JSS jar version\n";
+$result = system("$java org.mozilla.jss.tests.JSSPackageTest");
+$result >>=8;
+my $LIB = "$lib_jss"."4"."$lib_suffix";
+my $strings_exist = `which strings`;
+chop($strings_exist);
+if ($strings_exist ne "") {
+    my $jsslibver = `strings $nss_lib_dir/$LIB | grep Header`;
+    chop($jsslibver);
+    print "$LIB = $jsslibver\n";
+} else {
+    print "Could not fetch Header information from $LIB\n";
+}
+$result and die "JSS jar package information test $result";
 
