@@ -210,6 +210,10 @@ ifeq ($(OS_ARCH),CYGWIN_98-4.10)
 	OS_ARCH   = CYGWIN_NT-4.0
 	OS_TARGET = WIN95
 endif
+ifeq ($(OS_ARCH),CYGWIN_ME-4.90)
+	OS_ARCH   = CYGWIN_NT-4.0
+	OS_TARGET = WIN95
+endif
 
 #
 # On WIN32, we also define the variable CPU_ARCH, if it isn't already.
