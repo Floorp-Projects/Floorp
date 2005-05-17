@@ -3150,7 +3150,7 @@ MOZ_ARG_WITH_STRING(system-jpeg,
 _SAVE_CFLAGS=$CFLAGS
 _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
-if test -n "${JPEG_DIR}"; then
+if test -n "${JPEG_DIR}" -a "${JPEG_DIR}" != "yes"; then
     CFLAGS="-I${JPEG_DIR}/include $CFLAGS"
     LDFLAGS="-L${JPEG_DIR}/lib $LDFLAGS"
 fi
@@ -3195,7 +3195,7 @@ MOZ_ARG_WITH_STRING(system-zlib,
 _SAVE_CFLAGS=$CFLAGS
 _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
-if test -n "${ZLIB_DIR}"; then
+if test -n "${ZLIB_DIR}" -a "${ZLIB_DIR}" != "yes"; then
     CFLAGS="-I${ZLIB_DIR}/include $CFLAGS"
     LDFLAGS="-L${ZLIB_DIR}/lib $LDFLAGS"
 fi
@@ -3248,7 +3248,7 @@ _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
 CFLAGS="$ZLIB_CFLAGS $CFLAGS"
 LDFLAGS="$ZLIB_LIBS -lz $LDFLAGS"
-if test -n "${PNG_DIR}"; then
+if test -n "${PNG_DIR}" -a "${PNG_DIR}" != "yes"; then
     CFLAGS="-I${PNG_DIR}/include $CFLAGS"
     LDFLAGS="-L${PNG_DIR}/lib $LDFLAGS"
 fi
