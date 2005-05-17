@@ -36,7 +36,6 @@
 #include "jni_util.h" //for throwing Exceptions to Java
 
 jint CocoaBrowserControlCanvas::cocoaGetHandleToPeer(JNIEnv *env, jobject canvas) {
-    printf("debug: edburns: in CocoaBrowserControlCanvas::nativeGetHandleToPeer\n");
     JAWT awt;
     JAWT_DrawingSurface* ds = NULL;
     JAWT_DrawingSurfaceInfo* dsi = NULL;
@@ -47,39 +46,23 @@ jint CocoaBrowserControlCanvas::cocoaGetHandleToPeer(JNIEnv *env, jobject canvas
     NSWindow *win = NULL;
     void * windowPtr = NULL;
     
-    printf("debug: edburns: about to get AWT\n");
     // get the AWT
     awt.version = JAWT_VERSION_1_4;
 
-    printf("debug: edburns: set awt version: ok\n");
-
     result = JAWT_GetAWT(env, &awt);
 
-    printf("debug: edburns: got awt: result: %d\n",result);
-    printf("debug: edburns: additional printf\n");
-    printf("debug: edburns: got AWT\n");
-    printf("debug: edburns: about to get drawing surface\n");
-    fflush(stdout);
     // Get the drawing surface.  This can be safely cached.
     // Anything below the DS (DSI, contexts, etc) 
     // can possibly change/go away and should not be cached.
     ds = awt.GetDrawingSurface(env, canvas);
 
-    printf("debug: edburns: got drawing surface: %d\n", ds);
-    fflush(stdout);
-
     if (NULL == ds) {
         util_ThrowExceptionToJava(env, "CocoaBrowserControlCanvas: can't get drawing surface");
     }
     
-    printf("debug: edburns: about to lock drawing surface: %d\n", ds);
-    fflush(stdout);
     // Lock the drawing surface
     // You must lock EACH TIME before drawing
     lock = ds->Lock(ds); 
-
-    printf("debug: edburns: acquired lock: %d\n", lock);
-    fflush(stdout);
     
     if ((lock & JAWT_LOCK_ERROR) != 0) {
         util_ThrowExceptionToJava(env, "CocoaBrowserControlCanvas: can't lock drawing surface");
@@ -102,14 +85,8 @@ jint CocoaBrowserControlCanvas::cocoaGetHandleToPeer(JNIEnv *env, jobject canvas
         
         // Get the corresponding peer from the caller canvas
         view = dsi_mac->cocoaViewRef;
-        printf("debug: edburns: view: %p\n", view);
-        fflush(stdout);
         win = [view window];
-        printf("debug: edburns: win: %p\n", win);
-        fflush(stdout);
         windowPtr = [win windowRef];
-        printf("debug: edburns: windowPtr: %p\n", windowPtr);
-        fflush(stdout);
         // Free the DrawingSurfaceInfo
         ds->FreeDrawingSurfaceInfo(dsi);
     }

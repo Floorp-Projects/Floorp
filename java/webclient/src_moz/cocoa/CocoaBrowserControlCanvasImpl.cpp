@@ -38,8 +38,6 @@
  */
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CocoaBrowserControlCanvas_getHandleToPeer
   (JNIEnv *env, jobject canvas) {
-    printf("debug: edburns: in CocoaBrowserControlCanvasImpl->nativeGetHandleToPeer\n");
-    fflush(stdout);
 
     jint result = -1;
 

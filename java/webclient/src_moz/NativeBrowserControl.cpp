@@ -132,6 +132,7 @@ NativeBrowserControl::Realize(jobject javaBrowserControl,
                               void *parentWinPtr, PRBool *aAlreadyRealized,
                               PRUint32 width, PRUint32 height)
 {
+    nsresult rv = NS_OK;
     mJavaBrowserControl = javaBrowserControl;
 
     // Create our session history object and tell the navigation object
@@ -153,7 +154,11 @@ NativeBrowserControl::Realize(jobject javaBrowserControl,
 #endif
 
     // create the window
-    mWindow->CreateWindow_(width, height);
+    rv = mWindow->CreateWindow_(width, height);
+    if (NS_FAILED(rv)) {
+        JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+        ::util_ThrowExceptionToJava(env, "Can't CreateWindow");
+    }
 
     // bind the progress listener to the browser object
     nsCOMPtr<nsISupportsWeakReference> supportsWeak;
@@ -311,6 +316,7 @@ jobject NativeBrowserControl::QueryInterfaceJava(WEBCLIENT_INTERFACES interface)
 {
     PR_ASSERT(nsnull != mJavaBrowserControl);
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    env->ExceptionClear();
 
     jobject result = nsnull;
     jstring interfaceJStr = ::util_NewStringUTF(env, 
@@ -319,6 +325,7 @@ jobject NativeBrowserControl::QueryInterfaceJava(WEBCLIENT_INTERFACES interface)
     jclass clazz = env->GetObjectClass(mJavaBrowserControl);
     jmethodID mid = env->GetMethodID(clazz, "queryInterface", 
                                      "(Ljava/lang/String;)Ljava/lang/Object;");
+
     if (nsnull != mid) {
         result = env->CallObjectMethod(mJavaBrowserControl, mid,
                                        interfaceJStr);
