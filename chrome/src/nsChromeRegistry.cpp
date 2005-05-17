@@ -214,19 +214,19 @@ LanguagesMatch(const nsACString& a, const nsACString& b)
     if (*as == '-')
       return PR_TRUE;
  
+    ++as; ++bs;
+
     // reached the end
     if (as == ae && bs == be)
       return PR_TRUE;
 
     // "a" is short
     if (as == ae)
-      return (*++bs == '-');
+      return (*bs == '-');
 
     // "b" is short
     if (bs == be)
-      return (*++as == '-');
-
-    ++as; ++bs;
+      return (*as == '-');
   }
 
   return PR_FALSE;
