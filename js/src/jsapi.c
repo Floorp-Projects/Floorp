@@ -3167,18 +3167,6 @@ JS_NewFunction(JSContext *cx, JSNative native, uintN nargs, uintN flags,
     return js_NewFunction(cx, NULL, native, nargs, flags, parent, atom);
 }
 
-JS_PUBLIC_API(JSClass *)
-JS_GetFunctionBoundClass(JSContext *cx, JSFunction *fun)
-{
-    return fun->clasp;
-}
-
-JS_PUBLIC_API(void)
-JS_SetFunctionBoundClass(JSContext *cx, JSFunction *fun, JSClass *clasp)
-{
-    fun->clasp = clasp;
-}
-
 JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 {
