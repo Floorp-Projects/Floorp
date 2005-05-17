@@ -819,22 +819,19 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
              */
             JS_ASSERT(OBJ_GET_CLASS(cx, varobj) == &js_FunctionClass);
             JS_ASSERT(fp->fun == (JSFunction *) JS_GetPrivate(cx, varobj));
-            if (!js_LookupPropertyWithFlags(cx, varobj, ATOM_TO_JSID(funAtom),
-                                            JSLOOKUP_HIDDEN, &pobj, &prop)) {
+            if (!js_LookupHiddenProperty(cx, varobj, ATOM_TO_JSID(funAtom),
+                                         &pobj, &prop)) {
                 return NULL;
             }
             if (prop)
                 OBJ_DROP_PROPERTY(cx, pobj, prop);
             if (!prop || pobj != varobj) {
-                if (!js_DefineNativeProperty(cx, varobj, ATOM_TO_JSID(funAtom),
-                                             JSVAL_VOID,
-                                             js_GetLocalVariable,
-                                             js_SetLocalVariable,
-                                             JSPROP_ENUMERATE | JSPROP_SHARED,
-                                             SPROP_HAS_SHORTID |
-                                             SPROP_IS_HIDDEN,
-                                             fp->fun->nvars,
-                                             NULL)) {
+                if (!js_AddHiddenProperty(cx, varobj, ATOM_TO_JSID(funAtom),
+                                          js_GetLocalVariable,
+                                          js_SetLocalVariable,
+                                          SPROP_INVALID_SLOT,
+                                          JSPROP_ENUMERATE | JSPROP_SHARED,
+                                          SPROP_HAS_SHORTID, fp->fun->nvars)) {
                     return NULL;
                 }
                 if (fp->fun->nvars == JS_BITMASK(16)) {
@@ -864,10 +861,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             MUST_MATCH_TOKEN(TOK_NAME, JSMSG_MISSING_FORMAL);
             argAtom = CURRENT_TOKEN(ts).t_atom;
             pobj = NULL;
-            if (!js_LookupPropertyWithFlags(cx, fun->object,
-                                            ATOM_TO_JSID(argAtom),
-                                            JSLOOKUP_HIDDEN,
-                                            &pobj, &prop)) {
+            if (!js_LookupHiddenProperty(cx, fun->object, ATOM_TO_JSID(argAtom),
+                                         &pobj, &prop)) {
                 return NULL;
             }
             dupflag = 0;
@@ -898,13 +893,12 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                     return NULL;
                 prop = NULL;
             }
-            if (!js_AddNativeProperty(cx, fun->object, ATOM_TO_JSID(argAtom),
+            if (!js_AddHiddenProperty(cx, fun->object, ATOM_TO_JSID(argAtom),
                                       js_GetArgument, js_SetArgument,
                                       SPROP_INVALID_SLOT,
                                       JSPROP_ENUMERATE | JSPROP_PERMANENT |
                                       JSPROP_SHARED,
-                                      SPROP_HAS_SHORTID | SPROP_IS_HIDDEN |
-                                      dupflag,
+                                      dupflag | SPROP_HAS_SHORTID,
                                       fun->nargs)) {
                 return NULL;
             }
@@ -2212,8 +2206,8 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         if (!fun) {
             prop = NULL; /* don't lookup global variables at compile time */
         } else if (OBJ_IS_NATIVE(obj)) {
-            if (!js_LookupPropertyWithFlags(cx, obj, ATOM_TO_JSID(atom),
-                                            JSLOOKUP_HIDDEN, &pobj, &prop)) {
+            if (!js_LookupHiddenProperty(cx, obj, ATOM_TO_JSID(atom),
+                                         &pobj, &prop)) {
                 return NULL;
             }
         } else {
@@ -2301,12 +2295,11 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 atom != cx->runtime->atomState.argumentsAtom &&
                 fp->scopeChain == obj &&
                 !js_InWithStatement(tc)) {
-                if (!js_AddNativeProperty(cx, obj, ATOM_TO_JSID(atom),
+                if (!js_AddHiddenProperty(cx, obj, ATOM_TO_JSID(atom),
                                           currentGetter, currentSetter,
                                           SPROP_INVALID_SLOT,
                                           pn2->pn_attrs | JSPROP_SHARED,
-                                          SPROP_HAS_SHORTID | SPROP_IS_HIDDEN,
-                                          fun->nvars)) {
+                                          SPROP_HAS_SHORTID, fun->nvars)) {
                     return NULL;
                 }
                 if (fun->nvars == JS_BITMASK(16)) {

@@ -2136,7 +2136,7 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
             if (negative_) cp_++;                                             \
             if (JS7_ISDEC(*cp_) &&                                            \
                 str_->length - negative_ <= sizeof(JSVAL_INT_MAX_STRING)-1) { \
-                id = CheckForFunnyIndex(id, cp_, negative_);                  \
+                id = CheckForStringIndex(id, cp_, negative_);                 \
             } else {                                                          \
                 CHECK_FOR_EMPTY_INDEX(id);                                    \
             }                                                                 \
@@ -2144,7 +2144,7 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
     JS_END_MACRO
 
 static jsid
-CheckForFunnyIndex(jsid id, const jschar *cp, JSBool negative)
+CheckForStringIndex(jsid id, const jschar *cp, JSBool negative)
 {
     jsuint index = JS7_UNDEC(*cp++);
     jsuint oldIndex = 0;
@@ -2167,6 +2167,48 @@ CheckForFunnyIndex(jsid id, const jschar *cp, JSBool negative)
         id = INT_TO_JSID((jsint)index);
     }
     return id;
+}
+
+static JSBool
+HidePropertyName(JSContext *cx, jsid *idp)
+{
+    jsid id;
+    JSAtom *atom, *hidden;
+    
+    id = *idp;
+    JS_ASSERT(JSID_IS_ATOM(id));
+
+    atom = JSID_TO_ATOM(id);
+    JS_ASSERT(!(atom->flags & ATOM_HIDDEN));
+    JS_ASSERT(ATOM_IS_STRING(atom));
+
+    hidden = js_AtomizeString(cx, ATOM_TO_STRING(atom), ATOM_HIDDEN);
+    if (!hidden)
+        return JS_FALSE;
+
+    *idp = ATOM_TO_JSID(hidden);
+    return JS_TRUE;
+}
+
+JSScopeProperty *
+js_AddHiddenProperty(JSContext *cx, JSObject *obj, jsid id,
+                     JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
+                     uintN attrs, uintN flags, intN shortid)
+{
+    if (!HidePropertyName(cx, &id))
+        return NULL;
+
+    flags |= SPROP_IS_HIDDEN;
+    return js_AddNativeProperty(cx, obj, id, getter, setter, slot, attrs,
+                                flags, shortid);
+}
+
+JSBool
+js_LookupHiddenProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                        JSProperty **propp)
+{
+    return HidePropertyName(cx, &id) &&
+           js_LookupProperty(cx, obj, id, objp, propp);
 }
 
 JSScopeProperty *
@@ -2554,11 +2596,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             }
         }
 
-        /*
-         * The NXOR expression is optimized to take advantage of the fact that
-         * JSLOOKUP_HIDDEN == SPROP_IS_HIDDEN.  See jsobj.h and jsscope.h.
-         */
-        if (sprop && (~(sprop->flags ^ flags) & SPROP_IS_HIDDEN)) {
+        if (sprop) {
             JS_ASSERT(OBJ_SCOPE(obj) == scope);
             *objp = scope->object;      /* XXXbe hide in jsscope.[ch] */
 

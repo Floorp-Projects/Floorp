@@ -58,6 +58,7 @@ JS_BEGIN_EXTERN_C
 #define ATOM_PINNED     0x01            /* atom is pinned against GC */
 #define ATOM_INTERNED   0x02            /* pinned variant for JS_Intern* API */
 #define ATOM_MARK       0x04            /* atom is reachable via GC */
+#define ATOM_HIDDEN     0x08            /* atom is in special hidden subspace */
 #define ATOM_NOCOPY     0x40            /* don't copy atom string bytes */
 #define ATOM_TMPSTR     0x80            /* internal, to avoid extra string */
 

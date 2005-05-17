@@ -311,6 +311,21 @@ extern void
 js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
 
 /*
+ * Native property add and lookup variants that hide id in the hidden atom
+ * subspace, so as to avoid collisions between internal properties such as
+ * formal arguments and local variables in function objects, and externally
+ * set properties with the same ids.
+ */
+extern JSScopeProperty *
+js_AddHiddenProperty(JSContext *cx, JSObject *obj, jsid id,
+                     JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
+                     uintN attrs, uintN flags, intN shortid);
+
+extern JSBool
+js_LookupHiddenProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                        JSProperty **propp);
+
+/*
  * Find or create a property named by id in obj's scope, with the given getter
  * and setter, slot, attributes, and other members.
  */
@@ -358,18 +373,11 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                   JSProperty **propp);
 
 /*
- * Specialized subroutine that allows caller to preset JSRESOLVE_* flags, and
- * to pass JSLOOKUP_HIDDEN in the 7th bit of flags.  If JSLOOKUP_HIDDEN is set,
- * this lookup will match only those properties flagged with SPROP_IS_HIDDEN.
- * If JSLOOKUP_HIDDEN is not set in flags, funny properties (function arg and
- * local var props) are ignored.
+ * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.
  */
 extern JSBool
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp);
-
-#define JSLOOKUP_HIDDEN SPROP_IS_HIDDEN /* look for normally-hidden properties,
-                                           e.g., function arg/var props */
 
 extern JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
