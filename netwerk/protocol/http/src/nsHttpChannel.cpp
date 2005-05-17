@@ -3947,6 +3947,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     mHttpEventSink = nsnull;
     mChannelEventSink = nsnull;
     mProgressSink = nsnull;
+    mEventQ = nsnull;
     
     return NS_OK;
 }
