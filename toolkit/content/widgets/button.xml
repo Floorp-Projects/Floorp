@@ -171,6 +171,8 @@
       ]]>
       </handler>
 
+      <handler event="keypress" keycode="VK_RETURN" preventdefault="true"/>
+      <handler event="keypress" keycode="VK_ENTER" preventdefault="true"/>
     </handlers>
   </binding>
 

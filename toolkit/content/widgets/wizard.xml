@@ -374,12 +374,10 @@
       </method>
 
       <method name="_hitEnter">
+        <parameter name="evt"/>
         <body>
         <![CDATA[
-          // if a button is focused, dispatch its command instead 
-          // of advancing the wizard
-          var focused = document.commandDispatcher.focusedElement;
-          if (!(focused && focused.localName == "button"))
+          if (!evt.getPreventDefault())
             this.advance();
         ]]>
         </body>
@@ -413,9 +411,14 @@
     </implementation>
 
     <handlers>
-      <handler event="keypress" keycode="VK_ENTER" action="this._hitEnter()"/>
-      <handler event="keypress" keycode="VK_RETURN" action="this._hitEnter()"/>
-      <handler event="keypress" keycode="VK_ESCAPE" action="this.cancel();"/>
+      <handler event="keypress" keycode="VK_ENTER"
+               group="system" action="this._hitEnter(event)"/>
+      <handler event="keypress" keycode="VK_RETURN"
+               group="system" action="this._hitEnter(event)"/>
+      <handler event="keypress" keycode="VK_ESCAPE" group="system">
+        if (!event.getPreventDefault())
+          this.cancel();
+      </handler>
     </handlers>
   </binding>
 
