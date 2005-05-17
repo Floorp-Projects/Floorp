@@ -153,6 +153,7 @@ static const unsigned int kMaxTitleLength = 80;
 - (void)setupHistoryMenu;
 - (void)rebuildHistoryItems;
 - (void)historyChanged:(NSNotification*)inNotification;
+- (void)menuWillDisplay:(NSNotification*)inNotification;
 - (void)openHistoryItem:(id)sender;
 
 @end
@@ -195,6 +196,12 @@ static const unsigned int kMaxTitleLength = 80;
                                            selector:@selector(historyChanged:)
                                                name:kNotificationNameHistoryDataSourceChanged
                                              object:[GoMenuHistoryDataSourceOwner sharedHistoryDataSource]];
+
+  // register for menu display
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(menuWillDisplay:)
+                                               name:NSMenuWillDisplayNotification
+                                             object:nil];
 }
 
 - (void)dealloc
@@ -261,6 +268,14 @@ static const unsigned int kMaxTitleLength = 80;
     if (mAdditionalItemsParent)
       mHistoryItemsDirty |= (rootChangedItem == mAdditionalItemsParent ||
                             [rootChangedItem parentItem] == mAdditionalItemsParent);
+  }
+}
+
+- (void)menuWillDisplay:(NSNotification*)inNotification
+{
+  if ([self isTargetOfWillDisplayNotification:[inNotification object]])
+  {
+    [self menuWillBeDisplayed];
   }
 }
 
@@ -373,10 +388,9 @@ static const unsigned int kMaxTitleLength = 80;
   mHistoryItemsDirty = NO;
 }
 
-- (void)update
+- (void)menuWillBeDisplayed
 {
   [self rebuildHistoryItems];
-  [super update];
 }
 
 - (void)openHistoryItem:(id)sender
@@ -447,7 +461,7 @@ static const unsigned int kMaxTitleLength = 80;
   [self performSelector:@selector(setupHistoryMenu) withObject:nil afterDelay:0];
 }
 
-- (void)update
+- (void)menuWillBeDisplayed
 {
   if (mAppLaunchDone)
   {
@@ -461,7 +475,7 @@ static const unsigned int kMaxTitleLength = 80;
     }
   }
   
-  [super update];
+  [super menuWillBeDisplayed];
 }
 
 @end

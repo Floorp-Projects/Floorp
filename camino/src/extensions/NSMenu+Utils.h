@@ -37,7 +37,14 @@
 
 #import <AppKit/AppKit.h>
 
+// notification fire before a menu is displayed. the notification object
+// is an opaque id which should be compared with a NSMenu using -isTargetOfWillDisplayNotification
+extern NSString* const NSMenuWillDisplayNotification;
+
 @interface NSMenu(ChimeraMenuUtils)
+
+// turn on "NSMenuWillDisplayNotification" firing
++ (void)setupMenuWillDisplayNotifications;
 
 // check one item on a menu, optionally unchecking all the others
 - (void)checkItemWithTag:(int)tag uncheckingOtherItems:(BOOL)uncheckOthers;
@@ -58,6 +65,10 @@
 
 // remove all items including and after the given index (i.e. all items if index is 0)
 - (void)removeItemsFromIndex:(int)inItemIndex;
+
+// return YES if this menu is the target of the 'will display' notification.
+// the param should be the [NSNotification object]
+- (BOOL)isTargetOfWillDisplayNotification:(id)inObject;
 
 @end
 

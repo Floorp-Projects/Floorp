@@ -35,11 +35,60 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import <Carbon/Carbon.h>
+
 #import "NSResponder+Utils.h"
 
 #import "NSMenu+Utils.h"
 
+
+NSString* const NSMenuWillDisplayNotification = @"NSMenuWillDisplayNotification";
+
+// internal API
+extern MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
+
+static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef inEvent, void *inUserData)
+{
+  UInt32 eventKind = GetEventKind(inEvent);
+  switch (eventKind)
+  {
+    case kEventMenuOpening:
+      {
+        MenuRef theCarbonMenu;
+        OSStatus err = GetEventParameter(inEvent, kEventParamDirectObject, typeMenuRef, NULL, sizeof(MenuRef), NULL, &theCarbonMenu);
+        if (err == noErr)
+        {
+          // we can't map from MenuRef to NSMenu, so we have to let receivers of the notification
+          // do the test.
+          [[NSNotificationCenter defaultCenter] postNotificationName:NSMenuWillDisplayNotification
+                                                              object:[NSValue valueWithPointer:theCarbonMenu]];
+        }
+      }
+      break;
+  }
+
+  // always let the event propagate  
+  return eventNotHandledErr;
+}
+
+#pragma mark -
+
 @implementation NSMenu(ChimeraMenuUtils)
+
++ (void)setupMenuWillDisplayNotifications
+{
+  static BOOL sInstalled = NO;
+  
+  if (!sInstalled)
+  {
+    const EventTypeSpec menuEventList[] = { { kEventClassMenu, kEventMenuOpening } };
+
+    InstallApplicationEventHandler(NewEventHandlerUPP(MenuEventHandler), 
+                                   GetEventTypeCount(menuEventList),
+                                   menuEventList, (void*)self, NULL);
+    sInstalled = YES;
+  }
+}
 
 - (void)checkItemWithTag:(int)tag uncheckingOtherItems:(BOOL)uncheckOthers
 {
@@ -107,6 +156,13 @@
 
   while ([self numberOfItems] > inItemIndex)
     [self removeItemAtIndex:inItemIndex];
+}
+
+// because there's no way to map back from a MenuRef to a Cocoa NSMenu, we have
+// to let receivers of the notification do the test by calling this method.
+- (BOOL)isTargetOfWillDisplayNotification:(id)inObject
+{
+  return ([inObject pointerValue] == _NSGetCarbonMenu(self));
 }
 
 @end

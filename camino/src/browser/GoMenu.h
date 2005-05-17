@@ -39,6 +39,7 @@
 
 #import <Appkit/Appkit.h>
 
+
 @class HistoryDataSource;
 @class HistoryItem;
 
@@ -59,6 +60,8 @@
 - (void)setNumLeadingItemsToIgnore:(int)inIgnoreItems;
 - (int)numLeadingItemsToIgnore;
 
+- (void)menuWillBeDisplayed;
+
 // specify the item after which history items will be added
 // (they are assumed to go to the end of the menu). If nil,
 // the entire menu is full of history items.
@@ -72,5 +75,7 @@
 {
   BOOL                mAppLaunchDone;         // has app launching completed?
 }
+
+- (void)menuWillBeDisplayed;
 
 @end

@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <mach-o/dyld.h>
-#include <sys/utsname.h>
 #import <Carbon/Carbon.h>
 
 #import "NSString+Utils.h"
@@ -109,12 +107,12 @@ const int kReuseWindowOnAE = 2;
 
 - (void)setupStartpage;
 - (void)setupRendezvous;
-- (void)installBookmarksMenuEnableHandler;
 - (NSMenu*)bookmarksMenu;
 - (BOOL)bookmarksItemsEnabled;
 - (void)adjustBookmarkMenuItems;
 - (void)doBookmarksMenuEnabling;
 - (void)windowLayeringDidChange:(NSNotification*)inNotifiction;
+- (void)menuWillDisplay:(NSNotification*)inNotification;
 - (void)openPanelDidEnd:(NSOpenPanel*)inOpenPanel returnCode:(int)inReturnCode contextInfo:(void*)inContextInfo;
 
 @end
@@ -264,9 +262,14 @@ const int kReuseWindowOnAE = 2;
   NSString* cacheDir = [[pm newProfilePath] stringByAppendingPathComponent:@"Cache"];
   [[NSFileManager defaultManager] removeFileAtPath:cacheDir handler:nil];
 
-  // register for window layering changes, so that we can update the bookmarks menu
-  [self installBookmarksMenuEnableHandler];
   NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
+  // turn on menu display notifications
+  [NSMenu setupMenuWillDisplayNotifications];
+  
+  // register for them for bookmarks
+  [notificationCenter addObserver:self selector:@selector(menuWillDisplay:) name:NSMenuWillDisplayNotification object:nil];
+  
+  // register for various window layering changes
   [notificationCenter addObserver:self selector:@selector(windowLayeringDidChange:) name:NSWindowDidBecomeKeyNotification object:nil];
   [notificationCenter addObserver:self selector:@selector(windowLayeringDidChange:) name:NSWindowDidResignKeyNotification object:nil];
   [notificationCenter addObserver:self selector:@selector(windowLayeringDidChange:) name:NSWindowDidBecomeMainNotification object:nil];
@@ -344,7 +347,7 @@ const int kReuseWindowOnAE = 2;
 
 - (void)windowLayeringDidChange:(NSNotification*)inNotifiction
 {
-  [self adjustBookmarksMenuItemsEnabling];
+  [self performSelectorOnMainThread:@selector(doBookmarksMenuEnabling) withObject:nil waitUntilDone:NO];
 }
 
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender
@@ -836,53 +839,23 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 	[[ProgressDlgController sharedDownloadController] showWindow:aSender];
 }
 
-
-// super sekrit private API
-extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
-
-static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef inEvent, void *inUserData)
+- (void)menuWillDisplay:(NSNotification*)inNotification
 {
-  UInt32 eventKind = ::GetEventKind(inEvent);
-  switch (eventKind)
+  if ([mBookmarksMenu isTargetOfWillDisplayNotification:[inNotification object]])
   {
-    case kEventMenuOpening:
-      {
-        MainController* mainController = (MainController*)inUserData;
-        MenuRef theMenu;
-        OSStatus err = ::GetEventParameter(inEvent, kEventParamDirectObject, typeMenuRef, NULL, sizeof(MenuRef), NULL, &theMenu);
-        if ((err == noErr) && (theMenu == _NSGetCarbonMenu([mainController bookmarksMenu])))
-        {
-          [mainController adjustBookmarkMenuItems];
-        }
-      }
-      break;
+    [self adjustBookmarkMenuItems];
   }
-
-  // always let the event propagate  
-  return eventNotHandledErr;
 }
-
-// install a carbon event handler so that we can tell when a menu is being opened
-// on 10.3, we could use NSMenu delegate methods
-- (void)installBookmarksMenuEnableHandler
-{
-  const EventTypeSpec menuEventList[] = { { kEventClassMenu, kEventMenuOpening } };
-
-  InstallApplicationEventHandler(NewEventHandlerUPP(MenuEventHandler), 
-                                 GetEventTypeCount(menuEventList),
-                                 menuEventList, (void*)self, NULL);
-}
-
 
 - (void)adjustBookmarksMenuItemsEnabling
-{
-  // we do this after a delay to ensure that window layer state has been set by the time
-  // we do the enabling.
+ {
+   // we do this after a delay to ensure that window layer state has been set by the time
+   // we do the enabling.
   [self performSelectorOnMainThread:@selector(doBookmarksMenuEnabling) withObject:nil waitUntilDone:NO];
 }
 
 //
-// -adjustBookmarksMenuItemsEnabling
+// -doBookmarksMenuEnabling
 //
 // We've turned off auto-enabling for the bookmarks menu because of the unknown
 // number of bookmarks in the list so we have to manage it manually. This routine
