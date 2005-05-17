@@ -1285,8 +1285,10 @@ retry:
         if (!atom)
             goto error;
         if (!hadUnicodeEscape && ATOM_KEYWORD(atom)) {
-            struct keyword *kw = ATOM_KEYWORD(atom);
-
+            struct keyword *kw;
+            
+            JS_ASSERT(!(atom->flags & ATOM_HIDDEN));
+            kw = ATOM_KEYWORD(atom);
             if (kw->tokentype == TOK_RESERVED) {
                 char buf[MAX_KEYWORD_LENGTH + 1];
 
