@@ -62,8 +62,8 @@
  * prec         Operator precedence, zero if not an operator
  * format       Bytecode plus immediate operand encoding format
  *
- * This file is best viewed with 116 columns:
-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345
+ * This file is best viewed with 128 columns:
+12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678
  */
 
 /* legend: op         val name          image       len use def prec  format */
