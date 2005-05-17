@@ -232,10 +232,10 @@ static int LoadAppData(const char* appDataFile, nsXREAppData* aResult)
 
 #ifdef DEBUG
   printf("---------------------------------------------------------\n");
-  printf("     Vendor %s\n", aResult->appVendor);
-  printf("       Name %s\n", aResult->appName);
-  printf("    Version %s\n", aResult->appVersion);
-  printf("    BuildID %s\n", aResult->appBuildID);
+  printf("     Vendor %s\n", aResult->vendor);
+  printf("       Name %s\n", aResult->name);
+  printf("    Version %s\n", aResult->version);
+  printf("    BuildID %s\n", aResult->buildID);
   printf("  Copyright %s\n", aResult->copyright);
   printf("      Flags %08x\n", aResult->flags);
   printf("---------------------------------------------------------\n");
