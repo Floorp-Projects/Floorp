@@ -346,6 +346,17 @@ function getProduct() {
               .getProtocolHandler('http')
               .QueryInterface(Components.interfaces.nsIHttpProtocolHandler).misc.substring(3);
   }
-
-  return navigator.vendor+'/'+navigator.vendorSub;
+  // Firefox < 1.0+
+  else if (navigator.vendor != ''){
+    return window.navigator.vendor+'/'+window.navigator.vendorSub;
+  }
+  // Firefox 1.0+
+  try {
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                           getService(Components.interfaces.nsIPrefService);
+    return prefs.getCharPref("general.useragent.extra.firefox");
+  }
+  catch(ex) {
+    return "Unknown";
+  }
 }
