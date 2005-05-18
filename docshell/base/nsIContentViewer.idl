@@ -14,7 +14,7 @@ struct nsRect;
 [ptr] native nsIDeviceContextPtr(nsIDeviceContext);
 [ref] native nsRectRef(nsRect);
 
-[scriptable, uuid(e2c68a4d-b396-11d9-a3d1-00112478d626)]
+[scriptable, uuid(456651af-14ca-4f8d-91a3-c7cdd7e7eef6)]
 interface nsIContentViewer : nsISupports
 {
 
@@ -36,8 +36,21 @@ interface nsIContentViewer : nsISupports
    * close() should be called when the load of a new page for the next
    * content viewer begins, and destroy() should be called when the next
    * content viewer replaces this one.
+   *
+   * |historyEntry| sets the session history entry for the content viewer.  If
+   * this is null, then Destroy() will be called on the document by close().
+   * If it is non-null, the document will not be destroyed, and the following
+   * actions will happen when destroy() is called (*):
+   *  - Sanitize() will be called on the viewer's document
+   *  - The content viewer will set the contentViewer property on the
+   *    history entry, and release its reference (ownership reversal).
+   *  - hide() will be called, and no further destruction will happen.
+   *
+   *  (*) unless the document is currently being printed, in which case
+   *      it will never be saved in session history.
+   *
    */
-  void close();
+  void close(in nsISHEntry historyEntry);
   void destroy();
 
   void stop();
@@ -76,15 +89,8 @@ interface nsIContentViewer : nsISupports
   void open();
 
   /**
-   * Set the  session history entry for the content viewer.  If this is set,
-   * then the following actions will happen when destroy() is called (*):
-   *  - Sanitize() will be called on the viewer's document
-   *  - The content viewer will set the contentViewer property on the
-   *    history entry, and release its reference (ownership reversal).
-   *  - hide() will be called, and no further destruction will happen.
-   *
-   *  (*) unless the document is currently being printed, in which case
-   *      it will never be saved in session history.
+   * Clears the current history entry.  This is used if we need to clear out
+   * the saved presentation state.
    */
-  void setHistoryEntry(in nsISHEntry entry);
+  void clearHistoryEntry();
 };
