@@ -204,6 +204,7 @@ protected:
     enum {
         STYLE_STROKE = 0,
         STYLE_FILL,
+        STYLE_SHADOW,
         STYLE_MAX
     };
 
@@ -285,7 +286,8 @@ nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
       mDirty(PR_TRUE), mCairo(nsnull), mSurface(nsnull), mSurfaceData(nsnull)
 {
     mColorStyles[STYLE_STROKE] = NS_RGB(0,0,0);
-    mColorStyles[STYLE_FILL] = NS_RGB(255,255,255);
+    mColorStyles[STYLE_FILL] = NS_RGB(0,0,0);
+    mColorStyles[STYLE_SHADOW] = NS_RGBA(0,0,0,0);
 
     mLastStyle = (PRInt32) -1;
 
@@ -506,6 +508,13 @@ nsCanvasRenderingContext2D::SetTargetImageFrame(gfxIImageFrame* aImageFrame)
                                                mWidth * 4);
     cairo_set_target_surface (mCairo, mSurface);
 
+    // set up the initial canvas defaults
+    cairo_set_line_width (mCairo, 1.0);
+    cairo_set_operator (mCairo, CAIRO_OPERATOR_OVER);
+    cairo_set_miter_limit(mCairo, 10.0);
+    cairo_set_line_cap(mCairo, CAIRO_LINE_CAP_BUTT);
+    cairo_set_line_join(mCairo, CAIRO_LINE_JOIN_MITER);
+
     mImageFrame = aImageFrame;
 
     return ClearRect (0, 0, mWidth, mHeight);
@@ -548,22 +557,33 @@ nsCanvasRenderingContext2D::UpdateImageFrame()
             return rv;
         }
 
+        nsCOMPtr<nsIImage> img(do_GetInterface(mImageFrame));
+        PRBool topToBottom = img->GetIsRowOrderTopToBottom();
+
         for (PRUint32 j = 0; j < (PRUint32) mHeight; j++) {
             PRUint8 *inrow = (PRUint8*)(mSurfaceData + (mWidth * 4 * j));
-#ifdef XP_WIN
-            // On windows, RGB_A8 is really "BGR with Y axis flipped"
-            PRUint8 *outrowrgb = rgbBits + (rgbStride * (mHeight - j - 1));
-            PRUint8 *outrowalpha = alphaBits + (alphaStride * (mHeight - j - 1));
-#else
-            PRUint8 *outrowrgb = rgbBits + (rgbStride * j);
-            PRUint8 *outrowalpha = alphaBits + (alphaStride * j);
-#endif
+
+            PRUint32 rowIndex;
+            if (topToBottom)
+                rowIndex = j;
+            else
+                rowIndex = mHeight - j - 1;
+
+            PRUint8 *outrowrgb = rgbBits + (rgbStride * rowIndex);
+            PRUint8 *outrowalpha = alphaBits + (alphaStride * rowIndex);
+
             for (PRUint32 i = 0; i < (PRUint32) mWidth; i++) {
+#ifdef IS_LITTLE_ENDIAN
                 PRUint8 b = *inrow++;
                 PRUint8 g = *inrow++;
                 PRUint8 r = *inrow++;
                 PRUint8 a = *inrow++;
-
+#else
+                PRUint8 a = *inrow++;
+                PRUint8 r = *inrow++;
+                PRUint8 g = *inrow++;
+                PRUint8 b = *inrow++;
+#endif
                 // now recover the real bgra from the cairo
                 // premultiplied values
                 if (a == 0) {
@@ -603,7 +623,6 @@ nsCanvasRenderingContext2D::UpdateImageFrame()
         if (NS_FAILED(rv))
             return rv;
 
-        nsCOMPtr<nsIImage> img(do_GetInterface(mImageFrame));
         nsRect r(0, 0, mWidth, mHeight);
         img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 
@@ -909,6 +928,7 @@ nsCanvasRenderingContext2D::SetShadowColor(const nsAString& color)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetShadowColor(nsAString& color)
 {
+    StyleColorToString(mColorStyles[STYLE_SHADOW], color);
     return NS_OK;
 }
 
@@ -1074,7 +1094,9 @@ nsCanvasRenderingContext2D::SetLineCap(const nsAString& capstyle)
 {
     cairo_line_cap_t cap;
 
-    if (capstyle.EqualsLiteral("round"))
+    if (capstyle.EqualsLiteral("butt"))
+        cap = CAIRO_LINE_CAP_BUTT;
+    else if (capstyle.EqualsLiteral("round"))
         cap = CAIRO_LINE_CAP_ROUND;
     else if (capstyle.EqualsLiteral("square"))
         cap = CAIRO_LINE_CAP_SQUARE;
@@ -1090,7 +1112,9 @@ nsCanvasRenderingContext2D::GetLineCap(nsAString& capstyle)
 {
     cairo_line_cap_t cap = cairo_current_line_cap(mCairo);
 
-    if (cap == CAIRO_LINE_CAP_ROUND)
+    if (cap == CAIRO_LINE_CAP_BUTT)
+        capstyle.AssignLiteral("butt");
+    else if (cap == CAIRO_LINE_CAP_ROUND)
         capstyle.AssignLiteral("round");
     else if (cap == CAIRO_LINE_CAP_SQUARE)
         capstyle.AssignLiteral("square");
@@ -1272,18 +1296,22 @@ nsCanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op)
     if (op.EqualsLiteral(cvsop))   \
         cairo_op = CAIRO_OPERATOR_##cairoop;
 
+    // XXX Need to confirm if these are the right ops;
+    // will be irrelevant once we switch to CVS cairo,
+    // because the operators there have names that exactly
+    // match the canvas ops.
     CANVAS_OP_TO_CAIRO_OP("clear", CLEAR)
     else CANVAS_OP_TO_CAIRO_OP("copy", SRC)
-    else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)  // XXX
+    else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)
     else CANVAS_OP_TO_CAIRO_OP("destination-atop", ATOP_REVERSE)
     else CANVAS_OP_TO_CAIRO_OP("destination-in", IN_REVERSE)
     else CANVAS_OP_TO_CAIRO_OP("destination-out", OUT_REVERSE)
     else CANVAS_OP_TO_CAIRO_OP("destination-over", OVER_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("lighter", SATURATE)
+    else CANVAS_OP_TO_CAIRO_OP("lighter", ADD)
     else CANVAS_OP_TO_CAIRO_OP("source-atop", ATOP)
     else CANVAS_OP_TO_CAIRO_OP("source-in", IN)
     else CANVAS_OP_TO_CAIRO_OP("source-out", OUT)
-    else CANVAS_OP_TO_CAIRO_OP("source-over", OVER)
+    else CANVAS_OP_TO_CAIRO_OP("source-over", SRC)
     else CANVAS_OP_TO_CAIRO_OP("xor", XOR)
     else CANVAS_OP_TO_CAIRO_OP("over", OVER)
     else return NS_ERROR_NOT_IMPLEMENTED;
@@ -1303,18 +1331,22 @@ nsCanvasRenderingContext2D::GetGlobalCompositeOperation(nsAString& op)
     if (cairo_op == CAIRO_OPERATOR_##cairoop) \
         op.AssignLiteral(cvsop);
 
+    // XXX Need to confirm if these are the right ops;
+    // will be irrelevant once we switch to CVS cairo,
+    // because the operators there have names that exactly
+    // match the canvas ops.
     CANVAS_OP_TO_CAIRO_OP("clear", CLEAR)
     else CANVAS_OP_TO_CAIRO_OP("copy", SRC)
-    else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)  // XXX
+    else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)
     else CANVAS_OP_TO_CAIRO_OP("destination-atop", ATOP_REVERSE)
     else CANVAS_OP_TO_CAIRO_OP("destination-in", IN_REVERSE)
     else CANVAS_OP_TO_CAIRO_OP("destination-out", OUT_REVERSE)
     else CANVAS_OP_TO_CAIRO_OP("destination-over", OVER_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("lighter", SATURATE)
+    else CANVAS_OP_TO_CAIRO_OP("lighter", ADD)
     else CANVAS_OP_TO_CAIRO_OP("source-atop", ATOP)
     else CANVAS_OP_TO_CAIRO_OP("source-in", IN)
     else CANVAS_OP_TO_CAIRO_OP("source-out", OUT)
-    else CANVAS_OP_TO_CAIRO_OP("source-over", OVER)
+    else CANVAS_OP_TO_CAIRO_OP("source-over", SRC)
     else CANVAS_OP_TO_CAIRO_OP("xor", XOR)
     else CANVAS_OP_TO_CAIRO_OP("over", OVER)
     else return NS_ERROR_FAILURE;
@@ -1379,6 +1411,11 @@ nsCanvasRenderingContext2D::ConvertJSValToXPCObject(nsISupports** aSupports, REF
 
   return JS_FALSE;
 }
+
+/* cairo ARGB32 surfaces are ARGB stored as a packed 32-bit integer; on little-endian
+ * platforms, they appear as BGRA bytes in the surface data.  The color values are also
+ * stored with premultiplied alpha.
+ */
 
 nsresult
 nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement *imgElt,
@@ -1456,14 +1493,18 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
     if (format == gfxIFormats::RGB || format == gfxIFormats::BGR) {
         useBGR = (format & 1);
 
-        for (PRUint32 j = 0; j < (PRUint32) imgHeight; j++) {
-            PRUint8 *inrowrgb;
+#ifdef IS_BIG_ENDIAN
+        useBGR = !useBGR;
+#endif
 
-            if (topToBottom) {
-                inrowrgb = inPixBits + (inPixStride * j);
-            } else {
-                inrowrgb = inPixBits + (inPixStride * (imgHeight - j - 1));
-            }
+        for (PRUint32 j = 0; j < (PRUint32) imgHeight; j++) {
+            PRUint32 rowIndex;
+            if (topToBottom)
+                rowIndex = j;
+            else
+                rowIndex = imgHeight - j - 1;
+
+            PRUint8 *inrowrgb = inPixBits + (inPixStride * rowIndex);
 
             for (PRUint32 i = 0; i < (PRUint32) imgWidth; i++) {
                 // handle rgb data; no alpha to premultiply
@@ -1475,6 +1516,11 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
                 PRUint8 g = *inrowrgb++;
                 PRUint8 r = *inrowrgb++;
 
+#ifdef IS_BIG_ENDIAN
+                // alpha
+                *outData++ = 0xff;
+#endif
+
                 if (useBGR) {
                     *outData++ = b;
                     *outData++ = g;
@@ -1485,24 +1531,29 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
                     *outData++ = b;
                 }
 
+#ifdef IS_LITTLE_ENDIAN
                 // alpha
-                *outData++ = 255;
+                *outData++ = 0xff;
+#endif
             }
         }
         rv = NS_OK;
     } else if (format == gfxIFormats::RGB_A1 || format == gfxIFormats::BGR_A1) {
         useBGR = (format & 1);
-        for (PRUint32 j = 0; j < (PRUint32) imgHeight; j++) {
-            PRUint8 *inrowrgb;
-            PRUint8 *inrowalpha;
 
-            if (topToBottom) {
-                inrowrgb = inPixBits + (inPixStride * j);
-                inrowalpha = inAlphaBits + (inAlphaStride * j);
-            } else {
-                inrowrgb = inPixBits + (inPixStride * (imgHeight - j - 1));
-                inrowalpha = inAlphaBits + (inAlphaStride * (imgHeight - j - 1));
-            }
+#ifdef IS_BIG_ENDIAN
+        useBGR = !useBGR;
+#endif
+
+        for (PRUint32 j = 0; j < (PRUint32) imgHeight; j++) {
+            PRUint32 rowIndex;
+            if (topToBottom)
+                rowIndex = j;
+            else
+                rowIndex = imgHeight - j - 1;
+
+            PRUint8 *inrowrgb = inPixBits + (inPixStride * rowIndex);
+            PRUint8 *inrowalpha = inAlphaBits + (inAlphaStride * rowIndex);
 
             for (PRUint32 i = 0; i < (PRUint32) imgWidth; i++) {
                 // pull out alpha to premultiply
@@ -1512,8 +1563,8 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
                 PRUint8 a = (inrowalpha[byte] >> bit) & 1;
 
 #ifdef XP_MACOSX
-                    // skip extra X8 byte on OSX
-                    inrowrgb++;
+                // skip extra X8 byte on OSX
+                inrowrgb++;
 #endif
 
                 // handle rgb data; need to multiply the alpha out,
@@ -1523,6 +1574,11 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
                     PRUint8 b = *inrowrgb++;
                     PRUint8 g = *inrowrgb++;
                     PRUint8 r = *inrowrgb++;
+
+#ifdef IS_BIG_ENDIAN
+                    // alpha
+                    *outData++ = 0xff;
+#endif
 
                     if (useBGR) {
                         *outData++ = b;
@@ -1534,7 +1590,10 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
                         *outData++ = b;
                     }
 
+#ifdef IS_LITTLE_ENDIAN
+                    // alpha
                     *outData++ = 0xff;
+#endif
                 } else {
                     // alpha is 0, so we need to write all 0's,
                     // ignoring input color
@@ -1549,17 +1608,20 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
         rv = NS_OK;
     } else if (format == gfxIFormats::RGB_A8 || format == gfxIFormats::BGR_A8) {
         useBGR = (format & 1);
-        for (PRUint32 j = 0; j < (PRUint32) imgHeight; j++) {
-            PRUint8 *inrowrgb;
-            PRUint8 *inrowalpha;
 
-            if (topToBottom) {
-                inrowrgb = inPixBits + (inPixStride * j);
-                inrowalpha = inAlphaBits + (inAlphaStride * j);
-            } else {
-                inrowrgb = inPixBits + (inPixStride * (imgHeight - j - 1));
-                inrowalpha = inAlphaBits + (inAlphaStride * (imgHeight - j - 1));
-            }
+#ifdef IS_BIG_ENDIAN
+        useBGR = !useBGR;
+#endif
+
+        for (PRUint32 j = 0; j < (PRUint32) imgHeight; j++) {
+            PRUint32 rowIndex;
+            if (topToBottom)
+                rowIndex = j;
+            else
+                rowIndex = imgHeight - j - 1;
+
+            PRUint8 *inrowrgb = inPixBits + (inPixStride * rowIndex);
+            PRUint8 *inrowalpha = inAlphaBits + (inAlphaStride * rowIndex);
 
             for (PRUint32 i = 0; i < (PRUint32) imgWidth; i++) {
                 // pull out alpha; we'll need it to premultiply
@@ -1571,9 +1633,30 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
                 // skip extra X8 byte on OSX
                 inrowrgb++;
 #endif
+
+                // XXX gcc bug: gcc seems to push "r" into a register
+                // early, and pretends that it's in that register
+                // throughout the 3 macros below.  At the end
+                // of the 3rd macro, the correct r value is
+                // calculated but never stored anywhere -- the r variable
+                // has the value of the low byte of register that it
+                // was stuffed into, which has the result of some 
+                // intermediate calculation.
+                // I've seen this on gcc 3.4.2 x86 (Fedora Core 3)
+                // and gcc 3.3 PPC (OS X 10.3)
+
+                //PRUint8 b, g, r;
+                //FAST_DIVIDE_BY_255(b, *inrowrgb++ * a - a / 2);
+                //FAST_DIVIDE_BY_255(g, *inrowrgb++ * a - a / 2);
+                //FAST_DIVIDE_BY_255(r, *inrowrgb++ * a - a / 2);
+
                 PRUint8 b = (*inrowrgb++ * a - a / 2) / 255;
                 PRUint8 g = (*inrowrgb++ * a - a / 2) / 255;
                 PRUint8 r = (*inrowrgb++ * a - a / 2) / 255;
+
+#ifdef IS_BIG_ENDIAN
+                *outData++ = a;
+#endif
 
                 if (useBGR) {
                     *outData++ = b;
@@ -1584,7 +1667,10 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
                     *outData++ = g;
                     *outData++ = b;
                 }
+
+#ifdef IS_LITTLE_ENDIAN
                 *outData++ = a;
+#endif
             }
         }
         rv = NS_OK;

@@ -54,7 +54,7 @@ public:
   */
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
   virtual PRInt32     GetBytesPix()         { return mBytesPerPixel; }    // this is unused
-  virtual PRBool      GetIsRowOrderTopToBottom() { return PR_TRUE; }
+  virtual PRBool      GetIsRowOrderTopToBottom() { return PR_FALSE; }
 
   virtual PRInt32     GetWidth()            { return mWidth;  }
   virtual PRInt32     GetHeight()           { return mHeight; }
