@@ -870,8 +870,14 @@ FileEnumerator.prototype = {
  */
 function DirectoryInstallLocation(name, location, restricted, priority) {
   this._name = name;
-  if (location.exists() && !location.isDirectory())
-    throw "location must be a directoy!";
+  if (location.exists()) {
+    if (!location.isDirectory())
+      throw "location must be a directoy!";
+  }
+  else {
+    location.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
+  }
+
   this._location = location;
   this._locationToIDMap = {};
   this._restricted = restricted;
@@ -1008,14 +1014,6 @@ DirectoryInstallLocation.prototype = {
    */
   get priority() {
     return this._priority;
-  },
-  
-  /**
-   * See nsIExtensionManager.idl
-   */
-  get isFunctioning() {
-    // A Directory Install Location is "functioning" if the folder exists.
-    return this._location.exists();
   },
   
   /**
@@ -1246,10 +1244,6 @@ WinRegInstallLocation.prototype = {
 
   get priority() {
     return this._priority;
-  },
-
-  get isFunctioning() {
-    return true;
   },
 
   getItemLocation: function(id) {
@@ -2272,29 +2266,19 @@ ExtensionManager.prototype = {
     var dsExists = extensionsDS.exists();
     var iniExists = extensionsINI.exists();
     var cacheExists = extensionsCache.exists();
-    
-    var missing = false;
-      
-    var installLocations = this.installLocations;
-    while (installLocations.hasMoreElements()) {
-      var location = installLocations.getNext().QueryInterface(nsIInstallLocation);
-      if (!location.isFunctioning)
-        missing = true;
-    }
-    
-    if (missing || !dsExists || !iniExists || !cacheExists)
-      missing = true;
-    
+ 
+    if (dsExists && iniExists && cacheExists)
+      return false;
+
     // If any one file is missing, remove all the others.
-    if (missing) {
-      if (dsExists) 
-        extensionsDS.remove(false);
-      if (iniExists)
-        extensionsINI.remove(false);
-      if (cacheExists) 
-        extensionsCache.remove(false);
-    }
-    return missing;      
+    if (dsExists) 
+      extensionsDS.remove(false);
+    if (iniExists)
+      extensionsINI.remove(false);
+    if (cacheExists) 
+      extensionsCache.remove(false);
+
+    return true;
   },
   
   /**
@@ -2918,7 +2902,6 @@ ExtensionManager.prototype = {
           this._finalizeInstall(items[i].id, null);
         }
         PendingOperations.clearItems(OP_NEEDS_INSTALL);
-        LOG("After installation: " + PendingOperations.getOperations(OP_NEEDS_INSTALL).length);
 
         // Look for extensions that need to be removed. This MUST be done after
         // the install operations since extensions to be installed may have to be

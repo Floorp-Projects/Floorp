@@ -49,7 +49,7 @@ interface nsIDirectoryEnumerator;
  * Interface representing a location where extensions, themes etc are 
  * installed.
  */
-[scriptable, uuid(da11d198-093e-4d0d-8889-3ea0acef996a)]
+[scriptable, uuid(D3D4DADA-C6EB-11D9-A68F-001124787B2E)]
 interface nsIInstallLocation : nsISupports
 {
   /**
@@ -90,17 +90,6 @@ interface nsIInstallLocation : nsISupports
    * whether or not it actually *is* restricted right now.
    */
   readonly attribute boolean canAccess;
-
-  /**
-   * Whether or not the install location is functioning properly. If the
-   * location is not functioning properly, this probably suggests the
-   * user has deleted files/registry keys etc by hand and we need to 
-   * flush the various data sets and rebuild them. 
-   * e.g. for a Directory Install Location this is whether or not the
-   *      directory that contains the items exists. For a registry based
-   *      location this is whether or not the key exists.
-   */
-  readonly attribute boolean isFunctioning;
 
   /**
    * Constants representing priority of some default Install Locations.
