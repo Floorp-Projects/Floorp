@@ -52,6 +52,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsNetUtil.h"
+#include "nsIParserService.h"
 
 // string includes
 #include "nsReadableUtils.h"
@@ -1008,8 +1009,36 @@ nsSchemaLoader::ProcessElement(nsIWebServiceErrorHandler* aErrorHandler,
   aElement->GetAttribute(NS_LITERAL_STRING("ref"), ref);
   if (!ref.IsEmpty()) {
     nsSchemaElementRef* elementRef;
-    
-    elementRef = new nsSchemaElementRef(aSchema, ref);
+    nsAutoString refNS;
+
+    // need to handle ns:type
+    nsresult rv;
+    nsCOMPtr<nsIParserService> parserService =
+      do_GetService("@mozilla.org/parser/parser-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    const nsAFlatString& qName = PromiseFlatString(ref);
+    const PRUnichar *colon;
+    rv = parserService->CheckQName(qName, PR_TRUE, &colon);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (colon) {
+      const PRUnichar* end;
+      qName.EndReading(end);
+
+      nsAutoString schemaTypePrefix;
+      schemaTypePrefix.Assign(Substring(qName.get(), colon));
+      ref.Assign(Substring(colon + 1, end));
+
+      nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(aElement);
+      NS_ENSURE_STATE(domNode3);
+
+      // get the namespace url from the prefix
+      rv = domNode3->LookupNamespaceURI(schemaTypePrefix, refNS);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    elementRef = new nsSchemaElementRef(aSchema, ref, refNS);
     if (!elementRef) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

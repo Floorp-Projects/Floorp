@@ -404,7 +404,7 @@ class nsSchemaElementRef : public nsSchemaParticleBase,
                            public nsISchemaElement
 {
 public:
-  nsSchemaElementRef(nsSchema* aSchema, const nsAString& aRef);
+  nsSchemaElementRef(nsSchema* aSchema, const nsAString& aRef, const nsAString& aRefNS);
   virtual ~nsSchemaElementRef();
 
   NS_DECL_ISUPPORTS
@@ -414,6 +414,7 @@ public:
 
 protected:
   nsString mRef;
+  nsString mRefNS;
   nsCOMPtr<nsISchemaElement> mElement;
 };
 

@@ -54,6 +54,7 @@ REQUIRES	= xpcom \
 		  widget \
 		  content \
 		  js \
+		  htmlparser \
 		  necko \
 		  xmlextras \
 		  $(NULL)

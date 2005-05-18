@@ -673,8 +673,9 @@ nsSchemaElement::GetTargetNamespace(nsAString& aTargetNamespace)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaElementRef::nsSchemaElementRef(nsSchema* aSchema, 
-                                       const nsAString& aRef)
-  : nsSchemaParticleBase(aSchema), mRef(aRef)
+                                       const nsAString& aRef,
+                                       const nsAString& aRefNS)
+  : nsSchemaParticleBase(aSchema), mRef(aRef), mRefNS(aRefNS)
 {
 }
 
@@ -682,7 +683,7 @@ nsSchemaElementRef::~nsSchemaElementRef()
 {
 }
 
-NS_IMPL_ISUPPORTS3_CI(nsSchemaElementRef, 
+NS_IMPL_ISUPPORTS3_CI(nsSchemaElementRef,
                       nsISchemaComponent,
                       nsISchemaParticle,
                       nsISchemaElement)
@@ -698,7 +699,16 @@ nsSchemaElementRef::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 
   mIsResolved = PR_TRUE;
   if (!mElement && mSchema) {
-    mSchema->GetElementByName(mRef, getter_AddRefs(mElement));
+    if (mRefNS.IsEmpty()) {
+      mSchema->GetElementByName(mRef, getter_AddRefs(mElement));
+    } else {
+      // use the namespace and type
+      nsCOMPtr<nsISchemaCollection> schemaColl;
+      mSchema->GetCollection(getter_AddRefs(schemaColl));
+      NS_ENSURE_STATE(schemaColl);
+
+      schemaColl->GetElement(mRef, mRefNS, getter_AddRefs(mElement));
+    }
   }
 
   if (mElement) {
