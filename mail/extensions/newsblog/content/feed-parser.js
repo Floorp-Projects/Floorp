@@ -131,7 +131,7 @@ FeedParser.prototype =
       item.id = guid;
       item.description = getNodeValue(itemNode.getElementsByTagName("description")[0]);
       item.title = converter.ConvertFromUnicode(getNodeValue(itemNode.getElementsByTagName("title")[0])
-                   || (item.description ? item.description.substr(0, 150) : null)
+                   || (item.description ? (this.stripTags(item.description).substr(0, 150)) : null)
                    || item.title);
       // do this after we potentially assign item.description into item.title
       // because that potential assignment assumes the value is in unicode still
@@ -229,7 +229,7 @@ FeedParser.prototype =
       item.description = getRDFTargetValue(ds, itemResource, RSS_DESCRIPTION);
       item.title = getRDFTargetValue(ds, itemResource, RSS_TITLE)
                                      || getRDFTargetValue(ds, itemResource, DC_SUBJECT)
-                                     || (item.description ? item.description.substr(0, 150) : null)
+                                     || (item.description ? (this.stripTags(item.description).substr(0, 150)) : null)
                                      || item.title;
       item.author = getRDFTargetValue(ds, itemResource, DC_CREATOR)
                                       || getRDFTargetValue(ds, channel, DC_CREATOR)
@@ -257,7 +257,7 @@ FeedParser.prototype =
       return parsedItems;
     }
 
-    aFeed.title = aFeed.title || getNodeValue(channel.getElementsByTagName("title")[0]);
+    aFeed.title = aFeed.title || this.stripTags(getNodeValue(channel.getElementsByTagName("title")[0]));
     aFeed.description = getNodeValue(channel.getElementsByTagName("tagline")[0]);
     aFeed.link = this.findAtomLink("alternate",channel.getElementsByTagNameNS(ATOM_03_NS,"link"));
 
@@ -362,5 +362,10 @@ FeedParser.prototype =
         return url.resolve(alink.getAttribute('href'));
       }
     }
+  },
+  
+  stripTags: function(someHTML) 
+  {
+    return someHTML.replace(/<[^>]+>/g,"");
   }
 };
