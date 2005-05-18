@@ -1350,6 +1350,11 @@ case "$target" in
             DLLFLAGS="$DLLFLAGS -DEBUG"
             LDFLAGS="$LDFLAGS -DEBUG"
         fi
+
+        OS_DLLFLAGS="-nologo -DLL -SUBSYSTEM:WINDOWS"
+        if test "$MSC_VER" -le "1200" -a -z "$MOZ_DEBUG_SYMBOLS"; then
+            OS_DLLFLAGS="$OS_DLLFLAGS -PDB:NONE"
+        fi
         
         if test "$OS_TARGET" = "WINNT"; then
             CFLAGS="$CFLAGS -GT"
@@ -1385,11 +1390,6 @@ case "$target" in
 
     if test -n "$USE_DEBUG_RTL"; then
         OBJDIR_SUFFIX=OBJD
-    fi
-
-    OS_DLLFLAGS="-nologo -DLL -SUBSYSTEM:WINDOWS"
-    if test "$MSC_VER" -le "1200" -a -z "$MOZ_DEBUG_SYMBOLS"; then
-        OS_DLLFLAGS="$OS_DLLFLAGS -PDB:NONE"
     fi
 
     case "$OS_TARGET" in
