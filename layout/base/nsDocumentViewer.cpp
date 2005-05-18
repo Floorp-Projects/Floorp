@@ -518,7 +518,7 @@ NS_IMPL_ISUPPORTS7(DocumentViewerImpl,
 DocumentViewerImpl::~DocumentViewerImpl()
 {
   if (mDocument) {
-    Close();
+    Close(nsnull);
     mDocument->Destroy();
   }
 
@@ -1206,12 +1206,14 @@ DocumentViewerImpl::Open()
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::Close()
+DocumentViewerImpl::Close(nsISHEntry *aSHEntry)
 {
   // All callers are supposed to call close to break circular
   // references.  If we do this stuff in the destructor, the
   // destructor might never be called (especially if we're being
   // used from JS.
+
+  mSHEntry = aSHEntry;
 
   // Close is also needed to disable scripts during paint suppression,
   // since we transfer the existing global object to the new document
@@ -1251,6 +1253,9 @@ DocumentViewerImpl::Close()
     {
       // out of band cleanup of webshell
       mDocument->SetScriptGlobalObject(nsnull);
+
+      if (!mSHEntry)
+        mDocument->Destroy();
     }
 
   if (mFocusListener) {
@@ -1894,13 +1899,6 @@ DocumentViewerImpl::SetSticky(PRBool aSticky)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::SetHistoryEntry(nsISHEntry *aEntry)
-{
-  mSHEntry = aEntry;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 DocumentViewerImpl::GetEnableRendering(PRBool* aResult)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
@@ -2046,6 +2044,12 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DocumentViewerImpl::ClearHistoryEntry()
+{
+  mSHEntry = nsnull;
+  return NS_OK;
+}
 
 //-------------------------------------------------------
 
@@ -4041,6 +4045,7 @@ DocumentViewerImpl::OnDonePrinting()
     } else if (mClosingWhilePrinting) {
       if (mDocument) {
         mDocument->SetScriptGlobalObject(nsnull);
+        mDocument->Destroy();
         mDocument = nsnull;
       }
       mClosingWhilePrinting = PR_FALSE;

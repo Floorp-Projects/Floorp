@@ -3392,7 +3392,7 @@ nsDocShell::Destroy()
         docShellParentAsNode->RemoveChild(this);
 
     if (mContentViewer) {
-        mContentViewer->Close();
+        mContentViewer->Close(nsnull);
         mContentViewer->Destroy();
         mContentViewer = nsnull;
     }
@@ -5053,11 +5053,7 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
     mFiredUnloadEvent = PR_FALSE;
 
     if (mContentViewer) {
-        mContentViewer->Close();
-
-        if (aSavePresentation)
-            mContentViewer->SetHistoryEntry(mOSHE);
-
+        mContentViewer->Close(aSavePresentation ? mOSHE : nsnull);
         mContentViewer->Destroy();
     }
 
@@ -5572,14 +5568,10 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             }
         }
 
-        mContentViewer->Close();
+        // Tell the old content viewer to hibernate in session history when
+        // it is destroyed.
+        mContentViewer->Close(mSavingOldViewer ? mOSHE : nsnull);
         aNewViewer->SetPreviousViewer(mContentViewer);
-
-        if (mSavingOldViewer) {
-            // Tell the old content viewer to hibernate in session history when
-            // it is destroyed.
-            mContentViewer->SetHistoryEntry(mOSHE);
-        }
 
         mContentViewer = nsnull;
     }

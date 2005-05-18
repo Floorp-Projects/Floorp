@@ -4838,6 +4838,9 @@ nsDocument::Destroy()
 {
   // The ContentViewer wants to release the document now.  So, tell our content
   // to drop any references to the document so that it can be destroyed.
+  if (mIsGoingAway)
+    return;
+
   PRInt32 count = mChildren.Count();
 
   mIsGoingAway = PR_TRUE;
