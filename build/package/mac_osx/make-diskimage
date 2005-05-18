@@ -50,8 +50,6 @@
 # tip: use '-null-' for <eula-resource-file> if you only want to
 # provide <.dsstore_file> and <background_image_file>
 
-set -e;
-
 DMG_DIRNAME=`dirname $1`
 DMG_DIR=`cd $DMG_DIRNAME; pwd`
 DMG_NAME=`basename $1`
@@ -80,14 +78,13 @@ echo IMAGE_SIZE=$IMAGE_SIZE
 
 # Create the image
 echo "creating disk image"
-rm -f $DMG_TEMP_NAME
 hdiutil create -sectors $IMAGE_SIZE -fs HFS+ $DMG_TEMP_NAME -volname $VOLUME_NAME
 
 # mount it
 echo "mounting disk image"
-MOUNT_DIR=dmg-temp
-mkdir -p $MOUNT_DIR
-DEV_NAME=`hdiutil attach -readwrite -private -noautoopen -mountpoint $MOUNT_DIR $DMG_TEMP_NAME | egrep '^/dev/' | sed 1q | awk '{print $1}'`
+# `hdid -nomount rw.$DMG_NAME | grep "^/dev/disk.s2" | sed -e "s?^/dev/??" -e "s/[^0-9a-z].*//"`
+DEV_NAME=`hdid $DMG_TEMP_NAME | sed 1q | awk '{print $1}'`
+MOUNT_DIR=`hdid $DMG_TEMP_NAME | grep Apple_HFS | awk '{print $3}'`
 
 # copy content via ditto
 #
@@ -115,7 +112,7 @@ fi
 
 # make sure it's not world writeable
 echo "fixing permissions"
-chmod -R go-w ${MOUNT_DIR} || true
+chmod -R go-w ${MOUNT_DIR}
 
 # make the top window open itself on mount:
 if [ -x /usr/local/bin/openUp ]; then
