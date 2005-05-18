@@ -280,6 +280,8 @@ int main(int argc, char* argv[])
   geckoVersion = ParseVersion(GRE_BUILD_ID);
 
   const char *appDataFile;
+  char **argv2;
+
   if (IsArg(argv[1], "app"))
   {
     if (argc == 2)
@@ -288,14 +290,32 @@ int main(int argc, char* argv[])
       return 1;
     }
     appDataFile = argv[2];
-    argv += 2;
-    argc -= 2;
+    argv2 = NULL;
   }
   else
   {
     appDataFile = argv[1];
-    argv += 1;
-    argc -= 1;
+    //
+    // Fix-up argv to start with -app.
+    // 
+    // This is done so that we preserve our command line whenever XRE_main
+    // needs to restart our process.  We also don't want the supplied path to
+    // our application data file to be treated as a URL to load by the
+    // application.
+    //
+    // XXX this probably means that we need to implement a command line handler
+    // to consume the parameter before it is seen as a parameter by the
+    // application.
+    // XXX a better approach would be to use an evnvar.
+    //
+    argv2 = (char **) malloc(sizeof(char*) * (argc + 2));
+    argv2[0] = argv[0];
+    argv2[1] = "-app";
+    for (int i=1; i<argc; ++i)
+      argv2[i+1] = argv[i];
+    argv2[argc+1] = NULL;
+    argv = argv2;
+    argc++;
   }
 
   nsXREAppData appData = { sizeof(nsXREAppData), 0 };
@@ -305,6 +325,9 @@ int main(int argc, char* argv[])
     rv = XRE_main(argc, argv, &appData);
 
   NS_IF_RELEASE(appData.directory);
+
+  if (argv2)
+    free(argv2);
 
   return rv;
 }
