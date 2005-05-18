@@ -5053,7 +5053,7 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
     mFiredUnloadEvent = PR_FALSE;
 
     if (mContentViewer) {
-        mContentViewer->Close(aSavePresentation ? mOSHE : nsnull);
+        mContentViewer->Close(aSavePresentation ? mOSHE.get() : nsnull);
         mContentViewer->Destroy();
     }
 
@@ -5570,7 +5570,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 
         // Tell the old content viewer to hibernate in session history when
         // it is destroyed.
-        mContentViewer->Close(mSavingOldViewer ? mOSHE : nsnull);
+        mContentViewer->Close(mSavingOldViewer ? mOSHE.get() : nsnull);
         aNewViewer->SetPreviousViewer(mContentViewer);
 
         mContentViewer = nsnull;
