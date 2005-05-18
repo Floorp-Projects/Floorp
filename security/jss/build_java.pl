@@ -167,15 +167,29 @@ sub build {
     chop($jss_revision);
     $jss_revision      = substr($jss_revision, 22, 3);
     my $build_revision = $jss_revision;
-    system("echo \"Manifest-Version: 1.0\" > $manifest_file");
-    system("echo \"\" >> $manifest_file");
-    system("echo \"Name: org/mozilla/jss/\" >> $manifest_file");
-    system("echo \"Specification-Title: Network Security Services for Java (JSS)\" >> $manifest_file");
-    system("echo \"Specification-Version: $jss_revision\" >> $manifest_file");
-    system("echo \"Specification-Vendor: Mozilla Foundation\" >> $manifest_file");
-    system("echo \"Implementation-Title: org.mozilla.jss\" >> $manifest_file");
-    system("echo \"Implementation-Version: $build_revision\" >> $manifest_file");
-    system("echo \"Implementation-Vendor: Mozilla Foundation\" >> $manifest_file");
+    $append = 0;
+
+    if ($append) {
+        open(MYOUTFILE, ">MANIFEST.MF");  #open for write, overwrite
+    } else {
+        open(MYOUTFILE, ">>MANIFEST.MF"); #open for write, append
+    }
+
+    #*** Print freeform text, semicol required ***
+print MYOUTFILE <<"MyLabel";
+Manifest-Version: 1.0
+    
+Name: org/mozilla/jss/
+Specification-Title: Network Security Services for Java (JSS)
+Specification-Version: $jss_revision
+Specification-Vendor: Mozilla Foundation
+Implementation-Title: org.mozilla.jss
+Implementation-Version: $build_revision
+Implementation-Vendor: Mozilla Foundation
+MyLabel
+
+    #*** Close the file ***
+    close(MYOUTFILE);
 
     #
     # recursively find *.java
