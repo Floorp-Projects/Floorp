@@ -558,13 +558,16 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
     if (// If we're showing the view but the frame is hidden, then the
         // view is transparent
         (nsViewVisibility_kShow == aView->GetVisibility() &&
-         NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible) ||
-        // If we have overflowing kids and overflow is visible or doesn't apply
-        // (overflow only applies to things that are block-level), then the
-        // view has transparent content.
-        ((NS_STYLE_OVERFLOW_VISIBLE == display->mOverflowX || !isBlockLevel) &&
-         (kidState & NS_FRAME_OUTSIDE_CHILDREN))) {
+         NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible)) {
       viewHasTransparentContent = PR_TRUE;
+    } else {
+      PRBool isScrolledContent = aView->GetParent() &&
+        aView->GetParent()->ToScrollableView();
+      // If we have overflowing kids and we're not clipped by a parent
+      // scrolling view, then the view must be transparent.
+      if (!isScrolledContent && (kidState & NS_FRAME_OUTSIDE_CHILDREN)) {
+        viewHasTransparentContent = PR_TRUE;
+      }
     }
   }
 
