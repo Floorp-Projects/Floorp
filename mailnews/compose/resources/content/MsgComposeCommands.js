@@ -241,6 +241,9 @@ var gComposeRecyclingListener = {
         document.getElementById("FormatToolbar").hidden = false;
     }
 
+    // Stop InlineSpellChecker so personal dictionary is saved
+    StopInlineSpellChecker();
+
     //Reset editor
     EditorResetFontAndColorAttributes();
     EditorCleanup();
@@ -1510,6 +1513,9 @@ function ComposeUnload()
 {
   dump("\nComposeUnload from XUL\n");
 
+  // Stop InlineSpellChecker so personal dictionary is saved
+  StopInlineSpellChecker();
+
   EditorCleanup();
 
   RemoveMessageComposeOfflineObserver();
@@ -2043,6 +2049,12 @@ function addRecipientsToIgnoreList(aAddressesToAdd)
 
     InlineSpellChecker.inlineSpellChecker.ignoreWords(tokenizedNames, tokenizedNames.length);
   }
+}
+
+function StopInlineSpellChecker()
+{
+  if (InlineSpellChecker.inlineSpellChecker)
+    InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell = false;
 }
 
 function ToggleInlineSpellChecker(target)
