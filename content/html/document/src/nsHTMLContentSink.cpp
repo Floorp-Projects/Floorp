@@ -3934,6 +3934,12 @@ HTMLContentSink::ForceReflow()
 void
 HTMLContentSink::NotifyAppend(nsIContent* aContainer, PRUint32 aStartIndex)
 {
+  if (aContainer->GetCurrentDoc() != mDocument) {
+    // aContainer is not actually in our document anymore.... Just bail out of
+    // here; notifying on our document for this append would be wrong.
+    return;
+  }
+
   mInNotification++;
 
   MOZ_TIMER_DEBUGLOG(("Save and stop: nsHTMLContentSink::NotifyAppend()\n"));
@@ -3954,6 +3960,12 @@ HTMLContentSink::NotifyInsert(nsIContent* aContent,
                               nsIContent* aChildContent,
                               PRInt32 aIndexInContainer)
 {
+  if (aContent->GetCurrentDoc() != mDocument) {
+    // aContent is not actually in our document anymore.... Just bail out of
+    // here; notifying on our document for this insert would be wrong.
+    return;
+  }
+
   mInNotification++;
 
   MOZ_TIMER_DEBUGLOG(("Save and stop: nsHTMLContentSink::NotifyInsert()\n"));
