@@ -805,6 +805,8 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
     </nc:subheadings>
   </rdf:Description>
 
+<!-- To load Advanced Proxy Preferences Help content from prefs -->
+<rdf:Description ID="nav-prefs-advanced-proxy-advanced" nc:link="cs_nav_prefs_advanced.xhtml#advanced_proxy_preferences"/>
 
 <!-- USING PRIVACY FEATURES CONTENT -->
 <rdf:Description about="#using-priv-help">
