@@ -813,11 +813,11 @@ nsresult nsAbDirectoryDataSource::DoDeleteCardsFromDirectory(nsIAbDirectory *dir
 	PRUint32 item;
 	for(item = 0; item < itemCount; item++)
 	{
-		nsCOMPtr<nsISupports> supports = getter_AddRefs(arguments->ElementAt(item));
-		nsCOMPtr<nsIAbCard> deletedCard(do_QueryInterface(supports));
+    nsCOMPtr<nsIAbCard> deletedCard(do_QueryElementAt(arguments, item));
 		if (deletedCard)
 		{
-			cardArray->AppendElement(supports);
+      rv = cardArray->AppendElement(deletedCard);
+      NS_ENSURE_SUCCESS(rv, rv);
 		}
 	}
 	PRUint32 cnt;
