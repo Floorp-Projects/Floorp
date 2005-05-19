@@ -1126,8 +1126,8 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
       if(calendarEvent.isAllDay != true) {
 	var startDate = calendarEvent.startDate;
 	var endDate = calendarEvent.endDate;
-	calendarEvent.startDate = startDate.getInTimezone(null);
-	calendarEvent.endDate = endDate.getInTimezone(null);
+	calendarEvent.startDate = startDate.getInTimezone("UTC");
+	calendarEvent.endDate = endDate.getInTimezone("UTC");
       }
       // check if all required properties are available
       /*

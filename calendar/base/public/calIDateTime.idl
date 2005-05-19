@@ -43,97 +43,165 @@
 [scriptable, uuid(5678d4a3-2543-4ece-afbb-079292f2866e)]
 interface calIDateTime : nsISupports
 {
-  // returns true if this thing is able to be modified;
-  // if the item is not mutable, attempts to modify
-  // any data will throw CAL_ERROR_ITEM_IS_IMMUTABLE
+  /**
+   * isMutable is true if this instance is modifiable.
+   * If isMutable is false, any attempts to modify
+   * the object will throw CAL_ERROR_ITEM_IS_MUTABLE.
+   */
   readonly attribute boolean isMutable;
 
-  // makes this item immutable
+  /**
+   * Make this calIDateTime instance immutable.
+   */
   void makeImmutable();
 
-  // clone always returns a mutable event
+  /**
+   * Clone this calIDateTime instance into a new
+   * mutable object.
+   */
   calIDateTime clone();
 
+  /**
+   * valid is true if this object contains a valid
+   * time/date.
+   */
   // true if this thing is set/valid
   readonly attribute boolean isValid;
 
-  // this thing's base PRTime value, either as UTC or as timezoneless-
-  // local.  Setting this will explode the PRTime value to year/etc
-  // based on the current value of timezone.  PRTime is milliseconds
-  // since the epoch, in UTC.
+  /**
+   * nativeTime contains this instance's PRTime value relative
+   * to the UTC epoch, regardless of the timezone that's set
+   * on this instance.  If nativeTime is set, the given UTC PRTime
+   * value is exploded into year/month/etc, taking into account
+   * the timezone setting.
+   */
   attribute PRTime nativeTime;
 
-  //
-  // Year, fully exploded (e.g. "1989", "2004")
+  /**
+   * Full 4-digit year value (e.g. "1989", "2004")
+   */
   attribute short year;
 
-  // Month, 0-11
+  /**
+   * Month, 0-11, 0 = January
+   */
   attribute short month;
 
-  // Day, 1-[28,29,31]
+  /**
+   * Day of month, 1-[28,29,31]
+   */
   attribute short day;
 
-  // Hour, 0-23
+  /**
+   * Hour, 0-23
+   */
   attribute short hour;
 
-  // Minute, 0-59
+  /**
+   * Minute, 0-59
+   */
   attribute short minute;
 
-  // Second, 0-59
+  /**
+   * Second, 0-59
+   */
   attribute short second;
 
-  // isUtc and tiemzone together specify the timezone of this file;
-  // - if isUtc is true, timezone is ignored and this datetime is UTC.
-  // - if isUtc is false and timezone is not null, then this datetime
-  //   is in the given timezone
-  // - if isUtc is false and timezone is null, then this datetime
-  //   represents a floating time; the actual nativeTime representation
-  //   will still be as if it was in UTC
-  attribute PRBool isUtc;
+  /**
+   * Gets or sets the timezone of this calIDateTime instance.
+   * Setting the timezone does not change the actual date/time components;
+   * to convert between timezones, use getInTimezone(). 
+   *
+   * Valid values are:
+   *
+   * - "UTC" (or "utc", "UTC" preferred)
+   *   - the object refers to a time in UTC.
+   * - a TZID string, understood by the ICS Service
+   *   - the object refers to a time in that tz
+   * - "floating"
+   *   - the object is in floating time and does not have an
+   *     associated timezone.
+   *
+   * @throws NS_ERROR_INVALID_ARG if an invalid timezone is passed in.
+   */
   attribute AUTF8String timezone;
 
-  // if true, this calIDateTime represents a date (whole day), not a
-  // specific hour/minute/second
+  /**
+   * isDate indicates that this calIDateTime instance represents a date
+   * (a whole day), and not a specific time on that day.  If isDate is set,
+   * accessing the hour/minute/second fields will return 0, and and setting
+   * them is an illegal operation.
+   */
   attribute PRBool isDate;
 
-  //
-  // computed values
-  //
+  /*
+   * computed values
+   */
 
-  // Day of the week, 0-6, Sunday = 0
+  /**
+   * Day of the week. 0-6, with Sunday = 0.
+   */
   readonly attribute short weekday;
 
-  // Day of the year, 0-365/366
+  /**
+   * Day of the year, 0-365/366.
+   */
   readonly attribute short yearday;
 
-  //
-  // Methods
-  //
+  /*
+   * Methods
+   */
 
-  // reset to an invalid state
+  /**
+   * Reset this instance to an invalid state.
+   */
   void reset();
 
-  // return a string representation of this date/time
-  // in the current locale
+  /**
+   * Return a string representation of this instance.
+   */
   AUTF8String toString();
 
   // normalize and validate the expanded-out values
+  // XXX going away soon
   void normalize();
 
-  // sets this thing to a time in the given timezone
-  void setTimeInTimezone (in PRTime aTime, in string aTimezone);
+  /**
+   * Set the value of this calIDateTime instance
+   * to aTime milliseconds since the epoch in the
+   * given timezone.  Valid values for the aTimezone
+   * are either a known TZID or "UTC"; null/empty string
+   * is not valid.
+   */
+  void setTimeInTimezone (in PRTime aTime, in AUTF8String aTimezone);
 
-  // gets a new calIDateTime object representing this
-  // item in the given timezone
-  calIDateTime getInTimezone (in string aTimezone);
+  /**
+   * Return a new calIDateTime instance that's the result of
+   * converting this one into the given timezone.  Valid values
+   * for aTimezone are the same as the timezone field.  If
+   * the "floating" timezone is given, then this object
+   * is just cloned, and the timezone is set to floating.
+   */
+  calIDateTime getInTimezone (in AUTF8String aTimezone);
 
   // add the given calIDateTime, treating it as a duration, to
-  // this item
+  // this item.
+  // XXX will change
   void addDuration (in calIDateTime aDuration);
 
-  // returns -1, 0, 1 to indicate this < aOtherDate,
-  // this == aOtherDate, or this > aOtherDate.
-  long compare (in calIDateTime aOtherDate);
+  /**
+   * Compare this calIDateTime instance to aOther.  Returns -1, 0, 1 to
+   * indicate if this < aOther, this == aOther, or this > aOther,
+   * respectively.
+   *
+   * This comparison is timezone-aware; the given values are converted
+   * to a common timezone before comparing. If either this or aOther is
+   * floating, both objects are treated as floating for the comparison.
+   *
+   * If either this or aOther has isDate set, then only the date portion is
+   * compared.
+   */
+  long compare (in calIDateTime aOther);
 
   //
   // Some helper getters for calculating useful ranges

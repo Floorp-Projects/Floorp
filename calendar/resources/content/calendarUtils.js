@@ -191,6 +191,7 @@ function guessSystemTimezone()
     try {
         return tzTable[offset + " " + timezone];
     } catch(ex) {
-        return null;
+        // XXX we don't really have a better option here
+        return "floating";
     }
 }

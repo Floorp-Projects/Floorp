@@ -79,7 +79,6 @@ protected:
     PRInt16 mMinute;
     PRInt16 mSecond;
 
-    PRBool mIsUtc;
     PRBool mIsDate;
     nsCString mTimezone;
 
@@ -87,7 +86,7 @@ protected:
     PRInt16 mYearday;
 
     void FromIcalTime(icaltimetype *icalt);
-    struct _icaltimezone* GetIcalTZ(const nsACString& tzid);
+    nsresult GetIcalTZ(const nsACString& tzid, struct _icaltimezone **tzp);
 
     PRTime mLastModified;
 };

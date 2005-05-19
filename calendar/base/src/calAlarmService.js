@@ -176,7 +176,7 @@ calAlarmService.prototype = {
     /* calIAlarmService APIs */
     snoozeEvent: function(event, duration) {
         /* modify the event for a new alarm time */
-        var alarmTime = jsDateToDateTime((new Date())).getInTimezone(null);
+        var alarmTime = jsDateToDateTime((new Date())).getInTimezone("UTC");
         alarmTime.addDuration(duration);
         newEvent = event.clone();
         newEvent.alarmTime = alarmTime;
@@ -291,9 +291,9 @@ calAlarmService.prototype = {
     addAlarm: function(aItem, skipCheck, alarmTime) {
         // if aItem.alarmTime >= 'now' && aItem.alarmTime <= gAlarmEndTime
         if (!alarmTime)
-            alarmTime = aItem.alarmTime.getInTimezone(null);
+            alarmTime = aItem.alarmTime.getInTimezone("UTC");
 
-        var now = jsDateToDateTime((new Date())).getInTimezone(null);
+        var now = jsDateToDateTime((new Date())).getInTimezone("UTC");
 
         var callbackObj = {
             alarmService: this,
@@ -343,12 +343,12 @@ calAlarmService.prototype = {
 
         // figure out the 'now' and 6 hours from now and look for events 
         // between then with alarms
-        this.mRangeStart = jsDateToDateTime((new Date())).getInTimezone(null);
+        this.mRangeStart = jsDateToDateTime((new Date())).getInTimezone("UTC");
 
         var until = this.mRangeStart.clone();
         until.hour += kHoursBetweenUpdates;
         until.normalize();
-        this.mRangeEnd = until.getInTimezone(null);
+        this.mRangeEnd = until.getInTimezone("UTC");
 
         var calendarManager = Components.classes["@mozilla.org/calendar/manager;1"].getService(Components.interfaces.calICalendarManager);
         var calendars = calendarManager.getCalendars({});

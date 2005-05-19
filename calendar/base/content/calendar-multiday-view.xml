@@ -265,7 +265,7 @@
       <field name="mEventMap">null</field>
       <field name="mCalendarView">null</field>
       <field name="mDate">null</field>
-      <field name="mTimezone">null</field>
+      <field name="mTimezone">"UTC"</field>
       <field name="mDragState">null</field>
 
       <!-- properties -->
@@ -481,10 +481,10 @@
            var stdate = aOccurrence.occurrenceStartDate;
            var enddate = aOccurrence.occurrenceEndDate;
 
-           if (stdate.isUtc || stdate.timezone != this.mTimezone)
+           if (stdate.timezone != this.mTimezone)
                stdate = stdate.getInTimezone (this.mTimezone);
 
-           if (enddate.isUtc || enddate.timezone != this.mTimezone)
+           if (enddate.timezone != this.mTimezone)
                enddate = enddate.getInTimezone (this.mTimezone);
 
            return { start: stdate.hour * 60 + stdate.minute,
@@ -1493,8 +1493,8 @@
 	<body><![CDATA[
 	  var targetDate = aDate.clone();
 	  targetDate.isDate = true;
-          if (!targetDate.isUtc)
-              targetDate = targetDate.getInTimezone(null);
+	  if (targetDate.timezone != "UTC")
+              targetDate = targetDate.getInTimezone("UTC");
 
 	  if (this.mStartDate && this.mEndDate) {
               if (this.mStartDate.compare(targetDate) <= 0 &&
@@ -1819,8 +1819,8 @@
 
               d.isDate = true;
 
-              if (!d.isUtc)
-                  d = d.getInTimezone(null);
+              if (d.timezone != "UTC")
+                  d = d.getInTimezone("UTC");
 
               this.mDateColumns.push ( { date: d, column: dayEventsBox, header: dayHeaderBox } );
           }
@@ -1838,8 +1838,8 @@
 
           var eday = estart.clone();
           eday.isDate = true;
-          if (!eday.isUtc)
-              eday = eday.getInTimezone(null);
+          if (eday.timezone != "UTC")
+              eday = eday.getInTimezone("UTC");
 
           var column = null;
           var header = null;

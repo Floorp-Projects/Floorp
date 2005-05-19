@@ -141,7 +141,7 @@ function textToDate(d) {
         date = newDateTime(dval, "UTC");
     } else if (d[0] == 'L') {
         // is local time
-        date = newDateTime(dval, null);
+        date = newDateTime(dval, "floating");
     }
     if (d[1] == 'D')
         date.isDate = true;
@@ -150,7 +150,7 @@ function textToDate(d) {
 
 function dateToText(d) {
     var datestr;
-    if (d.isUtc) {
+    if (d.timezone != "floating") {
         datestr = "U";
     } else {
         datestr = "L";
@@ -173,11 +173,10 @@ function dateToText(d) {
 function newDateTime(aNativeTime, aTimezone) {
     var t = new CalDateTime();
     t.nativeTime = aNativeTime;
-    if (aTimezone && aTimezone != "UTC") {
+    if (aTimezone != "floating") {
         t = t.getInTimezone(aTimezone);
-    } else if (!aTimezone) {
-        t.isUtc = false;
-        t.timezone = null;
+    } else {
+        t.timezone = "floating";
     }
 
     return t;
@@ -1225,10 +1224,7 @@ calStorageCalendar.prototype = {
 
         function setDateParamHelper(params, entryname, cdt) {
             params[entryname] = cdt.nativeTime;
-            if (cdt.isUtc)
-                params[entryname + "_tz"] = "UTC";
-            else
-                params[entryname + "_tz"] = cdt.timezone;
+            params[entryname + "_tz"] = cdt.timezone;
         }
 
         // build flags up as we go
