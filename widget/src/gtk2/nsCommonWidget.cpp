@@ -44,6 +44,7 @@ nsCommonWidget::nsCommonWidget()
     mIsTopLevel       = PR_FALSE;
     mIsDestroyed      = PR_FALSE;
     mNeedsResize      = PR_FALSE;
+    mNeedsMove        = PR_FALSE;
     mListenForResizes = PR_FALSE;
     mIsShown          = PR_FALSE;
     mNeedsShow        = PR_FALSE;
@@ -248,10 +249,14 @@ nsCommonWidget::Show(PRBool aState)
 
     // If someone is showing this window and it needs a resize then
     // resize the widget.
-    if (aState && mNeedsResize) {
-        LOG(("\tresizing\n"));
-        NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
-                     PR_FALSE);
+    if (aState) {
+        if (mNeedsMove) {
+            LOG(("\tresizing\n"));
+            NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
+                         PR_FALSE);
+        } else if (mNeedsResize) {
+            NativeResize(mBounds.width, mBounds.height, PR_FALSE);
+        }
     }
 
     NativeShow(aState);
@@ -382,6 +387,7 @@ nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
         }
         else {
             mNeedsResize = PR_TRUE;
+            mNeedsMove = PR_TRUE;
         }
     }
 

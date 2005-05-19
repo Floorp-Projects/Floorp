@@ -2565,6 +2565,7 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
                        PRBool  aRepaint)
 {
     mNeedsResize = PR_FALSE;
+    mNeedsMove = PR_FALSE;
 
     LOG(("nsWindow::NativeResize [%p] %d %d %d %d\n", (void *)this,
          aX, aY, aWidth, aHeight));
