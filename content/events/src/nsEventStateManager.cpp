@@ -4216,7 +4216,8 @@ nsEventStateManager::GetFocusedFrame(nsIFrame** aFrame)
 NS_IMETHODIMP
 nsEventStateManager::ContentRemoved(nsIContent* aContent)
 {
-  if (aContent == mCurrentFocus) {
+  if (mCurrentFocus &&
+      nsContentUtils::ContentIsDescendantOf(mCurrentFocus, aContent)) {
     // Note that we don't use SetContentState() here because
     // we don't want to fire a blur.  Blurs should only be fired
     // in response to clicks or tabbing.
@@ -4224,7 +4225,8 @@ nsEventStateManager::ContentRemoved(nsIContent* aContent)
     SetFocusedContent(nsnull);
   }
 
-  if (aContent == mHoverContent) {
+  if (mHoverContent &&
+      nsContentUtils::ContentIsDescendantOf(mHoverContent, aContent)) {
     // Since hover is hierarchical, set the current hover to the
     // content's parent node.
     mHoverContent = aContent->GetParent();
