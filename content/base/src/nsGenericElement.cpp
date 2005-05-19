@@ -80,7 +80,6 @@
 
 #include "nsIBindingManager.h"
 #include "nsXBLBinding.h"
-#include "nsXBLPrototypeBinding.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
@@ -2380,38 +2379,13 @@ nsGenericElement::GetBaseURI() const
     return nsnull;
   }
 
-  // Our base URL depends on whether we have an xml:base attribute, as well as
-  // on whether any of our ancestors do.  The basic idea is to ask our parent
-  // (GetParent() if we have one, our document otherwise) for its base
-  // URL. Then we resolve our xml:base attr, if any, relative to that.
-
-  // The one complication is that we may be an anonymous node bound via XBL.
-  // If this is the case, we still want to use our parent's baseURL unless our
-  // parent is not part of our own binding (eg is the element the binding is
-  // attached to).  If that is the case, we want to use the binding url as the
-  // "parent" url.
+  // Our base URL depends on whether we have an xml:base attribute, as
+  // well as on whether any of our ancestors do.
+  nsCOMPtr<nsIURI> parentBase;
 
   nsIContent *parent = GetParent();
-  nsCOMPtr<nsIURI> parentBase;
   if (parent) {
-    // XXX Not all things with a bindingParent are actually XBL anonymous
-    // content, so we may not end up getting a binding in the case when we have
-    // a bindingParent...  This seems very wrong.  Perhaps it should be fixed?
-    if (!IsNativeAnonymous()) {
-      nsIContent* bindingParent = GetBindingParent();
-      nsIContent* parentsBindingParent = parent->GetBindingParent();
-      if (bindingParent != parentsBindingParent) {
-        nsXBLBinding* binding =
-          doc->BindingManager()->GetBinding(bindingParent);
-        if (binding) {
-          parentBase = binding->PrototypeBinding()->BindingURI();
-        }
-      }
-    }
-
-    if (!parentBase) {
-      parentBase = parent->GetBaseURI();
-    }
+    parentBase = parent->GetBaseURI();
   } else {
     // No parent, so just use the document (we must be the root or not in the
     // tree).
