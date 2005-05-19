@@ -67,18 +67,14 @@
 
   /*
    * BSD/OS ships no header that defines uint32_t, nor bool (for C)
-   * OpenBSD ships no header that defines uint32_t, but provides bool as a 
-   * macro.
+   * OpenBSD ships no header that defines uint32_t and using its bool macro is
+   * unsafe.
    */
   #if defined(bsdi) || defined(OPENBSD)
   typedef u_int32_t uint32_t;
 
-  #if defined(bsdi)
   #if !defined(__cplusplus)
     typedef int bool;
-  #endif
-  #else /* OPENBSD is defined, so use its bool */
-    #include <stdbool.h>
   #endif
   #else
   /*
