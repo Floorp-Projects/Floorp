@@ -1,4 +1,4 @@
-#extensionManager {
+[#extensionManager {
   background-color: ThreeDFace;
 }
 
@@ -85,25 +85,6 @@
 
 #getMore:focus {
   outline: 1px dotted invert ! important;
-}
-
-/* Extension Buttons (Iconic buttons in each extension item) */
-.extension-button {
-  width: 16px;
-  height: 16px;
-  margin: 1px;
-}
-
-.extension-button[anonid="options-button"] {
-  background-image: url("chrome://mozapps/skin/extensions/extensionOptions.png");
-}
-
-.extension-button[anonid="about-button"] {
-  background-image: url("chrome://mozapps/skin/extensions/extensionAbout.png");
-}
-
-.extension-button[anonid="homepage-button"] {
-  background-image: url("chrome://mozapps/skin/extensions/extensionHome.png");
 }
 
 /* Extension List Items */

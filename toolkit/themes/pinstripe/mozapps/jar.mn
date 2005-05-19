@@ -14,8 +14,6 @@ classic.jar:
   skin/classic/mozapps/downloads/unknownContentType.css           (downloads/unknownContentType.css)
   skin/classic/mozapps/downloads/downloads.xml                    (downloads/downloads.xml)
   skin/classic/mozapps/extensions/actionbuttons.png               (extensions/actionbuttons.png)
-  skin/classic/mozapps/extensions/extensionAbout.png              (extensions/extensionAbout.png)
-  skin/classic/mozapps/extensions/extensionHome.png               (extensions/extensionHome.png)
   skin/classic/mozapps/extensions/extensionItem.png               (extensions/extensionItem.png)
   skin/classic/mozapps/extensions/extensionOptions.png            (extensions/extensionOptions.png)
   skin/classic/mozapps/extensions/extensionOptions-pressed.png    (extensions/extensionOptions-pressed.png)
