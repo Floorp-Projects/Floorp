@@ -65,8 +65,20 @@
 
 #include "nsColor.h"
 #include "nsIRenderingContext.h"
+#include "nsIBlender.h"
+#include "nsGfxCIID.h"
+#include "nsIDrawingSurface.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDocShell.h"
+#include "nsPresContext.h"
+#include "nsIViewManager.h"
+#include "nsIScrollableView.h"
+#include "nsIDOMWindow.h"
 
 #include "cairo.h"
+
+static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 
 /**
  ** nsCanvasGradient
@@ -250,10 +262,15 @@ protected:
                                        jsval aValue);
 
     // cairo helpers
-    nsresult CairoSurfaceFromImageElement(nsIDOMHTMLImageElement *imgElt,
-                                          cairo_surface_t **aCairoSurface,
-                                          PRUint8 **imgDataOut,
-                                          PRInt32 *widthOut, PRInt32 *heightOut);
+    nsresult CairoSurfaceFromElement(nsIDOMElement *imgElt,
+                                     cairo_surface_t **aCairoSurface,
+                                     PRUint8 **imgDataOut,
+                                     PRInt32 *widthOut, PRInt32 *heightOut);
+
+    nsresult DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
+                                nsIDrawingSurface* aWhiteSurface,
+                                const nsIntSize& aSurfaceSize,
+                                nsIRenderingContext* aBlackContext);
 };
 
 NS_IMPL_ADDREF(nsCanvasRenderingContext2D)
@@ -859,7 +876,7 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLImageElement *image,
     cairo_surface_t *imgSurf = nsnull;
     PRUint8 *imgData = nsnull;
     PRInt32 imgWidth, imgHeight;
-    rv = CairoSurfaceFromImageElement (image, &imgSurf, &imgData, &imgWidth, &imgHeight);
+    rv = CairoSurfaceFromElement(image, &imgSurf, &imgData, &imgWidth, &imgHeight);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1216,16 +1233,23 @@ nsCanvasRenderingContext2D::DrawImage()
     double sx,sy,sw,sh;
     double dx,dy,dw,dh;
 
-    nsCOMPtr<nsIDOMHTMLImageElement> imgElt;
+    nsCOMPtr<nsIDOMElement> imgElt;
     if (!ConvertJSValToXPCObject(getter_AddRefs(imgElt),
-                                 NS_GET_IID(nsIDOMHTMLImageElement),
+                                 NS_GET_IID(nsIDOMElement),
                                  ctx, argv[0]))
         return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+
+    {
+        nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(imgElt);
+        nsCOMPtr<nsIDOMHTMLCanvasElement> canvas = do_QueryInterface(imgElt);
+        if (!image && !canvas)
+            return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+    }
 
     cairo_surface_t *imgSurf = nsnull;
     PRUint8 *imgData = nsnull;
     PRInt32 imgWidth, imgHeight;
-    rv = CairoSurfaceFromImageElement (imgElt, &imgSurf, &imgData, &imgWidth, &imgHeight);
+    rv = CairoSurfaceFromElement(imgElt, &imgSurf, &imgData, &imgWidth, &imgHeight);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1418,26 +1442,39 @@ nsCanvasRenderingContext2D::ConvertJSValToXPCObject(nsISupports** aSupports, REF
  */
 
 nsresult
-nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement *imgElt,
-                                                         cairo_surface_t **aCairoSurface,
-                                                         PRUint8 **imgData,
-                                                         PRInt32 *widthOut, PRInt32 *heightOut)
+nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
+                                                    cairo_surface_t **aCairoSurface,
+                                                    PRUint8 **imgData,
+                                                    PRInt32 *widthOut, PRInt32 *heightOut)
 {
     nsresult rv;
 
-    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(imgElt);
-    if (!imageLoader)
-        return NS_ERROR_NOT_AVAILABLE;
-    nsCOMPtr<imgIRequest> imgRequest;
-    rv = imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                                 getter_AddRefs(imgRequest));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!imgRequest)
-        return NS_ERROR_NOT_AVAILABLE;
-
     nsCOMPtr<imgIContainer> imgContainer;
-    rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
-    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(imgElt);
+    if (imageLoader) {
+        nsCOMPtr<imgIRequest> imgRequest;
+        rv = imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                                     getter_AddRefs(imgRequest));
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (!imgRequest)
+            return NS_ERROR_NOT_AVAILABLE;
+        
+        rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
+        NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+        // maybe a canvas
+        nsCOMPtr<nsICanvasElement> canvas = do_QueryInterface(imgElt);
+        if (canvas) {
+            // Ensure the canvas is up to date
+            canvas->UpdateImageFrame();
+            canvas->GetCanvasImageContainer(getter_AddRefs(imgContainer));
+        } else {
+            NS_WARNING("No way to get surface from non-canvas, non-imageloader");
+            return NS_ERROR_NOT_AVAILABLE;
+        }
+    }
+
     if (!imgContainer)
         return NS_ERROR_NOT_AVAILABLE;
 
@@ -1695,4 +1732,191 @@ nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement 
     *imgData = cairoImgData;
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt32 aY,
+                                       PRInt32 aW, PRInt32 aH, 
+                                       const nsAString& aBGColor)
+{
+    // We can't allow web apps to call this until we fix at least the
+    // following potential security issues:
+    // -- rendering cross-domain IFRAMEs and then extracting the results
+    // -- rendering the user's theme and then extracting the results
+    // -- rendering native anonymous content (e.g., file input paths;
+    // scrollbars should be allowed)
+    nsCOMPtr<nsIScriptSecurityManager> ssm =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+    if (!ssm)
+        return NS_ERROR_FAILURE;
+    PRBool isChrome = PR_FALSE;
+    ssm->SubjectPrincipalIsSystem(&isChrome);
+    if (!isChrome)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsPresContext> presContext;
+    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
+    if (sgo) {
+        nsIDocShell* docshell = sgo->GetDocShell();
+        if (docshell) {
+            docshell->GetPresContext(getter_AddRefs(presContext));
+        }
+    }
+    if (!presContext)
+        return NS_ERROR_FAILURE;
+
+    // Dig down past the viewport scroll stuff
+    nsIViewManager* vm = presContext->GetViewManager();
+    nsIScrollableView* scrollableView;
+    vm->GetRootScrollableView(&scrollableView);
+    nsIView* view;
+    if (scrollableView) {
+        scrollableView->GetScrolledView(view);
+    } else {
+        vm->GetRootView(view);
+    }
+
+    nscolor bgColor;
+    nsresult rv = mCSSParser->ParseColorString(PromiseFlatString(aBGColor),
+                                               nsnull, 0, PR_TRUE, &bgColor);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    float p2t = presContext->PixelsToTwips();
+    nsRect r(aX, aY, aW, aH);
+    r.ScaleRoundOut(p2t);
+
+    nsCOMPtr<nsIRenderingContext> blackCtx;
+    rv = vm->RenderOffscreen(view, r, !isChrome,
+                             NS_ComposeColors(NS_RGB(0, 0, 0), bgColor),
+                             getter_AddRefs(blackCtx));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsIDrawingSurface* blackSurface;
+    blackCtx->GetDrawingSurface(&blackSurface);
+    if (!blackSurface)
+        return NS_ERROR_FAILURE;
+    
+    // Render it!
+    if (NS_GET_A(bgColor) == 0xFF) {
+        // opaque background. Do it the easy way.
+        rv = DrawNativeSurfaces(blackSurface, nsnull, nsSize(aW, aH), blackCtx);
+        blackCtx->DestroyDrawingSurface(blackSurface);
+        return rv;
+    }
+    
+    // transparent background. Do it the hard way. We've drawn onto black,
+    // now draw onto white so we can recover the translucency information.
+    // But we need to compose our given background color onto black/white
+    // to get the real background to use.
+    nsCOMPtr<nsIRenderingContext> whiteCtx;
+    rv = vm->RenderOffscreen(view, r, !isChrome,
+                             NS_ComposeColors(NS_RGB(255, 255, 255), bgColor),
+                             getter_AddRefs(whiteCtx));
+    if (NS_SUCCEEDED(rv)) {
+        nsIDrawingSurface* whiteSurface;
+        whiteCtx->GetDrawingSurface(&whiteSurface);
+        if (!whiteSurface) {
+            rv = NS_ERROR_FAILURE;
+        } else {
+            rv = DrawNativeSurfaces(blackSurface, whiteSurface, nsSize(aW, aH), blackCtx);
+            whiteCtx->DestroyDrawingSurface(whiteSurface);
+        }
+    }
+    
+    blackCtx->DestroyDrawingSurface(blackSurface);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
+                                               nsIDrawingSurface* aWhiteSurface,
+                                               const nsIntSize& aSurfaceSize,
+                                               nsIRenderingContext* aBlackContext)
+{
+    if (!mImageFrame) {
+        NS_ERROR("Must have image frame already");
+        return NS_ERROR_FAILURE;
+    }
+    
+    // Acquire alpha values
+    nsAutoArrayPtr<PRUint8> alphas;
+    nsresult rv;
+    if (aWhiteSurface) {
+        // There is transparency. Use the blender to recover alphas.
+        nsCOMPtr<nsIBlender> blender = do_CreateInstance(kBlenderCID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsIDeviceContext* dc = nsnull;
+        aBlackContext->GetDeviceContext(dc);
+        rv = blender->Init(dc);
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        rv = blender->GetAlphas(nsRect(0, 0, aSurfaceSize.width, aSurfaceSize.height),
+                                aBlackSurface, aWhiteSurface, getter_Transfers(alphas));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // We use aBlackSurface to get the image color data
+    PRUint8* data;
+    PRInt32 rowLen, rowSpan;
+    rv = aBlackSurface->Lock(0, 0, aSurfaceSize.width, aSurfaceSize.height,
+                             (void**)&data, &rowSpan, &rowLen,
+                             NS_LOCK_SURFACE_READ_ONLY);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // Get info about native surface layout
+    PRUint32 bytesPerPix = rowLen/aSurfaceSize.width;
+    nsPixelFormat format;
+    aBlackSurface->GetPixelFormat(&format);
+
+    // Create a temporary surface to hold the full-size image in cairo
+    // image format.
+    nsAutoArrayPtr<PRUint8> tmpBuf(new PRUint8[aSurfaceSize.width*aSurfaceSize.height*4]);
+    if (tmpBuf) {
+        aBlackSurface->Unlock();
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    cairo_surface_t *tmpSurf =
+        cairo_image_surface_create_for_data((char*)tmpBuf.get(),
+                                            CAIRO_FORMAT_ARGB32, aSurfaceSize.width, aSurfaceSize.height,
+                                            aSurfaceSize.width*4);
+    if (!tmpSurf) {
+        aBlackSurface->Unlock();
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    // Convert the data
+    PRUint8* dest = tmpBuf;
+    PRInt32 index = 0;
+    for (PRInt32 i = 0; i < aSurfaceSize.height; ++i) {
+        PRUint8* src = data + i*rowSpan;
+        for (PRInt32 j = 0; j < aSurfaceSize.width; ++j) {
+            /* v is the pixel value */
+#ifdef IS_BIG_ENDIAN
+            PRUint32 v = (src[0] << 24) | (src[1] << 16) | (src[2] << 8) | src[3];
+            v >>= (32 - 8*bytesPerPix);
+#else
+            PRUint32 v = src[0] | (src[1] << 8) | (src[2] << 16) | (src[3] << 24);
+#endif
+            // Note that because aBlackSurface is the image rendered
+            // onto black, the channel values we get here have
+            // effectively been premultipled by the alpha value.
+            dest[0] = (PRUint8)(((v & format.mBlueMask) >> format.mBlueShift)
+                                << (8 - format.mBlueCount));
+            dest[1] = (PRUint8)(((v & format.mGreenMask) >> format.mGreenShift)
+                                << (8 - format.mGreenCount));
+            dest[2] = (PRUint8)(((v & format.mRedMask) >> format.mRedShift)
+                                << (8 - format.mRedCount));
+            dest[3] = alphas ? alphas[index++] : 0xFF;
+            src += bytesPerPix;
+            dest += 4;
+        }
+    }
+
+    cairo_show_surface(mCairo, tmpSurf, aSurfaceSize.width, aSurfaceSize.height);
+    
+    cairo_surface_destroy(tmpSurf);
+    aBlackSurface->Unlock();
+    return Redraw();
 }

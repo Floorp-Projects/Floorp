@@ -89,6 +89,11 @@ extern "C" NS_GFX_(PRBool) NS_HexToRGB(const nsString& aBuf, nscolor* aResult);
 extern "C" NS_GFX_(PRBool) NS_ASCIIHexToRGB(const nsCString& aBuf,
                                             nscolor* aResult);
 
+// Compose one NS_RGB color onto another. The result is what you get
+// if you draw aBG onto RGBA(0,0,0,0) and then aFG on top of that,
+// with operator OVER.
+extern "C" NS_GFX_(nscolor) NS_ComposeColors(nscolor aBG, nscolor aFG);
+
 // Translate a hex string to a color. Return true if it parses ok,
 // otherwise return false.
 // This version accepts 1 to 9 digits (missing digits are 0)

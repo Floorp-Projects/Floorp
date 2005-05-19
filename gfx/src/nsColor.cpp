@@ -319,6 +319,28 @@ extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
   return NS_RGBA(r, g, b, NS_GET_A(inColor));
 }
 
+extern "C" NS_GFX_(nscolor)
+NS_ComposeColors(nscolor aBG, nscolor aFG)
+{
+  PRIntn bgAlpha = NS_GET_A(aBG);
+  PRIntn r, g, b, a;
+
+  // First compute what we get drawing aBG onto RGBA(0,0,0,0)
+  MOZ_BLEND(r, 0, NS_GET_R(aBG), bgAlpha);
+  MOZ_BLEND(g, 0, NS_GET_G(aBG), bgAlpha);
+  MOZ_BLEND(b, 0, NS_GET_B(aBG), bgAlpha);
+  a = bgAlpha;
+
+  // Now draw aFG on top of that
+  PRIntn fgAlpha = NS_GET_A(aFG);
+  MOZ_BLEND(r, r, NS_GET_R(aFG), fgAlpha);
+  MOZ_BLEND(g, g, NS_GET_G(aFG), fgAlpha);
+  MOZ_BLEND(b, b, NS_GET_B(aFG), fgAlpha);
+  MOZ_BLEND(a, a, 255, fgAlpha);
+  
+  return NS_RGBA(r, g, b, a);
+}
+
 // Functions to convert from HSL color space to RGB color space.
 // This is the algorithm described in the CSS3 specification
 

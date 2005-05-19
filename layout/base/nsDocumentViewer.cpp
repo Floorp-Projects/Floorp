@@ -921,7 +921,7 @@ DocumentViewerImpl::DumpContentToPPM(const char* aFileName)
                 for (PRUint32 j = 0; j < width; ++j) {
                   /* v is the pixel value */
 #ifdef IS_BIG_ENDIAN
-                  PRUint32 v = (src[0] << 24) | (src[1] << 16) || (src[2] << 8) | src[3];
+                  PRUint32 v = (src[0] << 24) | (src[1] << 16) | (src[2] << 8) | src[3];
                   v >>= (32 - 8*bytesPerPix);
 #else
                   PRUint32 v = src[0] | (src[1] << 8) | (src[2] << 16) | (src[3] << 24);
