@@ -10,7 +10,7 @@
         chrome:author="Robert Accettura"
         chrome:authorURL="http://reporter.mozilla.org/"
         chrome:extension="true"
-        chrome:description="Broken Website Reporting Tool"
+        chrome:description="Broken Web Site Reporting Tool"
         chrome:name="reporter">
   </RDF:Description>
   <!-- overlay information -->
