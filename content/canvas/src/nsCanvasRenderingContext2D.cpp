@@ -1827,7 +1827,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
                                                nsIDrawingSurface* aWhiteSurface,
                                                const nsIntSize& aSurfaceSize,
