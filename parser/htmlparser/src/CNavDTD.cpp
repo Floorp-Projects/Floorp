@@ -3236,8 +3236,11 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
   nsresult   result = NS_OK; 
   PRBool     done   = PR_TRUE;
   PRBool     rs_tag = nsHTMLElement::IsResidualStyleTag(aTag);
+  // We need to open transient styles to encompass the <li> so that the bullets
+  // inherit the proper colors.
+  PRBool     li_tag = aTag == eHTMLTag_li;
 
-  if (rs_tag) {
+  if (rs_tag || li_tag) {
     /***********************************************************************
      *  Here's an interesting problem:
      *
