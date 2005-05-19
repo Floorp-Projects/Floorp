@@ -684,6 +684,12 @@ function doFind() {
 
     doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
+    // search additional search datasources
+    if (searchDatasources != "rdf:null") {
+      if (!searchDS) searchDS = loadCompositeDS(searchDatasources);
+      doFindOnDatasource(resultsDS, searchDS, RDF_ROOT, 0);
+    }
+
     if (emptySearch)
         assertSearchEmpty(resultsDS);
     // Add the datasource to the search tree
