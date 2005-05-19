@@ -58,7 +58,6 @@ calendarPrefObserver.prototype =
         {
             case "calendar.event.defaultstarthour":
             case "calendar.event.defaultendhour":
-            case "calendar.weeks.inview":
             case "calendar.previousweeks.inview":
             case "calendar.week.d0sundaysoff":
             case "calendar.week.d1mondaysoff":
@@ -70,7 +69,13 @@ calendarPrefObserver.prototype =
                 if (this.CalendarPreferences.calendarWindow.currentView != null)
                 this.CalendarPreferences.calendarWindow.currentView.refresh();
                 break;
-
+            case "calendar.weeks.inview":
+                //changeNumberOfWeeks expects an element with attribute 'value'
+                var newWeeks = document.createElement( "textbox" );
+                newWeeks.setAttribute("value", subject.getIntPref( prefName ) );
+                this.CalendarPreferences.calendarWindow.multiweekView
+                       .changeNumberOfWeeks(newWeeks);
+                break;
             case "calendar.week.start":
                 this.CalendarPreferences.calendarWindow.currentView.refresh();
                 this.CalendarPreferences.calendarWindow.miniMonth.refreshDisplay(true);
