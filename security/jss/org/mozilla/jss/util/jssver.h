@@ -44,6 +44,18 @@
  * The format of the version string should be
  *     "<major version>.<minor version>[.<patch level>] [<Beta>]"
  */
+
+/********************************************************************/
+/* The VERSION Strings should be updated in the following           */
+/* files everytime a new release of JSS is generated:               */
+/*                                                                  */
+/*     jss.jar:  /org/mozilla/jss/CryptoManager.java                */
+/*     jss.dll:  /org/mozilla/jss/CryptoManager.c                   */
+/*    jssver.h:  /org/mozilla/jss/util/jssver.h                     */
+/* manifest.mn:  /lib/manifest.mn                                   */
+/*                                                                  */
+/********************************************************************/
+
 #define JSS_VERSION  "4.1"
 #define JSS_VMAJOR   4
 #define JSS_VMINOR   1
