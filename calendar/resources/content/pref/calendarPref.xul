@@ -103,7 +103,7 @@
         var categories = document.getElementById("categories").value;
         gCategoryList = categories.split(",");
         updateCategoryList();
-        parent.PrefDialogService.registerCancelCallbackFunc(panelOnCancel);
+        parent.hPrefWindow.registerCancelCallbackFunc(panelOnCancel);
       }
 
       function updateCategoryList()
@@ -172,14 +172,8 @@
       {
         var list = document.getElementById("categorieslist");
         if (list.selectedItem) {
-          var categoryNameFix = fixName(categoryName);
-           try {
-              var currentColor = categoryPrefBranch.getCharPref(categoryNameFix);
-           }
-           catch (ex) {
-              var currentColor = null;
-           }
-           backupData(categoryNameFix, currentColor);
+           var categoryNameFix = fixName(gCategoryList[list.selectedIndex]);
+           backupData(categoryNameFix);
            try {
               categoryPrefBranch.clearUserPref(categoryNameFix);
            }
@@ -218,21 +212,14 @@
 
          var categoryNameFix = fixName(categoryName);
          if (list.selectedIndex == -1) {
-            backupData(categoryNameFix, "##NEW");
+            backupData(categoryNameFix);
             gCategoryList.push(categoryName);
-            gCategoryList.sort();
             if (categoryColor)
                categoryPrefBranch.setCharPref(categoryNameFix, categoryColor);
-         } else {
-            try {
-               var currentColor = categoryPrefBranch.getCharPref(categoryNameFix);
-            }
-            catch (ex) {
-               var currentColor = null;
-            }
-            backupData(categoryNameFix, currentColor);
+         }
+         else {
+            backupData(categoryNameFix);
             gCategoryList.splice(list.selectedIndex, 1, categoryName);
-            gCategoryList.sort();
             if(categoryColor)
                categoryPrefBranch.setCharPref(categoryNameFix, categoryColor);
             else {
@@ -262,23 +249,33 @@
         document.getElementById("deleteCButton").disabled=null;
       }
 
-      function backupData(categoryNameFix, categoryColor) {
+      function backupData(categoryNameFix) {
+         var currentColor;
+         try {
+            currentColor = categoryPrefBranch.getCharPref(categoryNameFix);
+         }
+         catch (ex) {
+            currentColor="##NEW";
+         }
          for(var i = 0; i<backupPrefList.length; i++) {
             if(categoryNameFix == backupPrefList[i].name)
                 return;
          }
          backupPrefList[backupPrefList.length] = {name : categoryNameFix,
-                color : categoryColor};
+                color : currentColor};
       }
 
       function panelOnCancel() {
          for(var i = 0; i<backupPrefList.length; i++) {
-            if(backupPrefList[i].name == "##NEW") {
-               categoryPrefBranch.clearUserPref(backupPrefList[i].name)
+            if(backupPrefList[i].color == "##NEW") {
+               try {
+                  categoryPrefBranch.clearUserPref(backupPrefList[i].name);
+               }
+               catch (ex) { }
             }
             else
                categoryPrefBranch.setCharPref(backupPrefList[i].name,
-                       backupPrefList[i].color)
+                       backupPrefList[i].color);
          }
       }
 
