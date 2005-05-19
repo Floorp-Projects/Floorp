@@ -146,7 +146,7 @@ calDateTime::Reset()
     return NS_OK;
 }
 
-CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRBool, Valid)
+CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRBool, IsValid)
 
 CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Year)
 CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Month)

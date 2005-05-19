@@ -164,7 +164,7 @@ calItemBase.prototype = {
 
     mStampTime: null,
     get stampTime() {
-        if (this.mStampTime.valid)
+        if (this.mStampTime.isValid)
             return this.mStampTime;
         return this.mLastModifiedTime;
     },

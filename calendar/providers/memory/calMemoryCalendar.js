@@ -379,10 +379,12 @@ calMemoryCalendar.prototype = {
             var tmpitem = item;
             if (wantEvents && (item instanceof calIEvent)) {
                 tmpitem = item.QueryInterface(calIEvent);
-                itemStartTime = item.startDate.valid ? item.startDate.nativeTime :
-                                                       START_OF_TIME;
-                itemEndTime = item.endDate.valid ? item.endDate.nativeTime :
-                                                   END_OF_TIME
+                itemStartTime = (item.startDate.isValid
+                                 ? item.startDate.nativeTime
+                                 : START_OF_TIME);
+                itemEndTime = (item.endDate.isValid
+                               ? item.endDate.nativeTime
+                               : END_OF_TIME);
             } else if (wantTodos && (item instanceof calITodo)) {
                 // if it's a todo, also filter based on completeness
                 if (item.percentComplete == 100 && !itemCompletedFilter)

@@ -608,8 +608,8 @@ calDavCalendar.prototype = {
 
         // if a time range has been specified, do the appropriate restriction.
         // XXX express "end of time" in caldav by leaving off "start", "end"
-        if (aRangeStart && aRangeStart.valid && 
-            aRangeEnd && aRangeEnd.valid) {
+        if (aRangeStart && aRangeStart.isValid && 
+            aRangeEnd && aRangeEnd.isValid) {
 
             var rangeXml = <time-range start={aRangeStart.icalString}
                                        end={aRangeEnd.icalString}/>;

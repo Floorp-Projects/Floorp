@@ -55,7 +55,7 @@ interface calIDateTime : nsISupports
   calIDateTime clone();
 
   // true if this thing is set/valid
-  readonly attribute boolean valid;
+  readonly attribute boolean isValid;
 
   // this thing's base PRTime value, either as UTC or as timezoneless-
   // local.  Setting this will explode the PRTime value to year/etc

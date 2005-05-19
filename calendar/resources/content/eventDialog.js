@@ -159,14 +159,14 @@ function loadCalendarEventDialog()
         setElementValue("all-day-event-checkbox", event.isAllDay, "checked");
         break;
     case "todo":
-        var hasEntry = event.entryDate.valid;
+        var hasEntry = event.entryDate.isValid;
         var entryDate = (hasEntry? event.entryDate.jsDate : null);
 
         setElementValue("start-datetime", entryDate);
         setElementValue("start-datetime", !hasEntry, "disabled");
         setElementValue("start-checkbox", hasEntry,  "checked");
 
-        var hasDue = event.dueDate.valid;
+        var hasDue = event.dueDate.isValid;
         var dueDate = (hasDue? event.dueDate.jsDate : null);
 
         setElementValue("due-datetime", dueDate);

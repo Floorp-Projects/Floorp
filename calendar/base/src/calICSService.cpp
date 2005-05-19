@@ -627,7 +627,7 @@ calIcalComponent::Set##Attrname(calIDateTime *dt)                       \
 {                                                                       \
     struct icaltimetype itt;                                            \
     PRBool isValid, wantTz = PR_FALSE;                                  \
-    if (!dt || NS_FAILED(dt->GetValid(&isValid)) || !isValid) {         \
+    if (!dt || NS_FAILED(dt->GetIsValid(&isValid)) || !isValid) {       \
         ClearAllProperties(ICAL_##ICALNAME##_PROPERTY);                 \
         return NS_OK;                                                   \
     }                                                                   \
