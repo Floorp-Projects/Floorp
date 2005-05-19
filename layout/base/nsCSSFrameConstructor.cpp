@@ -10387,10 +10387,12 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
     // this notification, so it's not that big a deal.
   }
 
-  // Menus and such can't deal with asynchronous changes of display when the
-  // menugenerated attribute changes, so make sure to process that immediately
+  // Menus and such can't deal with asynchronous changes of display
+  // when the menugenerated or menuactive attribute changes, so make
+  // sure to process that immediately
   if (aNameSpaceID == kNameSpaceID_None &&
-      aAttribute == nsXULAtoms::menugenerated) {
+      (aAttribute == nsXULAtoms::menugenerated ||
+       aAttribute == nsXULAtoms::menuactive)) {
     PRInt32 namespaceID;
     nsCOMPtr<nsIAtom> tag;
     mDocument->BindingManager()->ResolveTag(aContent, &namespaceID,
@@ -10398,7 +10400,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
 
     if (namespaceID == kNameSpaceID_XUL &&
         (tag == nsXULAtoms::menupopup || tag == nsXULAtoms::popup ||
-         tag == nsXULAtoms::tooltip)) {
+         tag == nsXULAtoms::tooltip || tag == nsXULAtoms::menu)) {
       nsIViewManager* viewManager = mPresShell->GetViewManager();
       viewManager->BeginUpdateViewBatch();
       ProcessOneRestyle(aContent, rshint, hint);
