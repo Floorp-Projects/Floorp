@@ -3014,8 +3014,8 @@ nsBrowserStatusHandler.prototype =
     this.urlBar                 = document.getElementById("urlbar");
 
     // Initialize the security button's state and tooltip text
-    const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
-    this.onSecurityChange(null, null, nsIWebProgressListener.STATE_IS_INSECURE);
+    var securityUI = getBrowser().securityUI;
+    this.onSecurityChange(null, null, securityUI.state);
   },
 
   destroy : function()
