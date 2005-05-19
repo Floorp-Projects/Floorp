@@ -48,10 +48,6 @@ svg {
      either 'svg' or 'svg:not(:root)'
   */
 
-  /* give svg elements block display style, so that they reflow
-     correctly when given a relative width/height: */
-  display: block;
-
   font-family: sans-serif;
 }
 
