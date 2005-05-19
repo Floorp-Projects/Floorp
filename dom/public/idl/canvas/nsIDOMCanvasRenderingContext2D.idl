@@ -38,6 +38,7 @@
 #include "nsISupports.idl"
 #include "nsIVariant.idl"
 
+interface nsIDOMWindow;
 interface nsIDOMHTMLImageElement;
 interface nsIDOMHTMLCanvasElement;
 
@@ -52,7 +53,7 @@ interface nsIDOMCanvasPattern : nsISupports
 {
 };
 
-[scriptable, uuid(785c1238-9f86-4da2-a7af-a960a2ce39a1)]
+[scriptable, uuid(15487cf4-292b-49aa-bc36-17d9099f77a7)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // back-reference to the canvas element for which
@@ -119,5 +120,39 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
   void drawImage(in HTMLImageElement image, in float dx, in float dy, in float sw, in float sh);
   void drawImage(in HTMLImageElement image, in float sx, in float sy, in float sw, in float sh, in float dx, in float dy, in float dw, in float dh);
 */
-};
 
+  /**
+   * Renders a region of a window into the canvas.  The contents of
+   * the window's viewport are rendered, ignoring viewport clipping
+   * and scrolling.
+   *
+   * @param x
+   * @param y
+   * @param w
+   * @param h specify the area of the window to render, in CSS
+   * pixels.
+   *
+   * @param backgroundColor the canvas is filled with this color
+   * before we render the window into it. This color may be
+   * transparent/translucent. It is given as a CSS color string
+   * (e.g., rgb() or rgba()).
+   *
+   * Of course, the rendering obeys the current scale, transform and
+   * globalAlpha values.
+   *
+   * Hints:
+   * -- If 'rgba(0,0,0,0)' is used for the background color, the
+   * drawing will be transparent wherever the window is transparent.
+   * -- Top-level browsed documents are usually not transparent
+   * because the user's background-color preference is applied,
+   * but IFRAMEs are transparent if the page doesn't set a background.
+   * -- If an opaque color is used for the background color, rendering
+   * will be faster because we won't have to compute the window's
+   * transparency.
+   *
+   * This API cannot currently be used by Web content. It is chrome
+   * only.
+   */
+  void drawWindow(in nsIDOMWindow window, in long x, in long y,
+                  in long w, in long h, in DOMString bgColor);
+};
