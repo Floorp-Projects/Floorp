@@ -75,13 +75,14 @@ if (!isset($_GET['plain'])) {
 		h6 { font-size: 90%; border: 0; }
 	}
 	</style>
+</head>
 <?php } ?>
 
 <h4>How it works</h4>
 <p>When you find a site, simply launch the reporter in the help menu, and fill out the short form.  Then submit it</p>
 
 <h4>Why should I participate</h4>
-<p>By helping alert us of broken websites, we can work with the webmaster to correct the problem, and make the website compatible.  You can help make sure Mozilla can access the entire internet</p>
+<p>By helping alert us of broken web sites, we can work with the webmaster to correct the problem, and make the website compatible.  You can help make sure Mozilla can access the entire internet</p>
 
 <h4>What about my privacy</h4>
 <p>Your privacy is important.  We do collect some information, but we only make anonymous bits of it available in to the general community.  We collect the following: information.</p>

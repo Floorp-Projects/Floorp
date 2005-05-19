@@ -1,5 +1,5 @@
 <!-- Entities for the Sample Extension Options Dialog go here -->
-<!ENTITY reportWizard.title                         "Report A Broken Website">
+<!ENTITY reportWizard.title                         "Report A Broken Web Site">
 
 <!ENTITY privacyNotice.label                        "Privacy Policy">
 <!ENTITY reportWizardPrivacy.description            "This tool allows you to tell the Evangelism Team about web sites that do not work properly in Firefox, or shut Firefox out. This is your way to help us ensure the best possible experience for Firefox users. Please take a moment to read the following to learn how we use the information we collect should you choose to participate.">
@@ -11,7 +11,7 @@
 
 <!ENTITY reportForm.description                     "Tell us a little about the problem you encountered:">
 <!ENTITY reportForm.url.title                       "Web site URL:">
-<!ENTITY reportForm.behind_login.title              "Website is password-protected"><!-- No ":" at the end -->
+<!ENTITY reportForm.behind_login.title              "Web site is password-protected"><!-- No ":" at the end -->
 <!ENTITY reportForm.problem_type.title              "Problem Type:">
 
 <!ENTITY reportForm.problem_type.chooseOne.title    "Choose One...">
