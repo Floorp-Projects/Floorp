@@ -94,7 +94,6 @@ const RDFContainer = Components.classes["@mozilla.org/rdf/container;1"]
 const CONSOLE_SERVICE = Components.classes['@mozilla.org/consoleservice;1']
     .getService(Components.interfaces.nsIConsoleService);
 
-var urnID = 0;
 var RE;
 
 var helpFileURI;
@@ -732,30 +731,17 @@ function doFindOnSeq(resultsDS, sourceDS, resource, level) {
     var targets = RDFContainer.GetElements();
     while (targets.hasMoreElements()) {
         var target = targets.getNext();
-        target = target.QueryInterface(Components.interfaces.nsIRDFResource);
+        var link = sourceDS.GetTarget(target, NC_LINK, true);
         var name = sourceDS.GetTarget(target, NC_NAME, true);
         name = name.QueryInterface(Components.interfaces.nsIRDFLiteral);
 
-        if (isMatch(name.Value)) {
+        if (link && isMatch(name.Value)) {
             // we have found a search entry - add it to the results datasource.
+            var urn = RDF.GetAnonymousResource();
+            resultsDS.Assert(urn, NC_NAME, name, true);
+            resultsDS.Assert(urn, NC_LINK, link, true);
+            resultsDS.Assert(RDF_ROOT, NC_CHILD, urn, true);
 
-            // Get URL of html for this entry.
-            var link = sourceDS.GetTarget(target, NC_LINK, true);
-            link = link.QueryInterface(Components.interfaces.nsIRDFLiteral);
-
-            urnID++;
-            resultsDS.Assert(RDF_ROOT,
-                RDF.GetResource("http://home.netscape.com/NC-rdf#child"),
-                RDF.GetResource("urn:" + urnID),
-                true);
-            resultsDS.Assert(RDF.GetResource("urn:" + urnID),
-                 RDF.GetResource("http://home.netscape.com/NC-rdf#name"),
-                 name,
-                 true);
-             resultsDS.Assert(RDF.GetResource("urn:" + urnID),
-                RDF.GetResource("http://home.netscape.com/NC-rdf#link"),
-                link,
-                true);
             emptySearch = false;
         }
         // process any nested rdf:seq elements.
