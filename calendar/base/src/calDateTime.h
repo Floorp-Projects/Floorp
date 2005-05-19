@@ -68,7 +68,7 @@ public:
 protected:
     PRBool mImmutable;
 
-    PRBool mValid;
+    PRBool mIsValid;
 
     PRTime mNativeTime;
 

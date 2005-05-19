@@ -58,7 +58,7 @@ NS_IMPL_ISUPPORTS2(calDateTime, calIDateTime, nsIXPCScriptable)
 
 calDateTime::calDateTime()
     : mImmutable(PR_FALSE),
-      mValid(PR_FALSE)
+      mIsValid(PR_FALSE)
 {
     Reset();
 }
@@ -67,13 +67,13 @@ calDateTime::calDateTime(struct icaltimetype *atimeptr)
     : mImmutable(PR_FALSE)
 {
     FromIcalTime(atimeptr);
-    mValid = PR_TRUE;
+    mIsValid = PR_TRUE;
 }
 
 calDateTime::calDateTime(const calDateTime& cdt)
 {
     // bitwise copy everything
-    mValid = cdt.mValid;
+    mIsValid = cdt.mIsValid;
     mNativeTime = cdt.mNativeTime;
     mYear = cdt.mYear;
     mMonth = cdt.mMonth;
@@ -202,7 +202,7 @@ calDateTime::Normalize()
 
     FromIcalTime(&icalt);
     
-    mValid = PR_TRUE;
+    mIsValid = PR_TRUE;
 
     return NS_OK;
 }
@@ -267,7 +267,7 @@ calDateTime::SetTimeInTimezone(PRTime aTime, const char *aTimezone)
     }
     FromIcalTime(&icalt);
 
-    mValid = PR_TRUE;
+    mIsValid = PR_TRUE;
 
     return NS_OK;
 }
@@ -585,7 +585,7 @@ calDateTime::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
             JSObject *dobj;
             if (!JSVAL_IS_OBJECT(*vp) ||
                 !js_DateIsValid(cx, (dobj = JSVAL_TO_OBJECT(*vp)))) {
-                mValid = PR_FALSE;
+                mIsValid = PR_FALSE;
             } else {
                 jsdouble utcMsec = js_DateGetMsecSinceEpoch(cx, dobj);
                 PRTime utcTime, thousands;
@@ -597,9 +597,9 @@ calDateTime::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                 if (NS_SUCCEEDED(rv)) {
                     mIsUtc = PR_TRUE;
                     mTimezone.Truncate();
-                    mValid = PR_TRUE;
+                    mIsValid = PR_TRUE;
                 } else {
-                    mValid = PR_FALSE;
+                    mIsValid = PR_FALSE;
                 }
             }
 
