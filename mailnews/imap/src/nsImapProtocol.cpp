@@ -1148,7 +1148,7 @@ nsImapProtocol::ImapThreadMainLoop()
       else
       {
         // see if we want to go into idle mode. Might want to check a pref here too.
-        if (m_useIdle && GetServerStateParser().GetCapabilityFlag() & kHasIdleCapability
+        if (m_useIdle && !m_urlInProgress && GetServerStateParser().GetCapabilityFlag() & kHasIdleCapability
           && GetServerStateParser().GetIMAPstate() 
                 == nsImapServerResponseParser::kFolderSelected)
         {
@@ -6890,7 +6890,11 @@ void nsImapProtocol::Unsubscribe(const char *mailboxName)
 void nsImapProtocol::Idle()
 {
   IncrementCommandTagNumber();
-    
+  
+  // this should prevent shutdown from happening while we're in the middle
+  // of going idle because TellThreadToDie also grabs this monitor.
+  nsAutoCMonitor mon(this);
+
   nsCAutoString command (GetServerCommandTag());
   command += " IDLE"CRLF;
   nsresult rv = SendData(command.get());  
