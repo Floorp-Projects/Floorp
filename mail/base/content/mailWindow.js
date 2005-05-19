@@ -513,6 +513,9 @@ function loadStartPage()
 
 function ShowAccountCentral()
 {
+  if (document.getElementById("displayDeck").selectedPanel == accountCentralBox)
+    ShowingAccountCentral(); // force us to reload account central because the user has switched accounts
+  else
     document.getElementById("displayDeck").selectedPanel = accountCentralBox;
 }
 
