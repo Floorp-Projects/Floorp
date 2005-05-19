@@ -524,8 +524,19 @@ EOF
             ])
         if test "$ac_cv_visibility_pragma" = "yes"; then
             AC_DEFINE(HAVE_VISIBILITY_PRAGMA)
-            VISIBILITY_FLAGS='-I$(dist_includedir)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
-            WRAP_SYSTEM_INCLUDES=1
+            # To work around a build problem on Linux x86-64 (Bugzilla bug
+            # 293438), we use the -fvisibility=hidden flag.  This flag is less
+            # optimal than #pragma GCC visibility push(hidden) because the flag
+            # assumes that symbols defined outside the current source file have
+            # the default visibility.  This has the advantage that we don't need
+            # to wrap system header files, but has the disadvantage that calls
+            # to hidden symbols defined in other source files cannot be
+            # optimized by the compiler.  The -fvisibility=hidden flag does
+            # hide and export symbols correctly.
+            #VISIBILITY_FLAGS='-I$(dist_includedir)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
+            #WRAP_SYSTEM_INCLUDES=1
+            VISIBILITY_FLAGS="-fvisibility=hidden"
+            WRAP_SYSTEM_INCLUDES=
         fi
     fi
 fi # GNU_CC
