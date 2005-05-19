@@ -2728,7 +2728,9 @@ nsMsgDBFolder::GetCanCompact(PRBool *aResult)
   PRBool isServer = PR_FALSE;
   nsresult rv = GetIsServer(&isServer);
   NS_ENSURE_SUCCESS(rv,rv);
-  *aResult = !isServer;   //servers cannot be compacted --> 4.x
+  // servers cannot be compacted --> 4.x
+  // virtual search folders cannot be compacted
+  *aResult = !isServer && !(mFlags & MSG_FOLDER_FLAG_VIRTUAL);
   return NS_OK;
 }
 
