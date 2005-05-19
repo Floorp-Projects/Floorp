@@ -126,8 +126,11 @@ protected:
     PRPackedBool        mIsDestroyed;
 
     // This is a flag that tracks if we need to resize a widget or
-    // window before we call |Show| on that widget.
+    // window when we show it.
     PRPackedBool        mNeedsResize;
+    // This is a flag that tracks if we need to move a widget or
+    // window when we show it.
+    PRPackedBool        mNeedsMove;
     // Should we send resize events on all resizes?
     PRPackedBool        mListenForResizes;
     // This flag tracks if we're hidden or shown.
