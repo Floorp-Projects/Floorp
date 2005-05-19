@@ -324,6 +324,13 @@ void CleanupPreviousVersionRegKeys(void)
           wsprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s %s", szCleanupProduct, szUAShort);
           DeleteWinRegKey(hkeyRoot, szKey, TRUE);
 
+          /* delete installed product that contains product name and its user agent not in parenthesis,
+           * for example:
+           *     Mozilla 0.8
+           */
+          wsprintf(szKey, "Software\\Mozilla\\%s %s", szCleanupProduct, szUAShort);
+          DeleteWinRegKey(hkeyRoot, szKey, TRUE);
+
           /* We are not looking to delete just the product name key, for example:
            *     Mozilla
            *
