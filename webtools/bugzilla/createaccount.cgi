@@ -30,6 +30,7 @@ use lib qw(.);
 
 require "CGI.pl";
 
+use Bugzilla::Constants;
 use Bugzilla::User;
 
 # Shut up misguided -w warnings about "used only once":
@@ -41,7 +42,7 @@ use vars qw(
 # Just in case someone already has an account, let them get the correct footer
 # on an error message.  The user is logged out just before the account is
 # actually created.
-Bugzilla->login();
+Bugzilla->login(LOGIN_OPTIONAL);
 
 # If we're using LDAP for login, then we can't create a new account here.
 unless (Bugzilla::Auth->can_edit('new')) {
