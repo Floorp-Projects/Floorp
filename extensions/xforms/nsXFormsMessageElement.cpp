@@ -384,6 +384,24 @@ nsXFormsMessageElement::HandleAction(nsIDOMEvent* aEvent,
   if (!mElement)
     return NS_OK;
 
+  if (mType != eType_Normal) {
+    nsCOMPtr<nsIDOMEventTarget> target;
+
+    if (mType == eType_Alert) {
+      // Alert should fire only if target is the parent element.
+      aEvent->GetTarget(getter_AddRefs(target));
+    } else {
+      // If <help> or <hint> is inside <action>, we don't want to fire them, 
+      // unless xforms-help/xforms-hint is dispatched to the <action>.
+      aEvent->GetCurrentTarget(getter_AddRefs(target));
+    }
+    nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(target));
+    nsCOMPtr<nsIDOMNode> parent;
+    mElement->GetParentNode(getter_AddRefs(parent));
+    if (!parent || targetNode != parent)
+      return NS_OK;
+  }
+
   nsAutoString level;
   
   switch (mType) {
@@ -392,9 +410,14 @@ nsXFormsMessageElement::HandleAction(nsIDOMEvent* aEvent,
       break;
     case eType_Hint:
       level.AssignLiteral("ephemeral");
+      // Using the innermost <hint>.
+      aEvent->StopPropagation();
       break;
     case eType_Help:
       level.AssignLiteral("modeless");
+      // <help> is equivalent to a
+      // <message level="modeless" ev:event="xforms-help" ev:propagate="stop>.
+      aEvent->StopPropagation();
       break;
     case eType_Alert:
       if (HandleInlineAlert(aEvent))
