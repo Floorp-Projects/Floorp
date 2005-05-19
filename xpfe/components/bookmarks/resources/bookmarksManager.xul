@@ -124,6 +124,7 @@
          handler in platformGlobalOverlay.xul maps command to "cmd_delete" which
          is NOT what we want! -->
     <key id="key_bm_delete" keycode="VK_DELETE" command="cmd_bm_delete"/>
+    <key keycode="VK_BACK" command="cmd_bm_delete"/>
 
     <key id="bm_key_find"
          key="&edit.find.keybinding;"
