@@ -23,3 +23,7 @@
 <!ENTITY minimizeWindowCmd.label    "Minimize">
 <!ENTITY minimizeWindowCmd.key      "M">
 <!ENTITY zoomWindowCmd.label        "Zoom">
+
+<!-- Help viewer -->
+<!ENTITY openHelpCmd.label          "&brandShortName; Help">
+<!ENTITY openHelpCmd.accesskey      "H">

@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
 
 <!DOCTYPE overlay [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
 <!ENTITY % helpMenuDTD SYSTEM "chrome://help/locale/helpMenuOverlay.dtd">
 %helpMenuDTD;
+<!ENTITY % platformCommunicatorDTD SYSTEM "chrome://communicator-platform/locale/platformCommunicatorOverlay.dtd">
+%platformCommunicatorDTD;
 ]>
 
 <overlay id="helpMenuID"
@@ -10,8 +14,8 @@
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <menupopup id="helpPopup">
-    <menuitem label="&helpContents.label;" 
-      accesskey="&helpContents.accesskey;" 
+    <menuitem label="&openHelpCmd.label;" 
+      accesskey="&openHelpCmd.accesskey;" 
       position="1" id="help"
       oncommand="openHelp();" />   
     <menuitem label="&helpForIEUsers.label;"
