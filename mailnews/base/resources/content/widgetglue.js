@@ -251,11 +251,12 @@ function MsgFolderProperties()
   var serverType = msgFolder.server.type;
   var folderTree = GetFolderTree();
 
-  // we'll probably want a new "server type" for virtual folders
-  // that will allow the user to edit the search criteria.
-  // But for now, we'll just disable other properties.
   if (msgFolder.flags & MSG_FOLDER_FLAG_VIRTUAL)
-    serverType = "none";
+  { 
+    // virtual folders get there own property dialog that contains all of the
+    // search information related to the virtual folder.
+    return MsgVirtualFolderProperties(true);
+  }
 
   var name = GetFolderNameFromUri(preselectedURI, folderTree);
 
