@@ -69,7 +69,8 @@ XPC_NW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
   // JSClass (JSExtendedClass.base) initialization
   { "XPCWrappedNative Class",
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
+    JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
+    JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
     JSCLASS_IS_EXTENDED,
     JS_PropertyStub, XPC_NW_DelProperty, XPC_NW_GetProperty,
     XPC_NW_SetProperty, JS_EnumerateStub, (JSResolveOp)XPC_NW_NewResolve,
