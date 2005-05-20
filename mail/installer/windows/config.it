@@ -319,13 +319,6 @@ Title=$ProductName$ Setup - Additional Options
 ;*** LOCALIZE ME BABY ***
 Message1=Select the following option if you wish to save downloaded Setup files on your own computer.  This allows you to re-run Setup without downloading the files again.  The Setup files will be saved to the path below.
 Save Installer=
-; The following settings control whether the Recapture Homepage checkbox is displayed.
-;    For this option to work the file nsResetPref.js must be installed into the 
-;    components directory
-Message0=The following checkbox gives users the option of reverting to
-the default home page
-Show Homepage Option=FALSE
-Recapture Homepage=FALSE
 
 [Dialog Advanced Settings]
 Show Dialog=TRUE
@@ -788,17 +781,6 @@ Wait=FALSE
 Target=[SETUP PATH]\$MainExeFile$
 Parameters=-installer
 WorkingDir=[SETUP PATH]
-;  Additional Options dialog.
-Condition=not RecaptureHPChecked
-
-[RunApp1]
-Timing=depend reboot
-Wait=FALSE
-Target=[SETUP PATH]\$MainExeFile$
-Parameters=-installer -resetPref browser.startup.homepage
-WorkingDir=[SETUP PATH]
-;  Additional Options dialog.
-Condition=RecaptureHPChecked
 
 [Windows Registry0]
 Root Key=HKEY_LOCAL_MACHINE
@@ -1245,8 +1227,6 @@ IDC Use FTP=Use &FTP for downloading files
 IDC Use HTTP=Use &HTTP for downloading files
 ;*** LOCALIZE ME BABY ***
 IDC Save Installer Files=&Save installer files locally
-;*** LOCALIZE ME BABY ***
-IDC Recapture Homepage=&Make Netscape.com my home page
 ;*** LOCALIZE ME BABY ***
 IDC Turbo Mode=&Use Quick Launch for faster startup times when possible
 ;*** LOCALIZE ME BABY ***

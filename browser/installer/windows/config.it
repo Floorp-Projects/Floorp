@@ -308,13 +308,6 @@ Show Dialog=TRUE
 Title={ADDL_OPTIONS_TITLE}
 Message1={ADDL_OPTIONS_MSG1}
 Save Installer=
-; The following settings control whether the Recapture Homepage checkbox is displayed.
-;    For this option to work the file nsResetPref.js must be installed into the 
-;    components directory
-Message0=The following checkbox gives users the option of reverting to
-the default home page
-Show Homepage Option=FALSE
-Recapture Homepage=FALSE
 
 [Dialog Advanced Settings]
 Show Dialog=TRUE
@@ -384,8 +377,6 @@ Message0={COMPLETE_MESSAGE0}
 Message1={COMPLETE_MESSAGE1}
 Launch App={COMPLETE_LAUNCH}
 Launch App Checked=TRUE
-Reset Homepage={COMPLETE_RESET_HOMEPAGE}
-Reset Homepage Checked=TRUE
 Registry Key=SOFTWARE\\$CompanyName$\\$ProductName$
 
 [Dialog Download]
@@ -760,17 +751,6 @@ Wait=FALSE
 Target=[SETUP PATH]\$MainExeFile$
 Parameters=-installer
 WorkingDir=[SETUP PATH]
-;  Additional Options dialog.
-Condition=not RecaptureHPChecked
-
-[RunApp1]
-Timing=depend reboot
-Wait=FALSE
-Target=[SETUP PATH]\$MainExeFile$
-Parameters=-installer -resetPref browser.startup.homepage
-WorkingDir=[SETUP PATH]
-;  Additional Options dialog.
-Condition=RecaptureHPChecked
 
 [Windows Registry0]
 Root Key=HKEY_LOCAL_MACHINE
@@ -1119,7 +1099,6 @@ UsageMsg Usage={MSG_USAGE}
 IDC Use FTP={MSG_USE_FTP}
 IDC Use HTTP={MSG_USE_HTTP}
 IDC Save Installer Files={MSG_SAVE_LOCALLY}
-IDC Recapture Homepage=&Make Netscape.com my home page
 IDC Turbo Mode=&Use Quick Launch for faster startup times when possible
 Message Download Paused={MSG_DL_PAUSED}
 Message NORMAL Restricted Access={MSG_NOT_ADMIN}

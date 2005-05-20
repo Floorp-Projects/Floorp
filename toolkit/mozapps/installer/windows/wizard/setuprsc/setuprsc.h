@@ -110,7 +110,6 @@
 #define DLG_INSTALL_SUCCESSFUL          1089
 #define IDC_START_APP                   1090
 #define IDC_MESSAGE_UPGRADE             1091
-#define IDC_RESET_HOMEPAGE              1091
 #define IDC_CHECK_SAFE_INSTALL          1092
 #define IDC_MESSAGE_INFO                1093
 #define IDC_APP_ICON                    1094

@@ -247,15 +247,6 @@
 
     <label>&restart.updated.label;</label>
 
-#ifdef MOZ_PHOENIX
-    <separator/>
-
-    <vbox align="start">
-      <checkbox id="resetHomepage" checked="true"
-                label="&resetHomepage.label;" accesskey="&resetHomepage.accesskey;"/>
-    </vbox>
-#endif
-
   </wizardpage>
   
 </wizard>

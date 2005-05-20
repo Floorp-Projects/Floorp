@@ -449,8 +449,6 @@ typedef struct dlgAdditionalOptions
   LPSTR szMessage0;
   LPSTR szMessage1;
   BOOL  bSaveInstaller;
-  BOOL  bRecaptureHomepage;
-  BOOL  bShowHomepageOption;
   DWORD dwUseProtocol;
   BOOL  bUseProtocolSettings;
   BOOL  bShowProtocols;
@@ -504,10 +502,8 @@ typedef struct dlgInstallSuccessful
   LPSTR szMessageHeader;
   LPSTR szMessage0;
   LPSTR szMessage1;
-  LPSTR szResetHomepage;
   LPSTR szRegistryKey;
   LPSTR szLaunchApp;
-  BOOL bResetHomepageChecked;
   BOOL bLaunchAppChecked;
 } diIS;
 

@@ -2104,7 +2104,6 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
   char szBuf[MAX_BUF];
   LPNMHDR notifyMessage;
   static BOOL launchAppChecked = TRUE;
-  static BOOL resetHomepageChecked = TRUE;
   DWORD result;
   HKEY theKey;
   
@@ -2117,7 +2116,6 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
     SetDlgItemText(hDlg, IDC_STATIC1, diInstallSuccessful.szMessage1);
     wsprintf(szBuf, diInstallSuccessful.szLaunchApp, sgProduct.szProductName);
     SetDlgItemText(hDlg, IDC_START_APP, szBuf);
-    SetDlgItemText(hDlg, IDC_RESET_HOMEPAGE, diInstallSuccessful.szResetHomepage);
 
     // The header on the welcome page uses another font.
     SendDlgItemMessage(hDlg, IDC_STATIC_TITLE, WM_SETFONT, (WPARAM)sgInstallGui.welcomeTitleFont, 0L);
@@ -2125,15 +2123,8 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
     SendDlgItemMessage(hDlg, IDC_STATIC0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     SendDlgItemMessage(hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     SendDlgItemMessage(hDlg, IDC_START_APP, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-    SendDlgItemMessage(hDlg, IDC_RESET_HOMEPAGE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-
-#ifndef MOZ_PHOENIX
-    // Hide the "Reset Homepage" item for non-Firefox installers. 
-    ShowWindow(GetDlgItem(hDlg, IDC_RESET_HOMEPAGE), SW_HIDE);
-#endif
 
     launchAppChecked = diInstallSuccessful.bLaunchAppChecked;
-    resetHomepageChecked = diInstallSuccessful.bResetHomepageChecked;
 
     // Subclass dialog to paint all static controls white.
     OldDialogWndProc = SubclassWindow(hDlg, (WNDPROC)NewDialogWndProc);
@@ -2149,8 +2140,6 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
       // Restore state from default or cached value. 
       CheckDlgButton(hDlg, IDC_START_APP, 
                      launchAppChecked ? BST_CHECKED : BST_UNCHECKED);
-      CheckDlgButton(hDlg, IDC_RESET_HOMEPAGE, 
-                     resetHomepageChecked ? BST_CHECKED : BST_UNCHECKED);
 
       // Don't show the back button here UNLESS the previous 
       // page was Windows Integration - and that only happens on a custom
@@ -2162,26 +2151,9 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
       // Store the checkbox state in case the user goes back to any post-install
       // pages that we might add.
       launchAppChecked = IsDlgButtonChecked(hDlg, IDC_START_APP) == BST_CHECKED;
-      resetHomepageChecked = IsDlgButtonChecked(hDlg, IDC_RESET_HOMEPAGE) == BST_CHECKED;
-      
       break;
 
     case PSN_WIZFINISH:
-#ifdef MOZ_PHOENIX
-      // Store the "Reset Homepage" preference in the Registry. 
-      resetHomepageChecked = IsDlgButtonChecked(hDlg, IDC_RESET_HOMEPAGE) == BST_CHECKED;
-      if (resetHomepageChecked) {
-        result = RegOpenKeyEx(HKEY_CURRENT_USER, diInstallSuccessful.szRegistryKey, 0, KEY_READ | KEY_WRITE, &theKey);
-        if (result == ERROR_FILE_NOT_FOUND)
-          result = RegCreateKey(HKEY_CURRENT_USER, diInstallSuccessful.szRegistryKey, &theKey);
-        if (result == ERROR_SUCCESS) {
-          RegSetValueEx(theKey, "Reset Home Page", 0, REG_DWORD, 
-                        (LPBYTE)&(resetHomepageChecked), 
-                        sizeof(DWORD));
-        }
-      }
-#endif
-
       // Store state from the "Run App Now" checkbox. ProcessFileOpsForAll
       // uses this variable to decide whether or not to launch the browser.
       gbIgnoreRunAppX = IsDlgButtonChecked(hDlg, IDC_START_APP) != BST_CHECKED;

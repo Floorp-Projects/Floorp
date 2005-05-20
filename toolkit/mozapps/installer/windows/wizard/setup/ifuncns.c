@@ -146,12 +146,6 @@ HRESULT MeetCondition(LPSTR szSection)
     if(strcmp(szBuf, sgProduct.szAppID) == 0)
       bResult = TRUE;
   }
-  // The condition "RecaptureHPChecked" is met if the RecaptureHome checkbox in "Additional Options" dialog.
-  //   has been checked by the user.
-  else if(strcmp(pszCondition, "RecaptureHPChecked") == 0)
-  {
-    bResult = diAdditionalOptions.bRecaptureHomepage;
-  }
 
   if(bNegateTheResult)
     return !bResult;
