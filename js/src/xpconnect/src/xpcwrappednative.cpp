@@ -310,6 +310,15 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         if(NS_FAILED(rv))
             return rv;
 
+        // Make sure to get the actual wrapped native for |parent| if
+        // it got wrapped in an XPCNativeWrapper.
+        if(parent != plannedParent &&
+           XPCNativeWrapper::IsNativeWrapper(ccx, parent))
+        {
+            parent = XPCNativeWrapper::GetWrappedNative(ccx, parent)->
+                GetFlatJSObject();
+        }
+
         if(parent != plannedParent)
         {
             XPCWrappedNativeScope* betterScope =
@@ -382,6 +391,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     NS_ADDREF(wrapper);
 
+    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(ccx, parent),
+                 "XPCNativeWrapper being used to parent XPCWrappedNative?");
+    
     if(!wrapper->Init(ccx, parent, &sciWrapper))
     {
         NS_RELEASE(wrapper);
