@@ -226,7 +226,7 @@ NS_IMETHODIMP
 calDateTime::ToString(nsACString& aResult)
 {
     aResult.Assign(nsPrintfCString(100,
-                                   "%04d/%02d/%02d %02d:%02d:%02d%s%s",
+                                   "%04d/%02d/%02d %02d:%02d:%02d %s",
                                    mYear, mMonth + 1, mDay,
                                    mHour, mMinute, mSecond,
                                    mTimezone.get()));
