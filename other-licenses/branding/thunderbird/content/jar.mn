@@ -1,5 +1,5 @@
 messenger.jar:
-  content/branding/contents.rdf                  (contents.rdf)
+% content branding %content/branding/ xpcnativewrappers=yes
   content/branding/about-credits.png             (about-credits.png)
   content/branding/about-thunderbird.png         (about-thunderbird.png)
   content/branding/thunderbird-wizard-badge.png  (thunderbird-wizard-badge.png)
