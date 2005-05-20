@@ -117,12 +117,11 @@ function loadDialog()
 
     if (event.hasAlarm) {
         var alarmLength = event.getProperty("alarmLength");
-        if (alarmLength) {
+        if (alarmLength != null) {
             setElementValue("alarm-length-field", alarmLength);
             setElementValue("alarm-length-units", event.getProperty("alarmUnits"));
             setElementValue("alarm-trigger-relation", event.getProperty("alarmRelated"));
         }
-        setElementValue("alarm-time", event.alarmTime);
         setElementValue("event-alarm", "custom");
     }
 }
