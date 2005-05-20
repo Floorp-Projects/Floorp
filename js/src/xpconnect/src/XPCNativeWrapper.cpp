@@ -122,7 +122,7 @@ RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
 {
   jsval deep;
   if (!::JS_GetReservedSlot(cx, obj, 0, &deep)) {
-    return ThrowException(NS_ERROR_UNEXPECTED, cx);
+    return JS_FALSE;
   }
 
   // Re-wrap non-primitive values if this is a deep wrapper, i.e.
@@ -133,7 +133,7 @@ RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
                                         nsnull, ::JS_GetGlobalObject(cx), 1,
                                         &v);
     if (!rvalWrapper) {
-      return ThrowException(NS_ERROR_OUT_OF_MEMORY, cx);
+      return JS_FALSE;
     }
 
     *rval = OBJECT_TO_JSVAL(rvalWrapper);
@@ -168,7 +168,7 @@ XPC_NW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   if (!::JS_CallFunctionValue(cx, wrappedNative->GetFlatJSObject(),
                               OBJECT_TO_JSVAL(methodToCallObj), argc, argv,
                               &v)) {
-    return ThrowException(NS_ERROR_UNEXPECTED, cx);
+    return JS_FALSE;
   }
 
   return RewrapIfDeepWrapper(cx, obj, v, rval);
@@ -288,7 +288,7 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   JSObject* funobj = ::JS_CloneFunctionObject(cx, JSVAL_TO_OBJECT(memberval),
                                               wrapper->GetFlatJSObject());
   if (!funobj) {
-    return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
+    return JS_FALSE;
   }
 
   jsval *argv = nsnull;
@@ -336,7 +336,7 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   jsval v;
   if (!::JS_CallFunctionValue(cx, wrapper->GetFlatJSObject(),
                               OBJECT_TO_JSVAL(funobj), argc, argv, &v)) {
-    return ThrowException(NS_ERROR_UNEXPECTED, cx);
+    return JS_FALSE;
   }
 
   if (aIsSet) {
@@ -465,7 +465,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
       ::JS_CloneFunctionObject(cx, JSVAL_TO_OBJECT(memberval),
                                wrapper->GetFlatJSObject());
     if (!funobj) {
-      return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
+      return JS_FALSE;
     }
 
 #ifdef DEBUG_XPCNativeWrapper
@@ -481,7 +481,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
       ::JS_NewFunction(cx, XPC_NW_FunctionWrapper, 0, 0, funobj,
                        "Components.lookupMethod function wrapper");
     if (!funWrapper) {
-      return ThrowException(NS_ERROR_OUT_OF_MEMORY, cx);
+      return JS_FALSE;
     }
 
     v = OBJECT_TO_JSVAL(::JS_GetFunctionObject(funWrapper));
@@ -495,6 +495,24 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
   *objp = obj;
 
+  return JS_TRUE;
+}
+
+static JSBool
+MirrorWrappedNativeParent(JSContext *cx, XPCWrappedNative *wrapper,
+                          JSObject **result)
+{
+  JSObject *wn_parent = ::JS_GetParent(cx, wrapper->GetFlatJSObject());
+  if (!wn_parent) {
+    *result = nsnull;
+  } else {
+    XPCWrappedNative *parent_wrapper =
+      XPCNativeWrapper::GetWrappedNative(cx, wn_parent);
+
+    *result = XPCNativeWrapper::GetNewOrUsed(cx, parent_wrapper);
+    if (!*result)
+      return JS_FALSE;
+  }
   return JS_TRUE;
 }
 
@@ -549,10 +567,11 @@ XPC_NW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   } else {
     wrapperObj = ::JS_NewObject(cx, XPCNativeWrapper::GetJSClass(), nsnull,
                                 nsnull);
-  }
 
-  if (!wrapperObj) {
-    return ThrowException(NS_ERROR_OUT_OF_MEMORY, cx);
+    if (!wrapperObj) {
+      // JS_NewObject already threw (or reported OOM).
+      return JS_FALSE;
+    }
   }
 
   PRBool hasStringArgs = PR_FALSE;
@@ -576,30 +595,41 @@ XPC_NW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     hasStringArgs = PR_TRUE;
   }
 
-  if (hasStringArgs) {
-    // Mark this wrapper as a non-deep wrapper.
-    if (!::JS_SetReservedSlot(cx, wrapperObj, 0, JSVAL_FALSE)) {
-      return ThrowException(NS_ERROR_UNEXPECTED, cx);
-    }
-  } else if (argc == 2 && !JSVAL_IS_PRIMITIVE(argv[1])) {
-    // An object was passed as the second argument to the
-    // constructor. In this case we check that the object we're
-    // wrapping is an instance of the assumed constructor that we
-    // got. If not, throw an exception.
-    JSBool hasInstance;
-    if (!::JS_HasInstance(cx, JSVAL_TO_OBJECT(argv[1]), native,
-                          &hasInstance)) {
-      return ThrowException(NS_ERROR_UNEXPECTED, cx);
-    }
+  jsval isDeep = !hasStringArgs;
+  if (!::JS_SetReservedSlot(cx, wrapperObj, 0, BOOLEAN_TO_JSVAL(isDeep))) {
+    return JS_FALSE;
+  }
 
-    if (!hasInstance) {
-      return ThrowException(NS_ERROR_INVALID_ARG, cx);
+  if (isDeep) {
+    // A deep XPCNativeWrapper has a __parent__ chain that mirrors its
+    // XPCWrappedNative's chain.
+    JSObject *parent;
+
+    if (!MirrorWrappedNativeParent(cx, wrappedNative, &parent))
+      return JS_FALSE;
+    if (!::JS_SetParent(cx, wrapperObj, parent))
+      return JS_FALSE;
+
+    if (argc == 2 && !JSVAL_IS_PRIMITIVE(argv[1])) {
+      // An object was passed as the second argument to the
+      // constructor. In this case we check that the object we're
+      // wrapping is an instance of the assumed constructor that we
+      // got. If not, throw an exception.
+      JSBool hasInstance;
+      if (!::JS_HasInstance(cx, JSVAL_TO_OBJECT(argv[1]), native,
+                            &hasInstance)) {
+        return ThrowException(NS_ERROR_UNEXPECTED, cx);
+      }
+
+      if (!hasInstance) {
+        return ThrowException(NS_ERROR_INVALID_ARG, cx);
+      }
     }
   }
 
   // Set the XPCWrappedNative as private data in the native wrapper.
   if (!::JS_SetPrivate(cx, wrapperObj, wrappedNative)) {
-    return ThrowException(NS_ERROR_UNEXPECTED, cx);
+    return JS_FALSE;
   }
 
   *rval = OBJECT_TO_JSVAL(wrapperObj);
@@ -665,7 +695,7 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       ::JS_ValueToString(cx,
                          OBJECT_TO_JSVAL(wrappedNative->GetFlatJSObject()));
     if (!str) {
-      return ThrowException(NS_ERROR_OUT_OF_MEMORY, cx);
+      return JS_FALSE;
     }
 
     resultString.Append(' ');
@@ -715,7 +745,12 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
     return obj;
   }
 
-  obj = ::JS_NewObject(cx, GetJSClass(), nsnull, nsnull);
+  JSObject *nw_parent;
+  if (!MirrorWrappedNativeParent(cx, wrapper, &nw_parent)) {
+    return nsnull;
+  }
+
+  obj = ::JS_NewObject(cx, GetJSClass(), nsnull, nw_parent);
 
   if (!obj || !::JS_SetPrivate(cx, obj, wrapper)) {
     return nsnull;
