@@ -45,8 +45,8 @@
   <xsl:output method="xml"/>
 
   <xsl:template match="/">
-    <link href="chrome://communicator/content/xml/XMLPrettyPrint.css" type="text/css" rel="stylesheet"/>
-    <link title="Monospace" href="chrome://communicator/content/xml/XMLMonoPrint.css" type="text/css" rel="alternate stylesheet"/>
+    <link href="chrome://global/content/xml/XMLPrettyPrint.css" type="text/css" rel="stylesheet"/>
+    <link title="Monospace" href="chrome://global/content/xml/XMLMonoPrint.css" type="text/css" rel="alternate stylesheet"/>
     <div id="header">
       <p>
         &xml.nostylesheet;

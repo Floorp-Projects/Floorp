@@ -124,7 +124,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
     // Load the XSLT
     nsCOMPtr<nsIURI> xslUri;
     rv = NS_NewURI(getter_AddRefs(xslUri),
-                   NS_LITERAL_CSTRING("chrome://communicator/content/xml/XMLPrettyPrint.xsl"));
+                   NS_LITERAL_CSTRING("chrome://global/content/xml/XMLPrettyPrint.xsl"));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIChannel> channel;
@@ -158,7 +158,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
     NS_ENSURE_TRUE(xblDoc, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIDOMDocument> dummy;
-    xblDoc->LoadBindingDocument(NS_LITERAL_STRING("chrome://communicator/content/xml/XMLPrettyPrint.xml"),
+    xblDoc->LoadBindingDocument(NS_LITERAL_STRING("chrome://global/content/xml/XMLPrettyPrint.xml"),
                                 getter_AddRefs(dummy));
 
     nsCOMPtr<nsIDOMElement> rootElem;
@@ -166,7 +166,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
     NS_ENSURE_TRUE(rootElem, NS_ERROR_UNEXPECTED);
 
     rv = xblDoc->AddBinding(rootElem,
-                            NS_LITERAL_STRING("chrome://communicator/content/xml/XMLPrettyPrint.xml#prettyprint"));
+                            NS_LITERAL_STRING("chrome://global/content/xml/XMLPrettyPrint.xml#prettyprint"));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Hand the result document to the binding
@@ -228,7 +228,7 @@ nsXMLPrettyPrinter::EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
         if (rootElem) {
             nsCOMPtr<nsIDOMDocumentXBL> xblDoc = do_QueryInterface(mDocument);
             xblDoc->RemoveBinding(rootElem,
-                                  NS_LITERAL_STRING("chrome://communicator/content/xml/XMLPrettyPrint.xml#prettyprint"));
+                                  NS_LITERAL_STRING("chrome://global/content/xml/XMLPrettyPrint.xml#prettyprint"));
         }
 
         mDocument = nsnull;
