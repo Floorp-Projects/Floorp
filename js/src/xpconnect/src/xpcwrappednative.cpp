@@ -42,6 +42,7 @@
 
 #include "xpcprivate.h"
 #include "nsCRT.h"
+#include "XPCNativeWrapper.h"
 
 /***************************************************************************/
 
@@ -499,7 +500,8 @@ XPCWrappedNative::XPCWrappedNative(nsISupports* aIdentity,
     : mMaybeProto(aProto),
       mSet(aProto->GetSet()),
       mFlatJSObject((JSObject*)JSVAL_ONE), // non-null to pass IsValid() test
-      mScriptableInfo(nsnull)
+      mScriptableInfo(nsnull),
+      mNativeWrapper(nsnull)
 {
     NS_ADDREF(mIdentity = aIdentity);
 
@@ -517,7 +519,8 @@ XPCWrappedNative::XPCWrappedNative(nsISupports* aIdentity,
     : mMaybeScope(TagScope(aScope)),
       mSet(aSet),
       mFlatJSObject((JSObject*)JSVAL_ONE), // non-null to pass IsValid() test
-      mScriptableInfo(nsnull)
+      mScriptableInfo(nsnull),
+      mNativeWrapper(nsnull)
 {
     NS_ADDREF(mIdentity = aIdentity);
 
@@ -723,7 +726,7 @@ XPCWrappedNative::Init(XPCCallContext& ccx, JSObject* parent,
 
     // create our flatJSObject
 
-    JSClass* jsclazz = si ? si->GetJSClass() : &XPC_WN_NoHelper_JSClass;
+    JSClass* jsclazz = si ? si->GetJSClass() : &XPC_WN_NoHelper_JSClass.base;
 
     NS_ASSERTION(jsclazz &&
                  jsclazz->name &&
@@ -755,6 +758,10 @@ XPCWrappedNative::Init(XPCCallContext& ccx, JSObject* parent,
         mFlatJSObject = nsnull;
         return JS_FALSE;
     }
+
+    // Propagate the system flag from parent to child.
+    if(JS_IsSystemObject(ccx, parent))
+        JS_FlagSystemObject(ccx, mFlatJSObject);
 
     // This reference will be released when mFlatJSObject is finalized.
     // Since this reference will push the refcount to 2 it will also root
@@ -1100,7 +1107,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
 }
 
 #define IS_WRAPPER_CLASS(clazz)                                               \
-          ((clazz) == &XPC_WN_NoHelper_JSClass ||                             \
+          ((clazz) == &XPC_WN_NoHelper_JSClass.base ||                        \
            (clazz)->getObjectOps == XPC_WN_GetObjectOpsNoCall ||              \
            (clazz)->getObjectOps == XPC_WN_GetObjectOpsWithCall)
 
@@ -1192,6 +1199,11 @@ return_tearoff:
             if(pTearOff)
                 *pTearOff = to;
             return wrapper;
+        }
+
+        if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
+        {
+            return XPCNativeWrapper::GetWrappedNative(cx, cur);
         }
     }
 
@@ -1520,6 +1532,11 @@ XPCWrappedNative::InitTearOffJSObject(XPCCallContext& ccx,
 
     if(!obj || !JS_SetPrivate(ccx, obj, to))
         return JS_FALSE;
+
+    // Propagate the system flag from parent to child.
+    if(JS_IsSystemObject(ccx, mFlatJSObject))
+        JS_FlagSystemObject(ccx, obj);
+
     to->SetJSObject(obj);
     return JS_TRUE;
 }
@@ -2101,7 +2118,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         if(isArray)
         {
             if(NS_FAILED(ifaceInfo->GetTypeForParam(vtblIndex, &paramInfo, 1,
-                                                &datum_type)))
+                                                    &datum_type)))
             {
                 Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, ccx);
                 goto done;

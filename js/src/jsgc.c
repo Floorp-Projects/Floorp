@@ -239,7 +239,7 @@ js_IsAboutToBeFinalized(JSContext *cx, void *thing)
 {
     uint8 flags = *js_GetGCThingFlags(thing);
 
-    return !(flags & (GCF_MARK | GCF_LOCKMASK | GCF_FINAL));
+    return !(flags & (GCF_MARK | GCF_LOCK | GCF_FINAL));
 }
 
 typedef void (*GCFinalizeOp)(JSContext *cx, JSGCThing *thing);
@@ -371,8 +371,6 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     fprintf(fp, "         things born locked: %lu\n", ULSTAT(lockborn));
     fprintf(fp, "           valid lock calls: %lu\n", ULSTAT(lock));
     fprintf(fp, "         valid unlock calls: %lu\n", ULSTAT(unlock));
-    fprintf(fp, "locks that hit stuck counts: %lu\n", ULSTAT(stuck));
-    fprintf(fp, "    unlocks on stuck counts: %lu\n", ULSTAT(unstuck));
     fprintf(fp, "       mark recursion depth: %lu\n", ULSTAT(depth));
     fprintf(fp, "     maximum mark recursion: %lu\n", ULSTAT(maxdepth));
     fprintf(fp, "     mark C recursion depth: %lu\n", ULSTAT(cdepth));
@@ -705,69 +703,89 @@ js_LockGCThing(JSContext *cx, void *thing)
     return ok;
 }
 
+/*
+ * Deep GC-things can't be locked just by setting the GCF_LOCK bit, because
+ * their descendants must be marked by the GC.  To find them during the mark
+ * phase, they are added to rt->gcLocksHash, which is created lazily.
+ *
+ * NB: we depend on the order of GC-thing type indexes here!
+ */
+#define GC_TYPE_IS_STRING(t)    ((t) == GCX_STRING ||                         \
+                                 (t) >= GCX_EXTERNAL_STRING)
+#define GC_TYPE_IS_XML(t)       ((unsigned)((t) - GCX_NAMESPACE) <=           \
+                                 (unsigned)(GCX_XML - GCX_NAMESPACE))
+#define GC_TYPE_IS_DEEP(t)      ((t) == GCX_OBJECT || GC_TYPE_IS_XML(t))
+
+#define IS_DEEP_STRING(t,o)     (GC_TYPE_IS_STRING(t) &&                      \
+                                 JSSTRING_IS_DEPENDENT((JSString *)(o)))
+
+#define GC_THING_IS_DEEP(t,o)   (GC_TYPE_IS_DEEP(t) || IS_DEEP_STRING(t, o))
+
 JSBool
 js_LockGCThingRT(JSRuntime *rt, void *thing)
 {
-    uint8 *flagp, flags, lockbits;
-    JSBool ok;
+    JSBool ok, deep;
+    uint8 *flagp, flags, lock, type;
     JSGCLockHashEntry *lhe;
 
+    ok = JS_TRUE;
     if (!thing)
-        return JS_TRUE;
+        return ok;
+
     flagp = js_GetGCThingFlags(thing);
-    flags = *flagp;
 
-    ok = JS_FALSE;
     JS_LOCK_GC(rt);
-    lockbits = (flags & GCF_LOCKMASK);
+    flags = *flagp;
+    lock = (flags & GCF_LOCK);
+    type = (flags & GCF_TYPEMASK);
+    deep = GC_THING_IS_DEEP(type, thing);
 
-    if (lockbits != GCF_LOCKMASK) {
-        if ((flags & GCF_TYPEMASK) == GCX_OBJECT) {
-            /* Objects may require "deep locking", i.e., rooting by value. */
-            if (lockbits == 0) {
+    /*
+     * Avoid adding a rt->gcLocksHash entry for shallow things until someone
+     * nests a lock -- then start such an entry with a count of 2, not 1.
+     */
+    if (lock || deep) {
+        if (lock == 0 || !deep) {
+            if (!rt->gcLocksHash) {
+                rt->gcLocksHash =
+                    JS_NewDHashTable(JS_DHashGetStubOps(), NULL,
+                                     sizeof(JSGCLockHashEntry),
+                                     GC_ROOTS_SIZE);
                 if (!rt->gcLocksHash) {
-                    rt->gcLocksHash =
-                        JS_NewDHashTable(JS_DHashGetStubOps(), NULL,
-                                         sizeof(JSGCLockHashEntry),
-                                         GC_ROOTS_SIZE);
-                    if (!rt->gcLocksHash)
-                        goto error;
-                } else {
-#ifdef DEBUG
-                    JSDHashEntryHdr *hdr =
-                        JS_DHashTableOperate(rt->gcLocksHash, thing,
-                                             JS_DHASH_LOOKUP);
-                    JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(hdr));
-#endif
+                    ok = JS_FALSE;
+                    goto done;
                 }
-                lhe = (JSGCLockHashEntry *)
-                    JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_ADD);
-                if (!lhe)
-                    goto error;
-                lhe->thing = thing;
-                lhe->count = 1;
-                *flagp = (uint8)(flags + GCF_LOCK);
             } else {
-                JS_ASSERT(lockbits == GCF_LOCK);
-                lhe = (JSGCLockHashEntry *)
+#ifdef DEBUG
+                JSDHashEntryHdr *hdr =
                     JS_DHashTableOperate(rt->gcLocksHash, thing,
                                          JS_DHASH_LOOKUP);
-                JS_ASSERT(JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr));
-                if (JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr)) {
-                    JS_ASSERT(lhe->count >= 1);
-                    lhe->count++;
-                }
+                JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(hdr));
+#endif
             }
+            lhe = (JSGCLockHashEntry *)
+                  JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_ADD);
+            if (!lhe) {
+                ok = JS_FALSE;
+                goto done;
+            }
+            lhe->thing = thing;
+            lhe->count = deep ? 1 : 2;
         } else {
-            *flagp = (uint8)(flags + GCF_LOCK);
+            lhe = (JSGCLockHashEntry *)
+                  JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_LOOKUP);
+            JS_ASSERT(JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr));
+            if (JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr)) {
+                JS_ASSERT(lhe->count >= 1);
+                lhe->count++;
+            }
         }
-    } else {
-        METER(rt->gcStats.stuck++);
     }
 
+    *flagp = (uint8)(flags | GCF_LOCK);
     METER(rt->gcStats.lock++);
     ok = JS_TRUE;
-error:
+done:
     JS_UNLOCK_GC(rt);
     return ok;
 }
@@ -775,41 +793,35 @@ error:
 JSBool
 js_UnlockGCThingRT(JSRuntime *rt, void *thing)
 {
-    uint8 *flagp, flags, lockbits;
+    uint8 *flagp, flags;
     JSGCLockHashEntry *lhe;
 
     if (!thing)
         return JS_TRUE;
+
     flagp = js_GetGCThingFlags(thing);
+    JS_LOCK_GC(rt);
     flags = *flagp;
 
-    JS_LOCK_GC(rt);
-    lockbits = (flags & GCF_LOCKMASK);
-
-    if (lockbits != GCF_LOCKMASK) {
-        if ((flags & GCF_TYPEMASK) == GCX_OBJECT) {
-            /* Defend against a call on an unlocked object. */
-            if (lockbits != 0) {
-                JS_ASSERT(lockbits == GCF_LOCK);
-                lhe = (JSGCLockHashEntry *)
-                    JS_DHashTableOperate(rt->gcLocksHash, thing,
-                                         JS_DHASH_LOOKUP);
-                JS_ASSERT(JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr));
-                if (JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr) &&
-                    --lhe->count == 0) {
-                    (void) JS_DHashTableOperate(rt->gcLocksHash, thing,
-                                                JS_DHASH_REMOVE);
-                    *flagp = (uint8)(flags & ~GCF_LOCKMASK);
-                }
-            }
+    if (flags & GCF_LOCK) {
+        if (!rt->gcLocksHash ||
+            (lhe = (JSGCLockHashEntry *)
+                   JS_DHashTableOperate(rt->gcLocksHash, thing,
+                                        JS_DHASH_LOOKUP),
+             JS_DHASH_ENTRY_IS_FREE(&lhe->hdr))) {
+            /* Shallow GC-thing with an implicit lock count of 1. */
+            JS_ASSERT(!GC_THING_IS_DEEP(flags & GCF_TYPEMASK, thing));
         } else {
-            *flagp = (uint8)(flags - GCF_LOCK);
+            /* Basis or nested unlock of a deep thing, or nested of shallow. */
+            if (--lhe->count != 0)
+                goto out;
+            JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_REMOVE);
         }
-    } else {
-        METER(rt->gcStats.unstuck++);
+        *flagp = (uint8)(flags & ~GCF_LOCK);
     }
 
     rt->gcPoke = JS_TRUE;
+out:
     METER(rt->gcStats.unlock++);
     JS_UNLOCK_GC(rt);
     return JS_TRUE;
@@ -1682,8 +1694,7 @@ restart:
         JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_marker, cx);
     js_MarkAtomState(&rt->atomState, gcflags, gc_mark_atom_key_thing, cx);
     js_MarkWatchPoints(rt);
-    if (gcflags & GC_KEEP_ATOMS)
-        js_MarkScriptFilenames(rt);
+    js_MarkScriptFilenames(rt, gcflags);
 
     iter = NULL;
     while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL) {
@@ -1808,7 +1819,7 @@ restart:
                 flags = *flagp;
                 if (flags & GCF_MARK) {
                     *flagp &= ~GCF_MARK;
-                } else if (!(flags & (GCF_LOCKMASK | GCF_FINAL))) {
+                } else if (!(flags & (GCF_LOCK | GCF_FINAL))) {
                     /* Call the finalizer with GCF_FINAL ORed into flags. */
                     type = flags & GCF_TYPEMASK;
                     finalizer = gc_finalizers[type];

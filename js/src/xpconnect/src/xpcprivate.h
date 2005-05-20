@@ -139,6 +139,10 @@
 #define DEBUG_xpc_hacker
 #endif
 
+#if defined(DEBUG_brendan) || defined(DEBUG_bzbarsky) || defined(DEBUG_jst)
+#define DEBUG_XPCNativeWrapper 1
+#endif
+
 #ifdef DEBUG
 #define XPC_DETECT_LEADING_UPPERCASE_ACCESS_ERRORS
 #define XPC_CHECK_WRAPPER_THREADSAFETY
@@ -552,6 +556,7 @@ public:
         IDX_OBJECT                  ,
         IDX_PROTOTYPE               ,
         IDX_CREATE_INSTANCE         ,
+        IDX_ITEM                    ,
 #ifdef XPC_IDISPATCH_SUPPORT
         IDX_ACTIVEX_OBJECT          ,
         IDX_COM_OBJECT              ,
@@ -948,7 +953,7 @@ private:
 // These are the various JSClasses and callbacks whose use that required
 // visibility from more than one .cpp file.
 
-extern JSClass XPC_WN_NoHelper_JSClass;
+extern JSExtendedClass XPC_WN_NoHelper_JSClass;
 extern JSClass XPC_WN_NoMods_Proto_JSClass;
 extern JSClass XPC_WN_ModsAllowed_Proto_JSClass;
 extern JSClass XPC_WN_Tearoff_JSClass;
@@ -1441,20 +1446,21 @@ class XPCNativeScriptableShared
 {
 public:
     const XPCNativeScriptableFlags& GetFlags() const {return mFlags;}
-    JSClass*                        GetJSClass() {return &mJSClass;}
+    JSClass*                        GetJSClass() {return &mJSClass.base;}
 
     XPCNativeScriptableShared(JSUint32 aFlags = 0, char* aName = nsnull)
         : mFlags(aFlags)
-        {memset(&mJSClass, 0, sizeof(JSClass));
-         mJSClass.name = aName;  // take ownership
+        {memset(&mJSClass, 0, sizeof(mJSClass));
+         mJSClass.base.name = aName;  // take ownership
          MOZ_COUNT_CTOR(XPCNativeScriptableShared);}
 
     ~XPCNativeScriptableShared()
-        {if(mJSClass.name)nsMemory::Free((void*)mJSClass.name);
+        {if(mJSClass.base.name)nsMemory::Free((void*)mJSClass.base.name);
          MOZ_COUNT_DTOR(XPCNativeScriptableShared);}
 
     char* TransferNameOwnership()
-        {char* name=(char*)mJSClass.name; mJSClass.name = nsnull; return name;}
+        {char* name=(char*)mJSClass.base.name; mJSClass.base.name = nsnull;
+        return name;}
 
     void PopulateJSClass();
 
@@ -1464,7 +1470,7 @@ public:
 
 private:
     XPCNativeScriptableFlags mFlags;
-    JSClass                  mJSClass;
+    JSExtendedClass          mJSClass;
 };
 
 /***************************************************************************/
@@ -1899,16 +1905,24 @@ public:
                                          XPCNativeInterface* aInterface,
                                          JSBool needJSObject = JS_FALSE,
                                          nsresult* pError = nsnull);
-    void
-    Mark() const
-        {mSet->Mark();
-         if(mScriptableInfo) mScriptableInfo->Mark();
-         if(HasProto()) mMaybeProto->Mark();}
+    void Mark() const
+    {
+        mSet->Mark();
+        if(mScriptableInfo) mScriptableInfo->Mark();
+        if(HasProto()) mMaybeProto->Mark();
+    }
 
     // Yes, we *do* need to mark the mScriptableInfo in both cases.
     inline void MarkBeforeJSFinalize(JSContext* cx)
-        {if(mScriptableInfo) mScriptableInfo->Mark();
-         if(HasProto()) mMaybeProto->MarkBeforeJSFinalize(cx);}
+    {
+        if(mScriptableInfo) mScriptableInfo->Mark();
+        if(HasProto()) mMaybeProto->MarkBeforeJSFinalize(cx);
+        if(mNativeWrapper)
+        {
+            JS_MarkGCThing(cx, mNativeWrapper, 
+                           "XPCWrappedNative::mNativeWrapper", nsnull);
+        }
+    }
 
 #ifdef DEBUG
     void ASSERT_SetsNotMarked() const
@@ -1931,6 +1945,9 @@ public:
                         XPCNativeScriptableCreateInfo* sciProto);
 
     JSBool HasExternalReference() const {return mRefCnt > 1;}
+
+    JSObject* GetNativeWrapper()              { return mNativeWrapper; }
+    void      SetNativeWrapper(JSObject *obj) { mNativeWrapper = obj; }
 
     // Make ctor and dtor protected (rather than private) to placate nsCOMPtr.
 protected:
@@ -1977,6 +1994,7 @@ private:
     JSObject*                    mFlatJSObject;
     XPCNativeScriptableInfo*     mScriptableInfo;
     XPCWrappedNativeTearOffChunk mFirstChunk;
+    JSObject*                    mNativeWrapper;
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
 public:

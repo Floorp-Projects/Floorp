@@ -56,7 +56,8 @@ const char* XPCJSRuntime::mStrings[] = {
     "wrappedJSObject",      // IDX_WRAPPED_JSOBJECT
     "Object",               // IDX_OBJECT
     "prototype",            // IDX_PROTOTYPE
-    "createInstance"        // IDX_CREATE_INSTANCE
+    "createInstance",       // IDX_CREATE_INSTANCE
+    "item"                  // IDX_ITEM
 #ifdef XPC_IDISPATCH_SUPPORT
     , "GeckoActiveXObject"  // IDX_ACTIVEX_OBJECT
     , "COMObject"           // IDX_COMOBJECT

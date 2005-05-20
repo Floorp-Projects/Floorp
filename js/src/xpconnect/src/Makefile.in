@@ -93,6 +93,7 @@ CPPSRCS		= \
 		xpcwrappednativejsops.cpp \
 		xpcwrappednativeproto.cpp \
 		xpcwrappednativescope.cpp \
+		XPCNativeWrapper.cpp \
 		$(NULL)
 ifdef XPC_IDISPATCH_SUPPORT
 CPPSRCS +=	XPCDispObject.cpp	\

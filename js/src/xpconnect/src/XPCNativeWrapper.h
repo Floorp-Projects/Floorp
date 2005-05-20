@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,15 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is XPConnect Native Wrapper.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Christopher A. Aillon <christopher@aillon.com>.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Christopher A. Aillon <christopher@aillon.com>
+ *   Johnny Stenback <jst@mozilla.org> (original author)
+ *   Brendan Eich <brendan@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,6 +37,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * Moved to C++ implementation in XPConnect.  See bug 281988.
- */
+#include "nscore.h"
+#include "jsapi.h"
+
+class XPCNativeWrapper
+{
+public:
+  static PRBool AttachNewConstructorObject(XPCCallContext &ccx,
+                                           JSObject *aGlobalObject);
+
+  static JSObject *GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper);
+
+  static PRBool IsNativeWrapperClass(JSClass *clazz)
+  {
+    return clazz == &sXPC_NW_JSClass.base;
+  }
+
+  static PRBool IsNativeWrapper(JSContext *cx, JSObject *obj)
+  {
+    return JS_GET_CLASS(cx, obj) == &sXPC_NW_JSClass.base;
+  }
+
+  static XPCWrappedNative *GetWrappedNative(JSContext *cx, JSObject *obj)
+  {
+    return (XPCWrappedNative *)::JS_GetPrivate(cx, obj);
+  }
+
+  static JSClass *GetJSClass()
+  {
+    return &sXPC_NW_JSClass.base;
+  }
+
+protected:
+  static JSExtendedClass sXPC_NW_JSClass;
+};
+

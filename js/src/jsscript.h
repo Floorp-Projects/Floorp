@@ -102,20 +102,44 @@ extern JS_FRIEND_DATA(JSClass) js_ScriptClass;
 extern JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj);
 
+/*
+ * On first new context in rt, initialize script runtime state, specifically
+ * the script filename table and its lock.
+ */
 extern JSBool
-js_InitRuntimeScriptState(JSContext *cx);
+js_InitRuntimeScriptState(JSRuntime *rt);
 
+/*
+ * On last context destroy for rt, if script filenames are all GC'd, free the
+ * script filename table and its lock.
+ */
 extern void
-js_FinishRuntimeScriptState(JSContext *cx);
+js_FinishRuntimeScriptState(JSRuntime *rt);
+
+/*
+ * On JS_DestroyRuntime(rt), forcibly free script filename prefixes and any
+ * script filename table entries that have not been GC'd, the latter using
+ * js_FinishRuntimeScriptState.
+ *
+ * This allows script filename prefixes to outlive any context in rt.
+ */
+extern void
+js_FreeRuntimeScriptState(JSRuntime *rt);
 
 extern const char *
 js_SaveScriptFilename(JSContext *cx, const char *filename);
+
+extern const char *
+js_SaveScriptFilenameRT(JSRuntime *rt, const char *filename, uint32 flags);
+
+extern uint32
+js_GetScriptFilenameFlags(const char *filename);
 
 extern void
 js_MarkScriptFilename(const char *filename);
 
 extern void
-js_MarkScriptFilenames(JSRuntime *rt);
+js_MarkScriptFilenames(JSRuntime *rt, uintN gcflags);
 
 extern void
 js_SweepScriptFilenames(JSRuntime *rt);

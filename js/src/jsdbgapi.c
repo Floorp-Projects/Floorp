@@ -1276,3 +1276,42 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
 
     return nbytes;
 }
+
+JS_PUBLIC_API(uint32)
+JS_GetTopScriptFilenameFlags(JSContext *cx, JSStackFrame *fp)
+{
+    if (!fp)
+        fp = cx->fp;
+    while (fp) {
+        if (fp->script) {
+            if (!fp->script->filename)
+                return JSFILENAME_NULL;
+            return js_GetScriptFilenameFlags(fp->script->filename);
+        }
+        fp = fp->down;
+    }
+    return 0;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_FlagScriptFilenamePrefix(JSRuntime *rt, const char *prefix, uint32 flags)
+{
+    if (!js_SaveScriptFilenameRT(rt, prefix, flags))
+        return JS_FALSE;
+    return JS_TRUE;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_IsSystemObject(JSContext *cx, JSObject *obj)
+{
+    return *js_GetGCThingFlags(obj) & GCF_SYSTEM;
+}
+
+JS_PUBLIC_API(void)
+JS_FlagSystemObject(JSContext *cx, JSObject *obj)
+{
+    uint8 *flagp;
+    
+    flagp = js_GetGCThingFlags(obj);
+    *flagp |= GCF_SYSTEM;
+}

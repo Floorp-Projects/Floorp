@@ -152,15 +152,22 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
      * as well as "first".
      */
     if (first) {
+        /*
+         * Both atomState and the scriptFilenameTable may be left over from a
+         * previous episode of non-zero contexts alive in rt, so don't re-init
+         * either table if it's not necessary.  Just repopulate atomState with
+         * well-known internal atoms, and with the reserved identifiers added
+         * by the scanner.
+         */
         ok = (rt->atomState.liveAtoms == 0)
              ? js_InitAtomState(cx, &rt->atomState)
              : js_InitPinnedAtoms(cx, &rt->atomState);
         if (ok)
             ok = js_InitScanner(cx);
+        if (ok && !rt->scriptFilenameTable)
+            ok = js_InitRuntimeScriptState(rt);
         if (ok)
             ok = js_InitRuntimeNumberState(cx);
-        if (ok)
-            ok = js_InitRuntimeScriptState(cx);
         if (ok)
             ok = js_InitRuntimeStringState(cx);
         if (!ok) {
@@ -265,7 +272,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
 
         /* Also free the script filename table if it exists and is empty. */
         if (rt->scriptFilenameTable && rt->scriptFilenameTable->nentries == 0)
-            js_FinishRuntimeScriptState(cx);
+            js_FinishRuntimeScriptState(rt);
 
         /* Take the runtime down, now that it has no contexts or atoms. */
         JS_LOCK_GC(rt);
