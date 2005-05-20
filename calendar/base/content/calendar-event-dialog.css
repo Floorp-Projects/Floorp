@@ -1,0 +1,4 @@
+label.label {
+  text-align: right;
+}
+xul:checkbox > xul:label {display:none}

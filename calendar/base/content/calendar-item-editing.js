@@ -117,6 +117,7 @@ function openEventDialog(calendarEvent, calendar, mode, callback)
     // wait cursor will revert to auto in eventDialog.js loadCalendarEventDialog
     window.setCursor("wait");
     // open the dialog modally
-    openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,titlebar,modal", args);
+    //openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,titlebar,modal", args);
+    openDialog("chrome://calendar/content/calendar-event-dialog.xul", "caEditEvent", "chrome,titlebar,modal", args);
 }
 

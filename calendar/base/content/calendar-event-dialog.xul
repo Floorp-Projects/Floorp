@@ -1,0 +1,177 @@
+<!-- -*- Mode: xml; indent-tabs-mode: nil; -*- -->
+<?xml version="1.0"?>
+
+<!--
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is calendar views.
+   -
+   - The Initial Developer of the Original Code is Oracle Corporation
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Stuart Parmenter <stuart.parmenter@oracle.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK *****
+-->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/calendar-event-dialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" ?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<dialog
+  id="calendar-editwindow"
+  title="Edit Event"
+  buttons="accept,cancel"
+  ondialogaccept="return onAccept();"
+  ondialogcancel="return onCancel();"
+  onload="onLoad()"
+  persist="screenX screenY"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <!-- Javascript includes -->
+  <script type="application/x-javascript" src="chrome://calendar/content/calendar-event-dialog.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+
+
+  <vbox id="dialog-box" flex="1">
+
+    <grid flex="1">
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+
+      <rows>
+        <rows equalsize="always">
+          <row align="center">
+            <label value="title" class="label"/>
+            <textbox id="event-title" size="10"/>
+          </row>
+          <row align="center">
+            <label value="location" class="label"/>
+            <textbox id="event-location" size="10"/>
+          </row>
+
+          <row align="center">
+            <label value="url" class="label"/>
+            <textbox id="event-url" size="10"/>
+          </row>
+
+          <row align="center">
+            <label value="all-day" class="label"/>
+            <hbox>
+              <checkbox id="event-all-day" oncommand="updateAllDay();"/>
+              <spacer flex="1"/>
+            </hbox>
+          </row>
+
+          <row align="center">
+            <label value="from" class="label"/>
+            <datetimepicker id="event-starttime" value=""/>
+          </row>
+
+          <row align="center">
+            <label value="to" class="label"/>
+            <datetimepicker id="event-endtime" value=""/>
+          </row>
+
+          <row align="center">
+            <label value="repeat" class="label"/>
+            <hbox align="center">
+              <label value="none"/>
+              <spacer flex="1"/>
+              <button disabled="true" label="set..."/>
+            </hbox>
+          </row>
+          <row align="center">
+            <label value="attendees" class="label"/>
+            <hbox align="center">
+              <label value="none"/>
+              <spacer flex="1"/>
+              <button disabled="true" label="set..."/>
+            </hbox>
+          </row>
+
+          <row align="center">
+            <label value="calendar" class="label"/>
+            <hbox>
+              <menulist id="event-calendar"/>
+              <spacer flex="1"/>
+            </hbox>
+          </row>
+
+          <row align="center">
+            <label value="alarm" class="label"/>
+            <hbox>
+              <menulist id="event-alarm" oncommand="updateAlarm()">
+                <menupopup>
+                  <menuitem label="none" value="none"/>
+                  <menuseparator/>
+                  <menuitem label="15 minutes before" length="15" unit="minutes" relation="START"/>
+                  <menuitem label="30 minutes before" length="30" unit="minutes" relation="START"/>
+                  <menuseparator/>
+                  <menuitem id="alarm-custom-menuitem" label="Custom..." value="custom"/>
+                </menupopup>
+              </menulist>
+              <spacer flex="1"/>
+            </hbox>
+          </row>
+
+          <row align="center">
+            <spacer/>
+            <hbox align="center" id="alarm-details">
+              <textbox id="alarm-length-field" size="1"/>
+              <menulist id="alarm-length-units">
+                <menupopup>
+                  <menuitem label="minutes" value="minutes"/>
+                  <menuitem label="hours" value="hours"/>
+                  <menuitem label="days" value="days"/>
+                </menupopup>
+              </menulist>
+              <menulist id="alarm-trigger-relation">
+                <menupopup>
+                  <menuitem label="before" value="START"/>
+                  <menuitem label="after" value="END"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+          </row>
+
+        </rows>
+
+        <textbox id="event-description" multiline="true" rows="2"/>
+
+      </rows>
+    </grid>
+
+  </vbox>
+
+</dialog>
+
