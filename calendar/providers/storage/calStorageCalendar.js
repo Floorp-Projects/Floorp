@@ -992,6 +992,8 @@ calStorageCalendar.prototype = {
         if (row.alarm_time) {
             item.alarmTime = newDateTime(row.alarm_time, row.alarm_time_tz);
             item.hasAlarm = true;
+        } else {
+            item.hasAlarm = false;
         }
 
         if (flags)
