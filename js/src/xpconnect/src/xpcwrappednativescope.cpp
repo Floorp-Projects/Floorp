@@ -41,6 +41,7 @@
 /* Class used to manage the wrapped native objects within a JS scope. */
 
 #include "xpcprivate.h"
+#include "XPCNativeWrapper.h"
 
 /***************************************************************************/
 
@@ -501,6 +502,15 @@ GetScopeOfObject(JSContext* cx, JSObject* obj)
 {
     nsISupports* supports;
     JSClass* clazz = JS_GET_CLASS(cx, obj);
+
+    if (XPCNativeWrapper::IsNativeWrapperClass(clazz)) {
+        XPCWrappedNative* native = XPCNativeWrapper::GetWrappedNative(cx, obj);
+        if (native) {
+            return native->GetScope();
+        }
+        // Fall through, but we'll end up returning null anyway, since
+        // our private is not IS_NSISUPPORTS.
+    }
 
     if(!clazz ||
        !(clazz->flags & JSCLASS_HAS_PRIVATE) ||
