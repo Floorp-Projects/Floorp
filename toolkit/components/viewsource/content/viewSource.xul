@@ -86,8 +86,6 @@
   <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
 #else
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
-  <!-- XPCNativeWrapper.js is needed by xpfe's contentAreaUtils.js (introduced by bug 220215) -->
-  <script type="application/x-javascript" src="chrome://global/content/XPCNativeWrapper.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
 #endif
 #ifdef USE_FIND_TOOLBAR

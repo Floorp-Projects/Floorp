@@ -1947,7 +1947,8 @@ function checkForDirectoryListing()
 {
   if ( "HTTPIndex" in content &&
        content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
-    content.defaultCharacterset = getMarkupDocumentViewer().defaultCharacterSet;
+    content.wrappedJSObject.defaultCharacterset =
+      getMarkupDocumentViewer().defaultCharacterSet;
   }
 }
 
@@ -3442,8 +3443,7 @@ nsBrowserAccess.prototype =
                             .getInterface(nsCI.nsIDOMWindow);
         try {
           if (aOpener) {
-            location = Components.lookupMethod(aOpener,"location")
-                                 .call(aOpener);
+            location = aOpener.location;
             referrer = 
                     Components.classes["@mozilla.org/network/io-service;1"]
                               .getService(Components.interfaces.nsIIOService)
@@ -3459,10 +3459,8 @@ nsBrowserAccess.prototype =
       default : // OPEN_CURRENTWINDOW or an illegal value
         try {
           if (aOpener) {
-            newWindow = Components.lookupMethod(aOpener,"top")
-                                  .call(aOpener);
-            location = Components.lookupMethod(aOpener,"location")
-                                 .call(aOpener);
+            newWindow = aOpener.top;
+            location = aOpener.location;
             referrer = 
                     Components.classes["@mozilla.org/network/io-service;1"]
                               .getService(Components.interfaces.nsIIOService)
@@ -4155,8 +4153,7 @@ nsContextMenu.prototype = {
             if ( !link.protocol ) {
                 // We must resort to testing the URL string :-(.
                 var protocol;
-                var wrapper = new XPCNativeWrapper(link, "href",
-                                                   "getAttributeNS()");
+                var wrapper = link;
                 if (wrapper.href) {
                     protocol = wrapper.href.substr(0, linktype.length);
                 } else {
@@ -4217,7 +4214,7 @@ nsContextMenu.prototype = {
         // when there is one
         var reference = null;
         if (context == "selection")
-          reference = focusedWindow.__proto__.getSelection.call(focusedWindow);
+          reference = focusedWindow.getSelection();
         else if (context == "mathml")
           reference = this.target;
         else
@@ -4309,8 +4306,7 @@ nsContextMenu.prototype = {
         // Let's try to unescape it using a character set
         // in case the address is not ASCII.
         try {
-          var characterSet = Components.lookupMethod(this.target.ownerDocument, "characterSet")
-                                       .call(this.target.ownerDocument);
+          var characterSet = this.target.ownerDocument.characterSet;
           const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
                                          .getService(Components.interfaces.nsITextToSubURI);
           addresses = textToSubURI.unEscapeURIForUI(characterSet, addresses);
@@ -4409,8 +4405,7 @@ nsContextMenu.prototype = {
     },
     // Generate fully-qualified URL for clicked-on link.
     linkURL : function () {
-        var wrapper = new XPCNativeWrapper(this.link, "href", "baseURI",
-                                           "getAttributeNS()");
+        var wrapper = this.link;
         if (wrapper.href) {
           return wrapper.href;
         }
@@ -4430,8 +4425,7 @@ nsContextMenu.prototype = {
           if (!text || !text.match(/\S/)) {
             text = this.link.getAttribute("alt");
             if (!text || !text.match(/\S/)) {
-              var wrapper = new XPCNativeWrapper(this.link, "href", "baseURI",
-                                                 "getAttributeNS()");
+              var wrapper = this.link;
 
               if (wrapper.href) {
                 text = wrapper.href;
@@ -4471,7 +4465,7 @@ nsContextMenu.prototype = {
     
     searchSelected : function( charlen ) {
         var focusedWindow = document.commandDispatcher.focusedWindow;
-        var searchStr = focusedWindow.__proto__.getSelection.call(focusedWindow);
+        var searchStr = focusedWindow.getSelection();
         searchStr = searchStr.toString();
         // searching for more than 150 chars makes no sense
         if (!charlen)
@@ -4635,7 +4629,7 @@ function asyncOpenWebPanel(event)
    }
    var wrapper = null;
    if (linkNode) {
-     wrapper = new XPCNativeWrapper(linkNode, "href", "getAttribute()", "ownerDocument");
+     wrapper = linkNode;
      if (event.button == 0 && !event.ctrlKey && !event.shiftKey &&
          !event.altKey && !event.metaKey) {
        // A Web panel's links should target the main content area.  Do this
@@ -4644,8 +4638,8 @@ function asyncOpenWebPanel(event)
        // The only reason we field _main and _content here is for the markLinkVisited
        // hack.
        target = wrapper.getAttribute("target");
-       var docWrapper = new XPCNativeWrapper(wrapper.ownerDocument, "location");
-       var locWrapper = new XPCNativeWrapper(docWrapper.location, "href");
+       var docWrapper = wrapper.ownerDocument;
+       var locWrapper = docWrapper.location;
        if (fieldNormalClicks && 
            (!target || target == "_content" || target  == "_main")) 
          // IE uses _main, SeaMonkey uses _content, we support both
@@ -4716,7 +4710,7 @@ function asyncOpenWebPanel(event)
      linkNode = target;
      while (linkNode) {
        if (linkNode.nodeType == Node.ELEMENT_NODE) {
-         wrapper = new XPCNativeWrapper(linkNode, "getAttributeNS()");
+         wrapper = linkNode;
 
          href = wrapper.getAttributeNS("http://www.w3.org/1999/xlink", "href");
          break;
@@ -4724,7 +4718,7 @@ function asyncOpenWebPanel(event)
        linkNode = linkNode.parentNode;
      }
      if (href) {
-       var baseURI = new XPCNativeWrapper(linkNode, "baseURI").baseURI;
+       var baseURI = linkNode.baseURI;
        href = makeURLAbsolute(baseURI, href);
        handleLinkClick(event, href, null);
        return true;
@@ -5377,8 +5371,8 @@ function WindowIsClosing()
 var MailIntegration = {
   sendLinkForContent: function ()
   {
-    this.sendMessage(Components.lookupMethod(window.content, 'location').call(window.content).href,
-                     Components.lookupMethod(window.content.document, 'title').call(window.content.document));  
+    this.sendMessage(window.content.location.href,
+                     window.content.document.title);  
   },
 
   sendMessage: function (aBody, aSubject) 
@@ -5537,7 +5531,7 @@ function livemarkOnLinkAdded(event)
   // mechanism for reading properties of the underlying XPCOM object
   // (ignoring potential getters/setters added by malicious content)
   var safeGetProperty = function(obj, propname) {
-    return Components.lookupMethod(obj, propname).call(obj);
+    return obj[propname];
   }
 
   var erel = event.target.rel;
@@ -5579,7 +5573,7 @@ function livemarkOnLinkAdded(event)
       livemarkLinks = browserForLink.livemarkLinks;
     }
 
-    var wrapper = new XPCNativeWrapper(event.target, "href", "type", "title");
+    var wrapper = event.target;
 
     livemarkLinks.push({ href: wrapper.href,
                          type: wrapper.type,
