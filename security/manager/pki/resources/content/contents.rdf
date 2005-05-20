@@ -54,18 +54,12 @@
 
   <!-- Declare overlay points used in this package -->
   <RDF:Seq about="urn:mozilla:overlays">
-    <!-- Firefox -->
-    <RDF:li resource="chrome://browser/content/pageInfo.xul"/>
     <!-- Mozilla -->
     <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
     <RDF:li resource="chrome://navigator/content/pageInfo.xul"/>
   </RDF:Seq>
 
   <!-- Define the local overlay file(s) for each overlay point -->
-  <!-- Firefox -->
-  <RDF:Seq about="chrome://browser/content/pageInfo.xul">
-    <RDF:li>chrome://pippki/content/PageInfoOverlay.xul</RDF:li>
-  </RDF:Seq>
   <!-- Mozilla -->
   <RDF:Seq about="chrome://communicator/content/pref/preftree.xul">
     <RDF:li>chrome://pippki/content/PrefOverlay.xul</RDF:li>

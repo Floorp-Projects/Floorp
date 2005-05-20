@@ -1,7 +1,9 @@
 toolkit.jar:
+#ifndef MOZ_XUL_APP
 *       content/global/contents.rdf                 (resources/content/contents.rdf)
 *       content/global-platform/contents.rdf        (resources/content/contents-platform.rdf)
 *       content/global-region/contents.rdf          (resources/content/contents-region.rdf)
+#endif
         content/global/hiddenWindow.xul             (resources/content/hiddenWindow.xul) 
         content/global/globalOverlay.xul            (resources/content/globalOverlay.xul) 
         content/global/globalOverlay.js             (resources/content/globalOverlay.js) 

@@ -54,6 +54,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifndef MOZ_XUL_APP
 libs realchrome::
 	@$(REGCHROME) content global toolkit.jar
 	@$(REGCHROME) locale en-US/global en-US.jar
@@ -61,3 +62,4 @@ libs realchrome::
 install::
 	@$(REGCHROME_INSTALL) content global toolkit.jar
 	@$(REGCHROME_INSTALL) locale en-US/global en-US.jar
+endif

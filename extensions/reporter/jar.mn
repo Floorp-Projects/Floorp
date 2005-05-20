@@ -1,5 +1,13 @@
 reporter.jar:
+#ifdef MOZ_XUL_APP
+% content reporter %content/reporter/ xpcnativewrappers=yes
+#ifdef MOZ_PHOENIX
+% overlay chrome://browser/content/browser.xul         chrome://reporter/content/reporterOverlay.xul
+% overlay chrome://global/content/customizeToolbar.xul chrome://reporter/content/reporterOverlay.xul
+#endif
+#else
  content/reporter/contents.rdf                           (resources/content/reporter/contents.rdf)
+#endif
  content/reporter/reportWizard.xul                       (resources/content/reporter/reportWizard.xul)
  content/reporter/reportWizard.js                        (resources/content/reporter/reportWizard.js)
  content/reporter/reporterOverlay.xul                    (resources/content/reporter/reporterOverlay.xul)
@@ -15,4 +23,3 @@ reporter.jar:
  skin/classic/reporter/reporter-icon-large.png           (resources/skin/classic/reporter/reporter-icon-large.png)
  skin/classic/reporter/reporter-icon-small.png           (resources/skin/classic/reporter/reporter-icon-small.png)
  skin/classic/reporter/splash.png                        (resources/skin/classic/reporter/splash.png)
- 

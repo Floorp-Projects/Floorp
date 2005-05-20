@@ -58,6 +58,7 @@
 #include "nsReadableUtils.h"
 #include "nsStaticAtom.h"
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 #include "nsWidgetsCID.h"
 #include "nsXPIDLString.h"
 #include "nsXULAppAPI.h"
@@ -95,6 +96,7 @@
 #include "nsIStyleSheet.h"
 #include "nsISupportsArray.h"
 #include "nsIWindowMediator.h"
+#include "nsIXPConnect.h"
 #include "nsIXULRuntime.h"
 
 // keep all the RDF stuff together, in case we can remove it in the far future
@@ -177,7 +179,7 @@ LogMessageWithContext(nsIURI* aURL, PRUint32 aLineNumber, PRUint32 flags,
   rv = error->Init(NS_ConvertUTF8toUTF16(formatted).get(),
                    NS_ConvertUTF8toUTF16(spec).get(),
                    nsnull,
-                   aLineNumber, 0, 0, "chrome registration");
+                   aLineNumber, 0, flags, "chrome registration");
   PR_smprintf_free(formatted);
 
   if (NS_FAILED(rv))
@@ -1787,6 +1789,56 @@ mend:
 static const char kWhitespace[] = "\t ";
 static const char kNewlines[]   = "\r\n";
 
+/**
+ * Check for a modifier flag of the following forms:
+ *   "flag"   (same as "true")
+ *   "flag=yes|true|1"
+ *   "flag="no|false|0"
+ * @param aFlag The flag to compare.
+ * @param aData The tokenized data to check; this is lowercased
+ *              before being passed in.
+ * @param aResult If the flag is found, the value is assigned here.
+ * @return Whether the flag was handled.
+ */
+static PRBool
+CheckFlag(const nsSubstring& aFlag, const nsSubstring& aData, PRBool& aResult)
+{
+  if (!StringBeginsWith(aData, aFlag))
+    return PR_FALSE;
+
+  if (aFlag.Length() == aData.Length()) {
+    // the data is simply "flag", which is the same as "flag=yes"
+    aResult = PR_TRUE;
+    return PR_TRUE;
+  }
+
+  if (aData.CharAt(aFlag.Length()) != '=') {
+    // the data is "flag2=", which is not anything we care about
+    return PR_FALSE;
+  }
+
+  if (aData.Length() == aFlag.Length() + 1) {
+    aResult = PR_FALSE;
+    return PR_TRUE;
+  }
+
+  switch (aData.CharAt(aFlag.Length() + 1)) {
+  case '1':
+  case 't': //true
+  case 'y': //yes
+    aResult = PR_TRUE;
+    return PR_TRUE;
+
+  case '0':
+  case 'f': //false
+  case 'n': //no
+    aResult = PR_FALSE;
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
 nsresult
 nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
                                         nsILocalFile* aManifest,
@@ -1794,12 +1846,17 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 {
   nsresult rv;
 
+  NS_NAMED_LITERAL_STRING(kToken, "platform");
+  NS_NAMED_LITERAL_STRING(kXPCNativeWrappers, "xpcnativewrappers");
+
   nsCOMPtr<nsIIOService> io (do_GetIOService());
   if (!io) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIURI> manifestURI;
   rv = io->NewFileURI(aManifest, getter_AddRefs(manifestURI));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIXPConnect> xpc (do_GetService("@mozilla.org/js/xpc/XPConnect;1"));
 
   char *token;
   char *newline = buf;
@@ -1829,10 +1886,25 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
                               "Warning: Malformed content registration.");
         continue;
       }
+
+      // NOTE: We check for platform and xpcnativewrappers modifiers on
+      // content packages, but they are *applied* to content|skin|locale.
+
       PRBool platform = PR_FALSE;
+      PRBool xpcNativeWrappers = PR_FALSE;
+
       while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace))) {
-        if (!strcmp(token, "platform"))
-          platform = PR_TRUE;
+        NS_ConvertASCIItoUTF16 wtoken(token);
+        ToLowerCase(wtoken);
+        
+        if (CheckFlag(kToken, wtoken, platform))
+          continue;
+        if (CheckFlag(kXPCNativeWrappers, wtoken, xpcNativeWrappers))
+          continue;
+
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Unrecognized chrome registration modifier '%s'.",
+                              token);
       }
 
       nsCOMPtr<nsIURI> resolved;
@@ -1852,6 +1924,17 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
       if (platform)
         entry->flags |= PackageEntry::PLATFORM_PACKAGE;
+      if (xpcNativeWrappers) {
+        entry->flags |= PackageEntry::XPCNATIVEWRAPPERS;
+        if (xpc) {
+          nsCAutoString urlp("chrome://");
+          urlp.Append(package);
+          urlp.Append('/');
+
+          rv = xpc->FlagSystemFilenamePrefix(urlp.get());
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+      }
     }
     else if (!strcmp(token, "locale")) {
       if (aSkinOnly) {

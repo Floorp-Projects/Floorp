@@ -87,12 +87,7 @@ const FILE_INSTALLED_EXTENSIONS_PROCESSED = "installed-extensions-processed.txt"
 #expand const TARGET_OS               = __OSARCH__;
 const FILE_LOGFILE                    = "extensionmanager.log";
 
-#ifdef MOZ_THUNDERBIRD
-// XXXben this must die!
-const FILE_DEFAULT_THEME_JAR          = "qute.jar";
-#else
 const FILE_DEFAULT_THEME_JAR          = "classic.jar";
-#endif
 
 const KEY_PROFILEDIR                  = "ProfD";
 const KEY_PROFILEDS                   = "ProfDS";

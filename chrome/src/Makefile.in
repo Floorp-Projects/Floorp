@@ -72,6 +72,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  jar \
 		  xulapp \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -81,6 +82,7 @@ CPPSRCS		= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
+                $(MOZ_UNICHARUTIL_LIBS) \
                 $(MOZ_COMPONENT_LIBS) \
                 $(NULL)
 

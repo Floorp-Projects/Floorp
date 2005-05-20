@@ -195,9 +195,11 @@ bin\components\update.xpt
 
 ; [Browser Chrome Files]
 bin\chrome\browser.jar
+bin\chrome\browser.manifest
 bin\chrome\classic.jar
 bin\extensions\{972ce4c6-7e08-4474-a285-3208198ce6fd}\install.rdf
 bin\chrome\comm.jar
+bin\chrome\comm.manifest
 bin\chrome\toolkit.jar
 bin\chrome\toolkit.manifest
 
@@ -273,6 +275,7 @@ bin\softokn3.dll
 bin\ssl3.dll
 bin\chrome\pipnss.jar
 bin\chrome\pippki.jar
+bin\chrome\pippki.manifest
 
 ; [Additional Developer Tools]
 [adt]
@@ -304,3 +307,4 @@ bin\components\talkback.hlp
 
 [reporter]
 bin\chrome\reporter.jar
+bin\chrome\reporter.manifest

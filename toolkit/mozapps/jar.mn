@@ -1,4 +1,5 @@
 toolkit.jar:
+% content mozapps %content/mozapps/ xpcnativewrappers=yes
 * content/mozapps/downloads/helperApps.js                       (downloads/content/helperApps.js)
 * content/mozapps/downloads/unknownContentType.xul              (downloads/content/unknownContentType.xul)
 * content/mozapps/downloads/overrideHandler.js                  (downloads/content/overrideHandler.js)
@@ -36,7 +37,6 @@ toolkit.jar:
 * content/mozapps/update/update.css                             (update/content/update.css)
 * content/mozapps/update/errors.xul                             (update/content/errors.xul)
 * content/mozapps/shared/richview.xml                           (shared/content/richview.xml)
-  content/mozapps/contents.rdf                                  (contents-content.rdf)
   content/mozapps/plugins/pluginInstallerWizard.xul             (plugins/content/pluginInstallerWizard.xul)
   content/mozapps/plugins/pluginInstallerWizard.js              (plugins/content/pluginInstallerWizard.js)
   content/mozapps/plugins/pluginInstallerWizard.css             (plugins/content/pluginInstallerWizard.css)
