@@ -62,7 +62,6 @@
   persist="screenX screenY width height sizemode">
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/XPCNativeWrapper.js"/>
   <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/pageInfo.js"/>
 
