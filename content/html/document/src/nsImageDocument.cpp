@@ -292,19 +292,21 @@ nsImageDocument::StartDocumentLoad(const char*         aCommand,
 void
 nsImageDocument::Destroy()
 {
-  // Remove our event listener from the image content.
-  if (mImageResizingEnabled) {
-    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mImageContent);
-    target->RemoveEventListener(NS_LITERAL_STRING("click"), this, PR_FALSE);
-  }
+  if (mImageContent) {
+    // Remove our event listener from the image content.
+    if (mImageResizingEnabled) {
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mImageContent);
+      target->RemoveEventListener(NS_LITERAL_STRING("click"), this, PR_FALSE);
+    }
 
-  // Break reference cycle with mImageContent, if we have one
-  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
-  if (imageLoader) {
-    imageLoader->RemoveObserver(this);
-  }
+    // Break reference cycle with mImageContent, if we have one
+    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
+    if (imageLoader) {
+      imageLoader->RemoveObserver(this);
+    }
 
-  mImageContent = nsnull;
+    mImageContent = nsnull;
+  }
 
   nsMediaDocument::Destroy();
 }
