@@ -27,6 +27,9 @@ if(verifyDiskSpace(fProgram, srDest))
 
   setPackageFolder(fProgram);
  
+  registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "@AB_CD@.jar"), "locale/@AB_CD@/editor/");
+  registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "@AB_CD@.jar"), "locale/@AB_CD@/wallet/");
+
   // check return value
   if (err == SUCCESS)
   {

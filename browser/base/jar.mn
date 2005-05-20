@@ -1,6 +1,12 @@
 browser.jar:
-*       content/browser/contents.rdf                  (content/contents.rdf)
-        content/browser-region/contents.rdf           (content/contents-region.rdf)
+%  content browser %content/browser/ xpcnativewrappers=yes
+%  overlay chrome://browser/content/pageInfo.xul chrome://pippki/content/PageInfoOverlay.xul
+#ifdef XP_MACOSX
+%  overlay chrome://mozapps/content/downloads/downloads.xul chrome://browser/content/downloadManagerOverlay.xul
+%  overlay chrome://mozapps/content/extensions/extensions.xul?type=extensions chrome://browser/content/extensionsManagerOverlay.xul
+%  overlay chrome://mozapps/content/extensions/extensions.xul?type=themes chrome://browser/content/extensionsManagerOverlay.xul
+%  overlay chrome://global/content/console.xul chrome://browser/content/jsConsoleOverlay.xul
+#endif
 *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
 *       content/browser/aboutDialog.js                (content/aboutDialog.js)
 *       content/browser/aboutDialog.css               (content/aboutDialog.css)
@@ -36,7 +42,7 @@ browser.jar:
 *       content/browser/jsConsoleOverlay.xul          (content/jsConsoleOverlay.xul)
 #endif
 #ifndef MOZ_USE_OFFICIAL_BRANDING
-  content/branding/contents.rdf                  (branding/contents.rdf)
+% content branding %content/branding/ xpcnativewrappers=yes
   content/branding/about.png                     (branding/about.png)
   content/branding/aboutCredits.png              (branding/aboutCredits.png)
   content/branding/aboutFooter.png               (branding/aboutFooter.png)

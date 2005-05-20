@@ -680,7 +680,10 @@ function upgradeCleanup()
   // obsolete JS components
   deleteThisFile("Components", "nsBackgroundUpdateService.js");
 
+  deleteThisFile("Chrome",  "installed-chrome.txt");
   deleteThisFile("Chrome",  "chrome.rdf");
+  deleteThisFile("Chrome",  "mail.jar");
+  deleteThisFile("Chrome",  "qute.jar");
   deleteThisFile("Chrome",  "en-US-mail.jar");
 
   deleteThisFile("Program",     "defaults/pref/all.js");
@@ -794,52 +797,12 @@ if(verifyDiskSpace(fProgram, srDest))
     // we don't want to fail on errors for the above two
     resetError();
 
-    // register chrome
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "mail.jar"), "content/mozapps/");
-    
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/autoconfig/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/necko/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/wallet/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/xbl-marquee/");
-
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/global/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/global-region/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/global-platform/");
-
-    // XXXben Stuff that will become obsolete
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/navigator/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/navigator-region/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/navigator-platform/");
-
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/communicator/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/communicator-region/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/communicator-platform/");
-
-    // register chrome
-
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/editor/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/editor-region/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/help/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/mozldap/");
-
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/messenger/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/messenger-smime/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/messenger-region/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/messenger-mdn/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/messenger-views/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/messenger-mapi/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/branding/");
-
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/communicator/downloadmanager/");  
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/pippki/"); 
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"), "content/pipnss/");  
-
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","qute.jar"), "skin/classic/global/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","qute.jar"), "skin/classic/communicator/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","qute.jar"), "skin/classic/mozapps/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","qute.jar"), "skin/classic/navigator/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","qute.jar"), "skin/classic/editor/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","qute.jar"), "skin/classic/messenger/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"), "skin/classic/global/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"), "skin/classic/communicator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"), "skin/classic/mozapps/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"), "skin/classic/navigator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"), "skin/classic/editor/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"), "skin/classic/messenger/");
 
     // Create the uninstall folder. 
     err = File.dirCreate(getFolder("Program", "uninstall"));

@@ -35,9 +35,11 @@
 #
 # ***** END LICENSE BLOCK *****
 
+#ifndef MOZ_XUL_APP
 comm.jar:
 *	content/mozldap/contents.rdf (content/contents.rdf)
 
 en-US.jar:
 *       locale/en-US/mozldap/contents.rdf (locale/en-US/contents.rdf)
         locale/en-US/mozldap/ldap.properties (locale/en-US/ldap.properties)
+#endif

@@ -23,8 +23,7 @@ addFile("RSS Service",
         getFolder("Components"),
         "");
 
-registerChrome(CONTENT | DELAYED_CHROME, jarFolder, "content/messenger-newsblog/");
-registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","qute.jar"), "skin/classic/messenger-newsblog/");
+registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"), "skin/classic/messenger-newsblog/");
 
 err = getLastError();
 if (err==SUCCESS)

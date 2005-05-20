@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-
+ifndef MOZ_XUL_APP
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 DIRS		= win
 else
@@ -50,6 +50,7 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		= mac
 else
 DIRS		= unix
+endif
 endif
 endif
 

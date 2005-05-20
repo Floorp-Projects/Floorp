@@ -1,5 +1,5 @@
 messenger.jar:
-*   content/messenger/contents.rdf                  (content/contents.rdf)
+% content messenger %content/messenger/ xpcnativewrappers=yes
 *   content/messenger/mail3PaneWindowVertLayout.xul (content/mail3PaneWindowVertLayout.xul)
     content/messenger/mailTasksOverlay.xul          (content/mailTasksOverlay.xul)
 *   content/messenger/mailWindow.js                 (content/mailWindow.js)
@@ -34,20 +34,18 @@ messenger.jar:
 *   content/messenger/msgPrintEngine.xul            (content/msgPrintEngine.xul)
 *   content/messenger/searchBar.js                  (content/searchBar.js)
 *   content/messenger/phishingDetector.js           (content/phishingDetector.js)
-*   content/messenger-views/contents.rdf            (content/messenger-views.rdf)
     content/messenger/about-footer.png              (content/about-footer.png)
     content/messenger/aboutDialog.css               (content/aboutDialog.css)
     content/messenger/messenger.css                 (content/messenger.css)
 *   content/messenger/search.xml                    (content/search.xml)
 #ifndef MOZ_USE_OFFICIAL_BRANDING
-    content/branding/contents.rdf                   (content/contents-branding.rdf)
+% content branding %content/branding/ xpcnativewrappers=yes
     content/branding/about-credits.png              (content/about-credits.png)
     content/branding/about-thunderbird.png          (content/about-thunderbird.png)
     content/branding/thunderbird-watermark.png      (content/thunderbird-watermark.png)
 #endif
 # The following file should have an official-branding version also. See bug 286483
     content/branding/icon64.png                     (content/icon64.png)
-*   content/messenger-region/contents.rdf           (/mailnews/base/resources/content/contents-region.rdf)
     content/messenger/msgSynchronize.xul            (/mailnews/base/resources/content/msgSynchronize.xul)
     content/messenger/msgSynchronize.js             (/mailnews/base/resources/content/msgSynchronize.js)
     content/messenger/folderProps.xul               (/mailnews/base/resources/content/folderProps.xul)
@@ -105,18 +103,12 @@ messenger.jar:
     content/messenger/mailViewList.js               (/mailnews/extensions/mailviews/resources/content/mailViewList.js)
     content/messenger/am-mdn.xul                    (/mailnews/extensions/mdn/resources/content/am-mdn.xul)
     content/messenger/am-mdn.js                     (/mailnews/extensions/mdn/resources/content/am-mdn.js)
-*   content/messenger-mdn/contents.rdf              (/mailnews/extensions/mdn/resources/content/contents.rdf)
 
 comm.jar:
-*   content/help/contents.rdf                       (content/help.rdf)
-    content/help/contextHelp.js                     (content/contextHelp.js)
 *+  content/communicator/contentAreaClick.js        (content/contentAreaClick.js)
 *+  content/communicator/utilityOverlay.xul         (content/utilityOverlay.xul)
 *+  content/communicator/nsContextMenu.js           (content/nsContextMenu.js)
-*+  content/communicator/contents.rdf               (content/contents-communicator.rdf)
 
 toolkit.jar:
 *+  content/global/customizeToolbar.xul             (content/customizeToolbar.xul)
 *+  content/global/customizeToolbar.js              (content/customizeToolbar.js)
-+   content/communicator/tasksOverlay.xul           (content/tasksOverlay.xul)
-*+  content/communicator/utilityOverlay.xul         (content/utilityOverlay.xul)

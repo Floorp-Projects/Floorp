@@ -1,7 +1,14 @@
 comm.jar:
+#ifdef MOZ_XUL_APP
+# This means thunderbird
+% content communicator-platform %content/communicator-platform/ platform
+% content communicator-region %content/communicator-region/
+% content communicator %content/communicator/
+#else
 *   content/communicator-platform/contents.rdf           (resources/content/contents-platform.rdf)
 *   content/communicator-region/contents.rdf             (resources/content/contents-region.rdf)
 *   content/communicator/contents.rdf                    (resources/content/contents.rdf)
+#endif
     content/communicator/communicator.css                (resources/content/communicator.css)
     content/communicator/communicatorOverlay.xul         (resources/content/communicatorOverlay.xul) 
     content/communicator/utilityOverlay.xul              (resources/content/utilityOverlay.xul) 
@@ -45,7 +52,6 @@ comm.jar:
 #endif
 
 en-US.jar:
-*   locale/en-US/communicator/contents.rdf                      (resources/locale/en-US/contents.rdf)
     locale/en-US/communicator/utilityOverlay.dtd                (resources/locale/en-US/utilityOverlay.dtd) 
     locale/en-US/communicator/utilityOverlay.properties         (resources/locale/en-US/utilityOverlay.properties) 
     locale/en-US/communicator/openLocation.dtd                  (resources/locale/en-US/openLocation.dtd)
@@ -58,6 +64,7 @@ en-US.jar:
     locale/en-US/communicator/viewZoomOverlay.properties        (resources/locale/en-US/viewZoomOverlay.properties)
     locale/en-US/communicator/printPreview.dtd                  (resources/locale/en-US/printPreview.dtd)
 #ifndef MOZ_XUL_APP
+*   locale/en-US/communicator/contents.rdf                      (resources/locale/en-US/contents.rdf)
 *   locale/en-US/branding/contents.rdf                          (resources/locale/en-US/contents-branding.rdf)
 *   locale/en-US/branding/brand.dtd                             (resources/locale/en-US/brand.dtd)
 *   locale/en-US/branding/brand.properties                      (resources/locale/en-US/brand.properties)

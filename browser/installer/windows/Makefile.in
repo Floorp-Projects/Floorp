@@ -82,7 +82,7 @@ include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.m
 installer:
 	$(NSINSTALL) -D instgen
 	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) instgen
-	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $(topsrcdir)/browser/locales/$(AB_CD)/installer/installer.inc > instgen/installer.inc
+	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer/installer.inc > instgen/installer.inc
 	$(EXIT_ON_ERROR) \
 	for i in $(PP_LOCALIZED_FILES); do \
 	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -Iinstgen/installer.inc $(srcdir)/$$i > instgen/$$i; \

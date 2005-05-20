@@ -110,24 +110,6 @@ NO_PKG_FILES += \
 	$(NULL)
 endif
 
-# Windows and Linux both support chrome repackaging to remove
-# unneeded chrome files
-ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-# Before building the installer, re-make in mail/config to pick up
-# new files in dist/bin.  This is needed for Talkback.
-libs:: 
-	$(MAKE) -C ../config
-
-# Before building the installer, re-make in mail/config to pick up
-# new files in dist/bin.  This is needed for Talkback.
-installer:: 
-	$(MAKE) -C ../config
-else
-libs::
-
-installer::
-endif
-
 ifeq ($(OS_ARCH), Darwin)
 MOZ_PKG_APPNAME = Thunderbird
 endif

@@ -571,9 +571,9 @@ Path=[WINDIR]
 Description Short={AB_CD} {LANGPACK_TITLE}
 Description Long={AB_CD} {LANGPACK_TITLE}
 Archive={AB_CD}.xpi
-$InstallSize$:{AB_CD}
-$InstallSizeSystem$
-$InstallSizeArchive$:{AB_CD}.xpi
+Install Size=512
+Install Size System=1
+Install Size Archive=512
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\chrome\{AB_CD}.jar
 FileCount=$FileCount$

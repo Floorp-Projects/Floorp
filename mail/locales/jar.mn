@@ -1,7 +1,7 @@
 #filter substitution
 
 @AB_CD@.jar:
-* locale/@AB_CD@/messenger/contents.rdf                                 (generic/chrome/messenger/contents.rdf)
+% locale messenger @AB_CD@ %locale/@AB_CD@/messenger/
   locale/@AB_CD@/messenger/start.html                                   (%chrome/messenger/start.html)
 * locale/@AB_CD@/messenger/credits.html                                 (%chrome/messenger/credits.html)
   locale/@AB_CD@/messenger/startpage-h1.png                             (%chrome/messenger/startpage-h1.png)
@@ -127,15 +127,16 @@
   locale/@AB_CD@/messenger/preferences/preferences.properties           (%chrome/messenger/preferences/preferences.properties)
   locale/@AB_CD@/messenger/migration/migration.dtd                      (%chrome/messenger/migration/migration.dtd)
   locale/@AB_CD@/messenger/migration/migration.properties               (%chrome/messenger/migration/migration.properties)
+% locale messenger-mapi @AB_CD@ %locale/@AB_CD@/messenger-mapi/
   locale/@AB_CD@/messenger-mapi/mapi.properties                         (%chrome/messenger-mapi/mapi.properties)
-* locale/@AB_CD@/messenger-mapi/contents.rdf                            (generic/chrome/messenger-mapi/contents.rdf)
-* locale/@AB_CD@/messenger-newsblog/contents.rdf                        (generic/chrome/messenger-newsblog/contents.rdf)
+% locale messenger-newsblog @AB_CD@ %locale/@AB_CD@/messenger-newsblog/
   locale/@AB_CD@/messenger-newsblog/newsblog.dtd                        (%chrome/messenger-newsblog/newsblog.dtd)
   locale/@AB_CD@/messenger-newsblog/newsblog.properties                 (%chrome/messenger-newsblog/newsblog.properties)
   locale/@AB_CD@/messenger-newsblog/feed-subscriptions.dtd              (%chrome/messenger-newsblog/feed-subscriptions.dtd)
   locale/@AB_CD@/messenger-newsblog/feed-properties.dtd                 (%chrome/messenger-newsblog/feed-properties.dtd)
   locale/@AB_CD@/messenger-newsblog/am-newsblog.properties              (%chrome/messenger-newsblog/am-newsblog.properties)
   locale/@AB_CD@/messenger-newsblog/am-newsblog.dtd                     (%chrome/messenger-newsblog/am-newsblog.dtd)
+% locale messenger-smime @AB_CD@ %locale/@AB_CD@/messenger-smime/
   locale/@AB_CD@/messenger-smime/msgCompSMIMEOverlay.dtd                (%chrome/messenger-smime/msgCompSMIMEOverlay.dtd)
   locale/@AB_CD@/messenger-smime/msgCompSMIMEOverlay.properties         (%chrome/messenger-smime/msgCompSMIMEOverlay.properties)
   locale/@AB_CD@/messenger-smime/msgReadSMIMEOverlay.dtd                (%chrome/messenger-smime/msgReadSMIMEOverlay.dtd)
@@ -145,26 +146,25 @@
   locale/@AB_CD@/messenger-smime/msgReadSecurityInfo.dtd                (%chrome/messenger-smime/msgReadSecurityInfo.dtd)
   locale/@AB_CD@/messenger-smime/certFetchingStatus.dtd                 (%chrome/messenger-smime/certFetchingStatus.dtd)
   locale/@AB_CD@/messenger-smime/msgSecurityInfo.properties             (%chrome/messenger-smime/msgSecurityInfo.properties)
-* locale/@AB_CD@/messenger-smime/contents.rdf                           (generic/chrome/messenger-smime/contents.rdf)
-* locale/@AB_CD@/messenger-offline/contents.rdf                         (generic/chrome/messenger-offline/contents.rdf)
+% locale messenger-offline @AB_CD@ %locale/@AB_CD@/messenger-offline/
   locale/@AB_CD@/messenger-offline/offline.properties                   (%chrome/messenger-offline/offline.properties)
   locale/@AB_CD@/messenger-offline/offline.dtd                          (%chrome/messenger-offline/offline.dtd)
-* locale/@AB_CD@/messenger-region/contents.rdf                          (generic/chrome/messenger-region/contents.rdf)
+% locale messenger-region @AB_CD@ %locale/@AB_CD@/messenger-region/
   locale/@AB_CD@/messenger-region/region.properties                     (%chrome/messenger-region/region.properties)
-* locale/@AB_CD@/mozldap/contents.rdf                                   (generic/chrome/mozldap/contents.rdf)
+% locale mozldap @AB_CD@ %locale/@AB_CD@/mozldap/
   locale/@AB_CD@/mozldap/ldap.properties                                (%chrome/mozldap/ldap.properties)
 + locale/@AB_CD@/mozapps/downloads/pref-downloads.dtd                   (%chrome/mozapps/downloads/pref-downloads.dtd)
-* locale/@AB_CD@/communicator/contents.rdf                   (generic/chrome/communicator/contents.rdf)
+% locale communicator @AB_CD@ %locale/@AB_CD@/communicator/
   locale/@AB_CD@/communicator/contentAreaCommands.dtd        (%chrome/communicator/contentAreaCommands.dtd)
   locale/@AB_CD@/communicator/contentAreaCommands.properties (%chrome/communicator/contentAreaCommands.properties)
   locale/@AB_CD@/communicator/utilityOverlay.properties      (%chrome/communicator/utilityOverlay.properties)
-*+ locale/@AB_CD@/communicator/utilityOverlay.dtd             (%chrome/communicator/utilityOverlay.dtd)
+* locale/@AB_CD@/communicator/utilityOverlay.dtd             (%chrome/communicator/utilityOverlay.dtd)
   locale/@AB_CD@/communicator/wallet/wallet.properties       (%chrome/communicator/wallet/wallet.properties)
   locale/@AB_CD@/communicator/wallet/SignonViewer.properties (%chrome/communicator/wallet/SignonViewer.properties)
   locale/@AB_CD@/communicator/wallet/SignonViewer.dtd        (%chrome/communicator/wallet/SignonViewer.dtd)
-* locale/@AB_CD@/navigator/contents.rdf         (generic/chrome/navigator/contents.rdf)
+% locale navigator @AB_CD@ %locale/@AB_CD@/navigator/
   locale/@AB_CD@/navigator/navigator.properties (%chrome/navigator/navigator.properties)
-* locale/@AB_CD@/navigator-platform/contents.rdf                        (generic/chrome/navigator-platform/contents.rdf)
+% locale navigator-platform @AB_CD@ %locale/@AB_CD@/navigator-platform/
   locale/@AB_CD@/navigator-platform/win/navigator.properties            (%chrome/navigator-platform/win/navigator.properties)
   locale/@AB_CD@/navigator-platform/mac/platformNavigationBindings.dtd  (%chrome/navigator-platform/mac/platformNavigationBindings.dtd)
   locale/@AB_CD@/navigator-platform/mac/navigator.properties            (%chrome/navigator-platform/mac/navigator.properties)
@@ -173,7 +173,7 @@
 + locale/@AB_CD@/global/charset.dtd                 (%chrome/global/charset.dtd)
   locale/@AB_CD@/global-platform/win/nsWindowsHooks.properties (%chrome/global-platform/win/nsWindowsHooks.properties)
 #ifndef MOZ_USE_OFFICIAL_BRANDING
-* locale/@AB_CD@/branding/contents.rdf                (generic/chrome/branding/contents.rdf)
+% locale branding @AB_CD@ %locale/@AB_CD@/branding/
   locale/@AB_CD@/branding/brand.properties            (%chrome/branding/brand.properties)
 * locale/@AB_CD@/branding/brand.dtd                   (%chrome/branding/brand.dtd)
 #endif
