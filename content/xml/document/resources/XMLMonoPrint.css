@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url("chrome://communicator/content/xml/XMLPrettyPrint.css");
+@import url("chrome://global/content/xml/XMLPrettyPrint.css");
 
 #top > table {
   font-family: monospace;
