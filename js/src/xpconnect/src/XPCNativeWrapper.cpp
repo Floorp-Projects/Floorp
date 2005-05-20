@@ -685,36 +685,63 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return ThrowException(NS_ERROR_UNEXPECTED, cx);
   }
 
+  // Check whether toString was overridden in any object along
+  // the wrapped native's object's prototype chain.
+  XPCJSRuntime *rt = nsXPConnect::GetRuntime();
+  if (!rt)
+    return JS_FALSE;
+
+  jsid id = rt->GetStringID(XPCJSRuntime::IDX_TO_STRING);
+
   XPCWrappedNative *wrappedNative =
     XPCNativeWrapper::GetWrappedNative(cx, obj);
 
-  nsAutoString resultString;
-  resultString.AppendLiteral("[object XPCNativeWrapper");
+  JSObject *wn_obj = wrappedNative->GetFlatJSObject();
+  JSObject *wn_pobj;
+  JSProperty *prop;
 
-  if (wrappedNative) {
-    JSString *str =
-      ::JS_ValueToString(cx,
-                         OBJECT_TO_JSVAL(wrappedNative->GetFlatJSObject()));
-    if (!str) {
-      return JS_FALSE;
+  // Check whether any object nearer than the last on the prototype
+  // chain, namely Object.prototype, defines a toString property.
+  if (!OBJ_LOOKUP_PROPERTY(cx, wn_obj, id, &wn_pobj, &prop)) {
+    return JS_FALSE;
+  }
+  JSBool overridden = prop && ::JS_GetPrototype(cx, wn_pobj) != nsnull;
+  OBJ_DROP_PROPERTY(cx, wn_pobj, prop);
+
+  JSString* str;
+  if (overridden) {
+    // Something overrides Object.prototype.toString -- defer to it.
+
+    str = ::JS_ValueToString(cx, OBJECT_TO_JSVAL(wn_obj));
+  } else {
+    // Ok, we do no damage, and add value, by returning our own idea
+    // of what toString() should be.
+
+    nsAutoString resultString;
+    resultString.AppendLiteral("[object XPCNativeWrapper");
+
+    if (wrappedNative) {
+      JSString *str = ::JS_ValueToString(cx, OBJECT_TO_JSVAL(wn_obj));
+      if (!str) {
+        return JS_FALSE;
+      }
+
+      resultString.Append(' ');
+      resultString.Append(NS_REINTERPRET_CAST(PRUnichar *,
+                                              ::JS_GetStringChars(str)),
+                          ::JS_GetStringLength(str));
     }
 
-    resultString.Append(' ');
-    resultString.Append(NS_REINTERPRET_CAST(PRUnichar *,
-                                            ::JS_GetStringChars(str)),
-                        ::JS_GetStringLength(str));
+    resultString.Append(']');
+
+    str = ::JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar *,
+                                                        resultString.get()),
+                                resultString.Length());
   }
 
-  resultString.Append(']');
-
-  JSString* str =
-    ::JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar *,
-                                                  resultString.get()),
-                          resultString.Length());
   NS_ENSURE_TRUE(str, JS_FALSE);
 
   *rval = STRING_TO_JSVAL(str);
-
   return JS_TRUE;
 }
 
