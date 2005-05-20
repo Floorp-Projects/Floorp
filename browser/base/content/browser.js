@@ -3352,16 +3352,9 @@ nsBrowserStatusHandler.prototype =
     }
 
     var securityUI = gBrowser.securityUI;
-    if (securityUI) {
-      this.securityButton.setAttribute("tooltiptext", securityUI.tooltipText);
-      if (this.urlBar)
-        this.urlBar.setAttribute("infotext", securityUI.tooltipText);
-    }
-    else {
-      this.securityButton.setAttribute("tooltiptext", securityUI.tooltipText);
-      if (this.urlBar)
-        this.urlBar.removeAttribute("infotext");
-    }
+    this.securityButton.setAttribute("tooltiptext", securityUI.tooltipText);
+    if (this.urlBar)
+      this.urlBar.setAttribute("infotext", securityUI.tooltipText);
   },
 
   startDocumentLoad : function(aRequest)

@@ -484,9 +484,28 @@
         null
       </field>
 
-      <property name="securityUI"
-                onget="return this.docShell.securityUI;"
-                onset="this.docShell.securityUI = val;"/>
+      <property name="securityUI">
+        <getter>
+          <![CDATA[
+            if (!this.docShell.securityUI) {
+              const SECUREBROWSERUI_CONTRACTID = "@mozilla.org/secure_browser_ui;1";
+              if (!this.hasAttribute("disablesecurity") &&
+                  SECUREBROWSERUI_CONTRACTID in Components.classes) {
+                var securityUI = Components.classes[SECUREBROWSERUI_CONTRACTID]
+                                           .createInstance(Components.interfaces.nsISecureBrowserUI);
+                securityUI.init(this.contentWindow);
+              }
+            }
+            
+            return this.docShell.securityUI;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            this.docShell.securityUI = val;
+          ]]>
+        </setter>
+      </property>
 
       <field name="userTypedClear">
         true
@@ -537,16 +556,6 @@
           try {
             this.mDragDropHandler = Components.classes["@mozilla.org:/content/content-area-dragdrop;1"].createInstance(Components.interfaces.nsIDragDropHandler);
             this.mDragDropHandler.hookupTo(this, null);
-          }
-          catch (e) {
-          }
-          try {
-            const SECUREBROWSERUI_CONTRACTID = "@mozilla.org/secure_browser_ui;1";
-            if (!this.hasAttribute("disablesecurity") &&
-                SECUREBROWSERUI_CONTRACTID in Components.classes) {
-              var securityUI = Components.classes[SECUREBROWSERUI_CONTRACTID].createInstance(Components.interfaces.nsISecureBrowserUI);
-	      securityUI.init(this.contentWindow);
-            }
           }
           catch (e) {
           }
