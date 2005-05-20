@@ -3725,7 +3725,7 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // whacky, that's because this method is *extremely* performace
   // critical. Don't touch this unless you know what you're doing.
 
-  if (JSVAL_IS_NUMBER(id)) {
+  if (JSVAL_IS_INT(id)) {
     // If we're accessing a numeric property we'll treat that as if
     // window.frames.n is accessed (since window.frames === window),
     // if window.frames.n is a child frame, wrap the frame and return
