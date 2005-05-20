@@ -669,7 +669,7 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     resultString.Append(' ');
-    resultString.Append(NS_REINTERPRET_CAST(jschar *,
+    resultString.Append(NS_REINTERPRET_CAST(PRUnichar *,
                                             ::JS_GetStringChars(str)),
                         ::JS_GetStringLength(str));
   }
