@@ -240,7 +240,45 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   // interface :)
   XPCNativeInterface* iface = inner_cc.GetInterface();
   if (!iface) {
-    // No interface, no property.
+    // No interface, no property -- unless we're getting an indexed
+    // property such as frames[0].  Handle that as a special case
+    // here, now that we know there's no XPConnected .item() method.
+
+    if (methodName != id) {
+      jsid index_id;
+      JSObject *pobj;
+      JSProperty *prop;
+
+      // Look up the property for the id being indexed in nativeObj.
+      if (!JS_ValueToId(cx, id, &index_id) ||
+          !OBJ_LOOKUP_PROPERTY(cx, nativeObj, index_id, &pobj, &prop)) {
+        return JS_FALSE;
+      }
+
+      if (prop) {
+        JSBool safe = JS_FALSE;
+
+        if (OBJ_IS_NATIVE(pobj)) {
+          // At this point we know we have a native JS object (one that
+          // has a JSScope for its map, containing refs to the runtime's
+          // JSScopeProperty tree nodes.  Compare that property's getter
+          // to the class default getter to decide whether this element
+          // is safe to get -- i.e., it is not overridden, possibly by a
+          // user-defined getter.
+
+          JSScopeProperty *sprop = (JSScopeProperty *) prop;
+          JSClass *nativeObjClass = JS_GET_CLASS(cx, nativeObj);
+
+          safe = (sprop->getter == nativeObjClass->getProperty);
+        }
+
+        OBJ_DROP_PROPERTY(cx, pobj, prop);
+
+        if (safe) {
+          return ::JS_GetElement(cx, nativeObj, JSVAL_TO_INT(id), vp);
+        }
+      }
+    }
 
     *vp = JSVAL_VOID;
 
