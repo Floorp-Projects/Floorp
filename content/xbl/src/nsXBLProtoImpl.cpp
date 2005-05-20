@@ -158,6 +158,7 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
 
   nsIScriptContext *context = globalObject->GetContext();
+  NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
 
   void* classObject;
   nsresult rv = aBinding->InitClass(mClassName, context, nsnull, &classObject);
