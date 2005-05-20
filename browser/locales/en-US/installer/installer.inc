@@ -90,7 +90,6 @@
 #define COMPLETE_MESSAGE0 %s $Version$ was successfully installed.
 #define COMPLETE_MESSAGE1 Click Finish to complete Setup.
 #define COMPLETE_LAUNCH Launch %s $Version$ now.
-#define COMPLETE_RESET_HOMEPAGE Use Firefox Start as my Home Page.
 
 #define DL2_TITLE $ProductShortName$ Setup - Download
 #define DL2_MESSAGE0 Setup is downloading the required files now.  This may take some time depending on your network connection speed.

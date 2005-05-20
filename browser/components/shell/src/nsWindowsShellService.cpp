@@ -294,7 +294,6 @@ nsWindowsShellService::nsWindowsShellService()
 {
   nsCOMPtr<nsIObserverService> obsServ (do_GetService("@mozilla.org/observer-service;1"));
   obsServ->AddObserver(this, "quit-application", PR_FALSE);
-  obsServ->AddObserver(this, "profile-after-change", PR_FALSE);
 }
 
 nsresult
@@ -1058,56 +1057,6 @@ nsWindowsShellService::GetRegistryEntry(PRInt32 aHKEYConstant,
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-static nsresult ResetHomepage()
-{
-  // Reset the homepage to the default value if the user requested the installer do so.
-  HKEY theKey;
-  nsresult rv = OpenKeyForWriting("Software\\Mozilla\\Mozilla Firefox", &theKey, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIPrefBranch> prefs;
-  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = pserve->GetBranch("", getter_AddRefs(prefs));
-  if (NS_FAILED(rv)) return rv;
-
-  char buf[MAX_BUF];
-  DWORD type, len = sizeof buf;
-  DWORD result = ::RegQueryValueEx(theKey, "Reset Home Page", 0, &type, (LPBYTE)&buf, &len);
-
-  PRBool resetHomepage = PR_FALSE;
-  prefs->GetBoolPref("browser.update.resetHomepage", &resetHomepage);
-
-  if ((REG_SUCCEEDED(result) && (PRBool)(*buf) == PR_TRUE) || resetHomepage) {
-    prefs->ResetBranch("browser.startup.homepage.");
-
-    PRBool hasUserValue;
-    prefs->PrefHasUserValue("browser.startup.homepage", &hasUserValue);
-    if (hasUserValue)
-      prefs->ClearUserPref("browser.startup.homepage");
-
-    nsCOMPtr<nsIPrefLocalizedString> pls;
-    prefs->GetComplexValue("browser.startup.homepage_reset", 
-                           NS_GET_IID(nsIPrefLocalizedString),
-                           getter_AddRefs(pls));
-    if (pls) {
-      prefs->SetComplexValue("browser.startup.homepage", 
-                             NS_GET_IID(nsIPrefLocalizedString),
-                             pls);
-    }
-
-    // Clear all traces of this activity so we don't keep resetting the homepage. 
-    DWORD val = 0;
-    ::RegSetValueEx(theKey, "Reset Home Page", 0, REG_DWORD, (LPBYTE)&val, len);
-
-    prefs->PrefHasUserValue("browser.update.resetHomepage", &hasUserValue);
-    if (hasUserValue)
-      prefs->ClearUserPref("browser.update.resetHomepage");
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsWindowsShellService::Observe(nsISupports* aObject, const char* aTopic, const PRUnichar* aMessage)
 {
@@ -1129,12 +1078,6 @@ nsWindowsShellService::Observe(nsISupports* aObject, const char* aTopic, const P
     os->RemoveObserver(this, "quit-application");
    
     return UnregisterDDESupport();
-  }
-  else if (!nsCRT::strcmp("profile-after-change", aTopic)) {
-    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-    os->RemoveObserver(this, "profile-after-change");
-
-    return ResetHomepage();
   }
 
   return NS_OK;

@@ -154,9 +154,6 @@ pref("browser.shell.checkDefaultBrowser", true);
 pref("browser.startup.page",                1);
 pref("browser.startup.homepage",	          "resource:/browserconfig.properties");
 
-// These values are deliberately non-localizable for official builds.
-pref("browser.startup.homepage_reset",      "resource:/browserconfig.properties");
-pref("browser.update.resetHomepage",        false);
 // "browser.startup.homepage_override" was for 4.x
 pref("browser.startup.homepage_override.1", false);
 

@@ -1,5 +1,5 @@
-<!ENTITY  brandShortName        "Browser">
-<!ENTITY  brandFullName         "Gecko Browser">            
-<!ENTITY  vendorShortName       "Generic">
+<!ENTITY  brandShortName        "Deer Park">
+<!ENTITY  brandFullName         "Deer Park Alpha 1">            
+<!ENTITY  vendorShortName       "Mozilla">
 
 <!ENTITY  releaseURL            "http://www.mozilla.org/">

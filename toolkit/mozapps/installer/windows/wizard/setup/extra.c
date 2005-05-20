@@ -3722,8 +3722,6 @@ HRESULT InitDlgAdditionalOptions(diDO *diDialog)
 {
   diDialog->bShowDialog           = FALSE;
   diDialog->bSaveInstaller        = FALSE;
-  diDialog->bRecaptureHomepage    = FALSE;
-  diDialog->bShowHomepageOption   = FALSE;
   diDialog->dwUseProtocol         = UP_FTP;
   diDialog->bUseProtocolSettings  = TRUE;
   diDialog->bShowProtocols        = TRUE;
@@ -3855,7 +3853,6 @@ HRESULT InitDlgInstallSuccessful(diIS *diDialog)
 {
   diDialog->bShowDialog = FALSE;
   diDialog->bLaunchAppChecked = TRUE;
-  diDialog->bResetHomepageChecked = TRUE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -3863,8 +3860,6 @@ HRESULT InitDlgInstallSuccessful(diIS *diDialog)
   if((diDialog->szMessage1 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szLaunchApp = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((diDialog->szResetHomepage = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szRegistryKey = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -3880,7 +3875,6 @@ void DeInitDlgInstallSuccessful(diIS *diDialog)
   FreeMemory(&(diDialog->szMessage0));
   FreeMemory(&(diDialog->szMessage1));
   FreeMemory(&(diDialog->szLaunchApp));
-  FreeMemory(&(diDialog->szResetHomepage));
   FreeMemory(&(diDialog->szRegistryKey));
   FreeMemory(&(diDialog->szMessageHeader));
 }
@@ -7592,14 +7586,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szBuf, "TRUE") == 0)
     diAdditionalOptions.bSaveInstaller = TRUE;
 
-  GetConfigIniProfileString("Dialog Additional Options",       "Recapture Homepage", "", szBuf,                            sizeof(szBuf));
-  if(lstrcmpi(szBuf, "TRUE") == 0)
-    diAdditionalOptions.bRecaptureHomepage = TRUE;
-
-  GetConfigIniProfileString("Dialog Additional Options",       "Show Homepage Option", "", szBuf,                            sizeof(szBuf));
-  if(lstrcmpi(szBuf, "TRUE") == 0)
-    diAdditionalOptions.bShowHomepageOption = TRUE;
-
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diAdditionalOptions.bShowDialog = TRUE;
 
@@ -7694,10 +7680,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetConfigIniProfileString("Dialog Install Successful",  "Launch App Checked", "", szShowDialog,                         MAX_BUF);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diInstallSuccessful.bLaunchAppChecked = TRUE;
-  GetConfigIniProfileString("Dialog Install Successful",  "Reset Homepage",         "", diInstallSuccessful.szResetHomepage, MAX_BUF);
-  GetConfigIniProfileString("Dialog Install Successful",  "Reset Homepage Checked", "", szShowDialog,                          MAX_BUF);
-  if(lstrcmpi(szShowDialog, "TRUE") == 0)
-    diInstallSuccessful.bResetHomepageChecked = TRUE;
   GetConfigIniProfileString("Dialog Install Successful",  "Registry Key",         "", diInstallSuccessful.szRegistryKey, MAX_BUF);
   
   /* Download dialog */
@@ -7740,7 +7722,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
       diDownloading.bShowDialog                 = FALSE;
       diInstallSuccessful.bShowDialog           = FALSE;
       diInstallSuccessful.bLaunchAppChecked     = FALSE;
-      diInstallSuccessful.bResetHomepageChecked = FALSE;
       break;
   }
 
@@ -9391,9 +9372,6 @@ void SaveInstallerFiles()
 BOOL ShowAdditionalOptionsDialog(void)
 {
   if(diAdditionalOptions.bShowDialog == FALSE)
-    return(FALSE);
-
-  if( (diAdditionalOptions.bShowHomepageOption == FALSE) && (GetTotalArchivesToDownload() < 1) )
     return(FALSE);
 
   return(TRUE);

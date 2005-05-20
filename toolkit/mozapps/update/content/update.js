@@ -109,10 +109,6 @@ var gUpdateWizard = {
   
   succeeded: true,
   
-#ifdef MOZ_PHOENIX
-  offeredResetHomepage: false,
-#endif
-
   appComps: {
     upgraded: { 
       core      : [],
@@ -170,13 +166,6 @@ var gUpdateWizard = {
         this.clearExtensionUpdatePrefs();
       }
     }
-
-#ifdef MOZ_PHOENIX
-    if (this.offeredResetHomepage) {
-      pref.setBoolPref("browser.update.resetHomepage", 
-                       document.getElementById("resetHomepage").checked); 
-    }
-#endif
     
     // Send an event to refresh any FE notification components. 
     var os = Components.classes["@mozilla.org/observer-service;1"]
@@ -1014,10 +1003,6 @@ var gRestartPage = {
     gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
     
     // XXXben - we should really have a way to restart the app now from here!
-    
-#ifdef MOZ_PHOENIX
-    gUpdateWizard.offeredResetHomepage = true;
-#endif
 
     document.documentElement.getButton("finish").focus();
 

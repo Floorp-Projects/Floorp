@@ -81,7 +81,3 @@
 
 <!ENTITY  restart.title                   "Upgrade Complete">
 <!ENTITY  restart.updated.label           "&brandShortName; successfully downloaded and installed updates. You will have to restart &brandShortName; to complete the update.">
-
-<!ENTITY  resetHomepage.label             "Use &brandShortName; Start as my Home Page">
-<!ENTITY  resetHomepage.accesskey         "H">
-
