@@ -492,7 +492,7 @@ DefineColumn("bug_status"        , "bugs.bug_status"            , "Status"      
 DefineColumn("resolution"        , "bugs.resolution"            , "Result"           );
 DefineColumn("short_short_desc"  , "bugs.short_desc"            , "Summary"          );
 DefineColumn("short_desc"        , "bugs.short_desc"            , "Summary"          );
-DefineColumn("status_whiteboard" , "bugs.status_whiteboard"     , "Status Summary"   );
+DefineColumn("status_whiteboard" , "bugs.status_whiteboard"     , "Whiteboard"       );
 DefineColumn("component"         , "map_components.name"        , "Component"        );
 DefineColumn("product"           , "map_products.name"          , "Product"          );
 DefineColumn("classification"    , "map_classifications.name"   , "Classification"   );
