@@ -90,26 +90,6 @@ NO_PKG_FILES = \
 	components/gkplugin.dll \
 	$(NULL)
 
-ifeq ($(OS_ARCH), WINNT)
-NO_PKG_FILES += \
-	chrome/en-unix.jar \
-	chrome/en-mac.jar \
-	$(NULL)
-endif
-
-
-ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-NO_PKG_FILES += \
-	chrome/messenger.jar \
-	chrome/pipnss.jar \
-	chrome/pippki.jar \
-	chrome/toolkit.jar \
-	chrome/classic.jar \
-	chrome/comm.jar \
-	chrome/US.jar \
-	$(NULL)
-endif
-
 ifeq ($(OS_ARCH), Darwin)
 MOZ_PKG_APPNAME = Thunderbird
 endif
