@@ -344,6 +344,50 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun);
 extern JS_PUBLIC_API(size_t)
 JS_GetScriptTotalSize(JSContext *cx, JSScript *script);
 
+/*
+ * Get the top-most running script on cx starting from fp, or from the top of
+ * cx's frame stack if fp is null, and return its script filename flags.  If
+ * the script has a null filename member, return JSFILENAME_NULL.
+ */
+extern JS_PUBLIC_API(uint32)
+JS_GetTopScriptFilenameFlags(JSContext *cx, JSStackFrame *fp);
+
+/*
+ * Associate flags with a script filename prefix in rt, so that any subsequent
+ * script compilation will inherit those flags if the script's filename is the
+ * same as prefix, or if prefix is a substring of the script's filename.
+ *
+ * The API defines only one flag bit, JSFILENAME_SYSTEM, leaving the remaining
+ * 31 bits up to the API client to define.  The union of all 32 bits must not
+ * be a legal combination, however, in order to preserve JSFILENAME_NULL as a
+ * unique value.  API clients may depend on JSFILENAME_SYSTEM being a set bit
+ * in JSFILENAME_NULL -- a script with a null filename member is presumed to
+ * be a "system" script.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_FlagScriptFilenamePrefix(JSRuntime *rt, const char *prefix, uint32 flags);
+
+#define JSFILENAME_NULL         0xffffffff      /* null script filename */
+#define JSFILENAME_SYSTEM       0x00000001      /* "system" script, see below */
+
+/*
+ * Return true if obj is a "system" object, that is, one flagged by a prior
+ * call to JS_FlagSystemObject(cx, obj).  What "system" means is up to the API
+ * client, but it can be used to coordinate access control policies based on
+ * script filenames and their prefixes, using JS_FlagScriptFilenamePrefix and
+ * JS_GetTopScriptFilenameFlags.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_IsSystemObject(JSContext *cx, JSObject *obj);
+
+/*
+ * Flag obj as a "system" object.  The API client can flag system objects to
+ * optimize access control checks.  The engine stores but does not interpret
+ * the per-object flag set by this call.
+ */
+extern JS_PUBLIC_API(void)
+JS_FlagSystemObject(JSContext *cx, JSObject *obj);
+
 JS_END_EXTERN_C
 
 #endif /* jsdbgapi_h___ */

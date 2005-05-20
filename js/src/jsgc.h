@@ -67,8 +67,8 @@ JS_BEGIN_EXTERN_C
 #define GCF_TYPEMASK    JS_BITMASK(GCX_NTYPES_LOG2)
 #define GCF_MARK        JS_BIT(GCX_NTYPES_LOG2)
 #define GCF_FINAL       JS_BIT(GCX_NTYPES_LOG2 + 1)
-#define GCF_LOCKSHIFT   (GCX_NTYPES_LOG2 + 2)   /* lock bit shift and mask */
-#define GCF_LOCKMASK    (JS_BITMASK(8 - GCF_LOCKSHIFT) << GCF_LOCKSHIFT)
+#define GCF_SYSTEM      JS_BIT(GCX_NTYPES_LOG2 + 2)
+#define GCF_LOCKSHIFT   (GCX_NTYPES_LOG2 + 3)   /* lock bit shift */
 #define GCF_LOCK        JS_BIT(GCF_LOCKSHIFT)   /* lock request bit in API */
 
 /* Pseudo-flag that modifies GCX_STRING to make GCX_MUTABLE_STRING. */
@@ -234,8 +234,6 @@ typedef struct JSGCStats {
     uint32  lockborn;   /* things born locked */
     uint32  lock;       /* valid lock calls */
     uint32  unlock;     /* valid unlock calls */
-    uint32  stuck;      /* stuck reference counts seen by lock calls */
-    uint32  unstuck;    /* unlock calls that saw a stuck lock count */
     uint32  depth;      /* mark tail recursion depth */
     uint32  maxdepth;   /* maximum mark tail recursion depth */
     uint32  cdepth;     /* mark recursion depth of C functions */

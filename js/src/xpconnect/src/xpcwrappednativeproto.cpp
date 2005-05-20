@@ -105,15 +105,21 @@ XPCWrappedNativeProto::Init(
                             &XPC_WN_ModsAllowed_Proto_JSClass :
                             &XPC_WN_NoMods_Proto_JSClass;
 
+    JSObject *parent = mScope->GetGlobalJSObject();
+
     mJSProtoObject = JS_NewObject(ccx, jsclazz,
                                   mScope->GetPrototypeJSObject(),
-                                  mScope->GetGlobalJSObject());
+                                  parent);
 
-    JSBool retval = mJSProtoObject && JS_SetPrivate(ccx, mJSProtoObject, this);
+    JSBool ok = mJSProtoObject && JS_SetPrivate(ccx, mJSProtoObject, this);
+
+    // Propagate the system flag from parent to child.
+    if(ok && JS_IsSystemObject(ccx, parent))
+        JS_FlagSystemObject(ccx, mJSProtoObject);
 
     DEBUG_ReportShadowedMembers(mSet, nsnull, this);
 
-    return retval;
+    return ok;
 }
 
 void

@@ -746,6 +746,7 @@ JS_DestroyRuntime(JSRuntime *rt)
     }
 #endif
 
+    js_FreeRuntimeScriptState(rt);
     js_FinishAtomState(&rt->atomState);
     js_FinishGC(rt);
 #ifdef JS_THREADSAFE

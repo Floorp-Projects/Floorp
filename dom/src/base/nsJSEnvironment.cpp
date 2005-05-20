@@ -50,6 +50,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMChromeWindow.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
@@ -1521,9 +1522,13 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
   // XPConnect to wrap aGlobalObject since it's already wrapped.
 
   if (!global) {
+    nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
+
+    PRUint32 flags = chromeWindow ? nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT : 0;
+
     rv = xpc->InitClassesWithNewWrappedGlobal(mContext, aGlobalObject,
                                               NS_GET_IID(nsISupports),
-                                              PR_FALSE,
+                                              flags,
                                               getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {

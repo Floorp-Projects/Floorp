@@ -44,6 +44,7 @@
 
 #include "xpcprivate.h"
 #include "nsString.h"
+#include "XPCNativeWrapper.h"
 
 //#define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
@@ -1062,6 +1063,50 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
             *pErr = rv;
         if(NS_SUCCEEDED(rv) && wrapper)
         {
+            if (wrapper->GetScope() != xpcscope)
+            {
+                // Cross scope access detected. Check if chrome code
+                // is accessing non-chrome objects, and if so, wrap
+                // the XPCWrappedNative with an XPCNativeWrapper to
+                // prevent user-defined properties from shadowing DOM
+                // properties from chrome code.
+
+                // printf("Wrapped native accessed across scope boundary\n");
+
+                uint32 flags = JS_GetTopScriptFilenameFlags(ccx, nsnull);
+                NS_ASSERTION(flags != JSFILENAME_NULL, "null script filename");
+
+                if((flags & JSFILENAME_SYSTEM) &&
+                   !JS_IsSystemObject(ccx, wrapper->GetFlatJSObject()))
+                {
+#ifdef DEBUG_XPCNativeWrapper
+                    printf("Content accessed from chrome, wrapping wrapper in XPCNativeWrapper\n");
+#endif
+
+                    JSObject *nativeWrapper =
+                        XPCNativeWrapper::GetNewOrUsed(ccx, wrapper);
+
+                    if (nativeWrapper)
+                    {
+                        XPCJSObjectHolder *objHolder =
+                            XPCJSObjectHolder::newHolder(ccx, nativeWrapper);
+
+                        if (objHolder)
+                        {
+                            NS_ADDREF(objHolder);
+                            NS_RELEASE(wrapper);
+
+                            *dest = objHolder;
+                            return JS_TRUE;
+                        }
+                    }
+
+                    // Out of memory
+                    NS_RELEASE(wrapper);
+                    return JS_FALSE;
+                }
+            }
+
             *dest = NS_STATIC_CAST(nsIXPConnectJSObjectHolder*, wrapper);
             return JS_TRUE;
         }

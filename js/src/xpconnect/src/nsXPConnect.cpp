@@ -43,6 +43,7 @@
 /* High level class and public functions implementation. */
 
 #include "xpcprivate.h"
+#include "XPCNativeWrapper.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPConnect,nsIXPConnect,nsISupportsWeakReference)
 
@@ -446,6 +447,10 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     // Initialize any properties IDispatch needs on the global object
     XPCIDispatchExtension::Initialize(ccx, aGlobalJSObj);
 #endif
+
+    if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, aGlobalJSObj))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
     return NS_OK;
 }
 
@@ -463,12 +468,12 @@ static JSClass xpcTempGlobalClass = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-/* nsIXPConnectJSObjectHolder initClassesWithNewWrappedGlobal (in JSContextPtr aJSContext, in nsISupports aCOMObj, in nsIIDRef aIID, in PRBool aCallJS_InitStandardClasses); */
+/* nsIXPConnectJSObjectHolder initClassesWithNewWrappedGlobal (in JSContextPtr aJSContext, in nsISupports aCOMObj, in nsIIDRef aIID, in PRUint32 aFlags); */
 NS_IMETHODIMP
 nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
                                              nsISupports *aCOMObj,
                                              const nsIID & aIID,
-                                             PRBool aCallJS_InitStandardClasses,
+                                             PRUint32 aFlags,
                                              nsIXPConnectJSObjectHolder **_retval)
 {
     NS_ASSERTION(aJSContext, "bad param");
@@ -490,6 +495,9 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
        !JS_SetPrototype(aJSContext, tempGlobal, nsnull))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
+    if(aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT)
+        JS_FlagSystemObject(aJSContext, tempGlobal);
+
     if(NS_FAILED(InitClasses(aJSContext, tempGlobal)))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -502,6 +510,9 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     if(NS_FAILED(holder->GetJSObject(&globalJSObj)) || !globalJSObj)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
+    if(aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT)
+        NS_ASSERTION(JS_IsSystemObject(aJSContext, globalJSObj), "huh?!");
+
     // voodoo to fixup scoping and parenting...
 
     JS_SetParent(aJSContext, globalJSObj, nsnull);
@@ -510,7 +521,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     if(!oldGlobal || oldGlobal == tempGlobal)
         JS_SetGlobalObject(aJSContext, globalJSObj);
 
-    if(aCallJS_InitStandardClasses &&
+    if((aFlags & nsIXPConnect::INIT_JS_STANDARD_CLASSES) &&
        !JS_InitStandardClasses(aJSContext, globalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -536,6 +547,9 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     }
 
     if(!nsXPCComponents::AttachNewComponentsObject(ccx, scope, globalJSObj))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, globalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     NS_ADDREF(*_retval = holder);
@@ -1252,6 +1266,26 @@ nsXPConnect::JSToVariant(JSContext* ctx, jsval value, nsIVariant** _retval)
     if(!(*_retval)) 
         return NS_ERROR_FAILURE;
 
+    return NS_OK;
+}
+
+/* void flagSystemFilenamePrefix (in string filenamePrefix); */
+NS_IMETHODIMP 
+nsXPConnect::FlagSystemFilenamePrefix(const char *aFilenamePrefix)
+{
+    NS_PRECONDITION(aFilenamePrefix, "bad param");
+
+    nsIJSRuntimeService* rtsvc = nsXPConnect::GetJSRuntimeService();
+    if(!rtsvc)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    JSRuntime* rt;
+    nsresult rv = rtsvc->GetRuntime(&rt);
+    if(NS_FAILED(rv))
+        return rv;
+
+    if(!JS_FlagScriptFilenamePrefix(rt, aFilenamePrefix, JSFILENAME_SYSTEM))
+        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
