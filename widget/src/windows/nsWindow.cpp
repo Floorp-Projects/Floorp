@@ -3530,12 +3530,10 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   // Ctrl+[Add, Subtract, Equals] are always handled here to make text zoom shortcuts work
   // on different keyboard layouts (Equals is needed because many layouts return it when
   // pressing Ctrl++ and that's why it's also accepted as a shortcut for increasing zoom).
-  // Alt+[a..z] are handled here to keep them lowercase (not affected by Caps Lock).
   if (virtualKeyCode == NS_VK_RETURN || virtualKeyCode == NS_VK_BACK ||
       (mIsControlDown && !mIsAltDown && !mIsShiftDown &&
        (virtualKeyCode == NS_VK_ADD || virtualKeyCode == NS_VK_SUBTRACT ||
-        virtualKeyCode == NS_VK_EQUALS)) ||
-      (!mIsControlDown && mIsAltDown && virtualKeyCode >= NS_VK_A && virtualKeyCode <= NS_VK_Z))
+        virtualKeyCode == NS_VK_EQUALS)))
   {
     // Remove a possible WM_CHAR or WM_SYSCHAR from the message queue
     if (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR)) {
@@ -3615,9 +3613,12 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
       if ((NS_VK_0 <= virtualKeyCode && virtualKeyCode <= NS_VK_9) ||
           (NS_VK_A <= virtualKeyCode && virtualKeyCode <= NS_VK_Z)) {
         asciiKey = virtualKeyCode;
-        // Take the Shift state into account
-        if (!mIsShiftDown && NS_VK_A <= virtualKeyCode && virtualKeyCode <= NS_VK_Z)
+        // Take the Shift state into account. We need a lowercase character
+        // regardless of Shift if Ctrl or Alt is down
+        if ((!mIsShiftDown || mIsAltDown || mIsControlDown) 
+            && NS_VK_A <= virtualKeyCode && virtualKeyCode <= NS_VK_Z) {
           asciiKey += 0x20;
+        }
       }
   }
 
@@ -3724,6 +3725,13 @@ BOOL nsWindow::OnChar(UINT charCode, PRUint32 aFlags)
       }
       charCode = 0;
     }
+  }
+
+  // Fix for bug 285161 which was caused by the initial fix for bug 178110.
+  // When pressing (alt|ctrl)+char, the char must be lowercase
+  // (regardless of Caps Lock or shift state).
+  if (saveIsAltDown || saveIsControlDown) {
+    uniChar = towlower(uniChar);
   }
 
   PRBool result = DispatchKeyEvent(NS_KEY_PRESS, uniChar, charCode, 0, aFlags);
