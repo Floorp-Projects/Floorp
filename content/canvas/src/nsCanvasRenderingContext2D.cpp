@@ -242,6 +242,7 @@ protected:
     nsCOMPtr<nsICSSParser> mCSSParser;
 
     // yay cairo
+    PRUint32 mSaveCount;
     cairo_t *mCairo;
     cairo_surface_t *mSurface;
     char *mSurfaceData;
@@ -300,7 +301,7 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
     : mCanvasElement(nsnull),
-      mDirty(PR_TRUE), mCairo(nsnull), mSurface(nsnull), mSurfaceData(nsnull)
+      mDirty(PR_TRUE), mSaveCount(0), mCairo(nsnull), mSurface(nsnull), mSurfaceData(nsnull)
 {
     mColorStyles[STYLE_STROKE] = NS_RGB(0,0,0);
     mColorStyles[STYLE_FILL] = NS_RGB(0,0,0);
@@ -685,6 +686,7 @@ nsCanvasRenderingContext2D::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Save()
 {
+    mSaveCount++;
     cairo_save (mCairo);
     return NS_OK;
 }
@@ -692,7 +694,10 @@ nsCanvasRenderingContext2D::Save()
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Restore()
 {
-    cairo_restore (mCairo);
+    if (mSaveCount > 0) {
+        mSaveCount--;
+        cairo_restore (mCairo);
+    }
     return NS_OK;
 }
 
