@@ -108,7 +108,7 @@ function navigation($pre_href='?page=', $post_href='', $num_items=0, $items_per_
 */
 
   // &//8230; is the ellipse character: "..."
-  $space = '<span class="spacer"> &//8230; '."\n\t".'</span>';
+  $space = '<span class="spacer"> &#8230; '."\n\t".'</span>';
 
   // There's no point in printing this string if there are no items,
   // Or if they all fit on one page.
