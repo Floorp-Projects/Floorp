@@ -32,7 +32,7 @@ calendar.jar:
   content/calendar/calendar-event-dialog.js	(/calendar/base/content/calendar-event-dialog.js)
   content/calendar/calendar-event-dialog.xul	(/calendar/base/content/calendar-event-dialog.xul)
   content/calendar/calendar-event-dialog.css	(/calendar/base/content/calendar-event-dialog.css)
-  content/calendar/calendar-event-dialog-alarms.xul	(/calendar/base/content/calendar-event-dialog-alarms.xul)
+
 calendar-en-US.jar:
   locale/en-US/calendar/global.dtd		(/calendar/resources/locale/en-US/global.dtd)
   locale/en-US/calendar/calendar.dtd		(/calendar/resources/locale/en-US/calendar.dtd)
