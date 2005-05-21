@@ -80,6 +80,18 @@ public:
     virtual nsresult SetNumCopies(int aNumCopies) = 0;
 
     /**
+     * Set the print job title. Some printing systems accept a job title
+     * which is displayed on a banner page, in a print queue listing, etc.
+     *
+     * This must be called after Init() and before StartSubmission().
+     * nsIPrintJobPS provides a stub implementation because most classes
+     * do not make use of this information.
+     * 
+     * @param aTitle  The job title.
+     */
+    virtual void SetJobTitle(const PRUnichar *aTitle) { }
+
+    /**
      * Begin submitting a print job. 
      * @param aHandle If the return value is NS_OK, this will be filled
      *                in with a file handle which the caller should use

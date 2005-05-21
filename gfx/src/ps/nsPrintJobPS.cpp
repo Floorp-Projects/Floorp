@@ -363,6 +363,7 @@ nsPrintJobCUPS::Init(nsIDeviceContextSpecPS *aSpec)
 
     const char *slash = strchr(printerName, '/');
     mPrinterName = slash ? slash + 1 : printerName;
+    mJobTitle.SetIsVoid(PR_TRUE);
     return NS_OK;
 }
 
@@ -374,6 +375,20 @@ nsPrintJobCUPS::SetNumCopies(int aNumCopies)
         mNumCopies.AppendInt(aNumCopies);
     return NS_OK;
 }
+
+
+/* According to the cups.development forum, only plain ASCII may be
+ * reliably used for CUPS print job titles. See
+ * <http://www.cups.org/newsgroups.php?s523+gcups.development+v530+T0>.
+ */
+void
+nsPrintJobCUPS::SetJobTitle(const PRUnichar *aTitle)
+{
+    if (aTitle) {
+        LossyCopyUTF16toASCII(aTitle, mJobTitle);
+    }
+}
+
 
 nsresult
 nsPrintJobCUPS::StartSubmission(FILE **aHandle)
@@ -430,8 +445,10 @@ nsPrintJobCUPS::FinishSubmission()
                                                        mNumCopies.get(),
                                                        dest->num_options,
                                                        &dest->options);
+        const char *title = mJobTitle.IsVoid() ?
+            "Untitled Document" : mJobTitle.get();
         result = (mCups.mCupsPrintFile)(printer.CStringAt(0)->get(),
-                                            GetDestination().get(), "Mozilla print job", 
+                                            GetDestination().get(), title, 
                                             dest->num_options, dest->options);
     }
     (mCups.mCupsFreeDests)(num_dests, dests);
