@@ -821,7 +821,7 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     hasStringArgs = PR_TRUE;
   }
 
-  jsval isDeep = !hasStringArgs;
+  JSBool isDeep = !hasStringArgs;
   if (!::JS_SetReservedSlot(cx, wrapperObj, 0, BOOLEAN_TO_JSVAL(isDeep))) {
     return JS_FALSE;
   }
@@ -1007,7 +1007,9 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
 
   obj = ::JS_NewObject(cx, GetJSClass(), nsnull, nw_parent);
 
-  if (!obj || !::JS_SetPrivate(cx, obj, wrapper)) {
+  if (!obj ||
+      !::JS_SetPrivate(cx, obj, wrapper) ||
+      !::JS_SetReservedSlot(cx, obj, 0, JSVAL_TRUE)) {
     return nsnull;
   }
 
