@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dsa.c,v 1.13 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
+/* $Id: dsa.c,v 1.14 2005/05/21 21:35:24 nelsonb%netscape.com Exp $ */
 
 #include "secerr.h"
 
@@ -188,11 +188,12 @@ dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest,
     /* FIPS-compliance dictates that digest is a SHA1 hash. */
     /* Check args. */
     if (!key || !signature || !digest ||
-        (signature->len != DSA_SIGNATURE_LEN) ||
+        (signature->len < DSA_SIGNATURE_LEN) ||
 	(digest->len != SHA1_LENGTH)) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
+
     /* Initialize MPI integers. */
     MP_DIGITS(&p) = 0;
     MP_DIGITS(&q) = 0;
@@ -253,6 +254,7 @@ dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest,
                                   DSA_SUBPRIME_LEN);
     if (err < 0) goto cleanup; 
     err = MP_OKAY;
+    signature->len = DSA_SIGNATURE_LEN;
 cleanup:
     mp_clear(&p);
     mp_clear(&q);
