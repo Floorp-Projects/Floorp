@@ -1304,7 +1304,7 @@ JS_FlagScriptFilenamePrefix(JSRuntime *rt, const char *prefix, uint32 flags)
 JS_PUBLIC_API(JSBool)
 JS_IsSystemObject(JSContext *cx, JSObject *obj)
 {
-    return *js_GetGCThingFlags(obj) & GCF_SYSTEM;
+    return (*js_GetGCThingFlags(obj) & GCF_SYSTEM) != 0;
 }
 
 JS_PUBLIC_API(void)
