@@ -109,9 +109,9 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
 // the wrapped native's flat JSObject, so the hook and args macro parameters
 // can be simply:
 //
-//      getProperty, (cx, obj, id, vp)
+//      addProperty, (cx, obj, id, vp)
 //
-// in the call from XPC_NW_GetProperty, for example.
+// in the call from XPC_NW_AddProperty, for example.
 
 #define XPC_NW_CALL_HOOK(cx, obj, hook, args)                                 \
     return JS_GET_CLASS(cx, obj)->hook args;
