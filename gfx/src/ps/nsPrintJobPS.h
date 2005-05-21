@@ -170,6 +170,7 @@ class nsPrintJobCUPS : public nsPrintJobFilePS {
         nsresult StartSubmission(FILE **aHandle);
         nsresult FinishSubmission();
         nsresult SetNumCopies(int aNumCopies);
+        void SetJobTitle(const PRUnichar *aTitle);
 
     protected:
         nsresult Init(nsIDeviceContextSpecPS *);
@@ -178,6 +179,7 @@ class nsPrintJobCUPS : public nsPrintJobFilePS {
         nsCUPSShim mCups;
         nsCString mPrinterName;
         nsCString mNumCopies;
+        nsCString mJobTitle;        // IsVoid() if no title
 };
 #endif  /* VMS */
 

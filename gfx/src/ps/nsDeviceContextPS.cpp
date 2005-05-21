@@ -428,8 +428,10 @@ NS_IMETHODIMP nsDeviceContextPS::BeginDocument(PRUnichar * aTitle, PRUnichar* aP
   PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::BeginDocument()\n"));
 
   NS_ENSURE_TRUE(mPSObj != nsnull, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mPrintJob != nsnull, NS_ERROR_NULL_POINTER);
 
   mPSObj->settitle(aTitle); 
+  mPrintJob->SetJobTitle(aTitle);
   return NS_OK;
 }
 
