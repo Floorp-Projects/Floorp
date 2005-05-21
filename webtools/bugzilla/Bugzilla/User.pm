@@ -1091,8 +1091,9 @@ sub insert_new_user ($$;$$) {
 
     # Insert the new user record into the database.
     $dbh->do("INSERT INTO profiles 
-                          (login_name, realname, cryptpassword, disabledtext) 
-                   VALUES (?, ?, ?, ?)",
+                          (login_name, realname, cryptpassword, disabledtext,
+                           refreshed_when) 
+                   VALUES (?, ?, ?, ?, '1901-01-01 00:00:00')",
              undef, 
              ($username, $realname, $cryptpassword, $disabledtext));
 
@@ -1133,12 +1134,14 @@ sub is_available_username ($;$) {
     #
     # substring/locate stuff: bug 165221; this used to use regexes, but that
     # was unsafe and required weird escaping; using substring to pull out
-    # the new/old email addresses and locate() to find the delimeter (':')
+    # the new/old email addresses and sql_position() to find the delimiter (':')
     # is cleaner/safer
     my $sth = $dbh->prepare(
         "SELECT eventdata FROM tokens WHERE tokentype = 'emailold'
-        AND SUBSTRING(eventdata, 1, (LOCATE(':', eventdata) - 1)) = ?
-        OR SUBSTRING(eventdata, (LOCATE(':', eventdata) + 1)) = ?");
+        AND SUBSTRING(eventdata, 1, (" 
+        . $dbh->sql_position(q{':'}, 'eventdata') . "-  1)) = ?
+        OR SUBSTRING(eventdata, (" 
+        . $dbh->sql_position(q{':'}, 'eventdata') . "+ 1)) = ?");
     $sth->execute($username, $username);
 
     if (my ($eventdata) = $sth->fetchrow_array()) {
