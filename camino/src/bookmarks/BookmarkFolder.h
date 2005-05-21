@@ -113,7 +113,7 @@ enum {
 -(void) buildFlatFolderList:(NSMenu *)menu depth:(unsigned)pad;
 
 // searching
--(NSArray *) resolveKeyword:(NSString *)aString;
+-(NSArray*)resolveKeyword:(NSString *)keyword withArgs:(NSString *)args;
 -(NSSet *) bookmarksWithString:(NSString *)searchString inFieldWithTag:(int)tag;
 - (BOOL)containsChildItem:(BookmarkItem*)inItem;
 

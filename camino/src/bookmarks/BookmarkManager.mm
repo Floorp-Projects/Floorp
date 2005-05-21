@@ -424,8 +424,20 @@ static unsigned gFirstUserCollection = 0;
 -(NSArray *)resolveBookmarksKeyword:(NSString *)keyword
 {
   NSArray *resolvedArray = nil;
-  if (![keyword isEqualToString:@""])
-    resolvedArray = [[self rootBookmarks] resolveKeyword:keyword];
+  if (![keyword isEqualToString:@""]) {
+    NSRange spaceRange = [keyword rangeOfString:@" "];
+    NSString *firstWord = nil;
+    NSString *secondWord = nil;
+    if (spaceRange.location != NSNotFound) {
+      firstWord = [keyword substringToIndex:spaceRange.location];
+      secondWord = [keyword substringFromIndex:(spaceRange.location + spaceRange.length)];
+    }
+    else {
+      firstWord = keyword;
+      secondWord = @"";
+    }
+    resolvedArray = [[self rootBookmarks] resolveKeyword:firstWord withArgs:secondWord];
+  }
   if (resolvedArray)
     return resolvedArray;
   return [NSArray arrayWithObject:keyword];

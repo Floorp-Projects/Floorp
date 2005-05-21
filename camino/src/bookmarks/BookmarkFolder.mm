@@ -685,43 +685,29 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 //
 // searching/keywords processing
 //
--(NSArray *)resolveKeyword:(NSString *)aString
+-(NSArray*)resolveKeyword:(NSString *)keyword withArgs:(NSString *)args
 {
   // see if it's us
-  if ([[self keyword] isEqualToString:aString])
-    return [self childURLs];
-  // see if it's us after an expansion
-  NSRange spaceRange = [aString rangeOfString:@" "];
-  NSString *firstWord = nil;
-  NSString *secondWord = nil;
-  if (spaceRange.location != NSNotFound) {
-    firstWord = [aString substringToIndex:spaceRange.location];
-    secondWord = [aString substringFromIndex:(spaceRange.location + spaceRange.length)];
-    if ([[self keyword] isEqualToString:firstWord]) {
-      NSMutableArray *urlArray = (NSMutableArray *)[self childURLs];
-      int i, j=[urlArray count];
-      for (i = 0; i < j; i++) {
-        NSString *newURL = [self expandKeyword:secondWord inString:[urlArray objectAtIndex:i]];
-        [urlArray replaceObjectAtIndex:i withObject:newURL];
-      }
-      return urlArray;
+  if ([[self keyword] isEqualToString:keyword]) {
+    NSMutableArray *urlArray = (NSMutableArray *)[self childURLs];
+    int i, j=[urlArray count];
+    for (i = 0; i < j; i++) {
+      NSString *newURL = [self expandKeyword:args inString:[urlArray objectAtIndex:i]];
+      [urlArray replaceObjectAtIndex:i withObject:newURL];
     }
+    return urlArray;
   }
   // see if it's one of our kids
-  NSArray *childArray = nil;
   NSEnumerator* enumerator = [[self childArray] objectEnumerator];
   id aKid;
   while ((aKid = [enumerator nextObject])) {
     if ([aKid isKindOfClass:[Bookmark class]]) {
-      if ([[aKid keyword] isEqualToString:aString])
-        return [NSArray arrayWithObject:[aKid url]];
-      if (firstWord) {
-        if ([[aKid keyword] isEqualToString:firstWord])
-          return [NSArray arrayWithObject:[self expandKeyword:secondWord inString:[aKid url]]];
-      }
+      if ([[aKid keyword] isEqualToString:keyword])
+      return [NSArray arrayWithObject:[self expandKeyword:args inString:[aKid url]]];
     }
     else if ([aKid isKindOfClass:[BookmarkFolder class]]) {
-      childArray = [aKid resolveKeyword:aString];
+      // recurse into sub-folders
+      NSArray *childArray = [aKid resolveKeyword:keyword withArgs:(NSString *)args];
       if (childArray)
         return childArray;
     }
@@ -781,7 +767,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
     
     if ([curChild isKindOfClass:[BookmarkFolder class]])
     {
-      if ([curChild containsChildItem:inItem])
+      if ([(BookmarkFolder *)curChild containsChildItem:inItem])
         return YES;
     }
   }
