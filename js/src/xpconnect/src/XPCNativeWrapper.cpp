@@ -900,6 +900,10 @@ XPC_NW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   return JS_TRUE;
 }
 
+extern JSBool JS_DLL_CALLBACK
+XPC_WN_Shared_ToString(JSContext *cx, JSObject *obj,
+                       uintN argc, jsval *argv, jsval *vp);
+
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval)
@@ -922,20 +926,27 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     XPCNativeWrapper::GetWrappedNative(cx, obj);
 
   JSObject *wn_obj = wrappedNative->GetFlatJSObject();
-  JSObject *wn_pobj;
-  JSProperty *prop;
+  jsval toStringVal;
 
-  // Check whether any object nearer than the last on the prototype
-  // chain, namely Object.prototype, defines a toString property.
-  if (!OBJ_LOOKUP_PROPERTY(cx, wn_obj, id, &wn_pobj, &prop)) {
+  // Check whether toString has been overridden from its XPCWrappedNative
+  // default native method.
+  if (!OBJ_GET_PROPERTY(cx, wn_obj, id, &toStringVal)) {
     return JS_FALSE;
   }
-  JSBool overridden = prop && ::JS_GetPrototype(cx, wn_pobj) != nsnull;
-  OBJ_DROP_PROPERTY(cx, wn_pobj, prop);
+
+  JSBool overridden = JS_TypeOfValue(cx, toStringVal) != JSTYPE_FUNCTION;
+  if (!overridden) {
+    JSObject *toStringFunObj = JSVAL_TO_OBJECT(toStringVal);
+    JSFunction *toStringFun = (JSFunction*) ::JS_GetPrivate(cx, toStringFunObj);
+
+    overridden =
+      ::JS_GetFunctionNative(cx, toStringFun) != XPC_WN_Shared_ToString;
+  }
 
   JSString* str;
   if (overridden) {
-    // Something overrides Object.prototype.toString -- defer to it.
+    // Something overrides XPCWrappedNative.prototype.toString, we
+    // should defer to it.
 
     str = ::JS_ValueToString(cx, OBJECT_TO_JSVAL(wn_obj));
   } else {
