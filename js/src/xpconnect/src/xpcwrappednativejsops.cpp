@@ -118,7 +118,7 @@ ToStringGuts(XPCCallContext& ccx)
 
 /***************************************************************************/
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+JSBool JS_DLL_CALLBACK
 XPC_WN_Shared_ToString(JSContext *cx, JSObject *obj,
                        uintN argc, jsval *argv, jsval *vp)
 {
