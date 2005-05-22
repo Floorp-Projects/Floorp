@@ -338,7 +338,15 @@ function setValReportID(results) {
 }
 
 function getProduct() {
-  // only works on Gecko 1.8 and higher
+  try {
+    // Works on Firefox 1.0+ and Future SeaMonkey's
+    var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                            .getService(Components.interfaces.nsIXULAppInfo);
+    // Use App info if possible
+    return appInfo.name+"/"+appInfo.version;
+  }
+  catch(ex) {}
+  // only works on Gecko 1.8 and higher (if above doesn't return)
   if ('nsIChromeRegistrySea' in Components.interfaces) {
     return 'SeaMonkey/'+
     Components.classes['@mozilla.org/network/io-service;1']
@@ -346,17 +354,11 @@ function getProduct() {
               .getProtocolHandler('http')
               .QueryInterface(Components.interfaces.nsIHttpProtocolHandler).misc.substring(3);
   }
-  // Firefox < 1.0+
+  // Firefox < 1.0+ or a last ditch effort for others that may fail
   else if (navigator.vendor != ''){
     return window.navigator.vendor+'/'+window.navigator.vendorSub;
   }
-  // Firefox 1.0+
-  try {
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                           getService(Components.interfaces.nsIPrefService);
-    return prefs.getCharPref("general.useragent.extra.firefox");
-  }
-  catch(ex) {
+  else {
     return "Unknown";
   }
 }
