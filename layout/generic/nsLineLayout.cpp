@@ -593,8 +593,18 @@ nsLineLayout::EndSpan(nsIFrame* aFrame,
 
         // Compute max-element-width if necessary
         if (aMaxElementWidth) {
-          nscoord mw = pfd->mMaxElementWidth +
-            pfd->mMargin.left + pfd->mMargin.right;
+          nscoord mw = pfd->mMaxElementWidth;
+          // add only fixed margins to the MEW
+          if (pfd->mMargin.left) {
+            if (pfd->mFrame->GetStyleMargin()->mMargin.GetLeftUnit() ==
+                eStyleUnit_Coord)
+              mw += pfd->mMargin.left;
+          }
+          if (pfd->mMargin.right) {
+            if (pfd->mFrame->GetStyleMargin()->mMargin.GetRightUnit() ==
+                eStyleUnit_Coord)
+              mw += pfd->mMargin.right;
+          }
           if (maxElementWidth < mw) {
             maxElementWidth = mw;
           }
@@ -1709,8 +1719,19 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
     // Compute max-element-width if necessary
     if (mComputeMaxElementWidth) {
 
-      nscoord mw = pfd->mMaxElementWidth +
-        pfd->mMargin.left + pfd->mMargin.right + indent;
+      nscoord mw = pfd->mMaxElementWidth + indent;
+      // add only fixed margins to the MEW
+      if (pfd->mMargin.left) {
+        if (pfd->mFrame->GetStyleMargin()->mMargin.GetLeftUnit() ==
+            eStyleUnit_Coord)
+          mw += pfd->mMargin.left;
+      }
+      if (pfd->mMargin.right) {
+        if (pfd->mFrame->GetStyleMargin()->mMargin.GetRightUnit() ==
+            eStyleUnit_Coord)
+          mw += pfd->mMargin.right;
+      }
+
       // Zero |indent| after including the 'text-indent' only for the
       // frame that is indented.
       indent = 0;
