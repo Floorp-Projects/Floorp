@@ -4088,6 +4088,16 @@ DOMJSClass_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   JSObject *dom_obj = JSVAL_TO_OBJECT(v);
   NS_ASSERTION(dom_obj, "DOMJSClass_HasInstance couldn't get object");
 
+  // This might not be the right object, if XPCNativeWrapping
+  // happened.  Get the wrapped native for this object, then get its
+  // JS object.
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native;
+  nsContentUtils::XPConnect()->
+    GetWrappedNativeOfJSObject(cx, dom_obj, getter_AddRefs(wrapped_native));
+  if (wrapped_native) {
+    wrapped_native->GetJSObject(&dom_obj);
+  }
+
   JSClass *dom_class = JS_GET_CLASS(cx, dom_obj);
   if (!dom_class) {
     NS_ERROR("DOMJSClass_HasInstance can't get class.");
