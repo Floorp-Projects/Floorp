@@ -793,17 +793,17 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
       if (NS_FAILED(result)) {
         aToken->SetInError(PR_TRUE);
 
-        // Note: We know here that the scanner is not incremental since if
-        // this peek fails, then we've already masked over a kEOF coming from
-        // the Consume() call above.
-        return NS_OK;
-      }
-
-      if(kGreaterThan != aChar) { // Look for a '>'
-        result = ConsumeAttributes(aChar, aToken, aScanner);
+        // Don't return early here so we can create a text and end token for
+        // the special <iframe>, <script> and similar tags down below.
+        result = NS_OK;
       }
       else {
-        aScanner.GetChar(aChar);
+        if(kGreaterThan != aChar) { // Look for a '>'
+          result = ConsumeAttributes(aChar, aToken, aScanner);
+        }
+        else {
+          aScanner.GetChar(aChar);
+        }
       }
 
       /*  Now that that's over with, we have one more problem to solve.
