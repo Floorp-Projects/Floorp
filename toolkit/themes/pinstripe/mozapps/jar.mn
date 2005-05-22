@@ -18,8 +18,6 @@ classic.jar:
   skin/classic/mozapps/extensions/extensionOptions.png            (extensions/extensionOptions.png)
   skin/classic/mozapps/extensions/extensionOptions-pressed.png    (extensions/extensionOptions-pressed.png)
   skin/classic/mozapps/extensions/themeGeneric.png                (extensions/themeGeneric.png)
-  skin/classic/mozapps/extensions/viewWatermarkExtensions.png     (extensions/viewWatermarkExtensions.png)
-  skin/classic/mozapps/extensions/viewWatermarkThemes.png         (extensions/viewWatermarkThemes.png)
   skin/classic/mozapps/extensions/about.css                       (extensions/about.css)
   skin/classic/mozapps/extensions/extensions.css                  (extensions/extensions.css)
   skin/classic/mozapps/pref/check.gif                             (pref/check.gif)
