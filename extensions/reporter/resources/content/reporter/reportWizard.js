@@ -96,8 +96,9 @@ function initPrivacyNotice() {
   if (getBoolPref("hidePrivacyStatement", false)) {
     reportWizard.advance();
   } else {
-    // Don't let users rewind
+    // Don't let users rewind or go forward
     reportWizard.canRewind = false;
+    reportWizard.canAdvance = false;
 
     // Load Privacy Policy
     var privacyURL = getCharPref("privacyURL", "http://reporter-test.mozilla.org/privacy/");
