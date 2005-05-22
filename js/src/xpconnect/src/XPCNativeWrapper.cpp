@@ -41,9 +41,6 @@
 #include "XPCNativeWrapper.h"
 
 JS_STATIC_DLL_CALLBACK(JSBool)
-XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
-
-JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -91,7 +88,7 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
     JSCLASS_IS_EXTENDED,
-    XPC_NW_AddProperty, XPC_NW_DelProperty,
+    JS_PropertyStub,    XPC_NW_DelProperty,
     XPC_NW_GetProperty, XPC_NW_SetProperty,
     XPC_NW_Enumerate,   (JSResolveOp)XPC_NW_NewResolve,
     XPC_NW_Convert,     JS_FinalizeStub,
@@ -109,9 +106,9 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
 // the wrapped native's flat JSObject, so the hook and args macro parameters
 // can be simply:
 //
-//      addProperty, (cx, obj, id, vp)
+//      enumerate, (cx, obj, id, vp)
 //
-// in the call from XPC_NW_AddProperty, for example.
+// in the call from XPC_NW_Enumerate, for example.
 
 #define XPC_NW_CALL_HOOK(cx, obj, hook, args)                                 \
     return JS_GET_CLASS(cx, obj)->hook args;
@@ -181,14 +178,6 @@ GetStringByIndex(JSContext *cx, uintN index)
     return JSVAL_VOID;
 
   return ID_TO_VALUE(rt->GetStringID(index));
-}
-
-JS_STATIC_DLL_CALLBACK(JSBool)
-XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-  XPC_NW_BYPASS(cx, obj, addProperty, (cx, obj, id, vp));
-
-  return JS_TRUE;
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -733,7 +722,7 @@ MirrorWrappedNativeParent(JSContext *cx, XPCWrappedNative *wrapper,
     *result = nsnull;
   } else {
     XPCWrappedNative *parent_wrapper =
-      XPCNativeWrapper::GetWrappedNative(cx, wn_parent);
+      XPCWrappedNative::GetWrappedNativeOfJSObject(cx, wn_parent);
 
     *result = XPCNativeWrapper::GetNewOrUsed(cx, parent_wrapper);
     if (!*result)
@@ -789,8 +778,14 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   if (XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
     // Use the object the JS engine created for us.
+#ifdef DEBUG_XPCNativeWrapper
+    printf("Using pre-created JSObject\n");
+#endif
     wrapperObj = obj;
   } else {
+#ifdef DEBUG_XPCNativeWrapper
+    printf("Creating new JSObject\n");
+#endif
     wrapperObj = ::JS_NewObject(cx, XPCNativeWrapper::GetJSClass(), nsnull,
                                 nsnull);
 
