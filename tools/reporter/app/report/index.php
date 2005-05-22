@@ -78,7 +78,7 @@ if (!$query->fields){
 	</tr>
 	<tr>
 		<th>URL:</th>
-		<td><a href="<?php print $query->fields['report_url']; ?>" target="_blank"><?php print $query->fields['report_url']; ?></a></td>
+		<td><a href="<?php print $query->fields['report_url']; ?>" target="_blank" rel="nofollow"><?php print $query->fields['report_url']; ?></a></td>
 	</tr>
 	<tr>
 		<th>Host:</th>
