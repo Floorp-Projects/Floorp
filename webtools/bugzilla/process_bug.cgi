@@ -402,6 +402,7 @@ sub CheckCanChangeField {
         return 1;
     # numeric fields need to be compared using == 
     } elsif (($field eq "estimated_time" || $field eq "remaining_time")
+             && $newvalue ne $cgi->param('dontchange')
              && $oldvalue == $newvalue)
     {
         return 1;
