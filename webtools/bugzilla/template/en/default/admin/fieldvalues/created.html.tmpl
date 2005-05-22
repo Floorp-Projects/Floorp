@@ -19,7 +19,7 @@
   # field: string; the name of the field the value belongs to
   #%]
   
-[% title = BLOCK %]New Value '[% product FILTER html %]' added to 
+[% title = BLOCK %]New Value '[% value FILTER html %]' added to 
   '[% field FILTER html %]' field[% END %]
 [% PROCESS global/header.html.tmpl
   title = title
