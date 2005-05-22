@@ -249,7 +249,9 @@ sub match {
     my @criteria = sqlify_criteria($criteria, \@tables);
     
     # Build the query, grouping the types if we are counting flags.
-    my $select_clause = "SELECT " . join(", ", @columns);
+    # DISTINCT is used in order to count flag types only once when
+    # they appear several times in the flaginclusions table.
+    my $select_clause = "SELECT DISTINCT " . join(", ", @columns);
     my $from_clause = "FROM " . join(" ", @tables);
     my $where_clause = "WHERE " . join(" AND ", @criteria);
     
