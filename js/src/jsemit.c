@@ -4077,10 +4077,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         switch (pn2->pn_type) {
           case TOK_NAME:
             if (pn2->pn_slot < 0 || !(pn2->pn_attrs & JSPROP_READONLY)) {
-          case TOK_DOT:
                 if (pn2->pn_slot >= 0) {
                     EMIT_UINT16_IMM_OP(pn2->pn_op, atomIndex);
                 } else {
+          case TOK_DOT:
                     EMIT_ATOM_INDEX_OP(pn2->pn_op, atomIndex);
                 }
             }
