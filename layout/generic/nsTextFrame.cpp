@@ -1306,18 +1306,16 @@ DrawSelectionIterator::GetSelectionColors(nscolor *aForeColor,
     return PR_FALSE;
   }
 
-  PRBool dontChangeTextColor = mOldStyle.mSelectionTextColor == NS_DONT_CHANGE_COLOR;
-
-  // If the selection text color is NS_DONT_CHANGE_COLOR,
-  // we don't accept the ::selection pseudo element.
-  if (!dontChangeTextColor &&
-      mSelectionPseudoStyle &&
+  if (mSelectionPseudoStyle &&
       mSelectionStatus == nsISelectionController::SELECTION_ON) {
     *aForeColor = mSelectionPseudoFGcolor;
     *aBackColor = mSelectionPseudoBGcolor;
     *aBackIsTransparent = mSelectionPseudoBGIsTransparent;
     return PR_TRUE;
   }
+
+  PRBool dontChangeTextColor =
+           mOldStyle.mSelectionTextColor == NS_DONT_CHANGE_COLOR;
 
   if (dontChangeTextColor)
     *aForeColor = mOldStyle.mColor->mColor;
