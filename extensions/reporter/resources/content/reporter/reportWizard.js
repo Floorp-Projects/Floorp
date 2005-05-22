@@ -44,7 +44,6 @@
  *******************************************************/
 
 const gURL = window.arguments[0];
-const geckoStri = "00000000"; //XXX Not used at the moment, 8 0's to ignore
 const gLanguage = window.navigator.language;
 const gRMOvers = "0.2"; // Do not touch without contacting reporter admin!
 
@@ -189,7 +188,7 @@ function sendReport() {
   param[4] = new SOAPParameter(behindLoginStri,     "behind_login");
   param[5] = new SOAPParameter(navigator.platform,  "platform");
   param[6] = new SOAPParameter(navigator.oscpu,     "oscpu");
-  param[7] = new SOAPParameter(geckoStri,           "gecko");
+  param[7] = new SOAPParameter(getGecko(),          "gecko");
   param[8] = new SOAPParameter(getProduct(),        "product");
   param[9] = new SOAPParameter(navigator.userAgent, "useragent");
   param[10] = new SOAPParameter(buildConfig,        "buildconfig");
@@ -227,7 +226,7 @@ function sendReport() {
     finishExtendedDoc.getElementById('platformStri').textContent    = navigator.platform;
     finishExtendedDoc.getElementById('oscpuStri').textContent       = navigator.oscpu;
     finishExtendedDoc.getElementById('productStri').textContent     = getProduct();
-    finishExtendedDoc.getElementById('geckoStri').textContent       = geckoStri;
+    finishExtendedDoc.getElementById('geckoStri').textContent       = getGecko();
     finishExtendedDoc.getElementById('buildConfigStri').textContent = buildConfig;
     finishExtendedDoc.getElementById('userAgentStri').textContent   = navigator.userAgent;
     finishExtendedDoc.getElementById('langStri').textContent        = gLanguage;
@@ -360,5 +359,17 @@ function getProduct() {
   }
   else {
     return "Unknown";
+  }
+}
+
+function getGecko() {
+  try {
+    var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                            .getService(Components.interfaces.nsIXULAppInfo);
+    // Use App info if possible
+    return appInfo.geckoBuildID;
+  }
+  catch(ex) {
+    return "00000000"; // 8 0's to ignore as we have historically
   }
 }
