@@ -95,6 +95,7 @@
 #include "nsNetCID.h"
 #include "nsIJARURI.h"
 #include "nsIFileURL.h"
+#include "nsIXPConnect.h"
 
 static char kChromePrefix[] = "chrome://";
 nsIAtom* nsChromeRegistry::sCPrefix; // atom for "c"
@@ -129,6 +130,7 @@ DEFINE_RDF_VOCAB(CHROME_URI, CHROME, skinVersion);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, localeVersion);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, packageVersion);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, disabled);
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, xpcNativeWrappers);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -216,6 +218,7 @@ nsChromeRegistry::Init()
     { "selectedLocale", nsnull },
     { "selectedSkin",  nsnull },
     { "hasOverlays",   nsnull },
+    { "xpcNativeWrappers", nsnull },
     { "previewURL", nsnull },
   };
 
@@ -288,6 +291,10 @@ nsChromeRegistry::Init()
 
   rv = mRDFService->GetResource(nsDependentCString(kURICHROME_disabled),
                                 getter_AddRefs(mDisabled));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(nsDependentCString(kURICHROME_xpcNativeWrappers),
+                                getter_AddRefs(mXPCNativeWrappers));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
   nsCOMPtr<nsIObserverService> observerService =
@@ -2920,7 +2927,42 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
   // Always load the install dir datasources
   LoadDataSource(kChromeFileName, getter_AddRefs(mInstallDirChromeDataSource), PR_FALSE, nsnull);
   mChromeDataSource->AddDataSource(mInstallDirChromeDataSource);
-  
+
+  // List all packages that want XPC native wrappers
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService("@mozilla.org/js/xpc/XPConnect;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsISimpleEnumerator> arcs;
+  nsCOMPtr<nsIRDFLiteral> trueLiteral;
+  mRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), getter_AddRefs(trueLiteral));
+  rv = mChromeDataSource->GetSources(mXPCNativeWrappers, trueLiteral, PR_TRUE,
+                                     getter_AddRefs(arcs));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCAutoString uri;
+  PRBool more;
+  rv = arcs->HasMoreElements(&more);
+  if (NS_FAILED(rv)) return rv;
+  while (more) {
+    nsCOMPtr<nsISupports> supp;
+    rv = arcs->GetNext(getter_AddRefs(supp));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIRDFResource> package(do_QueryInterface(supp));
+    if (package) {
+      const char urn[] = "urn:mozilla:package:";
+      const char* source;
+      package->GetValueConst(&source);
+      if (!memcmp(source, urn, sizeof urn - 1)) {
+        uri.AssignLiteral("chrome://");
+        uri.Append(source + sizeof urn - 1);
+        uri.Append('/');
+        rv = xpc->FlagSystemFilenamePrefix(uri.get());
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+    rv = arcs->HasMoreElements(&more);
+    if (NS_FAILED(rv)) return rv;
+  }
+
   return NS_OK;
 }
 

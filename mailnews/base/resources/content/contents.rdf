@@ -13,6 +13,7 @@
         chrome:displayName="Messenger"
         chrome:author="mozilla.org"
         chrome:name="messenger"
+        chrome:xpcNativeWrappers="true"
 #expand         chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"
 #expand         chrome:skinVersion="__MOZILLA_SKIN_VERSION__">
   </RDF:Description>

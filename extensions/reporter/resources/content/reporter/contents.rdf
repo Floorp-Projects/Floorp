@@ -11,7 +11,8 @@
         chrome:authorURL="http://reporter.mozilla.org/"
         chrome:extension="true"
         chrome:description="Broken Web Site Reporting Tool"
-        chrome:name="reporter">
+        chrome:name="reporter"
+        chrome:xpcNativeWrappers="true">
   </RDF:Description>
   <!-- overlay information -->
   <RDF:Seq about="urn:mozilla:overlays">

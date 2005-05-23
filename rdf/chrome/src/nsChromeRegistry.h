@@ -255,6 +255,7 @@ protected:
   nsCOMPtr<nsIRDFResource> mLocaleVersion;
   nsCOMPtr<nsIRDFResource> mPackageVersion;
   nsCOMPtr<nsIRDFResource> mDisabled;
+  nsCOMPtr<nsIRDFResource> mXPCNativeWrappers;
 
   nsCOMPtr<nsIZipReader> mOverrideJAR;
   nsCString              mOverrideJARURL;

@@ -12,6 +12,7 @@
         chrome:displayName="Form Manager"
         chrome:author="mozilla.org"
         chrome:name="wallet"
+        chrome:xpcNativeWrappers="true"
 #expand  	chrome:localeVersion="__MOZILLA_LOCALE_VERSION__">
   </RDF:Description>
 
