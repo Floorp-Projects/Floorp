@@ -108,7 +108,11 @@ comm.jar:
 *+  content/communicator/contentAreaClick.js        (content/contentAreaClick.js)
 *+  content/communicator/utilityOverlay.xul         (content/utilityOverlay.xul)
 *+  content/communicator/nsContextMenu.js           (content/nsContextMenu.js)
++   content/help/contextHelp.js                     (content/contextHelp.js)
+% content help %content/help/ xpcnativewrappers=yes
 
 toolkit.jar:
 *+  content/global/customizeToolbar.xul             (content/customizeToolbar.xul)
 *+  content/global/customizeToolbar.js              (content/customizeToolbar.js)
++   content/communicator/tasksOverlay.xul           (content/tasksOverlay.xul)
+*+  content/communicator/utilityOverlay.xul         (content/utilityOverlay.xul)
