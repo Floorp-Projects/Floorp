@@ -285,7 +285,7 @@
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="install:extensions" nc:name="Extensions" nc:link="customization.xhtml#extensions"/></rdf:li>
                 <rdf:li><rdf:Description ID="install:themes" nc:name="Themes" nc:link="customization.xhtml#themes"/></rdf:li>
-                <rdf:li><rdf:Description ID="install:updates" nc:name="Updates" nc:link="prefs.xhtml#advanced_update"/></rdf:li>
+                <rdf:li><rdf:Description ID="install:updates" nc:name="Updates" nc:link="menu_reference.xhtml#check_for_updates"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
@@ -409,7 +409,7 @@
                 <rdf:li><rdf:Description ID="security-options" nc:name="Security Options" nc:link="prefs.xhtml#advanced_security"/></rdf:li>
                 <rdf:li><rdf:Description ID="shortcuts" nc:name="Shortcuts" nc:link="shortcuts.xhtml"/></rdf:li>
                 <rdf:li><rdf:Description ID="sidebar" nc:name="Sidebar" nc:link="using_firebird.xhtml#using_the_sidebar"/></rdf:li>
-                <rdf:li><rdf:Description ID="software-updates" nc:name="Software Updates" nc:link="prefs.xhtml#advanced_update"/></rdf:li>
+                <rdf:li><rdf:Description ID="software-updates" nc:name="Software Updates" nc:link="menu_reference.xhtml#check_for_updates"/></rdf:li>
                 <rdf:li><rdf:Description ID="stop-button" nc:name="Stop Button" nc:link="using_firebird.xhtml#stopping_and_reloading"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
@@ -480,7 +480,7 @@
     <rdf:Description about="#u">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="updates" nc:name="Updates" nc:link="prefs.xhtml#advanced_update"/></rdf:li>
+                <rdf:li><rdf:Description ID="updates" nc:name="Updates" nc:link="menu_reference.xhtml#check_for_updates"/></rdf:li>
                 <rdf:li><rdf:Description ID="url" nc:name="URLs" nc:link="glossary.xhtml#Uniform_Resource_Locator"/></rdf:li>
                 <rdf:li><rdf:Description ID="using" nc:name="Using"/></rdf:li>
                 <rdf:li><rdf:Description ID="using-firefox" nc:name="Using &brandShortName;" nc:link="using_firebird.xhtml"/></rdf:li>
