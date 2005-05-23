@@ -559,6 +559,11 @@
           }
           catch (e) {
           }
+          try (e) {
+            var securityUI = this.securityUI;
+          }
+          catch (e) {
+          }
 
           // Listen for first load for lazy attachment to form fill controller
           this.addEventListener("load", this.onLoad, true);
