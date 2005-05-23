@@ -192,12 +192,14 @@ function initializeBooleanWidgets()
 
 function initializeSearchRows(scope, searchTerms)
 {
-    gTotalSearchTerms = searchTerms.Count();
-    for (var i=0; i<gTotalSearchTerms; i++) {
+    for (i = 0; i < searchTerms.Count(); i++) {
         var searchTerm = searchTerms.QueryElementAt(i, nsIMsgSearchTerm);
         createSearchRow(i, scope, searchTerm);
+        gTotalSearchTerms++;
     }
     initializeBooleanWidgets();
+    if (gTotalSearchTerms == 1)
+        document.getElementById("less0").setAttribute("disabled", "true");
 }
 
 function scrollToLastSearchTerm(index)
