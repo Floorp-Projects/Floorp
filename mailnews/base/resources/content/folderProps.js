@@ -41,8 +41,8 @@ var gFolderPropsSink = {
     setFolderPermissions: function(folderPermissions)
     {
       var permissionsLabel = document.getElementById("folderPermissions.text");
-      if (permissionsLabel)
-        permissionsLabel.setAttribute("value",folderPermissions);
+      var descTextNode =  document.createTextNode(folderPermissions);
+      permissionsLabel.appendChild(descTextNode);
     },
 
     serverDoesntSupportACL : function()

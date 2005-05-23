@@ -125,7 +125,7 @@
       <label value="" id="folderDescription.text"/>
       <label value=" " />
       <label value="&permissionsDesc.label;" id="permissionsDescLabel"/>
-      <label value="" id="folderPermissions.text"/>
+      <description id="folderPermissions.text"></description>
       <spacer flex="100%"/>
       <button iscontrolcontainer="true" hidable="true" label="&privileges.button.label;" 
               oncommand="onFolderPrivileges();" accesskey="&privileges.button.accesskey;" 
