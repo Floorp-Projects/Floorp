@@ -3325,6 +3325,7 @@ ExtensionManager.prototype = {
      */
     function IncompatibleObserver() {}
     IncompatibleObserver.prototype = {
+      _id: null,
       _type: nsIUpdateItem.TYPE_ANY,
       _xpi: null,
       
@@ -3341,6 +3342,7 @@ ExtensionManager.prototype = {
        *          up by this process.
        */
       checkForUpdates: function(installManifest, installData, xpiFile) {
+        this._id              = installData.id;
         this._type            = installData.type;
         this._xpi             = xpiFile;
         this._installManifest = installManifest;
@@ -3371,14 +3373,17 @@ ExtensionManager.prototype = {
        * @param   topic
        *          Extension Update Messages
        * @param   data
-       *          unused (XXXben - use a single topic and switch on this!)
+       *          item update check success and failure
        */
       observe: function(subject, topic, data) {
+        var item = subject.QueryInterface(Components.interfaces.nsIUpdateItem);
+        if (this._id != item.id)
+          return;
+
         switch (topic) {
         case "Update:Extension:Item-Ended":
-          if (subject) {
-            LOG("Version Check Phone Home Completed");
-            var item = subject.QueryInterface(Components.interfaces.nsIUpdateItem);
+          LOG("Version Check Phone Home Completed");
+          if (data == "update-check-success") {
             em.datasource.setTargetApplicationInfo(item.id, 
                                                    item.minAppVersion,
                                                    item.maxAppVersion, 
@@ -4392,7 +4397,7 @@ ExtensionItemUpdater.prototype = {
   //      whether or not the item can be installed.
   //  
   checkForUpdates: function(aItems, aItemCount, aVersionUpdateOnly) {
-    gOS.notifyObservers(null, "Update:Extension:Started", "");
+    gOS.notifyObservers(aItems[0], "Update:Extension:Started", "");
     this._versionUpdateOnly = aVersionUpdateOnly;
     this._items = aItems;
     this._responseCount = aItemCount;
@@ -4449,7 +4454,7 @@ ExtensionItemUpdater.prototype = {
       if (!this._versionUpdateOnly)
         gPref.setIntPref(PREF_UPDATE_COUNT, this._updateCount); 
           
-      gOS.notifyObservers(null, "Update:Extension:Ended", "");
+      gOS.notifyObservers(this._items[0], "Update:Extension:Ended", "");
     }
   },
   
@@ -4476,7 +4481,7 @@ RDFItemUpdater.prototype = {
     // A preference setting can disable updating for this item
     try {
       if (!gPref.getBoolPref(PREF_EM_ITEM_UPDATE_ENABLED.replace(/%UUID%/, aItem.id))) {
-        gOS.notifyObservers(null, "Update:Extension:Item-Ended", "");
+        gOS.notifyObservers(aItem, "Update:Extension:Item-Ended", "update-check-disabled");
         this._updater._checkForDone();
         return;
       }
@@ -4658,7 +4663,7 @@ RDFItemUpdater.prototype = {
           "version of this item: " + sameItem.objectSource);
     }    
     gOS.notifyObservers(!this._versionUpdateOnly ? newerItem : sameItem, 
-                        "Update:Extension:Item-Ended", "");
+                        "Update:Extension:Item-Ended", "update-check-success");
     
     // Only one call of this._updater._checkForDone is needed for RDF 
     // responses, since there is only one response per item.

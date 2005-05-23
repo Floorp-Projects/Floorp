@@ -379,7 +379,7 @@ var gUpdatePage = {
     case "Update:Extension:Item-Started":
       break;
     case "Update:Extension:Item-Ended":
-      if (aSubject) {
+      if (aData == "update-check-success") {
         var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
         gUpdateWizard.itemsToUpdate.push(item);
       
