@@ -929,7 +929,7 @@ calStorageCalendar.prototype = {
             "   alarm_time, alarm_time_tz) " +
             "VALUES (:cal_id, :id, :time_created, :last_modified, " +
             "        :title, :priority, :privacy, :ical_status, :flags, " +
-            "        :todo_entry, :todo_entry_tz, :todo_due, :todo_due_dz, " +
+            "        :todo_entry, :todo_entry_tz, :todo_due, :todo_due_tz, " +
             "        :todo_completed, :todo_completed_tz, :todo_complete, " +
             "        :alarm_time, :alarm_time_tz)"
             );
