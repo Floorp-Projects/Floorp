@@ -43,7 +43,13 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
 #include "nsIURI.h"
+#include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOM3Document.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMAbstractView.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMPopupBlockedEvent.h"
 
 // XPCOM and String includes
@@ -53,10 +59,11 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsNetError.h"
+#include "nsNetUtil.h"
 
 #import "CHBrowserView.h"
 
-#include "CHBrowserListener.h"
+#import "CHBrowserListener.h"
 
 
 // informal protocol of methods that our embedding window might support
@@ -663,15 +670,107 @@ CHBrowserListener::SetContainer(id <CHBrowserContainer> aContainer)
 }
 
 NS_IMETHODIMP
-CHBrowserListener::HandleEvent(nsIDOMEvent *event)
+CHBrowserListener::HandleEvent(nsIDOMEvent* inEvent)
 {
-  nsCOMPtr<nsIDOMPopupBlockedEvent> blockEvent = do_QueryInterface(event);
-  if ( blockEvent ) {
+  NS_ENSURE_ARG(inEvent);
+  
+  nsAutoString eventType;
+  inEvent->GetType(eventType);
+  
+  if (eventType.Equals(NS_LITERAL_STRING("DOMPopupBlocked")))
+    return HandleBlockedPopupEvent(inEvent);
+
+  if (eventType.Equals(NS_LITERAL_STRING("DOMLinkAdded")))
+    return HandleLinkAddedEvent(inEvent);
+
+  return NS_OK;
+}
+
+
+nsresult
+CHBrowserListener::HandleBlockedPopupEvent(nsIDOMEvent* inEvent)
+{
+  nsCOMPtr<nsIDOMPopupBlockedEvent> blockEvent = do_QueryInterface(inEvent);
+  if (blockEvent) {
     nsCOMPtr<nsIURI> blockedURI, blockedSite;
     blockEvent->GetPopupWindowURI(getter_AddRefs(blockedURI));
     blockEvent->GetRequestingWindowURI(getter_AddRefs(blockedSite));
     [mContainer onPopupBlocked:blockedURI fromSite:blockedSite];
   }
+  return NS_OK;
+}
+
+nsresult
+CHBrowserListener::HandleLinkAddedEvent(nsIDOMEvent* inEvent)
+{
+  nsCOMPtr<nsIDOMEventTarget> target;
+  inEvent->GetTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDOMElement> linkElement = do_QueryInterface(target);
+  if (!linkElement)
+    return NS_ERROR_FAILURE;
+
+  nsAutoString relAttribute;
+  linkElement->GetAttribute(NS_LITERAL_STRING("rel"), relAttribute);
+
+  if (!relAttribute.EqualsIgnoreCase("shortcut icon") && !relAttribute.EqualsIgnoreCase("icon"))
+    return NS_OK;
+
+  // make sure the load is for the main window
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  linkElement->GetOwnerDocument (getter_AddRefs(domDoc));
+
+  nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(domDoc));
+  NS_ENSURE_TRUE(docView, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMAbstractView> abstractView;
+  docView->GetDefaultView(getter_AddRefs(abstractView));
+
+  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(abstractView));
+  NS_ENSURE_TRUE(domWin, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMWindow> topDomWin;
+  domWin->GetTop(getter_AddRefs(topDomWin));
+
+  nsCOMPtr<nsISupports> domWinAsISupports(do_QueryInterface(domWin));
+  nsCOMPtr<nsISupports> topDomWinAsISupports(do_QueryInterface(topDomWin));
+  // prevent subframes from setting the favicon
+  if (domWinAsISupports != topDomWinAsISupports)
+    return NS_OK;
+
+  // now get the uri of the icon
+  nsAutoString iconHref;
+  linkElement->GetAttribute(NS_LITERAL_STRING("href"), iconHref);
+  if (iconHref.IsEmpty())
+    return NS_OK;
+
+  // get the document uri
+  nsCOMPtr<nsIDOM3Document> doc = do_QueryInterface(domDoc);
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  nsAutoString docURISpec;
+  nsresult rv = doc->GetDocumentURI(docURISpec);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIURI> documentURI;
+  rv = NS_NewURI(getter_AddRefs(documentURI), docURISpec);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIURI> iconURI;
+  rv = NS_NewURI(getter_AddRefs(iconURI), NS_ConvertUCS2toUTF8(iconHref), nsnull, documentURI);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  // only accept http and https icons (should we allow https, even?)
+  PRBool isHTTP = PR_FALSE, isHTTPS = PR_FALSE;
+  iconURI->SchemeIs("http", &isHTTP);
+  iconURI->SchemeIs("https", &isHTTPS);
+  if (!isHTTP && !isHTTPS)
+    return NS_OK;
+
+  nsCAutoString iconFullURI;
+  iconURI->GetSpec(iconFullURI);
+  NSString* iconSpec = [NSString stringWith_nsACString:iconFullURI];
+  
+  [mContainer onFoundShortcutIcon:iconSpec];
   return NS_OK;
 }
 

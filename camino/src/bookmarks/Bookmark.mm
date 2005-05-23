@@ -177,8 +177,16 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 
 -(void) refreshIcon
 {
-  if ([BookmarkManager sharedBookmarkManager]) {
-    [[SiteIconProvider sharedFavoriteIconProvider] loadFavoriteIcon:self forURI:[self url] allowNetwork:NO];
+  if ([BookmarkManager sharedBookmarkManager])
+  {
+    NSImage* siteIcon = [[SiteIconProvider sharedFavoriteIconProvider] favoriteIconForPage:[self url]];
+    if (siteIcon)
+      [self setIcon:siteIcon];
+    else
+      [[SiteIconProvider sharedFavoriteIconProvider] fetchFavoriteIconForPage:[self url]
+                                                             withIconLocation:nil
+                                                                 allowNetwork:NO
+                                                              notifyingClient:self];
   }
 }
 

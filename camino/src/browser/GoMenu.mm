@@ -64,7 +64,7 @@
 
 
 // the maximum number of history entry menuitems to display
-static const int kMaxItems = 15;
+static const int kMaxNumHistoryItems = 100;
 
 // the maximum number of "today" items to show on the main menu
 static const int kMaxTodayItems = 12;
@@ -301,15 +301,16 @@ static const unsigned int kMaxTitleLength = 80;
   {
     NSMenuItem* newItem = nil;
 
-    // XXX should we impose a max number of items in any one menu, to avoid crazy 2000-item menus?
     if ([curChild isKindOfClass:[HistorySiteItem class]])
     {
       newItem = [[[NSMenuItem alloc] initWithTitle:[HistoryMenu menuItemTitleForHistoryItem:curChild]
                                             action:@selector(openHistoryItem:)
                                      keyEquivalent:@""] autorelease];
 
+      [newItem setImage:[curChild iconAllowingLoad:NO]];
       [newItem setTarget:self];
       [newItem setRepresentedObject:curChild];
+      [self addItem:newItem];
     }
     else if ([curChild isKindOfClass:[HistoryCategoryItem class]] && ([curChild numberOfChildren] > 0))
     {
@@ -321,6 +322,7 @@ static const unsigned int kMaxTitleLength = 80;
         [mAdditionalItemsParent autorelease];
         mAdditionalItemsParent = [curChild retain];
 
+        // put the kMaxTodayItems most recent items into this menu (which is the go menu)
         NSMutableArray* menuTodayItems = [NSMutableArray arrayWithArray:[curChild children]];
         while ((int)[menuTodayItems count] > kMaxTodayItems)
           [menuTodayItems removeObjectAtIndex:kMaxTodayItems];
@@ -333,13 +335,14 @@ static const unsigned int kMaxTitleLength = 80;
                                                                   action:@selector(openHistoryItem:)
                                                            keyEquivalent:@""] autorelease];
 
+          [todayMenuItem setImage:[curTodayItem iconAllowingLoad:NO]];
           [todayMenuItem setTarget:self];
           [todayMenuItem setRepresentedObject:curTodayItem];
           [self addItem:todayMenuItem];
           separatorPending = YES;
         }
         
-        // make a submenu for "earlier today"
+        // and make a submenu for "earlier today"
         if ([curChild numberOfChildren] > kMaxTodayItems)
         {
           if (separatorPending)
@@ -352,12 +355,14 @@ static const unsigned int kMaxTitleLength = 80;
           newItem = [[[NSMenuItem alloc] initWithTitle:itemTitle
                                                 action:nil
                                          keyEquivalent:@""] autorelease];
+          [newItem setImage:[curChild iconAllowingLoad:NO]];
 
           HistoryMenu* newSubmenu = [[HistoryMenu alloc] initWithTitle:itemTitle];
           [newSubmenu setRootHistoryItem:curChild];
           [newSubmenu setNumLeadingItemsToIgnore:kMaxTodayItems];
 
           [newItem setSubmenu:newSubmenu];
+          [self addItem:newItem];
         }
       }
       else
@@ -373,19 +378,38 @@ static const unsigned int kMaxTitleLength = 80;
         newItem = [[[NSMenuItem alloc] initWithTitle:itemTitle
                                               action:nil
                                        keyEquivalent:@""] autorelease];
+        [newItem setImage:[curChild iconAllowingLoad:NO]];
 
         HistoryMenu* newSubmenu = [[HistoryMenu alloc] initWithTitle:itemTitle];
         [newSubmenu setRootHistoryItem:curChild];
         
         [newItem setSubmenu:newSubmenu];
+        [self addItem:newItem];
       }
     }
     
-    if (newItem)
-      [self addItem:newItem];
+    // if we're not the Go menu, stop after kMaxNumHistoryItems items
+    if (![self isKindOfClass:[GoMenu class]] && ([self numberOfItems] == kMaxNumHistoryItems))
+      break;
   }
   
+  [self addLastItems];
+  
   mHistoryItemsDirty = NO;
+}
+
+- (void)addLastItems
+{
+  if ([self numberOfItems] >= kMaxNumHistoryItems)
+  {
+    // this will only be called for submenus
+    [self addItem:[NSMenuItem separatorItem]];
+    NSMenuItem* showMoreItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"ShowMoreHistoryMenuItem", @"")
+                                                           action:@selector(showHistory:)
+                                                    keyEquivalent:@""] autorelease];
+    [showMoreItem setRepresentedObject:mRootItem];
+    [self addItem:showMoreItem];
+  }
 }
 
 - (void)menuWillBeDisplayed
@@ -476,6 +500,18 @@ static const unsigned int kMaxTitleLength = 80;
   }
   
   [super menuWillBeDisplayed];
+}
+
+- (void)addLastItems
+{
+  // at the bottom of the go menu, add a Clear History item
+  if ([[mRootItem children] count] > 0)
+    [self addItem:[NSMenuItem separatorItem]];
+
+  NSMenuItem* clearHistoryItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"ClearHistoryMenuItem", @"")
+                                                             action:@selector(clearHistory:)
+                                                      keyEquivalent:@""] autorelease];
+  [self addItem:clearHistoryItem];
 }
 
 @end

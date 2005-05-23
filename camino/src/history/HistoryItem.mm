@@ -40,6 +40,9 @@
 #import "NSDate+Utils.h"
 
 #import "HistoryItem.h"
+#import "HistoryDataSource.h"
+
+#import "SiteIconProvider.h"
 
 #import "nsString.h"
 #import "nsIHistoryItems.h"
@@ -56,10 +59,11 @@ enum
 
 @implementation HistoryItem
 
-- (id)init
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource
 {
   if ((self = [super init]))
   {
+    mDataSource = inDataSource;   // not retained
   }
   return self;
 }
@@ -67,6 +71,11 @@ enum
 - (void)dealloc
 {
   [super dealloc];
+}
+
+- (HistoryDataSource*)dataSource
+{
+  return mDataSource;
 }
 
 - (NSString*)title
@@ -82,6 +91,11 @@ enum
 - (NSImage*)icon
 {
   return nil;
+}
+
+- (NSImage*)iconAllowingLoad:(BOOL)inAllowLoad
+{
+  return [self icon];
 }
 
 - (NSString*)url
@@ -173,9 +187,9 @@ enum
 
 @implementation HistoryCategoryItem
 
-- (id)initWithTitle:(NSString*)title childCapacity:(int)capacity
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource title:(NSString*)title childCapacity:(int)capacity
 {
-  if ((self = [super init]))
+  if ((self = [super initWithDataSource:inDataSource]))
   {
     mTitle = [title retain];
     mChildren = [[NSMutableArray alloc] initWithCapacity:capacity];
@@ -337,9 +351,9 @@ enum
 
 @implementation HistorySiteCategoryItem
 
-- (id)initWithSite:(NSString*)site title:(NSString*)title childCapacity:(int)capacity
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource site:(NSString*)site title:(NSString*)title childCapacity:(int)capacity
 {
-  if ((self = [super initWithTitle:title childCapacity:capacity]))
+  if ((self = [super initWithDataSource:inDataSource title:title childCapacity:capacity]))
   {
     mSite = [site retain];
   }
@@ -373,9 +387,9 @@ enum
 
 @implementation HistoryDateCategoryItem
 
-- (id)initWithStartDate:(NSDate*)startDate ageInDays:(int)days title:(NSString*)title childCapacity:(int)capacity
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource startDate:(NSDate*)startDate ageInDays:(int)days title:(NSString*)title childCapacity:(int)capacity
 {
-  if ((self = [super initWithTitle:title childCapacity:capacity]))
+  if ((self = [super initWithDataSource:inDataSource title:title childCapacity:capacity]))
   {
     mStartDate = [startDate retain];
     mAgeInDays = days;
@@ -456,9 +470,9 @@ enum
 
 @implementation HistorySiteItem
 
-- (id)initWith_nsIHistoryItem:(nsIHistoryItem*)inItem
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource historyItem:(nsIHistoryItem*)inItem
 {
-  if ((self = [super init]))
+  if ((self = [super initWithDataSource:inDataSource]))
   {
     nsCString identifier;
     if (NS_SUCCEEDED(inItem->GetID(identifier)))
@@ -530,6 +544,8 @@ enum
   [mHostname release];
   [mFirstVisitDate release];
   [mLastVisitDate release];
+  [mSiteIcon release];
+
   [super dealloc];
 }
 
@@ -570,8 +586,46 @@ enum
 
 - (NSImage*)icon
 {
-  // XXX todo: site icons
-  return [NSImage imageNamed:@"smallbookmark"];
+  return [self iconAllowingLoad:NO];
+}
+
+- (NSImage*)iconAllowingLoad:(BOOL)inAllowLoad
+{
+  if (mSiteIcon)
+    return mSiteIcon;
+
+  if ([mDataSource showSiteIcons])
+  {
+    NSImage* siteIcon = [[SiteIconProvider sharedFavoriteIconProvider] favoriteIconForPage:[self url]];
+    if (siteIcon)
+    {
+      [self setSiteIcon:siteIcon];
+      return mSiteIcon;
+    }
+  }
+
+  // firing off site icon loads here interferes with history submenu display
+  // (maybe a slew of Carbon or other events causes events to get lost?)
+  if (inAllowLoad)
+  {
+    if (!mAttemptedIconLoad)
+    {
+      // fire off site icon load
+      [[SiteIconProvider sharedFavoriteIconProvider] fetchFavoriteIconForPage:[self url]
+                                                             withIconLocation:nil
+                                                                 allowNetwork:NO
+                                                              notifyingClient:self];
+      mAttemptedIconLoad = YES;
+    }
+  }
+
+  return [NSImage imageNamed:@"globe_ico"];
+}
+
+- (void)setSiteIcon:(NSImage*)inImage
+{
+  [mSiteIcon autorelease];
+  mSiteIcon = [inImage retain];
 }
 
 // ideally, we'd strip the protocol from the URL before comparing so that https:// doesn't

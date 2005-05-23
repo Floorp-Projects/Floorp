@@ -68,6 +68,8 @@
 - (void)setItemBeforeHistoryItems:(NSMenuItem*)inItem;
 - (NSMenuItem*)itemBeforeHistoryItems;
 
+- (void)addLastItems;
+
 @end
 
 

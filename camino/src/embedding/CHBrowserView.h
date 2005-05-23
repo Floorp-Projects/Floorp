@@ -80,6 +80,9 @@ class nsISupports;
 - (void)onHideTooltip;
 // Called when a popup is blocked
 - (void)onPopupBlocked:(nsIURI*)inURIBlocked fromSite:(nsIURI*)inSite;
+// Called when a "shortcut icon" link element is noticed
+- (void)onFoundShortcutIcon:(NSString*)inIconURI;
+
 @end
 
 typedef enum {

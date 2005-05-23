@@ -180,11 +180,19 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     if ( rec )
       rec->AddEventListenerByIID(clickListener, NS_GET_IID(nsIDOMMouseListener));
     
-    // register the CHBrowserListener as an event listener for popup-blocking events
+    // register the CHBrowserListener as an event listener for popup-blocking events,
+    // and link-added events.
     nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(rec);
-    if ( eventTarget )
+    if (eventTarget)
+    {
       rv = eventTarget->AddEventListener(NS_LITERAL_STRING("DOMPopupBlocked"), 
                                           NS_STATIC_CAST(nsIDOMEventListener*, _listener), PR_FALSE);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed");
+
+      rv = eventTarget->AddEventListener(NS_LITERAL_STRING("DOMLinkAdded"), 
+                                          NS_STATIC_CAST(nsIDOMEventListener*, _listener), PR_FALSE);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed");
+    }
   }
   return self;
 }

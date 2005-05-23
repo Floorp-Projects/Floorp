@@ -38,11 +38,11 @@
 #import <Foundation/Foundation.h>
 
 
-extern NSString* RemoteDataLoadRequestNotificationName;
-extern NSString* RemoteDataLoadRequestURIKey;
-extern NSString* RemoteDataLoadRequestDataKey;
-extern NSString* RemoteDataLoadRequestUserDataKey;
-extern NSString* RemoteDataLoadRequestResultKey;
+extern NSString* const RemoteDataLoadRequestNotificationName;
+extern NSString* const RemoteDataLoadRequestURIKey;
+extern NSString* const RemoteDataLoadRequestDataKey;
+extern NSString* const RemoteDataLoadRequestUserDataKey;
+extern NSString* const RemoteDataLoadRequestResultKey;
 
 // RemoteDataProvider is a class that can be used to do asynchronous loads
 // from URIs using necko, and passing back the result of the load to a

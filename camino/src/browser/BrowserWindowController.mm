@@ -1557,6 +1557,11 @@ enum BWCOpenDest {
 -(IBAction)manageHistory: (id)aSender
 {
   [self loadURL:@"about:history" referrer:nil activate:YES allowPopups:YES];
+
+  // aSender could be a history menu item with a represented object of
+  // an item that we wish to reveal. However, it belongs to a different
+  // data source than the one we just created. need a way to find the one
+  // to reveal...
 }
 
 - (IBAction)goToLocationFromToolbarURLField:(id)sender

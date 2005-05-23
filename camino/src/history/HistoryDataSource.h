@@ -65,6 +65,7 @@ extern NSString* const kNotificationHistoryDataSourceChangedUserInfoChangedItemO
   nsIBrowserHistory*      mGlobalHistory;     // owned (would be an nsCOMPtr)
   nsHistoryObserver*      mHistoryObserver;   // owned
   
+  BOOL                    mShowSiteIcons;
   NSString*               mCurrentViewIdentifier;
   
   NSString*               mSortColumn;
@@ -92,6 +93,8 @@ extern NSString* const kNotificationHistoryDataSourceChangedUserInfoChangedItemO
 // XXX remove?
 - (void)loadLazily;
 - (HistoryItem*)rootItem;
+
+- (BOOL)showSiteIcons;
 
 // ideally sorting would be on the view, not the data source, but this keeps thing simpler
 - (void)setSortColumnIdentifier:(NSString*)sortColumnIdentifier;

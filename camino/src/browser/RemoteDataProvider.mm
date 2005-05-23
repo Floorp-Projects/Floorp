@@ -47,11 +47,11 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsICachingChannel.h"
 
-NSString* RemoteDataLoadRequestNotificationName = @"remoteload_notification_name";
-NSString* RemoteDataLoadRequestURIKey           = @"remoteload_uri_key";
-NSString* RemoteDataLoadRequestDataKey          = @"remoteload_data_key";
-NSString* RemoteDataLoadRequestUserDataKey      = @"remoteload_user_data_key";
-NSString* RemoteDataLoadRequestResultKey        = @"remoteload_result_key";
+NSString* const RemoteDataLoadRequestNotificationName = @"remoteload_notification_name";
+NSString* const RemoteDataLoadRequestURIKey           = @"remoteload_uri_key";
+NSString* const RemoteDataLoadRequestDataKey          = @"remoteload_data_key";
+NSString* const RemoteDataLoadRequestUserDataKey      = @"remoteload_user_data_key";
+NSString* const RemoteDataLoadRequestResultKey        = @"remoteload_result_key";
 
 
 // this has to retain the load listener, to ensure that the listener lives long

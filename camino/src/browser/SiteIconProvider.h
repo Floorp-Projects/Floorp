@@ -48,8 +48,10 @@ class NeckoCacheHelper;
 
 @interface SiteIconProvider : NSObject<RemoteLoadListener>
 {
-  NeckoCacheHelper* mMissedIconsCacheHelper;
-  NSMutableDictionary *mRequestDict;
+  NeckoCacheHelper*       mIconsCacheHelper;
+  NSMutableDictionary*    mRequestDict;   // dict of favicon url -> request url
+  
+  NSMutableDictionary*    mIconDictionary;    // map of favorite url -> NSImage
 }
 
 + (SiteIconProvider*)sharedFavoriteIconProvider;
@@ -67,5 +69,28 @@ class NeckoCacheHelper;
 // YES, then the 'SiteIconLoadNotificationName' notification will be sent out.
 
 - (BOOL)loadFavoriteIcon:(id)sender forURI:(NSString *)inURI allowNetwork:(BOOL)inAllowNetwork;
+
+// fetch the icon for the given page.
+// inIconURI is the URI of the icon (if specified via a <link> element), or nil for the default
+// site icon location.
+// when the load is done, a SiteIconLoadNotificationName notification will be sent with
+// |inClient| as the object.
+// returns YES if the load is initiated, and the client can expect a notification.
+// 
+// there are various reasons why this might fail to load a site icon from the cache,
+// when we know we can load it if we hit the network:
+// i) it's a https URL, which is never put in the disk cache.
+// ii) the url might have moved (301 response), and we don't handle that.
+- (BOOL)fetchFavoriteIconForPage:(NSString*)inPageURI
+                withIconLocation:(NSString*)inIconURI
+                    allowNetwork:(BOOL)inAllowNetwork
+                 notifyingClient:(id)inClient;
+
+// image cache method
+
+// get the image for the given page URI. if not available, returns nil.
+// if the image was fetched with a specific location (e.g. because of a <link> element)
+// then this will take that into account.
+- (NSImage*)favoriteIconForPage:(NSString*)inPageURI;
 
 @end

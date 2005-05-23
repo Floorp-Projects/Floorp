@@ -480,18 +480,37 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)onLocationChange:(NSString*)urlSpec
 {
-  BOOL useSiteIcons = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.site_icons" withSuccess:NULL];
+  BOOL useSiteIcons = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL];
   BOOL siteIconLoadInitiated = NO;
   
   SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];
   NSString* faviconURI = [SiteIconProvider faviconLocationStringFromURI:urlSpec];
-
+  
   if (useSiteIcons && [faviconURI length] > 0)
   {
     // if the favicon uri has changed, fire off favicon load. When it completes, our
     // imageLoadedNotification selector gets called.
     if (![faviconURI isEqualToString:mSiteIconURI])
-      siteIconLoadInitiated = [faviconProvider loadFavoriteIcon:self forURI:urlSpec allowNetwork:YES];
+    {
+      // first get a cached image for this site, if we have one. we'll go ahead
+      // and request the load anyway, in case the site updated their icon.
+      NSImage*  cachedImage = [faviconProvider favoriteIconForPage:urlSpec];
+      NSString* cachedImageURI = nil;
+
+      if (cachedImage)
+        cachedImageURI = faviconURI;
+      
+      // immediately update the site icon (to the cached one, or the default)
+      [self updateSiteIconImage:cachedImage withURI:cachedImageURI];
+
+      // note that this is the only time we hit the network for site icons.
+      // note also that we may get a site icon from a link element later,
+      // which will replace any we get from the default location.
+      [faviconProvider fetchFavoriteIconForPage:urlSpec
+                               withIconLocation:nil
+                                   allowNetwork:YES
+                                notifyingClient:self];
+    }
   }
   else
   {
@@ -499,13 +518,13 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
       faviconURI = urlSpec;
     else
     	faviconURI = @"";
+
+    [self updateSiteIconImage:nil withURI:faviconURI];
   }
 
-  if (!siteIconLoadInitiated)
-    [self updateSiteIconImage:nil withURI:faviconURI];
-  
   [mDelegate updateLocationFields:urlSpec ignoreTyping:NO];
 
+  // see if someone wants to replace the main view
   [self checkForCustomViewOnLoad:urlSpec];
 }
 
@@ -645,6 +664,27 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   if ( mBlockedSites ) {
     mBlockedSites->AppendElement(inSite);
     [mDelegate showPopupBlocked:YES];
+  }
+}
+
+// Called when a "shortcut icon" link element is noticed
+- (void)onFoundShortcutIcon:(NSString*)inIconURI
+{
+  BOOL useSiteIcons = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL];
+  if (!useSiteIcons)
+    return;
+  
+  if ([inIconURI length] > 0)
+  {
+    // if the favicon uri has changed, fire off favicon load. When it completes, our
+    // imageLoadedNotification selector gets called.
+    if (![inIconURI isEqualToString:mSiteIconURI])
+    {
+      [[SiteIconProvider sharedFavoriteIconProvider] fetchFavoriteIconForPage:[self getCurrentURLSpec]
+                                                             withIconLocation:inIconURI
+                                                                 allowNetwork:YES
+                                                              notifyingClient:self];
+    }
   }
 }
 
@@ -838,8 +878,8 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
         siteIcon = [NSImage imageNamed:@"globe_ico"];
     }
 
-    [self setSiteIconImage: siteIcon];
-    [self setSiteIconURI:   inSiteIconURI];
+    [self setSiteIconImage:siteIcon];
+    [self setSiteIconURI:inSiteIconURI];
   
     // update the proxy icon
     [mDelegate updateSiteIcons:mSiteIconImage ignoreTyping:NO];

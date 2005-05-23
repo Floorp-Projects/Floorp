@@ -140,6 +140,7 @@ typedef enum EBookmarkOpenBehavior
 -(IBAction) viewSource:(id)aSender;
 -(IBAction) manageBookmarks: (id)aSender;
 -(IBAction) showHistory:(id)aSender;
+-(IBAction) clearHistory:(id)aSender;
 -(IBAction) reloadWithCharset:(id)aSender;
 
 // Bookmarks menu actions.

@@ -1080,6 +1080,26 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 }
 
 //
+// -clearHistory:
+//
+// clear the global history, after showing a warning
+//
+-(IBAction)clearHistory:(id)aSender
+{
+  if (NSRunCriticalAlertPanel(NSLocalizedString(@"ClearHistoryTitle", nil),
+                              NSLocalizedString(@"ClearHistoryMessage", nil),
+                              NSLocalizedString(@"ClearHistoryButton", nil),
+                              NSLocalizedString(@"CancelButtonText", nil),
+                              nil) == NSAlertDefaultReturn)
+  {
+    // clear history
+    nsCOMPtr<nsIBrowserHistory> hist = do_GetService("@mozilla.org/browser/global-history;2");
+    if (hist)
+      hist->RemoveAllPages();
+  }
+}
+
+//
 // manageBookmarks:
 //
 // toggle the bookmark manager (creating a new window if needed)

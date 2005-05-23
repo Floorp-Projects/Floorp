@@ -39,17 +39,23 @@
 #import <AppKit/AppKit.h>
 
 class nsIHistoryItem;
+@class HistoryDataSource;
 
 // HistoryItem is the base class for every object in the history outliner
 
 @interface HistoryItem : NSObject
 {
-  HistoryItem*    mParentItem;  // not retained
+  HistoryItem*        mParentItem;    // our parent item (not retained)
+  HistoryDataSource*  mDataSource;    // the data source that owns us (not retained)
 }
+
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource;
+- (HistoryDataSource*)dataSource;
 
 - (NSString*)title;
 - (BOOL)isSiteItem;
 - (NSImage*)icon;
+- (NSImage*)iconAllowingLoad:(BOOL)inAllowLoad;
 
 - (NSString*)url;
 - (NSDate*)firstVisit;
@@ -84,7 +90,7 @@ class nsIHistoryItem;
   NSMutableArray*   mChildren;    // array of HistoryItems (may be heterogeneous)
 }
 
-- (id)initWithTitle:(NSString*)title childCapacity:(int)capacity;
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource title:(NSString*)title childCapacity:(int)capacity;
 - (NSString*)title;
 - (NSString*)identifier;    // return UUID for this folder
 
@@ -101,7 +107,7 @@ class nsIHistoryItem;
   NSString*         mSite;    // not user-visible; used for state tracking
 }
 
-- (id)initWithSite:(NSString*)site title:(NSString*)title childCapacity:(int)capacity;
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource site:(NSString*)site title:(NSString*)title childCapacity:(int)capacity;
 - (NSString*)site;
 
 @end
@@ -113,7 +119,7 @@ class nsIHistoryItem;
   int               mAgeInDays;   // -1 is used for "distant past"
 }
 
-- (id)initWithStartDate:(NSDate*)startDate ageInDays:(int)days title:(NSString*)title childCapacity:(int)capacity;
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource startDate:(NSDate*)startDate ageInDays:(int)days title:(NSString*)title childCapacity:(int)capacity;
 - (NSDate*)startDate;
 - (BOOL)isTodayCategory;
 
@@ -128,12 +134,17 @@ class nsIHistoryItem;
   NSString*         mHostname;
   NSDate*           mFirstVisitDate;
   NSDate*           mLastVisitDate;
+  
+  NSImage*          mSiteIcon;
+  BOOL              mAttemptedIconLoad;
 }
 
-- (id)initWith_nsIHistoryItem:(nsIHistoryItem*)inItem;
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource historyItem:(nsIHistoryItem*)inItem;
 // return YES if anything changed
 - (BOOL)updateWith_nsIHistoryItem:(nsIHistoryItem*)inItem;
 
 - (BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag;
+
+- (void)setSiteIcon:(NSImage*)inImage;
 
 @end

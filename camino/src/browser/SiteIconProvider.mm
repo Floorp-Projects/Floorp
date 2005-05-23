@@ -43,6 +43,7 @@
 #include "nsString.h"
 #include "nsISupports.h"
 #include "nsNetUtil.h"
+#include "nsIURL.h"
 #include "nsICacheSession.h"
 #include "nsICacheService.h"
 #include "nsICacheEntryDescriptor.h"
@@ -53,6 +54,10 @@ NSString* const SiteIconLoadImageKey         = @"siteicon_load_image";
 NSString* const SiteIconLoadURIKey           = @"siteicon_load_uri";
 NSString* const SiteIconLoadUserDataKey      = @"siteicon_load_user_data";
 
+static const char* const kMissingFaviconMetadataKey     = "missing_favicon";
+static const char* const kFaviconURILocationMetadataKey = "favicon_location";
+
+//#define VERBOSE_SITE_ICON_LOADING
 
 static inline PRUint32 PRTimeToSeconds(PRTime t_usec)
 {
@@ -63,37 +68,53 @@ static inline PRUint32 PRTimeToSeconds(PRTime t_usec)
   LL_L2I(t_sec, t_usec);
   return t_sec;
 }
- 
+
+// this class is used for two things:
+// 1. to store information about which sites do not have site icons,
+//    so that we don't continually hit them.
+// 2. to store a mapping between page URIs and site icon URIs,
+//    so that we can reload page icons specified in <link> tags
+//    without having to reload the original page.
+
 class NeckoCacheHelper
 {
 public:
 
-  NeckoCacheHelper(const char* inMetaElement, const char* inMetaValue);
+  NeckoCacheHelper();
   ~NeckoCacheHelper() {}
 
   nsresult Init(const char* inCacheSessionName);
-  nsresult ExistsInCache(const nsACString& inURI, PRBool* outExists);
-  nsresult PutInCache(const nsACString& inURI, PRUint32 inExpirationTimeSeconds);
 
+  // get and save state about which icons are known missing. note that the URIs here
+  // are URIs for the favicons themselves
+  nsresult FaviconForURIIsMissing(const nsACString& inFaviconURI, PRBool* outKnownMissing);
+  nsresult SetFaviconForURIIsMissing(const nsACString& inFaviconURI, PRUint32 inExpirationTimeSeconds);
+
+  // get and save mapping between page URI and favicon URI, to store information
+  // for pages with icons specified in <link> tags. these should only be used
+  // for link-specified icons, and not those in the default location, to avoid
+  // unnecessary bloat.
+  nsresult SaveFaviconLocationForPageURI(const nsACString& inPageURI, const nsACString& inFaviconURI, PRUint32 inExpirationTimeSeconds);
+  nsresult GetFaviconLocationForPageURI(const nsACString& inPageURI, nsACString& outFaviconURI);
+  
   nsresult ClearCache();
+
+  void     GetCanonicalPageURI(const nsACString& inPageURI, nsACString& outCanonicalURI);
 
 protected:
 
-  const char*               mMetaElement;
-  const char*               mMetaValue;
   nsCOMPtr<nsICacheSession> mCacheSession;
 
 };
 
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
 
-NeckoCacheHelper::NeckoCacheHelper(const char* inMetaElement, const char* inMetaValue)
-: mMetaElement(inMetaElement)
-, mMetaValue(inMetaValue)
+NeckoCacheHelper::NeckoCacheHelper()
 {
 }
 
-nsresult NeckoCacheHelper::Init(const char* inCacheSessionName)
+nsresult
+NeckoCacheHelper::Init(const char* inCacheSessionName)
 {
   nsresult rv;
   
@@ -111,23 +132,31 @@ nsresult NeckoCacheHelper::Init(const char* inCacheSessionName)
 }
 
 
-nsresult NeckoCacheHelper::ExistsInCache(const nsACString& inURI, PRBool* outExists)
+nsresult
+NeckoCacheHelper::FaviconForURIIsMissing(const nsACString& inFaviconURI, PRBool* outKnownMissing)
 {
+  *outKnownMissing = PR_FALSE;
+  
   NS_ASSERTION(mCacheSession, "No cache session");
 
   nsCOMPtr<nsICacheEntryDescriptor> entryDesc;
-  nsresult rv = mCacheSession->OpenCacheEntry(inURI, nsICache::ACCESS_READ, nsICache::NON_BLOCKING, getter_AddRefs(entryDesc));
-
-  *outExists = NS_SUCCEEDED(rv) && (entryDesc != NULL);
+  nsresult rv = mCacheSession->OpenCacheEntry(inFaviconURI, nsICache::ACCESS_READ, nsICache::NON_BLOCKING, getter_AddRefs(entryDesc));
+  if (NS_SUCCEEDED(rv) && entryDesc)
+  {
+    nsXPIDLCString metadataString;
+    entryDesc->GetMetaDataElement(kMissingFaviconMetadataKey, getter_Copies(metadataString));
+    *outKnownMissing = metadataString.EqualsLiteral("1");
+  }
   return NS_OK;
 }
 
-nsresult NeckoCacheHelper::PutInCache(const nsACString& inURI, PRUint32 inExpirationTimeSeconds)
+nsresult
+NeckoCacheHelper::SetFaviconForURIIsMissing(const nsACString& inFaviconURI, PRUint32 inExpirationTimeSeconds)
 {
   NS_ASSERTION(mCacheSession, "No cache session");
 
   nsCOMPtr<nsICacheEntryDescriptor> entryDesc;
-  nsresult rv = mCacheSession->OpenCacheEntry(inURI, nsICache::ACCESS_WRITE, nsICache::NON_BLOCKING, getter_AddRefs(entryDesc));
+  nsresult rv = mCacheSession->OpenCacheEntry(inFaviconURI, nsICache::ACCESS_WRITE, nsICache::NON_BLOCKING, getter_AddRefs(entryDesc));
   if (NS_FAILED(rv) || !entryDesc) return rv;
   
   nsCacheAccessMode accessMode;
@@ -138,7 +167,7 @@ nsresult NeckoCacheHelper::PutInCache(const nsACString& inURI, PRUint32 inExpira
   if (accessMode != nsICache::ACCESS_WRITE)
     return NS_ERROR_FAILURE;
 
-  entryDesc->SetMetaDataElement(mMetaElement, mMetaValue);		// just set a bit of meta data.
+  entryDesc->SetMetaDataElement(kMissingFaviconMetadataKey, "1");		// just set a bit of meta data.
   entryDesc->SetExpirationTime(PRTimeToSeconds(PR_Now()) + inExpirationTimeSeconds);
   
   entryDesc->MarkValid();
@@ -147,7 +176,83 @@ nsresult NeckoCacheHelper::PutInCache(const nsACString& inURI, PRUint32 inExpira
   return NS_OK;
 }
 
-nsresult NeckoCacheHelper::ClearCache()
+nsresult
+NeckoCacheHelper::SaveFaviconLocationForPageURI(const nsACString& inPageURI, const nsACString& inFaviconURI, PRUint32 inExpirationTimeSeconds)
+{
+  NS_ASSERTION(mCacheSession, "No cache session");
+
+  // canonicalize the URI
+  nsCAutoString canonicalPageURI;
+  GetCanonicalPageURI(inPageURI, canonicalPageURI);
+  
+  nsCOMPtr<nsICacheEntryDescriptor> entryDesc;
+  nsresult rv = mCacheSession->OpenCacheEntry(canonicalPageURI, nsICache::ACCESS_WRITE, nsICache::NON_BLOCKING, getter_AddRefs(entryDesc));
+  if (NS_FAILED(rv) || !entryDesc) return rv;
+  
+  nsCacheAccessMode accessMode;
+  rv = entryDesc->GetAccessGranted(&accessMode);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  if (accessMode != nsICache::ACCESS_WRITE)
+    return NS_ERROR_FAILURE;
+  
+  entryDesc->SetMetaDataElement(kFaviconURILocationMetadataKey, PromiseFlatCString(inFaviconURI).get());
+  entryDesc->SetExpirationTime(PRTimeToSeconds(PR_Now()) + inExpirationTimeSeconds);
+  
+  entryDesc->MarkValid();
+  entryDesc->Close();
+  
+  return NS_OK;
+}
+
+nsresult
+NeckoCacheHelper::GetFaviconLocationForPageURI(const nsACString& inPageURI, nsACString& outFaviconURI)
+{
+  NS_ASSERTION(mCacheSession, "No cache session");
+
+  // canonicalize the URI
+  nsCAutoString canonicalPageURI;
+  GetCanonicalPageURI(inPageURI, canonicalPageURI);
+
+  nsCOMPtr<nsICacheEntryDescriptor> entryDesc;
+  nsresult rv = mCacheSession->OpenCacheEntry(canonicalPageURI, nsICache::ACCESS_READ, nsICache::NON_BLOCKING, getter_AddRefs(entryDesc));
+  if (NS_FAILED(rv)) return rv;
+  if (!entryDesc) return NS_ERROR_FAILURE;
+    
+  nsXPIDLCString faviconLocation;
+  rv = entryDesc->GetMetaDataElement(kFaviconURILocationMetadataKey, getter_Copies(faviconLocation));
+  if (NS_FAILED(rv)) return rv;
+
+  outFaviconURI = faviconLocation;
+  return NS_OK;
+}
+
+void
+NeckoCacheHelper::GetCanonicalPageURI(const nsACString& inPageURI, nsACString& outCanonicalURI)
+{
+  nsCOMPtr<nsIURI> pageURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(pageURI), inPageURI, nsnull, nsnull);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIURL> pageURL = do_QueryInterface(pageURI);
+    if (pageURL)
+    {
+      // remove any params or refs
+      //pageURL->SetParam(NS_LITERAL_CSTRING(""));  // this is not implemented
+      pageURL->SetQuery(NS_LITERAL_CSTRING(""));
+      pageURL->SetRef(NS_LITERAL_CSTRING(""));
+      
+      pageURL->GetSpec(outCanonicalURI);
+      return;
+    }
+  }
+  
+  outCanonicalURI = inPageURI;
+}
+
+nsresult
+NeckoCacheHelper::ClearCache()
 {
   NS_ASSERTION(mCacheSession, "No cache session");
 
@@ -157,7 +262,8 @@ nsresult NeckoCacheHelper::ClearCache()
 
 #pragma mark -
 
-static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
+static nsresult
+MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
 {
   outFaviconURI.Truncate(0);
   
@@ -184,8 +290,10 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
 
 @interface SiteIconProvider(Private)
 
-- (void)addToMissedIconsCache:(const nsAString&)inURI withExpirationSeconds:(unsigned int)inExpSeconds;
-- (BOOL)inMissedIconsCache:(const nsAString&)inURI;
+- (NSString*)favoriteIconURLFromPageURL:(NSString*)inPageURL;
+
+- (void)addToMissedIconsCache:(NSString*)inURI withExpirationSeconds:(unsigned int)inExpSeconds;
+- (BOOL)inMissedIconsCache:(NSString*)inURI;
 
 @end
 
@@ -196,12 +304,14 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
 {
   if ((self = [super init]))
   {
-    mMissedIconsCacheHelper = new NeckoCacheHelper("Favicon", "Missed");
-    mRequestDict = [[NSMutableDictionary alloc] initWithCapacity:5];
-    nsresult rv = mMissedIconsCacheHelper->Init("MissedIconsCache");
+    mRequestDict    = [[NSMutableDictionary alloc] initWithCapacity:5];
+    mIconDictionary = [[NSMutableDictionary alloc] initWithCapacity:100];
+
+    mIconsCacheHelper = new NeckoCacheHelper();
+    nsresult rv = mIconsCacheHelper->Init("MissedIconsCache");
     if (NS_FAILED(rv)) {
-      delete mMissedIconsCacheHelper;
-      mMissedIconsCacheHelper = NULL;
+      delete mIconsCacheHelper;
+      mIconsCacheHelper = NULL;
     }
   }
   
@@ -210,52 +320,60 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
 
 - (void)dealloc
 {
-  delete mMissedIconsCacheHelper;
+  delete mIconsCacheHelper;
+
   [mRequestDict release];
+  [mIconDictionary release];
+  
   [super dealloc];
 }
 
-- (void)addToMissedIconsCache:(const nsAString&)inURI withExpirationSeconds:(unsigned int)inExpSeconds
+- (NSString*)favoriteIconURLFromPageURL:(NSString*)inPageURL
 {
-  if (mMissedIconsCacheHelper)
+  NSString* faviconURL = nil;
+  
+  // do we have a link icon for this page?
+  if (mIconsCacheHelper)
   {
-    mMissedIconsCacheHelper->PutInCache(NS_ConvertUCS2toUTF8(inURI), inExpSeconds);
+    nsCAutoString pageURLString([inPageURL UTF8String]);
+    nsCAutoString iconURLString;
+    if (NS_SUCCEEDED(mIconsCacheHelper->GetFaviconLocationForPageURI(pageURLString, iconURLString)))
+    {
+      faviconURL = [NSString stringWith_nsACString:iconURLString];
+#ifdef VERBOSE_SITE_ICON_LOADING
+      NSLog(@"found linked icon url %@ for page %@", faviconURL, inPageURL);
+#endif
+    }
+  }
+  
+  if (!faviconURL)
+    faviconURL = [SiteIconProvider faviconLocationStringFromURI:inPageURL];
+    
+  return faviconURL;
+}
+
+- (void)addToMissedIconsCache:(NSString*)inURI withExpirationSeconds:(unsigned int)inExpSeconds
+{
+  if (mIconsCacheHelper)
+  {
+    mIconsCacheHelper->SetFaviconForURIIsMissing(nsCString([inURI UTF8String]), inExpSeconds);
   }
 
 }
 
-- (BOOL)inMissedIconsCache:(const nsAString&)inURI
+- (BOOL)inMissedIconsCache:(NSString*)inURI
 {
   PRBool inCache = PR_FALSE;
 
-  if (mMissedIconsCacheHelper)
-  	mMissedIconsCacheHelper->ExistsInCache(NS_ConvertUCS2toUTF8(inURI), &inCache);
+  if (mIconsCacheHelper)
+  	mIconsCacheHelper->FaviconForURIIsMissing(nsCString([inURI UTF8String]), &inCache);
 
   return inCache;
 }
 
 - (BOOL)loadFavoriteIcon:(id)sender forURI:(NSString *)inURI allowNetwork:(BOOL)inAllowNetwork
 {
-  // look for a favicon
-  nsAutoString uriString;
-  [inURI assignTo_nsAString:uriString];
-
-  nsAutoString faviconURIString;
-  MakeFaviconURIFromURI(uriString, faviconURIString);
-  if (faviconURIString.Length() == 0)
-    return NO;
-
-  NSString* faviconString = [NSString stringWith_nsAString:faviconURIString];
-  
-  // is this uri already in the missing icons cache?
-  if ([self inMissedIconsCache:faviconURIString])
-  {
-    return NO;
-  }
-  // preserve requesting URI for later notification
-  [mRequestDict setObject:inURI forKey:faviconString];
-  RemoteDataProvider* dataProvider = [RemoteDataProvider sharedRemoteDataProvider];
-  return [dataProvider loadURI:faviconString forTarget:sender withListener:self withUserData:nil allowNetworking:inAllowNetwork];
+  return [self fetchFavoriteIconForPage:inURI withIconLocation:nil allowNetwork:inAllowNetwork notifyingClient:sender];
 }
 
 #define SITE_ICON_EXPIRATION_SECONDS (60 * 60 * 24 * 7)    // 1 week
@@ -263,6 +381,10 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
 // this is called on the main thread
 - (void)doneRemoteLoad:(NSString*)inURI forTarget:(id)target withUserData:(id)userData data:(NSData*)data status:(nsresult)status
 {
+#ifdef VERBOSE_SITE_ICON_LOADING
+  NSLog(@"Site icon load %@ done, status 0x%08X", inURI, status);
+#endif
+
   nsAutoString uriString;
   [inURI assignTo_nsAString:uriString];
 
@@ -277,14 +399,14 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
   NS_DURING
     faviconImage = [[[NSImage alloc] initWithData:data] autorelease];
   NS_HANDLER
-    NSLog(@"Exception \"%@ making\" favicon image for %@", localException, inURI);
+    NSLog(@"Exception \"%@\" making favicon image for %@", localException, inURI);
     faviconImage = nil;
   NS_ENDHANDLER
 
   BOOL gotImageData = loadOK && (faviconImage != nil);
   if (NS_SUCCEEDED(status) && !gotImageData)		// error status indicates that load was attempted from cache
   {	
-    [self addToMissedIconsCache:uriString withExpirationSeconds:SITE_ICON_EXPIRATION_SECONDS];
+    [self addToMissedIconsCache:inURI withExpirationSeconds:SITE_ICON_EXPIRATION_SECONDS];
   }
   
   if (gotImageData)
@@ -292,24 +414,135 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
     [faviconImage setDataRetained:YES];
     [faviconImage setScalesWhenResized:YES];
     [faviconImage setSize:NSMakeSize(16, 16)];
+    
+    // add the image to the cache
+    [mIconDictionary setObject:faviconImage forKey:inURI];
   }
-  // figure out what URL triggered this favicon request
 
-  NSString *requestURL = [mRequestDict objectForKey:inURI];
-  if (!requestURL)
-    requestURL = [NSString string];
-  
-  // we always send out the notification, so that clients know
-  // about failed requests
-  NSDictionary*	notificationData = [NSDictionary dictionaryWithObjectsAndKeys:
-                                       inURI, SiteIconLoadURIKey,
-                                faviconImage, SiteIconLoadImageKey,	// may be nil
-                                  requestURL, SiteIconLoadUserDataKey,
-                                         nil];
-  NSNotification *note = [NSNotification notificationWithName: SiteIconLoadNotificationName object:target userInfo:notificationData];
-  [[NSNotificationQueue defaultQueue] enqueueNotification: note postingStyle:NSPostWhenIdle];
+  // figure out what URL triggered this favicon request
+  NSMutableArray* requestList = [mRequestDict objectForKey:inURI];
+
+  // send out a notification for every object in the request list
+  NSEnumerator* requestsEnum = [requestList objectEnumerator];
+  NSDictionary* curRequest;
+  while ((curRequest = [requestsEnum nextObject]))
+  {
+    NSString* requestURL = [curRequest objectForKey:@"request_uri"];
+    if (!requestURL)
+      requestURL = [NSString string];
+    id requestor = [curRequest objectForKey:@"icon_requestor"];
+    
+    // if we got an image, cache the link url, if any
+    NSString* linkURL = [curRequest objectForKey:@"icon_uri"];
+    if (gotImageData && ![linkURL isEqual:[NSNull null]] && mIconsCacheHelper)
+    {
+      nsCAutoString pageURI([requestURL UTF8String]);
+      nsCAutoString iconURI([linkURL UTF8String]);
+      
+#ifdef VERBOSE_SITE_ICON_LOADING
+      NSLog(@"saving linked icon url %@ for page %@", linkURL, requestURL);
+#endif
+      mIconsCacheHelper->SaveFaviconLocationForPageURI(pageURI, iconURI, SITE_ICON_EXPIRATION_SECONDS);
+    }
+    
+    // we always send out the notification, so that clients know
+    // about failed requests
+    NSDictionary*	notificationData = [NSDictionary dictionaryWithObjectsAndKeys:
+                                         inURI, SiteIconLoadURIKey,
+                                  faviconImage, SiteIconLoadImageKey,	// may be nil
+                                    requestURL, SiteIconLoadUserDataKey,
+                                           nil];
+    NSNotification *note = [NSNotification notificationWithName: SiteIconLoadNotificationName object:requestor userInfo:notificationData];
+    [[NSNotificationQueue defaultQueue] enqueueNotification:note postingStyle:NSPostWhenIdle];
+  }
+
   // cleanup our key holder
   [mRequestDict removeObjectForKey:inURI];  
+}
+
+#pragma mark -
+
+- (NSImage*)favoriteIconForPage:(NSString*)inPageURI
+{
+  if ([inPageURI length] == 0)
+    return nil;
+
+  // map uri to image location uri
+  NSString* iconURL = [self favoriteIconURLFromPageURL:inPageURI];
+  NSImage* siteIcon = [mIconDictionary objectForKey:iconURL];
+#ifdef VERBOSE_SITE_ICON_LOADING
+  NSLog(@"got icon %@ for url %@", siteIcon, iconURL);
+#endif
+  return siteIcon;
+}
+
+- (BOOL)fetchFavoriteIconForPage:(NSString*)inPageURI
+                withIconLocation:(NSString*)inIconURI
+                    allowNetwork:(BOOL)inAllowNetwork
+                 notifyingClient:(id)inClient
+{
+
+  NSString* iconTargetURL = nil;
+  
+  if (inIconURI)
+  {
+    // XXX clear any old cached uri for this page here?
+
+    // we should deal with the case of a page with a link element asking
+    // for the site icon, then a subsequent request with a nil inIconURI.
+    // however, we normally try to load the "default" favicon.ico before
+    // we see a link element, so the right thing happens.
+    iconTargetURL = inIconURI;
+  }
+  else
+  {
+    // look in the cache, and if it's not found, use the default location
+    iconTargetURL = [self favoriteIconURLFromPageURL:inPageURI];
+  }
+
+  if ([iconTargetURL length] == 0)
+    return NO;
+  
+  // is this uri already in the missing icons cache?
+  if ([self inMissedIconsCache:iconTargetURL])
+  {
+#ifdef VERBOSE_SITE_ICON_LOADING
+    NSLog(@"Site icon %@ known missing", iconTargetURL);
+#endif
+    return NO;
+  }
+  
+  id iconLocationString = inIconURI;
+  if (!iconLocationString)
+    iconLocationString = [NSNull null];
+  
+  // preserve requesting URI for later notification
+  NSDictionary* loadInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+                                            inClient, @"icon_requestor",
+                                           inPageURI, @"request_uri",
+                                  iconLocationString, @"icon_uri",
+                                                      nil];
+  NSMutableArray* existingRequests = [mRequestDict objectForKey:iconTargetURL];
+  if (existingRequests)
+  {
+#ifdef VERBOSE_SITE_ICON_LOADING
+    NSLog(@"Site icon request %@ added to load list", iconTargetURL);
+#endif
+    [existingRequests addObject:loadInfo];
+    return YES;
+  }
+  
+  existingRequests = [NSMutableArray arrayWithObject:loadInfo];
+  [mRequestDict setObject:existingRequests forKey:iconTargetURL];
+
+  RemoteDataProvider* dataProvider = [RemoteDataProvider sharedRemoteDataProvider];
+  BOOL loadDispatched = [dataProvider loadURI:iconTargetURL forTarget:inClient withListener:self withUserData:nil allowNetworking:inAllowNetwork];
+
+#ifdef VERBOSE_SITE_ICON_LOADING
+  NSLog(@"Site icon load %@ dispatched %d", iconTargetURL, loadDispatched);
+#endif
+  
+  return loadDispatched;
 }
 
 #pragma mark -

@@ -334,7 +334,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 - (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)cell forTableColumn:(NSTableColumn *)tableColumn item:(id)item
 {
   if ([[tableColumn identifier] isEqualToString:@"title"])
-    [cell setImage:[item icon]];
+    [cell setImage:[item iconAllowingLoad:YES]];
 }
 
 #if 0

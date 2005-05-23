@@ -83,6 +83,11 @@ public:
 
   void SetContainer(id <CHBrowserContainer> aContainer);
 
+protected:
+
+  nsresult HandleBlockedPopupEvent(nsIDOMEvent* inEvent);
+  nsresult HandleLinkAddedEvent(nsIDOMEvent* inEvent);
+  
 private:
   CHBrowserView*          mView;     // WEAK - it owns us
   NSMutableArray*         mListeners;

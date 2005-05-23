@@ -47,6 +47,7 @@
 #import "ExtendedOutlineView.h"
 #import "PreferenceManager.h"
 #import "HistoryItem.h"
+#import "SiteIconProvider.h"
 
 #import "BookmarkViewController.h"    // only for +greyStringWithItemCount
 
@@ -92,13 +93,14 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 // base class for a 'builder' object. This one just builds a flat list
 @interface HistoryTreeBuilder : NSObject
 {
-  HistoryCategoryItem*  mRootItem;
+  HistoryDataSource*    mDataSource;    // not retained (it owns us)
+  HistoryCategoryItem*  mRootItem;      // retained
   SEL                   mSortSelector;
   BOOL                  mSortDescending;
 }
 
 // sets up the tree and sorts it
-- (id)initWithItems:(NSArray*)items sortSelector:(SEL)sortSelector descending:(BOOL)descending;
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource items:(NSArray*)items sortSelector:(SEL)sortSelector descending:(BOOL)descending;
 
 - (HistoryItem*)rootItem;
 - (HistoryItem*)addItem:(HistorySiteItem*)item;
@@ -159,6 +161,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 - (HistorySiteItem*)itemWithIdentifier:(NSString*)identifier;
 - (NSString*)relativeDataStringForDate:(NSDate*)date;
 
+- (void)siteIconLoaded:(NSNotification*)inNotification;
 - (void)checkForNewDay;
 
 @end
@@ -200,11 +203,12 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 
 @implementation HistoryTreeBuilder
 
-- (id)initWithItems:(NSArray*)items sortSelector:(SEL)sortSelector descending:(BOOL)descending
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource items:(NSArray*)items sortSelector:(SEL)sortSelector descending:(BOOL)descending
 {
   if ((self = [super init]))
   {
-    mSortSelector = sortSelector;
+    mDataSource     = inDataSource;    // not retained
+    mSortSelector   = sortSelector;
     mSortDescending = descending;
 
     [self buildTreeWithItems:items];
@@ -239,7 +243,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 
 - (void)buildTreeWithItems:(NSArray*)items
 {
-  mRootItem = [[HistoryCategoryItem alloc] initWithTitle:@"" childCapacity:[items count]];
+  mRootItem = [[HistoryCategoryItem alloc] initWithDataSource:mDataSource title:@"" childCapacity:[items count]];
 
   [mRootItem addChildren:items];
   [self resortFromItem:mRootItem];
@@ -297,7 +301,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
     if ([itemHostname isEqualToString:@"local_file"])
       itemTitle = NSLocalizedString(@"LocalFilesCategoryTitle", @"");
     
-    hostCategory = [[HistorySiteCategoryItem alloc] initWithSite:itemHostname title:itemTitle childCapacity:10];
+    hostCategory = [[HistorySiteCategoryItem alloc] initWithDataSource:mDataSource site:itemHostname title:itemTitle childCapacity:10];
     [mSiteDictionary setObject:hostCategory forKey:itemHostname];
     [mRootItem addChild:hostCategory];
     [hostCategory release];
@@ -349,7 +353,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
     [mSiteDictionary removeAllObjects];
   
   [mRootItem release];
-  mRootItem = [[HistoryCategoryItem alloc] initWithTitle:@"" childCapacity:100];
+  mRootItem = [[HistoryCategoryItem alloc] initWithDataSource:mDataSource title:@"" childCapacity:100];
 
   NSEnumerator* itemsEnum = [items objectEnumerator];
   HistorySiteItem* item;
@@ -404,7 +408,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
                                                    minute:0
                                                    second:0
                                                  timeZone:[nowDate timeZone]];
-  HistoryCategoryItem* todayItem = [[HistoryDateCategoryItem alloc] initWithStartDate:lastMidnight ageInDays:0 title:NSLocalizedString(@"Today", @"") childCapacity:10];
+  HistoryCategoryItem* todayItem = [[HistoryDateCategoryItem alloc] initWithDataSource:mDataSource startDate:lastMidnight ageInDays:0 title:NSLocalizedString(@"Today", @"") childCapacity:10];
   [mDateCategories addObject:todayItem];
   [todayItem release];
   
@@ -414,7 +418,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
                                                     hours:0
                                                   minutes:0
                                                   seconds:0];
-  HistoryCategoryItem* yesterdayItem = [[HistoryDateCategoryItem alloc] initWithStartDate:startYesterday ageInDays:1 title:NSLocalizedString(@"Yesterday", @"") childCapacity:10];
+  HistoryCategoryItem* yesterdayItem = [[HistoryDateCategoryItem alloc] initWithDataSource:mDataSource startDate:startYesterday ageInDays:1 title:NSLocalizedString(@"Yesterday", @"") childCapacity:10];
   [mDateCategories addObject:yesterdayItem];
   [yesterdayItem release];
 
@@ -430,14 +434,14 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
                                          minutes:0
                                          seconds:0];
 
-    HistoryCategoryItem* dayItem = [[HistoryDateCategoryItem alloc] initWithStartDate:curDayStart ageInDays:(i + 2) title:[curDayStart descriptionWithCalendarFormat:@"%A %B %d"] childCapacity:10];
+    HistoryCategoryItem* dayItem = [[HistoryDateCategoryItem alloc] initWithDataSource:mDataSource startDate:curDayStart ageInDays:(i + 2) title:[curDayStart descriptionWithCalendarFormat:@"%A %B %d"] childCapacity:10];
     [mDateCategories addObject:dayItem];
     [dayItem release];
   }
   
   // do "older"
   NSDate* oldDate = [NSDate distantPast];
-  HistoryCategoryItem* olderItem = [[HistoryDateCategoryItem alloc] initWithStartDate:oldDate ageInDays:-1 title:NSLocalizedString(@"HistoryMoreThanAWeek", @"") childCapacity:100];
+  HistoryCategoryItem* olderItem = [[HistoryDateCategoryItem alloc] initWithDataSource:mDataSource startDate:oldDate ageInDays:-1 title:NSLocalizedString(@"HistoryMoreThanAWeek", @"") childCapacity:100];
   [mDateCategories addObject:olderItem];
   [olderItem release];
 }
@@ -485,7 +489,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
     [dateCategory addChild:item];
   }
 
-  mRootItem = [[HistoryCategoryItem alloc] initWithTitle:@"" childCapacity:[mDateCategories count]];
+  mRootItem = [[HistoryCategoryItem alloc] initWithDataSource:mDataSource title:@"" childCapacity:[mDateCategories count]];
   [mRootItem addChildren:mDateCategories];
 
   [self resortFromItem:mRootItem];
@@ -548,7 +552,7 @@ public:
       }      
       else
       {
-        item = [[HistorySiteItem alloc] initWith_nsIHistoryItem:inHistoryItem];
+        item = [[HistorySiteItem alloc] initWithDataSource:mDataSource historyItem:inHistoryItem];
         [mDataSource itemAdded:item];
         [item release];
       }
@@ -650,6 +654,14 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
                                                     selector:@selector(refreshTimerFired:)
                                                     userInfo:nil
                                                      repeats:YES] retain];
+
+    // register for site icon loads
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(siteIconLoaded:)
+                                                 name:SiteIconLoadNotificationName
+                                               object:nil];
+
+    mShowSiteIcons = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL];
   }
 
   return self;
@@ -788,7 +800,7 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
     nsCOMPtr<nsIHistoryItem> thisItem = do_QueryInterface(thisEntry);
     if (thisItem)
     {
-      HistorySiteItem* item = [[HistorySiteItem alloc] initWith_nsIHistoryItem:thisItem];
+      HistorySiteItem* item = [[HistorySiteItem alloc] initWithDataSource:self historyItem:thisItem];
       [mHistoryItems addObject:item];
       [mHistoryItemsDictionary setObject:item forKey:[item identifier]];
       [item release];
@@ -801,6 +813,11 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
 - (HistoryItem*)rootItem
 {
   return [mTreeBuilder rootItem];
+}
+
+- (BOOL)showSiteIcons
+{
+  return mShowSiteIcons;
 }
 
 - (void)notifyChanged:(HistoryItem*)changeRoot itemOnly:(BOOL)itemOnly
@@ -911,6 +928,22 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
 {
   NSCalendarDate* calendarDate = [date dateWithCalendarFormat:nil timeZone:nil];
   return [calendarDate relativeDateDescription];
+}
+
+- (void)siteIconLoaded:(NSNotification*)inNotification
+{
+  HistoryItem* theItem = [inNotification object];
+  // if it's not a site item, or it doesn't belong to this data source, ignore it
+  // (we instantiate multiple data sources)
+  if (![theItem isKindOfClass:[HistorySiteItem class]] || [theItem dataSource] != self)
+    return;
+
+  NSImage* iconImage = [[inNotification userInfo] objectForKey:SiteIconLoadImageKey];
+  if (iconImage)
+  {
+    [theItem setSiteIcon:iconImage];
+    [self notifyChanged:theItem itemOnly:YES];
+  }
 }
 
 - (void)checkForNewDay

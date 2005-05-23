@@ -697,7 +697,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   return mBookmarksEditingView;
 }
 
-- (void) focus
+- (void)focus
 {
   [[mBookmarksOutlineView window] makeFirstResponder:mBookmarksOutlineView];
   
@@ -706,7 +706,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   // manager view resized correctly. If we did it earlier, it would resize again
   // to stretch proportionally to the size of the browser window, destroying 
   // the width we just set.
-  if (!mSplittersRestored) {
+  if (!mSplittersRestored)
+  {
     const float kDefaultSplitWidth = kMinContainerSplitWidth;
     float savedWidth = [[NSUserDefaults standardUserDefaults] floatForKey:USER_DEFAULTS_CONTAINER_SPLITTER_WIDTH];
     if (savedWidth < kDefaultSplitWidth)
