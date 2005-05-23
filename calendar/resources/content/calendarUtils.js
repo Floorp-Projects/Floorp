@@ -188,9 +188,10 @@ function guessSystemTimezone()
     dump("Guessing system timezone:\n");
     dump("offset  : " + offset + "\ntimezone: " + timezone + "\n");
 
-    try {
-        return tzTable[offset + " " + timezone];
-    } catch(ex) {
+    var tzindex = offset + " " + timezone;
+    if (tzindex in tzTable) {
+        return tzTable[tzindex];
+    } else {
         // XXX we don't really have a better option here
         return "floating";
     }
