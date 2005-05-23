@@ -61,7 +61,7 @@
     </vbox>
     <description id="mustAgree">&reportWizardMustAgree.description;</description>
     <vbox>
-      <checkbox id="dontShowPrivacyStatement" label="&dontShowPrivacyStatement.label;" oncommand="privacyPolicyCheckbox()" />
+      <checkbox id="dontShowPrivacyStatement" label="&dontShowPrivacyStatement.label;" accesskey="&dontShowPrivacyStatement.accesskey;" oncommand="privacyPolicyCheckbox()" />
     </vbox>
   </wizardpage>
 
@@ -83,10 +83,10 @@
         </row>
         <row>
           <spacer/>
-          <checkbox id="behind_login" label="&reportForm.behind_login.title;"/>
+          <checkbox id="behind_login" label="&reportForm.behind_login.title;" accesskey="&reportForm.behind_login.accesskey;"/>
         </row>
         <row>
-          <label control="problem_type" value="&reportForm.problem_type.title;" accesskey="T"/>
+          <label control="problem_type" value="&reportForm.problem_type.title;" accesskey="&reportForm.problem_type.accesskey;"/>
           <!-- XXX: Perhaps this should eventually/maybe come from somewhere else?  Eh, not sure so lets just hardcode this for now. -->
           <menulist label="problem_type" id="problem_type" oncommand="validateForm()">
             <menupopup>
@@ -105,11 +105,11 @@
           </menulist>
         </row>
         <row>
-          <label control="description" value="&reportForm.describe.title;"/>
+          <label control="description" value="&reportForm.describe.title;" accesskey="&reportForm.describe.accesskey;"/>
           <textbox id="description" value="" cols="40" rows="7" multiline="true" size="40" class="noborder"/>
         </row>
         <row>
-          <label control="email" value="&reportForm.email.title;"/>
+          <label control="email" value="&reportForm.email.title;" accesskey="&reportForm.email.accesskey;"/>
           <textbox id="email" size="60" class="noborder"/>
         </row>
         <row>
@@ -138,7 +138,7 @@
   <wizardpage id="finish"
               label="&finish.label;">
     <textbox id="finishSummary" size="60" readonly="true"/>
-   <checkbox id="showDetail" label="&reportResults.showDetail.title;" oncommand="showDetail()"/>
+   <checkbox id="showDetail" label="&reportResults.showDetail.title;" accesskey="&reportResults.showDetail.accesskey;" oncommand="showDetail()"/>
     <vbox id="finishExtendedFrame" flex="1">
       <iframe id="finishExtendedSuccess" type="content" src="report.xhtml" flex="1"/>
       <iframe id="finishExtendedFailed" type="content" src="error.xhtml" flex="1"/>
