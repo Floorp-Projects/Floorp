@@ -112,7 +112,7 @@ calEvent.prototype = {
 
     get duration() {
         var dur = new CalDateTime();
-        dur.setTimeInTimezone (this.mEndDate.nativeTime - this.mStartDate.nativeTime, null);
+        dur.setTimeInTimezone (this.mEndDate.nativeTime - this.mStartDate.nativeTime, "floating");
         return dur;
     },
 
