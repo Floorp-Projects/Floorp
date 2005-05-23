@@ -559,7 +559,7 @@
           }
           catch (e) {
           }
-          try (e) {
+          try {
             var securityUI = this.securityUI;
           }
           catch (e) {
