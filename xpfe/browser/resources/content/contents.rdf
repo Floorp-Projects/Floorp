@@ -12,6 +12,7 @@
         chrome:displayName="Navigator"
         chrome:author="mozilla.org"
         chrome:name="navigator"
+        chrome:xpcNativeWrappers="true"
 #expand         chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"
 #expand         chrome:skinVersion="__MOZILLA_SKIN_VERSION__">
   </RDF:Description>
