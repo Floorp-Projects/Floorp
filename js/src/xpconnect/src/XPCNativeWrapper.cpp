@@ -255,6 +255,11 @@ XPC_NW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
+  XPCCallContext ccx(JS_CALLER, cx, obj);
+
+  // Make sure v doesn't get collected while we're re-wrapping it.
+  AUTO_MARK_JSVAL(ccx, v);
+
   return RewrapIfDeepWrapper(cx, obj, v, rval);
 }
 
@@ -329,18 +334,18 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   }
 
   // This will do verification and the method lookup for us.
-  XPCCallContext inner_cc(JS_CALLER, cx, nativeObj, nsnull, methodName);
+  XPCCallContext ccx(JS_CALLER, cx, nativeObj, nsnull, methodName);
 
   // Verify that our jsobject really is a wrapped native.
-  XPCWrappedNative* wrapper = inner_cc.GetWrapper();
+  XPCWrappedNative* wrapper = ccx.GetWrapper();
   if (wrapper != wrappedNative || !wrapper->IsValid()) {
     NS_ASSERTION(wrapper == wrappedNative, "Uh, how did this happen!");
     return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
   }
 
-  // it would a be a big surprise if there is a member without an
+  // it would be a big surprise if there is a member without an
   // interface :)
-  XPCNativeInterface* iface = inner_cc.GetInterface();
+  XPCNativeInterface* iface = ccx.GetInterface();
   if (!iface) {
     // No interface, no property -- unless we're getting an indexed
     // property such as frames[0].  Handle that as a special case
@@ -388,7 +393,7 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   }
 
   // did we find a method/attribute by that name?
-  XPCNativeMember* member = inner_cc.GetMember();
+  XPCNativeMember* member = ccx.GetMember();
   NS_ASSERTION(member, "not doing IDispatch, how'd this happen?");
   if (!member) {
     // No member, no property.
@@ -401,7 +406,7 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   // Get (and perhaps lazily create) the member's value (commonly a
   // cloneable function).
   jsval memberval;
-  if (!member->GetValue(inner_cc, iface, &memberval)) {
+  if (!member->GetValue(ccx, iface, &memberval)) {
     return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
   }
 
@@ -425,6 +430,10 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
 
     return JS_TRUE;
   }
+
+  // Make sure the function we're cloning doesn't go away while
+  // we're cloning it.
+  AUTO_MARK_JSVAL(ccx, memberval);
 
   // clone a function we can use for this object
   JSObject* funobj = ::JS_CloneFunctionObject(cx, JSVAL_TO_OBJECT(memberval),
@@ -485,7 +494,12 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return JS_TRUE;
   }
 
-  return RewrapIfDeepWrapper(cx, obj, v, vp);
+  {
+    // Make sure v doesn't get collected while we're re-wrapping it.
+    AUTO_MARK_JSVAL(ccx, v);
+
+    return RewrapIfDeepWrapper(cx, obj, v, vp);
+  }
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -591,18 +605,18 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   JSObject *nativeObj = wrappedNative->GetFlatJSObject();
 
   // This will do verification and the method lookup for us.
-  XPCCallContext inner_cc(JS_CALLER, cx, nativeObj, nsnull, id);
+  XPCCallContext ccx(JS_CALLER, cx, nativeObj, nsnull, id);
 
   // Verify that our jsobject really is a wrapped native.
-  XPCWrappedNative* wrapper = inner_cc.GetWrapper();
+  XPCWrappedNative* wrapper = ccx.GetWrapper();
   if (wrapper != wrappedNative || !wrapper->IsValid()) {
     NS_ASSERTION(wrapper == wrappedNative, "Uh, how did this happen!");
     return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
   }
 
-  // it would a be a big surprise if there is a member without an
+  // it would be a big surprise if there is a member without an
   // interface :)
-  XPCNativeInterface* iface = inner_cc.GetInterface();
+  XPCNativeInterface* iface = ccx.GetInterface();
   if (!iface) {
     // No interface, nothing to resolve.
 
@@ -610,7 +624,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   }
 
   // did we find a method/attribute by that name?
-  XPCNativeMember* member = inner_cc.GetMember();
+  XPCNativeMember* member = ccx.GetMember();
   NS_ASSERTION(member, "not doing IDispatch, how'd this happen?");
   if (!member) {
     // No member, nothing to resolve.
@@ -621,7 +635,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   // Get (and perhaps lazily create) the member's value (commonly a
   // cloneable function).
   jsval memberval;
-  if (!member->GetValue(inner_cc, iface, &memberval)) {
+  if (!member->GetValue(ccx, iface, &memberval)) {
     return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
   }
 
@@ -885,7 +899,8 @@ XPC_NW_Mark(JSContext *cx, JSObject *obj, void *arg)
   return 0;
 }
 
-extern nsISupports *GetIdentityObject(JSContext *cx, JSObject *obj);
+extern nsISupports *
+GetIdentityObject(JSContext *cx, JSObject *obj);
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
