@@ -106,15 +106,15 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
 // the wrapped native's flat JSObject, so the hook and args macro parameters
 // can be simply:
 //
-//      enumerate, (cx, obj, id, vp)
+//      enumerate, (cx, obj)
 //
 // in the call from XPC_NW_Enumerate, for example.
 
 #define XPC_NW_CALL_HOOK(cx, obj, hook, args)                                 \
-    return JS_GET_CLASS(cx, obj)->hook args;
+  return JS_GET_CLASS(cx, obj)->hook args;
 
 #define XPC_NW_CAST_HOOK(cx, obj, type, hook, args)                           \
-    return ((type) JS_GET_CLASS(cx, obj)->hook) args;
+  return ((type) JS_GET_CLASS(cx, obj)->hook) args;
 
 static JSBool
 ShouldBypassNativeWrapper(JSContext *cx, JSObject *obj)
@@ -183,7 +183,20 @@ GetStringByIndex(JSContext *cx, uintN index)
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  XPC_NW_BYPASS(cx, obj, delProperty, (cx, obj, id, vp));
+  XPC_NW_BYPASS_BASE(cx, obj,
+    // We're being notified of a delete operation on id in this
+    // XPCNativeWrapper, so forward to the right high-level hook,
+    // OBJ_DELETE_PROPERTY, on the XPCWrappedNative's object.
+    {
+      jsid interned_id;
+
+      if (!::JS_ValueToId(cx, id, &interned_id)) {
+        return JS_FALSE;
+      }
+
+      return OBJ_DELETE_PROPERTY(cx, obj, interned_id, vp);
+    }
+  );
 
   return ThrowException(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
 }
