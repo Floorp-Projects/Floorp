@@ -1215,6 +1215,9 @@ return_tearoff:
 
         if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
         {
+            if(pobj2)
+                *pobj2 = cur;
+
             return XPCNativeWrapper::GetWrappedNative(cx, cur);
         }
     }
