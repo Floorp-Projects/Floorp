@@ -8,7 +8,7 @@
 <!ENTITY  itemHistory.label           "History">
 <!ENTITY  rememberPages.label         "Remember visited pages for the last">
 <!ENTITY  rememberPages.accesskey     "R">
-<!ENTITY  rememberDays.label          "days">
+<!ENTITY  rememberDays.label          "days.">
 <!ENTITY  clearHistory.label          "Clear Browsing History Now">
 <!ENTITY  clearHistory.accesskey      "C">
 
@@ -81,4 +81,4 @@
 
 <!ENTITY  sanitizeSettings.label      "Sanitize Settings...">
 <!ENTITY  sanitizeSettings.accesskey  "z">
-<!ENTITY  sanitize.intro              "Sanitize automatically removes privacy information when you use a keyboard shortcut or close &brandShortName;">
+<!ENTITY  sanitize.intro              "Sanitize automatically removes privacy information when you use a keyboard shortcut or close &brandShortName;.">
