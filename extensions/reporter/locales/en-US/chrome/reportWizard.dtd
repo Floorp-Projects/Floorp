@@ -6,13 +6,18 @@
 <!ENTITY reportWizardMustAgree.description          "To continue you need to agree to the privacy policy above.">
 
 <!ENTITY dontShowPrivacyStatement.label             "I have read and accept the above privacy policy.">
+<!ENTITY dontShowPrivacyStatement.accesskey         "I">
 
 <!ENTITY reportForm.label                           "Fill out Report">
 
 <!ENTITY reportForm.description                     "Tell us a little about the problem you encountered:">
 <!ENTITY reportForm.url.title                       "Web site URL:">
+
 <!ENTITY reportForm.behind_login.title              "Web site is password-protected"><!-- No ":" at the end -->
+<!ENTITY reportForm.behind_login.accesskey          "P">
+
 <!ENTITY reportForm.problem_type.title              "Problem Type:">
+<!ENTITY reportForm.problem_type.accesskey          "T">
 
 <!ENTITY reportForm.problem_type.chooseOne.title    "Choose One...">
 
@@ -26,6 +31,8 @@
 <!ENTITY reportForm.problem_type.item7.title        "Other problem">
 
 <!ENTITY reportForm.describe.title                  "Describe Problem:">
+<!ENTITY reportForm.describe.accesskey              "D">
+
 <!ENTITY reportForm.platform.title                  "Platform:">
 <!ENTITY reportForm.product.title                   "Product:">
 <!ENTITY reportForm.gecko.title                     "Gecko:">
@@ -34,11 +41,13 @@
 
 <!--  Make sure this has "(Optional)" at the end.  This is important for the user to know -->
 <!ENTITY reportForm.email.title                     "Email (Optional):">
+<!ENTITY reportForm.email.accesskey                 "E">
 
 <!ENTITY reportForm.privacyPolicy.title             "Privacy Policy">
 <!ENTITY reportForm.privacyPolicy.tooltip           "View Privacy Policy">
 
 <!ENTITY reportResults.showDetail.title             "Show Details">
+<!ENTITY reportResults.showDetail.accesskey         "S">
 
 <!ENTITY sendReport.label                           "Sending Report">
 <!ENTITY sendReport.description                     "Sending Report to server...">
