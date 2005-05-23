@@ -2,7 +2,7 @@
 <!ENTITY reportWizard.title                         "Report A Broken Web Site">
 
 <!ENTITY privacyNotice.label                        "Privacy Policy">
-<!ENTITY reportWizardPrivacy.description            "This tool allows you to tell the Evangelism Team about web sites that do not work properly in Firefox, or shut Firefox out. This is your way to help us ensure the best possible experience for Firefox users. Please take a moment to read the following to learn how we use the information we collect should you choose to participate.">
+<!ENTITY reportWizardPrivacy.description            "This tool allows you to tell the Evangelism Team about web sites that do not work properly in &brandShortName;, or shut &brandShortName; out. This is your way to help us ensure the best possible experience for &brandShortName; users. Please take a moment to read the following to learn how we use the information we collect should you choose to participate.">
 <!ENTITY reportWizardMustAgree.description          "To continue you need to agree to the privacy policy above.">
 
 <!ENTITY dontShowPrivacyStatement.label             "I have read and accept the above privacy policy.">
@@ -44,4 +44,3 @@
 <!ENTITY sendReport.description                     "Sending Report to server...">
 
 <!ENTITY finish.label                               "Report Sent">
-

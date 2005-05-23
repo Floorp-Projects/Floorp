@@ -38,7 +38,12 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://reporter/skin/reportWizard.css" type="text/css"?>
 
-<!DOCTYPE wizard SYSTEM "chrome://reporter/locale/reportWizard.dtd">
+<!DOCTYPE wizard [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
+<!ENTITY % reportWizardDTD SYSTEM "chrome://reporter/locale/reportWizard.dtd">
+%reportWizardDTD;
+]>
 
 <wizard id="reportWizard" title="&reportWizard.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
