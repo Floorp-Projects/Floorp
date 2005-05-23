@@ -98,5 +98,98 @@ jint CocoaBrowserControlCanvas::cocoaGetHandleToPeer(JNIEnv *env, jobject canvas
     // Free the drawing surface (if not caching it)
     awt.FreeDrawingSurface(ds);
 
+printf("debug: edburns: CocoaBC: winPtr: %p\n", windowPtr);
+fflush(stdout);
+
     return (jint) windowPtr;
+}
+
+
+void CocoaBrowserControlCanvas::paintMe(JNIEnv *env, jobject canvas, jobject graphics) {
+
+    JAWT awt;
+    JAWT_DrawingSurface* ds = NULL;
+    JAWT_DrawingSurfaceInfo* dsi = NULL;
+    JAWT_MacOSXDrawingSurfaceInfo* dsi_mac = NULL;
+    jboolean result = JNI_FALSE;
+    jint lock = 0;
+	jclass bcClass;
+	jmethodID mid;
+    
+    // get the AWT
+    awt.version = JAWT_VERSION_1_4;
+    result = JAWT_GetAWT(env, &awt);
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+    }
+    assert(result != JNI_FALSE);
+	
+    // Get the drawing surface.  This can be safely cached.
+    // Anything below the DS (DSI, contexts, etc) 
+    // can possibly change/go away and should not be cached.
+    ds = awt.GetDrawingSurface(env, canvas);
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+    }
+    assert(ds != NULL);
+    
+    // Lock the drawing surface
+    // You must lock EACH TIME before drawing
+    lock = ds->Lock(ds); 
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+    }
+    assert((lock & JAWT_LOCK_ERROR) == 0);
+    
+    // Get the drawing surface info
+    dsi = ds->GetDrawingSurfaceInfo(ds);
+    
+    // Check DrawingSurfaceInfo.  This can be NULL on Mac OS X
+    // if the windowing system is not ready
+    if (dsi != NULL) {
+
+        // Get the platform-specific drawing info
+        // We will use this to get at Cocoa and CoreGraphics
+        // See <JavaVM/jawt_md.h>
+        dsi_mac = (JAWT_MacOSXDrawingSurfaceInfo*)dsi->platformInfo;
+        if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
+        }
+        
+        // Get the corresponding peer from the caller canvas
+        NSView *view = dsi_mac->cocoaViewRef;
+        		
+        // Get the CoreGraphics context from the parent window.
+        // DO NOT CACHE NSGraphicsContexts -- they may go away.
+        NSWindow *window = [view window];
+        NSGraphicsContext *ctxt = [NSGraphicsContext graphicsContextWithWindow:window];
+        CGContextRef cg = [ctxt graphicsPort];
+        
+        // Match Java's ctm
+        NSRect windowRect = [window frame];
+        CGContextConcatCTM(cg, CGAffineTransformMake(1, 0, 0, -1, dsi->bounds.x, windowRect.size.height-dsi->bounds.y));
+        
+        // Draw a pattern using CoreGraphics
+        CGContextSetRGBFillColor(cg, 1.0f, 0.0f, 0.0f, 1.0f);
+        CGContextFillRect(cg, CGRectMake(15, 15, dsi->bounds.width-30, dsi->bounds.height-30));
+        
+        // Free the DrawingSurfaceInfo
+        ds->FreeDrawingSurfaceInfo(dsi);
+        if (env->ExceptionOccurred()){
+            env->ExceptionDescribe();
+        }
+    }
+	
+    // Unlock the drawing surface
+    // You must unlock EACH TIME when done drawing
+    ds->Unlock(ds); 
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+    }
+    
+    // Free the drawing surface (if not caching it)
+    awt.FreeDrawingSurface(ds);
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+    }
 }

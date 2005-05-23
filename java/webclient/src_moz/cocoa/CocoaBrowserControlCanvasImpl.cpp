@@ -44,3 +44,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CocoaBrow
     result = CocoaBrowserControlCanvas::cocoaGetHandleToPeer(env, canvas);
     return result;
 }
+
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CocoaBrowserControlCanvas_paintMe(JNIEnv *env, jobject canvas, jobject graphics) {
+    CocoaBrowserControlCanvas::paintMe(env, canvas, graphics);
+}

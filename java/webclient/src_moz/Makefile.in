@@ -137,7 +137,7 @@ CMMSRCS = cocoa/CocoaBrowserControlCanvas.mm
 CPPSRCS += cocoa/CocoaBrowserControlCanvasImpl.cpp
 DLL_SUFFIX = .jnilib
 #DSO_LDOPTS += -L/System/Library/Frameworks/JavaVM.Framework/Libraries -ljawt
-DSO_LDOPTS += -framework JavaVM -lobjc
+DSO_LDOPTS += -framework JavaVM -framework AppKit -lobjc -L../src_share
 else
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += \

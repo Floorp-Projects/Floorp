@@ -31,7 +31,7 @@ import org.mozilla.webclient.BrowserControlCanvas;
 import org.mozilla.webclient.impl.wrapper_native.WCRunnable;
 import org.mozilla.webclient.impl.wrapper_native.NativeEventThread;
 
-import java.awt.Graphics;
+import java.awt.*;
 
 /**
  *
@@ -45,6 +45,7 @@ public class CocoaBrowserControlCanvas extends BrowserControlCanvas {
     
     //New method for obtaining access to the Native Peer handle
     private native int getHandleToPeer();
+    private native void paintMe(Graphics g);
     
 	/**
 	 * Obtain the native window handle for this
@@ -63,6 +64,26 @@ public class CocoaBrowserControlCanvas extends BrowserControlCanvas {
 		});
 	return result.intValue();
     }
+    
+    public void paint(Graphics g) {    
+        g.setColor(Color.green);
+        g.fillRect(0, 0, 100, 100);
+        
+        g.setColor(Color.blue);
+        g.fillRect(5, 5, 90, 90);
+        
+        // flush any outstanding graphics operations
+        Toolkit.getDefaultToolkit().sync(); 
+        // Call native code to render third (red) rect
+        paintMe(g);
+    
+        g.setColor(Color.yellow);
+        g.fillRect(25, 25, 50, 50);
+        
+        g.setColor(Color.black);
+        g.fillRect(40, 40, 20, 20);
+    }
+    
         
     
 }
