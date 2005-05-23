@@ -392,6 +392,7 @@
         <rdf:li> <rdf:Description ID="menu-tools-themes" nc:name="Themes" nc:link="menu_reference.xhtml#themes"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-javascript-console" nc:name="JavaScript Console" nc:link="menu_reference.xhtml#javascript_console"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-page-info" nc:name="Page Info" nc:link="menu_reference.xhtml#page_info"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-tools-check-for-updates" nc:name="Check for Updates" nc:link="menu_reference.xhtml#check_for_updates"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-sanitize" nc:name="Sanitize &brandShortName;..." nc:link="menu_reference.xhtml#sanitize"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-options" nc:name="Options" nc:link="menu_reference.xhtml#options"/> </rdf:li>
       </rdf:Seq>
