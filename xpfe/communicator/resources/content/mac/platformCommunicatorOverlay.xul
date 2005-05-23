@@ -20,12 +20,6 @@
   <key id="key_gotoHistory"  key="&historyCmd.key;" oncommand="toHistory();" modifiers="accel,shift"/>
 
   <menupopup id="menu_FilePopup">
-    <!-- Page setup -->
-    <menuitem id="printSetupMenuItem"
-         insertbefore="printMenuItem"
-         label="&printSetupCmd.label;"
-         accesskey="&printSetupCmd.accesskey;"
-         command="cmd_printSetup"/>
     <!-- quit -->
     <menuseparator id="menu_FileQuitSeparator"/>
     <menuitem label="&quitApplicationCmd.label;" id="menu_FileQuitItem"
