@@ -173,7 +173,7 @@ function dateToText(d) {
 function newDateTime(aNativeTime, aTimezone) {
     var t = new CalDateTime();
     t.nativeTime = aNativeTime;
-    if (aTimezone != "floating") {
+    if (aTimezone && aTimezone != "floating") {
         t = t.getInTimezone(aTimezone);
     } else {
         t.timezone = "floating";
