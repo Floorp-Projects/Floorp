@@ -289,7 +289,7 @@ libs::
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
-APP_NAME = Deer\ Park
+APP_NAME = Firefox
 
 AB_CD = $(MOZ_UI_LOCALE)
 
