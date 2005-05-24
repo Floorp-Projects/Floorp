@@ -1917,11 +1917,6 @@ public:
     {
         if(mScriptableInfo) mScriptableInfo->Mark();
         if(HasProto()) mMaybeProto->MarkBeforeJSFinalize(cx);
-        if(mNativeWrapper)
-        {
-            JS_MarkGCThing(cx, mNativeWrapper, 
-                           "XPCWrappedNative::mNativeWrapper", nsnull);
-        }
     }
 
 #ifdef DEBUG
