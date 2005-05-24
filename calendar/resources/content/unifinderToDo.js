@@ -49,6 +49,7 @@
 */
 
 const ToDoUnifinderTreeName = "unifinder-todo-tree";
+const kStatusOrder = ["NEEDS-ACTION", "IN-PROCESS", "COMPLETED", "CANCELLED"];
 
 var gTaskArray = new Array();
 
@@ -418,6 +419,12 @@ var toDoTreeView =
             return( calendarToDo.percent+"%" );
          case "unifinder-todo-tree-col-categories":
             return( calendarToDo.categories );
+         case "unifinder-todo-tree-col-location":
+            return( calendarToDo.getProperty("LOCATION") );
+         case "unifinder-todo-tree-col-status":
+            return getToDoStatusString(calendarToDo);
+         case "unifinder-todo-tree-col-filename":
+            return( calendarToDo.parent.name );
          default:
             return false;
       }
@@ -455,6 +462,13 @@ function compareTasks( taskA, taskB )
    
       case "unifinder-todo-tree-col-categories":
          return compareString(taskA.categories, taskB.categories) * modifier;
+
+      case "unifinder-todo-tree-col-location":
+         return compareString(taskA.getProperty("LOCATION"), taskB.getProperty("LOCATION")) * modifier;
+      case "unifinder-todo-tree-col-status":
+        return compareNumber(kStatusOrder.indexOf(taskA.status), kStatusOrder.indexOf(taskB.status)) * modifier;
+      case "unifinder-todo-tree-col-filename":
+        return compareString(taskA.parent.name, taskB.parent.name) * modifier;
 
       default:
          return 0;

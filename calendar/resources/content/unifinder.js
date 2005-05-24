@@ -532,11 +532,12 @@ function nullToEmpty(value) {
 }
 
 function compareMSTime(a, b) {
-  return a.compare(b);
+  return ((a < b) ? -1 :
+          (a > b) ?  1 : 0);
 }
 
 function msNextOrPreviousRecurrenceStart( calendarEvent ) {
-  return calendarEvent.startDate;
+  return calendarEvent.startDate.nativeTime;
   // XXX reimplement the following
   if (calendarEvent.recur && calendarEvent.start) {
     treeView.outParameter.value = null; // avoid creating objects during sort
@@ -551,7 +552,7 @@ function msNextOrPreviousRecurrenceStart( calendarEvent ) {
 
 function msNextOrPreviousRecurrenceEnd(event) {
   var msNextStart = msNextOrPreviousRecurrenceStart(event);
-  var msDuration=dateToMilliseconds(event.end)-dateToMilliseconds(event.start);
+  var msDuration=dateToMilliseconds(event.endDate)-dateToMilliseconds(event.startDate);
   return msNextStart + msDuration;
 }
 
