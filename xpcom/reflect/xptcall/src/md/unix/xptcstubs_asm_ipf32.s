@@ -15,15 +15,17 @@
         .type   PrepareAndDispatch,@function
 
 SharedStub::
-// 9 arguments, first 8 are the input arguments of previous
-// function call.  The last one is methodIndex, and is passed in memory
+// 10 arguments, first 8 are the input arguments of previous
+// function call.  The 9th one is methodIndex and the 10th is the
+// pointer to the remaining input arguments.  The last two arguments
+// are passed in memory.
         .prologue
         .save ar.pfs , r41
 // allocate 8 input args, 4 local args, and 5 output args
         alloc           r41 = ar.pfs, 8, 4, 5, 0   // M
         .save rp, r40
         mov             r40 = rp                   // I
-        nop.i           0                       ;; // I
+        addp4		out4 = 28, sp           ;; // I
 
         .save ar.unat, r42
         mov             r42 = ar.unat              // M
@@ -46,12 +48,9 @@ SharedStub::
         .body
         add             out0 = 0, in0        // A  move self ptr
 // 144 bytes = 16 byte stack header + 64 byte int space + 64 byte float space
-// current frame is 144 bytes, previous frame is 112 bytes
-// restarg is at 144 + 112 + 16 bytes away from current sp
-// (current frame + previous frame + previous previous frame header)
 // methodIndex is at 144 + 16 bytes away from current sp
 // (current frame + previous frame header)
-        add             out4 = 192, sp       // A  restarg address
+        ld4             out4 = [out4]        // A  restarg address
         add             r11  = 160, sp    ;; // A  address of methodIndex
 
         ld8             out1 = [r11]         // M  load methodIndex

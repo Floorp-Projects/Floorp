@@ -163,16 +163,17 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
 }
 
 extern "C" int SharedStub(PRUint64,PRUint64,PRUint64,PRUint64,
- PRUint64,PRUint64,PRUint64,PRUint64,PRUint64);
+ PRUint64,PRUint64,PRUint64,PRUint64,PRUint64,PRUint64 *);
 
 /* Variable a0-a7 were put there so we can have access to the 8 input
    registers on Stubxyz entry */
 
 #define STUB_ENTRY(n) \
 nsresult nsXPTCStubBase::Stub##n(PRUint64 a1, \
-PRUint64 a2,PRUint64 a3,PRUint64 a4,PRUint64 a5,PRUint64 a6,PRUint64 a7) \
+PRUint64 a2,PRUint64 a3,PRUint64 a4,PRUint64 a5,PRUint64 a6,PRUint64 a7, \
+PRUint64 a8) \
 { uint64_t a0 = (uint64_t) this; \
- return SharedStub(a0,a1,a2,a3,a4,a5,a6,a7,(PRUint64) n); \
+ return SharedStub(a0,a1,a2,a3,a4,a5,a6,a7,(PRUint64) n, &a8); \
 }
 
 #define SENTINEL_ENTRY(n) \
