@@ -3613,9 +3613,8 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
       if ((NS_VK_0 <= virtualKeyCode && virtualKeyCode <= NS_VK_9) ||
           (NS_VK_A <= virtualKeyCode && virtualKeyCode <= NS_VK_Z)) {
         asciiKey = virtualKeyCode;
-        // Take the Shift state into account. We need a lowercase character
-        // regardless of Shift if Ctrl or Alt is down
-        if ((!mIsShiftDown || mIsAltDown || mIsControlDown) 
+        // Take the Shift state into account
+        if (!mIsShiftDown 
             && NS_VK_A <= virtualKeyCode && virtualKeyCode <= NS_VK_Z) {
           asciiKey += 0x20;
         }
@@ -3727,10 +3726,10 @@ BOOL nsWindow::OnChar(UINT charCode, PRUint32 aFlags)
     }
   }
 
-  // Fix for bug 285161 which was caused by the initial fix for bug 178110.
-  // When pressing (alt|ctrl)+char, the char must be lowercase
-  // (regardless of Caps Lock or shift state).
-  if (saveIsAltDown || saveIsControlDown) {
+  // Fix for bug 285161 (and 295095) which was caused by the initial fix for bug 178110.
+  // When pressing (alt|ctrl)+char, the char must be lowercase unless shift is 
+  // pressed too.
+  if (!mIsShiftDown && (saveIsAltDown || saveIsControlDown)) {
     uniChar = towlower(uniChar);
   }
 
