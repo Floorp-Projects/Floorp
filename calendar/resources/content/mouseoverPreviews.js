@@ -81,9 +81,10 @@ function getPreviewForTask( toDoItem )
       hasHeader = true;
     }
 
-    if (toDoItem.location)
+    var location = toDoItem.getProperty("LOCATION");
+    if (location)
     {
-      boxAppendLabeledText(vbox, "tooltipLocation", toDoItem.location);
+      boxAppendLabeledText(vbox, "tooltipLocation", location);
       hasHeader = true;
     }
    
@@ -125,7 +126,7 @@ function getPreviewForTask( toDoItem )
       hasHeader = true;
     }
 
-    var description = toDoItem.getProperty("description");
+    var description = toDoItem.getProperty("DESCRIPTION");
     if (description)
     {
       // display up to 4 description lines like body of message below headers
