@@ -406,6 +406,9 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
         }
       }
 
+      // Boolean that indicates whether mCols took ownership of cgData
+      PRBool cgDataOwnershipTaken = PR_FALSE;
+      
       /*Loop over columns in this colgroup*/
       if (cgData->IsVisible()) {
         for (nsTableColFrame* col = cgFrame->GetFirstColumn(); col;
@@ -420,6 +423,7 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
           mCols[colIndex].mCol.mRect.MoveBy(cgData->mRect.x, cgData->mRect.y);
           //link to parent colgroup's data
           mCols[colIndex].mColGroup = cgData;
+          cgDataOwnershipTaken = PR_TRUE;
           if (mIsBorderCollapse) {
             border.left = lastLeftBorder;
             lastLeftBorder = col->GetContinuousBCBorderWidth(mP2t, border);
@@ -429,6 +433,11 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
             }
           }
         }
+      }
+
+      if (!cgDataOwnershipTaken) {
+        cgData->Destroy(mPresContext);
+        delete cgData;
       }
     }
   }
