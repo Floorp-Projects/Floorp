@@ -1920,8 +1920,8 @@ function cmdGotoURL(e)
     if (e.url.search(/^x-cz-command:/i) == 0)
     {
         var ary = e.url.match(/^x-cz-command:(.*)$/i);
-        e.sourceObject.frame.contentWindow.location = "javascript:void(view.dispatch('" +
-                                                      decodeURI(ary[1]) + "'))";
+        e.sourceObject.frame.contentWindow.location.href = 
+            "javascript:void(view.dispatch('" + decodeURI(ary[1]) + "'))";
         return;
     }
 

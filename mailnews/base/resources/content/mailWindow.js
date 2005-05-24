@@ -537,7 +537,7 @@ function loadStartPage() {
                 // first, clear out the charset setting.
                 messenger.setDisplayCharset("");
 
-                GetMessagePaneFrame().location = startpage;
+                GetMessagePaneFrame().location.href = startpage;
                 //dump("start message pane with: " + startpage + "\n");
                 ClearMessageSelection();
             }
@@ -566,7 +566,7 @@ function ShowAccountCentral()
         gSearchBox.collapsed = true;
         GetThreadTree().collapsed = true;
         document.getElementById("accountCentralBox").collapsed = false;
-        window.frames["accountCentralPane"].location = acctCentralPage;
+        window.frames["accountCentralPane"].location.href = acctCentralPage;
         if (!IsFolderPaneCollapsed())
             GetFolderTree().focus();
         gAccountCentralLoaded = true;
@@ -585,7 +585,7 @@ function HideAccountCentral()
 {
     try
     {
-        window.frames["accountCentralPane"].location = "about:blank";
+        window.frames["accountCentralPane"].location.href = "about:blank";
         document.getElementById("accountCentralBox").collapsed = true;
         GetThreadTree().collapsed = false;
         gSearchBox.collapsed = false;

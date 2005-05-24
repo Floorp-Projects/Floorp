@@ -498,7 +498,7 @@ function loadStartPage()
       var startpage = pref.getComplexValue("mailnews.start_page.url", Components.interfaces.nsIPrefLocalizedString).data;
       if (startpage != "") 
       {
-        GetMessagePaneFrame().location = startpage;
+        GetMessagePaneFrame().location.href = startpage;
         //dump("start message pane with: " + startpage + "\n");
         ClearMessageSelection();
       }
@@ -533,7 +533,7 @@ function ShowingAccountCentral()
         document.getElementById("threadpane-splitter").collapsed = true;
         gSearchBox.collapsed = true;
 
-        window.frames["accountCentralPane"].location = acctCentralPage;
+        window.frames["accountCentralPane"].location.href = acctCentralPage;
         
         if (!IsFolderPaneCollapsed())
             GetFolderTree().focus();        
@@ -550,7 +550,7 @@ function HidingAccountCentral()
 {
     try
     {
-        window.frames["accountCentralPane"].location = "about:blank";
+        window.frames["accountCentralPane"].location.href = "about:blank";
     }
     catch (ex)
     {

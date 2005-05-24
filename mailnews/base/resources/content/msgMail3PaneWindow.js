@@ -1131,8 +1131,8 @@ function ClearMessagePane()
   {
     gHaveLoadedMessage = false;
     gCurrentDisplayedMessage = null;
-    if (GetMessagePaneFrame().location != "about:blank")
-        GetMessagePaneFrame().location = "about:blank";
+    if (GetMessagePaneFrame().location.href != "about:blank")
+        GetMessagePaneFrame().location.href = "about:blank";
     // hide the message header view AND the message pane...
     HideMessageHeaderPane();
 

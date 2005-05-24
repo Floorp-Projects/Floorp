@@ -287,8 +287,8 @@ function InitPrintEngineWindow()
 
 function ClearPrintEnginePane()
 {
-  if (window.frames["content"].location != "about:blank")
-      window.frames["content"].location = "about:blank";
+  if (window.frames["content"].location.href != "about:blank")
+      window.frames["content"].location.href = "about:blank";
 }
 
 function StopUrls()
