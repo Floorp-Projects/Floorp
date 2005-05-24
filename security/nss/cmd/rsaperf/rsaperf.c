@@ -49,7 +49,7 @@
 #define DEFAULT_DURATION        10
 #define DEFAULT_KEY_BITS        1024
 #define MIN_KEY_BITS            512
-#define MAX_KEY_BITS            8192
+#define MAX_KEY_BITS            65536
 #define BUFFER_BYTES            MAX_KEY_BITS / 8
 #define DEFAULT_THREADS         1
 #define DEFAULT_EXPONENT        0x10001
@@ -542,7 +542,7 @@ main(int argc, char **argv)
         if (!privHighKey) {
             fprintf(stderr,
                     "Key generation failed in token \"%s\"\n",
-                    PK11_GetTokenName(privHighKey->pkcs11Slot));
+                    PK11_GetTokenName(slot));
             exit(1);
         }
 
