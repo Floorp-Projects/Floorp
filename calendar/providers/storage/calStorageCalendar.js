@@ -1020,7 +1020,7 @@ calStorageCalendar.prototype = {
 
         item.entryDate = newDateTime(row.todo_entry, row.todo_entry_tz);
         item.dueDate = newDateTime(row.todo_due, row.todo_due_tz);
-        item.completedDate = newDateTime(row.todo_complete, row.todo_complete_tz);
+        item.completedDate = newDateTime(row.todo_completed, row.todo_completed_tz);
         item.percentComplete = row.todo_complete;
 
         return item;
