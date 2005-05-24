@@ -59,12 +59,16 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
 
+JS_STATIC_DLL_CALLBACK(void)
+XPC_NW_Finalize(JSContext *cx, JSObject *obj);
+
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
                    JSAccessMode mode, jsval *vp);
 
 JS_STATIC_DLL_CALLBACK(JSBool)
-XPC_NW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+XPC_NW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+            jsval *rval);
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
@@ -91,7 +95,7 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
     JS_PropertyStub,    XPC_NW_DelProperty,
     XPC_NW_GetProperty, XPC_NW_SetProperty,
     XPC_NW_Enumerate,   (JSResolveOp)XPC_NW_NewResolve,
-    XPC_NW_Convert,     JS_FinalizeStub,
+    XPC_NW_Convert,     XPC_NW_Finalize,
     nsnull,             XPC_NW_CheckAccess,
     XPC_NW_Call,        XPC_NW_Construct,
     nsnull,             XPC_NW_HasInstance,
@@ -713,6 +717,17 @@ XPC_NW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
   return JS_TRUE;
 }
 
+JS_STATIC_DLL_CALLBACK(void)
+XPC_NW_Finalize(JSContext *cx, JSObject *obj)
+{
+  XPCWrappedNative *wrappedNative =
+    XPCNativeWrapper::GetWrappedNative(cx, obj);
+
+  if (wrappedNative && wrappedNative->GetNativeWrapper() == obj) {
+    wrappedNative->SetNativeWrapper(nsnull);
+  }
+}
+
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
                    JSAccessMode mode, jsval *vp)
@@ -864,6 +879,7 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (!MirrorWrappedNativeParent(cx, wrappedNative, &parent))
       return JS_FALSE;
+
     if (!::JS_SetParent(cx, wrapperObj, parent))
       return JS_FALSE;
 
