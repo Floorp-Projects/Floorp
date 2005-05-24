@@ -1013,7 +1013,7 @@ calStorageCalendar.prototype = {
         return item;
     },
 
-    getItemFromRow: function (row, flags) {
+    getTodoFromRow: function (row, flags) {
         var item = new CalTodo();
 
         this.getItemBaseFromRow (row, flags, item);
