@@ -162,6 +162,12 @@ function getCalendarManager()
         activeCalendarManager.addObserver(ltnCalendarManagerObserver);
     }
 
+    if (activeCalendarManager.getCalendars({}).length == 0) {
+        var homeCalendar = activeCalendarManager.createCalendar("storage", makeURL("moz-profile-calendar://"));
+        activeCalendarManager.registerCalendar(homeCalendar);
+        homeCalendar.name = "Home";
+    }
+
     return activeCalendarManager;
 }
 
