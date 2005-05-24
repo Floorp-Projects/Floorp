@@ -1,4 +1,4 @@
-<?php 
+<?php
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 require_once('../config.inc.php');
+require_once($config['app_path'].'/includes/iolib.inc.php');
 
 if (!isset($_GET['plain'])) {
 	include($config['app_path'].'/includes/header.inc.php');
