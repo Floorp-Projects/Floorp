@@ -58,6 +58,7 @@ interface calICalendar : nsISupports
 {
   /**
    * Name of the calendar
+   * Notes: Can only be set after the calendar is registered with the calendar manager.
    */
   attribute AUTF8String name;
 
