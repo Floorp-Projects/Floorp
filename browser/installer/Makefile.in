@@ -55,6 +55,12 @@ NO_PKG_FILES = \
 
 include $(topsrcdir)/config/rules.mk
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifndef MOZ_USE_OFFICIAL_BRANDING
+MOZ_APP_DISPLAYNAME   = DeerPark
+endif
+endif
+
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 installer:
