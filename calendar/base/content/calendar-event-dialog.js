@@ -55,10 +55,14 @@ function onLoad()
 
     loadDialog();
 
-    // update alarm checkbox/label/settings button
-    updateAlarm();
     // update datetime pickers
     updateAllDay();
+
+    // update recurrence button
+    updateRecurrence();
+
+    // update alarm checkbox/label/settings button
+    updateAlarm();
 
     document.getElementById("event-title").focus();
 
@@ -113,6 +117,10 @@ function loadDialog()
             if (event.parent.uri.equals(calendars[i].uri))
                 calendarList.selectedIndex = i;
         }
+    }
+
+    if (event.recurrenceInfo) {
+        setElementValue("event-recurrence", "true", "checked");
     }
 
     if (event.hasAlarm) {
@@ -184,6 +192,17 @@ function updateAllDay()
     var allDay = getElementValue("event-all-day", "checked");
     setElementValue("event-starttime", allDay, "timepickerdisabled");
     setElementValue("event-endtime", allDay, "timepickerdisabled");
+}
+
+
+function updateRecurrence()
+{
+    var recur = getElementValue("event-recurrence", "checked");
+    if (recur) {
+        setElementValue("set-recurrence", false, "disabled");
+    } else {
+        setElementValue("set-recurrence", "true", "disabled");
+    }
 }
 
 var prevAlarmItem = null;

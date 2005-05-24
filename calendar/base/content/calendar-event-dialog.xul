@@ -104,12 +104,13 @@
           <row align="center">
             <label value="repeat" class="label"/>
             <hbox align="center">
-              <label value="none"/>
+              <checkbox id="event-recurrence" oncommand="updateRecurrence();"/>
               <spacer flex="1"/>
-              <button disabled="true" label="set..."/>
+              <button id="set-recurrence" label="set..."/>
             </hbox>
           </row>
-          <row align="center">
+
+          <row align="center" hidden="true">
             <label value="attendees" class="label"/>
             <hbox align="center">
               <label value="none"/>
@@ -131,7 +132,7 @@
             <hbox>
               <menulist id="event-alarm" oncommand="updateAlarm()">
                 <menupopup>
-                  <menuitem label="none" value="none"/>
+                  <menuitem label="none" value="none" selected="true"/>
                   <menuseparator/>
                   <menuitem label="15 minutes before" length="15" unit="minutes" relation="START"/>
                   <menuitem label="30 minutes before" length="30" unit="minutes" relation="START"/>
@@ -149,14 +150,14 @@
               <textbox id="alarm-length-field" size="1"/>
               <menulist id="alarm-length-units">
                 <menupopup>
-                  <menuitem label="minutes" value="minutes"/>
+                  <menuitem label="minutes" value="minutes" selected="true"/>
                   <menuitem label="hours" value="hours"/>
                   <menuitem label="days" value="days"/>
                 </menupopup>
               </menulist>
               <menulist id="alarm-trigger-relation">
                 <menupopup>
-                  <menuitem label="before" value="START"/>
+                  <menuitem label="before" value="START" selected="true"/>
                   <menuitem label="after" value="END"/>
                 </menupopup>
               </menulist>
