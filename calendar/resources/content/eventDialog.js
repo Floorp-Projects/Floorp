@@ -1665,8 +1665,8 @@ function processToDoStatus(status, passedInCompletedDate)
 
     switch(status) {
     case "":
-    case "None":
-        menuListSelectItem("todo-status-field", "None");
+    case "NONE":
+        menuListSelectItem("todo-status-field", "NONE");
         disableElement("completed-date-picker");
         disableElement("percent-complete-menulist");
         disableElement("percent-complete-label");

@@ -354,7 +354,8 @@
                                 hidden-controller="event"
                                 hidden="true">
                         <menupopup id="event-status-menulist-menupopup">
-                          <menuitem label="None"/>
+                          <menuitem label="None"
+                                    value="NONE"/>
                           <menuitem label="&newevent.status.tentative.label;"
                                     value="TENTATIVE"/>
                           <menuitem label="&newevent.status.confirmed.label;"
@@ -369,7 +370,7 @@
                                 hidden="true">
                         <menupopup id="todo-status-menulist-menupopup">
                           <menuitem label="None"
-                                    value="None"/>
+                                    value="NONE"/>
                           <menuitem label="Needs Action"
                                     value="NEEDS-ACTION"/>
                           <menuitem label="In Process"
