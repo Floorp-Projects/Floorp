@@ -512,6 +512,9 @@ function compareEvents( eventA, eventB )
       case "unifinder-search-results-tree-col-status":
          return compareString(eventA.status, eventB.status) * modifier;
 
+      case "unifinder-search-results-tree-col-filename":
+        return compareString(eventA.parent.name, eventB.parent.name) * modifier;
+
       default:
          return 0;
    }
