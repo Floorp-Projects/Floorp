@@ -44,7 +44,7 @@ for($i = 0; $i < $entry_count; $i++) {
 }
 print OUTFILE "#else\n";
 for($i = 0; $i < $entry_count; $i++) {
-    print OUTFILE "NS_IMETHOD Stub",$i+3,"(PRUint64,\n";
+    print OUTFILE "NS_IMETHOD Stub",$i+3,"(PRUint64,PRUint64,\n";
     print OUTFILE " PRUint64,PRUint64,PRUint64,PRUint64,PRUint64,PRUint64);\n";
 
 }
