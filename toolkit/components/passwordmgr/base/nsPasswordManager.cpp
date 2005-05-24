@@ -1186,9 +1186,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
 
       nsAutoString dialogTitle, dialogText, neverText;
       GetLocalizedString(NS_LITERAL_STRING("savePasswordTitle"), dialogTitle);
-      GetLocalizedString(NS_LITERAL_STRING("savePasswordText"),
-                         dialogText,
-                         PR_TRUE);
+      GetLocalizedString(NS_LITERAL_STRING("savePasswordText"), dialogText);
       GetLocalizedString(NS_LITERAL_STRING("neverForSite"), neverText);
 
       PRInt32 selection;
