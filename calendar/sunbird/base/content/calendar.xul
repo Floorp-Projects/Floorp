@@ -522,6 +522,24 @@
                        persist="hidden ordinal width sortDirection sortActive" 
                        hidden="true"
                        flex="1" label="&calendar.unifinder.tree.categories.label;"/>
+              <splitter class="tree-splitter"/>
+              <treecol id="unifinder-todo-tree-col-location"
+                       persist="hidden ordinal width sortDirection sortActive" 
+                       flex="1"
+                       hidden="true"
+                       label="&calendar.unifinder.tree.location.label;"/>
+              <splitter class="tree-splitter"/>
+              <treecol id="unifinder-todo-tree-col-status"
+                       persist="hidden ordinal width sortDirection sortActive" 
+                       flex="1"
+                       hidden="true"
+                       label="&calendar.unifinder.tree.status.label;"/>
+              <splitter class="tree-splitter"/>
+              <treecol id="unifinder-todo-tree-col-calendarname"
+                       persist="hidden ordinal width sortDirection sortActive" 
+                       flex="1"
+                       hidden="true"
+                       label="&calendar.unifinder.tree.calendarname.label;"/>
             </treecols>
          
             <treechildren tooltip="taskTooltip"
@@ -609,11 +627,11 @@
                      flex="1"
                      hidden="true"
                      label="&calendar.unifinder.tree.status.label;"/>
-            <treecol id="unifinder-search-results-tree-col-filename"
+            <treecol id="unifinder-search-results-tree-col-calendarname"
                      persist="hidden ordinal width sortDirection sortActive" 
                      flex="1"
                      hidden="true"
-                     label="&calendar.unifinder.tree.filename.label;"/>
+                     label="&calendar.unifinder.tree.calendarname.label;"/>
           </treecols>
 
           <!-- on mousedown here happens before onclick above -->

@@ -69,7 +69,7 @@ calendar.jar:
     content/calendar/datetimepickers/minimonth.xml (content/datetimepickers/minimonth.xml)
     content/calendar/pref/pref.xul (content/pref/pref.xul)
     content/calendar/pref/alarmPrefs.xul (content/pref/alarmPrefs.xul)
-    content/calendar/pref/calendarPref.xul (content/pref/calendarPref.xul)
+*   content/calendar/pref/calendarPref.xul (content/pref/calendarPref.xul)
     content/calendar/pref/prefBird.xul (content/pref/prefBird.xul)
     content/calendar/pref/prefBirdOverlay.xul (content/pref/prefBirdOverlay.xul)
     content/calendar/pref/prefOverlay.xul (content/pref/prefOverlay.xul)
@@ -92,8 +92,12 @@ calendar.jar:
     locale/en-US/calendar/global.dtd (locale/en-US/global.dtd)
     locale/en-US/calendar/menuOverlay.dtd (locale/en-US/menuOverlay.dtd)
     locale/en-US/calendar/overlay.dtd  (locale/en-US/overlay.dtd) 
-    locale/en-US/calendar/prefs.dtd  (locale/en-US/prefs.dtd) 
+*   locale/en-US/calendar/prefs.dtd  (locale/en-US/prefs.dtd) 
     locale/en-US/calendar/selectAddresses.dtd (locale/en-US/selectAddresses.dtd)
+#ifdef MOZ_SUNBIRD
+    locale/en-US/calendar/connectionPrefs.dtd (locale/en-US/connectionPrefs.dtd)
+    locale/en-US/calendar/prefutilities.properties (locale/en-US/prefutilities.properties)
+#endif
     skin/classic/calendar/alertDialog.css (skin/classic/alertDialog.css)
     skin/classic/calendar/all_day_event.png (skin/classic/all_day_event.png)
     skin/classic/calendar/all_day_event_down.png (skin/classic/all_day_event_down.png)

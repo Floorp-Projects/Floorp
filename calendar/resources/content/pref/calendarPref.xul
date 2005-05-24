@@ -44,6 +44,9 @@
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/prefs.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd2;
+#ifdef MOZ_SUNBIRD
+    <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" > %brandDTD;
+#endif
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -279,6 +282,13 @@
          }
       }
 
+#ifdef MOZ_SUNBIRD
+      function showConnections()
+      {
+        openDialog("chrome://calendar/content/pref/connectionPrefs.xul", "", "chrome,dialog");
+      }
+#endif
+
       /* 
       ** NOTE: 
       ** When you add a pref to this page, you have to add its ID to the following list.
@@ -316,6 +326,17 @@
       
       <checkbox id="reloadonlaunch" preftype="bool" prefstring="calendar.servers.reloadonlaunch" label="&pref.reloadonlaunch;" />
    </groupbox>
+#ifdef MOZ_SUNBIRD
+   <groupbox>
+     <caption label="&pref.connectionsInfo.caption;"/>
+     <hbox align="center">
+       <description flex="1">&pref.proxiesInfo.label;</description>
+       <button id="catProxiesButton" icon="network" label="&pref.showConnections.label;" 
+               accesskey="&pref.showConnections.accesskey;" 
+               oncommand="showConnections()"/>
+     </hbox>
+   </groupbox>
+#endif
    <groupbox flex="1">
      <caption label="&pref.categories.label;"/>
      <hbox flex="1">
