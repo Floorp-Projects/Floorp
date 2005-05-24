@@ -85,7 +85,7 @@ function getCharPref(prefname, aDefault) {
 }
 
 function openPrivacyPolicy() {
-  var url = getCharPref("privacyURL", "http://reporter-test.mozilla.org/privacy/");
+  var url = getCharPref("privacyURL", "http://reporter.mozilla.org/privacy/");
   openDialog(window.opener.getBrowserURL(), "_blank", "chrome,all,dialog=no", url, null, null);
 }
 
@@ -100,7 +100,7 @@ function initPrivacyNotice() {
     reportWizard.canAdvance = false;
 
     // Load Privacy Policy
-    var privacyURL = getCharPref("privacyURL", "http://reporter-test.mozilla.org/privacy/");
+    var privacyURL = getCharPref("privacyURL", "http://reporter.mozilla.org/privacy/");
     document.getElementById("privacyStatement").setAttribute("src", privacyURL+"?plain");
   }
 }
@@ -294,7 +294,7 @@ function getBuildConfig() {
 /*  NEW WEB SERVICE MODULE */
 /*  Based on Apple's example implementation of SOAP at: developer.apple.com/internet/webservices/mozgoogle_source.html */
 function callReporter(method, params, callback) {
-  var serviceURL = getCharPref("serviceURL", "http://reporter-test.mozilla.org/service/");
+  var serviceURL = getCharPref("serviceURL", "http://reporter.mozilla.org/service/");
 
   var soapCall = new SOAPCall();
   soapCall.transportURI = serviceURL;
