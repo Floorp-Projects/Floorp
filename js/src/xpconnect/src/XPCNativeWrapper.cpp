@@ -827,23 +827,17 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   JSObject *wrapperObj;
 
-  if (XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
-    // Use the object the JS engine created for us.
+  // Don't use the object the JS engine created for us, it is in most
+  // cases incorectly parented and has a proto from the wrong scope.
 #ifdef DEBUG_XPCNativeWrapper
-    printf("Using pre-created JSObject\n");
+  printf("Creating new JSObject\n");
 #endif
-    wrapperObj = obj;
-  } else {
-#ifdef DEBUG_XPCNativeWrapper
-    printf("Creating new JSObject\n");
-#endif
-    wrapperObj = ::JS_NewObject(cx, XPCNativeWrapper::GetJSClass(), nsnull,
-                                nsnull);
+  wrapperObj = ::JS_NewObject(cx, XPCNativeWrapper::GetJSClass(), nsnull,
+                              wrappedNative->GetScope()->GetGlobalJSObject());
 
-    if (!wrapperObj) {
-      // JS_NewObject already threw (or reported OOM).
-      return JS_FALSE;
-    }
+  if (!wrapperObj) {
+    // JS_NewObject already threw (or reported OOM).
+    return JS_FALSE;
   }
 
   PRBool hasStringArgs = PR_FALSE;
@@ -872,16 +866,19 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
+  JSObject *parent = nsnull;
+
   if (isDeep) {
+    // Make sure wrapperObj doesn't get collected while we're wrapping
+    // parents for it.
+    ::JS_LockGCThing(cx, wrapperObj);
+
     // A deep XPCNativeWrapper has a __parent__ chain that mirrors its
     // XPCWrappedNative's chain.
-    JSObject *parent;
-
     if (!MirrorWrappedNativeParent(cx, wrappedNative, &parent))
       return JS_FALSE;
 
-    if (!::JS_SetParent(cx, wrapperObj, parent))
-      return JS_FALSE;
+    ::JS_UnlockGCThing(cx, wrapperObj);
 
     if (argc == 2 && !JSVAL_IS_PRIMITIVE(argv[1])) {
       // An object was passed as the second argument to the
@@ -899,6 +896,13 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       }
     }
   }
+
+  if (!parent) {
+    parent = wrappedNative->GetScope()->GetGlobalJSObject();
+  }
+    
+  if (!::JS_SetParent(cx, wrapperObj, parent))
+    return JS_FALSE;
 
   // Set the XPCWrappedNative as private data in the native wrapper.
   if (!::JS_SetPrivate(cx, wrapperObj, wrappedNative)) {
@@ -1064,7 +1068,27 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
     return nsnull;
   }
 
+  PRBool lock;
+
+  if (!nw_parent) {
+    nw_parent = wrapper->GetScope()->GetGlobalJSObject();
+
+    lock = PR_FALSE;
+  } else {
+    lock = PR_TRUE;
+  }
+
+  if (lock) {
+    // Make sure nw_parent doesn't get collected while we're creating
+    // the new wrapper.
+    ::JS_LockGCThing(cx, nw_parent);
+  }
+
   obj = ::JS_NewObject(cx, GetJSClass(), nsnull, nw_parent);
+
+  if (lock) {
+    ::JS_UnlockGCThing(cx, nw_parent);
+  }
 
   if (!obj ||
       !::JS_SetPrivate(cx, obj, wrapper) ||

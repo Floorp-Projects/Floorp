@@ -1080,7 +1080,12 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                    !JS_IsSystemObject(ccx, wrapper->GetFlatJSObject()))
                 {
 #ifdef DEBUG_XPCNativeWrapper
-                    printf("Content accessed from chrome, wrapping wrapper in XPCNativeWrapper\n");
+                    {
+                        char *s = wrapper->ToString(ccx);
+                        printf("Content accessed from chrome, wrapping wrapper (%s) in XPCNativeWrapper\n", s);
+                        if (s)
+                            JS_smprintf_free(s);
+                    }
 #endif
 
                     JSObject *nativeWrapper =

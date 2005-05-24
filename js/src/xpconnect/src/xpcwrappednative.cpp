@@ -928,6 +928,12 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx, JSObject *obj)
     NS_ASSERTION(*(int*)mIdentity != 0,          "bad pointer!");
 #endif
 
+    if (mNativeWrapper) {
+        // Invalidate our native wrapper (so that it
+        // doesn't try to access this wrapped native after it's gone).
+        XPCNativeWrapper::Invalidate(cx, mNativeWrapper);
+    }
+
     Release();
 }
 
