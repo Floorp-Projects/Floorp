@@ -48,7 +48,11 @@ interface nsILineInputStream : nsISupports
    * possibly zero length sequence of 8bit chars terminated by a
    * CR, LF, CRLF, LFCR, or eof.
    * The line terminator is not returned.
-   * Return false for end of file, true otherwise
+   * @retval false
+   *         End of file. This line is the last line of the file
+   *         (aLine is valid).
+   * @retval true
+   *         The file contains further lines.
    */
   boolean readLine(out ACString aLine);
 };
