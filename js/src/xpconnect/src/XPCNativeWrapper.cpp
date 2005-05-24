@@ -210,17 +210,24 @@ RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
   }
 
   // Re-wrap non-primitive values if this is a deep wrapper, i.e.
-  // if (deep == JSVAL_TRUE).
+  // if (deep == JSVAL_TRUE).  Note that just using GetNewOrUsed
+  // on the return value of GetWrappedNativeOfJSObject will give
+  // the right thing -- the unique deep wrapper associated to
+  // wrappedNative.
   if (deep == JSVAL_TRUE && !JSVAL_IS_PRIMITIVE(v)) {
-    JSObject *rvalWrapper =
-      ::JS_ConstructObjectWithArguments(cx, XPCNativeWrapper::GetJSClass(),
-                                        nsnull, ::JS_GetGlobalObject(cx), 1,
-                                        &v);
-    if (!rvalWrapper) {
+    JSObject *nativeObj = JSVAL_TO_OBJECT(v);
+    XPCWrappedNative* wrappedNative =
+      XPCWrappedNative::GetWrappedNativeOfJSObject(cx, nativeObj);
+    if (!wrappedNative) {
+      return ThrowException(NS_ERROR_INVALID_ARG, cx);
+    }
+
+    JSObject* wrapperObj = XPCNativeWrapper::GetNewOrUsed(cx, wrappedNative);
+    if (!wrapperObj) {
       return JS_FALSE;
     }
 
-    *rval = OBJECT_TO_JSVAL(rvalWrapper);
+    *rval = OBJECT_TO_JSVAL(wrapperObj);
   } else {
     *rval = v;
   }
@@ -776,6 +783,8 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   XPCWrappedNative *wrappedNative;
 
+  // XXXbz if this is a deep wrap perhaps we shouldn't be using
+  // |obj| and should call GetNewOrUsed instead?
   if (XPCNativeWrapper::IsNativeWrapper(cx, nativeObj)) {
     // We're asked to wrap an already wrapped object. Re-wrap the
     // object wrapped by the given wrapper.
