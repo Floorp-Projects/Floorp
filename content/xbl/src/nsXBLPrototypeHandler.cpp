@@ -368,15 +368,19 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   
   // Compile the event handler.
   nsAutoString xulText;
+  nsIContent* keyCommandContent = nsnull;
   if (isXULKey) {
     // Try an oncommand attribute (used by XUL <key> elements, which
     // are implemented using this code).
     mHandlerElement->GetAttr(kNameSpaceID_None, nsLayoutAtoms::oncommand, xulText);
+    keyCommandContent = mHandlerElement;
     if (xulText.IsEmpty()) {
       // Maybe the receiver is a <command> elt.
-      if (isReceiverCommandElement)
+      if (isReceiverCommandElement) {
         // It is!  See if it has an oncommand attribute.
         content->GetAttr(kNameSpaceID_None, nsLayoutAtoms::oncommand, xulText);
+        keyCommandContent = content;
+      }
       
       if (xulText.IsEmpty())
         return NS_ERROR_FAILURE; // For whatever reason, they didn't give us anything to do.
@@ -452,19 +456,21 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
 
   const char *eventName = nsContentUtils::GetEventArgName(kNameSpaceID_XBL);
 
-  if (isXULKey)
+  if (isXULKey) {
+    nsCAutoString documentURI;
+    keyCommandContent->GetOwnerDoc()->GetDocumentURI()->GetSpec(documentURI);
     boundContext->CompileEventHandler(scriptObject, onEventAtom, eventName,
                                       xulText,
-                                      nsnull, 0,
+                                      documentURI.get(), 0,
                                       PR_TRUE, &handler);
+  }
   else {
     nsDependentString handlerText(mHandlerText);
     if (handlerText.IsEmpty())
       return NS_ERROR_FAILURE;
     
     nsCAutoString bindingURI;
-    if (mPrototypeBinding)
-      mPrototypeBinding->DocURI()->GetSpec(bindingURI);
+    mPrototypeBinding->DocURI()->GetSpec(bindingURI);
     
     boundContext->CompileEventHandler(scriptObject, onEventAtom, eventName,
                                       handlerText,
