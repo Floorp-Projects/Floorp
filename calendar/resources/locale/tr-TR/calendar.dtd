@@ -237,7 +237,7 @@
 <!ENTITY calendar.unifinder.tree.categories.label    "Kategoriler">
 <!ENTITY calendar.unifinder.tree.location.label    "Konum">
 <!ENTITY calendar.unifinder.tree.status.label    "Durum">
-<!ENTITY calendar.unifinder.tree.filename.label    "Takvim İsmi">
+<!ENTITY calendar.unifinder.tree.calendarname.label    "Takvim İsmi">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Bugüne git" >
 <!ENTITY calendar.choosedate.button.tooltip       "Gidilecek tarihi seçin" >

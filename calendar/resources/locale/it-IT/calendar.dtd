@@ -237,7 +237,7 @@
 <!ENTITY calendar.unifinder.tree.categories.label    "Categorie">
 <!ENTITY calendar.unifinder.tree.location.label    "Luogo">
 <!ENTITY calendar.unifinder.tree.status.label    "Stato">
-<!ENTITY calendar.unifinder.tree.filename.label    "Nome Calendario">
+<!ENTITY calendar.unifinder.tree.calendarname.label    "Nome Calendario">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Vai a oggi" >
 <!ENTITY calendar.choosedate.button.tooltip       "Vai a una data" >

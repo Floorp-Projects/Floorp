@@ -243,7 +243,7 @@
 <!ENTITY calendar.unifinder.tree.categories.label    "Catégories">
 <!ENTITY calendar.unifinder.tree.location.label    "Lieu">
 <!ENTITY calendar.unifinder.tree.status.label    "Statut">
-<!ENTITY calendar.unifinder.tree.filename.label    "Nom de l'agenda">
+<!ENTITY calendar.unifinder.tree.calendarname.label    "Nom de l'agenda">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Revenir à la date d'aujourd'hui" >
 <!ENTITY calendar.choosedate.button.tooltip       "Choisir la date à atteindre" >

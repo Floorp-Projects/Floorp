@@ -237,7 +237,7 @@
 <!ENTITY calendar.unifinder.tree.categories.label    "Categories">
 <!ENTITY calendar.unifinder.tree.location.label    "Ubicació">
 <!ENTITY calendar.unifinder.tree.status.label    "En procés">
-<!ENTITY calendar.unifinder.tree.filename.label    "Nom del calendari">
+<!ENTITY calendar.unifinder.tree.calendarname.label    "Nom del calendari">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Vés a avui" >
 <!ENTITY calendar.choosedate.button.tooltip       "Trieu una data per anar-hi" >

@@ -471,7 +471,7 @@ var treeView =
          case "unifinder-search-results-tree-col-status":
             return getEventStatusString(calendarEvent);
 
-        case "unifinder-search-results-tree-col-filename":
+        case "unifinder-search-results-tree-col-calendarname":
           return calendarEvent.parent.name;
 
          default: 
@@ -512,7 +512,7 @@ function compareEvents( eventA, eventB )
       case "unifinder-search-results-tree-col-status":
          return compareString(eventA.status, eventB.status) * modifier;
 
-      case "unifinder-search-results-tree-col-filename":
+      case "unifinder-search-results-tree-col-calendarname":
         return compareString(eventA.parent.name, eventB.parent.name) * modifier;
 
       default:

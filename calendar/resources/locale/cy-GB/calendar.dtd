@@ -237,7 +237,7 @@
 <!ENTITY calendar.unifinder.tree.categories.label    "Categorïau">
 <!ENTITY calendar.unifinder.tree.location.label    "Lleoliad (URL)">
 <!ENTITY calendar.unifinder.tree.status.label    "Statws">
-<!ENTITY calendar.unifinder.tree.filename.label    "Enw Calendr">
+<!ENTITY calendar.unifinder.tree.calendarname.label    "Enw Calendr">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Mynd i heddiw" >
 <!ENTITY calendar.choosedate.button.tooltip       "Dewis dyddiad i fynd iddo" >

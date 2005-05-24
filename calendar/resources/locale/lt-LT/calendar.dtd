@@ -237,7 +237,7 @@
 <!ENTITY calendar.unifinder.tree.categories.label    "Grupė">
 <!ENTITY calendar.unifinder.tree.location.label    "Adresas">
 <!ENTITY calendar.unifinder.tree.status.label    "Būsena">
-<!ENTITY calendar.unifinder.tree.filename.label    "Kalendoriaus vardas">
+<!ENTITY calendar.unifinder.tree.calendarname.label    "Kalendoriaus vardas">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Eiti į šios dienos kalendorių" >
 <!ENTITY calendar.choosedate.button.tooltip       "Parinkti datą (kur eiti)" >

@@ -237,7 +237,7 @@
 <!ENTITY calendar.unifinder.tree.categories.label    "Kategorie">
 <!ENTITY calendar.unifinder.tree.location.label    "Místo">
 <!ENTITY calendar.unifinder.tree.status.label    "Stav">
-<!ENTITY calendar.unifinder.tree.filename.label    "Název kalendáře">
+<!ENTITY calendar.unifinder.tree.calendarname.label    "Název kalendáře">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Přejít na dnešní den" >
 <!ENTITY calendar.choosedate.button.tooltip       "Zvolit datum pro přechod" >

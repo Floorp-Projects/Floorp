@@ -240,7 +240,7 @@
 <!ENTITY calendar.unifinder.tree.categories.label    "カテゴリ">
 <!ENTITY calendar.unifinder.tree.location.label    "ロケーション">
 <!ENTITY calendar.unifinder.tree.status.label    "ステータス">
-<!ENTITY calendar.unifinder.tree.filename.label    "カレンダー名">
+<!ENTITY calendar.unifinder.tree.calendarname.label    "カレンダー名">
 
 <!ENTITY calendar.gototoday.button.tooltip        "今日に移動します" >
 <!ENTITY calendar.choosedate.button.tooltip       "移動する日を選択します" >

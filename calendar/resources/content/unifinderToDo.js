@@ -423,7 +423,7 @@ var toDoTreeView =
             return( calendarToDo.getProperty("LOCATION") );
          case "unifinder-todo-tree-col-status":
             return getToDoStatusString(calendarToDo);
-         case "unifinder-todo-tree-col-filename":
+         case "unifinder-todo-tree-col-calendarname":
             return( calendarToDo.parent.name );
          default:
             return false;
@@ -467,7 +467,7 @@ function compareTasks( taskA, taskB )
          return compareString(taskA.getProperty("LOCATION"), taskB.getProperty("LOCATION")) * modifier;
       case "unifinder-todo-tree-col-status":
         return compareNumber(kStatusOrder.indexOf(taskA.status), kStatusOrder.indexOf(taskB.status)) * modifier;
-      case "unifinder-todo-tree-col-filename":
+      case "unifinder-todo-tree-col-calendarname":
         return compareString(taskA.parent.name, taskB.parent.name) * modifier;
 
       default:

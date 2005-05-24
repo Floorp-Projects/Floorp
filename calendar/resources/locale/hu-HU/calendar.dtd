@@ -245,7 +245,7 @@
 <!ENTITY calendar.unifinder.tree.categories.label    "Kategória">
 <!ENTITY calendar.unifinder.tree.location.label    "Hely">
 <!ENTITY calendar.unifinder.tree.status.label    "Állapot">
-<!ENTITY calendar.unifinder.tree.filename.label    "Naptár neve">
+<!ENTITY calendar.unifinder.tree.calendarname.label    "Naptár neve">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Ugrás a mai napra" >
 <!ENTITY calendar.choosedate.button.tooltip       "Dátumválasztás ugráshoz" >

@@ -237,7 +237,7 @@
 <!ENTITY calendar.unifinder.tree.categories.label    "Kategorije">
 <!ENTITY calendar.unifinder.tree.location.label    "Lokacija">
 <!ENTITY calendar.unifinder.tree.status.label    "Stanje">
-<!ENTITY calendar.unifinder.tree.filename.label    "Ime koledarja">
+<!ENTITY calendar.unifinder.tree.calendarname.label    "Ime koledarja">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Izberi današnji dan za prikaz.">
 <!ENTITY calendar.choosedate.button.tooltip       "Izberite datum za prikaz.">
