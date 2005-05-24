@@ -124,7 +124,7 @@
         if (window.xmltbrowser) {
            dump("Load:xmltbrowser.location.href="+window.xmltbrowser.location.href+"\n");
            if (window.xmltbrowser.location.href.length) {
-              window.xmltbrowser.location = url;
+              window.xmltbrowser.location.href = url;
               succeeded = true;
            }
         }
