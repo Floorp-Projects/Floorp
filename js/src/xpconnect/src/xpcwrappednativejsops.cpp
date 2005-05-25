@@ -1139,6 +1139,25 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     return js_ObjectOps.enumerate(cx, obj, enum_op, statep, idp);
 }
 
+JS_STATIC_DLL_CALLBACK(void)
+XPC_WN_JSOp_Clear(JSContext *cx, JSObject *obj)
+{
+    // If our scope is cleared, make sure we clear the scope of our
+    // native wrapper as well.
+    XPCWrappedNative *wrapper =
+        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+
+    if(wrapper && wrapper->IsValid())
+    {
+        JSObject *nativeWrapper = wrapper->GetNativeWrapper();
+
+        if(nativeWrapper)
+            JS_ClearScope(cx, nativeWrapper);
+    }
+
+    js_ObjectOps.clear(cx, obj);
+}
+
 JSObjectOps * JS_DLL_CALLBACK
 XPC_WN_GetObjectOpsNoCall(JSContext *cx, JSClass *clazz)
 {
@@ -1160,9 +1179,11 @@ JSBool xpc_InitWrappedNativeJSOps()
 
         memcpy(&XPC_WN_WithCall_JSOps, &js_ObjectOps, sizeof(JSObjectOps));
         XPC_WN_WithCall_JSOps.enumerate = XPC_WN_JSOp_Enumerate;
+        XPC_WN_WithCall_JSOps.clear = XPC_WN_JSOp_Clear;
 
         XPC_WN_NoCall_JSOps.call = nsnull;
         XPC_WN_NoCall_JSOps.construct = nsnull;
+        XPC_WN_NoCall_JSOps.clear = XPC_WN_JSOp_Clear;
     }
     return JS_TRUE;
 }
