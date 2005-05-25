@@ -144,31 +144,7 @@ MOZCE_SHUNT_API char* mozce_getcwd(char* buff, size_t size)
 
 MOZCE_SHUNT_API int mozce_printf(const char * format, ...)
 {
-    // DONT CALL IN PRINTF    MOZCE_PRECHECK
-
-    va_list argp;
-    va_start(argp, format);
-
-    char buffer[1024];
-    int result = _snprintf(buffer, 1023, format, argp);
-    
-    if (result<=0)
-        return result;
-
-#ifdef USE_NC_LOGGING
-	nclograw(buffer, strlen(buffer));
-#endif
-
-    unsigned short wBuffer[1024];
-
-    if(0 != a2w_buffer(buffer, -1, wBuffer, sizeof(wBuffer) / sizeof(unsigned short)))
-    {
-        OutputDebugString(wBuffer);
-    }
-    
-    va_end(argp);
-    
-    return result;
+    return 0;
 }
 
 

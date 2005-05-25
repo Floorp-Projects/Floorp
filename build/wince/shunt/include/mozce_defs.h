@@ -37,7 +37,7 @@
 #ifndef MOZCE_DEFS
 #define MOZCE_DEFS
 
-#define USE_NC_LOGGING 1
+//#define USE_NC_LOGGING 1
 
 #define NOMINMAX
 
@@ -283,5 +283,18 @@ typedef struct _BLENDFUNCTION
 } BLENDFUNCTION, *PBLENDFUNCTION, *LPBLENDFUNCTION;
 
 #define AC_SRC_OVER 0
+
+
+#ifndef SM_CYVTHUMB
+#define SM_CYVTHUMB 9
+#endif
+
+#ifndef SM_CXHTHUMB
+#define SM_CXHTHUMB 10
+#endif
+
+#ifndef DFCS_SCROLLSIZEGRIP
+#define DFCS_SCROLLSIZEGRIP     0x0008
+#endif
 
 #endif
