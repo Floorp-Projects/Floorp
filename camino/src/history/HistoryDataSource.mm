@@ -679,6 +679,8 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
 
 - (void)cleanupHistory
 {
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+
   if (mHistoryObserver)
   {
     nsCOMPtr<nsIHistoryItems> historyItems = do_QueryInterface(mGlobalHistory);
