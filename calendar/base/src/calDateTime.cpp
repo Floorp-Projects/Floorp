@@ -286,6 +286,10 @@ calDateTime::GetInTimezone(const nsACString& aTimezone, calIDateTime **aResult)
         if (icalt.zone && tz) {
             icaltimezone_convert_time(&icalt, (icaltimezone*) icalt.zone, tz);
         }
+        if (tz == icaltimezone_get_utc_timezone())
+            icalt.is_utc = 1;
+        else
+            icalt.is_utc = 0;
 
         icalt.zone = tz;
 
