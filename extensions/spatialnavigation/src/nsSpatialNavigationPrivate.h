@@ -205,7 +205,6 @@ enum {
 
 // Utils
 
-PRBool   is_space                     (char c);
 nscoord* lo_parse_coord_list          (char *str, PRInt32* value_cnt);
 nsresult createFrameTraversal         (PRUint32 type, nsPresContext* presContext, nsIBidirectionalEnumerator** outTraversal);
 nsresult getEventTargetFromWindow     (nsIDOMWindow* aWindow, nsIDOM3EventTarget** aEventTarget, nsIDOMEventGroup** aSystemGroup);

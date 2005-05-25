@@ -40,7 +40,7 @@
 #include "nsIFrameDebug.h"
 #endif
 
-PRBool is_space(char c)
+static PRBool is_space(char c)
 {
   return (c == ' '  || c == '\f' || c == '\n' ||
           c == '\r' || c == '\t' || c == '\v');

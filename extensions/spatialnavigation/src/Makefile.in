@@ -42,7 +42,11 @@ VPATH=@srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE       = snav
+MODULE_NAME  = snav
 LIBRARY_NAME = snav
+
+EXPORT_LIBRARY  = 1
+MOZILLA_INTERNAL_API = 1
 IS_COMPONENT = 1
 
 REQUIRES	= xpcom \
@@ -69,8 +73,6 @@ CPPSRCS= \
 			  nsSpatialNavigationUtils.cpp \
 			  nsSpatialNavigationService.cpp \
 	          $(NULL)
-
-DEFINES = -DMOZILLA_INTERNAL_API
 
 EXTRA_DSO_LIBS = gkgfx
 
