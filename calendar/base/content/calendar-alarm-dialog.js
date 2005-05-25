@@ -46,6 +46,21 @@ function addAlarm(event)
   alarmWidget.item = event;
 
   alarmList.appendChild(alarmWidget);
+
+   var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
+   var calendarPrefs = prefService.getBranch("calendar.");
+
+   var playSound = calendarPrefs.getBoolPref("alarms.playsound");
+   if (playSound) {
+     try {
+       var soundURL = makeURL(calendarPrefs.getCharPref("alarms.soundURL"));
+       var sound = Components.classes["@mozilla.org/sound;1"].createInstance(Components.interfaces.nsISound);
+       sound.init();
+       sound.play(soundURL);
+     } catch (ex) {
+       dump("unable to play sound...\n" + ex + "\n");
+     }
+   }
 }
 
 function removeAlarm(event)
