@@ -48,9 +48,9 @@ var gGeneralPane = {
     this.mMapiBundle = document.getElementById("mapiBundle"); 
 
 #ifdef XP_WIN
-    this.onReadDefaultMailPref();
-    this.onReadDefaultNewsPref();
-    this.onReadDefaultFeedPref();
+    document.getElementById('mail.checkDefaultMail').valueFromPreferences = this.onReadDefaultMailPref();
+    document.getElementById('mail.checkDefaultNews').valueFromPreferences = this.onReadDefaultNewsPref();
+    document.getElementById('mail.checkDefaultFeed').valueFromPreferences = this.onReadDefaultFeedPref();
 #endif
 
 #ifdef XP_MACOSX
@@ -74,7 +74,7 @@ var gGeneralPane = {
   onReadDefaultMailPref: function()
   {
     var mapiRegistry = Components.classes["@mozilla.org/mapiregistry;1"].getService(Components.interfaces.nsIMapiRegistry);
-    document.getElementById('defaultMailClient').checked = mapiRegistry.isDefaultMailClient;   
+    document.getElementById('defaultMailClient').checked = mapiRegistry.isDefaultMailClient;
     return mapiRegistry.isDefaultMailClient;
   },
 
@@ -104,14 +104,14 @@ var gGeneralPane = {
   onReadDefaultFeedPref: function()
   {
     var mapiRegistry = Components.classes["@mozilla.org/mapiregistry;1"].getService(Components.interfaces.nsIMapiRegistry);
-    document.getElementById('defaultFeedClient').checked = mapiRegistry.isDefaultFeedClient;   
+    document.getElementById('defaultFeedClient').checked = mapiRegistry.isDefaultFeedClient; 
     return mapiRegistry.isDefaultFeedClient;   
   },
 
   onWriteDefaultFeed: function()
   {
     var mapiRegistry = Components.classes["@mozilla.org/mapiregistry;1"].getService(Components.interfaces.nsIMapiRegistry);
-    var makeDefaultFeedClient = document.getElementById('mail.checkDefaultFeed').value;   
+    var makeDefaultFeedClient = document.getElementById('mail.checkDefaultFeed').value;  
     if (mapiRegistry.isDefaultFeedClient != makeDefaultFeedClient) 
       mapiRegistry.isDefaultFeedClient = makeDefaultFeedClient;
   },

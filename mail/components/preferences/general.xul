@@ -82,15 +82,15 @@
       <label value="&generalSettings.label;"/>
       <hbox class="indent">
         <checkbox id="defaultMailClient" label="&setDefaultMailClient.label;"
-                  accesskey="&setDefaultMailClient.accesskey;" 
+                  accesskey="&setDefaultMailClient.accesskey;"
                   preference="mail.checkDefaultMail"/>
 
         <checkbox id="defaultNewsClient" label="&setDefaultNewsClient.label;"
-                  preference="mail.checkDefaultNews"                
+                  preference="mail.checkDefaultNews"
                   accesskey="&setDefaultNewsClient.accesskey;"/>
 
         <checkbox id="defaultFeedClient" label="&setDefaultFeedClient.label;"
-                  preference="mail.checkDefaultFeed"                
+                  preference="mail.checkDefaultFeed"
                   accesskey="&setDefaultFeedClient.accesskey;"/>
       </hbox>
 #endif
