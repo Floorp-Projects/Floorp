@@ -1177,20 +1177,29 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
              * vs. non-null return value, optimize away the array object that
              * would normally be returned in *rval.
              */
-            JS_ASSERT(*cx->fp->down->pc == JSOP_CALL ||
-                      *cx->fp->down->pc == JSOP_NEW);
-            JS_ASSERT(js_CodeSpec[*cx->fp->down->pc].length == 3);
-            switch (cx->fp->down->pc[3]) {
-              case JSOP_POP:
-              case JSOP_IFEQ:
-              case JSOP_IFNE:
-              case JSOP_IFEQX:
-              case JSOP_IFNEX:
-                test = JS_TRUE;
-                break;
-              default:
-                test = JS_FALSE;
-                break;
+            JSStackFrame *fp = cx->fp->down;
+
+            /* Skip Function.prototype.call and .apply frames. */
+            while (fp && !fp->pc) {
+                JS_ASSERT(!fp->script);
+                fp = fp->down;
+            }
+
+            /* Assume a full array result is required, then prove otherwise. */
+            test = JS_FALSE;
+            if (fp) {
+                JS_ASSERT(*fp->pc == JSOP_CALL || *fp->pc == JSOP_NEW);
+                JS_ASSERT(js_CodeSpec[*fp->pc].length == 3);
+                switch (fp->pc[3]) {
+                  case JSOP_POP:
+                  case JSOP_IFEQ:
+                  case JSOP_IFNE:
+                  case JSOP_IFEQX:
+                  case JSOP_IFNEX:
+                    test = JS_TRUE;
+                    break;
+                  default:;
+                }
             }
         }
         ok = js_ExecuteRegExp(cx, re, str, &index, test, rval);
