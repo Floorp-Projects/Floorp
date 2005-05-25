@@ -1077,6 +1077,7 @@
                          accesskey="&newAccountCmd.accesskey;"
                          oncommand="MsgAccountWizard();"/>
               <menuseparator/>
+              <menuitem id="menu_newCard"/>
             </menupopup>
           </menu>
           <menuitem id="openMessageFileMenuitem" label="&openMessageFileCmd.label;"

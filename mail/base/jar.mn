@@ -70,7 +70,6 @@ messenger.jar:
     content/messenger/virtualFolderListDialog.js    (/mailnews/base/resources/content/virtualFolderListDialog.js)
     content/messenger/messengerdnd.js               (/mailnews/base/resources/content/messengerdnd.js)
     content/messenger/msgPrintEngine.js             (/mailnews/base/resources/content/msgPrintEngine.js)
-    content/messenger/mailMessengerOverlay.xul      (/mailnews/base/resources/content/mailMessengerOverlay.xul)
     content/messenger/mailWidgets.xml               (/mailnews/base/resources/content/mailWidgets.xml)
 *   content/messenger/junkMailInfo.xul              (/mailnews/base/resources/content/junkMailInfo.xul)
     content/messenger/SearchDialog.js               (/mailnews/base/search/resources/content/SearchDialog.js)
