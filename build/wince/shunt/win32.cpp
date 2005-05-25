@@ -529,48 +529,23 @@ MOZCE_SHUNT_API BOOL mozce_FlashWindow(HWND inWnd, BOOL inInvert)
 }
 
 
-#define ECW_SIZEBY  0x100
-typedef struct __struct_ECWWindows
+typedef struct ECWWindows
 {
-    DWORD       mCount;
-    DWORD       mCapacity;
-    HWND*       mArray;
-}
-ECWWindows;
+    LPARAM      params;
+    WNDENUMPROC func;
+    HWND        parent;
+} ECWWindows;
 
-static BOOL ECWHelper(HWND inParent, ECWWindows* inChildren, BOOL inRecurse)
+static BOOL CALLBACK MyEnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
-    BOOL retval = TRUE;
+    ECWWindows *myParams = (ECWWindows*) lParam;
 
-    HWND child = GetWindow(inParent, GW_CHILD);
-    while(NULL != child && FALSE != retval)
+    if (IsChild(myParams->parent, hwnd))
     {
-        if(inChildren->mCount >= inChildren->mCapacity)
-        {
-            void* moved = realloc(inChildren->mArray, sizeof(HWND) * (ECW_SIZEBY + inChildren->mCapacity));
-            if(NULL != moved)
-            {
-                inChildren->mCapacity += ECW_SIZEBY;
-                inChildren->mArray = (HWND*)moved;
-            }
-            else
-            {
-                retval = FALSE;
-                break;
-            }
-        }
-
-        inChildren->mArray[inChildren->mCount] = child;
-        inChildren->mCount++;
-        if(FALSE != inRecurse)
-        {
-            retval = ECWHelper(child, inChildren, inRecurse);
-        }
-
-        child = GetWindow(child, GW_HWNDNEXT);
+        return myParams->func(hwnd, myParams->params);
     }
 
-    return retval;
+    return TRUE;
 }
 
 MOZCE_SHUNT_API BOOL mozce_EnumChildWindows(HWND inParent, WNDENUMPROC inFunc, LPARAM inParam)
@@ -581,43 +556,12 @@ MOZCE_SHUNT_API BOOL mozce_EnumChildWindows(HWND inParent, WNDENUMPROC inFunc, L
     mozce_printf("mozce_EnumChildWindows called\n");
 #endif
 
-    BOOL retval = FALSE;
+    ECWWindows myParams;
+    myParams.params = inParam;
+    myParams.func   = inFunc;
+    myParams.parent = inParent;
 
-    if(NULL != inFunc)
-    {
-        if(NULL == inParent)
-        {
-            inParent = GetDesktopWindow();
-        }
-
-        ECWWindows children;
-        memset(&children, 0, sizeof(children));
-        children.mArray = (HWND*)malloc(sizeof(HWND) * ECW_SIZEBY);
-        if(NULL != children.mArray)
-        {
-            children.mCapacity = ECW_SIZEBY;
-
-            BOOL helperRes = ECWHelper(inParent, &children, TRUE);
-            if(FALSE != helperRes)
-            {
-                DWORD loop = 0;
-                for(loop = 0; loop < children.mCount; loop++)
-                {
-                    if(IsWindow(children.mArray[loop])) // validate
-                    {
-                        if(FALSE == inFunc(children.mArray[loop], inParam))
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            free(children.mArray);
-        }
-    }
-
-    return retval;
+    return EnumWindows(MyEnumWindowsProc, (LPARAM) &myParams);
 }
 
 
@@ -626,41 +570,9 @@ MOZCE_SHUNT_API BOOL mozce_EnumThreadWindows(DWORD inThreadID, WNDENUMPROC inFun
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("mozce_EnumThreadWindows called\n");
+    mozce_printf("-- mozce_EnumThreadWindows called\n");
 #endif
-
-    BOOL retval = FALSE;
-
-    if(NULL != inFunc)
-    {
-        ECWWindows children;
-        memset(&children, 0, sizeof(children));
-        children.mArray = (HWND*)malloc(sizeof(HWND) * ECW_SIZEBY);
-        if(NULL != children.mArray)
-        {
-            children.mCapacity = ECW_SIZEBY;
-
-            BOOL helperRes = ECWHelper(GetDesktopWindow(), &children, FALSE);
-            if(FALSE != helperRes)
-            {
-                DWORD loop = 0;
-                for(loop = 0; loop < children.mCount; loop++)
-                {
-                    if(IsWindow(children.mArray[loop]) && inThreadID == GetWindowThreadProcessId(children.mArray[loop], NULL)) // validate
-                    {
-                        if(FALSE == inFunc(children.mArray[loop], inParam))
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            free(children.mArray);
-        }
-    }
-
-    return retval;
+    return FALSE; // Stop Enumerating
 }
 
 
@@ -669,13 +581,10 @@ MOZCE_SHUNT_API BOOL mozce_IsIconic(HWND inWnd)
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("-- mozce_IsIconic called\n");
+    mozce_printf("mozce_IsIconic called\n");
 #endif
 
     BOOL retval = FALSE;
-
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
     return retval;
 }
 

@@ -689,6 +689,9 @@
 
 // We use a method named CreateEvent.  We do not want to map
 // CreateEvent to CreateEventA
+#ifdef CreateEvent
+#undef CreateEvent
+#endif
 #define CreateEvent               CreateEvent
 
 #ifdef CreateEventA

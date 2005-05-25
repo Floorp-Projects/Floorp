@@ -660,6 +660,9 @@ MOZCE_SHUNT_API BOOL mozce_ExtTextOutA(HDC inDC, int inX, int inY, UINT inOption
 #endif
 
     BOOL retval = false;
+    
+    if (inCount == -1)
+		inCount = strlen(inString);
 
     int wLen = 0;
     LPTSTR wStr = a2w_malloc(inString, inCount, &wLen);
@@ -667,7 +670,6 @@ MOZCE_SHUNT_API BOOL mozce_ExtTextOutA(HDC inDC, int inX, int inY, UINT inOption
     if(NULL != wStr)
     {
         retval = ExtTextOutW(inDC, inX, inY, inOptions, inRect, wStr, wLen, inDx);
-
         free(wStr);
         wStr = NULL;
     }
@@ -1238,6 +1240,8 @@ MOZCE_SHUNT_API ATOM mozce_RegisterClassA(CONST WNDCLASSA *lpwc)
     LPTSTR wClassName = a2w_malloc(lpwc->lpszClassName, -1, NULL);
 
     memcpy(&wcW, lpwc, sizeof(WNDCLASSA));    
+
+    wcW.lpszMenuName  = NULL;
     wcW.lpszClassName = wClassName;
     
     return RegisterClassW(&wcW);   
