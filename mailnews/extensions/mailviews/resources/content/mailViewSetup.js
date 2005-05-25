@@ -68,11 +68,11 @@ function mailViewOnLoad()
     dialog.nameField.value = gMailView.mailViewName;
     initializeSearchRows(nsMsgSearchScope.offlineMail, gMailView.searchTerms);
 
-    if (gMailView.searchTerms.Count() > 1)
-       gSearchLessButton.removeAttribute("disabled", "false");
+    if (gMailView.searchTerms.Count() == 1)
+      document.getElementById("less0").setAttribute("disabled", "true");
   }
   else
-    onMore(null);
+    onMore(null, 0);
  
   doEnabling();
 }

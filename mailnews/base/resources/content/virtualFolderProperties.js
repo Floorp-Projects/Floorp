@@ -108,10 +108,11 @@ function setupSearchRows(aSearchTerms)
   {
     // load the search terms for the folder
     initializeSearchRows(nsMsgSearchScope.offlineMail, aSearchTerms);
-    gSearchLessButton.removeAttribute("disabled", "false");
+    if (aSearchTerms.Count() == 1)
+      document.getElementById("less0").setAttribute("disabled", "true");
   }
   else
-    onMore(null);
+    onMore(null, 0);
 }
 
 function updateOnlineSearchState()
