@@ -30,6 +30,10 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 
+/**
+ *Default screen to be shown while application is initializing. Run the
+ *dispose method on this class when you're ready to close the splash screen.
+ */
 public class Splash extends JWindow {
 
   public Splash() {

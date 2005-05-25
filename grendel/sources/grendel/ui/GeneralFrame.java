@@ -78,6 +78,14 @@ import javax.swing.BoxLayout;
 import grendel.prefs.base.InvisiblePrefs;
 import grendel.widgets.*;
 
+/**
+ *This class provides a JFrame containing the default GUI for Grendel windows,
+ *such as the menubar, toolbar, etc.
+ *
+ *<p>Also manages Frame references so that frames are not required to be
+ *reinitialized. This is done through frame IDs and the static method
+ *FindFrameById.</p>
+ */
 public class GeneralFrame extends JFrame
 {
   GeneralFrame            fThis;

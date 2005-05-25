@@ -32,6 +32,12 @@ import java.text.MessageFormat;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+/**
+ *A image animation component that runs animations by flipping through a
+ *number of images using a image template. Runs by taking in a image name via
+ *setImageTemplate and runs from 0 to iFrames. Each image will then be a single
+ *frame in the animation.
+ */
 public class Animation extends Component implements Runnable
 {
   Thread fThread;
@@ -99,6 +105,16 @@ public class Animation extends Component implements Runnable
     return this;
   }
 
+  /**
+   *Sets the name of all the image names in the animation plus how many frames
+   *to use in the animation.
+   *
+   *<p>Each frame will be called template[x].gif where x == the frame number.
+   *Frames then go from 0 to iFrames.</p>
+   *
+   * @param template The image name for each of the frames.
+   * @param iFrames The number of frames in the animation.
+   */
   public void setImageTemplate( String template, int iFrames )
   {
     fGlyphs = new Icon[iFrames];
@@ -110,6 +126,11 @@ public class Animation extends Component implements Runnable
     }
   }
 
+  /**
+   *Starts flipping through the frame in the animation and keeps repeating
+   *until the stop() method is called. Images are set through setImageTemplate()
+   *method.
+   */
   public synchronized void start()
   {
     if (fThread != null) {
@@ -125,6 +146,9 @@ public class Animation extends Component implements Runnable
     fThread.start();
   }
 
+  /**
+   *Stops flipping through the frames in the animation.
+   */
   public synchronized void stop()
   {
     if (fThread != null) {

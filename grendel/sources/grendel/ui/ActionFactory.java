@@ -59,6 +59,9 @@ import grendel.filters.FilterMaster;
 import grendel.composition.Composition;
 import com.trfenv.parsers.Event;
 
+/**
+ *Generates a list of common Grendel events for use across the application.
+ */
 public class ActionFactory {
   static ExitAction fExitAction = new ExitAction();
   static NewMailAction fNewMailAction = new NewMailAction();

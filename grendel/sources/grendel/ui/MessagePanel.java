@@ -276,15 +276,11 @@ public class MessagePanel extends GeneralPanel {
               if (makeRealHTML) {
                 stream = new MakeItHTML(stream).getHTMLInputStream();
               }
+
               // Okay, let's try to read from the stream and set the
-              // text from the InputStream. We may need to put this
-              // stuff back later. (talisman)
-              //InputStreamReader reader = new InputStreamReader(stream);
-              //  char buff[] = new char[4096];
-              // int count;
-              // while ((count = reader.read(buff, 0, 4096)) != -1) {
-              //   fTextArea.append(new String(buff, 0, count));
-              fTextArea.read(stream, "Message");
+              // text from the InputStream.
+              fTextArea.getDocument().putProperty("IgnoreCharsetDirective", Boolean.TRUE);
+              fTextArea.read(stream, fTextArea.getDocument());
               //  }
             } catch (MessagingException me) {
               fTextArea.setText(me.toString());

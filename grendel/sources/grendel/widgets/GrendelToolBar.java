@@ -33,6 +33,7 @@ import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JToolBar;
 import javax.swing.JButton;
+import javax.swing.Icon;
 
 import grendel.widgets.Spring;
 
@@ -44,7 +45,7 @@ public class GrendelToolBar extends JToolBar {
     super();
     setFloatable(false);
 
-    setBackground(new java.awt.Color(238,238,238));
+//    setBackground(new java.awt.Color(238,238,238));
   }
 
   public Spring makeNewSpring() {
@@ -56,20 +57,18 @@ public class GrendelToolBar extends JToolBar {
                           String aText,
                           String aToolTip) {
     JButton b = new JButton();
-
+/*
     b.setHorizontalTextPosition(JButton.CENTER);
     b.setVerticalTextPosition(JButton.BOTTOM);
     Font f=b.getFont();
     Font nf=new Font(f.getName(), Font.PLAIN, f.getSize()-2);
-    b.setFont(nf);
+    b.setFont(nf);*/
     b.setText(aText);
 
-    b.setRolloverEnabled(true);
-    b.setBorder(BorderFactory.createEmptyBorder());
     b.setToolTipText(aToolTip);
 
     b.setIcon(new ImageIcon("widgets/toolbar/mozilla/" + aImageName + ".gif"));
-
+/*
     Dimension d=b.getPreferredSize();
     double w=d.getWidth();
     if (w > 52) {
@@ -80,7 +79,7 @@ public class GrendelToolBar extends JToolBar {
     b.setMinimumSize(d);
     b.setMaximumSize(d);
     b.setPreferredSize(d);
-
+*/
     if (aActionListener != null) {
       b.addActionListener(aActionListener);
     } else {
