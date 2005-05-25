@@ -381,7 +381,10 @@ calCompositeGetListenerHelper.prototype = {
         if (!Components.isSuccessCode(aStatus)) {
             // proxy this to a onGetResult
             // XXX - do we want to give the real calendar? or this?
-            this.mRealListener.onGetResult (aCalendar, aStatus, null, aDetail, 0, []);
+            // XXX - get rid of iid param
+            this.mRealListener.onGetResult (aCalendar, aStatus, 
+                                            Components.interfaces.nsISupports,
+                                            aDetail, 0, []);
         }
 
         this.mReceivedCompletes++;
