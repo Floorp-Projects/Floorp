@@ -58,12 +58,6 @@ public:
     return JS_GET_CLASS(cx, obj) == &sXPC_NW_JSClass.base;
   }
 
-  static void Invalidate(JSContext *cx, JSObject *obj)
-  {
-    // Remove the reference to our native wrapper
-    ::JS_SetPrivate(cx, obj, nsnull);
-  }
-
   static XPCWrappedNative *GetWrappedNative(JSContext *cx, JSObject *obj)
   {
     return (XPCWrappedNative *)::JS_GetPrivate(cx, obj);
