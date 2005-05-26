@@ -281,7 +281,7 @@ sub FetchBug {
     my $uri;
     my $type;
     if ($subtype eq 'bug') {
-        $uri = "$self->{'bugsURI'}xml.cgi?id=".join(',',split(' ',$bugParams));
+        $uri = "$self->{'bugsURI'}show_bug.cgi?ctype=xml&excludefield=long_desc&id=".join(',',split(' ',$bugParams));
         $type = 'xml';
     } elsif ($subtype eq 'dwim') {
         # XXX should escape query string
