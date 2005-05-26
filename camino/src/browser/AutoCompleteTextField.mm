@@ -572,7 +572,14 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     // makes while allowing them to continue typing w/out having to
     // reset the insertion point. 
     NSString *result = [mDataSource resultString:aRow column:@"col1"];
-    NSRange matchRange = [result rangeOfString:mSearchString];
+    
+    // don't match letters in the protocol
+    int protocolLength = 0;
+    NSURL* resultURL = [NSURL URLWithString:result];
+    if (resultURL)
+      protocolLength = [[resultURL scheme] length];
+    
+    NSRange matchRange = [result rangeOfString:mSearchString options:NSCaseInsensitiveSearch range:NSMakeRange(protocolLength, [result length] - protocolLength)];
     if (matchRange.length > 0 && matchRange.location != NSNotFound) {
       unsigned int location = matchRange.location + matchRange.length;
       result = [result substringWithRange:NSMakeRange(location, [result length]-location)];
