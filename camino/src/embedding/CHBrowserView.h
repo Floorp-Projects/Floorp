@@ -70,7 +70,7 @@ class nsISupports;
 // in. If the total number of bytes expected is unknown,
 // maxBytes is -1.
 - (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes;
-- (void)onLocationChange:(NSString*)urlSpec;
+- (void)onLocationChange:(NSString*)urlSpec requestOK:(BOOL)isOK;
 - (void)onStatusChange:(NSString*)aMessage;
 - (void)onSecurityStateChange:(unsigned long)newState;
 // Called when a context menu should be shown.

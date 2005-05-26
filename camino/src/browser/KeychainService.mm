@@ -1048,7 +1048,7 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 {
 }
 
-- (void)onLocationChange:(NSString*)urlSpec
+- (void)onLocationChange:(NSString*)urlSpec requestOK:(BOOL)isOK
 {
 }
 

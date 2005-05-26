@@ -80,7 +80,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 - (void)setSiteIconImage:(NSImage*)inSiteIcon;
 - (void)setSiteIconURI:(NSString*)inSiteIconURI;
 
-- (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI;
+- (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI loadError:(BOOL)inLoadError;
 
 - (void)setTabTitle:(NSString*)tabTitle windowTitle:(NSString*)windowTitle;
 - (NSString*)displayTitleForPageURL:(NSString*)inURL title:(NSString*)inTitle;
@@ -478,16 +478,15 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   }
 }
 
-- (void)onLocationChange:(NSString*)urlSpec
+- (void)onLocationChange:(NSString*)urlSpec requestOK:(BOOL)isOK
 {
   BOOL useSiteIcons = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL];
-  BOOL siteIconLoadInitiated = NO;
   
-  SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];
   NSString* faviconURI = [SiteIconProvider faviconLocationStringFromURI:urlSpec];
-  
-  if (useSiteIcons && [faviconURI length] > 0)
+  if (isOK && useSiteIcons && [faviconURI length] > 0)
   {
+    SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];
+
     // if the favicon uri has changed, fire off favicon load. When it completes, our
     // imageLoadedNotification selector gets called.
     if (![faviconURI isEqualToString:mSiteIconURI])
@@ -501,7 +500,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
         cachedImageURI = faviconURI;
       
       // immediately update the site icon (to the cached one, or the default)
-      [self updateSiteIconImage:cachedImage withURI:cachedImageURI];
+      [self updateSiteIconImage:cachedImage withURI:cachedImageURI loadError:!isOK];
 
       // note that this is the only time we hit the network for site icons.
       // note also that we may get a site icon from a link element later,
@@ -519,7 +518,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     else
     	faviconURI = @"";
 
-    [self updateSiteIconImage:nil withURI:faviconURI];
+    [self updateSiteIconImage:nil withURI:faviconURI loadError:!isOK];
   }
 
   [mDelegate updateLocationFields:urlSpec ignoreTyping:NO];
@@ -861,7 +860,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 // A nil inSiteIcon image indicates that we should use the default icon
 // If inSiteIconURI is "about:blank", we don't show any icon
-- (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI
+- (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI loadError:(BOOL)inLoadError
 {
   BOOL     resetTabIcon     = NO;
   BOOL     tabIconDraggable = YES;
@@ -871,10 +870,16 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   {
     if (!siteIcon)
     {
-      if ([inSiteIconURI isEqualToString:@"about:blank"]) {
+      if ([inSiteIconURI isEqualToString:@"about:blank"])
+      {
         siteIcon = [NSImage imageNamed:@"smallDocument"];
         tabIconDraggable = NO;
-      } else
+      }
+      else if (inLoadError)
+      {
+        siteIcon = [NSImage imageNamed:@"brokenbookmark_icon"];   // it should have its own image
+      }
+      else
         siteIcon = [NSImage imageNamed:@"globe_ico"];
     }
 
@@ -918,7 +923,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     if (iconImage == nil)
       siteIconURI = @"";	// go back to default image
     
-    [self updateSiteIconImage:iconImage withURI:siteIconURI];
+    [self updateSiteIconImage:iconImage withURI:siteIconURI loadError:NO];
   }
 }
 

@@ -600,7 +600,7 @@ NS_IMETHODIMP
 CHBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, 
                                           nsIURI *aLocation)
 {
-  if (!aLocation || !aWebProgress)
+  if (!aLocation || !aWebProgress || !aRequest)
     return NS_ERROR_FAILURE;
 
   // only pay attention to location change for our nsIDOMWindow
@@ -610,6 +610,10 @@ CHBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aR
   if (windowForProgress != ourWindow)
     return NS_OK;
 
+  nsresult requestStatus = NS_OK;
+  aRequest->GetStatus(&requestStatus);
+  BOOL requestOK = NS_SUCCEEDED(requestStatus);
+  
   nsCAutoString spec;
   aLocation->GetSpec(spec);
   NSString* str = [NSString stringWithUTF8String:spec.get()];
@@ -617,7 +621,7 @@ CHBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aR
   NSEnumerator* enumerator = [mListeners objectEnumerator];
   id<CHBrowserListener> obj;
   while ((obj = [enumerator nextObject]))
-    [obj onLocationChange:str];
+    [obj onLocationChange:str requestOK:requestOK];
 
   return NS_OK;
 }
