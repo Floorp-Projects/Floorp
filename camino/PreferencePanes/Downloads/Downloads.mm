@@ -220,7 +220,7 @@ const int kDefaultExpireDays = 9;
   [icon setSize:NSMakeSize(16.0, 16.0)];
 
   // set the title to the leaf name and the icon to what we gathered above
-  [placeholder setTitle:[inDLPath lastPathComponent]];
+  [placeholder setTitle:[[NSFileManager defaultManager] displayNameAtPath:inDLPath]];
   [placeholder setImage:icon];
   
   // ensure first item is selected
