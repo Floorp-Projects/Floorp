@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
- *   Benjamin Smedberg <bsmedberg@covad.net>
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *   Ben Goodger <ben@mozilla.org>
  *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
  *
@@ -2000,6 +2000,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         PR_SetEnv("XRE_START_OFFLINE=");
         PR_SetEnv("XRE_IMPORT_PROFILES=");
         PR_SetEnv("NO_EM_RESTART=");
+        PR_SetEnv("XUL_APP_FILE=");
 
 #ifdef XP_MACOSX
         // we re-initialize the command-line service and do appleevents munging
