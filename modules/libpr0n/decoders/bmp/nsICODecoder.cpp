@@ -40,6 +40,8 @@
 /* This is a Cross-Platform ICO Decoder, which should work everywhere, including
  * Big-Endian machines like the PowerPC. */
 
+#include <stdlib.h>
+
 #include "nsICODecoder.h"
 
 #include "nsIInputStream.h"
@@ -105,7 +107,7 @@ nsresult nsICODecoder::SetAlphaData()
   // In case the decoder and frame have different sized alpha buffers, we
   // take the smaller of the two row length values as the row length to copy.
   PRUint32 rowCopyLen = PR_MIN(bpr, mDirEntry.mWidth);
-  PRUint8* alphaRow = new PRUint8[rowCopyLen];
+  PRUint8* alphaRow = (PRUint8*)malloc(rowCopyLen);
   if (!alphaRow)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -126,7 +128,7 @@ nsresult nsICODecoder::SetAlphaData()
     frameOffset += bpr;
     alphaBufferPos += decoderRowSize;
   }
-  delete[] alphaRow;
+  free(alphaRow);
   return NS_OK;
 }
 
@@ -190,12 +192,12 @@ NS_IMETHODIMP nsICODecoder::Close()
   mCurrIcon = 0;
   mNumIcons = 0;
 
-  delete[] mRow;
+  free(mRow);
   mRow = nsnull;
 
   mDecodingAndMask = PR_FALSE;
-  delete[] mDecodedBuffer;
-  delete[] mAlphaBuffer;
+  free(mDecodedBuffer);
+  free(mAlphaBuffer);
 
   return NS_OK;
 }
@@ -348,7 +350,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     NS_ENSURE_SUCCESS(rv, rv);
 
     mCurLine = mDirEntry.mHeight;
-    mRow = new PRUint8[(mDirEntry.mWidth * mBIH.bpp)/8 + 4];
+    mRow = (PRUint8*)malloc((mDirEntry.mWidth * mBIH.bpp)/8 + 4);
     // +4 because the line is padded to a 4 bit boundary, but I don't want
     // to make exact calculations here, that's unnecessary.
     // Also, it compensates rounding error.
@@ -394,9 +396,9 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
       // Increment mPos to avoid reprocessing the info header.
       mPos++;
 #if defined(XP_MAC) || defined(XP_MACOSX)
-      mDecodedBuffer = new PRUint8[mDirEntry.mHeight*mDirEntry.mWidth*4];
+      mDecodedBuffer = (PRUint8*)malloc(mDirEntry.mHeight*mDirEntry.mWidth*4);
 #else
-      mDecodedBuffer = new PRUint8[mDirEntry.mHeight*mDirEntry.mWidth*3];
+      mDecodedBuffer = (PRUint8*)malloc(mDirEntry.mHeight*mDirEntry.mWidth*3);
 #endif
       if (!mDecodedBuffer)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -510,11 +512,11 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
       mPos++;
       mRowBytes = 0;
       mCurLine = mDirEntry.mHeight;
-      delete []mRow;
-      mRow = new PRUint8[rowSize];
+      free(mRow);
+      mRow = (PRUint8*)malloc(rowSize);
       if (!mRow)
         return NS_ERROR_OUT_OF_MEMORY;
-      mAlphaBuffer = new PRUint8[mDirEntry.mHeight*rowSize];
+      mAlphaBuffer = (PRUint8*)malloc(mDirEntry.mHeight*rowSize);
       if (!mAlphaBuffer)
         return NS_ERROR_OUT_OF_MEMORY;
       memset(mAlphaBuffer, 0xff, mDirEntry.mHeight*rowSize);
