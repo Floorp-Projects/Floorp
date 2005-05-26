@@ -49,6 +49,7 @@
                 mFontsResetButton = NSButton; 
                 mMinFontSizePopup = NSPopUpButton; 
                 mProportionalSampleLabel = NSTextField; 
+                mProportionalSubLabel = NSTextField; 
                 mSansSerifFontPopup = NSPopUpButton; 
                 mSerifFontPopup = NSPopUpButton; 
                 mTabView = NSTabView; 

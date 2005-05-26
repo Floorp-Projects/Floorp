@@ -63,6 +63,7 @@
   IBOutlet NSTextField*   mFontSampleMonospace;
 
   IBOutlet NSTextField*   mProportionalSampleLabel;
+  IBOutlet NSTextField*   mProportionalSubLabel;
 
   IBOutlet NSButton*      mFontsResetButton;
 

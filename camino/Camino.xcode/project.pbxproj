@@ -13329,7 +13329,7 @@
 			sourceTree = "<group>";
 		};
 		F53849040349779901A80166 = {
-			fileEncoding = 30;
+			fileEncoding = 10;
 			isa = PBXFileReference;
 			lastKnownFileType = text.plist.strings;
 			name = Localizable.strings;

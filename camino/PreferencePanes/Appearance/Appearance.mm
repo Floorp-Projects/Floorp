@@ -50,6 +50,9 @@
 - (NSMutableDictionary *)makeDefaultFontTypeDictFromPrefsForRegion:(NSString*)regionCode;
 - (NSMutableDictionary *)makeFontSizesDictFromPrefsForRegion:(NSString*)regionCode;
 
+- (NSMutableDictionary*)settingsForCurrentRegion;
+- (NSString*)defaultProportionalFontTypeForCurrentRegion;
+
 - (void)saveFontNamePrefsForRegion:(NSDictionary*)regionDict forFontType:(NSString*)fontType;
 - (void)saveDefaultFontTypePrefForRegion:(NSDictionary*)entryDict;
 - (void)saveFontSizePrefsForRegion:(NSDictionary*)entryDict;
@@ -206,7 +209,10 @@
 - (IBAction)proportionalFontChoiceButtonClicked:(id)sender
 {
   NSFontManager *fontManager = [NSFontManager sharedFontManager];
-  NSFont *newFont = [[self getFontSampleForType:[mChooseProportionalFontButton alternateTitle]] font];
+
+  NSString* defaultFontType = [self defaultProportionalFontTypeForCurrentRegion];
+
+  NSFont *newFont = [[self getFontSampleForType:defaultFontType] font];
   mFontButtonForEditor = mChooseProportionalFontButton;
   [fontManager setSelectedFont:newFont isMultiple:NO];
   [[fontManager fontPanel:YES] makeKeyAndOrderFront:self];
@@ -215,7 +221,7 @@
 - (IBAction)monospaceFontChoiceButtonClicked:(id)sender
 {
   NSFontManager *fontManager = [NSFontManager sharedFontManager];
-  NSFont *newFont = [[self getFontSampleForType:[mChooseMonospaceFontButton alternateTitle]] font];
+  NSFont *newFont = [[self getFontSampleForType:@"monospace"] font];
   mFontButtonForEditor = mChooseMonospaceFontButton;
   [fontManager setSelectedFont:newFont isMultiple:NO];
   [[fontManager fontPanel:YES] makeKeyAndOrderFront:self];
@@ -372,6 +378,21 @@
     [fontDict setObject:[NSNumber numberWithInt:minSize] forKey:@"minimum"];
     
   return fontDict;
+}
+
+- (NSMutableDictionary*)settingsForCurrentRegion
+{
+  int selectedRegion = [mFontRegionPopup indexOfSelectedItem];
+  if (selectedRegion == -1)
+    return nil;
+
+  return [mRegionMappingTable objectAtIndex:selectedRegion];
+}
+
+- (NSString*)defaultProportionalFontTypeForCurrentRegion
+{
+  NSDictionary* regionDict = [self settingsForCurrentRegion];
+  return [[regionDict objectForKey:@"defaultFontType"] objectForKey:@"type"];
 }
 
 - (void)saveFontNamePrefsForRegion:(NSDictionary*)regionDict forFontType:(NSString*)fontType
@@ -548,11 +569,8 @@
 
 - (void)updateFontSampleOfType:(NSString *)fontType
 {
-  int selectedRegion = [mFontRegionPopup indexOfSelectedItem];
-  if (selectedRegion == -1)
-    return;
-
-  NSMutableDictionary *regionDict = [mRegionMappingTable objectAtIndex:selectedRegion];
+  NSMutableDictionary* regionDict = [self settingsForCurrentRegion];
+  if (!regionDict) return;
 
   NSTextField *sampleCell = [self getFontSampleForType:fontType];
   NSFont *sampleFont = [[NSFontManager sharedFontManager] convertFont:[sampleCell font]];
@@ -584,18 +602,16 @@
 
 - (void)updateFontPreviews
 {
-  int selectedRegion = [mFontRegionPopup indexOfSelectedItem];
-  if (selectedRegion == -1)
-    return;
+  NSDictionary* regionDict = [self settingsForCurrentRegion];
+  if (!regionDict) return;
 
-  NSDictionary *regionDict = [mRegionMappingTable objectAtIndex:selectedRegion];
-
-  NSString *defaultFontType = [[regionDict objectForKey:@"defaultFontType"] objectForKey:@"type"];
-  [mChooseProportionalFontButton setAlternateTitle:defaultFontType];
-
+  NSString* defaultFontType = [self defaultProportionalFontTypeForCurrentRegion];
   // make sure the 'proportional' label matches
-  NSString* propLabelString = [NSString stringWithFormat:[self getLocalizedString:@"ProportionalLableFormat"], [self getLocalizedString:defaultFontType]];
+  NSString* propLabelString = [NSString stringWithFormat:[self getLocalizedString:@"ProportionalLabelFormat"], [self getLocalizedString:defaultFontType]];
   [mProportionalSampleLabel setStringValue:propLabelString];
+  
+  NSString* sublabelValue = [self getLocalizedString:[defaultFontType stringByAppendingString:@"_note"]];
+  [mProportionalSubLabel setStringValue:sublabelValue];
   
   [self setupFontSamplesFromDict:regionDict];
 }
@@ -607,11 +623,8 @@ const int kDefaultFontSansSerifTag = 1;
 
 - (IBAction)showAdvancedFontsDialog:(id)sender
 {
-  int selectedRegion = [mFontRegionPopup indexOfSelectedItem];
-  if (selectedRegion == -1)
-    return;
-
-  NSDictionary *regionDict = [mRegionMappingTable objectAtIndex:selectedRegion];
+  NSDictionary* regionDict = [self settingsForCurrentRegion];
+  if (!regionDict) return;
 
   NSString* advancedLabel = [NSString stringWithFormat:[self getLocalizedString:@"AdditionalFontsLabelFormat"], [regionDict objectForKey:@"region"]];
   [mAdvancedFontsLabel setStringValue:advancedLabel];
@@ -634,7 +647,7 @@ const int kDefaultFontSansSerifTag = 1;
   [mMinFontSizePopup selectItemAtIndex:itemIndex];
   
   // set up default font radio buttons (default to serif)
-  NSString *defaultFontType = [[regionDict objectForKey:@"defaultFontType"] objectForKey:@"type"];
+  NSString* defaultFontType = [self defaultProportionalFontTypeForCurrentRegion];
   [mDefaultFontMatrix selectCellWithTag:([defaultFontType isEqualToString:@"sans-serif"] ? kDefaultFontSansSerifTag : kDefaultFontSerifTag)];
   
 	[NSApp beginSheet:mAdvancedFontsDialog
@@ -647,11 +660,8 @@ const int kDefaultFontSansSerifTag = 1;
 - (IBAction)advancedFontsDone:(id)sender
 {
   // save settings
-  int selectedRegion = [mFontRegionPopup indexOfSelectedItem];
-  if (selectedRegion == -1)
-    return;
-
-  NSDictionary *regionDict = [mRegionMappingTable objectAtIndex:selectedRegion];
+  NSDictionary* regionDict = [self settingsForCurrentRegion];
+  if (!regionDict) return;
 
   [self getFontFromPopup:mSerifFontPopup forType:@"serif" intoDict:regionDict];
   [self getFontFromPopup:mSansSerifFontPopup forType:@"sans-serif" intoDict:regionDict];
@@ -664,8 +674,8 @@ const int kDefaultFontSansSerifTag = 1;
   [fontSizeDict setObject:[NSNumber numberWithInt:(int)minSize] forKey:@"minimum"];
 
   // save the default font type
-  NSDictionary *defaultFontTypeDict = [regionDict objectForKey:@"defaultFontType"];
-  NSString *defaultFontType = ([[mDefaultFontMatrix selectedCell] tag] == kDefaultFontSerifTag) ? @"serif" : @"sans-serif";
+  NSMutableDictionary* defaultFontTypeDict = [regionDict objectForKey:@"defaultFontType"];
+  NSString* defaultFontType = ([[mDefaultFontMatrix selectedCell] tag] == kDefaultFontSerifTag) ? @"serif" : @"sans-serif";
   [defaultFontTypeDict setObject:defaultFontType forKey:@"type"];
   
   [mAdvancedFontsDialog orderOut:self];
@@ -866,10 +876,16 @@ const int kMissingFontPopupItemTag = 9999;
 
 - (void)changeFont:(id)sender
 {
-  if (mFontButtonForEditor) {
-    NSString *fontType = [mFontButtonForEditor alternateTitle];
+  if (mFontButtonForEditor == mChooseProportionalFontButton)
+  {
+    NSString* fontType = [self defaultProportionalFontTypeForCurrentRegion];
     [self updateFontSampleOfType:fontType];
   }
+  else if (mFontButtonForEditor == mChooseMonospaceFontButton)
+  {
+    [self updateFontSampleOfType:@"monospace"];
+  }
+  
 }
 
 - (BOOL)fontManager:(id)theFontManager willIncludeFont:(NSString *)fontName
