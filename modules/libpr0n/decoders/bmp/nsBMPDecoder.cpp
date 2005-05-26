@@ -73,7 +73,7 @@ nsBMPDecoder::nsBMPDecoder()
 nsBMPDecoder::~nsBMPDecoder()
 {
     delete[] mColors;
-    delete[] mRow;
+    free(mRow);
     if (mAlpha)
         free(mAlpha);
     if (mDecoded)
@@ -286,7 +286,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         NS_ENSURE_SUCCESS(rv, rv);
         mCurLine = real_height;
 
-        mRow = new PRUint8[(mBIH.width * mBIH.bpp)/8 + 4];
+        mRow = (PRUint8*)malloc((mBIH.width * mBIH.bpp)/8 + 4);
         // +4 because the line is padded to a 4 bit boundary, but I don't want
         // to make exact calculations here, that's unnecessary.
         // Also, it compensates rounding error.
