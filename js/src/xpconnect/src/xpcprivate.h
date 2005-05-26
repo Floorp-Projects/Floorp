@@ -208,6 +208,7 @@ void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper);
 #define XPC_NATIVE_SET_MAP_SIZE             64
 #define XPC_NATIVE_JSCLASS_MAP_SIZE         32
 #define XPC_THIS_TRANSLATOR_MAP_SIZE         8
+#define XPC_NATIVE_WRAPPER_MAP_SIZE         16
 
 /***************************************************************************/
 // data declarations...
@@ -520,6 +521,9 @@ public:
     XPCWrappedNativeProtoMap* GetDetachedWrappedNativeProtoMap() const
         {return mDetachedWrappedNativeProtoMap;}
 
+    XPCNativeWrapperMap* GetExplicitNativeWrapperMap() const
+        {return mExplicitNativeWrapperMap;}
+
     XPCLock* GetMapLock() const {return mMapLock;}
 
     XPCContext* GetXPCContext(JSContext* cx);
@@ -635,6 +639,7 @@ private:
     XPCNativeScriptableSharedMap* mNativeScriptableSharedMap;
     XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
     XPCWrappedNativeProtoMap* mDetachedWrappedNativeProtoMap;
+    XPCNativeWrapperMap*     mExplicitNativeWrapperMap;
     XPCLock* mMapLock;
     PRThread* mThreadRunningGC;
     nsVoidArray mWrappedJSToReleaseArray;
@@ -1917,6 +1922,11 @@ public:
     {
         if(mScriptableInfo) mScriptableInfo->Mark();
         if(HasProto()) mMaybeProto->MarkBeforeJSFinalize(cx);
+        if(mNativeWrapper)
+        {
+            JS_MarkGCThing(cx, mNativeWrapper, 
+                           "XPCWrappedNative::mNativeWrapper", nsnull);
+        }
     }
 
 #ifdef DEBUG

@@ -74,6 +74,9 @@ public:
     return &sXPC_NW_JSClass.base;
   }
 
+  static void ClearWrappedNativeScopes(JSContext* cx,
+                                       XPCWrappedNative* wrapper);
+
 protected:
   static JSExtendedClass sXPC_NW_JSClass;
 };

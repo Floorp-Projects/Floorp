@@ -1149,10 +1149,7 @@ XPC_WN_JSOp_Clear(JSContext *cx, JSObject *obj)
 
     if(wrapper && wrapper->IsValid())
     {
-        JSObject *nativeWrapper = wrapper->GetNativeWrapper();
-
-        if(nativeWrapper)
-            JS_ClearScope(cx, nativeWrapper);
+        XPCNativeWrapper::ClearWrappedNativeScopes(cx, wrapper);
     }
 
     js_ObjectOps.clear(cx, obj);

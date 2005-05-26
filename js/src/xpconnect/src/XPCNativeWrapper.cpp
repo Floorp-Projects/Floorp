@@ -723,8 +723,12 @@ XPC_NW_Finalize(JSContext *cx, JSObject *obj)
   XPCWrappedNative *wrappedNative =
     XPCNativeWrapper::GetWrappedNative(cx, obj);
 
-  if (wrappedNative && wrappedNative->GetNativeWrapper() == obj) {
-    wrappedNative->SetNativeWrapper(nsnull);
+  if (wrappedNative) {
+    XPCJSRuntime *rt = wrappedNative->GetRuntime();
+
+    // scoped lock
+    XPCAutoLock lock(rt->GetMapLock());
+    rt->GetExplicitNativeWrapperMap()->Remove(obj);
   }
 }
 
@@ -910,6 +914,14 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   *rval = OBJECT_TO_JSVAL(wrapperObj);
+
+  {
+    XPCJSRuntime *rt = wrappedNative->GetRuntime();
+
+    // scoped lock
+    XPCAutoLock lock(rt->GetMapLock());
+    rt->GetExplicitNativeWrapperMap()->Add(wrapperObj);
+  }
 
   return JS_TRUE;
 }
@@ -1098,4 +1110,46 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
 
   wrapper->SetNativeWrapper(obj);
   return obj;
+}
+
+struct WrapperAndCxHolder
+{
+    XPCWrappedNative* wrapper;
+    JSContext* cx;
+};
+
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+ClearNativeWrapperScope(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                        uint32 number, void *arg)
+{
+    JSDHashEntryStub* entry = (JSDHashEntryStub*)hdr;
+    WrapperAndCxHolder* d = (WrapperAndCxHolder*)arg;
+
+    if (d->wrapper->GetNativeWrapper() == (JSObject*)entry->key)
+    {
+        ::JS_ClearScope(d->cx, (JSObject*)entry->key);
+    }
+
+    return JS_DHASH_NEXT;
+}
+
+// static
+void
+XPCNativeWrapper::ClearWrappedNativeScopes(JSContext* cx,
+                                           XPCWrappedNative* wrapper)
+{
+  JSObject *nativeWrapper = wrapper->GetNativeWrapper();
+
+  if (nativeWrapper) {
+    ::JS_ClearScope(cx, nativeWrapper);
+  }
+
+  WrapperAndCxHolder d =
+    {
+      wrapper,
+      cx
+    };
+
+  wrapper->GetRuntime()->GetExplicitNativeWrapperMap()->
+    Enumerate(ClearNativeWrapperScope, &d);
 }
