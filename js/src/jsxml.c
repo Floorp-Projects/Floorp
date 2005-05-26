@@ -180,6 +180,7 @@ static void
 namespace_finalize(JSContext *cx, JSObject *obj)
 {
     JSXMLNamespace *ns;
+    JSAtom *functionAtom;
 
     ns = (JSXMLNamespace *) JS_GetPrivate(cx, obj);
     if (!ns)
@@ -187,6 +188,11 @@ namespace_finalize(JSContext *cx, JSObject *obj)
     JS_ASSERT(ns->object == obj);
     ns->object = NULL;
     UNMETER(xml_stats.livenamespaceobj);
+
+    functionAtom = cx->runtime->atomState.lazy.functionNamespaceAtom;
+    if (functionAtom && JSVAL_TO_OBJECT(ATOM_KEY(functionAtom)) == obj) {
+        cx->runtime->atomState.lazy.functionNamespaceAtom = NULL;
+    }
 }
 
 static void
@@ -392,6 +398,15 @@ qname_finalize(JSContext *cx, JSObject *obj)
     UNMETER(xml_stats.liveqnameobj);
 }
 
+static void
+anyname_finalize(JSContext* cx, JSObject* obj)
+{
+    /* Make sure the next call to js_GetAnyName doesn't try to use
+       this object */
+    cx->runtime->atomState.lazy.anynameAtom = NULL;
+    qname_finalize(cx, obj);
+}
+
 static uint32
 qname_mark(JSContext *cx, JSObject *obj, void *arg)
 {
@@ -458,7 +473,7 @@ JS_FRIEND_DATA(JSClass) js_AttributeNameClass = {
 JS_FRIEND_DATA(JSClass) js_AnyNameClass = {
     js_AnyName_str,    JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE,
     JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
-    JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    qname_finalize,
+    JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    anyname_finalize,
     NULL,              NULL,              NULL,              NULL,
     NULL,              NULL,              qname_mark,        NULL
 };
@@ -7462,7 +7477,7 @@ js_GetFunctionNamespace(JSContext *cx, jsval *vp)
         if (!obj)
             return JS_FALSE;
 
-        atom = js_AtomizeObject(cx, obj, ATOM_PINNED);
+        atom = js_AtomizeObject(cx, obj, 0);
         if (!atom)
             return JS_FALSE;
         rt->atomState.lazy.functionNamespaceAtom = atom;
@@ -7650,7 +7665,7 @@ js_GetAnyName(JSContext *cx, jsval *vp)
         METER(xml_stats.qnameobj);
         METER(xml_stats.liveqnameobj);
 
-        atom = js_AtomizeObject(cx, obj, ATOM_PINNED);
+        atom = js_AtomizeObject(cx, obj, 0);
         if (!atom)
             return JS_FALSE;
         rt->atomState.lazy.anynameAtom = atom;
