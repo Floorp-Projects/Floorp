@@ -248,6 +248,8 @@ function Shutdown()
   if (gWindowState != "extensions")
     gExtensionsView.removeEventListener("richview-select", onThemeSelect, false);
   
+  gExtensionsView.database.RemoveDataSource(gExtensionManager.datasource);
+
   gExtensionManager.removeDownloadListenerAt(gObserverIndex);
 
   var os = Components.classes["@mozilla.org/observer-service;1"]
