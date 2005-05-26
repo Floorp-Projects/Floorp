@@ -106,7 +106,8 @@ nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
 		// Get the Spec
 		nsCAutoString spec;
 		aURL->GetSpec(spec);
-		const char* arg = spec.get();
+		char* arg[1];
+		arg[0] = (char *) spec.get();
 		
 		//Launch the app		
 		BMimeType protocol;
@@ -116,11 +117,11 @@ nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
 			if(protocol.IsInstalled())
 			{
 				isInstalled = true;	
-				be_roster->Launch(protoStr.String(), 1, &(char*)arg);
+				be_roster->Launch(protoStr.String(), 1, arg);
 			}
 		}
 		if ((!isInstalled) && (!strcmp("mailto", scheme.get())))
-			be_roster->Launch("text/x-email", 1, &(char*)arg);
+			be_roster->Launch("text/x-email", 1, arg);
 	}
 	return rv;
 }
