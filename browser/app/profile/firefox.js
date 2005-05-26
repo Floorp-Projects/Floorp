@@ -51,10 +51,10 @@ pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/ex
 pref("xpinstall.dialog.progress.type.skin", "Extension:Manager-themes");
 pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager-extensions");
 
-// This is this application's unique identifier used by the Extension System to identify
-// this application as an extension target, and by the SmartUpdate system to identify
-// this application to the Update server.
-pref("app.extensions.version", "1.0");
+// This is the version number used by the Extension Manager to check extension
+// compatibility.  An extensions minVersion and maxVersion fields will be
+// compared to this value.  A trailing "+" indicates the post-release trunk.
+pref("app.extensions.version", "1.0+");
 
 pref("update.app.enabled", true);               // Whether or not app updates are enabled
 pref("update.app.url", "chrome://mozapps/locale/update/update.properties");
