@@ -3717,6 +3717,24 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
   return NS_OK;
 }
 
+static
+already_AddRefed<nsIDOMWindow>
+GetChildFrame(nsIXPConnectWrappedNative *wrapper, jsval id)
+{
+  nsCOMPtr<nsIDOMWindowInternal> win(do_QueryWrappedNative(wrapper));
+
+  nsCOMPtr<nsIDOMWindowCollection> frames;
+  win->GetFrames(getter_AddRefs(frames));
+
+  nsIDOMWindow *frame = nsnull;
+
+  if (frames) {
+    frames->Item(JSVAL_TO_INT(id), &frame);
+  }
+
+  return frame;
+}
+
 NS_IMETHODIMP
 nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
@@ -3727,28 +3745,23 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   if (JSVAL_IS_INT(id)) {
     // If we're accessing a numeric property we'll treat that as if
-    // window.frames.n is accessed (since window.frames === window),
-    // if window.frames.n is a child frame, wrap the frame and return
+    // window.frames[n] is accessed (since window.frames === window),
+    // if window.frames[n] is a child frame, wrap the frame and return
     // it without doing a security check.
 
-    nsCOMPtr<nsIDOMWindowInternal> win(do_QueryWrappedNative(wrapper));
+    nsCOMPtr<nsIDOMWindow> frame = GetChildFrame(wrapper, id);
+    nsresult rv = NS_OK;
 
-    nsCOMPtr<nsIDOMWindowCollection> frames;
-    win->GetFrames(getter_AddRefs(frames));
+    if (frame) {
+      // A numeric property accessed and the numeric property is a
+      // child frame, wrap the child frame without doing a security
+      // check and return.
 
-    if (frames) {
-      nsCOMPtr<nsIDOMWindow> frame;
-      frames->Item(JSVAL_TO_INT(id), getter_AddRefs(frame));
-
-      if (frame) {
-        // A numeric property accessed and the numeric proerty is a
-        // child frame, wrap the child frame without doing a security
-        // check and return.
-
-        return WrapNative(cx, ::JS_GetGlobalObject(cx), frame,
-                          NS_GET_IID(nsIDOMWindow), vp);
-      }
+      rv = WrapNative(cx, ::JS_GetGlobalObject(cx), frame,
+                      NS_GET_IID(nsIDOMWindow), vp);
     }
+
+    return rv;
   }
 
   if (needsSecurityCheck(cx, wrapper)) {
@@ -5049,8 +5062,30 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, jsval id, PRUint32 flags,
                        JSObject **objp, PRBool *_retval)
 {
-  if (!JSVAL_IS_STRING(id))
+  if (!JSVAL_IS_STRING(id)) {
+    if (JSVAL_IS_INT(id) && !(flags & JSRESOLVE_ASSIGNING)) {
+      // If we're resolving a numeric property, treat that as if
+      // window.frames[n] is resolved (since window.frames ===
+      // window), if window.frames[n] is a child frame, define a
+      // property for this index.
+
+      nsCOMPtr<nsIDOMWindow> frame = GetChildFrame(wrapper, id);
+
+      if (frame) {
+        // A numeric property accessed and the numeric property is a
+        // child frame. Define a property for this index.
+
+        *_retval = ::JS_DefineElement(cx, obj, JSVAL_TO_INT(id), JSVAL_VOID,
+                                      nsnull, nsnull, 0);
+
+        if (*_retval) {
+          *objp = obj;
+        }
+      }
+    }
+
     return NS_OK;
+  }
 
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
   NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
