@@ -50,6 +50,7 @@
 #include "nsBuildID.h"
 #include "plstr.h"
 #include "prprf.h"
+#include "prenv.h"
 
 /**
  * Output a string to the user.  This method is really only meant to be used to
@@ -244,12 +245,8 @@ static int LoadAppData(const char* appDataFile, nsXREAppData* aResult)
   return 0;
 }
 
-int main(int argc, char* argv[])
+static void Usage()
 {
-  if (argc == 1 || IsArg(argv[1], "h")
-                || IsArg(argv[1], "help")
-                || IsArg(argv[1], "?"))
-  {
     // display additional information (XXX make localizable?)
     Output(PR_FALSE,
            "Mozilla XULRunner " MOZILLA_VERSION " %d\n\n"
@@ -267,6 +264,15 @@ int main(int argc, char* argv[])
            "APP-OPTIONS\n"
            "  Application specific options.\n",
            BUILD_ID);
+}
+
+int main(int argc, char* argv[])
+{
+  if (argc > 1 && (IsArg(argv[1], "h") ||
+                   IsArg(argv[1], "help") ||
+                   IsArg(argv[1], "?")))
+  {
+    Usage();
     return 0;
   }
 
@@ -279,43 +285,32 @@ int main(int argc, char* argv[])
 
   geckoVersion = ParseVersion(GRE_BUILD_ID);
 
-  const char *appDataFile;
-  char **argv2;
+  const char *appDataFile = PR_GetEnv("XUL_APP_FILE");
 
-  if (IsArg(argv[1], "app"))
-  {
-    if (argc == 2)
-    {
-      Output(PR_TRUE, "Error: APP-FILE must be specified!\n");
+  if (!(appDataFile && *appDataFile)) {
+    if (argc < 2) {
+      Usage();
       return 1;
     }
-    appDataFile = argv[2];
-    argv2 = NULL;
-  }
-  else
-  {
+
+    if (IsArg(argv[1], "app")) {
+      if (argc == 2) {
+        Usage();
+        return 1;
+      }
+      argv[1] = argv[0];
+      ++argv;
+      --argc;
+    }
+
     appDataFile = argv[1];
-    //
-    // Fix-up argv to start with -app.
-    // 
-    // This is done so that we preserve our command line whenever XRE_main
-    // needs to restart our process.  We also don't want the supplied path to
-    // our application data file to be treated as a URL to load by the
-    // application.
-    //
-    // XXX this probably means that we need to implement a command line handler
-    // to consume the parameter before it is seen as a parameter by the
-    // application.
-    // XXX a better approach would be to use an evnvar.
-    //
-    argv2 = (char **) malloc(sizeof(char*) * (argc + 2));
-    argv2[0] = argv[0];
-    argv2[1] = "-app";
-    for (int i=1; i<argc; ++i)
-      argv2[i+1] = argv[i];
-    argv2[argc+1] = NULL;
-    argv = argv2;
-    argc++;
+    argv[1] = argv[0];
+    ++argv;
+    --argc;
+
+    static char kAppEnv[MAXPATHLEN];
+    PR_snprintf(kAppEnv, MAXPATHLEN, "XUL_APP_FILE=%s", appDataFile);
+    PR_SetEnv(kAppEnv);
   }
 
   nsXREAppData appData = { sizeof(nsXREAppData), 0 };
@@ -325,9 +320,6 @@ int main(int argc, char* argv[])
     rv = XRE_main(argc, argv, &appData);
 
   NS_IF_RELEASE(appData.directory);
-
-  if (argv2)
-    free(argv2);
 
   return rv;
 }
