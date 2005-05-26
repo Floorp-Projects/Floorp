@@ -7462,7 +7462,7 @@ js_GetFunctionNamespace(JSContext *cx, jsval *vp)
         if (!obj)
             return JS_FALSE;
 
-        atom = js_AtomizeObject(cx, obj, 0);
+        atom = js_AtomizeObject(cx, obj, ATOM_PINNED);
         if (!atom)
             return JS_FALSE;
         rt->atomState.lazy.functionNamespaceAtom = atom;
@@ -7650,7 +7650,7 @@ js_GetAnyName(JSContext *cx, jsval *vp)
         METER(xml_stats.qnameobj);
         METER(xml_stats.liveqnameobj);
 
-        atom = js_AtomizeObject(cx, obj, 0);
+        atom = js_AtomizeObject(cx, obj, ATOM_PINNED);
         if (!atom)
             return JS_FALSE;
         rt->atomState.lazy.anynameAtom = atom;
