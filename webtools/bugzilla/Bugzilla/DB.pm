@@ -187,7 +187,7 @@ sub _handle_error {
 }
 
 # List of abstract methods we are checking the derived class implements
-our @_abstract_methods = qw(REQUIRED_VERSION PROGRAM_NAME
+our @_abstract_methods = qw(REQUIRED_VERSION PROGRAM_NAME DBD_VERSION
                             new sql_regexp sql_not_regexp sql_limit sql_to_days
                             sql_date_format sql_interval
                             bz_lock_tables bz_unlock_tables);
@@ -962,6 +962,10 @@ to the admin to let them know what DB they're running.
 
 The name of the Bugzilla::DB module that we are. For example, for the MySQL
 Bugzilla::DB module, this would be "Mysql." For PostgreSQL it would be "Pg."
+
+=item C<DBD_VERSION>
+
+The minimum version of the DBD module that we require for this database.
 
 =head1 CONNECTION
 

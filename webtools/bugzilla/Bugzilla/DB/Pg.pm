@@ -51,6 +51,7 @@ use constant BLOB_TYPE => { pg_type => DBD::Pg::PG_BYTEA };
 use constant REQUIRED_VERSION => '7.03.0000';
 use constant PROGRAM_NAME => 'PostgreSQL';
 use constant MODULE_NAME  => 'Pg';
+use constant DBD_VERSION  => '1.31';
 
 sub new {
     my ($class, $user, $pass, $host, $dbname, $port) = @_;

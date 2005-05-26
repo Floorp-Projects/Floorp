@@ -300,10 +300,6 @@ my $modules = [
         version => '1.38' 
     }, 
     { 
-        name => 'DBD::mysql', 
-        version => '2.9003' 
-    }, 
-    { 
         name => 'File::Spec', 
         version => '0.82' 
     }, 
@@ -1469,9 +1465,27 @@ $::ENV{'PATH'} = $origPath;
 if ($my_db_check) {
     # Do we have the database itself?
 
+    # Unfortunately, $my_db_driver doesn't map perfectly between DBD
+    # and Bugzilla::DB. We need to fix the case a bit.
+    (my $dbd_name = trim($my_db_driver)) =~ s/(\w+)/\u\L$1/g;
+    # And MySQL is special, because it's all lowercase in DBD.
+    $dbd_name = 'mysql' if $dbd_name eq 'Mysql';
+
+    my $dbd = "DBD::$dbd_name";
+    unless (eval("require $dbd")) {
+        print "Bugzilla requires that perl's $dbd be installed.\n"
+              . "To install this module, you can do:\n "
+              . "   " . install_command($dbd) . "\n";
+        exit;
+    }
+
     my $dbh = Bugzilla::DB::connect_main("no database connection");
     my $sql_want = $dbh->REQUIRED_VERSION;
     my $sql_server = $dbh->PROGRAM_NAME;
+    my $dbd_ver = $dbh->DBD_VERSION;
+    unless (have_vers($dbd, $dbd_ver)) {
+        die "Bugzilla requires at least version $dbd_ver of $dbd.";
+    }
 
     printf("Checking for %15s %-9s ", $sql_server, "(v$sql_want)") unless $silent;
     my $sql_vers = $dbh->bz_server_version;
