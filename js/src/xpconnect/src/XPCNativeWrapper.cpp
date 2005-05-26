@@ -720,12 +720,11 @@ XPC_NW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 JS_STATIC_DLL_CALLBACK(void)
 XPC_NW_Finalize(JSContext *cx, JSObject *obj)
 {
-  XPCWrappedNative *wrappedNative =
-    XPCNativeWrapper::GetWrappedNative(cx, obj);
+  // We must not use obj's private data here since it's likely that it
+  // has already been finalized.
+  XPCJSRuntime *rt = nsXPConnect::GetRuntime();
 
-  if (wrappedNative) {
-    XPCJSRuntime *rt = wrappedNative->GetRuntime();
-
+  {
     // scoped lock
     XPCAutoLock lock(rt->GetMapLock());
     rt->GetExplicitNativeWrapperMap()->Remove(obj);
