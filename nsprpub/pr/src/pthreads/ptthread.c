@@ -209,7 +209,10 @@ static void *_pt_root(void *arg)
     thred->suspend = 0;
 
     thred->prev = pt_book.last;
-    pt_book.last->next = thred;
+    if (pt_book.last)
+        pt_book.last->next = thred;
+    else
+        pt_book.first = thred;
     thred->next = NULL;
     pt_book.last = thred;
     PR_Unlock(pt_book.ml);
@@ -233,7 +236,10 @@ static void *_pt_root(void *arg)
         pt_book.system -= 1;
     else if (--pt_book.user == pt_book.this_many)
         PR_NotifyAllCondVar(pt_book.cv);
-    thred->prev->next = thred->next;
+    if (NULL == thred->prev)
+        pt_book.first = thred->next;
+    else
+        thred->prev->next = thred->next;
     if (NULL == thred->next)
         pt_book.last = thred->prev;
     else
@@ -288,7 +294,10 @@ static PRThread* pt_AttachThread(void)
 
         /* then put it into the list */
         thred->prev = pt_book.last;
-	    pt_book.last->next = thred;
+        if (pt_book.last)
+            pt_book.last->next = thred;
+        else
+            pt_book.first = thred;
         thred->next = NULL;
         pt_book.last = thred;
         PR_Unlock(pt_book.ml);
@@ -790,10 +799,13 @@ static void _pt_thread_death(void *arg)
 {
     PRThread *thred = (PRThread*)arg;
 
-    if (thred->state & PT_THREAD_FOREIGN)
+    if (thred->state & (PT_THREAD_FOREIGN|PT_THREAD_PRIMORD))
     {
         PR_Lock(pt_book.ml);
-        thred->prev->next = thred->next;
+        if (NULL == thred->prev)
+            pt_book.first = thred->next;
+        else
+            thred->prev->next = thred->next;
         if (NULL == thred->next)
             pt_book.last = thred->prev;
         else
@@ -915,6 +927,7 @@ void _PR_InitThreads(
 PR_IMPLEMENT(PRStatus) PR_Cleanup(void)
 {
     PRThread *me = PR_CurrentThread();
+    int rv;
     PR_LOG(_pr_thread_lm, PR_LOG_MIN, ("PR_Cleanup: shutting down NSPR"));
     PR_ASSERT(me->state & PT_THREAD_PRIMORD);
     if (me->state & PT_THREAD_PRIMORD)
@@ -933,6 +946,9 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup(void)
         /* Close all the fd's before calling _PR_CleanupIO */
         _PR_CleanupIO();
 
+        _pt_thread_death(me);
+        rv = pthread_setspecific(pt_book.key, NULL);
+        PR_ASSERT(0 == rv);
         /*
          * I am not sure if it's safe to delete the cv and lock here,
          * since there may still be "system" threads around. If this
@@ -944,7 +960,6 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup(void)
             PR_DestroyCondVar(pt_book.cv); pt_book.cv = NULL;
             PR_DestroyLock(pt_book.ml); pt_book.ml = NULL;
         }
-        _pt_thread_death(me);
         PR_DestroyLock(_pr_sleeplock);
         _pr_sleeplock = NULL;
         _PR_CleanupLayerCache();
