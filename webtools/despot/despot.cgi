@@ -753,7 +753,7 @@ sub FindPartition {
         # form on the owners page, so we should redirect the user to the anchor on that
         # page for a single match.
         if (scalar(@matches) == 1 && param("view")) {
-            print "Location: http://www.mozilla.org/owners.html#$matches[0]->{name}\n\n";
+            print "Location: http://www.mozilla.org/owners.html#" . name_to_id_token($matches[0]->{name}) . "\n\n";
             exit;
         }
         PrintHeader();
