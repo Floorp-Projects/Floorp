@@ -40,7 +40,7 @@
 #expand pref("general.useragent.locale", "__AB_CD__");
 pref("general.skins.selectedSkin", "classic/1.0");
 
-pref("app.extensions.version", "1.0");
+pref("app.extensions.version", "1.0+");
 
 #ifdef XP_MACOSX
 pref("browser.chromeURL", "chrome://messenger/content/messengercompose/messengercompose.xul");
