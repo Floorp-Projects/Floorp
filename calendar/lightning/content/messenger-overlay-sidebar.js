@@ -84,10 +84,8 @@ function showCalendar(jumpToToday)
         var d = Components.classes['@mozilla.org/calendar/datetime;1'].createInstance(Components.interfaces.calIDateTime);
         d.jsDate = new Date();
         d = d.getInTimezone(calendarDefaultTimezone());
-        var st = d.startOfWeek;
-        var end = d.endOfWeek;
 
-        view.setDateRange(st, end);
+        view.showDate(d);
     }
 
     if (view.displayCalendar != getCompositeCalendar()) {
