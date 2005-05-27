@@ -57,6 +57,14 @@
 
 // XXXdmose getItem and getItems() should return immutable events
 
+
+function debug(s) {
+    const debugging = true;
+    if (debugging) {
+        dump(s);
+    }
+}
+
 function calDavCalendar() {
     this.wrappedJSObject = this;
     this.mObservers = [ ];
@@ -186,7 +194,7 @@ calDavCalendar.prototype = {
             // 201 = HTTP "Created"
             //
             if (aStatusCode == 201) {
-                dump("Item added successfully.\n");
+                debug("Item added successfully.\n");
                 var retVal = Components.results.NS_OK;
 
                 // XXX deal with Location header
@@ -197,7 +205,7 @@ calDavCalendar.prototype = {
 
             } else {
                 // XXX real error handling
-                dump("Error adding item: " + aStatusCode + "\n");
+                debug("Error adding item: " + aStatusCode + "\n");
                 retVal = Components.results.NS_ERROR_FAILURE;
 
             }
@@ -217,7 +225,7 @@ calDavCalendar.prototype = {
         newItem.setProperty("locationURI", itemUri.spec);
         newItem.makeImmutable();
 
-        dump("icalString = " + newItem.icalString + "\n");
+        debug("icalString = " + newItem.icalString + "\n");
 
         // XXX use if not exists
         // do WebDAV put
@@ -247,7 +255,7 @@ calDavCalendar.prototype = {
         var eventUri = this.mUri.clone();
         try {
             eventUri.spec = aItem.getProperty("locationURI");
-            dump("using locationURI: " + eventUri.spec + "\n");
+            debug("using locationURI: " + eventUri.spec + "\n");
         } catch (ex) {
             // XXX how are we REALLY supposed to figure this out?
             eventUri.spec = eventUri.spec + aItem.id + ".ics";
@@ -263,11 +271,11 @@ calDavCalendar.prototype = {
             // 204 = HTTP "No Content"
             //
             if (aStatusCode == 204) {
-                dump("Item modified successfully.\n");
+                debug("Item modified successfully.\n");
                 var retVal = Components.results.NS_OK;
 
             } else {
-                dump("Error modifying item: " + aStatusCode + "\n");
+                debug("Error modifying item: " + aStatusCode + "\n");
 
                 // XXX deal with non-existent item here, other
                 // real error handling
@@ -297,7 +305,7 @@ calDavCalendar.prototype = {
         // XXX use if-exists stuff here
         // XXX use etag as generation
         // do WebDAV put
-        dump("modifyItem: aItem.icalString = " + aItem.icalString + "\n");
+        debug("modifyItem: aItem.icalString = " + aItem.icalString + "\n");
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
         webSvc.putFromString(eventResource, "text/calendar", aItem.icalString, 
@@ -333,10 +341,10 @@ calDavCalendar.prototype = {
             // 204 = HTTP "No content"
             //
             if (aStatusCode == 204) {
-                dump("Item deleted successfully.\n");
+                debug("Item deleted successfully.\n");
                 var retVal = Components.results.NS_OK;
             } else {
-                dump("Error deleting item: " + aStatusCode + "\n");
+                debug("Error deleting item: " + aStatusCode + "\n");
                 // XXX real error handling here
                 retVal = Components.results.NS_ERROR_FAILURE;
             }
@@ -385,17 +393,17 @@ calDavCalendar.prototype = {
         default xml namespace = "urn:ietf:params:xml:ns:caldav";
         queryXml = 
           <calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">
-            <calendar-query-result/>
+            <calendar-data/>
               <filter>
-                <icalcomp-filter name="VCALENDAR">
-                  <icalcomp-filter name="VEVENT">
-                    <icalprop-filter name="UID">
+                <comp-filter name="VCALENDAR">
+                  <comp-filter name="VEVENT">
+                    <prop-filter name="UID">
                       <text-match caseless="no">
                        {aId}
                       </text-match>
-                    </icalprop-filter>
-                  </icalcomp-filter>
-                </icalcomp-filter>
+                    </prop-filter>
+                  </comp-filter>
+                </comp-filter>
               </filter>
           </calendar-query>;
 
@@ -440,9 +448,9 @@ calDavCalendar.prototype = {
                 var xSerializer = Components.classes
                     ['@mozilla.org/xmlextras/xmlserializer;1']
                     .getService(Components.interfaces.nsIDOMSerializer);
-                //XXXdump(xSerializer.serializeToString(aDetail));
-                responseElement = new XML(
-                    xSerializer.serializeToString(aDetail));
+                var response = xSerializer.serializeToString(aDetail);
+                debug("response = " + response + "\n");
+                var responseElement = new XML(response);
 
                 // create calIItemBase from e4x object
                 // XXX error-check that we only have one result, etc
@@ -454,10 +462,14 @@ calDavCalendar.prototype = {
                 var item = calEventClass.createInstance(calIEvent);
 
                 // cause returned data to be parsed into the event item
+                var calData = responseElement..C::["calendar-data"];
+                if (calData.length = 0) {
+                    debug("server returned empty or non-existing "
+                          + "calendar-data element!\n");
+                }
+                debug("ITEM RESULT: '" + calData + "'\n");
                 // XXX try-catch
-                dump ("ITEM RESULT: " + responseElement..C::["calendar-query-result"] + "\n");
-                item.icalString = 
-                    responseElement..C::["calendar-query-result"]; 
+                item.icalString = calData;
                 item.parent = this;
 
                 // save the location name in case we need to modify
@@ -468,8 +480,8 @@ calDavCalendar.prototype = {
                 if(aOccurrences) {
                     iid = calIItemOccurrence;
                     if (item.recurrenceInfo) {
-                        //dump ("ITEM has recurrence: " + item + " (" + item.title + ")\n");
-                        //dump ("rangestart: " + aRangeStart.jsDate + " -> " + aRangeEnd.jsDate + "\n");
+                        debug("ITEM has recurrence: " + item + " (" + item.title + ")\n");
+                        debug("rangestart: " + aRangeStart.jsDate + " -> " + aRangeEnd.jsDate + "\n");
                         items = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, 0, {});
                     } else {
                         item = makeOccurrence(item, item.startDate, item.endDate);
@@ -496,7 +508,7 @@ calDavCalendar.prototype = {
             }
 
             // XXX  handle aCount
-            dump("errString = " + errString + "\n");
+            debug("errString = " + errString + "\n");
             if (items) {
                 aListener.onGetResult(this, rv, iid, null, items ? items.length : 0,
                                       errString ? errString : items);
@@ -556,7 +568,7 @@ calDavCalendar.prototype = {
         filterTypes = 0;
         if ( aItemFilter & calICalendar.ITEM_FILTER_TYPE_TODO ) {
             filterTypes++;
-            dump("getItems called with TODO filter\n");
+            debug("getItems called with TODO filter\n");
         }
         if ( aItemFilter & calICalendar.ITEM_FILTER_TYPE_EVENT ) {
             filterTypes++;
@@ -565,7 +577,7 @@ calDavCalendar.prototype = {
             filterTypes++;
         }
         if ( filterTypes > 1 ) {
-            dump("Multiple simultaneous filter types not supported by " + 
+            debug("Multiple simultaneous filter types not supported by " + 
                  "this provider.\n");
             throw Components.results.NS_ERROR_FAILURE;
         }
@@ -575,32 +587,32 @@ calDavCalendar.prototype = {
         var C = new Namespace("urn:ietf:params:xml:ns:caldav")
         default xml namespace = C;
         var queryXml = <calendar-query>
-                         <calendar-query-result/>
+                         <calendar-data/>
                          <filter>
-                           <icalcomp-filter name="VCALENDAR">
-                             <icalcomp-filter/>
-                           </icalcomp-filter>
+                           <comp-filter name="VCALENDAR">
+                             <comp-filter/>
+                           </comp-filter>
                          </filter>
                        </calendar-query>;
 
         switch (aItemFilter & calICalendar.ITEM_FILTER_TYPE_ALL) {
         case calICalendar.ITEM_FILTER_TYPE_EVENT:
-            queryXml[0].C::filter.C::["icalcomp-filter"]
-                .C::["icalcomp-filter"].@name="VEVENT";
+            queryXml[0].C::filter.C::["comp-filter"]
+                .C::["comp-filter"].@name="VEVENT";
             break;
 
         case calICalendar.ITEM_FILTER_TYPE_TODO:
-            queryXml[0].C::filter.C::["icalcomp-filter"]
-                .C::["icalcomp-filter"].@name="VTODO";
+            queryXml[0].C::filter.C::["comp-filter"]
+                .C::["comp-filter"].@name="VTODO";
             break;
 
         case calICalendar.ITEM_FILTER_TYPE_JOURNAL:
             break;
-            queryXml[0].C::filter.C::["icalcomp-filter"]
-                .C::["icalcomp-filter"].@name="VJOURNAL";
+            queryXml[0].C::filter.C::["comp-filter"]
+                .C::["comp-filter"].@name="VJOURNAL";
 
         default:
-            dump("No item types specified\n");
+            debug("No item types specified\n");
             // XXX should we just quietly call back the completion method?
             throw NS_ERROR_FAILURE;
 
@@ -614,16 +626,15 @@ calDavCalendar.prototype = {
             var rangeXml = <time-range start={aRangeStart.icalString}
                                        end={aRangeEnd.icalString}/>;
 
-            // append the time-range as a child of our innermost 
-            // icalcomp-filter
-            queryXml[0].C::filter.C::["icalcomp-filter"]
-                .C::["icalcomp-filter"].appendChild(rangeXml);
+            // append the time-range as a child of our innermost comp-filter
+            queryXml[0].C::filter.C::["comp-filter"]
+                .C::["comp-filter"].appendChild(rangeXml);
         }
 
         // XXX aItemFilter
 
         var queryString = queryXml.toXMLString();
-        dump("queryString = " + queryString + "\n");
+        debug("queryString = " + queryString + "\n");
         var occurrences = (aItemFilter &
                            calICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0; 
         this.reportInternal(queryString, occurrences, aRangeStart, aRangeEnd, aCount, aListener);
@@ -695,13 +706,13 @@ WebDavListener.prototype = {
         // aClosure is the listener
         aClosure.onOperationComplete(this, aStatusCode, 0, null, null);
 
-        dump("WebDavListener.onOperationComplete() called\n");
+        debug("WebDavListener.onOperationComplete() called\n");
         return;
     },
 
     onOperationDetail: function(aStatusCode, aResource, aOperation, aDetail,
                                 aClosure) {
-        dump("WebDavListener.onOperationDetail() called\n");
+        debug("WebDavListener.onOperationDetail() called\n");
         return;
     }
 }
