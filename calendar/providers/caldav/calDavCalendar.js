@@ -130,7 +130,7 @@ calDavCalendar.prototype = {
 
     // attribute nsIURI uri;
     mUri: null,
-    get uri() { return this.mUri },
+    get uri() { return this.mUri; },
     set uri(aUri) { this.mUri = aUri; },
 
     // attribute boolean suppressAlarms;
@@ -458,6 +458,7 @@ calDavCalendar.prototype = {
                 dump ("ITEM RESULT: " + responseElement..C::["calendar-query-result"] + "\n");
                 item.icalString = 
                     responseElement..C::["calendar-query-result"]; 
+                item.parent = this;
 
                 // save the location name in case we need to modify
                 item.setProperty("locationURI", aResource.spec);
@@ -480,7 +481,6 @@ calDavCalendar.prototype = {
                     rv = Components.results.NS_OK;
                     items = [ item ];
                 } else if (item.QueryInterface(calITodo)) {
-                    dump ("QI to TODO succeeded\n");
                     iid = calITodo;
                     rv = Components.results.NS_OK;
                     items = [ item ];
