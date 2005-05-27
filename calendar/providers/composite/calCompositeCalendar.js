@@ -343,7 +343,7 @@ calCompositeCalendar.prototype = {
             try { o[method].apply(o, args); }
             catch (e) { }
         });
-    },
+    }
 };
 
 // composite listener helper
