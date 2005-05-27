@@ -235,16 +235,17 @@ function DisplayCardViewPane(card)
   var goimURL = "aim:goim?screenname=" + card.aimScreenName;
   var hasScreenName = HandleLink(data.cvScreenname, zScreenName, card.aimScreenName, data.cvScreennameBox, goimURL);
   
-  if (!hasScreenName || gIOService.offline) {
-    data.cvAimPresence.removeAttribute("src");
-    data.cvAimPresence.removeAttribute("url");
-    data.cvAimPresence.setAttribute("width","0");
-  }
-  else {
+  data.cvAimPresence.removeAttribute("src");
+  data.cvAimPresence.removeAttribute("url");
+  data.cvAimPresence.setAttribute("width","0");
+
+#if 0
+    // for now, disable the presence check since we don't really support this anymore but we may again in the future. 
+    // I'm leaving the code here for historical reference. See Bug #295726.
     data.cvAimPresence.setAttribute("src","http://big.oscar.aol.com:80/" + card.aimScreenName + "?on_url=http://ncmail.netscape.com/include/nc/images/online.gif&off_url=http://ncmail.netscape.com/include/nc/images/offline.gif");   
     data.cvAimPresence.setAttribute("url", goimURL);
     data.cvAimPresence.setAttribute("width","16");
-  }
+#endif
 
   visible = hasScreenName || visible;
   visible = HandleLink(data.cvEmail2, zSecondaryEmail, card.secondEmail, data.cvEmail2Box, "mailto:" + card.secondEmail) || visible;
