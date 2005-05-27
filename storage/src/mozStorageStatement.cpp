@@ -404,30 +404,11 @@ mozStorageStatement::Execute()
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
 
-    int nRetries = 0;
-
-    while (nRetries < 2) {
-        int srv = sqlite3_step (mDBStatement);
-        if (srv == SQLITE_MISUSE || srv == SQLITE_ERROR) {
-#ifdef PR_LOGGING
-            nsCAutoString errStr;
-            mDBConnection->GetLastErrorString(errStr);
-            PR_LOG(gStorageLog, PR_LOG_DEBUG, ("mozStorageStatement::Execute error: %s", errStr.get()));
-#endif
-            mExecuting = PR_FALSE;
-            return NS_ERROR_FAILURE; // XXX error code
-        } else if (srv == SQLITE_SCHEMA) {
-            nRetries++;
-            Initialize(mDBConnection, mStatementString);
-        } else {
-            break;
-        }
-    }
-
-    if (nRetries >= 2)
-        return NS_ERROR_FAILURE;
-    else
-        return Reset();
+    PRBool ret = PR_FALSE;
+    nsresult rv = ExecuteStep(&ret);
+    if (NS_FAILED(rv))
+        return rv;
+    return Reset();
 }
 
 /* mozIStorageDataSet executeDataSet (); */
