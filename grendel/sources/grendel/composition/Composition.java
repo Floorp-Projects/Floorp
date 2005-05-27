@@ -85,15 +85,13 @@ public class Composition extends GeneralFrame {
         mCompositionPanel.addCompositionPanelListener(new PanelListener());
 
         //create menubar (top)
-        //  fMenu = buildMenu("mainMenubar",
-        //                  mCompositionPanel.getActions());
         XMLMenuBuilder builder = new XMLMenuBuilder(mCompositionPanel.getActions());
-        fMenu = builder.buildFrom("ui/menus.xml", (JFrame)this);
+        fMenu = builder.buildFrom("ui/grendel.xml", (JFrame)this);
 
         getRootPane().setJMenuBar(fMenu);
 
         fToolBar = mCompositionPanel.getToolBar();
-        fToolBar.add(fToolBar.makeNewSpring());
+        fToolBar.add(new grendel.widgets.Spring());
 
         mAddressBar = mCompositionPanel.getAddressBar();
 

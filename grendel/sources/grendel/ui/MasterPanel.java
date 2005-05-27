@@ -56,7 +56,7 @@ import javax.swing.Icon;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-//import javax.swing.JToolBar;
+import javax.swing.JToolBar;
 import javax.swing.JViewport;
 import javax.swing.KeyStroke;
 import javax.swing.ToolTipManager;
@@ -69,9 +69,6 @@ import javax.swing.event.TreeModelEvent;
 
 import calypso.util.ArrayEnumeration;
 import calypso.util.Assert;
-//import netscape.orion.toolbars.NSToolbar;
-//import netscape.orion.uimanager.AbstractUICmd;
-//import netscape.orion.uimanager.IUICmd;
 
 import javax.mail.Folder;
 import javax.mail.MessagingException;
@@ -106,6 +103,10 @@ import grendel.widgets.TreeTableModelEvent;
 import grendel.widgets.TreeTableModelListener;
 
 import com.trfenv.parsers.Event;
+import com.trfenv.parsers.xul.XulParser;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * Panel to display the <em>contents</em> of a folder.
@@ -239,8 +240,15 @@ public class MasterPanel extends GeneralPanel {
    * Returns the toolbar associated with this panel.
    */
 
-  public GrendelToolBar getToolBar() {
-    return buildToolBar("masterToolBar", fActions);
+  public JToolBar getToolBar() {
+    XulParser curParser = new XulParser(fActions, null);
+    Document doc = curParser.makeDocument("ui/grendel.xml");
+    Element toolbar = (Element)doc.getDocumentElement().getElementsByTagName("toolbar").
+        item(0);
+
+    JToolBar newToolbar = (JToolBar)curParser.parseTag(this, toolbar);
+
+    return newToolbar;
   }
 
   /**

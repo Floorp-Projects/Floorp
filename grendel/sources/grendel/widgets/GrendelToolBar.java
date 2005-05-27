@@ -26,6 +26,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.awt.Component;
 
 import java.net.URL;
 
@@ -44,8 +45,15 @@ public class GrendelToolBar extends JToolBar {
   public GrendelToolBar() {
     super();
     setFloatable(false);
+  }
 
-//    setBackground(new java.awt.Color(238,238,238));
+  public GrendelToolBar(JToolBar aToolbar) {
+    this();
+
+    for (Component i : aToolbar.getComponents()) {
+      if (i instanceof JButton)
+        add(i);
+    }
   }
 
   public Spring makeNewSpring() {

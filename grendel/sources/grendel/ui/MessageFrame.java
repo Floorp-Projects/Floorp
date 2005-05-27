@@ -57,7 +57,7 @@ public class MessageFrame extends GeneralFrame {
     //                                           fMessagePanel.getActions()));
     XMLMenuBuilder builder = new XMLMenuBuilder(Util.MergeActions(actions,
                                         fMessagePanel.getActions()));
-    fMenu = builder.buildFrom("ui/menus.xml", this);
+    fMenu = builder.buildFrom("ui/grendel.xml", this);
     getRootPane().setJMenuBar(fMenu);
 
     fToolBar = fMessagePanel.getToolBar();

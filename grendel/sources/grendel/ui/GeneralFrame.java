@@ -97,7 +97,7 @@ public class GeneralFrame extends JFrame
   protected JMenuBar      fMenu;
   protected CollapsiblePanel        fToolBarPanel;
   protected GridBagConstraints fToolBarPanelConstraints;
-  protected GrendelToolBar      fToolBar;
+  protected JToolBar      fToolBar;
   protected Component     fStatusBar;
   protected String        fResourceBase = "grendel.ui";
   protected String        fID;

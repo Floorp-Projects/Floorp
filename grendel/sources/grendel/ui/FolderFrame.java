@@ -58,7 +58,7 @@ public class FolderFrame extends GeneralFrame {
     //    fMenu = buildMenu("folderMain", Util.MergeActions(actions,
     //                                             fFolderPanel.getActions()));
     XMLMenuBuilder builder = new XMLMenuBuilder(Util.MergeActions(actions, fFolderPanel.getActions()));
-    fMenu = builder.buildFrom("ui/menus.xml", this);
+    fMenu = builder.buildFrom("ui/grendel.xml", this);
     getRootPane().setJMenuBar(fMenu);
 
     fToolBar = fFolderPanel.getToolBar();

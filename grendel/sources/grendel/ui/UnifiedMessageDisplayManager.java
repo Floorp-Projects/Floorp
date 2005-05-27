@@ -184,13 +184,13 @@ class UnifiedMessageFrame extends GeneralFrame {
     layoutPanels(layout);
 
     XMLMenuBuilder builder = new XMLMenuBuilder(Util.MergeActions(actions, Util.MergeActions(fFolders.getActions(), Util.MergeActions(fThreads.getActions(), fMessage.getActions()))));
-    fMenu = builder.buildFrom("ui/menus.xml", this);
+    fMenu = builder.buildFrom("ui/grendel.xml", this);
 
     getRootPane().setJMenuBar(fMenu);
 
-    GrendelToolBar masterToolBar = fFolders.getToolBar();
-    GrendelToolBar folderToolBar = fThreads.getToolBar();
-    GrendelToolBar messageToolBar = fMessage.getToolBar();
+    JToolBar masterToolBar = fFolders.getToolBar();
+    JToolBar folderToolBar = fThreads.getToolBar();
+    JToolBar messageToolBar = fMessage.getToolBar();
 
 
     fToolBar = Util.MergeToolBars(masterToolBar,
@@ -200,7 +200,7 @@ class UnifiedMessageFrame extends GeneralFrame {
     fToolBarPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
     fToolBarPanelConstraints.anchor = GridBagConstraints.WEST;
     fToolBarPanel.setComponent(fToolBar);
-    fToolBar.add(fToolBar.makeNewSpring());
+    fToolBar.add(new Spring());
     fToolBarPanelConstraints.weightx = 1.0;
     fToolBarPanelConstraints.fill = GridBagConstraints.NONE;
     fToolBarPanelConstraints.gridwidth = GridBagConstraints.REMAINDER;

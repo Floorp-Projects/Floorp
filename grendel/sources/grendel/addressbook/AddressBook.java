@@ -274,7 +274,7 @@ public class AddressBook extends GeneralFrame {
     // (Jeff)
 
     XMLMenuBuilder builder = new XMLMenuBuilder(defaultActions);
-    mMenuBarCtrl = builder.buildFrom("ui/menus.xml", this);
+    mMenuBarCtrl = builder.buildFrom("ui/grendel.xml", this);
 
     JMenuItem aMenuItem = (JMenuItem)builder.getElementsAndIDs().get("sortAscending");
     if (aMenuItem != null) {

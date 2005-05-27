@@ -58,7 +58,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-//import javax.swing.JToolBar;
+import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.ToolTipManager;
 import javax.swing.event.ChangeEvent;
@@ -438,7 +438,7 @@ public class FolderPanel extends GeneralPanel {
    * Returns the toolbar associated with this panel.
    */
 
-  public GrendelToolBar getToolBar() {
+  public JToolBar getToolBar() {
     return buildToolBar("folderToolBar", getActions());
   }
 

@@ -52,7 +52,7 @@ import javax.swing.JTextPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-//import javax.swing.JToolBar;
+import javax.swing.JToolBar;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.EventListenerList;
@@ -161,7 +161,7 @@ public class MessagePanel extends GeneralPanel {
    * Returns the toolbar associated with this panel.
    */
 
-  public GrendelToolBar getToolBar() {
+  public JToolBar getToolBar() {
     return buildToolBar("messageToolBar", fActions);
   }
 

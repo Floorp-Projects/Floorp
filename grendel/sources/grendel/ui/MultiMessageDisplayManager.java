@@ -45,6 +45,9 @@ import javax.swing.tree.TreePath;
 
 import com.trfenv.parsers.Event;
 
+/**
+ *Main Grendel window
+ */
 public class MultiMessageDisplayManager extends MessageDisplayManager {
   MasterFrame     fMasterFrame;
 
@@ -138,7 +141,7 @@ class MasterFrame extends GeneralFrame {
     fPanel.add(fMasterPanel);
     //    fMenu = buildMenu("masterMain", actions);
     XMLMenuBuilder builder = new XMLMenuBuilder(actions);
-    fMenu = builder.buildFrom("ui/menus.xml", this);
+    fMenu = builder.buildFrom("ui/grendel.xml", this);
     getRootPane().setJMenuBar(fMenu);
 
     fToolBar = fMasterPanel.getToolBar();

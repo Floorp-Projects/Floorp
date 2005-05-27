@@ -46,7 +46,7 @@ import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
-//import javax.swing.JToolBar;
+import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 
 import grendel.widgets.GrendelToolBar;
@@ -138,8 +138,8 @@ public class Util {
     return res;
   }
 
-  static public GrendelToolBar MergeToolBars(GrendelToolBar aBar1, GrendelToolBar aBar2) {
-    GrendelToolBar res = new GrendelToolBar();
+  static public JToolBar MergeToolBars(JToolBar aBar1, JToolBar aBar2) {
+    JToolBar res = new JToolBar();
 
     Component barArray1[] = aBar1.getComponents();
     Component barArray2[] = aBar2.getComponents();
@@ -151,6 +151,9 @@ public class Util {
     }
 
     while (i < count1) {
+      if (!(barArray1[i] instanceof JButton))
+        continue;
+
       JButton button1 = (JButton) barArray1[i];
       if (j < count2) {
         JButton button2 = (JButton) barArray2[j];

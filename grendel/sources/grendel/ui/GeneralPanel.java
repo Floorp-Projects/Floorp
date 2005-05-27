@@ -46,8 +46,13 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JButton;
+import javax.swing.JToolBar;
 
 import com.trfenv.parsers.Event;
+import com.trfenv.parsers.xul.XulParser;
+
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 public class GeneralPanel extends JPanel {
   private final boolean DEBUG = false;
@@ -57,7 +62,7 @@ public class GeneralPanel extends JPanel {
   static Clipboard fPrivateClipboard = new Clipboard("Grendel");
 
   protected String         fResourceBase = "grendel.ui";
-  protected GrendelToolBar fToolBar;
+  protected JToolBar fToolBar;
 
   public GeneralPanel() {
     setLayout(new BorderLayout());
@@ -68,56 +73,18 @@ public class GeneralPanel extends JPanel {
     return null;
   }
 
-  protected GrendelToolBar buildToolBar(String aToolbar, Event[] aActions) {
-    GrendelToolBar res = null;
+  protected JToolBar buildToolBar(String aToolbar, Event[] aActions) {
+    XulParser curParser = new XulParser(aActions, null);
+    Document doc = curParser.makeDocument("ui/grendel.xml");
+    Element toolbar = (Element)doc.getDocumentElement().getElementsByTagName("toolbar").
+        item(0);
 
-    Hashtable commands = new Hashtable();
-    for (int i = 0; i < aActions.length; i++)
-        {
-           Event a = aActions[i];
-           String name = a.getName();
-           commands.put(name, a);
-        }
+    JToolBar newToolbar = (JToolBar)curParser.parseTag(this, toolbar);
 
-
-    try {
-      res = new GrendelToolBar();
-
-      ResourceBundle toolbarresources = ResourceBundle.getBundle(fResourceBase + ".Toolbar");
-      ResourceBundle menuresources = ResourceBundle.getBundle(fResourceBase + ".Menus");
-      String toolbar = menuresources.getString(aToolbar);
-      StringTokenizer tokens = new StringTokenizer(toolbar, " ", false);
-      while (tokens.hasMoreTokens()) {
-        String token = tokens.nextToken();
-        if (DEBUG) {
-          System.out.println("Local token = " + token);
-        }
-        Event action = (Event)commands.get(token);
-        String icon = toolbarresources.getString(token + "Icon");
-        String label = toolbarresources.getString(token + "Label");
-        String tooltip = toolbarresources.getString(token + "Tooltip");
-
-        res.addButton(action, icon, label, tooltip);
-      }
-    } catch (MissingResourceException e) {
-      System.err.println(e);
-    }
-
-    if (DEBUG) {
-      System.out.println("Toolbar status:");
-      if (res == null) {
-        System.out.println("\tbuildToolBar failed.");
-      }
-      else {
-        System.out.println("\tbuildToolBar succeeded.");
-        System.out.println("\tGrendelToolBar res contains " + res.getComponentCount() + " components.");
-      }
-    }
-
-    return res;
+    return newToolbar;
   }
 
-  public GrendelToolBar getToolBar() {
+  public JToolBar getToolBar() {
     return fToolBar;
   }
 }

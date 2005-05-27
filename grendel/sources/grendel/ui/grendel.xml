@@ -38,6 +38,8 @@
 <!DOCTYPE window [
 <!ENTITY % menuLabelsDTD SYSTEM "MenuLabels.dtd" >
 %menuLabelsDTD;
+<!ENTITY % toolbarDTD SYSTEM "Toolbar.dtd" >
+%toolbarDTD;
 ]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -143,5 +145,17 @@
   </menu>
 
   </menubar>
+
+  <toolbar>
+    <toolbarbutton label="&toolbar.msgGetNewLabel;" onclick="msgGetNew" tooltiptext="&msgGetNewTooltip;" image="widgets/toolbar/mozilla/getmsg.png"/>
+    <toolbarbutton label="&toolbar.msgNewLabel;" onclick="msgNew" tooltiptext="&msgNewTooltip;" image="widgets/toolbar/mozilla/newmsg.png"/>
+    <toolbarbutton label="&toolbar.msgReplyLabel;" onclick="msgReply" tooltiptext="&msgReplyTooltip;" image="widgets/toolbar/mozilla/reply.png"/>
+    <toolbarbutton label="&toolbar.msgReplyAllLabel;" onclick="msgReplyAll" tooltiptext="&msgReplyAllTooltip;" image="widgets/toolbar/mozilla/replyall.png"/>
+    <toolbarbutton label="&toolbar.fwdInlineLabel;" onclick="fwdInline" tooltiptext="&fwdInlineTooltip;" image="widgets/toolbar/mozilla/forward.png"/>
+    <toolbarbutton label="&toolbar.markAllReadLabel;" onclick="markAllRead" tooltiptext="&markAllReadTooltip;" image="widgets/toolbar/mozilla/readall.png"/>
+    <toolbarbutton label="&toolbar.msgDeleteLabel;" tooltiptext="&msgDeleteTooltip;" image="widgets/toolbar/mozilla/delete.png"/>
+    <toolbarbutton label="&toolbar.printLabel;" tooltiptext="&printTooltip;" image="widgets/toolbar/mozilla/print.png"/>
+    <toolbarbutton label="&toolbar.stopLabel;" tooltiptext="&stopTooltip;" image="widgets/toolbar/mozilla/stop.png"/>
+  </toolbar>
 
 </window>
