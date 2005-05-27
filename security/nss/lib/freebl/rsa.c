@@ -37,7 +37,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.35 2005/04/05 00:14:07 julien.pierre.bugs%sun.com Exp $
+ * $Id: rsa.c,v 1.36 2005/05/27 23:53:19 wtchang%redhat.com Exp $
  */
 
 #include "secerr.h"
@@ -65,6 +65,11 @@
 
 #define MAX_RSA_MODULUS  1024 /* bytes, 8k bits */
 #define MAX_RSA_EXPONENT    8 /* bytes, 64 bits */
+
+/* exponent should not be greater than modulus */
+#define BAD_RSA_KEY_SIZE(modLen, expLen) \
+    ((expLen) > (modLen) || (modLen) > MAX_RSA_MODULUS || \
+    (expLen) > MAX_RSA_EXPONENT)
 
 /*
 ** RSABlindingParamsStr
@@ -231,7 +236,8 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     RSAPrivateKey *key = NULL;
     PRArenaPool *arena = NULL;
     /* Require key size to be a multiple of 16 bits. */
-    if (!publicExponent || keySizeInBits % 16 != 0) {
+    if (!publicExponent || keySizeInBits % 16 != 0 ||
+	    BAD_RSA_KEY_SIZE(keySizeInBits/8, publicExponent->len)) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return NULL;
     }
@@ -334,8 +340,7 @@ RSA_PublicKeyOp(RSAPublicKey  *key,
     modLen = rsa_modulusLen(&key->modulus);
     expLen = rsa_modulusLen(&key->publicExponent);
     /* 1.  Obtain public key (n, e) */
-    if (expLen > modLen || modLen > MAX_RSA_MODULUS || expLen > MAX_RSA_EXPONENT) {
-	/* exponent should not be greater than modulus */
+    if (BAD_RSA_KEY_SIZE(modLen, expLen)) {
     	PORT_SetError(SEC_ERROR_INVALID_KEY);
 	rv = SECFailure;
 	goto cleanup;
