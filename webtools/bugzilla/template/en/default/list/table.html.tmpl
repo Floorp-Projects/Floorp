@@ -183,6 +183,10 @@
                column == 'remaining_time' ||
                column == 'estimated_time' %]
         [% PROCESS formattimeunit time_unit=bug.$column %] 
+      [% ELSIF column == 'bug_status' %]
+        [%- status_descs.${bug.$column}.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html %]
+      [% ELSIF column == 'resolution' %]
+        [%- resolution_descs.${bug.$column}.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html %]
       [% ELSE %]
         [%- bug.$column.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html -%]
       [% END %]
