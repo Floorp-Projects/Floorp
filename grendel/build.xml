@@ -48,6 +48,7 @@
       <copy todir="dist">
         <fileset dir="sources/grendel">
           <include name="**/*.gif"/>
+          <include name="**/*.png"/>
           <include name="**/*.jpg"/>
           <include name="**/*.tmpl"/>
           <include name="**/*.xml"/>
@@ -66,9 +67,10 @@
     </target>
 
     <target name="unzipResources">
-      <copy todir="dist/resources">
+      <copy todir="dist">
         <fileset dir="sources/grendel">
           <include name="**/*.gif"/>
+          <include name="**/*.png"/>
           <include name="**/*.jpg"/>
           <include name="**/*.tmpl"/>
           <include name="**/*.xml"/>
