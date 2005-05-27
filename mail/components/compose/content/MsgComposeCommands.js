@@ -1367,9 +1367,7 @@ function ComposeStartup(recycled, aParams)
           
           if (attachments.Count()) 
           {
-            var attachmentBox = document.getElementById("attachments-box");
-            attachmentBox.hidden = false;
-            document.getElementById("attachmentbucket-sizer").hidden=false; 
+            ChangeAttachmentBucketVisibility(false);
           }
       }
 
@@ -2456,14 +2454,12 @@ function AttachFile()
     var fileHandler = ioService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
     var currentAttachment = fileHandler.getURLSpecFromFile(currentFile);
 
+
     if (!DuplicateFileCheck(currentAttachment)) {
       var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
       attachment.url = currentAttachment;
       AddAttachment(attachment);
-      var attachmentBox = document.getElementById("attachments-box");
-      attachmentBox.hidden = false;
-      document.getElementById("attachmentbucket-sizer").hidden=false;
-
+      ChangeAttachmentBucketVisibility(false);
       gContentChanged = true;
     }
   }
@@ -2474,7 +2470,6 @@ function AddAttachment(attachment)
   if (attachment && attachment.url)
   {
     var bucket = document.getElementById("attachmentBucket");
-    var item = document.createElement("listitem");
 
     if (!attachment.name)
       attachment.name = gMsgCompose.AttachmentPrettyName(attachment.url, null);
@@ -2492,7 +2487,7 @@ function AddAttachment(attachment)
         attachment.name = sComposeMsgsBundle.getString("partAttachmentSafeName");
     }
 
-    item.setAttribute("label", attachment.name);    //use for display only
+    var item = bucket.appendItem(attachment.name, "");
     item.attachment = attachment;   //full attachment object stored here
     try {
       item.setAttribute("tooltiptext", decodeURI(attachment.url));
@@ -2522,8 +2517,6 @@ function AddAttachment(attachment)
       item.setAttribute("image", "moz-icon://" + url.fileName);
     else      
       item.setAttribute("image", "moz-icon:" + attachment.url);
-    
-    bucket.appendChild(item);
   }
 }
 
@@ -2538,7 +2531,7 @@ function MessageHasAttachments()
 {
   var bucketList = document.getElementById("attachmentBucket");
   if (bucketList) {
-    return (bucketList && bucketList.hasChildNodes() && (bucketList == top.document.commandDispatcher.focusedElement));
+    return (bucketList && bucketList.getRowCount() && (bucketList == top.document.commandDispatcher.focusedElement));
   }
   return false;
 }
@@ -2569,18 +2562,16 @@ function AttachPage()
         var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
         attachment.url = result.value;
         AddAttachment(attachment);
-        var attachmentBox = document.getElementById("attachments-box");
-        attachmentBox.hidden = false;
-        document.getElementById("attachmentbucket-sizer").hidden=false;
+        ChangeAttachmentBucketVisibility(false);
       }
    }
 }
 function DuplicateFileCheck(FileUrl)
 {
   var bucket = document.getElementById('attachmentBucket');
-  for (var index = 0; index < bucket.childNodes.length; index++)
+  for (var index = 0; index < bucket.getRowCount(); index++)
   {
-    var item = bucket.childNodes[index];
+    var item = bucket.getItemAtIndex(index);
     var attachment = item.attachment;
     if (attachment)
     {
@@ -2599,9 +2590,9 @@ function Attachments2CompFields(compFields)
   //First, we need to clear all attachment in the compose fields
   compFields.removeAttachments();
 
-  for (var index = 0; index < bucket.childNodes.length; index++)
+  for (var index = 0; index < bucket.getRowCount(); index++)
   {
-    var item = bucket.childNodes[index];
+    var item = bucket.getItemAtIndex(index);
     var attachment = item.attachment;
     if (attachment)
       compFields.addAttachment(attachment);
@@ -2612,15 +2603,20 @@ function RemoveAllAttachments()
 {
   var child;
   var bucket = document.getElementById("attachmentBucket");
-  while (bucket.hasChildNodes())
+  while (bucket.getRowCount())
   {
-    child = bucket.removeChild(bucket.lastChild);
+    child = bucket.removeItemAt(bucket.getRowCount() - 1);
     // Let's release the attachment object hold by the node else it won't go away until the window is destroyed
     child.attachment = null;
   }
   
-  document.getElementById("attachments-box").setAttribute("hidden", "true");
-  document.getElementById("attachmentbucket-sizer").setAttribute("hidden", "true");   
+  ChangeAttachmentBucketVisibility(true);
+}
+
+function ChangeAttachmentBucketVisibility(aHideBucket)
+{
+  document.getElementById("attachments-box").collapsed = aHideBucket;
+  document.getElementById("attachmentbucket-sizer").collapsed = aHideBucket;   
 }
 
 function RemoveSelectedAttachment()
@@ -2628,35 +2624,31 @@ function RemoveSelectedAttachment()
   var child;
   var bucket = document.getElementById("attachmentBucket");
   if (bucket.selectedItems.length > 0) {
-    for (var item = bucket.selectedItems.length - 1; item >= 0; item-- )
+    for (var index = bucket.selectedCount - 1; index >= 0; index-- )
     {
-      child = bucket.removeChild(bucket.selectedItems[item]);
-      // Let's release the attachment object hold by the node else it won't go away until the window is destroyed
+      child = bucket.removeItemAt(bucket.getIndexOfItem(bucket.getSelectedItem(index)));
+      // Let's release the attachment object held by the node else it won't go away until the window is destroyed
       child.attachment = null;
     }
     gContentChanged = true;
   }
 
   if (!MessageHasAttachments())
-  {                                                
-    document.getElementById("attachments-box").setAttribute("hidden", "true");
-    document.getElementById("attachmentbucket-sizer").setAttribute("hidden", "true");    
-  }
+    ChangeAttachmentBucketVisibility(true);
 }
 
 function FocusOnFirstAttachment()
 {
   var bucketList = document.getElementById("attachmentBucket");
 
-  if (bucketList && bucketList.hasChildNodes())
-    bucketTree.selectItem(bucketList.firstChild);
+  if (bucketList && bucketList.getRowCount())
+    bucketTree.selectedIndex(0);
 }
 
 function AttachmentElementHasItems()
 {
   var element = document.getElementById("attachmentBucket");
-
-  return element ? element.childNodes.length : 0;
+  return element ? element.getRowCount() : 0;
 }  
 
 function OpenSelectedAttachment()
@@ -3091,10 +3083,7 @@ var envelopeDragObserver = {
               attachment.url = rawData;
               attachment.name = prettyName;
               AddAttachment(attachment);
-  
-              var attachmentBox = document.getElementById("attachments-box");
-              attachmentBox.hidden = false;
-              document.getElementById("attachmentbucket-sizer").hidden=false;
+              ChangeAttachmentBucketVisibility(false);
             }
           }
         }
@@ -3113,11 +3102,8 @@ var envelopeDragObserver = {
       {
         // make sure the attachment box is visible during drag over
         var attachmentBox = document.getElementById("attachments-box");
-        if (attachmentBox.hidden)
-        {
-          attachmentBox.hidden = false;
-          document.getElementById("attachmentbucket-sizer").hidden=false;
-        }
+        if (attachmentBox.collapsed)
+          ChangeAttachmentBucketVisibility(false);
       }
       else
       {
