@@ -16,6 +16,7 @@
         {
             ACTIONS = {
                 addWhitelistSite = id; 
+                clickEnableAdBlocking = id; 
                 clickEnableAnnoyanceBlocker = id; 
                 clickEnableImageResizing = id; 
                 clickEnableJS = id; 
@@ -31,6 +32,7 @@
                 mAddButton = NSButton; 
                 mAddField = NSTextField; 
                 mEditWhitelist = NSButton; 
+                mEnableAdBlocking = NSButton; 
                 mEnableAnnoyanceBlocker = NSButton; 
                 mEnableJS = NSButton; 
                 mEnableJava = NSButton; 

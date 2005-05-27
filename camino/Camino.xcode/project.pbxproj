@@ -1742,6 +1742,7 @@
 				3F22CC1303DF42A200026DCE,
 				F56610A1039474CB01A9666E,
 				3003B8AB044514E300B85BF3,
+				3FFE23520847CB0D00D6CAFC,
 			);
 			isa = PBXGroup;
 			name = Resources;
@@ -3095,6 +3096,7 @@
 				0FFE0A83079B147F00966027,
 				3FFFEBDA081C2CC500843C07,
 				3FBDC8E00827C44B00D7F8E0,
+				3FFE23530847CB0D00D6CAFC,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6959,6 +6961,7 @@
 				3FBDC86108253C8C00D7F8E0,
 				3FBDC86208253C8C00D7F8E0,
 				3FBDC8E10827C44B00D7F8E0,
+				3FFE23540847CB0D00D6CAFC,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10824,6 +10827,27 @@
 		};
 		3FF71AE10710A6800081B5D7 = {
 			fileRef = 3FF71ADF0710A67F0081B5D7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FFE23520847CB0D00D6CAFC = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			name = ad_blocking.css;
+			path = resources/application/ad_blocking.css;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FFE23530847CB0D00D6CAFC = {
+			fileRef = 3FFE23520847CB0D00D6CAFC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FFE23540847CB0D00D6CAFC = {
+			fileRef = 3FFE23520847CB0D00D6CAFC;
 			isa = PBXBuildFile;
 			settings = {
 			};

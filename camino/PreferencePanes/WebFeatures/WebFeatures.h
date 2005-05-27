@@ -53,6 +53,7 @@ class nsISupportsArray;
   IBOutlet NSButton* mEnableJava;
 
   IBOutlet NSButton *mEnablePopupBlocking;
+  IBOutlet NSButton *mEnableAdBlocking;
   IBOutlet NSButton *mImageResize;
   IBOutlet NSButton *mEditWhitelist;
   
@@ -71,6 +72,7 @@ class nsISupportsArray;
 -(IBAction) clickEnableJava:(id)sender;
 
 -(IBAction) clickEnablePopupBlocking:(id)sender;
+-(IBAction) clickEnableAdBlocking:(id)sender;
 -(IBAction) clickEnableImageResizing:(id)sender;
 -(IBAction) editWhitelist:(id)sender;
 

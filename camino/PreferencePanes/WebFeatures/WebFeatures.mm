@@ -48,11 +48,17 @@
 #include "nsISupportsArray.h"
 #include "nsString.h"
 #include "nsIURI.h"
+#include "nsIFile.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsNetUtil.h"
 
 // we should really get this from "CHBrowserService.h",                         
 // but that requires linkage and extra search paths.                            
 static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";              
+
+@interface OrgMozillaChimeraPreferenceWebFeatures(PRIVATE)
+-(NSString*)profilePath;
+@end
 
 @implementation OrgMozillaChimeraPreferenceWebFeatures
 
@@ -106,7 +112,14 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
   // set initial value on image-resizing
   BOOL enableImageResize = [self getBooleanPref:"browser.enable_automatic_image_resizing" withSuccess:&gotPref];
   [mImageResize setState:enableImageResize];
-  
+
+  // check if userContent.css is in the profile. Yes, this will give false positives if the
+  // user has made their own, but that's their problem. 
+  NSString* adBlockFile = [[[self profilePath] stringByAppendingPathComponent:@"chrome"] 
+                            stringByAppendingPathComponent:@"userContent.css"];
+  BOOL enableAdBlock = [[NSFileManager defaultManager] fileExistsAtPath:adBlockFile]; 
+  [mEnableAdBlocking setState:enableAdBlock];
+
   // store permission manager service and cache the enumerator.
   nsCOMPtr<nsIPermissionManager> pm ( do_GetService(NS_PERMISSIONMANAGER_CONTRACTID) );
   mManager = pm.get();
@@ -132,6 +145,26 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
 -(IBAction) clickEnableJava:(id)sender
 {
   [self setPref:"security.enable_java" toBoolean:[sender state] == NSOnState];
+}
+
+//
+// -clickEnableAdBlocking:
+//
+// Enable and disable ad blocking via a userContent.css file that we provide in our
+// package, copied into the user's profile.
+//
+- (IBAction)clickEnableAdBlocking:(id)sender
+{
+  NSString* adBlockFileInProfile = [[[self profilePath] stringByAppendingPathComponent:@"chrome"] 
+                                        stringByAppendingPathComponent:@"userContent.css"];
+  if ([sender state]) {
+    NSString* sourcePath = [[NSBundle mainBundle] pathForResource:@"ad_blocking" ofType:@"css"];
+    [[NSFileManager defaultManager] removeFileAtPath:adBlockFileInProfile handler:nil];
+    [[NSFileManager defaultManager] copyPath:sourcePath toPath:adBlockFileInProfile handler:nil];
+  }
+  else {
+    [[NSFileManager defaultManager] removeFileAtPath:adBlockFileInProfile handler:nil];
+  }
 }
 
 //
@@ -346,4 +379,25 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
     [self setPref:"dom.disable_window_status_change" toBoolean:inValue];
     [self setPref:"dom.disable_window_flip" toBoolean:inValue];
 }
+
+//
+// -profilePath
+//
+// Returns the path for our post 0.8 profiles stored in Application Support/Camino.
+// Copied from the pref manager which we can't use w/out compiling it into our bundle.
+//
+- (NSString*) profilePath
+{
+  nsCOMPtr<nsIFile> appSupportDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR,
+                                       getter_AddRefs(appSupportDir));
+  if (NS_FAILED(rv))
+    return nil;
+  nsCAutoString nativePath;
+  rv = appSupportDir->GetNativePath(nativePath);
+  if (NS_FAILED(rv))
+    return nil;
+  return [NSString stringWithUTF8String:nativePath.get()];
+}
+
 @end
