@@ -2923,7 +2923,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     macEvent.modifiers = ::GetCurrentKeyModifiers();
 }
 
-- (nsRect)sendCompositionEvent:(PRInt32) aEventType;
+- (nsRect)sendCompositionEvent:(PRInt32) aEventType
 {
 #ifdef DEBUG_IME
   NSLog(@"****in sendCompositionEvent; type = %d\n", aEventType);
@@ -2959,9 +2959,10 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 }
 
 #define MAX_BUFFER_SIZE 32
+
 // NSTextInput implementation
 
-- (void)insertText:(id)insertString;
+- (void)insertText:(id)insertString
 {
 #if DEBUG_IME
   NSLog(@"****in insertText: %@\n", insertString);
@@ -3027,12 +3028,12 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   // dummy impl, does nothing (other than stop the beeping when hitting return)
 }
 
-- (void) doCommandBySelector:(SEL)aSelector;
+- (void) doCommandBySelector:(SEL)aSelector
 {
   [super doCommandBySelector:aSelector];
 }
 
-- (void) setMarkedText:(id)aString selectedRange:(NSRange)selRange;
+- (void) setMarkedText:(id)aString selectedRange:(NSRange)selRange
 {
 #if DEBUG_IME 
   NSLog(@"****in setMarkedText location: %d, length: %d\n", selRange.location, selRange.length);
@@ -3082,7 +3083,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     delete[] bufPtr;
 }
 
-- (void) unmarkText;
+- (void) unmarkText
 {
 #if DEBUG_IME
   NSLog(@"****in unmarkText\n");
@@ -3097,17 +3098,17 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   }
 }
 
-- (BOOL) hasMarkedText;
+- (BOOL) hasMarkedText
 {
   return mMarkedRange.location != NSNotFound && mMarkedRange.length != 0;
 }
 
-- (long) conversationIdentifier;
+- (long) conversationIdentifier
 {
   return (long)self;
 }
 
-- (NSAttributedString *) attributedSubstringFromRange:(NSRange)theRange;
+- (NSAttributedString *) attributedSubstringFromRange:(NSRange)theRange
 {
 #if DEBUG_IME
   NSLog(@"****in attributedSubstringFromRange\n");
@@ -3132,7 +3133,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   return NULL;
 }
 
-- (NSRange) markedRange;
+- (NSRange) markedRange
 {
 #if DEBUG_IME
   NSLog(@"****in markedRange\n");
@@ -3147,7 +3148,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   return mMarkedRange;
 }
 
-- (NSRange) selectedRange;
+- (NSRange) selectedRange
 {
 #if DEBUG_IME
   NSLog(@"****in selectedRange\n");
@@ -3159,7 +3160,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 }
 
 
-- (NSRect) firstRectForCharacterRange:(NSRange)theRange;
+- (NSRect) firstRectForCharacterRange:(NSRange)theRange
 {
 #if DEBUG_IME
   NSLog(@"****in firstRectForCharacterRange\n");
@@ -3189,7 +3190,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 }
 
 
-- (unsigned int)characterIndexForPoint:(NSPoint)thePoint;
+- (unsigned int)characterIndexForPoint:(NSPoint)thePoint
 {
 #if DEBUG_IME
   NSLog(@"****in characterIndexForPoint\n");
@@ -3201,7 +3202,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   return 0;
 }
 
-- (NSArray*) validAttributesForMarkedText;
+- (NSArray*) validAttributesForMarkedText
 {
 #if DEBUG_IME
   NSLog(@"****in validAttributesForMarkedText\n");
@@ -3220,7 +3221,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 //
 // NOTE: diacriticals (opt-e, e) aren't fully handled.
 //
-- (void)keyDown:(NSEvent*)theEvent;
+- (void)keyDown:(NSEvent*)theEvent
 {
   PRBool isKeyDownEventHandled = PR_TRUE;
   PRBool isKeyEventHandled = PR_FALSE;
@@ -3313,7 +3314,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   mCurEvent = NULL;
 }
 
-- (void)keyUp:(NSEvent*)theEvent;
+- (void)keyUp:(NSEvent*)theEvent
 {
   // if we don't have any characters we can't generate a keyUp event
   if (0 == [[theEvent characters] length])
