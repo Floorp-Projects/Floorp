@@ -42,7 +42,6 @@
 // calDavCalendar.js
 //
 
-
 // XXXdmose need to make and use better error reporting interface for webdav
 // (all uses of aStatusCode, probably)
 
@@ -68,7 +67,6 @@ function debug(s) {
 function calDavCalendar() {
     this.wrappedJSObject = this;
     this.mObservers = [ ];
-    this.mItems = { };
 }
 
 // some shorthand
@@ -252,6 +250,9 @@ calDavCalendar.prototype = {
             return;
         }
 
+        // XXX need to populate this correctly
+        var oldItem = null;
+
         var eventUri = this.mUri.clone();
         try {
             eventUri.spec = aItem.getProperty("locationURI");
@@ -280,8 +281,8 @@ calDavCalendar.prototype = {
                 // XXX deal with non-existent item here, other
                 // real error handling
 
-                // XXX aStatusCode will be 201 Created for a PUT on an item that
-                // didn't exist before.
+                // XXX aStatusCode will be 201 Created for a PUT on an item
+                // that didn't exist before.
 
                 retVal = Components.results.NS_ERROR_FAILURE;
             }
@@ -289,15 +290,16 @@ calDavCalendar.prototype = {
             // XXX ensure immutable version returned
             // notify listener
             if (aListener) {
-                aListener.onOperationComplete (savedthis, retVal,
-                                               aListener.MODIFY, aItem.id,
-                                               aItem);
+                aListener.onOperationComplete(savedthis, retVal,
+                                              aListener.MODIFY, aItem.id,
+                                              aItem);
             }
 
-            // XXX only if retVal is successn
             // notify observers
-            // XXX modified item should be first arg
-            savedthis.observeModifyItem(null, aItem);
+            if (Components.isSuccessCode(retVal)) {
+                // XXX old item should be second arg
+                savedthis.observeModifyItem(aItem, oldItem);
+            }
 
             return;
         }
@@ -415,6 +417,7 @@ calDavCalendar.prototype = {
     {
         var reportListener = new WebDavListener();
         var count = 0;  // maximum number of hits to return
+        var thisCalendar = this; // need to access from inside the callback
 
         reportListener.onOperationDetail = function(aStatusCode, aResource,
                                                     aOperation, aDetail,
@@ -449,7 +452,6 @@ calDavCalendar.prototype = {
                     ['@mozilla.org/xmlextras/xmlserializer;1']
                     .getService(Components.interfaces.nsIDOMSerializer);
                 var response = xSerializer.serializeToString(aDetail);
-                debug("response = " + response + "\n");
                 var responseElement = new XML(response);
 
                 // create calIItemBase from e4x object
@@ -463,14 +465,14 @@ calDavCalendar.prototype = {
 
                 // cause returned data to be parsed into the event item
                 var calData = responseElement..C::["calendar-data"];
-                if (calData.length = 0) {
+                if (calData.length == 0) {
                     debug("server returned empty or non-existing "
                           + "calendar-data element!\n");
                 }
-                debug("ITEM RESULT: '" + calData + "'\n");
+                debug("item result = \n" + calData + "\n");
                 // XXX try-catch
                 item.icalString = calData;
-                item.parent = this;
+                item.parent = thisCalendar;
 
                 // save the location name in case we need to modify
                 item.setProperty("locationURI", aResource.spec);
@@ -484,8 +486,9 @@ calDavCalendar.prototype = {
                         debug("rangestart: " + aRangeStart.jsDate + " -> " + aRangeEnd.jsDate + "\n");
                         items = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, 0, {});
                     } else {
-                        item = makeOccurrence(item, item.startDate, item.endDate);
-                        items = [ item ];
+                        var occ = makeOccurrence(item, item.startDate,
+                                                 item.endDate);
+                        items = [ occ ];
                     }
                     rv = Components.results.NS_OK;
                 } else if (item.QueryInterface(calIEvent)) {
@@ -508,7 +511,10 @@ calDavCalendar.prototype = {
             }
 
             // XXX  handle aCount
-            debug("errString = " + errString + "\n");
+            if (errString) {
+                debug("errString = " + errString + "\n");
+            }
+
             if (items) {
                 aListener.onGetResult(this, rv, iid, null, items ? items.length : 0,
                                       errString ? errString : items);
@@ -634,7 +640,8 @@ calDavCalendar.prototype = {
         // XXX aItemFilter
 
         var queryString = queryXml.toXMLString();
-        debug("queryString = " + queryString + "\n");
+        debug("getItems(): querying CalDAV server for events\n");
+
         var occurrences = (aItemFilter &
                            calICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0; 
         this.reportInternal(queryString, occurrences, aRangeStart, aRangeEnd, aCount, aListener);
