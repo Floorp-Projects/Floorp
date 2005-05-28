@@ -138,6 +138,7 @@ public class Util {
 
   static public JToolBar MergeToolBars(JToolBar aBar1, JToolBar aBar2) {
     JToolBar res = new JToolBar();
+    res.setFloatable(false);
 
     Component barArray1[] = aBar1.getComponents();
     Component barArray2[] = aBar2.getComponents();
