@@ -55,7 +55,7 @@ var agendaTreeView = {
     todayCount: 0,
     tomorrowCount: 0,
     soonCount: 0,
-    prevRowCount: 0,
+    prevRowCount: 0
 };
 
 agendaTreeView.addEvents =
@@ -285,7 +285,7 @@ function calendarUpdateComplete()
 
 agendaTreeView.calendarOpListener =
 {
-    agendaTreeView: agendaTreeView,
+    agendaTreeView: agendaTreeView
 };
 
 agendaTreeView.calendarOpListener.onOperationComplete =
@@ -352,7 +352,7 @@ function refreshPeriodDates()
 };
 
 agendaTreeView.calendarObserver = {
-    agendaTreeView: agendaTreeView,
+    agendaTreeView: agendaTreeView
 };
 
 agendaTreeView.calendarObserver.onAddItem =
