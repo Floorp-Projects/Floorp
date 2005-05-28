@@ -222,7 +222,7 @@ function updateAlarm()
     var alarmMenu = document.getElementById("event-alarm");
     var alarmItem = alarmMenu.selectedItem;
 
-    alarmItemValue = alarmItem.getAttribute("value");
+    var alarmItemValue = alarmItem.getAttribute("value");
     switch (alarmItemValue) {
     case "custom":
         /* restore old values if they're around */
