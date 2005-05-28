@@ -216,6 +216,7 @@
 
     <handlers>
       <handler event="mousedown" button="0"><![CDATA[
+        event.preventBubble();
         var whichside = this.getAttribute("whichside");
         if (!whichside)
             return;
@@ -227,7 +228,6 @@
         evbox.calendarView.selectedOccurrence = evbox.mOccurrence;
         // then start dragging it
         evbox.parentColumn.startSweepingToModifyEvent(evbox, evbox.mOccurrence, whichside, event.screenX, event.screenY);
-        event.preventBubble();
       ]]></handler>
     </handlers>
   </binding>
@@ -1245,11 +1245,11 @@
 
     <handlers>
       <handler event="mousedown"><![CDATA[
+        event.preventBubble();
         this.calendarView.selectedOccurrence = this.mOccurrence;
 
         if (this.mOccurrence.item.recurrenceInfo) {
             // XXXvv can't drag recurring events yet, FIXME
-            event.preventBubble();
             return;
         }
 
@@ -1257,7 +1257,6 @@
         this.mMouseX = event.screenX;
         this.mMouseY = event.screenY;
         this.mMouseTime = event.timeStamp;
-        event.preventBubble();
       ]]></handler>
 
       <handler event="mousemove"><![CDATA[
@@ -1279,10 +1278,11 @@
       ]]></handler>
 
       <handler event="dblclick"><![CDATA[
+        event.preventBubble();
         if (this.calendarView.controller && this.mOccurrence) {
             this.calendarView.controller.modifyOccurrence(this.mOccurrence);
         }
-        event.preventBubble();
+
       ]]></handler>
     </handlers>
   </binding>
@@ -1424,7 +1424,7 @@
 
             onDefaultCalendarChanged: function (aNewDefaultCalendar) {
                 // don't care, for now
-            },
+            }
         })
       ]]></field>
 
