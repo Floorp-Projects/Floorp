@@ -86,7 +86,6 @@ import grendel.widgets.ColumnModel;
 import grendel.widgets.ColumnModelEvent;
 import grendel.widgets.ColumnModelListener;
 import grendel.widgets.DefaultCellRenderer;
-import grendel.widgets.GrendelToolBar;
 import grendel.widgets.SelectionEvent;
 import grendel.widgets.SelectionListener;
 import grendel.widgets.SelectionManager;
@@ -126,37 +125,37 @@ public class FolderPanel extends GeneralPanel {
    * The Sender column ID
    */
 
-  public static final String  kSenderID = new String("sender");
+  public static final String  kSenderID = "sender";
 
   /**
    * The Subject column ID
    */
 
-  public static final String  kSubjectID = new String("subject");
+  public static final String  kSubjectID = "subject";
 
   /**
    * The Date column ID
    */
 
-  public static final String  kDateID = new String("date");
+  public static final String  kDateID = "date";
 
   /**
    * The read column ID
    */
 
-  public static final String  kReadID = new String("read");
+  public static final String  kReadID = "read";
 
   /**
    * The flag column ID
    */
 
-  public static final String  kFlagID = new String("flag");
+  public static final String  kFlagID = "flag";
 
   /**
    * The Deleted (X) column ID
    */
 
-  public static final String  kDeletedID = new String("deleted");
+  public static final String  kDeletedID = "deleted";
 
   /**
    * The individual message scope

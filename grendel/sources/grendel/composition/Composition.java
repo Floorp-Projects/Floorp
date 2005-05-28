@@ -37,16 +37,19 @@ import javax.swing.event.*;
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
 import grendel.widgets.Animation;
-import grendel.widgets.GrendelToolBar;
+import grendel.ui.ActionFactory;
 import grendel.ui.FolderPanel;
 import grendel.ui.GeneralFrame;
 import grendel.ui.StoreFactory;
 import grendel.ui.XMLMenuBuilder;
+import grendel.ui.Util;
 
 import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
+
+import com.trfenv.parsers.Event;
 
 /**
  *
@@ -85,7 +88,8 @@ public class Composition extends GeneralFrame {
         mCompositionPanel.addCompositionPanelListener(new PanelListener());
 
         //create menubar (top)
-        XMLMenuBuilder builder = new XMLMenuBuilder(mCompositionPanel.getActions());
+        XMLMenuBuilder builder = new XMLMenuBuilder(
+          Util.MergeActions(mCompositionPanel.getActions(), ActionFactory.prefEvents()));
         fMenu = builder.buildFrom("ui/grendel.xml", (JFrame)this);
 
         getRootPane().setJMenuBar(fMenu);

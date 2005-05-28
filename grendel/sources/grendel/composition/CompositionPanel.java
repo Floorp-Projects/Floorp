@@ -61,6 +61,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextArea;
+import javax.swing.JToolBar;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.EventListenerList;
@@ -89,9 +90,11 @@ import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
 import grendel.ui.ActionFactory;
 import grendel.ui.GeneralPanel;
-import grendel.widgets.GrendelToolBar;
 
 import com.trfenv.parsers.Event;
+import com.trfenv.parsers.xul.XulParser;
+
+import org.w3c.dom.Element;
 
 public class CompositionPanel extends GeneralPanel {
   private Hashtable       mCommands;
@@ -923,26 +926,20 @@ public class CompositionPanel extends GeneralPanel {
    * Create a Toolbar
    * @see addToolbarButton
    */
-  private GrendelToolBar createToolbar() {
+  private JToolBar createToolbar() {
 
-    GrendelToolBar toolBar = new GrendelToolBar();
+    Event[] toolbarEvents = {
+      new SendNow(), new SelectAddresses(), new AttachFile(), new SaveDraft()
+    };
 
-    toolBar.addButton( new SendNow(),
-                     "send",       "Send",     "Send this message");
-    toolBar.addButton( new SelectAddresses(),
-                     "address",    "Address",  "Address this message");
-    toolBar.addButton( new AttachFile(),
-                     "attach",     "Attach",   "Include an attachment");
-    toolBar.addButton( null,
-                     "spelling",   "Spelling", "Check Spelling");
-    toolBar.addButton( new SaveDraft(),
-                     "save",       "Save",     "Save this message as a draft");
-    toolBar.addButton( null,
-                     "print",      "Print",    "Print this message");
-    toolBar.addButton( null,
-                     "stop",       "Stop",     "Stop the current Transfer (ESC)" );
+    XulParser curParser = new XulParser(toolbarEvents, null);
+    org.w3c.dom.Document doc = curParser.makeDocument("ui/composition.xml");
+    Element toolbar = (Element)doc.getDocumentElement().getElementsByTagName("toolbar").
+        item(0);
 
-    return toolBar;
+    JToolBar newToolbar = (JToolBar)curParser.parseTag(this, toolbar);
+
+    return newToolbar;
   }
 
 

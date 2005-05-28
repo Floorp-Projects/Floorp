@@ -39,9 +39,6 @@ import java.util.ResourceBundle;
 import javax.swing.JFrame;
 import javax.swing.ToolTipManager;
 
-//import netscape.orion.uimanager.AbstractUICmd;
-//import netscape.orion.uimanager.IUICmd;
-
 import grendel.prefs.base.UIPrefs;
 import grendel.prefs.ui.Identities;
 import grendel.prefs.ui.Servers;
@@ -75,6 +72,8 @@ public class ActionFactory {
   static RunGeneralPrefsAction fRunGeneralPrefsAction = new RunGeneralPrefsAction();
   static RunUIPrefsAction fRunUIPrefsAction = new RunUIPrefsAction();
   static ShowAddressBookAction fShowAddressBookAction = new ShowAddressBookAction();
+
+  private static Event[] prefEvents;
 
   static int fIdent = 0;
 
@@ -140,6 +139,20 @@ public class ActionFactory {
 
   static public ShowAddressBookAction GetShowAddressBookAction() {
     return fShowAddressBookAction;
+  }
+
+  /**
+   *Returns an array of all the preferences events. Used in windows that
+   *don't automatically have the preferences events supplied to them.
+   */
+  public static Event[] prefEvents() {
+    if (prefEvents == null) {
+      prefEvents = new Event[] {
+        ActionFactory.GetRunGeneralPrefsAction(), ActionFactory.GetRunIdentityPrefsAction(),
+        ActionFactory.GetRunServerPrefsAction(), ActionFactory.GetRunUIPrefsAction()
+      };
+    }
+    return prefEvents;
   }
 }
 

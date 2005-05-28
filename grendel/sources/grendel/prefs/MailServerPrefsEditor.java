@@ -63,15 +63,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
-//import netscape.orion.dialogs.AbstractCtrl;
-//import netscape.orion.dialogs.AttrNotFoundException;
-//import netscape.orion.dialogs.JLISTeditor;
-//import netscape.orion.dialogs.PageModel;
-//import netscape.orion.dialogs.PageUI;
-
-//import xml.tree.XMLNode;
-//import xml.tree.TreeBuilder;
-
 import grendel.ui.EditHostDialog;
 import grendel.ui.Util;
 import grendel.ui.PageModel;

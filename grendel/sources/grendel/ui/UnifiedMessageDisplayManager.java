@@ -53,7 +53,6 @@ import javax.mail.MessagingException;
 import grendel.prefs.base.InvisiblePrefs;
 import grendel.prefs.base.UIPrefs;
 import grendel.view.ViewedMessage;
-import grendel.widgets.GrendelToolBar;
 import grendel.widgets.Spring;
 import grendel.widgets.StatusEvent;
 import javax.swing.tree.TreePath;

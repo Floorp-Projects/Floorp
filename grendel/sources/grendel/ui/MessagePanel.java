@@ -71,7 +71,6 @@ import grendel.mime.parser.MimeParserFactory;
 import grendel.mime.html.MimeHTMLOperatorFactory;
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
-import grendel.widgets.GrendelToolBar;
 
 import grendel.widgets.StatusEvent;
 

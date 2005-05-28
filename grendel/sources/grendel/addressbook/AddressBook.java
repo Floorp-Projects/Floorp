@@ -56,7 +56,7 @@ public class AddressBook extends GeneralFrame {
   //   private ACS_Personal      myLocalAddressBook;
 
   private JMenuBar          mMenuBarCtrl;
-  private GrendelToolBar    mTtoolbar;
+  private JToolBar          mTtoolbar;
   //    private Component       mStatusbar;
   private JTable            mTable;
   private JButton           mSearchButton;
@@ -694,9 +694,9 @@ public class AddressBook extends GeneralFrame {
    * Create a Toolbar
    * @see addToolbarButton
    */
-  private GrendelToolBar createToolbar() {
+  private JToolBar createToolbar() {
 
-    GrendelToolBar toolBar = new GrendelToolBar();
+    JToolBar toolBar = new JToolBar();
     addToolbarButton(toolBar, new NewCard(),     "moz-newcard.gif",       "Create a new card");
     addToolbarButton(toolBar, null,     "moz-newlist.gif",       "Create a new list");
     addToolbarButton(toolBar, null,     "moz-properties.gif",    "Edit the selected card");
@@ -716,7 +716,7 @@ public class AddressBook extends GeneralFrame {
    * @param aToolTip The buttons tool tip. like "Save the current file".
    * @see createToolbar
    */
-  public void addToolbarButton(GrendelToolBar aToolBar,
+  public void addToolbarButton(JToolBar aToolBar,
                                Event aActionListener,
                                String aImageName, String aToolTip) {
     JButton b = new JButton();

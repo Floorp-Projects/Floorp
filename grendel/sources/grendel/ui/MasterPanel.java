@@ -90,7 +90,6 @@ import grendel.widgets.ColumnHeader;
 import grendel.widgets.ColumnModel;
 import grendel.widgets.ColumnChangeListener;
 import grendel.widgets.DefaultCellRenderer;
-import grendel.widgets.GrendelToolBar;
 import grendel.widgets.SelectionEvent;
 import grendel.widgets.SelectionListener;
 import grendel.widgets.SelectionManager;

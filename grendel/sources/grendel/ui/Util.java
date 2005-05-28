@@ -49,8 +49,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 
-import grendel.widgets.GrendelToolBar;
-
 import com.trfenv.parsers.Event;
 
 public class Util {

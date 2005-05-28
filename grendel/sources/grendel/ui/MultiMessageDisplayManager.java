@@ -139,7 +139,7 @@ class MasterFrame extends GeneralFrame {
     fMasterPanel = new MasterPanel();
     fMasterPanel.addMasterPanelListener(new FolderSelectionListener());
     fPanel.add(fMasterPanel);
-    //    fMenu = buildMenu("masterMain", actions);
+
     XMLMenuBuilder builder = new XMLMenuBuilder(actions);
     fMenu = builder.buildFrom("ui/grendel.xml", this);
     getRootPane().setJMenuBar(fMenu);
