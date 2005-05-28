@@ -100,7 +100,8 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 }
 
 // sets up the tree and sorts it
-- (id)initWithDataSource:(HistoryDataSource*)inDataSource items:(NSArray*)items sortSelector:(SEL)sortSelector descending:(BOOL)descending;
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource sortSelector:(SEL)sortSelector descending:(BOOL)descending;
+- (void)buildTree;
 
 - (HistoryItem*)rootItem;
 - (HistoryItem*)addItem:(HistorySiteItem*)item;
@@ -158,6 +159,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 - (void)rebuildSearchResults;
 - (void)sortSearchResults;
 
+- (NSArray*)historyItems;
 - (HistorySiteItem*)itemWithIdentifier:(NSString*)identifier;
 - (NSString*)relativeDataStringForDate:(NSDate*)date;
 
@@ -203,15 +205,13 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 
 @implementation HistoryTreeBuilder
 
-- (id)initWithDataSource:(HistoryDataSource*)inDataSource items:(NSArray*)items sortSelector:(SEL)sortSelector descending:(BOOL)descending
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource sortSelector:(SEL)sortSelector descending:(BOOL)descending
 {
   if ((self = [super init]))
   {
     mDataSource     = inDataSource;    // not retained
     mSortSelector   = sortSelector;
     mSortDescending = descending;
-
-    [self buildTreeWithItems:items];
   }
   return self;
 }
@@ -220,6 +220,11 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 {
   [mRootItem release];
   [super dealloc];
+}
+
+- (void)buildTree
+{
+  [self buildTreeWithItems:[mDataSource historyItems]];
 }
 
 - (HistoryItem*)rootItem
@@ -284,6 +289,14 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 #pragma mark --HistoryBySiteTreeBuilder--
 
 @implementation HistoryBySiteTreeBuilder
+
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource sortSelector:(SEL)sortSelector descending:(BOOL)descending
+{
+  if ((self = [super initWithDataSource:inDataSource sortSelector:sortSelector descending:descending]))
+  {
+  }
+  return self;
+}
 
 - (void)dealloc
 {
@@ -373,15 +386,11 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 
 @implementation HistoryByDateTreeBuilder
 
-- (id)initWithItems:(NSArray*)items sortSelector:(SEL)sortSelector descending:(BOOL)descending
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource sortSelector:(SEL)sortSelector descending:(BOOL)descending
 {
-  if ((self = [super init]))
+  if ((self = [super initWithDataSource:inDataSource sortSelector:sortSelector descending:descending]))
   {
-    mSortSelector            = sortSelector;
-    mSortDescending          = descending;
-    
     [self setupDateCategories];
-    [self buildTreeWithItems:items];
   }
   return self;
 }
@@ -714,11 +723,13 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
   mTreeBuilder = nil;
 
   if ([mCurrentViewIdentifier isEqualToString:kHistoryViewFlat])
-    mTreeBuilder = [[HistoryTreeBuilder alloc] initWithItems:mHistoryItems sortSelector:[self selectorForSortColumn] descending:mSortDescending];
+    mTreeBuilder = [[HistoryTreeBuilder alloc] initWithDataSource:self sortSelector:[self selectorForSortColumn] descending:mSortDescending];
   else if ([mCurrentViewIdentifier isEqualToString:kHistoryViewBySite])
-    mTreeBuilder = [[HistoryBySiteTreeBuilder alloc] initWithItems:mHistoryItems sortSelector:[self selectorForSortColumn] descending:mSortDescending];
+    mTreeBuilder = [[HistoryBySiteTreeBuilder alloc] initWithDataSource:self sortSelector:[self selectorForSortColumn] descending:mSortDescending];
   else    // default to by date
-    mTreeBuilder = [[HistoryByDateTreeBuilder alloc] initWithItems:mHistoryItems sortSelector:[self selectorForSortColumn] descending:mSortDescending];
+    mTreeBuilder = [[HistoryByDateTreeBuilder alloc] initWithDataSource:self sortSelector:[self selectorForSortColumn] descending:mSortDescending];
+  
+  [mTreeBuilder buildTree];
   
   [self notifyChanged:nil itemOnly:NO];
 }
@@ -919,6 +930,11 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
     return @selector(compareHostname:sortDescending:);
 
   return @selector(compareLastVisitDate:sortDescending:);
+}
+
+- (NSArray*)historyItems
+{
+  return mHistoryItems;
 }
 
 - (HistorySiteItem*)itemWithIdentifier:(NSString*)identifier
