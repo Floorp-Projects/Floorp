@@ -97,12 +97,30 @@ const float kVOffset = 20.0;
   if (screen) {
     NSRect screenFrame = [screen visibleFrame];
     NSSize screenSize = screenFrame.size;
+
+    // for some reason, text views suffer from hysteresis; the answer you get this time
+    // depends on what you had in there before. so clear state first.
+    [mTextView setString:@""];
+    [mTextView setFrame:NSMakeRect(0, kBorderPadding, 0, 0)];
+
+    // -sizeToFit sucks. For some reason it likes to wrap short words, so
+    // we measure the text by hand and set that as the min width.
+    NSSize stringSize = [string sizeWithAttributes:[NSDictionary dictionaryWithObject:[NSFont toolTipsFontOfSize:[NSFont smallSystemFontSize]] forKey:NSFontAttributeName]];
+    float textViewWidth = ceil(stringSize.width);
+    if (textViewWidth > kMaxTextFieldWidth)
+      textViewWidth = kMaxTextFieldWidth;
+
+    textViewWidth += 2.0 * 5.0;   // magic numbers required to make the text not wrap. No, this isn't -textContainerInset.
     
     // set up the text view
     [mTextView setMaxSize:NSMakeSize(kMaxTextFieldWidth, screenSize.height - 2 * kBorderPadding)]; // do this here since we know screen size
-    [mTextView setString:string]; // do this after setting max size, before setting costrained frame size, 
+    [mTextView setString:string]; // do this after setting max size, before setting constrained frame size, 
                                   // reset to max width - it will not grow horizontally when resizing, only vertically
     [mTextView setConstrainedFrameSize:NSMakeSize(kMaxTextFieldWidth, 0.0)];
+    // to avoid wrapping when we don't want it, set the min width
+    [mTextView setMinSize:NSMakeSize(textViewWidth, 0.0)];
+
+    // finally, do the buggy sizeToFit
     [mTextView sizeToFit];
     
     // set the origin back where its supposed to be
