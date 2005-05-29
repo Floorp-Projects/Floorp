@@ -70,7 +70,7 @@ static const int kMaxNumHistoryItems = 100;
 static const int kMaxTodayItems = 12;
 
 // the maximum number of characters in a menu title before cropping it
-static const unsigned int kMaxTitleLength = 80;
+static const unsigned int kMaxTitleLength = 50;
 
 // this little class manages the singleton history data source, and takes
 // care of shutting it down at XPCOM shutdown time.
