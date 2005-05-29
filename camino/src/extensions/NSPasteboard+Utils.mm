@@ -170,8 +170,13 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
     }
   } else if ([types containsObject:NSURLPboardType]) {
     *outUrls = [NSArray arrayWithObject:[[NSURL URLFromPasteboard:self] absoluteString]];
-    if ([types containsObject:kCorePasteboardFlavorType_urld])
-      *outTitles = [NSArray arrayWithObject:[self stringForType:kCorePasteboardFlavorType_urld]];
+    if ([types containsObject:kCorePasteboardFlavorType_urld]) {
+      NSString* title = [self stringForType:kCorePasteboardFlavorType_urld];
+      if (!title)
+        title = [self stringForType:NSStringPboardType];
+      if (title)
+        *outTitles = [NSArray arrayWithObject:title];
+    }
     else
       *outTitles = [NSArray arrayWithObject:@""];
   } else if ([types containsObject:NSStringPboardType]) {
