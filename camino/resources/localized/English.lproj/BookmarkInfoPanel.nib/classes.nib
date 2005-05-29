@@ -9,7 +9,7 @@
             CLASS = BookmarkInfoController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                mBookmarkDescField = NSTextField; 
+                mBookmarkDescField = NSTextView; 
                 mBookmarkKeywordField = NSTextField; 
                 mBookmarkLocationField = NSTextField; 
                 mBookmarkNameField = NSTextField; 
@@ -17,7 +17,7 @@
                 mClearNumberVisitsButton = NSButton; 
                 mDockMenuCheckbox = NSButton; 
                 mDummyView = NSBox; 
-                mFolderDescField = NSTextField; 
+                mFolderDescField = NSTextView; 
                 mFolderKeywordField = NSTextField; 
                 mFolderNameField = NSTextField; 
                 mFolderView = NSBox; 

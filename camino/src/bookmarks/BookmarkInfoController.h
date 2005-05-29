@@ -53,10 +53,10 @@
   IBOutlet NSTextField* mBookmarkNameField;
   IBOutlet NSTextField* mBookmarkLocationField;
   IBOutlet NSTextField* mBookmarkKeywordField;
-  IBOutlet NSTextField* mBookmarkDescField;
+  IBOutlet NSTextView*  mBookmarkDescField;
   IBOutlet NSTextField* mFolderNameField;
   IBOutlet NSTextField* mFolderKeywordField;
-  IBOutlet NSTextField* mFolderDescField;
+  IBOutlet NSTextView*  mFolderDescField;
   IBOutlet NSTextField* mLastVisitField;
   IBOutlet NSTextField* mNumberVisitsField;
 

@@ -159,13 +159,13 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
   if (!changedField) {
     if ((tabViewItem == mBookmarkInfoTabView) && isBookmark) {
       [mBookmarkItem setTitle:[mBookmarkNameField stringValue]];
-      [mBookmarkItem setItemDescription:[mBookmarkDescField stringValue]];
+      [mBookmarkItem setItemDescription:[mBookmarkDescField string]];
       [mBookmarkItem setKeyword:[mBookmarkKeywordField stringValue]];
       [(Bookmark *)mBookmarkItem setUrl:[mBookmarkLocationField stringValue]];
     }
     else if ([mDummyView contentView] == mFolderView && !isBookmark) {
       [mBookmarkItem setTitle:[mFolderNameField stringValue]];
-      [mBookmarkItem setItemDescription:[mFolderDescField stringValue]];
+      [mBookmarkItem setItemDescription:[mFolderDescField string]];
       if ([(BookmarkFolder *)mBookmarkItem isGroup])
         [mBookmarkItem setKeyword:[mFolderKeywordField stringValue]];
     }
@@ -175,7 +175,7 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
   else if ((changedField == mBookmarkKeywordField) || (changedField == mFolderKeywordField))
     [mBookmarkItem setKeyword:[changedField stringValue]];
   else if ((changedField == mBookmarkDescField) || (changedField == mFolderDescField))
-    [mBookmarkItem setItemDescription:[changedField stringValue]];
+    [mBookmarkItem setItemDescription:[changedField string]];
   else if ((changedField == mBookmarkLocationField) && isBookmark)
     [(Bookmark *)mBookmarkItem setUrl:[changedField stringValue]];
     
@@ -233,7 +233,7 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
     if ([aBookmark isKindOfClass:[Bookmark class]]) {
       newView = mBookmarkView;
       [mBookmarkNameField setStringValue: [aBookmark title]];
-      [mBookmarkDescField setStringValue: [aBookmark itemDescription]];
+      [mBookmarkDescField setString: [aBookmark itemDescription]];
       [mBookmarkKeywordField setStringValue: [aBookmark keyword]];
       [mBookmarkLocationField setStringValue: [(Bookmark *)aBookmark url]];
       [mNumberVisitsField setIntValue:[(Bookmark *)aBookmark numberOfVisits]];
@@ -268,7 +268,7 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
       }
       [mFolderNameField setStringValue: [aBookmark title]];
       [mFolderKeywordField setStringValue: [aBookmark keyword]];
-      [mFolderDescField setStringValue: [aBookmark itemDescription]];
+      [mFolderDescField setString: [aBookmark itemDescription]];
       // we can't just unselect dock menu - we have to pick a new one
       if ([(BookmarkFolder *)aBookmark isDockMenu]) {
         [mDockMenuCheckbox setState:NSOnState];
