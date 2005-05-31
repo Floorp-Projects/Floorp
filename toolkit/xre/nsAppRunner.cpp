@@ -1983,8 +1983,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           em->Start(cmdLine, &needsRestart);
       }
 
+      // We want to restart no more than 2 times. The first restart,
+      // NO_EM_RESTART == "0" , and the second time, "1".
       char* noEMRestart = PR_GetEnv("NO_EM_RESTART");
-      if (noEMRestart && *noEMRestart) {
+      if (noEMRestart && *noEMRestart && *noEMRestart == '1') {
         if (upgraded || needsRestart) {
           NS_WARNING("EM tried to force us to restart twice! Forcefully preventing that.");
         }
@@ -2085,8 +2087,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   // Restart the app after XPCOM has been shut down cleanly. 
   if (needsRestart) {
-    // After this restart, we don't want to restart any more!
-    PR_SetEnv("NO_EM_RESTART=1");
+    char* noEMRestart = PR_GetEnv("NO_EM_RESTART");
+    if (noEMRestart && *noEMRestart) {
+      PR_SetEnv("NO_EM_RESTART=1");
+    }
+    else {
+      PR_SetEnv("NO_EM_RESTART=0");
+    }
 
     nsCAutoString path1, path2;
     profD->GetNativePath(path1);
