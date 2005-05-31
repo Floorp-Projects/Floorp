@@ -365,7 +365,7 @@ XPInstallDownloadManager.prototype = {
       element.setAttribute("description", 
                            extensionsStrings.getString("installSuccess"));
       var msg;
-      if (aValue != 0) {
+      if (aValue != 0 && aValue != 999) {
         var xpinstallStrings = document.getElementById("xpinstallStrings");
         try {
           msg = xpinstallStrings.getString("error" + aValue);
@@ -381,7 +381,7 @@ XPInstallDownloadManager.prototype = {
         var brandStrings = sbs.createBundle("chrome://branding/locale/brand.properties");
         var brandShortName = brandStrings.GetStringFromName("brandShortName");
         var params = [brandShortName, aURL, msg];
-        var message = extensionStrings.formatStringFromName("errorInstallMessage", params, params.length);
+        var message = extensionStrings.formatStringFromName("errorInstallMsg", params, params.length);
         
         var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                            .getService(Components.interfaces.nsIPromptService);
