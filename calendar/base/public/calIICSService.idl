@@ -45,6 +45,7 @@ interface calIItemBase;
 interface calIDateTime;
 
 interface calIIcalProperty;
+interface nsIUTF8StringEnumerator;
 
 [ptr] native icalpropertyptr(struct icalproperty_impl);
 [ptr] native icalcomponentptr(struct icalcomponent_impl);
@@ -57,7 +58,7 @@ interface calIIcalProperty;
  * general, you want to do as little manipulation of your FooContainers as
  * possible while iterating over them.
  */
-[scriptable,uuid(4d7e456b-cfd0-4ebf-8794-c57789dafdc3)]
+[scriptable,uuid(c4637c40-3c4c-4ecd-b802-8b5b46bdf5a4)]
 interface calIIcalComponent : nsISupports
 {
     /**
@@ -192,4 +193,6 @@ interface calIICSService : nsISupports
     calIIcalComponent getTimezone(in AUTF8String tzid);
     AUTF8String getTimezoneLatitude(in AUTF8String tzid);
     AUTF8String getTimezoneLongitude(in AUTF8String tzid);
+
+    readonly attribute nsIUTF8StringEnumerator timezoneIds;
 };

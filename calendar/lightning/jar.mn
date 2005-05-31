@@ -6,6 +6,9 @@ lightning.jar:
   content/lightning/lightning-widgets.css		(content/lightning-widgets.css)
   content/lightning/agenda-tree.js			(content/agenda-tree.js)
   content/lightning/lightning-standalone.xul		(content/lightning-standalone.xul)
+  content/lightning/messenger-overlay-preferences.xul	(content/messenger-overlay-preferences.xul)
+  content/lightning/lightning-prefs.xul			(content/lightning-prefs.xul)
+  content/lightning/lightning-prefs.js			(content/lightning-prefs.js)
 
 en-US.jar:
   locale/en-US/lightning/lightning.dtd				(locale/lightning.dtd)
@@ -32,6 +35,8 @@ calendar.jar:
   content/calendar/calendar-event-dialog.js	(/calendar/base/content/calendar-event-dialog.js)
   content/calendar/calendar-event-dialog.xul	(/calendar/base/content/calendar-event-dialog.xul)
   content/calendar/calendar-event-dialog.css	(/calendar/base/content/calendar-event-dialog.css)
+  content/calendar/calendar-recurrence-dialog.js	(/calendar/base/content/calendar-recurrence-dialog.js)
+  content/calendar/calendar-recurrence-dialog.xul	(/calendar/base/content/calendar-recurrence-dialog.xul)
 
 calendar-en-US.jar:
   locale/en-US/calendar/global.dtd		(/calendar/resources/locale/en-US/global.dtd)

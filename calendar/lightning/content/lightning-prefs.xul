@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+
+<overlay id="AdvancedPaneOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <prefpane id="paneLightning" onpaneload="gLightningPane.init()">
+    <script type="application/x-javascript" src="chrome://lightning/content/lightning-prefs.js"/>
+
+    <preferences>
+      <preference id="calendar.alarms.playsound"
+                  name="calendar.alarms.playsound"
+                  type="bool"/>
+      <preference id="calendar.timezone.local"
+                  name="calendar.timezone.local"
+                  type="string"/>
+    </preferences>
+
+    <groupbox flex="1">
+      <caption label="Alarms"/>
+      <checkbox label="Play sound" preference="calendar.alarms.playsound"/>
+    </groupbox>
+
+    <groupbox flex="1">
+      <caption label="Timezone"/>
+      <listbox id="timezone-listbox" preference="calendar.timezone.local" onpreferencewrite="return gLightningPane.getTimezoneResult();"/>
+    </groupbox>
+  </prefpane>
+
+
+</overlay>

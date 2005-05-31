@@ -44,6 +44,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsStringEnumerator.h"
 #include "nsCRT.h"
 
 #include "calIEvent.h"
@@ -1042,6 +1043,24 @@ get_timezone_data_struct_for_tzid(const char *tzid)
     }
     return nsnull;
 }
+
+NS_IMETHODIMP
+calICSService::GetTimezoneIds(nsIUTF8StringEnumerator **aTzids)
+{
+    NS_ENSURE_ARG_POINTER(aTzids);
+
+    PRUint32 length = sizeof(ical_timezone_data) / sizeof(ical_timezone_data[0]);
+    nsCStringArray *array = new nsCStringArray(length);
+    if (!array)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    for (int i = 0; ical_timezone_data[i].tzid != NULL; i++) {
+        array->AppendCString(nsDependentCString(ical_timezone_data[i].tzid));
+    }
+    array->Sort();
+    return NS_NewAdoptingUTF8StringEnumerator(aTzids, array);
+}
+
 
 NS_IMETHODIMP
 calICSService::GetTimezone(const nsACString& tzid,

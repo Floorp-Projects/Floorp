@@ -111,7 +111,7 @@ function loadDialog()
 
     /* event default calendar */
     if (event.parent) {
-        var calendarList = document.getElementById('event-calendar');
+        var calendarList = document.getElementById("event-calendar");
         var calendars = getCalendarManager().getCalendars({});
         for (i in calendars) {
             if (event.parent.uri.equals(calendars[i].uri))
@@ -184,6 +184,16 @@ function saveDialog(event)
 
         event.alarmTime = alarmTime;
     }
+
+    if (getElementValue("event-recurrence", "checked")) {
+        if (window.recurrenceInfo) {
+            dump("setting recurrenceInfo!\n");
+            event.recurrenceInfo = window.recurrenceInfo;
+        } else
+            dump("not setting recurrenceInfo\n");
+    } else {
+        event.recurrenceInfo = null;
+    }
 }
 
 
@@ -247,7 +257,23 @@ function updateAlarm()
     prevAlarmItem = alarmItem;
 }
 
+function editRecurrence()
+{
+    var args = new Object();
+    args.calendarEvent = window.calendarEvent;
+    args.recurrenceInfo = window.calendarEvent.recurrenceInfo;
 
+    var savedWindow = window;
+    args.onOk = function(recurrenceInfo) {
+        savedWindow.recurrenceInfo = recurrenceInfo;
+    };
+
+    // wait cursor will revert to auto in eventDialog.js loadCalendarEventDialog
+    window.setCursor("wait");
+
+    // open the dialog modally
+    openDialog("chrome://calendar/content/calendar-recurrence-dialog.xul", "_blank", "chrome,titlebar,modal", args);
+}
 
 
 

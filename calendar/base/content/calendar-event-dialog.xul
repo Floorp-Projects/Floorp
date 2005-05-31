@@ -45,7 +45,7 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <dialog
-  id="calendar-editwindow"
+  id="calendar-edit-dialog"
   title="Edit Event"
   buttons="accept,cancel"
   ondialogaccept="return onAccept();"
@@ -106,7 +106,7 @@
             <hbox align="center">
               <checkbox id="event-recurrence" oncommand="updateRecurrence();"/>
               <spacer flex="1"/>
-              <button id="set-recurrence" label="set..."/>
+              <button id="set-recurrence" label="set..." oncommand="editRecurrence();"/>
             </hbox>
           </row>
 
