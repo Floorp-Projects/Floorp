@@ -23,6 +23,7 @@ calendar.jar:
   content/calendar/datetimepickers/datetimepickers.xml (/calendar/resources/content/datetimepickers/datetimepickers.xml)
   content/calendar/datetimepickers/minimonth.css (/calendar/resources/content/datetimepickers/minimonth.css)
   content/calendar/datetimepickers/minimonth.xml (/calendar/resources/content/datetimepickers/minimonth.xml)
+  content/calendar/calendar-dialog-utils.js	(/calendar/base/content/calendar-dialog-utils.js)
   content/calendar/calendar-multiday-view.css	(/calendar/base/content/calendar-multiday-view.css)
   content/calendar/calendar-multiday-view.xml	(/calendar/base/content/calendar-multiday-view.xml)
   content/calendar/calendar-item-editing.js	(/calendar/base/content/calendar-item-editing.js)

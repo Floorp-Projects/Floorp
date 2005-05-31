@@ -172,59 +172,8 @@ function saveDialog()
 }
 
 
-
 function updateDeck()
 {
     document.getElementById("period-deck").selectedIndex = Number(getElementValue("period-list"));
 }
 
-
-/* utility functions */
-function setEventProperty(event, propertyName, value)
-{
-    if (value)
-        event.setProperty(propertyName, value);
-}
-
-function setElementValue(elementName, value, name)
-{
-    var element = document.getElementById(elementName);
-    if (!element) {
-        dump("unable to find " + elementName + "\n");
-        return;
-    }
-
-    if (value === false) {
-        element.removeAttribute(name ? name : "value");
-    } else if (name) {
-        //dump("element.setAttribute(" + name + ", " + value + ")\n");
-        element.setAttribute(name, value);
-    } else {
-        //dump("element.value = " + value + "\n");
-        element.value = value;
-    }
-}
-
-function getElementValue(elementName, name)
-{
-    var element = document.getElementById(elementName);
-    if (!element) {
-        dump("unable to find " + elementName + "\n");
-        return null;
-    }
-
-    if (name)
-        return element[name];
-
-    return element.value;
-}
-
-function enableElement(elementId)
-{
-    setElementValue(elementId, false, "disabled");
-}
-
-function disableElement(elementId)
-{
-    setElementValue(elementId, "true", "disabled");
-}
