@@ -1270,11 +1270,11 @@ nsCanvasRenderingContext2D::DrawImage()
     } else if (argc == 5) {
         GET_ARG(&dx, argv[1]);
         GET_ARG(&dy, argv[2]);
-        GET_ARG(&sw, argv[3]);
-        GET_ARG(&sh, argv[4]);
+        GET_ARG(&dw, argv[3]);
+        GET_ARG(&dh, argv[4]);
         sx = sy = 0.0;
-        dw = sw;
-        dh = sh;
+        sw = (double) imgWidth;
+        sh = (double) imgHeight;
     } else if (argc == 9) {
         GET_ARG(&sx, argv[1]);
         GET_ARG(&sy, argv[2]);
@@ -1298,16 +1298,19 @@ nsCanvasRenderingContext2D::DrawImage()
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
 
-    cairo_matrix_t *surfMat = cairo_matrix_create();
-
-    cairo_matrix_translate(surfMat, -sx, -sy);
-    cairo_matrix_scale(surfMat, sw/dw, sh/dh);
-    cairo_surface_set_matrix(imgSurf, surfMat);
-    cairo_matrix_destroy(surfMat);
-
     cairo_save(mCairo);
+
     cairo_translate(mCairo, dx, dy);
-    cairo_show_surface(mCairo, imgSurf, (int) dw, (int) dh);
+    cairo_rectangle(mCairo, 0, 0, dw, dh);
+    cairo_clip(mCairo);
+    // XX this is, I think, a bug in the version of cairo we're using
+    // that goes away once we move to the 0.5 snapshot.  The scale
+    // is affecting this translate, because the translate isn't
+    // taking effect until show_surface() is called.
+    cairo_translate(mCairo, -sx * (dw/sw), -sy * (dh/sh));
+    cairo_scale(mCairo, dw/sw, dh/sh);
+    cairo_show_surface(mCairo, imgSurf, imgWidth, imgHeight);
+
     cairo_restore(mCairo);
 
     nsMemory::Free(imgData);
@@ -1532,7 +1535,14 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
     PRBool topToBottom = img->GetIsRowOrderTopToBottom();
     PRBool useBGR;
 
-    if (format == gfxIFormats::RGB || format == gfxIFormats::BGR) {
+    // The gtk backend optimizes away the alpha mask of images
+    // with a fully opaque alpha, but doesn't update its format (bug?);
+    // you end up with a RGB_A8 image with GetHasAlphaMask() == false.
+    // We need to treat that case as RGB.
+
+    if ((format == gfxIFormats::RGB || format == gfxIFormats::BGR) ||
+        (!(img->GetHasAlphaMask()) && (format == gfxIFormats::RGB_A8 || format == gfxIFormats::BGR_A8)))
+    {
         useBGR = (format & 1);
 
 #ifdef IS_BIG_ENDIAN
