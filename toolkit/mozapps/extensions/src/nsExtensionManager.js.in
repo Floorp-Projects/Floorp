@@ -4668,8 +4668,12 @@ RDFItemUpdater.prototype = {
       LOG("RDFItemUpdater:onDatasourceLoaded: Found info about the installed\r\n" + 
           "version of this item: " + sameItem.objectSource);
     }    
-    gOS.notifyObservers(!this._versionUpdateOnly ? newerItem : sameItem, 
-                        "Update:Extension:Item-Ended", "update-check-success");
+    if (!this._versionUpdateOnly && newerItem)
+      gOS.notifyObservers(newerItem, "Update:Extension:Item-Ended", "update-check-success");
+    else if (this.__versionUpdateOnly && sameItem)
+      gOS.notifyObservers(sameItem, "Update:Extension:Item-Ended", "update-check-success");
+    else
+      gOS.notifyObservers(aLocalItem, "Update:Extension:Item-Ended", "update-check-no-update");
     
     // Only one call of this._updater._checkForDone is needed for RDF 
     // responses, since there is only one response per item.
