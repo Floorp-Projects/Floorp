@@ -120,6 +120,10 @@ public:
 
   static void SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisible);
 
+  // Return true if mOuter is the root scrollframe (that is, the
+  // unique in-flow child of the viewport).
+  PRBool OuterIsRootScrollframe();
+
   nsSize GetScrolledSize() const;
   nsMargin GetActualScrollbarSizes() const;
   nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);

@@ -1553,7 +1553,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   if (presContext->IsPaginated()) {
     // allow scrollbars if this is the child of the viewport, because
     // we must be the scrollbars for the print preview window
-    if (!parent || parent->GetType() != nsLayoutAtoms::viewportFrame) {
+    if (!OuterIsRootScrollframe()) {
       mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
       return;
     }
@@ -2348,19 +2348,16 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
   // (if the reflow is initial or resize, the fixed children will
   // be re-laid out anyway)
   if (aOldScrollArea.Size() != aScrollArea.Size()
-      && nsBoxLayoutState::Dirty == aState.LayoutReason()) {
+      && nsBoxLayoutState::Dirty == aState.LayoutReason() &&
+      OuterIsRootScrollframe()) {
+    // Usually there are no fixed children, so don't do anything unless there's
+    // at least one fixed child
     nsIFrame* parentFrame = mOuter->GetParent();
-    if (parentFrame) {
-      if (parentFrame->GetType() == nsLayoutAtoms::viewportFrame) {
-        // Usually there are no fixed children, so don't do anything unless there's
-        // at least one fixed child
-        if (parentFrame->GetFirstChild(nsLayoutAtoms::fixedList)) {
-          // force a reflow of the fixed children
-          mOuter->GetPresContext()->PresShell()->
-            AppendReflowCommand(parentFrame, eReflowType_UserDefined,
-                                nsLayoutAtoms::fixedList);
-        }
-      }
+    if (parentFrame->GetFirstChild(nsLayoutAtoms::fixedList)) {
+      // force a reflow of the fixed children
+      mOuter->GetPresContext()->PresShell()->
+        AppendReflowCommand(parentFrame, eReflowType_UserDefined,
+                            nsLayoutAtoms::fixedList);
     }
   }
 }
@@ -2442,6 +2439,14 @@ nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisibl
       mediator->VisibilityChanged(scrollbar, aVisible);
     }
   }
+}
+
+PRBool
+nsGfxScrollFrameInner::OuterIsRootScrollframe()
+{
+  nsIFrame* parent = mOuter->GetParent();
+  return parent && parent->GetType() == nsLayoutAtoms::viewportFrame &&
+    parent->GetFirstChild(nsnull) == mOuter;
 }
 
 PRInt32
