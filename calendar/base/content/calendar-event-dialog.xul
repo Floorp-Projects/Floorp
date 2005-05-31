@@ -70,21 +70,21 @@
       <rows>
         <rows equalsize="always">
           <row align="center">
-            <label value="title" class="label"/>
+            <label value="Title" class="label"/>
             <textbox id="event-title" size="10"/>
           </row>
           <row align="center">
-            <label value="location" class="label"/>
+            <label value="Location" class="label"/>
             <textbox id="event-location" size="10"/>
           </row>
 
           <row align="center">
-            <label value="url" class="label"/>
+            <label value="URL" class="label"/>
             <textbox id="event-url" size="10"/>
           </row>
 
           <row align="center">
-            <label value="all-day" class="label"/>
+            <label value="All day" class="label"/>
             <hbox>
               <checkbox id="event-all-day" oncommand="updateAllDay();"/>
               <spacer flex="1"/>
@@ -92,17 +92,17 @@
           </row>
 
           <row align="center">
-            <label value="from" class="label"/>
-            <datetimepicker id="event-starttime" value=""/>
+            <label value="From" class="label"/>
+            <datetimepicker id="event-starttime"/>
           </row>
 
           <row align="center">
-            <label value="to" class="label"/>
-            <datetimepicker id="event-endtime" value=""/>
+            <label value="To" class="label"/>
+            <datetimepicker id="event-endtime"/>
           </row>
 
           <row align="center">
-            <label value="repeat" class="label"/>
+            <label value="Repeat" class="label"/>
             <hbox align="center">
               <checkbox id="event-recurrence" oncommand="updateRecurrence();"/>
               <spacer flex="1"/>
@@ -111,7 +111,7 @@
           </row>
 
           <row align="center" hidden="true">
-            <label value="attendees" class="label"/>
+            <label value="Attendees" class="label"/>
             <hbox align="center">
               <label value="none"/>
               <spacer flex="1"/>
@@ -120,7 +120,7 @@
           </row>
 
           <row align="center">
-            <label value="calendar" class="label"/>
+            <label value="Calendar" class="label"/>
             <hbox>
               <menulist id="event-calendar"/>
               <spacer flex="1"/>
@@ -128,7 +128,7 @@
           </row>
 
           <row align="center">
-            <label value="alarm" class="label"/>
+            <label value="Alarm" class="label"/>
             <hbox>
               <menulist id="event-alarm" oncommand="updateAlarm()">
                 <menupopup>
