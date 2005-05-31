@@ -71,13 +71,63 @@ function onCancel()
 
 function loadDialog()
 {
+    var ritems = window.originalRecurrenceInfo.getRecurrenceItems({});
 
+    /* split out rules and exceptions */
+    var rules = [];
+    var exceptions = [];
+
+    for each (var r in ritems) {
+        if (r instanceof calIRecurrenceRule) {
+            if (r.isNegative)
+                exceptions.push(r);
+            else
+                rules.push(r);
+        }
+    }
+
+    if (rules.length > 0) {
+        // we only handle 1 rule currently
+        var rule = rules[0];
+
+        switch(rule.type) {
+        case "DAILY":
+            setElementValue("period-deck", 0, "selectedIndex");
+            setElementValue("daily-days", rule.interval);
+            break;
+        case "WEEKLY":
+            setElementValue("period-deck", 1, "selectedIndex");
+            break;
+        case "MONTHLY":
+            setElementValue("period-deck", 2, "selectedIndex");
+            break;
+        case "YEARLY":
+            setElementValue("period-deck", 3, "selectedIndex");
+            break;
+        default:
+            dump("unable to handle your rule type!\n");
+            break;
+        }
+
+        /* load up the duration of the event radiogroup */
+        if (rule.count == -1) {
+            setElementValue("recurrence-duration", "forever");
+        } else if (rule.isByCount) {
+            setElementValue("recurrence-duration", "ntimes");
+            setElementValue("repeat-ntimes-count", rule.count );
+        } else {
+            setElementValue("recurrence-duration", "until");
+            setElementValue("repeat-until-date", rule.endDate.jsDate); // XXX getInTimezone()
+        }        
+    }
+
+
+    // XXX handle exceptions
 }
 
 function saveDialog()
 {
     var deckNumber = Number(getElementValue("period-list"));
-    dump("decknumber = " + deckNumber + "\n");
     
     var recurrenceInfo = createRecurrenceInfo();
     recurrenceInfo.initialize(window.calendarEvent);
@@ -86,38 +136,33 @@ function saveDialog()
 
     switch (deckNumber) {
     case 0:
-        dump("daily recurrence\n");
         recRule.type = "DAILY";
         var ndays = Number(getElementValue("daily-days"));
         if (ndays == null)
             ndays = 1;
         recRule.interval = ndays;
         break;
-    case 1: // weekly
+    case 1:
         recRule.type = "WEEKLY";
         break;
-    case 2: // monthly
+    case 2:
         recRule.type = "MONTHLY";
         break;
-    case 3: // annually
+    case 3:
         recRule.type = "YEARLY";
         break;
     }
 
+    /* figure out how long this event is supposed to last */
     switch(document.getElementById("recurrence-duration").selectedItem.value) {
     case "forever":
-        dump("setting forever!\n");
         recRule.count = -1;
         break;
     case "ntimes":
-        recRule.count = Math.max(1, getElementValue("ntimes-count"));
+        recRule.count = Math.max(1, getElementValue("repeat-ntimes-count"));
         break;
     case "until":
-        //var recurEndDate = getElementValue("repeat-end-date-picker");
-        //recRule.endDate = jsDateToDateTime(recurEndDate);
-        break;
-    default:
-        dump("error finding duration\n");
+        recRule.endDate = jsDateToDateTime(getElementValue("repeat-until-date"));
         break;
     }
 

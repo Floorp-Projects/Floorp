@@ -39,6 +39,7 @@
 -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" ?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -148,7 +149,7 @@
           <row>
             <radio label="Repeat for" value="ntimes"/>
             <hbox>
-              <textbox id="ntimes-count" size="3"/>
+              <textbox id="repeat-ntimes-count" size="3"/>
               <spacer flex="0.5"/>
               <menulist>
                 <menupopup>
@@ -164,7 +165,7 @@
           <row>
             <radio label="Repeat until" value="until"/>
             <hbox>
-              <textbox size="3"/>
+              <datepicker id="repeat-until-date" value=""/>
               <spacer flex="1"/>
             </hbox>
           </row>
