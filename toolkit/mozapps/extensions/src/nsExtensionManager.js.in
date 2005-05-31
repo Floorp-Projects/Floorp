@@ -2422,6 +2422,11 @@ ExtensionManager.prototype = {
           LOG("... success, item is compatible");
           callback(installManifest, installData.id, location, installData.type);
         }
+        else if (installData.error == INSTALLERROR_INCOMPATIBLE_VERSION) {
+          LOG("... success, item installed but is not compatible");
+          callback(installManifest, installData.id, location, installData.type);
+          em.disableItem(id);
+        }
         else {
           /**
            * Turns an error code into a message for logging
