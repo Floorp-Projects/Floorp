@@ -24,6 +24,8 @@ function ltnEditSelectedCalendar()
 function nextMonth(dt)
 {
     var d = new Date(dt);
+    d.setDate(1); // make sure we avoid "June 31" when we bump the month
+
     var mo = d.getMonth();
     if (mo == 11) {
         d.setMonth(0);
