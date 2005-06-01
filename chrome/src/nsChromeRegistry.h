@@ -50,6 +50,7 @@
 #include "nsTHashtable.h"
 #include "nsURIHashKey.h"
 #include "nsVoidArray.h"
+#include "nsInterfaceHashtable.h"
 
 struct PRFileDesc;
 class nsIAtom;
@@ -234,6 +235,9 @@ private:
   // to a list of overlays/stylesheets
   OverlayListHash mOverlayHash;
   OverlayListHash mStyleHash;
+
+  // "Override" table (chrome URI string -> real URI)
+  nsInterfaceHashtable<nsURIHashKey, nsIURI> mOverrideTable;
 
   nsCString mSelectedLocale;
   nsCString mSelectedSkin;
