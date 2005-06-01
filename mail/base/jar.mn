@@ -49,6 +49,7 @@ messenger.jar:
     content/messenger/msgSynchronize.xul            (/mailnews/base/resources/content/msgSynchronize.xul)
     content/messenger/msgSynchronize.js             (/mailnews/base/resources/content/msgSynchronize.js)
     content/messenger/folderProps.xul               (/mailnews/base/resources/content/folderProps.xul)
+    content/messenger/retention.js                  (/mailnews/base/resources/content/retention.js)
     content/messenger/folderProps.js                (/mailnews/base/resources/content/folderProps.js)
     content/messenger/threadPane.js                 (/mailnews/base/resources/content/threadPane.js)
     content/messenger/msgHdrViewAddresses.js        (/mailnews/base/resources/content/msgHdrViewAddresses.js)

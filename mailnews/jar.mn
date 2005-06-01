@@ -107,6 +107,7 @@ messenger.jar:
     content/messenger/msgHdrViewOverlay.js                                     (base/resources/content/msgHdrViewOverlay.js)
     content/messenger/msgHdrViewAddresses.js                                   (base/resources/content/msgHdrViewAddresses.js)
     content/messenger/widgetglue.js                                            (base/resources/content/widgetglue.js)
+    content/messenger/retention.js                                             (base/resources/content/retention.js)
     content/messenger/commandglue.js                                           (base/resources/content/commandglue.js)
     content/messenger/mailCommands.js                                          (base/resources/content/mailCommands.js)
     content/messenger/shareglue.js                                             (base/resources/content/shareglue.js)
