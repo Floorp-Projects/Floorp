@@ -140,7 +140,8 @@ nsChromeRegistry::nsChromeRegistry() : mRDFService(nsnull),
                                        mProfileInitialized(PR_FALSE),
                                        mRuntimeProvider(PR_FALSE),
                                        mBatchInstallFlushes(PR_FALSE),
-                                       mSearchedForOverride(PR_FALSE)
+                                       mSearchedForOverride(PR_FALSE),
+                                       mLegacyOverlayinfo(PR_FALSE)
 {
   mDataSourceTable = nsnull;
 }
@@ -999,8 +1000,21 @@ nsChromeRegistry::GetDynamicDataSource(nsIURI *aChromeURL,
   }
 
   // Retrieve the mInner data source.
-  const nsACString& overlayFile = aIsOverlay ?
-    NS_LITERAL_CSTRING("overlays.rdf") : NS_LITERAL_CSTRING("stylesheets.rdf");
+  nsCAutoString overlayFile; 
+  if (aUseProfile && mLegacyOverlayinfo)
+  {
+    overlayFile.AppendLiteral("overlayinfo/");
+    overlayFile += package;
+    if (aIsOverlay)
+      overlayFile.AppendLiteral("/content/");
+    else
+      overlayFile.AppendLiteral("/skin/");
+  }
+  if (aIsOverlay)
+    overlayFile.AppendLiteral("overlays.rdf");
+  else
+    overlayFile.AppendLiteral("stylesheets.rdf");
+
   return LoadDataSource(overlayFile, aResult, aUseProfile, nsnull);
 }
 
@@ -2992,6 +3006,7 @@ nsresult nsChromeRegistry::LoadInstallDataSource()
 
 nsresult nsChromeRegistry::LoadProfileDataSource()
 {
+  mLegacyOverlayinfo = PR_FALSE;
   nsresult rv = GetProfileRoot(mProfileRoot);
   if (NS_SUCCEEDED(rv)) {
     // Load the profile search path for skins, content, and locales
@@ -3017,6 +3032,22 @@ nsresult nsChromeRegistry::LoadProfileDataSource()
 
     // We have to flush the chrome skin cache...
     FlushSkinCaches();
+    
+    // make sure we don't lose any old profile overlayinfo
+    // by checking the existence of the respective overlayinfo/ directory
+    nsCOMPtr<nsIFile> overlayinfoDir;
+    rv = NS_GetSpecialDirectory(NS_APP_USER_CHROME_DIR, getter_AddRefs(overlayinfoDir));
+    if (NS_SUCCEEDED(rv))
+    {
+      rv = overlayinfoDir->AppendNative(NS_LITERAL_CSTRING("overlayinfo"));
+      if (NS_SUCCEEDED(rv))
+      {
+        PRBool isLegacyOverlayinfo;
+        rv = overlayinfoDir->IsDirectory(&isLegacyOverlayinfo);
+        mLegacyOverlayinfo = NS_SUCCEEDED(rv) && isLegacyOverlayinfo;
+      }
+    }
+
   }
   return NS_OK;
 }
