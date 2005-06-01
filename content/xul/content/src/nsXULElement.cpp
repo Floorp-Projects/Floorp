@@ -1689,8 +1689,18 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         GetAttributeNode(attrName, getter_AddRefs(attrNode));
     }
 
+    nsDOMSlots *slots = GetExistingDOMSlots();
+    if (slots && slots->mAttributeMap) {
+      slots->mAttributeMap->DropAttribute(aNameSpaceID, aName);
+    }
+
     rv = mAttrsAndChildren.RemoveAttrAt(index);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // XXX if the RemoveAttrAt() call fails, we might end up having removed
+    // the attribute from the attribute map even though the attribute is still
+    // on the element
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=296205
 
     // Deal with modification of magical attributes that side-effect
     // other things.
