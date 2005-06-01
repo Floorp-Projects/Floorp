@@ -179,7 +179,7 @@ DEFINE_GETTER_AND_SETTER( HaveBeenSet,      mHaveBeenSet  )
 
 // Implementation of the nsIWindowsHooks interface.
 // Use standard implementation of nsISupports stuff.
-NS_IMPL_ISUPPORTS2( nsWindowsHooks, nsIWindowsHooks, nsIWindowsRegistry )
+NS_IMPL_ISUPPORTS1( nsWindowsHooks, nsIWindowsHooks )
 
 nsWindowsHooks::nsWindowsHooks() {
 }
@@ -683,40 +683,6 @@ nsWindowsHooks::SetRegistry() {
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
 
     return NS_OK;
-}
-
-NS_IMETHODIMP nsWindowsHooks::GetRegistryEntry( PRInt32 aHKEYConstant, const char *aSubKeyName, const char *aValueName, char **aResult ) {
-    NS_ENSURE_ARG( aResult );
-    *aResult = 0;
-    // Calculate HKEY_* starting point based on input nsIWindowsHooks constant.
-    HKEY hKey;
-    switch ( aHKEYConstant ) {
-        case HKCR:
-            hKey = HKEY_CLASSES_ROOT;
-            break;
-        case HKCC:
-            hKey = HKEY_CURRENT_CONFIG;
-            break;
-        case HKCU:
-            hKey = HKEY_CURRENT_USER;
-            break;
-        case HKLM:
-            hKey = HKEY_LOCAL_MACHINE;
-            break;
-        case HKU:
-            hKey = HKEY_USERS;
-            break;
-        default:
-            return NS_ERROR_INVALID_ARG;
-    }
-
-    // Get requested registry entry.
-    nsCAutoString entry( RegistryEntry( hKey, aSubKeyName, aValueName, 0 ).currentSetting() );
-
-    // Copy to result.
-    *aResult = PL_strdup( entry.get() );
-
-    return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 // nsIWindowsHooks.idl for documentation
