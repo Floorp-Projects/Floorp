@@ -139,7 +139,7 @@ enum EscapeMask {
  */
 NS_COM PRBool NS_EscapeURL(const char *str,
                            PRInt32 len,
-                           PRInt16 flags,
+                           PRUint32 flags,
                            nsACString &result);
 
 /**
@@ -155,7 +155,7 @@ NS_COM PRBool NS_EscapeURL(const char *str,
  */
 NS_COM PRBool NS_UnescapeURL(const char *str,
                              PRInt32 len,
-                             PRInt16 flags,
+                             PRUint32 flags,
                              nsACString &result);
 
 /** returns resultant string length **/
@@ -172,7 +172,7 @@ NS_EscapeURL(const nsASingleFragmentCString &part, PRInt16 partType, nsACString 
     return part;
 }
 inline const nsACString &
-NS_UnescapeURL(const nsASingleFragmentCString &str, PRInt16 flags, nsACString &result) {
+NS_UnescapeURL(const nsASingleFragmentCString &str, PRUint32 flags, nsACString &result) {
     const char *temp;
     if (NS_UnescapeURL(str.BeginReading(temp), str.Length(), flags, result))
         return result;
