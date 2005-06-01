@@ -782,6 +782,11 @@ NS_IMETHODIMP TokenStreamListener::SetSecurityInfo(nsISupports * aSecurityInfo)
     return NS_OK;
 }
 
+NS_IMETHODIMP TokenStreamListener::GetDummyMsgHeader(nsIMsgDBHdr **aMsgDBHdr)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* void onStartRequest (in nsIRequest aRequest, in nsISupports aContext); */
 NS_IMETHODIMP TokenStreamListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {

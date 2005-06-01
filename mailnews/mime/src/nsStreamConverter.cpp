@@ -418,6 +418,12 @@ nsStreamConverter::DetermineOutputFormat(const char *aUrl, nsMimeOutputType *aNe
     // content type appended to it...if it does, we want to remember
     // that as mOutputFormat
     const char * typeField = FindQueryElementData(queryPart, "type=");
+    if (typeField && !strncmp(typeField, "x-message-display", sizeof("x-message-display") - 1))
+    {
+      const char *secondTypeField = FindQueryElementData(typeField, "type=");
+      if (secondTypeField)
+        typeField = secondTypeField;
+    }
     if (typeField)
     {
       // store the real content type...mOutputFormat gets deleted later on...

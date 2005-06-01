@@ -71,6 +71,7 @@
 #include "nsIStreamListener.h"
 #include "nsIStreamConverterService.h"
 #include "nsNetUtil.h"
+#include "nsIFileURL.h"
 
 // rdf
 #include "nsIRDFCompositeDataSource.h"
@@ -101,7 +102,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgMailSession.h"
-
+#include "nsIMailboxUrl.h"
 #include "nsIMsgFolder.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgIncomingServer.h"
@@ -112,7 +113,7 @@
 #include "nsMsgRDFUtils.h"
 
 #include "nsIMsgHdr.h"
-
+#include "nsIMimeMiscStatus.h"
 // compose
 #include "nsMsgCompCID.h"
 #include "nsMsgI18N.h"
@@ -614,6 +615,8 @@ nsMessenger::LoadURL(nsIDOMWindowInternal *aWin, const char *aURL)
 {
   NS_ENSURE_ARG_POINTER(aURL);
   
+  nsresult rv;
+
   SetDisplayCharset("UTF-8");
   
   NS_ConvertASCIItoUTF16 uriString(aURL);
@@ -623,14 +626,54 @@ nsMessenger::LoadURL(nsIDOMWindowInternal *aWin, const char *aURL)
   uriString.StripChars("\r\n");
   NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
   
+  PRBool loadingFromFile = PR_FALSE;
+  PRInt64 fileSize;
+
+  if (StringBeginsWith(uriString, NS_LITERAL_STRING("file:")))
+  {
+
+    nsCOMPtr<nsIURI> fileUri;
+    rv = NS_NewURI(getter_AddRefs(fileUri), uriString);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr <nsIFileURL> fileUrl = do_QueryInterface(fileUri, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr <nsIFile> file;
+    rv = fileUrl->GetFile(getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+    file->GetFileSize(&fileSize);
+    uriString.ReplaceSubstring(NS_LITERAL_STRING("file:"), NS_LITERAL_STRING("mailbox:"));
+    uriString.Append(NS_LITERAL_STRING("&number=0"));
+    loadingFromFile = PR_TRUE;
+  }
+
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), uriString);
+  rv = NS_NewURI(getter_AddRefs(uri), uriString);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
   nsCOMPtr<nsIMsgMailNewsUrl> msgurl = do_QueryInterface(uri);
   if (msgurl)
+  {
     msgurl->SetMsgWindow(mMsgWindow);
+    if (loadingFromFile)
+    {
+      nsCOMPtr <nsIMailboxUrl> mailboxUrl = do_QueryInterface(msgurl, &rv);
+      mailboxUrl->SetMessageSize((PRUint32) fileSize);
+      nsCOMPtr <nsIMsgHeaderSink> headerSink;
+       // need to tell the header sink to capture some headers to create a fake db header
+       // so we can do reply to a .eml file or a rfc822 msg attachment.
+      mMsgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
+      if (headerSink)
+      {
+        nsCOMPtr <nsIMsgDBHdr> dummyHeader;
+        headerSink->GetDummyMsgHeader(getter_AddRefs(dummyHeader));
+        if (dummyHeader)
+        {
+          dummyHeader->SetMessageSize((PRUint32) fileSize);
+        }
+      }
+    }
+  }
   
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
   rv = mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
@@ -687,6 +730,18 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   }
 
   urlString = url;
+  // strip out ?type=x-message-display because it confuses libmime
+
+  PRInt32 typeIndex = urlString.Find("?type=x-message-display");
+  if (typeIndex != kNotFound)
+  {
+    urlString.Cut(typeIndex, sizeof("?type=x-message-display") - 1);
+    // we also need to replace the next '&' with '?'
+    PRInt32 firstPartIndex = urlString.FindChar('&');
+    if (firstPartIndex != kNotFound)
+      urlString.SetCharAt('?', firstPartIndex);
+  }
+
   urlString.ReplaceSubstring("/;section", "?section");
   nsresult rv = CreateStartupUrl(urlString.get(), getter_AddRefs(URL));
 

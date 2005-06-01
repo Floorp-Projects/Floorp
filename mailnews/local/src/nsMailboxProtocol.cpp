@@ -412,27 +412,31 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
 
 PRInt32 nsMailboxProtocol::SetupMessageExtraction()
 {
-	// Determine the number of bytes we are going to need to read out of the 
-	// mailbox url....
-	nsCOMPtr<nsIMsgDBHdr> msgHdr;
-	nsresult rv = NS_OK;
-	
+  // Determine the number of bytes we are going to need to read out of the 
+  // mailbox url....
+  nsCOMPtr<nsIMsgDBHdr> msgHdr;
+  nsresult rv = NS_OK;
+  
   NS_ASSERTION(m_runningUrl, "Not running a url");
   if (m_runningUrl)
   {
-        nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(m_runningUrl, &rv);
-        NS_ENSURE_SUCCESS(rv,rv);
-	  rv = msgUrl->GetMessageHeader(getter_AddRefs(msgHdr));
-	  if (NS_SUCCEEDED(rv) && msgHdr)
-	  {
-		  PRUint32 messageSize = 0;
-		  msgHdr->GetMessageSize(&messageSize);
-		  m_runningUrl->SetMessageSize(messageSize);
-	  }
-    else
-      NS_ASSERTION(PR_FALSE, "couldn't get message header");
+    PRUint32 messageSize = 0;
+    m_runningUrl->GetMessageSize(&messageSize);
+    if (!messageSize)
+    {
+      nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(m_runningUrl, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+      rv = msgUrl->GetMessageHeader(getter_AddRefs(msgHdr));
+      if (NS_SUCCEEDED(rv) && msgHdr)
+      {
+        msgHdr->GetMessageSize(&messageSize);
+        m_runningUrl->SetMessageSize(messageSize);
+      }
+      else
+        NS_ASSERTION(PR_FALSE, "couldn't get message header");
+    }
   }
-	return rv;
+  return rv;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////

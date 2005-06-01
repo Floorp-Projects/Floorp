@@ -424,6 +424,9 @@ void getMsgHdrForCurrentURL(MimeDisplayOptions *opts, nsIMsgDBHdr ** aMsgHdr)
       msgURI = do_QueryInterface(uri);
       if (msgURI)
       {
+        msgURI->GetMessageHeader(aMsgHdr);
+        if (*aMsgHdr)
+          return;
         nsXPIDLCString rdfURI;
         msgURI->GetUri(getter_Copies(rdfURI));
         if (rdfURI.get())

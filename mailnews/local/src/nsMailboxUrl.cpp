@@ -58,6 +58,7 @@
 #include "nsIMsgFolder.h"
 #include "prprf.h"
 #include "nsISupportsObsolete.h"
+#include "nsIMsgMailSession.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -289,6 +290,23 @@ nsresult nsMailboxUrl::GetMsgHdrForKey(nsMsgKey  msgKey, nsIMsgDBHdr ** aMsgHdr)
       rv = msgDBService->OpenMailDBFromFileSpec(dbFileSpec, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(mailDB));
     if (NS_SUCCEEDED(rv) && mailDB) // did we get a db back?
       rv = mailDB->GetMsgHdrForKey(msgKey, aMsgHdr);
+    else
+    {
+      if (!m_msgWindow)
+      {
+        nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        mailSession->GetTopmostMsgWindow(getter_AddRefs(m_msgWindow));
+      }
+      // maybe this is .eml file we're trying to read. See if we can get a header from the header sink.
+      if (m_msgWindow)
+      {
+        nsCOMPtr <nsIMsgHeaderSink> headerSink;
+        m_msgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
+        if (headerSink)
+          return headerSink->GetDummyMsgHeader(aMsgHdr);
+      }
+    }
   }
   else
     rv = NS_ERROR_NULL_POINTER;
@@ -486,6 +504,24 @@ NS_IMETHODIMP nsMailboxUrl::GetFolderCharset(char ** aCharacterSet)
 {
   nsCOMPtr<nsIMsgFolder> folder;
   nsresult rv = GetFolder(getter_AddRefs(folder));
+#if 0
+  if (NS_FAILED(rv))
+  {
+    nsCOMPtr<nsIPrefLocalizedString> pls;
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = prefBranch->GetComplexValue("mailnews.view_default_charset",
+      NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(pls));
+    if (NS_SUCCEEDED(rv)) 
+    {
+      nsXPIDLString ucsval;
+      pls->ToString(getter_Copies(ucsval));
+      if (ucsval)
+        *aCharacterSet = ToNewCString(ucsval);
+      return rv;
+    }
+  }
+#endif
   NS_ENSURE_SUCCESS(rv,rv);
   NS_ENSURE_TRUE(folder, NS_ERROR_FAILURE);
   folder->GetCharset(aCharacterSet);

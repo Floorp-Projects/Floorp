@@ -60,7 +60,7 @@ interface nsIMimeMiscStatus : nsISupports{
 // this is a simple interface which allows someone to listen to all the headers 
 // that are discovered by mime. We can use this when displaying a message to update
 // the msg header in JS. 
-[scriptable, uuid(34362984-C7A0-47b2-8BA3-6B67C4AD986F)] 
+[scriptable, uuid(0d6ebe53-de30-4797-9a8e-5f9be68d472c)] 
 interface nsIMsgHeaderSink : nsISupports 
 {
   // You must finish consuming the iterators before returning from processHeaders. aHeaderNames and aHeaderValues will ALWAYS have the same
@@ -82,4 +82,5 @@ interface nsIMsgHeaderSink : nsISupports
   attribute nsISupports securityInfo;
 
   void onMsgHasRemoteContent(in nsIMsgDBHdr aMsgHdr);
+  nsIMsgDBHdr getDummyMsgHeader();
 };

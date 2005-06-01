@@ -516,6 +516,15 @@ var messageHeaderSink = {
     setSecurityInfo: function(aSecurityInfo)
     {
       this.mSecurityInfo = aSecurityInfo;
+    },
+
+    mDummyMsgHeader: null,
+
+    getDummyMsgHeader: function() 
+    {
+      if (!this.mDummyMsgHeader)
+        this.mDummyMsgHeader = new nsDummyMsgHeader();
+      return this.mDummyMsgHeader;
     }
 };
 
@@ -1608,3 +1617,24 @@ nsFlavorDataProvider.prototype =
   }
 
 }
+
+function nsDummyMsgHeader()
+{
+}
+
+nsDummyMsgHeader.prototype =
+{
+  QueryInterface : function(iid)
+  {
+      if (iid.equals(Components.interfaces.nsIMsgDBHdr) ||
+          iid.equals(Components.interfaces.nsISupports))
+        return this;
+      throw Components.results.NS_NOINTERFACE;
+  },
+
+  mMessageSize : 0,
+
+  setMessageSize : function(aMessageSize) {mMessageSize = aMessageSize;},
+  getMessageSize : function() {return mMessageSize;},
+  folder : function() {return null;}
+};
