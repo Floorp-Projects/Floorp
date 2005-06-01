@@ -56,6 +56,8 @@
 #include <shlobj.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
+#include "nsNativeCharsetUtils.h"
 #elif defined(XP_OS2)
 #define MAX_PATH _MAX_PATH
 #define INCL_WINWORKPLACE
@@ -143,44 +145,34 @@ static HINSTANCE gShell32DLLInst = NULL;
 
 #if defined (XP_WIN)
 
-static PRBool gGlobalOSInitialized = PR_FALSE;
-static PRBool gGlobalDBCSEnabledOS = PR_FALSE;
-
 //----------------------------------------------------------------------------------------
 static char* MakeUpperCase(char* aPath)
 //----------------------------------------------------------------------------------------
 {
-  // check if the Windows is DBCSEnabled once.
-  if (PR_FALSE == gGlobalOSInitialized) {
-#ifndef WINCE
-    if (GetSystemMetrics(SM_DBCSENABLED))
-      gGlobalDBCSEnabledOS = PR_TRUE;
-#endif
-    gGlobalOSInitialized = PR_TRUE;
+  // windows does not care about case.  push to uppercase:
+  nsAutoString widePath;
+  nsDependentCString path(aPath);
+  nsresult rv = NS_CopyNativeToUnicode(path, widePath);
+  if (NS_FAILED(rv)) {
+      NS_ERROR("failed to convert a path to Unicode");
+      return aPath;
   }
 
-  // windows does not care about case.  pu sh to uppercase:
-  int length = strlen(aPath);
-  int i = 0; /* C++ portability guide #20 */
-  if (!gGlobalDBCSEnabledOS)  {
-    // for non-DBCS windows
-    for (i = 0; i < length; i++)
-        if (islower(aPath[i]))
-          aPath[i] = _toupper(aPath[i]);
+  PRUnichar *start = widePath.BeginWriting();
+  PRUnichar *end = widePath.EndWriting();
+
+  while (start != end) {
+      // XXX this doesn't change any non-ASCII character 
+      *start = towupper(*start);
+      ++start;
   }
-  else {
-    // for DBCS windows
-    for (i = 0; i < length; i++)  {
-      if (IsDBCSLeadByte(aPath[i])) {
-        // begining of the double bye char
-        i++;
-      }
-      else  {
-        if ( islower(aPath[i]))
-          aPath[i] = _toupper(aPath[i]);
-      }
-    } //end of for loop
-  }
+
+  nsCAutoString newCPath;
+  NS_CopyUnicodeToNative(widePath, newCPath); 
+  NS_ASSERTION(path.Length() >= newCPath.Length(), 
+               "uppercased string is longer than original");
+  ::strcpy(aPath, newCPath.get());
+
   return aPath;
 }
 
