@@ -1,5 +1,5 @@
 classic.jar:
-        skin/classic/mozapps/contents.rdf
+% skin mozapps classic/1.0 %skin/classic/mozapps/
         skin/classic/mozapps/downloads/downloadIcon.png               (downloads/downloadIcon.png)
         skin/classic/mozapps/downloads/downloadCleanup.png            (downloads/downloadCleanup.png)
         skin/classic/mozapps/downloads/downloadCleanupDisabled.png            (downloads/downloadCleanupDisabled.png)
