@@ -602,25 +602,6 @@ function contextChangePriority( event, Priority )
    }
 }
 
-function changeToolTipTextForToDo( event )
-{
-   var toDoItem = getToDoFromEvent( event );
-
-   var toolTip = document.getElementById( "taskTreeTooltip" );
-
-   while( toolTip.hasChildNodes() )
-   {
-      toolTip.removeChild( toolTip.firstChild ); 
-   }
-   var holderBox = getPreviewForTask( toDoItem );
-   if( holderBox ) {
-     toolTip.appendChild( holderBox );
-     return true;
-   } else {
-     return false;
-   }
-}
-
 function changeContextMenuForToDo( event )
 {
    if (event.target.id != "taskitem-context-menu")

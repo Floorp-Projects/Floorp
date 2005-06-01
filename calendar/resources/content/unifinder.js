@@ -745,22 +745,3 @@ function focusFirstItemIfNoSelection()
    }
 }
 
-function changeToolTipTextForEvent( event )
-{
-   var thisEvent = getCalendarEventFromEvent( event );
-   
-   var toolTip = document.getElementById( "eventTreeTooltip" );
-
-   while( toolTip.hasChildNodes() )
-   {
-      toolTip.removeChild( toolTip.firstChild );
-   }
-   var holderBox = getPreviewForEvent( thisEvent );
-   if (holderBox) {
-     toolTip.appendChild( holderBox );
-     return true;
-   } else {
-     return false;
-   }
-}
-

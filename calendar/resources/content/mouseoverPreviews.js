@@ -49,6 +49,44 @@
      some of it duplicated.)
 **/
 
+/** For all instances of an event, as displayed by unifinder. **/
+function onMouseOverEventTree( toolTip, mouseEvent )
+{
+  var item = getCalendarEventFromEvent( mouseEvent );
+  if (isEvent(item)) {
+    var holderBox = getPreviewForEvent(item);
+    if (holderBox) {
+      setToolTipContent(toolTip, holderBox);
+      return true;
+    } 
+  }
+  return false;
+}
+
+/** For all instances of a task, as displayed by unifinderToDo. **/
+function onMouseOverTaskTree( toolTip, mouseEvent )
+{
+  var item = getToDoFromEvent( mouseEvent );
+  if (isToDo(item)) {
+    var holderBox = getPreviewForTask(item);
+    if (holderBox) {
+      setToolTipContent(toolTip, holderBox);
+      return true;
+    }
+  }
+  return false;
+}
+
+/*
+** add newContentBox,
+*/
+function setToolTipContent(toolTip, holderBox)
+{
+  while (toolTip.hasChildNodes())
+    toolTip.removeChild( toolTip.firstChild );
+  toolTip.appendChild( holderBox );
+}
+
 /**
 *  Called when a user hovers over a todo element and the text for the mouse over is changed.
 */

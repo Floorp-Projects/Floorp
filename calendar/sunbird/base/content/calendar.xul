@@ -407,11 +407,11 @@
 
 <!-- tooltips to show cropped text behave as a titletip: don't hide until mouse moved away -->
 <tooltip id="eventTreeTooltip"
-         onpopupshowing="return changeToolTipTextForEvent( event );"
+         onpopupshowing="return onMouseOverEventTree( this, event )"
          noautohide="true"/>
 
 <tooltip id="taskTreeTooltip"
-         onpopupshowing="return changeToolTipTextForToDo( event );"
+         onpopupshowing="return onMouseOverTaskTree( this, event )"
          noautohide="true"/>
 
 <tooltip id="gridOccurrenceTooltip"
