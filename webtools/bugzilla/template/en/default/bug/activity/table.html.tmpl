@@ -34,6 +34,7 @@
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
+[% PROCESS "global/field-descs.none.tmpl" %]
 
 [% PROCESS bug/time.html.tmpl %]
 
@@ -80,6 +81,10 @@
                       change.fieldname == 'remaining_time' ||
                       change.fieldname == 'work_time' %]
                   [% PROCESS formattimeunit time_unit=change.removed %]
+                [% ELSIF change.fieldname == 'bug_status' %]
+                  [% status_descs.${change.removed} FILTER html %]
+                [% ELSIF change.fieldname == 'resolution' %]
+                  [% resolution_descs.${change.removed} FILTER html %]
                 [% ELSE %]
                   [% change.removed FILTER html %]
                 [% END %]
@@ -93,6 +98,10 @@
                       change.fieldname == 'remaining_time' ||
                       change.fieldname == 'work_time' %]
                   [% PROCESS formattimeunit time_unit=change.added %]
+                [% ELSIF change.fieldname == 'bug_status' %]
+                  [% status_descs.${change.added} FILTER html %]
+                [% ELSIF change.fieldname == 'resolution' %]
+                  [% resolution_descs.${change.added} FILTER html %]
                 [% ELSE %]
                   [% change.added FILTER html %]
                 [% END %]
