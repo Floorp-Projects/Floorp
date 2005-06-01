@@ -96,7 +96,8 @@ NS_IMPL_DOM_CLONENODE(nsHTMLSpanElement)
 nsresult
 nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::xmp)) {
+  if (mNodeInfo->Equals(nsHTMLAtoms::xmp) ||
+      mNodeInfo->Equals(nsHTMLAtoms::plaintext)) {
     GetContentsAsText(aInnerHTML);
     return NS_OK;
   }
@@ -107,7 +108,8 @@ nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 nsresult
 nsHTMLSpanElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::xmp)) {
+  if (mNodeInfo->Equals(nsHTMLAtoms::xmp) ||
+      mNodeInfo->Equals(nsHTMLAtoms::plaintext)) {
     return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
   }
 

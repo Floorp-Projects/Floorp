@@ -343,6 +343,23 @@ void nsHTMLTokenizer::PrependTokens(nsDeque& aDeque)
 }
 
 /**
+ * Copies the state flags from aTokenizer into this tokenizer. This is used
+ * to pass information around between the main tokenizer and tokenizers
+ * created for document.write() calls.
+ *
+ * @param aTokenizer The tokenizer with more information in it.
+ * @return NS_OK
+ */
+nsresult nsHTMLTokenizer::CopyState(nsITokenizer* aTokenizer)
+{
+  if (aTokenizer) {
+    mFlags = ((nsHTMLTokenizer*)aTokenizer)->mFlags;
+  }
+
+  return NS_OK;
+}
+
+/**
  * This is a utilty method for ScanDocStructure, which finds a given
  * tag in the stack. The return value is meant to be used with
  * nsDeque::ObjectAt() on aTagStack.
@@ -832,6 +849,16 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
             (eHTMLTag_noscript == theTag && (mFlags & NS_IPARSER_FLAG_SCRIPT_ENABLED)) ||
             (eHTMLTag_noembed == theTag)) {
           isCDATA = PR_TRUE;
+        }
+
+        // Plaintext contains CDATA, but it's special, so we handle it
+        // differently than the other CDATA elements
+        if (eHTMLTag_plaintext == theTag) {
+          isCDATA = PR_FALSE;
+
+          // Note: We check in ConsumeToken() for this flag, and if we see it
+          // we only construct text tokens (which is what we want).
+          mFlags |= NS_IPARSER_FLAG_PLAIN_TEXT;
         }
 
 
