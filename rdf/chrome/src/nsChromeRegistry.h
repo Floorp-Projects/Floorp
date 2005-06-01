@@ -274,4 +274,8 @@ protected:
 
   // make sure we only look once for the JAR override
   PRPackedBool mSearchedForOverride;
+  
+  // if we find an old profile overlayinfo/ directory structure, use it
+  // else use the new flat files
+  PRPackedBool mLegacyOverlayinfo;
 };
