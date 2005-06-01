@@ -88,7 +88,10 @@ menubar > menu[open] {
 menulist > menupopup > menuitem,
 .menulist-menupopup > menu,
 menulist > menupopup > menu {
-  padding: 1px 30px 1px 5px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 30px;
   max-width: none;
   font: message-box;
 }
@@ -98,19 +101,25 @@ menulist > menupopup > menu {
 .menu-text,
 .menu-iconic-left,
 .menu-iconic-text {
-  margin: 0px 2px 0px 0px !important;
+  margin-top: 0px !important;
+  margin-bottom: 0px !important;
+  -moz-margin-start: 0px !important;
+  -moz-margin-end: 2px !important;
   color: inherit;
 }
 
 .menu-text {
-  margin-left: 18px !important;
+  -moz-margin-start: 18px !important;
   font-weight: inherit;
 }
 
 .menu-accel,
 .menu-iconic-accel {
-  margin: 0px 2px 0px 7px !important;
-  padding-right: 14px;
+  margin-top: 0px !important;
+  margin-bottom: 0px !important;
+  -moz-margin-start: 7px !important;
+  -moz-margin-end: 2px !important;
+  -moz-padding-end: 14px;
   color: inherit;
 }
 
@@ -119,7 +128,10 @@ menulist > menupopup > menu {
 }
 
 .menu-right {
-  margin: 0px 0px 0px 6px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: 0px;
   width: 8px;
   list-style-image: url("chrome://global/skin/menu/Menu-arrow.png");
   -moz-image-region: auto;
@@ -135,8 +147,23 @@ menulist > menupopup > menu {
   -moz-image-region: auto;
 }
 
+.menu-right[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/menu/Menu-arrow-rtl.png");
+}
+
+.menu-right[chromedir="rtl"][_moz-menuactive="true"] {
+  list-style-image: url("chrome://global/skin/menu/Menu-arrow-hover-rtl.png");
+}
+
+.menu-right[chromedir="rtl"][disabled="true"] {
+  list-style-image: url("chrome://global/skin/menu/Menu-arrow-disabled-rtl.png");
+}
+
 .menubar-left {
-  margin: 0px 2px 0px 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  -moz-margin-start: 0px;
+  -moz-margin-end: 2px;
   color: inherit;
 }
 
@@ -190,7 +217,7 @@ menulist > menupopup > menuseparator,
 /* ::::: tree column picker ::::: */
 
 .treecell-popupcell-menu {
-  margin-left: -2px;
+  -moz-margin-start: -2px;
   list-style-image: url("chrome://global/skin/columnselect.gif");
   -moz-image-region: auto;
 }

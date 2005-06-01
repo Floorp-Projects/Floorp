@@ -75,7 +75,7 @@ checkbox {
 }
 
 .checkbox-icon[src] {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
 }
 
 .checkbox-label {

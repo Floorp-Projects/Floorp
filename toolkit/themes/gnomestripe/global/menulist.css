@@ -75,7 +75,7 @@ menulist[disabled="true"] {
 .menulist-description {
   font-style: italic;
   color: GrayText;
-  margin-left: 1ex !important;
+  -moz-margin-start: 1ex !important;
 }
 
 /* ::::: editable menulists ::::: */
@@ -114,7 +114,7 @@ html|*.menulist-editable-input {
 .menulist-compact > .menulist-dropmarker {
   -moz-appearance: menulist-button;
   display: -moz-box;
-  margin-left: 2px;
+  -moz-margin-start: 2px;
   padding: 0 !important;
 }
 
