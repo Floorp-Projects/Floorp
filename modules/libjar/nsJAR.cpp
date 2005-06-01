@@ -50,6 +50,7 @@
 #include "nsIConsoleService.h"
 #include "nscore.h"
 #include "nsCRT.h"
+#include "nsICryptoHash.h"
 
 #ifdef XP_UNIX
   #include <sys/stat.h>
@@ -711,7 +712,7 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
         else //-- calculate section digest
         {
           PRUint32 sectionLength = curPos - sectionStart;
-          CalculateDigest(verifier, sectionStart, sectionLength,
+          CalculateDigest(sectionStart, sectionLength,
                           &(curItemMF->calculatedSectionDigest));
           //-- Save item in the hashtable
           nsCStringKey itemKey(curItemName);
@@ -839,7 +840,7 @@ nsJAR::VerifyEntry(nsISignatureVerifier* verifier,
     else
     { //-- Calculate and compare digests
       char* calculatedEntryDigest;
-      nsresult rv = CalculateDigest(verifier, aEntryData, aLen, &calculatedEntryDigest);
+      nsresult rv = CalculateDigest(aEntryData, aLen, &calculatedEntryDigest);
       if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
       if (PL_strcmp(aManItem->storedEntryDigest, calculatedEntryDigest) != 0)
         aManItem->status = nsIJAR::INVALID_ENTRY;
@@ -897,33 +898,29 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
 }
 
 
-nsresult nsJAR::CalculateDigest(nsISignatureVerifier* verifier,
-                                const char* aInBuf, PRUint32 aLen,
+nsresult nsJAR::CalculateDigest(const char* aInBuf, PRUint32 aLen,
                                 char** digest)
 {
   *digest = nsnull;
   nsresult rv;
   
-  //-- Calculate the digest
-  HASHContextStr* id;
-  rv = verifier->HashBegin(nsISignatureVerifier::SHA1, &id);
+
+  nsCOMPtr<nsICryptoHash> hasher = do_CreateInstance("@mozilla.org/security/hash;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = verifier->HashUpdate(id, aInBuf, aLen);
+  rv = hasher->Init(nsICryptoHash::SHA1);
   if (NS_FAILED(rv)) return rv;
-  
-  PRUint32 len;
-  unsigned char* rawDigest = (unsigned char*)PR_MALLOC(nsISignatureVerifier::SHA1_LENGTH);
-  if (rawDigest == nsnull) return NS_ERROR_OUT_OF_MEMORY;
-  rv = verifier->HashEnd(id, &rawDigest, &len, nsISignatureVerifier::SHA1_LENGTH);
-  if (NS_FAILED(rv)) { PR_FREEIF(rawDigest); return rv; }
 
-  //-- Encode the digest in base64
-  *digest = PL_Base64Encode((char*)rawDigest, len, *digest);
-  if (!(*digest)) { PR_FREEIF(rawDigest); return NS_ERROR_OUT_OF_MEMORY; }
-  
-  PR_FREEIF(rawDigest);
-  return NS_OK;
+  rv = hasher->Update((const PRUint8*) aInBuf, aLen);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCAutoString hashString;
+  rv = hasher->Finish(PR_TRUE, hashString);
+  if (NS_FAILED(rv)) return rv;
+
+  *digest = ToNewCString(hashString);
+
+  return *digest ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 //----------------------------------------------

@@ -66,6 +66,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  uconv \
 		  unicharutil \
+		  caps \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 

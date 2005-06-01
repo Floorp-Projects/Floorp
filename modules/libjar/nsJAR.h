@@ -144,8 +144,7 @@ class nsJAR : public nsIZipReader, public nsIJAR
                          nsJARManifestItem* aEntry, const char* aEntryData, 
                          PRUint32 aLen);
 
-    nsresult CalculateDigest(nsISignatureVerifier* verifier, 
-                             const char* aInBuf, PRUint32 aInBufLen,
+    nsresult CalculateDigest(const char* aInBuf, PRUint32 aInBufLen,
                              char** digest);
 
     //-- Debugging
