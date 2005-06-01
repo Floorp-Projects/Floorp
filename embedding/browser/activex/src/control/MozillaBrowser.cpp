@@ -609,24 +609,14 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
     memset(&SaveFileName, 0, sizeof(SaveFileName));
     SaveFileName.lStructSize = sizeof(SaveFileName);
     SaveFileName.hwndOwner = m_hWnd;
-    SaveFileName.hInstance = NULL;
     SaveFileName.lpstrFilter = "Web Page, HTML Only (*.htm;*.html)\0*.htm;*.html\0Text File (*.txt)\0*.txt\0"; 
-    SaveFileName.lpstrCustomFilter = NULL; 
-    SaveFileName.nMaxCustFilter = NULL; 
     SaveFileName.nFilterIndex = 1; 
     SaveFileName.lpstrFile = szFile; 
     SaveFileName.nMaxFile = sizeof(szFile); 
     SaveFileName.lpstrFileTitle = szFileTitle;
     SaveFileName.nMaxFileTitle = sizeof(szFileTitle); 
-    SaveFileName.lpstrInitialDir = NULL; 
-    SaveFileName.lpstrTitle = NULL; 
     SaveFileName.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT; 
-    SaveFileName.nFileOffset = NULL; 
-    SaveFileName.nFileExtension = NULL; 
     SaveFileName.lpstrDefExt = "htm"; 
-    SaveFileName.lCustData = NULL; 
-    SaveFileName.lpfnHook = NULL; 
-    SaveFileName.lpTemplateName = NULL; 
 
     //Get the title of the current web page to set as the default filename.
     char szTmp[_MAX_FNAME] = "untitled";
