@@ -51,6 +51,40 @@ OS_REL_CFLAGS	= -Dppc
 CPU_ARCH	= ppc
 endif
 
+ifneq (,$(NEXT_ROOT))
+    GCC_VERSION_FULL := $(shell $(CC) -v 2>&1 | grep "gcc version" | sed -e "s/^.*gcc version[  ]*//" | awk '{ print $$1 }')
+    GCC_VERSION_MAJOR := $(shell echo $(GCC_VERSION_FULL) | awk -F. '{ print $$1 }')
+    GCC_VERSION_MINOR := $(shell echo $(GCC_VERSION_FULL) | awk -F. '{ print $$2 }')
+    GCC_VERSION := $(GCC_VERSION_MAJOR).$(GCC_VERSION_MINOR)
+
+    DARWIN_SDK_CFLAGS := -nostdinc
+
+    ifeq (,$(filter-out 2 3,$(GCC_VERSION_MAJOR)))
+        # GCC <= 3
+        DARWIN_TARGET_ARCH_LIB := darwin
+        DARWIN_SDK_CFLAGS += -isystem $(NEXT_ROOT)/usr/include/gcc/darwin/$(GCC_VERSION)
+    else
+        # GCC >= 4
+        DARWIN_TARGET_MAJOR := $(shell echo $(NEXT_ROOT) | sed -e 's/^.*MacOSX10\.//' | awk -F. '{ print $$1 }')
+        ifeq (,$(DARWIN_TARGET_MAJOR))
+            DARWIN_TARGET_MAJOR := $(shell echo $(OS_RELEASE) | awk -F. '{ print $$1 }')
+        else
+            DARWIN_TARGET_MAJOR := $(shell expr $(DARWIN_TARGET_MAJOR) + 4)
+        endif
+        DARWIN_TARGET_ARCH_LIB := powerpc-apple-darwin$(DARWIN_TARGET_MAJOR)
+        DARWIN_SDK_CFLAGS += -isystem $(NEXT_ROOT)/usr/lib/gcc/$(DARWIN_TARGET_ARCH_LIB)/$(GCC_VERSION_FULL)/include
+    endif
+
+    DARWIN_SDK_CFLAGS += -isystem $(NEXT_ROOT)/usr/include -F$(NEXT_ROOT)/System/Library/Frameworks
+    DARWIN_SDK_LDFLAGS := -L$(NEXT_ROOT)/usr/lib/gcc/$(DARWIN_TARGET_ARCH_LIB) -L$(NEXT_ROOT)/usr/lib/gcc/$(DARWIN_TARGET_ARCH_LIB)/$(GCC_VERSION_FULL) -L$(NEXT_ROOT)/usr/lib
+
+    ifneq (,$(shell find $(NEXT_ROOT)/Library/Frameworks -maxdepth 0))
+        DARWIN_SDK_CFLAGS += -F$(NEXT_ROOT)/Library/Frameworks
+    endif
+
+    LDFLAGS += $(DARWIN_SDK_LDFLAGS)
+endif
+
 # "Commons" are tentative definitions in a global scope, like this:
 #     int x;
 # The meaning of a common is ambiguous.  It may be a true definition:
@@ -61,7 +95,7 @@ endif
 # definitions so that the linker can catch multiply-defined symbols.
 # Also, common symbols are not allowed with Darwin dynamic libraries.
 
-OS_CFLAGS	= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Wmost -fpascal-strings -no-cpp-precomp -fno-common -pipe -DDARWIN -DHAVE_STRERROR -DHAVE_BSD_FLOCK
+OS_CFLAGS	= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Wmost -fpascal-strings -no-cpp-precomp -fno-common -pipe -DDARWIN -DHAVE_STRERROR -DHAVE_BSD_FLOCK $(DARWIN_SDK_CFLAGS)
 
 ifdef BUILD_OPT
 OPTIMIZER	= -O2
@@ -70,7 +104,7 @@ endif
 ARCH		= darwin
 
 # May override this with -bundle to create a loadable module.
-DSO_LDOPTS	= -dynamiclib -compatibility_version 1 -current_version 1 -install_name @executable_path/$(notdir $@) -headerpad_max_install_names
+DSO_LDOPTS	= -dynamiclib -compatibility_version 1 -current_version 1 -install_name @executable_path/$(notdir $@) -headerpad_max_install_names $(DARWIN_SDK_LDFLAGS)
 
 MKSHLIB		= $(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS)
 DLL_SUFFIX	= dylib
