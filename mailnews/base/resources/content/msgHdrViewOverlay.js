@@ -923,7 +923,8 @@ createNewAttachmentInfo.prototype.saveAttachment = function saveAttachment()
   messenger.saveAttachment(this.contentType, 
                            this.url, 
                            encodeURIComponent(this.displayName), 
-                           this.uri, false);
+                           this.uri,
+                           this.isExternalAttachment);
 }
 
 createNewAttachmentInfo.prototype.openAttachment = function openAttachment()
@@ -931,7 +932,8 @@ createNewAttachmentInfo.prototype.openAttachment = function openAttachment()
   messenger.openAttachment(this.contentType, 
                            this.url, 
                            encodeURIComponent(this.displayName), 
-                           this.uri, false);
+                           this.uri,
+                           this.isExternalAttachment);
 }
 
 createNewAttachmentInfo.prototype.printAttachment = function printAttachment()

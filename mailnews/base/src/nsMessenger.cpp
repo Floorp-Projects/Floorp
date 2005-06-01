@@ -587,10 +587,10 @@ nsMessenger::OpenURL(const char *aURL)
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     if(webNav)
       rv = webNav->LoadURI(NS_ConvertASCIItoUCS2(unescapedUrl).get(), // URI string
-      nsIWebNavigation::LOAD_FLAGS_NONE,  // Load flags
-      nsnull,                             // Referring URI
-      nsnull,                             // Post stream
-      nsnull);                            // Extra headers
+      nsIWebNavigation::LOAD_FLAGS_IS_LINK, // Load flags
+      nsnull,                               // Referring URI
+      nsnull,                               // Post stream
+      nsnull);                              // Extra headers
   }
   PL_strfree(unescapedUrl);
   return rv;
