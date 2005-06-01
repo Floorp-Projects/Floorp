@@ -101,6 +101,9 @@
     <key keycode="VK_ESCAPE" command="cmd_close"/>
     <key id="bm_key_find" key="&edit.find.keybinding;" modifiers="accel" command="cmd_bm_find"/>
     <key id="bm_key_properties" key="&edit.properties.keybinding;" modifiers="accel" command="cmd_bm_properties"/>
+#ifdef XP_MACOSX
+    <key id="key_delete2" keycode="VK_BACK" command="cmd_delete"/>
+#endif
   </keyset>
 
   <commandset id="baseMenuCommandSet" />
