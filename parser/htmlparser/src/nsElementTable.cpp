@@ -440,16 +440,6 @@ const nsHTMLElement gHTMLElements[] = {
     /*contain-func*/                    0
   },
   {
-    /*tag*/                             eHTMLTag_counter,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPhrase, (kFlowEntity|kSelf), kNone,
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
-    /*contain-func*/                    0
-  },
-  {
     /*tag*/                             eHTMLTag_dd,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,

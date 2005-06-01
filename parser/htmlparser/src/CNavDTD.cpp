@@ -346,10 +346,6 @@ nsresult CNavDTD::WillBuildModel(const CParserContext& aParserContext,
 
   if(!aParserContext.mPrevContext && aSink) {
 
-#ifdef DEBUG
-    mBodyContext->ResetCounters();
-#endif
-
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
     
@@ -1063,52 +1059,6 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
         }
         break;
       }
-#ifdef DEBUG
-    case eHTMLTag_counter:
-      {
-        PRInt32   theCount=mBodyContext->GetCount();
-        eHTMLTags theGrandParentTag=mBodyContext->TagAt(theCount-1);
-        
-        nsAutoString  theNumber;
-        
-        mBodyContext->IncrementCounter(theGrandParentTag,aNode,theNumber);
-
-        CTextToken theToken(theNumber);
-        nsCParserNode theNode(&theToken, 0 /*stack token*/);
-        result=mSink->AddLeaf(theNode);
-      }
-      break;
-
-    case eHTMLTag_meta:
-      {
-          //we should only enable user-defined entities in debug builds...
-
-        PRInt32 theCount=aNode.GetAttributeCount();
-        const nsAString* theNamePtr=0;
-        const nsAString* theValuePtr=0;
-
-        if(theCount) {
-          PRInt32 theIndex=0;
-          for(theIndex=0;theIndex<theCount;++theIndex){
-            const nsAString& theKey = aNode.GetKeyAt(theIndex);
-            if(theKey.LowerCaseEqualsLiteral("entity")) {
-              const nsAString& theName=aNode.GetValueAt(theIndex);
-              theNamePtr=&theName;
-            }
-            else if(theKey.LowerCaseEqualsLiteral("value")) {
-              //store the named enity with the context...
-              const nsAString& theValue=aNode.GetValueAt(theIndex);
-              theValuePtr=&theValue;
-            }
-          }
-        }
-        if(theNamePtr && theValuePtr) {
-          mBodyContext->RegisterEntity(*theNamePtr,*theValuePtr);
-        }
-      }
-      break; 
-#endif
-
     default:
       break;
   }//switch 
@@ -2139,24 +2089,15 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
   const nsSubstring& theStr = aToken->GetStringValue();
 
   if((kHashsign!=theStr.First()) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
+    //if you're here we have a bogus entity.
+    //convert it into a text token.
     CToken *theToken=0;
-#ifdef DEBUG
-    //before we just toss this away as a bogus entity, let's check...
-    CNamedEntity *theEntity=mBodyContext->GetEntity(theStr);
-    if(theEntity) {
-      theToken = NS_STATIC_CAST(CTextToken*,mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theEntity->mValue));
-    }
-    else {
-#endif
-      //if you're here we have a bogus entity.
-      //convert it into a text token.
-      nsAutoString entityName;
-      entityName.AssignLiteral("&");
-      entityName.Append(theStr); //should append the entity name; fix bug 51161.
-      theToken = mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,entityName);
-#ifdef DEBUG
-    }
-#endif
+
+    nsAutoString entityName;
+    entityName.AssignLiteral("&");
+    entityName.Append(theStr); //should append the entity name; fix bug 51161.
+    theToken = mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,entityName);
+
     return HandleToken(theToken,mParser); //theToken should get recycled automagically...
   }
 
@@ -3309,9 +3250,6 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
           done = PR_FALSE;
         }
       }
-      break;
-
-    case eHTMLTag_counter: //drop it on the floor.
       break;
 
     case eHTMLTag_style:

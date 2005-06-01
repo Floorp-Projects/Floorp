@@ -231,34 +231,6 @@ public:
   CTableState   *mPrevious;
 };
 
-#ifdef DEBUG
-//used for named entities and counters (XXX debug only)
-class CNamedEntity {
-public:
-  CNamedEntity(const nsAString& aName,const nsAString& aValue) : mName(), mValue() {
-    PRUnichar theFirst=aName.First();
-    PRUnichar theLast=aName.Last();
-    PRInt32   theLen=aName.Length();
-    if((2<theLen) && (theFirst==theLast) && (kQuote==theFirst)) {
-      mName = Substring(aName, 1, theLen - 2);
-    } 
-    else mName=aName;
-
-    theFirst=aValue.First();
-    theLast=aValue.Last();
-    theLen=aValue.Length();
-    if((2<theLen) && (theFirst==theLast) && (kQuote==theFirst)) {
-      mValue = Substring(aValue, 1, theLen - 2);
-    }
-    else mValue=aValue;
-
-  }
-
-  nsString mName;   
-  nsString mValue;  
-  PRInt32  mOrdinal;
-};
-#endif
 /************************************************************************
   nsTokenAllocator class implementation.
   This class is used to recycle tokens. 
@@ -387,14 +359,6 @@ public:
 #ifdef  NS_DEBUG
   enum { eMaxTags = 100 };
   eHTMLTags       mXTags[eMaxTags];
-  PRInt32           *mCounters;
-    
-  void            ResetCounters(void);
-  void            AllocateCounters(void);
-  PRInt32         IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsString& aResult);
-    
-  CNamedEntity*   RegisterEntity(const nsAString& aName,const nsAString& aValue);
-  CNamedEntity*   GetEntity(const nsAString& aName) const;
 #endif
 };
 

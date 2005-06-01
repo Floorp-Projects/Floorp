@@ -318,10 +318,6 @@ nsresult COtherDTD::WillBuildModel(const CParserContext& aParserContext,
     if(result==NS_OK) {
       result = aSink->WillBuildModel();
 
-#ifdef DEBUG
-      mBodyContext->ResetCounters();
-#endif
-
       MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::WillBuildModel(), this=%p\n", this));
       START_TIMER();
 
@@ -554,37 +550,6 @@ nsresult COtherDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
       }
       break;
 
-#ifdef DEBUG
-    case eHTMLTag_meta:
-      {
-          //we should only enable user-defined entities in debug builds...
-
-        PRInt32 theCount=aNode.GetAttributeCount();
-        const nsAString* theNamePtr=0;
-        const nsAString* theValuePtr=0;
-
-        if(theCount) {
-          PRInt32 theIndex=0;
-          for(theIndex=0;theIndex<theCount;++theIndex){
-            const nsAString& theKey = aNode.GetKeyAt(theIndex);
-            if(theKey.LowerCaseEqualsLiteral("entity")) {
-              const nsAString& theName=aNode.GetValueAt(theIndex);
-              theNamePtr=&theName;
-            }
-            else if(theKey.LowerCaseEqualsLiteral("value")) {
-              //store the named enity with the context...
-              const nsAString& theValue=aNode.GetValueAt(theIndex);
-              theValuePtr=&theValue;
-            }
-          }
-        }
-        if(theNamePtr && theValuePtr) {
-          mBodyContext->RegisterEntity(*theNamePtr,*theValuePtr);
-        }
-      }
-      break; 
-#endif
-
     default:
       break;
   }//switch 
@@ -800,24 +765,12 @@ nsresult COtherDTD::HandleEntityToken(CToken* aToken) {
   CToken    *theToken=0;
 
   if((kHashsign!=theChar) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
-
-#ifdef DEBUG
-    //before we just toss this away as a bogus entity, let's check...
-    CNamedEntity *theEntity=mBodyContext->GetEntity(theStr);
-    if(theEntity) {
-      theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theEntity->mValue);
-    }
-    else {
-#endif
-      //if you're here we have a bogus entity.
-      //convert it into a text token.
-      nsAutoString entityName;
-      entityName.AssignLiteral("&");
-      entityName.Append(theStr); //should append the entity name; fix bug 51161.
-      theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,entityName);
-#ifdef DEBUG
-    }
-#endif
+    //if you're here we have a bogus entity.
+    //convert it into a text token.
+    nsAutoString entityName;
+    entityName.AssignLiteral("&");
+    entityName.Append(theStr); //should append the entity name; fix bug 51161.
+    theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,entityName);
     result=HandleStartToken(theToken);
   }
   else {
