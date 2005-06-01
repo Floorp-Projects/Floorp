@@ -507,6 +507,43 @@ DEFINES += \
 endif
 endif
 
+# Flags passed to make-jars.pl
+
+MAKE_JARS_FLAGS = \
+	-s $(srcdir) -t $(topsrcdir) -z $(ZIP) -p $(MOZILLA_DIR)/config/preprocessor.pl \
+	-f $(MOZ_CHROME_FILE_FORMAT) \
+	$(NULL)
+
+ifdef NO_JAR_AUTO_REG
+MAKE_JARS_FLAGS += -a
+endif
+
+ifdef USE_EXTENSION_MANIFEST
+MAKE_JARS_FLAGS += -e
+endif
+
+ifeq ($(OS_TARGET),WIN95)
+MAKE_JARS_FLAGS += -l
+endif
+
+ifneq (,$(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)))
+MAKE_JARS_FLAGS += -x
+endif
+
+ifdef CROSS_COMPILE
+MAKE_JARS_FLAGS += -o $(OS_ARCH)
+endif
+
+TAR_CREATE_FLAGS = -cvhf
+
+ifeq ($(OS_ARCH),BSD_OS)
+TAR_CREATE_FLAGS = -cvLf
+endif
+
+ifeq ($(OS_ARCH),OS2)
+TAR_CREATE_FLAGS = -cvf
+endif
+
 #
 # Personal makefile customizations go in these optional make include files.
 #
@@ -833,6 +870,10 @@ EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/$(1)/en-US,$(t
 
 ifdef relativesrcdir
 LOCALE_SRCDIR = $(call EXPAND_LOCALE_SRCDIR,$(relativesrcdir))
+endif
+
+ifdef LOCALE_SRCDIR
+MAKE_JARS_FLAGS += -c $(LOCALE_SRCDIR)
 endif
 
 #

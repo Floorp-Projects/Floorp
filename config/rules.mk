@@ -1582,24 +1582,6 @@ endif # SDK_BINARY
 
 JAR_MANIFEST := $(srcdir)/jar.mn
 
-ifneq (,$(filter flat symlink,$(MOZ_CHROME_FILE_FORMAT)))
-_JAR_REGCHROME_DISABLE_JAR=1
-else
-_JAR_REGCHROME_DISABLE_JAR=0
-endif
-
-ifdef NO_JAR_AUTO_REG
-_JAR_AUTO_REG=-a
-endif
-
-ifdef LOCALE_SRCDIR
-_JAR_LOCALE_SOURCE = -c $(LOCALE_SRCDIR)
-endif
-
-ifeq ($(OS_TARGET),WIN95)
-_NO_FLOCK=-l
-endif
-
 chrome::
 	$(MAKE) realchrome
 	+$(LOOP_OVER_MOZ_DIRS)
@@ -1613,12 +1595,8 @@ ifndef NO_DIST_INSTALL
 	  $(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
 	    $(JAR_MANIFEST) | \
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl \
-	    $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) \
-	    $(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(_NO_FLOCK) $(_JAR_AUTO_REG) \
-	    -f $(MOZ_CHROME_FILE_FORMAT) -d $(FINAL_TARGET)/chrome \
-	    $(_JAR_LOCALE_SOURCE) \
-	    -s $(srcdir) -t $(topsrcdir) -z $(ZIP) -p $(MOZILLA_DIR)/config/preprocessor.pl -- \
-	    "$(XULPPFLAGS) $(DEFINES) $(ACDEFINES)"; \
+	    -d $(FINAL_TARGET)/chrome \
+	    $(MAKE_JARS_FLAGS) -- "$(XULPPFLAGS) $(DEFINES) $(ACDEFINES)"; \
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl \
 	    $(FINAL_TARGET)/chrome $(JAR_MANIFEST) $(_NO_FLOCK); \
 	fi
@@ -1632,28 +1610,10 @@ ifndef NO_INSTALL
 	  $(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
 	    $(JAR_MANIFEST) | \
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl \
-	    $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) \
-	    $(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(_NO_FLOCK) $(_JAR_AUTO_REG) \
-	    -f $(MOZ_CHROME_FILE_FORMAT) -d $(DESTDIR)$(mozappdir)/chrome \
-	    $(_JAR_LOCALE_SOURCE) \
-	    -s $(srcdir) -t $(topsrcdir) -z $(ZIP) -p $(MOZILLA_DIR)/config/preprocessor.pl -- \
-	    "$(XULPPFLAGS) $(DEFINES) $(ACDEFINES)"; \
+	    -d $(DESTDIR)$(mozappdir)/chrome \
+	    $(MAKE_JARS_FLAGS) -- "$(XULPPFLAGS) $(DEFINES) $(ACDEFINES)"; \
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl \
 	    $(DESTDIR)$(mozappdir)/chrome $(JAR_MANIFEST) $(_NO_FLOCK); \
-	fi
-endif
-
-ifneq ($(XPI_PKGNAME),)
-INSTALL_RDF ?= $(srcdir)/install.rdf
-
-libs realchrome::
-	@if test -f $(INSTALL_RDF); then					\
-		echo "Packaging $(XPI_PKGNAME).xpi..."; 			\
-		$(INSTALL) $(IFLAGS1) $(XPI_INSTALL_EXTRAS) $(INSTALL_RDF) $(FINAL_TARGET);	\
-		cd $(FINAL_TARGET);						\
-		$(ZIP) -qr ../$(XPI_PKGNAME).xpi *;				\
-	else									\
-		echo "$(INSTALL_RDF) not found; not packaging $(XPI_PKGNAME).xpi";	\
 	fi
 endif
 
@@ -1675,6 +1635,33 @@ libs:: $(DIST_CHROME_FILES)
 			$(XULAPP_DEFINES) $(DEFINES) $(ACDEFINES) \
 			$(srcdir)/$$f > $(FINAL_TARGET)/chrome/`basename $$f`; \
 	done
+endif
+
+ifneq ($(XPI_PKGNAME),)
+libs realchrome::
+	@echo "Packaging $(XPI_PKGNAME).xpi..."
+	cd $(FINAL_TARGET) && $(ZIP) -qr ../$(XPI_PKGNAME).xpi *
+endif
+
+ifdef INSTALL_EXTENSION_ID
+ifndef XPI_NAME
+$(error XPI_NAME must be set for INSTALL_EXTENSION_ID)
+endif
+
+libs::
+	$(RM) -rf "$(DIST)/bin/extensions/$(INSTALL_EXTENSION_ID)"
+	$(NSINSTALL) -D "$(DIST)/bin/extensions/$(INSTALL_EXTENSION_ID)"
+	cd $(FINAL_TARGET) && tar $(TAR_CREATE_FLAGS) - * | (cd "../../bin/extensions/$(INSTALL_EXTENSION_ID)" && tar -xf -)
+
+install::
+	$(NSINSTALL) -D "$(DESTDIR)$(mozappdir)/$(INSTALL_EXTENSION_ID)"
+	cd $(FINAL_TARGET) && tar $(TAR_CREATE_FLAGS) - * | (cd "$(DESTDIR)$(mozappdir)/extensions/$(INSTALL_EXTENSION_ID) && tar -xf -)
+endif
+
+ifneq (,$(filter flat symlink,$(MOZ_CHROME_FILE_FORMAT)))
+_JAR_REGCHROME_DISABLE_JAR=1
+else
+_JAR_REGCHROME_DISABLE_JAR=0
 endif
 
 REGCHROME = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl \

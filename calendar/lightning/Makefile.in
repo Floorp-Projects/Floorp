@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= lightning
 
 export XPI_NAME	= lightning
-XPI_INSTALL_EXTRAS = $(srcdir)/chrome.manifest
+DIST_FILES	= chrome.manifest install.rdf
 XPI_PKGNAME	= lightning
 
 DIRS		= ../../db/sqlite3/src ../../storage \

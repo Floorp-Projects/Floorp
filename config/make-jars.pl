@@ -1,6 +1,6 @@
 #!/perl
 
-# make-jars [-f] [-v] [-l] [-x] [-d <chromeDir>] [-s <srcdir>] [-t <topsrcdir>] [-c <localedir>] [-z zipprog] [-o operating-system] < <jar.mn>
+# make-jars [-f] [-v] [-l] [-x] [-a] [-e] [-d <chromeDir>] [-s <srcdir>] [-t <topsrcdir>] [-c <localedir>] [-z zipprog] [-o operating-system] < <jar.mn>
 
 my $cygwin_mountprefix = "";
 if ($^O eq "cygwin") {
@@ -49,7 +49,7 @@ foreach my $arg (@ARGV) {
 }
 my $defines = join(' ', @ARGV[ $ddindex .. $#ARGV ]);
 
-getopts("d:s:t:c:f:avlD:o:p:xz:");
+getopts("d:s:t:c:f:avlD:o:p:xz:e:");
 
 my $baseFilesDir = ".";
 if (defined($::opt_s)) {
@@ -110,6 +110,11 @@ if (defined($::opt_l)) {
 my $autoreg = 1;
 if (defined($::opt_a)) {
     $autoreg = 0;
+}
+
+my $useExtensionManifest = 0;
+if (defined($::opt_e)) {
+    $useExtensionManifest = 1;
 }
 
 my $preprocessor = "";
@@ -322,7 +327,7 @@ sub UniqIt
             chomp;
             delete $lines{$_};
         }
-	close(FILE);
+        close(FILE);
     }
 
     unless (open(FILE, ">>$manifest")) {
@@ -528,10 +533,13 @@ start:
             } elsif (/^\%\s+(.*)$/) {
                 my $path = $1;
 
+                my $jarpath = $jarfile;
+                $jarpath = "chrome/".$jarfile if $useExtensionManifest;
+
                 if ($fileformat eq "flat" || $fileformat eq "symlink") {
-                    $path =~ s|\%|$jarfile/$0|;
+                    $path =~ s|\%|$jarpath/$1|;
                 } else {
-                    $path =~ s|\%|jar:$jarfile.jar!/$1|;
+                    $path =~ s|\%|jar:$jarpath.jar!/$1|;
                 }
 
                 push @manifestLines, $path;
@@ -539,12 +547,16 @@ start:
                 # end with blank line
                 last;
             } else {
-                UniqIt("$chromeDir/$jarfile.manifest", @manifestLines);
+                my $manifest = "$chromeDir/$jarfile.manifest";
+                my $manifest = "$chromeDir/../chrome.manifest" if $useExtensionManifest;
+                UniqIt($manifest, @manifestLines);
                 JarIt($chromeDir, $jarfile, $args, $overrides);
                 goto start;
             }
         }
-        UniqIt("$chromeDir/$jarfile.manifest", @manifestLines);
+        my $manifest = "$chromeDir/$jarfile.manifest";
+        $manifest = "$chromeDir/../chrome.manifest" if $useExtensionManifest;
+        UniqIt($manifest, @manifestLines);
         JarIt($chromeDir, $jarfile, $args, $overrides);
 
     } elsif (/^\s*\#.*$/) {

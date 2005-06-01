@@ -65,12 +65,6 @@ PACKAGE       = $(PKG_BASENAME)$(PKG_SUFFIX)
 
 MAKE_PACKAGE	= $(error What is a $(MOZ_PKG_FORMAT) package format?);
 
-TAR_CREATE_FLAGS = -cvhf
-
-ifeq ($(OS_ARCH),BSD_OS)
-TAR_CREATE_FLAGS = -cvLf
-endif
-
 CREATE_FINAL_TAR = tar -c --owner=0 --group=0 --numeric-owner --mode="go-w" -f
 UNPACK_TAR       = tar -x
 
@@ -190,7 +184,6 @@ endif
 ifeq ($(OS_ARCH),OS2)
 STRIP		= $(srcdir)/os2/strip.cmd
 STRIP_FLAGS	=
-TAR_CREATE_FLAGS = -cvf
 PLATFORM_EXCLUDE_LIST = ! -name "*.ico"
 endif
 
