@@ -324,6 +324,15 @@
         ]]></body>
       </method>
       
+      <method name="toggleHistoryPopup">
+        <body><![CDATA[
+          if (!this.popup.mPopupOpen)
+            this.showHistoryPopup();
+          else
+            this.closePopup();
+        ]]></body>
+      </method>
+      
       <!-- ::::::::::::: event dispatching ::::::::::::: -->
 
       <method name="fireEvent">
@@ -395,6 +404,16 @@
               if (aEvent.shiftKey)
                 cancel = this.mController.handleDelete();
               break;
+            case KeyEvent.DOM_VK_DOWN:
+            case KeyEvent.DOM_VK_UP:
+              if (aEvent.altKey)
+                this.toggleHistoryPopup();
+              break;
+#ifndef XP_MACOSX
+            case KeyEvent.DOM_VK_F4:
+              this.toggleHistoryPopup();
+              break;
+#endif
           }
 
           if (cancel) {
