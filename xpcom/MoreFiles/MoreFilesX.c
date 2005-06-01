@@ -2124,8 +2124,12 @@ BadParameter:
 
 /*****************************************************************************/
 
+/* Renamed from FSLockRange to MFX_FSLockRange to avoid a conflict with
+ * the FSLockRange function present in the system library since Mac OS X
+ * 10.4. */
+
 OSErr
-FSLockRange(
+MFX_FSLockRange(
 	SInt16 refNum,
 	SInt32 rangeLength,
 	SInt32 rangeStart)
@@ -2147,8 +2151,12 @@ PBLockRangeSync:
 
 /*****************************************************************************/
 
+/* Renamed from FSUnlockRange to MFX_FSUnlockRange to avoid a conflict with
+ * the FSUnlockRange function present in the system library since Mac OS X
+ * 10.4. */
+
 OSErr
-FSUnlockRange(
+MFX_FSUnlockRange(
 	SInt16 refNum,
 	SInt32 rangeLength,
 	SInt32 rangeStart)
