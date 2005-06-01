@@ -3005,20 +3005,20 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
         mOSHE = mLSHE;
     }
 
-    nsAutoString url;
+    nsCAutoString url;
+    nsCAutoString charset;
     if (aURI)
     {
         // Set our current URI
         SetCurrentURI(aURI);
 
-        nsCAutoString uri;
-        nsresult rv = aURI->GetSpec(uri);
+        nsresult rv = aURI->GetSpec(url);
+        rv |= aURI->GetOriginCharset(charset);
         NS_ENSURE_SUCCESS(rv, rv);
-        CopyUTF8toUTF16(uri, url);
     }
     else if (aURL)
     {
-        url.Assign(aURL);
+        CopyUTF16toUTF8(aURL, url);
     }
     else
     {
@@ -3027,7 +3027,8 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
 
     // Create a URL to pass all the error information through to the page.
 
-    char *escapedUrl = nsEscape(NS_ConvertUTF16toUTF8(url.get()).get(), url_Path);
+    char *escapedUrl = nsEscape(url.get(), url_Path);
+    char *escapedCharset = nsEscape(charset.get(), url_Path);
     char *escapedError = nsEscape(NS_ConvertUTF16toUTF8(aErrorType).get(), url_Path);
     char *escapedDescription = nsEscape(NS_ConvertUTF16toUTF8(aDescription).get(), url_Path);
 
@@ -3049,12 +3050,15 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     errorPageUrl.AppendASCII(escapedError);
     errorPageUrl.AppendLiteral("&u=");
     errorPageUrl.AppendASCII(escapedUrl);
+    errorPageUrl.AppendLiteral("&c=");
+    errorPageUrl.AppendASCII(escapedCharset);
     errorPageUrl.AppendLiteral("&d=");
     errorPageUrl.AppendASCII(escapedDescription);
 
     nsMemory::Free(escapedDescription);
     nsMemory::Free(escapedError);
     nsMemory::Free(escapedUrl);
+    nsMemory::Free(escapedCharset);
 
     nsCOMPtr<nsIURI> errorPageURI;
     nsresult rv = NS_NewURI(getter_AddRefs(errorPageURI), errorPageUrl);
