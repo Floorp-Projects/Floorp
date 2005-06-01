@@ -227,7 +227,7 @@ sub JarIt
         my $cwd = getcwd;
         my $err = 0; 
 
-        #print "$zipprog $zipmoveopt -u ../$jarfile.jar $args\n";
+        #print "$zipprog $zipmoveopt -uX ../$jarfile.jar $args\n";
 
         # Handle posix cmdline limits
         while (length($args) > $maxCmdline) {
@@ -237,15 +237,15 @@ sub JarIt
             $subargs = substr($args, 0, $pos);
             $args = substr($args, $pos);
 
-            #print "$zipprog $zipmoveopt -u ../$jarfile.jar $subargs\n";
+            #print "$zipprog $zipmoveopt -uX ../$jarfile.jar $subargs\n";
             #print "Length of subargs: " . length($subargs) . "\n";
-            system("$zipprog $zipmoveopt -u ../$jarfile.jar $subargs") == 0 or
+            system("$zipprog $zipmoveopt -uX ../$jarfile.jar $subargs") == 0 or
                 $err = $? >> 8;
             zipErrorCheck($err,$lockfile);
         }
         #print "Length of args: " . length($args) . "\n";
-        #print "$zipprog $zipmoveopt -u ../$jarfile.jar $args\n";
-        system("$zipprog $zipmoveopt -u ../$jarfile.jar $args") == 0 or
+        #print "$zipprog $zipmoveopt -uX ../$jarfile.jar $args\n";
+        system("$zipprog $zipmoveopt -uX ../$jarfile.jar $args") == 0 or
             $err = $? >> 8;
         zipErrorCheck($err,$lockfile);
     }
@@ -261,15 +261,15 @@ sub JarIt
             $subargs = substr($overrides, 0, $pos);
             $overrides = substr($overrides, $pos);
 
-            #print "$zipprog $zipmoveopt ../$jarfile.jar $subargs\n";       
+            #print "$zipprog $zipmoveopt -X ../$jarfile.jar $subargs\n";       
             #print "Length of subargs: " . length($subargs) . "\n";
-            system("$zipprog $zipmoveopt ../$jarfile.jar $subargs") == 0 or
+            system("$zipprog $zipmoveopt -X ../$jarfile.jar $subargs") == 0 or
                 $err = $? >> 8;
             zipErrorCheck($err,$lockfile);
         }
         #print "Length of args: " . length($overrides) . "\n";
-        #print "$zipprog $zipmoveopt ../$jarfile.jar $overrides\n";
-        system("$zipprog $zipmoveopt ../$jarfile.jar $overrides\n") == 0 or 
+        #print "$zipprog $zipmoveopt -X ../$jarfile.jar $overrides\n";
+        system("$zipprog $zipmoveopt -X ../$jarfile.jar $overrides\n") == 0 or 
         $err = $? >> 8;
         zipErrorCheck($err,$lockfile);
     }
