@@ -284,10 +284,11 @@ MultiweekView.prototype.createEventBoxInternal = function multiweekView_createEv
 
     eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
     eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
-    eventBox.setAttribute( "onmouseover", "getEventToolTip(this, event)" );
+    eventBox.setAttribute( "onmouseover", "onMouseOverGridOccurrence(event)" );
     eventBox.setAttribute( "tooltip", "gridOccurrenceTooltip" );
     eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
 
+    eventBox.occurrence = itemOccurrence;
     eventBox.event = calEvent;
 
     var eventBoxText = document.createElement( "label" );

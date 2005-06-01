@@ -269,12 +269,13 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
     eventBox.setAttribute("eventbox", "monthview" );
     eventBox.setAttribute("onclick", "monthEventBoxClickEvent( this, event )" );
     eventBox.setAttribute("ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
-    eventBox.setAttribute("onmouseover", "getEventToolTip(this, event)" );
+    eventBox.setAttribute("onmouseover", "onMouseOverGridOccurrence(event)" );
     eventBox.setAttribute("tooltip", "gridOccurrenceTooltip" );
     eventBox.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
     // add a property to the event box that holds the calendarEvent that the
     // box represents
 
+    eventBox.occurrence = itemOccurrence; // for mouseover preview
     eventBox.event = calEvent;
 
     // Make a text item to show the event title

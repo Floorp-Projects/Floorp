@@ -49,6 +49,37 @@
      some of it duplicated.)
 **/
 
+/** PUBLIC
+*
+*  This changes the mouseover preview based on the start and end dates
+*  of an occurrence of a (one-time or recurring) calEvent or calToDo.
+*  Used by all grid views.
+*/
+
+function onMouseOverGridOccurrence( occurrenceBoxMouseEvent )
+{
+  if ("occurrence" in occurrenceBoxMouseEvent.currentTarget) {
+    // occurrence of repeating event or todo
+    var occurrence = occurrenceBoxMouseEvent.currentTarget.occurrence;
+    var item = occurrence.item;
+    var start = occurrence.occurrenceStartDate.jsDate;
+    var endEx = occurrence.occurrenceEndDate.jsDate;
+
+    const toolTip = document.getElementById( "gridOccurrenceTooltip" );
+    var holderBox = null;
+    if (isEvent(item)) {
+      holderBox = getPreviewForEvent(item, start, endEx);
+    } else if (isToDo(item)) {
+      holderBox = getPreviewForToDo(item, start, endEx);
+    }
+    if (holderBox) {
+      setToolTipContent(toolTip, holderBox);
+      return true;
+    } 
+  }
+  return false;
+}
+
 /** For all instances of an event, as displayed by unifinder. **/
 function onMouseOverEventTree( toolTip, mouseEvent )
 {
@@ -169,37 +200,6 @@ function getPreviewForTask( toDoItem )
   }
 }
 
-/* Draws tooltip for events in the various views */
-function getEventToolTip(eventbox, event )
-{
-   var toolTip = document.getElementById( "gridOccurrenceTooltip" );
-
-   while( toolTip.hasChildNodes() )
-   {
-      toolTip.removeChild( toolTip.firstChild );
-   }
-   var holderBox = getPreviewForEvent( eventbox.event );
-   if (holderBox) {
-      toolTip.appendChild( holderBox );
-   }
-}
-/**
-*  Called when mouse moves over a different event display box.
-*  An ICalEventDisplay represents an instance of a possibly recurring event.
-*/
-function getPreviewForEventDisplay( calendarEventDisplay )
-{
-  var instStartDate = new Date(calendarEventDisplay.displayDate);
-  // End date is normally at the time at which event ends.
-  // So AllDay displayed ending today end at 0:00 next day.
-  var instEndDate = new Date(calendarEventDisplay.displayEndDate);
-  if (calendarEventDisplay.event.isAllDay)
-    instEndDate.setDate(instEndDate.getDate() + 1);
-
-  return getPreviewForEvent(calendarEventDisplay.event,
-                            instStartDate, instEndDate);
-}
-
 /**
 *  Called when mouse moves over a different, or
 *  when mouse moves over event in event list.
@@ -240,10 +240,7 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
         relativeToDate = instStartDate || new Date(); // today
       } else {
         // event spanning multiple days, do not omit dates.
-        // For multiday events use event start/end, not grid start/end.
         relativeToDate = false;
-        instStartDate = null;
-        instEndDate = null;
       }
 
       var startDate, endDate;

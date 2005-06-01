@@ -429,6 +429,7 @@ DayView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, e
 
    //create actual eventbox
    var eventBox = document.createElement( "vbox" );
+   eventBox.occurrence = itemOccurrence;
    eventBox.event = calEvent;
    eventBox.setAttribute( "name", "day-view-event-box-"+calEvent.id );
 
@@ -446,7 +447,7 @@ DayView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, e
    
    eventBox.setAttribute( "onclick", "dayEventItemClick( this, event )" );
    eventBox.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
-   eventBox.setAttribute( "onmouseover", "getEventToolTip(this, event)" );
+   eventBox.setAttribute( "onmouseover", "onMouseOverGridOccurrence(event)" );
    eventBox.setAttribute( "tooltip", "gridOccurrenceTooltip" );
    eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" );
    eventBox.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" );

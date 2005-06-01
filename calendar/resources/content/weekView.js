@@ -376,6 +376,7 @@ dump(this.displayEndDate+"\n");
     var eventBox = document.createElement("vbox");
 
     // XXX Consider changing this to only store the ID
+    eventBox.occurrence = itemOccurrence;
     eventBox.event = calEvent;
 
     var ElementOfRef = document.getElementById("week-tree-day-" + gRefColumnIndex + "-item-" + startHour) ;
@@ -421,7 +422,7 @@ dump(this.displayEndDate+"\n");
     eventBox.setAttribute("ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)");
     eventBox.setAttribute("id", "week-view-event-box-" + calEvent.id);
     eventBox.setAttribute("name", "week-view-event-box-" + calEvent.id);
-    eventBox.setAttribute("onmouseover", "getEventToolTip(this, event)" );
+    eventBox.setAttribute("onmouseover", "onMouseOverGridOccurrence(event)" );
     eventBox.setAttribute("tooltip", "gridOccurrenceTooltip");
 
     // Event box text (title, location and description)
