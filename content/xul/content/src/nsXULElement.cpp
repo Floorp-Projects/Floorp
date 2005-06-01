@@ -3374,7 +3374,7 @@ nsXULPrototypeScript::SerializeOutOfLine(nsIObjectOutputStream* aStream,
 
     nsresult rv = NS_OK;
     if (!fastLoadService)
-        return rv;
+        return NS_ERROR_NOT_AVAILABLE;
 
     nsCAutoString urispec;
     rv = mSrcURI->GetAsciiSpec(urispec);
@@ -3383,15 +3383,23 @@ nsXULPrototypeScript::SerializeOutOfLine(nsIObjectOutputStream* aStream,
 
     PRBool exists = PR_FALSE;
     fastLoadService->HasMuxedDocument(urispec.get(), &exists);
+    /* return will be NS_OK from GetAsciiSpec.
+     * that makes no sense.
+     * nor does returning NS_OK from HasMuxedDocument.
+     * XXX return something meaningful.
+     */
     if (exists)
-        return rv;
+        return NS_OK;
 
     // Allow callers to pass null for aStream, meaning
     // "use the FastLoad service's default output stream."
     // See nsXULDocument.cpp for one use of this.
     nsCOMPtr<nsIObjectOutputStream> objectOutput = aStream;
-    if (! objectOutput)
+    if (! objectOutput) {
         fastLoadService->GetOutputStream(getter_AddRefs(objectOutput));
+        if (! objectOutput)
+            return NS_ERROR_NOT_AVAILABLE;
+    }
 
     rv = fastLoadService->
          StartMuxedDocument(mSrcURI, urispec.get(),
