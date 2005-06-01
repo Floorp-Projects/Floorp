@@ -6453,7 +6453,9 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
     nsAutoString type;
     type.Assign(nsDependentJSString(jsstr));
     ToLowerCase(type);
-    if (!type.EqualsLiteral("text/html")) {
+    nsCAutoString actualType, dummy;
+    NS_ParseContentType(NS_ConvertUTF16toUTF8(type), actualType, dummy);
+    if (!actualType.EqualsLiteral("text/html")) {
       contentType = "text/plain";
     }
   }
