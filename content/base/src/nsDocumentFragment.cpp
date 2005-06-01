@@ -496,15 +496,7 @@ nsDocumentFragment::GetUserData(const nsAString& aKey,
 NS_IMETHODIMP
 nsDocumentFragment::GetTextContent(nsAString &aTextContent)
 {
-  if (mOwnerDocument) {
-    return nsNode3Tearoff::GetTextContent(mOwnerDocument,
-                                          this,
-                                          aTextContent);
-  }
-
-  SetDOMStringToNull(aTextContent);
-
-  return NS_OK;
+  return nsNode3Tearoff::GetTextContent(this, aTextContent);
 }
 
 NS_IMETHODIMP

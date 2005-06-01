@@ -48,6 +48,7 @@
 #include "nsIDOMText.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsITextContent.h"
+#include "nsIContentIterator.h"
 #include "nsRange.h"
 #include "nsIEventListenerManager.h"
 #include "nsILinkHandler.h"
@@ -128,6 +129,7 @@ PLDHashTable nsGenericElement::sRangeListsHash;
 PLDHashTable nsGenericElement::sEventListenerManagersHash;
 PRInt32 nsIContent::sTabFocusModel = eTabFocus_any;
 PRBool nsIContent::sTabFocusModelAppliesToXUL = PR_FALSE;
+nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 //----------------------------------------------------------------------
 
 nsChildContentList::nsChildContentList(nsIContent *aContent)
@@ -218,40 +220,29 @@ nsNode3Tearoff::GetTextContent(nsAString &aTextContent)
     return node->GetNodeValue(aTextContent);
   }
 
-  nsIDocument *doc = mContent->GetOwnerDoc();
-  if (!doc) {
-    NS_ERROR("Need a document to do text serialization");
-
-    return NS_ERROR_FAILURE;
-  }
-
-  return GetTextContent(doc, node, aTextContent);
+  return GetTextContent(mContent, aTextContent);
 }
 
 // static
 nsresult
-nsNode3Tearoff::GetTextContent(nsIDocument *aDocument,
-                               nsIDOMNode *aNode,
+nsNode3Tearoff::GetTextContent(nsIContent *aContent,
                                nsAString &aTextContent)
 {
-  NS_ENSURE_ARG_POINTER(aDocument);
-  NS_ENSURE_ARG_POINTER(aNode);
+  NS_ENSURE_ARG_POINTER(aContent);
 
-  nsCOMPtr<nsIDocumentEncoder> docEncoder =
-    do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/plain");
+  nsCOMPtr<nsIContentIterator> iter;
+  NS_NewContentIterator(getter_AddRefs(iter));
+  iter->Init(aContent);
 
-  if (!docEncoder) {
-    NS_ERROR("Could not get a document encoder.");
-
-    return NS_ERROR_FAILURE;
+  nsString tempString;
+  aTextContent.Truncate();
+  while (!iter->IsDone()) {
+    nsCOMPtr<nsITextContent> textContent(do_QueryInterface(iter->GetCurrentNode()));
+    if (textContent)
+      textContent->AppendTextTo(aTextContent);
+    iter->Next();
   }
-
-  docEncoder->Init(aDocument, NS_LITERAL_STRING("text/plain"),
-                   nsIDocumentEncoder::OutputRaw);
-
-  docEncoder->SetNode(aNode);
-
-  return docEncoder->EncodeToString(aTextContent);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -289,13 +280,15 @@ nsNode3Tearoff::SetTextContent(nsIContent* aContent,
     aContent->RemoveChildAt(i, PR_TRUE);
   }
 
-  nsCOMPtr<nsITextContent> textContent;
-  nsresult rv = NS_NewTextNode(getter_AddRefs(textContent));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!aTextContent.IsEmpty()) {
+    nsCOMPtr<nsITextContent> textContent;
+    nsresult rv = NS_NewTextNode(getter_AddRefs(textContent));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  textContent->SetText(aTextContent, PR_TRUE);
+    textContent->SetText(aTextContent, PR_TRUE);
 
-  aContent->AppendChildTo(textContent, PR_TRUE);
+    aContent->AppendChildTo(textContent, PR_TRUE);
+  }
 
   return NS_OK;
 }
