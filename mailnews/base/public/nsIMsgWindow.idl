@@ -64,11 +64,11 @@ interface nsIMsgMessagePaneController : nsISupports {
 interface nsIMsgWindow : nsISupports {
 
   attribute nsIMsgMessagePaneController messagePaneController;
-	attribute nsIMsgStatusFeedback statusFeedback;
-	attribute nsIMsgHeaderSink msgHeaderSink;
+  attribute nsIMsgStatusFeedback statusFeedback;
+  attribute nsIMsgHeaderSink msgHeaderSink;
   attribute nsITransactionManager transactionManager;
-	attribute nsIMsgFolder openFolder;
-	attribute nsIDocShell rootDocShell;
+  attribute nsIMsgFolder openFolder;
+  attribute nsIDocShell rootDocShell;
   void displayHTMLInMessagePane(in wstring title, in wstring body);
 
   readonly attribute nsIPrompt promptDialog;
@@ -82,23 +82,23 @@ interface nsIMsgWindow : nsISupports {
   */
   attribute boolean stopped;
   	
-	void SetDOMWindow(in nsIDOMWindowInternal window);
-	void StopUrls();
+  void SetDOMWindow(in nsIDOMWindowInternal window);
+  void StopUrls();
 
-	void SelectFolder(in string folderUri);
-	void SelectMessage(in string messageUri);
-	/* when the msg window is being unloaded from the content window,
-	 * we can use this notification to force a flush on anything the 
-	 * msg window hangs on too. For some reason xpconnect is still hanging
-	 * onto the msg window even though all of our objects have let go of it
-	 * this forces a release...
-	 */
-	void closeWindow();
+  void SelectFolder(in string folderUri);
+  void SelectMessage(in string messageUri);
+  /* when the msg window is being unloaded from the content window,
+   * we can use this notification to force a flush on anything the 
+   * msg window hangs on too. For some reason xpconnect is still hanging
+   * onto the msg window even though all of our objects have let go of it
+   * this forces a release...
+   */
+  void closeWindow();
 };
 
 [scriptable, uuid(FAD93C80-1AC6-11d4-A8F6-006097222B83)]
 interface nsIMsgWindowCommands : nsISupports {
 
-	void SelectFolder(in string folderUri);
-	void SelectMessage(in string messageUri);
+    void SelectFolder(in string folderUri);
+    void SelectMessage(in string messageUri);
 };
