@@ -1020,6 +1020,18 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   XPCWrappedNative *wrappedNative =
     XPCNativeWrapper::GetWrappedNative(cx, obj);
 
+  if (!wrappedNative) {
+    // toString() called on XPCNativeWrapper.prototype
+    NS_NAMED_LITERAL_STRING(protoString, "[object XPCNativeWrapper]");
+    JSString *str =
+      ::JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*,
+                                                    protoString.get()),
+                            protoString.Length());
+    NS_ENSURE_TRUE(str, JS_FALSE);
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+  }
+
   JSObject *wn_obj = wrappedNative->GetFlatJSObject();
   jsval toStringVal;
 
