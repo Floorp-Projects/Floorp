@@ -280,7 +280,7 @@ nsDocAccessibleWrap::GetFirstLeafAccessible(nsIDOMNode *aStartNode)
 NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
 {
   // Staying on the same page, jumping to a named anchor
-  // Fire EVENT_SELECTION_WITHIN on first leaf accessible -- because some
+  // Fire EVENT_SCROLLINGSTART on first leaf accessible -- because some
   // assistive technologies only cache the child numbers for leaf accessibles
   // the can only relate events back to their internal model if it's a leaf.
   // There is usually an accessible for the focus node, but if it's an empty text node
@@ -307,7 +307,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
   }
 
   // mWasAnchor is set when the previous URL included a named anchor.
-  // This way we still know to fire the SELECTION_WITHIN event when we
+  // This way we still know to fire the EVENT_SCROLLINGSTART event when we
   // move from a named anchor back to the top.
   if (!mWasAnchor && !hasAnchor) {
     return NS_OK;
@@ -334,7 +334,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
   nsCOMPtr<nsIAccessible> accessible = GetFirstLeafAccessible(focusNode);
   nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(accessible);
   if (privateAccessible) {
-    privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
+    privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_SCROLLINGSTART,
                                         accessible, nsnull);
   }
   return NS_OK;
