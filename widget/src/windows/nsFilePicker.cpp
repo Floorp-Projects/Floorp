@@ -165,12 +165,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       }
   
       // free PIDL
-      LPMALLOC pMalloc = NULL;
-      ::SHGetMalloc(&pMalloc);
-      if(pMalloc) {
-         pMalloc->Free(list);
-         pMalloc->Release();
-      }
+      CoTaskMemFree(list);
     }
   }
   else {
