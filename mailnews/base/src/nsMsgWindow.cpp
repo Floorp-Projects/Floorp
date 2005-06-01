@@ -388,7 +388,7 @@ NS_IMETHODIMP nsMsgWindow::StopUrls()
     return webnav->Stop(nsIWebNavigation::STOP_NETWORK);
   }
   
-	return NS_ERROR_NULL_POINTER;
+  return NS_ERROR_NULL_POINTER;
 }
 
 
