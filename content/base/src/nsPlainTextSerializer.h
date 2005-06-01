@@ -193,6 +193,11 @@ protected:
 
   PRPackedBool     mStructs;            // Output structs (pref)
 
+  // If we've just written out a cite blockquote, we need to remember it
+  // so we don't duplicate spaces before a <pre wrap> (which mail uses to quote
+  // old messages).
+  PRPackedBool     mHasWrittenCiteBlockquote;
+
   PRInt32          mIndent;
   // mInIndentString keeps a header that has to be written in the indent.
   // That could be, for instance, the bullet in a bulleted list.

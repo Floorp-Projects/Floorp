@@ -15,9 +15,26 @@ quotations get wrapped:
 >
 >> /(The next line does not end with a *br* tag.)./
 >> Oh, what a rogue and peasant slave am I. 
->
 > /(Neither does the next line:)/
 > The observed of all observers, quite, quite down! 
 
 Now we're outside all blockquotes.
+
+Now let's test some more complicated quotes:
+
+On 02/22/2003 06:29 AM, Koike Kazuhiko wrote:
+> abc
+def
+
+On 02/23/2003 06:49 AM, Blake Kaplan wrote:
+> On 02/22/2003 06:29 AM, Koike Kazuhiko wrote:
+>> abc
+> def
+ghi
+
+The alternate method of quoting:
+
+On 02/22/2003 06:29 AM, Koike Kazuhiko wrote:
+> abc
+def
 

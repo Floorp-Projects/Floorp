@@ -104,6 +104,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   mHeaderStrategy = 1 /*indent increasingly*/;   // ditto
   mQuotesPreformatted = PR_FALSE;                // ditto
   mDontWrapAnyQuotes = PR_FALSE;                 // ditto
+  mHasWrittenCiteBlockquote = PR_FALSE;
   mSpanLevel = 0;
   for (PRInt32 i = 0; i <= 6; i++) {
     mHeaderCounter[i] = 0;
@@ -634,7 +635,17 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     return NS_OK;
   }
 
-  if (mLineBreakDue)
+  PRBool isInCiteBlockquote = PR_FALSE;
+
+  // XXX special-case <blockquote type=cite> so that we don't add additional
+  // newlines before the text.
+  if (aTag == eHTMLTag_blockquote) {
+    nsAutoString value;
+    nsresult rv = GetAttributeValue(aNode, nsHTMLAtoms::type, value);
+    isInCiteBlockquote = NS_SUCCEEDED(rv) && value.EqualsIgnoreCase("cite");
+  }
+
+  if (mLineBreakDue && !isInCiteBlockquote)
     EnsureVerticalSpace(mFloatingLines);
 
   // Check if this tag's content that should not be output
@@ -709,8 +720,17 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     return NS_OK;
   }
 
-  if (type == eHTMLTag_p || type == eHTMLTag_pre) {
-    EnsureVerticalSpace(1); // Should this be 0 in unformatted case?
+  if (type == eHTMLTag_p)
+    EnsureVerticalSpace(1);
+  else if (type == eHTMLTag_pre) {
+    if (GetLastBool(mIsInCiteBlockquote))
+      EnsureVerticalSpace(0);
+    else if (mHasWrittenCiteBlockquote) {
+      EnsureVerticalSpace(0);
+      mHasWrittenCiteBlockquote = PR_FALSE;
+    }
+    else
+      EnsureVerticalSpace(1);
   }
   else if (type == eHTMLTag_tr) {
     PushBool(mHasWrittenCellsForRow, PR_FALSE);
@@ -801,19 +821,14 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     ++mSpanLevel;
   }
   else if (type == eHTMLTag_blockquote) {
-    EnsureVerticalSpace(1);
-
-    nsAutoString value;
-    nsresult rv = GetAttributeValue(aNode, nsHTMLAtoms::type, value);
-
-    PRBool isInCiteBlockquote =
-      NS_SUCCEEDED(rv) && value.LowerCaseEqualsLiteral("cite");
     // Push
     PushBool(mIsInCiteBlockquote, isInCiteBlockquote);
     if (isInCiteBlockquote) {
+      EnsureVerticalSpace(0);
       mCiteQuoteLevel++;
     }
     else {
+      EnsureVerticalSpace(1);
       mIndent += kTabSize; // Check for some maximum value?
     }
   }
@@ -964,7 +979,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     mLineBreakDue = PR_TRUE;
   } 
   else if (type == eHTMLTag_pre) {
-    mFloatingLines = 1;
+    mFloatingLines = GetLastBool(mIsInCiteBlockquote) ? 0 : 1;
     mLineBreakDue = PR_TRUE;
   }
   else if (type == eHTMLTag_ul) {
@@ -1008,12 +1023,13 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
 
     if (isInCiteBlockquote) {
       mCiteQuoteLevel--;
+      mFloatingLines = 0;
+      mHasWrittenCiteBlockquote = PR_TRUE;
     }
     else {
       mIndent -= kTabSize;
+      mFloatingLines = 1;
     }
-
-    mFloatingLines = 1;
     mLineBreakDue = PR_TRUE;
   }
   else if (IsBlockLevel(aTag)
@@ -1658,13 +1674,13 @@ nsPlainTextSerializer::Write(const nsAString& aString)
     if (!mCurrentLine.IsEmpty()) {
       FlushLine();
     }
-    
+
     // Put the mail quote "> " chars in, if appropriate.
     // Have to put it in before every line.
     while(bol<totLen) {
-      if(mAtFirstColumn) {
-        OutputQuotesAndIndent();
-      }
+      PRBool outputQuotes = mAtFirstColumn;
+      PRBool atFirstColumn = mAtFirstColumn;
+      PRBool outputLineBreak = PR_FALSE;
 
       // Find one of '\n' or '\r' using iterators since nsAString
       // doesn't have the old FindCharInSet function.
@@ -1696,20 +1712,19 @@ nsPlainTextSerializer::Write(const nsAString& aString)
             mInWhitespace = PR_FALSE;
           }
         }
-        Output(stringpart);
+        mCurrentLine.Assign(stringpart);
         mEmptyLines=-1;
-        mAtFirstColumn = mAtFirstColumn && (totLen-bol)==0;
+        atFirstColumn = mAtFirstColumn && (totLen-bol)==0;
         bol = totLen;
       } 
       else {
         // There is a newline
         nsAutoString stringpart(Substring(aString, bol, newline-bol));
         mInWhitespace = PR_TRUE;
-        Output(stringpart);
-        // and write the newline
-        Output(mLineBreak);
+        mCurrentLine.Assign(stringpart);
+        outputLineBreak = PR_TRUE;
         mEmptyLines=0;
-        mAtFirstColumn = PR_TRUE;
+        atFirstColumn = PR_TRUE;
         bol = newline+1;
         if('\r' == *iter && bol < totLen && '\n' == *++iter) {
           // There was a CRLF in the input. This used to be illegal and
@@ -1718,7 +1733,21 @@ nsPlainTextSerializer::Write(const nsAString& aString)
           bol++;
         }
       }
+
+      if(outputQuotes) {
+        // Note: this call messes with mAtFirstColumn
+        OutputQuotesAndIndent();
+      }
+
+      Output(mCurrentLine);
+      if (outputLineBreak) {
+        Output(mLineBreak);
+      }
+      mAtFirstColumn = atFirstColumn;
     }
+
+    // Reset mCurrentLine.
+    mCurrentLine.Truncate();
 
 #ifdef DEBUG_wrapping
     printf("No wrapping: newline is %d, totLen is %d\n",
