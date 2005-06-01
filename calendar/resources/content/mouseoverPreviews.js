@@ -49,17 +49,6 @@
      some of it duplicated.)
 **/
 
-// Whether to show event details on mouseover (set to true or false by code)
-var gShowTooltip = true;
-
-/*
-** A function to check if the tooltip should be shown.
-*/
-function checkTooltip( event )
-{
-   return( gShowTooltip );
-}
-
 /**
 *  Called when a user hovers over a todo element and the text for the mouse over is changed.
 */
@@ -68,8 +57,6 @@ function getPreviewForTask( toDoItem )
 {
   if( toDoItem )
   {
-    gShowTooltip = true; //needed to show the tooltip.
-
     const vbox = document.createElement( "vbox" );
     boxInitializeHeaderGrid(vbox);
 
@@ -140,7 +127,6 @@ function getPreviewForTask( toDoItem )
   } 
   else
   {
-    gShowTooltip = false; //Don't show the tooltip
     return null;
   }
 }
@@ -190,8 +176,6 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
 
   if (event)
   {
-    gShowTooltip = true;
-
     if (event.title)
     {
       boxAppendLabeledText(vbox, "tooltipTitle", event.title);
@@ -260,7 +244,6 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
   }
   else
   {
-    gShowTooltip = false; //Don't show the tooltip
     return null;
   }
 }

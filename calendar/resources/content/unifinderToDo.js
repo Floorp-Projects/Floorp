@@ -613,8 +613,12 @@ function changeToolTipTextForToDo( event )
       toolTip.removeChild( toolTip.firstChild ); 
    }
    var holderBox = getPreviewForTask( toDoItem );
-   if( holderBox )
+   if( holderBox ) {
      toolTip.appendChild( holderBox );
+     return true;
+   } else {
+     return false;
+   }
 }
 
 function changeContextMenuForToDo( event )

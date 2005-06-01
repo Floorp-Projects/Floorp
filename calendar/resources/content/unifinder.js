@@ -756,7 +756,11 @@ function changeToolTipTextForEvent( event )
       toolTip.removeChild( toolTip.firstChild );
    }
    var holderBox = getPreviewForEvent( thisEvent );
-   if (holderBox)
+   if (holderBox) {
      toolTip.appendChild( holderBox );
+     return true;
+   } else {
+     return false;
+   }
 }
 
