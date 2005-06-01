@@ -189,20 +189,6 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
     return NS_OK;  // Not interested in frames or iframes, just the root content
   }
 
-  if (nsAccessNode::gLastFocusedNode) {
-    nsCOMPtr<nsIDocShellTreeItem> focusedDocShellTreeItem =
-      nsAccessNode::GetDocShellTreeItemFor(nsAccessNode::gLastFocusedNode);
-    NS_ENSURE_TRUE(focusedDocShellTreeItem, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIDocShellTreeItem> focusedRootTreeItem;
-    focusedDocShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(focusedRootTreeItem));
-
-    if (focusedRootTreeItem != sameTypeRoot) {
-      // Load is not occuring in the currently focused tab, so don't fire 
-      // doc load event there, otherwise assistive technology may become confused
-      return NS_OK;
-    }
-  }
-
   // Get the accessible for the new document.
   // If it not created yet this will create it & cache it, as well as 
   // set up event listeners so that MSAA/ATK toolkit and internal 
