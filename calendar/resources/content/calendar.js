@@ -1480,6 +1480,7 @@ function startBatchTransaction() {
 }
 function endBatchTransaction() {
     gTransactionMgr.endBatch();
+    updateUndoRedoMenu();
 }
 
 function canUndo() {
