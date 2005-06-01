@@ -197,6 +197,11 @@ CParserContext::GetTokenizer(PRInt32 aType,
 
       result = NS_NewHTMLTokenizer(&mTokenizer,mDTDMode,mDocType,
                                    mParserCommand,theFlags);
+      // Make sure the new tokenizer has all of the necessary information.
+      // XXX this might not be necessary.
+      if (mTokenizer && mPrevContext) {
+        mTokenizer->CopyState(mPrevContext->mTokenizer);
+      }
     }
     else if (aType == NS_IPARSER_FLAG_XML)
     {

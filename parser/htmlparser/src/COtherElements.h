@@ -2344,6 +2344,7 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_p].mContainsGroups.mBits.mSelf=0;
 
   CElement::InitializeLeaf(         mDfltElements[eHTMLTag_param],      eHTMLTag_param, CElement::GetEmptyGroup(), CLeafElement::GetContainedGroups());
+  CElement::Initialize(             mDfltElements[eHTMLTag_plaintext],  eHTMLTag_plaintext);
   CBlockElement::Initialize(        mDfltElements[eHTMLTag_pre],        eHTMLTag_pre);
   mDfltElements[eHTMLTag_pre].mExcludeKids=kPreExcludeKids;
 
