@@ -1002,7 +1002,16 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
   mHandleAlphaColors = aHandleAlphaColors;
 
   nsCSSValue value;
-  NS_ENSURE_TRUE(ParseColor(rv, value), NS_ERROR_FAILURE);
+  PRBool colorParsed = ParseColor(rv, value);
+
+  CLEAR_ERROR();
+  ReleaseScanner();
+
+  mHandleAlphaColors = PR_FALSE;
+
+  if (!colorParsed) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (value.GetUnit() == eCSSUnit_String) {
     nsAutoString s;
@@ -1031,11 +1040,6 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
       rv = NS_ERROR_FAILURE;
     }
   }
-
-  CLEAR_ERROR();
-  ReleaseScanner();
-
-  mHandleAlphaColors = PR_FALSE;
 
   return rv;
 }
