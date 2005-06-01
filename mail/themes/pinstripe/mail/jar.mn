@@ -9,6 +9,7 @@ classic.jar:
      skin/classic/messenger/primaryToolbar.css
      skin/classic/messenger/accountCentral.css
      skin/classic/messenger/accountManage.css
+     skin/classic/messenger/accountWizard.css
      skin/classic/messenger/messageHeader.css
      skin/classic/messenger/messageWindow.css
      skin/classic/messenger/messageBody.css
