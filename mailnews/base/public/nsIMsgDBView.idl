@@ -60,13 +60,14 @@ interface nsMsgViewSortOrder
 	const nsMsgViewSortOrderValue descending = 2;
 };
 
-[scriptable, uuid(dac950b0-1dd1-11b2-be06-d4c2003a6927)]
+[scriptable, uuid(f28a1cdf-06c3-4e98-8f66-f49991670071)]
 interface nsMsgViewType {
     const nsMsgViewTypeValue eShowAllThreads = 0;
     const nsMsgViewTypeValue eShowThreadsWithUnread = 2;
     const nsMsgViewTypeValue eShowWatchedThreadsWithUnread = 3;
     const nsMsgViewTypeValue eShowQuickSearchResults = 4;
     const nsMsgViewTypeValue eShowVirtualFolderResults = 5;
+    const nsMsgViewTypeValue eShowSearch = 6;
 };
 
 [scriptable, uuid(64852276-1dd2-11b2-8103-afe12002c053)]

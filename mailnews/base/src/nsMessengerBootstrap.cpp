@@ -55,9 +55,11 @@
 #include "nsString.h"
 #include "nsIURI.h"
 #include "nsIDialogParamBlock.h"
-
 #ifdef MOZ_XUL_APP
 #include "nsICommandLine.h"
+#include "nsILocalFile.h"
+#include "nsNetUtil.h"
+#include "nsIFileURL.h"
 #endif
 
 NS_IMPL_THREADSAFE_ADDREF(nsMessengerBootstrap)
@@ -114,8 +116,41 @@ nsMessengerBootstrap::Handle(nsICommandLine* aCmdLine)
     wwatch->OpenWindow(nsnull, "chrome://messenger/content/", "_blank",
                        "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar,dialog=no", argsArray, getter_AddRefs(opened));
     aCmdLine->SetPreventDefault(PR_TRUE);
+    return NS_OK;
   } 
 
+  PRInt32 numArgs;
+  aCmdLine->GetLength(&numArgs);
+  if (numArgs > 0)
+  {
+    nsAutoString arg;
+    aCmdLine->GetArgument(0, arg);
+    if (StringEndsWith(arg, NS_LITERAL_STRING(".eml")))
+    {
+      nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+      NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+      rv = file->InitWithPath(arg);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // should we check that the file exists, or looks like a mail message?
+
+      nsCOMPtr<nsIURI> uri;
+      NS_NewFileURI(getter_AddRefs(uri), file);
+      nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
+      NS_ENSURE_TRUE(fileURL, NS_ERROR_FAILURE);
+
+      // create scriptable versions of our strings that we can store in our nsISupportsArray....
+      nsCOMPtr<nsISupportsString> scriptableURL (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+      NS_ENSURE_TRUE(scriptableURL, NS_ERROR_FAILURE);
+
+      fileURL->SetQuery(NS_LITERAL_CSTRING("?type=x-message-display"));
+
+      wwatch->OpenWindow(nsnull, "chrome://messenger/content/messageWindow.xul", "_blank",
+                         "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar,dialog=no", fileURL, getter_AddRefs(opened));
+      aCmdLine->SetPreventDefault(PR_TRUE);
+    }
+    return NS_OK;
+
+  }
   return NS_OK;
 }
 

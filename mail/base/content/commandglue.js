@@ -672,6 +672,9 @@ function CreateBareDBView(originalView, msgFolder, viewType, viewFlags, sortType
       case nsMsgViewType.eShowVirtualFolderResults:
           dbviewContractId += "xfvf";
           break;
+      case nsMsgViewType.eShowSearch:
+          dbviewContractId += "search";
+          break;
       case nsMsgViewType.eShowAllThreads:
       default:
           if (sortType == nsMsgViewSortType.byThread || sortType == nsMsgViewSortType.byId
@@ -685,7 +688,7 @@ function CreateBareDBView(originalView, msgFolder, viewType, viewFlags, sortType
           break;
   }
 
-//  dump ("contract id = " + dbviewContractId + "original view = " + originalView + "\n");
+  //  dump ("contract id = " + dbviewContractId + "original view = " + originalView + "\n");
   if (!originalView)
     gDBView = Components.classes[dbviewContractId].createInstance(Components.interfaces.nsIMsgDBView);
 

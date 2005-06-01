@@ -252,19 +252,19 @@ function OnLoadMessageWindow()
 
 function delayedOnLoadMessageWindow()
 {
-	HideMenus();
+  HideMenus();
   ShowMenus();
   AddMailOfflineObserver();
-	CreateMailWindowGlobals();
-	CreateMessageWindowGlobals();
-	verifyAccounts(null);
+  CreateMailWindowGlobals();
+  CreateMessageWindowGlobals();
+  verifyAccounts(null);
 
-	InitMsgWindow();
+  InitMsgWindow();
 
-	messenger.SetWindow(window, msgWindow);
-	InitializeDataSources();
-	// FIX ME - later we will be able to use onload from the overlay
-	OnLoadMsgHeaderPane();
+  messenger.SetWindow(window, msgWindow);
+  InitializeDataSources();
+  // FIX ME - later we will be able to use onload from the overlay
+  OnLoadMsgHeaderPane();
 
   try {
     var nsIFolderListener = Components.interfaces.nsIFolderListener;
@@ -278,9 +278,9 @@ function delayedOnLoadMessageWindow()
   var folder = null;
   var messageUri;
   var loadCustomMessage = false;       //set to true when either loading a message/rfc822 attachment or a .eml file
-	if (window.arguments)
-	{
-		if (window.arguments[0])
+  if (window.arguments)
+  {
+    if (window.arguments[0])
     {
       try
       {
@@ -300,20 +300,20 @@ function delayedOnLoadMessageWindow()
       }
 
       if (!gCurrentMessageUri)
-			gCurrentMessageUri = window.arguments[0];
+        gCurrentMessageUri = window.arguments[0];
     }
-		else
-			gCurrentMessageUri = null;
+    else
+      gCurrentMessageUri = null;
 
-		if (window.arguments[1])
-			gCurrentFolderUri = window.arguments[1];
-		else
+    if (window.arguments[1])
+      gCurrentFolderUri = window.arguments[1];
+    else
       gCurrentFolderUri = folder ? folder.URI : null;
 
     if (window.arguments[2])
       originalView = window.arguments[2];      
 
-	}	
+  }	
 
   CreateView(originalView);
   
@@ -332,7 +332,10 @@ function delayedOnLoadMessageWindow()
 function OnLoadMessageWindowDelayed(loadCustomMessage)
 {
   if (loadCustomMessage)
+  {
+    gDBView.suppressMsgDisplay = false;
     gDBView.loadMessageByUrl(gCurrentMessageUri);
+  }
   else
   {
     var msgKey = extractMsgKeyFromURI(gCurrentMessageUri); 
@@ -381,6 +384,13 @@ function CreateView(originalView)
       msgDatabase = null;
       dbFolderInfo = null;
    }
+  }
+  else
+  {
+    // this is a hack to make opening a stand-alone msg window on a 
+    // .eml file work. We use a search view since its much more tolerant
+    // of not having a folder.
+    viewType = nsMsgViewType.eShowSearch;
   }
 
   // create a db view
@@ -525,12 +535,12 @@ function InitializeDataSources()
 
 function GetSelectedMsgFolders()
 {
-	var folderArray = new Array(1);
-	var msgFolder = GetLoadedMsgFolder();
-	if (msgFolder)
-		folderArray[0] = msgFolder;	
+  var folderArray = new Array(1);
+  var msgFolder = GetLoadedMsgFolder();
+  if (msgFolder)
+    folderArray[0] = msgFolder;	
 
-	return folderArray;
+  return folderArray;
 }
 
 function GetFirstSelectedMessage()
@@ -591,14 +601,14 @@ function GetLoadedMessage()
 //Clear everything related to the current message. called after load start page.
 function ClearMessageSelection()
 {
-	gCurrentMessageUri = null;
-	gCurrentFolderUri = null;
+  gCurrentMessageUri = null;
+  gCurrentFolderUri = null;
   UpdateMailToolbar("clear msg, std alone window");
 }
 
 function GetCompositeDataSource(command)
 {
-	return gCompositeDataSource;	
+  return gCompositeDataSource;	
 }
 
 function SetNextMessageAfterDelete()
@@ -712,38 +722,38 @@ function MsgDeleteMessageFromMessageWindow(reallyDelete, fromToolbar)
 var MessageWindowController =
 {
    supportsCommand: function(command)
-	{
-		switch ( command )
-		{
-			case "cmd_reply":
-			case "button_reply":
-			case "cmd_replySender":
-			case "cmd_replyGroup":
-			case "cmd_replyall":
-			case "button_replyall":
-			case "cmd_forward":
-			case "button_forward":
-			case "cmd_forwardInline":
-			case "cmd_forwardAttachment":
-			case "cmd_editAsNew":
-			case "cmd_delete":
+  {
+    switch ( command )
+    {
+      case "cmd_reply":
+      case "button_reply":
+      case "cmd_replySender":
+      case "cmd_replyGroup":
+      case "cmd_replyall":
+      case "button_replyall":
+      case "cmd_forward":
+      case "button_forward":
+      case "cmd_forwardInline":
+      case "cmd_forwardAttachment":
+      case "cmd_editAsNew":
+      case "cmd_delete":
       case "cmd_undo":
       case "cmd_redo":
       case "cmd_killThread":
       case "cmd_watchThread":
-			case "button_delete":
+      case "button_delete":
       case "button_junk":
-			case "cmd_shiftDelete":
-			case "cmd_saveAsFile":
-			case "cmd_saveAsTemplate":
-			case "cmd_viewPageSource":
+      case "cmd_shiftDelete":
+      case "cmd_saveAsFile":
+      case "cmd_saveAsTemplate":
+      case "cmd_viewPageSource":
       case "cmd_getMsgsForAuthAccounts":
       case "button_mark":
-			case "cmd_markAsRead":
-			case "cmd_markAllRead":
-			case "cmd_markThreadAsRead":
+      case "cmd_markAsRead":
+      case "cmd_markAllRead":
+      case "cmd_markThreadAsRead":
       case "cmd_markReadByDate":
-			case "cmd_markAsFlagged":
+      case "cmd_markAsFlagged":
       case "cmd_label0":
       case "cmd_label1":
       case "cmd_label2":
@@ -751,23 +761,24 @@ var MessageWindowController =
       case "cmd_label4":
       case "cmd_label5":
       case "button_file":
-			case "cmd_file":
+      case "cmd_file":
       case "cmd_markAsJunk":
       case "cmd_markAsNotJunk":
       case "cmd_recalculateJunkScore":
       case "cmd_applyFilters":
       case "cmd_runJunkControls":
       case "cmd_deleteJunk":
-			case "cmd_nextMsg":
+      case "cmd_nextMsg":
       case "button_next":
       case "button_previous":
-			case "cmd_nextUnreadMsg":
-			case "cmd_nextFlaggedMsg":
-			case "cmd_nextUnreadThread":
-			case "cmd_previousMsg":
-			case "cmd_previousUnreadMsg":
-			case "cmd_previousFlaggedMsg":
+      case "cmd_nextUnreadMsg":
+      case "cmd_nextFlaggedMsg":
+      case "cmd_nextUnreadThread":
+      case "cmd_previousMsg":
+      case "cmd_previousUnreadMsg":
+      case "cmd_previousFlaggedMsg":
         return !(gDBView.keyForFirstSelectedMessage == nsMsgKey_None);
+
       case "cmd_getNextNMessages":
       case "cmd_find":
       case "cmd_findAgain":
