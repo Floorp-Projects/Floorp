@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1626,6 +1627,11 @@ nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFl
     }
   }
 
+  if (result == kEOF && !aScanner.IsIncremental()) {
+    // Make sure we don't lose information about this trailing newline.
+    result = NS_OK;
+  }
+
   mNewlineCount = 1;
   return result;
 }
@@ -2111,6 +2117,13 @@ nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
   PRBool haveCR;
 
   nsresult result = aScanner.ReadWhitespace(mTextValue, mNewlineCount, haveCR);
+  
+  if (result == kEOF && !aScanner.IsIncremental()) {
+    // Oops, we ran off the end, make sure we don't lose the trailing
+    // whitespace!
+    result = NS_OK;
+  }
+
   if (NS_OK == result && haveCR) {
     mTextValue.writable().StripChar(kCR);
   }
