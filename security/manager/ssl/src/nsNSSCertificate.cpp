@@ -364,6 +364,8 @@ nsNSSCertificate::GetDbKey(char * *aDbKey)
   *aDbKey = nsnull;
   key.len = NS_NSS_LONG*4+mCert->serialNumber.len+mCert->derIssuer.len;
   key.data = (unsigned char *)nsMemory::Alloc(key.len);
+  if (!key.data)
+    return NS_ERROR_OUT_OF_MEMORY;
   NS_NSS_PUT_LONG(0,key.data); // later put moduleID
   NS_NSS_PUT_LONG(0,&key.data[NS_NSS_LONG]); // later put slotID
   NS_NSS_PUT_LONG(mCert->serialNumber.len,&key.data[NS_NSS_LONG*2]);
@@ -466,7 +468,7 @@ nsNSSCertificate::GetEmailAddresses(PRUint32 *aLength, PRUnichar*** aAddresses)
   }
 
   *aAddresses = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * (*aLength));
-  if (!aAddresses)
+  if (!*aAddresses)
     return NS_ERROR_OUT_OF_MEMORY;
 
   PRUint32 iAddr;
@@ -1030,8 +1032,11 @@ nsNSSCertificate::GetUsagesArray(PRBool ignoreOcsp,
   PRUint32 tmpCount;
   nsUsageArrayHelper uah(mCert);
   rv = uah.GetUsagesArray(suffix, ignoreOcsp, max_usages, _verified, &tmpCount, tmpUsages);
+  NS_ENSURE_SUCCESS(rv,rv);
   if (tmpCount > 0) {
     *_usages = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * tmpCount);
+    if (!*_usages)
+      return NS_ERROR_OUT_OF_MEMORY;
     for (PRUint32 i=0; i<tmpCount; i++) {
       (*_usages)[i] = tmpUsages[i];
     }
@@ -1039,6 +1044,8 @@ nsNSSCertificate::GetUsagesArray(PRBool ignoreOcsp,
     return NS_OK;
   }
   *_usages = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *));
+  if (!*_usages)
+    return NS_ERROR_OUT_OF_MEMORY;
   *_count = 0;
   return NS_OK;
 }
@@ -1059,6 +1066,7 @@ nsNSSCertificate::GetUsagesString(PRBool ignoreOcsp,
   PRUint32 tmpCount;
   nsUsageArrayHelper uah(mCert);
   rv = uah.GetUsagesArray(suffix, ignoreOcsp, max_usages, _verified, &tmpCount, tmpUsages);
+  NS_ENSURE_SUCCESS(rv,rv);
   _usages.Truncate();
   for (PRUint32 i=0; i<tmpCount; i++) {
     if (i>0) _usages.AppendLiteral(",");
