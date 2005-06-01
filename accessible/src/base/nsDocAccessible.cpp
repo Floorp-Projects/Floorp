@@ -131,9 +131,28 @@ NS_IMETHODIMP nsDocAccessible::GetName(nsAString& aName)
   return GetTitle(aName);
 }
 
-NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *_retval)
+NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *aRole)
 {
-  *_retval = ROLE_PANE;
+  *aRole = ROLE_PANE; // Fall back
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+    GetDocShellTreeItemFor(mDOMNode);
+  if (docShellTreeItem) {
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
+    docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+    if (sameTypeRoot == docShellTreeItem) {
+      // Root of content or chrome tree
+      PRInt32 itemType;
+      docShellTreeItem->GetItemType(&itemType);
+      if (itemType == nsIDocShellTreeItem::typeChrome) {
+        *aRole = ROLE_APPLICATION;
+      }
+      else if (itemType == nsIDocShellTreeItem::typeContent) {
+        *aRole = ROLE_DOCUMENT;
+      }
+    }
+  }
+  
   return NS_OK;
 }
 
@@ -396,7 +415,18 @@ NS_IMETHODIMP nsDocAccessible::Init()
     }
   }
   AddEventListeners();
-  return nsBlockAccessible::Init();
+
+  nsresult rv = nsBlockAccessible::Init();
+
+  if (mRoleMapEntry && mRoleMapEntry->role != ROLE_DIALOG &&
+      mRoleMapEntry->role != ROLE_APPLICATION &&
+      mRoleMapEntry->role != ROLE_DOCUMENT) {
+    // Document accessible can only have certain roles
+    // This was set in nsAccessible::Init() based on xhtml2:role attribute
+    mRoleMapEntry->role = nsnull;
+  }
+
+  return rv;
 }  
 
 

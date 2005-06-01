@@ -510,7 +510,9 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
   }
 #endif
   else if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex) ||
-           content->HasAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role)
+           (content->HasAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role) &&
+            tag != nsAccessibilityAtoms::body && content->GetParent())
+            // The role from a <body> or doc element is already exposed in nsDocAccessible
 #ifndef MOZ_ACCESSIBILITY_ATK
            ||
            tag == nsAccessibilityAtoms::abbr ||
