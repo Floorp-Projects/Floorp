@@ -668,6 +668,16 @@ function editCalendarDialog(event)
     openCalendarProperties(document.popupNode.calendar, null);
 }
 
+function deleteCalendar(event)
+{
+    var cal = document.popupNode.calendar
+    getDisplayComposite().removeCalendar(cal.uri);
+    var calMgr = getCalendarManager();
+    calMgr.unregisterCalendar(cal);
+    // Delete file?
+    //calMgr.deleteCalendar(cal);
+}
+
 
 function appendCalendars(to, froms, listener)
 {

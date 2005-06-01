@@ -63,7 +63,10 @@ var calCalendarManagerObserver = {
     },
 
     onCalendarUnregistering: function(aCalendar) {
-        setCalendarManagerUI();
+        var item = getListItem(aCalendar);
+        if (item) {
+            document.getElementById("list-calendars-listbox").removeChild(item);
+        }
     },
 
     onCalendarDeleting: function(aCalendar) {

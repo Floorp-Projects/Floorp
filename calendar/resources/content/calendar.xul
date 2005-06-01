@@ -103,7 +103,7 @@
 
   <command id="new_calendar_command" oncommand="newCalendarDialog()"/>
   <command id="edit_calendar_command" oncommand="editCalendarDialog(event)"/>
-  <command id="delete_calendar_command" oncommand="deleteCalendar()"/>
+  <command id="delete_calendar_command" oncommand="deleteCalendar(event)"/>
 
   <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
   <command id="previous_command" oncommand="gCalendarWindow.currentView.goToPrevious()"/>

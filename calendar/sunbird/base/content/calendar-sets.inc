@@ -77,7 +77,7 @@
   <command id="edit_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>
   <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddRemoteCalendarDialog()"/>
   <command id="edit_server_command" oncommand="gCalendarWindow.calendarManager.launchEditRemoteCalendarDialog()"/>
-  <command id="delete_server_command" oncommand="deleteCalendar()"/>
+  <command id="delete_server_command" oncommand="deleteCalendar(event)"/>
   <command id="find_new_calendar_command" oncommand="goFindNewCalendars()"/>
 
   <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
