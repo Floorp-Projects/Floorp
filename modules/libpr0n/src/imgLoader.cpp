@@ -926,7 +926,7 @@ void imgCacheValidator::AddProxy(imgRequestProxy *aProxy)
   // the network.
   aProxy->AddToLoadGroup();
 
-  mProxies.AppendElement(NS_STATIC_CAST(imgIRequest *, aProxy));
+  mProxies.AppendObject(aProxy);
 }
 
 /** nsIRequestObserver methods **/
@@ -939,13 +939,10 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
     PRBool isFromCache;
     if (NS_SUCCEEDED(cacheChan->IsFromCache(&isFromCache)) && isFromCache) {
 
-      PRUint32 count;
-      mProxies.Count(&count);
+      PRUint32 count = mProxies.Count();
       for (PRInt32 i = count-1; i>=0; i--) {
-        imgRequestProxy *proxy;
-        mProxies.GetElementAt(i, (nsISupports**)&proxy);
+        imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy *, mProxies[i]);
         mRequest->NotifyProxyListener(proxy);
-        NS_RELEASE(proxy);
       }
 
       mRequest->SetLoadId(mContext);
@@ -994,14 +991,11 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
 
   mDestListener = NS_STATIC_CAST(nsIStreamListener*, pl);
 
-  PRUint32 count;
-  mProxies.Count(&count);
+  PRUint32 count = mProxies.Count();
   for (PRInt32 i = count-1; i>=0; i--) {
-    imgRequestProxy *proxy;
-    mProxies.GetElementAt(i, (nsISupports**)&proxy);
+    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy *, mProxies[i]);
     proxy->ChangeOwner(request);
     request->NotifyProxyListener(proxy);
-    NS_RELEASE(proxy);
   }
 
   NS_RELEASE(request);
