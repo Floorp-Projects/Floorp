@@ -72,16 +72,21 @@
         <rows equalsize="always">
           <row align="center">
             <label value="Title" class="label"/>
-            <textbox id="event-title" size="10"/>
+            <textbox id="event-title"/>
           </row>
           <row align="center">
             <label value="Location" class="label"/>
-            <textbox id="event-location" size="10"/>
+            <textbox id="event-location"/>
           </row>
 
           <row align="center">
             <label value="URL" class="label"/>
-            <textbox id="event-url" size="10"/>
+            <textbox id="event-url"/>
+          </row>
+
+          <row align="center">
+            <label value="Attendees" class="label"/>
+            <textbox id="event-attendees"/>
           </row>
 
           <row align="center">

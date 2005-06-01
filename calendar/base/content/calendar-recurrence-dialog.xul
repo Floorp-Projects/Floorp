@@ -45,7 +45,7 @@
 
 <dialog
   id="calendar-recurrence-dialog"
-  title="Recurrence Event"
+  title="Edit Recurrence"
   buttons="accept,cancel"
   ondialogaccept="return onAccept();"
   ondialogcancel="return onCancel();"

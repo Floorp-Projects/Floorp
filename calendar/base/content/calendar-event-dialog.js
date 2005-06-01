@@ -110,6 +110,15 @@ function loadDialog()
     setElementValue("event-url",         event.getProperty("URL"));
     setElementValue("event-description", event.getProperty("DESCRIPTION"));
 
+    /* attendence */
+    var attendeeString = "";
+    for each (var attendee in event.getAttendees({})) {
+        if (attendeeString != "")
+            attendeeString += ",";
+        attendeeString += attendee.id.split("mailto:")[1];
+    }
+    setElementValue("event-attendees", attendeeString);
+
     /* event default calendar */
     if (event.parent) {
         var calendarList = document.getElementById("event-calendar");
@@ -120,10 +129,12 @@ function loadDialog()
         }
     }
 
+    /* recurrence */
     if (event.recurrenceInfo) {
         setElementValue("event-recurrence", "true", "checked");
     }
 
+    /* alarms */
     if (event.hasAlarm) {
         var alarmLength = event.getProperty("alarmLength");
         if (alarmLength != null) {
@@ -146,6 +157,29 @@ function saveDialog(event)
     setEventProperty(event, "URL",         getElementValue("event-url"));
     setEventProperty(event, "DESCRIPTION", getElementValue("event-description"));
 
+    /* attendence */
+    event.removeAllAttendees();
+    var attendees = getElementValue("event-attendees");
+    if (attendees != "") {
+        for each (var addr in attendees.split(",")) {
+            var attendee = createAttendee();
+            attendee.id = "mailto:" + addr;
+            event.addAttendee(attendee);
+        }
+    }
+
+    /* recurrence */
+    if (getElementValue("event-recurrence", "checked")) {
+        if (window.recurrenceInfo) {
+            dump("setting recurrenceInfo!\n");
+            event.recurrenceInfo = window.recurrenceInfo;
+        } else
+            dump("not setting recurrenceInfo\n");
+    } else {
+        event.recurrenceInfo = null;
+    }
+
+    /* alarms */
     event.hasAlarm = (getElementValue("event-alarm") != "none");
     if (!event.hasAlarm) {
         event.deleteProperty("alarmLength");
@@ -186,15 +220,6 @@ function saveDialog(event)
         event.alarmTime = alarmTime;
     }
 
-    if (getElementValue("event-recurrence", "checked")) {
-        if (window.recurrenceInfo) {
-            dump("setting recurrenceInfo!\n");
-            event.recurrenceInfo = window.recurrenceInfo;
-        } else
-            dump("not setting recurrenceInfo\n");
-    } else {
-        event.recurrenceInfo = null;
-    }
 }
 
 
