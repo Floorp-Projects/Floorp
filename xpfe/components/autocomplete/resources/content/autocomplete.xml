@@ -528,7 +528,7 @@
       <method name="startLookup">
         <body><![CDATA[
           var str = this.value;
-          
+
           this.isSearching = true;
           this.mSessionReturns = this.sessionCount;
           this.mFailureCount = 0;
@@ -711,6 +711,7 @@
                if (results && results.items.Count() > 0 && results.defaultItemIndex != -1)
                {
                   this.value = this.getSessionValueAt(name, results.defaultItemIndex);
+                  this.mDefaultMatchFilled = true;
                   this.mNeedToFinish = false;
                  break;
                }
@@ -728,7 +729,10 @@
                 this.mNeedToFinish = false;
                 var defaultSession = this.getDefaultSession();
                 if (defaultSession)
+                {
                     this.value = this.getSessionValueAt(defaultSession, 0); // preselect the first one...
+                    this.mDefaultMatchFilled = true;
+                }
               }
             }
 
@@ -1011,14 +1015,14 @@
         <parameter name="aUseFirstMatchIfNoDefault"/>
         <body><![CDATA[
           if (this.mDefaultMatchFilled) return;
-            
+
           if (!this.mFinishAfterSearch && this.autoFill && 
               this.mLastKeyCode != KeyEvent.DOM_VK_BACK_SPACE &&
               this.mLastKeyCode != KeyEvent.DOM_VK_DELETE) {
             var indexToUse = aResults.defaultItemIndex;
             if (aUseFirstMatchIfNoDefault && indexToUse == -1)
-              indexToUse = 0;      
-              
+              indexToUse = 0; 
+
             if (indexToUse != -1) {
               var resultValue = this.getSessionValueAt(aSessionName, indexToUse);
               var match = resultValue.toLowerCase();
