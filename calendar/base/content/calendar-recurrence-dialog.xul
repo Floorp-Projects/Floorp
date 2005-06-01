@@ -103,15 +103,15 @@
               </menulist>
               <hbox>
                 <vbox>
-                  <checkbox label="Monday"/>
-                  <checkbox label="Tuesday"/>
-                  <checkbox label="Wednesday"/>
-                  <checkbox label="Thursday"/>
+                  <checkbox id="weekly-mon" label="Monday" value="2"/>
+                  <checkbox id="weekly-tue" label="Tuesday" value="3"/>
+                  <checkbox id="weekly-wed" label="Wednesday" value="4"/>
+                  <checkbox id="weekly-thu" label="Thursday" value="5"/>
                 </vbox>
                 <vbox>
-                  <checkbox label="Friday"/>
-                  <checkbox label="Saturday"/>
-                  <checkbox label="Sunday"/>
+                  <checkbox id="weekly-fri" label="Friday" value="6"/>
+                  <checkbox id="weekly-sat" label="Saturday" value="7"/>
+                  <checkbox id="weekly-sun" label="Sunday" value="1"/>
                 </vbox>
               </hbox>
             </vbox>
@@ -122,7 +122,7 @@
             </hbox>
 
             <hbox align="top">
-              <textbox width="30"/>
+              <textbox id="yearly-years" width="30"/>
               <label value="years"/>
             </hbox>
 

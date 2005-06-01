@@ -71,6 +71,9 @@ function onCancel()
 
 function loadDialog()
 {
+    if (!window.originalRecurrenceInfo)
+        return;
+
     var ritems = window.originalRecurrenceInfo.getRecurrenceItems({});
 
     /* split out rules and exceptions */
@@ -92,17 +95,25 @@ function loadDialog()
 
         switch(rule.type) {
         case "DAILY":
-            setElementValue("period-deck", 0, "selectedIndex");
+            document.getElementById("period-list").selectedIndex = 0;
+
             setElementValue("daily-days", rule.interval);
             break;
         case "WEEKLY":
-            setElementValue("period-deck", 1, "selectedIndex");
+            document.getElementById("period-list").selectedIndex = 1;
+
+            const byDayTable = { 1 : "sun", 2 : "mon", 3 : "tue", 4 : "wed",
+                                 5 : "thu", 6 : "fri", 7: "sat" };
+
+            for each (var i in rule.getComponent("BYDAY", {})) {
+                setElementValue("weekly-" + byDayTable[i], "true", "checked");
+            }
             break;
         case "MONTHLY":
-            setElementValue("period-deck", 2, "selectedIndex");
+            document.getElementById("period-list").selectedIndex = 2;
             break;
         case "YEARLY":
-            setElementValue("period-deck", 3, "selectedIndex");
+            document.getElementById("period-list").selectedIndex = 3;
             break;
         default:
             dump("unable to handle your rule type!\n");
@@ -144,12 +155,27 @@ function saveDialog()
         break;
     case 1:
         recRule.type = "WEEKLY";
+        recRule.interval = 1; // XXX we need to support every 2 weeks and so on..
+        var onDays = [];
+        ["sun", "mon", "tue", "wed", "thu", "fri", "sat"].
+            forEach(function(d)
+                    {
+                        var elem = document.getElementById("weekly-" + d); 
+                        if (elem.checked) {
+                            onDays.push(elem.getAttribute("value"));
+                        }
+                    });
+        recRule.setComponent("BYDAY", onDays.length, onDays);
         break;
     case 2:
         recRule.type = "MONTHLY";
         break;
     case 3:
         recRule.type = "YEARLY";
+        var nyears = Number(getElementValue("yearly-years"));
+        if (nyears == null)
+            nyears = 1;
+        recRule.interval = nyears;
         break;
     }
 
