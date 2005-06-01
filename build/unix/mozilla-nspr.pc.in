@@ -7,6 +7,6 @@ Name: NSPR
 Description: The Netscape Portable Runtime
 Version: %MOZILLA_VERSION%
 Libs: %FULL_NSPR_LIBS%
-Cflags: -I${includedir}/nspr
+Cflags: %FULL_NSPR_CFLAGS%
 
 
