@@ -251,8 +251,6 @@ protected:
     return mDefaultNamespaceID;
   };
 
-  nsCOMPtr<nsIChannel>     mChannel;
-
   nsCompatibility mCompatMode;
 
   nsCOMArray<nsIDOMHTMLMapElement> mImageMaps;

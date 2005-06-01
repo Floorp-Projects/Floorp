@@ -225,10 +225,10 @@ nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 void
 nsXMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
 {
-  if (mPendingChannel) {
+  if (mChannelIsPending) {
     StopDocumentLoad();
-    mPendingChannel->Cancel(NS_BINDING_ABORTED);
-    mPendingChannel = nsnull;
+    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannelIsPending = nsnull;
   }
   
   nsDocument::ResetToURI(aURI, aLoadGroup);
@@ -506,12 +506,12 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   }
 
   // After this point, if we error out of this method we should clear
-  // mPendingChannel.
+  // mChannelIsPending.
 
   // Start an asynchronous read of the XML document
   rv = channel->AsyncOpen(listener, nsnull);
   if (NS_FAILED(rv)) {
-    mPendingChannel = nsnull;
+    mChannelIsPending = PR_FALSE;
     if (modalEventQueue) {
       mEventQService->PopThreadEventQueue(modalEventQueue);
     }
@@ -614,8 +614,9 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   rv = CallQueryInterface(mParser, aDocListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mPendingChannel = aChannel;
-
+  NS_ASSERTION(mChannel, "How can we not have a channel here?");
+  mChannelIsPending = PR_TRUE;
+  
   SetDocumentCharacterSet(charset);
   mParser->SetDocumentCharset(charset, charsetSource);
   mParser->SetCommand(aCommand);
@@ -628,7 +629,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 void
 nsXMLDocument::EndLoad()
 {
-  mPendingChannel = nsnull;
+  mChannelIsPending = PR_FALSE;
   mLoopingForSyncLoad = PR_FALSE;
 
   if (mLoadedAsData || mLoadedAsInteractiveData) {
