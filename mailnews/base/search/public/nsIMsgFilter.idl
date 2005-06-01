@@ -61,6 +61,8 @@ interface nsIMsgRuleAction : nsISupports {
 
   attribute long junkScore; 
 
+  attribute string strValue;
+
 };
 
 [scriptable, uuid(605db0f8-04a1-11d3-a50a-0060b0fc04b7)]

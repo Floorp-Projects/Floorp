@@ -65,7 +65,9 @@ REQUIRES	= xpcom \
 		  txmgr \
 		  caps \
 		  docshell \
+		  uriloader \
 		  msgimap \
+                  msgcompose \
 		  nkcache \
 		  windowwatcher \
 		  embed_base \

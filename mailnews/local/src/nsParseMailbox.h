@@ -127,6 +127,7 @@ public:
   struct message_header m_mozstatus;
   struct message_header m_mozstatus2;
   struct message_header m_in_reply_to;
+  struct message_header m_replyTo;
   struct message_header m_content_type;
   
   // Support for having multiple To or Cc header lines in a message
@@ -257,6 +258,7 @@ protected:
                                           nsIMsgWindow *msgWindow);
   virtual int   MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr);
   void          LogRuleHit(nsIMsgFilter *filter, nsIMsgDBHdr *msgHdr);
+
   nsCOMPtr <nsIMsgFilterList> m_filterList;
   nsCOMPtr <nsIMsgFilterList> m_deferredToServerFilterList;
   nsCOMPtr <nsIMsgFolder> m_rootFolder;

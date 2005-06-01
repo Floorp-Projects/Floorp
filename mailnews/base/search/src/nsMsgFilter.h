@@ -62,6 +62,8 @@ private:
     nsMsgLabelValue         m_label;  /* label to set rule to */
     nsCString		m_folderUri; 
     PRInt32             m_junkScore;  /* junk score (or arbitrary int value?) */
+    // arbitrary string value. Currently, email address to forward to
+    nsCString           m_strValue; 
 } ;
 
 

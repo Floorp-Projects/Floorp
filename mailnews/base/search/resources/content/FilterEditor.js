@@ -54,6 +54,8 @@ var gActionValueDeck;
 var gActionPriority;
 var gActionLabel;
 var gActionJunkScore;
+var gActionForwardTo;
+var gReplyWithTemplateUri;
 var gFilterBundle;
 var gPreFillName;
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
@@ -72,6 +74,7 @@ var gWatchCheckbox;
 var gDeleteFromServerCheckbox;
 var gFetchBodyFromServerCheckbox;
 var gFilterActionList;
+var gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
 var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
 
@@ -96,11 +99,13 @@ function filterEditorOnLoad()
           // editing a filter
           gFilter = window.arguments[0].filter;
           initializeDialog(gFilter);
+          PopulateTemplateMenu();
         } 
         else {
           if (gFilterList)
               setSearchScope(getScopeFromFilterList(gFilterList));
 
+          PopulateTemplateMenu();
           // if doing prefill filter create a new filter and populate it.
           if ("filterName" in args) {
             gPreFillName = args.filterName;
@@ -268,10 +273,13 @@ function initializeFilterWidgets()
     gActionPriority = document.getElementById("actionValuePriority");
     gActionJunkScore = document.getElementById("actionValueJunkScore");
     gActionLabel = document.getElementById("actionValueLabel");
+    gActionForwardTo = document.getElementById("actionValueForward");
     gMoveToFolderCheckbox = document.getElementById("moveToFolder");
     gCopyToFolderCheckbox = document.getElementById("copyToFolder");
     gChangePriorityCheckbox = document.getElementById("changePriority");
     gLabelCheckbox = document.getElementById("label");
+    gForwardToCheckbox = document.getElementById("forwardTo");
+    gReplyWithTemplateCheckbox = document.getElementById("replyWithTemplate");
     gJunkScoreCheckbox = document.getElementById("setJunkScore");
     gMarkReadCheckbox = document.getElementById("markRead");
     gMarkFlaggedCheckbox = document.getElementById("markFlagged");
@@ -293,7 +301,8 @@ function initializeDialog(filter)
     {
       var filterAction = actionList.QueryElementAt(actionIndex, Components.interfaces.nsIMsgRuleAction);
 
-      if (filterAction.type == nsMsgFilterAction.MoveToFolder) {
+      if (filterAction.type == nsMsgFilterAction.MoveToFolder) 
+      {
         // preselect target folder
         gMoveToFolderCheckbox.checked = true;
         var target = filterAction.targetFolderUri;
@@ -315,9 +324,7 @@ function initializeDialog(filter)
         var selectedPriority = gActionPriority.getElementsByAttribute("value", filterAction.priority).item(0);
 
         if (selectedPriority) 
-        {
           gActionPriority.selectedItem = selectedPriority;
-        }
       }
       else if (filterAction.type == nsMsgFilterAction.Label) 
       {
@@ -325,9 +332,7 @@ function initializeDialog(filter)
         // initialize label
         var selectedLabel = gActionLabel.getElementsByAttribute("value", filterAction.label).item(0);
         if (selectedLabel) 
-        {
           gActionLabel.selectedItem = selectedLabel;
-        }
       }
       else if (filterAction.type == nsMsgFilterAction.JunkScore) 
       {
@@ -336,9 +341,17 @@ function initializeDialog(filter)
         var selectedJunkScore = gActionJunkScore.getElementsByAttribute("value", filterAction.junkScore).item(0);
 
         if (selectedJunkScore) 
-        {
           gActionJunkScore.selectedItem = selectedJunkScore;
-        }
+      }
+      else if (filterAction.type == nsMsgFilterAction.Forward)
+      {
+        gForwardToCheckbox.checked = true;
+        gActionForwardTo.value = filterAction.strValue; 
+      }
+      else if (filterAction.type == nsMsgFilterAction.Reply)
+      {
+        gReplyWithTemplateCheckbox.checked = true;
+        gReplyWithTemplateUri = filterAction.strValue; 
       }
       else if (filterAction.type == nsMsgFilterAction.MarkRead)
         gMarkReadCheckbox.checked = true;
@@ -370,9 +383,7 @@ function InitMessageLabel()
     /* this code gets the label strings and changes the menu labels */
     var lastLabel = 5;
     for (var i = 0; i <= lastLabel; i++)
-    {
         setLabelAttributes(i, "labelMenuItem" + i);
-    }
     
     /* We set the label attribute for labels here because they have to be read from prefs. Default selection
        is always 0 and the picker thinks that it is already showing the label but it is not. Just setting selectedIndex 
@@ -383,6 +394,40 @@ function InitMessageLabel()
     gActionLabel.selectedIndex = 0;
 
     document.commandDispatcher.updateCommands('create-menu-label');
+}
+
+function PopulateTemplateMenu()
+{
+  try
+  {
+    var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
+    var identity = accountManager.getFirstIdentityForServer(gFilterList.folder.server);
+    var resource = gRDF.GetResource(identity.stationeryFolder);
+    var msgFolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    var msgWindow = GetFilterEditorMsgWindow();
+    var msgDatabase = msgFolder.getMsgDatabase(msgWindow);
+    var enumerator = msgDatabase.EnumerateMessages();
+    var templateListPopup = document.getElementById('actionValueReplyWithTemplate');
+
+    if ( enumerator )
+    {
+      while (enumerator.hasMoreElements())
+      {
+        var header = enumerator.getNext();
+        if (header instanceof Components.interfaces.nsIMsgDBHdr)
+        {
+          var msgHdr = header.QueryInterface(Components.interfaces.nsIMsgDBHdr);
+          var msgTemplateUri = msgFolder.URI + "?messageId="+msgHdr.messageId + '&subject=' + msgHdr.subject;
+          var newItem = templateListPopup.appendItem(msgHdr.subject, msgTemplateUri);
+          // ### TODO we really want to match based on messageId first, and if we don't get
+          // any hits, we'll match on subject
+          if (gReplyWithTemplateUri == msgTemplateUri)
+            templateListPopup.selectedItem = newItem;
+        }
+      }
+    }
+  }
+  catch (ex) {dump(ex);}
 }
 
 // move to overlay
@@ -426,6 +471,8 @@ function saveFilter()
         gWatchCheckbox.checked ||
         gKillCheckbox.checked ||
         gDeleteFromServerCheckbox.checked ||
+        gForwardToCheckbox.checked ||
+        gReplyWithTemplateCheckbox.checked ||
         gFetchBodyFromServerCheckbox.checked))
   {
     if (gPromptService)
@@ -447,6 +494,26 @@ function saveFilter()
     }
   }
 
+  if (gForwardToCheckbox.checked && 
+    (gActionForwardTo.value.length < 3 || gActionForwardTo.value.indexOf('@') < 2))
+  {
+    if (gPromptService)
+      gPromptService.alert(window, null,
+                           gFilterBundle.getString("enterValidEmailAddress"));
+    return false;
+  }
+
+  if (gReplyWithTemplateCheckbox.checked)
+  {
+    var templateListPopup = document.getElementById('actionValueReplyWithTemplate');
+    if (!templateListPopup.selectedItem)
+    {
+      if (gPromptService)
+        gPromptService.alert(window, null, gFilterBundle.getString("pickTemplateToReplyWith"));
+      return false;
+    }
+  }
+    
   if (gCopyToFolderCheckbox.checked)
   {
     if (gActionTargetCopyElement)
@@ -530,6 +597,23 @@ function saveFilter()
     filterAction.junkScore = gActionJunkScore.selectedItem.getAttribute("value");
     gFilter.appendAction(filterAction);
   }
+  if (gForwardToCheckbox.checked)
+  {
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.Forward;
+    filterAction.strValue = gActionForwardTo.value;
+    gFilter.appendAction(filterAction);
+  }
+
+  if (gReplyWithTemplateCheckbox.checked)
+  {
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.Reply;
+    var templateListPopup = document.getElementById('actionValueReplyWithTemplate');
+    filterAction.strValue = templateListPopup.selectedItem.getAttribute("value");
+    gFilter.appendAction(filterAction);
+  }
+
 
   if (gMarkReadCheckbox.checked) 
   {

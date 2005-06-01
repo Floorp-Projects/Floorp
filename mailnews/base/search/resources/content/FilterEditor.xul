@@ -181,6 +181,27 @@
 
           <listitem allowevents="true">
             <listcell>
+              <checkbox id="forwardTo" label="&forwardTo.label;"/>
+            </listcell>
+            <listcell> 
+              <textbox id="actionValueForward" flex="1" />
+            </listcell>
+          </listitem>
+
+          <listitem allowevents="true">
+            <listcell>
+              <checkbox id="replyWithTemplate" label="&replyWithTemplate.label;"/>
+            </listcell>
+            <listcell> 
+              <menulist enablefornews="false" id="actionValueReplyWithTemplate" flex="1">
+                <menupopup id="templateListPopup">
+                </menupopup>
+              </menulist>
+            </listcell>
+          </listitem>
+
+          <listitem allowevents="true">
+            <listcell>
               <checkbox id="markRead" label="&markRead.label;"/>
             </listcell>
           </listitem>
