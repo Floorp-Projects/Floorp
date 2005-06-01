@@ -1696,10 +1696,12 @@ nsParser::Parse(const nsAString& aSourceBuffer,
 
   nsresult result=NS_OK;
 
-  if(aLastCall && aSourceBuffer.IsEmpty()) {
+  if(!aLastCall && aSourceBuffer.IsEmpty()) {
     // Nothing is being passed to the parser so return
     // immediately. mUnusedInput will get processed when
     // some data is actually passed in.
+    // But if this is the last call, make sure to finish up
+    // stuff correctly.
     return result;
   }
 
@@ -1712,7 +1714,7 @@ nsParser::Parse(const nsAString& aSourceBuffer,
   // till we're completely done. 
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
 
-  if(!aSourceBuffer.IsEmpty() || !mUnusedInput.IsEmpty()) {
+  if(aLastCall || !aSourceBuffer.IsEmpty() || !mUnusedInput.IsEmpty()) {
     
     if (aVerifyEnabled) {
       mFlags |= NS_PARSER_FLAG_DTD_VERIFICATION;
@@ -1777,7 +1779,7 @@ nsParser::Parse(const nsAString& aSourceBuffer,
         pc->mDTDMode = aMode;
       }
 
-      mUnusedInput.Truncate(0); 
+      mUnusedInput.Truncate(); 
 
       //printf("Parse(string) iterate: %i",PR_FALSE); 
       pc->mScanner->Append(aSourceBuffer); 
