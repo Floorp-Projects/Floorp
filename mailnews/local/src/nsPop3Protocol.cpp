@@ -516,9 +516,7 @@ nsPop3Protocol::nsPop3Protocol(nsIURI* aURL)
   m_totalBytesReceived(0),
   m_lineStreamBuffer(nsnull),
   m_pop3ConData(nsnull),
-  m_password_already_sent(PR_FALSE),
-  m_responseTimer(nsnull),
-  m_responseTimeout(45)
+  m_password_already_sent(PR_FALSE)
 {
 }
 
@@ -535,7 +533,6 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
   m_totalFolderSize = 0;    
   m_totalDownloadSize = 0;
   m_totalBytesReceived = 0;
-  m_responseTimeout = 45;
   m_tlsEnabled = PR_FALSE;
   m_socketType = nsIMsgIncomingServer::tryTLS;
 
@@ -610,15 +607,6 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
   
   if (!POP3LOGMODULE)
       POP3LOGMODULE = PR_NewLogModule("POP3");
-
-  // Read in preferences
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefBranch)
-  {
-      prefBranch->GetIntPref("mail.pop3_response_timeout", &m_responseTimeout);
-      PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,
-        ("mail.pop3_response_timeout=%d", m_responseTimeout));
-  }
 
   m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE);
   if(!m_lineStreamBuffer)
@@ -766,10 +754,6 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
 
 NS_IMETHODIMP nsPop3Protocol::OnTransportStatus(nsITransport *aTransport, nsresult aStatus, PRUint32 aProgress, PRUint32 aProgressMax)
 {
-  // When the socket connection is established, start the response timer.
-  if (aStatus == NS_NET_STATUS_CONNECTED_TO) 
-    SetResponseTimer();
-
   return nsMsgProtocol::OnTransportStatus(aTransport, aStatus, aProgress, aProgressMax);
 }
 
@@ -910,7 +894,6 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
   m_pop3ConData->next_state_after_response = POP3_FINISH_CONNECT;
   if (NS_SUCCEEDED(rv))
   {
-    SetResponseTimer();
     m_pop3Server->SetRunningProtocol(this);
     return nsMsgProtocol::LoadUrl(aURL);
   }
@@ -3482,7 +3465,6 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
   PRInt32 status = 0;
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_url);
   
-  CancelResponseTimer();
   PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS, ("Entering NET_ProcessPop3 %d",
     aLength));
   
@@ -3899,8 +3881,6 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
     
   }  /* end while */
   
-  SetResponseTimer();
-
   return NS_OK;
           
 }
@@ -3944,37 +3924,3 @@ NS_IMETHODIMP nsPop3Protocol::CheckMessage(const char *aUidl, PRBool *aBool)
   return NS_OK;
 }
 
-void OnResponseTimeout(nsITimer *timer, void *aPop3Protocol)
-{
-  nsPop3Protocol *pop3Protocol = (nsPop3Protocol *) aPop3Protocol;
-
-  PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS, 
-      ("OnResponseTimeout: username=%s", pop3Protocol->GetUsername()));
-
-  // Cancel this connection to force it to drop.
-  pop3Protocol->Cancel(NS_BINDING_FAILED);
-}
-
-void nsPop3Protocol::SetResponseTimer()
-{
-  // Cancel outstanding timer since it can't be reset.
-  CancelResponseTimer();
-
-  // Setup new response timer
-  PRUint32 timeInMSUint32 = m_responseTimeout * 1000;
-  if (m_pop3ConData->next_state == POP3_START_CONNECT)
-    timeInMSUint32 += 60000; // add 60 seconds if we're starting the connection
-  m_responseTimer = do_CreateInstance("@mozilla.org/timer;1");
-  if (m_responseTimer)
-    m_responseTimer->InitWithFuncCallback(OnResponseTimeout, (void*)this, 
-      timeInMSUint32, nsITimer::TYPE_ONE_SHOT);
-}
-
-void nsPop3Protocol::CancelResponseTimer()
-{
-  // Cancel outstanding response timer
-  if (m_responseTimer) {
-    m_responseTimer->Cancel();
-    m_responseTimer = nsnull;
-  }
-}

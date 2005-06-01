@@ -362,12 +362,6 @@ private:
   PRInt32 m_origAuthFlags;
   PRInt32 m_listpos;
 
-  // Response timer to drop hung connections
-  nsCOMPtr<nsITimer> m_responseTimer;
-  PRInt32 m_responseTimeout; // in seconds
-  void SetResponseTimer();
-  void CancelResponseTimer();
-
   nsresult HandleLine(char *line, PRUint32 line_length);
 
   //////////////////////////////////////////////////////////////////////////////////////////
