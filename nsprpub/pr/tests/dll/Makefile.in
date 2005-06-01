@@ -71,7 +71,7 @@ else
 ifdef NS_USE_GCC
 DLLBASE=-Wl,--image-base -Wl,0x30000000
 else
-DLLBASE=/BASE:0x30000000
+DLLBASE=-BASE:0x30000000
 endif
 RES=$(OBJDIR)/my.res
 RESNAME=../../../pr/src/nspr.rc

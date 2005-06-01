@@ -67,16 +67,16 @@ ENABLE_CXX_EXCEPTIONS = 1
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += /D "WIN32" /GF /MT /O1
+CXXFLAGS += -D "WIN32" -GF -MT -O1
 
 libs::
 ifdef MOZ_ACTIVEX_REGISTRATION
 ifneq ($(OS_TARGET),WIN98)
-	-regsvr32 /s /c $(DIST)/bin/$(SHARED_LIBRARY)
+	-regsvr32 -s -c $(DIST)/bin/$(SHARED_LIBRARY)
 endif
 endif
 
 clean clobber clobber_all realclean distclean::
-	-regsvr32 /s /c /u $(DIST)/bin/$(SHARED_LIBRARY)
+	-regsvr32 -s -c -u $(DIST)/bin/$(SHARED_LIBRARY)
 
 control_kicker.cpp StdAfx.cpp: StdAfx.h

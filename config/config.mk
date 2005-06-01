@@ -307,8 +307,8 @@ OS_LDFLAGS += $(_DEBUG_LDFLAGS)
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 ifdef MOZ_DEBUG
 ifneq (,$(MOZ_BROWSE_INFO)$(MOZ_BSCFILE))
-OS_CFLAGS += /FR
-OS_CXXFLAGS += /FR
+OS_CFLAGS += -FR
+OS_CXXFLAGS += -FR
 endif
 else
 # if MOZ_DEBUG is not set and MOZ_PROFILE is set, then we generate
@@ -318,30 +318,30 @@ else
 # symbols in separate PDB files, rather than embedded into the binary.
 ifneq (,$(MOZ_PROFILE)$(MOZ_DEBUG_SYMBOLS))
 MOZ_OPTIMIZE_FLAGS=-Zi -O1 -UDEBUG -DNDEBUG
-OS_LDFLAGS = /DEBUG /OPT:REF /OPT:nowin98
+OS_LDFLAGS = -DEBUG -OPT:REF -OPT:nowin98
 ifdef MOZ_PROFILE
-OS_LDFLAGS += /PDB:NONE
+OS_LDFLAGS += -PDB:NONE
 endif
 endif
 
 ifdef MOZ_QUANTIFY
-# /FIXED:NO is needed for Quantify to work, but it increases the size
+# -FIXED:NO is needed for Quantify to work, but it increases the size
 # of executables, so only use it if building for Quantify.
-WIN32_EXE_LDFLAGS=/FIXED:NO
+WIN32_EXE_LDFLAGS=-FIXED:NO
 
-# We need /OPT:NOICF to prevent identical methods from being merged together.
+# We need -OPT:NOICF to prevent identical methods from being merged together.
 # Otherwise, Quantify doesn't know which method was actually called when it's
 # showing you the profile.
-OS_LDFLAGS += /OPT:NOICF
+OS_LDFLAGS += -OPT:NOICF
 endif
 
 # if MOZ_COVERAGE is set, we handle pdb files slightly differently
 ifdef MOZ_COVERAGE
 MOZ_OPTIMIZE_FLAGS=-Zi -O1 -UDEBUG -DNDEBUG
-OS_LDFLAGS = /DEBUG /PDB:NONE /OPT:REF /OPT:nowin98
+OS_LDFLAGS = -DEBUG -PDB:NONE -OPT:REF -OPT:nowin98
 _ORDERFILE := $(wildcard $(srcdir)/win32.order)
 ifneq (,$(_ORDERFILE))
-OS_LDFLAGS += /ORDER:@$(srcdir)/win32.order
+OS_LDFLAGS += -ORDER:@$(srcdir)/win32.order
 endif
 endif
 # MOZ_COVERAGE
@@ -352,7 +352,7 @@ endif
 #
 ifdef NS_TRACE_MALLOC
 MOZ_OPTIMIZE_FLAGS=-Zi -Od -UDEBUG -DNDEBUG
-OS_LDFLAGS = /DEBUG /PDB:NONE /OPT:REF /OPT:nowin98
+OS_LDFLAGS = -DEBUG -PDB:NONE -OPT:REF -OPT:nowin98
 endif
 # NS_TRACE_MALLOC
 
@@ -619,9 +619,9 @@ endif # CROSS_COMPILE
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 ifdef USE_STATIC_LIBS
-RTL_FLAGS += /Gd-
+RTL_FLAGS += -Gd-
 else # !USE_STATIC_LIBS
-RTL_FLAGS += /Gd+
+RTL_FLAGS += -Gd+
 endif
 endif
 
@@ -743,27 +743,27 @@ endif
 ifdef MOZ_WINCONSOLE
 ifeq ($(MOZ_WINCONSOLE),1)
 ifeq ($(MOZ_OS2_TOOLS),EMX)
-BIN_FLAGS	+= -Zlinker /PM:VIO
+BIN_FLAGS	+= -Zlinker -PM:VIO
 endif
 ifeq ($(OS_ARCH),WINNT)
 ifdef GNU_CC
 WIN32_EXE_LDFLAGS	+= -mconsole
 else
-WIN32_EXE_LDFLAGS	+= /SUBSYSTEM:CONSOLE
+WIN32_EXE_LDFLAGS	+= -SUBSYSTEM:CONSOLE
 endif
 endif
 else # MOZ_WINCONSOLE
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
-LDFLAGS += /PM:PM
+LDFLAGS += -PM:PM
 endif
 ifeq ($(MOZ_OS2_TOOLS),EMX)
-BIN_FLAGS	+= -Zlinker /PM:PM
+BIN_FLAGS	+= -Zlinker -PM:PM
 endif
 ifeq ($(OS_ARCH),WINNT)
 ifdef GNU_CC
 WIN32_EXE_LDFLAGS	+= -mwindows
 else
-WIN32_EXE_LDFLAGS	+= /SUBSYSTEM:WINDOWS
+WIN32_EXE_LDFLAGS	+= -SUBSYSTEM:WINDOWS
 endif
 endif
 endif

@@ -2856,8 +2856,8 @@ echo "configure:2852: checking for midl flags" >&5
              # This switches us back to the old behaviour. When we drop
              # support for Windows older than Win2k, we should remove
              # this.
-             MIDL_FLAGS="${MIDL_FLAGS} /no_robust"
-             echo "$ac_t""need /no_robust" 1>&6
+             MIDL_FLAGS="${MIDL_FLAGS} -no_robust"
+             echo "$ac_t""need -no_robust" 1>&6
          else
              MIDL_FLAGS="${MIDL_FLAGS}"
              echo "$ac_t""none needed" 1>&6
@@ -5470,8 +5470,8 @@ EOF
 
 *-wince*)
 
-    AR_LIST="$AR /list"
-    AR_EXTRACT="$AR /extract"
+    AR_LIST="$AR -list"
+    AR_EXTRACT="$AR -extract"
     AR_DELETE="$AR d"
     AR_FLAGS='-OUT:"$@"'
 
@@ -5487,16 +5487,16 @@ EOF
     HOST_CC=cl
     HOST_CXX=cl
     HOST_LD=link
-    HOST_AR='lib /OUT:$@'
+    HOST_AR='lib -OUT:$@'
         
 	MOZ_OPTIMIZE_FLAGS='-O1'
-    AR_FLAGS='/NOLOGO /OUT:"$@"'
+    AR_FLAGS='-NOLOGO -OUT:"$@"'
     ASM_SUFFIX=asm
     CFLAGS="$CFLAGS -W3 -Gy -Fd\$(PDBFILE)"
     CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(PDBFILE)"
     DLL_PREFIX=
     DOXYGEN=:
-    DSO_LDOPTS=/SUBSYSTEM:WINDOWSCE
+    DSO_LDOPTS=-SUBSYSTEM:WINDOWSCE
     DYNAMIC_XPCOM_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xpcom_core.lib'
     GARBAGE=
     IMPORT_LIB_SUFFIX=lib
@@ -5504,14 +5504,14 @@ EOF
     LIBXUL_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xul.lib'
     LIB_PREFIX=
     LIB_SUFFIX=lib 
-    MKCSHLIB='$(LD) /NOLOGO /DLL /OUT:$@ $(DSO_LDOPTS)'
-    MKSHLIB='$(LD) /NOLOGO /DLL /OUT:$@ $(DSO_LDOPTS)'
+    MKCSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ $(DSO_LDOPTS)'
+    MKSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ $(DSO_LDOPTS)'
     MKSHLIB_FORCE_ALL=
     MKSHLIB_UNFORCE_ALL=
     MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
     MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
     MOZ_DEBUG_FLAGS='-Zi'
-    MOZ_DEBUG_LDFLAGS='/DEBUG /DEBUGTYPE:CV'
+    MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
     MOZ_FIX_LINK_PATHS=
     MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.lib'
     MOZ_JS_LIBS='$(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
@@ -5632,16 +5632,16 @@ EOF
         DLL_PREFIX=
         LIB_PREFIX=
         IMPORT_LIB_SUFFIX=lib
-        MKSHLIB='$(LD) /NOLOGO /DLL /OUT:$@ /PDB:$(PDBFILE) $(DSO_LDOPTS)'
-        MKCSHLIB='$(LD) /NOLOGO /DLL /OUT:$@ /PDB:$(PDBFILE) $(DSO_LDOPTS)'
+        MKSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ -PDB:$(PDBFILE) $(DSO_LDOPTS)'
+        MKCSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ -PDB:$(PDBFILE) $(DSO_LDOPTS)'
         MKSHLIB_FORCE_ALL=
         MKSHLIB_UNFORCE_ALL=
-        DSO_LDOPTS=/SUBSYSTEM:WINDOWS
+        DSO_LDOPTS=-SUBSYSTEM:WINDOWS
         CFLAGS="$CFLAGS -W3 -Gy -Fd\$(PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(PDBFILE)"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
         MOZ_DEBUG_FLAGS='-Zi'
-        MOZ_DEBUG_LDFLAGS='/DEBUG /DEBUGTYPE:CV'
+        MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
     	MOZ_OPTIMIZE_FLAGS='-O1'
         MOZ_JPEG_LIBS='$(DIST)/lib/jpeg$(MOZ_BITS)$(VERSION_NUMBER).lib'
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.lib'

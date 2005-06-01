@@ -119,8 +119,8 @@ ENABLE_CXX_EXCEPTIONS = 1
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += /D "WIN32" /U "ClientWallet"
-LDFLAGS += -SUBSYSTEM:windows /DLL
+CXXFLAGS += -D "WIN32" -U "ClientWallet"
+LDFLAGS += -SUBSYSTEM:windows -DLL
 
 ifdef MOZ_NO_DEBUG_RTL
 DEFINES	+= -DMOZ_NO_DEBUG_RTL
@@ -136,7 +136,7 @@ $(DEFFILE): mkctldef.sh
 	$(srcdir)/mkctldef.sh $@
 
 done_gen: MozillaControl.idl
-	$(MIDL) $(MIDL_FLAGS) /Oicf /h MozillaControl.h /iid MozillaControl_i.c $(srcdir)/MozillaControl.idl
+	$(MIDL) $(MIDL_FLAGS) -Oicf -h MozillaControl.h -iid MozillaControl_i.c $(srcdir)/MozillaControl.idl
 	touch $@
 
 $(MIDL_GENERATED_FILES): done_gen
