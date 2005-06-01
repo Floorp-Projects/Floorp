@@ -883,55 +883,11 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  // XXX if the parser treated the text in a textarea like a normal
-  // textnode we wouldn't need to do this.
-
-  if (aNodeType == eHTMLTag_textarea) {
-    nsCOMPtr<nsIDTD> dtd;
-    mParser->GetDTD(getter_AddRefs(dtd));
-    NS_ENSURE_TRUE(dtd, nsnull);
-
-    PRInt32 lineNo = 0;
-
-    dtd->CollectSkippedContent(eHTMLTag_textarea, mSkippedContent, lineNo);
-  }
-
   // Make the content object
   nsGenericHTMLElement* result = MakeContentObject(aNodeType, nodeInfo, aForm,
                                              !!mInsideNoXXXTag, PR_TRUE).get();
   if (!result) {
     return nsnull;
-  }
-
-  if (aNodeType == eHTMLTag_textarea && !mSkippedContent.IsEmpty()) {
-    // XXX: if the parser treated the text in a textarea like a normal
-    // textnode we wouldn't need to do this.
-
-    // If the text area has some content, set it
-
-    // Strip only one leading newline if there is one (bug 40394)
-    nsString::const_iterator start, end;
-    mSkippedContent.BeginReading(start);
-    mSkippedContent.EndReading(end);
-    if (*start == nsCRT::CR) {
-      ++start;
-
-      if (start != end && *start == nsCRT::LF) {
-        ++start;
-      }
-    } else if (*start == nsCRT::LF) {
-      ++start;
-    }
-
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> ta(do_QueryInterface(result));
-    NS_ASSERTION(ta, "Huh? text area doesn't implement "
-                 "nsIDOMHTMLTextAreaElement?");
-
-    ta->SetDefaultValue(Substring(start, end));
-
-    // Release whatever's in the skipped content string, no point in
-    // holding on to this any longer.
-    mSkippedContent.Truncate();
   }
 
   result->SetContentID(mDocument->GetAndIncrementContentID());
@@ -1396,8 +1352,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
 
     break;
   case eHTMLTag_select:
-    // case eHTMLTag_textarea:
-    // textarea is treated as a leaf, not as a container
+  case eHTMLTag_textarea:
   case eHTMLTag_object:
   case eHTMLTag_applet:
     content->DoneAddingChildren();
@@ -1471,12 +1426,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
         content->DoneCreatingElement();
 
         break;
-      case eHTMLTag_textarea:
-        // XXX as long as a textarea is treated as a leaf, not a real container,
-        // we have to do this here, even though it can't have any children
-        content->DoneAddingChildren();
 
-        break;
       default:
         break;
       }
@@ -1754,8 +1704,6 @@ SinkContext::FlushTags(PRBool aNotify)
 void
 SinkContext::UpdateChildCounts()
 {
-  nsGenericHTMLElement* content;
-
   // Start from the top of the stack (growing upwards) and see if any
   // new content has been appended. If so, we recognize that reflows
   // have been generated for it and we should make sure that no

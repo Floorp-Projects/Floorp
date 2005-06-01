@@ -536,7 +536,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,
   if (aParser && aNotifySink) { 
     if (NS_OK == anErrorCode) {
       if (eHTMLTag_unknown != mSkipTarget) {
-        // Looks like there is an open target ( ex. <title>, <textarea> ).
+        // Looks like there is an open target ( ex. <title> ).
         // Create a matching target to handle the unclosed target.
         result = BuildNeglectedTarget(mSkipTarget, eToken_end, aParser, aSink);
         NS_ENSURE_SUCCESS(result , result);
@@ -1004,12 +1004,6 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
 nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
   nsresult result=NS_OK;
 
-#if 0
-    // XXX --- Ignore this: it's just rickg debug testing...
-  nsAutoString theStr;
-  aNode.GetSource(theStr);
-#endif
-
   switch(aChildTag){
 
     case eHTMLTag_pre:
@@ -1026,6 +1020,49 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
         }//if
       }
       break;
+    case eHTMLTag_textarea:
+      {
+        // In HTML, we need to strip the first newline from the textarea's text.
+        CToken* theNextToken = mTokenizer->PeekToken();
+        if (theNextToken) {
+#ifdef DEBUG
+          eHTMLTokenTypes theType = eHTMLTokenTypes(theNextToken->GetTokenType());
+          NS_ASSERTION(eToken_text == theType, "Textareas should always have at "
+                                             "least one text token as a child.");
+#endif
+          CTextToken* text = NS_STATIC_CAST(CTextToken*, theNextToken);
+          const nsSubstring &content = text->GetStringValue();
+          PRBool chop = PR_FALSE;
+
+          if (!content.IsEmpty()) {
+            nsSubstring::const_iterator start, end;
+            content.BeginReading(start);
+            content.EndReading(end);
+
+            if (*start == nsCRT::CR) {
+              ++start;
+
+              if (start != end && *start == nsCRT::LF) {
+                ++start;
+              }
+
+              chop = PR_TRUE;
+            }
+            else if (*start == nsCRT::LF) {
+              ++start;
+              chop = PR_TRUE;
+            }
+
+            if (chop) {
+              // XXX See bug 294599 for why the nsAutoString is necessary.
+              nsAutoString chopped(Substring(start, end));
+              text->Bind(chopped);
+              ++mLineNumber;
+            }
+          }
+        }
+        break;
+      }
 #ifdef DEBUG
     case eHTMLTag_counter:
       {
@@ -1891,7 +1928,6 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
     case eHTMLTag_style:
     case eHTMLTag_link:
     case eHTMLTag_meta:
-    case eHTMLTag_textarea:
     case eHTMLTag_title:
       break;
 
@@ -2388,8 +2424,8 @@ CNavDTD::CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLine
   
   InPlaceConvertLineEndings(aContent);
 
-  // Note: TEXTAREA content is PCDATA and hence the newlines are already accounted for.
-  mLineNumber += (aTag != eHTMLTag_textarea) ? aContent.CountChar(kNewLine) : 0;
+  // Note: TITLE content is PCDATA and hence the newlines are already accounted for.
+  mLineNumber += (aTag != eHTMLTag_title) ? aContent.CountChar(kNewLine) : 0;
   
   return NS_OK;
 }
@@ -3282,10 +3318,6 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
     case eHTMLTag_title:
       break;
 
-    case eHTMLTag_textarea:
-      result = AddLeaf(aNode);
-      break;
-
     case eHTMLTag_map:
       result = OpenMap(aNode);
       break;
@@ -3370,7 +3402,6 @@ CNavDTD::CloseContainer(const eHTMLTags aTag, eHTMLTags aTarget,PRBool aClosedBy
       result=CloseHTML(); break;
 
     case eHTMLTag_style:
-    case eHTMLTag_textarea:
       break;
 
     case eHTMLTag_head:

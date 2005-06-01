@@ -52,7 +52,6 @@ static const char gSkippedContentTags[] = {
   eHTMLTag_style,
   eHTMLTag_script,
   eHTMLTag_server,
-  eHTMLTag_textarea,
   eHTMLTag_title,
   0
 };
