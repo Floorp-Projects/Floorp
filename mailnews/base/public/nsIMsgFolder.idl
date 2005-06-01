@@ -71,7 +71,7 @@ typedef long nsMsgBiffState;
 // enumerated type for determining if a message has been replied to, forwarded, etc.
 typedef long nsMsgDispositionState;
 
-[scriptable, uuid(c295ac49-5623-4aea-b78a-09e37c5a3948)]
+[scriptable, uuid(63b5d816-06e8-4a86-918c-56de10293f58)]
 interface nsIMsgFolder : nsICollection {
 
 const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
@@ -472,4 +472,5 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
                      in long aLength, in nsIOutputStream outputStream);
   void copyDataDone();
   void setJunkScoreForMessages(in nsISupportsArray aMessages, in string aJunkScore);
+  void applyRetentionSettings();
 };

@@ -119,6 +119,7 @@ public:
   
   NS_IMETHOD GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aFilterList);
   NS_IMETHOD SetFilterList(nsIMsgFilterList *aFilterList);
+  NS_IMETHOD ApplyRetentionSettings();
 
   // for nsMsgLineBuffer
   virtual PRInt32 HandleLine(char *line, PRUint32 line_size);

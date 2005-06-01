@@ -1221,10 +1221,19 @@ NS_IMETHODIMP nsImapMailFolder::GetNoSelect(PRBool *aResult)
 NS_IMETHODIMP nsImapMailFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
+
+  rv = GetDatabase(nsnull);
+  // now's a good time to apply the retention settings. If we do delete any
+  // messages, the expunge is going to have to wait until the delete to 
+  // finish before it can run, but the multiple-connection protection code
+  // should handle that.
+  if (mDatabase)
+    ApplyRetentionSettings();
+
   // compact offline store, if folder configured for offline use.
   // for now, check aMsgWindow because not having aMsgWindow means
   // we're doing a compact at shut-down. TEMPORARY HACK
- if (aMsgWindow && mFlags & MSG_FOLDER_FLAG_OFFLINE)
+  if (aMsgWindow && mFlags & MSG_FOLDER_FLAG_OFFLINE)
     CompactOfflineStore(aMsgWindow);
 
   nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);

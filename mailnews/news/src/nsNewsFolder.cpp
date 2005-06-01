@@ -421,7 +421,7 @@ nsMsgNewsFolder::UpdateFolder(nsIMsgWindow *aWindow)
         nsCOMPtr<nsIMsgRetentionSettings> retentionSettings;
         nsresult rv = GetRetentionSettings(getter_AddRefs(retentionSettings));
         if (NS_SUCCEEDED(rv))
-          rv = mDatabase->ApplyRetentionSettings(retentionSettings);
+          rv = mDatabase->ApplyRetentionSettings(retentionSettings, PR_FALSE);
       }
       rv = AutoCompact(aWindow);
       NS_ENSURE_SUCCESS(rv,rv);
@@ -893,7 +893,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 *size)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* this is news, so remember that DeleteMessage is really CANCEL */
+/* this is news, so remember that DeleteMessage is really CANCEL. */
 NS_IMETHODIMP 
 nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages, nsIMsgWindow *aMsgWindow, 
                                 PRBool deleteStorage, PRBool isMove,
@@ -1780,14 +1780,16 @@ NS_IMETHODIMP nsMsgNewsFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow *
 
   rv = GetDatabase(nsnull);
   if (mDatabase)
-  {
-    nsCOMPtr<nsIMsgRetentionSettings> retentionSettings;
-    rv = GetRetentionSettings(getter_AddRefs(retentionSettings));
-    if (NS_SUCCEEDED(rv))
-      rv = mDatabase->ApplyRetentionSettings(retentionSettings);
-  }
+    ApplyRetentionSettings();
   return rv;
 }
+
+NS_IMETHODIMP
+nsMsgNewsFolder::ApplyRetentionSettings()
+{
+  return nsMsgDBFolder::ApplyRetentionSettings(PR_FALSE);
+}
+
 
 NS_IMETHODIMP nsMsgNewsFolder::GetMessageIdForKey(nsMsgKey key, char **result)
 {

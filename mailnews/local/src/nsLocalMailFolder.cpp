@@ -671,6 +671,8 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
   PRBool filtersRun;
   PRBool hasNewMessages;
   GetHasNewMessages(&hasNewMessages);
+  if (mDatabase)
+    ApplyRetentionSettings();
   // if we have new messages, try the filter plugins.
   if (NS_SUCCEEDED(rv) && hasNewMessages)
     (void) CallFilterPlugins(aWindow, &filtersRun);
@@ -2472,6 +2474,10 @@ void nsMsgLocalMailFolder::CopyPropertiesToMsgHdr(nsIMsgDBHdr *destHdr, nsIMsgDB
   destHdr->SetStringProperty("junkscore", sourceJunkScore);
   srcHdr->GetStringProperty("junkscoreorigin", getter_Copies(sourceJunkScore));
   destHdr->SetStringProperty("junkscoreorigin", sourceJunkScore);
+  
+  nsMsgLabelValue label = 0;
+  srcHdr->GetLabel(&label);
+  destHdr->SetLabel(label);
 }
 
 
@@ -2585,7 +2591,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       nsresult result = mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
       if (NS_SUCCEEDED(result) && newHdr)
       {
-        // need to copy junk score from mCopyState->m_message to newHdr.
+        // need to copy junk score and label from mCopyState->m_message to newHdr.
         if (mCopyState->m_message)
           CopyPropertiesToMsgHdr(newHdr, mCopyState->m_message);
         msgDb->AddNewHdrToDB(newHdr, PR_TRUE);

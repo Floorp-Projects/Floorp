@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Navin Gupta <naving@netscape.com> (Original Developer)
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   David Bienvenu <bienvenu@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -59,6 +60,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "prlog.h"
+#include "nsMsgFolderFlags.h"
 
 static PRLogModuleInfo *MsgPurgeLogModule = nsnull;
 
@@ -73,20 +75,17 @@ void OnPurgeTimer(nsITimer *timer, void *aPurgeService)
 nsMsgPurgeService::nsMsgPurgeService()
 {
   mHaveShutdown = PR_FALSE;
-  mMinDelayBetweenPurges = 480;  // never purge a junk folder more than once every 8 hours (60 min/hour * 8 hours)
+  mMinDelayBetweenPurges = 480;  // never purge a folder more than once every 8 hours (60 min/hour * 8 hours)
   mPurgeTimerInterval = 5;  // fire the purge timer every 5 minutes, starting 5 minutes after the service is created (when we load accounts)
 }
 
 nsMsgPurgeService::~nsMsgPurgeService()
 {
-  if (mPurgeTimer) {
+  if (mPurgeTimer)
     mPurgeTimer->Cancel();
-  }
   
   if(!mHaveShutdown)
-  {
     Shutdown();
-  }
 }
 
 NS_IMETHODIMP nsMsgPurgeService::Init()
@@ -102,15 +101,13 @@ NS_IMETHODIMP nsMsgPurgeService::Init()
   {
     PRInt32 min_delay;
     rv = prefBranch->GetIntPref("mail.purge.min_delay", &min_delay);
-    if (NS_SUCCEEDED(rv) &&  min_delay) {
+    if (NS_SUCCEEDED(rv) &&  min_delay) 
       mMinDelayBetweenPurges = min_delay;
-    }    
     
     PRInt32 purge_timer_interval;
     rv = prefBranch->GetIntPref("mail.purge.timer_interval", &purge_timer_interval);
-    if (NS_SUCCEEDED(rv) &&  purge_timer_interval) {
+    if (NS_SUCCEEDED(rv) &&  purge_timer_interval) 
       mPurgeTimerInterval = purge_timer_interval;
-    }    
   }
   
   PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("mail.purge.min_delay=%d minutes",mMinDelayBetweenPurges));
@@ -156,7 +153,15 @@ nsresult nsMsgPurgeService::SetupNextPurge()
   return NS_OK;
 }
 
-// This is the function that looks for the first folder to purge
+// This is the function that looks for the first folder to purge. It also 
+// applies retention settings to any folder that hasn't had retention settings
+// applied in mMinDelayBetweenPurges minutes (default, 8 hours).
+// However, if we've spent more than .5 seconds in this loop, don't
+// apply any more retention settings because it might lock up the UI.
+// This might starve folders later on in the hierarchy, since we always
+// start at the top, but since we also apply retention settings when you
+// open a folder, or when you compact all folders, I think this will do
+// for now, until we have a cleanup on shutdown architecture.
 nsresult nsMsgPurgeService::PerformPurge()
 {
   PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("performing purge"));
@@ -165,6 +170,7 @@ nsresult nsMsgPurgeService::PerformPurge()
   
   nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
+  PRBool keepApplyingRetentionSettings = PR_TRUE;
 
   nsCOMPtr<nsISupportsArray> allServers;
   rv = accountManager->GetAllServers(getter_AddRefs(allServers));
@@ -174,14 +180,87 @@ nsresult nsMsgPurgeService::PerformPurge()
     rv = allServers->Count(&numServers);
     PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("%d servers", numServers));
     nsCOMPtr<nsIMsgFolder> folderToPurge;
+    PRIntervalTime startTime = PR_IntervalNow();
     PRInt32 purgeIntervalToUse;
     nsTime oldestPurgeTime = 0; // we're going to pick the least-recently purged folder
+
+    // apply retention settings to folders that haven't had retention settings
+    // applied in mMinDelayBetweenPurges minutes (default 8 hours)
+    // Because we get last purge time from the folder cache,
+    // this code won't open db's for folders until it decides it needs
+    // to apply retention settings, and since nsIMsgFolder::ApplyRetentionSettings
+    // will close any db's it opens, this code won't leave db's open.
     for (PRUint32 serverIndex=0; serverIndex < numServers; serverIndex++)
     {
       nsCOMPtr <nsIMsgIncomingServer> server =
         do_QueryElementAt(allServers, serverIndex, &rv);
       if (NS_SUCCEEDED(rv) && server)
       {
+        if (keepApplyingRetentionSettings)
+        {
+          nsCOMPtr <nsIMsgFolder> rootFolder;
+          rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          nsCOMPtr <nsISupportsArray> childFolders = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
+          rv = rootFolder->ListDescendents(childFolders);
+
+          PRUint32 cnt =0;  
+          childFolders->Count(&cnt);
+
+          nsCOMPtr<nsISupports> supports;
+          nsCOMPtr<nsIUrlListener> urlListener;
+          nsCOMPtr<nsIMsgFolder> childFolder;
+
+          for (PRUint32 index = 0; index < cnt; index++)
+          {
+            childFolder = do_QueryElementAt(childFolders, index);
+            if (childFolder)
+            {
+              PRUint32 folderFlags;
+              (void) childFolder->GetFlags(&folderFlags);
+              if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL)
+                continue;
+              nsTime curFolderLastPurgeTime=0;
+              nsXPIDLCString curFolderLastPurgeTimeString, curFolderUri;
+              rv = childFolder->GetStringProperty("LastPurgeTime", getter_Copies(curFolderLastPurgeTimeString));
+              if (NS_FAILED(rv))  
+                continue; // it is ok to fail, go on to next folder
+                
+              if (!curFolderLastPurgeTimeString.IsEmpty())
+              {
+                PRInt64 theTime;
+                PR_ParseTimeString(curFolderLastPurgeTimeString.get(), PR_FALSE, &theTime);
+                curFolderLastPurgeTime = theTime;
+              }
+  
+              childFolder->GetURI(getter_Copies(curFolderUri));
+              PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("%s curFolderLastPurgeTime=%s (if blank, then never)", curFolderUri.get(), curFolderLastPurgeTimeString.get()));
+
+              // check if this folder is due to purge
+              // has to have been purged at least mMinDelayBetweenPurges minutes ago
+              // we don't want to purge the folders all the time - once a day is good enough
+              nsInt64 minDelayBetweenPurges(mMinDelayBetweenPurges);
+              nsInt64 microSecondsPerMinute(60000000);
+              nsTime nextPurgeTime = curFolderLastPurgeTime + (minDelayBetweenPurges * microSecondsPerMinute);
+              nsTime currentTime; // nsTime defaults to PR_Now
+              if (nextPurgeTime < currentTime)
+              {
+                PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("purging %s", curFolderUri.get()));
+                childFolder->ApplyRetentionSettings();
+              }
+              PRIntervalTime elapsedTime;
+              LL_SUB(elapsedTime, PR_IntervalNow(), startTime);
+              // check if more than 500 milliseconds have elapsed in this purge process
+              if (PR_IntervalToMilliseconds(elapsedTime) > 500)
+              {
+                keepApplyingRetentionSettings = PR_FALSE;
+                break;
+              }
+            }
+          }
+        }
         nsXPIDLCString type;
         nsresult rv = server->GetType(getter_Copies(type));
         NS_ENSURE_SUCCESS(rv, rv);
@@ -192,7 +271,6 @@ nsresult nsMsgPurgeService::PerformPurge()
         nsCOMPtr<nsIMsgProtocolInfo> protocolInfo =
           do_GetService(contractid.get(), &rv);
         NS_ENSURE_SUCCESS(rv, PR_FALSE);
-        
 
         nsXPIDLCString realHostName;
         server->GetRealHostName(getter_Copies(realHostName));

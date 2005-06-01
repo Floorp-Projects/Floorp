@@ -1346,6 +1346,9 @@ nsMsgDBFolder::GetRetentionSettings(nsIMsgRetentionSettings **settings)
 NS_IMETHODIMP nsMsgDBFolder::SetRetentionSettings(nsIMsgRetentionSettings *settings)
 {
   m_retentionSettings = settings;
+  GetDatabase(nsnull);
+  if (mDatabase)
+    mDatabase->SetMsgRetentionSettings(settings);
   return NS_OK;
 }
 
@@ -4321,6 +4324,40 @@ nsMsgDBFolder::SetJunkScoreForMessages(nsISupportsArray *aMessages, const char *
   }
   return rv;
 }
+
+NS_IMETHODIMP
+nsMsgDBFolder::ApplyRetentionSettings()
+{
+  return ApplyRetentionSettings(PR_TRUE);
+}
+
+nsresult nsMsgDBFolder::ApplyRetentionSettings(PRBool deleteViaFolder)
+{
+  if (mFlags & MSG_FOLDER_FLAG_VIRTUAL) // ignore virtual folders.
+    return NS_OK;
+  nsresult rv;
+  PRBool weOpenedDB = PR_FALSE;
+  if (!mDatabase)
+  {
+    rv = GetDatabase(nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+    weOpenedDB = PR_TRUE;
+  }
+  if (mDatabase)
+  {
+    nsCOMPtr<nsIMsgRetentionSettings> retentionSettings;
+    rv = GetRetentionSettings(getter_AddRefs(retentionSettings));
+    if (NS_SUCCEEDED(rv))
+       rv = mDatabase->ApplyRetentionSettings(retentionSettings, deleteViaFolder);
+    // we don't want applying retention settings to keep the db open, because
+    // if we try to purge a bunch of folders, that will leave the dbs all open.
+    // So if we opened the db, close it.
+    if (weOpenedDB)
+      CloseDBIfFolderNotOpen();
+  }
+  return rv;
+}
+
 
 NS_IMETHODIMP
 nsMsgDBFolder::DeleteMessages(nsISupportsArray *messages,

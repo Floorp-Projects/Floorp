@@ -53,6 +53,7 @@ interface nsIDBFolderInfo;
 interface nsIMsgOfflineImapOperation;
 interface nsIMsgFolder;
 interface nsIOFileStream;
+interface nsIUrlListener;
 
 [ptr] native octetPtr(PRUint8);
 
@@ -63,9 +64,9 @@ typedef unsigned long nsMsgRetainByPreference;
 
 interface nsIMsgRetentionSettings : nsISupports
 {
-	const unsigned long nsMsgRetainAll = 1;
-	const unsigned long nsMsgRetainByAge = 2;
-	const unsigned long nsMsgRetainByNumHeaders = 3;
+  const unsigned long nsMsgRetainAll = 1;
+  const unsigned long nsMsgRetainByAge = 2;
+  const unsigned long nsMsgRetainByNumHeaders = 3;
 
   attribute boolean useServerDefaults;
   attribute nsMsgRetainByPreference retainByPreference;
@@ -86,8 +87,8 @@ interface nsIMsgDownloadSettings : nsISupports
 {
   attribute boolean useServerDefaults;
   attribute boolean downloadByDate;
-	attribute boolean downloadUnreadOnly;
-	attribute unsigned long ageLimitOfMsgsToDownload;
+  attribute boolean downloadUnreadOnly;
+  attribute unsigned long ageLimitOfMsgsToDownload;
 };
 
 typedef long nsMsgDBCommit;
@@ -116,7 +117,7 @@ interface nsIMsgDBService : nsISupports
     void unregisterPendingListener(in nsIDBChangeListener aListener);
 };
 
-[scriptable, uuid(f667dcb8-5aae-4e71-8559-2a48d7e508cd)]
+[scriptable, uuid(1a706802-8121-4f91-a302-6e1f9a13204b)]
 
 interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   void Open(in nsIFileSpec aFolderName, in boolean aCreate, in boolean aLeaveInvalidDB);
@@ -237,8 +238,11 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   readonly attribute nsMsgKey FirstNew;
 
   attribute nsIMsgRetentionSettings msgRetentionSettings;
-  // purge unwanted message headers and/or bodies
-  void ApplyRetentionSettings(in nsIMsgRetentionSettings msgRetentionSettings);
+  // purge unwanted message headers and/or bodies. If deleteViaFolder is
+  // true, we'll call nsIMsgFolder::DeleteMessages to delete the messages.
+  // Otherwise, we'll just delete them from the db.
+  void applyRetentionSettings(in nsIMsgRetentionSettings aMsgRetentionSettings, 
+                              in boolean aDeleteViaFolder);
 
   attribute nsIMsgDownloadSettings msgDownloadSettings;
 
