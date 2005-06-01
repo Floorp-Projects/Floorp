@@ -662,36 +662,45 @@ _COMPILER_PREFIX=
 # It also accomodates for MKS's uname.exe.  If you never intend
 # to do development on a WIN95 machine, you don't need this hack.
 #
-if test "$OS_ARCH" = "WIN95"; then
+case "$OS_ARCH" in
+WIN95)
     OS_ARCH=WINNT
     OS_TARGET=WIN95
-elif test "$OS_ARCH" = 'Windows_95'; then
+    ;;
+Windows_95)
     OS_ARCH=Windows_NT
     OS_TARGET=WIN95
-elif test "$OS_ARCH" = 'Windows_98'; then
+    ;;
+Windows_98)
     OS_ARCH=Windows_NT
     OS_TARGET=WIN95
-elif test "`echo $OS_ARCH | egrep -c '^(CYGWIN_9|CYGWIN_ME)' 2>/dev/null`" != 0; then
+    ;;
+CYGWIN_9*|CYGWIN_ME*)
     OS_ARCH='CYGWIN_NT-4.0'
     OS_TARGET=WIN95
-elif test "$OS_ARCH" = "OS_2"; then
+    ;;
+OS_2)
     OS_ARCH=OS2
     OS_TARGET=OS2
-elif test "$OS_ARCH" = "WINCE"; then
+    ;;
+WINCE)
     OS_ARCH=WINCE
     OS_TARGET=WINCE
-fi
+    ;;
+esac
 
 #
 # On WIN32, we also define the variable CPU_ARCH.
 #
 
-if test "$OS_ARCH" = "WINNT"; then
+case "$OS_ARCH" in
+WINNT)
     CPU_ARCH=`uname -p`
     if test "$CPU_ARCH" = "I386"; then
         CPU_ARCH=x86
     fi
-elif test "$OS_ARCH" = "Windows_NT"; then
+    ;;
+Windows_NT)
 #
 # If uname -s returns "Windows_NT", we assume that we are using
 # the uname.exe in MKS toolkit.
@@ -714,12 +723,18 @@ elif test "$OS_ARCH" = "Windows_NT"; then
     if echo "$CPU_ARCH" | grep -c 86 >/dev/null; then
         CPU_ARCH=x86
     fi
-elif echo "$OS_ARCH" | grep -c CYGWIN_NT >/dev/null; then
+    ;;
+CYGWIN32_NT|CYGWIN_NT*|MINGW*_NT*)
 #
 # If uname -s returns "CYGWIN_NT-4.0", we assume that we are using
 # the uname.exe in the Cygwin tools.
+# Prior to the Beta 20 release, Cygwin was called GNU-Win32.
+# If uname -s returns "CYGWIN32/NT", we assume that we are using
+# the uname.exe in the GNU-Win32 tools.
+# If uname -s returns MINGW32_NT-5.1, we assume that we are using
+# the uname.exe in the MSYS tools.
 #
-    OS_RELEASE=`echo $OS_ARCH | sed 's|^CYGWIN_NT-||'`
+    OS_RELEASE=`expr $OS_ARCH : '.*NT-\(.*\)'`
     OS_ARCH=WINNT
     OS_TARGET=WINNT
     CPU_ARCH=`uname -m`
@@ -729,22 +744,8 @@ elif echo "$OS_ARCH" | grep -c CYGWIN_NT >/dev/null; then
     if echo "$CPU_ARCH" | grep -c 86 >/dev/null; then
         CPU_ARCH=x86
     fi
-elif test "$OS_ARCH" = "CYGWIN32_NT"; then
-#
-# Prior to the Beta 20 release, Cygwin was called GNU-Win32.
-# If uname -s returns "CYGWIN32/NT", we assume that we are using
-# the uname.exe in the GNU-Win32 tools.
-#
-    OS_ARCH=WINNT
-    OS_TARGET=WINNT
-    CPU_ARCH=`uname -m`
-    #
-    # GNU-Win32's uname -m returns "i686" on a Pentium Pro machine.
-    #
-    if echo "$CPU_ARCH" | grep -c 86 >/dev/null; then
-        CPU_ARCH=x86
-    fi
-fi
+    ;;
+esac
 
 if test -z "$OS_TARGET"; then
     OS_TARGET=$OS_ARCH
