@@ -68,6 +68,7 @@ REQUIRES	= xpcom \
 		  nkcache \
 		  txmgr \
 		  docshell \
+                  msgcompose \
 		  msglocal \
 		  msgnews \
 		  mimetype \

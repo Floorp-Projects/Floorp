@@ -4399,7 +4399,8 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
           GetTrashFolderName()))
         {
           PRBool trashExists = PR_FALSE;
-          nsCString trashMatch(CreatePossibleTrashName(nsPrefix));
+          nsCString trashMatch;
+          trashMatch.Adopt(CreatePossibleTrashName(nsPrefix));
           {
             char *serverTrashName = nsnull;
             m_runningUrl->AllocateCanonicalPath(

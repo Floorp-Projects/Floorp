@@ -111,6 +111,8 @@
 #include <time.h>
 #include "nsIMsgMailNewsUrl.h"
 #include "nsEmbedCID.h"
+#include "nsIMsgComposeService.h"
+#include "nsMsgCompCID.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -486,16 +488,16 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
   PRBool isServer;
   rv = GetIsServer(&isServer);
 
-  char *folderName;
+  nsCAutoString folderName;
   for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) 
   {
     nsFileSpec currentFolderPath = dir.Spec();
-    folderName = currentFolderPath.GetLeafName();
+    folderName.Adopt(currentFolderPath.GetLeafName());
     currentFolderNameStr.AssignWithConversion(folderName);
     if (isServer && imapServer)
     {
       PRBool isPFC;
-      imapServer->GetIsPFC(folderName, &isPFC);
+      imapServer->GetIsPFC(folderName.get(), &isPFC);
       if (isPFC)
       {
         nsCOMPtr <nsIMsgFolder> pfcFolder;
@@ -505,10 +507,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
       // should check if this is the PFC
     }
     if (nsShouldIgnoreFile(currentFolderNameStr))
-    {
-      PL_strfree(folderName);
       continue;
-    }
 
     // OK, here we need to get the online name from the folder cache if we can.
     // If we can, use that to create the sub-folder
@@ -519,7 +518,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 
     NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(dbFile));
     // don't strip off the .msf in currentFolderPath.
-    currentFolderPath.SetLeafName(folderName);
+    currentFolderPath.SetLeafName(folderName.get());
     rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(curFolder));
 
     currentFolderDBNameStr = currentFolderNameStr;
@@ -605,7 +604,6 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
         child->SetPrettyName(currentFolderNameStr.get());
 
     }
-    PL_strfree(folderName);
   }
   return rv;
 }
@@ -2241,6 +2239,8 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
         }
       }
     }
+    // if copy service listener is also a url listener, pass that
+    // url listener into StoreImapFlags.
     nsCOMPtr <nsIUrlListener> urlListener = do_QueryInterface(listener);
     if (deleteMsgs)
       messageFlags |= kImapMsgSeenFlag;
@@ -3379,6 +3379,25 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
           }
         }
         break;
+      case nsMsgFilterAction::Forward:
+        {
+          nsXPIDLCString forwardTo;
+          filterAction->GetStrValue(getter_Copies(forwardTo));
+          nsCOMPtr <nsIMsgIncomingServer> server;
+          rv = GetServer(getter_AddRefs(server));
+          NS_ENSURE_SUCCESS(rv, rv);
+          if (!forwardTo.IsEmpty())
+          {
+            nsCOMPtr <nsIMsgComposeService> compService = do_GetService (NS_MSGCOMPOSESERVICE_CONTRACTID) ;
+            if (compService)
+            {
+              nsAutoString forwardStr;
+              forwardStr.AssignWithConversion(forwardTo.get());
+              rv = compService->ForwardMessage(forwardStr, msgHdr, msgWindow, server);
+            }
+          }
+        }
+
         default:
           break;
       }
