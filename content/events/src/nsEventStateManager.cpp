@@ -4232,15 +4232,21 @@ nsEventStateManager::ContentRemoved(nsIContent* aContent)
     mHoverContent = aContent->GetParent();
   }
 
-  if (aContent == mActiveContent) {
-    mActiveContent = nsnull;
+  if (mActiveContent &&
+      nsContentUtils::ContentIsDescendantOf(mActiveContent, aContent)) {
+    // Active is hierarchical, so set the current active to the
+    // content's parent node.
+    mActiveContent = aContent->GetParent();
   }
 
-  if (aContent == mDragOverContent) {
+  if (mDragOverContent &&
+      nsContentUtils::ContentIsDescendantOf(mDragOverContent, aContent)) {
     mDragOverContent = nsnull;
   }
 
-  if (aContent == mLastMouseOverElement) {
+  if (mLastMouseOverElement &&
+      nsContentUtils::ContentIsDescendantOf(mLastMouseOverElement, aContent)) {
+    // See bug 292146 for why we want to null this out
     mLastMouseOverElement = nsnull;
   }
 
