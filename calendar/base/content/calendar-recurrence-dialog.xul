@@ -135,7 +135,7 @@
   <spacer flex="1"/>
 
   <vbox>
-    <radiogroup id="recurrence-duration">
+    <radiogroup id="recurrence-duration" oncommand="updateDuration()">
       <grid flex="1">
         <columns>
           <column/>
@@ -152,7 +152,7 @@
             <hbox>
               <textbox id="repeat-ntimes-count" size="3"/>
               <spacer flex="0.5"/>
-              <menulist>
+              <menulist id="repeat-ntimes-units">
                 <menupopup>
                   <menuitem label="day(s)"/>
                   <menuitem label="week(s)"/>

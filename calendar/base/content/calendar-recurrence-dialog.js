@@ -48,6 +48,8 @@ function onLoad()
 
     updateDeck();
 
+    updateDuration();
+
     opener.setCursor("auto");
 
     self.focus();
@@ -203,3 +205,23 @@ function updateDeck()
     document.getElementById("period-deck").selectedIndex = Number(getElementValue("period-list"));
 }
 
+function updateDuration()
+{
+    var durationSelection = document.getElementById("recurrence-duration").selectedItem.value;
+    if (durationSelection == "forever") {
+    }
+
+    if (durationSelection == "ntimes") {
+        setElementValue("repeat-ntimes-count", false, "disabled");
+        setElementValue("repeat-ntimes-units", false, "disabled");
+    } else {
+        setElementValue("repeat-ntimes-count", "true", "disabled");
+        setElementValue("repeat-ntimes-units", "true", "disabled");
+    }
+
+    if (durationSelection == "until") {
+        setElementValue("repeat-until-date", false, "disabled");
+    } else {
+        setElementValue("repeat-until-date", "true", "disabled");
+    }
+}
