@@ -17,13 +17,15 @@
 <input name="qsrc" value="64">
 <input name="askbutton.x" value="0">
 <input name="askbutton.y" value="0">
+<inputnext name="page" factor="1">
+<inputprev>
 
 <interpret 
     browserResultType="result" 
-    resultListStart = '<div class="indent">'
-    resultListEnd = "<nobr>"
-    resultItemStart = "<p><div>"
-    resultItemEnd = "</div>"
+    resultListStart = '<div id="result">'
+    resultListEnd = '<div id="resultspagingstrip"'
+    resultItemStart = '<div class="m8">'
+    resultItemEnd = '<div id="resultBottom'
 >
 
 </search>
