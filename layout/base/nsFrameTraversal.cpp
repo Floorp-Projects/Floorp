@@ -359,7 +359,7 @@ nsLeafIterator::Next()
     result = parent;
   }
   else {
-    while(parent && !IsRootFrame(parent)) {
+    while(parent) {
       result = parent->GetNextSibling();
       if (result) {
         parent = result;
@@ -585,18 +585,21 @@ nsFocusIterator::Next()
 
   result = parent;
   if (result == getCurrent()) {
-    while (result && !IsRootFrame(result)) {
+    while (result) {
       if ((parent = GetNextSibling(result))) {
         result = parent;
         break;
        } else {
         parent = result;
         result = GetParentFrame(parent);
+        if (IsRootFrame(result)) {
+          result = 0;
+          break;
+        }
       }
     }
 
-    if (!result || IsRootFrame(result)) {
-      result = 0;
+    if (!result) {
       setLast(parent);
     }
   }
@@ -684,7 +687,7 @@ NS_IMETHODIMP
     result = parent;
   }
   else {
-    while(parent && !IsRootFrame(parent)) {
+    while(parent) {
       nsIFrame *grandParent = parent->GetParent();
       if (grandParent) {
         nsFrameList list(grandParent->GetFirstChild(nsnull));
