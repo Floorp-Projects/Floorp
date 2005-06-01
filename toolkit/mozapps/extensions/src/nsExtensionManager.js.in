@@ -4670,7 +4670,7 @@ RDFItemUpdater.prototype = {
     }    
     if (!this._versionUpdateOnly && newerItem)
       gOS.notifyObservers(newerItem, "Update:Extension:Item-Ended", "update-check-success");
-    else if (this.__versionUpdateOnly && sameItem)
+    else if (this._versionUpdateOnly && sameItem)
       gOS.notifyObservers(sameItem, "Update:Extension:Item-Ended", "update-check-success");
     else
       gOS.notifyObservers(aLocalItem, "Update:Extension:Item-Ended", "update-check-no-update");
