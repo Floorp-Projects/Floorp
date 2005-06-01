@@ -110,6 +110,21 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafeFileOutputStream)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+extern NS_METHOD
+net_NewIncrementalDownload(nsISupports *, const nsIID &, void **);
+
+#define NS_INCREMENTALDOWNLOAD_CLASSNAME \
+    "nsIncrementalDownload"
+#define NS_INCREMENTALDOWNLOAD_CID \
+{ /* a62af1ba-79b3-4896-8aaf-b148bfce4280 */         \
+    0xa62af1ba,                                      \
+    0x79b3,                                          \
+    0x4896,                                          \
+    {0x8a, 0xaf, 0xb1, 0x48, 0xbf, 0xce, 0x42, 0x80} \
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 #include "nsStreamConverterService.h"
 
 #ifdef BUILD_APPLEFILE_DECODER
@@ -704,6 +719,12 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_URICHECKER_CID,
       NS_URICHECKER_CONTRACT_ID,
       nsURICheckerConstructor
+    },
+
+    { NS_INCREMENTALDOWNLOAD_CLASSNAME,
+      NS_INCREMENTALDOWNLOAD_CID,
+      NS_INCREMENTALDOWNLOAD_CONTRACTID,
+      net_NewIncrementalDownload
     },
 
     // The register functions for the built-in 

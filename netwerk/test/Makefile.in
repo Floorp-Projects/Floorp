@@ -54,6 +54,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
+		TestIncrementalDownload.cpp \
 		TestStreamLoader.cpp \
 		PropertiesTest.cpp \
 		urltest.cpp \

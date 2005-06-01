@@ -335,6 +335,10 @@
     {0xa9, 0x04, 0xac, 0x1d, 0x6d, 0xa7, 0x7a, 0x02} \
 }
 
+// component implementing nsIIncrementalDownload.
+#define NS_INCREMENTALDOWNLOAD_CONTRACTID \
+    "@mozilla.org/network/incremental-download;1"
+
 // service implementing nsIStreamTransportService
 #define NS_STREAMTRANSPORTSERVICE_CLASSNAME \
     "nsStreamTransportService"
