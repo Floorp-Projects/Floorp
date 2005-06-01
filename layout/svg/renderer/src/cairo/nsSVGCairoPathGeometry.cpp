@@ -505,6 +505,17 @@ nsSVGCairoPathGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
   GeneratePath(ctx);
 
   cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+
+  /* cairo_fill_extents doesn't work on degenerate paths */
+  if (xmin ==  32767 &&
+      ymin ==  32767 &&
+      xmax == -32768 &&
+      ymax == -32768) {
+    /* cairo_stroke_extents doesn't work with stroke width zero, fudge */
+    cairo_set_line_width(ctx, 0.0001);
+    cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+  }
+
   cairo_transform_point(ctx, &xmin, &ymin);
   cairo_transform_point(ctx, &xmax, &ymax);
 

@@ -315,6 +315,16 @@ GDIPlusGradient(nsISVGGDIPlusRegion *aRegion, nsISVGGradient *aGrad,
   aGrad->GetGradientTransform(getter_AddRefs(svgMatrix), aSource);
   NS_ASSERTION(svgMatrix, "GDIPlusGradient: GetGradientTransform returns null");
 
+  // GDI+ gradients don't like having a zero on the diagonal (zero
+  // width or height in the bounding box)
+  float val;
+  svgMatrix->GetA(&val);
+  if (val == 0.0)
+    svgMatrix->SetA(1.0);
+  svgMatrix->GetD(&val);
+  if (val == 0.0)
+    svgMatrix->SetD(1.0);
+
   Matrix *patternMatrix =  SVGToMatrix(svgMatrix);
   Matrix *ctm = SVGToMatrix(aCTM);
 
