@@ -595,7 +595,6 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
 
           if(nodeType == eHTMLTag_script    ||
              nodeType == eHTMLTag_style     ||
-             nodeType == eHTMLTag_textarea  ||
              nodeType == eHTMLTag_server) {
 
             // Create a text node holding the content

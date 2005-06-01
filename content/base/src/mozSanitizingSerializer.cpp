@@ -566,7 +566,6 @@ mozSanitizingHTMLSerializer::DoAddLeaf(PRInt32 aTag,
   }
   else if (type == eHTMLTag_script ||
            type == eHTMLTag_style ||
-           type == eHTMLTag_textarea ||
            type == eHTMLTag_server)
   {
     // These special tags require some extra care. The parser gives them
