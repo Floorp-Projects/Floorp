@@ -185,7 +185,7 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
       nsRect bounds;
       docWidget->GetBounds(bounds);
       pt -= bounds.TopLeft();
-      docWidget = docWidget->GetParent();
+      docWidget = dont_AddRef(docWidget->GetParent());
     }
   }
   
