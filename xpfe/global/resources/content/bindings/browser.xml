@@ -395,9 +395,9 @@
     </implementation>
 
     <handlers>
-      <handler event="keypress" keycode="VK_F7">
+      <handler event="keypress" keycode="VK_F7" group="system">
         <![CDATA[
-          if (!event.isTrusted)
+          if (event.getPreventDefault() || !event.isTrusted)
             return;
 
           // Toggle browse with caret mode
