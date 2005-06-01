@@ -147,10 +147,6 @@ prop_iterator_finalize(JSContext *cx, JSObject *obj)
                       &iter_state, NULL);
     }
     js_RemoveRoot(cx->runtime, &obj->slots[JSSLOT_PARENT]);
-
-    /* XXX force the GC to restart so we can collect iteratee, if possible,
-           during the current collector activation */
-    cx->runtime->gcLevel++;
 }
 
 static JSClass prop_iterator_class = {
