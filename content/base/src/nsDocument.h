@@ -343,12 +343,15 @@ public:
   virtual void AddCatalogStyleSheet(nsIStyleSheet* aSheet);
   virtual void EnsureCatalogStyleSheet(const char *aStyleSheetURI);
 
+  virtual nsIChannel* GetChannel() const {
+    return mChannel;
+  }
 
   /**
    * Get this document's attribute stylesheet.  May return null if
    * there isn't one.
    */
-  nsHTMLStyleSheet* GetAttributeStyleSheet() const {
+  virtual nsHTMLStyleSheet* GetAttributeStyleSheet() const {
     return mAttrStyleSheet;
   }
 
@@ -356,7 +359,7 @@ public:
    * Get this document's inline style sheet.  May return null if there
    * isn't one
    */
-  nsIHTMLCSSStyleSheet* GetInlineStyleSheet() const {
+  virtual nsIHTMLCSSStyleSheet* GetInlineStyleSheet() const {
     return mStyleAttrStyleSheet;
   }
   
@@ -631,6 +634,8 @@ protected:
 
   nsSupportsHashtable* mBoxObjectTable;
 
+  // The channel that got passed to StartDocumentLoad(), if any
+  nsCOMPtr<nsIChannel> mChannel;
   nsRefPtr<nsHTMLStyleSheet> mAttrStyleSheet;
   nsCOMPtr<nsIHTMLCSSStyleSheet> mStyleAttrStyleSheet;
   nsRefPtr<nsXMLEventsManager> mXMLEventsManager;

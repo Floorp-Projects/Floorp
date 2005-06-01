@@ -708,9 +708,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   // Store the security info for future use with wyciwyg channels.
   aChannel->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
 
-  // Stash away a pointer to our channel (we need this for cookies)
-  mChannel = aChannel;
-
   nsCOMPtr<nsIURI> uri;
   rv = aChannel->GetURI(getter_AddRefs(uri));
   if (NS_FAILED(rv)) {

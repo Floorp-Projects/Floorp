@@ -1030,6 +1030,8 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
   RetrieveRelevantHeaders(aChannel);
 
+  mChannel = aChannel;
+
   return NS_OK;
 }
 

@@ -90,8 +90,8 @@ class nsILayoutHistoryState;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x660e9925, 0x30e0, 0x4016, \
- { 0x8b, 0x7f, 0x0d, 0x70, 0x6e, 0xba, 0xc9, 0x8e } }
+{ 0x97e4f20e, 0x73de, 0x41fd, \
+  { 0x85, 0x20, 0x41, 0x45, 0xc8, 0x74, 0xf5, 0x85 } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -440,6 +440,13 @@ public:
   nsICSSLoader* CSSLoader() const {
     return mCSSLoader;
   }
+
+  /**
+   * Get the channel that was passed to StartDocumentLoad for this
+   * document.  Note that this may be null in some cases (eg if
+   * StartDocumentLoad was never called)
+   */
+  virtual nsIChannel* GetChannel() const = 0;
 
   /**
    * Get this document's attribute stylesheet.  May return null if

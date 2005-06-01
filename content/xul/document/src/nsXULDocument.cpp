@@ -532,6 +532,8 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
     mDocumentTitle.SetIsVoid(PR_TRUE);
 
+    mChannel = aChannel;
+
     nsresult rv = aChannel->GetOriginalURI(getter_AddRefs(mDocumentURI));
     NS_ENSURE_SUCCESS(rv, rv);
     

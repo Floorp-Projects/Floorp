@@ -102,12 +102,13 @@ protected:
 
   nsCOMPtr<nsIScriptContext> mScriptContext;
 
-  // mPendingChannel is the channel that we're currently asynchronously loading
-  // (via document.load() or normal load).  It's set when we first find out
-  // about the channel (at the end of StartDocumentLoad) and cleared in EndLoad
-  // or if ResetToURI() is called.  In the latter case it's also cancelled.
-  nsCOMPtr<nsIChannel> mPendingChannel;
-  
+  // mChannelIsPending indicates whether we're currently asynchronously loading
+  // data from mChannel (via document.load() or normal load).  It's set to true
+  // when we first find out about the channel (StartDocumentLoad) and set to
+  // false in EndLoad or if ResetToURI() is called.  In the latter case our
+  // mChannel is also cancelled.  Note that if this member is true, mChannel
+  // cannot be null.
+  PRPackedBool mChannelIsPending;
   PRPackedBool mCrossSiteAccessEnabled;
   PRPackedBool mLoadedAsData;
   PRPackedBool mLoadedAsInteractiveData;
