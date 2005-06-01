@@ -464,7 +464,8 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                     
                     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                     if(!NativeInterface2JSObject(ccx, getter_AddRefs(holder),
-                                                 iface, iid, scope, pErr))
+                                                 iface, iid, scope, PR_TRUE,
+                                                 pErr))
                         return JS_FALSE;
 
                     if(holder)
@@ -1009,7 +1010,9 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                                      nsIXPConnectJSObjectHolder** dest,
                                      nsISupports* src,
                                      const nsID* iid,
-                                     JSObject* scope, nsresult* pErr)
+                                     JSObject* scope,
+                                     PRBool allowNativeWrapper,
+                                     nsresult* pErr)
 {
     NS_ASSERTION(dest, "bad param");
     NS_ASSERTION(iid, "bad param");
@@ -1063,7 +1066,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
             *pErr = rv;
         if(NS_SUCCEEDED(rv) && wrapper)
         {
-            if (wrapper->GetScope() != xpcscope)
+            if (allowNativeWrapper && wrapper->GetScope() != xpcscope)
             {
                 // Cross scope access detected. Check if chrome code
                 // is accessing non-chrome objects, and if so, wrap

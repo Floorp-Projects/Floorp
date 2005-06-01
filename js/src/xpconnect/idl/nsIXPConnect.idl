@@ -463,6 +463,9 @@ interface nsIXPConnect : nsISupports
     * returned by the method into a nsIXPConnectWrappedNative or a
     * nsIXPConnectWrappedJS.
     *
+    * This method will never wrap the JSObject involved in an
+    * XPCNativeWrapper before returning.
+    *
     * Returns:
     *    success:
     *       NS_OK
