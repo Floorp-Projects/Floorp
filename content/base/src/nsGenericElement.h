@@ -255,8 +255,7 @@ public:
   {
   }
 
-  static nsresult GetTextContent(nsIDocument *aDoc,
-                                 nsIDOMNode *aNode,
+  static nsresult GetTextContent(nsIContent *aContent,
                                  nsAString &aTextContent);
 
   static nsresult SetTextContent(nsIContent *aContent,
