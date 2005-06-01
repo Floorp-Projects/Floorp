@@ -402,6 +402,17 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         return rv;
     }
 
+#if DEBUG_XPCNativeWrapper
+    {
+        char* s = wrapper->ToString(ccx);
+        NS_ASSERTION(wrapper->GetFlatJSObject(), "eh?");
+        printf("Created wrapped native %s, flat JSObject is %p\n",
+               s, (void*)wrapper->GetFlatJSObject());
+        if (s)
+            JS_smprintf_free(s);
+    }
+#endif
+
     // Redundant wrapper must be killed outside of the map lock.
     XPCWrappedNative* wrapperToKill = nsnull;
 
@@ -2462,9 +2473,11 @@ XPCWrappedNative::ToString(XPCCallContext& ccx,
 {
 #ifdef DEBUG
 #  define FMT_ADDR " @ 0x%p"
+#  define FMT_STR(str) str
 #  define PARAM_ADDR(w) , w
 #else
 #  define FMT_ADDR ""
+#  define FMT_STR(str)
 #  define PARAM_ADDR(w)
 #endif
 
@@ -2510,12 +2523,13 @@ XPCWrappedNative::ToString(XPCCallContext& ccx,
     {
         return nsnull;
     }
-    const char* fmt = "[xpconnect wrapped %s" FMT_ADDR "]";
+    const char* fmt = "[xpconnect wrapped %s" FMT_ADDR FMT_STR(" (native")
+        FMT_ADDR FMT_STR(")") "]";
     if(si)
     {
-        fmt = "[object %s" FMT_ADDR "]";
+        fmt = "[object %s" FMT_ADDR FMT_STR(" (native") FMT_ADDR FMT_STR(")") "]";
     }
-    sz = JS_smprintf(fmt, name PARAM_ADDR(this));
+    sz = JS_smprintf(fmt, name PARAM_ADDR(this) PARAM_ADDR(mIdentity));
 
     JS_smprintf_free(name);
 

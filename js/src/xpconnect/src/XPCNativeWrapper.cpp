@@ -944,6 +944,21 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
+#ifdef DEBUG_XPCNativeWrapper
+  {
+    XPCCallContext ccx(JS_CALLER, cx);
+
+    // Keep wrapperObj alive while we mess with strings
+    AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(wrapperObj));
+
+    char *s = wrappedNative->ToString(ccx);
+    printf("Created new XPCNativeWrapper %p for wrapped native %s\n",
+           (void*)wrapperObj, s);
+    if (s)
+      JS_smprintf_free(s);
+  }
+#endif
+  
   *rval = OBJECT_TO_JSVAL(wrapperObj);
 
   {
@@ -1152,6 +1167,22 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
   }
 
   wrapper->SetNativeWrapper(obj);
+
+#ifdef DEBUG_XPCNativeWrapper
+  {
+    XPCCallContext ccx(NATIVE_CALLER, cx);
+
+    // Keep obj alive while we mess with strings
+    AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(obj));
+
+    char *s = wrapper->ToString(ccx);
+    printf("Created new XPCNativeWrapper %p for wrapped native %s\n",
+           (void*)obj, s);
+    if (s)
+      JS_smprintf_free(s);
+  }
+#endif
+  
   return obj;
 }
 
