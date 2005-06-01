@@ -62,6 +62,8 @@ GARBAGE_DIRS += build
 
 include $(topsrcdir)/config/rules.mk
 
+unexport CC CXX
+
 ABS_topsrcdir := $(shell cd $(topsrcdir); pwd)
 
 export::
@@ -75,7 +77,7 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 endif
 
 libs::
-	$(PBBUILD) -project Camino.xcode -target $(TARGET) -buildstyle $(BUILDSTYLE) USE_GCC3=YES
+	$(PBBUILD) -project Camino.xcode -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_SETTINGS)
 
 # convenience target for PB script build phases
 echo_srcdir:

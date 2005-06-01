@@ -2380,7 +2380,7 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/Embed/components ../intl/unicharutil/util";
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lmozz -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				PREBINDING = NO;
 				PRODUCT_NAME = Camino;
 				SECTORDER_FLAGS = "";
@@ -6239,7 +6239,7 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader ../extensions/transformiix/build";
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lxpcom_compat -lmozjs -lmozjpeg -ljsj -lmozpng -lpthread -lz -lm";
+				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lxpcom_compat -lmozjs -lmozjpeg -ljsj -lmozpng -lpthread -lm";
 				PRODUCT_NAME = Camino;
 				SECTORDER_FLAGS = "";
 				WRAPPER_EXTENSION = app;
@@ -10949,6 +10949,7 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				WARNING_CFLAGS = "-Wno-non-virtual-dtor";
