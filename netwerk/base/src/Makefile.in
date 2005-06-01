@@ -64,6 +64,7 @@ CPPSRCS		= \
 		nsDirectoryIndexStream.cpp \
 		nsDownloader.cpp \
 		nsFileStreams.cpp \
+		nsIncrementalDownload.cpp \
 		nsInputStreamChannel.cpp \
 		nsInputStreamPump.cpp \
 		nsStreamTransportService.cpp \

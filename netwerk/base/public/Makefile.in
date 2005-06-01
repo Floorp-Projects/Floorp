@@ -69,6 +69,7 @@ XPIDLSRCS	= \
 		nsIDownloader.idl \
 		nsIEncodedChannel.idl \
 		nsIFileStreams.idl \
+		nsIIncrementalDownload.idl \
 		nsIInputStreamPump.idl \
 		nsIInputStreamChannel.idl \
 		nsIMIMEInputStream.idl \
