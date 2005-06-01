@@ -90,6 +90,7 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
   // JSClass (JSExtendedClass.base) initialization
   { "XPCNativeWrapper",
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
+    // Our one reserved slot holds a jsint of flag bits
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
     JSCLASS_IS_EXTENDED,
     JS_PropertyStub,    XPC_NW_DelProperty,
@@ -104,6 +105,12 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
   // JSExtendedClass initialization
   XPC_NW_Equality
 };
+
+#define FLAG_DEEP     0x1
+#define FLAG_EXPLICIT 0x2
+
+#define HAS_FLAGS(_val, _flags) \
+  ((JSVAL_TO_INT(_val) & (_flags)) != 0)
 
 // If one of our class hooks is ever called from a non-system script, bypass
 // the hook by calling the same hook on our wrapped native, with obj reset to
@@ -123,10 +130,12 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
 static JSBool
 ShouldBypassNativeWrapper(JSContext *cx, JSObject *obj)
 {
-  jsval deep = JS_FALSE;
+  NS_ASSERTION(XPCNativeWrapper::IsNativeWrapper(cx, obj),
+               "Unexpected object");
+  jsval flags;
 
-  ::JS_GetReservedSlot(cx, obj, 0, &deep);
-  return deep == JSVAL_TRUE &&
+  ::JS_GetReservedSlot(cx, obj, 0, &flags);
+  return !HAS_FLAGS(flags, FLAG_EXPLICIT) &&
          !(::JS_GetTopScriptFilenameFlags(cx, nsnull) & JSFILENAME_SYSTEM);
 }
 
@@ -162,6 +171,10 @@ static JSFunctionSpec sXPC_NW_JSClass_methods[] = {
   {"toString", XPC_NW_toString, 0, 0, 0},
   {0, 0, 0, 0, 0}
 };
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                     jsval *rval);
 
 static inline
 JSBool
@@ -208,17 +221,33 @@ XPC_NW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
 {
-  jsval deep;
-  if (!::JS_GetReservedSlot(cx, obj, 0, &deep)) {
-    return JS_FALSE;
-  }
+  NS_ASSERTION(XPCNativeWrapper::IsNativeWrapper(cx, obj),
+               "Unexpected object");
+  jsval flags;
+  ::JS_GetReservedSlot(cx, obj, 0, &flags);
 
   // Re-wrap non-primitive values if this is a deep wrapper, i.e.
-  // if (deep == JSVAL_TRUE).  Note that just using GetNewOrUsed
-  // on the return value of GetWrappedNativeOfJSObject will give
-  // the right thing -- the unique deep wrapper associated to
-  // wrappedNative.
-  if (deep == JSVAL_TRUE && !JSVAL_IS_PRIMITIVE(v)) {
+  // if (HAS_FLAGS(flags, FLAG_DEEP).
+  if (HAS_FLAGS(flags, FLAG_DEEP) && !JSVAL_IS_PRIMITIVE(v)) {
+
+    if (HAS_FLAGS(flags, FLAG_EXPLICIT)) {
+#ifdef DEBUG_XPCNativeWrapper
+      printf("Rewrapping for deep explicit wrapper\n");
+#endif
+      // |obj| is an explicit deep wrapper.  We want to construct another
+      // explicit deep wrapper for |v|.  Just call XPCNativeWrapperCtor by hand
+      // (passing null as the pre-created object it doesn't use anyway) so we
+      // don't have to create an object we never use.
+
+      return XPCNativeWrapperCtor(cx, nsnull, 1, &v, rval);
+    }
+    
+#ifdef DEBUG_XPCNativeWrapper
+    printf("Rewrapping for deep implicit wrapper\n");
+#endif
+    // Just using GetNewOrUsed on the return value of
+    // GetWrappedNativeOfJSObject will give the right thing -- the unique deep
+    // implicit wrapper associated with wrappedNative.
     JSObject *nativeObj = JSVAL_TO_OBJECT(v);
     XPCWrappedNative* wrappedNative =
       XPCWrappedNative::GetWrappedNativeOfJSObject(cx, nativeObj);
@@ -791,6 +820,10 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return ThrowException(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx);
   }
 
+  // |obj| almost always has the wrong proto and parent so we have to create
+  // our own object anyway.  Set |obj| to null so we don't use it by accident.
+  obj = nsnull;
+  
   jsval native = argv[0];
 
   if (JSVAL_IS_PRIMITIVE(native)) {
@@ -801,8 +834,6 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   XPCWrappedNative *wrappedNative;
 
-  // XXXbz if this is a deep wrap perhaps we shouldn't be using
-  // |obj| and should call GetNewOrUsed instead?
   if (XPCNativeWrapper::IsNativeWrapper(cx, nativeObj)) {
     // We're asked to wrap an already wrapped object. Re-wrap the
     // object wrapped by the given wrapper.
@@ -865,7 +896,8 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   JSBool isDeep = !hasStringArgs;
-  if (!::JS_SetReservedSlot(cx, wrapperObj, 0, BOOLEAN_TO_JSVAL(isDeep))) {
+  jsuint flags = isDeep ? FLAG_DEEP | FLAG_EXPLICIT : FLAG_EXPLICIT;
+  if (!::JS_SetReservedSlot(cx, wrapperObj, 0, INT_TO_JSVAL(flags))) {
     return JS_FALSE;
   }
 
@@ -1103,7 +1135,7 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
 
   if (!obj ||
       !::JS_SetPrivate(cx, obj, wrapper) ||
-      !::JS_SetReservedSlot(cx, obj, 0, JSVAL_TRUE)) {
+      !::JS_SetReservedSlot(cx, obj, 0, INT_TO_JSVAL(FLAG_DEEP))) {
     return nsnull;
   }
 
