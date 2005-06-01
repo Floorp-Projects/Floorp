@@ -310,14 +310,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         if(NS_FAILED(rv))
             return rv;
 
-        // Make sure to get the actual wrapped native for |parent| if
-        // it got wrapped in an XPCNativeWrapper.
-        if(parent != plannedParent &&
-           XPCNativeWrapper::IsNativeWrapper(ccx, parent))
-        {
-            parent = XPCNativeWrapper::GetWrappedNative(ccx, parent)->
-                GetFlatJSObject();
-        }
+        NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(ccx, parent),
+                     "Parent should never be an XPCNativeWrapper here");
 
         if(parent != plannedParent)
         {

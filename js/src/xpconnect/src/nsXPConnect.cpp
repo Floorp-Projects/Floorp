@@ -578,8 +578,17 @@ nsXPConnect::WrapNative(JSContext * aJSContext,
 
     nsresult rv;
     if(!XPCConvert::NativeInterface2JSObject(ccx, _retval,
-                                             aCOMObj, &aIID, aScope, &rv))
+                                             aCOMObj, &aIID, aScope, PR_FALSE,
+                                             &rv))
         return rv;
+
+#ifdef DEBUG
+    JSObject* returnObj;
+    (*_retval)->GetJSObject(&returnObj);
+    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(aJSContext, returnObj),
+                 "Shouldn't be returning a native wrapper here");
+#endif
+    
     return NS_OK;
 }
 

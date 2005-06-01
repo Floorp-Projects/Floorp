@@ -1104,7 +1104,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                 JSBool ok =
                                   XPCConvert::NativeInterface2JSObject(ccx,
                                         getter_AddRefs(holder), newThis,
-                                        newWrapperIID, obj, nsnull);
+                                        newWrapperIID, obj, PR_FALSE, nsnull);
                                 if(newWrapperIID != &NS_GET_IID(nsISupports))
                                     nsMemory::Free(newWrapperIID);
                                 if(!ok ||

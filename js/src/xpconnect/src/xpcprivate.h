@@ -2291,7 +2291,9 @@ public:
                                            nsIXPConnectJSObjectHolder** dest,
                                            nsISupports* src,
                                            const nsID* iid,
-                                           JSObject* scope, nsresult* pErr);
+                                           JSObject* scope,
+                                           PRBool allowNativeWrapper,
+                                           nsresult* pErr);
 
     static JSBool GetNativeInterfaceFromJSObject(XPCCallContext& ccx,
                                                  void** dest, JSObject* src,
