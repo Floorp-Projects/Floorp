@@ -526,18 +526,9 @@ if(verifyDiskSpace(fProgram, srDest))
 
     // register chrome. Most chrome is in .manifest files now, as we migrate
     registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome", "classic.jar"), "skin/classic/browser/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome", "classic.jar"), "skin/classic/mozapps/");
     
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/autoconfig/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/wallet/");
-
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/global/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/help/");
-
-    // XXXben Stuff that will become obsolete
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/navigator/");
-
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/communicator/");
 
     // Create the uninstall folder. 
     err = File.dirCreate(getFolder("Program", "uninstall"));
