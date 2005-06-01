@@ -208,33 +208,7 @@ interface nsIWindowsHooks : nsISupports {
     void setImageAsWallpaper(in nsIDOMElement aImageElement, in boolean useBackground);
 };
 
-/* nsIWindowsRegistry
- *
- * This interface describes the service that you can use to
- * get/set Win32 registry entries.
- * 
- * Notice: This interface is incomplete and should be used at your own risk!
- */
-[scriptable, uuid(e07e7430-8d11-417c-83ee-c994400c452f)]
-interface nsIWindowsRegistry : nsISupports {
-    /**
-     * Returns a Win32 registry entry value.  The returned string will be truncated
-     * at 4096 bytes.  The constants define the set of valid starting keys.  You
-     * pass in the subkey name and a value identifier (an empty string returns
-     * the "default" value for that subkey).
-     */
-    const long HKCR = 0; // HKEY_CLASSES_ROOT
-    const long HKCC = 1; // HKEY_CURRENT_CONFIG
-    const long HKCU = 2; // HKEY_CURRENT_USER
-    const long HKLM = 3; // HKEY_LOCAL_MACHINE
-    const long HKU  = 4; // HKEY_USERS
-    string getRegistryEntry( in long aHKeyConstant, in string aSubKeyName, in string aValueName );
-};
-
 %{C++
-#define NS_IWINDOWSHOOKS_CONTRACTID    "@mozilla.org/winhooks;1"
-#define NS_IWINDOWSHOOKS_CLASSNAME "Mozilla Windows Integration Hooks"
-
 // The key that is used to write the quick launch appname in the windows registry
 #define NS_QUICKLAUNCH_RUN_KEY "Mozilla Quick Launch"
 %}

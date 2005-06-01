@@ -110,7 +110,7 @@ private:
     friend class nsWindowsHooks;
 }; // nsWindowsHooksSettings
 
-class nsWindowsHooks : public nsIWindowsHooks, public nsIWindowsRegistry {
+class nsWindowsHooks : public nsIWindowsHooks {
 public:
     // ctor/dtor
     nsWindowsHooks();
@@ -119,7 +119,6 @@ public:
     // Declare all interface methods we must implement.
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWINDOWSHOOKS
-    NS_DECL_NSIWINDOWSREGISTRY
 
 protected:
     // Internal flavor of GetPreferences.
