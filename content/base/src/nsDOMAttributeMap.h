@@ -76,7 +76,7 @@ public:
 /**
  * PLDHashEntryHdr implementation for nsAttrKey.
  */
-class NS_COM nsAttrHashKey : public PLDHashEntryHdr
+class nsAttrHashKey : public PLDHashEntryHdr
 {
 public:
   typedef nsAttrKey KeyType;
