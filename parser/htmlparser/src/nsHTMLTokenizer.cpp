@@ -426,15 +426,23 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk)
                 PRInt32 earlyPos = FindLastIndexOfTag(theTag, theStack);
                 if (earlyPos != kNotFound) {
                   // Uh-oh, we've found a tag that is not allowed to nest at
-                  // all. Mark the previous one as malformed to increase our
-                  // chances of doing RS handling on it. We want to do this
-                  // for cases such as: <a><div><a></a></div></a>.
+                  // all. Mark the previous one and all of its children as 
+                  // malformed to increase our chances of doing RS handling
+                  // on all of them. We want to do this for cases such as:
+                  // <a><div><a></a></div></a>.
+                  // Note that we have to iterate through all of the chilren
+                  // of the original malformed tag to protect against:
+                  // <a><font><div><a></a></div></font></a>, so that the <font>
+                  // is allowed to contain the <div>.
                   // XXX What about <a><span><a>, where the second <a> closes
                   // the <span>?
-                  CHTMLToken *theMalformedToken = 
-                    NS_STATIC_CAST(CHTMLToken*, theStack.ObjectAt(earlyPos));
+                  nsDequeIterator it(theStack, earlyPos), end(theStack.End());
+                  while (it < end) {
+                    CHTMLToken *theMalformedToken = 
+                        NS_STATIC_CAST(CHTMLToken*, it++);
                   
-                  theMalformedToken->SetContainerInfo(eMalformed);
+                    theMalformedToken->SetContainerInfo(eMalformed);
+                  }
                 }
               }
 
