@@ -1799,6 +1799,7 @@ nsParser::Parse(const nsAString& aSourceBuffer,
         // to guarantee DidBuildModel() call - Fix 36148
         if(aLastCall) {
           mParserContext->mStreamListenerState=eOnStop;
+          mParserContext->mScanner->SetIncremental(PR_FALSE);
         }
         ResumeParse(PR_FALSE, PR_FALSE, PR_FALSE);
       }
