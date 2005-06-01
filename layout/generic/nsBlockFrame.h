@@ -625,7 +625,7 @@ protected:
     nsIFrame* aOldHead;
     nsBlockFrame* mBlock;
   };
-  friend class nsAutoOOFFrameList;
+  friend struct nsAutoOOFFrameList;
 
   nsFrameList GetOverflowOutOfFlows() const;
   void SetOverflowOutOfFlows(const nsFrameList& aList);
