@@ -2171,7 +2171,9 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
 
   // Save the data in cache
   if (mWyciwygChannel) {
-    mWyciwygChannel->WriteToCacheEntry(aText);
+    if (!aText.IsEmpty()) {
+      mWyciwygChannel->WriteToCacheEntry(aText);
+    }
 
     if (aNewlineTerminate) {
       mWyciwygChannel->WriteToCacheEntry(new_line);
