@@ -64,9 +64,14 @@ struct nsStateMapEntry
 };
 
 enum ENameRule {
-  eNoName,
-  eNameFromSubtree,  // Collect name from text & img descendents; use title if resulting name is "".
-  eNameFromTitle     // Use the title attribute for a name
+  eNameLabelOrTitle,     // Collect name if explicitly specified from 
+                         // 1) content subtree pointed to by labelledby
+                         //    which contains the ID for the label content, or
+                         // 2) title attribute if specified
+  eNameOkFromChildren    // Collect name from
+                         // 1) labelledby attribute if specified, or
+                         // 2) text & img descendents, or
+                         // 3) title attribute if specified
 };
 
 enum EValueRule {
@@ -136,7 +141,9 @@ protected:
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
   PRBool IsPartiallyVisible(PRBool *aIsOffscreen); 
-  static nsIContent *GetLabelForId(nsIContent *aLookContent, nsIAtom *forAttrib,
+  nsresult GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName);
+  static nsIContent *GetLabelForId(nsIContent *aLookContent,
+                                nsIAtom *forAttrib,
                                 const nsAString *aId);
   static nsIContent *GetXULLabelContent(nsIContent *aForNode);
   static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);

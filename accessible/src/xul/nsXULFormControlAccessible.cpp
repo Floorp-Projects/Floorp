@@ -64,11 +64,6 @@ nsAccessibleWrap(aNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsXULButtonAccessible::GetName(nsAString& aResult)
-{
-  return GetXULName(aResult);
-}
-
 /**
   * Only one actions available
   */
@@ -410,10 +405,16 @@ NS_IMETHODIMP nsXULGroupboxAccessible::GetState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULGroupboxAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP nsXULGroupboxAccessible::GetName(nsAString& aName)
 {
-  _retval.Truncate();  // Default name is blank 
+  aName.Truncate();  // Default name is blank 
 
+  if (mRoleMapEntry) {
+    nsAccessible::GetName(aName);
+    if (!aName.IsEmpty()) {
+      return NS_OK;
+    }
+  }
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if (element) {
     nsCOMPtr<nsIDOMNodeList> captions;
@@ -427,7 +428,7 @@ NS_IMETHODIMP nsXULGroupboxAccessible::GetName(nsAString& _retval)
       if (captionNode) {
         element = do_QueryInterface(captionNode);
         NS_ASSERTION(element, "No nsIDOMElement for caption node!");
-        element->GetAttribute(NS_LITERAL_STRING("label"), _retval) ;
+        element->GetAttribute(NS_LITERAL_STRING("label"), aName) ;
       }
     }
   }

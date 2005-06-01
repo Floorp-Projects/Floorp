@@ -54,17 +54,6 @@ nsLeafAccessible(aNode, aShell)
 { 
 }
 
-/**
-  * Might need to use the GetXULName method from nsFormControlAcc.cpp
-  */
-NS_IMETHODIMP nsXULTabAccessible::GetName(nsAString& _retval)
-{
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mDOMNode));
-  if (tab)
-    return GetXULName(_retval);
-  return NS_ERROR_FAILURE;
-}
-
 /** Only one action available */
 NS_IMETHODIMP nsXULTabAccessible::GetNumActions(PRUint8 *_retval)
 {

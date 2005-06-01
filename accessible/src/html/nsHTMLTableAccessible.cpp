@@ -108,9 +108,16 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetState(PRUint32 *aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTableAccessible::GetName(nsAString& aResult)
+NS_IMETHODIMP nsHTMLTableAccessible::GetName(nsAString& aName)
 {
-  aResult.Truncate();  // Default name is blank
+  aName.Truncate();  // Default name is blank
+
+  if (mRoleMapEntry) {
+    nsAccessible::GetName(aName);
+    if (!aName.IsEmpty()) {
+      return NS_OK;
+    }
+  }
 
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if (element) {
@@ -124,7 +131,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetName(nsAString& aResult)
       captions->Item(0, getter_AddRefs(captionNode));
       if (captionNode) {
         nsCOMPtr<nsIContent> captionContent(do_QueryInterface(captionNode));
-        AppendFlatStringFromSubtree(captionContent, &aResult);
+        AppendFlatStringFromSubtree(captionContent, &aName);
       }
     }
   }

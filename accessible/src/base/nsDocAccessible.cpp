@@ -128,7 +128,16 @@ NS_IMPL_RELEASE_INHERITED(nsDocAccessible, nsBlockAccessible)
 
 NS_IMETHODIMP nsDocAccessible::GetName(nsAString& aName) 
 { 
-  return GetTitle(aName);
+  nsresult rv = NS_OK;
+  aName.Truncate();
+  if (mRoleMapEntry) {
+    rv = nsAccessible::GetName(aName);
+  }
+  if (aName.IsEmpty()) {
+    rv = GetTitle(aName);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *aRole)

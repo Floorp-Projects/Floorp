@@ -56,20 +56,6 @@ nsAccessibleWrap(aNode, aShell)
 NS_IMPL_ISUPPORTS_INHERITED0(nsFormControlAccessible, nsAccessible)
 
 /**
-  * Will be called by both HTML and XUL elements, this method
-  *  merely checks who is calling and then calls the appropriate
-  *  protected method for the XUL or HTML element.
-  */
-NS_IMETHODIMP nsFormControlAccessible::GetName(nsAString& _retval)
-{
-  nsCOMPtr<nsIDOMXULElement> xulFormElement(do_QueryInterface(mDOMNode));
-  if (xulFormElement)
-    return GetXULName(_retval);
-  else
-    return GetHTMLName(_retval);
-}
-
-/**
   * No Children
   */
 NS_IMETHODIMP nsFormControlAccessible::GetFirstChild(nsIAccessible **_retval)

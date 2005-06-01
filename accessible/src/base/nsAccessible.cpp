@@ -70,6 +70,7 @@
 #include "nsGUIEvent.h"
 
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMXULButtonElement.h"
@@ -133,27 +134,21 @@ nsAccessible::~nsAccessible()
 
 NS_IMETHODIMP nsAccessible::GetName(nsAString& aName)
 {
+  aName.Truncate();
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (!content) {
     return NS_ERROR_FAILURE;  // Node shut down
   }
 
-  if (mRoleMapEntry) {
-    if (mRoleMapEntry->nameRule == eNoName) {
-      return NS_OK;
-    }
-    if (mRoleMapEntry->nameRule == eNameFromSubtree) {
-      // DHTML accessible name method for focusable items such as menuitem, treeitem, gridcell, etc.
-      nsresult rv = AppendFlatStringFromSubtree(content, &aName);
-      if (NS_SUCCEEDED(rv) && !aName.IsEmpty()) {
-        return rv;
-      }
-    }
+  PRBool canAggregateName = !mRoleMapEntry ||
+                            mRoleMapEntry->nameRule == eNameOkFromChildren;
+
+  if (content->IsContentOfType(nsIContent::eHTML)) {
+    return GetHTMLName(aName, canAggregateName);
   }
 
-  if (NS_CONTENT_ATTR_NOT_THERE ==
-      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aName)) {
-    aName.SetIsVoid(PR_TRUE);
+  if (content->IsContentOfType(nsIContent::eXUL)) {
+    return GetXULName(aName, canAggregateName);
   }
 
   return NS_OK;
@@ -161,23 +156,31 @@ NS_IMETHODIMP nsAccessible::GetName(nsAString& aName)
 
 NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
 {
-  // There are 3 conditions that make an accessible have no accDescription:
+  // There are 4 conditions that make an accessible have no accDescription:
   // 1. it's a text node; or
-  // 2. it doesn't have an accName; or
-  // 3. its title attribute equals to its accName nsAutoString name; 
-  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(mDOMNode));
-  if (!textContent) {
-    nsAutoString name;
-    GetName(name);
-    if (!name.IsEmpty()) {
-      // If there's already a name, we'll expose a description.if it's different than the name
-      // If there is no name, then we know the title should really be exposed there
-      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-      if (elt)
-        elt->GetAttribute(NS_LITERAL_STRING("title"), aDescription);
-      if (!elt || aDescription == name)
-        aDescription.Truncate();
+  // 2. It has no DHTML describedby property
+  // 3. it doesn't have an accName; or
+  // 4. its title attribute already equals to its accName nsAutoString name; 
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;  // Node shut down
+  }
+  if (!content->IsContentOfType(nsIContent::eTEXT)) {
+    nsAutoString description;
+    if (!mRoleMapEntry ||
+        NS_FAILED(GetTextFromRelationID(nsAccessibilityAtoms::describedby, description))) {
+      if (NS_CONTENT_ATTR_HAS_VALUE !=
+          content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, description)) {
+        nsAutoString name;
+        GetName(name);
+        if (name.IsEmpty() || description == name) {
+          // Has no name or description is not unique
+          description.Truncate();
+        }
+      }
     }
+    description.CompressWhitespace();
+    aDescription = description;
   }
 
   return NS_OK;
@@ -1193,7 +1196,6 @@ nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, 
   return NS_OK;
 }
 
-
 nsIContent* nsAccessible::GetXULLabelContent(nsIContent *aForNode)
 {
   nsAutoString controlID;
@@ -1256,6 +1258,38 @@ nsIContent* nsAccessible::GetHTMLLabelContent(nsIContent *aForNode)
   return nsnull;
 }
 
+nsresult nsAccessible::GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName)
+{
+  // Get DHTML name from content subtree pointed to by ID attribute
+  aName.Truncate();
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(content, "Called from shutdown accessible");
+
+  nsAutoString id;
+  if (NS_CONTENT_ATTR_HAS_VALUE !=
+      content->GetAttr(kNameSpaceID_StatesWAI_Unofficial, aIDAttrib, id)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMElement> labelElement;
+  domDoc->GetElementById(id, getter_AddRefs(labelElement));
+  content = do_QueryInterface(labelElement);
+  if (!content) {
+    return NS_OK;
+  }
+  
+  // We have a label content
+  nsresult rv = AppendFlatStringFromSubtree(content, &aName);
+  if (NS_SUCCEEDED(rv)) {
+    aName.CompressWhitespace();
+  }
+  return rv;
+}
+
 // Pass in forAttrib == nsnull if any <label> will do
 nsIContent *nsAccessible::GetLabelForId(nsIContent *aLookContent,
                                         nsIAtom *forAttrib,
@@ -1292,14 +1326,24 @@ nsIContent *nsAccessible::GetLabelForId(nsIContent *aLookContent,
   */
 nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtree)
 {
-  if (!mWeakShell || !mDOMNode) {
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
     return NS_ERROR_FAILURE;   // Node shut down
   }
 
-  nsIContent *labelContent;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if ((labelContent = GetHTMLLabelContent(content)) != nsnull) {
-    nsAutoString label;
+  // Check for DHTML accessibility labelledby relationship property
+  nsAutoString label;
+  nsresult rv;
+  if (mRoleMapEntry) {
+    rv = GetTextFromRelationID(nsAccessibilityAtoms::labelledby, label);
+    if (NS_SUCCEEDED(rv)) {
+      aLabel = label;
+      return rv;
+    }
+  }
+
+  nsIContent *labelContent = GetHTMLLabelContent(content);
+  if (labelContent) {
     AppendFlatStringFromSubtree(labelContent, &label);
     label.CompressWhitespace();
     if (!label.IsEmpty()) {
@@ -1308,17 +1352,20 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
     }
   }
 
-  if (!aCanAggregateSubtree) {
+  if (aCanAggregateSubtree) {
     // Don't use AppendFlatStringFromSubtree for container widgets like menulist
-    // Still try the title as as fallback method in that case.
-    if (NS_CONTENT_ATTR_NOT_THERE ==
-        content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aLabel)) {
-      aLabel.SetIsVoid(PR_TRUE);
+    nsresult rv = AppendFlatStringFromSubtree(content, &aLabel);
+    if (NS_SUCCEEDED(rv)) {
+      return NS_OK;
     }
-    return NS_OK;
   }
 
-  return nsAccessible::GetName(aLabel);
+  // Still try the title as as fallback method in that case.
+  if (NS_CONTENT_ATTR_NOT_THERE ==
+      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aLabel)) {
+    aLabel.SetIsVoid(PR_TRUE);
+  }
+  return NS_OK;
 }
 
 /**
@@ -1338,8 +1385,16 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   NS_ASSERTION(content, "No nsIContent for DOM node");
 
-  nsresult rv = NS_OK;
+  // First check for label override via accessibility labelledby relationship
   nsAutoString label;
+  nsresult rv;
+  if (mRoleMapEntry) {
+    rv = GetTextFromRelationID(nsAccessibilityAtoms::labelledby, label);
+    if (NS_SUCCEEDED(rv)) {
+      aLabel = label;
+      return rv;
+    }
+  }
 
   // CASE #1 (via label attribute) -- great majority of the cases
   nsCOMPtr<nsIDOMXULLabeledControlElement> labeledEl(do_QueryInterface(mDOMNode));
@@ -1352,9 +1407,14 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
       rv = itemEl->GetLabel(label);
     }
     else {
-      nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(mDOMNode));
-      if (xulEl) {
-        rv = xulEl->GetAttribute(NS_LITERAL_STRING("label"), label);
+      nsCOMPtr<nsIDOMXULSelectControlElement> select(do_QueryInterface(mDOMNode));
+      // Use label if this is not a select control element which 
+      // uses label attribute to indicate which option is selected
+      if (!select) {
+        nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(mDOMNode));
+        if (xulEl) {
+          rv = xulEl->GetAttribute(NS_LITERAL_STRING("label"), label);
+        }
       }
     }
   }
@@ -1423,102 +1483,109 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   // Using RDF will also allow for role extensibility. See bug 280138.
   // XXX Should we store attribute names in this table as atoms instead of strings?
   // Definition of nsRoleMapEntry and nsStateMapEntry contains comments explaining this table.
-  {"alert", ROLE_ALERT, eNameFromSubtree, eNoValue, eNoReqStates, END_ENTRY},
-  {"application", ROLE_APPLICATION, eNoName, eNoValue, eNoReqStates, END_ENTRY},
-  {"button", ROLE_PUSHBUTTON, eNameFromSubtree, eNoValue, eNoReqStates,
+  {"alert", ROLE_ALERT, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
+  {"application", ROLE_APPLICATION, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
+  {"button", ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"pressed", BOOL_STATE, STATE_PRESSED},
             {"haspopup", BOOL_STATE, STATE_HASPOPUP}, END_ENTRY},
-  {"button-submit", ROLE_PUSHBUTTON, eNameFromSubtree, eNoValue, STATE_DEFAULT, END_ENTRY},
-  {"checkbox", ROLE_CHECKBUTTON, eNameFromSubtree, eNoValue, eNoReqStates,
+  {"button-submit", ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, STATE_DEFAULT, END_ENTRY},
+  {"checkbox", ROLE_CHECKBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"checked", BOOL_STATE, STATE_CHECKED},
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
-  {"checkbox-tristate", ROLE_CHECKBUTTON, eNameFromSubtree, eNoValue, eNoReqStates, 
+  {"checkbox-tristate", ROLE_CHECKBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"checked", BOOL_STATE, STATE_CHECKED},
             {"checked", "mixed", STATE_MIXED},
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}},
-  {"columnheader", ROLE_COLUMNHEADER, eNameFromSubtree, eNoValue, STATE_SELECTABLE,
+  {"columnheader", ROLE_COLUMNHEADER, eNameOkFromChildren, eNoValue, STATE_SELECTABLE,
             {"selected", BOOL_STATE, STATE_SELECTED},
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
-  {"combobox", ROLE_COMBOBOX, eNameFromTitle, eNoValue, eNoReqStates,
-            {"readonly", BOOL_STATE, STATE_READONLY}, 
-            {"multiselect", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
-  {"dialog", ROLE_DIALOG, eNoName, eNoValue, eNoReqStates, END_ENTRY},
-  {"document", ROLE_DOCUMENT, eNoName, eNoValue, eNoReqStates, END_ENTRY},
-  {"icon", ROLE_ICON, eNameFromSubtree, eNoValue, eNoReqStates, END_ENTRY},
-  {"list", ROLE_LIST, eNameFromTitle, eNoValue, eNoReqStates,
+  {"combobox", ROLE_COMBOBOX, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"multiselect", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
-  {"listitem", ROLE_LISTITEM, eNameFromSubtree, eNoValue, STATE_SELECTABLE,
+  {"description", ROLE_STATICTEXT, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
+  {"dialog", ROLE_DIALOG, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
+  {"document", ROLE_DOCUMENT, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
+  {"icon", ROLE_ICON, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
+  {"label", ROLE_STATICTEXT, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
+  {"list", ROLE_LIST, eNameLabelOrTitle, eNoValue, eNoReqStates,
+            {"readonly", BOOL_STATE, STATE_READONLY},
+            {"multiselect", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
+  {"listitem", ROLE_LISTITEM, eNameOkFromChildren, eNoValue, STATE_SELECTABLE, END_ENTRY},
+  {"listitem-checkbox", ROLE_LISTITEM, eNameOkFromChildren, eNoValue, STATE_SELECTABLE,
             {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY },
-  {"menu", ROLE_MENUPOPUP, eNameFromTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"menubar", ROLE_MENUBAR, eNameFromTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"menuitem", ROLE_MENUITEM, eNameFromSubtree, eNoValue, eNoReqStates,
+  {"menu", ROLE_MENUPOPUP, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
+  {"menubar", ROLE_MENUBAR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
+  {"menuitem", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"haspopup", BOOL_STATE, STATE_HASPOPUP}, END_ENTRY},
-  {"menuitem-radio", ROLE_MENUITEM, eNameFromSubtree, eNoValue, eNoReqStates,
+  {"menuitem-radio", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"haspopup", BOOL_STATE, STATE_HASPOPUP},
             {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
-  {"menuitem-checkbox", ROLE_MENUITEM, eNameFromSubtree, eNoValue, eNoReqStates,
+  {"menuitem-checkbox", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"haspopup", BOOL_STATE, STATE_HASPOPUP},
             {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
-  {"grid", ROLE_TABLE, eNameFromTitle, eNoValue, STATE_FOCUSABLE,
+  {"grid", ROLE_TABLE, eNameLabelOrTitle, eNoValue, STATE_FOCUSABLE,
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
-  {"gridcell", ROLE_CELL, eNameFromSubtree, eHasValueMinMax, STATE_SELECTABLE,
+  {"gridcell", ROLE_CELL, eNameOkFromChildren, eHasValueMinMax, STATE_SELECTABLE,
             {"selected", BOOL_STATE, STATE_SELECTED},
-            {"readonly", BOOL_STATE, STATE_READONLY}, 
+            {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
-  {"group", ROLE_GROUPING, eNameFromTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"link", ROLE_LINK, eNameFromTitle, eNoValue, STATE_LINKED, END_ENTRY},
-  {"progressbar", ROLE_PROGRESSBAR, eNameFromTitle, eHasValueMinMax, STATE_READONLY,
+  {"group", ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
+  {"link", ROLE_LINK, eNameLabelOrTitle, eNoValue, STATE_LINKED, END_ENTRY},
+  {"progressbar", ROLE_PROGRESSBAR, eNameLabelOrTitle, eHasValueMinMax, STATE_READONLY,
             {"valuenow", "unknown", STATE_MIXED}, END_ENTRY},
-  {"radio", ROLE_RADIOBUTTON, eNameFromSubtree, eNoValue, eNoReqStates, 
+  {"radio", ROLE_RADIOBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
-  {"radiogroup", ROLE_GROUPING, eNameFromTitle, eNoValue, eNoReqStates,
+  {"radiogroup", ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
-  {"rowheader", ROLE_ROWHEADER, eNameFromSubtree, eNoValue, STATE_SELECTABLE,
+  {"rowheader", ROLE_ROWHEADER, eNameOkFromChildren, eNoValue, STATE_SELECTABLE,
             {"selected", BOOL_STATE, STATE_SELECTED},
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
-  {"secret", ROLE_PASSWORD_TEXT, eNameFromTitle, eNoValue, STATE_PROTECTED,
+  {"secret", ROLE_PASSWORD_TEXT, eNameLabelOrTitle, eNoValue, STATE_PROTECTED,
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY}, // XXX EXT_STATE_SINGLE_LINE
-  {"separator", ROLE_SEPARATOR, eNameFromTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"slider", ROLE_SLIDER, eNameFromTitle, eHasValueMinMax, eNoReqStates,
+  {"separator", ROLE_SEPARATOR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
+  {"slider", ROLE_SLIDER, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
-  {"spinbutton", ROLE_SPINBUTTON, eNameFromTitle, eHasValueMinMax, eNoReqStates, 
+  {"spinbutton", ROLE_SPINBUTTON, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
-  {"spreadsheet", ROLE_TABLE, eNameFromTitle, eNoValue, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE | STATE_FOCUSABLE,
+  {"spreadsheet", ROLE_TABLE, eNameLabelOrTitle, eNoValue, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE | STATE_FOCUSABLE,
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
-  {"tab", ROLE_PAGETAB, eNameFromSubtree, eNoValue, eNoReqStates,  END_ENTRY},
-  {"tablist", ROLE_PAGETABLIST, eNameFromSubtree, eNoValue, eNoReqStates,  END_ENTRY},
-  {"tabpanel", ROLE_PROPERTYPAGE, eNameFromSubtree, eNoValue, eNoReqStates,  END_ENTRY},
-  {"textarea", ROLE_TEXT, eNameFromTitle, eHasValueMinMax, eNoReqStates,
+  {"tab", ROLE_PAGETAB, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
+  {"tablist", ROLE_PAGETABLIST, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
+  {"tabpanel", ROLE_PROPERTYPAGE, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
+  {"textarea", ROLE_TEXT, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY}, // XXX EXT_STATE_MULTI_LINE
-  {"textfield", ROLE_TEXT, eNameFromTitle, eHasValueMinMax, eNoReqStates,
+  {"textfield", ROLE_TEXT, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED},
             {"haspopup", BOOL_STATE, STATE_HASPOPUP}, END_ENTRY}, // XXX EXT_STATE_SINGLE_LINE
-  {"toolbar", ROLE_TOOLBAR, eNoName, eNoValue, eNoReqStates, END_ENTRY},
-  {"tree", ROLE_OUTLINE, eNameFromTitle, eNoValue, eNoReqStates,
+  {"toolbar", ROLE_TOOLBAR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
+  {"tree", ROLE_OUTLINE, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"multiselectable", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
-  {"treeitem", ROLE_OUTLINEITEM, eNameFromSubtree, eNoValue, STATE_SELECTABLE,
+  {"treeitem", ROLE_OUTLINEITEM, eNameOkFromChildren, eNoValue, STATE_SELECTABLE,
+            {"selected", BOOL_STATE, STATE_SELECTED},
+            {"expanded", BOOL_STATE, STATE_EXPANDED},
+            {"expanded", "false", STATE_COLLAPSED}, END_ENTRY},
+  {"treeitem-checkbox", ROLE_OUTLINEITEM, eNameOkFromChildren, eNoValue, STATE_SELECTABLE,
             {"selected", BOOL_STATE, STATE_SELECTED},
             {"expanded", BOOL_STATE, STATE_EXPANDED},
             {"expanded", "false", STATE_COLLAPSED},
             {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
-  {nsnull, ROLE_NOTHING, eNoName, eNoValue, eNoReqStates, END_ENTRY} // Last item
+  {nsnull, ROLE_NOTHING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY} // Last item
 };
 
 // XHTML 2 roles
@@ -1579,7 +1646,12 @@ NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
   PRUint32 finalState = *aState;
   finalState &= ~STATE_READONLY;  // Once DHTML role is used, we're only readonly if DHTML readonly used
 
-  if (gLastFocusedNode == mDOMNode && (mRoleMapEntry->state & STATE_SELECTABLE)) {
+  if (finalState & STATE_UNAVAILABLE) {
+    // Disabled elements are not selectable or focusable, even if disabled
+    // via DHTML accessibility disabled property
+    finalState &= ~(STATE_SELECTABLE | STATE_FOCUSABLE);
+  }
+  else if (gLastFocusedNode == mDOMNode && (mRoleMapEntry->state & STATE_SELECTABLE)) {
     // If we're focused and selectable and not inside a multiselect,
     // then we're also selected
     nsCOMPtr<nsIAccessible> container = this;
