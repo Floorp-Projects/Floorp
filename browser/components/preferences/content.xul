@@ -70,14 +70,14 @@
     <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
     <script type="application/x-javascript" src="chrome://browser/content/preferences/content.js"/>
 
-    <groupbox>
-      <grid>
+    <groupbox id="contentGroupbox">
+      <grid id="contentGrid">
         <columns>
           <column flex="1"/>
           <column/>
         </columns>
-        <rows>
-          <row>
+        <rows id="contentRows-1">
+          <row id="popupPolicyRow">
             <vbox align="start">
               <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
                         label="&popupReject.label;" accesskey="&popupReject.accesskey;"
@@ -87,7 +87,7 @@
             <button id="popupPolicyButton" label="&allowedSites.label;"
                     oncommand="gContentPane.showExceptions('popup');"/>
           </row>
-          <row>
+          <row id="enableSoftwareInstallRow">
             <vbox align="start">
               <checkbox id="enableSoftwareInstall" preference="xpinstall.enabled"
                         label="&enableXPInstall.label;" accesskey="&enableXPInstall.accesskey;"
@@ -97,7 +97,7 @@
             <button id="enableSoftwareInstallButton" label="&allowedSites.label;"
                     oncommand="gContentPane.showExceptions('install');"/>
           </row>
-          <row>
+          <row id="enableImagesRow">
             <vbox align="start">
               <checkbox id="enableImages" 
                         label="&enableImages.label;" 
@@ -119,13 +119,13 @@
             </vbox>
           </row>
           <separator class="thin"/>
-          <row>
+          <row id="advancedJavaAllowRow">
             <vbox align="start">
               <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
                         preference="security.enable_java"/>
             </vbox>
           </row>
-          <row>
+          <row id="enableJavaScriptRow">
             <vbox align="start">
               <checkbox id="enableJavaScript" preference="javascript.enabled"
                         label="&enableJavaScript.label;" accesskey="&enableJavaScript.accesskey;"
@@ -150,8 +150,8 @@
           <column flex="1"/>
           <column/>
         </columns>
-        <rows>
-          <row>
+        <rows id="contentRows-2">
+          <row id="fontRow">
             <hbox align="center">
               <label control="defaultFont" accesskey="&defaultFont.accesskey;">&defaultFont.label;</label>
               <menulist id="defaultFont" flex="1"/>
@@ -190,7 +190,7 @@
                     accesskey="&advancedFonts.accesskey;" 
                     oncommand="gContentPane.showFonts();"/>
           </row>
-          <row>
+          <row id="selectColorRow">
             <hbox/>
             <button icon="select-color" label="&colors.label;" 
                     accesskey="&colors.accesskey;" 
