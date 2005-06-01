@@ -120,56 +120,5 @@ nsXTFVisualWrapper::ApplyDocumentStyleSheets()
 nsresult
 nsXTFVisualWrapper::Init()
 {
-  nsresult rv = nsXTFVisualWrapperBase::Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-  return GetXTFVisual()->GetClassAttributeName(getter_AddRefs(mClassAttributeName));
+  return nsXTFVisualWrapperBase::Init();
 }
-
-nsIAtom *
-nsXTFVisualWrapper::GetClassAttributeName() const
-{
-#ifdef DEBUG
-  nsCOMPtr<nsIAtom> classAttr;
-  GetXTFVisual()->GetClassAttributeName(getter_AddRefs(classAttr));
-  NS_WARN_IF_FALSE(classAttr == mClassAttributeName,
-                   "The name of the class attribute has changed.");
-#endif
-  return mClassAttributeName;
-}
-
-const nsAttrValue*
-nsXTFVisualWrapper::GetClasses() const
-{
-  const nsAttrValue* val = nsnull;
-  nsIAtom* clazzAttr = GetClassAttributeName();
-  if (clazzAttr) {
-    val = mAttrsAndChildren.GetAttr(clazzAttr);
-    // This is possibly the first time we need any classes.
-    if (val && val->Type() == nsAttrValue::eString) {
-      nsAutoString value;
-      val->ToString(value);
-      nsAttrValue newValue;
-      newValue.ParseAtomArray(value);
-      NS_CONST_CAST(nsAttrAndChildArray*, &mAttrsAndChildren)->
-        SetAndTakeAttr(clazzAttr, newValue);
-    }
-  }
-  return val;
-}
-
-NS_IMETHODIMP_(PRBool)
-nsXTFVisualWrapper::HasClass(nsIAtom* aClass, PRBool /*aCaseSensitive*/) const
-{
-  const nsAttrValue* val = GetClasses();
-  if (val) {
-    if (val->Type() == nsAttrValue::eAtom) {
-      return aClass == val->GetAtomValue();
-    }
-
-    if (val->Type() == nsAttrValue::eAtomArray) {
-      return val->GetAtomArrayValue()->IndexOf(aClass) >= 0;
-    }
-  }
-  return PR_FALSE;
-}
-

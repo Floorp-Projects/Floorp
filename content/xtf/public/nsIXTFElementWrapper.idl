@@ -38,17 +38,20 @@
 
 #include "nsISupports.idl"
 
+interface nsIAtom;
 interface nsIDOMElement;
 interface nsIDOMDocument;
 
-[scriptable, uuid(94c05b72-997a-4bb0-a23d-63e40c55b02c)]
+[scriptable, uuid(e71b0b11-45e3-422b-b589-9ea4629e36ec)]
 interface nsIXTFElementWrapper : nsISupports
 {  
   readonly attribute nsIDOMElement elementNode;
   readonly attribute nsIDOMElement documentFrameElement;
   
-  // Events can be unmasked by setting the corresponding bit as given
-  // by the NOTIFY_* constants in nsIXTFElement and nsIXTFVisual:
+  /**
+   * Events can be unmasked by setting the corresponding bit as given
+   * by the NOTIFY_* constants in nsIXTFElement and nsIXTFVisual:
+   */
   attribute unsigned long notificationMask;
 };
 

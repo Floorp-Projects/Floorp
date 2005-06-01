@@ -59,6 +59,9 @@ XPIDLSRCS = \
 	nsIXTFXMLVisualWrapper.idl \
 	nsIXTFXULVisual.idl \
 	nsIXTFXULVisualWrapper.idl \
+	nsIXTFBindableElement.idl \
+	nsIXTFBindableElementWrapper.idl \
+	nsIXTFStyledElementWrapper.idl \
 	$(NULL)
 
 ifdef MOZ_SVG

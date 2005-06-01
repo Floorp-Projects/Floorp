@@ -69,6 +69,9 @@ public:
   // nsIXTFXMLVisualWrapper interface
   NS_DECL_NSIXTFXMLVISUALWRAPPER
 
+  // nsIXTFStyledElementWrapper
+  NS_FORWARD_NSIXTFSTYLEDELEMENTWRAPPER(nsXTFStyledElementWrapper::)
+
   // nsIXTFElementWrapper interface
   NS_FORWARD_NSIXTFELEMENTWRAPPER(nsXTFXMLVisualWrapperBase::)
   
@@ -162,6 +165,7 @@ NS_IMPL_RELEASE_INHERITED(nsXTFXMLVisualWrapper,nsXTFXMLVisualWrapperBase)
 
 NS_INTERFACE_MAP_BEGIN(nsXTFXMLVisualWrapper)
   NS_INTERFACE_MAP_ENTRY(nsIXTFXMLVisualWrapper)
+  NS_INTERFACE_MAP_ENTRY(nsIXTFStyledElementWrapper)
 NS_INTERFACE_MAP_END_INHERITING(nsXTFXMLVisualWrapperBase)
 
 //----------------------------------------------------------------------

@@ -15,12 +15,12 @@
  * The Original Code is the Mozilla XTF project.
  *
  * The Initial Developer of the Original Code is
- * Alex Fritze.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Olli Pettay.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex@croczilla.com> (original author)
+ *   Olli Pettay <Olli.Pettay@helsinki.fi> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,10 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXTFStyledElementWrapper.idl"
+#include "nsIXTFElementWrapper.idl"
 
-[scriptable, uuid(1ab4b724-fd7e-41af-bc19-80bb7299f3c0)]
-interface nsIXTFXULVisualWrapper : nsIXTFStyledElementWrapper
+[scriptable, uuid(814dbfdd-32ff-4734-9aea-b84c925bc9c0)]
+interface nsIXTFStyledElementWrapper : nsIXTFElementWrapper
 {
+  /**
+   * This sets the name of the class attribute.
+   * Should be called only during ::onCreated.
+   * Note! nsIXTFAttributeHandler can't be used to handle class attribute.
+   */
+  void setClassAttributeName(in nsIAtom name);
 };
 

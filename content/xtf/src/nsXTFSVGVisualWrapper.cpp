@@ -65,10 +65,13 @@ public:
 
   // nsIXTFElementWrapperPrivate interface
   virtual PRUint32 GetElementType() { return nsIXTFElement::ELEMENT_TYPE_SVG_VISUAL; }
-  
+
   // nsIXTFSVGVisualWrapper interface
   NS_DECL_NSIXTFSVGVISUALWRAPPER
-  
+
+  // nsIXTFStyledElementWrapper
+  NS_FORWARD_NSIXTFSTYLEDELEMENTWRAPPER(nsXTFStyledElementWrapper::)
+
   // nsIXTFElementWrapper interface
   NS_FORWARD_NSIXTFELEMENTWRAPPER(nsXTFSVGVisualWrapperBase::)
 
@@ -162,6 +165,7 @@ NS_IMPL_RELEASE_INHERITED(nsXTFSVGVisualWrapper, nsXTFSVGVisualWrapperBase)
 
 NS_INTERFACE_MAP_BEGIN(nsXTFSVGVisualWrapper)
   NS_INTERFACE_MAP_ENTRY(nsIXTFSVGVisualWrapper)
+  NS_INTERFACE_MAP_ENTRY(nsIXTFStyledElementWrapper)
 NS_INTERFACE_MAP_END_INHERITING(nsXTFSVGVisualWrapperBase)
 
 //----------------------------------------------------------------------

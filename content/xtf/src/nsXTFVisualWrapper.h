@@ -44,7 +44,7 @@
 #include "nsIXTFVisualWrapperPrivate.h"
 #include "nsIXTFVisual.h"
 
-typedef nsXTFElementWrapper nsXTFVisualWrapperBase;
+typedef nsXTFStyledElementWrapper nsXTFVisualWrapperBase;
 
 class nsXTFVisualWrapper : public nsXTFVisualWrapperBase,
                            public nsIXTFVisualWrapperPrivate
@@ -64,18 +64,12 @@ public:
   virtual PRBool ApplyDocumentStyleSheets();
   
   nsresult Init();
-  
-  // nsIStyledContent
-  virtual nsIAtom *GetClassAttributeName() const;
-  virtual const nsAttrValue* GetClasses() const;
-  NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
 
 protected:
   // to be implemented by subclasses:
   virtual nsIXTFVisual *GetXTFVisual() const = 0;
   
   nsCOMPtr<nsIDOMElement> mVisualContent;
-  nsCOMPtr<nsIAtom> mClassAttributeName;
 };
 
 #endif // __NS_XTFVISUALWRAPPER_H__

@@ -15,12 +15,12 @@
  * The Original Code is the Mozilla XTF project.
  *
  * The Initial Developer of the Original Code is
- * Alex Fritze.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Olli Pettay.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex@croczilla.com> (original author)
+ *   Olli Pettay <Olli.Pettay@helsinki.fi> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,10 +36,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXTFStyledElementWrapper.idl"
+#include "nsIXTFElement.idl"
 
-[scriptable, uuid(1ab4b724-fd7e-41af-bc19-80bb7299f3c0)]
-interface nsIXTFXULVisualWrapper : nsIXTFStyledElementWrapper
+interface nsIXTFBindableElementWrapper;
+
+/**
+ * nsIXTFBindableElement can be used to add support for new interfaces to
+ * normal XML elements. XBL bindings do work with this kind of XTF elements.
+ *
+ * @note getScriptingInterfaces don't work at the moment with
+ * nsIXTFBindableElements. The problem is that XBL does not play nicely
+ * with that kind of interfaces.
+ * However, if nsIXTFBindableElement implements scriptable interfaces, those
+ * can be used by explicitly QIing to them.
+ */
+
+[scriptable, uuid(8dcc630c-9adc-4c60-9954-a004cb45e4a7)]
+interface nsIXTFBindableElement : nsIXTFElement
 {
+  /**
+   * onCreated will be called before any notifications are sent to
+   * the xtf element.
+   *
+   * @param wrapper is a weak proxy to the wrapping element
+   * (i.e. holding a reference to this will not create a cycle).
+   */
+  void onCreated(in nsIXTFBindableElementWrapper wrapper);
 };
-

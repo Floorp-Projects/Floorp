@@ -43,7 +43,7 @@ interface nsIDOMElement;
 interface nsIDOMNode;
 interface nsIDOMEvent;
 
-[scriptable, uuid(61077434-18c8-4d2d-956c-7c389a7e9bba)]
+[scriptable, uuid(a8b607fd-24b6-4a8c-9a89-d9b24f8e2592)]
 interface nsIXTFElement : nsISupports
 {
   // called when the wrapper object is being destroyed.
@@ -66,6 +66,10 @@ interface nsIXTFElement : nsISupports
   // Elements of type XUL_VISUAL are required to implement the
   // nsIXTFXULVisual interface in addition to nsIXTFElement:
   const unsigned long ELEMENT_TYPE_XUL_VISUAL      = 3;
+
+  // Elements of type BINDABLE are required to implement the
+  // nsIXTFBindableElement interface in addition to nsIXTFElement:
+  const unsigned long ELEMENT_TYPE_BINDABLE        = 4;
 
   // elementType identifies the type of wrapper that will be built for
   // a given xtf element. It must remain constant for the entire
