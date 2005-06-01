@@ -4176,9 +4176,9 @@ nsGlobalHistory::StartSearch(const nsAString &aSearchString,
 
   NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   
-  nsIAutoCompleteMdbResult *result = nsnull;
+  nsCOMPtr<nsIAutoCompleteMdbResult> result;
   if (aSearchString.IsEmpty()) {
-    AutoCompleteTypedSearch(&result);
+    AutoCompleteTypedSearch(getter_AddRefs(result));
   } else {
     // if the search string is empty after it has had prefixes removed, then 
     // we need to ignore the previous result set
@@ -4194,7 +4194,10 @@ nsGlobalHistory::StartSearch(const nsAString &aSearchString,
     AutoCompleteGetExcludeInfo(filtered, &exclude);
     
     // perform the actual search here
-    nsresult rv = AutoCompleteSearch(filtered, &exclude, NS_STATIC_CAST(nsIAutoCompleteMdbResult *, aPreviousResult), &result);
+    nsresult rv = AutoCompleteSearch(filtered, &exclude,
+                                     NS_STATIC_CAST(nsIAutoCompleteMdbResult *,
+                                                    aPreviousResult),
+                                     getter_AddRefs(result));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -4289,7 +4292,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString &aSearchString,
         aPrevResult->RemoveValueAt(i, PR_FALSE);
     }
     
-    *aResult = aPrevResult;
+    NS_ADDREF(*aResult = aPrevResult);
   } else {
     // Search through the entire history
         
