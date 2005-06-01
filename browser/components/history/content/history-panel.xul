@@ -59,7 +59,11 @@
   <stringbundle id="historyBundle" src="chrome://global/locale/history/history.properties"/>
 
   <commandset id="editMenuCommands"/>
-  <keyset id="editMenuKeys"/>
+  <keyset id="editMenuKeys">
+#ifdef XP_MACOSX
+    <key id="key_delete2" keycode="VK_BACK" command="cmd_delete"/>
+#endif
+  </keyset>
 
   <popup id="historyContextMenu" onpopupshowing="buildContextMenu(event);">
     <menuitem id="miExpand" label="&expand.label;" accesskey="&expand.accesskey;"
