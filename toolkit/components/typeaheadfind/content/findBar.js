@@ -334,7 +334,7 @@ function delayedCloseFindBar()
                      .getService(Components.interfaces.nsIWindowWatcher);
   if (window == ww.activeWindow && document.commandDispatcher.focusedElement &&
       document.commandDispatcher.focusedElement.parentNode.parentNode == findField) {
-    _content.focus();
+    window.content.focus();
   }
 
   var findToolbar = document.getElementById("FindToolbar");
