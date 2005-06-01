@@ -444,7 +444,7 @@ NS_IMETHODIMP mozInlineSpellChecker::IgnoreWord(const nsAString &word)
 NS_IMETHODIMP mozInlineSpellChecker::IgnoreWords(const PRUnichar **aWordsToIgnore, PRUint32 aCount)
 {
   // add each word to the ignore list and then recheck the document
-  for (PRInt32 index = 0; index < aCount; index++)
+  for (PRUint32 index = 0; index < aCount; index++)
     mSpellCheck->IgnoreWordAllOccurrences(aWordsToIgnore[index]);
 
   nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
@@ -705,6 +705,21 @@ nsresult mozInlineSpellChecker::CheckShouldSpellCheck(nsIDOMNode *aNode, PRBool 
   return NS_OK;
 }
 
+nsresult mozInlineSpellChecker::EnsureConverter()
+{
+  nsresult res = NS_OK;
+  if (!mConverter)
+  {
+    nsCOMPtr<mozISpellI18NManager> manager(do_GetService("@mozilla.org/spellchecker/i18nmanager;1", &res));
+    if (manager && NS_SUCCEEDED(res))
+    {
+      nsXPIDLString language;
+      res = manager->GetUtil(language.get(), getter_AddRefs(mConverter));
+    }
+  }
+  return res;
+}
+
 // takes a point in a text node and generates a range for the word containing that point. Note: 
 // aWordRange will be NULL if we don't have a word.
 nsresult mozInlineSpellChecker::GenerateRangeForSurroundingWord(nsIDOMNode * aNode, PRInt32 aOffset, nsIDOMRange ** aWordRange)
@@ -716,6 +731,9 @@ nsresult mozInlineSpellChecker::GenerateRangeForSurroundingWord(nsIDOMNode * aNo
   nsAutoString text;
   nsresult rv = aNode->GetNodeValue(text);
   NS_ENSURE_SUCCESS(rv, rv); 
+
+  rv = EnsureConverter();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   textChars = text.get();
   textLength = text.Length();
@@ -741,8 +759,6 @@ nsresult mozInlineSpellChecker::GenerateRangeForSurroundingWord(nsIDOMNode * aNo
     rv = mConverter->FindNextWord(textChars, textLength, currentOffset, &begin, &end);
     if (NS_SUCCEEDED(rv) && (begin != -1))
     {
-      const nsAString &word = Substring(text, begin, end - begin);
-
       lastWordBeginPosition = begin;
       lastWordEndPos = end;
       currentOffset = lastWordEndPos;
@@ -885,21 +901,14 @@ nsresult mozInlineSpellChecker::SpellCheckRange(nsIDOMRange *aRange, nsISelectio
   res = mTextServicesDocument->SetExtent(selectionRange);
   NS_ENSURE_SUCCESS(res, res); 
 
+  res = EnsureConverter();
+  NS_ENSURE_SUCCESS(res, res);
+
   PRBool done, isMisspelled;
   PRInt32 begin, end, startOffset, endOffset;
   PRUint32 selOffset = 0;
   nsCOMPtr<nsIDOMNode> startNode;
   nsCOMPtr<nsIDOMNode> endNode;
-
-  if (!mConverter)
-  {
-    nsCOMPtr<mozISpellI18NManager> manager(do_GetService("@mozilla.org/spellchecker/i18nmanager;1", &res));
-    if (manager && NS_SUCCEEDED(res))
-    {
-      nsXPIDLString language;
-      res = manager->GetUtil(language.get(),getter_AddRefs(mConverter));
-    }
-  }
 
   while (NS_SUCCEEDED(mTextServicesDocument->IsDone(&done)) && !done)
   {
@@ -1046,7 +1055,6 @@ mozInlineSpellChecker::CleanupRangesInSelection(nsISelection *aSelection)
 // and then removes it from the spell checker selection
 nsresult mozInlineSpellChecker::RemoveCurrentWordFromSpellSelection(nsISelection *aSpellCheckSelection, nsIDOMRange * aWordRange)
 {
-  nsresult rv = NS_OK;
   NS_ENSURE_ARG_POINTER(aSpellCheckSelection);
   NS_ENSURE_ARG_POINTER(aWordRange);
 
