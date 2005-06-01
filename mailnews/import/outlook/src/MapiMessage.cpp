@@ -601,7 +601,6 @@ void CMapiMessage::ClearTempAttachFile( void)
 BOOL CMapiMessage::CopyBinAttachToFile( LPATTACH lpAttach)
 {
 	LPSTREAM	lpStreamFile;
-	DWORD		len;
 
 	m_ownsAttachFile = FALSE;
 	m_attachPath.Truncate();

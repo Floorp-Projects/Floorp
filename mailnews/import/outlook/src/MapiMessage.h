@@ -129,7 +129,7 @@ protected:
 	BOOL		AddHeader( nsCString& str, ULONG tag, const char *pPrefix);
 	void		AddDate( nsCString& str);
 	
-	BOOL		IsSpace( PRUnichar c) { return( m_whitespace.FindChar( c) != -1);}
+	BOOL		IsSpace( char c) { return( m_whitespace.FindChar( c) != -1);}
 
 private:
 	LPMESSAGE		m_lpMsg;
