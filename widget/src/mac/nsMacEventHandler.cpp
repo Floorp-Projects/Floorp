@@ -1361,6 +1361,9 @@ if (KeyDown(0x39))	// press [caps lock] to start the profile
 		// Deactivate the TSMDocument assoicated with this EventHandler
 		//
 		if (mTSMDocument) {
+		  // We should call FixTSMDocument() before deactivate the window.
+		  // see http://bugzilla.mozilla.gr.jp/show_bug.cgi?id=4135
+		  ResetInputState();
 		  // make sure we do not use input widnow even some other code turn it for default by calling 
 		  // ::UseInputWindow(nsnull, TRUE); 
 		  ::UseInputWindow(mTSMDocument, FALSE); 
