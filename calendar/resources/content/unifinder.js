@@ -749,7 +749,7 @@ function changeToolTipTextForEvent( event )
 {
    var thisEvent = getCalendarEventFromEvent( event );
    
-   var toolTip = document.getElementById( "eventTreeListTooltip" );
+   var toolTip = document.getElementById( "eventTreeTooltip" );
 
    while( toolTip.hasChildNodes() )
    {

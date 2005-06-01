@@ -285,7 +285,7 @@ MultiweekView.prototype.createEventBoxInternal = function multiweekView_createEv
     eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
     eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
     eventBox.setAttribute( "onmouseover", "getEventToolTip(this, event)" );
-    eventBox.setAttribute( "tooltip", "eventTooltip" );
+    eventBox.setAttribute( "tooltip", "gridOccurrenceTooltip" );
     eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
 
     eventBox.event = calEvent;
@@ -342,7 +342,7 @@ MultiweekView.prototype.getToDoBox = function multiweekView_getToDoBox( calendar
   eventBox.setAttribute( "onclick", "multiweekToDoBoxClickEvent( this, event )" );
   eventBox.setAttribute( "ondblclick", "multiweekToDoBoxDoubleClickEvent( this, event )" );
   eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarToDo, event )" );
-  eventBox.setAttribute( "tooltip", "eventTooltip" );
+  eventBox.setAttribute( "tooltip", "gridOccurrenceTooltip" );
   //eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
   // add a property to the event box that holds the calendarEvent that the
   // box represents

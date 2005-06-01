@@ -270,7 +270,7 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
     eventBox.setAttribute("onclick", "monthEventBoxClickEvent( this, event )" );
     eventBox.setAttribute("ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
     eventBox.setAttribute("onmouseover", "getEventToolTip(this, event)" );
-    eventBox.setAttribute("tooltip", "eventTooltip" );
+    eventBox.setAttribute("tooltip", "gridOccurrenceTooltip" );
     eventBox.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
     // add a property to the event box that holds the calendarEvent that the
     // box represents
@@ -368,7 +368,7 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
          eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
          eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
          eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
-         eventBox.setAttribute( "tooltip", "eventTooltip" );
+         eventBox.setAttribute( "tooltip", "gridOccurrenceTooltip" );
          eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
          // add a property to the event box that holds the calendarEvent that the
          // box represents
@@ -448,7 +448,7 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
             eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
             eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
             eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
-            eventBox.setAttribute( "tooltip", "eventTooltip" );
+            eventBox.setAttribute( "tooltip", "gridOccurrenceTooltip" );
    
             this.kungFooDeathGripOnEventBoxes.push( eventBox );
             

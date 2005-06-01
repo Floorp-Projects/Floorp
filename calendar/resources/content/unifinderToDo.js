@@ -606,7 +606,7 @@ function changeToolTipTextForToDo( event )
 {
    var toDoItem = getToDoFromEvent( event );
 
-   var toolTip = document.getElementById( "taskTooltip" );
+   var toolTip = document.getElementById( "taskTreeTooltip" );
 
    while( toolTip.hasChildNodes() )
    {

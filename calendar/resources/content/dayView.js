@@ -333,7 +333,7 @@ DayView.prototype.createAllDayEventBox = function dayview_createAllDayEventBox( 
    eventBox.setAttribute( "onclick", "dayEventItemClick( this, event )" );
    eventBox.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
    eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
-   eventBox.setAttribute( "tooltip", "eventTooltip" );
+   eventBox.setAttribute( "tooltip", "gridOccurrenceTooltip" );
    
    eventBox.setAttribute( "flex", "1" );  
    
@@ -447,7 +447,7 @@ DayView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, e
    eventBox.setAttribute( "onclick", "dayEventItemClick( this, event )" );
    eventBox.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
    eventBox.setAttribute( "onmouseover", "getEventToolTip(this, event)" );
-   eventBox.setAttribute( "tooltip", "eventTooltip" );
+   eventBox.setAttribute( "tooltip", "gridOccurrenceTooltip" );
    eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" );
    eventBox.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" );
    eventBox.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)" );

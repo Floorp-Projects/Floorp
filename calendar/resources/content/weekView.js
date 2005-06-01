@@ -301,7 +301,7 @@ WeekView.prototype.refreshEvents = function()
             newHTMLNode.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
             newHTMLNode.setAttribute( "onclick", "weekEventItemClick( this, event )" );
             newHTMLNode.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
-            newHTMLNode.setAttribute( "tooltip", "eventTooltip" );
+            newHTMLNode.setAttribute( "tooltip", "gridOccurrenceTooltip" );
          
             var newImage = document.createElement("image");
             newImage.setAttribute( "class", "all-day-event-class" );
@@ -310,7 +310,7 @@ WeekView.prototype.refreshEvents = function()
             newImage.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
             newImage.setAttribute( "onclick", "weekEventItemClick( this, event )" );
             newImage.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
-            newImage.setAttribute( "tooltip", "eventTooltip" );
+            newImage.setAttribute( "tooltip", "gridOccurrenceTooltip" );
             
             ThisDayAllDayBox.appendChild( newImage );
             ThisDayAllDayBox.appendChild( newHTMLNode );
@@ -422,7 +422,7 @@ dump(this.displayEndDate+"\n");
     eventBox.setAttribute("id", "week-view-event-box-" + calEvent.id);
     eventBox.setAttribute("name", "week-view-event-box-" + calEvent.id);
     eventBox.setAttribute("onmouseover", "getEventToolTip(this, event)" );
-    eventBox.setAttribute("tooltip", "eventTooltip");
+    eventBox.setAttribute("tooltip", "gridOccurrenceTooltip");
 
     // Event box text (title, location and description)
     var locationText = calEvent.getProperty("LOCATION");

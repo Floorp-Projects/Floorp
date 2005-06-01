@@ -462,7 +462,7 @@ CalendarWindow.prototype.changeMouseOverInfo = function calWin_changeMouseOverIn
 {
     return;
     // XXX fixme
-   const toolTip = document.getElementById( "eventTooltip" );
+   const toolTip = document.getElementById( "gridOccurrenceTooltip" );
 
    while( toolTip.hasChildNodes() )
    {

@@ -479,15 +479,15 @@
 </toolbox>
 
 <!-- tooltips to show cropped text behave as a titletip: don't hide until mouse moved away -->
-<tooltip id="eventTreeListTooltip"
+<tooltip id="eventTreeTooltip"
          onpopupshowing="changeToolTipTextForEvent( event );return( checkTooltip( event ) );"
          noautohide="true"/>
 
-<tooltip id="eventTooltip"
+<tooltip id="taskTreeTooltip"
+         onpopupshowing="changeToolTipTextForToDo( event );return( checkTooltip( event ) );"
          noautohide="true"/>
 
-<tooltip id="taskTooltip"
-         onpopupshowing="changeToolTipTextForToDo( event );return( checkTooltip( event ) );"
+<tooltip id="gridOccurrenceTooltip"
          noautohide="true"/>
 
 <!-- V I S I B L E  C O N T E N T  -->
@@ -616,7 +616,7 @@
                      label="&calendar.unifinder.tree.calendarname.label;"/>
           </treecols>
        
-          <treechildren tooltip="taskTooltip"
+          <treechildren tooltip="taskTreeTooltip"
                         onmousedown="unifinderMouseDownToDo( event )"/>
         </tree>
       </vbox>
@@ -711,7 +711,7 @@
           </treecols>
 
           <!-- on mousedown here happens before onclick above -->
-          <treechildren tooltip="eventTreeListTooltip" 
+          <treechildren tooltip="eventTreeTooltip" 
                         onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
                         ondragover="return( false );"  
                         ondblclick="unifinderDoubleClickEvent( event )"

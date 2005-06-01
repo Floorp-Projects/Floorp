@@ -148,7 +148,7 @@ function getPreviewForTask( toDoItem )
 /* Draws tooltip for events in the various views */
 function getEventToolTip(eventbox, event )
 {
-   var toolTip = document.getElementById( "eventTooltip" );
+   var toolTip = document.getElementById( "gridOccurrenceTooltip" );
 
    while( toolTip.hasChildNodes() )
    {
