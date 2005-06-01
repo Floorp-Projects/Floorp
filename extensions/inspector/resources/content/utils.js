@@ -57,8 +57,8 @@ var InsUtil = {
   *******************************************************************************/
   convertChromeURL: function(aURL)
   {
-    var uri = XPCU.getService("@mozilla.org/network/simple-uri;1", "nsIURI");
-    uri.spec = aURL;
+    var uri = XPCU.getService("@mozilla.org/network/io-service;1", "nsIIOService")
+                  .newURI(aURL, null, null);
     var reg = XPCU.getService("@mozilla.org/chrome/chrome-registry;1", "nsIChromeRegistry");
     return reg.convertChromeURL(uri);
   },
