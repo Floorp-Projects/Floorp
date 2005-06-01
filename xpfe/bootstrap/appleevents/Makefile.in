@@ -109,7 +109,7 @@ include $(topsrcdir)/config/rules.mk
 
 
 # convert AppleScript dictionary .sdef file into .r format, and thence to .rsrc
-SDP_TOOL = /Developer/Tools/sdp
+SDP_TOOL = $(SDP)
 REZ_TOOL = /Developer/Tools/Rez
 SDEF_SRC = $(srcdir)/mozilla.sdef
 RES_DEST = mozillaSuite.r
