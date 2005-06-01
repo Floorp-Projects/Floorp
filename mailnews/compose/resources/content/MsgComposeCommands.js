@@ -3139,8 +3139,6 @@ function InitEditor(editor)
   gMsgCompose.initEditor(editor, window.content);
   try {
     InlineSpellChecker.Init(editor, sPrefs.getBoolPref("mail.spellcheck.inline"));
-    // Following line works round bug 292520, look at removing after that is fixed
-    InlineSpellChecker.checkDocument(window.content.document);
   } catch (e) {
     // InlineSpellChecker.Init throws if there is no inline spellchecker
     // so disable menuitem.

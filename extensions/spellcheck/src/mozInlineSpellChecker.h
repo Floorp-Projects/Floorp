@@ -178,6 +178,7 @@ public:
 
   nsresult GetSpellCheckSelection(nsISelection ** aSpellCheckSelection);
   nsresult SaveCurrentSelectionPosition();
+  nsresult EnsureConverter();
 };
 
 #endif /* __mozinlinespellchecker_h__ */
