@@ -183,8 +183,9 @@ NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
   *aNewFrame = nsnull;
 
   NS_ASSERTION(parentFrame, "null parent");
-  nsISVGTextFrame *text_container;
-  parentFrame->QueryInterface(NS_GET_IID(nsISVGTextFrame), (void**)&text_container);
+  nsISVGTextContainerFrame *text_container;
+  parentFrame->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame),
+                              (void**)&text_container);
   if (!text_container) {
     NS_ERROR("trying to construct an SVGTSpanFrame for an invalid container");
     return NS_ERROR_FAILURE;
