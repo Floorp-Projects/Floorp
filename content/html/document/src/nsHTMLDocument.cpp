@@ -2109,6 +2109,9 @@ nsHTMLDocument::Close()
                           NS_GENERATE_PARSER_KEY(),
                           mContentType, PR_FALSE,
                           PR_TRUE);
+    } else {
+      rv = mParser->Parse(EmptyString(), NS_GENERATE_PARSER_KEY(),
+                          mContentType, PR_FALSE, PR_TRUE);
     }
     --mWriteLevel;
     mIsWriting = 0;
