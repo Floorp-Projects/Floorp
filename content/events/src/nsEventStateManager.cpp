@@ -3681,20 +3681,6 @@ static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
         break;
       anc2 = parent;
     }
-#ifdef DEBUG
-    if (anc1 != anc2) {
-      // This could be a performance problem.
-
-      // The |!anc1->GetDocument()| case (that aNode1 has been removed
-      // from the document) could be a slight performance problem.  It's
-      // rare enough that it shouldn't be an issue, but common enough
-      // that we don't want to assert..
-      NS_ASSERTION(!anc1->GetDocument(),
-                   "moved hover/active between nodes in different documents");
-      // XXX Why don't we ever hit this code because we're not using
-      // |GetBindingParent|?
-    }
-#endif
     if (anc1 == anc2) {
       anc1 = aNode1;
       anc2 = aNode2;
@@ -3870,17 +3856,9 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
         }
       }
     }
-    else if (newHover) {
-      doc1 = newHover->GetDocument();
-    }
-    else if (oldHover) {
-      doc1 = oldHover->GetDocument();
-    }
-    else if (newActive) {
-      doc1 = newActive->GetDocument();
-    }
     else {
-      doc1 = oldActive->GetDocument();
+      EnsureDocument(mPresContext);
+      doc1 = mDocument;
     }
     if (doc1) {
       doc1->BeginUpdate(UPDATE_CONTENT_STATE);
