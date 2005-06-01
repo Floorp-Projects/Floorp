@@ -79,9 +79,6 @@ const extensionCsv      = ".csv";
 const filterRdf         = gCalendarBundle.getString("filterRdf");
 const extensionRdf      = ".rdf";
 
-if( opener && "gICalLib" in opener && opener.gICalLib )
-   gICalLib = opener.gICalLib;
-
 // convert to and from Unicode for file i/o
 function convertFromUnicode( aCharset, aSrc )
 {
@@ -134,7 +131,7 @@ function loadEventsFromFile()
         var flags = ( promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 ) + 
             ( promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 ) + 
             ( promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2 );
-        var intoCalName = getSelectedCalendarNameOrDefault();
+        var intoCalName = getDefaultCalendar();
         var importAllStr = gCalendarBundle.getString( "importAll" );
         var promptStr = gCalendarBundle.getString( "promptForEach" );
         var discardAllStr = gCalendarBundle.getString( "discardAll" );
@@ -158,8 +155,7 @@ function loadEventsFromFile()
                 // fall thru to process ics data
             case 0 : // ics
             case 3 : // vcs
-                parseIcalEvents(tmpCalendar, aDataStream);
-                parseIcalToDos(tmpCalendar, aDataStream);
+                parseIcal(tmpCalendar, aDataStream);
                 break;
             case 2: // csv
                 parseOutlookCSVEvents(tmpCalendar, aDataStream);
@@ -276,14 +272,13 @@ function createUniqueID()
  * silent: If silent, adds them all to selected (or default) calendar.
  *   else shows new event dialog on each event, using selected (or default)
  *   calendar as the initial calendar in dialog.
- * calendarPath (optional): if present, overrides selected calendar.
- *   Value is calendarPath from another item in calendar list.
+ * calendar (optional): if present, overrides selected calendar.
+ *   Value is a calICalendar object.
  */
-function addEventsToCalendar( calendarEventArray, silent, calendarPath )
+function addEventsToCalendar(calendarEventArray, silent, calendar)
 {
-  if( ! calendarPath ) // null, "", or false
-  {
-    calendarPath = getSelectedCalendarPathOrDefault();
+  if (!calendar) {
+    calendarPath = getDefaultCalendar();
   }
 
   gICalLib.batchMode = true;
@@ -396,31 +391,6 @@ function getSelectedCalendarPathOrDefault()
     calendarPath = gCalendarWindow.calendarManager.getDefaultServer();
   }
   return calendarPath;
-}
-
-
-/** Return the calendarPath of the calendar selected in list-calendars-listbox,
-    or the default calendarPath if none selected. **/
-function getSelectedCalendarNameOrDefault()
-{
-  var calendarName = null;
-  //see if there's a server selected in the calendar window first
-  //get the selected calendar
-  if( document.getElementById( "list-calendars-listbox" ) )
-  {
-    var selectedCalendarItem = document.getElementById( "list-calendars-listbox" ).selectedItem;
-    if( selectedCalendarItem )
-    {
-      var listCell = selectedCalendarItem.firstChild;
-      if ( listCell ) 
-        calendarName = listCell.getAttribute( "label" );
-    }
-  }
-  if( ! calendarName ) // null, "", or false
-  {
-    calendarName = gCalendarWindow.calendarManager.getDefaultCalendarName();
-  }
-  return calendarName;
 }
 
 
@@ -893,46 +863,36 @@ function parseOutlookTextField(args, textIndexName, eventFields)
     return textString; // null or empty
 }
 
-/**** parseIcalEvents
+/**** parseIcal
  *
- * Takes a text block of iCalendar events and tries to split that into individual events.
+ * Takes a text block of iCalendar events and tries to split that into
+ * individual items
  * Parses those events and adds them to a calendar.
  */
-
-function parseIcalEvents(calendar, icalStr)
-{
-    for (var i=0, j=0; (i = icalStr.indexOf("BEGIN:VEVENT", j)) != -1; ) {
-        // try to find the begin and end of an event. ParseIcalString does not support VCALENDAR
-        j = icalStr.indexOf("END:VEVENT", i + "BEGIN:VEVENT".length);
-        j = (j == -1? icalStr.length : j + "END:VEVENT".length);
-
-        var eventData = icalStr.substring(i, j);
-        var calendarEvent = createEvent();
-        calendarEvent.icalString = eventData;
-
-        calendar.addItem(calendarEvent, null);
-    }
-}
-
-/**** parseIcalToDos
- *
- * Takes a text block of iCalendar todos and tries to split that into individual todos.
- * Parses those toDos and returns an array of calendarToDos.
- */
  
-function parseIcalToDos(calendar, icalStr)
+function parseIcal(calendar, icalStr)
 {
-   for(var i=0, j=0; (i = icalStr.indexOf("BEGIN:VTODO", j)) != -1; ) { 
-      // try to find the begin and end of an toDo. ParseIcalString does not support VCALENDAR
-      j = icalStr.indexOf("END:VTODO", i + "BEGIN:VTODO".length);
-      j = (j == -1? icalStr.length : j + "END:VTODO".length);
-
-      var eventData = icalStr.substring(i, j);
-      var calendarToDo = createToDo();
-      calendarToDo.icalString = eventData;
-
-      calendar.addItem(calendarToDo, null);
-   }
+    icssrv = Components.classes["@mozilla.org/calendar/ics-service;1"]
+                       .getService(Components.interfaces.calIICSService);
+    var calComp = icssrv.parseICS(icalStr);
+    var subComp = calComp.getFirstSubcomponent("ANY");
+    while (subComp) {
+        switch (subComp.componentType) {
+        case "VEVENT":
+            var event = createEvent();
+            event.icalComponent = subComp;
+            calendar.addItem(event, null);
+            break;
+        case "VTODO":
+            var todo = createToDo();
+            todo.icalComponent = subComp;
+            calendar.addItem(todo, null);
+            break;
+        default:
+            // Nothing. ignore this thing
+        }
+        subComp = calComp.getNextSubcomponent("ANY");
+    }
 }
 
 /**** transformXCSData: transform into ics data
@@ -1986,31 +1946,5 @@ function getXmlDocument ( eventList )
 }
 
 function startImport() {
-  /*
-    var ImportExportErrorHandler = {
-        errorreport : "",
-        onLoad   : function() {},
-        onStartBatch   : function() {},
-        onEndBatch   : function() {},
-        onAddItem : function( calendarEvent ) {},
-        onModifyItem : function( calendarEvent, originalEvent ) {},
-        onDeleteItem : function( calendarEvent, nextEvent ) {},
-        onAlarm : function( calendarEvent ) {},
-        onError : function( severity, errorid, errorstring ) 
-        {
-            this.errorreport=this.errorreport+gCalendarBundle.getString( errorid )+"\n";
-        },
-        showErrors : function () {
-            if( this.errorreport != "" )
-                alert( "Errors:\n"+this.errorreport );
-        }
-
-    }
-    gICalLib.addObserver( ImportExportErrorHandler );
-    ImportExportErrorHandler.showErrors();
-    gICalLib.removeObserver( ImportExportErrorHandler );
-  */
-
     loadEventsFromFile();
-
 }
