@@ -1358,6 +1358,12 @@ CParserContext* nsParser::PopContext()
       if (mParserContext->mStreamListenerState != eOnStop) {
         mParserContext->mStreamListenerState = oldContext->mStreamListenerState;
       }
+      // Update the current context's tokenizer to any information gleaned
+      // while parsing document.write() calls (such as "a plaintext tag was
+      // found")
+      if (mParserContext->mTokenizer) {
+        mParserContext->mTokenizer->CopyState(oldContext->mTokenizer);
+      }
     }
   }
   return oldContext;
