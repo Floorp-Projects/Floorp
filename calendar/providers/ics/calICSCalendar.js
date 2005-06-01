@@ -261,7 +261,8 @@ calICSCalendar.prototype = {
              calComp.addProperty(this.unmappedProperties[i]);
         }
 
-        this.getItems(calICalendar.ITEM_FILTER_TYPE_ALL, 0, null, null, listener);
+        this.getItems(calICalendar.ITEM_FILTER_TYPE_ALL | calICalendar.ITEM_FILTER_COMPLETED_ALL,
+                      0, null, null, listener);
     },
 
     // nsIStreamListener impl
