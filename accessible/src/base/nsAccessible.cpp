@@ -86,6 +86,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsITimer.h"
+#include "nsIDOMHTMLDocument.h"
 
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
@@ -246,7 +247,7 @@ NS_IMETHODIMP nsAccessible::SetNextSibling(nsIAccessible *aNextSibling)
 
 NS_IMETHODIMP nsAccessible::Init()
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsIContent *content = GetRoleContent(mDOMNode);
   nsAutoString roleString;
   if (content &&
       NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_XHTML2_Unofficial, 
@@ -278,6 +279,35 @@ NS_IMETHODIMP nsAccessible::Init()
   }
 
   return nsAccessNodeWrap::Init();
+}
+
+nsIContent *nsAccessible::GetRoleContent(nsIDOMNode *aDOMNode)
+{
+  // Given the DOM node for an acessible, return content node that
+  // we should look at role string from
+  // For non-document accessibles, this is the associated content node.
+  // For doc accessibles, first try the <body> if it's HTML and there is
+  // a role attribute used there.
+  // For any other doc accessible , this is the document element.
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
+  if (!content) {
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aDOMNode));
+    if (domDoc) {
+      nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(aDOMNode));
+      if (htmlDoc) {
+        nsCOMPtr<nsIDOMHTMLElement> bodyElement;
+        htmlDoc->GetBody(getter_AddRefs(bodyElement));
+        content = do_QueryInterface(bodyElement);
+      }
+      if (!content || !content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
+                                        nsAccessibilityAtoms::role)) {
+        nsCOMPtr<nsIDOMElement> docElement;
+        domDoc->GetDocumentElement(getter_AddRefs(docElement));
+        content = do_QueryInterface(docElement);
+      }
+    }
+  }
+  return content;
 }
 
 NS_IMETHODIMP nsAccessible::Shutdown()

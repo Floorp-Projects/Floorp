@@ -396,7 +396,7 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
     return E_FAIL;
 
   // -- Try enumerated role
-  if (role != ROLE_NOTHING) {
+  if (role != ROLE_NOTHING && role != ROLE_CLIENT) {
     pvarRole->vt = VT_I4;
     pvarRole->lVal = role;  // Normal enumerated role
     return S_OK;
@@ -408,12 +408,14 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   nsCOMPtr<nsIDOMNode> domNode;
   nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(xpAccessible));
   NS_ASSERTION(accessNode, "No accessnode for accessible");
-  accessNode->GetDOMNode(getter_AddRefs(domNode));
-  nsCOMPtr<nsIContent> content(do_QueryInterface(domNode));
+  accessNode->GetDOMNode(getter_AddRefs(domNode));  
+  nsIContent *content = GetRoleContent(domNode);
   NS_ASSERTION(content, "No content for accessible");
   if (content) {
     nsAutoString roleString;
-    content->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, roleString);
+    if (role != ROLE_CLIENT) {
+      content->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, roleString);
+    }
     if (roleString.IsEmpty()) {
       nsINodeInfo *nodeInfo = content->GetNodeInfo();
       if (nodeInfo) {

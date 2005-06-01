@@ -140,6 +140,7 @@ protected:
                                 const nsAString *aId);
   static nsIContent *GetXULLabelContent(nsIContent *aForNode);
   static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);
+  static nsIContent *GetRoleContent(nsIDOMNode *aDOMNode);
   nsresult GetHTMLName(nsAString& _retval, PRBool aCanAggregateSubtree = PR_TRUE);
   nsresult GetXULName(nsAString& aName, PRBool aCanAggregateSubtree = PR_TRUE);
   // For accessibles that are not lists of choices, the name of the subtree should be the 

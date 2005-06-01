@@ -160,21 +160,21 @@ NS_IMETHODIMP nsRootAccessible::GetRole(PRUint32 *aRole)
     return NS_ERROR_FAILURE;
   }
 
-  *aRole = ROLE_PANE;
-
-  // If it's a <dialog>, use ROLE_DIALOG instead
+  // If it's a <dialog> or <wizard>, use ROLE_DIALOG instead
   nsIContent *rootContent = mDocument->GetRootContent();
   if (rootContent) {
     nsCOMPtr<nsIDOMElement> rootElement(do_QueryInterface(rootContent));
     if (rootElement) {
       nsAutoString name;
       rootElement->GetLocalName(name);
-      if (name.EqualsLiteral("dialog")) 
-        *aRole = ROLE_DIALOG;
+      if (name.EqualsLiteral("dialog") || name.EqualsLiteral("wizard")) {
+        *aRole = ROLE_DIALOG; // Always at the root
+        return NS_OK;
+      }
     }
   }
 
-  return NS_OK;
+  return nsDocAccessibleWrap::GetRole(aRole);
 }
 
 NS_IMETHODIMP nsRootAccessible::GetState(PRUint32 *aState) 
