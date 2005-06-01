@@ -60,14 +60,14 @@ static PRBool Init()
 {
     g_LogMod = PR_NewLogModule("xpclog");
     g_Spaces = new char[SPACE_COUNT+1];
-    memset(g_Spaces, ' ', SPACE_COUNT);
-    g_Spaces[SPACE_COUNT] = 0;
     if(!g_LogMod || !g_Spaces || !PR_LOG_TEST(g_LogMod,1))
     {
         g_InitState = 1;
         XPC_Log_Finish();
         return PR_FALSE;
     }
+    memset(g_Spaces, ' ', SPACE_COUNT);
+    g_Spaces[SPACE_COUNT] = 0;
     g_InitState = 1;
     return PR_TRUE;
 }
