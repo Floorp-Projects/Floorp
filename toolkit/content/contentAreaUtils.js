@@ -490,19 +490,24 @@ function getTargetFile(aData, aSniffer, aContentType, aIsDocument, aSkipPrompt, 
     //   mozilla/toolkit/mozapps/downloads/src/nsHelperAppDlg.js.in
     // If you are updating this code, update that code too! We can't share code
     // here since that code is called in a js component.
+    var collisionCount = 0;
     while (file.exists()) {
-      var parts = /.+-(\d+)(\..*)?$/.exec(file.leafName);
-      if (parts) {
-        file.leafName = file.leafName.replace(/((\d+)\.)|((\d+)$)/,
-                                              function (str, dot, dotNum, noDot, noDotNum, pos, s) {
-                                                return (parseInt(str) + 1) + (dot ? "." : "");
-                                              });
+      collisionCount++;
+      if (collisionCount == 1) {
+        // Append "(2)" before the last dot in (or at the end of) the filename
+        // special case .ext.gz etc files so we don't wind up with .tar(2).gz
+        if (file.leafName.match(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i)) {
+          file.leafName = file.leafName.replace(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i, "(2)$&");
+        }
+        else {
+          file.leafName = file.leafName.replace(/(\.[^\.]*)?$/, "(2)$&");
+        }
       }
       else {
-        file.leafName = file.leafName.replace(/\.|$/, "-1$&");
+        // replace the last (n) in the filename with (n+1)
+        file.leafName = file.leafName.replace(/^(.*\()\d+\)/, "$1" + (collisionCount+1) + ")");
       }
     }
-
   }
 
   return file;    
