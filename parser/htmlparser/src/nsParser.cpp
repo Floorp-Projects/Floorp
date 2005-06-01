@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1413,7 +1414,8 @@ NS_IMETHODIMP nsParser::Terminate(void)
   else if (mSink) {
     // We have no parser context or no DTD yet (so we got terminated before we
     // got any data).  Manually break the reference cycle with the sink.
-    mSink->SetParser(nsnull);
+    result = mSink->DidBuildModel();
+    NS_ENSURE_SUCCESS(result, result);
   }
   return NS_OK;
 }
