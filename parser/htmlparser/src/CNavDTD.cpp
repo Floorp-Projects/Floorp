@@ -2794,7 +2794,7 @@ eHTMLTags CNavDTD::GetTopNode() const {
  * @param   tag of the container just opened
  * @return  0 (for now)
  */
-nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
+nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag, PRBool aCloseInvalid){
   nsresult result=NS_OK;
 
   // No need to open transient styles in head context - Fix for 41427
@@ -2853,7 +2853,7 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
                   result = OpenContainer(theNode,theNodeTag,PR_FALSE,theStack);
                 }
               }
-              else {
+              else if (aCloseInvalid) {
                 //if the node tag can't contain the child tag, then remove the child tag from the style stack
                 nsCParserNode* node=theStack->Remove(sindex,theNodeTag);
                 IF_FREE(node, &mNodeAllocator);
@@ -3251,7 +3251,7 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
      *
      ***********************************************************************/
 
-    OpenTransientStyles(aTag); 
+    OpenTransientStyles(aTag, !li_tag); 
   }
 
   switch (aTag) {

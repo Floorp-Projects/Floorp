@@ -234,8 +234,8 @@ public:
 
     /**
      * Accessor that retrieves the tag type of the topmost item on context 
-	   * vector stack.
-	   *
+     * vector stack.
+     *
      * @update	gess5/11/98
      * @return  tag type (may be unknown)
      */
@@ -284,7 +284,7 @@ public:
 
     /**
      * The next set of method open given HTML elements of
-	   * various types.
+     * various types.
      * 
      * @update	gess5/11/98
      * @param   node to be opened in content sink.
@@ -341,14 +341,15 @@ public:
 
     /**
      * This set of methods is used to create and manage the set of
-	   * transient styles that occur as a result of poorly formed HTML
-   	 * or bugs in the original navigator.
-	   *
+     * transient styles that occur as a result of poorly formed HTML
+     * or bugs in the original navigator.
+     *
      * @update	gess5/11/98
      * @param   aTag -- represents the transient style tag to be handled.
      * @return  error code -- usually 0
      */
-    nsresult  OpenTransientStyles(eHTMLTags aChildTag);
+    nsresult  OpenTransientStyles(eHTMLTags aChildTag,
+                                  PRBool aCloseInvalid = PR_TRUE);
     nsresult  CloseTransientStyles(eHTMLTags aChildTag);
     nsresult  PopStyle(eHTMLTags aTag);
 
