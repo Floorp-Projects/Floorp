@@ -189,18 +189,14 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
     {
       PRUint32 ageBucket = 1;
       PRTime dateOfMsg;
-      PRUint32 dateOfMsgInSeconds, currentTimeInSeconds;
 	    
       nsresult rv = msgHdr->GetDate(&dateOfMsg);
-      (void) msgHdr->GetDateInSeconds(&dateOfMsgInSeconds);
 
       PRTime currentTime = PR_Now();
       PRExplodedTime explodedCurrentTime;
       PR_ExplodeTime(currentTime, PR_LocalTimeParameters, &explodedCurrentTime);
       PRExplodedTime explodedMsgTime;
       PR_ExplodeTime(dateOfMsg, PR_LocalTimeParameters, &explodedMsgTime);
-
-      dateOfMsgInSeconds -= explodedMsgTime.tm_params.tp_gmt_offset;
 
       if (explodedCurrentTime.tm_year == explodedMsgTime.tm_year &&
           explodedCurrentTime.tm_month == explodedMsgTime.tm_month &&
@@ -215,7 +211,10 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
         // some constants for calculation
         static PRInt64 microSecondsPerSecond;
         static PRInt64 microSecondsPerDay;
-
+	static PRInt64 secondsPerDay;
+	static PRInt64 microSecondsPer6Days;
+	static PRInt64 microSecondsPer13Days;
+			
         static PRBool bGotConstants = PR_FALSE;
         if ( !bGotConstants )
         {
@@ -227,41 +226,43 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
     
           // derivees
           LL_MUL( microSecondsPerDay,   secondsPerDay,      microSecondsPerSecond );
-          bGotConstants = PR_TRUE;
+          LL_MUL( microSecondsPer6Days, microSecondsPerDay, 6 );
+	  LL_MUL( microSecondsPer13Days, microSecondsPerDay, 13 );
+	  
+	  bGotConstants = PR_TRUE;
         }
 
-        const PRUint32 secondsPerDay = 60 * 60 * 24;
-        const PRUint32 secondsPer6Days = 60 * 60 * 24 * 6;
-        const PRUint32 secondsPer13Days = 60 * 60 * 24 * 13;
-        PRInt64 temp;
-        PRUint32 mostRecentMidnightSeconds;
-
-        LL_DIV(temp, currentTime, microSecondsPerSecond);
-        LL_L2UI(currentTimeInSeconds, temp);
-
-        PRUint32 nowSeconds;
-        LL_L2UI(nowSeconds, temp);
-
-        nowSeconds -= explodedCurrentTime.tm_params.tp_gmt_offset;
-
-        PRUint32 todaysSeconds = (nowSeconds % (60 * 60 * 24));
-        mostRecentMidnightSeconds = currentTimeInSeconds - todaysSeconds;
-        PRUint32 mostRecentWeekSeconds = mostRecentMidnightSeconds - secondsPer6Days;
-        PRUint32 yesterdayInSeconds = mostRecentMidnightSeconds - secondsPerDay;
-
+	// setting the time variables to local time
+        PRInt64 GMTLocalTimeShift;
+        LL_ADD( GMTLocalTimeShift, explodedCurrentTime.tm_params.tp_gmt_offset, explodedCurrentTime.tm_params.tp_dst_offset );
+        LL_MUL( GMTLocalTimeShift, GMTLocalTimeShift, microSecondsPerSecond );
+        LL_ADD( currentTime, currentTime, GMTLocalTimeShift );
+        LL_ADD( dateOfMsg, dateOfMsg, GMTLocalTimeShift );
+	
+	// the most recent midnight, counting from current time
+	PRInt64 todaysMicroSeconds, mostRecentMidnight;
+	LL_MOD( todaysMicroSeconds, currentTime, microSecondsPerDay );
+	LL_SUB( mostRecentMidnight, currentTime, todaysMicroSeconds );
+	PRInt64 yesterday;
+	LL_SUB( yesterday, mostRecentMidnight, microSecondsPerDay );
+	// most recent midnight minus 6 days
+	PRInt64 mostRecentWeek;
+	LL_SUB( mostRecentWeek, mostRecentMidnight, microSecondsPer6Days );
+	
         // was the message sent yesterday?
-        if (dateOfMsgInSeconds >= yesterdayInSeconds)
+        if ( LL_CMP( dateOfMsg, >=, yesterday ) )
         { // yes ....
           ageBucket = 2;
         }
-        else if (dateOfMsgInSeconds >= mostRecentWeekSeconds)
+        else if ( LL_CMP(dateOfMsg, >=, mostRecentWeek) )
         {
           ageBucket = 3;
         }
         else
         {
-          PRUint32 lastTwoWeeks = mostRecentMidnightSeconds - secondsPer13Days;
-          ageBucket = (dateOfMsgInSeconds >= lastTwoWeeks) ? 4 : 5;
+          PRInt64 lastTwoWeeks;
+	  LL_SUB( lastTwoWeeks, mostRecentMidnight, microSecondsPer13Days);
+	  ageBucket = LL_CMP(dateOfMsg, >=, lastTwoWeeks) ? 4 : 5;
         }
       }
       return new nsPRUint32Key(ageBucket);

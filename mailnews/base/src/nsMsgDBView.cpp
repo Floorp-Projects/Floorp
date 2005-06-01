@@ -589,6 +589,7 @@ nsresult nsMsgDBView::FetchSubject(nsIMsgDBHdr * aMsgHdr, PRUint32 aFlags, PRUni
 nsresult nsMsgDBView::FetchDate(nsIMsgDBHdr * aHdr, PRUnichar ** aDateString)
 {
   PRTime dateOfMsg;
+  PRTime dateOfMsgLocal;
   nsAutoString formattedDateString;
 
   if (!mDateFormater)
@@ -641,6 +642,13 @@ nsresult nsMsgDBView::FetchDate(nsIMsgDBHdr * aHdr, PRUnichar ** aDateString)
       bGotConstants = PR_TRUE;
     }
 
+    // setting the time variables to local time
+    PRInt64 GMTLocalTimeShift;
+    LL_ADD( GMTLocalTimeShift, explodedCurrentTime.tm_params.tp_gmt_offset, explodedCurrentTime.tm_params.tp_dst_offset );
+    LL_MUL( GMTLocalTimeShift, GMTLocalTimeShift, microSecondsPerSecond );
+    LL_ADD( currentTime, currentTime, GMTLocalTimeShift );
+    LL_ADD( dateOfMsgLocal, dateOfMsg, GMTLocalTimeShift );
+	    
     // the most recent midnight, counting from current time
     PRInt64 todaysMicroSeconds, mostRecentMidnight;
     LL_MOD( todaysMicroSeconds, currentTime, microSecondsPerDay );
@@ -651,7 +659,7 @@ nsresult nsMsgDBView::FetchDate(nsIMsgDBHdr * aHdr, PRUnichar ** aDateString)
     LL_SUB( mostRecentWeek, mostRecentMidnight, microSecondsPer6Days );
 
     // was the message sent during the last week?
-    if ( LL_CMP( dateOfMsg, >=, mostRecentWeek ) )
+    if ( LL_CMP( dateOfMsgLocal, >=, mostRecentWeek ) )
     { // yes ....
       dateFormat = m_dateFormatThisWeek;
     }
