@@ -52,6 +52,7 @@
     <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/> 
 
     <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
+    <script type="application/x-javascript" src="chrome://messenger/content/retention.js"/>
     <script type="application/x-javascript" src="chrome://messenger/content/am-offline.js"/>
     
     <broadcaster id="bc_notDownload"/>
@@ -114,32 +115,32 @@
         <label value="&daysOld.label;"/>
     </hbox>
 
-    <vbox hidefor="movemail,pop3,imap" align="start">  
+    <vbox align="start">  
     <separator hidefor="none"/>
-    <description class="desc">&nntpCleanup.label;</description>
+    <description id="retentionDescription" hidefor="" class="desc">&retentionCleanup.label;</description>
 
-    <radiogroup wsm_persist="true" id="nntp.keepMsg" class="indent">
-        <radio wsm_persist="true" id="nntp.keepAllMsg" value="1" accesskey="&nntpKeepAll.accesskey;"
-            label="&nntpKeepAll.label;" oncommand="onCheckKeepMsg();"/>
+    <radiogroup wsm_persist="true" hidefor="" id="retention.keepMsg" class="indent">
+        <radio wsm_persist="true" id="retention.keepAllMsg" value="1" accesskey="&retentionKeepAll.accesskey;"
+            label="&retentionKeepAll.label;" oncommand="onCheckKeepMsg();"/>
         <hbox flex="1" align="center">
-            <radio wsm_persist="true" id="nntp.keepNewMsg" accesskey="&nntpKeepNew.accesskey;" 
-                value="3" label="&nntpKeepNew.label;" oncommand="onCheckKeepMsg();"/>
-            <textbox wsm_persist="true" id="nntp.keepNewMsgMin" size="2" value="30"/>
+            <radio wsm_persist="true" id="retention.keepNewMsg" accesskey="&retentionKeepNew.accesskey;" 
+                value="3" label="&retentionKeepNew.label;" oncommand="onCheckKeepMsg();"/>
+            <textbox wsm_persist="true" id="retention.keepNewMsgMin" size="2" value="30"/>
             <label value="&message.label;"/>
         </hbox>
         <hbox flex="1" align="center">
-            <radio wsm_persist="true" id="nntp.keepOldMsg" accesskey="&nntpKeepMsg.accesskey;"
-                value="2" label="&nntpKeepMsg.label;" oncommand="onCheckKeepMsg();"/>
-            <textbox wsm_persist="true" id="nntp.keepOldMsgMin" size="2" value="30"/>
+            <radio wsm_persist="true" id="retention.keepOldMsg" accesskey="&retentionKeepMsg.accesskey;"
+                value="2" label="&retentionKeepMsg.label;" oncommand="onCheckKeepMsg();"/>
+            <textbox wsm_persist="true" id="retention.keepOldMsgMin" size="2" value="30"/>
             <label value="&days.label;"/>
         </hbox>
     </radiogroup>
 
     <hbox align="center" class="indent">
-        <checkbox wsm_persist="true" id="nntp.keepUnread" accesskey="&nntpKeepUnread.accesskey;"
-            label="&nntpKeepUnread.label;" checked="true"/>
+        <checkbox wsm_persist="true" id="retention.keepUnread" accesskey="&retentionKeepUnread.accesskey;"
+            label="&retentionKeepUnread.label;" hidefor="" checked="true"/>
     </hbox>
-    <hbox align="center" class="indent">
+    <hbox align="center" class="indent" hidefor="movemail,pop3,imap,none">
         <checkbox wsm_persist="true" id="nntp.removeBody" accesskey="&nntpRemoveBody.accesskey;"
             label="&nntpRemoveBody.label;" oncommand="onCheckItem('bc_removeBody','nntp.removeBody');"/>
         <textbox wsm_persist="true" id="nntp.removeBodyMin" size="2" value="30" observes="bc_removeBody"/>

@@ -46,6 +46,26 @@
 <!ENTITY folderCharsetOverride.label             "Apply default to all messages in the folder (individual message character encoding settings and auto-detection will be ignored)">
 <!ENTITY folderCharsetOverride.accesskey         "A">
 
+<!ENTITY retention.label "Retention Policy">
+<!ENTITY retentionUseDefault.label "Use server defaults">
+<!ENTITY retentionUseDefault.accesskey "d">
+<!ENTITY days.label "days">
+<!ENTITY daysOld.label "days old">
+<!ENTITY message.label "messages">
+<!ENTITY retentionNotDownloadRead.label "Read messages">
+<!ENTITY retentionNotDownloadRead.accesskey "R">
+<!ENTITY retentionDownloadMsg.label "Messages more than">
+<!ENTITY retentionDownloadMsg.accesskey "e">
+<!ENTITY retentionCleanup.label "Keep:">
+<!ENTITY retentionKeepMsg.label "Messages which have arrived within the last">
+<!ENTITY retentionKeepMsg.accesskey "w">
+<!ENTITY retentionKeepAll.label "All messages">
+<!ENTITY retentionKeepAll.accesskey "A">
+<!ENTITY retentionKeepNew.label "The newest">
+<!ENTITY retentionKeepNew.accesskey "n">
+<!ENTITY retentionKeepUnread.label "Only unread messages">
+<!ENTITY retentionKeepUnread.accesskey "u">
+
 <!ENTITY folderOfflineTab.label                  "Offline">
 <!ENTITY folderCheckForNewMessages.label         "Check this folder for new messages">
 <!ENTITY folderCheckForNewMessages.accesskey     "C">

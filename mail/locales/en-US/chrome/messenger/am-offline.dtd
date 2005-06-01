@@ -12,15 +12,15 @@
 <!ENTITY nntpNotDownloadRead.accesskey "R">
 <!ENTITY nntpDownloadMsg.label "Messages more than">
 <!ENTITY nntpDownloadMsg.accesskey "e">
-<!ENTITY nntpCleanup.label "Keep:">
-<!ENTITY nntpKeepMsg.label "Messages which have arrived within the last">
-<!ENTITY nntpKeepMsg.accesskey "w">
-<!ENTITY nntpKeepAll.label "All messages">
-<!ENTITY nntpKeepAll.accesskey "A">
-<!ENTITY nntpKeepNew.label "The newest">
-<!ENTITY nntpKeepNew.accesskey "n">
-<!ENTITY nntpKeepUnread.label "Only unread messages">
-<!ENTITY nntpKeepUnread.accesskey "u">
+<!ENTITY retentionCleanup.label "To recover disk space, old messages can be permanently deleted">
+<!ENTITY retentionKeepMsg.label "Delete messages more than">
+<!ENTITY retentionKeepMsg.accesskey "m">
+<!ENTITY retentionKeepAll.label "Don't delete any messages">
+<!ENTITY retentionKeepAll.accesskey "A">
+<!ENTITY retentionKeepNew.label "Delete all but the last">
+<!ENTITY retentionKeepNew.accesskey "l">
+<!ENTITY retentionKeepUnread.label "Always delete read messages">
+<!ENTITY retentionKeepUnread.accesskey "r">
 <!ENTITY nntpRemoveBody.label "Only message bodies less than">
 <!ENTITY nntpRemoveBody.accesskey "O">
 <!ENTITY offlineSelectNntp.label "Select newsgroups for offline use...">

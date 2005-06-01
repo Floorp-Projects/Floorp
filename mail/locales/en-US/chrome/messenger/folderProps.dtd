@@ -46,6 +46,22 @@
 <!ENTITY folderCharsetOverride.label             "Apply default to all messages in the folder (individual message character encoding settings and auto-detection will be ignored)">
 <!ENTITY folderCharsetOverride.accesskey         "A">
 
+<!ENTITY retention.label "Retention Policy">
+<!ENTITY retentionUseDefault.label  "Use server defaults">
+<!ENTITY retentionUseDefault.accesskey "d">
+<!ENTITY days.label "days">
+<!ENTITY daysOld.label "days old">
+<!ENTITY message.label "messages">
+<!ENTITY retentionCleanup.label "To recover disk space, old messages can be permanently deleted">
+<!ENTITY retentionKeepMsg.label "Delete messages more than">
+<!ENTITY retentionKeepMsg.accesskey "m">
+<!ENTITY retentionKeepAll.label "Don't delete any messages">
+<!ENTITY retentionKeepAll.accesskey "A">
+<!ENTITY retentionKeepNew.label "Delete all but the last">
+<!ENTITY retentionKeepNew.accesskey "l">
+<!ENTITY retentionKeepUnread.label "Always delete read messages">
+<!ENTITY retentionKeepUnread.accesskey "r">
+
 <!ENTITY folderOfflineTab.label                  "Offline">
 <!ENTITY folderCheckForNewMessages.label         "Check this folder for new messages">
 <!ENTITY folderCheckForNewMessages.accesskey     "C">

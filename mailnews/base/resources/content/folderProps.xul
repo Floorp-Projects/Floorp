@@ -53,8 +53,9 @@
   ondialogaccept="return folderPropsOKButton();">
  
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
-  <script type="application/x-javascript" src="chrome://messenger/content/folderProps.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/retention.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/folderProps.js"/>
   <script type="application/x-javascript">
   <![CDATA[
     var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
@@ -65,6 +66,7 @@
 <tabbox>
   <tabs>
     <tab id="GeneralTab" label="&generalInfo.label;"/>
+    <tab id="Retention" label="&retention.label;"/>
     <tab hidefor="movemail,pop3,rss,none" hidable="true" id="OfflineTab" label="&folderOfflineTab.label;"/>
     <tab hidefor="movemail,pop3,rss,none,nntp" hidable="true" id="SharingTab" label="&folderSharingTab.label;"/>
     <tab hidefor="movemail,pop3,rss,none,nntp" hidable="true" id="QuotaTab" label="&folderQuotaTab.label;"/>
@@ -99,6 +101,37 @@
       </vbox>
     </vbox>
  
+    <vbox align="start">  
+    <description class="desc">&retentionCleanup.label;</description>
+
+        <hbox align="center" class="indent">
+          <checkbox wsm_persist="true" id="retention.useDefault" accesskey="&retentionUseDefault.accesskey;"
+              label="&retentionUseDefault.label;" checked="true" oncommand="onUseDefaultRetentionSettings()"/>
+        </hbox>
+          <vbox class="indent">
+            <radiogroup wsm_persist="true" id="retention.keepMsg" class="indent">
+              <radio wsm_persist="true" value="1" accesskey="&retentionKeepAll.accesskey;"
+                      label="&retentionKeepAll.label;" oncommand="onCheckKeepMsg();"/>
+              <hbox flex="1" >
+                <radio wsm_persist="true" accesskey="&retentionKeepNew.accesskey;" 
+                        value="3" label="&retentionKeepNew.label;" oncommand="onCheckKeepMsg();"/>
+                <textbox wsm_persist="true" id="retention.keepNewMsgMin" size="2" value="30"/>
+                <label value="&message.label;"/>
+              </hbox>
+              <hbox flex="1">
+                <radio wsm_persist="true" accesskey="&retentionKeepMsg.accesskey;"
+                        value="2" label="&retentionKeepMsg.label;" oncommand="onCheckKeepMsg();"/>
+                <textbox wsm_persist="true" id="retention.keepOldMsgMin" size="2" value="30"/>
+                <label value="&days.label;"/>
+              </hbox>
+            </radiogroup>
+            <hbox>
+              <checkbox wsm_persist="true" id="retention.keepUnread" accesskey="&retentionKeepUnread.accesskey;"
+              label="&retentionKeepUnread.label;" observes="retention.keepMsg" checked="true"/>
+            </hbox>
+        </vbox>
+    </vbox>
+
     <vbox hidable="true" hidefor="movemail,pop3,rss,none" valign="top" align="start">
       <vbox>
         <checkbox iscontrolcontainer="true" hidable="true"  
