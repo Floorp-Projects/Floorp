@@ -69,14 +69,14 @@ const int netCharType[256] =
      ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)))
 
 
-#define IS_OK(C) (netCharType[((unsigned int) (C))] & (mask))
+#define IS_OK(C) (netCharType[((unsigned int) (C))] & (flags))
 #define HEX_ESCAPE '%'
 
 //----------------------------------------------------------------------------------------
 static char* nsEscapeCount(
     const char * str,
     PRInt32 len,
-    nsEscapeMask mask,
+    nsEscapeMask flags,
     PRInt32* out_len)
 //----------------------------------------------------------------------------------------
 {
@@ -99,7 +99,7 @@ static char* nsEscapeCount(
 
     register unsigned char* dst = (unsigned char *) result;
 	src = (const unsigned char *) str;
-	if (mask == url_XPAlphas)
+	if (flags == url_XPAlphas)
 	{
 	    for (i = 0; i < len; i++)
 		{
@@ -139,12 +139,12 @@ static char* nsEscapeCount(
 }
 
 //----------------------------------------------------------------------------------------
-NS_COM char* nsEscape(const char * str, nsEscapeMask mask)
+NS_COM char* nsEscape(const char * str, nsEscapeMask flags)
 //----------------------------------------------------------------------------------------
 {
     if(!str)
         return NULL;
-    return nsEscapeCount(str, (PRInt32)strlen(str), mask, NULL);
+    return nsEscapeCount(str, (PRInt32)strlen(str), flags, NULL);
 }
 
 //----------------------------------------------------------------------------------------
@@ -335,13 +335,13 @@ const int EscapeChars[256] =
         0    /* 8x  DEL               */
 };
 
-#define NO_NEED_ESC(C) (EscapeChars[((unsigned int) (C))] & (mask))
+#define NO_NEED_ESC(C) (EscapeChars[((unsigned int) (C))] & (flags))
 
 //----------------------------------------------------------------------------------------
 
 /* returns an escaped string */
 
-/* use the following masks to specify which 
+/* use the following flags to specify which 
    part of an URL you want to escape: 
 
    esc_Scheme        =     1
@@ -359,7 +359,7 @@ const int EscapeChars[256] =
 /* by default this function will not escape parts of a string
    that already look escaped, which means it already includes 
    a valid hexcode. This is done to avoid multiple escapes of
-   a string. Use the following mask to force escaping of a 
+   a string. Use the following flags to force escaping of a 
    string:
  
    esc_Forced        =  1024
@@ -367,7 +367,7 @@ const int EscapeChars[256] =
 
 NS_COM PRBool NS_EscapeURL(const char *part,
                            PRInt32 partLen,
-                           PRInt16 mask,
+                           PRUint32 flags,
                            nsACString &result)
 {
     if (!part) {
@@ -379,11 +379,11 @@ NS_COM PRBool NS_EscapeURL(const char *part,
     static const char hexChars[] = "0123456789ABCDEF";
     if (partLen < 0)
         partLen = strlen(part);
-    PRBool forced = (mask & esc_Forced);
-    PRBool ignoreNonAscii = (mask & esc_OnlyASCII);
-    PRBool ignoreAscii = (mask & esc_OnlyNonASCII);
-    PRBool writing = (mask & esc_AlwaysCopy);
-    PRBool colon = (mask & esc_Colon);
+    PRBool forced = (flags & esc_Forced);
+    PRBool ignoreNonAscii = (flags & esc_OnlyASCII);
+    PRBool ignoreAscii = (flags & esc_OnlyNonASCII);
+    PRBool writing = (flags & esc_AlwaysCopy);
+    PRBool colon = (flags & esc_Colon);
 
     register const unsigned char* src = (const unsigned char *) part;
 
@@ -441,7 +441,7 @@ NS_COM PRBool NS_EscapeURL(const char *part,
 
 #define ISHEX(c) memchr(hexChars, c, sizeof(hexChars)-1)
 
-NS_COM PRBool NS_UnescapeURL(const char *str, PRInt32 len, PRInt16 flags, nsACString &result)
+NS_COM PRBool NS_UnescapeURL(const char *str, PRInt32 len, PRUint32 flags, nsACString &result)
 {
     if (!str) {
         NS_NOTREACHED("null pointer");
