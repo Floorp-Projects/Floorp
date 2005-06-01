@@ -719,12 +719,24 @@ ifeq ($(OS_ARCH),Darwin)
 ifdef USE_PREBINDING
 export LD_PREBIND=1
 export LD_SEG_ADDR_TABLE=$(shell cd $(topsrcdir); pwd)/config/prebind-address-table
-endif
+endif # USE_PREBINDING
+PBBUILD = NEXT_ROOT= $(PBBUILD_BIN)
+PBBUILD_SETTINGS = GCC_VERSION="$(GCC_VERSION)"
 ifdef MACOS_SDK_DIR
 export NEXT_ROOT=$(MACOS_SDK_DIR)
-endif
-PBBUILD=NEXT_ROOT= $(PBBUILD_BIN)
-endif
+PBBUILD_SETTINGS += SDKROOT="$(MACOS_SDK_DIR)"
+endif # MACOS_SDK_DIR
+ifdef MACOSX_DEPLOYMENT_TARGET
+export MACOSX_DEPLOYMENT_TARGET
+PBBUILD_SETTINGS += MACOSX_DEPLOYMENT_TARGET="$(MACOSX_DEPLOYMENT_TARGET)"
+endif # MACOSX_DEPLOYMENT_TARGET
+ifdef MOZ_OPTIMIZE
+ifeq (2,$(MOZ_OPTIMIZE))
+# Only override project defaults if the config specified explicit settings
+PBBUILD_SETTINGS += GCC_MODEL_TUNING= OPTIMIZATION_CFLAGS="$(MOZ_OPTIMIZE_FLAGS)"
+endif # MOZ_OPTIMIZE=2
+endif # MOZ_OPTIMIZE
+endif # OS_ARCH=Darwin
 
 
 ifeq (,$(filter-out WINCE,$(OS_ARCH)))
