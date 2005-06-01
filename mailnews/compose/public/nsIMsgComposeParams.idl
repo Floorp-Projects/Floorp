@@ -57,6 +57,7 @@ interface nsIMsgCompType {
     const long Draft                    = 9;
     const long Template                 = 10;
     const long MailToUrl                = 11;
+    const long ReplyWithTemplate        = 12;
 };
 
 
