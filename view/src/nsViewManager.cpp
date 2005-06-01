@@ -453,6 +453,7 @@ PRUint32 nsViewManager::gLastUserEventTime = 0;
 nsViewManager::nsViewManager()
   : mMouseLocation(NSCOORD_NONE, NSCOORD_NONE)
   , mDelayedResize(NSCOORD_NONE, NSCOORD_NONE)
+  , mRootViewManager(this)
 {
   if (gViewManagers == nsnull) {
     NS_ASSERTION(mVMCount == 0, "View Manager count is incorrect");
@@ -497,7 +498,7 @@ nsViewManager::~nsViewManager()
   
   if (!IsRootVM()) {
     // We have a strong ref to mRootViewManager
-    NS_IF_RELEASE(mRootViewManager);
+    NS_RELEASE(mRootViewManager);
   }
   
   mInvalidateEventQueue = nsnull;  
@@ -640,22 +641,21 @@ NS_IMETHODIMP nsViewManager::SetRootView(nsIView *aView)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
 
+  NS_PRECONDITION(!view || view->GetViewManager() == this,
+                  "Unexpected viewmanager on root view");
+  
   // Do NOT destroy the current root view. It's the caller's responsibility
   // to destroy it
   mRootView = view;
 
   if (mRootView) {
-    if (mRootViewManager && mRootViewManager != this) {
-      NS_RELEASE(mRootViewManager);
-    }
     nsView* parent = mRootView->GetParent();
     if (parent) {
+      // Calling InsertChild on |parent| will InvalidateHierarchy() on us, so
+      // no need to set mRootViewManager ourselves here.
       parent->InsertChild(mRootView, nsnull);
-      mRootViewManager = parent->GetViewManager()->RootViewManager();
-      NS_ASSERTION(mRootViewManager != this, "Something's wrong");
-      NS_ADDREF(mRootViewManager);
     } else {
-      mRootViewManager = this;
+      InvalidateHierarchy();
     }
 
     mRootView->SetZIndex(PR_FALSE, 0, PR_FALSE);
@@ -4447,8 +4447,8 @@ void
 nsViewManager::InvalidateHierarchy()
 {
   if (mRootView) {
-    if (mRootViewManager != this) {
-      NS_IF_RELEASE(mRootViewManager);
+    if (!IsRootVM()) {
+      NS_RELEASE(mRootViewManager);
     }
     nsView *parent = mRootView->GetParent();
     if (parent) {
