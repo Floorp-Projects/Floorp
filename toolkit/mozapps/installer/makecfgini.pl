@@ -23,6 +23,7 @@
 #
 # Contributor(s):
 #   Sean Su <ssu@netscape.com>
+#   Howard Chu <hyc@symas.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -310,10 +311,16 @@ sub OutputInstallSize()
 
   print "   calculating size for $inPath\n";
 
-  my ($inPathWin) = `cygpath -wa $inPath`;
+  my ($inPathWin);
+  if($^O =~ msys)
+  {
+    $inPathWin = $inPath;
+  } else {
+    $inPathWin = `cygpath -wa $inPath`;
   chomp($inPathWin);
   $inPathWin =~ s/\\/\\\\/g;
-  $installSize    = `$ENV{WIZ_distInstallPath}/ds32.exe /D /L0 /A /S /C 32768 $inPathWin`;
+  }
+  $installSize    = `$ENV{WIZ_distInstallPath}/ds32.exe -D -L0 -A -S -C 32768 $inPathWin`;
   $installSize   += 32768; # take into account install.js
   $installSize    = int($installSize / 1024);
   $installSize   += 1;

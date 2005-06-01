@@ -112,7 +112,7 @@ sub include {
     my $lineout = 0;
     while (<FILE>) {
         # on cygwin, line endings are screwed up, so normalise them.
-        s/[\x0D\x0A]+$/\n/os if ($^O eq 'cygwin' || "$^O" eq "MSWin32");
+        s/[\x0D\x0A]+$/\n/os if ($^O eq 'msys' || $^O eq 'cygwin' || "$^O" eq "MSWin32");
         $stack->newline;
         if (/^\#([a-z]+)\n?$/os) { # argumentless processing instruction
             process($stack, $1);
