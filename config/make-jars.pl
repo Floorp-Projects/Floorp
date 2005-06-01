@@ -152,7 +152,7 @@ if ($verbose) {
         . "\n";
 }
 
-my $win32 = ($^O =~ /((MS)?win32)|cygwin|os2/i) ? 1 : 0;
+my $win32 = ($^O =~ /((MS)?win32)|msys|cygwin|os2/i) ? 1 : 0;
 my $macos = ($^O =~ /MacOS|darwin/i) ? 1 : 0;
 my $unix  = !($win32 || $macos) ? 1 : 0;
 my $vms   = ($^O =~ /VMS/i) ? 1 : 0;
