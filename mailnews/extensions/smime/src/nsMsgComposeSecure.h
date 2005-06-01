@@ -45,7 +45,7 @@
 #include "nsIX509Cert.h"
 #include "nsIMimeConverter.h"
 #include "nsIStringBundle.h"
-#include "nsIHash.h"
+#include "nsICryptoHash.h"
 #include "nsICMSMessage.h"
 #include "nsIArray.h"
 #include "nsString.h"
@@ -102,7 +102,7 @@ private:
   mimeDeliveryCryptoState mCryptoState;
   nsOutputFileStream *mStream;
   PRInt16 mHashType;
-  nsCOMPtr<nsIHash> mDataHash;
+  nsCOMPtr<nsICryptoHash> mDataHash;
   MimeEncoderData *mSigEncoderData;
   char *mMultipartSignedBoundary;
   nsXPIDLString mSigningCertName;

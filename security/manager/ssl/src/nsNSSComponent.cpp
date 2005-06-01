@@ -89,6 +89,7 @@
 #include "nsITokenPasswordDialogs.h"
 #include "nsICRLManager.h"
 #include "nsNSSShutDown.h"
+#include "nsICryptoHash.h"
 
 #include "nss.h"
 #include "pk11func.h"
@@ -100,6 +101,8 @@
 #include "ocsp.h"
 #include "cms.h"
 #include "nssckbi.h"
+#include "base64.h"
+
 extern "C" {
 #include "pkcs12.h"
 #include "p12plcy.h"
@@ -108,6 +111,8 @@ extern "C" {
 #ifdef PR_LOGGING
 PRLogModuleInfo* gPIPNSSLog = nsnull;
 #endif
+
+#define NS_CRYPTO_HASH_BUFFER_SIZE 4096
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 int nsNSSComponent::mInstanceCount = 0;
@@ -1326,36 +1331,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsNSSComponent,
                               nsIObserver,
                               nsISupportsWeakReference)
 
-//---------------------------------------------
-// Functions Implementing nsISignatureVerifier
-//---------------------------------------------
-NS_IMETHODIMP
-nsNSSComponent::HashBegin(PRUint32 alg, HASHContext** id)
-{
-  *id = HASH_Create((HASH_HashType)alg);
-  if (*id) {
-    HASH_Begin(*id);
-    return NS_OK; 
-  } else {
-    return NS_ERROR_FAILURE;
-  }
-}
-
-NS_IMETHODIMP
-nsNSSComponent::HashUpdate(HASHContext* ctx, const char* buf, PRUint32 buflen)
-{
-  HASH_Update(ctx, (const unsigned char*)buf, buflen);
-  return NS_OK; 
-}
-
-NS_IMETHODIMP
-nsNSSComponent::HashEnd(HASHContext* ctx, unsigned char** hash, 
-                        PRUint32* hashLen, PRUint32 maxLen)
-{
-  HASH_End(ctx, *hash, hashLen, maxLen);
-  HASH_Destroy(ctx);
-  return NS_OK;
-}
 
 /* Callback functions for decoder. For now, use empty/default functions. */
 static void ContentCallback(void *arg, 
@@ -1829,8 +1804,123 @@ nsNSSComponent::RememberCert(CERTCertificate *cert)
   return NS_OK;
 }
 
+//---------------------------------------------
+// Implementing nsICryptoHash
+//---------------------------------------------
 
+nsCryptoHash::nsCryptoHash()
+  : mHashContext(nsnull)
+{
+}
 
+nsCryptoHash::~nsCryptoHash()
+{
+  if (mHashContext)
+    HASH_Destroy(mHashContext);
+}
+
+NS_IMPL_ISUPPORTS1(nsCryptoHash, nsICryptoHash)
+
+NS_IMETHODIMP 
+nsCryptoHash::Init(PRUint32 algorithm)
+{
+  if (mHashContext)
+    HASH_Destroy(mHashContext);
+
+  mHashContext = HASH_Create((HASH_HashType) algorithm);
+  if (!mHashContext)
+    return NS_ERROR_INVALID_ARG;
+
+  HASH_Begin(mHashContext);
+  return NS_OK; 
+}
+
+NS_IMETHODIMP
+nsCryptoHash::Update(const PRUint8 *data, PRUint32 len)
+{
+  if (!mHashContext)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  HASH_Update(mHashContext, data, len);
+  return NS_OK; 
+}
+
+NS_IMETHODIMP
+nsCryptoHash::UpdateFromStream(nsIInputStream *data, PRUint32 len)
+{
+  if (!mHashContext)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  if (!data)
+    return NS_ERROR_INVALID_ARG;
+
+  PRUint32 n;
+  nsresult rv = data->Available(&n);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // if the user has passed PR_UINT32_MAX, then read
+  // everything in the stream
+
+  if (len == PR_UINT32_MAX)
+    len = n;
+
+  // So, if the stream has NO data available for the hash,
+  // or if the data available is less then what the caller
+  // requested, we can not fulfill the hash update.  In this
+  // case, just return NS_ERROR_NOT_AVAILABLE indicating
+  // that there is not enough data in the stream to satisify
+  // the request.
+
+  if (n == 0 || n < len)
+    return NS_ERROR_NOT_AVAILABLE;
+  
+  char buffer[NS_CRYPTO_HASH_BUFFER_SIZE];
+  PRUint32 read;
+  
+  while(NS_SUCCEEDED(rv) && len>0)
+  {
+    read = PR_MIN(NS_CRYPTO_HASH_BUFFER_SIZE, len);
+    
+    rv = data->Read(buffer, read, &read);
+    
+    if (NS_SUCCEEDED(rv))
+      rv = Update((const PRUint8*)buffer, read);
+    
+    len -= read;
+  }
+  
+  return rv;
+}
+
+NS_IMETHODIMP
+nsCryptoHash::Finish(PRBool ascii, nsACString & _retval)
+{
+  if (!mHashContext)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  PRUint32 hashLen = 0;
+  unsigned char buffer[HASH_LENGTH_MAX];
+  unsigned char* pbuffer = buffer;
+
+  HASH_End(mHashContext, pbuffer, &hashLen, 32);
+  HASH_Destroy(mHashContext);
+
+  mHashContext = nsnull;
+
+  if (ascii)
+  {
+    char *asciiData = BTOA_DataToAscii(buffer, hashLen);
+    _retval.Assign(asciiData);
+    PORT_Free(asciiData);
+  }
+  else
+  {
+    _retval.Assign((const char*)buffer, hashLen);
+  }
+
+  return NS_OK;
+}
 
 
 NS_IMPL_ISUPPORTS1(PipUIContext, nsIInterfaceRequestor)

@@ -41,33 +41,12 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIHash.h"
 #include "nsICMSMessage.h"
 #include "nsICMSEncoder.h"
 #include "nsICMSDecoder.h"
 #include "sechash.h"
 #include "cms.h"
 #include "nsNSSShutDown.h"
-
-#define NS_HASH_CLASSNAME "Hash Object"
-#define NS_HASH_CID \
-  { 0xa31a3028, 0xae28, 0x11d5, { 0xba, 0x4b, 0x00, 0x10, 0x83, 0x03, 0xb1, 0x17 } }
-
-class nsHash : public nsIHash,
-               public nsNSSShutDownObject
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIHASH
-
-  nsHash();
-  virtual ~nsHash();
-
-private:
-  HASHContext * m_ctxt;
-  virtual void virtualDestroyNSSReference();
-  void destructorSafeDestroyNSSReference();
-};
 
 #define NS_CMSMESSAGE_CLASSNAME "CMS Message Object"
 #define NS_CMSMESSAGE_CID \

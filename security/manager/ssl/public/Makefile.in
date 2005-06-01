@@ -80,7 +80,6 @@ XPIDLSRCS = \
     nsICMSEncoder.idl \
     nsICMSMessageErrors.idl \
     nsICMSMessage.idl \
-    nsIHash.idl \
     nsINSSCertCache.idl \
     nsIOCSPResponder.idl \
     nsIPK11Token.idl \

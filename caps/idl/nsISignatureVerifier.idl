@@ -36,39 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* An interface for calculating secure hashes and verifying signatures*/
+/* An interface for verifying signatures */
 #include "nsIPrincipal.idl"
 
-//interface nsIX509Cert;
-
-%{C++
-struct HASHContextStr;
-%}
-
-[ptr] native UnsignedCharPtr(unsigned char);
-[ptr] native HASHContextPtr(HASHContextStr);
-
-[uuid(7bdbdb36-1dd2-11b2-a44f-e303037f214d)]
+[uuid(dea87f65-e91e-4119-aa13-aaa2be80cac2)]
 interface nsISignatureVerifier : nsISupports
 {
    /* Sig Verification Error Codes */
   const long VERIFY_OK = 0;
   const long VERIFY_ERROR_UNKNOWN_CA  = -8172; /* -8172 is the error code returned by PSM */
-  
-  /* Hash Algorithms (based on cmtcmn.h) */ 
-  const short MD2  = 1;
-  const short MD5  = 2;
-  const short SHA1 = 3;
-  const unsigned long MD2_LENGTH  = 16;
-  const unsigned long MD5_LENGTH  = 16;
-  const unsigned long SHA1_LENGTH = 20;
-  const unsigned long MAX_HASH_LENGTH = SHA1_LENGTH;
-
-  /* Secure Hashing functions */
-  HASHContextPtr hashBegin(in unsigned long alg);
-  void hashUpdate(in HASHContextPtr id, in string buf, in unsigned long buflen);
-  [noscript] void hashEnd(in HASHContextPtr id, out UnsignedCharPtr hash, 
-                          out unsigned long hashlen, in unsigned long maxLen);
   
   nsIPrincipal verifySignature(in string aSignature,
                                in unsigned long aSignatureLen,

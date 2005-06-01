@@ -108,9 +108,6 @@ PRLogModuleInfo *IMAP;
 #include "nsIProxyInfo.h"
 #include "nsEventQueueUtils.h"
 #include "nsISSLSocketControl.h"
-#if 0
-#include "nsIHashAlgorithm.h"
-#endif
 
 #define ONE_SECOND ((PRUint32)1000)    // one second
 

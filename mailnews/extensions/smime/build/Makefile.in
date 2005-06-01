@@ -60,6 +60,7 @@ REQUIRES	= xpcom \
 		  pipnss \
 		  necko \
 		  intl \
+		  caps \
 		  $(NULL)
 
 ifndef MOZ_STATIC_MAIL_BUILD

@@ -96,18 +96,19 @@ nsHttpDigestAuth::MD5Hash(const char *buf, PRUint32 len)
 
   nsresult rv;
 
-  HASHContextStr *hid;
-  rv = mVerifier->HashBegin(nsISignatureVerifier::MD5, &hid);
+
+  rv = mVerifier->Init(nsICryptoHash::MD5);
   if (NS_FAILED(rv)) return rv;
 
-  // must call HashEnd to destroy |hid|
-  unsigned char cbuf[DIGEST_LENGTH], *chash = cbuf;
-  PRUint32 clen;
+  rv = mVerifier->Update((unsigned char*)buf, len);
+  if (NS_FAILED(rv)) return rv;
 
-  rv  = mVerifier->HashUpdate(hid, buf, len);
-  rv |= mVerifier->HashEnd(hid, &chash, &clen, DIGEST_LENGTH);
+  nsCAutoString hashString;
+  rv = mVerifier->Finish(PR_FALSE, hashString);
+  if (NS_FAILED(rv)) return rv;
+  
   if (NS_SUCCEEDED(rv))
-    memcpy(mHashBuf, chash, DIGEST_LENGTH);
+    memcpy(mHashBuf, hashString.get(), hashString.Length());
   return rv;
 }
 

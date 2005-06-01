@@ -38,7 +38,7 @@
 #include "nsICMSMessage.h"
 #include "nsICMSMessageErrors.h"
 #include "nsICMSDecoder.h"
-#include "nsIHash.h"
+#include "nsICryptoHash.h"
 #include "mimemcms.h"
 #include "mimecryp.h"
 #include "nsMimeTypes.h"
@@ -107,7 +107,7 @@ MimeMultipartSignedCMS_initialize (MimeObject *object)
 typedef struct MimeMultCMSdata
 {
   PRInt16 hash_type;
-  nsCOMPtr<nsIHash> data_hash_context;
+  nsCOMPtr<nsICryptoHash> data_hash_context;
   nsCOMPtr<nsICMSDecoder> sig_decoder_context;
   nsCOMPtr<nsICMSMessage> content_info;
   char *sender_addr;
@@ -201,22 +201,22 @@ MimeMultCMS_init (MimeObject *obj)
 
   if (!nsCRT::strcasecmp(micalg, PARAM_MICALG_MD5) ||
       !nsCRT::strcasecmp(micalg, PARAM_MICALG_MD5_2))
-	hash_type = nsIHash::HASH_AlgMD5;
+    hash_type = nsICryptoHash::MD5;
   else if (!nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1) ||
 		   !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_2) ||
 		   !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_3) ||
 		   !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_4) ||
 		   !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_5))
-	hash_type = nsIHash::HASH_AlgSHA1;
+    hash_type = nsICryptoHash::SHA1;
   else if (!nsCRT::strcasecmp(micalg, PARAM_MICALG_MD2))
-	hash_type = nsIHash::HASH_AlgMD2;
+    hash_type = nsICryptoHash::MD2;
   else
-	hash_type = nsIHash::HASH_AlgNULL;
+    hash_type = -1;
 
   PR_Free(micalg);
   micalg = 0;
 
-  if (hash_type == nsIHash::HASH_AlgNULL) return 0; /* #### bogus message? */
+  if (hash_type == -1) return 0; /* #### bogus message? */
 
   data = new MimeMultCMSdata;
   if (!data)
@@ -225,14 +225,14 @@ MimeMultCMS_init (MimeObject *obj)
   data->self = obj;
   data->hash_type = hash_type;
 
-  data->data_hash_context = do_CreateInstance(NS_HASH_CONTRACTID, &rv);
+  data->data_hash_context = do_CreateInstance("@mozilla.org/security/hash;1", &rv);
   if (NS_FAILED(rv)) return 0;
 
-  rv = data->data_hash_context->Create(data->hash_type);
+  rv = data->data_hash_context->Init(data->hash_type);
   if (NS_FAILED(rv)) return 0;
 
   PR_SetError(0,0);
-  data->data_hash_context->Begin();
+
   if (!data->decode_error)
 	{
 	  data->decode_error = PR_GetError();
@@ -335,17 +335,21 @@ MimeMultCMS_data_eof (void *crypto_closure, PRBool abort_p)
     return -1;
   }
 
-  data->data_hash_context->ResultLen(data->hash_type, &data->item_len);
+  nsCAutoString hashString;
+  data->data_hash_context->Finish(PR_FALSE, hashString);
+  PR_SetError(0, 0);
+  
+  data->item_len  = hashString.Length();
   data->item_data = new unsigned char[data->item_len];
   if (!data->item_data) return MIME_OUT_OF_MEMORY;
+  
+  memcpy(data->item_data, hashString.get(), data->item_len);
 
-  PR_SetError(0, 0);
-  data->data_hash_context->End(data->item_data, &data->item_len, data->item_len);
   if (!data->verify_error) {
 	  data->verify_error = PR_GetError();
   }
 
-  // Release our reference to nsIHash //
+  // Release our reference to nsICryptoHash //
   data->data_hash_context = 0;
 
   /* At this point, data->item.data contains a digest for the first part.

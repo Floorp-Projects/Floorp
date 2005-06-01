@@ -43,6 +43,7 @@
 #define nsDigestAuth_h__
 
 #include "nsIHttpAuthenticator.h"
+#include "nsICryptoHash.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
@@ -111,7 +112,7 @@ class nsHttpDigestAuth : public nsIHttpAuthenticator
     nsresult GetMethodAndPath(nsIHttpChannel *, PRBool, nsCString &, nsCString &);
 
   protected:
-    nsCOMPtr<nsISignatureVerifier> mVerifier;
+    nsCOMPtr<nsICryptoHash>        mVerifier;
     char                           mHashBuf[DIGEST_LENGTH];
     PRBool                         mGotVerifier;
 };

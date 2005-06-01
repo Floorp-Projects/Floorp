@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  msgcompose \
 		  necko \
 		  intl \
+		  caps \
 		  $(NULL)
 
 CPPSRCS		= \

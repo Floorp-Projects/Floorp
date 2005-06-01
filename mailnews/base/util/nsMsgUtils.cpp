@@ -69,6 +69,7 @@
 #include "nsCategoryManagerUtils.h"
 #include "nsISpamSettings.h"
 #include "nsISignatureVerifier.h"
+#include "nsICryptoHash.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsIRssIncomingServer.h"
 #include "nsIMsgFolder.h"
@@ -847,10 +848,9 @@ nsresult IsRSSArticle(nsIURI * aMsgURI, PRBool *aIsRSSArticle)
 nsresult MSGCramMD5(const char *text, PRInt32 text_len, const char *key, PRInt32 key_len, unsigned char *digest)
 {
   nsresult rv;
-  unsigned char result[DIGEST_LENGTH];
-  unsigned char *presult = result;
 
-  nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+  nsCAutoString hash;
+  nsCOMPtr<nsICryptoHash> hasher = do_CreateInstance("@mozilla.org/security/hash;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
 
@@ -863,17 +863,16 @@ nsresult MSGCramMD5(const char *text, PRInt32 text_len, const char *key, PRInt32
   if (key_len > 64) 
   {
 
-    HASHContextStr      *tctx;
-    PRUint32 resultLen;
-
-    rv = verifier->HashBegin(nsISignatureVerifier::MD5, &tctx);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = verifier->HashUpdate(tctx, key, key_len);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = verifier->HashEnd(tctx, &presult, &resultLen, DIGEST_LENGTH);
+    rv = hasher->Init(nsICryptoHash::MD5);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    key = (const char *) result;
+    rv = hasher->Update((const PRUint8*) key, key_len);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = hasher->Finish(PR_FALSE, hash);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    key = hash.get();
     key_len = DIGEST_LENGTH;
   }
 
@@ -903,21 +902,25 @@ nsresult MSGCramMD5(const char *text, PRInt32 text_len, const char *key, PRInt32
   /*
    * perform inner MD5
    */
-  HASHContextStr      *context;
-  PRUint32 resultLen;
+  nsCAutoString result;
+  rv = hasher->Init(nsICryptoHash::MD5); /* init context for 1st pass */
+  rv = hasher->Update((const PRUint8*)innerPad, 64);       /* start with inner pad */
+  rv = hasher->Update((const PRUint8*)text, text_len);     /* then text of datagram */
+  rv = hasher->Finish(PR_FALSE, result);   /* finish up 1st pass */
 
-  rv = verifier->HashBegin(nsISignatureVerifier::MD5, &context); /* init context for 1st pass */
-  rv = verifier->HashUpdate(context, innerPad, 64);      /* start with inner pad */
-  rv = verifier->HashUpdate(context, text, text_len); /* then text of datagram */
-  rv = verifier->HashEnd(context, &presult, &resultLen, DIGEST_LENGTH);          /* finish up 1st pass */
   /*
    * perform outer MD5
    */
-  verifier->HashBegin(nsISignatureVerifier::MD5, &context);  /* init context for 2nd pass */
-  rv = verifier->HashUpdate(context, outerPad, 64);     /* start with outer pad */
-  rv = verifier->HashUpdate(context, (const char *) result, 16);     /* then results of 1st hash */
-  rv = verifier->HashEnd(context, &presult, &resultLen, DIGEST_LENGTH);  /* finish up 2nd pass */
-  memcpy(digest, result, DIGEST_LENGTH);
+  hasher->Init(nsICryptoHash::MD5);       /* init context for 2nd pass */
+  rv = hasher->Update((const PRUint8*)outerPad, 64);    /* start with outer pad */
+  rv = hasher->Update((const PRUint8*)result.get(), 16);/* then results of 1st hash */
+  rv = hasher->Finish(PR_FALSE, result);    /* finish up 2nd pass */
+
+  if (result.Length() != DIGEST_LENGTH)
+    return NS_ERROR_UNEXPECTED;
+
+  memcpy(digest, result.get(), DIGEST_LENGTH);
+
   return rv;
 
 }
@@ -927,25 +930,27 @@ nsresult MSGCramMD5(const char *text, PRInt32 text_len, const char *key, PRInt32
 nsresult MSGApopMD5(const char *text, PRInt32 text_len, const char *password, PRInt32 password_len, unsigned char *digest)
 {
   nsresult rv;
-  unsigned char result[DIGEST_LENGTH];
-  unsigned char *presult = result;
+  nsCAutoString result;
 
-  nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+  nsCOMPtr<nsICryptoHash> hasher = do_CreateInstance("@mozilla.org/security/hash;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = hasher->Init(nsICryptoHash::MD5);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  HASHContextStr      *context;
-  PRUint32 resultLen;
+  rv = hasher->Update((const PRUint8*) text, text_len);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = verifier->HashBegin(nsISignatureVerifier::MD5, &context);
+  rv = hasher->Update((const PRUint8*) password, password_len);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = verifier->HashUpdate(context, text, text_len);
+
+  rv = hasher->Finish(PR_FALSE, result);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = verifier->HashUpdate(context, password, password_len);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = verifier->HashEnd(context, &presult, &resultLen, DIGEST_LENGTH);
-  NS_ENSURE_SUCCESS(rv, rv);
-  memcpy(digest, result, DIGEST_LENGTH);
+
+  if (result.Length() != DIGEST_LENGTH)
+    return NS_ERROR_UNEXPECTED;
+
+  memcpy(digest, result.get(), DIGEST_LENGTH);
   return rv;
 }
 
