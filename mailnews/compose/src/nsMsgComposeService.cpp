@@ -1065,7 +1065,7 @@ NS_IMETHODIMP nsMsgComposeService::ReplyWithTemplate(nsIMsgDBHdr *aMsgHdr, const
     {
       const char *subjectEnd = subject + strlen(subject);
       nsCAutoString messageId(Substring(query + 11, subject));
-      nsCAutoString subject(Substring(subject + 9, subjectEnd));
+      nsCAutoString subjectString(Substring(subject + 9, subjectEnd));
       templateDB->GetMsgHdrForMessageID(messageId.get(), getter_AddRefs(helper->mTemplateHdr));
       if (helper->mTemplateHdr)
         templateFolder->GetUriForMsg(helper->mTemplateHdr, getter_Copies(templateMsgHdrUri));
