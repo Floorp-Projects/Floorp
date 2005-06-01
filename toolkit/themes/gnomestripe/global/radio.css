@@ -77,7 +77,7 @@ radio {
 }
 
 .radio-icon[src] {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
 }
 
 .radio-label {

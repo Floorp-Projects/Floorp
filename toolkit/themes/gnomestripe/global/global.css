@@ -173,7 +173,7 @@ sidebarheader {
 }
 
 sidebarheader > label {
-  padding-left: 4px;
+  -moz-padding-start: 4px;
 }
 
 /* ::::: miscellaneous ::::: */
