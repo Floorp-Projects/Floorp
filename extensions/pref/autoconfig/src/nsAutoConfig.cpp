@@ -536,30 +536,28 @@ nsresult nsAutoConfig::getEmailAddr(nsACString & emailAddr)
     
     rv = mPrefBranch->GetCharPref("mail.accountmanager.defaultaccount", 
                                   getter_Copies(prefValue));
-    // Checking prefValue and its length.  Since by default the preference 
-    // is set to nothing
-    PRUint32 len;
-    if (NS_SUCCEEDED(rv) && (len = strlen(prefValue)) > 0) {
-        emailAddr = NS_LITERAL_CSTRING("mail.account.") + 
-            nsDependentCString(prefValue, len) + NS_LITERAL_CSTRING(".identities");
+    
+    if (NS_SUCCEEDED(rv) && !prefValue.IsEmpty()) {
+        emailAddr = NS_LITERAL_CSTRING("mail.account.") +
+            prefValue + NS_LITERAL_CSTRING(".identities");
         rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
                                       getter_Copies(prefValue));
-        if (NS_FAILED(rv) || (len = strlen(prefValue)) == 0) 
+        if (NS_FAILED(rv) || prefValue.IsEmpty())
             return PromptForEMailAddress(emailAddr);
-        emailAddr = NS_LITERAL_CSTRING("mail.identity.") + 
-            nsDependentCString(prefValue, len) + NS_LITERAL_CSTRING(".useremail");
+        emailAddr = NS_LITERAL_CSTRING("mail.identity.") +
+            prefValue + NS_LITERAL_CSTRING(".useremail");
         rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
                                       getter_Copies(prefValue));
-        if (NS_FAILED(rv)  || (len = strlen(prefValue)) == 0) 
+        if (NS_FAILED(rv)  || prefValue.IsEmpty())
             return PromptForEMailAddress(emailAddr);
-        emailAddr = nsDependentCString(prefValue, len);
+        emailAddr = prefValue;
     }
     else {
         // look for 4.x pref in case we just migrated.
         rv = mPrefBranch->GetCharPref("mail.identity.useremail", 
                                   getter_Copies(prefValue));
         if (NS_SUCCEEDED(rv) && !prefValue.IsEmpty())
-          emailAddr = prefValue;
+            emailAddr = prefValue;
         else if (NS_FAILED(PromptForEMailAddress(emailAddr))  && (!mCurrProfile.IsEmpty()))
             emailAddr = mCurrProfile;
     }

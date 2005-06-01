@@ -246,8 +246,8 @@ nsresult nsReadConfig::readConfigFile()
     nsXPIDLCString urlName;
     rv = prefBranch->GetCharPref("autoadmin.global_config_url",
                                   getter_Copies(urlName));
-    if (NS_SUCCEEDED(rv) && *urlName != '\0' ) {  
-    
+    if (NS_SUCCEEDED(rv) && !urlName.IsEmpty()) {
+
         // Instantiating nsAutoConfig object if the pref is present
         mAutoConfig = do_CreateInstance(NS_AUTOCONFIG_CONTRACTID, &rv);
         if (NS_FAILED(rv))
