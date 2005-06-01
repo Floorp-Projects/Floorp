@@ -37,7 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLTableAccessible.h"
+#include "nsAccessibilityAtoms.h"
 #include "nsIDOMElement.h"
+#include "nsINameSpaceManager.h"
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableCellAccessible, nsBlockAccessible)
 
@@ -133,6 +135,11 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetName(nsAString& aName)
         nsCOMPtr<nsIContent> captionContent(do_QueryInterface(captionNode));
         AppendFlatStringFromSubtree(captionContent, &aName);
       }
+    }
+    if (aName.IsEmpty()) {
+      nsCOMPtr<nsIContent> content(do_QueryInterface(element));
+      NS_ASSERTION(content, "No content for DOM element");
+      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::summary, aName);
     }
   }
   return NS_OK;
