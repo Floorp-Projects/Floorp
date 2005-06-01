@@ -49,7 +49,6 @@ class nsXULButtonAccessible : public nsAccessibleWrap
 {
 public:
   nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetName(nsAString& aResult);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
@@ -150,7 +149,6 @@ class nsXULTextFieldAccessible : public nsLeafAccessible
 {
 public:
   nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetName(nsAString& aName) { return GetXULName(aName); }
   NS_IMETHOD GetValue(nsAString& aValue);
   NS_IMETHOD GetState(PRUint32 *aState);
   NS_IMETHOD GetExtState(PRUint32 *aExtState);

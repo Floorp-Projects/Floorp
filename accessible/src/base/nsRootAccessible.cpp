@@ -122,6 +122,13 @@ NS_IMETHODIMP nsRootAccessible::GetName(nsAString& aName)
     return NS_ERROR_FAILURE;
   }
 
+  if (mRoleMapEntry) {
+    nsAccessible::GetName(aName);
+    if (!aName.IsEmpty()) {
+      return NS_OK;
+    }
+  }
+
   nsIScriptGlobalObject *globalScript = mDocument->GetScriptGlobalObject();
   nsIDocShell *docShell = nsnull;
   if (globalScript) {
@@ -660,7 +667,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         // when the list is open, based on DOMMenuitemActive events
         nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem;
         selectControl->GetSelectedItem(getter_AddRefs(selectedItem));
-        targetNode = do_QueryInterface(selectedItem);
+        if (selectedItem) {
+          targetNode = do_QueryInterface(selectedItem);
+        }
 
         if (!targetNode ||
             NS_FAILED(mAccService->GetAccessibleInShell(targetNode, eventShell,

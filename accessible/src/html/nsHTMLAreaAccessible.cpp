@@ -56,14 +56,21 @@ nsLinkableAccessible(aDomNode, aShell)
 }
 
 /* wstring getName (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetName(nsAString & _retval)
+NS_IMETHODIMP nsHTMLAreaAccessible::GetName(nsAString & aName)
 {
+  aName.Truncate();
+  if (mRoleMapEntry) {
+    nsresult rv = nsAccessible::GetName(aName);
+    if (!aName.IsEmpty()) {
+      return rv;
+    }
+  }
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
   if (elt) {
     nsAutoString hrefString;
-    elt->GetAttribute(NS_LITERAL_STRING("title"), _retval);
-    if (_retval.IsEmpty())
-      GetValue(_retval);
+    elt->GetAttribute(NS_LITERAL_STRING("title"), aName);
+    if (aName.IsEmpty())
+      return GetValue(aName);
   }
   return NS_OK;
 }

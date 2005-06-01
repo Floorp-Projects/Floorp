@@ -210,25 +210,31 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
                                                     name) &&
       NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
                                                     nsAccessibilityAtoms::alt,
-                                                    name) &&
-      NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
-                                                    nsAccessibilityAtoms::title,
-                                                    name) &&
-      NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
-                                                    nsAccessibilityAtoms::src,
-                                                    name) &&
-      NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
-                                                    nsAccessibilityAtoms::data,
                                                     name)) {
-    // Use anonymous text child of button if nothing else works.
-    // This is necessary for submit, reset and browse buttons.
-    nsCOMPtr<nsIPresShell> shell(GetPresShell());
-    NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
-    nsCOMPtr<nsISupportsArray> anonymousElements;
-    shell->GetAnonymousContentFor(content, getter_AddRefs(anonymousElements));
-    nsCOMPtr<nsIDOMNode> domNode(do_QueryElementAt(anonymousElements, 0));
-    if (domNode) {
-      domNode->GetNodeValue(name);
+    if (mRoleMapEntry) {
+      // Use HTML label or DHTML accessibility's labelledby attribute for name
+      GetHTMLName(name, PR_FALSE);
+    }
+    if (name.IsEmpty()) {
+      // Use anonymous text child of button if nothing else works.
+      // This is necessary for submit, reset and browse buttons.
+      nsCOMPtr<nsIPresShell> shell(GetPresShell());
+      NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+      nsCOMPtr<nsISupportsArray> anonymousElements;
+      shell->GetAnonymousContentFor(content, getter_AddRefs(anonymousElements));
+      nsCOMPtr<nsIDOMNode> domNode(do_QueryElementAt(anonymousElements, 0));
+      if (domNode) {
+        domNode->GetNodeValue(name);
+      }
+    }
+    if (name.IsEmpty() &&
+        NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
+                                                      nsAccessibilityAtoms::title,
+                                                      name) &&
+        NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
+                                                      nsAccessibilityAtoms::src,
+                                                      name)) {
+      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::data, name);
     }
   }
 
@@ -296,25 +302,6 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetState(PRUint32 *_retval)
 
   return NS_OK;
 }
-
-NS_IMETHODIMP nsHTML4ButtonAccessible::GetName(nsAString& _retval)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-
-  nsAutoString name;
-  if (content)
-    rv = AppendFlatStringFromSubtree(content, &name);
-
-  if (NS_SUCCEEDED(rv)) {
-    // Temp var needed until CompressWhitespace built for nsAString
-    name.CompressWhitespace();
-    _retval.Assign(name);
-  }
-
-  return rv;
-}
-
 
 // --- textfield -----
 
@@ -433,8 +420,15 @@ NS_IMETHODIMP nsHTMLGroupboxAccessible::GetState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLGroupboxAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP nsHTMLGroupboxAccessible::GetName(nsAString& aName)
 {
+  if (mRoleMapEntry) {
+    nsAccessible::GetName(aName);
+    if (!aName.IsEmpty()) {
+      return NS_OK;
+    }
+  }
+
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if (element) {
     nsCOMPtr<nsIDOMNodeList> legends;
@@ -447,8 +441,8 @@ NS_IMETHODIMP nsHTMLGroupboxAccessible::GetName(nsAString& _retval)
       legends->Item(0, getter_AddRefs(legendNode));
       nsCOMPtr<nsIContent> legendContent(do_QueryInterface(legendNode));
       if (legendContent) {
-        _retval.Truncate();  // Default name is blank 
-        return AppendFlatStringFromSubtree(legendContent, &_retval);
+        aName.Truncate();  // Default name is blank 
+        return AppendFlatStringFromSubtree(legendContent, &aName);
       }
     }
   }

@@ -91,6 +91,10 @@ ACCESSIBILITY_ATOM(thead, "thead")
 ACCESSIBILITY_ATOM(toolbaritem, "toolbaritem")
 ACCESSIBILITY_ATOM(ul, "ul")
 
+  // DHTML accessibility relationship attributes
+ACCESSIBILITY_ATOM(labelledby, "labelledby")
+ACCESSIBILITY_ATOM(describedby, "describedby")
+
   // Alphabetical list of attributes
 ACCESSIBILITY_ATOM(acceltext, "acceltext")
 ACCESSIBILITY_ATOM(accesskey, "accesskey")

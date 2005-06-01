@@ -67,8 +67,9 @@ NS_IMETHODIMP nsOuterDocAccessible::GetName(nsAString& aName)
     return NS_ERROR_FAILURE;
   }
   nsresult rv = accDoc->GetTitle(aName);
-  if (NS_FAILED(rv) || aName.IsEmpty())
-    rv = accDoc->GetURL(aName);
+  if (NS_FAILED(rv) || aName.IsEmpty()) {
+    rv = mRoleMapEntry ? nsAccessible::GetName(aName) : accDoc->GetURL(aName);
+  }
   return rv;
 }
 
