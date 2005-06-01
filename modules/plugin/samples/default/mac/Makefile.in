@@ -54,6 +54,21 @@ BUILDSTYLE	= Deployment
 endif
 endif
 
+ifeq (,$(findstring pbxbuild,$(XCODEBUILD)))
+    # pbbuild or xcodebuild indicates Xcode; the Xcode project contains
+    # native targets needed for proper SDK builds.
+    PROJECT=DefaultPlugin.xcode
+    PROJECT_ARG=-project $(PROJECT)
+    PBBUILD_ARG=$(PBBUILD_SETTINGS)
+else
+    # pbxbuild indicates Project Builder; this will only be used where Xcode
+    # is unavailable (pre-10.3).  SDK build unsupported, but with such an
+    # early build host, that should be OK.
+    PROJECT=DefaultPlugin.pbproj
+    PROJECT_ARG=
+    PBBUILD_ARG=
+endif
+
 TARGET		= "Default Plugin"
 
 PACKAGE_FILE = npnul.pkg
@@ -70,7 +85,7 @@ RESOURCE_FILES = _NullPlugin.rsrc
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 export::
-	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/DefaultPlugin.xcode .
+	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/$(PROJECT) .
 	ln -fs $(srcdir)/English.lproj
 	ln -fs $(srcdir)/DefaultPluginPrefix.h
 	ln -fs $(srcdir)/NullPlugin.cpp
@@ -89,7 +104,7 @@ install-plugin: build-plugin
 resources: $(RESOURCE_FILES)
 
 build-plugin: resources
-	$(PBBUILD) -project DefaultPlugin.xcode -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_SETTINGS)
+	$(PBBUILD) $(PROJECT_ARG) -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_ARG)
 	echo -n NSPLMOSS > "build/DefaultPlugin.build/Default Plugin.build/PkgInfo"
 
 _%.rsrc: %.rsrc
