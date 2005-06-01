@@ -88,7 +88,7 @@ CXXSRCS = \
 OBJS = $(addprefix $(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)) $(CXXSRCS:.cpp=.$(OBJ_SUFFIX)))
 
 ifeq ($(OS_ARCH), WINNT)
-        DLLBASE=/BASE:0x30000000
+        DLLBASE=-BASE:0x30000000
         RES=$(OBJDIR)/prstrms.res
         RESNAME=prstrms.rc
         OS_LIBS = user32.lib

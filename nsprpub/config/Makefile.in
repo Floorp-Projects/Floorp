@@ -128,7 +128,7 @@ endif
 OUTOPTION = -o # end of the line
 ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))
 ifndef NS_USE_GCC
-OUTOPTION = /Fe
+OUTOPTION = -Fe
 endif
 endif
 

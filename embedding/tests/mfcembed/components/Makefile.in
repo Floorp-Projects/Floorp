@@ -81,11 +81,11 @@ include $(topsrcdir)/config/rules.mk
 
 # UNICODE
 ifdef BUILD_UNICODE_MFCEMBED
-CXXFLAGS        += /D "_UNICODE"
+CXXFLAGS        += -D "_UNICODE"
 endif
 
-CXXFLAGS	+= /D "_AFXDLL" /D "USE_SINGLE_SIGN_ON" /D "_WINDLL"
-LDFLAGS		+= /SUBSYSTEM:windows
+CXXFLAGS	+= -D "_AFXDLL" -D "USE_SINGLE_SIGN_ON" -D "_WINDLL"
+LDFLAGS		+= -SUBSYSTEM:windows
 
 Dialogs.res: Dialogs.rc resource.h
 

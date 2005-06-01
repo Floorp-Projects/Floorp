@@ -152,7 +152,7 @@ LOCAL_INCLUDES	= -I$(srcdir)/components
 #
 # Set it to 256k.  See bug 127069.
 #
-LDFLAGS += /HEAP:0x40000
+LDFLAGS += -HEAP:0x40000
 
 
 include $(topsrcdir)/config/config.mk
@@ -189,12 +189,12 @@ endif # BUILD_STATIC_LIBS
 
 # UNICODE
 ifdef BUILD_UNICODE_MFCEMBED
-CXXFLAGS        += /D "_UNICODE"
-LDFLAGS         += /ENTRY:wWinMainCRTStartup
+CXXFLAGS        += -D "_UNICODE"
+LDFLAGS         += -ENTRY:wWinMainCRTStartup
 endif
 
-CXXFLAGS	+= /D "_AFXDLL" /D "USE_SINGLE_SIGN_ON" -DMOZILLA_VERSION=\"$(MOZILLA_VERSION)\"
-LDFLAGS		+= /SUBSYSTEM:windows
+CXXFLAGS	+= -D "_AFXDLL" -D "USE_SINGLE_SIGN_ON" -DMOZILLA_VERSION=\"$(MOZILLA_VERSION)\"
+LDFLAGS		+= -SUBSYSTEM:windows
 
 libs:: mfcembed.htm
 	$(INSTALL) $^ $(DIST)/bin

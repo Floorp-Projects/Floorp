@@ -205,7 +205,7 @@ INCLUDES	+= -I$(srcdir)
 # are taken violates the ISO C and C++ standards.
 ifndef MOZ_DEBUG
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-LDFLAGS         += /OPT:NOICF
+LDFLAGS         += -OPT:NOICF
 endif
 endif
 
@@ -247,9 +247,9 @@ endif
 # Prevent floating point errors caused by VC++ optimizations
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))
-CFLAGS += /Op
+CFLAGS += -Op
 else
-CFLAGS += /fp:precise
+CFLAGS += -fp:precise
 endif
 endif # WINNT
 
