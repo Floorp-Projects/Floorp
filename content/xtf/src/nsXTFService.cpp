@@ -50,6 +50,8 @@
 #include "nsXTFGenericElementWrapper.h"
 #include "nsXTFXMLVisualWrapper.h"
 #include "nsXTFXULVisualWrapper.h"
+#include "nsIXTFBindableElement.h"
+#include "nsXTFBindableElementWrapper.h"
 
 #ifdef MOZ_SVG
 #include "nsXTFSVGVisualWrapper.h"
@@ -149,7 +151,11 @@ nsXTFService::CreateElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
     {
       nsCOMPtr<nsIXTFGenericElement> elem2 = do_QueryInterface(elem);
       return NS_NewXTFGenericElementWrapper(elem2, aNodeInfo, aResult);
-      break;
+    }
+    case nsIXTFElement::ELEMENT_TYPE_BINDABLE:
+    {
+      nsCOMPtr<nsIXTFBindableElement> elem2 = do_QueryInterface(elem);
+      return NS_NewXTFBindableElementWrapper(elem2, aNodeInfo, aResult);
     }
     case nsIXTFElement::ELEMENT_TYPE_SVG_VISUAL:
     {
@@ -158,20 +164,18 @@ nsXTFService::CreateElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
       return NS_NewXTFSVGVisualWrapper(elem2, aNodeInfo, aResult);
 #else
       NS_ERROR("xtf svg visuals are only supported in mozilla builds with native svg support");
-#endif
       break;
+#endif
     }
     case nsIXTFElement::ELEMENT_TYPE_XML_VISUAL:
     {
       nsCOMPtr<nsIXTFXMLVisual> elem2 = do_QueryInterface(elem);
       return NS_NewXTFXMLVisualWrapper(elem2, aNodeInfo, aResult);
-      break;
     }
     case nsIXTFElement::ELEMENT_TYPE_XUL_VISUAL:
     {
       nsCOMPtr<nsIXTFXULVisual> elem2 = do_QueryInterface(elem);
       return NS_NewXTFXULVisualWrapper(elem2, aNodeInfo, aResult);
-      break;
     }
     default:
       NS_ERROR("unknown xtf element type");

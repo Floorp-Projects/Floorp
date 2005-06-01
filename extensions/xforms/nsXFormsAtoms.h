@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsXFormsAtoms_h_
+#define nsXFormsAtoms_h_
+
 #include "nsStaticAtom.h"
 
 /**
@@ -72,3 +75,5 @@ class nsXFormsAtoms
  private:
   static NS_HIDDEN_(const nsStaticAtom) Atoms_info[];
 };
+
+#endif

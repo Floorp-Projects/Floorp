@@ -69,6 +69,7 @@ CPPSRCS		= \
 		nsXTFWeakTearoff.cpp \
 		nsXTFXMLVisualWrapper.cpp \
 		nsXTFXULVisualWrapper.cpp \
+		nsXTFBindableElementWrapper.cpp \
 		$(NULL)
 
 ifdef MOZ_SVG

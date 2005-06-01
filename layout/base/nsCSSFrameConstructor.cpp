@@ -7644,7 +7644,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
         // display:none, so they don't mess with pseudo-state!
         aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
         return NS_OK;
-      } else 
+      } else if (xtfElem->GetElementType() != nsIXTFElement::ELEMENT_TYPE_BINDABLE)
         rv = ConstructXTFFrame(aState, aContent, adjParentFrame, aTag,
                                aNameSpaceID, styleContext, *frameItems,
                                pseudoParent);

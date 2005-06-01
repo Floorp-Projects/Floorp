@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,12 +15,12 @@
  * The Original Code is the Mozilla XTF project.
  *
  * The Initial Developer of the Original Code is
- * Alex Fritze.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Olli Pettay.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex@croczilla.com> (original author)
+ *   Olli Pettay <Olli.Pettay@helsinki.fi> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,10 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXTFStyledElementWrapper.idl"
+#ifndef __NS_XTFBINDABLEELEMENTWRAPPER_H__
+#define __NS_XTFBINDABLEELEMENTWRAPPER_H__
 
-[scriptable, uuid(1ab4b724-fd7e-41af-bc19-80bb7299f3c0)]
-interface nsIXTFXULVisualWrapper : nsIXTFStyledElementWrapper
-{
-};
+class nsIXTFBindableElement;
+class nsIContent;
+class nsINodeInfo;
 
+nsresult
+NS_NewXTFBindableElementWrapper(nsIXTFBindableElement* xtfElement,
+                                nsINodeInfo* ni,
+                                nsIContent** aResult);
+
+#endif // __NS_XTFBINDABLEELEMENTWRAPPER_H__

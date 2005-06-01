@@ -15,12 +15,12 @@
  * The Original Code is the Mozilla XTF project.
  *
  * The Initial Developer of the Original Code is
- * Alex Fritze.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Olli Pettay.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex@croczilla.com> (original author)
+ *   Olli Pettay <Olli.Pettay@helsinki.fi> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,8 +38,8 @@
 
 #include "nsIXTFStyledElementWrapper.idl"
 
-[scriptable, uuid(1ab4b724-fd7e-41af-bc19-80bb7299f3c0)]
-interface nsIXTFXULVisualWrapper : nsIXTFStyledElementWrapper
+[scriptable, uuid(7914d5f2-14b4-47d0-88f8-70715cfbdfb7)]
+interface nsIXTFBindableElementWrapper : nsIXTFStyledElementWrapper
 {
 };
 

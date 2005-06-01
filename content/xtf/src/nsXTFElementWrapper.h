@@ -44,6 +44,7 @@
 #include "nsXMLElement.h"
 #include "nsIXTFAttributeHandler.h"
 #include "nsIXTFElement.h"
+#include "nsIXTFStyledElementWrapper.h"
 
 typedef nsXMLElement nsXTFElementWrapperBase;
 
@@ -135,6 +136,21 @@ protected:
   
   PRUint32 mNotificationMask;
   nsCOMPtr<nsIXTFAttributeHandler> mAttributeHandler;
+};
+
+class nsXTFStyledElementWrapper : public nsXTFElementWrapper
+{
+public:
+  nsXTFStyledElementWrapper(nsINodeInfo* aNodeInfo);
+
+  // for nsIStyledContent
+  virtual nsIAtom *GetClassAttributeName() const;
+  virtual const nsAttrValue* GetClasses() const;
+  NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
+  
+  nsresult SetClassAttributeName(nsIAtom* aName);
+protected:
+  nsCOMPtr<nsIAtom> mClassAttributeName;
 };
 
 #endif // __NS_XTFELEMENTWRAPPER_H__

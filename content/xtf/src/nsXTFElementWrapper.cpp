@@ -704,3 +704,62 @@ nsXTFElementWrapper::HandleDOMEvent(nsPresContext* aPresContext,
   return rv;
 }
 
+// nsXTFStyleableElementWrapper
+
+nsXTFStyledElementWrapper::nsXTFStyledElementWrapper(nsINodeInfo* aNodeInfo)
+: nsXTFElementWrapper(aNodeInfo)
+{
+}
+
+nsIAtom *
+nsXTFStyledElementWrapper::GetClassAttributeName() const
+{
+  return mClassAttributeName;
+}
+
+const nsAttrValue*
+nsXTFStyledElementWrapper::GetClasses() const
+{
+  const nsAttrValue* val = nsnull;
+  nsIAtom* clazzAttr = GetClassAttributeName();
+  if (clazzAttr) {
+    val = mAttrsAndChildren.GetAttr(clazzAttr);
+    // This is possibly the first time we need any classes.
+    if (val && val->Type() == nsAttrValue::eString) {
+      nsAutoString value;
+      val->ToString(value);
+      nsAttrValue newValue;
+      newValue.ParseAtomArray(value);
+      NS_CONST_CAST(nsAttrAndChildArray*, &mAttrsAndChildren)->
+        SetAndTakeAttr(clazzAttr, newValue);
+    }
+  }
+  return val;
+}
+
+PRBool
+nsXTFStyledElementWrapper::HasClass(nsIAtom* aClass, PRBool /*aCaseSensitive*/) const
+{
+  const nsAttrValue* val = GetClasses();
+  if (val) {
+    if (val->Type() == nsAttrValue::eAtom) {
+      return aClass == val->GetAtomValue();
+    }
+
+    if (val->Type() == nsAttrValue::eAtomArray) {
+      return val->GetAtomArrayValue()->IndexOf(aClass) >= 0;
+    }
+  }
+  return PR_FALSE;
+}
+
+nsresult
+nsXTFStyledElementWrapper::SetClassAttributeName(nsIAtom* aName)
+{
+  // The class attribute name can be set only once
+  if (mClassAttributeName || !aName)
+    return NS_ERROR_FAILURE;
+  
+  mClassAttributeName = aName;
+  return NS_OK;
+}

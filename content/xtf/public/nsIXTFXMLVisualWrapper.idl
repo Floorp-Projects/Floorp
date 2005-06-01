@@ -36,10 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXTFElementWrapper.idl"
+#include "nsIXTFStyledElementWrapper.idl"
 
-[scriptable, uuid(a260bc18-c639-41e5-b28a-a6b5c8e99993)]
-interface nsIXTFXMLVisualWrapper : nsIXTFElementWrapper
-{  
+[scriptable, uuid(656c9417-744e-4fa3-8e2b-8218185efe21)]
+interface nsIXTFXMLVisualWrapper : nsIXTFStyledElementWrapper
+{
 };
 

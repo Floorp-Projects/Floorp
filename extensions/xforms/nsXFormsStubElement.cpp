@@ -375,13 +375,6 @@ nsXFormsXMLVisualStub::DidLayout()
 }
 
 NS_IMETHODIMP
-nsXFormsXMLVisualStub::GetClassAttributeName(nsIAtom** aName)
-{
-  NS_ADDREF(*aName = nsXFormsAtoms::clazz);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXFormsXMLVisualStub::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 {
   return NS_OK;
@@ -397,6 +390,163 @@ nsresult
 NS_NewXFormsXMLVisualStub(nsIXTFElement **aResult)
 {
   *aResult = new nsXFormsXMLVisualStub();
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+// nsXFormsBindableStub implementation
+
+NS_IMPL_ISUPPORTS2(nsXFormsBindableStub, nsIXTFElement, nsIXTFBindableElement)
+
+NS_IMETHODIMP
+nsXFormsBindableStub::OnDestroyed()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::GetElementType(PRUint32 *aElementType)
+{
+  *aElementType = nsIXTFElement::ELEMENT_TYPE_BINDABLE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::GetIsAttributeHandler(PRBool *aIsAttributeHandler)
+{
+  *aIsAttributeHandler = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::GetScriptingInterfaces(PRUint32 *aCount, nsIID ***aArray)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::WillChangeDocument(nsIDOMDocument *aNewDocument)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::DocumentChanged(nsIDOMDocument *aNewDocument)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::WillChangeParent(nsIDOMElement *aNewParent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::ParentChanged(nsIDOMElement *aNewParent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::WillInsertChild(nsIDOMNode *aChild, PRUint32 aIndex)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::WillAppendChild(nsIDOMNode *aChild)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::ChildAppended(nsIDOMNode *aChild)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::WillRemoveChild(PRUint32 aIndex)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::ChildRemoved(PRUint32 aIndex)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::WillSetAttribute(nsIAtom *aName,
+                                      const nsAString &aNewValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::AttributeSet(nsIAtom *aName, const nsAString &aNewValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::WillRemoveAttribute(nsIAtom *aName)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::AttributeRemoved(nsIAtom *aName)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::BeginAddingChildren()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::DoneAddingChildren()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
+{
+  *aHandled = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsBindableStub::CloneState(nsIDOMElement *aElement)
+{
+  return NS_OK;
+}
+
+nsresult
+NS_NewXFormsBindableStub(nsIXTFElement **aResult)
+{
+  *aResult = new nsXFormsBindableStub();
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
 
