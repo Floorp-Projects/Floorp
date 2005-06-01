@@ -1570,6 +1570,7 @@ js_GC(JSContext *cx, uintN gcflags)
         return;
     }
     METER(rt->gcStats.poke++);
+    rt->gcPoke = JS_FALSE;
 
 #ifdef JS_THREADSAFE
     /* Bump gcLevel and return rather than nest on this thread. */
@@ -1911,15 +1912,16 @@ restart:
 #endif
 
     JS_LOCK_GC(rt);
-    if (rt->gcLevel > 1) {
+    if (rt->gcLevel > 1 || rt->gcPoke) {
         rt->gcLevel = 1;
+        rt->gcPoke = JS_FALSE;
         JS_UNLOCK_GC(rt);
         goto restart;
     }
     js_EnablePropertyCache(cx);
     rt->gcLevel = 0;
     rt->gcLastBytes = rt->gcBytes;
-    rt->gcPoke = rt->gcRunning = JS_FALSE;
+    rt->gcRunning = JS_FALSE;
 
 #ifdef JS_THREADSAFE
     /* If we were invoked during a request, pay back the temporary debit. */
