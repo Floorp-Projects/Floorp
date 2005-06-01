@@ -983,66 +983,6 @@ public:
 };
 
 /**********************************************************
-  This defines the counter element, and is for debug use.
-
-    Usage:  <counter name="xxx" reset=n>
-
-    if you leave off the name key/value pair, we'll use the
-    name of the element instead.
- **********************************************************/
-class CCounterElement: public CInlineElement {
-public:
-
-  CCounterElement(eHTMLTags aTag=eHTMLTag_counter) : CInlineElement(aTag) {
-    CInlineElement::Initialize(*this,aTag);
-    mProperties.mIsSinkContainer=PR_FALSE;
-  }
-
-  /**********************************************************
-    handles the opening of it's own children
-   **********************************************************/
-  virtual nsresult HandleStartToken(  nsCParserNode* aNode,
-                                      eHTMLTags aTag,
-                                      nsDTDContext* aContext,
-                                      nsIHTMLContentSink* aSink) {
-    return CElement::HandleStartToken(aNode,aTag,aContext,aSink);
-  }
-
-
-  /**********************************************************
-    this gets called after each tag is opened in the given context
-   **********************************************************/
-  virtual nsresult OpenContext(nsCParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
-    CElement::OpenContext(aNode,aTag,aContext,aSink);
-    
-    nsresult result=NS_OK;
-    PRInt32   theCount=aContext->GetCount();
-
-    nsCParserNode *theNode = (nsCParserNode*)aNode;
-
-#ifdef DEBUG
-    eHTMLTags theGrandParentTag=aContext->TagAt(theCount-2);
-    nsAutoString  theNumber;
-    aContext->IncrementCounter(theGrandParentTag,*theNode,theNumber);
-
-    CTextToken theToken(theNumber);
-    nsCParserNode theNewNode(&theToken, 0 /*stack token*/);
-    *theNode = theNewNode;
-#endif
-    result=aSink->AddLeaf(*theNode);
-    return result;
-  }
-
-  /**********************************************************
-    handles the opening of it's own children
-   **********************************************************/
-  virtual nsresult HandleEndToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    return CElement::HandleEndToken(aNode,aTag,aContext,aSink);
-  }
-
-};
-
-/**********************************************************
   This defines the heading element group (h1..h6)
  **********************************************************/
 class CHeadingElement: public CElement {
@@ -2082,7 +2022,6 @@ public:
     mAppletElement(eHTMLTag_applet),
     mObjectElement(eHTMLTag_object),
     mFieldsetElement(),
-    mCounterElement(),
     mFormElement(),
     mHeadElement(eHTMLTag_head)
   {
@@ -2131,7 +2070,6 @@ public:
   CAppletElement    mAppletElement;
   CAppletElement    mObjectElement;
   CFieldsetElement  mFieldsetElement;
-  CCounterElement   mCounterElement;
   CFormElement      mFormElement;
   CHeadElement      mHeadElement;
 };
@@ -2223,8 +2161,6 @@ void CElementTable::InitializeElements() {
   CTableElement::Initialize(        mDfltElements[eHTMLTag_colgroup],   eHTMLTag_colgroup);
   mDfltElements[eHTMLTag_colgroup].mContainsGroups.mAllBits=0;
   mDfltElements[eHTMLTag_colgroup].mIncludeKids=kColgroupKids;
-
-  CElement::Initialize(             mDfltElements[eHTMLTag_counter],    eHTMLTag_counter);
 
   CElement::Initialize(             mDfltElements[eHTMLTag_dd],         eHTMLTag_dd,  CElement::GetEmptyGroup(),   CFlowElement::GetContainedGroups());
   mDfltElements[eHTMLTag_dd].mAutoClose=kAutoCloseDD;
@@ -2437,7 +2373,6 @@ void CElementTable::InitializeElements() {
   mElements[eHTMLTag_applet]=&mAppletElement;
   mElements[eHTMLTag_object]=&mObjectElement;
   mElements[eHTMLTag_fieldset]=&mFieldsetElement;
-  mElements[eHTMLTag_counter]=&mCounterElement;
   mElements[eHTMLTag_form]=&mFormElement;
   mElements[eHTMLTag_head]=&mHeadElement;
 }
