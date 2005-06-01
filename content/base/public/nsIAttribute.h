@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Peter Van der Beken <peterv@netscape.com>
- *
+ *   Allan Beaufour <allan@beaufour.dk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,24 +44,21 @@
 #include "nsINodeInfo.h"
 
 class nsIContent;
-
+class nsDOMAttributeMap;
 #define NS_IATTRIBUTE_IID  \
- {0xa6cf90dd, 0x15b3, 0x11d2,        \
- {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+ {0x9a9066ec, 0x35ba, 0x4244,        \
+ {0x8f, 0xb9, 0x49, 0x73, 0x90, 0xb0, 0x3f, 0x66}}
 
 class nsIAttribute : public nsISupports
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IATTRIBUTE_IID)
 
-  void SetContent(nsIContent* aContent)
+  virtual void SetMap(nsDOMAttributeMap *aMap) = 0;
+  
+  nsDOMAttributeMap *GetMap()
   {
-    mContent = aContent;
-  }
-
-  nsIContent *GetContent()
-  {
-    return mContent;
+    return mAttrMap;
   }
 
   nsINodeInfo *NodeInfo()
@@ -69,13 +66,15 @@ public:
     return mNodeInfo;
   }
 
+  virtual nsIContent* GetContent() = 0;
+
 protected:
-  nsIAttribute(nsIContent *aContent, nsINodeInfo *aNodeInfo)
-    : mContent(aContent), mNodeInfo(aNodeInfo)
+  nsIAttribute(nsDOMAttributeMap *aAttrMap, nsINodeInfo *aNodeInfo)
+    : mAttrMap(aAttrMap), mNodeInfo(aNodeInfo)
   {
   }
 
-  nsIContent *mContent; // WEAK
+  nsDOMAttributeMap *mAttrMap; // WEAK
   nsCOMPtr<nsINodeInfo> mNodeInfo; // STRONG
 
 private:

@@ -51,6 +51,7 @@
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
 #include "nsIXTFService.h"
+#include "nsDOMAttributeMap.h"
 
 nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo)
     : nsXTFElementWrapperBase(aNodeInfo),
@@ -331,7 +332,17 @@ nsXTFElementWrapper::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
       NS_WARNING("setattr: xtf elements don't do namespaced attribs yet!");
       return NS_ERROR_FAILURE;
     }  
+    nsDOMSlots *slots = GetExistingDOMSlots();
+    if (slots && slots->mAttributeMap) {
+      slots->mAttributeMap->DropAttribute(aNameSpaceID, aAttr);
+    }
     rv = mAttributeHandler->RemoveAttribute(aAttr);
+
+    // XXX if the RemoveAttribute() call fails, we might end up having removed
+    // the attribute from the attribute map even though the attribute is still
+    // on the element
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=296205
+
     // XXX mutation events?
   }
   else { // try wrapper

@@ -1303,6 +1303,10 @@ nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
     if (!slots->mAttributeMap) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+    if (!slots->mAttributeMap->Init()) {
+      slots->mAttributeMap = nsnull;
+      return NS_ERROR_FAILURE;
+    }
   }
 
   NS_ADDREF(*aAttributes = slots->mAttributeMap);
@@ -2676,12 +2680,6 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
   nsIDocument *document = GetCurrentDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
   
-  PRBool isAppend;
-
-  if (aNotify) {
-    isAppend = aIndex == GetChildCount();
-  }
-
   nsresult rv = mAttrsAndChildren.InsertChildAt(aKid, aIndex);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2702,7 +2700,7 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
   // the DOM....
   if (document && document == GetCurrentDoc() && aKid->GetParent() == this) {
     if (aNotify) {
-      if (isAppend) {
+      if (aIndex == GetChildCount() - 1) {
         document->ContentAppended(this, aIndex);
       } else {
         document->ContentInserted(this, aKid, aIndex);
@@ -3323,12 +3321,13 @@ nsGenericElement::TriggerLink(nsPresContext* aPresContext,
     // Check that this page is allowed to load this URI.
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv)) {
+      PRUint32 flag = aIsUserTriggered ?
+                      (PRUint32) nsIScriptSecurityManager::STANDARD :
+                      (PRUint32) nsIScriptSecurityManager::DISALLOW_FROM_MAIL;
       proceed =
-        securityManager->CheckLoadURI(aOriginURI, aLinkURI,
-                                      aIsUserTriggered ?
-                                        nsIScriptSecurityManager::STANDARD :
-                                        nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
+        securityManager->CheckLoadURI(aOriginURI, aLinkURI, flag);
+    }
 
     // Only pass off the click event if the script security manager
     // says it's ok.
@@ -3680,6 +3679,12 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       HandleDOMEvent(nsnull, &mutation, nsnull,
                      NS_EVENT_FLAG_INIT, &status);
     }
+  }
+
+  // Clear binding to nsIDOMNamedNodeMap
+  nsDOMSlots *slots = GetExistingDOMSlots();
+  if (slots && slots->mAttributeMap) {
+    slots->mAttributeMap->DropAttribute(aNameSpaceID, aName);
   }
 
   nsresult rv = mAttrsAndChildren.RemoveAttrAt(index);
