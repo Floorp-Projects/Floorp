@@ -3060,7 +3060,9 @@ DocumentViewerImpl::GetPopupImageNode(nsIImageLoadingContent** aNode)
   nsresult rv = GetPopupNode(getter_AddRefs(node));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  CallQueryInterface(node, aNode);
+  if (node)
+    CallQueryInterface(node, aNode);
+
   return NS_OK;
 }
 
