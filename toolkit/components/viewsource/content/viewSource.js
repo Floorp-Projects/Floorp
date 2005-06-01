@@ -235,13 +235,7 @@ function ViewSourceClose()
   window.close();
 }
 
-function BrowserReload()
-{
-  // Reload will always reload from cache which is probably not what's wanted
-  BrowserReloadSkipCache();
-}
-
-function BrowserReloadSkipCache()
+function ViewSourceReload()
 {
   const webNavigation = getBrowser().webNavigation;
   webNavigation.reload(webNavigation.LOAD_FLAGS_BYPASS_PROXY | webNavigation.LOAD_FLAGS_BYPASS_CACHE);

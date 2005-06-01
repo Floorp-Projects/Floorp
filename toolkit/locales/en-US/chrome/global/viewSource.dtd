@@ -35,6 +35,9 @@
 
 <!ENTITY viewMenu.label           "View">
 <!ENTITY viewMenu.accesskey       "V">
+<!ENTITY reloadCmd.label "Reload">
+<!ENTITY reloadCmd.accesskey "R">
+<!ENTITY reloadCmd.commandkey "r">
 <!ENTITY menu_wrapLongLines.title "Wrap Long Lines"> 
 <!ENTITY menu_wrapLongLines.accesskey "W">
 <!ENTITY menu_highlightSyntax.label "Syntax Highlighting">
