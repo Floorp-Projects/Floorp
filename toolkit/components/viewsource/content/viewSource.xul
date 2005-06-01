@@ -111,6 +111,7 @@
   <command id="cmd_findAgain" oncommand="getBrowser().findAgain()"/>
   <command id="cmd_findPrevious" oncommand="getBrowser().findPrevious()"/>
 #endif
+  <command id="cmd_reload" oncommand="ViewSourceReload();"/>
   <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
   <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
   <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>
@@ -128,6 +129,11 @@
     <key id="key_textZoomEnlarge2" key="&textEnlarge.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key id="key_textZoomReduce"  key="&textReduce.commandkey;" command="cmd_textZoomReduce" modifiers="accel"/>
     <key id="key_textZoomReset" key="&textReset.commandkey;" oncommand="ZoomManager.prototype.getInstance().reset();" modifiers="accel"/>
+
+    <key id="key_reload" key="&reloadCmd.commandkey;" command="cmd_reload" modifiers="accel"/>
+    <key key="&reloadCmd.commandkey;" command="cmd_reload" modifiers="accel,shift"/>
+    <key keycode="VK_F5" command="cmd_reload"/>
+    <key keycode="VK_F5" command="cmd_reload" modifiers="accel"/>
 #ifdef USE_FIND_TOOLBAR
     <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
     <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
@@ -189,6 +195,9 @@
 
       <menu id="menu_view" label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
         <menupopup id="viewmenu-popup">
+          <menuitem id="menu_reload" command="cmd_reload" accesskey="&reloadCmd.accesskey;"
+                    label="&reloadCmd.label;" key="key_reload"/>
+          <menuseparator />
           <menuitem id="menu_textEnlarge" command="cmd_textZoomEnlarge"
                     label="&menu_textEnlarge.label;" accesskey="&menu_textEnlarge.accesskey;"
                     key="key_textZoomEnlarge"/>
