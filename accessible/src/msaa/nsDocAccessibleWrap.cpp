@@ -345,14 +345,31 @@ void nsDocAccessibleWrap::DocLoadCallback(nsITimer *aTimer, void *aClosure)
   // Doc has finished loading, fire "load finished" event
   // By using short timer we can wait for MS Windows to make the window visible,
   // which it does asynchronously. This avoids confusing the screen reader with a
-  // hidden window.
+  // hidden window. Waiting also allows us to see of the document has focus,
+  // which is important because we only fire doc loaded events for focused documents.
 
   nsDocAccessibleWrap *docAcc =
     NS_REINTERPRET_CAST(nsDocAccessibleWrap*, aClosure);
-  if (docAcc) {
-    docAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
-                             docAcc, nsnull);
-    docAcc->FireAnchorJumpEvent();
+  if (!docAcc) {
+    return;
+  }
+
+  // Fire doc finished event
+  nsCOMPtr<nsIDOMNode> docDomNode;
+  docAcc->GetDOMNode(getter_AddRefs(docDomNode));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(docDomNode));
+  if (doc) {
+    nsCOMPtr<nsISupports> container = doc->GetContainer();
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+    if (docShell) {
+      PRBool hasFocus;
+      docShell->GetHasFocus(&hasFocus);
+      if (hasFocus) {
+        docAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
+                                docAcc, nsnull);
+        docAcc->FireAnchorJumpEvent();
+      }
+    }
   }
 }
 

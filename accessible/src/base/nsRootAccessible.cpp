@@ -232,9 +232,6 @@ nsresult nsRootAccessible::AddEventListeners()
     nsresult rv = target->AddEventListener(NS_LITERAL_STRING("focus"), NS_STATIC_CAST(nsIDOMFocusListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
-    // Fire accessible focus event for pre-existing focus
-    FireCurrentFocusEvent();
-
     // capture Form change events 
     rv = target->AddEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
@@ -292,6 +289,14 @@ nsresult nsRootAccessible::AddEventListeners()
 
   if (!mCaretAccessible)
     mCaretAccessible = new nsCaretAccessible(mDOMNode, mWeakShell, this);
+
+  // Fire accessible focus event for pre-existing focus, but wait until all internal
+  // focus events are finished for window initialization.
+  mFireFocusTimer = do_CreateInstance("@mozilla.org/timer;1");
+  if (mFireFocusTimer) {
+    mFireFocusTimer->InitWithFuncCallback(FireFocusCallback, this,
+                                          0, nsITimer::TYPE_ONE_SHOT);
+  }
 
   return nsDocAccessible::AddEventListeners();
 }
@@ -863,6 +868,13 @@ void nsRootAccessible::GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNo
   }
 }
 
+void nsRootAccessible::FireFocusCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsRootAccessible *rootAccessible = NS_STATIC_CAST(nsRootAccessible*, aClosure);
+  NS_ASSERTION(rootAccessible, "How did we get here without a root accessible?");
+  rootAccessible->FireCurrentFocusEvent();
+}
+
 // ------- nsIDOMFocusListener Methods (1) -------------
 
 NS_IMETHODIMP nsRootAccessible::Focus(nsIDOMEvent* aEvent) 
@@ -936,6 +948,10 @@ NS_IMETHODIMP nsRootAccessible::Shutdown()
   mMenuAccessible = nsnull;
   mCaretAccessible = nsnull;
   mAccService = nsnull;
+  if (mFireEventTimer) {
+    mFireFocusTimer->Cancel();
+    mFireFocusTimer = nsnull;
+  }
 
   return nsDocAccessibleWrap::Shutdown();
 }
