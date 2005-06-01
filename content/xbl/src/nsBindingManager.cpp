@@ -640,7 +640,8 @@ nsBindingManager::AddLayeredBinding(nsIContent* aContent, nsIURI* aURL)
 NS_IMETHODIMP
 nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
 {
-  nsXBLBinding *binding = nsBindingManager::GetBinding(aContent);
+  // Hold a ref to the binding so it won't die when we remove it from our table
+  nsRefPtr<nsXBLBinding> binding = nsBindingManager::GetBinding(aContent);
   
   if (!binding) {
     return NS_OK;
