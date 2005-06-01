@@ -126,12 +126,7 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
                     rv = NS_NewURI(aURI, lpTemp);
 
                     // free the string that GetURL alloc'd
-                    IMalloc* pMalloc;
-                    result = SHGetMalloc(&pMalloc);
-                    if (SUCCEEDED(result)) {
-                        pMalloc->Free(lpTemp);
-                        pMalloc->Release();
-                    }
+                    CoTaskMemFree(lpTemp);
                 }
             }
             urlFile->Release();
