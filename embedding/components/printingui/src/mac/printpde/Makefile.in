@@ -47,6 +47,21 @@ else
 BUILDSTYLE	= Deployment
 endif
 
+ifeq (,$(findstring pbxbuild,$(XCODEBUILD)))
+    # pbbuild or xcodebuild indicates Xcode; the Xcode project contains
+    # native targets needed for proper SDK builds.
+    PROJECT=PrintPDE.xcode
+    PROJECT_ARG=-project $(PROJECT)
+    PBBUILD_ARG=$(PBBUILD_SETTINGS)
+else
+    # pbxbuild indicates Project Builder; this will only be used where Xcode
+    # is unavailable (pre-10.3).  SDK build unsupported, but with such an
+    # early build host, that should be OK.
+    PROJECT=PrintPDE.pbproj
+    PROJECT_ARG=
+    PBBUILD_ARG=
+endif
+
 MODULE       = printpde
 PACKAGE_FILE = printpde.pkg
 
@@ -57,7 +72,7 @@ unexport CC CXX
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 export::
-	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/PrintPDE.xcode .
+	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/$(PROJECT) .
 	ln -fs $(srcdir)/src
 	ln -fs $(srcdir)/res
 	ln -fs $(srcdir)/public
@@ -65,7 +80,7 @@ export::
 endif
 
 libs::
-	$(PBBUILD) -project PrintPDE.xcode -target PrintPDE -buildstyle $(BUILDSTYLE) install $(PBBUILD_SETTINGS)
+	$(PBBUILD) $(PROJECT_ARG) -target PrintPDE -buildstyle $(BUILDSTYLE) install $(PBBUILD_ARG)
 	mkdir -p $(DIST)/package
 	cp -R build/UninstalledProducts/PrintPDE.plugin $(DIST)/package/
 
