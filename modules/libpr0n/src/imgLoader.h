@@ -106,7 +106,7 @@ private:
  * validate checker
  */
 
-#include "nsSupportsArray.h"
+#include "nsCOMArray.h"
 
 class imgCacheValidator : public nsIStreamListener
 {
@@ -125,7 +125,7 @@ private:
   nsCOMPtr<nsIStreamListener> mDestListener;
 
   imgRequest *mRequest;
-  nsSupportsArray mProxies;
+  nsCOMArray<imgIRequest> mProxies;
 
   void *mContext;
 };
