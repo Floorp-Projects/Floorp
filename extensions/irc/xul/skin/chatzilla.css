@@ -58,6 +58,11 @@ window {
     margin: 5px;
 }
 
+#input-widgets {
+    border: none;
+    -moz-binding: none;
+}
+
 #input-widget,
 #input-widget-multiline {
     border: thin silver inset;
@@ -116,31 +121,6 @@ window {
 
 .output-container {
     border: thin silver inset;
-}
-
-flatbutton {
-    margin: 2px;
-    border: 1px solid transparent;
-}
-
-flatbutton:hover {
-    border-top: 1px solid ThreeDHighlight;
-    border-right: 1px solid ThreeDShadow;
-    border-bottom: 1px solid ThreeDShadow;
-    border-left: 1px solid ThreeDHighlight;
-}
-
-flatbutton:active, flatbutton[open="true"] {
-    border-top: 1px solid ThreeDShadow;
-    border-right: 1px solid ThreeDHighlight;
-    border-bottom: 1px solid ThreeDHighlight;
-    border-left: 1px solid ThreeDShadow;
-}
-
-flatbutton > .flatbutton-dropmarker {
-    background: url(images/arrow-down.png);
-    width: 11px;
-    height: 11px;
 }
 
 treecol { 

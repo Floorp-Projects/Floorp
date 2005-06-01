@@ -388,7 +388,9 @@ function initMenus()
     var netAwayIsDef = "(cx.network.prefs['away'] == '" + MSG_AWAY_DEFAULT +
                        "') and " + netAway;
 
-    client.menuSpecs["context:nickname"] = {
+    client.menuSpecs["mainmenu:nickname"] = {
+        label: "",
+        domID: "server-nick",
         getContext: getDefaultContext,
         items:
         [

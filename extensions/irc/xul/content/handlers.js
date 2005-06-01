@@ -317,33 +317,6 @@ function onTooltip(event)
     return false;
 }
 
-var _nicknamePopupHandlersInstalled = false;
-function onNicknamePopup(e)
-{
-    function onNicknamePopupOpening(e)
-    {
-        button.setAttribute("open", "true");
-    };
-
-    function onNicknamePopupClosing(e)
-    {
-        button.removeAttribute("open");
-    };
-
-    var button = document.getElementById("nickname-button");
-    var popup = document.getElementById("context:nickname");
-    if (!_nicknamePopupHandlersInstalled)
-    {
-        popup.addEventListener("popupshowing", onNicknamePopupOpening, false);
-        popup.addEventListener("popuphiding", onNicknamePopupClosing, false);
-        _nicknamePopupHandlersInstalled = true;
-    }
-    if (button.getAttribute("open") == "true")
-        popup.hidePopup();
-    else
-        popup.showPopup(button, -1, -1, "popup", "bottomleft", "topleft");
-}
-
 function onInputKeyPress (e)
 {
     if (client.prefs["outgoing.colorCodes"])

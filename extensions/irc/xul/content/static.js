@@ -2124,7 +2124,7 @@ function updateTitle (obj)
     }
 
     document.title = tstring;
-    client.statusBar["server-nick"].setAttribute("value", nick);
+    client.statusBar["server-nick"].setAttribute("label", nick);
 }
 
 function multilineInputMode (state)
