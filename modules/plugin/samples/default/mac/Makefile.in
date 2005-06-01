@@ -60,6 +60,8 @@ PACKAGE_FILE = npnul.pkg
 
 include $(topsrcdir)/config/rules.mk
 
+unexport CC CXX
+
 # decodes resource files from AppleSingle to Resource Manager format.
 ASDECODE = $(DIST)/bin/asdecode
 RESOURCE_FILES = _NullPlugin.rsrc
@@ -68,11 +70,12 @@ RESOURCE_FILES = _NullPlugin.rsrc
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 export::
-	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/DefaultPlugin.pbproj .
+	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/DefaultPlugin.xcode .
 	ln -fs $(srcdir)/English.lproj
 	ln -fs $(srcdir)/DefaultPluginPrefix.h
 	ln -fs $(srcdir)/NullPlugin.cpp
 	ln -fs $(srcdir)/npmac.cpp
+	ln -fs $(srcdir)/Info-*.plist .
 endif
 
 all:: build-plugin
@@ -86,7 +89,8 @@ install-plugin: build-plugin
 resources: $(RESOURCE_FILES)
 
 build-plugin: resources
-	$(PBBUILD) -target $(TARGET) -buildstyle $(BUILDSTYLE)
+	$(PBBUILD) -project DefaultPlugin.xcode -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_SETTINGS)
+	echo -n NSPLMOSS > "build/DefaultPlugin.build/Default Plugin.build/PkgInfo"
 
 _%.rsrc: %.rsrc
 	$(ASDECODE) $< $@

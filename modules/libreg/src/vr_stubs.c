@@ -508,6 +508,7 @@ extern int nr_RenameFile(char *from, char *to)
 
 
 #ifdef STANDALONE_REGISTRY
+#ifndef XP_MACOSX
 char *strdup(const char *source)
 {
         char    *newAllocation;
@@ -522,7 +523,6 @@ char *strdup(const char *source)
         return newAllocation;
 }
 
-#ifndef XP_MACOSX
 int strcasecmp(const char *str1, const char *str2)
 {
     char    currentChar1, currentChar2;

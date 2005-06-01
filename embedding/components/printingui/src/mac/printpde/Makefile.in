@@ -52,17 +52,20 @@ PACKAGE_FILE = printpde.pkg
 
 include $(topsrcdir)/config/rules.mk
 
+unexport CC CXX
+
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 export::
-	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/PrintPDE.pbproj .
+	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/PrintPDE.xcode .
 	ln -fs $(srcdir)/src
 	ln -fs $(srcdir)/res
 	ln -fs $(srcdir)/public
+	ln -fs $(srcdir)/Info-*.plist .
 endif
 
 libs::
-	$(PBBUILD) -buildstyle $(BUILDSTYLE) install
+	$(PBBUILD) -project PrintPDE.xcode -target PrintPDE -buildstyle $(BUILDSTYLE) install $(PBBUILD_SETTINGS)
 	mkdir -p $(DIST)/package
 	cp -R build/UninstalledProducts/PrintPDE.plugin $(DIST)/package/
 

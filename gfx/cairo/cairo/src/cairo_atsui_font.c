@@ -37,7 +37,9 @@
 #include <math.h>
 #include "cairo-atsui.h"
 #include "cairoint.h"
+#if 0
 #include <iconv.h>
+#endif
 
 // FixedToFloat/FloatToFixed are 10.3 SDK items - include definitions
 // here so we can use older SDKs

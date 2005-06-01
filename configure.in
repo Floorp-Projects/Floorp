@@ -32,6 +32,8 @@ dnl                 xpctools support
 dnl               Benjamin Smedberg <bsmedberg@covad.net>
 dnl               Howard Chu <hyc@symas.com>
 dnl                 MSYS support
+dnl               Mark Mentovai <mark@moxienet.com>:
+dnl                 Mac OS X 10.4 support
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl ========================================================
@@ -439,39 +441,6 @@ AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
 
 dnl ========================================================
-dnl = Mac OS X SDK support
-dnl ========================================================
-MACOS_SDK_DIR=
-MOZ_ARG_WITH_STRING(macos-sdk,
-[  --with-macos-sdk=dir   Location of platform SDK to use (Mac OS X only)],
-    MACOS_SDK_DIR=$withval)
-
-AC_SUBST(MACOS_SDK_DIR)
-
-if test "$MACOS_SDK_DIR"; then
-  export NEXT_ROOT=$MACOS_SDK_DIR
-  changequote(,)
-  GCC_VERSION=`echo $CXX_VERSION | perl -pe "s/^.*gcc version ([^ ]*).*/\1/"`
-  changequote([,])
-  CFLAGS="-I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION} -I${MACOS_SDK_DIR}/usr/include $CFLAGS"
-  CXXFLAGS="-I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION} -I${MACOS_SDK_DIR}/usr/include $CXXFLAGS"
-  LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/darwin/${GCC_VERSION} -L${MACOS_SDK_DIR}/usr/lib $LIBS"
-fi
-
-dnl ========================================================
-dnl Java SDK support
-dnl ========================================================
-JAVA_INCLUDE_PATH=
-MOZ_ARG_WITH_STRING(java-include-path,
-[  --with-java-include-path=dir   Location of Java SDK headers],
-    JAVA_INCLUDE_PATH=$withval)
-
-JAVA_BIN_PATH=
-MOZ_ARG_WITH_STRING(java-bin-path,
-[  --with-java-bin-path=dir   Location of Java binaries (java, javac, jar)],
-    JAVA_BIN_PATH=$withval)
-
-dnl ========================================================
 dnl Checks for programs.
 dnl ========================================================
 AC_PROG_CPP
@@ -515,11 +484,100 @@ AC_PATH_PROG(XARGS, xargs)
 if test -z "$XARGS" || test "$XARGS" = ":"; then
     AC_MSG_ERROR([xargs not found in \$PATH .])
 fi
+
+dnl ========================================================
+dnl = Mac OS X toolchain support
+dnl ========================================================
 case "$target_os" in
 darwin*)
+    dnl Current known valid versions for GCC_VERSION are 2.95.2 3.1 3.3 4.0.
+    dnl 4.0 identifies itself as 4.0.x, so strip the decidecimal for
+    dnl the environment and includedir purposes (when using an SDK, below),
+    dnl but remember the full version number for the libdir (SDK).
+    changequote(,)
+    GCC_VERSION_FULL=`echo $CXX_VERSION | $PERL -pe 's/^.*gcc version ([^ ]*).*/$1/'`
+    GCC_VERSION=`echo $GCC_VERSION_FULL | $PERL -pe '(split(/\./))[0]>=4&&s/(^\d*\.\d*).*/$1/;'`
+    changequote([,])
+    if test "$GCC_VERSION_FULL" = "4.0.0" ; then
+        dnl Bug 280479, but this keeps popping up in bug 292530 too because
+        dnl 4.0.0/4061 is the default compiler in Tiger.
+        changequote(,)
+        GCC_BUILD=`echo $CXX_VERSION | $PERL -pe 's/^.*build ([^ )]*).*/$1/'`
+        changequote([,])
+        if test "$GCC_BUILD" = "4061" ; then
+            AC_MSG_WARN([You are attempting to use gcc 4.0.0 build 4061.
+This compiler is unable to build Mozilla.  gcc 3.3 is recommended.
+Run \"sudo gcc_select 3.3\" to switch the system's default compiler.])
+        fi
+    fi
+
+    dnl xcodebuild needs GCC_VERSION defined in the environment, since it
+    dnl doesn't respect the CC/CXX setting.  With GCC_VERSION set, it will use
+    dnl /usr/bin/g(cc|++)-$GCC_VERSION.
     AC_PATH_PROGS(PBBUILD, pbbuild xcodebuild pbxbuild)
+
+    dnl sdp was formerly in /Developer/Tools.  As of Mac OS X 10.4 (Darwin 8),
+    dnl it has moved into /usr/bin.
+    AC_PATH_PROG(SDP, sdp, :, [$PATH:/usr/bin:/Developer/Tools])
     ;;
 esac
+
+AC_SUBST(GCC_VERSION)
+
+dnl ========================================================
+dnl = Mac OS X SDK support
+dnl ========================================================
+MACOS_SDK_DIR=
+MOZ_ARG_WITH_STRING(macos-sdk,
+[  --with-macos-sdk=dir   Location of platform SDK to use (Mac OS X only)],
+    MACOS_SDK_DIR=$withval)
+
+AC_SUBST(MACOS_SDK_DIR)
+
+if test "$MACOS_SDK_DIR"; then
+  if test ! -d "$MACOS_SDK_DIR"; then
+    AC_MSG_ERROR([SDK not found.  When using --with-macos-sdk, you must
+specify a valid SDK.  SDKs are installed when the optional cross-development
+tools are selected during the Xcode/Developer Tools installation.])
+  fi
+
+  export NEXT_ROOT=$MACOS_SDK_DIR
+
+  dnl Sync this block with the NEXT_ROOT block in nsprpub/configure.in
+  dnl
+  dnl Changes to the cross environment here need to be accounted for in
+  dnl the libIDL checks (below) and xpidl build.
+
+  GCC_VERSION_MAJOR=`echo $GCC_VERSION_FULL | $PERL -pe 's/(^\d*).*/$1/;'`
+  if test "$GCC_VERSION_MAJOR" -lt "4" ; then
+    TARGET_ARCH_LIB="darwin"
+    TARGET_ARCH_INCLUDE="ppc-darwin"
+    SDK_C_INCLUDE="-isystem ${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION} -isystem ${MACOS_SDK_DIR}/usr/include -F${MACOS_SDK_DIR}/System/Library/Frameworks"
+  else
+    dnl If gcc >= 4, use powerpc-apple-darwin#, where # is the version of
+    dnl the Darwin release corresponding to the target Mac OS X release.
+    dnl For OS X >= 10.1.1, take the minor version number and add 4 to get
+    dnl the Darwin major version number.  If it can't be determined, use the
+    dnl current Darwin major version number and hope that there's a symlink.
+    TARGET_ARCH_LIB=powerpc-apple-darwin`echo $MACOS_SDK_DIR | $PERL -pe 's/MacOSX10\.([^\.]*)//;if ($1) {$_=$1+4;} else {$_="'${target_os}'";s/(\d+)//;$_=$1;}'`
+    TARGET_ARCH_INCLUDE=$TARGET_ARCH_LIB
+    SDK_C_INCLUDE="-isystem ${MACOS_SDK_DIR}/usr/lib/gcc/${TARGET_ARCH_LIB}/${GCC_VERSION_FULL}/include -isystem ${MACOS_SDK_DIR}/usr/include -F${MACOS_SDK_DIR}/System/Library/Frameworks"
+  fi
+
+  if test -d "${MACOS_SDK_DIR}/Library/Frameworks" ; then
+    SDK_C_INCLUDE="$SDK_C_INCLUDE -F${MACOS_SDK_DIR}/Library/Frameworks"
+  fi
+
+  SDK_CXX_INCLUDE="-I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++ -I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++/${TARGET_ARCH_INCLUDE} -I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++/backward"
+  CFLAGS="$CFLAGS -nostdinc ${SDK_C_INCLUDE}"
+  CXXFLAGS="$CXXFLAGS -nostdinc -nostdinc++ ${SDK_CXX_INCLUDE} ${SDK_C_INCLUDE}"
+
+  dnl CPP/CXXCPP needs to be set for AC_CHECK_HEADER.
+  CPP="$CPP -nostdinc ${SDK_C_INCLUDE}"
+  CXXCPP="$CXXCPP -nostdinc -nostdinc++ ${SDK_CXX_INCLUDE} ${SDK_C_INCLUDE}"
+
+  LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/${TARGET_ARCH_LIB} -L${MACOS_SDK_DIR}/usr/lib/gcc/${TARGET_ARCH_LIB}/${GCC_VERSION_FULL} -L${MACOS_SDK_DIR}/usr/lib $LIBS"
+fi
 
 dnl Be sure the make we use is GNU make.
 dnl on win32, gmake.exe is the generally the wrong version
@@ -2384,7 +2442,7 @@ dnl ========================================================
 MOZ_ARG_ENABLE_STRING(macos-target,
                       [  --enable-macos-target=VER (default=10.1)
                           Set the minimum MacOS version needed at runtime],
-                      [MACOS_DEPLOYMENT_TARGET_STR=$enableval],
+                      [MACOS_DEPLOYMENT_TARGET_STR=$enableval _MACOS_DT_SET=1],
                       [MACOS_DEPLOYMENT_TARGET_STR=10.1])
 
 case "$target" in
@@ -2405,6 +2463,11 @@ case "$target" in
 
     MACOS_DEPLOYMENT_TARGET=`printf "%02d%02d%02d" "$MACOS_VERSION_MAJOR" "$MACOS_VERSION_MINOR" "$MACOS_VERSION_MICRO"`
     AC_DEFINE_UNQUOTED(MACOS_DEPLOYMENT_TARGET, $MACOS_DEPLOYMENT_TARGET)
+
+    if test -n "$_MACOS_DT_SET" ; then
+        dnl ld uses this.
+        export MACOSX_DEPLOYMENT_TARGET="$MACOS_VERSION_MAJOR.$MACOS_VERSION_MINOR"
+    fi
     ;;
 *)
     MACOS_DEPLOYMENT_TARGET=
@@ -2412,6 +2475,7 @@ case "$target" in
 esac
 
 AC_SUBST(MACOS_DEPLOYMENT_TARGET)
+AC_SUBST(MACOSX_DEPLOYMENT_TARGET)
 
 dnl ========================================================
 dnl See if mmap sees writes
@@ -3297,6 +3361,19 @@ MOZ_ARG_ENABLE_BOOL(canvas,
 if test "$MOZ_ENABLE_CANVAS"; then
     AC_DEFINE(MOZ_ENABLE_CANVAS)
 fi
+
+dnl ========================================================
+dnl Java SDK support
+dnl ========================================================
+JAVA_INCLUDE_PATH=
+MOZ_ARG_WITH_STRING(java-include-path,
+[  --with-java-include-path=dir   Location of Java SDK headers],
+    JAVA_INCLUDE_PATH=$withval)
+
+JAVA_BIN_PATH=
+MOZ_ARG_WITH_STRING(java-bin-path,
+[  --with-java-bin-path=dir   Location of Java binaries (java, javac, jar)],
+    JAVA_BIN_PATH=$withval)
 
 dnl ========================================================
 dnl = 
@@ -4371,9 +4448,6 @@ if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth
         [  --with-gssapi=PFX	   Location of GSSAPI libraries],
         GSSAPI_DIR=$withval)
 
-    dnl
-    dnl If not specified, assume GSSAPI lives under /usr
-    dnl
     if test -z "$GSSAPI_DIR"; then
         dnl
         dnl RedHat Linux 7, 8, and 9 install GSSAPI headers and libraries under
@@ -4384,26 +4458,35 @@ if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth
         dnl
         if test -d "/usr/kerberos/include"; then
             GSSAPI_DIR="/usr/kerberos"
-        else
-            GSSAPI_DIR="/usr"
         fi
+    fi
+
+    dnl
+    dnl If not specified, assume GSSAPI is in the system directories
+    dnl
+    if test -n "$GSSAPI_DIR"; then
+        _GSSAPI_INC="-I$GSSAPI_DIR/include"
+        _GSSAPI_LIB="-L$GSSAPI_DIR/lib"
+    else
+        _GSSAPI_INC=
+        _GSSAPI_LIB=
     fi
 
     _SAVE_CPPFLAGS="$CPPFLAGS"
     _SAVE_LDFLAGS="$LDFLAGS"
     _SAVE_LIBS="$LIBS"
 
-    CPPFLAGS="$CPPFLAGS -I$GSSAPI_DIR/include"
-    LDFLAGS="$LDFLAGS -L$GSSAPI_DIR/lib"
+    CPPFLAGS="$CPPFLAGS $_GSSAPI_INC"
+    LDFLAGS="$LDFLAGS $_GSSAPI_LIB"
 
     dnl
     dnl Try to set GSSAPI_INCLUDES ...
     dnl
     AC_CHECK_HEADERS(gssapi.h,
-        [GSSAPI_INCLUDES="-I$GSSAPI_DIR/include"])
+        [GSSAPI_INCLUDES="$_GSSAPI_INC"])
     if test -z "$GSSAPI_INCLUDES" ; then
         AC_CHECK_HEADERS(gssapi/gssapi.h,
-            [GSSAPI_INCLUDES="-I$GSSAPI_DIR/include"])
+            [GSSAPI_INCLUDES="$_GSSAPI_INC"])
     fi
     CPPFLAGS="$_SAVE_CPPFLAGS $GSSAPI_INCLUDES"
 
@@ -4411,7 +4494,7 @@ if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth
     dnl Try to set GSSAPI_LIBS ...
     dnl
     AC_CHECK_LIB(gss, gss_init_sec_context,
-        [GSSAPI_LIBS="-L$GSSAPI_DIR/lib -lgss"],)
+        [GSSAPI_LIBS="$_GSSAPI_LIB -lgss"],)
 
     dnl
     dnl If libgss was not found, look for the MIT Kerberos V5 GSSAPI
@@ -4421,7 +4504,7 @@ if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth
         dnl
         dnl We only need to link to libgssapi_krb5.so
         dnl
-        _GSS_LIBS="-L$GSSAPI_DIR/lib -lgssapi_krb5"
+        _GSS_LIBS="$_GSSAPI_LIB -lgssapi_krb5"
         LIBS="$LIBS $_GSS_LIBS"
         AC_CHECK_FUNC(gss_init_sec_context, 
             [GSSAPI_LIBS="$_GSS_LIBS"],)
@@ -4433,10 +4516,14 @@ if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth
     dnl Kerberos V5 libraries.
     dnl
     if test -z "$GSSAPI_LIBS" ; then
-        if test -x "$GSSAPI_DIR/bin/krb5-config" ; then
-            krb5cfg="$GSSAPI_DIR/bin/krb5-config"
-            TMP_GSSAPI_LIBS=`$krb5cfg --libs gssapi 2>/dev/null`
-            TMP_GSSAPI_INCLUDES=`$krb5cfg --cflags gssapi 2>/dev/null`
+        if test -n "$GSSAPI_DIR" ; then
+            AC_PATH_PROG(KRB5CONFIG, krb5-config, :, [$GSSAPI_DIR/bin:$PATH:/usr/bin])
+        else
+            AC_PATH_PROG(KRB5CONFIG, krb5-config, :, [$PATH:/usr/bin])
+        fi
+        if test -n "$KRB5CONFIG" -a -x "$KRB5CONFIG" ; then
+            TMP_GSSAPI_LIBS=`$KRB5CONFIG --libs gssapi 2>/dev/null`
+            TMP_GSSAPI_INCLUDES=`$KRB5CONFIG --cflags gssapi 2>/dev/null`
 
             LIBS="$LIBS $TMP_GSSAPI_LIBS"
             AC_CHECK_LIB(gssapi, gss_init_sec_context,
@@ -5701,7 +5788,13 @@ if test "$SKIP_IDL_CHECK" = "no"
 then
     _LIBIDL_FOUND=
     if test "$MACOS_SDK_DIR"; then 
+      dnl xpidl, and therefore libIDL, is only needed on the build host.
+      dnl Don't build it against the SDK, as that causes problems.
+      _MACSAVE_CFLAGS="$CFLAGS"
+      _MACSAVE_LIBS="$LIBS"
+      _MACSAVE_NEXT_ROOT="$NEXT_ROOT"
       changequote(,)
+      CFLAGS=`echo $CFLAGS|sed -E -e "s%((-I|-isystem )${MACOS_SDK_DIR}/usr/(include|lib/gcc)[^ ]*)|-F${MACOS_SDK_DIR}(/System)?/Library/Frameworks[^ ]*|-nostdinc[^ ]*%%g"`
       LIBS=`echo $LIBS|sed -e "s?-L${MACOS_SDK_DIR}/usr/lib[^ ]*??g"`
       changequote([,])
       unset NEXT_ROOT
@@ -5720,6 +5813,7 @@ then
     if test -z "$_LIBIDL_FOUND" && test -z "$CROSS_COMPILE"; then
         AC_PATH_PROGS(ORBIT_CONFIG, $ORBIT_CONFIG orbit-config)
         if test -n "$ORBIT_CONFIG"; then
+            AC_MSG_CHECKING([for ORBit libIDL usability])
         	_ORBIT_CFLAGS=`${ORBIT_CONFIG} client --cflags`
     	    _ORBIT_LIBS=`${ORBIT_CONFIG} client --libs`
             _ORBIT_INC_PATH=`${PERL} -e '{ for $f (@ARGV) { print "$f " if ($f =~ m/^-I/); } }' -- ${_ORBIT_CFLAGS}`
@@ -5727,7 +5821,31 @@ then
             LIBIDL_CFLAGS="$_ORBIT_INC_PATH"
             LIBIDL_LIBS="$_ORBIT_LIB_PATH -lIDL -lglib"
             LIBIDL_CONFIG=
-            _LIBIDL_FOUND=1
+            _SAVE_CFLAGS="$CFLAGS"
+            _SAVE_LIBS="$LIBS"
+            CFLAGS="$LIBIDL_CFLAGS $CFLAGS"
+            LIBS="$LIBIDL_LIBS $LIBS"
+            AC_TRY_RUN([
+#include <stdlib.h>
+#include <libIDL/IDL.h>
+int main() {
+  char *s;
+  s=strdup(IDL_get_libver_string());
+  if(s==NULL) {
+    exit(1);
+  }
+  exit(0);
+}
+            ], [_LIBIDL_FOUND=1
+                result="yes"],
+               [LIBIDL_CFLAGS=
+                LIBIDL_LIBS=
+                result="no"],
+               [_LIBIDL_FOUND=1
+                result="maybe"] )
+            AC_MSG_RESULT($result)
+            CFLAGS="$_SAVE_CFLAGS"
+            LIBS="$_SAVE_LIBS"
         fi
     fi
     if test -z "$_LIBIDL_FOUND"; then
@@ -5735,8 +5853,9 @@ then
         libIDL $LIBIDL_VERSION or higher is required.])
     fi
     if test "$MACOS_SDK_DIR"; then
-      LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/darwin/${GCC_VERSION} -L${MACOS_SDK_DIR}/usr/lib $LIBS"
-      export NEXT_ROOT=$MACOS_SDK_DIR
+      CFLAGS="$_MACSAVE_CFLAGS"
+      LIBS="$_MACSAVE_LIBS"
+      export NEXT_ROOT="$_MACSAVE_NEXT_ROOT"
     fi
 fi
 
