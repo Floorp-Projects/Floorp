@@ -127,7 +127,6 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
             mTotalRequests = 0;
             mFinishedRequests = 0;
             mUseRealProgressFlag = PR_FALSE;
-            mIsLoadingDocument = PR_TRUE;
         }
         if (aStateFlags & STATE_IS_REQUEST) {
             ++mTotalRequests;
@@ -135,21 +134,18 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
             // if the total requests exceeds 1, then we'll base our progress
             // notifications on the percentage of completed requests.
             // otherwise, progress for the single request will be reported.
-            // But if we're not loading a document, we must be sure to deliver
-            // OnStateChange for STATE_STOP correctly: use the real progress in
-            // such cases
-            mUseRealProgressFlag = (mTotalRequests == 1) || !mIsLoadingDocument;
+            mUseRealProgressFlag = (mTotalRequests == 1);
         }
     }
     else if (aStateFlags & STATE_STOP) {
-        if (aStateFlags & STATE_IS_NETWORK) {
-            mIsLoadingDocument = PR_FALSE;
-        }
         if (aStateFlags & STATE_IS_REQUEST) {
             ++mFinishedRequests;
+            // Note: Do not return from here. This is necessary so that the
+            // STATE_STOP can still be relayed to the listener if needed
+            // (bug 209330)
             if (!mUseRealProgressFlag && mTotalRequests)
-                return OnProgressChange(nsnull, nsnull, 0, 0,
-                                        mFinishedRequests, mTotalRequests);
+                OnProgressChange(nsnull, nsnull, 0, 0,
+                                 mFinishedRequests, mTotalRequests);
         }
     }
     else if (aStateFlags & STATE_TRANSFERRING) {

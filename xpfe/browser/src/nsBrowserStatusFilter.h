@@ -87,9 +87,6 @@ private:
     // indicates whether a timeout is pending
     PRPackedBool                     mDelayedStatus;
     PRPackedBool                     mDelayedProgress;
-
-    // indicates whether a document is currently loading
-    PRPackedBool                     mIsLoadingDocument;
 };
 
 #define NS_BROWSERSTATUSFILTER_CLASSNAME \
