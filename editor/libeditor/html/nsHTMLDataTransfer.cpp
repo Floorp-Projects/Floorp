@@ -219,7 +219,7 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
     nsCOMPtr<nsIDOMDocumentFragment> docfrag;
     {
       res = nsrange->CreateContextualFragment(aInputString, getter_AddRefs(docfrag));
-    NS_ENSURE_SUCCESS(res, res);
+      NS_ENSURE_SUCCESS(res, res);
     }
     // put the fragment into the document
     nsCOMPtr<nsIDOMNode> parent, junk;
@@ -386,6 +386,8 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
                                  streamStartParent, streamStartOffset,
                                  streamEndParent, streamEndOffset);
   NS_ENSURE_SUCCESS(res, res);
+
+  NS_ASSERTION(nodeList.Count() > 0, "We should have at least one node here.");
 
   // walk list of nodes; perform surgery on nodes (relativize) with _mozattr
   res = RelativizeURIInFragmentList(nodeList, aFlavor, aSourceDoc, targetNode);
