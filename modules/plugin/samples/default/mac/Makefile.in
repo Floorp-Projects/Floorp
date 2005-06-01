@@ -54,7 +54,7 @@ BUILDSTYLE	= Deployment
 endif
 endif
 
-ifeq (,$(findstring pbxbuild,$(XCODEBUILD)))
+ifeq (,$(findstring pbxbuild,$(PBBUILD)))
     # pbbuild or xcodebuild indicates Xcode; the Xcode project contains
     # native targets needed for proper SDK builds.
     PROJECT=DefaultPlugin.xcode
