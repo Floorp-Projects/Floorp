@@ -119,6 +119,9 @@ public :
     nsresult setupDefaultProtocolKey(const char * aDefaultAppRegKey, const char * aProtocol, const char * aProtocolEntryValue, const char * aCmdLineParam); 
     nsresult setProtocolHandler(const char * aDefaultAppRegKey, const char * protocolName); // installs protocol handler on Software\Classes\<protocolName>
 
+    nsresult setupFileExtension(const char * aDefaultAppRegKey, const char * aExtension);
+    nsresult restoreFileExtension(const char * aDefaultAppRegKey, const char * aExtension);
+
     nsresult registerNewsApp(PRBool aForceRegistration); // aForceRegistration set to TRUE if we want to force the keys to be set again
     nsresult registerMailApp(PRBool aForceRegistration);
 
