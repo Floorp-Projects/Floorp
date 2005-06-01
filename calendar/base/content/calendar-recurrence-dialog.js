@@ -151,7 +151,7 @@ function saveDialog()
     case 0:
         recRule.type = "DAILY";
         var ndays = Number(getElementValue("daily-days"));
-        if (ndays == null)
+        if (ndays == "")
             ndays = 1;
         recRule.interval = ndays;
         break;
@@ -175,7 +175,7 @@ function saveDialog()
     case 3:
         recRule.type = "YEARLY";
         var nyears = Number(getElementValue("yearly-years"));
-        if (nyears == null)
+        if (nyears == "")
             nyears = 1;
         recRule.interval = nyears;
         break;
