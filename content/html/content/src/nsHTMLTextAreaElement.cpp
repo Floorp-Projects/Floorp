@@ -450,7 +450,11 @@ nsHTMLTextAreaElement::GetDefaultValue(nsAString& aDefaultValue)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetDefaultValue(const nsAString& aDefaultValue)
 {
-  return ReplaceContentsWithText(aDefaultValue, PR_TRUE);
+  nsresult rv = ReplaceContentsWithText(aDefaultValue, PR_TRUE);
+  if (NS_SUCCEEDED(rv) && !mValueChanged) {
+    Reset();
+  }
+  return rv;
 }
 
 nsresult
@@ -624,7 +628,14 @@ nsHTMLTextAreaElement::GetInnerHTML(nsAString& aInnerHTML)
 nsresult
 nsHTMLTextAreaElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
-  return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
+  // XXXbz we can't use the normal SetInnerHTML because the parser
+  // thinks we're a leaf, what with the whole CollectSkippedContent
+  // mess.
+  nsresult rv = ReplaceContentsWithText(aInnerHTML, PR_TRUE);
+  if (NS_SUCCEEDED(rv) && !mValueChanged) {
+    Reset();
+  }
+  return rv;
 }
 
 // Controllers Methods
