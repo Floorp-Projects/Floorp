@@ -1299,7 +1299,8 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength,
         if (NS_FAILED(rv)) return rv;
       }
 
-      ProcessContentsManifest(baseURI, aManifest, PR_TRUE, strcmp(chromeType, "skin") == 0);
+      ProcessContentsManifest(baseURI, aManifest, baseURI, PR_TRUE,
+                              strcmp(chromeType, "skin") == 0);
     }
     
     while (aBuffer < bufferEnd && (*aBuffer == '\0' || *aBuffer == ' ' || *aBuffer == '\r' || *aBuffer == '\n'))
@@ -1459,12 +1460,13 @@ static const PRInt32 kNSPR_TRUNCATE_FLAGS = PR_WRONLY | PR_CREATE_FILE | PR_TRUN
 
 NS_IMETHODIMP
 nsChromeRegistry::ProcessContentsManifest(nsIURI* aOldManifest, nsIURI* aFile,
-                                          PRBool aAppend, PRBool aSkinOnly)
+                                          nsIURI* aBaseURI, PRBool aAppend,
+                                          PRBool aSkinOnly)
 {
   nsresult rv;
 
   nsCAutoString relativePath;
-  GetRelativePath(aFile, aOldManifest, relativePath);
+  GetRelativePath(aFile, aBaseURI, relativePath);
 
   nsCAutoString spec;
   aOldManifest->GetSpec(spec);

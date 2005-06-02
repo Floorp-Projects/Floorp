@@ -1417,7 +1417,7 @@ Installer.prototype = {
       }
       catch (e) {
         zipReader.close();
-        LOG("installTheme: failed to open Theme jar file: " + jarFile.path);
+        LOG("extractThemeFiles: failed to open Theme jar file: " + jarFile.path);
         throw e; // let the safe-op clean up
       }
 
@@ -1456,22 +1456,30 @@ Installer.prototype = {
         zipReader.close();
       }
       else { // old theme structure requires only an install.rdf
+        try {
+          var entry = zipReader.getEntry(FILE_CONTENTS_MANIFEST);
+          var contentsManifestFile = installLocation.getItemFile(id, FILE_CONTENTS_MANIFEST);
+          zipReader.extract(FILE_CONTENTS_MANIFEST, contentsManifestFile);
+        }
+        catch (e) {
+          zipReader.close();
+          LOG("extractThemeFiles: failed to extract contents.rdf: " + target.path);
+          throw e; // let the safe-op clean up
+        }
         zipReader.close();
         var chromeDir = installLocation.getItemFile(id, DIR_CHROME);
         try {
           jarFile.copyTo(chromeDir, jarFile.fileName);
         }
         catch (e) {
-          LOG("installTheme: failed to copy theme JAR file to: " + chromeDir.path);
+          LOG("extractThemeFiles: failed to copy theme JAR file to: " + chromeDir.path);
           throw e; // let the safe-op clean up
         }
 
         if (!installer.metadataDS && installer._type == nsIUpdateItem.TYPE_THEME) {
-          var contentsManifestFile = extractRDFFileToTempDir(jarFile, FILE_CONTENTS_MANIFEST, false);
           if (contentsManifestFile && contentsManifestFile.exists()) {
             var contentsManifest = gRDF.GetDataSourceBlocking(getURLSpecFromFile(contentsManifestFile));
             showOldThemeError(contentsManifest);
-            contentsManifestFile.remove(false);
           }
           LOG("Theme JAR file: " + jarFile.leafName + " contains an Old-Style " + 
               "Theme that is not compatible with this version of the software.");
@@ -1506,16 +1514,18 @@ Installer.prototype = {
       var chromeDir = this._installLocation.getItemFile(this._id, DIR_CHROME);
       // We're relying on the fact that there is only one JAR file
       // in the "chrome" directory. This is a hack, but it works.
-
       var entries = chromeDir.directoryEntries.QueryInterface(nsIDirectoryEnumerator);
       var jarFile = entries.nextFile;
       if (jarFile) {
         var jarFileURI = getURIFromFile(jarFile);
         var contentsURI = newURI("jar:" + jarFileURI.spec + "!/");
+        var contentsFile = this._installLocation.getItemFile(this._id, FILE_CONTENTS_MANIFEST);
+        var contentsFileURI = getURIFromFile(contentsFile.parent);
 
-        cr.processContentsManifest(contentsURI, manifestURI, false, true);
+        cr.processContentsManifest(contentsFileURI, manifestURI, contentsURI, false, true);
       }
       entries.close();
+      contentsFile.remove(false);
     }
     catch (e) {
       // Failed to register chrome, for any number of reasons - non-existent 
@@ -1612,7 +1622,7 @@ Installer.prototype = {
     var fileURI = newURI(fileURLSpec);
     var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                         .getService(Components.interfaces.nsIToolkitChromeRegistry);
-    cr.processContentsManifest(fileURI, manifest, true, false);
+    cr.processContentsManifest(fileURI, manifest, fileURI, true, false);
   }  
 };
 
@@ -2796,7 +2806,7 @@ ExtensionManager.prototype = {
             // Use the Chrome Registry API to install the theme there
             var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                               .getService(Components.interfaces.nsIToolkitChromeRegistry);
-            cr.processContentsManifest(contentsURI, manifestURI, false, true);
+            cr.processContentsManifest(contentsURI, manifestURI, contentsURI, false, true);
           }
           entries.close();
         }

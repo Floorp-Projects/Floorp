@@ -40,7 +40,7 @@
 
 interface nsIURI;
 
-[scriptable, uuid(b1fe3107-fac6-432a-be34-fdfc26b0736c)]
+[scriptable, uuid(717FA4AB-FD62-412b-AEF5-54A50B340449)]
 interface nsIToolkitChromeRegistry : nsIXULChromeRegistry
 {
   /**
@@ -50,15 +50,22 @@ interface nsIToolkitChromeRegistry : nsIXULChromeRegistry
    *
    * @param aOldManifestURI  The URI of an old manifest to read, without
    *                         the trailing "contents.rdf", e.g.
-   *                         "jar:resource:///chrome/foo.jar!/content/foo/"
+   *                         "jar:resource:///chrome/foo.jar!/content/foo/" or
+   *                         "file://path/to/contents/rdf/"
    * @param aFile            The URI of a manifest file to write. It's a good
    *                         idea to use a resource: URI if possible.
+   * @param aBaseURI         The base URI for relative path creation
+   *                         "jar:resource:///chrome/foo.jar!/content/foo/"
+   *                         this is a separate param from aOldManifestURI so
+   *                         the "contents.rdf" can be read outside of the jar
+   *                         to keep the zipreader cache from holding it open.
    * @param aAppend          Whether we should append to an existing manifest
    *                         or truncate and start empty.
    * @param aSkinOnly        Only allow skin packages.
    */
   void processContentsManifest(in nsIURI aOldManifestURI, in nsIURI aFile,
-                               in boolean aAppend, in boolean aSkinOnly);
+                               in nsIURI aBaseURI, in boolean aAppend,
+                               in boolean aSkinOnly);
 
   /**
    * If the OS has a "high-visibility" or "disabled-friendly" theme set,
