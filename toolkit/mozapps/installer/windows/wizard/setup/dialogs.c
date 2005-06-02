@@ -1951,7 +1951,6 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
 BOOL InstallFiles(HWND hDlg)
 {
   HRESULT err;
-  char szDestPath[MAX_PATH];
 
   // Clean up old versions of GRE previously installed.
   // These GREs should only be fully uninstalled if they were only
@@ -2003,9 +2002,6 @@ BOOL InstallFiles(HWND hDlg)
     ProcessFileOpsForAll(T_POST_XPCOM);
     // PRE_SMARTUPDATE process file manipulation functions
     ProcessFileOpsForAll(T_PRE_SMARTUPDATE);
-
-    lstrcat(szDestPath, "uninstall\\");
-    CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG);
 
     //XXXben TODO - process this return result!
     err = SmartUpdateJars(hDlg);
