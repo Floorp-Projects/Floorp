@@ -283,6 +283,10 @@
 
 #define NS_SUCCESS_FILE_DIRECTORY_EMPTY         NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_FILES, 1)
 
+ /* Result codes used by nsIDirectoryServiceProvider2 */
+
+#define NS_SUCCESS_AGGREGATE_RESULT             NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_FILES, 2)
+
  /* Result codes used by nsIVariant */
 
 #define NS_ERROR_CANNOT_CONVERT_DATA            NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM,  1)
