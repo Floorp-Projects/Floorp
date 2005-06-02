@@ -43,6 +43,7 @@
 #include "nsLocalFile.h"
 #include "nsDebug.h"
 #include "nsStaticAtom.h"
+#include "nsEnumeratorUtils.h"
 
 #if defined(XP_MAC)
 #include <Folders.h>
@@ -582,10 +583,25 @@ static PRBool FindProviderFile(nsISupports* aElement, void *aData)
       nsCOMPtr<nsIDirectoryServiceProvider2> prov2 = do_QueryInterface(aElement);
       if (prov2)
       {
-          rv = prov2->GetFiles(fileData->property, (nsISimpleEnumerator **)&fileData->data);
-          if (NS_SUCCEEDED(rv) && fileData->data) {
-          	  fileData->persistent = PR_FALSE; // Enumerators can never be peristent
-              return PR_FALSE;
+          nsCOMPtr<nsISimpleEnumerator> newFiles;
+          rv = prov2->GetFiles(fileData->property, getter_AddRefs(newFiles));
+          if (NS_SUCCEEDED(rv) && newFiles) {
+              if (fileData->data) {
+                  nsCOMPtr<nsISimpleEnumerator> unionFiles;
+
+                  NS_NewUnionEnumerator(getter_AddRefs(unionFiles),
+                                        (nsISimpleEnumerator*) fileData->data, newFiles);
+
+                  if (unionFiles)
+                      unionFiles.swap(* (nsISimpleEnumerator**) &fileData->data);
+              }
+              else
+              {
+                  NS_ADDREF(fileData->data = newFiles);
+              }
+                  
+              fileData->persistent = PR_FALSE; // Enumerators can never be persistent
+              return rv == NS_SUCCESS_AGGREGATE_RESULT;
           }
       }
   }
