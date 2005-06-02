@@ -203,6 +203,7 @@ bin/components/mozgnome.xpt
 bin/chrome/browser.jar
 bin/chrome/browser.manifest
 bin/chrome/classic.jar
+bin/chrome/classic.manifest
 bin/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
 bin/chrome/comm.jar
 bin/chrome/comm.manifest
