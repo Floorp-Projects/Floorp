@@ -78,6 +78,7 @@ endif
 
 # NSS makefiles are not safe for parallel execution.
 DEFAULT_GMAKE_FLAGS = MAKE="$(MAKE) -j1" -j1
+DEFAULT_GMAKE_FLAGS += CC="$(CC)"
 DEFAULT_GMAKE_FLAGS += MOZILLA_INCLUDES="-I$(MOZ_BUILD_ROOT)/dist/include/nspr -I$(MOZ_BUILD_ROOT)/dist/include/dbm"
 DEFAULT_GMAKE_FLAGS += SOURCE_MD_DIR=$(MOZ_BUILD_ROOT)/dist
 DEFAULT_GMAKE_FLAGS += DIST=$(MOZ_BUILD_ROOT)/dist
