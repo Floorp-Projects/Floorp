@@ -21,6 +21,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#  Chase Phillips <chase@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -175,17 +176,15 @@ endif
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 ifndef GNU_CC
 
-ifdef LIBRARY_NAME
-PDBFILE=$(LIBRARY_NAME).pdb
-ifdef MOZ_DEBUG
-CODFILE=$(LIBRARY_NAME).cod
-endif
-else
+# Previously when possible we wrote to $LIBRARY_NAME.pdb.  This broke parallel
+# make builds on Windows.  Now we just write to a pdb file per compiled file.
+# See bug 286179 <https://bugzilla.mozilla.org/show_bug.cgi?id=286179> for
+# details. -- chase@mozilla.org
+#
 PDBFILE=$(basename $(@F)).pdb
 ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
 endif
-endif # LIBRARY_NAME
 
 ifdef MOZ_MAPINFO
 ifdef LIBRARY_NAME
