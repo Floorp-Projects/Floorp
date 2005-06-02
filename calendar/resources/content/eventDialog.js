@@ -723,15 +723,15 @@ function onOKCommand()
  */
 function compareIgnoringTimeOfDay(dateA, dateB)
 {
-  if (dateA.getFullYear() == dateB.getFullYear() &&
-      dateA.getMonth() == dateB.getMonth() &&
-      dateA.getDate() == dateB.getDate() ) {
-    return 0;
-  } else if (dateA < dateB) {
-      return -1;
-  } else if (dateA > dateB) {
-      return 1;
-   }
+    if (dateA.getFullYear() == dateB.getFullYear() &&
+        dateA.getMonth() == dateB.getMonth() &&
+        dateA.getDate() == dateB.getDate() ) {
+        return 0;
+    } else if (dateA < dateB) {
+        return -1;
+    } else if (dateA > dateB) {
+        return 1;
+    }
 }
 
 
@@ -741,29 +741,29 @@ function compareIgnoringTimeOfDay(dateA, dateB)
  */
 function checkSetTimeDate()
 {
-  var startDate      = getElementValue("start-datetime");
-  var endDate        = getElementValue("end-datetime");
-  var dateComparison = compareIgnoringTimeOfDay(endDate, startDate);
+    var startDate      = getElementValue("start-datetime");
+    var endDate        = getElementValue("end-datetime");
+    var dateComparison = compareIgnoringTimeOfDay(endDate, startDate);
 
-  if (dateComparison < 0) {
-    // end date before start date
-    setDateError(true);
-    setTimeError(false);
-    return false;
-  } else if (dateComparison == 0) {
-    // ok even for all day events, end date will become exclusive when saved.
-    setDateError(false); 
-    // start & end date same, so compare entire time (ms since 1970) if not allday.
-    var isAllDay = getElementValue("all-day-event-checkbox", "checked");
-    var isBadEndTime = (!isAllDay && (endDate.getTime() < startDate.getTime()));
-    setTimeError(isBadEndTime);
-    return !isBadEndTime;
-  } else {
-    // endDate > startDate
-    setDateError(false);
-    setTimeError(false);
-    return true;
-  }
+    if (dateComparison < 0) {
+        // end date before start date
+        setDateError(true);
+        setTimeError(false);
+        return false;
+    } else if (dateComparison == 0) {
+        // ok even for all day events, end date will become exclusive when saved.
+        setDateError(false); 
+        // start & end date same, so compare entire time (ms since 1970) if not allday.
+        var isAllDay = getElementValue("all-day-event-checkbox", "checked");
+        var isBadEndTime = (!isAllDay && (endDate.getTime() < startDate.getTime()));
+        setTimeError(isBadEndTime);
+        return !isBadEndTime;
+    } else {
+        // endDate > startDate
+        setDateError(false);
+        setTimeError(false);
+        return true;
+    }
 }
 
 
@@ -890,54 +890,54 @@ function updateOKButton()
 
 
 function updateDuration() {
-  var startDate = getElementValue("start-datetime");
-  var endDate = new Date(getElementValue("end-datetime"));
-  if (getElementValue("all-day-event-checkbox", "checked")) {
-    // all-day display end date is inclusive end date
-    // but duration depends on exclusive end date
-    endDate.setDate(endDate.getDate() + 1);
-  }
-  gDurationMSec = endDate - startDate;
+    var startDate = getElementValue("start-datetime");
+    var endDate = new Date(getElementValue("end-datetime"));
+    if (getElementValue("all-day-event-checkbox", "checked")) {
+        // all-day display end date is inclusive end date
+        // but duration depends on exclusive end date
+        endDate.setDate(endDate.getDate() + 1);
+    }
+    gDurationMSec = endDate - startDate;
 }
 
 
 function onDueDateTimePick(dateTimePicker) {
-  // check for due < start
-  updateOKButton();
-  return;
+    // check for due < start
+    updateOKButton();
+    return;
 }
 
 function onEndDateTimePick(dateTimePicker) {
-  updateDuration();
-  // check for end < start    
-  updateOKButton();
-  return;
+    updateDuration();
+    // check for end < start    
+    updateOKButton();
+    return;
 }
 
 function onStartDateTimePick(dateTimePicker) {
-  var startDate = new Date(dateTimePicker.value);
+    var startDate = new Date(dateTimePicker.value);
 
-  // update the end date keeping the same duration
-  var displayEndDate = new Date(startDate.getTime() + gDurationMSec);
-  if (getElementValue("all-day-event-checkbox", "checked")) {
-    // all-day display end date is inclusive end date
-    // but duration depends on exclusive end date
-    displayEndDate.setDate( displayEndDate.getDate() - 1 );
-  }
-  setElementValue("end-datetime", displayEndDate);
+    // update the end date keeping the same duration
+    var displayEndDate = new Date(startDate.getTime() + gDurationMSec);
+    if (getElementValue("all-day-event-checkbox", "checked")) {
+        // all-day display end date is inclusive end date
+        // but duration depends on exclusive end date
+        displayEndDate.setDate( displayEndDate.getDate() - 1 );
+    }
+    setElementValue("end-datetime", displayEndDate);
 
-  // Initialize the until-date picker for recurring events to picked day,
-  // if the picked date is in future and repeat is not checked.
-  // UNTIL dates may be last occurrence start date, inclusive
-  // [rfc2445sec4.3.10].
-  if (startDate > new Date() && !getElementValue("repeat-checkbox", "checked")) {
-    setElementValue("repeat-end-date-picker", startDate);
-  }
+    // Initialize the until-date picker for recurring events to picked day,
+    // if the picked date is in future and repeat is not checked.
+    // UNTIL dates may be last occurrence start date, inclusive
+    // [rfc2445sec4.3.10].
+    if (startDate > new Date() && !getElementValue("repeat-checkbox", "checked")) {
+        setElementValue("repeat-end-date-picker", startDate);
+    }
 
-  updateAdvancedWeekRepeat();
-  updateAdvancedRepeatDayOfMonth();
-  updateAddExceptionButton();
-  updateOKButton();
+    updateAdvancedWeekRepeat();
+    updateAdvancedRepeatDayOfMonth();
+    updateAddExceptionButton();
+    updateOKButton();
 }
 
 
@@ -946,7 +946,7 @@ function onStartDateTimePick(dateTimePicker) {
  */
 function commandRepeat()
 {
-   updateRepeatItemEnabled();
+    updateRepeatItemEnabled();
 }
 
 
@@ -955,9 +955,8 @@ function commandRepeat()
  */
 function commandUntil()
 {
-   updateUntilItemEnabled();
-
-   updateOKButton();
+    updateUntilItemEnabled();
+    updateOKButton();
 }
 
 
@@ -966,9 +965,9 @@ function commandUntil()
  */
 function commandAllDay()
 {
-  updateDuration(); // Same start/end means 24hrs if all-day, 0hrs if not.
-  updateStartEndItemEnabled();
-  updateOKButton();
+    updateDuration(); // Same start/end means 24hrs if all-day, 0hrs if not.
+    updateStartEndItemEnabled();
+    updateOKButton();
 }
 
 
@@ -1082,9 +1081,9 @@ function updateRepeatUnitExtensions()
  */
 function updateStartEndItemEnabled()
 {
-   var editTimeDisabled = getElementValue("all-day-event-checkbox", "checked");
-   setElementValue("start-datetime", editTimeDisabled, "timepickerdisabled");
-   setElementValue("end-datetime",   editTimeDisabled, "timepickerdisabled");
+    var editTimeDisabled = getElementValue("all-day-event-checkbox", "checked");
+    setElementValue("start-datetime", editTimeDisabled, "timepickerdisabled");
+    setElementValue("end-datetime",   editTimeDisabled, "timepickerdisabled");
 }
 
 
@@ -1271,15 +1270,15 @@ function getDayExtension(dayNumber)
 
 function getDayOfWeek()
 {
-   //get the day number for today.
-   var dayNumber = getElementValue("start-datetime").getDay();
+    //get the day number for today.
+    var dayNumber = getElementValue("start-datetime").getDay();
 
-   var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
+    var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
 
-   //add one to the dayNumber because in the above prop. file, it starts at day1, but JS starts at 0
-   var oneBasedDayNumber = parseInt(dayNumber) + 1;
+    //add one to the dayNumber because in the above prop. file, it starts at day1, but JS starts at 0
+    var oneBasedDayNumber = parseInt(dayNumber) + 1;
 
-   return(dateStringBundle.GetStringFromName("day." + oneBasedDayNumber + ".name") );
+    return(dateStringBundle.GetStringFromName("day." + oneBasedDayNumber + ".name") );
 }
 
 
