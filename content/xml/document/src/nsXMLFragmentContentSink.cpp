@@ -98,7 +98,8 @@ protected:
   virtual nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                  nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
                                  nsIContent** aResult, PRBool* aAppendContent);
-  virtual nsresult CloseElement(nsIContent* aContent, PRBool* aAppendContent);
+  virtual nsresult CloseElement(nsIContent* aContent, nsIContent* aParent,
+                                PRBool* aAppendContent);
 
   // nsContentSink overrides
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
@@ -186,7 +187,8 @@ NS_IMETHODIMP
 nsXMLFragmentContentSink::DidBuildModel()
 {
   if (mAllContent) {
-    PopContent();  // remove mRoot pushed above
+    // Need the nsCOMPtr to properly release
+    nsCOMPtr<nsIContent> root = PopContent();  // remove mRoot pushed above
   }
 
   nsCOMPtr<nsIParser> kungFuDeathGrip(mParser);
@@ -245,7 +247,9 @@ nsXMLFragmentContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsC
 }
 
 nsresult
-nsXMLFragmentContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
+nsXMLFragmentContentSink::CloseElement(nsIContent* aContent,
+                                       nsIContent* aParent,
+                                       PRBool* aAppendContent)
 {
   // don't do fancy stuff in nsXMLContentSink
   *aAppendContent = PR_FALSE;
@@ -413,7 +417,8 @@ nsXMLFragmentContentSink::DidBuildContent()
     if (!mParseError) {
       FlushText();
     }
-    PopContent();
+    // Need the nsCOMPtr to properly release
+    nsCOMPtr<nsIContent> root = PopContent();
   }
 
   return NS_OK;

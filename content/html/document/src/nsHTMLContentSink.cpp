@@ -4096,7 +4096,11 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
         loader->SetEnabled(PR_FALSE);
       }
     }
-  } else {
+  } else if (parent->GetCurrentDoc() == mDocument) {
+    // We test the current doc of |parent| because if it doesn't have one we
+    // won't actually try to evaluate the script, so we shouldn't be blocking
+    // or appending to mScriptElements or anything.
+    
     // Don't include script loading and evaluation in the stopwatch
     // that is measuring content creation time
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::ProcessSCRIPTTag()\n"));
