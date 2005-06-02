@@ -1324,10 +1324,14 @@ function cmdServer(e)
         client.addNetwork(name, [{name: e.hostname, port: e.port,
                                         password: e.password}], true);
     }
-    else if (e.password)
+    else
     {
-        /* update password on existing server. */
-        client.networks[name].serverList[0].password = e.password;
+        // We are trying to connect without SSL, adjust for temporary networks
+        if (client.networks[name].temporary)
+            client.networks[name].serverList[0].isSecure = false;
+        // update password on existing server.
+        if (e.password)
+            client.networks[name].serverList[0].password = e.password;
     }
 
     return client.connectToNetwork(name, false);
@@ -1358,10 +1362,14 @@ function cmdSSLServer(e)
         client.addNetwork(name, [{name: e.hostname, port: e.port,
                                   password: e.password, isSecure: true}], true);
     }
-    else if (e.password)
+    else
     {
-        /* update password on existing server. */
-        client.networks[name].serverList[0].password = e.password;
+        // We are trying to connect using SSL, adjust for temporary networks
+        if (client.networks[name].temporary)
+            client.networks[name].serverList[0].isSecure = true;
+        // update password on existing server.
+        if (e.password)
+            client.networks[name].serverList[0].password = e.password;
     }
 
     return client.connectToNetwork(name, true);
