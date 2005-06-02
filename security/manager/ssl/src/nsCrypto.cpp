@@ -219,13 +219,13 @@ NS_IMPL_ADDREF(nsPkcs11)
 NS_IMPL_RELEASE(nsPkcs11)
 
 // ISupports implementation for nsCryptoRunnable
-NS_IMPL_ISUPPORTS1(nsCryptoRunnable, nsIRunnable);
+NS_IMPL_ISUPPORTS1(nsCryptoRunnable, nsIRunnable)
 
 // ISupports implementation for nsP12Runnable
-NS_IMPL_ISUPPORTS1(nsP12Runnable, nsIRunnable);
+NS_IMPL_ISUPPORTS1(nsP12Runnable, nsIRunnable)
 
 // ISupports implementation for nsCryptoRunArgs
-NS_IMPL_ISUPPORTS0(nsCryptoRunArgs);
+NS_IMPL_ISUPPORTS0(nsCryptoRunArgs)
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
