@@ -76,7 +76,7 @@ FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)
 #
 VERSION_NUMBER		= 50
 
-ifneq (,$(filter OS2 WINNT WINCE, $(OS_ARCH)))
+ifneq (,$(filter WINNT WINCE, $(OS_ARCH)))
 win_srcdir	:= $(subst $(topsrcdir),$(WIN_TOP_SRC),$(srcdir))
 BUILD_TOOLS	= $(WIN_TOP_SRC)/build/unix
 else
