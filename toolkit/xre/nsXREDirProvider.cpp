@@ -443,9 +443,15 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
   nsresult rv = NS_OK;
   *aResult = nsnull;
 
+  nsCOMPtr<nsIFile> profileFile;
+  if (mProfileDir) {
+    mProfileDir->Clone(getter_AddRefs(profileFile));
+    profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
+  }
+
   if (!strcmp(aProperty, NS_XPCOM_COMPONENT_DIR_LIST)) {
     nsCOMArray<nsIFile> directories;
-    
+
     if (mXULAppDir) {
       nsCOMPtr<nsIFile> file;
       mXULAppDir->Clone(getter_AddRefs(file));
@@ -457,10 +463,6 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
 
     if (mProfileDir && !gSafeMode) {
       static const char *const kAppendCompDir[] = { "components", nsnull };
-
-      nsCOMPtr<nsIFile> profileFile;
-      mProfileDir->Clone(getter_AddRefs(profileFile));
-      profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
 
       LoadDirsIntoArray(profileFile, "ExtensionDirs",
                         kAppendCompDir, directories);
@@ -481,15 +483,11 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
         directories.AppendObject(file);
     }
 
-    if (!gSafeMode) {
+    if (mProfileDir && !gSafeMode) {
       static const char *const kAppendPrefDir[] = { "defaults", "preferences", nsnull };
-      nsCOMPtr<nsIFile> profileFile;
-      if (mProfileDir) {
-        mProfileDir->Clone(getter_AddRefs(profileFile));
-        profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
-        LoadDirsIntoArray(profileFile, "ExtensionDirs",
-                          kAppendPrefDir, directories);
-      }
+
+      LoadDirsIntoArray(profileFile, "ExtensionDirs",
+                        kAppendPrefDir, directories);
     }
 
     rv = NS_NewArrayEnumerator(aResult, directories);
@@ -509,13 +507,14 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
       PRBool exists;
       if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
         manifests.AppendObject(file);
+
+      mXULAppDir->Clone(getter_AddRefs(file));
+      file->AppendNative(NS_LITERAL_CSTRING("chrome.manifest"));
+      if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
+        manifests.AppendObject(file);
     }
 
     if (mProfileDir && !gSafeMode) {
-      nsCOMPtr<nsIFile> profileFile;
-      mProfileDir->Clone(getter_AddRefs(profileFile));
-      profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
-
       LoadDirsIntoArray(profileFile, "ExtensionDirs",
                         kAppendChromeManifests, manifests);
     }
@@ -525,10 +524,6 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
   else if (!strcmp(aProperty, NS_SKIN_MANIFESTS_FILE_LIST)) {
     nsCOMArray<nsIFile> manifests;
     if (mProfileDir && !gSafeMode) {
-      nsCOMPtr<nsIFile> profileFile;
-      mProfileDir->Clone(getter_AddRefs(profileFile));
-      profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
-
       LoadDirsIntoArray(profileFile, "ThemeDirs",
                         kAppendChromeManifests, manifests);
     }
@@ -553,15 +548,37 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
     if (mProfileDir && !gSafeMode) {
       static const char *const kAppendChromeDir[] = { "chrome", nsnull };
 
-      nsCOMPtr<nsIFile> profileFile;
-      mProfileDir->Clone(getter_AddRefs(profileFile));
-      profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
-
       LoadDirsIntoArray(profileFile, "ExtensionDirs",
                         kAppendChromeDir, directories);
     }
 
     rv = NS_NewArrayEnumerator(aResult, directories);
+  }
+  else if (!strcmp(aProperty, NS_APP_PLUGINS_DIR_LIST)) {
+    nsCOMArray<nsIFile> directories;
+
+    // The root dirserviceprovider does quite a bit for us: we're mainly
+    // interested in xulapp and extension-provided plugins.
+    if (mXULAppDir) {
+      nsCOMPtr<nsIFile> file;
+      mXULAppDir->Clone(getter_AddRefs(file));
+      file->AppendNative(NS_LITERAL_CSTRING("plugins"));
+      PRBool exists;
+      if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
+        directories.AppendObject(file);
+    }
+
+    if (mProfileDir && !gSafeMode) {
+      static const char *const kAppendPlugins[] = { "plugins", nsnull };
+
+      LoadDirsIntoArray(profileFile, "ExtensionDirs",
+                        kAppendPlugins, directories);
+    }
+
+    rv = NS_NewArrayEnumerator(aResult, directories);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = NS_SUCCESS_AGGREGATE_RESULT;
   }
   else
     rv = NS_ERROR_FAILURE;
