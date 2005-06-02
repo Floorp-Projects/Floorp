@@ -38,6 +38,7 @@
 
 #include "nsICategoryManager.h"
 #include "nsIDOMClassInfo.h"
+#include "nsIDOMNSXPathExpression.h"
 #include "nsIDOMXPathExpression.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMXPathResult.h"
@@ -98,6 +99,7 @@ NS_DOMCI_EXTENSION(Transformiix)
 
     NS_DOMCI_EXTENSION_ENTRY_BEGIN(XPathExpression)
         NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMXPathExpression)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMNSXPathExpression)
     NS_DOMCI_EXTENSION_ENTRY_END(XPathExpression, nsIDOMXPathExpression,
                                  PR_TRUE, nsnull)
 

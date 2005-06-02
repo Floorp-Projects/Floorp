@@ -52,6 +52,7 @@ XPIDLSRCS =                                     \
 	nsIDOMXPathNamespace.idl			\
 	nsIDOMXPathNSResolver.idl			\
 	nsIDOMXPathResult.idl			\
+	nsIDOMNSXPathExpression.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
