@@ -40,6 +40,7 @@
 #include "nsAccessible.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIDocument.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIImageDocument.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -264,9 +265,23 @@ NS_IMETHODIMP nsAccessible::Init()
       nsAutoString prefix;
       NS_NAMED_LITERAL_STRING(kRolesWAI_Namespace, "http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#");
       dom3Node->LookupPrefix(kRolesWAI_Namespace, prefix);
+      if (prefix.IsEmpty()) {
+        // In HTML we are hardcoded to allow the exact prefix "wairole:" to 
+        // always indicate that we are using the WAI roles. This allows DHTML accessibility
+        // to be used within HTML
+        nsCOMPtr<nsIDOMNSDocument> doc(do_QueryInterface(content->GetDocument()));
+        if (doc) {
+          nsAutoString mimeType;
+          doc->GetContentType(mimeType);
+          if (mimeType.EqualsLiteral("text/html")) {
+            prefix = NS_LITERAL_STRING("wairole");
+          }
+        }
+      }
       prefix += ':';
-      if (StringBeginsWith(roleString, prefix)) {
-        roleString.Cut(0, prefix.Length());
+      PRUint32 length = prefix.Length();
+      if (length > 1 && StringBeginsWith(roleString, prefix)) {
+        roleString.Cut(0, length);
         nsCString utf8Role = NS_ConvertUCS2toUTF8(roleString); // For easy comparison
         PRUint32 index;
         for (index = 0; gWAIRoleMap[index].roleString; index ++) {
