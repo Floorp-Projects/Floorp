@@ -54,6 +54,7 @@ function initCommands()
          ["attach",            cmdAttach,                          CMD_CONSOLE],
          ["away",              cmdAway,                            CMD_CONSOLE],
          ["back",              cmdAway,                            CMD_CONSOLE],
+         ["ban",               cmdBan,             CMD_NEED_CHAN | CMD_CONSOLE],
          ["cancel",            cmdCancel,           CMD_NEED_NET | CMD_CONSOLE],
          ["charset",           cmdCharset,                         CMD_CONSOLE],
          ["channel-motif",     cmdMotif,           CMD_NEED_CHAN | CMD_CONSOLE],
@@ -175,6 +176,7 @@ function initCommands()
          ["toggle-pref",       cmdTogglePref,                                0],
          ["topic",             cmdTopic,           CMD_NEED_CHAN | CMD_CONSOLE],
          ["unignore",          cmdIgnore,           CMD_NEED_NET | CMD_CONSOLE],
+         ["unban",             cmdBan,             CMD_NEED_CHAN | CMD_CONSOLE],
          ["unstalk",           cmdUnstalk,                         CMD_CONSOLE],
          ["urls",              cmdURLs,                            CMD_CONSOLE],
          ["usermode",          cmdUsermode,                        CMD_CONSOLE],
@@ -807,6 +809,38 @@ function cmdAblePlugin(e)
 
         e.plugin.enabled = true;
     }
+}
+
+function cmdBan(e)
+{
+    /* If we're unbanning, or banning in odd cases, we may actually be talking
+     * about a user who is not in the channel, so we need to check the server
+     * for information as well.
+     */
+    if (!e.user)
+        e.user = e.channel.getUser(e.nickname);
+    if (!e.user)
+        e.user = e.server.getUser(e.nickname);
+
+    var mask;
+    if (e.user)
+    {
+        // We have a real user object, so get their proper 'ban mask'.
+        mask = e.user.getBanMask();
+    }
+    else
+    {
+        /* If we have either ! or @ in the nickname assume the user has given
+         * us a complete mask and pass it directly, otherwise assume it is
+         * only the nickname and use * for username/host.
+         */
+        mask = fromUnicode(e.nickname, e.server);
+        if (!/[!@]/.test(e.nickname))
+            mask = mask + "!*@*";
+    }
+
+    var op = (e.command.name == "unban") ? " -b " : " +b ";
+    e.server.sendData("MODE " + e.channel.encodedName + op + mask + "\n");
 }
 
 function cmdCancel(e)
@@ -2732,17 +2766,7 @@ function cmdKick(e)
     }
 
     if (e.command.name == "kick-ban")
-    {
-        var hostmask;
-
-        if (e.user.host.match(/^[\d\.]*$/) != null)
-            hostmask = e.user.host.replace(/[^.]+$/, "*");
-        else
-            hostmask = e.user.host.replace(/^[^.]+/, "*");
-
-        e.server.sendData("MODE " + e.channel.encodedName + " +b *!" +
-                          e.user.name + "@" + hostmask + "\n");
-    }
+        e.sourceObject.dispatch("ban", { nickname: e.user.encodedName });
 
     e.user.kick(e.reason);
 }

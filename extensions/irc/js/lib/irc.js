@@ -2978,6 +2978,15 @@ function usr_hostmask (pfx)
     return (pfx + this.host.substr(idx + 1, this.host.length));
 }
 
+CIRCUser.prototype.getBanMask =
+function usr_banmask()
+{
+    var hostmask = this.host;
+    if (!/^\d+\.\d+\.\d+\.\d+$/.test(hostmask))
+        hostmask = hostmask.replace(/^[^.]+/, "*");
+    return "*!" + this.name + "@" + hostmask;
+}
+
 CIRCUser.prototype.say =
 function usr_say (msg)
 {
@@ -3166,7 +3175,7 @@ function cusr_setban (f)
         return false;
 
     var modifier = (f) ? " +b " : " -b ";
-    modifier += this.getHostMask() + " ";
+    modifier += this.getBanMask() + " ";
 
     server.sendData("MODE " + this.parent.encodedName + modifier + "\n");
 
@@ -3182,7 +3191,7 @@ function cusr_kban (reason)
         return false;
 
     reason = (typeof reason != "undefined") ? reason : this.encodedName;
-    var modifier = " -o+b " + this.encodedName + " " + this.getHostMask() + " ";
+    var modifier = " -o+b " + this.encodedName + " " + this.getBanMask() + " ";
 
     server.sendData("MODE " + this.parent.encodedName + modifier + "\n" +
                     "KICK " + this.parent.encodedName + " " +

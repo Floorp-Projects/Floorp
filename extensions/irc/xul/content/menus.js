@@ -302,6 +302,8 @@ function initMenus()
          ["voice",      {visibleif: isopish        + "!cx.user.isVoice"}],
          ["devoice",    {visibleif: isopish        + "cx.user.isVoice"}],
          ["-"],
+         ["ban",        {enabledif: "(" + isop + "1) || (" + isopish + "!cx.user.isOp)"}],
+         ["unban",      {enabledif: "(" + isop + "1) || (" + isopish + "!cx.user.isOp)"}],
          ["kick",       {enabledif: "(" + isop + "1) || (" + isopish + "!cx.user.isOp)"}],
          ["kick-ban",   {enabledif: "(" + isop + "1) || (" + isopish + "!cx.user.isOp)"}]
         ]
