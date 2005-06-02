@@ -67,6 +67,7 @@
 #include "nsIComponentManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableView.h"
+#include "nsIScrollableFrame.h"
 #include "nsGUIEvent.h"
 #include "nsIRootBox.h"
 #include "nsIDocShellTreeItem.h"
@@ -1293,6 +1294,17 @@ NS_IMETHODIMP nsMenuPopupFrame::ConsumeOutsideClicks(PRBool& aConsumeOutsideClic
   return NS_OK;
 }
 
+static nsIScrollableView* GetScrollableViewForFrame(nsIFrame* aFrame)
+{
+  nsIScrollableFrame* sf;
+  nsresult rv = CallQueryInterface(aFrame, &sf);
+  if (NS_FAILED(rv))
+    return nsnull;
+  return sf->GetScrollableView();
+}
+
+// XXXroc this is megalame. Fossicking around for a view of the right
+// type is a recipe for disaster in the long term.
 nsIScrollableView* nsMenuPopupFrame::GetScrollableView(nsIFrame* aStart)
 {
   if ( ! aStart )
@@ -1304,9 +1316,7 @@ nsIScrollableView* nsMenuPopupFrame::GetScrollableView(nsIFrame* aStart)
   // try start frame and siblings
   currFrame=aStart;
   do {
-    nsIView* view = currFrame->GetView();
-    if ( view )
-      scrollableView = view->ToScrollableView();
+    scrollableView = GetScrollableViewForFrame(currFrame);
     if ( scrollableView )
       return scrollableView;
     currFrame = currFrame->GetNextSibling();
