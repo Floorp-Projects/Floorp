@@ -79,7 +79,6 @@ include $(topsrcdir)/config/rules.mk
 
 INCLUDEDIR	= $(DIST)/public/ldap
 PRIVATEINCDIR	= $(DIST)/public/ldap-private
-NSPRINCDIR	= $(DIST)/public/ldap-nspr
 GENHEADERS	= $(addprefix $(INCLUDEDIR)/, $(GENERATED_HEADERS))
 
 GARBAGE		+= sdkver.h dirver.h $(GENHEADERS)
@@ -88,13 +87,8 @@ GARBAGE		+= sdkver.h dirver.h $(GENHEADERS)
 
 all export::	$(INCLUDEDIR) $(GENHEADERS)
 	$(NSINSTALL) -D $(PRIVATEINCDIR)
-	$(NSINSTALL) -D $(NSPRINCDIR)
 	$(INSTALL) $(INSTALLFLAGS) -m 644 $(HEADERS) $(INCLUDEDIR)
 	$(INSTALL) $(INSTALLFLAGS) -m 644 $(PRIVATEHEADERS) $(PRIVATEINCDIR)
-	rm -rf $(NSPRINCDIR)/*
-	if [ -d $(DIST)/$(OBJDIR_NAME)/include/nspr ]; then				\
-		cp -r $(DIST)/$(OBJDIR_NAME)/include/nspr/* $(NSPRINCDIR);	\
-	fi
 
 $(INCLUDEDIR):	FORCE
 	$(NSINSTALL) -D $(INCLUDEDIR)

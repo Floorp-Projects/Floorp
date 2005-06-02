@@ -72,9 +72,9 @@ include $(topsrcdir)/config/rules.mk
 
 GARBAGE 	+= $(LIBPRLDAP) $(DLLPRLDAP)
 
-LOCAL_INCLUDES  = -I$(PUBLIC)/nspr
+LOCAL_INCLUDES  =
 INCLUDES	+= -I$(DISTHDIR) -I$(HDIR) -I$(INSTALLDIR)/include \
-                   -I$(DIST)/include/nspr \
+                   $(NSPR_CFLAGS) \
 		   -I$(DIST)/$(RELEASE_OBJDIR_NAME)/include
 DEFINES		+= $(DEFS)
 

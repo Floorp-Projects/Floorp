@@ -48,6 +48,7 @@ AC_CANONICAL_SYSTEM
 dnl ========================================================
 dnl = Defaults
 dnl ========================================================
+NSPR_VERSION=4
 _HAVE_PTHREADS=
 USE_PTHREADS=
 USE_USER_PTHREADS=
@@ -227,29 +228,27 @@ dnl ========================================================
 AC_ARG_WITH(system-nspr,
     [  --with-system-nspr   Use system installed NSPR],
     [   if test "$withval" = "yes"; then
-            _NO_NSPR=
+            _SYSTEM_NSPR=1
 	    else
-            _NO_NSPR=1
-	    fi])
+            _SYSTEM_NSPR=
+	    fi], _SYSTEM_NSPR= )
 
 if test "$_WIN32_MSVC"; then
-    _NO_NSPR=1
+    _SYSTEM_NSPR=
 fi
 	
-if test -z "$_NO_NSPR"; then
+if test -n "$_SYSTEM_NSPR"; then
     AM_PATH_NSPR(4.0.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
 fi
 
 if test -z "$MOZ_NATIVE_NSPR"; then
-    NSPR_CFLAGS='`$(NSDEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --cflags`'
+    NSPR_CFLAGS='-I$(DIST)/include/nspr'
+    NSPR_LIBS='-L$(DIST)/lib '"-lplds$NSPR_VERSION -lplc$NSPR_VERSION -lnspr$NSPR_VERSION"
     # explicitly set libs for Visual Age C++ for OS/2
     if test "$VACPP" = "yes"; then
         NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
     elif test "$_WIN32_MSVC"; then
             NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '
-            NSPR_CFLAGS='-I$(DIST)/include/nspr'
-    else
-        NSPR_LIBS='`$(NSDEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --libs`'
     fi
 fi
 
