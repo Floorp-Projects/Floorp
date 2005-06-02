@@ -40,8 +40,19 @@
 
 function initMunger()
 {
+    /* linkRE: the general URL linkifier regular expression:
+     *
+     * - start with whitespace, non-word, or begining-of-line
+     * - then match:
+     *   - EITHER scheme (word + hyphen), colon, then lots of non-whitespace
+     *   - OR "www" followed by at least 2 sets of:
+     *     - "." plus some non-whitespace, non-"." characters
+     * - must end match with a word-break
+     * - include a "/" or "=" beyond break if present
+     * - end with whitespace, non-word, or end-of-line
+     */
     client.linkRE =
-        /(?:\s|\W|^)((?:(\w[\w-]+):[^\s]+|www(\.[^.\s]+){2,})[^\s>)\].,!?\'\"\u201d])(?:\s|\W|$)/;
+        /(?:\s|\W|^)((?:(\w[\w-]+):[^\s]+|www(\.[^.\s]+){2,})\b[\/=]?)(?:\s|\W|$)/;
 
     var munger = client.munger = new CMunger();
     // Special internal munger!
