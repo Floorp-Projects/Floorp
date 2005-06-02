@@ -809,8 +809,19 @@ var gExtensionsViewController = {
     {
       if (!aSelectedItem) return;
       var optionsURL = aSelectedItem.getAttribute("optionsURL");
-      if (optionsURL != "")
-        openDialog(optionsURL, "", "chrome,modal");
+      if (optionsURL != "") {
+        var features;
+        try {
+          var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                                 .getService(Components.interfaces.nsIPrefBranch);
+          instantApply = prefs.getBoolPref("browser.preferences.instantApply");
+          features = "chrome,titlebar,toolbar,centerscreen" + (instantApply ? ",dialog=no" : ",modal");
+        }
+        catch (e) {
+          features = "chrome,titlebar,toolbar,centerscreen,modal";
+        }
+        openDialog(optionsURL, "", features);
+      }
     },
     
     cmd_homepage: function (aSelectedItem)
