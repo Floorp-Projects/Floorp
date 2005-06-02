@@ -42,9 +42,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CONFIG_DIR=$(shell cygpath -a $(srcdir))
-OBJ_DIR=$(shell cygpath -a $(DEPTH))
-SRC_DIR=$(shell cygpath -a $(topsrcdir))
+CONFIG_DIR=$(shell cd $(srcdir) && pwd)
+OBJ_DIR=$(shell cd $(DEPTH) && pwd)
+SRC_DIR=$(shell cd $(topsrcdir) && pwd)
 
 installer: sunbird.manifest
 	cd $(topsrcdir)/toolkit/mozapps/installer && perl build_static.pl -config "$(CONFIG_DIR)" -srcDir "$(SRC_DIR)" -objDir "$(OBJ_DIR)"

@@ -44,7 +44,7 @@ LIBRARY_NAME	= AccessibleMarshal
 MODULE    = accessibility
 XPIDL_MODULE = accessibility-msaa
 GRE_MODULE   = 1
-DEFFILE = $(srcdir)/AccessibleMarshal.def
+DEFFILE = $(win_srcdir)/AccessibleMarshal.def
 
 include $(DEPTH)/config/autoconf.mk
 

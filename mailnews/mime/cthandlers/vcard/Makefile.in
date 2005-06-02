@@ -76,7 +76,7 @@ REQUIRES	= xpcom \
 
 ifeq ($(OS_ARCH),WINNT)
 MAPFILE		= vcard.map
-DEFFILE		= $(srcdir)/vcard.def
+DEFFILE		= $(win_srcdir)/vcard.def
 endif
 
 LOCAL_INCLUDES = -I$(srcdir)/../glue

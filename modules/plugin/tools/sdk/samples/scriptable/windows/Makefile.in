@@ -60,7 +60,7 @@ XPIDLSRCS = nsIScriptablePluginSample.idl
 
 SHARED_LIBRARY_LIBS = ../../common/$(LIB_PREFIX)plugingate_s.$(LIB_SUFFIX)
 
-DEFFILE = $(srcdir)/npscriptable.def
+DEFFILE = $(win_srcdir)/npscriptable.def
 RESFILE = npscriptable.res
 
 ifdef GNU_CC

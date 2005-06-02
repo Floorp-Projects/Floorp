@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mozMapi32
 EXPORT_LIBRARY	= $(MODULE)
 LIBRARY_NAME	= $(MODULE)
-DEFFILE		= $(srcdir)/Mapi32.def
+DEFFILE		= $(win_srcdir)/Mapi32.def
 MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= MapiProxy \

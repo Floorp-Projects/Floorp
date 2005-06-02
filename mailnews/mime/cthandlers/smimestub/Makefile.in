@@ -64,7 +64,7 @@ REQUIRES	= xpcom \
 
 ifeq ($(OS_ARCH),WINNT)
 MAPFILE		= smimestb.map
-DEFFILE		= $(srcdir)/smime.def
+DEFFILE		= $(win_srcdir)/smime.def
 endif
 
 EXTRA_DSO_LIBS	= mimecthglue_s

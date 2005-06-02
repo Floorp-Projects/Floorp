@@ -1104,14 +1104,13 @@ ifndef COMPILER_DEPEND
 _MDDEPFILE = $(MDDEPDIR)/$(@F).pp
 
 ifeq (,$(CROSS_COMPILE)$(filter-out WINCE WINNT,$(OS_ARCH)))
-_dos_srcdir := $(shell cygpath -w $(srcdir) | sed 's|\\|/|g')
 define MAKE_DEPS_AUTO
 if test -d $(@D); then \
 	echo "Building deps for $<"; \
 	touch $(_MDDEPFILE) && \
 	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f$(_MDDEPFILE) $(DEFINES) $(ACDEFINES) $(INCLUDES) $< >/dev/null 2>&1 && \
 	mv $(_MDDEPFILE) $(_MDDEPFILE).old && \
-	cat $(_MDDEPFILE).old | sed -e "s|^$(srcdir)/||" -e "s|^$(_dos_srcdir)/||" > $(_MDDEPFILE) && rm -f $(_MDDEPFILE).old ; \
+	cat $(_MDDEPFILE).old | sed -e "s|^$(srcdir)/||" -e "s|^$(win_srcdir)/||" > $(_MDDEPFILE) && rm -f $(_MDDEPFILE).old ; \
 fi
 endef
 else

@@ -41,9 +41,13 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-OBJDIR          = $(shell cygpath -t mixed -ai $(DEPTH))
 
 include $(DEPTH)/config/autoconf.mk
+ifdef CYGDRIVE_MOUNT
+OBJDIR          = $(shell cygpath -t mixed -ai $(DEPTH))
+else
+OBJDIR		= $(shell cd $(DEPTH) && pwd)
+endif
 
 MODULE		= xpinstall
 

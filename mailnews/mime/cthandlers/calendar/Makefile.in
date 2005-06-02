@@ -58,7 +58,7 @@ REQUIRES	= xpcom \
 
 ifeq ($(OS_ARCH),WINNT)
 MAPFILE		= calendar.map
-DEFFILE		= $(srcdir)/calendar.def
+DEFFILE		= $(win_srcdir)/calendar.def
 endif
 
 LOCAL_INCLUDES = -I$(srcdir)/../glue
