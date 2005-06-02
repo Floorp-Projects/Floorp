@@ -63,7 +63,7 @@
 
 nsHttpDigestAuth::nsHttpDigestAuth()
 {
-  mVerifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID);
+  mVerifier = do_GetService("@mozilla.org/security/hash;1");
   mGotVerifier = (mVerifier != nsnull);
 
 #if defined(PR_LOGGING)

@@ -57,8 +57,6 @@
 #define EXPANDED_DIGEST_LENGTH 32
 #define NONCE_COUNT_LENGTH 8
 
-class nsISignatureVerifier;
-
 //-----------------------------------------------------------------------------
 // nsHttpDigestAuth
 //-----------------------------------------------------------------------------
