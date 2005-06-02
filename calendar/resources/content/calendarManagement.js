@@ -59,6 +59,8 @@ var calCalendarManagerObserver = {
     },
 
     onCalendarRegistered: function(aCalendar) {
+        // Enable new calendars by default
+        getDisplayComposite().addCalendar(aCalendar);
         setCalendarManagerUI();
     },
 
@@ -187,6 +189,7 @@ function setCalendarManagerUI()
         var nameCell = document.createElement("listcell");
         nameCell.setAttribute("label", calendar.name);
         listItem.appendChild(nameCell);
+
         listItem.calendar = calendar;
         calendarList.appendChild(listItem);
 
