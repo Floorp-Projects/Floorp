@@ -209,6 +209,9 @@ interface nsIWindowsHooks : nsISupports {
 };
 
 %{C++
+#define NS_IWINDOWSHOOKS_CONTRACTID    "@mozilla.org/winhooks;1"
+#define NS_IWINDOWSHOOKS_CLASSNAME "Mozilla Windows Integration Hooks"
+
 // The key that is used to write the quick launch appname in the windows registry
 #define NS_QUICKLAUNCH_RUN_KEY "Mozilla Quick Launch"
 %}
