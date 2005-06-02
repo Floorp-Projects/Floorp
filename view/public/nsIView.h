@@ -126,6 +126,13 @@ public:
   virtual nsIScrollableView* ToScrollableView() { return nsnull; }
 
   /**
+   * Find the view for the given widget, if there is one.
+   * @return the view the widget belongs to, or null if the widget doesn't
+   * belong to any view.
+   */
+  static nsIView* GetViewFor(nsIWidget* aWidget);
+
+  /**
    * Get the view manager which "owns" the view.
    * This method might require some expensive traversal work in the future. If you can get the
    * view manager from somewhere else, do that instead.
@@ -292,6 +299,7 @@ public:
    * Get the nearest widget in this view or a parent of this view and
    * the offset from the widget's origin to this view's origin
    * @param aOffset the offset from this view's origin to the widget's origin
+   * (usually positive)
    * @return the widget closest to this view; can be null because some view trees
    * don't have widgets at all (e.g., printing), but if any view in the view tree
    * has a widget, then it's safe to assume this will not return null
