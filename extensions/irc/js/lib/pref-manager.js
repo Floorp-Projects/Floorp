@@ -204,10 +204,11 @@ function pm_ispref(prefName)
 PrefManager.prototype.addPrefs =
 function pm_addprefs(prefSpecs)
 {
+    var bundle = "stringBundle" in prefSpecs ? prefSpecs.stringBundle : null;
     for (var i = 0; i < prefSpecs.length; ++i)
     {
         this.addPref(prefSpecs[i][0], prefSpecs[i][1],
-                     3 in prefSpecs[i] ? prefSpecs[i][3] : null, null,
+                     3 in prefSpecs[i] ? prefSpecs[i][3] : null, bundle,
                      2 in prefSpecs[i] ? prefSpecs[i][2] : null);
     }
 }

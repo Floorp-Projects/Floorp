@@ -2251,7 +2251,7 @@ function cmdLoad(e)
             }
 
             plugin.API = 1;
-            plugin.prefary = [["enabled", true, ""]];
+            plugin.prefary = [["enabled", true, "hidden"]];
             rv = rvStr = plugin.init(e.scope);
 
             var branch = "extensions.irc.plugins." + plugin.id + ".";
