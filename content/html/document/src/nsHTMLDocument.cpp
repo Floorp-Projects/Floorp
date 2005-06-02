@@ -3526,8 +3526,23 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     rv = editSession->MakeWindowEditable(window, "html", PR_FALSE);
 
     if (NS_SUCCEEDED(rv)) {
-      // now that we've successfully created the editor, we can reset our flag
+      // now that we've successfully created the editor, we can
+      // reset our flag
       mEditingIsOn = PR_TRUE;
+
+      // Set the editor to not insert br's on return when in p
+      // elements by default.
+      PRBool unused;
+      rv = ExecCommand(NS_LITERAL_STRING("insertBrOnReturn"), PR_FALSE,
+                       NS_LITERAL_STRING("false"), &unused);
+
+      if (NS_FAILED(rv)) {
+        // Editor setup failed. Editing is is not on after all.
+
+        editSession->TearDownEditorOnWindow(window);
+
+        mEditingIsOn = PR_FALSE;
+      }
     }
   } else if (aDesignMode.LowerCaseEqualsLiteral("off") && mEditingIsOn) {
     // turn editing off
@@ -3620,6 +3635,7 @@ static const struct MidasCommand gMidasCommandTable[] = {
   { "heading",       "cmd_paragraphState",  "", PR_FALSE, PR_FALSE },
   { "useCSS",        "cmd_setDocumentUseCSS",   "", PR_FALSE, PR_TRUE },
   { "readonly",      "cmd_setDocumentReadOnly", "", PR_FALSE, PR_TRUE },
+  { "insertBrOnReturn", "cmd_insertBrOnReturn", "", PR_FALSE, PR_TRUE },
 #if 0
 // no editor support to remove alignments right now
   { "justifynone",   "cmd_align",           "", PR_TRUE,  PR_FALSE },
@@ -3690,16 +3706,15 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
     }
     else {
       // handle checking of param passed in
-      NS_ConvertUCS2toUTF8 convertedParam(inParam);
-
       if (outIsBoolean) {
         // if this is a boolean value and it's not explicitly false
         // (e.g. no value) we default to "true"
-        outBooleanValue = convertedParam.Equals("false",
-                                   nsCaseInsensitiveCStringComparator());
+        outBooleanValue = !inParam.LowerCaseEqualsLiteral("false");
         outParam.SetLength(0);
       }
       else {
+        NS_ConvertUCS2toUTF8 convertedParam(inParam);
+
         // check to see if we need to convert the parameter
         PRUint32 j;
         for (j = 0; j < MidasParamCount; ++j) {

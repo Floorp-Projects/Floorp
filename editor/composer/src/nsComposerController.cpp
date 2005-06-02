@@ -100,7 +100,8 @@ nsComposerController::RegisterEditorDocStateCommands(
   // commands that may get or change state
   NS_REGISTER_FIRST_COMMAND(nsSetDocumentStateCommand, "cmd_setDocumentModified")
   NS_REGISTER_NEXT_COMMAND(nsSetDocumentStateCommand, "cmd_setDocumentUseCSS")
-  NS_REGISTER_LAST_COMMAND(nsSetDocumentStateCommand, "cmd_setDocumentReadOnly")
+  NS_REGISTER_NEXT_COMMAND(nsSetDocumentStateCommand, "cmd_setDocumentReadOnly")
+  NS_REGISTER_LAST_COMMAND(nsSetDocumentStateCommand, "cmd_insertBrOnReturn")
 
   NS_REGISTER_ONE_COMMAND(nsSetDocumentOptionsCommand, "cmd_setDocumentOptions")
 
