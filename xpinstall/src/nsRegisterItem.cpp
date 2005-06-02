@@ -297,7 +297,7 @@ PRInt32 nsRegisterItem::Complete()
             else {
                 PRBool skinOnly = (mChromeType & CHROME_ALL) == CHROME_SKIN;
                 rv = reg->ProcessContentsManifest(baseuri, manifesturi,
-                                                  PR_TRUE,
+                                                  baseuri, PR_TRUE,
                                                   skinOnly);
                 if (NS_FAILED(rv)) {
                     LogError(NS_LITERAL_STRING("ProcessContentsManifest failed."), rv);
