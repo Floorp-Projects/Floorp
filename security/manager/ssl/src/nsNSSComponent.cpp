@@ -255,7 +255,7 @@ private:
 };
 
 // ISuuports implementation for nsTokenEventRunnable
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsTokenEventRunnable, nsIRunnable);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsTokenEventRunnable, nsIRunnable)
 
 nsTokenEventRunnable::nsTokenEventRunnable(const nsAString &aType, 
    const nsAString &aTokenName): mType(aType), mTokenName(aTokenName) { }
