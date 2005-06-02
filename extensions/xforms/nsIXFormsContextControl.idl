@@ -58,10 +58,16 @@ interface nsIXFormsContextControl : nsISupports
    * @note The actual model ID must be returned. An empty |aModelID| should
    * only be returned if the default model has an id="".
    */
-  void getContext(out AString aModelID, out nsIDOMNode aContextNode, out long aContextPosition, out long aContextSize);
+  void getContext(out AString aModelID, out nsIDOMNode aContextNode,
+                  out long aContextPosition, out long aContextSize);
 
   /**
-   * Used by parents to set the context node for children.
+   * Used by parents to set the context for children.
+   *
+   * @param aContextNode      The context node
+   * @param aContextPosition  The context position
+   * @param aContextSize      The context size
    */
-  void setContextNode(in nsIDOMNode aContextNode);
+  void setContext(in nsIDOMNode aContextNode, in long aContextPosition,
+                  in long aContextSize);
 };

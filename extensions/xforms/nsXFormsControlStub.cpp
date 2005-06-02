@@ -412,7 +412,9 @@ nsXFormsControlStubBase::AttributeRemoved(nsIAtom *aName)
 // nsIXFormsContextControl
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::SetContextNode(nsIDOMNode *aContextNode)
+nsXFormsControlStubBase::SetContext(nsIDOMNode *aContextNode,
+                                    PRInt32     aContextPosition,
+                                    PRInt32     aContextSize)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

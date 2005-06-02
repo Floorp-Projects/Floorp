@@ -41,7 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsXFormsXPathNode.h"
-#include "nsIDOMXPathExpression.h"
+#include "nsIDOMNSXPathExpression.h"
 #include "nsIXFormsXPathEvaluator.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMNode.h"
@@ -58,13 +58,15 @@
  */
 class nsXFormsXPathAnalyzer {
 private:
-  nsCOMPtr<nsIXFormsXPathEvaluator>  mEvaluator;
-  nsCOMPtr<nsIDOMNode>               mResolver;
+  nsCOMPtr<nsIXFormsXPathEvaluator>    mEvaluator;
+  nsCOMPtr<nsIDOMNode>                 mResolver;
 
-  nsCOMArray<nsIDOMNode>            *mCurSet;
-  nsCOMPtr<nsIDOMXPathExpression>    mCurExpression;
-  const nsAString                   *mCurExprString;
-  nsStringArray                      mIndexesUsed;
+  nsCOMArray<nsIDOMNode>              *mCurSet;
+  nsCOMPtr<nsIDOMNSXPathExpression>    mCurExpression;
+  const nsAString                     *mCurExprString;
+  PRUint32                             mCurSize;
+  PRUint32                             mCurPosition;
+  nsStringArray                        mIndexesUsed;
 
   nsresult AnalyzeRecursively(nsIDOMNode              *aContextNode,
                               const nsXFormsXPathNode *aNode,
@@ -75,11 +77,13 @@ public:
                         nsIDOMNode               *aResolver);
   ~nsXFormsXPathAnalyzer();
   
-  nsresult Analyze(nsIDOMNode              *aContextNode,
-                   const nsXFormsXPathNode *aNode,
-                   nsIDOMXPathExpression   *aExpression,
-                   const nsAString         *aExprString,
-                   nsCOMArray<nsIDOMNode>  *aSet);
+  nsresult Analyze(nsIDOMNode                *aContextNode,
+                   const nsXFormsXPathNode   *aNode,
+                   nsIDOMNSXPathExpression   *aExpression,
+                   const nsAString           *aExprString,
+                   nsCOMArray<nsIDOMNode>    *aSet,
+                   PRUint32                   aSize,
+                   PRUint32                   aPosition);
 
   const nsStringArray& IndexesUsed() const;
 };

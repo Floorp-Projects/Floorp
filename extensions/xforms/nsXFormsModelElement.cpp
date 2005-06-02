@@ -57,7 +57,7 @@
 #include "nsIDOMXPathResult.h"
 #include "nsIXFormsXPathEvaluator.h"
 #include "nsIDOMXPathNSResolver.h"
-#include "nsIDOMXPathExpression.h"
+#include "nsIDOMNSXPathExpression.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIContent.h"
 #include "nsIURL.h"
@@ -1285,12 +1285,12 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
                                   nsIDOMElement           *aBindElement)
 {
   // Get the model item properties specified by this \<bind\>.
-  nsCOMPtr<nsIDOMXPathExpression> props[eModel__count];
+  nsCOMPtr<nsIDOMNSXPathExpression> props[eModel__count];
   nsAutoString propStrings[eModel__count];
   nsresult rv;
   nsAutoString attrStr;
 
-  for (int i = 0; i < eModel__count; ++i) {
+  for (PRUint32 i = 0; i < eModel__count; ++i) {
     sModelPropsList[i]->ToString(attrStr);
 
     aBindElement->GetAttribute(attrStr, propStrings[i]);
@@ -1317,9 +1317,8 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
   if (expr.IsEmpty()) {
     expr = NS_LITERAL_STRING(".");
   }
-  ///
-  /// @todo use aContextSize and aContextPosition in evaluation (XXX)
-  rv = aEvaluator->Evaluate(expr, aContextNode, aBindElement,
+  rv = aEvaluator->Evaluate(expr, aContextNode, aContextSize, aContextPosition,
+                            aBindElement,
                             nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
                             nsnull, getter_AddRefs(result));
   if (NS_FAILED(rv)) {
@@ -1358,7 +1357,7 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
     nsXFormsXPathParser parser;
     nsXFormsXPathAnalyzer analyzer(aEvaluator, aBindElement);
     PRBool multiMIP = PR_FALSE;
-    for (int j = 0; j < eModel__count; ++j) {
+    for (PRUint32 j = 0; j < eModel__count; ++j) {
       if (propStrings[j].IsEmpty())
         continue;
 
@@ -1406,12 +1405,13 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
         NS_ENSURE_SUCCESS(rv, rv);
       } else {
         // the rest of the MIPs are given to the MDG
-        nsCOMPtr<nsIDOMXPathExpression> expr = props[j];
+        nsCOMPtr<nsIDOMNSXPathExpression> expr = props[j];
 
         // Get node dependencies
         nsAutoPtr<nsXFormsXPathNode> xNode(parser.Parse(propStrings[j]));
         deps.Clear();
-        rv = analyzer.Analyze(node, xNode, expr, &propStrings[j], &deps);
+        rv = analyzer.Analyze(node, xNode, expr, &propStrings[j], &deps,
+                              snapItem + 1, snapLen);
         NS_ENSURE_SUCCESS(rv, rv);
 
         // Insert into MDG

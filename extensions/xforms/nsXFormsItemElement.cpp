@@ -361,7 +361,7 @@ nsXFormsItemElement::Refresh()
   container->SetAttribute(modelStr, modelID);
 
   nsCOMPtr<nsIXFormsContextControl> context = do_QueryInterface(container);
-  context->SetContextNode(mContextNode);
+  context->SetContext(mContextNode, 1, 1);
 
   for (PRUint32 i = 0; i < childCount; ++i) {
     children->Item(i, getter_AddRefs(child));

@@ -52,7 +52,7 @@
 #include "nsXFormsNodeState.h"
 #include "nsIModelElementPrivate.h"
 
-class nsIDOMXPathExpression;
+class nsIDOMNSXPathExpression;
 
 /**
  * Data structure for nodes in the graph.
@@ -73,7 +73,7 @@ public:
   nsCOMPtr<nsIDOMNode> mContextNode;
   
   /** The XPath expression for this node */
-  nsCOMPtr<nsIDOMXPathExpression> mExpression;
+  nsCOMPtr<nsIDOMNSXPathExpression> mExpression;
   
   /** List of nodes that depend on this node */
   nsVoidArray mSuc;
@@ -119,10 +119,10 @@ public:
    * @param aContextPosition The context position for the expression
    * @param aContextSize     The context size for the expression
    */
-  void SetExpression(nsIDOMXPathExpression *aExpression,
-                     PRBool                 aDynFunc,
-                     PRInt32                aContextPosition,
-                     PRInt32                aContextSize);
+  void SetExpression(nsIDOMNSXPathExpression *aExpression,
+                     PRBool                   aDynFunc,
+                     PRInt32                  aContextPosition,
+                     PRInt32                  aContextSize);
                      
   /** Does node have an expression? */
   PRBool HasExpr() const;
@@ -355,13 +355,13 @@ public:
    * @param aContextPos      The context positions of aExpression
    * @param aContextSize     The context size for aExpression
    */
-  nsresult AddMIP(ModelItemPropName       aType,
-                  nsIDOMXPathExpression  *aExpression,
-                  nsCOMArray<nsIDOMNode> *aDependencies,
-                  PRBool                  aDynFunc,
-                  nsIDOMNode             *aContextNode,
-                  PRInt32                 aContextPos,
-                  PRInt32                 aContextSize);
+  nsresult AddMIP(ModelItemPropName         aType,
+                  nsIDOMNSXPathExpression  *aExpression,
+                  nsCOMArray<nsIDOMNode>   *aDependencies,
+                  PRBool                    aDynFunc,
+                  nsIDOMNode               *aContextNode,
+                  PRInt32                   aContextPos,
+                  PRInt32                   aContextSize);
 
   /**
    * Recalculate the MDG.

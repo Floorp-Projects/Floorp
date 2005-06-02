@@ -42,7 +42,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMText.h"
-#include "nsIDOMXPathExpression.h"
+#include "nsIDOMNSXPathExpression.h"
 #include "nsIDOMXPathResult.h"
 #include "nsDeque.h"
 #include "nsIModelElementPrivate.h"
@@ -80,10 +80,10 @@ nsXFormsMDGNode::~nsXFormsMDGNode()
 }
 
 void
-nsXFormsMDGNode::SetExpression(nsIDOMXPathExpression *aExpression,
-                               PRBool                 aDynFunc,
-                               PRInt32                aContextPosition,
-                               PRInt32                aContextSize)
+nsXFormsMDGNode::SetExpression(nsIDOMNSXPathExpression *aExpression,
+                               PRBool                   aDynFunc,
+                               PRInt32                  aContextPosition,
+                               PRInt32                  aContextSize)
 {
   mHasExpr = PR_TRUE;
   mDynFunc = aDynFunc;
@@ -150,13 +150,13 @@ nsXFormsMDGEngine::Init(nsIModelElementPrivate *aModel)
 }
 
 nsresult
-nsXFormsMDGEngine::AddMIP(ModelItemPropName       aType,
-                          nsIDOMXPathExpression  *aExpression,
-                          nsCOMArray<nsIDOMNode> *aDependencies,
-                          PRBool                  aDynFunc,
-                          nsIDOMNode             *aContextNode,
-                          PRInt32                 aContextPos,
-                          PRInt32                 aContextSize)
+nsXFormsMDGEngine::AddMIP(ModelItemPropName         aType,
+                          nsIDOMNSXPathExpression  *aExpression,
+                          nsCOMArray<nsIDOMNode>   *aDependencies,
+                          PRBool                    aDynFunc,
+                          nsIDOMNode               *aContextNode,
+                          PRInt32                   aContextPos,
+                          PRInt32                   aContextSize)
 {
   NS_ENSURE_ARG(aContextNode);
   
@@ -353,15 +353,15 @@ nsXFormsMDGEngine::Recalculate(nsCOMArray<nsIDOMNode> *aChangedNodes)
     switch (g->mType) {
     case eModel_calculate:
       if (g->HasExpr()) {
-        nsISupports* retval;
-        rv = g->mExpression->Evaluate(g->mContextNode,
-                                      nsIDOMXPathResult::STRING_TYPE,
-                                      nsnull,
-                                      &retval);
+        nsCOMPtr<nsIDOMXPathResult> xpath_res;
+        rv = g->mExpression->EvaluateWithContext(g->mContextNode,
+                                                 g->mContextPosition,
+                                                 g->mContextSize,
+                                                 nsIDOMXPathResult::STRING_TYPE,
+                                                 nsnull,
+                                                 getter_AddRefs(xpath_res));
         NS_ENSURE_SUCCESS(rv, rv);
-        
-        nsCOMPtr<nsIDOMXPathResult> xpath_res = do_QueryInterface(retval);
-        NS_ENSURE_TRUE(xpath_res, NS_ERROR_OUT_OF_MEMORY);
+        NS_ENSURE_STATE(xpath_res);
         
         nsAutoString nodeval;
         rv = xpath_res->GetStringValue(nodeval);
@@ -920,15 +920,15 @@ nsXFormsMDGEngine::BooleanExpression(nsXFormsMDGNode* aNode, PRBool& state)
   NS_ENSURE_ARG_POINTER(aNode);
   NS_ENSURE_TRUE(aNode->mExpression, NS_ERROR_FAILURE);
   
-  /// @todo Use aNode->contextPosition and aNode->contextSize (XXX)
-  /// @see https://bugzilla.mozilla.org/show_bug.cgi?id=265460
   nsISupports* retval;
   nsresult rv;
 
-  rv = aNode->mExpression->Evaluate(aNode->mContextNode,
-                                    nsIDOMXPathResult::BOOLEAN_TYPE,
-                                    nsnull,
-                                    &retval);
+  rv = aNode->mExpression->EvaluateWithContext(aNode->mContextNode,
+                                               aNode->mContextPosition,
+                                               aNode->mContextSize,
+                                               nsIDOMXPathResult::BOOLEAN_TYPE,
+                                               nsnull,
+                                               &retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMXPathResult> xpath_res = do_QueryInterface(retval);

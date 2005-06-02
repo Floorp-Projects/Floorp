@@ -78,7 +78,16 @@ protected:
   /** The HTML representation for the node */
   nsCOMPtr<nsIDOMElement> mHTMLElement;
 
+  /** The context position for the element */
+  PRInt32 mContextPosition;
+
+  /** The context size for the element */
+  PRInt32 mContextSize;
+
 public:
+  nsXFormsContextContainer()
+    : mContextPosition(1), mContextSize(1) {}
+
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIXTFXMLVisual overrides
@@ -96,7 +105,13 @@ public:
   // nsIXFormsControl
   NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
-  NS_IMETHOD SetContextNode(nsIDOMNode *aContextNode);
+  NS_IMETHOD SetContext(nsIDOMNode *aContextNode,
+                        PRInt32     aContextPosition,
+                        PRInt32     aContextSize);
+  NS_IMETHOD GetContext(nsAString   &aModelID,
+                        nsIDOMNode **aContextNode,
+                        PRInt32     *aContextPosition,
+                        PRInt32     *aContextSize);
   NS_IMETHOD IsEventTarget(PRBool *aOK);
 
   // nsIXFormsRepeatItemElement
@@ -242,9 +257,13 @@ nsXFormsContextContainer::CloneState(nsIDOMElement *aElement)
 // nsIXFormsContextControl
 
 NS_IMETHODIMP
-nsXFormsContextContainer::SetContextNode(nsIDOMNode *aContextNode)
+nsXFormsContextContainer::SetContext(nsIDOMNode *aContextNode,
+                                     PRInt32     aContextPosition,
+                                     PRInt32     aContextSize)
 {
   mBoundNode = aContextNode;
+  mContextPosition = aContextPosition;
+  mContextSize = aContextSize;
 
   // Remove from old model (if any)
   if (mModel) {
@@ -257,6 +276,24 @@ nsXFormsContextContainer::SetContextNode(nsIDOMNode *aContextNode)
     mModel->AddFormControl(this);
     mModel->SetStates(this, mBoundNode);
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsContextContainer::GetContext(nsAString      &aModelID,
+                                     nsIDOMNode    **aContextNode,
+                                     PRInt32        *aContextPosition,
+                                     PRInt32        *aContextSize)
+{
+  nsresult rv = nsXFormsControlStub::GetContext(aModelID,
+                                                aContextNode,
+                                                aContextPosition,
+                                                aContextSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aContextPosition = mContextPosition;
+  *aContextSize = mContextSize;
 
   return NS_OK;
 }

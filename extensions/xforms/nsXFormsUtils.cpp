@@ -69,7 +69,7 @@
 #include "nsXFormsXPathAnalyzer.h"
 #include "nsXFormsXPathParser.h"
 #include "nsXFormsXPathNode.h"
-#include "nsIDOMXPathExpression.h"
+#include "nsIDOMNSXPathExpression.h"
 #include "nsArray.h"
 
 #include "nsIScriptSecurityManager.h"
@@ -263,13 +263,19 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement           *aElement,
                               PRBool                  *aOuterBind,
                               nsIDOMNode             **aContextNode,
                               PRInt32                 *aContextPosition,
-                              PRInt32                  *aContextSize)
+                              PRInt32                 *aContextSize)
 {
   NS_ENSURE_ARG(aElement);
   NS_ENSURE_ARG(aOuterBind);
   NS_ENSURE_ARG_POINTER(aContextNode);
   NS_ENSURE_ARG_POINTER(aBindElement);
   *aBindElement = nsnull;
+
+  // Set default context size and position
+  if (aContextSize)
+    *aContextSize = 1;
+  if (aContextPosition)
+    *aContextPosition = 1;
 
   // Find correct model element
   nsCOMPtr<nsIDOMDocument> domDoc;
@@ -289,12 +295,6 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement           *aElement,
       DispatchEvent(aElement, eEvent_BindingException);
       return NS_ERROR_ABORT;
     }
-
-    // Context size and position are always 1
-    if (aContextSize)
-      *aContextSize = 1;
-    if (aContextPosition)
-      *aContextPosition = 1;
 
     *aOuterBind = GetParentModel(*aBindElement, aModel);
     NS_ENSURE_STATE(*aModel);
@@ -400,7 +400,7 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
            do_CreateInstance("@mozilla.org/dom/xforms-xpath-evaluator;1");
   NS_ENSURE_TRUE(eval, nsnull);
 
-  nsCOMPtr<nsIDOMXPathExpression> expression;
+  nsCOMPtr<nsIDOMNSXPathExpression> expression;
   eval->CreateExpression(aExpression,
                          aResolverNode,
                          getter_AddRefs(expression));
@@ -412,13 +412,13 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
     return nsnull;
   }
   
-  ///
-  /// @todo Evaluate() should use aContextPosition and aContextSize
   nsCOMPtr<nsISupports> supResult;
-  nsresult rv = expression->Evaluate(aContextNode,
-                                     aResultType,
-                                     nsnull,
-                                     getter_AddRefs(supResult));
+  nsresult rv = expression->EvaluateWithContext(aContextNode,
+                                                aContextPosition,
+                                                aContextSize,
+                                                aResultType,
+                                                nsnull,
+                                                getter_AddRefs(supResult));
 
   nsIDOMXPathResult *result = nsnull;
   if (NS_SUCCEEDED(rv) && supResult) {
@@ -433,7 +433,9 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
                             xNode,
                             expression,
                             &aExpression,
-                            aSet);
+                            aSet,
+                            aContextSize,
+                            aContextPosition);
       NS_ENSURE_SUCCESS(rv, nsnull);
 
       if (aIndexesUsed) 
@@ -524,8 +526,8 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
                                                   contextNode,
                                                   aElement,
                                                   aResultType,
-                                                  contextSize,
                                                   contextPosition,
+                                                  contextSize,
                                                   aDeps,
                                                   aIndexesUsed);
 

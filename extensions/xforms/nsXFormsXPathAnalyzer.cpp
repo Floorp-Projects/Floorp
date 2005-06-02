@@ -60,11 +60,13 @@ nsXFormsXPathAnalyzer::~nsXFormsXPathAnalyzer()
 }
 
 nsresult
-nsXFormsXPathAnalyzer::Analyze(nsIDOMNode              *aContextNode,
-                               const nsXFormsXPathNode *aNode,
-                               nsIDOMXPathExpression   *aExpression,
-                               const nsAString         *aExprString,
-                               nsCOMArray<nsIDOMNode>  *aSet)
+nsXFormsXPathAnalyzer::Analyze(nsIDOMNode                *aContextNode,
+                               const nsXFormsXPathNode   *aNode,
+                               nsIDOMNSXPathExpression   *aExpression,
+                               const nsAString           *aExprString,
+                               nsCOMArray<nsIDOMNode>    *aSet,
+                               PRUint32                   aSize,
+                               PRUint32                   aPosition)
 {
   NS_ENSURE_ARG(aContextNode);
   NS_ENSURE_ARG(aNode);
@@ -75,6 +77,8 @@ nsXFormsXPathAnalyzer::Analyze(nsIDOMNode              *aContextNode,
   mCurExpression = aExpression;
   mCurExprString = aExprString;
   mCurSet = aSet;
+  mCurSize = aSize;
+  mCurPosition = aPosition;
 
 #ifdef DEBUG_XF_ANALYZER
   printf("=====================================\n");
@@ -165,9 +169,8 @@ nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
     } else {
       xp = Substring(*mCurExprString, aNode->mStartIndex, aNode->mEndIndex - aNode->mStartIndex);
     }
-
-    rv = mEvaluator->Evaluate(xp, aContextNode, mResolver,
-                              nsIDOMXPathResult::ANY_TYPE,
+    rv = mEvaluator->Evaluate(xp, aContextNode, mCurPosition, mCurSize,
+                              mResolver, nsIDOMXPathResult::ANY_TYPE,
                               nsnull, getter_AddRefs(result));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -182,8 +185,8 @@ nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
                                                  indexSize,
                                                  xp.Length() - indexSize - 1); // remove final ')' too
       nsCOMPtr<nsIDOMXPathResult> stringRes;
-      rv = mEvaluator->Evaluate(indexExpr, aContextNode, mResolver,
-                                nsIDOMXPathResult::STRING_TYPE,
+      rv = mEvaluator->Evaluate(indexExpr, aContextNode, mCurPosition, mCurSize,
+                                mResolver, nsIDOMXPathResult::STRING_TYPE,
                                 nsnull, getter_AddRefs(stringRes));
       NS_ENSURE_SUCCESS(rv, rv);
 
