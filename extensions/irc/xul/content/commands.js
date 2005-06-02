@@ -940,6 +940,10 @@ function cmdCharset(e)
     }
 
     display(getMsg(msg, pm.prefs["charset"]));
+
+    // If we're on a channel, get the topic again so it can be re-decoded.
+    if (e.newCharset && e.server && e.channel)
+        e.server.sendData("TOPIC " + e.channel.encodedName + "\n");
 }
 
 function cmdCreateTabForView(e)
