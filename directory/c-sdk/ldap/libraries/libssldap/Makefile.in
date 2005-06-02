@@ -93,7 +93,7 @@ endif
 
 # variable definitions for exported symbols
 ifeq ($(OS_ARCH), WINNT)
-        SSLDAP_EXPORT_DEFS= $(srcdir)/../msdos/winsock/nsldapssl32.def
+        SSLDAP_EXPORT_DEFS= $(win_srcdir)/../msdos/winsock/nsldapssl32.def
 else
         SSLDAP_EXPORT_DEFS= $(SSLOBJDEST)/libldap_ssl.exp
 endif

@@ -95,7 +95,7 @@ endif
 
 # variable definitions for exported symbols
 ifeq ($(OS_ARCH), WINNT)
-        PRLDAP_EXPORT_DEFS= $(srcdir)/../msdos/winsock/nsldappr32.def
+        PRLDAP_EXPORT_DEFS= $(win_srcdir)/../msdos/winsock/nsldappr32.def
 else
 ifeq ($(OS_ARCH), OS2)
         PRLDAP_EXPORT_DEFS= $(OBJDIR_NAME)/libprldap.def

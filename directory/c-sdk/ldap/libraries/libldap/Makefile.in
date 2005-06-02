@@ -161,7 +161,7 @@ endif
 
 # variable definitions for exported symbols
 ifeq ($(OS_ARCH), WINNT)
-        LDAP_EXPORT_DEFS= $(srcdir)/../msdos/winsock/nsldap32.def
+        LDAP_EXPORT_DEFS= $(win_srcdir)/../msdos/winsock/nsldap32.def
 else
 ifeq ($(OS_ARCH), OS2)
         LDAP_EXPORT_DEFS= $(OBJDIR_NAME)/libldap.def

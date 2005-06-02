@@ -690,12 +690,17 @@ dnl ========================================================
 dnl Override of system specific host options
 dnl ========================================================
 case "$host" in
-*-mingw*|*-cygwin*|*-msvc*|*-mks*)
+*-mingw*)
+    NSINSTALL=nsinstall
+    WIN_TOP_SRC=`cd $srcdir && pwd -W`
+    ;;
+*-cygwin*|*-msvc*|*-mks*)
     CYGWIN_WRAPPER='sh $(topsrcdir)/config/cygwin-wrapper'
     NSINSTALL='$(CYGWIN_WRAPPER) nsinstall'
     if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" = 0; then
         PERL='$(CYGWIN_WRAPPER) perl'
     fi
+    WIN_TOP_SRC=`cygpath -w $srcdir | sed -e 's|\\\\|/|g'`
     ;;
 *-beos*)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_BEOS -DBeOS -DBEOS -D_POSIX_SOURCE"
@@ -2242,10 +2247,10 @@ fi
 RELEASE_OBJDIR_NAME="${OS_CONFIG}${CPU_ARCH_TAG}${COMPILER_TAG}${IMPL_STRATEGY}${OBJDIR_TAG}.${OBJDIR_SUFFIX}"
 
 dnl ========================================================
-dnl Use cygwin wrapper for win32 builds
+dnl Use cygwin wrapper for win32 builds, except MinGW/MSYS
 dnl ========================================================
 case "$target_os" in
-mingw*|cygwin*|msvc*|mksnt*)
+cygwin*|msvc*|mks*)
     CC="\$(CYGWIN_WRAPPER) $CC"
     CXX="\$(CYGWIN_WRAPPER) $CXX"
     RC="\$(CYGWIN_WRAPPER) $RC"
@@ -2340,6 +2345,7 @@ AC_SUBST(DLLFLAGS)
 AC_SUBST(EXEFLAGS)
 AC_SUBST(OS_DLLFLAGS)
 AC_SUBST(CYGWIN_WRAPPER)
+AC_SUBST(WIN_TOP_SRC)
 
 dnl ========================================================
 dnl Generate output files.

@@ -57,6 +57,7 @@ endif
 
 ifeq ($(OS_ARCH), WINNT)
 	COMPONENT_PULL_METHOD=FTP
+	win_srcdir:=$(subst $(topsrcdir),$(WIN_TOP_SRC),$(srcdir))
 endif
 
 # component tags for internal build only
