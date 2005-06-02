@@ -741,7 +741,10 @@ dnl ========================================================
 dnl Override of system specific host options
 dnl ========================================================
 case "$host" in
-*-mingw*|*-cygwin*|*-msvc*|*-mks*)
+*-mingw*)
+    NSINSTALL=nsinstall
+    ;;
+*-cygwin*|*-msvc*|*-mks*)
     NSINSTALL='$(CYGWIN_WRAPPER) nsinstall'
     if test `echo "${PATH}" | grep -c \;` = 0; then
         CYGWIN_WRAPPER='sh $(topsrcdir)/build/cygwin-wrapper'
@@ -2518,10 +2521,10 @@ fi
 RELEASE_OBJDIR_NAME="${OS_CONFIG}${CPU_ARCH_TAG}${COMPILER_TAG}${IMPL_STRATEGY}${OBJDIR_TAG}.${OBJDIR_SUFFIX}"
 
 dnl ========================================================
-dnl Use cygwin wrapper for win32 builds
+dnl Use cygwin wrapper for win32 builds, except MSYS/MinGW
 dnl ========================================================
 case "$target_os" in
-mingw*|cygwin*|msvc*|mks*)
+cygwin*|msvc*|mks*)
     CC="\$(CYGWIN_WRAPPER) $CC"
     CXX="\$(CYGWIN_WRAPPER) $CXX"
     RC="\$(CYGWIN_WRAPPER) $RC"
