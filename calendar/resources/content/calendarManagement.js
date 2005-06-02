@@ -74,11 +74,16 @@ var calCalendarManagerObserver = {
     },
 
     onCalendarPrefSet: function(aCalendar, aName, aValue) {
+        var item = getListItem(aCalendar);
         if (aName == 'color') {
-            var item = getListItem(aCalendar);
             if (item) {
                 var colorCell = item.childNodes[1];
                 colorCell.style.background = aValue;
+            }
+        } else if (aName == 'name') {
+            if (item) {
+                var nameCell = item.childNodes[2];
+                nameCell.setAttribute("label", aCalendar.name);
             }
         }
     },
