@@ -432,11 +432,13 @@ function pm_addpref(prefName, defaultValue, setter, bundle, group)
     var label = getMsgFrom(bundle, "pref." + prefName + ".label", null, prefName);
     var help  = getMsgFrom(bundle, "pref." + prefName + ".help", null, 
                            MSG_NO_HELP);
-    
-    if (label == prefName)
-        dd("WARNING: !!! Preference without label: " + prefName);
-    if (help == MSG_NO_HELP)
-        dd("WARNING: Preference without help text: " + prefName);
+    if (group != "hidden")
+    {
+        if (label == prefName)
+            dd("WARNING: !!! Preference without label: " + prefName);
+        if (help == MSG_NO_HELP)
+            dd("WARNING: Preference without help text: " + prefName);
+    }
     
     this.prefRecords[prefName] = new PrefRecord (prefName, defaultValue, 
                                                  label, help, group);
