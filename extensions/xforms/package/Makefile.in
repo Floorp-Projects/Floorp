@@ -61,7 +61,7 @@ endif
 GARBAGE		+= xforms.js xforms.template
 GARBAGE_DIRS	+= stage
 
-PACKAGE_VERSION = 0.1
+PACKAGE_VERSION = 0.2
 
 xpi:
 	@echo Copying files to staging area...
