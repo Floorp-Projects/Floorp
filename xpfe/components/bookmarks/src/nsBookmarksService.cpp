@@ -4763,7 +4763,7 @@ nsBookmarksService::exportBookmarks(nsISupportsArray *aArguments)
     NS_ENSURE_TRUE(pathUni, NS_ERROR_NULL_POINTER);
 
     // determine file type to export; default to HTML unless told otherwise
-    const PRUnichar* format = nsnull;
+    const PRUnichar* format = EmptyString().get();
     rv = getArgumentN(aArguments, kRDF_type, 0, getter_AddRefs(node));
     if (NS_SUCCEEDED(rv))
     {
