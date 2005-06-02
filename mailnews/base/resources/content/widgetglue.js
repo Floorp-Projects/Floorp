@@ -253,9 +253,10 @@ function MsgFolderProperties()
 
   if (msgFolder.flags & MSG_FOLDER_FLAG_VIRTUAL)
   { 
-    // virtual folders get there own property dialog that contains all of the
+    // virtual folders get their own property dialog that contains all of the
     // search information related to the virtual folder.
-    return MsgVirtualFolderProperties(true);
+    MsgVirtualFolderProperties(true);
+    return;
   }
 
   var name = GetFolderNameFromUri(preselectedURI, folderTree);
