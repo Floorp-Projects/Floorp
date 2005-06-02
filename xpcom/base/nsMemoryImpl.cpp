@@ -185,7 +185,11 @@ nsMemoryImpl::HeapMinimize(PRBool aImmediate)
 NS_IMETHODIMP
 nsMemoryImpl::IsLowMemory(PRBool *result)
 {
-#if defined(XP_WIN)
+#if defined(WINCE)
+    MEMORYSTATUS stat;
+    GlobalMemoryStatus(&stat);
+    *result = ((float)stat.dwAvailPhys / stat.dwTotalPhys) < 0.1;
+#elif defined(XP_WIN)
     MEMORYSTATUS stat;
     GlobalMemoryStatus(&stat);
     *result = ((float)stat.dwAvailPageFile / stat.dwTotalPageFile) < 0.1;
