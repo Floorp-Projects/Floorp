@@ -276,7 +276,7 @@
                                 hidden="true"/>
                       <datetimepicker id="start-datetime"
                                       value=""
-                                      onchange="onDateTimePick( this );"/>
+                                      onchange="onStartDateTimePick( this );"/>
                       <spacer width="10px"/>
                       <hbox pack="end" align="center">
                         <checkbox id="all-day-event-checkbox"
@@ -306,12 +306,12 @@
                                 hidden="true"/>
                       <datetimepicker id="due-datetime"
                                       value=""
-                                      onchange="onDateTimePick( this );"
+                                      onchange="onDueDateTimePick( this );"
                                       hidden-controller="todo"
                                       hidden="true"/>
                       <datetimepicker id="end-datetime"
                                       value=""
-                                      onchange="onDateTimePick( this );"
+                                      onchange="onEndDateTimePick( this );"
                                       hidden-controller="event"
                                       hidden="true"/>
                       <spacer flex="1"/>

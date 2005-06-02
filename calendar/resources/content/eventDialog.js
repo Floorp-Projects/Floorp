@@ -84,6 +84,7 @@
 var gDebugEnabled=true;
 
 var gOnOkFunction;   // function to be called when user clicks OK
+var gDurationMSec;   // current duration, for updating end date when start date is changed
 
 const DEFAULT_ALARM_LENGTH = 15; //default number of time units, an alarm goes off before an event
 
@@ -124,20 +125,16 @@ function loadCalendarEventDialog()
     case "event":
         var startDate = event.startDate.getInTimezone(kDefaultTimezone).jsDate;
         setElementValue("start-datetime", startDate);
-        dump(startDate + "\n");
 
         // only events have end dates. todos have due dates
         var endDate   = event.endDate.getInTimezone(kDefaultTimezone).jsDate;
+        gDurationMSec = endDate - startDate;
+
         var displayEndDate = new Date(endDate);
-
-        dump(displayEndDate + "\n");
-
-        /*
         if (event.isAllDay) {
             //displayEndDate == icalEndDate - 1, in the case of allday events
             displayEndDate.setDate(displayEndDate.getDate() - 1);
         }
-        */
         setElementValue("end-datetime", displayEndDate);
 
         // event status fields
@@ -483,9 +480,17 @@ function onOKCommand()
         if (!event.isMutable) // I will cut vlad for making me do this QI
             event = originalEvent.clone().QueryInterface(Components.interfaces.calIEvent);
 
+        event.isAllDay = getElementValue("all-day-event-checkbox", "checked");
         event.startDate = jsDateToDateTime(getElementValue("start-datetime"));
         event.endDate = jsDateToDateTime(getElementValue("end-datetime"));
-        event.isAllDay = getElementValue("all-day-event-checkbox", "checked");
+        var endDate = getElementValue("end-datetime");
+        if (event.isAllDay)
+        {
+            // displayed all day end date is inclusive date, convert to exclusive end date.
+            endDate.setDate(endDate.getDate() + 1); 
+        }
+        event.endDate = jsDateToDateTime(endDate);
+
         var status = getElementValue("event-status-field");
         if (status)
             event.status = status;
@@ -883,72 +888,55 @@ function updateOKButton()
 }
 
 
-/*
- * Called when an event datepicker is finished, and a date was picked.
- */
-function onDateTimePick(dateTimePicker)
-{
-    var pickedDateTime = new Date(dateTimePicker.value);
+function updateDuration() {
+  var startDate = getElementValue("start-datetime");
+  var endDate = new Date(getElementValue("end-datetime"));
+  if (getElementValue("all-day-event-checkbox", "checked")) {
+    // all-day display end date is inclusive end date
+    // but duration depends on exclusive end date
+    endDate.setDate(endDate.getDate() + 1);
+  }
+  gDurationMSec = endDate - startDate;
+}
 
-    // set the new end (or due) date
-    if (dateTimePicker.id == "end-datetime") {
-        if (getElementValue("all-day-event-checkbox", "checked")) {
-            //display enddate == ical enddate - 1 (for allday events)
-            pickedDateTime.setDate( pickedDateTime.getDate() + 1 );
-        }
-        setElementValue("end-datetime", pickedDateTime);
-        updateOKButton();
-        return;
-    }
 
-    if (dateTimePicker.id == "due-datetime") {
-        setElementValue("due-datetime", pickedDateTime);
-        updateOKButton();
-        return;
-    }
+function onDueDateTimePick(dateTimePicker) {
+  // check for due < start
+  updateOKButton();
+  return;
+}
 
-    // set the new start date
-    if (dateTimePicker.id == "start-datetime") {
-        var componentType = getElementValue("component-type");
-        var startDate = getElementValue("start-datetime");
-        var endDate;
+function onEndDateTimePick(dateTimePicker) {
+  updateDuration();
+  // check for end < start    
+  updateOKButton();
+  return;
+}
 
-        if (componentType == "event")
-            endDate = getElementValue("end-datetime");
-        else
-            endDate = getElementValue("due-datetime");
-        var duration = ( endDate.getTime() - startDate.getTime() );
+function onStartDateTimePick(dateTimePicker) {
+  var startDate = new Date(dateTimePicker.value);
 
-        setElementValue("start-datetime", pickedDateTime);
-        startDate = getElementValue("start-datetime");
-        // preserve the previous duration by changing end
-        endDate.setTime(startDate.getTime() + duration );
-        
-        var displayEndDate = new Date(endDate)
-        if (componentType == "event") {
-            if (getElementValue("all-day-event-checkbox", "checked")) {
-                //display enddate == ical enddate - 1 (for allday events)
-                displayEndDate.setDate( displayEndDate.getDate() - 1 );
-            }
-            setElementValue("end-datetime", displayEndDate);
-        }
-        else
-            setElementValue("due-datetime", displayEndDate);
-    }
+  // update the end date keeping the same duration
+  var displayEndDate = new Date(startDate.getTime() + gDurationMSec);
+  if (getElementValue("all-day-event-checkbox", "checked")) {
+    // all-day display end date is inclusive end date
+    // but duration depends on exclusive end date
+    displayEndDate.setDate( displayEndDate.getDate() - 1 );
+  }
+  setElementValue("end-datetime", displayEndDate);
 
-    var now = new Date();
+  // Initialize the until-date picker for recurring events to picked day,
+  // if the picked date is in future and repeat is not checked.
+  // UNTIL dates may be last occurrence start date, inclusive
+  // [rfc2445sec4.3.10].
+  if (startDate > new Date() && !getElementValue("repeat-checkbox", "checked")) {
+    setElementValue("repeat-end-date-picker", startDate);
+  }
 
-    // change the end date of recurring events to today, 
-    // if the new date is after today and repeat is not checked.
-    if (pickedDateTime.getTime() > now.getTime() &&
-        !getElementValue("repeat-checkbox", "checked") ) 
-    {
-        setElementValue("repeat-end-date-picker", pickedDateTime);
-    }
-    updateAdvancedWeekRepeat();
-    updateAdvancedRepeatDayOfMonth();
-    updateAddExceptionButton();
-    updateOKButton();
+  updateAdvancedWeekRepeat();
+  updateAdvancedRepeatDayOfMonth();
+  updateAddExceptionButton();
+  updateOKButton();
 }
 
 
@@ -977,16 +965,9 @@ function commandUntil()
  */
 function commandAllDay()
 {
-    var endDate = getElementValue("end-datetime");
-
-    //user enddate == ical enddate - 1 (for allday events)
-    if (getElementValue("all-day-event-checkbox", "checked") )
-        endDate.setDate(endDate.getDate() + 1);
-    else
-        endDate.setDate(endDate.getDate() - 1);
-
-    updateStartEndItemEnabled();
-    updateOKButton();
+  updateDuration(); // Same start/end means 24hrs if all-day, 0hrs if not.
+  updateStartEndItemEnabled();
+  updateOKButton();
 }
 
 
