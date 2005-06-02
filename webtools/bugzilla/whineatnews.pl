@@ -33,6 +33,9 @@ require "globals.pl";
 
 use Bugzilla::BugMail;
 
+# Whining is disabled if whinedays is zero
+exit unless Param('whinedays') >= 1;
+
 my $dbh = Bugzilla->dbh;
 SendSQL("SELECT bug_id, short_desc, login_name " .
         "FROM bugs INNER JOIN profiles ON userid = assigned_to " .

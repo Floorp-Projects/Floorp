@@ -770,8 +770,9 @@ Configure bugmail: %urlbase%userprefs.cgi?tab=email
 
   {
    name => 'whinedays',
-   desc => 'The number of days that we\'ll let a bug sit untouched in a NEW ' .
-           'state before our cronjob will whine at the owner.',
+   desc => q{The number of days that we'll let a bug sit untouched in a NEW
+             state before our cronjob will whine at the owner.<br>
+             Set to 0 to disable whining.},
    type => 't',
    default => 7
   },
