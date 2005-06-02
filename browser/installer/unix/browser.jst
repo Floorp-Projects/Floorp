@@ -90,46 +90,10 @@ if (verifyDiskSpace(communicatorFolder, srDest))
     logComment("dirCreate() returned: " + ignoreErr);
 
     // register chrome
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "browser.jar"), "content/browser/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "browser.jar"), "content/branding/");
     registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome", "classic.jar"), "skin/classic/browser/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "browser.jar"), "content/browser-region/");
-
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "toolkit.jar"), "content/passwordmgr/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "toolkit.jar"), "content/mozapps/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome", "classic.jar"), "skin/classic/mozapps/");
 
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/autoconfig/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/necko/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/cookie/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/wallet/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/xbl-marquee/");
-
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global-region/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global-platform/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/global/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/help/");
-
-    // XXXben Stuff that will become obsolete
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator-region/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator-platform/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/navigator/");
-
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator-region/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator-platform/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/communicator/");
-
-    // Register the psm chrome files, if they exist.
-    var pki = getFolder("Chrome", "pippki.jar");
-    if (File.exists(pki))
-      registerChrome(CONTENT | DELAYED_CHROME, pki, "content/pippki/");
-
-    var nss = getFolder("Chrome", "pipnss.jar");
-    if (File.exists(nss))
-      registerChrome(CONTENT | DELAYED_CHROME, nss, "content/pipnss/");
 
     if (err==SUCCESS)
     {
