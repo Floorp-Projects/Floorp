@@ -1,4 +1,4 @@
-pref("general.useragent.override", "Mozilla/5.0 (Windows; U; Windows CE; en-US; rv:1.8b2) Gecko/20050331 Minimo/0.4");
+pref("general.useragent.override", "Mozilla/5.0 (Windows; U; Windows CE; en-US; rv:1.8b2) Gecko/20050517 Minimo/0.5");
 
 
 pref("advanced.always_load_images",         true);
