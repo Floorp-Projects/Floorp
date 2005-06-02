@@ -349,7 +349,14 @@ static void AdjustChildWidgets(nsView *aView,
       widget->Move(NSTwipsToIntPixels(widgetOrigin.x, aScale),
                    NSTwipsToIntPixels(widgetOrigin.y, aScale));
       if (aInvalidate) {
-        widget->Invalidate(PR_FALSE);
+        // Force the widget and everything in it to repaint. We can't
+        // just use Invalidate because the widget might have child
+        // widgets and they wouldn't get updated. We can't call
+        // UpdateView(aView) because the area to be repainted might be
+        // outside aView's clipped bounds. This isn't the greatest way
+        // to achieve this, perhaps, but it works.
+        widget->Show(PR_FALSE);
+        widget->Show(PR_TRUE);
       }
     }
   } else {
