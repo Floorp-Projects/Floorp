@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= plugin
 LIBRARY_NAME	= npnul32
 RESFILE		= npnul32.res
-DEFFILE		= $(srcdir)/npnul32.def
+DEFFILE		= $(win_srcdir)/npnul32.def
 GRE_MODULE	= 1
 
 PACKAGE_FILE = npnul.pkg

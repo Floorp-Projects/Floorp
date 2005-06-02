@@ -642,6 +642,7 @@ IMPORT_LIB_SUFFIX=
 TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 CYGWIN_WRAPPER=
+WIN_TOP_SRC=
 MOZ_USER_DIR=".mozilla"
 
 MOZ_JPEG_CFLAGS=
@@ -945,15 +946,22 @@ case "$host" in
     HOST_NSPR_MDCPUCFG='\"md/_winnt.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     HOST_BIN_SUFFIX=.exe
-    CYGWIN_WRAPPER="${srcdir}/build/cygwin-wrapper"
-    if test "`echo ${srcdir} | grep -c ^/ 2>/dev/null`" = 0; then
-        _pwd=`pwd`
-        CYGWIN_WRAPPER="${_pwd}/${srcdir}/build/cygwin-wrapper"
-    fi
-    if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" = 0; then
-        AS_PERL=1
-        PERL="${CYGWIN_WRAPPER} $PERL"
-    fi
+    case "$host" in
+    *mingw*)
+    dnl MinGW/MSYS does not need CYGWIN_WRAPPER
+        ;;
+    *)
+        CYGWIN_WRAPPER="${srcdir}/build/cygwin-wrapper"
+        if test "`echo ${srcdir} | grep -c ^/ 2>/dev/null`" = 0; then
+            _pwd=`pwd`
+            CYGWIN_WRAPPER="${_pwd}/${srcdir}/build/cygwin-wrapper"
+        fi
+        if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" = 0; then
+            AS_PERL=1
+            PERL="${CYGWIN_WRAPPER} $PERL"
+        fi
+        ;;
+    esac
     ;;
 
 *-darwin*)
@@ -1401,11 +1409,21 @@ case "$target" in
     no_x=yes
     AC_DEFINE(NO_X11)
 
+    dnl MinGW/MSYS doesn't provide or need cygpath
+    case "$host" in
+    *-mingw*)
+	CYGPATH_W=echo
+	CYGPATH_S=cat
+	MOZ_BUILD_ROOT=`cd $MOZ_BUILD_ROOT && pwd -W`
+	;;
+    *-cygwin*|*-msvc*|*-mks*)
+	CYGPATH_W="cygpath -w"
+	CYGPATH_S="sed -e s|\\\\|/|g"
+	MOZ_BUILD_ROOT=`$CYGPATH_W $MOZ_BUILD_ROOT | $CYGPATH_S`
+	;;
+    esac
     case "$host" in
     *-mingw*|*-cygwin*|*-msvc*|*-mks*)
-
-    dnl Remove cygwinism from MOZ_BUILD_ROOT
-    MOZ_BUILD_ROOT=`cygpath -w $MOZ_BUILD_ROOT | sed -e 's|\\\\|/|g'`
 
     if test -z "$MOZ_TOOLS"; then
         AC_MSG_ERROR([MOZ_TOOLS is not set])
@@ -1418,7 +1436,7 @@ case "$target" in
     if test `echo ${PATH}: | grep -ic "$MOZ_TOOLS_DIR/bin:"` = 0; then
         AC_MSG_ERROR([\$MOZ_TOOLS\\bin must be in your path.])
     fi
-    MOZ_TOOLS_DIR=`cygpath -w $MOZ_TOOLS_DIR | sed -e 's|\\\\|/|g'`
+    MOZ_TOOLS_DIR=`$CYGPATH_W $MOZ_TOOLS_DIR | $CYGPATH_S`
 
     if test -n "$GLIB_PREFIX"; then
         _GLIB_PREFIX_DIR=`cd $GLIB_PREFIX && pwd`
@@ -1426,7 +1444,7 @@ case "$target" in
             if test `echo ${PATH}: | grep -ic "$_GLIB_PREFIX_DIR/bin:"` = 0; then
                 AC_MSG_ERROR([GLIB_PREFIX must be in your \$PATH.])
             fi
-            _GLIB_PREFIX_DIR=`cygpath -w $_GLIB_PREFIX_DIR | sed -e 's|\\\\|/|g'`
+            _GLIB_PREFIX_DIR=`$CYGPATH_W $_GLIB_PREFIX_DIR | $CYGPATH_S`
         else
             AC_MSG_ERROR([GLIB_PREFIX is set but "${GLIB_PREFIX}" is not a directory.])
         fi
@@ -1445,7 +1463,7 @@ case "$target" in
             if test `echo ${PATH}: | grep -ic "$_LIBIDL_PREFIX_DIR/bin:"` = 0; then
                 AC_MSG_ERROR([LIBIDL_PREFIX must be in your \$PATH.])
             fi
-            _LIBIDL_PREFIX_DIR=`cygpath -w $_LIBIDL_PREFIX_DIR | sed -e 's|\\\\|/|g'`
+            _LIBIDL_PREFIX_DIR=`$CYGPATH_W $_LIBIDL_PREFIX_DIR | $CYGPATH_S`
         else
             AC_MSG_ERROR([LIBIDL_PREFIX is set but "${LIBIDL_PREFIX}" is not a directory.])
         fi
@@ -6534,10 +6552,13 @@ done
 AC_SUBST(LIBS_PATH)
 
 dnl ========================================================
-dnl Use cygwin wrapper for win32 builds
+dnl Use cygwin wrapper for win32 builds, except MSYS/MinGW
 dnl ========================================================
 case "$host_os" in
-mingw*|cygwin*|msvc*|mks*)
+mingw*)
+    WIN_TOP_SRC=`cd $srcdir; pwd -W`
+    ;;
+cygwin*|msvc*|mks*)
     HOST_CC="\$(CYGWIN_WRAPPER) $HOST_CC"
     HOST_CXX="\$(CYGWIN_WRAPPER) $HOST_CXX"
     CC="\$(CYGWIN_WRAPPER) $CC"
@@ -6548,10 +6569,12 @@ mingw*|cygwin*|msvc*|mks*)
     RC="\$(CYGWIN_WRAPPER) $RC"
     MIDL="\$(CYGWIN_WRAPPER) $MIDL"
     CYGDRIVE_MOUNT=`mount -p | awk '{ if (/^\//) { print $1; exit } }'`
+    WIN_TOP_SRC=`cygpath -w $srcdir | sed -e 's|\\\\|/|g'`
     ;;
 esac
 
 AC_SUBST(CYGDRIVE_MOUNT)
+AC_SUBST(WIN_TOP_SRC)
 
 AC_SUBST(MOZILLA_VERSION)
 AC_SUBST(MOZILLA_VERSION_MAJOR)

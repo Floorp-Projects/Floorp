@@ -55,7 +55,7 @@ CPPSRCS = plugin.cpp
 
 SHARED_LIBRARY_LIBS = ../../common/$(LIB_PREFIX)plugingate_s.$(LIB_SUFFIX)
 
-DEFFILE = $(srcdir)/basic.def
+DEFFILE = $(win_srcdir)/basic.def
 RESFILE = basic.res
 
 ifdef GNU_CC

@@ -60,7 +60,7 @@ XPIDLSRCS = nsISimplePlugin.idl
 SHARED_LIBRARY_LIBS = ../common/$(LIB_PREFIX)plugingate_s.$(LIB_SUFFIX)
 
 ifeq ($(OS_ARCH),WINNT)
-DEFFILE = $(srcdir)/npsimple.def
+DEFFILE = $(win_srcdir)/npsimple.def
 RESFILE = npsimple.res
 endif
 

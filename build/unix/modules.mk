@@ -41,8 +41,8 @@ BUILD_MODULE_CVS = config build
 # client.mk does not have topsrcdir set
 ifndef topsrcdir
 topsrcdir=$(TOPSRCDIR)
-ifdef MOZ_TOOLS
-topsrcdir := $(shell cygpath -w $(TOPSRCDIR) | sed -e 's|\\|/|g')
+ifdef CYGDRIVE_MOUNT
+topsrcdir := $(subst \,/,$(shell cygpath -w $(TOPSRCDIR)))
 endif
 endif
 
