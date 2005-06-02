@@ -6020,7 +6020,11 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
   printf("saving window state, stateObj = %p\n", stateObj);
 #endif
   nsresult rv = CopyJSProperties(cx, mJSObject, stateObj);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    delete *aState;
+    *aState = nsnull;
+    return rv;
+  }
 
   NS_ADDREF(*aState);
   return NS_OK;
