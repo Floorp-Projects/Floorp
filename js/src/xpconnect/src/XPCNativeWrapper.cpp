@@ -476,8 +476,8 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   AUTO_MARK_JSVAL(ccx, memberval);
 
   // clone a function we can use for this object
-  JSObject* funobj = ::JS_CloneFunctionObject(cx, JSVAL_TO_OBJECT(memberval),
-                                              wrapper->GetFlatJSObject());
+  JSObject* funobj = xpc_CloneJSFunction(ccx, JSVAL_TO_OBJECT(memberval),
+                                         wrapper->GetFlatJSObject());
   if (!funobj) {
     return JS_FALSE;
   }
@@ -701,9 +701,8 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     // use for this object.  NB: cx's newborn roots will protect funobj
     // and funWrapper and its object from GC.
 
-    JSObject* funobj =
-      ::JS_CloneFunctionObject(cx, JSVAL_TO_OBJECT(memberval),
-                               wrapper->GetFlatJSObject());
+    JSObject* funobj = xpc_CloneJSFunction(ccx, JSVAL_TO_OBJECT(memberval),
+                                           wrapper->GetFlatJSObject());
     if (!funobj) {
       return JS_FALSE;
     }
