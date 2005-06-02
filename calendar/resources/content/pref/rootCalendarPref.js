@@ -66,23 +66,31 @@ calendarPrefObserver.prototype =
             case "calendar.week.d4thursdaysoff":
             case "calendar.week.d5fridaysoff":
             case "calendar.week.d6saturdaysoff":
-                if (this.CalendarPreferences.calendarWindow.currentView != null)
-                this.CalendarPreferences.calendarWindow.currentView.refresh();
+                if (this.CalendarPreferences.calendarWindow.currentView != null) {
+                  this.CalendarPreferences.calendarWindow.currentView.refresh();
+                }
                 break;
             case "calendar.weeks.inview":
-                //changeNumberOfWeeks expects an element with attribute 'value'
-                var newWeeks = document.createElement( "textbox" );
-                newWeeks.setAttribute("value", subject.getIntPref( prefName ) );
-                this.CalendarPreferences.calendarWindow.multiweekView
-                       .changeNumberOfWeeks(newWeeks);
+                if (this.CalendarPreferences.calendarWindow.multiweekView != null) {
+                  //changeNumberOfWeeks expects an element with attribute 'value'
+                  var newWeeks = document.createElement( "textbox" );
+                  newWeeks.setAttribute("value", subject.getIntPref( prefName ) );
+                  this.CalendarPreferences.calendarWindow.multiweekView
+                         .changeNumberOfWeeks(newWeeks);
+                }
                 break;
             case "calendar.week.start":
-                this.CalendarPreferences.calendarWindow.currentView.refresh();
-                this.CalendarPreferences.calendarWindow.miniMonth.refreshDisplay(true);
+                if (this.CalendarPreferences.calendarWindow.currentView != null) {
+                  this.CalendarPreferences.calendarWindow.currentView.refresh();
+                }
+                if (this.CalendarPreferences.calendarWindow.miniMonth != null) {
+                  this.CalendarPreferences.calendarWindow.miniMonth.refreshDisplay(true);
+                }
                 break;
-
             case "calendar.date.format" :
-                this.CalendarPreferences.calendarWindow.currentView.refresh();
+                if (this.CalendarPreferences.calendarWindow.currentView != null) {
+                  this.CalendarPreferences.calendarWindow.currentView.refresh();
+                }
                 refreshEventTree();
                 toDoUnifinderRefresh();
                 break;
@@ -98,7 +106,9 @@ calendarPrefObserver.prototype =
             case "calendar.local-time-zone":
                 gDefaultTimezone = subject.getCharPref( prefName );
 
-                this.CalendarPreferences.calendarWindow.currentView.refresh();
+                if (this.CalendarPreferences.calendarWindow.currentView != null) {
+                  this.CalendarPreferences.calendarWindow.currentView.refresh();
+                }
                 refreshEventTree();
                 toDoUnifinderRefresh();
                 break;
