@@ -55,6 +55,7 @@ const char* XPCJSRuntime::mStrings[] = {
     "Components",           // IDX_COMPONENTS
     "wrappedJSObject",      // IDX_WRAPPED_JSOBJECT
     "Object",               // IDX_OBJECT
+    "Function",             // IDX_FUNCTION
     "prototype",            // IDX_PROTOTYPE
     "createInstance",       // IDX_CREATE_INSTANCE
     "item"                  // IDX_ITEM

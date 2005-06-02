@@ -418,20 +418,13 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
 static
 JSBool GetMember(XPCCallContext& ccx, JSObject* funobj, XPCNativeInterface*& iface, XPCDispInterface::Member*& member)
 {
-    // We expect funobj to be a clone, we need the real funobj.
-    JSFunction* fun = (JSFunction*) JS_GetPrivate(ccx, funobj);
-    if(!fun)
-        return JS_FALSE;
-    JSObject* realFunObj = JS_GetFunctionObject(fun);
-    if(!realFunObj)
-        return JS_FALSE;
     jsval val;
-    if(!JS_GetReservedSlot(ccx, realFunObj, 1, &val))
+    if(!JS_GetReservedSlot(ccx, funobj, 1, &val))
         return JS_FALSE;
     if(!JSVAL_IS_INT(val))
         return JS_FALSE;
     iface = NS_REINTERPRET_CAST(XPCNativeInterface*,JSVAL_TO_PRIVATE(val));
-    if(!JS_GetReservedSlot(ccx, realFunObj, 0, &val))
+    if(!JS_GetReservedSlot(ccx, funobj, 0, &val))
         return JS_FALSE;
     if(!JSVAL_IS_INT(val))
         return JS_FALSE;

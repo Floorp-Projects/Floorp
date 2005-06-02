@@ -447,7 +447,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
     
         AUTO_MARK_JSVAL(ccx, funval);
 
-        funobj = JS_CloneFunctionObject(ccx, JSVAL_TO_OBJECT(funval), obj);
+        funobj = xpc_CloneJSFunction(ccx, JSVAL_TO_OBJECT(funval), obj);
         if(!funobj)
             return JS_FALSE;
     }

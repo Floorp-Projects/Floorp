@@ -266,7 +266,7 @@ JSBool XPCIDispatchExtension::DefineProperty(XPCCallContext & ccx,
     // Protect the jsval 
     AUTO_MARK_JSVAL(ccx, funval);
     // clone a function we can use for this object 
-    JSObject* funobj = JS_CloneFunctionObject(ccx, JSVAL_TO_OBJECT(funval), obj);
+    JSObject* funobj = xpc_CloneJSFunction(ccx, JSVAL_TO_OBJECT(funval), obj);
     if(!funobj)
         return JS_FALSE;
     jsid id;

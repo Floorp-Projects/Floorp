@@ -2092,8 +2092,8 @@ NS_IMETHODIMP nsXPCComponents::LookupMethod()
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     // clone a function we can use for this object 
-    JSObject* funobj = JS_CloneFunctionObject(cx, JSVAL_TO_OBJECT(funval), 
-                                              wrapper->GetFlatJSObject());
+    JSObject* funobj = xpc_CloneJSFunction(inner_cc, JSVAL_TO_OBJECT(funval), 
+                                           wrapper->GetFlatJSObject());
     if(!funobj)
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 

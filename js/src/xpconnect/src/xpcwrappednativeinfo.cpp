@@ -43,6 +43,44 @@
 #include "xpcprivate.h"
 
 /***************************************************************************/
+
+/*
+ * Helper that clones JS Function objects along with both of its
+ * reserved slots.
+ */
+
+JSObject *
+xpc_CloneJSFunction(XPCCallContext &ccx, JSObject *funobj, JSObject *parent)
+{
+    JSObject *clone = JS_CloneFunctionObject(ccx, funobj, parent);
+    if(!clone)
+        return nsnull;
+
+    XPCWrappedNativeScope *scope = 
+        XPCWrappedNativeScope::FindInJSObjectScope(ccx, parent);
+
+    if (!scope) {
+        return nsnull;
+    }
+
+    // Make sure to break the prototype chain to the function object
+    // we cloned to prevent its scope from leaking into the clones
+    // scope.
+    JS_SetPrototype(ccx, clone, scope->GetPrototypeJSFunction());
+
+    // Copy the reserved slots to the clone.
+    jsval ifaceVal, memberVal;
+    if(!JS_GetReservedSlot(ccx, funobj, 0, &ifaceVal) ||
+       !JS_GetReservedSlot(ccx, funobj, 1, &memberVal))
+        return nsnull;
+
+    if(!JS_SetReservedSlot(ccx, clone, 0, ifaceVal) ||
+       !JS_SetReservedSlot(ccx, clone, 1, memberVal))
+        return nsnull;
+
+    return clone;
+}
+
 // XPCNativeMember
 
 // static
@@ -52,19 +90,11 @@ XPCNativeMember::GetCallInfo(XPCCallContext& ccx,
                              XPCNativeInterface** pInterface,
                              XPCNativeMember**    pMember)
 {
-    JSFunction* fun;
-    JSObject* realFunObj;
-
-    // We expect funobj to be a clone, we need the real funobj.
-
-    fun = (JSFunction*) JS_GetPrivate(ccx, funobj);
-    realFunObj = JS_GetFunctionObject(fun);
-
     jsval ifaceVal;
     jsval memberVal;
 
-    if(!JS_GetReservedSlot(ccx, realFunObj, 0, &ifaceVal) ||
-       !JS_GetReservedSlot(ccx, realFunObj, 1, &memberVal) ||
+    if(!JS_GetReservedSlot(ccx, funobj, 0, &ifaceVal) ||
+       !JS_GetReservedSlot(ccx, funobj, 1, &memberVal) ||
        !JSVAL_IS_INT(ifaceVal) || !JSVAL_IS_INT(memberVal))
     {
         return JS_FALSE;
