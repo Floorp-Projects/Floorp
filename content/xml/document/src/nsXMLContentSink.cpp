@@ -468,7 +468,8 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
 
 
 nsresult
-nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
+nsXMLContentSink::CloseElement(nsIContent* aContent, nsIContent* aParent,
+                               PRBool* aAppendContent)
 {
   NS_ASSERTION(aContent, "missing element to close");
 
@@ -502,7 +503,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
       || nodeInfo->Equals(nsSVGAtoms::script, kNameSpaceID_SVG)
 #endif
     ) {
-    rv = ProcessEndSCRIPTTag(aContent);
+    rv = ProcessEndSCRIPTTag(aContent, aParent);
     *aAppendContent = PR_TRUE;
     return rv;
   }
@@ -981,14 +982,17 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
                "Wrong element being closed");
 #endif  
 
-  result = CloseElement(content, &appendContent);
+  nsCOMPtr<nsIContent> parent = GetCurrentContent();
+  
+  result = CloseElement(content, parent, &appendContent);
   NS_ENSURE_SUCCESS(result, result);
 
   if (mDocElement == content) {
+    // XXXbz for roots that don't want to be appended on open, we
+    // probably need to deal here.... (and stop appending them on open).
     mState = eXMLContentSinkState_InEpilog;
   }
   else if (appendContent) {
-    nsCOMPtr<nsIContent> parent = GetCurrentContent();
     NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
 
     parent->AppendChildTo(content, PR_FALSE);
@@ -1354,21 +1358,24 @@ nsXMLContentSink::AddText(const PRUnichar* aText,
 }
 
 nsresult
-nsXMLContentSink::ProcessEndSCRIPTTag(nsIContent* aContent)
+nsXMLContentSink::ProcessEndSCRIPTTag(nsIContent* aContent,
+                                      nsIContent* aParent)
 {
   nsresult result = NS_OK;
 
+  mConstrainSize = PR_TRUE; 
   nsCOMPtr<nsIScriptElement> scriptElement(do_QueryInterface(aContent));
   NS_ASSERTION(scriptElement, "null script element in XML content sink");
-  mScriptElements.AppendObject(scriptElement);
 
   scriptElement->SetScriptLineNumber(mScriptLineNo);
 
-  mConstrainSize = PR_TRUE; 
-  // Assume that we're going to block the parser with a script load.
-  // If it's an inline script, we'll be told otherwise in the call
-  // to our ScriptAvailable method.
-  mNeedToBlockParser = PR_TRUE;
+  if (!aParent || aParent->GetCurrentDoc() == mDocument) {
+    // Assume that we're going to block the parser with a script load.
+    // If it's an inline script, we'll be told otherwise in the call
+    // to our ScriptAvailable method.
+    mScriptElements.AppendObject(scriptElement);
+    mNeedToBlockParser = PR_TRUE;
+  }
 
   return result;
 }
