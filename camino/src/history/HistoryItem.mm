@@ -279,8 +279,8 @@ enum
 
 - (void)removeChild:(HistoryItem*)inChild
 {
-  [mChildren removeObject:inChild];
   [inChild setParentItem:nil];
+  [mChildren removeObject:inChild];
 }
 
 - (void)addChildren:(NSArray*)inChildren
