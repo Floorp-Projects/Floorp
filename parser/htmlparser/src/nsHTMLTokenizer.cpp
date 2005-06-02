@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1037,7 +1038,7 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,
         IF_FREE(aToken, mTokenAllocator);
       }
       else {
-        if (mIsFinalChunk && result == kEOF) {
+        if (!aScanner.IsIncremental() && result == kEOF) {
           result=NS_OK; // Use as much of the entity as you can get.
         }
         AddToken(aToken,result,&mTokenDeque,theAllocator);
@@ -1046,6 +1047,13 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,
     }
     // Oops, we're actually looking at plain text...
     result = ConsumeText(aToken,aScanner);
+  }
+  else if (result == kEOF && !aScanner.IsIncremental()) {
+    // If the last character in the file is an &, consume it as text.
+    result = ConsumeText(aToken, aScanner);
+    if (aToken) {
+      aToken->SetInError(PR_TRUE);
+    }
   }
   return result;
 }
