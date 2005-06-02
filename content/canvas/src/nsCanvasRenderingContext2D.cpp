@@ -1887,7 +1887,7 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
     // Create a temporary surface to hold the full-size image in cairo
     // image format.
     nsAutoArrayPtr<PRUint8> tmpBuf(new PRUint8[aSurfaceSize.width*aSurfaceSize.height*4]);
-    if (tmpBuf) {
+    if (!tmpBuf) {
         aBlackSurface->Unlock();
         return NS_ERROR_OUT_OF_MEMORY;
     }
