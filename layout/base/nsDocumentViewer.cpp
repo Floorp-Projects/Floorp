@@ -1375,8 +1375,10 @@ DocumentViewerImpl::Destroy()
     return NS_OK;
   }
 
-  mDocument->Destroy();
-  mDocument = nsnull;
+  if (mDocument) {
+    mDocument->Destroy();
+    mDocument = nsnull;
+  }
 
   // All callers are supposed to call destroy to break circular
   // references.  If we do this stuff in the destructor, the
