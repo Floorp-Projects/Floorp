@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<?xml-stylesheet src="chrome://calendar/skin/calendar-toolbar.css" type="text/css"?>
+
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="chrome://calendar/content/calendar-item-editing.js"/>
+
+  <menupopup id="menu_NewPopup">
+    <menuitem id="ltnNewEvent" label="New Calendar Event"
+              oncommand="createEventWithDialog();"/>
+  </menupopup>
+
+
+  <toolbarpalette id="MailToolbarPalette">
+
+    <toolbarbutton id="calendar-new-event-button" class="cal-toolbarbutton-1" label="New Event" tooltiptext="New Event" oncommand="createEventWithDialog()"/>
+
+  </toolbarpalette>
+
+</overlay>
