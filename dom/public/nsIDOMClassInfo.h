@@ -332,6 +332,9 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_CanvasPattern_id,
 #endif
   
+  // SmartCard Events
+  eDOMClassInfo_SmartCardEvent_id,
+  
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

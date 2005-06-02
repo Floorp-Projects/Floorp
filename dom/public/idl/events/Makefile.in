@@ -67,6 +67,7 @@ XPIDLSRCS =					\
 	nsIDOMPopupBlockedEvent.idl		\
 	nsIDOMBeforeUnloadEvent.idl		\
 	nsIDOMNSEventTarget.idl			\
+	nsIDOMSmartCardEvent.idl                \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

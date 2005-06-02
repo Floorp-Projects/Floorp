@@ -50,11 +50,13 @@
 #include "nsIEntropyCollector.h"
 #include "nsString.h"
 #include "nsIStringBundle.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIPrefBranch.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsSmartCardMonitor.h"
 #include "nsITimer.h"
 #include "nsNetUtil.h"
 #include "nsHashtable.h"
@@ -147,6 +149,14 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   NS_IMETHOD DownloadCRLDirectly(nsAutoString, nsAutoString) = 0;
   
   NS_IMETHOD LogoutAuthenticatedPK11() = 0;
+
+  NS_IMETHOD LaunchSmartCardThread(SECMODModule *module) = 0;
+
+  NS_IMETHOD ShutdownSmartCardThread(SECMODModule *module) = 0;
+
+  NS_IMETHOD PostEvent(const nsAString &eventType, const nsAString &token) = 0;
+
+  NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token) = 0;
   
 };
 
@@ -205,6 +215,11 @@ public:
   NS_IMETHOD RememberCert(CERTCertificate *cert);
   static nsresult GetNSSCipherIDFromPrefString(const nsACString &aPrefString, PRUint16 &aCipherId);
 
+  NS_IMETHOD LaunchSmartCardThread(SECMODModule *module);
+  NS_IMETHOD ShutdownSmartCardThread(SECMODModule *module);
+  NS_IMETHOD PostEvent(const nsAString &eventType, const nsAString &token);
+  NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token);
+
 private:
 
   nsresult InitializeNSS(PRBool showWarningBox);
@@ -223,6 +238,8 @@ private:
   
   void ShowAlert(AlertIdentifier ai);
   void InstallLoadableRoots();
+  void LaunchSmartCardThreads();
+  void ShutdownSmartCardThreads();
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
   nsresult RegisterPSMContentListener();
@@ -230,6 +247,7 @@ private:
   nsresult DownloadCrlSilently();
   nsresult PostCRLImportEvent(nsCAutoString *urlString, PSMContentDownloader *psmDownloader);
   nsresult getParamsForNextCrlToDownload(nsAutoString *url, PRTime *time, nsAutoString *key);
+  nsresult DispatchEventToWindow(nsIDOMWindow *domWin, const nsAString &eventType, const nsAString &token);
   PRLock *mutex;
   
   nsCOMPtr<nsIScriptSecurityManager> mScriptSecurityManager;
@@ -248,6 +266,7 @@ private:
   PRBool mUpdateTimerInitialized;
   static int mInstanceCount;
   nsNSSShutDownList *mShutdownObjectList;
+  SmartCardThreadList *mThreadList;
 };
 
 class PSMContentListener : public nsIURIContentListener,
