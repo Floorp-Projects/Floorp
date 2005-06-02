@@ -120,20 +120,20 @@ function toggleHighlight(aHighlight)
 {
   var word = document.getElementById("find-field").value;
   if (aHighlight) {
-    highlightDoc('yellow', word);
+    highlightDoc('yellow', 'black', word);
   } else {
-    highlightDoc(null, null);
+    highlightDoc(null, null, null);
     gLastHighlightString = null;
   }
 }
 
-function highlightDoc(color, word, win)
+function highlightDoc(highBackColor, highTextColor, word, win)
 {
   if (!win)
     win = window._content; 
 
   for (var i = 0; win.frames && i < win.frames.length; i++) {
-    highlightDoc(color, word, win.frames[i]);
+    highlightDoc(highBackColor, highTextColor, word, win.frames[i]);
   }
 
   var doc = win.document;
@@ -158,7 +158,7 @@ function highlightDoc(color, word, win)
   endPt.setStart(body, count);
   endPt.setEnd(body, count);
 
-  if (!color) {
+  if (!highBackColor) {
     // Remove highlighting.  We use the find API again rather than
     // searching for our span elements by id so that we gain access to the
     // anonymous content that nsIFind searches.
@@ -206,7 +206,7 @@ function highlightDoc(color, word, win)
   }
 
   var baseNode = doc.createElement("span");
-  baseNode.setAttribute("style", "background-color: " + color + ";");
+  baseNode.setAttribute("style", "background-color: " + highBackColor + "; color: " + highTextColor + ";");
   baseNode.setAttribute("id", "__firefox-findbar-search-id");
 
   highlightText(word, baseNode);
