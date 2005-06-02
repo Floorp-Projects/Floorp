@@ -270,65 +270,7 @@ nsPageFrame::IsContainingBlock() const
   return PR_TRUE;
 }
 
-// Remove fix below when string gets fixed
-#define WORKAROUND_FOR_BUG_110335
-// replace the &<code> with the value, but if the value is empty
-// set the string to zero length
-static void
-SubstValueForCode(nsString& aStr, const PRUnichar * aUKey, const PRUnichar * aUStr)
-{
-#ifdef WORKAROUND_FOR_BUG_110335
-  const PRUnichar* uKeyStr = aUKey;
-
-  // Check to make sure our subst code &<code> isn't in the data string
-  // for example &T for title is in QB&T
-  nsAutoString dataStr(aUStr);
-  nsAutoString newKey(aUKey);
-  PRBool fixingSubstr = (dataStr.Find(newKey) != kNotFound);
-  if (fixingSubstr) {
-    // well, the code is in the data str so make up a new code
-    // but make sure it it isn't in either substs string or the data string
-    char* code = "~!@#$%^*()_+=][}{`';:|?/.,:\"<>";
-    PRInt32 codeInx = 0;
-    PRInt32 codeLen = PRUint32(strlen(code));
-    while ((dataStr.Find(newKey) > -1 || aStr.Find(newKey) > -1) && codeInx < codeLen) {
-      newKey.SetCharAt((PRUnichar)code[codeInx++], 0);
-    }
-
-    // Check to see if we can do the substitution
-    if (codeInx == codeLen) {
-      aStr.Truncate();
-      return; // bail we just can't do it
-    }
-
-    // Ok, we have the new code, so repplace the old code 
-    // in the dest str with the new code
-    aStr.ReplaceSubstring(aUKey, newKey.get());
-    uKeyStr = ToNewUnicode(newKey);
-  }
-
-  if (!aUStr || !*aUStr) {
-    aStr.Truncate();
-  } else {
-    aStr.ReplaceSubstring(uKeyStr, aUStr);
-  }
-
-  // Free uKeyStr only if we fixed the string.
-  if (fixingSubstr) {
-    nsMemory::Free(NS_CONST_CAST(PRUnichar*, uKeyStr));
-  }
-#else
-
-  if (!aUStr || !*aUStr) {
-    aStr.Truncate();
-  } else {
-    aStr.ReplaceSubstring(aUKey, aUStr);
-  }
-#endif  // WORKAROUND_FOR_BUG_110335
-}
 // done with static helper functions
-//------------------------------------------------------------------------------
-
 //------------------------------------------------------------------------------
 void 
 nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
