@@ -741,28 +741,29 @@ function compareIgnoringTimeOfDay(dateA, dateB)
  */
 function checkSetTimeDate()
 {
-   var startDate      = getElementValue("start-datetime");
-   var endDate        = getElementValue("end-datetime");
-   var dateComparison = compareIgnoringTimeOfDay(endDate, startDate);
+  var startDate      = getElementValue("start-datetime");
+  var endDate        = getElementValue("end-datetime");
+  var dateComparison = compareIgnoringTimeOfDay(endDate, startDate);
 
-   if (dateComparison < 0 || (dateComparison == 0 &&
-       getElementValue("all-day-event-checkbox", "checked") ) )
-   {
-      // end before start, or all day event and end date is not exclusive.
-      setDateError(true);
-      setTimeError(false);
-      return false;
-   } else if (dateComparison == 0) {
-      setDateError(false);
-      // start & end date same, so compare entire time (ms since 1970)
-      var isBadEndTime = endDate.getTime() < startDate.getTime();
-      setTimeError(isBadEndTime);
-      return !isBadEndTime;
-   } else {
-      setDateError(false);
-      setTimeError(false);
-      return true;
-   }
+  if (dateComparison < 0) {
+    // end date before start date
+    setDateError(true);
+    setTimeError(false);
+    return false;
+  } else if (dateComparison == 0) {
+    // ok even for all day events, end date will become exclusive when saved.
+    setDateError(false); 
+    // start & end date same, so compare entire time (ms since 1970) if not allday.
+    var isAllDay = getElementValue("all-day-event-checkbox", "checked");
+    var isBadEndTime = (!isAllDay && (endDate.getTime() < startDate.getTime()));
+    setTimeError(isBadEndTime);
+    return !isBadEndTime;
+  } else {
+    // endDate > startDate
+    setDateError(false);
+    setTimeError(false);
+    return true;
+  }
 }
 
 
