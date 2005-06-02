@@ -72,6 +72,8 @@
 #include "nsIPrefBranch.h"
 #include "nsISupportsPrimitives.h"
 
+#include "nsNativeCharsetUtils.h"
+
 #ifdef MOZ_THUNDERBIRD
 #include "nsToolkitCompsCID.h" 
 #define PROFILE_COMMANDLINE_ARG " -profile "
@@ -279,7 +281,7 @@ nsMessengerWinIntegration::ResetCurrent()
   return NS_OK;
 }
 
-NOTIFYICONDATA nsMessengerWinIntegration::mAsciiBiffIconData = { sizeof(NOTIFYICONDATA),
+NOTIFYICONDATA nsMessengerWinIntegration::sNativeBiffIconData = { sizeof(NOTIFYICONDATA),
                                                     0,
                                                     2,
                                                     NIF_ICON | NIF_MESSAGE | NIF_TIP,
@@ -287,7 +289,7 @@ NOTIFYICONDATA nsMessengerWinIntegration::mAsciiBiffIconData = { sizeof(NOTIFYIC
                                                     0,
                                                     0 };
 
-NOTIFYICONDATAW nsMessengerWinIntegration::mWideBiffIconData = { sizeof(NOTIFYICONDATAW),
+NOTIFYICONDATAW nsMessengerWinIntegration::sWideBiffIconData = { sizeof(NOTIFYICONDATAW),
                                                     0,
                                                     2,
                                                     NIF_ICON | NIF_MESSAGE | NIF_TIP,
@@ -312,15 +314,15 @@ void nsMessengerWinIntegration::InitializeBiffStatusIcon()
 
   if (mUseWideCharBiffIcon)
   {
-    mWideBiffIconData.hWnd = (HWND) msgWindow;
-    mWideBiffIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( MAIL_DLL_NAME ), MAKEINTRESOURCE(IDI_MAILBIFF) );
-    mWideBiffIconData.szTip[0] = 0;
+    sWideBiffIconData.hWnd = (HWND) msgWindow;
+    sWideBiffIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( MAIL_DLL_NAME ), MAKEINTRESOURCE(IDI_MAILBIFF) );
+    sWideBiffIconData.szTip[0] = 0;
   }
   else
   {
-    mAsciiBiffIconData.hWnd = (HWND) msgWindow;
-    mAsciiBiffIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( MAIL_DLL_NAME ), MAKEINTRESOURCE(IDI_MAILBIFF) );
-    mAsciiBiffIconData.szTip[0] = 0;
+    sNativeBiffIconData.hWnd = (HWND) msgWindow;
+    sNativeBiffIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( MAIL_DLL_NAME ), MAKEINTRESOURCE(IDI_MAILBIFF) );
+    sNativeBiffIconData.szTip[0] = 0;
   }
 
   mBiffIconInitialized = PR_TRUE;
@@ -678,9 +680,9 @@ void nsMessengerWinIntegration::DestroyBiffIcon()
 PRUint32 nsMessengerWinIntegration::GetToolTipSize()
 {
   if (mUseWideCharBiffIcon)
-    return (sizeof(mWideBiffIconData.szTip)/sizeof(mWideBiffIconData.szTip[0]));
+    return (sizeof(sWideBiffIconData.szTip)/sizeof(sWideBiffIconData.szTip[0]));
   else
-    return (sizeof(mAsciiBiffIconData.szTip));
+    return (sizeof(sNativeBiffIconData.szTip));
 }
 
 void nsMessengerWinIntegration::SetToolTipStringOnIconData(const PRUnichar * aToolTipString)
@@ -691,17 +693,19 @@ void nsMessengerWinIntegration::SetToolTipStringOnIconData(const PRUnichar * aTo
   
   if (mUseWideCharBiffIcon)
   {
-    ::wcsncpy( mWideBiffIconData.szTip, aToolTipString, toolTipBufSize);
+    ::wcsncpy( sWideBiffIconData.szTip, aToolTipString, toolTipBufSize);
     if (wcslen(aToolTipString) >= toolTipBufSize)
-      mWideBiffIconData.szTip[toolTipBufSize - 1] = 0;
+      sWideBiffIconData.szTip[toolTipBufSize - 1] = 0;
   }
   else
   {
-    nsCString asciiToolTip;
-    asciiToolTip.AssignWithConversion(aToolTipString);
-    ::strncpy( mAsciiBiffIconData.szTip, asciiToolTip.get(), GetToolTipSize() );
-    if (asciiToolTip.Length() >= toolTipBufSize)
-      mAsciiBiffIconData.szTip[toolTipBufSize - 1] = 0;
+    nsCAutoString nativeToolTipString;
+    NS_CopyUnicodeToNative(nsDependentString(aToolTipString),
+                           nativeToolTipString);
+    ::strncpy(sNativeBiffIconData.szTip,
+              nativeToolTipString.get(), GetToolTipSize());
+    if (nativeToolTipString.Length() >= toolTipBufSize)
+      sNativeBiffIconData.szTip[toolTipBufSize - 1] = 0;
   }
 }
 
@@ -709,14 +713,14 @@ void nsMessengerWinIntegration::GenericShellNotify(DWORD aMessage)
 {
   if (mUseWideCharBiffIcon)
   {
-    BOOL res = mShellNotifyWideChar( aMessage, &mWideBiffIconData );
+    BOOL res = mShellNotifyWideChar( aMessage, &sWideBiffIconData );
     if (!res)
       RevertToNonUnicodeShellAPI(); // oops we don't really implement the unicode shell apis...fall back.
     else
       return; 
   }
   
-  ::Shell_NotifyIcon( aMessage, &mAsciiBiffIconData ); 
+  ::Shell_NotifyIcon( aMessage, &sNativeBiffIconData ); 
 }
 
 // some flavors of windows define ShellNotifyW but when you actually try to use it,
@@ -730,9 +734,9 @@ void nsMessengerWinIntegration::RevertToNonUnicodeShellAPI()
   InitializeBiffStatusIcon();
 
   // now we need to copy over any left over tool tip strings
-  if (mWideBiffIconData.szTip)
+  if (sWideBiffIconData.szTip)
   {
-    const PRUnichar * oldTooltipString = mWideBiffIconData.szTip;
+    const PRUnichar * oldTooltipString = sWideBiffIconData.szTip;
     SetToolTipStringOnIconData(oldTooltipString);
   }
 }

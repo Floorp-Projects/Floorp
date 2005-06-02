@@ -89,8 +89,8 @@ private:
   nsresult AlertFinished();
   nsresult AlertClicked();
 
-  static NOTIFYICONDATAW mWideBiffIconData; 
-  static NOTIFYICONDATA  mAsciiBiffIconData;
+  static NOTIFYICONDATAW sWideBiffIconData; 
+  static NOTIFYICONDATA  sNativeBiffIconData;
 
   void InitializeBiffStatusIcon(); 
   void FillToolTipInfo();
