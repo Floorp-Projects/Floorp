@@ -63,7 +63,7 @@ ReleaseObject(void    *aObject,
               void    *aPropertyValue,
               void    *aData)
 {
-  NS_STATIC_CAST(nsISupports *, aObject)->Release();
+  NS_STATIC_CAST(nsISupports *, aPropertyValue)->Release();
 }
 
 
