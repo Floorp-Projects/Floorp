@@ -63,6 +63,10 @@ var userTreeView;
 
 function LoadCerts()
 {
+  window.crypto.enableSmartCardEvents = true;
+  document.addEventListener("smartcard-insert", onSmartCardChange, false);
+  document.addEventListener("smartcard-remove", onSmartCardChange, false);
+
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
   var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
   
@@ -445,6 +449,23 @@ function addCACerts()
     caTreeView.loadCerts(nsIX509Cert.CA_CERT);
     caTreeView.selection.clearSelection();
   }
+}
+
+function onSmartCardChange()
+{
+  var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
+  // We've change the state of the smart cards inserted or removed
+  // that means the available certs may have changed. Update the display
+  certcache.cacheAllCerts();
+  userTreeView.loadCertsFromCache(certcache, nsIX509Cert.USER_CERT);
+  userTreeView.selection.clearSelection();
+  caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
+  caTreeView.selection.clearSelection();
+  serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);
+  serverTreeView.selection.clearSelection();
+  emailTreeView.loadCertsFromCache(certcache, nsIX509Cert.EMAIL_CERT);
+  emailTreeView.selection.clearSelection();
+
 }
 
 function addEmailCert()

@@ -56,8 +56,18 @@ function LoadModules()
 {
   bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   secmoddb = Components.classes[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
+  window.crypto.enableSmartCardEvents = true;
+  document.addEventListener("smartcard-insert", onSmartCardChange, false);
+  document.addEventListener("smartcard-remove", onSmartCardChange, false);
+
+  RefreshDeviceList();
+}
+
+function RefreshDeviceList()
+{
   var modules = secmoddb.listModules();
   var done = false;
+
   try {
     modules.isDone();
   } catch (e) { done = true; }
@@ -230,20 +240,33 @@ function ClearInfoList()
       info_list.removeChild(info_list.firstChild);
 }
 
+function ClearDeviceList()
+{
+  // Remove the existing listed modules so that refresh doesn't 
+  // display the module that just changed.
+  var device_list = document.getElementById("device_list");
+  while (device_list.firstChild)
+    device_list.removeChild(device_list.firstChild);
+}
+
+
 // show a list of info about a slot
 function showSlotInfo()
 {
+  var present = true;
   ClearInfoList();
   switch (selected_slot.status) {
    case nsIPKCS11Slot.SLOT_DISABLED:
      AddInfoRow(bundle.GetStringFromName("devinfo_status"), 
                 bundle.GetStringFromName("devinfo_stat_disabled"), 
                 "tok_status");
+     present = false;
      break;
    case nsIPKCS11Slot.SLOT_NOT_PRESENT:
      AddInfoRow(bundle.GetStringFromName("devinfo_status"), 
                 bundle.GetStringFromName("devinfo_stat_notpresent"), 
                 "tok_status");
+     present = false;
      break;
    case nsIPKCS11Slot.SLOT_UNINITIALIZED:
      AddInfoRow(bundle.GetStringFromName("devinfo_status"), 
@@ -274,6 +297,9 @@ function showSlotInfo()
              selected_slot.HWVersion, "slot_hwv");
   AddInfoRow(bundle.GetStringFromName("devinfo_fwversion"),
              selected_slot.FWVersion, "slot_fwv");
+  if (present) {
+     showTokenInfo();
+  }
 }
 
 function showModuleInfo()
@@ -353,10 +379,8 @@ function doLoad()
 {
   window.open("load_device.xul", "loaddevice", 
               "chrome,centerscreen,modal");
-  var device_list = document.getElementById("device_list");
-  while (device_list.firstChild)
-    device_list.removeChild(device_list.firstChild);
-  LoadModules();
+  ClearDeviceList();
+  RefreshDeviceList();
 }
 
 function doUnload()
@@ -364,11 +388,21 @@ function doUnload()
   getSelectedItem();
   if (selected_module) {
     pkcs11.deletemodule(selected_module.name);
-    var device_list = document.getElementById("device_list");
-    while (device_list.firstChild)
-      device_list.removeChild(device_list.firstChild);
-    LoadModules();
+    ClearDeviceList();
+    RefreshDeviceList();
   }
+}
+
+// handle card insertion and removal
+function onSmartCardChange()
+{
+  var tree = document.getElementById('device_tree');
+  var index = tree.currentIndex;
+  tree.currentIndex = 0;
+  ClearDeviceList();
+  RefreshDeviceList();
+  tree.currentIndex = index;
+  enableButtons();
 }
 
 function changePassword()
@@ -410,8 +444,8 @@ function doLoadDevice()
 
 function showTokenInfo()
 {
-  ClearInfoList();
-  getSelectedToken();
+  //ClearInfoList();
+  var selected_token = selected_slot.getToken();
   AddInfoRow(bundle.GetStringFromName("devinfo_label"), 
              selected_token.tokenLabel, "tok_label");
   AddInfoRow(bundle.GetStringFromName("devinfo_manID"),
@@ -446,9 +480,7 @@ function toggleFIPS()
   secmoddb.toggleFIPSMode();
   //Remove the existing listed modules so that re-fresh doesn't 
   //display the module that just changed.
-  var device_list = document.getElementById("device_list");
-  while (device_list.firstChild)
-    device_list.removeChild(device_list.firstChild);
+  ClearDeviceList();
 
-  LoadModules();
+  RefreshDeviceList();
 }
