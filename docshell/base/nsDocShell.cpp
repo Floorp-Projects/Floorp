@@ -172,6 +172,7 @@ static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
 #include "plevent.h"
 #include "nsGUIEvent.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsEventQueueUtils.h"
 
 // Number of documents currently loading
 static PRInt32 gNumberOfDocumentsLoading = 0;
@@ -4968,6 +4969,29 @@ nsDocShell::FireRestoreEvents()
                                          NS_EVENT_FLAG_INIT, &status);
 }
 
+class ContentViewerDestroyEvent : public PLEvent
+{
+public:
+    ContentViewerDestroyEvent(nsIContentViewer *aViewer)
+        : mViewer(aViewer)
+    {
+    }
+
+    nsCOMPtr<nsIContentViewer> mViewer;
+};
+
+PR_STATIC_CALLBACK(void*)
+HandleContentViewerDestroyEvent(PLEvent *aEvent)
+{
+    NS_STATIC_CAST(ContentViewerDestroyEvent*, aEvent)->mViewer->Destroy();
+    return nsnull;
+}
+
+PR_STATIC_CALLBACK(void)
+DestroyContentViewerDestroyEvent(PLEvent *aEvent)
+{
+    delete NS_STATIC_CAST(ContentViewerDestroyEvent*, aEvent);
+}
 
 nsresult
 nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
@@ -5055,17 +5079,37 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
         FireUnloadNotification();
 
     mFiredUnloadEvent = PR_FALSE;
+    nsresult rv;
 
     if (mContentViewer) {
         mContentViewer->Close(aSavePresentation ? mOSHE.get() : nsnull);
-        mContentViewer->Destroy();
+
+        // It's unsafe to actually destroy the content viewer here.
+        // In particular, if we're called from within a plugin's event loop,
+        // then attempting to tear down the plugin can cause a hang.
+        // So, post an event to destroy and release the viewer.
+
+        nsCOMPtr<nsIEventQueue> uiThreadQueue;
+        NS_GetMainEventQ(getter_AddRefs(uiThreadQueue));
+        NS_ENSURE_TRUE(uiThreadQueue, NS_ERROR_UNEXPECTED);
+
+        PLEvent *evt = new ContentViewerDestroyEvent(mContentViewer);
+        NS_ENSURE_TRUE(evt, NS_ERROR_OUT_OF_MEMORY);
+
+        PL_InitEvent(evt, this, ::HandleContentViewerDestroyEvent,
+                     ::DestroyContentViewerDestroyEvent);
+
+        rv = uiThreadQueue->PostEvent(evt);
+        if (NS_FAILED(rv)) {
+            PL_DestroyEvent(evt);
+        }
     }
 
     mContentViewer.swap(viewer);
     viewer = nsnull; // force a release to complete ownership transfer
 
     // Reattach to the window object.
-    nsresult rv = mContentViewer->Open();
+    rv = mContentViewer->Open();
 
     // Now remove it from the cached presentation.
     aSHEntry->SetContentViewer(nsnull);
