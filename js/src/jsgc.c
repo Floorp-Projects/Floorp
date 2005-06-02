@@ -745,40 +745,36 @@ js_LockGCThingRT(JSRuntime *rt, void *thing)
      * nests a lock -- then start such an entry with a count of 2, not 1.
      */
     if (lock || deep) {
-        if (lock == 0 || !deep) {
+        if (!rt->gcLocksHash) {
+            rt->gcLocksHash =
+                JS_NewDHashTable(JS_DHashGetStubOps(), NULL,
+                                 sizeof(JSGCLockHashEntry),
+                                 GC_ROOTS_SIZE);
             if (!rt->gcLocksHash) {
-                rt->gcLocksHash =
-                    JS_NewDHashTable(JS_DHashGetStubOps(), NULL,
-                                     sizeof(JSGCLockHashEntry),
-                                     GC_ROOTS_SIZE);
-                if (!rt->gcLocksHash) {
-                    ok = JS_FALSE;
-                    goto done;
-                }
-            } else {
-#ifdef DEBUG
-                JSDHashEntryHdr *hdr =
-                    JS_DHashTableOperate(rt->gcLocksHash, thing,
-                                         JS_DHASH_LOOKUP);
-                JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(hdr));
-#endif
-            }
-            lhe = (JSGCLockHashEntry *)
-                  JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_ADD);
-            if (!lhe) {
                 ok = JS_FALSE;
                 goto done;
             }
+        } else if (lock == 0) {
+#ifdef DEBUG
+            JSDHashEntryHdr *hdr =
+                JS_DHashTableOperate(rt->gcLocksHash, thing,
+                                     JS_DHASH_LOOKUP);
+            JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(hdr));
+#endif
+        }
+
+        lhe = (JSGCLockHashEntry *)
+            JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_ADD);
+        if (!lhe) {
+            ok = JS_FALSE;
+            goto done;
+        }
+        if (!lhe->thing) {
             lhe->thing = thing;
             lhe->count = deep ? 1 : 2;
         } else {
-            lhe = (JSGCLockHashEntry *)
-                  JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_LOOKUP);
-            JS_ASSERT(JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr));
-            if (JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr)) {
-                JS_ASSERT(lhe->count >= 1);
-                lhe->count++;
-            }
+            JS_ASSERT(lhe->count >= 1);
+            lhe->count++;
         }
     }
 
