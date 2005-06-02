@@ -483,8 +483,10 @@ NS_IMETHODIMP
 nsTreeContentView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& _retval)
 {
   NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad row");
-  if (aRow < 0 || aRow >= mRows.Count())
-    return NS_ERROR_INVALID_ARG;   
+  NS_PRECONDITION(aCol, "bad column");
+
+  if (aRow < 0 || aRow >= mRows.Count() || !aCol)
+    return NS_ERROR_INVALID_ARG;
 
   _retval.SetCapacity(0);
 
