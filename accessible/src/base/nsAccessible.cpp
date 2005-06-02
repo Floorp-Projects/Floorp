@@ -424,16 +424,14 @@ NS_IMETHODIMP nsAccessible::GetPreviousSibling(nsIAccessible * *aPreviousSibling
     return NS_ERROR_FAILURE;
   }
 
-  if (!mParent) {
-    nsCOMPtr<nsIAccessible> parent;
-    if (NS_FAILED(GetParent(getter_AddRefs(parent)))) {
-      return NS_ERROR_FAILURE;
-    }
+  nsCOMPtr<nsIAccessible> parent;
+  if (NS_FAILED(GetParent(getter_AddRefs(parent)))) {
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIAccessible> testAccessible, prevSibling;
-  mParent->GetFirstChild(getter_AddRefs(testAccessible));
-  while (testAccessible) {
+  parent->GetFirstChild(getter_AddRefs(testAccessible));
+  while (testAccessible && this != testAccessible) {
     prevSibling = testAccessible;
     prevSibling->GetNextSibling(getter_AddRefs(testAccessible));
   }
