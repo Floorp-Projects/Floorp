@@ -168,6 +168,7 @@ function setCalendarManagerUI()
         calendarList.removeChild(child);
     }
 
+    var composite = getDisplayComposite();
     var calmgr = getCalendarManager();
     var calendars = calmgr.getCalendars({});
     for each (var calendar in calendars) {
@@ -175,7 +176,9 @@ function setCalendarManagerUI()
 
         var checkCell = document.createElement("listcell");
         checkCell.setAttribute("type", "checkbox");
-        checkCell.setAttribute("checked", true);
+
+        checkCell.setAttribute("checked", 
+                               composite.getCalendar(calendar.uri) ? true : false);
         listItem.appendChild(checkCell);
         listItem.addEventListener("click", onCalendarCheckboxClick, true);
 

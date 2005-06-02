@@ -53,11 +53,7 @@ function getDisplayComposite()
     if (!gDisplayComposite) {
        gDisplayComposite = Components.classes["@mozilla.org/calendar/calendar;1?type=composite"]
                                      .createInstance(Components.interfaces.calICompositeCalendar);
-       var calMgr = getCalendarManager();
-       var calList = calMgr.getCalendars({});
-       for (i in calList) {
-           gDisplayComposite.addCalendar(calList[i]);
-       }
+       gDisplayComposite.prefPrefix = 'calendar-main';
     }
     return gDisplayComposite;
 }
