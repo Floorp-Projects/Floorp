@@ -4028,14 +4028,8 @@ nsDocument::AddEventListener(const nsAString& aType,
                              nsIDOMEventListener* aListener,
                              PRBool aUseCapture)
 {
-  PRBool permitUntrustedEvents = PR_FALSE;
-  if (mDocumentURI) {
-    PRBool isChrome = PR_TRUE;
-    nsresult rv = mDocumentURI->SchemeIs("chrome", &isChrome);
-    NS_ENSURE_SUCCESS(rv, rv);
-    permitUntrustedEvents = !isChrome;
-  }
-  return AddEventListener(aType, aListener, aUseCapture, permitUntrustedEvents);
+  return AddEventListener(aType, aListener, aUseCapture,
+                          !nsContentUtils::IsChromeDoc(this));
 }
 
 nsresult

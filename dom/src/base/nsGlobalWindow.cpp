@@ -4084,16 +4084,10 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
                                  PRBool aUseCapture)
 {
-  PRBool permitUntrustedEvents = PR_FALSE;
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-  nsIURI *docUri;
-  if (doc && (docUri = doc->GetDocumentURI())) {
-    PRBool isChrome = PR_TRUE;
-    nsresult rv = docUri->SchemeIs("chrome", &isChrome);
-    NS_ENSURE_SUCCESS(rv, rv);
-    permitUntrustedEvents = !isChrome;
-  }
-  return AddEventListener(aType, aListener, aUseCapture, permitUntrustedEvents);
+
+  return AddEventListener(aType, aListener, aUseCapture,
+                          !nsContentUtils::IsChromeDoc(doc));
 }
 
 NS_IMETHODIMP
@@ -6383,7 +6377,8 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
     NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
     // Call esm and set cursor.
-    rv = presContext->EventStateManager()->SetCursor(cursor, nsnull, widget, PR_TRUE);
+    rv = presContext->EventStateManager()->SetCursor(cursor, nsnull, widget,
+                                                     PR_TRUE);
   }
 
   return rv;

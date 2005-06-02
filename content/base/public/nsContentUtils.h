@@ -112,10 +112,10 @@ public:
    * @return PR_TRUE if aPossibleDescendant is a descendant of
    *         aPossibleAncestor (or is aPossibleAncestor).  PR_FALSE
    *         otherwise.
-   */   
+   */
   static PRBool ContentIsDescendantOf(nsIContent* aPossibleDescendant,
                                       nsIContent* aPossibleAncestor);
-  
+
   /*
    * This method fills the |aArray| with all ancestor nodes of |aNode|
    * including |aNode| at the zero index.
@@ -132,7 +132,7 @@ public:
    * For each ancestor, there is a corresponding element in |aAncestorOffsets|
    * which is the IndexOf the child in relation to its parent.
    *
-   * The elements of |aAncestorNodes| were |nsIContent*|s before casting to 
+   * The elements of |aAncestorNodes| were |nsIContent*|s before casting to
    * |void*| and must be cast back to |nsIContent*| on usage, or bad things
    * will happen.
    *
@@ -194,9 +194,9 @@ public:
    */
   static PRUint16 ReverseDocumentPosition(PRUint16 aDocumentPosition);
 
-  static PRUint32 CopyNewlineNormalizedUnicodeTo(const nsAString& aSource, 
-                                                 PRUint32 aSrcOffset, 
-                                                 PRUnichar* aDest, 
+  static PRUint32 CopyNewlineNormalizedUnicodeTo(const nsAString& aSource,
+                                                 PRUint32 aSrcOffset,
+                                                 PRUnichar* aDest,
                                                  PRUint32 aLength,
                                                  PRBool& aLastCharCR);
 
@@ -212,7 +212,7 @@ public:
                                                    PRBool aTrimTrailing = PR_TRUE);
 
   static void Shutdown();
-  
+
   /**
    * Checks whether two nodes come from the same origin. aTrustedNode is
    * considered 'safe' in that a user can operate on it and that it isn't
@@ -247,7 +247,7 @@ public:
   static PRBool InProlog(nsIDOMNode *aNode);
 
   static nsIParserService* GetParserServiceWeakRef();
-  
+
   static nsINameSpaceManager* GetNSManagerWeakRef()
   {
     return sNameSpaceManager;
@@ -266,12 +266,12 @@ public:
 #ifdef MOZ_XTF
   static nsIXTFService* GetXTFServiceWeakRef();
 #endif
-  
+
   static nsIScriptSecurityManager* GetSecurityManager()
   {
     return sSecurityManager;
   }
-  
+
   static nsresult GenerateStateKey(nsIContent* aContent,
                                    nsIDocument* aDocument,
                                    nsIStatefulFrame::SpecialStateID aID,
@@ -297,7 +297,7 @@ public:
    */
   static PRBool BelongsInForm(nsIDOMHTMLFormElement *aForm,
                               nsIContent *aContent);
-  
+
   static nsresult CheckQName(const nsAString& aQualifiedName,
                              PRBool aNamespaceAware = PR_TRUE);
 
@@ -424,7 +424,7 @@ public:
    * @return Null if aContent is not an XLink, the URI it points to otherwise
    */
   static already_AddRefed<nsIURI> GetXLinkURI(nsIContent* aContent);
-  
+
   /**
    * Convenience method to create a new nodeinfo that differs only by name
    * from aNodeInfo.
@@ -534,6 +534,10 @@ public:
   static already_AddRefed<nsContentList>
   GetFormControlElements(nsIDocument *aDocument);
 
+  /**
+   * Returns true if aDocument is a chrome document
+   */
+  static PRBool IsChromeDoc(nsIDocument *aDocument);
 
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
