@@ -167,7 +167,8 @@ function saveDialog()
                             onDays.push(elem.getAttribute("value"));
                         }
                     });
-        recRule.setComponent("BYDAY", onDays.length, onDays);
+        if (onDays.length > 0)
+            recRule.setComponent("BYDAY", onDays.length, onDays);
         break;
     case 2:
         recRule.type = "MONTHLY";
