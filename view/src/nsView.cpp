@@ -289,7 +289,7 @@ nsresult nsView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-nsView* nsView::GetViewFor(nsIWidget* aWidget)
+nsIView* nsIView::GetViewFor(nsIWidget* aWidget)
 {           
   NS_PRECONDITION(nsnull != aWidget, "null widget ptr");
 

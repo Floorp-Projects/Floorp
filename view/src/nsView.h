@@ -232,7 +232,9 @@ public:
   nsRect GetClippedRect(nsIView* aStopAtView = nsnull);
 
   // Helper function to get the view that's associated with a widget
-  static nsView*  GetViewFor(nsIWidget* aWidget);
+  static nsView* GetViewFor(nsIWidget* aWidget) {
+    return NS_STATIC_CAST(nsView*, nsIView::GetViewFor(aWidget));
+  }
 
   // Helper function to get mouse grabbing off this view (by moving it to the
   // parent, if we can)

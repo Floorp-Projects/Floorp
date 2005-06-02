@@ -48,6 +48,9 @@
 #include "nsPlaceholderFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsIDOMEvent.h"
+#include "nsGUIEvent.h"
 
 /**
  * A namespace class for static layout utilities.
@@ -425,6 +428,38 @@ nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
     }
   }
   return scrollableView;
+}
+
+nsPoint
+nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(nsIDOMEvent* aDOMEvent, nsIFrame* aFrame)
+{
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aDOMEvent));
+  NS_ASSERTION(privateEvent, "bad implementation");
+  if (!privateEvent)
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  nsEvent* event;
+  nsresult rv = privateEvent->GetInternalNSEvent(&event);
+  if (NS_FAILED(rv))
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  if (!event || event->eventStructType != NS_MOUSE_EVENT)
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  
+  nsGUIEvent* GUIEvent = NS_STATIC_CAST(nsGUIEvent*, event);
+  if (!GUIEvent->widget)
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  nsIView* view = nsIView::GetViewFor(GUIEvent->widget);
+  if (!view)
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+
+  nsPoint widgetToView;
+  view->GetNearestWidget(&widgetToView);
+  nsPoint viewToFrame;
+  nsIView* frameView = aFrame->GetClosestView(&viewToFrame);
+
+  float p2t = aFrame->GetPresContext()->PixelsToTwips();
+  nsPoint mousePt(NSIntPixelsToTwips(GUIEvent->refPoint.x, p2t),
+                  NSIntPixelsToTwips(GUIEvent->refPoint.y, p2t));
+  return mousePt + widgetToView + (-frameView->GetOffsetTo(view)) +  viewToFrame;
 }
 
 // Combine aNewBreakType with aOrigBreakType, but limit the break types
