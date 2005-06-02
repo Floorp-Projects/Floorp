@@ -257,15 +257,6 @@ nsXFormsModelElement::DocumentChanged(nsIDOMDocument* aNewDocument)
 NS_IMETHODIMP
 nsXFormsModelElement::DoneAddingChildren()
 {
-  // We wait until all children are added to dispatch xforms-model-construct,
-  // since the model may have an action handler for this event.
-
-  nsresult rv = nsXFormsUtils::DispatchEvent(mElement, eEvent_ModelConstruct);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // xforms-model-construct is not cancellable, so always proceed.
-  // We continue here rather than doing this in HandleEvent since we know
-  // it only makes sense to perform this default action once.
 
   // (XForms 4.2.1)
   // 1. load xml schemas
@@ -286,6 +277,7 @@ nsXFormsModelElement::DoneAddingChildren()
     mSchemaTotal = schemas.Count();
 
     for (PRInt32 i=0; i<mSchemaTotal; ++i) {
+      nsresult rv = NS_OK;
       nsCOMPtr<nsIURI> newURI;
       NS_NewURI(getter_AddRefs(newURI), *schemas[i], nsnull, baseURI);
       nsCOMPtr<nsIURL> newURL = do_QueryInterface(newURI);
@@ -770,6 +762,20 @@ nsXFormsModelElement::HandleEvent(nsIDOMEvent* aEvent)
 
   mDocumentLoaded = PR_TRUE;
 
+  // dispatch xforms-model-construct, xforms-rebuild, xforms-recalculate,
+  // xforms-revalidate
+
+  // We wait until DOMContentLoaded to dispatch xforms-model-construct,
+  // since the model may have an action handler for this event and Mozilla
+  // doesn't register XML Event listeners until the document is loaded.
+
+  // xforms-model-construct is not cancellable, so always proceed.
+
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_ModelConstruct);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Rebuild);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Recalculate);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Revalidate);
+
   if (mPendingInlineSchemas.Count() > 0) {
     nsCOMPtr<nsIDOMElement> el;
     nsresult rv;
@@ -1198,12 +1204,6 @@ nsXFormsModelElement::FinishConstruction()
   // <bind> elements in document order.
 
   // we get the instance data from our instance child nodes
-
-  // 5. dispatch xforms-rebuild, xforms-recalculate, xforms-revalidate
-
-  nsXFormsUtils::DispatchEvent(mElement, eEvent_Rebuild);
-  nsXFormsUtils::DispatchEvent(mElement, eEvent_Recalculate);
-  nsXFormsUtils::DispatchEvent(mElement, eEvent_Revalidate);
 
   // We're done initializing this model.
 
