@@ -659,19 +659,8 @@ nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsAString& aValue)
 
     if (NS_FAILED(rv)) return rv;
 
-    nsIURI *uri = doc->GetDocumentURI();
-    PRBool isChromeElement;
-
-    if (uri) {
-        if (NS_FAILED(uri->SchemeIs("chrome", &isChromeElement))) {
-            isChromeElement = PR_FALSE;
-        }
-    } else {
-        isChromeElement = PR_FALSE;
-    }
-
     return manager->AddScriptEventListener(target, aName, aValue, defer,
-                                           !isChromeElement);
+                                           !nsContentUtils::IsChromeDoc(doc));
 }
 
 nsresult

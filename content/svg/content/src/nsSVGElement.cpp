@@ -232,17 +232,9 @@ nsSVGElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
     if (manager) {
       nsIDocument *ownerDoc = GetOwnerDoc();
 
-      PRBool permitUntrustedEvents = PR_FALSE;
-
-      nsIURI *docUri;
-      if (ownerDoc && (docUri = ownerDoc->GetDocumentURI())) {
-        PRBool isChrome = PR_TRUE;
-        rv = docUri->SchemeIs("chrome", &isChrome);
-        permitUntrustedEvents = NS_SUCCEEDED(rv) && !isChrome;
-      }
- 
       manager->AddScriptEventListener(NS_STATIC_CAST(nsIContent*, this), aName,
-                                      aValue, PR_TRUE, permitUntrustedEvents);
+                                      aValue, PR_TRUE,
+                                      !nsContentUtils::IsChromeDoc(ownerDoc));
     }
   }
   

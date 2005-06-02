@@ -188,7 +188,7 @@ nsContentUtils::Init()
     // no image loading for us.  Oh, well.
     sImgLoader = nsnull;
   }
-  
+
   sInitialized = PR_TRUE;
 
   return NS_OK;
@@ -488,7 +488,7 @@ nsContentUtils::GetDocumentAndPrincipal(nsIDOMNode* aNode,
 
         return NS_OK;
       }
-      
+
       *aPrincipal = ni->NodeInfoManager()->GetDocumentPrincipal();
       if (!*aPrincipal) {
         // we can't get to the principal so we'll give up
@@ -502,7 +502,7 @@ nsContentUtils::GetDocumentAndPrincipal(nsIDOMNode* aNode,
       CallQueryInterface(domDoc, aDocument);
       if (!*aDocument) {
         NS_ERROR("QI to nsIDocument failed");
-      
+
         return NS_ERROR_UNEXPECTED;
       }
     }
@@ -564,9 +564,9 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
 
       nsINodeInfo *ni = cont->GetNodeInfo();
       NS_ENSURE_TRUE(ni, NS_ERROR_UNEXPECTED);
-      
+
       trustedPrincipal = ni->NodeInfoManager()->GetDocumentPrincipal();
-      
+
       if (!trustedPrincipal) {
         // Can't get principal of aTrustedNode so we can't check security
         // against it
@@ -1345,7 +1345,7 @@ static inline void KeyAppendString(const nsAString& aString, nsACString& aKey)
 static inline void KeyAppendString(const nsACString& aString, nsACString& aKey)
 {
   KeyAppendSep(aKey);
-  
+
   // Could escape separator here if collisions happen.  > is not a legal char
   // for a name or type attribute, so we should be safe avoiding that extra work.
 
@@ -1487,7 +1487,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
       } else {
 
         // If not in a form, add index of control in document
-        // Less desirable than indexing by form info. 
+        // Less desirable than indexing by form info.
 
         // Hash by index of control in doc (we are not in a form)
         // These are important as they are unique, and type/name may not be.
@@ -1597,7 +1597,7 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
     // aForm return false here....
     return PR_TRUE;
   }
-  
+
   return PR_FALSE;
 }
 
@@ -1861,7 +1861,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
     // nothing we can do here
     return NS_OK;
   }
-  
+
   nsCOMPtr<nsILoadGroup> loadGroup = aLoadingDocument->GetDocumentLoadGroup();
   NS_WARN_IF_FALSE(loadGroup, "Could not get loadgroup; onload may fire too early");
 
@@ -1891,28 +1891,28 @@ nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent,
   }
 
   NS_ENSURE_TRUE(aContent, nsnull);
-  
+
   nsCOMPtr<imgIRequest> imgRequest;
   aContent->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
                       getter_AddRefs(imgRequest));
   if (!imgRequest) {
     return nsnull;
   }
-  
+
   nsCOMPtr<imgIContainer> imgContainer;
   imgRequest->GetImage(getter_AddRefs(imgContainer));
 
   if (!imgContainer) {
     return nsnull;
   }
-    
+
   nsCOMPtr<gfxIImageFrame> imgFrame;
   imgContainer->GetFrameAt(0, getter_AddRefs(imgFrame));
 
   if (!imgFrame) {
     return nsnull;
   }
-  
+
   nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(imgFrame);
 
   if (!ir) {
@@ -1945,7 +1945,7 @@ nsContentUtils::IsDraggableImage(nsIContent* aContent)
 
   // XXXbz It may be draggable even if the request resulted in an error.  Why?
   // Not sure; that's what the old nsContentAreaDragDrop/nsFrame code did.
-  return imgRequest != nsnull;  
+  return imgRequest != nsnull;
 }
 
 // static
@@ -2319,4 +2319,18 @@ nsContentUtils::GetFormControlElements(nsIDocument *aDocument)
                                           MatchFormControls, EmptyString());
   NS_IF_ADDREF(list);
   return list;
+}
+
+PRBool
+nsContentUtils::IsChromeDoc(nsIDocument *aDocument)
+{
+  nsIPrincipal *principal;
+  if (!aDocument || !(principal = aDocument->GetPrincipal())) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIPrincipal> systemPrincipal;
+  sSecurityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+
+  return principal == systemPrincipal;
 }

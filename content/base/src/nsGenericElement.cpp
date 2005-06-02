@@ -624,17 +624,9 @@ nsDOMEventRTTearoff::AddEventListener(const nsAString& aType,
                                       nsIDOMEventListener *aListener,
                                       PRBool useCapture)
 {
-  PRBool permitUntrustedEvents = PR_FALSE;
-  nsIDocument *ownerDoc = mContent->GetOwnerDoc();
-  nsIURI *docUri;
-  if (ownerDoc && (docUri = ownerDoc->GetDocumentURI())) {
-    PRBool isChrome = PR_TRUE;
-    nsresult rv = docUri->SchemeIs("chrome", &isChrome);
-    NS_ENSURE_SUCCESS(rv, rv);
-    permitUntrustedEvents = !isChrome;
-  }
-
-  return AddEventListener(aType, aListener, useCapture, permitUntrustedEvents);
+  return
+    AddEventListener(aType, aListener, useCapture,
+                     !nsContentUtils::IsChromeDoc(mContent->GetOwnerDoc()));
 }
 
 NS_IMETHODIMP
@@ -3368,19 +3360,9 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
   if (manager) {
     nsIDocument *ownerDoc = GetOwnerDoc();
 
-    PRBool permitUntrustedEvents = PR_FALSE;
-
-    nsIURI *docUri;
-    if (ownerDoc && (docUri = ownerDoc->GetDocumentURI())) {
-      PRBool isChrome = PR_TRUE;
-      rv = docUri->SchemeIs("chrome", &isChrome);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      permitUntrustedEvents = !isChrome;
-    }
-
-    rv = manager->AddScriptEventListener(target, aAttribute, aValue, defer,
-                                         permitUntrustedEvents);
+    rv =
+      manager->AddScriptEventListener(target, aAttribute, aValue, defer,
+                                      !nsContentUtils::IsChromeDoc(ownerDoc));
   }
 
   return rv;
