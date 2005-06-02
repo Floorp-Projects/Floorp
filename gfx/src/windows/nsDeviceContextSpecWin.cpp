@@ -380,7 +380,9 @@ CheckForPrintToFile(nsIPrintSettings* aPS, LPTSTR aPrinterName, PRUnichar* aUPri
   if (aPrinterName) {
     CheckForPrintToFileWithName(aPrinterName, toFile);
   } else {
-    CheckForPrintToFileWithName(NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aUPrinterName).get()), toFile);
+    nsCAutoString nativeName;
+    NS_CopyUnicodeToNative(nsDependentString(aUPrinterName), nativeName);
+    CheckForPrintToFileWithName(NS_CONST_CAST(char*, nativeName.get()), toFile);
   }
 #endif
   // Since the driver wasn't a "Print To File" Driver, check to see
@@ -672,27 +674,35 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
   }
 
   HANDLE hPrinter = NULL;
-  BOOL status = ::OpenPrinter(NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aName).get()), &hPrinter, NULL);
+  nsCAutoString nativeName;
+  NS_CopyUnicodeToNative(nsDependentString(aName), nativeName);
+  BOOL status = ::OpenPrinter(NS_CONST_CAST(char*, nativeName.get()),
+                              &hPrinter, NULL);
   if (status) {
 
     LPDEVMODE   pDevMode;
     DWORD       dwNeeded, dwRet;
 
     // Allocate a buffer of the correct size.
-    dwNeeded = DocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aName).get()), 
-                                  NULL, NULL, 0);
+    dwNeeded = ::DocumentProperties(gParentWnd, hPrinter,
+                                    NS_CONST_CAST(char*, nativeName.get()),
+                                    NULL, NULL, 0);
 
     pDevMode = (LPDEVMODE)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, dwNeeded);
     if (!pDevMode) return NS_ERROR_FAILURE;
 
     // Get the default DevMode for the printer and modify it for our needs.
-    dwRet = DocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aName).get()),
+    dwRet = DocumentProperties(gParentWnd, hPrinter, 
+                               NS_CONST_CAST(char*, nativeName.get()),
                                pDevMode, NULL, DM_OUT_BUFFER);
 
     if (dwRet == IDOK && aPS) {
       SetupDevModeFromSettings(pDevMode, aPS);
       // Sets back the changes we made to the DevMode into the Printer Driver
-      dwRet = ::DocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aName).get()), pDevMode, pDevMode, DM_IN_BUFFER | DM_OUT_BUFFER);
+      dwRet = ::DocumentProperties(gParentWnd, hPrinter,
+                                   NS_CONST_CAST(char*, nativeName.get()),
+                                   pDevMode, pDevMode,
+                                   DM_IN_BUFFER | DM_OUT_BUFFER);
     }
 
     if (dwRet != IDOK) {
@@ -705,7 +715,7 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
 
     SetDevMode(pDevMode); // cache the pointer and takes responsibility for the memory
 
-    SetDeviceName(NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aName).get()));
+    SetDeviceName(NS_CONST_CAST(char*, nativeName.get()));
   
     // The driver should be NULL for Win95/Win98
     OSVERSIONINFO os;
@@ -720,7 +730,7 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
     rv = NS_OK;
   } else {
     rv = NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
-    PR_PL(("***** nsDeviceContextSpecWin::GetDataFromPrinter - Couldn't open printer: [%s]\n", NS_ConvertUCS2toUTF8(aName).get()));
+    PR_PL(("***** nsDeviceContextSpecWin::GetDataFromPrinter - Couldn't open printer: [%s]\n", nativeName.get()));
     DISPLAY_LAST_ERROR
   }
   return rv;
@@ -948,7 +958,10 @@ NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPri
 #else
   nsresult rv = NS_ERROR_FAILURE;
   HANDLE hPrinter = NULL;
-  BOOL status = ::OpenPrinter(NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aPrinterName).get()), &hPrinter, NULL);
+  nsCAutoString nativeName;
+  NS_CopyUnicodeToNative(nsDependentString(aPrinterName), nativeName);
+  BOOL status = ::OpenPrinter(NS_CONST_CAST(char*, nativeName.get()),
+                              &hPrinter, NULL);
   if (status) {
 
     LPDEVMODE   pDevMode;
@@ -957,33 +970,36 @@ NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPri
 
     // Get the buffer correct buffer size
     dwNeeded = ::DocumentProperties(gParentWnd, hPrinter,
-                                   NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aPrinterName).get()), NULL, NULL, 0);
+                                   NS_CONST_CAST(char*, nativeName.get()),
+                                   NULL, NULL, 0);
 
     // Allocate a buffer of the correct size.
     pNewDevMode = (LPDEVMODE)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, dwNeeded);
     if (!pNewDevMode) return NS_ERROR_FAILURE;
 
-    dwRet = ::DocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aPrinterName).get()), 
-                               pNewDevMode, NULL, DM_OUT_BUFFER);
+    dwRet = ::DocumentProperties(gParentWnd, hPrinter,
+                                 NS_CONST_CAST(char*, nativeName.get()),
+                                 pNewDevMode, NULL, DM_OUT_BUFFER);
 
     if (dwRet != IDOK) {
        ::HeapFree(::GetProcessHeap(), 0, pNewDevMode);
        ::ClosePrinter(hPrinter);
-       PR_PL(("***** nsDeviceContextSpecWin::DisplayPropertiesDlg - Couldn't get DocumentProperties (pNewDevMode) for [%s]\n", NS_ConvertUCS2toUTF8(aPrinterName).get()));
+       PR_PL(("***** nsDeviceContextSpecWin::DisplayPropertiesDlg - Couldn't get DocumentProperties (pNewDevMode) for [%s]\n", nativeName.get()));
        return NS_ERROR_FAILURE;
     }
 
     pDevMode = (LPDEVMODE)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, dwNeeded);
     if (!pDevMode) return NS_ERROR_FAILURE;
 
-    dwRet = ::DocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aPrinterName).get()), 
-                               pDevMode, NULL, DM_OUT_BUFFER);
+    dwRet = ::DocumentProperties(gParentWnd, hPrinter,
+                                 NS_CONST_CAST(char*, nativeName.get()),
+                                 pDevMode, NULL, DM_OUT_BUFFER);
 
     if (dwRet != IDOK) {
        ::HeapFree(::GetProcessHeap(), 0, pDevMode);
        ::HeapFree(::GetProcessHeap(), 0, pNewDevMode);
        ::ClosePrinter(hPrinter);
-       PR_PL(("***** nsDeviceContextSpecWin::DisplayPropertiesDlg - Couldn't get DocumentProperties (pDevMode) for [%s]\n", NS_ConvertUCS2toUTF8(aPrinterName).get()));
+       PR_PL(("***** nsDeviceContextSpecWin::DisplayPropertiesDlg - Couldn't get DocumentProperties (pDevMode) for [%s]\n", nativeName.get()));
        return NS_ERROR_FAILURE;
     }
 
@@ -994,9 +1010,14 @@ NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPri
       // Display the Dialog and get the new DevMode
 #if 0 // need more to do more work to see why AdvancedDocumentProperties fails 
       // when cancel is pressed
-      LONG stat = ::AdvancedDocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aPrinterName).get()), pNewDevMode, pDevMode);
+      LONG stat = ::AdvancedDocumentProperties(gParentWnd, hPrinter,
+                                               NS_CONST_CAST(char*, nativeName.get()),
+                                               pNewDevMode, pDevMode);
 #else
-      LONG stat = ::DocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aPrinterName).get()), pDevMode, NULL, DM_IN_PROMPT|DM_OUT_BUFFER);
+      LONG stat = ::DocumentProperties(gParentWnd, hPrinter,
+                                       NS_CONST_CAST(char*, nativeName.get()),
+                                       pDevMode, NULL,
+                                       DM_IN_PROMPT|DM_OUT_BUFFER);
 #endif
       if (stat == IDOK) {
         // Now set the print options from the native Page Setup
@@ -1013,7 +1034,7 @@ NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPri
 
   } else {
     rv = NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
-    PR_PL(("***** nsDeviceContextSpecWin::DisplayPropertiesDlg - Couldn't open printer [%s]\n", NS_ConvertUCS2toUTF8(aPrinterName).get()));
+    PR_PL(("***** nsDeviceContextSpecWin::DisplayPropertiesDlg - Couldn't open printer [%s]\n", nativeName.get()));
     DISPLAY_LAST_ERROR
   }
 
