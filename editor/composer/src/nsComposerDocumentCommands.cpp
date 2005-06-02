@@ -250,10 +250,11 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
 
     if (modified)
       return editor->IncrementModificationCount(1);
-    else 
-      return editor->ResetModificationCount();
+
+    return editor->ResetModificationCount();
   }
-  else if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentReadOnly"))
+
+  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentReadOnly"))
   {
     NS_ENSURE_ARG_POINTER(aParams);
     PRBool isReadOnly; 
@@ -270,7 +271,8 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
 
     return editor->SetFlags(flags);
   }
-  else if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentUseCSS"))
+
+  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentUseCSS"))
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
@@ -283,6 +285,22 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
       return rvCSS;
 
     return htmleditor->SetIsCSSEnabled(desireCSS);
+  }
+
+  if (!nsCRT::strcmp(aCommandName, "cmd_insertBrOnReturn"))
+  {
+    NS_ENSURE_ARG_POINTER(aParams);
+    nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
+    if (!htmleditor) 
+      return NS_ERROR_INVALID_ARG;
+
+    PRBool insertBrOnReturn;
+    nsresult rvBR = aParams->GetBooleanValue(STATE_ATTRIBUTE,
+                                              &insertBrOnReturn);
+    if (NS_FAILED(rvBR))
+      return rvBR;
+
+    return htmleditor->SetReturnInParagraphCreatesNewParagraph(!insertBrOnReturn);
   }
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -315,7 +333,8 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
 
     return aParams->SetBooleanValue(STATE_ATTRIBUTE, modified);
   }
-  else if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentReadOnly"))
+
+  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentReadOnly"))
   {
     NS_ENSURE_ARG_POINTER(aParams);
 
@@ -324,7 +343,8 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
     PRBool isReadOnly = flags & nsIPlaintextEditor::eEditorReadonlyMask;
     return aParams->SetBooleanValue(STATE_ATTRIBUTE, isReadOnly);
   }
-  else if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentUseCSS"))
+
+  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentUseCSS"))
   {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
@@ -334,6 +354,18 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
     PRBool isCSS;
     htmleditor->GetIsCSSEnabled(&isCSS);
     return aParams->SetBooleanValue(STATE_ATTRIBUTE, isCSS);
+  }
+
+  if (!nsCRT::strcmp(aCommandName, "cmd_insertBrOnReturn"))
+  {
+    NS_ENSURE_ARG_POINTER(aParams);
+    nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
+    if (!htmleditor)
+      return NS_ERROR_INVALID_ARG;
+
+    PRBool createPOnReturn;
+    htmleditor->GetReturnInParagraphCreatesNewParagraph(&createPOnReturn);
+    return aParams->SetBooleanValue(STATE_ATTRIBUTE, !createPOnReturn);
   }
 
   return NS_ERROR_NOT_IMPLEMENTED;
