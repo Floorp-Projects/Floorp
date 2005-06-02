@@ -85,6 +85,8 @@
   
   NSTextView*             mPropSampleFieldEditor;
   NSTextView*             mMonoSampleFieldEditor;
+  
+  BOOL                    mFontPanelWasVisible;
 }
 
 - (void)mainViewDidLoad;

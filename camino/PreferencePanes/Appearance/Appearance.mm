@@ -650,6 +650,9 @@ const int kDefaultFontSansSerifTag = 1;
   NSString* defaultFontType = [self defaultProportionalFontTypeForCurrentRegion];
   [mDefaultFontMatrix selectCellWithTag:([defaultFontType isEqualToString:@"sans-serif"] ? kDefaultFontSansSerifTag : kDefaultFontSerifTag)];
   
+  mFontPanelWasVisible = [[NSFontPanel sharedFontPanel] isVisible];
+  [[NSFontPanel sharedFontPanel] orderOut:nil];
+  
 	[NSApp beginSheet:mAdvancedFontsDialog
         modalForWindow:[mTabView window] // any old window accessor
         modalDelegate:self
@@ -682,6 +685,9 @@ const int kDefaultFontSansSerifTag = 1;
   [NSApp endSheet:mAdvancedFontsDialog];
 
   [self updateFontPreviews];
+
+  if (mFontPanelWasVisible)
+     [[NSFontPanel sharedFontPanel] makeKeyAndOrderFront:self];    
 }
 
 // Reset the "Colors and Links" tab to application factory defaults.
@@ -876,6 +882,10 @@ const int kMissingFontPopupItemTag = 9999;
 
 - (void)changeFont:(id)sender
 {
+  // ignore font panel changes if the advanced panel is up
+  if ([mAdvancedFontsDialog isVisible])
+    return;
+  
   if (mFontButtonForEditor == mChooseProportionalFontButton)
   {
     NSString* fontType = [self defaultProportionalFontTypeForCurrentRegion];
