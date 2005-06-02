@@ -434,8 +434,8 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
                             expression,
                             &aExpression,
                             aSet,
-                            aContextSize,
-                            aContextPosition);
+                            aContextPosition,
+                            aContextSize);
       NS_ENSURE_SUCCESS(rv, nsnull);
 
       if (aIndexesUsed) 

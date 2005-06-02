@@ -65,8 +65,8 @@ nsXFormsXPathAnalyzer::Analyze(nsIDOMNode                *aContextNode,
                                nsIDOMNSXPathExpression   *aExpression,
                                const nsAString           *aExprString,
                                nsCOMArray<nsIDOMNode>    *aSet,
-                               PRUint32                   aSize,
-                               PRUint32                   aPosition)
+                               PRUint32                   aPosition,
+                               PRUint32                   aSize)
 {
   NS_ENSURE_ARG(aContextNode);
   NS_ENSURE_ARG(aNode);
