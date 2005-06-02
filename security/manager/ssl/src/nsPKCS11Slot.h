@@ -63,9 +63,11 @@ private:
 
   PK11SlotInfo *mSlot;
   nsString mSlotDesc, mSlotManID, mSlotHWVersion, mSlotFWVersion;
+  int mSeries;
 
   virtual void virtualDestroyNSSReference();
   void destructorSafeDestroyNSSReference();
+  void refreshSlotInfo();
 };
 
 class nsPKCS11Module : public nsIPKCS11Module,

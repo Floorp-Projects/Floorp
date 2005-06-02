@@ -44,6 +44,7 @@
 #include "nsNSSComponent.h"
 #include "nsNSSCallbacks.h"
 #include "nsNSSIOLayer.h"
+#include "nsNSSEvent.h"
 
 #include "nsNetUtil.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -51,6 +52,7 @@
 #include "nsIStreamListener.h"
 #include "nsIStringBundle.h"
 #include "nsIDirectoryService.h"
+#include "nsIDOMNode.h"
 #include "nsCURILoader.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIProxyObjectManager.h"
@@ -59,6 +61,7 @@
 #include "nsIProfileChangeStatus.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSHelper.h"
+#include "nsSmartCardMonitor.h"
 #include "prlog.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -66,8 +69,15 @@
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsAutoLock.h"
-#include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMWindowCollection.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIDOMSmartCardEvent.h"
+#include "nsIDOMCrypto.h"
 #include "nsIRunnable.h"
 #include "plevent.h"
 #include "nsCRT.h"
@@ -89,6 +99,7 @@
 #include "nsITokenPasswordDialogs.h"
 #include "nsICRLManager.h"
 #include "nsNSSShutDown.h"
+#include "nsSmartCardEvent.h"
 #include "nsICryptoHash.h"
 
 #include "nss.h"
@@ -205,9 +216,10 @@ struct CRLDownloadEvent : PLEvent {
   nsCAutoString *urlString;
   nsIStreamListener *psmDownloader;
 };
-//Note that nsNSSComponent is a singleton object across all threads, and automatic downloads
-//are always scheduled sequentially - that is, once one crl download is complete, the next one
-//is scheduled
+
+// Note that nsNSSComponent is a singleton object across all threads, 
+// and automatic downloads are always scheduled sequentially - that is, 
+// once one crl download is complete, the next one is scheduled
 static void PR_CALLBACK HandleCRLImportPLEvent(CRLDownloadEvent *aEvent)
 {
   nsresult rv;
@@ -228,8 +240,43 @@ static void PR_CALLBACK DestroyCRLImportPLEvent(CRLDownloadEvent* aEvent)
   delete aEvent;
 }
 
+//This class is used to run the callback code
+//passed to the event handlers for smart card notification
+class nsTokenEventRunnable : public nsIRunnable {
+public:
+  nsTokenEventRunnable(const nsAString &aType, const nsAString &aTokenName);
+  virtual ~nsTokenEventRunnable();
+
+  NS_IMETHOD Run ();
+  NS_DECL_ISUPPORTS
+private:
+  nsString mType;
+  nsString mTokenName;
+};
+
+// ISuuports implementation for nsTokenEventRunnable
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsTokenEventRunnable, nsIRunnable);
+
+nsTokenEventRunnable::nsTokenEventRunnable(const nsAString &aType, 
+   const nsAString &aTokenName): mType(aType), mTokenName(aTokenName) { }
+
+nsTokenEventRunnable::~nsTokenEventRunnable() { }
+
+//Implementation that runs the callback passed to 
+//crypto.generateCRMFRequest as an event.
+NS_IMETHODIMP
+nsTokenEventRunnable::Run()
+{ 
+  nsresult rv;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return nssComponent->DispatchEvent(mType, mTokenName);
+}
+
 nsNSSComponent::nsNSSComponent()
-:mNSSInitialized(PR_FALSE)
+  :mNSSInitialized(PR_FALSE), mThreadList(nsnull)
 {
   mutex = PR_NewLock();
   
@@ -286,6 +333,160 @@ nsNSSComponent::~nsNSSComponent()
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::dtor finished\n"));
 }
+
+NS_IMETHODIMP
+nsNSSComponent::PostEvent(const nsAString &eventType, 
+                                                  const nsAString &tokenName)
+{
+  nsresult rv;
+  nsTokenEventRunnable *runnable = 
+                               new nsTokenEventRunnable(eventType, tokenName);
+  if (!runnable) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  rv = nsNSSEventPostToUIEventQueue(runnable);
+  if (NS_FAILED(rv))
+    delete runnable;
+
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsNSSComponent::DispatchEvent(const nsAString &eventType,
+                                                 const nsAString &tokenName)
+{
+  // 'Dispatch' the event to all the windows. 'DispatchEventToWindow()' will
+  // first check to see if a given window has requested crypto events.
+  nsresult rv;
+  nsCOMPtr<nsIWindowWatcher> windowWatcher =
+                            do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  rv = windowWatcher->GetWindowEnumerator(getter_AddRefs(enumerator));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  PRBool hasMoreWindows;
+
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreWindows))
+         && hasMoreWindows) {
+    nsCOMPtr<nsISupports> supports;
+    enumerator->GetNext(getter_AddRefs(supports));
+    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(supports));
+    if (domWin) {
+      nsresult rv2 = DispatchEventToWindow(domWin, eventType, tokenName);
+      if (NS_FAILED(rv2)) {
+        // return the last failure, don't let a single failure prevent
+        // continued delivery of events.
+        rv = rv2;
+      }
+    }
+  }
+  return rv;
+}
+
+nsresult
+nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
+                      const nsAString &eventType, const nsAString &tokenName)
+{
+  // first walk the children and dispatch their events 
+  {
+    nsresult rv;
+    nsCOMPtr<nsIDOMWindowCollection> frames;
+    rv = domWin->GetFrames(getter_AddRefs(frames));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    PRUint32 length;
+    frames->GetLength(&length);
+    PRUint32 i;
+    for (i = 0; i < length; i++) {
+      nsCOMPtr<nsIDOMWindow> childWin;
+      frames->Item(i, getter_AddRefs(childWin));
+      DispatchEventToWindow(childWin, eventType, tokenName);
+    }
+  }
+
+  // check if we've enabled smart card events on this window
+  // NOTE: it's not an error to say that we aren't going to dispatch
+  // the event.
+  {
+    nsCOMPtr<nsIDOMWindowInternal> intWindow = do_QueryInterface(domWin);
+    if (!intWindow) {
+      return NS_OK; // nope, it's not an internal window
+    }
+
+    nsCOMPtr<nsIDOMCrypto> crypto;
+    intWindow->GetCrypto(getter_AddRefs(crypto));
+    if (!crypto) {
+      return NS_OK; // nope, it doesn't have a crypto property
+    }
+
+    PRBool boolrv;
+    crypto->GetEnableSmartCardEvents(&boolrv);
+    if (!boolrv) {
+      return NS_OK; // nope, it's not enabled.
+    }
+  }
+
+  // dispatch the event ...
+
+  nsresult rv;
+  // find the document
+  nsCOMPtr<nsIDOMDocument> doc;
+  rv = domWin->GetDocument(getter_AddRefs(doc));
+  if (doc == nsnull) {
+    return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
+  }
+
+  // create the event
+  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(doc, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIDOMEvent> event;
+  rv = docEvent->CreateEvent(NS_LITERAL_STRING("Events"), 
+                             getter_AddRefs(event));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  event->InitEvent(eventType, false, true);
+
+  // create the Smart Card Event;
+  nsCOMPtr<nsIDOMSmartCardEvent> smartCardEvent = 
+                                          new nsSmartCardEvent(tokenName);
+  // init the smart card event, fail here if we can't complete the 
+  // initialization.
+  if (!smartCardEvent) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  rv = smartCardEvent->Init(event);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Send it 
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(doc, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  PRBool boolrv;
+  rv = target->DispatchEvent(smartCardEvent, &boolrv);
+  return rv;
+}
+
 
 #ifdef XP_MAC
 #ifdef DEBUG
@@ -356,6 +557,62 @@ nsNSSComponent::SkipOcspOff()
 }
 
 void
+nsNSSComponent::LaunchSmartCardThreads()
+{
+  nsNSSShutDownPreventionLock locker;
+  {
+    SECMODModuleList *list = SECMOD_GetDefaultModuleList();
+    SECMODListLock *lock = SECMOD_GetDefaultModuleListLock();
+    SECMOD_GetReadLock(lock);
+
+    while (list) {
+      SECMODModule *module = list->module;
+      LaunchSmartCardThread(module);
+      list = list->next;
+    }
+    SECMOD_ReleaseReadLock(lock);
+  }
+}
+
+NS_IMETHODIMP
+nsNSSComponent::LaunchSmartCardThread(SECMODModule *module)
+{
+  SmartCardMonitoringThread *newThread;
+  if (SECMOD_HasRemovableSlots(module)) {
+    if (mThreadList == nsnull) {
+      mThreadList = new SmartCardThreadList();
+      if (!mThreadList) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+    newThread = new SmartCardMonitoringThread(module);
+    if (!newThread) {
+	return NS_ERROR_OUT_OF_MEMORY;
+    }
+    // newThread is adopted by the add.
+    return mThreadList->Add(newThread);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::ShutdownSmartCardThread(SECMODModule *module)
+{
+  if (!mThreadList) {
+    return NS_OK;
+  }
+  mThreadList->Remove(module);
+  return NS_OK;
+}
+
+void
+nsNSSComponent::ShutdownSmartCardThreads()
+{
+  delete mThreadList;
+  mThreadList = nsnull;
+}
+
+void
 nsNSSComponent::InstallLoadableRoots()
 {
   nsNSSShutDownPreventionLock locker;
@@ -375,7 +632,7 @@ nsNSSComponent::InstallLoadableRoots()
         PK11SlotInfo *slot = module->slots[i];
         if (PK11_IsPresent(slot)) {
           if (PK11_HasRootCerts(slot)) {
-            RootsModule = module;
+            RootsModule = SECMOD_ReferenceModule(module);
             break;
           }
         }
@@ -392,6 +649,7 @@ nsNSSComponent::InstallLoadableRoots()
     CK_INFO info;
     if (SECSuccess != PK11_GetModInfo(RootsModule, &info)) {
       // Do not use this module
+      SECMOD_DestroyModule(RootsModule);
       RootsModule = nsnull;
     }
     else {
@@ -408,13 +666,16 @@ nsNSSComponent::InstallLoadableRoots()
          ) {
         PRInt32 modType;
         SECMOD_DeleteModule(RootsModule->commonName, &modType);
+        SECMOD_DestroyModule(RootsModule);
 
         RootsModule = nsnull;
       }
     }
   }
 
-  if (!RootsModule) {
+  if (RootsModule) {
+    SECMOD_DestroyModule(RootsModule);
+  } else { /* !RootsModule */
     // Load roots module from our installation path
   
     nsresult rv;
@@ -621,9 +882,9 @@ static void setOCSPOptions(nsIPrefBranch * pref)
   pref->GetIntPref("security.OCSP.enabled", &ocspEnabled);
   switch (ocspEnabled) {
   case 0:
-	  CERT_DisableOCSPChecking(CERT_GetDefaultCertDB());
-	  CERT_DisableOCSPDefaultResponder(CERT_GetDefaultCertDB());
-	  break;
+    CERT_DisableOCSPChecking(CERT_GetDefaultCertDB());
+    CERT_DisableOCSPDefaultResponder(CERT_GetDefaultCertDB());
+    break;
   case 1:
     CERT_EnableOCSPChecking(CERT_GetDefaultCertDB());
     break;
@@ -644,15 +905,13 @@ static void setOCSPOptions(nsIPrefBranch * pref)
       nsMemory::Free(signingCA);
       nsMemory::Free(url);
     }
-	  break;
+    break;
   }
 }
 
 nsresult
 nsNSSComponent::PostCRLImportEvent(nsCAutoString *urlString, PSMContentDownloader *psmDownloader)
 {
-  nsresult rv;
-  
   //Create the event
   CRLDownloadEvent *event = new CRLDownloadEvent;
   PL_InitEvent(event, this, (PLHandleEventProc)HandleCRLImportPLEvent, (PLDestroyEventProc)DestroyCRLImportPLEvent);
@@ -660,17 +919,12 @@ nsNSSComponent::PostCRLImportEvent(nsCAutoString *urlString, PSMContentDownloade
   event->psmDownloader = (nsIStreamListener *)psmDownloader;
   
   //Get a handle to the ui event queue
-  nsCOMPtr<nsIEventQueueService> service = 
-                        do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) 
-    return rv;
   
-  nsIEventQueue* result = nsnull;
-  rv = service->GetThreadEventQueue(NS_UI_THREAD, &result);
-  if (NS_FAILED(rv)) 
-    return rv;
-  
-  nsCOMPtr<nsIEventQueue>uiQueue = dont_AddRef(result);
+  nsCOMPtr<nsIEventQueue>uiQueue = nsNSSEventGetUIEventQueue();
+
+  if (!uiQueue) {
+    return NS_ERROR_FAILURE;
+  }
 
   //Post the event
   return uiQueue->PostEvent(event);
@@ -1212,6 +1466,8 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
 
       InstallLoadableRoots();
 
+      LaunchSmartCardThreads();
+
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
     }
   }
@@ -1258,6 +1514,7 @@ nsNSSComponent::ShutdownNSS()
       pbi->RemoveObserver("security.", this);
     }
 
+    ShutdownSmartCardThreads();
     SSL_ClearSessionCache();
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("evaporating psm resources\n"));
     mShutdownObjectList->evaporateAllNSSResources();

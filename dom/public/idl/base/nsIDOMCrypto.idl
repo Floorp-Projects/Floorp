@@ -38,10 +38,11 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(33276f5d-3499-4ab9-acea-d85a9fceeccd)]
+[scriptable, uuid(d2b675a5-f05b-4172-bac2-24cc39ffd398)]
 interface nsIDOMCrypto : nsISupports
 {
   readonly attribute DOMString        version;
+  attribute boolean         enableSmartCardEvents;
 
   nsIDOMCRMFObject          generateCRMFRequest(/* ... */);
   DOMString                 importUserCertificates(in DOMString nickname,

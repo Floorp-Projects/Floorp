@@ -63,11 +63,13 @@ public:
 
 private:
   friend class nsPK11TokenDB;
+  void refreshTokenInfo();
 
   nsString mTokenName;
   nsString mTokenLabel, mTokenManID, mTokenHWVersion, mTokenFWVersion;
   nsString mTokenSerialNum;
   PK11SlotInfo *mSlot;
+  int mSeries;
   nsCOMPtr<nsIInterfaceRequestor> mUIContext;
   virtual void virtualDestroyNSSReference();
   void destructorSafeDestroyNSSReference();

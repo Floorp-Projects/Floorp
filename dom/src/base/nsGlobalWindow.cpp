@@ -495,6 +495,11 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
     // Let go of the cached principal since we no longer need it.
     mDocumentPrincipal = nsnull;
+
+    // clear smartcard events, our document has gone away.
+    if (mCrypto) {
+	mCrypto->SetEnableSmartCardEvents(PR_FALSE);
+    }
   }
 
   if (mFirstDocumentLoad) {
