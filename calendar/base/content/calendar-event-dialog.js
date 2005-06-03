@@ -103,12 +103,19 @@ function loadDialog()
     setElementValue("event-title",       event.title);
     setElementValue("event-all-day",     event.isAllDay, "checked");
 
-    setElementValue("event-starttime",   event.startDate.getInTimezone(kDefaultTimezone).jsDate);
-    setElementValue("event-endtime",     event.endDate.getInTimezone(kDefaultTimezone).jsDate);
-
     setElementValue("event-location",    event.getProperty("LOCATION"));
     setElementValue("event-url",         event.getProperty("URL"));
     setElementValue("event-description", event.getProperty("DESCRIPTION"));
+
+    /* all day */
+    var startDate = event.startDate.getInTimezone(kDefaultTimezone);
+    var endDate = event.endDate.getInTimezone(kDefaultTimezone);
+    if (startDate.isDate) {
+        endDate.day -= 1;
+        endDate.normalize();
+    }
+    setElementValue("event-starttime",   startDate.jsDate);
+    setElementValue("event-endtime",     endDate.jsDate);
 
     /* attendence */
     var attendeeString = "";
@@ -149,13 +156,21 @@ function loadDialog()
 function saveDialog(event)
 {
     event.title = getElementValue("event-title");
+    event.isAllDay = getElementValue("event-all-day", "checked");
     event.startDate = jsDateToDateTime(getElementValue("event-starttime"));
     event.endDate = jsDateToDateTime(getElementValue("event-endtime"));
-    event.isAllDay = getElementValue("event-all-day", "checked");
 
     setEventProperty(event, "LOCATION",    getElementValue("event-location"));
     setEventProperty(event, "URL",         getElementValue("event-url"));
     setEventProperty(event, "DESCRIPTION", getElementValue("event-description"));
+
+    /*  all day */
+    if (event.isAllDay) {
+        event.startDate.isDate = true;
+        event.endDate.isDate = true;
+        event.endDate.day += 1;
+        event.endDate.normalize();
+    }
 
     /* attendence */
     event.removeAllAttendees();
@@ -171,10 +186,8 @@ function saveDialog(event)
     /* recurrence */
     if (getElementValue("event-recurrence", "checked")) {
         if (window.recurrenceInfo) {
-            dump("setting recurrenceInfo!\n");
             event.recurrenceInfo = window.recurrenceInfo;
-        } else
-            dump("not setting recurrenceInfo\n");
+        }
     } else {
         event.recurrenceInfo = null;
     }
