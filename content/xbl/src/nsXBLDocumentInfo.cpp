@@ -352,7 +352,7 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
     if (reg) {
       PRBool allow = PR_TRUE;
       reg->AllowScriptsForPackage(uri, &allow);
-      SetScriptAccess(allow);
+      mScriptAccess = allow;
     }
   }
 }
