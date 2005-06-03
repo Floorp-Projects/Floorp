@@ -154,12 +154,36 @@ CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Day)
 CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Hour)
 CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Minute)
 CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Second)
-CAL_VALUETYPE_ATTR(calDateTime, PRBool, IsDate)
 
 CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRInt16, Weekday)
 CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRInt16, Yearday)
 
 CAL_STRINGTYPE_ATTR_GETTER(calDateTime, nsACString, Timezone)
+
+NS_IMETHODIMP
+calDateTime::SetIsDate(PRBool aIsDate)
+{
+    if (mImmutable)
+        return NS_ERROR_FAILURE;
+
+    mIsDate = aIsDate;
+    if (aIsDate) {
+        mHour = 0;
+        mMinute = 0;
+        mSecond = 0;
+        Normalize();
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calDateTime::GetIsDate(PRBool *aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+
+    *aResult = mIsDate;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 calDateTime::SetTimezone(const nsACString& aTimezone)
