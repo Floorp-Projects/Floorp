@@ -579,7 +579,7 @@ NS_METHOD nsMenuBarX::AddMenu(nsIMenu * aMenu)
     aMenu->GetMenuContent(getter_AddRefs(menu));
     nsAutoString menuHidden;
     menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, menuHidden);
-    if( !menuHidden.EqualsLiteral("true")) {
+    if(!menuHidden.EqualsLiteral("true") && menu->GetChildCount() > 0) {
     	// make sure we only increment |mNumMenus| if the menu is visible, since
     	// we use it as an index of where to insert the next menu.
       mNumMenus++;
