@@ -2967,6 +2967,10 @@ nsDocument::SetTitle(const nsAString& aTitle)
   CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
   if (event) {
     event->InitEvent(NS_LITERAL_STRING("DOMTitleChanged"), PR_TRUE, PR_TRUE);
+    // There might be script running, so the event might have ended up
+    // untrusted.  Make it trusted.
+    nsCOMPtr<nsIPrivateDOMEvent> privEvt(do_QueryInterface(event));
+    privEvt->SetTrusted(PR_TRUE);
     PRBool defaultActionEnabled;
     DispatchEvent(event, &defaultActionEnabled);
   }
