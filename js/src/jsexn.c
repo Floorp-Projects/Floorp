@@ -426,7 +426,8 @@ InitExceptionObject(JSContext *cx, JSObject *obj, JSString *message,
         if (checkAccess) {
             v = (fp->fun && fp->argv) ? fp->argv[-2] : JSVAL_NULL;
             if (!JSVAL_IS_PRIMITIVE(v)) {
-                ok = checkAccess(cx, fp->fun->object, callerid, JSACC_READ, &v);
+                ok = checkAccess(cx, JSVAL_TO_OBJECT(fp->argv[-2]), callerid,
+                                 JSACC_READ, &v /* ignored */);
                 if (!ok) {
                     ok = JS_TRUE;
                     break;
