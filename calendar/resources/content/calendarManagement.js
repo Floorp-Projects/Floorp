@@ -203,8 +203,17 @@ function setCalendarManagerUI()
 
 function initCalendarManager()
 {
-    getCalendarManager().addObserver(calCalendarManagerObserver);
-    getDisplayComposite().addObserver(calCompositeCalendarObserver, 0);
+    var calMgr = getCalendarManager();
+    var composite = getDisplayComposite();
+    if (calMgr.getCalendars({}).length == 0) {
+        var homeCalendar = calMgr.createCalendar("storage", makeURL("moz-profile-calendar://"));
+        calMgr.registerCalendar(homeCalendar);
+        // XXX Localize me
+        homeCalendar.name = "Home";
+        composite.addCalendar(homeCalendar);
+    }
+    calMgr.addObserver(calCalendarManagerObserver);
+    composite.addObserver(calCompositeCalendarObserver, 0);
     setCalendarManagerUI();
 }
 
