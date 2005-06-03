@@ -754,7 +754,7 @@ treechildren::-moz-tree-image(remote-err) {
 
 /* ::::: address book sidebar ::::: */
 .ab-closebutton {
-   list-style-image: url("chrome://global/skin/icons/close-button.gif");
+   list-style-image: url("chrome://global/skin/icons/Close.gif");
 }
 
 #sidebar {
