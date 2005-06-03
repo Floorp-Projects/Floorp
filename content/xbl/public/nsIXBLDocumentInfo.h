@@ -66,7 +66,6 @@ public:
   NS_IMETHOD GetDocument(nsIDocument** aResult)=0;
   
   NS_IMETHOD GetScriptAccess(PRBool* aResult)=0;
-  NS_IMETHOD SetScriptAccess(PRBool aAccess)=0;
 
   /* Never returns null */
   NS_IMETHOD_(nsIURI*) DocumentURI()=0;

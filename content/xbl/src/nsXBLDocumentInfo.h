@@ -54,7 +54,6 @@ public:
   NS_IMETHOD GetDocument(nsIDocument** aResult) { NS_ADDREF(*aResult = mDocument); return NS_OK; };
 
   NS_IMETHOD GetScriptAccess(PRBool* aResult) { *aResult = mScriptAccess; return NS_OK; };
-  NS_IMETHOD SetScriptAccess(PRBool aAccess) { mScriptAccess = aAccess; return NS_OK; };
 
   NS_IMETHOD_(nsIURI*) DocumentURI() { return mDocument->GetDocumentURI(); };
 
