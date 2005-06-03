@@ -421,7 +421,7 @@ function loadCalendarEventDialog()
     }
     // The event calendar is its current calendar, or for a new event,
     // the selected calendar in the calendar list, passed in args.calendar.
-    var eventCalendar = event.parent || args.calendar;
+    var eventCalendar = event.calendar || args.calendar;
 
     // Initialize calendar names in drop down list.
     var calendarField = document.getElementById('server-field');

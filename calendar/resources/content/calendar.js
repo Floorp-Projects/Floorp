@@ -970,8 +970,8 @@ function saveItem( calendarEvent, calendar, functionToRun, originalEvent )
         // compare cal.uri because there may be multiple instances of
         // calICalendar or uri for the same spec, and those instances are
         // not ==.
-        if (!originalEvent.parent || 
-            (originalEvent.parent.uri.equals(calendar.uri)))
+        if (!originalEvent.calendar || 
+            (originalEvent.calendar.uri.equals(calendar.uri)))
             doTransaction('modify', calendarEvent, calendar, originalEvent, null);
         else
             doTransaction('move', calendarEvent, calendar, originalEvent, null);
@@ -990,7 +990,7 @@ function deleteItems( SelectedItems, DoNotConfirm )
 
     startBatchTransaction();
     for (i in SelectedItems) {
-        doTransaction('delete', SelectedItems[i], SelectedItems[i].parent, null, null);
+        doTransaction('delete', SelectedItems[i], SelectedItems[i].calendar, null, null);
     }
     endBatchTransaction();
 }
@@ -1541,7 +1541,7 @@ calTransaction.prototype = {
                 this.mCalendar.deleteItem(this.mItem, this.mListener);
                 break;
             case 'move':
-                this.mOldCalendar = this.mOldItem.parent;
+                this.mOldCalendar = this.mOldItem.calendar;
                 this.mCalendar.addItem(this.mItem, this.mListener);
                 this.mOldCalendar.deleteItem(this.mOldItem, this.mListener);
                 break;

@@ -94,16 +94,16 @@ function modifyEventWithDialog(event)
         // compare cal.uri because there may be multiple instances of
         // calICalendar or uri for the same spec, and those instances are
         // not ==.
-        if (!originalEvent.parent || 
-            (originalEvent.parent.uri.equals(calendar.uri)))
+        if (!originalEvent.calendar || 
+            (originalEvent.calendar.uri.equals(calendar.uri)))
             calendar.modifyItem(event, null);
         else {
-            originalEvent.parent.deleteItem(event, null);
+            originalEvent.calendar.deleteItem(event, null);
             calendar.addItem(event, null);
         }
     }
 
-    openEventDialog(event, event.parent, "modify", onModifyEvent);
+    openEventDialog(event, event.calendar, "modify", onModifyEvent);
 }
 
 function openEventDialog(calendarEvent, calendar, mode, callback)

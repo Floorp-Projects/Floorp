@@ -122,7 +122,7 @@ var ltnCalendarViewController = {
             var event = aOccurrence.item.clone();
             event.startDate = aNewStartTime;
             event.endDate = aNewEndTime;
-            event.parent.modifyItem(event, null);
+            event.calendar.modifyItem(event, null);
         } else {
             modifyEventWithDialog(aOccurrence.item);
         }
@@ -135,7 +135,7 @@ var ltnCalendarViewController = {
             return;
         }
 
-        aOccurrence.item.parent.deleteItem(aOccurrence.item, null);
+        aOccurrence.item.calendar.deleteItem(aOccurrence.item, null);
     }
 };
 

@@ -116,7 +116,7 @@ calItemBase.prototype = {
         m.mImmutable = false;
         m.mGeneration = this.mGeneration;
         m.mLastModifiedTime = this.mLastModifiedTime.clone();
-        m.mParent = this.mParent;
+        m.mCalendar = this.mCalendar;
         m.mId = this.mId;
         m.mTitle = this.mTitle;
         m.mPriority = this.mPriority;
@@ -234,15 +234,15 @@ calItemBase.prototype = {
         this.mAttendees.push(attendee);
     },
 
-    get parent () {
-        return this.mParent;
+    get calendar () {
+        return this.mCalendar;
     },
 
-    set parent (v) {
+    set calendar (v) {
         if (this.mImmutable)
             // Components.results.NS_ERROR_CALENDAR_IMMUTABLE;
             throw Components.results.NS_ERROR_FAILURE;
-        this.mParent = v;
+        this.mCalendar = v;
     },
 
     mOrganizer: null,

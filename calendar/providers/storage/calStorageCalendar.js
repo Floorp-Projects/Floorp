@@ -335,7 +335,7 @@ calStorageCalendar.prototype = {
         }
 
         var newItem = aItem.clone();
-        newItem.parent = this;
+        newItem.calendar = this;
         newItem.generation = 1;
         newItem.makeImmutable();
 
@@ -982,7 +982,7 @@ calStorageCalendar.prototype = {
     getItemBaseFromRow: function (row, flags, item) {
         item.creationDate = newDateTime(row.time_created, "UTC");
         item.lastModifiedTime = newDateTime(row.last_modified, "UTC");
-        item.parent = this;
+        item.calendar = this;
         item.id = row.id;
         item.title = row.title;
         item.priority = row.priority;

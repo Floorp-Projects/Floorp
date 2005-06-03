@@ -218,7 +218,7 @@ calDavCalendar.prototype = {
         }
 
         var newItem = aItem.clone();
-        newItem.parent = this;
+        newItem.calendar = this;
         newItem.generation = 1;
         newItem.setProperty("locationURI", itemUri.spec);
         newItem.makeImmutable();
@@ -472,7 +472,7 @@ calDavCalendar.prototype = {
                 debug("item result = \n" + calData + "\n");
                 // XXX try-catch
                 item.icalString = calData;
-                item.parent = thisCalendar;
+                item.calendar = thisCalendar;
 
                 // save the location name in case we need to modify
                 item.setProperty("locationURI", aResource.spec);

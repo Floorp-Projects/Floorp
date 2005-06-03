@@ -96,7 +96,7 @@ interface calIItemBase : nsISupports
   void updateStampTime();
 
   // the calICalendar to which this event belongs
-  attribute calICalendar parent;
+  attribute calICalendar calendar;
 
   // the ID of this event
   attribute AUTF8String id;

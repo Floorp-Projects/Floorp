@@ -127,11 +127,11 @@ function loadDialog()
     setElementValue("event-attendees", attendeeString);
 
     /* event default calendar */
-    if (event.parent) {
+    if (event.calendar) {
         var calendarList = document.getElementById("event-calendar");
         var calendars = getCalendarManager().getCalendars({});
         for (i in calendars) {
-            if (event.parent.uri.equals(calendars[i].uri))
+            if (event.calendar.uri.equals(calendars[i].uri))
                 calendarList.selectedIndex = i;
         }
     }

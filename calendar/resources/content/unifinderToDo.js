@@ -258,7 +258,7 @@ function checkboxClick(thisTodo, completed)
             newTodo.percentComplete = 0;
     }
    
-    doTransaction('modify', newTodo, newTodo.parent, thisTodo, null);
+    doTransaction('modify', newTodo, newTodo.calendar, thisTodo, null);
 }
 
 
@@ -580,7 +580,7 @@ function contextChangeProgress( event, Progress )
       {
           var newItem = todoItem.clone().QueryInterface(Components.interfaces.calITodo);
           newItem.percentComplete = Progress;
-          doTransaction('modify', newItem, newItem.parent, todoItem, null);
+          doTransaction('modify', newItem, newItem.calendar, todoItem, null);
       }
    }
 }
@@ -597,7 +597,7 @@ function contextChangePriority( event, Priority )
       {
           var newItem = todoItem.clone().QueryInterface(Components.interfaces.calITodo);
           newItem.priority = Priority;
-          doTransaction('modify', newItem, newItem.parent, todoItem, null);
+          doTransaction('modify', newItem, newItem.calendar, todoItem, null);
       }
    }
 }

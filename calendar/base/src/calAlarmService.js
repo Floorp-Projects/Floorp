@@ -61,8 +61,8 @@ function testAlarm(name) {
     this.alarmTime = jsDateToDateTime(new Date());
     this.alarmTime.second += 5;
     this.alarmTime.normalize();
-    this.parent = new Object();
-    this.parent.suppressAlarms = false;
+    this.calendar = new Object();
+    this.calendar.suppressAlarms = false;
     this.id = testalarmnumber++;
 }
 testAlarm.prototype = {
@@ -182,7 +182,7 @@ calAlarmService.prototype = {
         newEvent.alarmTime = alarmTime;
         // calling modifyItem will cause us to get the right callback
         // and update the alarm properly
-        newEvent.parent.modifyItem(newEvent, null);
+        newEvent.calendar.modifyItem(newEvent, null);
     },
 
     addObserver: function(aObserver) {
@@ -359,7 +359,7 @@ calAlarmService.prototype = {
     },
 
     alarmFired: function(event) {
-        if (event.parent.suppressAlarms)
+        if (event.calendar.suppressAlarms)
             return;
 
         this.notifyObservers("onAlarm", [event]);

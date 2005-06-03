@@ -294,22 +294,22 @@ calCompositeCalendar.prototype = {
 
     // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
     modifyItem: function (aItem, aListener) {
-        if (aItem.parent == null) {
+        if (aItem.calendar == null) {
             // XXX Can't modify item with NULL parent
             throw Components.results.NS_ERROR_FAILURE;
         }
 
-        aItem.parent.modifyItem (aItem, aListener);
+        aItem.calendar.modifyItem (aItem, aListener);
     },
 
     // void deleteItem( in string id, in calIOperationListener aListener );
     deleteItem: function (aItem, aListener) {
-        if (aItem.parent == null) {
+        if (aItem.calendar == null) {
             // XXX Can't delete item with NULL parent
             throw Components.results.NS_ERROR_FAILURE;
         }
 
-        aItem.parent.deleteItem (aItem, aListener);
+        aItem.calendar.deleteItem (aItem, aListener);
     },
 
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
