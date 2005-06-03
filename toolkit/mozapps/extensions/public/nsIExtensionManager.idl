@@ -424,6 +424,7 @@ interface nsIExtensionItemUpdater : nsISupports
 #define EM_ITEM_UNINSTALLED "item-uninstalled"
 #define EM_ITEM_ENABLED     "item-enabled"
 #define EM_ITEM_DISABLED    "item-disabled"
+#define EM_ITEM_CANCEL      "item-cancel-action"
 
 %}
 

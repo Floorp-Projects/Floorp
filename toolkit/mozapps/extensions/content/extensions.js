@@ -62,6 +62,13 @@ const PREF_GENERAL_SKINS_SELECTEDSKIN       = "general.skins.selectedSkin";
 const RDFURI_ITEM_ROOT  = "urn:mozilla:item:root";
 const PREFIX_ITEM_URI   = "urn:mozilla:item:";
 
+const OP_NONE                         = "";
+const OP_NEEDS_INSTALL                = "needs-install";
+const OP_NEEDS_UPGRADE                = "needs-upgrade";
+const OP_NEEDS_UNINSTALL              = "needs-uninstall";
+const OP_NEEDS_ENABLE                 = "needs-enable";
+const OP_NEEDS_DISABLE                = "needs-disable";
+
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions 
 
@@ -234,7 +241,6 @@ function Startup()
   
   // Set the tooltips
   if (!isExtensions) {
-    var extensionsStrings = document.getElementById("extensionsStrings");
 #ifndef MOZ_PHOENIX
     document.getElementById("installButton").setAttribute("tooltiptext", extensionsStrings.getString("cmdInstallTooltipTheme"));
 #endif
@@ -354,14 +360,14 @@ XPInstallDownloadManager.prototype = {
     case nsIXPIProgressDialog.INSTALL_START:
       element.setAttribute("state", "installing");
 
-      var extensionsStrings = document.getElementById("extensionsStrings");
+      extensionsStrings = document.getElementById("extensionsStrings");
       element.setAttribute("description", 
                            extensionsStrings.getString("installInstalling"));
       break;
     case nsIXPIProgressDialog.INSTALL_DONE:
       dump("*** state change = " + aURL + ", state = " + aState + ", value = " + aValue + "\n");
       element.setAttribute("state", "done");
-      var extensionsStrings = document.getElementById("extensionsStrings");
+      extensionsStrings = document.getElementById("extensionsStrings");
       element.setAttribute("description", 
                            extensionsStrings.getString("installSuccess"));
       var msg;
@@ -662,7 +668,7 @@ var gExtensionsDNDObserver =
     }
     return this._flavourSet;
   }
-}
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Command Updating and Command Handlers
@@ -688,59 +694,66 @@ var gExtensionsViewController = {
   isCommandEnabled: function (aCommand)
   {
     var selectedItem = gExtensionsView.selected;
+    if (selectedItem)
+      var opType = selectedItem.getAttribute("opType");
+
     switch (aCommand) {
     case "cmd_close":
       return true;
     case "cmd_useTheme":
       return selectedItem &&
              !selectedItem.disabled &&
-             selectedItem.getAttribute("toBeUninstalled") != "true" &&
+             opType != OP_NEEDS_UNINSTALL &&
              gCurrentTheme != selectedItem.getAttribute("internalName");
     case "cmd_options":
       return selectedItem &&
              !selectedItem.disabled &&
              !gApp.inSafeMode &&
-             selectedItem.getAttribute("toBeUninstalled") != "true" &&
+             opType == OP_NONE &&
              selectedItem.getAttribute("optionsURL") != "";
     case "cmd_about":
       return selectedItem &&
-             selectedItem.getAttribute("toBeInstalled") != "true" &&
-             (selectedItem.disabled ? selectedItem.getAttribute("aboutURL") == "" : true);
+             opType != OP_NEEDS_INSTALL;
     case "cmd_homepage":
       return selectedItem && selectedItem.getAttribute("homepageURL") != "";
     case "cmd_uninstall":
       if (gWindowState != "extensions") {
-        // uninstall is only available if the selected item isn't the 
-        // default theme.
+        // uninstall is never available for the default theme
         return (selectedItem && 
-                selectedItem.getAttribute("internalName") != gDefaultTheme);
+                selectedItem.getAttribute("internalName") != gDefaultTheme &&
+                opType != OP_NEEDS_UNINSTALL &&
+                selectedItem.getAttribute("locked") != "true" &&
+                canWriteToLocation(selectedItem));
       }
       return selectedItem &&
-             selectedItem.getAttribute("toBeUninstalled") != "true" &&
-             selectedItem.getAttribute("toBeInstalled") != "true" &&
+             opType != OP_NEEDS_UNINSTALL &&
              selectedItem.getAttribute("locked") != "true" &&
              canWriteToLocation(selectedItem);
     case "cmd_update":
       return !selectedItem ||
              (selectedItem &&
-              selectedItem.getAttribute("toBeUninstalled") != "true" &&
-              selectedItem.getAttribute("toBeInstalled") != "true") &&
-              canWriteToLocation(selectedItem);
+              opType != OP_NEEDS_INSTALL &&
+              opType != OP_NEEDS_UNINSTALL &&
+              opType != OP_NEEDS_UPGRADE &&
+              canWriteToLocation(selectedItem));
     case "cmd_reallyEnable":
     // controls whether to show Enable or Disable in extensions' context menu
       return selectedItem && 
-             selectedItem.disabled;
+            (selectedItem.disabled &&
+             opType != OP_NEEDS_ENABLE ||
+             opType == OP_NEEDS_DISABLE ||
+             opType == OP_NEEDS_UNINSTALL);
     case "cmd_enable":
     //controls wheter the Enable/Disable menuitem is enabled
       return selectedItem && 
-             selectedItem.disabled && 
-             selectedItem.getAttribute("toBeUninstalled") != "true" &&
+             opType != OP_NEEDS_ENABLE &&
+             opType != OP_NEEDS_INSTALL &&
+             opType != OP_NEEDS_UPGRADE &&
              selectedItem.getAttribute("compatible") != "false";
     case "cmd_disable":
       return selectedItem &&
-             !selectedItem.disabled &&
-             selectedItem.getAttribute("toBeUninstalled") != "true" && 
-             selectedItem.getAttribute("toBeInstalled") != "true";
+            (opType == OP_NONE ||
+             opType == OP_NEEDS_ENABLE);
     case "cmd_movetop":
       return selectedItem && (gExtensionsView.children[0] != selectedItem);
     case "cmd_moveup":
@@ -887,7 +900,7 @@ var gExtensionsViewController = {
       var name = aSelectedItem.getAttribute("name");
       var title = extensionsStrings.getFormattedString("queryUninstallTitle", [name]);
       if (gWindowState == "extensions")
-        message = extensionsStrings.getFormattedString("queryUninstallExtensionMessage", [name, name]);
+        var message = extensionsStrings.getFormattedString("queryUninstallExtensionMessage", [name, name]);
       else if (gWindowState == "themes")
         message = extensionsStrings.getFormattedString("queryUninstallThemeMessage", [name]);
 
@@ -926,6 +939,7 @@ var gExtensionsViewController = {
     cmd_enable: function (aSelectedItem)
     {
       gExtensionManager.enableItem(getIDFromResourceURI(aSelectedItem.id));
+      gExtensionsView.selected = document.getElementById(aSelectedItem.id);
 #ifdef MOZ_PHOENIX
     }
   }
