@@ -2655,9 +2655,8 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
   mIsHTMLContent = PR_FALSE;
   mIsHTMLLink = PR_FALSE;
   mIsSimpleXLink = PR_FALSE;
-  mIsChecked = PR_FALSE;
   mLinkState = eLinkState_Unknown;
-  mEventState = NS_EVENT_STATE_UNSPECIFIED;
+  mEventState = 0;
   mNameSpaceID = kNameSpaceID_Unknown;
   mPreviousSiblingData = nsnull;
   mParentData = nsnull;
@@ -2721,18 +2720,6 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
        nsStyleUtil::IsSimpleXlink(aContent, mPresContext, &mLinkState)) {
       mIsSimpleXLink = PR_TRUE;
     } 
-
-    if (mIsHTMLContent) {
-      PRBool isChecked = PR_FALSE;
-      if (mContentTag == nsHTMLAtoms::option) {
-        nsCOMPtr<nsIDOMHTMLOptionElement> optEl = do_QueryInterface(mContent);
-        optEl->GetSelected(&isChecked);
-      } else if (mContentTag == nsHTMLAtoms::input) {
-        nsCOMPtr<nsIDOMHTMLInputElement> inputEl = do_QueryInterface(mContent);
-        inputEl->GetChecked(&isChecked);
-      }
-      mIsChecked = isChecked;
-    }
   }
 }
 
@@ -2899,6 +2886,10 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
       return PR_FALSE;
   }
 }
+
+#define STATE_CHECK(_state)                                  \
+  ((aStateMask & (_state)) ||                                \
+   (localTrue == (0 != (data.mEventState & (_state)))))
 
 // NOTE:  The |aStateMask| code isn't going to work correctly anymore if
 // we start batching style changes, because if multiple states change in
@@ -3095,24 +3086,19 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         result = localFalse;
       } else {
         if (nsCSSPseudoClasses::active == pseudoClass->mAtom) {
-          result = (aStateMask & NS_EVENT_STATE_ACTIVE) ||
-                   (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_ACTIVE)));
+          result = STATE_CHECK(NS_EVENT_STATE_ACTIVE);
         }
         else if (nsCSSPseudoClasses::focus == pseudoClass->mAtom) {
-          result = (aStateMask & NS_EVENT_STATE_FOCUS) ||
-                   (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_FOCUS)));
+          result = STATE_CHECK(NS_EVENT_STATE_FOCUS);
         }
         else if (nsCSSPseudoClasses::hover == pseudoClass->mAtom) {
-          result = (aStateMask & NS_EVENT_STATE_HOVER) ||
-                   (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_HOVER)));
+          result = STATE_CHECK(NS_EVENT_STATE_HOVER);
         }
         else if (nsCSSPseudoClasses::mozDragOver == pseudoClass->mAtom) {
-          result = (aStateMask & NS_EVENT_STATE_DRAGOVER) ||
-                   (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_DRAGOVER)));
+          result = STATE_CHECK(NS_EVENT_STATE_DRAGOVER);
         }
         else if (nsCSSPseudoClasses::target == pseudoClass->mAtom) {
-          result = (aStateMask & NS_EVENT_STATE_URLTARGET) ||
-                   (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_URLTARGET)));
+          result = STATE_CHECK(NS_EVENT_STATE_URLTARGET);
         }
       } 
     }
@@ -3137,8 +3123,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       //  <option>
       //  <input type=checkbox>
       //  <input type=radio>
-      if (!(aStateMask & NS_EVENT_STATE_CHECKED))
-        result = data.mIsChecked ? localTrue : localFalse;
+      result = STATE_CHECK(NS_EVENT_STATE_CHECKED);
     }
     else {
       NS_ERROR("CSS parser parsed a pseudo-class that we do not handle");
@@ -3294,6 +3279,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   }
   return result;
 }
+
+#undef STATE_CHECK
 
 // Right now, there are four operators:
 //   PRUnichar(0), the descendent combinator, is greedy

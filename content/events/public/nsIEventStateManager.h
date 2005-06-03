@@ -132,7 +132,6 @@ public:
   NS_IMETHOD ShiftFocus(PRBool aDirection, nsIContent* aStart)=0;
 };
 
-#define NS_EVENT_STATE_UNSPECIFIED  0x0000
 #define NS_EVENT_STATE_ACTIVE       0x0001 // mouse is down on content
 #define NS_EVENT_STATE_FOCUS        0x0002 // content has focus
 #define NS_EVENT_STATE_HOVER        0x0004 // mouse is hovering over content

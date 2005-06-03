@@ -225,6 +225,8 @@ public:
 
   virtual void DoneCreatingElement();
 
+  virtual PRInt32 IntrinsicState() const;
+
   // nsITextControlElement
   NS_IMETHOD TakeTextFrameValue(const nsAString& aValue);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
@@ -2459,6 +2461,18 @@ nsHTMLInputElement::DoneCreatingElement()
   }
 
   SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, PR_FALSE);
+}
+
+PRInt32
+nsHTMLInputElement::IntrinsicState() const
+{
+  PRInt32 state = nsGenericHTMLFormElement::IntrinsicState();
+  if (GET_BOOLBIT(mBitField, BF_CHECKED) &&
+      (mType == NS_FORM_INPUT_CHECKBOX ||
+       mType == NS_FORM_INPUT_RADIO)) {
+    state |= NS_EVENT_STATE_CHECKED;
+  }
+  return state;
 }
 
 PRBool

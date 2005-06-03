@@ -122,6 +122,7 @@ public:
                                  PRBool aNotify);
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+  virtual PRInt32 IntrinsicState() const;
 
 protected:
   /**
@@ -493,6 +494,20 @@ nsHTMLOptionElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   return rv;
 }
 
+PRInt32
+nsHTMLOptionElement::IntrinsicState() const
+{
+  PRInt32 state = nsGenericHTMLElement::IntrinsicState();
+  // Nasty hack because we need to call an interface method, and one that
+  // toggles some of our hidden internal state at that!  Would that we could
+  // use |mutable|.
+  PRBool selected;
+  NS_CONST_CAST(nsHTMLOptionElement*, this)->GetSelected(&selected);
+  if (selected) {
+    state |= NS_EVENT_STATE_CHECKED;
+  }
+  return state;
+}
 
 // Options don't have frames - get the select content node
 // then call nsGenericHTMLElement::GetFormControlFrameFor()

@@ -3625,7 +3625,7 @@ nsEventStateManager::GetEventRelatedContent(nsIContent** aContent)
 NS_IMETHODIMP
 nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
 {
-  aState = NS_EVENT_STATE_UNSPECIFIED;
+  aState = aContent->IntrinsicState();
 
   // Hierchical active:  Check the ancestor chain of mActiveContent to see
   // if we are on it.
