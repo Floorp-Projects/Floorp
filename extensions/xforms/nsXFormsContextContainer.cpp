@@ -218,16 +218,9 @@ nsXFormsContextContainer::HandleDefault(nsIDOMEvent *aEvent,
     // Not a child to a \<repeat\>
     return NS_OK;
 
-  // Find our context position
-  nsAutoString posString;
-  mElement->GetAttribute(NS_LITERAL_STRING("contextposition"), posString);
-  NS_ASSERTION(!posString.IsEmpty(), "@contextposition n/a or empty on repeat child?");
-  PRInt32 errCode;
-  PRUint32 pos = posString.ToInteger(&errCode);
-  NS_ASSERTION(!errCode, "@contextposition != integer on repeat child?");
-
   // Tell \<repeat\> about the new index position
-  return repeat->SetIndex(&pos, PR_FALSE);
+  PRUint32 tmp = mContextPosition;
+  return repeat->SetIndex(&tmp, PR_FALSE);
 }
 
 NS_IMETHODIMP
