@@ -5188,7 +5188,12 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
         nsDoc->SetTitle(title);
     }
     
+    // aSHEntry is now our currently-loaded document.
     mOSHE = aSHEntry;
+
+    // Clear the mLSHE reference to indicate document loading is done one
+    // way or another.
+    mLSHE = nsnull;
 
     // mEODForCurrentDocument is true here, so EndPageLoad will not fire
     // onload (we fire that below, in a special way so that the content window
