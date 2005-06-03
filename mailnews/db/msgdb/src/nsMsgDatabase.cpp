@@ -4329,9 +4329,11 @@ NS_IMETHODIMP nsMsgDatabase::ApplyRetentionSettings(nsIMsgRetentionSettings *aMs
   case nsIMsgRetentionSettings::nsMsgRetainByAge:
     aMsgRetentionSettings->GetDaysToKeepHdrs(&daysToKeepHdrs);
     rv = PurgeMessagesOlderThan(daysToKeepHdrs, keepUnreadMessagesOnly, msgHdrsToDelete);
+    break;
   case nsIMsgRetentionSettings::nsMsgRetainByNumHeaders:
     aMsgRetentionSettings->GetNumHeadersToKeep(&numHeadersToKeep);
     rv = PurgeExcessMessages(numHeadersToKeep, keepUnreadMessagesOnly, msgHdrsToDelete);
+    break;
   }
   if (m_folder)
   {
