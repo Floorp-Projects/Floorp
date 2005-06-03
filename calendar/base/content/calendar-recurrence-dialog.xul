@@ -67,7 +67,7 @@
 
       <rows>
         <row align="center">
-          <label value="Frequency"/>
+          <label value="Occurs"/>
           <menulist id="period-list" oncommand="updateDeck();">
             <menupopup>
               <menuitem label="Daily" value="0"/>
@@ -84,12 +84,29 @@
 
             <!-- Daily -->
             <hbox align="top">
-              <textbox id="daily-days" width="30"/>
+              <label value="Every"/>
+              <textbox id="daily-days" size="3"/>
               <label value="days"/>
+              <spacer flex="1"/>
             </hbox>
 
             <!-- Weekly -->
-            <vbox>
+            <hbox>
+              <label value="On:"/>
+              <vbox>
+                <checkbox id="weekly-mon" label="Monday" value="2"/>
+                <checkbox id="weekly-tue" label="Tuesday" value="3"/>
+                <checkbox id="weekly-wed" label="Wednesday" value="4"/>
+                <checkbox id="weekly-thu" label="Thursday" value="5"/>
+              </vbox>
+              <vbox>
+                <checkbox id="weekly-fri" label="Friday" value="6"/>
+                <checkbox id="weekly-sat" label="Saturday" value="7"/>
+                <checkbox id="weekly-sun" label="Sunday" value="1"/>
+              </vbox>
+            </hbox>
+
+            <vbox align="center">
               <menulist>
                 <menupopup>
                   <menuitem label="every"/>
@@ -101,29 +118,18 @@
                   <menuitem label="every last"/>
                 </menupopup>
               </menulist>
+
               <hbox>
-                <vbox>
-                  <checkbox id="weekly-mon" label="Monday" value="2"/>
-                  <checkbox id="weekly-tue" label="Tuesday" value="3"/>
-                  <checkbox id="weekly-wed" label="Wednesday" value="4"/>
-                  <checkbox id="weekly-thu" label="Thursday" value="5"/>
-                </vbox>
-                <vbox>
-                  <checkbox id="weekly-fri" label="Friday" value="6"/>
-                  <checkbox id="weekly-sat" label="Saturday" value="7"/>
-                  <checkbox id="weekly-sun" label="Sunday" value="1"/>
-                </vbox>
+                <label value="Repeat on the"/>
+                <textbox value="10,23,29" size="3"/>
               </hbox>
             </vbox>
 
-            <hbox align="center">
-              <label value="Repeat on the"/>
-              <textbox value="10,23,29" width="70"/>
-            </hbox>
-
             <hbox align="top">
-              <textbox id="yearly-years" width="30"/>
+              <label value="Every"/>
+              <textbox id="yearly-years" size="3"/>
               <label value="years"/>
+              <spacer flex="1"/>
             </hbox>
 
           </deck>
