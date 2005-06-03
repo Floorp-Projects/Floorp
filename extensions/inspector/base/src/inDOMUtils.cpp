@@ -233,7 +233,7 @@ inDOMUtils::SetContentState(nsIDOMElement *aElement, PRInt32 aState)
 NS_IMETHODIMP
 inDOMUtils::GetContentState(nsIDOMElement *aElement, PRInt32* aState)
 {
-  *aState = NS_EVENT_STATE_UNSPECIFIED;
+  *aState = 0;
 
   if (!aElement)
     return NS_ERROR_NULL_POINTER;

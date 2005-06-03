@@ -60,8 +60,8 @@ class nsIURI;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x10caf6a4, 0x8891, 0x46c9, \
-  { 0x9b, 0x6c, 0x6d, 0xc8, 0xdf, 0x01, 0x2d, 0x29 } }
+{ 0x3fecc374, 0x2839, 0x4db3, \
+ { 0x8d, 0xe8, 0x6b, 0x76, 0xd1, 0xd8, 0xe6, 0xf6 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -650,6 +650,20 @@ public:
   {
     return PR_TRUE;
   }
+
+  /**
+   * Method to get the _intrinsic_ content state of this content node.  This is
+   * the state that is independent of the node's presentation.  To get the full
+   * content state, use nsIEventStateManager.  Also see nsIEventStateManager
+   * for the possible bits that could be set here.
+   */
+  // XXXbz this is PRInt32 because all the ESM content state APIs use
+  // PRInt32.  We should really use PRUint32 instead.
+  virtual PRInt32 IntrinsicState() const
+  {
+    return 0;
+  }
+    
 
   /* Methods for manipulating content node properties.  For documentation on
    * properties, see nsPropertyTable.h.
