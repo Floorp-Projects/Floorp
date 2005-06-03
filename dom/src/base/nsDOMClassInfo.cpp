@@ -4353,7 +4353,7 @@ nsDOMClassInfo::InitDOMJSClass(JSContext *cx, JSObject *obj)
  * See https://bugzilla.mozilla.org/show_bug.cgi?id=283129 for more details.
  */
 
-#if defined(DEBUG_dbaron) || defined(DEBUG_jst)
+#if defined(DEBUG_dbaron)
 #define DEBUG_PRESERVE_WRAPPERS
 #endif
 
@@ -4383,7 +4383,8 @@ struct PreservedWrapperEntry : public PLDHashEntryHdr {
  * walking up to the top of the parent chain.  This function finds that
  * root node for any DOM node.
  */
-static nsIDOMNode* GetSCCRootFor(nsIDOMNode *aDOMNode)
+static nsIDOMNode *
+GetSCCRootFor(nsIDOMNode *aDOMNode)
 {
   nsCOMPtr<nsIDOMNode> cur(aDOMNode), next;
 #ifdef DEBUG_NOISY_PRESERVE_WRAPPERS
@@ -6799,9 +6800,9 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, JSObject *obj, uintN argc,
 
   JSObject *self;
 
-  if (JS_GET_CLASS(cx, obj) == &sHTMLDocumentAllClass) {
-    // If obj is our document.all object, we're called through
-    // document.all.item(), or something similar. In such a case, self
+  if (::JS_TypeOfValue(cx, argv[-2]) == JSTYPE_FUNCTION) {
+    // If argv[-2] is a function, we're called through
+    // document.all.item() or something similar. In such a case, self
     // is passed as obj.
 
     self = obj;
