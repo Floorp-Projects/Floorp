@@ -561,6 +561,8 @@ already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleFor(nsIContent* aContent,
                             nsStyleContext* aParentContext)
 {
+  NS_ENSURE_FALSE(mInShutdown, nsnull);
+  
   nsStyleContext*  result = nsnull;
   nsPresContext* presContext = PresContext();
 
@@ -628,6 +630,8 @@ nsStyleSet::ResolvePseudoStyleFor(nsIContent* aParentContent,
                                   nsStyleContext* aParentContext,
                                   nsICSSPseudoComparator* aComparator)
 {
+  NS_ENSURE_FALSE(mInShutdown, nsnull);
+
   nsStyleContext*  result = nsnull;
   nsPresContext *presContext = PresContext();
 
@@ -663,6 +667,8 @@ nsStyleSet::ProbePseudoStyleFor(nsIContent* aParentContent,
                                 nsIAtom* aPseudoTag,
                                 nsStyleContext* aParentContext)
 {
+  NS_ENSURE_FALSE(mInShutdown, nsnull);
+  
   nsStyleContext*  result = nsnull;
   nsPresContext *presContext = PresContext();
 

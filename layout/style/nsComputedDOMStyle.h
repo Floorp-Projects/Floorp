@@ -312,7 +312,10 @@ private:
 
   CSS2PropertiesTearoff mInner;
 
-  nsWeakPtr mPresShellWeak;
+  // We don't really have a good immutable representation of "presentation".
+  // Given the way GetComputedStyle is currently used, we should just grab the
+  // 0th presshell, if any, from the document.
+  nsWeakPtr mDocumentWeak;
   nsCOMPtr<nsIContent> mContent;
 
   /*
