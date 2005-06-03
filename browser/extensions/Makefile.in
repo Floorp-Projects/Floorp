@@ -42,10 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(findstring inspector,$(MOZ_EXTENSIONS)))
-DIRS  += inspector
-endif
-
 ifneq (,$(findstring layout-debug,$(MOZ_EXTENSIONS)))
 DIRS  += layout-debug
 endif

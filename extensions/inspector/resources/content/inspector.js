@@ -66,7 +66,7 @@ function InspectorApp_initialize()
   // If passed via a command line handler, it will be a uri string.
   // If passed via navigator hooks, it will be a dom node to inspect.
   var initNode, initURI;
-  if (window.arguments.length) {
+  if (window.arguments && window.arguments.length) {
     if (typeof window.arguments[0] == "string") {
       initURI = window.arguments[0];
     }

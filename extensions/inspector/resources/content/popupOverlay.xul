@@ -55,8 +55,6 @@
     <menuseparator/>
     <menuitem id="mnEditInsert"/>
     <menuitem id="mnEditDelete"/>
-    <menuseparator/>
-    <menuitem id="menu_preferences" observes="cmdShowPrefsDialog"/>
   </menupopup>
 
   <menupopup id="mppSearch">

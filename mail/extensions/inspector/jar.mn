@@ -1,5 +1,0 @@
-inspector.jar:
-*+ content/inspector/contents.rdf                                      (content/contents.rdf)
-+  content/inspector/tasksOverlay.xul                                  (content/tasksOverlay.xul)
-+  content/inspector/toolboxOverlay.xul                                (content/toolboxOverlay.xul)
-+  content/inspector/inspector.xul                                     (content/inspector.xul)

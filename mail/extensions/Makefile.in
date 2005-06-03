@@ -52,10 +52,5 @@ ifdef BUILD_SMIME
 DIRS		+= smime
 endif
 
-ifneq (,$(findstring inspector,$(MOZ_EXTENSIONS)))
-DIRS  += inspector
-endif
-
-
 include $(topsrcdir)/config/rules.mk
 

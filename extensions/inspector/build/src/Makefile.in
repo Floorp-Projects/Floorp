@@ -45,14 +45,16 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = inspector
 LIBRARY_NAME = inspector
 # Do not set EXPORT_LIBRARY as we do not want inspector in the static libs list
-#EXPORT_LIBRARY = 1
+IS_COMPONENT = 1
 FORCE_SHARED_LIB = 1
 ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME = inspectr
 endif
 MOZILLA_INTERNAL_API = 1
 
-PACKAGE_FILE = inspector.pkg
+ifdef MOZ_XUL_APP
+XPI_NAME = inspector
+endif
 
 REQUIRES	= xpcom \
 		  string \
@@ -64,8 +66,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  necko \
 		  $(NULL)
-IS_COMPONENT = 1
-
 CPPSRCS 	= \
 		nsInspectorModule.cpp \
 		$(NULL)
