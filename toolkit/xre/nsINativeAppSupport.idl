@@ -43,7 +43,7 @@
 /* nsINativeAppSupport
  *
  * This "pseudo" (in the XPCOM sense) interface provides for
- * platform-specific general aplication support:
+ * platform-specific general application support:
  *  o It manages the details of the simple DDE communication 
  *    supported on the Win32 platform (it is the addition of this 
  *    item that prompted the creation of this interface.

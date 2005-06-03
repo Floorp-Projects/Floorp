@@ -847,7 +847,7 @@ nsDragService::GetSourceList(void)
         // gtk's implementation?), we don't advertise all flavours listed
         // in the nsITransferable.
 
-        // the aplication/x-moz-internal-item-list format, which preserves
+        // the application/x-moz-internal-item-list format, which preserves
         // all information for drags within the same mozilla instance.
         GdkAtom listAtom = gdk_atom_intern(gMimeListType, FALSE);
         GtkTargetEntry *listTarget =

@@ -86,7 +86,7 @@ MimeLeafClassInitialize(MimeLeafClass *clazz)
 static int
 MimeLeaf_initialize (MimeObject *obj)
 {
-  /* This is an abstract class; it shouldn't be directly instanciated. */
+  /* This is an abstract class; it shouldn't be directly instantiated. */
   NS_ASSERTION(obj->clazz != (MimeObjectClass *) &mimeLeafClass, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(obj);

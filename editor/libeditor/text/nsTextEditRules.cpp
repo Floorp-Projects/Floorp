@@ -1201,7 +1201,7 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
       if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
       res = mEditor->DoTransaction(txn); 
       if (NS_FAILED(res))  return res; 
-      // The transaction system (if any) has taken ownwership of txn
+      // The transaction system (if any) has taken ownership of txn
       NS_IF_RELEASE(txn);
       
       // insert a break

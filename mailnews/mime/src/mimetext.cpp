@@ -94,7 +94,7 @@ MimeInlineTextClassInitialize(MimeInlineTextClass *clazz)
 static int
 MimeInlineText_initialize (MimeObject *obj)
 {
-  /* This is an abstract class; it shouldn't be directly instanciated. */
+  /* This is an abstract class; it shouldn't be directly instantiated. */
   PR_ASSERT(obj->clazz != (MimeObjectClass *) &mimeInlineTextClass);
 
   ((MimeInlineText *) obj)->initializeCharset = PR_FALSE;

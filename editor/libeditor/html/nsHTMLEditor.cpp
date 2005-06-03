@@ -686,7 +686,7 @@ nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
 
       result = nsEditor::DoTransaction(txn);  
     }
-    // The transaction system (if any) has taken ownwership of txn
+    // The transaction system (if any) has taken ownership of txn
     NS_IF_RELEASE(txn);
   }
   return result;
@@ -3535,7 +3535,7 @@ nsHTMLEditor::RemoveStyleSheet(const nsAString &aURL)
     rv = RemoveStyleSheetFromList(aURL);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  // The transaction system (if any) has taken ownwership of txns
+  // The transaction system (if any) has taken ownership of txns
   NS_IF_RELEASE(txn);
   
   return rv;
@@ -4183,7 +4183,7 @@ nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
       AddNewStyleSheetToList(mLastStyleSheetURL, aSheet);
     }
   }
-  // The transaction system (if any) has taken ownwership of txns
+  // The transaction system (if any) has taken ownership of txns
   NS_IF_RELEASE(txn);
 
   return NS_OK;

@@ -99,7 +99,7 @@ MimeObjectClassInitialize(MimeObjectClass *clazz)
 static int
 MimeObject_initialize (MimeObject *obj)
 {
-  /* This is an abstract class; it shouldn't be directly instanciated. */
+  /* This is an abstract class; it shouldn't be directly instantiated. */
   NS_ASSERTION(obj->clazz != &mimeObjectClass, "should directly instantiate abstract class");
 
   /* Set up the content-type and encoding. */

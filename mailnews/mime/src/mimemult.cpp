@@ -111,7 +111,7 @@ MimeMultipart_initialize (MimeObject *object)
   MimeMultipart *mult = (MimeMultipart *) object;
   char *ct;
 
-  /* This is an abstract class; it shouldn't be directly instanciated. */
+  /* This is an abstract class; it shouldn't be directly instantiated. */
   PR_ASSERT(object->clazz != (MimeObjectClass *) &mimeMultipartClass);
 
   ct = MimeHeaders_get (object->headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);

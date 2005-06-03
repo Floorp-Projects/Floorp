@@ -1230,7 +1230,7 @@ nsEditor::SetAttribute(nsIDOMElement *aElement, const nsAString & aAttribute, co
   if (NS_SUCCEEDED(result))  {
     result = DoTransaction(txn);  
   }
-  // The transaction system (if any) has taken ownwership of txn
+  // The transaction system (if any) has taken ownership of txn
   NS_IF_RELEASE(txn);
   return result;
 }
@@ -1266,7 +1266,7 @@ nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsAString& aAttribute)
   if (NS_SUCCEEDED(result))  {
     result = DoTransaction(txn);  
   }
-  // The transaction system (if any) has taken ownwership of txn
+  // The transaction system (if any) has taken ownership of txn
   NS_IF_RELEASE(txn);
   return result;
 }
@@ -1336,7 +1336,7 @@ NS_IMETHODIMP nsEditor::CreateNode(const nsAString& aTag,
       NS_ASSERTION((NS_SUCCEEDED(result)), "GetNewNode can't fail if txn::DoTransaction succeeded.");
     }
   }
-  // The transaction system (if any) has taken ownwership of txn
+  // The transaction system (if any) has taken ownership of txn
   NS_IF_RELEASE(txn);
   
   mRangeUpdater.SelAdjCreateNode(aParent, aPosition);
@@ -1378,7 +1378,7 @@ NS_IMETHODIMP nsEditor::InsertNode(nsIDOMNode * aNode,
   if (NS_SUCCEEDED(result))  {
     result = DoTransaction(txn);  
   }
-  // The transaction system (if any) has taken ownwership of txn
+  // The transaction system (if any) has taken ownership of txn
   NS_IF_RELEASE(txn);
 
   mRangeUpdater.SelAdjInsertNode(aParent, aPosition);
@@ -1427,7 +1427,7 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
       NS_ASSERTION((NS_SUCCEEDED(result)), "result must succeeded for GetNewNode");
     }
   }
-  // The transaction system (if any) has taken ownwership of txn
+  // The transaction system (if any) has taken ownership of txn
   NS_IF_RELEASE(txn);
 
   mRangeUpdater.SelAdjSplitNode(aNode, aOffset, *aNewLeftNode);
@@ -1484,7 +1484,7 @@ nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
     result = DoTransaction(txn);  
   }
 
-  // The transaction system (if any) has taken ownwership of txn
+  // The transaction system (if any) has taken ownership of txn
   NS_IF_RELEASE(txn);
 
   mRangeUpdater.SelAdjJoinNodes(aLeftNode, aRightNode, aParent, offset, (PRInt32)oldLeftNodeLen);
@@ -1530,7 +1530,7 @@ NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
     result = DoTransaction(txn);  
   }
 
-  // The transaction system (if any) has taken ownwership of txn
+  // The transaction system (if any) has taken ownership of txn
   NS_IF_RELEASE(txn);
 
   if (mActionListeners)
@@ -2782,7 +2782,7 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToIns
     }
   }
   
-  // The transaction system (if any) has taken ownwership of txns.
+  // The transaction system (if any) has taken ownership of txns.
   // aggTxn released at end of routine.
   NS_IF_RELEASE(txn);
   return result;
@@ -2969,7 +2969,7 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
       }
     }
   }
-  // The transaction system (if any) has taken ownwership of txn
+  // The transaction system (if any) has taken ownership of txn
   NS_IF_RELEASE(txn);
   return result;
 }
@@ -4628,7 +4628,7 @@ nsEditor::DeleteSelectionImpl(nsIEditor::EDirection aAction)
     }
   }
 
-  // The transaction system (if any) has taken ownwership of txn
+  // The transaction system (if any) has taken ownership of txn
   NS_IF_RELEASE(txn);
 
   return res;

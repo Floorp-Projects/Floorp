@@ -81,7 +81,7 @@ MimeContainerClassInitialize(MimeContainerClass *clazz)
 static int
 MimeContainer_initialize (MimeObject *object)
 {
-  /* This is an abstract class; it shouldn't be directly instanciated. */
+  /* This is an abstract class; it shouldn't be directly instantiated. */
   NS_ASSERTION(object->clazz != (MimeObjectClass *) &mimeContainerClass, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(object);
