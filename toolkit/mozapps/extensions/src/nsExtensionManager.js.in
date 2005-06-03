@@ -102,6 +102,7 @@ const EM_ITEM_UPGRADED                = "item-upgraded";
 const EM_ITEM_UNINSTALLED             = "item-uninstalled";
 const EM_ITEM_ENABLED                 = "item-enabled";
 const EM_ITEM_DISABLED                = "item-disabled";
+const EM_ITEM_CANCEL                  = "item-cancel-action";
 
 const OP_NONE                         = "";
 const OP_NEEDS_INSTALL                = "needs-install";
@@ -2878,27 +2879,40 @@ ExtensionManager.prototype = {
       // Stuff has changed, load the Extensions datasource in all its RDFey
       // glory. 
       var ds = this.datasource;
-      
-      // Look for extensions that need to be enabled and disabled.
-      PendingOperations.clearItems(OP_NEEDS_ENABLE);
-      PendingOperations.clearItems(OP_NEEDS_DISABLE);
-
-      // Reset any startup cache entries with op set to OP_NEEDS_ENABLE or
-      // OP_NEEDS_DISABLE.
-      function resetOp(entry) {
-        if (entry.op == OP_NEEDS_ENABLE || entry.op == OP_NEEDS_DISABLE)
-          entry.op = OP_NONE;
-      }
-      StartupCache.forEachEntry(resetOp);
 
       var needsRestart = false;      
       do {
+        // Enable and disable during startup so items that are changed in the
+        // ui can be reset to a no-op.
+        // Look for extensions that need to be enabled.
+        var items = PendingOperations.getOperations(OP_NEEDS_ENABLE);
+        for (var i = items.length - 1; i >= 0; --i) {
+          var id = items[0].id;
+          ds.setItemProperty(id, EM_R("disabled"), null);
+          var installLocation = this.getInstallLocation(id);
+          StartupCache.put(installLocation, id, OP_NONE, true);
+          PendingOperations.clearItem(OP_NEEDS_ENABLE, id);
+          needsRestart = true;
+        }
+        PendingOperations.clearItems(OP_NEEDS_ENABLE);
+
+        // Look for extensions that need to be disabled.
+        items = PendingOperations.getOperations(OP_NEEDS_DISABLE);
+        for (i = items.length - 1; i >= 0; --i) {
+          id = items[i].id;
+          ds.setItemProperty(id, EM_R("disabled"), EM_L("true"));
+          installLocation = this.getInstallLocation(id);
+          StartupCache.put(installLocation, id, OP_NONE, true);
+          PendingOperations.clearItem(OP_NEEDS_DISABLE, id);
+        }
+        PendingOperations.clearItems(OP_NEEDS_DISABLE);
+
         // Look for extensions that need to be upgraded. The process here is to
         // uninstall the old version of the extension first, then install the
         // new version in its place. 
-        var items = PendingOperations.getOperations(OP_NEEDS_UPGRADE);
-        for (var i = items.length - 1; i >= 0; --i) {
-          var id = items[i].id;
+        items = PendingOperations.getOperations(OP_NEEDS_UPGRADE);
+        for (i = items.length - 1; i >= 0; --i) {
+          id = items[i].id;
           var oldLocation = this.getInstallLocation(id);
           var newLocation = InstallLocations.get(items[i].locationKey);
           if (newLocation.priority <= oldLocation.priority) 
@@ -2908,7 +2922,7 @@ ExtensionManager.prototype = {
 
         // Install items
         items = PendingOperations.getOperations(OP_NEEDS_INSTALL);
-        for (var i = items.length - 1; i >= 0; --i) {
+        for (i = items.length - 1; i >= 0; --i) {
           needsRestart = true;
           this._finalizeInstall(items[i].id, null);
         }
@@ -2918,8 +2932,8 @@ ExtensionManager.prototype = {
         // the install operations since extensions to be installed may have to be
         // uninstalled if there are errors during the installation process!
         items = PendingOperations.getOperations(OP_NEEDS_UNINSTALL);
-        for (var i = items.length - 1; i >= 0; --i) {
-          var id = items[i].id;
+        for (i = items.length - 1; i >= 0; --i) {
+          id = items[i].id;
           this._finalizeUninstall(id);
           this._checkForUncoveredItem(id);
           needsRestart = true;
@@ -3842,40 +3856,50 @@ ExtensionManager.prototype = {
     PendingOperations.addItem(op, { locationKey: location.name, id: id });
     var ds = this.datasource;
     ds.updateProperty(id, "displayDescription");
+    ds.updateProperty(id, "opType");
     var restartRequired = this.installRequiresRestart(id, ds.getItemProperty(id, "type"))
     this._updateManifests(restartRequired);
   },
     
   /**
-   * Enables an item. If the item cannot be enabled immediately, it is scheduled
-   * for the next restart.
+   * Sets an item to be enabled. If the item is already enabled this clears
+   * the needs-enable operation for the next restart. If the item's operation
+   * is set to be uninstalled this will cancel the uninstall and sets the
+   * needs-enable operation for the next restart if the item is disabled.
+   * 
    * @param   id
-   *          The GUID of the item to uninstall.
+   *          The ID of the item to enable.
    */
   enableItem: function(id) {
     var ds = this.datasource;
-    var restartRequired = this.installRequiresRestart(id, ds.getItemProperty(id, "type"));
-    if (restartRequired)
+    var disabled = ds.getItemProperty(id, "disabled") ? true : false;
+    if (disabled) {
       this._setOp(id, OP_NEEDS_ENABLE);
-    ds.setItemProperty(id, EM_R("disabled"), null);
-    this._updateManifests(restartRequired);
-    this._notifyAction(id, EM_ITEM_ENABLED);
+      this._notifyAction(id, EM_ITEM_ENABLED);
+    }
+    else {
+      this._setOp(id, OP_NONE);
+      this._notifyAction(id, EM_ITEM_CANCEL);
+    }
   },
   
   /**
-   * Disables an item. If the item cannot be disabled immediately, it is scheduled
-   * for the next restart.
+   * Sets an item to be disabled. If the item is already disabled this clears
+   * the needs-disable operation for the next restart.
    * @param   id
-   *          The GUID of the item to uninstall.
+   *          The ID of the item to disable.
    */
   disableItem: function(id) {
     var ds = this.datasource;
-    var restartRequired = this.installRequiresRestart(id, ds.getItemProperty(id, "type"));
-    if (restartRequired)
+    var disabled = ds.getItemProperty(id, "disabled") ? true : false;
+    if (disabled) {
+      this._setOp(id, OP_NONE);
+      this._notifyAction(id, EM_ITEM_CANCEL);
+    }
+    else {
       this._setOp(id, OP_NEEDS_DISABLE);
-    ds.setItemProperty(id, EM_R("disabled"), EM_L("true"));
-    this._updateManifests(restartRequired);
-    this._notifyAction(id, EM_ITEM_DISABLED);
+      this._notifyAction(id, EM_ITEM_DISABLED);
+    }
   },
   
   /**
@@ -5282,6 +5306,7 @@ ExtensionsDataSource.prototype = {
       }
     }
     this.updateProperty(id, "displayDescription");
+    this.updateProperty(id, "opType");
     this.Flush();
   },
   
@@ -5619,7 +5644,9 @@ ExtensionsDataSource.prototype = {
    * If we're in safe mode, force the generic about dialog for all extensions.
    */
   _rdfGet_aboutURL: function(item, property) {
-    if (inSafeMode())
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    if (inSafeMode() || this.getItemProperty(id, "disabled") == "true" ||
+        this.getItemProperty(id, "opType") == OP_NEEDS_UPGRADE)
       return EM_L("");
 
     return null;
@@ -5699,6 +5726,19 @@ ExtensionsDataSource.prototype = {
     return this.GetTarget(item, EM_R("description"), true);
   },
   
+    /**
+   * Get the em:opType property (controls widget state for the EM UI)
+   * from the Startup Cache (e.g. extensions-startup.manifest)
+   */
+  _rdfGet_opType: function(item, property) {
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    var key = this.getItemProperty(id, "installLocation");
+    if (key in StartupCache.entries && id in StartupCache.entries[key] &&
+        StartupCache.entries[key][id])
+      return EM_L(StartupCache.entries[key][id].op);
+    return EM_L(OP_NONE);
+  },
+
   /**
    * Gets a localizable property. Install Manifests are generally only in one 
    * language, however an item can customize by providing localized prefs in 
