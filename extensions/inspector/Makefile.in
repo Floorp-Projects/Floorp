@@ -48,21 +48,31 @@ MODULE	= inspector
 
 DIRS=base build
 
+ifdef MOZ_XUL_APP
+XPI_NAME               = inspector
+USE_EXTENSION_MANIFEST = 1
+NO_JAR_AUTO_REG        = 1
+INSTALL_EXTENSION_ID   = inspector@mozilla.org
+endif
+
+PREF_JS_EXPORTS = $(srcdir)/resources/content/prefs/inspector.js
+
+DIST_FILES = install.rdf
+
+# We should really pull FIREFOX_VERSION and THUNDERBIRD_VERSION from
+# browser/config/version.txt mail/config/version.txt but we can't be assured
+# that we've even pulled those files. So we hardcode them.
+
+XULAPP_DEFINES = \
+	-DFIREFOX_VERSION=1.0+ \
+	-DTHUNDERBIRD_VERSION=1.0+ \
+	-DMOZILLA_VERSION_U=$(MOZILLA_VERSION) \
+	$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	$(INSTALL) $(srcdir)/resources/content/res/viewer-registry.rdf $(DIST)/bin/res/inspector
-	$(INSTALL) $(srcdir)/resources/content/res/search-registry.rdf $(DIST)/bin/res/inspector
-	$(INSTALL) $(srcdir)/resources/content/prefs/inspector.js $(DIST)/bin/defaults/pref
+export::
 ifeq ($(OS_ARCH),WINNT)
-	$(INSTALL) $(srcdir)/resources/content/res/winInspectorMain.ico $(DIST)/bin/chrome/icons/default
+	$(NSINSTALL) -D $(FINAL_TARGET)/chrome/icons/default
+	$(INSTALL) $(srcdir)/resources/content/res/winInspectorMain.ico $(FINAL_TARGET)/chrome/icons/default
 endif
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/resources/content/res/viewer-registry.rdf $(DESTDIR)$(mozappdir)/res/inspector
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/resources/content/res/search-registry.rdf $(DESTDIR)$(mozappdir)/res/inspector
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/resources/content/prefs/inspector.js $(DESTDIR)$(mozappdir)/defaults/pref
-ifeq ($(OS_ARCH),WINNT)
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/resources/content/res/winInspectorMain.ico $(DESTDIR)$(mozappdir)/chrome/icons/default
-endif
-

@@ -50,7 +50,7 @@
 //////////// global constants ////////////////////
 
 const kViewerURLPrefix = "chrome://inspector/content/viewers/";
-const kViewerRegURL  = "resource:///res/inspector/viewer-registry.rdf";
+const kViewerRegURL  = "chrome://inspector/content/res/viewer-registry.rdf";
 
 ////////////////////////////////////////////////////////////////////////////
 //// class ViewerRegistry
