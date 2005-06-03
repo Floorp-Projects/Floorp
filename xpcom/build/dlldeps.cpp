@@ -127,8 +127,8 @@ void XXXNeverCalled()
     a.Alloc(0);
     a.Free(0, 0);
     nsIThread::GetCurrent(nsnull);
-    nsDeque(nsnull);
-    nsDequeIterator(nsDeque(nsnull));
+    nsDeque d(nsnull);
+    nsDequeIterator di(d);
     nsTraceRefcnt::LogAddCOMPtr(nsnull, nsnull);
     nsTraceRefcntImpl::DumpStatistics();
     NS_NewEmptyEnumerator(nsnull);
