@@ -2981,6 +2981,15 @@ ExtensionManager.prototype = {
       // Version mismatch, we're have to load the extensions datasource
       // and do version checking. Time hit here doesn't matter since this 
       // doesn't happen all that often.
+
+      // Pre 1.1 profiles have a default theme directory in the profile's
+      // extensions directory that will be disabled due to having a maxVersion
+      // of 1.0 so we must remove it if it exists.
+      var profileDefaultTheme = getDirNoCreate(KEY_PROFILEDS, [DIR_EXTENSIONS,
+                                               stripPrefix(RDFURI_DEFAULT_THEME, PREFIX_ITEM_URI)]);
+      if (profileDefaultTheme && profileDefaultTheme.exists())
+        profileDefaultTheme.remove(true);
+
       var ds = this.datasource;
       var currAppID = gApp.ID;
       var items = ds.getIncompatibleItemList(currAppID, currAppVersion,
