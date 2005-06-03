@@ -295,17 +295,13 @@ bin/components/libnegotiateauth.so
 
 ; [Additional Developer Tools]
 [adt]
-; [Document Inspector]
-bin/components/inspector-cmdline.js
-bin/components/libinspector.so
-bin/components/inspector.xpt
-bin/chrome/inspector.jar
-bin/defaults/pref/inspector.js
-bin/res/inspector/viewer-registry.rdf
-bin/res/inspector/search-registry.rdf
-; [Venkman JavaScript Debugger]
-; bin/components/venkman-service.js
-; bin/chrome/venkman.jar
+bin/extensions/inspector@mozilla.org/install.rdf
+bin/extensions/inspector@mozilla.org/components/inspector-cmdline.js
+bin/extensions/inspector@mozilla.org/components/libinspector.so
+bin/extensions/inspector@mozilla.org/components/inspector.xpt
+bin/extensions/inspector@mozilla.org/chrome.manifest
+bin/extensions/inspector@mozilla.org/chrome/inspector.jar
+bin/extensions/inspector@mozilla.org/defaults/preferences/inspector.js
 
 ; [Additional Browsing Enhancements]
 [abe]
