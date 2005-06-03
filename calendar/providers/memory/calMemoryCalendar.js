@@ -167,7 +167,7 @@ calMemoryCalendar.prototype = {
         }
 
         var newItem = aItem.clone();
-        newItem.parent = this;
+        newItem.parent = this.calendarToReturn;
         newItem.generation = 1;
         newItem.makeImmutable();
         this.mItems[newItem.id] = newItem;
