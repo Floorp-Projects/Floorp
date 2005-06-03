@@ -168,13 +168,9 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
 
   mParent = aParent;
   // our parent could be either a menu bar (if we're toplevel) or a menu (if we're a submenu)
-  PRBool isValidParent = PR_FALSE;
-  if (aParent) {
-    nsCOMPtr<nsIMenuBar> menubar = do_QueryInterface(aParent);
-    nsCOMPtr<nsIMenu> menu = do_QueryInterface(aParent);
-    isValidParent = (menubar || menu);
-  }
-  NS_ASSERTION(isValidParent, "Menu parent not a menu bar or menu!" );
+  nsCOMPtr<nsIMenuBar> menubar = do_QueryInterface(aParent);
+  nsCOMPtr<nsIMenu> menu = do_QueryInterface(aParent);
+  NS_ASSERTION(menubar || menu, "Menu parent not a menu bar or menu!" );
 
   SetLabel(aLabel);
   SetAccessKey(aAccessKey);
@@ -183,6 +179,9 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hiddenValue);
   mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::collapsed, collapsedValue);
   if ( hiddenValue.EqualsLiteral("true") || collapsedValue.EqualsLiteral("true") )
+    mVisible = PR_FALSE;
+
+  if (menubar && mMenuContent->GetChildCount() == 0)
     mVisible = PR_FALSE;
 
   return NS_OK;
@@ -1237,7 +1236,9 @@ nsMenuX :: CountVisibleBefore ( PRUint32* outVisibleBefore )
         nsAutoString hiddenValue, collapsedValue;
         menuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hiddenValue);
         menuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::collapsed, collapsedValue);
-        if ( !hiddenValue.EqualsLiteral("true") && !collapsedValue.EqualsLiteral("true"))
+        if ( menuContent->GetChildCount() > 0 ||
+             !hiddenValue.EqualsLiteral("true") &&
+             !collapsedValue.EqualsLiteral("true"))
           ++(*outVisibleBefore);
       }
     }
