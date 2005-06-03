@@ -1385,7 +1385,7 @@ nsRenderingContextGTK::CopyOffScreenBits(nsIDrawingSurface* aSrcSurf,
     mTranMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
 
 #if 0
-  // XXX impliment me
+  // XXX implement me
   if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
   {
     // we should use the source clip region if this flag is used...

@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 //NOTE: This script expects gBrandBundle and gProfileManagerBundle to be
-//      instanciated elsewhere (currently from StartUp in profileSelection.js)
+//      instantiated elsewhere (currently from StartUp in profileSelection.js)
 
 var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 var profileManagerMode = "selection";

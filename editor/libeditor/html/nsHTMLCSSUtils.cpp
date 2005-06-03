@@ -474,7 +474,7 @@ nsHTMLCSSUtils::SetCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, con
       result = mHTMLEditor->DoTransaction(txn);
     }
   }
-  // The transaction system (if any) has taken ownwership of txn
+  // The transaction system (if any) has taken ownership of txn
   NS_IF_RELEASE(txn);
   return result;
 }
@@ -508,7 +508,7 @@ nsHTMLCSSUtils::RemoveCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, 
       result = mHTMLEditor->DoTransaction(txn);
     }
   }
-  // The transaction system (if any) has taken ownwership of txn
+  // The transaction system (if any) has taken ownership of txn
   NS_IF_RELEASE(txn);
   return result;
 }

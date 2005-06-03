@@ -482,7 +482,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
     if (!aFromStream || !aFromType || !aToType || !_retval) return NS_ERROR_NULL_POINTER;
     nsresult rv;
 
-    // first determine whether we can even handle this covnversion
+    // first determine whether we can even handle this conversion
     // build a CONTRACTID
     nsCAutoString contractID;
     contractID.AssignLiteral(NS_ISTREAMCONVERTER_KEY "?from=");
@@ -568,7 +568,7 @@ nsStreamConverterService::AsyncConvertData(const char *aFromType,
 
     nsresult rv;
 
-    // first determine whether we can even handle this covnversion
+    // first determine whether we can even handle this conversion
     // build a CONTRACTID
     nsCAutoString contractID;
     contractID.AssignLiteral(NS_ISTREAMCONVERTER_KEY "?from=");

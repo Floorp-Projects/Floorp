@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// gopher implementation - based on datetime and finger implimentations
+// gopher implementation - based on datetime and finger implementations
 // and documentation
 
 #include "nsGopherChannel.h"

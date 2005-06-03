@@ -1453,7 +1453,7 @@ test_for_file(char* foo, char* buf)
 		return foo;
 	}
 #else
-	printf("test_for_file() not implimented\n");
+	printf("test_for_file() not implemented\n");
 #endif
 	return NULL;
 }

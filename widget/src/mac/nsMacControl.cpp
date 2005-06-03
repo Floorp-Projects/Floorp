@@ -414,7 +414,7 @@ void nsMacControl::StringToStr255(const nsAString& aText, Str255& aStr255)
 	}
 
 	if (NS_FAILED(rv)) {
-//		NS_ASSERTION(0, "error: charset covnersion");
+//		NS_ASSERTION(0, "error: charset conversion");
 		NS_LossyConvertUCS2toASCII buffer(Substring(aText,0,254));
 		PRInt32 len = buffer.Length();
 		memcpy(&aStr255[1], buffer.get(), len);
@@ -455,7 +455,7 @@ void nsMacControl::Str255ToString(const Str255& aStr255, nsString& aText)
 	}
 	
 	if (NS_FAILED(rv)) {
-//		NS_ASSERTION(0, "error: charset covnersion");
+//		NS_ASSERTION(0, "error: charset conversion");
 		aText.AssignWithConversion((char *) &aStr255[1], aStr255[0]);
 	}
 }

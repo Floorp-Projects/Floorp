@@ -232,7 +232,7 @@ static char * GetGreLocationFromRegistry()
 // In this case GetGreDirectory() creates a new localFile based on the
 // GRE path it just read from the registry
 //
-// If the embedding appliction is not using an GRE and is running in
+// If the embedding application is not using an GRE and is running in
 // a "regular" embedding scenario GetGreDirectory() simply returns a
 // failure code indicating to the caller to fallback to a non-GRE
 // based operation - which is the default mode of operation.
