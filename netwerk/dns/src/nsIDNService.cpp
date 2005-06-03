@@ -397,8 +397,8 @@ nsresult nsIDNService::stringPrep(const nsAString& in, nsAString& out)
   idn_result_t idn_err;
 
   PRUint32 namePrepBuf[kMaxDNSNodeLen * 3];   // map up to three characters
-  idn_err = idn_nameprep_map(mNamePrepHandle, (const unsigned long*) ucs4Buf,
-		                     (unsigned long*) namePrepBuf, kMaxDNSNodeLen * 3);
+  idn_err = idn_nameprep_map(mNamePrepHandle, (const PRUint32 *) ucs4Buf,
+		                     (PRUint32 *) namePrepBuf, kMaxDNSNodeLen * 3);
   NS_ENSURE_TRUE(idn_err == idn_success, NS_ERROR_FAILURE);
 
   nsAutoString namePrepStr;
@@ -413,15 +413,15 @@ nsresult nsIDNService::stringPrep(const nsAString& in, nsAString& out)
     return NS_ERROR_FAILURE;
 
   // prohibit
-  const unsigned long *found = nsnull;
+  const PRUint32 *found = nsnull;
   idn_err = idn_nameprep_isprohibited(mNamePrepHandle, 
-                                      (const unsigned long*) ucs4Buf, &found);
+                                      (const PRUint32 *) ucs4Buf, &found);
   if (idn_err != idn_success || found)
     return NS_ERROR_FAILURE;
 
   // check bidi
   idn_err = idn_nameprep_isvalidbidi(mNamePrepHandle, 
-                                     (const unsigned long*) ucs4Buf, &found);
+                                     (const PRUint32 *) ucs4Buf, &found);
   if (idn_err != idn_success || found)
     return NS_ERROR_FAILURE;
 

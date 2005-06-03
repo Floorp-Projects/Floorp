@@ -48,6 +48,8 @@
 #ifndef NAMEPREP_TEMPLATE_INIT
 #define NAMEPREP_TEMPLATE_INIT
 
+#include "prtypes.h"
+
 /* Symbol composition. */
 #define compose_sym2(a, b)		compose_sym2X(a, b)
 #define compose_sym2X(a, b)		a ## b
@@ -73,7 +75,7 @@
 #endif /* NAMEPREP_TEMPLATE_INIT */
 
 static const char *
-compose_sym2(nameprep_map_, VERSION) (unsigned long v) {
+compose_sym2(nameprep_map_, VERSION) (PRUint32 v) {
 	int idx0 = IDX0(MAP, v);
 	int idx1 = IDX1(MAP, v);
 	int idx2 = IDX2(MAP, v);
@@ -92,7 +94,7 @@ compose_sym2(nameprep_map_, VERSION) (unsigned long v) {
 }
 
 static int
-compose_sym2(nameprep_prohibited_, VERSION) (unsigned long v) {
+compose_sym2(nameprep_prohibited_, VERSION) (PRUint32 v) {
 	int idx0 = IDX0(PROH, v);
 	int idx1 = IDX1(PROH, v);
 	int idx2 = IDX2(PROH, v);
@@ -107,7 +109,7 @@ compose_sym2(nameprep_prohibited_, VERSION) (unsigned long v) {
 }
 
 static int
-compose_sym2(nameprep_unassigned_, VERSION) (unsigned long v) {
+compose_sym2(nameprep_unassigned_, VERSION) (PRUint32 v) {
 	int idx0 = IDX0(UNAS, v);
 	int idx1 = IDX1(UNAS, v);
 	int idx2 = IDX2(UNAS, v);
@@ -122,7 +124,7 @@ compose_sym2(nameprep_unassigned_, VERSION) (unsigned long v) {
 }
 
 static idn_biditype_t
-compose_sym2(nameprep_biditype_, VERSION) (unsigned long v) {
+compose_sym2(nameprep_biditype_, VERSION) (PRUint32 v) {
 	int idx0 = IDX0(BIDI, v);
 	int idx1 = IDX1(BIDI, v);
 	int idx2 = IDX2(BIDI, v);

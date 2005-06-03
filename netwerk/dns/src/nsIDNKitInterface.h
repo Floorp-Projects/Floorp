@@ -47,6 +47,8 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#include "prtypes.h"
+
 /*
  * libidnkit result code.
  */
@@ -96,12 +98,12 @@ typedef struct idn_nameprep *idn_nameprep_t;
 
 /* race.c */
 idn_result_t	race_decode_decompress(const char *from,
-					       unsigned short *buf,
+					       PRUint16 *buf,
 					       size_t buflen);
-idn_result_t	race_compress_encode(const unsigned short *p,
+idn_result_t	race_compress_encode(const PRUint16 *p,
 					     int compress_mode,
 					     char *to, size_t tolen);
-int		get_compress_mode(unsigned short *p);
+int		get_compress_mode(PRUint16 *p);
 
 
 /* nameprep.c */
@@ -136,8 +138,8 @@ idn_nameprep_destroy(idn_nameprep_t handle);
  *	idn_buffer_overflow	-- result buffer is too small.
  */
 idn_result_t
-idn_nameprep_map(idn_nameprep_t handle, const unsigned long *from,
-		 unsigned long *to, size_t tolen);
+idn_nameprep_map(idn_nameprep_t handle, const PRUint32 *from,
+		 PRUint32 *to, size_t tolen);
 
 /*
  * Check if an UCS4 string 'str' contains any prohibited characters specified
@@ -151,8 +153,8 @@ idn_nameprep_map(idn_nameprep_t handle, const unsigned long *from,
  *				   result.)
  */
 idn_result_t
-idn_nameprep_isprohibited(idn_nameprep_t handle, const unsigned long *str,
-			  const unsigned long **found);
+idn_nameprep_isprohibited(idn_nameprep_t handle, const PRUint32 *str,
+			  const PRUint32 **found);
 
 /*
  * Check if an UCS4 string 'str' contains any unassigned characters specified
@@ -166,8 +168,8 @@ idn_nameprep_isprohibited(idn_nameprep_t handle, const unsigned long *str,
  *				   result.)
  */
 idn_result_t
-idn_nameprep_isunassigned(idn_nameprep_t handle, const unsigned long *str,
-			  const unsigned long **found);
+idn_nameprep_isunassigned(idn_nameprep_t handle, const PRUint32 *str,
+			  const PRUint32 **found);
 
 /*
  * Check if an UCS4 string 'str' is valid string specified by ``bidi check''
@@ -180,8 +182,8 @@ idn_nameprep_isunassigned(idn_nameprep_t handle, const unsigned long *str,
  *				   Check '*found' to see the result.)
  */
 idn_result_t
-idn_nameprep_isvalidbidi(idn_nameprep_t handle, const unsigned long *str,
-			 const unsigned long **found);
+idn_nameprep_isvalidbidi(idn_nameprep_t handle, const PRUint32 *str,
+			 const PRUint32 **found);
 
 
 
