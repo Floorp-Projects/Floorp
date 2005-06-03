@@ -3,7 +3,7 @@
 	For example style definitions for navigator can be found in navigator.css
 
    THIS FILE IS LOCKED DOWN.  YOU ARE NOT ALLOWED TO MODIFY IT WITHOUT FIRST HAVING YOUR
-   CHANGES REVIEWED BY hyatt@netscape.com.
+   CHANGES REVIEWED BY mconnor@steelgryphon.com
 **/
 
 @import url("chrome://global/content/platformXUL.css");
@@ -240,6 +240,10 @@ menu {
   
 menu.menu-iconic {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic");
+}
+
+menu:empty {
+  display: none;
 }
 
 /********* menuitem ***********/
