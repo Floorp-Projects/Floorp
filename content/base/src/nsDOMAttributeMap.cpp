@@ -234,7 +234,6 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
       nsINodeInfo *contentNi = mContent->GetNodeInfo();
       NS_ENSURE_TRUE(contentNi, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsINodeInfo> ni;
       contentNi->NodeInfoManager()->GetNodeInfo(name, nsURI,
                                                 getter_AddRefs(ni));
       NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
