@@ -420,12 +420,23 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
   aState->mScrollPortRect = nsRect(scrollPortOrigin, scrollPortSize);
   aState->mAscent = aKidMetrics.ascent;
   if (aKidMetrics.mComputeMEW) {
-    nscoord kidContentMEW = aKidMetrics.mMaxElementWidth -
-      aState->mReflowState.mComputedPadding.LeftRight();
-    NS_ASSERTION(kidContentMEW >= 0, "MEW didn't include padding?");
+    // XXXBernd the following code is controversial see bug 295459 and bug
+    // 234593, however to get the main customer of MEW  - tables happy. It
+    // seems to be necessary
+    // It looks at the MEW as the minimum width that the parent has to give its
+    // children so that the childs margin box can layout its content without
+    // overflowing the parents content box. If the child has a fixed width
+    // the MEW will be allways this width regardless whether it makes the grand
+    // children overflow the child. Please notice that fixed widths for table
+    // related frames are not covered by this as they mean more a min-width.
+    //
+    // This means for scrolling boxes that if the width is auto or percent
+    // their content box can be squeezed down to 0, as they will either create
+    // a scrollbar so that content of the scrollframe will not leak out or it
+    // will cut the content at the frame boundaries.
     aState->mMaxElementWidth = vScrollbarActualWidth +
       aState->mReflowState.mComputedPadding.LeftRight() +
-      aState->mReflowState.AdjustIntrinsicMinContentWidthForStyle(kidContentMEW);
+      aState->mReflowState.AdjustIntrinsicMinContentWidthForStyle(0);
     // borders get added on the way out of Reflow()
   }
   if (aKidMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
