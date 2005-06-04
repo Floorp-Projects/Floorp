@@ -42,6 +42,8 @@
 #include <iconv.h>
 #endif
 
+#include <FixMath.h>
+
 typedef struct {
     cairo_scaled_font_t base;
 
