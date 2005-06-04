@@ -38,7 +38,9 @@
 #include "cairo-atsui.h"
 #include "cairoint.h"
 #include "cairo.h"
+#if 0
 #include <iconv.h>
+#endif
 
 typedef struct {
     cairo_scaled_font_t base;
