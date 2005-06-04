@@ -1221,6 +1221,8 @@ nsEventStateManager::FireContextClick()
                                                      &mCurrentTarget);
 
     if ( mCurrentTarget ) {
+      SetFrameExternalReference(mCurrentTarget);
+      
       NS_ASSERTION(mPresContext == mCurrentTarget->GetPresContext(),
                    "a prescontext returned a primary frame that didn't belong to it?");
 
@@ -1455,6 +1457,8 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       StopTrackingDragGesture();
       return;
     }
+
+    SetFrameExternalReference(mCurrentTarget);
 
     // Check if selection is tracking drag gestures, if so
     // don't interfere!
