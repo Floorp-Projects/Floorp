@@ -42,12 +42,12 @@
 #include <iconv.h>
 #endif
 
-/* These aren't getting included (FixMath.h) for some reason when we build
- * within the moz tree. */
-#ifndef FixToFloat
-#ifndef fixed1
+/*
+ * FixedToFloat/FloatToFixed are 10.3+ SDK items - include definitions
+ * here so we can use older SDKs.
+ */
+#ifndef FixedToFloat
 #define fixed1              ((Fixed) 0x00010000L)
-#endif
 #define FixedToFloat(a)     ((float)(a) / fixed1)
 #define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
 #endif
