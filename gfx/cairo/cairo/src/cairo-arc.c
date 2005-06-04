@@ -34,8 +34,6 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#include <math.h>
-
 #include "cairo-arc-private.h"
 
 /* Spline deviation from the circle in radius would be given by:
