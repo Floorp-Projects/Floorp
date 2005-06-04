@@ -39,7 +39,7 @@
 
 #include <cairo.h>
 
-#ifdef  CAIRO_HAS_FT_FONT
+#ifdef CAIRO_HAS_FT_FONT
 
 /* Fontconfig/Freetype platform-specific font interface */
 
@@ -49,25 +49,23 @@
 
 CAIRO_BEGIN_DECLS
 
-cairo_font_t *
-cairo_ft_font_create (FcPattern      *pattern,
-		      cairo_matrix_t *scale);
+cairo_font_face_t *
+cairo_ft_font_face_create_for_pattern (FcPattern *pattern);
 
-cairo_font_t *
-cairo_ft_font_create_for_ft_face (FT_Face         face,
-				  int             load_flags,
-				  cairo_matrix_t *scale);
+cairo_font_face_t *
+cairo_ft_font_face_create_for_ft_face (FT_Face         face,
+				       int             load_flags);
 
 FT_Face
-cairo_ft_font_lock_face (cairo_font_t *ft_font);
+cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *scaled_font);
 
 void
-cairo_ft_font_unlock_face (cairo_font_t *ft_font);
-
-FcPattern *
-cairo_ft_font_get_pattern (cairo_font_t  *ft_font);
+cairo_ft_scaled_font_unlock_face (cairo_scaled_font_t *scaled_font);
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_FT_FONT */
+# error Cairo was not compiled with support for the freetype font backend
 #endif /* CAIRO_HAS_FT_FONT */
+
 #endif /* CAIRO_FT_H */

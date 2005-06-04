@@ -39,21 +39,34 @@
 
 #include <cairo.h>
 
-#ifdef  CAIRO_HAS_XCB_SURFACE
+#ifdef CAIRO_HAS_XCB_SURFACE
 
 #include <X11/XCB/xcb.h>
-#include <X11/XCB/render.h>
 
 CAIRO_BEGIN_DECLS
 
+cairo_surface_t *
+cairo_xcb_surface_create (XCBConnection *c,
+			  XCBDRAWABLE	 pixmap,
+			  XCBVISUALTYPE *visual,
+			  int		 width,
+			  int		 height);
+
+cairo_surface_t *
+cairo_xcb_surface_create_for_bitmap (XCBConnection *c,
+				     XCBPIXMAP	    bitmap,
+				     int	    width,
+				     int	    height);
+
 void
-cairo_set_target_xcb (cairo_t		*cr,
-		      XCBConnection	*dpy,
-		      XCBDRAWABLE	drawable,
-		      XCBVISUALTYPE	*visual,
-		      cairo_format_t	format);
+cairo_xcb_surface_set_size (cairo_surface_t *surface,
+			    int		     width,
+			    int		     height);
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_XCB_SURFACE */
+# error Cairo was not compiled with support for the xcb backend
 #endif /* CAIRO_HAS_XCB_SURFACE */
+
 #endif /* CAIRO_XCB_H */

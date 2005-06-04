@@ -39,29 +39,30 @@
 
 #include <cairo.h>
 
-#ifdef  CAIRO_HAS_PDF_SURFACE
-
-#include <stdio.h>
+#ifdef CAIRO_HAS_PDF_SURFACE
 
 CAIRO_BEGIN_DECLS
 
-void
-cairo_set_target_pdf (cairo_t	*cr,
-		      FILE	*file,
-		      double	width_inches,
-		      double	height_inches,
-		      double	x_pixels_per_inch,
-		      double	y_pixels_per_inch);
-
+cairo_surface_t *
+cairo_pdf_surface_create (const char   *filename,
+			  double	width_in_points,
+			  double	height_in_points);
 
 cairo_surface_t *
-cairo_pdf_surface_create (FILE		*file,
-			  double	width_inches,
-			  double	height_inches,
-			  double	x_pixels_per_inch,
-			  double	y_pixels_per_inch);
+cairo_pdf_surface_create_for_stream (cairo_write_func_t	write_func,
+				     void	       *closure,
+				     double		width_in_points,
+				     double		height_in_points);
+
+void
+cairo_pdf_surface_set_dpi (cairo_surface_t     *surface,
+			   double		x_dpi,
+			   double		y_dpi);
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_PDF_SURFACE */
+# error Cairo was not compiled with support for the pdf backend
 #endif /* CAIRO_HAS_PDF_SURFACE */
+
 #endif /* CAIRO_PDF_H */

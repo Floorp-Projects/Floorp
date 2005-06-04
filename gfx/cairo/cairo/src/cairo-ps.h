@@ -39,30 +39,34 @@
 
 #include <cairo.h>
 
-#ifdef  CAIRO_HAS_PS_SURFACE
+#ifdef CAIRO_HAS_PS_SURFACE
 
 #include <stdio.h>
 
 CAIRO_BEGIN_DECLS
 
-void
-cairo_set_target_ps (cairo_t	*cr,
-		     FILE	*file,
-		     double	width_inches,
-		     double	height_inches,
-		     double	x_pixels_per_inch,
-		     double	y_pixels_per_inch);
-
 /* PS-surface functions */
 
 cairo_surface_t *
-cairo_ps_surface_create (FILE	*file,
-			 double	width_inches,
-			 double height_inches,
-			 double	x_pixels_per_inch,
-			 double	y_pixels_per_inch);
+cairo_ps_surface_create (const char *filename,
+			 double	     width_in_points,
+			 double	     height_in_points);
+
+cairo_surface_t *
+cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
+				    void	       *closure,
+				    double		width_in_points,
+				    double		height_in_points);
+
+void
+cairo_ps_surface_set_dpi (cairo_surface_t      *surface,
+			  double		x_dpi,
+			  double		y_dpi);
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_PS_SURFACE */
+# error Cairo was not compiled with support for the ps backend
 #endif /* CAIRO_HAS_PS_SURFACE */
+
 #endif /* CAIRO_PS_H */

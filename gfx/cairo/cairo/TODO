@@ -1,29 +1,42 @@
-API Shakeup work
-----------------
-Patch?	Reviewed?
-yes	yes	user data (was Re: [cairo] Patch improving fallbacks)
-		cairo_paint
-yes	yes	setters and getters
-		cairo_current_matrix
-		Renaming the terms of the rendering equation
-		Making set_source consistent
-		Eliminating cairo_show_surface
-		cairo_mask
-		cairo_begin_group, cairo_end_group, cairo_get_group
-yes	yes	cairo_output_stream_t and cairo_surface_finish()
-		cairo_create and eliminating cairo_set_target_surface
-		cairo_fill_preserve, cairo_stroke_preserve, cairo_clip_preserve
-		default matrix
-		cairo_current_path -> cairo_copy_path_data
-		cairo_surface_finish, cairo_surface_flush
-		cairo_<device>_surface_mark_dirty
-		Eliminating cairo_copy
-		Eliminating cairo_surface_set_repeat/matrix/filter
-		A hidden offset for the xlib backend
-		cairo_stroke_path -> cairo_stroke_to_path
-		Simplifying the operator set
-		Abbreviation hunt: cairo_init_clip and cairo_concat_matrix
-		Consistent error handling for all objects
+API Shakeup planning
+--------------------
+ Patch submitted to mailing list?
+/ Documentation included in patch?
+|/ Review of patch completed?
+||/ Test case included?
+|||/ Committed.
+||||/
+New functionality (more-or-less)
+--------------------------------
+	cairo_begin_group, cairo_end_group, cairo_get_group
+	cairo_<device>_surface_mark_dirty
+	Consistent error handling for all objects
+
+Somewhat backwards-compatible changes
+-----------------------------------
+PDRTC	user data (was Re: [cairo] Patch improving fallbacks)
+PDRTC	setters and getters
+PDRTC	cairo_output_stream_t and cairo_surface_finish()
+PDRTC	cairo_current_path -> cairo_copy_path_data
+PDR C	cairo_surface_finish, cairo_surface_flush
+PDRTC	Abbreviation hunt: cairo_init_clip and cairo_concat_matrix
+PDRTC	Renaming the terms of the rendering equation
+PDRTC	default matrix
+PDRTC	cairo_paint
+PDRTC	Making set_source consistent
+PDRTC	cairo_stroke_path -> cairo_stroke_to_path
+PDRTC	cairo_current_matrix
+PDRTC	cairo_mask
+PDRTC	cairo_fill_preserve, cairo_stroke_preserve, cairo_clip_preserve
+PDR C	A hidden offset for the xlib backend
+
+Backwards incompatible
+----------------------
+PDRTC	Simplifying the operator set
+PDRTC	cairo_create and eliminating cairo_set_target_surface
+PDRTC	Eliminating cairo_copy
+PDRTC	Eliminating cairo_surface_set_repeat/matrix/filter
+PDRTC	Eliminating cairo_show_surface
 
 * Add support for non-antialiased rendering. API ?
 
@@ -37,8 +50,37 @@ yes	yes	cairo_output_stream_t and cairo_surface_finish()
 
 	((src Op dest) In clip) Add (dest Out clip)
 
-* Replace PNG backend with an image_surface function to save a PNG
-  image.
+* Split cairo_format_t into two things:
+
+   - An enumeration that determines the "capabilities" of a surface - 
+     A vs. ARGB. vs. RGB
+   - An enumeration that determines a specific in-memory representation
+     of data. (A1/A8/ARGB32/etc.. Could be extensible to things like
+     RGBA32_BYTES_NONPREMULTIPLIED. Some consistent naming convention would 
+     be be good.)
+
+  One issue here is that some interfaces, like cairo_surface_create_similar()
+  might be useful with either one. We might want to create an A1 surface
+  compatible with the backend (are there examples other than A1? Should 
+  bilevel just be another "capability"?), or we might want to just create
+  an alpha surface without caring about the depth.
+
+  If we want to support this, we could do something like:
+
+   typedef enum cairo_pixel_format_t {
+     CAIRO_PIXEL_FORMAT_A8 = CAIRO_FORMAT_ALPHA,
+     CAIRO_PIXEL_FORMAT_RGB24 = CAIRO_FORMAT_RGB,
+     CAIRO_PIXEL_FORMAT_A1,
+   };
+
+  To allow passing either in. 
+
+  (I don't particularly like this idea for create_similar() because then you 
+  aren't really saying ALPHA-dont-care, you are saying ALPHA-8. I think it 
+  would be better to have a separate path for create_similar_with_pixel_format() 
+  if we need that. But it might be useful for cairo_image_surface_create() ... 
+  people are  going to screw up and pass CAIRO_FORMAT_RGB into that, and if it
+  "just worked" that would save people trouble....)
 
 * Clean up the API in preparation for freezing and release.
 
@@ -83,9 +125,6 @@ do gradients the Right Way).
 
 * Implement cairo_arc_to.
 
-* Re-implement the trapezoid rasterization algorithm according to the
-  new "specification".
-
 * Stroking closed, degenerate paths should still draw caps.  Round
   caps are easy; square should probably draw an axis-aligned square.
 
@@ -128,3 +167,7 @@ do gradients the Right Way).
 * Verification, profiling, optimization.
 
 	centi_unfinished.svg may provide a good test case.
+
+* Implement copy-on-write regions in pixman as a more complete
+  solution than the BAD_NESTING stuff to Owen's "Clip region problems"
+  thread.

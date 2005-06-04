@@ -109,6 +109,18 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 LOCAL_INCLUDES +=  -I$(topsrcdir)/gfx/src/mac
 endif
 
+ifdef MOZ_ENABLE_CAIRO_GFX
+DEFINES += -DMOZ_ENABLE_CAIRO_GFX
+endif
+
+ifdef MOZ_ENABLE_GTK2
+DEFINES += -DMOZ_ENABLE_GTK2
+endif
+
+ifdef MOZ_ENABLE_GTK
+DEFINES += -DMOZ_ENABLE_GTK
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT), windows)
 LOCAL_INCLUDES += -I$(topsrcdir)/gfx/src/windows
 endif

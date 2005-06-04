@@ -1,17 +1,7 @@
-Index: cairo_win32_surface.c
-===================================================================
-RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairo_win32_surface.c,v
-retrieving revision 1.1
-diff -u -8 -p -r1.1 cairo_win32_surface.c
---- cairo_win32_surface.c	23 Mar 2005 19:53:39 -0000	1.1
-+++ cairo_win32_surface.c	25 Apr 2005 16:38:22 -0000
-@@ -547,16 +547,48 @@ _cairo_win32_surface_release_dest_image 
- static cairo_status_t
- _cairo_win32_surface_clone_similar (void             *surface,
- 				    cairo_surface_t  *src,
- 				    cairo_surface_t **clone_out)
- {
-     return CAIRO_INT_STATUS_UNSUPPORTED;
+--- ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairo-win32-surface.c	2005-05-11 19:59:13.000000000 -0700
++++ cairo/src/cairo-win32-surface.c	2005-06-01 22:25:37.000000000 -0700
+@@ -512,6 +512,38 @@
+     cairo_surface_destroy ((cairo_surface_t *)local);
  }
  
 +// AlphaBlend is not available or useable on older versions of Win32
@@ -49,49 +39,29 @@ diff -u -8 -p -r1.1 cairo_win32_surface.c
  static cairo_int_status_t
  _cairo_win32_surface_composite (cairo_operator_t	operator,
  				cairo_pattern_t       	*pattern,
- 				cairo_pattern_t		*mask_pattern,
- 				void			*abstract_dst,
- 				int			src_x,
- 				int			src_y,
- 				int			mask_x,
-@@ -568,16 +600,31 @@ _cairo_win32_surface_composite (cairo_op
- {
-     cairo_win32_surface_t *dst = abstract_dst;
-     cairo_win32_surface_t *src;
-     cairo_surface_pattern_t *src_surface_pattern;
-     int alpha;
+@@ -533,6 +565,21 @@
      int integer_transform;
      int itx, ity;
  
 +    if (!gAlphaBlendChecked) {
-+        OSVERSIONINFO os;
++	OSVERSIONINFO os;
 +    
-+        os.dwOSVersionInfoSize = sizeof(os);
-+        GetVersionEx(&os);
-+        // If running on Win98, disable using AlphaBlend()
-+        // to avoid Win98 AlphaBlend() bug
-+        if (VER_PLATFORM_WIN32_WINDOWS != os.dwPlatformId ||
-+            os.dwMajorVersion != 4 || os.dwMinorVersion != 10) {
-+            gAlphaBlend = (ALPHABLENDPROC)GetProcAddress(LoadLibrary("msimg32"),
-+                                                         "AlphaBlend");
-+        }
-+        gAlphaBlendChecked = PR_TRUE;
++	os.dwOSVersionInfoSize = sizeof(os);
++	GetVersionEx(&os);
++	// If running on Win98, disable using AlphaBlend()
++	// to avoid Win98 AlphaBlend() bug
++	if (VER_PLATFORM_WIN32_WINDOWS != os.dwPlatformId ||
++	    os.dwMajorVersion != 4 || os.dwMinorVersion != 10) {
++	    gAlphaBlend = (ALPHABLENDPROC)GetProcAddress(LoadLibrary("msimg32"),
++							 "AlphaBlend");
++	}
++	gAlphaBlendChecked = PR_TRUE;
 +    }
 +
      if (pattern->type != CAIRO_PATTERN_SURFACE ||
  	pattern->extend != CAIRO_EXTEND_NONE)
  	return CAIRO_INT_STATUS_UNSUPPORTED;
- 
-     if (mask_pattern) {
- 	/* FIXME: When we fully support RENDER style 4-channel
- 	 * masks we need to check r/g/b != 1.0.
- 	 */
-@@ -622,17 +669,20 @@ _cairo_win32_surface_composite (cairo_op
- 
- 	BLENDFUNCTION blend_function;
- 
- 	blend_function.BlendOp = AC_SRC_OVER;
- 	blend_function.BlendFlags = 0;
+@@ -587,7 +634,10 @@
  	blend_function.SourceConstantAlpha = alpha;
  	blend_function.AlphaFormat = src->format == CAIRO_FORMAT_ARGB32 ? AC_SRC_ALPHA : 0;
  
@@ -103,8 +73,3 @@ diff -u -8 -p -r1.1 cairo_win32_surface.c
  			 dst_x, dst_y,
  			 width, height,
  			 src->dc,
- 			 src_x + itx, src_y + ity,
- 			 width, height,
- 			 blend_function))
- 	    return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite");
- 

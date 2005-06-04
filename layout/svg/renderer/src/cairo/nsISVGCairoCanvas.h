@@ -63,6 +63,9 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGCAIROCANVAS_IID)
 
   NS_IMETHOD_(cairo_t*) GetContext() = 0;
+
+  // Update the matrix with the device translation
+  NS_IMETHOD AdjustMatrixForInitialTransform(cairo_matrix_t* aMatrix) = 0;
 };
 
 /** @} */

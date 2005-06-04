@@ -1,5 +1,5 @@
 /*
- * $Id: cairo-wideint.h,v 1.5 2005/04/19 17:19:45 bryner%brianryner.com Exp $
+ * $Id: cairo-wideint.h,v 1.6 2005/06/04 07:03:27 vladimir%pobox.com Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -38,7 +38,7 @@
 #ifndef CAIRO_WIDEINT_H
 #define CAIRO_WIDEINT_H
 
-#if HAVE_STDINT_H
+#if   HAVE_STDINT_H
 # include <stdint.h>
 #elif HAVE_INTTYPES_H
 # include <inttypes.h>
