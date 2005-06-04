@@ -46,12 +46,17 @@
 #ifndef _CAIROINT_H_
 #define _CAIROINT_H_
 
+#define _USE_MATH_DEFINES
+
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#define _USE_MATH_DEFINES
 #include <math.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 #include <limits.h>
 #include <assert.h>
