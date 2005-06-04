@@ -79,7 +79,7 @@ agendaTreeView.forceTreeRebuild =
 function forceTreeRebuild()
 {
     if (this.tree) {
-        dump("forcing tree rebuild\n");
+        // dump("forcing tree rebuild\n");
         this.tree.view = this;
     }
 };
@@ -236,7 +236,7 @@ function findPeriodForItem(item)
     if (start.compare(this.soon.end) <= 0)
         return this.soon;
     
-    dump(item.item.title + " @ " + start + " not in range " +
+    void(item.item.title + " @ " + start + " not in range " +
          "(" + this.today.start + " - " + this.soon.end + ")\n");
 
     return null;
@@ -248,7 +248,7 @@ function addItem(item)
     var when = this.findPeriodForItem(item);
     if (!when)
         return;
-    dump(item.item.title + " @ " + item.occurrenceStartDate + " -> " + when.title + "\n");
+    void(item.item.title + " @ " + item.occurrenceStartDate + " -> " + when.title + "\n");
     when.events.push(item);
     this.calendarUpdateComplete();
 };
@@ -258,16 +258,16 @@ function deleteItem(item)
 {
     var when = this.findPeriodForItem(item);
     if (!when) {
-        dump("deleting non-binned item " + item + "\n");
+        void("deleting non-binned item " + item + "\n");
         return;
     }
     
-    dump("deleting item " + item + " from " + when.title + "\n");
-    dump("before: " + when.events.map(function (e) { return e.item.title; }).join(" ") + "\n");
+    void("deleting item " + item + " from " + when.title + "\n");
+    void("before: " + when.events.map(function (e) { return e.item.title; }).join(" ") + "\n");
     when.events = when.events.filter(function (e) {
         return !e.equals(item);
     });
-    dump("after: " + when.events.map(function (e) { return e.item.title; }).join(" ") + "\n");
+    void("after: " + when.events.map(function (e) { return e.item.title; }).join(" ") + "\n");
     this.rebuildAgendaView(true);
 };
 
@@ -314,7 +314,7 @@ function refreshCalendarQuery()
     this.periods.forEach(function (p) { p.events = []; });
     this.calendar.getItems(filter, 0, this.today.start, this.soon.end,
                            this.calendarOpListener);
-    dump("Calendar query started (" + this.today.start + " -> " + this.soon.end + ")\n");
+    void("Calendar query started (" + this.today.start + " -> " + this.soon.end + ")\n");
 };
 
 agendaTreeView.refreshPeriodDates =
@@ -346,7 +346,7 @@ function refreshPeriodDates()
     this.soon.end = d.clone();
 
     this.periods.forEach(function (when) {
-        dump(when.title + ": " + when.start + " -> " + when.end + "\n");
+        void(when.title + ": " + when.start + " -> " + when.end + "\n");
     });
     this.refreshCalendarQuery();
 };
@@ -384,7 +384,7 @@ function observer_onModifyItem(newItem, oldItem)
 agendaTreeView.setCalendar =
 function setCalendar(calendar)
 {
-    dump("periods: " + this.periods + "\n");
+    void("periods: " + this.periods + "\n");
     if (this.calendar)
         this.calendar.removeObserver(this.calendarObserver);
     this.calendar = calendar;
