@@ -153,7 +153,7 @@ nsSVGCairoPathBuilder::Arcto(float x2, float y2, float rx, float ry, float angle
   const double radPerDeg = pi/180.0;
 
   double x1=0.0, y1=0.0;
-  cairo_current_point(mCR, &x1, &y1);
+  cairo_get_current_point(mCR, &x1, &y1);
 
   // 1. Treat out-of-range parameters as described in
   // http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes

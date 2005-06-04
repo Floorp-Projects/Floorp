@@ -98,7 +98,8 @@ private:
 nsSVGCairoGlyphMetrics::nsSVGCairoGlyphMetrics(nsISVGGlyphMetricsSource *src)
   : mSource(src)
 {
-  mCT = cairo_create();
+  // XXX NULL isn't legal here without our patch to cairo.c
+  mCT = cairo_create(nsnull);
 }
 
 nsSVGCairoGlyphMetrics::~nsSVGCairoGlyphMetrics()
@@ -200,9 +201,9 @@ nsSVGCairoGlyphMetrics::GetSubBoundingBox(PRUint32 charoffset, PRUint32 count,
   nsAutoString text;
   mSource->GetCharacterData(text);
   cairo_text_extents(mCT,
-                     (unsigned char *)NS_ConvertUCS2toUTF8(Substring(text,
-                                                                     charoffset,
-                                                                     count)).get(),
+                     NS_ConvertUCS2toUTF8(Substring(text,
+                                                    charoffset,
+                                                    count)).get(),
                      &extents);
 
   
@@ -290,7 +291,7 @@ nsSVGCairoGlyphMetrics::Update(PRUint32 updatemask, PRBool *_retval)
   nsAutoString text;
   mSource->GetCharacterData(text);
   cairo_text_extents(mCT, 
-                     (unsigned char*)NS_ConvertUCS2toUTF8(text).get(),
+                     NS_ConvertUCS2toUTF8(text).get(),
                      &mExtents);
   
   return NS_OK;
@@ -327,12 +328,12 @@ nsSVGCairoGlyphMetrics::SelectFont(cairo_t *ctx)
     nsString family;
     font.GetFirstFamily(family);
     char *f = ToNewCString(family);
-    cairo_select_font(ctx, f, slant, weight);
+    cairo_select_font_face(ctx, f, slant, weight);
     nsMemory::Free(f);
 
     nsCOMPtr<nsPresContext> presContext;
     mSource->GetPresContext(getter_AddRefs(presContext));
     float pxPerTwips;
     pxPerTwips = presContext->TwipsToPixels();
-    cairo_scale_font(ctx, font.size*pxPerTwips);
+    cairo_set_font_size(ctx, font.size*pxPerTwips);
 }

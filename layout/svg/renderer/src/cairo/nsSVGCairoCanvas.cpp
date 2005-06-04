@@ -93,19 +93,23 @@ public:
 
   // nsISVGCairoCanvas interface:
   NS_IMETHOD_(cairo_t*) GetContext() { return mCR; }
+  NS_IMETHOD AdjustMatrixForInitialTransform(cairo_matrix_t* aMatrix);
     
 private:
   nsCOMPtr<nsIRenderingContext> mMozContext;
   nsCOMPtr<nsPresContext> mPresContext;
   cairo_t *mCR;
   PRUint32 mWidth, mHeight;
-  nsVoidArray mSurfaceStack;
-  PRUint16 mRenderMode;
+  cairo_matrix_t mInitialTransform;
+  nsVoidArray mContextStack;
 
 #ifdef XP_MACOSX
   nsCOMPtr<nsIDrawingSurfaceMac> mSurface;
   CGContextRef mQuartzRef;
 #endif
+
+  PRUint16 mRenderMode;
+  PRPackedBool mOwnsCR;
 };
 
 
@@ -116,6 +120,7 @@ private:
 
 nsSVGCairoCanvas::nsSVGCairoCanvas()
 {
+  mOwnsCR = PR_FALSE;
 }
 
 nsSVGCairoCanvas::~nsSVGCairoCanvas()
@@ -123,7 +128,17 @@ nsSVGCairoCanvas::~nsSVGCairoCanvas()
   mMozContext = nsnull;
   mPresContext = nsnull;
 
-  cairo_destroy(mCR);
+  if (mOwnsCR) {
+    cairo_destroy(mCR);
+  }
+}
+
+nsresult
+nsSVGCairoCanvas::AdjustMatrixForInitialTransform(cairo_matrix_t* aMatrix)
+{
+  if (mContextStack.Count() == 0)
+    cairo_matrix_multiply(aMatrix, aMatrix, &mInitialTransform);
+  return NS_OK;
 }
 
 nsresult
@@ -135,9 +150,19 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
   mMozContext = ctx;
   NS_ASSERTION(mMozContext, "empty rendering context");
 
-  mCR = cairo_create();
+  mRenderMode = SVG_RENDER_MODE_NORMAL;
 
-#ifdef XP_MACOSX
+#if defined(MOZ_ENABLE_CAIRO_GFX)
+  mOwnsCR = PR_FALSE;
+  void* data;
+  ctx->RetrieveCurrentNativeGraphicData(&data);
+  mCR = (cairo_t*)data;
+  cairo_get_matrix(mCR, &mInitialTranslation);
+  return NS_OK;
+
+#else // !MOZ_ENABLE_CAIRO_GFX
+  cairo_surface_t* cairoSurf = nsnull;
+#if defined(XP_MACOSX)
   nsIDrawingSurface *surface;
   ctx->GetDrawingSurface(&surface);
   mSurface = do_QueryInterface(surface);
@@ -156,26 +181,31 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
 #endif
 
   ::SyncCGContextOriginWithPort(mQuartzRef, port);
-  cairo_set_target_quartz_context(mCR, mQuartzRef,
-                                  portRect.right - portRect.left,
-                                  portRect.bottom - portRect.top);
+  cairoSurf = cairo_quartz_surface_create(mQuartzRef,
+                                          portRect.right - portRect.left,
+                                          portRect.bottom - portRect.top);
 #elif defined(XP_WIN)
   nsDrawingSurfaceWin *surface;
   HDC hdc;
   ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);
   surface->GetDimensions(&mWidth, &mHeight);
   surface->GetDC(&hdc);
-  cairo_set_target_win32(mCR, hdc);
-#else
+  cairoSurf = cairo_win32_surface_create(hdc);
+#elif defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_GTK)
   nsDrawingSurfaceGTK *surface;
   ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);
   surface->GetSize(&mWidth, &mHeight);
   GdkDrawable *drawable = surface->GetDrawable();
-
-  cairo_set_target_drawable(mCR,
-                            GDK_WINDOW_XDISPLAY(drawable),
-                            GDK_WINDOW_XWINDOW(drawable));
+  GdkVisual *visual = gdk_window_get_visual(drawable);
+  cairoSurf = cairo_xlib_surface_create(GDK_WINDOW_XDISPLAY(drawable),
+                                        GDK_WINDOW_XWINDOW(drawable),
+                                        GDK_VISUAL_XVISUAL(visual),
+                                        mWidth, mHeight);
 #endif
+
+  NS_ASSERTION(cairoSurf, "No surface");
+  mOwnsCR = PR_TRUE;
+  mCR = cairo_create(cairoSurf);
 
   // get the translation set on the rendering context. It will be in
   // displayunits (i.e. pixels*scale), *not* pixels:
@@ -184,8 +214,9 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
   float dx, dy;
   xform->GetTranslation(&dx, &dy);
   cairo_translate(mCR, dx, dy);
+  cairo_get_matrix(mCR, &mInitialTransform);
 
-#ifdef DEBUG_tor
+#if defined(DEBUG_tor) || defined(DEBUG_roc)
   fprintf(stderr, "cairo translate: %f %f\n", dx, dy);
 
   fprintf(stderr, "cairo dirty: %d %d %d %d\n",
@@ -199,9 +230,8 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
   cairo_clip(mCR);
   cairo_new_path(mCR);
 
-  mRenderMode = SVG_RENDER_MODE_NORMAL;
-
   return NS_OK;
+#endif // !MOZ_ENABLE_CAIRO_GFX
 }
 
 nsresult
@@ -274,10 +304,11 @@ nsSVGCairoCanvas::GetPresContext(nsPresContext **_retval)
 NS_IMETHODIMP
 nsSVGCairoCanvas::Clear(nscolor color)
 {
-  cairo_set_rgb_color(mCR,
-                      NS_GET_R(color)/255.0,
-                      NS_GET_G(color)/255.0,
-                      NS_GET_B(color)/255.0);
+  cairo_set_source_rgba(mCR,
+                        NS_GET_R(color)/255.0,
+                        NS_GET_G(color)/255.0,
+                        NS_GET_B(color)/255.0,
+                        NS_GET_A(color)/255.0);
   cairo_rectangle(mCR, 0, 0, mWidth, mHeight);
   cairo_fill(mCR);
 
@@ -356,34 +387,22 @@ nsSVGCairoCanvas::SetClipRect(nsIDOMSVGMatrix *aCTM, float aX, float aY,
   aCTM->GetF(&val);
   m[5] = val;
 
-  cairo_matrix_t *matrix = cairo_matrix_create();
-  cairo_matrix_t *oldMatrix = cairo_matrix_create();
-  if (!matrix) {
-    cairo_matrix_destroy(matrix);
-    return NS_ERROR_FAILURE;
-  }
-  if (!oldMatrix) {
-    cairo_matrix_destroy(oldMatrix);
-    return NS_ERROR_FAILURE;
-  }
-
-  cairo_current_matrix(mCR, oldMatrix);
-  cairo_matrix_set_affine(matrix, m[0], m[1], m[2], m[3], m[4], m[5]);
-  cairo_concat_matrix(mCR, matrix);
-  cairo_matrix_destroy(matrix);
+  cairo_matrix_t oldMatrix;
+  cairo_get_matrix(mCR, &oldMatrix);
+  cairo_matrix_t matrix = {m[0], m[1], m[2], m[3], m[4], m[5]};
+  cairo_transform(mCR, &matrix);
 
   cairo_new_path(mCR);
   cairo_rectangle(mCR, aX, aY, aWidth, aHeight);
   cairo_clip(mCR);
   cairo_new_path(mCR);
 
-  cairo_set_matrix(mCR, oldMatrix);
-  cairo_matrix_destroy(oldMatrix);
+  cairo_set_matrix(mCR, &oldMatrix);
 
   return NS_OK;
 }
 
-/** Implements pushSurface(in nsISVGRendereerSurface surface); */
+/** Implements pushSurface(in nsISVGRendererSurface surface); */
 NS_IMETHODIMP
 nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface)
 {
@@ -391,12 +410,11 @@ nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface)
   if (!cairoSurface)
     return NS_ERROR_FAILURE;
 
-  mSurfaceStack.AppendElement((void *)cairo_current_target_surface(mCR));
+  cairo_t* oldCR = mCR;
+  mContextStack.AppendElement(NS_STATIC_CAST(void*, oldCR));
 
-  cairo_save(mCR);
-  cairo_default_matrix(mCR);
-  cairo_init_clip(mCR);
-  cairo_set_target_surface(mCR, cairoSurface->GetSurface());
+  mCR = cairo_create(cairoSurface->GetSurface());
+  // XXX Copy state over from oldCR?
 
   return NS_OK;
 }
@@ -405,13 +423,13 @@ nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface)
 NS_IMETHODIMP
 nsSVGCairoCanvas::PopSurface()
 {
-  PRUint32 count = mSurfaceStack.Count();
+  PRUint32 count = mContextStack.Count();
   if (count != 0) {
-    cairo_set_target_surface(mCR, (cairo_surface_t *)mSurfaceStack[count - 1]);
-    mSurfaceStack.RemoveElementAt(count - 1);
+    cairo_destroy(mCR);
+    mCR = NS_STATIC_CAST(cairo_t*, mContextStack[count - 1]);
+    mContextStack.RemoveElementAt(count - 1);
   }
 
-  cairo_restore(mCR);
   return NS_OK;
 }
 
@@ -428,14 +446,13 @@ nsSVGCairoCanvas::CompositeSurface(nsISVGRendererSurface *aSurface,
 
   cairo_save(mCR);
   cairo_translate(mCR, aX, aY);
-  cairo_set_alpha(mCR, aOpacity);
 
   PRUint32 width, height;
   aSurface->GetWidth(&width);
   aSurface->GetHeight(&height);
 
-  cairo_move_to(mCR, 0.0, 0.0);
-  cairo_show_surface(mCR, cairoSurface->GetSurface(), width, height);
+  cairo_set_source_surface(mCR, cairoSurface->GetSurface(), 0.0, 0.0);
+  cairo_paint_with_alpha(mCR, aOpacity);
   cairo_restore(mCR);
 
   return NS_OK;
@@ -474,24 +491,15 @@ nsSVGCairoCanvas::CompositeSurfaceMatrix(nsISVGRendererSurface *aSurface,
   aCTM->GetF(&val);
   m[5] = val;
 
-  cairo_matrix_t *matrix = cairo_matrix_create();
-  if (!matrix) {
-    cairo_restore(mCR);
-    return NS_ERROR_FAILURE;
-  }
-
-  cairo_matrix_set_affine(matrix, m[0], m[1], m[2], m[3], m[4], m[5]);
-  cairo_concat_matrix(mCR, matrix);
-  cairo_matrix_destroy(matrix);
+  cairo_matrix_t matrix = {m[0], m[1], m[2], m[3], m[4], m[5]};
+  cairo_transform(mCR, &matrix);
 
   PRUint32 width, height;
   aSurface->GetWidth(&width);
   aSurface->GetHeight(&height);
 
-  cairo_move_to(mCR, 0.0, 0.0);
-  cairo_set_alpha(mCR, aOpacity);
-  cairo_show_surface(mCR, cairoSurface->GetSurface(), width, height);
-
+  cairo_set_source_surface(mCR, cairoSurface->GetSurface(), 0.0, 0.0);
+  cairo_paint_with_alpha(mCR, aOpacity);
   cairo_restore(mCR);
 
   return NS_OK;

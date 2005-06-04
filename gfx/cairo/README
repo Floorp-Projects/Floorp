@@ -3,25 +3,30 @@ these should be official releases from the cairo project as-is.  If
 changes are necessary, they should be documented below and the patch
 file included in this directory.
 
+We only include the relevant parts of each release (generally, src/*.[ch]),
+as we have Makefile.in's that integrate into the Mozilla build system.  For
+documentation and similar, please see the official tarballs at
+http://www.cairographics.org/.
+
 VERSIONS:
 
-  cairo 0.4.0
-  libpixman 0.1.4
+  cairo 0.5.0
+  libpixman 0.1.5
 
 PATCHES:
 
-  subdirs.diff - don't build test/ or doc/.
-
-  stdint.diff - select between inttypes.h, stdint.h, and mozstdint.h.
-
-  quartz.diff - update cairo quartz/atsui backend for 0.4.0, reenable.
-
-  xlib.diff - include X11/xlib.h in cairo-xlib.h - needed for Solaris.
-
-  stroke-extent.diff - fix calculation of stroke extents.
+  stdint.h - select between inttypes.h, stdint.h, and mozstdint.h.
 
   dash-dos.diff - prevent DOS attack with dasharray.
 
-  icformat.diff - upstream patch to select appropriate depth
-
   alphablend.diff - check for AlphaBlend usability at runtime (win32)
+
+  feature-tests.diff - change #if to #ifdef, and change
+      cairo-features.h.in to #define things based on mozilla configure
+      tests
+
+  allow-null-surface.diff - allow creating a cairo_t with a NULL
+      target surface
+
+  optimize-opaque-paint.diff - if cairo_paint_with_alpha is called
+      with alpha == 1.0, turn it into cairo_paint

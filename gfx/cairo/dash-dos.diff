@@ -1,35 +1,29 @@
-Index: cairo_gstate.c
-===================================================================
-RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairo_gstate.c,v
-retrieving revision 1.3
-diff -u -8 -p -r1.3 cairo_gstate.c
---- cairo_gstate.c	30 Mar 2005 17:32:16 -0000	1.3
-+++ cairo_gstate.c	31 Mar 2005 19:53:08 -0000
-@@ -84,16 +84,18 @@ _cairo_gstate_init (cairo_gstate_t *gsta
-     gstate->line_join = CAIRO_GSTATE_LINE_JOIN_DEFAULT;
-     gstate->miter_limit = CAIRO_GSTATE_MITER_LIMIT_DEFAULT;
+diff -ru ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairo-gstate-private.h cairo/src/cairo-gstate-private.h
+--- ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairo-gstate-private.h	2005-05-06 21:55:23.000000000 -0700
++++ cairo/src/cairo-gstate-private.h	2005-06-01 22:19:22.000000000 -0700
+@@ -52,6 +52,8 @@
+     double *dash;
+     int num_dashes;
+     double dash_offset;
++    double max_dash_length;
++    double fraction_dash_lit;
  
-     gstate->fill_rule = CAIRO_GSTATE_FILL_RULE_DEFAULT;
- 
+     char *font_family; /* NULL means CAIRO_FONT_FAMILY_DEFAULT; */
+     cairo_font_slant_t font_slant; 
+Only in cairo/src: cairo-gstate-private.h~
+diff -ru ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairo-gstate.c cairo/src/cairo-gstate.c
+--- ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairo-gstate.c	2005-05-12 10:59:01.000000000 -0700
++++ cairo/src/cairo-gstate.c	2005-06-01 22:15:34.000000000 -0700
+@@ -101,6 +101,8 @@
      gstate->dash = NULL;
      gstate->num_dashes = 0;
      gstate->dash_offset = 0.0;
 +    gstate->max_dash_length = 0.0;
 +    gstate->fraction_dash_lit = 0.0;
  
-     gstate->font_family = NULL;
-     gstate->font_slant = CAIRO_FONT_SLANT_DEFAULT;
-     gstate->font_weight = CAIRO_FONT_WEIGHT_DEFAULT;
- 
-     gstate->font = NULL;
- 
-     gstate->surface = NULL;
-@@ -538,28 +540,41 @@ cairo_line_join_t
- _cairo_gstate_current_line_join (cairo_gstate_t *gstate)
- {
-     return gstate->line_join;
- }
- 
+     gstate->scaled_font = NULL;
+     gstate->font_face = NULL;
+@@ -509,6 +511,9 @@
  cairo_status_t
  _cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, double offset)
  {
@@ -39,12 +33,7 @@ diff -u -8 -p -r1.3 cairo_gstate.c
      if (gstate->dash) {
  	free (gstate->dash);
  	gstate->dash = NULL;
-     }
-     
-     gstate->num_dashes = num_dashes;
-     if (gstate->num_dashes) {
- 	gstate->dash = malloc (gstate->num_dashes * sizeof (double));
- 	if (gstate->dash == NULL) {
+@@ -521,6 +526,16 @@
  	    gstate->num_dashes = 0;
  	    return CAIRO_STATUS_NO_MEMORY;
  	}
@@ -61,18 +50,8 @@ diff -u -8 -p -r1.3 cairo_gstate.c
      }
  
      memcpy (gstate->dash, dash, gstate->num_dashes * sizeof (double));
-     gstate->dash_offset = offset;
- 
-     return CAIRO_STATUS_SUCCESS;
- }
- 
-@@ -1317,46 +1332,77 @@ _cairo_gstate_pattern_init_copy (cairo_g
- 				 cairo_pattern_union_t *pattern,
- 				 cairo_pattern_t       *src)
- {
-     _cairo_pattern_init_copy (&pattern->base, src);
-     _cairo_pattern_transform (&pattern->base, &gstate->ctm_inverse);
-     _cairo_pattern_set_alpha (&pattern->base, gstate->alpha);
+@@ -954,11 +969,30 @@
+     return status;
  }
  
 +static cairo_bool_t
@@ -93,13 +72,16 @@ diff -u -8 -p -r1.3 cairo_gstate.c
 +}
 +
  cairo_status_t
- _cairo_gstate_stroke (cairo_gstate_t *gstate)
+ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
  {
      cairo_status_t status;
      cairo_traps_t traps;
 +    double *dash = NULL;
 +    double alpha = 0.0;
  
+     if (gstate->surface->level != gstate->surface_level)
+ 	return CAIRO_STATUS_BAD_NESTING;
+@@ -966,15 +1000,21 @@
      if (gstate->line_width <= 0.0)
  	return CAIRO_STATUS_SUCCESS;
  
@@ -107,15 +89,15 @@ diff -u -8 -p -r1.3 cairo_gstate.c
 +	dash = gstate->dash;
 +	gstate->dash = NULL;
 +
-+	alpha = gstate->alpha;
-+	gstate->alpha *= gstate->fraction_dash_lit;
++	/* alpha = gstate->alpha; */
++	/* gstate->alpha *= gstate->fraction_dash_lit; */
 +    }
 +
      _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
  
      _cairo_traps_init (&traps);
  
-     status = _cairo_path_stroke_to_traps (&gstate->path, gstate, &traps);
+     status = _cairo_path_fixed_stroke_to_traps (path, gstate, &traps);
 -    if (status) {
 -	_cairo_traps_fini (&traps);
 -	return status;
@@ -124,64 +106,40 @@ diff -u -8 -p -r1.3 cairo_gstate.c
 +	goto BAIL;
  
      _cairo_gstate_clip_and_composite_trapezoids (gstate,
-                                                  gstate->pattern,
-                                                  gstate->operator,
+                                                  gstate->source,
+@@ -982,9 +1022,15 @@
                                                   gstate->surface,
                                                   &traps);
  
-+ BAIL:
++BAIL:
      _cairo_traps_fini (&traps);
- 
-     _cairo_gstate_new_path (gstate);
  
 -    return CAIRO_STATUS_SUCCESS;
 +    if (dash) {
 +	gstate->dash = dash;
-+	gstate->alpha = alpha;
++	/* gstate->alpha = alpha; */
 +    }
 +
 +    return status;
  }
  
  cairo_status_t
- _cairo_gstate_in_stroke (cairo_gstate_t	*gstate,
- 			 double		x,
- 			 double		y,
- 			 cairo_bool_t	*inside_ret)
- {
-@@ -1695,19 +1741,25 @@ _cairo_gstate_show_page (cairo_gstate_t 
- cairo_status_t
- _cairo_gstate_stroke_extents (cairo_gstate_t *gstate,
-                               double *x1, double *y1,
- 			      double *x2, double *y2)
- {
+@@ -1514,7 +1560,13 @@
      cairo_status_t status;
      cairo_traps_t traps;
      cairo_box_t extents;
+-  
 +    double *dash = NULL;
-+  
++
 +    if (_dashes_invisible(gstate)) {
 +	dash = gstate->dash;
 +	gstate->dash = NULL;
 +    }
- 
-     _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
--  
 +
+     _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
+ 
      _cairo_traps_init (&traps);
-   
-     status = _cairo_path_stroke_to_traps (&gstate->path, gstate, &traps);
-     if (status)
- 	goto BAIL;
- 
-     _cairo_traps_extents (&traps, &extents);
- 
-@@ -1716,16 +1768,19 @@ _cairo_gstate_stroke_extents (cairo_gsta
-     *x2 = _cairo_fixed_to_double (extents.p2.x);
-     *y2 = _cairo_fixed_to_double (extents.p2.y);
- 
-     cairo_matrix_transform_point (&gstate->ctm_inverse, x1, y1);
-     cairo_matrix_transform_point (&gstate->ctm_inverse, x2, y2);
+@@ -1535,6 +1587,9 @@
    
  BAIL:
      _cairo_traps_fini (&traps);
@@ -191,35 +149,22 @@ diff -u -8 -p -r1.3 cairo_gstate.c
    
      return status;
  }
- 
- cairo_status_t
- _cairo_gstate_fill_extents (cairo_gstate_t *gstate,
-                             double *x1, double *y1,
- 			    double *x2, double *y2)
-Index: cairo_matrix.c
-===================================================================
-RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairo_matrix.c,v
-retrieving revision 1.2
-diff -u -8 -p -r1.2 cairo_matrix.c
---- cairo_matrix.c	23 Mar 2005 19:53:39 -0000	1.2
-+++ cairo_matrix.c	31 Mar 2005 19:53:08 -0000
-@@ -615,16 +615,39 @@ _cairo_matrix_compute_scale_factors (cai
- 	    *sx = minor;
- 	    *sy = major;
- 	}
-     }
- 
+Only in cairo/src: cairo-gstate.c~
+diff -ru ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairo-matrix.c cairo/src/cairo-matrix.c
+--- ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairo-matrix.c	2005-05-09 08:50:27.000000000 -0700
++++ cairo/src/cairo-matrix.c	2005-06-01 22:19:54.000000000 -0700
+@@ -559,6 +559,29 @@
      return CAIRO_STATUS_SUCCESS;
  }
  
 +/* Compute the min/max expansion factors.  See the comment in
 + * cairo-pen.c for the derivation */
 +cairo_status_t
-+_cairo_matrix_compute_expansion_factors (cairo_matrix_t *matrix,
++_cairo_matrix_compute_expansion_factors (const cairo_matrix_t *matrix,
 +					 double *min, double *max)
 +{
-+    double  a = matrix->m[0][0],   c = matrix->m[0][1];
-+    double  b = matrix->m[1][0],   d = matrix->m[1][1];
++    double  a = matrix->xx, b = matrix->yx;
++    double  c = matrix->xy, d = matrix->yy;
 +
 +    double  i = a*a + c*c;
 +    double  j = b*b + d*d;
@@ -236,31 +181,17 @@ diff -u -8 -p -r1.2 cairo_matrix.c
 +}
 +
  cairo_bool_t 
- _cairo_matrix_is_integer_translation(cairo_matrix_t *mat, 
+ _cairo_matrix_is_integer_translation(const cairo_matrix_t *mat, 
  				     int *itx, int *ity)
- {
-     double a, b, c, d, tx, ty;
-     int ttx, tty;
-     int ok = 0;
-     cairo_matrix_get_affine (mat, &a, &b, &c, &d, &tx, &ty);
-Index: cairo_pen.c
-===================================================================
-RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairo_pen.c,v
-retrieving revision 1.2
-diff -u -8 -p -r1.2 cairo_pen.c
---- cairo_pen.c	23 Mar 2005 19:53:39 -0000	1.2
-+++ cairo_pen.c	31 Mar 2005 19:53:08 -0000
-@@ -367,42 +367,24 @@ doesn't matter where on the circle the e
- 
- */
- 
- static int
- _cairo_pen_vertices_needed (double	    tolerance,
+diff -ru ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairo-pen.c cairo/src/cairo-pen.c
+--- ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairo-pen.c	2005-05-06 21:55:23.000000000 -0700
++++ cairo/src/cairo-pen.c	2005-06-01 22:18:51.000000000 -0700
+@@ -374,32 +374,15 @@
  			    double	    radius,
  			    cairo_matrix_t  *matrix)
  {
--    double  a = matrix->m[0][0],   c = matrix->m[0][1];
--    double  b = matrix->m[1][0],   d = matrix->m[1][1];
+-    double  a = matrix->xx, b = matrix->yx;
+-    double  c = matrix->xy, d = matrix->yy;
 +    double min, max, major_axis;
 +    int num_vertices;
  
@@ -282,9 +213,9 @@ diff -u -8 -p -r1.2 cairo_pen.c
 -     * we don't need the minor axis length, which is
 -     * double min = radius * sqrt (f - sqrt (g*g+h*h));
 -     */
--    
 +    _cairo_matrix_compute_expansion_factors (matrix, &min, &max);
 +    major_axis = radius * max;
+     
      /*
       * compute number of vertices needed
       */
@@ -292,54 +223,30 @@ diff -u -8 -p -r1.2 cairo_pen.c
      
      /* Where tolerance / M is > 1, we use 4 points */
      if (tolerance >= major_axis) {
- 	num_vertices = 4;
-     } else {
- 	double delta = acos (1 - tolerance / major_axis);
- 	num_vertices = ceil (M_PI / delta);
- 	
-Index: cairoint.h
-===================================================================
-RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairoint.h,v
-retrieving revision 1.4
-diff -u -8 -p -r1.4 cairoint.h
---- cairoint.h	29 Mar 2005 20:53:07 -0000	1.4
-+++ cairoint.h	31 Mar 2005 19:53:08 -0000
-@@ -853,16 +853,18 @@ typedef struct _cairo_gstate {
-     cairo_line_join_t line_join;
-     double miter_limit;
+Only in cairo/src: cairo-pen.c~
+diff -ru ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairo-wideint.h cairo/src/cairo-wideint.h
+--- ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairo-wideint.h	2005-05-10 14:55:37.000000000 -0700
++++ cairo/src/cairo-wideint.h	2005-06-01 22:07:43.000000000 -0700
+@@ -45,7 +45,7 @@
+ #elif HAVE_SYS_INT_TYPES_H
+ # include <sys/int_types.h>
+ #else
+-#error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
++# include "mozstdint.h"
+ #endif
  
-     cairo_fill_rule_t fill_rule;
- 
-     double *dash;
-     int num_dashes;
-     double dash_offset;
-+    double max_dash_length;
-+    double fraction_dash_lit;
- 
-     char *font_family; /* NULL means CAIRO_FONT_FAMILY_DEFAULT; */
-     cairo_font_slant_t font_slant; 
-     cairo_font_weight_t font_weight;
- 
-     cairo_font_t *font;		/* Specific to the current CTM */
- 
-     cairo_surface_t *surface;
-@@ -1640,16 +1642,19 @@ cairo_private cairo_status_t
- _cairo_matrix_compute_determinant (cairo_matrix_t *matrix, double *det);
- 
- cairo_private cairo_status_t
- _cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, double *lambda2);
- 
- cairo_private cairo_status_t
- _cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double *sy, int x_major);
+ /*
+diff -ru ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairoint.h cairo/src/cairoint.h
+--- ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairoint.h	2005-05-17 06:17:45.000000000 -0700
++++ cairo/src/cairoint.h	2005-06-01 22:19:46.000000000 -0700
+@@ -1638,6 +1638,9 @@
+ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
+ 				     double *sx, double *sy, int x_major);
  
 +cairo_private cairo_status_t
-+_cairo_matrix_compute_expansion_factors (cairo_matrix_t *matrix, double *min, double *max);
++_cairo_matrix_compute_expansion_factors (const cairo_matrix_t *matrix, double *min, double *max);
 +
  cairo_private cairo_bool_t
- _cairo_matrix_is_integer_translation(cairo_matrix_t *matrix, int *itx, int *ity);
- 
- /* cairo_traps.c */
- cairo_private void
- _cairo_traps_init (cairo_traps_t *traps);
- 
- cairo_private void
+ _cairo_matrix_is_integer_translation(const cairo_matrix_t *matrix,
+ 				     int *itx, int *ity);
+Only in cairo/src: cairoint.h~

@@ -48,10 +48,8 @@
 #include "nsSVGCairoGradient.h"
 
 
-static cairo_matrix_t *
-SVGToMatrix(nsIDOMSVGMatrix *ctm)
+static cairo_matrix_t SVGToMatrix(nsIDOMSVGMatrix *ctm)
 {
-  cairo_matrix_t *matrix;
   float A, B, C, D, E, F;
   ctm->GetA(&A);
   ctm->GetB(&B);
@@ -59,8 +57,7 @@ SVGToMatrix(nsIDOMSVGMatrix *ctm)
   ctm->GetD(&D);
   ctm->GetE(&E);
   ctm->GetF(&F);
-  matrix = cairo_matrix_create();
-  cairo_matrix_set_affine(matrix, A, B, C, D, E, F);
+  cairo_matrix_t matrix = { A, B, C, D, E, F };
   return matrix;
 }
 
@@ -79,11 +76,11 @@ CairoSetStops(cairo_pattern_t *aPattern, nsISVGGradient *aGrad)
     aGrad->GetStopColor(i, &rgba);
     aGrad->GetStopOpacity(i, &opacity);
 
-    cairo_pattern_add_color_stop(aPattern, offset,
-                                 NS_GET_R(rgba)/255.0,
-                                 NS_GET_G(rgba)/255.0,
-                                 NS_GET_B(rgba)/255.0,
-                                 opacity);
+    cairo_pattern_add_color_stop_rgba(aPattern, offset,
+                                      NS_GET_R(rgba)/255.0,
+                                      NS_GET_G(rgba)/255.0,
+                                      NS_GET_B(rgba)/255.0,
+                                      opacity);
   }
 }
 
@@ -137,7 +134,7 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
   aGrad->GetGradientTransform(getter_AddRefs(svgMatrix), aSource);
   NS_ASSERTION(svgMatrix, "CairoGradient: GetGradientTransform returns null");
 
-  cairo_matrix_t *patternMatrix =  SVGToMatrix(svgMatrix);
+  cairo_matrix_t patternMatrix = SVGToMatrix(svgMatrix);
 
   cairo_pattern_t *gradient;
 
@@ -160,9 +157,8 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
   else if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REPEAT)
     cairo_pattern_set_extend(gradient, CAIRO_EXTEND_REPEAT);
   
-  cairo_matrix_invert(patternMatrix);
-  cairo_pattern_set_matrix(gradient, patternMatrix);
-  cairo_matrix_destroy(patternMatrix);
+  cairo_matrix_invert(&patternMatrix);
+  cairo_pattern_set_matrix(gradient, &patternMatrix);
 
   CairoSetStops(gradient, aGrad);
 

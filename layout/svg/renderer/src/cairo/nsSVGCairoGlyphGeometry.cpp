@@ -77,7 +77,7 @@ protected:
   ~nsSVGCairoGlyphGeometry();
   nsresult Init(nsISVGGlyphGeometrySource* src);
 
-  void GetGlobalTransform(cairo_t *ctx);
+  void GetGlobalTransform(cairo_t *ctx, nsISVGCairoCanvas* aCanvas);
 
 public:
   // nsISupports interface:
@@ -173,18 +173,17 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
   }
 
   PRUint16 renderMode;
-  cairo_matrix_t *matrix;
+  cairo_matrix_t matrix;
   canvas->GetRenderMode(&renderMode);
   if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
     /* save/pop the state so we don't screw up the xform */
     cairo_save(ctx);
   }
   else {
-    matrix = cairo_matrix_create();
-    cairo_current_matrix(ctx, matrix);
+    cairo_get_matrix(ctx, &matrix);
   }
 
-  GetGlobalTransform(ctx);
+  GetGlobalTransform(ctx, cairoCanvas);
 
   metrics->SelectFont(ctx);
 
@@ -203,10 +202,9 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
 
     nsAutoString text;
     mSource->GetCharacterData(text);
-    cairo_text_path(ctx, (unsigned char*)NS_ConvertUCS2toUTF8(text).get());
+    cairo_text_path(ctx, NS_ConvertUCS2toUTF8(text).get());
 
-    cairo_set_matrix(ctx, matrix);
-    cairo_matrix_destroy(matrix);
+    cairo_set_matrix(ctx, &matrix);
 
     return NS_OK;
   }
@@ -231,24 +229,24 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
       float opacity;
       mSource->GetFillOpacity(&opacity);
       
-      cairo_set_rgb_color(ctx,
-                          NS_GET_R(rgb)/255.0,
-                          NS_GET_G(rgb)/255.0,
-                          NS_GET_B(rgb)/255.0);
-      cairo_set_alpha(ctx, double(opacity));
+      cairo_set_source_rgba(ctx,
+                            NS_GET_R(rgb)/255.0,
+                            NS_GET_G(rgb)/255.0,
+                            NS_GET_B(rgb)/255.0,
+                            opacity);
       
       nsAutoString text;
       mSource->GetCharacterData(text);
 
       if (filltype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
-        cairo_show_text(ctx, (unsigned char*)NS_ConvertUCS2toUTF8(text).get());
+        cairo_show_text(ctx, NS_ConvertUCS2toUTF8(text).get());
       } else {
         nsCOMPtr<nsISVGGradient> aGrad;
         mSource->GetFillGradient(getter_AddRefs(aGrad));
 
         cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
-        cairo_set_pattern(ctx, gradient);
-        cairo_show_text(ctx, (unsigned char*)NS_ConvertUCS2toUTF8(text).get());
+        cairo_set_source(ctx, gradient);
+        cairo_show_text(ctx, NS_ConvertUCS2toUTF8(text).get());
         cairo_pattern_destroy(gradient);
       }
   }
@@ -258,11 +256,11 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
     mSource->GetStrokePaint(&rgb);
     float opacity;
     mSource->GetStrokeOpacity(&opacity);
-    cairo_set_rgb_color(ctx,
-                        NS_GET_R(rgb)/255.0,
-                        NS_GET_G(rgb)/255.0,
-                        NS_GET_B(rgb)/255.0);
-    cairo_set_alpha(ctx, double(opacity));
+    cairo_set_source_rgba(ctx,
+                          NS_GET_R(rgb)/255.0,
+                          NS_GET_G(rgb)/255.0,
+                          NS_GET_B(rgb)/255.0,
+                          opacity);
 
     float width;
     mSource->GetStrokeWidth(&width);
@@ -315,7 +313,7 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
 
     nsAutoString text;
     mSource->GetCharacterData(text);
-    cairo_text_path(ctx, (unsigned char*)NS_ConvertUCS2toUTF8(text).get());
+    cairo_text_path(ctx, NS_ConvertUCS2toUTF8(text).get());
 
     if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
       cairo_stroke(ctx);
@@ -324,7 +322,7 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
       mSource->GetStrokeGradient(getter_AddRefs(aGrad));
       
       cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
-      cairo_set_pattern(ctx, gradient);
+      cairo_set_source(ctx, gradient);
       cairo_stroke(ctx);
       cairo_pattern_destroy(gradient);
     }
@@ -391,7 +389,8 @@ NS_IMETHODIMP
 nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
 {
   *_retval = nsnull;
-  cairo_t *ctx = cairo_create();
+  // XXX NULL isn't legal here without our patch to cairo.c
+  cairo_t *ctx = cairo_create(nsnull);
 
   /* get the metrics */
   nsCOMPtr<nsISVGCairoGlyphMetrics> metrics;
@@ -404,7 +403,7 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
       return NS_ERROR_FAILURE;
   }
 
-  GetGlobalTransform(ctx);
+  GetGlobalTransform(ctx, nsnull);
 
   metrics->SelectFont(ctx);
 
@@ -423,7 +422,7 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
 
   nsAutoString text;
   mSource->GetCharacterData(text);
-  cairo_text_path(ctx, (unsigned char*)NS_ConvertUCS2toUTF8(text).get());
+  cairo_text_path(ctx, NS_ConvertUCS2toUTF8(text).get());
 
   double xmin, ymin, xmax, ymax;
 
@@ -469,8 +468,8 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
     cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
   }
 
-  cairo_transform_point(ctx, &xmin, &ymin);
-  cairo_transform_point(ctx, &xmax, &ymax);
+  cairo_user_to_device(ctx, &xmin, &ymin);
+  cairo_user_to_device(ctx, &xmax, &ymax);
 
   cairo_destroy(ctx);
 
@@ -497,8 +496,9 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   nsCOMPtr<nsIDOMSVGRect> box;
   metrics->GetBoundingBox(getter_AddRefs(box));
 
-  cairo_t *ctx = cairo_create();
-  GetGlobalTransform(ctx);
+  // XXX NULL isn't legal here without our patch to cairo.c
+  cairo_t *ctx = cairo_create(nsnull);
+  GetGlobalTransform(ctx, nsnull);
 
   float sX, sY, eX, eY, eWidth, eHeight;
   mSource->GetX(&sX);
@@ -509,7 +509,7 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   box->GetHeight(&eHeight);
   cairo_rectangle(ctx, sX + eX, sY + eY, eWidth, eHeight);
 
-  cairo_default_matrix(ctx);
+  cairo_identity_matrix(ctx);
   *_retval = cairo_in_fill(ctx, x, y);
   cairo_destroy(ctx);
 
@@ -518,7 +518,7 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
 
 
 void
-nsSVGCairoGlyphGeometry::GetGlobalTransform(cairo_t *ctx)
+nsSVGCairoGlyphGeometry::GetGlobalTransform(cairo_t *ctx, nsISVGCairoCanvas* aCanvas)
 {
   nsCOMPtr<nsIDOMSVGMatrix> ctm;
   mSource->GetCanvasTM(getter_AddRefs(ctm));
@@ -544,8 +544,9 @@ nsSVGCairoGlyphGeometry::GetGlobalTransform(cairo_t *ctx)
   ctm->GetF(&val);
   m[5] = val;
 
-  cairo_matrix_t *matrix = cairo_matrix_create();
-  cairo_matrix_set_affine(matrix, m[0], m[1], m[2], m[3], m[4], m[5]);
-  cairo_concat_matrix(ctx, matrix);
-  cairo_matrix_destroy(matrix);
+  cairo_matrix_t matrix = {m[0], m[1], m[2], m[3], m[4], m[5]};
+  if (aCanvas) {
+    aCanvas->AdjustMatrixForInitialTransform(&matrix);
+  }
+  cairo_set_matrix(ctx, &matrix);
 }

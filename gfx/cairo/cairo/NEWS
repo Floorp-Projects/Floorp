@@ -1,3 +1,307 @@
+Snapshot 0.5.0 (2005-05-17 Carl Worth <cworth@cworth.org>)
+==========================================================
+This is a pretty big, and fairly significant snapshot.  It represents
+between 2 and 3 months of solid work from a lot of people on improving
+the API as much as possible. I'd like to express my appreciation and
+congratulations to everyone who has worked on the big API Shakeup,
+(whether in email battles over names, or fixing my silly bugs).
+
+This snapshot will require some effort on the part of users, since
+there are a _lot_ of API changes (ie. no cairo program ever written is
+safe --- they're all broken now in at least one way). But, in spite of
+that, we do encourage everyone to move their code to this snapshot as
+soon as possible. And we're doing everything we can think of to make
+the transition as smooth as possible.
+
+The idea behind 0.5 is that we've tried to make every good API change
+we could want now, and get them all done with. That is, between now
+and the 1.0 release of cairo, we expect very few new API changes,
+(though some will certainly sneak in). We will have some significant
+additions, but the pain of moving code from cairo 0.4 to cairo 0.5
+should be a one time experience, and things should be much smoother as
+we continue to move toward cairo 1.0.
+
+And with so many changes coming out for the first time in this 0.5
+release, we really do need a lot of people trying this out to make
+sure the ideas are solid before we freeze the API in preparation for
+the 1.0 release.
+
+OK, enough introduction. Here is a (not-quite-complete) description of
+the API removals, changes and additions in this snapshot, (compared to
+0.4.0)
+
+API removals
+============
+The following public functions have been removed:
+
+- cairo_set_target_*
+
+	This is a big change. See the description of cairo_create in
+	the API changes section for how to deal with this.
+
+- cairo_set_alpha
+
+	Alpha blending hasn't gone away; there's just a much more
+	unified rendering model now. Almost all uses of
+	cairo_set_alpha will be trivially replaced with
+	cairo_set_source_rgba and a few others will be replaced just
+	as easily with cairo_paint_with_alpha.
+
+- cairo_show_surface
+
+	Another useful function that we realized was muddling up the
+	rendering model. The replacement is quite easy:
+	cairo_set_source_surface and cairo_paint.
+
+- cairo_matrix_create
+- cairo_matrix_destroy
+- cairo_matrix_copy
+- cairo_matrix_get_affine
+
+	These functions supported an opaque cairo_matrix_t. We now
+	have an exposed cairo_matrix_t structure, so these can be
+	dropped.
+
+- cairo_surface_set_repeat
+- cairo_surface_set_matrix
+- cairo_surface_set_filter
+
+	These properties don't belong on surfaces. If you were using
+	them, you'll just want to instead use
+	cairo_pattern_create_for_surface and then set these properties
+	on the pattern.
+
+- cairo_copy
+
+	This was a confusing function and hopefully nobody will miss
+	it. But if you really don't find cairo_save/restore adequate,
+	let us know and we have another idea for a potential
+	replacement.
+
+And while we're on the subject of removals, we carefully tightened up
+the cairo header files so they no longer gratuitously include header
+files that are not strictly necessary, (stdio.h, stdint.h, pixman.h,
+Xrender.h, etc. and their dependencies). This may lead to some
+surprising errors, so keep your eyes open for that.
+
+API changes
+===========
+Here are some of the API changes that have occurred:
+
+~ cairo_create(void) -> cairo_create(cairo_surface_t *)
+
+	This is the big change that breaks every program. The ability
+	to re-target a cairo_t was not particularly useful, but it did
+	introduce a lot of muddy semantic questions. To eliminate
+	that, cairo_create now requires its target surface to be
+	passed in at creation time. This isn't too hard to cope with
+	as the typical first operation after cairo_create was often
+	cairo_set_target_foo. So the order of those two swap and the
+	application instead has cairo_foo_surface_create, then
+	cairo_create.
+
+~ cairo_current_* -> cairo_get_*
+
+	We had a strange mixture of cairo_get and cairo_current
+	functions. They've all been standardized on cairo_get, (though
+	note one is cairo_get_current_point).
+
+~ CAIRO_OPERATOR_SRC -> CAIRO_OPERATOR_SOURCE
+~ CAIRO_OPERATOR_OVER_REVERSE -> CAIRO_OPERATOR_DEST_OVER
+
+	Many of the cairo_operator_t symbolic values were renamed to
+	reduce the amount of abbreviation. The confusing "OP_REVERSE"
+	naming was also changed to use "DEST_OP" instead which is
+	easier to read and has wider acceptance in other
+	libraries/languages.
+
+~ cairo_set_pattern -> cairo_set_source
+~ cairo_set_rgb_color -> cairo_set_source_rgb
+
+	All of the various functions that changed the source
+	color/pattern were unified to use cairo_set_source names to
+	make the relation more clear.
+
+~ cairo_transform_point		   -> cairo_user_to_device
+~ cairo_transform_distance	   -> cairo_user_to_device_distance
+~ cairo_inverse_transform_point	   -> cairo_device_to_user
+~ cairo_inverse_transform_distance -> cairo_device_to_user_distance
+
+	These names just seemed a lot more clear.
+
+~ cairo_init_clip	-> cairo_reset_clip
+~ cairo_concat_matrix	-> cairo_transform
+
+	More abbreviation elimination
+
+~ cairo_current_path	  -> cairo_copy_path
+~ cairo_current_path_flat -> cairo_copy_path_flat
+
+	The former mechanism for examining the current path was a
+	function that required 3 or 4 callbacks. This was more
+	complexity than warranted in most situations. The new
+	cairo_copy_path function copies the current path into an
+	exposed data structure, and the documentation provides a
+	convenient idiom for navigating the path data.
+
+API additions
+-------------
++ cairo_paint
+
+	A generalized version of the painting operators cairo_stroke
+	and cairo_fill. The cairo_paint call applies the source paint
+	everywhere within the current clip region. Very useful for
+	clearing a surface to a solid color, or painting an image,
+	(see cairo_set_source_surface).
+
++ cairo_paint_with_alpha
+
+	Like cairo_paint but applying some alpha to the source,
+	(making the source paint translucent, eg. to blend an image on
+	top of another).
+
++ cairo_mask
+
+	A more generalized version of cairo_paint_with_alpha which
+	allows a pattern to specify the amount of translucence at each
+	point rather than using a constant value everywhere.
+
++ cairo_mask_surface
+
+	A convenience function on cairo_mask for when the mask pattern
+	is already contained within a surface.
+
++ cairo_surface_set_user_data
++ cairo_surface_get_user_data
++ cairo_font_face_set_user_data
++ cairo_font_face_get_user_data
+
+	Associate arbitrary data with a surface or font face for later
+	retrieval. Get notified when a surface or font face object is
+	destroyed.
+
++ cairo_surface_finish
+
+	Allows the user to instruct cairo to finish all of its
+	operations for a given surface. This provides a safe point for
+	doing things such as flushing and closing files that the
+	surface may have had open for writing.
+
++ cairo_fill_preserve
++ cairo_stroke_preserve
++ cairo_clip_preserve
+
+	One interesting change in cairo is that the path is no longer
+	part of the graphics state managed by
+	cairo_save/restore. This allows functions to construct paths
+	without interfering with the graphics state. But it prevents
+	the traditional idiom for fill-and-stroke:
+
+		cairo_save; cairo_fill; cairo_restore; cairo_stroke
+
+	Instead we know have alternate versions cairo cairo_fill,
+	cairo_stroke, and cairo_clip that preserve the current path
+	rather than consuming it. So the idiom now becomes simply:
+
+		cairo_fill_preserve; cairo_stroke
+
++ cairo_surface_write_to_png
++ cairo_surface_write_to_png_stream
+
+	In place of a single PNG backend, now a surface created
+	through any backend (except PDF currently) can be written out
+	to a PNG image.
+
++ cairo_image_surface_create_from_png
++ cairo_image_surface_create_from_png_stream
+
+	And its just as easy to load a PNG image into a surface as well.
+
++ cairo_append_path
+
+	With the new, exposed path data structure, it's now possible
+	to append bulk path data to the current path, (rather than
+	issuing a long sequence of cairo_move_to/line_to/curve_to
+	function calls).
+
+Xlib and XCB backends
+---------------------
+
+Any cairo_format_t and Colormap arguments have been dropped from
+cairo_xlib_surface_create. There are also two new
+cairo_xlib|xcb_surface_create functions:
+
+	cairo_xlib|xcb_surface_create_for_bitmap
+		(Particular for creating A1 surfaces)
+	cairo_xlib|xcb_surface_create_with_xrender_format
+		(For any other surface types, not described by a Visual*)
+
+All of these surface create functions now accept width and height. In
+addition, there are new cairo_xlib|xcb_surface_set_size functions
+which must be called each time a window that is underlying a surface
+changes size.
+
+Print backends (PS and PDF)
+---------------------------
+The old FILE* based interfaces have been eliminated. In their place we
+have two different functions. One accepts a simple const char
+*filename. The other is a more general function which accepts a
+callback write function and a void* closure. This should allow the
+flexibility needed to hook up with various stream object in many
+languages.
+
+In addition, when specifying the surface size during construction, the
+units are now device-space units (ie. points) rather than inches. This
+provides consistency with all the other surface types and also makes
+it much easier to reason about the size of the surface when drawing to
+it with the default identity matrix.
+
+Finally, the DPI parameters, which are only needed to control the
+quality of fallbacks, have been made optional. Nothing is required
+during surface_create (300 DPI is assumed) and
+cairo_ps|pdf_surface_set_dpi can be used to set alternate values if
+needed.
+
+Font system
+-----------
+Owen very graciously listened to feedback after the big font rework he
+had done for 0.4, and came up with way to improve it even more. In 0.4
+there was a cairo_font_t that was always pre-scaled. Now, there is an
+unscaled cairo_font_face_t which is easier to construct, (eg. no
+scaling matrix required) and work with, (it can be scaled and
+transformed after being set on the graphics state). And the font size
+manipulation functions are much easier. You can set an explicit size
+and read/modify/write the font matrix with:
+
+	cairo_set_font_size
+	cairo_get_font_matrix
+	cairo_set_font_matrix
+
+(Previously you could only multiply in a scale factor or a matrix.) A
+pleasant side effect is that we can (and do) now have a default font
+size that is reasonable, as opposed to the old default height of one
+device-space unit which was useless until scaled.
+
+Of course, the old pre-scaled font had allowed some performance
+benefits when getting many metrics for a font. Those benefits are
+still made available through the new cairo_scaled_font_t. And a
+cairo_font_face_t can be "promoted" to a cairo_scaled_font_t by
+suppling a font_matrix and the desired CTM.
+
+Quartz backend
+--------------
+Tim Rowley put in the work to bring the Quartz backend back after it
+had been disabled in the 0.4.0 snapshot. He was not able to bring back
+the function that allows one to create a cairo_font_t from an ATSUI
+style:
+
+	cairo_font_t *
+	cairo_atsui_font_create (ATSUStyle style);
+
+because he didn't have a test case for it. If you care about this
+function, please provide a fairly minimal test and we'll try to bring
+it back in an upcoming snapshot.
+
 Snapshot 0.4.0 (2005-03-08 Carl Worth <cworth@cworth.org>)
 ==========================================================
 New documentation

@@ -992,7 +992,6 @@ pixman_composite (pixman_operator_t	op,
 	{
 	    switch (iSrc->format_code) {
 	    case PICT_a8r8g8b8:
-	    case PICT_x8r8g8b8:
 		switch (iDst->format_code) {
 		case PICT_a8r8g8b8:
 		case PICT_x8r8g8b8:
@@ -1007,7 +1006,6 @@ pixman_composite (pixman_operator_t	op,
 		}
 		break;
 	    case PICT_a8b8g8r8:
-	    case PICT_x8b8g8r8:
 		switch (iDst->format_code) {
 		case PICT_a8b8g8r8:
 		case PICT_x8b8g8r8:

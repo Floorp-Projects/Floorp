@@ -39,39 +39,35 @@
 
 #include <cairo.h>
 
-#ifdef  CAIRO_HAS_XLIB_SURFACE
+#ifdef CAIRO_HAS_XLIB_SURFACE
 
 #include <X11/Xlib.h>
-#include <X11/extensions/Xrender.h>
 
 CAIRO_BEGIN_DECLS
 
-/* XXX: This shold be renamed to cairo_set_target_xlib to match the
- * other backends */
-void
-cairo_set_target_drawable (cairo_t	*cr,
-			   Display	*dpy,
-			   Drawable	drawable);
-
-/* XXX: This is a mess from the user's POV. Should the Visual or the
-   cairo_format_t control what render format is used? Maybe I can have
-   cairo_surface_create_for_window with a visual, and
-   cairo_surface_create_for_pixmap with a cairo_format_t. Would that work?
-*/
 cairo_surface_t *
-cairo_xlib_surface_create (Display		*dpy,
-			   Drawable		drawable,
-			   Visual		*visual,
-			   cairo_format_t	format,
-			   Colormap		colormap);
-  
-/* XXX: This has been proposed
-cairo_status_t
-cairo_xlib_surface_set_size (cairo_surface_t *surface, int width, int height);
-*/
+cairo_xlib_surface_create (Display     *dpy,
+			   Drawable	drawable,
+			   Visual      *visual,
+			   int		width,
+			   int		height);
+
+cairo_surface_t *
+cairo_xlib_surface_create_for_bitmap (Display  *dpy,
+				      Pixmap	bitmap,
+				      int	width,
+				      int	height);
+
+void
+cairo_xlib_surface_set_size (cairo_surface_t *surface,
+			     int              width,
+			     int              height);
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_XLIB_SURFACE */
+# error Cairo was not compiled with support for the xlib backend
 #endif /* CAIRO_HAS_XLIB_SURFACE */
+
 #endif /* CAIRO_XLIB_H */
 

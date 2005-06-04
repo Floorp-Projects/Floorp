@@ -65,7 +65,7 @@ public:
   NS_IMETHOD_(cairo_surface_t*) GetSurface() { return mSurface; }
     
 private:
-  char *mData;
+  PRUint8 *mData;
   cairo_surface_t *mSurface;
   PRUint32 mWidth, mHeight;
 };
@@ -98,18 +98,16 @@ nsSVGCairoSurface::Init(PRUint32 width, PRUint32 height)
   mWidth = width;
   mHeight = height;
 
-  mData = new char[4*width*height];
+  mData = new PRUint8[4*width*height];
 
   if (!mData)
     return NS_ERROR_OUT_OF_MEMORY;
 
   memset(mData, 0, 4*width*height);
-  mSurface = cairo_surface_create_for_image(mData, CAIRO_FORMAT_ARGB32,
-                                            mWidth, mHeight, 4*mWidth);
+  mSurface = cairo_image_surface_create_for_data(mData, CAIRO_FORMAT_ARGB32,
+                                                 mWidth, mHeight, 4*mWidth);
   if (!mSurface)
     return NS_ERROR_FAILURE;
-
-  cairo_surface_set_filter(mSurface, CAIRO_FILTER_BEST);
 
   return NS_OK;
 }
@@ -164,7 +162,7 @@ nsSVGCairoSurface::GetHeight(PRUint32 *aHeight)
 NS_IMETHODIMP
 nsSVGCairoSurface::GetData(PRUint8 **aData, PRUint32 *length, PRInt32 *stride)
 {
-  *aData = (PRUint8*)mData;
+  *aData = mData;
   *length = 4*mWidth*mHeight;
   *stride = 4*mWidth;
   return NS_OK;

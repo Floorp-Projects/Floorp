@@ -89,7 +89,7 @@ private:
   nsCOMPtr<nsISVGPathGeometrySource> mSource;
   nsCOMPtr<nsISVGRendererRegion> mCoveredRegion;
 
-  void GeneratePath(cairo_t *ctx);
+  void GeneratePath(cairo_t *ctx, nsISVGCairoCanvas* aCanvas);
 };
 
 /** @} */
@@ -147,7 +147,7 @@ NS_INTERFACE_MAP_END
 //----------------------------------------------------------------------
 
 void
-nsSVGCairoPathGeometry::GeneratePath(cairo_t *ctx)
+nsSVGCairoPathGeometry::GeneratePath(cairo_t *ctx, nsISVGCairoCanvas* aCanvas)
 {
   nsCOMPtr<nsIDOMSVGMatrix> ctm;
   mSource->GetCanvasTM(getter_AddRefs(ctm));
@@ -173,10 +173,11 @@ nsSVGCairoPathGeometry::GeneratePath(cairo_t *ctx)
   ctm->GetF(&val);
   m[5] = val;
 
-  cairo_matrix_t *matrix = cairo_matrix_create();
-  cairo_matrix_set_affine(matrix, m[0], m[1], m[2], m[3], m[4], m[5]);
-  cairo_concat_matrix(ctx, matrix);
-  cairo_matrix_destroy(matrix);
+  cairo_matrix_t matrix = { m[0], m[1], m[2], m[3], m[4], m[5] };
+  if (aCanvas) {
+    aCanvas->AdjustMatrixForInitialTransform(&matrix);
+  }
+  cairo_set_matrix(ctx, &matrix);
 
   nsCOMPtr<nsISVGRendererPathBuilder> builder;
   NS_NewSVGCairoPathBuilder(getter_AddRefs(builder), ctx);
@@ -264,7 +265,7 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
 
   PRUint16 renderMode;
   canvas->GetRenderMode(&renderMode);
-  cairo_matrix_t *matrix;
+  cairo_matrix_t matrix;
 
   if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
     cairo_new_path(ctx);
@@ -272,11 +273,10 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
     /* save/pop the state so we don't screw up the xform */
     cairo_save(ctx);
   } else {
-    matrix = cairo_matrix_create();
-    cairo_current_matrix(ctx, matrix);
+    cairo_get_matrix(ctx, &matrix);
   }
 
-  GeneratePath(ctx);
+  GeneratePath(ctx, cairoCanvas);
 
   if (renderMode != nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
     PRUint16 rule;
@@ -286,8 +286,7 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
     else
       cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
 
-    cairo_set_matrix(ctx, matrix);
-    cairo_matrix_destroy(matrix);
+    cairo_set_matrix(ctx, &matrix);
 
     return NS_OK;
   }
@@ -301,34 +300,31 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
 
   mSource->GetFillPaintType(&fillType);
   if (fillType != nsISVGGeometrySource::PAINT_TYPE_NONE) {
-    if (bStroking)
-      cairo_save(ctx);
-
     nscolor rgb;
     mSource->GetFillPaint(&rgb);
     float opacity;
     mSource->GetFillOpacity(&opacity);
 
-    cairo_set_rgb_color(ctx,
-                        NS_GET_R(rgb)/255.0,
-                        NS_GET_G(rgb)/255.0,
-                        NS_GET_B(rgb)/255.0);
-    cairo_set_alpha(ctx, double(opacity));
+    cairo_set_source_rgba(ctx,
+                          NS_GET_R(rgb)/255.0,
+                          NS_GET_G(rgb)/255.0,
+                          NS_GET_B(rgb)/255.0,
+                          opacity);
 
     if (fillType == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
-      cairo_fill(ctx);
+      cairo_fill_preserve(ctx);
     } else {
       nsCOMPtr<nsISVGGradient> aGrad;
       mSource->GetFillGradient(getter_AddRefs(aGrad));
 
       cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
-      cairo_set_pattern(ctx, gradient);
-      cairo_fill(ctx);
+      cairo_set_source(ctx, gradient);
+      cairo_fill_preserve(ctx);
       cairo_pattern_destroy(gradient);
     }
 
-    if (bStroking)
-      cairo_restore(ctx);
+    if (!bStroking)
+      cairo_new_path(ctx);
   }
 
   if (bStroking) {
@@ -336,11 +332,11 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
     mSource->GetStrokePaint(&rgb);
     float opacity;
     mSource->GetStrokeOpacity(&opacity);
-    cairo_set_rgb_color(ctx,
-                        NS_GET_R(rgb)/255.0,
-                        NS_GET_G(rgb)/255.0,
-                        NS_GET_B(rgb)/255.0);
-    cairo_set_alpha(ctx, double(opacity));
+    cairo_set_source_rgba(ctx,
+                          NS_GET_R(rgb)/255.0,
+                          NS_GET_G(rgb)/255.0,
+                          NS_GET_B(rgb)/255.0,
+                          opacity);
 
     if (strokeType == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
       cairo_stroke(ctx);
@@ -349,7 +345,7 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
       mSource->GetStrokeGradient(getter_AddRefs(aGrad));
 
       cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
-      cairo_set_pattern(ctx, gradient);
+      cairo_set_source(ctx, gradient);
       cairo_stroke(ctx);
       cairo_pattern_destroy(gradient);
     }
@@ -419,9 +415,10 @@ nsSVGCairoPathGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
 {
   *_retval = nsnull;
 
-  cairo_t *ctx = cairo_create();
+  // XXX NULL isn't legal here without our patch to cairo.c
+  cairo_t *ctx = cairo_create(nsnull);
 
-  GeneratePath(ctx);
+  GeneratePath(ctx, nsnull);
 
   PRUint16 type;  
   mSource->GetFillPaintType(&type);
@@ -439,8 +436,8 @@ nsSVGCairoPathGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
   else
     cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
 
-  cairo_transform_point(ctx, &xmin, &ymin);
-  cairo_transform_point(ctx, &xmax, &ymax);
+  cairo_user_to_device(ctx, &xmin, &ymin);
+  cairo_user_to_device(ctx, &xmax, &ymax);
 
   cairo_destroy(ctx);
 
@@ -460,12 +457,13 @@ nsSVGCairoPathGeometry::ContainsPoint(float x, float y, PRBool *_retval)
       return NS_OK;
   }
 
-  cairo_t *ctx = cairo_create();
+  // XXX NULL isn't legal here without our patch to cairo.c
+  cairo_t *ctx = cairo_create(nsnull);
   cairo_set_tolerance(ctx, 1.0);
 
-  GeneratePath(ctx);
+  GeneratePath(ctx, nsnull);
   double xx = x, yy = y;
-  cairo_inverse_transform_point(ctx, &xx, &yy);
+  cairo_device_to_user(ctx, &xx, &yy);
 
   PRBool isClip;
   mSource->IsClipChild(&isClip);
@@ -501,8 +499,9 @@ nsSVGCairoPathGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
   if (!rect) return NS_ERROR_FAILURE;
 
   double xmin, ymin, xmax, ymax;
-  cairo_t *ctx = cairo_create();
-  GeneratePath(ctx);
+  // NULL isn't legal here without our patch to cairo.c
+  cairo_t *ctx = cairo_create(nsnull);
+  GeneratePath(ctx, nsnull);
 
   cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
 
@@ -516,8 +515,8 @@ nsSVGCairoPathGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
     cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
   }
 
-  cairo_transform_point(ctx, &xmin, &ymin);
-  cairo_transform_point(ctx, &xmax, &ymax);
+  cairo_user_to_device(ctx, &xmin, &ymin);
+  cairo_user_to_device(ctx, &xmax, &ymax);
 
   cairo_destroy(ctx);
 

@@ -54,63 +54,65 @@ REQUIRES	= $(PNG_REQUIRES) \
 
 CSRCS	= \
 	cairo.c \
-	cairo_array.c \
-	cairo_cache.c \
-	cairo_color.c \
-	cairo_fixed.c \
-	cairo_font.c \
-	cairo_gstate.c \
-	cairo_hull.c \
-	cairo_image_surface.c \
-	cairo_matrix.c \
-	cairo_path.c \
-	cairo_path_bounds.c \
-	cairo_path_fill.c \
-	cairo_path_stroke.c \
-	cairo_pattern.c \
-	cairo_pen.c \
-	cairo_polygon.c \
-	cairo_slope.c \
-	cairo_spline.c \
-	cairo_surface.c \
-	cairo_traps.c \
-	cairo_unicode.c \
-	cairo_wideint.c \
+	cairo-arc.c \
+	cairo-array.c \
+	cairo-cache.c \
+	cairo-color.c \
+	cairo-fixed.c \
+	cairo-font.c \
+	cairo-gstate.c \
+	cairo-hull.c \
+	cairo-image-surface.c \
+	cairo-matrix.c \
+	cairo-output-stream.c \
+	cairo-path.c \
+	cairo-path-bounds.c \
+	cairo-path-data.c \
+	cairo-path-fill.c \
+	cairo-path-stroke.c \
+	cairo-pattern.c \
+	cairo-pen.c \
+	cairo-polygon.c \
+	cairo-slope.c \
+	cairo-spline.c \
+	cairo-surface.c \
+	cairo-traps.c \
+	cairo-unicode.c \
+	cairo-wideint.c \
 	$(NULL)
 
 EXPORTS		= cairo.h cairo-features.h
 
 
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
-CSRCS	+= 	cairo_win32_font.c \
-		cairo_win32_surface.c
+CSRCS	+= 	cairo-win32-font.c \
+		cairo-win32-surface.c
 EXPORTS += cairo-win32.h
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))
-CSRCS	+= 	cairo_quartz_surface.c \
-		cairo_atsui_font.c
+CSRCS	+= 	cairo-quartz-surface.c \
+		cairo-atsui-font.c
 EXPORTS += cairo-quartz.h
 endif
 
 
 ifdef BUILD_CAIRO_PDF
-CSRCS	+=	cairo_pdf_surface.c \
-		cairo_png_surface.c \
-		cairo_ps_surface.c
-EXPORTS += cairo-pdf.h
+CSRCS	+=	cairo-pdf-surface.c \
+		cairo-ps-surface.c
+EXPORTS += cairo-ps.h cairo-pdf.h
 endif
 
 
 ifdef MOZ_X11
-CSRCS	+=	cairo_xlib_surface.c \
-		cairo_ft_font.c
+CSRCS	+=	cairo-xlib-surface.c \
+		cairo-ft-font.c
 EXPORTS += cairo-xlib.h
 LOCAL_INCLUDES += $(FT2_CFLAGS)
 endif
 
 ifdef BUILD_CAIRO_GL
-CSRCS	+= 	cairo_glitz_surface.c
+CSRCS	+= 	cairo-glitz-surface.c
 EXPORTS += cairo-glitz.h
 endif
 

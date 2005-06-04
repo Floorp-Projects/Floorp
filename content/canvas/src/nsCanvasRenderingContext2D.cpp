@@ -101,7 +101,7 @@ public:
     }
 
     void Apply(cairo_t *cairo) {
-        cairo_set_pattern(cairo, mPattern);
+        cairo_set_source(cairo, mPattern);
     }
 
     /* nsIDOMCanvasGradient */
@@ -114,11 +114,11 @@ public:
         if (NS_FAILED(rv))
             return PR_FALSE;
 
-        cairo_pattern_add_color_stop (mPattern, (double) offset,
-                                      NS_GET_R(color) / 255.0,
-                                      NS_GET_G(color) / 255.0,
-                                      NS_GET_B(color) / 255.0,
-                                      NS_GET_A(color) / 255.0);
+        cairo_pattern_add_color_stop_rgba (mPattern, (double) offset,
+                                           NS_GET_R(color) / 255.0,
+                                           NS_GET_G(color) / 255.0,
+                                           NS_GET_B(color) / 255.0,
+                                           NS_GET_A(color) / 255.0);
         return NS_OK;
     }
 
@@ -161,7 +161,7 @@ public:
     }
 
     void Apply(cairo_t *cairo) {
-        cairo_set_pattern(cairo, mPattern);
+        cairo_set_source(cairo, mPattern);
     }
 
     NS_DECL_ISUPPORTS
@@ -245,7 +245,8 @@ protected:
     PRUint32 mSaveCount;
     cairo_t *mCairo;
     cairo_surface_t *mSurface;
-    char *mSurfaceData;
+    unsigned char *mSurfaceData;
+    float mGlobalAlpha;
 
     // style handling
     PRInt32 mLastStyle;
@@ -308,6 +309,7 @@ nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
     mColorStyles[STYLE_SHADOW] = NS_RGBA(0,0,0,0);
 
     mLastStyle = (PRInt32) -1;
+    mGlobalAlpha = 1.0f;
 
     DirtyAllStyles();
 }
@@ -502,10 +504,9 @@ nsCanvasRenderingContext2D::SetCairoColor(nscolor c)
     double r = double(NS_GET_R(c) / 255.0);
     double g = double(NS_GET_G(c) / 255.0);
     double b = double(NS_GET_B(c) / 255.0);
-    double a = double(NS_GET_A(c) / 255.0);
+    double a = double(NS_GET_A(c) / 255.0) * mGlobalAlpha;
 
-    cairo_set_rgb_color (mCairo, r, g, b);
-    cairo_set_alpha (mCairo, a);
+    cairo_set_source_rgba (mCairo, r, g, b, a);
 }
 
 NS_IMETHODIMP
@@ -517,14 +518,13 @@ nsCanvasRenderingContext2D::SetTargetImageFrame(gfxIImageFrame* aImageFrame)
     aImageFrame->GetWidth(&mWidth);
     aImageFrame->GetHeight(&mHeight);
 
-    mCairo = cairo_create();
-    mSurfaceData = (char *) nsMemory::Alloc(mWidth * mHeight * 4);
-    mSurface = cairo_surface_create_for_image (mSurfaceData,
-                                               CAIRO_FORMAT_ARGB32,
-                                               mWidth,
-                                               mHeight,
-                                               mWidth * 4);
-    cairo_set_target_surface (mCairo, mSurface);
+    mSurfaceData = (unsigned char *) nsMemory::Alloc(mWidth * mHeight * 4);
+    mSurface = cairo_image_surface_create_for_data (mSurfaceData,
+                                                    CAIRO_FORMAT_ARGB32,
+                                                    mWidth,
+                                                    mHeight,
+                                                    mWidth * 4);
+    mCairo = cairo_create(mSurface);
 
     // set up the initial canvas defaults
     cairo_set_line_width (mCairo, 1.0);
@@ -731,17 +731,16 @@ nsCanvasRenderingContext2D::Translate(float x, float y)
 //
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetGlobalAlpha(float globalAlpha)
+nsCanvasRenderingContext2D::SetGlobalAlpha(float aGlobalAlpha)
 {
-    cairo_set_alpha (mCairo, globalAlpha);
+    mGlobalAlpha = aGlobalAlpha;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetGlobalAlpha(float *globalAlpha)
+nsCanvasRenderingContext2D::GetGlobalAlpha(float *aGlobalAlpha)
 {
-    double d = cairo_current_alpha(mCairo);
-    *globalAlpha = (float) d;
+    *aGlobalAlpha = mGlobalAlpha;
     return NS_OK;
 }
 
@@ -863,7 +862,6 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLImageElement *image,
                                           nsIDOMCanvasPattern **_retval)
 {
     nsresult rv;
-    cairo_matrix_t *mat = cairo_matrix_create();
 
     if (repeat.IsEmpty() || repeat.EqualsLiteral("repeat")) {
         // XX
@@ -874,7 +872,6 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLImageElement *image,
     } else if (repeat.EqualsLiteral("no-repeat")) {
         // XX
     } else {
-        cairo_matrix_destroy(mat);
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
@@ -961,11 +958,9 @@ nsCanvasRenderingContext2D::GetShadowColor(nsAString& color)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
 {
-    DirtyAllStyles();
-
     cairo_save (mCairo);
     cairo_set_operator (mCairo, CAIRO_OPERATOR_CLEAR);
-    cairo_set_alpha (mCairo, 0.0);
+    cairo_set_source_rgba (mCairo, 0.0, 0.0, 0.0, 0.0);
     cairo_new_path (mCairo);
     cairo_rectangle (mCairo, x, y, w, h);
     cairo_fill (mCairo);
@@ -1106,7 +1101,7 @@ nsCanvasRenderingContext2D::SetLineWidth(float width)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetLineWidth(float *width)
 {
-    double d = cairo_current_line_width(mCairo);
+    double d = cairo_get_line_width(mCairo);
     *width = (float) d;
     return NS_OK;
 }
@@ -1132,7 +1127,7 @@ nsCanvasRenderingContext2D::SetLineCap(const nsAString& capstyle)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetLineCap(nsAString& capstyle)
 {
-    cairo_line_cap_t cap = cairo_current_line_cap(mCairo);
+    cairo_line_cap_t cap = cairo_get_line_cap(mCairo);
 
     if (cap == CAIRO_LINE_CAP_BUTT)
         capstyle.AssignLiteral("butt");
@@ -1167,7 +1162,7 @@ nsCanvasRenderingContext2D::SetLineJoin(const nsAString& joinstyle)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetLineJoin(nsAString& joinstyle)
 {
-    cairo_line_join_t j = cairo_current_line_join(mCairo);
+    cairo_line_join_t j = cairo_get_line_join(mCairo);
 
     if (j == CAIRO_LINE_JOIN_ROUND)
         joinstyle.AssignLiteral("round");
@@ -1191,7 +1186,7 @@ nsCanvasRenderingContext2D::SetMiterLimit(float miter)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetMiterLimit(float *miter)
 {
-    double d = cairo_current_miter_limit(mCairo);
+    double d = cairo_get_miter_limit(mCairo);
     *miter = (float) d;
     return NS_OK;
 }
@@ -1298,20 +1293,21 @@ nsCanvasRenderingContext2D::DrawImage()
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
 
-    cairo_save(mCairo);
+    cairo_matrix_t surfMat;
+    cairo_matrix_init_translate(&surfMat, sx, sy);
+    cairo_matrix_scale(&surfMat, sw/dw, sh/dh);
+    cairo_pattern_t* pat = cairo_pattern_create_for_surface(imgSurf);
+    cairo_pattern_set_matrix(pat, &surfMat);
 
+    cairo_save(mCairo);
+    cairo_set_source(mCairo, pat);
     cairo_translate(mCairo, dx, dy);
     cairo_rectangle(mCairo, 0, 0, dw, dh);
     cairo_clip(mCairo);
-    // XX this is, I think, a bug in the version of cairo we're using
-    // that goes away once we move to the 0.5 snapshot.  The scale
-    // is affecting this translate, because the translate isn't
-    // taking effect until show_surface() is called.
-    cairo_translate(mCairo, -sx * (dw/sw), -sy * (dh/sh));
-    cairo_scale(mCairo, dw/sw, dh/sh);
-    cairo_show_surface(mCairo, imgSurf, imgWidth, imgHeight);
-
+    cairo_paint_with_alpha(mCairo, mGlobalAlpha);
     cairo_restore(mCairo);
+
+    cairo_pattern_destroy(pat);
 
     nsMemory::Free(imgData);
     cairo_surface_destroy(imgSurf);
@@ -1333,17 +1329,17 @@ nsCanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op)
     // because the operators there have names that exactly
     // match the canvas ops.
     CANVAS_OP_TO_CAIRO_OP("clear", CLEAR)
-    else CANVAS_OP_TO_CAIRO_OP("copy", SRC)
-    else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-atop", ATOP_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-in", IN_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-out", OUT_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-over", OVER_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("copy", SOURCE)
+    else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)  // XXX
+    else CANVAS_OP_TO_CAIRO_OP("destination-atop", DEST_ATOP)
+    else CANVAS_OP_TO_CAIRO_OP("destination-in", DEST_IN)
+    else CANVAS_OP_TO_CAIRO_OP("destination-out", DEST_OUT)
+    else CANVAS_OP_TO_CAIRO_OP("destination-over", DEST_OVER)
     else CANVAS_OP_TO_CAIRO_OP("lighter", ADD)
     else CANVAS_OP_TO_CAIRO_OP("source-atop", ATOP)
     else CANVAS_OP_TO_CAIRO_OP("source-in", IN)
     else CANVAS_OP_TO_CAIRO_OP("source-out", OUT)
-    else CANVAS_OP_TO_CAIRO_OP("source-over", SRC)
+    else CANVAS_OP_TO_CAIRO_OP("source-over", SOURCE)
     else CANVAS_OP_TO_CAIRO_OP("xor", XOR)
     else CANVAS_OP_TO_CAIRO_OP("over", OVER)
     else return NS_ERROR_NOT_IMPLEMENTED;
@@ -1357,7 +1353,7 @@ nsCanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetGlobalCompositeOperation(nsAString& op)
 {
-    cairo_operator_t cairo_op = cairo_current_operator(mCairo);
+    cairo_operator_t cairo_op = cairo_get_operator(mCairo);
 
 #define CANVAS_OP_TO_CAIRO_OP(cvsop,cairoop) \
     if (cairo_op == CAIRO_OPERATOR_##cairoop) \
@@ -1368,17 +1364,17 @@ nsCanvasRenderingContext2D::GetGlobalCompositeOperation(nsAString& op)
     // because the operators there have names that exactly
     // match the canvas ops.
     CANVAS_OP_TO_CAIRO_OP("clear", CLEAR)
-    else CANVAS_OP_TO_CAIRO_OP("copy", SRC)
-    else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-atop", ATOP_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-in", IN_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-out", OUT_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-over", OVER_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("copy", SOURCE)
+    else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)  // XXX
+    else CANVAS_OP_TO_CAIRO_OP("destination-atop", DEST_ATOP)
+    else CANVAS_OP_TO_CAIRO_OP("destination-in", DEST_IN)
+    else CANVAS_OP_TO_CAIRO_OP("destination-out", DEST_OUT)
+    else CANVAS_OP_TO_CAIRO_OP("destination-over", DEST_OVER)
     else CANVAS_OP_TO_CAIRO_OP("lighter", ADD)
     else CANVAS_OP_TO_CAIRO_OP("source-atop", ATOP)
     else CANVAS_OP_TO_CAIRO_OP("source-in", IN)
     else CANVAS_OP_TO_CAIRO_OP("source-out", OUT)
-    else CANVAS_OP_TO_CAIRO_OP("source-over", SRC)
+    else CANVAS_OP_TO_CAIRO_OP("source-over", SOURCE)
     else CANVAS_OP_TO_CAIRO_OP("xor", XOR)
     else CANVAS_OP_TO_CAIRO_OP("over", OVER)
     else return NS_ERROR_FAILURE;
@@ -1740,7 +1736,7 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
     }
 
     cairo_surface_t *imgSurf =
-        cairo_image_surface_create_for_data((char *)cairoImgData, CAIRO_FORMAT_ARGB32,
+        cairo_image_surface_create_for_data(cairoImgData, CAIRO_FORMAT_ARGB32,
                                             imgWidth, imgHeight, imgWidth*4);
 
     *aCairoSurface = imgSurf;
@@ -1893,7 +1889,7 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
     }
 
     cairo_surface_t *tmpSurf =
-        cairo_image_surface_create_for_data((char*)tmpBuf.get(),
+        cairo_image_surface_create_for_data(tmpBuf.get(),
                                             CAIRO_FORMAT_ARGB32, aSurfaceSize.width, aSurfaceSize.height,
                                             aSurfaceSize.width*4);
     if (!tmpSurf) {
@@ -1929,7 +1925,8 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
         }
     }
 
-    cairo_show_surface(mCairo, tmpSurf, aSurfaceSize.width, aSurfaceSize.height);
+    cairo_set_source_surface(mCairo, tmpSurf, aSurfaceSize.width, aSurfaceSize.height);
+    cairo_paint_with_alpha(mCairo, mGlobalAlpha);
     
     cairo_surface_destroy(tmpSurf);
     aBlackSurface->Unlock();

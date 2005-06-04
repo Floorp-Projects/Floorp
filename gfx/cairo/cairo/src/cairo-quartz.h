@@ -39,17 +39,11 @@
 
 #include <cairo.h>
 
-#ifdef  CAIRO_HAS_QUARTZ_SURFACE
+#ifdef CAIRO_HAS_QUARTZ_SURFACE
 
 #include <Carbon/Carbon.h>
 
 CAIRO_BEGIN_DECLS
-
-void
-cairo_set_target_quartz_context(   	cairo_t		*cr,
-					CGContextRef    context,
-					int		width,
-					int		height);
 
 cairo_surface_t *
 cairo_quartz_surface_create (   CGContextRef    context,
@@ -58,6 +52,9 @@ cairo_quartz_surface_create (   CGContextRef    context,
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_QUARTZ_SURFACE */
+# error Cairo was not compiled with support for the quartz backend
 #endif /* CAIRO_HAS_QUARTZ_SURFACE */
+
 #endif /* CAIRO_QUARTZ_H */
 

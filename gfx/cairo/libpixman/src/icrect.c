@@ -146,8 +146,6 @@ pixman_color_rects (pixman_image_t	 *dst,
 				 clipPict->alphaOrigin.x,
 				 clipPict->alphaOrigin.y);
     }
-    if (clipPict->clientClipType != CT_NONE)
-	pixman_region_intersect (clip, clip, clipPict->clientClip);
 
     if (xoff || yoff)
     {
