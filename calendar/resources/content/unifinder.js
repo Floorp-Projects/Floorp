@@ -472,7 +472,7 @@ var treeView =
             return getEventStatusString(calendarEvent);
 
         case "unifinder-search-results-tree-col-calendarname":
-          return calendarEvent.parent.name;
+          return calendarEvent.calendar.name;
 
          default: 
             return false;
