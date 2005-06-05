@@ -17,12 +17,13 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 package calypso.util;
 
 import java.lang.Runtime;
+import java.util.logging.*;
 
 /**
  * A utility class to help track memory usage during development.
@@ -42,6 +43,8 @@ import java.lang.Runtime;
 public class MemoryMonitor
 {
   Runtime fSystem;
+
+  private static final Logger logger = Logger.getLogger("calypso.util.MemoryMonitor");
 
   long    fFreeAtStart,
     fFreeAtEnd,
@@ -70,15 +73,10 @@ public class MemoryMonitor
   {
     finishMonitor ();
 
-    System.out.println();
-
     if (fUserString != null)
-      System.out.println (fUserString);
+      logger.info(fUserString);
 
-    System.out.println ("    Starting Free: " + fFreeAtStart);
-    System.out.println ("      Ending Free: " + fFreeAtEnd);
-    System.out.println ("     Memory Delta: " + (fFreeAtStart - fFreeAtEnd));
-    System.out.println ("Garbage Generated: " + fGarbageGenerated);
+    logger.info("    Starting Free: " + fFreeAtStart + "\n      Ending Free: " + fFreeAtEnd + "\n     Memory Delta: " + (fFreeAtStart - fFreeAtEnd) + "\nGarbage Generated: " + fGarbageGenerated);
   }
 
   protected void freeUpMemory ()

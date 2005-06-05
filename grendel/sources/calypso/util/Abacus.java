@@ -17,16 +17,19 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 package calypso.util;
+
+import java.util.logging.*;
 
 /** A class for counting in a variety of bases.
  */
 
 public class Abacus
 {
+  private static final Logger logger = Logger.getLogger("calypso.util.Abacus");
 
 /************************************************
  *    Formatting Strings
@@ -261,11 +264,11 @@ public class Abacus
 
   public static void PadPrint(String aString, int aWidth)
   {
-    System.out.print(aString);
+    logger.info(aString);
     int padCount=aWidth-aString.length();
     if(padCount>0)
       for(int i=0;i<padCount;i++)
-        System.out.print(" ");
+        logger.info(" ");
   }
 
 
@@ -273,9 +276,7 @@ public class Abacus
   {
     int index=0;
 
-    System.out.println(" ");
-    System.out.println("Value   Hex       Roman     Series    Binary            Spoken    ");
-    System.out.println("-----------------------------------------------------------------------------");
+    logger.info(" \nValue   Hex       Roman     Series    Binary            Spoken    \n-----------------------------------------------------------------------------");
     for(index=1002;index<1205;index++)
     {
       PadPrint(index,8);
@@ -284,7 +285,7 @@ public class Abacus
       PadPrint(Abacus.getSeriesString(index,"ABCD",0,4),10);
       PadPrint(Abacus.getBinaryString(index),16);
       PadPrint(Abacus.getSpokenString(index),10);
-      System.out.println("");
+      logger.info("");
     }
   }
 

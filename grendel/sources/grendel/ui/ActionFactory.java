@@ -79,65 +79,65 @@ public class ActionFactory {
 
   static Runnable fComposeMessageThread = new DummyComposeMessageThread();
 
-  static public ExitAction GetExitAction() {
+  public static ExitAction GetExitAction() {
     return fExitAction;
   }
 
-  static public NewMailAction GetNewMailAction() {
+  public static NewMailAction GetNewMailAction() {
     return fNewMailAction;
   }
 
-  static public ComposeMessageAction GetComposeMessageAction() {
+  public static ComposeMessageAction GetComposeMessageAction() {
     return fComposeMessageAction;
   }
 
-  static public void SetComposeMessageThread(Runnable aThread) {
+  public static void SetComposeMessageThread(Runnable aThread) {
     fComposeMessageThread = aThread;
   }
 
-  static public void setIdent(int aIdent) {
+  public static void setIdent(int aIdent) {
     System.out.println("setIdent "+aIdent);
     fIdent = aIdent;
   }
 
-  static public int getIdent() {
+  public static int getIdent() {
     System.out.println("getIdent "+fIdent);
     return fIdent;
   }
 
-  static public PreferencesAction GetPreferencesAction() {
+  public static PreferencesAction GetPreferencesAction() {
     return fPrefsAction;
   }
 
-  static public SearchAction GetSearchAction() {
+  public static SearchAction GetSearchAction() {
     return fSearchAction;
   }
 
-  static public RunFiltersAction GetRunFiltersAction() {
+  public static RunFiltersAction GetRunFiltersAction() {
     return fRunFiltersAction;
   }
 
-  static public ShowTooltipsAction GetShowTooltipsAction() {
+  public static ShowTooltipsAction GetShowTooltipsAction() {
     return fShowTooltipsAction;
   }
 
-  static public RunIdentityPrefsAction GetRunIdentityPrefsAction() {
+  public static RunIdentityPrefsAction GetRunIdentityPrefsAction() {
     return fRunIdentityPrefsAction;
   }
 
-  static public RunServerPrefsAction GetRunServerPrefsAction() {
+  public static RunServerPrefsAction GetRunServerPrefsAction() {
     return fRunServerPrefsAction;
   }
 
-  static public RunGeneralPrefsAction GetRunGeneralPrefsAction() {
+  public static RunGeneralPrefsAction GetRunGeneralPrefsAction() {
     return fRunGeneralPrefsAction;
   }
 
-  static public RunUIPrefsAction GetRunUIPrefsAction() {
+  public static RunUIPrefsAction GetRunUIPrefsAction() {
     return fRunUIPrefsAction;
   }
 
-  static public ShowAddressBookAction GetShowAddressBookAction() {
+  public static ShowAddressBookAction GetShowAddressBookAction() {
     return fShowAddressBookAction;
   }
 

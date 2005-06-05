@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  *  ParseBerkeleyFolder.java
  *  Created: Terry Weissman <terry@netscape.com>,  8 Aug 1997.
