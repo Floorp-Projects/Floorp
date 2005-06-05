@@ -1652,8 +1652,8 @@ libs::
 	cd $(FINAL_TARGET) && tar $(TAR_CREATE_FLAGS) - * | (cd "../../bin/extensions/$(INSTALL_EXTENSION_ID)" && tar -xf -)
 
 install::
-	$(NSINSTALL) -D "$(DESTDIR)$(mozappdir)/$(INSTALL_EXTENSION_ID)"
-	cd $(FINAL_TARGET) && tar $(TAR_CREATE_FLAGS) - * | (cd "$(DESTDIR)$(mozappdir)/extensions/$(INSTALL_EXTENSION_ID) && tar -xf -)
+	$(NSINSTALL) -D "$(DESTDIR)$(mozappdir)/extensions/$(INSTALL_EXTENSION_ID)"
+	cd $(FINAL_TARGET) && tar $(TAR_CREATE_FLAGS) - * | (cd "$(DESTDIR)$(mozappdir)/extensions/$(INSTALL_EXTENSION_ID)" && tar -xf -)
 endif
 
 ifneq (,$(filter flat symlink,$(MOZ_CHROME_FILE_FORMAT)))
