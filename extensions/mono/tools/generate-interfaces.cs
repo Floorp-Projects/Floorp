@@ -12,7 +12,8 @@ public class Generate
     PropertyBuilder lastProperty = null;
     const PropertyAttributes PROPERTY_ATTRS = PropertyAttributes.None;
     const MethodAttributes METHOD_ATTRS = MethodAttributes.Public |
-            MethodAttributes.Abstract | MethodAttributes.Virtual;
+            MethodAttributes.Abstract | MethodAttributes.Virtual |
+            MethodAttributes.NewSlot;
 
     Type FixupInterfaceType(TypeInfo.ParamDescriptor desc)
     {
@@ -87,9 +88,12 @@ public class Generate
         else
             parentType = EmitOneInterface(parentName);
 
+        Console.WriteLine ("Emitting: " + name + " : " + parentType);
+
         TypeBuilder ifaceTb = mb.DefineType("Mozilla.XPCOM.Interfaces." + name,
                                             TypeAttributes.Public | 
-                                            TypeAttributes.Interface,
+                                            TypeAttributes.Interface |
+                                            TypeAttributes.Abstract,
                                             parentType);
         ifaceTable.Add(name, ifaceTb);
 

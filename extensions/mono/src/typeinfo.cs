@@ -17,10 +17,10 @@ public struct XPTType
     public byte   padding;
     public UInt16 arg3;
 
-    static implicit operator XPTType(TypeInfo.TypeDescriptor td)
+    static public implicit operator XPTType(TypeInfo.TypeDescriptor td)
     {
         XPTType t = new XPTType();
-        t.prefix = (byte)(td.flags | td.tag);
+        t.prefix = (byte) ((byte)td.flags | (byte)td.tag);
         t.arg1 = td.arg1;
         t.arg2 = td.arg2;
         t.arg3 = td.arg3;
@@ -91,7 +91,7 @@ public class TypeInfo
             return false;
         }
 
-        static implicit operator TypeDescriptor(XPTType t)
+        static public implicit operator TypeDescriptor(XPTType t)
         {
             TypeDescriptor td = new TypeInfo.TypeDescriptor();
             td.flags = (TypeFlags)(t.prefix & XPTType.FlagMask);

@@ -206,7 +206,7 @@ class ProxyGenerator
                 EmitPrepareArgStore(i);
                 ilg.Emit(OpCodes.Stind_I4);
                 break;
-            case TypeTag.NSIDPtr:
+            case TypeTag.NSIdPtr:
                 EmitPrepareArgStore(i);
                 ilg.Emit(OpCodes.Stind_I4); // XXX 64-bitness
                 break;
