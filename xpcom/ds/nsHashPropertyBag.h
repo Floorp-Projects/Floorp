@@ -44,6 +44,7 @@
 #include "nsCOMArray.h"
 #include "nsVoidArray.h"
 
+#include "nsIVariant.h"
 #include "nsIWritablePropertyBag.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsInterfaceHashtable.h"
