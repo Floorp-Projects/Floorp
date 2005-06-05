@@ -39,27 +39,9 @@
 
     <target name="build" description="Compiles Grendel.">
       <mkdir dir="dist"/>
-      <unzip dest="dist" overwrite="false">
-        <fileset dir="extlib">
-          <include name="**/*.jar"/>
-        </fileset>
-      </unzip>
+      <antcall target="unzipResources"/>
 
-      <copy todir="dist">
-        <fileset dir="sources/grendel">
-          <include name="**/*.gif"/>
-          <include name="**/*.png"/>
-          <include name="**/*.jpg"/>
-          <include name="**/*.tmpl"/>
-          <include name="**/*.xml"/>
-          <include name="**/*.dtd"/>
-        </fileset>
-      </copy>
-      <copy todir="dist">
-        <fileset dir="sources">
-          <include name="**/*.properties"/>
-        </fileset>
-      </copy>
+      <echo message="-- Compiling WikiRadio"/>
       <javac srcdir="." destdir="dist"
             optimize="false"
             debug="true"
@@ -67,6 +49,14 @@
     </target>
 
     <target name="unzipResources">
+      <echo message="-- Unzipping jar files..."/>
+      <unzip dest="dist" overwrite="false">
+        <fileset dir="extlib">
+          <include name="**/*.jar"/>
+        </fileset>
+      </unzip>
+
+      <echo message="-- Copying resource files..."/>
       <copy todir="dist">
         <fileset dir="sources/grendel">
           <include name="**/*.gif"/>
@@ -85,6 +75,7 @@
     </target>
 
     <target name="makeJar" description="Pumps all the libs into one big JAR for distribution. Grendel must be built before running this.">
+      <echo message="-- Creating Grendel JAR file"/>
       <jar destfile="grendel.jar">
         <fileset dir="dist">
           <include name="**/*.*"/>
@@ -94,16 +85,18 @@
         </manifest>
       </jar>
 
+      <echo message="-- Creating grendel.zip"/>
       <zip destfile="dist/grendel.zip">
-        <fileset dir="dist">
-          <include name="images/*.gif"/>
-          <include name="xml/*.xml"/>
-          <include name="dtd/*.dtd"/>
-          <include name="templates/*.tmpl"/>
-          <include name="images/*.jpg"/>
+        <fileset dir="sources/grendel">
+          <include name="**/*.gif"/>
+          <include name="**/*.png"/>
+          <include name="**/*.jpg"/>
+          <include name="**/*.tmpl"/>
+          <include name="**/*.xml"/>
+          <include name="**/*.dtd"/>
         </fileset>
-        <fileset dir=".">
-          <include name="*.jar"/>
+        <fileset dir="sources">
+          <include name="**/*.properties"/>
         </fileset>
       </zip>
 
