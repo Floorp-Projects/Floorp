@@ -178,7 +178,7 @@ DayView.prototype.refreshEvents = function()
    
    // Divide events into all day and other events
    for( i = 0; i < dayEventList.length; i++ ) {
-      if ( dayEventList[i].event.allDay == true )
+      if ( dayEventList[i].event.isAllDay == true )
          allDayEvents.push(dayEventList[i]);
       else
          normalEvents.push(dayEventList[i]);

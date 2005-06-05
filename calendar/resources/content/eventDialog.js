@@ -484,8 +484,7 @@ function onOKCommand()
         event.startDate = jsDateToDateTime(getElementValue("start-datetime"));
         event.endDate = jsDateToDateTime(getElementValue("end-datetime"));
         var endDate = getElementValue("end-datetime");
-        if (event.isAllDay)
-        {
+        if (event.isAllDay) {
             // displayed all day end date is inclusive date, convert to exclusive end date.
             endDate.setDate(endDate.getDate() + 1); 
         }

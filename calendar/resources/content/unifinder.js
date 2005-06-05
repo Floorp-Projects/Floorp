@@ -448,19 +448,16 @@ var treeView =
             var eventStartDate = calendarEvent.startDate.jsDate;
             // XXX reimplement
             //var eventStartDate = getCurrentNextOrPreviousRecurrence( calendarEvent );
-            return formatUnifinderEventDateTime(eventStartDate, calendarEvent.allDay);
+            return formatUnifinderEventDateTime(eventStartDate, calendarEvent.isAllDay);
          
          case "unifinder-search-results-tree-col-enddate":
             var eventEndDate = calendarEvent.endDate.jsDate;
             // XXX reimplement
             //var eventEndDate = getCurrentNextOrPreviousRecurrence( calendarEvent );
-            var eventLength = calendarEvent.endDate.jsDate.getTime() - calendarEvent.startDate.jsDate.getTime();
-            var actualEndDate = eventEndDate.getTime() + eventLength;
-            eventEndDate = new Date( actualEndDate );
-            if (calendarEvent.allDay) // display enddate is ical enddate - 1
+            if (calendarEvent.isAllDay) // display enddate is ical enddate - 1
                //user-enddate is ical-enddate - 1
                eventEndDate.setDate( eventEndDate.getDate() - 1 );
-            return formatUnifinderEventDateTime(eventEndDate, calendarEvent.allDay);         
+            return formatUnifinderEventDateTime(eventEndDate, calendarEvent.isAllDay);         
 
          case "unifinder-search-results-tree-col-categories":
             return( calendarEvent.categories );
