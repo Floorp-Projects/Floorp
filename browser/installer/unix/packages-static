@@ -307,6 +307,7 @@ bin/extensions/inspector@mozilla.org/defaults/preferences/inspector.js
 [abe]
 
 [talkback]
+bin/README.txt,bin/readme.txt
 bin/components/libqfaservices.so
 bin/components/qfaservices.xpt
 bin/components/talkback/*

@@ -293,6 +293,7 @@ bin\extensions\inspector@mozilla.org\chrome\icons\default\winInspectorMain.ico
 [abe]
 
 [talkback]
+bin\README.txt,bin\readme.txt
 bin\components\qfaservices.dll
 bin\components\qfaservices.xpt
 bin\components\BrandRes.dll
