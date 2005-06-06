@@ -124,8 +124,6 @@
 <!ENTITY themes.label                 "Themes">
 <!ENTITY themes.tooltip               "Change the Theme">
 <!ENTITY themes.accesskey             "T">
-<!ENTITY updateMenu.label             "Check for Updates...">
-<!ENTITY updateMenu.accesskey         "U">
 
 <!ENTITY javaConsoleCmd.label         "Java Console">
 <!ENTITY javaConsoleCmd.accesskey     "J">
