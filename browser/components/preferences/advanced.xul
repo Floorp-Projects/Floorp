@@ -145,9 +145,8 @@
                           label="&enableAutoInstall.label;"
                           accesskey="&enableAutoInstall.accesskey;"
                           preference="app.update.autoInstallEnabled"
-                          onpreferenceread="return gAdvancedPane.updateAutoInstallUI();"
-                          hidden="true"/>
-                <radiogroup id="autoInstallMode" preference="app.update.autoInstallMode" hidden="true">
+                          onpreferenceread="return gAdvancedPane.updateAutoInstallUI();"/>
+                <radiogroup id="autoInstallMode" preference="app.update.autoInstallMode">
                   <grid class="indent">
                     <columns>
                       <column/>
