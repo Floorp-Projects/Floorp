@@ -117,7 +117,7 @@ calAlarmServiceClassInfo = {
         var ifaces = [
             Components.interfaces.nsISupports,
             Components.interfaces.calIAlarmService,
-            Components.interfaces.calIObserver
+            Components.interfaces.nsIObserver
         ];
         count.value = ifaces.length;
         return ifaces;
