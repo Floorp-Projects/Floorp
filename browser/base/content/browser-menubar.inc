@@ -418,10 +418,6 @@
               <menuitem accesskey="&pageInfoCmd.accesskey;" label="&pageInfoCmd.label;"   
                         key="key_viewInfo" command="View:PageInfo"/>
 #endif
-              <menuseparator id="updateSeparator"/>
-              <menuitem id="updateItem" label="&updateMenu.label;"
-                        accesskey="&updateMenu.accesskey;"
-                        oncommand="checkForUpdates();"/>
               <menuseparator id="sanitizeSeparator"/>
               <menuitem id="sanitizeItem" 
                         accesskey="&sanitizeCmd.accesskey;" label="&sanitizeCmd.label;"
