@@ -64,6 +64,10 @@ nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
 
 nsDOMAttribute::~nsDOMAttribute()
 {
+  nsIDocument *doc = GetOwnerDoc();
+  if (doc)
+    doc->PropertyTable()->DeleteAllPropertiesFor(this);
+
   NS_IF_RELEASE(mChild);
   NS_IF_RELEASE(mChildList);
 }
@@ -98,7 +102,7 @@ nsDOMAttribute::SetMap(nsDOMAttributeMap *aMap)
 }
 
 nsIContent*
-nsDOMAttribute::GetContent()
+nsDOMAttribute::GetContent() const
 {
   return GetContentInternal();
 }
@@ -677,6 +681,49 @@ nsDOMAttribute::LookupNamespaceURI(const nsAString& aNamespacePrefix,
   if (node)
     rv = node->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
   return rv;
+}
+
+void*
+nsDOMAttribute::GetProperty(nsIAtom* aPropertyName, nsresult* aStatus)
+{
+  nsIDocument *doc = GetOwnerDoc();
+  if (!doc)
+    return nsnull;
+
+  return doc->PropertyTable()->GetProperty(this, aPropertyName, aStatus);
+}
+
+nsresult
+nsDOMAttribute::SetProperty(nsIAtom            *aPropertyName,
+                            void               *aValue,
+                            NSPropertyDtorFunc  aDtor)
+{
+  nsIDocument *doc = GetOwnerDoc();
+  if (!doc)
+    return NS_ERROR_FAILURE;
+
+  return doc->PropertyTable()->SetProperty(this, aPropertyName, aValue, aDtor,
+                                           nsnull);
+}
+
+nsresult
+nsDOMAttribute::DeleteProperty(nsIAtom* aPropertyName)
+{
+  nsIDocument *doc = GetOwnerDoc();
+  if (!doc)
+    return nsnull;
+
+  return doc->PropertyTable()->DeleteProperty(this, aPropertyName);
+}
+
+void*
+nsDOMAttribute::UnsetProperty(nsIAtom* aPropertyName, nsresult* aStatus)
+{
+  nsIDocument *doc = GetOwnerDoc();
+  if (!doc)
+    return nsnull;
+
+  return doc->PropertyTable()->UnsetProperty(this, aPropertyName, aStatus);
 }
 
 //----------------------------------------------------------------------

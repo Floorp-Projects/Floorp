@@ -42,12 +42,15 @@
 
 #include "nsISupports.h"
 #include "nsINodeInfo.h"
+#include "nsIContent.h"
+#include "nsPropertyTable.h"
 
-class nsIContent;
+class nsIAtom;
 class nsDOMAttributeMap;
+
 #define NS_IATTRIBUTE_IID  \
- {0x9a9066ec, 0x35ba, 0x4244,        \
- {0x8f, 0xb9, 0x49, 0x73, 0x90, 0xb0, 0x3f, 0x66}}
+ {0x4940cc50, 0x2ede, 0x4883,        \
+ {0x95, 0xf5, 0x53, 0xdb, 0x50, 0x50, 0x13, 0x3e}}
 
 class nsIAttribute : public nsISupports
 {
@@ -66,7 +69,29 @@ public:
     return mNodeInfo;
   }
 
-  virtual nsIContent* GetContent() = 0;
+  virtual nsIContent* GetContent() const = 0;
+
+  nsIDocument *GetOwnerDoc() const
+  {
+    nsIContent* content = GetContent();
+    return content ? content->GetOwnerDoc() : mNodeInfo->GetDocument();
+  }
+
+  /*
+   * Methods for manipulating content node properties.  For documentation on
+   * properties, see nsPropertyTable.h.
+   */
+  virtual void* GetProperty(nsIAtom  *aPropertyName,
+                            nsresult *aStatus = nsnull) = 0;
+
+  virtual nsresult SetProperty(nsIAtom                   *aPropertyName,
+                               void                      *aValue,
+                               NSPropertyDtorFunc         aDtor = nsnull) = 0;
+
+  virtual nsresult DeleteProperty(nsIAtom *aPropertyName) = 0;
+
+  virtual void* UnsetProperty(nsIAtom  *aPropertyName,
+                              nsresult *aStatus = nsnull) = 0;
 
 protected:
   nsIAttribute(nsDOMAttributeMap *aAttrMap, nsINodeInfo *aNodeInfo)

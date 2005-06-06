@@ -91,7 +91,17 @@ public:
 
   // nsIAttribute interface
   void SetMap(nsDOMAttributeMap *aMap);
-  nsIContent *GetContent();
+  nsIContent *GetContent() const;
+
+  // Property functions, see nsPropertyTable.h
+  virtual void* GetProperty(nsIAtom  *aPropertyName,
+                            nsresult *aStatus = nsnull);
+  virtual nsresult SetProperty(nsIAtom            *aPropertyName,
+                               void               *aValue,
+                               NSPropertyDtorFunc  aDtor);
+  virtual nsresult DeleteProperty(nsIAtom  *aPropertyName);
+  virtual void*    UnsetProperty(nsIAtom *aPropertyName,
+                                 nsresult *aStatus = nsnull);
 
 private:
   nsString mValue;
@@ -100,7 +110,7 @@ private:
   nsIDOMText* mChild;
   nsAttributeChildList* mChildList;
 
-  nsIContent *GetContentInternal()
+  nsIContent *GetContentInternal() const
   {
     return mAttrMap ? mAttrMap->GetContent() : nsnull;
   }
