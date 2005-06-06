@@ -68,38 +68,41 @@
           label="&helpMenu.label;"
           accesskey="&helpMenu.accesskey;">
 #endif
-        <menupopup id="menu_HelpPopup">
-            <menuitem oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
+      <menupopup id="menu_HelpPopup">
+        <menuitem oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
 #ifdef XP_MACOSX
-                      label="&helpContentsMac.label;"
-                      key="key_openHelpMacFrontend"/>
+                  label="&helpContentsMac.label;"
+                  key="key_openHelpMacFrontend"/>
 #else
-                      label="&helpContents.label;"
-                      accesskey="&helpContents.accesskey;"
-                      key="key_openHelp"/>
+                  label="&helpContents.label;"
+                  accesskey="&helpContents.accesskey;"
+                  key="key_openHelp"/>
 #endif
 # Show IE Users menu item on Windows only
 #ifdef XP_WIN
-            <menuitem label="&helpForIEUsers.label;"
-                      accesskey="&helpForIEUsers.accesskey;"
-                      oncommand="openHelp('ieusers', 'chrome://browser/locale/help/help.rdf');"/>
+        <menuitem label="&helpForIEUsers.label;"
+                  accesskey="&helpForIEUsers.accesskey;"
+                  oncommand="openHelp('ieusers', 'chrome://browser/locale/help/help.rdf');"/>
 #endif
-            <menuseparator/>
-            <menuitem accesskey="&promote.accesskey;"
-                      label="&promote.label;"
-                      oncommand="openUILink(getUILink('promote'), event, false, true);"
-                      onclick="checkForMiddleClick(this, event);"/>
+        <menuitem accesskey="&helpReleaseNotes.accesskey;"
+                  label="&helpReleaseNotes.label;"
+                  oncommand="openReleaseNotes(event)"
+                  onclick="checkForMiddleClick(this, event);"/>
 #ifndef XP_MACOSX
-            <menuseparator id="aboutSeparator"/>
+        <menuseparator id="aboutSeparator"/>
 #endif
-            <menuitem id="aboutName"
-                      accesskey="&aboutCmd.accesskey;"
-                      label="&aboutCmd.label;"
+        <menuitem id="checkForUpdates"
+                  accesskey="&updateCmd.accesskey;"
+                  label="&updateCmd.label;"
+                  oncommand="checkForUpdates();"/>
+        <menuitem id="aboutName"
+                  accesskey="&aboutCmd.accesskey;"
+                  label="&aboutCmd.label;"
 #ifdef XP_MACOSX
-                      hidden="true"
+                  hidden="true"
 #endif
-                      oncommand="openAboutDialog();"/>
-        </menupopup>
+                  oncommand="openAboutDialog();"/>
+      </menupopup>
     </menu>
 
     <keyset id="baseMenuKeyset">

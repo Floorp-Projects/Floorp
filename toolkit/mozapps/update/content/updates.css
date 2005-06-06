@@ -1,0 +1,135 @@
+.wizard-header {
+  display: none;
+}
+
+.wizard-buttons {
+  display: none;
+}
+
+.wizard-page-box {
+  margin: 0px;
+}
+
+.content {
+  margin: 10px 44px 10px 44px;
+}
+
+link {
+  -moz-binding: url("chrome://mozapps/content/update/updates.xml#link");
+  -moz-user-focus: normal;
+  color: blue;
+  border: 1px solid transparent;
+}
+
+.linkLabel {
+  cursor: pointer;
+  text-decoration: underline !important;
+}
+
+link:hover:active {
+  color: red;
+}
+
+link:focus {
+  border: 1px dotted black;
+}
+
+#updateName {
+  font-weight: bold;
+  font-size: x-large;
+}
+
+#updateType[type=major] {
+  font-weight: bold;
+  color: #C00000;
+}
+
+#updateType[type=minor] {
+  font-weight: bold;
+  color: #FF0000;
+}
+
+#updateForMoreInfo {
+  margin-left: 5px;
+}
+
+#updateImage {
+  margin-right: 5px;
+}
+
+#update-info {
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: ThreeDFace ThreeDHighlight;
+  -moz-appearance: listbox;
+  margin: 10px;
+  background-color: #FFFFFF;
+}
+
+#update-info-inner {
+  background-color: InfoBackground;
+  color: InfoText;
+  display: -moz-box;
+  padding: 7px 5px 7px 7px;
+}
+
+#updateAvailable {
+  margin: 5px;
+}
+
+#alertImage {
+  list-style-image: url("chrome://global/skin/icons/Warning.png");
+  margin-right: 5px;
+}
+
+.action-button-box {
+  margin: 7px;
+}
+
+#download-button {
+  font-weight: bold;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+#updatesView {
+  -moz-binding: url("chrome://mozapps/skin/shared/richview.xml#richview");
+  overflow: auto;
+}
+
+update {
+  -moz-binding: url("chrome://mozapps/content/update/updates.xml#update");
+  -moz-box-orient: vertical;
+  background-color: #FFFFFF;
+  border-bottom: 1px dotted #C0C0C0;
+  padding: 5px;
+}
+
+update[state="downloading"] {
+  -moz-binding: url("chrome://mozapps/content/update/updates.xml#update-downloading");
+}
+
+#updatesView[showcompletedupdates=true] > update {
+  display: none
+}
+
+#incompatibleWarning {
+  margin-right: 50px;
+}
+
+#downloadingIntro {
+  margin: 10px 10px 0px 10px;
+}
+
+#downloadingFooter {
+  margin: 0px 4px 7px 4px;
+}
+
+.update-item-name {
+  font-weight: bold;
+}
+
+.update-item-pause {
+  font-size: smaller;
+}

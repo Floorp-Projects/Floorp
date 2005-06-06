@@ -5785,11 +5785,3 @@ missingPluginInstaller.prototype.observe = function(aSubject, aTopic, aData){
 }
 var gMissingPluginInstaller = new missingPluginInstaller();
 
-function checkForUpdates() {
-  var updates = Components.classes["@mozilla.org/updates/update-service;1"]
-                          .getService(Components.interfaces.nsIUpdateService);
-  updates.checkForUpdates([], 0, Components.interfaces.nsIUpdateItem.TYPE_ANY, 
-                          Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER,
-                          window);
-}
-

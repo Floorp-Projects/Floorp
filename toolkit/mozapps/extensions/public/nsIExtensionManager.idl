@@ -194,7 +194,7 @@ interface nsIExtensionDownloadListener : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface, 
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(cb90632b-4838-44c3-991c-0964e918af4b)]
+[scriptable, uuid(344c6fd1-ed48-4c84-a472-abdec533d1e2)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -284,7 +284,7 @@ interface nsIExtensionManager : nsISupports
    *          true if it should only find newer target application compatibility
    *          information for the currently installed version.
    */
-  void update([array, size_is(itemCount)] in nsIUpdateItem items,
+   void update([array, size_is(itemCount)] in nsIUpdateItem items,
                in unsigned long itemCount, 
                in unsigned long versionUpdateOnly);
 
@@ -310,6 +310,25 @@ interface nsIExtensionManager : nsISupports
    */
   void getItemList(in unsigned long type, out unsigned long itemCount,
                    [retval, array, size_is(itemCount)] out nsIUpdateItem items);
+
+  /**
+   * Retrieves a list of nsIUpdateItems of items that are incompatible
+   * with the supplied parameters.
+   * @param   id
+   *          The id of the application to check compatibility against
+   * @param   version
+   *          The version of the application to check compatibility against
+   * @param   type
+   *          The type of item to return
+   * @param   countRef
+   *          The XPCJS reference to the number of items returned.
+   * @returns An array of incompatible nsIUpdateItems.
+   */
+  void getIncompatibleItemList(in AString id, 
+                               in AString version,
+                               in unsigned long type,
+                               out unsigned long itemCount,
+                               [retval, array, size_is(itemCount)] out nsIUpdateItem items);
 
   /**
    * The Extensions Datasource

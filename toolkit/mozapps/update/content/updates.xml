@@ -1,265 +1,11 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE bindings SYSTEM "chrome://mozapps/locale/update/update.dtd">
+<!DOCTYPE bindings SYSTEM "chrome://mozapps/locale/update/updates.dtd">
 
 <bindings id="updatesBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
-
-  <binding id="updateStatusbarNotification" 
-           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image">
-    <resources>
-      <stylesheet src="chrome://mozapps/skin/update/update.css"/>
-    </resources>
-    <implementation implements="nsIObserver">
-      <destructor>
-      <![CDATA[
-        var os = Components.classes["@mozilla.org/observer-service;1"]
-                           .getService(Components.interfaces.nsIObserverService);
-        os.removeObserver(this, "Update:Ended");       
-        os.removeObserver(this, "Update:Extension:Item-Ended");       
-        os.removeObserver(this, "Update:App:Ended");       
-      ]]>  
-      </destructor>
-
-      <method name="init">
-        <body>
-        <![CDATA[
-          var os = Components.classes["@mozilla.org/observer-service;1"]
-                             .getService(Components.interfaces.nsIObserverService);
-          os.addObserver(this, "Update:Ended", false);
-          os.addObserver(this, "Update:Extension:Item-Ended", false);
-          os.addObserver(this, "Update:App:Ended", false);
-          
-          this.refreshData();
-        ]]>
-        </body>
-      </method>
-      
-      <method name="observe">
-        <parameter name="aSubject"/>
-        <parameter name="aTopic"/>
-        <parameter name="aData"/>
-        <body>
-        <![CDATA[
-          switch (aTopic) {
-          case "Update:Extension:Item-Ended":
-          case "Update:App:Ended":
-          case "Update:Ended":
-            this.refreshData();
-          }
-        ]]>
-        </body>
-      </method>
-      
-      <method name="refreshData">
-        <body>
-        <![CDATA[
-          var updates = Components.classes["@mozilla.org/updates/update-service;1"]
-                                  .getService(Components.interfaces.nsIUpdateService);
-          this.severity     = updates.updateSeverity;
-          this.updateCount  = updates.updateCount;
-          
-          var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                              .getService(Components.interfaces.nsIStringBundleService);
-          var updateStrings = sbs.createBundle("chrome://mozapps/locale/update/update.properties");
-          var key;
-          if (this.updateCount > 0)
-            key = "updatesAvailableTooltip-" + this.severity;
-          else
-            key = "updatesCheckForUpdatesTooltip";
-          var tooltip = updateStrings.GetStringFromName(key);
-          this.setAttribute("tooltiptext", tooltip);
-        ]]>
-        </body>
-      </method>
-
-      <method name="showUpdates">
-        <body>
-        <![CDATA[
-          var updates = Components.classes["@mozilla.org/updates/update-service;1"]
-                                  .getService(Components.interfaces.nsIUpdateService);
-          updates.checkForUpdates([], 0, Components.interfaces.nsIUpdateItem.TYPE_ANY, 
-                                  Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER,
-                                  window);
-        ]]>
-        </body>
-      </method>
-      
-      <property name="severity"     onset="this.setAttribute('severity', val); return val;"
-                                    onget="return this.getAttribute('severity');"/>
-      <property name="updateCount"  onset="this.setAttribute('updateCount', val); return val;"
-                                    onget="return this.getAttribute('updateCount');"/>
-    </implementation>
-    <handlers>
-      <handler event="command">
-      <![CDATA[
-        this.showUpdates();
-      ]]>
-      </handler>
-    </handlers>
-  </binding>
-  
-  <binding id="updateCategorySet" extends="chrome://global/content/bindings/radio.xml#radiogroup">
-    <implementation>
-      <method name="computeSizes">
-        <body>
-        <![CDATA[
-          var kids = this._getRadioChildren();
-          for (var i = 0; i < kids.length; ++i)
-            kids[i].expandedHeight = kids[i]._content.boxObject.height;
-          this.removeAttribute("_uninitialized");
-        ]]>
-        </body>
-      </method>
-      <field name="lastSelectedItem">null</field>
-    </implementation>
-  </binding>
-  
-  <binding id="updateCategory" extends="chrome://global/content/bindings/radio.xml#radio">
-    <resources>
-      <stylesheet src="chrome://global/skin/radio.css"/>
-      <stylesheet src="chrome://mozapps/skin/update/update.css"/>
-    </resources>
-    <content>
-      <xul:hbox class="updateCategoryBox" xbl:inherits="selected,checked,disabled">
-#ifdef MOZ_WIDGET_GTK2
-        <xul:hbox class="radio-spacer-box">
-#endif
-        <xul:hbox class="radio-check-box1" xbl:inherits="selected,checked,disabled">
-          <xul:hbox class="radio-check-box2" flex="1">
-            <xul:image class="radio-check" xbl:inherits="selected,checked,disabled"/>
-          </xul:hbox>
-        </xul:hbox>
-#ifdef MOZ_WIDGET_GTK2
-        </xul:hbox>
-#endif
-        <xul:image class="updateCategoryIcon" xbl:inherits="src"/>
-        <xul:label class="updateCategoryLabel" xbl:inherits="xbl:text=label,accesskey,crop,selected" flex="1"/>
-      </xul:hbox>
-      <xul:vbox flex="1" class="updateCategoryContent">
-        <children/>
-      </xul:vbox>
-    </content>  
-    <implementation implements="nsITimerCallback">
-      <property name="expandedHeight" 
-                onget="return this.getAttribute('expandedHeight');"
-                onset="this.setAttribute('expandedHeight', val); return val;"/>
-      
-      <method name="notify">
-        <parameter name="aTimer"/>
-        <body>
-        <![CDATA[
-            var newHeight;
-            if (this._destinationSize == 0) {
-              if (this._content.boxObject.height > 0) {
-                newHeight = this._content.boxObject.height - this._animateIncrement;
-                newHeight = newHeight < 0 ? 0 : newHeight;
-                this._content.style.height = newHeight + "px";
-                this._timer.initWithCallback(this, this._animateDelay, 
-                                             Components.interfaces.nsITimer.TYPE_ONE_SHOT);
-              }
-              else {
-                this._timer.cancel();
-                this._content.style.visibility = "collapse";
-              }
-            }
-            else {
-              if (this._content.boxObject.height <= this._destinationSize) {
-                newHeight = this._content.boxObject.height + this._animateIncrement;
-                newHeight = newHeight > this.expandedHeight ? this.expandedHeight : newHeight;
-                this._content.style.height = newHeight + "px";
-                this._timer.initWithCallback(this, this._animateDelay, 
-                                             Components.interfaces.nsITimer.TYPE_ONE_SHOT);
-              }
-              else
-                this._timer.cancel();
-            }
-        ]]>
-        </body>
-      </method>
-      
-      <method name="_setUpTimer">
-        <parameter name="aSelected"/>
-        <body>
-        <![CDATA[
-          if (!this._timer) 
-            this._timer = Components.classes["@mozilla.org/timer;1"]
-                                    .createInstance(Components.interfaces.nsITimer);
-          else
-            this._timer.cancel();
-          
-          this._content.style.visibility = "visible";
-
-          this._destinationSize = aSelected ? this.expandedHeight : 0;
-          this._timer.initWithCallback(this, this._animateDelay, 
-                                       Components.interfaces.nsITimer.TYPE_ONE_SHOT);
-        ]]>
-        </body>
-      </method>
-      
-      <field name="_content">
-        document.getAnonymousElementByAttribute(this, "class", "updateCategoryContent");
-      </field>
-      <field name="_timer">null</field>
-      <field name="_animateDelay">50</field>
-      <field name="_animateIncrement">25</field>
-      <field name="_destinationSize">0</field>
-    </implementation>
-    <handlers>
-      <handler event="RadioStateChange">
-      <![CDATA[
-      /*
-        this._content.style.height = "0px";
-        
-        if (this.radioGroup.lastSelectedItem)
-          this.radioGroup.lastSelectedItem._setUpTimer(false);
-        this.radioGroup.lastSelectedItem = this;
-        
-        this._setUpTimer(true);*/
-      ]]>
-      </handler>
-    </handlers>
-  </binding>
-
-  <binding id="updateItem" extends="chrome://global/content/bindings/checkbox.xml#checkbox">
-    <content>
-#ifdef MOZ_WIDGET_GTK2
-      <xul:hbox class="checkbox-spacer-box">
-#endif
-      <xul:image class="checkbox-check" xbl:inherits="checked,disabled"/>
-#ifdef MOZ_WIDGET_GTK2
-      </xul:hbox>
-      <xul:hbox class="checkbox-label-center-box" flex="1">
-#endif
-      <xul:hbox class="checkbox-label-box" flex="1">
-        <xul:label class="checkbox-label foundLabel" xbl:inherits="xbl:text=label,accesskey" flex="1"/>
-        <xul:label class="checkbox-label" value="&from.label;"/>
-        <xul:label class="checkbox-label foundSource" xbl:inherits="xbl:text=source,infoURL,accesskey,crop"/>
-      </xul:hbox>
-#ifdef MOZ_WIDGET_GTK2
-      </xul:hbox>
-#endif
-    </content>
-    <implementation>
-      <property name="type" 
-                onget="return this.getAttribute('type');"
-                onset="this.setAttribute('type', val); return val;"/>
-      <property name="source" 
-                onget="return this.getAttribute('source');"
-                onset="this.setAttribute('source', val); return val;"/>
-      <property name="URL" 
-                onget="return this.getAttribute('URL');"
-                onset="this.setAttribute('URL', val); return val;"/>
-      <property name="infoURL" 
-                onget="return this.getAttribute('infoURL');"
-                onset="this.setAttribute('infoURL', val); return val;"/>
-      <property name="internalName" 
-                onget="return this.getAttribute('internalName');"
-                onset="this.setAttribute('internalName', val); return val;"/>
-    </implementation>
-  </binding>
 
   <binding id="link" extends="chrome://global/content/bindings/text.xml#text-base">
     <content>
@@ -306,5 +52,39 @@
       </handler>
     </handlers>
   </binding>
+
+  <binding id="update" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/content/update/updates.css"/>
+    </resources>
+    <content>
+      <xul:hbox pack="start">
+        <xul:label class="update-item-name" xbl:inherits="value=name" crop="right" flex="1"/>
+        <xul:link class="update-item-details" xbl:inherits="href=url">&details.link;</xul:link>
+      </xul:hbox>
+      <xul:label class="update-item-status" xbl:inherits="xbl:text=status" flex="1"/>
+    </content>
+  </binding>
+  
+  <binding id="update-downloading" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/content/update/updates.css"/>
+    </resources>
+    <content>
+      <xul:hbox pack="start">
+        <xul:label class="update-item-name" xbl:inherits="value=name" crop="right" flex="1"/>
+        <xul:link class="update-item-details" xbl:inherits="href=url" label="&details.link;"/>
+      </xul:hbox>
+      <xul:progressmeter class="update-item-progress" xbl:inherits="value=progress"/>
+      <xul:hbox align="center">
+        <xul:label class="update-item-status" xbl:inherits="value=status" flex="1" crop="right"/>
+        <xul:button class="update-item-pause" label="&pause.label;" accesskey="&pause.accesskey;"/>
+      </xul:hbox>
+    </content>  
+    <implementation>
+      <field name="eventPrefix">"update-"</field>
+    </implementation>
+  </binding>
+  
 </bindings>
 

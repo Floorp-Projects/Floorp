@@ -1,0 +1,38 @@
+<!ENTITY  updateWizard.title              "Software Update">
+
+<!ENTITY  checking.title                  "Checking for Updates">
+<!ENTITY  checking.label                  "&brandShortName; is now checking for updates...">
+
+<!ENTITY  cancel.label                    "Cancel">
+<!ENTITY  cancel.accesskey                "C">
+
+<!ENTITY  updatesfound.title              "Updates Available">
+
+<!ENTITY  forMoreInfo.label               "For more information, ">
+<!ENTITY  clickHere.label                 "Click Here">
+<!ENTITY  updateAvailable.placeholder     "This is a line of text that should wrap comfortably to two 
+                                           lines in the current language.">
+
+<!ENTITY  incompatible.warning            "This update will cause some of your extensions and/or themes 
+                                           to stop working until they are updated.">
+<!ENTITY  listIncompatible.label          "Show List">
+<!ENTITY  listIncompatible.accesskey      "L">
+
+<!ENTITY  later.label                     "Later">
+<!ENTITY  later.accesskey                 "a">
+<!ENTITY  download.label                  "Download &amp; Install &#0187;">
+<!ENTITY  download.accesskey              "D">
+
+<!ENTITY  upgrade.evangelism              "It is strongly recommended that you upgrade &brandShortName; 
+                                           as soon as possible by clicking Download &amp; Install &#0187;.">
+
+<!ENTITY  downloading.intro               "The following updates are being/have been installed:">
+<!ENTITY  showCompletedUpdates.label      "Show old updates in this list">
+<!ENTITY  showCompletedUpdates.accesskey  "o">
+
+<!ENTITY  details.link                    "Details">
+<!ENTITY  pause.label                     "Pause">
+<!ENTITY  pause.accesskey                 "P">
+<!ENTITY  close.label                     "Close">
+<!ENTITY  close.accesskey                 "C">
+

@@ -27,5 +27,8 @@
 <!ENTITY openHelpMac2.frontendCommandkey   "?">
 <!ENTITY openHelpMac2.frontendModifiers    "accel">
 
-<!ENTITY promote.label            "Promote &brandShortName;">
-<!ENTITY promote.accesskey        "P">
+<!ENTITY helpReleaseNotes.accesskey     "R">
+<!ENTITY helpReleaseNotes.label         "Release Notes">
+<!ENTITY updateCmd.accesskey            "U">
+<!ENTITY updateCmd.label                "Check for Updates...">
+

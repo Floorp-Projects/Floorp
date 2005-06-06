@@ -425,12 +425,28 @@ function openPreferences(paneID)
                "Preferences", features, paneID);
 }
 
-function getUILink(item)
+/**
+ * Opens the release notes page for this version of the application.
+ * @param   event
+ *          The DOM Event that caused this function to be called, used to
+ *          determine where the release notes page should be displayed based
+ *          on modifiers (e.g. Ctrl = new tab)
+ */
+function openReleaseNotes(event)
 {
+  var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                          .getService(Components.interfaces.nsIXULAppInfo);
   var regionBundle = document.getElementById("bundle_browser_region");
-
-  if (item == "promote")
-    return regionBundle.getString("promoteURL");
+  var relnotesURL = regionBundle.getFormattedString("releaseNotesURL", [appInfo.version]);
+  openUILink(relnotesURL, event, false, true);
+}
   
-  return "";
+/**
+ * Opens the update manager and checks for updates to the application.
+ */
+function checkForUpdates()
+{
+  var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
+                           .createInstance(Components.interfaces.nsIUpdatePrompt);
+  prompter.checkForUpdates();  
 }

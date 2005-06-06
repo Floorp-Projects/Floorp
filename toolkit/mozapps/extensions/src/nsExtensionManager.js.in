@@ -132,6 +132,7 @@ const URI_FINALIZE_DIALOG             = "chrome://mozapps/content/extensions/fin
 const URI_EXTENSIONS_PROPERTIES       = "chrome://mozapps/locale/extensions/extensions.properties";
 const URI_BRAND_PROPERTIES            = "chrome://branding/locale/brand.properties";
 const URI_DOWNLOADS_PROPERTIES        = "chrome://mozapps/locale/downloads/downloads.properties";
+const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
 
 const INSTALLERROR_SUCCESS              = 0;
 const INSTALLERROR_INVALID_VERSION      = -1;
@@ -2998,14 +2999,8 @@ ExtensionManager.prototype = {
         // Now disable the items so they won't hurt anything. 
         for (var i = 0; i < items.length; ++i)
           this.disableItem(items[i].id);
-
-        // Check for newer available versions.
-        var updates = Components.classes["@mozilla.org/updates/update-service;1"]
-                                .getService(Components.interfaces.nsIUpdateService);
-        updates.checkForUpdates(items, items.length, nsIUpdateItem.TYPE_ADDON, 
-                                nsIUpdateService.SOURCE_EVENT_MISMATCH,
-                                null);
         
+        this._showMismatchWindow(items);
         needsRestart = true;
       }
     }
@@ -3022,6 +3017,40 @@ ExtensionManager.prototype = {
     gPref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
 
     return needsRestart;
+  },
+
+  /**
+   * Shows the "Incompatible Items Found" UI
+   * @param   items
+   *          An array of items to show in the Mismatch UI
+   */
+  _showMismatchWindow: function(items) {
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var wizard = wm.getMostRecentWindow("Update:Wizard");
+    if (wizard)
+      wizard.focus();
+    else {
+      var ary = Components.classes["@mozilla.org/supports-array;1"]
+                          .createInstance(Components.interfaces.nsISupportsArray);
+      var updateTypes = Components.classes["@mozilla.org/supports-PRUint8;1"]
+                                  .createInstance(Components.interfaces.nsISupportsPRUint8);
+      updateTypes.data = nsIUpdateItem.TYPE_ADDON;
+      ary.AppendElement(updateTypes);
+      var sourceEvent = Components.classes["@mozilla.org/supports-PRUint8;1"]
+                                  .createInstance(Components.interfaces.nsISupportsPRBool);
+      sourceEvent.data = true;
+      ary.AppendElement(sourceEvent);
+      for (var i = 0; i < items.length; ++i)
+        ary.AppendElement(items[i]);
+
+      var features = "chrome,centerscreen,dialog,titlebar,modal";
+      // This *must* be modal so as not to break startup! This code is invoked before
+      // the main event loop is initiated (via checkForMismatches).
+      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                         .getService(Components.interfaces.nsIWindowWatcher);
+      ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, ary);
+    }
   },
   
   /**
@@ -3228,7 +3257,7 @@ ExtensionManager.prototype = {
     }
         
     // Check the target application range specified by the extension metadata.
-    if (!this.datasource.isCompatible(installManifest, gInstallManifestRoot))
+    if (!this.datasource.isCompatible(installManifest, gInstallManifestRoot, undefined))
       installData.error = INSTALLERROR_INCOMPATIBLE_VERSION;
     
     return installData;
@@ -3982,6 +4011,15 @@ ExtensionManager.prototype = {
    */
   getItemList: function(type, countRef) {
     return this.datasource.getItemList(type, countRef);
+  },
+
+  /**  
+   * See nsIExtensionManager.idl
+   */
+  getIncompatibleItemList: function(id, version, type, countRef) {
+    var items = this.datasource.getIncompatibleItemList(id, version, type);
+    countRef.value = items.length;
+    return items;
   },
   
   /**
@@ -4882,16 +4920,24 @@ ExtensionsDataSource.prototype = {
    *          datasource or an Install Manifest.
    * @param   source
    *          The RDF Resource of the item to inspect for compatibility.
-   * @returns true if the item is compatible with this version of the application,
-   *          false, otherwise.
+   * @param   version
+   *          The version of the application we are checking for compatibility
+   *          against. If this parameter is undefined, the version of the running
+   *          application is used.
+   * @returns true if the item is compatible with this version of the 
+   *          application, false, otherwise.
    */
-  isCompatible: function (datasource, source) {
+  isCompatible: function (datasource, source, version) {
     // The Default Theme is always compatible. 
     if (source.EqualsNode(this._defaultTheme))
       return true;
 
     var appVersion = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
                                             gApp.version);
+    if (version === undefined) {
+      version = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
+                                       gApp.version);
+    }              
     var appID = gApp.ID;
     
     var targets = datasource.GetTargets(source, EM_R("targetApplication"), true);
@@ -4905,8 +4951,8 @@ ExtensionsDataSource.prototype = {
       var maxVersion  = stringData(datasource.GetTarget(targetApp, maxVersionRes, true));
       if (id == appID) {
         var versionChecker = getVersionChecker();
-        return ((versionChecker.compare(appVersion, minVersion) >= 0) &&
-                (versionChecker.compare(appVersion, maxVersion) <= 0));
+        return ((versionChecker.compare(version, minVersion) >= 0) &&
+                (versionChecker.compare(version, maxVersion) <= 0));
       }
     }
     return false;
@@ -4917,7 +4963,7 @@ ExtensionsDataSource.prototype = {
    * @param   appID
    *          The ID of the application - XXXben unused?
    * @param   appVersion
-   *          The Version of the application - XXXben - unused?
+   *          The Version of the application to check for incompatibility against.
    * @param   desiredType
    *          The nsIUpdateItem type of items to look for
    * @returns An array of nsIUpdateItems that are incompatible with the application
@@ -4931,7 +4977,7 @@ ExtensionsDataSource.prototype = {
       var item = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
       var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
       var type = this.getItemProperty(id, "type");
-      if (type != -1 && (type & desiredType) && !this.isCompatible(this, item))
+      if (type != -1 && (type & desiredType) && !this.isCompatible(this, item, appVersion))
         items.push(this.getItemForID(id));
     }
     return items;
