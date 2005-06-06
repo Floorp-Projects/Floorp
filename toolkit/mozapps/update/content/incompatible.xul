@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE dialog [
+<!ENTITY % incompatibleDTD SYSTEM "chrome://mozapps/locale/update/incompatible.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%incompatibleDTD;
+%brandDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://mozapps/content/update/updates.css"?>
+
+<dialog id="incompatible"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        style="width: 35em;"
+        buttons="cancel" closebuttonlabel="&closebutton.label;"
+        title="&incompatible.title;"
+        onload="init();">
+
+  <script type="application/x-javascript" 
+          src="chrome://mozapps/content/update/incompatible.js"/>
+          
+  <stringbundle id="updateBundle" 
+                src="chrome://mozapps/locale/update/updates.properties"/>
+  
+  <label>&incompatible.intro;</label>
+  <separator/>
+  <listbox id="incompatibleItems" rows="10"/>
+  <separator/>
+  <label>&incompatible.update;</label>        
+  <separator class="thin"/>
+  <label class="bold">&incompatible.suffix;</label>        
+  <separator/>
+
+</dialog>
+

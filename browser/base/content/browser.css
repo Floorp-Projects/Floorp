@@ -8,10 +8,6 @@ toolbar[printpreview="true"] {
   -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
 }
 
-toolbarbutton[type="updates"] {
-  -moz-binding: url("chrome://mozapps/content/update/updates.xml#updateStatusbarNotification");
-}
-
 #noPreviewAvailable 
 {
   background-color: white !important;

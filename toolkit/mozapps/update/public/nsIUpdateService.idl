@@ -12,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Extension Manager.
+ * The Original Code is the Application Update Service
  *
- * The Initial Developer of the Original Code is Ben Goodger.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Ben Goodger <ben@bengoodger.com>
+ *  Ben Goodger <ben@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,11 +35,151 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// XXXben - document these files
-
 #include "nsISupports.idl"
 
-interface nsIDOMWindowInternal;
+interface nsIRequest;
+interface nsIRequestObserver;
+
+[scriptable, uuid(56863a67-bd69-42de-9f40-583e625b457d)]
+interface nsIUpdatePatch : nsISupports
+{
+  /**
+   *
+   */
+  attribute AString type;
+  /**
+   *
+   */
+  attribute AString url;
+  /**
+   *
+   */
+  attribute AString hashfunction;
+  /**
+   *
+   */
+  attribute AString hashvalue;
+  
+  /**
+   *
+   */
+  attribute unsigned long size;
+};
+
+[scriptable, uuid(bd75a4c6-b813-45b2-a96e-41a429c857c4)]
+interface nsIUpdate : nsISupports
+{
+  /**
+   *
+   */
+  attribute AString type;
+  /**
+   *
+   */
+  attribute AString version;
+  /**
+   *
+   */
+  attribute AString extensionversion;
+  /**
+   *
+   */
+  attribute AString detailsurl;
+
+  /**
+   *
+   */
+  readonly attribute unsigned long patchCount;
+  /**
+   *
+   */
+  nsIUpdatePatch getPatchAt(in unsigned long index);  
+};
+
+[scriptable, uuid(8cbceb6e-8e27-46f2-8808-444c6499f836)]
+interface nsIUpdateCheckListener : nsISupports
+{
+  /**
+   *
+   */
+  void onProgress(in nsIRequest request, 
+                  in unsigned long position,
+                  in unsigned long totalSize);
+
+  /**
+   *
+   */
+  void onCheckComplete([array, size_is(updateCount)] in nsIUpdate updates,
+                       in unsigned long updateCount);
+
+  /**
+   *
+   */
+  void onError();
+};
+
+[scriptable, uuid(22b00276-ec23-4034-a764-395da539b4be)]
+interface nsIUpdatePrompt : nsISupports
+{
+  /**
+   * Shows a user interface that checks for and then displays the available
+   * updates.
+   */
+  void checkForUpdates();
+
+  /**
+   * Show a message advising that a set of updates is available for
+   * download and install.
+   * @param   updates
+   *          An array of available nsIUpdates
+   * @param   updateCount
+   *          The length of |updates|
+   */
+  void showUpdatesAvailable([array, size_is(updateCount)] in nsIUpdate updates,
+                            in unsigned long updateCount);
+};
+
+[scriptable, uuid(877ace25-8bc5-452a-8586-9c1cf2871994)]
+interface nsIUpdateChecker : nsISupports
+{
+  /**
+   *
+   */
+  void stopChecking();
+};
+
+[scriptable, uuid(9849c4bf-5197-4d22-baa8-e3b44a1703d2)]
+interface nsIApplicationUpdateService : nsISupports
+{
+  /**
+   *
+   */
+  nsIUpdateChecker checkForUpdates(in nsIUpdateCheckListener listener);
+
+  /**
+   * Adds a listener that receives progress and state information about the 
+   * update that is currently being downloaded, e.g. to update a user 
+   * interface.
+   * @param   listener
+   *          An object implementing nsIRequestObserver and optionally
+   *          nsIProgressEventSink that is to be notified of state and
+   *          progress information as the update is downloaded.
+   */
+  void addDownloadListener(in nsIRequestObserver listener);
+
+  /**
+   * Removes a listener that is receiving progress and state information
+   * about the update that is currently being downloaded. 
+   * @param   listener
+   *          The listener object to remove.
+   */
+  void removeDownloadListener(in nsIRequestObserver listener);
+
+  /**
+   * 
+   */
+  void downloadUpdate(in nsIUpdate update);
+};
 
 /**
  * An item managed by the Extension or Software Update System. Contains
@@ -111,71 +251,16 @@ interface nsIUpdateItem : nsISupports
   /**
    * Initializes this Item object.
    */
-  void init(in AString aID, in AString aVersion, 
-            in AString aInstallLocationKey, in AString aMinAppVersion, 
-            in AString aMaxAppVersion, in AString aName,
-            in AString aUpdateURL, in AString aIconURL,
-            in AString aUpdateRDF, in long aType);
+  void init(in AString id, in AString version, 
+            in AString installLocationKey, in AString minAppVersion, 
+            in AString maxAppVersion, in AString name,
+            in AString downloadURL, in AString iconURL,
+            in AString updateURL, in long type);
 
   /**
    * Returns a JS Object source representing an nsIUpdateItem.
    */
   readonly attribute AString objectSource;
-};
-
-[scriptable, uuid(24aee3ca-a274-4247-bd3b-d0acbb5a98aa)]
-interface nsIAppUpdateInfoItem : nsISupports
-{
-  readonly attribute AString internalName;
-  readonly attribute AString name;
-  readonly attribute AString URL;
-  readonly attribute AString infoURL;
-  readonly attribute AString description;
-};
-
-[scriptable, uuid(2daab124-9bc7-4c35-bb7b-0fecdea03ce8)]
-interface nsIAppUpdateInfo : nsISupports
-{
-  readonly attribute AString updateVersion;
-  readonly attribute AString updateDisplayVersion;
-  readonly attribute AString updateInfoURL;
-
-  void getCollection(in AString aCollectionName, out unsigned long aItemCount,
-                     [retval, array, size_is(aItemCount)] out nsIAppUpdateInfoItem aItems);
-};
-
-[scriptable, uuid(c8a2339e-770a-417d-ab9c-efde1f23ba24)]
-interface nsIUpdateService : nsISupports
-{
-  void watchForUpdates();
-
-  const unsigned short SOURCE_EVENT_USER        = 0x01;
-  const unsigned short SOURCE_EVENT_BACKGROUND  = 0x02;
-  const unsigned short SOURCE_EVENT_MISMATCH    = 0x04;
-
-  void checkForUpdates([array, size_is(aItemCount)] in nsIUpdateItem aItems,
-                       in unsigned long aItemCount,
-                       in unsigned short aUpdateTypes, 
-                       in unsigned short aSourceEvent,
-                       in nsIDOMWindowInternal aParentWindow);
-  void checkForUpdatesInternal([array, size_is(aItemCount)] in nsIUpdateItem aItems,
-                               in unsigned long aItemCount,
-                               in unsigned short aUpdateTypes, 
-                               in unsigned short aSourceEvent);
-
-  readonly attribute long updateCount;
-  readonly attribute unsigned short updateSeverity;
-
-  // these are per-session settings
-  attribute boolean appUpdatesAvailable;
-  attribute long extensionUpdatesAvailable;
-
-  readonly attribute nsIAppUpdateInfo newestVersion;
-  readonly attribute nsIAppUpdateInfo currentVersion;
-
-  const unsigned short SEVERITY_HIGH    = 2;
-  const unsigned short SEVERITY_MEDIUM  = 1;
-  const unsigned short SEVERITY_LOW     = 0;
 };
 
 [scriptable, uuid(22d35700-5765-42e1-914b-a0da7c911a8c)]
