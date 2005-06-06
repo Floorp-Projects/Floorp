@@ -1008,7 +1008,11 @@ calStorageCalendar.prototype = {
         item.startDate = newDateTime(row.event_start, row.event_start_tz);
         item.endDate = newDateTime(row.event_end, row.event_end_tz);
         item.stampTime = newDateTime(row.event_stamp, "UTC");
-        item.isAllDay = ((row.flags & CAL_ITEM_FLAG_EVENT_ALLDAY) != 0);
+        if ((row.flags & CAL_ITEM_FLAG_EVENT_ALLDAY) != 0) {
+            item.isAllDay = true;
+            item.startDate.isDate = true;
+            item.endDate.isDate = true;
+        }
 
         return item;
     },
