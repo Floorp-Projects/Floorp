@@ -4103,11 +4103,11 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
       if (aPos->mDirection == eDirNext)
       {
         aPos->mPreferLeft = (PRBool)!(aPos->mPreferLeft);//drift to other side
-#ifdef IBMBIDI
-        if (lineIsRTL)
-          aPos->mAmount = eSelectNoAmount;
-#endif
       }
+#ifdef IBMBIDI
+      if (lineIsRTL)
+        aPos->mAmount = eSelectNoAmount;
+#endif
     }
 
   }
