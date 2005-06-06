@@ -536,7 +536,7 @@ function flashFindBar()
     clearInterval(gFlashFindBarTimeout);
     findToolbar.removeAttribute("flash");
     gFlashFindBarCount = 6;
-    return true;
+    return;
   }
  
   findToolbar.setAttribute("flash", (gFlashFindBarCount % 2 == 0) ? "false" : "true");
@@ -560,8 +560,10 @@ function onFindCmd()
 function onFindAgainCmd()
 {
   var findString = getBrowser().findString;
-  if (!findString)
-    return onFindCmd();
+  if (!findString) {
+    onFindCmd();
+    return;
+  }
 
   var res = findNext();
   if (res == Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND) {
@@ -579,8 +581,10 @@ function onFindAgainCmd()
 function onFindPreviousCmd()
 {
   var findString = getBrowser().findString;
-  if (!findString)
-    return onFindCmd();
+  if (!findString) {
+    onFindCmd();
+    return;
+  }
  
   var res = findPrevious();
   if (res == Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND) {
