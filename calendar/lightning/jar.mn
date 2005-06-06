@@ -7,8 +7,8 @@ lightning.jar:
   content/lightning/agenda-tree.js			(content/agenda-tree.js)
   content/lightning/lightning-standalone.xul		(content/lightning-standalone.xul)
   content/lightning/messenger-overlay-preferences.xul	(content/messenger-overlay-preferences.xul)
-  content/lightning/lightning-prefs.xul			(content/lightning-prefs.xul)
-  content/lightning/lightning-prefs.js			(content/lightning-prefs.js)
+  content/lightning/lightning-preferences.xul		(content/lightning-preferences.xul)
+  content/lightning/lightning-preferences.js		(content/lightning-preferences.js)
   content/lightning/messenger-overlay-toolbar.xul	(content/messenger-overlay-toolbar.xul)
 
 en-US.jar:

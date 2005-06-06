@@ -37,21 +37,44 @@
 
 var gLightningPane = {
     init: function() {
+        dump("init called\n");
         var tzListBox = document.getElementById("timezone-listbox");
         var icsService = Components.classes["@mozilla.org/calendar/ics-service;1"].createInstance(Components.interfaces.calIICSService);
         var timezones = icsService.timezoneIds;
-        
+
+        prefValue = document.getElementById("calendar.timezone.local").value;
         while (timezones.hasMore()) {
             var tzid = timezones.getNext();
-            var item = document.createElement('listitem');
-            item.setAttribute("label", tzid);
-            tzListBox.appendChild(item);
+            var listItem = tzListBox.appendItem(tzid, tzid);
+            if (tzid == prefValue) {
+                tzListBox.selectItem(listItem);
+                tzListBox.scrollToIndex(tzListBox.getIndexOfItem(listItem));
+            }
         }
     },
 
     getTimezoneResult: function() {
+        dump("looking for timezone\n");
         var tzListBox = document.getElementById("timezone-listbox");
-        if (tzListBox.selectedItems.length > 0)
-            return tzListBox.selectedItems[0].getAttribute("label");
+        if (tzListBox.selectedItems.length > 0) {
+            var value = tzListBox.selectedItems[0].getAttribute("label");
+            dump("value: " + value + "\n");
+            return value;
+        }
+        return undefined;
+    },
+    setTimezone: function() {
+        prefValue = document.getElementById("calendar.timezone.local").value;
+
+        var tzListBox = document.getElementById("timezone-listbox");
+        var children = tzListBox.childNodes;
+        for (var i = 0; i < children.length; i++) {
+            var label = children[i];
+            if (label.getAttribute("value") == prefValue) {
+                dump("selecting: " + label.getAttribute("value") + "\n");
+                tzListBox.selectItem(label);
+                return;
+            }
+        }
     },
 }

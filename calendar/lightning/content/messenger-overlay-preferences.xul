@@ -4,7 +4,7 @@
 
 <prefwindow id="MailPreferences">
   <prefpane id="paneLightning" label="Lightning"
-            src="chrome://lightning/content/lightning-prefs.xul"/>
+            src="chrome://lightning/content/lightning-preferences.xul"/>
 </prefwindow>
 
 </overlay>

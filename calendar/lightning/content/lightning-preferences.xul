@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+
+<overlay id="LightningPaneOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <prefpane id="paneLightning" onpaneload="gLightningPane.init()">
+    <script type="application/x-javascript" src="chrome://lightning/content/lightning-prefs.js"/>
+
+    <preferences>
+      <preference id="calendar.alarms.playsound" name="calendar.alarms.playsound" type="bool"/>
+      <preference id="calendar.alarms.playfile" name="calendar.alarms.playfile" type="string"/>
+      <preference id="calendar.alarms.defaultsnoozelength" name="calendar.alarms.defaultsnoozelength" type="int"/>
+      <preference id="calendar.event.defaultstarthour" name="calendar.event.defaultstarthour" type="int"/>
+      <preference id="calendar.event.defaultendhour" name="calendar.event.defaultendhour" type="int"/>
+      <preference id="calendar.timezone.local" name="calendar.timezone.local" type="string"/>
+    </preferences>
+
+
+    <tabbox id="privacyPrefs" flex="1" onselect="">
+      <tabs>
+        <tab label="Alarms"/>
+        <tab label="Week View"/>
+        <tab label="Timezone"/>
+      </tabs>
+      <tabpanels flex="1">
+
+        <!-- alarms -->
+        <tabpanel orient="vertical">
+          <grid flex="1">
+            <columns>
+              <column/>
+              <column flex="1"/>
+            </columns>
+
+            <rows>
+              <row align="center">
+                <checkbox label="Play sound" preference="calendar.alarms.playsound"/>
+<!--                <filewidget flex="1" preference="calendar.alarms.playfile" preference-editable="true"/> -->
+                <spacer/>
+              </row>
+              <row align="center">
+                <label value="Default snooze time"/>
+                <hbox><textbox preference="calendar.alarms.defaultsnoozelength"/><label value="minutes"/><spacer flex="1"/></hbox>
+              </row>
+            </rows>
+          </grid>
+        </tabpanel>
+
+        <!-- week view -->
+        <tabpanel orient="vertical">
+          <grid flex="1">
+            <columns>
+              <column/>
+              <column flex="1"/>
+            </columns>
+
+            <rows>
+              <row align="center">
+                <label value="Start Hour"/>
+                <textbox preference="calendar.event.defaultstarthour"/>
+              </row>
+              <row align="center">
+                <label value="End Hour"/>
+                <textbox preference="calendar.event.defaultendhour"/>
+              </row>
+            </rows>
+          </grid>
+        </tabpanel>
+
+        <!-- timezones -->
+        <tabpanel orient="vertical">
+          <label value="Default timezone"/>
+          <listbox id="timezone-listbox" preference="calendar.timezone.local"
+                   onselect="document.getElementById('paneLightning').userChangedValue(event.target);"
+                   onpreferencewrite="return gLightningPane.getTimezoneResult();"
+                   onpreferenceread="gLightningPane.setTimezone();"/>
+        </tabpanel>
+      </tabpanels>
+    </tabbox>
+  </prefpane>
+
+</overlay>
