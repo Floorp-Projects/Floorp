@@ -56,14 +56,11 @@ pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager-extensions");
 // compared to this value.  A trailing "+" indicates the post-release trunk.
 pref("app.extensions.version", "1.0+");
 
-pref("update.app.enabled", true);               // Whether or not app updates are enabled
+// Whether or not app updates are enabled
+pref("update.app.enabled", true);
 pref("update.app.url", "chrome://mozapps/locale/update/update.properties");
-pref("update.app.updatesAvailable", false);
-pref("update.app.updateVersion", "");
-pref("update.app.updateDescription", "");
-pref("update.app.updateURL", "");
+
 pref("update.extensions.enabled", true);
-pref("update.extensions.wsdl", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
 // Developers can set this to |true| if they are constantly changing files in their 
@@ -76,15 +73,21 @@ pref("extensions.logging.enabled", false);
 
 // App-specific update preferences
 pref("app.update.enabled", true);               // Whether or not app updates are enabled
-pref("app.update.autoUpdateEnabled", true);     // Whether or not background app updates 
-                                                // are enabled
+
+// Whether or not automated background app updates are enabled.
+pref("app.update.autoUpdateEnabled", true);
+// If automatic download is enabled, whether or not the Update system should 
+// automatically install the downloaded updates or just download them and prompt
+// the user to install.
+pref("app.update.autoInstallMode", 0);
+
 pref("app.update.url", "chrome://mozapps/locale/update/update.properties");
 pref("app.update.updatesAvailable", false);
-pref("app.update.interval", 86400000);          // Check for updates to Firefox every day
-pref("app.update.lastUpdateDate", 0);           // UTC offset when last App update was 
-                                                // performed. 
-pref("app.update.performed", false);            // Whether or not an update has been 
-                                                // performed this session. 
+// Check for updates to Firefox every day
+pref("app.update.interval", 86400000);
+// UTC offset when last App update was performed.
+pref("app.update.lastUpdateDate", 0);
+
 // Symmetric (can be overridden by individual extensions) update preferences.
 // e.g.
 //  extensions.{GUID}.update.enabled
