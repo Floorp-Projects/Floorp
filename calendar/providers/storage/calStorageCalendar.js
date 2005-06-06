@@ -208,16 +208,16 @@ function getCalendarManager()
 
 function calStorageCalendar() {
     this.wrappedJSObject = this;
+    this.mObservers = new Array();
+    this.mItemCache = new Array();
 }
 
 calStorageCalendar.prototype = {
     //
     // private members
     //
-    mObservers: Array(),
     mDB: null,
     mDBTwo: null,
-    mItemCache: Array(),
     mCalId: 0,
 
     //
