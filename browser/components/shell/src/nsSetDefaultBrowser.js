@@ -65,7 +65,7 @@ nsSetDefaultBrowser.prototype = {
   },
 
   helpText : "  -setDefaultBrowser   Set this app as the default browser.\n"
-};
+}
 
 // This Component's module and factory implementation.
 
