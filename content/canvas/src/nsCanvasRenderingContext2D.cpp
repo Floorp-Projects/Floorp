@@ -1760,10 +1760,24 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
     if (!ssm)
         return NS_ERROR_FAILURE;
+
+    PRBool isTrusted = PR_FALSE;
     PRBool isChrome = PR_FALSE;
-    ssm->SubjectPrincipalIsSystem(&isChrome);
-    if (!isChrome)
-        return NS_ERROR_FAILURE;
+    PRBool hasCap = PR_FALSE;
+
+    // The secman really should handle UniversalXPConnect case, since that
+    // should include UniversalBrowserRead... doesn't right now, though.
+    if ((NS_SUCCEEDED(ssm->SubjectPrincipalIsSystem(&isChrome)) && isChrome) ||
+        (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalBrowserRead", &hasCap)) && hasCap) ||
+        (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &hasCap)) && hasCap))
+    {
+        isTrusted = PR_TRUE;
+    }
+
+    if (!isTrusted) {
+        // not permitted to use DrawWindow
+        return NS_ERROR_DOM_SECURITY_ERR;
+    }
 
     nsCOMPtr<nsPresContext> presContext;
     nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
@@ -1797,7 +1811,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     r.ScaleRoundOut(p2t);
 
     nsCOMPtr<nsIRenderingContext> blackCtx;
-    rv = vm->RenderOffscreen(view, r, !isChrome,
+    rv = vm->RenderOffscreen(view, r, PR_FALSE,
                              NS_ComposeColors(NS_RGB(0, 0, 0), bgColor),
                              getter_AddRefs(blackCtx));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1820,7 +1834,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     // But we need to compose our given background color onto black/white
     // to get the real background to use.
     nsCOMPtr<nsIRenderingContext> whiteCtx;
-    rv = vm->RenderOffscreen(view, r, !isChrome,
+    rv = vm->RenderOffscreen(view, r, PR_FALSE,
                              NS_ComposeColors(NS_RGB(255, 255, 255), bgColor),
                              getter_AddRefs(whiteCtx));
     if (NS_SUCCEEDED(rv)) {
@@ -1925,7 +1939,7 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
         }
     }
 
-    cairo_set_source_surface(mCairo, tmpSurf, aSurfaceSize.width, aSurfaceSize.height);
+    cairo_set_source_surface(mCairo, tmpSurf, 0, 0);
     cairo_paint_with_alpha(mCairo, mGlobalAlpha);
     
     cairo_surface_destroy(tmpSurf);
