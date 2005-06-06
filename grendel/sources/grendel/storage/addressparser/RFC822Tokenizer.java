@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Eric Bina <ebina@netscape.com>, 30 Oct 1997.
  */
@@ -75,57 +75,52 @@ class RFC822Tokenizer
     t_char = this.sstr.currentChar();
 
     // This while loop is the main body of the parser.
-    while ((parse_state != AT_END)&&(this.sstr.currentIndex() < len))
-    {
+    while ((parse_state != AT_END)&&(this.sstr.currentIndex() < len)) {
       int indx1, indx2;
 
-      // Big if-else (should be a switch)
-      // to switch on parser state.
-      if (parse_state == IN_NOTHING)
-      {
+      switch(parse_state) {
+      case IN_NOTHING:
         parse_state = skipNothing();
-      }
-      else if (parse_state == IN_ATOM)
-      {
+        break;
+      case IN_ATOM:
         indx1 = this.sstr.currentIndex();
         parse_state = skipAtom();
         indx2 = this.sstr.currentIndex();
         addAtom(str, indx1, indx2);
-      }
-      else if (parse_state == IN_COMMENT)
-      {
+        break;
+      case IN_COMMENT:
         indx1 = this.sstr.currentIndex();
         t_char = this.sstr.nextChar();
         parse_state = skipComment();
         t_char = this.sstr.nextChar();
         indx2 = this.sstr.currentIndex();
         addComment(str, indx1, indx2);
-      }
-      else if (parse_state == IN_DOMAIN_LITERAL)
-      {
+        break;
+      case IN_DOMAIN_LITERAL:
         indx1 = this.sstr.currentIndex();
         t_char = this.sstr.nextChar();
         parse_state = skipDomainLiteral();
         t_char = this.sstr.nextChar();
         indx2 = this.sstr.currentIndex();
         addDomainLiteral(str, indx1, indx2);
-      }
-      else if (parse_state == IN_QUOTED_TEXT)
-      {
+        break;
+      case IN_QUOTED_TEXT:
         indx1 = this.sstr.currentIndex();
         t_char = this.sstr.nextChar();
         parse_state = skipQuotedText();
         t_char = this.sstr.nextChar();
         indx2 = this.sstr.currentIndex();
         addQuotedText(str, indx1, indx2);
-      }
-      else if (parse_state == IN_SPECIAL)
-      {
+        break;
+      case IN_SPECIAL:
         indx1 = this.sstr.currentIndex();
         t_char = this.sstr.nextChar();
         indx2 = this.sstr.currentIndex();
         addSpecial(str, indx1, indx2);
         parse_state = IN_NOTHING;
+        break;
+      default:
+        break;
       }
     }
   }

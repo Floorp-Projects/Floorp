@@ -81,29 +81,25 @@ class RFC822Token
 
   public void printTokenType()
   {
-    if (this.token_type == SPECIAL_CHAR)
-    {
+      switch(this.token_type) {
+      case SPECIAL_CHAR:
       System.out.print("Special");
-    }
-    else if (this.token_type == QUOTED_STRING)
-    {
+          break;
+      case QUOTED_STRING:
       System.out.print("Quoted String");
-    }
-    else if (this.token_type == DOMAIN_LITERAL)
-    {
+          break;
+      case DOMAIN_LITERAL:
       System.out.print("Domain Literal");
-    }
-    else if (this.token_type == COMMENT)
-    {
+          break;
+      case COMMENT:
       System.out.print("Comment");
-    }
-    else if (this.token_type == ATOM)
-    {
+          break;
+      case ATOM:
       System.out.print("Atom");
-    }
-    else
-    {
+          break;
+      default:
       System.out.print("Unknown");
+          break;
     }
   }
 
