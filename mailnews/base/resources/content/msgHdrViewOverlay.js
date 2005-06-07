@@ -920,11 +920,17 @@ function createNewAttachmentInfo(contentType, url, displayName, uri, isExternalA
 
 createNewAttachmentInfo.prototype.saveAttachment = function saveAttachment()
 {
-  messenger.saveAttachment(this.contentType, 
-                           this.url, 
-                           encodeURIComponent(this.displayName), 
-                           this.uri,
-                           this.isExternalAttachment);
+  if (this.isExternalAttachment)
+    internalSave(this.url, null,
+                 this.displayName, null,
+                 this.contentType, false,
+                 "SaveAttachmentTitle", null, null);
+  else
+    messenger.saveAttachment(this.contentType, 
+                             this.url, 
+                             encodeURIComponent(this.displayName), 
+                             this.uri,
+                             false);
 }
 
 createNewAttachmentInfo.prototype.openAttachment = function openAttachment()
