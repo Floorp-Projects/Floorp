@@ -527,7 +527,7 @@ nsDirectoryService::RealInit()
     if (!self)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = NS_NewISupportsArray(getter_AddRefs(self->mProviders));
+    rv = NS_NewISupportsArray(getter_AddRefs(((nsDirectoryService*) self)->mProviders));
     if (NS_FAILED(rv))
         return rv;
 
