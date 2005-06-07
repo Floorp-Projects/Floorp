@@ -493,7 +493,7 @@ UpdateService.prototype = {
    *          An array of available updates
    */
   _selectAndInstallUpdate: function(updates) {
-    var update = this.selectUpdate(updates);
+    var update = this.selectUpdate(updates, updates.length);
     if (this._shouldPrompt(update)) {
       LOG("_selectAndInstallUpdate: need to prompt user before continuing...");
       var prompter = 
