@@ -47,7 +47,6 @@
 
 button {
   -moz-appearance: button;
-  -moz-user-focus: ignore;
   margin: 6px;
   min-width: 6.3em;
   -moz-appearance: button;
