@@ -85,6 +85,7 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 nsIIOService    *nsScriptSecurityManager::sIOService = nsnull;
 nsIXPConnect    *nsScriptSecurityManager::sXPConnect = nsnull;
 nsIStringBundle *nsScriptSecurityManager::sStrBundle = nsnull;
+JSRuntime       *nsScriptSecurityManager::sRuntime   = 0;
 
 ///////////////////////////
 // Convenience Functions //
@@ -2862,14 +2863,13 @@ nsresult nsScriptSecurityManager::Init()
         do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JSRuntime *rt;
-    rv = runtimeService->GetRuntime(&rt);
+    rv = runtimeService->GetRuntime(&sRuntime);
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
     JSCheckAccessOp oldCallback =
 #endif
-        JS_SetCheckObjectAccessCallback(rt, CheckObjectAccess);
+        JS_SetCheckObjectAccessCallback(sRuntime, CheckObjectAccess);
 
     // For now, assert that no callback was set previously
     NS_ASSERTION(!oldCallback, "Someone already set a JS CheckObjectAccess callback");
@@ -2891,6 +2891,14 @@ nsScriptSecurityManager::~nsScriptSecurityManager(void)
 void
 nsScriptSecurityManager::Shutdown()
 {
+    if (sRuntime) {
+#ifdef DEBUG
+        JSCheckAccessOp oldCallback =
+#endif
+            JS_SetCheckObjectAccessCallback(sRuntime, nsnull);
+        NS_ASSERTION(oldCallback == CheckObjectAccess, "Oops, we just clobbered someone else, oh well.");
+        sRuntime = nsnull;
+    }
     sEnabledID = JSVAL_VOID;
 
     NS_IF_RELEASE(sIOService);
