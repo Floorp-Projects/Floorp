@@ -173,6 +173,11 @@ ifdef BUILD_STATIC_LIBS
 DEFINES += -D_BUILD_STATIC_BIN
 endif
 
+DEFINES += -DOS_TARGET=\"$(OS_TARGET)\"
+ifdef TARGET_XPCOM_ABI
+DEFINES += -DTARGET_OS_ABI=\"$(OS_TARGET)_$(TARGET_XPCOM_ABI)\"
+endif
+
 export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS) $(SHAREDCMMSRCS)) $(STACKWALK_CPPSRCS)
 ifeq ($(OS_ARCH),WINNT)
 	$(INSTALL) $^ $(srcdir)
