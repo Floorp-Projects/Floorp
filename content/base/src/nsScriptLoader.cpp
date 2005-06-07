@@ -580,6 +580,17 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
 }
 
 nsresult
+nsScriptLoader::GetCurrentScript(nsIScriptElement **aElement)
+{
+  NS_ENSURE_ARG_POINTER(aElement);
+  *aElement = mCurrentScript;
+
+  NS_IF_ADDREF(*aElement);
+
+  return NS_OK;
+}
+
+nsresult
 nsScriptLoader::FireErrorNotification(nsresult aResult,
                                       nsIScriptElement* aElement,
                                       nsIScriptLoaderObserver* aObserver)
@@ -715,10 +726,17 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
     ::JS_SetOptions(cx, options | JSOPTION_XML);
   }
 
+  // Update our current script.
+  nsCOMPtr<nsIScriptElement> oldCurrent = mCurrentScript;
+  mCurrentScript = aRequest->mElement;
+
   PRBool isUndefined;
   context->EvaluateString(aScript, nsnull, principal, url.get(),
                           aRequest->mLineNo, aRequest->mJSVersion, nsnull,
                           &isUndefined);
+
+  // Put the old script back in case it wants to do anything else.
+  mCurrentScript = oldCurrent;
 
   ::JS_ReportPendingException(cx);
   if (needE4X) {

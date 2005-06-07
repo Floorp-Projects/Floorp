@@ -246,6 +246,8 @@ protected:
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);
 
+  void *GenerateParserKey(void);
+
   PRInt32 GetDefaultNamespaceID() const
   {
     return mDefaultNamespaceID;

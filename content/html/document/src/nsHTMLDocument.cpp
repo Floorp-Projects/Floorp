@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -2088,8 +2089,6 @@ nsHTMLDocument::Open(const nsACString& aContentType, PRBool aReplace,
   return CallQueryInterface(this, aReturn);
 }
 
-#define NS_GENERATE_PARSER_KEY() NS_INT32_TO_PTR((mIsWriting << 31) | (mWriteLevel & 0x7fffffff))
-
 NS_IMETHODIMP
 nsHTMLDocument::Clear()
 {
@@ -2106,11 +2105,11 @@ nsHTMLDocument::Close()
     ++mWriteLevel;
     if (mContentType.EqualsLiteral("text/html")) {
       rv = mParser->Parse(NS_LITERAL_STRING("</HTML>"),
-                          NS_GENERATE_PARSER_KEY(),
+                          GenerateParserKey(),
                           mContentType, PR_FALSE,
                           PR_TRUE);
     } else {
-      rv = mParser->Parse(EmptyString(), NS_GENERATE_PARSER_KEY(),
+      rv = mParser->Parse(EmptyString(), GenerateParserKey(),
                           mContentType, PR_FALSE, PR_TRUE);
     }
     --mWriteLevel;
@@ -2191,12 +2190,12 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
   // why pay that price when we don't need to?
   if (aNewlineTerminate) {
     rv = mParser->Parse(aText + new_line,
-                        NS_GENERATE_PARSER_KEY(),
+                        GenerateParserKey(),
                         mContentType, PR_FALSE,
                         (!mIsWriting || (mWriteLevel > 1)));
   } else {
     rv = mParser->Parse(aText,
-                        NS_GENERATE_PARSER_KEY(),
+                        GenerateParserKey(),
                         mContentType, PR_FALSE,
                         (!mIsWriting || (mWriteLevel > 1)));
   }
@@ -3475,6 +3474,17 @@ nsHTMLDocument::RemoveWyciwygChannel(void)
   mWyciwygChannel = nsnull;
 
   return rv;
+}
+
+void *
+nsHTMLDocument::GenerateParserKey(void)
+{
+  // The script loader provides us with the currently executing script element,
+  // which is guaranteed to be unique per script.
+  nsCOMPtr<nsIScriptElement> key;
+  mScriptLoader->GetCurrentScript(getter_AddRefs(key));
+
+  return key;
 }
 
 /* attribute DOMString designMode; */
