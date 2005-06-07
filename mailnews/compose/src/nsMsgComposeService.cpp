@@ -506,6 +506,7 @@ NS_IMETHODIMP nsMsgComposeService::GetParamsForMailto(nsIURI * aURI, nsIMsgCompo
        nsXPIDLCString aSubjectPart;
        nsXPIDLCString aBodyPart;
        nsXPIDLCString aNewsgroup;
+       nsXPIDLCString aRefPart;
        nsXPIDLCString aHTMLBodyPart;
 
        // we are explictly not allowing attachments to be specified in mailto: urls
@@ -516,7 +517,7 @@ NS_IMETHODIMP nsMsgComposeService::GetParamsForMailto(nsIURI * aURI, nsIMsgCompo
                                     nsnull /* follow */, nsnull /* organization */, 
                                     nsnull /* reply to part */, getter_Copies(aSubjectPart),
                                     getter_Copies(aBodyPart), getter_Copies(aHTMLBodyPart) /* html part */, 
-                                    nsnull /* a ref part */, nsnull /* attachment part, must always null, see #99055 */,
+                                    getter_Copies(aRefPart), nsnull /* attachment part, must always null, see #99055 */,
                                     nsnull /* priority */, getter_Copies(aNewsgroup), nsnull /* host */,
                                     &requestedComposeFormat);
 
@@ -585,6 +586,7 @@ NS_IMETHODIMP nsMsgComposeService::GetParamsForMailto(nsIURI * aURI, nsIMsgCompo
           pMsgCompFields->SetCc(NS_ConvertUTF8toUTF16(aCcPart));
           pMsgCompFields->SetBcc(NS_ConvertUTF8toUTF16(aBccPart));
           pMsgCompFields->SetNewsgroups(aNewsgroup);
+          pMsgCompFields->SetReferences(aRefPart);
           pMsgCompFields->SetSubject(NS_ConvertUTF8toUTF16(aSubjectPart));
           pMsgCompFields->SetBody(composeHTMLFormat ? sanitizedBody : rawBody);
           pMsgComposeParams->SetComposeFields(pMsgCompFields);

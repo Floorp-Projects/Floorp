@@ -68,6 +68,7 @@ NS_IMPL_ISUPPORTS2(nsMailtoUrl, nsIMailtoUrl, nsIURI)
 nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
 {
 	char *rest = searchPart;
+        nsCAutoString inReplyToPart;
 	// okay, first, free up all of our old search part state.....
 	CleanupMailtoState();
 
@@ -146,6 +147,11 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
             mFormat = nsIMsgCompFormat::HTML;
           }
           break;
+                                case 'I':
+                                        if (!nsCRT::strcasecmp (token, "in-reply-to"))
+                                                inReplyToPart = value;
+                                        break;
+
 				case 'N':
 					if (!nsCRT::strcasecmp (token, "newsgroups"))
 						m_newsgroupPart = value;
@@ -191,6 +197,24 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
 				token = nsCRT::strtok(rest, "&", &rest);
 		} // while we still have part of the url to parse...
 	} // if rest && *rest
+
+  // Ensure that References and In-Reply-To are consistent...
+  if (!inReplyToPart.IsEmpty())
+  {
+    if (m_referencePart.IsEmpty())
+      m_referencePart = inReplyToPart;
+    else
+    {
+      const char * lastRef = strrchr(m_referencePart.get(), '<');
+      nsCAutoString lastReference;
+      lastReference = lastRef ? lastRef : m_referencePart.get();
+      if (lastReference != inReplyToPart)
+      {
+        m_referencePart += " ";
+        m_referencePart += inReplyToPart;
+      }
+    }
+  }
 
   nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(NS_MIME_CONVERTER_CONTRACTID);
   char *decodedString;
