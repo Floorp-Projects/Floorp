@@ -7,7 +7,7 @@ const nsIIncrementalDownload = Components.interfaces.nsIIncrementalDownload;
  *          The string to write to the error console..
  */  
 function LOG(string) {
-  dump("*** " + string + "\n");
+  // dump("*** " + string + "\n");
 }
 
 var gUpdates = {
