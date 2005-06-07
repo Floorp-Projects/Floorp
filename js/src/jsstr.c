@@ -1286,7 +1286,8 @@ typedef struct ReplaceData {
 } ReplaceData;
 
 static JSSubString *
-interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
+interpret_dollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData *rdata,
+                 size_t *skip)
 {
     JSVersion version;
     JSRegExpStatics *res;
@@ -1306,6 +1307,10 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
             return NULL;
     }
 
+    /* If there is only a dollar, bail now */
+    if (dp + 1 >= ep)
+        return NULL;
+
     /* Interpret all Perl match-induced dollar variables. */
     res = &cx->regExpStatics;
     dc = dp[1];
@@ -1317,7 +1322,7 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
             /* Check for overflow to avoid gobbling arbitrary decimal digits. */
             num = 0;
             cp = dp;
-            while ((dc = *++cp) != 0 && JS7_ISDEC(dc)) {
+            while (++cp < ep && (dc = *cp, JS7_ISDEC(dc))) {
                 tmp = 10 * num + JS7_UNDEC(dc);
                 if (tmp < num)
                     break;
@@ -1327,9 +1332,9 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
             num = JS7_UNDEC(dc);
             if (num > res->parenCount)
                 return NULL;
+
             cp = dp + 2;
-            dc = *cp;
-            if ((dc != 0) && JS7_ISDEC(dc)) {
+            if (cp < ep && (dc = *cp, JS7_ISDEC(dc))) {
                 tmp = 10 * num + JS7_UNDEC(dc);
                 if (tmp <= res->parenCount) {
                     cp++;
@@ -1498,7 +1503,7 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
     replen = JSSTRING_LENGTH(repstr);
     for (dp = rdata->dollar, ep = rdata->dollarEnd; dp;
          dp = js_strchr_limit(dp, '$', ep)) {
-        sub = interpret_dollar(cx, dp, rdata, &skip);
+        sub = interpret_dollar(cx, dp, ep, rdata, &skip);
         if (sub) {
             replen += sub->length - skip;
             dp += skip;
@@ -1526,7 +1531,7 @@ do_replace(JSContext *cx, ReplaceData *rdata, jschar *chars)
         js_strncpy(chars, cp, len);
         chars += len;
         cp = dp;
-        sub = interpret_dollar(cx, dp, rdata, &skip);
+        sub = interpret_dollar(cx, dp, ep, rdata, &skip);
         if (sub) {
             len = sub->length;
             js_strncpy(chars, sub->chars, len);
