@@ -463,6 +463,13 @@ var messageHeaderSink = {
     setSecurityInfo: function(aSecurityInfo)
     {
       this.mSecurityInfo = aSecurityInfo;
+    },
+
+    mDummyHeader: null,
+    getDummyMsgHeader: function() {
+      if (!this.mDummyHeader)
+        this.mDummyHeader = { messageSize: 0, folder: null };
+      return this.mDummyHeader;
     }
 };
 
