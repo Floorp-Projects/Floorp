@@ -415,6 +415,90 @@ interface nsIExtensionItemUpdater : nsISupports
   readonly attribute unsigned long updateTypes;
 };
 
+/**
+ * An item managed by the Extension System. Contains metadata that describes 
+ * the item.
+ * XXXben work in progress, the name of this interface will change after the
+ *        update system is complete, probably to nsIAddon
+ */
+[scriptable, uuid(415edb0a-4f2d-485c-9e10-f262b065ab33)]
+interface nsIUpdateItem : nsISupports
+{
+  /**
+   * The GUID of the item.
+   */
+  readonly attribute AString  id;
+
+  /**
+   * The Version of the item, in FVF format.
+   */
+  readonly attribute AString  version;
+
+  /**
+   * The minimum version of the application that this item works with, 
+   * in FVF format.
+   */
+  readonly attribute AString  minAppVersion;
+
+  /**
+   * The maximum version of the application that this item works with,
+   * in FVF format.
+   */
+  readonly attribute AString  maxAppVersion;
+
+  /**
+   * The name of the Install Location where this item is installed.
+   */
+  readonly attribute AString  installLocationKey;
+
+  /**
+   * The name of this item.
+   */
+  readonly attribute AString  name;
+
+  /**
+   * The URL of the XPI where this item can be downloaded.
+   */
+  readonly attribute AString  xpiURL;
+
+  /**
+   * The URL of the icon that can be shown for this item.
+   */
+  readonly attribute AString  iconURL;
+
+  /**
+   * The URL of the update RDF file for this item.
+   */
+  readonly attribute AString  updateRDF;
+  
+  const unsigned long TYPE_APP         = 0x01;
+  const unsigned long TYPE_EXTENSION   = 0x02;
+  const unsigned long TYPE_THEME       = 0x04;
+  const unsigned long TYPE_LOCALE      = 0x08;
+  const unsigned long TYPE_PLUGIN      = 0x10;
+  const unsigned long TYPE_ADDON       = TYPE_EXTENSION + TYPE_THEME + TYPE_LOCALE + TYPE_PLUGIN;
+  const unsigned long TYPE_ANY         = TYPE_APP + TYPE_ADDON;
+
+  /**
+   * The type of this item.
+   */
+  readonly attribute long type;
+
+  /**
+   * Initializes this Item object.
+   */
+  void init(in AString id, in AString version, 
+            in AString installLocationKey, in AString minAppVersion, 
+            in AString maxAppVersion, in AString name,
+            in AString downloadURL, in AString iconURL,
+            in AString updateURL, in long type);
+
+  /**
+   * Returns a JS Object source representing an nsIUpdateItem.
+   */
+  readonly attribute AString objectSource;
+};
+
 %{ C++
 /**
  * Install Location Key for Application-Global Items

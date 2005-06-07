@@ -52,7 +52,8 @@
         title="&updateWizard.title;" 
         windowtype="Update:Wizard" style="width: 36em;"
         onwizardfinished="gUpdates.onFinish();"
-        onclose="return gUpdates.onClose();">
+        onclose="return gUpdates.onClose();"
+        onload="gUpdates.onLoad();>
 
   <script type="application/x-javascript" src="chrome://mozapps/content/update/updates.js"/>
   
