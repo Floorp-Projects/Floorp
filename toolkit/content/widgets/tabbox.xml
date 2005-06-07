@@ -129,7 +129,7 @@
             case event.DOM_VK_TAB:
               if (event.ctrlKey && !event.altKey && !event.metaKey)
                 if (this.tabbox._tabs && this.tabbox.handleCtrlTab) {
-                  this.tabbox._tabs.advanceSelectedTab(event.shiftKey ? -1 : 1);
+                  this.tabbox._tabs.advanceSelectedTab(event.shiftKey ? -1 : 1, true);
                   event.stopPropagation();
                   event.preventDefault();
                 }
@@ -137,7 +137,7 @@
             case event.DOM_VK_PAGE_UP:
               if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
                 if (this.tabbox._tabs && this.tabbox.handleCtrlPageUpDown) {
-                  this.tabbox._tabs.advanceSelectedTab(-1);
+                  this.tabbox._tabs.advanceSelectedTab(-1, true);
                   event.stopPropagation();
                   event.preventDefault();
                 }
@@ -145,7 +145,7 @@
             case event.DOM_VK_PAGE_DOWN:
               if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
                 if (this.tabbox._tabs && this.tabbox.handleCtrlPageUpDown) {
-                  this.tabbox._tabs.advanceSelectedTab(1);
+                  this.tabbox._tabs.advanceSelectedTab(1, true);
                   event.stopPropagation();
                   event.preventDefault();
                 }
@@ -305,8 +305,17 @@
 
       <method name="selectNewTab">
         <parameter name="aNewTab"/>
+        <parameter name="aFallbackDir"/>
+        <parameter name="aWrap"/>
         <body>
         <![CDATA[
+          while (aNewTab.getAttribute("hidden")) {
+            aNewTab = aFallbackDir == -1 ? aNewTab.previousSibling : aNewTab.nextSibling;
+            if (!aNewTab && aWrap)
+              aNewTab = aFallbackDir == -1 ? this.childNodes[this.childNodes.length - 1] :
+                                             this.childNodes[0];
+          }
+          
           var isTabFocused =
             (document.commandDispatcher.focusedElement == this.selectedItem);
           this.selectedItem = aNewTab;
@@ -320,22 +329,20 @@
         </body>
       </method>
 
+
       <method name="advanceSelectedTab">
         <parameter name="aDir"/>
+        <parameter name="aWrap"/>
         <body>
         <![CDATA[
           var startTab = this.selectedItem;
           var next = startTab[aDir == -1 ? "previousSibling" : "nextSibling"];
-
-          while (next != startTab && (!next || next.getAttribute("hidden"))) {
-            if (next && next.getAttribute("hidden"))
-              next = next[aDir == -1 ? "previousSibling" : "nextSibling"];
-            if (!next)
-              next = aDir == 1 ? this.childNodes[0] : this.childNodes[this.childNodes.length - 1];
+          if (!next && aWrap) {
+            next = aDir == -1 ? this.childNodes[this.childNodes.length - 1] :
+                                this.childNodes[0];
           }
-
           if (next && next != startTab) {
-            this.selectNewTab(next);
+            this.selectNewTab(next, aDir, aWrap);
           }
         ]]>
         </body>
@@ -522,38 +529,58 @@
 
       <property name="linkedPanel" onget="return this.getAttribute('linkedpanel')"
                                    onset="this.setAttribute('linkedpanel', val); return val;"/>
+
+      <field name="arrowKeysShouldWrap" readonly="true">
+#ifdef XP_MACOSX
+        true
+#else
+        false
+#endif
+      </field>    
     </implementation>
     
     <handlers>
-      <handler event="click" button="0">
+      <handler event="mousedown" button="0">
       <![CDATA[
         this.parentNode.selectNewTab(this);
       ]]>
       </handler>
       
-      <handler event="keypress" keycode="vk_left">
+      <handler event="keypress" keycode="VK_LEFT">
       <![CDATA[
         var direction = window.getComputedStyle(this.parentNode, null).direction;
-        this.parentNode.advanceSelectedTab(direction == 'ltr' ? -1 : 1);
+        this.parentNode.advanceSelectedTab(direction == 'ltr' ? -1 : 1, this.arrowKeysShouldWrap);
       ]]>
       </handler>
       
-      <handler event="keypress" keycode="vk_right">
+      <handler event="keypress" keycode="VK_RIGHT">
       <![CDATA[
         var direction = window.getComputedStyle(this.parentNode, null).direction;
-        this.parentNode.advanceSelectedTab(direction == 'ltr' ? 1 : -1);
+        this.parentNode.advanceSelectedTab(direction == 'ltr' ? 1 : -1, this.arrowKeysShouldWrap);
       ]]>
       </handler>
       
-      <handler event="keypress" keycode="vk_up">
+      <handler event="keypress" keycode="VK_UP">
       <![CDATA[
-        this.parentNode.advanceSelectedTab(-1);
+        this.parentNode.advanceSelectedTab(-1, this.arrowKeysShouldWrap);
       ]]>
       </handler>
       
-      <handler event="keypress" keycode="vk_down">
+      <handler event="keypress" keycode="VK_DOWN">
       <![CDATA[
-        this.parentNode.advanceSelectedTab(1);
+        this.parentNode.advanceSelectedTab(1, this.arrowKeysShouldWrap);
+      ]]>
+      </handler>
+      
+      <handler event="keypress" keycode="VK_HOME">
+      <![CDATA[
+        this.parentNode.selectNewTab(this.parentNode.childNodes[0]);
+      ]]>
+      </handler>
+      
+      <handler event="keypress" keycode="VK_END">
+      <![CDATA[
+        this.parentNode.selectNewTab(this.parentNode.childNodes[this.parentNode.childNodes.length - 1], -1);
       ]]>
       </handler>
     </handlers>
