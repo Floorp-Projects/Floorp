@@ -21,6 +21,7 @@
 
  Contributor(s):
    Srilatha Moturi <srilatha@netscape.com>
+   Ian Neal <bugzilla@arlen.demon.co.uk>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -45,16 +46,24 @@
 <overlay id="prefMailnewsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script type="application/x-javascript">
-  <![CDATA[
-      _elementIDs.push("mailnewsEnableMapi");
-  ]]>
-</script>         
-<script type="application/x-javascript" src="chrome://messenger-mapi/content/pref-mailnewsOverlay.js"/>
-<hbox align="center" id="mapi">
-  <checkbox id="mailnewsEnableMapi" label="&enableMapi.label;"
-            accesskey="&enableMapi.accesskey;" 
-            oncommand="onEnableMapi();"
-            startupFunc="registerCallback();"/>
-</hbox>
+  <script type="application/x-javascript">
+    <![CDATA[
+      _elementIDs.push("mailnewsEnableMapi", "mailnewsEnableNews");
+    ]]>
+  </script>         
+  <script type="application/x-javascript" src="chrome://messenger-mapi/content/pref-mailnewsOverlay.js"/>
+  <vbox id="mapi">
+    <separator class="thin"/>
+
+    <description>&defaultMailSettings.label;</description>
+    <hbox class="indent" align="center">
+      <checkbox id="mailnewsEnableMapi" label="&enableMapi.label;"
+                accesskey="&enableMapi.accesskey;" 
+                oncommand="parent.mapiPref.isDefaultMailClient = this.checked;"
+                startupFunc="mailnewsOverlayStartup();"/>
+      <checkbox id="mailnewsEnableNews" label="&enableNews.label;"
+                accesskey="&enableNews.accesskey;" 
+                oncommand="parent.mapiPref.isDefaultNewsClient = this.checked;"/>
+    </hbox>
+  </vbox>
 </overlay> 

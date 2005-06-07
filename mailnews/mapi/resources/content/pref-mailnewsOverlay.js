@@ -21,6 +21,7 @@
  * Contributor(s): 
  *   Srilatha Moturi <srilatha@netscape.com>
  *   Rajiv Dayal <rdayal@netscape.com>
+ *   Ian Neal <bugzilla@arlen.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,121 +37,83 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function mailnewsOverlayStartup() {
-    mailnewsOverlayInit();
-    if (!("mapiPref" in parent)) {
-        parent.mapiPref = new Object;
-        parent.mapiPref.isDefaultMailClient = 
-               document.getElementById("mailnewsEnableMapi").checked;
-        
-        var mailnewsEnableNews = document.getElementById("mailnewsEnableNews"); 
-        if (mailnewsEnableNews)
-          parent.mapiPref.isDefaultNewsClient = mailnewsEnableNews.checked;
-    }
-    else { 
-        // when we switch between different panes
-        // set the checkbox based on the saved state
-        var mailnewsEnableMapi = document.getElementById("mailnewsEnableMapi");
-        var mailnewsEnableNews = document.getElementById("mailnewsEnableNews"); 
-        
-        if (parent.mapiPref.isDefaultMailClient)
-            mailnewsEnableMapi.setAttribute("checked", "true");
-        else
-            mailnewsEnableMapi.setAttribute("checked", "false");
-        
-        if (mailnewsEnableNews)
-        {
-          if (parent.mapiPref.isDefaultNewsClient)
-             mailnewsEnableNews.setAttribute("checked", "true");
-          else
-             mailnewsEnableNews.setAttribute("checked", "false");
-        }
-    }
-}
-
-function registerCallback(){
-    if ("mapiCallback" in parent && parent.mapiCallback)
-        return;
-    if ("hPrefWindow" in parent && parent.hPrefWindow) {
-        parent.hPrefWindow.registerOKCallbackFunc( onOK );
-        parent.mapiCallback = true;
-    }
-}
-
-function mailnewsOverlayInit() {
-    try {
-        var mapiRegistry = Components.classes[ "@mozilla.org/mapiregistry;1" ].
-                   getService( Components.interfaces.nsIMapiRegistry );
-    }
-    catch(ex){
-        mapiRegistry = null;
-    }
-
-    const prefbase = "system.windows.lock_ui.";
-    var mailnewsEnableMapi = document.getElementById("mailnewsEnableMapi");
-    var mailnewsEnableNews = document.getElementById("mailnewsEnableNews");
-    
-    if (mapiRegistry) {
-    // initialise preference component.
-    // While the data is coming from the system registry, we use a set
-    // of parallel preferences to indicate if the ui should be locked.
-        try { 
-            var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService()
-                          .QueryInterface(Components.interfaces.nsIPrefService);
-            var prefBranch = prefService.getBranch(prefbase);
-            if (prefBranch && prefBranch.prefIsLocked("defaultMailClient")) {
-                mapiRegistry.isDefaultMailClient = prefBranch.getBoolPref("defaultMailClient") ;
-                mailnewsEnableMapi.setAttribute("disabled", "true");
-           }
-        }
-        catch(ex) {}
-
-        mailnewsEnableMapi.setAttribute("checked", mapiRegistry.isDefaultMailClient ? "true" : "false");
-        if (mailnewsEnableNews)
-          mailnewsEnableNews.setAttribute("checked", mapiRegistry.isDefaultNewsClient ? "true" : "false");
-    }
-    else
+function mailnewsOverlayStartup()
+{
+  if (!("mapiInitialized" in parent))
+  {
+    parent.mapiDisabled = true;
+    parent.newsDisabled = true;
+    var mapiRegistry = getMapiRegistry();
+    parent.mapiInitialized = !!mapiRegistry;
+    if (mapiRegistry)
     {
-        mailnewsEnableMapi.setAttribute("disabled", "true");
-        if (mailnewsEnableNews)
-          mailnewsEnableNews.setAttribute("disabled", "true");
+      var prefWindow = parent.hPrefWindow;
+      // initialise preference and registry components.
+      // While the data is coming from the system registry, we use a set
+      // of parallel preferences to indicate if the ui should be locked.
+      parent.mapiPref = {};
+      parent.mapiReg = {};
+
+      // Only register callback if mapiRegistry exists so
+      // we do not need to check its existence in onOK
+      prefWindow.registerOKCallbackFunc(onOK);
+
+      var isDefault;
+      const kPrefBase = "system.windows.lock_ui.";
+      if (prefWindow.getPrefIsLocked(kPrefBase + "defaultMailClient"))
+      {
+        isDefault = prefWindow.getPref("bool", kPrefBase + "defaultMailClient");
+        mapiRegistry.isDefaultMailClient = isDefault;
+        parent.mapiReg.isDefaultMailClient = isDefault;
+      }
+      else
+      {
+        parent.mapiReg.isDefaultMailClient = mapiRegistry.isDefaultMailClient;
+        parent.mapiDisabled = false;
+      }
+      parent.mapiPref.isDefaultMailClient = parent.mapiReg.isDefaultMailClient;
+
+      if (prefWindow.getPrefIsLocked(kPrefBase + "defaultNewsClient"))
+      {
+        isDefault = prefWindow.getPref("bool", kPrefBase + "defaultNewsClient");
+        mapiRegistry.isDefaultNewsClient = isDefault;
+        parent.mapiReg.isDefaultNewsClient = isDefault;
+      }
+      else
+      {
+        parent.mapiReg.isDefaultNewsClient = mapiRegistry.isDefaultNewsClient;
+        parent.newsDisabled = false;
+      }
+      parent.mapiPref.isDefaultNewsClient = parent.mapiReg.isDefaultNewsClient;
     }
+  }
+
+  var mailnewsEnableMapi = document.getElementById("mailnewsEnableMapi");
+  var mailnewsEnableNews = document.getElementById("mailnewsEnableNews");
+
+  if (parent.mapiInitialized)
+  {
+    // when we switch between different panes set the checkbox based on the saved state
+    mailnewsEnableMapi.checked = parent.mapiPref.isDefaultMailClient;
+    mailnewsEnableNews.checked = parent.mapiPref.isDefaultNewsClient;
+  }
+  mailnewsEnableMapi.disabled = parent.mapiDisabled;
+  mailnewsEnableNews.disabled = parent.newsDisabled;
 }
 
-function onEnableMapi() {
-    // save the state of the checkbox
-    if ("mapiPref" in parent)
-        parent.mapiPref.isDefaultMailClient = 
-               document.getElementById("mailnewsEnableMapi").checked;
-}
-
-function onEnableNews() {
-    // save the state of the checkbox
-    if ("mapiPref" in parent)
-        parent.mapiPref.isDefaultNewsClient = document.getElementById("mailnewsEnableNews").checked;
+function getMapiRegistry() {
+  if ("@mozilla.org/mapiregistry;1" in Components.classes)
+    return Components.classes["@mozilla.org/mapiregistry;1"]
+                     .getService(Components.interfaces.nsIMapiRegistry);
+  return null;
 }
 
 function onOK()
 {
-    try {
-        var mapiRegistry = Components.classes[ "@mozilla.org/mapiregistry;1" ].getService( Components.interfaces.nsIMapiRegistry );
-    }
-    catch(ex){
-        mapiRegistry = null;
-    } 
+  var mapiRegistry = getMapiRegistry();
+  if (parent.mapiReg.isDefaultMailClient != parent.mapiPref.isDefaultMailClient)
+    mapiRegistry.isDefaultMailClient = parent.mapiPref.isDefaultMailClient;
 
-    if (mapiRegistry && ("mapiPref" in parent)) {
-      if (mapiRegistry.isDefaultMailClient != parent.mapiPref.isDefaultMailClient)
-        mapiRegistry.isDefaultMailClient = parent.mapiPref.isDefaultMailClient ;
-      
-      if ("isDefaultNewsClient" in parent.mapiPref)
-      {
-        if (mapiRegistry.isDefaultNewsClient != parent.mapiPref.isDefaultNewsClient)
-          mapiRegistry.isDefaultNewsClient = parent.mapiPref.isDefaultNewsClient;
-      }
-    }
+  if (parent.mapiReg.isDefaultNewsClient != parent.mapiPref.isDefaultNewsClient)
+    mapiRegistry.isDefaultNewsClient = parent.mapiPref.isDefaultNewsClient;
 }
-
-// Install the onload handler
-addEventListener("load", mailnewsOverlayStartup, false);

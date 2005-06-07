@@ -51,14 +51,14 @@
 <!ENTITY location.label                   "Location:">
 <!ENTITY location.accesskey               "L">
 <!ENTITY useDefault.label                 "Restore Default">
-<!ENTITY useDefault.accesskey             "R">
+<!ENTITY useDefault.accesskey             "D">
 <!ENTITY rememberLastMsg.label            "Remember the last selected message">
 <!ENTITY rememberLastMsg.accesskey        "e">
 <!ENTITY toolbarIntro.label               "Select the buttons you want to see in the toolbar">
 <!ENTITY fileButton.label                 "File">
 <!ENTITY fileButton.accesskey             "F">
 <!ENTITY nextButton.label                 "Next">
-<!ENTITY nextButton.accesskey             "N">
+<!ENTITY nextButton.accesskey             "x">
 <!ENTITY junkMailButton.label             "Junk">
 <!ENTITY junkMailButton.accesskey         "J">
 <!ENTITY printButton.label                "Print">

@@ -70,8 +70,6 @@
                 accesskey="&confirmMove.accesskey;"/>
     </hbox>
 
-    <hbox align="start" id="mapi"/>
-
     <hbox align="center">
       <checkbox id="mailRememberLastMsg" label="&rememberLastMsg.label;"
                 prefstring="mailnews.remember_selected_message"
@@ -85,6 +83,8 @@
                 prefstring="mailnews.thread_pane_column_unthreads"
                 reversed="true" />
     </hbox>    
+
+    <vbox id="mapi"/>
   </groupbox>
 
   <groupbox>
