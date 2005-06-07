@@ -352,7 +352,7 @@ public:
   JSContextAutoPopper();
   ~JSContextAutoPopper();
 
-  nsresult   Push();
+  nsresult   Push(JSContext *cx = nsnull);
   JSContext *get() { return mContext; }
 
 protected:
@@ -375,16 +375,21 @@ JSContextAutoPopper::~JSContextAutoPopper()
   }
 }
 
-nsresult JSContextAutoPopper::Push()
+nsresult JSContextAutoPopper::Push(JSContext *cx)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (mContext) // only once
     return NS_ERROR_FAILURE;
 
   mService = do_GetService(sJSStackContractID);
   if(mService) {
-    rv = mService->GetSafeJSContext(&mContext);
+    if (cx) {
+      mContext = cx;
+    } else {
+      rv = mService->GetSafeJSContext(&mContext);
+    }
+
     if (NS_SUCCEEDED(rv) && mContext) {
       rv = mService->Push(mContext);
       if (NS_FAILED(rv))
@@ -499,7 +504,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   nsCOMPtr<nsIDocShellTreeOwner>  parentTreeOwner;  // from the parent window, if any
   nsCOMPtr<nsIDocShellTreeItem>   newDocShellItem;  // from the new window
   EventQueueAutoPopper            queueGuard;
-  JSContextAutoPopper             contextGuard;
+  JSContextAutoPopper             callerContextGuard;
 
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = 0;
@@ -527,12 +532,6 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     featuresSpecified = PR_TRUE;
     features.StripWhitespace();
   }
-
-  nsCOMPtr<nsIDOMChromeWindow> chromeParent(do_QueryInterface(aParent));
-
-  chromeFlags = CalculateChromeFlags(features.get(), featuresSpecified,
-                                     aDialog, uriToLoadIsChrome,
-                                     !aParent || chromeParent);
 
   // try to find an extant window with the given name
   if (nameSpecified) {
@@ -570,6 +569,30 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   }
 
   // no extant window? make a new one.
+
+  nsCOMPtr<nsIDOMChromeWindow> chromeParent(do_QueryInterface(aParent));
+
+  PRBool isCallerChrome = PR_FALSE;
+  nsCOMPtr<nsIScriptSecurityManager>
+    sm(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
+  if (sm)
+    sm->SubjectPrincipalIsSystem(&isCallerChrome);
+
+  JSContext *cx = GetJSContextFromWindow(aParent);
+
+  if (isCallerChrome && !chromeParent && cx) {
+    // open() is called from chrome on a non-chrome window, push
+    // the context of the callee onto the context stack to
+    // prevent the caller's priveleges from leaking into code
+    // that runs while opening the new window.
+
+    callerContextGuard.Push(cx);
+  }
+
+  chromeFlags = CalculateChromeFlags(features.get(), featuresSpecified,
+                                     aDialog, uriToLoadIsChrome,
+                                     !aParent || chromeParent);
+
   if (!newDocShellItem) {
     windowIsNew = PR_TRUE;
 
@@ -585,11 +608,13 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
       if (NS_SUCCEEDED(rv)) {
         windowIsModal = PR_TRUE;
         // in case we added this because weAreModal
-        chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL | nsIWebBrowserChrome::CHROME_DEPENDENT;
+        chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL |
+          nsIWebBrowserChrome::CHROME_DEPENDENT;
       }
     }
 
-    NS_ASSERTION(mWindowCreator, "attempted to open a new window with no WindowCreator");
+    NS_ASSERTION(mWindowCreator,
+                 "attempted to open a new window with no WindowCreator");
     rv = NS_ERROR_FAILURE;
     if (mWindowCreator) {
       nsCOMPtr<nsIWebBrowserChrome> newChrome;
@@ -614,8 +639,6 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
         // chrome is always allowed, so clear the flag if the opener is chrome
         if (popupConditions) {
           PRBool isChrome = PR_FALSE;
-          nsCOMPtr<nsIScriptSecurityManager>
-            sm(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
           if (sm)
             sm->SubjectPrincipalIsSystem(&isChrome);
           popupConditions = !isChrome;
@@ -722,7 +745,9 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   }
 
   if (uriToLoad) { // get the script principal and pass it to docshell
-    JSContext *cx = GetJSContextFromCallStack();
+    JSContextAutoPopper contextGuard;
+
+    cx = GetJSContextFromCallStack();
 
     // get the security manager
     if (!cx)
@@ -739,11 +764,8 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
     if (!uriToLoadIsChrome) {
-      nsCOMPtr<nsIScriptSecurityManager> secMan =
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-
       nsCOMPtr<nsIPrincipal> principal;
-      if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
+      if (NS_FAILED(sm->GetSubjectPrincipal(getter_AddRefs(principal))))
         return NS_ERROR_FAILURE;
 
       if (principal) {
@@ -785,7 +807,8 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   }
 
   if (windowIsNew)
-    SizeOpenedDocShellItem(newDocShellItem, aParent, features.get(), chromeFlags);
+    SizeOpenedDocShellItem(newDocShellItem, aParent, features.get(),
+                           chromeFlags);
 
   if (windowIsModal) {
     nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;

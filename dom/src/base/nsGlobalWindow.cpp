@@ -498,7 +498,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
     // clear smartcard events, our document has gone away.
     if (mCrypto) {
-	mCrypto->SetEnableSmartCardEvents(PR_FALSE);
+      mCrypto->SetEnableSmartCardEvents(PR_FALSE);
     }
   }
 
@@ -4722,8 +4722,9 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         tabURI->SchemeIs("chrome", &chromeTab);
 
       if (!thisChrome && !chromeTab) {
-        containerPref=nsContentUtils::GetIntPref("browser.link.open_newwindow",
-                                nsIBrowserDOMWindow::OPEN_NEWWINDOW);
+        containerPref =
+          nsContentUtils::GetIntPref("browser.link.open_newwindow",
+                                     nsIBrowserDOMWindow::OPEN_NEWWINDOW);
         PRInt32 restrictionPref = nsContentUtils::GetIntPref(
                                 "browser.link.open_newwindow.restriction");
         /* The restriction pref is a power-user's fine-tuning pref. values:
@@ -4733,7 +4734,6 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 
         if (containerPref == nsIBrowserDOMWindow::OPEN_NEWTAB ||
             containerPref == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
-
           divertOpen = restrictionPref != 1;
           if (divertOpen && !aOptions.IsEmpty() && restrictionPref == 2)
             divertOpen = PR_FALSE;
@@ -4812,26 +4812,6 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         // dialog is open.
         nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
 
-        nsCOMPtr<nsIDOMChromeWindow> chrome_win =
-          do_QueryInterface(NS_STATIC_CAST(nsIDOMWindow *, this));
-
-        nsCOMPtr<nsIJSContextStack> stack;
-        JSContext *cx = nsnull;
-
-        if (IsCallerChrome() && !chrome_win) {
-          // open() is called from chrome on a non-chrome window, push
-          // the context of the callee onto the context stack to
-          // prevent the caller's priveleges from leaking into code
-          // that runs while opening the new window.
-
-          cx = (JSContext *)mContext->GetNativeContext();
-
-          stack = do_GetService(sJSStackContractID);
-          if (stack && cx) {
-            stack->Push(cx);
-          }
-        }
-
         if (argc) {
           nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
           if (pwwatch) {
@@ -4847,10 +4827,6 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         } else {
           rv = wwatch->OpenWindow(this, url.get(), name_ptr, options_ptr,
                                   aExtraArgument, getter_AddRefs(domReturn));
-        }
-
-        if (stack && cx) {
-          stack->Pop(nsnull);
         }
       }
     }
