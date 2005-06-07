@@ -92,6 +92,10 @@ public:
   // nsIXFormsControl
   NS_IMETHOD Refresh();
   NS_IMETHOD TryFocus(PRBool *aOK);
+
+#ifdef DEBUG_smaug
+  virtual const char* Name() { return "group"; }
+#endif
 };
 
 // nsIXTFXMLVisual

@@ -71,6 +71,9 @@ public:
   NS_IMETHOD ChildAppended(nsIDOMNode *aChild);
   NS_IMETHOD ChildRemoved(PRUint32 aIndex);
 
+#ifdef DEBUG_smaug
+  virtual const char* Name() { return "label"; }
+#endif
 private:
   NS_HIDDEN_(void) RefreshLabel();
 

@@ -76,6 +76,10 @@ public:
   NS_IMETHOD Refresh();
   NS_IMETHOD TryFocus(PRBool* aOK);
 
+#ifdef DEBUG_smaug
+  virtual const char* Name() { return "trigger"; }
+#endif
+
   // nsXFormsTriggerElement
   nsXFormsTriggerElement() :
     mIsMinimal(PR_FALSE), mDoneAddingChildren(PR_TRUE) {}
@@ -311,6 +315,10 @@ public:
 
   // nsIXTFElement overrides
   NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled);
+
+#ifdef DEBUG_smaug
+  virtual const char* Name() { return "submit"; }
+#endif
 };
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsSubmitElement,

@@ -84,15 +84,18 @@ public:
   // nsIDOMEventListener
   NS_DECL_NSIDOMEVENTLISTENER
 
+#ifdef DEBUG_smaug
+  virtual const char* Name() { return "select"; }
+#endif
 private:
   NS_HIDDEN_(void) SelectItemsInList(const nsString &aValueList);
   NS_HIDDEN_(void) SelectCopiedItem(nsIDOMNode *aNode);
   NS_HIDDEN_(void) SelectItemsByValue(nsIDOMNode *aNode,
                                       const nsStringArray &aItems);
+  NS_HIDDEN_(void) RemoveChildren(nsIDOMNode* aParent);
 
   nsCOMPtr<nsIDOMElement> mLabel;
   nsCOMPtr<nsIDOMHTMLSelectElement> mSelect;
-  nsVoidArray mOptions;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsSelectElement,
@@ -193,6 +196,22 @@ nsXFormsSelectElement::GetInsertionPoint(nsIDOMElement **aPoint)
 
 // nsIXTFElement
 
+void
+nsXFormsSelectElement::RemoveChildren(nsIDOMNode* aParent)
+{
+  if (aParent) {
+    nsCOMPtr<nsIDOMNode> childNode, nodeReturn;
+    while (NS_SUCCEEDED(aParent->GetFirstChild(getter_AddRefs(childNode))) &&
+           childNode) {
+      aParent->RemoveChild(childNode, getter_AddRefs(nodeReturn));
+
+      if (nodeReturn) {
+        RemoveChildren(nodeReturn);
+      }
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsXFormsSelectElement::OnDestroyed()
 {
@@ -202,9 +221,14 @@ nsXFormsSelectElement::OnDestroyed()
     targ->RemoveEventListener(NS_LITERAL_STRING("change"), this, PR_FALSE);
   }
 
-  nsXFormsControlStub::OnDestroyed();
+  // XXX For some reason we leak <contextcontainer-inline> and
+  //     <label> elements, if the child elements of the <select>
+  //     are not removed manually.
+  RemoveChildren(mSelect);
 
-  return NS_OK;
+  mLabel = nsnull;
+  mSelect = nsnull;
+  return nsXFormsControlStub::OnDestroyed();
 }
 
 NS_IMETHODIMP

@@ -116,6 +116,14 @@ public:
 
   // nsIXFormsRepeatItemElement
   NS_DECL_NSIXFORMSREPEATITEMELEMENT
+
+#ifdef DEBUG_smaug
+  virtual const char* Name() {
+    return mIsBlock ? "contextcontainer" : "contextcontainer-inline";
+  }
+
+  PRBool mIsBlock;
+#endif
 };
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsContextContainer,
@@ -144,6 +152,10 @@ nsXFormsContextContainer::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   nsAutoString localName;
   mElement->GetLocalName(localName);
   isBlock = localName.EqualsLiteral("contextcontainer");
+
+#ifdef DEBUG_smaug
+  mIsBlock = isBlock;
+#endif
 
   // Create UI element
   rv = domDoc->CreateElementNS(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml"),

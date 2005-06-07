@@ -326,15 +326,50 @@ nsXFormsControlStubBase::HandleDefault(nsIDOMEvent *aEvent,
   return NS_OK;
 }
 
+#ifdef DEBUG_smaug
+static nsVoidArray* sControlList = nsnull;
+class ControlDebug
+{
+public:
+  ControlDebug() {
+    sControlList = new nsVoidArray();
+    NS_ASSERTION(sControlList, "Out of memory!");
+  }
+
+  ~ControlDebug() {
+    for (PRInt32 i = 0; i < sControlList->Count(); ++i) {
+      nsXFormsControlStubBase* control =
+        NS_STATIC_CAST(nsXFormsControlStubBase*, sControlList->ElementAt(i));
+      if (control) {
+        printf("Possible leak, <xforms:%s>\n", control->Name());
+      }
+    }
+    delete sControlList;
+    sControlList = nsnull;
+  }
+};
+
+static ControlDebug tester = ControlDebug();
+#endif
+
 nsresult
 nsXFormsControlStubBase::Create(nsIXTFElementWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(kStandardNotificationMask);
 
-  aWrapper->GetElementNode(getter_AddRefs(mElement));
+  // It's ok to keep a weak pointer to mElement.  mElement will have an
+  // owning reference to this object, so as long as we null out mElement in
+  // OnDestroyed, it will always be valid.
+  nsCOMPtr<nsIDOMElement> node;
+  aWrapper->GetElementNode(getter_AddRefs(node));
+  mElement = node;
   NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
   ResetHelpAndHint(PR_TRUE);
+
+#ifdef DEBUG_smaug
+  sControlList->AppendElement(this);
+#endif
 
   return NS_OK;
 }
@@ -349,8 +384,12 @@ nsXFormsControlStubBase::OnDestroyed()
     mModel->RemoveFormControl(this);
     mModel = nsnull;
   }
-  mElement = nsnull;
 
+#ifdef DEBUG_smaug
+  sControlList->RemoveElement(this);
+#endif
+
+  mElement = nsnull;
   return NS_OK;
 }
 

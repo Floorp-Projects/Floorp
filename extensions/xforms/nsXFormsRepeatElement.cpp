@@ -330,6 +330,10 @@ public:
     mLevel(1),
     mIsParent(PR_FALSE)
     {}
+
+#ifdef DEBUG_smaug
+  virtual const char* Name() { return "repeat"; }
+#endif
 };
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsRepeatElement,

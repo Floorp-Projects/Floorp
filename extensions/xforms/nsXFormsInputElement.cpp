@@ -97,6 +97,10 @@ public:
     eType_TextArea
   };
 
+#ifdef DEBUG_smaug
+  virtual const char* Name() { return "input"; }
+#endif
+
   // nsXFormsInputElement
   nsXFormsInputElement(ControlType aType)
     : mType(aType), mIncremental(PR_FALSE)

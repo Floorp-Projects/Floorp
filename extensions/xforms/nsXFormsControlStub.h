@@ -126,7 +126,12 @@ public:
 
   // nsIXFormsContextControl
   NS_DECL_NSIXFORMSCONTEXTCONTROL
+
+#ifdef DEBUG_smaug
+  virtual const char* Name() { return "[undefined]"; }
+#endif
   
+
   /** Constructor */
   nsXFormsControlStubBase() :
     kStandardNotificationMask(nsIXTFElement::NOTIFY_WILL_SET_ATTRIBUTE |
@@ -143,7 +148,7 @@ public:
 
 protected:
   /** The nsIXTFXMLVisualWrapper */
-  nsCOMPtr<nsIDOMElement>             mElement;
+  nsIDOMElement*                      mElement;
 
   /** The node that the control is bound to. */
   nsCOMPtr<nsIDOMNode>                mBoundNode;

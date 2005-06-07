@@ -86,6 +86,10 @@ public:
   NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
 
+#ifdef DEBUG_smaug
+  virtual const char* Name() { return "output"; }
+#endif
+
 private:
   void MaybeBindAndRefresh(nsIAtom *aName);
   void MaybeRemoveFromModel(nsIAtom *aName, const nsAString &aValue);

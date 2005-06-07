@@ -87,6 +87,10 @@ public:
   NS_IMETHOD Refresh();
   NS_IMETHOD IsEventTarget(PRBool *aOK);
 
+#ifdef DEBUG_smaug
+  virtual const char* Name() { return "switch"; }
+#endif
+
 private:
   /**
    * http://www.w3.org/TR/xforms/slice9.html#ui-case
@@ -163,7 +167,6 @@ NS_IMETHODIMP
 nsXFormsSwitchElement::OnDestroyed()
 {
   mVisual = nsnull;
-  mElement = nsnull;
   mSelected = nsnull;
 
   return nsXFormsControlStub::OnDestroyed();
