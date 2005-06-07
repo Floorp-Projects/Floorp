@@ -507,6 +507,7 @@ private:
     static nsIIOService    *sIOService;
     static nsIXPConnect    *sXPConnect;
     static nsIStringBundle *sStrBundle;
+    static JSRuntime       *sRuntime;
 };
 
 #endif // nsScriptSecurityManager_h__
