@@ -376,18 +376,18 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
             settings->mHandleCHROME = PR_TRUE;
             settings->mHandleGOPHER = PR_TRUE;
             settings->mHandleHTML   = PR_TRUE;
-            settings->mHandleJPEG   = PR_TRUE;
-            settings->mHandleGIF    = PR_TRUE;
-            settings->mHandlePNG    = PR_TRUE;
-            settings->mHandleMNG    = PR_TRUE;
-            settings->mHandleXBM    = PR_TRUE;
+            settings->mHandleJPEG   = PR_FALSE;
+            settings->mHandleGIF    = PR_FALSE;
+            settings->mHandlePNG    = PR_FALSE;
+            settings->mHandleMNG    = PR_FALSE;
+            settings->mHandleXBM    = PR_FALSE;
             settings->mHandleBMP    = PR_FALSE;
             settings->mHandleICO    = PR_FALSE;
             settings->mHandleXML    = PR_TRUE;
             settings->mHandleXHTML  = PR_TRUE;
             settings->mHandleXUL    = PR_TRUE;
 
-            settings->mShowDialog       = PR_TRUE;
+            settings->mShowDialog   = PR_TRUE;
         }
 
         // If launched with "-installer" then override mShowDialog.
