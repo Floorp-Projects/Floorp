@@ -1,5 +1,5 @@
 classic.jar:
-* skin/classic/help/contents.rdf
+% skin help classic/1.0 %skin/classic/help/
   skin/classic/help/help.css
   skin/classic/help/Toolbar.png
 * skin/classic/help/helpFileLayout.css

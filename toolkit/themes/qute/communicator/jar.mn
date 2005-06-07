@@ -1,8 +1,8 @@
 classic.jar:
+% skin communicator classic/1.0 %skin/classic/communicator/
   skin/classic/communicator/brand.css
   skin/classic/communicator/button.css
   skin/classic/communicator/communicator.css
-  skin/classic/communicator/contents.rdf
   skin/classic/communicator/dialogs.css
   skin/classic/communicator/formatting.css
   skin/classic/communicator/plugins.css

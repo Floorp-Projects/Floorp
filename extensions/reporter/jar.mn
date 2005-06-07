@@ -4,9 +4,11 @@ reporter.jar:
 #ifdef MOZ_PHOENIX
 % overlay chrome://browser/content/browser.xul         chrome://reporter/content/reporterOverlay.xul
 % overlay chrome://global/content/customizeToolbar.xul chrome://reporter/content/reporterOverlay.xul
+% skin reporter classic/1.0 %skin/classic/reporter/
 #endif
 #else
  content/reporter/contents.rdf                           (resources/content/reporter/contents.rdf)
+ skin/classic/reporter/contents.rdf                      (resources/skin/classic/reporter/contents.rdf)
 #endif
  content/reporter/reportWizard.xul                       (resources/content/reporter/reportWizard.xul)
  content/reporter/reportWizard.js                        (resources/content/reporter/reportWizard.js)
@@ -15,7 +17,6 @@ reporter.jar:
  content/reporter/about.xul                              (resources/content/reporter/about.xul)
  content/reporter/error.xhtml                            (resources/content/reporter/error.xhtml)
  content/reporter/report.xhtml                           (resources/content/reporter/report.xhtml)
- skin/classic/reporter/contents.rdf                      (resources/skin/classic/reporter/contents.rdf)
  skin/classic/reporter/browserOverlay.css                (resources/skin/classic/reporter/browserOverlay.css)
  skin/classic/reporter/icon.png                          (resources/skin/classic/reporter/icon.png)
  skin/classic/reporter/reportResults.css                 (resources/skin/classic/reporter/reportResults.css)

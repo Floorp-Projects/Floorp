@@ -1,4 +1,5 @@
 classic.jar:
+% skin browser classic/1.0 %skin/classic/browser/
   skin/classic/browser/bookmark_toolbar_background.gif
   skin/classic/browser/bookmark-hover-left.png
   skin/classic/browser/bookmark-hover-mid.png
@@ -8,7 +9,6 @@ classic.jar:
   skin/classic/browser/bookmark-open-right.png
   skin/classic/browser/browser.css
   skin/classic/browser/browser.xml
-  skin/classic/browser/contents.rdf
   skin/classic/browser/find.png
   skin/classic/browser/find-bar-background.png
   skin/classic/browser/Go.png

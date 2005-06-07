@@ -1,5 +1,5 @@
 classic.jar:
-  skin/classic/help/contents.rdf    
+% skin help classic/1.0 %skin/classic/help/
   skin/classic/help/sidebar.css     
   skin/classic/help/sbtab-twisty.gif
   skin/classic/help/help.css     

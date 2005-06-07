@@ -1,4 +1,5 @@
 classic.jar:
+% skin mozapps classic/1.0 %skin/classic/mozapps/
   skin/classic/mozapps/downloads/progress-bar-paused.gif          (downloads/progress-bar-paused.gif)
   skin/classic/mozapps/downloads/progress-bar.gif                 (downloads/progress-bar.gif)
   skin/classic/mozapps/downloads/progress-remainder.gif           (downloads/progress-remainder.gif)
@@ -36,6 +37,3 @@ classic.jar:
   skin/classic/mozapps/update/update.png                          (update/update.png)
   skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png         (xpinstall/xpinstallItemGeneric.png)
   skin/classic/mozapps/xpinstall/xpinstallConfirm.css             (xpinstall/xpinstallConfirm.css)
-  skin/classic/mozapps/contents.rdf
-  
-  
