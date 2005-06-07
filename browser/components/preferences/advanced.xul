@@ -55,7 +55,7 @@
                   type="bool"/>
       <preference id="general.autoScroll"              name="general.autoScroll"              type="bool"/>
       <preference id="general.smoothScroll"            name="general.smoothScroll"            type="bool"/>
-      <preference id="app.update.autoUpdateEnabled"    name="app.update.autoUpdateEnabled"    type="bool"/>
+      <preference id="app.update.enabled"              name="app.update.enabled"              type="bool"/>
       <preference id="app.update.autoInstallEnabled"   name="app.update.autoInstallEnabled"   type="bool"/>
       <preference id="app.update.autoInstallMode"      name="app.update.autoInstallMode"      type="int"/>
       <preference id="extensions.update.autoUpdateEnabled"
@@ -138,7 +138,7 @@
               <checkbox id="enableSmartUpdate"
                         label="&enableSmartUpdate.label;"
                         accesskey="&enableSmartUpdate.accesskey;"
-                        preference="app.update.autoUpdateEnabled"
+                        preference="app.update.enabled"
                         onpreferenceread="return gAdvancedPane.updateAppUpdateUI();"/>
               <vbox class="indent" align="start">
                 <checkbox id="enableAutoInstall"
@@ -154,7 +154,7 @@
                     </columns>
                     <rows>
                       <row><label id="updateAnd"
-                                  preference="app.update.autoUpdateEnabled">&updateAnd.label;</label>
+                                  preference="app.update.enabled">&updateAnd.label;</label>
                            <radio label="&autoDownloadAndInstall.label;" 
                                   accesskey="&autoDownloadAndInstall.accesskey;" value="0"/></row>
                       <row><hbox/>

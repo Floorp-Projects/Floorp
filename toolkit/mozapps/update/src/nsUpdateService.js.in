@@ -35,14 +35,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const PREF_APP_UPDATE_ENABLED   = "app.update.enabled";
-const PREF_APP_UPDATE_MODE      = "app.update.mode";
-const PREF_APP_UPDATE_INTERVAL  = "app.update.interval";
-const PREF_APP_UPDATE_TIMER     = "app.update.timer";
-const PREF_APP_UPDATE_URL       = "app.update.url";
-const PREF_APP_UPDATE_INPROGRESS      = "app.update.inProgress";
-const PREF_APP_UPDATE_LASTUPDATEDATE  = "app.update.lastUpdateDate";
-const PREF_APP_EXTENSIONS_VERSION     = "app.extensions.version";
+const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
+const PREF_APP_UPDATE_AUTOINSTALL_ENABLED = "app.update.autoInstallEnabled";
+// Defines the notification behavior when updates are encountered
+//
+// 0 = download and install all updates (including major versions, provided
+//     no addons are made incompatible)
+// 1 = download and install minor (security) updates
+// 2 = ask before doing anything
+//
+const PREF_APP_UPDATE_AUTOINSTALL_MODE    = "app.update.autoInstallMode";
+const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
+const PREF_APP_UPDATE_TIMER               = "app.update.timer";
+
+const PREF_APP_UPDATE_URL                 = "app.update.url";
+
+const PREF_APP_UPDATE_LASTUPDATEDATE      = "app.update.lastUpdateDate";
+const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 
@@ -294,11 +303,10 @@ UpdatePrompt.prototype = {
   /**
    * See nsIUpdateService.idl
    */
-  showUpdatesAvailable: function(type, updates, updateCount) {
+  showUpdateAvailable: function(update) {
     var ary = Components.classes["@mozilla.org/supports-array;1"]
                         .createInstance(Components.interfaces.nsISupportsArray);
-    for (var i = 0; i < updateCount; ++i)
-      ary.AppendElement(updates[i]);
+    ary.AppendElement(update);
       
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Components.interfaces.nsIWindowMediator);
@@ -355,7 +363,9 @@ UpdateService.prototype = {
       this._timer = Components.classes["@mozilla.org/timer;1"]
                               .createInstance(Components.interfaces.nsITimer);
     this._timer.cancel();
-    this._timer.initWithCallback(this, 1000000, 
+    var interval = getPref("getIntPref", PREF_APP_UPDATE_TIMER);
+    dump("==================*** interval = " + interval + "\n");
+    this._timer.initWithCallback(this, interval, 
                                  Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
     return this._timer;
   },
@@ -403,31 +413,86 @@ UpdateService.prototype = {
 
     this.checkForUpdates(listener);
   },
-
+  
+  /**
+   * Determine whether or not an update requires user confirmation before it
+   * can be installed.
+   * @param   update
+   *          The update to be installed
+   * @returns true if a prompt UI should be shown asking the user if they want
+   *          to install the update, false if the update should just be 
+   *          silently downloaded and installed.
+   */
+  _shouldPrompt: function(update) {
+    // There are two possible outcomes here:
+    // 1. download and install the update automatically
+    // 2. alert the user about the presence of an update before doing anything
+    //
+    // The outcome we follow is determined as follows:
+    // 
+    // Update Type      Mode      Incompatible    Outcome
+    // Major            0         No              Auto Install
+    // Major            0         Yes             Notify and Confirm
+    // Major            1         Yes or No       Notify and Confirm
+    // Major            2         Yes or No       Notify and Confirm
+    // Minor            0         No              Auto Install
+    // Minor            0         Yes             Notify and Confirm
+    // Minor            1         No              Auto Install
+    // Minor            1         Yes             Notify and Confirm
+    // Minor            2         Yes or No       Notify and Confirm
+    //
+    // If app.update.enabled is set to false, an update check is not performed
+    // at all, and so none of the decision making above is entered into.
+    //
+    var updateEnabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED);
+    if (!updateEnabled)
+      return;
+      
+    var mode = getPref("getIntPref", PREF_APP_UPDATE_AUTOINSTALL_MODE);
+    var compatible = isCompatible(update);
+    if ((update.type == "major" && (mode == 0)) ||
+        (update.type == "minor" && (mode == 0 || mode == 1)))
+      return !compatible;
+    return true;
+  },
+  
+  /**
+   * Determine which of the specified updates should be installed and
+   * begin the download/installation process, optionally prompting the
+   * user for permission if required.
+   * @param   updates
+   *          An array of available updates
+   */
   _selectUpdate: function(updates) {
-    // If there is a major update available, then we may want to notify the
-    // user here and let them select whether or not to install it.  Otherwise,
-    // if there is only a minor update available then we will proceed to
-    // download it.  In the case where we have both, we'll defer to the UI
-    // layer code to decide how to proceed.
-
+    if (updates.length == 0) {
+      // XXXben erk
+    }
+    
+    // Choose the newest of the available minor and major updates. 
+    var newestMinor = updates[0], newestMajor = updates[0];
+    
+    var vc = new VersionChecker();
     for (var i = 0; i < updates.length; ++i) {
-      if (updates[i].type == "major") {
-        // Defer to UI
-        var prompter =
-            Components.classes["@mozilla.org/updates/update-prompt;1"].
-            createInstance(Components.interfaces.nsIUpdatePrompt);
-        prompter.showUpdatesAvailable(updates, updates.length);
-        return;
-      }
+      if (updates[i].type == "major" && 
+          vc.compare(updates[i].version, newestMajor.version) < 0)
+        newestMajor = updates[i];
+      else if (updates[i].type == "minor" && 
+               vc.compare(updates[i].version, newestMinor.version) < 0)
+        newestMinor = updates[i];
     }
-
-    if (updates[0].type == "minor") {
-      if (updates.length > 1)
-        LOG("Ignoring unexpected updates");
-
-      this.downloadUpdate(updates[0]);
+    
+    // If there's a major update, always try and fetch that one first, 
+    // otherwise fall back to the newest minor update.
+    var update = newestMajor || newestMinor;
+    if (this._shouldPrompt(update)) {
+      LOG("_selectUpdate: need to prompt user before continuing...");
+      var prompter = 
+          Components.classes["@mozilla.org/updates/update-prompt;1"].
+          createInstance(Components.interfaces.nsIUpdatePrompt);
+      prompter.showUpdateAvailable(update);
     }
+    else
+      this.downloadUpdate(update);
   },
 
   /**
@@ -499,7 +564,7 @@ UpdateService.prototype = {
  */
 function getPref(func, preference) {
   try {
-    return gPref[func](prefName);
+    return gPref[func](preference);
   }
   catch (e) {
   }
@@ -1215,8 +1280,25 @@ var gModule = {
   }
 };
 
-function NSGetModule(compMgr, fileSpec) 
-{
+function NSGetModule(compMgr, fileSpec) {
   return gModule;
+}
+
+/**
+ * Determines whether or there are installed addons which are incompatible 
+ * with this update.
+ * @param   update
+ *          The update to check compatibility against
+ * @returns true if there are no addons installed that are incompatible with
+ *          the specified update, false otherwise.
+ */
+function isCompatible(update) {
+#ifdef MOZ_XULAPP
+  var em = Components.classes["@mozilla.org/extensions/manager;1"]
+                      .getService(Components.interfaces.nsIExtensionManager);
+  var items = em.getIncompatibleItemList("", update.extensionversion,
+                                         nsIUpdateItem.TYPE_ADDON, { });
+  return items.length == 0;
+#endif
 }
 
