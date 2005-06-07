@@ -76,6 +76,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsIAtom.h"
 #include "nsContentUtils.h"
+#include "jscntxt.h"
 
 // For locale aware string methods
 #include "plstr.h"
@@ -183,8 +184,17 @@ NS_ScriptErrorReporter(JSContext *cx,
       }
 
       // First, notify the DOM that we have a script error.
+      /* We do not try to report Out Of Memory via a dom
+       * event because the dom event handler would encounter
+       * an OOM exception trying to process the event, and
+       * then we'd need to generate a new OOM event for that
+       * new OOM instance -- this isn't pretty.
+       */
       nsIDocShell *docShell = globalObject->GetDocShell();
-      if (docShell && !JSREPORT_IS_WARNING(report->flags)) {
+      if (docShell &&
+          !report ||
+          (report->errorNumber != JSMSG_OUT_OF_MEMORY &&
+           !JSREPORT_IS_WARNING(report->flags))) {
         static PRInt32 errorDepth; // Recursion prevention
         ++errorDepth;
 
@@ -261,6 +271,10 @@ NS_ScriptErrorReporter(JSContext *cx,
   // mozilla with -console.
   nsCAutoString error;
   error.Assign("JavaScript ");
+  if (!report) {
+    error.Append("[no report]: ");
+    error.Append(message);
+  } else {
   if (JSREPORT_IS_STRICT(report->flags))
     error.Append("strict ");
   if (JSREPORT_IS_WARNING(report->flags))
@@ -275,7 +289,7 @@ NS_ScriptErrorReporter(JSContext *cx,
                     error);
   if (status != nsEventStatus_eIgnore && !JSREPORT_IS_WARNING(report->flags))
     error.Append(" Error was suppressed by event handler\n");
-
+  }
   fprintf(stderr, "%s\n", error.get());
   fflush(stderr);
 #endif
