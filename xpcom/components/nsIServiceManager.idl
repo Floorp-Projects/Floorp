@@ -101,12 +101,6 @@ interface nsIServiceManager : nsISupports
  */
 #define NS_ERROR_SERVICE_IN_USE         NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM, 23)
 
-// Observing xpcom startup.  If you component has not been created, it will be.
-#define NS_XPCOM_STARTUP_OBSERVER_ID "xpcom-startup"
-
-// Observing xpcom shutdown
-#define NS_XPCOM_SHUTDOWN_OBSERVER_ID "xpcom-shutdown"
-
 // Observing xpcom autoregistration.  Topics will be 'start' and 'stop'.
 #define NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID "xpcom-autoregistration"
 

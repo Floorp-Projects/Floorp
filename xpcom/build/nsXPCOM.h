@@ -258,6 +258,56 @@ NS_Realloc(void* ptr, PRSize size);
 extern "C" NS_COM void
 NS_Free(void* ptr);
 
+
+/**
+ * Categories (in the category manager service) used by XPCOM:
+ */
+
+/**
+ * A category which is read after component registration but before
+ * the "xpcom-startup" notifications. Each category entry is treated
+ * as the contract ID of a service which implements
+ * nsIDirectoryServiceProvider. Each directory service provider is
+ * installed in the global directory service.
+ *
+ * @status FROZEN
+ */
+#define XPCOM_DIRECTORY_PROVIDER_CATEGORY "xpcom-directory-providers"
+
+/**
+ * A category which is read after component registration but before
+ * NS_InitXPCOM2 returns. Each category entry is treated as the contractID of
+ * a service: each service is instantiated, and if it implements nsIObserver
+ * the nsIObserver.observe method is called with the "xpcom-startup" topic.
+ *
+ * @status FROZEN
+ */
+#define NS_XPCOM_STARTUP_CATEGORY "xpcom-startup"
+
+
+/**
+ * Observer topics (in the observer service) used by XPCOM:
+ */
+
+/**
+ * At XPCOM startup after component registration is complete, the
+ * following topic is notified. In order to receive this notification,
+ * component must register their contract ID in the category manager,
+ *
+ * @see NS_XPCOM_STARTUP_CATEGORY
+ * @status FROZEN
+ */
+#define NS_XPCOM_STARTUP_OBSERVER_ID "xpcom-startup"
+
+/**
+ * At XPCOM shutdown, this topic is notified. All components must
+ * release any interface references to objects in other modules when
+ * this topic is notified.
+ *
+ * @status FROZEN
+ */
+#define NS_XPCOM_SHUTDOWN_OBSERVER_ID "xpcom-shutdown"
+
 extern "C" NS_COM nsresult
 NS_GetDebug(nsIDebug* *result);
 

@@ -38,12 +38,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsLocalFile.h"
 #include "nsDebug.h"
 #include "nsStaticAtom.h"
 #include "nsEnumeratorUtils.h"
+
+#include "nsICategoryManager.h"
+#include "nsISimpleEnumerator.h"
+#include "nsIStringEnumerator.h"
 
 #if defined(XP_MAC)
 #include <Folders.h>
@@ -120,7 +125,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
     *aFile = nsnull;
     
    //  Set the component registry location:
-    if (!mService)
+    if (!gService)
         return NS_ERROR_FAILURE;
 
     nsresult rv; 
@@ -399,7 +404,7 @@ nsIAtom*  nsDirectoryService::sSystemDirectory = nsnull;
 #endif
 
 
-nsDirectoryService* nsDirectoryService::mService = nsnull;
+nsDirectoryService* nsDirectoryService::gService = nsnull;
 
 nsDirectoryService::nsDirectoryService() :
     mHashtable(256, PR_TRUE)
@@ -410,13 +415,14 @@ NS_METHOD
 nsDirectoryService::Create(nsISupports *outer, REFNSIID aIID, void **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-    if (!mService)
+    NS_ENSURE_NO_AGGREGATION(outer);
+
+    if (!gService)
     {
-        mService = new nsDirectoryService();
-        if (!mService)
-            return NS_ERROR_OUT_OF_MEMORY;
+        return NS_ERROR_NOT_INITIALIZED;
     }
-    return mService->QueryInterface(aIID, aResult);
+
+    return gService->QueryInterface(aIID, aResult);
 }
 
 static const nsStaticAtom directory_atoms[] = {
@@ -503,13 +509,27 @@ static const nsStaticAtom directory_atoms[] = {
 #endif
 };    
 
-nsresult
+NS_IMETHODIMP
 nsDirectoryService::Init()
 {
+    NS_NOTREACHED("Don't call me, I was for internal use only!");
+    return NS_OK;
+}
+
+nsresult
+nsDirectoryService::RealInit()
+{
+    NS_ASSERTION(!gService, "Mustn't initialize twice!");
+
     nsresult rv;
-      
-    rv = NS_NewISupportsArray(getter_AddRefs(mProviders));
-    if (NS_FAILED(rv)) return rv;
+
+    nsRefPtr<nsDirectoryService> self = new nsDirectoryService();
+    if (!self)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = NS_NewISupportsArray(getter_AddRefs(self->mProviders));
+    if (NS_FAILED(rv))
+        return rv;
 
     NS_RegisterStaticAtoms(directory_atoms, NS_ARRAY_LENGTH(directory_atoms));
     
@@ -518,9 +538,12 @@ nsDirectoryService::Init()
     if (!defaultProvider)
         return NS_ERROR_OUT_OF_MEMORY;
     // AppendElement returns PR_TRUE for success.
-    rv = mProviders->AppendElement(defaultProvider) ? NS_OK : NS_ERROR_FAILURE;
+    rv = self->mProviders->AppendElement(defaultProvider) ? NS_OK : NS_ERROR_FAILURE;
+    if (NS_FAILED(rv))
+        return rv;
 
-    return rv;
+    self.swap(gService);
+    return NS_OK;
 }
 
 PRBool
@@ -533,9 +556,6 @@ nsDirectoryService::ReleaseValues(nsHashKey* key, void* data, void* closure)
 
 nsDirectoryService::~nsDirectoryService()
 {
-     // clear the global
-     mService = nsnull;
-
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsDirectoryService, nsIProperties, nsIDirectoryService, nsIDirectoryServiceProvider, nsIDirectoryServiceProvider2)
@@ -718,6 +738,38 @@ nsDirectoryService::RegisterProvider(nsIDirectoryServiceProvider *prov)
 
     // AppendElement returns PR_TRUE for success.
     return mProviders->AppendElement(supports) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+void
+nsDirectoryService::RegisterCategoryProviders()
+{
+    nsCOMPtr<nsICategoryManager> catman
+        (do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
+    if (!catman)
+        return;
+
+    nsCOMPtr<nsISimpleEnumerator> entries;
+    catman->EnumerateCategory(XPCOM_DIRECTORY_PROVIDER_CATEGORY,
+                              getter_AddRefs(entries));
+
+    nsCOMPtr<nsIUTF8StringEnumerator> strings(do_QueryInterface(entries));
+    if (!strings)
+        return;
+
+    PRBool more;
+    while (NS_SUCCEEDED(strings->HasMore(&more)) && more) {
+        nsCAutoString entry;
+        strings->GetNext(entry);
+
+        nsXPIDLCString contractID;
+        catman->GetCategoryEntry(XPCOM_DIRECTORY_PROVIDER_CATEGORY, entry.get(), getter_Copies(contractID));
+
+        if (contractID) {
+            nsCOMPtr<nsIDirectoryServiceProvider> provider = do_GetService(contractID.get());
+            if (provider)
+                RegisterProvider(provider);
+        }
+    }
 }
 
 NS_IMETHODIMP

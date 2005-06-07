@@ -242,18 +242,10 @@ RegisterGenericFactory(nsIComponentRegistrar* registrar,
 static PRBool CheckUpdateFile()
 {
     nsresult rv;
-    nsCOMPtr<nsIProperties> directoryService;
-    nsDirectoryService::Create(nsnull, 
-                               NS_GET_IID(nsIProperties), 
-                               getter_AddRefs(directoryService));  
-    
-    if (!directoryService) 
-        return PR_FALSE;
-
     nsCOMPtr<nsIFile> file;
-    rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, 
-                               NS_GET_IID(nsIFile), 
-                               getter_AddRefs(file));
+    rv = nsDirectoryService::gService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, 
+                                           NS_GET_IID(nsIFile), 
+                                           getter_AddRefs(file));
 
     if (NS_FAILED(rv)) {
         NS_WARNING("Getting NS_XPCOM_CURRENT_PROCESS_DIR failed");
@@ -268,9 +260,9 @@ static PRBool CheckUpdateFile()
         return PR_FALSE;
 
     nsCOMPtr<nsIFile> compregFile;
-    rv = directoryService->Get(NS_XPCOM_COMPONENT_REGISTRY_FILE,
-                               NS_GET_IID(nsIFile),
-                               getter_AddRefs(compregFile));
+    rv = nsDirectoryService::gService->Get(NS_XPCOM_COMPONENT_REGISTRY_FILE,
+                                           NS_GET_IID(nsIFile),
+                                           getter_AddRefs(compregFile));
 
     
     if (NS_FAILED(rv)) {
@@ -290,7 +282,6 @@ static PRBool CheckUpdateFile()
 
 
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
-nsIProperties     *gDirectoryService = NULL;
 PRBool gXPCOMShuttingDown = PR_FALSE;
 
 // For each class that wishes to support nsIClassInfo, add a line like this
@@ -481,17 +472,7 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 
     StartupSpecialSystemDirectory();
 
-    // Start the directory service so that the component manager init can use it.
-    rv = nsDirectoryService::Create(nsnull,
-                                    NS_GET_IID(nsIProperties),
-                                    (void**)&gDirectoryService);
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsIDirectoryService> dirService = do_QueryInterface(gDirectoryService, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-    rv = dirService->Init();
+    rv = nsDirectoryService::RealInit();
     if (NS_FAILED(rv))
         return rv;
 
@@ -513,23 +494,23 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
             rv = binDirectory->IsDirectory(&value);
 
             if (NS_SUCCEEDED(rv) && value) {
-                gDirectoryService->Set(NS_XPCOM_INIT_CURRENT_PROCESS_DIR, binDirectory);
+                nsDirectoryService::gService->Set(NS_XPCOM_INIT_CURRENT_PROCESS_DIR, binDirectory);
                 binDirectory->Clone(getter_AddRefs(xpcomLib));
             }
         }
         else {
-            gDirectoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, 
-                                   NS_GET_IID(nsIFile), 
-                                   getter_AddRefs(xpcomLib));
+            nsDirectoryService::gService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, 
+                                              NS_GET_IID(nsIFile), 
+                                              getter_AddRefs(xpcomLib));
         }
 
         if (xpcomLib) {
             xpcomLib->AppendNative(nsDependentCString(XPCOM_DLL));
-            gDirectoryService->Set(NS_XPCOM_LIBRARY_FILE, xpcomLib);
+            nsDirectoryService::gService->Set(NS_XPCOM_LIBRARY_FILE, xpcomLib);
         }
         
         if (appFileLocationProvider) {
-            rv = dirService->RegisterProvider(appFileLocationProvider);
+            rv = nsDirectoryService::gService->RegisterProvider(appFileLocationProvider);
             if (NS_FAILED(rv)) return rv;
         }
 
@@ -621,9 +602,9 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 #ifdef DEBUG_dougt
                 printf("start - Registering GRE components\n");
 #endif
-                rv = gDirectoryService->Get(NS_GRE_COMPONENT_DIR,
-                                            NS_GET_IID(nsIFile),
-                                            getter_AddRefs(greDir));
+                rv = nsDirectoryService::gService->Get(NS_GRE_COMPONENT_DIR,
+                                                       NS_GET_IID(nsIFile),
+                                                       getter_AddRefs(greDir));
                 if (NS_FAILED(rv)) {
                     NS_ERROR("Could not get GRE components directory!");
                     return rv;
@@ -653,9 +634,9 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
         //
 
         nsCOMPtr<nsISimpleEnumerator> dirList;
-        gDirectoryService->Get(NS_XPCOM_COMPONENT_DIR_LIST,
-                               NS_GET_IID(nsISimpleEnumerator),
-                               getter_AddRefs(dirList));
+        nsDirectoryService::gService->Get(NS_XPCOM_COMPONENT_DIR_LIST,
+                                          NS_GET_IID(nsISimpleEnumerator),
+                                          getter_AddRefs(dirList));
         if (dirList) {
             PRBool hasMore;
             while (NS_SUCCEEDED(dirList->HasMoreElements(&hasMore)) && hasMore) {
@@ -675,15 +656,20 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 
         // Make sure the compreg file's mod time is current.
         nsCOMPtr<nsIFile> compregFile;
-        rv = gDirectoryService->Get(NS_XPCOM_COMPONENT_REGISTRY_FILE,
-                                    NS_GET_IID(nsIFile),
-                                    getter_AddRefs(compregFile));
+        rv = nsDirectoryService::gService->Get(NS_XPCOM_COMPONENT_REGISTRY_FILE,
+                                               NS_GET_IID(nsIFile),
+                                               getter_AddRefs(compregFile));
         compregFile->SetLastModifiedTime(PR_Now() / 1000);
     }
     
     // Pay the cost at startup time of starting this singleton.
     nsIInterfaceInfoManager* iim = XPTI_GetInterfaceInfoManager();
     NS_IF_RELEASE(iim);
+
+    // After autoreg, but before we actually instantiate any components,
+    // add any services listed in the "xpcom-directory-providers" category
+    // to the directory service.
+    nsDirectoryService::gService->RegisterCategoryProviders();
 
     // Notify observers of xpcom autoregistration start
     NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_OBSERVER_ID, 
@@ -813,7 +799,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     nsProxyObjectManager::Shutdown();
 
     // Release the directory service
-    NS_IF_RELEASE(gDirectoryService);
+    NS_IF_RELEASE(nsDirectoryService::gService);
 
     // Shutdown nsLocalFile string conversion
     NS_ShutdownLocalFile();

@@ -67,16 +67,19 @@ class nsDirectoryService : public nsIDirectoryService,
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
 
   nsDirectoryService();
+   ~nsDirectoryService();
+
+  static nsresult RealInit();
+  void RegisterCategoryProviders();
 
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-private:
-   ~nsDirectoryService();
+  static nsDirectoryService* gService;
 
+private:
     nsresult GetCurrentProcessDirectory(nsILocalFile** aFile);
     
-    static nsDirectoryService* mService;
     static PRBool PR_CALLBACK ReleaseValues(nsHashKey* key, void* data, void* closure);
     nsSupportsHashtable mHashtable;
     nsCOMPtr<nsISupportsArray> mProviders;
