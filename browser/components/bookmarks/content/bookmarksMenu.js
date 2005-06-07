@@ -78,7 +78,7 @@ var BookmarksMenu = {
   {
     if (!aParent.hasChildNodes())
       return;
-    child = aParent.lastChild;
+    var child = aParent.lastChild;
     var removed = 0;
     while (child) {
       var cclass = child.getAttribute("class");
@@ -542,20 +542,21 @@ var BookmarksMenuDNDObserver = {
     // c) on Windows, there is no hang or crash associated with this, so we'll leave 
     // the functionality there. 
     if (navigator.platform != "Win32" && target.localName != "toolbarbutton")
-      return;
+      return false;
 
     // a drag start is fired when leaving an open toolbarbutton(type=menu) 
     // (see bug 143031)
     if (this.isContainer(target)) {
       if (this.isPlatformNotSupported) 
-        return;
+        return false;
       if (!aEvent.shiftKey && !aEvent.altKey && !aEvent.ctrlKey)
-        return;
+        return false;
       // menus open on mouse down
       target.firstChild.hidePopup();
     }
     var selection  = BookmarksMenu.getBTSelection(target);
     aXferData.data = BookmarksUtils.getXferDataFromSelection(selection);
+    return true;
   },
 
   onDragOver: function(aEvent, aFlavour, aDragSession) 
