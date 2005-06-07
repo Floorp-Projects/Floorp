@@ -6050,6 +6050,67 @@ ExtensionsDataSource.prototype = {
   }
 };
 
+function UpdateItem () {
+}
+UpdateItem.prototype = {
+  /**
+   * See nsIUpdateService.idl
+   */
+  init: function(id, version, installLocationKey, minAppVersion, maxAppVersion,
+                 name, downloadURL, iconURL, updateURL, type) {
+    this._id                  = id;
+    this._version             = version;
+    this._installLocationKey  = installLocationKey;
+    this._minAppVersion       = minAppVersion;
+    this._maxAppVersion       = maxAppVersion;
+    this._name                = name;
+    this._downloadURL         = downloadURL;
+    this._iconURL             = iconURL;
+    this._updateURL           = updateURL;
+    this._type                = type;
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  get id()                { return this._id;                },
+  get version()           { return this._version;           },
+  get installLocationKey(){ return this._installLocationKey;},
+  get minAppVersion()     { return this._minAppVersion;     },
+  get maxAppVersion()     { return this._maxAppVersion;     },
+  get name()              { return this._name;              },
+  get xpiURL()            { return this._downloadURL;       },
+  get iconURL()           { return this._iconURL            },
+  get updateRDF()         { return this._updateURL;         },
+  get type()              { return this._type;              },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get objectSource() {
+    return { id                 : this._id, 
+             version            : this._version, 
+             installLocationKey : this._installLocationKey,
+             minAppVersion      : this._minAppVersion,
+             maxAppVersion      : this._maxAppVersion,
+             name               : this._name, 
+             xpiURL             : this._downloadURL, 
+             iconURL            : this._iconURL, 
+             updateRDF          : this._updateURL,
+             type               : this._type 
+           }.toSource();
+  },
+  
+  /**
+   * See nsISupports.idl
+   */
+  QueryInterface: function(iid) {
+    if (!iid.equals(Components.interfaces.nsIUpdateItem) &&
+        !iid.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
 
 var gModule = {
   registerSelf: function(componentManager, fileSpec, location, type) {
@@ -6096,6 +6157,11 @@ var gModule = {
                contractID : ExtensionManager.prototype.contractID,
                className  : ExtensionManager.prototype.classDescription,
                factory    : #1#(ExtensionManager)
+             },
+    item:    { CID        : Components.ID("{F3294B1C-89F4-46F8-98A0-44E1EAE92518}"),
+               contractID : "@mozilla.org/updates/item;1",
+               className  : "Update Item",
+               factory    : #1#(UpdateItem)
              }
    },
 

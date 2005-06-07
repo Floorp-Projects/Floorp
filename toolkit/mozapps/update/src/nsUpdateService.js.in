@@ -99,7 +99,7 @@ var gConsole  = null;
  *          The string to write to the error console..
  */  
 function LOG(string) {
-  // dump("*** " + string + "\n");
+  dump("*** " + string + "\n");
   gConsole.logStringMessage(string);
 }
 
@@ -406,7 +406,7 @@ UpdateService.prototype = {
     var listener = {
       onProgress: function() { },
       onCheckComplete: function(updates, updateCount) {
-        self._selectUpdate(updates);
+        self._selectAndInstallUpdate(updates);
       },
       onError: function() { },
     }
@@ -457,15 +457,14 @@ UpdateService.prototype = {
   },
   
   /**
-   * Determine which of the specified updates should be installed and
-   * begin the download/installation process, optionally prompting the
-   * user for permission if required.
+   * Determine which of the specified updates should be installed.
    * @param   updates
    *          An array of available updates
    */
-  _selectUpdate: function(updates) {
+  selectUpdate: function(updates) {
     if (updates.length == 0) {
       // XXXben erk
+      return null;
     }
     
     // Choose the newest of the available minor and major updates. 
@@ -483,9 +482,20 @@ UpdateService.prototype = {
     
     // If there's a major update, always try and fetch that one first, 
     // otherwise fall back to the newest minor update.
-    var update = newestMajor || newestMinor;
+    return newestMajor || newestMinor;
+  },
+  
+  /**
+   * Determine which of the specified updates should be installed and
+   * begin the download/installation process, optionally prompting the
+   * user for permission if required.
+   * @param   updates
+   *          An array of available updates
+   */
+  _selectAndInstallUpdate: function(updates) {
+    var update = this.selectUpdate(updates);
     if (this._shouldPrompt(update)) {
-      LOG("_selectUpdate: need to prompt user before continuing...");
+      LOG("_selectAndInstallUpdate: need to prompt user before continuing...");
       var prompter = 
           Components.classes["@mozilla.org/updates/update-prompt;1"].
           createInstance(Components.interfaces.nsIUpdatePrompt);
@@ -1061,68 +1071,6 @@ Verifier.prototype = {
 
 };
 
-function UpdateItem () {
-}
-UpdateItem.prototype = {
-  /**
-   * See nsIUpdateService.idl
-   */
-  init: function(id, version, installLocationKey, minAppVersion, maxAppVersion,
-                 name, downloadURL, iconURL, updateURL, type) {
-    this._id                  = id;
-    this._version             = version;
-    this._installLocationKey  = installLocationKey;
-    this._minAppVersion       = minAppVersion;
-    this._maxAppVersion       = maxAppVersion;
-    this._name                = name;
-    this._downloadURL         = downloadURL;
-    this._iconURL             = iconURL;
-    this._updateURL           = updateURL;
-    this._type                = type;
-  },
-  
-  /**
-   * See nsIUpdateService.idl
-   */
-  get id()                { return this._id;                },
-  get version()           { return this._version;           },
-  get installLocationKey(){ return this._installLocationKey;},
-  get minAppVersion()     { return this._minAppVersion;     },
-  get maxAppVersion()     { return this._maxAppVersion;     },
-  get name()              { return this._name;              },
-  get xpiURL()            { return this._downloadURL;       },
-  get iconURL()           { return this._iconURL            },
-  get updateRDF()         { return this._updateURL;         },
-  get type()              { return this._type;              },
-
-  /**
-   * See nsIUpdateService.idl
-   */
-  get objectSource() {
-    return { id                 : this._id, 
-             version            : this._version, 
-             installLocationKey : this._installLocationKey,
-             minAppVersion      : this._minAppVersion,
-             maxAppVersion      : this._maxAppVersion,
-             name               : this._name, 
-             xpiURL             : this._downloadURL, 
-             iconURL            : this._iconURL, 
-             updateRDF          : this._updateURL,
-             type               : this._type 
-           }.toSource();
-  },
-  
-  /**
-   * See nsISupports.idl
-   */
-  QueryInterface: function(iid) {
-    if (!iid.equals(Components.interfaces.nsIUpdateItem) &&
-        !iid.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
-};
-
 function Version(aMajor, aMinor, aRelease, aBuild, aPlus) 
 { 
   this.major    = aMajor    || 0;
@@ -1266,16 +1214,10 @@ var gModule = {
                contractID : "@mozilla.org/updates/version-checker;1",
                className  : "Version Checker",
                factory    : #1#(VersionChecker)
-             },
-    item:    { CID        : Components.ID("{F3294B1C-89F4-46F8-98A0-44E1EAE92518}"),
-               contractID : "@mozilla.org/updates/item;1",
-               className  : "Update Item",
-               factory    : #1#(UpdateItem)
              }
   },
   
-  canUnload: function (aComponentManager) 
-  {
+  canUnload: function(componentManager) {
     return true;
   }
 };

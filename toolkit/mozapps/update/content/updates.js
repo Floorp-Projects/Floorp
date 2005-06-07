@@ -11,7 +11,7 @@ function LOG(string) {
 }
 
 var gUpdates = {
-  updates: null,
+  update: null,
   onClose: function() {
     var objects = {
       checking: gCheckingPage,
@@ -20,6 +20,13 @@ var gUpdates = {
     var pageid = document.documentElement.currentPage.pageid;
     if ("onClose" in objects[pageid]) 
       objects[pageid].onClose();
+  },
+  
+  onLoad: function() {
+    if (window.arguments[0]) {
+      this.update = window.arguments[0];
+      document.documentElement.advance();
+    }
   },
 }
 
@@ -65,7 +72,9 @@ var gCheckingPage = {
      * See nsIUpdateCheckListener.idl
      */
     onCheckComplete: function(updates, updateCount) {
-      gUpdates.updates = updates;
+      var aus = Components.classes["@mozilla.org/updates/update-service;1"]
+                          .getService(Components.interfaces.nsIApplicationUpdateService);
+      gUpdate.update = aus.selectUpdate(updates);
       document.documentElement.advance();
     },
 

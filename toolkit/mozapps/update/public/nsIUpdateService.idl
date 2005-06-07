@@ -173,91 +173,19 @@ interface nsIApplicationUpdateService : nsISupports
   void removeDownloadListener(in nsIRequestObserver listener);
 
   /**
+   * Selects the best update to install from a list of available updates.
+   * @param   updates
+   *          An array of updates that are available
+   * @param   updateCount
+   *          The length of the |updates| array
+   */
+  nsIUpdate selectUpdate([array, size_is(updateCount)] in nsIUpdate updates,
+                         in unsigned long updateCount);
+
+  /**
    * 
    */
   void downloadUpdate(in nsIUpdate update);
-};
-
-/**
- * An item managed by the Extension or Software Update System. Contains
- * metadata that describes the item.
- */
-[scriptable, uuid(415edb0a-4f2d-485c-9e10-f262b065ab33)]
-interface nsIUpdateItem : nsISupports
-{
-  /**
-   * The GUID of the item.
-   */
-  readonly attribute AString  id;
-
-  /**
-   * The Version of the item, in FVF format.
-   */
-  readonly attribute AString  version;
-
-  /**
-   * The minimum version of the application that this item works with, 
-   * in FVF format.
-   */
-  readonly attribute AString  minAppVersion;
-
-  /**
-   * The maximum version of the application that this item works with,
-   * in FVF format.
-   */
-  readonly attribute AString  maxAppVersion;
-
-  /**
-   * The name of the Install Location where this item is installed.
-   */
-  readonly attribute AString  installLocationKey;
-
-  /**
-   * The name of this item.
-   */
-  readonly attribute AString  name;
-
-  /**
-   * The URL of the XPI where this item can be downloaded.
-   */
-  readonly attribute AString  xpiURL;
-
-  /**
-   * The URL of the icon that can be shown for this item.
-   */
-  readonly attribute AString  iconURL;
-
-  /**
-   * The URL of the update RDF file for this item.
-   */
-  readonly attribute AString  updateRDF;
-  
-  const unsigned long TYPE_APP         = 0x01;
-  const unsigned long TYPE_EXTENSION   = 0x02;
-  const unsigned long TYPE_THEME       = 0x04;
-  const unsigned long TYPE_LOCALE      = 0x08;
-  const unsigned long TYPE_PLUGIN      = 0x10;
-  const unsigned long TYPE_ADDON       = TYPE_EXTENSION + TYPE_THEME + TYPE_LOCALE + TYPE_PLUGIN;
-  const unsigned long TYPE_ANY         = TYPE_APP + TYPE_ADDON;
-
-  /**
-   * The type of this item.
-   */
-  readonly attribute long type;
-
-  /**
-   * Initializes this Item object.
-   */
-  void init(in AString id, in AString version, 
-            in AString installLocationKey, in AString minAppVersion, 
-            in AString maxAppVersion, in AString name,
-            in AString downloadURL, in AString iconURL,
-            in AString updateURL, in long type);
-
-  /**
-   * Returns a JS Object source representing an nsIUpdateItem.
-   */
-  readonly attribute AString objectSource;
 };
 
 [scriptable, uuid(22d35700-5765-42e1-914b-a0da7c911a8c)]
