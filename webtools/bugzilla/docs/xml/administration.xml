@@ -1354,7 +1354,7 @@
       </orderedlist>
       <para>These controls are often described in this order, so a 
       product that requires a user to be a member of group "foo" 
-      to enter a bug and then requires that the bug stay resticted
+      to enter a bug and then requires that the bug stay restricted
       to group "foo" at all times and that only members of group "foo"
       can edit the bug even if they otherwise could see the bug would 
       have its controls summarized by...</para>
