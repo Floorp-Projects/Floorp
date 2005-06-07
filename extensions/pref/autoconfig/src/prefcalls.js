@@ -150,6 +150,16 @@ function getPref(prefName) {
     }
 }
 
+function clearPref(prefName) {
+
+    try {
+        var prefBranch = getPrefBranch();
+            prefBranch.clearUserPref(prefName);
+    }
+    catch(e) {
+    }
+        
+}
 
 function setLDAPVersion(version) {
     gVersion = version;
