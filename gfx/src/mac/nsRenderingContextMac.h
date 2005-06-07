@@ -177,8 +177,11 @@ public:
   nsresult   SetPortTextState();
   nsresult   Init(nsIDeviceContext* aContext, CGrafPtr aPort);
 
-  // for determining if we're running on at least Mac OS X 10.2
-  static PRBool OnJaguar();
+  // for determining if we're running on at least Mac OS X 10.2.0
+  static PRBool OnJaguarOrLater();
+
+  // for determining if we're running on at least Mac OS X 10.4.0 
+  static PRBool OnTigerOrLater();
 
 protected:
   enum GraphicStateChanges {
