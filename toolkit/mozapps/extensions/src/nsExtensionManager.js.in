@@ -21,6 +21,7 @@
  * Contributor(s):
  *  Ben Goodger <ben@mozilla.org> (Google Inc.)
  *  Benjamin Smedberg <benjamin@smedbergs.us>
+ *  Jens Bannmann <jens.b@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -84,7 +85,18 @@ const FILE_CONTENTS_MANIFEST          = "contents.rdf";
 const FILE_CHROME_MANIFEST            = "chrome.manifest";
 const FILE_INSTALLED_EXTENSIONS       = "installed-extensions.txt"
 const FILE_INSTALLED_EXTENSIONS_PROCESSED = "installed-extensions-processed.txt"
-#expand const TARGET_OS               = __OSARCH__;
+
+#expand const OS_TARGET               = __OS_TARGET__;
+
+#ifdef TARGET_XPCOM_ABI
+#expand const TARGET_XPCOM_ABI        = __TARGET_XPCOM_ABI__;
+#else
+// Provide a default for TARGET_XPCOM_ABI. It won't be compared to an item's metadata
+// (i.e. install.rdf can't specify e.g. WINNT_unknownABI as targetPlatform),
+// but it will be displayed in error messages and transmitted to update URLs.
+const TARGET_XPCOM_ABI                = "unknownABI";
+#endif
+
 const FILE_LOGFILE                    = "extensionmanager.log";
 
 const FILE_DEFAULT_THEME_JAR          = "classic.jar";
@@ -134,11 +146,12 @@ const URI_BRAND_PROPERTIES            = "chrome://branding/locale/brand.properti
 const URI_DOWNLOADS_PROPERTIES        = "chrome://mozapps/locale/downloads/downloads.properties";
 const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
 
-const INSTALLERROR_SUCCESS              = 0;
-const INSTALLERROR_INVALID_VERSION      = -1;
-const INSTALLERROR_INVALID_GUID         = -2;
-const INSTALLERROR_INCOMPATIBLE_VERSION = -3;
-const INSTALLERROR_PHONED_HOME          = -4;
+const INSTALLERROR_SUCCESS               = 0;
+const INSTALLERROR_INVALID_VERSION       = -1;
+const INSTALLERROR_INVALID_GUID          = -2;
+const INSTALLERROR_INCOMPATIBLE_VERSION  = -3;
+const INSTALLERROR_PHONED_HOME           = -4;
+const INSTALLERROR_INCOMPATIBLE_PLATFORM = -5;
 
 const MODE_WRONLY   = 0x02;
 const MODE_CREATE   = 0x08;
@@ -2454,6 +2467,8 @@ ExtensionManager.prototype = {
               return "Invalid Version";
             case INSTALLERROR_INCOMPATIBLE_VERSION:
               return "Incompatible Version";
+            case INSTALLERROR_INCOMPATIBLE_PLATFORM:
+              return "Incompatible Platform";
             }
           }
           LOG("... failure, item is not compatible, error: " + 
@@ -3195,6 +3210,9 @@ ExtensionManager.prototype = {
    *                     INSTALLERROR_INCOMPATIBLE_VERSION
    *                       error, item is not compatible with this version
    *                       of the application.
+   *                     INSTALLERROR_INCOMPATIBLE_PLATFORM
+   *                       error, item is not compatible with the operating
+   *                       system or ABI the application was built for.
    */
   _getInstallData: function(installManifest) {
     var installData = { id          : "", 
@@ -3243,7 +3261,47 @@ ExtensionManager.prototype = {
         }
       }
     }
-     
+
+    // If the item specifies one or more target platforms, make sure our OS/ABI
+    // combination is in the list - otherwise, refuse to install the item.
+    var targetPlatforms = null;
+    try {
+      targetPlatforms = installManifest.GetTargets(gInstallManifestRoot, 
+                                                   EM_R("targetPlatform"), 
+                                                   true);
+    } catch(e) {
+      // No targetPlatform nodes, continue.
+    }
+    if (targetPlatforms != null && targetPlatforms.hasMoreElements()) {
+      var foundMatchingOS = false;
+      var foundMatchingOSAndABI = false;
+      var requireABICompatibility = false;
+      while (targetPlatforms.hasMoreElements()) {
+        var targetPlatform = stringData(targetPlatforms.getNext());
+        var tokens = targetPlatform.split("_");
+        var os = tokens[0];
+        var abi = (tokens.length > 1) ? tokens[1] : null;
+        if (os == OS_TARGET) {
+          foundMatchingOS = true;
+          // The presence of any ABI part after our OS means ABI is important.
+          if (abi != null) {
+            requireABICompatibility = true;
+// If we don't know our ABI, we can't be compatible - skip the equality check.
+#ifdef TARGET_XPCOM_ABI
+            if (abi == TARGET_XPCOM_ABI) {
+              foundMatchingOSAndABI = true;
+              break;
+            }
+#endif
+          }
+        }
+      }
+      if (!foundMatchingOS || (requireABICompatibility && !foundMatchingOSAndABI)) {
+        installData.error = INSTALLERROR_INCOMPATIBLE_PLATFORM;
+        return installData;
+      }
+    }
+
     // Validate the Item ID
     if (!gIDTest.test(installData.id)) {
       installData.error = INSTALLERROR_INVALID_GUID;
@@ -3586,6 +3644,16 @@ ExtensionManager.prototype = {
       showMessage("incompatibleTitle", 
                   [bundle.GetStringFromName("type-" + installData.type)], 
                   "invalidVersionMessage", [installData.name, installData.version]);
+      break;
+    case INSTALLERROR_INCOMPATIBLE_PLATFORM:
+      const osABI = OS_TARGET + "_" + TARGET_XPCOM_ABI;
+      LOG("Incompatible Platform: Item: \"" + installData.id + "\" is not " + 
+          "compatible with '" + osABI + "'.");
+      var bundle = BundleManager.getBundle(URI_EXTENSIONS_PROPERTIES);
+      showMessage("incompatibleTitle", 
+                  [bundle.GetStringFromName("type-" + installData.type)], 
+                  "incompatiblePlatformMessage",
+                  [installData.name, BundleManager.appName, osABI]);
       break;
     default:
       break;
@@ -4597,7 +4665,8 @@ RDFItemUpdater.prototype = {
     dsURI = dsURI.replace(/%APP_ID%/g, this._updater._appID);
     dsURI = dsURI.replace(/%APP_VERSION%/g, this._updater._appVersion);
     dsURI = dsURI.replace(/%REQ_VERSION%/g, 1);
-    dsURI = dsURI.replace(/%APP_OS%/g, TARGET_OS);
+    dsURI = dsURI.replace(/%APP_OS%/g, OS_TARGET);
+    dsURI = dsURI.replace(/%APP_ABI%/g, TARGET_XPCOM_ABI);
     
     // escape() does not properly encode + symbols in any embedded FVF strings.
     dsURI = dsURI.replace(/\+/g, "%2B");
