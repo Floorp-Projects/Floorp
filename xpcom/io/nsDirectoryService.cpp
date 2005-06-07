@@ -538,7 +538,7 @@ nsDirectoryService::RealInit()
     if (!defaultProvider)
         return NS_ERROR_OUT_OF_MEMORY;
     // AppendElement returns PR_TRUE for success.
-    rv = self->mProviders->AppendElement(defaultProvider) ? NS_OK : NS_ERROR_FAILURE;
+    rv = ((nsDirectoryService*) self)->mProviders->AppendElement(defaultProvider) ? NS_OK : NS_ERROR_FAILURE;
     if (NS_FAILED(rv))
         return rv;
 
