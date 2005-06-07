@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: security.xml,v 1.4 2005/01/21 07:08:19 travis%sedsystems.ca Exp $ -->
+<!-- $Id: security.xml,v 1.5 2005/06/07 19:40:25 jocuri%softhome.net Exp $ -->
 
 <chapter id="security">
 <title>Bugzilla Security</title>
@@ -369,9 +369,8 @@ skip-networking
       <ulink
       url="http://www.cert.org/tech_tips/malicious_code_mitigation.html#3">the
       CERT advisory</ulink> on this issue.
-      If your installation is for an English speaking audience only, making the
-      change in <xref linkend="security-bugzilla-charset-ex"/> will prevent
-      this problem. 
+      Making the change in <xref linkend="security-bugzilla-charset-ex"/> will
+      prevent this problem. 
       </para>
 
       <example id="security-bugzilla-charset-ex">
@@ -381,7 +380,7 @@ skip-networking
         <filename>Bugzilla/CGI.pm</filename>:
         <programlisting>$self->charset('');</programlisting>
         and change it to:
-        <programlisting>$self->charset('ISO-8859-1');</programlisting>
+        <programlisting>$self->charset('UTF-8');</programlisting>
         </para>
       </example>
     </section>    
