@@ -2026,10 +2026,10 @@ nsJSContext::FireGCTimer()
 static JSBool JS_DLL_CALLBACK
 DOMGCCallback(JSContext *cx, JSGCStatus status)
 {
+  JSBool result = gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
+
   if (status == JSGC_BEGIN && PR_GetCurrentThread() != gDOMThread)
     return JS_FALSE;
-
-  JSBool result = gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
 
   // XPCJSRuntime::GCCallback does marking from the JSGC_MARK_END callback.
   // we need to call EndGCMark *after* marking is finished.
