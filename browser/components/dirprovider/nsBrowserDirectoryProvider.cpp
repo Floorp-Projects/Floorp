@@ -220,7 +220,7 @@ static const nsModuleComponentInfo components[] = {
   }
 };
 
-NS_IMPL_NSGETMODULE(BrowserDirProivder, components)
+NS_IMPL_NSGETMODULE(BrowserDirProvider, components)
 
 void
 nsBrowserDirectoryProvider::EnsureProfileFile(const nsACString& aLeafName,
