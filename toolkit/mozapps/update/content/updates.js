@@ -23,7 +23,7 @@ var gUpdates = {
   },
   
   onLoad: function() {
-    if (window.arguments[0]) {
+    if (window.arguments && window.arguments[0]) {
       this.update = window.arguments[0];
       document.documentElement.advance();
     }
@@ -74,7 +74,7 @@ var gCheckingPage = {
     onCheckComplete: function(updates, updateCount) {
       var aus = Components.classes["@mozilla.org/updates/update-service;1"]
                           .getService(Components.interfaces.nsIApplicationUpdateService);
-      gUpdate.update = aus.selectUpdate(updates);
+      gUpdates.update = aus.selectUpdate(updates, updates.length);
       document.documentElement.advance();
     },
 
@@ -101,36 +101,28 @@ var gUpdatesAvailablePage = {
   _incompatibleItems: null,
   
   onPageShow: function() {
-    var newestUpdate = gUpdates.updates[0];
-    var vc = Components.classes["@mozilla.org/updates/version-checker;1"]
-                       .createInstance(Components.interfaces.nsIVersionChecker);
-    for (var i = 0; i < gUpdates.updates.length; ++i) {
-      if (vc.compare(gUpdates.updates[i].version, newestUpdate.version) > 0)
-        newestVersion = gUpdates.updates[i];
-    }
-    
     var updateStrings = document.getElementById("updateStrings");
     var brandStrings = document.getElementById("brandStrings");
     var brandName = brandStrings.getString("brandShortName");
     var updateName = updateStrings.getFormattedString("updateName", 
-                                                      [brandName, newestVersion.version]);
+                                                      [brandName, gUpdates.update.version]);
     var updateNameElement = document.getElementById("updateName");
     updateNameElement.value = updateName;
     
-    var displayType = updateStrings.getString("updateType_" + newestVersion.type);
+    var displayType = updateStrings.getString("updateType_" + gUpdates.update.type);
     var updateTypeElement = document.getElementById("updateType");
-    updateTypeElement.setAttribute("type", newestVersion.type);
-    var intro = updateStrings.getFormattedString("introType_" + newestVersion.type, [brandName]);
+    updateTypeElement.setAttribute("type", gUpdates.update.type);
+    var intro = updateStrings.getFormattedString("introType_" + gUpdates.update.type, [brandName]);
     while (updateTypeElement.hasChildNodes())
       updateTypeElement.removeChild(updateTypeElement.firstChild);
     updateTypeElement.appendChild(document.createTextNode(intro));
     
     var updateMoreInfoURL = document.getElementById("updateMoreInfoURL");
-    updateMoreInfoURL.href = newestVersion.detailsurl;
+    updateMoreInfoURL.href = gUpdates.update.detailsurl;
     
     var em = Components.classes["@mozilla.org/extensions/manager;1"]
                        .getService(Components.interfaces.nsIExtensionManager);
-    var items = em.getIncompatibleItemList("", newestVersion.version,
+    var items = em.getIncompatibleItemList("", gUpdates.update.version,
                                            nsIUpdateItem.TYPE_ADDON, { });
     if (items.length > 0) {
       // There are addons that are incompatible with this update, so show the 
