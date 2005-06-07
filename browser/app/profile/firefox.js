@@ -75,7 +75,7 @@ pref("extensions.logging.enabled", false);
 pref("app.update.enabled", true);               // Whether or not app updates are enabled
 
 // Whether or not automated background app updates are enabled.
-pref("app.update.autoUpdateEnabled", true);
+pref("app.update.autoInstallEnabled", true);
 // If automatic download is enabled, whether or not the Update system should 
 // automatically install the downloaded updates or just download them and prompt
 // the user to install.
@@ -85,6 +85,7 @@ pref("app.update.url", "chrome://mozapps/locale/update/update.properties");
 pref("app.update.updatesAvailable", false);
 // Check for updates to Firefox every day
 pref("app.update.interval", 86400000);
+pref("app.update.timer", 100000000);
 // UTC offset when last App update was performed.
 pref("app.update.lastUpdateDate", 0);
 

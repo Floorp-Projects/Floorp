@@ -128,22 +128,19 @@ interface nsIUpdatePrompt : nsISupports
   void checkForUpdates();
 
   /**
-   * Show a message advising that a set of updates is available for
-   * download and install.
-   * @param   updates
-   *          An array of available nsIUpdates
-   * @param   updateCount
-   *          The length of |updates|
+   * Show a message advising that an update is available for download and
+   * install.
+   * @param   update
+   *          The update to be downloaded and installed
    */
-  void showUpdatesAvailable([array, size_is(updateCount)] in nsIUpdate updates,
-                            in unsigned long updateCount);
+  void showUpdateAvailable(in nsIUpdate update);
 };
 
 [scriptable, uuid(877ace25-8bc5-452a-8586-9c1cf2871994)]
 interface nsIUpdateChecker : nsISupports
 {
   /**
-   *
+   * Ends any pending update check.
    */
   void stopChecking();
 };
