@@ -391,7 +391,7 @@ function initMenus()
                        "') and " + netAway;
 
     client.menuSpecs["mainmenu:nickname"] = {
-        label: "",
+        label: client.prefs["nickname"],
         domID: "server-nick",
         getContext: getDefaultContext,
         items:

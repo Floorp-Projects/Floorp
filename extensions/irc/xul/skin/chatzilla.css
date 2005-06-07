@@ -58,6 +58,10 @@ window {
     margin: 5px;
 }
 
+.toolbarbutton-menu-dropmarker {
+    margin-left: 0.5em;
+}
+
 #input-widgets {
     border: none;
     -moz-binding: none;
