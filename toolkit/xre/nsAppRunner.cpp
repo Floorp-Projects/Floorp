@@ -440,6 +440,20 @@ nsXULAppInfo::GetGeckoBuildID(nsACString& aResult)
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetLogConsoleErrors(PRBool *aResult)
+{
+  *aResult = gLogConsoleErrors;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::SetLogConsoleErrors(PRBool aValue)
+{
+  gLogConsoleErrors = aValue;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetInSafeMode(PRBool *aResult)
 {
   *aResult = gSafeMode;
@@ -463,6 +477,24 @@ nsXULAppInfo::LockFactory(PRBool aLock)
 }
 
 static const nsXULAppInfo kAppInfo;
+PRBool gLogConsoleErrors
+#ifdef DEBUG
+         = PR_TRUE;
+#else
+         = PR_FALSE;
+#endif
+
+#define NS_ENSURE_TRUE_LOG(x, ret)               \
+  PR_BEGIN_MACRO                                 \
+  if (NS_UNLIKELY(!(x))) {                       \
+    NS_WARNING("NS_ENSURE_TRUE(" #x ") failed"); \
+    gLogConsoleErrors = PR_TRUE;                 \
+    return ret;                                  \
+  }                                              \
+  PR_END_MACRO
+
+#define NS_ENSURE_SUCCESS_LOG(res, ret)          \
+  NS_ENSURE_TRUE_LOG(NS_SUCCEEDED(res), ret)
 
 /**
  * Because we're starting/stopping XPCOM several times in different scenarios,
@@ -491,6 +523,8 @@ ScopedXPCOMStartup::~ScopedXPCOMStartup()
 {
   if (mServiceManager) {
     gDirServiceProvider->DoShutdown();
+
+    WriteConsoleLog();
 
     NS_ShutdownXPCOM(mServiceManager);
     mServiceManager = nsnull;
@@ -1102,7 +1136,7 @@ ProfileLockedDialog(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
 
     nsCOMPtr<nsIStringBundle> sb;
     sbs->CreateBundle(kProfileProperties, getter_AddRefs(sb));
-    NS_ENSURE_TRUE(sbs, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE_LOG(sbs, NS_ERROR_FAILURE);
 
     NS_ConvertUTF8toUTF16 appName(gAppData->name);
     const PRUnichar* params[] = {appName.get(), appName.get()};
@@ -1134,7 +1168,7 @@ ProfileLockedDialog(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
     PRInt32 button;
     rv = ps->ConfirmEx(nsnull, killTitle, killMessage, flags,
                        killTitle, nsnull, nsnull, nsnull, nsnull, &button);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS_LOG(rv, rv);
 
     if (button == 1 && aUnlocker) {
       rv = aUnlocker->Unlock(nsIProfileUnlocker::FORCE_QUIT);
@@ -1195,7 +1229,7 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
 
       appStartup->ExitLastWindowClosingSurvivalArea();
 
-      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_SUCCESS_LOG(rv, rv);
 
       aProfileSvc->Flush();
 
@@ -1206,7 +1240,7 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
       nsCOMPtr<nsIProfileLock> lock;
       rv = dlgArray->QueryElementAt(0, NS_GET_IID(nsIProfileLock),
                                     getter_AddRefs(lock));
-      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_SUCCESS_LOG(rv, rv);
 
       rv = lock->GetDirectory(getter_AddRefs(profD));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -2024,7 +2058,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
         rv = cmdLine->Run();
-        NS_ENSURE_SUCCESS(rv, 1);
+        NS_ENSURE_SUCCESS_LOG(rv, 1);
 
         nsCOMPtr<nsIWindowMediator> windowMediator
           (do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
@@ -2037,7 +2071,12 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
         PRBool more;
         windowEnumerator->HasMoreElements(&more);
-        if (more) {
+        if (!more) {
+          // We didn't open any windows. This is normally not a good thing,
+          // so we force console logging to file.
+          gLogConsoleErrors = PR_TRUE;
+        }
+        else {
 #ifndef XP_MACOSX
           appStartup->ExitLastWindowClosingSurvivalArea();
 #endif
@@ -2058,7 +2097,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           NS_TIMELINE_ENTER("appStartup->Run");
           rv = appStartup->Run();
           NS_TIMELINE_LEAVE("appStartup->Run");
-          NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appstartup");
+          if (NS_FAILED(rv)) {
+            NS_ERROR("failed to run appstartup");
+            gLogConsoleErrors = PR_TRUE;
+          }
 
 #ifdef MOZ_ENABLE_XREMOTE
           // shut down the x remote proxy window

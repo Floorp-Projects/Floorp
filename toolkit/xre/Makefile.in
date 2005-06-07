@@ -101,6 +101,7 @@ SHAREDCPPSRCS = \
 CPPSRCS = \
 	$(SHAREDCPPSRCS) \
 	nsAppRunner.cpp \
+	nsConsoleWriter.cpp \
 	nsXREDirProvider.cpp \
 	nsNativeAppSupportBase.cpp \
 	$(NULL)
