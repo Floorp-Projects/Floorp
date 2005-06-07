@@ -11,15 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla Browser code.
+# The Original Code is Mozilla Firefox browser.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Benjamin Smedberg <benjamin@smedbergs.us>
+#
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,33 +35,28 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = browsercomps
-XPIDL_MODULE = browsercompsbase
+MODULE               = browsercomps
+LIBRARY_NAME         = browserdirprovider
+IS_COMPONENT         = 1
+MODULE_NAME          = BrowserDirProvider
+EXPORT_LIBRARY       = 1
+MOZILLA_INTERNAL_API = 1
 
-XPIDLSRCS = \
-	nsIBrowserHandler.idl \
+REQUIRES = \
+	xpcom \
+	string \
+	xulapp \
 	$(NULL)
 
-EXTRA_PP_COMPONENTS = \
-	nsBrowserContentHandler.js \
-	$(NULL)
+CPPSRCS = nsBrowserDirectoryProvider.cpp
 
-DIRS = \
-	bookmarks \
-	dirprovider \
-	migration \
-	history \
-	preferences \
-	shell \
-	sidebar \
-	build \
-	$(NULL)
+EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk

@@ -150,6 +150,16 @@ struct nsXREAppData
   "@mozilla.org/xre/app-info;1"
 
 /**
+ * A directory service key which provides a list of all enabled extension
+ * directories. The list includes compatible platform-specific extension
+ * subdirectories.
+ *
+ * @note The directory list will have no members when the application is
+ *       launched in safe mode.
+ */
+#define XRE_EXTENSIONS_DIR_LIST "XREExtDL"
+
+/**
  * Begin an XUL application. Does not return until the user exits the
  * application.
  *

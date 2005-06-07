@@ -324,9 +324,6 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
         rv = mProfileDir->Clone(getter_AddRefs(file));
         rv |= file->AppendNative(NS_LITERAL_CSTRING("prefs.js"));
       }
-      // XXXbsmedberg this needs rethinking... many of these are app-specific,
-      // and apps are going to add new stuff. I don't have a good solution,
-      // yet.
       else if (!strcmp(aProperty, NS_APP_LOCALSTORE_50_FILE)) {
         rv = mProfileDir->Clone(getter_AddRefs(file));
         rv |= file->AppendNative(NS_LITERAL_CSTRING("localstore.rdf"));
@@ -336,29 +333,20 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
         rv = mProfileDir->Clone(getter_AddRefs(file));
         rv |= file->AppendNative(NS_LITERAL_CSTRING("history.dat"));
       }
-      else if (!strcmp(aProperty, NS_APP_USER_PANELS_50_FILE)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("panels.rdf"));
-        EnsureProfileFileExists(file);
-      }
       else if (!strcmp(aProperty, NS_APP_USER_MIMETYPES_50_FILE)) {
         rv = mProfileDir->Clone(getter_AddRefs(file));
         rv |= file->AppendNative(NS_LITERAL_CSTRING("mimeTypes.rdf"));
         EnsureProfileFileExists(file);
       }
-      else if (!strcmp(aProperty, NS_APP_BOOKMARKS_50_FILE)) {
+      else if (!strcmp(aProperty, NS_APP_STORAGE_50_FILE)) {
         rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("bookmarks.html"));
+        rv |= file->AppendNative(NS_LITERAL_CSTRING("storage.sdb"));
       }
       else if (!strcmp(aProperty, NS_APP_DOWNLOADS_50_FILE)) {
         rv = mProfileDir->Clone(getter_AddRefs(file));
         rv |= file->AppendNative(NS_LITERAL_CSTRING("downloads.rdf"));
       }
-      else if (!strcmp(aProperty, NS_APP_SEARCH_50_FILE)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("search.rdf"));
-        EnsureProfileFileExists(file);
-      }
+      // XXXbsmedberg move these defines into application-specific providers.
       else if (!strcmp(aProperty, NS_APP_MAIL_50_DIR)) {
         rv = mProfileDir->Clone(getter_AddRefs(file));
         rv |= file->AppendNative(NS_LITERAL_CSTRING("Mail"));
@@ -374,10 +362,6 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
       else if (!strcmp(aProperty, NS_APP_MESSENGER_FOLDER_CACHE_50_DIR)) {
         rv = mProfileDir->Clone(getter_AddRefs(file));
         rv |= file->AppendNative(NS_LITERAL_CSTRING("panacea.dat"));
-      }
-      else if (!strcmp(aProperty, NS_APP_STORAGE_50_FILE)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("storage.sdb"));
       }
     }
   }
@@ -449,7 +433,19 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
     profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
   }
 
-  if (!strcmp(aProperty, NS_XPCOM_COMPONENT_DIR_LIST)) {
+  if (!strcmp(aProperty, XRE_EXTENSIONS_DIR_LIST)) {
+    nsCOMArray<nsIFile> directories;
+    
+    if (mProfileDir && !gSafeMode) {
+      static const char *const kAppendNothing[] = { nsnull };
+
+      LoadDirsIntoArray(profileFile, "ExtensionDirs",
+                        kAppendNothing, directories);
+    }
+
+    rv = NS_NewArrayEnumerator(aResult, directories);
+  }
+  else if (!strcmp(aProperty, NS_XPCOM_COMPONENT_DIR_LIST)) {
     nsCOMArray<nsIFile> directories;
 
     if (mXULAppDir) {
