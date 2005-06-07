@@ -343,12 +343,18 @@
         <toolbarbutton id="new-tab-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&tabCmd.label;"
                        command="cmd_newNavigatorTab"
-                       tooltiptext="&newTabButton.tooltip;"/>
+                       tooltiptext="&newTabButton.tooltip;"
+                       ondragover="nsDragAndDrop.dragOver(event, newTabButtonObserver);"
+                       ondragdrop="nsDragAndDrop.drop(event, newTabButtonObserver);"
+                       ondragexit="nsDragAndDrop.dragExit(event, newTabButtonObserver);"/>         
 
         <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&newNavigatorCmd.label;"
                        command="key_newNavigator"
-                       tooltiptext="&newWindowButton.tooltip;"/>
+                       tooltiptext="&newWindowButton.tooltip;"
+                       ondragover="nsDragAndDrop.dragOver(event, newWindowButtonObserver);"
+                       ondragdrop="nsDragAndDrop.drop(event, newWindowButtonObserver);"
+                       ondragexit="nsDragAndDrop.dragExit(event, newWindowButtonObserver);"/>
 
         <toolbarbutton id="cut-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&cutCmd.label;"

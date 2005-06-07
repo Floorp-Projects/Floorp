@@ -2485,6 +2485,68 @@ var bookmarksButtonObserver = {
   }
 }
 
+var newTabButtonObserver = {
+  onDragOver: function(aEvent, aFlavour, aDragSession)
+    {
+      var statusTextFld = document.getElementById("statusbar-display");
+      statusTextFld.label = gNavigatorBundle.getString("droponnewtabbutton");
+      aEvent.target.setAttribute("dragover", "true");
+      return true;
+    },
+  onDragExit: function (aEvent, aDragSession)
+    {
+      var statusTextFld = document.getElementById("statusbar-display");
+      statusTextFld.label = "";
+      aEvent.target.removeAttribute("dragover");
+    },
+  onDrop: function (aEvent, aXferData, aDragSession)
+    {
+      var xferData = aXferData.data.split("\n");
+      var uri = xferData[0] ? xferData[0] : xferData[1];
+      if (uri)
+        openNewTabWith(uri, aXferData, aEvent, false);
+    },
+  getSupportedFlavours: function ()
+    {
+      var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("text/unicode");
+      flavourSet.appendFlavour("text/x-moz-url");
+      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+      return flavourSet;
+    }
+}
+
+var newWindowButtonObserver = {
+  onDragOver: function(aEvent, aFlavour, aDragSession)
+    {
+      var statusTextFld = document.getElementById("statusbar-display");
+      statusTextFld.label = gNavigatorBundle.getString("droponnewwindowbutton");
+      aEvent.target.setAttribute("dragover", "true");
+      return true;
+    },
+  onDragExit: function (aEvent, aDragSession)
+    {
+      var statusTextFld = document.getElementById("statusbar-display");
+      statusTextFld.label = "";
+      aEvent.target.removeAttribute("dragover");
+    },
+  onDrop: function (aEvent, aXferData, aDragSession)
+    {
+      var xferData = aXferData.data.split("\n");
+      var uri = xferData[0] ? xferData[0] : xferData[1];
+      if (uri)
+        openNewWindowWith(uri, aXferData, null, false);
+    },
+  getSupportedFlavours: function ()
+    {
+      var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("text/unicode");
+      flavourSet.appendFlavour("text/x-moz-url");
+      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+      return flavourSet;
+    }
+}
+
 var goButtonObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession)
     {
@@ -2512,9 +2574,9 @@ var goButtonObserver = {
   getSupportedFlavours: function ()
     {
       var flavourSet = new FlavourSet();
-      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
-      flavourSet.appendFlavour("text/x-moz-url");
       flavourSet.appendFlavour("text/unicode");
+      flavourSet.appendFlavour("text/x-moz-url");
+      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
       return flavourSet;
     }
 }
