@@ -743,6 +743,77 @@ perl runtests.pl 2 --verbose
           </para>
         </answer>
       </qandaentry>
+
+      <qandaentry>
+        <question id="faq-admin-moving">
+          <para>
+            How do I move a Bugzilla installation from one machine to another?
+          </para>
+        </question>
+
+        <answer>
+          <para>
+            Use mysqldump to make a backup of the bugs database. For a
+            typical Bugzilla setup, such a command might look like this:
+            <programlisting>
+/usr/bin/mysqldump -u(username) -p(password) --database bugs > bugzilla-backup.txt
+            </programlisting>
+            See the <ulink url="http://dev.mysql.com/doc/mysql/en/mysqldump.html">
+            mysqldump documentation</ulink> for more information on using 
+            the tool, including how to restore your copy onto the destination
+            machine.
+          </para>
+
+          <warning>
+            <para>
+              Depending on the size of your database, and the power of your
+              machine, the mysqldump command could be running long enough
+              that the password would be visible to someone using the
+              <command>ps</command> command. If you are on a multi-user
+              machine, and this is a concern to you, create an entry in
+              the file <filename>~/.my.cnf</filename> that looks like this:
+              <programlisting>
+[mysqldump]
+user=bugs
+password=mypassword
+              </programlisting>
+              and then leave the 'user' and 'password' params out of the
+              command line.
+            </para>
+          </warning>
+              
+          <para>
+            On your new machine, follow the instructions found in <xref 
+            linkend="installing-bugzilla"/> as far as setting up the physical
+            environment of the new machine with perl, webserver, modules, etc. 
+            Having done that, you can either: copy your entire Bugzilla
+            directory from the old machine to a new one (if you want to keep
+            your existing code and modifications), or download a newer version
+            (if you are planning to upgrade at the same time). Even if you are
+            upgrading to clean code, you will still want to bring over the 
+            <filename>localconfig</filename> file, and the 
+            <filename class="directory">data</filename> directory from the
+            old machine, as they contain configuration information that you 
+            probably won't want to re-create.
+          </para>
+
+          <note>
+            <para>
+              If the location or port number of your SQL server changed
+              as part of the move, you'll need to update the appropriate
+              variables in localconfig before taking the next step.
+            </para>
+          </note>
+
+          <para>
+            Once you have your code in place, and your database has
+            been restored from the backup you made in step 1, run
+            <command>checksetup.pl</command>. This will upgrade your
+            database (if necessary), rebuild your templates, etc.
+          </para>
+        </answer>
+      </qandaentry>
+
     </qandadiv>
 
     <qandadiv id="faq-security">
