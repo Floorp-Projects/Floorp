@@ -40,7 +40,6 @@ components/offlineStartup.js
 components/mdn-service.js
 components/libsmimestb.so
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Chrome Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -68,6 +67,8 @@ defaults/profile/US/localstore.rdf
 defaults/profile/US/mimeTypes.rdf
 defaults/isp/US/movemail.rdf
 defaults/isp/movemail.rdf
+defaults/autoconfig/platform.js
+defaults/autoconfig/prefcalls.js
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; App extensions to Mail
