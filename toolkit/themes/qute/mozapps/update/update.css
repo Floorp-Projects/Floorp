@@ -6,7 +6,10 @@
 }
 
 updateitem {
-  padding: 5px 0px 5px 5px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 0px;
   border-bottom: 1px dotted #C0C0C0;
   margin-bottom: 5px;
 }
@@ -20,7 +23,7 @@ updateitem {
   height: 32px;
   max-width: 32px !important;
   max-height: 32px !important;
-  margin-right: 5px;
+  -moz-margin-end: 5px;
 }
 
 .updateItemName {
@@ -60,24 +63,39 @@ updateitem {
 }
 
 /* Inline Update Notifications */
-.updateIndicator[updateCount="0"] {
-  visibility: hidden;
+toolbarbutton[type="updates"] {
+  padding: 0px;
+  -moz-appearance: none;
+  border: none;
 }
-
-.updateIcon {
+toolbarbutton[type="updates"][updateCount="0"] {
+  visibility: collapse;
+}
+toolbarbutton[type="updates"] > .toolbarbutton-icon {
   list-style-image: url("chrome://mozapps/skin/update/extensionalert.png"); 
   -moz-image-region: rect(0px 16px 16px 0px);
   width: 16px;
   height: 16px;
+  margin: 0px 2px;
 }
-.updateIcon[severity="0"] {
+toolbarbutton[type="updates"][severity="0"] > .toolbarbutton-icon {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
-.updateIcon[severity="1"] {
+toolbarbutton[type="updates"][severity="1"] > .toolbarbutton-icon {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
-.updateIcon[severity="2"] {
+toolbarbutton[type="updates"][severity="2"] > .toolbarbutton-icon {
   -moz-image-region: rect(0px 48px 16px 32px);
+}
+
+.throbber {
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+  width: 16px;
+  height: 16px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  -moz-margin-start: 5px;
+  -moz-margin-end: 2px;
 }
 
 #incompatibleAlert {
@@ -151,7 +169,7 @@ link:active {
 }
 
 .updateCategoryContent {
-  margin-left: 12px;
+  -moz-margin-start: 12px;
 }
 
 #optionalItemsList {
