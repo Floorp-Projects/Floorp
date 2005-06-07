@@ -209,8 +209,11 @@ NS_IMETHODIMP mozInlineSpellChecker::SpellCheckAfterEditorChange(PRInt32 action,
                                                                  PRInt32 aEndOffset)
 {
   NS_ENSURE_ARG_POINTER(aSelection);
+  if (!mSpellCheck)
+    return NS_OK; // disabling spell checking is not an error
+
   nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
-  if (!mSpellCheck || !editor) 
+  if (!editor) 
     return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMNode> anchorNode;
