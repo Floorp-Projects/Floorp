@@ -42,7 +42,7 @@ interface nsIDocument;
 interface nsIScriptElement;
 interface nsIScriptLoaderObserver;
 
-[scriptable, uuid(501209d3-7edf-437d-9948-3c6d1c08ef7a)]
+[scriptable, uuid(339a4eb5-dac6-4034-8c43-f4f8c645ce57)]
 interface nsIScriptLoader : nsISupports {
   /**
    * Initialize loader with a document. The container of this document
@@ -88,6 +88,12 @@ interface nsIScriptLoader : nsISupports {
    */
   void processScriptElement(in nsIScriptElement aElement,
                             in nsIScriptLoaderObserver aObserver);
+
+  /**
+   * Gets the currently executing script. This is useful if you want to
+   * generate a unique key based on the currently executing script.
+   */
+  nsIScriptElement getCurrentScript();
 
   /**
    * Whether the loader is enabled or not.

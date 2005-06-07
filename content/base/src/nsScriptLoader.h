@@ -84,6 +84,7 @@ protected:
   nsIDocument* mDocument;                   // [WEAK]
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
   nsCOMArray<nsScriptLoadRequest> mPendingRequests;
+  nsCOMPtr<nsIScriptElement> mCurrentScript;
   PRBool mEnabled;
 };
 
