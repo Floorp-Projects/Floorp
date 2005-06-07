@@ -40,24 +40,31 @@
 #expand pref("general.useragent.locale", "__AB_CD__");
 pref("general.skins.selectedSkin", "classic/1.0");
 
-pref("app.extensions.version", "1.0+");
-
 #ifdef XP_MACOSX
 pref("browser.chromeURL", "chrome://messenger/content/messengercompose/messengercompose.xul");
 pref("mail.biff.animate_dock_icon", false);
 #endif
 
+pref("app.extensions.version", "1.0+");
+pref("update.app.enabled", true); // Whether or not app updates are enabled 
+pref("update.app.url", "chrome://mozapps/locale/update/update.properties");	
+pref("update.extensions.enabled", true);
+
 // App-specific update preferences
 pref("app.update.enabled", true);               // Whether or not app updates are enabled
-pref("app.update.autoUpdateEnabled", true);     // Whether or not background app updates 
-                                                // are enabled
+
+// Whether or not automated background app updates are enabled.
+pref("app.update.autoInstallEnabled", true); 
+// If automatic download is enabled, whether or not the Update system should 
+// automatically install the downloaded updates or just download them and prompt
+// the user to install.
+pref("app.update.autoInstallMode", 0);  
+
 pref("app.update.url", "chrome://mozapps/locale/update/update.properties");
 pref("app.update.updatesAvailable", false);
-pref("app.update.interval", 86400000);          // Check for updates to Firefox every day
-pref("app.update.lastUpdateDate", 0);           // UTC offset when last App update was 
-                                                // performed. 
-pref("app.update.performed", false);            // Whether or not an update has been 
-                                                // performed this session. 
+pref("app.update.interval", 86400000);  // Check for updates to Thunderbird every day
+pref("app.update.timer", 100000000);
+pref("app.update.lastUpdateDate", 0);
 
 // Developers can set this to |true| if they are constantly changing files in their
 // extensions directory so that the extension system does not constantly think that
