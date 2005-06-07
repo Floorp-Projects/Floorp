@@ -313,7 +313,7 @@ ReportStatementTooLarge(JSContext *cx, JSCodeGenerator *cg)
   offsets) of targets that come after a jump target (for when a jump below
   that target needs to be extended).  We use an AVL tree, implemented using
   recursion, but with some tricky optimizations to its height-balancing code
-  (see http://www.enteract.com/~bradapp/ftp/src/libs/C++/AvlTrees.html).
+  (see http://www.cmcrossroads.com/bradapp/ftp/src/libs/C++/AvlTrees.html).
 
   A final wrinkle: backpatch chains are linked by jump-to-jump offsets with
   positive sign, even though they link "backward" (i.e., toward lower bytecode
