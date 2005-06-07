@@ -3,10 +3,6 @@ logComment("initInstall: " + err);
 
 addDirectory("", "$Version$", "bin", getFolder("Program"), "", true);
 
-var jarFolder = getFolder("Chrome", "reporter.jar");
-
-registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/classic/reporter/");
-
 err = getLastError();
 if (err==SUCCESS)
     performInstall(); 

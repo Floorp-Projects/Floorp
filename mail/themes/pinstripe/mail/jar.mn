@@ -2,8 +2,7 @@ classic.jar:
      skin/classic/global/preview.png                  
      skin/classic/global/tree/treetwisty.png                        (icons/treetwisty.png) 
      skin/classic/global/tree/treetwisty-open.png                   (icons/treetwisty-open.png) 
-*    skin/classic/global/contents.rdf                               (global-contents.rdf)
-*    skin/classic/messenger/contents.rdf
+% skin messenger classic/1.0 %skin/classic/messenger/
      skin/classic/messenger/dialogs.css 
      skin/classic/messenger/messenger.css
      skin/classic/messenger/primaryToolbar.css
@@ -79,10 +78,10 @@ classic.jar:
      skin/classic/messenger/messengercompose/small-button-base.png   (compose/small-button-base.png)
      skin/classic/messenger/messengercompose/small-button-disabled.png        (compose/small-button-disabled.png)
      skin/classic/messenger/messengercompose/small-button-pressed.png         (compose/small-button-pressed.png)
+% skin messenger-newsblog classic/1.0 %skin/classic/messenger-newsblog/
      skin/classic/messenger-newsblog/feed-subscriptions.css         (newsblog/feed-subscriptions.css)
      skin/classic/messenger-newsblog/newsBlogOverlay.css            (newsblog/newsBlogOverlay.css)
      skin/classic/messenger-newsblog/icons/folder-search-rss.png    (newsblog/folder-search-rss.png)
-     skin/classic/messenger-newsblog/contents.rdf                   (newsblog/contents.rdf)
      skin/classic/messenger/preferences/preferences.css             (preferences/preferences.css)
      skin/classic/messenger/preferences/mail-options.png            (preferences/mail-options.png)
      skin/classic/messenger/smime/msgCompSMIMEOverlay.css           (smime/msgCompSMIMEOverlay.css)

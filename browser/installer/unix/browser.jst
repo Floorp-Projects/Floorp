@@ -89,12 +89,6 @@ if (verifyDiskSpace(communicatorFolder, srDest))
     var ignoreErr = dirCreate(pluginsFolder);
     logComment("dirCreate() returned: " + ignoreErr);
 
-    // register chrome
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome", "classic.jar"), "skin/classic/browser/");
-
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/autoconfig/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/wallet/");
-
     if (err==SUCCESS)
     {
 	    err = performInstall(); 

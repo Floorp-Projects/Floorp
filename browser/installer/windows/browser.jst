@@ -524,12 +524,6 @@ if(verifyDiskSpace(fProgram, srDest))
     // we don't want to fail on errors for the above two
     resetError();
 
-    // register chrome. Most chrome is in .manifest files now, as we migrate
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome", "classic.jar"), "skin/classic/browser/");
-    
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/autoconfig/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/wallet/");
-
     // Create the uninstall folder. 
     err = File.dirCreate(getFolder("Program", "uninstall"));
     logComment("dirCreate() of Program/uninstall returned: " + err);

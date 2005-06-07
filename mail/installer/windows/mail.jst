@@ -797,13 +797,6 @@ if(verifyDiskSpace(fProgram, srDest))
     // we don't want to fail on errors for the above two
     resetError();
 
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"), "skin/classic/global/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"), "skin/classic/communicator/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"), "skin/classic/mozapps/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"), "skin/classic/navigator/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"), "skin/classic/editor/");
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"), "skin/classic/messenger/");
-
     // Create the uninstall folder. 
     err = File.dirCreate(getFolder("Program", "uninstall"));
     logComment("dirCreate() of Program/uninstall returned: " + err);

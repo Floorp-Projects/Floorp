@@ -1,10 +1,9 @@
 classic.jar:
 +   skin/classic/global/tree.css
-*+  skin/classic/global/contents.rdf                         (global-contents.rdf)
 +   skin/classic/global/alerts/alert.css
-*   skin/classic/messenger/contents.rdf
     skin/classic/communicator/communicator.css
     skin/classic/communicator/smileys.css
+% skin messenger classic/1.0 %skin/classic/messenger/
     skin/classic/messenger/primaryToolbar.css
     skin/classic/messenger/accountCentral.css
     skin/classic/messenger/accountManage.css
@@ -42,7 +41,7 @@ classic.jar:
     skin/classic/messenger/messengercompose/compose-toolbar.png  (compose/compose-toolbar.png)
     skin/classic/messenger/messengercompose/compose-toolbar-small.png   (compose/compose-toolbar-small.png)
     skin/classic/messenger/messengercompose/format-buttons.png  (compose/format-buttons.png)
-    skin/classic/messenger-newsblog/contents.rdf                (newsblog/contents.rdf)
+% skin messenger-newsblog classic/1.0 %skin/classic/messenger-newsblog/
     skin/classic/messenger-newsblog/feed-subscriptions.css      (newsblog/feed-subscriptions.css)
     skin/classic/messenger-newsblog/newsBlogOverlay.css         (newsblog/newsBlogOverlay.css)
     skin/classic/messenger-newsblog/icons/rss-feed.png          (newsblog/rss-feed.png)

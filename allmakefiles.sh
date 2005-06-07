@@ -892,6 +892,7 @@ browser/components/bookmarks/Makefile
 browser/components/bookmarks/public/Makefile
 browser/components/bookmarks/src/Makefile
 browser/components/build/Makefile
+browser/components/dirprovider/Makefile
 browser/components/history/Makefile
 browser/components/migration/Makefile
 browser/components/migration/public/Makefile
@@ -1021,7 +1022,6 @@ toolkit/themes/winstripe/help/Makefile
 toolkit/themes/winstripe/mozapps/Makefile
 toolkit/xre/Makefile
 toolkit/components/passwordmgr/resources/content/contents.rdf
-toolkit/mozapps/contents-content.rdf
 "
 
 
