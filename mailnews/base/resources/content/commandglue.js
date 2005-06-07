@@ -1035,21 +1035,6 @@ function RemoveMailOfflineObserver()
   observerService.removeObserver(mailOfflineObserver,"network:offline-status-changed");
 }
 
-function getViewName(okCallbackFunc, defaultViewName) 
-{
-  var preselectedURI = GetSelectedFolderURI();
-  var folderTree = GetFolderTree();
-
-  var name = GetFolderNameFromUri(preselectedURI, folderTree);
-  name += defaultViewName + "-view";
-  var dialog = window.openDialog(
-                          "chrome://messenger/content/virtualFolderName.xul",
-                          "newFolder",
-                          "chrome,titlebar,modal",
-                          {siblingFolderURI: preselectedURI, searchFolderURIs: preselectedURI, 
-                          okCallback: okCallbackFunc, name: name});
-}
-
 function getSearchTermString(searchTerms)
 {
   var searchIndex;

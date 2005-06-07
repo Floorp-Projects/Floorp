@@ -110,16 +110,11 @@ function menu_new_init()
                          .getService(Components.interfaces.nsIIOService);
   var showNew = ((serverType != 'nntp') && canCreateNew) || isInbox;
   ShowMenuItem("menu_newFolder", showNew);
+  ShowMenuItem("menu_newVirtualFolder", showNew);
   EnableMenuItem("menu_newFolder", !isIMAPFolder || !ioService.offline);
+  EnableMenuItem("menu_newVirtualFolder", true);
   if (showNew)
-  {
-    if (isServer || isInbox)
-      SetMenuItemLabel("menu_NewFolder",
-        gMessengerBundle.getString("newFolder"));
-    else
-      SetMenuItemLabel("menu_NewFolder",
-        gMessengerBundle.getString("newSubfolder"));
-  }
+    SetMenuItemLabel("menu_newFolder", gMessengerBundle.getString((isServer || isInbox) ? "newFolderMenuItem" : "newSubfolderMenuItem"));
 }
 
 function goUpdateMailMenuItems(commandset)

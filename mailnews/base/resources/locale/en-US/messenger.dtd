@@ -46,6 +46,8 @@
 <!ENTITY newMessage.accesskey "N">
 <!ENTITY newFolderCmd.label "Folder...">
 <!ENTITY newFolderCmd.accesskey "F">
+<!ENTITY newVirtualFolderCmd.label "Saved Search...">
+<!ENTITY newVirtualFolderCmd.accesskey "S">
 <!ENTITY newAccountCmd.label "Account...">
 <!ENTITY newAccountCmd.accesskey "A">
 <!ENTITY openMessageMenu.label "Open">
@@ -566,7 +568,6 @@
 <!ENTITY SearchNameOrEmail.accesskey "N">
 <!ENTITY advancedButton.label "Advanced...">
 <!ENTITY advancedButton.accesskey "A">
-<!ENTITY saveAsVirtualFolderMenu.label "Save as Virtual Folder">
 
 <!ENTITY clearButton.label "Clear">
 <!ENTITY clearButton.accesskey "C">

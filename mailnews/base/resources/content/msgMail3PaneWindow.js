@@ -259,16 +259,13 @@ var folderListener = {
              else if (gVirtualFolderTerms)
              {
                 gDefaultSearchViewTerms = null;
-                ViewChangeByValue(-1); // override current view
                 viewDebug("searching gVirtualFolderTerms\n");
-                Search("");
-  //              gVirtualFolderTerms = null;
+                loadVirtualFolder();
              }
              else if (gMsgFolderSelected.flags & MSG_FOLDER_FLAG_VIRTUAL)
              {
                 viewDebug("selected folder is virtual\n");
                 gDefaultSearchViewTerms = null;
-                ViewChangeByValue(-1); // override current view
              }
              else
              {               

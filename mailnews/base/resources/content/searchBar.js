@@ -540,15 +540,18 @@ function Search(str)
 
 function saveViewAsVirtualFolder()
 {
-// prompt for view name - create virtual folder in ok callback.
-  getViewName(CreateView, gSearchInput.value);
+  openNewVirtualFolderDialogWithArgs(gSearchInput.value, gSearchSession.searchTerms);
 }
 
-function CreateView(newName, origFolderURI)
+// When the front end has finished loading a virtual folder, it calls openVirtualFolder
+// to actually perform the folder search. We use this method instead of calling Search("") directly
+// from FolderLoaded in order to avoid moving focus into the search bar.
+function loadVirtualFolder()
 {
-  var selectedFolder = GetResourceFromUri(origFolderURI);
-  var folderToSearch = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
-  CreateVirtualFolder(newName, folderToSearch.parent, origFolderURI, gSearchSession.searchTerms);
+  // bit of a hack...if the underlying real folder is loaded with the same view value
+  // as the value for the virtual folder being searched, then ViewChangeByValue
+  // fails to change the view because it thinks the view is already correctly loaded.
+  // so set gCurrentViewValue back to All. 
+  gCurrentViewValue = 0; 
+  onEnterInSearchBar();
 }
-
-

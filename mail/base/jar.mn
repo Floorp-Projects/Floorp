@@ -63,8 +63,6 @@ messenger.jar:
     content/messenger/msgFolderPickerOverlay.xul    (/mailnews/base/resources/content/msgFolderPickerOverlay.xul)
     content/messenger/renameFolderDialog.xul        (/mailnews/base/resources/content/renameFolderDialog.xul)
     content/messenger/renameFolderDialog.js         (/mailnews/base/resources/content/renameFolderDialog.js)
-    content/messenger/virtualFolderName.xul         (/mailnews/base/resources/content/virtualFolderName.xul)
-    content/messenger/virtualFolderName.js          (/mailnews/base/resources/content/virtualFolderName.js)
     content/messenger/virtualFolderProperties.xul   (/mailnews/base/resources/content/virtualFolderProperties.xul)
     content/messenger/virtualFolderProperties.js    (/mailnews/base/resources/content/virtualFolderProperties.js)
     content/messenger/virtualFolderListDialog.xul   (/mailnews/base/resources/content/virtualFolderListDialog.xul)
