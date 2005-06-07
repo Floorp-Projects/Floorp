@@ -73,6 +73,7 @@ extern PRBool gSafeMode;
 
 extern int    gArgc;
 extern char **gArgv;
+extern PRBool gLogConsoleErrors;
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
 extern char gBinaryPath[MAXPATHLEN];
@@ -108,6 +109,9 @@ NS_NewToolkitProfileService(nsIToolkitProfileService* *aResult);
 NS_HIDDEN_(nsresult)
 NS_LockProfilePath(nsILocalFile* aPath, nsILocalFile* aTempPath,
                    nsIProfileUnlocker* *aUnlocker, nsIProfileLock* *aResult);
+
+NS_HIDDEN_(void)
+WriteConsoleLog();
 
 #define NS_NATIVEAPPSUPPORT_CONTRACTID "@mozilla.org/toolkit/native-app-support;1"
 

@@ -683,8 +683,15 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
                                                        & (nsACString&) package,
                                                        PL_DHASH_LOOKUP));
 
-  if (PL_DHASH_ENTRY_IS_FREE(entry))
-    return mInitialized ? NS_ERROR_FAILURE : NS_ERROR_NOT_INITIALIZED;
+  if (PL_DHASH_ENTRY_IS_FREE(entry)) {
+    if (!mInitialized)
+      return NS_ERROR_NOT_INITIALIZED;
+
+    LogMessage("No chrome package registered for chrome://%s/%s/%s .",
+               package.get(), provider.get(), path.get());
+
+    return NS_ERROR_FAILURE;
+  }
 
   if (entry->flags & PackageEntry::PLATFORM_PACKAGE) {
 #if defined(XP_WIN) || defined(XP_OS2)

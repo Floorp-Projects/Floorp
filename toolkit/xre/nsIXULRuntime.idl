@@ -44,11 +44,18 @@
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(28e8652b-3e9e-4e35-a8f7-e65f8d2399e0)]
+[scriptable, uuid(B344A346-D2BF-11D9-A33B-001124787B2E)]
 interface nsIXULRuntime : nsISupports
 {
   /**
    * Whether the application was launched in safe mode.
    */
   readonly attribute boolean inSafeMode;
+
+  /**
+   * Whether to write console errors to a log file. If a component
+   * encounters startup errors that might prevent the app from showing
+   * proper UI, it should set this flag to "true".
+   */
+  attribute boolean logConsoleErrors;
 };
