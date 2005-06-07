@@ -187,7 +187,11 @@
                  accesskey="&allowPopups.accesskey;" 
                  oncommand="gPopupBlockerObserver.toggleAllowPopupsForSite(event);"/>
     <broadcaster id="blockedPopupEditSettings" 
-                 label="&editPopupSettings.label;" 
+#ifdef XP_WIN
+                 label="&editPopupSettings.label;"
+#else
+                 label="&editPopupSettingsUnix.label;" 
+#endif
                  accesskey="&editPopupSettings.accesskey;" 
                  oncommand="gPopupBlockerObserver.editPopupSettings();"/>
     <broadcaster id="blockedPopupDontShowMessage" 
