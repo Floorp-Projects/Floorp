@@ -393,6 +393,10 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
       break;
 
     nsCOMPtr<nsILocalFile> dir(do_CreateInstance("@mozilla.org/file/local;1"));
+    nsCOMPtr<nsIFile> platformDir;
+#ifdef TARGET_OS_ABI
+    nsCOMPtr<nsIFile> platformABIDir;
+#endif
     rv = dir->SetPersistentDescriptor(nsDependentCString(parserBuf));
     if (NS_FAILED(rv)) {
       // Must be a relative descriptor, relative to the profile directory, 
@@ -404,9 +408,24 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
       if (NS_FAILED(rv))
         continue;
     }
+
+    dir->Clone(getter_AddRefs(platformDir));
+    platformDir->AppendNative(NS_LITERAL_CSTRING("platform"));
+    platformDir->AppendNative(NS_LITERAL_CSTRING(OS_TARGET));
+
+#ifdef TARGET_OS_ABI
+    dir->Clone(getter_AddRefs(platformABIDir));
+    platformABIDir->AppendNative(NS_LITERAL_CSTRING("platform"));
+    platformABIDir->AppendNative(NS_LITERAL_CSTRING(TARGET_OS_ABI));
+#endif
+
     const char* const* a = aAppendList;
     while (*a) {
       dir->AppendNative(nsDependentCString(*a));
+      platformDir->AppendNative(nsDependentCString(*a));
+#ifdef TARGET_OS_ABI
+      platformABIDir->AppendNative(nsDependentCString(*a));
+#endif
       ++a;
     }
 
@@ -414,6 +433,16 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
     rv = dir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && exists)
       aDirectories.AppendObject(dir);
+
+    rv = platformDir->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && exists)
+      aDirectories.AppendObject(platformDir);
+
+#ifdef TARGET_OS_ABI
+    rv = platformABIDir->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && exists)
+      aDirectories.AppendObject(platformABIDir);
+#endif
   }
   while (PR_TRUE);
 }
