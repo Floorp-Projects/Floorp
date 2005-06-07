@@ -58,6 +58,8 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMSerializer.h"
+#include "nsIContent.h"
+#include "nsIAttribute.h"
 
 #include "nsIXFormsContextControl.h"
 #include "nsIDOMDocumentEvent.h"
@@ -1147,63 +1149,51 @@ nsXFormsUtils::GetInstanceNodeForData(nsIDOMNode             *aInstanceDataNode,
 nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData,
                                  nsAString &aType, nsAString &aNSPrefix)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   // aInstanceData could be an instance data node or it could be an attribute
   // on an instance data node (basically the node that a control is bound to).
   // So first checking to see if it is a proper element node.  If it isn't,
   // making sure that it is at least an attribute.  
-  //
-  // XXX - Once node type is set as a property on the element or attribute node,
-  // then we can treat elements and attributes the same.  For now we are using
-  // an attribute on the instance data node to store the type.  If we bind
-  // to an attribute on the instance data node there is nothing we can do but
-  // hope that it doesn't have a bound type until we get properties on 
-  // attributes working. (bug 283004)
-  nsCOMPtr<nsIDOMElement> nodeElem = do_QueryInterface(aInstanceData, &rv);
-  if (NS_FAILED(rv)) {
-    nsCOMPtr<nsIDOMAttr> attrNode = do_QueryInterface(aInstanceData, &rv);
-    if(NS_SUCCEEDED(rv)){
-      // right now we can't handle having a 'type' property on attribute nodes.
-      // For now we'll treat this condition as not having a 'type' property
-      // on the given node at all.  This will allow a lot of testcases to still
-      // work ok as the caller will usually assign a default type of 
-      // 'xsd:string' when we return NS_ERROR_NOT_AVAILABLE here.
-      return NS_ERROR_NOT_AVAILABLE;
-    } else {
-      // can't have a 'type' property on anything other than an element or an
-      // attribute.  Return failure
+
+  /// @bug We need to check for any type attributes set directly on the node
+  /// too (XXX)
+
+  nsAutoString *typeVal = nsnull;
+  nsCOMPtr<nsIContent> nodeContent(do_QueryInterface(aInstanceData));
+  if (nodeContent) {
+    typeVal =
+      NS_STATIC_CAST(nsAutoString*,
+                     nodeContent->GetProperty(nsXFormsAtoms::type, &rv));
+  } else {
+    nsCOMPtr<nsIAttribute> nodeAttribute(do_QueryInterface(aInstanceData));
+    if (!nodeAttribute)
+      // node is neither content or attribute!
       return NS_ERROR_FAILURE;
-    }
+
+    typeVal =
+      NS_STATIC_CAST(nsAutoString*,
+                     nodeAttribute->GetProperty(nsXFormsAtoms::type, &rv));
   }
 
-  // right now type is stored as an attribute on the instance node.  In the
-  // future it will be a property.
-  PRBool typeExists = PR_FALSE;
-  NS_NAMED_LITERAL_STRING(schemaInstanceURI, NS_NAMESPACE_XML_SCHEMA_INSTANCE);
-  NS_NAMED_LITERAL_STRING(type, "type");
-  nodeElem->HasAttributeNS(schemaInstanceURI, type, &typeExists);
-  if (!typeExists) {
+  if (NS_FAILED(rv) || !typeVal) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsAutoString typeAttribute;
-  nodeElem->GetAttributeNS(schemaInstanceURI, type, typeAttribute);
-
   // split type (ns:type) into namespace and type.
-  PRInt32 separator = typeAttribute.FindChar(':');
-  if ((PRUint32) separator == (typeAttribute.Length() - 1)) {
-    const PRUnichar *strings[] = { typeAttribute.get() };
+  PRInt32 separator = typeVal->FindChar(':');
+  if ((PRUint32) separator == (typeVal->Length() - 1)) {
+    const PRUnichar *strings[] = { typeVal->get() };
     // XXX: get an element from the document this came from
     ReportError(NS_LITERAL_STRING("missingTypeName"), strings, 1, nsnull, nsnull);
     return NS_ERROR_UNEXPECTED;
   } else if (separator == kNotFound) {
     // no namespace prefix, which is valid;
     aNSPrefix.AssignLiteral("");
-    aType.Assign(typeAttribute);
+    aType.Assign(*typeVal);
   } else {
-    aNSPrefix.Assign(Substring(typeAttribute, 0, separator));
-    aType.Assign(Substring(typeAttribute, ++separator, typeAttribute.Length()));
+    aNSPrefix.Assign(Substring(*typeVal, 0, separator));
+    aType.Assign(Substring(*typeVal, ++separator, typeVal->Length()));
   }
 
   return NS_OK;

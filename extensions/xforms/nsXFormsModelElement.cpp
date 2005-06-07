@@ -69,6 +69,7 @@
 #include "nsIInstanceElementPrivate.h"
 #include "nsXFormsUtils.h"
 #include "nsXFormsSchemaValidator.h"
+#include "nsIAttribute.h"
 
 #include "nsISchemaLoader.h"
 #include "nsISchema.h"
@@ -1277,6 +1278,15 @@ nsXFormsModelElement::MaybeNotifyCompletion()
   nsXFormsModelElement::ProcessDeferredBinds(domDoc);
 }
 
+static void
+DeleteAutoString(void    *aObject,
+                 nsIAtom *aPropertyName,
+                 void    *aPropertyValue,
+                 void    *aData)
+{
+  delete NS_STATIC_CAST(nsAutoString*, aPropertyValue);
+}
+
 nsresult
 nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
                                   nsIDOMNode              *aContextNode,
@@ -1361,48 +1371,34 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
       if (propStrings[j].IsEmpty())
         continue;
 
-      // type and p3ptype are applied as attributes on the instance node
+      // type and p3ptype are stored as properties on the instance node
       if (j == eModel_type || j == eModel_p3ptype) {
-        nsCOMPtr<nsIDOMElement> nodeElem = do_QueryInterface(node, &rv);
-
-        if (NS_FAILED(rv)) {
-          NS_WARNING("nsXFormsModelElement::ProcessBind(): Node is not nsIDOMElement!\n");
-          continue;
-        }
-
-        // Check whether attribute already exists
-        if (j == eModel_type) {
-          rv = nodeElem->HasAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
-                                        NS_LITERAL_STRING("type"),
-                                        &multiMIP);
+        nsAutoPtr<nsAutoString> prop (new nsAutoString(propStrings[j]));
+        nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+        if (content) {
+          rv = content->SetProperty(sModelPropsList[j],
+                                    prop,
+                                    DeleteAutoString);
         } else {
-          rv = nodeElem->HasAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
-                                        NS_LITERAL_STRING("p3ptype"),
-                                        &multiMIP);
+          nsCOMPtr<nsIAttribute> attribute = do_QueryInterface(node);
+          if (attribute) {
+            rv = attribute->SetProperty(sModelPropsList[j],
+                                        prop,
+                                        DeleteAutoString);
+          } else {
+            NS_WARNING("node is neither nsIContent or nsIAttribute");
+            continue;
+          }
         }
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // It is an error to set a MIP twice, so break and emit an exception.
-        if (multiMIP) {
+        if (NS_SUCCEEDED(rv)) {
+          prop.forget();
+        } else {
+          return rv;
+        }
+        if (rv == NS_PROPTABLE_PROP_OVERWRITTEN) {
+          multiMIP = PR_TRUE;
           break;
         }
- 
-        // Set attribute
-        if (j == eModel_type) {
-          rv = nodeElem->SetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
-                                        NS_LITERAL_STRING("type"),
-                                        propStrings[j]);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          // Inform MDG that it needs to check type. The only arguments
-          // actually used are |eModel_constraint| and |node|.
-          rv = mMDG.AddMIP(eModel_constraint, nsnull, nsnull, PR_FALSE, node, 1, 1);
-        } else {
-          rv = nodeElem->SetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
-                                        NS_LITERAL_STRING("p3ptype"),
-                                        propStrings[j]);
-        }
-        NS_ENSURE_SUCCESS(rv, rv);
       } else {
         // the rest of the MIPs are given to the MDG
         nsCOMPtr<nsIDOMNSXPathExpression> expr = props[j];
