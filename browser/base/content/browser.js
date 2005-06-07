@@ -218,7 +218,11 @@ const gPopupBlockerObserver = {
         var brandShortName = brandBundle.getString("brandShortName");
         var message;
         var popupCount = gBrowser.selectedBrowser.pageReport.length;
+#ifdef XP_WIN
         var popupButtonText = bundle_browser.getString("popupWarningButton");
+#else
+        var popupButtonText = bundle_browser.getString("popupWarningButtonUnix");
+#endif
         if (popupCount > 1) 
           message = bundle_browser.getFormattedString("popupWarningMultiple", [brandShortName, popupCount]);
         else
