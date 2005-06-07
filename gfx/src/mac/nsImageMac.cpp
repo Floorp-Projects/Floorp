@@ -987,7 +987,7 @@ NS_IMETHODIMP nsImageMac::DrawTile(nsIRenderingContext &aContext,
     return NS_OK;
 
 #ifdef USE_CGPATTERN_TILING
-  if (nsRenderingContextMac::OnJaguar())
+  if (nsRenderingContextMac::OnJaguarOrLater())
   {
     // CGPattern is only available in 10.2 and higher
 
