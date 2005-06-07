@@ -121,6 +121,7 @@ classic.jar:
 +  skin/classic/global/menulist/menulist-arrow-dis.gif                (menulist/menulist-arrow-dis.gif)
 +  skin/classic/global/menulist/menulist-arrow.gif                    (menulist/menulist-arrow.gif)
 +  skin/classic/global/splitter/dimple.png                            (splitter/dimple.png)
++  skin/classic/global/tabDragDrop/tabDragIndicator.png               (tabDragDrop/tabDragIndicator.png)
 +  skin/classic/global/toolbar/Lighten.png                            (toolbar/Lighten.png)
 +  skin/classic/global/toolbar/spring.gif                             (toolbar/spring.gif)
 +  skin/classic/global/toolbar/toolbar-pinstripe-overlay.png          (toolbar/toolbar-pinstripe-overlay.png)
