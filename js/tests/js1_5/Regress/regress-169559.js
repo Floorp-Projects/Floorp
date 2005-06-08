@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
 var bug = 169559;
-var summary = 'Global var access should not be more than twice as slow as local';
+var summary = 'Global vars should not be more than 2.5 times slower than local';
 var actual = '';
 var expect = '';
 
@@ -47,6 +47,7 @@ var starttime;
 var stoptime;
 var globaltime = 0;
 var localtime  = 0;
+var maxratio   = 2.5;
 var ratio;
 
 var globalvar;
@@ -71,7 +72,7 @@ ratio = globaltime/localtime;
 printStatus("Ratio of global to local time " + ratio.toFixed(3));
 
 expect = true;
-actual = (ratio < 2);
+actual = (ratio < maxratio);
 summary += ', Ratio: ' + ratio + ' ';  
 reportCompare(expect, actual, summary);
 
