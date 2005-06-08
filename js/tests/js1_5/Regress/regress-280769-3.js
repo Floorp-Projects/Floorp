@@ -56,8 +56,22 @@ for (var i = 0; i != N; ++i) {
 
 var str = '['+a.join('][')+']'; // str is [0][1][2]...[<PRINTED N-1>]
 
-var re = new RegExp(str);
+try
+{
+  var re = new RegExp(str);
+}
+catch(e)
+{
+  printStatus('Exception creating RegExp: ' + e);
+}
 
-re.exec("");
+try
+{
+  re.exec('');
+}
+catch(e)
+{
+  printStatus('Exception executing RegExp: ' + e);
+}
 
 reportCompare(expect, actual, status);
