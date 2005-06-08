@@ -1627,6 +1627,7 @@ void nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   PRInt16             borderRadii[4],i;
   float               percent;
   nsCompatibility     compatMode = aPresContext->CompatibilityMode();
+  PRBool              forceSolid;
 
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the border.  DO not get the data from aForFrame, since the passed in style context
@@ -1798,8 +1799,19 @@ void nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   static PRUint8 sideOrder[] = { NS_SIDE_BOTTOM, NS_SIDE_LEFT, NS_SIDE_TOP, NS_SIDE_RIGHT };
   nscolor sideColor;
   nsBorderColors* compositeColors = nsnull;
+
   for (cnt = 0; cnt < 4; cnt++) {
     PRUint8 side = sideOrder[cnt];
+
+    
+    // If a side needs a double border but will be less than two pixels,
+    // force it to be solid (see bug 1781).
+    if (aBorderStyle.GetBorderStyle(side) == NS_STYLE_BORDER_STYLE_DOUBLE) {
+      nscoord widths[] = { border.bottom, border.left, border.top, border.right };
+      forceSolid = (widths[side]/twipsPerPixel < 2);
+    } else 
+      forceSolid = PR_FALSE;
+
     if (0 == (aSkipSides & (1<<side))) {
       if (GetBorderColor(ourColor, aBorderStyle, side, sideColor, &compositeColors)) {
         if (compositeColors)
@@ -1807,7 +1819,7 @@ void nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                             compositeInnerRect, borderRadii, twipsPerPixel, aGap);
         else
           DrawSide(aRenderingContext, side,
-                   aBorderStyle.GetBorderStyle(side),
+                   forceSolid ? NS_STYLE_BORDER_STYLE_SOLID : aBorderStyle.GetBorderStyle(side),
                    sideColor,
                    MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(side)) ? 
                     mozBGColor->mBackgroundColor :
