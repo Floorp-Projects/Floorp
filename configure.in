@@ -4835,6 +4835,19 @@ fi
 AC_SUBST(MOZ_INSTALLER)
 
 dnl ========================================================
+dnl Updater
+dnl ========================================================
+
+if test "$MOZ_XUL_APP"; then
+    MOZ_UPDATER=1
+fi
+MOZ_ARG_DISABLE_BOOL(updater,
+[  --disable-updater       Disable building of updater],
+    MOZ_UPDATER=,
+    MOZ_UPDATER=1 )
+AC_SUBST(MOZ_UPDATER)
+
+dnl ========================================================
 dnl ActiveX
 dnl ========================================================
 MOZ_NO_ACTIVEX_SUPPORT=1

@@ -1,4 +1,4 @@
-#
+# vim:set ts=8 sw=8 sts=8 noet:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,11 +12,12 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is Mozilla Toolkit Application Update.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Benjamin Smedberg <benjamin@smedbergs.us>
+
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,23 +36,50 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../../../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
+
+DEPTH		= ../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = extensions
+CPPSRCS = \
+	updater.cpp \
+	bspatch.cpp \
+	archivereader.cpp \
+	$(NULL)
 
-ifdef MOZ_UPDATER
-DIRS = updater
+PROGRAM = updater$(BIN_SUFFIX)
+
+REQUIRES = libmar libbz2
+
+LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
+	$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+HAVE_PROGRESSUI = 1
+RCINCLUDE = updater.rc
+CPPSRCS += progressui_win.cpp
+OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32)
+ifndef GNU_CC
+RCFLAGS += -I$(srcdir)
+else
+RCFLAGS += --include-dir $(srcdir)
+endif
 endif
 
-EXTRA_COMPONENTS = nsUpdateService.js
+ifneq ($(MOZ_ENABLE_GTK2),)
+HAVE_PROGRESSUI = 1
+CPPSRCS += progressui_gtk.cpp
+OS_CXXFLAGS += $(TK_CFLAGS)
+OS_LIBS += $(TK_LIBS)
+endif
+
+ifndef HAVE_PROGRESSUI
+CPPSRCS += progressui_null.cpp
+endif
 
 include $(topsrcdir)/config/rules.mk
-
-nsUpdateService.js: nsUpdateService.js.in
-	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > $@ 
-
