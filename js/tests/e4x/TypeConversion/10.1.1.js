@@ -42,7 +42,14 @@
 
 START("10.1.1 - XML.toString");
 
-order = 
+var n = 0;
+var expect;
+var actual;
+var xml;
+
+// Example from ECMA 357 10.1.1
+
+var order = 
 <order>
     <customer>
         <firstname>John</firstname>
@@ -55,14 +62,78 @@ order =
     </item>
 </order>;
 
-name = order.customer.firstname + " " + order.customer.lastname;
+var name = order.customer.firstname + " " + order.customer.lastname;
 
-TEST(1, "John Doe", name);
+TEST(++n, "John Doe", name);
 
-total = order.item.price * order.item.quantity;
+var total = order.item.price * order.item.quantity;
 
-TEST(2, 1299.99, total);
+TEST(++n, 1299.99, total);
 
-    
+// Semantics
+
+printStatus("test empty.toString()");
+
+xml = new XML();
+expect = '';
+actual = xml.toString();
+TEST(++n, expect, actual);
+
+printStatus("test attribute.toString()");
+
+xml = <foo bar="baz"/>;
+var attr = xml.@bar;
+expect = "baz";
+actual = attr.toString();
+TEST(++n, expect, actual);
+
+printStatus("test text.toString()");
+
+xml = new XML("this is text");
+expect = "this is text";
+actual = xml.toString();
+TEST(++n, expect, actual);
+
+printStatus("test simpleContent.toString()");
+
+xml = <foo>bar</foo>;
+expect = "bar";
+actual = xml.toString();
+TEST(++n, expect, actual);
+
+var truefalse = [true, false];
+
+for (var ic = 0; ic < truefalse.length; ic++)
+{
+    for (var ip = 0; ip < truefalse.length; ip++)
+    {
+        XML.ignoreComments = truefalse[ic];
+        XML.ignoreProcessingInstructions = truefalse[ip];
+
+        xml = <foo><!-- comment1 --><?pi1 ?>ba<!-- comment2 -->r<?pi2 ?></foo>;
+        expect = "bar";
+        actual = xml.toString();
+        TEST(++n, expect, actual);
+    }
+}
+
+printStatus("test nonSimpleContent.toString() == " +
+            "nonSimpleContent.toXMLString()");
+
+var indents = [0, 4];
+
+for (var pp = 0; pp < truefalse.length; pp++)
+{
+    XML.prettyPrinting = truefalse[pp];
+    for (var pi = 0; pi < indents.length; pi++)
+    {
+        XML.prettyIndent = indents[pi];
+   
+        expect = order.toXMLString();
+        actual = order.toString();
+        TEST(++n, expect, actual);
+    }
+}
+
 END();
 
