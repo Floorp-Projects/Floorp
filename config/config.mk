@@ -743,6 +743,12 @@ ifeq (2,$(MOZ_OPTIMIZE))
 PBBUILD_SETTINGS += GCC_MODEL_TUNING= OPTIMIZATION_CFLAGS="$(MOZ_OPTIMIZE_FLAGS)"
 endif # MOZ_OPTIMIZE=2
 endif # MOZ_OPTIMIZE
+ifneq (,$(findstring xcodebuild,$(PBBUILD)))
+# Tell Xcode 2.1 to put its build products where earlier versions of Xcode
+# and Project Builder did.  This gets set when using earlier Xcodes as well,
+# but "build" is the default in that case.
+PBBUILD_SETTINGS += TARGET_BUILD_DIR=build BUILT_PRODUCTS_DIR=build
+endif # PBBUILD contains "xcodebuild"
 endif # OS_ARCH=Darwin
 
 
