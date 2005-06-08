@@ -25,6 +25,7 @@
  *   Igor Bukanov
  *   Ethan Hugg
  *   Milen Nankov
+ *   Werner Sharp
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,5 +58,13 @@ correct =
 x.setNamespace("http://bar/");   
 
 TEST(2, correct, x);
+
+var xhtml1NS = new Namespace('http://www.w3.org/1999/xhtml');
+var xhtml = <html />;
+xhtml.setNamespace(xhtml1NS);
+
+TEST(3, 1, xhtml.namespaceDeclarations().length);
+
+TEST(4, xhtml1NS, xhtml.namespace());
 
 END();
