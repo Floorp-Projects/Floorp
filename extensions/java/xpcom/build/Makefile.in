@@ -68,6 +68,14 @@ ifdef MOZ_DEBUG
 JAVAC_FLAGS = -g
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+RUN =
+OUTPUT_DIR = $(shell cygpath -w $(CURDIR)/_javagen/org/mozilla/xpcom)
+else
+RUN = $(DIST)/bin/run-mozilla.sh
+OUTPUT_DIR = $(CURDIR)/_javagen/org/mozilla/xpcom
+endif
+
 _javagen/org/mozilla/xpcom/.iface_done:
 	@if test ! -d _javagen/org/mozilla/xpcom; then \
 		touch .done; \
@@ -79,13 +87,15 @@ _javagen/org/mozilla/xpcom/.iface_done:
 	@$(INSTALL) -m 644 $(addprefix ../,$(GEN_JAVA_SRCS)) \
 			_javagen/org/mozilla/xpcom
 	@echo Generating Java interface files
-	$(DIST)/bin/run-mozilla.sh $(DIST)/bin/GenerateJavaInterfaces$(BIN_SUFFIX) \
-			-d $(CURDIR)/_javagen/org/mozilla/xpcom
+	$(RUN) $(DIST)/bin/GenerateJavaInterfaces$(BIN_SUFFIX) -d $(OUTPUT_DIR)
 	@touch $@
 
+# Use find and xargs for passing list of Java files to JAVAC.  This avoids the
+# "argument list too long" error on Windows when using *.java
 org/mozilla/xpcom/.class_done: _javagen/org/mozilla/xpcom/.iface_done
 	@echo Compiling Java interface classes
-	@$(JAVAC) $(JAVAC_FLAGS) -classpath . -d . _javagen/org/mozilla/xpcom/*.java
+	find _javagen -name *.java | xargs $(JAVAC) $(JAVAC_FLAGS) -classpath . -d . \
+      -sourcepath _javagen
 	@touch $@
 
 $(JARFILE): org/mozilla/xpcom/.class_done Makefile

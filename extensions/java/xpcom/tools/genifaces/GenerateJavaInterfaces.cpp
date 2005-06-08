@@ -48,6 +48,10 @@
 #include "nsIWeakReference.h"
 #include <stdio.h>
 
+#ifdef WIN32
+#define snprintf  _snprintf
+#endif
+
 #define WRITE_NOSCRIPT_METHODS
 
 
@@ -191,8 +195,8 @@ public:
 #ifdef WRITE_NOSCRIPT_METHODS
     size = NS_ARRAY_LENGTH(kNoscriptMethodIfaces);
     mNoscriptMethodsTable.Init(size);
-    for (PRUint32 i = 0; i < size; i++) {
-      mNoscriptMethodsTable.Put(nsDependentCString(kNoscriptMethodIfaces[i]));
+    for (PRUint32 j = 0; j < size; j++) {
+      mNoscriptMethodsTable.Put(nsDependentCString(kNoscriptMethodIfaces[j]));
     }
 #endif
   }
@@ -640,17 +644,17 @@ public:
     NS_ENSURE_SUCCESS(rv, rv);
 
     // write parameters
-    for (PRUint8 i = 0; i < paramCount; i++) {
-      const nsXPTParamInfo &paramInfo = aMethodInfo->GetParam(i);
+    for (PRUint8 j = 0; j < paramCount; j++) {
+      const nsXPTParamInfo &paramInfo = aMethodInfo->GetParam(j);
       if (paramInfo.IsRetval())
         continue;
 
-      if (i != 0) {
+      if (j != 0) {
         rv = out->Write(kParamSeparator, sizeof(kParamSeparator) - 1, &count);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      rv = WriteParam(out, aIInfo, aMethodIndex, &paramInfo, i + 1);
+      rv = WriteParam(out, aIInfo, aMethodIndex, &paramInfo, j + 1);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -826,8 +830,8 @@ int main(int argc, char** argv)
         }
 
         // see if given path exists
-        output_dir = new nsLocalFile();
-        rv = output_dir->InitWithNativePath(nsDependentCString(argv[++i]));
+        rv = NS_NewNativeLocalFile(nsDependentCString(argv[++i]), PR_TRUE,
+                                   getter_AddRefs(output_dir));
         PRBool val;
         if (NS_FAILED(rv) || NS_FAILED(output_dir->Exists(&val)) || !val ||
             NS_FAILED(output_dir->IsDirectory(&val)) || !val)
