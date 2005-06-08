@@ -228,11 +228,12 @@ TestParams::TestSimpleTypeArrayInOut(PRUint32 aCount, PRInt16** aArray)
   printf("-> TestSimpleTypeArrayInOut()\n");
 
   printf("in:\n");
-  for (PRUint32 i = 0; i < aCount; i++) {
+  PRUint32 i;
+  for (i = 0; i < aCount; i++) {
     printf("[%d]  %d\n", i, aArray[0][i]);
   }
 
-  for (PRUint32 i = 0; i < aCount/2; i++) {
+  for (i = 0; i < aCount/2; i++) {
     PRUint32 index = aCount - 1 - i;
     PRUint16 temp = aArray[0][index];
     aArray[0][index] = aArray[0][i];
@@ -248,11 +249,12 @@ TestParams::TestCharStrTypeArrayInOut(PRUint32 aCount, char*** aArray)
   printf("-> TestCharStrTypeArrayInOut()\n");
 
   printf("in:\n");
-  for (PRUint32 i = 0; i < aCount; i++) {
+  PRUint32 i;
+  for (i = 0; i < aCount; i++) {
     printf("[%d]  %s\n", i, aArray[0][i]);
   }
 
-  for (PRUint32 i = 0; i < aCount/2; i++) {
+  for (i = 0; i < aCount/2; i++) {
     PRUint32 index = aCount - 1 - i;
     char* temp = aArray[0][index];
     aArray[0][index] = aArray[0][i];
@@ -268,12 +270,13 @@ TestParams::TestWCharStrTypeArrayInOut(PRUint32 aCount, PRUnichar*** aArray)
   printf("-> TestWCharStrTypeArrayInOut()\n");
 
   printf("in:\n");
-  for (PRUint32 i = 0; i < aCount; i++) {
+  PRUint32 i;
+  for (i = 0; i < aCount; i++) {
     nsAutoString tmp(aArray[0][i]);
     printf("[%d]  %s\n", i, NS_LossyConvertUCS2toASCII(tmp).get());
   }
 
-  for (PRUint32 i = 0; i < aCount/2; i++) {
+  for (i = 0; i < aCount/2; i++) {
     PRUint32 index = aCount - 1 - i;
     PRUnichar* temp = aArray[0][index];
     aArray[0][index] = aArray[0][i];
@@ -289,13 +292,14 @@ TestParams::TestIIDTypeArrayInOut(PRUint32 aCount, nsIID*** aArray)
   printf("-> TestIIDTypeArrayInOut()\n");
 
   printf("in:\n");
-  for (PRUint32 i = 0; i < aCount; i++) {
+  PRUint32 i;
+  for (i = 0; i < aCount; i++) {
     char* iid = aArray[0][i]->ToString();
     printf("[%d]  %s\n", i, iid);
     PR_Free(iid);
   }
 
-  for (PRUint32 i = 0; i < aCount/2; i++) {
+  for (i = 0; i < aCount/2; i++) {
     PRUint32 index = aCount - 1 - i;
     nsID* temp = aArray[0][index];
     aArray[0][index] = aArray[0][i];
@@ -311,13 +315,14 @@ TestParams::TestIfaceTypeArrayInOut(PRUint32 aCount, nsILocalFile*** aArray)
   printf("-> TestIfaceTypeArrayInOut()\n");
 
   printf("in:\n");
-  for (PRUint32 i = 0; i < aCount; i++) {
+  PRUint32 i;
+  for (i = 0; i < aCount; i++) {
     nsAutoString path;
     aArray[0][i]->GetPath(path);
     printf("[%d]  %s\n", i, NS_LossyConvertUCS2toASCII(path).get());
   }
 
-  for (PRUint32 i = 0; i < aCount/2; i++) {
+  for (i = 0; i < aCount/2; i++) {
     PRUint32 index = aCount - 1 - i;
     nsILocalFile* temp = aArray[0][index];
     aArray[0][index] = aArray[0][i];

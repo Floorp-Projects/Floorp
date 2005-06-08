@@ -186,7 +186,7 @@ nsJavaXPTCStub::ReleaseWeakRef()
 {
   // if this is a child
   if (mMaster)
-    return mMaster->ReleaseWeakRef();
+    mMaster->ReleaseWeakRef();
 
   --mWeakRefCnt;
 

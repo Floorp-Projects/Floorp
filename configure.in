@@ -4519,18 +4519,23 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c java` -ne 0; then
 
   if test -n "${JAVA_BIN_PATH}"; then
     dnl Look for javac and jar in the specified path.
-    AC_PATH_PROG(JAVAC, javac, :, $JAVA_BIN_PATH)
-    AC_PATH_PROG(JAR, jar, :, $JAVA_BIN_PATH)
-    if test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
-      AC_MSG_ERROR([The programs javac and jar were not found in given path $JAVA_BIN_PATH.])
-    fi
+    _JAVA_PATH=$JAVA_BIN_PATH
   else
     dnl No path specified, so look for javac and jar are in $JAVA_HOME & $PATH.
-    AC_PATH_PROG(JAVAC, javac, :, [$JAVA_HOME/bin:$PATH])
-    AC_PATH_PROG(JAR, jar, :, [$JAVA_HOME/bin:$PATH])
-    if test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
-      AC_MSG_ERROR([The programs javac and jar were not found.  Set \$JAVA_HOME or use --with-java-bin-path={java-bin-dir}.])
-    fi
+    _JAVA_PATH=$JAVA_HOME/bin:$PATH
+  fi
+  case "$host_os" in
+    mingw*|cygwin*|msvc*|mks*)
+        JAVA_PATH=`cygpath -u $_JAVA_PATH`
+        ;;
+    *)
+        JAVA_PATH=$_JAVA_PATH
+        ;;
+  esac
+  AC_PATH_PROG(JAVAC, javac, :, $JAVA_PATH)
+  AC_PATH_PROG(JAR, jar, :, $JAVA_PATH)
+  if test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
+    AC_MSG_ERROR([The programs javac and jar were not found.  Set \$JAVA_HOME or use --with-java-bin-path={java-bin-dir}.])
   fi
 fi
 
