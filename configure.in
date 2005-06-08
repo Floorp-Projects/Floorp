@@ -738,26 +738,20 @@ CYGWIN_9*|CYGWIN_ME*)
     OS_ARCH='CYGWIN_NT-4.0'
     OS_TARGET=WIN95
     ;;
-OS_2)
-    OS_ARCH=OS2
-    OS_TARGET=OS2
-    ;;
-WINCE)
-    OS_ARCH=WINCE
-    OS_TARGET=WINCE
-    ;;
 esac
 
 #
-# On WIN32, we also define the variable CPU_ARCH.
+# Define and override various archtecture-specific variables, including
+# OS_ARCH
+# OS_TEST
+# OS_TARGET
+# OS_RELEASE
+# OS_MINOR_RELEASE
 #
 
 case "$OS_ARCH" in
 WINNT)
-    CPU_ARCH=`uname -p`
-    if test "$CPU_ARCH" = "I386"; then
-        CPU_ARCH=x86
-    fi
+    OS_TEST=`uname -p`
     ;;
 Windows_NT)
 #
@@ -775,13 +769,6 @@ Windows_NT)
         OS_MINOR_RELEASE=0
     fi
     OS_RELEASE="${OS_RELEASE}.${OS_MINOR_RELEASE}"
-    CPU_ARCH=`uname -m`
-    #
-    # MKS's uname -m returns "586" on a Pentium machine.
-    #
-    if echo "$CPU_ARCH" | grep -c 86 >/dev/null; then
-        CPU_ARCH=x86
-    fi
     ;;
 CYGWIN32_NT|CYGWIN_NT*|MINGW*_NT*)
 #
@@ -796,13 +783,101 @@ CYGWIN32_NT|CYGWIN_NT*|MINGW*_NT*)
     OS_RELEASE=`expr $OS_ARCH : '.*NT-\(.*\)'`
     OS_ARCH=WINNT
     OS_TARGET=WINNT
-    CPU_ARCH=`uname -m`
-    #
-    # Cygwin's uname -m returns "i686" on a Pentium Pro machine.
-    #
-    if echo "$CPU_ARCH" | grep -c 86 >/dev/null; then
-        CPU_ARCH=x86
+    ;;
+AIX)
+    OS_RELEASE=`uname -v`.`uname -r`
+    ;;
+BSD_386)
+    OS_ARCH=BSD
+    ;;
+dgux)
+    OS_ARCH=DGUX
+    ;;
+IRIX64)
+    OS_ARCH=IRIX
+    ;;
+UNIX_SV)
+    if "`cat /etc/bcheckrc | grep -c NCR 2>/dev/null`" != "0"; then
+        OS_ARCH=NCR
+    else
+        OS_ARCH=UNIXWARE
+        OS_RELEASE=`uname -v`
     fi
+    ;;
+ncr)
+    OS_ARCH=NCR
+    ;;
+UNIX_SYSTEM_V)
+    OS_ARCH=NEC
+    ;;
+OSF1)
+    case `uname -v` in
+    148)
+        OS_RELEASE=V3.2C
+        ;;
+    564)
+        OS_RELEASE=V4.0B
+        ;;
+    878)
+        OS_RELEASE=V4.0D
+        ;;
+    esac
+    ;;
+*OpenVMS*)
+    OS_ARCH=OpenVMS
+    OS_RELEASE=`uname -v`
+    OS_TEST=`uname -p`
+    ;;
+OS_2)
+    OS_ARCH=OS2
+    OS_TARGET=OS2
+    OS_RELEASE=`uname -v`
+    ;;
+QNX)
+    if test "$OS_TARGET" != "NTO"; then
+        OS_RELEASE=`uname -v | sed 's/^\([0-9]\)\([0-9]*\)$/\1.\2/'`
+    fi
+    OS_TEST=x86
+    ;;
+SCO_SV)
+    OS_ARCH=SCOOS
+    OS_RELEASE=5.0
+    ;;
+SINIX-N | SINIX-Y | SINIX-Z |ReliantUNIX-M)
+    OS_ARCH=SINIX
+    OS_TEST=`uname -p`
+    ;;
+UnixWare)
+    OS_ARCH=UNIXWARE
+    OS_RELEASE=`uname -v`
+    ;;
+WINCE)
+    OS_ARCH=WINCE
+    OS_TARGET=WINCE
+    ;;
+esac
+
+if "$OS_ARCH" = "NCR"; then
+    OS_RELEASE=`awk '{print $3}' /etc/.relid | sed 's/^\([0-9]\)\(.\)\(..\)\(.*\)$/\2.\3/'`
+fi
+
+# Only set CPU_ARCH if we recognize the value of OS_TEST
+
+case "$OS_TEST" in
+*86)
+    CPU_ARCH=x86
+    ;;
+
+powerpc*)
+    CPU_ARCH=ppc
+    ;;
+
+Alpha | alpha | ALPHA)
+    CPU_ARCH=Alpha
+    ;;
+
+x86_64 | sparc | ppc | ia64)
+    CPU_ARCH="$CPU_ARCH_TEST"
     ;;
 esac
 
@@ -1168,6 +1243,7 @@ case "$target" in
     dnl the irix specific xptcinvoke code is written against the n32 ABI so we *must* 
     dnl compile and link using -n32
     USE_N32=1
+    TARGET_COMPILER_ABI=n32
     DSO_LDOPTS='-elf -shared'
     MKSHLIB='$(CCC) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
@@ -1340,6 +1416,7 @@ case "$target" in
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
     else
+        TARGET_COMPILER_ABI=msvc
         HOST_CC='$(CC)'
         HOST_CXX='$(CXX)'
         HOST_LD='$(LD)'
@@ -2861,7 +2938,10 @@ if test "$GNU_CC"; then
                       ac_cv_gcc_three_abi="yes",
                       ac_cv_gcc_three_abi="no")])
   if test "$ac_cv_gcc_three_abi" = "yes"; then
+      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-gcc3}"
       HAVE_GCC3_ABI=1
+  else
+      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-gcc2}"
   fi
 fi
 AC_SUBST(HAVE_GCC3_ABI)
@@ -3178,6 +3258,11 @@ if test "$ac_cv_i18n_lc_messages" = yes; then
 fi 	
 
 fi # SKIP_COMPILER_CHECKS
+
+TARGET_XPCOM_ABI=
+if test -n "${CPU_ARCH}" -a -n "${TARGET_COMPILER_ABI}"; then
+    TARGET_XPCOM_ABI="${CPU_ARCH}-${TARGET_COMPILER_ABI}"
+fi
 
 dnl Mozilla specific options
 dnl ========================================================
@@ -6441,6 +6526,7 @@ AC_SUBST(TARGET_VENDOR)
 AC_SUBST(TARGET_OS)
 AC_SUBST(TARGET_NSPR_MDCPUCFG)
 AC_SUBST(TARGET_MD_ARCH)
+AC_SUBST(TARGET_XPCOM_ABI)
 AC_SUBST(OS_TARGET)
 AC_SUBST(OS_ARCH)
 AC_SUBST(OS_RELEASE)

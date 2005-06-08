@@ -87,85 +87,12 @@ endif
 CONFIG_TOOLS	= $(MOZ_BUILD_ROOT)/config
 AUTOCONF_TOOLS	= $(topsrcdir)/build/autoconf
 
-#
-# Tweak the default OS_ARCH and OS_RELEASE macros as needed.
-#
-ifeq ($(OS_ARCH),AIX)
-OS_RELEASE	:= $(shell uname -v).$(shell uname -r)
-endif
-ifeq ($(OS_ARCH),BSD_386)
-OS_ARCH		:= BSD_OS
-endif
-ifeq ($(OS_ARCH),dgux)
-OS_ARCH		:= DGUX
-endif
-ifeq ($(OS_ARCH),IRIX64)
-OS_ARCH		:= IRIX
-endif
-ifeq ($(OS_ARCH),UNIX_SV)
-ifneq ($(findstring NCR,$(shell grep NCR /etc/bcheckrc | head -1 )),)
-OS_ARCH		:= NCR
-else
-OS_ARCH		:= UNIXWARE
-OS_RELEASE	:= $(shell uname -v)
-endif
-endif
-ifeq ($(OS_ARCH),ncr)
-OS_ARCH		:= NCR
-endif
-# This is the only way to correctly determine the actual OS version on NCR boxes.
-ifeq ($(OS_ARCH),NCR)
-OS_RELEASE	:= $(shell awk '{print $$3}' /etc/.relid | sed 's/^\([0-9]\)\(.\)\(..\)\(.*\)$$/\2.\3/')
-endif
-ifeq ($(OS_ARCH),UNIX_System_V)
-OS_ARCH		:= NEC
-endif
-ifeq ($(OS_ARCH),OSF1)
-OS_SUB		:= $(shell uname -v)
-# Until I know the other possibilities, or an easier way to compute them, this is all there's gonna be.
-#ifeq ($(OS_SUB),240)
-#OS_RELEASE	:= V2.0
-#endif
-ifeq ($(OS_SUB),148)
-OS_RELEASE	:= V3.2C
-endif
-ifeq ($(OS_SUB),564)
-OS_RELEASE	:= V4.0B
-endif
-ifeq ($(OS_SUB),878)
-OS_RELEASE	:= V4.0D
-endif
-endif
-ifneq (,$(findstring OpenVMS,$(OS_ARCH)))
-OS_ARCH		:= OpenVMS
-OS_RELEASE	:= $(shell uname -v)
-CPU_ARCH	:= $(shell uname -p)
-CPU_ARCH_TAG	:= _$(CPU_ARCH)
-endif
 ifeq ($(OS_ARCH),QNX)
 ifeq ($(OS_TARGET),NTO)
 LD		:= qcc -Vgcc_ntox86 -nostdlib
 else
-OS_RELEASE	:= $(shell uname -v | sed 's/^\([0-9]\)\([0-9]*\)$$/\1.\2/')
 LD		:= $(CC)
 endif
-OS_TEST		:= x86
-endif
-ifeq ($(OS_ARCH),SCO_SV)
-OS_ARCH		:= SCOOS
-OS_RELEASE	:= 5.0
-endif
-ifneq (,$(filter SINIX-N SINIX-Y SINIX-Z ReliantUNIX-M,$(OS_ARCH)))
-OS_ARCH		:= SINIX
-OS_TEST		:= $(shell uname -p)
-endif
-ifeq ($(OS_ARCH),UnixWare)
-OS_ARCH		:= UNIXWARE
-OS_RELEASE	:= $(shell uname -v)
-endif
-ifeq ($(OS_ARCH),OS_2)
-OS_ARCH		:= OS2
-OS_RELEASE	:= $(shell uname -v)
 endif
 ifeq ($(OS_ARCH),BeOS)
 BEOS_ADDON_WORKAROUND	= 1
