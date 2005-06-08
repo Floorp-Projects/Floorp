@@ -118,7 +118,7 @@ function getURLSpecFromFile(file) {
 }
 
 /**
- * Gets the specified directory at the speciifed hierarchy under a 
+ * Gets the specified directory at the specified hierarchy under a 
  * Directory Service key. 
  * @param   key
  *          The Directory Service Key to start from
@@ -465,27 +465,26 @@ UpdateService.prototype = {
    *          An array of available updates
    */
   selectUpdate: function(updates) {
-    if (updates.length == 0) {
-      // XXXben erk
+    if (updates.length == 0)
       return null;
-    }
     
     // Choose the newest of the available minor and major updates. 
+    var majorUpdate = null, minorUpdate = null;
     var newestMinor = updates[0], newestMajor = updates[0];
     
     var vc = new VersionChecker();
     for (var i = 0; i < updates.length; ++i) {
       if (updates[i].type == "major" && 
-          vc.compare(updates[i].version, newestMajor.version) < 0)
-        newestMajor = updates[i];
-      else if (updates[i].type == "minor" && 
-               vc.compare(updates[i].version, newestMinor.version) < 0)
-        newestMinor = updates[i];
+          vc.compare(newestMajor.version, updates[i].version) < 0)
+        majorUpdate = newestMajor = updates[i];
+      if (updates[i].type == "minor" && 
+          vc.compare(newestMinor.version, updates[i].version) < 0)
+        minorUpdate = newestMinor = updates[i];
     }
     
     // If there's a major update, always try and fetch that one first, 
     // otherwise fall back to the newest minor update.
-    return newestMajor || newestMinor;
+    return majorUpdate || minorUpdate;
   },
   
   /**

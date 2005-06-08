@@ -75,6 +75,10 @@ var gCheckingPage = {
       var aus = Components.classes["@mozilla.org/updates/update-service;1"]
                           .getService(Components.interfaces.nsIApplicationUpdateService);
       gUpdates.update = aus.selectUpdate(updates, updates.length);
+      if (!gUpdates.update) {
+        LOG("Could not select an appropriate update, either because there were none," + 
+            " or |selectUpdate| failed.");
+      }
       document.documentElement.advance();
     },
 
