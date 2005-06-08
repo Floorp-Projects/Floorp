@@ -378,7 +378,9 @@ tier_99_dirs     +=  toolkit/mozapps/installer
 endif
 else
 ifneq (,$(MOZ_XPFE_COMPONENTS)$(MOZ_XUL))
+ifndef MINIMO
 tier_99_dirs	+= xpfe/bootstrap
+endif
 endif
 endif
 

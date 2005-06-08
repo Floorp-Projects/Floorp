@@ -155,7 +155,6 @@ class  nsWindow;
  * mouse pointer to see if it is within the outer most window.
  */ 
 
-#ifndef WINCE
 class MouseTrailer 
 {
 public:
@@ -190,6 +189,5 @@ private:
     nsCOMPtr<nsITimer>    mTimer;
 
 };
-#endif // WINCE
 
 #endif  // TOOLKIT_H

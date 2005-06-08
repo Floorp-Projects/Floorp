@@ -81,7 +81,7 @@ REQUIRES	= xpcom \
 CPPSRCS = nsEditorRegistration.cpp
 
 ifdef MOZ_PLAINTEXT_EDITOR_ONLY
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 LIBRARY_NAME	= texteditor
 endif
 SHARED_LIBRARY_LIBS = $(NULL)

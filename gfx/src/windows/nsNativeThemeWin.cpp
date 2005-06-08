@@ -1164,13 +1164,14 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
     case NS_THEME_TAB_PANELS:
       // no minimum widget size
       break;
-#ifndef WINCE
     case NS_THEME_RESIZER: {     
+#ifndef WINCE
       NONCLIENTMETRICS nc;
       nc.cbSize = sizeof(nc);
       if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(nc), &nc, 0))
         (*aResult).width = (*aResult).height = abs(nc.lfStatusFont.lfHeight) + 4;
       else
+#endif
         (*aResult).width = (*aResult).height = 15;
       break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:        
@@ -1187,7 +1188,6 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
       (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB) << 1;
       break;
     }
-#endif
     default:
       return NS_ERROR_FAILURE;
   }  
@@ -1381,12 +1381,10 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
 
       return NS_OK;    
     }
-#ifndef WINCE
     case NS_THEME_RESIZER:    
       aPart = DFC_SCROLL;
       aState = DFCS_SCROLLSIZEGRIP;
       return NS_OK;
-#endif
   }
   return NS_ERROR_FAILURE;
 }

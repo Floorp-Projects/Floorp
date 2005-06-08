@@ -269,7 +269,7 @@ OleRegisterMgr::~OleRegisterMgr()
 #endif
   ::OleUninitialize();
 }
-#endif
+#endif //WINCE
 
 ////////////////////////////////////////////////////
 // nsWindow Class static variable definitions
@@ -704,10 +704,9 @@ public:
     if (info) {
       // make sure it's unflashed and kill the timer
 
-#ifndef WINCE
       if (info->hasFlashed)
         ::FlashWindow(info->flashWindow, FALSE);
-#endif
+
       ::KillTimer(info->timerWindow, info->timerID);
       RemoveTimer(info);
       delete info;
@@ -947,11 +946,9 @@ nsWindow::~nsWindow()
     gCurrentWindow = nsnull;
   }
 
-#ifndef WINCE
   if (MouseTrailer::GetSingleton().GetMouseTrailerWindow() == this) {
     MouseTrailer::GetSingleton().DestroyTimer();
   }
-#endif
 
   // If the widget was released without calling Destroy() then the native
   // window still exists, and we need to destroy it
@@ -991,14 +988,10 @@ nsWindow::~nsWindow()
 NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 {
   if (aCapture) {
-#ifndef WINCE
     MouseTrailer::GetSingleton().SetCaptureWindow(this);
-#endif
     ::SetCapture(mWnd);
   } else {
-#ifndef WINCE
     MouseTrailer::GetSingleton().SetCaptureWindow(NULL);
-#endif
     ::ReleaseCapture();
   }
   mIsInMouseCapture = aCapture;
@@ -1314,122 +1307,6 @@ BOOL nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow * ptr) {
   }
 }
 
-//
-// DealWithPopups
-//
-// Handle events that may cause a popup (combobox, XPMenu, etc) to need to rollup.
-//
-BOOL
-nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult )
-{
-  if ( gRollupListener && gRollupWidget) {
-
-    if (inMsg == WM_ACTIVATE || inMsg == WM_LBUTTONDOWN ||
-      inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
-      inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL
-#ifndef WINCE
-        || 
-        inMsg == WM_NCRBUTTONDOWN || 
-        inMsg == WM_MOVING || 
-        inMsg == WM_SIZING || 
-        inMsg == WM_GETMINMAXINFO ||
-        inMsg == WM_NCLBUTTONDOWN || 
-        inMsg == WM_NCMBUTTONDOWN ||
-        inMsg == WM_MOUSEACTIVATE ||
-        inMsg == WM_ACTIVATEAPP ||
-        inMsg == WM_MENUSELECT ||
-        (inMsg == WM_GETMINMAXINFO && !::GetParent(inWnd))
-#endif
-        )
-    {
-      // Rollup if the event is outside the popup.
-      PRBool rollup = !nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)gRollupWidget);
-
-      if (rollup && (inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL))
-      {
-        gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
-        *outResult = PR_TRUE;
-      }
-
-      // If we're dealing with menus, we probably have submenus and we don't
-      // want to rollup if the click is in a parent menu of the current submenu.
-      if (rollup) {
-        nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
-        if ( menuRollup ) {
-          nsCOMPtr<nsISupportsArray> widgetChain;
-          menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) );
-          if ( widgetChain ) {
-            PRUint32 count = 0;
-            widgetChain->Count(&count);
-            for ( PRUint32 i = 0; i < count; ++i ) {
-              nsCOMPtr<nsISupports> genericWidget;
-              widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) );
-              nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
-              if ( widget ) {
-                nsIWidget* temp = widget.get();
-                if ( nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)temp) ) {
-                  rollup = PR_FALSE;
-                  break;
-                }
-              }
-            } // foreach parent menu widget
-          }
-        } // if rollup listener knows about menus
-      }
-
-#ifndef WINCE
-      if (inMsg == WM_MOUSEACTIVATE) {
-        // Prevent the click inside the popup from causing a change in window
-        // activation. Since the popup is shown non-activated, we need to eat
-        // any requests to activate the window while it is displayed. Windows
-        // will automatically activate the popup on the mousedown otherwise.
-        if (!rollup) {
-          *outResult = MA_NOACTIVATE;
-          return TRUE;
-        }
-        else
-        {
-          UINT uMsg = HIWORD(inLParam);
-          if (uMsg == WM_MOUSEMOVE)
-          {
-            // WM_MOUSEACTIVATE cause by moving the mouse - X-mouse (eg. TweakUI)
-            // must be enabled in Windows.
-            gRollupListener->ShouldRollupOnMouseActivate(&rollup);
-            if (!rollup)
-            {
-              *outResult = MA_NOACTIVATE;
-              return true;
-            }
-          }
-        }
-      }
-      // if we've still determined that we should still rollup everything, do it.
-      else 
-#endif
-     if ( rollup ) {
-        gRollupListener->Rollup();
-
-        // Tell hook to stop processing messages
-        gProcessHook = PR_FALSE;
-        gRollupMsgId = 0;
-        gRollupMsgWnd = NULL;
-
-        // return TRUE tells Windows that the event is consumed,
-        // false allows the event to be dispatched
-        //
-        // So if we are NOT supposed to be consuming events, let it go through
-        if (gRollupConsumeRollupEvent && inMsg != WM_RBUTTONDOWN) {
-          *outResult = TRUE;
-          return TRUE;
-        }
-      }
-    } // if event that might trigger a popup to rollup
-  } // if rollup listeners registered
-
-  return FALSE;
-} // DealWithPopups
-
-
 //-------------------------------------------------------------------------
 //
 // the nsWindow procedure for all nsWindows in this toolkit
@@ -1437,9 +1314,11 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
 //-------------------------------------------------------------------------
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+#ifndef WINCE
   LRESULT popupHandlingResult;
   if ( DealWithPopups(hWnd, msg, wParam, lParam, &popupHandlingResult) )
     return popupHandlingResult;
+#endif
 
   // Get the window which caused the event and ask it to process the message
   nsWindow *someWindow = GetNSWindowPtr(hWnd);
@@ -5389,10 +5268,14 @@ LPCSTR nsWindow::WindowPopupClass()
 //-------------------------------------------------------------------------
 DWORD nsWindow::WindowStyle()
 {
-#ifdef WINCE
-  return WS_CHILD;
-#else
   DWORD style;
+
+#ifdef WINCE
+    if (mWindowType == eWindowType_popup)
+      style = WS_POPUP;
+    else
+      style = WS_CHILD;
+#else
 
   switch (mWindowType) {
 
@@ -5457,9 +5340,8 @@ DWORD nsWindow::WindowStyle()
     if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_maximize))
       style &= ~WS_MAXIMIZEBOX;
   }
-
-  return style;
 #endif
+  return style;
 }
 
 
@@ -5927,9 +5809,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
       // So we use "WindowFromPoint" to find what window we are over and
       // set that window into the mouse trailer timer.
       if (!mIsInMouseCapture) {
-#ifndef WINCE
         MouseTrailer::GetSingleton().SetMouseTrailerWindow(this);
-#endif
       } else {
         POINT mp;
         DWORD pos = ::GetMessagePos();
@@ -5958,9 +5838,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
         }
         // only set the window into the mouse trailer if we have a good window
         if (nsnull != someWindow) {
-#ifndef WINCE
           MouseTrailer::GetSingleton().SetMouseTrailerWindow(someWindow);
-#endif
         }
       }
 
@@ -5972,9 +5850,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
       if (rect.Contains(event.point.x, event.point.y)) {
         if (gCurrentWindow == NULL || gCurrentWindow != this) {
           if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
-#ifndef WINCE
             MouseTrailer::GetSingleton().IgnoreNextCycle();
-#endif
             gCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, wParam, gCurrentWindow->GetLastPoint());
           }
           gCurrentWindow = this;
@@ -7478,9 +7354,7 @@ static VOID CALLBACK nsGetAttentionTimerFunc(HWND hwnd, UINT uMsg, UINT idEvent,
     if (maxFlashCount > 0) {
       // We have a max flash count, if we haven't met it yet, flash again.
       if (flashCount < maxFlashCount) {
-#ifndef WINCE
         ::FlashWindow(flashwnd, TRUE);
-#endif
         gAttentionTimerMonitor->IncrementFlashCount(hwnd);
       }
       else
@@ -7488,9 +7362,7 @@ static VOID CALLBACK nsGetAttentionTimerFunc(HWND hwnd, UINT uMsg, UINT idEvent,
     }
     else {
       // The caller didn't specify a flash count.
-#ifndef WINCE
       ::FlashWindow(flashwnd, TRUE);
-#endif
     }
 
     gAttentionTimerMonitor->SetFlashed(hwnd);
@@ -7790,6 +7662,119 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
     gRollupMsgWnd = NULL;
   }
 }
+
+//
+// DealWithPopups
+//
+// Handle events that may cause a popup (combobox, XPMenu, etc) to need to rollup.
+//
+
+BOOL
+nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult )
+{
+  if ( gRollupListener && gRollupWidget) {
+
+    if (inMsg == WM_ACTIVATE || inMsg == WM_LBUTTONDOWN ||
+      inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
+      inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL
+        || 
+        inMsg == WM_NCRBUTTONDOWN || 
+        inMsg == WM_MOVING || 
+        inMsg == WM_SIZING || 
+        inMsg == WM_GETMINMAXINFO ||
+        inMsg == WM_NCLBUTTONDOWN || 
+        inMsg == WM_NCMBUTTONDOWN ||
+        inMsg == WM_MOUSEACTIVATE ||
+        inMsg == WM_ACTIVATEAPP ||
+        inMsg == WM_MENUSELECT ||
+        (inMsg == WM_GETMINMAXINFO && !::GetParent(inWnd))
+        )
+    {
+      // Rollup if the event is outside the popup.
+      PRBool rollup = !nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)gRollupWidget);
+
+      if (rollup && (inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL))
+      {
+        gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
+        *outResult = PR_TRUE;
+      }
+
+      // If we're dealing with menus, we probably have submenus and we don't
+      // want to rollup if the click is in a parent menu of the current submenu.
+      if (rollup) {
+        nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
+        if ( menuRollup ) {
+          nsCOMPtr<nsISupportsArray> widgetChain;
+          menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) );
+          if ( widgetChain ) {
+            PRUint32 count = 0;
+            widgetChain->Count(&count);
+            for ( PRUint32 i = 0; i < count; ++i ) {
+              nsCOMPtr<nsISupports> genericWidget;
+              widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) );
+              nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
+              if ( widget ) {
+                nsIWidget* temp = widget.get();
+                if ( nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)temp) ) {
+                  rollup = PR_FALSE;
+                  break;
+                }
+              }
+            } // foreach parent menu widget
+          }
+        } // if rollup listener knows about menus
+      }
+
+      if (inMsg == WM_MOUSEACTIVATE) {
+        // Prevent the click inside the popup from causing a change in window
+        // activation. Since the popup is shown non-activated, we need to eat
+        // any requests to activate the window while it is displayed. Windows
+        // will automatically activate the popup on the mousedown otherwise.
+        if (!rollup) {
+          *outResult = MA_NOACTIVATE;
+          return TRUE;
+        }
+        else
+        {
+          UINT uMsg = HIWORD(inLParam);
+          if (uMsg == WM_MOUSEMOVE)
+          {
+            // WM_MOUSEACTIVATE cause by moving the mouse - X-mouse (eg. TweakUI)
+            // must be enabled in Windows.
+            gRollupListener->ShouldRollupOnMouseActivate(&rollup);
+            if (!rollup)
+            {
+              *outResult = MA_NOACTIVATE;
+              return true;
+            }
+          }
+        }
+      }
+      // if we've still determined that we should still rollup everything, do it.
+      else 
+     if ( rollup ) {
+        gRollupListener->Rollup();
+
+        // Tell hook to stop processing messages
+        gProcessHook = PR_FALSE;
+        gRollupMsgId = 0;
+        gRollupMsgWnd = NULL;
+
+        // return TRUE tells Windows that the event is consumed,
+        // false allows the event to be dispatched
+        //
+        // So if we are NOT supposed to be consuming events, let it go through
+        if (gRollupConsumeRollupEvent && inMsg != WM_RBUTTONDOWN) {
+          *outResult = TRUE;
+          return TRUE;
+        }
+      }
+    } // if event that might trigger a popup to rollup
+  } // if rollup listeners registered
+
+  return FALSE;
+} // DealWithPopups
+
 #endif // WinCE
 
 
