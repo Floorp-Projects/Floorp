@@ -3106,9 +3106,6 @@ ExtensionManager.prototype = {
    * @returns An array of active items of the specified type.
    */
   _getActiveItems: function(type) {
-    if (inSafeMode())
-      return [];
-
     var allItems = this.getItemList(type, { });
     var activeItems = [];
     var ds = this.datasource;
