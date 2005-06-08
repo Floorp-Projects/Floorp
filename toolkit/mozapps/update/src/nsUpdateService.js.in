@@ -77,8 +77,9 @@ const STATE_APPLYING    = "applying";
 const STATE_SUCCEEDED   = "succeeded";
 const STATE_FAILED      = "failed";
 
-const DOWNLOAD_CHUNK_SIZE = 65536;
-const DOWNLOAD_INTERVAL   = 1;
+const DOWNLOAD_CHUNK_SIZE           = 65536;
+const DOWNLOAD_BACKGROUND_INTERVAL  = 1;
+const DOWNLOAD_FOREGROUND_INTERVAL  = 0;
 
 const nsILocalFile            = Components.interfaces.nsILocalFile;
 const nsIUpdateService        = Components.interfaces.nsIUpdateService;
@@ -376,14 +377,15 @@ UpdateService.prototype = {
     switch (topic) {
     case "app-startup":
       // Resume fetching...
-      this.downloadUpdate(null);
+      this.downloadUpdate(null, true);
       break;
     case "profile-after-change":
       gOS.removeObserver(this, "profile-after-change");
 
       // Register a background update check timer
-      var tm = Components.classes["@mozilla.org/updates/timer-manager;1"]
-                         .getService(Components.interfaces.nsIUpdateTimerManager);
+      var tm = 
+          Components.classes["@mozilla.org/updates/timer-manager;1"]
+                    .getService(Components.interfaces.nsIUpdateTimerManager);
       var interval = getPref("getIntPref", PREF_APP_UPDATE_INTERVAL, 86400000);
       tm.registerTimer("background-update-timer", this, interval,
                        Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
@@ -518,7 +520,7 @@ UpdateService.prototype = {
       prompter.showUpdateAvailable(update);
     }
     else
-      this.downloadUpdate(update);
+      this.downloadUpdate(update, true);
   },
 
   /**
@@ -555,14 +557,17 @@ UpdateService.prototype = {
   /**
    * 
    */
-  downloadUpdate: function(update) {
+  downloadUpdate: function(update, background) {
     LOG("downloadUpdate");
 
     if (this._downloader && this._downloader.isBusy) {
-      LOG("no support for downloading more than one update at a time");
-      return;
+      if (background == this._downloader.background) {
+        LOG("no support for downloading more than one update at a time");
+        return;
+      }
+      this._downloader.cancel();
     }
-    this._downloader = new Downloader();
+    this._downloader = new Downloader(background);
     this._downloader.downloadUpdate(update);
   },
   
@@ -791,11 +796,30 @@ Checker.prototype = {
   }
 };
 
-function Downloader() {
+/**
+ * Manages the download of updates
+ * @param   background
+ *          Whether or not this downloader is operating in background
+ *          update mode. 
+ * @constructor
+ */
+function Downloader(background) {
+  this.background = background;
 }
 Downloader.prototype = {
   _patch: null,    // UpdatePatch
   _request: null,  // nsIIncrementalDownload
+
+  /**
+   *
+   */  
+  cancel: function() {
+    if (this._request && 
+        this._request instanceof Components.interfaces.nsIRequest) {
+      const NS_BINDING_ABORTED = 0x804b0002;
+      this._request.cancel(NS_BINDING_ABORTED);
+    }
+  },
 
   /**
    * 
@@ -1010,6 +1034,7 @@ Downloader.prototype = {
    *        attempt to resume downloading what it was previously downloading.
    */
   downloadUpdate: function(update) {
+    LOG("downloadUpdate");
     var updateDir = this._getUpdatesDir();
 
     // This function may return null, which indicates that there are no patches
@@ -1034,7 +1059,9 @@ Downloader.prototype = {
     LOG("Downloader.downloadUpdate: Downloading from " + uri.spec + " to " + 
         patchFile.path);
 
-    this._request.init(uri, patchFile, DOWNLOAD_CHUNK_SIZE, DOWNLOAD_INTERVAL);
+    var interval = this.background ? DOWNLOAD_BACKGROUND_INTERVAL
+                                   : DOWNLOAD_FOREGROUND_INTERVAL;
+    this._request.init(uri, patchFile, DOWNLOAD_CHUNK_SIZE, interval);
     this._request.start(this, null);
 
     this._writeStatusFile(updateDir, STATE_DOWNLOADING);
@@ -1074,6 +1101,7 @@ Downloader.prototype = {
   },
   
   onProgress: function(request, context, progress, maxProgress) {
+    LOG("MODE: " + (this.background ? "BACKGROUND" : "FOREGROUND"));
     request.QueryInterface(nsIIncrementalDownload);
     LOG("Downloader.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
     var listenerCount = this._listeners.length;

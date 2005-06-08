@@ -86,7 +86,7 @@ var gCheckingPage = {
      * See nsIUpdateCheckListener.idl
      */
     onError: function() {
-      dump("*** UpdateCheckListener: ERROR\n");
+      LOG("UpdateCheckListener: ERROR");
     },
     
     /**
@@ -112,7 +112,6 @@ var gUpdatesAvailablePage = {
                                                       [brandName, gUpdates.update.version]);
     var updateNameElement = document.getElementById("updateName");
     updateNameElement.value = updateName;
-    dump("*** update = " + gUpdates.update.version + "\n");
     var displayType = updateStrings.getString("updateType_" + gUpdates.update.type);
     var updateTypeElement = document.getElementById("updateType");
     updateTypeElement.setAttribute("type", gUpdates.update.type);
@@ -164,7 +163,8 @@ var gDownloadingPage = {
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"]
                   .getService(Components.interfaces.nsIApplicationUpdateService);
-    updates.downloadUpdate(gUpdates.update);
+    LOG("goats");
+    updates.downloadUpdate(gUpdates.update, false);
     updates.addDownloadListener(this);
     
     // Build the UI for previously installed updates
