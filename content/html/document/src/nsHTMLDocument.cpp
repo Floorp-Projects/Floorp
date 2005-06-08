@@ -1230,18 +1230,24 @@ nsHTMLDocument::CreateElement(const nsAString& aTagName,
   *aReturn = nsnull;
   nsresult rv;
 
-  // if we are in quirks, don't validate the tag name
-  if (mCompatMode != eCompatibility_NavQuirks) {
-    rv = nsContentUtils::CheckQName(aTagName, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }  
+  nsAutoString tagName(aTagName);
 
-  nsAutoString tmp(aTagName);
-  if (!IsXHTML()) {
-    ToLowerCase(tmp);
+  // if we are in quirks, allow surrounding '<' '>' for IE compat
+  if (mCompatMode == eCompatibility_NavQuirks &&
+      tagName.Length() > 2 &&
+      tagName.First() == '<' &&
+      tagName.Last() == '>') {
+    tagName = Substring(tagName, 1, tagName.Length() - 2); 
   }
 
-  nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
+  rv = nsContentUtils::CheckQName(tagName, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!IsXHTML()) {
+    ToLowerCase(tagName);
+  }
+
+  nsCOMPtr<nsIAtom> name = do_GetAtom(tagName);
 
   nsCOMPtr<nsIContent> content;
   rv = CreateElem(name, nsnull, GetDefaultNamespaceID(), PR_TRUE,
