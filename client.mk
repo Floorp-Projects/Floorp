@@ -65,6 +65,7 @@
 #
 # Other common MOZ_CO_MODULE options include the following:
 #   mozilla/other-licenses/libart_lgpl
+#   mozilla/other-licenses/bsdiff
 #   mozilla/tools/codesighs
 #
 # Other targets (gmake -f client.mk [targets...]),
@@ -102,6 +103,8 @@ MODULES_core :=                                \
   SeaMonkeyAll                                  \
   mozilla/ipc/ipcd                              \
   mozilla/modules/libpr0n                       \
+  mozilla/modules/libmar                        \
+  mozilla/modules/libbz2                        \
   mozilla/accessible                            \
   mozilla/security/manager                      \
   mozilla/toolkit                               \

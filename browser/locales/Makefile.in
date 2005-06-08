@@ -1,3 +1,4 @@
+# vim:set ts=8 sw=8 sts=8 noet:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -223,4 +224,13 @@ installers-%:
 	@$(MAKE) repackage-zip-$*
 ifeq (WINNT,$(OS_ARCH))
 	@$(MAKE) repackage-win32-installer-$*
+endif
+
+ifdef MOZ_UPDATER
+libs:: $(addprefix $(LOCALE_SRCDIR)/,updater/updater.ini)
+ifeq ($(OS_ARCH),WINNT)
+	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $< > $(FINAL_TARGET)/updater.ini
+else
+	$(INSTALL) $^ $(FINAL_TARGET)
+endif
 endif

@@ -1203,6 +1203,15 @@ MAKEFILES_zlib="
     modules/zlib/standalone/Makefile
 "
 
+MAKEFILES_libbz2="
+    modules/libbz2/Makefile
+    modules/libbz2/src/Makefile
+"
+
+MAKEFILES_libmar="
+    modules/libmar/Makefile
+    modules/libmar/src/Makefile
+"
 
 if [ ! "$SYSTEM_PNG" ]; then
     MAKEFILES_libimg="$MAKEFILES_libimg modules/libimg/png/Makefile"
@@ -1601,6 +1610,8 @@ $MAKEFILES_xpconnect
 $MAKEFILES_xpinstall
 $MAKEFILES_xpfe
 $MAKEFILES_zlib
+$MAKEFILES_libbz2
+$MAKEFILES_libmar
 "
 
 if test -n "$MOZ_PSM"; then

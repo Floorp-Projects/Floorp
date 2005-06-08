@@ -125,6 +125,11 @@ ifdef MOZ_INSTALLER
 tier_1_dirs	+= modules/zlib/standalone
 endif
 
+ifdef MOZ_UPDATER
+tier_1_dirs += modules/libbz2
+tier_1_dirs += modules/libmar
+endif
+
 ifdef MOZ_SVG_RENDERER_LIBART
 tier_1_dirs	+= other-licenses/libart_lgpl
 endif

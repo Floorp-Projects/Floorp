@@ -177,3 +177,12 @@ installers-%:
 ifeq (WINNT,$(OS_ARCH))
 	@$(MAKE) repackage-win32-installer-$*
 endif
+
+ifdef MOZ_UPDATER
+libs:: $(addprefix $(LOCALE_SRCDIR)/,updater/updater.ini)
+ifeq ($(OS_ARCH),WINNT)
+	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $< > $(FINAL_TARGET)/updater.ini
+else
+	$(INSTALL) $^ $(FINAL_TARGET)
+endif
+endif
