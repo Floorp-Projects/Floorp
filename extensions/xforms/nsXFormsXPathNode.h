@@ -49,13 +49,28 @@
  */
 class nsXFormsXPathNode {
 public:
+  /** Children of the node */
   nsXFormsXPathNode* mChild;
+
+  /** Siblings to the node */
   nsXFormsXPathNode* mSibling;
+
+  /** The starting position of the node in the expression string */
   PRInt32 mStartIndex;
+
+  /** The ending position of the node in the expression string */
   PRInt32 mEndIndex;
+
+  /** @todo Write dox. (XXX) */
   PRBool mCon;
+
+  /** Is node a predicate? */
   PRBool mPredicate;
+
+  /** Is node a literal? */
   PRBool mLiteral;
+
+  /** Is node an index() call? */
   PRBool mIsIndex;  
   
   nsXFormsXPathNode(nsXFormsXPathNode* aParent, PRBool aContinue = PR_FALSE);
