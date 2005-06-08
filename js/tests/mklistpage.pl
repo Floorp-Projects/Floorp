@@ -48,6 +48,19 @@ local $uid = 0;          # radio button unique ID
 local $html = "";        # html output
 local $javascript = "";  # script output
 
+#
+# automatically exclude spidermonkey-n.tests
+# XXXbc better to emulate jsDriver.pl's option processing
+#    and allow -L file1 file2 etc.
+#
+local $excludedtest;
+local @excludedlist = expand_user_test_list('spidermonkey-n.tests');
+local %excludedhash = {};
+foreach $excludedtest (@excludedlist)
+{
+    $excludedhash{"./" . $excludedtest} = 1;
+}
+
 &main;
 
 print (&scriptTag($javascript) . "\n");
@@ -221,6 +234,12 @@ sub process_test {
     local ($test_dir_path, $test) = @_;
     local $title = "";
 
+    # ignore excluded tests
+    if ($excludedhash{$test_dir_path . "/" . $test})
+    {
+	return;
+    }
+
     $uid++;
 
     open (TESTCASE, $test_dir_path . "/" . $test) ||
@@ -301,4 +320,112 @@ sub get_js_files {
     return @js_file_array;
 }
 
+
+# copied from jsDriver.pl
+
+#
+# reads $list_file, storing non-comment lines into an array.
+# lines in the form suite_dir/[*] or suite_dir/test_dir/[*] are expanded
+# to include all test files under the specified directory
+#
+sub expand_user_test_list {
+    my ($list_file) = @_;
+    my @retval = ();
+
+    #
+    # Trim off the leading path separator that begins relative paths on the Mac.
+    # Each path will get concatenated with $opt_suite_path, which ends in one.
+    #
+    # Also note:
+    #
+    # We will call expand_test_list_entry(), which does pattern-matching on $list_file.
+    # This will make the pattern-matching the same as it would be on Linux/Windows -
+    #
+    if ($os_type eq "MAC") {
+        $list_file =~ s/^$path_sep//;
+    }
+
+    if ($list_file =~ /\.js$/ || -d $opt_suite_path . $list_file) {
+
+        push (@retval, &expand_test_list_entry($list_file));
+
+    } else {
+
+        open (TESTLIST, $list_file) ||
+          die("Error opening test list file '$list_file': $!\n");
+
+        while (<TESTLIST>) {
+            s/\r*\n*$//;
+            if (!(/\s*\#/)) {
+                # It's not a comment, so process it
+                push (@retval, &expand_test_list_entry($_));
+            }
+        }
+
+        close (TESTLIST);
+
+    }
+
+    return @retval;
+
+}
+
+
+#
+# Currently expect all paths to be RELATIVE to the top-level tests directory.
+# One day, this should be improved to allow absolute paths as well -
+#
+sub expand_test_list_entry {
+    my ($entry) = @_;
+    my @retval;
+
+    if ($entry =~ /\.js$/) {
+        # it's a regular entry, add it to the list
+        if (-f $opt_suite_path . $entry) {
+            push (@retval, $entry);
+        } else {
+            status ("testcase '$entry' not found.");
+        }
+    } elsif ($entry =~ /(.*$path_sep[^\*][^$path_sep]*)$path_sep?\*?$/) {
+        # Entry is in the form suite_dir/test_dir[/*]
+        # so iterate all tests under it
+        my $suite_and_test_dir = $1;
+        my @test_files = &get_js_files ($opt_suite_path . 
+                                        $suite_and_test_dir);
+        my $i;
+
+        foreach $i (0 .. $#test_files) {
+            $test_files[$i] = $suite_and_test_dir . $path_sep .
+              $test_files[$i];
+        }
+
+        splice (@retval, $#retval + 1, 0, @test_files);
+
+    } elsif ($entry =~ /([^\*][^$path_sep]*)$path_sep?\*?$/) {
+        # Entry is in the form suite_dir[/*]
+        # so iterate all test dirs and tests under it
+        my $suite = $1;
+        my @test_dirs = &get_subdirs ($opt_suite_path . $suite);
+        my $test_dir;
+
+        foreach $test_dir (@test_dirs) {
+            my @test_files = &get_js_files ($opt_suite_path . $suite .
+                                            $path_sep . $test_dir);
+            my $i;
+
+            foreach $i (0 .. $#test_files) {
+                $test_files[$i] = $suite . $path_sep . $test_dir . $path_sep .
+                  $test_files[$i];
+            }
+
+            splice (@retval, $#retval + 1, 0, @test_files);
+        }
+
+    } else {
+        die ("Dont know what to do with list entry '$entry'.\n");
+    }
+
+    return @retval;
+
+}
 
