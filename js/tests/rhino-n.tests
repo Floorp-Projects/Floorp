@@ -117,4 +117,7 @@ js1_5/Object/no-such-method.js
 #
 # Array extras (bug 290592 is spidermonkey only)
 js1_5/Array/array-002.js
-
+#
+# Invalid bug
+#
+e4x/Regress/regress-278112.js
