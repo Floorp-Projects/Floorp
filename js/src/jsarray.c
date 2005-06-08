@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set sw=4 ts=8 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -62,6 +63,9 @@
 /* 2^32 - 1 as a number and a string */
 #define MAXINDEX 4294967295u
 #define MAXSTR   "4294967295"
+
+/* A useful value for identifying a hole in an array */
+#define JSVAL_HOLE BOOLEAN_TO_JSVAL(2)
 
 /*
  * Determine if the id represents an array index or an XML property index.
@@ -543,6 +547,8 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint length, jsval *vector)
     jsid id;
 
     for (index = 0; index < length; index++) {
+        JS_ASSERT(vector[index] != JSVAL_HOLE);
+
         if (!IndexToId(cx, index, &id))
             return JS_FALSE;
         if (!OBJ_SET_PROPERTY(cx, obj, id, &vector[index]))
@@ -752,18 +758,34 @@ sort_compare(const void *a, const void *b, void *arg)
     CompareArgs *ca = (CompareArgs *) arg;
     JSContext *cx = ca->context;
     jsdouble cmp = -1;
-    jsval fval, argv[2], rval;
+    jsval fval, argv[2], rval, special;
     JSBool ok;
 
     fval = ca->fval;
-    if (fval == JSVAL_NULL) {
+
+    /* 
+     * By ECMA 262, 15.4.4.11 existance of the property takes precedence
+     * over an undefined property
+     */
+    if (av == JSVAL_HOLE || bv == JSVAL_HOLE)
+        special = JSVAL_HOLE;
+    else if (av == JSVAL_VOID || bv == JSVAL_VOID)
+        special = JSVAL_VOID;
+    else
+        special = JSVAL_NULL;
+
+    if (special != JSVAL_NULL) {
+        if (av == bv)
+            cmp = 0;
+        else if (av != special)
+            cmp = -1;
+        else
+            cmp = 1;
+    } else if (fval == JSVAL_NULL) {
         JSString *astr, *bstr;
 
         if (av == bv) {
             cmp = 0;
-        } else if (av == JSVAL_VOID || bv == JSVAL_VOID) {
-            /* Put undefined properties at the end. */
-            cmp = (av == JSVAL_VOID) ? 1 : -1;
         } else if ((astr = js_ValueToString(cx, av)) != NULL &&
                    (bstr = js_ValueToString(cx, bv)) != NULL) {
             cmp = js_CompareStrings(astr, bstr);
@@ -804,10 +826,6 @@ sort_compare_strings(const void *a, const void *b, void *arg)
     return (int) js_CompareStrings(JSVAL_TO_STRING(av), JSVAL_TO_STRING(bv));
 }
 
-/* XXXmccabe do the sort helper functions need to take int?  (Or can we claim
- * that 2^32 * 32 is too large to worry about?)  Something dumps when I change
- * to unsigned int; is qsort using -1 as a fencepost?
- */
 static JSBool
 array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -858,11 +876,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!vec)
         return JS_FALSE;
 
-#if JS_HAS_SPARSE_ARRAYS
     newlen = 0;
-#else
-    newlen = len;
-#endif
 
     /* Root vec, clearing it first in case a GC nests while we're filling it. */
     memset(vec, 0, len * sizeof(jsval));
@@ -874,7 +888,6 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         ca.status = IndexToId(cx, i, &id);
         if (!ca.status)
             goto out;
-#if JS_HAS_SPARSE_ARRAYS
         {
             JSObject *obj2;
             JSProperty *prop;
@@ -882,13 +895,13 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (!ca.status)
                 goto out;
             if (!prop) {
-                vec[i] = JSVAL_VOID;
+                vec[i] = JSVAL_HOLE;
                 continue;
             }
             OBJ_DROP_PROPERTY(cx, obj2, prop);
             newlen++;
         }
-#endif
+
         ca.status = OBJ_GET_PROPERTY(cx, obj, id, &vec[i]);
         if (!ca.status)
             goto out;
@@ -911,21 +924,6 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         ca.status = InitArrayElements(cx, obj, newlen, vec);
         if (ca.status)
             *rval = OBJECT_TO_JSVAL(obj);
-#if JS_HAS_SPARSE_ARRAYS
-        /* set length of newly-created array object to old length. */
-        if (ca.status && newlen < len) {
-            ca.status = js_SetLengthProperty(cx, obj, len);
-
-            /* Delete any leftover properties greater than newlen. */
-            while (ca.status && newlen < len) {
-                jsval junk;
-
-                ca.status = !IndexToId(cx, newlen, &id) ||
-                    !OBJ_DELETE_PROPERTY(cx, obj, id, &junk);
-                newlen++;
-            }
-        }
-#endif
     }
 
 out:
