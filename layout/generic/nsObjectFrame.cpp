@@ -1370,8 +1370,8 @@ nsObjectFrame::InstantiatePlugin(nsPresContext* aPresContext,
     if (NS_SUCCEEDED(rv))
       pDoc->SetStreamListener(stream);
   } else {   /* embedded mode */
-    rv = aPluginHost->InstantiateEmbededPlugin(aMimeType, aURI,
-                                               mInstanceOwner);
+    rv = aPluginHost->InstantiateEmbeddedPlugin(aMimeType, aURI,
+                                                mInstanceOwner);
   }
 #ifdef DEBUG
   mInstantiating = PR_FALSE;

@@ -267,7 +267,7 @@ public:
   GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin);
 
   NS_IMETHOD
-  InstantiateEmbededPlugin(const char *aMimeType, nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
+  InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
 
   NS_IMETHOD
   InstantiateFullPagePlugin(const char *aMimeType, nsIURI* aURI, nsIStreamListener *&aStreamListener, nsIPluginInstanceOwner *aOwner);
@@ -418,7 +418,7 @@ private:
   LoadXPCOMPlugins(nsIComponentManager* aComponentManager);
 
   nsresult
-  NewEmbededPluginStream(nsIURI* aURL, nsIPluginInstanceOwner *aOwner, nsIPluginInstance* aInstance);
+  NewEmbeddedPluginStream(nsIURI* aURL, nsIPluginInstanceOwner *aOwner, nsIPluginInstance* aInstance);
 
   nsresult
   NewFullPagePluginStream(nsIStreamListener *&aStreamListener, nsIPluginInstance *aInstance);

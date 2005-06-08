@@ -236,7 +236,7 @@ gtk_xtbin_realize (GtkWidget *widget)
   gint          width, height;
   Widget        top_widget;
   Window        win;
-  Widget        embeded;
+  Widget        embedded;
 
 #ifdef DEBUG_XTBIN
   printf("gtk_xtbin_realize()\n");
@@ -323,7 +323,7 @@ gtk_xtbin_realize (GtkWidget *widget)
   XtSetArg(args[n], XtNwidth,  xtbin->width);n++;
   XtSetValues(top_widget, args, n);
 
-  embeded = XtVaCreateWidget("form", compositeWidgetClass, top_widget, NULL);
+  embedded = XtVaCreateWidget("form", compositeWidgetClass, top_widget, NULL);
 
   n = 0;
   XtSetArg(args[n], XtNheight, xtbin->height);n++;
@@ -331,7 +331,7 @@ gtk_xtbin_realize (GtkWidget *widget)
   XtSetArg(args[n], XtNvisual, GDK_VISUAL_XVISUAL(gdk_window_get_visual( xtbin->parent_window )) ); n++;
   XtSetArg(args[n], XtNdepth, gdk_window_get_visual( xtbin->parent_window )->depth ); n++;
   XtSetArg(args[n], XtNcolormap, GDK_COLORMAP_XCOLORMAP(gdk_window_get_colormap( xtbin->parent_window)) ); n++;
-  XtSetValues(embeded, args, n);
+  XtSetValues(embedded, args, n);
 
   /* Ok, here is the dirty little secret on how I am */
   /* switching the widget's XWindow to the GdkWindow's XWindow. */
@@ -352,21 +352,21 @@ gtk_xtbin_realize (GtkWidget *widget)
                      top_widget);
 #endif
   
-  XtRealizeWidget(embeded);
+  XtRealizeWidget(embedded);
 #ifdef DEBUG_XTBIN
-  printf("embeded window = %li\n", XtWindow(embeded));
+  printf("embedded window = %li\n", XtWindow(embedded));
 #endif
-  XtManageChild(embeded);
+  XtManageChild(embedded);
 
   /* now fill out the xtbin info */
-  xtbin->xtwindow  = XtWindow(embeded);
+  xtbin->xtwindow  = XtWindow(embedded);
 
   /* listen to all Xt events */
   XSelectInput(xtbin->xtdisplay, 
                XtWindow(top_widget), 
                0x0FFFFF);
   XSelectInput(xtbin->xtdisplay, 
-               XtWindow(embeded), 
+               XtWindow(embedded), 
                0x0FFFFF);
   XFlush(xtbin->xtdisplay);
 }

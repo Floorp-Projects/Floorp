@@ -71,7 +71,7 @@ void xtbin::xtbin_realize() {
   Arg args[2];
   int n;
   Widget top_widget;
-  Widget embeded;
+  Widget embedded;
   XSetWindowAttributes attr;
   unsigned long mask;
 
@@ -127,32 +127,32 @@ void xtbin::xtbin_realize() {
   XtSetArg(args[n], XtNwidth,  width);  n++;
   XtSetValues(top_widget, args, n);
 
-  embeded = XtVaCreateWidget("form", compositeWidgetClass, top_widget, NULL);
+  embedded = XtVaCreateWidget("form", compositeWidgetClass, top_widget, NULL);
 
   n = 0;
   XtSetArg(args[n], XtNheight, height); n++;
   XtSetArg(args[n], XtNwidth,  width);  n++;
-  XtSetValues(embeded, args, n);
+  XtSetValues(embedded, args, n);
 
   oldwindow = top_widget->core.window;
   top_widget->core.window = window;
 
   XtRegisterDrawable(xtdisplay, window, top_widget);
 
-  XtRealizeWidget(embeded);
+  XtRealizeWidget(embedded);
   XtRealizeWidget(top_widget);
-  XtManageChild(embeded);
+  XtManageChild(embedded);
 
   /* Now fill out the xtbin info */
-  xtwindow = XtWindow(embeded);
+  xtwindow = XtWindow(embedded);
 
   /* Suppress background refresh flashing */
   XSetWindowBackgroundPixmap(xtdisplay, XtWindow(top_widget), None);
-  XSetWindowBackgroundPixmap(xtdisplay, XtWindow(embeded),    None);
+  XSetWindowBackgroundPixmap(xtdisplay, XtWindow(embedded),   None);
 
   /* Listen to all Xt events */
   XSelectInput(xtdisplay, XtWindow(top_widget), 0x0fffff);
-  XSelectInput(xtdisplay, XtWindow(embeded),    0x0fffff);
+  XSelectInput(xtdisplay, XtWindow(embedded),   0x0fffff);
 
   sync();
 }

@@ -785,7 +785,7 @@ function SetPublishStringPref(prefBranch, name, value)
 
 // Assure that a publishing URL ends in "/", "=", "&" or "?"
 // Username and password should always be extracted as separate fields
-//  and are not allowed to remain embeded in publishing URL
+//  and are not allowed to remain embedded in publishing URL
 function FormatUrlForPublishing(url)
 {
   url = TrimString(StripUsernamePassword(url));

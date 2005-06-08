@@ -76,7 +76,7 @@ typedef struct _XtClient XtClient;
 struct _XtClient {
   Display	*xtdisplay;
   Widget	top_widget;    /* The toplevel widget */
-  Widget	child_widget;  /* The embeded widget */
+  Widget	child_widget;  /* The embedded widget */
   Visual	*xtvisual;
   int		xtdepth;
   Colormap	xtcolormap;
