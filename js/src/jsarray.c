@@ -764,8 +764,8 @@ sort_compare(const void *a, const void *b, void *arg)
     fval = ca->fval;
 
     /* 
-     * By ECMA 262, 15.4.4.11 existance of the property takes precedence
-     * over an undefined property
+     * By ECMA 262, 15.4.4.11, existence of the property with value undefined
+     * takes precedence over an undefined property (which we call a "hole").
      */
     if (av == JSVAL_HOLE || bv == JSVAL_HOLE)
         special = JSVAL_HOLE;
@@ -829,10 +829,9 @@ sort_compare_strings(const void *a, const void *b, void *arg)
 static JSBool
 array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    jsval fval;
+    jsval fval, *vec;
     CompareArgs ca;
     jsuint len, newlen, i;
-    jsval *vec;
     JSStackFrame *fp;
     jsid id;
     size_t nbytes;
@@ -924,6 +923,16 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         ca.status = InitArrayElements(cx, obj, newlen, vec);
         if (ca.status)
             *rval = OBJECT_TO_JSVAL(obj);
+
+        /* Re-create any holes that sorted to the end of the array. */
+        while (len > newlen) {
+            jsval junk;
+
+            if (!IndexToId(cx, --len, &id))
+                return JS_FALSE;
+            if (!OBJ_DELETE_PROPERTY(cx, obj, id, &junk))
+                return JS_FALSE;
+        }
     }
 
 out:
