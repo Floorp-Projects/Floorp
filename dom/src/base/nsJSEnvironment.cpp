@@ -197,9 +197,9 @@ NS_ScriptErrorReporter(JSContext *cx,
        */
       nsIDocShell *docShell = globalObject->GetDocShell();
       if (docShell &&
-          !report ||
-          (report->errorNumber != JSMSG_OUT_OF_MEMORY &&
-           !JSREPORT_IS_WARNING(report->flags))) {
+          (!report ||
+           (report->errorNumber != JSMSG_OUT_OF_MEMORY &&
+            !JSREPORT_IS_WARNING(report->flags)))) {
         static PRInt32 errorDepth; // Recursion prevention
         ++errorDepth;
 
