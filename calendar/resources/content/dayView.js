@@ -110,6 +110,20 @@ DayView.prototype.refreshEvents = function()
 {
     // clean up anything that was here before
     this.removeElementsByAttribute("eventbox", "dayview");
+    this.eventList = new Array();
+
+    // set view limits for the day
+    // XXX expand if event outside this window. Or better, always display the
+    //     complete day, but stroll as needed
+    var sHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8);
+    var eHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17);
+    var i;
+    for (i = 0; i < 24; i++) {
+        if ((i < sHour) || (i > eHour))
+            document.getElementById("day-tree-item-"+i).setAttribute("hidden", "true");
+        else
+            document.getElementById("day-tree-item-"+i).removeAttribute("hidden");
+    }
 
     // Figure out the start and end days for the week we're currently viewing
     var selectedDateTime = this.calendarWindow.getSelectedDate();
@@ -124,12 +138,12 @@ DayView.prototype.refreshEvents = function()
     var eventController = this;
     var getListener = {
         onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
-            dump("onOperationComplete\n");
+            eventController.drawEventBoxes();
         },
         onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
             for (var i = 0; i < aCount; ++i) {
                 eventController.createEventBox(aItems[i],
-                                               function(a1, a2, a3) { eventController.createEventBoxInternal(a1, a2, a3); } );
+                                               function(a1, a2, a3) { eventController.addToDisplayList(a1, a2, a3); } );
             }
         }
     };
@@ -349,12 +363,29 @@ DayView.prototype.createAllDayEventBox = function dayview_createAllDayEventBox( 
    return eventBox;
 }
 
+DayView.prototype.addToDisplayList = function(itemOccurrence, startDate, endDate)
+{
+    this.eventList.push({event:itemOccurrence, start:startDate, end:endDate});
+}
+
+DayView.prototype.drawEventBoxes = function()
+{
+    this.setDrawProperties(this.eventList);
+    var event;
+    for (event in this.eventList) {
+        this.createEventBoxInternal(this.eventList[event]);
+    }
+}
+
 /** PRIVATE
 *
 *   This creates an event box for the day view
 */
-DayView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, endDate)
+DayView.prototype.createEventBoxInternal = function(event)
 {
+    var itemOccurrence = event.event;
+    var startDate = event.start;
+    var endDate = event.end;
     var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
 
     // XXX Centralize this next checks
@@ -399,15 +430,15 @@ DayView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, e
     var hourHeight = startHourTreeItem.boxObject.height;
     var hourWidth = startHourTreeItem.boxObject.width;
     var eventSlotWidth = Math.round( ( hourWidth - kDayViewHourLeftStart ) 
-                                     / 1 /*calendarEventDisplay.totalSlotCount */);
+                                     / event.totalSlotCount);
 
     //calculate event dimensions
     var eventTop = startHourTreeItem.boxObject.y -
                     startHourTreeItem.parentNode.boxObject.y +
                     Math.round( hourHeight * startMinutes/ 60 ) - 1;
-    var eventLeft = kDayViewHourLeftStart + ( /* calendarEventDisplay.startDrawSlot */ 0 * eventSlotWidth );
+    var eventLeft = kDayViewHourLeftStart + ( event.startDrawSlot * eventSlotWidth );
     var eventHeight = Math.round( eventDuration * hourHeight ) + 1;
-    var eventWidth = ( 1 /* calendarEventDisplay.drawSlotCount */ * eventSlotWidth ) - 1;
+    var eventWidth = ( event.drawSlotCount * eventSlotWidth ) - 1;
 
     // create title label, location label and description description :)
     var eventTitleLabel = document.createElement( "label" );

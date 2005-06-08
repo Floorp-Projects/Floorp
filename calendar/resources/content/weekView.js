@@ -132,6 +132,7 @@ WeekView.prototype.refreshEvents = function()
 
     // clean up anything that was here before
     this.removeElementsByAttribute("eventbox", "weekview");
+    this.eventList = new Array();
 
 
     // Figure out the start and end days for the week we're currently viewing
@@ -145,11 +146,12 @@ WeekView.prototype.refreshEvents = function()
     var getListener = {
         onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
             debug("onOperationComplete\n");
+            eventController.drawEventBoxes();
         },
         onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
             for (var i = 0; i < aCount; ++i) {
                 eventController.createEventBox(aItems[i],
-                                               function(a1, a2, a3) { eventController.createEventBoxInternal(a1, a2, a3); } );
+                                               function(a1, a2, a3) { eventController.addToDisplayList(a1, a2, a3); } );
             }
         }
     };
@@ -324,13 +326,31 @@ WeekView.prototype.refreshEvents = function()
 */
 }
 
+
+WeekView.prototype.addToDisplayList = function(itemOccurrence, startDate, endDate)
+{
+    this.eventList.push({event:itemOccurrence, start:startDate, end:endDate});
+}
+
+WeekView.prototype.drawEventBoxes = function()
+{
+    this.setDrawProperties(this.eventList);
+    var event;
+    for (event in this.eventList) {
+        this.createEventBoxInternal(this.eventList[event]);
+    }
+}
+
 /** PRIVATE
 *
 *   This creates an event box for the week view
 */
 
-WeekView.prototype.createEventBoxInternal = function (itemOccurrence, startDate, endDate)
+WeekView.prototype.createEventBoxInternal = function (event)
 {    
+    var itemOccurrence = event.event;
+    var startDate = event.start;
+    var endDate = event.end;
     var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
 
     // Check if the event is within the bounds of events to be displayed.
@@ -352,8 +372,6 @@ WeekView.prototype.createEventBoxInternal = function (itemOccurrence, startDate,
         endDate.hour = this.highestEndHour;
         endDate.normalize();
     }
-dump(startDate+" "+endDate+"\n");
-dump(this.displayEndDate+"\n");
 
     /*
     if (calEvent.isAllDay) {
@@ -385,9 +403,9 @@ dump(this.displayEndDate+"\n");
     var hourHeightEnd = ElementOfRefEnd.boxObject.height;
    
     var hourWidth = ElementOfRef.boxObject.width;
-    var eventSlotWidth = Math.round(hourWidth / 1/*calendarEventDisplay.totalSlotCount*/);
+    var eventSlotWidth = Math.round(hourWidth / event.totalSlotCount);
    
-    var Width = ( 1 /*calendarEventDisplay.drawSlotCount*/ * eventSlotWidth ) - 1;
+    var Width = ( event.drawSlotCount * eventSlotWidth ) - 1;
     eventBox.setAttribute( "width", Width );
 
     var top = eval( ElementOfRef.boxObject.y + ( ( startMinutes/60 ) * hourHeight ) );
@@ -406,7 +424,7 @@ dump(this.displayEndDate+"\n");
 
     var boxLeft = document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
                   document.getElementById( "week-view-content-box" ).boxObject.x +
-                  ( /*calendarEventDisplay.startDrawSlot*/0 * eventSlotWidth );
+                  ( event.startDrawSlot * eventSlotWidth );
     //dump(boxLeft + "\n");
     eventBox.setAttribute("left", boxLeft);
    

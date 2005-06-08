@@ -529,11 +529,11 @@ CalendarWindow.prototype.compareNumbers = function calWin_compareNumbers(a, b) {
 }
 
 CalendarWindow.prototype.compareDisplayEventStart = function calWin_compareDisplayEventStart(a, b) {
-   return ( a.displayDate - b.displayDate );
+   return ( a.start.compare(b.start) );
 }
 
 CalendarWindow.prototype.compareDisplayEventEnd = function calWin_compareDisplayEventStart(a, b) {
-   return ( a.displayEndDate - b.displayEndDate );
+   return ( a.end.compare(b.end) );
 }
 
 CalendarWindow.prototype.onMouseUpCalendarSplitter = function calWinOnMouseUpCalendarSplitter()
@@ -797,11 +797,12 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
   var done = false;
 
   var i;
-  for( i = 0; i < dayEventList.length; i++ )
+  for( i = 0; i < dayEventList.length; i++ ) {
     if( !dayEventList[i].event.isAllDay) {
       dayEventStartList.push(dayEventList[i]);
       dayEventEndList.push(dayEventList[i]);
     }
+  }
     
   if( dayEventStartList.length > 0 ) {
 
@@ -880,7 +881,8 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
       if( !(eventStartListIndex in dayEventStartList) || dayEventStartList[eventStartListIndex] == null )
         done = true;
       else
-        nextEventIsStarting = ( dayEventStartList[eventStartListIndex].displayDate <  dayEventEndList[eventEndListIndex].displayEndDate );     
+        nextEventIsStarting = dayEventStartList[eventStartListIndex].start
+                                  .compare(dayEventEndList[eventEndListIndex].end);
     }
     //  set totalSlotCount for the last contiguous group of events
     for ( i = groupStartIndex; i < dayEventStartList.length; i++ )
