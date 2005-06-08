@@ -345,15 +345,10 @@ function UpdateService() {
                     .getService(Components.interfaces.nsIObserverService);
   gConsole = Components.classes["@mozilla.org/consoleservice;1"]
                        .getService(Components.interfaces.nsIConsoleService);  
-  
-  // Register a background update check timer
-  var tm = Components.classes["@mozilla.org/updates/timer-manager;1"]
-                     .getService(Components.interfaces.nsIUpdateTimerManager);
-  var interval = getPref("getIntPref", PREF_APP_UPDATE_INTERVAL);
-  if (!interval) 
-    interval = 5000;
-  tm.registerTimer("background-update-timer", this, interval,
-                   Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+
+  // Start the update timer only after a profile has been selected so that the
+  // appropriate values for the update check are read from the user's profile.  
+  gOS.addObserver(this, "profile-after-change", false);
 
   // Observe xpcom-shutdown to unhook pref branch observers above to avoid 
   // shutdown leaks.
@@ -364,9 +359,24 @@ UpdateService.prototype = {
   _downloader: null,
 
   observe: function(subject, topic, data) {
-    if (topic == "app-startup") {
+    switch (topic) {
+    case "app-startup":
       // Resume fetching...
       this.downloadUpdate(null);
+      break;
+    case "profile-after-change":
+      gOS.removeObserver(this, "profile-after-change");
+
+      // Register a background update check timer
+      var tm = Components.classes["@mozilla.org/updates/timer-manager;1"]
+                         .getService(Components.interfaces.nsIUpdateTimerManager);
+      var interval = getPref("getIntPref", PREF_APP_UPDATE_INTERVAL, 86400000);
+      tm.registerTimer("background-update-timer", this, interval,
+                       Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+      break;
+    case "xpcom-shutdown":
+      gOS.removeObserver(this, "xpcom-shutdown");
+      break;
     }
   },
   
@@ -437,11 +447,11 @@ UpdateService.prototype = {
     // If app.update.enabled is set to false, an update check is not performed
     // at all, and so none of the decision making above is entered into.
     //
-    var updateEnabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED);
+    var updateEnabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
     if (!updateEnabled)
       return;
       
-    var mode = getPref("getIntPref", PREF_APP_UPDATE_AUTOINSTALL_MODE);
+    var mode = getPref("getIntPref", PREF_APP_UPDATE_AUTOINSTALL_MODE, 0);
     var compatible = isCompatible(update);
     if ((update.type == "major" && (mode == 0)) ||
         (update.type == "minor" && (mode == 0 || mode == 1)))
@@ -562,16 +572,19 @@ UpdateService.prototype = {
  *          The name of the preference function to call, on nsIPrefBranch
  * @param   preference
  *          The name of the preference
+ * @param   defaultValue
+ *          The default value to return in the event the preference has 
+ *          no setting
  * @returns The value of the preference, or undefined if there was no
  *          user or default value.
  */
-function getPref(func, preference) {
+function getPref(func, preference, defaultValue) {
   try {
     return gPref[func](preference);
   }
   catch (e) {
   }
-  return undefined;
+  return defaultValue;
 }
 
 /**
@@ -1074,7 +1087,7 @@ TimerManager.prototype = {
     const nsITimer = Components.interfaces.nsITimer;
     var timer = Components.classes["@mozilla.org/timer;1"]
                           .createInstance(nsITimer);
-    var timerInterval = getPref("getIntPref", PREF_APP_UPDATE_TIMER);
+    var timerInterval = getPref("getIntPref", PREF_APP_UPDATE_TIMER, 5000);
     
     var self = this;
     function TimerCallback(id, callback, interval) {
@@ -1084,10 +1097,10 @@ TimerManager.prototype = {
     }
     TimerCallback.prototype = {
       notify: function(timer) {
-        LOG("*** self._timers = " + self._timers.toSource());
+        LOG("self._timers = " + self._timers.toSource());
         var lastUpdateTime = self._timers[this.id].lastUpdateTime;
         var now = Math.round(Date.now() / 1000);
-        LOG("*** notify = " + (now - lastUpdateTime) + " > " + this.interval);
+        LOG("notify = " + (now - lastUpdateTime) + " > " + this.interval);
         if ((now - lastUpdateTime) > this.interval &&
             this.callback instanceof Components.interfaces.nsITimerCallback) {
           this.callback.notify(timer);
@@ -1108,10 +1121,12 @@ TimerManager.prototype = {
       }
     };
     var tc = new TimerCallback(id, callback, interval);
+    LOG("timerInterval = " + timerInterval);
     timer.initWithCallback(tc, timerInterval, type);
     var preference = PREF_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, id);
-    var lastUpdateTime = getPref("getIntPref", preference);
-    this._timers[id] = { timer: timer, lastUpdateTime: lastUpdateTime || 0 };
+    var lastUpdateTime = getPref("getIntPref", preference, 
+                                 Math.round(Date.now() / 1000));
+    this._timers[id] = { timer: timer, lastUpdateTime: lastUpdateTime };
   },
 
   QueryInterface: function(iid) {
