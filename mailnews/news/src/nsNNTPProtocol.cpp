@@ -4162,9 +4162,13 @@ PRInt32 nsNNTPProtocol::DoCancel()
           rv = dialog->Alert(nsnull, alertText);
 		  // XXX:  todo, check rv?
           
+/* After the cancel is disallowed, Make the status update to be the same as though the 
+cancel was allowed, otherwise, the newsgroup is not able to take further requests as
+reported here */
           status = MK_NNTP_CANCEL_DISALLOWED;
-          m_nextState = NEWS_ERROR; /* even though it worked */
-          ClearFlag(NNTP_PAUSE_FOR_READ);
+          m_nextState = NNTP_RESPONSE; 
+          m_nextStateAfterResponse = NNTP_SEND_POST_DATA_RESPONSE;
+          SetFlag(NNTP_PAUSE_FOR_READ);
           failure = PR_TRUE;
           goto FAIL;
       }
