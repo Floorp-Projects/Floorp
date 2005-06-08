@@ -122,10 +122,10 @@ nsThread::Main(void* arg)
     // Because a thread can die after gMainThread dies and takes nsIThreadLog with it,
     // we need to check for it being null so that we don't crash on shutdown.
     if (nsIThreadLog) {
-      PRThreadState state;
-      rv = self->GetState(&state);
-      PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-             ("nsIThread %p end run %p\n", self, self->mRunnable.get()));
+        PRThreadState state;
+        rv = self->GetState(&state);
+        PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+               ("nsIThread %p end run %p\n", self, self->mRunnable.get()));
     }
 #endif
 
@@ -145,11 +145,12 @@ nsThread::Exit(void* arg)
     }
 
     self->mDead = PR_TRUE;
+    self->mThread = nsnull;
 
 #if defined(PR_LOGGING)
     if (nsIThreadLog) {
-      PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-             ("nsIThread %p exited\n", self));
+        PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+               ("nsIThread %p exited\n", self));
     }
 #endif
     NS_RELEASE(self);
@@ -182,12 +183,11 @@ nsThread::Join()
     // this to null (bad c++)
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p end join\n", this));
-    if (status == PR_SUCCESS) {
-        NS_RELEASE_THIS();   // most likely the final release of this thread 
-        return NS_OK;
-    }
-    else
+    if (status != PR_SUCCESS)
         return NS_ERROR_FAILURE;
+
+    NS_RELEASE_THIS();   // most likely the final release of this thread 
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -264,23 +264,44 @@ nsThread::Init(nsIRunnable* runnable,
                PRThreadState state)
 {
     NS_ENSURE_ARG_POINTER(runnable);
+    if (mRunnable)
+        return NS_ERROR_ALREADY_INITIALIZED;
+
     mRunnable = runnable;
 
-    NS_ADDREF_THIS();   // released in nsThread::Exit
+    if (mStartLock)
+        return NS_ERROR_ALREADY_INITIALIZED;
+
+    mStartLock = PR_NewLock();
+    if (mStartLock == nsnull) {
+        mRunnable = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    NS_ADDREF_THIS();       // released in nsThread::Exit
     if (state == PR_JOINABLE_THREAD)
         NS_ADDREF_THIS();   // released in nsThread::Join
-    mStartLock = PR_NewLock();
-    if (mStartLock == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+
     PR_Lock(mStartLock);
+    mDead = PR_FALSE;
     mThread = PR_CreateThread(PR_USER_THREAD, Main, this,
                               priority, scope, state, stackSize);
     PR_Unlock(mStartLock);
+
+    if (mThread == nsnull) {
+        mDead = PR_TRUE;         // otherwise cleared in nsThread::Exit
+        mRunnable = nsnull;      // otherwise cleared in nsThread::Main(when done)
+        PR_DestroyLock(mStartLock);
+        mStartLock = nsnull;
+        NS_RELEASE_THIS();       // otherwise released in nsThread::Exit
+        if (state == PR_JOINABLE_THREAD)
+            NS_RELEASE_THIS();   // otherwise released in nsThread::Join
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p created\n", this));
 
-    if (mThread == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
