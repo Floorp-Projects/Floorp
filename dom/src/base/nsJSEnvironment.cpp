@@ -39,6 +39,7 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsIDOMChromeWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
@@ -86,6 +87,10 @@
 #include "nsILocaleService.h"
 #include "nsICollation.h"
 #include "nsCollationCID.h"
+
+#ifdef NS_DEBUG
+#include "jsgc.h"       // for WAY_TOO_MUCH_GC, if defined for GC debugging
+#endif
 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
@@ -666,10 +671,10 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 
   ++sContextCount;
 
-  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS |
-                      JSOPTION_NATIVE_BRANCH_CALLBACK
+  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS
+                    | JSOPTION_NATIVE_BRANCH_CALLBACK
 #ifdef DEBUG
-    | JSOPTION_STRICT   // lint catching for development
+                    | JSOPTION_STRICT   // lint catching for development
 #endif
     ;
 
@@ -1294,7 +1299,8 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
   const char *argList[] = { aEventName };
 
   JSFunction* fun =
-      ::JS_CompileUCFunctionForPrincipals(mContext, target, jsprin,
+      ::JS_CompileUCFunctionForPrincipals(mContext,
+                                          aShared ? nsnull : target, jsprin,
                                           charName, 1, argList,
                                           (jschar*)PromiseFlatString(aBody).get(),
                                           aBody.Length(),
@@ -1310,11 +1316,6 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
   JSObject *handler = ::JS_GetFunctionObject(fun);
   if (aHandler)
     *aHandler = (void*) handler;
-
-  if (aShared) {
-    /* Break scope link to avoid entraining shared compilation scope. */
-    ::JS_SetParent(mContext, handler, nsnull);
-  }
   return NS_OK;
 }
 
@@ -1345,7 +1346,8 @@ nsJSContext::CompileFunction(void* aTarget,
 
   JSObject *target = (JSObject*)aTarget;
   JSFunction* fun =
-      ::JS_CompileUCFunctionForPrincipals(mContext, target, jsprin,
+      ::JS_CompileUCFunctionForPrincipals(mContext,
+                                          aShared ? nsnull : target, jsprin,
                                           PromiseFlatCString(aName).get(),
                                           aArgCount, aArgArray,
                                           (jschar*)PromiseFlatString(aBody).get(),
@@ -1360,12 +1362,6 @@ nsJSContext::CompileFunction(void* aTarget,
   JSObject *handler = ::JS_GetFunctionObject(fun);
   if (aFunctionObject)
     *aFunctionObject = (void*) handler;
-
-  // Prevent entraining just like CompileEventHandler does?
-  if (aShared) {
-    /* Break scope link to avoid entraining shared compilation scope. */
-    ::JS_SetParent(mContext, handler, nsnull);
-  }
   return NS_OK;
 }
 
@@ -1917,10 +1913,14 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
 
   mNumEvaluations++;
 
+#ifdef WAY_TOO_MUCH_GC
+  ::JS_MaybeGC(mContext);
+#else
   if (mNumEvaluations > 20) {
     mNumEvaluations = 0;
     ::JS_MaybeGC(mContext);
   }
+#endif
 
   mBranchCallbackCount = 0;
   mBranchCallbackTime = LL_ZERO;

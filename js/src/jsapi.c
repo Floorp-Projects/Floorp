@@ -1758,6 +1758,9 @@ JS_GC(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx)
 {
+#ifdef WAY_TOO_MUCH_GC
+    JS_GC(cx);
+#else
     JSRuntime *rt;
     uint32 bytes, lastBytes;
 
@@ -1773,6 +1776,7 @@ JS_MaybeGC(JSContext *cx)
          */
         JS_GC(cx);
     }
+#endif
 }
 
 JS_PUBLIC_API(JSGCCallback)

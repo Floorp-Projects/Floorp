@@ -256,6 +256,14 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp);
 
 #endif /* JS_GCMETER */
 
+#ifdef DEBUG_notme
+#define TOO_MUCH_GC 1
+#endif
+
+#ifdef WAY_TOO_MUCH_GC
+#define TOO_MUCH_GC 1
+#endif
+
 JS_END_EXTERN_C
 
 #endif /* jsgc_h___ */

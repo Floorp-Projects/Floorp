@@ -555,13 +555,6 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     JSLocalRootStack *lrs;
     uint32 *bytesptr;
 
-#ifdef TOO_MUCH_GC
-    js_GC(cx, GC_KEEP_ATOMS);
-    tried_gc = JS_TRUE;
-#else
-    tried_gc = JS_FALSE;
-#endif
-
     rt = cx->runtime;
     JS_LOCK_GC(rt);
     JS_ASSERT(!rt->gcRunning);
@@ -570,6 +563,17 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
         JS_UNLOCK_GC(rt);
         return NULL;
     }
+
+#ifdef TOO_MUCH_GC
+#ifdef WAY_TOO_MUCH_GC
+    rt->gcPoke = JS_TRUE;
+#endif
+    js_GC(cx, GC_KEEP_ATOMS | GC_ALREADY_LOCKED);
+    tried_gc = JS_TRUE;
+#else
+    tried_gc = JS_FALSE;
+#endif
+
     METER(rt->gcStats.alloc++);
     nbytes = JS_ROUNDUP(nbytes, sizeof(JSGCThing));
     nflags = nbytes / sizeof(JSGCThing);
