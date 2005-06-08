@@ -635,7 +635,7 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::DoAction(PRUint8 index)
     nsIFrame *selectFrame = nsnull;
     presShell->GetPrimaryFrameFor(selectContent, &selectFrame);
     nsIComboboxControlFrame *comboBoxFrame = nsnull;
-    selectFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboBoxFrame);
+    CallQueryInterface(selectFrame, &comboBoxFrame);
     if (comboBoxFrame) {
       nsIFrame *listFrame = nsnull;
       comboBoxFrame->GetDropDown(&listFrame);
@@ -884,13 +884,16 @@ nsHTMLComboboxAccessible::GetFocusedOptionAccessible()
   if (!mWeakShell) {
     return nsnull;  // Shut down
   }
-  nsCOMPtr<nsIAccessible> listAccessible;
-  GetLastChild(getter_AddRefs(listAccessible));
-  nsCOMPtr<nsIAccessNode> listAccessNode(do_QueryInterface(listAccessible));
-  NS_ASSERTION(listAccessNode, "No list for combobox");
-  nsCOMPtr<nsIDOMNode> listNode;
-  listAccessNode->GetDOMNode(getter_AddRefs(listNode));
-  NS_ASSERTION(listAccessible, "No dom node for listbox");
+  nsCOMPtr<nsIComboboxControlFrame> cbxFrame = do_QueryInterface(GetFrame());
+  if (!cbxFrame) {
+    return nsnull;
+  }
+  nsIFrame *listFrame = nsnull;
+  cbxFrame->GetDropDown(&listFrame);
+  if (!listFrame) {
+    return nsnull;
+  }
+  nsCOMPtr<nsIDOMNode> listNode = do_QueryInterface(listFrame->GetContent());
   nsCOMPtr<nsIDOMNode> focusedOptionNode;
   nsHTMLSelectOptionAccessible::GetFocusedOptionNode(listNode, getter_AddRefs(focusedOptionNode));
   nsCOMPtr<nsIAccessibilityService> accService = 
