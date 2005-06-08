@@ -2895,6 +2895,7 @@ ExtensionManager.prototype = {
       // Stuff has changed, load the Extensions datasource in all its RDFey
       // glory. 
       var ds = this.datasource;
+      var updatedTargetAppInfos = [];
 
       var needsRestart = false;      
       do {
@@ -2931,8 +2932,13 @@ ExtensionManager.prototype = {
           id = items[i].id;
           var oldLocation = this.getInstallLocation(id);
           var newLocation = InstallLocations.get(items[i].locationKey);
-          if (newLocation.priority <= oldLocation.priority) 
+          if (newLocation.priority <= oldLocation.priority) {
+            // check if there is updated app compatibility info
+            var newTargetAppInfo = ds.getUpdatedTargetAppInfo(id);
+            if (newTargetAppInfo)
+              updatedTargetAppInfos.push(newTargetAppInfo);
             this._finalizeUpgrade(id);
+          }
         }
         PendingOperations.clearItems(OP_NEEDS_UPGRADE);
 
@@ -2940,7 +2946,12 @@ ExtensionManager.prototype = {
         items = PendingOperations.getOperations(OP_NEEDS_INSTALL);
         for (i = items.length - 1; i >= 0; --i) {
           needsRestart = true;
-          this._finalizeInstall(items[i].id, null);
+          var id = items[i].id;
+          // check if there is updated app compatibility info
+          newTargetAppInfo = ds.getUpdatedTargetAppInfo(id);
+          if (newTargetAppInfo)
+            updatedTargetAppInfos.push(newTargetAppInfo);
+          this._finalizeInstall(id, null);
         }
         PendingOperations.clearItems(OP_NEEDS_INSTALL);
 
@@ -2970,6 +2981,13 @@ ExtensionManager.prototype = {
       // no new components that need registering so we can inform the app
       // not to do any extra startup checking next time round. 
       this._updateManifests(needsRestart);
+
+      // If there is updated app compatibility info update the data sources.
+      for (i = 0; i < updatedTargetAppInfos.length; ++i) {
+        ds.updateTargetAppInfo(updatedTargetAppInfos[i].id,
+                               updatedTargetAppInfos[i].minVersion,
+                               updatedTargetAppInfos[i].maxVersion);
+      }
     }
     catch (e) {
       LOG("ExtensionManager:_finishOperations - failure, catching exception... " + e);
@@ -3518,7 +3536,20 @@ ExtensionManager.prototype = {
             // Try and install again, but use the updated compatibility DB
             em.installItemFromFileInternal(this._xpi, aInstallLocationKey, 
                                            this._installManifest);
-          } else {
+
+            // Add the updated compatibility info to the datasource if done
+            if (StartupCache.entries[aInstallLocationKey][item.id].op == OP_NONE) {
+              em.datasource.updateTargetAppInfo(item.id, item.minAppVersion,
+                                                item.maxAppVersion);
+            }
+            else { // needs a restart
+              // Add updatedMinVersion and updatedMaxVersion so it can be used
+              // to update the data sources during the installation or upgrade.
+              em.datasource.setUpdatedTargetAppInfo(item.id, item.minAppVersion,
+                                                    item.maxAppVersion);
+            }
+          }
+          else {
             showIncompatibleError(installData);
             // We are responsible for cleaning up this file!
             InstallLocations.get(aInstallLocationKey).removeFile(this._xpi);
@@ -4575,11 +4606,11 @@ ExtensionItemUpdater.prototype = {
     var targetAppInfo = this._emDS.getTargetApplicationInfo(aLocalItem.id, this._emDS);
     if (gVersionChecker.compare(targetAppInfo.maxVersion, aRemoteItem.maxAppVersion) < 0) {
       // Remotely specified maxVersion is newer than the maxVersion 
-      // for the installed Extension. Apply that change to the datasource.
-      this._emDS.setTargetApplicationInfo(aLocalItem.id, 
-                                          aRemoteItem.minAppVersion, 
-                                          aRemoteItem.maxAppVersion, null);
-      
+      // for the installed Extension. Apply that change to the datasources.
+      this._emDS.datasource.updateTargetAppInfo(aLocalItem.id,
+                                                item.minAppVersion,
+                                                item.maxAppVersion);
+
       // If we got here through |checkForMismatches|, this extension has
       // already been disabled, re-enable it.
       if (this._emDS.getItemProperty(aLocalItem.id, "disabled") == "true") 
@@ -5166,6 +5197,132 @@ ExtensionsDataSource.prototype = {
   },
   
   /**
+   * Sets the target application info for an item in the Extensions
+   * datasource and in the item's install manifest if it is installed in a
+   * profile's extensions directory, it exists, and we have write access.
+   * @param   id
+   *          The ID of the item to update target application info for
+   * @param   minVersion
+   *          The minimum version of the target application that this item can
+   *          run in
+   * @param   maxVersion
+   *          The maximum version of the target application that this item can
+   *          run in
+   */
+  updateTargetAppInfo: function(id, minVersion, maxVersion)
+  {
+    // Update the Extensions datasource
+    this.setTargetApplicationInfo(id, minVersion, maxVersion, null);
+
+    var installLocation = InstallLocations.get(this.getInstallLocationKey(id));
+    if (installLocation.name != KEY_APP_PROFILE)
+      return;
+
+    var installManifestFile = installLocation.getItemFile(id, FILE_INSTALL_MANIFEST);
+    // Only update if the item exists and we can write to the location
+    if (installManifestFile.exists() && installLocation.canAccess)
+      this.setTargetApplicationInfo(id, minVersion, maxVersion,
+                                    getInstallManifest(installManifestFile));
+  },
+
+  /**
+   * Gets the updated target application info if it exists for an item from
+   * the Extensions datasource during an installation or upgrade.
+   * @param   id
+   *          The ID of the item to discover updated target application info for
+   * @returns A JS Object with the following properties:
+   *          "id"            The id of the item
+   *          "minVersion"    The updated minimum version of the target
+   *                          application that this item can run in
+   *          "maxVersion"    The updated maximum version of the target
+   *                          application that this item can run in
+   */
+  getUpdatedTargetAppInfo: function(id) {
+    // The default theme is always compatible so there is never update info.
+    if (getResourceForID(id).EqualsNode(this._defaultTheme))
+      return null;
+
+    var appID = gApp.ID;
+    var r = getResourceForID(id);
+    var targetApps = this._inner.GetTargets(r, EM_R("targetApplication"), true);
+    if (!targetApps.hasMoreElements())
+      targetApps = this._inner.GetTargets(gInstallManifestRoot, EM_R("targetApplication"), true); 
+    while (targetApps.hasMoreElements()) {
+      var targetApp = targetApps.getNext();
+      if (targetApp instanceof Components.interfaces.nsIRDFResource) {
+        try {
+          var foundAppID = stringData(this._inner.GetTarget(targetApp, EM_R("id"), true));
+          if (foundAppID != appID) // Different target application
+            continue;
+          var updatedMinVersion = this._inner.GetTarget(targetApp, EM_R("updatedMinVersion"), true);
+          var updatedMaxVersion = this._inner.GetTarget(targetApp, EM_R("updatedMaxVersion"), true);
+          if (updatedMinVersion && updatedMaxVersion)
+            return { id        : id,
+                     minVersion: stringData(updatedMinVersion),
+                     maxVersion: stringData(updatedMaxVersion) };
+          else
+            return null;
+        }
+        catch (e) { 
+          continue;
+        }
+      }
+    }
+    return null;
+  },
+  
+  /**
+   * Sets the updated target application info for an item in the Extensions
+   * datasource during an installation or upgrade.
+   * @param   id
+   *          The ID of the item to set updated target application info for
+   * @param   updatedMinVersion
+   *          The updated minimum version of the target application that this
+   *          item can run in
+   * @param   updatedMaxVersion
+   *          The updated maximum version of the target application that this
+   *          item can run in
+   */
+  setUpdatedTargetAppInfo: function(id, updatedMinVersion, updatedMaxVersion) {
+    // The default theme is always compatible so it is never updated.
+    if (getResourceForID(id).EqualsNode(this._defaultTheme))
+      return;
+
+    // Version/Dependency Info
+    var updatedMinVersionRes = EM_R("updatedMinVersion");
+    var updatedMaxVersionRes = EM_R("updatedMaxVersion");
+
+    var appID = gApp.ID;
+    var r = getResourceForID(id);
+    var targetApps = this._inner.GetTargets(r, EM_R("targetApplication"), true);
+    // add updatedMinVersion and updatedMaxVersion for an install else an upgrade
+    if (!targetApps.hasMoreElements()) {
+      var idRes = EM_R("id");
+      var targetRes = getResourceForID(id);
+      var property = EM_R("targetApplication");
+      var anon = gRDF.GetAnonymousResource();
+      this._inner.Assert(anon, idRes, EM_L(appID), true);
+      this._inner.Assert(anon, updatedMinVersionRes, EM_L(updatedMinVersion), true);
+      this._inner.Assert(anon, updatedMaxVersionRes, EM_L(updatedMaxVersion), true);
+      this._inner.Assert(targetRes, property, anon, true);
+    }
+    else {
+      while (targetApps.hasMoreElements()) {
+        var targetApp = targetApps.getNext();
+        if (targetApp instanceof Components.interfaces.nsIRDFResource) {
+          var foundAppID = stringData(this._inner.GetTarget(targetApp, EM_R("id"), true));
+          if (foundAppID != appID) // Different target application
+            continue;
+          this._inner.Assert(targetApp, updatedMinVersionRes, EM_L(updatedMinVersion), true);
+          this._inner.Assert(targetApp, updatedMaxVersionRes, EM_L(updatedMaxVersion), true);
+          break;
+        }
+      }
+    }
+    this._inner.Flush();
+  },
+
+  /**
    * Gets the target application info for an item from a datasource.
    * @param   id
    *          The GUID of the item to discover target application info for
@@ -5193,8 +5350,8 @@ ExtensionsDataSource.prototype = {
       var targetApp = targetApps.getNext();
       if (targetApp instanceof Components.interfaces.nsIRDFResource) {
         try {
-          var id = stringData(datasource.GetTarget(targetApp, EM_R("id"), true));
-          if (id != appID) // Different target application
+          var foundAppID = stringData(datasource.GetTarget(targetApp, EM_R("id"), true));
+          if (foundAppID != appID) // Different target application
             continue;
           
           return { minVersion: stringData(datasource.GetTarget(targetApp, EM_R("minVersion"), true)),
@@ -5234,8 +5391,8 @@ ExtensionsDataSource.prototype = {
     while (targetApps.hasMoreElements()) {
       var targetApp = targetApps.getNext();
       if (targetApp instanceof Components.interfaces.nsIRDFResource) {
-        var id = stringData(targetDataSource.GetTarget(targetApp, EM_R("id"), true));
-        if (id != appID) // Different target application
+        var foundAppID = stringData(targetDataSource.GetTarget(targetApp, EM_R("id"), true));
+        if (foundAppID != appID) // Different target application
           continue;
         
         this._setProperty(targetDataSource, targetApp, EM_R("minVersion"), EM_L(minVersion));
