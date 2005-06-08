@@ -85,7 +85,7 @@ pref("app.update.url", "chrome://mozapps/locale/update/update.properties");
 pref("app.update.updatesAvailable", false);
 // Check for updates to Firefox every day
 pref("app.update.interval", 86400000);
-pref("app.update.timer", 100000000);
+pref("app.update.timer", 5000);
 // UTC offset when last App update was performed.
 pref("app.update.lastUpdateDate", 0);
 

@@ -39,6 +39,7 @@
 
 interface nsIRequest;
 interface nsIRequestObserver;
+interface nsITimerCallback;
 
 [scriptable, uuid(56863a67-bd69-42de-9f40-583e625b457d)]
 interface nsIUpdatePatch : nsISupports
@@ -186,6 +187,18 @@ interface nsIApplicationUpdateService : nsISupports
    * 
    */
   void downloadUpdate(in nsIUpdate update);
+};
+
+[scriptable, uuid(0765c92c-6145-4253-9db4-594d8023087e)]
+interface nsIUpdateTimerManager : nsISupports
+{
+    /**
+     *
+     */
+    void registerTimer(in AString id, 
+                       in nsITimerCallback callback, 
+                       in unsigned long interval,
+                       in unsigned long type);
 };
 
 [scriptable, uuid(22d35700-5765-42e1-914b-a0da7c911a8c)]
