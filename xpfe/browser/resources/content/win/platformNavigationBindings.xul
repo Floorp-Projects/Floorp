@@ -12,12 +12,6 @@
     <key id="goForwardKb"  keycode="&goForwardCmd.keyCode;" command="Browser:Forward" modifiers="alt"/>
     <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
 
-    <!-- Supporting IE forward and back accelerators out of courtesy
-         to transitioning IE users -->
-    <!-- Backspace is also used by type ahead find -->
-    <key keycode="VK_BACK" command="cmd_handleBackspace"/>
-    <key keycode="VK_BACK" command="Browser:Forward" modifiers="shift"/>
-
     <!-- Supporting IE 'refresh' shortcut key -->
     <key keycode="VK_F5" oncommand="BrowserReload();"/>
     <key keycode="VK_F5" modifiers="control" oncommand="BrowserReloadSkipCache();"/>
