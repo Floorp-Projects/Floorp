@@ -450,7 +450,9 @@
                      label="rdf:http://home.netscape.com/NC-rdf#Name"
                      livemark="true"
                      chromedir="&locale.dir;">
-#ifndef XP_MACOSX
+#ifdef XP_MACOSX
+        <menupopup/>
+#else
         <menupopup contextmenu="bookmarks-context-menu"/>
 #endif
       </toolbarbutton>
@@ -459,7 +461,9 @@
       <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
                      rdf:type="http://home.netscape.com/NC-rdf#Folder"
                      label="rdf:http://home.netscape.com/NC-rdf#Name">
-#ifndef XP_MACOSX
+#ifdef XP_MACOSX
+        <menupopup/>
+#else
         <menupopup contextmenu="bookmarks-context-menu"/>
 #endif
       </toolbarbutton>
@@ -495,8 +499,10 @@
         <menu class="menu-iconic bookmark-item" uri="rdf:*"
               label="rdf:http://home.netscape.com/NC-rdf#Name"
               type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-#ifndef XP_MACOSX
-          <menupopup contextmenu="bookmarks-context-menu"/>
+#ifdef XP_MACOSX
+        <menupopup/>
+#else
+        <menupopup contextmenu="bookmarks-context-menu"/>
 #endif
         </menu>
       </menupopup>
