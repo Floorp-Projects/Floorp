@@ -70,8 +70,7 @@ CPPSRCS =         affentry.cpp \
                   $(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
+		$(LIBS_DIR) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
