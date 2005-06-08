@@ -1040,7 +1040,6 @@ mail/components/gnome/Makefile
 mail/extensions/Makefile
 mail/extensions/smime/Makefile
 mail/extensions/offline/Makefile
-mail/extensions/inspector/Makefile
 mail/config/Makefile
 mail/installer/Makefile
 mail/installer/windows/Makefile
