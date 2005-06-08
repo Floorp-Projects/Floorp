@@ -48,15 +48,15 @@ var expect = '';
 printBugNumber (bug);
 printStatus (summary);
 
-function test(tokens) {
+function testfunc(tokens) {
 function eek(y) {} /* remove function eek and the code will change its behavior */
     return tokens.split(/\]?(?:\[|$)/).shift();
 }
-bad=test;
-function test(tokens) {
+bad=testfunc;
+function testfunc(tokens) {
     return tokens.split(/\]?(?:\[|$)/).shift();
 }
-good=test;
+good=testfunc;
 
 var goodvalue = good("DIV[@id=\"test\"]");
 var badvalue = bad("DIV[@id=\"test\"]");
