@@ -60,7 +60,11 @@ HOST_LIBS	= $(DIST)/lib/$(LIB_PREFIX)mar.$(LIB_SUFFIX)
 
 ifeq (WINNT,$(OS_ARCH))
 EXTRA_LIBS += $(call EXPAND_LIBNAME,Ws2_32)
-WIN32_EXE_LDFLAGS += /NODEFAULTLIB:LIBC
+ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))
+WIN32_EXE_LDFLAGS += -NODEFAULTLIB:LIBC
+else
+WIN32_EXE_LDFLAGS += -NODEFAULTLIB:LIBCMT
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
