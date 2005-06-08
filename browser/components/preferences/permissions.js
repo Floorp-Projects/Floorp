@@ -112,9 +112,10 @@ var gPermissionManager = {
     } catch(ex) {
       var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                     .getService(Components.interfaces.nsIPromptService);
-      var message = stringBundle.getString("invalidURI");
-      var title = stringBundle.getString("invalidURITitle");
-      promptservice.alert(window,title,message);
+      var message = this._bundle.getString("invalidURI");
+      var title = this._bundle.getString("invalidURITitle");
+      promptService.alert(window, title, message);
+      return;
     }
 
     var capabilityString = this._getCapabilityString(aCapability);
@@ -131,13 +132,9 @@ var gPermissionManager = {
     }
     
     if (!exists) {
-      var p = new Permission(host, 
-                             (host.charAt(0) == ".") ? host.substring(1,host.length) : host, 
-                             this._type, 
-                             capabilityString,
-                             aCapability);
-      uri.spec = p.host;
-      this._pm.add(uri, p.type, p.perm);
+      host = (host.charAt(0) == ".") ? host.substring(1,host.length) : host;
+      var uri = ioService.newURI("http://" + host, null, null);
+      this._pm.add(uri, this._type, aCapability);
     }
     textbox.value = "";
     textbox.focus();
