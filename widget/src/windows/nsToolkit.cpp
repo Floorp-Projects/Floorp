@@ -92,9 +92,7 @@ DEFINE_GUID(IID_IActiveIMMMessagePumpOwner,
 IActiveIMMApp* nsToolkit::gAIMMApp   = NULL;
 PRInt32        nsToolkit::gAIMMCount = 0;
 
-#ifndef WINCE
 MouseTrailer MouseTrailer::mSingleton;
-#endif
 
 #if !defined(MOZ_STATIC_COMPONENT_LIBS) && !defined(MOZ_ENABLE_LIBXUL)
 //
@@ -106,6 +104,8 @@ MouseTrailer MouseTrailer::mSingleton;
 extern "C" {
 #endif
 
+// Windows CE is created when nsToolkit
+// starts up, not when the dll is loaded.
 #ifndef WINCE
 BOOL APIENTRY DllMain(  HINSTANCE hModule, 
                         DWORD reason, 
@@ -130,7 +130,7 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
 
     return TRUE;
 }
-#endif //wince
+#endif //#ifndef WINCE
 
 #if defined(__GNUC__)
 } // extern "C"
@@ -175,11 +175,7 @@ LRESULT CALLBACK DetectWindowMove(int code, WPARAM wParam, LPARAM lParam)
     }
     return CallNextHookEx(nsMsgFilterHook, code, wParam, lParam);
 }
-#endif // WINCE
-
-
-
-
+#endif //#ifndef WINCE
 
 #include "nsWindowAPI.h"
 
@@ -488,7 +484,7 @@ LPITEMIDLIST WINAPI nsSHBrowseForFolder(LPBROWSEINFOW aBiW)
   }
   return itemIdList;
 }
-#endif
+#endif //#ifndef WINCE
 
 HMODULE             nsToolkit::mShell32Module = NULL;
 NS_DefWindowProc    nsToolkit::mDefWindowProc = DefWindowProcA;
@@ -561,7 +557,7 @@ nsToolkit::nsToolkit()
       ::CoCreateInstance(CLSID_CActiveIMM, NULL, CLSCTX_INPROC_SERVER, IID_IActiveIMMApp, (void**) &nsToolkit::gAIMMApp);
 
     nsToolkit::gAIMMCount++;
-#endif
+#endif //#ifndef WINCE
 
 #if defined(MOZ_STATIC_COMPONENT_LIBS) || defined (WINCE)
     nsToolkit::Startup(GetModuleHandle(NULL));
@@ -642,7 +638,8 @@ nsToolkit::Startup(HMODULE hModule)
 
     nsToolkit::mIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT);
     if (nsToolkit::mIsNT)  
-#endif    
+#endif // #ifndef WINCE
+
     {
       // For Windows 9x base OS nsFoo is already pointing to A functions
       // However on NT base OS we should point them to respective W functions
@@ -682,7 +679,7 @@ nsToolkit::Startup(HMODULE hModule)
           nsToolkit::mW2KXP_CP936 = PR_TRUE;
         }
       }
-#endif
+#endif // #ifndef WINCE
     }
     nsToolkit::mDllInstance = hModule;
 
@@ -925,7 +922,6 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   return rv;
 }
 
-#ifndef WINCE
 //-------------------------------------------------------------------------
 //
 //
@@ -1050,6 +1046,4 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
     mSingleton.mHoldMouseWindow = nsnull;
   }
 }
-
-#endif
 

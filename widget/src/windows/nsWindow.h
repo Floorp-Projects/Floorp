@@ -443,9 +443,8 @@ protected:
   static void             RegisterSpecialDropdownHooks();
   static void             UnregisterSpecialDropdownHooks();
 
-#endif
-
   static BOOL             DealWithPopups (HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult);
+#endif
 
   static PRBool           EventIsInsideWindow(UINT Msg, nsWindow* aWindow);
 

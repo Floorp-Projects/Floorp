@@ -178,6 +178,10 @@ static HPEN   gStockWhitePen = (HPEN)::GetStockObject(WHITE_PEN);
 
 nsRenderingContextWin :: nsRenderingContextWin()
 {
+#ifdef WINCE
+  gIsWIN95 = PR_FALSE;
+  gBidiInfo = DONT_INIT;
+#else
   // The first time in we initialize gIsWIN95 flag
   if (NOT_SETUP == gIsWIN95) {
     OSVERSIONINFO os;
@@ -195,7 +199,6 @@ nsRenderingContextWin :: nsRenderingContextWin()
         // Windows 95 or earlier: assume it's not Bidi
         gBidiInfo = DONT_INIT;
       }
-#ifndef WINCE
       else if (os.dwMajorVersion >= 4) {
         // Windows 98 or later
         UINT cp = ::GetACP();
@@ -206,9 +209,9 @@ nsRenderingContextWin :: nsRenderingContextWin()
           gBidiInfo = GCP_REORDER;
         }
       }
-#endif
     }
   }
+#endif
 
   mDC = NULL;
   mMainDC = NULL;
@@ -1070,6 +1073,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoor
 
   SetupPen();
 
+#ifndef WINCE
   if (nsLineStyle_kDotted == mCurrLineStyle)
   {
     lineddastruct dda_struct;
@@ -1081,6 +1085,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoor
     LineDDA((int)(aX0),(int)(aY0),(int)(aX1),(int)(aY1),(LINEDDAPROC) LineDDAFunc,(long)&dda_struct);
   }
   else
+#endif
   {
     ::MoveToEx(mDC, (int)(aX0), (int)(aY0), NULL);
     ::LineTo(mDC, (int)(aX1), (int)(aY1));

@@ -1250,7 +1250,7 @@ GetCustomEncoding(const char* aFontName, nsCString& aValue, PRBool* aIsWide)
        (!strcmp(aFontName, "Times New Roman" )) ||
        (!strcmp(aFontName, "Courier New" )) ||
        (!strcmp(aFontName, mspgothic )) )
-    return NS_ERROR_NOT_AVAILABLE; // error mean do not get a special encoding
+    return NS_ERROR_NOT_AVAILABLE; // error means do not get a special encoding
 
   // XXX We need this kludge to deal with aFontName in CP949 when the locale 
   // is Korean until we figure out a way to get facename in US-ASCII
@@ -1610,6 +1610,7 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName,
   PRBool aNameQuirks, eFontType& aFontType, PRUint8& aCharset)
 {
   PRUint16 *ccmap = nsnull;
+
   DWORD len = GetFontData(aDC, CMAP, 0, nsnull, 0);
   if ((len == GDI_ERROR) || (!len)) {
     return nsnull;
@@ -2499,11 +2500,13 @@ enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
       }
 
       // copy Unicode subrange bitfield (128bit) if it's a truetype font. 
-#ifndef WINCE
       if (fontType & hasFontSig) {
+#ifndef WINCE
         memcpy(font->signature.fsUsb, ((NEWTEXTMETRICEX*)metrics)->ntmFontSig.fsUsb, 16);
-      }
+#else
+        memset(font->signature.fsUsb, '\0', 16);
 #endif
+      }
       return 1;
     }
   }
@@ -2533,6 +2536,8 @@ enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
 #ifndef WINCE
     // copy Unicode subrange bitfield (128 bits = 16 bytes)
     memcpy(font->signature.fsUsb, ((NEWTEXTMETRICEX*)metrics)->ntmFontSig.fsUsb, 16);
+#else
+    memset(font->signature.fsUsb, '\0', 16);
 #endif
   }
 
