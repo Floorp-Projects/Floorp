@@ -488,7 +488,6 @@ rdf/base/src/Makefile
 rdf/util/Makefile
 rdf/util/public/Makefile
 rdf/util/src/Makefile
-rdf/resources/Makefile
 rdf/build/Makefile
 rdf/datasource/Makefile
 rdf/datasource/public/Makefile
