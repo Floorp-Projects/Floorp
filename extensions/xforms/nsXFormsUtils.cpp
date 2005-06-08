@@ -89,7 +89,7 @@
 #define CANCELABLE 0x01
 #define BUBBLES    0x02
 
-const EventData sXFormsEventsEntries[41] = {
+const EventData sXFormsEventsEntries[42] = {
   { "xforms-model-construct",      PR_FALSE, PR_TRUE  },
   { "xforms-model-construct-done", PR_FALSE, PR_TRUE  },
   { "xforms-ready",                PR_FALSE, PR_TRUE  },
@@ -130,7 +130,8 @@ const EventData sXFormsEventsEntries[41] = {
   { "xforms-binding-exception",    PR_FALSE, PR_TRUE  },
   { "xforms-link-exception",       PR_FALSE, PR_TRUE  },
   { "xforms-link-error",           PR_FALSE, PR_TRUE  },
-  { "xforms-compute-exception",    PR_FALSE, PR_TRUE  }
+  { "xforms-compute-exception",    PR_FALSE, PR_TRUE  },
+  { "xforms-moz-hint-off",         PR_FALSE, PR_TRUE  }
 };
 
 static const EventData sEventDefaultsEntries[] = {

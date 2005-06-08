@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Allan Beaufour <abeaufour@novell.com>
+ *  Olli Pettay <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -75,7 +76,12 @@ nsXFormsHintHelpListener::HandleEvent(nsIDOMEvent* aEvent)
       if (code == nsIDOMKeyEvent::DOM_VK_F1)
         nsXFormsUtils::DispatchEvent(targetNode, eEvent_Help);
     } else {
-      nsXFormsUtils::DispatchEvent(targetNode, eEvent_Hint);
+      nsAutoString type;
+      aEvent->GetType(type);
+      nsXFormsUtils::DispatchEvent(targetNode,
+                                   (type.EqualsLiteral("mouseover") ||
+                                    type.EqualsLiteral("focus"))
+                                   ? eEvent_Hint : eEvent_MozHintOff);
     }
   }
 
@@ -256,12 +262,16 @@ nsXFormsControlStubBase::ResetHelpAndHint(PRBool aInitialize)
     return;
 
   NS_NAMED_LITERAL_STRING(mouseover, "mouseover");
+  NS_NAMED_LITERAL_STRING(mouseout, "mouseout");
   NS_NAMED_LITERAL_STRING(focus, "focus");
+  NS_NAMED_LITERAL_STRING(blur, "blur");
   NS_NAMED_LITERAL_STRING(keypress, "keypress");
 
   if (mEventListener) {
     targ->RemoveEventListener(mouseover, mEventListener, PR_TRUE);
+    targ->RemoveEventListener(mouseout, mEventListener, PR_TRUE);
     targ->RemoveEventListener(focus, mEventListener, PR_TRUE);
+    targ->RemoveEventListener(blur, mEventListener, PR_TRUE);
     targ->RemoveEventListener(keypress, mEventListener, PR_TRUE);
     mEventListener = nsnull;
   }
@@ -272,7 +282,9 @@ nsXFormsControlStubBase::ResetHelpAndHint(PRBool aInitialize)
       return;
 
     targ->AddEventListener(mouseover, mEventListener, PR_TRUE);
+    targ->AddEventListener(mouseout, mEventListener, PR_TRUE);
     targ->AddEventListener(focus, mEventListener, PR_TRUE);
+    targ->AddEventListener(blur, mEventListener, PR_TRUE);
     targ->AddEventListener(keypress, mEventListener, PR_TRUE);
   }
 }

@@ -343,12 +343,14 @@ nsXFormsMessageElement::WillChangeParent(nsIDOMElement *aNewParent)
   
   if (mType == eType_Hint) {
     targ->RemoveEventListener(NS_LITERAL_STRING("xforms-hint"), this, PR_FALSE);
+    targ->RemoveEventListener(NS_LITERAL_STRING("xforms-moz-hint-off"),
+                              this, PR_FALSE);
   } else if (mType == eType_Help) {
     targ->RemoveEventListener(NS_LITERAL_STRING("xforms-help"), this, PR_FALSE);      
   } else if (mType == eType_Alert) {
     targ->RemoveEventListener(NS_LITERAL_STRING("xforms-invalid"), this, PR_TRUE);
     targ->RemoveEventListener(NS_LITERAL_STRING("xforms-out-of-range"), this, PR_TRUE);
-    targ->RemoveEventListener(NS_LITERAL_STRING("xforms-binding-exception"), this, PR_TRUE);
+    targ->RemoveEventListener(NS_LITERAL_STRING("xforms-binding-exception"),this, PR_TRUE);
   }
 
   return NS_OK;
@@ -365,6 +367,8 @@ nsXFormsMessageElement::ParentChanged(nsIDOMElement *aNewParent)
 
   if (mType == eType_Hint) {
     targ->AddEventListener(NS_LITERAL_STRING("xforms-hint"), this, PR_FALSE);
+    targ->AddEventListener(NS_LITERAL_STRING("xforms-moz-hint-off"),
+                           this, PR_FALSE);
   } else if (mType == eType_Help) {
     targ->AddEventListener(NS_LITERAL_STRING("xforms-help"), this, PR_FALSE);
   } else if (mType == eType_Alert) {
@@ -498,6 +502,39 @@ nsXFormsMessageElement::HandleEphemeralMessage(nsIDOMDocument* aDoc,
   if (!aEvent)
     return NS_OK;
 
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
+
+  if (mType == eType_Hint) {
+    // If this is a <hint> element, try to make it work more like a tooltip:
+    // - if we get an xforms-moz-hint-off event, hide the element.
+    // - if the <hint> is active and we get a new xforms-hint, then do nothing.
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
+    if (!doc)
+      return NS_OK;
+
+    nsXFormsMessageElement *msg =
+    NS_STATIC_CAST(nsXFormsMessageElement*,
+                   doc->GetProperty(nsXFormsAtoms::messageProperty));
+    if (msg == this) {
+      if (eventType.EqualsLiteral("xforms-moz-hint-off")) {
+        if (mEphemeralTimer) {
+          mEphemeralTimer->Cancel();
+          mEphemeralTimer = nsnull;
+        }
+        doc->UnsetProperty(nsXFormsAtoms::messageProperty);
+  
+        if (mVisualElement) {
+          mVisualElement->SetAttribute(NS_LITERAL_STRING("style"),
+                                       NS_LITERAL_STRING(EPHEMERAL_STYLE_HIDDEN));
+        }
+        ResetEphemeralPosition();
+      }
+
+      return NS_OK;
+    }
+  }
+
   /// @bug How to handle the following:
   ///      <message level="ephemeral" src="http://mozilla.org"/>
   nsCOMPtr<nsIDOMEventTarget> target;
@@ -526,9 +563,6 @@ nsXFormsMessageElement::HandleEphemeralMessage(nsIDOMDocument* aDoc,
         if (height > 20)
           mPosY -= height > 30 ? 10 : 10 - (30 - height);
       }
-      
-      nsAutoString eventType;
-      aEvent->GetType(eventType);
 
       // A special case for hints to make them work more like
       // normal tooltips.

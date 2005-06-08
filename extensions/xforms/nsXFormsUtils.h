@@ -111,7 +111,8 @@ enum nsXFormsEvent {
   eEvent_BindingException,
   eEvent_LinkException,
   eEvent_LinkError,
-  eEvent_ComputeException
+  eEvent_ComputeException,
+  eEvent_MozHintOff
 };
 
 struct EventData
@@ -121,7 +122,7 @@ struct EventData
   PRBool      canBubble;
 };
 
-extern const EventData sXFormsEventsEntries[41];
+extern const EventData sXFormsEventsEntries[42];
 
 /**
  * @todo The attribute names used on the elements to reflect the pseudo class
