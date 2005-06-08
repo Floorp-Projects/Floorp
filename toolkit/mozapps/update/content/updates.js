@@ -7,7 +7,7 @@ const nsIIncrementalDownload = Components.interfaces.nsIIncrementalDownload;
  *          The string to write to the error console..
  */  
 function LOG(string) {
-  // dump("*** " + string + "\n");
+  dump("*** " + string + "\n");
 }
 
 var gUpdates = {
@@ -108,7 +108,7 @@ var gUpdatesAvailablePage = {
                                                       [brandName, gUpdates.update.version]);
     var updateNameElement = document.getElementById("updateName");
     updateNameElement.value = updateName;
-    
+    dump("*** update = " + gUpdates.update.version + "\n");
     var displayType = updateStrings.getString("updateType_" + gUpdates.update.type);
     var updateTypeElement = document.getElementById("updateType");
     updateTypeElement.setAttribute("type", gUpdates.update.type);
@@ -160,8 +160,7 @@ var gDownloadingPage = {
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"]
                   .getService(Components.interfaces.nsIApplicationUpdateService);
-    for (var i = 0; i < gUpdates.updates.length; ++i) 
-      updates.downloadUpdate(gUpdates.updates[i]);
+    updates.downloadUpdate(gUpdates.update);
     updates.addDownloadListener(this);
     
     // Build the UI for previously installed updates

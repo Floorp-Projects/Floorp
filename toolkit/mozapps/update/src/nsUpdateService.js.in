@@ -50,7 +50,7 @@ const PREF_APP_UPDATE_TIMER               = "app.update.timer";
 
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 
-const PREF_APP_UPDATE_LASTUPDATEDATE      = "app.update.lastUpdateDate";
+const PREF_UPDATE_LASTUPDATETIME_FMT      = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
@@ -99,7 +99,7 @@ var gConsole  = null;
  *          The string to write to the error console..
  */  
 function LOG(string) {
-  dump("*** " + string + "\n");
+  // dump("*** " + string + "\n");
   gConsole.logStringMessage(string);
 }
 
@@ -346,9 +346,14 @@ function UpdateService() {
   gConsole = Components.classes["@mozilla.org/consoleservice;1"]
                        .getService(Components.interfaces.nsIConsoleService);  
   
-  this._makeTimer();
-
-  // gPref.addObserver(PREF_UPDATE_APP_AUTOUPDATEENABLED, this, false);
+  // Register a background update check timer
+  var tm = Components.classes["@mozilla.org/updates/timer-manager;1"]
+                     .getService(Components.interfaces.nsIUpdateTimerManager);
+  var interval = getPref("getIntPref", PREF_APP_UPDATE_INTERVAL);
+  if (!interval) 
+    interval = 5000;
+  tm.registerTimer("background-update-timer", this, interval,
+                   Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
 
   // Observe xpcom-shutdown to unhook pref branch observers above to avoid 
   // shutdown leaks.
@@ -357,19 +362,7 @@ function UpdateService() {
 
 UpdateService.prototype = {
   _downloader: null,
-  _timer: null,  
-  _makeTimer: function() {
-    if (!this._timer) 
-      this._timer = Components.classes["@mozilla.org/timer;1"]
-                              .createInstance(Components.interfaces.nsITimer);
-    this._timer.cancel();
-    var interval = getPref("getIntPref", PREF_APP_UPDATE_TIMER);
-    dump("==================*** interval = " + interval + "\n");
-    this._timer.initWithCallback(this, interval, 
-                                 Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
-    return this._timer;
-  },
-  
+
   observe: function(subject, topic, data) {
     if (topic == "app-startup") {
       // Resume fetching...
@@ -691,9 +684,11 @@ Checker.prototype = {
     if (!callback)
       throw Components.results.NS_ERROR_NULL_POINTER;
       
+    if (!this._updateURL)
+      return;
+      
     this._request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                               .createInstance(Components.interfaces.nsIXMLHttpRequest);
-    dump("*** update url: " + this._updateURL + "\n");
     this._request.open("GET", this._updateURL, true);
     this._request.overrideMimeType("text/xml");
     this._request.setRequestHeader("Cache-Control", "no-cache");
@@ -710,7 +705,7 @@ Checker.prototype = {
   },
   
   onProgress: function(event) {
-    dump("*** download progress: " + event.position + "/" + event.totalSize + "\n");
+    LOG("*** download progress: " + event.position + "/" + event.totalSize);
     this._callback.onProgress(event.target, event.position, event.totalSize);
   },
   
@@ -1071,6 +1066,62 @@ Verifier.prototype = {
 
 };
 
+function TimerManager() {
+}
+TimerManager.prototype = {
+  _timers: { },
+  registerTimer: function(id, callback, interval, type) {
+    const nsITimer = Components.interfaces.nsITimer;
+    var timer = Components.classes["@mozilla.org/timer;1"]
+                          .createInstance(nsITimer);
+    var timerInterval = getPref("getIntPref", PREF_APP_UPDATE_TIMER);
+    
+    var self = this;
+    function TimerCallback(id, callback, interval) {
+      this.id = id;
+      this.callback = callback;
+      this.interval = interval;
+    }
+    TimerCallback.prototype = {
+      notify: function(timer) {
+        LOG("*** self._timers = " + self._timers.toSource());
+        var lastUpdateTime = self._timers[this.id].lastUpdateTime;
+        var now = Math.round(Date.now() / 1000);
+        LOG("*** notify = " + (now - lastUpdateTime) + " > " + this.interval);
+        if ((now - lastUpdateTime) > this.interval &&
+            this.callback instanceof Components.interfaces.nsITimerCallback) {
+          this.callback.notify(timer);
+          self._timers[this.id].lastUpdateTime = now;
+          var preference = PREF_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, this.id);
+          gPref.setIntPref(preference, now);
+        }
+      },
+
+      /**
+       * See nsISupports.idl
+       */
+      QueryInterface: function(iid) {
+        if (!iid.equals(Components.interfaces.nsITimerCallback) &&
+            !iid.equals(Components.interfaces.nsISupports))
+          throw Components.results.NS_ERROR_NO_INTERFACE;
+        return this;
+      }
+    };
+    var tc = new TimerCallback(id, callback, interval);
+    timer.initWithCallback(tc, timerInterval, type);
+    var preference = PREF_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, id);
+    var lastUpdateTime = getPref("getIntPref", preference);
+    this._timers[id] = { timer: timer, lastUpdateTime: lastUpdateTime || 0 };
+  },
+
+  QueryInterface: function(iid) {
+    if (!iid.equals(Components.interfaces.nsIUpdateTimerManager) &&
+        !iid.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
+
 function Version(aMajor, aMinor, aRelease, aBuild, aPlus) 
 { 
   this.major    = aMajor    || 0;
@@ -1214,6 +1265,11 @@ var gModule = {
                contractID : "@mozilla.org/updates/version-checker;1",
                className  : "Version Checker",
                factory    : #1#(VersionChecker)
+             },
+    timers:  { CID        : Components.ID("{B322A5C0-A419-484E-96BA-D7182163899F}"),
+               contractID : "@mozilla.org/updates/timer-manager;1",
+               className  : "Timer Manager",
+               factory    : #1#(TimerManager)
              }
   },
   
