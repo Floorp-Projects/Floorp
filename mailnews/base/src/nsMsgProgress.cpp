@@ -161,6 +161,9 @@ NS_IMETHODIMP nsMsgProgress::RegisterListener(nsIWebProgressListener * listener)
   
   if (!listener) //Nothing to do with a null listener!
     return NS_OK;
+
+  if (this == listener) //Check for self-reference (see bug 271700)
+    return NS_ERROR_INVALID_ARG;
   
   if (!m_listenerList)
     rv = NS_NewISupportsArray(getter_AddRefs(m_listenerList));
