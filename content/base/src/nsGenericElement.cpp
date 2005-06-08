@@ -237,9 +237,12 @@ nsNode3Tearoff::GetTextContent(nsIContent *aContent,
   nsString tempString;
   aTextContent.Truncate();
   while (!iter->IsDone()) {
-    nsCOMPtr<nsITextContent> textContent(do_QueryInterface(iter->GetCurrentNode()));
-    if (textContent)
-      textContent->AppendTextTo(aTextContent);
+    nsIContent *content = iter->GetCurrentNode();
+    if (content->IsContentOfType(nsIContent::eTEXT)) {
+      nsCOMPtr<nsITextContent> textContent(do_QueryInterface(iter->GetCurrentNode()));
+      if (textContent)
+        textContent->AppendTextTo(aTextContent);
+    }
     iter->Next();
   }
   return NS_OK;
