@@ -1805,19 +1805,6 @@ foreach my $id (@idlist) {
     }
     $dbh->bz_unlock_tables();
 
-    $vars->{'mailrecipients'} = { 'cc' => \@ccRemoved,
-                                  'owner' => $origOwner,
-                                  'qacontact' => $origQaContact,
-                                  'changer' => Bugzilla->user->login };
-
-    $vars->{'id'} = $id;
-    
-    # Let the user know the bug was changed and who did and didn't
-    # receive email about the change.
-    $template->process("bug/process/results.html.tmpl", $vars)
-      || ThrowTemplateError($template->error());
-    $vars->{'header_done'} = 1;
-    
     if ($duplicate) {
         # Check to see if Reporter of this bug is reporter of Dupe 
         SendSQL("SELECT reporter FROM bugs WHERE bug_id = " .
@@ -1847,7 +1834,26 @@ foreach my $id (@idlist) {
         CheckFormFieldDefined($cgi,'comment');
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, " .
                 $cgi->param('id') . ")");
-        
+    }
+
+    # Now all changes to the DB have been made. It's time to email
+    # all concerned users, including the bug itself, but also the
+    # duplicated bug and dependent bugs, if any.
+
+    $vars->{'mailrecipients'} = { 'cc' => \@ccRemoved,
+                                  'owner' => $origOwner,
+                                  'qacontact' => $origQaContact,
+                                  'changer' => Bugzilla->user->login };
+
+    $vars->{'id'} = $id;
+    
+    # Let the user know the bug was changed and who did and didn't
+    # receive email about the change.
+    $template->process("bug/process/results.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+    $vars->{'header_done'} = 1;
+    
+    if ($duplicate) {
         $vars->{'mailrecipients'} = { 'changer' => Bugzilla->user->login }; 
 
         $vars->{'id'} = $duplicate;
