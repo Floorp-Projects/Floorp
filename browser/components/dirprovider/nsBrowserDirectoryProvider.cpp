@@ -103,7 +103,7 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
     leafName = "panels.rdf";
   }
   else if (!strcmp(aKey, NS_APP_BOOKMARKS_50_FILE)) {
-    leafName = "bookmarks.rdf";
+    leafName = "bookmarks.html";
   }
   else if (!strcmp(aKey, NS_APP_SEARCH_50_FILE)) {
     leafName = "search.rdf";
