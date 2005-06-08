@@ -85,6 +85,9 @@ const nsIUpdateService        = Components.interfaces.nsIUpdateService;
 const nsIUpdateItem           = Components.interfaces.nsIUpdateItem;
 const nsIPrefLocalizedString  = Components.interfaces.nsIPrefLocalizedString;
 const nsIIncrementalDownload  = Components.interfaces.nsIIncrementalDownload;
+const nsIFileInputStream      = Components.interfaces.nsIFileInputStream;
+const nsIFileOutputStream     = Components.interfaces.nsIFileOutputStream;
+const nsICryptoHash           = Components.interfaces.nsICryptoHash;
 
 const Node = Components.interfaces.nsIDOMNode;
 
@@ -101,6 +104,17 @@ var gConsole  = null;
 function LOG(string) {
   // dump("*** " + string + "\n");
   gConsole.logStringMessage(string);
+}
+
+/**
+ * Convert a string containing binary values to hex.
+ */
+function binaryToHex(input) {
+  var result = "";
+  for (var i = 0; i < input.length; ++i) {
+    result += input.charCodeAt(i).toString(16);
+  }
+  return result;
 }
 
 /**
@@ -239,7 +253,7 @@ function stripPrefix(string, prefix) {
 function writeStringToFile(file, text) {
   var fos =
       Components.classes["@mozilla.org/network/safe-file-output-stream;1"].
-      createInstance(Components.interfaces.nsIFileOutputStream);
+      createInstance(nsIFileOutputStream);
   var modeFlags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
   if (!file.exists()) 
     file.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
@@ -259,7 +273,7 @@ function writeStringToFile(file, text) {
 function readStringFromFile(file) {
   var fis =
       Components.classes["@mozilla.org/network/file-input-stream;1"].
-      createInstance(Components.interfaces.nsIFileInputStream);
+      createInstance(nsIFileInputStream);
   var modeFlags = MODE_RDONLY;
   if (!file.exists())
     return null;
@@ -780,7 +794,8 @@ Checker.prototype = {
 function Downloader() {
 }
 Downloader.prototype = {
-  _request: null,
+  _patch: null,    // UpdatePatch
+  _request: null,  // nsIIncrementalDownload
 
   /**
    * 
@@ -823,6 +838,42 @@ Downloader.prototype = {
     statusFile.append(FILE_UPDATE_STATUS);
     LOG(statusFile.path);
     return readStringFromFile(statusFile);
+  },
+
+  /**
+   * Verify the downloaded file.  We assume that the download is complete at
+   * this point.
+   */
+  _verifyDownload: function() {
+    var fileStream = Components.classes["@mozilla.org/network/file-input-stream;1"].
+        createInstance(nsIFileInputStream);
+    fileStream.init(this._request.destination, MODE_RDONLY, PERMS_FILE, 0);
+
+    try {
+      var hash = Components.classes["@mozilla.org/security/hash;1"].
+          createInstance(nsICryptoHash);
+      const map = {
+        "MD2"    : nsICryptoHash.MD2,
+        "MD5"    : nsICryptoHash.MD5,
+        "SHA1"   : nsICryptoHash.SHA1,
+        "SHA256" : nsICryptoHash.SHA256,
+        "SHA384" : nsICryptoHash.SHA384,
+        "SHA512" : nsICryptoHash.SHA512
+      };
+      var hashfunction = this._patch.hashfunction.toUpperCase();
+      if (!(hashfunction in map))
+        return false;
+      hash.init(map[hashfunction]);
+      hash.updateFromStream(fileStream, -1);
+      digest = binaryToHex(hash.finish(false));
+    } catch (e) {
+      LOG("failed to compute hash of downloaded update archive");
+      digest = "";
+    }
+
+    fileStream.close();
+
+    return digest == this._patch.hashvalue;
   },
 
   /**
@@ -963,8 +1014,8 @@ Downloader.prototype = {
 
     // This function may return null, which indicates that there are no patches
     // to download.
-    var patch = this._selectPatch(update, updateDir);
-    if (!patch) {
+    this._patch = this._selectPatch(update, updateDir);
+    if (!this._patch) {
       LOG("no patch to download");
       return;
     }
@@ -974,7 +1025,7 @@ Downloader.prototype = {
 
     var ios = Components.classes["@mozilla.org/network/io-service;1"].
         getService(Components.interfaces.nsIIOService);
-    var uri = ios.newURI(patch.url, null, null);
+    var uri = ios.newURI(this._patch.url, null, null);
 
     this._request =
         Components.classes["@mozilla.org/network/incremental-download;1"].
@@ -1048,16 +1099,24 @@ Downloader.prototype = {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("Downloader.onStopRequest: " + request.URI.spec + ", status = " + status);
 
+    if (Components.isSuccessCode(status)) {
+      var state;
+      if (this._verifyDownload()) {
+        state = STATE_PENDING;
+      } else {
+        LOG("download verification failed");
+        state = STATE_FAILED;
+        // TODO: use more informative error code here
+        status = Components.results.NS_ERROR_UNEXPECTED;
+      }
+      this._writeStatusFile(this._getUpdatesDir(), state);
+    }
+
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i)
       this._listeners[i].onStopRequest(request, context, status);
 
     this._request = null;
-
-    if (Components.isSuccessCode(status)) {
-      // TODO: Verify download
-      this._writeStatusFile(this._getUpdatesDir(), STATE_PENDING);
-    }
   },
    
   /**
@@ -1070,12 +1129,6 @@ Downloader.prototype = {
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
   }
-};
-
-function Verifier() {
-}
-Verifier.prototype = {
-
 };
 
 function TimerManager() {
