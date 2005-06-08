@@ -29,3 +29,8 @@ js1_5/Regress/regress-119719.js
 # 0 and ''
 #
 js1_5/Exceptions/regress-50447.js
+#
+# Invalid bug
+#
+e4x/Regress/regress-278112.js
+
