@@ -116,15 +116,6 @@
             </hbox>
           </row>
 
-          <row align="center" hidden="true">
-            <label value="Attendees" class="label"/>
-            <hbox align="center">
-              <label value="none"/>
-              <spacer flex="1"/>
-              <button disabled="true" label="set..."/>
-            </hbox>
-          </row>
-
           <row align="center">
             <label value="Calendar" class="label"/>
             <hbox>
@@ -153,7 +144,7 @@
           <row align="center">
             <spacer/>
             <hbox align="center" id="alarm-details">
-              <textbox id="alarm-length-field" size="1"/>
+              <textbox id="alarm-length-field" size="1" oninput="validateIntegers(event);"/>
               <menulist id="alarm-length-units">
                 <menupopup>
                   <menuitem label="minutes" value="minutes" selected="true"/>
@@ -172,7 +163,7 @@
 
         </rows>
 
-        <textbox id="event-description" multiline="true" rows="2"/>
+        <textbox id="event-description" multiline="true" rows="4"/>
 
       </rows>
     </grid>

@@ -85,7 +85,7 @@
             <!-- Daily -->
             <hbox align="top">
               <label value="Every"/>
-              <textbox id="daily-days" size="3"/>
+              <textbox id="daily-days" size="3" oninput="validateIntegers(event);"/>
               <label value="days"/>
               <spacer flex="1"/>
             </hbox>
@@ -127,7 +127,7 @@
 
             <hbox align="top">
               <label value="Every"/>
-              <textbox id="yearly-years" size="3"/>
+              <textbox id="yearly-years" size="3" oninput="validateIntegers(event);"/>
               <label value="years"/>
               <spacer flex="1"/>
             </hbox>
@@ -156,7 +156,7 @@
           <row>
             <radio label="Repeat for" value="ntimes"/>
             <hbox>
-              <textbox id="repeat-ntimes-count" size="3"/>
+              <textbox id="repeat-ntimes-count" size="3" oninput="validateIntegers(event);"/>
               <spacer flex="0.5"/>
               <menulist id="repeat-ntimes-units">
                 <menupopup>

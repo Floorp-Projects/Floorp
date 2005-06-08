@@ -79,3 +79,13 @@ function disableElement(elementId)
 {
     setElementValue(elementId, "true", "disabled");
 }
+
+/* use with textfields oninput to only allow integers */
+function validateIntegers(event)
+{
+    if (isNaN(Number(event.target.value))) {
+        var newValue = parseInt(event.target.value);
+        event.target.value = isNaN(newValue) ? "" : newValue;
+        event.preventDefault();
+    }
+}

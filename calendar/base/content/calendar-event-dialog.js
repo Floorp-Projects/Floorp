@@ -233,6 +233,7 @@ function saveDialog(event)
         event.alarmTime = alarmTime;
     }
 
+    dump(event.icalString + "\n");
 }
 
 
@@ -319,6 +320,8 @@ function editRecurrence()
 /* utility functions */
 function setEventProperty(event, propertyName, value)
 {
-    if (value)
+    if (!value || value == "")
+        event.deleteProperty(propertyName);
+    else
         event.setProperty(propertyName, value);
 }
