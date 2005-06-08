@@ -92,19 +92,16 @@ export::
 	ln -fs $(srcdir)/Info-*.plist .
 endif
 
-all:: build-plugin
-
 libs install:: install-plugin
 
 install-plugin: build-plugin
 	$(INSTALL) "build/Default Plugin.plugin" $(DIST)/bin/plugins
-	$(INSTALL) "build/DefaultPlugin.build/Default Plugin.build/PkgInfo" "$(DIST)/bin/plugins/Default Plugin.plugin/Contents"
 
 resources: $(RESOURCE_FILES)
 
 build-plugin: resources
 	$(PBBUILD) $(PROJECT_ARG) -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_ARG)
-	echo -n NSPLMOSS > "build/DefaultPlugin.build/Default Plugin.build/PkgInfo"
+	echo -n NSPLMOSS > "build/Default Plugin.plugin/Contents/PkgInfo"
 
 _%.rsrc: %.rsrc
 	$(ASDECODE) $< $@
