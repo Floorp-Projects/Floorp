@@ -280,20 +280,20 @@ NS_ScriptErrorReporter(JSContext *cx,
     error.Append("[no report]: ");
     error.Append(message);
   } else {
-  if (JSREPORT_IS_STRICT(report->flags))
-    error.Append("strict ");
-  if (JSREPORT_IS_WARNING(report->flags))
-    error.Append("warning: ");
-  else
-    error.Append("error: ");
-  error.Append(report->filename);
-  error.Append(", line ");
-  error.AppendInt(report->lineno, 10);
-  error.Append(": ");
-  AppendUTF16toUTF8(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage),
-                    error);
-  if (status != nsEventStatus_eIgnore && !JSREPORT_IS_WARNING(report->flags))
-    error.Append(" Error was suppressed by event handler\n");
+    if (JSREPORT_IS_STRICT(report->flags))
+      error.Append("strict ");
+    if (JSREPORT_IS_WARNING(report->flags))
+      error.Append("warning: ");
+    else
+      error.Append("error: ");
+    error.Append(report->filename);
+    error.Append(", line ");
+    error.AppendInt(report->lineno, 10);
+    error.Append(": ");
+    AppendUTF16toUTF8(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage),
+                      error);
+    if (status != nsEventStatus_eIgnore && !JSREPORT_IS_WARNING(report->flags))
+      error.Append(" Error was suppressed by event handler\n");
   }
   fprintf(stderr, "%s\n", error.get());
   fflush(stderr);
