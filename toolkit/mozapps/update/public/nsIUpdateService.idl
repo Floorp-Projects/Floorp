@@ -186,7 +186,7 @@ interface nsIApplicationUpdateService : nsISupports
   /**
    * 
    */
-  void downloadUpdate(in nsIUpdate update);
+  void downloadUpdate(in nsIUpdate update, in boolean background);
 };
 
 [scriptable, uuid(0765c92c-6145-4253-9db4-594d8023087e)]
