@@ -1216,7 +1216,7 @@ public:
                       nsIPluginStreamListener *aListener,
                       PRInt32 requestCount = 1);
 
-  nsresult InitializeEmbeded(nsIURI *aURL,
+  nsresult InitializeEmbedded(nsIURI *aURL,
                              nsIPluginInstance* aInstance,
                              nsIPluginInstanceOwner *aOwner = nsnull,
                              nsIPluginHost *aHost = nsnull);
@@ -1741,23 +1741,23 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
 
 
 /*
-    Called by NewEmbededPluginStream() - if this is called, we weren't
+    Called by NewEmbeddedPluginStream() - if this is called, we weren't
     able to load the plugin, so we need to load it later once we figure
     out the mimetype.  In order to load it later, we need the plugin
     host and instance owner.
 */
 ////////////////////////////////////////////////////////////////////////
-nsresult nsPluginStreamListenerPeer::InitializeEmbeded(nsIURI *aURL,
-                                                       nsIPluginInstance* aInstance,
-                                                       nsIPluginInstanceOwner *aOwner,
-                                                       nsIPluginHost *aHost)
+nsresult nsPluginStreamListenerPeer::InitializeEmbedded(nsIURI *aURL,
+                                                        nsIPluginInstance* aInstance,
+                                                        nsIPluginInstanceOwner *aOwner,
+                                                        nsIPluginHost *aHost)
 {
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec;
   if(aURL != nsnull) (void)aURL->GetSpec(urlSpec);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-        ("nsPluginStreamListenerPeer::InitializeEmbeded url=%s\n", urlSpec.get()));
+        ("nsPluginStreamListenerPeer::InitializeEmbedded url=%s\n", urlSpec.get()));
 
   PR_LogFlush();
 #endif
@@ -1766,7 +1766,7 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbeded(nsIURI *aURL,
   NS_ADDREF(mURL);
 
   if(aInstance != nsnull) {
-    NS_ASSERTION(mInstance == nsnull, "nsPluginStreamListenerPeer::InitializeEmbeded mInstance != nsnull");
+    NS_ASSERTION(mInstance == nsnull, "nsPluginStreamListenerPeer::InitializeEmbedded mInstance != nsnull");
     mInstance = aInstance;
     NS_ADDREF(mInstance);
   } else {
@@ -2049,7 +2049,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   // we weren't able to load a plugin previously because we
   // didn't have the mimetype.  Now that we do (aContentType),
   // we'll try again with SetUpPluginInstance()
-  // which is called by InstantiateEmbededPlugin()
+  // which is called by InstantiateEmbeddedPlugin()
   // NOTE: we don't want to try again if we didn't get the MIME type this time
 
   if ((nsnull == mInstance) && (nsnull != mOwner) && (!aContentType.IsEmpty()))
@@ -2063,7 +2063,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
       nsPluginMode mode;
       mOwner->GetMode(&mode);
       if (mode == nsPluginMode_Embedded)
-        rv = mHost->InstantiateEmbededPlugin(aContentType.get(), aURL, mOwner);
+        rv = mHost->InstantiateEmbeddedPlugin(aContentType.get(), aURL, mOwner);
       else
         rv = mHost->SetUpPluginInstance(aContentType.get(), aURL, mOwner);
 
@@ -3293,8 +3293,8 @@ nsPluginHostImpl::GetPluginTempDir(nsIFile **aDir)
 
 
 ////////////////////////////////////////////////////////////////////////
-/* Called by nsPluginInstanceOwner (nsObjectFrame.cpp - embeded case) */
-NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
+/* Called by nsPluginInstanceOwner (nsObjectFrame.cpp - embedded case) */
+NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
                                                          nsIURI* aURL,
                                                          nsIPluginInstanceOwner *aOwner)
 {
@@ -3303,7 +3303,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   if(aURL != nsnull) (void)aURL->GetAsciiSpec(urlSpec);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-        ("nsPluginHostImpl::InstatiateEmbededPlugin Begin mime=%s, owner=%p, url=%s\n",
+        ("nsPluginHostImpl::InstatiateEmbeddedPlugin Begin mime=%s, owner=%p, url=%s\n",
         aMimeType, aOwner, urlSpec.get()));
 
   PR_LogFlush();
@@ -3361,7 +3361,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
   // Determine if the scheme of this URL is one we can handle internaly because we should
   // only open the initial stream if it's one that we can handle internally. Otherwise
-  // |NS_OpenURI| in |InstantiateEmbededPlugin| may open up a OS protocal registered helper app
+  // |NS_OpenURI| in |InstantiateEmbeddedPlugin| may open up a OS protocal registered helper app
   PRBool bCanHandleInternally = PR_FALSE;
   nsCAutoString scheme;
   if (aURL && NS_SUCCEEDED(aURL->GetScheme(scheme))) {
@@ -3376,11 +3376,11 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   if(FindStoppedPluginForURL(aURL, aOwner) == NS_OK) {
 
     PLUGIN_LOG(PLUGIN_LOG_NOISY,
-    ("nsPluginHostImpl::InstatiateEmbededPlugin FoundStopped mime=%s\n", aMimeType));
+    ("nsPluginHostImpl::InstatiateEmbeddedPlugin FoundStopped mime=%s\n", aMimeType));
 
     aOwner->GetInstance(instance);
     if((!aMimeType || !isJava) && bCanHandleInternally)
-      rv = NewEmbededPluginStream(aURL, aOwner, instance);
+      rv = NewEmbeddedPluginStream(aURL, aOwner, instance);
 
     // notify Java DOM component
     nsresult res;
@@ -3396,7 +3396,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   // if we don't have a MIME type at this point, we still have one more chance by
   // opening the stream and seeing if the server hands one back
   if (!aMimeType)
-    return bCanHandleInternally ? NewEmbededPluginStream(aURL, aOwner, nsnull) : NS_ERROR_FAILURE;
+    return bCanHandleInternally ? NewEmbeddedPluginStream(aURL, aOwner, nsnull) : NS_ERROR_FAILURE;
 
   rv = SetUpPluginInstance(aMimeType, aURL, aOwner);
 
@@ -3472,7 +3472,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     }
 
     if(havedata && !isJava && bCanHandleInternally)
-      rv = NewEmbededPluginStream(aURL, aOwner, instance);
+      rv = NewEmbeddedPluginStream(aURL, aOwner, instance);
 
     // notify Java DOM component
     nsresult res;
@@ -3489,7 +3489,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   if(aURL != nsnull) (void)aURL->GetAsciiSpec(urlSpec2);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-        ("nsPluginHostImpl::InstatiateEmbededPlugin Finished mime=%s, rv=%d, owner=%p, url=%s\n",
+        ("nsPluginHostImpl::InstatiateEmbeddedPlugin Finished mime=%s, rv=%d, owner=%p, url=%s\n",
         aMimeType, rv, aOwner, urlSpec2.get()));
 
   PR_LogFlush();
@@ -3818,7 +3818,7 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   // someone else (e.g., a plugin) on a different thread, the proxy JNI will
   // not work, and break LiveConnect.
   // Currently, on Unix, when instantiating a Java plugin instance (by calling
-  // InstantiateEmbededPlugin() next), Java plugin will create the proxy JNI
+  // InstantiateEmbeddedPlugin() next), Java plugin will create the proxy JNI
   // if it is not created yet. If that happens, LiveConnect will be broken.
   // Before lazy start JVM was implemented, since at this point the browser
   // already created the proxy JNI buring startup, the problem did not happen.
@@ -5884,10 +5884,10 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
 }
 
 ////////////////////////////////////////////////////////////////////////
-/* Called by InstantiateEmbededPlugin() */
-nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
-                                                  nsIPluginInstanceOwner *aOwner,
-                                                  nsIPluginInstance* aInstance)
+/* Called by InstantiateEmbeddedPlugin() */
+nsresult nsPluginHostImpl::NewEmbeddedPluginStream(nsIURI* aURL,
+                                                   nsIPluginInstanceOwner *aOwner,
+                                                   nsIPluginInstance* aInstance)
 {
   if (!aURL)
     return NS_OK;
@@ -5903,9 +5903,9 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
   // so the listener can set up the instance later after
   // we've determined the mimetype of the stream
   if(aInstance != nsnull)
-    rv = listener->InitializeEmbeded(aURL, aInstance);
+    rv = listener->InitializeEmbedded(aURL, aInstance);
   else if(aOwner != nsnull)
-    rv = listener->InitializeEmbeded(aURL, nsnull, aOwner, this);
+    rv = listener->InitializeEmbedded(aURL, nsnull, aOwner, this);
   else
     rv = NS_ERROR_ILLEGAL_VALUE;
 

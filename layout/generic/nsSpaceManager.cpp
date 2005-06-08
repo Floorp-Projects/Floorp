@@ -1070,7 +1070,7 @@ nsSpaceManager::PopState()
 
   // Now that we've restored our state, pop the topmost
   // state and delete it.  Make sure not to delete the mAutoState element
-  // as it is embeded in this class
+  // as it is embedded in this class
 
   SpaceManagerState *state = mSavedStates;
   mSavedStates = mSavedStates->mNext;

@@ -485,7 +485,7 @@ gtk_xtbin_destroy (GtkObject *object)
 }
 
 /*
-* Following is the implementation of Xt XEmbeded for client side
+* Following is the implementation of Xt XEmbedded for client side
 */
 
 /* Initial Xt plugin */
