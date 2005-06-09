@@ -1250,9 +1250,7 @@ nsGlobalHistory::IsVisited(nsIURI* aURI, PRBool *_retval)
   rv = aURI->GetSpec(URISpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIMdbRow> row;
-  rv = FindRow(kToken_URLColumn, URISpec.get(), getter_AddRefs(row));
-
+  rv = FindRow(kToken_URLColumn, URISpec.get(), nsnull);
   *_retval = NS_SUCCEEDED(rv);
 
   return NS_OK;
@@ -2978,23 +2976,28 @@ nsGlobalHistory::FindRow(mdb_column aCol,
 
   mdbOid rowId;
   nsCOMPtr<nsIMdbRow> row;
-  err = mStore->FindRow(mEnv, kToken_HistoryRowScope,
-                        aCol, &yarn,
-                        &rowId, getter_AddRefs(row));
+  if (aResult) {
+    err = mStore->FindRow(mEnv, kToken_HistoryRowScope,
+                          aCol, &yarn,
+                          &rowId, getter_AddRefs(row));
 
+    if (!row) return NS_ERROR_NOT_AVAILABLE;
+  } else {
+    err = mStore->FindRow(mEnv, kToken_HistoryRowScope,
+                          aCol, &yarn, &rowId, nsnull);
+  }
 
-  if (!row) return NS_ERROR_NOT_AVAILABLE;
-  
-  
   // make sure it's actually stored in the main table
   mdb_bool hasRow;
-  mTable->HasRow(mEnv, row, &hasRow);
+  mTable->HasOid(mEnv, &rowId, &hasRow);
 
   if (!hasRow) return NS_ERROR_NOT_AVAILABLE;
   
-  *aResult = row;
-  (*aResult)->AddRef();
-  
+  if (aResult) {
+    *aResult = row;
+    (*aResult)->AddRef();
+  }
+
   return NS_OK;
 }
 
@@ -3007,9 +3010,7 @@ nsGlobalHistory::IsURLInHistory(nsIRDFResource* aResource)
   rv = aResource->GetValueConst(&url);
   if (NS_FAILED(rv)) return PR_FALSE;
 
-  nsCOMPtr<nsIMdbRow> row;
-  rv = FindRow(kToken_URLColumn, url, getter_AddRefs(row));
-
+  rv = FindRow(kToken_URLColumn, url, nsnull);
   return (NS_SUCCEEDED(rv)) ? PR_TRUE : PR_FALSE;
 }
 
