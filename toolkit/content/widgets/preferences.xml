@@ -1021,7 +1021,7 @@
       <stylesheet src="chrome://global/skin/preferences.css"/>
     </resources>
     <content>
-      <xul:image class="paneButtonIcon" xbl:inherits="image"/>
+      <xul:image class="paneButtonIcon" xbl:inherits="src"/>
       <xul:label class="paneButtonLabel" xbl:inherits="value=label"/>
     </content>
   </binding>
