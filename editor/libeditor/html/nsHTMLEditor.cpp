@@ -72,6 +72,7 @@
 #include "nsIDOMHTMLHtmlElement.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMEventGroup.h"
+#include "nsILinkHandler.h"
 
 #include "TransactionFactory.h"
 
@@ -184,11 +185,13 @@ nsHTMLEditor::~nsHTMLEditor()
     nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
     nsCOMPtr<nsISelectionListener>listener;
     listener = do_QueryInterface(mTypeInState);
-    if (listener) {
+    if (listener)
+    {
       selPriv->RemoveSelectionListener(listener); 
     }
     listener = do_QueryInterface(mSelectionListenerP);
-    if (listener) {
+    if (listener)
+    {
       selPriv->RemoveSelectionListener(listener); 
     }
   }
@@ -200,6 +203,26 @@ nsHTMLEditor::~nsHTMLEditor()
 
   // free any default style propItems
   RemoveAllDefaultProperties();
+
+  while (mStyleSheetURLs.Count())
+  {
+    nsAString* strp = mStyleSheetURLs.StringAt(0);
+
+    if (strp)
+    {
+      RemoveOverrideStyleSheet(*strp);
+    }
+  }
+
+  if (mLinkHandler && mPresShellWeak)
+  {
+    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+
+    if (ps && ps->GetPresContext())
+    {
+      ps->GetPresContext()->SetLinkHandler(mLinkHandler);
+    }
+  }
 
   RemoveEventListeners();
 }
@@ -226,8 +249,10 @@ NS_INTERFACE_MAP_BEGIN(nsHTMLEditor)
 NS_INTERFACE_MAP_END_INHERITING(nsPlaintextEditor)
 
 
-NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc, 
-                                 nsIPresShell   *aPresShell, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags)
+NS_IMETHODIMP
+nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
+                   nsIContent *aRoot, nsISelectionController *aSelCon,
+                   PRUint32 aFlags)
 {
   NS_PRECONDITION(aDoc && aPresShell, "bad arg");
   if (!aDoc || !aPresShell)
@@ -275,8 +300,11 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     // disable links
     nsPresContext *context = aPresShell->GetPresContext();
     if (!context) return NS_ERROR_NULL_POINTER;
-    if (!(mFlags & eEditorPlaintextMask))
-      context->SetLinkHandler(0);  
+    if (!(mFlags & eEditorPlaintextMask)) {
+      mLinkHandler = context->GetLinkHandler();
+
+      context->SetLinkHandler(nsnull);
+    }
 
     // init the type-in state
     mTypeInState = new TypeInState();
@@ -386,7 +414,8 @@ nsHTMLEditor::SetFlags(PRUint32 aFlags)
   return mRules->SetFlags(aFlags);
 }
 
-NS_IMETHODIMP nsHTMLEditor::InitRules()
+NS_IMETHODIMP
+nsHTMLEditor::InitRules()
 {
   // instantiate the rules for the html editor
   nsresult res = NS_NewHTMLEditRules(getter_AddRefs(mRules));
@@ -397,7 +426,8 @@ NS_IMETHODIMP nsHTMLEditor::InitRules()
   return res;
 }
 
-NS_IMETHODIMP nsHTMLEditor::BeginningOfDocument()
+NS_IMETHODIMP
+nsHTMLEditor::BeginningOfDocument()
 {
   if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -3533,7 +3563,6 @@ nsHTMLEditor::RemoveStyleSheet(const nsAString &aURL)
 
     // Remove it from our internal list
     rv = RemoveStyleSheetFromList(aURL);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
   // The transaction system (if any) has taken ownership of txns
   NS_IF_RELEASE(txn);
@@ -3612,8 +3641,12 @@ NS_IMETHODIMP
 nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
 {
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
-  NS_ENSURE_SUCCESS(rv, rv);
+  GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
+
+  // Make sure we remove the stylesheet from our internal list in all
+  // cases.
+  nsresult rv = RemoveStyleSheetFromList(aURL);
+
   if (!sheet)
     return NS_OK; /// Don't fail if sheet not found
 
@@ -3625,7 +3658,7 @@ nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
   ps->ReconstructStyleData();
 
   // Remove it from our internal list
-  return RemoveStyleSheetFromList(aURL);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -4168,19 +4201,21 @@ nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
       nsCOMPtr<nsIStyleSheet> sheet = do_QueryInterface(aSheet);
       nsCOMPtr<nsIURI> uri;
       rv = sheet->GetSheetURI(getter_AddRefs(uri));
-      if (NS_FAILED(rv))
-        return rv;
 
-      nsCAutoString spec;
-      rv = uri->GetSpec(spec);
-      if (NS_FAILED(rv))
-        return rv;
+      if (NS_SUCCEEDED(rv))
+      {
+        nsCAutoString spec;
+        rv = uri->GetSpec(spec);
 
-      // Save it so we can remove before applying the next one
-      mLastStyleSheetURL.AssignWithConversion(spec.get());
+        if (NS_SUCCEEDED(rv))
+        {
+          // Save it so we can remove before applying the next one
+          mLastStyleSheetURL.AssignWithConversion(spec.get());
 
-      // Also save in our arrays of urls and sheets
-      AddNewStyleSheetToList(mLastStyleSheetURL, aSheet);
+          // Also save in our arrays of urls and sheets
+          AddNewStyleSheetToList(mLastStyleSheetURL, aSheet);
+        }
+      }
     }
   }
   // The transaction system (if any) has taken ownership of txns

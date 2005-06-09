@@ -84,6 +84,7 @@ class TypeInState;
 class nsIContentFilter;
 class nsIURL;
 class nsIRangeUtils;
+class nsILinkHandler;
 
 /**
  * The HTML editor implementation.<br>
@@ -942,6 +943,8 @@ protected:
 
   void     AddMouseClickListener(nsIDOMElement * aElement);
   void     RemoveMouseClickListener(nsIDOMElement * aElement);
+
+  nsCOMPtr<nsILinkHandler> mLinkHandler;
 
 public:
 
