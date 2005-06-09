@@ -967,7 +967,7 @@ function nonBrowserWindowStartup()
                        'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain', 'viewToolbarsMenu',
                        'cmd_toggleTaskbar', 'viewSidebarMenuMenu', 'Browser:Reload', 'Browser:ReloadSkipCache',
                        'viewTextZoomMenu', 'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
-                       'viewHistorySidebar', 'Browser:AddBookmarkAs', 'Tools:Search', 'View:PageInfo', 'Tasks:InspectPage'];
+                       'viewHistorySidebar', 'Browser:AddBookmarkAs', 'View:PageInfo', 'Tasks:InspectPage'];
   var element;
 
   for (var id in disabledItems)
@@ -1570,16 +1570,30 @@ function openLocation()
     gURLBar.focus();
     gURLBar.select();
   }
-  else {
 #ifdef XP_MACOSX
-    if (window.location.href != getBrowserURL()) {
-      // If it's not a browser window, open a new one. 
-      window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no", "about:blank");
+  else if (window.location.href != getBrowserURL()) {
+    var win = getTopWin();
+    if (win) {
+      // If there's an open browser window, it should handle this command
+      win.focus()
+      win.openLocation();
     }
-    else
-#endif
-      openDialog("chrome://browser/content/openLocation.xul", "_blank", "chrome,modal,titlebar", window);
+    else {
+      // If there are no open browser windows, open a new one
+      win = OpenBrowserWindow();
+      win.addEventListener("load", openLocationCallback, false);
+    }
   }
+#endif
+  else
+    openDialog("chrome://browser/content/openLocation.xul", "_blank",
+               "chrome,modal,titlebar", window);
+}
+
+function openLocationCallback()
+{
+  // make sure the DOM is ready
+  setTimeout(function() { this.openLocation(); }, 0);
 }
 
 function BrowserOpenTab()
@@ -2622,13 +2636,35 @@ var DownloadsButtonDNDObserver = {
   }
 }
 
-function focusSearchBar()
+function WebSearch()
 {
-  var searchBar = document.getElementsByTagName("searchbar");
-  if (searchBar.length > 0) {
-    searchBar[0].select();
-    searchBar[0].focus();
+  var searchBar = document.getElementById("searchbar");
+  if (searchBar && !searchBar.parentNode.parentNode.collapsed &&
+      !(window.getComputedStyle(searchBar.parentNode, null).display == "none")) {
+    searchBar.select();
+    searchBar.focus();
   }
+  // XXX: If the search box is hidden, we should open a search dialog (see bug 235204)
+#ifdef XP_MACOSX
+  else if (window.location.href != getBrowserURL()) {
+    var win = getTopWin();
+    if (win) {
+      // If there's an open browser window, it should handle this command
+      win.focus()
+      win.WebSearch();
+    }
+    else {
+      // If there are no open browser windows, open a new one
+      var win = OpenBrowserWindow();
+      win.addEventListener("load", WebSearchCallback, false);
+    }
+  }
+#endif
+}
+
+function WebSearchCallback() {
+  // make sure the DOM is ready
+  setTimeout(function() { this.WebSearch(); }, 0);
 }
 
 function OpenSearch(tabName, searchStr, newTabFlag)
@@ -2858,18 +2894,21 @@ function OpenBrowserWindow()
   // if and only if the current window is a browser window and it has a document with a character
   // set, then extract the current charset menu setting from the current document and use it to
   // initialize the new browser window...
+  var win;
   if (window && (wintype == "navigator:browser") && window.content && window.content.document)
   {
     var DocCharset = window.content.document.characterSet;
     charsetArg = "charset="+DocCharset;
 
     //we should "inherit" the charset menu setting in a new window
-    window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no", defaultArgs, charsetArg);
+    win = window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no", defaultArgs, charsetArg);
   }
   else // forget about the charset information.
   {
-    window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no", defaultArgs);
+    win = window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no", defaultArgs);
   }
+
+  return win;
 }
 
 function BrowserCustomizeToolbar()
