@@ -445,11 +445,8 @@ nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JSObject *obj,
     //    a different trust domain.
     // 2. A user-defined getter or setter function accessible on another
     //    trust domain's window or document object.
-    // If *vp is not a primitive, some new JS engine call to this hook was
-    // added, but we can handle that case too -- if a primitive value in a
-    // property of obj is being accessed, we should use obj as the target
+    // *vp can be a primitive, in that case, we use obj as the target
     // object.
-    NS_ASSERTION(!JSVAL_IS_PRIMITIVE(*vp), "unexpected target property value");
     JSObject* target = JSVAL_IS_PRIMITIVE(*vp) ? obj : JSVAL_TO_OBJECT(*vp);
 
     // Do the same-origin check -- this sets a JS exception if the check fails.
