@@ -755,22 +755,36 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
   nsCOMPtr<nsIDOMElement> newDocElm;
   newDoc->GetDocumentElement(getter_AddRefs(newDocElm));
 
-  // add namespaces from the main document to the submission document
-  rv = AddNameSpaces(newDocElm, node);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // handle namespaces on the model
+  nsCOMPtr<nsIDOMNode> instanceNode;
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
-  node = do_QueryInterface(model);
-  NS_ENSURE_STATE(node);
-  rv = AddNameSpaces(newDocElm, node);
+  rv = nsXFormsUtils::GetInstanceNodeForData(data, model, getter_AddRefs(instanceNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // handle namespaces on the xforms:instance
-  rv = nsXFormsUtils::GetInstanceNodeForData(data, model, getter_AddRefs(node));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = AddNameSpaces(newDocElm, node);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // add namespaces from the main document to the submission document, but only
+  // if the instance data is local, not remote.
+  PRBool hasSrc = PR_FALSE;
+  nsCOMPtr<nsIDOMElement> instanceElement(do_QueryInterface(instanceNode));
+  instanceElement->HasAttribute(NS_LITERAL_STRING("src"), &hasSrc);
+
+  if (!hasSrc) {
+    rv = AddNameSpaces(newDocElm, node);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // handle namespaces on the model
+    node = do_QueryInterface(model);
+    NS_ENSURE_STATE(node);
+    rv = AddNameSpaces(newDocElm, node);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // handle namespaces on the xforms:instance
+    rv = AddNameSpaces(newDocElm, instanceNode);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // handle namespaces on the root element of the instance document
+    doc->GetDocumentElement(getter_AddRefs(docElm));
+    rv = AddNameSpaces(newDocElm, docElm);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Serialize content
   rv = serializer->SerializeToStream(newDoc, sink,
