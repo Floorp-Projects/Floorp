@@ -148,6 +148,9 @@ private:
   nsIScriptContextOwner* mOwner;  /* NB: weak reference, not ADDREF'd */
 
 protected:
+  struct TerminationFuncHolder;
+  friend struct TerminationFuncHolder;
+  
   struct TerminationFuncClosure {
     TerminationFuncClosure(nsScriptTerminationFunc aFunc,
                            nsISupports* aArg,
