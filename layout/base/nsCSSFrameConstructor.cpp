@@ -7875,6 +7875,16 @@ nsCSSFrameConstructor::AppendFrames(const nsFrameConstructorState& aState,
                                     aState.mPresContext)) {
     nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(aParentFrame);
     if (afterFrame) {
+      // aParentFrame may have next-in-flows.  If there's no :after content
+      // around, we automatically get the right in-flow as aParentFrame.  But
+      // in this case, we could have ended up with the prev-in-flow of the
+      // right thing (the "right thing" being the last-in-flow for an append).
+      // Looking for afterFrame in the child list of it would then fail, and we
+      // could end up inserting our new frame at the wrong place.  So just set
+      // aParentFrame to the parent of afterFrame.  That will make sure we're
+      // getting our ordering right, and if our frame needs to be pulled up to
+      // the prev-in-flow that will happen when we reflow.
+      aParentFrame = afterFrame->GetParent();
       nsFrameList frames(aParentFrame->GetFirstChild(nsnull));
 
       // Insert the frames before the :after pseudo-element.
