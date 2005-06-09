@@ -299,8 +299,8 @@ sub WriteParams {
     ChmodDataFile("$datadir/params", 0666);
 }
 
-# Some files in the data directory must be world readable iff we don't have
-# a webserver group. Call this function to do this.
+# Some files in the data directory must be world readable if and only if
+# we don't have a webserver group. Call this function to do this.
 # This will become a private function once all the datafile handling stuff
 # moves into this package
 

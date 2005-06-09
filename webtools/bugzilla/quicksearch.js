@@ -334,8 +334,8 @@ function make_query_URL(url, input, searchLong) {
 
     // This function matches the given prefixes against the given statuses and
     // resolutions. Matched statuses are added to bug_status, matched 
-    // resolutions are added to resolution. Returns true iff some matches 
-    // were found for at least one of the given prefixes.
+    // resolutions are added to resolution. Returns true if and only if
+    // some matches were found for at least one of the given prefixes.
     function matchPrefixes(prefixes,statuses,resolutions) {
         var failedPrefixes = new Array();
         var foundMatch = false;
