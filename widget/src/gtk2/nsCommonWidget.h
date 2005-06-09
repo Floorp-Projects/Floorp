@@ -43,6 +43,8 @@
 #include "nsGUIEvent.h"
 #include <gdk/gdkevents.h>
 
+#ifdef MOZ_LOGGING
+
 // make sure that logging is enabled before including prlog.h
 #define FORCE_PR_LOG
 
@@ -57,6 +59,15 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 #define LOGFOCUS(args) PR_LOG(gWidgetFocusLog, 4, args)
 #define LOGIM(args) PR_LOG(gWidgetIMLog, 4, args)
 #define LOGDRAW(args) PR_LOG(gWidgetDrawLog, 4, args)
+
+#else
+
+#define LOG(args)
+#define LOGFOCUS(args)
+#define LOGIM(args)
+#define LOGDRAW(args)
+
+#endif /* MOZ_LOGGING */
 
 class nsCommonWidget : public nsBaseWidget {
 public:
