@@ -433,7 +433,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   [mDelegate setLoadingActive:NO];
 
   [mLoadingStatusString autorelease];
-  mLoadingStatusString = [NSLocalizedString(@"DocumentDone", @"") retain];
+  mLoadingStatusString = [@"" retain];
   
   [mDelegate updateStatus:mDefaultStatusString ? mDefaultStatusString : mLoadingStatusString];
   
