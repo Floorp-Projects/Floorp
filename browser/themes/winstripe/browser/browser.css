@@ -825,7 +825,7 @@ statusbarpanel#statusbar-display {
 }
 
 #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://browser/skin/Throbber-small.gif");
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
   opacity: 0.5;
 }
 
@@ -835,7 +835,7 @@ toolbar[mode="text"] #navigator-throbber {
 }
 toolbar[iconsize="small"] #navigator-throbber[busy="true"],
 toolbar[mode="text"] #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://browser/skin/Throbber-small.gif");
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
   opacity: 0.5;
 }
 
@@ -900,7 +900,7 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 }
 
 #sidebar-throbber[loading="true"] {
-  list-style-image: url("chrome://browser/skin/Throbber-small.gif");
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
   opacity: 0.5;
   -moz-margin-end: 4px;
 }
