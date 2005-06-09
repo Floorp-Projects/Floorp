@@ -78,7 +78,9 @@
       <xul:progressmeter class="update-item-progress" xbl:inherits="value=progress"/>
       <xul:hbox align="center">
         <xul:label class="update-item-status" xbl:inherits="value=status" flex="1" crop="right"/>
-        <xul:button class="update-item-pause" label="&pause.label;" accesskey="&pause.accesskey;"/>
+        <xul:button class="update-item-pause" 
+                    label="&pause.label;" accesskey="&pause.accesskey;"
+                    oncommand="this.parentNode.parentNode.fireEvent('pause');"/>
       </xul:hbox>
     </content>  
     <implementation>

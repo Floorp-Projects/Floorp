@@ -533,7 +533,7 @@ UpdateService.prototype = {
   },
   
   /**
-   *
+   * See nsIUpdateService.idl
    */
   addDownloadListener: function(listener) {
     if (!this._downloader) {
@@ -544,7 +544,7 @@ UpdateService.prototype = {
   },
   
   /**
-   *
+   * See nsIUpdateService.idl
    */
   removeDownloadListener: function(listener) {
     if (!this._downloader) {
@@ -555,13 +555,11 @@ UpdateService.prototype = {
   },
   
   /**
-   * 
+   * See nsIUpdateService.idl
    */
   downloadUpdate: function(update, background) {
-    LOG("downloadUpdate");
-
     if (this._downloader && this._downloader.isBusy) {
-      if (background == this._downloader.background) {
+      if (update.isCompleteUpdate == this._downloader.isCompleteUpdate) {
         LOG("no support for downloading more than one update at a time");
         return;
       }
@@ -569,6 +567,14 @@ UpdateService.prototype = {
     }
     this._downloader = new Downloader(background);
     this._downloader.downloadUpdate(update);
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  pauseDownload: function() {
+    if (this._downloader && this._downloader.isBusy)
+      this._downloader.cancel();
   },
   
   /**
@@ -634,6 +640,7 @@ function Update(type, version, extensionversion, detailsurl, patches) {
   this.version = version;
   this.extensionversion = extensionversion;
   this.detailsurl = detailsurl;
+  this.isCompleteUpdate = false;
   this._patches = patches;
 }
 
@@ -809,6 +816,13 @@ function Downloader(background) {
 Downloader.prototype = {
   _patch: null,    // UpdatePatch
   _request: null,  // nsIIncrementalDownload
+
+  /**
+   * Whether or not the update being downloaded is a complete replacement of
+   * the user's existing installation or a patch representing the difference
+   * between the new version and the previous version.
+   */
+  isCompleteUpdate: null,
 
   /**
    *
@@ -1017,6 +1031,8 @@ Downloader.prototype = {
       patch = getPatchOfType("partial");
     if (!patch)
       patch = getPatchOfType("complete");
+      
+    update.isCompleteUpdate = useComplete;
 
     writeUpdateInfo(patch);
     return patch;
@@ -1034,7 +1050,6 @@ Downloader.prototype = {
    *        attempt to resume downloading what it was previously downloading.
    */
   downloadUpdate: function(update) {
-    LOG("downloadUpdate");
     var updateDir = this._getUpdatesDir();
 
     // This function may return null, which indicates that there are no patches
@@ -1044,6 +1059,7 @@ Downloader.prototype = {
       LOG("no patch to download");
       return;
     }
+    this.isCompleteUpdate = this._patch.type == "complete";
 
     var patchFile = updateDir.clone();
     patchFile.append(FILE_UPDATE_ARCHIVE);
@@ -1101,9 +1117,8 @@ Downloader.prototype = {
   },
   
   onProgress: function(request, context, progress, maxProgress) {
-    LOG("MODE: " + (this.background ? "BACKGROUND" : "FOREGROUND"));
     request.QueryInterface(nsIIncrementalDownload);
-    LOG("Downloader.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
+    // LOG("Downloader.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i) {
       var listener = this._listeners[i];
