@@ -165,7 +165,6 @@
                 mLocationSheetURLField = NSTextField; 
                 mLocationSheetWindow = NSWindow; 
                 mLocationToolbarView = NSView; 
-                mLock = NSImageView; 
                 mMailToLinkMenu = NSMenu; 
                 mPageMenu = NSMenu; 
                 mPersonalToolbar = BookmarkToolbar; 

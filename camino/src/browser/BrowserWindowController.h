@@ -101,7 +101,6 @@ typedef enum
   IBOutlet AutoCompleteTextField* mURLBar;
   IBOutlet NSTextField*       mStatus;
   IBOutlet NSProgressIndicator* mProgress;              // STRONG reference
-  IBOutlet NSImageView*       mLock;
   IBOutlet NSButton*          mPopupBlocked;
   IBOutlet NSWindow*          mLocationSheetWindow;
   IBOutlet NSTextField*       mLocationSheetURLField;
