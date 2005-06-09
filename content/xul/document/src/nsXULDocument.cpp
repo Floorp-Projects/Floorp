@@ -3536,10 +3536,16 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
     else {
         // If it's not a XUL element, it's gonna be heavyweight no matter
         // what. So we need to copy everything out of the prototype
-        // into the element.
-        rv = NS_NewElement(getter_AddRefs(result),
-                           aPrototype->mNodeInfo->NamespaceID(),
-                           aPrototype->mNodeInfo);
+        // into the element.  Get a nodeinfo from our nodeinfo manager
+        // for this node.
+        nsCOMPtr<nsINodeInfo> newNodeInfo;
+        rv = mNodeInfoManager->GetNodeInfo(aPrototype->mNodeInfo->NameAtom(),
+                                           aPrototype->mNodeInfo->GetPrefixAtom(),
+                                           aPrototype->mNodeInfo->NamespaceID(),
+                                           getter_AddRefs(newNodeInfo));
+        if (NS_FAILED(rv)) return rv;
+        rv = NS_NewElement(getter_AddRefs(result), newNodeInfo->NamespaceID(),
+                           newNodeInfo);
         if (NS_FAILED(rv)) return rv;
 
         rv = AddAttributes(aPrototype, result);
