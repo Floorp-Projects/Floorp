@@ -488,7 +488,9 @@
               label="rdf:http://home.netscape.com/NC-rdf#Name"
               type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
               livemark="true">
-#ifndef XP_MACOSX
+#ifdef XP_MACOSX
+          <menupopup/>
+#else
           <menupopup contextmenu="bookmarks-context-menu"/>
 #endif
         </menu>
