@@ -1951,6 +1951,10 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
                 // End current arg.
                 if ( !justCounting ) {
                     argv[argc] = new char[ arg.Length() + 1 ];
+                    if (!argv[argc]) {
+                        rv = NS_ERROR_OUT_OF_MEMORY;
+                        break;
+                    }
                     strcpy( argv[argc], arg.get() );
                 }
                 argc++;
@@ -2013,7 +2017,10 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
             if ( justCounting ) {
                 // Allocate argv array.
                 argv = new char*[ argc ];
-
+                if (!argv) {
+                    rv = NS_ERROR_OUT_OF_MEMORY;
+                    break;
+                }
                 // Start second pass
                 justCounting = 0;
                 init = 1;
