@@ -118,6 +118,7 @@ nsPluginInstallerWizard.prototype.pluginInfoReceived = function (aPluginInfo){
     if (this.mPluginInfoArrayLength == 0) {
       this.advancePage("lastpage", true, false, false);
     } else {
+      // we want to allow user to cancel
       this.advancePage(null, true, false, true);
     }
   } else {
@@ -201,7 +202,7 @@ nsPluginInstallerWizard.prototype.showLicenses = function (){
 
   if (this.mPluginLicenseArray.length == 0) {
     // no plugins require licenses
-    this.advancePage(null, false, false, false);
+    this.advancePage(null, true, false, false);
   } else {
     this.licenseAcceptCounter = 0;
 
@@ -327,7 +328,10 @@ nsPluginInstallerWizard.prototype.startPluginInstallation = function (){
 
   for (pluginInfoItem in this.mPluginInfoArray){
     var pluginItem = this.mPluginInfoArray[pluginInfoItem];
-    if (pluginItem.toBeInstalled && pluginItem.licenseAccepted) {
+
+    // only push to the array if it has an XPILocation, else nsIXPInstallManager
+    // will complain.
+    if (pluginItem.toBeInstalled && pluginItem.XPILocation && pluginItem.licenseAccepted) {
       pluginURLArray.push(pluginItem.XPILocation);
       pluginPidArray.push(pluginItem.pid);
     }
@@ -482,14 +486,14 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
       var manualUrl;
       if ((myPluginItem.error || !myPluginItem.XPILocation) && (myPluginItem.manualInstallationURL || this.mPluginRequestArray[myPluginItem.requestedMimetype].pluginsPage)){
         manualUrl = myPluginItem.manualInstallationURL ? myPluginItem.manualInstallationURL : this.mPluginRequestArray[myPluginItem.requestedMimetype].pluginsPage;
-      }  
+      }
 
       this.addPluginResultRow(
           myPluginItem.IconUrl, 
           myPluginItem.name + " " + (myPluginItem.version ? myPluginItem.version : ""),
           null,
           statusMsg, 
-          statusTooltip, 
+          statusTooltip,
           manualUrl);
     }
   }
