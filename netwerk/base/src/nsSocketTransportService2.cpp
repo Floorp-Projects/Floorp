@@ -1,3 +1,4 @@
+// vim:set sw=4 sts=4 et cin:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -79,6 +80,7 @@ nsSocketTransportService::nsSocketTransportService()
     , mThread(nsnull)
     , mThreadEvent(nsnull)
     , mAutodialEnabled(PR_FALSE)
+    , mShuttingDown(PR_FALSE)
     , mEventQLock(PR_NewLock())
     , mActiveCount(0)
     , mIdleCount(0)
@@ -120,8 +122,15 @@ nsSocketTransportService::PostEvent(PLEvent *event)
     NS_ASSERTION(event, "null event");
 
     nsAutoLock lock(mEventQLock);
-    if (!mInitialized)
-        return NS_ERROR_OFFLINE;
+    if (!mInitialized) {
+        // Allow socket detach handlers to post events
+        if (!mShuttingDown || (PR_GetCurrentThread() != gSocketThread)) {
+            NS_WARN_IF_FALSE(PR_GetCurrentThread() != gSocketThread,
+                            "Rejecting event posted to uninitialized sts");
+            return NS_ERROR_OFFLINE;
+        }
+
+    }
 
     PR_APPEND_LINK(&event->link, &mEventQ);
 
@@ -615,11 +624,19 @@ nsSocketTransportService::Run()
     
     LOG(("shutting down socket transport thread...\n"));
 
+    mShuttingDown = PR_TRUE;
+
     // detach any sockets
     for (i=mActiveCount-1; i>=0; --i)
         DetachSocket(&mActiveList[i]);
     for (i=mIdleCount-1; i>=0; --i)
         DetachSocket(&mIdleList[i]);
+
+    mShuttingDown = PR_FALSE;
+
+    // Final pass over the event queue. This makes sure that events posted by
+    // socket detach handlers get processed.
+    ServiceEventQ();
 
     gSocketThread = nsnull;
     return NS_OK;
