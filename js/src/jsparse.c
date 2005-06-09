@@ -830,7 +830,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                                           js_GetLocalVariable,
                                           js_SetLocalVariable,
                                           SPROP_INVALID_SLOT,
-                                          JSPROP_ENUMERATE | JSPROP_SHARED,
+                                          JSPROP_PERMANENT | JSPROP_SHARED,
                                           SPROP_HAS_SHORTID, fp->fun->nvars)) {
                     return NULL;
                 }
@@ -896,8 +896,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             if (!js_AddHiddenProperty(cx, fun->object, ATOM_TO_JSID(argAtom),
                                       js_GetArgument, js_SetArgument,
                                       SPROP_INVALID_SLOT,
-                                      JSPROP_ENUMERATE | JSPROP_PERMANENT |
-                                      JSPROP_SHARED,
+                                      JSPROP_PERMANENT | JSPROP_SHARED,
                                       dupflag | SPROP_HAS_SHORTID,
                                       fun->nargs)) {
                 return NULL;

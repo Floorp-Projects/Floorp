@@ -1214,7 +1214,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
             JSPropertyOp getter, setter;
 
             for (i = n; i != 0; i--) {
-                uintN attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
+                uintN attrs = JSPROP_PERMANENT;
 
                 if (!JS_XDRUint32(xdr, &type) ||
                     !JS_XDRUint32(xdr, &userid) ||
@@ -1808,8 +1808,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 if (!js_AddHiddenProperty(cx, fun->object, ATOM_TO_JSID(atom),
                                           js_GetArgument, js_SetArgument,
                                           SPROP_INVALID_SLOT,
-                                          JSPROP_ENUMERATE | JSPROP_PERMANENT |
-                                          JSPROP_SHARED,
+                                          JSPROP_PERMANENT | JSPROP_SHARED,
                                           dupflag | SPROP_HAS_SHORTID,
                                           fun->nargs)) {
                     goto bad_formal;
