@@ -174,7 +174,7 @@
     <content context="_child">
       <children/>
       <xul:menupopup anonid="input-box-contextmenu"
-                     onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild) 
+                     onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild)
                                        this.parentNode.firstChild.focus();
                                      this.parentNode.doPopupItemEnabling(this);"
                      oncommand="this.parentNode.doCommand(event.originalTarget.getAttribute('cmd'));event.preventBubble();">
