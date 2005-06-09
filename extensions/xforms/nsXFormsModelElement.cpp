@@ -392,10 +392,6 @@ nsXFormsModelElement::ConstructDone()
   nsresult rv = InitializeControls();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  /// @bug This is not entirely correct. xforms-ready should be sent when
-  /// _all_ models have initialized their controls.
-  nsXFormsUtils::DispatchEvent(mElement, eEvent_Ready);  
-  
   return NS_OK;
 }
 
@@ -1276,6 +1272,12 @@ nsXFormsModelElement::MaybeNotifyCompletion()
   }
 
   nsXFormsModelElement::ProcessDeferredBinds(domDoc);
+
+  for (i = 0; i < models->Count(); ++i) {
+    nsXFormsModelElement *model =
+        NS_STATIC_CAST(nsXFormsModelElement *, models->ElementAt(i));
+    nsXFormsUtils::DispatchEvent(model->mElement, eEvent_Ready);  
+  }
 }
 
 static void
