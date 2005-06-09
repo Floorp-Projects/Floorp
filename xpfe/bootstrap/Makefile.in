@@ -146,7 +146,11 @@ CPPSRCS		+= nsSigHandlers.cpp nsStackFrameUnix.cpp
 endif
 
 ifdef BUILD_STATIC_LIBS
+ifneq ($(MOZ_OS2_TOOLS),VACPP)
+ifneq (WINNT_,$(OS_ARCH)_$(GNU_CC))
 STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
+endif
+endif
 endif
 
 LIBS	= \
