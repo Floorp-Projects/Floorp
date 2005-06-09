@@ -197,4 +197,18 @@ sub bz_unlock_tables {
     }
 }
 
+#####################################################################
+# Custom Database Setup
+#####################################################################
+
+sub bz_setup_database {
+    my $self = shift;
+    $self->SUPER::bz_setup_database(@_);
+
+    # PostgreSQL doesn't like having *any* index on the thetext
+    # field, because it can't have index data longer than 2770
+    # characters on that field.
+    $self->bz_drop_index('longdescs', 'longdescs_thetext_idx');
+}
+
 1;

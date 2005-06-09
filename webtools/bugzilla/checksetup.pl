@@ -3664,7 +3664,10 @@ if (!$dbh->bz_index_info('bugs', 'bugs_short_desc_idx')) {
     $dbh->bz_add_index('bugs', 'bugs_short_desc_idx', 
                        {TYPE => 'FULLTEXT', FIELDS => [qw(short_desc)]});
 }
-if (!$dbh->bz_index_info('longdescs', 'longdescs_thetext_idx')) {
+# Right now, we only create the "thetext" index on MySQL.
+if ($dbh->isa('Bugzilla::DB::Mysql') 
+    && !$dbh->bz_index_info('longdescs', 'longdescs_thetext_idx')) 
+{
     print "Adding full-text index for thetext column in longdescs table...\n";
     $dbh->bz_add_index('longdescs', 'longdescs_thetext_idx',
         {TYPE => 'FULLTEXT', FIELDS => [qw(thetext)]});
