@@ -1081,6 +1081,21 @@ fun_finalize(JSContext *cx, JSObject *obj)
         js_DestroyScript(cx, fun->u.script);
 }
 
+/*
+ * Functions are often shared, even across trust domains, in order to amortize
+ * scripted function compilation costs across N sharing domains or contexts.
+ * If there is a runtime-wide checkObjectAccess callback, invoke it for every
+ * function object operation that might cross a trust domain boundary.
+ */
+JSBool
+js_SharedCheckAccess(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
+                     jsval *vp)
+{
+    if (!cx->runtime->checkObjectAccess)
+        return JS_TRUE;
+    return cx->runtime->checkObjectAccess(cx, obj, id, mode, vp);
+}
+
 #if JS_HAS_XDR
 
 #include "jsxdrapi.h"
@@ -1351,7 +1366,7 @@ JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     fun_getProperty,  JS_PropertyStub,
     JS_EnumerateStub, (JSResolveOp)fun_resolve,
     fun_convert,      fun_finalize,
-    NULL,             NULL,
+    NULL,             js_SharedCheckAccess,
     NULL,             NULL,
     fun_xdrObject,    fun_hasInstance,
     fun_mark,         fun_reserveSlots

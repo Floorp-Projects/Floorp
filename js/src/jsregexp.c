@@ -3366,6 +3366,15 @@ regexp_finalize(JSContext *cx, JSObject *obj)
     js_DestroyRegExp(cx, re);
 }
 
+/*
+ * RegExps are often shared, even across trust domains, in order to amortize
+ * scripted regexp compilation costs across N sharing domains or contexts --
+ * just as function objects are.  See jsfun.c for the definition of this hook.
+ */
+extern JSBool
+js_SharedCheckAccess(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
+                     jsval *vp);
+
 /* Forward static prototype. */
 static JSBool
 regexp_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
@@ -3436,10 +3445,14 @@ regexp_mark(JSContext *cx, JSObject *obj, void *arg)
 JSClass js_RegExpClass = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
-    JS_PropertyStub,  JS_PropertyStub,  regexp_getProperty, regexp_setProperty,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,     regexp_finalize,
-    NULL,             NULL,             regexp_call,        NULL,
-    regexp_xdrObject, NULL,             regexp_mark,        0
+    JS_PropertyStub,    JS_PropertyStub,
+    regexp_getProperty, regexp_setProperty,
+    JS_EnumerateStub,   JS_ResolveStub,
+    JS_ConvertStub,     regexp_finalize,
+    NULL,               js_SharedCheckAccess,
+    regexp_call,        NULL,
+    regexp_xdrObject,   NULL,
+    regexp_mark,        0
 };
 
 static const jschar empty_regexp_ucstr[] = {'(', '?', ':', ')', 0};
