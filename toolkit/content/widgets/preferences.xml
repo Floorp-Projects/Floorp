@@ -497,11 +497,19 @@
         }
         var panes = this.preferencePanes;
 
+        var lastPane = null;
+        if (this.lastSelected) {
+          lastPane = document.getElementById(this.lastSelected);
+          if (!lastPane) {
+            this.lastSelected = null;
+          }
+        }
+
         var paneToLoad;
-        if ("arguments" in window && window.arguments[0])
+        if ("arguments" in window && window.arguments[0] && document.getElementById(window.arguments[0]))
           paneToLoad = document.getElementById(window.arguments[0]);
-        else if (this.lastSelected)
-          paneToLoad = document.getElementById(this.lastSelected);
+        else if (lastPane)
+          paneToLoad = lastPane;
         else
           paneToLoad = panes[0];
 
