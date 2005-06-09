@@ -1188,6 +1188,13 @@ case "$target" in
         # set MACOSX to generate lib/mac/MoreFiles/Makefile
         MACOSX=1
         ;;
+    i[3456]86*)
+        _PLATFORM_DEFAULT_TOOLKIT='mac'
+        DSO_LDOPTS="$DSO_LDOPTS -arch i386"
+        MOZ_ENABLE_POSTSCRIPT=
+        # set MACOSX to generate lib/mac/MoreFiles/Makefile
+        MACOSX=1
+        ;;
     esac
     ;;
 
