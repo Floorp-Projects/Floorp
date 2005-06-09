@@ -232,8 +232,6 @@ function saveDialog(event)
 
         event.alarmTime = alarmTime;
     }
-
-    dump(event.icalString + "\n");
 }
 
 
