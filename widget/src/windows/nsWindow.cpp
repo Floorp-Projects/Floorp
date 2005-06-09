@@ -6276,6 +6276,11 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
   if (sIMEIsComposing)
     return PR_TRUE;
 
+  if (sIMEReconvertUnicode) {
+    nsMemory::Free(sIMEReconvertUnicode);
+    sIMEReconvertUnicode = NULL;
+  }
+
   nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_START, this);
   nsPoint point(0, 0);
   CANDIDATEFORM candForm;
