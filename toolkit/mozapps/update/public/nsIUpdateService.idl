@@ -88,6 +88,13 @@ interface nsIUpdate : nsISupports
   attribute AString detailsurl;
 
   /**
+   * Whether or not the update being downloaded is a complete replacement of
+   * the user's existing installation or a patch representing the difference
+   * between the new version and the previous version.
+   */
+  attribute boolean isCompleteUpdate;
+
+  /**
    *
    */
   readonly attribute unsigned long patchCount;
@@ -187,6 +194,11 @@ interface nsIApplicationUpdateService : nsISupports
    * 
    */
   void downloadUpdate(in nsIUpdate update, in boolean background);
+
+  /**
+   * Pauses the active update download process
+   */
+  void pauseDownload();
 };
 
 [scriptable, uuid(0765c92c-6145-4253-9db4-594d8023087e)]
