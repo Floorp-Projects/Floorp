@@ -315,14 +315,8 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
 
   // Now call the method
 
-  nsCOMPtr<nsIJSContextStack> cxstack = 
-      do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = cxstack->Push(cx);
-  if (NS_FAILED(rv))
-    return rv;
+  // Use nsCxPusher to make sure we call ScriptEvaluated when we're done.
+  nsCxPusher pusher(aBoundElement);
 
   // Check whether it's OK to call the method.
   rv = nsContentUtils::GetSecurityManager()->CheckFunctionAccess(cx, method, thisObject);
@@ -333,7 +327,6 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
     ok = ::JS_CallFunctionValue(cx, thisObject, OBJECT_TO_JSVAL(method),
                                 0 /* argc */, nsnull /* argv */, &retval);
   }
-  cxstack->Pop(&cx);
 
   if (!ok) {
     return NS_ERROR_FAILURE;
