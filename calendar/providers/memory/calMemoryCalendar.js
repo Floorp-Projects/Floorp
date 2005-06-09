@@ -183,46 +183,67 @@ calMemoryCalendar.prototype = {
         this.observeAddItem(newItem);
     },
 
-    // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
-    modifyItem: function (aItem, aListener) {
-        if (aItem.id == null ||
-            this.mItems[aItem.id] == null)
-        {
+    // void modifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem, in calIOperationListener aListener );
+    modifyItem: function (aNewItem, aOldItem, aListener) {
+        if (!aNewItem) {
+            throw Components.results.NS_ERROR_FAILURE;
+        }
+        if (aNewItem.id == null || this.mItems[aNewItem.id] == null) {
             // this is definitely an error
             if (aListener)
                 aListener.onOperationComplete (this.calendarToReturn,
                                                Components.results.NS_ERROR_FAILURE,
                                                aListener.MODIFY,
-                                               aItem.id,
+                                               aNewItem.id,
                                                "ID for modifyItem doesn't exist, is null, or is from different calendar");
             return;
         }
 
-        var oldItem = this.mItems[aItem.id];
-
-        if (oldItem.generation != aItem.generation) {
+        // do the old and new items match?
+        if (aOldItem.id != aNewItem.id) {
             if (aListener)
                 aListener.onOperationComplete (this.calendarToReturn,
                                                Components.results.NS_ERROR_FAILURE,
                                                aListener.MODIFY,
-                                               aItem.id,
+                                               aNewItem.id,
+                                               "item ID mismatch between old and new items");
+            return;
+        }
+
+        if (aOldItem.id != this.mItems[aOldItem.id] ||
+            aOldItem.generation != aOldItem.generation) {
+            if (aListener)
+                aListener.onOperationComplete (this.calendarToReturn,
+                                               Components.results.NS_ERROR_FAILURE,
+                                               aListener.MODIFY,
+                                               aNewItem.id,
+                                               "old item mismatch in modifyItem");
+            return;
+        }
+
+        if (aOldItem.generation != aNewItem.generation) {
+            if (aListener)
+                aListener.onOperationComplete (this.calendarToReturn,
+                                               Components.results.NS_ERROR_FAILURE,
+                                               aListener.MODIFY,
+                                               aNewItem.id,
                                                "generation mismatch in modifyItem");
             return;
         }
 
-        var newItem = aItem.clone();
-        newItem.generation += 1;
-        newItem.makeImmutable();
-        this.mItems[newItem.id] = newItem;
+        var modifiedItem = aNewItem.clone();
+        modifiedItem.generation += 1;
+        modifiedItem.makeImmutable();
+        this.mItems[newItem.id] = modifiedItem;
 
         if (aListener)
             aListener.onOperationComplete (this.calendarToReturn,
                                            Components.results.NS_OK,
                                            aListener.MODIFY,
-                                           newItem.id,
-                                           newItem);
+                                           modifiedItem.id,
+                                           modifiedItem);
         // notify observers
-        this.observeModifyItem(oldItem, newItem);
+        this.observeModifyItem(aOldItem, modifiedItem);
     },
 
     // void deleteItem( in calIItemBase aItem, in calIOperationListener aListener );

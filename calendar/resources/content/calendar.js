@@ -1535,7 +1535,8 @@ calTransaction.prototype = {
                 this.mCalendar.addItem(this.mItem, this.mListener);
                 break;
             case 'modify':
-                this.mCalendar.modifyItem(this.mItem, this.mListener);
+                this.mCalendar.modifyItem(this.mItem, this.mOldItem,
+                                          this.mListener);
                 break;
             case 'delete':
                 this.mCalendar.deleteItem(this.mItem, this.mListener);
@@ -1553,7 +1554,7 @@ calTransaction.prototype = {
                 this.mCalendar.deleteItem(this.mItem, null);
                 break;
             case 'modify':
-                this.mCalendar.modifyItem(this.mOldItem, null);
+                this.mCalendar.modifyItem(this.mOldItem, this.mItem, null);
                 break;
             case 'delete':
                 this.mCalendar.addItem(this.mItem, null);

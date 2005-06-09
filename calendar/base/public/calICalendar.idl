@@ -53,7 +53,7 @@ interface calIOperationListener;
 interface calIRange;
 interface calIDateTime;
 
-[scriptable, uuid(2ab0652d-9a66-43db-b481-fe77a53eb4ea)]
+[scriptable, uuid(74e685e4-d863-11d9-88f2-000b7d081f44)]
 interface calICalendar : nsISupports
 {
   /**
@@ -148,12 +148,13 @@ interface calICalendar : nsISupports
    * status of NS_ERROR_XXXXX.  If the item is immutable,
    * onOperationComplete is called with a status of NS_ERROR_XXXXX.
    *
-   * If the generation of the given aItem does not match the generation
+   * If the generation of the given aNewItem does not match the generation
    * of the internal item (indicating that someone else modified the
    * item), onOperationComplete is called with a status of NS_ERROR_XXXXX
    * and aDetail is set to the latest-version internal immutable item.
    *
-   * @param aItem       item to modify
+   * @param aNewItem    new version to replace the old one
+   * @param aOldItem    caller's view of the item to be changed, as it is now
    * @param aListener   where to call back the results
    *
    * The results of the operation are reported through an
@@ -165,7 +166,8 @@ interface calICalendar : nsISupports
    * - aDetail: the calIItemBase corresponding to the newly-updated
    *            immutable version of the modified item
    */
-  void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
+  void modifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem, 
+                   in calIOperationListener aListener );
 
   /**
    * deleteItem takes an item that is to be deleted.  The item is
@@ -379,7 +381,7 @@ interface calIOperationListener : nsISupports
    *                  result, this will probably be an extended error
    *                  string (eg one returned by a server).
    * @param aCount    size of array returned, in items
-   * @param aItems    array of item interfaces
+   * @param aItems    array of immutable items
    *
    * Multiple onGetResults might be called 
    */

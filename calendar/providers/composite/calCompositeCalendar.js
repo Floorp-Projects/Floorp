@@ -292,14 +292,14 @@ calCompositeCalendar.prototype = {
         this.mObservers = this.mObservers.filter( function (v) { return v != aObserver; } );
     },
 
-    // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
-    modifyItem: function (aItem, aListener) {
-        if (aItem.calendar == null) {
+    // void modifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem, in calIOperationListener aListener );
+    modifyItem: function (aNewItem, aOldItem, aListener) {
+        if (aNewItem.calendar == null) {
             // XXX Can't modify item with NULL parent
             throw Components.results.NS_ERROR_FAILURE;
         }
 
-        aItem.calendar.modifyItem (aItem, aListener);
+        aNewItem.calendar.modifyItem (aNewItem, aOldItem, aListener);
     },
 
     // void deleteItem( in string id, in calIOperationListener aListener );

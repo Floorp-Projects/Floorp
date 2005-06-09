@@ -353,57 +353,56 @@ calStorageCalendar.prototype = {
         this.observeAddItem(newItem);
     },
 
-    // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
-    modifyItem: function (aItem, aListener) {
-        if (aItem.id == null) {
+    // void modifyItem( in calIItemBase aOldItem, in calIItemBase aNewItem, in calIOperationListener aListener );
+    modifyItem: function (aOldItem, aNewItem, aListener) {
+        if (aNewItem.id == null) {
             // this is definitely an error
             if (aListener)
                 aListener.onOperationComplete (this,
                                                Components.results.NS_ERROR_FAILURE,
                                                aListener.MODIFY,
-                                               aItem.id,
+                                               aNewItem.id,
                                                "ID for modifyItem item is null");
             return;
         }
 
-        // get the old item
-        var olditem = this.getItemById(aItem.id);
-        if (!olditem) {
+        // make sure we've got an old item
+        if (!aOldItem || !this.getItemById(aOldItem.id)) {
             // no old item found?  should be using addItem, then.
             if (aListener)
                 aListener.onOperationComplete (this,
                                                Components.results.NS_ERROR_FAILURE,
                                                aListener.MODIFY,
-                                               aItem.id,
-                                               "ID does not already exit for modifyItem");
+                                               aNewItem.id,
+                                               "ID does not already exist for modifyItem");
             return;
         }
 
-        if (olditem.generation != aItem.generation) {
+        if (aOldItem.generation != aNewItem.generation) {
             if (aListener)
                 aListener.onOperationComplete (this,
                                                Components.results.NS_ERROR_FAILURE,
                                                aListener.MODIFY,
-                                               aItem.id,
+                                               aNewItem.id,
                                                "generation too old for for modifyItem");
             return;
         }
 
-        var newItem = aItem.clone();
-        newItem.generation += 1;
-        newItem.makeImmutable();
+        var modifiedItem = aNewItem.clone();
+        modifiedItem.generation += 1;
+        modifiedItem.makeImmutable();
 
-        this.flushItem (newItem, olditem);
+        this.flushItem (modifiedItem, aOldItem);
 
         if (aListener)
             aListener.onOperationComplete (this,
                                            Components.results.NS_OK,
                                            aListener.MODIFY,
-                                           newItem.id,
-                                           newItem);
+                                           modifiedItem.id,
+                                           modifiedItem);
 
         // notify observers
-        this.observeModifyItem(newItem, olditem);
+        this.observeModifyItem(modifiedItem, aOldItem);
     },
 
     // void deleteItem( in string id, in calIOperationListener aListener );

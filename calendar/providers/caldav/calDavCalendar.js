@@ -42,20 +42,20 @@
 // calDavCalendar.js
 //
 
-// XXXdmose need to make and use better error reporting interface for webdav
-// (all uses of aStatusCode, probably)
+// XXXdmose deal with generation goop
 
-// XXXdmose translate most/all dumps() to NSPR logging, once that's available
-// from JS
+// XXXdmose need to re-query for add & modify to get up-to-date items
 
 // XXXdmose deal with etags
 
 // XXXdmose deal with locking
 
-// XXXdmose first listeners, then observers
+// XXXdmose need to make and use better error reporting interface for webdav
+// (all uses of aStatusCode, probably)
 
-// XXXdmose getItem and getItems() should return immutable events
+// XXXdmose use real calendar result codes, not NS_ERROR_FAILURE for everything
 
+const xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>\n';
 
 function debug(s) {
     const debugging = true;
@@ -167,6 +167,7 @@ calDavCalendar.prototype = {
     addItem: function (aItem, aListener) {
 
         if (aItem.id == null && aItem.isMutable)
+            // XXX real UUID here!!
             aItem.id = "uuid" + (new Date()).getTime();
 
         if (aItem.id == null) {
@@ -185,38 +186,50 @@ calDavCalendar.prototype = {
         var eventResource = new WebDavResource(itemUri);
 
         var listener = new WebDavListener();
-        var savedthis = this;
-        listener.onOperationComplete = function(aStatusCode, aResource,
-                                                aOperation, aClosure) {
+        var thisCalendar = this;
+        listener.onOperationComplete = 
+        function onPutComplete(aStatusCode, aResource, aOperation, aClosure) {
 
             // 201 = HTTP "Created"
             //
             if (aStatusCode == 201) {
-                debug("Item added successfully.\n");
+                debug("Item added successfully\n");
+
                 var retVal = Components.results.NS_OK;
 
-                // XXX deal with Location header
-
-                // notify observers
-                // XXX should be called after listener?
-                savedthis.observeAddItem(newItem);
-
+            } else if (aStatusCode == 200) {
+                // XXXdmose once we get etag stuff working, this should
+                // 
+                debug("200 received from clients, until we have etags working"
+                      + " this probably means a collision; after that it'll"
+                      + " mean server malfunction/n");
+                retVal = Components.results.NS_ERROR_FAILURE;
             } else {
                 // XXX real error handling
                 debug("Error adding item: " + aStatusCode + "\n");
                 retVal = Components.results.NS_ERROR_FAILURE;
-
             }
 
             // notify the listener
-            if (aListener)
-                aListener.onOperationComplete (savedthis,
-                                               retVal,
-                                               aListener.ADD,
-                                               newItem.id,
-                                               newItem);
-        }
+            if (aListener) {
+                try {
+                    aListener.onOperationComplete(thisCalendar,
+                                                  retVal,
+                                                  aListener.ADD,
+                                                  newItem.id,
+                                                  newItem);
+                } catch (ex) {
+                    debug("addItem's onOperationComplete threw an exception "
+                          + ex + "; ignoring\n");
+                }
+            }
 
+            // notify observers
+            if (Components.isSuccessCode(retVal)) {
+                thisCalendar.observeAddItem(newItem);
+            }
+        }
+  
         var newItem = aItem.clone();
         newItem.calendar = this;
         newItem.generation = 1;
@@ -235,37 +248,41 @@ calDavCalendar.prototype = {
         return;
     },
 
-    // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
-    modifyItem: function (aItem, aListener) {
+    // void modifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem, in calIOperationListener aListener );
+    modifyItem: function modifyItem(aNewItem, aOldItem, aListener) {
 
-        if (aItem.id == null) {
+        if (aNewItem.id == null) {
 
             // this is definitely an error
-            if (aListener)
-                aListener.onOperationComplete (this,
-                                               Components.results.NS_ERROR_FAILURE,
-                                               aListener.MODIFY,
-                                               aItem.id,
-                                               "ID for modifyItem doesn't exist or is null");
+            if (aListener) {
+                try {
+                    aListener.onOperationComplete(this,
+                                                  Components.results.NS_ERROR_FAILURE,
+                                                  aListener.MODIFY,
+                                                  aItem.id,
+                                                  "ID for modifyItem doesn't exist or is null");
+                } catch (ex) {
+                    debug("modifyItem's onOperationComplete threw an"
+                          + " exception " + ex + "; ignoring\n");
+                }
+            }
+
             return;
         }
 
-        // XXX need to populate this correctly
-        var oldItem = null;
-
         var eventUri = this.mUri.clone();
         try {
-            eventUri.spec = aItem.getProperty("locationURI");
+            eventUri.spec = aNewItem.getProperty("locationURI");
             debug("using locationURI: " + eventUri.spec + "\n");
         } catch (ex) {
             // XXX how are we REALLY supposed to figure this out?
-            eventUri.spec = eventUri.spec + aItem.id + ".ics";
+            eventUri.spec = eventUri.spec + aNewItem.id + ".ics";
         }
 
         var eventResource = new WebDavResource(eventUri);
 
         var listener = new WebDavListener();
-        var savedthis = this;
+        var thisCalendar = this;
         listener.onOperationComplete = function(aStatusCode, aResource,
                                                 aOperation, aClosure) {
 
@@ -290,15 +307,19 @@ calDavCalendar.prototype = {
             // XXX ensure immutable version returned
             // notify listener
             if (aListener) {
-                aListener.onOperationComplete(savedthis, retVal,
-                                              aListener.MODIFY, aItem.id,
-                                              aItem);
+                try {
+                    aListener.onOperationComplete(thisCalendar, retVal,
+                                                  aListener.MODIFY,
+                                                  aNewItem.id, aNewItem);
+                } catch (ex) {
+                    debug("modifyItem's onOperationComplete threw an"
+                          + " exception " + ex + "; ignoring\n");
+                }
             }
 
             // notify observers
             if (Components.isSuccessCode(retVal)) {
-                // XXX old item should be second arg
-                savedthis.observeModifyItem(aItem, oldItem);
+                thisCalendar.observeModifyItem(aNewItem, aOldItem);
             }
 
             return;
@@ -307,11 +328,12 @@ calDavCalendar.prototype = {
         // XXX use if-exists stuff here
         // XXX use etag as generation
         // do WebDAV put
-        debug("modifyItem: aItem.icalString = " + aItem.icalString + "\n");
+        debug("modifyItem: aNewItem.icalString = " + aNewItem.icalString 
+              + "\n");
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
-        webSvc.putFromString(eventResource, "text/calendar", aItem.icalString, 
-                             listener, null);
+        webSvc.putFromString(eventResource, "text/calendar",
+                             aNewItem.icalString, listener, null);
 
         return;
     },
@@ -336,9 +358,11 @@ calDavCalendar.prototype = {
         var eventResource = new WebDavResource(eventUri);
 
         var listener = new WebDavListener();
-        var savedthis = this;
-        listener.onOperationComplete = function(aStatusCode, aResource,
-                                                aOperation, aClosure) {
+        var thisCalendar = this;
+
+        listener.onOperationComplete = 
+        function onOperationComplete(aStatusCode, aResource, aOperation,
+                                     aClosure) {
 
             // 204 = HTTP "No content"
             //
@@ -352,15 +376,23 @@ calDavCalendar.prototype = {
             }
 
             // notify the listener
-            if (aListener)
-                aListener.onOperationComplete (savedthis,
-                                               Components.results.NS_OK,
-                                               aListener.DELETE,
-                                               aItem.id,
-                                               null);
+            if (aListener) {
+                try {
+                    aListener.onOperationComplete(thisCalendar,
+                                                  Components.results.NS_OK,
+                                                  aListener.DELETE,
+                                                  aItem.id,
+                                                  null);
+                } catch (ex) {
+                    debug("deleteItem's onOperationComplete threw an"
+                          + " exception " + ex + "; ignoring\n");
+                }
+            }
+
             // notify observers
-            // XXX call only if successful
-            savedthis.observeDeleteItem(aItem);
+            if (Components.isSuccessCode(retVal)) {
+                thisCalendar.observeDeleteItem(aItem);
+            }
         }
 
         // XXX check etag/generation
@@ -379,7 +411,6 @@ calDavCalendar.prototype = {
             return;
 
         if (aId == null) {
-            // XXX FAILURE is a bad choice
             aListener.onOperationComplete(this,
                                           Components.results.NS_ERROR_FAILURE,
                                           aListener.GET,
@@ -396,20 +427,21 @@ calDavCalendar.prototype = {
         queryXml = 
           <calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">
             <calendar-data/>
-              <filter>
-                <comp-filter name="VCALENDAR">
-                  <comp-filter name="VEVENT">
-                    <prop-filter name="UID">
-                      <text-match caseless="no">
-                       {aId}
-                      </text-match>
-                    </prop-filter>
-                  </comp-filter>
+            <filter>
+              <comp-filter name="VCALENDAR">
+                <comp-filter name="VEVENT">
+                  <prop-filter name="UID">
+                    <text-match caseless="no">
+                      {aId}
+                    </text-match>
+                  </prop-filter>
                 </comp-filter>
-              </filter>
+              </comp-filter>
+            </filter>
           </calendar-query>;
 
-        this.reportInternal(queryXml.toXMLString(), false, null, null, 1, aListener);
+        this.reportInternal(xmlHeader + queryXml.toXMLString(), 
+                            false, null, null, 1, aListener);
         return;
     },
 
@@ -430,6 +462,7 @@ calDavCalendar.prototype = {
             //
             if (aResource.path == calendarDirUri.path) {
                 // XXX is this even valid?  what should we do here?
+                // XXX if it's an error, it might be valid?
                 throw("XXX report result for calendar, not event\n");
             }
 
@@ -476,6 +509,7 @@ calDavCalendar.prototype = {
 
                 // save the location name in case we need to modify
                 item.setProperty("locationURI", aResource.spec);
+                item.makeImmutable();
 
                 // figure out what type of item to return
                 var iid;
@@ -484,10 +518,14 @@ calDavCalendar.prototype = {
                     if (item.recurrenceInfo) {
                         debug("ITEM has recurrence: " + item + " (" + item.title + ")\n");
                         debug("rangestart: " + aRangeStart.jsDate + " -> " + aRangeEnd.jsDate + "\n");
-                        items = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, 0, {});
+                        // XXX does getOcc call makeImmutable?
+                        items = item.recurrenceInfo.getOccurrences(aRangeStart,
+                                                                   aRangeEnd,
+                                                                   0, {});
                     } else {
                         var occ = makeOccurrence(item, item.startDate,
                                                  item.endDate);
+                        // XXX need to make occurrences immutable?
                         items = [ occ ];
                     }
                     rv = Components.results.NS_OK;
@@ -506,6 +544,7 @@ calDavCalendar.prototype = {
 
             } else { 
                 // XXX
+                dump("aStatusCode = " + aStatusCode + "\n");
                 errString = "XXX";
                 rv = Components.results.NS_ERROR_FAILURE;
             }
@@ -515,9 +554,13 @@ calDavCalendar.prototype = {
                 debug("errString = " + errString + "\n");
             }
 
-            if (items) {
-                aListener.onGetResult(this, rv, iid, null, items ? items.length : 0,
+            try {
+                aListener.onGetResult(thisCalendar, rv, iid, null,
+                                      items ? items.length : 0,
                                       errString ? errString : items);
+            } catch (ex) {
+                    debug("reportInternal's onGetResult threw an"
+                          + " exception " + ex + "; ignoring\n");
             }
             return;
         };
@@ -538,9 +581,19 @@ calDavCalendar.prototype = {
             }
 
             // call back the listener
-            aListener.onOperationComplete(this,
-                                          Components.results.NS_ERROR_FAILURE,
-                                          aListener.GET, null, errString);
+            try {
+                if (aListener) {
+                    aListener.onOperationComplete(thisCalendar,
+                                                  Components.results.
+                                                  NS_ERROR_FAILURE,
+                                                  aListener.GET, null,
+                                                  errString);
+                }
+            } catch (ex) {
+                    debug("reportInternal's onOperationComplete threw an"
+                          + " exception " + ex + "; ignoring\n");
+            }
+
             return;
         };
 
@@ -589,17 +642,17 @@ calDavCalendar.prototype = {
         }
 
         // this is our basic report xml
-        // XXX get rid of vevent filter?
         var C = new Namespace("urn:ietf:params:xml:ns:caldav")
         default xml namespace = C;
-        var queryXml = <calendar-query>
-                         <calendar-data/>
-                         <filter>
-                           <comp-filter name="VCALENDAR">
-                             <comp-filter/>
-                           </comp-filter>
-                         </filter>
-                       </calendar-query>;
+        var queryXml = 
+          <calendar-query>
+            <calendar-data/>
+            <filter>
+              <comp-filter name="VCALENDAR">
+                <comp-filter/>
+              </comp-filter>
+            </filter>
+          </calendar-query>;
 
         switch (aItemFilter & calICalendar.ITEM_FILTER_TYPE_ALL) {
         case calICalendar.ITEM_FILTER_TYPE_EVENT:
@@ -621,7 +674,6 @@ calDavCalendar.prototype = {
             debug("No item types specified\n");
             // XXX should we just quietly call back the completion method?
             throw NS_ERROR_FAILURE;
-
         }
 
         // if a time range has been specified, do the appropriate restriction.
@@ -639,42 +691,78 @@ calDavCalendar.prototype = {
 
         // XXX aItemFilter
 
-        var queryString = queryXml.toXMLString();
+        var queryString = xmlHeader + queryXml.toXMLString();
         debug("getItems(): querying CalDAV server for events\n");
 
         var occurrences = (aItemFilter &
                            calICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0; 
-        this.reportInternal(queryString, occurrences, aRangeStart, aRangeEnd, aCount, aListener);
+        this.reportInternal(queryString, occurrences, aRangeStart, aRangeEnd,
+                            aCount, aListener);
     },
 
     //
     // Helper functions
     //
-    observeBatchChange: function (aNewBatchMode) {
+    observeBatchChange: function observeBatchChange (aNewBatchMode) {
         for each (obs in this.mObservers) {
-            if (aNewBatchMode)
-                obs.onStartBatch ();
-            else
-                obs.onEndBatch ();
+            if (aNewBatchMode) {
+                try {
+                    obs.onStartBatch();
+                } catch (ex) {
+                    debug("observer's onStartBatch threw an exception " + ex 
+                          + "; ignoring\n");
+                }
+            } else {
+                try {
+                    obs.onEndBatch();
+                } catch (ex) {
+                    debug("observer's onEndBatch threw an exception " + ex 
+                          + "; ignoring\n");
+                }
+            }
         }
+        return;
     },
 
-    observeAddItem: function (aItem) {
-        for each (obs in this.mObservers)
-            obs.onAddItem (aItem);
-    },
+    observeAddItem: 
+        function observeAddItem(aItem) {
+            for each (obs in this.mObservers) {
+                try {
+                    obs.onAddItem(aItem);
+                } catch (ex) {
+                    debug("observer's onAddItem threw an exception " + ex 
+                          + "; ignoring\n");
+                }
+            }
+            return;
+        },
 
-    observeModifyItem: function (aOldItem, aNewItem) {
-        for each (obs in this.mObservers)
-            obs.onModifyItem (aOldItem, aNewItem);
-    },
+    observeModifyItem: 
+        function observeModifyItem(aNewItem, aOldItem) {
+            for each (obs in this.mObservers) {
+                try {
+                    obs.onModifyItem(aNewItem, aOldItem);
+                } catch (ex) {
+                    debug("observer's onModifyItem threw an exception " + ex 
+                          + "; ignoring\n");
+                }
+            }
+            return;
+        },
 
-    observeDeleteItem: function (aDeletedItem) {
-        for each (obs in this.mObservers)
-            obs.onDeleteItem (aDeletedItem);
-    },
+    observeDeleteItem: 
+        function observeDeleteItem(aDeletedItem) {
+            for each (obs in this.mObservers) {
+                try {
+                    obs.onDeleteItem(aDeletedItem);
+                } catch (ex) {
+                    debug("observer's onDeleteItem threw an exception " + ex 
+                          + "; ignoring\n");
+                }
+            }
+            return;
+        }
 };
-
 
 function WebDavResource(url) {
     this.mResourceURL = url;

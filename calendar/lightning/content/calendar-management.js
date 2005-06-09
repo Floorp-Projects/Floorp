@@ -119,10 +119,10 @@ var ltnCalendarViewController = {
         }
 
         if (aNewStartTime && aNewEndTime && !aNewStartTime.isDate && !aNewEndTime.isDate) {
-            var event = aOccurrence.item.clone();
-            event.startDate = aNewStartTime;
-            event.endDate = aNewEndTime;
-            event.calendar.modifyItem(event, null);
+            var newEvent = aOccurrence.item.clone();
+            newEvent.startDate = aNewStartTime;
+            newEvent.endDate = aNewEndTime;
+            newEvent.calendar.modifyItem(newEvent, aOccurrence.item, null);
         } else {
             modifyEventWithDialog(aOccurrence.item);
         }

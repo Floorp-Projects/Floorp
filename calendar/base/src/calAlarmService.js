@@ -182,7 +182,7 @@ calAlarmService.prototype = {
         newEvent.alarmTime = alarmTime;
         // calling modifyItem will cause us to get the right callback
         // and update the alarm properly
-        newEvent.calendar.modifyItem(newEvent, null);
+        newEvent.calendar.modifyItem(newEvent, event, null);
     },
 
     addObserver: function(aObserver) {

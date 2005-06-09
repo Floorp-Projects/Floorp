@@ -96,7 +96,7 @@ function modifyEventWithDialog(event)
         // not ==.
         if (!originalEvent.calendar || 
             (originalEvent.calendar.uri.equals(calendar.uri)))
-            calendar.modifyItem(event, null);
+            calendar.modifyItem(event, originalEvent, null);
         else {
             originalEvent.calendar.deleteItem(event, null);
             calendar.addItem(event, null);

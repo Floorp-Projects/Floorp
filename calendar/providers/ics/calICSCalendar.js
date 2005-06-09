@@ -309,8 +309,9 @@ calICSCalendar.prototype = {
         this.processQueue();
     },
 
-    modifyItem: function (aItem, aListener) {
-        this.queue.push({action:'modify', item:aItem, listener:aListener});
+    modifyItem: function (aNewItem, aOldItem, aListener) {
+        this.queue.push({action:'modify', oldItem: aOldItem,
+                         newItem: aNewItem, listener:aListener});
         this.processQueue();
     },
 
@@ -342,7 +343,8 @@ calICSCalendar.prototype = {
                     this.mMemoryCalendar.addItem(a.item, a.listener);
                     break;
                 case 'modify':
-                    this.mMemoryCalendar.modifyItem(a.item, a.listener);
+                    this.mMemoryCalendar.modifyItem(a.newItem, a.oldItem,
+                                                    a.listener);
                     break;
                 case 'delete':
                     this.mMemoryCalendar.deleteItem(a.item, a.listener);
@@ -404,7 +406,7 @@ calICSObserver.prototype = {
     },
     onModifyItem: function(aNewItem, aOldItem) {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].onAddItem(aNewItem, aOldItem);
+            this.mObservers[i].onModifyItem(aNewItem, aOldItem);
 
         if (!this.mInBatch)
             this.mCalendar.writeICS();
