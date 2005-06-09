@@ -1841,15 +1841,17 @@ morkStore::FindRow(nsIMdbEnv* mev, // search for row with matching cell
     morkRow* row = FindRow(ev, inRowScope, inColumn, inTargetCellValue);
     if ( row && ev->Good() )
     {
-      outRow = row->AcquireRowHandle(ev, this);
-      if ( outRow )
-        rowOid = row->mRow_Oid;
+      rowOid = row->mRow_Oid;
+      if ( acqRow )
+          outRow = row->AcquireRowHandle(ev, this);
     }
     outErr = ev->AsErr();
   }
   if ( acqRow )
     *acqRow = outRow;
-    
+  if ( outRowOid )
+    *outRowOid = rowOid;
+
   return outErr;
 }
 

@@ -257,6 +257,7 @@ public: // other port methods
     const mdbYarn* inTargetCellValue, // cell value for which to search
     mdbOid* outRowOid, // out row oid on match (or {0,-1} for no match)
     nsIMdbRow** acqRow); // acquire matching row (or nil for no match)
+                         // can be null if you only want the oid
   // FindRow() searches for one row that has a cell in column inColumn with
   // a contained value with the same form (i.e. charset) and is byte-wise
   // identical to the blob described by yarn inTargetCellValue.  Both content
