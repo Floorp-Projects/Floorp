@@ -54,6 +54,10 @@
 #define USE_WIN_TITLE_STYLE
 #endif
 
+#ifdef XP_MACOSX
+<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
+#endif
+
 <prefwindow type="prefwindow"
             id="BrowserPreferences"
             windowtype="Browser:Preferences"
@@ -92,6 +96,10 @@
               src="chrome://browser/content/preferences/downloads.xul"/>
     <prefpane id="paneAdvanced" label="&paneAdvanced.title;"
               src="chrome://browser/content/preferences/advanced.xul"/>
+
+#ifdef XP_MACOSX
+#include ../../base/content/browserMountPoints.inc
+#endif
 
 </prefwindow>
 
