@@ -237,7 +237,7 @@ mstrtok(const char *delims, char **str)
 // Ensure that the directory containing this file exists.
 static int ensure_parent_dir(const char *path)
 {
-  char *slash = strrchr(path, '/');
+  char *slash = (char *) strrchr(path, '/');
   if (slash)
   {
     *slash = '\0';
@@ -462,7 +462,7 @@ RemoveFile::Prepare()
   if (rv)
     return IO_ERROR;
 
-  char *slash = strrchr(mFile, '/');
+  char *slash = (char *) strrchr(mFile, '/');
   if (slash) {
     *slash = '\0';
     rv = access(mFile, W_OK);
