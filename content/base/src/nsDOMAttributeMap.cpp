@@ -64,7 +64,7 @@ nsDOMAttributeMap::Init()
  * Clear map pointer for attributes.
  */
 PLDHashOperator
-RemoveMapRef(nsAttrKey aKey, nsCOMPtr<nsIDOMNode>& aData, void* aUserArg)
+RemoveMapRef(nsAttrHashKey::KeyType aKey, nsCOMPtr<nsIDOMNode>& aData, void* aUserArg)
 {
   nsCOMPtr<nsIAttribute> attr(do_QueryInterface(aData));
   NS_ASSERTION(attr, "non-nsIAttribute somehow made it into the hashmap?!");
@@ -100,7 +100,7 @@ NS_IMPL_RELEASE(nsDOMAttributeMap)
 void
 nsDOMAttributeMap::DropAttribute(PRInt32 aNamespaceID, nsIAtom* aLocalName)
 {
-  nsAttrHashKey::KeyType attr(aNamespaceID, aLocalName);
+  nsAttrKey attr(aNamespaceID, aLocalName);
   nsIDOMNode *node = mAttributeCache.GetWeak(attr);
   if (node) {
     nsCOMPtr<nsIAttribute> iAttr(do_QueryInterface(node));
@@ -124,7 +124,7 @@ nsDOMAttributeMap::GetAttribute(nsINodeInfo* aNodeInfo,
 
   *aReturn = nsnull;
 
-  nsAttrHashKey::KeyType attr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom());
+  nsAttrKey attr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom());
 
   if (!mAttributeCache.Get(attr, aReturn)) {
     nsAutoString value;
@@ -281,7 +281,7 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
     }
     
     if (NS_SUCCEEDED(rv)) {
-      nsAttrHashKey::KeyType attrkey(ni->NamespaceID(), ni->NameAtom());
+      nsAttrKey attrkey(ni->NamespaceID(), ni->NameAtom());
       rv = mAttributeCache.Put(attrkey, attribute);
       NS_ENSURE_SUCCESS(rv, rv);
 

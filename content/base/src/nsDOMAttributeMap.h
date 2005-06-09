@@ -79,7 +79,7 @@ public:
 class nsAttrHashKey : public PLDHashEntryHdr
 {
 public:
-  typedef nsAttrKey KeyType;
+  typedef const nsAttrKey& KeyType;
   typedef const nsAttrKey* KeyTypePointer;
 
   nsAttrHashKey(KeyTypePointer aKey) : mKey(*aKey) {}
@@ -107,7 +107,7 @@ public:
   enum { ALLOW_MEMMOVE = PR_TRUE };
 
 private:
-  KeyType mKey;
+  nsAttrKey mKey;
 };
 
 // Helper class that implements the nsIDOMNamedNodeMap interface.
