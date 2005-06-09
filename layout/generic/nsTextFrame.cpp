@@ -2950,78 +2950,14 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
   aRenderingContext.GetColor(textColor);
   for (; --aLength >= 0; aBuffer++) {
     nsIFontMetrics* nextFont;
-    nscoord glyphWidth;
+    nscoord glyphWidth = 0;
     PRUnichar ch = *aBuffer;
     if (aTextStyle.mSmallCaps &&
         (IsLowerCase(ch) || (ch == kSZLIG))) {
       nextFont = aTextStyle.mSmallFont;
-      PRUnichar upper_ch;
-      // German szlig should be expanded to "SS".
-      if (ch == kSZLIG)
-        upper_ch = (PRUnichar)'S';
-      else
-        upper_ch = ToUpperCase(ch);
-      if (lastFont != aTextStyle.mSmallFont) {
-        aRenderingContext.SetFont(aTextStyle.mSmallFont);
-        aRenderingContext.GetWidth(upper_ch, charWidth);
-        aRenderingContext.SetFont(aTextStyle.mNormalFont);
-      }
-      else {
-        aRenderingContext.GetWidth(upper_ch, charWidth);
-      }
-      glyphWidth = charWidth + aTextStyle.mLetterSpacing;
-      if (ch == kSZLIG)   //add an additional 'S' here.
-      {
-        *bp++ = upper_ch;
-        if (spacing)
-          *sp++ = glyphWidth;
-        width += glyphWidth;
-      }
-      ch = upper_ch;
-    }
-    else if (ch == ' ') {
-      nextFont = aTextStyle.mNormalFont;
-      glyphWidth = aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing + aTextStyle.mLetterSpacing;
     }
     else {
-      if (lastFont != aTextStyle.mNormalFont) {
-        aRenderingContext.SetFont(aTextStyle.mNormalFont);
-      }
-
-      if (IS_HIGH_SURROGATE(ch) && aLength > 0 &&
-        IS_LOW_SURROGATE(*(aBuffer+1))) {
-      
-        // special handling for surrogate pair
-        aRenderingContext.GetWidth(aBuffer, 2, charWidth);
-        glyphWidth = charWidth + aTextStyle.mLetterSpacing;
-        // copy the surrogate low
-        *bp++ = ch;
-        --aLength;
-        aBuffer++;
-        ch = *aBuffer;
-        // put the width into the space buffer
-        width += glyphWidth;
-        *sp++ = glyphWidth;
-        // set the glyphWidth to 0 so the code later will 
-        // set a 0 for one element in space array for surrogate low to 0
-        glyphWidth = 0;
-      } else {
-        aRenderingContext.GetWidth(ch, charWidth);
-        glyphWidth = charWidth + aTextStyle.mLetterSpacing;
-      }
-
-      if (lastFont != aTextStyle.mNormalFont) {
-        aRenderingContext.SetFont(aTextStyle.mSmallFont);
-      }
       nextFont = aTextStyle.mNormalFont;
-    }
-    if (justifying && (!isEndOfLine || aLength > 0)
-        && IsJustifiableCharacter(ch, isCJ)) {
-      glyphWidth += aTextStyle.mExtraSpacePerJustifiableCharacter;
-      if ((PRUint32)--aTextStyle.mNumJustifiableCharacterToRender
-            < (PRUint32)aTextStyle.mNumJustifiableCharacterReceivingExtraJot) {
-        glyphWidth++;
-      }
     }
     if (nextFont != lastFont) {
       pendingCount = bp - runStart;
@@ -3047,6 +2983,58 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
       }
       aRenderingContext.SetFont(nextFont);
       lastFont = nextFont;
+    }
+    if (nextFont == aTextStyle.mSmallFont) {
+      PRUnichar upper_ch;
+      // German szlig should be expanded to "SS".
+      if (ch == kSZLIG)
+        upper_ch = (PRUnichar)'S';
+      else
+        upper_ch = ToUpperCase(ch);
+      aRenderingContext.GetWidth(upper_ch, charWidth);
+      glyphWidth += charWidth + aTextStyle.mLetterSpacing;
+      if (ch == kSZLIG)   //add an additional 'S' here.
+      {
+        *bp++ = upper_ch;
+        if (spacing)
+          *sp++ = glyphWidth;
+        width += glyphWidth;
+      }
+      ch = upper_ch;
+    }
+    else if (ch == ' ') {
+      glyphWidth += aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing + aTextStyle.mLetterSpacing;
+    }
+    else if (IS_HIGH_SURROGATE(ch) && aLength > 0 &&
+           IS_LOW_SURROGATE(*(aBuffer+1))) {
+      
+      // special handling for surrogate pair
+      aRenderingContext.GetWidth(aBuffer, 2, charWidth);
+      glyphWidth += charWidth + aTextStyle.mLetterSpacing;
+      // copy the surrogate low
+      *bp++ = ch;
+      --aLength;
+      aBuffer++;
+      ch = *aBuffer;
+      // put the width into the space buffer
+      width += glyphWidth;
+      if (spacing)
+        *sp++ = glyphWidth;
+      // set the glyphWidth to 0 so the code later will 
+      // set a 0 for one element in space array for surrogate low to 0
+      glyphWidth = 0;
+    }
+    else {
+      aRenderingContext.GetWidth(ch, charWidth);
+      glyphWidth += charWidth + aTextStyle.mLetterSpacing;
+    }
+    if (justifying && (!isEndOfLine || aLength > 0)
+        && IsJustifiableCharacter(ch, isCJ)) {
+      glyphWidth += aTextStyle.mExtraSpacePerJustifiableCharacter;
+      if ((PRUint32)--aTextStyle.mNumJustifiableCharacterToRender
+            < (PRUint32)aTextStyle.mNumJustifiableCharacterReceivingExtraJot) {
+        glyphWidth++;
+      }
     }
     *bp++ = ch;
     if (spacing)
@@ -3118,7 +3106,7 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
   PRBool isCJ = IsChineseJapaneseLangGroup();
   PRBool isEndOfLine = aIsEndOfFrame && IsEndOfLine(mState);
 
-  while (--length >= 0) {
+  for (PRInt32 prevLength = length; --length >= 0; prevLength = length) {
     PRUnichar ch = *inBuffer++;
     if (aStyle.mSmallCaps &&
         (IsLowerCase(ch) || (ch == kSZLIG))) {
@@ -3146,7 +3134,14 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
         lastFont = aStyle.mNormalFont;
         aRenderingContext.SetFont(lastFont);
       }
-      aRenderingContext.GetTextDimensions(&ch, (PRUint32)1, glyphDimensions);
+      if (IS_HIGH_SURROGATE(ch) && length > 0 &&
+        IS_LOW_SURROGATE(*inBuffer)) {
+        aRenderingContext.GetTextDimensions(inBuffer-1, (PRUint32)2, glyphDimensions);
+        length--;
+        inBuffer++;
+      } else {
+        aRenderingContext.GetTextDimensions(&ch, (PRUint32)1, glyphDimensions);
+      }
       glyphDimensions.width += aStyle.mLetterSpacing;
     }
     if (justifying && (!isEndOfLine || length > 0)
@@ -3162,7 +3157,7 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
     if (!aGetTextDimensions && sum.width >= aDimensionsResult->width) {
       PRInt32 result = aLength - length;
       if (2*(sum.width - aDimensionsResult->width) > glyphDimensions.width) //then we have gone too far, back up 1
-        result--;
+        result = aLength - prevLength;
       aStyle.mLastFont = lastFont;
       return result;
     }
