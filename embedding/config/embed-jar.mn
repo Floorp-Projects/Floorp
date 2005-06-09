@@ -10,6 +10,7 @@
 # Stuff needed for key bindings, scroll bar graphics etc.
 content/forms,                                      forms/content/forms
 content/global,                                     toolkit/content/global
+content/global/xml,                                 toolkit/content/global/xml
 content/global/bindings,                            toolkit/content/global/bindings
 content/global-platform,                            toolkit/content/global-platform
 content/global-region,                              toolkit/content/global-region
@@ -38,6 +39,7 @@ locale/XXXX/global,                                 XXXX/locale/XXXX/global
 locale/XXXX/global/dom,                             XXXX/locale/XXXX/global/dom
 locale/XXXX/global/layout,                          XXXX/locale/XXXX/global/layout
 locale/XXXX/global/xslt,                            XXXX/locale/XXXX/global/xslt
+locale/XXXX/global/xml,                             XXXX/locale/XXXX/global/xml
 locale/XXXX/necko/contents.rdf,                     XXXX/locale/XXXX/necko/contents.rdf
 locale/XXXX/necko/necko.properties,                 XXXX/locale/XXXX/necko/necko.properties
 locale/XXXX/necko/redirect_loop.dtd,                XXXX/locale/XXXX/necko/redirect_loop.dtd
