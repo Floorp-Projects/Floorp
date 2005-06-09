@@ -5875,7 +5875,7 @@ EOF
 	MOZ_BUILD_ROOT=`cd $MOZ_BUILD_ROOT && pwd -W`
 	;;
     *-cygwin*|*-msvc*|*-mks*)
-	CYGPATH_W="cygpath -w"
+	CYGPATH_W="cygpath -a -w"
 	CYGPATH_S="sed -e s|\\\\|/|g"
 	MOZ_BUILD_ROOT=`$CYGPATH_W $MOZ_BUILD_ROOT | $CYGPATH_S`
 	;;
@@ -18535,7 +18535,7 @@ cygwin*|msvc*|mks*)
     RC="\$(CYGWIN_WRAPPER) $RC"
     MIDL="\$(CYGWIN_WRAPPER) $MIDL"
     CYGDRIVE_MOUNT=`mount -p | awk '{ if (/^\//) { print $1; exit } }'`
-    WIN_TOP_SRC=`cygpath -w $srcdir | sed -e 's|\\\\|/|g'`
+    WIN_TOP_SRC=`cygpath -a -w $srcdir | sed -e 's|\\\\|/|g'`
     ;;
 esac
 
