@@ -76,11 +76,14 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
   // class object in the bound document that represents the concrete version of this implementation.
   // This function also has the side effect of building up the prototype implementation if it has
   // not been built already.
-  void * targetScriptObject = nsnull;
+  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
   void * targetClassObject = nsnull;
   nsresult rv = InitTargetObjects(aBinding, context, aBoundElement,
-                                  &targetScriptObject, &targetClassObject);
+                                  getter_AddRefs(holder), &targetClassObject);
   NS_ENSURE_SUCCESS(rv, rv); // kick out if we were unable to properly intialize our target objects
+
+  JSObject * targetScriptObject;
+  holder->GetJSObject(&targetScriptObject);
 
   // Walk our member list and install each one in turn.
   for (nsXBLProtoImplMember* curr = mMembers;
@@ -95,10 +98,12 @@ nsresult
 nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
                                   nsIScriptContext* aContext, 
                                   nsIContent* aBoundElement, 
-                                  void** aScriptObject, 
+                                  nsIXPConnectJSObjectHolder** aScriptObjectHolder, 
                                   void** aTargetClassObject)
 {
   nsresult rv = NS_OK;
+  *aScriptObjectHolder = nsnull;
+  
   if (!mClassObject) {
     rv = CompilePrototypeMembers(aBinding); // This is the first time we've ever installed this binding on an element.
                                  // We need to go ahead and compile all methods and properties on a class
@@ -128,7 +133,6 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   // concrete base class.  We need to alter the object so that our concrete class is interposed
   // between the object and its base class.  We become the new base class of the object, and the
   // object's old base class becomes the new class' base class.
-  *aScriptObject = object;
   rv = aBinding->InitClass(mClassName, aContext, (void *) object, aTargetClassObject);
   if (NS_FAILED(rv))
     return rv;
@@ -142,6 +146,8 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
       NS_DOMClassInfo_PreserveWrapper(node, nativeWrapper);
     }
   }
+
+  wrapper.swap(*aScriptObjectHolder);
   
   return rv;
 }

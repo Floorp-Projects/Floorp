@@ -713,7 +713,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   mIsInitialized = PR_FALSE;
   mNumEvaluations = 0;
   mOwner = nsnull;
-  mTerminationFunc = nsnull;
+  mTerminations = nsnull;
   mScriptsEnabled = PR_TRUE;
   mBranchCallbackCount = 0;
   mBranchCallbackTime = LL_ZERO;
@@ -724,6 +724,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 
 nsJSContext::~nsJSContext()
 {
+  NS_PRECONDITION(!mTerminations, "Shouldn't have termination funcs by now");
+                  
   // Cope with JS_NewContext failure in ctor (XXXbe move NewContext to Init?)
   if (!mContext)
     return;
@@ -845,12 +847,12 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     return NS_ERROR_FAILURE;
   }
 
-  // The result of evaluation, used only if there were no errors.  This need
-  // not be a GC root currently, provided we run the GC only from the branch
-  // callback or from ScriptEvaluated.  TODO: use JS_Begin/EndRequest to keep
-  // the GC from racing with JS execution on any thread.
+  // The result of evaluation, used only if there were no errors.  TODO: use
+  // JS_Begin/EndRequest to keep the GC from racing with JS execution on any
+  // thread.
   jsval val;
 
+  nsJSContext::TerminationFuncHolder holder(this);
   if (ok) {
     JSVersion newVersion = JSVERSION_UNKNOWN;
 
@@ -864,8 +866,6 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
 
       if (aVersion)
         oldVersion = ::JS_SetVersion(mContext, newVersion);
-      mTerminationFuncArg = nsnull;
-      mTerminationFunc = nsnull;
       ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
                                               (JSObject *)aScopeObject,
                                               jsprin,
@@ -909,6 +909,22 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   // Pop here, after JS_ValueToString and any other possible evaluation.
   if (NS_FAILED(stack->Pop(nsnull)))
     rv = NS_ERROR_FAILURE;
+
+  // Need to lock, since ScriptEvaluated can GC.
+  PRBool locked = PR_FALSE;
+  if (ok && JSVAL_IS_GCTHING(val)) {
+    locked = ::JS_LockGCThing(mContext, JSVAL_TO_GCTHING(val));
+    if (!locked) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  // ScriptEvaluated needs to come after we pop the stack
+  ScriptEvaluated(PR_TRUE);
+
+  if (locked) {
+    ::JS_UnlockGCThing(mContext, JSVAL_TO_GCTHING(val));
+  }
 
   return rv;
 
@@ -1031,6 +1047,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // the GC from racing with JS execution on any thread.
   jsval val;
 
+  nsJSContext::TerminationFuncHolder holder(this);
   if (ok) {
     JSVersion newVersion = JSVERSION_UNKNOWN;
 
@@ -1044,8 +1061,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 
       if (aVersion)
         oldVersion = ::JS_SetVersion(mContext, newVersion);
-      mTerminationFuncArg = nsnull;
-      mTerminationFunc = nsnull;
       ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
                                               (JSObject *)aScopeObject,
                                               jsprin,
@@ -1086,11 +1101,12 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     }
   }
 
-  ScriptEvaluated(PR_TRUE);
-
   // Pop here, after JS_ValueToString and any other possible evaluation.
   if (NS_FAILED(stack->Pop(nsnull)))
     rv = NS_ERROR_FAILURE;
+
+  // ScriptEvaluated needs to come after we pop the stack
+  ScriptEvaluated(PR_TRUE);
 
   return rv;
 }
@@ -1202,8 +1218,7 @@ nsJSContext::ExecuteScript(void* aScriptObject,
   jsval val;
   JSBool ok;
 
-  mTerminationFuncArg = nsnull;
-  mTerminationFunc = nsnull;
+  nsJSContext::TerminationFuncHolder holder(this);
   ok = ::JS_ExecuteScript(mContext,
                           (JSObject*) aScopeObject,
                           (JSScript*) ::JS_GetPrivate(mContext,
@@ -1230,11 +1245,12 @@ nsJSContext::ExecuteScript(void* aScriptObject,
     NotifyXPCIfExceptionPending(mContext);
   }
 
-  ScriptEvaluated(PR_TRUE);
-
   // Pop here, after JS_ValueToString and any other possible evaluation.
   if (NS_FAILED(stack->Pop(nsnull)))
     rv = NS_ERROR_FAILURE;
+
+  // ScriptEvaluated needs to come after we pop the stack
+  ScriptEvaluated(PR_TRUE);
 
   return rv;
 }
@@ -1384,18 +1400,15 @@ nsJSContext::CallEventHandler(JSObject *aTarget, JSObject *aHandler,
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext)))
     return NS_ERROR_FAILURE;
 
-  mTerminationFuncArg = nsnull;
-  mTerminationFunc = nsnull;
-
   // check if the event handler can be run on the object in question
   rv = sSecurityManager->CheckFunctionAccess(mContext, aHandler, aTarget);
+
+  nsJSContext::TerminationFuncHolder holder(this);
 
   if (NS_SUCCEEDED(rv)) {
     jsval funval = OBJECT_TO_JSVAL(aHandler);
     PRBool ok = ::JS_CallFunctionValue(mContext, aTarget, funval, argc, argv,
                                        rval);
-
-    ScriptEvaluated(PR_TRUE);
 
     if (!ok) {
       // Tell XPConnect about any pending exceptions. This is needed
@@ -1414,6 +1427,22 @@ nsJSContext::CallEventHandler(JSObject *aTarget, JSObject *aHandler,
 
   if (NS_FAILED(stack->Pop(nsnull)))
     return NS_ERROR_FAILURE;
+
+  // Need to lock, since ScriptEvaluated can GC.
+  PRBool locked = PR_FALSE;
+  if (NS_SUCCEEDED(rv) && JSVAL_IS_GCTHING(*rval)) {
+    locked = ::JS_LockGCThing(mContext, JSVAL_TO_GCTHING(*rval));
+    if (!locked) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  // ScriptEvaluated needs to come after we pop the stack
+  ScriptEvaluated(PR_TRUE);
+
+  if (locked) {
+    ::JS_UnlockGCThing(mContext, JSVAL_TO_GCTHING(*rval));
+  }
 
   return rv;
 }
@@ -1905,10 +1934,18 @@ nsJSContext::GC()
 void
 nsJSContext::ScriptEvaluated(PRBool aTerminated)
 {
-  if (aTerminated && mTerminationFunc) {
-    (*mTerminationFunc)(mTerminationFuncArg);
-    mTerminationFuncArg = nsnull;
-    mTerminationFunc = nsnull;
+  if (aTerminated && mTerminations) {
+    // Make sure to null out mTerminations before doing anything that
+    // might cause new termination funcs to be added!
+    nsJSContext::TerminationFuncClosure* start = mTerminations;
+    mTerminations = nsnull;
+    
+    for (nsJSContext::TerminationFuncClosure* cur = start;
+         cur;
+         cur = cur->mNext) {
+      (*(cur->mTerminationFunc))(cur->mTerminationFuncArg);
+    }
+    delete start;
   }
 
   mNumEvaluations++;
@@ -1940,12 +1977,18 @@ nsJSContext::GetOwner()
   return mOwner;
 }
 
-void
+nsresult
 nsJSContext::SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                     nsISupports* aRef)
 {
-  mTerminationFunc = aFunc;
-  mTerminationFuncArg = aRef;
+  nsJSContext::TerminationFuncClosure* newClosure =
+    new nsJSContext::TerminationFuncClosure(aFunc, aRef, mTerminations);
+  if (!newClosure) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  mTerminations = newClosure;
+  return NS_OK;
 }
 
 PRBool

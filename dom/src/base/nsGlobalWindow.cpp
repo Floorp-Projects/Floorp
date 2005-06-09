@@ -3595,6 +3595,10 @@ nsGlobalWindow::Close()
     nsIScriptContext *currentCX = nsJSUtils::GetDynamicScriptContext(cx);
 
     if (currentCX && currentCX == mContext) {
+      // We ignore the return value here.  If setting the termination function
+      // fails, it's better to fail to close the window than it is to crash
+      // (which is what would tend to happen if we did this synchronously
+      // here).
       currentCX->SetTerminationFunction(CloseWindow,
                                         NS_STATIC_CAST(nsIDOMWindow *,
                                                        this));

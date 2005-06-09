@@ -965,11 +965,16 @@ nsHTMLDocument::EndLoad()
           //   document.write("foo");
           //   location.href = "http://www.mozilla.org";
           //   document.write("bar");
-
-          scx->SetTerminationFunction(DocumentWriteTerminationFunc,
-                                      NS_STATIC_CAST(nsIDocument *, this));
-
-          return;
+          
+          nsresult rv =
+            scx->SetTerminationFunction(DocumentWriteTerminationFunc,
+                                        NS_STATIC_CAST(nsIDocument *, this));
+          // If we fail to set the termination function, just go ahead
+          // and EndLoad now.  The slight bugginess involved is better
+          // than leaking.
+          if (NS_SUCCEEDED(rv)) {
+            return;
+          }
         }
       }
     }

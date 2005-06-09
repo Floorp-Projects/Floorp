@@ -310,11 +310,13 @@ public:
   /**
    * Called to specify a function that should be called when the current
    * script (if there is one) terminates. Generally used if breakdown
-   * of script state needs to be happen, but should be deferred till
+   * of script state needs to happen, but should be deferred till
    * the end of script evaluation.
+   *
+   * @throws NS_ERROR_OUT_OF_MEMORY if that happens
    */
-  virtual void SetTerminationFunction(nsScriptTerminationFunc aFunc,
-                                      nsISupports* aRef) = 0;
+  virtual nsresult SetTerminationFunction(nsScriptTerminationFunc aFunc,
+                                          nsISupports* aRef) = 0;
 
   /**
    * Called to disable/enable script execution in this context.
