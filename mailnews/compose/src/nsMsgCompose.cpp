@@ -869,7 +869,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
                                       nsnull, &isAsciiOnly);
           if (NS_SUCCEEDED(rv)) 
           {
-            if (m_compFields->GetForceMsgEncoding());
+            if (m_compFields->GetForceMsgEncoding())
               isAsciiOnly = PR_FALSE;
               
             m_compFields->SetBodyIsAsciiOnly(isAsciiOnly);
