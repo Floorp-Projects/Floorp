@@ -44,6 +44,8 @@
 #include "nsXBLProtoImplMember.h"
 #include "nsXBLPrototypeBinding.h"
 
+class nsIXPConnectJSObjectHolder;
+
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImpl)
 
 class nsXBLProtoImpl
@@ -70,7 +72,8 @@ public:
   nsresult InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIContent* aBoundElement);
   nsresult InitTargetObjects(nsXBLPrototypeBinding* aBinding, nsIScriptContext* aContext, 
                              nsIContent* aBoundElement, 
-                             void** aScriptObject, void** aTargetClassObject);
+                             nsIXPConnectJSObjectHolder** aScriptObjectHolder,
+                             void** aTargetClassObject);
   nsresult CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding);
 
   void SetMemberList(nsXBLProtoImplMember* aMemberList) { delete mMembers; mMembers = aMemberList; };

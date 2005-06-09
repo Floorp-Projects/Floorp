@@ -120,8 +120,8 @@ public:
   virtual void ScriptEvaluated(PRBool aTerminated);
   virtual void SetOwner(nsIScriptContextOwner* owner);
   virtual nsIScriptContextOwner *GetOwner();
-  virtual void SetTerminationFunction(nsScriptTerminationFunc aFunc,
-                                      nsISupports* aRef);
+  virtual nsresult SetTerminationFunction(nsScriptTerminationFunc aFunc,
+                                          nsISupports* aRef);
   virtual PRBool GetScriptsEnabled();
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
 
@@ -146,10 +146,55 @@ private:
   PRUint32 mNumEvaluations;
 
   nsIScriptContextOwner* mOwner;  /* NB: weak reference, not ADDREF'd */
-  nsScriptTerminationFunc mTerminationFunc;
 
-  nsCOMPtr<nsISupports> mTerminationFuncArg;
+protected:
+  struct TerminationFuncClosure {
+    TerminationFuncClosure(nsScriptTerminationFunc aFunc,
+                           nsISupports* aArg,
+                           TerminationFuncClosure* aNext) :
+      mTerminationFunc(aFunc),
+      mTerminationFuncArg(aArg),
+      mNext(aNext)
+    {}
+    ~TerminationFuncClosure()
+    {
+      delete mNext;
+    }
+    
+    nsScriptTerminationFunc mTerminationFunc;
+    nsCOMPtr<nsISupports> mTerminationFuncArg;
+    TerminationFuncClosure* mNext;
+  };
 
+  struct TerminationFuncHolder {
+    TerminationFuncHolder(nsJSContext* aContext) :
+      mContext(aContext),
+      mTerminations(aContext->mTerminations)
+    {
+      aContext->mTerminations = nsnull;
+    }
+    ~TerminationFuncHolder() {
+      // Have to be careful here.  mContext might have picked up new
+      // termination funcs while the script was evaluating.  Prepend whatever
+      // we have to the current termination funcs on the context (since our
+      // termination funcs were posted first).
+      if (mTerminations) {
+        TerminationFuncClosure* cur = mTerminations;
+        while (cur->mNext) {
+          cur = cur->mNext;
+        }
+        cur->mNext = mContext->mTerminations;
+        mContext->mTerminations = mTerminations;
+      }
+    }
+
+    nsJSContext* mContext;
+    TerminationFuncClosure* mTerminations;
+  };
+  
+  TerminationFuncClosure* mTerminations;
+
+private:
   PRPackedBool mIsInitialized;
   PRPackedBool mScriptsEnabled;
   PRPackedBool mGCOnDestruction;
