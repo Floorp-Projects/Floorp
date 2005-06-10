@@ -66,18 +66,11 @@ DEFINES += -DXULRUNNER_PROGNAME=\"xulrunner\"
 
 REQUIRES = \
         xpcom \
-        string \
         appshell \
         xulapp \
 	$(NULL)
 
 CPPSRCS = nsXULRunnerApp.cpp
-
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += nsRegisterGREWin.cpp
-else
-CPPSRCS += nsRegisterGREVoid.cpp
-endif
 
 ifdef MOZ_ENABLE_LIBXUL
 CPPSRCS += nsINIParser.cpp

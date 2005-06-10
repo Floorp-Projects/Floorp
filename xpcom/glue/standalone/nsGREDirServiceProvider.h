@@ -40,6 +40,16 @@
 
 #include "nsIDirectoryService.h"
 
+#ifndef MAXPATHLEN
+#ifdef _MAX_PATH
+#define MAXPATHLEN _MAX_PATH
+#elif defined(CCHMAXPATH)
+#define MAXPATHLEN CCHMAXPATH
+#else
+#define MAXPATHLEN 1024
+#endif
+#endif
+
 /**
  * the directoryserviceprovider used by GRE_Startup when calling NS_InitXPCOM2
  */

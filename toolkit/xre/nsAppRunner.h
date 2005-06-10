@@ -75,6 +75,10 @@ extern int    gArgc;
 extern char **gArgv;
 extern PRBool gLogConsoleErrors;
 
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+extern char gBinaryPath[MAXPATHLEN];
+#endif
+
 /**
  * Create the nativeappsupport implementation.
  *
