@@ -61,7 +61,9 @@
     </vbox>
     <description id="mustAgree">&reportWizardMustAgree.description;</description>
     <vbox>
-      <checkbox id="dontShowPrivacyStatement" label="&dontShowPrivacyStatement.label;" accesskey="&dontShowPrivacyStatement.accesskey;" oncommand="privacyPolicyCheckbox()" />
+      <hbox>
+        <checkbox id="dontShowPrivacyStatement" label="&dontShowPrivacyStatement.label;" accesskey="&dontShowPrivacyStatement.accesskey;" oncommand="privacyPolicyCheckbox()" />
+      </hbox>
     </vbox>
   </wizardpage>
 
@@ -77,15 +79,15 @@
         <column flex="1"/>
       </columns>
       <rows>
-        <row>
+        <row align="center">
           <label control="url" value="&reportForm.url.title;"/>
           <textbox id="url" size="60" readonly="true" class="noborder"/>
         </row>
-        <row>
+        <row align="center">
           <spacer/>
           <checkbox id="behind_login" label="&reportForm.behind_login.title;" accesskey="&reportForm.behind_login.accesskey;"/>
         </row>
-        <row>
+        <row align="center">
           <label control="problem_type" value="&reportForm.problem_type.title;" accesskey="&reportForm.problem_type.accesskey;"/>
           <!-- XXX: Perhaps this should eventually/maybe come from somewhere else?  Eh, not sure so lets just hardcode this for now. -->
           <menulist label="problem_type" id="problem_type" oncommand="validateForm()">
@@ -106,19 +108,21 @@
         </row>
         <row>
           <label control="description" value="&reportForm.describe.title;" accesskey="&reportForm.describe.accesskey;"/>
-          <textbox id="description" value="" cols="40" rows="7" multiline="true" size="40" class="noborder"/>
+          <textbox id="description" value="" cols="40" rows="5" multiline="true" size="40" class="noborder"/>
         </row>
-        <row>
+        <row align="center">
           <label control="email" value="&reportForm.email.title;" accesskey="&reportForm.email.accesskey;"/>
           <textbox id="email" size="60" class="noborder"/>
         </row>
-        <row>
+        <row align="center">
           <spacer/>
-          <label id="privacyPolicy"
-                 onclick="openPrivacyPolicy();"
-                 onkeypress="if (event.keyCode == event.DOM_VK_ENTER || event.keyCode == event.DOM_VK_RETURN) openPrivacyPolicy();"
-                 value="&reportForm.privacyPolicy.title;"
-                 tooltiptext="&reportForm.privacyPolicy.tooltip;"/>
+          <hbox>
+            <label id="privacyPolicy"
+                   onclick="openPrivacyPolicy();"
+                   onkeypress="if (event.keyCode == event.DOM_VK_ENTER || event.keyCode == event.DOM_VK_RETURN) openPrivacyPolicy();"
+                   value="&reportForm.privacyPolicy.title;"
+                   tooltiptext="&reportForm.privacyPolicy.tooltip;"/>
+          </hbox>
         </row>
       </rows>
     </grid>
@@ -138,7 +142,9 @@
   <wizardpage id="finish"
               label="&finish.label;">
     <textbox id="finishSummary" size="60" readonly="true"/>
-   <checkbox id="showDetail" label="&reportResults.showDetail.title;" accesskey="&reportResults.showDetail.accesskey;" oncommand="showDetail()"/>
+   <hbox>
+     <checkbox id="showDetail" label="&reportResults.showDetail.title;" accesskey="&reportResults.showDetail.accesskey;" oncommand="showDetail()"/>
+    </hbox>
     <vbox id="finishExtendedFrame" flex="1">
       <iframe id="finishExtendedSuccess" type="content" src="report.xhtml" flex="1"/>
       <iframe id="finishExtendedFailed" type="content" src="error.xhtml" flex="1"/>

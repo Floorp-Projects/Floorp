@@ -9,6 +9,6 @@
 <!ENTITY reportUseragent             "Useragent">
 <!ENTITY reportLanguage              "Language">
 <!ENTITY reportEmail                 "Email">
-<!ENTITY error                       "Error">
+<!ENTITY error                       "Error Details">
 <!ENTITY faultCode                   "Code">
 <!ENTITY faultMessage                "Message">
