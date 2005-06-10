@@ -143,7 +143,7 @@ function saveDialog()
     var deckNumber = Number(getElementValue("period-list"));
     
     var recurrenceInfo = createRecurrenceInfo();
-    recurrenceInfo.initialize(window.calendarEvent);
+    recurrenceInfo.item = window.calendarEvent;
 
     var recRule = new calRecurrenceRule();
 

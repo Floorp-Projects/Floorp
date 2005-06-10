@@ -263,7 +263,7 @@
             this.mEditorDate = aDate;
 
             if (this.mSelected) {
-              this.mSelected.setAttribute("selected", "");
+              this.mSelected.removeAttribute("selected");
               this.mSelected = null;
             }
 
@@ -308,7 +308,7 @@
                 if (aDate.getMonth() != date.getMonth()) {
                   day.setAttribute("othermonth", "true");
                 } else {
-                  day.setAttribute("othermonth", "");
+                  day.removeAttribute("othermonth");
                 }
 
                 // highlight the current date
@@ -438,7 +438,7 @@
         <body>
           <![CDATA[
             if (this.mSelected) {
-              this.mSelected.setAttribute("selected", "");
+              this.mSelected.removeAttribute("selected");
             }
             this.mSelected = aDay;
             aDay.setAttribute("selected", "true");

@@ -42,10 +42,23 @@
 //
 
 const ICAL = Components.interfaces.calIIcalComponent;
+const kHashPropertyBagContractID = "@mozilla.org/hash-property-bag;1";
+const kIWritablePropertyBag = Components.interfaces.nsIWritablePropertyBag;
+const HashPropertyBag = new Components.Constructor(kHashPropertyBagContractID, kIWritablePropertyBag);
 
-function calItemBase() { }
+function NewCalDateTime(aJSDate) {
+    var c = new CalDateTime();
+    if (aJSDate)
+        c.jsDate = c;
+    return c;
+}
+
+function calItemBase() {
+}
 
 calItemBase.prototype = {
+    mIsProxy: false,
+
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
             !aIID.equals(Components.interfaces.calIItemBase))
@@ -56,21 +69,63 @@ calItemBase.prototype = {
         return this;
     },
 
+    mParentItem: null,
+    get parentItem() {
+        if (this.mParentItem)
+            return this.mParentItem;
+        else
+            return this;
+    },
+    set parentItem(value) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_OBJECT_IS_IMMUTABLE;
+        this.mIsProxy = true;
+        this.mParentItem = value;
+    },
+
+    initializeProxy: function (aParentItem) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_OBJECT_IS_IMMUTABLE;
+
+        if (this.mParentItem != null)
+            throw Components.results.NS_ERROR_FAILURE;
+
+        this.mParentItem = aParentItem;
+        this.mCalendar = aParentItem.mCalendar;
+        this.mIsProxy = true;
+    },
+
+    //
+    // calIItemBase
+    //
     mImmutable: false,
     get isMutable() { return !this.mImmutable; },
 
     mDirty: false,
     modify: function() {
         if (this.mImmutable)
-            // Components.results.NS_ERROR_CALENDAR_IMMUTABLE;
-            throw Components.results.NS_ERROR_FAILURE;
+            throw Components.results.NS_ERROR_OBJECT_IS_IMMUTABLE;
         this.mDirty = true;
     },
 
-    makeItemBaseImmutable: function() {
-        // make all our components immutable
-        this.mCreationDate.makeImmutable();
+    ensureNotDirty: function() {
+        if (!this.mDirty)
+            return;
 
+        if (this.mImmutable) {
+            dump ("### Something tried to undirty a dirty immutable event!\n");
+            throw Components.results.NS_ERROR_OBJECT_IS_IMMUTABLE;
+        }
+
+        this.setProperty("LAST-MODIFIED", NewCalDateTime(new Date()));
+        this.mDirty = false;
+    },
+
+    makeItemBaseImmutable: function() {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_OBJECT_IS_IMMUTABLE;
+
+        // make all our components immutable
         if (this.mRecurrenceInfo)
             this.mRecurrenceInfo.makeImmutable();
         if (this.mAlarmTime)
@@ -80,25 +135,31 @@ calItemBase.prototype = {
             this.mOrganizer.makeImmutable();
         for (var i = 0; i < this.mAttendees.length; i++)
             this.mAttendees[i].makeImmutable();
+
+        var e = this.mProperties.enumerator;
+        while (e.hasMoreElements()) {
+            var prop = e.getNext().QueryInterface(Components.interfaces.nsIProperty);
+            var val = prop.value;
+
+            if (prop.value instanceof Components.interfaces.calIDateTime) {
+                if (prop.value.isMutable)
+                    prop.value.makeImmutable();
+            }
+        }
+
+        this.ensureNotDirty();
         this.mImmutable = true;
     },
 
     // initialize this class's members
     initItemBase: function () {
-        this.mCreationDate = new CalDateTime();
-        this.mAlarmTime = new CalDateTime();
-        this.mLastModifiedTime = new CalDateTime();
-        this.mStampTime = new CalDateTime();
+        var now = new Date();
 
-        this.mCreationDate.jsDate = new Date();
-        this.mLastModifiedTime.jsDate = new Date();
-        this.mStampTime.jsDate = new Date();
-        
-        this.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
-                           createInstance(Components.interfaces.nsIWritablePropertyBag);
+        this.mProperties = new HashPropertyBag();
 
-        this.mAttachments = Components.classes["@mozilla.org/array;1"].
-                            createInstance(Components.interfaces.nsIArray);
+        this.setProperty("CREATED", NewCalDateTime(now));
+        this.setProperty("LAST-MODIFIED", NewCalDateTime(now));
+        this.setProperty("DTSTAMP", NewCalDateTime(now));
 
         this.mAttendees = [];
 
@@ -108,37 +169,24 @@ calItemBase.prototype = {
     },
 
     // for subclasses to use; copies the ItemBase's values
-    // into m
-    cloneItemBaseInto: function (m) {
-        var suppressDCE = this.lastModifiedTime;
-        suppressDCE = this.stampTime;
+    // into m. aNewParent is optional
+    cloneItemBaseInto: function (m, aNewParent) {
+        this.updateStampTime();
+        this.ensureNotDirty();
 
         m.mImmutable = false;
-        m.mGeneration = this.mGeneration;
-        m.mLastModifiedTime = this.mLastModifiedTime.clone();
-        m.mCalendar = this.mCalendar;
-        m.mId = this.mId;
-        m.mTitle = this.mTitle;
-        m.mPriority = this.mPriority;
-        m.mPrivacy = this.mPrivacy;
-        m.mStatus = this.mStatus;
-        m.mHasAlarm = this.mHasAlarm;
+        m.mIsProxy = this.mIsProxy;
+        m.mParentItem = aNewParent || this.mParentItem;
 
-        m.mCreationDate = this.mCreationDate.clone();
-        m.mStampTime = this.mStampTime.clone();
+        m.mCalendar = this.mCalendar;
         if (this.mRecurrenceInfo) {
             m.mRecurrenceInfo = this.mRecurrenceInfo.clone();
-            dump ("old recurType: " + this.mRecurrenceInfo.recurType + " new type: " + m.mRecurrenceInfo.recurType + "\n");
+            m.mRecurrenceInfo.item = m;
         }
-        if (this.mAlarmTime)
-            m.mAlarmTime = this.mAlarmTime.clone();
 
         m.mAttendees = [];
         for (var i = 0; i < this.mAttendees.length; i++)
             m.mAttendees[i] = this.mAttendees[i].clone();
-
-        // these need fixing
-        m.mAttachments = this.mAttachments;
 
         m.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
                         createInstance(Components.interfaces.nsIWritablePropertyBag);
@@ -146,42 +194,146 @@ calItemBase.prototype = {
         var e = this.mProperties.enumerator;
         while (e.hasMoreElements()) {
             var prop = e.getNext().QueryInterface(Components.interfaces.nsIProperty);
-            m.mProperties.setProperty (prop.name, prop.value);
+            var val = prop.value;
+
+            if (prop.value instanceof Components.interfaces.calIDateTime)
+                val = prop.value.clone();
+
+            m.mProperties.setProperty (prop.name, val);
         }
 
-        m.mDirty = this.mDirty;
+        m.mDirty = false;
 
+        // these need fixing
+        m.mAttachments = this.mAttachments;
         return m;
     },
 
     get lastModifiedTime() {
-        if (this.mDirty) {
-            this.mLastModifiedTime.jsDate = new Date();
-            this.mDirty = false;
-        }
-        return this.mLastModifiedTime;
+        this.ensureNotDirty();
+        return this.getProperty("LAST-MODIFIED");
     },
 
-    mStampTime: null,
     get stampTime() {
-        if (this.mStampTime.isValid)
-            return this.mStampTime;
-        return this.mLastModifiedTime;
+        var prop = this.getProperty("DTSTAMP");
+        if (prop && prop.isValid)
+            return prop;
+        return this.getProperty("LAST-MODIFIED");
     },
 
     updateStampTime: function() {
+        // can't update the stamp time on an immutable event
+        if (this.mImmutable)
+            return;
+
         this.modify();
-        this.mStampTime.jsDate = new Date();
+        this.setProperty("DTSTAMP", NewCalDateTime(new Date()));
     },
 
-    get propertyEnumerator() { return this.mProperties.enumerator; },
+    get unproxiedPropertyEnumerator() {
+        return this.mProperties.enumerator;
+    },
+
+    get propertyEnumerator() {
+        if (this.mIsProxy) {
+            // nsISimpleEnumerator sucks.  It really, really sucks.
+            // The interface is badly defined, it's not clear
+            // what happens if you just keep calling getNext() without
+            // calling hasMoreElements in between, which seems like more
+            // of an informational thing.  An interface with
+            // "advance()" which returns true or false, and with "item()",
+            // which returns the item the enumerator is pointing to, makes
+            // far more sense.  Right now we have getNext() doing both
+            // item returning and enumerator advancing, which makes
+            // no sense.
+            return {
+                firstEnumerator: this.mProperties.eumerator,
+                secondEnumerator: this.mParentItem.propertyEnumerator,
+                handledProperties: { },
+
+                currentItem: null,
+
+                QueryInterface: function(aIID) {
+                    if (!aIID.equals(Components.interfaces.nsISimpleEnumerator) ||
+                        !aIID.equals(Components.interfaces.nsISupports))
+                    {
+                        throw Components.results.NS_ERROR_NO_INTERFACE;
+                    }
+                    return this;
+                },
+
+                hasMoreElements: function() {
+                    if (!this.secondEnumerator)
+                        return false;
+
+                    if (this.firstEnumerator) {
+                        var moreFirst = this.firstEnumerator.hasMoreElements();
+                        if (moreFirst) {
+                            this.currentItem = this.firstEnumerator.getNext();
+                            this.handledProperties[this.currentItem.name] = true;
+                            return true;
+                        }
+                        this.firstEnumerator = null;
+                    }
+
+                    var moreSecond = this.secondEnumerator.hasMoreElements();
+                    if (moreSecond) {
+                        while (this.currentItem.name in this.handledProperties &&
+                               this.secondEnumerator.hasMoreElements())
+                        do {
+                            this.currentItem = this.secondEnumerator.getNext();
+                        } while (this.currentItem.name in this.handledProperties &&
+                                 ((this.currentItem = null) == null) && // hack
+                                 this.secondEnumerator.hasMoreElements());
+
+                        if (!this.currentItem)
+                            return false;
+
+                        return true;
+                    }
+
+                    this.secondEnumerator = null;
+
+                    return false;
+                },
+
+                getNext: function() {
+                    if (!currentItem)
+                        throw Components.results.NS_ERROR_UNEXPECTED;
+
+                    var rval = this.currentItem;
+                    this.currentItem = null;
+                    return rval;
+                }
+            };
+        } else {
+            return this.mProperties.enumerator;
+        }
+    },
 
     getProperty: function (aName) {
         try {
             return this.mProperties.getProperty(aName);
         } catch (e) {
+            try {
+                if (this.mIsProxy) {
+                    return this.mParentItem.getProperty(aName);
+                }
+            } catch (e) {}
+
             return null;
         }
+    },
+
+    getUnproxiedProperty: function (aName) {
+        try {
+            return this.mProperties.getProperty(aName);
+        } catch (e) { }
+        return null;
+    },
+
+    hasProperty: function (aName) {
+        return (this.getProperty(aName) != null);
     },
 
     setProperty: function (aName, aValue) {
@@ -193,8 +345,7 @@ calItemBase.prototype = {
         this.modify();
         try {
             this.mProperties.deleteProperty(aName);
-        } catch (e) {
-        }
+        } catch (e) { }
     },
 
     getAttendees: function (countObj) {
@@ -240,8 +391,7 @@ calItemBase.prototype = {
 
     set calendar (v) {
         if (this.mImmutable)
-            // Components.results.NS_ERROR_CALENDAR_IMMUTABLE;
-            throw Components.results.NS_ERROR_FAILURE;
+            throw Components.results.NS_ERROR_OBJECT_IS_IMMUTABLE;
         this.mCalendar = v;
     },
 
@@ -280,37 +430,36 @@ calItemBase.prototype = {
         "RDATE": true,
         "ATTENDEE": true,
         "ORGANIZER": true,
+        "RECURRENCE-ID": true,
     },
+
+    icsBasePropMap: [
+    { cal: "CREATED", ics: "createdTime" },
+    { cal: "LAST-MODIFIED", ics: "lastModified" },
+    { cal: "DTSTAMP", ics: "stampTime" },
+    { cal: "UID", ics: "uid" },
+    { cal: "SUMMARY", ics: "summary" },
+    { cal: "PRIORITY", ics: "priority" },
+    { cal: "STATUS", ics: "status" },
+    { cal: "CLASS", ics: "icalClass" } ],
 
     mapPropsFromICS: function(icalcomp, propmap) {
         for (var i = 0; i < propmap.length; i++) {
             var prop = propmap[i];
             var val = icalcomp[prop.ics];
             if (val != null && val != ICAL.INVALID_VALUE)
-                this[prop.cal] = val;
+                this.setProperty(prop.cal, val);
         }
     },
 
     mapPropsToICS: function(icalcomp, propmap) {
         for (var i = 0; i < propmap.length; i++) {
             var prop = propmap[i];
-            if (!(prop.cal in this))
-                continue;
-            var val = this[prop.cal];
+            var val = this.getProperty(prop.cal);
             if (val != null && val != ICAL.INVALID_VALUE)
                 icalcomp[prop.ics] = val;
         }
     },
-
-    icsBasePropMap: [
-    { cal: "mCreationDate", ics: "createdTime" },
-    { cal: "mLastModifiedTime", ics: "lastModified" },
-    { cal: "mStampTime", ics: "stampTime" },
-    { cal: "mId", ics: "uid" },
-    { cal: "mTitle", ics: "summary" },
-    { cal: "mPriority", ics: "priority" },
-    { cal: "mStatus", ics: "status" },
-    { cal: "mPrivacy", ics: "icalClass" }],
 
     setItemBaseFromICS: function (icalcomp) {
         this.modify();
@@ -360,7 +509,7 @@ calItemBase.prototype = {
 
             if (!rec) {
                 rec = new CalRecurrenceInfo();
-                rec.initialize(this);
+                rec.item = this;
             }
 
             rec.appendRecurrenceItem(ritem);
@@ -380,14 +529,19 @@ calItemBase.prototype = {
         }
     },
 
+    isPropertyPromoted: function (name) {
+        return (this.itemBasePromotedProps[name]);
+    },
+
     get icalComponent() {
         throw Components.results.NS_NOT_IMPLEMENTED;
     },
 
     fillIcalComponentFromBase: function (icalcomp) {
         // Make sure that the LMT and ST are updated
-        var suppressDCE = this.lastModifiedTime;
-        suppressDCE = this.stampTime;
+        this.updateStampTime();
+        this.ensureNotDirty();
+
         this.mapPropsToICS(icalcomp, this.icsBasePropMap);
 
         if (this.mOrganizer)
@@ -415,107 +569,35 @@ calItemBase.prototype = {
     }
 };
 
-function calItemOccurrence () {
-    this.wrappedJSObject = this;
+makeMemberAttr(calItemBase, "X-MOZILLA-GENERATION", 0, "generation", true);
+makeMemberAttr(calItemBase, "CREATED", null, "creationDate", true);
+makeMemberAttr(calItemBase, "UID", null, "id", true);
+makeMemberAttr(calItemBase, "SUMMARY", null, "title", true);
+makeMemberAttr(calItemBase, "PRIORITY", 0, "priority", true);
+makeMemberAttr(calItemBase, "CLASS", "PUBLIC", "privacy", true);
+makeMemberAttr(calItemBase, "STATUS", null, "status", true);
+makeMemberAttr(calItemBase, "ALARMTIME", null, "alarmTime", true);
+makeMemberAttr(calItemBase, "RECURRENCE-ID", null, "recurrenceId", true);
 
-    this.occurrenceStartDate = new CalDateTime();
-    this.occurrenceEndDate = new CalDateTime();
-}
-
-calItemOccurrenceClassInfo = {
-    getInterfaces: function (count) {
-        var ifaces = [
-            Components.interfaces.nsISupports,
-            Components.interfaces.calIItemOccurrence
-        ];
-        count.value = ifaces.length;
-        return ifaces;
-    },
-
-    getHelperForLanguage: function (language) {
-        return null;
-    },
-
-    contractID: "@mozilla.org/calendar/item-occurrence;1",
-    classDescription: "Calendar Item Occurrence",
-    classID: Components.ID("{bad672b3-30b8-4ecd-8075-7153313d1f2c}"),
-    implementationLanguage: Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
-    flags: 0
-};
-
-calItemOccurrence.prototype = {
-    QueryInterface: function (aIID) {
-        if (aIID.equals(Components.interfaces.nsIClassInfo))
-            return calItemOccurrenceClassInfo;
-
-        if (!aIID.equals(Components.interfaces.nsISupports) &&
-            !aIID.equals(Components.interfaces.calIItemOccurrence))
-        {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
-
-        return this;
-    },
-
-    initialize: function (aItem, aStartDate, aEndDate) {
-        this.item = aItem;
-        this.occurrenceStartDate = aStartDate.clone();
-        this.occurrenceStartDate.makeImmutable();
-        this.occurrenceEndDate = aEndDate.clone();
-        this.occurrenceEndDate.makeImmutable();
-    },
-
-    item: null,
-    occurrenceStartDate: null,
-    occurrenceEndDate: null,
-
-    get next() {
-        if (this.item.recurrenceInfo)
-            return this.item.recurrenceInfo.getNextOccurrence(this.item, aEndDate);
-        return null;
-    },
-    get previous() {
-        if (this.item.recurrenceInfo)
-            return this.item.recurrenceInfo.getPreviousOccurrence(this.item, aStartDate);
-        return null;
-    },
-
-    equals: function(aOther) {
-        if (this.item.id != aOther.item.id)
-            return false;
-
-        if (this.occurrenceStartDate.compare(aOther.occurrenceStartDate) != 0)
-            return false;
-
-        if (this.occurrenceEndDate.compare(aOther.occurrenceEndDate) != 0)
-            return false;
-
-        return true;
-    }
-};
-
-makeMemberAttr(calItemBase, "mGeneration", 0, "generation");
-makeMemberAttr(calItemBase, "mCreationDate", null, "creationDate");
-makeMemberAttr(calItemBase, "mId", null, "id");
-makeMemberAttr(calItemBase, "mTitle", null, "title");
-makeMemberAttr(calItemBase, "mPriority", 0, "priority");
-makeMemberAttr(calItemBase, "mPrivacy", "PUBLIC", "privacy");
-makeMemberAttr(calItemBase, "mStatus", null, "status");
-makeMemberAttr(calItemBase, "mHasAlarm", false, "hasAlarm");
-makeMemberAttr(calItemBase, "mAlarmTime", null, "alarmTime");
 makeMemberAttr(calItemBase, "mRecurrenceInfo", null, "recurrenceInfo");
 makeMemberAttr(calItemBase, "mAttachments", null, "attachments");
 makeMemberAttr(calItemBase, "mProperties", null, "properties");
 
-function makeMemberAttr(ctor, varname, dflt, attr)
+function makeMemberAttr(ctor, varname, dflt, attr, asProperty)
 {
-    ctor.prototype[varname] = dflt;
+    // XXX handle defaults!
     var getter = function () {
-        return this[varname];
+        if (asProperty)
+            return this.getProperty(varname);
+        else
+            return this[varname];
     };
     var setter = function (v) {
         this.modify();
-        this[varname] = v;
+        if (asProperty)
+            this.setProperty(varname, v);
+        else
+            this[varname] = v;
     };
     ctor.prototype.__defineGetter__(attr, getter);
     ctor.prototype.__defineSetter__(attr, setter);

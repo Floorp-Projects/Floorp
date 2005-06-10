@@ -43,10 +43,16 @@ calendar-event-column {
 
 .fgdragcontainer[dragging="true"] {
   display: -moz-box;
+  /* This is a workaround for a stack bug and display: hidden in underlying
+   * elements -- the display: hidden bits get misrendered as being on top.
+   * Setting an opacity here forces a view to be created for this element, too.
+   */
+  opacity: 0.9999;
 }
 
 .fgdragbox-label {
   font-weight: bold;
+  overflow: hidden;
 }
 
 /*== calendar-event-box ==*/
@@ -58,6 +64,7 @@ calendar-event-box {
 .calendar-event-box-container {
   background: #4e84c2;
   padding: 2px;
+  overflow: hidden;
 }
 
 .calendar-event-box-container[parentorient="vertical"] {

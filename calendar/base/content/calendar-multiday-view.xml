@@ -110,7 +110,7 @@
           if (!orient) orient = "horizontal";
           if (orient == "vertical") otherorient = "horizontal";
 
-          dump ("calendar-time-bar: orient: " + orient + " other: " + otherorient + "\n");
+          //dump ("calendar-time-bar: orient: " + orient + " other: " + otherorient + "\n");
 
           function makeTimeBox(timestr, size) {
               var box = createXULElement("box");
@@ -242,7 +242,7 @@
         <xul:box anonid="bgbox" flex="1"/>
         <xul:box anonid="topbox" flex="1" equalsize="always"/>
         <xul:box anonid="fgbox" flex="1" class="fgdragcontainer">
-          <xul:box anonid="fgdragspacer" style="display: inherit;">
+          <xul:box anonid="fgdragspacer" style="display: inherit; overflow: hidden;">
             <xul:spacer flex="1"/>
             <xul:label anonid="fgdragbox-startlabel" class="fgdragbox-label"/>
           </xul:box>
@@ -408,7 +408,9 @@
         <parameter name="aOccurrence"/>
         <body><![CDATA[
           for each (var chunk in this.mEvents) {
-              if (chunk.event.equals(aOccurrence)) {
+              if (chunk.event.id == aOccurrence.id &&
+                  chunk.event.startDate.compare(aOccurrence.startDate) == 0)
+              {
                   return chunk;
               }
           }
@@ -445,7 +447,9 @@
            var i;
            for (i = 0; i < this.mEvents.length; i++) {
                occ = this.mEvents[i].event;
-               if (occ.equals(aOccurrence)) {
+               if (occ.id == aOccurrence.id &&
+                   occ.startDate.compare(aOccurrence.startDate) == 0)
+               {
                    itemIndex = i;
                    break;
                }
@@ -478,8 +482,8 @@
       <method name="getStartEndMinutesForOccurrence">
         <parameter name="aOccurrence"/>
         <body><![CDATA[
-           var stdate = aOccurrence.occurrenceStartDate;
-           var enddate = aOccurrence.occurrenceEndDate;
+           var stdate = aOccurrence.startDate;
+           var enddate = aOccurrence.endDate;
 
            if (stdate.timezone != this.mTimezone)
                stdate = stdate.getInTimezone (this.mTimezone);
@@ -650,7 +654,7 @@
 
       <method name="computeEventMap">
         <body><![CDATA[
-                     //dump ("computeEventMap\n");
+          //dump ("computeEventMap\n");
           // we need to build a layout data structure
           // that looks like this:
           // [
@@ -679,7 +683,7 @@
           eventMap.push(new Array());
 
           for each (var event in this.mEvents) {
-              //if (event.occurrenceStartDate.isDate)
+              //if (event.startDate.isDate)
               //    continue;
 
               if (event.startMinute == null || event.endMinute == null || event.event == null)
@@ -972,7 +976,7 @@
         <parameter name="aMouseX"/>
         <parameter name="aMouseY"/>
         <body><![CDATA[
-          dump ("startSweepingToModify\n");
+          //dump ("startSweepingToModify\n");
           this.mDragState = {
               origColumn: this,
               dragOccurrence: aOccurrence,
@@ -982,7 +986,7 @@
           var interval = this.mPixPerMin * 15;
           var sizeattr;
 
-          dump ("AMY: " + aMouseY + " boY: " + this.parentNode.boxObject.screenY + "\n");
+          //dump ("AMY: " + aMouseY + " boY: " + this.parentNode.boxObject.screenY + "\n");
           var frameloc;
           if (this.getAttribute("orient") == "vertical") {
               this.mDragState.origLoc = aMouseY;
@@ -1050,7 +1054,7 @@
           document.calendarEventColumnDragging = this;
           //this.onEventSweepMouseMove(event);
 
-          dump (">>> drag is: " + this.mDragState.dragType + "\n");
+          //dump (">>> drag is: " + this.mDragState.dragType + "\n");
 
           window.addEventListener("mousemove", this.onEventSweepMouseMove, false);
           window.addEventListener("mouseup", this.onEventSweepMouseUp, false);
@@ -1160,7 +1164,7 @@
       <xul:box anonid="eventbox" xbl:inherits="orient,width,height" flex="1">
         <xul:calendar-event-gripbar anonid="gripbar1" whichside="start" xbl:inherits="parentorient=orient"/>
         <xul:vbox class="calendar-event-box-container" xbl:inherits="parentorient=orient" flex="1" align="left">
-          <xul:label anonid="event-name" flex="1" crop="right"/>
+        <xul:label anonid="event-name" flex="1" crop="right"/>
           <!-- for some reason, textboxes suck ass for reflow. -->
           <!-- <xul:textbox class="plain" style="background: transparent !important" anonid="event-name" flex="1" crop="right"/> -->
         </xul:vbox>
@@ -1224,10 +1228,15 @@
         ]]></getter>
         <setter><![CDATA[
           this.mOccurrence = val;
-          if (val && val.item)
-              this.eventNameLabel.setAttribute('value', val.item.title);
-          else
-              this.eventNameLabel.setAttribute('value', 'Untitled Event');
+          var evl = this.eventNameLabel;
+          while (evl.firstChild)
+              evl.removeChild(evl.firstChild);
+
+          if (val) {
+              evl.appendChild(document.createTextNode(val.title));
+          } else {
+              evl.appendChild(document.createTextNode("Untitled Event"));
+          }
           return val;
         ]]></setter>
       </property>
@@ -1237,21 +1246,16 @@
         onset="return (this.mParentColumn = val);"/>
 
       <property name="startMinute" readonly="true"
-        onget="if (!this.mOccurrence) return 0; return this.mOccurrence.occurrenceStartDate.hour * 60 + this.mOccurrence.occurrenceStartDate.minute"/>
+        onget="if (!this.mOccurrence) return 0; return this.mOccurrence.startDate.hour * 60 + this.mOccurrence.startDate.minute"/>
 
       <property name="endMinute" readonly="true"
-        onget="if (!this.mOccurrence) return 0; return this.mOccurrence.occurrenceEndDate.hour * 60 + this.mOccurrence.occurrenceEndDate.minute"/>
+        onget="if (!this.mOccurrence) return 0; return this.mOccurrence.endDate.hour * 60 + this.mOccurrence.endDate.minute"/>
     </implementation>
 
     <handlers>
       <handler event="mousedown"><![CDATA[
         event.preventBubble();
         this.calendarView.selectedOccurrence = this.mOccurrence;
-
-        if (this.mOccurrence.item.recurrenceInfo) {
-            // XXXvv can't drag recurring events yet, FIXME
-            return;
-        }
 
         this.mInMouseDown = true;
         this.mMouseX = event.screenX;
@@ -1357,7 +1361,7 @@
                 this.calView.refresh();
             },
             onAddItem: function (aItem) {
-                //dump ("++ AddItem\n");
+                //dump ("++ AddItem " + aItem + "\n");
                 if (!(aItem instanceof Components.interfaces.calIEvent))
                     return;
                 aItem = aItem.QueryInterface(Components.interfaces.calIEvent);
@@ -1365,6 +1369,7 @@
                 var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                        this.calView.endDate,
                                                        {});
+                //dump ("occs: " + occs.length + "\n");
                 for each (var occ in occs) {
                     this.calView.doAddEvent(occ);
                 }
@@ -1591,7 +1596,11 @@
           if (this.mSelectedOccurrence != val) {
               if (this.mSelectedOccurrence) {
                   var col = this.findColumnForEvent(this.mSelectedOccurrence);
-                  col.column.selectOccurrence(null);
+                  if (col) {
+                      col.column.selectOccurrence(null);
+                  } else {
+                      dump ("Thought I had a selected occurrence (id: " + this.mSelectedOccurrence.id + "), but couldn't find a column for it!\n");
+                  }
               }
 
               if (val) {
@@ -1675,7 +1684,7 @@
               labelbox.setAttribute("height", 30);
               labelbox.removeAttribute("width");
 
-              var timebarWidth = 50;
+              var timebarWidth = 100;
               timebar.setAttribute("width", timebarWidth);
               timebar.removeAttribute("height");
               headertimespacer.setAttribute("width", timebarWidth);
@@ -1689,7 +1698,7 @@
               labelbox.setAttribute("width", 30);
               labelbox.removeAttribute("height");
 
-              var timebarHeight = 30;
+              var timebarHeight = 40;
               timebar.setAttribute("height", timebarHeight);
               timebar.removeAttribute("width");
               headertimespacer.setAttribute("height", timebarHeight);
@@ -1833,8 +1842,8 @@
       <method name="findColumnForEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          var estart = aEvent.occurrenceStartDate;
-          var eend = aEvent.occurrenceEndDate;
+          var estart = aEvent.startDate;
+          var eend = aEvent.endDate;
 
           var eday = estart.clone();
           eday.isDate = true;
@@ -1884,7 +1893,7 @@
           var column = col.column;
           var header = col.header;
 
-          var estart = aEvent.occurrenceStartDate;
+          var estart = aEvent.startDate;
           if (estart.isDate) {
               // add it to header
           } else {
@@ -1903,7 +1912,7 @@
           var column = col.column;
           var header = col.header;
 
-          var estart = aEvent.occurrenceStartDate;
+          var estart = aEvent.startDate;
           if (estart.isDate) {
               // remove from header
           } else {

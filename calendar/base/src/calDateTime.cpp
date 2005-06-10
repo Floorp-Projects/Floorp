@@ -54,7 +54,7 @@ extern "C" {
 
 static NS_DEFINE_CID(kCalICSService, CAL_ICSSERVICE_CID);
 
-NS_IMPL_ISUPPORTS2(calDateTime, calIDateTime, nsIXPCScriptable)
+NS_IMPL_ISUPPORTS2_CI(calDateTime, calIDateTime, nsIXPCScriptable)
 
 calDateTime::calDateTime()
     : mImmutable(PR_FALSE),
@@ -107,7 +107,7 @@ NS_IMETHODIMP
 calDateTime::MakeImmutable()
 {
     if (mImmutable)
-        return NS_ERROR_CALENDAR_IMMUTABLE;
+        return NS_ERROR_OBJECT_IS_IMMUTABLE;
 
     mImmutable = PR_TRUE;
     return NS_OK;
@@ -243,7 +243,7 @@ calDateTime::AddDuration(calIDateTime *aDuration)
 
     mLastModified = PR_Now();
 
-    return SetTimeInTimezone(mNativeTime + nativeDur, mTimezone);
+    return SetNativeTime(mNativeTime + nativeDur);
 }
 
 NS_IMETHODIMP

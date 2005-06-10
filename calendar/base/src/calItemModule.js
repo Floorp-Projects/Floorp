@@ -105,11 +105,6 @@ const componentData =
      script: "calTodo.js",
      constructor: "calTodo"},
 
-    {cid: Components.ID("{bad672b3-30b8-4ecd-8075-7153313d1f2c}"),
-     contractid: "@mozilla.org/calendar/item-occurrence;1",
-     script: null,
-     constructor: "calItemOccurrence"},
-
     {cid: Components.ID("{5c8dcaa3-170c-4a73-8142-d531156f664d}"),
      contractid: "@mozilla.org/calendar/attendee;1",
      script: "calAttendee.js",
@@ -118,7 +113,12 @@ const componentData =
     {cid: Components.ID("{5f76b352-ab75-4c2b-82c9-9206dbbf8571}"),
      contractid: "@mozilla.org/calendar/attachment;1",
      script: "calAttachment.js",
-     constructor: "calAttachment"}
+     constructor: "calAttachment"},
+
+    {cid: Components.ID("{04027036-5884-4a30-b4af-f2cad79f6edf}"),
+     contractid: "@mozilla.org/calendar/recurrence-info;1",
+     script: "calRecurrenceInfo.js",
+     constructor: "calRecurrenceInfo"}
     ];
 
 var calItemModule = {
@@ -151,8 +151,13 @@ var calItemModule = {
             var f = appdir.clone();
             f.append(scriptName);
 
-            var fileurl = iosvc.newFileURI(f);
-            loader.loadSubScript(fileurl.spec, null);
+            try {
+                var fileurl = iosvc.newFileURI(f);
+                loader.loadSubScript(fileurl.spec, null);
+            } catch (e) {
+                dump("Error while loading " + fileurl.spec + "\n");
+                throw e;
+            }
         }
 
         this.mScriptsLoaded = true;

@@ -76,9 +76,13 @@ function onAccept()
 {
     // if this event isn't mutable, we need to clone it like a sheep
     var originalEvent = window.calendarEvent;
-    var event = null;
+    var event = originalEvent;
 
-    event = (originalEvent.isMutable) ? originalEvent : originalEvent.clone();
+    if (!event.isMutable) {
+        event = event.clone();
+    } else {
+        dump ("#### modifyEvent is mutable already?\n");
+    }
 
     saveDialog(event);
 
@@ -137,12 +141,20 @@ function loadDialog()
     }
 
     /* recurrence */
-    if (event.recurrenceInfo) {
+    /* if the item is a proxy occurrence/instance, a few things aren't valid:
+     * - Setting recurrence on the item
+     * - changing the calendar
+     */
+    if (event.parentItem != event) {
+        setElementValue("event-recurrence", "true", "disabled");
+        setElementValue("set-recurrence", "true", "disabled");
+        setElementValue("event-calendar", "true", "disabled");
+    } else if (event.recurrenceInfo) {
         setElementValue("event-recurrence", "true", "checked");
     }
 
     /* alarms */
-    if (event.hasAlarm) {
+    if (event.alarmTime) {
         var alarmLength = event.getProperty("alarmLength");
         if (alarmLength != null) {
             setElementValue("alarm-length-field", alarmLength);
@@ -193,8 +205,8 @@ function saveDialog(event)
     }
 
     /* alarms */
-    event.hasAlarm = (getElementValue("event-alarm") != "none");
-    if (!event.hasAlarm) {
+    var hasAlarm = (getElementValue("event-alarm") != "none");
+    if (!hasAlarm) {
         event.deleteProperty("alarmLength");
         event.deleteProperty("alarmUnits");
         event.deleteProperty("alarmRelated");

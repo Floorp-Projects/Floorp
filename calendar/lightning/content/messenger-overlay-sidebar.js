@@ -86,7 +86,6 @@ function showCalendar(jumpToToday)
         var d = Components.classes['@mozilla.org/calendar/datetime;1'].createInstance(Components.interfaces.calIDateTime);
         d.jsDate = new Date();
         d = d.getInTimezone(calendarDefaultTimezone());
-
         view.showDate(d);
     }
 

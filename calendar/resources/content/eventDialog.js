@@ -227,7 +227,7 @@ function loadCalendarEventDialog()
 
 
     // ALARMS ------------------------------------------------------------
-    if (!event.hasAlarm) {
+    if (event.alarmTime == null) {
         menuListSelectItem("alarm-type", "none");
     } else {
         setElementValue("alarm-length-field", event.getProperty("alarmLength"));
@@ -558,8 +558,6 @@ function onOKCommand()
     // ALARMS ------------------------------------------------------------
     var alarmType = getElementValue("alarm-type");
     if (alarmType != "" && alarmType != "none") {
-        event.hasAlarm = true;
-
         var alarmLength = getElementValue("alarm-length-field");
         var alarmUnits = getElementValue("alarm-length-units");
         var alarmRelated = getElementValue("alarm-trigger-relation");

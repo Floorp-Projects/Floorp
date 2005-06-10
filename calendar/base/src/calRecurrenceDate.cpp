@@ -48,7 +48,7 @@ extern "C" {
     #include "ical.h"
 }
 
-NS_IMPL_ISUPPORTS2(calRecurrenceDate, calIRecurrenceItem, calIRecurrenceDate)
+NS_IMPL_ISUPPORTS2_CI(calRecurrenceDate, calIRecurrenceItem, calIRecurrenceDate)
 
 calRecurrenceDate::calRecurrenceDate()
     : mImmutable(PR_FALSE),
@@ -109,6 +109,15 @@ calRecurrenceDate::SetIsNegative(PRBool aIsNegative)
         return NS_ERROR_FAILURE; // XXX CAL_ERROR_ITEM_IS_IMMUTABLE
 
     mIsNegative = aIsNegative;
+    return NS_OK;
+}
+
+/* readonly attribute boolean isFinite; */
+NS_IMETHODIMP
+calRecurrenceDate::GetIsFinite(PRBool *_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+    *_retval = PR_TRUE;
     return NS_OK;
 }
 

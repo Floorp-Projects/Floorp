@@ -47,7 +47,6 @@ interface nsIVariant;
 interface nsIPropertyBag;
 
 interface calICalendar;
-interface calIItemOccurrence;
 
 interface calIDateTime;
 
@@ -63,7 +62,7 @@ interface calIIcalComponent;
 // Base for Events, Todos, Journals, etc.
 //
 
-[scriptable, uuid(096b8cc5-113c-40fb-bc52-d64e3992980c)]
+[scriptable, uuid(18521d75-346d-4616-8778-de2c4a9a676e)]
 interface calIItemBase : nsISupports
 {
   // returns true if this thing is able to be modified;
@@ -121,9 +120,9 @@ interface calIItemBase : nsISupports
   attribute calIIcalComponent icalComponent;
 
   //
-  // alarms
+  // alarms; alarmTime is null if there is no
+  // alarm set.
   //
-  attribute boolean hasAlarm;
   attribute calIDateTime alarmTime;
 
   //
@@ -137,10 +136,22 @@ interface calIItemBase : nsISupports
   // if this item is mutable, the returned array will be a nsIMutableArray
   readonly attribute nsIArray attachments;
 
+  // 
+  // All event properties are stored in a property bag;
+  // some number of these are "promoted" to top-level
+  // accessor attributes.  For example, "SUMMARY" is
+  // promoted to the top-level "title" attribute.
   //
-  // other properties come in through a property bag
+  // The isPropertyPromoted() attribute can will indicate
+  // if a particular property is promoted or not, for
+  // serialization purposes.
   //
 
+  // Note that if this item is a proxy, then any requests for
+  // non-existant properties will be forward to the parent item.
+
+  // some other properties that may exist:
+  //
   // 'description' - description (string)
   // 'location' - location (string)
   // 'categories' - categories (string)
@@ -149,20 +160,18 @@ interface calIItemBase : nsISupports
   // alarmLength/alarmUnits/alarmEmailAddress/lastAlarmAck
   // recurInterval/recurCount/recurWeekdays/recurWeeknumber
 
-  // Ideally, /all/ of the properties on the event should
-  // be available via the property bag.  (And maybe the
-  // nsIItemBase impl should be QI'able to
-  // nsIWritablePropertyBag also)
-
-  // if this item is mutable, the returned bag will be a nsIWritablePropertyBag
-  //readonly attribute nsIPropertyBag properties;
   // these forward to an internal property bag; implemented here, so we can
-  // do access control on set/delete.
+  // do access control on set/delete to have control over mutability.
   readonly attribute nsISimpleEnumerator propertyEnumerator;
+  boolean hasProperty(in AString name);
   nsIVariant getProperty(in AString name);
   void setProperty(in AString name, in nsIVariant value);
   // will not throw an error if you delete a property that doesn't exist
   void deleteProperty(in AString name);
+
+  // returns true if the given property is promoted to some
+  // top-level attribute (e.g. id or title)
+  boolean isPropertyPromoted(in AString name);
 
   /**
    * The organizer (originator) of the item.  We will likely not
@@ -171,6 +180,10 @@ interface calIItemBase : nsISupports
    * grow one.
    */
   attribute calIAttendee organizer;
+
+  //
+  // Attendees
+  //
 
   // The array returned here is not live; it will not reflect calls to
   // removeAttendee/addAttendee that follow the call to getAttendees.
@@ -181,43 +194,66 @@ interface calIItemBase : nsISupports
   void addAttendee(in calIAttendee attendee);
   void removeAllAttendees();
 
-  // return a list of occurrences of this item between the given dates
+  //
+  // Occurrence querying
+  //
+
+  /**
+   * Return a list of occurrences of this item between the given dates.  The items
+   * returned are the same type as this one, as proxies.
+   */
   void getOccurrencesBetween (in calIDateTime aStartDate, in calIDateTime aEndDate,
                               out PRUint32 aCount,
-                              [array,size_is(aCount),retval] out calIItemOccurrence aOccurrences);
+                              [array,size_is(aCount),retval] out calIItemBase aOccurrences);
+
+  /**
+   * The next occurrence after this one, if any.
+   */
+  readonly attribute calIItemBase nextOccurrence;
+
+  /**
+   * The previous occurrence before this one, if any.
+   */
+  readonly attribute calIItemBase previousOccurrence;
+
+  //
+  // proxy support
+  //
+
+  /**
+   * create a proxy for this item; the returned item
+   * proxy will have parentItem set to this instance.
+   */
+  calIItemBase createProxy();
+
+  /**
+   * If this item is a proxy, parentItem will point upwards
+   * to our parent.  Otherwise, it will point to this.
+   * parentItem can thus always be used for modifyItem() calls
+   * to providers.
+   */
+  attribute calIItemBase parentItem;
+
+  /**
+   * The recurrence ID, a.k.a. DTSTART-of-calculated-occurrence,
+   * or null if this isn't an occurrence.
+   */
+  attribute calIDateTime recurrenceId;
+
+  /**
+   * Returns the given property value if it is natively set on the item,
+   * otherwise returns null.
+   */
+  nsIVariant getUnproxiedProperty(in AString name);
+
+  /**
+   * An enumerator that lets us walk down the list of properties
+   * that are actually changed by this proxy from the base.  If this
+   * item is not a proxy, then this list will be equivalent to the one
+   * returned from propertyEnumerator.
+   *
+   * The elements returned by the enumerator will be of type nsIProperty,
+   * as with a normal nsIPropertyBag enumerator.
+   */
+  readonly attribute nsISimpleEnumerator unproxiedPropertyEnumerator;
 };
-
-//
-// calIItemOccurrence
-//
-// An item representing a specific instance of a possibly recurring item.
-// XXX unclear how recurrence (& this) works for todo events with due dates.
-//
-
-[scriptable, uuid(b19f3d7e-e848-4139-af3e-505a8023568d)]
-interface calIItemOccurrence : nsISupports
-{
-  // Initialize this Occurrence
-  void initialize (in calIItemBase aItem,
-                   in calIDateTime aStartDate,
-                   in calIDateTime aEndDate);
-  //
-  // The parent item for which this is the occurrence item for
-  //
-  readonly attribute calIItemBase item;
-
-  //
-  // The start and end times to display for this event instance
-  //
-  readonly attribute calIDateTime occurrenceStartDate;
-  readonly attribute calIDateTime occurrenceEndDate;
-
-  // same as item.getNextOccurrence(occurrenceEndDate)
-  readonly attribute calIItemOccurrence next;
-  // same as item.getPreviousOccurrence(occurrenceStartDate)
-  readonly attribute calIItemOccurrence previous;
-
-  // is this occurrence equal to the other
-  boolean equals (in calIItemOccurrence aOther);
-};
-

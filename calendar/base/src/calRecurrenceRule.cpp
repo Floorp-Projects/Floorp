@@ -50,7 +50,7 @@ extern "C" {
     #include "ical.h"
 }
 
-NS_IMPL_ISUPPORTS2(calRecurrenceRule, calIRecurrenceItem, calIRecurrenceRule)
+NS_IMPL_ISUPPORTS2_CI(calRecurrenceRule, calIRecurrenceItem, calIRecurrenceRule)
 
 calRecurrenceRule::calRecurrenceRule()
     : mImmutable(PR_FALSE),
@@ -85,6 +85,21 @@ calRecurrenceRule::MakeImmutable()
     return NS_OK;
 }
 
+NS_IMETHODIMP
+calRecurrenceRule::Clone(calIRecurrenceItem **aResult)
+{
+    calRecurrenceRule *crc = new calRecurrenceRule;
+    if (!crc)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    crc->mIsNegative = mIsNegative;
+    crc->mIsByCount = mIsByCount;
+    *(crc->mIcalRecur) = *mIcalRecur;
+
+    NS_ADDREF(*aResult = crc);
+    return NS_OK;
+}
+
 /* attribute boolean isNegative; */
 NS_IMETHODIMP
 calRecurrenceRule::GetIsNegative(PRBool *_retval)
@@ -105,18 +120,19 @@ calRecurrenceRule::SetIsNegative(PRBool aIsNegative)
     return NS_OK;
 }
 
+/* readonly attribute boolean isFinite; */
 NS_IMETHODIMP
-calRecurrenceRule::Clone(calIRecurrenceItem **aResult)
+calRecurrenceRule::GetIsFinite(PRBool *_retval)
 {
-    calRecurrenceRule *crc = new calRecurrenceRule;
-    if (!crc)
-        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ENSURE_ARG_POINTER(_retval);
 
-    crc->mIsNegative = mIsNegative;
-    crc->mIsByCount = mIsByCount;
-    *(crc->mIcalRecur) = *mIcalRecur;
-
-    NS_ADDREF(*aResult = crc);
+    if ((mIsByCount && mIcalRecur->count == 0) ||
+        (!mIsByCount && icaltime_is_null_time(mIcalRecur->until)))
+    {
+        *_retval = PR_FALSE;
+    } else {
+        *_retval = PR_TRUE;
+    }
     return NS_OK;
 }
 
@@ -169,6 +185,9 @@ calRecurrenceRule::GetCount(PRInt32 *aRecurCount)
 {
     NS_ENSURE_ARG_POINTER(aRecurCount);
 
+    if (!mIsByCount)
+        return NS_ERROR_FAILURE;
+
     if (mIcalRecur->count == 0 && icaltime_is_null_time(mIcalRecur->until)) {
         *aRecurCount = -1;
     } else if (mIcalRecur->count) {
@@ -202,6 +221,9 @@ NS_IMETHODIMP
 calRecurrenceRule::GetEndDate(calIDateTime * *aRecurEnd)
 {
     NS_ENSURE_ARG_POINTER(aRecurEnd);
+
+    if (mIsByCount)
+        return NS_ERROR_FAILURE;
 
     if (!icaltime_is_null_time(mIcalRecur->until)) {
         calDateTime *cdt = new calDateTime(&mIcalRecur->until);
@@ -389,7 +411,6 @@ calDateTimeComparator (calIDateTime *aElement1,
     return result;
 }
 
-/* void getOccurrences(in calIDateTime aStartTime, in calIDateTime aEndTime, out unsigned long aCount, [array, size_is (aCount), retval] out calIItemOccurrence aItems); */
 NS_IMETHODIMP
 calRecurrenceRule::GetOccurrences(calIDateTime *aStartTime,
                                   calIDateTime *aRangeStart,

@@ -47,17 +47,29 @@ function calTodo() {
     this.wrappedJSObject = this;
     this.initItemBase();
     this.initTodo();
+
+    this.todoPromotedProps = {
+        "DTSTART": true,
+        "DTEND": true,
+        "DTSTAMP": true,
+        "DUE": true,
+        "COMPLETED": true,
+        "PERCENT-COMPLETE": true,
+        __proto__: this.itemBasePromotedProps
+    };
 }
 
 // var trickery to suppress lib-as-component errors from loader
 var calItemBase;
 
-calTodoClassInfo = {
+var calTodoClassInfo = {
     getInterfaces: function (count) {
         var ifaces = [
             Components.interfaces.nsISupports,
             Components.interfaces.calIItemBase,
-            Components.interfaces.calITodo
+            Components.interfaces.calITodo,
+            Components.interfaces.calIInternalShallowCopy,
+            Components.interfaces.nsIClassInfo
         ];
         count.value = ifaces.length;
         return ifaces;
@@ -78,7 +90,8 @@ calTodo.prototype = {
     __proto__: calItemBase ? (new calItemBase()) : {},
 
     QueryInterface: function (aIID) {
-        if (aIID.equals(Components.interfaces.calITodo))
+        if (aIID.equals(Components.interfaces.calITodo) ||
+            aIID.equals(Components.interfaces.calIInternalShallowCopy))
             return this;
 
         if (aIID.equals(Components.interfaces.nsIClassInfo))
@@ -94,13 +107,32 @@ calTodo.prototype = {
         this.mPercentComplete = 0;
     },
 
-    clone: function () {
+    cloneShallow: function (aNewParent) {
         var m = new calTodo();
-        this.cloneItemBaseInto(m);
+        this.cloneItemBaseInto(m, aNewParent);
         m.mEntryDate = this.mEntryDate.clone();
         m.mDueDate = this.mDueDate.clone();
         m.mCompletedDate = this.mCompletedDate.clone();
         m.mPercentComplete = this.mPercentComplete;
+        return m;
+    },
+
+    clone: function () {
+        var m;
+
+        if (this.parentItem != this) {
+            var clonedParent = this.mParentItem.clone();
+            m = clonedParent.recurrenceInfo.getExceptionFor (this.recurrenceId, true);
+        } else {
+            m = this.cloneShallow(null);
+        }
+
+        return m;
+    },
+
+    createProxy: function () {
+        var m = new calTodo();
+        m.initializeProxy(this);
 
         return m;
     },
@@ -165,6 +197,8 @@ calTodo.prototype = {
         return icalcomp;
     },
 
+    todoPromotedProps: null,
+
     set icalComponent(todo) {
         this.modify();
         if (todo.componentType != "VTODO") {
@@ -177,18 +211,13 @@ calTodo.prototype = {
         this.mapPropsFromICS(todo, this.icsEventPropMap);
         this.mIsAllDay = this.mStartDate && this.mStartDate.isDate;
 
-        var promotedProps = {
-            "DTSTART": true,
-            "DTEND": true,
-            "DTSTAMP": true,
-            "DUE": true,
-            "COMPLETED": true,
-            "PERCENT-COMPLETE": true,
-            __proto__: this.itemBasePromotedProps
-        };
-        this.importUnpromotedProperties(todo, promotedProps);
+        this.importUnpromotedProperties(todo, todoPromotedProps);
         // Importing didn't really change anything
         this.mDirty = false;
+    },
+
+    isPropertyPromoted: function (name) {
+        return (this.todoPromotedProps[name]);
     },
 };
         

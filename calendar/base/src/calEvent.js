@@ -48,17 +48,26 @@ function calEvent() {
     this.wrappedJSObject = this;
     this.initItemBase();
     this.initEvent();
+
+    this.eventPromotedProps = {
+        "DTSTART": true,
+        "DTEND": true,
+        "DTSTAMP": true,
+        __proto__: this.itemBasePromotedProps
+    }
 }
 
 // var trickery to suppress lib-as-component errors from loader
 var calItemBase;
 
-calEventClassInfo = {
+var calEventClassInfo = {
     getInterfaces: function (count) {
         var ifaces = [
             Components.interfaces.nsISupports,
             Components.interfaces.calIItemBase,
-            Components.interfaces.calIEvent
+            Components.interfaces.calIEvent,
+            Components.interfaces.calIInternalShallowCopy,
+            Components.interfaces.nsIClassInfo
         ];
         count.value = ifaces.length;
         return ifaces;
@@ -79,7 +88,8 @@ calEvent.prototype = {
     __proto__: calItemBase ? (new calItemBase()) : {},
 
     QueryInterface: function (aIID) {
-        if (aIID.equals(Components.interfaces.calIEvent))
+        if (aIID.equals(Components.interfaces.calIEvent) ||
+            aIID.equals(Components.interfaces.calIInternalShallowCopy))
             return this;
 
         if (aIID.equals(Components.interfaces.nsIClassInfo))
@@ -88,36 +98,55 @@ calEvent.prototype = {
         return this.__proto__.__proto__.QueryInterface.call(this, aIID);
     },
 
-    clone: function () {
+    cloneShallow: function (aNewParent) {
         var m = new calEvent();
-        this.cloneItemBaseInto(m);
-        m.mStartDate = this.mStartDate.clone();
-        m.mEndDate = this.mEndDate.clone();
-        m.isAllDay = this.isAllDay;
+        this.cloneItemBaseInto(m, aNewParent);
+
+        return m;
+    },
+
+    clone: function () {
+        var m;
+
+        if (this.mParentItem) {
+            var clonedParent = this.mParentItem.clone();
+            m = clonedParent.recurrenceInfo.getOccurrenceFor (this.recurrenceId);
+        } else {
+            m = this.cloneShallow(null);
+        }
+
+        return m;
+    },
+
+    createProxy: function () {
+        if (this.mIsProxy) {
+            calDebug("Tried to create a proxy for an existing proxy!\n");
+            throw Components.results.NS_ERROR_UNEXPECTED;
+        }
+
+        var m = new calEvent();
+        m.initializeProxy(this);
 
         return m;
     },
 
     makeImmutable: function () {
-        this.mStartDate.makeImmutable();
-        this.mEndDate.makeImmutable();
-
         this.makeItemBaseImmutable();
     },
 
     initEvent: function() {
-        this.mStartDate = new CalDateTime();
-        this.mEndDate = new CalDateTime();
+        this.startDate = new CalDateTime();
+        this.endDate = new CalDateTime();
     },
 
     get duration() {
         var dur = new CalDateTime();
-        dur.setTimeInTimezone (this.mEndDate.nativeTime - this.mStartDate.nativeTime, "floating");
+        dur.setTimeInTimezone (this.endDate.nativeTime - this.startDate.nativeTime, "floating");
         return dur;
     },
 
     get recurrenceStartDate() {
-        return this.mStartDate;
+        return this.startDate;
     },
 
     icsEventPropMap: [
@@ -163,6 +192,8 @@ calEvent.prototype = {
         return icalcomp;
     },
 
+    eventPromotedProps: null,
+
     set icalComponent(event) {
         this.modify();
         if (event.componentType != "VEVENT") {
@@ -173,17 +204,15 @@ calEvent.prototype = {
 
         this.setItemBaseFromICS(event);
         this.mapPropsFromICS(event, this.icsEventPropMap);
-        this.mIsAllDay = this.mStartDate && this.mStartDate.isDate;
+        this.mIsAllDay = this.startDate && this.startDate.isDate;
 
-        var promotedProps = {
-            "DTSTART": true,
-            "DTEND": true,
-            "DTSTAMP": true,
-            __proto__: this.itemBasePromotedProps
-        };
-        this.importUnpromotedProperties(event, promotedProps);
+        this.importUnpromotedProperties(event, eventPromotedProps);
         // Importing didn't really change anything
         this.mDirty = false;
+    },
+
+    isPropertyPromoted: function (name) {
+        return (this.eventPromotedProps[name]);
     },
 
     getOccurrencesBetween: function(aStartDate, aEndDate, aCount) {
@@ -194,10 +223,8 @@ calEvent.prototype = {
         if ((this.startDate.compare(aStartDate) >= 0 && this.startDate.compare(aEndDate) <= 0) ||
             (this.endDate.compare(aStartDate) >= 0 && this.endDate.compare(aEndDate) <= 0))
         {
-            var occ = Components.classes["@mozilla.org/calendar/item-occurrence;1"].createInstance(Components.interfaces.calIItemOccurrence);
-            occ.initialize(this, this.startDate, this.endDate);
             aCount.value = 1;
-            return ([ occ ]);
+            return ([ this ]);
         }
 
         aCount.value = 0;
@@ -209,7 +236,8 @@ calEvent.prototype = {
 
 var makeMemberAttr;
 if (makeMemberAttr) {
-    makeMemberAttr(calEvent, "mStartDate", null, "startDate");
-    makeMemberAttr(calEvent, "mEndDate", null, "endDate");
+    makeMemberAttr(calEvent, "DTSTART", null, "startDate", true);
+    makeMemberAttr(calEvent, "DTEND", null, "endDate", true);
+    // XXX get rid of this
     makeMemberAttr(calEvent, "mIsAllDay", false, "isAllDay");
 }

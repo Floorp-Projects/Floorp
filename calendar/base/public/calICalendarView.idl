@@ -42,9 +42,9 @@
 interface calICalendar;
 interface calIDateTime;
 interface calICalendarViewController;
-interface calIItemOccurrence;
+interface calIItemBase;
 
-[scriptable, uuid(be9b4f26-2475-4aeb-9b46-e165fc0809fb)]
+[scriptable, uuid(448a7f1a-384c-4e47-b5b5-1c372b4ad3d1)]
 interface calICalendarView : nsISupports
 {
   /**
@@ -110,7 +110,7 @@ interface calICalendarView : nsISupports
   void getDateList(out unsigned long aCount, [array,size_is(aCount),retval] out calIDateTime aDates);
 
   /**
-   * Get or set the selected occurrence.  Only one occurrence may be selected.
+   * Get or set the selected item.  Only one item may be selected.
    */
-  attribute calIItemOccurrence selectedOccurrence;
+  attribute calIItemBase selectedItem;
 };

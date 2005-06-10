@@ -80,13 +80,13 @@ function calAlarmService() {
         onEndBatch: function() { },
         onLoad: function() { },
         onAddItem: function(aItem) {
-            if (aItem.hasAlarm)
+            if (aItem.alarmTime)
                 this.alarmService.addAlarm(aItem, false);
         },
         onModifyItem: function(aNewItem, aOldItem) {
             this.alarmService.removeAlarm(aOldItem);
 
-            if (aNewItem.hasAlarm)
+            if (aNewItem.alarmTime)
                 this.alarmService.addAlarm(aNewItem, false);
         },
         onDeleteItem: function(aDeletedItem) {
@@ -112,12 +112,13 @@ function calAlarmService() {
     };
 }
 
-calAlarmServiceClassInfo = {
+var calAlarmServiceClassInfo = {
     getInterfaces: function (count) {
         var ifaces = [
             Components.interfaces.nsISupports,
             Components.interfaces.calIAlarmService,
-            Components.interfaces.nsIObserver
+            Components.interfaces.nsIObserver,
+            Components.interfaces.nsIClassInfo
         ];
         count.value = ifaces.length;
         return ifaces;
@@ -334,7 +335,7 @@ calAlarmService.prototype = {
             onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
                 for (var i = 0; i < aCount; ++i) {
                     var item = aItems[i];
-                    if (item.hasAlarm) {
+                    if (item.alarmTime) {
                         this.alarmService.addAlarm(item, false);
                     }
                 }

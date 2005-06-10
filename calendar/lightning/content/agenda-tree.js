@@ -94,7 +94,7 @@ function rebuildAgendaView(invalidate)
         if (e instanceof Synthetic)
             dump("  " + e.title + "\n");
         else
-            dump("    " + e.item.title + " @ " + e.occurrenceStartDate + "\n");
+            dump("    " + e.title + " @ " + e.occurrenceStartDate + "\n");
     });
 */
     this.forceTreeRebuild();
@@ -143,12 +143,13 @@ function getCellText(row, column)
     if (column.id == "col-agenda-item") {
         if (event instanceof Synthetic)
             return event.title;
-        return event.item.title;
+        return event.title;
     }
 
     if (event instanceof Synthetic)
         return "";
-    return event.occurrenceStartDate.toString();
+    var start = event.startDate || event.entryDate;
+    return start.toString();
 };
 
 agendaTreeView.getLevel =
@@ -223,10 +224,7 @@ function hasNextSibling(row, afterIndex)
 agendaTreeView.findPeriodForItem =
 function findPeriodForItem(item)
 {
-    var start = item.occurrenceStartDate;
-    if (start.compare(this.today.start) < 0 || start.compare(this.soon.end) > 0)
-        return null;
-
+    var start = item.startDate || item.entryDate;
     if (start.compare(this.today.end) <= 0)
         return this.today;
         
@@ -236,7 +234,7 @@ function findPeriodForItem(item)
     if (start.compare(this.soon.end) <= 0)
         return this.soon;
     
-    void(item.item.title + " @ " + start + " not in range " +
+    void(item.title + " @ " + start + " not in range " +
          "(" + this.today.start + " - " + this.soon.end + ")\n");
 
     return null;
@@ -248,7 +246,7 @@ function addItem(item)
     var when = this.findPeriodForItem(item);
     if (!when)
         return;
-    void(item.item.title + " @ " + item.occurrenceStartDate + " -> " + when.title + "\n");
+    void(item.title + " @ " + item.occurrenceStartDate + " -> " + when.title + "\n");
     when.events.push(item);
     this.calendarUpdateComplete();
 };
@@ -263,11 +261,16 @@ function deleteItem(item)
     }
     
     void("deleting item " + item + " from " + when.title + "\n");
-    void("before: " + when.events.map(function (e) { return e.item.title; }).join(" ") + "\n");
+    void("before: " + when.events.map(function (e) { return e.title; }).join(" ") + "\n");
     when.events = when.events.filter(function (e) {
-        return !e.equals(item);
-    });
-    void("after: " + when.events.map(function (e) { return e.item.title; }).join(" ") + "\n");
+                                         if (e.id != item.id)
+                                             return true;
+                                         if (e.recurrenceId && item.recurrenceId &&
+                                             e.recurrenceId.compare(item.recurrenceId) != 0)
+                                             return true;
+                                         return false;
+                                     });
+    void("after: " + when.events.map(function (e) { return e.title; }).join(" ") + "\n");
     this.rebuildAgendaView(true);
 };
 
@@ -276,7 +279,9 @@ function calendarUpdateComplete()
 {
     [this.today, this.tomorrow, this.soon].forEach(function(when) {
         function compare(a, b) {
-            return a.occurrenceStartDate.compare(b.occurrenceStartDate);
+            var ad = a.startDate || a.entryDate;
+            var bd = b.startDate || b.entryDate;
+            return ad.compare(bd);
         }
         when.events.sort(compare);
     });

@@ -66,11 +66,12 @@ function makeURI(uriString)
     return ioservice.newURI(uriString, null, null);
 }
 
-calCalendarManagerClassInfo = {
+var calCalendarManagerClassInfo = {
     getInterfaces: function (count) {
         var ifaces = [
             Components.interfaces.nsISupports,
-            Components.interfaces.calICalendarManager
+            Components.interfaces.calICalendarManager,
+            Components.interfaces.nsIClassInfo
         ];
         count.value = ifaces.length;
         return ifaces;

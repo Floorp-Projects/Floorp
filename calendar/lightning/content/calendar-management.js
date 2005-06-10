@@ -113,29 +113,28 @@ var ltnCalendarViewController = {
     },
 
     modifyOccurrence: function (aOccurrence, aNewStartTime, aNewEndTime) {
-        if (aOccurrence.recurrenceInfo) {
-            dump ("*** Don't know what to do in modifyOccurrence for a recurring event!\n");
-            return;
-        }
-
+        // if we can modify this thing directly (e.g. just the time changed),
+        // then do so; otherwise pop up the dialog
         if (aNewStartTime && aNewEndTime && !aNewStartTime.isDate && !aNewEndTime.isDate) {
-            var newEvent = aOccurrence.item.clone();
-            newEvent.startDate = aNewStartTime;
-            newEvent.endDate = aNewEndTime;
-            newEvent.calendar.modifyItem(newEvent, aOccurrence.item, null);
+            var instance = aOccurrence.clone();
+
+            instance.startDate = aNewStartTime;
+            instance.endDate = aNewEndTime;
+
+            instance.calendar.modifyItem(instance, aOccurrence, null);
         } else {
-            modifyEventWithDialog(aOccurrence.item);
+            modifyEventWithDialog(aOccurrence);
         }
     },
 
     deleteOccurrence: function (aOccurrence) {
-        dump ("+++ deleteOccurrence\n");
-        if (aOccurrence.recurrenceInfo) {
-            dump ("*** Don't know what do in deleteOccurrence for a recurring event!\n");
-            return;
+        if (aOccurrence.parentItem) {
+            var event = aOccurrence.parentItem.clone();
+            event.recurrenceInfo.removeOccurrenceAt(aOccurrence.recurrenceId);
+            event.calendar.modifyItem(event, aOccurrence, null);
+        } else {
+            aOccurrence.calendar.deleteItem(aOccurrence, null);
         }
-
-        aOccurrence.item.calendar.deleteItem(aOccurrence.item, null);
     }
 };
 

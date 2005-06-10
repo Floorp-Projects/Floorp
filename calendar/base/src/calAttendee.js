@@ -42,11 +42,12 @@ function calAttendee() {
         createInstance(Components.interfaces.nsIWritablePropertyBag);
 }
 
-calAttendeeClassInfo = {
+var calAttendeeClassInfo = {
     getInterfaces: function (count) {
         var ifaces = [
             Components.interfaces.nsISupports,
-            Components.interfaces.calIAttendee
+            Components.interfaces.calIAttendee,
+            Components.interfaces.nsIClassInfo
         ];
         count.value = ifaces.length;
         return ifaces;

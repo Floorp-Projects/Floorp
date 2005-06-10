@@ -40,7 +40,6 @@
 
 #include "calDateTime.h"
 #include "calICSService.h"
-#include "calRecurrenceInfo.h"
 #include "calRecurrenceRule.h"
 #include "calRecurrenceDate.h"
 #include "calRecurrenceDateSet.h"
@@ -49,37 +48,73 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(calDateTime)
 NS_GENERIC_FACTORY_CONSTRUCTOR(calICSService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceInfo)
 NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceRule)
 NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceDate)
 NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceDateSet)
+
+NS_DECL_CLASSINFO(calDateTime)
+NS_DECL_CLASSINFO(calICSService)
+NS_DECL_CLASSINFO(calRecurrenceRule)
+NS_DECL_CLASSINFO(calRecurrenceDate)
+NS_DECL_CLASSINFO(calRecurrenceDateSet)
 
 static const nsModuleComponentInfo components[] =
 {
     { "Calendar DateTime Object",
       CAL_DATETIME_CID,
       CAL_DATETIME_CONTRACTID,
-      calDateTimeConstructor },
+      calDateTimeConstructor,
+      NULL,
+      NULL,
+      NULL,
+      NS_CI_INTERFACE_GETTER_NAME(calDateTime),
+      NULL,
+      &NS_CLASSINFO_NAME(calDateTime)
+    },
     { "ICS parser/serializer",
       CAL_ICSSERVICE_CID,
       CAL_ICSSERVICE_CONTRACTID,
-      calICSServiceConstructor },
-    { "Calendar Recurrence Object",
-      CAL_RECURRENCEINFO_CID,
-      CAL_RECURRENCEINFO_CONTRACTID,
-      calRecurrenceInfoConstructor },
+      calICSServiceConstructor,
+      NULL,
+      NULL,
+      NULL,
+      NS_CI_INTERFACE_GETTER_NAME(calICSService),
+      NULL,
+      &NS_CLASSINFO_NAME(calICSService)
+    },
     { "Calendar Recurrence Rule",
       CAL_RECURRENCERULE_CID,
       CAL_RECURRENCERULE_CONTRACTID,
-      calRecurrenceRuleConstructor },
+      calRecurrenceRuleConstructor,
+      NULL,
+      NULL,
+      NULL,
+      NS_CI_INTERFACE_GETTER_NAME(calRecurrenceRule),
+      NULL,
+      &NS_CLASSINFO_NAME(calRecurrenceRule)
+    },
     { "Calendar Recurrence Date",
       CAL_RECURRENCEDATE_CID,
       CAL_RECURRENCEDATE_CONTRACTID,
-      calRecurrenceDateConstructor },
+      calRecurrenceDateConstructor,
+      NULL,
+      NULL,
+      NULL,
+      NS_CI_INTERFACE_GETTER_NAME(calRecurrenceDate),
+      NULL,
+      &NS_CLASSINFO_NAME(calRecurrenceDate)
+    },
     { "Calendar Recurrence Date Set",
       CAL_RECURRENCEDATESET_CID,
       CAL_RECURRENCEDATESET_CONTRACTID,
-      calRecurrenceDateSetConstructor }
+      calRecurrenceDateSetConstructor,
+      NULL,
+      NULL,
+      NULL,
+      NS_CI_INTERFACE_GETTER_NAME(calRecurrenceDateSet),
+      NULL,
+      &NS_CLASSINFO_NAME(calRecurrenceDateSet)
+    }
 };
 
 NS_IMPL_NSGETMODULE(calBaseModule, components)

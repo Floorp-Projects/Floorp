@@ -51,11 +51,6 @@
 #define CAL_ICSSERVICE_CONTRACTID \
     "@mozilla.org/calendar/ics-service;1"
 
-#define CAL_RECURRENCEINFO_CID \
-    { 0x04027036, 0x5884, 0x4a30, { 0xb4, 0xaf, 0xf2, 0xca, 0xd7, 0x9f, 0x6e, 0xdf } }
-#define CAL_RECURRENCEINFO_CONTRACTID \
-    "@mozilla.org/calendar/recurrence-info;1"
-
 #define CAL_RECURRENCERULE_CID \
     { 0xd9560bf9, 0x3065, 0x404a, { 0x90, 0x4c, 0xc8, 0x82, 0xfc, 0x9c, 0x9b, 0x74 } }
 #define CAL_RECURRENCERULE_CONTRACTID \
@@ -72,11 +67,6 @@
     "@mozilla.org/calendar/recurrence-date;1"
 
 /* JS -- Update these from calItemModule.js */
-#define CAL_ITEM_OCCURRENCE_CID \
-    { 0xbad672b3, 0x30b8, 0x4ecd, { 0x80, 0x75, 0x71, 0x53, 0x31, 0x3d, 0x1f, 0x2c } }
-#define CAL_ITEM_OCCURRENCE_CONTRACTID \
-    "@mozilla.org/calendar/item-occurrence;1"
-
 #define CAL_EVENT_CID \
     { 0x974339d5, 0xab86, 0x4491, { 0xaa, 0xaf, 0x2b, 0x2c, 0xa1, 0x77, 0xc1, 0x2b } }
 #define CAL_EVENT_CONTRACTID \
@@ -91,6 +81,11 @@
     { 0x5c8dcaa3, 0x170c, 0x 4a73, { 0x81, 0x42, 0xd5, 0x31, 0x15, 0x6f, 0x66, 0x4d } }
 #define CAL_ATTENDEE_CONTRACTID \
     "@mozilla.org/calendar/attendee;1"
+
+#define CAL_RECURRENCEINFO_CID \
+    { 0x04027036, 0x5884, 0x4a30, { 0xb4, 0xaf, 0xf2, 0xca, 0xd7, 0x9f, 0x6e, 0xdf } }
+#define CAL_RECURRENCEINFO_CONTRACTID \
+    "@mozilla.org/calendar/recurrence-info;1"
 
 #define NS_ERROR_CALENDAR_WRONG_COMPONENT_TYPE		NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_CALENDAR, 1)
 // Until extensible xpconnect error mapping works

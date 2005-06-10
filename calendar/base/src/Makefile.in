@@ -61,9 +61,13 @@ REQUIRES = xpcom \
 #	   sqlite3 \
 #           $(NULL)
 
+XPIDL_MODULE	= calbaseinternal
+XPIDLSRCS = \
+	calInternalInterfaces.idl \
+	$(NULL)
+
 CPPSRCS = calDateTime.cpp \
 	  calICSService.cpp \
-	  calRecurrenceInfo.cpp \
 	  calRecurrenceRule.cpp \
 	  calRecurrenceDate.cpp \
 	  calRecurrenceDateSet.cpp \
@@ -75,6 +79,7 @@ EXTRA_COMPONENTS = \
 	calAttachment.js \
 	calAttendee.js \
 	calCalendarManager.js \
+	calRecurrenceInfo.js \
 	calEvent.js \
 	calItemBase.js \
 	calItemModule.js \

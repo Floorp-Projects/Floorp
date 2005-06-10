@@ -948,7 +948,7 @@ calIcalComponent::RemoveProperty(calIIcalProperty *prop)
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(calICSService, calIICSService)
+NS_IMPL_ISUPPORTS1_CI(calICSService, calIICSService)
 
 calICSService::calICSService()
 {

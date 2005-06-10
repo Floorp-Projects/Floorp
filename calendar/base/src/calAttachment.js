@@ -40,11 +40,12 @@
 //
 function calAttachment() { }
 
-calAttachmentClassInfo = {
+var calAttachmentClassInfo = {
     getInterfaces: function (count) {
         var ifaces = [
             Components.interfaces.nsISupports,
-            Components.interfaces.calIAttachment
+            Components.interfaces.calIAttachment,
+            Components.interfaces.nsIClassInfo
         ];
         count.value = ifaces.length;
         return ifaces;

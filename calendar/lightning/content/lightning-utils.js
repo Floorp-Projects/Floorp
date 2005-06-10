@@ -2,13 +2,33 @@
 function ltnCreateInstance(cid, iface) {
     if (!iface)
         iface = "nsISupports";
-    return Components.classes[cid].createInstance(Components.interfaces[iface]);
+    try {
+        return Components.classes[cid].createInstance(Components.interfaces[iface]);
+    } catch(e) {
+        dump("#### ltnCreateInstance failed for: " + cid + "\n");
+        var frame = Components.stack;
+        for (var i = 0; frame && (i < 4); i++) {
+            dump(i + ": " + frame + "\n");
+            frame = frame.caller;
+        }
+        throw e;
+    }
 }
 
 function ltnGetService(cid, iface) {
     if (!iface)
         iface = "nsISupports";
-    return Components.classes[cid].getService(Components.interfaces[iface]);
+    try {
+        return Components.classes[cid].getService(Components.interfaces[iface]);
+    } catch(e) {
+        dump("#### ltnGetService failed for: " + cid + "\n");
+        var frame = Components.stack;
+        for (var i = 0; frame && (i < 4); i++) {
+            dump(i + ": " + frame + "\n");
+            frame = frame.caller;
+        }
+        throw e;
+    }
 }
 
 var atomSvc;

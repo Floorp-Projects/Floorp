@@ -61,12 +61,10 @@ function calMemoryCalendar() {
 
 function makeOccurrence(item, start, end)
 {
-    var occ = Components.classes["@mozilla.org/calendar/item-occurrence;1"].
-        createInstance(Components.interfaces.calIItemOccurrence);
-    // XXX poor form
-    occ.wrappedJSObject.item = item;
-    occ.wrappedJSObject.occurrenceStartDate = start;
-    occ.wrappedJSObject.occurrenceEndDate = end;
+    var occ = item.createProxy();
+    occ.recurrenceId = start;
+    occ.startDate = start;
+    occ.endDate = end;
     return occ;
 }
 
@@ -122,21 +120,15 @@ calMemoryCalendar.prototype = {
 
     // void addObserver( in calIObserver observer );
     addObserver: function (aObserver, aItemFilter) {
-        for each (obs in this.mObservers) {
-            if (obs == aObserver)
-                return;
-        }
+        if (this.mObservers.any(function(o) { return (o == aObserver); }))
+            return;
 
         this.mObservers.push(aObserver);
     },
 
     // void removeObserver( in calIObserver observer );
     removeObserver: function (aObserver) {
-        var newObservers = Array();
-        for each (obs in this.mObservers) {
-            if (obs != aObserver)
-                newObservers.push(obs);
-        }
+        var newObservers = this.mObservers.filter(function(o) { return (o != aObserver); });
         this.mObservers = newObservers;
     },
 
@@ -243,7 +235,7 @@ calMemoryCalendar.prototype = {
                                            modifiedItem.id,
                                            modifiedItem);
         // notify observers
-        this.observeModifyItem(aOldItem, modifiedItem);
+        this.observeModifyItem(modifiedItem, aOldItem);
     },
 
     // void deleteItem( in calIItemBase aItem, in calIOperationListener aListener );
@@ -376,7 +368,7 @@ calMemoryCalendar.prototype = {
         // figure out the return interface type
         var typeIID = null;
         if (itemReturnOccurrences) {
-            typeIID = calIItemOccurrence;
+            typeIID = calIItemBase;
         } else {
             if (wantEvents && wantTodos) {
                 typeIID = calIItemBase;
@@ -425,9 +417,7 @@ calMemoryCalendar.prototype = {
                 {
                     // there might be some recurrences here that we need to handle
                     var recs = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, 0, {});
-                    for (var i = 0; i < recs.length; i++) {
-                        itemsFound.push(recs[i]);
-                    }
+                    itemsFound = concat(itemsFound, recs);
                 } else if (itemEndTime >= startTime) {
                     // no occurrences
                     if (itemReturnOccurrences)

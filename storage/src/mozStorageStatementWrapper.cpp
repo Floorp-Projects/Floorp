@@ -315,7 +315,7 @@ mozStorageStatementWrapper::Call(nsIXPConnectWrappedNative *wrapper, JSContext *
     for (int i = 0; i < argc; i++) {
         if (!JSValStorageStatementBinder(cx, mStatement, &i, 1, argv[i])) {
             *_retval = PR_FALSE;
-            return NS_ERROR_FAILURE;
+            return NS_ERROR_INVALID_ARG;
         }
     }
 
@@ -522,7 +522,7 @@ mozStorageStatementRow::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContex
                     double dval = sqlite3_column_double(NativeStatement(), i);
                     if (!JS_NewNumberValue(cx, dval, vp)) {
                         *_retval = PR_FALSE;
-                        return NS_ERROR_FAILURE;
+                        return NS_ERROR_OUT_OF_MEMORY;
                     }
                 } else if (ctype == SQLITE_TEXT) {
                     JSString *str = JS_NewUCStringCopyN(cx,
@@ -530,7 +530,7 @@ mozStorageStatementRow::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContex
                                                         sqlite3_column_bytes16(NativeStatement(), i)/2);
                     if (!str) {
                         *_retval = PR_FALSE;
-                        return NS_ERROR_FAILURE;
+                        return NS_ERROR_OUT_OF_MEMORY;
                     }
                     *vp = STRING_TO_JSVAL(str);
                 } else if (ctype == SQLITE_BLOB) {
@@ -539,7 +539,7 @@ mozStorageStatementRow::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContex
                                                       sqlite3_column_bytes(NativeStatement(), i));
                     if (!str) {
                         *_retval = PR_FALSE;
-                        return NS_OK;
+                        return NS_ERROR_OUT_OF_MEMORY;
                     }
                 } else if (ctype == SQLITE_NULL) {
                     *vp = JSVAL_NULL;
@@ -788,10 +788,12 @@ mozStorageStatementParams::SetProperty(nsIXPConnectWrappedNative *wrapper, JSCon
         }
     } else {
         *_retval = PR_FALSE;
-        return NS_ERROR_FAILURE;
     }
 
-    return NS_OK;
+    if (*_retval)
+        return NS_OK;
+    else
+        return NS_ERROR_INVALID_ARG;
 }
 
 /* void preCreate (in nsISupports nativeObj, in JSContextPtr cx, in JSObjectPtr globalObj, out JSObjectPtr parentObj); */
