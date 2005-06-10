@@ -62,6 +62,7 @@ const DIR_UPDATES         = "updates";
 const FILE_UPDATE_STATUS  = "update.status";
 const FILE_UPDATE_ARCHIVE = "update.mar";
 const FILE_UPDATE_INFO    = "update.info";
+const FILE_UPDATES_DB     = "updates.xml";
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
@@ -622,8 +623,30 @@ UpdateService.prototype = {
 };
 
 function UpdateManager() {
+  this._init();
 }
 UpdateManager.prototype = {
+  /**
+   *
+   */
+  _data: null,
+  
+  /**
+   *
+   */
+  _init: function() {
+    var updatesDB = getFile(KEY_APPDIR, [FILE_UPDATES_DB]);
+    var fileStream = Components.classes["@mozilla.org/network/file-input-stream;1"]
+                               .createInstance(Components.interfaces.nsIFileInputStream);
+    fileStream.init(updatesDB, MODE_RDONLY, PERMS_FILE, 0);
+    if (fileStream instanceof Components.interfaces.nsIScriptableInputStream) {
+      var data = fileStream.read(fileStream.available());    
+      var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
+                             .createInstance(Components.interfaces.nsIDOMParser);
+      this._data = parser.parseFromString(data, "text/xml");
+    }
+  },
+  
   /**
    * See nsIUpdateService.idl
    */
@@ -654,6 +677,25 @@ UpdateManager.prototype = {
    * See nsIUpdateService.idl
    */
   saveUpdates: function() {
+    if (!this._doc)
+      return;
+    
+    var fos = Components.classes["@mozilla.org/network/safe-file-output-stream;1"]
+                        .createInstance(Components.interfaces.nsIFileOutputStream);
+    var updatesDB = getFile(KEY_APPDIR, [FILE_UPDATES_DB]);
+    var modeFlags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
+    if (!updatesDB.exists()) 
+      updatesDB.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+    fos.init(updatesDB, modeFlags, PERMS_FILE, 0);
+    
+    var serializer = Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
+                               .createInstance(Components.interfaces.nsIDOMSerializer);
+    serializer.serializeToStream(this._data.documentElement, fos, null);
+    
+    if (fos instanceof Components.interfaces.nsISafeOutputStream)
+      fos.finish();
+    else
+      fos.close();
   },
   
   /**
