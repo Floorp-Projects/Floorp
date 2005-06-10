@@ -263,6 +263,8 @@ mozStorageStatement::Reset()
     PR_LOG(gStorageLog, PR_LOG_DEBUG, ("Resetting statement: '%s'", nsPromiseFlatCString(mStatementString).get()));
 
     sqlite3_reset(mDBStatement);
+    sqlite3_clear_bindings(mDBStatement);
+
     mExecuting = PR_FALSE;
 
     return NS_OK;
