@@ -60,6 +60,7 @@ CSRCS = \
 	build.c \
 	date.c \
 	delete.c \
+	experimental.c \
 	expr.c \
 	func.c \
 	hash.c \
@@ -91,7 +92,16 @@ CSRCS = \
 	where.c \
 	$(NULL)
 
+ifdef ENABLE_TESTS
+##LIBS = $(DIST)/lib/$(LIB_PREFIX)sqlite3_s.$(LIB_SUFFIX)
+##SIMPLE_PROGRAMS = sqlite-shell
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 sqlite3.h: sqlite.h.in
-	sed -e "s/--VERS--/$VERSION/" $(srcdir)/sqlite.h.in > sqlite3.h
+	sed -e "s/--VERS--/$(VERSION)/" $(srcdir)/sqlite.h.in > sqlite3.h
+
+sqlite-shell.$(OBJ_SUFFIX): shell.c
+	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
+
