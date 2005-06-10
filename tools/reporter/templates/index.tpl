@@ -59,8 +59,8 @@
 						<td>
 							<select name="report_product" id="report_product">
 								<option value="-1">Any</option>
-								<option value="$product['id']">$product['title']</option>
-							</select>
+								{html_options values=$product_options output=$product_options selected=$report_product}
+ 							</select>
 						</td>
 					</tr>
 					<tr>

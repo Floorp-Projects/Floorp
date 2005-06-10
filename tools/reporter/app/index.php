@@ -54,6 +54,7 @@ $content->assign('report_gecko',                $_GET['report_gecko']);
 $content->assign('report_language',             $_GET['report_language']);
 $content->assign('report_platform',             $_GET['report_platform']);
 $content->assign('report_oscpu',                $_GET['report_oscpu']);
+$content->assign('product_options',             $config['products']);
 $content->assign('report_product',              $_GET['report_product']);
 $content->assign('report_file_date_start',      $_GET['report_file_date_start']);
 $content->assign('report_file_date_end',        $_GET['report_file_date_end']);

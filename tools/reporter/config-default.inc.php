@@ -42,26 +42,26 @@
  **************************************/
 
 // Debug
-$config['debug'] = false;
+$config['debug']                           = false;
 
 // Paths
-$config['base_url']                      = 'http://reporter.server.tld'; // no trailing slash
-$config['base_path']                     = '/path/to/reporter'; // no trailing slash
+$config['base_url']                        = 'http://reporter.server.tld'; // no trailing slash
+$config['base_path']                       = '/path/to/reporter'; // no trailing slash
 
 // Database
-$config['db_type']                      = 'mysql';
-$config['db_server']                    = 'SERVER';
-$config['db_user']                      = 'USERNAME';
-$config['db_pass']                      = 'PASSWORD';
-$config['db_database']                  = 'DATABASE';
-$config['db_dsn']                       = $config['db_type'].'://'.$config['db_user'].':'.$config['db_pass'].'@'.$config['db_server'].'/'.$config['db_database'];
+$config['db_type']                         = 'mysql';
+$config['db_server']                       = 'SERVER';
+$config['db_user']                         = 'USERNAME';
+$config['db_pass']                         = 'PASSWORD';
+$config['db_database']                     = 'DATABASE';
+$config['db_dsn']                          = $config['db_type'].'://'.$config['db_user'].':'.$config['db_pass'].'@'.$config['db_server'].'/'.$config['db_database'];
 
 // Smarty Configurations
-$config['smarty_template_directory']    = $config['base_path'].'/templates/';
-$config['smarty_compile_dir']           = '/tmp';
-$config['smarty_cache_dir']             = '';
-$config['smarty_compile_check']         = true;
-$config['smarty_debug']                 = false;
+$config['smarty_template_directory']       = $config['base_path'].'/templates/';
+$config['smarty_compile_dir']              = '/tmp';
+$config['smarty_cache_dir']                = '';
+$config['smarty_compile_check']            = true;
+$config['smarty_debug']                    = false;
 
 // Service
 /**********************************************************
@@ -71,7 +71,7 @@ $config['smarty_debug']                 = false;
  * the rest go outwards to the main reporter.mozilla.org
  * instance
 ***********************************************************/
-$config['proxy']                        = false;
+$config['proxy']                           = false;
 /**********************************************************
  * if this statement evaluates to true, it uses the local
  * instance, otherwise it goes to reporter.mozilla.org.
@@ -79,21 +79,19 @@ $config['proxy']                        = false;
  * sequentially number the array $config['proxy_regex'][0],
  * $config['proxy_regex'][1], etc.
 ************************************************************/
-$config['proxy_regex'][0]               = '';
+$config['proxy_regex'][0]                  = '';
 
 // should we gzip encode (more cpu, less bandwidth) XX-> Not implemented
-$config['gzip']                         = false;
+$config['gzip']                             = false;
 
 // minimum version to allow to contact the service
-$config['min_vers']                     = '0.2';
+$config['min_vers']                        = '0.2';
 
 
 
 // products to show in the pull down on the query page
-$config['products'][0]['id']            = 'Firefox/1.0';
-$config['products'][0]['title']         = 'Firefox 1.0';
-$config['products'][0]['id']            = 'Firefox/1.0+';
-$config['products'][0]['title']         = 'Firefox 1.0+';
+$config['products'][0]                     = 'Firefox/1.0';
+$config['products'][1]                     = 'Firefox/1.0+';
 
 
 // How many items to show by default
