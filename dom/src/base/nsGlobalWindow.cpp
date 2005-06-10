@@ -2698,19 +2698,32 @@ nsGlobalWindow::Print()
     
     nsCOMPtr<nsIPrintSettings> printSettings;
     if (printSettingsService) {
-      printSettingsService->GetGlobalPrintSettings(getter_AddRefs(printSettings));
+      PRBool printSettingsAreGlobal =
+        nsContentUtils::GetBoolPref("print.use_global_printsettings", PR_FALSE);
 
-      nsXPIDLString printerName;
-      printSettingsService->GetDefaultPrinterName(getter_Copies(printerName));
-      if (printerName)
-        printSettingsService->InitPrintSettingsFromPrinter(printerName, printSettings);
-      printSettingsService->InitPrintSettingsFromPrefs(printSettings, 
+      if (printSettingsAreGlobal) {
+        printSettingsService->GetGlobalPrintSettings(getter_AddRefs(printSettings));
+
+        nsXPIDLString printerName;
+        printSettingsService->GetDefaultPrinterName(getter_Copies(printerName));
+        if (printerName)
+          printSettingsService->InitPrintSettingsFromPrinter(printerName, printSettings);
+        printSettingsService->InitPrintSettingsFromPrefs(printSettings, 
                                                          PR_TRUE, 
-                                                         nsIPrintSettings::kInitSaveAll); 
+                                                         nsIPrintSettings::kInitSaveAll);
+      } else {
+        printSettingsService->GetNewPrintSettings(getter_AddRefs(printSettings));
+      }
+
       webBrowserPrint->Print(printSettings, nsnull);
-      printSettingsService->SavePrintSettingsToPrefs(printSettings, 
+
+      PRBool savePrintSettings =
+        nsContentUtils::GetBoolPref("print.save_print_settings", PR_FALSE);
+      if (printSettingsAreGlobal && savePrintSettings) {
+        printSettingsService->SavePrintSettingsToPrefs(printSettings,
                                                        PR_TRUE, 
-                                                       nsIPrintSettings::kInitSaveAll); 
+                                                       nsIPrintSettings::kInitSaveAll);
+      }
     } else {
       webBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
       webBrowserPrint->Print(printSettings, nsnull);
