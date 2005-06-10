@@ -290,8 +290,12 @@ NS_ScriptErrorReporter(JSContext *cx,
     error.Append(", line ");
     error.AppendInt(report->lineno, 10);
     error.Append(": ");
-    AppendUTF16toUTF8(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage),
-                      error);
+    if (report->ucmessage) {
+      AppendUTF16toUTF8(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage),
+                        error);
+    } else {
+      error.Append(message);
+    }
     if (status != nsEventStatus_eIgnore && !JSREPORT_IS_WARNING(report->flags))
       error.Append(" Error was suppressed by event handler\n");
   }
