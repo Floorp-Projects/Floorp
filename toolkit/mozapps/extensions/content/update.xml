@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE bindings SYSTEM "chrome://mozapps/locale/update/update.dtd">
+<!DOCTYPE bindings SYSTEM "chrome://mozapps/locale/extensions/update.dtd">
 
 <bindings id="updatesBindings"
           xmlns="http://www.mozilla.org/xbl"
