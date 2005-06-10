@@ -42,8 +42,6 @@
 #endif
 
 #include "nsXULAppAPI.h"
-#include "nsXPCOMGlue.h"
-#include "nsRegisterGRE.h"
 #include "nsAppRunner.h"
 #include "nsINIParser.h"
 #include "nsILocalFile.h"
@@ -207,7 +205,7 @@ static int LoadAppData(const char* appDataFile, nsXREAppData* aResult)
     }
     else if (string_fields[i].required) {
       Output(PR_TRUE, "Error: %x: No \"%s\" field.\n",
-             rv, string_fields[i].key);
+	     rv, string_fields[i].key);
       return 1;
     }
   }
@@ -251,49 +249,21 @@ static void Usage()
 {
     // display additional information (XXX make localizable?)
     Output(PR_FALSE,
-           "Mozilla XULRunner %s\n\n"
-           "Usage: " XULRUNNER_PROGNAME "[OPTIONS]\n"
-           "       " XULRUNNER_PROGNAME "APP-FILE [APP-OPTIONS...]\n"
+           "Mozilla XULRunner " MOZILLA_VERSION " %d\n\n"
+           "Usage: " XULRUNNER_PROGNAME 
+           " [OPTIONS] [APP-FILE [APP-OPTIONS...]]\n"
            "\n"
            "OPTIONS\n"
-           "      --app                  specify APP-FILE (optional)\n"
-           "  -h, --help                 show this message\n"
-           "  -v, --version              show version\n"
-           "  --gre-version              print the GRE version string on stdout"
-           "  --register-global          register this GRE in the machine registry.\n"
-           "  --register-user            register this GRE in the user registry\n"
-           "  --unregister-global        unregister this GRE formerly registered with\n"
-           "                             --register-global\n"
-           "  --unregister-user          unregister this GRE formely registered with\n"
-           "                             --register-user\n"
-           "  --find-gre <version>       Find a GRE with version <version> and print\n"
-           "                             the path on stdout\n"
+           "      --app        specify APP-FILE (optional)\n"
+           "  -h, --help       show this message\n"
+           "  -v, --version    show version\n"
            "\n"
            "APP-FILE\n"
            "  Application initialization file.\n"
            "\n"
            "APP-OPTIONS\n"
            "  Application specific options.\n",
-           GRE_BUILD_ID);
-}
-
-static nsresult
-GetXULRunnerDir(const char *argv0, nsIFile* *aResult)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsILocalFile> appFile;
-  rv = XRE_GetBinaryPath(argv0, getter_AddRefs(appFile));
-  if (NS_FAILED(rv)) {
-    Output(PR_TRUE, "Could not find XULRunner application path.\n");
-    return rv;
-  }
-
-  rv = appFile->GetParent(aResult);
-  if (NS_FAILED(rv)) {
-    Output(PR_TRUE, "Could not find XULRunner installation dir.\n");
-  }
-  return rv;
+           BUILD_ID);
 }
 
 int main(int argc, char* argv[])
@@ -308,64 +278,8 @@ int main(int argc, char* argv[])
 
   if (argc == 2 && (IsArg(argv[1], "v") || IsArg(argv[1], "version")))
   {
-    Output(PR_FALSE, "Mozilla XULRunner %s\n", GRE_BUILD_ID);
-    return 0;
-  }
-
-  PRBool registerGlobal = IsArg(argv[1], "register-global");
-  PRBool registerUser   = IsArg(argv[1], "register-user");
-  if (registerGlobal || registerUser) {
-    if (argc != 2) {
-      Usage();
-      return 1;
-    }
-
-    nsCOMPtr<nsIFile> regDir;
-    nsresult rv = GetXULRunnerDir(argv[0], getter_AddRefs(regDir));
-    if (NS_FAILED(rv))
-        return 2;
-
-    return RegisterXULRunner(registerGlobal, regDir) ? 0 : 2;
-  }
-
-  registerGlobal = IsArg(argv[1], "unregister-global");
-  registerUser   = IsArg(argv[1], "unregister-user");
-  if (IsArg(argv[1], "unregister-global")) {
-    if (argc != 2) {
-      Usage();
-      return 1;
-    }
-
-    nsCOMPtr<nsIFile> regDir;
-    nsresult rv = GetXULRunnerDir(argv[0], getter_AddRefs(regDir));
-    if (NS_FAILED(rv))
-        return 2;
-    UnregisterXULRunner(registerGlobal, regDir);
-    return 0;
-  }
-
-  if (IsArg(argv[1], "find-gre")) {
-    if (argc != 3) {
-      Usage();
-      return 1;
-    }
-
-    char version[MAXPATHLEN];
-    nsresult rv = GRE_GetGREPathForVersion(argv[2], version, MAXPATHLEN);
-    if (NS_FAILED(rv))
-      return 1;
-
-    printf("%s\n", version);
-    return 0;
-  }
-
-  if (IsArg(argv[1], "gre-version")) {
-    if (argc != 2) {
-      Usage();
-      return 1;
-    }
-
-    printf("%s\n", GRE_BUILD_ID);
+    Output(PR_FALSE, "Mozilla XULRunner " MOZILLA_VERSION " %d\n",
+           BUILD_ID);
     return 0;
   }
 

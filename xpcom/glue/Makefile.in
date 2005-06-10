@@ -66,15 +66,7 @@ SDK_HEADERS     = \
 		nsISupportsImpl.h \
 		nsISupportsUtils.h \
 		nsIWeakReferenceUtils.h \
-		nsCOMPtr.h \
-		nsDebug.h \
-		nsGenericFactory.h \
-		nsIGenericFactory.h \
-		nsMemory.h \
-		nsTraceRefcnt.h \
-		nsWeakReference.h \
-		nsComponentManagerUtils.h \
-		nsServiceManagerUtils.h \
+		$(XPCOM_GLUE_SRC_LEXPORTS) \
 		$(NULL)
 
 SDK_LIBRARY     =                        \

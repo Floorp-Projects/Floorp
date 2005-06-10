@@ -189,13 +189,4 @@ XRE_main(int argc, char* argv[],
 extern "C" XULAPI nsresult
 XRE_GetFileFromPath(const char *aPath, nsILocalFile* *aResult);
 
-/**
- * Get the path of the running application binary and store it in aResult.
- * @param argv0   The value passed as argv[0] of main(). This value is only
- *                used on *nix, and only when other methods of determining
- *                the binary path have failed.
- */
-extern "C" XULAPI nsresult
-XRE_GetBinaryPath(const char *argv0, nsILocalFile* *aResult);
-
 #endif // _nsXULAppAPI_h__

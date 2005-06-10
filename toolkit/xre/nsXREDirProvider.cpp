@@ -110,21 +110,88 @@ nsXREDirProvider::Initialize(nsIFile *aXULAppDir)
 { 
   mXULAppDir = aXULAppDir;
 
-  nsCOMPtr<nsILocalFile> lf;
-  nsresult rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIFile> appDir;
-  rv = lf->GetParent(getter_AddRefs(appDir));
-  if (NS_FAILED(rv))
-    return rv;
-
-  mAppDir = do_QueryInterface(appDir);
-  if (!mAppDir)
+  // We need to use platform-specific hackery to find the
+  // path of this executable. This is copied, with some modifications, from
+  // nsGREDirServiceProvider.cpp
+#ifdef XP_WIN
+  char exePath[MAXPATHLEN];
+  if ( ! ::GetModuleFileName(0, exePath, MAXPATHLEN) )
     return NS_ERROR_FAILURE;
 
-  return NS_OK;
+  // chop off the executable name by finding the rightmost backslash
+  char* lastSlash = strrchr(exePath, '\\');
+  if (!lastSlash) return NS_ERROR_FAILURE;
+
+  *(lastSlash) = '\0';
+  return NS_NewNativeLocalFile(nsDependentCString(exePath), PR_TRUE,
+                               getter_AddRefs(mAppDir));
+
+#elif defined(XP_MACOSX)
+  // Works even if we're not bundled.
+  CFBundleRef appBundle = CFBundleGetMainBundle();
+  if (!appBundle) return NS_ERROR_FAILURE;
+
+  nsresult rv = NS_ERROR_FAILURE;
+
+  CFURLRef bundleURL = CFBundleCopyExecutableURL(appBundle);
+  if (bundleURL) {
+    CFURLRef parentURL = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, bundleURL);
+    if (parentURL) {
+      rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE,
+                                 getter_AddRefs(mAppDir));
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsILocalFileMac> appDirMac (do_QueryInterface(mAppDir, &rv));
+        if (NS_SUCCEEDED(rv)) {
+          rv = appDirMac->InitWithCFURL(parentURL);
+        }
+      }
+
+      CFRelease(parentURL);
+    }
+    CFRelease(bundleURL);
+  }
+
+  return rv;
+
+#elif defined(XP_UNIX)
+  // Because we do have access to argv[0], we can get the application
+  // path with certitude, instead of using MOZILLA_FIVE_HOME or
+  // guessing from the CWD like nsGREDirServiceProvider does.
+  char* lastSlash = strrchr(gBinaryPath, '/');
+  if (!lastSlash) return NS_ERROR_FAILURE;
+
+  nsDependentCSubstring appDir(gBinaryPath, lastSlash);
+  return NS_NewNativeLocalFile(appDir, PR_TRUE, getter_AddRefs(mAppDir));
+
+#elif defined(XP_OS2)
+  PPIB ppib;
+  PTIB ptib;
+  char appDir[MAXPATHLEN];
+  char* p;
+  DosGetInfoBlocks( &ptib, &ppib);
+  DosQueryModuleName( ppib->pib_hmte, MAXPATHLEN, appDir);
+  p = strrchr( appDir, '\\'); // XXX DBCS misery
+  if (!p) return NS_ERROR_FAILURE;
+
+  *p  = '\0';
+  return NS_NewNativeLocalFile(nsDependentCString(appDir), PR_TRUE, getter_AddRefs(mAppDir));
+
+#elif defined(XP_BEOS)
+  int32 cookie = 0;
+  image_info info;
+  char *p;
+
+  if(get_next_image_info(0, &cookie, &info) != B_OK)
+    return NS_ERROR_FAILURE;
+
+  p = strrchr(info.name, '/');
+  if (!p) return NS_ERROR_FAILURE;
+
+  *p = 0;
+  return NS_NewNativeLocalFile(nsDependentCString(info.name), PR_TRUE, getter_AddRefs(mAppDir));
+#elif
+#error Oops, you need platform-specific code here
+#endif
 }
 
 nsresult
