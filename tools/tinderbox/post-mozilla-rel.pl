@@ -694,17 +694,6 @@ sub main {
 
   chdir $mozilla_build_dir;
 
-  if ($Settings::BuildXForms) {
-    TinderUtils::run_shell_command "cd $builddir/extensions/schema-validation; $builddir/build/autoconf/make-makefile";
-    TinderUtils::run_shell_command "make -C $builddir/extensions/schema-validation";
-
-    TinderUtils::run_shell_command "cd $builddir/extensions/xforms; $builddir/build/autoconf/make-makefile";
-    TinderUtils::run_shell_command "make -C $builddir/extensions/xforms";
-
-    TinderUtils::run_shell_command "cd $builddir/extensions/xforms/package; $builddir/build/autoconf/make-makefile";
-    TinderUtils::run_shell_command "make -C $builddir/extensions/xforms/package xpi";
-  }
-
   if (is_windows()) {
     #$mozilla_build_dir = `cygpath $mozilla_build_dir`; # cygnusify the path
     #chop $mozilla_build_dir; # remove whitespace
@@ -746,6 +735,17 @@ sub main {
   $c_day        = pad_digit($c_day);
   $c_month      = pad_digit($c_month);
   my $datestamp = "$c_year-$c_month-$c_day-$c_hour-$Settings::milestone";
+
+  if ($Settings::BuildXForms) {
+    TinderUtils::run_shell_command "cd $objdir/extensions/schema-validation; $objdir/build/autoconf/make-makefile";
+    TinderUtils::run_shell_command "make -C $objdir/extensions/schema-validation";
+
+    TinderUtils::run_shell_command "cd $objdir/extensions/xforms; $objdir/build/autoconf/make-makefile";
+    TinderUtils::run_shell_command "make -C $objdir/extensions/xforms";
+
+    TinderUtils::run_shell_command "cd $objdir/extensions/xforms/package; $objdir/build/autoconf/make-makefile";
+    TinderUtils::run_shell_command "make -C $objdir/extensions/xforms/package xpi";
+  }
 
   if (is_windows()) {
     # hack for cygwin installs with "unix" filetypes
