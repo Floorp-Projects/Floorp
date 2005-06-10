@@ -174,6 +174,41 @@ NS_IMETHODIMP nsDocAccessibleWrap::Shutdown()
 
 NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
 {
+#ifdef DEBUG
+  // Ensure that we're only firing events that we intend to
+  PRUint32 supportedEvents[] = {
+    nsIAccessibleEvent::EVENT_SHOW,
+    nsIAccessibleEvent::EVENT_HIDE,
+    nsIAccessibleEvent::EVENT_REORDER,
+    nsIAccessibleEvent::EVENT_FOCUS,
+    nsIAccessibleEvent::EVENT_STATE_CHANGE,
+    nsIAccessibleEvent::EVENT_NAME_CHANGE,
+    nsIAccessibleEvent::EVENT_DESCRIPTIONCHANGE,
+    nsIAccessibleEvent::EVENT_VALUE_CHANGE,
+    nsIAccessibleEvent::EVENT_SELECTION,
+    nsIAccessibleEvent::EVENT_SELECTION_ADD,
+    nsIAccessibleEvent::EVENT_SELECTION_REMOVE,
+    nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
+    nsIAccessibleEvent::EVENT_ALERT,
+    nsIAccessibleEvent::EVENT_MENUSTART,
+    nsIAccessibleEvent::EVENT_MENUEND,
+    nsIAccessibleEvent::EVENT_MENUPOPUPSTART,
+    nsIAccessibleEvent::EVENT_MENUPOPUPEND,
+    nsIAccessibleEvent::EVENT_SCROLLINGSTART,
+    nsIAccessibleEvent::EVENT_SCROLLINGEND,
+  };
+
+  PRBool found = PR_FALSE;
+  for (PRUint32 count = 0; count < NS_ARRAY_LENGTH(supportedEvents); count ++) {
+    if (aEvent == supportedEvents[count]) {
+      found = PR_TRUE;
+      break;
+    }
+  }
+  if (!found) {
+    NS_WARNING("Event not supported!");
+  }
+#endif
   if (!mWeakShell) {   // Means we're not active
     return NS_ERROR_FAILURE;
   }
@@ -196,24 +231,34 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
   PRInt32 childID, worldID = OBJID_CLIENT;
   PRUint32 role = ROLE_SYSTEM_TEXT; // Default value
 
+  HWND hWnd = (HWND)mWnd;
+
   if (NS_SUCCEEDED(aAccessible->GetRole(&role)) && role == ROLE_SYSTEM_CARET) {
     childID = CHILDID_SELF;
     worldID = OBJID_CARET;
   }
-  else 
+  else {
     childID = GetChildIDFor(aAccessible); // get the id for the accessible
-
-  if (role == ROLE_SYSTEM_PANE && aEvent == nsIAccessibleEvent::EVENT_STATE_CHANGE) {
-    // Something on the document has changed
-    // Clear out the cache in this subtree
+    if (aAccessible != this) {
+      // See if we're in a scrollable area with its own window
+      nsCOMPtr<nsIAccessible> accessible;
+      if (aEvent == nsIAccessibleEvent::EVENT_HIDE) {
+        // Don't use frame from current accessible when we're hiding that accessible
+        aAccessible->GetParent(getter_AddRefs(accessible));
+      }
+      else {
+        accessible = aAccessible;
+      }
+      nsCOMPtr<nsPIAccessNode> privateAccessNode =
+        do_QueryInterface(accessible);
+      if (privateAccessNode) {
+        nsIFrame *frame = privateAccessNode->GetFrame();
+        if (frame) {
+          hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW); 
+        }
+      }
+    }
   }
-
-  nsCOMPtr<nsPIAccessNode> privateAccessNode =
-    do_QueryInterface(aAccessible);
-  nsIFrame *frame = privateAccessNode->GetFrame();
-
-  HWND hWnd = frame ? (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW) :
-                      (HWND)mWnd;
 
   // Gecko uses two windows for every scrollable area. One window contains
   // scrollbars and the child window contains only the client area.
@@ -302,7 +347,8 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
   }
   const char kHash = '#';
   PRBool hasAnchor = PR_FALSE;
-  if (theURL.FindChar(kHash) > 0) {
+  PRInt32 hasPosition = theURL.FindChar(kHash);
+  if (hasPosition > 0 && hasPosition < (PRInt32)theURL.Length() - 1) {
     hasAnchor = PR_TRUE;
   }
 

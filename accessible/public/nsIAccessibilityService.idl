@@ -45,7 +45,7 @@ interface nsIFrame;
 interface nsObjectFrame;
 interface nsIContent;
 
-[scriptable, uuid(3d4b0231-34eb-4ba3-be7e-02d90932afc0)]
+[scriptable, uuid(0e80f152-d676-4fba-8862-9dc4eb761442)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -121,8 +121,18 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
    * that were generated for aContainerContent and it's subtree.
    * The container content node for the change is passed in, rather than the
    * changed presentation for the content node itself.
+   * @param aPresShell         The presShell where changes occured
+   * @param aChangeContent     The affected DOM content
+   * @param aEvent             The event from nsIAccessibleEvent that
+   *                           caused the change:
+   *                           Must be one of:
+   *                           EVENT_REORDER (change),
+   *                           EVENT_SHOW (make visible or create) or 
+   *                           EVENT_HIDE (destroy or hide)
    */
-  [noscript] void invalidateSubtreeFor(in nsIPresShell aPresShell, in nsIContent aContainerContent);
+  [noscript] void invalidateSubtreeFor(in nsIPresShell aPresShell,
+                                       in nsIContent aChangedContent,
+                                       in PRUint32 aEvent);
 };
 
 

@@ -1868,8 +1868,14 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 
 // Called from layout when the frame tree owned by a node changes significantly
 NS_IMETHODIMP nsAccessibilityService::InvalidateSubtreeFor(nsIPresShell *aShell,
-                                                           nsIContent *aContainerContent)
+                                                           nsIContent *aChangeContent,
+                                                           PRUint32 aEvent)
 {
+  NS_ASSERTION(aEvent == nsIAccessibleEvent::EVENT_REORDER ||
+               aEvent == nsIAccessibleEvent::EVENT_SHOW ||
+               aEvent == nsIAccessibleEvent::EVENT_HIDE,
+               "Incorrect aEvent passed in");
+
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aShell));
   NS_ASSERTION(aShell, "No pres shell in call to InvalidateSubtreeFor");
   nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
@@ -1879,9 +1885,7 @@ NS_IMETHODIMP nsAccessibilityService::InvalidateSubtreeFor(nsIPresShell *aShell,
   if (!privateAccessibleDoc) {
     return NS_OK;
   }
-  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aContainerContent));
-  NS_ASSERTION(domNode, "No DOM node in call to InvalidateSubtreeFor");
-  return privateAccessibleDoc->InvalidateCacheSubtree(domNode, nsIAccessibleEvent::EVENT_REORDER);
+  return privateAccessibleDoc->InvalidateCacheSubtree(aChangeContent, aEvent);
 }
 
 //////////////////////////////////////////////////////////////////////

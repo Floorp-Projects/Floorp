@@ -1288,18 +1288,18 @@ nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) 
     }
     if ((NS_STYLE_VISIBILITY_COLLAPSE == mVisible) || 
         (NS_STYLE_VISIBILITY_COLLAPSE == aOther.mVisible)) {
-      return NS_CombineHint(NS_STYLE_HINT_REFLOW, nsChangeHint_AccessibleChange);
+      return NS_STYLE_HINT_REFLOW;
     }
-    return NS_CombineHint(NS_STYLE_HINT_VISUAL, nsChangeHint_AccessibleChange);
+    return NS_STYLE_HINT_VISUAL;
   }
-  return NS_CombineHint(NS_STYLE_HINT_REFLOW, nsChangeHint_AccessibleChange);;
+  return NS_STYLE_HINT_REFLOW;
 }
 
 #ifdef DEBUG
 /* static */
 nsChangeHint nsStyleVisibility::MaxDifference()
 {
-  return NS_CombineHint(NS_STYLE_HINT_REFLOW, nsChangeHint_AccessibleChange);
+  return NS_STYLE_HINT_REFLOW;
 }
 #endif
 

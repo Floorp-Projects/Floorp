@@ -41,6 +41,7 @@
 #include "nsAccessibleTreeWalker.h"
 #include "nsBulletFrame.h"
 #include "nsIAccessibleDocument.h"
+#include "nsIAccessibleEvent.h"
 #include "nsIFrame.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -71,6 +72,16 @@ nsIFrame* nsHTMLTextAccessible::GetFrame()
     mFrame = nsTextAccessible::GetFrame();
   }
   return mFrame;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::FireToolkitEvent(PRUint32 aEvent,
+                                                     nsIAccessible *aTarget,
+                                                     void *aData)
+{
+  if (aEvent == nsIAccessibleEvent::EVENT_HIDE) {
+    mFrame = nsnull;  // Invalidate cached frame
+  }
+  return nsTextAccessibleWrap::FireToolkitEvent(aEvent, aTarget, aData);
 }
 
 NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)

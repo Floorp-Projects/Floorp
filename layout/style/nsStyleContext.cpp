@@ -434,7 +434,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   PRBool compare = mRuleNode != aOther->mRuleNode;
 
   nsChangeHint maxHint = nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
-      nsChangeHint_UpdateCursor | nsChangeHint_AccessibleChange);
+      nsChangeHint_UpdateCursor);
   
 #define DO_STRUCT_DIFFERENCE(struct_)                                         \
   PR_BEGIN_MACRO                                                              \

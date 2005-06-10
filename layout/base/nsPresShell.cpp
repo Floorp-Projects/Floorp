@@ -176,6 +176,7 @@
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #include "nsIAccessible.h"
+#include "nsIAccessibleEvent.h"
 #endif
 
 // For style data reconstruction
@@ -3822,6 +3823,20 @@ PresShell::CancelAllReflowCommands()
   return NS_OK;
 }
 
+#ifdef ACCESSIBILITY
+void nsIPresShell::InvalidateAccessibleSubtree(nsIContent *aContent)
+{
+  if (mIsAccessibilityActive) {
+    nsCOMPtr<nsIAccessibilityService> accService = 
+      do_GetService("@mozilla.org/accessibilityService;1");
+    if (accService) {
+      accService->InvalidateSubtreeFor(this, aContent,
+                                       nsIAccessibleEvent::EVENT_REORDER);
+    }
+  }
+}
+#endif
+
 NS_IMETHODIMP
 PresShell::RecreateFramesFor(nsIContent* aContent)
 {
@@ -3837,6 +3852,9 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
   mViewManager->BeginUpdateViewBatch();
   nsresult rv = mFrameConstructor->ProcessRestyledFrames(changeList);
   mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+#ifdef ACCESSIBILITY
+  InvalidateAccessibleSubtree(aContent);
+#endif
   return rv;
 }
 
@@ -5527,6 +5545,10 @@ nsIPresShell::ReconstructStyleDataInternal()
   mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
   VERIFY_STYLE_TREE;
+
+#ifdef ACCESSIBILITY
+  InvalidateAccessibleSubtree(nsnull);
+#endif
 }
 
 void
@@ -7152,6 +7174,9 @@ PresShell::Observe(nsISupports* aSubject,
       mFrameConstructor->ProcessRestyledFrames(changeList);
 
       mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+#ifdef ACCESSIBILITY
+      InvalidateAccessibleSubtree(nsnull);
+#endif
     }
     return NS_OK;
   }

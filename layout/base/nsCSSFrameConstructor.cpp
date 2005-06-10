@@ -128,6 +128,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 #endif
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
+#include "nsIAccessibleEvent.h"
 #endif
 
 #include "nsInlineFrame.h"
@@ -10102,6 +10103,45 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
   return rv;
 }
 
+#ifdef ACCESSIBILITY
+nsIAtom*
+nsCSSFrameConstructor::GetRenderedFrameType(nsIFrame *aFrame)
+{
+  if (aFrame) {
+    const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+    if (vis->IsVisible()) {
+      return aFrame->GetType();
+    }
+  }
+
+  return nsnull;
+}
+
+void
+nsCSSFrameConstructor::NotifyAccessibleChange(nsIAtom *aPreviousFrameType,
+                                              nsIAtom *aFrameType,
+                                              nsIContent *aContent)
+{
+  if (aFrameType == aPreviousFrameType) {
+    return;
+  }
+  PRUint32 event = nsIAccessibleEvent::EVENT_REORDER;
+  if (!aPreviousFrameType) {
+    event = nsIAccessibleEvent::EVENT_SHOW;
+  }
+  else if (!aFrameType) {
+    event = nsIAccessibleEvent::EVENT_HIDE;
+  }
+
+  // A significant enough change occured that this part
+  // of the accessible tree is no longer valid.
+  nsCOMPtr<nsIAccessibilityService> accService = 
+    do_GetService("@mozilla.org/accessibilityService;1");
+  if (accService) {
+    accService->InvalidateSubtreeFor(mPresShell, aContent, event);
+  }
+}
+#endif
 
 nsresult
 nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
@@ -10160,23 +10200,6 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         if (viewMgr)
           viewMgr->SynthesizeMouseMove(PR_FALSE);
       }
-  #ifdef ACCESSIBILITY
-      if ((hint & nsChangeHint_AccessibleChange) && 
-          mPresShell->IsAccessibilityActive()) {
-        // A significant enough change occured that this part
-        // of the accessible tree is no longer valid
-        // This also happens in RecreateFramesForContent()
-        nsCOMPtr<nsIAccessibilityService> accService = 
-          do_GetService("@mozilla.org/accessibilityService;1");
-        if (accService) {
-          nsCOMPtr<nsIContent> parentContent = content->GetParent();
-          if (!parentContent) {
-            parentContent = content;
-          }
-          accService->InvalidateSubtreeFor(mPresShell, parentContent);
-        }
-      }
-  #endif
     }
 
 #ifdef DEBUG
@@ -10213,6 +10236,12 @@ nsCSSFrameConstructor::RestyleElement(nsIContent     *aContent,
                                       nsIFrame       *aPrimaryFrame,
                                       nsChangeHint   aMinHint)
 {
+#ifdef ACCESSIBILITY
+  nsIAtom *prevRenderedFrameType = nsnull;
+  if (mPresShell->IsAccessibilityActive()) {
+    prevRenderedFrameType = GetRenderedFrameType(aPrimaryFrame);
+  }
+#endif
   if (aMinHint & nsChangeHint_ReconstructFrame) {
     RecreateFramesForContent(aContent);
   } else if (aPrimaryFrame) {
@@ -10233,6 +10262,15 @@ nsCSSFrameConstructor::RestyleElement(nsIContent     *aContent,
     // no frames, reconstruct for content
     MaybeRecreateFramesForContent(aContent);
   }
+#ifdef ACCESSIBILITY
+  if (mPresShell->IsAccessibilityActive()) {
+    nsIFrame *frame;
+    mPresShell->GetPrimaryFrameFor(aContent, &frame);
+    NotifyAccessibleChange(prevRenderedFrameType,
+                           GetRenderedFrameType(frame),
+                           aContent);
+  }
+#endif
 }
 
 void
@@ -11611,17 +11649,6 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
   }
 
   if (frame && IsFrameSpecial(frame)) {
-#ifdef ACCESSIBILITY
-    nsCOMPtr<nsIContent> invalidationContent;
-    if (mPresShell->IsAccessibilityActive()) {
-      // A significant enough change occured that this part
-      // of the accessible tree is no longer valid
-      nsIFrame *containerFrame = GetIBContainingBlockFor(frame);
-      invalidationContent = containerFrame ? containerFrame->GetContent() :
-                                             aContent;
-    }
-#endif
-
 #ifdef DEBUG
     if (gNoisyContentUpdates) {
       printf("nsCSSFrameConstructor::RecreateFramesForContent: frame=");
@@ -11629,17 +11656,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
       printf(" is special\n");
     }
 #endif
-    nsresult rv = ReframeContainingBlock(frame);
-#ifdef ACCESSIBILITY
-    if (invalidationContent) {
-      nsCOMPtr<nsIAccessibilityService> accService = 
-        do_GetService("@mozilla.org/accessibilityService;1");
-      if (accService) {
-        accService->InvalidateSubtreeFor(mPresShell, invalidationContent);
-      }
-    }
-#endif
-    return rv;
+    return ReframeContainingBlock(frame);
   }
 
   nsresult rv = NS_OK;
@@ -11677,21 +11694,6 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
     // The content is the root node, so just rebuild the world.
     ReconstructDocElementHierarchy();
   }
-
-#ifdef ACCESSIBILITY
-  if (mPresShell->IsAccessibilityActive()) {
-    // A significant enough change occured that this part
-    // of the accessible tree is no longer valid
-    nsCOMPtr<nsIAccessibilityService> accService = 
-      do_GetService("@mozilla.org/accessibilityService;1");
-    if (accService) {
-      if (!container) {
-        container = aContent;
-      }
-      accService->InvalidateSubtreeFor(mPresShell, container);
-    }
-  }
-#endif
 
   return rv;
 }

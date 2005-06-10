@@ -45,7 +45,7 @@
 #include "nsIAccessibleEvent.h"
 #include "nsIArray.h"
 #include "nsIDocument.h"
-#include "nsIDOMMutationListener.h"
+#include "nsIDocumentObserver.h"
 #include "nsIEditor.h"
 #include "nsIObserver.h"
 #include "nsIScrollPositionListener.h"
@@ -59,8 +59,8 @@ const PRUint32 kDefaultCacheSize = 256;
 class nsDocAccessible : public nsBlockAccessible,
                         public nsIAccessibleDocument,
                         public nsPIAccessibleDocument,
+                        public nsIDocumentObserver,
                         public nsIObserver,
-                        public nsIDOMMutationListener,
                         public nsIScrollPositionListener,
                         public nsSupportsWeakReference
 {  
@@ -83,15 +83,8 @@ class nsDocAccessible : public nsBlockAccessible,
     NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
     NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
 
-    // ----- nsIDOMMutationListener -------------------------
-    NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-    NS_IMETHOD SubtreeModified(nsIDOMEvent* aMutationEvent);
-    NS_IMETHOD NodeInserted(nsIDOMEvent* aMutationEvent);
-    NS_IMETHOD NodeRemoved(nsIDOMEvent* aMutationEvent);
-    NS_IMETHOD NodeRemovedFromDocument(nsIDOMEvent* aMutationEvent);
-    NS_IMETHOD NodeInsertedIntoDocument(nsIDOMEvent* aMutationEvent);
-    NS_IMETHOD AttrModified(nsIDOMEvent* aMutationEvent);
-    NS_IMETHOD CharacterDataModified(nsIDOMEvent* aMutationEvent);
+    // nsIDocumentObserver
+    NS_DECL_NSIDOCUMENTOBSERVER
 
     NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData);
     static void FlushEventsCallback(nsITimer *aTimer, void *aClosure);
@@ -109,10 +102,11 @@ class nsDocAccessible : public nsBlockAccessible,
     virtual nsresult RemoveEventListeners();
     void AddScrollListener();
     void RemoveScrollListener();
-    void HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aEventType);
-    void ShutdownNodes(nsIDOMNode *aStartNode);
+    void RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
     virtual void CheckForEditor();
+    nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
+                                     void *aData);
 
     nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> mAccessNodeCache;
     void *mWnd;

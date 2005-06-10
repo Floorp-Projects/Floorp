@@ -42,15 +42,11 @@
 // Defines for various style related constants
 
 enum nsChangeHint {
-  nsChangeHint_AccessibleChange = 0x1,  // Change requires changes to the accessible object
-                                        // hierarchy (if accessibility is turned on).
-                                        // Anything that causes frame reconstruction also means changes
-                                        // are required in the accessible object hierarcy.
-  nsChangeHint_RepaintFrame = 0x02,  // change was visual only (e.g., COLOR=)
-  nsChangeHint_ReflowFrame = 0x04,   // change requires reflow (e.g., WIDTH=)
-  nsChangeHint_SyncFrameView = 0x08, // change requires view to be updated, if there is one (e.g., clip:)
-  nsChangeHint_UpdateCursor = 0x10,  // The currently shown mouse cursor needs to be updated
-  nsChangeHint_ReconstructFrame = 0x20   // change requires frame change (e.g., display:)
+  nsChangeHint_RepaintFrame = 0x01,  // change was visual only (e.g., COLOR=)
+  nsChangeHint_ReflowFrame = 0x02,   // change requires reflow (e.g., WIDTH=)
+  nsChangeHint_SyncFrameView = 0x04, // change requires view to be updated, if there is one (e.g., clip:)
+  nsChangeHint_UpdateCursor = 0x08,  // The currently shown mouse cursor needs to be updated
+  nsChangeHint_ReconstructFrame = 0x10   // change requires frame change (e.g., display:)
                                          // This subsumes all the above
   // TBD: add nsChangeHint_ForceFrameView to force frame reconstruction if the frame doesn't yet
   // have a view
