@@ -1580,7 +1580,8 @@ function openLocation()
     }
     else {
       // If there are no open browser windows, open a new one
-      win = OpenBrowserWindow();
+      win = window.openDialog("chrome://browser/content/", "_blank",
+                              "chrome,all,dialog=no", "about:blank");
       win.addEventListener("load", openLocationCallback, false);
     }
   }
@@ -2655,7 +2656,8 @@ function WebSearch()
     }
     else {
       // If there are no open browser windows, open a new one
-      var win = OpenBrowserWindow();
+      win = window.openDialog("chrome://browser/content/", "_blank",
+                              "chrome,all,dialog=no", "about:blank");
       win.addEventListener("load", WebSearchCallback, false);
     }
   }
