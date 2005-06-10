@@ -1038,6 +1038,16 @@ SWITCH: for ($cgi->param('knob')) {
             ThrowUserError("dupe_of_self_disallowed");
         }
 
+        # Make sure the bug is not already marked as a dupe
+        # (may appear in race condition)
+        my $dupe_of =
+            $dbh->selectrow_array("SELECT dupe_of FROM duplicates
+                                   WHERE dupe = ?",
+                                   undef, $cgi->param('id'));
+        if ($dupe_of) {
+            ThrowUserError("dupe_entry_found", { dupe_of => $dupe_of });
+        }
+
         # DUPLICATE bugs should have no time remaining.
         _remove_remaining_time();
 
