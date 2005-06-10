@@ -1031,7 +1031,7 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = lfm->InitWithFSRef(fileRef);
+  rv = lfm->InitWithFSRef(&fileRef);
   CFRelease(bundleURL);
 
   if (NS_FAILED(rv))
