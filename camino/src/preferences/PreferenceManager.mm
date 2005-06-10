@@ -314,7 +314,11 @@ static BOOL gMadePrefManager;
         [language appendString:[[localeParts objectAtIndex:1] lowercaseString]];
       }
 
-      if ( [language length] == 2 || ( [language length] == 5 && [language characterAtIndex:2] == '-' ) )
+      // We accept standalone primary subtags (e.g. "en") and also
+      // a primary subtag with additional subtags of between two and eight characters long
+      // We ignore i- and x- primary subtags
+      if ( [language length] == 2 ||
+           ( [language length] >= 5 && [language length] <= 13 && [language characterAtIndex:2] == '-' ) )
         r = [NSString stringWithString:language];
     }
     return r;
