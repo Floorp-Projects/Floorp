@@ -1,17 +1,5 @@
 # Obsolete SpiderMonkey tests
 #
-# invalidated by bug 240317
-#
-ecma/LexicalConventions/7.4.3-14-n.js
-ecma/LexicalConventions/7.4.3-4-n.js
-ecma/LexicalConventions/7.4.3-7-n.js
-ecma/LexicalConventions/7.4.3-9-n.js
-ecma_2/Exceptions/lexical-011.js
-ecma_2/Exceptions/lexical-014.js
-ecma_2/Exceptions/lexical-016.js
-ecma_2/Exceptions/lexical-021.js
-ecma_2/LexicalConventions/keywords-001.js
-#
 # invalidated by bug 10278
 #
 ecma_2/Exceptions/function-001.js
