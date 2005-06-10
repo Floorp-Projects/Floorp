@@ -7,10 +7,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="link" extends="chrome://global/content/bindings/text.xml#text-base">
-    <content>
-      <xul:label xbl:inherits="value=label,crop" class="linkLabel" flex="1"/>
-    </content>
+  <binding id="link">
     <implementation>
       <property name="href"
                 onget="return this.getAttribute('href');"

@@ -68,6 +68,7 @@
 const nsIUpdateItem       = Components.interfaces.nsIUpdateItem;
 const nsIUpdateService    = Components.interfaces.nsIUpdateService;
 
+const PREF_UPDATE_EXTENSIONS_ENABLED            = "extensions.update.enabled";
 const PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED  = "extensions.update.autoUpdateEnabled";
 const PREF_UPDATE_EXTENSIONS_COUNT              = "extensions.update.count";
 const PREF_UPDATE_EXTENSIONS_SEVERITY_THRESHOLD = "extensions.update.severity.threshold";
@@ -130,7 +131,7 @@ var gUpdateWizard = {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     if (this.shouldSuggestAutoChecking)
-      pref.setBoolPref("update.extensions.enabled", this.shouldAutoCheck); 
+      pref.setBoolPref(PREF_EXTENSIONS_UPDATE_ENABLED, this.shouldAutoCheck); 
     
     if (this.succeeded) {
       // Downloading and Installed Extension
