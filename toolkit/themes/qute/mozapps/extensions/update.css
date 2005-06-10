@@ -68,9 +68,11 @@ toolbarbutton[type="updates"] {
   -moz-appearance: none;
   border: none;
 }
+
 toolbarbutton[type="updates"][updateCount="0"] {
   visibility: collapse;
 }
+
 toolbarbutton[type="updates"] > .toolbarbutton-icon {
   list-style-image: url("chrome://mozapps/skin/update/extensionalert.png"); 
   -moz-image-region: rect(0px 16px 16px 0px);
