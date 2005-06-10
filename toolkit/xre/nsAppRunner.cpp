@@ -462,6 +462,24 @@ nsXULAppInfo::GetInSafeMode(PRBool *aResult)
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetOS(nsACString& aResult)
+{
+  aResult.AssignLiteral(OS_TARGET);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetXPCOMABI(nsACString& aResult)
+{
+#ifdef TARGET_XPCOM_ABI
+  aResult.AssignLiteral(TARGET_XPCOM_ABI);
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::CreateInstance(nsISupports* aOuter,
                              REFNSIID aIID,
                              void** aResult)
