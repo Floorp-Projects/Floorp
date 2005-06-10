@@ -281,6 +281,13 @@
 #define _makepath	mozce_makepath
 
 
+
+#define lstrlenA  strlen
+#define lstrcpyA  strcpy
+#define lstrcmpA  strcmp
+#define lstrcmpiA strcmpi
+#define lstrcatA  strcat
+
 #ifdef strdup
 #undef strdup
 #endif
@@ -618,6 +625,11 @@
 #endif
 #define SetWindowsHookEx          mozce_SetWindowsHookEx
 
+#ifdef SetWindowTextA
+#undef SetWindowTextA
+#endif
+#define SetWindowTextA            mozce_SetWindowTextA
+
 #ifdef TlsAlloc
 #undef TlsAlloc
 #endif
@@ -748,6 +760,11 @@
 #undef EnumFontFamiliesA
 #endif
 #define EnumFontFamiliesA         mozce_EnumFontFamiliesA
+
+#ifdef TextOut
+#undef TextOut
+#endif
+#define TextOut                   mozce_TextOutA
 
 #ifdef ExtTextOutA
 #undef ExtTextOutA
@@ -1333,6 +1350,8 @@ extern "C" {
   MOZCE_SHUNT_API BOOL mozce_RemoveDirectoryA(LPCSTR lpPathName);
   MOZCE_SHUNT_API BOOL mozce_CreateProcessA(LPCSTR pszImageName, LPCSTR pszCmdLine, LPSECURITY_ATTRIBUTES psaProcess, LPSECURITY_ATTRIBUTES psaThread, BOOL fInheritHandles, DWORD fdwCreate, LPVOID pvEnvironment, LPSTR pszCurDir, LPSTARTUPINFO psiStartInfo, LPPROCESS_INFORMATION pProcInfo);
   MOZCE_SHUNT_API BOOL mozce_ExtTextOutA(HDC inDC, int inX, int inY, UINT inOptions, LPCRECT inRect, LPCSTR inString, UINT inCount, const LPINT inDx);
+  MOZCE_SHUNT_API BOOL mozce_TextOutA(HDC  hdc, int  nXStart, int  nYStart, LPCSTR  lpString, int  cbString);
+
   MOZCE_SHUNT_API BOOL mozce_GetClassInfoA(HINSTANCE hInstance, LPCSTR lpClassName, LPWNDCLASS lpWndClass);
   MOZCE_SHUNT_API int mozce_GetClassNameA(HWND hWnd, LPTSTR lpClassName, int nMaxCount);
   MOZCE_SHUNT_API BOOL mozce_GetFileVersionInfoA(LPSTR inFilename, DWORD inHandle, DWORD inLen, LPVOID outData);
@@ -1416,6 +1435,8 @@ extern "C" {
   MOZCE_SHUNT_API int mozce_EnumFontFamiliesA(HDC hdc, LPCTSTR lpszFamily, FONTENUMPROC lpEnumFontFamProc, LPARAM lParam);
   MOZCE_SHUNT_API int mozce_GetTextFaceA(HDC hdc, int nCount,  LPTSTR lpFaceName);
   MOZCE_SHUNT_API BOOL mozce_GetTextMetricsA(HDC hdc, LPTEXTMETRIC lptm);
+
+  MOZCE_SHUNT_API BOOL mozce_SetWindowTextA(HWND hWnd, LPCSTR lpString);
 
 
   // From win32w.cpp

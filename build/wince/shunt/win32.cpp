@@ -328,7 +328,7 @@ MOZCE_SHUNT_API UINT mozce_GetTextCharsetInfo(HDC inDC, LPFONTSIGNATURE outSig, 
     mozce_printf("mozce_GetTextCharsetInfo called\n");
 #endif
 
-    // A broken implementation.
+    // Zero out the FONTSIGNATURE as we do not know how to fill it out properly.
     if(NULL != outSig)
     {
         memset(outSig, 0, sizeof(FONTSIGNATURE));
@@ -342,22 +342,12 @@ MOZCE_SHUNT_API UINT mozce_GetOutlineTextMetrics(HDC inDC, UINT inData, void* ou
 {
     MOZCE_PRECHECK
 
-    static int x = 0;
-
 #ifdef DEBUG
-    mozce_printf("-- mozce_GetOutlineTextMetrics called (%d)\n", ++x);
+    mozce_printf("-- mozce_GetOutlineTextMetrics called.\n");
 #endif
 
-    UINT retval = 0;
-
-    if(NULL != outOTM)
-    {
-        //memset(outOTM, 0, sizeof(OUTLINETEXTMETRIC));
-    }
-
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-    return retval;
+    return 0;
 }
 
 
@@ -400,32 +390,33 @@ MOZCE_SHUNT_API int mozce_EnumFontFamiliesEx(HDC inDC, LPLOGFONT inLogfont, FONT
 
     //  We support only one case.
     //  Callback should be oldstyle EnumFonts.
-    if(DEFAULT_CHARSET == inLogfont->lfCharSet)
+    if(DEFAULT_CHARSET != inLogfont->lfCharSet)
     {
-        CollectFaces collection;
-        collection.mCount = 0;
-
-        EnumFonts(inDC, NULL, collectProc, (LPARAM)&collection);
-
-        UINT loop;
-        for(loop = 0; loop < collection.mCount; loop++)
-        {
-            retval = EnumFonts(inDC, collection.mNames[loop], inFunc, inParam);
-        }
-
-        for(loop = 0; loop < collection.mCount; loop++)
-        {
-            free(collection.mNames[loop]);
-        }
-    }
-    else
-    {
+#ifdef DEBUG
+        mozce_printf("mozce_EnumFontFamiliesEx failed\n");
+#endif
         SetLastError(ERROR_NOT_SUPPORTED);
+        return retval;
+    }
+     
+    CollectFaces collection;
+    collection.mCount = 0;
+    
+    EnumFonts(inDC, NULL, collectProc, (LPARAM)&collection);
+    
+    UINT loop;
+    for(loop = 0; loop < collection.mCount; loop++)
+    {
+        retval = EnumFonts(inDC, collection.mNames[loop], inFunc, inParam);
+    }
+    
+    for(loop = 0; loop < collection.mCount; loop++)
+    {
+        free(collection.mNames[loop]);
     }
 
     return retval;
 }
-
 
 MOZCE_SHUNT_API int mozce_GetMapMode(HDC inDC)
 {
@@ -594,14 +585,9 @@ MOZCE_SHUNT_API BOOL mozce_OpenIcon(HWND inWnd)
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("-- mozce_OpenIcon called\n");
+    mozce_printf("mozce_OpenIcon called\n");
 #endif
-
-    BOOL retval = FALSE;
-
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-    return retval;
+    return SetActiveWindow(inWnd) ? 1:0;
 }
 
 
