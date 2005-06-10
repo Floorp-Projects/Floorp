@@ -989,13 +989,59 @@ RemoteCommandLine()
 }
 #endif // MOZ_ENABLE_XREMOTE
 
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-char gBinaryPath[MAXPATHLEN];
-
-static PRBool
-GetBinaryPath(const char* argv0)
+nsresult
+XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
 {
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> lf;
+
+  // We need to use platform-specific hackery to find the
+  // path of this executable. This is copied, with some modifications, from
+  // nsGREDirServiceProvider.cpp
+
+#ifdef XP_WIN
+  char exePath[MAXPATHLEN];
+
+  if (!::GetModuleFileName(0, exePath, MAXPATHLEN))
+    return NS_ERROR_FAILURE;
+
+  rv = NS_NewNativeLocalFile(nsDependentCString(exePath), PR_TRUE,
+                             getter_AddRefs(lf));
+  if (NS_FAILED(rv))
+    return rv;
+
+#elif defined(XP_MACOSX)
+  NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(lf));
+  nsCOMPtr<nsILocalFileMac> lfm (do_QueryInterface(lf));
+  if (!lfm)
+    return NS_ERROR_FAILURE;
+
+  // Works even if we're not bundled.
+  CFBundleRef appBundle = CFBundleGetMainBundle();
+  if (!appBundle)
+    return NS_ERROR_FAILURE;
+
+  CFURLRef bundleURL = CFBundleCopyExecutableURL(appBundle);
+  if (!bundleURL)
+    return NS_ERROR_FAILURE;
+
+  FSRef fileRef;
+  if (!CFURLGetFSRef(bundleURL, &fileRef)) {
+    CFRelease(bundleURL);
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = lfm->InitWithFSRef(fileRef);
+  CFRelease(bundleURL);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+#elif defined(XP_UNIX)
   struct stat fileStat;
+  const char exePath[MAXPATHLEN];
+
+  rv = NS_ERROR_FAILURE;
 
   // on unix, there is no official way to get the path of the current binary.
   // instead of using the MOZILLA_FIVE_HOME hack, which doesn't scale to
@@ -1010,87 +1056,59 @@ GetBinaryPath(const char* argv0)
 
 // #ifdef __linux__
 #if 0
-  int r = readlink("/proc/self/exe", gBinaryPath, MAXPATHLEN);
+  int r = readlink("/proc/self/exe", exePath, MAXPATHLEN);
 
   // apparently, /proc/self/exe can sometimes return weird data... check it
-  if (r > 0 && r < MAXPATHLEN && stat(gBinaryPath, &fileStat) == 0)
-    return PR_TRUE;
+  if (r > 0 && r < MAXPATHLEN && stat(exePath, &fileStat) == 0) {
+    rv = NS_OK;
+  }
+
 #endif
+  if (NS_FAILED(rv) &&
+      realpath(argv0, exePath) && stat(exePath, &fileStat) == 0) {
+    rv = NS_OK;
+  }
 
-  if (realpath(argv0, gBinaryPath) && stat(gBinaryPath, &fileStat) == 0)
-    return PR_TRUE;
+  if (NS_FAILED(rv)) {
+    const char *path = getenv("PATH");
+    if (!path)
+      return NS_ERROR_FAILURE;
 
-  const char *path = getenv("PATH");
-  if (!path) return PR_FALSE;
+    char *pathdup = strdup(path);
+    if (!pathdup)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-  char *pathdup = strdup(path);
-  if (!pathdup) return PR_FALSE;
-
-  PRBool found = PR_FALSE;
-  char *newStr = pathdup;
-  char *token;
-  while ( (token = nsCRT::strtok(newStr, ":", &newStr)) ) {
-    sprintf(gBinaryPath, "%s/%s", token, argv0);
-    if (stat(gBinaryPath, &fileStat) == 0) {
-      found = PR_TRUE;
-      break;
+    PRBool found = PR_FALSE;
+    char *newStr = pathdup;
+    char *token;
+    while ( (token = nsCRT::strtok(newStr, ":", &newStr)) ) {
+      sprintf(exePath, "%s/%s", token, argv0);
+      if (stat(exePath, &fileStat) == 0) {
+        found = PR_TRUE;
+        break;
+      }
     }
-  }
-  free(pathdup);
-  return found;
-}
-#endif
-
-#define NS_ERROR_LAUNCHED_CHILD_PROCESS NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_PROFILE, 200)
-
-static nsresult LaunchChild(nsINativeAppSupport* aNative)
-{
-  aNative->Quit(); // release DDE mutex, if we're holding it
-
-  // We need to use platform-specific hackery to find the
-  // path of this executable. This is copied, with some modifications, from
-  // nsGREDirServiceProvider.cpp
-#ifdef XP_WIN
-  // We must shorten the path to a 8.3 path, since that's all _execv can
-  // handle (otherwise segments after any spaces that might exist in the path
-  // will be converted into parameters, and really weird things will happen)
-  char exePath[MAXPATHLEN];
-  if (!::GetModuleFileName(0, exePath, MAXPATHLEN) ||
-      !::GetShortPathName(exePath, exePath, sizeof(exePath)))
-    return NS_ERROR_FAILURE;
-  gRestartArgv[0] = (char*)exePath;
-
-#elif defined(XP_MACOSX)
-  // Works even if we're not bundled.
-  CFBundleRef appBundle = CFBundleGetMainBundle();
-  if (!appBundle) return NS_ERROR_FAILURE;
-
-  CFURLRef bundleURL = CFBundleCopyExecutableURL(appBundle);
-  if (!bundleURL) return NS_ERROR_FAILURE;
-
-  FSRef fileRef;
-  if (!CFURLGetFSRef(bundleURL, &fileRef)) {
-    CFRelease(bundleURL);
-    return NS_ERROR_FAILURE;
+    free(pathdup);
+    if (!found)
+      return NS_ERROR_FAILURE;
   }
 
-  char exePath[MAXPATHLEN];
-  if (FSRefMakePath(&fileRef, exePath, MAXPATHLEN)) {
-    CFRelease(bundleURL);
-    return NS_ERROR_FAILURE;
-  }
-
-  CFRelease(bundleURL);
-
-#elif defined(XP_UNIX)
-  char* exePath = gBinaryPath;
+  rv = NS_NewNativeLocalFile(nsDependentCString(exePath), PR_TRUE,
+                             getter_AddRefs(lf));
+  if (NS_FAILED(rv))
+    return rv;
 
 #elif defined(XP_OS2)
   PPIB ppib;
   PTIB ptib;
   char exePath[MAXPATHLEN];
+
   DosGetInfoBlocks( &ptib, &ppib);
   DosQueryModuleName( ppib->pib_hmte, MAXPATHLEN, exePath);
+  rv = NS_NewNativeLocalFile(nsDependentCString(exePath), PR_TRUE,
+                             getter_AddRefs(lf));
+  if (NS_FAILED(rv))
+    return rv;
 
 #elif defined(XP_BEOS)
   int32 cookie = 0;
@@ -1099,24 +1117,61 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative)
   if(get_next_image_info(0, &cookie, &info) != B_OK)
     return NS_ERROR_FAILURE;
 
-  char *exePath = info.name;
+  PL_strncpy(aResult, info.name, MAXPATHLEN);
+  rv = NS_NewNativeLocalFile(nsDependentCString(info.name), PR_TRUE,
+                             getter_AddRefs(lf));
+  if (NS_FAILED(rv))
+    return rv;
+
 #elif
 #error Oops, you need platform-specific code here
 #endif
 
-  // restart this process by exec'ing it into the current process
-  // if supported by the platform.  otherwise, use nspr ;-)
+  NS_ADDREF(*aResult = lf);
+  return NS_OK;
+}
 
-#if defined(XP_WIN) || defined(XP_OS2)
-  if (_execv(exePath, gRestartArgv) == -1)
-    return NS_ERROR_FAILURE;
-#elif defined(XP_MACOSX)
+#define NS_ERROR_LAUNCHED_CHILD_PROCESS NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_PROFILE, 200)
+
+static nsresult LaunchChild(nsINativeAppSupport* aNative)
+{
+  aNative->Quit(); // release DDE mutex, if we're holding it
+
+  // Restart this process by exec'ing it into the current process
+  // if supported by the platform.  Otherwise, use NSPR.
+
+#if defined(XP_MACOSX)
   LaunchChildMac(gRestartArgc, gRestartArgv);
+#else
+  nsCOMPtr<nsILocalFile> lf;
+  nsresult rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCAutoString exePath;
+  rv = lf->GetNativePath(exePath);
+  if (NS_FAILED(rv))
+    return rv;
+
+#if defined(XP_WIN)
+  // We must shorten the path to a 8.3 path, since that's all _execv can
+  // handle (otherwise segments after any spaces that might exist in the path
+  // will be converted into parameters, and really weird things will happen)
+  char shortPath[MAXPATHLEN];
+  ::GetShortPathName(exePath.get(), shortPath, MAXPATHLEN);
+
+  gRestartArgv[0] = shortPath;
+
+  if (_execv(shortPath, gRestartArgv) == -1)
+    return NS_ERROR_FAILURE;
+#elif defined(XP_OS2)
+  if (_execv(exePath.get(), gRestartArgv) == -1)
+    return NS_ERROR_FAILURE;
 #elif defined(XP_UNIX)
-  if (execv(exePath, gRestartArgv) == -1)
+  if (execv(exePath.get(), gRestartArgv) == -1)
     return NS_ERROR_FAILURE;
 #else
-  PRProcess* process = PR_CreateProcess(exePath, gRestartArgv,
+  PRProcess* process = PR_CreateProcess(exePath.get(), gRestartArgv,
                                         nsnull, nsnull);
   if (!process) return NS_ERROR_FAILURE;
 
@@ -1124,6 +1179,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative)
   PRStatus failed = PR_WaitProcess(process, &exitCode);
   if (failed || exitCode)
     return NS_ERROR_FAILURE;
+#endif
 #endif
 
   return NS_ERROR_LAUNCHED_CHILD_PROCESS;
@@ -1681,11 +1737,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   fpsetmask(0);
 #endif
 
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-  if (!GetBinaryPath(argv[0]))
-    return 1;
-#endif
-
   gArgc = argc;
   gArgv = argv;
 
@@ -1723,11 +1774,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     return 1;
   ScopedFPHandler handler;
 #endif /* XP_OS2 */
-
-#ifdef _BUILD_STATIC_BIN
-  // Initialize XPCOM's module info table
-  NSGetStaticModuleInfo = app_getModuleInfo;
-#endif
 
   if (CheckArg("safe-mode"))
     gSafeMode = PR_TRUE;
