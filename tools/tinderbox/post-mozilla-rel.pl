@@ -318,15 +318,6 @@ sub packit {
 
     my(@xforms_xpi);
     if ($Settings::BuildXForms) {
-      TinderUtils::run_shell_command "cd $builddir/extensions/schema-validation; $builddir/build/autoconf/make-makefile";
-      TinderUtils::run_shell_command "make -C $builddir/extensions/schema-validation";
-
-      TinderUtils::run_shell_command "cd $builddir/extensions/xforms; $builddir/build/autoconf/make-makefile";
-      TinderUtils::run_shell_command "make -C $builddir/extensions/xforms";
-
-      TinderUtils::run_shell_command "cd $builddir/extensions/xforms/package; $builddir/build/autoconf/make-makefile";
-      TinderUtils::run_shell_command "make -C $builddir/extensions/xforms/package xpi";
-
       @xforms_xpi = grep { -f $_ } <${builddir}/extensions/xforms/package/stage/xforms/xforms.xpi>;
     }
 
@@ -394,8 +385,8 @@ sub packit_l10n {
 
   TinderUtils::print_log "Starting l10n builds\n";
 
-  unless (open(ALL_LOCALES, "<$srcdir/browser/locales/all-locales")) {
-      TinderUtils::print_log "Error: Couldn't read $srcdir/browser/locales/all-locales.\n";
+  unless (open(ALL_LOCALES, "<$srcdir/$Settings::LocaleProduct/locales/all-locales")) {
+      TinderUtils::print_log "Error: Couldn't read $srcdir/$Settings::LocaleProduct/locales/all-locales.\n";
       return (("testfailed"));
   }
 
@@ -441,7 +432,7 @@ sub packit_l10n {
   
       # the one operation we care about saving status of
       if ($Settings::sea_installer || $Settings::stub_installer) {
-        $status = run_locale_shell_command "$Settings::Make -C $objdir/browser/locales installers-$locale";
+        $status = run_locale_shell_command "$Settings::Make -C $objdir/$Settings::LocaleProduct/locales installers-$locale";
         if ($status != 0) {
           $tinderstatus = 'busted';
         }
@@ -490,7 +481,7 @@ sub packit_l10n {
       if (is_windows()) {
         run_locale_shell_command "cp $package_location/../*$locale*.zip $stagedir/";
       } elsif (is_mac()) {
-        $status = run_locale_shell_command "$Settings::Make -C $objdir/browser/locales installers-$locale";
+        $status = run_locale_shell_command "$Settings::Make -C $objdir/$Settings::LocaleProduct/locales installers-$locale";
         if ($status != 0) {
           $tinderstatus = 'busted';
         }
@@ -702,6 +693,17 @@ sub main {
   TinderUtils::print_log "Post-Build packaging/uploading commencing.\n";
 
   chdir $mozilla_build_dir;
+
+  if ($Settings::BuildXForms) {
+    TinderUtils::run_shell_command "cd $builddir/extensions/schema-validation; $builddir/build/autoconf/make-makefile";
+    TinderUtils::run_shell_command "make -C $builddir/extensions/schema-validation";
+
+    TinderUtils::run_shell_command "cd $builddir/extensions/xforms; $builddir/build/autoconf/make-makefile";
+    TinderUtils::run_shell_command "make -C $builddir/extensions/xforms";
+
+    TinderUtils::run_shell_command "cd $builddir/extensions/xforms/package; $builddir/build/autoconf/make-makefile";
+    TinderUtils::run_shell_command "make -C $builddir/extensions/xforms/package xpi";
+  }
 
   if (is_windows()) {
     #$mozilla_build_dir = `cygpath $mozilla_build_dir`; # cygnusify the path
