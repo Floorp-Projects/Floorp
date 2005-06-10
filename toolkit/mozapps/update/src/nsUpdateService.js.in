@@ -575,7 +575,7 @@ UpdateService.prototype = {
       this._downloader.cancel();
     }
     this._downloader = new Downloader(background);
-    this._downloader.downloadUpdate(update);
+    return this._downloader.downloadUpdate(update);
   },
   
   /**
@@ -719,8 +719,7 @@ Checker.prototype = {
   
   get _updateURL() {
     try {
-      //return gPref.getComplexValue(PREF_APP_UPDATE_URL, nsIPrefLocalizedString).data;
-      return gPref.getCharPref(PREF_APP_UPDATE_URL);
+      return gPref.getComplexValue(PREF_APP_UPDATE_URL, nsIPrefLocalizedString).data;
     }
     catch (e) {
     }
@@ -931,7 +930,7 @@ Downloader.prototype = {
     function getPatchOfType(type) {
       for (var i = 0; i < update.patchCount; ++i) {
         var patch = update.getPatchAt(i);
-        if (patch.type == type)
+        if (patch && patch.type == type)
           return patch;
       }
       return null;
@@ -941,7 +940,7 @@ Downloader.prototype = {
     function getPatchWithHash(hashvalue) {
       for (var i = 0; i < update.patchCount; ++i) {
         var patch = update.getPatchAt(i);
-        if (patch.hashvalue == hashvalue)
+        if (patch && patch.hashvalue == hashvalue)
           return patch;
       }
       return null;
@@ -1060,9 +1059,10 @@ Downloader.prototype = {
     // This function may return null, which indicates that there are no patches
     // to download.
     this._patch = this._selectPatch(update, updateDir);
+    LOG("PATCH = " + this._patch);
     if (!this._patch) {
       LOG("no patch to download");
-      return;
+      return this._readStatusFile(updateDir);
     }
     this.isCompleteUpdate = this._patch.type == "complete";
 
@@ -1086,6 +1086,7 @@ Downloader.prototype = {
     this._request.start(this, null);
 
     this._writeStatusFile(updateDir, STATE_DOWNLOADING);
+    return STATE_DOWNLOADING;
   },
   
   _listeners: [],

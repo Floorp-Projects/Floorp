@@ -38,6 +38,7 @@
 const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
 const nsIIncrementalDownload = Components.interfaces.nsIIncrementalDownload;
 const XMLNS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const PREF_UPDATE_MANUAL_URL = "app.update.manual.url";
 
 /**
  * Logs a string to the error console. 
@@ -65,6 +66,28 @@ var gUpdates = {
       this.update = window.arguments[0];
       document.documentElement.advance();
     }
+  },
+  
+  advanceToErrorPage: function(currentPage, reason) {
+    currentPage.setAttribute("next", "errors");
+    var errorReason = document.getElementById("errorReason");
+    errorReason.value = reason;
+    var errorLink = document.getElementById("errorLink");
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch2);
+    var manualURL = pref.getComplexValue(PREF_UPDATE_MANUAL_URL, 
+                                         Components.interfaces.nsIPrefLocalizedString);
+    errorLink.href = manualURL.data;
+    var errorLinkLabel = document.getElementById("errorLinkLabel");
+    errorLinkLabel.value = manualURL.data;
+    
+    var updateStrings = document.getElementById("updateStrings");
+    var pageTitle = updateStrings.getString("errorsPageHeader");
+    
+    var errorPage = document.getElementById("errors");
+    errorPage.setAttribute("label", pageTitle);
+    document.documentElement.setAttribute("label", pageTitle);
+    document.documentElement.advance();
   },
 }
 
@@ -202,12 +225,15 @@ var gDownloadingPage = {
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"].
         getService(Components.interfaces.nsIApplicationUpdateService);
-    LOG("intergoat");
-    updates.downloadUpdate(gUpdates.update, false);
-    updates.addDownloadListener(this);
+    var state = updates.downloadUpdate(gUpdates.update, false);
+    if (state == "failed") 
+      this.showVerificationError();
+    else
+      updates.addDownloadListener(this);
     
     // Build the UI for previously installed updates
     // ...
+    
   },
   
   _paused: false,
@@ -257,6 +283,8 @@ var gDownloadingPage = {
   onStopRequest: function(request, context, status) {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("gDownloadingPage.onStopRequest: " + request.URI.spec + ", status = " + status);
+    
+    const NS_BINDING_ABORTED = 0x804b0002;
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"]
                   .getService(Components.interfaces.nsIApplicationUpdateService);
@@ -266,10 +294,25 @@ var gDownloadingPage = {
       // failed, log this and then commence downloading the complete update.
       LOG("Verification of patch failed, downloading complete update");
       gUpdates.update.isCompleteUpdate = true;
-      updates.downloadUpdate(gUpdates.update, false);
-      return;
+      var state = updates.downloadUpdate(gUpdates.update, false);
+      if (state == "failed") 
+        this.showVerificationError();
+      else
+        return;
+    }
+    else if (status == NS_BINDING_ABORTED) {
+      LOG("Download PAUSED");
     }
     updates.removeDownloadListener(this);
+  },
+  
+  showVerificationError: function() {
+    var updateStrings = document.getElementById("updateStrings");
+    var brandStrings = document.getElementById("brandStrings");
+    var brandName = brandStrings.getString("brandShortName");
+    var verificationError = updateStrings.getFormattedString("verificationError", [brandName]);
+    var downloadingPage = document.getElementById("downloading");
+    gUpdates.advanceToErrorPage(downloadingPage, verificationError);
   },
    
   /**
@@ -281,6 +324,14 @@ var gDownloadingPage = {
         !iid.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
+  }
+};
+
+var gErrorsPage = {
+  onPageShow: function() {
+    document.documentElement.getButton("back").disabled = true;
+    document.documentElement.getButton("cancel").disabled = true;
+    document.documentElement.getButton("finish").focus();
   }
 };
 

@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// XXX Toolkit-specific preferences should be moved into toolkit.js
+
 #filter substitution
 
 # SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
@@ -56,11 +58,6 @@ pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager-extensions");
 // compared to this value.  A trailing "+" indicates the post-release trunk.
 pref("app.extensions.version", "1.0+");
 
-// Whether or not app updates are enabled
-pref("update.app.enabled", true);
-pref("update.app.url", "chrome://mozapps/locale/update/update.properties");
-
-pref("update.extensions.enabled", true);
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
 // Developers can set this to |true| if they are constantly changing files in their 
@@ -81,7 +78,10 @@ pref("app.update.autoInstallEnabled", true);
 // the user to install.
 pref("app.update.autoInstallMode", 0);
 
-pref("app.update.url", "chrome://mozapps/locale/update/update.properties");
+// XXX these prefs and others like them are distribution specific and should move 
+//     into chrome://browser
+pref("app.update.url", "chrome://mozapps/locale/update/updates.properties");
+pref("app.update.manual.url", "chrome://mozapps/locale/update/updates.properties");
 pref("app.update.updatesAvailable", false);
 // Check for updates to Firefox every day
 pref("app.update.interval", 86400000);
@@ -117,20 +117,6 @@ pref("extensions.update.count", 0);             // The number of extension/theme
 pref("extensions.dss.enabled", false);          // Dynamic Skin Switching                                               
 pref("extensions.dss.switchPending", false);    // Non-dynamic switch pending after next
                                                 // restart.
-
-// General Update preferences
-pref("update.interval", 3600000);               // Check each of the above intervals 
-                                                // every 60 mins
-pref("update.showSlidingNotification", true);   // Windows-only slide-up taskbar 
-                                                // notification.
-// These prefs relate to the number and severity of updates available. This is a 
-// cache that the browser notification mechanism uses to determine if it should show
-// status bar UI if updates are detected and the app is shut down before installing
-// them.
-// 0 = low    (extension/theme updates), 
-// 1 = medium (numerous extension/theme updates), 
-// 2 = high   (new version of Firefox/Security patch)
-pref("update.severity", 0); 
 
 pref("xpinstall.whitelist.add", "update.mozilla.org");
 pref("xpinstall.whitelist.add.103", "addons.mozilla.org");

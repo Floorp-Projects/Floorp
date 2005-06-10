@@ -193,7 +193,7 @@ interface nsIApplicationUpdateService : nsISupports
   /**
    * 
    */
-  void downloadUpdate(in nsIUpdate update, in boolean background);
+  AString downloadUpdate(in nsIUpdate update, in boolean background);
 
   /**
    * Pauses the active update download process

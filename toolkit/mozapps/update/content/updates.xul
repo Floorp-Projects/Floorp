@@ -50,6 +50,7 @@
 <wizard id="updates"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&updateWizard.title;" 
+        label="" description=""
         windowtype="Update:Wizard" style="width: 36em;"
         onwizardfinished="gUpdates.onFinish();"
         onclose="return gUpdates.onClose();"
@@ -123,7 +124,7 @@
     -->
   </wizardpage>
   
-  <wizardpage id="downloading" pageid="downloading"
+  <wizardpage id="downloading" pageid="downloading" next="finished"
               onpageshow="gDownloadingPage.onPageShow();" flex="1">
     
     <label id="downloadingIntro">&downloading.intro;</label>
@@ -136,6 +137,24 @@
       <separator flex="1"/>
       <button label="&close.label;" accesskey="&close.accesskey;" oncommand="close();"/>
     </hbox>
+  </wizardpage>
+  
+  <wizardpage id="errors" pageid="errors" class="content"
+              onpageshow="gErrorsPage.onPageShow();">
+    <label id="errorIntro">&error.label;</label>
+    <separator/>
+    <textbox class="plain" readonly="true" id="errorReason"/>
+    <separator/>
+    <label id="errorManual">&errorManual.label;</label>
+    <hbox>
+      <link id="errorLink">
+        <label id="errorLinkLabel"/>
+      </link>
+    </hbox>
+  </wizardpage>
+  
+  <wizardpage id="finished" pageid="finished" align="start">
+    <label>Finished</label>
   </wizardpage>
   
 </wizard>
