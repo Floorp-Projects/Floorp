@@ -41,6 +41,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <stdlib.h>
+#include <libkern/OSByteOrder.h>
 
 #define EXIT_IF_FALSE(x)                                                      \
   do {                                                                        \
@@ -58,6 +59,7 @@ static int read_int(FILE* f)
 {
   int result;
   EXIT_IF_FALSE(fread(&result, sizeof(result), 1, f) == 1);
+  result = OSSwapBigToHostInt32(result);
   return result;
 }
 
@@ -97,12 +99,15 @@ int main(int argc, char** argv)
   } header;
 
   EXIT_IF_FALSE(fread(&header, sizeof(header), 1, input) == 1);
+  header.magic_number = OSSwapBigToHostInt32(header.magic_number);
+  header.version_number = OSSwapBigToHostInt32(header.version_number);
   EXIT_IF_FALSE(header.magic_number == 0x00051600);
   EXIT_IF_FALSE(header.version_number <= 0x00020000);
   // printf("sizeof(header) == %d\n", sizeof(header));
 
   short entry_count;
   EXIT_IF_FALSE(fread(&entry_count, sizeof(entry_count), 1, input) == 1);
+  entry_count = OSSwapHostToBigInt16(entry_count);
 
   struct entry {
     unsigned int id;
@@ -117,6 +122,11 @@ int main(int argc, char** argv)
   entry* rez_entry = NULL;
 
   for (int i = 0; i < entry_count; i++) {
+    entry *swap = &entries[i];
+    swap->id = OSSwapBigToHostInt32(swap->id);
+    swap->offset = OSSwapBigToHostInt32(swap->offset);
+    swap->length = OSSwapBigToHostInt32(swap->length);
+	
     entry& entry = entries[i];
     switch (entry.id) {
     case 1:
