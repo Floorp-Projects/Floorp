@@ -312,7 +312,7 @@ var gDownloadingPage = {
     var brandName = brandStrings.getString("brandShortName");
     var verificationError = updateStrings.getFormattedString("verificationError", [brandName]);
     var downloadingPage = document.getElementById("downloading");
-    gUpdates.advanceToErrorPage(downloadingPage, verificationError);
+    // gUpdates.advanceToErrorPage(downloadingPage, verificationError);
   },
    
   /**
