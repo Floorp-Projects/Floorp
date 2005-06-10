@@ -36,12 +36,13 @@ sub LoadConfig() {
         open CONFIG, 'multi-config.pl' or
             print "can't open multi-config.pl, $?\n";
 
-        while (<CONFIG>) {
-            package Settings;
-            eval;
-        }
-
+        local $/ = undef;
+        my $config = <CONFIG>;
         close CONFIG;
+
+        package Settings;
+        eval $config;
+
     } else {
         warn "Error: Need tinderbox config file, multi-config.pl\n";
         exit;
