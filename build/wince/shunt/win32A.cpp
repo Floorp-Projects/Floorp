@@ -269,17 +269,16 @@ MOZCE_SHUNT_API int mozce_GetLocaleInfoA(LCID Locale, LCTYPE LCType, LPSTR lpLCD
             {
                 if(0 == cchData)
                 {
-                    retval = WideCharToMultiByte(
-                        CP_ACP,
-                        0,
-                        buffer,
-                        neededChars,
-                        NULL,
-                        0,
-                        NULL,
-                        NULL
-                        );
-
+                    retval = WideCharToMultiByte(CP_ACP,
+                                                 0,
+                                                 buffer,
+                                                 neededChars,
+                                                 NULL,
+                                                 0,
+                                                 NULL,
+                                                 NULL
+                                                 );
+                    
                 }
                 else
                 {
@@ -650,7 +649,6 @@ MOZCE_SHUNT_API BOOL mozce_GetTextExtentExPointA(HDC inDC, char* inStr, int inLe
     return retval;
 }
 
-
 MOZCE_SHUNT_API BOOL mozce_ExtTextOutA(HDC inDC, int inX, int inY, UINT inOptions, const LPRECT inRect, LPCSTR inString, UINT inCount, const LPINT inDx)
 {
     MOZCE_PRECHECK
@@ -676,6 +674,13 @@ MOZCE_SHUNT_API BOOL mozce_ExtTextOutA(HDC inDC, int inX, int inY, UINT inOption
 
     return retval;
 }
+
+
+MOZCE_SHUNT_API BOOL mozce_TextOutA(HDC hdc, int nXStart, int nYStart, LPCSTR lpString, int cbString)
+{
+  return mozce_ExtTextOutA(hdc, nXStart, nYStart, 0, NULL, lpString, cbString, NULL);
+}
+
 MOZCE_SHUNT_API DWORD mozce_GetGlyphOutlineA(HDC inDC, CHAR inChar, UINT inFormat, void* inGM, DWORD inBufferSize, LPVOID outBuffer, CONST mozce_MAT2* inMAT2)
 {
     MOZCE_PRECHECK
@@ -1823,14 +1828,53 @@ MOZCE_SHUNT_API HFONT mozce_CreateFontIndirectA(CONST LOGFONTA* lplf)
 }
 
 
-MOZCE_SHUNT_API int mozce_EnumFontFamiliesA(HDC hdc, LPCTSTR lpszFamily, FONTENUMPROC lpEnumFontFamProc, LPARAM lParam)
+
+typedef struct _MyEnumFontFamArg
+{
+  FONTENUMPROC fn;
+  LPARAM lParam;
+} MYENUMFONTFAMARG;
+
+
+
+// typedef int (CALLBACK* FONTENUMPROC)(CONST LOGFONT *, CONST TEXTMETRIC *, DWORD, LPARAM);
+
+static int CALLBACK
+MyEnumFontFamProc(CONST LOGFONT *lf, CONST TEXTMETRIC *tm, DWORD fonttype, LPARAM lParam)
+{
+    MYENUMFONTFAMARG *parg = (MYENUMFONTFAMARG *) lParam;
+    FONTENUMPROC fn = parg->fn;
+
+    LOGFONTW lfw;
+    memcpy(&lfw, lf, sizeof(LOGFONTA));    
+    a2w_buffer((const char*)lf->lfFaceName, -1, lfw.lfFaceName, LF_FACESIZE);
+
+    return (*fn) (&lfw, tm, fonttype, parg->lParam);
+}
+
+MOZCE_SHUNT_API int mozce_EnumFontFamiliesA(HDC hdc, LPCSTR lpszFamily, FONTENUMPROC lpEnumFontFamProc, LPARAM lParam)
 {
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("-- mozce_EnumFontFamilies called\n");
+    mozce_printf("mozce_EnumFontFamilies called\n");
 #endif
-    return 0;
+    
+    MYENUMFONTFAMARG arg;
+    wchar_t *lpszFamilyW = NULL;
+    
+    if(lpszFamily != NULL)
+        lpszFamilyW = a2w_malloc(lpszFamily, -1, NULL);
+    
+    arg.fn = lpEnumFontFamProc;
+    arg.lParam = lParam;
+    
+    int result = EnumFontFamiliesW(hdc, lpszFamilyW, (FONTENUMPROC) MyEnumFontFamProc, (LPARAM) &arg);
+
+    free(lpszFamilyW);
+    
+    return result;
+
 }
 
 
@@ -1908,6 +1952,24 @@ MOZCE_SHUNT_API BOOL mozce_GetTextMetricsA(HDC hdc, LPTEXTMETRICA lptma)
 
     return res;
 }
+
+MOZCE_SHUNT_API BOOL mozce_SetWindowTextA(HWND hWnd, LPCSTR lpString)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_SetWindowTextA called\n");
+#endif
+
+    LPTSTR wstr = a2w_malloc(lpString, -1, NULL);
+    BOOL result = SetWindowTextW(hWnd, wstr); 
+    
+    if (wstr)
+        free(wstr);
+
+    return result;
+}
+
 
 #if 0
 {
