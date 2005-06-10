@@ -72,7 +72,7 @@
         <xul:label class="update-item-name" xbl:inherits="value=name" crop="right" flex="1"/>
         <xul:link class="update-item-details" xbl:inherits="href=url" label="&details.link;"/>
       </xul:hbox>
-      <xul:progressmeter class="update-item-progress" xbl:inherits="value=progress"/>
+      <xul:progressmeter class="update-item-progress" xbl:inherits="value=progress" mode="undetermined"/>
       <xul:hbox align="center">
         <xul:label class="update-item-status" xbl:inherits="value=status" flex="1" crop="right"/>
         <xul:button class="update-item-pause" 

@@ -29,6 +29,8 @@
 <!ENTITY checkNow.label                 "Check Now...">
 <!ENTITY appCheckNow.accesskey          "C">
 <!ENTITY extensionsCheckNow.accesskey   "h">
+<!ENTITY showUpdates.label              "Show Updates">
+<!ENTITY showUpdates.accesskey          "U">
 
 <!ENTITY securityTab.label              "Security">
 <!ENTITY protocols.label                "Protocols">

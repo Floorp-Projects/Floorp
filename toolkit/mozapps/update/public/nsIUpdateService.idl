@@ -39,6 +39,7 @@
 
 interface nsIRequest;
 interface nsIRequestObserver;
+interface nsISimpleEnumerator;
 interface nsITimerCallback;
 
 [scriptable, uuid(56863a67-bd69-42de-9f40-583e625b457d)]
@@ -71,23 +72,36 @@ interface nsIUpdatePatch : nsISupports
 interface nsIUpdate : nsISupports
 {
   /**
-   *
+   * The type of update:
+   *   "major"  A major new version of the Application
+   *   "minor"  A minor update to the Application (e.g. security update)
    */
   attribute AString type;
+
   /**
-   *
+   * The Application version of this update. 
    */
   attribute AString version;
+
   /**
-   *
+   * The Addon version of this update. Used by the Extension System to track 
+   * compatibility of installed addons with this update. 
    */
   attribute AString extensionversion;
+
   /**
-   *
+   * The URL to a page which offers details about the content of this 
+   * update. Ideally, this page is not the release notes but some other page
+   * that summarizes the differences between this update and the previous,
+   * which also links to the release notes.
    */
   attribute AString detailsurl;
+
   /**
-   *
+   * The URL to a HTML fragment that contains a license for this update. If
+   * this is specified, the user is shown the license file after they choose
+   * to install the update and they must agree to it before the download 
+   * commences.
    */
   attribute AString licenseurl;
 
@@ -99,11 +113,20 @@ interface nsIUpdate : nsISupports
   attribute boolean isCompleteUpdate;
 
   /**
-   *
+   * When the update was installed.
+   */
+  attribute long long installDate;
+
+  /**
+   * The number of patches supplied by this update.
    */
   readonly attribute unsigned long patchCount;
+
   /**
-   *
+   * Retrieves a patch. 
+   * @param   index
+   *          The index of the patch to retrieve.
+   * @returns The nsIUpdatePatch at the specified index.
    */
   nsIUpdatePatch getPatchAt(in unsigned long index);  
 };
@@ -208,6 +231,35 @@ interface nsIApplicationUpdateService : nsISupports
    * Pauses the active update download process
    */
   void pauseDownload();
+};
+
+[scriptable, uuid(fede66a9-9f96-4507-a22a-775ee885577e)]
+interface nsIUpdateManager : nsISupports
+{
+  /**
+   *
+   */
+  readonly attribute nsISimpleEnumerator updates;
+
+  /**
+   *
+   */
+  attribute nsIUpdate activeUpdate;
+
+  /**
+   *
+   */
+  void addUpdate(in nsIUpdate update);
+
+  /**
+   *
+   */
+  void removeUpdate(in nsIUpdate update);
+
+  /**
+   *
+   */
+  void saveUpdates();
 };
 
 [scriptable, uuid(0765c92c-6145-4253-9db4-594d8023087e)]

@@ -265,6 +265,7 @@ var gDownloadingPage = {
     update.setAttribute("name", "Firefox 1.0.4");
     update.setAttribute("status", "Blah");
     update.setAttribute("url", "http://www.bengoodger.com/");
+    update.setAttribute("mode", "normal");
     update.id = "activeDownloadItem";
     var updatesView = document.getElementById("updatesView");
     updatesView.appendChild(update);
