@@ -146,6 +146,11 @@ interface nsIUpdatePrompt : nsISupports
    *          The update to be downloaded and installed
    */
   void showUpdateAvailable(in nsIUpdate update);
+
+  /**
+   * Shows a list of all updates installed to date.
+   */
+  void showInstalledUpdates();
 };
 
 [scriptable, uuid(877ace25-8bc5-452a-8586-9c1cf2871994)]

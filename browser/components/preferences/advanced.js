@@ -114,13 +114,18 @@ var gAdvancedPane = {
     return undefined;
   },
   
-  checkForUpdates: function (aType)
+  checkForUpdates: function ()
   {
-    var updates = Components.classes["@mozilla.org/updates/update-service;1"]
-                            .getService(Components.interfaces.nsIUpdateService);
-    updates.checkForUpdates([], 0, aType, 
-                            Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER,
-                            null);  
+    var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
+                             .createInstance(Components.interfaces.nsIUpdatePrompt);
+    prompter.checkForUpdates();  
+  },
+  
+  showUpdates: function ()
+  {
+    var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
+                             .createInstance(Components.interfaces.nsIUpdatePrompt);
+    prompter.showInstalledUpdates();  
   },
   
   showLanguages: function ()

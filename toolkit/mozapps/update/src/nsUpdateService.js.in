@@ -307,19 +307,7 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   checkForUpdates: function() {
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
-    var win = wm.getMostRecentWindow("Update:Wizard");
-    if (win) {
-      win.focus();
-      win.checkForUpdates();
-    }
-    else {
-      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                         .getService(Components.interfaces.nsIWindowWatcher);
-      ww.openWindow(null, URI_UPDATE_PROMPT_DIALOG, 
-                    "", "chrome,centerscreen,dialog,titlebar", null);
-    }
+    this._showUI(0);
   },
     
   /**
@@ -336,6 +324,40 @@ UpdatePrompt.prototype = {
     if (win) 
       win.focus();
     else {
+      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                         .getService(Components.interfaces.nsIWindowWatcher);
+      ww.openWindow(null, URI_UPDATE_PROMPT_DIALOG, 
+                    "", "chrome,centerscreen,dialog,titlebar", ary);
+    }
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  showInstalledUpdates: function() {
+    this._showUI(1);
+  },
+  
+  /**
+   * Shows the update wizard in the specified mode.
+   * @param   mode
+   *          The mode to show the update wizard in:
+   *          0 - check for updates
+   *          1 - show all installed updates
+   */
+  _showUI: function(mode) {
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var win = wm.getMostRecentWindow("Update:Wizard");
+    if (win)
+      win.focus();
+    else {
+      var ary = Components.classes["@mozilla.org/supports-array;1"]
+                          .createInstance(Components.interfaces.nsISupportsArray);
+      var wizardMode = Components.classes["@mozilla.org/supports-PRUint8;1"]
+                                 .createInstance(Components.interfaces.nsISupportsPRUint8);
+      wizardMode.data = mode;
+      ary.AppendElement(wizardMode);
       var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                          .getService(Components.interfaces.nsIWindowWatcher);
       ww.openWindow(null, URI_UPDATE_PROMPT_DIALOG, 

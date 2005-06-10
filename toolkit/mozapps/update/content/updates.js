@@ -65,8 +65,15 @@ var gUpdates = {
   
   onLoad: function() {
     if (window.arguments && window.arguments[0]) {
-      this.update = window.arguments[0];
-      document.documentElement.advance();
+      if (window.arguments[0] instanceof Components.interfaces.nsIUpdate) {
+        this.update = window.arguments[0];
+        document.documentElement.advance();
+      }
+      else if (window.arguments[0] == 1) {
+        var checking = document.getElementById("checking");
+        checking.setAttribute("next", "downloading");
+        document.documentElement.advance();
+      }
     }
     
     this.updateStrings = document.getElementById("updateStrings");
