@@ -398,7 +398,6 @@ var messageHeaderSink = {
         }
         else
          currentHeaderData[lowerCaseHeaderName] = header;
-
         if (lowerCaseHeaderName == "from")
         {
           if (msgHeaderParser && header.value)
@@ -1151,6 +1150,19 @@ function detachAttachment(aAttachment, aSaveFirst)
                            aAttachment.messageUri, aSaveFirst);
 }
 
+function CanDetachAttachments()
+{
+  var uri = GetLoadedMessage();
+  var canDetach = !IsNewsMessage(uri) && (!IsImapMessage(uri) || CheckOnline());
+  if (canDetach && ("content-type" in currentHeaderData))
+  {
+    var contentType = currentHeaderData["content-type"].headerValue;
+    canDetach = contentType.indexOf("application/x-pkcs7-mime") < 0 && 
+        contentType.indexOf("application/x-pkcs7-signature") < 0;
+  }
+  return canDetach;
+}
+
 function onShowAttachmentContextMenu()
 {
   // if no attachments are selected, disable the Open and Save...
@@ -1160,32 +1172,47 @@ function onShowAttachmentContextMenu()
   var saveMenu = document.getElementById('context-saveAttachment');
   var detachMenu = document.getElementById('context-detachAttachment');
   var deleteMenu = document.getElementById('context-deleteAttachment');
-
-  var canDetach = false;
-  if (selectedAttachments.length > 0)
+  var detachAllMenu = document.getElementById('context-detachAllAttachments');
+  var deleteAllMenu = document.getElementById('context-deleteAllAttachments');
+  var canDetach = CanDetachAttachments();
+  var canOpen = false;
+  for (var i = 0; i < selectedAttachments.length && !canOpen; i++)
+    canOpen = selectedAttachments[i].attachment.contentType != 'text/x-moz-deleted';
+  if (canOpen && selectedAttachments.length == 1)
   {
-    var attachment = selectedAttachments[0].attachment
-    canDetach = attachment.contentType != 'text/x-moz-deleted' &&
-        !(/news-message:/.test(attachment.messageUri)) && 
-        (!(/imap-message/.test(attachment.messageUri)) || CheckOnline());
     openMenu.removeAttribute('disabled');
-    saveMenu.removeAttribute('disabled');
   }
   else
   {
     openMenu.setAttribute('disabled', true);
+  }
+  if (canOpen)
+  {
+    saveMenu.removeAttribute('disabled');
+  }
+  else
+  {
     saveMenu.setAttribute('disabled', true);
   }
-
-  if (canDetach)
+  if (canDetach && canOpen)
   {
     detachMenu.removeAttribute('disabled');
     deleteMenu.removeAttribute('disabled');
   }
   else
   {
-    detachMenu.setAttribute('disabled', true);
-    deleteMenu.setAttribute('disabled', true);
+    detachMenu.setAttribute('disabled', 'true');
+    deleteMenu.setAttribute('disabled', 'true');
+  }
+  if (canDetach)
+  {
+    detachAllMenu.removeAttribute('disabled');
+    deleteAllMenu.removeAttribute('disabled');
+  }
+  else
+  {
+    detachAllMenu.setAttribute('disabled', 'true');
+    deleteAllMenu.setAttribute('disabled', 'true');
   }
 }
 
@@ -1325,6 +1352,18 @@ function FillAttachmentListPopup(popup)
   }
 
   gBuildAttachmentPopupForCurrentMsg = false;
+  var detachAllMenu = document.getElementById('file-detachAllAttachments');
+  var deleteAllMenu = document.getElementById('file-deleteAllAttachments');
+  if (CanDetachAttachments())
+  {
+    detachAllMenu.removeAttribute('disabled');
+    deleteAllMenu.removeAttribute('disabled');
+  }
+  else
+  {
+    detachAllMenu.setAttribute('disabled', 'true');
+    deleteAllMenu.setAttribute('disabled', 'true');
+  }
 
 }
 
@@ -1402,7 +1441,15 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       // but that uses X-Mozilla-External-Attachment-URL, which
       // we'd need to check for somehow.
 
+      var signedOrEncrypted = false;
+      if ("content-type" in currentHeaderData)
+      {
+        var contentType = currentHeaderData["content-type"].headerValue;
+        signedOrEncrypted = contentType.indexOf("application/x-pkcs7-mime") >= 0 || 
+            contentType.indexOf("application/x-pkcs7-signature") >= 0;
+      }
       var canDetach = !(/news-message:/.test(attachment.uri)) && 
+          !signedOrEncrypted &&
           (!(/imap-message/.test(attachment.uri)) || CheckOnline());
       menuitementry.setAttribute('label', gOpenLabel); 
       menuitementry.setAttribute('accesskey', gOpenLabelAccesskey); 
@@ -1418,7 +1465,7 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       menuitementry.setAttribute('oncommand', 'saveAttachment(this.attachment)'); 
       menuitementry.setAttribute('label', gSaveLabel); 
       menuitementry.setAttribute('accesskey', gSaveLabelAccesskey); 
-      if (attachment.contentType == 'text/x-moz-deleted' || !canDetach)
+      if (attachment.contentType == 'text/x-moz-deleted')
         menuitementry.setAttribute('disabled', true); 
       menuitementry = openpopup.appendChild(menuitementry);
 
@@ -1624,17 +1671,6 @@ function nsDummyMsgHeader()
 
 nsDummyMsgHeader.prototype =
 {
-  QueryInterface : function(iid)
-  {
-      if (iid.equals(Components.interfaces.nsIMsgDBHdr) ||
-          iid.equals(Components.interfaces.nsISupports))
-        return this;
-      throw Components.results.NS_NOINTERFACE;
-  },
-
-  mMessageSize : 0,
-
-  setMessageSize : function(aMessageSize) {mMessageSize = aMessageSize;},
-  getMessageSize : function() {return mMessageSize;},
-  folder : function() {return null;}
+  messageSize : 0,
+  folder : null
 };
