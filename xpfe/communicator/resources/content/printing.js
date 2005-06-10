@@ -142,6 +142,11 @@ function NSPrint()
     if (webBrowserPrint) {
       gPrintSettings = GetPrintSettings();
       webBrowserPrint.print(gPrintSettings, null);
+      if (gPrintSettingsAreGlobal && gSavePrintSettings) {
+        var psService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                                          .getService(Components.interfaces.nsIPrintSettingsService);
+        psService.savePrintSettingsToPrefs(gPrintSettings, true, gPrintSettings.kInitSaveAll);
+      }
     }
   } catch (e) {
     // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
