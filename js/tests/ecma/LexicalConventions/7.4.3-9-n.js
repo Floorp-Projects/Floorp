@@ -60,10 +60,46 @@ var TITLE   = "Future Reserved Words";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
+var actual = 'no error';
+var prefValue;
+
+writeLineToLog("This test requires option javascript.options.strict enabled");
+if (typeof document == "undefined" && typeof options == 'function')
+{
+  options("strict", "werror");
+}
+else
+{
+  prefValue = setBoolPref("javascript.options.werror", true);
+}
+
+try
+{
+  eval("var class = true");
+}
+catch(e)
+{
+  actual = 'error';
+}
+
+if (typeof prefValue == 'boolean')
+{
+  setBoolPref("javascript.options.werror", prefValue);
+}
+
+DESCRIPTION = "var class = true";
+EXPECTED = "error";
+
+// force exception since this is a negative test
+if (actual == 'error')
+{
+  throw actual;
+}
+
 new TestCase( SECTION,  
               "var class = true",     
               "error",    
-              eval("var class = true") );
+              actual );
 
 test();
 

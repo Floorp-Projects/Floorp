@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
- ***** BEGIN LICENSE BLOCK *****
+/***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -61,9 +61,46 @@ var TITLE   = "Future Reserved Words";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
+var actual = 'no error';
+var prefValue;
+
+writeLineToLog("This test requires option javascript.options.strict enabled");
+if (typeof document == "undefined" && typeof options == 'function')
+{
+  options("strict", "werror");
+}
+else
+{
+  prefValue = setBoolPref("javascript.options.werror", true);
+}
+
+try
+{
+  eval("var import = true");
+}
+catch(e)
+{
+  actual = 'error';
+}
+
+if (typeof prefValue == 'boolean')
+{
+  setBoolPref("javascript.options.werror", prefValue);
+}
+
 DESCRIPTION = "var import = true";
 EXPECTED = "error";
 
-new TestCase( SECTION,  "var import = true",     "error",    eval("var import = true") );
+// force exception since this is a negative test
+if (actual == 'error')
+{
+  throw actual;
+}
+
+new TestCase( SECTION,  
+              "var import = true",     
+              "error",    
+              actual );
 
 test();
+
