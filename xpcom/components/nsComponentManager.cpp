@@ -1445,7 +1445,8 @@ nsComponentManagerImpl::WritePersistentRegistry()
     localFile->SetNativeLeafName(leafName);
 
     PRFileDesc* fd = nsnull;
-    nsresult rv = localFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0666, &fd);
+    // Owner and group can setup components, everyone else should be able to see but not poison them.
+    nsresult rv = localFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0664, &fd);
     if (NS_FAILED(rv))
         return rv;
 

@@ -621,8 +621,8 @@ nsDiskCacheStreamIO::OpenCacheFile(PRIntn flags, PRFileDesc ** fd)
                                                   getter_AddRefs(mLocalFile));
     if (NS_FAILED(rv))  return rv;
     
-    // create PRFileDesc for input stream
-    rv = mLocalFile->OpenNSPRFileDesc(flags, 00666, fd);
+    // create PRFileDesc for input stream - the 00600 is just for consistency
+    rv = mLocalFile->OpenNSPRFileDesc(flags, 00600, fd);
     if (NS_FAILED(rv))  return rv;  // unable to open file
 
     return NS_OK;

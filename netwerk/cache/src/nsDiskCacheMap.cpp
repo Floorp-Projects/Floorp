@@ -170,8 +170,8 @@ nsDiskCacheMap::Open(nsILocalFile *  cacheDirectory)
     rv = localFile->AppendNative(NS_LITERAL_CSTRING("_CACHE_MAP_"));
     if (NS_FAILED(rv))  return rv;
 
-    // open the file
-    rv = localFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE, 00666, &mMapFD);
+    // open the file - restricted to user, the data could be confidential
+    rv = localFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE, 00600, &mMapFD);
     if (NS_FAILED(rv))  return NS_ERROR_FILE_CORRUPTED;
 
     PRBool cacheFilesExist = CacheFilesExist();
@@ -620,7 +620,8 @@ nsDiskCacheMap::ReadDiskCacheEntry(nsDiskCacheRecord * record, nsDiskCacheEntry 
         if (NS_FAILED(rv))  return rv;
 
         PRFileDesc * fd = nsnull;
-        rv = file->OpenNSPRFileDesc(PR_RDONLY, 00666, &fd);
+        // open the file - restricted to user, the data could be confidential
+        rv = file->OpenNSPRFileDesc(PR_RDONLY, 00600, &fd);
         if (NS_FAILED(rv))  return rv;
         
         PRInt32 fileSize = PR_Available(fd);
@@ -719,7 +720,8 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
         
         // open the file
         PRFileDesc * fd;
-        rv = localFile->OpenNSPRFileDesc(PR_RDWR | PR_TRUNCATE | PR_CREATE_FILE, 00666, &fd);
+        // open the file - restricted to user, the data could be confidential
+        rv = localFile->OpenNSPRFileDesc(PR_RDWR | PR_TRUNCATE | PR_CREATE_FILE, 00600, &fd);
         if (NS_FAILED(rv))  goto exit;  // unable to open or create file
 
         // write the file

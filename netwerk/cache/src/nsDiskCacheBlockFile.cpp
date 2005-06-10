@@ -57,8 +57,8 @@ nsDiskCacheBlockFile::Open( nsILocalFile *  blockFile, PRUint32  blockSize)
 
     mBlockSize = blockSize;
     
-    // open the file
-    nsresult rv = blockFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE, 00666, &mFD);
+    // open the file - restricted to user, the data could be confidential
+    nsresult rv = blockFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE, 00600, &mFD);
     if (NS_FAILED(rv))  return rv;  // unable to open or create file
     
     // allocate bit map buffer
