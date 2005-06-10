@@ -416,7 +416,9 @@
 <!ENTITY releaseCmd.accesskey "R"> 
 <!ENTITY hintsAndTips.label "&brandFullName; Help">
 <!ENTITY hintsAndTipsMac.commandkey "?">
-<!ENTITY hintsAndTips.accesskey "h"> 
+<!ENTITY hintsAndTips.accesskey "h">
+<!ENTITY updateCmd.accesskey  "U">
+<!ENTITY updateCmd.label      "Check for Updates...">
 <!ENTITY aboutCmd.label "About &brandFullName;">
 <!ENTITY aboutCmd.accesskey "A">
 
@@ -434,6 +436,7 @@
 <!ENTITY printButton.label "Print">
 <!ENTITY stopButton.label "Stop">
 <!ENTITY throbberItem.title "Activity Indicator">
+<!ENTITY updatesItem.title  "Updates">
 <!ENTITY junkButton.label "Junk">
 <!ENTITY notJunkButton.label "Not Junk">
 <!ENTITY addressBookButton.label "Address Book">

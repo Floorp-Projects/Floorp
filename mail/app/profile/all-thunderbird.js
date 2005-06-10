@@ -63,7 +63,7 @@ pref("app.update.autoInstallMode", 0);
 pref("app.update.url", "chrome://mozapps/locale/update/update.properties");
 pref("app.update.updatesAvailable", false);
 pref("app.update.interval", 86400000);  // Check for updates to Thunderbird every day
-pref("app.update.timer", 100000000);
+pref("app.update.timer", 5000);
 pref("app.update.lastUpdateDate", 0);
 
 // Developers can set this to |true| if they are constantly changing files in their

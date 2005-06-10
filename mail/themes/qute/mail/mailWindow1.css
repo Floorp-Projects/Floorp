@@ -1050,10 +1050,6 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 
 /* ..... smart update statusbar panel ..... */
 
-#statusbar-updates[updateCount="0"]{
-  visibility: collapse; 
-}
-
 #searchBox {
   border-top: 1px solid ThreeDHighlight;
   height: 30px;

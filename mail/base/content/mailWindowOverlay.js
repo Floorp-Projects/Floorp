@@ -2515,3 +2515,14 @@ function loadThrobberUrl(urlPref)
         messenger.launchExternalURL(url);  
     } catch (ex) {}
 }
+
+/**
+ * Opens the update manager and checks for updates to the application.
+ */
+
+function checkForUpdates()
+{
+  var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
+                           .createInstance(Components.interfaces.nsIUpdatePrompt);
+  prompter.checkForUpdates();
+}

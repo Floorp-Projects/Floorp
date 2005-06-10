@@ -57,7 +57,10 @@
       <preference id="mailnews.mark_message_read.delay.interval" name="mailnews.mark_message_read.delay.interval" type="int"/>
       <preference id="mail.showFolderPaneColumns" name="mail.showFolderPaneColumns" type="bool"/>
       <preference id="mailnews.reuse_message_window" name="mailnews.reuse_message_window" type="bool"/>
-      <preference id="app.update.autoUpdateEnabled"    name="app.update.autoUpdateEnabled"    type="bool"/>
+      <preference id="app.update.enabled"              name="app.update.enabled"              type="bool"/>
+      <preference id="app.update.autoInstallEnabled"   name="app.update.autoInstallEnabled"   type="bool"/>
+      <preference id="app.update.autoInstallMode"      name="app.update.autoInstallMode"      type="int"/>
+      <preference id="extensions.update.autoUpdateEnabled" name="extensions.update.autoUpdateEnabled" type="bool"/>
       <preference id="extensions.update.autoUpdateEnabled" name="extensions.update.autoUpdateEnabled" type="bool"/>
       <preference id="mailnews.tcptimeout" name="mailnews.tcptimeout" type="int"/>
       <preference id="offline.startup_state"                 name="offline.startup_state"     type="int"/>
@@ -186,14 +189,38 @@
               <checkbox id="enableSmartUpdate"
                         label="&enableSmartUpdate.label;"
                         accesskey="&enableSmartUpdate.accesskey;"
-                        preference="app.update.autoUpdateEnabled"
-                        onpreferenceread="return gAdvancedPane.updateAppUpdateUI();"/> 
-              <separator class="thin"/>
-              <hbox class="indent">
-                <button label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
-                        oncommand="gAdvancedPane.checkForUpdates(Components.interfaces.nsIUpdateItem.TYPE_APP);"
-                        preference="pref.update.disable_button.update_app"/>
-              </hbox>
+                        preference="app.update.enabled"
+                        onpreferenceread="return gAdvancedPane.updateAppUpdateUI();"/>
+              <vbox class="indent" align="start">
+                <checkbox id="enableAutoInstall"
+                          label="&enableAutoInstall.label;"
+                          accesskey="&enableAutoInstall.accesskey;"
+                          preference="app.update.autoInstallEnabled"
+                          onpreferenceread="return gAdvancedPane.updateAutoInstallUI();"/>
+                <radiogroup id="autoInstallMode" preference="app.update.autoInstallMode">
+                  <grid class="indent">
+                    <columns>
+                      <column/>
+                      <column flex="1"/>
+                    </columns>
+                    <rows>
+                      <row><label id="updateAnd"
+                                  preference="app.update.enabled">&updateAnd.label;</label>
+                           <radio label="&autoDownloadAndInstall.label;" 
+                                  accesskey="&autoDownloadAndInstall.accesskey;" value="0"/></row>
+                      <row><hbox/>
+                           <radio label="&autoDownloadAndPrompt.label;" 
+                                  accesskey="&autoDownloadAndPrompt.accesskey;" value="1"/></row>
+                    </rows>
+                  </grid>
+                </radiogroup>
+                <separator class="thin"/>
+                <hbox>
+                  <button label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
+                          oncommand="gAdvancedPane.checkForUpdates(Components.interfaces.nsIUpdateItem.TYPE_APP);"
+                          preference="pref.update.disable_button.update_app"/>
+                </hbox>
+              </vbox>
             </vbox>
             <separator class="thin"/>
             <separator class="groove"/>
@@ -211,7 +238,7 @@
               </hbox>
             </vbox>
           </vbox>
-        </tabpanel> 
+        </tabpanel>
       </tabpanels>
     </tabbox>
 

@@ -38,6 +38,8 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/folderMenus.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/tasksOverlay.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/skin/extensions/update.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/content/update/update.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailWindowExtrasOverlay.xul"?>
@@ -1713,6 +1715,8 @@
           <menuitem id="hintsAndTips" accesskey="&hintsAndTips.accesskey;" label="&hintsAndTips.label;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');"/>
 #endif
           <menuseparator id="menu_HelpAboutSeparator"/>
+          <menuitem id="checkForUpdates" accesskey="&updateCmd.accesskey;" 
+                    label="&updateCmd.label;" oncommand="checkForUpdates();"/>
           <menuitem id="aboutName" accesskey="&aboutCmd.accesskey;"
                     label="&aboutCmd.label;"
                     oncommand="openAboutDialog();"/>
@@ -1721,6 +1725,10 @@
 
       <spacer flex="100%"/>
       </menubar>
+    </toolbaritem>
+    
+    <toolbaritem id="softwareupdate-item" title="&updatesItem.title;" align="center" pack="center">
+      <toolbarbutton type="updates" id="softwareupdate" updateCount="0"/>
     </toolbaritem>
   </toolbar>
 
