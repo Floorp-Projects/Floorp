@@ -99,13 +99,13 @@
         grippytooltiptext="&Menubar.tooltip;">
 
         <!-- File menu placeholder, see menus.js -->
-        <menu id="mainmenu:file"/>
+        <menu id="mainmenu:file"><menupopup/></menu>
         
         <!-- Edit menu placeholder, see menus.js -->
-        <menu id="mainmenu:edit"/>
+        <menu id="mainmenu:edit"><menupopup/></menu>
   
         <!-- View menu placeholder, see menus.js -->
-        <menu id="mainmenu:view"/>
+        <menu id="mainmenu:view"><menupopup/></menu>
 
         <!-- Tasks menu -->
         <menu id="tasksMenu"/>
@@ -114,7 +114,7 @@
         <menu id="windowMenu"/>
 
         <!-- Tools menu placeholder, see menus.js -->
-        <menu id="mainmenu:tools"/>
+        <menu id="mainmenu:tools"><menupopup/></menu>
         
         <!-- Help menu -->
         <!-- Mac expects a help menu with this ID, and there is nothing we can
