@@ -1039,7 +1039,7 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
 
 #elif defined(XP_UNIX)
   struct stat fileStat;
-  const char exePath[MAXPATHLEN];
+  char exePath[MAXPATHLEN];
 
   rv = NS_ERROR_FAILURE;
 
