@@ -36,10 +36,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-require_once('config.inc.php');
-require_once($config['base_path'].'/includes/iolib.inc.php');
+class userlib {
 
-printheaders();
-header("Location: app");
+function login($username, $password){
+    global $db;
 
+    $data =& $db->getRow("SELECT user.user_id, user.user_username, user.user_password, user.user_realname, user.user_status
+                          FROM user
+                          WHERE  user.user_username = ".$db->quote($username)." AND user.user_password = md5(".$db->quote($password).")", DB_FETCHMODE_ASSOC);
+    if ($data['user_status'] == 1){
+        $_SESSION['user_id'] = $data['user_id'];
+        $_SESSION['user_realname'] = $data['user_realname'];
+        $_SESSION['user_username'] = $data['user_username'];
+        $_SESSION['login'] = true;
+        return array(true, '');
+    }
+    return array(false, 'Bad Status');
+}
+
+function isLoggedIn(){
+    if ($_SESSION['user_username'] && $_SESSION['login'] == true){
+       return true;
+    }
+    return false;
+}
+
+// End Class
+}
+$userlib = new userlib;
 ?>

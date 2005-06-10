@@ -43,6 +43,7 @@ require_once($config['app_path'].'/includes/iolib.inc.php');
 session_name('reportSessID');
 session_start();
 header("Cache-control: private"); //IE 6 Fix
+printheaders();
 
 $_SESSION = array();
 session_destroy();

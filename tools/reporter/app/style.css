@@ -18,58 +18,35 @@
 }
 
 
-#query_table th {
-	text-align: left;
-	background-color: #999;
-	color: #fff;
-	padding: 2px 0 2px 0;
+#query_table .header{
+	background-color: #e4ecec;
 }
-
-#query_table th>a {
-	color: #fff;
+#query_table .header a {
+	color: #000;
 	text-decoration: none;
 }
 
-#query_table .alt {
-	background: #eee;
+#query_table td {
+	border: 1px dotted #eee;
 }
 
-#queryTable td {
-    vertical-align: middle;
-  }
-  
-#queryTable label {
-    -moz-user-select: none;
-    font-weight: normal;
-  }
-  
-#queryTable td.label {
-    vertical-align: top; 
-    text-align: right;
-    padding-right: 7px;
-    padding-top: 3px;
-  }
-  
-#queryTable td.label label {
-    font-weight: bold;
-  }
-  
-#queryTable input[type="radio"] + label {
-    border: 1px solid transparent;
-  }
-  
-#queryTable input[type="radio"]:focus + label {
-    border: 1px dotted black;
-  }
-  
-#queryTable legend {
-    font-weight: bold;
-    padding: 5px;
-  }
+.navigation {
+	font-size: 0.9em;
+}
 
 #message {
 	padding: 4px;
 	margin: 8px 3px 12px 3px;
 	background: #FFD1D1;
 	border: 1px solid #FF0000;
+}
+*/
+
+.rmo_error {
+	border: 0;
+	text-align: center;
+}
+
+#header h1 a {
+	background: transparent url("/app/img/logo.gif") no-repeat;
 }

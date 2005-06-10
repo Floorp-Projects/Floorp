@@ -41,9 +41,11 @@ require_once($config['app_path'].'/includes/iolib.inc.php');
 require_once($config['app_path'].'/includes/security.inc.php');
 
 // Start Session
+// start the session
 session_name('reportSessID');
 session_start();
 header("Cache-control: private"); //IE 6 Fix
+printheaders();
 
 include($config['app_path'].'/includes/header.inc.php');
 include($config['app_path'].'/includes/message.inc.php');

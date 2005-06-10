@@ -37,15 +37,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 require_once('../../config.inc.php');
-require_once($config['app_path'].'/includes/adodb/adodb.inc.php');
-require_once($config['app_path'].'/includes/iolib.inc.php');
-require_once($config['app_path'].'/includes/security.inc.php');
+require_once($config['base_path'].'/includes/iolib.inc.php');
+require_once($config['base_path'].'/includes/contrib/adodb/adodb.inc.php');
+require_once($config['base_path'].'/includes/contrib/smarty/libs/Smarty.class.php');
+require_once($config['base_path'].'/includes/security.inc.php');
 
 // Start Session
 session_name('reportSessID');
 session_start();
 header("Cache-control: private"); //IE 6 Fix
-
+printheaders();
 
 // Open DB
 $db = NewADOConnection($config['db_dsn']);
@@ -53,93 +54,43 @@ if (!$db) die("Connection failed");
 $db->SetFetchMode(ADODB_FETCH_ASSOC);
 
 $query =& $db->Execute("SELECT *
-                      FROM report, host
-                      WHERE report.report_id = ".$db->quote($_GET['report_id'])."
-                      AND host.host_id = report_host_id");
+                        FROM report, host
+                        WHERE report.report_id = ".$db->quote($_GET['report_id'])."
+                        AND host.host_id = report_host_id");
 
 // disconnect database
 $db->Close();
 
 $title = "Report for - ".$query->fields['host_hostname'];
 
-include($config['app_path'].'/includes/header.inc.php');
-include($config['app_path'].'/includes/message.inc.php');
+$content = initializeTemplate();
 
 if (!$query->fields){
-	?><h1>No Report Found</h1><?php
-	exit;
+    $content->assign('error', 'No Report Found');
+    displayPage($content, 'report.tpl', 'Mozilla Reporter - Error');
+    exit;
 }
+
+$content->assign('report_id',              $query->fields['report_id']);
+$content->assign('report_url',             $query->fields['report_url']);
+$content->assign('host_url',               $config['base_url'].'/app/query/?host_hostname='.$query->fields['host_hostname'].'&amp;submit_query=Query');
+$content->assign('host_hostname',          $query->fields['host_hostname']);
+$content->assign('report_problem_type',    resolveProblemTypes($query->fields['report_problem_type']));
+$content->assign('report_behind_login',    resolveBehindLogin($query->fields['report_behind_login']));
+$content->assign('report_product',         $query->fields['report_product']);
+$content->assign('report_gecko',           $query->fields['report_gecko']);
+$content->assign('report_useragent',       $query->fields['report_useragent']);
+$content->assign('report_buildconfig',     $query->fields['report_buildconfig']);
+$content->assign('report_platform',        $query->fields['report_platform']);
+$content->assign('report_oscpu',           $query->fields['report_oscpu']);
+$content->assign('report_language',        $query->fields['report_language']);
+$content->assign('report_file_date',       $query->fields['report_file_date']);
+$content->assign('report_email',           $query->fields['report_email']);
+$content->assign('report_ip',              $query->fields['report_ip']);
+$content->assign('report_description',     $query->fields['report_description']);
+
+$title = 'Mozilla Reporter: '.$query->fields['report_id'];
+
+displayPage($content, 'report.tpl', $title);
 ?>
 
-<table id="report_table">
-	<tr>
-		<th>Report ID:</th>
-		<td><?php print $query->fields['report_id']; ?></td>
-	</tr>
-	<tr>
-		<th>URL:</th>
-		<td><a href="<?php print $query->fields['report_url']; ?>" target="_blank" rel="nofollow"><?php print $query->fields['report_url']; ?></a></td>
-	</tr>
-	<tr>
-		<th>Host:</th>
-		<td><a href="<?php print $config['app_url']; ?>/query/?host_hostname=<?php print $query->fields['host_hostname']; ?>&submit_query=Query">Reports For This Host</a></td>
-	</tr>
-
-	<tr>
-		<th>Problem Type:</th>
-		<td><?php print resolveProblemTypes($query->fields['report_problem_type']); ?></td>
-	</tr>
-	<tr>
-		<th>Behind Login:</th>
-		<td><?php print $boolTypes[$query->fields['report_behind_login']]; ?></td>
-	</tr>
-	<tr>
-		<th>Product:</th>
-		<td><?php print $query->fields['report_product']; ?></td>
-	</tr>
-	<tr>
-		<th>Gecko:</th>
-		<td><?php print $query->fields['report_gecko']; ?></td>
-	</tr>
-	<tr>
-		<th>Useragent:</th>
-		<td><?php print $query->fields['report_useragent']; ?></td>
-	</tr>
-	<tr>
-		<th>Build Config:</th>
-		<td><?php print $query->fields['report_buildconfig']; ?></td>
-	</tr>
-
-	<tr>
-		<th>Platform:</th>
-		<td><?php print $query->fields['report_platform']; ?></td>
-	</tr>
-	<tr>
-		<th>OS:</th>
-		<td><?php print $query->fields['report_oscpu']; ?></td>
-	</tr>
-
-	<tr>
-		<th>Language:</th>
-		<td><?php print $query->fields['report_language']; ?></td>
-	</tr>
-	<tr>
-		<th>Date Filed:</th>
-		<td><?php print $query->fields['report_file_date']; ?></td>
-	</tr>
-	<?php if ($userlib->isLoggedIn()){ ?>
-	<tr>
-		<th>Email:</th>
-		<td><a href="mailto:<?php print $query->fields['report_email']; ?>"><?php print $query->fields['report_email']; ?></a></td>
-	</tr>
-	<tr>
-		<th>IP:</th>
-		<td><a href="http://ws.arin.net/cgi-bin/whois.pl?queryinput=<?php print $query->fields['report_ip']; ?>" target="_blank"><?php print $query->fields['report_ip']; ?></a></td>
-	</tr>
-	<?php } ?>
-	<tr>
-		<th>Description:</th>
-		<td><?php print str_replace("\n", "<br />", $query->fields['report_description']); ?></td>
-	</tr>
-</table>
-<?php include($config['app_path'].'/includes/footer.inc.php'); ?>
