@@ -680,7 +680,8 @@ sub clear {
 
 =item C<FormToNewFlags($target, $cgi)
 
-Someone pleasedocument this function.
+Checks whether or not there are new flags to create and returns an
+array of flag objects. This array is then passed to Flag::create().
 
 =back
 
@@ -688,24 +689,50 @@ Someone pleasedocument this function.
 
 sub FormToNewFlags {
     my ($target, $cgi) = @_;
-    
-    # Get information about the setter to add to each flag.
-    # Uses a conditional to suppress Perl's "used only once" warnings.
-    my $setter = new Bugzilla::User($::userid);
 
+    my $dbh = Bugzilla->dbh;
+    
     # Extract a list of flag type IDs from field names.
     my @type_ids = map(/^flag_type-(\d+)$/ ? $1 : (), $cgi->param());
     @type_ids = grep($cgi->param("flag_type-$_") ne 'X', @type_ids);
-    
-    # Process the form data and create an array of flag objects.
+
+    return () unless (scalar(@type_ids) && $target->{'exists'});
+
+    # Get information about the setter to add to each flag.
+    my $setter = new Bugzilla::User($::userid);
+
+    # Get a list of active flag types available for this target.
+    my $flag_types = Bugzilla::FlagType::match(
+        { 'target_type'  => $target->{'type'},
+          'product_id'   => $target->{'product_id'},
+          'component_id' => $target->{'component_id'},
+          'is_active'    => 1 });
+
     my @flags;
-    foreach my $type_id (@type_ids) {
+    foreach my $flag_type (@$flag_types) {
+        my $type_id = $flag_type->{'id'};
+
+        # We are only interested in flags the user tries to create.
+        next unless scalar(grep { $_ == $type_id } @type_ids);
+
+        # Get the number of active flags of this type already set for this target.
+        my $has_flags = count(
+            { 'type_id'     => $type_id,
+              'target_type' => $target->{'type'},
+              'bug_id'      => $target->{'bug'}->{'id'},
+              'attach_id'   => $target->{'attachment'}->{'id'},
+              'is_active'   => 1 });
+
+        # Do not create a new flag of this type if this flag type is
+        # not multiplicable and already has an active flag set.
+        next if (!$flag_type->{'is_multiplicable'} && $has_flags);
+
         my $status = $cgi->param("flag_type-$type_id");
-        &::trick_taint($status);
+        trick_taint($status);
     
         # Create the flag record and populate it with data from the form.
         my $flag = { 
-            type   => Bugzilla::FlagType::get($type_id) , 
+            type   => $flag_type ,
             target => $target , 
             setter => $setter , 
             status => $status 
