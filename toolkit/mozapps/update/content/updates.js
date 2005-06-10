@@ -51,6 +51,8 @@ function LOG(string) {
 
 var gUpdates = {
   update: null,
+  updateStrings: null,
+  brandStrings: null,
   onClose: function() {
     var objects = {
       checking: gCheckingPage,
@@ -66,6 +68,9 @@ var gUpdates = {
       this.update = window.arguments[0];
       document.documentElement.advance();
     }
+    
+    this.updateStrings = document.getElementById("updateStrings");
+    this.brandStrings = document.getElementById("brandStrings");
   },
   
   advanceToErrorPage: function(currentPage, reason) {
@@ -81,14 +86,17 @@ var gUpdates = {
     var errorLinkLabel = document.getElementById("errorLinkLabel");
     errorLinkLabel.value = manualURL.data;
     
-    var updateStrings = document.getElementById("updateStrings");
-    var pageTitle = updateStrings.getString("errorsPageHeader");
+    var pageTitle = this.updateStrings.getString("errorsPageHeader");
     
     var errorPage = document.getElementById("errors");
     errorPage.setAttribute("label", pageTitle);
     document.documentElement.setAttribute("label", pageTitle);
     document.documentElement.advance();
   },
+  
+  set headerVisible(visible) {
+    document.documentElement.setAttribute("label", visible ? " " : "");
+  }
 }
 
 var gCheckingPage = {
@@ -108,6 +116,8 @@ var gCheckingPage = {
     var aus = Components.classes["@mozilla.org/updates/update-service;1"]
                         .getService(Components.interfaces.nsIApplicationUpdateService);
     this._checker = aus.checkForUpdates(this.updateListener);
+    
+    gUpdates.headerVisible = true;
   },
   
   /**
@@ -166,17 +176,15 @@ var gUpdatesAvailablePage = {
   _incompatibleItems: null,
   
   onPageShow: function() {
-    var updateStrings = document.getElementById("updateStrings");
-    var brandStrings = document.getElementById("brandStrings");
-    var brandName = brandStrings.getString("brandShortName");
-    var updateName = updateStrings.getFormattedString("updateName", 
-                                                      [brandName, gUpdates.update.version]);
+    var brandName = gUpdates.brandStrings.getString("brandShortName");
+    var updateName = gUpdates.updateStrings.getFormattedString("updateName", 
+                                                              [brandName, gUpdates.update.version]);
     var updateNameElement = document.getElementById("updateName");
     updateNameElement.value = updateName;
-    var displayType = updateStrings.getString("updateType_" + gUpdates.update.type);
+    var displayType = gUpdates.updateStrings.getString("updateType_" + gUpdates.update.type);
     var updateTypeElement = document.getElementById("updateType");
     updateTypeElement.setAttribute("type", gUpdates.update.type);
-    var intro = updateStrings.getFormattedString("introType_" + gUpdates.update.type, [brandName]);
+    var intro = gUpdates.updateStrings.getFormattedString("introType_" + gUpdates.update.type, [brandName]);
     while (updateTypeElement.hasChildNodes())
       updateTypeElement.removeChild(updateTypeElement.firstChild);
     updateTypeElement.appendChild(document.createTextNode(intro));
@@ -199,11 +207,46 @@ var gUpdatesAvailablePage = {
     
     var dlButton = document.getElementById("download-button");
     dlButton.focus();
+    
+    gUpdates.headerVisible = false;
+  },
+  
+  onInstallNow: function() {
+    var nextPageID = gUpdates.update.licenseurl ? "license" : "downloading";
+    var updatesfound = document.getElementById("updatesfound");
+    updatesfound.setAttribute("next", nextPageID);
+    document.documentElement.advance();
   },
   
   showIncompatibleItems: function() {
     openDialog("chrome://mozapps/content/update/incompatible.xul", "", 
                "dialog,centerscreen,modal,resizable,titlebar", this._incompatibleItems);
+  }
+};
+
+var gLicensePage = {
+  _licenseContent: null,
+  onPageShow: function() {
+    this._licenseContent = document.getElementById("licenseContent");
+    
+    var nextButton = document.documentElement.getButton("next");
+    nextButton.disabled = true;
+    nextButton.label = gUpdates.updateStrings.getString("IAgreeLabel");
+    document.documentElement.getButton("back").disabled = true;
+    document.documentElement.getButton("next").focus();
+
+    this._licenseContent.addEventListener("load", this.onLicenseLoad, false);
+    this._licenseContent.url = gUpdates.update.licenseurl;
+    
+    gUpdates.headerVisible = true;
+  },
+  
+  onLicenseLoad: function() {
+    document.documentElement.getButton("next").disabled = false;
+  },
+  
+  onClose: function() {
+    this._licenseContent.stopDownloading();
   }
 };
 
@@ -234,6 +277,7 @@ var gDownloadingPage = {
     // Build the UI for previously installed updates
     // ...
     
+    gUpdates.headerVisible = false;
   },
   
   _paused: false,
@@ -307,10 +351,8 @@ var gDownloadingPage = {
   },
   
   showVerificationError: function() {
-    var updateStrings = document.getElementById("updateStrings");
-    var brandStrings = document.getElementById("brandStrings");
-    var brandName = brandStrings.getString("brandShortName");
-    var verificationError = updateStrings.getFormattedString("verificationError", [brandName]);
+    var brandName = gUpdates.brandStrings.getString("brandShortName");
+    var verificationError = gUpdates.updateStrings.getFormattedString("verificationError", [brandName]);
     var downloadingPage = document.getElementById("downloading");
     // gUpdates.advanceToErrorPage(downloadingPage, verificationError);
   },
@@ -332,6 +374,8 @@ var gErrorsPage = {
     document.documentElement.getButton("back").disabled = true;
     document.documentElement.getButton("cancel").disabled = true;
     document.documentElement.getButton("finish").focus();
+    
+    gUpdates.headerVisible = true;
   }
 };
 

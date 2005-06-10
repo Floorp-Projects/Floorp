@@ -82,6 +82,9 @@
       <preference id="pref.update.disable_button.update_app"
                   name="pref.update.disable_button.update_app"
                   type="bool"/>
+      <preference id="pref.update.disable_button.show_updates"
+                  name="pref.update.disable_button.show_updates"
+                  type="bool"/>
       <preference id="pref.update.disable_button.update_addons"
                   name="pref.update.disable_button.update_addons"
                   type="bool"/>
@@ -166,8 +169,11 @@
                 <separator class="thin"/>
                 <hbox>
                   <button label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
-                          oncommand="gAdvancedPane.checkForUpdates(Components.interfaces.nsIUpdateItem.TYPE_APP);"
+                          oncommand="gAdvancedPane.checkForUpdates();"
                           preference="pref.update.disable_button.update_app"/>
+                  <button label="&showUpdates.label;" accesskey="&showUpdates.accesskey;"
+                          oncommand="gAdvancedPane.showUpdates();"
+                          preference="pref.update.disable_button.show_updates"/>
                 </hbox>
               </vbox>
             </vbox>

@@ -113,15 +113,20 @@
           <separator flex="1"/>
           <button id="download-button" 
                   label="&download.label;" accesskey="&download.accesskey;"
-                  oncommand="document.documentElement.advance()"/>
+                  oncommand="gUpdatesAvailablePage.onInstallNow();"/>
         </hbox>
       </vbox>
     </vbox>
-    <!--
-    <hbox pack="end">
-      <resizer dir="bottomright"/>
-    </hbox>
-    -->
+  </wizardpage>
+  
+  <wizardpage id="license" pageid="license" next="downloading"
+              onpageshow="gLicensePage.onPageShow();" class="content"
+              label="&license.title;">
+    <label>&license.intro;</label>
+    <separator class="thin"/>
+    <license id="licenseContent" flex="1"/>
+    <separator class="thin"/>
+    <label>&license.instructions;</label>
   </wizardpage>
   
   <wizardpage id="downloading" pageid="downloading" next="finished"
