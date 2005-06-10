@@ -17,7 +17,10 @@ sub PrintExample() {
     print <<END_EXAMPLE
 # multi-config.pl
 \$BuildSleep = 10;                       # minutes
-\$Tinderboxes = [ { tree => "SeaMonkey", args => "--depend --mozconfig mozconfig" }, { tree => "SeaMonkey-Branch", args => "--depend --mozconfig mozconfig" } ];
+\$Tinderboxes = [
+  { tree => "SeaMonkey", args => "--depend --mozconfig mozconfig" },
+  { tree => "SeaMonkey-Branch", args => "--depend --mozconfig mozconfig" },
+];
 END_EXAMPLE
     ;
     exit;
