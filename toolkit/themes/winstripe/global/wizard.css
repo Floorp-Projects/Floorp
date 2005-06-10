@@ -7,6 +7,10 @@
   color: WindowText;
 }
 
+wizard[description=""] .wizard-header-description {
+  display: none;
+}
+
 .wizard-header-label {
   -moz-margin-start: 23px;
   font-weight: bold;

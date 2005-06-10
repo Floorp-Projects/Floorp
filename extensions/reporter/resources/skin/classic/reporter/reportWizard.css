@@ -62,3 +62,7 @@
 #privacyPolicy:focus {
   outline: 1px dotted invert ! important;
 }
+
+wizard[description=""] .wizard-header-description { 
+  display: none;
+}
