@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDocAccessible.h"
+#include "nsAccessibilityAtoms.h"
 #include "nsAccessibleEventData.h"
 #include "nsIAccessibilityService.h"
 #include "nsArray.h"
@@ -53,7 +54,6 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsIEditingSession.h"
 #include "nsIFrame.h"
@@ -116,7 +116,7 @@ nsDocAccessible::~nsDocAccessible()
 NS_INTERFACE_MAP_BEGIN(nsDocAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsPIAccessibleDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMutationListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessibleDocument)
@@ -559,31 +559,9 @@ nsresult nsDocAccessible::AddEventListeners()
     }
   }
 
-  // add ourself as a mutation event listener 
-  // (this slows down mozilla about 3%, but only used when accessibility APIs active)
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mDocument));
-  NS_ASSERTION(target, "No dom event target for document");
-  nsresult rv = target->AddEventListener(NS_LITERAL_STRING("DOMAttrModified"), 
-    this, PR_TRUE);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-  rv = target->AddEventListener(NS_LITERAL_STRING("DOMSubtreeModified"), 
-    this, PR_TRUE);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-  rv = target->AddEventListener(NS_LITERAL_STRING("DOMNodeInserted"), 
-    this, PR_TRUE);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-  rv = target->AddEventListener(NS_LITERAL_STRING("DOMNodeRemoved"), 
-    this, PR_TRUE);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-  // These aren't implemented yet, and we're not using them
-  // rv = target->AddEventListener(NS_LITERAL_STRING("DOMNodeInsertedIntoDocument"), 
-  //  this, PR_TRUE);
-  // NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-  // rv = target->AddEventListener(NS_LITERAL_STRING("DOMNodeRemovedFromDocument"), 
-  //  this, PR_TRUE);
-  // NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-
-  return rv;
+  // add document observer
+  mDocument->AddObserver(this);
+  return NS_OK;
 }
 
 nsresult nsDocAccessible::RemoveEventListeners()
@@ -592,14 +570,8 @@ nsresult nsDocAccessible::RemoveEventListeners()
   // Remove scroll position listener
   RemoveScrollListener();
 
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mDocument));
-  NS_ASSERTION(target, "No dom event target for document");
-  target->RemoveEventListener(NS_LITERAL_STRING("DOMAttrModified"), this, PR_TRUE);
-  target->RemoveEventListener(NS_LITERAL_STRING("DOMSubtreeModified"), this, PR_TRUE);
-  target->RemoveEventListener(NS_LITERAL_STRING("DOMNodeInserted"), this, PR_TRUE);
-  target->RemoveEventListener(NS_LITERAL_STRING("DOMNodeRemoved"), this, PR_TRUE);
-  // target->RemoveEventListener(NS_LITERAL_STRING("DOMNodeInsertedIntoDocument"), this, PR_TRUE);
-  // target->RemoveEventListener(NS_LITERAL_STRING("DOMNodeRemovedFromDocument"), this, PR_TRUE);
+  // Remove document observer
+  mDocument->RemoveObserver(this);
 
   if (mScrollWatchTimer) {
     mScrollWatchTimer->Cancel();
@@ -728,31 +700,19 @@ NS_IMETHODIMP nsDocAccessible::Observe(nsISupports *aSubject, const char *aTopic
   return NS_OK;
 }
 
-// ---------- Mutation event listeners ------------
-NS_IMETHODIMP nsDocAccessible::NodeInserted(nsIDOMEvent* aEvent)
-{
-  HandleMutationEvent(aEvent, nsIAccessibleEvent::EVENT_SHOW);
+///////////////////////////////////////////////////////////////////////
+// nsIDocumentObserver
 
-  return NS_OK;
-}
+NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(nsDocAccessible)
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsDocAccessible)
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsDocAccessible)
+NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsDocAccessible)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsDocAccessible)
 
-NS_IMETHODIMP nsDocAccessible::NodeRemoved(nsIDOMEvent* aEvent)
-{
-  // The related node for the event will be the parent of the removed node or subtree
-
-  HandleMutationEvent(aEvent, nsIAccessibleEvent::EVENT_HIDE);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocAccessible::SubtreeModified(nsIDOMEvent* aEvent)
-{
-  HandleMutationEvent(aEvent, nsIAccessibleEvent::EVENT_REORDER);
- 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocAccessible::AttrModified(nsIDOMEvent* aMutationEvent)
+void
+nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
+                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                                  PRInt32 aModType)
 {
   // XXX todo
   // We still need to handle special HTML cases here
@@ -760,101 +720,160 @@ NS_IMETHODIMP nsDocAccessible::AttrModified(nsIDOMEvent* aMutationEvent)
   // Otherwise it may just be a state change, for example an object changing
   // its visibility
 
+  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+  if (!docShell) {
+    return;
+  }
+  PRUint32 busyFlags;
+  docShell->GetBusyFlags(&busyFlags);
+  if (busyFlags) {
+    return; // Still loading, ignore setting of initial attributes
+  }
+
   nsCOMPtr<nsIPresShell> shell = GetPresShell();
   if (!shell) {
-    return NS_OK; // Document has been shut down
+    return; // Document has been shut down
   }
 
-  nsCOMPtr<nsIDOMMutationEvent> mutationEvent(do_QueryInterface(aMutationEvent));
-  NS_ASSERTION(mutationEvent, "Not a mutation event!");
-  nsCOMPtr<nsIDOMEventTarget> domEventTarget;
-  mutationEvent->GetTarget(getter_AddRefs(domEventTarget));
-  nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(domEventTarget));
+  nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(aContent));
   NS_ASSERTION(targetNode, "No node for attr modified");
   if (!targetNode) {
-    return NS_OK;
+    return;
   }
 
-  nsCOMPtr<nsIAccessibilityService> accService = 
-    do_GetService("@mozilla.org/accessibilityService;1");
-  NS_ASSERTION(accService, "How can we be here if no accessibility service?");
-
-  nsCOMPtr<nsIAccessible> changedAccessible;
-  accService->GetAccessibleInShell(targetNode, shell,
-                                   getter_AddRefs(changedAccessible));
-  if (!changedAccessible) {
-    return NS_OK; // The attribute change did not occur on a node exposed for accessibility
+  if (aNameSpaceID == kNameSpaceID_XHTML2_Unofficial) {
+    if (aAttribute == nsAccessibilityAtoms::role) {
+      nsCOMPtr<nsIContent> changedContent(do_QueryInterface(targetNode));
+      InvalidateCacheSubtree(changedContent, nsIAccessibleEvent::EVENT_REORDER);
+    }
+    return;
   }
-
-  nsCOMPtr<nsIDOMNode> attributeNode;
-  mutationEvent->GetRelatedNode(getter_AddRefs(attributeNode));
-  nsCOMPtr<nsIDOMAttr> domAttr(do_QueryInterface(attributeNode));
-  NS_ASSERTION(domAttr, "No related attribute node for DOMAttrModified event");
-
-  nsAutoString attrName;
-  mutationEvent->GetAttrName(attrName);
 
   PRUint32 eventType = 0;
-  if (attrName.EqualsLiteral("checked") || attrName.EqualsLiteral("expanded")) {
-    nsCOMPtr<nsIContent> targetContent(do_QueryInterface(targetNode));
-    if (targetContent->IsContentOfType(nsIContent::eXUL)) {
-      // XXX Should we remove XUL's CheckboxStateChanged event and just utilize this instead?
-      return NS_OK; // XUL utilizes CheckboxStateChanged event for this. Don't fire double event
+  if (aNameSpaceID == kNameSpaceID_StatesWAI_Unofficial) {
+    // DHTML accessibility attributes
+    nsCOMPtr<nsIContent> changedContent(do_QueryInterface(targetNode));
+    if (!changedContent->HasAttr(kNameSpaceID_XHTML2_Unofficial,
+                                 nsAccessibilityAtoms::role)) {
+      // We don't care about DHTML state changes unless there is
+      // a DHTML role set for the element
+      return;
     }
-    eventType = nsIAccessibleEvent::EVENT_STATE_CHANGE;
-  }
-  else if (attrName.EqualsLiteral("readonly") ||
-           attrName.EqualsLiteral("disabled") ||
-           attrName.EqualsLiteral("required") ||
-           attrName.EqualsLiteral("invalid")) {
-    eventType = nsIAccessibleEvent::EVENT_STATE_CHANGE;
-  }
-  else if (attrName.EqualsLiteral("valuenow")) {
-    eventType = nsIAccessibleEvent::EVENT_VALUE_CHANGE;
-  }
-  else if (attrName.EqualsLiteral("selected")) {
-    nsCOMPtr<nsIContent> targetContent(do_QueryInterface(targetNode));
-    if (targetContent->IsContentOfType(nsIContent::eXUL)) {
-      return NS_OK; // XUL fires special events for selection
+    if (aAttribute == nsAccessibilityAtoms::checked ||
+        aAttribute == nsAccessibilityAtoms::expanded) {
+      eventType = nsIAccessibleEvent::EVENT_STATE_CHANGE;
     }
-    // XXX Do we need to differentiate between different kinds of selection events
-    // such as selection, selection add, selection remove?
-    nsAutoString attrValue;
-    mutationEvent->GetNewValue(attrValue);
-    if (!attrValue.IsEmpty() && !attrValue.EqualsLiteral("false")) {
-      eventType = nsIAccessibleEvent::EVENT_SELECTION;
+    else if (aAttribute == nsAccessibilityAtoms::readonly ||
+             aAttribute == nsAccessibilityAtoms::disabled ||
+             aAttribute == nsAccessibilityAtoms::required ||
+             aAttribute == nsAccessibilityAtoms::invalid) {
+      eventType = nsIAccessibleEvent::EVENT_STATE_CHANGE;
+    }
+    else if (aAttribute == nsAccessibilityAtoms::valuenow) {
+      eventType = nsIAccessibleEvent::EVENT_VALUE_CHANGE;
     }
   }
 
   // Fire after short timer, because we need to wait for
-  // DOM attribute to actually change. Otherwise, assistive technology 
+  // DOM attribute & resulting layout to actually change.
+  // Otherwise, assistive technology 
   // will retrieve the wrong state/value/selection info.
   if (eventType) {
-    PRBool isTimerStarted = PR_TRUE;
-    if (mEventsToFire.Count() == 0) {
-      if (!mFireEventTimer) {
-        // Do not yet have a timer going for firing another event.
-        mFireEventTimer = do_CreateInstance("@mozilla.org/timer;1");
-        NS_ENSURE_TRUE(mFireEventTimer, NS_ERROR_OUT_OF_MEMORY);
-      }
-      isTimerStarted = PR_FALSE;
+    // The attribute change occured on an accessible node
+    FireDelayedToolkitEvent(eventType, targetNode, nsnull);
+  }
+}
+
+void nsDocAccessible::ContentAppended(nsIDocument *aDocument,
+                                      nsIContent* aContainer,
+                                      PRInt32 aNewIndexInContainer)
+{
+  // InvalidateCacheSubtree will not fire the EVENT_SHOW for the new node
+  // unless an accessible can be created for the passed in node, which it
+  // can't do unless the node is visible. The right thing happens there so
+  // no need for an extra visibility check here.
+  PRUint32 childCount = aContainer->GetChildCount();
+  for (PRInt32 index = aNewIndexInContainer; index < childCount; index ++) {
+    InvalidateCacheSubtree(aContainer->GetChildAt(index),
+                           nsIAccessibleEvent::EVENT_SHOW);
+  }
+}
+
+void nsDocAccessible::CharacterDataChanged(nsIDocument *aDocument,
+                                           nsIContent* aContent,
+                                           PRBool aAppend)
+{
+  InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_REORDER);
+}
+
+void
+nsDocAccessible::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
+                                 nsIContent* aChild, PRInt32 aIndexInContainer)
+{
+  // InvalidateCacheSubtree will not fire the EVENT_SHOW for the new node
+  // unless an accessible can be created for the passed in node, which it
+  // can't do unless the node is visible. The right thing happens there so
+  // no need for an extra visibility check here.
+  InvalidateCacheSubtree(aChild, nsIAccessibleEvent::EVENT_SHOW);
+}
+
+void
+nsDocAccessible::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
+                                nsIContent* aChild, PRInt32 aIndexInContainer)
+{
+  InvalidateCacheSubtree(aChild, nsIAccessibleEvent::EVENT_HIDE);
+}
+
+nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
+                                                  nsIDOMNode *aDOMNode,
+                                                  void *aData)
+{
+  PRBool isTimerStarted = PR_TRUE;
+  PRInt32 numQueuedEvents = mEventsToFire.Count();
+  if (numQueuedEvents == 0) {
+    if (!mFireEventTimer) {
+      // Do not yet have a timer going for firing another event.
+      mFireEventTimer = do_CreateInstance("@mozilla.org/timer;1");
+      NS_ENSURE_TRUE(mFireEventTimer, NS_ERROR_OUT_OF_MEMORY);
     }
-    // XXX Add related data for ATK support.
-    // For example, state change event should provide what state has changed,
-    // as well as the old and new value.
-    nsCOMPtr<nsIAccessibleEvent> event =
-      new nsAccessibleEventData(eventType, changedAccessible, this, nsnull);
-    NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-    mEventsToFire.AppendObject(event);
-    if (!isTimerStarted) {
-      // This is be the first delayed event in queue, start timer
-      // so that event gets fired via FlushEventsCallback
-      mFireEventTimer->InitWithFuncCallback(FlushEventsCallback,
-                                            NS_STATIC_CAST(nsPIAccessibleDocument*, this),
-                                            0, nsITimer::TYPE_ONE_SHOT);
+    isTimerStarted = PR_FALSE;
+  }
+  else {
+    // Check for repeat events. If a redundant event exists remove
+    // original and put the new event at the end of the queue
+    // so it is fired after the others
+    for (PRInt32 index = 0; index < numQueuedEvents; index ++) {
+      nsIAccessibleEvent *accessibleEvent = mEventsToFire[index];
+      NS_ASSERTION(accessibleEvent, "Array item is not an accessible event");
+      PRUint32 eventType;
+      accessibleEvent->GetEventType(&eventType);
+      if (eventType == aEvent) {
+        nsCOMPtr<nsIDOMNode> domNode;
+        accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
+        if (domNode == aDOMNode) {
+          mEventsToFire.RemoveObjectAt(index);
+          -- index;
+          -- numQueuedEvents;
+        }
+      }
     }
   }
 
+  // XXX Add related data for ATK support.
+  // For example, state change event should provide what state has changed,
+  // as well as the old and new value.
+  nsCOMPtr<nsIAccessibleEvent> event =
+    new nsAccessibleEventData(aEvent, aDOMNode, this, aData);
+  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+  mEventsToFire.AppendObject(event);
+  if (!isTimerStarted) {
+    // This is be the first delayed event in queue, start timer
+    // so that event gets fired via FlushEventsCallback
+    mFireEventTimer->InitWithFuncCallback(FlushEventsCallback,
+                                          NS_STATIC_CAST(nsPIAccessibleDocument*, this),
+                                          0, nsITimer::TYPE_ONE_SHOT);
+  }
   return NS_OK;
 }
 
@@ -868,9 +887,11 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
     NS_ASSERTION(accessibleEvent, "Array item is not an accessible event");
     nsCOMPtr<nsIAccessible> accessible;
     accessibleEvent->GetAccessible(getter_AddRefs(accessible));
-    PRUint32 eventType;
-    accessibleEvent->GetEventType(&eventType);
-    FireToolkitEvent(eventType, accessible, nsnull);
+    if (accessible) {
+      PRUint32 eventType;
+      accessibleEvent->GetEventType(&eventType);
+      FireToolkitEvent(eventType, accessible, nsnull);
+    }
   }
   mEventsToFire.Clear(); // Clear out array
   return NS_OK;
@@ -883,34 +904,7 @@ void nsDocAccessible::FlushEventsCallback(nsITimer *aTimer, void *aClosure)
   accessibleDoc->FlushPendingEvents();
 }
 
-NS_IMETHODIMP nsDocAccessible::NodeRemovedFromDocument(nsIDOMEvent* aMutationEvent)
-{
-  // Not implemented yet, see bug 74220
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocAccessible::NodeInsertedIntoDocument(nsIDOMEvent* aMutationEvent)
-{
-
-  // Not implemented yet, see bug 74219
-  // This is different from NodeInserted() in that it's fired when
-  // a node is inserted into a document, but isn't necessarily mean that
-  // it's becoming part of the DOM tree.
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocAccessible::HandleEvent(nsIDOMEvent* aEvent)
-{
-  NS_NOTREACHED("Should be handled by specific methods like NodeInserted, etc.");
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocAccessible::CharacterDataModified(nsIDOMEvent* aMutationEvent)
-{
-  return NS_OK;
-}
-
-void nsDocAccessible::ShutdownNodes(nsIDOMNode *aStartNode)
+void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent)
 {
   nsCOMPtr<nsIDOMNode> iterNode(aStartNode), nextNode;
   nsCOMPtr<nsIAccessNode> accessNode;
@@ -924,6 +918,28 @@ void nsDocAccessible::ShutdownNodes(nsIDOMNode *aStartNode)
 
       // Don't shutdown our doc object!
       if (accessNode != NS_STATIC_CAST(nsIAccessNode*, this)) { 
+        if (aChangeEvent != nsIAccessibleEvent::EVENT_SHOW) {
+          nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
+          if (accessible) {
+            // Fire menupopupend events for menu popups that go away
+            PRUint32 role, event = 0;
+            accessible->GetFinalRole(&role);
+            if (role == ROLE_MENUPOPUP) {
+              event = nsIAccessibleEvent::EVENT_MENUPOPUPEND;
+            }
+            else if (role == ROLE_PROGRESSBAR && iterNode != aStartNode) {
+              // Make sure EVENT_HIDE gets fired for progress meters
+              event = nsIAccessibleEvent::EVENT_HIDE;
+            }
+            if (event) {
+              PRUint32 state;
+              accessible->GetFinalState(&state);
+              if (0 == (state & STATE_INVISIBLE)) {
+                FireToolkitEvent(event, accessible, nsnull);
+              }
+            }
+          }
+        }
         void *uniqueID;
         accessNode->GetUniqueID(&uniqueID);
         nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
@@ -961,39 +977,115 @@ void nsDocAccessible::ShutdownNodes(nsIDOMNode *aStartNode)
   while (iterNode && iterNode != aStartNode);
 }
 
-NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIDOMNode *aStartNode,
+NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
                                                       PRUint32 aChangeEventType)
 {
+  NS_ASSERTION(aChangeEventType == nsIAccessibleEvent::EVENT_REORDER ||
+               aChangeEventType == nsIAccessibleEvent::EVENT_SHOW ||
+               aChangeEventType == nsIAccessibleEvent::EVENT_HIDE,
+               "Incorrect aChangeEventType passed in");
+
   // Invalidate cache subtree
   // We have to check for accessibles for each dom node by traversing DOM tree
   // instead of just the accessible tree, although that would be faster
   // Otherwise we might miss the nsAccessNode's that are not nsAccessible's.
 
-  if (!aStartNode)
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMNode> childNode = aChild ? do_QueryInterface(aChild) : mDOMNode;
+
+  // Don't fire any other events if doc is still loading
+  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
+  PRUint32 busyFlags;
+  docShell->GetBusyFlags(&busyFlags);
+  if (busyFlags && mAccessNodeCache.Count() <= 1) {
+    return NS_OK; // Still loading and nothing to invalidate yet
+  }
+
+  else if (aChangeEventType == nsIAccessibleEvent::EVENT_HIDE) {
+    // Fire EVENT_HIDE or EVENT_MENUPOPUPEND if previous accessible existed
+    // for node being hidden. Fire this before the accessible goes away
+    nsCOMPtr<nsIAccessNode> childAccessNode;
+    GetCachedAccessNode(childNode, getter_AddRefs(childAccessNode));
+    nsCOMPtr<nsIAccessible> childAccessible = do_QueryInterface(childAccessNode);
+    if (childAccessible) {
+      nsCOMPtr<nsPIAccessible> privateChildAccessible =
+        do_QueryInterface(childAccessible);
+      NS_ASSERTION(privateChildAccessible, "No nsPIAccessible for an nsIAccessible");
+      privateChildAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_HIDE,
+                                               childAccessible, nsnull);
+    }
+  }
 
   // Shutdown nsIAccessNode's or nsIAccessibles for any DOM nodes in this subtree
-  ShutdownNodes(aStartNode);
+  if (aChangeEventType != nsIAccessibleEvent::EVENT_SHOW) {
+    RefreshNodes(childNode, aChangeEventType);
+  }
 
-  // We need to get an accessible for the mutation event's target node
+  // We need to get an accessible for the mutation event's container node
   // If there is no accessible for that node, we need to keep moving up the parent
   // chain so there is some accessible.
   // We will use this accessible to fire the accessible mutation event.
   // We're guaranteed success, because we will eventually end up at the doc accessible,
   // and there is always one of those.
 
-  nsCOMPtr<nsIAccessible> accessible;
-  GetAccessibleInParentChain(aStartNode, getter_AddRefs(accessible));
-  nsCOMPtr<nsPIAccessible> privateAccessible(do_QueryInterface(accessible));
-  if (privateAccessible) {
-    privateAccessible->InvalidateChildren();
+  nsCOMPtr<nsIAccessible> containerAccessible;
+  if (childNode == mDOMNode) {
+    // Don't go any higher in parent chain than this
+    containerAccessible = this;
+  }
+  else {
+    GetAccessibleInParentChain(childNode, getter_AddRefs(containerAccessible));
+  }
+  nsCOMPtr<nsPIAccessible> privateContainerAccessible =
+    do_QueryInterface(containerAccessible);
+  if (privateContainerAccessible) {
+    privateContainerAccessible->InvalidateChildren();
+  }
+
+  if (busyFlags) {
+    return NS_OK;
   }
 
   // Fire an event so the assistive technology knows the objects it is holding onto
   // in this part of the subtree are no longer useful and should be released.
   // However, they still won't crash if the AT tries to use them, because a stub of the
   // object still exists as long as it is refcounted, even from outside of Gecko.
-  privateAccessible->FireToolkitEvent(aChangeEventType, accessible, nsnull);
+  nsCOMPtr<nsIAccessNode> containerAccessNode =
+    do_QueryInterface(containerAccessible);
+  if (containerAccessNode) {
+    nsCOMPtr<nsIDOMNode> containerNode;
+    containerAccessNode->GetDOMNode(getter_AddRefs(containerNode));
+    if (containerNode) {
+      FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_REORDER,
+                              containerNode, nsnull);
+    }
+  }
+
+  if (aChangeEventType == nsIAccessibleEvent::EVENT_SHOW && aChild) {
+    // Fire EVENT_SHOW, EVENT_MENUPOPUPSTART or EVENT_ALERT event for
+    // newly visible content. Create new accessible if necessary to do so.
+    nsAutoString role;
+    aChild->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role,
+                    role);
+    PRUint32 event = 0;
+    if (StringEndsWith(role, NS_LITERAL_STRING(":alert"))) {
+      event = nsIAccessibleEvent::EVENT_ALERT;
+    }
+    else if (StringEndsWith(role, NS_LITERAL_STRING(":menu"))) {
+      event = nsIAccessibleEvent::EVENT_MENUPOPUPSTART;
+    }
+
+    // Fire after a short timer, because we want to make sure the view has been
+    // updated to make this accessible content visible. If we don't wait,
+    // the assistive technology may receive the event and then retrieve
+    // STATE_INVISIBLE for the event's accessible object.
+    FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SHOW, childNode, nsnull);
+    if (event) {
+      FireDelayedToolkitEvent(event, childNode, nsnull);
+    }
+  }
 
   return NS_OK;
 }
@@ -1002,53 +1094,29 @@ NS_IMETHODIMP
 nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode, 
                                             nsIAccessible **aAccessible)
 {
-  nsCOMPtr<nsIAccessibilityService> accService = 
-    do_GetService("@mozilla.org/accessibilityService;1");
-  NS_ASSERTION(accService,
-               "No accessibility service while in code created by service");
-
+  // Find a pre-existing accessible in parent chain of DOM nodes, or return null
+  *aAccessible = nsnull;
   nsCOMPtr<nsIDOMNode> currentNode(aNode), parentNode;
+  nsCOMPtr<nsIAccessNode> accessNode;
 
-  while (NS_FAILED(accService->GetAccessibleInWeakShell(currentNode, mWeakShell, 
-                                                        aAccessible))) {
-    currentNode->GetParentNode(getter_AddRefs(parentNode));
-    NS_ASSERTION(parentNode, "Impossible! Crawled up parent chain without "
-                             "finding accessible. There should have at least "
-                             "been a document accessible at the root.");
-    if (!parentNode) {
-      // XXX Todo We need to figure out why this is happening.
-      // For now, return safely.
-      return NS_ERROR_FAILURE;
+  do  {
+    GetCachedAccessNode(currentNode, getter_AddRefs(accessNode));
+    nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
+    if (accessible) {
+      if (currentNode == aNode) {
+        // We don't want an accessible for the passed-innode --
+        // it must be from an ancestor
+        return accessible->GetParent(aAccessible);
+      }
+      NS_ADDREF(*aAccessible = accessible);
+      break;
     }
+    currentNode->GetParentNode(getter_AddRefs(parentNode));
     currentNode = parentNode;
   }
+  while (currentNode);
 
   return NS_OK;
-}
-
-void nsDocAccessible::HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aChangeEventType)
-{
-  NS_ASSERTION(aChangeEventType == nsIAccessibleEvent::EVENT_REORDER ||
-               aChangeEventType == nsIAccessibleEvent::EVENT_SHOW ||
-               aChangeEventType == nsIAccessibleEvent::EVENT_HIDE,
-               "Incorrect aChangeEventType passed in");
-
-
-  nsCOMPtr<nsIDOMMutationEvent> mutationEvent(do_QueryInterface(aEvent));
-  NS_ASSERTION(mutationEvent, "Not a mutation event!");
-
-  nsCOMPtr<nsIDOMNode> subTreeToInvalidate;
-  mutationEvent->GetRelatedNode(getter_AddRefs(subTreeToInvalidate));
-  NS_ASSERTION(subTreeToInvalidate, 
-               "No old sub tree being replaced in DOMSubtreeModified");
-  nsCOMPtr<nsIAccessibleDocument> docAccessible =
-    GetDocAccessibleFor(subTreeToInvalidate);
-  nsCOMPtr<nsPIAccessibleDocument> privateDocAccessible =
-    do_QueryInterface(docAccessible);
-  if (privateDocAccessible) {
-    privateDocAccessible->InvalidateCacheSubtree(subTreeToInvalidate,
-                                                 aChangeEventType);
-  }
 }
 
 NS_IMETHODIMP nsDocAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)

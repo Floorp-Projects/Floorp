@@ -38,6 +38,7 @@
 
 #include "nsHTMLLinkAccessible.h"
 #include "nsAccessibilityAtoms.h"
+#include "nsIAccessibleEvent.h"
 #include "nsINameSpaceManager.h"
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLLinkAccessible, nsLinkableAccessible)
@@ -92,3 +93,12 @@ nsIFrame* nsHTMLLinkAccessible::GetFrame()
   return nsnull;
 }
 
+NS_IMETHODIMP nsHTMLLinkAccessible::FireToolkitEvent(PRUint32 aEvent,
+                                                     nsIAccessible *aTarget,
+                                                     void *aData)
+{
+  if (aEvent == nsIAccessibleEvent::EVENT_HIDE) {
+    mFrame = nsnull;  // Invalidate cached frame
+  }
+  return nsLinkableAccessible::FireToolkitEvent(aEvent, aTarget, aData);
+}

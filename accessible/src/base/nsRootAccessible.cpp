@@ -103,7 +103,8 @@ NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsDocAccessible)
 //-----------------------------------------------------
 nsRootAccessible::nsRootAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
   nsDocAccessibleWrap(aDOMNode, aShell), 
-  mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
+  mAccService(do_GetService("@mozilla.org/accessibilityService;1")),
+  mIsInDHTMLMenu(PR_FALSE)
 {
 }
 
@@ -350,144 +351,48 @@ NS_IMETHODIMP nsRootAccessible::GetCaretAccessible(nsIAccessible **aCaretAccessi
   return NS_OK;
 }
 
-void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible, nsIDOMNode *aNode)
+void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
+                                                nsIDOMNode *aNode)
 {
   NS_ASSERTION(aAccessible, "Attempted to fire focus event for no accessible");
   PRUint32 role = ROLE_NOTHING;
   aAccessible->GetFinalRole(&role);
 
-  // Fire focus if it changes, but always fire focus events for menu items
+  // Fire focus only if it changes, but always fire focus events for menu items
   if (gLastFocusedNode == aNode && role != ROLE_MENUITEM) {
     return;
   }
 
+  nsCOMPtr<nsPIAccessible> privateAccessible =
+    do_QueryInterface(aAccessible);
+  NS_ASSERTION(privateAccessible , "No nsPIAccessible for nsIAccessible");
+
+  // Use focus events on DHTML menuitems to indicate when to fire menustart and menuend
   // Special dynamic content handling
   PRUint32 naturalRole; // The natural role is the role that this type of element normally has
   aAccessible->GetRole(&naturalRole);
-  if (role != naturalRole) {  // xhtml2:role is being used to override element's natural role
-    FireDHTMLFocusRelatedEvents(aAccessible, role);
+  if (role == ROLE_MENUITEM) {
+    if (role != naturalRole && !mIsInDHTMLMenu) {  // Entering menus
+      privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART,
+                                          this, nsnull);
+      mIsInDHTMLMenu = PR_TRUE;
+    }
+  }
+  else if (mIsInDHTMLMenu) {   // Leaving menus
+    privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUEND,
+                                        this, nsnull);
+    mIsInDHTMLMenu = PR_FALSE;
   }
 
   NS_IF_RELEASE(gLastFocusedNode);
   gLastFocusedNode = aNode;
   NS_IF_ADDREF(gLastFocusedNode);
 
-  nsCOMPtr<nsPIAccessible> privateAccessible =
-    do_QueryInterface(aAccessible);
   privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS,
                                       aAccessible, nsnull);
+
   if (mCaretAccessible)
     mCaretAccessible->AttachNewSelectionListener(aNode);
-}
-
-void nsRootAccessible::FireDHTMLMenuBarEvents(nsIAccessible *aAccessible, PRUint32 aEvent)
-{
-  // Will fire EVENT_MENUSTART or EVENT_MENUEND if we're in a menubar
-  PRUint32 containerRole;
-  while (aAccessible) {
-    aAccessible->GetFinalRole(&containerRole);
-    if (containerRole == ROLE_MENUBAR) {
-      nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(aAccessible);
-      privateAccessible->FireToolkitEvent(aEvent, aAccessible, nsnull);
-      return;
-    }
-    else if (containerRole != ROLE_MENUPOPUP) {
-      break;
-    }
-    nsCOMPtr<nsIAccessible> nextParent;
-    aAccessible->GetParent(getter_AddRefs(nextParent));
-    aAccessible = nextParent;
-  }
-}
-
-
-void nsRootAccessible::FireDHTMLFocusRelatedEvents(nsIAccessible *aAccessible, PRUint32 aRole)
-{
-  // Rule set 1: special menu events
-  // Use focus events on DHTML menuitems to indicate when to fire menustart and 
-  // menuend for menubars, as well as menupopupstart and menupopupend for popups
-
-  // How menupopupstart/menupopupend events are computed for firing:
-  // We keep track of the last popup the user was in mMenuAccessible.
-  // Store null there if the last thing that was focused was not a menuitem.
-  // If there's a menuitem focus it checks to see if you're still in that menu.
-  // If the new menu != mMenuAccessible, then a menupopupstart is fired
-  // Once something else besides a menuitem is focused, menupopupend is fired,.
-  // the menustart/menuend events are for a menubar.
-
-  // How menustart/menuend events (for menubars) are computed for firing:
-  // Starting from mMenuAccessible, walk up from its chain of menupopup parents 
-  // until we're  no longer in a menupopup. If that ancestor is a menubar, then fire
-  // a menustart or menuend event, depending on whether we're now focusing a menuitem
-  // or something else.
-
-  nsCOMPtr<nsIAccessible> newMenuAccessible;
-  PRUint32 newMenuRole;
-  if (aRole == ROLE_MENUITEM) {
-    aAccessible->GetParent(getter_AddRefs(newMenuAccessible));
-    if (newMenuAccessible) {
-      newMenuAccessible->GetFinalRole(&newMenuRole);
-      if (newMenuRole != ROLE_MENUPOPUP && newMenuRole != ROLE_MENUBAR) {
-        newMenuAccessible = nsnull;  // Menuitem not in a menu
-      }
-    }
-  }
-  if (newMenuAccessible != mMenuAccessible) {
-    if (mMenuAccessible) {
-      // We must synthesize a menupopupend event when a menu was focused and
-      // apparently loses focus (something else gets focus)
-      PRUint32 currentMenuRole;
-      mMenuAccessible->GetFinalRole(&currentMenuRole);
-      if (currentMenuRole == ROLE_MENUPOPUP) {
-        nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(mMenuAccessible);
-        privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUPEND,
-                                            mMenuAccessible, nsnull);
-      }
-      if (!newMenuAccessible) {  // No longer in a menu
-        FireDHTMLMenuBarEvents(mMenuAccessible, nsIAccessibleEvent::EVENT_MENUEND);
-      }
-    }
-    if (newMenuAccessible) {
-      // We must synthesize a menupopupstart event for DHTML when a menu item gets focused
-      // This could be a DHTML menu in which case there will be no DOMMenuActive event to help do this
-      if (!mMenuAccessible) {  // Was not in menu
-        FireDHTMLMenuBarEvents(newMenuAccessible, nsIAccessibleEvent::EVENT_MENUSTART);
-      }
-      if (newMenuRole == ROLE_MENUPOPUP) {
-        nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(newMenuAccessible);
-        privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUPSTART,
-                                            newMenuAccessible, nsnull);
-      }
-    }
-    mMenuAccessible = newMenuAccessible;
-  }
-
-  // Rule set 2: selection events that mirror focus events
-  // Mirror selection events to focus, but only for widgets that are selectable
-  // but not a descendent of a multi-selectable widget
-  PRUint32 state;
-  aAccessible->GetFinalState(&state);
-  PRBool isMultiSelectOn = PR_TRUE;
-  if (state & STATE_SELECTABLE) {
-    nsCOMPtr<nsIAccessible> container = aAccessible;
-    PRUint32 containerRole;
-    while (0 == (state & STATE_MULTISELECTABLE)) {
-      nsIAccessible *current = container;
-      current->GetParent(getter_AddRefs(container));      
-      if (!container || (NS_SUCCEEDED(container->GetFinalRole(&containerRole)) &&
-                         containerRole == ROLE_PANE)) {
-        isMultiSelectOn = PR_FALSE;
-        break;
-      }
-      container->GetFinalState(&state);
-    }
-
-    if (!isMultiSelectOn) {
-      nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(aAccessible);
-      privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION,
-                                          aAccessible, nsnull);
-    }
-  }
 }
 
 void nsRootAccessible::FireCurrentFocusEvent()
@@ -685,7 +590,18 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     }
     FireAccessibleFocusEvent(accessible, targetNode);
   }
-  else if (eventType.LowerCaseEqualsLiteral("valuechange")) { 
+  else if (eventType.EqualsLiteral("ValueChange")) {
+    PRUint32 role;
+    accessible->GetFinalRole(&role);
+    if (role == ROLE_PROGRESSBAR) {
+      // For progressmeter, fire EVENT_SHOW on 1st value change
+      nsAutoString value;
+      accessible->GetFinalValue(value);
+      if (value.EqualsLiteral("0%")) {
+        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SHOW, 
+                                  accessible, nsnull);
+      }
+    }
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, 
                               accessible, nsnull);
   }
@@ -712,7 +628,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
                                 accessible, nsnull);
     }
   }
-  else if (eventType.LowerCaseEqualsLiteral("dommenubaractive")) 
+  else if (eventType.LowerCaseEqualsLiteral("dommenubaractive"))
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART, accessible, nsnull);
   else if (eventType.LowerCaseEqualsLiteral("dommenubarinactive")) {
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUEND, accessible, nsnull);
@@ -945,7 +861,6 @@ NS_IMETHODIMP nsRootAccessible::Shutdown()
   if (!mWeakShell) {
     return NS_OK;  // Already shutdown
   }
-  mMenuAccessible = nsnull;
   mCaretAccessible = nsnull;
   mAccService = nsnull;
   if (mFireEventTimer) {

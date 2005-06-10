@@ -55,7 +55,11 @@ public:
   
   // nsPIAccessNode
   NS_IMETHOD_(nsIFrame *) GetFrame(void);
-  
+
+  // nsPIAccessible
+  NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget,
+                              void *aData);
+
 private:
   nsIFrame *mFrame;
 };

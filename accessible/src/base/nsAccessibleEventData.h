@@ -44,27 +44,34 @@
 #include "nsIAccessibleEvent.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibleDocument.h"
+#include "nsIDOMNode.h"
 
 class nsAccessibleEventData: public nsIAccessibleEvent
 {
   public:
+    // Initialize with an nsIAccessible
     nsAccessibleEventData(PRUint32 aEventType, nsIAccessible *aAccessible, 
-                         nsIAccessibleDocument *aDocAccessible, 
-                         void *aEventData);
+                          nsIAccessibleDocument *aDocAccessible, 
+                          void *aEventData);
+    // Initialize with an nsIDOMNode
+    nsAccessibleEventData(PRUint32 aEventType, nsIDOMNode *aDOMNode,
+                          nsIAccessibleDocument *aDocAccessible,
+                          void *aEventData);
     virtual ~nsAccessibleEventData() {};
 
     NS_DECL_ISUPPORTS
 
     //nsIAccessibleEvent
     NS_IMETHOD GetEventType(PRUint32 *aEventType) {*aEventType = mEventType; return NS_OK;}
-    NS_IMETHOD GetAccessible(nsIAccessible **aAccessible) 
-      {NS_ADDREF(*aAccessible = mAccessible); return NS_OK;}
+    NS_IMETHOD GetAccessible(nsIAccessible **aAccessible);
     NS_IMETHOD GetAccessibleDocument(nsIAccessibleDocument **aDocAccessible) 
       {NS_ADDREF(*aDocAccessible = mDocAccessible); return NS_OK;}
+    NS_IMETHOD GetDOMNode(nsIDOMNode **aDOMNode);
 
   private:
     PRUint32 mEventType;
     nsCOMPtr<nsIAccessible> mAccessible;
+    nsCOMPtr<nsIDOMNode> mDOMNode;
     nsCOMPtr<nsIAccessibleDocument> mDocAccessible;
     void *mEventData;
 };
