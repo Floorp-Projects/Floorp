@@ -354,23 +354,20 @@ function shouldFastFind(evt)
     
   var elt = document.commandDispatcher.focusedElement;
   if (elt) {
-    var eltLocalName = elt.localName.toLowerCase();
-    switch (eltLocalName) {
-      case "input":
-        // block FAYT when an <input> textfield element is focused
-        var inputType = elt.type;
-        switch (inputType) {
-          case "text":
-          case "password":
-          case "file":
-            return false;
-        }
-        break;
-      case "textarea":
-      case "select":
-      case "isindex":
-        return false;
+    if (elt instanceof HTMLInputElement) {
+      // block FAYT when an <input> textfield element is focused
+      var inputType = elt.type;
+      switch (inputType) {
+        case "text":
+        case "password":
+        case "file":
+          return false;
+      }
     }
+    else if (elt instanceof HTMLTextAreaElement ||
+             elt instanceof HTMLSelectElement ||
+             elt instanceof HTMLIsIndexElement)
+      return false;
   }
   
   var win = document.commandDispatcher.focusedWindow;
