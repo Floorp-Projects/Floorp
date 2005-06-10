@@ -23,6 +23,7 @@
  *  Brian Ryner <bryner@brianryner.com>
  *  Benjamin Smedberg <bsmedberg@covad.net>
  *  Ben Goodger <ben@mozilla.org>
+ *  Jens Bannmann <jens.b@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -381,6 +382,12 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
   nsCOMPtr<nsILocalFile> lf(do_QueryInterface(aComponentsList));
   parser.Init(lf);
 
+  NS_NAMED_LITERAL_CSTRING(platform, "platform");
+  NS_NAMED_LITERAL_CSTRING(osTarget, OS_TARGET);
+#ifdef TARGET_OS_ABI
+  NS_NAMED_LITERAL_CSTRING(targetOSABI, TARGET_OS_ABI);
+#endif
+
   nsresult rv;
   char parserBuf[MAXPATHLEN];
   char buf[18];
@@ -410,21 +417,22 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
     }
 
     dir->Clone(getter_AddRefs(platformDir));
-    platformDir->AppendNative(NS_LITERAL_CSTRING("platform"));
-    platformDir->AppendNative(NS_LITERAL_CSTRING(OS_TARGET));
+    platformDir->AppendNative(platform);
+    platformDir->AppendNative(osTarget);
 
 #ifdef TARGET_OS_ABI
     dir->Clone(getter_AddRefs(platformABIDir));
-    platformABIDir->AppendNative(NS_LITERAL_CSTRING("platform"));
-    platformABIDir->AppendNative(NS_LITERAL_CSTRING(TARGET_OS_ABI));
+    platformABIDir->AppendNative(platform);
+    platformABIDir->AppendNative(targetOSABI);
 #endif
 
     const char* const* a = aAppendList;
     while (*a) {
-      dir->AppendNative(nsDependentCString(*a));
-      platformDir->AppendNative(nsDependentCString(*a));
+      nsDependentCString directory(*a);
+      dir->AppendNative(directory);
+      platformDir->AppendNative(directory);
 #ifdef TARGET_OS_ABI
-      platformABIDir->AppendNative(nsDependentCString(*a));
+      platformABIDir->AppendNative(directory);
 #endif
       ++a;
     }
