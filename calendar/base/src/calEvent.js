@@ -206,7 +206,7 @@ calEvent.prototype = {
         this.mapPropsFromICS(event, this.icsEventPropMap);
         this.mIsAllDay = this.startDate && this.startDate.isDate;
 
-        this.importUnpromotedProperties(event, eventPromotedProps);
+        this.importUnpromotedProperties(event, this.eventPromotedProps);
         // Importing didn't really change anything
         this.mDirty = false;
     },
