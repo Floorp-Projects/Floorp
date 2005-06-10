@@ -548,7 +548,7 @@ sub packit_l10n {
   } # foreach
 
   # remove en-US files since we're building that on a different system
-  run_locale_shell_command "rm -f $stagedir/*en-US* $stagedir/*-xpi";
+  TinderUtils::run_shell_command "rm -f $stagedir/*en-US* $stagedir/*-xpi";
 
   TinderUtils::print_log "locales completed.\n";
 
