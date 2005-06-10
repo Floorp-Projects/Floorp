@@ -438,7 +438,8 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
 		dd->bufsize = BUFSIZE;
 
 		// validate patch header & check for special instructions
-    patchFileLocal->OpenNSPRFileDesc(PR_RDONLY, 0666, &dd->fDiff);
+    // we're just reading, the 0400 is an annotation.
+    patchFileLocal->OpenNSPRFileDesc(PR_RDONLY, 0400, &dd->fDiff);
 
 		if (dd->fDiff != NULL)
 		{
@@ -555,8 +556,9 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
     nsCOMPtr<nsILocalFile> realFileLocal = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);;
     realFileLocal->InitWithNativePath(realfile);
 
-    realFileLocal->OpenNSPRFileDesc(PR_RDONLY, 0666, &dd->fSrc);
-    outFileLocal->OpenNSPRFileDesc(PR_RDWR|PR_CREATE_FILE|PR_TRUNCATE, 0666, &dd->fOut);
+    // it's ok for people in the group to modify these files later, but it wouldn't be good for just anyone.
+    realFileLocal->OpenNSPRFileDesc(PR_RDONLY, 0664, &dd->fSrc);
+    outFileLocal->OpenNSPRFileDesc(PR_RDWR|PR_CREATE_FILE|PR_TRUNCATE, 0664, &dd->fOut);
 
     if (dd->fSrc != NULL && dd->fOut != NULL)
     {
