@@ -85,5 +85,117 @@
     </implementation>
   </binding>
   
+  <binding id="license">
+    <content>
+      <xul:vbox flex="1" class="loadingBox">
+        <xul:hbox align="start">
+          <xul:image class="licenseLoadingThrobber" xbl:inherits="state"/>
+          <xul:vbox flex="1">
+            <xul:description flex="1" class="licenseLoadingMessage" crop="right"/>
+          </xul:vbox>
+        </xul:hbox>
+      </xul:vbox>
+      <xul:vbox flex="1">
+        <xul:browser class="licenseContent" flex="1"/>
+      </xul:vbox>
+      <xul:stringbundle anonid="strings" 
+                        src="chrome://mozapps/locale/update/updates.properties"/>
+    </content>
+    <implementation>
+      <constructor>
+        if (this.hasAttribute("url"))
+          this.url = this.getAttribute("url");
+      </constructor>
+      
+      <field name="_request">null</field>
+      <field name="_message">
+        document.getAnonymousElementByAttribute(this, "class", "licenseLoadingMessage");
+      </field>
+      <field name="_content">
+        document.getAnonymousElementByAttribute(this, "class", "licenseContent");
+      </field>
+      <field name="_strings">
+        document.getAnonymousElementByAttribute(this, "anonid", "strings");
+      </field>
+      
+      <method name="_setMessageValue">
+        <parameter name="value"/>
+        <body><![CDATA[
+          while (this._message.hasChildNodes())
+            this._message.removeChild(this._message.firstChild);
+          this._message.appendChild(document.createTextNode(value));
+        ]]></body>
+      </method>
+
+      <method name="onError">
+        <parameter name="event"/>
+        <body><![CDATA[
+          var status = this._request.status;
+          var statusText = this._request.statusText
+          LOG("license.onError: error during load, status code = " + status + 
+              ", message: " + statusText);
+
+          if (status == 404) 
+            statusText = this._strings.getString("license404Error");
+
+          this._setMessageValue(statusText);
+          this.setAttribute("state", "error");
+        ]]></body>
+      </method>
+      <method name="onLoad">
+        <parameter name="event"/>
+        <body><![CDATA[
+          LOG("license.onLoad: request completed downloading document");
+          this.setAttribute("selectedIndex", "1");
+          var doc = this._content.contentWindow.document;
+          doc.documentElement.innerHTML = this._request.responseText;
+
+          var e = document.createEvent("Events");
+          e.initEvent("load", false, true);
+          this.dispatchEvent(e);
+        ]]></body>
+      </method>
+      <method name="onProgress">
+        <parameter name="event"/>
+        <body><![CDATA[
+          LOG("license.onProgress: download progress: " + event.position + "/" + event.totalSize);        
+        ]]></body>
+      </method>
+
+      <property name="url">
+        <getter><![CDATA[
+          return this.getAttribute("url");
+        ]]></getter>
+        <setter><![CDATA[
+          this.setAttribute("url", val);
+
+          this._request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                                    .createInstance(Components.interfaces.nsIXMLHttpRequest);
+          this._request.open("GET", val, true);
+          this._request.setRequestHeader("Cache-Control", "no-cache");
+    
+          var self = this;
+          this._request.onerror     = function(event) { self.onError(event);    };
+          this._request.onload      = function(event) { self.onLoad(event);     };
+          this._request.onprogress  = function(event) { self.onProgress(event); };
+
+          this.setAttribute("state", "loading");
+          this._setMessageValue(this._strings.getString("downloadingLicense"));
+          
+          LOG("license.set_url: sending request to " + val);
+          this._request.send(null);
+        ]]></setter>
+      </property>
+      
+      <method name="stopDownloading">
+        <body><![CDATA[
+          const READY_STATE_COMPLETED = 4
+          if (this._request && 
+              this._request.readyState != READY_STATE_COMPLETED)
+            this._request.abort();
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
 </bindings>
 

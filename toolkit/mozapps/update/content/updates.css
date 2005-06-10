@@ -4,6 +4,7 @@ wizard[description=""] .wizard-header-description {
   display: none;
 }
 
+wizard[currentpageid="license"] .wizard-buttons,
 wizard[currentpageid="errors"] .wizard-buttons {
   display: -moz-box;
 }
@@ -52,6 +53,29 @@ link:hover:active {
 
 link:focus {
   border: 1px dotted black;
+}
+
+license {
+  -moz-binding: url("chrome://mozapps/content/update/updates.xml#license");
+  display: -moz-deck;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: 5px;
+  -moz-appearance: listbox;
+  padding-bottom: 1px;
+}
+.loadingBox {
+  padding: 3px 5px 3px 5px;
+}
+.licenseLoadingThrobber {
+  margin-top: 3px;
+}
+.licenseLoadingThrobber[state="loading"] {
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+}
+.licenseLoadingThrobber[state="error"] {
+  list-style-image: url("chrome://global/skin/icons/notfound.png");
 }
 
 #updateName {

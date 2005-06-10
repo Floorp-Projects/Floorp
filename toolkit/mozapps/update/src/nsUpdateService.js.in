@@ -644,11 +644,12 @@ UpdatePatch.prototype = {
  * Update
  * Implements nsIUpdate
  */
-function Update(type, version, extensionversion, detailsurl, patches) {
+function Update(type, version, extensionversion, detailsurl, licenseurl, patches) {
   this.type = type;
   this.version = version;
   this.extensionversion = extensionversion;
   this.detailsurl = detailsurl;
+  this.licenseurl = licenseurl;
   this.isCompleteUpdate = false;
   this._patches = patches;
 }
@@ -704,6 +705,7 @@ function ParseUpdateNode(node) {
                     node.getAttribute("version"),
                     node.getAttribute("extensionversion"),
                     node.getAttribute("detailsurl"),
+                    node.getAttribute("licenseurl"),
                     patches);
 }
 

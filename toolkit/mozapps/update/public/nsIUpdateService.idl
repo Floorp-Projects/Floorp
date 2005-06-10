@@ -86,6 +86,10 @@ interface nsIUpdate : nsISupports
    *
    */
   attribute AString detailsurl;
+  /**
+   *
+   */
+  attribute AString licenseurl;
 
   /**
    * Whether or not the update being downloaded is a complete replacement of
