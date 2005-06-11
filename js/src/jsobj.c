@@ -105,7 +105,10 @@ JSClass js_ObjectClass = {
     0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    NULL,             js_SharedCheckAccess,
+    NULL,             NULL,
+    NULL,             NULL,
+    NULL,             NULL
 };
 
 #if JS_HAS_OBJ_PROTO_PROP
@@ -3413,6 +3416,10 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     sprop = (JSScopeProperty *)prop;
     *vp = (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)))
           ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
+          : (mode == JSACC_PROTO)
+          ? LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PROTO)
+          : (mode == JSACC_PARENT)
+          ? LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PARENT)
           : JSVAL_VOID;
     *attrsp = sprop->attrs;
     clasp = LOCKED_OBJ_GET_CLASS(obj);
@@ -3425,6 +3432,15 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     }
     OBJ_DROP_PROPERTY(cx, pobj, prop);
     return ok;
+}
+
+JSBool
+js_SharedCheckAccess(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
+                     jsval *vp)
+{
+    if (!cx->runtime->checkObjectAccess)
+        return JS_TRUE;
+    return cx->runtime->checkObjectAccess(cx, obj, id, mode, vp);
 }
 
 #ifdef JS_THREADSAFE

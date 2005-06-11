@@ -3366,15 +3366,6 @@ regexp_finalize(JSContext *cx, JSObject *obj)
     js_DestroyRegExp(cx, re);
 }
 
-/*
- * RegExps are often shared, even across trust domains, in order to amortize
- * scripted regexp compilation costs across N sharing domains or contexts --
- * just as function objects are.  See jsfun.c for the definition of this hook.
- */
-extern JSBool
-js_SharedCheckAccess(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
-                     jsval *vp);
-
 /* Forward static prototype. */
 static JSBool
 regexp_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
