@@ -634,6 +634,11 @@ UpdateManager.prototype = {
   /**
    *
    */
+  _updates: [],
+  
+  /**
+   *
+   */
   _init: function() {
     var updatesDB = getFile(KEY_APPDIR, [FILE_UPDATES_DB]);
     var fileStream = Components.classes["@mozilla.org/network/file-input-stream;1"]
@@ -644,13 +649,25 @@ UpdateManager.prototype = {
       var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
                              .createInstance(Components.interfaces.nsIDOMParser);
       this._data = parser.parseFromString(data, "text/xml");
+      
+      var updateCount = this._data.documentElement.childNodes.length;
+      for (var i = 0; i < updateCount; ++i) {
+        var updateNode = this._data.documentElement.childNodes[i];
+        this._updates.push(parseUpdateNode(updateNode));
+      }
     }
   },
   
   /**
    * See nsIUpdateService.idl
    */
-  get updates() {
+  getUpdateAt: function(index) {
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  get updateCount() {
   },
   
   /**
@@ -755,13 +772,14 @@ UpdatePatch.prototype = {
  * Update
  * Implements nsIUpdate
  */
-function Update(type, version, extensionversion, detailsurl, licenseurl, patches) {
+function Update(type, version, extensionversion, detailsurl, licenseurl, installDate, patches) {
   this.type = type;
   this.version = version;
   this.extensionversion = extensionversion;
   this.detailsurl = detailsurl;
   this.licenseurl = licenseurl;
   this.isCompleteUpdate = false;
+  this.installDate = installDate;
   this._patches = patches;
 }
 
@@ -793,10 +811,10 @@ Update.prototype = {
  
 
 /**
- * ParseUpdateNode
+ * parseUpdateNode
  * Parses an <update> element into an Update object.
  */
-function ParseUpdateNode(node) {
+function parseUpdateNode(node) {
   patches = [];
 
   for (var i = 0; i < node.childNodes.length; ++i) {
@@ -817,6 +835,7 @@ function ParseUpdateNode(node) {
                     node.getAttribute("extensionversion"),
                     node.getAttribute("detailsurl"),
                     node.getAttribute("licenseurl"),
+                    node.hasAttribute("installdate") ? node.getAttribute("installdate") : 0,
                     patches);
 }
 
@@ -881,7 +900,7 @@ Checker.prototype = {
       if (updateElement.nodeType != Node.ELEMENT_NODE)
         continue;
 
-      updates.push(ParseUpdateNode(updateElement));
+      updates.push(parseUpdateNode(updateElement));
     }
 
     return updates;
