@@ -49,7 +49,6 @@ comm.jar:
     content/communicator/printing.js                     (resources/content/printing.js)
 #ifndef MOZ_XUL_APP
 *   content/branding/contents.rdf                        (resources/content/contents-branding.rdf)
-#endif
 
 en-US.jar:
     locale/en-US/communicator/utilityOverlay.dtd                (resources/locale/en-US/utilityOverlay.dtd) 
@@ -63,14 +62,11 @@ en-US.jar:
     locale/en-US/communicator/viewZoomOverlay.dtd               (resources/locale/en-US/viewZoomOverlay.dtd)
     locale/en-US/communicator/viewZoomOverlay.properties        (resources/locale/en-US/viewZoomOverlay.properties)
     locale/en-US/communicator/printPreview.dtd                  (resources/locale/en-US/printPreview.dtd)
-#ifndef MOZ_XUL_APP
 *   locale/en-US/communicator/contents.rdf                      (resources/locale/en-US/contents.rdf)
 *   locale/en-US/branding/contents.rdf                          (resources/locale/en-US/contents-branding.rdf)
 *   locale/en-US/branding/brand.dtd                             (resources/locale/en-US/brand.dtd)
 *   locale/en-US/branding/brand.properties                      (resources/locale/en-US/brand.properties)
-#endif
 
-#ifndef MOZ_XUL_APP
 US.jar:
 *   locale/US/communicator-region/contents.rdf   	      (resources/locale/en-US/contents-region.rdf)
     locale/US/communicator-region/region.properties     (resources/locale/en-US/region.properties)
