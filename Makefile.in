@@ -264,10 +264,6 @@ ifdef MOZ_XPINSTALL
 tier_50_dirs     +=  xpinstall
 endif
 
-ifdef NS_TRACE_MALLOC
-tier_50_dirs += tools/trace-malloc
-endif
-
 ifdef MOZ_JSDEBUGGER
 tier_50_dirs += js/jsd
 endif
@@ -277,6 +273,10 @@ tier_50_dirs += \
 		toolkit/library \
 		xpcom/stub \
 		$(NULL)
+endif
+
+ifdef NS_TRACE_MALLOC
+tier_50_dirs += tools/trace-malloc
 endif
 
 ifdef MOZ_PSM
