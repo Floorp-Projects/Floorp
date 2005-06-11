@@ -2083,7 +2083,7 @@ NS_TraceMallocFlushLogfiles()
 }
 
 PR_IMPLEMENT(void)
-NS_TrackAllocation(__ptr_t ptr, FILE *ofp)
+NS_TrackAllocation(void* ptr, FILE *ofp)
 {
     PLHashEntry **hep;
     allocation *alloc;

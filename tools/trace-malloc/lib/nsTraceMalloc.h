@@ -43,6 +43,10 @@
 #include <stdio.h> /* for FILE */
 #include "prtypes.h"
 
+#ifdef XP_WIN
+#define setlinebuf(stream) setvbuf((stream), (char *)NULL, _IOLBF, 0)
+#endif
+
 PR_BEGIN_EXTERN_C
 
 /**
@@ -220,7 +224,7 @@ NS_TraceMallocFlushLogfiles(void);
  * Track all realloc and free calls operating on a given allocation.
  */
 PR_EXTERN(void)
-NS_TrackAllocation(__ptr_t ptr, FILE *ofp);
+NS_TrackAllocation(void* ptr, FILE *ofp);
 
 PR_END_EXTERN_C
 
