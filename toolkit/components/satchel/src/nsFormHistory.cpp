@@ -61,6 +61,8 @@
 #include "nsVoidArray.h"
 #include "nsCOMArray.h"
 
+#include "prmem.h" //for Bug 289695
+
 #define PREF_FORMFILL_BRANCH "browser.formfill."
 #define PREF_FORMFILL_ENABLE "enable"
 
@@ -787,7 +789,7 @@ nsFormHistory::AutoCompleteSearch(const nsAString &aInputName,
         result->AddRow(matchingRows[items[i]]);
 
         // Free up these strings we owned.
-        delete (PRUnichar *) matchingValues[i];
+        PR_Free((PRUnichar *) matchingValues[i]);
       }
 
       delete[] items;
