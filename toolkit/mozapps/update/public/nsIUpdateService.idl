@@ -239,7 +239,12 @@ interface nsIUpdateManager : nsISupports
   /**
    *
    */
-  readonly attribute nsISimpleEnumerator updates;
+  nsIUpdate getUpdateAt(in long index);
+
+  /**
+   * 
+   */
+  readonly attribute long updateCount;
 
   /**
    *
