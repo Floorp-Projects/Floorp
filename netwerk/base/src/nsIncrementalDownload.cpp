@@ -70,7 +70,7 @@ WriteToFile(nsILocalFile *lf, const char *data, PRUint32 len, PRInt32 flags)
   if (NS_FAILED(rv))
     return rv;
 
-  rv = PR_Write(fd, data, len) == len ? NS_OK : NS_ERROR_FAILURE;
+  rv = PR_Write(fd, data, len) == PRInt32(len) ? NS_OK : NS_ERROR_FAILURE;
 
   PR_Close(fd);
   return rv;
@@ -273,7 +273,8 @@ nsIncrementalDownload::ReadCurrentSize()
 {
   nsInt64 size;
   nsresult rv = mDest->GetFileSize((PRInt64 *) &size);
-  if (rv == NS_ERROR_FILE_NOT_FOUND) {
+  if (rv == NS_ERROR_FILE_NOT_FOUND ||
+      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
     mCurrentSize = 0;
     return NS_OK;
   }
