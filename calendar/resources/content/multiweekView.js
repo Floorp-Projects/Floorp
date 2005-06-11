@@ -247,7 +247,7 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
             for(var i = 0; i < aCount; ++i )
             {
                 var itemOccurrence = aItems[i];
-                var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
+                var calEvent = itemOccurrence.QueryInterface(Components.interfaces.calIEvent);
                 dump("calEvent.title:" + calEvent.title + "\n");
 
                 eventController.createEventBox(itemOccurrence,
@@ -273,7 +273,7 @@ MultiweekView.prototype.createEventBoxInternal = function multiweekView_createEv
     if (!dayBoxItem)
         return;
 
-    var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
+    var calEvent = itemOccurrence.QueryInterface(Components.interfaces.calIEvent);
     // Make a box item to hold the event
     eventBox = document.createElement( "box" );
     eventBox.setAttribute( "id", "multiweek-view-event-box-" + itemOccurrence.id );

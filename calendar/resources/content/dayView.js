@@ -386,7 +386,7 @@ DayView.prototype.createEventBoxInternal = function(event)
     var itemOccurrence = event.event;
     var startDate = event.start;
     var endDate = event.end;
-    var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
+    var calEvent = itemOccurrence.QueryInterface(Components.interfaces.calIEvent);
 
     // XXX Centralize this next checks
     // Check if the event is within the bounds of events to be displayed.

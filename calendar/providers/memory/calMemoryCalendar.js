@@ -120,7 +120,7 @@ calMemoryCalendar.prototype = {
 
     // void addObserver( in calIObserver observer );
     addObserver: function (aObserver, aItemFilter) {
-        if (this.mObservers.any(function(o) { return (o == aObserver); }))
+        if (this.mObservers.some(function(o) { return (o == aObserver); }))
             return;
 
         this.mObservers.push(aObserver);

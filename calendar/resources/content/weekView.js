@@ -351,7 +351,7 @@ WeekView.prototype.createEventBoxInternal = function (event)
     var itemOccurrence = event.event;
     var startDate = event.start;
     var endDate = event.end;
-    var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
+    var calEvent = itemOccurrence.QueryInterface(Components.interfaces.calIEvent);
 
     // Check if the event is within the bounds of events to be displayed.
     if ((endDate.jsDate < this.displayStartDate) ||

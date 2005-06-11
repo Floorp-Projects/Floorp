@@ -654,13 +654,13 @@ CalendarView.prototype.createEventBox = function(aItemOccurrence, aInteralFuncti
     var origEndDate;
 
     if ("displayTimezone" in this) {
-        startDate = aItemOccurrence.occurrenceStartDate.getInTimezone(this.displayTimezone).clone();
-        origEndDate = aItemOccurrence.occurrenceEndDate.getInTimezone(this.displayTimezone).clone();
+        startDate = aItemOccurrence.startDate.getInTimezone(this.displayTimezone).clone();
+        origEndDate = aItemOccurrence.endDate.getInTimezone(this.displayTimezone).clone();
     } else {
         // Copy the values from jsDate. jsDate is in de users timezone
         // It's a hack, but it kind of works. It doesn't set the right
         // timezone info for the date, but that's not a real problem.
-        startDate = aItemOccurrence.occurrenceStartDate.clone();
+        startDate = aItemOccurrence.startDate.clone();
         var jsDate = startDate.jsDate;
         startDate.year = jsDate.getFullYear();
         startDate.month = jsDate.getMonth();
@@ -670,7 +670,7 @@ CalendarView.prototype.createEventBox = function(aItemOccurrence, aInteralFuncti
         startDate.second = jsDate.getSeconds();
         startDate.normalize();
 
-        origEndDate = aItemOccurrence.occurrenceEndDate.clone();
+        origEndDate = aItemOccurrence.endDate.clone();
         jsDate = origEndDate.jsDate;
         origEndDate.year = jsDate.getFullYear();
         origEndDate.month = jsDate.getMonth();

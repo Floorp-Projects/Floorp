@@ -255,7 +255,7 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
     if (!dayBoxItem)
         return;
 
-    var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
+    var calEvent = itemOccurrence.QueryInterface(Components.interfaces.calIEvent);
  
     // Make a box item to hold the event
     eventBox = document.createElement("box");
