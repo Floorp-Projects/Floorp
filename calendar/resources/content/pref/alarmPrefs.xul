@@ -60,12 +60,22 @@
       ];
    </script>
 
+   <stringbundleset id="stringbundleset">
+     <stringbundle id="bundle_calendar" src="chrome://calendar/locale/calendar.properties"/>
+   </stringbundleset>
+
    <groupbox>
       <caption label="&pref.alarmbox.label;"/>
       <description>&pref.alarmgoesoff.label;</description>
-      <checkbox id="alarmplaysound" prefstring="calendar.alarms.playsound"
+      <hbox>
+         <checkbox id="alarmplaysound" prefstring="calendar.alarms.playsound"
           label="&pref.playasound;" />
-          
+         <textbox id="alarmsoundpath" value="" prefstring="calendar.alarms.soundURL"/>
+         <button id="alarmbrowse" label="&calendar.server.dialog.browse.label;"
+              oncommand="browseAlarm()"/>
+         <button id="previewalarm" label="&pref.preview.label;"
+              oncommand="previewAlarm()"/>
+      </hbox>
       <checkbox id="alarmshow" prefstring="calendar.alarms.show" label="&pref.showalarmbox;" />
       
       <checkbox id="missedalarms" prefstring="calendar.alarms.showmissed" label="&pref.missedalarms;" />

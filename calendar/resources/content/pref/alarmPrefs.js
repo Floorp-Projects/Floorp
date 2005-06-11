@@ -91,3 +91,34 @@ function updateMenuPlural( lengthFieldId, menuId )
     }
 }
 
+function browseAlarm() {
+   const nsIFilePicker = Components.interfaces.nsIFilePicker;
+
+   var gCalendarBundle = document.getElementById( "bundle_calendar" );
+
+   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+   fp.init(window, gCalendarBundle.getString( "Open" ), nsIFilePicker.modeOpen);
+   var ret = fp.show();
+
+   if(ret == nsIFilePicker.returnOK) {
+      document.getElementById( "alarmsoundpath" ).value = fp.fileURL.spec;
+      document.getElementById( "alarmplaysound" ).checked=true;
+   }
+}
+
+function previewAlarm() {
+   var soundURL = document.getElementById( "alarmsoundpath" ).value;
+   var gSound = Components.classes["@mozilla.org/sound;1"].createInstance(Components.interfaces.nsISound);
+
+   if (soundURL.indexOf( "file://" ) == -1) {
+     gSound.playSystemSound(soundURL);
+   }
+   else {
+     var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService);
+     var url = ioService.newURI(soundURL, null, null);
+     gSound.play(url)
+   }
+}
+
+
