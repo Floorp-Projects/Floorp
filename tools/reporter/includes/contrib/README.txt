@@ -20,6 +20,12 @@ Reference point (check if this structure is valid):
 NuSOAP
 http://sourceforge.net/projects/nusoap/
 
+Scroll down to about line 130 in nusoap.php and comment out the following line:
+    //var $soap_defencoding = 'ISO-8859-1';
+and uncomment the following line:
+    var $soap_defencoding = 'UTF-8';
+
+
 Reference point (check if this structure is valid):
 [base_path]/includes/contrib/nusoap/lib/nusoap.php
 
