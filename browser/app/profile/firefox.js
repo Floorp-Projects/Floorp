@@ -80,8 +80,9 @@ pref("app.update.autoInstallMode", 0);
 
 // XXX these prefs and others like them are distribution specific and should move 
 //     into chrome://browser
-pref("app.update.url", "chrome://mozapps/locale/update/updates.properties");
-pref("app.update.manual.url", "chrome://mozapps/locale/update/updates.properties");
+pref("app.update.url.base", "https://aus.mozilla.org/update/");
+pref("app.update.url.manual", "chrome://mozapps/locale/update/updates.properties");
+pref("app.update.url.override", "chrome://mozapps/locale/update/updates.properties");
 pref("app.update.updatesAvailable", false);
 // Check for updates to Firefox every day
 pref("app.update.interval", 86400000);
