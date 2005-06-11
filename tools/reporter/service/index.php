@@ -37,9 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 require_once('../config.inc.php');
-require_once($config['app_path'].'/includes/adodb/adodb.inc.php');
-require_once($config['app_path'].'/includes/iolib.inc.php');
-require_once($config['app_path'].'/includes/nusoap/lib/nusoap.php');
+require_once($config['base_path'].'/includes/iolib.inc.php');
+require_once($config['base_path'].'/includes/contrib/adodb/adodb.inc.php');
+require_once($config['base_path'].'/includes/contrib/nusoap/lib/nusoap.php');
 
 // Create the server instance
 $server = new soap_server;
