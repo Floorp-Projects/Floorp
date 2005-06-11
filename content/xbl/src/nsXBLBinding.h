@@ -111,7 +111,7 @@ public:
   void GenerateAnonymousContent();
   void InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement);
   void InstallEventHandlers();
-  void InstallImplementation();
+  nsresult InstallImplementation();
 
   void ExecuteAttachedHandler();
   void ExecuteDetachedHandler();

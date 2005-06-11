@@ -721,18 +721,22 @@ nsXBLBinding::InstallEventHandlers()
     mNextBinding->InstallEventHandlers();
 }
 
-void
+nsresult
 nsXBLBinding::InstallImplementation()
 {
   // Always install the base class properties first, so that
   // derived classes can reference the base class properties.
 
-  if (mNextBinding)
-    mNextBinding->InstallImplementation();
-
+  if (mNextBinding) {
+    nsresult rv = mNextBinding->InstallImplementation();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
   // iterate through each property in the prototype's list and install the property.
   if (AllowScripts())
-    mPrototypeBinding->InstallImplementation(mBoundElement);
+    return mPrototypeBinding->InstallImplementation(mBoundElement);
+
+  return NS_OK;
 }
 
 nsIAtom*
