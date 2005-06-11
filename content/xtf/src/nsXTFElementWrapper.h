@@ -100,6 +100,8 @@ public:
   PRUint32 GetAttrCount() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
 
+  virtual PRInt32 IntrinsicState() const;
+
   virtual void BeginAddingChildren();
   virtual void DoneAddingChildren();
   
@@ -136,6 +138,12 @@ protected:
   
   PRUint32 mNotificationMask;
   nsCOMPtr<nsIXTFAttributeHandler> mAttributeHandler;
+
+  /*
+   * The intrinsic state of the element.
+   * @see nsIContent::IntrinsicState()
+   */
+  PRInt32 mIntrinsicState;
 };
 
 class nsXTFStyledElementWrapper : public nsXTFElementWrapper

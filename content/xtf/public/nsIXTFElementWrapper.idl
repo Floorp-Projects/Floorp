@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alex Fritze <alex@croczilla.com> (original author)
+ *   Allan Beaufour <allan@beaufour.dk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,7 +43,7 @@ interface nsIAtom;
 interface nsIDOMElement;
 interface nsIDOMDocument;
 
-[scriptable, uuid(e71b0b11-45e3-422b-b589-9ea4629e36ec)]
+[scriptable, uuid(444d0276-3302-4d35-a74e-25c4e9c483c9)]
 interface nsIXTFElementWrapper : nsISupports
 {  
   readonly attribute nsIDOMElement elementNode;
@@ -53,5 +54,11 @@ interface nsIXTFElementWrapper : nsISupports
    * by the NOTIFY_* constants in nsIXTFElement and nsIXTFVisual:
    */
   attribute unsigned long notificationMask;
+
+  /**
+   * Sets the intrinsic state for the element.
+   * @see nsIContent::IntrinsicState().
+   */
+  void setIntrinsicState(in long newState);
 };
 

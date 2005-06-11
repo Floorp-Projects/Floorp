@@ -55,7 +55,8 @@
 
 nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo)
     : nsXTFElementWrapperBase(aNodeInfo),
-      mNotificationMask(0)
+      mNotificationMask(0),
+      mIntrinsicState(0)
 {
 }
 
@@ -415,6 +416,12 @@ nsXTFElementWrapper::GetExistingAttrNameFromQName(const nsAString& aStr) const
   return nodeInfo;
 }
 
+PRInt32
+nsXTFElementWrapper::IntrinsicState() const
+{
+  return mIntrinsicState;
+}
+
 //----------------------------------------------------------------------
 // nsIDOMNode methods:
 
@@ -702,6 +709,22 @@ nsXTFElementWrapper::HandleDOMEvent(nsPresContext* aPresContext,
   if (defaultHandled)
     *aEventStatus = nsEventStatus_eConsumeNoDefault;
   return rv;
+}
+
+NS_IMETHODIMP
+nsXTFElementWrapper::SetIntrinsicState(PRInt32 aNewState)
+{
+  nsIDocument *doc = GetCurrentDoc();
+  PRInt32 bits = mIntrinsicState ^ aNewState;
+  
+  if (!doc || !bits)
+    return NS_OK;
+
+  mIntrinsicState = aNewState;
+  mozAutoDocUpdate(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+  doc->ContentStatesChanged(this, nsnull, bits);
+
+  return NS_OK;
 }
 
 // nsXTFStyleableElementWrapper
