@@ -370,7 +370,7 @@ calStorageCalendar.prototype = {
         this.observeAddItem(newItem);
     },
 
-    // void modifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem, in calIOperationListener aListener );
+    // void modifyItem( in calIItemBase aOldItem, in calIItemBase aNewItem, in calIOperationListener aListener );
     modifyItem: function (aNewItem, aOldItem, aListener) {
         function reportError(errId, errStr) {
             if (aListener)
@@ -762,9 +762,9 @@ calStorageCalendar.prototype = {
             obs.onAddItem (aItem);
     },
 
-    observeModifyItem: function (aNewItem, aOldItem) {
+    observeModifyItem: function (aOldItem, aNewItem) {
         for each (obs in this.mObservers)
-            obs.onModifyItem (aNewItem, aOldItem);
+            obs.onModifyItem (aOldItem, aNewItem);
     },
 
     observeDeleteItem: function (aDeletedItem) {
