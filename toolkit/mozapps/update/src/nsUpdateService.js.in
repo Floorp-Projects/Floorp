@@ -49,7 +49,8 @@ const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
 const PREF_APP_UPDATE_TIMER               = "app.update.timer";
 const PREF_APP_UPDATE_LOG_ENABLED         = "app.update.logEnabled";
 
-const PREF_APP_UPDATE_URL                 = "app.update.url";
+const PREF_APP_UPDATE_URL_BASE            = "app.update.url.base";
+const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
 
 const PREF_UPDATE_LASTUPDATETIME_FMT      = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
@@ -383,7 +384,8 @@ UpdatePrompt.prototype = {
  */
 function UpdateService() {
   gApp  = Components.classes["@mozilla.org/xre/app-info;1"]
-                    .getService(Components.interfaces.nsIXULAppInfo);
+                    .getService(Components.interfaces.nsIXULAppInfo)
+                    .QueryInterface(Components.interfaces.nsIXULRuntime);
   gPref = Components.classes["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefBranch2);
   gOS   = Components.classes["@mozilla.org/observer-service;1"]
@@ -544,15 +546,17 @@ UpdateService.prototype = {
    */
   _selectAndInstallUpdate: function(updates) {
     var update = this.selectUpdate(updates, updates.length);
+    if (!update)
+      return;
     if (this._shouldPrompt(update)) {
       LOG("_selectAndInstallUpdate: need to prompt user before continuing...");
       var prompter = 
           Components.classes["@mozilla.org/updates/update-prompt;1"].
           createInstance(Components.interfaces.nsIUpdatePrompt);
       prompter.showUpdateAvailable(update);
-    }
-    else
+    } else {
       this.downloadUpdate(update, true);
+    }
   },
 
   /**
@@ -850,12 +854,31 @@ Checker.prototype = {
   observer  : null,
   
   get _updateURL() {
+    var url;
     try {
-      return gPref.getComplexValue(PREF_APP_UPDATE_URL, nsIPrefLocalizedString).data;
+      // Use the override URL if specified.
+      url = gPref.getComplexValue(PREF_APP_UPDATE_URL_OVERRIDE,
+                                  nsIPrefLocalizedString).data;
+      if (url && url != "")
+        return url;
+    } catch (e) {}
+
+    // Otherwise, construct the update URL from component parts.
+    var baseURL = getPref("getCharPref", PREF_APP_UPDATE_URL_BASE, null);
+    if (!baseURL) {
+      LOG(PREF_APP_UPDATE_URL_BASE + " not defined");
+      return null;
     }
-    catch (e) {
-    }
-    return null;
+
+    // <product-name>/<version>/<build-id>/<build-target>/<locale>/update.xml
+    url = baseURL +
+        gApp.name + "/" +
+        gApp.version + "/" +
+        gApp.appBuildID + "/" +
+        gApp.OS + "_" + gApp.XPCOMABI + "/" +
+        gPref.getCharPref("general.useragent.locale") + "/update.xml";
+    LOG("update url: " + url);
+    return url;
   },
   
   findUpdates: function(callback) {
@@ -894,6 +917,11 @@ Checker.prototype = {
       return [];
     }
 
+    if (updatesElement.nodeName != "updates") {
+      LOG("Checker.get_updates: unexpected node name!");
+      return [];
+    }
+    
     var updates = [];
     for (var i = 0; i < updatesElement.childNodes.length; ++i) {
       var updateElement = updatesElement.childNodes[i];
@@ -915,6 +943,8 @@ Checker.prototype = {
 
     // Analyze the resulting DOM and determine the set of updates to install
     var updates = this._updates;
+
+    LOG("Updates available: " + updates.length);
     
     // ... and tell the Update Service about what we discovered.
     this._callback.onCheckComplete(updates, updates.length);
