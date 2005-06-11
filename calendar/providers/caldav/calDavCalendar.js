@@ -66,7 +66,7 @@ function debug(s) {
 
 function calDavCalendar() {
     this.wrappedJSObject = this;
-    this.mObservers = [ ];
+    this.mObservers = Array();
 }
 
 // some shorthand
@@ -75,9 +75,9 @@ const nsIWebDAVOperationListener =
 const calICalendar = Components.interfaces.calICalendar;
 const nsISupportsCString = Components.interfaces.nsISupportsCString;
 const calIEvent = Components.interfaces.calIEvent;
+const calIItemBase = Components.interfaces.calIItemBase;
 const calITodo = Components.interfaces.calITodo;
 const calEventClass = Components.classes["@mozilla.org/calendar/event;1"];
-const calIItemOccurrence = Components.interfaces.calIItemOccurrence;
 
 const kCalCalendarManagerContractID = "@mozilla.org/calendar/manager;1";
 const kCalICalendarManager = Components.interfaces.calICalendarManager;
@@ -85,9 +85,10 @@ const kCalICalendarManager = Components.interfaces.calICalendarManager;
 
 function makeOccurrence(item, start, end)
 {
-    var occ = Components.classes["@mozilla.org/calendar/item-occurrence;1"].
-        createInstance(calIItemOccurrence);
-    occ.initialize(item, start, end);
+    var occ = item.createProxy();
+    occ.recurrenceId = start;
+    occ.startDate = start;
+    occ.endDate = end;
 
     return occ;
 }
@@ -145,9 +146,10 @@ calDavCalendar.prototype = {
 
     // void addObserver( in calIObserver observer );
     addObserver: function (aObserver, aItemFilter) {
-        for each (obs in this.mObservers) {
-            if (obs == aObserver)
+        for each (obs in aObserver) {
+            if (obs == aObserver) {
                 return;
+            }
         }
 
         this.mObservers.push(aObserver);
@@ -155,12 +157,8 @@ calDavCalendar.prototype = {
 
     // void removeObserver( in calIObserver observer );
     removeObserver: function (aObserver) {
-        var newObservers = Array();
-        for each (obs in this.mObservers) {
-            if (obs != aObserver)
-                newObservers.push(obs);
-        }
-        this.mObservers = newObservers;
+        this.mObservers = this.mObservers.filter(
+            function(o) {return (o != aObserver);});
     },
 
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
@@ -514,7 +512,7 @@ calDavCalendar.prototype = {
                 // figure out what type of item to return
                 var iid;
                 if(aOccurrences) {
-                    iid = calIItemOccurrence;
+                    iid = calIItemBase;
                     if (item.recurrenceInfo) {
                         debug("ITEM has recurrence: " + item + " (" + item.title + ")\n");
                         debug("rangestart: " + aRangeStart.jsDate + " -> " + aRangeEnd.jsDate + "\n");
