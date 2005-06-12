@@ -108,6 +108,8 @@ function initHandlers()
     node = document.getElementById("multiline-input");
     node.addEventListener("keypress", onMultilineInputKeyPress, false);
     node.active = false;
+    node = document.getElementById("security-button");
+    node.addEventListener("dblclick", onSecurityIconDblClick, false);
 
     window.onkeypress = onWindowKeyPress;
 
@@ -256,6 +258,12 @@ function onSortCol(sortColName)
     sortUserList(node, sortDirection);
 
     return false;
+}
+
+function onSecurityIconDblClick(e)
+{
+    if (e.button == 0)
+        displayCertificateInfo();
 }
 
 function onMultilineInputKeyPress (e)
@@ -925,6 +933,7 @@ function my_showtonet (e)
             updateTitle(this);
             this.updateHeader();
             client.updateHeader();
+            updateSecurityIcon();
             updateStalkExpression(this);
 
             // Do this after the JOINs, so they are quicker.
@@ -1698,6 +1707,8 @@ function my_netdisconnect (e)
     dispatch("sync-header");
     updateTitle();
     updateProgress();
+    updateSecurityIcon();
+
     if ("userClose" in client && client.userClose &&
         client.getConnectionCount() == 0)
         window.close();

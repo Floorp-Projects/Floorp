@@ -257,3 +257,33 @@ progressmeter[mode="undetermined"] {
     direction: rtl;
 }
 
+/* Hack; Stop the status-bar from distorting without a security icon */
+#status-text {
+    min-height: 17px;
+}
+
+#security-button {
+    min-width: 20px;
+}
+
+#security-button:not([level="high"]):not([level="low"]):not([level="broken"]) {
+    display: none;
+}
+
+#security-button[level="high"] > image {
+    list-style-image: url("chrome://chatzilla/skin/images/secure.png");
+}
+
+#security-button[level="low"] > image {
+    list-style-image: url("chrome://chatzilla/skin/images/secure.png");
+}
+
+#security-button[level="broken"] > image {
+    list-style-image: url("chrome://chatzilla/skin/images/secure-broken.png");
+}
+
+/* prevent margins of a value-less label from shifting the image */
+#security-button > label:not([value]) {
+    display: none;
+}
+

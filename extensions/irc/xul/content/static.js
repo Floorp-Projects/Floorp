@@ -2011,6 +2011,45 @@ function updateProgress()
     }
 }
 
+function updateSecurityIcon()
+{
+    var o = getObjectDetails(client.currentObject);
+    var securityButton = window.document.getElementById("security-button");
+    securityButton.firstChild.value = "";
+    securityButton.removeAttribute("level");
+    securityButton.removeAttribute("tooltiptext");
+    if (!o.server || !o.server.isConnected) // No server or connection?
+    {
+        securityButton.setAttribute("tooltiptext", MSG_SECURITY_INFO);
+        return;
+    }
+
+    var securityState = o.server.connection.getSecurityState()
+    switch (securityState[0]) 
+    {
+        case STATE_IS_SECURE:
+            securityButton.firstChild.value = o.server.hostname;
+            if (securityState[1] == STATE_SECURE_HIGH)
+                securityButton.setAttribute("level", "high");
+            else // Because low security is the worst we have when being secure
+                securityButton.setAttribute("level", "low");
+
+            // Add the tooltip:
+            var issuer = o.server.connection.getCertificate().issuerOrganization;
+            var tooltiptext = getMsg(MSG_SECURE_CONNECTION, issuer);
+            securityButton.setAttribute("tooltiptext", tooltiptext);
+            securityButton.firstChild.setAttribute("tooltiptext", tooltiptext);
+            securityButton.lastChild.setAttribute("tooltiptext", tooltiptext);
+            break;
+        case STATE_IS_BROKEN:
+            securityButton.setAttribute("level", "broken");
+            // No break to make sure we get the correct tooltip
+        case STATE_IS_INSECURE:
+        default:
+            securityButton.setAttribute("tooltiptext", MSG_SECURITY_INFO);
+    }
+}
+
 function updateNetwork()
 {
     var o = getObjectDetails (client.currentObject);
@@ -2170,6 +2209,21 @@ function multilineInputMode (state)
     client.input.focus();
 }
 
+function displayCertificateInfo()
+{
+    var o = getObjectDetails(client.currentObject);
+    if (!o.server)
+        return;
+
+    if (!o.server.isSecure)
+    {
+        alert(getMsg(MSG_INSECURE_SERVER, o.server.hostname));
+        return;
+    }
+
+    viewCert(o.server.connection.getCertificate());
+}
+
 function newInlineText (data, className, tagName)
 {
     if (typeof tagName == "undefined")
@@ -2309,6 +2363,7 @@ function setCurrentObject (obj)
 
     updateTitle();
     updateProgress();
+    updateSecurityIcon();
 
     if (client.PRINT_DIRECTION == 1)
         scrollDown(obj.frame, false);

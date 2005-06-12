@@ -1078,6 +1078,15 @@ function promptPassword(msg, initial, parent, title)
     return rv.value;
 }
 
+function viewCert(cert, parent)
+{
+    var cd = getService("@mozilla.org/nsCertificateDialogs;1",
+                        "nsICertificateDialogs");
+    if (!parent)
+        parent = window;
+    cd.viewCert(parent, cert);
+}
+
 function getHostmaskParts(hostmask)
 {
     var rv;

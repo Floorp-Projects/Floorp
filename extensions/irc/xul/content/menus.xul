@@ -136,6 +136,10 @@
         <progressmeter class="progressmeter-statusbar" id="status-progress-bar" 
             mode="undetermined" value="0"/>
       </statusbarpanel>
+      <statusbarpanel id="security-button">
+        <label id="security-button-label"/>
+        <image id="security-button-image"/>
+      </statusbarpanel>
 <!--
       <statusbarpanel class="statusbarpanel-iconic" id="offline-status"
         hidden="true" offline="true"/>
