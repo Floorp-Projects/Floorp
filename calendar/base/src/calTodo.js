@@ -211,7 +211,7 @@ calTodo.prototype = {
         this.mapPropsFromICS(todo, this.icsEventPropMap);
         this.mIsAllDay = this.mStartDate && this.mStartDate.isDate;
 
-        this.importUnpromotedProperties(todo, todoPromotedProps);
+        this.importUnpromotedProperties(todo, this.todoPromotedProps);
         // Importing didn't really change anything
         this.mDirty = false;
     },
