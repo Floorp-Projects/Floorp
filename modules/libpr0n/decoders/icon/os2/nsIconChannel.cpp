@@ -64,6 +64,9 @@
 // nbr of bytes per row, rounded up to the nearest dword boundary
 #define ALIGNEDBPR(cx,bits) ((( ((cx)*(bits)) + 31) / 32) * 4)
 
+// nbr of bytes per row, rounded up to the nearest byte boundary
+#define UNALIGNEDBPR(cx,bits) (( ((cx)*(bits)) + 7) / 8)
+
 // native icon functions
 HPOINTER GetFileIcon(nsCString& file, PRBool fExists);
 
@@ -470,8 +473,9 @@ HPOINTER    GetFileIcon(nsCString& file, PRBool fExists)
 
 // converts 16, 256, & 16M color bitmaps to 24-bit BGR format;  since the
 // scanlines in OS/2 bitmaps run bottom-to-top, it starts at the end of the
-// input buffer & works its way back;  Note:  because the input is already
-// padded to a dword boundary, the output will be padded automatically
+// input buffer & works its way back;  Note:  no output padding is needed
+// for any expected color-depth or size;  only 4-bit, 20x20 icons contain
+// input padding that has to be ignored
 
 void    ConvertColorBitMap(PRUint8* inBuf, PBITMAPINFO2 pBMInfo, PRUint8* outBuf)
 {
@@ -482,12 +486,15 @@ void    ConvertColorBitMap(PRUint8* inBuf, PBITMAPINFO2 pBMInfo, PRUint8* outBuf
   PRGB2 	pColorTable = &pBMInfo->argbColor[0];
 
   if (pBMInfo->cBitCount == 4) {
+    PRUint32  ubprIn = UNALIGNEDBPR(pBMInfo->cx, pBMInfo->cBitCount);
+    PRUint32  padIn  = bprIn - ubprIn;
+
     for (PRUint32 row = pBMInfo->cy; row > 0; row--) {
-      for (PRUint32 ndx = 0; ndx < bprIn; ndx++, pIn++) {
+      for (PRUint32 ndx = 0; ndx < ubprIn; ndx++, pIn++) {
         pOut = 3 + (PRUint8*)memcpy( pOut, &pColorTable[FIRSTPEL(*pIn)], 3);
         pOut = 3 + (PRUint8*)memcpy( pOut, &pColorTable[SECONDPEL(*pIn)], 3);
       }
-      pIn -= 2 * bprIn;
+      pIn -= (2 * bprIn) - padIn;
     }
   }
   else
@@ -525,11 +532,14 @@ void    ShrinkColorBitMap(PRUint8* inBuf, PBITMAPINFO2 pBMInfo, PRUint8* outBuf)
   PRGB2 	pColorTable = &pBMInfo->argbColor[0];
 
   if (pBMInfo->cBitCount == 4) {
+    PRUint32  ubprIn = UNALIGNEDBPR(pBMInfo->cx, pBMInfo->cBitCount);
+    PRUint32  padIn  = bprIn - ubprIn;
+
     for (PRUint32 row = pBMInfo->cy; row > 0; row -= 2) {
-      for (PRUint32 ndx = 0; ndx < bprIn; ndx++, pIn++) {
+      for (PRUint32 ndx = 0; ndx < ubprIn; ndx++, pIn++) {
         pOut = 3 + (PRUint8*)memcpy( pOut, &pColorTable[FIRSTPEL(*pIn)], 3);
       }
-      pIn -= 3 * bprIn;
+      pIn -= (3 * bprIn) - padIn;
     }
   }
   else
