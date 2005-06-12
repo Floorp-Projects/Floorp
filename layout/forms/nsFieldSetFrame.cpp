@@ -103,6 +103,7 @@ public:
                                nsIFrame**        aFrame);
 
   virtual nsIAtom* GetType() const;
+  virtual PRBool IsContainingBlock() const;
 
 #ifdef ACCESSIBILITY  
   NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);
@@ -157,6 +158,12 @@ nsIAtom*
 nsFieldSetFrame::GetType() const
 {
   return nsLayoutAtoms::fieldSetFrame;
+}
+
+PRBool
+nsFieldSetFrame::IsContainingBlock() const
+{
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
