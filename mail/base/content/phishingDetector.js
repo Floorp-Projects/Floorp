@@ -147,7 +147,9 @@ function misMatchedHostWithLinkText(aLinkNode, aHrefURL, aLinkTextURL)
 function hostNameIsIPAddress(aHostName, aUnobscuredHostName)
 {
   // TODO: Add Support for IPv6
-  
+
+  var index;
+
   // scammers frequently obscure the IP address by encoding each component as octal, hex
   // or in some cases a mix match of each. The IP address could also be represented as a DWORD.
 
@@ -160,7 +162,6 @@ function hostNameIsIPAddress(aHostName, aUnobscuredHostName)
   {
     // Convert to a binary to test for possible DWORD.
     var binaryDword = parseInt(aHostName).toString(2);
-    
     if (isNaN(binaryDword))
       return false;
 
@@ -173,16 +174,16 @@ function hostNameIsIPAddress(aHostName, aUnobscuredHostName)
   }
   else
   {
-    for (var index = 0; index < ipComponents.length; index++)
+    for (index = 0; index < ipComponents.length; ++index)
     {
-      // by leaving the radix parameter blank, we can handle IP addresses 
-      //where one component is hex, another is octal, etc. 
+      // by leaving the radix parameter blank, we can handle IP addresses
+      // where one component is hex, another is octal, etc.
       ipComponents[index] = parseInt(ipComponents[index]); 
     }
   }
 
   // make sure each part of the IP address is in fact a number
-  for (var index = 0; index < ipComponents.length; index++)
+  for (index = 0; index < ipComponents.length; ++index)
     if (isNaN(ipComponents[index])) // if any part of the IP address is not a number, then we can safely return
       return false;
 
