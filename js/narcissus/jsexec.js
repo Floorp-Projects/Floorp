@@ -738,6 +738,11 @@ function Activation(f, a) {
     this.__defineProperty__('arguments', a, true);
 }
 
+
+// Null Activation.prototype's proto slot so that Object.prototype.* does not
+// pollute the scope of heavyweight functions.
+Activation.prototype.__proto__ = null;
+
 function FunctionObject(node, scope) {
     this.node = node;
     this.scope = scope;
