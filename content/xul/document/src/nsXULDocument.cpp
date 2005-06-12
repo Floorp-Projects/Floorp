@@ -3332,13 +3332,13 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                                 PRUint32 stringLen,
                                 const PRUint8* string)
 {
+    nsCOMPtr<nsIRequest> request;
+    aLoader->GetRequest(getter_AddRefs(request));
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+
 #ifdef DEBUG
     // print a load error on bad status
     if (NS_FAILED(aStatus)) {
-        nsCOMPtr<nsIRequest> request;
-        aLoader->GetRequest(getter_AddRefs(request));
-        nsCOMPtr<nsIChannel> channel;
-        channel = do_QueryInterface(request);
         if (channel) {
             nsCOMPtr<nsIURI> uri;
             channel->GetURI(getter_AddRefs(uri));
@@ -3381,10 +3381,14 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         // not to reach here.
         nsCOMPtr<nsIURI> uri = scriptProto->mSrcURI;
 
-        // XXX this seems broken - what if the script is non-ascii? (bug 241739)
-        nsString stringStr; stringStr.AssignWithConversion(NS_REINTERPRET_CAST(const char*, string), stringLen);
-        rv = scriptProto->Compile(stringStr.get(), stringLen, uri, 1, this,
-                                  mCurrentPrototype);
+        // XXX should also check nsIHttpChannel::requestSucceeded
+
+        nsString stringStr;
+        rv = nsScriptLoader::ConvertToUTF16(channel, string, stringLen,
+                                            EmptyString(), this, stringStr);
+        if (NS_SUCCEEDED(rv))
+          rv = scriptProto->Compile(stringStr.get(), stringStr.Length(), uri,
+                                    1, this, mCurrentPrototype);
 
         aStatus = rv;
         if (NS_SUCCEEDED(rv) && scriptProto->mJSObject) {

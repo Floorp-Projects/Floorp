@@ -65,6 +65,22 @@ public:
   NS_DECL_NSISCRIPTLOADER
   NS_DECL_NSISTREAMLOADEROBSERVER
 
+  /**
+   * Convert the given buffer to a UTF-16 string.
+   * @param aChannel     Channel corresponding to the data. May be null.
+   * @param aData        The data to convert
+   * @param aLength      Length of the data
+   * @param aHintCharset Hint for the character set (e.g., from a charset
+   *                     attribute). May be the empty string.
+   * @param aDocument    Document which the data is loaded for. Must not be
+   *                     null.
+   * @param aString      [out] Data as converted to unicode
+   */
+  static nsresult ConvertToUTF16(nsIChannel* aChannel, const PRUint8* aData,
+                                 PRUint32 aLength,
+                                 const nsString& aHintCharset,
+                                 nsIDocument* aDocument, nsString& aString);
+
 protected:
   PRBool InNonScriptingContainer(nsIScriptElement* aScriptElement);
   PRBool IsScriptEventHandler(nsIScriptElement* aScriptElement);
