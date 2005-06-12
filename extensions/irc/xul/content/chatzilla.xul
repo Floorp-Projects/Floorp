@@ -63,6 +63,7 @@
     <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   </stringbundleset>
 
+    <vbox id="upper-box" flex="1">
       <hbox id="tabpanels-contents-box" flex="1">
         <vbox id="user-list-box" width="125" persist="collapsed width">
  
@@ -131,6 +132,8 @@
           </scrollbox>
         </hbox>
       </hbox>
+  
+    </vbox> <!-- upper-box -->
   
     <splitter id="input-splitter" orient="vertical" collapse="after"
       collapsed="true"/>
