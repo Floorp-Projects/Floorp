@@ -277,7 +277,7 @@ var nsFeedCommandLineHandler =
     }
   },
 
-  helpInfo : "",
+  helpInfo : ""
 };
 
 var nsNewsBlogFeedDownloaderModule =
@@ -357,7 +357,7 @@ var nsNewsBlogFeedDownloaderModule =
           return nsFeedCommandLineHandler.QueryInterface(aIID);
         }       
       } // factory
-    },
+    }
   },
 
   registerSelf: function(aCompMgr, aFileSpec, aLocation, aType)
