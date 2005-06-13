@@ -89,6 +89,7 @@ RegisterXULRunner(PRBool aRegisterGlobally, nsIFile* aLocation)
 
   nsresult rv;
   PRBool irv;
+  int i;
 
   nsCAutoString greHome;
   rv = aLocation->GetNativePath(greHome);
@@ -161,7 +162,7 @@ RegisterXULRunner(PRBool aRegisterGlobally, nsIFile* aLocation)
     goto reg_end;
   }
   
-  for (int i = 0; i < 1000; ++i) {
+  for (i = 0; i < 1000; ++i) {
     sprintf(keyName, GRE_BUILD_ID "_%i", i);
     rv = MakeVersionKey(rootKey, keyName, greHome);
     if (NS_SUCCEEDED(rv)) {
