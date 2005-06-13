@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.92 2005/03/09 18:59:24 travis%sedsystems.ca Exp $ -->
+<!-- $Id: installation.xml,v 1.93 2005/06/13 09:30:33 mozilla%colinogilvie.co.uk Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -252,6 +252,14 @@
         for further assistance or hire someone to help you out.</para>
       </tip>
 
+      <note>
+        <para>If you are using a package-based system, and attempting to install the
+        Perl modules from CPAN, you may need to install the "development" packages for
+        MySQL and GD before attempting to install the related Perl modules. The names of
+        these packages will vary depending on the specific distribution you are using,
+        but are often called <filename>&lt;packagename&gt;-devel</filename>.</para>
+      </note>
+ 
       <para>
         Here is a complete list of modules and their minimum versions.
         Some modules have special installation notes, which follow.
