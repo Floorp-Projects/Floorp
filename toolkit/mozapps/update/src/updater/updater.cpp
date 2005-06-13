@@ -63,10 +63,7 @@
 #include <fcntl.h>
 #include <limits.h>
 
-#if defined(XP_UNIX)
-# include <sys/wait.h>
-# include <unistd.h>
-#elif defined(XP_WIN)
+#if defined(XP_WIN)
 # include <windows.h>
 # include <direct.h>
 # include <io.h>
@@ -76,6 +73,9 @@
 # define access _access
 # define snprintf _snprintf
 # define fchmod(a,b)
+#else
+# include <sys/wait.h>
+# include <unistd.h>
 #endif
 
 #ifndef _O_BINARY
@@ -159,7 +159,7 @@ private:
   void      *mThreadParam;
 };
 
-#else
+#elif defined(XP_UNIX)
 #include <pthread.h>
 
 class Thread
@@ -178,6 +178,40 @@ private:
   pthread_t thr;
 };
 
+#elif defined(XP_OS2)
+
+class Thread
+{
+public:
+  int Run(ThreadFunc func, void *param)
+  {
+    mThreadFunc = func;
+    mThreadParam = param;
+
+    mThread = _beginthread(ThreadMain, NULL, 16384, (void *)this);
+    
+    return mThread ? 0 : -1;
+  }
+  int Join()
+  {
+    int status;
+    waitpid(mThread, &status, 0);
+    return 0;
+  }
+private:
+  static unsigned ThreadMain(void *p)
+  {
+    Thread *self = (Thread *) p;
+    self->mThreadFunc(self->mThreadParam);
+    return 0;
+  }
+  int        mThread;
+  ThreadFunc mThreadFunc;
+  void      *mThreadParam;
+};
+
+#else
+#error "Unsupported platform"
 #endif
 
 //-----------------------------------------------------------------------------
