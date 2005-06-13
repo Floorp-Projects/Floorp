@@ -65,6 +65,9 @@
  * XPCOM Category Manager Contract ID
  *   The contract supports the nsICategoryManager interface. The 
  *   category manager is a singleton.
+ * The "enumerateCategory" method of nsICategoryManager will return an object
+ * that implements nsIUTF8StringEnumerator. In addition, the enumerator will
+ * return the entries in sorted order (sorted by byte comparison).
  */
 #define NS_CATEGORYMANAGER_CONTRACTID   "@mozilla.org/categorymanager;1"
 

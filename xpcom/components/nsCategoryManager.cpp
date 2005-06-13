@@ -55,6 +55,7 @@
 #include "nsIObserver.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include "nsQuickSort.h"
 #include "nsEnumeratorUtils.h"
 
 class nsIComponentLoaderManager;
@@ -90,6 +91,9 @@ public:
   NS_DECL_NSIUTF8STRINGENUMERATOR
 
 protected:
+  // Callback function for NS_QuickSort to sort mArray
+  static int SortCallback(const void *, const void *, void *);
+
   BaseStringEnumerator()
     : mArray(nsnull),
       mCount(0),
@@ -104,6 +108,8 @@ protected:
     if (mArray)
       delete[] mArray;
   }
+
+  void Sort();
 
   const char** mArray;
   PRUint32 mCount;
@@ -155,6 +161,21 @@ BaseStringEnumerator::GetNext(nsACString& _retval)
   return NS_OK;
 }
 
+int
+BaseStringEnumerator::SortCallback(const void *e1, const void *e2,
+                                   void * /*unused*/)
+{
+  char const *const *s1 = NS_REINTERPRET_CAST(char const *const *, e1);
+  char const *const *s2 = NS_REINTERPRET_CAST(char const *const *, e2);
+
+  return strcmp(*s1, *s2);
+}
+
+void
+BaseStringEnumerator::Sort()
+{
+  NS_QuickSort(mArray, mCount, sizeof(mArray[0]), SortCallback, nsnull);
+}
 
 //
 // EntryEnumerator is the wrapper that allows nsICategoryManager::EnumerateCategory
@@ -194,6 +215,8 @@ EntryEnumerator::Create(nsTHashtable<CategoryLeaf>& aTable)
   }
 
   aTable.EnumerateEntries(enumfunc_createenumerator, enumObj);
+
+  enumObj->Sort();
 
   return enumObj;
 }

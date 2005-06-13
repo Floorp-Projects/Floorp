@@ -42,11 +42,14 @@
 
  */
 
-#include "nsIEnumerator.h"
+#include "nsISimpleEnumerator.h"
+#include "nsIStringEnumerator.h"
 
 ////////////////////////////////////////////////////////////////////////
 
-class EmptyEnumeratorImpl : public nsISimpleEnumerator
+class EmptyEnumeratorImpl : public nsISimpleEnumerator,
+                            public nsIUTF8StringEnumerator,
+                            public nsIStringEnumerator
 {
 public:
     EmptyEnumeratorImpl(void);
@@ -56,6 +59,10 @@ public:
 
     // nsISimpleEnumerator
     NS_DECL_NSISIMPLEENUMERATOR
+    NS_DECL_NSIUTF8STRINGENUMERATOR
+    // can't use NS_DECL_NSISTRINGENUMERATOR because they share the
+    // HasMore() signature
+    NS_IMETHOD GetNext(nsAString& aResult);
 
     static void Shutdown();
 
