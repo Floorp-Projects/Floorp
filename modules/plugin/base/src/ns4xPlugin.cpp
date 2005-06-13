@@ -65,7 +65,7 @@
 
 #include "nsIXPConnect.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 #include <Resources.h>
 #endif
 
@@ -169,15 +169,6 @@ PR_BEGIN_EXTERN_C
   static void NP_EXPORT
   _forceredraw(NPP npp);
 
-  ////////////////////////////////////////////////////////////////////////
-  // Anything that returns a pointer needs to be _HERE_ for 68K Mac to
-  // work.
-  //
-
-#if defined(XP_MAC) && !defined(powerc)
-#pragma pointers_in_D0
-#endif
-
   static const char* NP_EXPORT
   _useragent(NPP npp);
 
@@ -195,10 +186,6 @@ PR_BEGIN_EXTERN_C
 
 #endif
 #endif /* OJI */
-
-#if defined(XP_MAC) && !defined(powerc)
-#pragma pointers_in_A0
-#endif
 
 PR_END_EXTERN_C
 
@@ -420,30 +407,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
                "callback version is less than NP version");
 
   fShutdownEntry = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
-#elif defined(XP_MAC) && !TARGET_CARBON
-  // get the main entry point
-  NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "mainRD");
-
-  if (pfnMain == NULL)
-    return;
-
-  // call into the entry point
-  NPError error;
-  NS_TRY_SAFE_CALL_RETURN(error,
-                          CallNPP_MainEntryProc(pfnMain,
-                                                &(ns4xPlugin::CALLBACKS),
-                                                &fCallbacks,
-                                                &fShutdownEntry),
-                          aLibrary, nsnull);
-
-  NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-                 ("NPP MainEntryProc called, return=%d\n",error));
-
-  if (error != NPERR_NO_ERROR ||
-      ((fCallbacks.version >> 8) < NP_VERSION_MAJOR))
-    return;
-
-#elif defined(XP_MACOSX) || (defined(XP_MAC) && TARGET_CARBON)
+#elif defined(XP_MACOSX)
   // call into the entry point
   NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "main");
 
@@ -538,7 +502,7 @@ ns4xPlugin::~ns4xPlugin(void)
 }
 
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 ////////////////////////////////////////////////////////////////////////
 void
 ns4xPlugin::SetPluginRefNum(short aRefNum)
@@ -732,7 +696,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
   }
 #endif
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
   short appRefNum = ::CurResFile();
   short pluginRefNum;
 
@@ -759,7 +723,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
   }
 
   plugin->SetPluginRefNum(pluginRefNum);
-#endif  // XP_MAC || XP_MACOSX
+#endif  // XP_MACOSX
 
 #ifdef XP_BEOS
   // I just copied UNIX version.
@@ -866,7 +830,7 @@ ns4xPlugin::Shutdown(void)
                  ("NPP Shutdown to be called: this=%p\n", this));
 
   if (nsnull != fShutdownEntry) {
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
     CallNPP_ShutdownProc(fShutdownEntry);
     ::CloseResFile(fPluginRefNum);
 #else
@@ -2062,16 +2026,6 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
 
   return NS_OK;
 }
-
-////////////////////////////////////////////////////////////////////////
-//
-// On 68K Mac (XXX still supported?), we need to make sure that the
-// pointers are in D0 for the following functions that return pointers.
-//
-
-#if defined(XP_MAC) && !defined(powerc)
-#pragma pointers_in_D0
-#endif
 
 ////////////////////////////////////////////////////////////////////////
 #ifdef OJI
