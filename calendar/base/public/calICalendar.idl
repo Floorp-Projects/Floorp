@@ -24,6 +24,7 @@
  *                 ArentJan Banck <ajbanck@planet.nl>
  *                 Dan Mosedale <dan.mosedale@oracle.com>
  *                 Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *                 Mike Shaver <shaver@off.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -85,6 +86,15 @@ interface calICalendar : nsISupports
    * in getting and observing items.  At some point fairly soon, we're
    * going to need to generalize this mechanism significantly (so we
    * can allow boolean logic, categories, etc.).
+   *
+   * When adding item filters (bits which, when not set to 1, reduce the
+   * scope of the results), use bit positions <= 15, so that
+   * ITEM_FILTER_ALL_ITEMS remains compatible for components that have the
+   * constant compiled in.
+   *
+   * XXX the naming here is questionable; adding a filter (setting a bit, in
+   * this case) usually _reduces_ the set of items that pass the set of
+   * filters, rather than adding to it.
    */
   const unsigned long ITEM_FILTER_COMPLETED_YES = 1 << 0; 
   const unsigned long ITEM_FILTER_COMPLETED_NO = 1 << 1; 
@@ -97,12 +107,14 @@ interface calICalendar : nsISupports
   const unsigned long ITEM_FILTER_TYPE_ALL = 
     (ITEM_FILTER_TYPE_TODO | ITEM_FILTER_TYPE_EVENT |
      ITEM_FILTER_TYPE_JOURNAL);
+  
+  const unsigned long ITEM_FILTER_ALL_ITEMS = 0xFFFF;
 
   /** 
    * If set, return calIItemOccurence items, otherwise return subclasses of
    * calIItemBase.
    */
-  const unsigned long ITEM_FILTER_CLASS_OCCURRENCES = 1 << 5;
+  const unsigned long ITEM_FILTER_CLASS_OCCURRENCES = 1 << 16;
 
   void addObserver( in calIObserver observer );
   void removeObserver( in calIObserver observer );
