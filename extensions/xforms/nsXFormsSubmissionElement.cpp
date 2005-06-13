@@ -724,16 +724,26 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
       do_GetService("@mozilla.org/xmlextras/xmlserializer;1");
   NS_ENSURE_TRUE(serializer, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDOMDocument> doc;
+  nsCOMPtr<nsIDOMDocument> doc, newDoc;
   data->GetOwnerDocument(getter_AddRefs(doc));
-  // owner doc is null when the data node is the document (e.g., ref="/")
-  if (!doc)
+
+  nsresult rv;
+  // XXX: We can't simply pass in data if !doc, since it crashes
+  if (!doc) {
+    // owner doc is null when the data node is the document (e.g., ref="/")
+    // so we can just get the document via QI.
     doc = do_QueryInterface(data);
-  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+
+    rv = CreateSubmissionDoc(doc, encoding, attachments,
+                             getter_AddRefs(newDoc));
+  } else {
+    // if we got a document, we need to create a new
+    rv = CreateSubmissionDoc(data, encoding, attachments,
+                             getter_AddRefs(newDoc));
+  }
 
   // clone and possibly modify the document for submission
-  nsCOMPtr<nsIDOMDocument> newDoc;
-  nsresult rv = CreateSubmissionDoc(doc, encoding, attachments, getter_AddRefs(newDoc));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(newDoc, NS_ERROR_UNEXPECTED);
 
@@ -843,7 +853,7 @@ nsXFormsSubmissionElement::AddNameSpaces(nsIDOMElement* aTarget, nsIDOMNode* aSo
 }
 
 nsresult
-nsXFormsSubmissionElement::CreateSubmissionDoc(nsIDOMDocument *source,
+nsXFormsSubmissionElement::CreateSubmissionDoc(nsIDOMNode *source,
                                                const nsString &encoding,
                                                SubmissionAttachmentArray *attachments,
                                                nsIDOMDocument **result)
@@ -863,8 +873,17 @@ nsXFormsSubmissionElement::CreateSubmissionDoc(nsIDOMDocument *source,
   // XXX we'll just assume that the QNames correspond to node names since
   //     it's unclear how to resolve the namespace prefixes any other way.
 
+  // source can be a document or just a node
+  nsCOMPtr<nsIDOMDocument> sourceDoc(do_QueryInterface(source));
   nsCOMPtr<nsIDOMDOMImplementation> impl;
-  source->GetImplementation(getter_AddRefs(impl));
+
+  if (sourceDoc) {
+    sourceDoc->GetImplementation(getter_AddRefs(impl));
+  } else {
+    nsCOMPtr<nsIDOMDocument> tmpDoc;
+    source->GetOwnerDocument(getter_AddRefs(tmpDoc));
+    tmpDoc->GetImplementation(getter_AddRefs(impl));
+  }
   NS_ENSURE_TRUE(impl, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIDOMDocument> doc;
@@ -887,8 +906,18 @@ nsXFormsSubmissionElement::CreateSubmissionDoc(nsIDOMDocument *source,
   }
 
   // recursively walk the source document, copying nodes as appropriate
+  nsCOMPtr<nsIDOMNode> startNode;
+  // if it is a document, get the root element
+  if (sourceDoc) {
+    nsCOMPtr<nsIDOMElement> elm;
+    sourceDoc->GetDocumentElement(getter_AddRefs(elm));
+    startNode = elm;
+  } else {
+    startNode = source;
+  }
 
-  nsresult rv = CopyChildren(source, doc, doc, attachments, cdataElements, indent, 0);
+  nsresult rv = CopyChildren(startNode, doc, doc, attachments, cdataElements,
+                             indent, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*result = doc);
@@ -902,11 +931,10 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
                                         const nsString &cdataElements,
                                         PRBool indent, PRUint32 depth)
 {
-  nsCOMPtr<nsIDOMNode> sourceChild, node, destChild;
+  nsCOMPtr<nsIDOMNode> currentNode(source), node, destChild;
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
 
-  source->GetFirstChild(getter_AddRefs(sourceChild));
-  while (sourceChild)
+  while (currentNode)
   {
     // if not indenting, then strip all unnecessary whitespace
 
@@ -914,7 +942,7 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
     // to iterate over the attributes since the attributes could somehow
     // (remains to be determined) reference external entities.
 
-    destDoc->ImportNode(sourceChild, PR_FALSE, getter_AddRefs(destChild));
+    destDoc->ImportNode(currentNode, PR_FALSE, getter_AddRefs(destChild));
     NS_ENSURE_TRUE(destChild, NS_ERROR_UNEXPECTED);
 
     PRUint16 type;
@@ -940,7 +968,7 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
       }
       else
       {
-        sourceChild->GetParentNode(getter_AddRefs(node));
+        currentNode->GetParentNode(getter_AddRefs(node));
         NS_ENSURE_STATE(node);
 
         nsAutoString name;
@@ -969,7 +997,7 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
     {
 
      PRUint16 handleNodeResult;
-     model->HandleInstanceDataNode(sourceChild, &handleNodeResult);
+     model->HandleInstanceDataNode(currentNode, &handleNodeResult);
 
       /*
        *  SUBMIT_SERIALIZE_NODE   - node is to be serialized
@@ -978,8 +1006,8 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
        */
       if (handleNodeResult == nsIModelElementPrivate::SUBMIT_SKIP_NODE) {
          // skip node and subtree
-         sourceChild->GetNextSibling(getter_AddRefs(node));
-         sourceChild.swap(node);
+         currentNode->GetNextSibling(getter_AddRefs(node));
+         currentNode.swap(node);
          continue;
       } else if (handleNodeResult == nsIModelElementPrivate::SUBMIT_ABORT_SUBMISSION) {
         // abort
@@ -998,7 +1026,7 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
       {
         // ok, looks like we have a local file to upload
 
-        nsCOMPtr<nsIContent> content = do_QueryInterface(sourceChild);
+        nsCOMPtr<nsIContent> content = do_QueryInterface(currentNode);
         NS_ENSURE_STATE(content);
 
         nsILocalFile *file =
@@ -1027,14 +1055,17 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
         dest->AppendChild(destChild, getter_AddRefs(node));
 
         // recurse
-        nsresult rv = CopyChildren(sourceChild, destChild, destDoc, attachments,
+        nsCOMPtr<nsIDOMNode> startNode;
+        currentNode->GetFirstChild(getter_AddRefs(startNode));
+
+        nsresult rv = CopyChildren(startNode, destChild, destDoc, attachments,
                                    cdataElements, indent, depth + 1);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
 
-    sourceChild->GetNextSibling(getter_AddRefs(node));
-    sourceChild.swap(node);
+    currentNode->GetNextSibling(getter_AddRefs(node));
+    currentNode.swap(node);
   }
   return NS_OK;
 }
