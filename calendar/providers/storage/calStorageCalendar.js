@@ -1474,7 +1474,7 @@ calStorageCalendar.prototype = {
             ip.event_stamp = item.stampTime.nativeTime;
 
         if (tmp = item.getUnproxiedProperty("ALARMTIME"))
-            this.setDateParamHelper(ip, "alarm_Time", tmp);
+            this.setDateParamHelper(ip, "alarm_time", tmp);
     },
 
     writeAttendees: function (item, olditem) {
