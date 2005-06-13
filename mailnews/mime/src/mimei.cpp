@@ -1835,7 +1835,7 @@ MimeObject_write(MimeObject *obj, const char *output, PRInt32 length,
   // if we're stripping attachments, check if any parent is not being ouput
   if (obj->options->format_out == nsMimeOutput::nsMimeMessageAttach)
   {
-    // if true, mime genrates a separator in html - we don't want that.
+    // if true, mime generates a separator in html - we don't want that.
     user_visible_p = PR_FALSE;
 
     for (MimeObject *parent = obj->parent; parent; parent = parent->parent)

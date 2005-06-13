@@ -332,7 +332,7 @@ MimeInlineText_parse_decoded_buffer (const char *buf, PRInt32 size, MimeObject *
 
   /* If we're supposed to write this object, but aren't supposed to convert
 	 it to HTML, simply pass it through unaltered. */
-  if (!obj->options->write_html_p)
+  if (!obj->options->write_html_p && obj->options->format_out != nsMimeOutput::nsMimeMessageAttach)
 	return MimeObject_write(obj, buf, size, PR_TRUE);
 
   /* This is just like the parse_decoded_buffer method we inherit from the

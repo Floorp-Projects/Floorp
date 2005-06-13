@@ -413,11 +413,9 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
       return -1;
   }
 
-  if (obj->options->format_out == nsMimeOutput::nsMimeMessageAttach && mult->state != MimeMultipartPartLine)
-  {
-    if (!obj->options->state->strippingPart  /* || mult->state != MimeMultipartHeaders */)
+  if (obj->options->format_out == nsMimeOutput::nsMimeMessageAttach && 
+      (!obj->options->state->strippingPart && mult->state != MimeMultipartPartLine))
       return MimeObject_write(obj, line, length, PR_FALSE);
-  }
   return 0;
 }
 

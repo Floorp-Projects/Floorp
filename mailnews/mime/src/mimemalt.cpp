@@ -189,6 +189,9 @@ MimeMultipartAlternative_parse_child_line (MimeObject *obj,
   PR_ASSERT(malt->part_buffer);
   if (!malt->part_buffer) return -1;
 
+  if (!obj->options->state->strippingPart && obj->options->format_out == nsMimeOutput::nsMimeMessageAttach)
+    MimeObject_write(obj, line, length, PR_FALSE);
+
   /* Push this line into the buffer for later retrieval. */
   return MimePartBufferWrite (malt->part_buffer, line, length);
 }
