@@ -569,7 +569,7 @@ nsCommandLine::EnumerateHandlers(EnumerateCallback aCallback, void *aClosure)
       continue;
 
     rv = (aCallback)(clh, this, aClosure);
-    if (rv = NS_ERROR_ABORT)
+    if (rv == NS_ERROR_ABORT)
       break;
 
     rv = NS_OK;
