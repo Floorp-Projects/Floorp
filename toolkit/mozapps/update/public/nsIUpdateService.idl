@@ -37,6 +37,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMDocument;
+interface nsIDOMElement;
 interface nsIRequest;
 interface nsIRequestObserver;
 interface nsISimpleEnumerator;
@@ -52,20 +54,30 @@ interface nsIUpdatePatch : nsISupports
   /**
    *
    */
-  attribute AString url;
+  attribute AString URL;
   /**
    *
    */
-  attribute AString hashfunction;
+  attribute AString hashFunction;
   /**
    *
    */
-  attribute AString hashvalue;
+  attribute AString hashValue;
   
   /**
    *
    */
   attribute unsigned long size;
+
+  /**
+   *
+   */
+  attribute boolean selected;
+
+  /**
+   *
+   */
+  nsIDOMElement serialize(in nsIDOMDocument updates);
 };
 
 [scriptable, uuid(bd75a4c6-b813-45b2-a96e-41a429c857c4)]
@@ -87,7 +99,7 @@ interface nsIUpdate : nsISupports
    * The Addon version of this update. Used by the Extension System to track 
    * compatibility of installed addons with this update. 
    */
-  attribute AString extensionversion;
+  attribute AString extensionVersion;
 
   /**
    * The URL to a page which offers details about the content of this 
@@ -95,7 +107,7 @@ interface nsIUpdate : nsISupports
    * that summarizes the differences between this update and the previous,
    * which also links to the release notes.
    */
-  attribute AString detailsurl;
+  attribute AString detailsURL;
 
   /**
    * The URL to a HTML fragment that contains a license for this update. If
@@ -103,7 +115,7 @@ interface nsIUpdate : nsISupports
    * to install the update and they must agree to it before the download 
    * commences.
    */
-  attribute AString licenseurl;
+  attribute AString licenseURL;
 
   /**
    * Whether or not the update being downloaded is a complete replacement of
@@ -128,7 +140,12 @@ interface nsIUpdate : nsISupports
    *          The index of the patch to retrieve.
    * @returns The nsIUpdatePatch at the specified index.
    */
-  nsIUpdatePatch getPatchAt(in unsigned long index);  
+  nsIUpdatePatch getPatchAt(in unsigned long index);
+
+  /**
+   * Serializes this Update object to a DOM element
+   */
+  nsIDOMElement serialize(in nsIDOMDocument updates);
 };
 
 [scriptable, uuid(8cbceb6e-8e27-46f2-8808-444c6499f836)]

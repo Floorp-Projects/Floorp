@@ -56,6 +56,7 @@ const PREF_UPDATE_LASTUPDATETIME_FMT      = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
+const URI_UPDATE_NS             = "http://www.mozilla.org/2005/app-update";
 
 const KEY_APPDIR          = "XCurProcD";
 
@@ -64,7 +65,7 @@ const FILE_UPDATE_STATUS  = "update.status";
 const FILE_UPDATE_ARCHIVE = "update.mar";
 const FILE_UPDATE_INFO    = "update.info";
 const FILE_UPDATES_DB     = "updates.xml";
-const FILE_UPDATE_CURRENT = "current-update.xml";
+const FILE_UPDATE_ACTIVE  = "active-update.xml";
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
@@ -412,7 +413,11 @@ UpdateService.prototype = {
     switch (topic) {
     case "app-startup":
       // Resume fetching...
-      this.downloadUpdate(null, true);
+      var um = Components.classes["@mozilla.org/updates/update-manager;1"]
+                         .getService(Components.interfaces.nsIUpdateManager);
+      var activeUpdate = um.activeUpdate;
+      if (activeUpdate)
+        this.downloadUpdate(activeUpdate, true);
       break;
     case "profile-after-change":
       gOS.removeObserver(this, "profile-after-change");
@@ -439,7 +444,7 @@ UpdateService.prototype = {
     var incompatibleList = { };
     for (var i = 0; i < updates.length; ++i) {
       var count = {};
-      em.getIncompatibleItemList(gApp.ID, updates[i].extensionversion,
+      em.getIncompatibleItemList(gApp.ID, updates[i].extensionVersion,
                                  nsIUpdateItem.TYPE_ADDON, count);
       if (count.value > 0)
         return true;
@@ -595,6 +600,8 @@ UpdateService.prototype = {
    * See nsIUpdateService.idl
    */
   downloadUpdate: function(update, background) {
+    if (!update)
+      throw Components.results.NS_ERROR_NULL_POINTER;
     if (this._downloader && this._downloader.isBusy) {
       if (update.isCompleteUpdate == this._downloader.isCompleteUpdate) {
         LOG("no support for downloading more than one update at a time");
@@ -627,19 +634,23 @@ UpdateService.prototype = {
   }
 };
 
+/**
+ * A service to manage active and past updates.
+ * @constructor
+ */
 function UpdateManager() {
-  this._init();
 }
 UpdateManager.prototype = {
   /**
-   *
+   * All previously downloaded and installed updates, as an array of nsIUpdate
+   * objects.
    */
-  _updates: [],
+  _updates: null,
   
   /**
-   *
+   * The current actively downloading/installing update, as a nsIUpdate object.
    */
-  _currentUpdate: null,
+  _activeUpdate: null,
   
   /**
    * Loads an updates.xml formatted file into an array of nsIUpdate items.
@@ -648,9 +659,11 @@ UpdateManager.prototype = {
    * @returns The array of nsIUpdate items held in the file.
    */
   _loadXMLFileIntoArray: function(file) {
+    LOG(FILE_UPDATE_ACTIVE);
     if (!file.exists())
-      return;
-      
+      return [];
+    
+    var result = [];
     var fileStream = Components.classes["@mozilla.org/network/file-input-stream;1"]
                                .createInstance(Components.interfaces.nsIFileInputStream);
     fileStream.init(file, MODE_RDONLY, PERMS_FILE, 0);
@@ -663,45 +676,67 @@ UpdateManager.prototype = {
       var updateCount = doc.documentElement.childNodes.length;
       for (var i = 0; i < updateCount; ++i) {
         var updateNode = doc.documentElement.childNodes[i];
-        result.push(parseUpdateNode(updateNode));
+        result.push(new Update(updateNode));
       }
     }
+    LOG("ARY RESULT = " + result);
+    return result;
   },
   
   /**
    * Load the update manager, initializing state from state files.
    */
-  _init: function() {
-    this._updates       = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, [FILE_UPDATES_DB]));
-    this._currentUpdate = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, [FILE_UPDATE_CURRENT]))[0];
+  _ensureUpdates: function() {
+    if (!this._updates)
+      this._updates = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, 
+                        [FILE_UPDATES_DB]));
+    this._ensureActiveUpdate();
+  },
+  
+  /**
+   * Ensure that the Active Update file is loaded.
+   */
+  _ensureActiveUpdate: function() {
+    if (!this._activeUpdate) {
+      var updates = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, 
+                             [FILE_UPDATE_ACTIVE]));
+      if (updates.length > 0) 
+        this._activeUpdate = updates[0];
+    }
   },
   
   /**
    * See nsIUpdateService.idl
    */
   getUpdateAt: function(index) {
-    if (this._currentUpdate && index == 0) {
+    this._ensureUpdates();
+    if (this._activeUpdate && index == 0) {
       // The "current" or "active" update is always first in the list.
-      return this._currentUpdate;
+      return this._activeUpdate;
     }
-    return this._updates[index - (this._currentUpdate ? 1 : 0)];
+    return this._updates[index - (this._activeUpdate ? 1 : 0)];
   },
   
   /**
    * See nsIUpdateService.idl
    */
   get updateCount() {
-    this._updates.length + (this._currentUpdate ? 1 : 0);
+    this._ensureUpdates();
+    this._updates.length + (this._activeUpdate ? 1 : 0);
   },
   
   /**
    * See nsIUpdateService.idl
    */
   get activeUpdate() {
-    return this._currentUpdate;
+    this._ensureActiveUpdate();
+    return this._activeUpdate;
   },
   set activeUpdate(activeUpdate) {
-    this._currentUpdate = activeUpdate;
+    this._ensureActiveUpdate();
+    this._activeUpdate = activeUpdate;
+    this._writeUpdatesToXMLFile([this._activeUpdate], 
+                                getFile(KEY_APPDIR, [FILE_UPDATE_ACTIVE]));
     return activeUpdate;
   },
   
@@ -709,10 +744,11 @@ UpdateManager.prototype = {
    * See nsIUpdateService.idl
    */
   removeUpdateAtIndex: function(index) {
-    if (this._currentUpdate && index == 0) 
-      this._currentUpdate = null;
-    if (update == this._currentUpdate)
-      this._currentUpdate = null;
+    this._ensureUpdates();
+    if (this._activeUpdate && index == 0) 
+      this._activeUpdate = null;
+    if (update == this._activeUpdate)
+      this._activeUpdate = null;
     else {
       for (var i = this._updates.length; i > 0; --i) {
         if (this._updates[i] == update)
@@ -721,6 +757,9 @@ UpdateManager.prototype = {
     }
   },
   
+  /**
+   *
+   */
   _writeUpdatesToXMLFile: function(updates) {
     var fos = Components.classes["@mozilla.org/network/safe-file-output-stream;1"]
                         .createInstance(Components.interfaces.nsIFileOutputStream);
@@ -730,43 +769,17 @@ UpdateManager.prototype = {
       updatesDB.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
     fos.init(updatesDB, modeFlags, PERMS_FILE, 0);
     
-    var documentPreamble = "<?xml version=\"1.0\"?><updates>\n";
-    var updatePreamble = "<update type=\"%TYPE%\" version=\"%VERSION%\" extensionversion=\"%EVERSION%\" detailsurl=\"%DETAILSURL%\" licenseurl=\"%LICENSEURL%\" installdate=\"%INSTALLDATE%\"";
-    var updateCloseWithChildren = ">\n";
-    var updateCloseWithoutChildren = "/>\n";
-    var patchFormat = "<patch type=\"%TYPE%\" url=\"%URL%\" hashfunction=\"%HASHFUNCTION%\" hashvalue=\"%HASHVALUE%\" size=\"%SIZE%\"/>\n";
-    var updateFooter = "</update>\n";
-    var documentFooter = "</updates>\n";
-    
-    function writePatch(patch) {
-      var line = patchFormat.replace(/%TYPE%/, patch.type);
-      line = line.replace(/%URL%/, patch.url);
-      line = line.replace(/%HASHFUNCTION%/, patch.hashfunction);
-      line = line.replace(/%HASHVALUE%/, patch.hashvalue);
-      line = line.replace(/%SIZE%/, patch.size);
-      fos.write(line, line.length);
-    }
-    
-    function writeUpdate(update) {
-      var line = updatePreamble.replace(/%TYPE%/, update.type);
-      line = line.replace(/%VERSION%/, update.version);
-      line = line.replace(/%EVERSION%/, update.extensionversion);
-      line = line.replace(/%DETAILSURL%/, update.detailsurl);
-      line = line.replace(/%LICENSEURL%/, update.licenseurl);
-      line = line.replace(/%INSTALLDATE%/, update.installdate);
-      fos.write(line, line.length);
-      var updateClose = update.patchCount > 0 ? updateCloseWithChildren : updateCloseWithoutChildren;
-      fos.write(updateClose, updateClose.length);
-      for (var i = 0; i < update.patchCount; ++i)
-        writePatch(update.getPatchAt(i));
-      if (update.patchCount > 0);
-        fos.write(updateFooter, updateFooter.length);
-    }
-    
-    fos.write(documentPreamble, documentPreamble.length);
-    for (var i = 0; i < updates.length; ++i) 
-      writeUpdate(updates[i]);
-    fos.write(documentFooter, documentFooter.length);
+    var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
+                           .createInstance(Components.interfaces.nsIDOMParser);
+    const EMPTY_UPDATES_DOCUMENT = "<?xml version=\"1.0\"?><updates xmlns=\"http://www.mozilla.org/2005/app-update\"></updates>";
+    var doc = parser.parseFromString(EMPTY_UPDATES_DOCUMENT, "text/xml");
+
+    for (var i = 0; i < updates.length; ++i)
+      doc.documentElement.appendChild(updates[i].serialize(doc));
+
+    var serializer = Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
+                               .createInstance(Components.interfaces.nsIDOMSerializer);
+    serializer.serializeToStream(doc.documentElement, fos, null);
 
     if (fos instanceof Components.interfaces.nsISafeOutputStream)
       fos.finish();
@@ -778,9 +791,9 @@ UpdateManager.prototype = {
    * See nsIUpdateService.idl
    */
   saveUpdates: function() {
-    if (this._currentUpdate) {
-      this._writeUpdatesToXMLFile([this._currentUpdate], 
-                                  getFile(KEY_APPDIR, [FILE_UPDATE_CURRENT]));
+    if (this._activeUpdate) {
+      this._writeUpdatesToXMLFile([this._activeUpdate], 
+                                  getFile(KEY_APPDIR, [FILE_UPDATE_ACTIVE]));
     }
     this._writeUpdatesToXMLFile(this._updates, 
                                 getFile(KEY_APPDIR, [FILE_UPDATES_DB]));
@@ -821,16 +834,36 @@ function getPref(func, preference, defaultValue) {
 
 /**
  * Update Patch
+ * @param   patch
+ *          A <patch> element to initialize this object with
+ * @constructor
  */
-function UpdatePatch(type, url, hashfunction, hashvalue, size) {
-  this.type = type;
-  this.url = url;
-  this.hashfunction = hashfunction;
-  this.hashvalue = hashvalue;
-  this.size = size;
+function UpdatePatch(patch) {
+  this.type = patch.getAttribute("type");
+  this.URL = patch.getAttribute("URL");
+  this.hashFunction = patch.getAttribute("hashFunction");
+  this.hashValue = patch.getAttribute("hashValue");
+  this.size = parseInt(patch.getAttribute("size"));
+  this.selected = patch.getAttribute("selected") == "true";
 }
-
 UpdatePatch.prototype = {
+  /**
+   * See nsIUpdateService.idl
+   */
+  serialize: function(updates) {
+    var patch = updates.createElementNS(URI_UPDATE_NS, "patch");
+    patch.setAttribute("type", this.type);
+    patch.setAttribute("URL", this.URL);
+    patch.setAttribute("hashFunction", this.hashFunction);
+    patch.setAttribute("hashValue", this.hashValue);
+    patch.setAttribute("size", this.size);
+    patch.setAttribute("selected", this.selected);
+    return patch; 
+  },
+  
+  /**
+   * See nsISupports.idl
+   */
   QueryInterface: function(iid) {
     if (!iid.equals(Components.interfaces.nsIUpdatePatch) &&
         !iid.equals(Components.interfaces.nsISupports))
@@ -842,31 +875,56 @@ UpdatePatch.prototype = {
 /**
  * Update
  * Implements nsIUpdate
+ * @param   update
+ *          An <update> element to initialize this object with
+ * @constructor
  */
-function Update(type, version, extensionversion, detailsurl, licenseurl, installDate, patches) {
-  this.type = type;
-  this.version = version;
-  this.extensionversion = extensionversion;
-  this.detailsurl = detailsurl;
-  this.licenseurl = licenseurl;
-  this.isCompleteUpdate = false;
-  this.installDate = installDate;
-  this._patches = patches;
-}
+function Update(update) {
+  this._patches = [];
 
+  for (var i = 0; i < update.childNodes.length; ++i)
+    this._patches.push(new UpdatePatch(update.childNodes[i]));
+
+  this.type = update.getAttribute("type");
+  this.version = update.getAttribute("version");
+  this.extensionVersion = update.getAttribute("extensionVersion");
+  this.detailsURL = update.getAttribute("detailsURL");
+  this.licenseURL = update.getAttribute("licenseURL");
+  this.installDate = update.hasAttribute("installDate") ? parseInt(update.getAttribute("installDate")) : 0;
+  this.isCompleteUpdate = false;
+}
 Update.prototype = {
   /**
-   * 
+   * See nsIUpdateService.idl
    */
   get patchCount() {
     return this._patches.length;
   },
   
   /**
-   *
+   * See nsIUpdateService.idl
    */
   getPatchAt: function(index) {
     return this._patches[index];
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  serialize: function(updates) {
+    var update = updates.createElementNS(URI_UPDATE_NS, "update");
+    update.setAttribute("type", this.type);
+    update.setAttribute("version", this.version);
+    update.setAttribute("extensionVersion", this.extensionVersion);
+    update.setAttribute("detailsURL", this.detailsURL);
+    update.setAttribute("licenseURL", this.licenseURL);
+    update.setAttribute("installDate", this.installDate);
+    document.documentElement.appendChild(update);
+    
+    for (var i = 0; i < this.patchCount; ++i)
+      update.appendChild(this.getPatchAt(i).serialize(updates));
+    
+    return update;
   },
    
   /**
@@ -880,46 +938,31 @@ Update.prototype = {
   }
 }; 
  
-
-/**
- * parseUpdateNode
- * Parses an <update> element into an Update object.
- */
-function parseUpdateNode(node) {
-  patches = [];
-
-  for (var i = 0; i < node.childNodes.length; ++i) {
-    var patchNode = node.childNodes[i];
-    if (patchNode.nodeType != Node.ELEMENT_NODE)
-      continue;
-
-    patches.push(
-        new UpdatePatch(patchNode.getAttribute("type"),
-                        patchNode.getAttribute("url"),
-                        patchNode.getAttribute("hashfunction"),
-                        patchNode.getAttribute("hashvalue"),
-                        parseInt(patchNode.getAttribute("size"))));
-  }
-
-  return new Update(node.getAttribute("type"),
-                    node.getAttribute("version"),
-                    node.getAttribute("extensionversion"),
-                    node.getAttribute("detailsurl"),
-                    node.getAttribute("licenseurl"),
-                    node.hasAttribute("installdate") ? node.getAttribute("installdate") : 0,
-                    patches);
-}
-
 /**
  * Checker
  */
 function Checker() {
 }
 Checker.prototype = {
+  /**
+   * The XMLHttpRequest object that performs the connection.
+   */
   _request  : null,
+  
+  /**
+   *
+   */
   _callback : null,
+  
+  /**
+   *
+   */
   observer  : null,
   
+  /**
+   * The URL of the update service XML file to connect to that contains details
+   * about available updates.
+   */
   get _updateURL() {
     var url;
     try {
@@ -948,6 +991,9 @@ Checker.prototype = {
     return url;
   },
   
+  /**
+   *
+   */
   findUpdates: function(callback) {
     if (!callback)
       throw Components.results.NS_ERROR_NULL_POINTER;
@@ -972,11 +1018,17 @@ Checker.prototype = {
     this._callback = callback;
   },
   
+  /**
+   *
+   */
   onProgress: function(event) {
     LOG("*** download progress: " + event.position + "/" + event.totalSize);
     this._callback.onProgress(event.target, event.position, event.totalSize);
   },
   
+  /**
+   *
+   */
   get _updates() {
     var updatesElement = this._request.responseXML.documentElement;
     if (!updatesElement) {
@@ -995,12 +1047,15 @@ Checker.prototype = {
       if (updateElement.nodeType != Node.ELEMENT_NODE)
         continue;
 
-      updates.push(parseUpdateNode(updateElement));
+      updates.push(new Update(updateElement));
     }
 
     return updates;
   },
   
+  /**
+   *
+   */
   onLoad: function(event) {
     LOG("Checker.onLoad: request completed downloading document");
     
@@ -1017,6 +1072,9 @@ Checker.prototype = {
     this._callback.onCheckComplete(updates, updates.length);
   },
   
+  /**
+   *
+   */
   onError: function(event) {
     LOG("Checker.onError: error during load");
     this._callback.onError(event.target);
@@ -1051,8 +1109,15 @@ function Downloader(background) {
   this.background = background;
 }
 Downloader.prototype = {
-  _patch: null,    // UpdatePatch
-  _request: null,  // nsIIncrementalDownload
+  /**
+   * The nsIUpdatePatch that we are downloading
+   */
+  _patch: null,
+  
+  /**
+   * The nsIIncrementalDownload object handling the download
+   */
+  _request: null,
 
   /**
    * Whether or not the update being downloaded is a complete replacement of
@@ -1127,12 +1192,12 @@ Downloader.prototype = {
     try {
       var hash = Components.classes["@mozilla.org/security/hash;1"].
           createInstance(nsICryptoHash);
-      var hashfunction = nsICryptoHash[this._patch.hashfunction.toUpperCase()];
-      if (hashfunction == undefined)
+      var hashFunction = nsICryptoHash[this._patch.hashFunction.toUpperCase()];
+      if (hashFunction == undefined)
         return false;
-      hash.init(hashfunction);
+      hash.init(hashFunction);
       hash.updateFromStream(fileStream, -1);
-      // NOTE: For now, we assume that the format of _patch.hashvalue is hex
+      // NOTE: For now, we assume that the format of _patch.hashValue is hex
       // encoded binary (such as what is typically output by programs like
       // sha1sum).  In the future, this may change to base64 depending on how
       // we choose to compute these hashes.
@@ -1144,18 +1209,28 @@ Downloader.prototype = {
 
     fileStream.close();
 
-    return digest == this._patch.hashvalue.toLowerCase();
+    return digest == this._patch.hashValue.toLowerCase();
   },
 
   /**
    * Select the patch to use given the current state of updateDir and the given
    * set of update patches.
+   * @param   update
+   *          A nsIUpdate object to select a patch from
+   * @param   updateDir
+   *          A nsIFile representing the update directory
+   * @returns A nsIUpdatePatch object to download
    */
   _selectPatch: function(update, updateDir) {
     // Given an update to download, we will always try to download the patch
     // for a partial update over the patch for a full update.
 
-    // Return the first UpdatePatch with the given type.
+    /**
+     * Return the first UpdatePatch with the given type.
+     * @param   type
+     *          The type of the patch ("complete" or "partial")
+     * @returns A nsIUpdatePatch object matching the type specified
+     */
     function getPatchOfType(type) {
       for (var i = 0; i < update.patchCount; ++i) {
         var patch = update.getPatchAt(i);
@@ -1165,124 +1240,91 @@ Downloader.prototype = {
       return null;
     }
 
-    // Return the first UpdatePatch with the given hash.
-    function getPatchWithHash(hashvalue) {
-      for (var i = 0; i < update.patchCount; ++i) {
-        var patch = update.getPatchAt(i);
-        if (patch && patch.hashvalue == hashvalue)
-          return patch;
-      }
-      return null;
+    // Look to see if any of the patches in the Update object has been
+    // pre-selected for download, otherwise we must figure out which one
+    // to select ourselves. 
+    var selectedPatch = null;
+    for (var i = 0; i < update.patchCount; ++i) {
+      var currentPatch = update.getPatchAt(i);
+      if (currentPatch.selected)
+        selectedPatch = currentPatch;
     }
-
-    // Deserialize the UpdatePatch currently being downloaded.
-    function readUpdateInfo() {
-      var infoFile = updateDir.clone();
-      infoFile.append(FILE_UPDATE_INFO);
-      var info = readStringFromFile(infoFile);
-      if (!info)
-        return null;
-      var fields = info.split(" ");  
-
-      return new UpdatePatch(fields[0], fields[1], fields[2], fields[3],
-                             parseInt(fields[4]));
-    }
-
-    // Serialize the given UpdatePatch.
-    function writeUpdateInfo(patch) {
-      var info =
-         patch.type + " " +
-         patch.url + " " +
-         patch.hashfunction + " " +
-         patch.hashvalue + " " +
-         patch.size;
-      var infoFile = updateDir.clone();
-      infoFile.append(FILE_UPDATE_INFO);
-      writeStringToFile(infoFile, info);
-    }
-
-    // OK, now start by looking at what is currently in the updateDir.
-    var state = this._readStatusFile(updateDir);
-    var patch = readUpdateInfo();
-
+    
     // If this is a patch that we know about, then select it.  If it is a patch
     // that we do not know about, then remove it and use our default logic.
-
     var useComplete = false;
-
-    if (patch) {
+    if (selectedPatch) {
       LOG("found existing patch [state="+state+"]");
-
-      // We may have no update to compare the existing patch against.
-      var found = update ? getPatchWithHash(patch.hashvalue) : patch;
-      if (found) {
-        LOG("existing patch is known");
-
-        if (state == STATE_DOWNLOADING) {
-          LOG("resuming download");
-          return found;
-        }
-        if (state == STATE_PENDING) {
-          LOG("already downloaded and staged");
+      
+      switch (this._readStatusFile(updateDir)) {
+      case STATE_DOWNLOADING: 
+        LOG("resuming download");
+        return selectedPatch;
+      case STATE_PENDING:
+        LOG("already downloaded and staged");
+        return null;
+      case STATE_FAILED:
+      case STATE_APPLYING:
+        // Something went wrong when we tried to apply the previous patch.
+        // Try the complete patch next time.
+        if (update && selectedPatch.type == "partial") {
+          useComplete = true;
+        } else {
+          // This is a pretty fatal error.  Just bail.
+          LOG("failed to apply complete patch!");
           return null;
-        }
-        if (state == STATE_FAILED || state == STATE_APPLYING) {
-          // Something went wrong when we tried to apply the previous patch.
-          // Try the complete patch next time.
-          if (update && patch.type == "partial") {
-            useComplete = true;
-          } else {
-            // This is a pretty fatal error.  Just bail.
-            LOG("failed to apply complete patch!");
-            return null;
-          }
         }
       }
 
       // The patch is no longer known to us, so we should assume that it is
       // no longer valid.  Remove all from the updateDir.
-
       // XXX We may want to preserve an update.log file from a failed update.
-
-      // We expect this operation to fail since some files (e.g., updater.exe)
-      // may still be in use.  That's ok.
+      // We expect this operation may fail since some files (e.g., updater.exe)
+      // may still be in use. That's ok.
       try {
         updateDir.remove(true);
       } catch (e) {}
       // Restore the updateDir since we may have deleted it.
       updateDir = this._getUpdatesDir();
 
-      state = null;
-      patch = null;
+      selectedPatch = null;
     }
 
-    if (!update)
-      return null;
-
-    // Now, we select the best patch from the given set
+    // If we were not able to discover an update from a previous download, we 
+    // select the best patch from the given set.
     if (!useComplete)
-      patch = getPatchOfType("partial");
-    if (!patch)
-      patch = getPatchOfType("complete");
-      
+      selectedPatch = getPatchOfType("partial");
+    if (!selectedPatch)
+      selectedPatch = getPatchOfType("complete");
+    
+    selectedPatch.selected = true;
     update.isCompleteUpdate = useComplete;
 
-    writeUpdateInfo(patch);
-    return patch;
+    // Reset the Active Update object on the Update Manager and flush the
+    // Active Update DB. 
+    var um = Components.classes["@mozilla.org/updates/update-manager;1"]
+                       .getService(Components.interfaces.nsIUpdateManager);
+    um.activeUpdate = update;
+
+    return selectedPatch;
   },
 
+  /**
+   * Whether or not we are currently downloading something.
+   */
   get isBusy() {
     return this._request != null;
   },
   
   /**
    * Download and stage the given update.
-   *
-   * @param update
-   *        An Update instance or null.  If null, then the downloader will
-   *        attempt to resume downloading what it was previously downloading.
+   * @param   update
+   *          A nsIUpdate object to download a patch for. Cannot be null.
    */
   downloadUpdate: function(update) {
+    if (!update)
+      throw Components.results.NS_ERROR_NULL_POINTER;
+    
     var updateDir = this._getUpdatesDir();
 
     // This function may return null, which indicates that there are no patches
@@ -1300,7 +1342,7 @@ Downloader.prototype = {
 
     var ios = Components.classes["@mozilla.org/network/io-service;1"].
         getService(Components.interfaces.nsIIOService);
-    var uri = ios.newURI(this._patch.url, null, null);
+    var uri = ios.newURI(this._patch.URL, null, null);
 
     this._request =
         Components.classes["@mozilla.org/network/incremental-download;1"].
@@ -1644,7 +1686,7 @@ function isCompatible(update) {
 #ifdef MOZ_XULAPP
   var em = Components.classes["@mozilla.org/extensions/manager;1"]
                       .getService(Components.interfaces.nsIExtensionManager);
-  var items = em.getIncompatibleItemList("", update.extensionversion,
+  var items = em.getIncompatibleItemList("", update.extensionVersion,
                                          nsIUpdateItem.TYPE_ADDON, { });
   return items.length == 0;
 #endif

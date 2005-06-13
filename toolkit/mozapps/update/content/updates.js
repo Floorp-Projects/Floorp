@@ -197,7 +197,7 @@ var gUpdatesAvailablePage = {
     updateTypeElement.appendChild(document.createTextNode(intro));
     
     var updateMoreInfoURL = document.getElementById("updateMoreInfoURL");
-    updateMoreInfoURL.href = gUpdates.update.detailsurl;
+    updateMoreInfoURL.href = gUpdates.update.detailsURL;
     
     var em = Components.classes["@mozilla.org/extensions/manager;1"]
                        .getService(Components.interfaces.nsIExtensionManager);
@@ -219,7 +219,7 @@ var gUpdatesAvailablePage = {
   },
   
   onInstallNow: function() {
-    var nextPageID = gUpdates.update.licenseurl ? "license" : "downloading";
+    var nextPageID = gUpdates.update.licenseURL ? "license" : "downloading";
     var updatesfound = document.getElementById("updatesfound");
     updatesfound.setAttribute("next", nextPageID);
     document.documentElement.advance();
@@ -243,7 +243,7 @@ var gLicensePage = {
     document.documentElement.getButton("next").focus();
 
     this._licenseContent.addEventListener("load", this.onLicenseLoad, false);
-    this._licenseContent.url = gUpdates.update.licenseurl;
+    this._licenseContent.url = gUpdates.update.licenseURL;
     
     gUpdates.headerVisible = true;
   },
