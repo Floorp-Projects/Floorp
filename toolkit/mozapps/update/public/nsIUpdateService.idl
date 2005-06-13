@@ -254,12 +254,7 @@ interface nsIUpdateManager : nsISupports
   /**
    *
    */
-  void addUpdate(in nsIUpdate update);
-
-  /**
-   *
-   */
-  void removeUpdate(in nsIUpdate update);
+  void removeUpdateAtInde(in long index);
 
   /**
    *
