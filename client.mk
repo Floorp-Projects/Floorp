@@ -163,7 +163,7 @@ MODULES_mail :=                                 \
 LOCALES_mail :=                                 \
   $(LOCALES_toolkit)                            \
   mail                                          \
-  other-licenses/branding/firefox               \
+  other-licenses/branding/thunderbird           \
   $(NULL)
 
 BOOTSTRAP_mail := mozilla/mail/config/mozconfig
