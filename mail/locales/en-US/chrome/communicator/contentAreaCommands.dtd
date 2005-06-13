@@ -53,14 +53,18 @@
 <!ENTITY bookmarkLinkCmd.accesskey    "L">
 <!ENTITY bookmarkFrameCmd.label       "Bookmark This Frame">
 <!ENTITY bookmarkFrameCmd.accesskey   "m">
-<!ENTITY savePageCmd.label            "Save Page As...">
+<!ENTITY savePageAsCmd.label          "Save Page As...">
+<!ENTITY savePageCmd.label            "Save Page">
 <!ENTITY savePageCmd.accesskey        "A">
 <!ENTITY savePageCmd.commandkey       "s">
-<!ENTITY saveFrameCmd.label           "Save Frame As...">
+<!ENTITY saveFrameAsCmd.label         "Save Frame As...">
+<!ENTITY saveFrameCmd.label           "Save Frame">
 <!ENTITY saveFrameCmd.accesskey       "m">
-<!ENTITY saveLinkCmd.label            "Save Link Target As...">
+<!ENTITY saveLinkAsCmd.label          "Save Link Target As...">
+<!ENTITY saveLinkCmd.label            "Save Link Target">
 <!ENTITY saveLinkCmd.accesskey        "r">
-<!ENTITY saveImageCmd.label           "Save Image As...">
+<!ENTITY saveImageAsCmd.label         "Save Image As...">
+<!ENTITY saveImageCmd.label           "Save Image">
 <!ENTITY saveImageCmd.accesskey       "v">
 <!ENTITY copyCmd.label                "Copy">
 <!ENTITY copyCmd.accesskey            "C">
@@ -87,3 +91,7 @@
 <!ENTITY thisFrameMenu.label          "This Frame">
 <!ENTITY thisFrameMenu.accesskey      "h">
 <!ENTITY search.accesskey             "W">
+<!ENTITY bidiSwitchPageDirectionItem.label        "Switch Page Direction">
+<!ENTITY bidiSwitchPageDirectionItem.accesskey    "g">
+<!ENTITY bidiSwitchTextDirectionItem.label        "Switch Text Direction">
+<!ENTITY bidiSwitchTextDirectionItem.accesskey    "w">
