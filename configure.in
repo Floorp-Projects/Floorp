@@ -1011,10 +1011,6 @@ case "$host" in
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
-*-os2*)
-    HOST_CFLAGS="$HOST_CFLAGS -Zomf"
-    ;;
-
 *cygwin*|*mingw*|*mks*|*msvc*|*wince)
     if test -n "$_WIN32_MSVC"; then
         HOST_CFLAGS="$HOST_CFLAGS -TC -nologo"
@@ -1058,7 +1054,7 @@ case "$host" in
     ;;
 
 *os2*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_OS2 -DNO_X11"
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_OS2 -DNO_X11 -Zomf"
     HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     HOST_BIN_SUFFIX=.exe
