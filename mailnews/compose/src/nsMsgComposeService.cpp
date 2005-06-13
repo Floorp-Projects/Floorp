@@ -44,6 +44,7 @@
 
 #include "nsMsgComposeService.h"
 #include "nsMsgCompCID.h"
+#include "nsIMsgSend.h"
 #include "nsISupportsArray.h"
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"

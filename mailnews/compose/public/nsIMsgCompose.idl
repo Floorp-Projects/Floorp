@@ -39,11 +39,16 @@
 #include "nsISupports.idl"
 #include "nsIMsgCompFields.idl"
 #include "nsIMsgComposeParams.idl"
-#include "nsIMsgIdentity.idl"
-#include "nsIMsgSend.idl"
-#include "nsIMsgProgress.idl"
 
+%{C++
+#include "nsString.h"
+%}
+
+interface nsIMsgSend;
+interface nsIMsgIdentity;
+interface nsIMsgProgress;
 interface nsIDOMWindowInternal;
+interface nsIDOMWindow;
 interface nsIDOMNode;
 interface nsIEditor;
 interface nsIMsgWindow;

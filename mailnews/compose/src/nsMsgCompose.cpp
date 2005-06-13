@@ -120,6 +120,7 @@
 #include "nsIUTF8ConverterService.h"
 #include "nsUConvCID.h"
 #include "nsIUnicodeNormalizer.h"                                               
+#include "nsIMsgProgress.h"
 
 // Defines....
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);

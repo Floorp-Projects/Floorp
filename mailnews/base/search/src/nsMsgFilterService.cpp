@@ -61,6 +61,8 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgCopyService.h"
 #include "nsIOutputStream.h"
+#include "nsIMsgComposeService.h"
+#include "nsMsgCompCID.h"
 
 NS_IMPL_ISUPPORTS1(nsMsgFilterService, nsIMsgFilterService)
 
@@ -653,6 +655,56 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
         m_curFolder->SetJunkScoreForMessages(m_searchHitHdrs, junkScoreStr.get());
         break;
       }
+      case nsMsgFilterAction::Forward:
+        {
+          nsXPIDLCString forwardTo;
+          filterAction->GetStrValue(getter_Copies(forwardTo));
+          nsCOMPtr <nsIMsgIncomingServer> server;
+          rv = m_curFolder->GetServer(getter_AddRefs(server));
+          NS_ENSURE_SUCCESS(rv, rv);
+          if (!forwardTo.IsEmpty())
+          {
+            nsCOMPtr <nsIMsgComposeService> compService = do_GetService (NS_MSGCOMPOSESERVICE_CONTRACTID) ;
+            if (compService)
+            {
+              for (PRUint32 msgIndex = 0; msgIndex < m_searchHits.GetSize(); msgIndex++)
+              {
+                nsCOMPtr <nsIMsgDBHdr> msgHdr;
+                m_searchHitHdrs->QueryElementAt(msgIndex, NS_GET_IID(nsIMsgDBHdr), getter_AddRefs(msgHdr));
+                if (msgHdr)
+                {
+                  nsAutoString forwardStr;
+                  forwardStr.AssignWithConversion(forwardTo.get());
+                  rv = compService->ForwardMessage(forwardStr, msgHdr, m_msgWindow, server);
+                }
+              }
+            }
+          }
+        }
+        break;
+      case nsMsgFilterAction::Reply:
+        {
+          nsXPIDLCString replyTemplateUri;
+          filterAction->GetStrValue(getter_Copies(replyTemplateUri));
+          nsCOMPtr <nsIMsgIncomingServer> server;
+          rv = m_curFolder->GetServer(getter_AddRefs(server));
+          NS_ENSURE_SUCCESS(rv, rv);
+          if (!replyTemplateUri.IsEmpty())
+          {
+            nsCOMPtr <nsIMsgComposeService> compService = do_GetService (NS_MSGCOMPOSESERVICE_CONTRACTID) ;
+            if (compService)
+            {
+              for (PRUint32 msgIndex = 0; msgIndex < m_searchHits.GetSize(); msgIndex++)
+              {
+                nsCOMPtr <nsIMsgDBHdr> msgHdr;
+                m_searchHitHdrs->QueryElementAt(msgIndex, NS_GET_IID(nsIMsgDBHdr), getter_AddRefs(msgHdr));
+                if (msgHdr)
+                  rv = compService->ReplyWithTemplate(msgHdr, replyTemplateUri, m_msgWindow, server);
+              }
+            }
+          }
+        }
+        break;
       default:
         break;
       }

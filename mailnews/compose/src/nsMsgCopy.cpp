@@ -59,6 +59,7 @@
 #include "nsIEventQueueService.h"
 #include "nsMsgSimulateError.h"
 #include "nsIMsgWindow.h"
+#include "nsIMsgProgress.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);

@@ -45,6 +45,7 @@ interface nsIDOMWindowInternal;
 interface nsIMsgWindow;
 interface nsIMsgIdentity;
 interface nsIMsgIncomingServer;
+interface nsIMsgDBHdr;
 
 [scriptable, uuid(acb1a30a-466e-4809-bb59-f9b7946f6cf6)]
 interface nsIMsgComposeService : nsISupports {

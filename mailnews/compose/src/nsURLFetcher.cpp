@@ -58,6 +58,7 @@
 #include "nsMsgAttachmentHandler.h"
 #include "nsMsgSend.h"
 #include "nsIStreamConverterService.h"
+#include "nsIMsgProgress.h"
 
 NS_IMPL_ISUPPORTS6(nsURLFetcher, nsIURLFetcher, nsIStreamListener, nsIURIContentListener, nsIInterfaceRequestor, nsIWebProgressListener, nsISupportsWeakReference)
 

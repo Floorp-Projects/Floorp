@@ -107,6 +107,7 @@
 #include "nsIMsgAccountManager.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsIAbCard.h"
+#include "nsIMsgProgress.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
