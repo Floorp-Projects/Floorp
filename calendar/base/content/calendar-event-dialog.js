@@ -54,10 +54,7 @@ function onLoad()
         menuitem.calendar = calendar;
     }
 
-    loadDialog();
-
-    // update edit type (all occurrences vs single occurence)
-    updateEditing();
+    loadDialog(window.calendarEvent);
 
     // update datetime pickers
     updateAllDay();
@@ -79,12 +76,7 @@ function onAccept()
 {
     // if this event isn't mutable, we need to clone it like a sheep
     var originalEvent = window.calendarEvent;
-    var event = originalEvent;
-
-    if (document.getElementById("event-edit-type").selectedItem.getAttribute("value") == "all")
-        event = event.parentItem;
-
-    event = (event.isMutable) ? event : event.clone();
+    var event = (originalEvent.isMutable) ? originalEvent : originalEvent.clone();
 
     saveDialog(event);
 
@@ -100,11 +92,9 @@ function onCancel()
 
 }
 
-function loadDialog()
+function loadDialog(event)
 {
     var kDefaultTimezone = calendarDefaultTimezone();
-
-    var event = window.calendarEvent;
 
     setElementValue("event-title",       event.title);
     setElementValue("event-all-day",     event.isAllDay, "checked");
@@ -147,13 +137,12 @@ function loadDialog()
      * - Setting recurrence on the item
      * - changing the calendar
      */
-    if (event.parentItem != event)
-        setElementValue("event-edit-type", "single");
-    else {
-        setElementValue("event-edit-type", "true", "disabled");
-        if (event.recurrenceInfo)
-            setElementValue("event-recurrence", "true", "checked");
-    }
+    if (event.parentItem != event) {
+        setElementValue("event-recurrence", "true", "disabled");
+        setElementValue("set-recurrence", "true", "disabled");
+        setElementValue("event-calendar", "true", "disabled");
+    } else if (event.recurrenceInfo)
+        setElementValue("event-recurrence", "true", "checked");
 
     /* alarms */
     if (event.alarmTime) {
@@ -253,34 +242,6 @@ function saveDialog(event)
 }
 
 
-function updateEditing()
-{
-    var event = window.calendarEvent;
-    var handleRecurrence = (event.parentItem != event);
-
-    if (handleRecurrence) {
-        var editType = document.getElementById("event-edit-type").selectedItem.getAttribute("value");
-
-        switch (editType) {
-        case "single":
-            setElementValue("event-recurrence", "true", "disabled");
-            setElementValue("set-recurrence", "true", "disabled");
-            setElementValue("event-calendar", "true", "disabled");
-            setElementValue("event-recurrence", false, "checked");
-            break;
-        case "all":
-            if (event.parentItem.recurrenceInfo || window.recurrenceInfo) {
-                setElementValue("event-recurrence", "true", "checked");
-                setElementValue("event-recurrence", false, "disabled");
-                setElementValue("set-recurrence", false, "disabled");
-                setElementValue("event-calendar", false, "disabled");
-            }
-            break;
-        }
-    }
-}
-
-
 function updateAllDay()
 {
     var allDay = getElementValue("event-all-day", "checked");
@@ -344,8 +305,8 @@ function updateAlarm()
 function editRecurrence()
 {
     var args = new Object();
-    args.calendarEvent = window.calendarEvent.parentItem;
-    args.recurrenceInfo = (window.recurrenceInfo) ? window.recurrenceInfo : args.calendarEvent.recurrenceInfo;
+    args.calendarEvent = window.calendarEvent;
+    args.recurrenceInfo = window.recurrenceInfo || args.calendarEvent.recurrenceInfo;
 
     var savedWindow = window;
     args.onOk = function(recurrenceInfo) {
@@ -366,6 +327,6 @@ function setEventProperty(event, propertyName, value)
 {
     if (!value || value == "")
         event.deleteProperty(propertyName);
-    else
+    else if (event.getProperty(propertyName) != value)
         event.setProperty(propertyName, value);
 }

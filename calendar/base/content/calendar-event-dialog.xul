@@ -70,15 +70,6 @@
 
       <rows>
         <rows equalsize="always">
-          <row id="row-edit-occurrence" align="center">
-            <label value="Edit" class="label"/>
-            <menulist id="event-edit-type" oncommand="updateEditing()">
-              <menupopup>
-                <menuitem label="This occurrence" value="single"/>
-                <menuitem label="All occurrences" value="all" selected="true"/>
-              </menupopup>
-            </menulist>
-          </row>
           <row align="center">
             <label value="Title" class="label"/>
             <textbox id="event-title"/>
