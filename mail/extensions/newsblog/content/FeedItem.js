@@ -160,28 +160,10 @@ FeedItem.prototype =
   {
     this.mUnicodeConverter.charset = this.characterSet;
 
-    try 
-    {
-      if (this.title)
-        this.title = this.mUnicodeConverter.ConvertToUnicode(this.title);
-    } catch (ex) {}
-
-    try 
-    {
-      if (this.description)
-        this.description =  this.mUnicodeConverter.ConvertToUnicode(this.description);
-    } catch (ex) {}
-
     if (this.isStored()) 
       debug(this.identity + " already stored; ignoring");
     else if (this.content) 
     {
-      try 
-      {
-        this.content = this.mUnicodeConverter.ConvertToUnicode(this.content);
-      } 
-      catch (ex) {}
-
       debug(this.identity + " has content; storing");
       var content = MESSAGE_TEMPLATE;
       content = content.replace(/%CONTENT_TEMPLATE%/, LOCAL_CONTENT_TEMPLATE);

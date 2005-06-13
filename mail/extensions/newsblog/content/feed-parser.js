@@ -59,7 +59,14 @@ FeedParser.prototype =
             && (aDOM.documentElement.getElementsByTagNameNS("http://purl.org/rss/1.0/", "channel")[0]))
     {
       debug(aFeed.url + " is an RSS 1.x (RDF-based) feed");
-      return this.parseAsRSS1(aFeed, aSource, aBaseURI);
+      // aSource can be misencoded (XMLHttpRequest converts to UTF-8 by default), 
+      // but the DOM is almost always right because it uses the hints in the XML file.
+      // This is slower, but not noticably so. Mozilla doesn't have the 
+      // XMLHttpRequest.responseBody property that IE has, which provides access 
+      // to the unencoded response.
+      var serial=new XMLSerializer();
+      var xmlString=serial.serializeToString(aDOM.documentElement);
+      return this.parseAsRSS1(aFeed, xmlString, aBaseURI);
     } 
     else if (aDOM.documentElement.namespaceURI == ATOM_03_NS)
     {
@@ -101,10 +108,7 @@ FeedParser.prototype =
       return parsedItems;
 
     aFeed.invalidateItems();
-    var itemNodes = aDOM.getElementsByTagName("item");   
-    var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].
-                    createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-    converter.charset = 'UTF-8';
+    var itemNodes = aDOM.getElementsByTagName("item");
 
     for (var i=0; i<itemNodes.length; i++) 
     {
@@ -130,12 +134,9 @@ FeedParser.prototype =
       item.url = link ? link : (guid && isPermaLink) ? guid : null;
       item.id = guid;
       item.description = getNodeValue(itemNode.getElementsByTagName("description")[0]);
-      item.title = converter.ConvertFromUnicode(getNodeValue(itemNode.getElementsByTagName("title")[0])
+      item.title = getNodeValue(itemNode.getElementsByTagName("title")[0])
                    || (item.description ? (this.stripTags(item.description).substr(0, 150)) : null)
-                   || item.title);
-      // do this after we potentially assign item.description into item.title
-      // because that potential assignment assumes the value is in unicode still
-      item.description = converter.ConvertFromUnicode(item.description);
+                   || item.title;
 
       item.author = getNodeValue(itemNode.getElementsByTagName("author")[0]
                                  || itemNode.getElementsByTagName("creator")[0])
@@ -159,8 +160,6 @@ FeedParser.prototype =
       }
 
       var content = getNodeValue(itemNode.getElementsByTagNameNS(RSS_CONTENT_NS, "encoded")[0]);
-      if (content)
-        item.content = converter.ConvertFromUnicode(content);
 
       // Handle an enclosure (if present)
       var enclosureNode = itemNode.getElementsByTagName("enclosure")[0];
