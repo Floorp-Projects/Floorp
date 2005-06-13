@@ -150,8 +150,8 @@ calEvent.prototype = {
     },
 
     icsEventPropMap: [
-    { cal: "mStartDate", ics: "startTime" },
-    { cal: "mEndDate", ics: "endTime" }],
+    { cal: "DTSTART", ics: "startTime" },
+    { cal: "DTEND", ics: "endTime" }],
 
     set icalString(value) {
         this.icalComponent = icalFromString(value);
@@ -176,14 +176,17 @@ calEvent.prototype = {
         this.fillIcalComponentFromBase(icalcomp);
         this.mapPropsToICS(icalcomp, this.icsEventPropMap);
         
+dump("sd: "+this.getProperty("DTSTART")+"\n")
         var bagenum = this.mProperties.enumerator;
         while (bagenum.hasMoreElements()) {
             var iprop = bagenum.getNext().
                 QueryInterface(Components.interfaces.nsIProperty);
             try {
-                var icalprop = icssvc.createIcalProperty(iprop.name);
-                icalprop.stringValue = iprop.value;
-                icalcomp.addProperty(icalprop);
+                if (!this.eventPromotedProps[iprop.name]) {
+                    var icalprop = icssvc.createIcalProperty(iprop.name);
+                    icalprop.stringValue = iprop.value;
+                    icalcomp.addProperty(icalprop);
+                }
             } catch (e) {
                 // dump("failed to set " + iprop.name + " to " + iprop.value +
                 // ": " + e + "\n");

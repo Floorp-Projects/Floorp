@@ -150,9 +150,9 @@ calTodo.prototype = {
     },
 
     icsEventPropMap: [
-    { cal: "mEntryDate", ics: "startTime" },
-    { cal: "mDueDate", ics: "dueTime" },
-    { cal: "mCompletedDate", ics: "completedTime" }],
+    { cal: "DTSTART", ics: "startTime" },
+    { cal: "DUE", ics: "dueTime" },
+    { cal: "COMPLETED", ics: "completedTime" }],
 
     set icalString(value) {
         this.icalComponent = icalFromString(value);
@@ -186,9 +186,11 @@ calTodo.prototype = {
             var iprop = bagenum.getNext().
                 QueryInterface(Components.interfaces.nsIProperty);
             try {
-                var icalprop = icssvc.createIcalProperty(iprop.name);
-                icalprop.stringValue = iprop.value;
-                icalcomp.addProperty(icalprop);
+                if (!this.eventPromotedProps[iprop.name]) {
+                    var icalprop = icssvc.createIcalProperty(iprop.name);
+                    icalprop.stringValue = iprop.value;
+                    icalcomp.addProperty(icalprop);
+                }
             } catch (e) {
                 // dump("failed to set " + iprop.name + " to " + iprop.value +
                 // ": " + e + "\n");
@@ -225,8 +227,8 @@ calTodo.prototype = {
 
 var makeMemberAttr;
 if (makeMemberAttr) {
-    makeMemberAttr(calTodo, "mEntryDate", null, "entryDate");
-    makeMemberAttr(calTodo, "mDueDate", null, "dueDate");
-    makeMemberAttr(calTodo, "mCompletedDate", null, "completedDate");
+    makeMemberAttr(calTodo, "DTSTART", null, "entryDate", true);
+    makeMemberAttr(calTodo, "DUE", null, "dueDate", true);
+    makeMemberAttr(calTodo, "COMPLETED", null, "completedDate", true);
     makeMemberAttr(calTodo, "mPercentComplete", 0, "percentComplete");
 }
