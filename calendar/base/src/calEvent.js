@@ -176,7 +176,6 @@ calEvent.prototype = {
         this.fillIcalComponentFromBase(icalcomp);
         this.mapPropsToICS(icalcomp, this.icsEventPropMap);
         
-dump("sd: "+this.getProperty("DTSTART")+"\n")
         var bagenum = this.mProperties.enumerator;
         while (bagenum.hasMoreElements()) {
             var iprop = bagenum.getNext().
