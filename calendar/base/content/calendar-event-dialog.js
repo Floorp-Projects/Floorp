@@ -56,6 +56,9 @@ function onLoad()
 
     loadDialog();
 
+    // update edit type (all occurrences vs single occurence)
+    updateEditing();
+
     // update datetime pickers
     updateAllDay();
 
@@ -78,11 +81,10 @@ function onAccept()
     var originalEvent = window.calendarEvent;
     var event = originalEvent;
 
-    if (!event.isMutable) {
-        event = event.clone();
-    } else {
-        dump ("#### modifyEvent is mutable already?\n");
-    }
+    if (document.getElementById("event-edit-type").selectedItem.getAttribute("value") == "all")
+        event = event.parentItem;
+
+    event = (event.isMutable) ? event : event.clone();
 
     saveDialog(event);
 
@@ -100,7 +102,7 @@ function onCancel()
 
 function loadDialog()
 {
-    const kDefaultTimezone = calendarDefaultTimezone();
+    var kDefaultTimezone = calendarDefaultTimezone();
 
     var event = window.calendarEvent;
 
@@ -145,12 +147,12 @@ function loadDialog()
      * - Setting recurrence on the item
      * - changing the calendar
      */
-    if (event.parentItem != event) {
-        setElementValue("event-recurrence", "true", "disabled");
-        setElementValue("set-recurrence", "true", "disabled");
-        setElementValue("event-calendar", "true", "disabled");
-    } else if (event.recurrenceInfo) {
-        setElementValue("event-recurrence", "true", "checked");
+    if (event.parentItem != event)
+        setElementValue("event-edit-type", "single");
+    else {
+        setElementValue("event-edit-type", "true", "disabled");
+        if (event.recurrenceInfo)
+            setElementValue("event-recurrence", "true", "checked");
     }
 
     /* alarms */
@@ -189,9 +191,11 @@ function saveDialog(event)
     var attendees = getElementValue("event-attendees");
     if (attendees != "") {
         for each (var addr in attendees.split(",")) {
-            var attendee = createAttendee();
-            attendee.id = "mailto:" + addr;
-            event.addAttendee(attendee);
+            if (addr != "") {
+                var attendee = createAttendee();
+                attendee.id = "mailto:" + addr;
+                event.addAttendee(attendee);
+            }
         }
     }
 
@@ -243,6 +247,36 @@ function saveDialog(event)
         alarmTime.normalize();
 
         event.alarmTime = alarmTime;
+    }
+
+    //dump(event.icalString + "\n");
+}
+
+
+function updateEditing()
+{
+    var event = window.calendarEvent;
+    var handleRecurrence = (event.parentItem != event);
+
+    if (handleRecurrence) {
+        var editType = document.getElementById("event-edit-type").selectedItem.getAttribute("value");
+
+        switch (editType) {
+        case "single":
+            setElementValue("event-recurrence", "true", "disabled");
+            setElementValue("set-recurrence", "true", "disabled");
+            setElementValue("event-calendar", "true", "disabled");
+            setElementValue("event-recurrence", false, "checked");
+            break;
+        case "all":
+            if (event.parentItem.recurrenceInfo || window.recurrenceInfo) {
+                setElementValue("event-recurrence", "true", "checked");
+                setElementValue("event-recurrence", false, "disabled");
+                setElementValue("set-recurrence", false, "disabled");
+                setElementValue("event-calendar", false, "disabled");
+            }
+            break;
+        }
     }
 }
 
@@ -310,8 +344,8 @@ function updateAlarm()
 function editRecurrence()
 {
     var args = new Object();
-    args.calendarEvent = window.calendarEvent;
-    args.recurrenceInfo = (window.recurrenceInfo) ? window.recurrenceInfo : window.calendarEvent.recurrenceInfo;
+    args.calendarEvent = window.calendarEvent.parentItem;
+    args.recurrenceInfo = (window.recurrenceInfo) ? window.recurrenceInfo : args.calendarEvent.recurrenceInfo;
 
     var savedWindow = window;
     args.onOk = function(recurrenceInfo) {
