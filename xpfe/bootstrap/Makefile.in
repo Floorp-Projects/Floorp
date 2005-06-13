@@ -158,6 +158,10 @@ LIBS	= \
 	$(EXTRA_DSO_LIBS) \
 	$(NULL)
 
+ifdef MOZ_ENABLE_XREMOTE
+LIBS += $(DEPTH)/widget/src/xremoteclient/$(LIB_PREFIX)xremote_client_s.$(LIB_SUFFIX)
+LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/xremoteclient
+endif
 
 ifndef BUILD_STATIC_LIBS
 
@@ -350,11 +354,6 @@ SRCS_IN_OBJDIR=1
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 GARBAGE         += $(STACKWALK_SRC_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
-endif
-
-ifdef MOZ_ENABLE_XREMOTE
-LIBS += $(DEPTH)/widget/src/xremoteclient/$(LIB_PREFIX)xremote_client_s.$(LIB_SUFFIX)
-LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/xremoteclient
 endif
 
 include $(topsrcdir)/config/rules.mk
