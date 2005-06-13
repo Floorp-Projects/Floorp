@@ -85,8 +85,12 @@ public:
 protected:
   ~nsCommandLine() { }
 
+  typedef nsresult (*EnumerateCallback)(nsICommandLineHandler* aHandler,
+					nsICommandLine* aThis,
+					void *aClosure);
+
   void appendArg(const char* arg);
-  nsresult getHandlers(nsCStringArray& handlers, nsICategoryManager* catman);
+  nsresult EnumerateHandlers(EnumerateCallback aCallback, void *aClosure);
 
   nsStringArray     mArgs;
   PRUint32          mState;
@@ -532,9 +536,13 @@ nsCommandLine::Init(PRInt32 argc, char** argv, nsIFile* aWorkingDir,
 }
 
 nsresult
-nsCommandLine::getHandlers(nsCStringArray &handlers, nsICategoryManager* catman)
+nsCommandLine::EnumerateHandlers(EnumerateCallback aCallback, void *aClosure)
 {
   nsresult rv;
+
+  nsCOMPtr<nsICategoryManager> catman
+    (do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
+  NS_ENSURE_TRUE(catman, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsISimpleEnumerator> entenum;
   rv = catman->EnumerateCategory("command-line-handler",
@@ -548,37 +556,32 @@ nsCommandLine::getHandlers(nsCStringArray &handlers, nsICategoryManager* catman)
   PRBool hasMore;
   while (NS_SUCCEEDED(strenum->HasMore(&hasMore)) && hasMore) {
     strenum->GetNext(entry);
-    handlers.AppendCString(entry);
+
+    nsXPIDLCString contractID;
+    rv = catman->GetCategoryEntry("command-line-handler",
+				  entry.get(),
+				  getter_Copies(contractID));
+    if (!contractID)
+      continue;
+
+    nsCOMPtr<nsICommandLineHandler> clh(do_GetService(contractID.get()));
+    if (!clh)
+      continue;
+
+    rv = (aCallback)(clh, this, aClosure);
+    if (rv = NS_ERROR_ABORT)
+      break;
+
+    rv = NS_OK;
   }
 
-  handlers.Sort();
-  return NS_OK;
+  return rv;
 }
 
-struct RunClosure
+static nsresult
+EnumRun(nsICommandLineHandler* aHandler, nsICommandLine* aThis, void*)
 {
-  nsICommandLine* cl;
-  nsICategoryManager* catman;
-};
-
-static PRBool
-EnumRun(nsCString& aEntry, void* aData)
-{
-  nsresult rv;
-
-  RunClosure* closure = NS_STATIC_CAST(RunClosure*, aData);
-
-  nsXPIDLCString value;
-  rv = closure->catman->GetCategoryEntry("command-line-handler",
-                                         aEntry.get(),
-                                         getter_Copies(value));
-  NS_ENSURE_SUCCESS(rv, PR_TRUE);
-
-  nsCOMPtr<nsICommandLineHandler> clh (do_GetService(value));
-  NS_ENSURE_TRUE(clh, PR_TRUE);
-
-  rv = clh->Handle(closure->cl);
-  return rv != NS_ERROR_ABORT;
+  return aHandler->Handle(aThis);
 }  
 
 NS_IMETHODIMP
@@ -586,74 +589,36 @@ nsCommandLine::Run()
 {
   nsresult rv;
 
-  nsCOMPtr<nsICategoryManager> catman
-    (do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
-  NS_ENSURE_TRUE(catman, NS_ERROR_UNEXPECTED);
-
-  nsCStringArray handlers;
-  rv = getHandlers(handlers, catman);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  RunClosure closure = { this, catman };
-
-  if (!handlers.EnumerateForwards(&EnumRun, &closure))
-    return NS_ERROR_ABORT;
+  rv = EnumerateHandlers(EnumRun, nsnull);
+  if (rv == NS_ERROR_ABORT)
+    return rv;
 
   return NS_OK;
 }
 
-struct HelpClosure
-{
-  HelpClosure(nsACString& aText, nsICategoryManager* aCatman) :
-    text(aText), catman(aCatman) { }
-
-  nsACString& text;
-  nsICategoryManager* catman;
-};
-  
 static PRBool
-EnumHelp(nsCString& aEntry, void* aData)
+EnumHelp(nsICommandLineHandler* aHandler, nsICommandLine* aThis, void* aClosure)
 {
   nsresult rv;
 
-  HelpClosure* closure = NS_STATIC_CAST(HelpClosure*, aData);
-
-  nsXPIDLCString value;
-  rv = closure->catman->GetCategoryEntry("command-line-handler",
-                                         aEntry.get(),
-                                         getter_Copies(value));
-  NS_ENSURE_SUCCESS(rv, PR_TRUE);
-
-  nsCOMPtr<nsICommandLineHandler> clh (do_GetService(value));
-  NS_ENSURE_TRUE(clh, PR_TRUE);
-
   nsCString text;
-  rv = clh->GetHelpInfo(text);
+  rv = aHandler->GetHelpInfo(text);
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(text.Length() == 0 || text.Last() == '\n',
                  "Help text from command line handlers should end in a newline.");
-    closure->text.Append(text);
+
+    nsACString* totalText = NS_REINTERPRET_CAST(nsACString*, aClosure);
+    totalText->Append(text);
   }
 
-  return PR_TRUE;
+  return NS_OK;
 }  
 
 NS_IMETHODIMP
 nsCommandLine::GetHelpText(nsACString& aResult)
 {
-  nsresult rv;
+  EnumerateHandlers(EnumRun, &aResult);
 
-  nsCOMPtr<nsICategoryManager> catman
-    (do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
-  NS_ENSURE_TRUE(catman, NS_ERROR_UNEXPECTED);
-
-  nsCStringArray handlers;
-  rv = getHandlers(handlers, catman);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  HelpClosure closure (aResult, catman);
-
-  handlers.EnumerateForwards(EnumHelp, &closure);
   return NS_OK;
 }
 
