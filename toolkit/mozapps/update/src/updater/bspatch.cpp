@@ -38,16 +38,16 @@
 #include <string.h>
 #include <limits.h>
 
-#if defined(XP_UNIX)
-# include <unistd.h>
-#elif defined(XP_WIN)
+#if defined(XP_WIN)
 # include <io.h>
+#else
+# include <unistd.h>
 #endif
 
 #ifdef XP_WIN
-#include <winsock2.h>
+# include <winsock2.h>
 #else
-#include <arpa/inet.h>
+# include <arpa/inet.h>
 #endif
 
 #ifndef SSIZE_MAX
