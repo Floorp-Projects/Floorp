@@ -1284,7 +1284,8 @@
       <handler event="dblclick"><![CDATA[
         event.preventBubble();
         if (this.calendarView.controller && this.mOccurrence) {
-            this.calendarView.controller.modifyOccurrence(this.mOccurrence);
+            var occurrence = (event.ctrlKey) ? this.mOccurrence.parentItem : this.mOccurrence;
+            this.calendarView.controller.modifyOccurrence(occurrence);
         }
 
       ]]></handler>
@@ -1941,7 +1942,8 @@
             event.keyCode == kKE.DOM_VK_DELETE)
         {
             if (this.selectedOccurrence && this.controller) {
-                this.controller.deleteOccurrence(this.selectedOccurrence);
+                var occurrence = (event.ctrlKey) ? this.selectedOccurrence.parentItem : this.selectedOccurrence;
+                this.controller.deleteOccurrence(occurrence);
             }
         }
       ]]></handler>
