@@ -80,7 +80,23 @@ NS_IMETHODIMP EmptyEnumeratorImpl::HasMoreElements(PRBool* aResult)
     return NS_OK;
 }
 
+NS_IMETHODIMP EmptyEnumeratorImpl::HasMore(PRBool* aResult)
+{
+    *aResult = PR_FALSE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP EmptyEnumeratorImpl::GetNext(nsISupports** aResult)
+{
+    return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP EmptyEnumeratorImpl::GetNext(nsACString& aResult)
+{
+    return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP EmptyEnumeratorImpl::GetNext(nsAString& aResult)
 {
     return NS_ERROR_UNEXPECTED;
 }
