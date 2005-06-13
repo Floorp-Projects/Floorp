@@ -11,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator.
+ * The Original Code is Mozilla XULRunner.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corp.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Benjamin Smedberg <benjamin@smedbergs.us>.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Sean Su <ssu@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,24 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsGREDirServiceProvider_h_
-#define nsGREDirServiceProvider_h_
+#ifndef nsRegisterGRE_h__
+#define nsRegisterGRE_h__
 
-#include "nsIDirectoryService.h"
+#include "nscore.h"
+class nsIFile;
 
 /**
- * the directoryserviceprovider used by GRE_Startup when calling NS_InitXPCOM2
+ * @return PR_TRUE on success
  */
-class nsGREDirServiceProvider : public nsIDirectoryServiceProvider
-{
-public:
-   nsGREDirServiceProvider() { }
+NS_HIDDEN_(PRBool)
+RegisterXULRunner(PRBool aRegisterGlobally, nsIFile* aLocation);
 
-   NS_DECL_ISUPPORTS
-   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+NS_HIDDEN_(void)
+UnregisterXULRunner(PRBool aUnregisterGlobally, nsIFile* aLocation);
 
-private:
-   ~nsGREDirServiceProvider() { }
-};
-
-#endif // nsGREDirServiceProvider.h
+#endif // nsRegisterGRE_h__

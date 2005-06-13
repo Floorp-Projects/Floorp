@@ -11,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator.
+ * The Original Code is Mozilla XULRunner.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corp.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Benjamin Smedberg <benjamin@smedbergs.us>.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Sean Su <ssu@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,24 +35,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsGREDirServiceProvider_h_
-#define nsGREDirServiceProvider_h_
+#include "nsRegisterGRE.h"
 
-#include "nsIDirectoryService.h"
+#include <stdlib.h>
+#include <stdio.h>
 
-/**
- * the directoryserviceprovider used by GRE_Startup when calling NS_InitXPCOM2
- */
-class nsGREDirServiceProvider : public nsIDirectoryServiceProvider
+int
+RegisterXULRunner(PRBool aRegisterGlobally, nsIFile* aLocation)
 {
-public:
-   nsGREDirServiceProvider() { }
+  fprintf(stderr, "Registration not implemented on this platform!\n");
+  return 1;
+}
 
-   NS_DECL_ISUPPORTS
-   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
-
-private:
-   ~nsGREDirServiceProvider() { }
-};
-
-#endif // nsGREDirServiceProvider.h
+void
+UnregisterXULRunner(PRBool aUnregisterGlobally, nsIFile* aLocation)
+{
+  fprintf(stderr, "Registration not implemented on this platform!\n");
+}
