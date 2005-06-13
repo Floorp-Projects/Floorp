@@ -43,20 +43,7 @@ XPCOM_GLUE_SRC_LCSRCS =			       \
 		nsMemory.cpp		       \
 		nsTraceRefcnt.cpp              \
 		nsWeakReference.cpp	       \
+		nsGREGlue.cpp                  \
 		$(NULL)			       \
-
-XPCOM_GLUE_SRC_LEXPORTS =           \
-		nsCOMPtr.h	    \
-		nsDebug.h	    \
-		nsGenericFactory.h  \
-		nsIGenericFactory.h \
-		nsMemory.h	    \
-		nsTraceRefcnt.h     \
-		nsWeakReference.h   \
-		nsComponentManagerUtils.h   \
-		nsServiceManagerUtils.h \
-		$(NULL)
-
-
 
 XPCOM_GLUE_SRC_CSRCS := $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCSRCS))
