@@ -64,6 +64,7 @@ const FILE_UPDATE_STATUS  = "update.status";
 const FILE_UPDATE_ARCHIVE = "update.mar";
 const FILE_UPDATE_INFO    = "update.info";
 const FILE_UPDATES_DB     = "updates.xml";
+const FILE_UPDATE_CURRENT = "current-update.xml";
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
@@ -633,74 +634,94 @@ UpdateManager.prototype = {
   /**
    *
    */
-  _data: null,
-  
-  /**
-   *
-   */
   _updates: [],
   
   /**
    *
    */
-  _init: function() {
-    var updatesDB = getFile(KEY_APPDIR, [FILE_UPDATES_DB]);
+  _currentUpdate: null,
+  
+  /**
+   * Loads an updates.xml formatted file into an array of nsIUpdate items.
+   * @param   file
+   *          A nsIFile for the updates.xml file
+   * @returns The array of nsIUpdate items held in the file.
+   */
+  _loadXMLFileIntoArray: function(file) {
+    if (!file.exists())
+      return;
+      
     var fileStream = Components.classes["@mozilla.org/network/file-input-stream;1"]
                                .createInstance(Components.interfaces.nsIFileInputStream);
-    fileStream.init(updatesDB, MODE_RDONLY, PERMS_FILE, 0);
+    fileStream.init(file, MODE_RDONLY, PERMS_FILE, 0);
     if (fileStream instanceof Components.interfaces.nsIScriptableInputStream) {
       var data = fileStream.read(fileStream.available());    
       var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
                              .createInstance(Components.interfaces.nsIDOMParser);
-      this._data = parser.parseFromString(data, "text/xml");
+      var doc = parser.parseFromString(data, "text/xml");
       
-      var updateCount = this._data.documentElement.childNodes.length;
+      var updateCount = doc.documentElement.childNodes.length;
       for (var i = 0; i < updateCount; ++i) {
-        var updateNode = this._data.documentElement.childNodes[i];
-        this._updates.push(parseUpdateNode(updateNode));
+        var updateNode = doc.documentElement.childNodes[i];
+        result.push(parseUpdateNode(updateNode));
       }
     }
+  },
+  
+  /**
+   * Load the update manager, initializing state from state files.
+   */
+  _init: function() {
+    this._updates       = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, [FILE_UPDATES_DB]));
+    this._currentUpdate = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, [FILE_UPDATE_CURRENT]))[0];
   },
   
   /**
    * See nsIUpdateService.idl
    */
   getUpdateAt: function(index) {
+    if (this._currentUpdate && index == 0) {
+      // The "current" or "active" update is always first in the list.
+      return this._currentUpdate;
+    }
+    return this._updates[index - (this._currentUpdate ? 1 : 0)];
   },
   
   /**
    * See nsIUpdateService.idl
    */
   get updateCount() {
+    this._updates.length + (this._currentUpdate ? 1 : 0);
   },
   
   /**
    * See nsIUpdateService.idl
    */
   get activeUpdate() {
+    return this._currentUpdate;
   },
   set activeUpdate(activeUpdate) {
+    this._currentUpdate = activeUpdate;
+    return activeUpdate;
   },
   
   /**
    * See nsIUpdateService.idl
    */
-  addUpdate: function(update) {
+  removeUpdateAtIndex: function(index) {
+    if (this._currentUpdate && index == 0) 
+      this._currentUpdate = null;
+    if (update == this._currentUpdate)
+      this._currentUpdate = null;
+    else {
+      for (var i = this._updates.length; i > 0; --i) {
+        if (this._updates[i] == update)
+          this._updates.splice(i, 1);
+      }
+    }
   },
-
-  /**
-   * See nsIUpdateService.idl
-   */
-  removeUpdate: function(update) {
-  },
-
-  /**
-   * See nsIUpdateService.idl
-   */
-  saveUpdates: function() {
-    if (!this._doc)
-      return;
-    
+  
+  _writeUpdatesToXMLFile: function(updates) {
     var fos = Components.classes["@mozilla.org/network/safe-file-output-stream;1"]
                         .createInstance(Components.interfaces.nsIFileOutputStream);
     var updatesDB = getFile(KEY_APPDIR, [FILE_UPDATES_DB]);
@@ -709,14 +730,60 @@ UpdateManager.prototype = {
       updatesDB.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
     fos.init(updatesDB, modeFlags, PERMS_FILE, 0);
     
-    var serializer = Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
-                               .createInstance(Components.interfaces.nsIDOMSerializer);
-    serializer.serializeToStream(this._data.documentElement, fos, null);
+    var documentPreamble = "<?xml version=\"1.0\"?><updates>\n";
+    var updatePreamble = "<update type=\"%TYPE%\" version=\"%VERSION%\" extensionversion=\"%EVERSION%\" detailsurl=\"%DETAILSURL%\" licenseurl=\"%LICENSEURL%\" installdate=\"%INSTALLDATE%\"";
+    var updateCloseWithChildren = ">\n";
+    var updateCloseWithoutChildren = "/>\n";
+    var patchFormat = "<patch type=\"%TYPE%\" url=\"%URL%\" hashfunction=\"%HASHFUNCTION%\" hashvalue=\"%HASHVALUE%\" size=\"%SIZE%\"/>\n";
+    var updateFooter = "</update>\n";
+    var documentFooter = "</updates>\n";
     
+    function writePatch(patch) {
+      var line = patchFormat.replace(/%TYPE%/, patch.type);
+      line = line.replace(/%URL%/, patch.url);
+      line = line.replace(/%HASHFUNCTION%/, patch.hashfunction);
+      line = line.replace(/%HASHVALUE%/, patch.hashvalue);
+      line = line.replace(/%SIZE%/, patch.size);
+      fos.write(line, line.length);
+    }
+    
+    function writeUpdate(update) {
+      var line = updatePreamble.replace(/%TYPE%/, update.type);
+      line = line.replace(/%VERSION%/, update.version);
+      line = line.replace(/%EVERSION%/, update.extensionversion);
+      line = line.replace(/%DETAILSURL%/, update.detailsurl);
+      line = line.replace(/%LICENSEURL%/, update.licenseurl);
+      line = line.replace(/%INSTALLDATE%/, update.installdate);
+      fos.write(line, line.length);
+      var updateClose = update.patchCount > 0 ? updateCloseWithChildren : updateCloseWithoutChildren;
+      fos.write(updateClose, updateClose.length);
+      for (var i = 0; i < update.patchCount; ++i)
+        writePatch(update.getPatchAt(i));
+      if (update.patchCount > 0);
+        fos.write(updateFooter, updateFooter.length);
+    }
+    
+    fos.write(documentPreamble, documentPreamble.length);
+    for (var i = 0; i < updates.length; ++i) 
+      writeUpdate(updates[i]);
+    fos.write(documentFooter, documentFooter.length);
+
     if (fos instanceof Components.interfaces.nsISafeOutputStream)
       fos.finish();
     else
       fos.close();
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  saveUpdates: function() {
+    if (this._currentUpdate) {
+      this._writeUpdatesToXMLFile([this._currentUpdate], 
+                                  getFile(KEY_APPDIR, [FILE_UPDATE_CURRENT]));
+    }
+    this._writeUpdatesToXMLFile(this._updates, 
+                                getFile(KEY_APPDIR, [FILE_UPDATES_DB]));
   },
   
   /**
