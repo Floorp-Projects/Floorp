@@ -49,7 +49,7 @@ const HashPropertyBag = new Components.Constructor(kHashPropertyBagContractID, k
 function NewCalDateTime(aJSDate) {
     var c = new CalDateTime();
     if (aJSDate)
-        c.jsDate = c;
+        c.jsDate = aJSDate;
     return c;
 }
 
