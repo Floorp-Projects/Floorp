@@ -77,7 +77,7 @@ protected:
   nsresult FindOSMimeInfoForType(const char * aMimeContentType, nsIURI * aURI, char ** aFileExtension, nsIMIMEInfo ** aMIMEInfo);
 
   /** Whether we're running on an OS that supports the *W registry functions */
-  static PRBool mIsNT;
+  static PRBool sIsNT;
   static nsresult GetMIMEInfoFromRegistry(const nsAFlatString& fileType, nsIMIMEInfo *pInfo);
   /// Looks up the type for the extension aExt and compares it to aType
   static PRBool typeFromExtEquals(const PRUnichar* aExt, const char *aType);
