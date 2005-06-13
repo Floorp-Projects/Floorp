@@ -49,6 +49,9 @@
 #include "nsIXTFXMLVisualWrapper.h"
 #include "nsIDocument.h"
 #include "nsXFormsModelElement.h"
+#include "nsPIDOMWindow.h"
+#include "nsIFocusController.h"
+#include "nsIScriptGlobalObject.h"
 
 /** This class is used to generate xforms-hint and xforms-help events.*/
 class nsXFormsHintHelpListener : public nsIDOMEventListener {
@@ -332,6 +335,71 @@ nsXFormsControlStubBase::HandleDefault(nsIDOMEvent *aEvent,
 
     if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Focus].name)) {
       TryFocus(aHandled);
+    } else if (type.Equals(NS_LITERAL_STRING("keypress"))) { 
+      nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
+      if (keyEvent) {
+        PRUint32 keycode;
+        keyEvent->GetKeyCode(&keycode);
+        if (keycode == nsIDOMKeyEvent::DOM_VK_TAB) {
+          PRBool extraKey = PR_FALSE;
+
+          keyEvent->GetAltKey(&extraKey);
+          if (extraKey) {
+            return NS_OK;
+          }
+
+          keyEvent->GetCtrlKey(&extraKey);
+          if (extraKey) {
+            return NS_OK;
+          }
+
+          keyEvent->GetMetaKey(&extraKey);
+          if (extraKey) {
+            return NS_OK;
+          }
+
+          keyEvent->GetShiftKey(&extraKey);
+          mPreventLoop = PR_TRUE;
+          if (extraKey) {
+            nsXFormsUtils::DispatchEvent(mElement, eEvent_Previous);
+          } else {
+            nsXFormsUtils::DispatchEvent(mElement, eEvent_Next);
+          }
+        }
+      }
+    } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Next].name) ||     
+               type.EqualsASCII(sXFormsEventsEntries[eEvent_Previous].name)) { 
+
+      // only continue this processing if xforms-next or xforms-previous were
+      // dispatched by the form and not as part of the 'tab' and 'shift+tab'
+      // processing
+      if (mPreventLoop) {
+        mPreventLoop = PR_FALSE;
+        return NS_OK;
+      }
+
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+      // element isn't in a document, yet?  Odd, indeed.  Well, if not in
+      // document, these two events have no meaning.
+      NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+      nsCOMPtr<nsPIDOMWindow> win = 
+                               do_QueryInterface(doc->GetScriptGlobalObject()); 
+                                               
+    
+      // An inelegant way to retrieve this to be sure, but we are
+      // guaranteed that the focus controller outlives us, so it
+      // is safe to hold on to it (since we can't die until it has
+      // died).
+      nsIFocusController *focusController = win->GetRootFocusController();
+      if (focusController &&
+          type.EqualsASCII(sXFormsEventsEntries[eEvent_Next].name)) {
+        focusController->MoveFocus(PR_TRUE, nsnull);
+      } else {
+        focusController->MoveFocus(PR_FALSE, nsnull);
+      }
     }
   }
   

@@ -143,7 +143,8 @@ public:
                               nsIXTFElement::NOTIFY_HANDLE_DEFAULT),
     kElementFlags(nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR),
     mHasParent(PR_FALSE),
-    mBindAttrsCount(0)
+    mBindAttrsCount(0),
+    mPreventLoop(PR_FALSE)
     {};
 
 protected:
@@ -164,6 +165,11 @@ protected:
 
   /** State that tells whether control has a parent or not */
   PRBool                              mHasParent;
+
+  /** State to prevent infinite loop when generating and handling xforms-next
+   *  and xforms-previous events
+   */
+  PRBool                              mPreventLoop;
 
   /**
    * Array of repeat-elements of which the control uses repeat-index.
