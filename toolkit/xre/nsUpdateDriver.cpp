@@ -54,6 +54,8 @@
 # include <windows.h>
 #elif defined(XP_UNIX)
 # include <unistd.h>
+#else
+# include <stdlib.h>
 #endif
 
 #ifdef PR_LOGGING
