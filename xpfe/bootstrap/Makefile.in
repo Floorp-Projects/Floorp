@@ -485,7 +485,10 @@ libs:: $(PROGRAM)
 	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Plug-Ins
-	cp -R $(DIST)/package/PrintPDE.plugin $(DIST)/$(APP_NAME).app/Contents/Plug-Ins/
+# Bug 297227: the next line only exists to repair broken depend builds, it can
+# go away once that bug has been closed for a while.
+	rm -rf $(DIST)/$(APP_NAME).app/Contents/Plug-Ins/PrintPDE.plugin
+	rsync -a --copy-unsafe-links $(DIST)/package/PrintPDE.plugin $(DIST)/$(APP_NAME).app/Contents/Plug-Ins
 	cp -RL $(DIST)/package/mozillaSuite.rsrc $(DIST)/$(APP_NAME).app/Contents/Resources/$(PROGRAM).rsrc
 	echo -n APPLMOZZ > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 

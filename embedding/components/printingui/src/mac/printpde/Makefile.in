@@ -79,9 +79,14 @@ export::
 endif
 
 libs::
-	$(PBBUILD) $(PROJECT_ARG) -target PrintPDE -buildstyle $(BUILDSTYLE) install $(PBBUILD_ARG)
+# Bug 297227: The next line doesn't need to stay around forever, only
+# long enough to clean up existing depend builds from when xcodebuild
+# was being instructed to "install"
+	if test -e build/UninstalledProducts ; then $(MAKE) clean ; rm -rf $(DIST)/package/PrintPDE.plugin ; fi
+
+	$(PBBUILD) $(PROJECT_ARG) -target PrintPDE -buildstyle $(BUILDSTYLE) $(PBBUILD_ARG)
 	mkdir -p $(DIST)/package
-	cp -R build/UninstalledProducts/PrintPDE.plugin $(DIST)/package/
+	$(INSTALL) build/PrintPDE.plugin $(DIST)/package
 
 clean clobber::
 	rm -rf build
