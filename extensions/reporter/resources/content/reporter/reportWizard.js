@@ -120,10 +120,14 @@ function setPrivacyPref(){
 }
 
 function initForm() {
+  var strbundle=document.getElementById("strings");
   var reportWizard = document.getElementById('reportWizard');
-  reportWizard.canRewind = false;
 
+  reportWizard.canRewind = false;
   document.getElementById('url').value = gURL;
+
+  // Change next button to "submit report"
+  reportWizard.getButton('next').label = strbundle.getString("submitReport") + ">";
 
   // We don't let the user go forward until they fufill certain requirements - see validateform()
   reportWizard.canAdvance = false;
