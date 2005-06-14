@@ -87,7 +87,7 @@ var gTypeAheadFind = {
 function initFindBar()
 {
   getBrowser().addEventListener("keypress", onBrowserKeyPress, false);
-  getBrowser().addEventListener("mousedown", onBrowserMouseDown, false);
+  getBrowser().addEventListener("mouseup", onBrowserMouseUp, false);
   
   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch);
@@ -113,7 +113,7 @@ function uninitFindBar()
    pbi.removeObserver(gTypeAheadFind.searchLinksPref, gTypeAheadFind);
 
    getBrowser().removeEventListener("keypress", onBrowserKeyPress, false);
-   getBrowser().removeEventListener("mousedown", onBrowserMouseDown, false);
+   getBrowser().removeEventListener("mouseup", onBrowserMouseUp, false);
 }
 
 function toggleHighlight(aHighlight)
@@ -388,7 +388,7 @@ function onFindBarBlur()
   changeSelectionColor(false);
 }
 
-function onBrowserMouseDown(evt)
+function onBrowserMouseUp(evt)
 {
   var findToolbar = document.getElementById("FindToolbar");
   if (!findToolbar.hidden && gFindMode != FIND_NORMAL)
