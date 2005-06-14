@@ -1058,6 +1058,7 @@ case "$host" in
     HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     HOST_BIN_SUFFIX=.exe
+    MOZ_FIX_LINK_PATHS='-Wl,$(DIST)/bin'
     ;;
 
 *-osf*)
