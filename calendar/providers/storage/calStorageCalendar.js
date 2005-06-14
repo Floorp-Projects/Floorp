@@ -979,10 +979,22 @@ calStorageCalendar.prototype = {
         this.mSelectAttendeesForItem = createStatement(
             this.mDBTwo,
             "SELECT * FROM cal_attendees " +
+            "WHERE item_id = :item_id AND recurrence_id IS NULL"
+            );
+
+        this.mSelectAttendeesForItemWithRecurrenceId = createStatement(
+            this.mDBTwo,
+            "SELECT * FROM cal_attendees " +
             "WHERE item_id = :item_id AND recurrence_id = :recurrence_id AND recurrence_id_tz = :recurrence_id_tz"
             );
 
         this.mSelectPropertiesForItem = createStatement(
+            this.mDBTwo,
+            "SELECT * FROM cal_properties " +
+            "WHERE item_id = :item_id AND recurrence_id IS NULL"
+            );
+
+        this.mSelectPropertiesForItemWithRecurrenceId = createStatement(
             this.mDBTwo,
             "SELECT * FROM cal_properties " +
             "WHERE item_id = :item_id AND recurrence_id = :recurrence_id AND recurrence_id_tz = :recurrence_id_tz"
@@ -1143,24 +1155,40 @@ calStorageCalendar.prototype = {
     
     getAdditionalDataForItem: function (item, flags) {
         if (flags & CAL_ITEM_FLAG_HAS_ATTENDEES) {
-            this.mSelectAttendeesForItem.params.item_id = item.id;
-            this.setDateParamHelper(this.mSelectAttendeesForItem.params, "recurrence_id", item.recurrenceId);
-            while (this.mSelectAttendeesForItem.step()) {
-                var attendee = this.getAttendeeFromRow(this.mSelectAttendeesForItem.row);
+            var selectItem = null;
+            if (item.recurrenceId == null)
+                selectItem = this.mSelectAttendeesForItem;
+            else {
+                selectItem = this.mSelectAttendeesForItemWithRecurrenceId;
+                this.setDateParamHelper(selectItem.params, "recurrence_id", item.recurrenceId);
+            }
+
+            selectItem.params.item_id = item.id;
+
+            while (selectItem.step()) {
+                var attendee = this.getAttendeeFromRow(selectItem.row);
                 item.addAttendee(attendee);
             }
-            this.mSelectAttendeesForItem.reset();
+            selectItem.reset();
         }
 
         var row;
         if (flags & CAL_ITEM_FLAG_HAS_PROPERTIES) {
-            this.mSelectPropertiesForItem.params.item_id = item.id;
-            this.setDateParamHelper(this.mSelectPropertiesForItem.params, "recurrence_id", item.recurrenceId);
-            while (this.mSelectPropertiesForItem.step()) {
-                row = this.mSelectPropertiesForItem.row;
+            var selectItem = null;
+            if (item.recurrenceId == null)
+                selectItem = this.mSelectPropertiesForItem;
+            else {
+                selectItem = this.mSelectPropertiesForItemWithRecurrenceId;
+                this.setDateParamHelper(selectItem.params, "recurrence_id", item.recurrenceId);
+            }
+                
+            selectItem.params.item_id = item.id;
+            
+            while (selectItem.step()) {
+                row = selectItem.row;
                 item.setProperty (row.key, row.value);
             }
-            this.mSelectPropertiesForItem.reset();
+            selectItem.reset();
         }
 
         var i;

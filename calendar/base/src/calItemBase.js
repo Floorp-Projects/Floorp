@@ -431,6 +431,7 @@ calItemBase.prototype = {
         "ATTENDEE": true,
         "ORGANIZER": true,
         "RECURRENCE-ID": true,
+        "ALARMTIME": true,
     },
 
     icsBasePropMap: [
