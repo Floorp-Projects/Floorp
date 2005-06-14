@@ -778,21 +778,25 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
 
   // See if the frame is being relatively positioned or absolutely
   // positioned
-  PRBool isTopMostView = display->IsPositioned();
-
-  // Make sure z-index is correct
-  const nsStylePosition* position = aStyleContext->GetStylePosition();
+  PRBool isPositioned = display->IsPositioned();
 
   PRInt32 zIndex = 0;
   PRBool  autoZIndex = PR_FALSE;
 
-  if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
-    zIndex = position->mZIndex.GetIntValue();
-  } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
+  if (!isPositioned) {
     autoZIndex = PR_TRUE;
+  } else {
+    // Make sure z-index is correct
+    const nsStylePosition* position = aStyleContext->GetStylePosition();
+
+    if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
+      zIndex = position->mZIndex.GetIntValue();
+    } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
+      autoZIndex = PR_TRUE;
+    }
   }
 
-  vm->SetViewZIndex(aView, autoZIndex, zIndex, isTopMostView);
+  vm->SetViewZIndex(aView, autoZIndex, zIndex, isPositioned);
 
   SyncFrameViewGeometryDependentProperties(aPresContext, aFrame, aStyleContext, aView, aFlags);
 }
