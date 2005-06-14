@@ -202,9 +202,9 @@ function saveDialog(event)
         var alarmUnits = document.getElementById("alarm-length-units").selectedItem.value;
         var alarmRelated = document.getElementById("alarm-trigger-relation").selectedItem.value;
 
-        event.setProperty("alarmLength",  alarmLength);
-        event.setProperty("alarmUnits",   alarmUnits);
-        event.setProperty("alarmRelated", alarmRelated);
+        setEventProperty(event, "alarmLength",  alarmLength);
+        setEventProperty(event, "alarmUnits",   alarmUnits);
+        setEventProperty(event, "alarmRelated", alarmRelated);
 
         var alarmTime = null;
 
@@ -228,7 +228,7 @@ function saveDialog(event)
 
         alarmTime.normalize();
 
-        event.alarmTime = alarmTime;
+        setEventProperty(event, "alarmTime", alarmTime);
     }
 
     //dump(event.icalString + "\n");
@@ -318,23 +318,24 @@ function editRecurrence()
 /* utility functions */
 function setEventProperty(event, propertyName, value)
 {
+    dump(propertyName + " = " + value + "\n");
     switch(propertyName) {
-    case 'title':
+    case "title":
         if (value != event.title)
             event.title = value;
         break;
-    case 'isAllDay':
+    case "isAllDay":
         if (value != event.isAllDay)
             event.isAllDay = value;
         break;
-    case 'startDate':
+    case "startDate":
         if (value.compare(event.startDate) != 0) {
             if (event.isAllDay)
                 value.isDate = true;
             event.startDate = value;
         }
         break;
-    case 'endDate':
+    case "endDate":
         if (value.compare(event.endDate) != 0) {
             if (event.isAllDay) {
                 value.isDate = true;
@@ -343,6 +344,12 @@ function setEventProperty(event, propertyName, value)
             }
             event.endDate = value;
         }
+        break;
+    case "alarmTime":
+        if ((value && !event.alarmTime) ||
+            (!value && event.alarmTime) ||
+            (value.compare(event.alarmTime) != 0))
+            event.alarmTime = value;
         break;
     default:
         if (!value || value == "")
