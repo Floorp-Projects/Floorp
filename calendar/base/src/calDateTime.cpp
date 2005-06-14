@@ -505,6 +505,9 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
 NS_IMETHODIMP
 calDateTime::Compare(calIDateTime *aOther, PRInt32 *aResult)
 {
+    if (!aOther)
+        return NS_ERROR_INVALID_ARG;
+
     PRBool otherIsDate = PR_FALSE;
     aOther->GetIsDate(&otherIsDate);
 
