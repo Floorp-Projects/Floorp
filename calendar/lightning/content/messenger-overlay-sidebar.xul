@@ -15,7 +15,6 @@
 <script type="application/x-javascript" src="chrome://lightning/content/lightning-utils.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/messenger-overlay-sidebar.js"/>
-<script type="application/x-javascript" src="chrome://lightning/content/agenda-tree.js"/>
 
 <vbox id="folderPaneBox">
   <commandset id="calendar_commands">
@@ -41,43 +40,13 @@
         <tab label="Calendars"/>
       </tabs>
       <tabpanels flex="1">
-        <vbox>
-          <hbox>
-            <spacer flex="1"/>
-            <label value="View:"/>
-            <menulist label="View" oncommand="updateAgendaView(this);">
-              <menupopup>
-                <menuitem label="All"/>
-                <menuitem label="Events"/>
-                <menuitem label="Tasks"/>
-                <menuitem label="Reminders"/>
-                <menuseparator/>
-                <menuitem label="Home"/>
-                <menuitem label="Work"/>
-                <menuseparator/>
-                <menuitem value="customize" label="Customize..."/>
-              </menupopup>
-            </menulist>
-            <spacer/>
-          </hbox>
-          <deck id="agenda-viewcustomize-deck" selectedIndex="0" flex="1">
-            <tree id="agenda-tree" hidecolumnpicker="true" flex="1">
-              <treecols>
-                <treecol id="col-agenda-item" primary="true" label="Item" flex="3"/>
-                <treecol id="col-agenda-when" label="" flex="1"/>
-              </treecols>
-              <treechildren/>
-            </tree>
-            <label value="Customize yer views!"/>
-          </deck>
-        </vbox> <!-- end of agenda tab panel -->
-    
+        <vbox id="agenda-tab-panel"/>    
         <vbox flex="1">
           <hbox>
             <button label="New..." oncommand="ltnNewCalendar();"/>
-            <button id="cal-sidebar-edit-calendar" label="Edit..." disabled="true" oncommand="ltnEditSelectedCalendar();"/>
+            <button id="cal-sidebar-edit-calendar" label="Edit..." oncommand="ltnEditSelectedCalendar();"/>
             <spacer orient="horizontal" flex="5"/>
-            <button id="cal-sidebar-delete-calendar" label="Delete" disabled="true" oncommand="ltnDeleteSelectedCalendar();"/>
+            <button id="cal-sidebar-delete-calendar" label="Delete" oncommand="ltnDeleteSelectedCalendar();"/>
           </hbox>
           <tree id="calendarTree" hidecolumnpicker="true" seltype="single" onfocus="selectedCalendarPane(event)" flex="1" onselect="ltnSidebarCalendarSelected(this);" context="calendartree-context-menu">
             <treecols>
