@@ -3869,22 +3869,23 @@ var gHomeButton = {
 };
 
 function nsContextMenu( xulMenu ) {
-    this.target         = null;
-    this.menu           = null;
-    this.onTextInput    = false;
-    this.onKeywordField = false;
-    this.onImage        = false;
-    this.onLink         = false;
-    this.onMailtoLink   = false;
-    this.onSaveableLink = false;
-    this.onMetaDataItem = false;
-    this.onMathML       = false;
-    this.link           = false;
-    this.inFrame        = false;
-    this.hasBGImage     = false;
-    this.isTextSelected = false;
-    this.inDirList      = false;
-    this.shouldDisplay  = true;
+    this.target            = null;
+    this.menu              = null;
+    this.onTextInput       = false;
+    this.onKeywordField    = false;
+    this.onImage           = false;
+    this.onLink            = false;
+    this.onMailtoLink      = false;
+    this.onSaveableLink    = false;
+    this.onMetaDataItem    = false;
+    this.onMathML          = false;
+    this.link              = false;
+    this.inFrame           = false;
+    this.hasBGImage        = false;
+    this.isTextSelected    = false;
+    this.isContentSelected = false;
+    this.inDirList         = false;
+    this.shouldDisplay     = true;
 
     // Initialize new menu.
     this.initMenu( xulMenu );
@@ -3904,6 +3905,7 @@ nsContextMenu.prototype = {
         this.setTarget( document.popupNode );
         
         this.isTextSelected = this.isTextSelection();
+        this.isContentSelected = this.isContentSelection();
 
         // Initialize (disable/remove) menu items.
         this.initItems();
@@ -3930,20 +3932,20 @@ nsContextMenu.prototype = {
         // Forward determined by canGoForward broadcaster.
         this.setItemAttrFromNode( "context-forward", "disabled", "canGoForward" );
         
-        this.showItem( "context-back", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
-        this.showItem( "context-forward", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
+        this.showItem( "context-back", !( this.isContentSelected || this.onLink || this.onImage || this.onTextInput ) );
+        this.showItem( "context-forward", !( this.isContentSelected || this.onLink || this.onImage || this.onTextInput ) );
 
-        this.showItem( "context-reload", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
+        this.showItem( "context-reload", !( this.isContentSelected || this.onLink || this.onImage || this.onTextInput ) );
         
-        this.showItem( "context-stop", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
-        this.showItem( "context-sep-stop", !( this.isTextSelected || this.onLink || this.onTextInput || this.onImage ) );
+        this.showItem( "context-stop", !( this.isContentSelected || this.onLink || this.onImage || this.onTextInput ) );
+        this.showItem( "context-sep-stop", !( this.isContentSelected || this.onLink || this.onTextInput || this.onImage ) );
 
         // XXX: Stop is determined in navigator.js; the canStop broadcaster is broken
         //this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
     },
     initSaveItems : function () {
-        this.showItem( "context-savepage", !( this.inDirList || this.isTextSelected || this.onTextInput || this.onLink || this.onImage ));
-        this.showItem( "context-sendpage", !( this.inDirList || this.isTextSelected || this.onTextInput || this.onLink || this.onImage ));
+        this.showItem( "context-savepage", !( this.inDirList || this.isContentSelected || this.onTextInput || this.onLink || this.onImage ));
+        this.showItem( "context-sendpage", !( this.inDirList || this.isContentSelected || this.onTextInput || this.onLink || this.onImage ));
 
         // Save link depends on whether we're in a link.
         this.showItem( "context-savelink", this.onSaveableLink );
@@ -3958,12 +3960,12 @@ nsContextMenu.prototype = {
     },
     initViewItems : function () {
         // View source is always OK, unless in directory listing.
-        this.showItem( "context-viewpartialsource-selection", this.isTextSelected );
-        this.showItem( "context-viewpartialsource-mathml", this.onMathML && !this.isTextSelected );
-        this.showItem( "context-viewsource", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
-        this.showItem( "context-viewinfo", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
+        this.showItem( "context-viewpartialsource-selection", this.isContentSelected );
+        this.showItem( "context-viewpartialsource-mathml", this.onMathML && !this.isContentSelected );
+        this.showItem( "context-viewsource", !( this.inDirList || this.onImage || this.isContentSelected || this.onLink || this.onTextInput ) );
+        this.showItem( "context-viewinfo", !( this.inDirList || this.onImage || this.isContentSelected || this.onLink || this.onTextInput ) );
 
-        this.showItem( "context-sep-properties", !( this.inDirList || this.isTextSelected || this.onTextInput ) );
+        this.showItem( "context-sep-properties", !( this.inDirList || this.isContentSelected || this.onTextInput ) );
         // Set As Wallpaper depends on whether an image was clicked on, and only works if we have a shell service.
         var haveSetWallpaper = false;
 #ifdef HAVE_SHELL_SERVICE
@@ -3982,13 +3984,13 @@ nsContextMenu.prototype = {
         this.showItem( "context-viewimage", this.onImage  && !this.onStandaloneImage );
 
         // View background image depends on whether there is one.
-        this.showItem( "context-viewbgimage", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
-        this.showItem( "context-sep-viewbgimage", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
+        this.showItem( "context-viewbgimage", !( this.inDirList || this.onImage || this.isContentSelected || this.onLink || this.onTextInput ) );                                        
+        this.showItem( "context-sep-viewbgimage", !( this.inDirList || this.onImage || this.isContentSelected || this.onLink || this.onTextInput ) ); 
         this.setItemAttr( "context-viewbgimage", "disabled", this.hasBGImage ? null : "true");
     },
     initMiscItems : function () {
         // Use "Bookmark This Link" if on a link.
-        this.showItem( "context-bookmarkpage", !( this.isTextSelected || this.onTextInput || this.onLink || this.onImage ) );
+        this.showItem( "context-bookmarkpage", !( this.isContentSelected || this.onTextInput || this.onLink || this.onImage ) );
         this.showItem( "context-bookmarklink", this.onLink && !this.onMailtoLink );
         this.showItem( "context-searchselect", this.isTextSelected );
         this.showItem( "context-keywordfield", this.onTextInput && this.onKeywordField );
@@ -4030,12 +4032,12 @@ nsContextMenu.prototype = {
         this.showItem( "context-undo", this.onTextInput );
         this.showItem( "context-sep-undo", this.onTextInput );
         this.showItem( "context-cut", this.onTextInput );
-        this.showItem( "context-copy", this.isTextSelected || this.onTextInput );
+        this.showItem( "context-copy", this.isContentSelected || this.onTextInput );
         this.showItem( "context-paste", this.onTextInput );
         this.showItem( "context-delete", this.onTextInput );
         this.showItem( "context-sep-paste", this.onTextInput );
         this.showItem( "context-selectall", !( this.onLink || this.onImage ) );
-        this.showItem( "context-sep-selectall", this.isTextSelected );
+        this.showItem( "context-sep-selectall", this.isContentSelected );
 
         // XXX dr
         // ------
@@ -4558,6 +4560,25 @@ nsContextMenu.prototype = {
         return result;
     },
     
+    // Returns true if anything is selected.
+    isContentSelection : function() {
+        var focusedWindow = document.commandDispatcher.focusedWindow;
+        var selection = focusedWindow.getSelection();
+        if (selection.rangeCount == 0) {
+            return false;
+        }
+        var rangeFragment = selection.getRangeAt(0).cloneContents();
+        if (rangeFragment.childNodes.length == 0) {
+            return false;
+        }
+        // The selection object may also report an empty text node if there is no selection.
+        var node = rangeFragment.childNodes[0];
+        if (node.nodeType == node.TEXT_NODE && node.nodeValue.length == 0) {
+            return false;
+        }
+        return true;
+    },
+
     searchSelected : function( charlen ) {
         var focusedWindow = document.commandDispatcher.focusedWindow;
         var searchStr = focusedWindow.getSelection();
