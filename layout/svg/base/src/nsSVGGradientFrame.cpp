@@ -973,11 +973,14 @@ nsSVGRadialGradientFrame::PrivateGetFx(nsIDOMSVGLength * *aFx)
       aRNgrad->PrivateGetFx(aFx);
       return NS_OK;
     }
-    // There are no gradients in the list with our type --  the spec
-    // states that if there is no explicit fx value, we return the cx value
-    // see http://www.w3.org/TR/SVG11/pservers.html#RadialGradients
-    return PrivateGetCx(aFx);
+    // There are no gradients in the list with our type -- fall through
+    // and return our default value
   }
+  // See if the value was explicitly set --  the spec
+  // states that if there is no explicit fx value, we return the cx value
+  // see http://www.w3.org/TR/SVG11/pservers.html#RadialGradients
+  if (!mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::fx))
+    return PrivateGetCx(aFx);
   // No, return the values
   nsCOMPtr<nsIDOMSVGAnimatedLength> aLen;
   aRgrad->GetFx(getter_AddRefs(aLen));
@@ -1002,11 +1005,14 @@ nsSVGRadialGradientFrame::PrivateGetFy(nsIDOMSVGLength * *aFy)
       aRNgrad->PrivateGetFy(aFy);
       return NS_OK;
     }
-    // There are no gradients in the list with our type -- the spec
-    // states that if there is no explicit fy value, we return the cy value
-    // see http://www.w3.org/TR/SVG11/pservers.html#RadialGradients
-    return PrivateGetCy(aFy);
+    // There are no gradients in the list with our type -- fall through
+    // and return our default value
   }
+  // See if the value was explicitly set --  the spec
+  // states that if there is no explicit fy value, we return the cy value
+  // see http://www.w3.org/TR/SVG11/pservers.html#RadialGradients
+  if (!mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::fy))
+    return PrivateGetCy(aFy);
   // No, return the values
   nsCOMPtr<nsIDOMSVGAnimatedLength> aLen;
   aRgrad->GetFy(getter_AddRefs(aLen));
