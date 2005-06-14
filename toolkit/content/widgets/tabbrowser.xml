@@ -280,7 +280,6 @@
             mTab: aTab,
             mBrowser: aBrowser,
             mBlank: aStartsBlank,
-            mIcon: null,
             mLastURI: null,
 
             onProgressChange : function (aWebProgress, aRequest,
@@ -308,9 +307,6 @@
               const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
               const nsIChannel = Components.interfaces.nsIChannel;
 
-              if (aStateFlags & nsIWebProgressListener.STATE_START)
-                  this.mBrowser.mFavIconURL = null;
-
               if (aStateFlags & nsIWebProgressListener.STATE_START &&
                   aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
                 // It's okay to clear what the user typed when we start
@@ -323,9 +319,8 @@
 
                 if (!this.mBlank) {
                   this.mTab.setAttribute("busy", "true");
+                  this.mTabBrowser.updateIcon(this.mTab);
                   this.mTab.label = this.mTabBrowser.mStringBundle.getString("tabs.loading");
-                  this.mTab.removeAttribute("image");
-                  this.mIcon = null;
 
                   if (this.mTabBrowser.mCurrentTab == this.mTab)
                     this.mTabBrowser.mIsBusy = true;
@@ -333,28 +328,26 @@
               }
               else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
                        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-                // The document is done loading, it's okay to clear
-                // the value again.
-                if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
+                if (aWebProgress.DOMWindow == this.mBrowser.contentWindow) {
+                  // The document is done loading, it's okay to clear
+                  // the value again.
                   this.mBrowser.userTypedClear = false;
+
+                  if (!this.mBrowser.mIconURL)
+                    this.mTabBrowser.useDefaultIcon(this.mTab);
+                }
 
                 if (this.mBlank)
                   this.mBlank = false;
 
                 this.mTab.removeAttribute("busy");
+                this.mTabBrowser.updateIcon(this.mTab);
 
                 var location = aRequest.QueryInterface(nsIChannel).URI;
 
                 // For keyword URIs clear the user typed value since they will be changed into real URIs
                 if (location.scheme == "keyword")
                   this.mBrowser.userTypedValue = null;
-
-                if (this.mTabBrowser.shouldLoadFavIcon(location)) {
-                    if (this.mIcon)
-                      this.mTab.setAttribute("image", this.mIcon);
-                    else
-                      this.mTabBrowser.loadFavIcon(location, "image", this.mTab);
-                }
 
                 if (this.mTab.label == this.mTabBrowser.mStringBundle.getString("tabs.loading"))
                   this.mTabBrowser.setTabTitle(this.mTab);
@@ -377,6 +370,9 @@
               // The document loaded correctly, clear the value if we should
               if (this.mBrowser.userTypedClear)
                 this.mBrowser.userTypedValue = null;
+
+              if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
+                this.mTabBrowser.setIcon(this.mTab, null);
 
               if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
@@ -412,13 +408,6 @@
               }
             },
 
-            setIcon : function(aURI)
-            {
-              this.mIcon = aURI;
-              if (!this.mTab.hasAttribute("busy"))
-                this.mTab.setAttribute("image", aURI);
-            },
-
             QueryInterface : function(aIID)
             {
               if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
@@ -432,12 +421,34 @@
         </body>
       </method>
       
-      <method name="buildFavIconString">
+      <method name="setIcon">
+        <parameter name="aTab"/>
         <parameter name="aURI"/>
         <body>
           <![CDATA[
-            var end = (aURI.port == -1) ? "/favicon.ico" : (":" + aURI.port + "/favicon.ico");
-            return aURI.scheme + "://" + aURI.host + end;
+            var browser = this.getBrowserForTab(aTab);
+            browser.mIconURL = aURI;
+
+            this.updateIcon(aTab);
+
+            for (var i = 0; i < this.mProgressListeners.length; i++) {
+              var p = this.mProgressListeners[i];
+              if ('onLinkIconAvailable' in p)
+                p.onLinkIconAvailable(browser);
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateIcon">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            var browser = this.getBrowserForTab(aTab);
+            if (!aTab.hasAttribute("busy") && browser.mIconURL)
+              aTab.setAttribute("image", browser.mIconURL);
+            else
+              aTab.removeAttribute("image");
           ]]>
         </body>
       </method>
@@ -453,19 +464,20 @@
         </body>
       </method>
 
-      <method name="loadFavIcon">
-        <parameter name="aURI"/>
-        <parameter name="aAttr"/>
-        <parameter name="aElt"/>
+      <method name="useDefaultIcon">
+        <parameter name="aTab"/>
         <body>
           <![CDATA[
-            var iconURL;
-            if (this.contentDocument instanceof ImageDocument)
-              iconURL = this.currentURI.spec;
-            else
-              iconURL = this.buildFavIconString(aURI);
-            if (!this.isFavIconKnownMissing(iconURL))
-              aElt.setAttribute(aAttr, iconURL);
+            var browser = this.getBrowserForTab(aTab);
+            if (browser.contentDocument instanceof ImageDocument) {
+              if (this.mPrefs.getBoolPref("browser.chrome.site_icons"))
+                this.setIcon(aTab, browser.currentURI.spec);
+            }
+            else if (this.shouldLoadFavIcon(browser.currentURI)) {
+              var url = browser.currentURI.prePath + "/favicon.ico";
+              if (!this.isIconKnownMissing(url))
+                this.setIcon(aTab, url);
+            }
           ]]>
         </body>
       </method>
@@ -508,7 +520,7 @@
         </body>
       </method>
 
-      <method name="isFavIconKnownMissing">
+      <method name="isIconKnownMissing">
         <parameter name="key"/>
         <body>
           <![CDATA[
@@ -638,13 +650,6 @@
                 p.onLocationChange(webProgress, null, loc);
                 if (securityUI)
                   p.onSecurityChange(webProgress, null, securityUI.state);
-                var listener = this.mTabListeners[this.mTabContainer.selectedIndex];
-                if (listener.mIcon) {
-                  if (this.isFavIconKnownMissing(listener.mIcon))
-                    listener.mIcon = null;
-                  else if ('onLinkIconAvailable' in p)
-                    p.onLinkIconAvailable(newBrowser, listener.mIcon);
-                }
               }
             }
             this.mCurrentBrowser.userTypedClear = userTypedClear;
@@ -797,27 +802,9 @@
             // no browser? no favicon.
             if (browserIndex == -1)
               return;
-
-            var listener = tabBrowser.mTabListeners[browserIndex];
-            // there's no tab listener for non-tabbed mode browser 0
-
-            if (tabBrowser.isFavIconKnownMissing(href)) {
-              if (listener)
-                listener.mIcon = null;
-              return;
-            }
-
-            if (listener)
-              listener.setIcon(href);
-
-            if (tabBrowser.mProgressListeners) {
-              var targetBrowser = tabBrowser.getBrowserAtIndex(browserIndex);
-              for (i = 0; i < tabBrowser.mProgressListeners.length; i++) {
-                var p = tabBrowser.mProgressListeners[i];
-                if (p && 'onLinkIconAvailable' in p)
-                  p.onLinkIconAvailable(targetBrowser, href);
-              }
-            }
+      
+            var tab = tabBrowser.mTabContainer.childNodes[browserIndex];
+            tabBrowser.setIcon(tab, href);
           ]]>
         </body>
       </method>
@@ -923,11 +910,7 @@
             this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
 
             this.setTabTitle(this.mCurrentTab);
-
-            // Hook up our favicon.
-            var uri = this.mCurrentBrowser.currentURI;
-            if (this.shouldLoadFavIcon(uri))
-              this.loadFavIcon(uri, "image", this.mCurrentTab);
+            this.setIcon(this.mCurrentTab, this.mCurrentBrowser.mIconURL);
 
             var filter;
             if (this.mTabFilters.length > 0) {

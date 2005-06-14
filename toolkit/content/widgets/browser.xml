@@ -165,7 +165,7 @@
               catch (e) {
               }
             }
-            this.mFavIconURL = null;
+            this.mIconURL = null;
             this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, aPostData, null);
           ]]>
         </body>
@@ -535,7 +535,7 @@
         false
       </field>
 
-      <field name="mFavIconURL">null</field>
+      <field name="mIconURL">null</field>
 
       <field name="mDestroyed">false</field>
 
