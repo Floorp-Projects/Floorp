@@ -2525,7 +2525,8 @@ nsListControlFrame::UpdateInListState(nsIDOMEvent* aEvent)
     return;
 
   nsPoint pt = nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(aEvent, this);
-  if (pt.y >= GetScrollableView()->View()->GetBounds().y) {
+  nsRect borderInnerEdge = GetScrollableView()->View()->GetBounds();
+  if (pt.y >= borderInnerEdge.y && pt.y < borderInnerEdge.YMost()) {
     mItemSelectionStarted = PR_TRUE;
   }
 }
