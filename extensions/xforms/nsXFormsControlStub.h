@@ -143,8 +143,8 @@ public:
                               nsIXTFElement::NOTIFY_HANDLE_DEFAULT),
     kElementFlags(nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR),
     mHasParent(PR_FALSE),
-    mBindAttrsCount(0),
-    mPreventLoop(PR_FALSE)
+    mPreventLoop(PR_FALSE),
+    mBindAttrsCount(0)
     {};
 
 protected:
