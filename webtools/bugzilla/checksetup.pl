@@ -53,7 +53,7 @@
 #     - set defaults for local configuration variables
 #     - create and populate the data directory after installation
 #     - set the proper rights for the *.cgi, *.html, etc. files
-#     - verify that the code can access MySQL
+#     - verify that the code can access the database server
 #     - creates the database 'bugs' if it does not exist
 #     - creates the tables inside the database if they don't exist
 #     - automatically changes the table definitions if they are from
@@ -675,8 +675,8 @@ LocalVar('db_host', q[
 # How to access the SQL database:
 #
 $db_host = 'localhost';         # where is the database?
-$db_name = 'bugs';              # name of the MySQL database
-$db_user = 'bugs';              # user to attach to the MySQL database
+$db_name = 'bugs';              # name of the SQL database
+$db_user = 'bugs';              # user to attach to the SQL database
 
 # Sometimes the database server is running on a non-standard
 # port. If that's the case for your database server, set this
@@ -1490,8 +1490,8 @@ if ($my_db_check) {
     printf("Checking for %15s %-9s ", $sql_server, "(v$sql_want)") unless $silent;
     my $sql_vers = $dbh->bz_server_version;
 
-    # Check what version of MySQL is installed and let the user know
-    # if the version is too old to be used with Bugzilla.
+    # Check what version of the database server is installed and let
+    # the user know if the version is too old to be used with Bugzilla.
     if ( vers_cmp($sql_vers,$sql_want) > -1 ) {
         print "ok: found v$sql_vers\n" unless $silent;
     } else {
