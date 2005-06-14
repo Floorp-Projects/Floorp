@@ -231,6 +231,10 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
   #error need_to_define_your_file_path_separator_and_illegal_characters
 #endif
 
+#ifdef AIX
+#include <sys/param.h>
+#endif
+
 #ifndef MAXPATHLEN
 #ifdef _MAX_PATH
 #define MAXPATHLEN _MAX_PATH
