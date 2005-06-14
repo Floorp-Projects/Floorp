@@ -162,7 +162,7 @@ langpack-%:
 	@$(MAKE) libs-$(AB_CD)
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
 	  -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc \
-	  -I$(LOCALE_SRCDIR)/defines.inc $(srcdir)/generic/install.rdf >
+	  -I$(LOCALE_SRCDIR)/defines.inc $(srcdir)/generic/install.rdf > \
 	  $(FINAL_TARGET)/install.rdf
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
 	  $(ZIP) -r9D $(LANGPACK_FILE) install.rdf chrome
