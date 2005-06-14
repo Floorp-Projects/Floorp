@@ -3979,7 +3979,7 @@ nsContextMenu.prototype = {
           this.setItemAttr( "context-setWallpaper", "disabled", (("complete" in this.target) && !this.target.complete) ? "true" : null );
 
         // View Image depends on whether an image was clicked on.
-        this.showItem( "context-viewimage", this.onImage );
+        this.showItem( "context-viewimage", this.onImage  && !this.onStandaloneImage );
 
         // View background image depends on whether there is one.
         this.showItem( "context-viewbgimage", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
@@ -4070,6 +4070,7 @@ nsContextMenu.prototype = {
         }
         // Initialize contextual info.
         this.onImage    = false;
+        this.onStandaloneImage = false;
         this.onMetaDataItem = false;
         this.onTextInput = false;
         this.onKeywordField = false;
@@ -4089,6 +4090,9 @@ nsContextMenu.prototype = {
                   this.target.currentURI != null ) {
                 this.onImage = true;
                 this.imageURL = this.target.currentURI.spec;
+
+                if ( this.target.ownerDocument instanceof ImageDocument)
+                   this.onStandaloneImage = true;
              } else if ( this.target.localName.toUpperCase() == "INPUT") {
                type = this.target.getAttribute("type");
                this.onTextInput = this.isTargetATextBox(this.target);
