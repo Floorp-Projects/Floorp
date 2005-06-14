@@ -85,7 +85,13 @@
         
         [% col_idx = 1 - col_idx %]
         <td class="[% classes.$row_idx.$col_idx %]">
-          [% col FILTER html FILTER replace('^ $','&nbsp;') %]
+          [% IF col_field == 'bug_status' %]
+            [% status_descs.$col FILTER html FILTER replace('^ $','&nbsp;') %]
+          [% ELSIF col_field == 'resolution' %]
+            [% resolution_descs.$col FILTER html FILTER replace('^ $','&nbsp;') %]
+          [% ELSE %]
+            [% col FILTER html FILTER replace('^ $','&nbsp;') %]
+          [% END %]
         </td>
       [% END %]
       <td class="ttotal">
@@ -100,7 +106,13 @@
     [% row_idx = 1 - row_idx %]
     <tr>
       <td class="[% classes.$row_idx.$col_idx %]" align="right">
-        [% row FILTER html FILTER replace('^ $','&nbsp;') %]
+        [% IF row_field == 'bug_status' %]
+          [% status_descs.$row FILTER html FILTER replace('^ $','&nbsp;') %]
+        [% ELSIF row_field == 'resolution' %]
+          [% resolution_descs.$row FILTER html FILTER replace('^ $','&nbsp;') %]
+        [% ELSE %]
+          [% row FILTER html FILTER replace('^ $','&nbsp;') %]
+        [% END %]
       </td>
       [% FOREACH col = col_names %]
         [% row_total = row_total + data.$tbl.$col.$row %]
