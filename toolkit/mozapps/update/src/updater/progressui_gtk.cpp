@@ -39,11 +39,11 @@
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include <unistd.h>
-#include <string.h>
-#include <stdio.h>
+#include "progressui.h"
+#include "readstrings.h"
+#include "errors.h"
 
 #define TIMER_INTERVAL 100
-#define MAX_TEXT_LEN 200
 
 static float    sProgressVal;  // between 0 and 100
 static gboolean sQuit = FALSE;
@@ -54,53 +54,6 @@ static GtkWidget *sLabel;
 static GtkWidget *sProgressBar;
 
 static const char *sProgramPath;
-
-// stack based FILE wrapper to ensure that fclose is called.
-class AutoFILE {
-public:
-  AutoFILE(FILE *fp) : fp_(fp) {}
-  ~AutoFILE() { if (fp_) fclose(fp_); }
-  operator FILE *() { return fp_; }
-private:
-  FILE *fp_;
-};
-
-// very basic parser for updater.ini
-static gboolean
-ReadStrings(char title[MAX_TEXT_LEN], char info[MAX_TEXT_LEN])
-{
-  char path[PATH_MAX];
-  snprintf(path, sizeof(path), "%s.ini", sProgramPath);
-
-  AutoFILE fp = fopen(path, "r");
-  if (!fp)
-    return FALSE;
-
-  if (!fgets(title, MAX_TEXT_LEN, fp))
-    return FALSE;
-  if (!fgets(title, MAX_TEXT_LEN, fp))
-    return FALSE;
-  if (!fgets(info, MAX_TEXT_LEN, fp))
-    return FALSE;
-
-  // trim trailing newline character and leading 'key='
-
-  char *strings[] = {
-    title, info, NULL
-  };
-  for (char **p = strings; *p; ++p) {
-    int len = strlen(*p);
-    if (len)
-      (*p)[len - 1] = '\0';
-
-    char *eq = strchr(*p, '=');
-    if (!eq)
-      return FALSE;
-    memmove(*p, eq + 1, len - (eq - *p + 1));
-  }
-
-  return TRUE;
-}
 
 static gboolean
 UpdateDialog(gpointer data)
@@ -119,9 +72,10 @@ UpdateDialog(gpointer data)
   return TRUE;
 }
 
-static void
-DoNothing()
+static gboolean
+OnDeleteEvent(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 {
+  return TRUE;
 }
 
 int
@@ -144,22 +98,35 @@ ShowProgressUI()
   if (sQuit || sProgressVal > 50.0f)
     return 0;
 
-  char titleText[MAX_TEXT_LEN], infoText[MAX_TEXT_LEN]; 
-  if (!ReadStrings(titleText, infoText))
+  char path[PATH_MAX];
+  snprintf(path, sizeof(path), "%s.ini", sProgramPath);
+
+  StringTable strings;
+  if (ReadStrings(path, &strings) != OK)
     return -1;
   
   sWin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   if (!sWin)
     return -1;
-  gtk_window_set_title(GTK_WINDOW(sWin), titleText);
+
+  // GTK 2.2 seems unable to prevent our dialog from being closed when
+  // the user hits the close button on the dialog.  This problem only
+  // occurs when either one of the following methods are called:
+  //   gtk_window_set_position
+  //   gtk_window_set_type_hint
+  // For this reason, we disable window decorations.
+ 
+  g_signal_connect(G_OBJECT(sWin), "delete_event",
+                   G_CALLBACK(OnDeleteEvent), NULL);
+
+  gtk_window_set_title(GTK_WINDOW(sWin), strings.title);
   gtk_window_set_type_hint(GTK_WINDOW(sWin), GDK_WINDOW_TYPE_HINT_DIALOG);
   gtk_window_set_position(GTK_WINDOW(sWin), GTK_WIN_POS_CENTER_ALWAYS);
   gtk_window_set_resizable(GTK_WINDOW(sWin), FALSE);
   gtk_window_set_decorated(GTK_WINDOW(sWin), FALSE);
-  gtk_signal_connect(GTK_OBJECT(sWin), "delete", DoNothing, NULL);
 
   GtkWidget *vbox = gtk_vbox_new(TRUE, 6);
-  sLabel = gtk_label_new(infoText);
+  sLabel = gtk_label_new(strings.info);
   gtk_misc_set_alignment(GTK_MISC(sLabel), 0.0f, 0.0f);
   sProgressBar = gtk_progress_bar_new();
 

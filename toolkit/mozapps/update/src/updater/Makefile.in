@@ -73,7 +73,10 @@ endif
 
 ifneq ($(MOZ_ENABLE_GTK2),)
 HAVE_PROGRESSUI = 1
-CPPSRCS += progressui_gtk.cpp
+CPPSRCS += \
+	progressui_gtk.cpp \
+	readstrings.cpp \
+	$(NULL)
 OS_CXXFLAGS += $(TK_CFLAGS)
 OS_LIBS += $(TK_LIBS)
 endif
