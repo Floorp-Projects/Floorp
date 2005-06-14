@@ -160,7 +160,7 @@ PR_STATIC_CALLBACK(PRBool)
 DeleteManifestEntry(nsHashKey* aKey, void* aData, void* closure)
 {
 //-- deletes an entry in  mManifestData.
-  PR_FREEIF(aData);
+  delete (nsJARManifestItem*)aData;
   return PR_TRUE;
 }
 
