@@ -733,7 +733,7 @@ var gExtensionsViewController = {
              selectedItem.getAttribute("locked") != "true" &&
              canWriteToLocation(selectedItem);
     case "cmd_update":
-      return !selectedItem ||
+      return !selectedItem && gExtensionsView.children.length > 0 ||
              (selectedItem &&
               opType != OP_NEEDS_INSTALL &&
               opType != OP_NEEDS_UNINSTALL &&
