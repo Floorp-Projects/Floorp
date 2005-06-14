@@ -318,7 +318,6 @@ function editRecurrence()
 /* utility functions */
 function setEventProperty(event, propertyName, value)
 {
-    dump(propertyName + " = " + value + "\n");
     switch(propertyName) {
     case "title":
         if (value != event.title)
