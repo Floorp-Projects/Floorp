@@ -42,10 +42,14 @@
 <!ENTITY menu_wrapLongLines.accesskey "W">
 <!ENTITY menu_highlightSyntax.label "Syntax Highlighting">
 <!ENTITY menu_highlightSyntax.accesskey "H">
-<!ENTITY menu_textEnlarge.label "Increase Text Size">
+<!ENTITY menu_textSize.label "Text Size">
+<!ENTITY menu_textSize.accesskey "Z">
+<!ENTITY menu_textEnlarge.label "Increase">
 <!ENTITY menu_textEnlarge.accesskey "I">
-<!ENTITY menu_textReduce.label "Decrease Text Size">
+<!ENTITY menu_textReduce.label "Decrease">
 <!ENTITY menu_textReduce.accesskey "D">
+<!ENTITY menu_textReset.label "Normal">
+<!ENTITY menu_textReset.accesskey "N">
 
 <!ENTITY findOnCmd.label     "Find in This Page...">
 <!ENTITY findOnCmd.accesskey "F">
