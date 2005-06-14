@@ -4,6 +4,7 @@ lightning.jar:
   content/lightning/messenger-overlay-sidebar.js	(content/messenger-overlay-sidebar.js)
   content/lightning/calendar-management.js		(content/calendar-management.js)
   content/lightning/lightning-widgets.css		(content/lightning-widgets.css)
+  content/lightning/agenda-tree-overlay.xul             (content/agenda-tree-overlay.xul)
   content/lightning/agenda-tree.js			(content/agenda-tree.js)
   content/lightning/lightning-standalone.xul		(content/lightning-standalone.xul)
   content/lightning/messenger-overlay-preferences.xul	(content/messenger-overlay-preferences.xul)
