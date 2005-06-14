@@ -12,5 +12,7 @@
 <!ENTITY button.removeFeed.accesskey   "R">
 <!ENTITY button.importOPML.label "Import">
 <!ENTITY button.importOPML.accesskey   "I">
+<!ENTITY button.exportOPML.label "Export">
+<!ENTITY button.exportOPML.accesskey   "X">
 
 <!ENTITY cmd.close.commandKey             "w">

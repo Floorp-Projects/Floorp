@@ -133,6 +133,11 @@
         <button id="importOPML"  
                 label="&button.importOPML.label;" accesskey="&button.importOPML.accesskey;"
                 oncommand="gFeedSubscriptionsWindow.importOPML();"/>
+		
+        <button id="exportOPML"  
+                label="&button.exportOPML.label;" accesskey="&button.exportOPML.accesskey;"
+                oncommand="gFeedSubscriptionsWindow.exportOPML();"/>
+		
         <spacer flex="1"/>
       </hbox>
     </hbox>

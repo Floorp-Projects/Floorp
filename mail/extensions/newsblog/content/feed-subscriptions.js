@@ -370,29 +370,39 @@ var gFeedSubscriptionsWindow = {
       }
     }
 
+    var feeds = this.getFeedsInFolder(aFolder);
+    
+    for (feed in feeds)
+    {
+      // Special case, if a folder only has a single feed associated with it, then just use the feed
+      // in the view and don't show the folder at all. 
+//      if (feedUrlArray.length <= 2 && !aFolder.hasSubFolders) // Note: split always adds an empty element to the array...
+//        this.mFeedContainers[aCurrentLength] = this.makeFeedObject(feed, aCurrentLevel);
+//      else // now add any feed urls for the folder
+        folderObject.children.push(this.makeFeedObject(feeds[feed], aCurrentLevel + 1));           
+    }
+
+    return folderObject;
+  },
+
+  getFeedsInFolder: function (aFolder)
+  {
     var msgdb = aFolder.QueryInterface(Components.interfaces.nsIMsgFolder).getMsgDatabase(null);
     var folderInfo = msgdb.dBFolderInfo;
     var feedurls = folderInfo.getCharPtrProperty("feedUrl");
-    var feedUrlArray = feedurls.split("|"); 
-
+    var feedUrlArray = feedurls.split("|");
+    var feeds = new Array();
     for (url in feedUrlArray)
     {
       if (!feedUrlArray[url])
         continue;
       var feedResource  = rdf.GetResource(feedUrlArray[url]);
       var feed = new Feed(feedResource, this.mRSSServer);
-
-      // Special case, if a folder only has a single feed associated with it, then just use the feed
-      // in the view and don't show the folder at all. 
-//      if (feedUrlArray.length <= 2 && !aFolder.hasSubFolders) // Note: split always adds an empty element to the array...
-//        this.mFeedContainers[aCurrentLength] = this.makeFeedObject(feed, aCurrentLevel);
-//      else // now add any feed urls for the folder
-        folderObject.children.push(this.makeFeedObject(feed, aCurrentLevel + 1));           
+      feeds.push(feed);
     }
-
-    return folderObject;
+    return feeds;
   },
-
+  
   makeFeedObject: function (aFeed, aLevel)
   {
     // look inside the data source for the feed properties
@@ -798,6 +808,98 @@ var gFeedSubscriptionsWindow = {
     {
       updateStatusItem('progressMeter', (aProgress * 100) / aProgressMax);
     },
+  },
+
+  exportOPML: function()
+  {
+    if (this.mRSSServer.rootFolder.hasSubFolders)
+    {
+      var opmlDoc = document.implementation.createDocument("","opml",null);
+      var opmlRoot = opmlDoc.documentElement;
+      opmlRoot.setAttribute("version","1.0");
+      
+      // Make the <head> element
+      var head = opmlDoc.createElement("head");
+      var title = opmlDoc.createElement("title");
+      title.appendChild(opmlDoc.createTextNode(this.mBundle.getString("subscribe-OPMLExportFileTitle")));
+      head.appendChild(title);
+      var dt = opmlDoc.createElement("dateCreated");
+      dt.appendChild(opmlDoc.createTextNode((new Date()).toGMTString()));
+      head.appendChild(dt);
+      opmlRoot.appendChild(head);
+      
+      //add <outline>s to the <body>
+      var body = opmlDoc.createElement("body");
+      this.generateOutline(this.mRSSServer.rootFolder, body);
+      opmlRoot.appendChild(body);
+      
+      var serial=new XMLSerializer();
+      var rv = pickSaveAs(this.mBundle.getString("subscribe-OPMLExportTitle"),'$all',
+                          this.mBundle.getString("subscribe-OPMLExportFileName"));
+      if(rv.reason == PICK_CANCEL)
+        return;
+      else if(rv)
+      {
+        //debug("opml:\n"+serial.serializeToString(opmlDoc)+"\n");
+        var file = new LocalFile(rv.file, MODE_WRONLY | MODE_CREATE);
+        serial.serializeToStream(opmlDoc,file.outputStream,opmlDoc.xmlEncoding);
+        file.close();
+      }
+    }
+  },
+  
+  generateOutline: function(baseFolder, parent)
+  {
+    var folderEnumerator = baseFolder.GetSubFolders();
+    var done = false;
+
+    while (!done) 
+    {
+      var folder = folderEnumerator.currentItem().QueryInterface(Components.interfaces.nsIMsgFolder);
+      if (folder && !folder.getFlag(MSG_FOLDER_FLAG_TRASH)) 
+      {
+        var outline;
+        if(folder.hasSubFolders)
+        {
+          // Make a mostly empty outline element
+          outline = parent.ownerDocument.createElement("outline");
+          outline.setAttribute("text",folder.prettiestName);
+          this.generateOutline(folder, outline); // recurse
+          parent.appendChild(outline);
+        }
+        else
+        {
+          // Add outline elements with xmlUrls
+          var feeds = this.getFeedsInFolder(folder);
+          for(feed in feeds)
+          {
+            debug("feed: " + feeds[feed]);
+            outline = this.opmlFeedToOutline(feeds[feed],parent.ownerDocument);
+            parent.appendChild(outline);
+          }
+        }
+      }
+      
+      try {
+        folderEnumerator.next();
+      } 
+      catch (ex)
+      {
+        done = true;
+      }
+    }
+  },
+  
+  opmlFeedToOutline: function(aFeed,aDoc)
+  {
+    var outRv = aDoc.createElement("outline");
+    outRv.setAttribute("title",aFeed.title);
+    outRv.setAttribute("text",aFeed.title);
+    outRv.setAttribute("type","rss");
+    outRv.setAttribute("version","RSS");
+    outRv.setAttribute("xmlUrl",aFeed.url);
+    outRv.setAttribute("htmlUrl",aFeed.link);
+    return outRv;
   },
 
   importOPML: function()
