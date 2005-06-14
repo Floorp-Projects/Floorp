@@ -169,7 +169,7 @@ RegisterXULRunner(PRBool aRegisterGlobally, nsIFile* aLocation)
     rv = MakeVersionKey(rootKey, keyName, greHome);
     if (NS_SUCCEEDED(rv)) {
       PR_Write(fd, keyName, strlen(keyName));
-      irv = PR_FALSE;
+      irv = PR_TRUE;
       goto reg_end;
     }
   }
