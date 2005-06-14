@@ -8496,8 +8496,10 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   nsIAtom* frameType = parentFrame->GetType();
   if (frameType == nsLayoutAtoms::objectFrame ||
       frameType == nsLayoutAtoms::tableColFrame ||
-      frameType == nsLayoutAtoms::HTMLCanvasFrame) {
-    // This handles APPLET, EMBED, OBJECT, COL, and CANVAS
+      frameType == nsLayoutAtoms::HTMLCanvasFrame ||
+      frameType == nsLayoutAtoms::textInputFrame) {
+    // This handles APPLET, EMBED, OBJECT, COL, CANVAS, TEXTAREA and
+    // <INPUT TYPE=text>
     return NS_OK;
   }
   // Deal with inner/outer tables, fieldsets
@@ -9084,8 +9086,10 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     nsIAtom* frameType = parentFrame->GetType();
     if (frameType == nsLayoutAtoms::objectFrame ||
         frameType == nsLayoutAtoms::tableColFrame ||
-        frameType == nsLayoutAtoms::HTMLCanvasFrame) {
-      // This handles APPLET, EMBED, OBJECT, COL, and CANVAS
+        frameType == nsLayoutAtoms::HTMLCanvasFrame ||
+        frameType == nsLayoutAtoms::textInputFrame) {
+      // This handles APPLET, EMBED, OBJECT, COL, CANVAS, TEXTAREA, and
+      // <INPUT TYPE=text>
       return NS_OK;
     }
     // Deal with inner/outer tables, fieldsets
