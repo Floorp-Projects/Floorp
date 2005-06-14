@@ -1700,11 +1700,13 @@ function BrowserLoadURL(aTriggeringEvent, aPostData)
 {
   var url = gURLBar.value;
   if (url.match(/^view-source:/)) {
+    handleURLBarRevert();
     BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null, null);
   } else {
     if (gBrowser.localName == "tabbrowser" &&
         aTriggeringEvent && 'altKey' in aTriggeringEvent &&
         aTriggeringEvent.altKey) {
+      handleURLBarRevert();
       content.focus();
       var t = gBrowser.addTab(url, null, null, aPostData); // open link in new tab
       gBrowser.selectedTab = t;
