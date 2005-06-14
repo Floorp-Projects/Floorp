@@ -113,6 +113,9 @@ RegisterXULRunner(PRBool aRegisterGlobally, nsIFile* aLocation)
   }
 
   HKEY rootKey = NULL;
+  char keyName[MAXPATHLEN];
+  PRInt32 r;
+
   if (::RegCreateKeyEx(aRegisterGlobally ? HKEY_LOCAL_MACHINE :
                                            HKEY_CURRENT_USER,
                        kRegKeyRoot, NULL, NULL, 0, KEY_WRITE,
@@ -121,8 +124,7 @@ RegisterXULRunner(PRBool aRegisterGlobally, nsIFile* aLocation)
     goto reg_end;
   }
 
-  char keyName[MAXPATHLEN];
-  PRInt32 r = PR_Read(fd, keyName, MAXPATHLEN);
+  r = PR_Read(fd, keyName, MAXPATHLEN);
   if (r < 0) {
     irv = PR_FALSE;
     goto reg_end;
