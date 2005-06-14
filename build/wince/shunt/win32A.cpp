@@ -821,7 +821,7 @@ MOZCE_SHUNT_API BOOL mozce_VerQueryValueA(const LPVOID inBlock, LPSTR inSubBlock
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("mozce_VerQueryValueA called\n");
+    mozce_printf("mozce_VerQueryValueA called.  Incomplete implementation.  Your code will have to manually convert strings.\n");
 #endif
 
     BOOL retval = FALSE;

@@ -48,6 +48,17 @@ extern "C" {
 #endif
 
 
+MOZCE_SHUNT_API int mozce_access(const char *path, int mode)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_access called\n");
+#endif
+
+    return 0;
+}
+
 MOZCE_SHUNT_API void mozce_rewind(FILE* inStream)
 {
     MOZCE_PRECHECK

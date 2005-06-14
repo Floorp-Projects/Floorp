@@ -198,6 +198,11 @@
 
 
 // From stdio.cpp
+#ifdef access
+#undef access
+#endif
+#define access		mozce_access
+
 #ifdef rewind
 #undef rewind
 #endif
@@ -1235,6 +1240,7 @@ extern "C" {
   MOZCE_SHUNT_API int mozce_stat(const char *, struct _stat *);
   
   // From stdio.cpp
+  MOZCE_SHUNT_API int mozce_access(const char *path, int mode);
   MOZCE_SHUNT_API void mozce_rewind(FILE* inStream);
   MOZCE_SHUNT_API FILE* mozce_fdopen(int inFD, const char* inMode);
   MOZCE_SHUNT_API void mozce_perror(const char* inString);
