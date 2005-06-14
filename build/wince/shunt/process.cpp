@@ -72,7 +72,7 @@ MOZCE_SHUNT_API char* mozce_getenv(const char* inName)
 
     char* retval = NULL;
 
-#ifdef DEBUG
+#ifdef DEBUG_NSPR_ALL
 
     if (!strcmp(inName, "NSPR_LOG_MODULES"))
         return "all:5";
