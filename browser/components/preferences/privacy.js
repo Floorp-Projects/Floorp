@@ -235,6 +235,5 @@ var gPrivacyPane = {
       this.updateMasterPasswordButton();
       document.getElementById("setMasterPassword").focus();
     }
-  },
+  }
 };
-

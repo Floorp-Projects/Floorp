@@ -363,13 +363,15 @@
               dump(e);
             }
           }
+          var value = ("value" in aElement) ? aElement.value : aElement.getAttribute("value");
+
           switch (this.type) {
           case "int":
-            return aElement.value != "" ? parseInt(aElement.value) : 0;
+            return value != "" ? parseInt(value) : 0;
           case "bool":
-            return typeof(aElement.value) == "boolean" ? aElement.value : aElement.value == "true";
+            return typeof(value) == "boolean" ? value : value == "true";
           }
-          return aElement.value;
+          return value;
         ]]>
         </body>
       </method>

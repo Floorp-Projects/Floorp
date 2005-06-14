@@ -631,7 +631,7 @@ var gContextMenus = [
 function buildContextMenu(aEvent)
 {
   if (aEvent.target.id != "downloadContextMenu")
-    return;
+    return false;
     
   var popup = document.getElementById("downloadContextMenu");
   while (popup.hasChildNodes())
@@ -782,11 +782,11 @@ function initAutoDownloadDisplay()
     }
 
     var displayName = null;
+    var folder;
     switch (pref.getIntPref("browser.download.folderList")) {
     case 0:
       folder = getDownloadsFolder("Desktop");
-      var strings = document.getElementById("downloadStrings");
-      displayName = strings.getString("displayNameDesktop");
+      displayName = document.getElementById("downloadStrings").getString("displayNameDesktop");
       break;
     case 1:
       folder = getDownloadsFolder("Downloads");
@@ -881,7 +881,7 @@ function getLocalFileFromNativePathOrUrl(aPathOrUrl)
   } else {
 
     // if it's a pathname, create the nsILocalFile directly
-    f = Components.classes["@mozilla.org/file/local;1"].
+    var f = Components.classes["@mozilla.org/file/local;1"].
       createInstance(Components.interfaces.nsILocalFile);
     f.initWithPath(aPathOrUrl);
 

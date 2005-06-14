@@ -273,6 +273,6 @@ DownloadProgressListener.prototype =
     result = this._replaceInsert(result, 3, secs);
 
     return result;
-  },
+  }
   
 }; 
