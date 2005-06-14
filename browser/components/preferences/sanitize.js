@@ -49,6 +49,6 @@ var gSanitizeDialog = {
   {
     this.sanitizePasswords();
     return undefined;
-  },
+  }
 };
 

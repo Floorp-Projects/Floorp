@@ -480,6 +480,8 @@ var gCookiesWindow = {
     var ids = ["nameLabel", "name", "valueLabel", "value", "isDomain", "host", 
                "pathLabel", "path", "isSecureLabel", "isSecure", "expiresLabel", 
                "expires"];
+    var properties;
+    
     if (aItem && !aItem.container && seln.count > 0) {
       properties = { name: aItem.name, value: aItem.value, host: aItem.host,
                      path: aItem.path, expires: this.formatExpiresString(aItem.expires),
@@ -515,7 +517,7 @@ var gCookiesWindow = {
     
     var rangeCount = seln.getRangeCount();
     var selectedCookieCount = 0;
-    for (i = 0; i < rangeCount; ++i) {
+    for (var i = 0; i < rangeCount; ++i) {
       var min = {}; var max = {};
       seln.getRangeAt(i, min, max);
       for (var j = min.value; j <= max.value; ++j) {

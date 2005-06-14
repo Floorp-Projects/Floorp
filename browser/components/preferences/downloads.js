@@ -177,6 +177,5 @@ var gDownloadsPane = {
     document.documentElement.openWindow("Preferences:DownloadActions",
                                         "chrome://browser/content/preferences/downloadactions.xul",
                                         "", null);
-  },
+  }
 };
-

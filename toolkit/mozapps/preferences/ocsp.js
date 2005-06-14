@@ -90,6 +90,5 @@ var gOCSPDialog = {
         break;
       }
     }
-  },
+  }
 };
-

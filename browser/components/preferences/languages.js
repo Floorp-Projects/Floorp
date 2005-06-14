@@ -93,13 +93,13 @@ var gLanguagesDialog = {
         var ab = useABCDFormat ? abCDPairs[0] : abCD;
         var cd = useABCDFormat ? abCDPairs[1] : "";
         if (ab) {
-          var language = region = "";
+          var language = "";
           try {
             language = bundleLanguages.getString(ab);
           } 
           catch (e) { continue; };
           
-          
+          var region = "";
           if (useABCDFormat) {
             try {
               region = bundleRegions.getString(cd);
@@ -331,6 +331,6 @@ var gLanguagesDialog = {
       downButton.disabled = true;
       removeButton.disabled = false;
     }
-  },
+  }
 };
 

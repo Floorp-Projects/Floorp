@@ -115,5 +115,5 @@ var FontBuilder = {
       }
     }
     aMenuList.appendChild(popup);    
-  },
+  }
 };

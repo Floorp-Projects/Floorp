@@ -140,10 +140,11 @@ var gContentPane = {
   },
   
   _exceptionsParams: {
-    install: { blockVisible: false, sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "install", },
+    install: { blockVisible: false, sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "install" },
     popup:   { blockVisible: false, sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "popup"   },
-    image:   { blockVisible: true,  sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "image"   },
+    image:   { blockVisible: true,  sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "image"   }
   },
+  
   showExceptions: function (aPermissionType)
   {
     var bundlePreferences = document.getElementById("bundlePreferences");
