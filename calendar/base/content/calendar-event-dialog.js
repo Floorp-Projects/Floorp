@@ -158,22 +158,15 @@ function loadDialog(event)
 
 function saveDialog(event)
 {
-    event.title = getElementValue("event-title");
-    event.isAllDay = getElementValue("event-all-day", "checked");
-    event.startDate = jsDateToDateTime(getElementValue("event-starttime"));
-    event.endDate = jsDateToDateTime(getElementValue("event-endtime"));
-
+    // setEventProperty will only change if the value is different and 
+    // does magic for startDate and endDate based on isAllDay, so set that first.
+    setEventProperty(event, "isAllDay",    getElementValue("event-all-day", "checked"));
+    setEventProperty(event, "startDate",   jsDateToDateTime(getElementValue("event-starttime")));
+    setEventProperty(event, "endDate",     jsDateToDateTime(getElementValue("event-endtime")));
+    setEventProperty(event, "title",       getElementValue("event-title"));
     setEventProperty(event, "LOCATION",    getElementValue("event-location"));
     setEventProperty(event, "URL",         getElementValue("event-url"));
     setEventProperty(event, "DESCRIPTION", getElementValue("event-description"));
-
-    /*  all day */
-    if (event.isAllDay) {
-        event.startDate.isDate = true;
-        event.endDate.isDate = true;
-        event.endDate.day += 1;
-        event.endDate.normalize();
-    }
 
     /* attendence */
     event.removeAllAttendees();
@@ -325,8 +318,37 @@ function editRecurrence()
 /* utility functions */
 function setEventProperty(event, propertyName, value)
 {
-    if (!value || value == "")
-        event.deleteProperty(propertyName);
-    else if (event.getProperty(propertyName) != value)
-        event.setProperty(propertyName, value);
+    switch(propertyName) {
+    case 'title':
+        if (value != event.title)
+            event.title = value;
+        break;
+    case 'isAllDay':
+        if (value != event.isAllDay)
+            event.isAllDay = value;
+        break;
+    case 'startDate':
+        if (value.compare(event.startDate) != 0) {
+            if (event.isAllDay)
+                value.isDate = true;
+            event.startDate = value;
+        }
+        break;
+    case 'endDate':
+        if (value.compare(event.endDate) != 0) {
+            if (event.isAllDay) {
+                value.isDate = true;
+                value.day += 1;
+                value.normalize();
+            }
+            event.endDate = value;
+        }
+        break;
+    default:
+        if (!value || value == "")
+            event.deleteProperty(propertyName);
+        else if (event.getProperty(propertyName) != value)
+            event.setProperty(propertyName, value);
+        break;
+    }
 }
