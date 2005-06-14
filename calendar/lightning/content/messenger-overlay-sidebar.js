@@ -1,8 +1,6 @@
 function ltnSidebarCalendarSelected(tree)
 {
-    var disabled = tree.view.selection.count == 0;
-    document.getElementById("cal-sidebar-edit-calendar").disabled = disabled;
-    document.getElementById("cal-sidebar-delete-calendar").disabled = disabled;
+   getCompositeCalendar().defaultCalendar = ltnSelectedCalendar();
 }
 
 function ltnSelectedCalendar()
