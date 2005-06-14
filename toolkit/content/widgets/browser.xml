@@ -655,6 +655,7 @@
         <body>
           <![CDATA[
             this._isScrolling = false;
+            this.removeEventListener('mousemove', this.handleMouseMove, false);            
             if (this._autoScrollMarkerImage) {
               this._autoScrollMarkerImage.style.display = 'none';  // seems to avoid blocking when autoscroll is initited during pageload
               this._autoScrollMarkerImage.parentNode.removeChild(this._autoScrollMarkerImage);
@@ -769,6 +770,24 @@
          ]]>
        </body>
      </method>
+     <method name="handleMouseMove">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          this._clientX = aEvent.clientX;
+          this._clientY = aEvent.clientY;
+        
+          if (this._isScrolling) {
+            var x = this._clientX - this._startX;
+            var y = this._clientY - this._startY;
+        
+            if ((x > this._AUTOSCROLL_SNAP || x < -this._AUTOSCROLL_SNAP) ||
+                (y > this._AUTOSCROLL_SNAP || y < -this._AUTOSCROLL_SNAP))
+              this._snapOn = false;
+          }
+        ]]>
+        </body>
+      </method>
 
      <field name="_findInstData">null</field>
      <property name="findInstData" readonly="true">
@@ -873,32 +892,20 @@
           if (this._isScrolling) {
             stopScroll();
           } else if (event.button == 1) {
-          if (!this.autoscrollEnabled  ||
-              this.currentURI.spec == "about:blank"|| 
-              this.isAutoscrollBlocker(event.originalTarget))
-            return;
-
-              this._startX = event.clientX;
-              this._startY = event.clientY;
-              this._clientFrameDoc = event.originalTarget.ownerDocument;
-              this._isScrolling = true;
-              this._snapOn = true; 
-              this.showAutoscrollMarker(event);
-              window.setTimeout(function foo(a) { a.autoScrollLoop() }, 5, this);
-            }
-        ]]>
-      </handler>
-      <handler event="mousemove">
-        <![CDATA[          
-          this._clientX = event.clientX;
-          this._clientY = event.clientY;
-        
-          if (this._isScrolling) {
-            var x = this._clientX - this._startX;
-            var y = this._clientY - this._startY;
-        
-            if ((x > this._AUTOSCROLL_SNAP || x < -this._AUTOSCROLL_SNAP) || (y > this._AUTOSCROLL_SNAP || y < -this._AUTOSCROLL_SNAP))
-              this._snapOn = false;            
+            if (!this.autoscrollEnabled  ||
+                this.currentURI.spec == "about:blank"|| 
+                this.isAutoscrollBlocker(event.originalTarget))
+              return;
+            this.addEventListener('mousemove', this.handleMouseMove, false);
+            this._clientX = event.clientX;
+            this._clientY = event.clientY;
+            this._startX = event.clientX;
+            this._startY = event.clientY;
+            this._clientFrameDoc = event.originalTarget.ownerDocument;
+            this._isScrolling = true;
+            this._snapOn = true; 
+            this.showAutoscrollMarker(event);
+            window.setTimeout(function foo(a) { a.autoScrollLoop() }, 5, this);
           }
         ]]>
       </handler>
