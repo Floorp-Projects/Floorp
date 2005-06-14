@@ -30,3 +30,7 @@ PATCHES:
 
   optimize-opaque-paint.diff - if cairo_paint_with_alpha is called
       with alpha == 1.0, turn it into cairo_paint
+
+  win32-extents.diff - correct text extents for general tranforms
+      (upstream patch)
+
