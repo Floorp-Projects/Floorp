@@ -26,6 +26,7 @@
 #     Pierre Chanial <p_ch@verizon.net>
 #     Blake Ross     <blake@cs.stanford.edu>
 #     Jeff Walden <jwalden+code@mit.edu>
+#     Jason Barnabe <jason_barnabe@fastmail.fm>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -117,6 +118,7 @@
   <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>
   <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
   <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
+  <command id="cmd_textZoomReset" oncommand="ZoomManager.prototype.getInstance().reset();"/>
 
   <keyset id="editMenuKeys"/>
   <keyset id="viewSourceKeys">
@@ -128,7 +130,7 @@
     <key id="key_textZoomEnlarge" key="&textEnlarge.commandkey;" command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key id="key_textZoomEnlarge2" key="&textEnlarge.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key id="key_textZoomReduce"  key="&textReduce.commandkey;" command="cmd_textZoomReduce" modifiers="accel"/>
-    <key id="key_textZoomReset" key="&textReset.commandkey;" oncommand="ZoomManager.prototype.getInstance().reset();" modifiers="accel"/>
+    <key id="key_textZoomReset" key="&textReset.commandkey;" command="cmd_textZoomReset" modifiers="accel"/>
 
     <key id="key_reload" key="&reloadCmd.commandkey;" command="cmd_reload" modifiers="accel"/>
     <key key="&reloadCmd.commandkey;" command="cmd_reload" modifiers="accel,shift"/>
@@ -198,12 +200,20 @@
           <menuitem id="menu_reload" command="cmd_reload" accesskey="&reloadCmd.accesskey;"
                     label="&reloadCmd.label;" key="key_reload"/>
           <menuseparator />
-          <menuitem id="menu_textEnlarge" command="cmd_textZoomEnlarge"
-                    label="&menu_textEnlarge.label;" accesskey="&menu_textEnlarge.accesskey;"
-                    key="key_textZoomEnlarge"/>
-          <menuitem id="menu_textReduce" command="cmd_textZoomReduce"
-                    label="&menu_textReduce.label;" accesskey="&menu_textReduce.accesskey;"
-                    key="key_textZoomReduce"/>
+          <menu id="viewTextZoomMenu" label="&menu_textSize.label;" accesskey="&menu_textSize.accesskey;">
+            <menupopup>                    
+              <menuitem id="menu_textEnlarge" command="cmd_textZoomEnlarge" 
+                        label="&menu_textEnlarge.label;" accesskey="&menu_textEnlarge.accesskey;"
+                        key="key_textZoomEnlarge"/>
+              <menuitem id="menu_textReduce" command="cmd_textZoomReduce" 
+                        label="&menu_textReduce.label;" accesskey="&menu_textReduce.accesskey;"
+                        key="key_textZoomReduce"/>
+              <menuseparator/>
+              <menuitem id="menu_textReset" command="cmd_textZoomReset"
+                        label="&menu_textReset.label;" accesskey="&menu_textReset.accesskey;"
+                        key="key_textZoomReset"/>
+            </menupopup>
+          </menu>
           <menu id="charsetMenu"/>
           <menuseparator/>
           <menuitem id="menu_wrapLongLines" type="checkbox" command="cmd_wrapLongLines"
