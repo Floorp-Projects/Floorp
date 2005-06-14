@@ -49,7 +49,7 @@ const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
 const PREF_APP_UPDATE_TIMER               = "app.update.timer";
 const PREF_APP_UPDATE_LOG_ENABLED         = "app.update.logEnabled";
 
-const PREF_APP_UPDATE_URL_BASE            = "app.update.url.base";
+const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
 
 const PREF_UPDATE_LASTUPDATETIME_FMT      = "app.update.lastUpdateTime.%ID%";
@@ -974,19 +974,22 @@ Checker.prototype = {
     } catch (e) {}
 
     // Otherwise, construct the update URL from component parts.
-    var baseURL = getPref("getCharPref", PREF_APP_UPDATE_URL_BASE, null);
-    if (!baseURL) {
-      LOG(PREF_APP_UPDATE_URL_BASE + " not defined");
+    try {
+      url = gPref.getComplexValue(PREF_APP_UPDATE_URL,
+                                  nsIPrefLocalizedString).data;
+    } catch (e) {
+      LOG(PREF_APP_UPDATE_URL + " not defined");
       return null;
     }
 
-    // <product-name>/<version>/<build-id>/<build-target>/<locale>/update.xml
-    url = baseURL +
-        gApp.name + "/" +
-        gApp.version + "/" +
-        gApp.appBuildID + "/" +
-        gApp.OS + "_" + gApp.XPCOMABI + "/" +
-        gPref.getCharPref("general.useragent.locale") + "/update.xml";
+    var locale = gPref.getCharPref("general.useragent.locale");
+
+    url = url.replace(/%PRODUCT%/g, gApp.name);
+    url = url.replace(/%VERSION%/g, gApp.version);
+    url = url.replace(/%BUILD_ID%/g, gApp.appBuildID);
+    url = url.replace(/%BUILD_TARGET%/g, gApp.OS + "_" + gApp.XPCOMABI);
+    url = url.replace(/%LOCALE%/g, locale);
+
     LOG("update url: " + url);
     return url;
   },
