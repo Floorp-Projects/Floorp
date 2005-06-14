@@ -81,8 +81,8 @@ OBJDIR_TAG = _OPT
 # Add symbolic information for use by a profiler
 ifdef MOZ_PROFILE
 OPTIMIZER += -Zi
-DLLFLAGS += -DEBUG -DEBUGTYPE:CV
-LDFLAGS += -DEBUG -DEBUGTYPE:CV
+DLLFLAGS += -DEBUG
+LDFLAGS += -DEBUG
 endif
 
 else
@@ -99,13 +99,13 @@ OPTIMIZER = -Od -Zi
 #OPTIMIZER = -Zi -Fd$(OBJDIR)/ -Od
 DEFINES = -DDEBUG -D_DEBUG -UNDEBUG
 
-DLLFLAGS = -DEBUG -DEBUGTYPE:CV -OUT:"$@"
+DLLFLAGS = -DEBUG -OUT:"$@"
 ifdef GLOWCODE
 DLLFLAGS = -DEBUG -DEBUGTYPE:both -INCLUDE:_GlowCode -OUT:"$@"
 endif
 
 OBJDIR_TAG = _DBG
-LDFLAGS = -DEBUG -DEBUGTYPE:CV
+LDFLAGS = -DEBUG
 #
 # When PROFILE=1 is defined, set the compile and link options
 # to build targets for use by the ms-win32 profiler
