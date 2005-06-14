@@ -52,6 +52,7 @@
 <!ENTITY pref.mainbox.label         "Réglages globaux" >
 <!ENTITY pref.alarmgoesoff.label "Quand survient une alarme :">
 <!ENTITY pref.playasound  "Émettre un son" >
+<!ENTITY pref.preview.label "Aperçu" >
 
 #ifdef MOZ_SUNBIRD                                                              
 <!ENTITY pref.showConnections.label      "Paramètres de connexion…">
