@@ -804,18 +804,22 @@ var gFeedSubscriptionsWindow = {
   {
     var rv = pickOpen(this.mBundle.getString("subscribe-OPMLImportTitle"), '$xml $opml $all');
     if(rv.reason == PICK_CANCEL)
-      return; 
+      return;
     
-    var file = new LocalFile(rv.file, MODE_RDONLY);
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(IPS);
-    
-    // return if we couldn't open the file at all...
-    if(!file)      
-      return promptService.alert(window, null, this.mBundle.getString("subscribe-errorOpeningFile"));
+    var stream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+    var opmlDom = null;
 
-    var text = file.read();  
-    var parser = new DOMParser();
-    var opmlDom = parser.parseFromString(text, 'application/xml');
+    // read in file as raw bytes, so Expat can do the decoding for us
+    try{
+      stream.init(rv.file, MODE_RDONLY, PERM_IROTH, 0);
+      var parser = new DOMParser();
+      opmlDom = parser.parseFromStream(stream, null, stream.available(), 'application/xml');
+    }catch(e){
+      return promptService.alert(window, null, this.mBundle.getString("subscribe-errorOpeningFile"));
+    }finally{
+      stream.close();
+    }
 
     // return if the user didn't give us an OPML file
     if(!opmlDom || !(opmlDom.documentElement.tagName == "opml"))
