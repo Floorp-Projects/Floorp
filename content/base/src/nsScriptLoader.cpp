@@ -434,8 +434,26 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
                                      mimeType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    isJavaScript = mimeType.LowerCaseEqualsLiteral("text/javascript") ||
-                   mimeType.LowerCaseEqualsLiteral("application/x-javascript");
+    // Table ordered from most to least likely JS MIME types.
+    // See bug 62485, feel free to add <script type="..."> survey data to it,
+    // or to a new bug once 62485 is closed.
+    static const char *jsTypes[] = {
+      "text/javascript",
+      "text/ecmascript",
+      "application/javascript",
+      "application/ecmascript",
+      "application/x-javascript",
+      nsnull
+    };
+
+    isJavaScript = PR_FALSE;
+    for (PRInt32 i = 0; jsTypes[i]; i++) {
+      if (mimeType.LowerCaseEqualsASCII(jsTypes[i])) {
+        isJavaScript = PR_TRUE;
+        break;
+      }
+    }
+
     if (isJavaScript) {
       JSVersion jsVersion = JSVERSION_DEFAULT;
       nsAutoString value;
