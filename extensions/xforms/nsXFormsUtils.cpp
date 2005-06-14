@@ -1154,27 +1154,37 @@ nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData,
 
   // aInstanceData could be an instance data node or it could be an attribute
   // on an instance data node (basically the node that a control is bound to).
-  // So first checking to see if it is a proper element node.  If it isn't,
-  // making sure that it is at least an attribute.  
-
-  /// @bug We need to check for any type attributes set directly on the node
-  /// too (XXX)
 
   nsAutoString *typeVal = nsnull;
-  nsCOMPtr<nsIContent> nodeContent(do_QueryInterface(aInstanceData));
-  if (nodeContent) {
-    typeVal =
-      NS_STATIC_CAST(nsAutoString*,
-                     nodeContent->GetProperty(nsXFormsAtoms::type, &rv));
-  } else {
-    nsCOMPtr<nsIAttribute> nodeAttribute(do_QueryInterface(aInstanceData));
-    if (!nodeAttribute)
-      // node is neither content or attribute!
-      return NS_ERROR_FAILURE;
 
-    typeVal =
-      NS_STATIC_CAST(nsAutoString*,
-                     nodeAttribute->GetProperty(nsXFormsAtoms::type, &rv));
+  // Get type stored directly on instance node
+  nsAutoString typeAttribute;
+  nsCOMPtr<nsIDOMElement> nodeElem(do_QueryInterface(aInstanceData));
+  if (nodeElem) {
+    nodeElem->GetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
+                             NS_LITERAL_STRING("type"), typeAttribute);
+    if (!typeAttribute.IsEmpty()) {
+      typeVal = &typeAttribute;
+    }
+  }
+
+  if (!typeVal) {
+    // Get MIP type bound to node
+    nsCOMPtr<nsIContent> nodeContent(do_QueryInterface(aInstanceData));
+    if (nodeContent) {
+      typeVal =
+        NS_STATIC_CAST(nsAutoString*,
+                       nodeContent->GetProperty(nsXFormsAtoms::type, &rv));
+    } else {
+      nsCOMPtr<nsIAttribute> nodeAttribute(do_QueryInterface(aInstanceData));
+      if (!nodeAttribute)
+        // node is neither content or attribute!
+        return NS_ERROR_FAILURE;
+
+      typeVal =
+        NS_STATIC_CAST(nsAutoString*,
+                       nodeAttribute->GetProperty(nsXFormsAtoms::type, &rv));
+    }
   }
 
   if (NS_FAILED(rv) || !typeVal) {
