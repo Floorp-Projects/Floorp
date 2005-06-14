@@ -154,10 +154,9 @@ friend  int  PR_CALLBACK  searchModePrefCallback(const char *pref, void *aClosur
   nsresult  MapEncoding(const nsString &numericEncoding, 
                         nsString &stringEncoding);
   const char * const MapScriptCodeToCharsetName(PRUint32 aScriptCode);
-  nsresult  SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon, const PRUnichar *hint, const PRUnichar *data, PRBool isSystemSearchFile, PRBool checkMacFileType);
-  nsresult  GetSearchEngineList(nsIFile *spec, PRBool isSystemSearchFile, PRBool checkMacFileType);
+  nsresult  SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon, const PRUnichar *hint, const PRUnichar *data, PRBool isSystemSearchFile);
+  nsresult  GetSearchEngineList(nsIFile *spec, PRBool isSystemSearchFile);
   nsresult  GetCategoryList();
-  nsresult  GetSearchFolder(nsIFile **spec);
   nsresult  ReadFileContents(nsILocalFile *baseFilename, nsString & sourceContents);
   nsresult  DecodeData(const char *aCharset, const PRUnichar *aInString, PRUnichar **aOutString);
   nsresult  GetData(const PRUnichar *data, const char *sectionToFind, PRUint32 sectionNum, const char *attribToFind, nsString &value);
@@ -203,7 +202,7 @@ public:
   InternetSearchDataSource(void);
   virtual    ~InternetSearchDataSource(void);
   NS_METHOD  Init();
-  NS_METHOD  DeferredInit();
+  void DeferredInit();
 };
 
 #endif // nsinternetsearchdatasource__h____
