@@ -334,10 +334,22 @@ WeekView.prototype.addToDisplayList = function(itemOccurrence, startDate, endDat
 
 WeekView.prototype.drawEventBoxes = function()
 {
-    this.setDrawProperties(this.eventList);
+    // Need to split in seperate lists for each day.
+    var lists = new Array();
+    for (var i=0; i<7; ++i) {
+        lists[i] = new Array();
+    }
     var event;
-    for (event in this.eventList) {
-        this.createEventBoxInternal(this.eventList[event]);
+    for each (event in this.eventList) {
+        lists[event.start.weekday].push(event);
+    }
+    
+    
+    for (var i=0; i<7; ++i) {
+        this.setDrawProperties(lists[i]);
+        for each (event in lists[i]) {
+            this.createEventBoxInternal(event);
+        }
     }
 }
 
