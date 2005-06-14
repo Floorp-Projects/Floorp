@@ -126,19 +126,14 @@ function loadEventHandlers(event)
 
   // some event handlers want to be told what the original browser/listener is
   var targetBrowser = null;
-  var targetListener = null;
   if (gBrowser.mTabbedMode) {
     var targetBrowserIndex = gBrowser.getBrowserIndexForDocument(event.originalTarget);
     if (targetBrowserIndex == -1)
       return;
     targetBrowser = gBrowser.getBrowserAtIndex(targetBrowserIndex);
-    targetListener = gBrowser.mTabListeners[targetBrowserIndex];
   } else {
     targetBrowser = gBrowser.mCurrentBrowser;
-    targetListener = null;      // no listener for non-tabbed-mode
   }
-
-  updatePageFavIcon(targetBrowser, targetListener);
 
   // update the last visited date
   if (targetBrowser.currentURI.spec)
@@ -2110,24 +2105,12 @@ function SetPageProxyState(aState)
   gProxyButton.setAttribute("pageproxystate", aState);
 
   // the page proxy state is set to valid via OnLocationChange, which
-  // gets called when we switch tabs.  We'll let updatePageFavIcon
-  // take care of updating the mFavIconURL because it knows exactly
-  // for which tab to update things, instead of confusing the issue
-  // here.
+  // gets called when we switch tabs.
   if (aState == "valid") {
     gLastValidURLStr = gURLBar.value;
     gURLBar.addEventListener("input", UpdatePageProxyState, false);
 
-    if (gBrowser.mCurrentBrowser.mFavIconURL != null) {
-      if (gBrowser.isFavIconKnownMissing(gBrowser.mCurrentBrowser.mFavIconURL)) {
-        gBrowser.mFavIconURL = null;
-        PageProxyClearIcon();
-      } else {
-        PageProxySetIcon(gBrowser.mCurrentBrowser.mFavIconURL);
-      }
-    } else {
-      PageProxyClearIcon();
-    }
+    PageProxySetIcon(gBrowser.mCurrentBrowser.mIconURL);
   } else if (aState == "invalid") {
     gURLBar.removeEventListener("input", UpdatePageProxyState, false);
     PageProxyClearIcon();
@@ -2139,7 +2122,9 @@ function PageProxySetIcon (aURL)
   if (!gProxyFavIcon)
     return;
 
-  if (gProxyFavIcon.getAttribute("src") != aURL)
+  if (!aURL)
+    PageProxyClearIcon();
+  else if (gProxyFavIcon.getAttribute("src") != aURL)
     gProxyFavIcon.setAttribute("src", aURL);
   else if (gProxyDeck.selectedIndex != 1)
     gProxyDeck.selectedIndex = 1;
@@ -3177,16 +3162,14 @@ nsBrowserStatusHandler.prototype =
     }
   },
 
-  onLinkIconAvailable : function(aBrowser, aHref) 
+  onLinkIconAvailable : function(aBrowser) 
   {
     if (gProxyFavIcon &&
         gBrowser.mCurrentBrowser == aBrowser &&
         gBrowser.userTypedValue === null)
     {
-      PageProxySetIcon(aHref);
+      PageProxySetIcon(aBrowser.mIconURL);
     }
-
-    aBrowser.mFavIconURL = aHref;
   },
 
   onProgressChange : function (aWebProgress, aRequest,
@@ -3210,15 +3193,6 @@ nsBrowserStatusHandler.prototype =
         // This (thanks to the filter) is a network start or the first
         // stray request (the first request outside of the document load),
         // initialize the throbber and his friends.
-
-        // always reset the favicon
-        if (gBrowser.mTabbedMode) {
-          var browserIndex = gBrowser.getBrowserIndexForDocument(aWebProgress.DOMWindow);
-          if (browserIndex != -1)
-            gBrowser.getBrowserAtIndex(browserIndex).mFavIconURL = null;
-        }
-        else
-          gBrowser.mCurrentBrowser.mFavIconURL = null;
 
         // Call start document load listeners (only if this is a network load)
         if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK &&
@@ -3244,9 +3218,14 @@ nsBrowserStatusHandler.prototype =
     }
     else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
       if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-        if (aRequest) {
-          if (aWebProgress.DOMWindow == content)
+        if (aWebProgress.DOMWindow == content) {
+          if (aRequest)
             this.endDocumentLoad(aRequest, aStatus);
+          var browser = gBrowser.mCurrentBrowser;
+          if (!gBrowser.mTabbedMode && !browser.mIconURL)
+            gBrowser.useDefaultIcon(gBrowser.mCurrentTab);
+          if (browser.mIconURL)
+            BookmarksUtils.loadFavIcon(browser.currentURI.spec, browser.mIconURL);
         }
       }
 
@@ -3356,6 +3335,9 @@ nsBrowserStatusHandler.prototype =
       // The document loaded correctly, clear the value if we should
       if (browser.userTypedClear)
         browser.userTypedValue = null;
+
+      if (!gBrowser.mTabbedMode)
+        gBrowser.setIcon(gBrowser.mCurrentTab, null);
 
       if (findField)
         setTimeout(function() { findField.value = browser.findString; }, 0, findField, browser); 
@@ -5747,31 +5729,6 @@ function livemarkAddMark(wincontent, data) {
   var title = wincontent.document.title;
   var description = BookmarksUtils.getDescriptionFromDocument(wincontent.document);
   BookmarksUtils.addLivemark(wincontent.document.baseURI, data, title, description);
-}
-
-function updatePageFavIcon(aBrowser, aListener) {
-  var uri = aBrowser.currentURI;
-
-  if (!gBrowser.shouldLoadFavIcon(uri))
-    return;
-
-  // if we made it here with this null, then no <link> was found for
-  // the page load.  We try to fetch a generic favicon.ico.
-  if (aBrowser.mFavIconURL == null) {
-    aBrowser.mFavIconURL = gBrowser.buildFavIconString(uri);
-    // give it to the listener as well
-    // XXX - there is no listener for non-tabbed-mode: this is why
-    // the urlbar has no favicon when you switch from tabbed mode to
-    // non-tabbed-mode.
-    if (aListener)
-      aListener.mIcon = aBrowser.mFavIconURL;
-  }
-
-  if (aBrowser == gBrowser.mCurrentBrowser)
-    PageProxySetIcon(aBrowser.mFavIconURL);
-
-  if (aBrowser.mFavIconURL != null)
-    BookmarksUtils.loadFavIcon(uri.spec, aBrowser.mFavIconURL);
 }
 
 function GetFrameDocumentsFromWindow(aWindow){
