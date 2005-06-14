@@ -549,7 +549,7 @@ calItemBase.prototype = {
         for (var i = 0; i < this.mAttendees.length; i++)
             icalcomp.addProperty(this.mAttendees[i].icalProperty);
 
-        if (this.mGeneration != 0) {
+        if (this.mGeneration) {
             var genprop = icalProp("X-MOZILLA-GENERATION");
             genprop.stringValue = String(this.mGeneration);
             icalcomp.addProperty(genprop);

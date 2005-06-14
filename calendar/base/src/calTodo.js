@@ -104,7 +104,7 @@ calTodo.prototype = {
         this.mEntryDate = new CalDateTime();
         this.mDueDate = new CalDateTime();
         this.mCompletedDate = new CalDateTime();
-        this.mPercentComplete = 0;
+        this.mPercentComplete = undefined;
     },
 
     cloneShallow: function (aNewParent) {
@@ -177,9 +177,11 @@ calTodo.prototype = {
         this.fillIcalComponentFromBase(icalcomp);
         this.mapPropsToICS(icalcomp, this.icsEventPropMap);
 
-        var percentprop = icssvc.createIcalProperty("PERCENT-COMPLETE");
-        percentprop.stringValue = this.mPercentComplete;
-        icalcomp.addProperty(percentprop);
+        if (this.mPercentComplete != undefined) {
+            var percentprop = icssvc.createIcalProperty("PERCENT-COMPLETE");
+            percentprop.stringValue = this.mPercentComplete;
+            icalcomp.addProperty(percentprop);
+        }
 
         var bagenum = this.mProperties.enumerator;
         while (bagenum.hasMoreElements()) {
