@@ -74,6 +74,8 @@ public:
   nsresult Close();
   nsresult LoadTextFilters(nsIOFileStream *aStream);
 
+  PRBool m_temporaryList;
+
 protected:
   // type-safe accessor when you really have to have an nsMsgFilter
   nsresult GetMsgFilterAt(PRUint32 filterIndex, nsMsgFilter **filter);

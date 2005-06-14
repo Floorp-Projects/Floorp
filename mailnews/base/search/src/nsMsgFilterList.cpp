@@ -73,6 +73,7 @@ nsMsgFilterList::nsMsgFilterList() :
 
   m_loggingEnabled = PR_FALSE;
   m_startWritingToBuffer = PR_FALSE; 
+  m_temporaryList = PR_FALSE;
   m_curFilter = nsnull;
   m_arbitraryHeaders.SetLength(0);
 }
@@ -963,7 +964,8 @@ nsMsgFilterList::RemoveFilter(nsIMsgFilter *aFilter)
 nsresult nsMsgFilterList::InsertFilterAt(PRUint32 filterIndex, nsIMsgFilter *aFilter)
 {
   nsMsgFilter *filter = NS_STATIC_CAST(nsMsgFilter *, aFilter);
-  filter->SetFilterList(this);
+  if (!m_temporaryList)
+    filter->SetFilterList(this);
   m_filters->InsertElementAt(aFilter, filterIndex);
   return NS_OK;
 }

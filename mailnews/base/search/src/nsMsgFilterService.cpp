@@ -716,14 +716,12 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
 NS_IMETHODIMP nsMsgFilterService::GetTempFilterList(nsIMsgFolder *aFolder, nsIMsgFilterList **aFilterList)
 {
   NS_ENSURE_ARG_POINTER(aFilterList);
-  *aFilterList = new nsMsgFilterList;
-  if (*aFilterList)
-  {
-    (*aFilterList)->SetFolder(aFolder);
-    NS_ADDREF(*aFilterList);
-    return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
+  nsMsgFilterList *filterList = new nsMsgFilterList;
+  NS_ENSURE_TRUE(filterList, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(*aFilterList = filterList);
+  (*aFilterList)->SetFolder(aFolder);
+  filterList->m_temporaryList = PR_TRUE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilterService::ApplyFiltersToFolders(nsIMsgFilterList *aFilterList, nsISupportsArray *aFolders, nsIMsgWindow *aMsgWindow)
