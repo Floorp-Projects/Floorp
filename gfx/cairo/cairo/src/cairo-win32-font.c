@@ -714,7 +714,7 @@ _cairo_win32_scaled_font_glyph_extents (void		     *abstract_font,
 	_cairo_win32_scaled_font_done_unscaled_font (&scaled_font->base);
 
 	extents->x_bearing = (double)metrics.gmptGlyphOrigin.x / scaled_font->em_square;
-	extents->y_bearing = (double)metrics.gmptGlyphOrigin.y / scaled_font->em_square;
+	extents->y_bearing = - (double)metrics.gmptGlyphOrigin.y / scaled_font->em_square;
 	extents->width = (double)metrics.gmBlackBoxX / scaled_font->em_square;
 	extents->height = (double)metrics.gmBlackBoxY / scaled_font->em_square;
 	extents->x_advance = (double)metrics.gmCellIncX / scaled_font->em_square;
