@@ -205,7 +205,7 @@ function initializeSearchRows(scope, searchTerms)
 function scrollToLastSearchTerm(index)
 {
     if (index > 0)
-      gSearchTermList.ensureIndexIsVisible(index-1);
+      gSearchTermList.ensureIndexIsVisible(index);
 }
  
 function onMore(event, rowNumber)
@@ -218,7 +218,7 @@ function onMore(event, rowNumber)
         document.getElementById("less0").removeAttribute("disabled");
 
     // the user just added a term, so scroll to it
-    scrollToLastSearchTerm(gTotalSearchTerms);
+    scrollToLastSearchTerm(gTotalSearchTerms == 1 ? 0 : rowNumber + 1);
 }
 
 function onLess(event, rowNumber)
