@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -85,12 +85,6 @@
 #include "nsReadableUtils.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIGenericFactory.h"
-
-#ifdef	XP_MAC
-#include <Files.h>
-#include <Timer.h>
-#include <Gestalt.h>
-#endif
 
 #ifdef	XP_WIN
 #include "windef.h"
@@ -977,46 +971,50 @@ InternetSearchDataSource::Init()
 	return(rv);
 }
 
-
-
-NS_METHOD
+void
 InternetSearchDataSource::DeferredInit()
 {
-	nsresult	rv = NS_OK;
+  if (gEngineListBuilt)
+    return;
 
-  if (!gEngineListBuilt)
-	{
-		gEngineListBuilt = PR_TRUE;
+  nsresult rv;
 
-		// get available search engines
-		nsCOMPtr<nsIFile>			nativeDir;
-		if (NS_SUCCEEDED(rv = GetSearchFolder(getter_AddRefs(nativeDir))))
-		{
-			rv = GetSearchEngineList(nativeDir, PR_FALSE, PR_FALSE);
-			
-			// read in category list
-			rv = GetCategoryList();
-		}
+  nsCOMPtr<nsIProperties> dirSvc
+    (do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+  if (!dirSvc)
+    return;
 
-#ifdef	XP_MAC
-		// on Mac, use system's search files too
-      	nsCOMPtr<nsIFile> macSearchDir;
+  gEngineListBuilt = PR_TRUE;
 
-        rv = NS_GetSpecialDirectory(NS_MAC_INTERNET_SEARCH_DIR, getter_AddRefs(macSearchDir));
-        if (NS_SUCCEEDED(rv))
-        {
-      		// Mac OS X doesn't have file types set for search files, so don't check them
-      		long response;
-      		OSErr err = ::Gestalt(gestaltSystemVersion, &response);
-      		PRBool checkFileType = (!err) && (response >= 0x00001000) ? PR_FALSE : PR_TRUE;
-      		rv = GetSearchEngineList(macSearchDir, PR_TRUE, checkFileType);
-      	}
-#endif
-	}
-	return(rv);
+  // get available search engines
+  nsCOMPtr<nsIFile> dir;
+  rv = dirSvc->Get(NS_APP_SEARCH_DIR,
+                   NS_GET_IID(nsIFile), getter_AddRefs(dir));
+  if (NS_SUCCEEDED(rv))
+  {
+    GetSearchEngineList(dir, PR_FALSE);
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> dirlist;
+  rv = dirSvc->Get(NS_APP_SEARCH_DIR_LIST,
+                   NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(dirlist));
+  if (NS_SUCCEEDED(rv))
+  {
+    PRBool more;
+    while (NS_SUCCEEDED(dirlist->HasMoreElements(&more)) && more) {
+      nsCOMPtr<nsISupports> suppfile;
+      dirlist->GetNext(getter_AddRefs(suppfile));
+      dir = do_QueryInterface(suppfile);
+      if (dir)
+      {
+        GetSearchEngineList(dir, PR_FALSE);
+      }
+    }
+  }
+
+  // read in category list
+  GetCategoryList();
 }
-
-
 
 NS_IMETHODIMP
 InternetSearchDataSource::GetURI(char **uri)
@@ -2564,7 +2562,9 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	}
 
 	nsCOMPtr<nsIFile>	outFile;
-	if (NS_FAILED(rv = GetSearchFolder(getter_AddRefs(outFile))))		return(rv);
+  rv = NS_GetSpecialDirectory(NS_APP_SEARCH_DIR, getter_AddRefs(outFile));
+  if (NS_FAILED(rv))
+    return rv;
 
 	const PRUnichar	*dataBuf = nsnull;
 	if (NS_FAILED(rv = context->GetBufferConst(&dataBuf)))	return(rv);
@@ -2617,27 +2617,18 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
     if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_NEW_CONTEXT ||
         contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_UPDATE_CONTEXT)
     {
-#ifdef	XP_MAC
-        // set appropriate Mac file type/creator for search engine files
-        nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(outFile));
-        if (macFile) {
-          macFile->SetFileType('issp');
-          macFile->SetFileCreator('fndf');
-        }
-#endif
-
         // check suggested category hint
         const PRUnichar	*hintUni = nsnull;
         rv = context->GetHintConst(&hintUni);
 
         // update graph with various required info
-        SaveEngineInfoIntoGraph(outFile, nsnull, hintUni, dataBuf, PR_FALSE, PR_FALSE);
+        SaveEngineInfoIntoGraph(outFile, nsnull, hintUni, dataBuf, PR_FALSE);
     }
     else if (contextType == nsIInternetSearchContext::ICON_DOWNLOAD_NEW_CONTEXT ||
              contextType == nsIInternetSearchContext::ICON_DOWNLOAD_UPDATE_CONTEXT)
     {
         // update graph with icon info
-        SaveEngineInfoIntoGraph(nsnull, outFile, nsnull, nsnull, PR_FALSE, PR_FALSE);
+        SaveEngineInfoIntoGraph(nsnull, outFile, nsnull, nsnull, PR_FALSE);
     }
 
 	// after we're all done with the data buffer, get rid of it
@@ -4116,29 +4107,11 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	return(rv);
 }
 
-
-
-nsresult
-InternetSearchDataSource::GetSearchFolder(nsIFile **searchDir)
-{
-  NS_ENSURE_ARG_POINTER(searchDir);
-  *searchDir = nsnull;
-	
-  nsCOMPtr<nsIFile> aDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_SEARCH_DIR, getter_AddRefs(aDir));
-  if (NS_FAILED(rv)) return rv;
-  
-  *searchDir = aDir;
-  NS_ADDREF(*searchDir);
-  return NS_OK;
-}
-
-
-
 nsresult
 InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
-		const PRUnichar *categoryHint, const PRUnichar *dataUni, PRBool isSystemSearchFile,
-		PRBool checkMacFileType)
+                                                  const PRUnichar *categoryHint,
+                                                  const PRUnichar *dataUni,
+                                                  PRBool isSystemSearchFile)
 {
 	nsresult			rv = NS_OK;
 
@@ -4225,16 +4198,6 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 			return(rv);
 		AppendUTF8toUTF16(iconFileURL, iconURL);
 	}
-#ifdef XP_MAC
-	else if (file)
-	{
-		nsCAutoString  fileURL;
-		if (NS_FAILED(rv = NS_GetURLSpecFromFile(file,fileURL)))
-			return(rv);
-		iconURL.AssignLiteral("moz-icon:");
-		AppendUTF8toUTF16(fileURL, iconURL);
-	}
-#endif
 
 	// save icon url (if we have one)
 	if (iconURL.Length() > 0)
@@ -4335,7 +4298,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 
 nsresult
 InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
-              PRBool isSystemSearchFile, PRBool checkMacFileType)
+              PRBool isSystemSearchFile)
 {
         nsresult			rv = NS_OK;
 
@@ -4368,7 +4331,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
           continue;
         if (isDirectory)
         {
-          GetSearchEngineList(dirEntry, isSystemSearchFile, checkMacFileType);
+          GetSearchEngineList(dirEntry, isSystemSearchFile);
           continue;
         }
 
@@ -4390,22 +4353,6 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
 		{
 			continue;
 		}
-
-#ifdef	XP_MAC
-    if (checkMacFileType)
-		{
-            nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(dirEntry));
-            if (!macFile)
-                continue;
-            OSType type, creator;
-            rv = macFile->GetFileType(&type);
-            if (NS_FAILED(rv) || type != 'issp')
-                continue;
-            rv = macFile->GetFileCreator(&creator);     // Do we really care about creator?  
-            if (NS_FAILED(rv) || creator != 'fndf')
-                continue;  
-		}
-#endif
 
 		// check the extension (must be ".src")
 		nsAutoString	extension;
@@ -4445,7 +4392,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
                         } 
                 }
 		
-		SaveEngineInfoIntoGraph(dirEntry, iconFile, nsnull, nsnull, isSystemSearchFile, checkMacFileType);
+		SaveEngineInfoIntoGraph(dirEntry, iconFile, nsnull, nsnull, isSystemSearchFile);
 	}
 
 #ifdef MOZ_PHOENIX
@@ -5485,12 +5432,8 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 
 #ifdef	DEBUG
 	PRTime		now;
-#ifdef	XP_MAC
-	Microseconds((UnsignedWide *)&now);
-#else
 	now = PR_Now();
-#endif
-       printf("\nStart processing search results:   %u bytes \n", htmlPageSize); 
+  printf("\nStart processing search results:   %u bytes \n", htmlPageSize); 
 #endif
 
 	// need to handle multiple <interpret> sections, per spec
@@ -6243,11 +6186,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 
 #ifdef	DEBUG
 	PRTime		now2;
-#ifdef	XP_MAC
-	Microseconds((UnsignedWide *)&now2);
-#else
 	now2 = PR_Now();
-#endif
 	PRUint64	loadTime64;
 	LL_SUB(loadTime64, now2, now);
 	PRUint32	loadTime32;
