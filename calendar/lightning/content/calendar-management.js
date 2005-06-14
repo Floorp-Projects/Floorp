@@ -165,6 +165,10 @@ function getCalendarManager()
         var homeCalendar = activeCalendarManager.createCalendar("storage", makeURL("moz-profile-calendar://"));
         activeCalendarManager.registerCalendar(homeCalendar);
         homeCalendar.name = "Home";
+
+        var composite = getCompositeCalendar();
+        composite.addCalendar(homeCalendar);
+        // XXX this doesn't make it selected, but you do add to it
     }
 
     return activeCalendarManager;
@@ -284,7 +288,8 @@ var ltnCalendarTreeView = {
     getLevel: function(row) { return 0; },
     getImageSrc: function(row, col) { return null; },
     getRowProperties: function(row, props) { },
-    getColumnProperties: function(colid, col, props) { }
+    getColumnProperties: function(colid, col, props) { },
+    cycleHeader: function() { }
 };
 
 function ltnSetTreeView()
