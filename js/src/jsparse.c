@@ -2197,13 +2197,13 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn2->pn_expr = NULL;
         pn2->pn_slot = -1;
         pn2->pn_attrs = (pn->pn_op == JSOP_DEFCONST)
-                        ? JSPROP_ENUMERATE | JSPROP_PERMANENT |
-                          JSPROP_READONLY
-                        : JSPROP_ENUMERATE | JSPROP_PERMANENT;
+                        ? JSPROP_PERMANENT | JSPROP_READONLY
+                        : JSPROP_PERMANENT;
         PN_APPEND(pn, pn2);
 
         if (!fun) {
-            prop = NULL; /* don't lookup global variables at compile time */
+            /* Don't lookup global variables at compile time. */
+            prop = NULL;
         } else if (OBJ_IS_NATIVE(obj)) {
             if (!js_LookupHiddenProperty(cx, obj, ATOM_TO_JSID(atom),
                                          &pobj, &prop)) {
