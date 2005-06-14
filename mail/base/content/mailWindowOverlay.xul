@@ -1956,7 +1956,7 @@
     <image id="junkBarImage"/>
     <description flex="1" class="msgNotificationBarText">&junkBarMessage.label;</description>
     <spacer flex="1"/>
-    <button label="&notJunkButton.label;" oncommand="JunkSelectedMessages(false);"/>
+    <button label="&junkBarButton.label;" oncommand="JunkSelectedMessages(false);"/>
   </hbox>
 
   <hbox id="remoteContentBar" class="msgNotificationBar" align="center">

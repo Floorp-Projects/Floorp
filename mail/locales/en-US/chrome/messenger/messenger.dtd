@@ -10,8 +10,6 @@
 <!ENTITY newAccountCmd.label "Account...">
 <!ENTITY newAccountCmd.accesskey "A">
 <!ENTITY openMessageMenu.label "Open">
-<!ENTITY openMessageWindowCmd.label "Open Message">
-<!ENTITY openMessageWindowCmd.accesskey "s">
 <!ENTITY openMessageFileCmd.label "Open Saved Message...">
 <!ENTITY openMessageFileCmd.accesskey "O">
 <!ENTITY openAttachmentCmd.label "Attachments">
@@ -249,6 +247,8 @@
 <!ENTITY searchMailCmd.label "Search Messages...">
 <!ENTITY searchMailCmd.accesskey "M">
 <!ENTITY searchMailCmd.key "f">
+<!ENTITY searchAddressesCmd.label "Search Addresses...">
+<!ENTITY searchAddressesCmd.accesskey "S">
 
 <!-- Go Menu -->
 <!ENTITY goMenu.label "Go">
@@ -395,11 +395,6 @@
 <!ENTITY addressBookCmd.label "Address Book">  
 <!ENTITY addressBookCmd.accesskey "a">
 <!ENTITY addressBookCmd.commandkey "2">
-<!ENTITY searchMailCmd.label "Search Messages...">
-<!ENTITY searchMailCmd.accesskey "e">
-<!ENTITY searchMailCmd.key "f">
-<!ENTITY searchAddressesCmd.label "Search Addresses...">
-<!ENTITY searchAddressesCmd.accesskey "S">
 <!ENTITY junkMailCmd.label "Junk Mail Controls...">
 <!ENTITY junkMailCmd.accesskey "J">
 <!ENTITY runJunkControls.label "Run Junk Mail Controls on Folder">
@@ -464,8 +459,6 @@
 <!-- Folder Pane -->
 <!ENTITY folderPaneHeader.label "Folders">
 <!ENTITY folderColumn.label "Name">
-<!ENTITY unreadColumn.label "Unread">
-<!ENTITY totalColumn.label "Total">
 <!ENTITY folderSizeColumn.label "Size">
 
 <!-- Folder Pane Context Menu -->
@@ -595,7 +588,7 @@
 
 <!-- Junk Bar -->
 <!ENTITY junkBarMessage.label "&brandShortName; thinks this message is junk.">
-<!ENTITY notJunkButton.label "This is Not Junk">
+<!ENTITY junkBarButton.label "This is Not Junk">
 <!ENTITY junkInfoButton.label "?">
 
 <!-- Remote Content Bar -->
