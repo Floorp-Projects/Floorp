@@ -57,31 +57,77 @@
     <content>
       <xul:hbox pack="start">
         <xul:label class="update-item-name" xbl:inherits="value=name" crop="right" flex="1"/>
-        <xul:link class="update-item-details" xbl:inherits="href=url">&details.link;</xul:link>
+        <xul:link class="update-item-details" xbl:inherits="href=detailsURL">&details.link;</xul:link>
       </xul:hbox>
-      <xul:label class="update-item-status" xbl:inherits="xbl:text=status" flex="1"/>
+      <xul:deck anonid="modeDeck">
+        <xul:label class="update-item-status" xbl:inherits="xbl:text=status" flex="1"/>
+        <xul:vbox>
+          <xul:progressmeter class="update-item-progress" xbl:inherits="value=progress" mode="undetermined"/>
+          <xul:hbox align="center">
+            <xul:label class="update-item-status" xbl:inherits="value=status" flex="1" crop="right"/>
+            <xul:button class="update-item-pause" 
+                        label="&pause.label;" accesskey="&pause.accesskey;"
+                        oncommand="this.parentNode.parentNode.fireEvent('pause');"/>
+          </xul:hbox>
+        </xul:vbox>
+      </xul:deck>
+      <xul:stringbundle anonid="strings" 
+                        src="chrome://mozapps/locale/update/updates.properties"/>
     </content>
-  </binding>
-  
-  <binding id="update-downloading" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
-    <resources>
-      <stylesheet src="chrome://mozapps/content/update/updates.css"/>
-    </resources>
-    <content>
-      <xul:hbox pack="start">
-        <xul:label class="update-item-name" xbl:inherits="value=name" crop="right" flex="1"/>
-        <xul:link class="update-item-details" xbl:inherits="href=url" label="&details.link;"/>
-      </xul:hbox>
-      <xul:progressmeter class="update-item-progress" xbl:inherits="value=progress" mode="undetermined"/>
-      <xul:hbox align="center">
-        <xul:label class="update-item-status" xbl:inherits="value=status" flex="1" crop="right"/>
-        <xul:button class="update-item-pause" 
-                    label="&pause.label;" accesskey="&pause.accesskey;"
-                    oncommand="this.parentNode.parentNode.fireEvent('pause');"/>
-      </xul:hbox>
-    </content>  
     <implementation>
-      <field name="eventPrefix">"update-"</field>
+      <field name="_update">null</field>
+      <field name="_strings">
+        document.getAnonymousElementByAttribute(this, "anonid", "strings");
+      </field>
+      <field name="_modeDeck">
+        document.getAnonymousElementByAttribute(this, "anonid", "modeDeck");
+      </field>
+      <method name="setUpdate">
+        <parameter name="update"/>
+        <body><![CDATA[
+          this._update = update;
+          
+          this.setAttribute("name", update.name);
+          this.setAttribute("detailsURL", update.detailsURL);
+          this.state = update.state;
+        ]]></body>
+      </method>
+      
+      <property name="state">
+        <getter><![CDATA[
+          return this.getAttribute("state");
+        ]]></getter>
+        <setter><![CDATA[
+          this.setAttribute("state", val);
+          this._modeDeck.setAttribute("selectedIndex", val == "downloading" ? 1 : 0);
+          
+          if (val == "failed") {
+            var failed = this._strings.getString("statusFailed");
+            this.setAttribute("status", failed);
+          }
+          else if (val != "downloading") {
+            var sdf = 
+                Components.classes["@mozilla.org/intl/scriptabledateformat;1"].
+                getService(Components.interfaces.nsIScriptableDateFormat);
+            var installDate = new Date(this._update.installDate);
+            var dateString = sdf.FormatDateTime("", sdf.dateFormatLong, 
+                                                sdf.timeFormatSeconds,
+                                                date.getFullYear(),
+                                                date.getMonth() + 1,
+                                                date.getDate(),
+                                                date.getHours(),
+                                                date.getMinutes(),
+                                                date.getSeconds());
+            dateString = this._strings.getFormattedString("statusSucceededFormat",
+                                                          [dateString]);
+            this.setAttribute("status", dateString);
+          }
+          return val;
+        ]]></setter>
+      </property>
+      <property name="state" 
+                onset="this.setAttribute('state', val); return val;"
+                onget="return this.getAttribute('state');"/>
     </implementation>
   </binding>
   

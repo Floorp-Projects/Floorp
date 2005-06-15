@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  Ben Goodger <ben@mozilla.org> (Original Author)
+ *  Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,6 +57,8 @@ const PREF_UPDATE_LASTUPDATETIME_FMT      = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
+const URI_BRAND_PROPERTIES      = "chrome://branding/locale/brand.properties";
+const URI_UPDATES_PROPERTIES    = "chrome://mozapps/locale/update/updates.properties";
 const URI_UPDATE_NS             = "http://www.mozilla.org/2005/app-update";
 
 const KEY_APPDIR          = "XCurProcD";
@@ -700,7 +703,7 @@ UpdateManager.prototype = {
     if (!this._activeUpdate) {
       var updates = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, 
                              [FILE_UPDATE_ACTIVE]));
-      if (updates.length > 0) 
+      if (updates.length > 0)
         this._activeUpdate = updates[0];
     }
   },
@@ -891,7 +894,25 @@ function Update(update) {
   this.detailsURL = update.getAttribute("detailsURL");
   this.licenseURL = update.getAttribute("licenseURL");
   this.installDate = update.hasAttribute("installDate") ? parseInt(update.getAttribute("installDate")) : 0;
+  this.state = update.getAttribute("state");
   this.isCompleteUpdate = false;
+  
+  // The Update Name is either the string provided by the <update> element, or
+  // the string: "<App Name> <Update App Version>"
+  var name = "";
+  if (update.hasAttribute("name"))
+    name = update.getAttribute("name");
+  else {
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var brandBundle = sbs.createBundle(URI_BRAND_PROPERTIES);
+    var updateBundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
+    var appName = brandBundle.GetStringFromName("brandShortName");
+    name = updateBundle.formatStringFromName("updateName", 
+                                             [appName, this.version], 2);
+  }
+  
+  this.name = name;
 }
 Update.prototype = {
   /**
@@ -914,11 +935,13 @@ Update.prototype = {
   serialize: function(updates) {
     var update = updates.createElementNS(URI_UPDATE_NS, "update");
     update.setAttribute("type", this.type);
+    update.setAttribute("name", this.name);
     update.setAttribute("version", this.version);
     update.setAttribute("extensionVersion", this.extensionVersion);
     update.setAttribute("detailsURL", this.detailsURL);
     update.setAttribute("licenseURL", this.licenseURL);
     update.setAttribute("installDate", this.installDate);
+    update.setAttribute("state", this.state);
     document.documentElement.appendChild(update);
     
     for (var i = 0; i < this.patchCount; ++i)
@@ -1116,6 +1139,11 @@ Downloader.prototype = {
    * The nsIUpdatePatch that we are downloading
    */
   _patch: null,
+  
+  /**
+   * The nsIUpdate that we are downloading
+   */
+  _update: null,
   
   /**
    * The nsIIncrementalDownload object handling the download
@@ -1330,6 +1358,8 @@ Downloader.prototype = {
     
     var updateDir = this._getUpdatesDir();
 
+    this._update = update;
+
     // This function may return null, which indicates that there are no patches
     // to download.
     this._patch = this._selectPatch(update, updateDir);
@@ -1360,9 +1390,16 @@ Downloader.prototype = {
     this._request.start(this, null);
 
     this._writeStatusFile(updateDir, STATE_DOWNLOADING);
+    update.state = STATE_DOWNLOADING;
+    var um = Components.classes["@mozilla.org/updates/update-manager;1"]
+                       .getService(Components.interfaces.nsIUpdateManager);
+    um.saveUpdates();
     return STATE_DOWNLOADING;
   },
   
+  /**
+   *
+   */
   _listeners: [],
 
   /** 
@@ -1433,6 +1470,10 @@ Downloader.prototype = {
         status = Components.results.NS_ERROR_UNEXPECTED;
       }
       this._writeStatusFile(this._getUpdatesDir(), state);
+      this._update.state = state;
+      var um = Components.classes["@mozilla.org/updates/update-manager;1"]
+                         .getService(Components.interfaces.nsIUpdateManager);
+      um.saveUpdates();
     }
 
     var listenerCount = this._listeners.length;
@@ -1454,10 +1495,22 @@ Downloader.prototype = {
   }
 };
 
+/**
+ * A manager for update check timers. Manages timers that fire over long 
+ * periods of time (e.g. days, weeks).
+ * @constructor
+ */
 function TimerManager() {
 }
 TimerManager.prototype = {
+  /**
+   * The set of registered timers.
+   */
   _timers: { },
+  
+  /**
+   *
+   */
   registerTimer: function(id, callback, interval, type) {
     const nsITimer = Components.interfaces.nsITimer;
     var timer = Components.classes["@mozilla.org/timer;1"]
@@ -1465,17 +1518,40 @@ TimerManager.prototype = {
     var timerInterval = getPref("getIntPref", PREF_APP_UPDATE_TIMER, 5000);
     
     var self = this;
+    
+    /**
+     * A callback object implementing nsITimerCallback that determines if the
+     * user-registered callback should be invoked yet. 
+     * @param   id
+     *          The id of the timer that fired
+     * @param   callback
+     *          The nsITimerCallback object supplied by the user that should be
+     *          notified if the user's interval has expired.
+     * @param   interval
+     *          The user's interval
+     * @constructor
+     */
     function TimerCallback(id, callback, interval) {
       this.id = id;
       this.callback = callback;
       this.interval = interval;
     }
     TimerCallback.prototype = {
+      /**
+       *
+       */
       notify: function(timer) {
         LOG("self._timers = " + self._timers.toSource());
         var lastUpdateTime = self._timers[this.id].lastUpdateTime;
         var now = Math.round(Date.now() / 1000);
         LOG("notify = " + (now - lastUpdateTime) + " > " + this.interval);
+        
+        // Fudge the lastUpdateTime by some random increment of the update 
+        // check interval (e.g. some random slice of 10 minutes) so that when
+        // the time comes to check, we offset each client request by a random
+        // amount so they don't all hit at once.
+        lastUpdateTime += Math.round(Math.random() * this.interval);
+        
         if ((now - lastUpdateTime) > this.interval &&
             this.callback instanceof Components.interfaces.nsITimerCallback) {
           this.callback.notify(timer);
@@ -1504,6 +1580,9 @@ TimerManager.prototype = {
     this._timers[id] = { timer: timer, lastUpdateTime: lastUpdateTime };
   },
 
+  /**
+   * See nsISupports.idl
+   */
   QueryInterface: function(iid) {
     if (!iid.equals(Components.interfaces.nsIUpdateTimerManager) &&
         !iid.equals(Components.interfaces.nsISupports))
@@ -1512,23 +1591,23 @@ TimerManager.prototype = {
   }
 };
 
-function Version(aMajor, aMinor, aRelease, aBuild, aPlus) 
-{ 
+/**
+ * Represents the version of an entity, in Firefox Version Format.
+ * @constructor
+ */
+function Version(aMajor, aMinor, aRelease, aBuild, aPlus) { 
   this.major    = aMajor    || 0;
   this.minor    = aMinor    || 0;
   this.release  = aRelease  || 0;
   this.build    = aBuild    || 0;
   this.plus     = aPlus     || 0;
 }
-
 Version.prototype = {
-  toString: function Version_toString() 
-  {
+  toString: function Version_toString() {
     return this.major + "." + this.minor + "." + this.subminor + "." + this.release + (this.plus ? "+" : "");
   },
   
-  compare: function (aVersion)
-  {
+  compare: function (aVersion) {
     var fields = ["major", "minor", "release", "build", "plus"];
     
     for (var i = 0; i < fields.length; ++i) {
@@ -1542,6 +1621,10 @@ Version.prototype = {
   }
 }
 
+/**
+ * A service that provides a means to compare two FVF strings.
+ * @constructor
+ */
 function VersionChecker() {
 }
 
@@ -1552,16 +1635,14 @@ VersionChecker.prototype = {
   // -ve      if B is newer
   // equal    if A == B
   // +ve      if A is newer
-  compare: function(aVersionA, aVersionB)
-  {
+  compare: function(aVersionA, aVersionB) {
     var a = this._decomposeVersion(aVersionA);
     var b = this._decomposeVersion(aVersionB);
     
     return a.compare(b);
   },
   
-  _decomposeVersion: function(aVersion)
-  {
+  _decomposeVersion: function(aVersion) {
     var plus = 0;
     if (aVersion.charAt(aVersion.length-1) == "+") {
       aVersion = aVersion.substr(0, aVersion.length-1);
@@ -1577,23 +1658,20 @@ VersionChecker.prototype = {
                        plus);
   },
   
-  _getValidInt: function(aPartString)
-  {
+  _getValidInt: function(aPartString) {
     var integer = parseInt(aPartString);
     if (isNaN(integer))
       return 0;
     return integer;
   },
   
-  isValidVersion: function(aVersion)
-  {
+  isValidVersion: function(aVersion) {
     return /^([0-9]+\.){0,3}[0-9]+\+?$/.test(aVersion);
   },
 
   /////////////////////////////////////////////////////////////////////////////
   // nsISupports
-  QueryInterface: function(aIID) 
-  {
+  QueryInterface: function(aIID) {
     if (!aIID.equals(Components.interfaces.nsIVersionChecker) &&
         !aIID.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;

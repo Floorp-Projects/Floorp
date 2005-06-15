@@ -150,10 +150,6 @@ update {
   padding: 5px;
 }
 
-update[state="downloading"] {
-  -moz-binding: url("chrome://mozapps/content/update/updates.xml#update-downloading");
-}
-
 #updatesView[showcompletedupdates=true] > update {
   display: none
 }
