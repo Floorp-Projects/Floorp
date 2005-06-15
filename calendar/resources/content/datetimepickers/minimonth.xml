@@ -159,6 +159,7 @@
           this.mInitialized = false;
           this.mSelected = false;
           this.mValue = null;
+          this.mEditorDate = null; // set only in showMonth
           this.kMonthNames = new Array(12);
           var tempDate = new Date();
           for (var month = 0; month < 12; month++) {
@@ -260,7 +261,12 @@
               aDate = new Date(aDate);
             }
             aDate.setDate(1);
-            this.mEditorDate = aDate;
+            aDate.setHours(0);
+            aDate.setMinutes(0);
+            aDate.setSeconds(0);
+            aDate.setMilliseconds(0);
+            var monthChanged = (this.mEditorDate != aDate);
+            this.mEditorDate = aDate; // only place mEditorDate is set.
 
             if (this.mSelected) {
               this.mSelected.removeAttribute("selected");
@@ -327,6 +333,7 @@
                 date.setDate(date.getDate() + 1);
               }
             }
+            if (monthChanged) this.fireEvent('monthchange');
           ]]>
         </body>
       </method>
@@ -421,14 +428,10 @@
         <parameter name="aDir"/>
         <body>
           <![CDATA[
-            var ad = this.mEditorDate.getMonth() + aDir;
-            this.mEditorDate.setMonth(ad);
-            this.showMonth(this.mEditorDate);
-            if (this.mSelected) {
-              this.mSelected.removeAttribute("selected");
-            }
-            this.value = this.mEditorDate;
-            this.fireEvent("monthchange");
+            var advEditorDate = new Date(this.mEditorDate); // at 1st of month
+            var advMonth = this.mEditorDate.getMonth() + aDir;
+            advEditorDate.setMonth(advMonth);
+            this.showMonth(advEditorDate); 
           ]]>
         </body>
       </method>
@@ -472,12 +475,9 @@
         <parameter name="aMonth"/>
         <body>
           <![CDATA[
-            this.mEditorDate.setMonth(aMonth);
-            this.showMonth(this.mEditorDate);
-            if (this.mSelected)
-              this.mSelected.removeAttribute("selected");
-            this.value = this.mEditorDate;
-            this.fireEvent("monthchange");
+            var newMonth = new Date(this.mEditorDate);
+            newMonth.setMonth(aMonth);
+            this.showMonth(newMonth);
           ]]>
         </body>
       </method>
@@ -486,12 +486,9 @@
         <parameter name="aYear"/>
         <body>
           <![CDATA[
-            this.mEditorDate.setFullYear(aYear);
-            this.showMonth(this.mEditorDate);
-            if (this.mSelected)
-              this.mSelected.removeAttribute("selected");
-            this.value = this.mEditorDate;
-            this.fireEvent("monthchange");
+            var newMonth = new Date(this.mEditorDate);
+            newMonth.setFullYear(aYear);
+            this.showMonth(newMonth);
           ]]>
         </body>
       </method>
