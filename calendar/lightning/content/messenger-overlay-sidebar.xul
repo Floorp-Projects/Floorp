@@ -64,8 +64,8 @@
 
 <deck id="displayDeck">
   <deck id="calendar-view-box" flex="1">
-    <vbox id="calendar-month-view"><label value="blah"/></vbox>
     <calendar-multiday-view orient="vertical" id="calendar-multiday-view" style="overflow:-moz-scrollbars-vertical" flex="1" />
+    <vbox id="calendar-month-view"><label value="blah"/></vbox>
     <!-- <vbox id="week-view-box" flex="1"/> -->
   </deck>
 </deck>
