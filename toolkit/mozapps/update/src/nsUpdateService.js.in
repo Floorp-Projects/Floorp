@@ -678,7 +678,11 @@ UpdateManager.prototype = {
       
       var updateCount = doc.documentElement.childNodes.length;
       for (var i = 0; i < updateCount; ++i) {
-        var updateNode = doc.documentElement.childNodes[i];
+        var updateElement = doc.documentElement.childNodes[i];
+        if (updateElement.nodeType != Node.ELEMENT_NODE ||
+            updateElement.localName != "update")
+          continue;
+
         result.push(new Update(updateNode));
       }
     }
@@ -798,8 +802,11 @@ UpdateManager.prototype = {
       this._writeUpdatesToXMLFile([this._activeUpdate], 
                                   getFile(KEY_APPDIR, [FILE_UPDATE_ACTIVE]));
     }
-    this._writeUpdatesToXMLFile(this._updates, 
-                                getFile(KEY_APPDIR, [FILE_UPDATES_DB]));
+    if (this._updates) {
+      LOG("UPDATES = " + this._updates);
+      this._writeUpdatesToXMLFile(this._updates, 
+                                  getFile(KEY_APPDIR, [FILE_UPDATES_DB]));
+    }
   },
   
   /**
@@ -885,9 +892,15 @@ UpdatePatch.prototype = {
 function Update(update) {
   this._patches = [];
 
-  for (var i = 0; i < update.childNodes.length; ++i)
-    this._patches.push(new UpdatePatch(update.childNodes[i]));
+  for (var i = 0; i < update.childNodes.length; ++i) {
+    var patchElement = update.childNodes[i];
+    if (patchElement.nodeType != Node.ELEMENT_NODE ||
+        patchElement.localName != "patch")
+      continue;
 
+    this._patches.push(new UpdatePatch(patchElement));
+  }
+  
   this.type = update.getAttribute("type");
   this.version = update.getAttribute("version");
   this.extensionVersion = update.getAttribute("extensionVersion");
@@ -942,7 +955,7 @@ Update.prototype = {
     update.setAttribute("licenseURL", this.licenseURL);
     update.setAttribute("installDate", this.installDate);
     update.setAttribute("state", this.state);
-    document.documentElement.appendChild(update);
+    updates.documentElement.appendChild(update);
     
     for (var i = 0; i < this.patchCount; ++i)
       update.appendChild(this.getPatchAt(i).serialize(updates));
@@ -1070,7 +1083,8 @@ Checker.prototype = {
     var updates = [];
     for (var i = 0; i < updatesElement.childNodes.length; ++i) {
       var updateElement = updatesElement.childNodes[i];
-      if (updateElement.nodeType != Node.ELEMENT_NODE)
+      if (updateElement.nodeType != Node.ELEMENT_NODE ||
+          updateElement.localName != "update")
         continue;
 
       updates.push(new Update(updateElement));
@@ -1263,6 +1277,7 @@ Downloader.prototype = {
      * @returns A nsIUpdatePatch object matching the type specified
      */
     function getPatchOfType(type) {
+      LOG("PATCHCOUNT = " + update.patchCount);
       for (var i = 0; i < update.patchCount; ++i) {
         var patch = update.getPatchAt(i);
         if (patch && patch.type == type)
@@ -1363,7 +1378,6 @@ Downloader.prototype = {
     // This function may return null, which indicates that there are no patches
     // to download.
     this._patch = this._selectPatch(update, updateDir);
-    LOG("PATCH = " + this._patch);
     if (!this._patch) {
       LOG("no patch to download");
       return this._readStatusFile(updateDir);
