@@ -1158,7 +1158,7 @@ NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBo
     }
   }
   if (err == NS_OK || err == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
-    GetDBCache()->AppendElement(this);
+    AddToCache(this);
   return (summaryFileExists) ? err : NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
 }
 
@@ -1589,6 +1589,8 @@ nsresult nsMsgDatabase::InitExistingDB()
     else
       err = NS_ERROR_FAILURE;
     
+    NS_ASSERTION(NS_SUCCEEDED(err), "failed initing existing db");
+    NS_ENSURE_SUCCESS(err, err);
     // create new all msg hdrs table, if it doesn't exist.
     if (NS_SUCCEEDED(err) && !m_mdbAllMsgHeadersTable)
     {

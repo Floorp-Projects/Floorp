@@ -366,15 +366,15 @@ nsresult nsDBFolderInfo::InitFromExistingDB()
           {
             ret = rowCursor->NextRow(m_mdb->GetEnv(), &m_mdbRow, &rowPos);
             NS_RELEASE(rowCursor);
-            if (ret == NS_OK && m_mdbRow)
-            {
+            if (!m_mdbRow)
+              ret = NS_ERROR_FAILURE;
+            if (ret == NS_OK)
               LoadMemberVariables();
             }
           }
         }
       }
     }
-  }
   return ret;
 }
 
