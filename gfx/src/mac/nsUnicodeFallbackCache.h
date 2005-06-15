@@ -66,7 +66,8 @@ public:
 
 	inline PRBool	Get(PRUnichar aChar, ScriptCode& oScript) 
 	{
-		ScriptCode ret = (ScriptCode)PL_HashTableLookup(mTable, (void*)aChar);
+		ScriptCode ret = (ScriptCode) 
+		    NS_PTR_TO_INT32(PL_HashTableLookup(mTable, (void*)aChar));
 		oScript = 0x00FF & ret ;
 		return 0x00 != (0xFF00 & ret);
 	};
@@ -86,17 +87,19 @@ public:
 private:
 	inline static PR_CALLBACK PLHashNumber HashKey(const void *aKey) 
 	{
-		return (PRUnichar)aKey;
+		return (PRUnichar) NS_PTR_TO_INT32(aKey);
 	};
 	
 	inline static PR_CALLBACK PRIntn		CompareKeys(const void *v1, const void *v2) 
 	{
-		return  (((PRUnichar ) v1) == ((PRUnichar ) v2));
+		return  (((PRUnichar ) NS_PTR_TO_INT32(v1)) == 
+		    ((PRUnichar ) NS_PTR_TO_INT32(v2)));
 	};
 	
 	inline static PR_CALLBACK PRIntn		CompareValues(const void *v1, const void *v2) 
 	{
-		return (((ScriptCode)v1) == ((ScriptCode)v2));
+		return (((ScriptCode) NS_PTR_TO_INT32(v1)) == 
+		    ((ScriptCode) NS_PTR_TO_INT32(v2)));
 	};
 	inline static PR_CALLBACK PRIntn		FreeHashEntries(PLHashEntry *he, PRIntn italic, void *arg) 
 	{

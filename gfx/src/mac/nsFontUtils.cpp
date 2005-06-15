@@ -111,7 +111,7 @@ nsFontUtils::GetNativeTextStyle(nsIFontMetrics& inMetrics,
 
 	RGBColor	black = {0};
 
-	outStyle.tsFont = (short)fontNum;
+	outStyle.tsFont = (short) NS_PTR_TO_INT32(fontNum);
 	outStyle.tsFace = textFace;
 	outStyle.tsSize = textSize;
 	outStyle.tsColor = black;
