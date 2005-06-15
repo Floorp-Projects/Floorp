@@ -47,7 +47,8 @@
   -moz-image-region: rect(0px 160px 32px 128px);
 }
 
-#button-security[buttondown], #button-security[open="true"] {
+#button-security:hover:active,
+#button-security[open="true"] {
   -moz-image-region: rect(32px 160px 64px 128px);
 } 
 
@@ -60,7 +61,8 @@ toolbar[iconsize="small"] #button-security {
   -moz-image-region: rect(0px 120px 24px 96px);
 }
 
-toolbar[iconsize="small"] #button-security[buttondown="true"], toolbar[iconsize="small"] #button-security[open="true"] {
+toolbar[iconsize="small"] #button-security:hover:active,
+toolbar[iconsize="small"] #button-security[open="true"] {
   -moz-image-region: rect(24px 120px 48px 96px);
 } 
 

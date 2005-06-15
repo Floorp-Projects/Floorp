@@ -129,7 +129,8 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 128px 32px 96px);
 }
 
-#button-attach[buttondown="true"], #button-attach[open="true"] {
+#button-attach:hover:active,
+#button-attach[open="true"] {
   -moz-image-region: rect(32px 128px 64px 96px);
 } 
 
@@ -142,7 +143,8 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 192px 32px 160px);
 }
 
-#button-save[buttondown="true"], #button-save[open="true"] {
+#button-save:hover:active,
+#button-save[open="true"] {
   -moz-image-region: rect(32px 192px 64px 160px);
 } 
 
@@ -168,7 +170,7 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 256px 32px 224px);
 }
 
-#cut-button:active {
+#cut-button:hover:active {
   -moz-image-region: rect(32px 256px 64px 224px);
 }
 
@@ -181,7 +183,7 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 288px 32px 256px);
 }
 
-#copy-button:active {
+#copy-button:hover:active {
   -moz-image-region: rect(32px 288px 64px 256px);
 }
 
@@ -194,7 +196,7 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 320px 32px 288px);
 }
 
-#paste-button:active {
+#paste-button:hover:active {
   -moz-image-region: rect(32px 320px 64px 288px);
 }
 
@@ -252,7 +254,8 @@ toolbar[iconsize="small"] #button-attach {
   -moz-image-region: rect(0px 96px 24px 72px);
 }
 
-toolbar[iconsize="small"] #button-attach[buttondown="true"], toolbar[iconsize="small"] #button-attach[open="true"] {
+toolbar[iconsize="small"] #button-attach:hover:active,
+toolbar[iconsize="small"] #button-attach[open="true"] {
   -moz-image-region: rect(24px 96px 48px 72px);
 } 
 
@@ -265,7 +268,8 @@ toolbar[iconsize="small"] #button-save {
   -moz-image-region: rect(0px 144px 24px 120px);
 }
 
-toolbar[iconsize="small"] #button-save[buttondown="true"], toolbar[iconsize="small"] #button-save[open="true"] {
+toolbar[iconsize="small"] #button-save:hover:active,
+toolbar[iconsize="small"] #button-save[open="true"] {
   -moz-image-region: rect(24px 144px 48px 120px);
 } 
 
@@ -291,7 +295,7 @@ toolbar[iconsize="small"] #cut-button {
   -moz-image-region: rect(0px 192px 24px 168px);
 }
 
-toolbar[iconsize="small"] #cut-button:active {
+toolbar[iconsize="small"] #cut-button:hover:active {
   -moz-image-region: rect(24px 192px 48px 168px);
 }
 
@@ -304,7 +308,7 @@ toolbar[iconsize="small"] #copy-button {
   -moz-image-region: rect(0px 216px 24px 192px);
 }
 
-toolbar[iconsize="small"] #copy-button:active {
+toolbar[iconsize="small"] #copy-button:hover:active {
   -moz-image-region: rect(24px 216px 48px 192px);
 }
 
@@ -317,7 +321,7 @@ toolbar[iconsize="small"] #paste-button {
   -moz-image-region: rect(0px 240px 24px 216px);
 }
 
-toolbar[iconsize="small"] #paste-button:active {
+toolbar[iconsize="small"] #paste-button:hover:active {
   -moz-image-region: rect(24px 240px 48px 216px);
 }
 

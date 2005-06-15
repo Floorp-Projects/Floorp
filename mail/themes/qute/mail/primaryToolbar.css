@@ -169,11 +169,7 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 216px 24px 192px);
 }
 
-#button-print[buttonover] {
-  -moz-image-region: rect(24px 216px 48px 192px);
-}
-
-#button-print[buttondown] {
+#button-print:hover {
   -moz-image-region: rect(24px 216px 48px 192px);
 }
 
@@ -197,11 +193,7 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 264px 24px 240px);
 }
 
-#button-file:hover {
-  -moz-image-region: rect(24px 264px 48px 240px);
-} 
-
-#button-file:hover:active,
+#button-file:hover,
 #button-file[open] {
   -moz-image-region: rect(24px 264px 48px 240px);
 } 
@@ -238,11 +230,7 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 336px 24px 312px);
 }
 
-#button-mark[buttonover] {
-  -moz-image-region: rect(24px 336px 48px 312px);
-} 
-
-#button-mark[buttondown] {
+#button-mark:hover {
   -moz-image-region: rect(24px 336px 48px 312px);
 } 
 
@@ -357,11 +345,7 @@ toolbar[iconsize="small"] #button-print {
   -moz-image-region: rect(0px 144px 16px 128px);
 }
 
-toolbar[iconsize="small"] #button-print[buttonover] {
-  -moz-image-region: rect(16px 144px 32px 128px);
-}
-
-toolbar[iconsize="small"] #button-print[buttondown] {
+toolbar[iconsize="small"] #button-print:hover {
   -moz-image-region: rect(16px 144px 32px 128px);
 }
 
@@ -385,11 +369,7 @@ toolbar[iconsize="small"] #button-file {
   -moz-image-region: rect(0px 176px 16px 160px);
 }
 
-toolbar[iconsize="small"] #button-file:hover {
-  -moz-image-region: rect(16px 176px 32px 160px);
-} 
-
-toolbar[iconsize="small"] #button-file:hover:active,
+toolbar[iconsize="small"] #button-file:hover,
 toolbar[iconsize="small"] #button-file[open] {
   -moz-image-region: rect(16px 176px 32px 160px);
 } 

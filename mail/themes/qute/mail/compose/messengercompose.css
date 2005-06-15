@@ -119,11 +119,7 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 96px 24px 72px);
 }
 
-#button-attach[buttonover="true"] {
-  -moz-image-region: rect(24px 96px 48px 72px);
-} 
-
-#button-attach[buttondown="true"] {
+#button-attach:hover {
   -moz-image-region: rect(24px 96px 48px 72px);
 } 
 
@@ -136,11 +132,7 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 144px 24px 120px);
 }
 
-#button-save[buttonover="true"] {
-  -moz-image-region: rect(24px 144px 48px 120px);
-} 
-
-#button-save[buttondown="true"] {
+#button-save:hover {
   -moz-image-region: rect(24px 144px 48px 120px);
 } 
 
