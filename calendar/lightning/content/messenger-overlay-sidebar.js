@@ -93,6 +93,22 @@ function showCalendar(jumpToToday)
     }
 }
 
+function switchView(type) {
+    var calendarViewBox = document.getElementById("calendar-view-box");
+
+    switch (type) {
+    case "month":
+      calendarViewBox.selectedPanel = document.getElementById("calendar-month-view");
+      break;
+    case "week":
+    default:
+      calendarViewBox.selectedPanel = document.getElementById("calendar-multiday-view");
+      break;
+    }
+
+    document.getElementById("displayDeck").selectedPanel = calendarViewBox;
+}
+
 function selectedCalendarPane(event)
 {
     dump("selecting calendar pane\n");
