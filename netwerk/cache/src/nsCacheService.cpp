@@ -67,7 +67,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsVoidArray.h"
 #include "nsDeleteDir.h"
-
+#include <math.h>  // for log()
 
 
 /******************************************************************************
@@ -1279,28 +1279,10 @@ nsCacheService::SetMemoryCacheCapacity(PRInt32  capacity)
  * 2048 Mb  44 Mb
  * 4096 Mb  58 Mb
  *
+ * The equation for this is (for cache size C and memory size K (kbytes)):
+ *  x = log2(K) - 14
+ *  C = x^2 - x + 2
  */
-
-#include <math.h>
-#if defined(__linux) || defined(__sun)
-#include <unistd.h>
-#elif defined(__hpux)
-#include <sys/pstat.h>
-#elif defined(XP_MACOSX)
-extern "C" {
-#include <mach/mach_init.h>
-#include <mach/mach_host.h>
-}
-#elif defined(XP_OS2)
-#define INCL_DOSMISC
-#include <os2.h>
-#elif defined(XP_WIN)
-#include <windows.h>
-#elif defined(_AIX)
-#include <cf.h>
-#include <sys/cfgodm.h>
-#endif
-
 
 PRInt32
 nsCacheService::CacheMemoryAvailable()
@@ -1309,74 +1291,21 @@ nsCacheService::CacheMemoryAvailable()
     if (capacity >= 0)
         return capacity;
 
-    long kbytes  = 0;
+    PRUint64 bytes = PR_GetPhysicalMemorySize();
 
-#if defined(__linux) || defined(__sun)
+    if (LL_CMP(bytes, ==, LL_ZERO))
+        return 0;
 
-    long pageSize  = sysconf(_SC_PAGESIZE);
-    long pageCount = sysconf(_SC_PHYS_PAGES);
-    kbytes         = (pageSize / 1024) * pageCount;
+    // Conversion from unsigned int64 to double doesn't work on all platforms.
+    // We need to truncate the value at LL_MAXINT to make sure we don't
+    // overflow.
+    if (LL_CMP(bytes, >, LL_MAXINT))
+        bytes = LL_MAXINT;
 
-#elif defined(__hpux)
-    
-    struct pst_static  info;
-    int result = pstat_getstatic(&info, sizeof(info), 1, 0);
-    if (result == 1) {
-        kbytes = info.physical_memory * (info.page_size / 1024);
-    }
-    
-#elif defined(XP_MACOSX)
+    double bytesD;
+    LL_L2D(bytesD, (PRInt64) bytes);
 
-    struct host_basic_info hInfo;
-    mach_msg_type_number_t count;
-
-    int result = host_info(mach_host_self(),
-                           HOST_BASIC_INFO,
-                           (host_info_t) &hInfo,
-                           &count);
-    if (result == KERN_SUCCESS) {
-        kbytes = hInfo.memory_size / 1024;
-    }
-
-#elif defined(XP_WIN)
-    
-    // XXX we should use GlobalMemoryStatusEx on XP and 2000, but
-    // XXX our current build environment doesn't support it.
-    MEMORYSTATUS  memStat;
-    memset(&memStat, 0, sizeof(memStat));
-    GlobalMemoryStatus(&memStat);
-    kbytes = memStat.dwTotalPhys / 1024;
-
-#elif defined(XP_OS2)
-
-    ULONG ulPhysMem;
-    DosQuerySysInfo(QSV_TOTPHYSMEM,
-                    QSV_TOTPHYSMEM,
-                    &ulPhysMem,
-                    sizeof(ulPhysMem));
-    kbytes = (long)(ulPhysMem / 1024);
-      
-#elif defined(_AIX)
-
-    int how_many;
-    struct CuAt *obj;
-    if (odm_initialize() == 0) {
-        obj = getattr("sys0", "realmem", 0, &how_many);
-        if (obj != NULL) {
-            kbytes = atoi(obj->value);
-            free(obj);
-        }
-        odm_terminate();
-    }
-
-#else
-    return MEMORY_CACHE_CAPACITY;
-#endif
-
-    if (kbytes == 0)  return 0;
-    if (kbytes < 0)   kbytes = LONG_MAX; // cap overflows
-
-    double x = log((double)kbytes)/log((double)2) - 14;
+    double x = log(bytesD)/log(2.0) - 14;
     if (x > 0) {
         capacity    = (PRInt32)(x * x - x + 2.001); // add .001 for rounding
         capacity   *= 1024;
