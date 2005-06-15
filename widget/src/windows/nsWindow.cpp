@@ -1534,10 +1534,17 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
   SubclassWindow(TRUE);
 
   if (gTrimOnMinimize == 2 && mWindowType == eWindowType_invisible) {
-    /* not yet initialized, and this is the hidden window
-       (conveniently created before any visible windows and after
-       the profile has been initialized) */
-    gTrimOnMinimize = 1;
+    /* The internal variable set by the config.trim_on_minimize pref
+       has not yet been initialized, and this is the hidden window
+       (conveniently created before any visible windows, and after
+       the profile has been initialized).
+       
+       Default config.trim_on_minimize to false, to fix bug 76831
+       for good.  If anyone complains about this new default, saying
+       that a Mozilla app hogs too much memory while minimized, they
+       will have that entire bug tattooed on their backside. */
+
+    gTrimOnMinimize = 0;
     nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
       nsCOMPtr<nsIPrefBranch> prefBranch;
@@ -1546,8 +1553,8 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
         PRBool trimOnMinimize;
         if (NS_SUCCEEDED(prefBranch->GetBoolPref("config.trim_on_minimize",
                                                  &trimOnMinimize))
-            && !trimOnMinimize)
-          gTrimOnMinimize = 0;
+            && trimOnMinimize)
+          gTrimOnMinimize = 1;
 
         PRBool switchKeyboardLayout;
         if (NS_SUCCEEDED(prefBranch->GetBoolPref("intl.keyboard.per_window_layout",
