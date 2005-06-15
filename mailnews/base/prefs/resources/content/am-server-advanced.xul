@@ -132,32 +132,32 @@
 
     <!-- POP3 Panel -->
     <vbox id="pop3Panel">
-      <description style="width: 20em;">&pop3Desc.label;</description>
-      <separator class="thin"/>
+      <description flex="1">&pop3Desc.label;</description>
       <hbox align="center">
-      <radiogroup id="folderStorage"
-                  orient="horizontal" amsa_persist="true">
-      <rows>
-         <row align = "center">
-          <radio value="0" id = "globalInbox" label="&globalInbox.label;"
-                 oncommand="updateInboxAccount(false, true)" 
-                 accesskey="&globalInbox.accesskey;"/>
-         </row>
-         <row>
-            <radio value="1" id = "accountDirectory" label="&accountDirectory.label;"
-                 accesskey="&accountDirectory.accesskey;"
-                 oncommand="updateInboxAccount(false, false)" />
-         </row>
-         <row>
-            <radio value="2" id = "deferToServer" label="&deferToServer.label;"
-                 accesskey="&deferToServer.accesskey;"
-                 oncommand="updateInboxAccount(true, true)" 
-                 />
-  	        <menulist id="deferedServerFolderPicker" />
-         </row>
-        </rows>
+        <radiogroup id="folderStorage" orient="horizontal" amsa_persist="true">
+          <rows>
+            <row>
+              <radio value="1" id = "accountDirectory" label="&accountDirectory.label;"
+                     accesskey="&accountDirectory.accesskey;"
+                     oncommand="updateInboxAccount(false, false)" />
+            </row>
+            <row align = "center">
+              <radio value="0" id = "globalInbox" label="&globalInbox.label;"
+                      oncommand="updateInboxAccount(false, true)" 
+                      accesskey="&globalInbox.accesskey;"/>
+            </row>
+            <row>
+              <radio value="2" id = "deferToServer" label="&deferToServer.label;"
+                     accesskey="&deferToServer.accesskey;"
+                     oncommand="updateInboxAccount(true, true)"/>
+  	            <menulist id="deferedServerFolderPicker" />
+            </row>
+          </rows>
         </radiogroup>
       </hbox>
+
+      <separator class="thin"/>
+
       <checkbox amsa_persist="true" id="deferGetNewMail"
               label="&deferGetNewMail.label;"
               accesskey="&deferGetNewMail.accesskey;"/>
