@@ -662,7 +662,6 @@ UpdateManager.prototype = {
    * @returns The array of nsIUpdate items held in the file.
    */
   _loadXMLFileIntoArray: function(file) {
-    LOG(FILE_UPDATE_ACTIVE);
     if (!file.exists())
       return [];
     
@@ -686,7 +685,6 @@ UpdateManager.prototype = {
         result.push(new Update(updateNode));
       }
     }
-    LOG("ARY RESULT = " + result);
     return result;
   },
   
@@ -741,6 +739,8 @@ UpdateManager.prototype = {
   },
   set activeUpdate(activeUpdate) {
     this._ensureActiveUpdate();
+    if (!activeUpdate)
+      this._updates = [this._activeUpdate].concat(this._updates);
     this._activeUpdate = activeUpdate;
     this._writeUpdatesToXMLFile([this._activeUpdate], 
                                 getFile(KEY_APPDIR, [FILE_UPDATE_ACTIVE]));
@@ -767,29 +767,36 @@ UpdateManager.prototype = {
   /**
    *
    */
-  _writeUpdatesToXMLFile: function(updates) {
+  _writeUpdatesToXMLFile: function(updates, file) {
     var fos = Components.classes["@mozilla.org/network/safe-file-output-stream;1"]
                         .createInstance(Components.interfaces.nsIFileOutputStream);
-    var updatesDB = getFile(KEY_APPDIR, [FILE_UPDATES_DB]);
     var modeFlags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
-    if (!updatesDB.exists()) 
-      updatesDB.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-    fos.init(updatesDB, modeFlags, PERMS_FILE, 0);
+    if (!file.exists()) 
+      file.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+    fos.init(file, modeFlags, PERMS_FILE, 0);
     
     var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
                            .createInstance(Components.interfaces.nsIDOMParser);
     const EMPTY_UPDATES_DOCUMENT = "<?xml version=\"1.0\"?><updates xmlns=\"http://www.mozilla.org/2005/app-update\"></updates>";
     var doc = parser.parseFromString(EMPTY_UPDATES_DOCUMENT, "text/xml");
 
-    for (var i = 0; i < updates.length; ++i)
-      doc.documentElement.appendChild(updates[i].serialize(doc));
+    for (var i = 0; i < updates.length; ++i) {
+      if (updates[i])
+        doc.documentElement.appendChild(updates[i].serialize(doc));
+    }
 
     var serializer = Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
                                .createInstance(Components.interfaces.nsIDOMSerializer);
     serializer.serializeToStream(doc.documentElement, fos, null);
 
-    if (fos instanceof Components.interfaces.nsISafeOutputStream)
-      fos.finish();
+    if (fos instanceof Components.interfaces.nsISafeOutputStream) {
+      try {
+        fos.finish();
+      }
+      catch (e) {
+        fos.close();
+      }
+    }
     else
       fos.close();
   },
@@ -803,7 +810,6 @@ UpdateManager.prototype = {
                                   getFile(KEY_APPDIR, [FILE_UPDATE_ACTIVE]));
     }
     if (this._updates) {
-      LOG("UPDATES = " + this._updates);
       this._writeUpdatesToXMLFile(this._updates, 
                                   getFile(KEY_APPDIR, [FILE_UPDATES_DB]));
     }
@@ -1061,7 +1067,7 @@ Checker.prototype = {
    *
    */
   onProgress: function(event) {
-    LOG("*** download progress: " + event.position + "/" + event.totalSize);
+    LOG("Checker.onProgress: " + event.position + "/" + event.totalSize);
     this._callback.onProgress(event.target, event.position, event.totalSize);
   },
   
@@ -1277,7 +1283,6 @@ Downloader.prototype = {
      * @returns A nsIUpdatePatch object matching the type specified
      */
     function getPatchOfType(type) {
-      LOG("PATCHCOUNT = " + update.patchCount);
       for (var i = 0; i < update.patchCount; ++i) {
         var patch = update.getPatchAt(i);
         if (patch && patch.type == type)
@@ -1300,9 +1305,9 @@ Downloader.prototype = {
     // that we do not know about, then remove it and use our default logic.
     var useComplete = false;
     if (selectedPatch) {
+      var state = this._readStatusFile(updateDir)
       LOG("found existing patch [state="+state+"]");
-      
-      switch (this._readStatusFile(updateDir)) {
+      switch (state) {
       case STATE_DOWNLOADING: 
         LOG("resuming download");
         return selectedPatch;
@@ -1338,14 +1343,16 @@ Downloader.prototype = {
 
     // If we were not able to discover an update from a previous download, we 
     // select the best patch from the given set.
+    var partialPatch = getPatchOfType("partial");
     if (!useComplete)
-      selectedPatch = getPatchOfType("partial");
-    if (!selectedPatch)
+      selectedPatch = partialPatch;
+    if (!selectedPatch) {
+      partialPatch.selected = false;
       selectedPatch = getPatchOfType("complete");
-    
+    }
     selectedPatch.selected = true;
     update.isCompleteUpdate = useComplete;
-
+    
     // Reset the Active Update object on the Update Manager and flush the
     // Active Update DB. 
     var um = Components.classes["@mozilla.org/updates/update-manager;1"]
@@ -1487,6 +1494,7 @@ Downloader.prototype = {
       this._update.state = state;
       var um = Components.classes["@mozilla.org/updates/update-manager;1"]
                          .getService(Components.interfaces.nsIUpdateManager);
+      um.activeUpdate = null;
       um.saveUpdates();
     }
 

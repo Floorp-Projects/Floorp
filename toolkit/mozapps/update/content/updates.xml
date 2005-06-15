@@ -125,6 +125,7 @@
           return val;
         ]]></setter>
       </property>
+      <field name="eventPrefix">"update-"</field>
       <property name="state" 
                 onset="this.setAttribute('state', val); return val;"
                 onget="return this.getAttribute('state');"/>
