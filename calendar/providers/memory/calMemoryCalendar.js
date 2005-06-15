@@ -417,7 +417,7 @@ calMemoryCalendar.prototype = {
                 {
                     // there might be some recurrences here that we need to handle
                     var recs = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, 0, {});
-                    itemsFound = concat(itemsFound, recs);
+                    itemsFound = itemsFound.concat(recs);
                 } else if (itemEndTime >= startTime) {
                     // no occurrences
                     if (itemReturnOccurrences)
