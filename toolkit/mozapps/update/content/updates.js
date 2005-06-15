@@ -161,6 +161,7 @@ var gCheckingPage = {
       var aus = Components.classes["@mozilla.org/updates/update-service;1"]
                           .getService(Components.interfaces.nsIApplicationUpdateService);
       gUpdates.update = aus.selectUpdate(updates, updates.length);
+      LOG("SELECTEDUPDATE = " + gUpdates.update.patchCount);
       if (!gUpdates.update) {
         LOG("Could not select an appropriate update, either because there were none," + 
             " or |selectUpdate| failed.");
@@ -268,12 +269,14 @@ var gLicensePage = {
 var gDownloadingPage = {
   _createAndInsertItem: function(update, state) {
     var element = document.createElementNS(XMLNS_XUL, "update");
-    updatesView.appendChild(element);
+    this._updatesView.appendChild(element);
     element.setUpdate(update);
     return element;
   },
 
   onPageShow: function() {
+    this._updatesView = document.getElementById("updatesView");
+    
     var um = Components.classes["@mozilla.org/updates/update-manager;1"]
                        .getService(Components.interfaces.nsIUpdateManager);
     var activeUpdate = um.activeUpdate;
@@ -281,7 +284,7 @@ var gDownloadingPage = {
       var element = this._createAndInsertItem(activeUpdate);
       element.id = "activeDownloadItem";
     }
-    updatesView.addEventListener("update-pause", this.onPause, false);
+    this._updatesView.addEventListener("update-pause", this.onPause, false);
     
     if (gUpdates.update) {
       // Add this UI as a listener for active downloads
@@ -327,8 +330,7 @@ var gDownloadingPage = {
   },
   
   showCompletedUpdatesChanged: function(checkbox) {
-    var updatesView = document.getElementById("updatesView");
-    updatesView.setAttribute("showcompletedupdates", checkbox.checked);
+    this._updatesView.setAttribute("showcompletedupdates", checkbox.checked);
   },
 
   onStartRequest: function(request, context) {
