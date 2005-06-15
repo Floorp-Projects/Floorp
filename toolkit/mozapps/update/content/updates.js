@@ -35,10 +35,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
-const nsIIncrementalDownload = Components.interfaces.nsIIncrementalDownload;
-const XMLNS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const PREF_UPDATE_MANUAL_URL = "app.update.manual.url";
+const nsIUpdateItem           = Components.interfaces.nsIUpdateItem;
+const nsIIncrementalDownload  = Components.interfaces.nsIIncrementalDownload;
+
+const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+const PREF_UPDATE_MANUAL_URL  = "app.update.manual.url";
+
+const STATE_DOWNLOADING       = "downloading";
+const STATE_PENDING           = "pending";
+const STATE_APPLYING          = "applying";
+const STATE_SUCCEEDED         = "succeeded";
+const STATE_FAILED            = "failed";
 
 /**
  * Logs a string to the error console. 
@@ -258,32 +266,41 @@ var gLicensePage = {
 };
 
 var gDownloadingPage = {
+  _createAndInsertItem: function(update, state) {
+    var element = document.createElementNS(XMLNS_XUL, "update");
+    updatesView.appendChild(element);
+    element.setUpdate(update);
+    return element;
+  },
+
   onPageShow: function() {
-    // Build the UI for the active download
-    var update = document.createElementNS(XMLNS_XUL, "update");
-    update.setAttribute("state", "downloading");
-    update.setAttribute("name", "Firefox 1.0.4");
-    update.setAttribute("status", "Blah");
-    update.setAttribute("url", "http://www.bengoodger.com/");
-    update.setAttribute("mode", "normal");
-    update.id = "activeDownloadItem";
-    var updatesView = document.getElementById("updatesView");
-    updatesView.appendChild(update);
-    
+    var um = Components.classes["@mozilla.org/updates/update-manager;1"]
+                       .getService(Components.interfaces.nsIUpdateManager);
+    var activeUpdate = um.activeUpdate;
+    if (um.activeUpdate) {
+      var element = this._createAndInsertItem(activeUpdate);
+      element.id = "activeDownloadItem";
+    }
     updatesView.addEventListener("update-pause", this.onPause, false);
     
-    // Add this UI as a listener for active downloads
-    var updates = 
-        Components.classes["@mozilla.org/updates/update-service;1"].
-        getService(Components.interfaces.nsIApplicationUpdateService);
-    var state = updates.downloadUpdate(gUpdates.update, false);
-    if (state == "failed") 
-      this.showVerificationError();
-    else
-      updates.addDownloadListener(this);
+    if (gUpdates.update) {
+      // Add this UI as a listener for active downloads
+      var updates = 
+          Components.classes["@mozilla.org/updates/update-service;1"].
+          getService(Components.interfaces.nsIApplicationUpdateService);
+      var state = updates.downloadUpdate(gUpdates.update, false);
+      if (state == "failed") 
+        this.showVerificationError();
+      else
+        updates.addDownloadListener(this);
+    }
     
     // Build the UI for previously installed updates
-    // ...
+    for (var i = 0; i < um.updateCount; ++i) {
+      var update = um.getUpdateAt(i);
+      this._createAndInsertItem(update);
+    }
+    
     
     gUpdates.headerVisible = false;
   },

@@ -91,6 +91,11 @@ interface nsIUpdate : nsISupports
   attribute AString type;
 
   /**
+   * The name of the update, or "<Application Name> <Update Version>"
+   */
+  attribute AString name;
+
+  /**
    * The Application version of this update. 
    */
   attribute AString version;
@@ -128,6 +133,13 @@ interface nsIUpdate : nsISupports
    * When the update was installed.
    */
   attribute long long installDate;
+
+  /**
+   * The state of this update
+   * XXXben: in a multi-patch world, this needs to move down into the 
+   *         nsIUpdatePatch interface, but for simplicity it shall stay here.
+   */
+  attribute AString state;
 
   /**
    * The number of patches supplied by this update.
@@ -271,7 +283,7 @@ interface nsIUpdateManager : nsISupports
   /**
    *
    */
-  void removeUpdateAtInde(in long index);
+  void removeUpdateAtIndex(in long index);
 
   /**
    *
