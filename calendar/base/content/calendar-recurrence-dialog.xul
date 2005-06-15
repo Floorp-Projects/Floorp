@@ -41,8 +41,6 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" ?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <dialog
   id="calendar-recurrence-dialog"
   title="Edit Recurrence"

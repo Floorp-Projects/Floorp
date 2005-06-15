@@ -56,6 +56,9 @@ function onLoad()
 
     loadDialog(window.calendarEvent);
 
+    // update the accept button
+    updateAccept();
+
     // update datetime pickers
     updateAllDay();
 
@@ -232,6 +235,18 @@ function saveDialog(event)
     }
 
     //dump(event.icalString + "\n");
+}
+
+
+function updateAccept()
+{
+    var acceptButton = document.getElementById("calendar-event-dialog").getButton("accept");
+
+    var title = getElementValue("event-title");
+    if (title.length == 0)
+        acceptButton.setAttribute("disabled", "true");
+    else if (acceptButton.getAttribute("disabled"))
+        acceptButton.removeAttribute("disabled");
 }
 
 

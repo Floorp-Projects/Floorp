@@ -42,10 +42,8 @@
 <?xml-stylesheet href="chrome://calendar/content/calendar-event-dialog.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" ?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <dialog
-  id="calendar-edit-dialog"
+  id="calendar-event-dialog"
   title="Edit Event"
   buttons="accept,cancel"
   ondialogaccept="return onAccept();"
@@ -72,7 +70,7 @@
         <rows equalsize="always">
           <row align="center">
             <label value="Title" class="label"/>
-            <textbox id="event-title"/>
+            <textbox id="event-title" oninput="updateAccept();"/>
           </row>
           <row align="center">
             <label value="Location" class="label"/>
