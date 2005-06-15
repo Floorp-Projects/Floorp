@@ -2830,6 +2830,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
         break;
 
       case NS_STYLE_TEXT_ALIGN_LEFT:
+      case NS_STYLE_TEXT_ALIGN_MOZ_LEFT:
         break;
 
       case NS_STYLE_TEXT_ALIGN_JUSTIFY:

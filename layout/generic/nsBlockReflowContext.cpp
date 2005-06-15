@@ -268,7 +268,7 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
           aAlign.mXOffset += remainingSpace;
         } else if (styleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER) {
           aAlign.mXOffset += remainingSpace / 2;
-        } else {
+        } else if (styleText->mTextAlign != NS_STYLE_TEXT_ALIGN_MOZ_LEFT) {
           // If we don't have a special text-align value indicating
           // HTML alignment, then use the CSS rules.
 
