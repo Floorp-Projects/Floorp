@@ -1299,9 +1299,10 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
             PRUint32 indexToRemove = 0;
             if ( NS_SUCCEEDED(CountVisibleBefore(&indexToRemove)) ) {
               ++indexToRemove;                // if there are N siblings before me, my index is N+1
-              MenuRef menubar = nsnull;
-              menubarParent->GetNativeData ( (void*)menubar );
-              if ( menubar ) {
+              void *clientData = nsnull;
+              menubarParent->GetNativeData ( clientData );
+              if ( clientData ) {
+                MenuRef menubar = reinterpret_cast<MenuRef>(clientData);
                 ::SetMenuItemHierarchicalMenu(menubar, indexToRemove, nsnull);
                 ::DeleteMenuItem(menubar, indexToRemove);
                 mVisible = PR_FALSE;
@@ -1321,9 +1322,10 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
           if ( menubarParent ) {
             PRUint32 insertAfter = 0;
             if ( NS_SUCCEEDED(CountVisibleBefore(&insertAfter)) ) {
-              MenuRef menubar = nsnull;
-              menubarParent->GetNativeData ( (void*)menubar );
-              if ( menubar ) {
+              void *clientData = nsnull;
+              menubarParent->GetNativeData ( clientData );
+              if ( clientData ) {
+                MenuRef menubar = reinterpret_cast<MenuRef>(clientData);
                 // Shove this menu into its rightful place in the menubar. It doesn't matter
                 // what title we pass to InsertMenuItem() because when we stuff the actual menu
                 // handle in, the correct title goes with it.
