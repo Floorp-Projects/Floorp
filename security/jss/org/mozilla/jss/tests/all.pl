@@ -48,6 +48,7 @@ sub usage {
     exit(1);
 }
 
+my $testdir;
 my $nss_lib_dir;
 my $dist_dir;
 my $pathsep       = ":";
@@ -97,12 +98,21 @@ sub setup_vars {
         $nss_lib_dir   = "$dist_dir/lib";
         $jss_rel_dir   = "$dist_dir/../classes$dbg_suffix/org";
         $jss_classpath = "$dist_dir/../xpclass$jar_dbg_suffix.jar";
+
+		# Test directory = $DIST_DIR
+		# make it absolute path
+		$testdir = `cd $dist_dir;pwd`;
+		# take the last part (can be overriden if not <OS><VERSION>_<OPT|DBG>.OBJ
+		$testdir = `basename $testdir`;
+		chomp $testdir;
     } elsif( $$argv[0] eq "release" ) {
         shift @$argv;
 
         $jss_rel_dir     = shift @$argv or usage();
         my $nss_rel_dir  = shift @$argv or usage();
         my $nspr_rel_dir = shift @$argv or usage();
+		$testdir = `basename $nss_rel_dir`;
+		chomp $testdir;
 
         $ENV{CLASSPATH} .= "$jss_rel_dir/../xpclass$jar_dbg_suffix.jar";
         $ENV{$ld_lib_path} =
@@ -129,12 +139,23 @@ sub setup_vars {
 
     $pwfile = "passwords";
 
+    # testdir
+    if (!($testdir =~ /\.OBJ$/)) {
+        # Override testdir if not <OS><VERSION>_<OPT|DBG>.OBJ
+        # use hostname_pid instead
+        my $host = `uname -n`;
+        $host =~ s/\..*//g;
+        chomp $host;
+        $testdir = $host . "_" . $$;
+    }
+
     print STDERR "*****ENVIRONMENT*****\n";
     print STDERR "java=$java\n";
     print STDERR "NATIVE_FLAG=$ENV{NATIVE_FLAG}\n";
     print STDERR "$ld_lib_path=$ENV{$ld_lib_path}\n";
     print STDERR "CLASSPATH=$ENV{CLASSPATH}\n";
     print STDERR "USE_64=$ENV{USE_64}\n";
+    print STDERR "testdir=$testdir\n";
 }
 
 setup_vars(\@ARGV);
@@ -147,12 +168,11 @@ print STDERR "*********************\n";
 #
 # Make the test database directory
 #
-my $testdir = "testdir";
 if( ! -d $testdir ) {
     mkdir( $testdir, 0755 ) or die;
 }
 {
-    chdir "testdir" or die;
+    chdir "$testdir" or die;
     my @dbfiles = 
         ("./cert8.db", "./key3.db", "./secmod.db");
     unlink @dbfiles;
@@ -164,13 +184,13 @@ if( ! -d $testdir ) {
       rmdir($dbdir) or die "Unable to delete cert8.dir";
     }    
     chdir ".." or die;
-    my $result = system("cp $nss_lib_dir/*nssckbi* testdir"); $result >>= 8;
+    my $result = system("cp $nss_lib_dir/*nssckbi* $testdir"); $result >>= 8;
     $result and die "Failed to copy builtins library";
 }
 my $result;
 
 print STDERR "============= Setup DB\n";
-$result = system("$java org.mozilla.jss.tests.SetupDBs testdir $pwfile");
+$result = system("$java org.mozilla.jss.tests.SetupDBs $testdir $pwfile");
 $result >>=8;
 $result and die "SetupDBs returned $result";
 
@@ -282,10 +302,10 @@ $result = system("$java org.mozilla.jss.tests.JSSPackageTest");
 $result >>=8;
 my $LIB = "$lib_jss"."4"."$lib_suffix";
 my $strings_exist = `which strings`;
-chop($strings_exist);
+chomp($strings_exist);
 if ($strings_exist ne "") {
     my $jsslibver = `strings $nss_lib_dir/$LIB | grep Header`;
-    chop($jsslibver);
+    chomp($jsslibver);
     print "$LIB = $jsslibver\n";
 } else {
     print "Could not fetch Header information from $LIB\n";
