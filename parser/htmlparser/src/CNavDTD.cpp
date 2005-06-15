@@ -1944,10 +1944,27 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
               // Ex. <html><body>Hello</P>There</body></html>
               PRBool theParentContains=-1; //set to -1 to force canomit to recompute.
               if(!CanOmit(theParentTag,theChildTag,theParentContains)) {
-                IF_HOLD(aToken);
-                mTokenizer->PushTokenFront(aToken); //put this end token back...
-                CHTMLToken* theToken = NS_STATIC_CAST(CHTMLToken*,mTokenAllocator->CreateTokenOfType(eToken_start,theChildTag));
-                mTokenizer->PushTokenFront(theToken); //put this new token onto stack...
+                CHTMLToken* theStartToken = NS_STATIC_CAST(CHTMLToken*,mTokenAllocator->CreateTokenOfType(eToken_start,theChildTag));
+
+                // This check for NS_DTD_FLAG_IN_MISPLACED_CONTENT was added
+                // to fix bug 142965.
+                if (!(mFlags & NS_DTD_FLAG_IN_MISPLACED_CONTENT)) {
+                  // We're not handling misplaced content right now, just push
+                  // these new tokens back on the stack and handle them in the
+                  // regular flow of HandleToken.
+                  IF_HOLD(aToken);
+                  mTokenizer->PushTokenFront(aToken); //put this end token back...
+                  mTokenizer->PushTokenFront(theStartToken); //put the new token onto the stack...
+                }
+                else {
+                  // Oops, we're in misplaced content. Handle these tokens 
+                  // directly instead of trying to push them onto the tokenizer
+                  // stack.
+                  result = HandleToken(theStartToken, mParser);
+                  NS_ENSURE_SUCCESS(result, result);
+
+                  result = HandleToken(aToken, mParser);
+                }
               }
             }
             return result;
