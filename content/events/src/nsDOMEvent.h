@@ -85,7 +85,6 @@ public:
     eDOMEvents_unload,
     eDOMEvents_abort,
     eDOMEvents_error,
-    eDOMEvents_DOMPageRestore,
     eDOMEvents_submit,
     eDOMEvents_reset,
     eDOMEvents_change,
@@ -123,7 +122,9 @@ public:
     eDOMEvents_popupBlocked,
     eDOMEvents_DOMActivate,
     eDOMEvents_DOMFocusIn,
-    eDOMEvents_DOMFocusOut
+    eDOMEvents_DOMFocusOut,
+    eDOMEvents_PageShow,
+    eDOMEvents_PageHide
   };
 
   nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent);

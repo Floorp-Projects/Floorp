@@ -166,6 +166,22 @@ interface nsIWebProgressListener : nsISupports
 
 
   /**
+   * State Modifier Flags
+   *
+   * These flags further describe the transition which is occuring.  These
+   * flags are NOT mutually exclusive (i.e., an onStateChange event may
+   * indicate some combination of these flags).
+   *
+   * STATE_RESTORING
+   *   This flag indicates that the state transition corresponds to the start
+   *   or stop of activity for restoring a previously-rendered presentation.
+   *   As such, there is no actual network activity associated with this
+   *   request, and any modifications made to the document or presentation
+   *   when it was originally loaded will still be present.
+   */
+  const unsigned long STATE_RESTORING      = 0x01000000;
+
+  /**
    * State Security Flags
    *
    * These flags describe the security state reported by a call to the

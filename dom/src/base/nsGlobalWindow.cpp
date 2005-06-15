@@ -5815,6 +5815,9 @@ public:
   // Get the listener manager, which holds all event handlers for the window.
   nsIEventListenerManager* GetListenerManager() { return mListenerManager; }
 
+  // Get the saved value of the mMutationBits field.
+  PRUint32 GetMutationBits() { return mMutationBits; }
+
   // Get the contents of focus memory when the state was saved
   // (if the focus was inside of this window).
   nsIDOMElement* GetFocusedElement() { return mFocusedElement; }
@@ -5835,6 +5838,7 @@ private:
   nsCOMPtr<nsIDOMWindowInternal> mFocusedWindow;
   nsTimeout *mSavedTimeouts;
   nsTimeout **mTimeoutInsertionPoint;
+  PRUint32 mMutationBits;
 };
 
 WindowStateHolder::WindowStateHolder(JSContext *cx, JSObject *aObject,
@@ -5844,6 +5848,11 @@ WindowStateHolder::WindowStateHolder(JSContext *cx, JSObject *aObject,
   NS_ASSERTION(aWindow, "null window");
 
   aWindow->GetListenerManager(getter_AddRefs(mListenerManager));
+  mMutationBits = aWindow->mMutationBits;
+
+  // Clear the window's EventListenerManager pointer so that it can't have
+  // listeners removed from it later.
+  aWindow->mListenerManager = nsnull;
 
   nsIFocusController *fc = aWindow->GetRootFocusController();
   NS_ASSERTION(fc, "null focus controller");
@@ -6042,6 +6051,7 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
   NS_ENSURE_SUCCESS(rv, rv);
 
   mListenerManager = holder->GetListenerManager();
+  mMutationBits = holder->GetMutationBits();
 
   nsIDOMElement *focusedElement = holder->GetFocusedElement();
   nsIDOMWindowInternal *focusedWindow = holder->GetFocusedWindow();

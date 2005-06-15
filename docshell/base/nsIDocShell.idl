@@ -66,7 +66,7 @@ interface nsISHEntry;
 interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
 
-[scriptable, uuid(b0228925-9242-467b-842f-dc739a6e478f)]
+[scriptable, uuid(5d1529b3-f825-45af-a2ee-1ae4bc2b2b2a)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -175,9 +175,10 @@ interface nsIDocShell : nsISupports
 
   /**
    * Notify the associated content viewer and all child docshells that they are
-   * about to be unloaded.
+   * about to be hidden.  If |isUnload| is true, then the document is being
+   * unloaded as well.
    */
-  [noscript] void fireUnloadNotification();
+  [noscript] void firePageHideNotification(in boolean isUnload);
 
   /**
    * Presentation context for the currently loaded document.  This may be null.
@@ -364,12 +365,22 @@ interface nsIDocShell : nsISupports
   void resumeRefreshURIs();
 
   /**
-   * Fire the onload and DOMPageRestore events as part of restoring a
-   * presentation from sessino history.  The onload event is fired starting
-   * at the chrome event handler; the DOMPageRestore event is fired starting
-   * at the window object.  This first recurses into child docshells so that
-   * events fire in a bottom-up order.
+   * Begin firing WebProgressListener notifications and DOM events for
+   * restoring a page presentation. |top| should be true for the toplevel
+   * docshell that is being restored; it will be set to false when this method
+   * is called for child docshells.  This method will post an event to call
+   * finishRestore() after returning to the event loop.
    */
-  void fireRestoreEvents();
+  void beginRestore(in boolean top);
+
+  /**
+   * Finish firing WebProgressListener notifications and DOM events for
+   * restoring a page presentation.  This should only be called via
+   * beginRestore().
+   */
+  void finishRestore();
+
+  /* Track whether we're currently restoring a document presentation. */
+  readonly attribute boolean restoringDocument;
 };
 

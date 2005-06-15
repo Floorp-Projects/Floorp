@@ -1,11 +1,10 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -15,14 +14,13 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is 
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Hubbie Shaw
- *   Doug Turner <dougt@netscape.com>
+ *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,21 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsDOMPageTransitionEvent_h__
+#define nsDOMPageTransitionEvent_h__
 
-interface nsIDOMWindow;
-interface nsIDOMElement;
+#include "nsIDOMPageTransitionEvent.h"
+#include "nsDOMEvent.h"
 
-[scriptable, uuid(081e31e0-a144-11d3-8c7c-00609792278c)]
-interface nsISecureBrowserUI : nsISupports
+class nsDOMPageTransitionEvent : public nsIDOMPageTransitionEvent,
+                                 public nsDOMEvent
 {
-    void init(in nsIDOMWindow window);
+public:
+  nsDOMPageTransitionEvent(nsPresContext* aPresContext,
+                           nsPageTransitionEvent* aEvent);
+                     
+  NS_DECL_ISUPPORTS_INHERITED
 
-    readonly attribute unsigned long state;
-    readonly attribute AString tooltipText;
+  NS_DECL_NSIDOMPAGETRANSITIONEVENT
+
+  // Forward to base class
+  NS_FORWARD_TO_NSDOMEVENT
 };
 
-%{C++
-#define NS_SECURE_BROWSER_UI_CONTRACTID "@mozilla.org/secure_browser_ui;1"
-#define NS_SECURE_BROWSER_UI_CLASSNAME "Mozilla Secure Browser UI Handler"
-%}
+#endif // nsDOMPageTransitionEvent_h__

@@ -410,7 +410,7 @@
         </body>
       </method>
 
-      <method name="onLoad">
+      <method name="onPageShow">
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
@@ -433,7 +433,7 @@
         </body>
       </method>
 
-      <method name="onUnload">
+      <method name="onPageHide">
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
@@ -566,8 +566,8 @@
           }
 
           // Listen for first load for lazy attachment to form fill controller
-          this.addEventListener("load", this.onLoad, true);
-          this.addEventListener("unload", this.onUnload, true);
+          this.addEventListener("PageShow", this.onPageShow, true);
+          this.addEventListener("PageHide", this.onPageHide, true);
           this.addEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
         ]]>
       </constructor>
@@ -606,8 +606,8 @@
           this._fastFind = null;
           this._webBrowserFind = null;
 
-          this.removeEventListener("load", this.onLoad, true);
-          this.removeEventListener("unload", this.onUnload, true);
+          this.removeEventListener("PageShow", this.onPageShow, true);
+          this.removeEventListener("PageHide", this.onPageHide, true);
           this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
           ]]>
         </body>

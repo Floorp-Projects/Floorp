@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +11,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,38 +34,25 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsIDocumentViewer_h___
-#define nsIDocumentViewer_h___
 
-#include "nsIContentViewer.h"
+#ifndef nsIDOMPageTransitionListener_h__
+#define nsIDOMPageTransitionListener_h__
 
-class nsIDocument;
-class nsPresContext;
-class nsIPresShell;
-class nsIStyleSheet;
+#include "nsIDOMEventListener.h"
 
-#define NS_IDOCUMENT_VIEWER_IID \
- { 0xbd4fde0c, 0x71fd, 0x4d77,{0xab, 0x66, 0x26, 0xce, 0x43, 0x93, 0x2e, 0x4e}}
+class nsIDOMEvent;
 
-/**
- * A document viewer is a kind of content viewer that uses NGLayout
- * to manage the presentation of the content.
+/*
+ * Page transition event listener interface.
  */
-class nsIDocumentViewer : public nsIContentViewer
-{
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_VIEWER_IID)
+#define NS_IDOMPAGETRANSITIONLISTENER_IID \
+{ 0x24f4d69f, 0x6b0c, 0x48a8, { 0xba, 0xb7, 0x12, 0x50, 0xcb, 0x5e, 0x48, 0x79 } }
 
-  NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet) = 0;
-  
-  NS_IMETHOD GetDocument(nsIDocument** aResult) = 0;
-  
-  NS_IMETHOD GetPresShell(nsIPresShell** aResult) = 0;
-  
-  NS_IMETHOD GetPresContext(nsPresContext** aResult) = 0;
+class nsIDOMPageTransitionListener : public nsIDOMEventListener {
+ public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMPAGETRANSITIONLISTENER_IID)
 
-  NS_IMETHOD CreateDocumentViewerUsing(nsPresContext* aPresContext,
-                                       nsIDocumentViewer** aResult) = 0;
+  NS_IMETHOD PageShow(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD PageHide(nsIDOMEvent* aEvent) = 0;
 };
-
-#endif /* nsIDocumentViewer_h___ */
+#endif // nsIDOMPageTransitionListener_h__

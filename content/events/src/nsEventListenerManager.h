@@ -84,6 +84,7 @@ enum EventArrayType {
   eEventArrayType_Scroll = 12,
   eEventArrayType_Mutation = 13,
   eEventArrayType_DOMUI = 14,
+  eEventArrayType_PageTransition = 15,
   eEventArrayType_Hash,
   eEventArrayType_None
 };
@@ -303,7 +304,6 @@ protected:
 #define NS_EVENT_BITS_LOAD_ABORT             0x04
 #define NS_EVENT_BITS_LOAD_ERROR             0x08
 #define NS_EVENT_BITS_LOAD_BEFORE_UNLOAD     0x10
-#define NS_EVENT_BITS_LOAD_PAGE_RESTORE      0x20
 
 //nsIDOMXULListener
 #define NS_EVENT_BITS_XUL_NONE               0x00
@@ -348,5 +348,10 @@ protected:
 #define NS_EVENT_BITS_UI_ACTIVATE  0x01
 #define NS_EVENT_BITS_UI_FOCUSIN   0x02
 #define NS_EVENT_BITS_UI_FOCUSOUT  0x04
+
+// nsIDOMPageTransitionListener
+#define NS_EVENT_BITS_PAGETRANSITION_NONE 0x00
+#define NS_EVENT_BITS_PAGETRANSITION_SHOW 0x01
+#define NS_EVENT_BITS_PAGETRANSITION_HIDE 0x02
 
 #endif // nsEventListenerManager_h__

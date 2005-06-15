@@ -55,7 +55,7 @@ struct nsRect;
 %}
 [ref] native nsRect(nsRect);
 
-[scriptable, uuid(e47bf412-3bc2-4306-a82f-ea2bdf950432)]
+[scriptable, uuid(a19c4489-4a71-42e1-b150-61366547030d)]
 interface nsISHEntry : nsIHistoryEntry
 {
     /** URI for the document */
@@ -101,9 +101,6 @@ interface nsISHEntry : nsIHistoryEntry
      * Clear the child shell list.
      */
     void clearChildShells();
-
-    /** Saved security state for the content viewer */
-    attribute nsISupports securityState;
 
     /** Saved refresh URI list for the content viewer */
     attribute nsISupportsArray refreshURIList;

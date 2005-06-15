@@ -58,15 +58,16 @@ static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
   "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "beforeunload", "unload", "abort", "error",
-  "DOMPageRestore", "submit", "reset", "change", "select", "input", "paint",
-  "text", "compositionstart", "compositionend", "popupshowing", "popupshown",
+  "submit", "reset", "change", "select", "input", "paint" ,"text",
+  "compositionstart", "compositionend", "popupshowing", "popupshown",
   "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture", "resize",
   "scroll","overflow", "underflow", "overflowchanged",
   "DOMSubtreeModified", "DOMNodeInserted", "DOMNodeRemoved", 
   "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument",
   "DOMAttrModified", "DOMCharacterDataModified",
-  "popupBlocked", "DOMActivate", "DOMFocusIn", "DOMFocusOut"
+  "popupBlocked", "DOMActivate", "DOMFocusIn", "DOMFocusOut",
+  "PageShow", "PageHide"
 }; 
 
 static char *sPopupAllowedEvents;
@@ -434,8 +435,6 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_IMAGE_ABORT;
     else if (atom == nsLayoutAtoms::onerror)
       mEvent->message = NS_IMAGE_ERROR;
-    else if (atom == nsLayoutAtoms::onDOMPageRestore)
-      mEvent->message = NS_PAGE_RESTORE;
   } else if (mEvent->eventStructType == NS_MUTATION_EVENT) {
     if (atom == nsLayoutAtoms::onDOMAttrModified)
       mEvent->message = NS_MUTATION_ATTRMODIFIED;
@@ -458,6 +457,11 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_UI_FOCUSIN;
     else if (atom == nsLayoutAtoms::onDOMFocusOut)
       mEvent->message = NS_UI_FOCUSOUT;
+  } else if (mEvent->eventStructType == NS_PAGETRANSITION_EVENT) {
+    if (atom == nsLayoutAtoms::onPageShow)
+      mEvent->message = NS_PAGE_SHOW;
+    else if (atom == nsLayoutAtoms::onPageHide)
+      mEvent->message = NS_PAGE_HIDE;
   }
 
   if (mEvent->message == NS_USER_DEFINED_EVENT)
@@ -796,8 +800,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_IMAGE_ERROR:
   case NS_SCRIPT_ERROR:
     return sEventNames[eDOMEvents_error];
-  case NS_PAGE_RESTORE:
-    return sEventNames[eDOMEvents_DOMPageRestore];
   case NS_FORM_SUBMIT:
     return sEventNames[eDOMEvents_submit];
   case NS_FORM_RESET:
@@ -869,6 +871,10 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_DOMFocusIn];
   case NS_UI_FOCUSOUT:
     return sEventNames[eDOMEvents_DOMFocusOut];
+  case NS_PAGE_SHOW:
+    return sEventNames[eDOMEvents_PageShow];
+  case NS_PAGE_HIDE:
+    return sEventNames[eDOMEvents_PageHide];
   default:
     break;
   }

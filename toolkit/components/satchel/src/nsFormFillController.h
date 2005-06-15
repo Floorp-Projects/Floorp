@@ -112,7 +112,6 @@ public:
   NS_IMETHOD Unload(nsIDOMEvent *aLoadEvent);
   NS_IMETHOD Abort(nsIDOMEvent *aLoadEvent);
   NS_IMETHOD Error(nsIDOMEvent *aLoadEvent);
-  NS_IMETHOD PageRestore(nsIDOMEvent* aLoadEvent);
 
   nsFormFillController();
   virtual ~nsFormFillController();

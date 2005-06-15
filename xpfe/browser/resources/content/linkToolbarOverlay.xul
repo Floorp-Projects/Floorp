@@ -56,7 +56,7 @@
 
   <script type="application/x-javascript">
     <![CDATA[
-      document.addEventListener("load", linkToolbarUI.initHandlers, true);
+      document.addEventListener("PageShow", linkToolbarUI.initHandlers, true);
     ]]>
   </script>
 

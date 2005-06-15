@@ -880,12 +880,6 @@ nsFormFillController::Error(nsIDOMEvent *aLoadEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFormFillController::PageRestore(nsIDOMEvent *aLoadEvent)
-{
-  return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////
 //// nsFormFillController
 

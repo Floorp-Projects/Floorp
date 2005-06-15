@@ -14,7 +14,7 @@ struct nsRect;
 [ptr] native nsIDeviceContextPtr(nsIDeviceContext);
 [ref] native nsRectRef(nsRect);
 
-[scriptable, uuid(456651af-14ca-4f8d-91a3-c7cdd7e7eef6)]
+[scriptable, uuid(62d0e866-e608-4b1a-9ab0-467142b3e3bd)]
 interface nsIContentViewer : nsISupports
 {
 
@@ -27,7 +27,7 @@ interface nsIContentViewer : nsISupports
   void loadStart(in nsISupports aDoc);
   void loadComplete(in unsigned long aStatus);
   boolean permitUnload();
-  void unload();
+  void pageHide(in boolean isUnload);
 
   /**
    * All users of a content viewer are responsible for calling both

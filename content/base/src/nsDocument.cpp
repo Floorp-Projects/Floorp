@@ -128,6 +128,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsBindingManager.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIRequest.h"
+#include "nsILink.h"
 
 #include "nsICharsetAlias.h"
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
@@ -4908,4 +4909,74 @@ nsDocument::UnblockOnload()
       loadGroup->RemoveRequest(mOnloadBlocker, nsnull, NS_OK);
     }
   }    
+}
+
+void
+nsDocument::OnPageShow(PRBool aPersisted)
+{
+  if (aPersisted) {
+    // Send out notifications that our <link> elements are attached.
+    nsRefPtr<nsContentList> links = NS_GetContentList(this,
+                                                      nsHTMLAtoms::link,
+                                                      kNameSpaceID_Unknown,
+                                                      mRootContent);
+
+    if (links) {
+      PRUint32 linkCount = links->Length(PR_TRUE);
+      for (PRUint32 i = 0; i < linkCount; ++i) {
+        nsCOMPtr<nsILink> link = do_QueryInterface(links->Item(i, PR_FALSE));
+        if (link) {
+          link->LinkAdded();
+        }
+      }
+    }
+  }
+
+  nsIPresShell *shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[0]);
+  if (shell && mScriptGlobalObject) {
+    nsPresContext *pc = shell->GetPresContext();
+    if (pc) {
+      nsPageTransitionEvent event(PR_TRUE, NS_PAGE_SHOW, aPersisted);
+      nsEventStatus status = nsEventStatus_eIgnore;
+
+      mScriptGlobalObject->HandleDOMEvent(pc, &event, nsnull,
+                                          NS_EVENT_FLAG_INIT, &status);
+    }
+  }
+}
+
+void
+nsDocument::OnPageHide(PRBool aPersisted)
+{
+  // Send out notifications that our <link> elements are detached,
+  // but only if this is not a full unload.
+  if (aPersisted) {
+    nsRefPtr<nsContentList> links = NS_GetContentList(this,
+                                                      nsHTMLAtoms::link,
+                                                      kNameSpaceID_Unknown,
+                                                      mRootContent);
+
+    if (links) {
+      PRUint32 linkCount = links->Length(PR_TRUE);
+      for (PRUint32 i = 0; i < linkCount; ++i) {
+        nsCOMPtr<nsILink> link = do_QueryInterface(links->Item(i, PR_FALSE));
+        if (link) {
+          link->LinkRemoved();
+        }
+      }
+    }
+  }
+
+  // Now send out a PageHide event.
+  nsIPresShell *shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[0]);
+  if (shell && mScriptGlobalObject) {
+    nsPresContext *pc = shell->GetPresContext();
+    if (pc) {
+      nsPageTransitionEvent event(PR_TRUE, NS_PAGE_HIDE, aPersisted);
+      nsEventStatus status = nsEventStatus_eIgnore;
+
+      mScriptGlobalObject->HandleDOMEvent(pc, &event, nsnull,
+                                          NS_EVENT_FLAG_INIT, &status);
+    }
+  }
 }

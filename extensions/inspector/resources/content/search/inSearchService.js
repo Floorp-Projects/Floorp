@@ -68,7 +68,7 @@ function inSearchService()
   // the xmlextras facility for loading xml, but it's broken, so 
   // we use a browser for onw
   var browser = document.getElementById("inSearchServiceLoader");
-  browser.addEventListener("load", inSearchService_LoadListener, true);
+  browser.addEventListener("PageShow", inSearchService_LoadListener, true);
   this.mWebNav = browser.webNavigation;
 }
 

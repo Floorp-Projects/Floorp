@@ -260,7 +260,7 @@ if (window && (wintype == "navigator:browser"))
 {
     var contentArea = window.document.getElementById("appcontent");
     if (contentArea)
-        contentArea.addEventListener("load", charsetLoadListener, true);
+        contentArea.addEventListener("PageShow", charsetLoadListener, true);
 }
 else
 {
@@ -269,14 +269,14 @@ else
     {
         var messageContent = window.document.getElementById("messagepane");
         if (messageContent)
-            messageContent.addEventListener("load", mailCharsetLoadListener, true);
+            messageContent.addEventListener("PageShow", mailCharsetLoadListener, true);
     }
     else
     if (window && arrayOfStrings[0] == "composer") 
     {
         contentArea = window.document.getElementById("appcontent");
         if (contentArea)
-            contentArea.addEventListener("load", composercharsetLoadListener, true);
+            contentArea.addEventListener("PageShow", composercharsetLoadListener, true);
     }
 
 }

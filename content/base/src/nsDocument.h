@@ -440,6 +440,9 @@ public:
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
 
+  virtual void OnPageShow(PRBool aPersisted);
+  virtual void OnPageHide(PRBool aPersisted);
+
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
                             nsIRadioVisitor* aVisitor);

@@ -56,6 +56,7 @@
 #include "nsIDOMScrollListener.h"
 #include "nsIDOMMutationListener.h"
 #include "nsIDOMUIListener.h"
+#include "nsIDOMPageTransitionListener.h"
 #include "nsIEventStateManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPrivateDOMEvent.h"
@@ -242,7 +243,6 @@ static const EventDispatchData sLoadEvents[] = {
   {NS_IMAGE_ERROR, HANDLER(&nsIDOMLoadListener::Error), NS_EVENT_BITS_LOAD_ERROR},
   {NS_SCRIPT_ERROR,HANDLER(&nsIDOMLoadListener::Error), NS_EVENT_BITS_LOAD_ERROR},
   {NS_BEFORE_PAGE_UNLOAD,HANDLER(&nsIDOMLoadListener::BeforeUnload), NS_EVENT_BITS_LOAD_BEFORE_UNLOAD},
-  {NS_PAGE_RESTORE,HANDLER(&nsIDOMLoadListener::PageRestore), NS_EVENT_BITS_LOAD_PAGE_RESTORE}
 };
 
 static const EventDispatchData sPaintEvents[] = {
@@ -320,6 +320,13 @@ static const EventDispatchData sUIEvents[] = {
     NS_EVENT_BITS_UI_FOCUSOUT }
 };
 
+static const EventDispatchData sPageTransitionEvents[] = {
+  { NS_PAGE_SHOW, HANDLER(&nsIDOMPageTransitionListener::PageShow),
+    NS_EVENT_BITS_PAGETRANSITION_SHOW },
+  { NS_PAGE_HIDE, HANDLER(&nsIDOMPageTransitionListener::PageHide),
+    NS_EVENT_BITS_PAGETRANSITION_HIDE }
+};
+
 #define IMPL_EVENTTYPEDATA(type) \
 { \
   s##type##Events, \
@@ -344,7 +351,8 @@ static const EventTypeData sEventTypes[] = {
   IMPL_EVENTTYPEDATA(XUL),
   IMPL_EVENTTYPEDATA(Scroll),
   IMPL_EVENTTYPEDATA(Mutation),
-  IMPL_EVENTTYPEDATA(UI)
+  IMPL_EVENTTYPEDATA(UI),
+  IMPL_EVENTTYPEDATA(PageTransition)
 };
 
 // Strong references to event groups
@@ -892,10 +900,6 @@ nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType,
     *aArrayType = eEventArrayType_Load;
     *aFlags = NS_EVENT_BITS_LOAD_ERROR;
   }
-  else if (aType == nsLayoutAtoms::onDOMPageRestore) {
-    *aArrayType = eEventArrayType_Load;
-    *aFlags = NS_EVENT_BITS_LOAD_PAGE_RESTORE;
-  }
   else if (aType == nsLayoutAtoms::onpaint) {
     *aArrayType = eEventArrayType_Paint;
     *aFlags = NS_EVENT_BITS_PAINT_PAINT;
@@ -1019,6 +1023,14 @@ nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType,
   else if (aType == nsLayoutAtoms::oncompositionend) {
     *aArrayType = eEventArrayType_Composition;
     *aFlags = NS_EVENT_BITS_COMPOSITION_END;
+  }
+  else if (aType == nsLayoutAtoms::onPageShow) {
+    *aArrayType = eEventArrayType_PageTransition;
+    *aFlags = NS_EVENT_BITS_PAGETRANSITION_SHOW;
+  }
+  else if (aType == nsLayoutAtoms::onPageHide) {
+    *aArrayType = eEventArrayType_PageTransition;
+    *aFlags = NS_EVENT_BITS_PAGETRANSITION_HIDE;
   }
   else {
     return NS_ERROR_FAILURE;
@@ -1723,6 +1735,10 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
         NS_NewDOMBeforeUnloadEvent(aDOMEvent, aPresContext,
                                    NS_STATIC_CAST(nsBeforePageUnloadEvent*,
                                                   aEvent));
+    case NS_PAGETRANSITION_EVENT:
+      return NS_NewDOMPageTransitionEvent(aDOMEvent, aPresContext,
+                                          NS_STATIC_CAST(nsPageTransitionEvent*,
+                                                         aEvent));
     }
 
     // For all other types of events, create a vanilla event object.

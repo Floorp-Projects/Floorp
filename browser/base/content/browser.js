@@ -112,7 +112,7 @@ var gAutoHideTabbarPrefListener = null;
 * one listener that calls all real handlers.
 */
 
-function loadEventHandlers(event)
+function pageShowEventHandlers(event)
 {
   // Filter out events that are not about the document load we are interested in
   if (event.originalTarget == content.document) {
@@ -727,7 +727,7 @@ function delayedStartup()
   // loads the services
   initServices();
   initBMService();
-  gBrowser.addEventListener("load", function(evt) { setTimeout(loadEventHandlers, 0, evt); }, true);
+  gBrowser.addEventListener("PageShow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
   window.addEventListener("keypress", ctrlNumberTabSelection, false);
 

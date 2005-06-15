@@ -990,19 +990,12 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
     newSecurityState = lis_no_security;
   }
 
-  return UpdateSecurityState(newSecurityState, aRequest);
-}
-
-nsresult
-nsSecureBrowserUIImpl::UpdateSecurityState(lockIconState aNewState,
-                                           nsIRequest *aRequest)
-{
   PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
          ("SecureUI:%p: UpdateSecurityState:  old-new  %d - %d\n", this,
-         mPreviousSecurityState, aNewState
+         mPreviousSecurityState, newSecurityState
           ));
 
-  if (mPreviousSecurityState != aNewState)
+  if (mPreviousSecurityState != newSecurityState)
   {
     // must show alert
     
@@ -1047,7 +1040,7 @@ nsSecureBrowserUIImpl::UpdateSecurityState(lockIconState aNewState,
     {
       case lis_no_security:
       case lis_broken_security:
-        switch (aNewState)
+        switch (newSecurityState)
         {
           case lis_no_security:
           case lis_broken_security:
@@ -1064,7 +1057,7 @@ nsSecureBrowserUIImpl::UpdateSecurityState(lockIconState aNewState,
     
     if (showWarning)
     {
-      switch (aNewState)
+      switch (newSecurityState)
       {
         case lis_no_security:
         case lis_broken_security:
@@ -1085,9 +1078,9 @@ nsSecureBrowserUIImpl::UpdateSecurityState(lockIconState aNewState,
       }
     }
 
-    mPreviousSecurityState = aNewState;
+    mPreviousSecurityState = newSecurityState;
 
-    if (lis_no_security == aNewState)
+    if (lis_no_security == newSecurityState)
     {
       mSSLStatus = nsnull;
       mInfoTooltip.Truncate();
@@ -1098,7 +1091,7 @@ nsSecureBrowserUIImpl::UpdateSecurityState(lockIconState aNewState,
   {
     PRUint32 newState = STATE_IS_INSECURE;
 
-    switch (aNewState)
+    switch (newSecurityState)
     {
       case lis_broken_security:
         newState = STATE_IS_BROKEN;
@@ -1497,51 +1490,4 @@ ConfirmPostToInsecureFromSecure()
   if (NS_FAILED(rv)) return PR_FALSE;
 
   return result;
-}
-
-#define NS_SECUREBROWSERUISTATE_IID \
-{0x086c5daf, 0xbb0a, 0x45cb, {0x98, 0x2b, 0xf1, 0x62, 0x49, 0xd5, 0x0e, 0x28}}
-
-class nsSecureBrowserUIImpl::State : public nsISupports
-{
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_SECUREBROWSERUISTATE_IID)
-  NS_DECL_ISUPPORTS
-
-  State(lockIconState aState, nsISupports *aSSLStatus);
-
-  lockIconState GetState() const { return mState; }
-  nsISupports* GetSSLStatus() { return mSSLStatus; }
-
-private:
-  lockIconState mState;
-  nsCOMPtr<nsISupports> mSSLStatus;
-};
-
-NS_IMPL_ISUPPORTS1(nsSecureBrowserUIImpl::State, nsSecureBrowserUIImpl::State)
-
-nsSecureBrowserUIImpl::State::State(lockIconState aState,
-                                    nsISupports *aSSLStatus)
-  : mState(aState), mSSLStatus(aSSLStatus)
-{
-}
-
-NS_IMETHODIMP
-nsSecureBrowserUIImpl::CaptureState(nsISupports **aState)
-{
-  *aState = new State(mPreviousSecurityState, mSSLStatus);
-  NS_ENSURE_TRUE(aState, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(*aState);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSecureBrowserUIImpl::TransitionToState(nsISupports *aState)
-{
-  nsCOMPtr<nsSecureBrowserUIImpl::State> state = do_QueryInterface(aState);
-  NS_ENSURE_TRUE(state, NS_ERROR_NULL_POINTER);
-
-  mSSLStatus = state->GetSSLStatus();
-  return UpdateSecurityState(state->GetState(), nsnull);
 }

@@ -142,6 +142,7 @@ nsDocLoader::nsDocLoader()
   mParent    = nsnull;
 
   mIsLoadingDocument = PR_FALSE;
+  mIsRestoringDocument = PR_FALSE;
 
   static PLDHashTableOps hash_table_ops =
   {
@@ -1154,6 +1155,10 @@ void nsDocLoader::FireOnStateChange(nsIWebProgress *aProgress,
       (this != aProgress)) {
     aStateFlags &= ~nsIWebProgressListener::STATE_IS_NETWORK;
   }
+
+  // Add the STATE_RESTORING bit if necessary.
+  if (mIsRestoringDocument)
+    aStateFlags |= nsIWebProgressListener::STATE_RESTORING;
 
 #if defined(DEBUG)
   nsCAutoString buffer;
