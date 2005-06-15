@@ -39,6 +39,7 @@
 #include "nsIGenericFactory.h"
 
 #include "calDateTime.h"
+#include "calDuration.h"
 #include "calICSService.h"
 #include "calRecurrenceRule.h"
 #include "calRecurrenceDate.h"
@@ -47,12 +48,14 @@
 #include "calBaseCID.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(calDateTime)
+NS_GENERIC_FACTORY_CONSTRUCTOR(calDuration)
 NS_GENERIC_FACTORY_CONSTRUCTOR(calICSService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceRule)
 NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceDate)
 NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceDateSet)
 
 NS_DECL_CLASSINFO(calDateTime)
+NS_DECL_CLASSINFO(calDuration)
 NS_DECL_CLASSINFO(calICSService)
 NS_DECL_CLASSINFO(calRecurrenceRule)
 NS_DECL_CLASSINFO(calRecurrenceDate)
@@ -70,6 +73,17 @@ static const nsModuleComponentInfo components[] =
       NS_CI_INTERFACE_GETTER_NAME(calDateTime),
       NULL,
       &NS_CLASSINFO_NAME(calDateTime)
+    },
+    { "Calendar Duration Object",
+      CAL_DURATION_CID,
+      CAL_DURATION_CONTRACTID,
+      calDurationConstructor,
+      NULL,
+      NULL,
+      NULL,
+      NS_CI_INTERFACE_GETTER_NAME(calDuration),
+      NULL,
+      &NS_CLASSINFO_NAME(calDuration)
     },
     { "ICS parser/serializer",
       CAL_ICSSERVICE_CID,

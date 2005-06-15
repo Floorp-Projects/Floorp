@@ -14,13 +14,12 @@
  *
  * The Original Code is Oracle Corporation code.
  *
- * The Initial Developer of the Original Code is
- *  Oracle Corporation
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is Oracle Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Stuart Parmenter <stuart.parmenter@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,45 +35,94 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "calIItemBase.idl"
+#include "nsISupports.idl"
 
-interface calIDuration;
+[ptr] native icaldurationtypeptr(struct icaldurationtype);
 
-//
-// calIEvent
-//
-// An interface for an event (analogous to a VEVENT)
-//
-
-[scriptable, uuid(5ab15c1c-e295-4d8e-a9a9-ba5bc848b59a)]
-interface calIEvent : calIItemBase
+[scriptable, uuid(d1d2e05d-5472-482e-b0a4-a9e43925d530)]
+interface calIDuration : nsISupports
 {
-  // these attributes are marked readonly, as the calIDates are owned
-  // by the event; however, the actual calIDate objects are not read
-  // only and are intended to be manipulated to adjust dates.
-  
   /**
-   * The (inclusive) start of the event.
+   * isMutable is true if this instance is modifiable.
+   * If isMutable is false, any attempts to modify
+   * the object will throw CAL_ERROR_ITEM_IS_MUTABLE.
    */
-  attribute calIDateTime startDate;
+  readonly attribute boolean isMutable;
 
   /**
-   * The (non-inclusive) end of the event.
-   * Note that for all-day events, non-inclusive means that this will be set
-   * to the day after the last day of the event.
-   * If startDate.isDate is set, endDate.isDate must also be set.
+   * Make this calIDuration instance immutable.
    */
-  attribute calIDateTime endDate;
+  void makeImmutable();
 
   /**
-   * The duration of the event.
-   * equal to endDate - startDate
+   * Clone this calIDuration instance into a new
+   * mutable object.
    */
-  readonly attribute calIDuration duration;
+  calIDuration clone();
 
   /**
-   * Indicates if the event is an all-day event.
-   * All-day event have isDate in startDate and endDate set to true.
+   * Is Negative
    */
-  attribute boolean isAllDay;
+  attribute boolean isNegative;
+
+  /**
+   * Weeks
+   */
+  attribute short weeks;
+
+  /**
+   * Days
+   */
+  attribute short days;
+
+  /**
+   * Hours
+   */
+  attribute short hours;
+
+  /**
+   * Minutes
+   */
+  attribute short minutes;
+
+  /**
+   * Seconds
+   */
+  attribute short seconds;
+
+  /**
+   * total duration in seconds
+   */
+  attribute long inSeconds;
+
+  /*
+   * Methods
+   */
+
+  /**
+   * Add a duration
+   */
+  void addDuration(in calIDuration aDuration);
+
+  /**
+   * Reset this duration to 0
+   */
+  void reset();
+
+  /**
+   * Normalize the duration
+   */
+  void normalize();
+
+  /**
+   * Return a string representation of this instance.
+   */
+  AUTF8String toString();
+
+  [noscript,notxpcom] void toIcalDuration(in icaldurationtypeptr idt);
+
+  /**
+   * This object as an iCalendar DURATION string
+   */
+  readonly attribute ACString icalString;
 };

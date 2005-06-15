@@ -1,4 +1,4 @@
-/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,13 +14,12 @@
  *
  * The Original Code is Oracle Corporation code.
  *
- * The Initial Developer of the Original Code is
- *  Oracle Corporation
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is Oracle Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Stuart Parmenter <stuart.parmenter@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,45 +35,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "calIItemBase.idl"
+#ifndef CALDURATION_H_
+#define CALDURATION_H_
 
-interface calIDuration;
+#include "nsString.h"
 
-//
-// calIEvent
-//
-// An interface for an event (analogous to a VEVENT)
-//
+#include "calIDuration.h"
 
-[scriptable, uuid(5ab15c1c-e295-4d8e-a9a9-ba5bc848b59a)]
-interface calIEvent : calIItemBase
+extern "C" {
+    #include "ical.h"
+}
+
+class calDuration : public calIDuration
 {
-  // these attributes are marked readonly, as the calIDates are owned
-  // by the event; however, the actual calIDate objects are not read
-  // only and are intended to be manipulated to adjust dates.
-  
-  /**
-   * The (inclusive) start of the event.
-   */
-  attribute calIDateTime startDate;
+public:
+    calDuration ();
+    calDuration (const calDuration& cdt);
 
-  /**
-   * The (non-inclusive) end of the event.
-   * Note that for all-day events, non-inclusive means that this will be set
-   * to the day after the last day of the event.
-   * If startDate.isDate is set, endDate.isDate must also be set.
-   */
-  attribute calIDateTime endDate;
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
 
-  /**
-   * The duration of the event.
-   * equal to endDate - startDate
-   */
-  readonly attribute calIDuration duration;
+    // calIDateTime interface
+    NS_DECL_CALIDURATION
 
-  /**
-   * Indicates if the event is an all-day event.
-   * All-day event have isDate in startDate and endDate set to true.
-   */
-  attribute boolean isAllDay;
+protected:
+    PRBool mImmutable;
+
+    struct icaldurationtype mDuration;
 };
+
+#endif /* CALDURATION_H_ */
+

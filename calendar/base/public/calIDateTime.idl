@@ -38,6 +38,7 @@
 
 #include "nsISupports.idl"
 
+interface calIDuration;
 [ptr] native icaltimetypeptr(struct icaltimetype);
 
 [scriptable, uuid(5678d4a3-2543-4ece-afbb-079292f2866e)]
@@ -187,7 +188,12 @@ interface calIDateTime : nsISupports
   // add the given calIDateTime, treating it as a duration, to
   // this item.
   // XXX will change
-  void addDuration (in calIDateTime aDuration);
+  void addDuration (in calIDuration aDuration);
+
+  // Subtract two dates and return a duration
+  // returns duration of this - aOtherDate
+  // if aOtherDate is > this the duration will be negative
+  calIDuration subtractDate (in calIDateTime aOtherDate);
 
   /**
    * Compare this calIDateTime instance to aOther.  Returns -1, 0, 1 to

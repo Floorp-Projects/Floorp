@@ -46,6 +46,11 @@
 #define CAL_DATETIME_CONTRACTID \
     "@mozilla.org/calendar/datetime;1"
 
+#define CAL_DURATION_CID \
+    { 0x63513139, 0x51cb, 0x4f5b, { 0x9a, 0x52, 0x49, 0xac, 0xcc, 0x5c, 0xae, 0x17 } }
+#define CAL_DURATION_CONTRACTID \
+    "@mozilla.org/calendar/duration;1"
+
 #define CAL_ICSSERVICE_CID \
     { 0xf2f65cf2, 0x880e, 0x4960, { 0xb3, 0x7b, 0xae, 0x02, 0x05, 0xb6, 0xe3, 0x42 } }
 #define CAL_ICSSERVICE_CONTRACTID \

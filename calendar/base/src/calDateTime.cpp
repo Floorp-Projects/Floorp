@@ -45,6 +45,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "calIICSService.h"
+#include "calIDuration.h"
 
 #include "jsdate.h"
 
@@ -232,18 +233,54 @@ calDateTime::Normalize()
 }
 
 NS_IMETHODIMP
-calDateTime::AddDuration(calIDateTime *aDuration)
+calDateTime::AddDuration(calIDuration *aDuration)
 {
     NS_ENSURE_ARG_POINTER(aDuration);
 
-    PRTime nativeDur;
-    nsresult rv = aDuration->GetNativeTime(&nativeDur);
-    if (NS_FAILED(rv))
-        return rv;
+    struct icaldurationtype idt;
+    aDuration->ToIcalDuration(&idt);
+    
+    struct icaltimetype itt;
+    ToIcalTime(&itt);
 
-    mLastModified = PR_Now();
+    struct icaltimetype newitt;
+    newitt = icaltime_add(itt, idt);
+    FromIcalTime(&newitt);
 
-    return SetNativeTime(mNativeTime + nativeDur);
+    mIsValid = PR_TRUE;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calDateTime::SubtractDate(calIDateTime *aDate, calIDuration **aDuration)
+{
+    NS_ENSURE_ARG_POINTER(aDate);
+
+    struct icaltimetype itt1;
+    struct icaltimetype itt2;
+
+    ToIcalTime(&itt1);
+    aDate->ToIcalTime(&itt2);
+
+    struct icaldurationtype idt;
+    idt = icaltime_subtract(itt1, itt2);
+
+    nsCOMPtr<calIDuration> result(do_CreateInstance("@mozilla.org/calendar/duration;1"));
+    if (!result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    result->SetIsNegative(idt.is_neg);
+    result->SetWeeks(idt.weeks);
+    result->SetDays(idt.days);
+    result->SetHours(idt.hours);
+    result->SetMinutes(idt.minutes);
+    result->SetSeconds(idt.seconds);
+
+    *aDuration = result;
+    NS_ADDREF(*aDuration);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP

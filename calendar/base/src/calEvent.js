@@ -140,9 +140,7 @@ calEvent.prototype = {
     },
 
     get duration() {
-        var dur = new CalDateTime();
-        dur.setTimeInTimezone (this.endDate.nativeTime - this.startDate.nativeTime, "floating");
-        return dur;
+        return this.endDate.subtractDate(this.startDate);
     },
 
     get recurrenceStartDate() {

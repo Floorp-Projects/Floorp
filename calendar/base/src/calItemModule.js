@@ -55,6 +55,7 @@ var CalRecurrenceRule = null;
 var CalRecurrenceDateSet = null;
 var CalRecurrenceDate = null;
 var CalDateTime = null;
+var CalDuration = null;
 var CalAttendee = null;
 
 var componentInitRun = false;
@@ -66,6 +67,8 @@ function initBaseComponent()
     CalRecurrenceDate = new Components.Constructor(kCalRecurrenceDateContractID, kCalIRecurrenceDate);
 
     CalDateTime = new Components.Constructor("@mozilla.org/calendar/datetime;1",
+                                             Components.interfaces.calIDateTime);
+    CalDuration = new Components.Constructor("@mozilla.org/calendar/duration;1",
                                              Components.interfaces.calIDateTime);
     CalAttendee = new Components.Constructor("@mozilla.org/calendar/attendee;1",
                                              Components.interfaces.calIAttendee);
