@@ -218,7 +218,7 @@ typedef struct _appledouble_decode_object
 PR_BEGIN_EXTERN_C
 
 int ap_encode_init(appledouble_encode_object *p_ap_encode_obj, 
-					char* fname,
+					const char* fname,
 					char* separator);
 
 int ap_encode_next(appledouble_encode_object* p_ap_encode_obj, 

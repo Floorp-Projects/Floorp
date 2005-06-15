@@ -133,8 +133,8 @@ MacGetFileType(nsFileSpec   *fs,
 *	Setup the encode envirment
 */
 
-int ap_encode_init( appledouble_encode_object *p_ap_encode_obj, 
-	                  char                      *fname,
+int ap_encode_init( appledouble_encode_object *p_ap_encode_obj,
+                    const char                *fname,
                     char                      *separator)
 {
 	FSSpec	fspec;
@@ -146,7 +146,7 @@ int ap_encode_init( appledouble_encode_object *p_ap_encode_obj,
 #if defined(XP_MAC)
 	fspec = mySpec.GetFSSpec();
 #else
-	FSPathMakeFSSpec((UInt8 *)fname, &fspec, NULL);
+	FSPathMakeFSSpec((const UInt8 *)fname, &fspec, NULL);
 #endif
 	memset(p_ap_encode_obj, 0, sizeof(appledouble_encode_object));
 	
