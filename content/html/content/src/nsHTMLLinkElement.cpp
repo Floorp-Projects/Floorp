@@ -56,6 +56,8 @@
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsParserUtils.h"
+#include "nsPIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
 
 class nsHTMLLinkElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLLinkElement,
@@ -85,6 +87,8 @@ public:
   NS_IMETHOD    GetLinkState(nsLinkState &aState);
   NS_IMETHOD    SetLinkState(nsLinkState aState);
   NS_IMETHOD    GetHrefURI(nsIURI** aURI);
+  NS_IMETHOD    LinkAdded();
+  NS_IMETHOD    LinkRemoved();
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -209,6 +213,20 @@ nsHTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMLinkAdded"));
 
   return rv;  
+}
+
+NS_IMETHODIMP
+nsHTMLLinkElement::LinkAdded()
+{
+  CreateAndDispatchEvent(GetOwnerDoc(), NS_LITERAL_STRING("DOMLinkAdded"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLLinkElement::LinkRemoved()
+{
+  CreateAndDispatchEvent(GetOwnerDoc(), NS_LITERAL_STRING("DOMLinkRemoved"));
+  return NS_OK;
 }
 
 void

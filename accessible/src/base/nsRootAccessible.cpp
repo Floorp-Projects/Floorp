@@ -278,12 +278,11 @@ nsresult nsRootAccessible::AddEventListeners()
 
   GetChromeEventHandler(getter_AddRefs(target));
   NS_ASSERTION(target, "No chrome event handler for document");
-  if (target) {   
-    // onunload doesn't fire unless we use chrome event handler for target
-    target->AddEventListener(NS_LITERAL_STRING("unload"), 
+  if (target) {
+    target->AddEventListener(NS_LITERAL_STRING("PageHide"), 
                              NS_STATIC_CAST(nsIDOMXULListener*, this), 
                              PR_TRUE);
-    target->AddEventListener(NS_LITERAL_STRING("load"), 
+    target->AddEventListener(NS_LITERAL_STRING("PageShow"), 
                              NS_STATIC_CAST(nsIDOMXULListener*, this), 
                              PR_TRUE);
   }
@@ -323,10 +322,10 @@ nsresult nsRootAccessible::RemoveEventListeners()
 
   GetChromeEventHandler(getter_AddRefs(target));
   if (target) {
-    target->RemoveEventListener(NS_LITERAL_STRING("unload"), 
+    target->RemoveEventListener(NS_LITERAL_STRING("PageHide"), 
                                 NS_STATIC_CAST(nsIDOMXULListener*, this), 
                                 PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("load"), 
+    target->RemoveEventListener(NS_LITERAL_STRING("PageShow"), 
                                 NS_STATIC_CAST(nsIDOMXULListener*, this), 
                                 PR_TRUE);
   }
@@ -482,8 +481,8 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
       
-  if (eventType.LowerCaseEqualsLiteral("unload")) {
-    // Only get cached accessible for unload -- so that we don't create it
+  if (eventType.LowerCaseEqualsLiteral("PageHide")) {
+    // Only get cached accessible for pagehide -- so that we don't create it
     // just to destroy it.
     nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(eventShell));
     nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
@@ -668,7 +667,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #else
   AtkStateChange stateData;
-  if (eventType.EqualsIgnoreCase("load")) {
+  if (eventType.EqualsIgnoreCase("PageShow")) {
     nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(targetNode));
     if (htmlDoc) {
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER, 

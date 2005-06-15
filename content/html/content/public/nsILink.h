@@ -45,8 +45,8 @@ class nsIURI;
 
 // IID for the nsILink interface
 #define NS_ILINK_IID    \
-{ 0xa904ac22, 0x28fa, 0x4812,  \
-  { 0xbe, 0xf3, 0x2, 0x2f, 0xf3, 0x3b, 0x8e, 0xf5 } }
+{ 0x0c212bc4, 0xfcd7, 0x479d,  \
+  { 0x8c, 0x3f, 0x3b, 0xe8, 0xe6, 0x78, 0x74, 0x50 } }
 
 /**
  * This interface allows SelectorMatches to get the canonical
@@ -86,6 +86,20 @@ public:
     */
   NS_IMETHOD GetHrefURI(nsIURI** aURI) = 0;
 
+  /**
+   * Dispatch a LinkAdded event to the nsIChromeEventHandler for this document.
+   * This is used to notify the chrome listeners when restoring a page
+   * presentation.  Currently, this only applies to HTML <link> elements.
+   */
+  NS_IMETHOD LinkAdded() = 0;
+
+  /**
+   * Dispatch a LinkRemoved event to the nsIChromeEventHandler for this
+   * document.  This is used to notify the chrome listeners when saving a page
+   * presentation (since the document is not torn down).  Currently, this only
+   * applies to HTML <link> elements.
+   */
+  NS_IMETHOD LinkRemoved() = 0;
 };
 
 #endif /* nsILink_h___ */

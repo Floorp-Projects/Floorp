@@ -210,6 +210,9 @@ protected:
 
     PLDHashTable mRequestInfoHash;
 
+    /* Flag to indicate that we're in the process of restoring a document. */
+    PRBool mIsRestoringDocument;
+
 private:
     nsListenerInfo *GetListenerInfo(nsIWebProgressListener* aListener);
 

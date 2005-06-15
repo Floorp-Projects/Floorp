@@ -47,8 +47,9 @@
  *
  */
 #define NS_IDOMLOADLISTENER_IID \
-{0x0f7fa587, 0xaac5, 0x11d9, \
-{0xba, 0x4e, 0x00, 0x11, 0x24, 0x78, 0xd6, 0x26} }
+{ /* d1810238-14f8-4cab-9b96-96bedb9de7be */ \
+0xd1810238, 0x14f8, 0x4cab, \
+{0x9b, 0x96, 0x96, 0xbe, 0xdb, 0x9d, 0xe7, 0xbe} }
 
 class nsIDOMLoadListener : public nsIDOMEventListener {
 
@@ -90,13 +91,6 @@ public:
    */
   NS_IMETHOD Error(nsIDOMEvent* aEvent) = 0;
 
-  /**
-   * Processes a DOMPageRestore event.  This is dispatched when a page's
-   * presentation is restored from session history (onload does not fire
-   * in this case).
-   * @param aEvent The event object
-   */
-  NS_IMETHOD PageRestore(nsIDOMEvent* aEvent) = 0;
 };
 
 #endif // nsIDOMLoadListener_h__

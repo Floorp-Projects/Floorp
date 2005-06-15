@@ -41,23 +41,15 @@
 #include "nsISupports.idl"
 
 interface nsIDOMWindow;
+interface nsIDOMElement;
 
-[scriptable, uuid(c5ca429c-b5c2-11d9-8547-00112478d626)]
+[scriptable, uuid(081e31e0-a144-11d3-8c7c-00609792278c)]
 interface nsISecureBrowserUI : nsISupports
 {
     void init(in nsIDOMWindow window);
 
     readonly attribute unsigned long state;
     readonly attribute AString tooltipText;
-
-    /* Returns an object that encapsulates the current security state. */
-    nsISupports captureState();
-
-    /**
-     * Restore the state captured by captureState(), firing transition
-     * notifications as necessary.
-     */
-    void transitionToState(in nsISupports state);
 };
 
 %{C++

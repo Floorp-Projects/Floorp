@@ -1747,12 +1747,6 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXMLHttpRequest::PageRestore(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
-}
-
 nsresult
 nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast,
                               PRBool aClearEventListeners)

@@ -92,6 +92,7 @@ class nsIURI;
 #define NS_BEFORE_PAGE_UNLOAD_EVENT       26
 #define NS_UI_EVENT                       27
 #define NS_QUERYCARETRECT_EVENT           28
+#define NS_PAGETRANSITION_EVENT               29
 
 #define NS_EVENT_FLAG_NONE                0x0000
 #define NS_EVENT_FLAG_INIT                0x0001
@@ -323,6 +324,11 @@ class nsIURI;
 // query caret rect events
 #define NS_QUERYCARETRECT_START    2600
 #define NS_QUERYCARETRECT          (NS_QUERYCARETRECT_START)
+
+// pagetransition events
+#define NS_PAGETRANSITION_START    2700
+#define NS_PAGE_SHOW               (NS_PAGETRANSITION_START + 1)
+#define NS_PAGE_HIDE               (NS_PAGETRANSITION_START + 2)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -882,6 +888,21 @@ public:
   }
 
   PRInt32 detail;
+};
+
+/**
+ * PageTransition event
+ */
+class nsPageTransitionEvent : public nsEvent
+{
+public:
+  nsPageTransitionEvent(PRBool isTrusted, PRUint32 msg, PRBool p)
+    : nsEvent(isTrusted, msg, NS_PAGETRANSITION_EVENT),
+      persisted(p)
+  {
+  }
+
+  PRBool persisted;
 };
 
 /**

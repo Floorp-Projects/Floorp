@@ -165,7 +165,6 @@ LAYOUT_ATOM(oncontextmenu, "oncontextmenu")
 LAYOUT_ATOM(onDOMActivate, "onDOMActivate")
 LAYOUT_ATOM(onDOMFocusIn, "onDOMFocusIn")
 LAYOUT_ATOM(onDOMFocusOut, "onDOMFocusOut")
-LAYOUT_ATOM(onDOMPageRestore, "onDOMPageRestore")
 LAYOUT_ATOM(ondblclick, "ondblclick")
 LAYOUT_ATOM(ondragdrop, "ondragdrop")
 LAYOUT_ATOM(ondragenter, "ondragenter")
@@ -211,6 +210,10 @@ LAYOUT_ATOM(onDOMNodeRemovedFromDocument, "onDOMNodeRemovedFromDocument")
 LAYOUT_ATOM(onDOMNodeInsertedIntoDocument, "onDOMNodeInsertedIntoDocument")
 LAYOUT_ATOM(onDOMAttrModified, "onDOMAttrModified")
 LAYOUT_ATOM(onDOMCharacterDataModified, "onDOMCharacterDataModified")
+
+// pagetransition events
+LAYOUT_ATOM(onPageShow, "onPageShow")
+LAYOUT_ATOM(onPageHide, "onPageHide")
 
   // Alphabetical list of languages for lang-specific transforms
 LAYOUT_ATOM(Japanese, "ja")

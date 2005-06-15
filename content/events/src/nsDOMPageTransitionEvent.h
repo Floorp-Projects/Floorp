@@ -2,9 +2,9 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -14,12 +14,13 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is 
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,43 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDOMParser_h__
-#define nsDOMParser_h__
+#ifndef nsDOMPageTransitionEvent_h__
+#define nsDOMPageTransitionEvent_h__
 
-#include "nsIDOMParser.h"
-#include "nsCOMPtr.h"
-#include "nsIURI.h"
-#include "nsIEventQueueService.h"
-#include "nsIDOMLoadListener.h"
-#include "nsWeakReference.h"
+#include "nsIDOMPageTransitionEvent.h"
+#include "nsDOMEvent.h"
 
-class nsDOMParser : public nsIDOMParser,
-                    public nsIDOMLoadListener,
-                    public nsSupportsWeakReference
+class nsDOMPageTransitionEvent : public nsIDOMPageTransitionEvent,
+                                 public nsDOMEvent
 {
-public: 
-  nsDOMParser();
-  virtual ~nsDOMParser();
+public:
+  nsDOMPageTransitionEvent(nsPresContext* aPresContext,
+                           nsPageTransitionEvent* aEvent);
+                     
+  NS_DECL_ISUPPORTS_INHERITED
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMPAGETRANSITIONEVENT
 
-  // nsIDOMParser
-  NS_DECL_NSIDOMPARSER
-
-  // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-
-  // nsIDOMLoadListener
-  NS_IMETHOD Load(nsIDOMEvent* aEvent);
-  NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent);
-  NS_IMETHOD Unload(nsIDOMEvent* aEvent);
-  NS_IMETHOD Abort(nsIDOMEvent* aEvent);
-  NS_IMETHOD Error(nsIDOMEvent* aEvent);
-
-private:
-  nsCOMPtr<nsIURI> mBaseURI;
-  nsCOMPtr<nsIEventQueueService> mEventQService;
-  PRBool mLoopingForSyncLoad;
+  // Forward to base class
+  NS_FORWARD_TO_NSDOMEVENT
 };
 
-#endif
+#endif // nsDOMPageTransitionEvent_h__

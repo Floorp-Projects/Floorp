@@ -986,17 +986,26 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   nsCOMPtr<nsIDocumentViewer> kungFuDeathGrip(this);
 
   // Now, fire either an OnLoad or OnError event to the document...
+  PRBool restoring = PR_FALSE;
   if(NS_SUCCEEDED(aStatus)) {
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(PR_TRUE, NS_PAGE_LOAD);
 
-    rv = global->HandleDOMEvent(mPresContext, &event, nsnull,
-                                NS_EVENT_FLAG_INIT, &status);
-#ifdef MOZ_TIMELINE
-    // if navigator.xul's load is complete, the main nav window is visible
-    // mark that point.
+    // If the document presentation is being restored, we don't want to fire
+    // onload to the document content since that would likely confuse scripts
+    // on the page.
 
-    if (mDocument) {
+    nsIDocShell *docShell = global->GetDocShell();
+    NS_ENSURE_TRUE(docShell, NS_ERROR_UNEXPECTED);
+
+    docShell->GetRestoringDocument(&restoring);
+    if (!restoring) {
+      rv = global->HandleDOMEvent(mPresContext, &event, nsnull,
+                                  NS_EVENT_FLAG_INIT, &status);
+#ifdef MOZ_TIMELINE
+      // if navigator.xul's load is complete, the main nav window is visible
+      // mark that point.
+
       //printf("DEBUG: getting uri from document (%p)\n", mDocument.get());
 
       nsIURI *uri = mDocument->GetDocumentURI();
@@ -1009,11 +1018,15 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
           NS_TIMELINE_MARK("Navigator Window visible now");
         }
       }
-    }
 #endif /* MOZ_TIMELINE */
+    }
   } else {
     // XXX: Should fire error event to the document...
   }
+
+  // Notify the document that it has been shown (regardless of whether
+  // it was just loaded).
+  mDocument->OnPageShow(restoring);
 
   // Now that the document has loaded, we can tell the presshell
   // to unsuppress painting.
@@ -1148,13 +1161,17 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::Unload()
+DocumentViewerImpl::PageHide(PRBool aIsUnload)
 {
   mEnableRendering = PR_FALSE;
 
   if (!mDocument) {
     return NS_ERROR_NULL_POINTER;
   }
+
+  mDocument->OnPageHide(!aIsUnload);
+  if (!aIsUnload)
+    return NS_OK;
 
   // First, get the script global object from the document...
   nsIScriptGlobalObject *global = mDocument->GetScriptGlobalObject();
@@ -1202,6 +1219,7 @@ DocumentViewerImpl::Open()
 
   // XXX re-enable image animations once that works correctly
 
+  mEnableRendering = PR_TRUE;
   return NS_OK;
 }
 

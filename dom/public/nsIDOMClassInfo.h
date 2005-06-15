@@ -335,6 +335,9 @@ enum nsDOMClassInfoID {
   // SmartCard Events
   eDOMClassInfo_SmartCardEvent_id,
   
+  // PageTransition Events
+  eDOMClassInfo_PageTransitionEvent_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

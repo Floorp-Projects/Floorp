@@ -95,7 +95,6 @@ private:
   nsCOMPtr<nsISupports>           mWindowState;
   nsRect                          mViewerBounds;
   nsVoidArray                     mChildShells;
-  nsCOMPtr<nsISupports>           mSecurityState;
   nsCOMPtr<nsISupportsArray>      mRefreshURIList;
 };
 
