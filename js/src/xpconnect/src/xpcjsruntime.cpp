@@ -313,6 +313,31 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 NS_ASSERTION(self->mDoingFinalization, "bad state");
                 self->mDoingFinalization = JS_FALSE;
 
+                // Release all the members whose JSObjects are now known
+                // to be dead.
+
+                dyingWrappedJSArray = &self->mWrappedJSToReleaseArray;
+                XPCLock* mapLock = self->GetMainThreadOnlyGC() ?
+                                   nsnull : self->GetMapLock();
+                while(1)
+                {
+                    nsXPCWrappedJS* wrapper;
+                    {
+                        XPCAutoLock al(mapLock); // lock if necessary
+                        PRInt32 count = dyingWrappedJSArray->Count();
+                        if(!count)
+                        {
+                            dyingWrappedJSArray->Compact();
+                            break;
+                        }
+                        wrapper = NS_STATIC_CAST(nsXPCWrappedJS*,
+                                    dyingWrappedJSArray->ElementAt(count-1));
+                        dyingWrappedJSArray->RemoveElementAt(count-1);
+                    }
+                    NS_RELEASE(wrapper);
+                }
+
+
 #ifdef XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
                 printf("--------------------------------------------------------------\n");
                 int setsBefore = (int) self->mNativeSetMap->Count();
@@ -505,32 +530,11 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
             case JSGC_END:
             {
                 // NOTE that this event happens outside of the gc lock in
-                // the js engine. So this could be sumultaneous with the
+                // the js engine. So this could be simultaneous with the
                 // events above.
 
-                // Release all the members whose JSObjects are now known
-                // to be dead.
-
-                dyingWrappedJSArray = &self->mWrappedJSToReleaseArray;
                 XPCLock* lock = self->GetMainThreadOnlyGC() ?
                                 nsnull : self->GetMapLock();
-                while(1)
-                {
-                    nsXPCWrappedJS* wrapper;
-                    {
-                        XPCAutoLock al(lock); // lock if necessary
-                        PRInt32 count = dyingWrappedJSArray->Count();
-                        if(!count)
-                        {
-                            dyingWrappedJSArray->Compact();
-                            break;
-                        }
-                        wrapper = NS_REINTERPRET_CAST(nsXPCWrappedJS*,
-                                    dyingWrappedJSArray->ElementAt(count-1));
-                        dyingWrappedJSArray->RemoveElementAt(count-1);
-                    }
-                    NS_RELEASE(wrapper);
-                }
 
                 // Do any deferred released of native objects.
                 if(self->GetDeferReleases())

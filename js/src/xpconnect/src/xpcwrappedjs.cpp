@@ -348,6 +348,8 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
 {
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
 
+    XPCJSRuntime* rt = nsXPConnect::GetRuntime();
+
     if(mRoot != this)
     {
         // unlink this wrapper
@@ -373,7 +375,6 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
         ClearWeakReferences();
 
         // remove this root wrapper from the map
-        XPCJSRuntime* rt = nsXPConnect::GetRuntime();
         if(rt)
         {
             JSObject2WrappedJSMap* map = rt->GetWrappedJSMap();
@@ -388,7 +389,18 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
     if(IsValid())
     {
         NS_IF_RELEASE(mClass);
-        NS_IF_RELEASE(mOuter);
+        if (mOuter)
+        {
+            if (rt && rt->GetThreadRunningGC())
+            {
+                rt->DeferredRelease(mOuter);
+                mOuter = nsnull;
+            }
+            else
+            {
+                NS_RELEASE(mOuter);
+            }
+        }
     }
 }
 
