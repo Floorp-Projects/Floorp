@@ -41,7 +41,10 @@
 #include "xptcprivate.h"
 #include "xptc_platforms_unixish_x86.h"
 
-static nsresult
+#if !defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
+static
+#endif
+nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 {
 #define PARAM_BUFFER_COUNT     16
@@ -128,22 +131,7 @@ nsresult nsXPTCStubBase::Stub##n() \
 
 #elif defined(__SUNPRO_CC)           /* Sun Workshop Compiler. */
 
-#define STUB_ENTRY(n) \
-nsresult nsXPTCStubBase::Stub##n() \
-{ \
-  asm ( \
-	"\n\t leal   0x0c(%ebp), %ecx\t / args" \
-	"\n\t pushl  %ecx" \
-	"\n\t pushl  $"#n"\t / method index" \
-	"\n\t movl   0x08(%ebp), %ecx\t / this" \
-	"\n\t pushl  %ecx" \
-	"\n\t call   __1cSPrepareAndDispatch6FpnOnsXPTCStubBase_IpI_I_\t / PrepareAndDispatch" \
-	"\n\t addl  $12, %esp" \
- ); \
-/* result == %eax */ \
-  if(0) /* supress "*** is expected to return a value." error */ \
-     return 0; \
-}
+#define STUB_ENTRY(n)
 
 #else
 #error "can't find a compiler to use"
