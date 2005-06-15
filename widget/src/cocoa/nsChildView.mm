@@ -2517,7 +2517,7 @@ nsChildView::Idle()
 
   RgnHandle updateRgn = ::NewRgn();
   RectRgn(updateRgn, &updateRect);
-  ::QDFlushPortBuffer([self qdPort], updateRgn);
+  ::QDFlushPortBuffer((OpaqueGrafPtr *)[self qdPort], updateRgn);
   ::DisposeRgn(updateRgn);
 }
 

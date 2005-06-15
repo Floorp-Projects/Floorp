@@ -896,7 +896,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
       {
         // need to be careful to adjust index as we insert items to avoid
         // inserting in reverse order
-        if ([aKid parent] == dropFolder)
+        if ([aKid parent] == (id)dropFolder)
         {
           int kidIndex = [dropFolder indexOfObject:aKid];
           [[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];

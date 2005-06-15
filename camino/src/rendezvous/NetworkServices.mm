@@ -273,18 +273,18 @@ static inline u_int ns_get16(u_char* buffer)
     u_int i;
 
     for (i = 0; i < numQuestions; i++)
-      ptr = DNS_SkipQuestion((DNSMessage *)buffer, ptr, end);
+      ptr = (u_char *)DNS_SkipQuestion((DNSMessage *)buffer, ptr, end);
 
     for (i = 0; i < numAnswers; i++)
     {
       domainname name;
-      ptr = DNS_GetDomainName((DNSMessage *)buffer, ptr, end, &name);
+      ptr = (u_char *)DNS_GetDomainName((DNSMessage *)buffer, ptr, end, &name);
       if (!ptr || ptr + 10 > end) return;
       rrtype  = ns_get16(ptr);
       rrclass = ns_get16(ptr + 2) & 0x7FFF;
       // TTL is ptr+4,5,6,7
       rdlen   = ns_get16(ptr + 8);
-      void* rdata = ptr + 10;
+      u_char* rdata = ptr + 10;
       ptr += 10 + rdlen;
 
       if (rrtype == /* T_SRV */ 33 && rrclass == C_IN)

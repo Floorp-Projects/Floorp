@@ -46,6 +46,7 @@
 {
   @private
   NSTimer *mTimer;
+  @protected
   int mFrameCounter;    
 }
 

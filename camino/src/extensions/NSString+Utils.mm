@@ -163,7 +163,7 @@
   return cleanString;
 }
 
-- (NSString*)stringByTruncatingTo:(unsigned in)maxCharacters at:(ETruncationType)truncationType
+- (NSString*)stringByTruncatingTo:(unsigned int)maxCharacters at:(ETruncationType)truncationType
 {
   if ([self length] > maxCharacters)
   {
