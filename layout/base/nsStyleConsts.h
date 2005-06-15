@@ -526,6 +526,7 @@
 #define NS_STYLE_TEXT_ALIGN_CHAR                5   //align based on a certain character, for table cell
 #define NS_STYLE_TEXT_ALIGN_MOZ_CENTER          6
 #define NS_STYLE_TEXT_ALIGN_MOZ_RIGHT           7
+#define NS_STYLE_TEXT_ALIGN_MOZ_LEFT            8
 
 // See nsStyleText, nsStyleFont
 #define NS_STYLE_TEXT_DECORATION_NONE           0

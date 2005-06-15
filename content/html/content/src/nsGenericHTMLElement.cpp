@@ -2428,7 +2428,7 @@ static const nsAttrValue::EnumTable kVAlignTable[] = {
 };
 
 static const nsAttrValue::EnumTable kDivAlignTable[] = {
-  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
+  { "left", NS_STYLE_TEXT_ALIGN_MOZ_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
   { "middle", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
@@ -2509,7 +2509,7 @@ nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
 
 // These tables are used for TD,TH,TR, etc (but not TABLE)
 static const nsAttrValue::EnumTable kTableCellHAlignTable[] = {
-  { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
+  { "left",   NS_STYLE_TEXT_ALIGN_MOZ_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
   { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
@@ -2518,7 +2518,7 @@ static const nsAttrValue::EnumTable kTableCellHAlignTable[] = {
 };
 
 static const nsAttrValue::EnumTable kCompatTableCellHAlignTable[] = {
-  { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
+  { "left",   NS_STYLE_TEXT_ALIGN_MOZ_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
   { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
