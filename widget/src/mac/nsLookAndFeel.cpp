@@ -546,7 +546,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
           if (fullKeyboardAccessProperty)
           {
             PRInt32 fullKeyboardAccessPrefVal;
-            if (::CFNumberGetValue(fullKeyboardAccessProperty, kCFNumberIntType, &fullKeyboardAccessPrefVal))
+            if (::CFNumberGetValue((CFNumberRef) fullKeyboardAccessProperty, kCFNumberIntType, &fullKeyboardAccessPrefVal))
             {
               // the second bit means  "Full keyboard access" is on
               if (fullKeyboardAccessPrefVal & (1 << 1))

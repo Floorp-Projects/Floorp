@@ -425,7 +425,7 @@ nsSafariProfileMigrator::CopyPreferences(PRBool aReplace)
   safariPrefsFile->Append(SAFARI_PREFERENCES_FILE_NAME);
 
   CFDictionaryRef safariPrefs; 
-  nsresult rv = GetPListFromFile(safariPrefsFile, (CFDictionaryRef*)&safariPrefs);
+  nsresult rv = GetPListFromFile(safariPrefsFile, (CFPropertyListRef*)&safariPrefs);
   if (NS_FAILED(rv)) 
     return NS_OK;
   
@@ -444,7 +444,7 @@ nsSafariProfileMigrator::CopyPreferences(PRBool aReplace)
     case _SPM(INT):
       break;
     case _SPM(BOOL): {
-      CFBooleanRef boolValue = ::CFDictionaryGetValue(safariPrefs, transform->keyName);
+      CFBooleanRef boolValue = (CFBooleanRef) ::CFDictionaryGetValue(safariPrefs, transform->keyName);
       transform->boolValue = boolValue == kCFBooleanTrue;
       }
       break;
