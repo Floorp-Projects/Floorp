@@ -191,8 +191,10 @@ PR_END_EXTERN_C
 
 #ifdef XP_MACOSX
 
+#define TV2FP(tvp) _TV2FP((void *)tvp)
+
 static void*
-TV2FP(void *tvp)
+_TV2FP(void *tvp)
 {
     static uint32 glue[6] = {
       0x3D800000, 0x618C0000, 0x800C0000, 0x804C0004, 0x7C0903A6, 0x4E800420
@@ -211,8 +213,10 @@ TV2FP(void *tvp)
     return newGlue;
 }
 
+#define FP2TV(fp) _FP2TV((void *)fp)
+
 static void*
-FP2TV(void *fp)
+_FP2TV(void *fp)
 {
     void **newGlue = NULL;
     if (fp != NULL) {
@@ -474,29 +478,29 @@ ns4xPlugin::~ns4xPlugin(void)
 #if defined(XP_MACOSX)
   // release all wrapped plugin entry points.
   if (fCallbacks.newp)
-    free(fCallbacks.newp);
+    free((void *)fCallbacks.newp);
   if (fCallbacks.destroy)
-    free(fCallbacks.destroy);
+    free((void *)fCallbacks.destroy);
   if (fCallbacks.setwindow)
-    free(fCallbacks.setwindow);
+    free((void *)fCallbacks.setwindow);
   if (fCallbacks.newstream)
-    free(fCallbacks.newstream);
+    free((void *)fCallbacks.newstream);
   if (fCallbacks.asfile)
-    free(fCallbacks.asfile);
+    free((void *)fCallbacks.asfile);
   if (fCallbacks.writeready)
-    free(fCallbacks.writeready);
+    free((void *)fCallbacks.writeready);
   if (fCallbacks.write)
-    free(fCallbacks.write);
+    free((void *)fCallbacks.write);
   if (fCallbacks.print)
-    free(fCallbacks.print);
+    free((void *)fCallbacks.print);
   if (fCallbacks.event)
-    free(fCallbacks.event);
+    free((void *)fCallbacks.event);
   if (fCallbacks.urlnotify)
-    free(fCallbacks.urlnotify);
+    free((void *)fCallbacks.urlnotify);
   if (fCallbacks.getvalue)
-    free(fCallbacks.getvalue);
+    free((void *)fCallbacks.getvalue);
   if (fCallbacks.setvalue)
-    free(fCallbacks.setvalue);
+    free((void *)fCallbacks.setvalue);
 #endif
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
 }
@@ -839,7 +843,7 @@ ns4xPlugin::Shutdown(void)
 
 #if defined(XP_MACOSX)
     // release the wrapped plugin function.
-    free(fShutdownEntry);
+    free((void *)fShutdownEntry);
 #endif
     fShutdownEntry = nsnull;
   }
