@@ -23,7 +23,7 @@
 #                 Joel Peshkin <bugreport@peshkin.net> 
 #                 Byron Jones <bugzilla@glob.com.au>
 #                 Shane H. W. Travis <travis@sedsystems.ca>
-#                 Max Kanat-Alexander <mkanat@kerio.com>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Gervase Markham <gerv@gerv.net>
 
 ################################################################################

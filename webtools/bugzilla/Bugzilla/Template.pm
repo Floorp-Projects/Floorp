@@ -24,6 +24,7 @@
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Tobias Burnus <burnus@net-b.de>
 #                 Myk Melez <myk@mozilla.org>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 
 package Bugzilla::Template;

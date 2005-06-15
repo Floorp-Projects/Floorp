@@ -23,7 +23,7 @@
 #                 Stephan Niemz  <st.n@gmx.net>
 #                 Andreas Franke <afranke@mathweb.org>
 #                 Myk Melez <myk@mozilla.org>
-#                 Max Kanat-Alexander <mkanat@kerio.com>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 ################################################################################
 # Script Initialization

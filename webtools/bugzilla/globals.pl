@@ -24,7 +24,7 @@
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Joel Peshkin <bugreport@peshkin.net>
 #                 Dave Lawrence <dkl@redhat.com>
-#                 Max Kanat-Alexander <mkanat@kerio.com>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 # Contains some global variables and routines used throughout bugzilla.
 

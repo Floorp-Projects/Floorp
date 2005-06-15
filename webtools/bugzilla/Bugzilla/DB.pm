@@ -23,6 +23,7 @@
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Tomas Kopal <Tomas.Kopal@altap.cz>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 package Bugzilla::DB;
 

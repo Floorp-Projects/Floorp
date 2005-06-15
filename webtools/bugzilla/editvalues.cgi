@@ -11,7 +11,7 @@
 #
 # The Original Code is the Bugzilla Bug Tracking System.
 #
-# Contributor(s): Max Kanat-Alexander <mkanat@kerio.com>
+# Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
 
 # This is a script to edit the values of fields that have drop-down
 # or select boxes. It is largely a copy of editmilestones.cgi, but 

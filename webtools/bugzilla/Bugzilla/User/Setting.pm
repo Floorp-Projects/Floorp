@@ -13,7 +13,7 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Shane H. W. Travis <travis@sedsystems.ca>
-#                 Max Kanat-Alexander <mkanat@kerio.com>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #
 
 

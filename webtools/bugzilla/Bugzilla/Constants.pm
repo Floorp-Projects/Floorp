@@ -26,6 +26,7 @@
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Shane H. W. Travis <travis@sedsystems.ca>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 package Bugzilla::Constants;
 use strict;

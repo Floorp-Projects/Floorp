@@ -20,7 +20,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Matthew Tuck <matty@chariot.net.au>
-#                 Max Kanat-Alexander <mkanat@kerio.com>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 use strict;
 
@@ -380,7 +380,7 @@ CrossCheck("products", "id",
            ["flaginclusions", "product_id", "type_id"],
            ["flagexclusions", "product_id", "type_id"]);
 
-# Check the former enum types -mkanat@kerio.com
+# Check the former enum types -mkanat@bugzilla.org
 CrossCheck("bug_status", "value",
             ["bugs", "bug_status"]);
 

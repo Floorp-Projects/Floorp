@@ -22,6 +22,7 @@
 #                 Jeroen Ruigrok van der Werven <asmodai@wxs.nl>
 #                 Dave Lawrence <dkl@redhat.com>
 #                 Tomas Kopal <Tomas.Kopal@altap.cz>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 =head1 NAME
 

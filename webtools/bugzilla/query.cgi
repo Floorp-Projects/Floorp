@@ -23,7 +23,7 @@
 #                 Matthias Radestock <matthias@sorted.org>
 #                 Gervase Markham <gerv@gerv.net>
 #                 Byron Jones <bugzilla@glob.com.au>
-#                 Max Kanat-Alexander <mkanat@kerio.com>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 use strict;
 use lib ".";

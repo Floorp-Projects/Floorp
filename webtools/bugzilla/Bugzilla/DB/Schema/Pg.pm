@@ -19,6 +19,7 @@
 #
 # Contributor(s): Andrew Dunstan <andrew@dunslane.net>,
 #                 Edward J. Sabol <edwardjsabol@iname.com>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 package Bugzilla::DB::Schema::Pg;
 

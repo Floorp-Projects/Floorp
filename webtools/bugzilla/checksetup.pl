@@ -30,7 +30,7 @@
 #                 Gervase Markham <gerv@gerv.net>
 #                 Erik Stambaugh <erik@dasbistro.com>
 #                 Dave Lawrence <dkl@redhat.com>
-#                 Max Kanat-Alexander <mkanat@kerio.com>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #
 #
 #
@@ -751,7 +751,7 @@ my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
 my $my_index_html = ${*{$main::{'index_html'}}{SCALAR}};
 my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
 my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
-# mkanat@kerio.com - bug 17453
+# mkanat@bugzilla.org - bug 17453
 # The following values have been removed from localconfig.
 # However, if we are upgrading from a Bugzilla with enums to a 
 # Bugzilla without enums, we use these values one more time so 
@@ -1728,7 +1728,7 @@ AddFDef("content", "Content", 0);
 # Detect changed local settings
 ###########################################################################
 
-# mkanat@kerio.com - bug 17453
+# mkanat@bugzilla.org - bug 17453
 # Create the values for the tables that hold what used to be enum types.
 # Don't populate the tables if the table isn't empty.
 sub PopulateEnumTable ($@) {
@@ -1759,7 +1759,7 @@ sub PopulateEnumTable ($@) {
     }
 }
 
-# mkanat@kerio.com - bug 17453
+# mkanat@bugzilla.org - bug 17453
 # Set default values for what used to be the enum types.
 # These values are no longer stored in localconfig.
 # However, if we are upgrading from a Bugzilla with enums to a 
@@ -3600,7 +3600,7 @@ $dbh->bz_rename_column('whine_schedules', 'mailto_userid', 'mailto');
 $dbh->bz_add_column('whine_schedules', 'mailto_type', 
     {TYPE => 'INT2', NOTNULL => 1, DEFAULT => '0'});
 
-# 2005-01-29 - mkanat@kerio.com
+# 2005-01-29 - mkanat@bugzilla.org
 if (!$dbh->bz_column_info('longdescs', 'already_wrapped')) {
     # Old, pre-wrapped comments should not be auto-wrapped
     $dbh->bz_add_column('longdescs', 'already_wrapped',
