@@ -135,7 +135,7 @@
 
 // Note that one would not normally turn *any* of these on in a non-DEBUG build.
 
-#if defined(DEBUG_jband) || defined(DEBUG_jst) || defined(DEBUG_dbradley) || defined(DEBUG_shaver_no) || defined(DEBUG_dbaron) || defined(DEBUG_timeless)
+#if defined(DEBUG_jband) || defined(DEBUG_jst) || defined(DEBUG_dbradley) || defined(DEBUG_shaver_no) || defined(DEBUG_timeless)
 #define DEBUG_xpc_hacker
 #endif
 
@@ -164,6 +164,10 @@
 //#define XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
 //#define XPC_REPORT_JSCLASS_FLUSHING
 //#define XPC_TRACK_AUTOMARKINGPTR_STATS
+#endif
+
+#if defined(DEBUG_dbaron) // only part of DEBUG_xpc_hacker!
+#define XPC_DUMP_AT_SHUTDOWN
 #endif
 
 /***************************************************************************/
@@ -2184,7 +2188,7 @@ public:
     // longer root their JSObject and are only still alive because they
     // were being used via nsSupportsWeakReference at the time when their
     // last (outside) reference was released. Wrappers that fit into that
-    // category are only deleted when we see that their cooresponding JSObject
+    // category are only deleted when we see that their corresponding JSObject
     // is to be finalized.
     JSBool IsSubjectToFinalization() const {return IsValid() && mRefCnt == 1;}
 
