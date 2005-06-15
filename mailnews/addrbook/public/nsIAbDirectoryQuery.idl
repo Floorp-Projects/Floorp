@@ -50,7 +50,7 @@
  * returned if a match is found from the expression
  *
  */
-[scriptable, uuid(41EC291E-1DD2-11B2-B583-C44757081F64)]
+[scriptable, uuid(c2d83a31-eba6-4053-9273-c7a006a94311)]
 interface nsIAbDirectoryQueryArguments : nsISupports
 {
     /**
