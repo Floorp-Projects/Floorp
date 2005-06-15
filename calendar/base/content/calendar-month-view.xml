@@ -1,0 +1,729 @@
+<?xml version="1.0"?>
+
+<!--
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is calendar views.
+   -
+   - The Initial Developer of the Original Code is
+   -   Oracle Corporation
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Vladimir Vukicevic <vladimir@pobox.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK *****
+-->
+
+<bindings id="calendar-multiday-view-bindings"
+  xmlns="http://www.mozilla.org/xbl"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="calendar-month-day-box-item">
+    <content>
+      <xul:label anonid="item-label" crop="end" class="calendar-month-day-box-item-label"/>
+    </content>
+
+    <implementation>
+      <field name="mItem">null</field>
+
+      <property name="item">
+        <getter><![CDATA[
+	  return this.mItem;
+	]]></getter>
+        <setter><![CDATA[
+          this.mItem = val;
+
+          function formatTime(aTime) {
+            var m = aTime.minute;
+            return (aTime.hour + ":" + (m < 10 ? "0" : "") + m);
+          }
+
+          var str = null;
+          if (val instanceof Components.interfaces.calIEvent) {
+            str = formatTime(val.startDate) + " " + val.title;
+          } else if (val instanceof Components.interfaces.calITodo) {
+            // yeah, this should really be a little picture instead of a "*"
+            str = "* " + val.title;
+          } else {
+            str = val.title;
+          }
+
+          var label = document.getAnonymousElementByAttribute(this, "anonid", "item-label");
+          if (label.firstChild)
+            label.removeChild(label.firstChild);
+          label.appendChild(document.createTextNode(str));
+
+          return val;
+        ]]></setter>
+      </property>
+    </implementation>
+  </binding>
+
+  <binding id="calendar-month-day-box">
+    <content>
+      <xul:vbox>
+        <xul:label anonid="day-label" crop="end" class="calendar-month-day-box-date-label"/>
+        <xul:vbox anonid="day-items"/>
+      </xul:vbox>
+    </content>
+
+    <implementation>
+      <field name="mDate">null</field>
+      <!-- mItemData will always be kept sorted in display order -->
+      <field name="mItemData">[]</field>
+
+      <property name="date">
+        <getter>return this.mDate;</getter>
+        <setter>this.setDate(val); return val;</setter>
+      </property>
+
+      <property name="dayitems">
+        <getter>return document.getAnonymousElementByAttribute(this, "anonid", "day-items");</getter>
+      </property>
+
+      <method name="setDate">
+        <parameter name="aDate"/>
+        <body><![CDATA[
+          if (!aDate)
+            throw Components.results.NS_ERROR_NULL_POINTER;
+          if (this.mDate && this.mDate.compare(aDate) == 0)
+            return;
+
+          this.mDate = aDate;
+          var daylabel = document.getAnonymousElementByAttribute(this, "anonid", "day-label");
+
+          if (aDate.compare(aDate.startOfMonth) == 0 ||
+              aDate.compare(aDate.endOfMonth) == 0)
+          {
+            var monthNames = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
+            daylabel.setAttribute("value", aDate.day + " " + monthNames[aDate.month]);
+          } else {
+            daylabel.setAttribute("value", aDate.day);
+          }
+        ]]></body>
+      </method>
+
+      <method name="addItem">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          for each (ed in this.mItemData) {
+            if (ed.item == aItem ||
+                (ed.item.id == aItem.id && ed.item.recurrence_id == aItem.recurrence_id))
+            {
+              return;
+            }
+          }
+
+          // insert the new item block, and then relayout
+          this.mItemData.push({ item: aItem });
+
+          this.relayout();
+        ]]></body>
+      </method>
+
+      <method name="deleteItem">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          var deleted = [];
+
+          var origLen = this.mItemData.length;
+          this.mItemData = this.mItemData.filter(
+            function(itd) {
+              if (itd.item == aItem ||
+                  (itd.item.id == aItem.id && itd.item.recurrence_id == aItem.recurrence_id))
+              {
+                deleted.push(itd);
+                return false;
+              }
+              return true;
+            });
+
+          if (deleted.length > 0) {
+            for each (itd in deleted) {
+              if (itd.box)
+                this.dayitems.removeChild(itd.box);
+            }
+            // no need to relayout; all we did was delete
+            //this.relayout();
+          }
+        ]]></body>
+      </method>
+
+      <method name="relayout">
+        <body><![CDATA[
+          function createXULElement(el) {
+              return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
+          }
+
+
+          this.mItemData.sort(
+            function (a, b) {
+              var aIsEvent = (a.item instanceof Components.interfaces.calIEvent);
+              var aIsTodo = (a.item instanceof Components.interfaces.calITodo);
+
+              var bIsEvent = (b.item instanceof Components.interfaces.calIEvent);
+              var bIsTodo = (b.item instanceof Components.interfaces.calITodo);
+
+              if ((!aIsEvent && !aIsTodo) || (!bIsEvent && !bIsTodo)) {
+                // XXX ????
+                dump ("Don't know how to sort these two events: " + a.item + " " + b.item + "\n");
+                return 0;
+              }
+
+              // sort todos before events
+              if (aIsTodo && bIsEvent) return -1;
+              if (aIsEvent && bIsTodo) return 1;
+
+              // XXX how do I sort todos?
+              if (aIsTodo && bIsTodo) {
+                return 0;
+              }
+
+              if (aIsEvent && bIsEvent) {
+                var cmp;
+
+                cmp = a.item.startDate.compare(b.item.startDate);
+                if (cmp != 0)
+                  return cmp;
+
+                cmp = a.item.endDate.compare(b.item.endDate);
+                if (cmp != 0)
+                  return cmp;
+
+                if (a.item.title < b.item.title)
+                  return -1;
+                if (a.item.title > b.item.title)
+                  return 1;
+              }
+
+              return 0;
+            });
+
+          for (var i = 0; i < this.mItemData.length; i++) {
+            var itd = this.mItemData[i];
+
+            if (!itd.box) {
+              // find what element to insert before
+              var before = null;
+              for (var j = i+1; !before && this.mItemData[j]; j++)
+                before = this.mItemData[j].box;
+
+              var box = createXULElement("calendar-month-day-box-item");
+              this.dayitems.insertBefore(box, before);
+	  
+              box.item = itd.item;
+              itd.box = box;
+            }
+          }
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="calendar-month-view-column-header">
+    <content>
+      <xul:hbox flex="1">
+        <xul:spacer flex="1"/>
+        <xul:label anonid="label" crop="right" class="calendar-month-view-column-header-label" />
+        <xul:spacer flex="1"/>
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <field name="mIndex">-1</field>
+
+      <constructor><![CDATA[
+        if (this.mIndex == -1) {
+          var attrIndex = this.getAttribute("index");
+          if (attrIndex)
+            this.index = parseInt(attrIndex);
+        }
+      ]]></constructor>
+
+      <property name="index">
+        <getter>return this.mIndex;</getter>
+        <setter><![CDATA[
+          this.mIndex = val % 7;
+
+          // XXX aaaaaaaa
+          var weekdayNames = [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ];
+
+          var label = document.getAnonymousElementByAttribute(this, "anonid", "label");
+          label.setAttribute("value", weekdayNames[this.mIndex]);
+
+          return this.mIndex;
+        ]]></setter>
+      </property>
+    </implementation>
+  </binding>
+
+  <binding id="calendar-month-view">
+    <content>
+      <xul:vbox flex="1">
+        <xul:hbox anonid="headerbox" equalsize="always"/>
+
+        <xul:grid anonid="monthgrid" flex="1">
+          <xul:columns anonid="monthgridcolumns" equalsize="always">
+            <xul:column flex="1" class="calendar-month-view-grid-column"/>
+            <xul:column flex="1" class="calendar-month-view-grid-column"/>
+            <xul:column flex="1" class="calendar-month-view-grid-column"/>
+            <xul:column flex="1" class="calendar-month-view-grid-column"/>
+            <xul:column flex="1" class="calendar-month-view-grid-column"/>
+            <xul:column flex="1" class="calendar-month-view-grid-column"/>
+            <xul:column flex="1" class="calendar-month-view-grid-column"/>
+          </xul:columns>
+
+          <xul:rows anonid="monthgridrows" equalsize="always"/>
+        </xul:grid>
+      </xul:vbox>
+    </content>
+
+    <implementation implements="calICalendarView">
+
+      <!-- constructor -->
+      <constructor><![CDATA[
+          function createXULElement(el) {
+            return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
+          }
+
+          var headerbox = document.getAnonymousElementByAttribute(this, "anonid", "headerbox")
+          for (var i = 0; i < 7; i++) {
+            var hdr = createXULElement("calendar-month-view-column-header");
+            hdr.setAttribute("flex", "1");
+            headerbox.appendChild(hdr);
+            hdr.index = i;
+          }
+      ]]></constructor>
+
+      <!-- fields -->
+
+      <field name="mCalendar">null</field>
+      <field name="mController">null</field>
+      <field name="mStartDate">null</field>
+      <field name="mEndDate">null</field>
+      <field name="mDateBoxes">null</field>
+
+      <field name="mShowDaysOutsideMonth">true</field>
+
+      <!-- calICalendarView -->
+
+      <property name="supportsDisjointDates" readonly="true"
+        onget="return false;"/>
+      <property name="hasDisjointDates" readonly="true"
+        onget="return false;"/>
+
+      <property name="displayCalendar">
+        <getter><![CDATA[
+           return this.mCalendar;
+        ]]></getter>
+        <setter><![CDATA[
+           if (this.mCalendar != val) {
+             this.mCalendar = val;
+             this.refresh();
+           }
+           return val;
+        ]]></setter>
+      </property>
+
+      <property name="controller"
+	onget="return this.mController;"
+	onset="return this.mController = val;"/>
+
+      <property name="startDate" readonly="true"
+	onget="return this.mStartDate"/>
+
+      <property name="endDate" readonly="true">
+	<getter><![CDATA[
+	  if (!this.mEndDate)
+	    return null;
+	  var realEnd = this.mEndDate.clone();
+	  realEnd.day -= 1;
+	  realEnd.normalize();
+	  return realEnd;
+	]]></getter>
+      </property>
+
+      <property name="selectedItem">
+        <getter><![CDATA[
+          return this.mSelectedItem;
+        ]]></getter>
+        <setter><![CDATA[
+        ]]></setter>
+      </property>
+
+      <method name="showDate">
+	<parameter name="aDate"/>
+	<body><![CDATA[
+                   dump ("showDate: " + aDate + "\n");
+          var realEnd = aDate.endOfMonth;
+          realEnd.day += 1;
+          realEnd.normalize();
+	  this.setDateRange(aDate.startOfMonth, realEnd);
+        ]]></body>
+      </method>
+
+      <method name="setDateRange">
+        <parameter name="aStartDate"/>
+        <parameter name="aEndDate"/>
+        <body><![CDATA[
+	  var realStart = aStartDate.startOfWeek;
+	  var realEnd = aEndDate.endOfWeek;
+
+          dump ("setDateRange: " + aStartDate + " -> " + aEndDate + "\n");
+          realEnd.day += 1;
+          realEnd.normalize();
+
+          this.mStartDate = realStart;
+          this.mEndDate = realEnd;
+
+          dump ("setDateRange: " + realStart + " -> " + realEnd + "\n");
+
+          this.refresh();
+        ]]></body>
+      </method>
+
+      <method name="setDateList">
+        <parameter name="aCount"/>
+        <parameter name="aDates"/>
+        <body><![CDATA[
+           throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        ]]></body>
+      </method>
+
+      <method name="getDateList">
+        <parameter name="aCount"/>
+        <body><![CDATA[
+	  if (!this.mStartDate || !this.mEndDate) {
+	    aCount.value = 0;
+	    return [];
+	  }
+
+	  var results = [];
+	  var curDate = this.mStartDate.clone();
+          curDate.isDate = true;
+          curDate.normalize();
+
+	  while (curDate.compare(this.mEndDate) < 0) {
+	    results.push(curDate.clone());
+	    curDate.day += 1;
+	    curDate.normalize();
+	  }
+	  aCount.value = results.length;
+	  return results;
+        ]]></body>
+      </method>
+
+      <!-- public properties and methods -->
+
+      <!-- whether to show days outside of the current month -->
+      <property name="showDaysOutsideMonth">
+        <getter><![CDATA[
+          return this.mShowDaysOutsideMonth;
+        ]]></getter>
+        <setter><![CDATA[
+          if (this.mShowDaysOutsideMonth != val) {
+            this.mShowDaysOutsideMonth = val;
+            this.refresh();
+          }
+          return val;
+        ]]></setter>
+      </property>
+
+      <!-- private properties and methods -->
+
+      <property name="monthgrid" readonly="true"
+	onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'monthgrid');"/>
+
+      <property name="monthgridrows" readonly="true"
+	onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'monthgridrows');"/>
+
+      <method name="refresh">
+        <body><![CDATA[
+          this.relayout();
+
+          if (!this.mCalendar)
+            return;
+
+          this.mCalendar.getItems(this.mCalendar.ITEM_FILTER_COMPLETED_ALL |
+                                  this.mCalendar.ITEM_FILTER_TYPE_ALL |
+                                  this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES,
+                                  0,
+                                  this.startDate,
+                                  this.endDate,
+                                  this.mOperationListener);
+        ]]></body>
+      </method>
+
+      <method name="relayout">
+	<body><![CDATA[
+          function createXULElement(el) {
+              return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
+          }
+
+	  var gridrows = this.monthgridrows;
+
+          // XXX - reuse the grid boxes!
+          // clear out the grid
+          while (gridrows.lastChild)
+            gridrows.removeChild(gridrows.lastChild);
+
+	  if (!this.mStartDate || !this.mEndDate)
+            return;
+
+	  // we're going to cheat and make sure that the first full
+	  // month is "even".  The only time when this wouldn't be
+	  // valid is if the first of the month actually falls to
+	  // whatever the first weekday is that we're displaying.
+
+	  var isEven = 0;
+	  if (this.mStartDate.day == 1)
+            isEven = 1;
+
+          var dateBoxes = [];
+
+          var first = true;
+          var lastMonth = this.mStartDate.month;
+          var lastWeekNo = null;
+          var curRow = null;
+
+          for each (var date in this.getDateList({})) {
+            var box = createXULElement("calendar-month-day-box");
+            if (lastMonth != date.month && !first) {
+              isEven = !isEven;
+              lastMonth = date.month;
+            }
+
+            // XXX take into account real start week
+            var weekno = Math.floor ((date.yearday - date.weekday) / 7);
+
+            if (weekno != lastWeekNo) {
+              // start a new row
+              curRow = createXULElement("row");
+              curRow.setAttribute("flex", "1");
+              curRow.setAttribute("class", "calendar-month-view-grid-row");
+
+              gridrows.appendChild(curRow);
+              lastWeekNo = weekno;
+            }
+
+            var class = "calendar-month-day-box-" + (isEven ? "even" : "odd");
+            // XXX isWeekend?
+            if (date.weekday == 0 || date.weekday == 6)
+              class = "calendar-month-day-box-weekend " + class;
+            box.setAttribute("class", class);
+            curRow.appendChild(box);
+
+            box.setDate(date);
+
+            var boxdata = {
+              date: date,
+              row: curRow,
+              box: box
+            };
+
+            first = false;
+
+            dateBoxes.push(boxdata);
+          }
+
+          this.mDateBoxes = dateBoxes;
+	]]></body>
+      </method>
+
+      <method name="findBoxForItem">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          var targetDate = null;
+          if (aItem instanceof Components.interfaces.calIEvent) {
+            targetDate = aItem.startDate;
+          } else if (aItem instanceof Components.interfaces.calITodo) {
+            targetDate = aItem.startDate || aItem.entryDate;
+          }
+
+          if (!targetDate)
+            return null;
+
+          for each (box in this.mDateBoxes) {
+            if (box.date.compare(targetDate) == 0)
+              return box;
+          }
+
+          return null;
+	]]></body>
+      </method>
+
+      <method name="doAddItem">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          var box = this.findBoxForItem(aItem);
+          if (!box)
+            return;
+
+          box.box.addItem(aItem);
+        ]]></body>
+      </method>
+
+      <method name="doDeleteItem">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          var box = this.findBoxForItem(aItem);
+          if (!box)
+            return;
+
+          box.deleteItem(aItem);
+        ]]></body>
+      </method>
+
+      <!-- our private observers and listeners -->
+
+      <field name="mOperationListener"><![CDATA[
+        ({
+          calView: this,
+
+          QueryInterface: function (aIID) {
+            if (!aIID.equals(Components.interfaces.calIOperationListener) &&
+                !aIID.equals(Components.interfaces.nsISupports)) {
+              throw Components.results.NS_ERROR_NO_INTERFACE;
+            }
+
+            return this;
+          },
+  
+          onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
+            // nothing to do
+            //dump ("+++ OnOperationComplete (detail: " + aDetail + ")\n");
+          },
+          onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
+            if (!Components.isSuccessCode(aStatus))
+              return;
+  
+            for each (var item in aItems) {
+              this.calView.doAddItem(item);
+            }
+          }
+        })
+      ]]></field>
+
+      <field name="mObserver"><![CDATA[
+        // the calIObserver, and calICompositeObserver
+        ({
+          calView: this,
+
+          QueryInterface: function (aIID) {
+            if (!aIID.equals(Components.interfaces.calIObserver) &&
+                !aIID.equals(Components.interfaces.calICompositeObserver) &&
+                !aIID.equals(Components.interfaces.nsISupports)) {
+              throw Components.results.NS_ERROR_NO_INTERFACE;
+            }
+
+            return this;
+          },
+
+          onStartBatch: function() {
+            this.calView.mBatchCount++;
+          },
+          onEndBatch: function() {
+            this.mBatchCount--;
+            if (this.mBatchCount == 0) {
+              this.calView.refresh();
+            }
+          },
+          onLoad: function() {
+            this.calView.refresh();
+          },
+          onAddItem: function (aItem) {
+            var occs = aItem.getOccurrencesBetween(this.calView.startDate,
+                                                   this.calView.endDate,
+                                                   {});
+            for each (var occ in occs)
+              this.calView.doAddItem(occ);
+          },
+          onModifyItem: function (aNewItem, aOldItem) {
+            var occs;
+            occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
+                                                  this.calView.endDate,
+                                                  {});
+            for each (var occ in occs)
+              this.calView.doDeleteItem(occ);
+
+            occs = aNewItem.getOccurrencesBetween(this.calView.startDate,
+                                                  this.calView.endDate,
+                                                  {});
+            for each (var occ in occs)
+              this.calView.doAddItem(occ);
+          },
+          onDeleteItem: function (aItem) {
+            if (!(aItem instanceof Components.interfaces.calIEvent))
+              return;
+
+            var occs = aItem.getOccurrencesBetween(this.calView.startDate,
+                                                   this.calView.endDate,
+                                                   {});
+            for each (var occ in occs) {
+              this.calView.doDeleteEvent(occ);
+            }
+          },
+          //XXXvv Alarm could, in theory, flash the event or something
+          onAlarm: function (aAlarmItem) { },
+          onError: function (aErrNo, aMessage) { },
+
+          //
+          // calICompositeObserver stuff
+          // XXXvv we can be smarter about how we handle this stuff
+          //
+          onCalendarAdded: function (aCalendar) {
+            this.calView.refresh();
+          },
+
+          onCalendarRemoved: function (aCalendar) {
+            this.calView.refresh();
+          },
+
+          onDefaultCalendarChanged: function (aNewDefaultCalendar) {
+                // don't care, for now
+          }
+        })
+      ]]></field>
+
+    </implementation>
+  </binding>
+
+</bindings>
+
+<!-- -*- Mode: xml; indent-tabs-mode: nil; -*- -->

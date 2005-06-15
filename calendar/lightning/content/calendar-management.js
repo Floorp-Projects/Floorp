@@ -128,7 +128,7 @@ var ltnCalendarViewController = {
     },
 
     deleteOccurrence: function (aOccurrence) {
-        if (aOccurrence.parentItem) {
+        if (aOccurrence.parentItem != aOccurrence) {
             var event = aOccurrence.parentItem.clone();
             event.recurrenceInfo.removeOccurrenceAt(aOccurrence.recurrenceId);
             event.calendar.modifyItem(event, aOccurrence, null);

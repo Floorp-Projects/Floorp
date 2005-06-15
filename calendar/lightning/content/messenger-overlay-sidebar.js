@@ -49,8 +49,9 @@ function ltnMinimonthPick(which, minimonth)
 
     var cdt = new CalDateTime();
     cdt.jsDate = minimonth.value;
+    
+    cdt = cdt.getInTimezone(calendarDefaultTimezone());
     cdt.isDate = true;
-    cdt.timezone = calendarDefaultTimezone();
     currentView().showDate(cdt);
 
     showCalendar(false);
@@ -71,7 +72,8 @@ function ltnOnLoad(event)
 
 function currentView()
 {
-    return document.getElementById("calendar-multiday-view");
+    var calendarViewBox = document.getElementById("calendar-view-box");
+    return calendarViewBox.selectedPanel;
 }
 
 function showCalendar(jumpToToday)
@@ -94,19 +96,52 @@ function showCalendar(jumpToToday)
 }
 
 function switchView(type) {
+    var messengerDisplayDeck = document.getElementById("displayDeck");
     var calendarViewBox = document.getElementById("calendar-view-box");
 
-    switch (type) {
-    case "month":
-      calendarViewBox.selectedPanel = document.getElementById("calendar-month-view");
-      break;
-    case "week":
-    default:
-      calendarViewBox.selectedPanel = document.getElementById("calendar-multiday-view");
-      break;
+    var monthView = document.getElementById("calendar-month-view");
+    var multidayView = document.getElementById("calendar-multiday-view");
+
+    // XXX we need a selectedDate in calICalendarView.idl!
+    var selectedDate = calendarViewBox.selectedPanel.startDate;
+
+    if (!selectedDate) {
+        var d = Components.classes['@mozilla.org/calendar/datetime;1'].createInstance(Components.interfaces.calIDateTime);
+        d.jsDate = new Date();
+        selectedDate = d.getInTimezone(calendarDefaultTimezone());
     }
 
-    document.getElementById("displayDeck").selectedPanel = calendarViewBox;
+    switch (type) {
+    case "month": {
+        monthView.showDate(selectedDate);
+        calendarViewBox.selectedPanel = monthView;
+    }
+        break;
+    case "week": {
+        var start = selectedDate.startOfWeek;
+        var end = selectedDate.endOfWeek.clone();
+        end.day += 1;
+        end.normalize();
+        multidayView.setDateRange(start, end);
+        calendarViewBox.selectedPanel = multidayView;
+    }
+        break;
+    case "day":
+    default: {
+        var start = selectedDate;
+        var end = selectedDate.clone();
+        end.day += 1;
+        end.normalize();
+        multidayView.setDateRange(start, end);
+        calendarViewBox.selectedPanel = multidayView;
+    }
+        break;
+    }
+
+    if (messengerDisplayDeck.selectedPanel = calendarViewBox)
+        showCalendar(false);
+    else
+        showCalendar(true);
 }
 
 function selectedCalendarPane(event)

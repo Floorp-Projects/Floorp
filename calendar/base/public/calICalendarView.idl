@@ -65,8 +65,8 @@ interface calICalendarView : nsISupports
   void showDate(in calIDateTime aDate);
 
   /**
-   * Set a date range for the view to display, from aStartDate to
-   * aEndDate, inclusive.
+   * Set a date range for the view to display, from aStartDate
+   * inclusive to aEndDate, not inclusive.
    *
    * Some views may decide to utilize the time portion of these
    * calIDateTimes; pass in calIDateTimes that are dates if you
@@ -82,7 +82,10 @@ interface calICalendarView : nsISupports
 
   /**
    * The start date of the view's display.  If the view is displaying
-   * disjoint dates, this will be the latestdate that's displayed.
+   * disjoint dates, this will be the latest date that's displayed.
+   *
+   * Note that this won't be equivalent to the aEndDate passed to
+   * setDateRange, because that date isn't actually displayed!
    */
   readonly attribute calIDateTime endDate;
 

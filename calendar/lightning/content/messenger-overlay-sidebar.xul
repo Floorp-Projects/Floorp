@@ -5,6 +5,7 @@
 <?xml-stylesheet href="chrome://lightning/skin/lightning.css" type="text/css"?>
 
 <?xml-stylesheet href="chrome://calendar/content/calendar-multiday-view.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/calendar-month-view.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/minimonth.css" type="text/css"?>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -15,6 +16,7 @@
 <script type="application/x-javascript" src="chrome://lightning/content/lightning-utils.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/messenger-overlay-sidebar.js"/>
+<script type="application/x-javascript" src="chrome://lightning/content/agenda-tree.js"/>
 
 <vbox id="folderPaneBox">
   <commandset id="calendar_commands">
@@ -64,9 +66,8 @@
 
 <deck id="displayDeck">
   <deck id="calendar-view-box" flex="1">
-    <calendar-multiday-view orient="vertical" id="calendar-multiday-view" style="overflow:-moz-scrollbars-vertical" flex="1" />
-    <vbox id="calendar-month-view"><label value="blah"/></vbox>
-    <!-- <vbox id="week-view-box" flex="1"/> -->
+    <calendar-month-view id="calendar-month-view" flex="1" />
+    <calendar-multiday-view orient="vertical" id="calendar-multiday-view" flex="1" />
   </deck>
 </deck>
 </overlay>

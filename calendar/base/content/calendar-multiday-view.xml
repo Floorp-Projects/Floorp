@@ -238,10 +238,10 @@
     -->
   <binding id="calendar-event-column">
     <content>
-      <xul:stack anonid="boxstack" flex="1">
-        <xul:box anonid="bgbox" flex="1"/>
-        <xul:box anonid="topbox" flex="1" equalsize="always"/>
-        <xul:box anonid="fgbox" flex="1" class="fgdragcontainer">
+      <xul:stack anonid="boxstack" flex="1" style="min-width: 1px; min-height: 1px">
+        <xul:box anonid="bgbox" flex="1" style="min-width: 1px; min-height: 1px"/>
+        <xul:box anonid="topbox" flex="1" equalsize="always" style="min-width: 1px; min-height: 1px"/>
+        <xul:box anonid="fgbox" flex="1" class="fgdragcontainer" style="min-width: 1px; min-height: 1px">
           <xul:box anonid="fgdragspacer" style="display: inherit; overflow: hidden;">
             <xul:spacer flex="1"/>
             <xul:label anonid="fgdragbox-startlabel" class="fgdragbox-label"/>
@@ -564,6 +564,8 @@
               else
                   box.setAttribute("width", dur * this.mPixPerMin);
 
+              box.setAttribute("style", "min-width: 1px; min-height: 1px;");
+
               this.bgbox.appendChild(box);
               theMin += 60;
           }
@@ -583,6 +585,7 @@
               var xulColumn = createXULElement("box");
               xulColumn.setAttribute("orient", orient);
               xulColumn.setAttribute("flex", "1");
+              xulColumn.setAttribute("style", "min-width: 1px; min-height: 1px;");
               this.topbox.appendChild(xulColumn);
 
               var numBlocksInserted = 0
@@ -611,6 +614,7 @@
 
                   if (chunk.event) {
                       var chunkBox = createXULElement("calendar-event-box");
+                      chunkBox.setAttribute("style", "min-width: 1px; min-height: 1px;");
                       chunkBox.setAttribute("orient", orient);
                       // chunkBox.setAttribute("style", "background: #eeeeff; padding: 0px 1px 0px 1px");
 
@@ -629,6 +633,7 @@
                       chunk.event.eventbox = chunkBox;
                   } else {
                       var chunkBox = createXULElement("spacer");
+                      chunkBox.setAttribute("style", "min-width: 1px; min-height: 1px;");
                       chunkBox.setAttribute("orient", orient);
                       chunkBox.setAttribute("class", "calendar-empty-space-box");
                       xulColumn.appendChild(chunkBox);
@@ -1318,9 +1323,33 @@
 
     <implementation implements="calICalendarView">
 
+      <field name="mResizeHandler">null</field>
       <constructor><![CDATA[
+	var self = this;
+	this.mResizeHandler = function() { self.onResize(); };
+	window.addEventListener("resize", this.mResizeHandler, true);
         this.reorient();
       ]]></constructor>
+
+      <method name="onResize">
+	<body><![CDATA[
+          var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
+          var daybox = document.getAnonymousElementByAttribute(this, "anonid", "daybox");
+
+          var orient = this.orient;
+          var size;
+          if (this.orient == "horizontal")
+              size = daybox.boxObject.width;
+          else
+              size = daybox.boxObject.height;
+
+          // ask the 
+          var minutes = timebar.endMinute - timebar.startMinute;
+          var ppm = size / minutes;
+          dump ("new ppm: " + ppm + "\n");
+          this.pixelsPerMinute = ppm;
+	]]></body>
+      </method>
 
       <field name="mController">null</field>
       <field name="mCalendar">null</field>
@@ -1514,10 +1543,21 @@
               }
           }
 
-          var wkStart = aDate.startOfWeek;
-          var wkEnd = aDate.endOfWeek;
+	  // if we're only showing one date, then continue
+	  // to only show one date; otherwise, show the week.
+	  if (this.numVisibleDates == 1) {
+            var st = aDate;
+            var end = aDate.clone();
+            end.day += 1;
+            end.normalize();
 
-          this.setDateRange(wkStart, wkEnd);
+            this.setDateRange(st, end);
+	  } else {
+            var wkStart = aDate.startOfWeek;
+            var wkEnd = aDate.endOfWeek;
+
+            this.setDateRange(wkStart, wkEnd);
+          }
         ]]></body>
       </method>
 
@@ -1530,6 +1570,8 @@
           this.mStartDate = aStartDate.clone();
           this.mStartDate.makeImmutable();
           this.mEndDate = aEndDate.clone();
+          this.mEndDate.day -= 1;
+          this.mEndDate.normalize();
           this.mEndDate.makeImmutable();
 
           // this function needs to be smarter, and needs to compare
@@ -1624,9 +1666,27 @@
 
       <!-- private -->
 
+      <property name="numVisibleDates" readonly="true">
+        <getter><![CDATA[
+          if (this.mDateList)
+            return this.mDateList.length;
+
+          var count = 0;
+
+          var d = this.mStartDate.clone();
+          while (d.compare(this.mEndDate) <= 0) {
+            count++;
+            d.day += 1;
+            d.normalize();
+          }
+
+          return count;
+        ]]></getter>
+      </property>
+
       <property name="orient">
-        <getter>return this.getAttribute("orient");</getter>
-        <setter>return this.setAttribute("orient", val);</setter>
+        <getter>return (this.getAttribute("orient") || "vertical");</getter>
+        <setter>this.setAttribute("orient", val); return val;</setter>
       </property>
 
       <method name="setAttribute">
@@ -1835,8 +1895,8 @@
               this.mDateColumns.push ( { date: d, column: dayEventsBox, header: dayHeaderBox } );
           }
 
-          daybox.removeAttribute("flex");
-          daybox.setAttribute("flex", "1");
+          // fix pixels-per-minute
+          this.onResize();
         ]]></body>
       </method>
 

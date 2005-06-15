@@ -1,0 +1,65 @@
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/*== calendar-month-view ==*/
+calendar-month-view { 
+  -moz-binding: url(chrome://calendar/content/calendar-month-view.xml#calendar-month-view);
+}
+
+.calendar-month-view-grid-column {
+  min-width: 1px;
+  width: 1px;
+}
+
+.calendar-month-view-grid-row {
+  min-height: 1px;
+  height: 1px;
+}
+
+/*== calendar-month-day-box ==*/
+calendar-month-day-box { 
+  -moz-binding: url(chrome://calendar/content/calendar-month-view.xml#calendar-month-day-box);
+}
+
+calendar-month-day-box { 
+  border: 1px solid #999999;
+}
+
+.calendar-month-day-box-odd {
+  background: #dddddd !important;
+}
+
+.calendar-month-day-box-even {
+  background: white;
+}
+
+.calendar-month-day-box-weekend { 
+  background: #eeeeee;
+}
+
+.calendar-month-day-box-date-label { 
+  color: #556;
+  font-weight: bold;
+}
+
+.calendar-month-day-box-date-event { 
+}
+
+/*== calendar-month-day-box-item ==*/
+calendar-month-day-box-item { 
+  -moz-binding: url(chrome://calendar/content/calendar-month-view.xml#calendar-month-day-box-item);
+}
+
+.calendar-month-day-box-item-label {
+  font-size: small;
+}
+
+/*== calendar-month-view-column-header ==*/
+calendar-month-view-column-header {
+  -moz-binding: url(chrome://calendar/content/calendar-month-view.xml#calendar-month-view-column-header);
+}
+
+.calendar-month-view-column-header-label {
+  font-weight: bold;
+  padding: 3px 3px 3px 3px;
+}
