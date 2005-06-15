@@ -60,14 +60,14 @@
         <xul:link class="update-item-details" xbl:inherits="href=detailsURL">&details.link;</xul:link>
       </xul:hbox>
       <xul:deck anonid="modeDeck">
-        <xul:label class="update-item-status" xbl:inherits="xbl:text=status" flex="1"/>
+        <xul:label class="update-item-status" xbl:inherits="value=status" flex="1"/>
         <xul:vbox>
-          <xul:progressmeter class="update-item-progress" xbl:inherits="value=progress" mode="undetermined"/>
+          <xul:progressmeter class="update-item-progress" anonid="progress"
+                             mode="undetermined"/>
           <xul:hbox align="center">
             <xul:label class="update-item-status" xbl:inherits="value=status" flex="1" crop="right"/>
-            <xul:button class="update-item-pause" 
-                        label="&pause.label;" accesskey="&pause.accesskey;"
-                        oncommand="this.parentNode.parentNode.fireEvent('pause');"/>
+            <xul:button class="update-item-pause" anonid="pause-button"
+                        label="&pause.label;" accesskey="&pause.accesskey;"/>
           </xul:hbox>
         </xul:vbox>
       </xul:deck>
@@ -78,6 +78,9 @@
       <field name="_update">null</field>
       <field name="_strings">
         document.getAnonymousElementByAttribute(this, "anonid", "strings");
+      </field>
+      <field name="_progressBar">
+        document.getAnonymousElementByAttribute(this, "anonid", "progress");
       </field>
       <field name="_modeDeck">
         document.getAnonymousElementByAttribute(this, "anonid", "modeDeck");
@@ -93,6 +96,34 @@
         ]]></body>
       </method>
       
+      <property name="progress">
+        <getter><![CDATA[
+          return parseInt(this._progressBar.getAttribute("value"));
+        ]]></getter>
+        <setter><![CDATA[
+          this._progressBar.setAttribute("value", val);
+        ]]></setter>
+      </property>
+      
+      <field name="_started">false</field>
+      <method name="startDownload">
+        <body><![CDATA[
+          if (!this._started) {
+            this._progressBar.setAttribute("mode", "normal");
+            this._started = true;
+          }
+        ]]></body>
+      </method>
+      
+      <method name="stopDownload">
+        <body><![CDATA[
+          if (this._started) {
+            this._progressBar.setAttribute("mode", "undetermined");
+            this._started = false;
+          }
+        ]]></body>
+      </method>
+      
       <property name="state">
         <getter><![CDATA[
           return this.getAttribute("state");
@@ -100,7 +131,6 @@
         <setter><![CDATA[
           this.setAttribute("state", val);
           this._modeDeck.setAttribute("selectedIndex", val == "downloading" ? 1 : 0);
-          
           if (val == "failed") {
             var failed = this._strings.getString("statusFailed");
             this.setAttribute("status", failed);
@@ -126,10 +156,13 @@
         ]]></setter>
       </property>
       <field name="eventPrefix">"update-"</field>
-      <property name="state" 
-                onset="this.setAttribute('state', val); return val;"
-                onget="return this.getAttribute('state');"/>
     </implementation>
+    <handlers>
+      <handler event="command"><![CDATA[
+        if (event.originalTarget.getAttribute("anonid") == "pause-button")
+          this.fireEvent("pause");
+      ]]></handler>
+    </handlers>
   </binding>
   
   <binding id="license">
