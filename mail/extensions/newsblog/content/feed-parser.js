@@ -64,8 +64,7 @@ FeedParser.prototype =
       // This is slower, but not noticably so. Mozilla doesn't have the 
       // XMLHttpRequest.responseBody property that IE has, which provides access 
       // to the unencoded response.
-      var serial=new XMLSerializer();
-      var xmlString=serial.serializeToString(aDOM.documentElement);
+      var xmlString=serializer.serializeToString(aDOM.documentElement);
       return this.parseAsRSS1(aFeed, xmlString, aBaseURI);
     } 
     else if (aDOM.documentElement.namespaceURI == ATOM_03_NS)
