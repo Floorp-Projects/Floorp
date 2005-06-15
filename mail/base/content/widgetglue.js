@@ -231,8 +231,8 @@ function onEditVirtualFolderPropertiesCallback(aVirtualFolderURI)
   if (gMsgFolderSelected && aVirtualFolderURI == gMsgFolderSelected.URI)
   {
     gMsgFolderSelected = null; // force the folder pane to reload the virtual folder
-  FolderPaneSelectionChange();
-}
+    FolderPaneSelectionChange();
+  }
 }
 
 function MsgFolderProperties() 
@@ -246,18 +246,17 @@ function MsgFolderProperties()
     return;
   }
 
-  var serverType = msgFolder.server.type;
-  var folderTree = GetFolderTree();
-
   if (msgFolder.flags & MSG_FOLDER_FLAG_VIRTUAL)
   { 
     // virtual folders get there own property dialog that contains all of the
     // search information related to the virtual folder.
-    return MsgVirtualFolderProperties(true);
+    MsgVirtualFolderProperties(true);
+    return;
   }
 
+  var serverType = msgFolder.server.type;
+  var folderTree = GetFolderTree();
   var name = GetFolderNameFromUri(preselectedURI, folderTree);
-
   var windowTitle = gMessengerBundle.getString("folderProperties");
   var dialog = window.openDialog(
               "chrome://messenger/content/folderProps.xul",
