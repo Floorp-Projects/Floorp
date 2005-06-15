@@ -310,7 +310,6 @@ var gDownloadingPage = {
   
   _paused: false,
   onPause: function() {
-    LOG("PAUSE/RESUME DOWNLOAD");
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"].
         getService(Components.interfaces.nsIApplicationUpdateService);
@@ -318,6 +317,7 @@ var gDownloadingPage = {
       updates.downloadUpdate(gUpdates.update, false);
     else
       updates.pauseDownload();
+    this._paused = !this._paused;
   },
   
   onClose: function() {
@@ -341,10 +341,12 @@ var gDownloadingPage = {
   
   onProgress: function(request, context, progress, maxProgress) {
     request.QueryInterface(nsIIncrementalDownload);
-    LOG("gDownloadingPage.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
+    // LOG("gDownloadingPage.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
     
     var active = document.getElementById("activeDownloadItem");
-    active.setAttribute("progress", Math.floor(100 * (progress/maxProgress)));
+    active.startDownload();
+    active.state = STATE_DOWNLOADING;
+    active.progress = Math.floor(100 * (progress/maxProgress));
   },
   
   onStatus: function(request, context, status, statusText) {
@@ -356,12 +358,17 @@ var gDownloadingPage = {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("gDownloadingPage.onStopRequest: " + request.URI.spec + ", status = " + status);
     
+    // Flip the progressmeter back to "undetermined" mode in case we need to
+    // download a new (complete) update patch.
+    var active = document.getElementById("activeDownloadItem");
+    active.stopDownload();
+
+    var state = STATE_FAILED;
     const NS_BINDING_ABORTED = 0x804b0002;
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"]
                   .getService(Components.interfaces.nsIApplicationUpdateService);
     if (status == Components.results.NS_ERROR_UNEXPECTED) {
-      var state = STATE_FAILED;
       if (!gUpdates.update.isCompleteUpdate) {
         // If we were downloading a patch and the patch verification phase 
         // failed, log this and then commence downloading the complete update.
@@ -375,8 +382,10 @@ var gDownloadingPage = {
         return;
     }
     else if (status == NS_BINDING_ABORTED) {
-      LOG("Download PAUSED");
+      state = gUpdates.update.state;
+      LOG("gDownloadingPage.onStopRequest: Pausing Download");
     }
+    active.state = state;
     updates.removeDownloadListener(this);
   },
   
@@ -384,7 +393,7 @@ var gDownloadingPage = {
     var brandName = gUpdates.brandStrings.getString("brandShortName");
     var verificationError = gUpdates.updateStrings.getFormattedString("verificationError", [brandName]);
     var downloadingPage = document.getElementById("downloading");
-    // gUpdates.advanceToErrorPage(downloadingPage, verificationError);
+    gUpdates.advanceToErrorPage(downloadingPage, verificationError);
   },
    
   /**
