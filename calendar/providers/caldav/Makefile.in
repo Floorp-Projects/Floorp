@@ -44,6 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = calDavCalendar
 
+ifeq (,$(filter webdav,$(MOZ_EXTENSIONS)))
+DIRS        = ../../../extensions/webdav
+endif
 EXTRA_COMPONENTS = calDavCalendar.js
 
 include $(topsrcdir)/config/rules.mk
