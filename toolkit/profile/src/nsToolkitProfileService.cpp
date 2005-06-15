@@ -867,7 +867,8 @@ XRE_GetFileFromPath(const char *aPath, nsILocalFile* *aResult)
         return NS_ERROR_INVALID_ARG;
 
     CFURLRef fullPath =
-        CFURLCreateFromFileSystemRepresentation(NULL, aPath, pathLen, true);
+        CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *) aPath,
+                                                pathLen, true);
     if (!fullPath)
         return NS_ERROR_FAILURE;
 
