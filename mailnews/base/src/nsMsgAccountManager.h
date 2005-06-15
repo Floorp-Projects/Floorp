@@ -102,6 +102,7 @@ private:
   PRBool m_shutdownInProgress;
   PRBool m_userAuthenticated;
   PRBool m_loadingVirtualFolders;
+  PRBool m_virtualFoldersLoaded;
 
   /* we call FindServer() a lot.  so cache the last server found */
   nsCOMPtr <nsIMsgIncomingServer> m_lastFindServerResult;
