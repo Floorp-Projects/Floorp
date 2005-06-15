@@ -40,7 +40,7 @@ const nsIIncrementalDownload  = Components.interfaces.nsIIncrementalDownload;
 
 const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const PREF_UPDATE_MANUAL_URL  = "app.update.manual.url";
+const PREF_UPDATE_MANUAL_URL  = "app.update.url.manual";
 
 const STATE_DOWNLOADING       = "downloading";
 const STATE_PENDING           = "pending";
@@ -161,7 +161,6 @@ var gCheckingPage = {
       var aus = Components.classes["@mozilla.org/updates/update-service;1"]
                           .getService(Components.interfaces.nsIApplicationUpdateService);
       gUpdates.update = aus.selectUpdate(updates, updates.length);
-      LOG("SELECTEDUPDATE = " + gUpdates.update.patchCount);
       if (!gUpdates.update) {
         LOG("Could not select an appropriate update, either because there were none," + 
             " or |selectUpdate| failed.");
@@ -267,7 +266,9 @@ var gLicensePage = {
 };
 
 var gDownloadingPage = {
-  _createAndInsertItem: function(update, state) {
+  _updatesView: null,
+  
+  _createAndInsertItem: function(update) {
     var element = document.createElementNS(XMLNS_XUL, "update");
     this._updatesView.appendChild(element);
     element.setUpdate(update);
@@ -276,16 +277,6 @@ var gDownloadingPage = {
 
   onPageShow: function() {
     this._updatesView = document.getElementById("updatesView");
-    
-    var um = Components.classes["@mozilla.org/updates/update-manager;1"]
-                       .getService(Components.interfaces.nsIUpdateManager);
-    var activeUpdate = um.activeUpdate;
-    if (um.activeUpdate) {
-      var element = this._createAndInsertItem(activeUpdate);
-      element.id = "activeDownloadItem";
-    }
-    this._updatesView.addEventListener("update-pause", this.onPause, false);
-    
     if (gUpdates.update) {
       // Add this UI as a listener for active downloads
       var updates = 
@@ -297,6 +288,15 @@ var gDownloadingPage = {
       else
         updates.addDownloadListener(this);
     }
+
+    var um = Components.classes["@mozilla.org/updates/update-manager;1"]
+                       .getService(Components.interfaces.nsIUpdateManager);
+    var activeUpdate = um.activeUpdate;
+    if (activeUpdate) {
+      var element = this._createAndInsertItem(activeUpdate);
+      element.id = "activeDownloadItem";
+    }
+    this._updatesView.addEventListener("update-pause", this.onPause, false);
     
     // Build the UI for previously installed updates
     for (var i = 0; i < um.updateCount; ++i) {
@@ -310,6 +310,7 @@ var gDownloadingPage = {
   
   _paused: false,
   onPause: function() {
+    LOG("PAUSE/RESUME DOWNLOAD");
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"].
         getService(Components.interfaces.nsIApplicationUpdateService);
@@ -340,7 +341,7 @@ var gDownloadingPage = {
   
   onProgress: function(request, context, progress, maxProgress) {
     request.QueryInterface(nsIIncrementalDownload);
-    //LOG("gDownloadingPage.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
+    LOG("gDownloadingPage.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
     
     var active = document.getElementById("activeDownloadItem");
     active.setAttribute("progress", Math.floor(100 * (progress/maxProgress)));
@@ -359,14 +360,16 @@ var gDownloadingPage = {
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"]
                   .getService(Components.interfaces.nsIApplicationUpdateService);
-    if (status == Components.results.NS_ERROR_UNEXPECTED &&
-        !gUpdates.update.isCompleteUpdate) {
-      // If we were downloading a patch and the patch verification phase 
-      // failed, log this and then commence downloading the complete update.
-      LOG("Verification of patch failed, downloading complete update");
-      gUpdates.update.isCompleteUpdate = true;
-      var state = updates.downloadUpdate(gUpdates.update, false);
-      if (state == "failed") 
+    if (status == Components.results.NS_ERROR_UNEXPECTED) {
+      var state = STATE_FAILED;
+      if (!gUpdates.update.isCompleteUpdate) {
+        // If we were downloading a patch and the patch verification phase 
+        // failed, log this and then commence downloading the complete update.
+        LOG("Verification of patch failed, downloading complete update");
+        gUpdates.update.isCompleteUpdate = true;
+        state = updates.downloadUpdate(gUpdates.update, false);
+      }
+      if (state == STATE_FAILED)
         this.showVerificationError();
       else
         return;
