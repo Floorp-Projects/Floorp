@@ -348,13 +348,26 @@ ifdef IS_COMPONENT
 ifdef MODULE_NAME
 DEFINES += -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT=1
 else
-$(error Component makefile doesn't specify MODULE_NAME.)
+$(error Component makefile does not specify MODULE_NAME.)
 endif
 endif
 EXPORT_LIBRARY=
 FORCE_STATIC_LIB=1
 _ENABLE_PIC=1
 SHORT_LIBNAME=
+endif
+endif
+
+# If we are building this component into an extension/xulapp, it cannot be
+# statically linked. In the future we may want to add a xulapp meta-component
+# build option.
+
+ifdef XPI_NAME
+ifdef IS_COMPONENT
+EXPORT_LIBRARY=
+_ENABLE_PIC=1
+FORCE_STATIC_LIB=
+FORCE_SHARED_LIB=1
 endif
 endif
 
