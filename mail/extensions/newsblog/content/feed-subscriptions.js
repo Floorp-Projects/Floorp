@@ -817,22 +817,32 @@ var gFeedSubscriptionsWindow = {
       var opmlDoc = document.implementation.createDocument("","opml",null);
       var opmlRoot = opmlDoc.documentElement;
       opmlRoot.setAttribute("version","1.0");
-      
+
+      this.generatePPSpace(opmlRoot,"  ");
+
       // Make the <head> element
       var head = opmlDoc.createElement("head");
+      this.generatePPSpace(head, "    ");
       var title = opmlDoc.createElement("title");
       title.appendChild(opmlDoc.createTextNode(this.mBundle.getString("subscribe-OPMLExportFileTitle")));
       head.appendChild(title);
+      this.generatePPSpace(head, "    ");
       var dt = opmlDoc.createElement("dateCreated");
       dt.appendChild(opmlDoc.createTextNode((new Date()).toGMTString()));
       head.appendChild(dt);
+      this.generatePPSpace(head, "  ");
       opmlRoot.appendChild(head);
-      
+
+      this.generatePPSpace(opmlRoot, "  ");
+
       //add <outline>s to the <body>
       var body = opmlDoc.createElement("body");
-      this.generateOutline(this.mRSSServer.rootFolder, body);
+      this.generateOutline(this.mRSSServer.rootFolder, body, 4);
+      this.generatePPSpace(body, "  ");
       opmlRoot.appendChild(body);
-      
+
+      this.generatePPSpace(opmlRoot, "");
+
       var serial=new XMLSerializer();
       var rv = pickSaveAs(this.mBundle.getString("subscribe-OPMLExportTitle"),'$all',
                           this.mBundle.getString("subscribe-OPMLExportFileName"));
@@ -847,12 +857,23 @@ var gFeedSubscriptionsWindow = {
       }
     }
   },
+
+  generatePPSpace: function(aNode, indentString)
+  {
+    aNode.appendChild(aNode.ownerDocument.createTextNode("\n"));
+    aNode.appendChild(aNode.ownerDocument.createTextNode(indentString));
+  },
   
-  generateOutline: function(baseFolder, parent)
+  generateOutline: function(baseFolder, parent, indentLevel)
   {
     var folderEnumerator = baseFolder.GetSubFolders();
     var done = false;
 
+    // pretty printing
+    var indentString = "";
+    for(i = 0; i < indentLevel; i++)
+      indentString = indentString + " ";
+ 
     while (!done) 
     {
       var folder = folderEnumerator.currentItem().QueryInterface(Components.interfaces.nsIMsgFolder);
@@ -864,17 +885,19 @@ var gFeedSubscriptionsWindow = {
           // Make a mostly empty outline element
           outline = parent.ownerDocument.createElement("outline");
           outline.setAttribute("text",folder.prettiestName);
-          this.generateOutline(folder, outline); // recurse
+          this.generateOutline(folder, outline, indentLevel+2); // recurse
+          this.generatePPSpace(parent, indentString);
+          this.generatePPSpace(outline, indentString);
           parent.appendChild(outline);
         }
         else
         {
           // Add outline elements with xmlUrls
           var feeds = this.getFeedsInFolder(folder);
-          for(feed in feeds)
+          for (feed in feeds)
           {
-            debug("feed: " + feeds[feed]);
             outline = this.opmlFeedToOutline(feeds[feed],parent.ownerDocument);
+            this.generatePPSpace(parent, indentString);
             parent.appendChild(outline);
           }
         }
