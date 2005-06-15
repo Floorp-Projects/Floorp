@@ -918,11 +918,10 @@ nsresult nsMsgMdnGenerator::InitAndProcess()
           if (!accountKey.IsEmpty())
             accountManager->GetAccount(accountKey, getter_AddRefs(account));
           if (account)
-          {
             account->GetIncomingServer(getter_AddRefs(m_server));
-            if (m_server)
-              rv = accountManager->GetFirstIdentityForServer(m_server, getter_AddRefs(m_identity));
-          }
+          
+          if (m_server)
+            rv = accountManager->GetFirstIdentityForServer(m_server, getter_AddRefs(m_identity));
         }
         NS_ENSURE_SUCCESS(rv,rv);
 
