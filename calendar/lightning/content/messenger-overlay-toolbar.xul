@@ -14,8 +14,8 @@
   <toolbarpalette id="MailToolbarPalette">
 
     <toolbarbutton id="calendar-new-event-button" class="cal-toolbarbutton-1" label="New Event" tooltiptext="New Event" oncommand="createEventWithDialog()"/>
-    <toolbarbutton id="calendar-show-week-view" class="cal-toolbarbutton-1" label="Week View" tooltiptext="Month View" oncommand="switchView('week')"/>
-    <toolbarbutton id="calendar-show-month-view" class="cal-toolbarbutton-1" label="Month View" tooltiptext="Month View" oncommand="switchView('month')"/>
+    <toolbarbutton id="calendar-week-view-button" class="cal-toolbarbutton-1" label="Week View" tooltiptext="Month View" oncommand="switchView('week')"/>
+    <toolbarbutton id="calendar-month-view-button" class="cal-toolbarbutton-1" label="Month View" tooltiptext="Month View" oncommand="switchView('month')"/>
 
   </toolbarpalette>
 
