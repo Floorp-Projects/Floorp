@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsEditor.h"
 #include "pratom.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
@@ -108,6 +107,7 @@
 #include "nsStyleSheetTxns.h"
 #include "IMETextTxn.h"
 
+#include "nsEditor.h"
 #include "nsEditorUtils.h"
 #include "nsISelectionDisplay.h"
 #include "nsIInlineSpellChecker.h"
