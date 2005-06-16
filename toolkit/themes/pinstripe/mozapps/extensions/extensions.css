@@ -158,6 +158,11 @@ extension[disabled="true"] {
   background-image: none;
 }
 
+extension[disabled="true"][compatible="false"] .extension-item-description,
+extension[incompatibleUpdate="true"] .extension-item-description {
+  color: #C77173;
+}
+
 extension[disabled="true"][selected="true"] {
   background-image: url("chrome://mozapps/skin/shared/itemSelected.png");
 }

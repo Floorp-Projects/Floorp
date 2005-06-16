@@ -697,8 +697,11 @@ var gExtensionsViewController = {
   isCommandEnabled: function (aCommand)
   {
     var selectedItem = gExtensionsView.selected;
-    if (selectedItem)
+    if (selectedItem) {
+      if (selectedItem.getAttribute("downloadURL") != "")
+        return false;
       var opType = selectedItem.getAttribute("opType");
+    }
 
     switch (aCommand) {
     case "cmd_close":
@@ -964,6 +967,7 @@ var gExtensionsViewController = {
     cmd_disable: function (aSelectedItem)
     {
       gExtensionManager.disableItem(getIDFromResourceURI(aSelectedItem.id));
+      gExtensionsView.selected = document.getElementById(aSelectedItem.id);
     },
     
     cmd_enable: function (aSelectedItem)

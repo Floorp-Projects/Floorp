@@ -3630,6 +3630,8 @@ ExtensionManager.prototype = {
       _id: null,
       _type: nsIUpdateItem.TYPE_ANY,
       _xpi: null,
+      _installManifest: null,
+      _iinstallRDF: null,
       
       /** 
        * Ask the Extension Update System if there are any version updates for
@@ -3643,11 +3645,12 @@ ExtensionManager.prototype = {
        *          The staged source XPI file that contains the item. Cleaned 
        *          up by this process.
        */
-      checkForUpdates: function(installManifest, installData, xpiFile) {
+      checkForUpdates: function(installManifest, installData, xpiFile, installRDF) {
         this._id              = installData.id;
         this._type            = installData.type;
         this._xpi             = xpiFile;
         this._installManifest = installManifest;
+        this._installRDF      = installRDF;
         
         // XXXben - replace with a single notification and a data param or a
         //          proper notification interface.
@@ -3684,6 +3687,7 @@ ExtensionManager.prototype = {
 
         switch (topic) {
         case "Update:Extension:Item-Ended":
+          em.datasource.removeDownload(this._xpi.path);
           LOG("Version Check Phone Home Completed");
           if (data == "update-check-success") {
             em.datasource.setTargetApplicationInfo(item.id, 
@@ -3706,6 +3710,10 @@ ExtensionManager.prototype = {
               em.datasource.setUpdatedTargetAppInfo(item.id, item.minAppVersion,
                                                     item.maxAppVersion);
             }
+            // Prevent the datasource file from being lazily recreated after
+            // it is deleted by calling Flush.
+            this._installManifest.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+            this._installManifest.Flush();
           }
           else {
             showIncompatibleError(installData);
@@ -3718,10 +3726,15 @@ ExtensionManager.prototype = {
           gOS.removeObserver(this, "Update:Extension:Item-Ended");
           gOS.removeObserver(this, "Update:Extension:Item-Error");
           gOS.removeObserver(this, "Update:Extension:Ended");
+          // We are responsible for cleaning up this file!
+          this._installRDF.remove(false);
           break;
         case "Update:Extension:Started":
+          em.datasource.addIncompatibleUpdateItem(item.name, this._xpi.path,
+                                                  item.type, item.version);
           break;
         case "Update:Extension:Item-Error":
+          em.datasource.removeDownload(this._xpi.path);
           showIncompatibleError(installData);
           // We are responsible for cleaning up this file!
           InstallLocations.get(aInstallLocationKey).removeFile(this._xpi);
@@ -3734,7 +3747,7 @@ ExtensionManager.prototype = {
     var shouldPhoneHomeIfNecessary = false;
     if (!aInstallManifest) {
       // If we were not called with an Install Manifest, we were called from 
-      // some other path than the Phone Home syste, so we do want to phone
+      // some other path than the Phone Home system, so we do want to phone
       // home if the version is incompatible.
       shouldPhoneHomeIfNecessary = true;
       var installManifest = getInstallManifest(installManifestFile);
@@ -3763,7 +3776,10 @@ ExtensionManager.prototype = {
         }
         var stagedFile = installLocation.stageFile(aXPIFile, installData.id);
         (new IncompatibleObserver(this)).checkForUpdates(installManifest, 
-                                                         installData, stagedFile);
+                                                         installData, stagedFile,
+                                                         installManifestFile);
+        // Return early to prevent deletion of the install manifest file.
+        return;
       }
       else {
         // XXXben Look up XULRunnerSettingsThingy to see if there is a registered
@@ -5476,7 +5492,7 @@ ExtensionsDataSource.prototype = {
         }
       }
     }
-    this._inner.Flush();
+    this.Flush();
   },
 
   /**
@@ -5560,6 +5576,8 @@ ExtensionsDataSource.prototype = {
         // fleeting).
         if (!datasource)
           this.Flush();
+
+        break;
       }
     }
   },
@@ -5865,6 +5883,43 @@ ExtensionsDataSource.prototype = {
     this.Flush();
   },
   
+  /**
+   * Adds an entry representing an item that is incompatible and is being
+   * checked for a compatibility update.
+   * @param   name
+   *          The display name of the item being checked
+   * @param   url
+   *          The URL string of the xpi file that has been staged. This is
+   *          also used for installLocation to make this an independently
+   *          managed item
+   * @param   type
+   *          The nsIUpdateItem type of the item
+   * @param   version
+   *          The version of the item
+   */
+  addIncompatibleUpdateItem: function(name, url, type, version) {
+    var iconURL = (type == nsIUpdateItem.TYPE_THEME) ? URI_GENERIC_ICON_THEME :
+                                                       URI_GENERIC_ICON_XPINSTALL;
+    var extensionsStrings = BundleManager.getBundle(URI_EXTENSIONS_PROPERTIES);
+    var updateMsg = extensionsStrings.formatStringFromName("incompatibleUpdateMessage",
+                                                           [BundleManager.appName, name], 2)
+
+    var res = gRDF.GetResource(url);
+    this._setProperty(this._inner, res, EM_R("name"), EM_L(name));
+    this._setProperty(this._inner, res, EM_R("iconURL"), EM_L(iconURL));
+    this._setProperty(this._inner, res, EM_R("downloadURL"), EM_L(url));
+    this._setProperty(this._inner, res, EM_R("type"), EM_I(type));
+    this._setProperty(this._inner, res, EM_R("version"), EM_L(version));
+    this._setProperty(this._inner, res, EM_R("incompatibleUpdate"), EM_L("true"));
+    this._setProperty(this._inner, res, EM_R("description"), EM_L(updateMsg));
+
+    var ctr = getContainer(this._inner, this._itemRoot);
+    if (ctr.IndexOf(res) == -1)
+      ctr.InsertElementAt(res, 1, true);
+
+    this.Flush();
+  },
+
   /**
    * Removes an active download from the appropriate container
    * @param   url
