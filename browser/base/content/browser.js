@@ -5590,7 +5590,7 @@ function AddKeywordForSearchField()
                             .getService(Components.interfaces.nsIIOService);
   var uri = ioService.newURI(node.ownerDocument.URL, node.ownerDocument.characterSet, null);
 
-  var keywordURL = ioService.newURI(node.form.action, node.ownerDocument.characterSet, uri);
+  var keywordURL = ioService.newURI(node.form.getAttribute("action"), node.ownerDocument.characterSet, uri);
   var spec = keywordURL.spec;
   var postData = "";
   var i, e;
