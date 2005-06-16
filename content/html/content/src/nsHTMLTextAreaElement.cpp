@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -463,7 +464,7 @@ nsHTMLTextAreaElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 {
   nsresult rv;
   rv = nsGenericHTMLFormElement::InsertChildAt(aKid, aIndex, aNotify);
-  if (!mValueChanged) {
+  if (!mValueChanged && mDoneAddingChildren) {
     Reset();
   }
   return rv;
@@ -474,7 +475,7 @@ nsHTMLTextAreaElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   nsresult rv;
   rv = nsGenericHTMLFormElement::AppendChildTo(aKid, aNotify);
-  if (!mValueChanged) {
+  if (!mValueChanged && mDoneAddingChildren) {
     Reset();
   }
   return rv;
@@ -486,6 +487,8 @@ nsHTMLTextAreaElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   nsresult rv;
   rv = nsGenericHTMLFormElement::RemoveChildAt(aIndex, aNotify);
   if (!mValueChanged) {
+    NS_ASSERTION(mDoneAddingChildren,
+                 "The HTML content sink shouldn't call this");
     Reset();
   }
   return rv;
@@ -608,8 +611,17 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsPresContext* aPresContext,
 void
 nsHTMLTextAreaElement::DoneAddingChildren()
 {
+  if (!mValueChanged) {
+    if (!mDoneAddingChildren) {
+      // Reset now that we're done adding children if the content sink tried to
+      // sneak some text in without calling AppendChildTo.
+      Reset();
+    }
+
+    RestoreFormControlState(this, this);
+  }
+
   mDoneAddingChildren = PR_TRUE;
-  RestoreFormControlState(this, this);
 }
 
 PRBool
