@@ -41,14 +41,16 @@ my $java;
 # release <java release dir> <nss release dir> <nspr release dir>
 
 sub usage {
-    print STDERR "Usage:\n";
-    print STDERR "$0 dist <dist_dir>\n";
-    print STDERR "$0 release <jss release dir> <nss release dir> "
+    print "Usage:\n";
+    print "$0 dist <dist_dir>\n";
+    print "$0 release <jss release dir> <nss release dir> "
         . "<nspr release dir>\n";
     exit(1);
 }
 
 my $testdir;
+my $testrun = 0;
+my $testpass = 0;
 my $nss_lib_dir;
 my $dist_dir;
 my $pathsep       = ":";
@@ -125,7 +127,7 @@ sub setup_vars {
     }
 
     unless( $ENV{JAVA_HOME} ) {
-        print STDERR "Must set JAVA_HOME environment variable\n";
+        print "Must set JAVA_HOME environment variable\n";
         exit(1);
     }
 
@@ -149,13 +151,27 @@ sub setup_vars {
         $testdir = $host . "_" . $$;
     }
 
-    print STDERR "*****ENVIRONMENT*****\n";
-    print STDERR "java=$java\n";
-    print STDERR "NATIVE_FLAG=$ENV{NATIVE_FLAG}\n";
-    print STDERR "$ld_lib_path=$ENV{$ld_lib_path}\n";
-    print STDERR "CLASSPATH=$ENV{CLASSPATH}\n";
-    print STDERR "USE_64=$ENV{USE_64}\n";
-    print STDERR "testdir=$testdir\n";
+    print "*****ENVIRONMENT*****\n";
+    print "java=$java\n";
+    print "NATIVE_FLAG=$ENV{NATIVE_FLAG}\n";
+    print "$ld_lib_path=$ENV{$ld_lib_path}\n";
+    print "CLASSPATH=$ENV{CLASSPATH}\n";
+    print "USE_64=$ENV{USE_64}\n";
+    print "testdir=$testdir\n";
+}
+
+sub print_case_result {
+    my $result = shift;
+	my $testname = shift;
+
+    $testrun++;
+    if ($result == 0) {
+        $testpass++;
+        print "JSSTEST_CASE $testrun ($testname): PASS\n";
+    } else {
+        print "JSSTEST_CASE $testrun ($testname): FAIL\n";
+    }
+
 }
 
 setup_vars(\@ARGV);
@@ -163,7 +179,7 @@ setup_vars(\@ARGV);
 my $signingToken = "Internal Key Storage Token";
 
 
-print STDERR "*********************\n";
+print "*********************\n";
 
 #
 # Make the test database directory
@@ -189,115 +205,125 @@ if( ! -d $testdir ) {
 }
 my $result;
 
-print STDERR "============= Setup DB\n";
+print "============= Setup DB\n";
 $result = system("$java org.mozilla.jss.tests.SetupDBs $testdir $pwfile");
 $result >>=8;
-$result and die "SetupDBs returned $result";
+$result and print "SetupDBs returned $result\n";
+print_case_result ($result,"Setup DB");
 
 #
 # List CA certs
 #
-print STDERR "============= List CA certs\n";
+print "============= List CA certs\n";
 $result = system("$java org.mozilla.jss.tests.ListCACerts $testdir");
 $result >>=8;
-$result and die "ListCACerts returned $result";
+$result and print "ListCACerts returned $result\n";
+print_case_result ($result,"List CA certs");
 
 #
 # test sockets
 #
-print STDERR "============= test sockets\n";
+print "============= test sockets\n";
 $result = system("$java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile");
 $result >>=8;
-$result and die "SSLClientAuth returned $result";
+$result and print "SSLClientAuth returned $result\n";
+print_case_result ($result,"Sockets");
 
 # test key gen
 #
-print STDERR "============= test key gen\n";
+print "============= test key gen\n";
 $result = system("$java org.mozilla.jss.tests.TestKeyGen $testdir $pwfile");
 $result >>=8;
-$result and die "TestKeyGen returned $result";
+$result and print "TestKeyGen returned $result\n";
+print_case_result ($result,"Key generation");
 
 # test digesting
 #
-print STDERR "============= test digesting\n";
+print "============= test digesting\n";
 $result = system("$java org.mozilla.jss.tests.DigestTest $testdir $pwfile");
 $result >>=8;
-$result and die "DigestTest returned $result";
+$result and print "DigestTest returned $result\n";
+print_case_result ($result,"Digesting");
 
 # test signing
 #
-print STDERR "============= test signing\n";
+print "============= test signing\n";
 $result = system("$java org.mozilla.jss.tests.SigTest $testdir " .
             "\"$signingToken\" $pwfile"); $result >>=8;
-$result and die "SigTest returned $result";
+$result and print "SigTest returned $result\n";
+print_case_result ($result,"Signing");
 
 # test JCA Sig Test
 #
-print STDERR "============= test Mozilla-JSS SigatureSPI JCASitTest\n";
+print "============= test Mozilla-JSS SigatureSPI JCASitTest\n";
 $result = system("$java org.mozilla.jss.tests.JCASigTest $testdir $pwfile");
 $result >>=8;
-$result and die "TestJCASigTest returned $result";
+$result and print "TestJCASigTest returned $result\n";
+print_case_result ($result,"Mozilla-JSS SigatureSPI JCASitTest");
 
 # test Secret Decoder Ring
 #
-print STDERR "============= test Secret Decoder Ring\n";
+print "============= test Secret Decoder Ring\n";
 $result = system("$java org.mozilla.jss.tests.TestSDR $testdir $pwfile");
 $result >>=8;
-$result and die "TestSDR returned $result";
+$result and print "TestSDR returned $result\n";
+print_case_result ($result,"Secret Decoder Ring");
 
 #
 # Generate a known cert pair that can be used for testing
 #
-print STDERR "============= Generate known cert pair for testing\n";
+print "============= Generate known cert pair for testing\n";
 $result=system("$java org.mozilla.jss.tests.GenerateTestCert $testdir $pwfile");
 $result >>=8;
-$result and die "Generate known cert pair for testing returned $result";
+$result and print "Generate known cert pair for testing returned $result\n";
 
 #
 # Create keystore.pfx from generated cert db
 # for "JSSCATestCert"
-print STDERR "============= convert PKCS11 cert to PKCS12 format\n";
+print "============= convert PKCS11 cert to PKCS12 format\n";
 $result = system("$nss_lib_dir/../bin/pk12util$exe_suffix -o keystore.pfx -n JSSCATestCert -d ./$testdir -K netscape -W netscape");
 $result >>=8;
-$result and die "Convert PKCS11 to PKCS12 returned $result";
+$result and print "Convert PKCS11 to PKCS12 returned $result\n";
 
 #
-# Start both JSS and JSSE servers
+# Start JSSE server
 #
-print STDERR "============= Start JSSE server tests\n";
+print "============= Start JSSE server tests\n";
 $result=system("./startJsseServ.$scriptext $jss_classpath $testdir $java");
 $result >>=8;
-$result and die "JSSE servers returned $result";
+$result and print "JSSE servers returned $result\n";
 
 #
 # Test JSS client communication
 #
-print STDERR "============= Start JSS client tests\n";
+print "============= Start JSS client tests\n";
 $result = system("cp $testdir/*.db .");
 $result = system("$java org.mozilla.jss.tests.JSS_SSLClient");
 $result >>=8;
-$result and die "JSS client returned $result";
+$result and print "JSS client returned $result\n";
+print_case_result ($result,"JSSE server / JSS client");
 
 #
-# Start both JSS and JSSE servers
+# Start JSS server
 #
-print STDERR "============= Start JSS server tests\n";
+print "============= Start JSS server tests\n";
 $result=system("./startJssServ.$scriptext $jss_classpath $testdir $java");
 $result >>=8;
-$result and die "JSS servers returned $result";
+$result and print "JSS servers returned $result\n";
 
 #
 # Test JSSE client communication
 #
-print STDERR "============= Start JSSE client tests\n";
+print "============= Start JSSE client tests\n";
 $result = system("$java org.mozilla.jss.tests.JSSE_SSLClient");
 $result >>=8;
-$result and die "JSSE client returned $result";
+$result and print "JSSE client returned $result\n";
+print_case_result ($result,"JSS server / JSSE client");
 
 #
 # Test for JSS jar and library revision
 #
-print STDERR "============= Check JSS jar version\n";
+print "============= Check JSS jar version\n";
 $result = system("$java org.mozilla.jss.tests.JSSPackageTest");
 $result >>=8;
 my $LIB = "$lib_jss"."4"."$lib_suffix";
@@ -310,5 +336,10 @@ if ($strings_exist ne "") {
 } else {
     print "Could not fetch Header information from $LIB\n";
 }
-$result and die "JSS jar package information test $result";
+$result and print "JSS jar package information test returned $result\n";
+print_case_result ($result,"Check JSS jar version");
+
+print "JSSTEST_SUITE: $testpass / $testrun\n";
+my $rate = $testpass / $testrun * 100;
+printf "JSSTEST_RATE: %.0f %\n",$rate;
 
