@@ -835,6 +835,10 @@ cmdEditDelete.prototype =
       this.node = node;
       this.nextSibling = node.nextSibling;
       this.parentNode = node.parentNode;
+      var selectNode = this.nextSibling;
+      if (!selectNode) selectNode = node.previousSibling;
+      if (!selectNode) selectNode = this.parentNode;
+      viewer.selectElementInTree(selectNode);
       node.parentNode.removeChild(node);
     }
   },
@@ -847,6 +851,7 @@ cmdEditDelete.prototype =
       else
         this.parentNode.appendChild(this.node);        
     }
+    viewer.selectElementInTree(this.node);
   }
 };
 
