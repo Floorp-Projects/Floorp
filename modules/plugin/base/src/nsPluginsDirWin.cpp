@@ -68,9 +68,18 @@ static char* GetKeyValue(char* verbuf, char* key)
 					(void **)&buf, &blen);
 
 	if(buf != NULL)
-		return PL_strdup(buf);
-	else
-		return nsnull;
+	{
+#ifdef WINCE
+        // On windows CE, the verbuf is wide and the shunt
+        // layer can't do much about it.  So, here we
+        // convert the wide string.
+		return PL_strdup(NS_ConvertUCS2toUTF8((PRUnichar*)buf).get());
+#else
+		return PL_strdup(buf);	
+#endif
+	}
+
+	return nsnull;
 }
 
 static PRUint32 CalculateVariantCount(char* mimeTypes)

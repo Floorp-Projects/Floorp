@@ -626,6 +626,10 @@ enum eGetNameError
 static eGetNameError
 GetNAME(HDC aDC, nsString* aName, PRBool* aIsSymbolEncoding = nsnull)
 {
+#ifdef WINCE
+  return eGetName_GDIError;
+#else
+
   DWORD len = GetFontData(aDC, NAME, 0, nsnull, 0);
   if (len == GDI_ERROR) {
     TEXTMETRIC metrics;
@@ -692,6 +696,7 @@ GetNAME(HDC aDC, nsString* aName, PRBool* aIsSymbolEncoding = nsnull)
   }
 
   return eGetName_OK;
+#endif
 }
 
 static PLHashNumber
@@ -2733,6 +2738,16 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUint32 c)
     }
     else if (res == eGetName_GDIError) { // Bitmap font
       // alright, was treated as unicode font in GetCCMAP()
+
+#ifdef WINCE
+      name.AssignWithConversion(font->mName);
+      font = LoadSubstituteFont(aDC, name);
+      if (font) {
+        ((nsFontWinSubstitute*)font)->SetRepresentable(c);
+        mSubstituteFont = font;
+        return font;
+      }
+#endif
     }
     else {
       continue;

@@ -375,6 +375,9 @@ nsresult
 nsOSHelperAppService::GetDefaultAppInfo(nsAString& aTypeName, nsAString& aDefaultDescription, 
                                         nsIFile** aDefaultApplication)
 {
+#ifdef WINCE
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
   // If all else fails, use the file type key name, which will be 
   // something like "pngfile" for .pngs, "WMVFile" for .wmvs, etc. 
   aDefaultDescription = aTypeName;
@@ -486,6 +489,7 @@ nsOSHelperAppService::GetDefaultAppInfo(nsAString& aTypeName, nsAString& aDefaul
   }
 
   return NS_OK;
+#endif
 }
 
 already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFlatString& aFileExt, const char *aTypeHint)

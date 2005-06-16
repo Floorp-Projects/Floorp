@@ -646,6 +646,10 @@ nsWindowsRegKey::WriteBinaryValue(const nsAString &name, const nsACString &value
 NS_IMETHODIMP
 nsWindowsRegKey::StartWatching(PRBool recurse)
 {
+#ifdef WINCE
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 
   if (mWatchEvent)
@@ -670,6 +674,7 @@ nsWindowsRegKey::StartWatching(PRBool recurse)
 
   mWatchRecursive = recurse;
   return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
