@@ -3327,11 +3327,12 @@ function toggleAddressPicker()
 {
   var sidebarBox = document.getElementById("sidebar-box");
   var sidebarSplitter = document.getElementById("sidebar-splitter");
-  var menuItem = document.getElementById("menu_AddressSidebar");
+  var elt = document.getElementById("viewAddressPicker");
   if (sidebarBox.hidden) 
   {
     sidebarBox.hidden = false;
     sidebarSplitter.hidden = false;
+    elt.setAttribute("checked","true");
 
     var sidebar = document.getElementById("sidebar");
     var sidebarUrl = sidebar.getAttribute("src");
@@ -3340,7 +3341,6 @@ function toggleAddressPicker()
     // data sources. Only when the user opens the address picker do we set the src url for the sidebar...
     if (sidebarUrl == "")
       sidebar.setAttribute("src", "chrome://messenger/content/addressbook/abContactsPanel.xul");
-    menuItem.setAttribute("checked","true");
 
     sidebarBox.setAttribute("sidebarVisible", "true");
   }
@@ -3348,8 +3348,8 @@ function toggleAddressPicker()
   {
     sidebarBox.hidden = true;
     sidebarSplitter.hidden = true;
-    menuItem.setAttribute("checked","false");
     sidebarBox.setAttribute("sidebarVisible", "false");
+    elt.removeAttribute("checked");
   }
 
 }

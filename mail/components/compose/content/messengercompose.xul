@@ -171,6 +171,7 @@
   <broadcaster id="Communicator:WorkMode" label="&offlineGoOfflineCmd.label;"
                type="checkbox" oncommand="toggleOfflineStatus();"/>
   <broadcaster id="args" value="editorType=default"/>
+  <broadcaster id="viewAddressPicker" autoCheck="false" type="checkbox" oncommand="toggleAddressPicker();"/>
 </broadcasterset>
 
 <keyset id="tasksKeys">
@@ -387,7 +388,8 @@
                     
             </menupopup>
           </menu>
-          <menuitem id="menu_AddressSidebar" type="checkbox" checked="false" label="&addressSidebar.label;" accesskey="&addressSidebar.accesskey;" oncommand="toggleAddressPicker();"/>
+
+          <menuitem id="menu_AddressSidebar" label="&addressSidebar.label;" accesskey="&addressSidebar.accesskey;" observes="viewAddressPicker"/>
         </menupopup>
       </menu>
   
@@ -580,7 +582,7 @@
     <toolbarbutton class="toolbarbutton-1"
                id="button-address" label="&addressButton.label;" 
                tooltiptext="&addressButton.tooltip;" 
-               oncommand="toggleAddressPicker();"/>
+               observes="viewAddressPicker"/>
     
     <toolbarbutton class="toolbarbutton-1" type="menu-button"
                id="button-attach" label="&attachButton.label;" 
