@@ -82,6 +82,8 @@ TEST_FILES      = \
 		xifdthtml.out \
 		simplemail.html \
 		simplemail.out \
+		mischtml.html \
+		mischtml.out \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
