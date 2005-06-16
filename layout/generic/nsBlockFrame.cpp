@@ -734,7 +734,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   nsBlockReflowState state(aReflowState, aPresContext, this, aMetrics,
-                           aReflowState.mFlags.mHasClearance || (NS_BLOCK_MARGIN_ROOT & mState),
+                           (NS_BLOCK_MARGIN_ROOT & mState),
                            (NS_BLOCK_MARGIN_ROOT & mState));
 
   // The condition for doing Bidi resolutions includes a test for the
@@ -3239,7 +3239,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // Only record the first frame that requires clearance
       if (!*aState.mReflowState.mDiscoveredClearance) {
         *aState.mReflowState.mDiscoveredClearance = frame;
-    }
+      }
       // Exactly what we do now is flexible since we'll definitely be
       // reflowed.
     }
