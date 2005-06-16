@@ -71,7 +71,7 @@ FinalizeInstallVersion(JSContext *cx, JSObject *obj);
 //
 JSClass InstallVersionClass = {
   "InstallVersion",
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetInstallVersionProperty,
