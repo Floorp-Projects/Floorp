@@ -249,6 +249,7 @@ nsWindow::nsWindow()
     mLastDragMotionWindow = NULL;
   mBlockMozAreaFocusIn = PR_FALSE;
   mLastGrabFailed = PR_TRUE;
+  mHasAnonymousChildren = PR_FALSE;
   mDragMotionWidget = 0;
   mDragMotionContext = 0;
   mDragMotionX = 0;
@@ -415,6 +416,35 @@ void nsWindow::InvalidateWindowPos(void)
     nsRect kidBounds;
     kid->GetBounds(kidBounds);
     kid->Move(kidBounds.x, kidBounds.y);
+  }
+
+  // The following code was shamelessly copied from nsWindow::DestroyNativeChildren
+  // If this wasn't GTK1, I'd refactor it to share code with that function
+  if (mSuperWin && mHasAnonymousChildren) {
+    Display *display = GDK_DISPLAY();
+    Window  window = GDK_WINDOW_XWINDOW(mSuperWin->bin_window);
+    if (window && !((GdkWindowPrivate *)mSuperWin->bin_window)->destroyed)
+    {
+      Window       root_return;
+      Window       parent_return;
+      Window      *children_return = NULL;
+      unsigned int nchildren_return = 0;
+      // get a list of children for this window
+      XQueryTree(display, window, &root_return, &parent_return,
+                 &children_return, &nchildren_return);
+      // walk the list of children
+      for (unsigned int i=0; i < nchildren_return; i++)
+      {
+        Window child_window = children_return[i];
+        nsWindow *thisWindow = GetnsWindowFromXWindow(child_window);
+        if (thisWindow)
+        {
+          nsRect kidBounds;
+          thisWindow->GetBounds(kidBounds);
+          thisWindow->Move(kidBounds.x, kidBounds.y);
+        }
+      }      
+    }
   }
 }
 
@@ -1963,10 +1993,16 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
       }
     }
     else {
-      if (superwin)
+      if (superwin) {
         mSuperWin = gdk_superwin_new(superwin->bin_window,
                                      mBounds.x, mBounds.y,
                                      mBounds.width, mBounds.height);
+        nsWindow* realParent =
+          NS_STATIC_CAST(nsWindow*, gtk_object_get_data(GTK_OBJECT(superwin), "nsWindow"));
+        if (realParent && !mParent) {
+          realParent->mHasAnonymousChildren = PR_TRUE;
+        }
+      }
     }
     break;
 

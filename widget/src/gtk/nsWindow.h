@@ -409,7 +409,13 @@ private:
   PRPackedBool mLeavePending;
   PRPackedBool mRestoreFocus;
 
+  /**
+   * Whether this widget has child widgets that are not linked into
+   * its explicit nsIWidget child list
+   */
+  PRPackedBool mHasAnonymousChildren;
   PRPackedBool mIsTranslucent;
+
   // This bitmap tracks which pixels are transparent. We don't support
   // full translucency at this time; each pixel is either fully opaque
   // or fully transparent.
@@ -418,7 +424,6 @@ private:
   void DestroyNativeChildren(void);
 
   GtkWindow *mTransientParent;
-
 };
 
 //
