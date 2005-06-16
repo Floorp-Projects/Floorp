@@ -296,12 +296,12 @@ XPInstallDownloadManager.prototype = {
   observe: function (aSubject, aTopic, aData) 
   {
     switch (aTopic) {
-    case "xpinstall-download-started":
-      var params = aSubject.QueryInterface(Components.interfaces.nsISupportsArray);
-      var paramBlock = params.GetElementAt(0).QueryInterface(Components.interfaces.nsISupportsInterfacePointer);
-      paramBlock = paramBlock.data.QueryInterface(Components.interfaces.nsIDialogParamBlock);
-      this.addDownloads(paramBlock);
-      break;
+      case "xpinstall-download-started":
+        var params = aSubject.QueryInterface(Components.interfaces.nsISupportsArray);
+        var paramBlock = params.GetElementAt(0).QueryInterface(Components.interfaces.nsISupportsInterfacePointer);
+        paramBlock = paramBlock.data.QueryInterface(Components.interfaces.nsIDialogParamBlock);
+        this.addDownloads(paramBlock);
+        break;
     }
   },
   
@@ -347,62 +347,62 @@ XPInstallDownloadManager.prototype = {
     var element = document.getElementById(aURL);
     if (!element) return;
     switch (aState) {
-    case nsIXPIProgressDialog.DOWNLOAD_START:
-      element.setAttribute("state", "waiting");
+      case nsIXPIProgressDialog.DOWNLOAD_START:
+        element.setAttribute("state", "waiting");
 
-      var extensionsStrings = document.getElementById("extensionsStrings");
-      element.setAttribute("description", 
-                           extensionsStrings.getString("installWaiting"));
+        var extensionsStrings = document.getElementById("extensionsStrings");
+        element.setAttribute("description",
+                             extensionsStrings.getString("installWaiting"));
 
-      element.setAttribute("progress", "0");
-      break;
-    case nsIXPIProgressDialog.DOWNLOAD_DONE:
-      element.setAttribute("progress", "100");
-      break;
-    case nsIXPIProgressDialog.INSTALL_START:
-      element.setAttribute("state", "installing");
+        element.setAttribute("progress", "0");
+        break;
+      case nsIXPIProgressDialog.DOWNLOAD_DONE:
+        element.setAttribute("progress", "100");
+        break;
+      case nsIXPIProgressDialog.INSTALL_START:
+        element.setAttribute("state", "installing");
 
-      extensionsStrings = document.getElementById("extensionsStrings");
-      element.setAttribute("description", 
-                           extensionsStrings.getString("installInstalling"));
-      break;
-    case nsIXPIProgressDialog.INSTALL_DONE:
-      dump("*** state change = " + aURL + ", state = " + aState + ", value = " + aValue + "\n");
-      element.setAttribute("state", "done");
-      extensionsStrings = document.getElementById("extensionsStrings");
-      element.setAttribute("description", 
-                           extensionsStrings.getString("installSuccess"));
-      var msg;
-      if (aValue != 0 && aValue != 999) {
-        var xpinstallStrings = document.getElementById("xpinstallStrings");
-        try {
-          msg = xpinstallStrings.getString("error" + aValue);
+        extensionsStrings = document.getElementById("extensionsStrings");
+        element.setAttribute("description",
+                             extensionsStrings.getString("installInstalling"));
+        break;
+      case nsIXPIProgressDialog.INSTALL_DONE:
+        dump("*** state change = " + aURL + ", state = " + aState + ", value = " + aValue + "\n");
+        element.setAttribute("state", "done");
+        extensionsStrings = document.getElementById("extensionsStrings");
+        element.setAttribute("description",
+                             extensionsStrings.getString("installSuccess"));
+        var msg;
+        if (aValue != 0 && aValue != 999) {
+          var xpinstallStrings = document.getElementById("xpinstallStrings");
+          try {
+            msg = xpinstallStrings.getString("error" + aValue);
+          }
+          catch (e) {
+            msg = xpinstallStrings.getFormattedString("unknown.error", [aValue]);
+          }
+          var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                              .getService(Components.interfaces.nsIStringBundleService);
+          var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
+          var title = extensionStrings.GetStringFromName("errorInstallTitle");
+
+          var brandStrings = sbs.createBundle("chrome://branding/locale/brand.properties");
+          var brandShortName = brandStrings.GetStringFromName("brandShortName");
+          var params = [brandShortName, aURL, msg];
+          var message = extensionStrings.formatStringFromName("errorInstallMsg", params, params.length);
+
+          var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                             .getService(Components.interfaces.nsIPromptService);
+          ps.alert(window, title, message);
+          element.setAttribute("status", msg);
         }
-        catch (e) {
-          msg = xpinstallStrings.getFormattedString("unknown.error", [aValue]);
-        }
-        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                            .getService(Components.interfaces.nsIStringBundleService);
-        var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
-        var title = extensionStrings.GetStringFromName("errorInstallTitle");
-
-        var brandStrings = sbs.createBundle("chrome://branding/locale/brand.properties");
-        var brandShortName = brandStrings.GetStringFromName("brandShortName");
-        var params = [brandShortName, aURL, msg];
-        var message = extensionStrings.formatStringFromName("errorInstallMsg", params, params.length);
-        
-        var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                           .getService(Components.interfaces.nsIPromptService);
-        ps.alert(window, title, message);
-        element.setAttribute("status", msg);
-      }
-      // Remove the dummy, since we installed successfully
-      var type = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION 
-                                              : nsIUpdateItem.TYPE_THEME;
-      gExtensionManager.removeDownload(aURL);
-      break;
-    case nsIXPIProgressDialog.DIALOG_CLOSE:
-      break;
+        // Remove the dummy, since we installed successfully
+        var type = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION
+                                                : nsIUpdateItem.TYPE_THEME;
+        gExtensionManager.removeDownload(aURL);
+        break;
+      case nsIXPIProgressDialog.DIALOG_CLOSE:
+        break;
     }
   },
   
@@ -485,12 +485,12 @@ function onViewDoubleClick(aEvent)
     return;
 
   switch (gWindowState) {
-  case "extensions":
-    gExtensionsViewController.doCommand('cmd_options');
-    break;
-  case "themes":
-    gExtensionsViewController.doCommand('cmd_useTheme');
-    break;
+    case "extensions":
+      gExtensionsViewController.doCommand('cmd_options');
+      break;
+    case "themes":
+      gExtensionsViewController.doCommand('cmd_useTheme');
+      break;
   }
 }
 
@@ -584,77 +584,102 @@ function buildContextMenu(aEvent)
 var gExtensionsDNDObserver =
 {
   _ioServ: null,
-  _filePH: null,
+  _canDrop: false,
   
   _ensureServices: function ()
   {
-    if (!this._ioServ) {
+    if (!this._ioServ)
       this._ioServ = Components.classes["@mozilla.org/network/io-service;1"]
                                .getService(Components.interfaces.nsIIOService);
-      this._filePH = this._ioServ.getProtocolHandler("file")
-                         .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
-    }
   },
-  
-  onDragOver: function (aEvent, aFlavor, aDragSession)
-  {
-    this._ensureServices();
-  
-    aDragSession.canDrop = true;
-    var count = aDragSession.numDropItems;
-    for (var i = 0; i < count; ++i) {
-      var xfer = Components.classes["@mozilla.org/widget/transferable;1"]
-                          .createInstance(Components.interfaces.nsITransferable);
-      xfer.addDataFlavor("text/x-moz-url");
-      aDragSession.getData(xfer, i);
-      
-      var data = { }, length = { };
-      xfer.getTransferData("text/x-moz-url", data, length);
-      var fileURL = data.value.QueryInterface(Components.interfaces.nsISupportsString).data.split("\n")[0];
 
-      var fileURI = this._ioServ.newURI(fileURL, null, null);
-      var url = fileURI.QueryInterface(Components.interfaces.nsIURL);
-      if (url.fileExtension != "jar" && url.fileExtension != "xpi") {
-        aDragSession.canDrop = false;
-        break;
+  // returns a JS object whose properties are used by xpinstall
+  _getDataFromDragSession: function (aDragSession, aPosition)
+  {
+    var fileData = { };
+    // if this fails we do not have valid data to drop
+    try {
+      var xfer = Components.classes["@mozilla.org/widget/transferable;1"]
+                           .createInstance(Components.interfaces.nsITransferable);
+      xfer.addDataFlavor("text/x-moz-url");
+      xfer.addDataFlavor("application/x-moz-file", "nsIFile");
+      aDragSession.getData(xfer, aPosition);
+
+      var flavour = { }, data = { }, length = { };
+      xfer.getAnyTransferData(flavour, data, length);
+      var selectedFlavour = this.getSupportedFlavours().flavourTable[flavour.value];
+      var xferData = new FlavourData(data.value, length.value, selectedFlavour);
+
+      var fileURL = transferUtils.retrieveURLFromData(xferData.data,
+                                                      xferData.flavour.contentType);
+      fileData.fileURL = fileURL;
+
+      var uri = this._ioServ.newURI(fileURL, null, null);
+      var url = uri.QueryInterface(Components.interfaces.nsIURL);
+      fileData.fileName = url.fileName;
+
+      switch (url.fileExtension) {
+        case "xpi":
+          fileData.type = nsIUpdateItem.TYPE_EXTENSION;
+          break;
+        case "jar":
+          fileData.type = nsIUpdateItem.TYPE_THEME;
+          break;
+        default:
+          return null;
       }
     }
+    catch (e) {
+      return null;
+    }
+
+    return fileData;
   },
-  
+
+  canDrop: function (aEvent, aDragSession) { return this._canDrop; },
+
+  onDragEnter: function (aEvent, aDragSession)
+  {
+    this._ensureServices();
+
+    var count = aDragSession.numDropItems;
+    for (var i = 0; i < count; ++i) {
+      var fileData = this._getDataFromDragSession(aDragSession, i);
+      if (!fileData) {
+        this._canDrop = false;
+        return;
+      }
+    }
+    this._canDrop = true;
+  },
+
+  onDragOver: function (aEvent, aFlavor, aDragSession) { },
+
   onDrop: function(aEvent, aXferData, aDragSession)
   {
     this._ensureServices();
     
-    var xpinstallObj = {};
-    var themes = {};
+    var xpinstallObj = { };
+    var themes = { };
     var xpiCount = 0;
     var themeCount = 0;
     
     var count = aDragSession.numDropItems;
     for (var i = 0; i < count; ++i) {
-      var xfer = Components.classes["@mozilla.org/widget/transferable;1"]
-                          .createInstance(Components.interfaces.nsITransferable);
-      xfer.addDataFlavor("text/x-moz-url");
-      aDragSession.getData(xfer, i);
-      
-      var data = { }, length = { };
-      xfer.getTransferData("text/x-moz-url", data, length);
-      var fileURL = data.value.QueryInterface(Components.interfaces.nsISupportsString).data.split("\n")[0];
+      var fileData = this._getDataFromDragSession(aDragSession, i);
+      if (!fileData)
+        return;
 
-      var uri = Components.classes["@mozilla.org/network/io-service;1"]
-                          .getService(Components.interfaces.nsIIOService)
-                          .newURI(fileURL, null, null);
-
-      var url = uri.QueryInterface(Components.interfaces.nsIURL);
-      if (url.fileExtension == "xpi") {
-        xpinstallObj[url.fileName] = fileURL;
+      if (fileData.type == nsIUpdateItem.TYPE_EXTENSION) {
+        xpinstallObj[fileData.fileName] = fileData.fileURL;
         ++xpiCount;
       }
-      else if (url.fileExtension == "jar") {
-        themes[url.fileName] = fileURL;
+      else if (fileData.type == nsIUpdateItem.TYPE_THEME) {
+        themes[fileData.fileName] = fileData.fileURL;
         ++themeCount;
       }
     }
+
     if (xpiCount > 0) 
       InstallTrigger.install(xpinstallObj);
     if (themeCount > 0) {
@@ -668,6 +693,7 @@ var gExtensionsDNDObserver =
     if (!this._flavourSet) {
       this._flavourSet = new FlavourSet();
       this._flavourSet.appendFlavour("text/x-moz-url");
+      this._flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
     }
     return this._flavourSet;
   }
