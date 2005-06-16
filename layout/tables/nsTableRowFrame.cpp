@@ -968,7 +968,6 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
             if (desiredSize.mComputeMEW) {
               cellFrame->SetPass1MaxElementWidth(desiredSize.width, desiredSize.mMaxElementWidth);
               if (desiredSize.mMaxElementWidth > desiredSize.width) {
-                NS_ASSERTION(PR_FALSE, "max element width exceeded desired width");
                 desiredSize.width = desiredSize.mMaxElementWidth;
               }
             }
