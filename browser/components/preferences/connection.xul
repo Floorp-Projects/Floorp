@@ -43,11 +43,13 @@
 <prefwindow id="ConnectionsDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&connectionsDialog.title;"
-            dlgbuttons="accept,cancel"
+            dlgbuttons="accept,cancel,help"
             onbeforeaccept="return gConnectionsDialog.beforeAccept();"
             style="width: &window.width; !important;">
 
-  <prefpane id="ConnectionsDialogPane">
+  <prefpane id="ConnectionsDialogPane"
+            helpTopic="prefs-connection-settings" helpURI="chrome://browser/locale/help/help.rdf">
+
     <preferences>
       <preference id="network.proxy.type"         name="network.proxy.type"         type="int" onchange="gConnectionsDialog.proxyTypeChanged();"/>
       <preference id="network.proxy.http"         name="network.proxy.http"         type="string"/>

@@ -46,7 +46,9 @@
 <overlay id="DownloadsPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneDownloads">
+  <prefpane id="paneDownloads"
+            helpTopic="prefs-downloads" helpURI="chrome://browser/locale/help/help.rdf">
+
     <preferences>
       <preference id="browser.download.useDownloadDir"    name="browser.download.useDownloadDir"    type="bool"/>
       <preference id="browser.download.folderList"        name="browser.download.folderList"        type="int"/>

@@ -46,7 +46,9 @@
 <overlay id="PrivacyPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="panePrivacy" onpaneload="gPrivacyPane.init();">
+  <prefpane id="panePrivacy" onpaneload="gPrivacyPane.init();"
+            helpURI="chrome://browser/locale/help/help.rdf">
+
     <preferences id="privacyPreferences">
       <preference id="browser.history_expire_days"        name="browser.history_expire_days"        type="int"/>
       <preference id="browser.formfill.enable"            name="browser.formfill.enable"            type="bool"/>
@@ -98,12 +100,12 @@
     <tabbox id="privacyPrefs" flex="1"
             onselect="gPrivacyPane.tabSelectionChanged(event);">
       <tabs>
-        <tab label="&itemHistory.label;"/>
-        <tab label="&itemFormData.label;"/>
-        <tab label="&itemPasswords.label;"/>
-        <tab label="&itemDownloads.label;"/>
-        <tab label="&itemCookies.label;"/>
-        <tab label="&itemCache.label;"/>
+        <tab label="&itemHistory.label;"   helpTopic="prefs-history"/>
+        <tab label="&itemFormData.label;"  helpTopic="prefs-saved-forms"/>
+        <tab label="&itemPasswords.label;" helpTopic="prefs-passwords"/>
+        <tab label="&itemDownloads.label;" helpTopic="prefs-download-history"/>
+        <tab label="&itemCookies.label;"   helpTopic="prefs-cookies"/>
+        <tab label="&itemCache.label;"     helpTopic="prefs-cache"/>
       </tabs>
       <tabpanels flex="1">
         <tabpanel orient="vertical">
