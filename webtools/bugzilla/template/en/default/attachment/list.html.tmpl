@@ -73,6 +73,7 @@
           [% IF attachment.ispatch && patchviewerinstalled %]
             | <a href="attachment.cgi?id=[% attachment.attachid %]&amp;action=diff">Diff</a>
           [% END %]
+          [% Hook.process("action") %]
         </td>
       </tr>
     [% END %]
