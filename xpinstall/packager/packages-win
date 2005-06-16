@@ -273,7 +273,6 @@ bin\components\nsDownloadProgressListener.js
 ; svg
 bin\gksvggdiplus.dll
 bin\res\svg.css
-bin\res\svg.properties
 bin\components\dom_svg.xpt
 
 [mail]

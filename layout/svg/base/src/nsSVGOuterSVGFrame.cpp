@@ -351,7 +351,7 @@ AlertMissingGDIPlus()
     return;
 
   nsCOMPtr<nsIStringBundle> sb;
-  sbs->CreateBundle("resource://gre/res/svg.properties", getter_AddRefs(sb));
+  sbs->CreateBundle("chrome://global/locale/svg.properties", getter_AddRefs(sb));
   if (!sb)
     return;
 

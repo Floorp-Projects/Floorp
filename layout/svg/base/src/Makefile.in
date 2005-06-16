@@ -107,11 +107,9 @@ LOCAL_INCLUDES	= \
 
 libs::
 	$(INSTALL) $(srcdir)/svg.css $(DIST)/bin/res
-	$(INSTALL) $(srcdir)/svg.properties $(DIST)/bin/res
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/svg.css $(DESTDIR)$(mozappdir)/res
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/svg.properties $(DESTDIR)$(mozappdir)/res
 
 
 DEFINES += -D_IMPL_NS_LAYOUT

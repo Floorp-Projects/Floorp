@@ -358,5 +358,4 @@ bin\res\table-remove-row.gif
 ; svg
 bin\gksvggdiplus.dll
 bin\res\svg.css
-bin\res\svg.properties
 bin\components\dom_svg.xpt

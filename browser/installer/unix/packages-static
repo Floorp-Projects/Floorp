@@ -270,7 +270,6 @@ bin/res/builtin/platformHTMLBindings.xml
 
 ; svg
 bin/res/svg.css
-bin/res/svg.properties
 bin/components/dom_svg.xpt
 
 ; [Personal Security Manager]
