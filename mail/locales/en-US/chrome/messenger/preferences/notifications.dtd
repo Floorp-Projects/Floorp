@@ -3,6 +3,7 @@
 <!ENTITY preview.label                    "Preview Sound">
 <!ENTITY preview.accesskey                "v">
 <!ENTITY systemsound.label                "System New Mail Sound">
+<!ENTITY systemsoundMac.label             "System Alert Sound">
 <!ENTITY systemsound.accesskey            "y">
 <!ENTITY customsound.label                "Custom .wav file">
 <!ENTITY customsound.accesskey            "C">

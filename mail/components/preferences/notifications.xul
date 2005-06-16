@@ -64,7 +64,12 @@
     <groupbox>
       <caption label="&soundNotification.caption;"/>
         <radiogroup id="newMailNotificationType" preference="mail.biff.play_sound.type" orient="vertical">
-          <radio value="0" label="&systemsound.label;" 
+          <radio value="0" 
+#ifdef XP_MACOSX
+                 label="&systemsoundMac.label;"         
+#else
+                 label="&systemsound.label;" 
+#endif
                  accesskey="&systemsound.accesskey;" id="system"/>
           <radio value="1" label="&customsound.label;" 
                  accesskey="&customsound.accesskey;" id="custom"/>
