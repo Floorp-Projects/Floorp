@@ -1699,27 +1699,22 @@ function loadURI(uri, referrer, postData)
 function BrowserLoadURL(aTriggeringEvent, aPostData)
 {
   var url = gURLBar.value;
-  if (url.match(/^view-source:/)) {
+  if (gBrowser.localName == "tabbrowser" &&
+      aTriggeringEvent && 'altKey' in aTriggeringEvent &&
+      aTriggeringEvent.altKey) {
     handleURLBarRevert();
-    BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null, null);
-  } else {
-    if (gBrowser.localName == "tabbrowser" &&
-        aTriggeringEvent && 'altKey' in aTriggeringEvent &&
-        aTriggeringEvent.altKey) {
-      handleURLBarRevert();
-      content.focus();
-      var t = gBrowser.addTab(url, null, null, aPostData); // open link in new tab
-      gBrowser.selectedTab = t;
-      gURLBar.value = url;
-      aTriggeringEvent.preventDefault();
-      aTriggeringEvent.preventBubble();
-      aTriggeringEvent.preventCapture();
-      aTriggeringEvent.stopPropagation();
-    }
-    else
-      loadURI(url, null, aPostData);
     content.focus();
+    var t = gBrowser.addTab(url, null, null, aPostData); // open link in new tab
+    gBrowser.selectedTab = t;
+    gURLBar.value = url;
+    aTriggeringEvent.preventDefault();
+    aTriggeringEvent.preventBubble();
+    aTriggeringEvent.preventCapture();
+    aTriggeringEvent.stopPropagation();
   }
+  else  
+    loadURI(url, null, aPostData);
+  content.focus();
 }
 
 function SearchLoadURL(aURL, aTriggeringEvent)
