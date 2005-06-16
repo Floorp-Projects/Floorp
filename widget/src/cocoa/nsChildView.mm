@@ -72,9 +72,6 @@
 // category of NSView methods to quiet warnings
 @interface NSView(ChildViewExtensions)
 
-- (NSWindow*)getNativeWindow;
-- (NSMenu*)getContextMenu;
-
 #if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
 - (void)getRectsBeingDrawn:(const NSRect **)rects count:(int *)count;
 - (BOOL)needsToDrawRect:(NSRect)aRect;
@@ -1287,6 +1284,12 @@ NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
 
   if (aIsSynchronous)
     [mView display];
+  else if ([NSView focusView])
+  {
+    // if a view is focussed (i.e. being drawn), then postpone the invalidate so that we
+    // don't lose it.
+    [mView performSelector:@selector(setNeedsDisplayWithValue:) withObject:nil afterDelay:0];
+  }
   else
     [mView setNeedsDisplay:YES];
 
@@ -1300,14 +1303,20 @@ NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 {
-  if ( !mView || !mVisible)
+  if (!mView || !mVisible)
     return NS_OK;
- 
+
   NSRect r;
   ConvertGeckoToCocoaRect ( aRect, r );
   
   if (aIsSynchronous)
     [mView displayRect:r];
+  else if ([NSView focusView])
+  {
+    // if a view is focussed (i.e. being drawn), then postpone the invalidate so that we
+    // don't lose it.
+    [mView performSelector:@selector(setNeedsDisplayWithValue:) withObject:[NSValue valueWithRect:r] afterDelay:0];
+  }
   else
     [mView setNeedsDisplayInRect:r];
   
@@ -2189,25 +2198,6 @@ nsChildView::Idle()
 
 @implementation ChildView
 
--(NSMenu*)menuForEvent:(NSEvent*)theEvent
-{
-  // Fire the context menu event into Gecko.
-  nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convert:theEvent message:NS_CONTEXTMENU toGeckoEvent:&geckoEvent];
-  
-  // send event into Gecko by going directly to the
-  // the widget.
-  mGeckoChild->DispatchMouseEvent(geckoEvent);
-  
-  // Go up our view chain to fetch the correct menu to return.
-  return [self getContextMenu];
-}
-
--(NSMenu*)getContextMenu
-{
-  return [[self superview] getContextMenu];
-}
-
 //
 // initWithGeckoChild:eventSink:
 //
@@ -2215,31 +2205,56 @@ nsChildView::Idle()
 //
 - (id)initWithGeckoChild:(nsChildView*)inChild eventSink:(nsIEventSink*)inSink
 {
-  [super init];
-  
-  mGeckoChild = inChild;
-  mEventSink = inSink;
-  mIsPluginView = NO;
-  mLastKeyEventWasSentToCocoa = NO;
-  mCurEvent = NULL;
+  if ((self = [super init]))
+  {
+    mGeckoChild = inChild;
+    mEventSink = inSink;
+    mIsPluginView = NO;
+    mLastKeyEventWasSentToCocoa = NO;
+    mCurEvent = NULL;
 
-  // See if hack code for enabling and disabling mouse move
-  // events is necessary. Fixed by at least 10.2.8
-  long version = 0;
-  ::Gestalt(gestaltSystemVersion, &version);
-  mToggleMouseMoveEventWatching = (version < 0x00001028);
+    // See if hack code for enabling and disabling mouse move
+    // events is necessary. Fixed by at least 10.2.8
+    long version = 0;
+    ::Gestalt(gestaltSystemVersion, &version);
+    mToggleMouseMoveEventWatching = (version < 0x00001028);
+    
+    // initialization for NSTextInput
+    mMarkedRange.location = NSNotFound;
+    mMarkedRange.length = 0;
+    mSelectedRange.location = NSNotFound;
+    mSelectedRange.length = 0;
+    mInComposition = NO;
+  }
   
-  // initialization for NSTextInput
-  mMarkedRange.location = NSNotFound;
-  mMarkedRange.length = 0;
-  mSelectedRange.location = NSNotFound;
-  mSelectedRange.length = 0;
-  mInComposition = NO;
-
   return self;
 }
 
-- (NSWindow*) getNativeWindow
+- (void)dealloc
+{
+  [super dealloc];    // this sets the current port to _savePort
+  SetPort(NULL);      // this is safe on OS X; it will set the port to
+                      // an empty fallback port.
+}
+
+//
+// -widget
+// mozView method
+//
+// return our gecko child view widget. Note this does not AddRef.
+//
+- (nsIWidget*) widget
+{
+  return NS_STATIC_CAST(nsIWidget*, mGeckoChild);
+}
+
+//
+// -getNativeWindow
+// mozView method
+//
+// get the window that this view is associated with
+//
+- (NSWindow*)getNativeWindow
 {
   NSWindow* currWin = [self window];
   if (currWin)
@@ -2248,17 +2263,35 @@ nsChildView::Idle()
      return mWindow;
 }
 
-- (void) setNativeWindow: (NSWindow*)aWindow
+//
+// -setNativeWindow:
+// mozView method
+//
+// set the NSWindow that this view is associated with (even when not in the view
+// hierarchy).
+//
+- (void)setNativeWindow:(NSWindow*)aWindow
 {
   mWindow = aWindow;
 }
 
-- (void) dealloc
+//
+// -setNeedsDisplayWithValue:
+//
+//
+- (void)setNeedsDisplayWithValue:(NSValue*)inRectValue
 {
-  [super dealloc];    // this sets the current port to _savePort
-  SetPort(NULL);      // this is safe on OS X; it will set the port to
-                      // an empty fallback port.
+  if (inRectValue)
+  {
+    NSRect theRect = [inRectValue rectValue];
+    [self setNeedsDisplayInRect:theRect];
+  }
+  else
+  {
+    [self setNeedsDisplay:YES];
+  }
 }
+
 
 - (NSString*)description
 {
@@ -2483,7 +2516,7 @@ nsChildView::Idle()
   if (!isVisible) {
     return;
   }
-    
+
   // tell gecko to paint.
   // If < 10.3, just paint the rect
   if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_2) {
@@ -2517,7 +2550,7 @@ nsChildView::Idle()
 
   RgnHandle updateRgn = ::NewRgn();
   RectRgn(updateRgn, &updateRect);
-  ::QDFlushPortBuffer((OpaqueGrafPtr *)[self qdPort], updateRgn);
+  ::QDFlushPortBuffer((CGrafPtr)[self qdPort], updateRgn);
   ::DisposeRgn(updateRgn);
 }
 
@@ -2814,6 +2847,25 @@ const PRInt32 kNumLines = 4;
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
 
+-(NSMenu*)menuForEvent:(NSEvent*)theEvent
+{
+  // Fire the context menu event into Gecko.
+  nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
+  [self convert:theEvent message:NS_CONTEXTMENU toGeckoEvent:&geckoEvent];
+  
+  // send event into Gecko by going directly to the
+  // the widget.
+  mGeckoChild->DispatchMouseEvent(geckoEvent);
+  
+  // Go up our view chain to fetch the correct menu to return.
+  return [self getContextMenu];
+}
+
+-(NSMenu*)getContextMenu
+{
+  return [[self superview] getContextMenu];
+}
+
 //
 // -convert:message:toGeckoEvent:
 //
@@ -2850,16 +2902,6 @@ const PRInt32 kNumLines = 4;
 }
 
  
-//
-// -widget
-//
-// return our gecko child view widget. Note this does not AddRef.
-//
-- (nsIWidget*) widget
-{
-  return NS_STATIC_CAST(nsIWidget*, mGeckoChild);
-}
-
 static PRBool ConvertUnicodeToCharCode(PRUnichar inUniChar, unsigned char* outChar)
 {
   UnicodeToTextInfo converterInfo;
