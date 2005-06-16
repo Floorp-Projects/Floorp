@@ -506,6 +506,9 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
 extern JS_PUBLIC_API(JSBool)
 JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj);
 
+extern JS_PUBLIC_API(JSIdArray *)
+JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_GetScopeChain(JSContext *cx);
 

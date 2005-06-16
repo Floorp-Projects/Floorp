@@ -3249,20 +3249,24 @@ js_NewIdArray(JSContext *cx, jsint length)
     JSIdArray *ida;
 
     ida = (JSIdArray *)
-        JS_malloc(cx, sizeof(JSIdArray) + (length - 1) * sizeof(jsval));
+          JS_malloc(cx, sizeof(JSIdArray) + (length-1) * sizeof(jsval));
     if (ida)
         ida->length = length;
     return ida;
 }
 
 JSIdArray *
-js_GrowIdArray(JSContext *cx, JSIdArray *ida, jsint length)
+js_SetIdArrayLength(JSContext *cx, JSIdArray *ida, jsint length)
 {
-    ida = (JSIdArray *)
-        JS_realloc(cx, ida, sizeof(JSIdArray) + (length - 1) * sizeof(jsval));
-    if (ida)
-        ida->length = length;
-    return ida;
+    JSIdArray *rida;
+
+    rida = (JSIdArray *)
+           JS_realloc(cx, ida, sizeof(JSIdArray) + (length-1) * sizeof(jsval));
+    if (!rida)
+        JS_DestroyIdArray(cx, ida);
+    else
+        rida->length = length;
+    return rida;
 }
 
 /* Private type used to iterate over all properties of a native JS object */
