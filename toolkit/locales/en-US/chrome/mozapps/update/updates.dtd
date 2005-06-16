@@ -38,7 +38,7 @@
 
 <!ENTITY  details.link                    "Details">
 <!ENTITY  pause.label                     "Pause">
-<!ENTITY  pause.accesskey                 "P">
+<!ENTITY  pause.accesskey                 "e">
 <!ENTITY  close.label                     "Close">
 <!ENTITY  close.accesskey                 "C">
 

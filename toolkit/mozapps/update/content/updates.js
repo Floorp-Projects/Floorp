@@ -318,6 +318,7 @@ var gDownloadingPage = {
     else
       updates.pauseDownload();
     this._paused = !this._paused;
+    document.getElementById("activeDownloadItem").paused = this._paused;
   },
   
   onClose: function() {
@@ -361,31 +362,35 @@ var gDownloadingPage = {
     // Flip the progressmeter back to "undetermined" mode in case we need to
     // download a new (complete) update patch.
     var active = document.getElementById("activeDownloadItem");
-    active.stopDownload();
-
-    var state = STATE_FAILED;
+    active.state = gUpdates.update.state;
+    
     const NS_BINDING_ABORTED = 0x804b0002;
-    var updates = 
-        Components.classes["@mozilla.org/updates/update-service;1"]
-                  .getService(Components.interfaces.nsIApplicationUpdateService);
-    if (status == Components.results.NS_ERROR_UNEXPECTED) {
-      if (!gUpdates.update.isCompleteUpdate) {
-        // If we were downloading a patch and the patch verification phase 
-        // failed, log this and then commence downloading the complete update.
-        LOG("Verification of patch failed, downloading complete update");
-        gUpdates.update.isCompleteUpdate = true;
-        state = updates.downloadUpdate(gUpdates.update, false);
-      }
-      if (state == STATE_FAILED)
+    switch (status) {
+    case Components.results.NS_ERROR_UNEXPECTED:
+      LOG("DLP:STATE = " + gUpdates.update.state);
+      if (gUpdates.update.state == STATE_FAILED)
         this.showVerificationError();
-      else
+      else {
+        // Verification failed for a partial patch, complete patch is now
+        // downloading so return early and do NOT remove the download listener!
+        
+        // Reset the progress meter to "undertermined" mode so that we don't 
+        // show old progress for the new download of the "complete" patch.
+        active.stopDownload();
         return;
-    }
-    else if (status == NS_BINDING_ABORTED) {
-      state = gUpdates.update.state;
+      }
+      break;
+    case NS_BINDING_ABORTED:
       LOG("gDownloadingPage.onStopRequest: Pausing Download");
+      // Return early, do not remove UI listener since the user may resume
+      // downloading again.
+      return;
     }
-    active.state = state;
+
+    LOG("Removing Listener");
+    var updates = 
+        Components.classes["@mozilla.org/updates/update-service;1"].
+        getService(Components.interfaces.nsIApplicationUpdateService);
     updates.removeDownloadListener(this);
   },
   
