@@ -1489,6 +1489,17 @@ Downloader.prototype = {
         state = STATE_FAILED;
         // TODO: use more informative error code here
         status = Components.results.NS_ERROR_UNEXPECTED;
+        
+        if (!this._update.isCompleteUpdate) {
+          // If we were downloading a patch and the patch verification phase 
+          // failed, log this and then commence downloading the complete update.
+          LOG("Downloader.onStopRequest: Verification of patch failed, downloading complete update");
+          this._update.isCompleteUpdate = true;
+          var rv = this.downloadUpdate(this._update);
+          LOG("US:STATE = " + rv);
+          // This will reset the |.state| property on this._update if a new 
+          // download initiates.
+        }
       }
       this._writeStatusFile(this._getUpdatesDir(), state);
       this._update.state = state;

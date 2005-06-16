@@ -66,7 +66,7 @@
                              mode="undetermined"/>
           <xul:hbox align="center">
             <xul:label class="update-item-status" xbl:inherits="value=status" flex="1" crop="right"/>
-            <xul:button class="update-item-pause" anonid="pause-button"
+            <xul:button class="update-item-pause" anonid="pauseButton"
                         label="&pause.label;" accesskey="&pause.accesskey;"/>
           </xul:hbox>
         </xul:vbox>
@@ -84,6 +84,9 @@
       </field>
       <field name="_modeDeck">
         document.getAnonymousElementByAttribute(this, "anonid", "modeDeck");
+      </field>
+      <field name="_pauseButton">
+        document.getAnonymousElementByAttribute(this, "anonid", "pauseButton");
       </field>
       <method name="setUpdate">
         <parameter name="update"/>
@@ -110,6 +113,7 @@
         <body><![CDATA[
           if (!this._started) {
             this._progressBar.setAttribute("mode", "normal");
+            this._pauseButton.disabled = false;
             this._started = true;
           }
         ]]></body>
@@ -119,10 +123,24 @@
         <body><![CDATA[
           if (this._started) {
             this._progressBar.setAttribute("mode", "undetermined");
+            this._pauseButton.disabled = true;
             this._started = false;
           }
         ]]></body>
       </method>
+      
+      <field name="_paused">false</field>
+      <property name="paused">
+        <getter><![CDATA[
+          return this._paused;
+        ]]></getter>
+        <setter><![CDATA[
+          this._paused = val;
+          var key = val ? "pauseButtonResume" : "pauseButtonPause";
+          this._pauseButton.label = this._strings.getString(key);
+          return val;
+        ]]></setter>
+      </property>
       
       <property name="state">
         <getter><![CDATA[
@@ -159,7 +177,7 @@
     </implementation>
     <handlers>
       <handler event="command"><![CDATA[
-        if (event.originalTarget.getAttribute("anonid") == "pause-button")
+        if (event.originalTarget.getAttribute("anonid") == "pauseButton")
           this.fireEvent("pause");
       ]]></handler>
     </handlers>
