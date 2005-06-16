@@ -5976,11 +5976,14 @@ CopyJSProperties(JSContext *cx, JSObject *aSource, JSObject *aDest)
   // Enumerate all of the properties on aSource and install them on aDest.
 
   JSIdArray *props = ::JS_Enumerate(cx, aSource);
+  if (props) {
+    props = ::JS_EnumerateResolvedStandardClasses(cx, aSource, props);
+  }
   if (!props) {
 #ifdef DEBUG_PAGE_CACHE
-    printf("[no properties]\n");
+    printf("failed to enumerate JS properties\n");
 #endif
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
 #ifdef DEBUG_PAGE_CACHE
