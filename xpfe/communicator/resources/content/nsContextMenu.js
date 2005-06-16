@@ -585,10 +585,12 @@ nsContextMenu.prototype = {
     },
     // Change current window to the URL of the image.
     viewImage : function () {
+        urlSecurityCheck( this.imageURL, document )
         openTopWin( this.imageURL );
     },
     // Change current window to the URL of the background image.
     viewBGImage : function () {
+        urlSecurityCheck( this.bgImageURL, document )
         openTopWin( this.bgImageURL );
     },
     setWallpaper: function() {
