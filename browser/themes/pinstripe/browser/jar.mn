@@ -45,6 +45,6 @@ classic.jar:
   skin/classic/browser/bookmarks/folderarrow.png            (bookmarks/folderarrow.png)
   skin/classic/browser/preferences/Options.png              (preferences/Options.png)
   skin/classic/browser/preferences/preferences.css          (preferences/preferences.css)
-  ./preview.png
-  ./icon.png
+  icon.png
+  preview.png
 

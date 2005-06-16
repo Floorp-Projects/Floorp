@@ -26,5 +26,5 @@ classic.jar:
         skin/classic/browser/bookmarks/Bookmarks-toolbar.png    (bookmarks/Bookmarks-toolbar.png)
         skin/classic/browser/preferences/Options.png            (preferences/Options.png)
         skin/classic/browser/preferences/preferences.css        (preferences/preferences.css)
-        ./icon.png
-        ./preview.png
+        icon.png
+        preview.png
