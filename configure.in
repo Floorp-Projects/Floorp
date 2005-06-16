@@ -505,9 +505,11 @@ darwin*)
         GCC_BUILD=`echo $CXX_VERSION | $PERL -pe 's/^.*build ([^ )]*).*/$1/'`
         changequote([,])
         if test "$GCC_BUILD" = "4061" ; then
-            AC_MSG_WARN([You are attempting to use gcc 4.0.0 build 4061.
-This compiler is unable to build Mozilla.  gcc 3.3 is recommended.
-Run \"sudo gcc_select 3.3\" to switch the system's default compiler.])
+            AC_MSG_ERROR([You are attempting to use Apple gcc 4.0 build 4061.
+This compiler was supplied with Xcode 2.0, and contains bugs that prevent it
+from building Mozilla.
+Either upgrade to Xcode 2.1 or later, or switch the system's default compiler
+to gcc 3.3 by running \"sudo gcc_select 3.3\".])
         fi
     fi
 
@@ -577,6 +579,19 @@ tools are selected during the Xcode/Developer Tools installation.])
   CXXCPP="$CXXCPP -nostdinc -nostdinc++ ${SDK_CXX_INCLUDE} ${SDK_C_INCLUDE}"
 
   LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/${TARGET_ARCH_LIB} -L${MACOS_SDK_DIR}/usr/lib/gcc/${TARGET_ARCH_LIB}/${GCC_VERSION_FULL} -L${MACOS_SDK_DIR}/usr/lib $LIBS"
+
+  dnl Make sure that all of the paths that were just set will work
+  if test ! -d "${MACOS_SDK_DIR}/usr/lib/gcc/${TARGET_ARCH_LIB}/${GCC_VERSION_FULL}"; then
+    if test "$GCC_VERSION" = "4.0" ; then
+      COMPILER_SPECIFIC_MESSAGE="The selected compiler, gcc 4.0, requires SDK 10.3.9 or greater.
+"
+    fi
+    AC_MSG_ERROR([The selected SDK does not support the chosen compiler.
+Either switch to a different compiler or choose a different SDK.
+${COMPILER_SPECIFIC_MESSAGE}You can change the system's default compiler to gcc 3.3 by running
+\"sudo gcc_select 3.3\".
+You can change the target SDK by using a different --with-macos-sdk option.])
+  fi
 fi
 
 dnl Be sure the make we use is GNU make.
