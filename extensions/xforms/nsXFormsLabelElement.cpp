@@ -43,6 +43,7 @@
 
 #include "nsXFormsUtils.h"
 #include "nsXFormsControlStub.h"
+#include "nsXFormsAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXPathResult.h"
@@ -51,10 +52,19 @@
 #include "nsIDOMText.h"
 #include "nsIXTFXMLVisualWrapper.h"
 #include "nsString.h"
+#include "nsIDocument.h"
+#include "nsNetUtil.h"
 
-class nsXFormsLabelElement : public nsXFormsControlStub
+class nsXFormsLabelElement : public nsXFormsControlStub,
+                             public nsIStreamListener,
+                             public nsIInterfaceRequestor
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIINTERFACEREQUESTOR
+
   // nsIXFormsControl
   NS_IMETHOD Refresh();
   NS_IMETHOD IsEventTarget(PRBool *aOK);
@@ -70,16 +80,28 @@ public:
   NS_IMETHOD ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex);
   NS_IMETHOD ChildAppended(nsIDOMNode *aChild);
   NS_IMETHOD ChildRemoved(PRUint32 aIndex);
+  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aSrc);
+  NS_IMETHOD AttributeRemoved(nsIAtom *aName);
 
 #ifdef DEBUG_smaug
   virtual const char* Name() { return "label"; }
 #endif
 private:
   NS_HIDDEN_(void) RefreshLabel();
+  NS_HIDDEN_(void) LoadExternalLabel(const nsAString& aValue);
 
   nsCOMPtr<nsIDOMElement> mOuterSpan;
   nsCOMPtr<nsIDOMElement> mInnerSpan;
+
+  nsCString mSrcAttrText;
+  nsCOMPtr<nsIChannel> mChannel;
 };
+
+NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsLabelElement,
+                             nsXFormsControlStub,
+                             nsIRequestObserver,
+                             nsIStreamListener,
+                             nsIInterfaceRequestor)
 
 NS_IMETHODIMP
 nsXFormsLabelElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
@@ -155,6 +177,43 @@ nsXFormsLabelElement::ChildRemoved(PRUint32 aIndex)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsLabelElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
+{
+  if (aName == nsXFormsAtoms::src) {
+    // If we are currently trying to load an external label, cancel the request.
+    if (mChannel) {
+      mChannel->Cancel(NS_BINDING_ABORTED);
+    }
+
+    LoadExternalLabel(aValue);
+
+    // No need to call RefreshLabel() here, since it is called once the link
+    // target has been read in, during OnStopRequest()
+
+    return NS_OK;
+  }
+
+  return nsXFormsControlStub::AttributeSet(aName, aValue);
+}
+
+NS_IMETHODIMP
+nsXFormsLabelElement::AttributeRemoved(nsIAtom *aName)
+{
+  if (aName == nsXFormsAtoms::src) {
+    // If we are currently trying to load an external label, cancel the request.
+    if (mChannel) {
+      mChannel->Cancel(NS_BINDING_ABORTED);
+    }
+
+    mSrcAttrText.Truncate();
+    RefreshLabel();
+    return NS_OK;
+  }
+
+  return nsXFormsControlStub::AttributeRemoved(aName);
+}
+
 void
 nsXFormsLabelElement::RefreshLabel()
 {
@@ -169,14 +228,17 @@ nsXFormsLabelElement::RefreshLabel()
   nsAutoString labelValue;
   PRBool foundValue = PR_FALSE;
 
+  // handle binding attribute
   if (mBoundNode) {
     nsXFormsUtils::GetNodeValue(mBoundNode, labelValue);
     foundValue = PR_TRUE;
   }
 
-  // if (!foundValue) {
-  //   TODO: src attribute
-  // }
+  // handle linking ('src') attribute
+  if (!foundValue && !mSrcAttrText.IsEmpty()) {
+    labelValue = NS_ConvertUTF8toUTF16(mSrcAttrText);
+    foundValue = PR_TRUE;
+  }
 
   nsCOMPtr<nsIDOMNode> textNode;
   mOuterSpan->GetFirstChild(getter_AddRefs(textNode));
@@ -190,6 +252,57 @@ nsXFormsLabelElement::RefreshLabel()
     // Just show our inline text.
     textNode->SetNodeValue(EmptyString());
     mInnerSpan->RemoveAttribute(NS_LITERAL_STRING("style"));
+  }
+}
+
+void
+nsXFormsLabelElement::LoadExternalLabel(const nsAString& aSrc)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (doc) {
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), aSrc, doc->GetDocumentCharacterSet().get(),
+              doc->GetDocumentURI());
+    if (uri) {
+      if (nsXFormsUtils::CheckSameOrigin(doc->GetDocumentURI(), uri)) {
+        nsCOMPtr<nsILoadGroup> loadGroup;
+        loadGroup = doc->GetDocumentLoadGroup();
+        NS_WARN_IF_FALSE(loadGroup, "No load group!");
+
+        // Using the same load group as the main document and creating
+        // the channel with LOAD_NORMAL flag delays the dispatching of
+        // the 'load' event until label data document has been loaded.
+        NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup,
+                      this, nsIRequest::LOAD_NORMAL);
+
+        if (mChannel) {
+          rv = mChannel->AsyncOpen(this, nsnull);
+          if (NS_FAILED(rv)) {
+            // URI doesn't exist; report error.
+            mChannel = nsnull;
+
+            // XXX Passing |mElement| as |aContext| param to ReportError leads
+            //     to an infinite loop.  Avoid for now.
+            const nsPromiseFlatString& flat = PromiseFlatString(aSrc);
+            const PRUnichar *strings[] = { flat.get() };
+            nsXFormsUtils::ReportError(NS_LITERAL_STRING("labelLink1Error"),
+                                       strings, 1, mElement, nsnull);
+
+            nsCOMPtr<nsIModelElementPrivate> modelPriv =
+                                              nsXFormsUtils::GetModel(mElement);
+            nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
+            nsXFormsUtils::DispatchEvent(model, eEvent_LinkError);
+          }
+        }
+      } else {
+        nsXFormsUtils::ReportError(NS_LITERAL_STRING("labelLinkLoadOrigin"),
+                                   domDoc);
+      }
+    }
   }
 }
 
@@ -208,6 +321,93 @@ nsXFormsLabelElement::IsEventTarget(PRBool *aOK)
   *aOK = PR_FALSE;
   return NS_OK;
 }
+
+// nsIInterfaceRequestor
+
+NS_IMETHODIMP
+nsXFormsLabelElement::GetInterface(const nsIID &aIID, void **aResult)
+{
+  *aResult = nsnull;
+  return QueryInterface(aIID, aResult);
+}
+
+// nsIStreamListener
+
+NS_IMETHODIMP
+nsXFormsLabelElement::OnStartRequest(nsIRequest *aRequest,
+                                     nsISupports *aContext)
+{
+  // Only handle data from text files for now.  Cancel any other requests.
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+  if (channel) {
+    nsCAutoString type;
+    channel->GetContentType(type);
+    if (!type.EqualsLiteral("text/plain"))
+      return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  mSrcAttrText.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsLabelElement::OnDataAvailable(nsIRequest *aRequest,
+                                      nsISupports *aContext,
+                                      nsIInputStream *aInputStream,
+                                      PRUint32 aOffset,
+                                      PRUint32 aCount)
+{
+  nsresult rv;
+  PRUint32 size, bytesRead;
+  char buffer[256];
+
+  while (aCount) {
+    size = PR_MIN(aCount, sizeof(buffer));
+    rv = aInputStream->Read(buffer, size, &bytesRead);
+    if (NS_FAILED(rv))
+      return rv;
+    mSrcAttrText.Append(buffer, bytesRead);
+    aCount -= bytesRead;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsLabelElement::OnStopRequest(nsIRequest *aRequest,
+                                    nsISupports *aContext,
+                                    nsresult aStatusCode)
+{
+  // Done with load request, so null out channel member
+  mChannel = nsnull;
+
+  if (NS_FAILED(aStatusCode)) {
+    // If we received NS_BINDING_ABORTED, then we were cancelled by a later
+    // AttributeSet() call.  Don't do anything and return.
+    if (aStatusCode == NS_BINDING_ABORTED)
+      return NS_OK;
+
+    // XXX Passing |mElement| as |aContext| param to ReportError leads
+    //     to an infinite loop.  Avoid for now.
+    nsAutoString src;
+    mElement->GetAttribute(NS_LITERAL_STRING("src"), src);
+    const PRUnichar *strings[] = { src.get() };
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("labelLink2Error"),
+                               strings, 1, mElement, nsnull);
+
+    nsCOMPtr<nsIModelElementPrivate> modelPriv =
+                                          nsXFormsUtils::GetModel(mElement);
+    nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
+    nsXFormsUtils::DispatchEvent(model, eEvent_LinkError);
+
+    mSrcAttrText.Truncate();
+  }
+
+  RefreshLabel();
+
+  return NS_OK;
+}
+
 
 NS_HIDDEN_(nsresult)
 NS_NewXFormsLabelElement(nsIXTFElement **aResult)
