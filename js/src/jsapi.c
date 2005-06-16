@@ -1432,17 +1432,10 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
 }
 
 static JSBool
-HasOwnProperty(JSContext *cx, JSObject *obj, JSAtom *atom, JSBool *ownp)
+AlreadyHasOwnProperty(JSObject *obj, JSAtom *atom)
 {
-    JSObject *pobj;
-    JSProperty *prop;
-
-    if (!OBJ_LOOKUP_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop))
-        return JS_FALSE;
-    if (prop)
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
-    *ownp = (pobj == obj && prop);
-    return JS_TRUE;
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    return SCOPE_GET_PROPERTY(OBJ_SCOPE(obj), ATOM_TO_JSID(atom)) != NULL;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1450,7 +1443,6 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
 {
     JSRuntime *rt;
     JSAtom *atom;
-    JSBool found;
     uintN i;
 
     CHECK_REQUEST(cx);
@@ -1459,9 +1451,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
 #if JS_HAS_UNDEFINED
     /* Check whether we need to bind 'undefined' and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
-    if (!HasOwnProperty(cx, obj, atom, &found))
-        return JS_FALSE;
-    if (!found &&
+    if (!AlreadyHasOwnProperty(obj, atom) &&
         !OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), JSVAL_VOID,
                              NULL, NULL, JSPROP_PERMANENT, NULL)) {
         return JS_FALSE;
@@ -1471,10 +1461,10 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     /* Initialize any classes that have not been resolved yet. */
     for (i = 0; standard_class_atoms[i].init; i++) {
         atom = OFFSET_TO_ATOM(rt, standard_class_atoms[i].atomOffset);
-        if (!HasOwnProperty(cx, obj, atom, &found))
+        if (!AlreadyHasOwnProperty(obj, atom) &&
+            !standard_class_atoms[i].init(cx, obj)) {
             return JS_FALSE;
-        if (!found && !standard_class_atoms[i].init(cx, obj))
-            return JS_FALSE;
+        }
     }
 
     return JS_TRUE;
@@ -1499,10 +1489,7 @@ static JSIdArray *
 EnumerateIfResolved(JSContext *cx, JSObject *obj, JSAtom *atom, JSIdArray *ida,
                     jsint *ip, JSBool *foundp)
 {
-    if (!HasOwnProperty(cx, obj, atom, foundp)) {
-        JS_DestroyIdArray(cx, ida);
-        return NULL;
-    }
+    *foundp = AlreadyHasOwnProperty(obj, atom);
     if (*foundp) {
         ida = AddAtomToArray(cx, atom, ida, ip);
         if (!ida)
@@ -1512,21 +1499,25 @@ EnumerateIfResolved(JSContext *cx, JSObject *obj, JSAtom *atom, JSIdArray *ida,
 }
 
 JS_PUBLIC_API(JSIdArray *)
-JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj)
+JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj,
+                                    JSIdArray *ida)
 {
     JSRuntime *rt;
-    JSIdArray *ida;
-    JSAtom *atom;
     jsint i, j, k;
+    JSAtom *atom;
     JSBool found;
     JSObjectOp init;
 
     CHECK_REQUEST(cx);
     rt = cx->runtime;
-    ida = js_NewIdArray(cx, 8);
-    if (!ida)
-        return NULL;
-    i = 0;
+    if (ida) {
+        i = ida->length;
+    } else {
+        ida = js_NewIdArray(cx, 8);
+        if (!ida)
+            return NULL;
+        i = 0;
+    }
 
 #if JS_HAS_UNDEFINED
     /* Check whether 'undefined' has been resolved and enumerate it if so. */
