@@ -4878,7 +4878,16 @@ RDFItemUpdater.prototype = {
     LOG("RDFItemUpdater:checkForUpdates sending a request to server for: " + 
         dsURI + ", item = " + aItem.objectSource);        
 
-    var ds = gRDF.GetDataSource(dsURI);
+    try {
+      var ds = gRDF.GetDataSource(dsURI);
+    }
+    catch (e) {
+      LOG("RDFItemUpdater:checkForUpdates: There was an error loading the \r\n" + 
+          " update datasource for: " + dsURI + ", item = " + aItem.id + ", error: " + e);
+      gOS.notifyObservers(aItem, "Update:Extension:Item-Error", e);
+      this._updater._checkForDone();
+      return;
+    }
     var rds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource)
     if (rds.loaded)
       this.onDatasourceLoaded(ds, aItem);
@@ -6048,7 +6057,7 @@ ExtensionsDataSource.prototype = {
     if (id == stripPrefix(RDFURI_DEFAULT_THEME, PREFIX_ITEM_URI)) {
       var jarFile = getFile(KEY_APPDIR, [DIR_CHROME, FILE_DEFAULT_THEME_JAR]);
       var url = "jar:" + getURLSpecFromFile(jarFile) + "!/" + fileName;
-      return gRDF.GetResource(url)
+      return gRDF.GetResource(url);
     }
 
     return fallbackURL ? gRDF.GetResource(fallbackURL) : null;
