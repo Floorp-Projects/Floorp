@@ -1154,7 +1154,6 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI,
         if(NS_FAILED(aURI->GetPath(path)))
             return NS_ERROR_FAILURE;
         if (path.EqualsLiteral("blank")   ||
-            path.IsEmpty()                ||
             path.EqualsLiteral("mozilla") ||
             path.EqualsLiteral("logo")    ||
             path.EqualsLiteral("license") ||
