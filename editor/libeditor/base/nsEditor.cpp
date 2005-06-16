@@ -128,7 +128,8 @@ static PRBool gDontCareForIMEOnFocusPassword = PR_FALSE;
 // Value of "ime.password.onBlur.dontCare"
 static PRBool gDontCareForIMEOnBlurPassword  = PR_FALSE;
 
-nsIParserService* sParserService;
+// Defined in nsEditorRegistration.cpp
+extern nsIParserService *sParserService;
 
 //---------------------------------------------------------------------------
 //
@@ -248,21 +249,6 @@ nsEditor::~nsEditor()
   delete mPhonetic;
  
   NS_IF_RELEASE(mViewManager);
-}
-
-/* static */
-nsresult
-nsEditor::Init()
-{
-  return CallGetService("@mozilla.org/parser/parser-service;1",
-                        &sParserService);
-}
-
-/* static */
-void
-nsEditor::Shutdown()
-{
-  NS_IF_RELEASE(sParserService);
 }
 
 NS_IMPL_ISUPPORTS4(nsEditor, nsIEditor, nsIEditorIMESupport, nsISupportsWeakReference, nsIPhonetic)

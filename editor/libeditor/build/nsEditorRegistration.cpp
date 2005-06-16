@@ -49,6 +49,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsCOMPtr.h"
+#include "nsIParserService.h"
 
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #include "nsHTMLEditor.h"
@@ -85,6 +86,8 @@ EditorShutdownObserver::Observe(nsISupports *aSubject,
 
 static PRBool gInitialized = PR_FALSE;
 
+nsIParserService *sParserService;
+
 PR_STATIC_CALLBACK(nsresult)
 Initialize(nsIModule* self)
 {
@@ -95,7 +98,8 @@ Initialize(nsIModule* self)
 
   gInitialized = PR_TRUE;
 
-  nsresult rv = nsEditor::Init();
+  nsresult rv = CallGetService("@mozilla.org/parser/parser-service;1",
+                               &sParserService);
   if (NS_FAILED(rv)) {
     gInitialized = PR_FALSE;
 
@@ -136,7 +140,8 @@ Shutdown()
   if (!gInitialized)
     return;
 
-  nsEditor::Shutdown();
+  NS_IF_RELEASE(sParserService);
+
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   nsHTMLEditor::Shutdown();
   nsTextServicesDocument::Shutdown();

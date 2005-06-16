@@ -141,6 +141,9 @@ static char namedanchorText[] = "namedanchor";
 
 nsIRangeUtils* nsHTMLEditor::sRangeHelper;
 
+// Defined in nsEditorRegistration.cpp
+extern nsIParserService *sParserService;
+
 // some prototypes for rules creation shortcuts
 nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
 nsresult NS_NewHTMLEditRules(nsIEditRules** aInstancePtrResult);
