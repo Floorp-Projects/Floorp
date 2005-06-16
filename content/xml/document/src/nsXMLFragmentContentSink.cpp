@@ -90,6 +90,7 @@ public:
   NS_IMETHOD SetTargetDocument(nsIDocument* aDocument);
   NS_IMETHOD WillBuildContent();
   NS_IMETHOD DidBuildContent();
+  NS_IMETHOD IgnoreFirstContainer();
 
 protected:
   virtual PRBool SetDocElement(PRInt32 aNameSpaceID, 
@@ -423,3 +424,11 @@ nsXMLFragmentContentSink::DidBuildContent()
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsXMLFragmentContentSink::IgnoreFirstContainer()
+{
+  NS_NOTREACHED("XML isn't as broken as HTML");
+  return NS_ERROR_FAILURE;
+}
+
