@@ -812,8 +812,18 @@ PRBool
 nsXFormsSubmissionElement::CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI)
 {
   // We require same-origin for replace="instance" or XML submission
-  if (mFormat & (ENCODING_XML | ENCODING_MULTIPART_RELATED) || mIsReplaceInstance)
-    return nsXFormsUtils::CheckSameOrigin(aBaseURI, aTestURI);
+  if (mFormat & (ENCODING_XML | ENCODING_MULTIPART_RELATED) || mIsReplaceInstance) {
+
+    // if we don't replace the instance, we allow file:// to send the data
+    PRBool schemeIsFile = PR_FALSE;
+
+    if (!mIsReplaceInstance) {
+      aBaseURI->SchemeIs("file", &schemeIsFile);
+    }
+
+    if (!schemeIsFile)
+      return nsXFormsUtils::CheckSameOrigin(aBaseURI, aTestURI);
+  }
   return PR_TRUE;
 }
 
