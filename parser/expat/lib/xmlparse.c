@@ -2843,11 +2843,14 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
 /* BEGIN MOZILLA CHANGE (Include xmlns attributes in attributes array) */
 #if 0
         if (!--nPrefixes)
+          break;
 #else
-        if (!--nPrefixes && !nXMLNSDeclarations)
+        if (!--nPrefixes && !nXMLNSDeclarations) {
+          i += 2;
+          break;
+        }
 #endif
 /* END MOZILLA CHANGE */
-          break;
       }
 /* BEGIN MOZILLA CHANGE (Include xmlns attributes in attributes array) */
       else if (s[-1] == 3) { /* xmlns attribute */
@@ -2891,8 +2894,10 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
         poolFinish(&tempPool);
         appAtts[i] = s;
 
-        if (!--nXMLNSDeclarations && !nPrefixes)
+        if (!--nXMLNSDeclarations && !nPrefixes) {
+          i += 2;
           break;
+        }
       }
 /* END MOZILLA CHANGE */
       else  /* not prefixed */
