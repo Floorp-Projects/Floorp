@@ -317,8 +317,8 @@ int main(int argc, char* argv[])
     PRBool registerUser   = IsArg(argv[1], "register-user");
     if (registerGlobal || registerUser) {
       if (argc != 2) {
-	Usage();
-	return 1;
+        Usage();
+        return 1;
       }
 
       nsCOMPtr<nsIFile> regDir;
@@ -331,10 +331,10 @@ int main(int argc, char* argv[])
 
     registerGlobal = IsArg(argv[1], "unregister-global");
     registerUser   = IsArg(argv[1], "unregister-user");
-    if (IsArg(argv[1], "unregister-global")) {
+    if (registerGlobal || registerUser) {
       if (argc != 2) {
-	Usage();
-	return 1;
+        Usage();
+        return 1;
       }
 
       nsCOMPtr<nsIFile> regDir;
@@ -347,14 +347,14 @@ int main(int argc, char* argv[])
 
     if (IsArg(argv[1], "find-gre")) {
       if (argc != 3) {
-	Usage();
-	return 1;
+        Usage();
+        return 1;
       }
 
       char version[MAXPATHLEN];
       nsresult rv = GRE_GetGREPathForVersion(argv[2], version, MAXPATHLEN);
       if (NS_FAILED(rv))
-	return 1;
+        return 1;
 
       printf("%s\n", version);
       return 0;
@@ -362,8 +362,8 @@ int main(int argc, char* argv[])
 
     if (IsArg(argv[1], "gre-version")) {
       if (argc != 2) {
-	Usage();
-	return 1;
+        Usage();
+        return 1;
       }
 
       printf("%s\n", GRE_BUILD_ID);

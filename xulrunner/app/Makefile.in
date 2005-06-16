@@ -76,7 +76,11 @@ CPPSRCS = nsXULRunnerApp.cpp
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += nsRegisterGREWin.cpp
 else
+ifneq (,$(filter OS2 Darwin,$(OS_ARCH)))
 CPPSRCS += nsRegisterGREVoid.cpp
+else
+CPPSRCS += nsRegisterGREUnix.cpp
+endif
 endif
 
 ifdef MOZ_ENABLE_LIBXUL
