@@ -57,7 +57,7 @@ function DumpNodeAndChildren(node, prefix)
 			dump(" id=\"" + text + "\"");
 	}
 	
-	if ( node.nodeName == "#text" )
+	if ( node.nodeType == Node.TEXT_NODE )
 		dump(" = \"" + node.data + "\"");
 	
 	dump(">\n");
