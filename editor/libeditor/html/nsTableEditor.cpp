@@ -281,7 +281,7 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode)
         res = tableChild->GetFirstChild(getter_AddRefs(rowNode));
         if (NS_FAILED(res)) return res;
         
-        // We can encounter "__moz_text" nodes here -- must find a row
+        // We can encounter textnodes here -- must find a row
         while (rowNode && !nsHTMLEditUtils::IsTableRow(rowNode))
         {
           nsCOMPtr<nsIDOMNode> nextNode;
@@ -300,7 +300,7 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode)
     }
     // Here if table child was a CAPTION or COLGROUP
     //  or child of a row parent wasn't a row (bad HTML?),
-    //  or first child was a "__moz_text" node
+    //  or first child was a textnode
     // Look in next table child
     nsCOMPtr<nsIDOMNode> nextChild;
     res = tableChild->GetNextSibling(getter_AddRefs(nextChild));
@@ -330,7 +330,7 @@ nsHTMLEditor::GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode **aRowNode)
 
   nsCOMPtr<nsIDOMNode> nextNode;
 
-  // Skip over any "__moz_text" nodes here
+  // Skip over any textnodes here
   while (nextRow && !nsHTMLEditUtils::IsTableRow(nextRow))
   {
     res = nextRow->GetNextSibling(getter_AddRefs(nextNode));
@@ -360,7 +360,7 @@ nsHTMLEditor::GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode **aRowNode)
     res = parentSibling->GetFirstChild(getter_AddRefs(nextRow));
     if (NS_FAILED(res)) return res;
   
-    // We can encounter "__moz_text" nodes here -- must find a row
+    // We can encounter textnodes here -- must find a row
     while (nextRow && !nsHTMLEditUtils::IsTableRow(nextRow))
     {
       res = nextRow->GetNextSibling(getter_AddRefs(nextNode));
@@ -404,7 +404,7 @@ nsHTMLEditor::GetFirstCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode)
 
   while (rowChild && !nsHTMLEditUtils::IsTableCell(rowChild))
   {
-    // Skip over "__moz_text" nodes
+    // Skip over textnodes
     nsCOMPtr<nsIDOMNode> nextChild;
     res = rowChild->GetNextSibling(getter_AddRefs(nextChild));
     if (NS_FAILED(res)) return res;
@@ -436,7 +436,7 @@ nsHTMLEditor::GetNextCellInRow(nsIDOMNode* aCurrentCellNode, nsIDOMNode** aCellN
 
   while (nextCell && !nsHTMLEditUtils::IsTableCell(nextCell))
   {
-    // Skip over "__moz_text" nodes
+    // Skip over textnodes
     nsCOMPtr<nsIDOMNode> nextChild;
     res = nextCell->GetNextSibling(getter_AddRefs(nextChild));
     if (NS_FAILED(res)) return res;
@@ -468,7 +468,7 @@ nsHTMLEditor::GetLastCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode)
 
   while (rowChild && !nsHTMLEditUtils::IsTableCell(rowChild))
   {
-    // Skip over "__moz_text" nodes
+    // Skip over textnodes
     nsCOMPtr<nsIDOMNode> previousChild;
     res = rowChild->GetPreviousSibling(getter_AddRefs(previousChild));
     if (NS_FAILED(res)) return res;

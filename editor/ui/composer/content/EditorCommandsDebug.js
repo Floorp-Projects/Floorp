@@ -472,7 +472,7 @@ sampleJSTransaction.prototype = {
 
   doTransaction: function()
   {
-    if (this.mContainer.nodeName != "#text")
+    if (this.mContainer.nodeType != Node.TEXT_NODE)
     {
       // We're not in a text node, so create one and
       // we'll just insert it at (mContainer, mOffset).

@@ -4253,6 +4253,11 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
 
     *_retval = nsIMsgCompConvertible::No;
 
+    PRInt16 nodeType;
+    rv = node->GetNodeType(&nodeType);
+    if (NS_FAILED(rv))
+      return rv;
+
     nsAutoString element;
     rv = node->GetNodeName(element);
     if (NS_FAILED(rv))
@@ -4260,7 +4265,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
 
     nsCOMPtr<nsIDOMNode> pItem;
     if      (
-              element.LowerCaseEqualsLiteral("#text") ||
+              nodeType == nsIDOMNode::TEXT_NODE ||
               element.LowerCaseEqualsLiteral("br") ||
               element.LowerCaseEqualsLiteral("p") ||
               element.LowerCaseEqualsLiteral("pre") ||

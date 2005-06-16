@@ -4932,12 +4932,14 @@ function findParentNode(node, parentNode)
     node = node.parentNode;
   }
   while (node) {
+    if (node.nodeType == Node.DOCUMENT_NODE) {
+      return null;
+    }
     var nodeName = node.localName;
     if (!nodeName)
       return null;
     nodeName = nodeName.toLowerCase();
-    if (nodeName == "body" || nodeName == "html" ||
-        nodeName == "#document") {
+    if (nodeName == "body" || nodeName == "html") {
       return null;
     }
     if (nodeName == parentNode)
