@@ -46,7 +46,9 @@
 <overlay id="AdvancedPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneAdvanced" onpaneload="gAdvancedPane.init();">
+  <prefpane id="paneAdvanced" onpaneload="gAdvancedPane.init();"
+            helpURI="chrome://browser/locale/help/help.rdf">
+
     <preferences>
       <preference id="accessibility.browsewithcaret"   name="accessibility.browsewithcaret"   type="bool"/>
       <preference id="accessibility.typeaheadfind"     name="accessibility.typeaheadfind"     type="bool"/>
@@ -95,9 +97,9 @@
     <tabbox id="advancedPrefs" flex="1"
             onselect="gAdvancedPane.tabSelectionChanged();">
       <tabs>
-        <tab label="&generalTab.label;"/>
-        <tab label="&updateTab.label;"/>
-        <tab label="&securityTab.label;"/>
+        <tab label="&generalTab.label;" helpTopic="prefs-advanced-general"/>
+        <tab label="&updateTab.label;" helpTopic="prefs-advanced-update"/>
+        <tab label="&securityTab.label;" helpTopic="prefs-advanced-security"/>
       </tabs>
       <tabpanels flex="1">
         <tabpanel orient="vertical">

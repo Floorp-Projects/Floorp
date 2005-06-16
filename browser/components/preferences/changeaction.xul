@@ -45,13 +45,16 @@
 
 <dialog id="ChangeActionDialog" title="&changeAction.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="gChangeActionDialog.init();" 
+        onload="gChangeActionDialog.init();"
+        buttons="accept,cancel,help"
         ondialogaccept="return gChangeActionDialog.onAccept();" 
+        ondialoghelp="openHelp('prefs-download-actions', 'chrome://browser/locale/help/help.rdf');"
         style="width: &window.width;;"
         persist="screenX screenY">
 
   <script type="application/x-javascript" src="chrome://mozapps/content/preferences/actionsshared.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/preferences/changeaction.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   
   <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 

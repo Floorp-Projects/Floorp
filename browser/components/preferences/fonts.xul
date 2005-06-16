@@ -45,14 +45,15 @@
 <prefwindow id="FontsDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&fontsDialog.title;"
-            dlgbuttons="accept,cancel"
+            dlgbuttons="accept,cancel,help"
 #ifdef XP_MACOSX
             style="width: &window.macWidth; !important;">
 #else
             style="width: &window.width; !important;">
 #endif
 
-  <prefpane id="FontsDialogPane">
+  <prefpane id="FontsDialogPane"
+            helpTopic="prefs-fonts-and-colors" helpURI="chrome://browser/locale/help/help.rdf">
   
     <preferences id="fontPreferences">
       <preference id="font.language.group"  name="font.language.group"  type="wstring"/>

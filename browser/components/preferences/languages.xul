@@ -44,10 +44,12 @@
 <prefwindow id="LanguagesDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&languages.customize.Header;"
-            dlgbuttons="accept,cancel"
+            dlgbuttons="accept,cancel,help"
             style="width: &window.width;;">
 
-  <prefpane id="LanguagesDialogPane" onpaneload="gLanguagesDialog.init();">   
+  <prefpane id="LanguagesDialogPane" onpaneload="gLanguagesDialog.init();"
+            helpTopic="prefs-languages" helpURI="chrome://browser/locale/help/help.rdf">
+
     <preferences>
       <preference id="intl.accept_languages" name="intl.accept_languages" type="wstring"/>
       <preference id="pref.browser.language.disable_button.up"

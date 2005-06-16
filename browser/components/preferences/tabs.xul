@@ -46,7 +46,7 @@
 <overlay id="TabsPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneTabs">
+  <prefpane id="paneTabs" helpTopic="prefs-tabs" helpURI="chrome://browser/locale/help/help.rdf">
     <preferences>
       <preference id="browser.link.open_external"      name="browser.link.open_external"      type="int"/>
       <preference id="browser.link.open_newwindow"     name="browser.link.open_newwindow"     type="int"/>

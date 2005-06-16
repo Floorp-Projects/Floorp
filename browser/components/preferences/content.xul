@@ -41,7 +41,9 @@
 <overlay id="ContentPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneContent" onpaneload="gContentPane.init();">
+  <prefpane id="paneContent" onpaneload="gContentPane.init();"
+            helpTopic="prefs-content" helpURI="chrome://browser/locale/help/help.rdf">
+
     <preferences id="contentPreferences">
       <preference id="dom.disable_open_during_load"   name="dom.disable_open_during_load"   type="bool"/>
       <preference id="xpinstall.enabled"              name="xpinstall.enabled"              type="bool"/>

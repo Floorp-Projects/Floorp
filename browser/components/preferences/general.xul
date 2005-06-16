@@ -10,7 +10,8 @@
 <overlay id="GeneralPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
            
-  <prefpane id="paneGeneral" onpaneload="gGeneralPane.init();">
+  <prefpane id="paneGeneral" onpaneload="gGeneralPane.init();"
+            helpTopic="prefs-general" helpURI="chrome://browser/locale/help/help.rdf">
     <script type="application/x-javascript" src="chrome://browser/content/preferences/general.js"/>
 
     <preferences>

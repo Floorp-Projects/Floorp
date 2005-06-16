@@ -47,11 +47,12 @@
 
 <prefwindow id="SanitizeDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            dlgbuttons="accept,cancel"
+            dlgbuttons="accept,cancel,help"
             title="&sanitizeDialog.title;"
             style="width: &window.width; !important;">
 
-  <prefpane id="SanitizeDialogPane">  
+  <prefpane id="SanitizeDialogPane"
+            helpTopic="prefs-sanitize" helpURI="chrome://browser/locale/help/help.rdf">
     <script type="application/x-javascript" src="chrome://browser/content/preferences/sanitize.js"/>
 
     <preferences>
