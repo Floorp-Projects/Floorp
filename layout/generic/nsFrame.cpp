@@ -2783,13 +2783,10 @@ nsresult
 nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
 {
   aResult = aType;
-  if (mContent) {
-    nsIAtom *tag = mContent->Tag();
-    if (tag != nsLayoutAtoms::textTagName) {
-      nsAutoString buf;
-      tag->ToString(buf);
-      aResult.Append(NS_LITERAL_STRING("(") + buf + NS_LITERAL_STRING(")"));
-    }
+  if (mContent && !mContent->IsContentOfType(nsIContent::eTEXT)) {
+    nsAutoString buf;
+    mContent->Tag()->ToString(buf);
+    aResult.Append(NS_LITERAL_STRING("(") + buf + NS_LITERAL_STRING(")"));
   }
   char buf[40];
   PR_snprintf(buf, sizeof(buf), "(%d)", ContentIndexInContainer(this));
@@ -3453,12 +3450,11 @@ nsPeekOffsetStruct nsIFrame::GetExtremeCaretPosition(PRBool aStart)
   if (!content)
     return result;
   
-  // special case: if this is not a __moz_text element,
+  // special case: if this is not a textnode,
   // position the caret to the offset of its parent instead
   // (position the caret to non-text element may make the caret missing)
 
-  nsIAtom* tag = content->Tag();
-  if (tag != nsLayoutAtoms::textTagName) {
+  if (!content->IsContentOfType(nsIContent::eTEXT)) {
     // special case in effect
     nsIContent* parent = content->GetParent();
     NS_ASSERTION(parent,"element has no parent!");

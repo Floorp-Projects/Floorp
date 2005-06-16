@@ -131,6 +131,8 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsILink.h"
 
 #include "nsICharsetAlias.h"
+#include "nsIParser.h"
+
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 // Helper structs for the content->subdoc map

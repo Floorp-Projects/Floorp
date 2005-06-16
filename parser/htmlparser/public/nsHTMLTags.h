@@ -50,7 +50,7 @@ class nsIAtom;
 
  */
 #define HTML_TAG(_tag, _classname) eHTMLTag_##_tag,
-#define HTML_OTHER(_tag, _classname) eHTMLTag_##_tag,
+#define HTML_OTHER(_tag) eHTMLTag_##_tag,
 enum nsHTMLTag {
   /* this enum must be first and must be zero */
   eHTMLTag_unknown = 0,

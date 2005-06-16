@@ -3763,29 +3763,19 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
   return rv;
 }
 
-PRBool 
-nsCSSFrameConstructor::MustGeneratePseudoParent(nsIAtom*         aTag,
-                                                nsIContent*      aContent,
-                                                nsStyleContext*  aStyleContext)
+static PRBool 
+MustGeneratePseudoParent(nsIContent* aContent, nsStyleContext*  aStyleContext)
 {
-  if (!aStyleContext)
+  if (!aStyleContext ||
+      NS_STYLE_DISPLAY_NONE == aStyleContext->GetStyleDisplay()->mDisplay) {
     return PR_FALSE;
-
-  if (NS_STYLE_DISPLAY_NONE == aStyleContext->GetStyleDisplay()->mDisplay)
-    return PR_FALSE;
+  }
     
-  // check tags first
-
-  if ((nsLayoutAtoms::textTagName == aTag)) {
+  if (aContent->IsContentOfType(nsIContent::eTEXT)) {
     return !IsOnlyWhitespace(aContent);
   }
 
-  // exclude tags
-  if ( nsLayoutAtoms::commentTagName == aTag) {
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
+  return !aContent->IsContentOfType(nsIContent::eCOMMENT);
 }
 
 // this is called when a non table related element is a child of a table, row group, 
@@ -3804,9 +3794,7 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsFrameConstructorState& aStat
   nsIFrame* parentFrame = nsnull;
   PRBool hasPseudoParent = PR_FALSE;
 
-  nsIAtom *tag = aContent->Tag();
- 
-  if (MustGeneratePseudoParent(tag, aContent, aStyleContext)) {
+  if (MustGeneratePseudoParent(aContent, aStyleContext)) {
     // this frame may have a pseudo parent, use block frame type to
     // trigger foreign
     rv = GetParentFrame(aTableCreator,
@@ -6762,7 +6750,7 @@ nsCSSFrameConstructor::ResolveStyleContext(nsIFrame*         aParentFrame,
     return styleSet->ResolveStyleFor(aContent, parentStyleContext);
   } else {
 
-    NS_ASSERTION(aContent->Tag() == nsLayoutAtoms::textTagName,
+    NS_ASSERTION(aContent->IsContentOfType(nsIContent::eTEXT),
                  "shouldn't waste time creating style contexts for "
                  "comments and processing instructions");
 
@@ -7467,12 +7455,9 @@ nsCSSFrameConstructor::ConstructFrame(nsFrameConstructorState& aState,
     return rv;
   }
 
-  // Get the element's tag
-  nsIAtom *tag = aContent->Tag();
-
-  // never create frames for comments on PIs
-  if (tag == nsLayoutAtoms::commentTagName ||
-      tag == nsLayoutAtoms::processingInstructionTagName)
+  // never create frames for comments or PIs
+  if (aContent->IsContentOfType(nsIContent::eCOMMENT) ||
+      aContent->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION))
     return rv;
 
   nsRefPtr<nsStyleContext> styleContext;
@@ -7487,8 +7472,8 @@ nsCSSFrameConstructor::ConstructFrame(nsFrameConstructorState& aState,
   }
   // construct the frame
   rv = ConstructFrameInternal(aState, aContent, aParentFrame,
-                              tag, aContent->GetNameSpaceID(), styleContext,
-                              aFrameItems, PR_FALSE);
+                              aContent->Tag(), aContent->GetNameSpaceID(),
+                              styleContext, aFrameItems, PR_FALSE);
   if (NS_SUCCEEDED(rv) && pageBreakAfter) {
     // Construct the page break after
     ConstructPageBreakFrame(aState, aContent, aParentFrame, styleContext,
@@ -11482,7 +11467,7 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsFrameManager*  aFrameManager,
 
   if (aHint && !*aFrame)
   { // if we had a hint, and we didn't get a frame, see if we should try the slow way
-    if (aContent->Tag() == nsLayoutAtoms::textTagName) 
+    if (aContent->IsContentOfType(nsIContent::eTEXT)) 
     {
 #ifdef NOISY_FINDFRAME
       FFWC_slowSearchForText++;

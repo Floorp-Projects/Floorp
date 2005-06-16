@@ -462,15 +462,11 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
       if (!parserService)
         return NS_ERROR_OUT_OF_MEMORY;
 
-      const PRUnichar *name = nsnull;
-
-      parserService->HTMLIdToStringTag(nodeType, &name);
+      nsIAtom *name = parserService->HTMLIdToAtomTag(nodeType);
       NS_ASSERTION(name, "This should not happen!");
 
-      result =
-        mNodeInfoManager->GetNodeInfo(nsDependentString(name), nsnull,
-                                      kNameSpaceID_None,
-                                      getter_AddRefs(nodeInfo));
+      result = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None,
+                                             getter_AddRefs(nodeInfo));
     }
 
     NS_ENSURE_SUCCESS(result, result);
@@ -565,14 +561,12 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
                                           kNameSpaceID_None,
                                           getter_AddRefs(nodeInfo));
         } else {
-          const PRUnichar *name = nsnull;
-          result = parserService->HTMLIdToStringTag(nodeType, &name);
+          nsIAtom *name = parserService->HTMLIdToAtomTag(nodeType);
           NS_ASSERTION(name, "This should not happen!");
 
-          result =
-            mNodeInfoManager->GetNodeInfo(nsDependentString(name), nsnull,
-                                          kNameSpaceID_None,
-                                          getter_AddRefs(nodeInfo));
+          result = mNodeInfoManager->GetNodeInfo(name, nsnull,
+                                                 kNameSpaceID_None,
+                                                 getter_AddRefs(nodeInfo));
         }
 
         NS_ENSURE_SUCCESS(result, result);

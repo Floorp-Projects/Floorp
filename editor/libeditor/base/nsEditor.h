@@ -86,6 +86,7 @@ class RemoveStyleSheetTxn;
 class nsIFile;
 class nsISelectionController;
 class nsIDOMEventReceiver;
+class nsIParserService;
 
 #define kMOZEditorBogusNodeAttr NS_LITERAL_STRING("_moz_editor_bogus_node")
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
@@ -135,7 +136,10 @@ public:
    *  for someone to derive from the nsEditor later? I dont believe so.
    */
   virtual ~nsEditor();
-  
+
+  static nsresult Init();
+  static void Shutdown();
+
 //Interfaces for addref and release and queryinterface
 //NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsEditor
   NS_DECL_ISUPPORTS
@@ -637,7 +641,7 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mDragListenerP;
   nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
 
-  static PRInt32 gInstanceCount;
+  static nsIParserService *sParserService;
 
   friend PRBool NSCanUnload(nsISupports* serviceMgr);
   friend class nsAutoTxnsConserveSelection;

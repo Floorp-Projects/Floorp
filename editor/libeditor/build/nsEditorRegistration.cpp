@@ -39,7 +39,7 @@
 
 #include "nsIGenericFactory.h"
 #include "nsEditorCID.h"
-#include "nsEditor.h"				// for gInstanceCount
+#include "nsEditor.h"
 #include "nsPlaintextEditor.h"
 #include "nsEditorController.h" //CID
 #include "nsIController.h"
@@ -95,6 +95,12 @@ Initialize(nsIModule* self)
 
   gInitialized = PR_TRUE;
 
+  nsresult rv = nsEditor::Init();
+  if (NS_FAILED(rv)) {
+    gInitialized = PR_FALSE;
+
+    return rv;
+  }
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   nsEditProperty::RegisterAtoms();
   nsTextServicesDocument::RegisterAtoms();
@@ -130,6 +136,7 @@ Shutdown()
   if (!gInitialized)
     return;
 
+  nsEditor::Shutdown();
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   nsHTMLEditor::Shutdown();
   nsTextServicesDocument::Shutdown();

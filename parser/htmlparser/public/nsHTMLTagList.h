@@ -176,15 +176,11 @@ HTML_TAG(xmp, Span)
 /* These are not for tags. But they will be included in the nsHTMLTag
    enum anyway */
 
-/* XXX: The second parameters in some of the following entries look
-   like they are just wrong. They should really be NOTUSED. For now,
-   I'm just emulating what nsHTMLContentSink has done all along.
-*/
-HTML_OTHER(text, Span)
-HTML_OTHER(whitespace, Span)
-HTML_OTHER(newline, Span)
-HTML_OTHER(comment, Span)
-HTML_OTHER(entity, Span)
-HTML_OTHER(doctypeDecl, Span)
-HTML_OTHER(markupDecl, Span)
-HTML_OTHER(instruction, Span)
+HTML_OTHER(text)
+HTML_OTHER(whitespace)
+HTML_OTHER(newline)
+HTML_OTHER(comment)
+HTML_OTHER(entity)
+HTML_OTHER(doctypeDecl)
+HTML_OTHER(markupDecl)
+HTML_OTHER(instruction)

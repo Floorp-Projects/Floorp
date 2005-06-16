@@ -1465,11 +1465,8 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
           nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
           if (content)
           {
-            PRInt32 id;
-            parserService->HTMLAtomTagToId(content->Tag(), &id);
-
             PRBool isBlock = PR_FALSE;
-            parserService->IsBlock(id, isBlock);
+            parserService->IsBlock(parserService->HTMLAtomTagToId(content->Tag()), isBlock);
             if (isBlock)
             {
               bResetPromotion = PR_FALSE;
@@ -1551,11 +1548,8 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
           nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
           if (content)
           {
-            PRInt32 id;
-            parserService->HTMLAtomTagToId(content->Tag(), &id);
-
             PRBool isBlock = PR_FALSE;
-            parserService->IsBlock(id, isBlock);
+            parserService->IsBlock(parserService->HTMLAtomTagToId(content->Tag()), isBlock);
             if (isBlock)
             {
               bResetPromotion = PR_FALSE;

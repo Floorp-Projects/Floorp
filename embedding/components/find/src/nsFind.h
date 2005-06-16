@@ -69,11 +69,9 @@ protected:
   static PRInt32 sInstanceCount;
 
   // HTML tags we treat specially
-  static nsIAtom* sTextAtom;
   static nsIAtom* sImgAtom;
   static nsIAtom* sHRAtom;
   // Nodes we skip
-  static nsIAtom* sCommentAtom;
   static nsIAtom* sScriptAtom;
   static nsIAtom* sNoframesAtom;
   static nsIAtom* sSelectAtom;

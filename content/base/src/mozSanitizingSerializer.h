@@ -49,7 +49,7 @@
 #include "nsIAtom.h"
 #include "nsIDocumentEncoder.h"
 #include "nsString.h"
-
+#include "nsIParser.h"
 
 class mozSanitizingHTMLSerializer : public nsIContentSerializer,
                                     public nsIHTMLContentSink,

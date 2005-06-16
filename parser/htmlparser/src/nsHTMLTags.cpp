@@ -266,7 +266,7 @@ static const PRUnichar sHTMLTagUnicodeName_xmp[] =
 
 // static array of unicode tag names
 #define HTML_TAG(_tag, _classname) sHTMLTagUnicodeName_##_tag,
-#define HTML_OTHER(_tag, _classname)
+#define HTML_OTHER(_tag)
 static const PRUnichar* const kTagUnicodeTable[] = {
 #include "nsHTMLTagList.h"
 };
@@ -390,7 +390,7 @@ nsHTMLTags::CaseSensitiveLookupTag(const PRUnichar* aTagName)
 
   PRUint32 tag = NS_PTR_TO_INT32(PL_HashTableLookupConst(gTagTable, aTagName));
 
-  return (nsHTMLTag)tag;
+  return tag == eHTMLTag_unknown ? eHTMLTag_userdefined : (nsHTMLTag)tag;
 }
 
 // static
@@ -429,34 +429,7 @@ nsHTMLTags::LookupTag(const nsAString& aTagName)
 
   buf[i] = 0;
 
-  nsHTMLTag tag = CaseSensitiveLookupTag(buf);
-
-  // hack: this can come out when rickg provides a way for the editor to ask
-  // CanContain() questions without having to first fetch the parsers
-  // internal enum values for a tag name.
-
-  // Hmm, this hack would be faster if we'd put these strings in the
-  // hash table. But maybe it's not worth it...
-
-  if (tag == eHTMLTag_unknown) {
-    // "__moz_text"
-    static const PRUnichar moz_text[] =
-      {'_', '_', 'm', 'o', 'z', '_', 't', 'e', 'x', 't', PRUnichar(0) };
-
-    // "#text"
-    static const PRUnichar text[] =
-      {'#', 't', 'e', 'x', 't', PRUnichar(0) };
-
-    if (nsCRT::strcmp(buf, moz_text) == 0) {
-      tag = eHTMLTag_text;
-    } else if (nsCRT::strcmp(buf, text) == 0) {
-      tag = eHTMLTag_text;
-    } else {
-      tag = eHTMLTag_userdefined;
-    }
-  }
-
-  return tag;
+  return CaseSensitiveLookupTag(buf);
 }
 
 // static

@@ -157,7 +157,8 @@ nsresult TextEditorTest::TestTextProperties()
   TEST_RESULT(result);
   TEST_POINTER(doc.get());
   nsCOMPtr<nsIDOMNodeList>nodeList;
-  nsAutoString textTag(NS_LITERAL_STRING("__moz_text"));
+  // XXX This is broken, text nodes are not elements.
+  nsAutoString textTag(NS_LITERAL_STRING("#text"));
   result = doc->GetElementsByTagName(textTag, getter_AddRefs(nodeList));
   TEST_RESULT(result);
   TEST_POINTER(nodeList.get());

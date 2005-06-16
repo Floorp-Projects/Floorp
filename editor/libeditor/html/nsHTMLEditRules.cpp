@@ -1323,7 +1323,8 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
   if (NS_FAILED(res)) return res;
 
   // dont put text in places that cant have it
-  if (!mHTMLEditor->IsTextNode(selNode) && !mHTMLEditor->CanContainTag(selNode, NS_LITERAL_STRING("__moz_text")))
+  if (!mHTMLEditor->IsTextNode(selNode) &&
+      !mHTMLEditor->CanContainTag(selNode, NS_LITERAL_STRING("#text")))
     return NS_ERROR_FAILURE;
 
   // we need to get the doc

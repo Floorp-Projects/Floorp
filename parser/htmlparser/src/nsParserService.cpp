@@ -62,45 +62,40 @@ nsParserService::~nsParserService()
 
 NS_IMPL_ISUPPORTS1(nsParserService, nsIParserService)
 
-NS_IMETHODIMP
-nsParserService::HTMLAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const
+PRInt32
+nsParserService::HTMLAtomTagToId(nsIAtom* aAtom) const
 {
   nsAutoString tagName;
   aAtom->ToString(tagName);
 
-  *aId = nsHTMLTags::LookupTag(tagName);
-
-  return NS_OK;
+  return nsHTMLTags::LookupTag(tagName);
 }
 
-NS_IMETHODIMP
-nsParserService::HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom,
-                                              PRInt32* aId) const
+PRInt32
+nsParserService::HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom) const
 {
   nsAutoString tagName;
   aAtom->ToString(tagName);
 
-  *aId = nsHTMLTags::CaseSensitiveLookupTag(tagName.get());
-
-  return NS_OK;
+  return nsHTMLTags::CaseSensitiveLookupTag(tagName.get());
 }
 
-NS_IMETHODIMP
-nsParserService::HTMLStringTagToId(const nsAString &aTagName,
-                                   PRInt32* aId) const
+PRInt32
+nsParserService::HTMLStringTagToId(const nsAString& aTag) const
 {
-  *aId = nsHTMLTags::LookupTag(aTagName);
-
-  return NS_OK;
+  return nsHTMLTags::LookupTag(aTag);
 }
 
-NS_IMETHODIMP
-nsParserService::HTMLIdToStringTag(PRInt32 aId,
-                                   const PRUnichar **aTagName) const
+const PRUnichar*
+nsParserService::HTMLIdToStringTag(PRInt32 aId) const
 {
-  *aTagName = nsHTMLTags::GetStringValue((nsHTMLTag)aId);
-
-  return NS_OK;
+  return nsHTMLTags::GetStringValue((nsHTMLTag)aId);
+}
+  
+nsIAtom*
+nsParserService::HTMLIdToAtomTag(PRInt32 aId) const
+{
+  return nsHTMLTags::GetAtom((nsHTMLTag)aId);
 }
 
 NS_IMETHODIMP
@@ -163,7 +158,7 @@ nsParserService::RegisterObserver(nsIElementObserver* aObserver,
   }
 
   while (*aTags) {
-    if(*aTags != eHTMLTag_userdefined && *aTags <= NS_HTML_TAG_MAX) {
+    if (*aTags <= NS_HTML_TAG_MAX) {
       entry->AddObserver(aObserver,*aTags);
     }
     ++aTags;

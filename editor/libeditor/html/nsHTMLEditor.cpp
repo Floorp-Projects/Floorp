@@ -130,6 +130,7 @@
 #include "nsIFrame.h"
 #include "nsIView.h"
 #include "nsIWidget.h"
+#include "nsIParserService.h"
 
 static NS_DEFINE_CID(kCTransitionalDTDCID,  NS_CTRANSITIONAL_DTD_CID);
 
@@ -138,7 +139,6 @@ static char hrefText[] = "href";
 static char anchorTxt[] = "anchor";
 static char namedanchorText[] = "namedanchor";
 
-nsIParserService* nsHTMLEditor::sParserService;
 nsIRangeUtils* nsHTMLEditor::sRangeHelper;
 
 // some prototypes for rules creation shortcuts
@@ -231,7 +231,6 @@ nsHTMLEditor::~nsHTMLEditor()
 void
 nsHTMLEditor::Shutdown()
 {
-  NS_IF_RELEASE(sParserService);
   NS_IF_RELEASE(sRangeHelper);
 }
 
@@ -544,11 +543,6 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
   nsIAtom *tagAtom = GetTag(aNode);
   if (!tagAtom) return NS_ERROR_NULL_POINTER;
 
-  if (!sParserService) {
-    rv = CallGetService("@mozilla.org/parser/parser-service;1", &sParserService);
-    if (NS_FAILED(rv)) return rv;
-  }
-
   // Nodes we know we want to treat as block
   // even though the parser says they're not:
   if (tagAtom==nsEditProperty::body       ||
@@ -568,10 +562,8 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
     return NS_OK;
   }
 
-  PRInt32 id;
-  rv = sParserService->HTMLAtomTagToId(tagAtom, &id);
-  if (NS_FAILED(rv)) return rv;
-  rv = sParserService->IsBlock(id, *aIsBlock);
+  rv = sParserService->IsBlock(sParserService->HTMLAtomTagToId(tagAtom),
+                               *aIsBlock);
 
 #ifdef DEBUG
   // Check this against what we would have said with the old code:
@@ -4283,16 +4275,13 @@ nsHTMLEditor::TagCanContainTag(const nsAString& aParentTag, const nsAString& aCh
   // if parent is a pre, and child is not inline, say "no"
   if ( aParentTag.EqualsLiteral("pre") )
   {
-    if (aChildTag.EqualsLiteral("__moz_text"))
+    if (aChildTag.EqualsLiteral("#text"))
       return PR_TRUE;
-    PRInt32 childTagEnum, parentTagEnum;
-    nsAutoString non_const_childTag(aChildTag);
-    nsAutoString non_const_parentTag(aParentTag);
-    nsresult res = mDTD->StringTagToIntTag(non_const_childTag,&childTagEnum);
-    if (NS_FAILED(res)) return PR_FALSE;
-    res = mDTD->StringTagToIntTag(non_const_parentTag,&parentTagEnum);
-    if (NS_FAILED(res)) return PR_FALSE;
-    if (!mDTD->IsInlineElement(childTagEnum,parentTagEnum))
+
+    PRInt32 childTagEnum = sParserService->HTMLStringTagToId(aChildTag);
+    PRInt32 parentTagEnum = sParserService->HTMLStringTagToId(aParentTag);
+
+    if (!mDTD->IsInlineElement(childTagEnum, parentTagEnum))
       return PR_FALSE;
   }
 */

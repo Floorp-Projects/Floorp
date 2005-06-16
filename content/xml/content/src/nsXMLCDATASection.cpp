@@ -119,7 +119,7 @@ NS_IMPL_RELEASE_INHERITED(nsXMLCDATASection, nsGenericDOMDataNode)
 nsIAtom *
 nsXMLCDATASection::Tag() const
 {
-  return nsLayoutAtoms::textTagName;
+  return nsLayoutAtoms::cdataTagName;
 }
 
 PRBool

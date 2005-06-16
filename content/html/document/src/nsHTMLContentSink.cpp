@@ -188,7 +188,7 @@ NS_NewHTMLNOTUSEDElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 }
 
 #define HTML_TAG(_tag, _classname) NS_NewHTML##_classname##Element,
-#define HTML_OTHER(_tag, _classname) NS_NewHTML##_classname##Element,
+#define HTML_OTHER(_tag) NS_NewHTMLNOTUSEDElement,
 static const contentCreatorCallback sContentCreatorCallbacks[] = {
   NS_NewHTMLUnknownElement,
 #include "nsHTMLTagList.h"
@@ -757,16 +757,14 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
                                void* aThis)
 {
   if (SINK_LOG_TEST(gSinkLogModuleInfo, aBit)) {
-    nsCOMPtr<nsIDTD> dtd;
-    if (mParser) {
-      mParser->GetDTD(getter_AddRefs(dtd));
-      if (!dtd) 
-        return;
-    }
-    const char* cp = 
-      NS_ConvertUCS2toUTF8(dtd->IntTagToStringTag(aTag)).get();
+    nsIParserService *parserService =
+      nsContentUtils::GetParserServiceWeakRef();
+    if (!parserService)
+      return;
+
+    NS_ConvertUTF16toUTF8 tag(parserService->HTMLIdToStringTag(aTag));
     PR_LogPrint("%s: this=%p node='%s' stackPos=%d", 
-                aMsg, aThis, cp, aStackPos);
+                aMsg, aThis, tag.get(), aStackPos);
   }
 }
 #endif
@@ -858,8 +856,6 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
                                      nsGenericHTMLElement* aForm,
                                      nsIDocShell* aDocShell)
 {
-  nsresult rv = NS_OK;
-
   // Find/create atom for the tag name
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
@@ -869,19 +865,22 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     ToLowerCase(tmp);
 
     nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
-    rv = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None,
-                                       getter_AddRefs(nodeInfo));
+    mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None,
+                                  getter_AddRefs(nodeInfo));
   } else {
-    nsCOMPtr<nsIDTD> dtd;
-    rv = mParser->GetDTD(getter_AddRefs(dtd));
-    if (NS_SUCCEEDED(rv)) {
-      rv = mNodeInfoManager->GetNodeInfo(dtd->IntTagToAtom(aNodeType), nsnull,
-                                         kNameSpaceID_None,
-                                         getter_AddRefs(nodeInfo));
-    }
+    nsIParserService *parserService =
+      nsContentUtils::GetParserServiceWeakRef();
+    if (!parserService)
+      return nsnull;
+
+    nsIAtom *name = parserService->HTMLIdToAtomTag(aNodeType);
+    NS_ASSERTION(name, "What? Reverse mapping of id to string broken!!!");
+
+    mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None,
+                                  getter_AddRefs(nodeInfo));
   }
 
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_TRUE(nodeInfo, nsnull);
 
   // Make the content object
   nsGenericHTMLElement* result = MakeContentObject(aNodeType, nodeInfo, aForm,
@@ -906,30 +905,17 @@ NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 
   nsIAtom *name = aNodeInfo->NameAtom();
 
-  PRInt32 id;
+  nsHTMLTag id;
   nsRefPtr<nsGenericHTMLElement> result;
   if (aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
     // Find tag in tag table
-    parserService->HTMLCaseSensitiveAtomTagToId(name, &id);
+    id = nsHTMLTag(parserService->HTMLCaseSensitiveAtomTagToId(name));
 
-    // XXX Temporary fix for
-    //     https://bugzilla.mozilla.org/show_bug.cgi?id=285166
-    if (id > NS_HTML_TAG_MAX) {
-        id = eHTMLTag_userdefined;
-    }
-
-    result = MakeContentObject(nsHTMLTag(id), aNodeInfo, nsnull,
-                               PR_FALSE, PR_FALSE);
+    result = MakeContentObject(id, aNodeInfo, nsnull, PR_FALSE, PR_FALSE);
   }
   else {
     // Find tag in tag table
-    parserService->HTMLAtomTagToId(name, &id);
-
-    // XXX Temporary fix for
-    //     https://bugzilla.mozilla.org/show_bug.cgi?id=285166
-    if (id > NS_HTML_TAG_MAX) {
-        id = eHTMLTag_userdefined;
-    }
+    id = nsHTMLTag(parserService->HTMLAtomTagToId(name));
 
     // Reverse map id to name to get the correct character case in
     // the tag name.
@@ -937,16 +923,13 @@ NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     nsCOMPtr<nsINodeInfo> kungFuDeathGrip;
     nsINodeInfo *nodeInfo = aNodeInfo;
 
-    if (nsHTMLTag(id) != eHTMLTag_userdefined) {
-      const PRUnichar *tag = nsnull;
-      parserService->HTMLIdToStringTag(id, &tag);
+    if (id != eHTMLTag_userdefined) {
+      nsIAtom *tag = parserService->HTMLIdToAtomTag(id);
       NS_ASSERTION(tag, "What? Reverse mapping of id to string broken!!!");
 
-      if (!name->Equals(nsDependentString(tag))) {
-        nsCOMPtr<nsIAtom> atom = do_GetAtom(tag);
-
+      if (name != tag) {
         nsresult rv =
-          nsContentUtils::NameChanged(aNodeInfo, atom,
+          nsContentUtils::NameChanged(aNodeInfo, tag,
                                       getter_AddRefs(kungFuDeathGrip));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -954,8 +937,7 @@ NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
       }
     }
 
-    result = MakeContentObject(nsHTMLTag(id), nodeInfo, nsnull,
-                               PR_FALSE, PR_FALSE);
+    result = MakeContentObject(id, nodeInfo, nsnull, PR_FALSE, PR_FALSE);
   }
 
   return result ? CallQueryInterface(result.get(), aResult)
@@ -1125,16 +1107,18 @@ SinkContext::DidAddContent(nsIContent* aContent, PRBool aDidNotify)
 
 #ifdef NS_DEBUG
     // Tracing code
-    nsCOMPtr<nsIDTD> dtd;
-    mSink->mParser->GetDTD(getter_AddRefs(dtd));
-    nsHTMLTag tag = nsHTMLTag(mStack[mStackPos - 1].mType);
-    nsDependentString str(dtd->IntTagToStringTag(tag));
+    nsIParserService *parserService =
+      nsContentUtils::GetParserServiceWeakRef();
+    if (parserService) {
+      nsHTMLTag tag = nsHTMLTag(mStack[mStackPos - 1].mType);
+      NS_ConvertUTF16toUTF8 str(parserService->HTMLIdToStringTag(tag));
 
-    SINK_TRACE(SINK_TRACE_REFLOW,
-               ("SinkContext::DidAddContent: Insertion notification for "
-                "parent=%s at position=%d and stackPos=%d",
-                NS_LossyConvertUCS2toASCII(str).get(),
-                mStack[mStackPos - 1].mInsertionPoint - 1, mStackPos - 1));
+      SINK_TRACE(SINK_TRACE_REFLOW,
+                 ("SinkContext::DidAddContent: Insertion notification for "
+                  "parent=%s at position=%d and stackPos=%d",
+                  str.get(), mStack[mStackPos - 1].mInsertionPoint - 1,
+                  mStackPos - 1));
+    }
 #endif
 
     mSink->NotifyInsert(parent, aContent,

@@ -665,7 +665,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 // first element we've generated?
             }
         }
-        else if (tag == nsLayoutAtoms::textTagName) {
+        else if (tmplKid->IsContentOfType(nsIContent::eTEXT)) {
             nsCOMPtr<nsIDOMNode> tmplTextNode = do_QueryInterface(tmplKid);
             if (!tmplTextNode) {
                 NS_ERROR("textnode not implementing nsIDOMNode??");

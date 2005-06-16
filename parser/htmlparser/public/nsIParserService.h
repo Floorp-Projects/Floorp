@@ -41,13 +41,12 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsHTMLTags.h"
-#include "nsIParserNode.h"
-#include "nsIParser.h"
-#include "nsVoidArray.h"
 #include "nsIElementObserver.h"
 
-#define NS_PARSER_CONTRACTID_PREFIX                    "@mozilla.org/parser"
-#define NS_PARSERSERVICE_CONTRACTID NS_PARSER_CONTRACTID_PREFIX "/parser-service;1"
+class nsIParser;
+class nsIParserNode;
+
+#define NS_PARSERSERVICE_CONTRACTID "@mozilla.org/parser/parser-service;1"
 
 // {90a92e37-abd6-441b-9b39-4064d98e1ede}
 #define NS_IPARSERSERVICE_IID \
@@ -74,16 +73,66 @@ class nsIParserService : public nsISupports {
  public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPARSERSERVICE_IID)
 
-  NS_IMETHOD HTMLAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const = 0;
+  /**
+   * Looks up the nsHTMLTag enum value corresponding to the tag in aAtom. The
+   * lookup happens case insensitively.
+   *
+   * @param aAtom The tag to look up.
+   *
+   * @return PRInt32 The nsHTMLTag enum value corresponding to the tag in aAtom
+   *                 or eHTMLTag_userdefined if the tag does not correspond to
+   *                 any of the tag nsHTMLTag enum values.
+   */
+  virtual PRInt32 HTMLAtomTagToId(nsIAtom* aAtom) const = 0;
 
-  NS_IMETHOD HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom,
-                                          PRInt32* aId) const = 0;
+  /**
+   * Looks up the nsHTMLTag enum value corresponding to the tag in aAtom.
+   *
+   * @param aAtom The tag to look up.
+   *
+   * @return PRInt32 The nsHTMLTag enum value corresponding to the tag in aAtom
+   *                 or eHTMLTag_userdefined if the tag does not correspond to
+   *                 any of the tag nsHTMLTag enum values.
+   */
+  virtual PRInt32 HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom) const = 0;
 
-  NS_IMETHOD HTMLStringTagToId(const nsAString &aTagName,
-                               PRInt32* aId) const = 0;
+  /**
+   * Looks up the nsHTMLTag enum value corresponding to the tag in aTag. The
+   * lookup happens case insensitively.
+   *
+   * @param aTag The tag to look up.
+   *
+   * @return PRInt32 The nsHTMLTag enum value corresponding to the tag in aTag
+   *                 or eHTMLTag_userdefined if the tag does not correspond to
+   *                 any of the tag nsHTMLTag enum values.
+   */
+  virtual PRInt32 HTMLStringTagToId(const nsAString& aTag) const = 0;
 
-  NS_IMETHOD HTMLIdToStringTag(PRInt32 aId,
-                               const PRUnichar **aTagName) const = 0;
+  /**
+   * Gets the tag corresponding to the nsHTMLTag enum value in aId. The
+   * returned tag will be in lowercase.
+   *
+   * @param aId The nsHTMLTag enum value to get the tag for.
+   *
+   * @return const PRUnichar* The tag corresponding to the nsHTMLTag enum
+   *                          value, or nsnull if the enum value doesn't
+   *                          correspond to a tag (eHTMLTag_unknown,
+   *                          eHTMLTag_userdefined, eHTMLTag_text, ...).
+   */
+  virtual const PRUnichar *HTMLIdToStringTag(PRInt32 aId) const = 0;
+
+  /**
+   * Gets the tag corresponding to the nsHTMLTag enum value in aId. The
+   * returned tag will be in lowercase.
+   *
+   * @param aId The nsHTMLTag enum value to get the tag for.
+   *
+   * @return nsIAtom* The tag corresponding to the nsHTMLTag enum value, or
+   *                  nsnull if the enum value doesn't correspond to a tag
+   *                  (eHTMLTag_unknown, eHTMLTag_userdefined, eHTMLTag_text,
+   *                  ...).
+   */
+  virtual nsIAtom *HTMLIdToAtomTag(PRInt32 aId) const = 0;
   
   NS_IMETHOD HTMLConvertEntityToUnicode(const nsAString& aEntity, 
                                         PRInt32* aUnicode) const = 0;

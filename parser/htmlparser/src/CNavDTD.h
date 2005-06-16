@@ -372,6 +372,8 @@ protected:
     nsresult        HandleSavedTokens(PRInt32 anIndex);
     nsresult        HandleKeyGen(nsIParserNode *aNode);
     PRBool          IsAlternateTag(eHTMLTags aTag);
+    PRBool          IsBlockElement(PRInt32 aTagID, PRInt32 aParentID) const;
+    PRBool          IsInlineElement(PRInt32 aTagID, PRInt32 aParentID) const;
     
     nsDeque             mMisplacedContent;
     nsDeque             mSkippedContent;

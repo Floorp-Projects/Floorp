@@ -61,7 +61,6 @@
 
 #include "nsEditProperty.h"
 #include "nsHTMLCSSUtils.h"
-#include "nsIParserService.h"
 
 #include "nsVoidArray.h"
 
@@ -781,9 +780,6 @@ protected:
 
    // for real-time spelling
    nsCOMPtr<nsITextServicesDocument> mTextServices;
-
-  // Maintain a static parser service ...
-  static nsIParserService* sParserService;
 
   // And a static range utils service
   static nsIRangeUtils* sRangeHelper;

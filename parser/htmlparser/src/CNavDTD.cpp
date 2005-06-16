@@ -2427,40 +2427,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const
 } 
 
 /**
- * Give rest of world access to our tag enums, so that CanContain(), etc,
- * become useful.
- */
-NS_IMETHODIMP CNavDTD::StringTagToIntTag(const nsAString &aTag,
-                                         PRInt32* aIntTag) const
-{
-  *aIntTag = nsHTMLTags::LookupTag(aTag);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(const PRUnichar *)
-CNavDTD::IntTagToStringTag(PRInt32 aIntTag) const
-{
-  const PRUnichar *str_ptr = nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag);
-
-  NS_ASSERTION(str_ptr, "Bad tag enum passed to CNavDTD::IntTagToStringTag()"
-               "!!");
-
-  return str_ptr;
-}
-
-NS_IMETHODIMP_(nsIAtom *)
-CNavDTD::IntTagToAtom(PRInt32 aIntTag) const
-{
-  nsIAtom *atom = nsHTMLTags::GetAtom((nsHTMLTag)aIntTag);
-
-  NS_ASSERTION(atom, "Bad tag enum passed to CNavDTD::IntTagToAtom()"
-               "!!");
-
-  return atom;
-}
-
-/**
  *  This method is called to determine whether or not
  *  the given childtag is a block element.
  *
