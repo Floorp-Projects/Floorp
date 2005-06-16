@@ -92,6 +92,13 @@ if ($status != 0) {
   $errmsg = "$errmsg mailquote.out";
 }
 
+print "Testing misc. HTML output with format=flowed ...\n";
+$status = system("./TestOutput -i text/html -o text/plain -f 2 -w 50 -c OutTestData/mischtml.out OutTestData/mischtml.html");
+if ($status != 0) {
+  print "Misc. HTML with format=flowed test failed.\n";
+  $errmsg = "$errmsg mischtml.out";
+}
+
 print "Testing format=flowed output ...\n";
 $status = system("./TestOutput -i text/html -o text/plain -f 66 -w 50 -c OutTestData/simplemail.out OutTestData/simplemail.html");
 if ($status != 0) {

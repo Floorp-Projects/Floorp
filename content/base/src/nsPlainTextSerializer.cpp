@@ -635,6 +635,10 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     return NS_OK;
   }
 
+  // Reset this so that <blockquote type=cite> doesn't affect the whitespace
+  // above random <pre>s below it.
+  mHasWrittenCiteBlockquote = mHasWrittenCiteBlockquote && aTag == eHTMLTag_pre;
+
   PRBool isInCiteBlockquote = PR_FALSE;
 
   // XXX special-case <blockquote type=cite> so that we don't add additional
@@ -1120,6 +1124,11 @@ nsPlainTextSerializer::DoAddLeaf(const nsIParserNode *aNode, PRInt32 aTag,
   // If we don't want any output, just return
   if (!DoOutput()) {
     return NS_OK;
+  }
+
+  if (aTag != eHTMLTag_whitespace && aTag != eHTMLTag_newline) {
+    // Make sure to reset this, since it's no longer true.
+    mHasWrittenCiteBlockquote = PR_FALSE;
   }
   
   if (mLineBreakDue)
