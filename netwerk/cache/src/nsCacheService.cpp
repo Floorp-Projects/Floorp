@@ -1302,10 +1302,13 @@ nsCacheService::CacheMemoryAvailable()
     if (LL_CMP(bytes, >, LL_MAXINT))
         bytes = LL_MAXINT;
 
-    double bytesD;
-    LL_L2D(bytesD, (PRInt64) bytes);
+    PRUint64 kbytes;
+    LL_SHR(kbytes, bytes, 10);
 
-    double x = log(bytesD)/log(2.0) - 14;
+    double kBytesD;
+    LL_L2D(kBytesD, (PRInt64) kbytes);
+
+    double x = log(kBytesD)/log(2.0) - 14;
     if (x > 0) {
         capacity    = (PRInt32)(x * x - x + 2.001); // add .001 for rounding
         capacity   *= 1024;
