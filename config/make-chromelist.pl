@@ -130,7 +130,10 @@ while (<JARFILE>)
   if (!$1 || $1 eq "")
   {
     $chromefile = File::Spec::Unix->canonpath("$jarfilename/$_");
-    $_ =~ /.*\/(.*?)$/;
+    # match / 0 or 1 time and all chars except / to the end of the string.
+    # this is so it can also handle the case where a file is located in the
+    # root of the base directory (e.g. icon.png).
+    $_ =~ /\/?([^\/]*?)$/;
     $cvsfile = File::Spec::Unix->canonpath($1);
   } else {
     $chromefile = File::Spec::Unix->canonpath("$jarfilename/$chromefile");
