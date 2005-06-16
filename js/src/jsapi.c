@@ -1236,6 +1236,11 @@ static struct {
 #if JS_HAS_SCRIPT_OBJECT
     {js_InitScriptClass,            ATOM_OFFSET(Script)},
 #endif
+#if JS_HAS_XML_SUPPORT
+    {js_InitXMLClass,               ATOM_OFFSET(XML)},
+    {js_InitNamespaceClass,         ATOM_OFFSET(Namespace)},
+    {js_InitQNameClass,             ATOM_OFFSET(QName)},
+#endif
     {NULL,                          0}
 };
 
@@ -1308,13 +1313,10 @@ static JSStdName standard_class_names[] = {
 #endif
 
 #if JS_HAS_XML_SUPPORT
-    {js_InitXMLClass,           LAZILY_PINNED_ATOM(isXMLName)},
-    {js_InitNamespaceClass,     LAZILY_PINNED_ATOM(Namespace)},
-    {js_InitQNameClass,         LAZILY_PINNED_ATOM(QName)},
-    {js_InitQNameClass,         LAZILY_PINNED_ATOM(AnyName)},
-    {js_InitQNameClass,         LAZILY_PINNED_ATOM(AttributeName)},
-    {js_InitXMLClass,           LAZILY_PINNED_ATOM(XML)},
+    {js_InitAnyNameClass,       LAZILY_PINNED_ATOM(AnyName)},
+    {js_InitAttributeNameClass, LAZILY_PINNED_ATOM(AttributeName)},
     {js_InitXMLClass,           LAZILY_PINNED_ATOM(XMLList)},
+    {js_InitXMLClass,           LAZILY_PINNED_ATOM(isXMLName)},
 #endif
 
     {NULL,                      0, NULL}
@@ -1372,7 +1374,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     rt = cx->runtime;
 
 #if JS_HAS_UNDEFINED
-    /* See if we're resolving 'undefined', and define it if so. */
+    /* Check whether we're resolving 'undefined', and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (idstr == ATOM_TO_STRING(atom)) {
         *resolved = JS_TRUE;
@@ -1455,7 +1457,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     rt = cx->runtime;
 
 #if JS_HAS_UNDEFINED
-    /* See if we need to bind 'undefined' and define it if so. */
+    /* Check whether we need to bind 'undefined' and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (!HasOwnProperty(cx, obj, atom, &found))
         return JS_FALSE;
@@ -1476,6 +1478,96 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     }
 
     return JS_TRUE;
+}
+
+static JSIdArray *
+AddAtomToArray(JSContext *cx, JSAtom *atom, JSIdArray *ida, jsint *ip)
+{
+    jsint i = *ip;
+
+    if (i >= ida->length) {
+        ida = js_SetIdArrayLength(cx, ida, ida->length * 2);
+        if (!ida)
+            return NULL;
+    }
+    ida->vector[i] = ATOM_TO_JSID(atom);
+    *ip = i + 1;
+    return ida;
+}
+
+static JSIdArray *
+EnumerateIfResolved(JSContext *cx, JSObject *obj, JSAtom *atom, JSIdArray *ida,
+                    jsint *ip, JSBool *foundp)
+{
+    if (!HasOwnProperty(cx, obj, atom, foundp)) {
+        JS_DestroyIdArray(cx, ida);
+        return NULL;
+    }
+    if (*foundp) {
+        ida = AddAtomToArray(cx, atom, ida, ip);
+        if (!ida)
+            return NULL;
+    }
+    return ida;
+}
+
+JS_PUBLIC_API(JSIdArray *)
+JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj)
+{
+    JSRuntime *rt;
+    JSIdArray *ida;
+    JSAtom *atom;
+    jsint i, j, k;
+    JSBool found;
+    JSObjectOp init;
+
+    CHECK_REQUEST(cx);
+    rt = cx->runtime;
+    ida = js_NewIdArray(cx, 8);
+    if (!ida)
+        return NULL;
+    i = 0;
+
+#if JS_HAS_UNDEFINED
+    /* Check whether 'undefined' has been resolved and enumerate it if so. */
+    atom = rt->atomState.typeAtoms[JSTYPE_VOID];
+    ida = EnumerateIfResolved(cx, obj, atom, ida, &i, &found);
+    if (!ida)
+        return NULL;
+#endif
+
+    /* Enumerate only classes that *have* been resolved. */
+    for (j = 0; standard_class_atoms[j].init; j++) {
+        atom = OFFSET_TO_ATOM(rt, standard_class_atoms[j].atomOffset);
+        ida = EnumerateIfResolved(cx, obj, atom, ida, &i, &found);
+        if (!ida)
+            return NULL;
+
+        if (found) {
+            init = standard_class_atoms[j].init;
+
+            for (k = 0; standard_class_names[k].init; k++) {
+                if (standard_class_names[k].init == init) {
+                    atom = StdNameToAtom(cx, &standard_class_names[k]);
+                    ida = AddAtomToArray(cx, atom, ida, &i);
+                    if (!ida)
+                        return NULL;
+                }
+            }
+
+            if (init == js_InitObjectClass) {
+                for (k = 0; object_prototype_names[k].init; k++) {
+                    atom = StdNameToAtom(cx, &object_prototype_names[k]);
+                    ida = AddAtomToArray(cx, atom, ida, &i);
+                    if (!ida)
+                        return NULL;
+                }
+            }
+        }
+    }
+
+    /* Trim to exact length via js_SetIdArrayLength. */
+    return js_SetIdArrayLength(cx, ida, i);
 }
 
 #undef ATOM_OFFSET
@@ -3028,7 +3120,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
         if (i == ida->length) {
             /* Grow length by factor of 1.5 instead of doubling. */
             jsint newlen = ida->length + (((jsuint)ida->length + 1) >> 1);
-            ida = js_GrowIdArray(cx, ida, newlen);
+            ida = js_SetIdArrayLength(cx, ida, newlen);
             if (!ida)
                 goto error;
             vector = &ida->vector[0];

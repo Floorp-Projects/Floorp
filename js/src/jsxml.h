@@ -45,9 +45,6 @@
 extern const char js_AnyName_str[];
 extern const char js_AttributeName_str[];
 extern const char js_isXMLName_str[];
-extern const char js_Namespace_str[];
-extern const char js_QName_str[];
-extern const char js_XML_str[];
 extern const char js_XMLList_str[];
 
 extern const char js_amp_entity_str[];
@@ -217,10 +214,10 @@ js_GetXMLObject(JSContext *cx, JSXML *xml);
 
 extern JS_FRIEND_DATA(JSXMLObjectOps)   js_XMLObjectOps;
 extern JS_FRIEND_DATA(JSClass)          js_XMLClass;
+extern JS_FRIEND_DATA(JSExtendedClass)  js_NamespaceClass;
 extern JS_FRIEND_DATA(JSExtendedClass)  js_QNameClass;
 extern JS_FRIEND_DATA(JSClass)          js_AttributeNameClass;
 extern JS_FRIEND_DATA(JSClass)          js_AnyNameClass;
-extern JS_FRIEND_DATA(JSExtendedClass)  js_NamespaceClass;
 
 /*
  * Macros to test whether an object or a value is of type "xml" (per typeof).
@@ -235,6 +232,12 @@ js_InitNamespaceClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
 js_InitQNameClass(JSContext *cx, JSObject *obj);
+
+extern JSObject *
+js_InitAttributeNameClass(JSContext *cx, JSObject *obj);
+
+extern JSObject *
+js_InitAnyNameClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
 js_InitXMLClass(JSContext *cx, JSObject *obj);

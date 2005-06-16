@@ -118,9 +118,6 @@ static struct {
 const char js_AnyName_str[]       = "AnyName";
 const char js_AttributeName_str[] = "AttributeName";
 const char js_isXMLName_str[]     = "isXMLName";
-const char js_Namespace_str[]     = "Namespace";
-const char js_QName_str[]         = "QName";
-const char js_XML_str[]           = "XML";
 const char js_XMLList_str[]       = "XMLList";
 const char js_localName_str[]     = "localName";
 const char js_xml_parent_str[]    = "parent";
@@ -7347,17 +7344,21 @@ js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitQNameClass(JSContext *cx, JSObject *obj)
 {
-    if (!JS_InitClass(cx, obj, NULL, &js_AttributeNameClass, AttributeName, 2,
-                      qname_props, qname_methods, NULL, NULL)) {
-        return NULL;
-    }
-
-    if (!JS_InitClass(cx, obj, NULL, &js_AnyNameClass, AnyName, 0,
-                      qname_props, qname_methods, NULL, NULL)) {
-        return NULL;
-    }
-
     return JS_InitClass(cx, obj, NULL, &js_QNameClass.base, QName, 2,
+                        qname_props, qname_methods, NULL, NULL);
+}
+
+JSObject *
+js_InitAttributeNameClass(JSContext *cx, JSObject *obj)
+{
+    return JS_InitClass(cx, obj, NULL, &js_AttributeNameClass, AttributeName, 2,
+                        qname_props, qname_methods, NULL, NULL);
+}
+
+JSObject *
+js_InitAnyNameClass(JSContext *cx, JSObject *obj)
+{
+    return JS_InitClass(cx, obj, NULL, &js_AnyNameClass, AnyName, 0,
                         qname_props, qname_methods, NULL, NULL);
 }
 
@@ -7444,7 +7445,13 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitXMLClasses(JSContext *cx, JSObject *obj)
 {
-    if (!js_InitNamespaceClass(cx, obj) || !js_InitQNameClass(cx, obj))
+    if (!js_InitNamespaceClass(cx, obj))
+        return NULL;
+    if (!js_InitQNameClass(cx, obj))
+        return NULL;
+    if (!js_InitAttributeNameClass(cx, obj))
+        return NULL;
+    if (!js_InitAnyNameClass(cx, obj))
         return NULL;
     return js_InitXMLClass(cx, obj);
 }
