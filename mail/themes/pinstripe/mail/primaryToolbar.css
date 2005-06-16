@@ -178,7 +178,7 @@ toolbar[mode="text"] .toolbarbutton-text {
 }
 
 #button-print:hover:active,
-#button-print[open="true"]  {
+#button-print[open="true"] {
   -moz-image-region: rect(32px 288px 64px 256px);
 }
 
@@ -205,10 +205,6 @@ toolbar[mode="text"] .toolbarbutton-text {
 #button-file > dropmarker {
 	display: none;
 }
-
-#button-file:hover:active {
-  -moz-image-region: rect(32px 352px 64px 320px);
-} 
 
 #button-file:hover:active,
 #button-file[open] {
@@ -278,7 +274,7 @@ toolbar[iconsize="small"] #button-newmsg {
   -moz-image-region: rect(0px 48px 24px 24px);
 }
 
-toolbar[iconsize="small"] #button-newmsg:hover:active  {
+toolbar[iconsize="small"] #button-newmsg:hover:active {
   -moz-image-region: rect(24px 48px 48px 24px);
 } 
 
