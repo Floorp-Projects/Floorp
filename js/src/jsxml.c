@@ -7538,8 +7538,12 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     if (!nsobj)
         return JS_FALSE;
     v = OBJECT_TO_JSVAL(nsobj);
-    if (obj && !OBJ_SET_PROPERTY(cx, obj, JS_DEFAULT_XML_NAMESPACE_ID, &v))
+    if (obj &&
+        !OBJ_DEFINE_PROPERTY(cx, obj, JS_DEFAULT_XML_NAMESPACE_ID, v,
+                             JS_PropertyStub, JS_PropertyStub,
+                             JSPROP_PERMANENT, NULL)) {
         return JS_FALSE;
+    }
     fp->xmlNamespace = nsobj;
     *vp = v;
     return JS_TRUE;
@@ -7563,8 +7567,11 @@ js_SetDefaultXMLNamespace(JSContext *cx, jsval v)
     fp = cx->fp;
     varobj = fp->varobj;
     if (varobj) {
-        if (!OBJ_SET_PROPERTY(cx, varobj, JS_DEFAULT_XML_NAMESPACE_ID, &v))
+        if (!OBJ_DEFINE_PROPERTY(cx, varobj, JS_DEFAULT_XML_NAMESPACE_ID, v,
+                                 JS_PropertyStub, JS_PropertyStub,
+                                 JSPROP_PERMANENT, NULL)) {
             return JS_FALSE;
+        }
     } else {
         JS_ASSERT(fp->fun && !(fp->fun->flags & JSFUN_HEAVYWEIGHT));
     }
