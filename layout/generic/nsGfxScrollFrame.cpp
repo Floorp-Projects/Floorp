@@ -510,10 +510,11 @@ nsHTMLScrollFrame::ReflowScrolledFrame(const ScrollReflowState& aState,
   // setting their mOverflowArea. This is wrong because every frame should
   // always set mOverflowArea. In fact nsObjectFrame and nsFrameFrame don't
   // support the 'outline' property because of this. Rather than fix the world
-  // right now, just fix up the overflow area if necessary.
-  if (!(mInner.mScrolledFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)) {
-    aMetrics->mOverflowArea.SetRect(0, 0, aMetrics->width, aMetrics->height);
-  }
+  // right now, just fix up the overflow area if necessary. Note that we don't
+  // check NS_FRAME_OUTSIDE_CHILDREN because it could be set even though the
+  // overflow area doesn't include the frame bounds.
+  aMetrics->mOverflowArea.UnionRect(aMetrics->mOverflowArea,
+                                    nsRect(0, 0, aMetrics->width, aMetrics->height));
 
   return rv;
 }
@@ -1564,7 +1565,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   if (presContext->IsPaginated()) {
     // allow scrollbars if this is the child of the viewport, because
     // we must be the scrollbars for the print preview window
-    if (!OuterIsRootScrollframe()) {
+    if (!mIsRoot) {
       mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
       return;
     }
@@ -2360,7 +2361,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
   // be re-laid out anyway)
   if (aOldScrollArea.Size() != aScrollArea.Size()
       && nsBoxLayoutState::Dirty == aState.LayoutReason() &&
-      OuterIsRootScrollframe()) {
+      mIsRoot) {
     // Usually there are no fixed children, so don't do anything unless there's
     // at least one fixed child
     nsIFrame* parentFrame = mOuter->GetParent();
@@ -2450,14 +2451,6 @@ nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisibl
       mediator->VisibilityChanged(scrollbar, aVisible);
     }
   }
-}
-
-PRBool
-nsGfxScrollFrameInner::OuterIsRootScrollframe()
-{
-  nsIFrame* parent = mOuter->GetParent();
-  return parent && parent->GetType() == nsLayoutAtoms::viewportFrame &&
-    parent->GetFirstChild(nsnull) == mOuter;
 }
 
 PRInt32
