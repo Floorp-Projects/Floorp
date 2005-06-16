@@ -2609,10 +2609,10 @@ ExtensionManager.prototype = {
           installRDF.append(FILE_INSTALL_MANIFEST);
 
           var id = location.getIDForLocation(entry);
-          if (!installRDF.exists() && 
-              !location.itemIsManagedIndependently(id)) 
+          if (!id || (!installRDF.exists() && 
+                      !location.itemIsManagedIndependently(id)))
             continue;
-          
+
           actualItems[id] = entry;
         }
         else {
