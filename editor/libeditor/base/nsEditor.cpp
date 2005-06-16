@@ -128,7 +128,7 @@ static PRBool gDontCareForIMEOnFocusPassword = PR_FALSE;
 // Value of "ime.password.onBlur.dontCare"
 static PRBool gDontCareForIMEOnBlurPassword  = PR_FALSE;
 
-nsIParserService* nsEditor::sParserService;
+nsIParserService* sParserService;
 
 //---------------------------------------------------------------------------
 //

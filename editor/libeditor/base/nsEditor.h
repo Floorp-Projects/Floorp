@@ -88,6 +88,9 @@ class nsISelectionController;
 class nsIDOMEventReceiver;
 class nsIParserService;
 
+// Defined in nsEditor.cpp
+extern nsIParserService *sParserService;
+
 #define kMOZEditorBogusNodeAttr NS_LITERAL_STRING("_moz_editor_bogus_node")
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
 
@@ -586,8 +589,6 @@ public:
   static nsIAtom *gDeleteTxnName;
 
 protected:
-
-  static nsIParserService *sParserService;
 
   PRUint32        mModCount;		// number of modifications (for undo/redo stack)
   PRUint32        mFlags;		// behavior flags. See nsPlaintextEditor.h for the flags we use.
