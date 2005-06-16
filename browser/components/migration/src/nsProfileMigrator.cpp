@@ -60,7 +60,12 @@
 #include "nsString.h"
 #ifdef XP_WIN
 #include <windows.h>
+#include "nsIWindowsRegKey.h"
+#include "nsILocalFileWin.h"
 #endif
+
+#include "nsAutoPtr.h"
+#include "nsNativeCharsetUtils.h"
 
 #ifndef MAXPATHLEN
 #ifdef _MAX_PATH
@@ -150,18 +155,14 @@ nsProfileMigrator::Import()
 NS_IMPL_ISUPPORTS1(nsProfileMigrator, nsIProfileMigrator)
 
 #ifdef XP_WIN
-typedef struct {
-  WORD wLanguage;
-  WORD wCodePage;
-} LANGANDCODEPAGE;
 
-#define INTERNAL_NAME_FIREBIRD        "Firebird"
-#define INTERNAL_NAME_FIREFOX         "Firefox"
-#define INTERNAL_NAME_PHOENIX         "Phoenix"
+#define INTERNAL_NAME_FIREBIRD        "firebird"
+#define INTERNAL_NAME_FIREFOX         "firefox"
+#define INTERNAL_NAME_PHOENIX         "phoenix"
 #define INTERNAL_NAME_IEXPLORE        "iexplore"
 #define INTERNAL_NAME_SEAMONKEY       "apprunner"
-#define INTERNAL_NAME_DOGBERT         "NETSCAPE"
-#define INTERNAL_NAME_OPERA           "Opera"
+#define INTERNAL_NAME_DOGBERT         "netscape"
+#define INTERNAL_NAME_OPERA           "opera"
 #endif
 
 nsresult
@@ -169,95 +170,92 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
                                                 nsCOMPtr<nsIBrowserProfileMigrator>& bpm)
 {
 #if XP_WIN
-  HKEY hkey;
 
-  const char* kCommandKey = "SOFTWARE\\Classes\\HTTP\\shell\\open\\command";
-  if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, kCommandKey, 0, KEY_READ, &hkey) == ERROR_SUCCESS) {
-    DWORD type;
-    DWORD length = MAX_PATH;
-    unsigned char value[MAX_PATH];
-    if (::RegQueryValueEx(hkey, NULL, 0, &type, value, &length) == ERROR_SUCCESS) {
-      nsCAutoString str; str.Assign((char*)value);
+  nsCOMPtr<nsIWindowsRegKey> regKey = 
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  if (!regKey)
+    return NS_ERROR_FAILURE;
 
-      PRInt32 lastIndex = str.Find(".exe", PR_TRUE);
+  NS_NAMED_LITERAL_STRING(kCommandKey,
+                          "SOFTWARE\\Classes\\HTTP\\shell\\open\\command");
 
-      nsCAutoString filePath;
-      if (str.CharAt(1) == ':') 
-        filePath = Substring(str, 0, lastIndex + 4);
-      else
-        filePath = Substring(str, 1, lastIndex + 3);        
+  if (NS_FAILED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                             kCommandKey, nsIWindowsRegKey::ACCESS_READ)))
+    return NS_ERROR_FAILURE;
 
-      char* strCpy = ToNewCString(filePath);
+  nsAutoString value;
+  if (NS_FAILED(regKey->ReadStringValue(EmptyString(), value)))
+    return NS_ERROR_FAILURE;
 
-      // We want to find out what the default browser is but the path in and of itself
-      // isn't enough. Why? Because sometimes on Windows paths get truncated like so:
-      // C:\PROGRA~1\MOZILL~2\MOZILL~1.EXE
-      // How do we know what product that is? Mozilla or Mozilla Firebird? etc. Mozilla's
-      // file objects do nothing to 'normalize' the path so we need to attain an actual
-      // product descriptor from the file somehow, and in this case it means getting
-      // the "InternalName" field of the file's VERSIONINFO resource. 
-      //
-      // In the file's resource segment there is a VERSIONINFO section that is laid 
-      // out like this:
-      //
-      // VERSIONINFO
-      //   StringFileInfo
-      //     <TranslationID>
-      //       InternalName           "iexplore"
-      //   VarFileInfo
-      //     Translation              <TranslationID>
-      //
-      // By Querying the VERSIONINFO section for its Tranlations, we can find out where
-      // the InternalName lives. (A file can have more than one translation of its 
-      // VERSIONINFO segment, but we just assume the first one). 
-      DWORD dummy;
-      DWORD size = ::GetFileVersionInfoSize(strCpy, &dummy);
-      if (size) {
-        void* ver = malloc(size);  
-        memset(ver, 0, size);
+  PRInt32 lastIndex = value.Find(NS_LITERAL_STRING(".exe"), PR_TRUE);
+  if (lastIndex == kNotFound)
+    return NS_ERROR_FAILURE;
 
-        if (::GetFileVersionInfo(strCpy, 0, size, ver)) {
-          LANGANDCODEPAGE* translate;
-          UINT pageCount;
-          ::VerQueryValue(ver, TEXT("\\VarFileInfo\\Translation"), (void**)&translate, &pageCount);
+  int index = (value.CharAt(1) == ':') ? 0 : 1;
+  nsDependentSubstring filePath(value, index, lastIndex + 4 - index); 
 
-          if (pageCount > 0) {
-            TCHAR subBlock[MAX_PATH];
-            wsprintf(subBlock, TEXT("\\StringFileInfo\\%04x%04x\\InternalName"), translate[0].wLanguage, translate[0].wCodePage);
+  // We want to find out what the default browser is but the path in and of itself
+  // isn't enough. Why? Because sometimes on Windows paths get truncated like so:
+  // C:\PROGRA~1\MOZILL~2\MOZILL~1.EXE
+  // How do we know what product that is? Mozilla or Mozilla Firebird? etc. Mozilla's
+  // file objects do nothing to 'normalize' the path so we need to attain an actual
+  // product descriptor from the file somehow, and in this case it means getting
+  // the "InternalName" field of the file's VERSIONINFO resource. 
+  //
+  // In the file's resource segment there is a VERSIONINFO section that is laid 
+  // out like this:
+  //
+  // VERSIONINFO
+  //   StringFileInfo
+  //     <TranslationID>
+  //       InternalName           "iexplore"
+  //   VarFileInfo
+  //     Translation              <TranslationID>
+  //
+  // By Querying the VERSIONINFO section for its Tranlations, we can find out where
+  // the InternalName lives. (A file can have more than one translation of its 
+  // VERSIONINFO segment, but we just assume the first one). 
 
-            LPVOID internalName = NULL;
-            UINT size;
-            ::VerQueryValue(ver, subBlock, (void**)&internalName, &size);
+  nsCOMPtr<nsILocalFile> lf;
+  NS_NewLocalFile(filePath, PR_TRUE, getter_AddRefs(lf));
+  if (!lf)
+    return NS_ERROR_FAILURE;
 
-            if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_IEXPLORE)) {
-              aKey = "ie";
-              return NS_OK;
-            }
-            if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_SEAMONKEY)) {
-              aKey = "seamonkey";
-              return NS_OK;
-            }
-            if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_DOGBERT)) {
-              aKey = "dogbert";
-              return NS_OK;
-            }
-            if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_OPERA)) {
-              aKey = "opera";
-              return NS_OK;
-            }
-            // Migrate data from any existing Application Data\Phoenix\* installations.
-            if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_FIREBIRD) || 
-                !nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_FIREFOX) ||
-                !nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_PHOENIX)) {
-              aKey = "phoenix";
-              return NS_OK;
-            }
-          }
-        }
-      }
-    }
+  nsCOMPtr<nsILocalFileWin> lfw = do_QueryInterface(lf); 
+  if (!lfw)
+    return NS_ERROR_FAILURE;
+
+  nsAutoString internalName;
+  if (NS_FAILED(lfw->GetVersionInfoField("InternalName", internalName)))
+    return NS_ERROR_FAILURE;
+
+  if (internalName.LowerCaseEqualsLiteral(INTERNAL_NAME_IEXPLORE)) {
+    aKey = "ie";
+    return NS_OK;
   }
+  if (internalName.LowerCaseEqualsLiteral(INTERNAL_NAME_SEAMONKEY)) {
+    aKey = "seamonkey";
+    return NS_OK;
+  }
+  if (internalName.LowerCaseEqualsLiteral(INTERNAL_NAME_DOGBERT)) {
+    aKey = "dogbert";
+    return NS_OK;
+  }
+  if (internalName.LowerCaseEqualsLiteral(INTERNAL_NAME_OPERA)) {
+    aKey = "opera";
+    return NS_OK;
+  }
+
+  // Migrate data from any existing Application Data\Phoenix\* installations.
+  if (internalName.LowerCaseEqualsLiteral(INTERNAL_NAME_FIREBIRD)  ||
+      internalName.LowerCaseEqualsLiteral(INTERNAL_NAME_FIREFOX)  ||
+      internalName.LowerCaseEqualsLiteral(INTERNAL_NAME_PHOENIX)) { 
+    aKey = "phoenix";
+    return NS_OK;
+  }
+
   return NS_ERROR_FAILURE;
+
 #else
   // XXXben - until we figure out what to do here with default browsers on MacOS and
   // GNOME, simply copy data from a previous Seamonkey install. 
