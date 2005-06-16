@@ -47,3 +47,5 @@
                                            
 <!ENTITY  errorManual.label               "You can update &brandShortName; manually by visiting this link
                                            and downloading the latest version:">
+
+<!ENTITY  finished.label                  "Finished">
