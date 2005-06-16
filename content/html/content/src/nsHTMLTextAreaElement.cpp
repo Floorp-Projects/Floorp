@@ -129,9 +129,6 @@ public:
                                   nsEventStatus* aEventStatus);
   virtual void SetFocus(nsPresContext* aPresContext);
 
-  virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
-  virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
-
   virtual void DoneAddingChildren();
   virtual PRBool IsDoneAddingChildren();
 
@@ -628,26 +625,6 @@ PRBool
 nsHTMLTextAreaElement::IsDoneAddingChildren()
 {
   return mDoneAddingChildren;
-}
-
-nsresult
-nsHTMLTextAreaElement::GetInnerHTML(nsAString& aInnerHTML)
-{
-  GetContentsAsText(aInnerHTML);
-  return NS_OK;
-}
-
-nsresult
-nsHTMLTextAreaElement::SetInnerHTML(const nsAString& aInnerHTML)
-{
-  // XXXbz we can't use the normal SetInnerHTML because the parser
-  // thinks we're a leaf, what with the whole CollectSkippedContent
-  // mess.
-  nsresult rv = ReplaceContentsWithText(aInnerHTML, PR_TRUE);
-  if (NS_SUCCEEDED(rv) && !mValueChanged) {
-    Reset();
-  }
-  return rv;
 }
 
 // Controllers Methods
