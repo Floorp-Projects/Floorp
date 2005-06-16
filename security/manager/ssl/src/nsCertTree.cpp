@@ -934,10 +934,14 @@ NS_IMETHODIMP nsCertTree::IsSorted(PRBool *_retval)
   return NS_OK;
 }
 
+#define RETURN_NOTHING
+
 void 
 nsCertTree::CmpInitCriterion(nsIX509Cert *cert, CompareCacheHashEntry *entry,
                              sortCriterion crit, PRInt32 level)
 {
+  NS_ENSURE_TRUE( (cert!=0 && entry!=0), RETURN_NOTHING );
+
   entry->mCritInit[level] = PR_TRUE;
   nsXPIDLString &str = entry->mCrit[level];
   
@@ -989,6 +993,8 @@ nsCertTree::CmpByCrit(nsIX509Cert *a, CompareCacheHashEntry *ace,
                       nsIX509Cert *b, CompareCacheHashEntry *bce, 
                       sortCriterion crit, PRInt32 level)
 {
+  NS_ENSURE_TRUE( (a!=0 && ace!=0 && b!=0 && bce!=0), 0 );
+
   if (!ace->mCritInit[level]) {
     CmpInitCriterion(a, ace, crit, level);
   }
@@ -1016,6 +1022,8 @@ PRInt32
 nsCertTree::CmpBy(void *cache, nsIX509Cert *a, nsIX509Cert *b, 
                   sortCriterion c0, sortCriterion c1, sortCriterion c2)
 {
+  NS_ENSURE_TRUE( (cache!=0 && a!=0 && b!=0), 0 );
+
   if (a == b)
     return 0;
 
