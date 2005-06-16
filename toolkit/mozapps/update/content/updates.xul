@@ -159,7 +159,7 @@
   </wizardpage>
   
   <wizardpage id="finished" pageid="finished" align="start">
-    <label>Finished</label>
+    <label>&finished.label;</label>
   </wizardpage>
   
 </wizard>
