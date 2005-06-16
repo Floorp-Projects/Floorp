@@ -587,6 +587,8 @@ public:
 
 protected:
 
+  static nsIParserService *sParserService;
+
   PRUint32        mModCount;		// number of modifications (for undo/redo stack)
   PRUint32        mFlags;		// behavior flags. See nsPlaintextEditor.h for the flags we use.
   
@@ -640,8 +642,6 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mCompositionListenerP;
   nsCOMPtr<nsIDOMEventListener> mDragListenerP;
   nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
-
-  static nsIParserService *sParserService;
 
   friend PRBool NSCanUnload(nsISupports* serviceMgr);
   friend class nsAutoTxnsConserveSelection;
