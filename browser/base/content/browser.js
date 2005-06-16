@@ -4339,10 +4339,12 @@ nsContextMenu.prototype = {
     },
     // Change current window to the URL of the image.
     viewImage : function (e) {
+        urlSecurityCheck( this.imageURL, document )
         openUILink( this.imageURL, e );
     },
     // Change current window to the URL of the background image.
     viewBGImage : function (e) {
+        urlSecurityCheck( this.bgImageURL, document )
         openUILink( this.bgImageURL, e );
     },
     setWallpaper: function() {
