@@ -62,9 +62,12 @@ nsPrintOptionsWin::~nsPrintOptionsWin()
 /* nsIPrintSettings CreatePrintSettings (); */
 nsresult nsPrintOptionsWin::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
+  *_retval = nsnull;
   nsPrintSettingsWin* printSettings = new nsPrintSettingsWin(); // does not initially ref count
-  NS_ASSERTION(printSettings, "Can't be NULL!");
+  NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);
 
-  return printSettings->QueryInterface(NS_GET_IID(nsIPrintSettings), (void**)_retval); // ref counts
+  NS_ADDREF(*_retval = printSettings); // ref count
+
+  return NS_OK;
 }
 
