@@ -69,7 +69,6 @@ LAYOUT_ATOM(tty, "tty")
 LAYOUT_ATOM(tv, "tv")
 
   // Alphabetical list of standard name space prefixes
-LAYOUT_ATOM(htmlNameSpace, "html")
 LAYOUT_ATOM(xmlNameSpace, "xml")
 LAYOUT_ATOM(xmlnsNameSpace, "xmlns")
 
@@ -85,9 +84,10 @@ LAYOUT_ATOM(overflowList, "Overflow-list")
 LAYOUT_ATOM(overflowOutOfFlowList, "OverflowOutOfFlow-list")
 LAYOUT_ATOM(popupList, "Popup-list")
 
-LAYOUT_ATOM(commentTagName, "__moz_comment")
-LAYOUT_ATOM(textTagName, "__moz_text")
-LAYOUT_ATOM(processingInstructionTagName, "__moz_pi")
+LAYOUT_ATOM(commentTagName, "#comment")
+LAYOUT_ATOM(textTagName, "#text")
+LAYOUT_ATOM(cdataTagName, "#cdata-section")
+LAYOUT_ATOM(processingInstructionTagName, "#processing-instruction")
 LAYOUT_ATOM(documentFragmentNodeName, "#document-fragment")
 
   // Alphabetical list of frame types

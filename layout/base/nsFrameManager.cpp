@@ -385,14 +385,12 @@ nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent)
       if (index > 0)  // no use looking if it's the first child
       {
         nsIContent *prevSibling;
-        nsIAtom *tag;
         do {
           prevSibling = parent->GetChildAt(--index);
-          tag = prevSibling->Tag();
         } while (index &&
-                 (tag == nsLayoutAtoms::textTagName ||
-                  tag == nsLayoutAtoms::commentTagName ||
-                  tag == nsLayoutAtoms::processingInstructionTagName));
+                 (prevSibling->IsContentOfType(nsIContent::eTEXT) ||
+                  prevSibling->IsContentOfType(nsIContent::eCOMMENT) ||
+                  prevSibling->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION)));
         if (prevSibling) {
           entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
                           PL_DHashTableOperate(&mPrimaryFrameMap, prevSibling,

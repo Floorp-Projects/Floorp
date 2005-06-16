@@ -447,10 +447,8 @@ NS_NewFindContentIterator(PRBool aFindBackward,
 
 // Sure would be nice if we could just get these from somewhere else!
 PRInt32 nsFind::sInstanceCount = 0;
-nsIAtom* nsFind::sTextAtom = nsnull;
 nsIAtom* nsFind::sImgAtom = nsnull;
 nsIAtom* nsFind::sHRAtom = nsnull;
-nsIAtom* nsFind::sCommentAtom = nsnull;
 nsIAtom* nsFind::sScriptAtom = nsnull;
 nsIAtom* nsFind::sNoframesAtom = nsnull;
 nsIAtom* nsFind::sSelectAtom = nsnull;
@@ -468,10 +466,8 @@ nsFind::nsFind()
   // Initialize the atoms if they aren't already:
   if (sInstanceCount <= 0)
   {
-    sTextAtom = NS_NewAtom("__moz_text");
     sImgAtom = NS_NewAtom("img");
     sHRAtom = NS_NewAtom("hr");
-    sCommentAtom = NS_NewAtom("__moz_comment");
     sScriptAtom = NS_NewAtom("script");
     sNoframesAtom = NS_NewAtom("noframes");
     sSelectAtom = NS_NewAtom("select");
@@ -486,10 +482,8 @@ nsFind::~nsFind()
 {
   if (sInstanceCount <= 1)
   {
-    NS_IF_RELEASE(sTextAtom);
     NS_IF_RELEASE(sImgAtom);
     NS_IF_RELEASE(sHRAtom);
-    NS_IF_RELEASE(sCommentAtom);
     NS_IF_RELEASE(sScriptAtom);
     NS_IF_RELEASE(sNoframesAtom);
     NS_IF_RELEASE(sSelectAtom);
@@ -806,11 +800,8 @@ PRBool nsFind::IsBlockNode(nsIContent* aContent)
       return PR_FALSE;
   }
 
-  PRInt32 id;
-  mParserService->HTMLAtomTagToId(atom, &id);
-
   PRBool isBlock = PR_FALSE;
-  mParserService->IsBlock(id, isBlock);
+  mParserService->IsBlock(mParserService->HTMLAtomTagToId(atom), isBlock);
   return isBlock;
 }
 
@@ -820,7 +811,7 @@ PRBool nsFind::IsTextNode(nsIDOMNode* aNode)
   // also implements that interface.
   nsCOMPtr<nsIContent> content (do_QueryInterface(aNode));
 
-  return content && content->Tag() == sTextAtom;
+  return content && content->IsContentOfType(nsIContent::eTEXT);
 }
 
 PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
@@ -856,10 +847,9 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
 
   // We may not need to skip comment nodes,
   // now that IsTextNode distinguishes them from real text nodes.
-  return (atom == sCommentAtom ||
+  return (aContent->IsContentOfType(nsIContent::eCOMMENT) ||
           (aContent->IsContentOfType(nsIContent::eHTML) &&
            (atom == sScriptAtom ||
-            atom == sCommentAtom ||
             atom == sNoframesAtom ||
             atom == sSelectAtom)));
 
@@ -874,7 +864,7 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
   {
     atom = content->Tag();
 
-    if (atom == sCommentAtom ||
+    if (aContent->IsContentOfType(nsIContent::eCOMMENT) ||
         (content->IsContentOfType(nsIContent::eHTML) &&
          (atom == sScriptAtom ||
           atom == sNoframesAtom ||

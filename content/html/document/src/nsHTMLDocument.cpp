@@ -3079,18 +3079,15 @@ nsHTMLDocument::RemoveFromIdTable(nsIContent *aContent)
 nsresult
 nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent)
 {
-  nsIAtom *tag = aContent->Tag();
-
-  if (tag == nsLayoutAtoms::textTagName) {
+  if (aContent->IsContentOfType(nsIContent::eTEXT)) {
     // Text nodes are not named items nor can they have children.
-
     return NS_OK;
   }
 
   nsAutoString value;
   nsresult rv = NS_OK;
 
-  if (!IsXHTML() && IsNamedItem(aContent, tag, value)) {
+  if (!IsXHTML() && IsNamedItem(aContent, aContent->Tag(), value)) {
     rv = RemoveFromNameTable(value, aContent);
 
     if (NS_FAILED(rv)) {
@@ -3116,17 +3113,14 @@ nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent)
 nsresult
 nsHTMLDocument::RegisterNamedItems(nsIContent *aContent)
 {
-  nsIAtom *tag = aContent->Tag();
-
-  if (tag == nsLayoutAtoms::textTagName) {
+  if (aContent->IsContentOfType(nsIContent::eTEXT)) {
     // Text nodes are not named items nor can they have children.
-
     return NS_OK;
   }
 
   nsAutoString value;
 
-  if (!IsXHTML() && IsNamedItem(aContent, tag, value)) {
+  if (!IsXHTML() && IsNamedItem(aContent, aContent->Tag(), value)) {
     UpdateNameTableEntry(value, aContent);
   }
 
@@ -3162,15 +3156,15 @@ FindNamedItems(const nsAString& aName, nsIContent *aContent,
 
   nsIAtom *tag = aContent->Tag();
 
-  if (tag == nsLayoutAtoms::textTagName) {
+  if (aContent->IsContentOfType(nsIContent::eTEXT)) {
     // Text nodes are not named items nor can they have children.
-
     return;
   }
 
   nsAutoString value;
 
-  if (!aIsXHTML && IsNamedItem(aContent, tag, value) && value.Equals(aName)) {
+  if (!aIsXHTML && IsNamedItem(aContent, aContent->Tag(), value) &&
+      value.Equals(aName)) {
     aEntry.mContentList->AppendElement(aContent);
   }
 

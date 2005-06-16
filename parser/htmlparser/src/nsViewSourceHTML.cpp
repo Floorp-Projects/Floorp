@@ -873,51 +873,6 @@ PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
 }
 
 /**
- * Give rest of world access to our tag enums, so that CanContain(), etc,
- * become useful.
- */
-NS_IMETHODIMP
-CViewSourceHTML::StringTagToIntTag(const nsAString &aTag,
-                                   PRInt32* aIntTag) const
-{
-  *aIntTag = nsHTMLTags::LookupTag(aTag);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(const PRUnichar *)
-CViewSourceHTML::IntTagToStringTag(PRInt32 aIntTag) const
-{
-  const PRUnichar *str_ptr = nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag);
-
-  NS_ASSERTION(str_ptr, "Bad tag enum passed to COtherDTD::IntTagToStringTag()"
-               "!!");
-
-  return str_ptr;
-}
-
-NS_IMETHODIMP_(nsIAtom *)
-CViewSourceHTML::IntTagToAtom(PRInt32 aIntTag) const
-{
-  nsIAtom *atom = nsHTMLTags::GetAtom((nsHTMLTag)aIntTag);
-
-  NS_ASSERTION(atom, "Bad tag enum passed to COtherDTD::IntTagToAtom()"
-               "!!");
-
-  return atom;
-}
-
-PRBool CViewSourceHTML::IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const {
-  PRBool result=PR_FALSE;
-  return result;
-}
-
-PRBool CViewSourceHTML::IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const {
-  PRBool result=PR_FALSE;
-  return result;
-}
-
-/**
  *  This method gets called to determine whether a given 
  *  tag is itself a container
  *  

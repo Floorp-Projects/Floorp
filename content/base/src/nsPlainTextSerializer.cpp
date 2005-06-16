@@ -1892,11 +1892,8 @@ nsPlainTextSerializer::GetIdForContent(nsIContent* aContent)
 
   nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
 
-  PRInt32 id;
-  nsresult rv = parserService->HTMLAtomTagToId(aContent->Tag(), &id);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Can't map HTML tag to id!");
-
-  return id;
+  return parserService ? parserService->HTMLAtomTagToId(aContent->Tag()) :
+                         eHTMLTag_unknown;
 }
 
 /**

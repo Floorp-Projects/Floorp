@@ -83,7 +83,6 @@ class CToken;
 class nsIURI;
 class nsIContentSink;
 class CParserContext;
-class nsIAtom;
 
 class nsIDTD : public nsISupports
 {
@@ -203,29 +202,6 @@ public:
     NS_IMETHOD_(PRInt32) GetType() = 0;
 
     NS_IMETHOD CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLineNo) = 0;
-
-/* XXX Temporary measure, pending further work by RickG  */
-
-
-    //  Whaaaa! These are useless methods, use nsIParserService!
-
-
-    /**
-     * Give rest of world access to our tag enums, so that CanContain(), etc,
-     * become useful.
-     */
-    NS_IMETHOD StringTagToIntTag(const nsAString &aTag,
-                                 PRInt32* aIntTag) const = 0;
-   
-    NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const = 0;
-    
-    NS_IMETHOD_(nsIAtom *) IntTagToAtom(PRInt32 aIntTag) const = 0;
-
-    NS_IMETHOD_(PRBool) IsBlockElement(PRInt32 aTagID,
-                                       PRInt32 aParentID) const = 0;
-    
-    NS_IMETHOD_(PRBool) IsInlineElement(PRInt32 aTagID,
-                                        PRInt32 aParentID) const = 0;
 };
 
 #define NS_DECL_NSIDTD \
@@ -242,10 +218,5 @@ public:
     NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;\
     NS_IMETHOD CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLineNo);\
     NS_IMETHOD_(void)  Terminate();\
-    NS_IMETHOD_(PRInt32) GetType(); \
-    NS_IMETHOD StringTagToIntTag(const nsAString &aTag, PRInt32* aIntTag) const ;\
-    NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const ;\
-    NS_IMETHOD_(nsIAtom *) IntTagToAtom(PRInt32 aIntTag) const;\
-    NS_IMETHOD_(PRBool)  IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const;\
-    NS_IMETHOD_(PRBool)  IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const;
+    NS_IMETHOD_(PRInt32) GetType();
 #endif /* nsIDTD_h___ */

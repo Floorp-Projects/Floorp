@@ -216,11 +216,8 @@ mozSanitizingHTMLSerializer::GetIdForContent(nsIContent* aContent)
 
   nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
 
-  PRInt32 id;
-  nsresult rv = parserService->HTMLAtomTagToId(aContent->Tag(), &id);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Can't map HTML tag to id!");
-
-  return id;
+  return parserService ? parserService->HTMLAtomTagToId(aContent->Tag()) :
+                         eHTMLTag_unknown;
 }
 
 NS_IMETHODIMP 
@@ -474,8 +471,7 @@ mozSanitizingHTMLSerializer::DoOpenContainer(PRInt32 aTag)
       nsContentUtils::GetParserServiceWeakRef();
     if (!parserService)
       return NS_ERROR_OUT_OF_MEMORY;
-    const PRUnichar* tag_name;
-    parserService->HTMLIdToStringTag(aTag, &tag_name);
+    const PRUnichar* tag_name = parserService->HTMLIdToStringTag(aTag);
     NS_ENSURE_TRUE(tag_name, NS_ERROR_INVALID_POINTER);
 
     Write(NS_LITERAL_STRING("<") + nsDependentString(tag_name));
@@ -522,8 +518,7 @@ mozSanitizingHTMLSerializer::DoCloseContainer(PRInt32 aTag)
       nsContentUtils::GetParserServiceWeakRef();
     if (!parserService)
       return NS_ERROR_OUT_OF_MEMORY;
-    const PRUnichar* tag_name;
-    parserService->HTMLIdToStringTag(aTag, &tag_name);
+    const PRUnichar* tag_name = parserService->HTMLIdToStringTag(aTag);
     NS_ENSURE_TRUE(tag_name, NS_ERROR_INVALID_POINTER);
 
     Write(NS_LITERAL_STRING("</") + nsDependentString(tag_name)
@@ -765,31 +760,29 @@ mozSanitizingHTMLSerializer::ParseTagPref(const nsCAutoString& tagpref)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Parsing tag
-  PRInt32 bracket = tagpref.Find("(");
-  nsCAutoString tag = tagpref;
-  if (bracket != kNotFound)
-    tag.Truncate(bracket);
-  if (tag.Equals(""))
+  PRInt32 bracket = tagpref.FindChar('(');
+  if (bracket == 0)
   {
     printf(" malformed pref: %s\n", tagpref.get());
     return NS_ERROR_CANNOT_CONVERT_DATA;
   }
 
+  nsAutoString tag;
+  CopyUTF8toUTF16(StringHead(tagpref, bracket), tag);
+
   // Create key
-  NS_ConvertASCIItoUCS2 tag_widestr(tag);
-  PRInt32 tag_id;
-  parserService->HTMLStringTagToId(tag_widestr, &tag_id);
-  if (tag_id == eHTMLTag_userdefined ||
-      tag_id == eHTMLTag_unknown)
+  PRInt32 tag_id = parserService->HTMLStringTagToId(tag);
+  if (tag_id == eHTMLTag_userdefined)
   {
-    printf(" unknown tag <%s>, won't add.\n", tag.get());
+    printf(" unknown tag <%s>, won't add.\n",
+           NS_ConvertUTF16toUTF8(tag).get());
     return NS_ERROR_CANNOT_CONVERT_DATA;
   }
   nsPRUint32Key tag_key(tag_id);
 
   if (mAllowedTags.Exists(&tag_key))
   {
-    printf(" duplicate tag: %s\n", tag.get());
+    printf(" duplicate tag: %s\n", NS_ConvertUTF16toUTF8(tag).get());
     return NS_ERROR_CANNOT_CONVERT_DATA;
   }
   if (bracket == kNotFound)

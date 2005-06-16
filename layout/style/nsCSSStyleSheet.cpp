@@ -2834,14 +2834,14 @@ static PRBool IsSignificantChild(nsIContent* aChild, PRBool aTextIsSignificant, 
   NS_ASSERTION(!aWhitespaceIsSignificant || aTextIsSignificant,
                "Nonsensical arguments");
 
-  nsIAtom *tag = aChild->Tag(); // skip text, comments, and PIs
-  if ((tag != nsLayoutAtoms::textTagName) && 
-      (tag != nsLayoutAtoms::commentTagName) &&
-      (tag != nsLayoutAtoms::processingInstructionTagName)) {
+  PRBool isText = aChild->IsContentOfType(nsIContent::eTEXT);
+
+  if (!isText && !aChild->IsContentOfType(nsIContent::eCOMMENT) &&
+      !aChild->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION)) {
     return PR_TRUE;
   }
 
-  if (aTextIsSignificant && tag == nsLayoutAtoms::textTagName) {
+  if (aTextIsSignificant && isText) {
     if (!aWhitespaceIsSignificant) {
        nsCOMPtr<nsITextContent> text = do_QueryInterface(aChild);
       

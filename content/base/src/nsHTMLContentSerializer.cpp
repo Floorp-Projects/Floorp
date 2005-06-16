@@ -801,10 +801,9 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
 
   if (parserService && (name != nsHTMLAtoms::style)) {
     PRBool isContainer;
-    PRInt32 id;
 
-    parserService->HTMLAtomTagToId(name, &id);
-    parserService->IsContainer(id, isContainer);
+    parserService->IsContainer(parserService->HTMLAtomTagToId(name),
+                               isContainer);
     if (!isContainer) return NS_OK;
   }
 
@@ -1066,10 +1065,7 @@ nsHTMLContentSerializer::LineBreakBeforeOpen(nsIAtom* aName,
     
     if (parserService) {
       PRBool res;
-      PRInt32 id;
-
-      parserService->HTMLAtomTagToId(aName, &id);
-      parserService->IsBlock(id, res);
+      parserService->IsBlock(parserService->HTMLAtomTagToId(aName), res);
       return res;
     }
   }
@@ -1167,10 +1163,7 @@ nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName,
     
     if (parserService) {
       PRBool res;
-      PRInt32 id;
-
-      parserService->HTMLAtomTagToId(aName, &id);
-      parserService->IsBlock(id, res);
+      parserService->IsBlock(parserService->HTMLAtomTagToId(aName), res);
       return res;
     }
   }

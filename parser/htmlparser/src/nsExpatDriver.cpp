@@ -1179,18 +1179,6 @@ nsExpatDriver::HandleToken(CToken* aToken,nsIParser* aParser)
 }
 
 NS_IMETHODIMP_(PRBool)
-nsExpatDriver::IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const
-{
-  return PR_FALSE;
-}
-
-NS_IMETHODIMP_(PRBool)
-nsExpatDriver::IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const
-{
-  return PR_FALSE;
-}
-
-NS_IMETHODIMP_(PRBool)
 nsExpatDriver::IsContainer(PRInt32 aTag) const
 {
   return PR_TRUE;
@@ -1200,22 +1188,4 @@ NS_IMETHODIMP_(PRBool)
 nsExpatDriver::CanContain(PRInt32 aParent,PRInt32 aChild) const
 {
   return PR_TRUE;
-}
-
-NS_IMETHODIMP
-nsExpatDriver::StringTagToIntTag(const nsAString &aTag, PRInt32* aIntTag) const
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(const PRUnichar *)
-nsExpatDriver::IntTagToStringTag(PRInt32 aIntTag) const
-{
-  return 0;
-}
-
-NS_IMETHODIMP_(nsIAtom *)
-nsExpatDriver::IntTagToAtom(PRInt32 aIntTag) const
-{
-  return 0;
 }

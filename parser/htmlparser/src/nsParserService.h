@@ -52,15 +52,16 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD HTMLAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const;
+  PRInt32 HTMLAtomTagToId(nsIAtom* aAtom) const;
 
-  NS_IMETHOD HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const;
+  PRInt32 HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom) const;
 
-  NS_IMETHOD HTMLStringTagToId(const nsAString &aTagName,
-                               PRInt32* aId) const;
+  PRInt32 HTMLStringTagToId(const nsAString& aTag) const;
 
-  NS_IMETHOD HTMLIdToStringTag(PRInt32 aId, const PRUnichar **aTagName) const;
+  const PRUnichar *HTMLIdToStringTag(PRInt32 aId) const;
   
+  nsIAtom *HTMLIdToAtomTag(PRInt32 aId) const;
+
   NS_IMETHOD HTMLConvertEntityToUnicode(const nsAString& aEntity, 
                                         PRInt32* aUnicode) const;
   NS_IMETHOD HTMLConvertUnicodeToEntity(PRInt32 aUnicode,

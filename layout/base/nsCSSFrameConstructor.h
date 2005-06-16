@@ -330,10 +330,6 @@ private:
                                    nsIFrame*&               aNewCellInnerFrame,
                                    PRBool&                  aIsPseudoParent);
 
-  PRBool MustGeneratePseudoParent(nsIAtom*         aTag,
-                                  nsIContent*      aContent,
-                                  nsStyleContext*  aContext);
-
   /**
    * ConstructTableForeignFrame constructs the frame for a non-table-element
    * child of a table-element frame (where "table-element" can mean rows,
