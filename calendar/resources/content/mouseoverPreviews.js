@@ -61,9 +61,9 @@ function onMouseOverGridOccurrence( occurrenceBoxMouseEvent )
   if ("occurrence" in occurrenceBoxMouseEvent.currentTarget) {
     // occurrence of repeating event or todo
     var occurrence = occurrenceBoxMouseEvent.currentTarget.occurrence;
-    var item = occurrence.item;
-    var start = occurrence.occurrenceStartDate.jsDate;
-    var endEx = occurrence.occurrenceEndDate.jsDate;
+    var item = occurrence;
+    var start = occurrence.startDate.jsDate;
+    var endEx = occurrence.endDate.jsDate;
 
     const toolTip = document.getElementById( "gridOccurrenceTooltip" );
     var holderBox = null;
@@ -144,14 +144,14 @@ function getPreviewForTask( toDoItem )
       hasHeader = true;
     }
    
-    if (toDoItem.entryDate.isValid)
+    if (toDoItem.entryDate && toDoItem.entryDate.isValid)
     {
       var startDate = toDoItem.entryDate.jsDate;
       boxAppendLabeledDateTime(vbox, "tooltipStart", startDate, false);
       hasHeader = true;
     }
    
-    if (toDoItem.dueDate.isValid)
+    if (toDoItem.dueDat && toDoItem.dueDate.isValid)
     {
       var dueDate = toDoItem.dueDate.jsDate;
       boxAppendLabeledDateTime(vbox, "tooltipDue", dueDate, false);

@@ -274,7 +274,7 @@ function ToDoProgressAtom( aTodo )
   if (completed)
       return "completed";
 
-  if (aTodo.dueDate.isValid) {
+  if (aTodo.dueDate && aTodo.dueDate.isValid) {
       if (aTodo.dueDate.jsDate.getTime() < now.getTime())
           return "overdue";
       else if (aTodo.dueDate.year == now.getFullYear() &&
@@ -283,7 +283,7 @@ function ToDoProgressAtom( aTodo )
           return "duetoday";
   }
 
-  if (aTodo.entryDate.isValid &&
+  if (aTodo.entryDate && aTodo.entryDate.isValid &&
       aTodo.entryDate.jsDate.getTime() < now.getTime())
       return "inprogress";
 
