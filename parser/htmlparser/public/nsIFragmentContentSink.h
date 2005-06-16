@@ -43,8 +43,8 @@ class nsIDOMDocumentFragment;
 class nsIDocument;
 
 #define NS_I_FRAGMENT_CONTENT_SINK_IID \
- { 0xe9ea6afb, 0x92f3, 0x4270, \
- { 0xb2, 0x67, 0xd2, 0xe3, 0x8d, 0x0e, 0x95, 0x45 } }
+  { 0x2cec7263, 0x9dd0, 0x4413, \
+    { 0xb6, 0x68, 0x6f, 0xf0, 0xa1, 0x40, 0xc1, 0xbe } }
 
 /**
  * The fragment sink allows a client to parse a fragment of sink, possibly
@@ -85,6 +85,14 @@ public:
    * (such as an end context).
    */
   NS_IMETHOD DidBuildContent() = 0;
+
+  /**
+   * This method is a total hack to help with parsing fragments. It is called to
+   * tell the fragment sink that a container from the context will be delivered
+   * after the call to WillBuildContent(). This is only relevent for HTML
+   * fragments that use nsHTMLTokenizer/CNavDTD.
+   */
+  NS_IMETHOD IgnoreFirstContainer() = 0;
 };
 
 /**
