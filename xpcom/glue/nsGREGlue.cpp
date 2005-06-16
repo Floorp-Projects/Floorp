@@ -126,20 +126,29 @@ GRE_GetGREPathForVersion(const char *aVersion,
   }
 
 #if XP_UNIX
-  // check in the HOME directory
   env = PR_GetEnv("HOME");
   if (env && *env) {
     char buffer[MAXPATHLEN];
 
-    sprintf(buffer, "%s" XPCOM_FILE_PATH_SEPARATOR GRE_CONF_NAME, env);
+    // Look in ~/.gre.config
+
+    snprintf(buffer, sizeof(buffer),
+             "%s" XPCOM_FILE_PATH_SEPARATOR GRE_CONF_NAME, env);
     
     if (GRE_GetPathFromConfigFile(aVersion, buffer, aBuffer, aBufLen)) {
       return NS_OK;
     }
-  }
-#endif
 
-#if XP_UNIX
+    // Look in ~/.gre.d/*.conf
+
+    snprintf(buffer, sizeof(buffer),
+             "%s" XPCOM_FILE_PATH_SEPARATOR GRE_USER_CONF_DIR, env);
+
+    if (GRE_GetPathFromConfigDir(aVersion, buffer, aBuffer, aBufLen)) {
+      return NS_OK;
+    }
+  }
+
   // Look for a global /etc/gre.conf file
   if (GRE_GetPathFromConfigFile(aVersion, GRE_CONF_PATH, aBuffer, aBufLen)) {
     return NS_OK;
@@ -203,7 +212,7 @@ GRE_GetPathFromConfigDir(const char* version, const char* dirname,
 
   while (!found && (entry = PR_ReadDir(dir, PR_SKIP_BOTH))) {
 
-    const char kExt[] = ".conf";
+    static const char kExt[] = ".conf";
 
     // Only look for files that end in .conf
     char *offset = PL_strrstr(entry->name, kExt);
@@ -214,7 +223,7 @@ GRE_GetPathFromConfigDir(const char* version, const char* dirname,
       continue;
 
     char fullPath[MAXPATHLEN];
-    snprintf(fullPath, MAXPATHLEN, "%s" XPCOM_FILE_PATH_SEPARATOR "%s",
+    snprintf(fullPath, sizeof(fullPath), "%s" XPCOM_FILE_PATH_SEPARATOR "%s",
              dirname, entry->name);
 
     found = GRE_GetPathFromConfigFile(version, fullPath, buffer, buflen);
@@ -229,8 +238,10 @@ GRE_GetPathFromConfigDir(const char* version, const char* dirname,
 
 PRBool
 GRE_GetPathFromConfigFile(const char* version, const char* filename,
-              char* pathBuffer, PRUint32 buflen)
+                          char* pathBuffer, PRUint32 buflen)
 {
+  int versionlen = strlen(version);
+
   *pathBuffer = '\0';
   char buffer[READ_BUFFER_SIZE];
   FILE *cfg;
@@ -246,15 +257,17 @@ GRE_GetPathFromConfigFile(const char* version, const char* filename,
       continue;
     }
 
-    // we found a section heading, check to see if it is the one we are intersted in.
+    // we found a section heading, check to see if it is the one we
+    // are interested in.
     if (buffer[0] == '[') {
-      if (!strcmp(buffer+1, version)) {
-        foundHeader = PR_TRUE;
-      }
+      foundHeader == (buffer[versionlen + 1] == ']' &&
+                      strncmp(buffer + 1, version, versionlen) == 0);
       continue;
     }
 
-    if (foundHeader && !strncmp (buffer, "GRE_PATH=", 9)) {
+    static const char kGreHome[] = "GRE_PATH=";
+
+    if (foundHeader && !strncmp(buffer, kGreHome, sizeof(kGreHome) - 1)) {
       strncpy(pathBuffer, buffer + 9, buflen);
       // kill the line feed if any
       PRInt32 len = strlen(pathBuffer);
@@ -334,7 +347,7 @@ GRE_GetPathFromRegKey(const char* aVersion, HKEY aRegKey,
     char version[40];
     DWORD versionlen = 40;
     char pathbuf[MAXPATHLEN];
-    DWORD pathlen = MAXPATHLEN;
+    DWORD pathlen = sizeof(pathbuf);
     DWORD pathtype;
 
     if (::RegQueryValueEx(subKey, "Version", NULL, NULL,
