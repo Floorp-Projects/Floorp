@@ -4253,7 +4253,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
 
     *_retval = nsIMsgCompConvertible::No;
 
-    PRInt16 nodeType;
+    PRUint16 nodeType;
     rv = node->GetNodeType(&nodeType);
     if (NS_FAILED(rv))
       return rv;
