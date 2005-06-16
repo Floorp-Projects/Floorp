@@ -225,7 +225,7 @@
         // specifically, this should get us to a <calendar-event-box>
         var evbox = this.parentNode.parentNode;
         // still select it (since we'll preventBubble())
-        evbox.calendarView.selectedOccurrence = evbox.mOccurrence;
+        evbox.calendarView.selectedItem = evbox.mOccurrence;
         // then start dragging it
         evbox.parentColumn.startSweepingToModifyEvent(evbox, evbox.mOccurrence, whichside, event.screenX, event.screenY);
       ]]></handler>
@@ -280,6 +280,21 @@
             this.mPixPerMin = val;
             this.relayout();
           }
+        ]]></setter>
+      </property>
+
+      <property name="selected">
+        <getter><![CDATA[
+          if (this.getAttribute("selected") == "true")
+            return true;
+          return false;
+        ]]></getter>
+        <setter><![CDATA[
+          if (val)
+            this.setAttribute("selected", "true");
+          else
+            this.removeAttribute("selected");
+          return val;
         ]]></setter>
       </property>
 
@@ -456,8 +471,8 @@
            }
 
            if (itemIndex != -1) {
-               if (this.mSelectedOccurrence == this.mEvents[itemIndex])
-                   this.mSelectedOccurrence = null;
+               if (this.mSelectedItem == this.mEvents[itemIndex])
+                   this.mSelectedItem = null;
 
                this.mEvents.splice(itemIndex, 1);
                return true;
@@ -1125,6 +1140,9 @@
          - event.
         -->
       <handler event="mousedown" button="0"><![CDATA[
+        // select this column
+        this.calendarView.selectedDay = this.mDate;
+
         // snap to 15 minute intervals
         var interval = this.mPixPerMin * 15;
 
@@ -1260,7 +1278,7 @@
     <handlers>
       <handler event="mousedown"><![CDATA[
         event.preventBubble();
-        this.calendarView.selectedOccurrence = this.mOccurrence;
+        this.calendarView.selectedItem = this.mOccurrence;
 
         this.mInMouseDown = true;
         this.mMouseX = event.screenX;
@@ -1346,7 +1364,7 @@
           // ask the 
           var minutes = timebar.endMinute - timebar.startMinute;
           var ppm = size / minutes;
-          dump ("new ppm: " + ppm + "\n");
+          //dump ("new ppm: " + ppm + "\n");
           this.pixelsPerMinute = ppm;
 	]]></body>
       </method>
@@ -1357,11 +1375,12 @@
       <field name="mEndDate">null</field>
       <!-- mDateList will always be sorted before being set -->
       <field name="mDateList">null</field>
-      <!-- array of { date: calIDatetime, col: column item } -->
+      <!-- array of { date: calIDatetime, column: colbox, header: hdrbox }  -->
       <field name="mDateColumns">null</field>
       <field name="mBatchCount">0</field>
       <field name="mPixPerMin">0.6</field>
-      <field name="mSelectedOccurrence">null</field>
+      <field name="mSelectedItem">null</field>
+      <field name="mSelectedDayCol">null</field>
 
       <field name="mObserver"><![CDATA[
         // the calIObserver, and calICompositeObserver
@@ -1528,8 +1547,6 @@
 	<body><![CDATA[
 	  var targetDate = aDate.clone();
 	  targetDate.isDate = true;
-	  if (targetDate.timezone != "UTC")
-              targetDate = targetDate.getInTimezone("UTC");
 
 	  if (this.mStartDate && this.mEndDate) {
               if (this.mStartDate.compare(targetDate) <= 0 &&
@@ -1546,18 +1563,12 @@
 	  // if we're only showing one date, then continue
 	  // to only show one date; otherwise, show the week.
 	  if (this.numVisibleDates == 1) {
-            var st = aDate;
-            var end = aDate.clone();
-            end.day += 1;
-            end.normalize();
-
-            this.setDateRange(st, end);
+            this.setDateRange(aDate, aDate);
 	  } else {
-            var wkStart = aDate.startOfWeek;
-            var wkEnd = aDate.endOfWeek;
-
-            this.setDateRange(wkStart, wkEnd);
+            this.setDateRange(aDate.startOfWeek, aDate.endOfWeek);
           }
+
+          this.selectedDay = aDate;
         ]]></body>
       </method>
 
@@ -1570,8 +1581,6 @@
           this.mStartDate = aStartDate.clone();
           this.mStartDate.makeImmutable();
           this.mEndDate = aEndDate.clone();
-          this.mEndDate.day -= 1;
-          this.mEndDate.normalize();
           this.mEndDate.makeImmutable();
 
           // this function needs to be smarter, and needs to compare
@@ -1631,18 +1640,54 @@
         ]]></body>
       </method>
 
-      <property name="selectedOccurrence">
+      <property name="selectedDay">
         <getter><![CDATA[
-          return this.mSelectedOccurrence;
+          if (this.numVisibleDates == 1)
+            return this.mDateColumns[0].date;
+
+          if (this.mSelectedDayCol)
+            return this.mSelectedDayCol.date;
+
+          return null;
         ]]></getter>
         <setter><![CDATA[
-          if (this.mSelectedOccurrence != val) {
-              if (this.mSelectedOccurrence) {
-                  var col = this.findColumnForEvent(this.mSelectedOccurrence);
+          // ignore if just 1 visible, it's always selected,
+          // but we don't indicate it
+          if (this.numVisibleDates == 1)
+            return val;
+
+          if (this.mSelectedDayCol) {
+            this.mSelectedDayCol.column.selected = false;
+            this.mSelectedDayCol.header.removeAttribute("selected");
+          }
+
+          if (val) {
+            this.mSelectedDayCol = this.findColumnForDate(val);
+            if (this.mSelectedDayCol) {
+              this.mSelectedDayCol.column.selected = true;
+              this.mSelectedDayCol.header.setAttribute("selected", "true");
+            } else {
+              dump ("XX couldn't find column to select for day: " + val + "\n");
+              return null;
+            }
+          }
+
+          return val;
+        ]]></setter>
+      </property>
+
+      <property name="selectedItem">
+        <getter><![CDATA[
+          return this.mSelectedItem;
+        ]]></getter>
+        <setter><![CDATA[
+          if (this.mSelectedItem != val) {
+              if (this.mSelectedItem) {
+                  var col = this.findColumnForEvent(this.mSelectedItem);
                   if (col) {
                       col.column.selectOccurrence(null);
                   } else {
-                      dump ("Thought I had a selected occurrence (id: " + this.mSelectedOccurrence.id + "), but couldn't find a column for it!\n");
+                      dump ("Thought I had a selected occurrence (id: " + this.mSelectedItem.id + "), but couldn't find a column for it!\n");
                   }
               }
 
@@ -1654,7 +1699,7 @@
                       val = null;
               }
 
-              return (this.mSelectedOccurrence = val);
+              return (this.mSelectedItem = val);
           }
         ]]></setter>
       </property>
@@ -1782,6 +1827,9 @@
 
       <method name="refresh">
         <body><![CDATA[
+          if (!this.startDate || !this.endDate)
+            return;
+
           // recreate our columns as necessary
           this.relayout();
 
@@ -1791,13 +1839,16 @@
           // start our items query; for a disjoint date range
           // we get all the items, and just filter out the ones we don't
           // care about in addItem
-          //dump ("+++++++++ Calling getItems\n");
+
+          var queryEnd = this.endDate.clone();
+          queryEnd.day += 1;
+          queryEnd.normalize();
           this.mCalendar.getItems(this.mCalendar.ITEM_FILTER_COMPLETED_ALL |
                                   this.mCalendar.ITEM_FILTER_TYPE_EVENT |
                                   this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES,
                                   0,
                                   this.startDate,
-                                  this.endDate,
+                                  queryEnd,
                                   this.mOperationListener);
         ]]></body>
       </method>
@@ -1889,9 +1940,6 @@
 
               d.isDate = true;
 
-              if (d.timezone != "UTC")
-                  d = d.getInTimezone("UTC");
-
               this.mDateColumns.push ( { date: d, column: dayEventsBox, header: dayHeaderBox } );
           }
 
@@ -1900,26 +1948,25 @@
         ]]></body>
       </method>
 
+      <method name="findColumnForDate">
+        <parameter name="aDate"/>
+        <body><![CDATA[
+          for each (var col in this.mDateColumns) {
+              if (col.date.compare(aDate) == 0)
+                  return col;
+          }
+          return null;
+        ]]></body>
+      </method>
+
+
       <method name="findColumnForEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
           var estart = aEvent.startDate;
           var eend = aEvent.endDate;
 
-          var eday = estart.clone();
-          eday.isDate = true;
-          if (eday.timezone != "UTC")
-              eday = eday.getInTimezone("UTC");
-
-          var column = null;
-          var header = null;
-          for each (var col in this.mDateColumns) {
-              if (col.date.compare(eday) == 0) { 
-                  return col;
-              }
-          }
-
-          return null;
+          return this.findColumnForDate(estart);
         ]]></body>
       </method>
 
@@ -2001,8 +2048,8 @@
         if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
             event.keyCode == kKE.DOM_VK_DELETE)
         {
-            if (this.selectedOccurrence && this.controller) {
-                var occurrence = (event.ctrlKey) ? this.selectedOccurrence.parentItem : this.selectedOccurrence;
+            if (this.selectedItem && this.controller) {
+                var occurrence = (event.ctrlKey) ? this.selectedItem.parentItem : this.selectedItem;
                 this.controller.deleteOccurrence(occurrence);
             }
         }

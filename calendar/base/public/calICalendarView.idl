@@ -44,7 +44,7 @@ interface calIDateTime;
 interface calICalendarViewController;
 interface calIItemBase;
 
-[scriptable, uuid(448a7f1a-384c-4e47-b5b5-1c372b4ad3d1)]
+[scriptable, uuid(3e567ccb-2ecf-4f59-b7ca-bf42b0fbf24a)]
 interface calICalendarView : nsISupports
 {
   /**
@@ -60,13 +60,13 @@ interface calICalendarView : nsISupports
   /**
    * Ensure that the given date is visible; the view is free
    * to show more dates than the given date (e.g. week view
-   * would show the entire week.
+   * would show the entire week).
    */
   void showDate(in calIDateTime aDate);
 
   /**
    * Set a date range for the view to display, from aStartDate
-   * inclusive to aEndDate, not inclusive.
+   * to aEndDate, inclusive.
    *
    * Some views may decide to utilize the time portion of these
    * calIDateTimes; pass in calIDateTimes that are dates if you
@@ -116,4 +116,9 @@ interface calICalendarView : nsISupports
    * Get or set the selected item.  Only one item may be selected.
    */
   attribute calIItemBase selectedItem;
+
+  /**
+   * Get or set the selected day.
+   */
+  attribute calIDateTime selectedDay;
 };

@@ -19,6 +19,13 @@ function ltnEditSelectedCalendar()
     ltnEditCalendarProperties(ltnSelectedCalendar());
 }
 
+function today()
+{
+    var d = Components.classes['@mozilla.org/calendar/datetime;1'].createInstance(Components.interfaces.calIDateTime);
+    d.jsDate = new Date();
+    return d.getInTimezone(calendarDefaultTimezone());
+}
+
 function nextMonth(dt)
 {
     var d = new Date(dt);
@@ -49,12 +56,10 @@ function ltnMinimonthPick(which, minimonth)
 
     var cdt = new CalDateTime();
     cdt.jsDate = minimonth.value;
-    
     cdt = cdt.getInTimezone(calendarDefaultTimezone());
     cdt.isDate = true;
-    currentView().showDate(cdt);
 
-    showCalendar(false);
+    showCalendar(cdt);
 }
 
 function ltnOnLoad(event)
@@ -68,6 +73,10 @@ function ltnOnLoad(event)
     document.getElementById("ltnMinimonthRight").showMonth(nextmo);
 
     gMiniMonthLoading = false;
+
+    // nuke the onload, or we get called every time there's
+    // any load that occurs
+    document.removeEventListener("load", ltnOnLoad, true);
 }
 
 function currentView()
@@ -76,23 +85,22 @@ function currentView()
     return calendarViewBox.selectedPanel;
 }
 
-function showCalendar(jumpToToday)
+function showCalendar(aDate1, aDate2)
 {
-    document.getElementById("displayDeck").selectedPanel =
-        document.getElementById("calendar-view-box");
-
     var view = currentView();
-    if (jumpToToday) {
-        var d = Components.classes['@mozilla.org/calendar/datetime;1'].createInstance(Components.interfaces.calIDateTime);
-        d.jsDate = new Date();
-        d = d.getInTimezone(calendarDefaultTimezone());
-        view.showDate(d);
-    }
 
     if (view.displayCalendar != getCompositeCalendar()) {
         view.displayCalendar = getCompositeCalendar();
         view.controller = ltnCalendarViewController;
     }
+
+    if (aDate1 && !aDate2)
+        view.showDate(aDate1);
+    else if (aDate1 && aDate2)
+        view.setDateRange(aDate1, aDate2);
+
+    document.getElementById("displayDeck").selectedPanel =
+        document.getElementById("calendar-view-box");
 }
 
 function switchView(type) {
@@ -102,56 +110,46 @@ function switchView(type) {
     var monthView = document.getElementById("calendar-month-view");
     var multidayView = document.getElementById("calendar-multiday-view");
 
-    // XXX we need a selectedDate in calICalendarView.idl!
-    var selectedDate = calendarViewBox.selectedPanel.startDate;
+    var selectedDay = calendarViewBox.selectedPanel.selectedDay;
 
-    if (!selectedDate) {
-        var d = Components.classes['@mozilla.org/calendar/datetime;1'].createInstance(Components.interfaces.calIDateTime);
-        d.jsDate = new Date();
-        selectedDate = d.getInTimezone(calendarDefaultTimezone());
-    }
+    if (!selectedDay)
+        selectedDay = today();
+
+    var d1, d2;
 
     switch (type) {
     case "month": {
-        monthView.showDate(selectedDate);
+        d1 = selectedDay;
         calendarViewBox.selectedPanel = monthView;
     }
         break;
     case "week": {
-        var start = selectedDate.startOfWeek;
-        var end = selectedDate.endOfWeek.clone();
-        end.day += 1;
-        end.normalize();
-        multidayView.setDateRange(start, end);
+        d1 = selectedDay.startOfWeek;
+        d2 = selectedDay.endOfWeek;
         calendarViewBox.selectedPanel = multidayView;
     }
         break;
     case "day":
     default: {
-        var start = selectedDate;
-        var end = selectedDate.clone();
-        end.day += 1;
-        end.normalize();
-        multidayView.setDateRange(start, end);
+        d1 = selectedDay;
+        d2 = selectedDay;
         calendarViewBox.selectedPanel = multidayView;
     }
         break;
     }
 
-    if (messengerDisplayDeck.selectedPanel = calendarViewBox)
-        showCalendar(false);
-    else
-        showCalendar(true);
+    showCalendar(d1, d2);
+
+    calendarViewBox.selectedPanel.selectedDay = selectedDay;
 }
 
 function selectedCalendarPane(event)
 {
-    dump("selecting calendar pane\n");
     document.getElementById("displayDeck").selectedPanel =
         document.getElementById("calendar-view-box");
 
     // give the view the calendar
-    showCalendar(true);
+    showCalendar(today());
 }
 
 function LtnObserveDisplayDeckChange(event)

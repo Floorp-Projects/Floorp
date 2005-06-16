@@ -98,10 +98,38 @@
       <field name="mDate">null</field>
       <!-- mItemData will always be kept sorted in display order -->
       <field name="mItemData">[]</field>
+      <field name="mMonthView">null</field>
 
       <property name="date">
         <getter>return this.mDate;</getter>
         <setter>this.setDate(val); return val;</setter>
+      </property>
+
+      <property name="monthView">
+        <getter><![CDATA[
+          return this.mMonthView;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mMonthView = val;
+          return val;
+        ]]></setter>
+      </property>
+
+      <property name="selected">
+        <getter><![CDATA[
+          var sel = this.getAttribute("selected");
+          if (sel && sel == "true") {
+            return true;
+          }
+
+          return false;
+        ]]></getter>
+        <setter><![CDATA[
+          if (val)
+            this.setAttribute("selected", "true");
+          else
+            this.removeAttribute("selected");
+        ]]></setter>
       </property>
 
       <property name="dayitems">
@@ -245,6 +273,15 @@
         ]]></body>
       </method>
     </implementation>
+
+    <handlers>
+      <handler event="mousedown" button="0"><![CDATA[
+        event.preventBubble();
+
+        if (this.mDate)
+          this.monthView.selectedDay = this.mDate;
+      ]]></handler>
+    </handlers>
   </binding>
 
   <binding id="calendar-month-view-column-header">
@@ -339,6 +376,9 @@
       <field name="mEndDate">null</field>
       <field name="mDateBoxes">null</field>
 
+      <field name="mSelectedItem">null</field>
+      <field name="mSelectedDayBox">null</field>
+
       <field name="mShowDaysOutsideMonth">true</field>
 
       <!-- calICalendarView -->
@@ -387,14 +427,36 @@
         ]]></setter>
       </property>
 
+      <property name="selectedDay">
+        <getter><![CDATA[
+          if (this.mSelectedDayBox)
+            return this.mSelectedDayBox.date.clone();
+        ]]></getter>
+        <setter><![CDATA[
+          if (this.mSelectedDayBox)
+            this.mSelectedDayBox.box.selected = false;
+
+          var realVal = val;
+          if (!realVal.isDate) {
+            realVal = val.clone();
+            realVal.isDate = true;
+          }
+          var box = this.findBoxForDate(realVal);
+          if (box) {
+            box.box.selected = true;
+            this.mSelectedDayBox = box;
+          }
+          return val;
+        ]]></setter>
+      </property>
+
+
       <method name="showDate">
 	<parameter name="aDate"/>
 	<body><![CDATA[
-                   dump ("showDate: " + aDate + "\n");
-          var realEnd = aDate.endOfMonth;
-          realEnd.day += 1;
-          realEnd.normalize();
-	  this.setDateRange(aDate.startOfMonth, realEnd);
+	  this.setDateRange(aDate.startOfMonth, aDate.endOfMonth);
+
+          this.selectedDay = aDate;
         ]]></body>
       </method>
 
@@ -402,17 +464,8 @@
         <parameter name="aStartDate"/>
         <parameter name="aEndDate"/>
         <body><![CDATA[
-	  var realStart = aStartDate.startOfWeek;
-	  var realEnd = aEndDate.endOfWeek;
-
-          dump ("setDateRange: " + aStartDate + " -> " + aEndDate + "\n");
-          realEnd.day += 1;
-          realEnd.normalize();
-
-          this.mStartDate = realStart;
-          this.mEndDate = realEnd;
-
-          dump ("setDateRange: " + realStart + " -> " + realEnd + "\n");
+          this.mStartDate = aStartDate.startOfWeek;
+          this.mEndDate = aEndDate.endOfWeek;
 
           this.refresh();
         ]]></body>
@@ -439,7 +492,7 @@
           curDate.isDate = true;
           curDate.normalize();
 
-	  while (curDate.compare(this.mEndDate) < 0) {
+	  while (curDate.compare(this.mEndDate) <= 0) {
 	    results.push(curDate.clone());
 	    curDate.day += 1;
 	    curDate.normalize();
@@ -475,17 +528,23 @@
 
       <method name="refresh">
         <body><![CDATA[
+          if (!this.startDate || !this.endDate)
+            return;
+
           this.relayout();
 
           if (!this.mCalendar)
             return;
 
+          var queryEnd = this.endDate.clone();
+          queryEnd.day += 1;
+          queryEnd.normalize();
           this.mCalendar.getItems(this.mCalendar.ITEM_FILTER_COMPLETED_ALL |
                                   this.mCalendar.ITEM_FILTER_TYPE_ALL |
                                   this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES,
                                   0,
                                   this.startDate,
-                                  this.endDate,
+                                  queryEnd,
                                   this.mOperationListener);
         ]]></body>
       </method>
@@ -500,6 +559,12 @@
 
           // XXX - reuse the grid boxes!
           // clear out the grid
+          if (this.mSelectedItem)
+            this.mSelectedItem = null;
+
+          if (this.mSelectedDayBox)
+            this.mSelectedDayBox = null;
+
           while (gridrows.lastChild)
             gridrows.removeChild(gridrows.lastChild);
 
@@ -550,6 +615,7 @@
             curRow.appendChild(box);
 
             box.setDate(date);
+            box.monthView = this;
 
             var boxdata = {
               date: date,
@@ -566,6 +632,18 @@
 	]]></body>
       </method>
 
+      <method name="findBoxForDate">
+        <parameter name="aDate"/>
+        <body><![CDATA[
+          for each (box in this.mDateBoxes) {
+            if (box.date.compare(aDate) == 0)
+              return box;
+          }
+          return null;
+        ]]></body>
+      </method>
+
+
       <method name="findBoxForItem">
         <parameter name="aItem"/>
         <body><![CDATA[
@@ -579,12 +657,7 @@
           if (!targetDate)
             return null;
 
-          for each (box in this.mDateBoxes) {
-            if (box.date.compare(targetDate) == 0)
-              return box;
-          }
-
-          return null;
+          return this.findBoxForDate(targetDate);
 	]]></body>
       </method>
 

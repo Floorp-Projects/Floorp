@@ -37,6 +37,10 @@ calendar-month-day-box {
   background: #eeeeee;
 }
 
+calendar-month-day-box[selected="true"] { 
+  background: #ffe79c !important;
+}
+
 .calendar-month-day-box-date-label { 
   color: #556;
   font-weight: bold;
