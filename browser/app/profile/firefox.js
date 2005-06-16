@@ -344,8 +344,8 @@ pref("accessibility.typeaheadfind.flashBar", 1);
 // Disable the default plugin for firefox
 pref("plugin.default_plugin_disabled", true);
 
-// plugin finder service
-pref("pfs.datasource.url", "chrome://mozapps/locale/plugins/plugins.properties");
+// plugin finder service url
+pref("pfs.datasource.url", "https://pfs.mozilla.org/plugins/PluginFinderService.php?mimetype=%PLUGIN_MIMETYPE%&appID=%APP_ID%&appVersion=%APP_VERSION%&clientOS=%CLIENT_OS%&chromeLocale=%CHROME_LOCALE%");
 
 #ifdef XP_WIN
 pref("browser.preferences.instantApply", false);
