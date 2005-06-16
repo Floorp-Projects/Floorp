@@ -81,7 +81,7 @@ FinalizeInstall(JSContext *cx, JSObject *obj);
 //
 JSClass InstallClass = {
   "Install",
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetInstallProperty,
@@ -293,34 +293,48 @@ PRBool ConvertJSValToBool(PRBool* aProp,
 
 PRBool ConvertJSValToObj(nsISupports** aSupports,
                         REFNSIID aIID,
-                        const nsString& aTypeName,
+                        JSClass* aClass,
                         JSContext* aContext,
                         jsval aValue)
 {
   if (JSVAL_IS_NULL(aValue)) {
     *aSupports = nsnull;
+    return JS_TRUE;
   }
-  else if (JSVAL_IS_OBJECT(aValue)) {
-    JSObject* jsobj = JSVAL_TO_OBJECT(aValue);
-    JSClass* jsclass = JS_GetClass(aContext, jsobj);
-    if ((nsnull != jsclass) && (jsclass->flags & JSCLASS_HAS_PRIVATE)) {
-      nsISupports *supports = (nsISupports *)JS_GetPrivate(aContext, jsobj);
-      if (NS_OK != supports->QueryInterface(aIID, (void **)aSupports)) {
-        char buf[128];
-        char typeName[128];
-        aTypeName.ToCString(typeName, sizeof(typeName));
-        sprintf(buf, "Parameter must of type %s", typeName);
-        JS_ReportError(aContext, buf);
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(aContext, "Parameter isn't an object");
-      return JS_FALSE;
-    }
-  }
-  else {
+  if (!JSVAL_IS_OBJECT(aValue)) {
     JS_ReportError(aContext, "Parameter must be an object");
+    return JS_FALSE;
+  }
+  JSObject* jsobj = JSVAL_TO_OBJECT(aValue);
+  JSClass* jsclass = JS_GetClass(aContext, jsobj);
+  if (!jsclass ||
+      !(jsclass->flags & JSCLASS_HAS_PRIVATE) ||
+      !(jsclass->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS)) {
+    JS_ReportError(aContext,
+                   "Parameter isn't an object that implements nsISupports");
+    return JS_FALSE;
+  }
+  if (!JS_InstanceOf(aContext,
+                     jsobj,
+                     aClass,
+                     nsnull))
+  {
+    char buf[128];
+    sprintf(buf, "Parameter isn't an instance of type %s", aClass->name);
+    JS_ReportError(aContext, buf);
+    return JS_FALSE;
+  }
+  nsISupports *supports = (nsISupports *)JS_GetPrivate(aContext, jsobj);
+  if (!supports) {
+    NS_ERROR("This should not happen.");
+    JS_ReportError(aContext,
+                   "JSObject has JSCLASS_PRIVATE_IS_NSISUPPORTS flag but has a null private slot, please file a bug.");
+    return JS_FALSE;
+  }
+  if (NS_FAILED(supports->QueryInterface(aIID, (void **)aSupports))) {
+    char buf[128];
+    sprintf(buf, "Parameter must be of type %s", aClass->name);
+    JS_ReportError(aContext, buf);
     return JS_FALSE;
   }
 
@@ -362,8 +376,6 @@ InstallAbortInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   int32   b0;
 
@@ -404,8 +416,6 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   PRInt32 nativeRet;
   nsAutoString b0;
@@ -560,8 +570,6 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   PRInt32 nativeRet;
   nsAutoString b0;
@@ -737,8 +745,6 @@ InstallExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   PRInt32 nativeRet;
   nsAutoString b0;
@@ -806,8 +812,6 @@ InstallFinalizeInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   PRInt32 nativeRet;
 
@@ -839,8 +843,6 @@ InstallGestalt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   PRInt32 nativeRet;
   nsAutoString b0;
@@ -884,8 +886,6 @@ InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   nsInstallFolder* folder;
   nsAutoString b0;
@@ -960,8 +960,6 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   JSObject *jsObj;
   nsAutoString b0;
@@ -1065,8 +1063,6 @@ InstallGetLastError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   PRInt32 nativeRet;
 
@@ -1164,8 +1160,6 @@ InstallLoadResources(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   nsAutoString b0;
 
@@ -1202,8 +1196,6 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   PRInt32 nativeRet;
   nsAutoString b0;
@@ -1318,8 +1310,6 @@ InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   // If there's no private data, this must be the prototype, so ignore
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   if (nsnull == nativeThis) {
     *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
@@ -1365,8 +1355,6 @@ InstallRefreshPlugins(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   // If there's no private data, this must be the prototype, so ignore
   if (!nativeThis)
@@ -1393,8 +1381,6 @@ InstallResetError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   *rval = JSVAL_VOID;
 
@@ -1422,8 +1408,6 @@ InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   nsAutoString b0;
   JSObject *jsObj;
@@ -1484,8 +1468,6 @@ InstallStartInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   PRInt32 nativeRet;
   nsAutoString b0;
@@ -1540,8 +1522,6 @@ InstallUninstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 {
   nsInstall *nativeThis =
     (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
-  if (!nativeThis)
-    return JS_FALSE;
 
   PRInt32 nativeRet;
   nsAutoString b0;

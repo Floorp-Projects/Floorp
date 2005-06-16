@@ -97,7 +97,7 @@ extern PRBool ConvertJSValToBool(PRBool* aProp,
 
 extern PRBool ConvertJSValToObj(nsISupports** aSupports,
                                REFNSIID aIID,
-                               const nsString& aTypeName,
+                               JSClass* aClass,
                                JSContext* aContext,
                                jsval aValue);
 
@@ -465,7 +465,7 @@ InstallVersionCompareTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
         if(JS_FALSE == ConvertJSValToObj(getter_AddRefs(versionObj),
                                          NS_GET_IID(nsIDOMInstallVersion),
-                                         NS_ConvertASCIItoUCS2("InstallVersion"),
+                                         &InstallVersionClass,
                                          cx,
                                          argv[0]))
         {
