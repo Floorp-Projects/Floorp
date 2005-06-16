@@ -43,7 +43,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
 #define CALL_SAFETY_ON
 #endif
 

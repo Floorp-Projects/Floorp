@@ -164,7 +164,7 @@ SDK_XPIDLSRCS   = \
 		nsISupportsPrimitives.idl  \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 CPPSRCS += nsWindowsRegKey.cpp
 XPIDLSRCS += nsIWindowsRegKey.idl
 EXPORTS += nsWindowsRegKey.h
