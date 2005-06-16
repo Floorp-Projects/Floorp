@@ -585,7 +585,7 @@ var BookmarksCommand = {
     // Bookmark Properties dialog is only ever opened with one selection 
     // (command is disabled otherwise)
     var bookmark = aSelection.item[0].Value;
-    value = {};
+    var value = {};
     openDialog("chrome://browser/content/bookmarks/bookmarksProperties.xul", "", "centerscreen,chrome,modal,resizable=no", bookmark, value);
     return value.ok;
   },
@@ -1402,7 +1402,7 @@ var BookmarksUtils = {
   /////////////////////////////////////////////////////////////////////////////
   removeAndCheckSelection: function (aAction, aSelection)
   {
-    isValid = BookmarksUtils.isSelectionValidForDeletion(aSelection);
+    var isValid = BookmarksUtils.isSelectionValidForDeletion(aSelection);
     if (!isValid) {
       SOUND.beep();
       return false;
@@ -1432,7 +1432,7 @@ var BookmarksUtils = {
         
   insertAndCheckSelection: function (aAction, aSelection, aTarget, aTargetIndex)
   {
-    isValid = BookmarksUtils.isSelectionValidForInsertion(aSelection, aTarget);
+    var isValid = BookmarksUtils.isSelectionValidForInsertion(aSelection, aTarget);
     if (!isValid) {
       SOUND.beep();
       return false;
