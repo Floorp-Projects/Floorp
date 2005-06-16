@@ -62,5 +62,10 @@ class nsIWidget;
 - (NSWindow*) getNativeWindow;
 - (void) setNativeWindow: (NSWindow*)aWindow;
 
+  // calls setNeedsDisplay, with the rect in inRectValue if supplied.
+  // Allows callers to do a delayed invalidate using
+  // -performSelector:withObject:afterDelay:
+- (void)setNeedsDisplayWithValue:(NSValue*)inRectValue;
+
 @end
 

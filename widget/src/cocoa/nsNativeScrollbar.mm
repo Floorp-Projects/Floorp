@@ -596,6 +596,23 @@ nsNativeScrollbar::IsEnabled(PRBool *aState)
   return NS_STATIC_CAST(nsIWidget*, mGeckoChild);
 }
 
+//
+// -setNeedsDisplayWithValue:
+//
+// call -setNeedsDisplay or setNeedsDisplayInRect:
+//
+- (void)setNeedsDisplayWithValue:(NSValue*)inRectValue
+{
+  if (inRectValue)
+  {
+    NSRect theRect = [inRectValue rectValue];
+    [self setNeedsDisplayInRect:theRect];
+  }
+  else
+  {
+    [self setNeedsDisplay:YES];
+  }
+}
 
 //
 // -mouseMoved

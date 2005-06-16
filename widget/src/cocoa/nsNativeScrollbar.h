@@ -43,6 +43,7 @@
 #include "nsChildView.h"
 #include <Controls.h>
 #include "nsIContent.h"
+
 #import "mozView.h"
 
 class nsIScrollbarMediator;
