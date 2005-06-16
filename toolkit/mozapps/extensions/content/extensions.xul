@@ -143,6 +143,7 @@
     <view id="extensionsView" flex="3" style="overflow: auto;"
           context="extensionContextMenu"
           datasources="rdf:null" persist="last-selected"
+          ondragenter="nsDragAndDrop.dragEnter(event, gExtensionsDNDObserver);"
           ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
           ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
           ondblclick="onViewDoubleClick(event);">
