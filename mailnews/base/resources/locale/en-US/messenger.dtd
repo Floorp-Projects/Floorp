@@ -51,8 +51,6 @@
 <!ENTITY newAccountCmd.label "Account...">
 <!ENTITY newAccountCmd.accesskey "A">
 <!ENTITY openMessageMenu.label "Open">
-<!ENTITY openMessageWindowCmd.label "Open Message">
-<!ENTITY openMessageWindowCmd.accesskey "s">
 <!ENTITY openMessageFileCmd.label "Open File...">
 <!ENTITY openMessageFileCmd.accesskey "O">
 <!ENTITY openAttachmentCmd.label "Attachments">
@@ -589,6 +587,6 @@
 
 <!-- junk bar -->
 <!ENTITY junkBarMessage.label "&brandShortName; thinks this message is junk mail">
-<!ENTITY notJunkButton.label "This is Not Junk">
+<!ENTITY junkBarButton.label "This is Not Junk">
 <!ENTITY junkInfoButton.label "?">
 

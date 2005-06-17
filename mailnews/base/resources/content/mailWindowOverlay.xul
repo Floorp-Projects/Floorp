@@ -1832,7 +1832,7 @@
   <label id="junkBarMessage" value="&junkBarMessage.label;"/>
   <spacer flex="1"/>
   <button label="&junkInfoButton.label;" oncommand="MsgJunkMailInfo(false)"/>
-  <button label="&notJunkButton.label;" oncommand="JunkSelectedMessages(false)"/>
+  <button label="&junkBarButton.label;" oncommand="JunkSelectedMessages(false)"/>
 </hbox>
 
 <statusbar class="chromeclass-status" id="status-bar"> 
