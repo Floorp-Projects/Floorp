@@ -1210,7 +1210,12 @@ MAKEFILES_libbz2="
 MAKEFILES_libmar="
     modules/libmar/Makefile
     modules/libmar/src/Makefile
+    modules/libmar/tool/Makefile
 "
+
+if test -n "$MOZ_UPDATE_PACKAGING"; then
+    MAKEFILES_update_packaging="tools/update-packaging/Makefile"
+fi
 
 if [ ! "$SYSTEM_PNG" ]; then
     MAKEFILES_libimg="$MAKEFILES_libimg modules/libimg/png/Makefile"
@@ -1617,6 +1622,7 @@ $MAKEFILES_xpfe
 $MAKEFILES_zlib
 $MAKEFILES_libbz2
 $MAKEFILES_libmar
+$MAKEFILES_update_packaging
 "
 
 if test -n "$MOZ_PSM"; then
