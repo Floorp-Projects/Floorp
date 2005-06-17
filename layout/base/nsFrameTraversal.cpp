@@ -592,8 +592,8 @@ nsFocusIterator::Next()
        } else {
         parent = result;
         result = GetParentFrame(parent);
-        if (IsRootFrame(result)) {
-          result = 0;
+        if (!result || IsRootFrame(result)) {
+          result = nsnull;
           break;
         }
       }
