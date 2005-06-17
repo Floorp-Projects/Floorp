@@ -821,6 +821,22 @@ static char* lexGet1Value() {
 		break;
 		}
 	    }
+	else if (c == '\\') {
+	    int a;
+	    lexSkipLookahead();
+	    a = lexLookahead();
+	    if (a == '\\' || a == ',' || a == ';' || a == ':') {
+		lexAppendc(a);
+		}
+	    else if (a == 'n' || a == 'N') {
+		lexAppendc('\n');
+		}
+	    else {
+		lexAppendc(c);
+		lexAppendc(a);
+		}
+	    lexSkipLookahead();
+	    }
 	else {
 	    lexAppendc(c);
 	    lexSkipLookahead();
