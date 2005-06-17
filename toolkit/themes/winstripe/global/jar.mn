@@ -74,6 +74,8 @@ classic.jar:
         skin/classic/global/icons/pg-landscape-small.gif            (icons/pg-landscape-small.gif)
         skin/classic/global/icons/pg-portrait.gif                   (icons/pg-portrait.gif)
         skin/classic/global/icons/Print-preview.png                 (icons/Print-preview.png)
+        skin/classic/global/icons/Portrait.png                      (icons/Portrait.png)
+        skin/classic/global/icons/Landscape.png                     (icons/Landscape.png)
         skin/classic/global/icons/Question.png                      (icons/Question.png)        
         skin/classic/global/icons/Restore.gif                       (icons/Restore.gif)
         skin/classic/global/icons/tabstrip-bottom.png               (icons/tabstrip-bottom.png)
