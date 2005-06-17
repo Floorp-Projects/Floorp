@@ -41,6 +41,7 @@ DEPTH=../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+pyexecdir	= @libdir@/python$(PYTHON_VER_DOTTED)/site-packages
 
 DIRS = loader $(NULL)
 
@@ -50,6 +51,9 @@ MODULE		= pyxpcom
 LIBRARY_NAME	= _xpcom$(PYTHON_DEBUG_SUFFIX)
 #MODULE_NAME	= 
 REQUIRES	= xpcom string $(NULL)
+MOZILLA_INTERNAL_API = 1
+FORCE_SHARED_LIB = 1 
+FORCE_USE_PIC = 1 
 
 DLL_SUFFIX=$(PYTHON_DLL_SUFFIX)
 LOCAL_INCLUDES = $(PYTHON_INCLUDES)
@@ -96,6 +100,12 @@ else
 endif
 	rm -f $(DIST)/bin/$(SHARED_LIBRARY)
 	rm -f $(DIST)/lib/$(IMPORT_LIBRARY)
+
+install::
+ifneq ($(OS_ARCH),WINNT)
+	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DISTDIR)$(pyexecdir)/xpcom
+	mv $(DISTDIR)$(pyexecdir)/xpcom/$(SHARED_LIBRARY) $(DISTDIR)$(pyexecdir)/xpcom/_xpcom$(PYTHON_DLL_SUFFIX)
+endif
 
 clobber::
 	rm -f *.ilk *.pdb

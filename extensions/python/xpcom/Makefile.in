@@ -46,14 +46,53 @@ DIRS = \
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+pyexecdir	= @libdir@/python$(PYTHON_VER_DOTTED)/site-packages
+
+PYSRCS_XPCOM = \
+	__init__.py \
+	components.py \
+	file.py \
+	nsError.py \
+	register.py \
+	xpcom_consts.py \
+	xpt.py \
+	$(NULL)
+
+PYSRCS_XPCOMCLIENT = \
+	__init__.py \
+	$(NULL)
+
+PYSRCS_XPCOMSERVER = \
+	__init__.py \
+	enumerator.py \
+	factory.py \
+	loader.py \
+	module.py \
+	policy.py \
+	$(NULL)
+
+PYSRCS_XPCOMTOOLS = \
+	regxpcom.py \
+	tracer_demo.py \
+	$(NULL)
+
+PYSRCS_XPCOM       := $(addprefix $(srcdir)/,$(PYSRCS_XPCOM))
+PYSRCS_XPCOMCLIENT := $(addprefix $(srcdir)/client/,$(PYSRCS_XPCOMCLIENT))
+PYSRCS_XPCOMSERVER := $(addprefix $(srcdir)/server/,$(PYSRCS_XPCOMSERVER))
+PYSRCS_XPCOMTOOLS  := $(addprefix $(srcdir)/tools/,$(PYSRCS_XPCOMTOOLS))
 
 include $(topsrcdir)/config/rules.mk
 
 libs::
-	$(INSTALL) *.py $(DIST)/bin/python/xpcom 
-	$(INSTALL) client/*.py $(DIST)/bin/python/xpcom/client
-	$(INSTALL) server/*.py $(DIST)/bin/python/xpcom/server
-	$(INSTALL) tools/*.py $(DIST)/bin/python/xpcom/tools
+	$(INSTALL) $(PYSRCS_XPCOM) $(DIST)/bin/python/xpcom 
+	$(INSTALL) $(PYSRCS_XPCOMCLIENT) $(DIST)/bin/python/xpcom/client
+	$(INSTALL) $(PYSRCS_XPCOMSERVER) $(DIST)/bin/python/xpcom/server
+	$(INSTALL) $(PYSRCS_XPCOMTOOLS) $(DIST)/bin/python/xpcom/tools
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(PYSRCS_XPCOM) $(DISTDIR)$(pyexecdir)/xpcom
+	$(SYSINSTALL) $(IFLAGS1) $(PYSRCS_XPCOMCLIENT) $(DISTDIR)$(pyexecdir)/xpcom/client
+	$(SYSINSTALL) $(IFLAGS1) $(PYSRCS_XPCOMSERVER) $(DISTDIR)$(pyexecdir)/xpcom/server
 
 clobber::
 	rm -rf $(DIST)/bin/python/xpcom
