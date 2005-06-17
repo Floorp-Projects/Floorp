@@ -61,7 +61,7 @@
   </keyset>
   <popupset id="historyContextMenu"/>
   <!-- use deep merging to hide certain columns by default -->
-  <tree id="historyTree" onfocus="goUpdateSelectEditMenuItems();">
+  <tree id="historyTree" onfocus="goUpdateSelectEditMenuItems();" seltype="single">
     <treecols id="historyTreeCols">
       <treecol id="Name"/>
       <splitter id="pre-URL-splitter"/>
