@@ -537,6 +537,13 @@ nsresult nsMsgDBView::FetchAccount(nsIMsgDBHdr * aHdr, PRUnichar ** aAccount)
     if (server)
       server->GetPrettyName(aAccount);
   }
+  else
+  {
+    *aAccount = ToNewUnicode(accountKey);
+  }
+  
+  if (!*aAccount)
+    *aAccount = nsCRT::strdup(NS_LITERAL_STRING("").get());
   return NS_OK;
 }
 
