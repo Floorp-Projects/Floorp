@@ -706,12 +706,6 @@ ifdef BEOS_ADDON_WORKAROUND
 endif
 endif
 endif # GRE_MODULE
-ifeq ($(OS_ARCH),OS2)
-	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib/components
-else
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib/components
-	$(ELF_DYNSTR_GC) $(DIST)/lib/components/$(SHARED_LIBRARY)
-endif
 ifndef _SKIP_OLD_GRE_INSTALL
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/components
 	$(ELF_DYNSTR_GC) $(FINAL_TARGET)/components/$(SHARED_LIBRARY)
@@ -1074,7 +1068,7 @@ ifdef SHARED_LIBRARY_LIBS
 endif # SHARED_LIBRARY_LIBS
 endif # NO_LD_ARCHIVE_FLAGS
 	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
-	@rm -f foodummyfilefoo $(SUB_SHLOBJS)
+	@rm -f foodummyfilefoo $(SUB_SHLOBJS) $(DELETE_AFTER_LINK)
 else # os2 vacpp
 	$(MKSHLIB) -O:$@ -DLL -INC:_dllentry $(LDFLAGS) $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
 endif # !os2 vacpp

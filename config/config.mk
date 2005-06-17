@@ -371,6 +371,16 @@ FORCE_SHARED_LIB=1
 endif
 endif
 
+# If we're building a component on MSVC, we don't want to generate an
+# import lib, because that import lib will collide with the name of a
+# static version of the same library.
+ifeq ($(GNU_LD)$(OS_ARCH),WINNT)
+ifdef IS_COMPONENT
+LDFLAGS += -IMPLIB:fake-import
+DELETE_AFTER_LINK = fake-import.exp
+endif
+endif
+
 ifdef STATIC_BUILD_PIC
 ifndef _ENABLE_PIC
 # If PIC hasn't been enabled now, object files in this directory will not
