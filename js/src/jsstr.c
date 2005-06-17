@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -1802,6 +1803,14 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
                 i++;
                 goto again;
             }
+	    if ((size_t)i == length) {
+                /* 
+                 * If there was a trivial zero-length match at the end of the
+                 * split, then we shouldn't output the matched string at the end
+                 * of the split array. See ECMA-262 Ed. 3, 15.5.4.14, Step 15.
+                 */
+                sep->chars = NULL;
+	    }
         }
         JS_ASSERT((size_t)i >= sep->length);
         return i - sep->length;
