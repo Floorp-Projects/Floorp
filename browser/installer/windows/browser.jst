@@ -317,12 +317,9 @@ function upgradeCleanup()
   deleteThisFile("Chrome",      "US.jar");
   deleteThisFile("Chrome",      "en-win.jar");
   deleteThisFile("Chrome",      "help.jar");
-  // Remove chrome and overlay registries, to remove bogus dependencies
-  // on any of the above files which may cause the app not to start. 
-  // XXXben Erk. This will effectively disable all global extensions...
-  //        we need to come up with a way to preserve global extensions 
-  //        across app versions...
   deleteThisFile("Chrome",      "chrome.rdf");
+  deleteThisFile("Chrome",      "installed-chrome.txt");
+  deleteThisFile("Chrome",      "app-chrome.manifest");
   deleteThisFolder("Chrome",    "overlayinfo");
 
   // Remove defunct components 
@@ -545,29 +542,6 @@ if(verifyDiskSpace(fProgram, srDest))
     logComment("Installing: "    + fProgram + "components\\Netscape\\MozillaTrunk\\permdata.box");
     logComment("Installing: "    + fProgram + "components\\Netscape\\MozillaTrunk\\Talkback.ini");
     logComment("Create Folder: " + fProgram + "chrome");
-    logComment("Installing: "    + fProgram + "chrome\\installed-chrome.txt");
-    logComment("Installing: "    + fProgram + "chrome\\chrome.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\cookie");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\cookie\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\cookie\\content\\overlays.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\inspector");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\inspector\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\inspector\\content\\overlays.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\communicator\\content\\overlays.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\editor");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\editor\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\editor\\content\\overlays.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\messenger");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\messenger\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\messenger\\content\\overlays.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\navigator\\content\\overlays.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator\\skin");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\navigator\\skin\\stylesheets.rdf");
     logComment("Create Folder: " + fProgram + "uninstall");
 
     err = getLastError();
