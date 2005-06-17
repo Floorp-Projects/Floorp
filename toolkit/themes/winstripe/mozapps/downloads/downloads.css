@@ -4,10 +4,8 @@
 
 /* Download View */
 #downloadView {
-  -moz-binding: url("chrome://mozapps/skin/downloads/downloads.xml#download-view");
   margin: 10px 10px 5px 10px;
   -moz-appearance: listbox;
-  -moz-user-focus: normal;
   background-color: Window;
 }
 
@@ -49,7 +47,6 @@ download {
   -moz-padding-end: 10px;
   min-height: 25px;
   border-bottom: 1px dotted #C0C0C0;
-  -moz-user-focus: normal;
 }
 
 download[selected="true"] {
@@ -80,7 +77,6 @@ download[state="5"], download[state="6"] {
   text-decoration: underline;
   color: blue;
   cursor: pointer;
-  -moz-user-focus: normal;
   border: 1px solid transparent;
 }
 

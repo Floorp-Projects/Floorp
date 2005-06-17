@@ -96,41 +96,41 @@
   <vbox id="contextMenuPalette" hidden="true">
     <menuitem id="menuitem_pause" 
               label="&cmd.pause.label;" accesskey="&cmd.pause.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selected, 'pause');"/>
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'pause');"/>
     <menuitem id="menuitem_resume" 
               label="&cmd.resume.label;" accesskey="&cmd.resume.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selected, 'resume');"/>
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'resume');"/>
     <menuitem id="menuitem_cancel" 
               label="&cmd.cancel.label;" accesskey="&cmd.cancel.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selected, 'cancel');"/>
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'cancel');"/>
 
     <menuitem id="menuitem_open" default="true"
               label="&cmd.open.label;" accesskey="&cmd.open.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selected, 'open');"/>
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'open');"/>
     <menuitem id="menuitem_openWith" 
               label="&cmd.openWith.label;" accesskey="&cmd.openWith.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selected, 'openWith');"/>
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'openWith');"/>
     <menuitem id="menuitem_show" 
               label="&cmd.show.label;" accesskey="&cmd.show.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selected, 'show');"/>
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'show');"/>
 
     <menuitem id="menuitem_retry" default="true"
               label="&cmd.retry.label;" accesskey="&cmd.retry.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selected, 'retry');"/>
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'retry');"/>
 
     <menuitem id="menuitem_remove"
               label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selected, 'remove');"/>
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'remove');"/>
               
     <menuseparator id="menuseparator_properties"/>              
     <menuitem id="menuitem_properties" 
               label="&cmd.properties.label;" accesskey="&cmd.properties.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selected, 'properties');"/>
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'properties');"/>
   </vbox>
   
   <popup id="downloadContextMenu" onpopupshowing="return buildContextMenu(event);"/>
 
-  <vbox id="downloadView" flex="1" style="overflow: auto;"
+  <richlistbox id="downloadView" flex="1" context="downloadContextMenu"
         datasources="rdf:null" ref="NC:DownloadsRoot"
         ondragover="nsDragAndDrop.dragOver(event, gDownloadDNDObserver);"
         ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
@@ -164,13 +164,13 @@
                   object="?icon"/>
         </bindings>            
         <action>
-          <download uri="?download" context="downloadContextMenu"
+          <download uri="?download"
                     image="?icon" file="?file" target="?target" state="?state"
                     animated="?animated" status="?status" progress="?progress-percent"/>
         </action>
       </rule>
     </template>
-  </vbox> 
+  </richlistbox>
   
   <hbox>
     <hbox id="commandBar" flex="1">

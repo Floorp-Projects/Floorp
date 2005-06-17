@@ -280,7 +280,7 @@ function onDownloadRemove(aEvent)
 {
   if (aEvent.target.removable) {
     gDownloadManager.removeDownload(aEvent.target.id);
-    
+
     gDownloadViewController.onCommandUpdate();
   }
 }
@@ -637,8 +637,8 @@ function buildContextMenu(aEvent)
   while (popup.hasChildNodes())
     popup.removeChild(popup.firstChild);
   
-  if (gDownloadsView.selected) {
-    var idx = parseInt(gDownloadsView.selected.getAttribute("state"));
+  if (gDownloadsView.selectedItem) {
+    var idx = parseInt(gDownloadsView.selectedItem.getAttribute("state"));
     if (idx < 0)
       idx = 0;
     
@@ -731,8 +731,8 @@ function onDownloadShowOptions()
 
 function onDownloadShowInfo()
 {
-  if (gDownloadsView.selected)
-    fireEventForElement(gDownloadsView.selected, "properties");
+  if (gDownloadsView.selectedItem)
+    fireEventForElement(gDownloadsView.selectedItem, "properties");
 }
 
 function initAutoDownloadDisplay()

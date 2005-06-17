@@ -1,10 +1,7 @@
 /* Download View */
 #downloadView {
-  -moz-binding: url("chrome://mozapps/skin/downloads/downloads.xml#download-view");
   margin: 0px;
-  -moz-user-focus: normal;
   border-bottom: 1px solid #8E8E8E;
-
 }
 
 .downloadViewInner2 {
@@ -86,7 +83,6 @@ label:last-child {
   text-decoration: underline;
   color: blue !important;
   cursor: pointer;
-  -moz-user-focus: normal;
   font-size: 100% !important;
   margin-left: 6px;
   padding: 0px;

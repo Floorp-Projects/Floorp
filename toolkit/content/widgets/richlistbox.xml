@@ -1,0 +1,216 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Richlistbox code.
+   -
+   - The Initial Developer of the Original Code is
+   - IBM Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - IBM Corporation. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Doron Rosenberg <doronr@us.ibm.com> (Original Author)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<bindings id="richlistboxBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="richlistbox">
+    <content>
+      <xul:scrollbox allowevents="true" orient="vertical" anonid="main-box"
+                     flex="1" style="overflow: auto;">
+        <children />
+      </xul:scrollbox>
+    </content>
+
+    <implementation>
+      <field name="scrollBoxObject">null</field>
+      <constructor>
+        <![CDATA[
+          var x = document.getAnonymousElementByAttribute(this, "anonid", "main-box");
+          this.scrollBoxObject = x.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+        ]]>
+      </constructor>
+
+      <property name="children">
+        <getter>
+        <![CDATA[
+          var childNodes = [];
+          for (var i = 0; i < this.childNodes.length; ++i) {
+            if ("fireEvent" in this.childNodes[i])
+              childNodes.push(this.childNodes[i]);
+          }
+          return childNodes;
+        ]]>
+        </getter>
+      </property>
+
+      <field name="_selectedItem">null</field>
+      <property name="selectedItem">
+        <getter>
+          return this._selectedItem;
+        </getter>
+        <setter>
+        <![CDATA[
+          if (this._selectedItem)
+            this._selectedItem.selected = false;
+
+          this._selectedItem = val;
+
+          if (val) {
+            val.selected = true;
+            this.scrollBoxObject.ensureElementIsVisible(val);
+          }
+
+          this.fireEvent("select");
+
+          var event = document.createEvent("Events");
+          event.initEvent("DOMMenuItemActive", true, true);
+          this.dispatchEvent(event);
+        ]]>
+        </setter>
+      </property>
+
+      <method name="clearSelection">
+        <body>
+        <![CDATA[
+          this.selectedItem = null;
+        ]]>
+        </body>
+      </method>
+
+      <method name="goUp">
+        <body>
+        <![CDATA[
+          // if nothing selected, we go from the bottom
+          for (var i = this.selectedItem ? this.selectedItem.previousSibling : this.lastChild; i; i = i.previousSibling) {
+            if ("fireEvent" in i) {
+              this.selectedItem = i;
+              return true;
+            }
+          }
+          return false;
+        ]]>
+        </body>
+      </method>
+
+      <method name="goDown">
+        <body>
+        <![CDATA[
+          // if nothing selected, we go from the top
+          for (var i = this.selectedItem ? this.selectedItem.nextSibling : this.firstChild; i; i = i.nextSibling) {
+            if ("fireEvent" in i) {
+              this.selectedItem = i;
+              return true;
+            }
+          }
+          return false;
+        ]]>
+        </body>
+      </method>
+
+      <method name="fireEvent">
+        <parameter name="aEventType"/>
+        <body>
+        <![CDATA[
+          var e = document.createEvent("Events");
+          var eventType = "richview-" + aEventType;
+          e.initEvent(eventType, false, true);
+          this.dispatchEvent(e);
+
+          var handler = this.getAttribute("onrichview-" + aEventType);
+          if (handler != "") {
+            var fn = new Function("event", handler);
+            fn(e);
+          }
+          document.commandDispatcher.updateCommands(eventType);
+        ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_UP" action="goUp(); event.preventDefault();"/>
+      <handler event="keypress" keycode="VK_DOWN" action="goDown(); event.preventDefault();"/>
+      <handler event="click">
+      <![CDATA[
+        // clicking into nothing should unselect
+        if (event.originalTarget.getAttribute("anonid") == "main-box")
+          this.clearSelection();
+      ]]>
+      </handler>
+      <handler event="contextmenu">
+      <![CDATA[
+        // if the context menu was opened via the keyboard, display it in the
+        // right location.
+        if (event.button != 2) {
+          var popup = document.getElementById(this.getAttribute("context"));
+          if (popup)
+            popup.showPopup(this.selectedItem, -1, -1, "context", "bottomleft", "topleft");
+        }
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="richlistitem">
+    <content>
+      <children />
+    </content>
+
+    <implementation>
+      <property name="selected"
+                onget="return this.getAttribute('selected');"
+                onset="return this.setAttribute('selected',val);"/>
+    </implementation>
+
+    <handlers>
+      <handler event="click">
+      <![CDATA[
+        if ((event.target == this) && event.ctrlKey && (this.parentNode.selectedItem == this)) {
+          this.parentNode.clearSelection();
+        } else {
+          this.parentNode.selectedItem = this;
+        }
+      ]]>
+      </handler>
+      <handler event="contextmenu" phase="capturing">
+      <![CDATA[
+         // This needed to be called before the contextmenu gets shown to handle
+         // someone rightclicking on an unselected item
+         if (event.target == this) {
+           this.parentNode.selectedItem = this;
+         }
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+</bindings>
+
