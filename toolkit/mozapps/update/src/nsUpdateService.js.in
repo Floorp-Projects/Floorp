@@ -1031,6 +1031,7 @@ Checker.prototype = {
     url = url.replace(/%BUILD_ID%/g, gApp.appBuildID);
     url = url.replace(/%BUILD_TARGET%/g, gApp.OS + "_" + gApp.XPCOMABI);
     url = url.replace(/%LOCALE%/g, locale);
+    url = url.replace(/\+/g, "%2B");
 
     LOG("update url: " + url);
     return url;
