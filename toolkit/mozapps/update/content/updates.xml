@@ -95,7 +95,7 @@
           
           this.setAttribute("name", update.name);
           this.setAttribute("detailsURL", update.detailsURL);
-          this.state = update.state;
+          this.state = update.selectedPatch.state;
         ]]></body>
       </method>
       

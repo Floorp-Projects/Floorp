@@ -72,6 +72,16 @@ interface nsIUpdatePatch : nsISupports
   /**
    *
    */
+  attribute double progress;
+
+  /**
+   * The state of this update
+   */
+  attribute AString state;
+
+  /**
+   *
+   */
   attribute boolean selected;
 
   /**
@@ -135,11 +145,9 @@ interface nsIUpdate : nsISupports
   attribute long long installDate;
 
   /**
-   * The state of this update
-   * XXXben: in a multi-patch world, this needs to move down into the 
-   *         nsIUpdatePatch interface, but for simplicity it shall stay here.
+   * 
    */
-  attribute AString state;
+  readonly attribute nsIUpdatePatch selectedPatch;
 
   /**
    * The number of patches supplied by this update.
