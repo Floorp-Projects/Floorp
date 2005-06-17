@@ -75,6 +75,11 @@ interface nsIUpdatePatch : nsISupports
   attribute double progress;
 
   /**
+   *
+   */
+  attribute AString status;
+
+  /**
    * The state of this update
    */
   attribute AString state;
