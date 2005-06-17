@@ -182,3 +182,5 @@ pref("ui.key.menuAccessKey", 18);
 pref("ui.key.menuAccessKeyFocuses", false);
 pref("ui.key.saveLink.shift", true); 
 pref("viewmanager.do_doublebuffering", true);
+
+pref("browser.xul.error_pages.enabled", true);

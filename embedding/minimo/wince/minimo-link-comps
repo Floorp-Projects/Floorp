@@ -3,6 +3,7 @@ mozuconv
 i18n
 necko
 jar50
+rdf
 pref
 caps
 gkparser
@@ -13,12 +14,16 @@ gklayout
 docshell
 embedcmp
 webbrwsr
-editor
+texteditor
 txmgr
 appshell
-chrmlite
+chrome
 mork
 xmlextra
 t8iix
 websrvcs
 popuplite
+snav
+tkitcmps
+gkplugin
+softkey

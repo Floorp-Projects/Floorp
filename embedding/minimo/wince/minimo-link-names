@@ -3,6 +3,7 @@ nsUConvModule
 nsI18nModule
 necko_core_and_primary_protocols
 nsJarModule
+nsRDFModule
 nsPrefModule
 nsSecurityManagerModule
 nsParserModule
@@ -16,9 +17,13 @@ Browser_Embedding_Module
 nsEditorModule
 nsTransactionManagerModule
 appshell
-chromelite
+nsChromeModule
 nsMorkModule
 nsXMLExtrasModule
 TransformiixModule
 nsWebServicesModule
 popuplite
+SpatialNavigationModule
+nsToolkitCompsModule
+nsPluginModule
+SoftKeyBoardModule

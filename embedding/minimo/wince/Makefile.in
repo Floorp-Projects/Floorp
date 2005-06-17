@@ -36,12 +36,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MOZILLA_INTERNAL_API = 1
 
-PROGRAM		= winEmbed$(BIN_SUFFIX)
-RESFILE		= winEmbed.res
+PROGRAM		= minimo$(BIN_SUFFIX)
 
-MODULE		= winEmbed
-
-PACKAGE_FILE = winembed.pkg
+MODULE		= minimo
 
 REQUIRES	= xpcom \
 		  string \
@@ -61,13 +58,14 @@ REQUIRES	= xpcom \
 		  layout \
 		  content \
 		  profdirserviceprovider \
+		  embedcomponents \
+		  appcomps \
 		  $(NULL)
 
 CPPSRCS		= \
 		winEmbed.cpp \
 		WebBrowserChrome.cpp \
 		WindowCreator.cpp \
-		PromptService.cpp \
 		$(NULL)
 
 

@@ -42,13 +42,9 @@
 #include "nsIDOMWindow.h"
 #include "nsIComponentRegistrar.h"
 
-#include "PromptService.h"
-
 // Local header files
 #include "winEmbed.h"
 #include "WebBrowserChrome.h"
 #include "WindowCreator.h"
-#include "resource.h"
 
-#include "PromptService.h"
 #endif // MINIMO_PRIVATE_H

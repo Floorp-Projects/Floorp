@@ -30,7 +30,7 @@
 
 #include "nsIWebBrowserChrome.h"
 #include "WindowCreator.h"
-#include "winEmbed.h"
+#include "MinimoPrivate.h"
 
 WindowCreator::WindowCreator()
 {
@@ -42,12 +42,70 @@ WindowCreator::~WindowCreator()
 
 NS_IMPL_ISUPPORTS1(WindowCreator, nsIWindowCreator)
 
-NS_IMETHODIMP
-WindowCreator::CreateChromeWindow(nsIWebBrowserChrome *parent,
-                                  PRUint32 chromeFlags,
-                                  nsIWebBrowserChrome **_retval)
+nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
-    AppCallbacks::CreateBrowserWindow(PRInt32(chromeFlags), parent, _retval);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+    if (!chrome)
+        return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsIEmbeddingSiteWindow> embeddingSite = do_QueryInterface(chrome);
+    HWND hWnd;
+    embeddingSite->GetSiteWindow((void **) & hWnd);
+    
+    if (!hWnd)
+        return NS_ERROR_NULL_POINTER;
+    
+    RECT rect;
+    GetClientRect(hWnd, &rect);
+    
+    // Make sure the browser is visible and sized
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    chrome->GetWebBrowser(getter_AddRefs(webBrowser));
+    nsCOMPtr<nsIBaseWindow> webBrowserAsWin = do_QueryInterface(webBrowser);
+    if (webBrowserAsWin)
+    {
+        webBrowserAsWin->SetPositionAndSize(rect.left, 
+                                            rect.top, 
+                                            rect.right - rect.left, 
+                                            rect.bottom - rect.top,
+                                            PR_TRUE);
+        webBrowserAsWin->SetVisibility(PR_TRUE);
+    }
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+WindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
+                                  PRUint32 aChromeFlags,
+                                  nsIWebBrowserChrome **aNewWindow)
+{
+    NS_ENSURE_ARG_POINTER(aNewWindow);
+
+    WebBrowserChrome * chrome = new WebBrowserChrome();
+    if (!chrome)
+        return NS_ERROR_FAILURE;
+
+    // now an extra addref; the window owns itself (to be released by
+    // WebBrowserChromeUI::Destroy)
+    NS_ADDREF(chrome);
+    
+    chrome->SetChromeFlags(aChromeFlags);
+    
+    // Insert the browser
+    nsCOMPtr<nsIWebBrowser> newBrowser;
+    chrome->CreateBrowser(-1, -1, -1, -1, getter_AddRefs(newBrowser));
+
+    if (!newBrowser)
+    {
+        NS_RELEASE(chrome);
+        return NS_ERROR_FAILURE;
+    }
+
+    // and an addref on the way out.
+    NS_ADDREF(chrome);
+    *aNewWindow = NS_STATIC_CAST(nsIWebBrowserChrome*, chrome);
+
+    ResizeEmbedding(chrome);
+
+    return NS_OK;
 }
