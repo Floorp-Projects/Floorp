@@ -54,7 +54,7 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 libs::
-	$(INSTALL) ./py_test_component.py $(DIST)/bin/components
+	$(INSTALL) $(srcdir)/py_test_component.py $(DIST)/bin/components
 
 clobber::
 	$(RM) $(DIST)/bin/components/py_test_component.py
