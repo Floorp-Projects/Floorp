@@ -13,9 +13,9 @@ function upgradeCleanup()
   deleteThisFolder("Chrome",      "US");
   deleteThisFile("Chrome",        "help.jar");
 
-  // Remove chrome and overlay registries, to remove bogus dependencies
-  // on any of the above files which may cause the app not to start. 
   deleteThisFile("Chrome",        "chrome.rdf");
+  deleteThisFile("Chrome",        "installed-chrome.txt");
+  deleteThisFile("Chrome",        "app-chrome.manifest");
   deleteThisFolder("Chrome",      "overlayinfo");
 
   // Remove defunct components and type libraries
