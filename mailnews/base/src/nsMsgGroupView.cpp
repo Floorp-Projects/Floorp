@@ -147,8 +147,8 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
       return new nsCStringKey(cStringKey.get());
       break;
     case nsMsgViewSortType::byAuthor:
-      (void) msgHdr->GetAuthor(getter_Copies(cStringKey));
-      return new nsCStringKey(cStringKey.get());
+      (void) nsMsgDBView::FetchAuthor(msgHdr, getter_Copies(stringKey));
+      return new nsStringKey(stringKey.get());
     case nsMsgViewSortType::byRecipient:
       (void) msgHdr->GetRecipients(getter_Copies(cStringKey));
       return new nsCStringKey(cStringKey.get());
