@@ -69,8 +69,22 @@ CPPSRCS	= 				\
 		nsLoadListenerProxy.cpp		\
 		$(NULL)
 
+# See bug 295659
+DEFINES += -D_IMPL_NS_GFX
+CPPSRCS += nsRect.cpp
+
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
+
+# Make sure that we have nsRect built in, because some compilers like to
+# aggressively expand some inlines we get via nsGUIEvent.h, and then we
+# lose when linking during a (transitive) XPI_PKGNAME build driven by a
+# static-app master build.
+#
+# See bug 295659.
+export::
+	$(NSINSTALL) $(topsrcdir)/gfx/src/nsRect.cpp .
+
