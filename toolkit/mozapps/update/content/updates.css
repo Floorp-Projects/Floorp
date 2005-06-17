@@ -5,7 +5,9 @@ wizard[description=""] .wizard-header-description {
 }
 
 wizard[currentpageid="license"] .wizard-buttons,
-wizard[currentpageid="errors"] .wizard-buttons {
+wizard[currentpageid="errors"] .wizard-buttons,
+wizard[currentpageid="noupdatesfound"] .wizard-buttons,
+wizard[currentpageid="checking"] .wizard-buttons {
   display: -moz-box;
 }
 

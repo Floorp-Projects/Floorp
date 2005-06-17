@@ -64,17 +64,19 @@
   </stringbundleset>
 
   <wizardpage id="checking" pageid="checking" next="updatesfound"
+              label="&checking.title;" 
               onpageshow="gCheckingPage.onPageShow();">
     <vbox class="content" flex="1">
       <label>&checking.label;</label>
       <separator/>
       <progressmeter id="checkingProgress" mode="undetermined"/>
-      <separator flex="1"/>
-      <hbox pack="end">
-        <button label="&cancel.label;" accesskey="&cancel.accesskey;"
-                oncommand="gCheckingPage.onClose();"/>
-      </hbox>
     </vbox>
+  </wizardpage>
+  
+  <wizardpage id="noupdatesfound" pageid="noupdatesfound" class="content"
+              label="&noupdatesfound.title;"
+              onpageshow="gNoUpdatesPage.onPageShow();">
+    <label>&noupdatesfound.intro;</label>
   </wizardpage>
   
   <wizardpage id="updatesfound" pageid="updatesfound" next="downloading"
