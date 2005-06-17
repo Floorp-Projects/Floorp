@@ -130,8 +130,8 @@ function Startup()
       document.getElementById("bookmarknamegrid").setAttribute("hidden", "true");
       document.getElementById("createinseparator").setAttribute("hidden", "true");
       document.getElementById("nameseparator").setAttribute("hidden", "true");
-      sizeToContent();
-      document.title = document.documentElement.getAttribute("selectFolderTitle");
+      sizeToFit();
+      document.title = document.documentElement.getAttribute("title-selectFolder");
       shouldSetOKButton = false;
       if (window.arguments[2])
         folderItem = RDF.GetResource(window.arguments[2]);
@@ -293,20 +293,6 @@ function createNewFolder ()
   var resource = bookmarksView.treeBuilder.getResourceAtIndex(bookmarksView.currentIndex);
   var target = BookmarksUtils.getTargetFromFolder(resource);
   BookmarksCommand.createNewFolder(target);
-}
-
-function useDefaultFolder ()
-{
-  var bookmarkView = document.getElementById("bookmarks-view");
-  var folder = BookmarksUtils.getNewBookmarkFolder();
-  var ind = bookmarkView.treeBuilder.getIndexOfResource(folder);
-  if (ind != -1) {
-    bookmarkView.tree.focus();
-    bookmarkView.treeBoxObject.view.selection.select(ind);
-  } else {
-    bookmarkView.treeBoxObject.view.selection.clearSelection();
-  }
-  gCreateInFolder = folder.Value;
 }
 
 var gOldNameValue = "";
