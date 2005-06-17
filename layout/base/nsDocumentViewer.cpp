@@ -525,6 +525,10 @@ DocumentViewerImpl::~DocumentViewerImpl()
   NS_ASSERTION(!mPresShell && !mPresContext,
                "User did not call nsIContentViewer::Destroy");
   if (mPresShell || mPresContext) {
+    // Make sure we don't hand out a reference to the content viewer to
+    // the SHEntry!
+    mSHEntry = nsnull;
+
     Destroy();
   }
 
