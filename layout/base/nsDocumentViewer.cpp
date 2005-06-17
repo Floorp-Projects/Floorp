@@ -1029,8 +1029,10 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   }
 
   // Notify the document that it has been shown (regardless of whether
-  // it was just loaded).
-  mDocument->OnPageShow(restoring);
+  // it was just loaded). Note: mDocument may be null now if the above
+  // firing of onload caused the document to unload.
+  if (mDocument)
+    mDocument->OnPageShow(restoring);
 
   // Now that the document has loaded, we can tell the presshell
   // to unsuppress painting.
