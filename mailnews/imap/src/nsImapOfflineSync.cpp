@@ -335,7 +335,7 @@ nsImapOfflineSync::ProcessAppendMsgOperation(nsIMsgOfflineImapOperation *current
             rv = destFolder->GetOfflineStoreInputStream(getter_AddRefs(offlineStoreInputStream));
             if (NS_SUCCEEDED(rv) && offlineStoreInputStream)
             {
-              nsCOMPtr<nsIRandomAccessStore> seekStream = do_QueryInterface(offlineStoreInputStream);
+              nsCOMPtr<nsISeekableStream> seekStream = do_QueryInterface(offlineStoreInputStream);
               NS_ASSERTION(seekStream, "non seekable stream - can't read from offline msg");
               if (seekStream)
               {

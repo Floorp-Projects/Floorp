@@ -75,7 +75,7 @@ static nsresult ns_file_convert_result(PRInt32 nativeErr)
 //-----------------------------------------------------------------------------
 
 class nsStringInputStream : public nsIStringInputStream
-                          , public nsIRandomAccessStore
+                          , public nsISeekableStream
                             
 {
 public:
@@ -97,16 +97,10 @@ private:
 
 public:
     NS_DECL_ISUPPORTS
-
     NS_DECL_NSISTRINGINPUTSTREAM
     NS_DECL_NSIINPUTSTREAM
-
-    // nsIRandomAccessStore interface
-    NS_IMETHOD GetAtEOF(PRBool* outAtEOF);
-    NS_IMETHOD SetAtEOF(PRBool inAtEOF);
-
     NS_DECL_NSISEEKABLESTREAM
-    
+
 protected:
     PRInt32 LengthRemaining() const
     {
@@ -135,10 +129,9 @@ protected:
     PRUint32                       mLength;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsStringInputStream,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsStringInputStream,
                               nsIStringInputStream,
                               nsIInputStream,
-                              nsIRandomAccessStore,
                               nsISeekableStream)
 
 /////////
@@ -226,7 +219,7 @@ NS_IMETHODIMP nsStringInputStream::Read(char* aBuf, PRUint32 aCount,
 
     *aReadCount = bytesRead;
     if (bytesRead < aCount)
-        SetAtEOF(PR_TRUE);
+        SetEOF();
     return NS_OK;
 }
 
@@ -264,7 +257,8 @@ nsStringInputStream::IsNonBlocking(PRBool *aNonBlocking)
 /////////
 // nsISeekableStream implementation
 /////////
-NS_IMETHODIMP nsStringInputStream::Seek(PRInt32 whence, PRInt64 offset)
+NS_IMETHODIMP 
+nsStringInputStream::Seek(PRInt32 whence, PRInt64 offset)
 {
     mLastResult = NS_OK; // reset on a seek.
     const nsInt64 maxUint32 = PR_UINT32_MAX;
@@ -309,23 +303,8 @@ NS_IMETHODIMP nsStringInputStream::SetEOF()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/////////
-// nsIRandomAccessStore implementation
-/////////
-NS_IMETHODIMP nsStringInputStream::GetAtEOF(PRBool* outAtEOF)
-{
-    *outAtEOF = mEOF;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsStringInputStream::SetAtEOF(PRBool inAtEOF)
-{
-    mEOF = inAtEOF;
-    return NS_OK;
-}
-
 // Factory method to get an nsInputStream from an nsAString.  Result will
-// implement nsIStringInputStream and nsIRandomAccessStore
+// implement nsIStringInputStream and nsISeekableStream
 extern "C" NS_COM nsresult
 NS_NewStringInputStream(nsIInputStream** aStreamResult,
                         const nsAString& aStringToRead)
@@ -356,7 +335,7 @@ NS_NewStringInputStream(nsIInputStream** aStreamResult,
 }
 
 // Factory method to get an nsInputStream from an nsACString.  Result will
-// implement nsIStringInputStream and nsIRandomAccessStore
+// implement nsIStringInputStream and nsISeekableStream
 extern "C" NS_COM nsresult
 NS_NewCStringInputStream(nsIInputStream** aStreamResult,
                          const nsACString& aStringToRead)
@@ -387,7 +366,7 @@ NS_NewCStringInputStream(nsIInputStream** aStreamResult,
 }
 
 // Factory method to get an nsInputStream from a C string.  Result will
-// implement nsIStringInputStream and nsIRandomAccessStore
+// implement nsIStringInputStream and nsISeekableStream
 extern "C" NS_COM nsresult
 NS_NewCharInputStream(nsIInputStream** aStreamResult,
                       const char* aStringToRead)
@@ -412,7 +391,7 @@ NS_NewCharInputStream(nsIInputStream** aStreamResult,
 }
 
 // Factory method to get an nsInputStream from a byte array.  Result will
-// implement nsIStringInputStream and nsIRandomAccessStore
+// implement nsIStringInputStream and nsISeekableStream
 extern "C" NS_COM nsresult
 NS_NewByteInputStream(nsIInputStream** aStreamResult,
                       const char* aStringToRead,

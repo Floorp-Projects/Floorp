@@ -718,7 +718,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineStoreOutputStream(nsIOutputStream **outpu
     NS_ENSURE_SUCCESS(rv, rv);
     supports->QueryInterface(NS_GET_IID(nsIOutputStream), (void **) outputStream);
 
-    nsCOMPtr <nsIRandomAccessStore> seekable = do_QueryInterface(supports);
+    nsCOMPtr <nsISeekableStream> seekable = do_QueryInterface(supports);
     if (seekable)
       seekable->Seek(nsISeekableStream::NS_SEEK_END, 0);
   }
@@ -1470,7 +1470,7 @@ nsresult nsMsgDBFolder::StartNewOfflineMessage()
 
 nsresult nsMsgDBFolder::EndNewOfflineMessage()
 {
-  nsCOMPtr <nsIRandomAccessStore> seekable;
+  nsCOMPtr <nsISeekableStream> seekable;
   nsInt64 curStorePos;
   PRUint32 messageOffset;
   nsMsgKey messageKey;
