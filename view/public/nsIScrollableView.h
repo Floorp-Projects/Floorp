@@ -109,13 +109,6 @@ public:
   NS_IMETHOD ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags) = 0;
 
   /**
-   * Get information about whether the vertical and horizontal scrollbars
-   * are currently visible
-   */
-  NS_IMETHOD GetScrollbarVisibility(PRBool *aVerticalVisible,
-                                    PRBool *aHorizontalVisible) const = 0;
-
-  /**
    * Set the properties describing how scrolling can be performed
    * in this scrollable.
    * @param aProperties new properties

@@ -77,6 +77,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsDocumentCharsetInfoCID.h"
 #include "nsICanvasFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsContentPolicyUtils.h" // NS_CheckContentLoadPolicy(...)
 #include "nsICategoryManager.h"
 #include "nsXPCOMCID.h"
@@ -3955,21 +3956,25 @@ nsDocShell::GetScrollbarVisibility(PRBool * verticalVisible,
     nsIScrollableView* scrollView;
     NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
                       NS_ERROR_FAILURE);
-    if (!scrollView) {
+    if (!scrollView)
         return NS_ERROR_FAILURE;
-    }
 
-    PRBool vertVisible;
-    PRBool horizVisible;
+    // We should now call nsLayoutUtils::GetScrollableFrameFor,
+    // but we can't because of stupid linkage!
+    nsIFrame* scrollFrame =
+        NS_STATIC_CAST(nsIFrame*, scrollView->View()->GetParent()->GetClientData());
+    if (!scrollFrame)
+        return NS_ERROR_FAILURE;
+    nsIScrollableFrame* scrollable = nsnull;
+    CallQueryInterface(scrollFrame, &scrollable);
+    if (!scrollable)
+        return NS_ERROR_FAILURE;
 
-    NS_ENSURE_SUCCESS(scrollView->GetScrollbarVisibility(&vertVisible,
-                                                         &horizVisible),
-                      NS_ERROR_FAILURE);
-
+    nsMargin scrollbars = scrollable->GetActualScrollbarSizes();
     if (verticalVisible)
-        *verticalVisible = vertVisible;
+        *verticalVisible = scrollbars.left != 0 || scrollbars.right != 0;
     if (horizontalVisible)
-        *horizontalVisible = horizVisible;
+        *horizontalVisible = scrollbars.top != 0 || scrollbars.bottom != 0;
 
     return NS_OK;
 }
