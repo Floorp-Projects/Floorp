@@ -2107,7 +2107,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         // clear out any environment variables which may have been set 
         // during the relaunch process now that we know we won't be relaunching.
         PR_SetEnv("XRE_PROFILE_PATH=");
-        PR_SetEnv("XRE_PROFILE_TEMP_PATH=");
+        PR_SetEnv("XRE_PROFILE_LOCAL_PATH=");
         PR_SetEnv("XRE_START_OFFLINE=");
         PR_SetEnv("XRE_IMPORT_PROFILES=");
         PR_SetEnv("NO_EM_RESTART=");
