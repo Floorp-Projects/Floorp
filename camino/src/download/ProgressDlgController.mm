@@ -434,10 +434,22 @@ static id gSharedProgressController = nil;
   [self makeDLInstanceVisibleIfItsNotAlready:progressDisplay];
 }
 
--(void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay
+-(void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay withSuccess:(BOOL)completedOK
 {
   [self rebuildViews]; // to swap in the completed view
   [[[self window] toolbar] validateVisibleItems]; // force update which doesn't always happen
+
+  // close the window if user has set pref to close when all downloads complete
+  if (completedOK)
+  {
+    BOOL gotPref;
+    BOOL keepDownloadsOpen = [[PreferenceManager sharedInstance] getBooleanPref:"browser.download.progressDnldDialog.keepAlive" withSuccess:&gotPref];
+    if (!keepDownloadsOpen && ([self numDownloadsInProgress] == 0))
+    {
+      [self close];   // don't call -performClose: on the window, because we don't want Cocoa to look
+                      // for the option key and try to close all windows
+    }
+  }
 }
 
 -(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay
@@ -579,7 +591,8 @@ static id gSharedProgressController = nil;
   return TRUE;
 }
 
--(BOOL)validateMenuItem:(id <NSMenuItem>)menuItem {
+-(BOOL)validateMenuItem:(id <NSMenuItem>)menuItem
+{
   SEL action = [menuItem action];
   if (action == @selector(cancel:)) {
     return [self shouldAllowCancelAction];

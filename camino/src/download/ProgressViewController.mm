@@ -444,18 +444,8 @@ enum {
 {
   mDownloadingError = !completedOK;
   
-  // close the window if user has set pref to close when all downloads complete
-  if (completedOK) {
-    BOOL gotPref;
-    // from the UI, this download is still going so close if we're the only one left
-    if (![[PreferenceManager sharedInstance] getBooleanPref:"browser.download.progressDnldDialog.keepAlive" withSuccess:&gotPref] &&
-        ([mProgressWindowController numDownloadsInProgress] == 1)) {
-      [[mProgressWindowController window] performClose:self];
-    }
-  }
-  
   [self downloadDidEnd];
-  [mProgressWindowController didEndDownload:self];
+  [mProgressWindowController didEndDownload:self withSuccess:completedOK];
 }
 
 -(void)setProgressTo:(long long)aCurProgress ofMax:(long long)aMaxProgress
