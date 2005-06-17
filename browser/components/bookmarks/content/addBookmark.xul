@@ -45,7 +45,7 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/bookmarks/addBookmark.dtd">
 
-<dialog id="newBookmarkDialog" style="width: 36em;"
+<dialog id="newBookmarkDialog" style="width: 36em; height: 18em;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         ondialogaccept="return onOK(event)"
         title="&newBookmark.title;" title-selectFolder="&selectFolder.label;"
@@ -109,9 +109,6 @@
         <vbox>
           <button label="&button.newfolder.label;" accesskey="&button.newfolder.accesskey;"
                   oncommand="createNewFolder();" icon="open"/>
-          <button label="&button.defaultfolder.label;" 
-                  accesskey="&button.defaultfolder.accesskey;"
-                  oncommand="useDefaultFolder();"/>
         </vbox>
       </hbox>
     </hbox>
