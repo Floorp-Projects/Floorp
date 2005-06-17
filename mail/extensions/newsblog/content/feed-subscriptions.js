@@ -387,19 +387,23 @@ var gFeedSubscriptionsWindow = {
 
   getFeedsInFolder: function (aFolder)
   {
-    var msgdb = aFolder.QueryInterface(Components.interfaces.nsIMsgFolder).getMsgDatabase(null);
-    var folderInfo = msgdb.dBFolderInfo;
-    var feedurls = folderInfo.getCharPtrProperty("feedUrl");
-    var feedUrlArray = feedurls.split("|");
     var feeds = new Array();
-    for (url in feedUrlArray)
+    try
     {
-      if (!feedUrlArray[url])
-        continue;
-      var feedResource  = rdf.GetResource(feedUrlArray[url]);
-      var feed = new Feed(feedResource, this.mRSSServer);
-      feeds.push(feed);
+      var msgdb = aFolder.QueryInterface(Components.interfaces.nsIMsgFolder).getMsgDatabase(null);
+      var folderInfo = msgdb.dBFolderInfo;
+      var feedurls = folderInfo.getCharPtrProperty("feedUrl");
+      var feedUrlArray = feedurls.split("|");
+      for (url in feedUrlArray)
+      {
+        if (!feedUrlArray[url])
+          continue;
+        var feedResource  = rdf.GetResource(feedUrlArray[url]);
+        var feed = new Feed(feedResource, this.mRSSServer);
+        feeds.push(feed);
+      }
     }
+    catch(ex) {}
     return feeds;
   },
   
