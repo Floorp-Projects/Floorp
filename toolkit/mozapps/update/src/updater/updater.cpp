@@ -463,7 +463,7 @@ private:
 class RemoveFile : public Action
 {
 public:
-  RemoveFile() : mFile(NULL) { }
+  RemoveFile() : mFile(NULL), mSkip(0) { }
 
   int Parse(char *line);
   int Prepare();
@@ -472,6 +472,7 @@ public:
 
 private:
   const char* mFile;
+  int mSkip;
 };
 
 int
@@ -493,8 +494,11 @@ RemoveFile::Prepare()
 
   // We expect the file to exist if we are to remove it.
   int rv = access(mFile, F_OK);
-  if (rv)
-    return IO_ERROR;
+  if (rv) {
+    LOG(("file cannot be removed because it does not exist; skipping"));
+    mSkip = 1;
+    return OK;
+  }
 
   char *slash = (char *) strrchr(mFile, '/');
   if (slash) {
@@ -516,6 +520,9 @@ RemoveFile::Execute()
 {
   LOG(("EXECUTE REMOVE %s\n", mFile));
 
+  if (mSkip)
+    return OK;
+
   // save a complete copy of the old file, and then remove the
   // old file.  we'll clean up the copy in Finish.
 
@@ -534,6 +541,9 @@ void
 RemoveFile::Finish(int status)
 {
   LOG(("FINISH REMOVE %s\n", mFile));
+
+  if (mSkip)
+    return;
 
   backup_finish(mFile, status);
 }
