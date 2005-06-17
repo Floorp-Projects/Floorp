@@ -1295,6 +1295,8 @@ nsComponentManagerImpl::ReadPersistentRegistry()
     if (ReadSectionHeader(reader, "CATEGORIES"))
         goto out;
 
+    mCategoryManager->SuppressNotifications(PR_TRUE);
+
     while (1)
     {
         if (!reader.NextLine())
@@ -1311,6 +1313,8 @@ nsComponentManagerImpl::ReadPersistentRegistry()
                                            PR_TRUE,
                                            0);
     }
+
+    mCategoryManager->SuppressNotifications(PR_FALSE);
 
     mRegistryDirty = PR_FALSE;
 out:

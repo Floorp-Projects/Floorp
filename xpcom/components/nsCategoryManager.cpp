@@ -53,6 +53,7 @@
 #include "nsSupportsPrimitives.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsQuickSort.h"
@@ -517,6 +518,39 @@ nsCategoryManager::get_category(const char* aName) {
   return node;
 }
 
+void
+nsCategoryManager::NotifyObservers( const char *aTopic,
+                                    const char *aCategoryName,
+                                    const char *aEntryName )
+{
+  if (mSuppressNotifications)
+    return;
+
+  nsCOMPtr<nsIObserverService> observerService
+    (do_GetService("@mozilla.org/observer-service;1"));
+  if (!observerService)
+    return;
+ 
+  if (aEntryName) {
+    nsCOMPtr<nsISupportsCString> entry
+      (do_CreateInstance (NS_SUPPORTS_CSTRING_CONTRACTID));
+    if (!entry)
+      return;
+
+    nsresult rv = entry->SetData(nsDependentCString(aEntryName));
+    if (NS_FAILED(rv))
+      return;
+
+    observerService->NotifyObservers
+                       (entry, aTopic,
+                        NS_ConvertUTF8toUTF16(aCategoryName).get());
+  } else {
+    observerService->NotifyObservers
+                       (this, aTopic,
+                        NS_ConvertUTF8toUTF16(aCategoryName).get());
+  }
+}
+
 NS_IMETHODIMP
 nsCategoryManager::GetCategoryEntry( const char *aCategoryName,
                                      const char *aEntryName,
@@ -568,12 +602,19 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
   if (!category)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  return category->AddLeaf(aEntryName,
-                           aValue,
-                           aPersist,
-                           aReplace,
-                           _retval,
-                           &mArena);
+  nsresult rv = category->AddLeaf(aEntryName,
+                                  aValue,
+                                  aPersist,
+                                  aReplace,
+                                  _retval,
+                                  &mArena);
+
+  if (NS_SUCCEEDED(rv)) {
+    NotifyObservers(NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID,
+                    aCategoryName, aEntryName);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -597,8 +638,15 @@ nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
   if (!category)
     return NS_OK;
 
-  return category->DeleteLeaf(aEntryName,
-                              aDontPersist);
+  nsresult rv = category->DeleteLeaf(aEntryName,
+                                     aDontPersist);
+
+  if (NS_SUCCEEDED(rv)) {
+    NotifyObservers(NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID,
+                    aCategoryName, aEntryName);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -614,8 +662,11 @@ nsCategoryManager::DeleteCategory( const char *aCategoryName )
   CategoryNode* category = get_category(aCategoryName);
   PR_Unlock(mLock);
 
-  if (category)
+  if (category) {
     category->Clear();
+    NotifyObservers(NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID,
+                    aCategoryName, nsnull);
+  }
 
   return NS_OK;
 }
@@ -691,6 +742,13 @@ nsCategoryManager::WriteCategoryManagerToRegistry(PRFileDesc* fd)
     return NS_ERROR_UNEXPECTED;
   }
 
+  return NS_OK;
+}
+
+NS_METHOD
+nsCategoryManager::SuppressNotifications(PRBool aSuppress)
+{
+  mSuppressNotifications = aSuppress;
   return NS_OK;
 }
 
