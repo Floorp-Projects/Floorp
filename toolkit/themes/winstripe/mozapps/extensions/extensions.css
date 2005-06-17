@@ -77,6 +77,12 @@
   outline: 1px dotted invert ! important;
 }
 
+richlistbox {
+  margin: 10px 10px 5px 10px;
+  -moz-appearance: listbox;
+  background-color: Window;
+}
+
 /* Extension List Items */
 extension[selected="true"] {
   background-image: url("chrome://mozapps/skin/shared/itemSelected.png");

@@ -39,7 +39,8 @@ download[state="7"] {
   -moz-binding: url('chrome://mozapps/content/downloads/download.xml#install-done');
 }
 
-#downloadView {
-  -moz-binding: url('chrome://mozapps/content/downloads/download.xml#download-view');
+/* Only focus links in the selected item*/
+download[selected="true"] .link {
+  -moz-user-focus: normal;
 }
 

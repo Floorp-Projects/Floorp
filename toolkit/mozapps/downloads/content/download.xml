@@ -51,7 +51,7 @@
           xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 
-  <binding id="download-base">
+  <binding id="download-base" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
     <resources>
       <stylesheet src="chrome://mozapps/skin/downloads/downloads.css"/>
     </resources>
@@ -126,6 +126,15 @@
         </body>
       </method>
     </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_RETURN">
+      <![CDATA[
+        if (event.originalTarget.className == "link")
+          event.originalTarget.click();
+      ]]>
+      </handler>
+    </handlers>
   </binding>
   
   <binding id="download-starting" extends="chrome://mozapps/content/downloads/download.xml#download-base">
@@ -306,14 +315,12 @@
             </xul:vbox>
             <xul:vbox pack="start">
               <xul:label value="&cmd.cancel.label;" class="link"
-                         onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.fireEvent('cancel');"
-                         onkeypress="if (event.keyCode == 13) this.onclick();"/>
+                         onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.fireEvent('cancel');"/>
             </xul:vbox>
           </xul:hbox>                              
           <xul:hbox align="center">
             <xul:label value="&cmd.resume.label;" class="link"
-                       onclick="this.parentNode.parentNode.parentNode.parentNode.fireEvent('resume');"
-                       onkeypress="if (event.keyCode == 13) this.onclick();"/>
+                       onclick="this.parentNode.parentNode.parentNode.parentNode.fireEvent('resume');"/>
             <xul:label xbl:inherits="value=status" flex="1" crop="right"/>
           </xul:hbox>                            
         </xul:vbox>
@@ -344,11 +351,9 @@
         </xul:vbox>
         <xul:vbox pack="start">
           <xul:label value="&cmd.open.label;" class="link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('open');"
-                     onkeypress="if (event.keyCode == 13) this.onclick();"/>
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('open');"/>
           <xul:label value="&cmd.remove.label;" class="link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"
-                     onkeypress="if (event.keyCode == 13) this.onclick();"/>
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
         </xul:vbox>
       </xul:hbox>
     </content>  
@@ -368,11 +373,9 @@
         </xul:vbox>
         <xul:vbox pack="start">
           <xul:label value="&cmd.retry.label;" class="link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"
-                     onkeypress="if (event.keyCode == 13) this.onclick();"/>
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"/>
           <xul:label value="&cmd.remove.label;" class="link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"
-                     onkeypress="if (event.keyCode == 13) this.onclick();"/>
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
         </xul:vbox>
       </xul:hbox>
     </content>  
@@ -392,11 +395,9 @@
         </xul:vbox>
         <xul:vbox pack="start">
           <xul:label value="&cmd.retry.label;" class="link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"
-                     onkeypress="if (event.keyCode == 13) this.onclick();"/>
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"/>
           <xul:label value="&cmd.remove.label;" class="link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"
-                     onkeypress="if (event.keyCode == 13) this.onclick();"/>
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
         </xul:vbox>
       </xul:hbox>
     </content>  

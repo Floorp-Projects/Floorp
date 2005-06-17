@@ -130,8 +130,8 @@ function setRestartMessage(aItem)
 // Event Handlers
 function onExtensionSelect(aEvent)
 {
-  if (aEvent.target.selected)
-    aEvent.target.setAttribute("last-selected", aEvent.target.selected.id);
+  if (aEvent.target.selectedItem)
+    aEvent.target.setAttribute("last-selected", aEvent.target.selectedItem.id);
   else
     aEvent.target.removeAttribute("last-selected");
 }
@@ -194,7 +194,7 @@ function Startup()
   if (!lastSelected) 
     gExtensionsView.selectionForward();
   else
-    gExtensionsView.selected = lastSelected;
+    gExtensionsView.selectedItem = lastSelected;
 
   var extensionsStrings = document.getElementById("extensionsStrings");
   document.title = extensionsStrings.getString(gWindowState + "Title");
@@ -500,11 +500,11 @@ function onThemeSelect(aEvent)
     return;
 
   var previewImageDeck = document.getElementById("previewImageDeck");
-  if (!gExtensionsView.selected) {
+  if (!gExtensionsView.selectedItem) {
     previewImageDeck.setAttribute("selectedIndex", "0");
     return;
   }
-  var url = gExtensionsView.selected.getAttribute("previewImage");
+  var url = gExtensionsView.selectedItem.getAttribute("previewImage");
   if (url) {
     previewImageDeck.setAttribute("selectedIndex", "2");
     var previewImage = document.getElementById("previewImage");
@@ -545,7 +545,7 @@ function buildContextMenu(aEvent)
 
   var extensionsStrings = document.getElementById("extensionsStrings");
   var menuitem_about = document.getElementById("menuitem_about_clone");
-  var selectedItem = gExtensionsView.selected;
+  var selectedItem = gExtensionsView.selectedItem;
   var name = selectedItem ? selectedItem.getAttribute("name") : "";
   menuitem_about.setAttribute("label", extensionsStrings.getFormattedString("aboutExtension", [name]));
   
@@ -565,8 +565,8 @@ function buildContextMenu(aEvent)
   }
   else {
     var enableMenu = document.getElementById("menuitem_enable_clone");
-    if (gExtensionsView.selected.getAttribute("compatible") == "false" ||
-        gExtensionsView.selected.disabled) 
+    if (gExtensionsView.selectedItem.getAttribute("compatible") == "false" ||
+        gExtensionsView.selectedItem.disabled) 
       // don't let the user activate incompatible themes, but show a (disabled) Enable
       // menuitem to give visual feedback; it's disabled because cmd_enable returns false
       enableMenu.hidden = false;
@@ -719,10 +719,10 @@ var gExtensionsViewController = {
     var commandNode = document.getElementById(aCommand);
     return commandNode && (commandNode.parentNode == document.getElementById("extensionsCommands"));
   },
-  
+
   isCommandEnabled: function (aCommand)
   {
-    var selectedItem = gExtensionsView.selected;
+    var selectedItem = gExtensionsView.selectedItem;
     if (selectedItem) {
       if (selectedItem.getAttribute("downloadURL") != "")
         return false;
@@ -807,7 +807,7 @@ var gExtensionsViewController = {
   doCommand: function (aCommand)
   {
     if (this.isCommandEnabled(aCommand))
-      this.commands[aCommand](gExtensionsView.selected);
+      this.commands[aCommand](gExtensionsView.selectedItem);
   },  
   
   onCommandUpdate: function ()
@@ -895,7 +895,7 @@ var gExtensionsViewController = {
       var movingID = aSelectedItem.id;
       var moveTopID = gExtensionsView.children[0].id;
       gExtensionManager.moveToIndexOf(movingID, moveTopID);
-      gExtensionsView.selected = document.getElementById(movingID);
+      gExtensionsView.selectedItem = document.getElementById(movingID);
     },
     
     cmd_moveup: function (aSelectedItem)
@@ -903,7 +903,7 @@ var gExtensionsViewController = {
       var movingID = aSelectedItem.id;
       var moveAboveID = aSelectedItem.previousSibling.id;
       gExtensionManager.moveToIndexOf(movingID, moveAboveID);
-      gExtensionsView.selected = document.getElementById(movingID);
+      gExtensionsView.selectedItem = document.getElementById(movingID);
     },
     
     cmd_movedn: function (aSelectedItem)
@@ -911,7 +911,7 @@ var gExtensionsViewController = {
       var movingID = aSelectedItem.id;
       var moveBelowID = aSelectedItem.nextSibling.id;
       gExtensionManager.moveToIndexOf(movingID, moveBelowID);
-      gExtensionsView.selected = document.getElementById(movingID);
+      gExtensionsView.selectedItem = document.getElementById(movingID);
     },
     
     cmd_update: function (aSelectedItem)
@@ -961,12 +961,10 @@ var gExtensionsViewController = {
         return;
 
       var selectedID = aSelectedItem.id;
-      var selectedElement = document.getElementById(selectedID);
-      var nextElement = selectedElement.nextSibling;
-      if (!nextElement)
-        nextElement = selectedElement.previousSibling;
-      nextElement = nextElement.id;
-      
+      // if no next item, go to the previous one
+      if (!gExtensionsView.goDown())
+        gExtensionsView.goUp();
+
       if (gWindowState == "themes") {
         // If the theme being uninstalled is the current theme, we need to reselect
         // the default. 
@@ -977,10 +975,9 @@ var gExtensionsViewController = {
           this.cmd_useTheme(document.getElementById(PREFIX_ITEM_URI + "{972ce4c6-7e08-4474-a285-3208198ce6fd}"));
       }
       gExtensionManager.uninstallItem(getIDFromResourceURI(selectedID));
-      
-      gExtensionsView.selected = document.getElementById(nextElement);
+
     },
-    
+
     cmd_showFolder: function (aSelectedItem)
     {
       var id = getIDFromResourceURI(aSelectedItem.id);
@@ -993,13 +990,13 @@ var gExtensionsViewController = {
     cmd_disable: function (aSelectedItem)
     {
       gExtensionManager.disableItem(getIDFromResourceURI(aSelectedItem.id));
-      gExtensionsView.selected = document.getElementById(aSelectedItem.id);
+      gExtensionsView.selectedItem = document.getElementById(aSelectedItem.id);
     },
     
     cmd_enable: function (aSelectedItem)
     {
       gExtensionManager.enableItem(getIDFromResourceURI(aSelectedItem.id));
-      gExtensionsView.selected = document.getElementById(aSelectedItem.id);
+      gExtensionsView.selectedItem = document.getElementById(aSelectedItem.id);
 #ifdef MOZ_PHOENIX
     }
   }

@@ -23,6 +23,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@bengoodger.com>
+#   Doron Rosenberg <doronr@us.ibm.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,11 +51,26 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
-  
-  <binding id="extension" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+
+  <binding id="extension-base" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
     <resources>
       <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
     </resources>
+    <implementation>
+      <method name="fireEvent">
+        <parameter name="aEventType"/>
+        <body>
+        <![CDATA[
+          var e = document.createEvent("Events");
+          e.initEvent(this.eventPrefix + aEventType, false, true);
+          this.dispatchEvent(e);
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="extension" extends="chrome://mozapps/content/extensions/extensions.xml#extension-base">
     <content>
       <xul:hbox flex="1">
         <xul:vbox pack="start">
@@ -69,13 +85,10 @@
           <xul:label class="extension-item-description" xbl:inherits="value=description" crop="right"/>
         </xul:vbox>
       </xul:hbox>
-    </content>  
+    </content>
   </binding>
-  
-  <binding id="extension-downloading" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
-    <resources>
-      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
-    </resources>
+
+  <binding id="extension-downloading" extends="chrome://mozapps/content/extensions/extensions.xml#extension-base">
     <content>
       <xul:hbox flex="1">
         <xul:vbox pack="start">

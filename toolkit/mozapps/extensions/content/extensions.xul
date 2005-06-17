@@ -57,18 +57,18 @@
         persist="width height screenX screenY sizeMode"
         onload="Startup();" onunload="Shutdown();"
         onclose="return closeWindow(false);">
-      
+
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://mozapps/content/extensions/extensions.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
-  
+
   <stringbundleset id="extensionsSet">
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
     <stringbundle id="xpinstallStrings" src="chrome://global/locale/xpinstall/xpinstall.properties"/>
   </stringbundleset>
-    
+
   <keyset id="extensionsKeys">
     <key id="key_close"   key="&cmd.close.commandKey;"    modifiers="accel" command="cmd_close" 
          oncommand="gExtensionsViewController.doCommand('cmd_close');"/>
@@ -79,9 +79,9 @@
     <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel" command="cmd_options"
          oncommand="gExtensionsViewController.doCommand('cmd_options');"/>
   </keyset>
-  
+
   <commandset id="extensionsCommands"
-              events="richview-select,focus"
+              events="richview-select"
               commandupdater="true"
               oncommandupdate="gExtensionsViewController.onCommandUpdate();"
               oncommand="gExtensionsViewController.doCommand(event.target.id);">
@@ -136,17 +136,16 @@
     <menuitem id="menuitem_showFolder" command="cmd_showFolder"
               label="&cmd.showFolder.label;" accesskey="&cmd.showFolder.accesskey;"/>
   </vbox>
-  
+
   <popup id="extensionContextMenu" onpopupshowing="return buildContextMenu(event);"/>
 
   <hbox flex="1">
-    <view id="extensionsView" flex="3" style="overflow: auto;"
-          context="extensionContextMenu"
-          datasources="rdf:null" persist="last-selected"
-          ondragenter="nsDragAndDrop.dragEnter(event, gExtensionsDNDObserver);"
-          ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
-          ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
-          ondblclick="onViewDoubleClick(event);">
+    <richlistbox id="extensionsView" flex="3" context="extensionContextMenu"
+                 datasources="rdf:null" persist="last-selected"
+                 ondragenter="nsDragAndDrop.dragEnter(event, gExtensionsDNDObserver);"
+                 ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
+                 ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
+                 ondblclick="onViewDoubleClick(event);">
       <template>
         <rule>
           <conditions>
@@ -238,7 +237,7 @@
           </action>
         </rule>
       </template>
-    </view> 
+    </richlistbox>
     <vbox flex="5" id="themePreviewArea" class="themePreviewArea" hidden="true">
       <deck id="previewImageDeck" flex="1">
         <vbox id="noThemeSelected" pack="center" align="center">
@@ -267,11 +266,11 @@
         <button id="uninstallButton" 
                 label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;" tooltiptext="&cmd.uninstall.tooltip;" 
                 command="cmd_uninstall"/>
-        <separator class="commandBarSeparator"/>              
+        <separator class="commandBarSeparator"/>
         <button id="updateButton" 
                 label="&cmd.update.label;" accesskey="&cmd.update.accesskey;" tooltiptext="&cmd.update.tooltip;"
                 command="cmd_update"/>
-        <separator class="commandBarSeparator"/>              
+        <separator class="commandBarSeparator"/>
         <button id="optionsButton" command="cmd_options"
 #ifdef XP_WIN
               label="&cmd.options.label;" accesskey="&cmd.options.accesskey;" tooltiptext="&cmd.options.tooltip;"/>
