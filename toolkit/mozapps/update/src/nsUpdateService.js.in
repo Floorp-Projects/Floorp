@@ -860,6 +860,8 @@ function UpdatePatch(patch) {
   this.hashFunction = patch.getAttribute("hashFunction");
   this.hashValue = patch.getAttribute("hashValue");
   this.size = parseInt(patch.getAttribute("size"));
+  this.percentage = parseFloat(patch.getAttribute("percentage"));
+  this.state = patch.getAttribute("state");
   this.selected = patch.getAttribute("selected") == "true";
 }
 UpdatePatch.prototype = {
@@ -873,6 +875,8 @@ UpdatePatch.prototype = {
     patch.setAttribute("hashFunction", this.hashFunction);
     patch.setAttribute("hashValue", this.hashValue);
     patch.setAttribute("size", this.size);
+    patch.setAttribute("percentage", this.percentage);
+    patch.setAttribute("state", this.state);
     patch.setAttribute("selected", this.selected);
     return patch; 
   },
@@ -913,7 +917,6 @@ function Update(update) {
   this.detailsURL = update.getAttribute("detailsURL");
   this.licenseURL = update.getAttribute("licenseURL");
   this.installDate = update.hasAttribute("installDate") ? parseInt(update.getAttribute("installDate")) : 0;
-  this.state = update.getAttribute("state");
   this.isCompleteUpdate = false;
   
   // The Update Name is either the string provided by the <update> element, or
@@ -948,6 +951,14 @@ Update.prototype = {
     return this._patches[index];
   },
   
+  get selectedPatch() {
+    for (var i = 0; i < this.patchCount; ++i) {
+      if (this._patches[i].selected)
+        return this._patches[i];
+    }
+    return null;
+  },
+  
   /**
    * See nsIUpdateService.idl
    */
@@ -960,7 +971,6 @@ Update.prototype = {
     update.setAttribute("detailsURL", this.detailsURL);
     update.setAttribute("licenseURL", this.licenseURL);
     update.setAttribute("installDate", this.installDate);
-    update.setAttribute("state", this.state);
     updates.documentElement.appendChild(update);
     
     for (var i = 0; i < this.patchCount; ++i)
@@ -1295,12 +1305,7 @@ Downloader.prototype = {
     // Look to see if any of the patches in the Update object has been
     // pre-selected for download, otherwise we must figure out which one
     // to select ourselves. 
-    var selectedPatch = null;
-    for (var i = 0; i < update.patchCount; ++i) {
-      var currentPatch = update.getPatchAt(i);
-      if (currentPatch.selected)
-        selectedPatch = currentPatch;
-    }
+    var selectedPatch = update.selectedPatch;
     
     // If this is a patch that we know about, then select it.  If it is a patch
     // that we do not know about, then remove it and use our default logic.
@@ -1412,7 +1417,7 @@ Downloader.prototype = {
     this._request.start(this, null);
 
     this._writeStatusFile(updateDir, STATE_DOWNLOADING);
-    update.state = STATE_DOWNLOADING;
+    this._patch.state = STATE_DOWNLOADING;
     var um = Components.classes["@mozilla.org/updates/update-manager;1"]
                        .getService(Components.interfaces.nsIUpdateManager);
     um.saveUpdates();
@@ -1439,12 +1444,14 @@ Downloader.prototype = {
    *
    */
   removeDownloadListener: function(listener) {
+    LOG("LISTENERS0 = " + this._listeners.length);
     for (var i = 0; i < this._listeners.length; ++i) {
       if (this._listeners[i] == listener) {
         this._listeners.splice(i, 1);
         return;
       }
     }
+    LOG("LISTENERS1 = " + this._listeners.length);
   },
   
   onStartRequest: function(request, context) {
@@ -1458,6 +1465,9 @@ Downloader.prototype = {
   onProgress: function(request, context, progress, maxProgress) {
     request.QueryInterface(nsIIncrementalDownload);
     // LOG("Downloader.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
+    
+    this._patch.progress = Math.round(100 * (progress/maxProgress));
+
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i) {
       var listener = this._listeners[i];
@@ -1503,7 +1513,7 @@ Downloader.prototype = {
         }
       }
       this._writeStatusFile(this._getUpdatesDir(), state);
-      this._update.state = state;
+      this._patch.state = state;
       var um = Components.classes["@mozilla.org/updates/update-manager;1"]
                          .getService(Components.interfaces.nsIUpdateManager);
       um.activeUpdate = null;

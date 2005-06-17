@@ -72,12 +72,15 @@ var gUpdates = {
   },
   
   onLoad: function() {
-    if (window.arguments && window.arguments[0]) {
-      if (window.arguments[0] instanceof Components.interfaces.nsIUpdate) {
-        this.update = window.arguments[0];
+    if (window.arguments) {
+      var um = Components.classes["@mozilla.org/updates/update-manager;1"]
+                         .getService(Components.interfaces.nsIUpdateManager);
+      var arg0 = window.arguments[0];
+      if (arg0 instanceof Components.interfaces.nsIUpdate) {
+        this.update = arg0;
         document.documentElement.advance();
       }
-      else if (window.arguments[0] == 1) {
+      else if (arg0 == 1 || (arg0 == 0 && um.activeUpdate)) {
         var checking = document.getElementById("checking");
         checking.setAttribute("next", "downloading");
         document.documentElement.advance();
@@ -339,6 +342,11 @@ var gDownloadingPage = {
         Components.classes["@mozilla.org/updates/update-service;1"]
                   .getService(Components.interfaces.nsIApplicationUpdateService);
     updates.removeDownloadListener(this);
+    
+    var um = 
+        Components.classes["@mozilla.org/updates/update-manager;1"]
+                  .getService(Components.interfaces.nsIUpdateManager);
+    um.activeUpdate = gUpdates.update;
   },
   
   showCompletedUpdatesChanged: function(checkbox) {
@@ -357,7 +365,7 @@ var gDownloadingPage = {
     var active = document.getElementById("activeDownloadItem");
     active.startDownload();
     active.state = STATE_DOWNLOADING;
-    active.progress = Math.floor(100 * (progress/maxProgress));
+    active.progress = gUpdates.update.selectedPatch.progress;
   },
   
   onStatus: function(request, context, status, statusText) {
@@ -372,13 +380,13 @@ var gDownloadingPage = {
     // Flip the progressmeter back to "undetermined" mode in case we need to
     // download a new (complete) update patch.
     var active = document.getElementById("activeDownloadItem");
-    active.state = gUpdates.update.state;
+    active.state = gUpdates.update.selectedPatch.state;
     
     const NS_BINDING_ABORTED = 0x804b0002;
     switch (status) {
     case Components.results.NS_ERROR_UNEXPECTED:
-      LOG("DLP:STATE = " + gUpdates.update.state);
-      if (gUpdates.update.state == STATE_FAILED)
+      LOG("DLP:STATE = " + gUpdates.update.selectedPatch.state);
+      if (gUpdates.update.selectedPatch.state == STATE_FAILED)
         this.showVerificationError();
       else {
         // Verification failed for a partial patch, complete patch is now
