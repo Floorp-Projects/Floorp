@@ -102,28 +102,28 @@ interface nsIStringInputStream : nsIInputStream
 
 //-----------------------------------------------------------------------------
 // Factory method to get an nsInputStream from an nsAString.  Result will
-// implement nsIStringInputStream and nsIRandomAccessStore
+// implement nsIStringInputStream and nsISeekableStream
 extern "C" NS_COM nsresult
 NS_NewStringInputStream(nsIInputStream** aStreamResult,
                         const nsAString& aStringToRead);
 
 //-----------------------------------------------------------------------------
 // Factory method to get an nsInputStream from an nsACString.  Result will
-// implement nsIStringInputStream and nsIRandomAccessStore
+// implement nsIStringInputStream and nsISeekableStream 
 extern "C" NS_COM nsresult
 NS_NewCStringInputStream(nsIInputStream** aStreamResult,
                          const nsACString& aStringToRead);
 
 //-----------------------------------------------------------------------------
 // Factory method to get an nsInputStream from a string.  Result will
-// implement nsIStringInputStream and nsIRandomAccessStore
+// implement nsIStringInputStream and nsISeekableStream
 extern "C" NS_COM nsresult
 NS_NewCharInputStream(nsIInputStream** aStreamResult,
                       const char* aStringToRead);
 
 //-----------------------------------------------------------------------------
 // Factory method to get an nsInputStream from a byte buffer.  Result will
-// implement nsIStringInputStream and nsIRandomAccessStore
+// implement nsIStringInputStream and nsISeekableStream
 extern "C" NS_COM nsresult
 NS_NewByteInputStream(nsIInputStream** aStreamResult,
                       const char* aStringToRead,
