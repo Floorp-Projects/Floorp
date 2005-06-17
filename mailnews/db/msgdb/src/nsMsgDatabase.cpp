@@ -1242,8 +1242,8 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
         if (ret == 0 && outDone)
         {
           ret = myMDBFactory->ThumbToOpenStore(m_mdbEnv, thumb, &m_mdbStore);
-          if (ret == NS_OK && m_mdbStore)
-            ret = InitExistingDB();
+          if (ret == NS_OK)
+            ret = (m_mdbStore) ? InitExistingDB() : NS_ERROR_FAILURE;
         }
 #ifdef DEBUG_bienvenu1
         DumpContents();
@@ -1266,7 +1266,7 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
             ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, dbHeap,
               newFile, &inOpenPolicy, &m_mdbStore);
             if (ret == NS_OK)
-              ret = InitNewDB();
+              ret = (m_mdbStore) ? InitNewDB() : NS_ERROR_FAILURE;
           }
           NS_RELEASE(newFile); // always release our file ref, store has own
         }
@@ -1275,6 +1275,7 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
       nsCRT::free(nativeFileName);
     }
   }
+  NS_ASSERTION(NS_SUCCEEDED(ret), "failed opening mdb");
   return ret;
 }
 
@@ -1504,13 +1505,10 @@ nsresult nsMsgDatabase::InitNewDB()
   err = InitMDBInfo();
   if (err == NS_OK)
   {
-    // why is this bad? dbFolderInfo is tightly tightly bound to nsMsgDatabase. It will
-    // never be provided by someone else. It could be strictly embedded inside nsMsgDatabase
-    // but I wanted to keep nsMsgDatabase a little bit smaller
-    nsDBFolderInfo *dbFolderInfo = new nsDBFolderInfo(this); // this is bad!! Should go through component manager
+    nsDBFolderInfo *dbFolderInfo = new nsDBFolderInfo(this); 
     if (dbFolderInfo)
     {
-      NS_ADDREF(dbFolderInfo); // mscott: shouldn't have to do this...go through c. manager
+      NS_ADDREF(dbFolderInfo); 
       err = dbFolderInfo->AddToNewMDB();
       dbFolderInfo->SetVersion(GetCurVersion());
       nsIMdbStore *store = GetStore();
