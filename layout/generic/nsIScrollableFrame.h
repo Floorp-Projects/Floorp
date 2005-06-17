@@ -43,8 +43,8 @@
 #include "nsIViewManager.h"
 #include "nsIScrollableViewProvider.h"
 #include "nsPresContext.h"
+#include "nsIFrame.h" // to get nsIBox, which is a typedef
 
-class nsIFrame;
 class nsBoxLayoutState;
 
 // IID for the nsIScrollableFrame interface

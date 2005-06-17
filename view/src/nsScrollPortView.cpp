@@ -328,13 +328,6 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aDestinationX, nscoord aDestina
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollPortView::GetScrollbarVisibility(PRBool *aVerticalVisible,
-                                                       PRBool *aHorizontalVisible) const
-{ 
-  NS_WARNING("Attempt to get scrollbars visibility this is not xp!");
-  return NS_OK;
-}
-
 static void AdjustChildWidgets(nsView *aView,
   nsPoint aWidgetToParentViewOrigin, float aScale, PRBool aInvalidate)
 {
