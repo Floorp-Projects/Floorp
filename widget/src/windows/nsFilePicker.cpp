@@ -117,6 +117,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
   PRBool result = PR_FALSE;
   PRUnichar fileBuffer[FILE_BUFFER_SIZE+1];
   wcsncpy(fileBuffer,  mDefault.get(), FILE_BUFFER_SIZE);
+  fileBuffer[FILE_BUFFER_SIZE] = '\0'; // null terminate in case copy truncated
 
   NS_NAMED_LITERAL_STRING(htmExt, "html");
   nsAutoString initialDir;
@@ -228,7 +229,18 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
         result = nsToolkit::mGetOpenFileName(&ofn);
       }
       else if (mMode == modeSave) {
-        ofn.Flags |= OFN_NOREADONLYRETURN | OFN_NODEREFERENCELINKS;
+        ofn.Flags |= OFN_NOREADONLYRETURN;
+
+        // Don't follow shortcuts when saving a shortcut, this can be used
+        // to trick users (bug 271732)
+        NS_ConvertUTF16toUTF8 ext(mDefault);
+        ext.Trim(" .", PR_FALSE, PR_TRUE); // watch out for trailing space and dots
+        ToLowerCase(ext);
+        if (StringEndsWith(ext, NS_LITERAL_CSTRING(".lnk")) ||
+            StringEndsWith(ext, NS_LITERAL_CSTRING(".pif")) ||
+            StringEndsWith(ext, NS_LITERAL_CSTRING(".url")))
+          ofn.Flags |= OFN_NODEREFERENCELINKS;
+
         result = nsToolkit::mGetSaveFileName(&ofn);
         if (!result) {
           // Error, find out what kind.
