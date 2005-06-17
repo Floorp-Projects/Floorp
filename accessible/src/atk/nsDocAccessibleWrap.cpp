@@ -205,7 +205,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         if (NS_SUCCEEDED(rv))
             g_signal_emit_by_name(accWrap->GetAtkObject(),
                                   g_strconcat("property_change::",
-                                              values.property_name),
+                                              values.property_name, NULL),
                                   &values, NULL);
 
         break;
