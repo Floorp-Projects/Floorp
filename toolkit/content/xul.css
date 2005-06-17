@@ -274,7 +274,7 @@ menu.menu-iconic {
 }
 
 menu:empty {
-  display: none;
+  visibility: collapse;
 }
 
 /********* menuitem ***********/
