@@ -60,6 +60,11 @@
 #include "nsILocalFile.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#ifdef AIX
+#include "nsPluginLogging.h"
+#include "prprf.h"
+#define LOG(args)  PLUGIN_LOG(PLUGIN_LOG_NORMAL, args)
+#endif
 
 #define LOCAL_PLUGIN_DLL_SUFFIX ".so"
 #if defined(__hpux)
@@ -283,6 +288,66 @@ nsPluginFile::~nsPluginFile()
     // nada
 }
 
+#ifdef AIX
+/**
+ * This code is necessary for Java 1.4.2 SR2 and later on AIX, as the
+ * loadquery() function is no longer used to determine the path to the
+ * installed JVM, so we need to manually set the LIBPATH variable to
+ * include the proper directories needed to run the Java plug-in.
+ *
+ * See Bug 297807 for more information.
+ */
+static char *javaLibPath = NULL;
+
+static void SetJavaLibPath(const nsCString& pluginPath)
+{
+    // If javaLibPath is non-NULL, that means we have already set the LIBPATH
+    // variable once this session, so we don't need to do it again.
+    if (javaLibPath)
+        return;
+
+    nsCAutoString javaDir, newLibPath;
+
+    PRInt32 pos = pluginPath.RFindChar('/');
+    if (pos == kNotFound || pos == 0)
+        return;
+
+    javaDir = Substring(pluginPath, 0, pos);
+    LOG(("AIX: Java dir is %s\n", javaDir.get()));
+
+    // Add jre/bin to new LIBPATH
+    newLibPath += javaDir;
+
+    // Check for existance of jre/bin/classic dir, and append it to
+    // LIBPATH if found
+    PRFileInfo info;
+    javaDir.AppendLiteral("/classic");
+    if (PR_GetFileInfo(javaDir.get(), &info) == PR_SUCCESS &&
+        info.type == PR_FILE_DIRECTORY)
+    {
+        newLibPath.Append(':');
+        newLibPath.Append(javaDir);
+    }
+
+    // Get the current LIBPATH, and append it to the new LIBPATH
+    const char *currentLibPath = PR_GetEnv("LIBPATH");
+    LOG(("AIX: current LIBPATH=%s\n", currentLibPath));
+    if (currentLibPath && *currentLibPath) {
+        newLibPath.Append(':');
+        newLibPath.Append(currentLibPath);
+    }
+
+    // Set the LIBPATH to include the path to the JRE directories.
+    // NOTE: We are leaking javaLibPath here, as it needs to remain in memory
+    // for PR_SetEnv to work properly.
+    javaLibPath = PR_smprintf("LIBPATH=%s", newLibPath.get());
+    if (javaLibPath) {
+        LOG(("AIX: new LIBPATH=%s\n", newLibPath.get()));
+        PR_SetEnv(javaLibPath);
+    }
+}
+#endif
+
 /**
  * Loads the plugin into memory using NSPR's shared-library loading
  * mechanism. Handles platform differences in loading shared libraries.
@@ -301,6 +366,16 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
     rv = mPlugin->GetNativePath(path);
     if (NS_FAILED(rv))
         return rv;
+
+#ifdef AIX
+    nsCAutoString leafName;
+    rv = mPlugin->GetNativeLeafName(leafName);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (StringBeginsWith(leafName, NS_LITERAL_CSTRING("libjavaplugin_oji")))
+        SetJavaLibPath(path);
+#endif
 
     libSpec.value.pathname = path.get();
 
