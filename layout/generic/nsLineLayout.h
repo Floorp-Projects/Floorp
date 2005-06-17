@@ -324,7 +324,6 @@ protected:
   PRBool  AllocateDeque();
 
   nscoord mTopEdge;
-  nscoord mBottomEdge;
   nscoord mMaxTopBoxHeight;
   nscoord mMaxBottomBoxHeight;
 

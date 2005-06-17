@@ -13138,14 +13138,19 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsFrameConstructorState& aState,
     }
   }
 
-  *aKidsAllInline = allKidsInline;
-
   // process the current pseudo frame state
   if (!aState.mPseudoFrames.IsEmpty()) {
     ProcessPseudoFrames(aState, aFrameItems);
+    // recompute allKidsInline to take into account new child frames
+    // XXX we DON'T do this yet because anonymous table children should
+    // be accepted as inline children, until we turn on inline-table.
+    // See bug 297537.
+    // allKidsInline = AreAllKidsInline(aFrameItems.childList);
   }
   // restore the pseudo frame state
   aState.mPseudoFrames = prevPseudoFrames;
+
+  *aKidsAllInline = allKidsInline;
 
   return rv;
 }

@@ -172,7 +172,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   SetFlag(LL_ENDSINWHITESPACE, PR_TRUE);
   mPlacedFloats = 0;
   mTotalPlacedFrames = 0;
-  mTopEdge = mBottomEdge = 0;
+  mTopEdge = 0;
 
   // Instead of always pre-initializing the free-lists for frames and
   // spans, we do it on demand so that situations that only use a few
@@ -297,12 +297,6 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   }
 
   mTopEdge = aY;
-  if (NS_UNCONSTRAINEDSIZE == aHeight) {
-    mBottomEdge = NS_UNCONSTRAINEDSIZE;
-  }
-  else {
-    mBottomEdge = aY + aHeight;
-  }
 
   switch (mStyleText->mWhiteSpace) {
   case NS_STYLE_WHITESPACE_PRE:
@@ -427,12 +421,6 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
     psd->mRightEdge = aX + aWidth;
   }
   mTopEdge = aY;
-  if (NS_UNCONSTRAINEDSIZE == aHeight) {
-    mBottomEdge = NS_UNCONSTRAINEDSIZE;
-  }
-  else {
-    mBottomEdge = aY + aHeight;
-  }
   SetFlag(LL_UPDATEDBAND, PR_TRUE);
   mPlacedFloats |= (aPlacedLeftFloat ? PLACED_LEFT : PLACED_RIGHT);
   SetFlag(LL_IMPACTEDBYFLOATS, PR_TRUE);
@@ -852,12 +840,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       availSize.width = psd->mReflowState->availableWidth;
     }
   }
-  if (NS_UNCONSTRAINEDSIZE == mBottomEdge) {
-    availSize.height = NS_UNCONSTRAINEDSIZE;
-  }
-  else {
-    availSize.height = mBottomEdge - mTopEdge;
-  }
+  // For now, set the available height to unconstrained always.
+  // XXX inline blocks and tables won't be able to break across pages/
+  // columns, but it's not clear how to handle that anyway
+  availSize.height = NS_UNCONSTRAINEDSIZE;
 
   // Get reflow reason set correctly. It's possible that a child was
   // created and then it was decided that it could not be reflowed
