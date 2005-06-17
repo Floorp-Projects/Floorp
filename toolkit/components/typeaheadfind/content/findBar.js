@@ -484,6 +484,11 @@ function onFindBarKeyPress(evt)
     if (!findString.value)
       return;
 
+    if (evt.ctrlKey) {
+      document.getElementById("highlight").click();
+      return;
+    }
+
     if (evt.shiftKey)
       findPrevious();
     else
