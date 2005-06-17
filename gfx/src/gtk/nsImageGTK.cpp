@@ -115,17 +115,17 @@ nsImageGTK::nsImageGTK()
 nsImageGTK::~nsImageGTK()
 {
   if(nsnull != mImageBits) {
-    delete[] mImageBits;
+    free(mImageBits);
     mImageBits = nsnull;
   }
 
   if (nsnull != mAlphaBits) {
-    delete[] mAlphaBits;
+    free(mAlphaBits);
     mAlphaBits = nsnull;
   }
 
   if (nsnull != mTrueAlphaBits) {
-    delete[] mTrueAlphaBits;
+    free(mTrueAlphaBits);
     mTrueAlphaBits = nsnull;
   }
 
@@ -206,7 +206,9 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
   // create the memory for the image
   ComputeMetrics();
 
-  mImageBits = (PRUint8*) new PRUint8[mSizeImage];
+  mImageBits = (PRUint8*)malloc(mSizeImage);
+  if (!mImageBits)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   switch(aMaskRequirements)
   {
@@ -216,8 +218,9 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
 
       // 32-bit align each row
       mTrueAlphaRowBytes = (mTrueAlphaRowBytes + 3) & ~0x3;
-      mTrueAlphaBits = new PRUint8[mTrueAlphaRowBytes * aHeight];
-      memset(mTrueAlphaBits, 0, mTrueAlphaRowBytes*aHeight);
+      mTrueAlphaBits = (PRUint8*)calloc(mTrueAlphaRowBytes * aHeight, 1);
+      if (!mTrueAlphaBits)
+        return NS_ERROR_OUT_OF_MEMORY;
 
       // FALL THROUGH
 
@@ -228,8 +231,9 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
       // 32-bit align each row
       mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
 
-      mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
-      memset(mAlphaBits, 0, mAlphaRowBytes*aHeight);
+      mAlphaBits = (PRUint8*)calloc(mAlphaRowBytes * aHeight, 1);
+      if (!mAlphaBits)
+        return NS_ERROR_OUT_OF_MEMORY;
       break;
 
     default:
@@ -383,7 +387,7 @@ void nsImageGTK::UpdateCachedImage()
           mAlphaPixmap = 0;
         }
         if (mAlphaBits) {
-          delete [] mAlphaBits;
+          free(mAlphaBits);
           mAlphaBits = mTrueAlphaBits;
           mAlphaRowBytes = mTrueAlphaRowBytes;
           mTrueAlphaBits = 0;
@@ -1934,18 +1938,18 @@ nsresult nsImageGTK::Optimize(nsIDeviceContext* aContext)
 
   if ((gdk_rgb_get_visual()->depth > 8) && (mAlphaDepth != 8)) {
     if(nsnull != mImageBits) {
-      delete[] mImageBits;
+      free(mImageBits);
       mImageBits = nsnull;
     }
 
     if (nsnull != mAlphaBits) {
-      delete[] mAlphaBits;
+      free(mAlphaBits);
       mAlphaBits = nsnull;
     }
   }
     
   if (mTrueAlphaBits) {
-    delete[] mTrueAlphaBits;
+    free(mTrueAlphaBits);
     mTrueAlphaBits = nsnull;
   }
 
@@ -1976,8 +1980,9 @@ nsImageGTK::LockImagePixels(PRBool aMaskPixels)
                               0, 0, mWidth, mHeight,
                               AllPlanes, XYPixmap);
 
-    mAlphaBits = new PRUint8[mAlphaRowBytes * mHeight];
-    memset(mAlphaBits, 0, mAlphaRowBytes * mHeight);
+    mAlphaBits = (PRUint8*)calloc(mAlphaRowBytes * mHeight, 1);
+    if (!mAlphaBits)
+      return NS_ERROR_OUT_OF_MEMORY;
 
     for (PRInt32 y = 0; y < mHeight; ++y) {
       PRUint8 *alphaTarget = mAlphaBits + y*mAlphaRowBytes;
@@ -2013,7 +2018,10 @@ nsImageGTK::LockImagePixels(PRBool aMaskPixels)
                       0, 0, mWidth, mHeight,
                       AllPlanes, XYPixmap);
 
-  mImageBits = (PRUint8*) new PRUint8[mSizeImage];
+  mImageBits = (PRUint8*)malloc(mSizeImage);
+  if (!mImageBits)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   GdkVisual *visual = gdk_rgb_get_visual();
   GdkColormap *colormap = gdk_rgb_get_cmap();
 
