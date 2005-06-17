@@ -164,6 +164,8 @@ var gCheckingPage = {
       if (!gUpdates.update) {
         LOG("Could not select an appropriate update, either because there were none," + 
             " or |selectUpdate| failed.");
+        var checking = document.getElementById("checking");
+        checking.setAttribute("next", "noupdatesfound");
       }
       document.documentElement.advance();
     },
@@ -184,6 +186,14 @@ var gCheckingPage = {
         throw Components.results.NS_ERROR_NO_INTERFACE;
       return this;
     }
+  }
+};
+
+var gNoUpdatesPage = {
+  onPageShow: function() {
+    document.documentElement.getButton("back").disabled = true;
+    document.documentElement.getButton("cancel").disabled = true;
+    document.documentElement.getButton("finish").focus();
   }
 };
 

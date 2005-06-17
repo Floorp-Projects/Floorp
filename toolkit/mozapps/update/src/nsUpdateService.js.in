@@ -1574,10 +1574,10 @@ TimerManager.prototype = {
        *
        */
       notify: function(timer) {
-        LOG("self._timers = " + self._timers.toSource());
+        // LOG("self._timers = " + self._timers.toSource());
         var lastUpdateTime = self._timers[this.id].lastUpdateTime;
         var now = Math.round(Date.now() / 1000);
-        LOG("notify = " + (now - lastUpdateTime) + " > " + this.interval);
+        // LOG("notify = " + (now - lastUpdateTime) + " > " + this.interval);
         
         // Fudge the lastUpdateTime by some random increment of the update 
         // check interval (e.g. some random slice of 10 minutes) so that when
