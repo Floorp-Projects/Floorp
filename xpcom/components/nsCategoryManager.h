@@ -142,6 +142,13 @@ public:
    */
   NS_METHOD WriteCategoryManagerToRegistry(PRFileDesc* fd);
 
+  /**
+   * Suppress or unsuppress notifications of category changes to the
+   * observer service. This is to be used by nsComponentManagerImpl
+   * on startup while reading the stored category list.
+   */
+  NS_METHOD SuppressNotifications(PRBool aSuppress);
+
   nsCategoryManager() { }
 private:
   friend class nsCategoryManagerFactory;
@@ -150,10 +157,14 @@ private:
   ~nsCategoryManager();
 
   CategoryNode* get_category(const char* aName);
+  void NotifyObservers(const char* aTopic,
+                       const char* aCategoryName,
+                       const char* aEntryName);
 
   PLArenaPool mArena;
   nsClassHashtable<nsDepCharHashKey, CategoryNode> mTable;
   PRLock* mLock;
+  PRBool mSuppressNotifications;
 };
 
 #endif

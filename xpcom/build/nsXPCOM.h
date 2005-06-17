@@ -308,6 +308,37 @@ NS_Free(void* ptr);
  */
 #define NS_XPCOM_SHUTDOWN_OBSERVER_ID "xpcom-shutdown"
 
+/**
+ * This topic is notified when an entry was added to a category in the
+ * category manager. The subject of the notification will be the name of
+ * the added entry as an nsISupportsCString, and the data will be the
+ * name of the category.
+ *
+ * @status FROZEN
+ */
+#define NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID \
+  "xpcom-category-entry-added"
+
+/**
+ * This topic is notified when an entry was removed from a category in the
+ * category manager. The subject of the notification will be the name of
+ * the removed entry as an nsISupportsCString, and the data will be the
+ * name of the category.
+ *
+ * @status FROZEN
+ */
+#define NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID \
+  "xpcom-category-entry-removed"
+
+/**
+ * This topic is notified when an a category was cleared in the category
+ * manager. The subject of the notification will be the category manager,
+ * and the data will be the name of the cleared category.
+ *
+ * @status FROZEN
+ */
+#define NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID "xpcom-category-cleared"
+
 extern "C" NS_COM nsresult
 NS_GetDebug(nsIDebug* *result);
 
