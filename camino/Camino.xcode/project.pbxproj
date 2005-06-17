@@ -11122,7 +11122,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = "compiled.mach-o.bundle";
 			name = libcomposer.dylib;
-			path = ../dist/lib/components/libcomposer.dylib;
+			path = ../dist/bin/components/libcomposer.dylib;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -11164,7 +11164,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = "compiled.mach-o.bundle";
 			name = libtransformiix.dylib;
-			path = ../dist/lib/components/libtransformiix.dylib;
+			path = ../dist/bin/components/libtransformiix.dylib;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -11190,7 +11190,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libtransformiix.a;
-			path = ../dist/lib/components/libtransformiix.a;
+			path = ../dist/bin/components/libtransformiix.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -11204,7 +11204,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libcomposer.a;
-			path = ../dist/lib/components/libcomposer.a;
+			path = ../dist/bin/components/libcomposer.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
