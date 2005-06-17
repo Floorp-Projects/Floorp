@@ -2607,6 +2607,19 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     return NS_ERROR_FAILURE;
   }
 
+  nsIView* view = GetScrolledFrame()->GetView();
+  nsIViewManager* viewMan = view->GetViewManager();
+  nsIView* curGrabber;
+  viewMan->GetMouseEventGrabber(curGrabber);
+  if (curGrabber != view) {
+    // If we're not capturing, then ignore movement in the border
+    nsPoint pt = nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(aMouseEvent, this);
+    nsRect borderInnerEdge = GetScrollableView()->View()->GetBounds();
+    if (!borderInnerEdge.Contains(pt)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   nsCOMPtr<nsIContent> content;
   GetPresContext()->EventStateManager()->
     GetEventTargetContent(nsnull, getter_AddRefs(content));
