@@ -370,11 +370,13 @@ nsresult nsDBFolderInfo::InitFromExistingDB()
               ret = NS_ERROR_FAILURE;
             if (ret == NS_OK)
               LoadMemberVariables();
-            }
           }
         }
       }
+      else
+        ret = NS_ERROR_FAILURE;
     }
+  }
   return ret;
 }
 
@@ -967,6 +969,7 @@ NS_IMETHODIMP nsDBFolderInfo::GetTransferInfo(nsIDBFolderInfo **transferInfo)
   char columnName[100];
   mdbYarn cellName = { columnName, 0, sizeof(columnName), 0, 0, nsnull };
 
+  NS_ASSERTION(m_mdbRow, "null row in getTransferInfo");
   m_mdbRow->GetCount(m_mdb->GetEnv(), &numCells);
   // iterate over the cells in the dbfolderinfo remembering attribute names and values.
   for (mdb_count cellIndex = 0; cellIndex < numCells; cellIndex++)
