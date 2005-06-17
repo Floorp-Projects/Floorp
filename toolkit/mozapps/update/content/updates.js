@@ -366,6 +366,7 @@ var gDownloadingPage = {
     active.startDownload();
     active.state = STATE_DOWNLOADING;
     active.progress = gUpdates.update.selectedPatch.progress;
+    active.status = gUpdates.update.selectedPatch.status;
   },
   
   onStatus: function(request, context, status, statusText) {

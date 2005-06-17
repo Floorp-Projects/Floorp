@@ -56,7 +56,7 @@
     </resources>
     <content>
       <xul:hbox pack="start">
-        <xul:label class="update-item-name" xbl:inherits="value=name" crop="right" flex="1"/>
+        <xul:label anonid="name" class="update-item-name" xbl:inherits="value=name" crop="right" flex="1"/>
         <xul:link class="update-item-details" xbl:inherits="href=detailsURL">&details.link;</xul:link>
       </xul:hbox>
       <xul:deck anonid="modeDeck">
@@ -79,6 +79,9 @@
       <field name="_strings">
         document.getAnonymousElementByAttribute(this, "anonid", "strings");
       </field>
+      <field name="_name">
+        document.getAnonymousElementByAttribute(this, "anonid", "name");
+      </field>
       <field name="_progressBar">
         document.getAnonymousElementByAttribute(this, "anonid", "progress");
       </field>
@@ -93,21 +96,24 @@
         <body><![CDATA[
           this._update = update;
           
-          this.setAttribute("name", update.name);
+          this.name = update.name;
           this.setAttribute("detailsURL", update.detailsURL);
           this.state = update.selectedPatch.state;
         ]]></body>
       </method>
       
-      <property name="progress">
-        <getter><![CDATA[
-          return parseInt(this._progressBar.getAttribute("value"));
-        ]]></getter>
-        <setter><![CDATA[
-          this._progressBar.setAttribute("value", val);
-        ]]></setter>
-      </property>
+      <property name="name"
+                onget="return this._name.getAttribute('value');"
+                onset="this._name.setAttribute('value', val); return val;"/>
       
+      <property name="progress"
+                onget="return parseInt(this._progressBar.getAttribute('value'));"
+                onset="this._progressBar.setAttribute('value', val); return val;"/>
+      
+      <property name="status"
+                onget="return this.getAttribute('status');"
+                onset="this.setAttribute('status', val); return val;"/>
+
       <field name="_started">false</field>
       <method name="startDownload">
         <body><![CDATA[
@@ -137,6 +143,19 @@
         <setter><![CDATA[
           this._paused = val;
           var key = val ? "pauseButtonResume" : "pauseButtonPause";
+          if (val) {
+            this.setAttribute("old-status", this.status);
+            this.status = this._strings.getString("pausedStatus");
+            this.setAttribute("old-name", this.name);
+            this.name = this._strings.getFormattedString("pausedName", [this.name]);
+            LOG("GOAT = " + this._strings.getFormattedString("pausedName", [this.name]));
+          }
+          else {
+            this.status = this.getAttribute("old-status");
+            this.removeAttribute("old-status");
+            this.setAttribute("name", this.getAttribute("old-name"));
+            this.removeAttribute("old-name");
+          }
           this._pauseButton.label = this._strings.getString(key);
           return val;
         ]]></setter>
@@ -149,6 +168,13 @@
         <setter><![CDATA[
           this.setAttribute("state", val);
           this._modeDeck.setAttribute("selectedIndex", val == "downloading" ? 1 : 0);
+          var name = this._update.name;
+          if (val == "downloading") {
+            var name = this._strings.getFormattedString("downloadingPrefix", 
+                                                        [this._update.name]);
+          }
+          this.setAttribute("name", name);
+
           if (val == "failed") {
             var failed = this._strings.getString("statusFailed");
             this.setAttribute("status", failed);
