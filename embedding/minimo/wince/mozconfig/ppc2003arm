@@ -8,9 +8,9 @@ CROSS_COMPILE=1
 CXX=arm-wince-gcc
 LD=arm-wince-link
 AR=arm-wince-lib
-mk_add_options AR=arm-wince-lib
-
 AS=arm-wince-as
+
+mk_add_options AR=arm-wince-lib
 
 ac_add_options --target=arm-wince
 ac_add_options --enable-win32-target=WINCE
@@ -23,7 +23,7 @@ ac_add_options --disable-md
 ac_add_options --disable-activex
 ac_add_options --disable-activex-scripting
 ac_add_options --disable-oji
-ac_add_options --disable-plugins
+#ac_add_options --disable-plugins
 
 WINCE=1
 mk_add_options WINCE=1
@@ -34,16 +34,13 @@ mk_add_options TARGET_DEVICE=device
 MINIMO=1
 mk_add_options MINIMO=1
 
-# disable XUL support to reduce codesize
-ac_add_options --disable-xul
-
 # enable minimal profile support
 ac_add_options --disable-profilesharing
 ac_add_options --disable-profilelocking
 ac_add_options --enable-single-profile
 
 # disable features and skip various build steps
-ac_add_options --enable-extensions="xml-rpc xmlextras transformiix webservices"
+ac_add_options --enable-extensions="xml-rpc xmlextras transformiix webservices spatialnavigation"
 ac_add_options --disable-accessibility
 ac_add_options --disable-composer
 ac_add_options --enable-plaintext-editor-only
@@ -66,7 +63,7 @@ ac_add_options --disable-logging
 ac_add_options --disable-tests
 
 # build minimal set of protocol handlers
-ac_add_options --enable-necko-protocols=http,file,res,jar
+ac_add_options --enable-necko-protocols=about,data,http,file,res,jar
 
 # build minimal set of image decoders
 ac_add_options --enable-image-decoders=png,gif,jpeg
@@ -82,4 +79,5 @@ ac_add_options --disable-debug
 ac_add_options --disable-shared
 ac_add_options --enable-static
 
+#for now.
 ac_add_options --disable-crypto
