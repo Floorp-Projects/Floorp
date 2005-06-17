@@ -1252,8 +1252,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   nsHTMLReflowMetrics dropdownDesiredSize(nsnull);
 
   // Check to see if this a fully unconstrained reflow
-  PRBool fullyUnconstrained = firstPassState.mComputedWidth == NS_UNCONSTRAINEDSIZE && 
-                              firstPassState.mComputedHeight == NS_UNCONSTRAINEDSIZE;
+  PRBool fullyUnconstrained = firstPassState.mComputedWidth == NS_UNCONSTRAINEDSIZE;
 
   PRBool forceReflow = PR_FALSE;
 
@@ -1429,8 +1428,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   // XXX - I need to clean this nect part up a little it is very redundant
 
   // Check here to if this is a mComputed unconstrained reflow
-  PRBool computedUnconstrained = firstPassState.mComputedWidth == NS_UNCONSTRAINEDSIZE && 
-                                 firstPassState.mComputedHeight == NS_UNCONSTRAINEDSIZE;
+  PRBool computedUnconstrained = firstPassState.mComputedWidth == NS_UNCONSTRAINEDSIZE;
   if (computedUnconstrained && !forceReflow) {
     // Because Incremental reflows aren't actually getting to the dropdown
     // we cache the size from when it did a fully unconstrained reflow
