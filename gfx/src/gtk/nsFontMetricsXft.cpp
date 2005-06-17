@@ -1696,7 +1696,7 @@ nsFontMetricsXft::FamilyExists(nsIDeviceContext *aDevice,
     
     // Build a list of familes and walk the list looking to see if we
     // have it.
-    os = FcObjectSetBuild(FC_FAMILY, 0);
+    os = FcObjectSetBuild(FC_FAMILY, NULL);
     if (!os)
         goto end;
 
@@ -2239,7 +2239,7 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
     if (!pat)
         goto end;
 
-    os = FcObjectSetBuild(FC_FAMILY, FC_FOUNDRY, 0);
+    os = FcObjectSetBuild(FC_FAMILY, FC_FOUNDRY, NULL);
     if (!os)
         goto end;
 
