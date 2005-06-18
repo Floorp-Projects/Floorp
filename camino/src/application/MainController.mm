@@ -562,6 +562,18 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
     [browserController newTab:aSender];
+  else
+  {
+    // follow the pref about what to load in a new tab (even though we're making a new window)
+    int newTabPage = [[PreferenceManager sharedInstance] getIntPref:"browser.tabs.startPage" withSuccess:NULL];
+    BOOL loadHomepage = (newTabPage == 1);
+
+    NSString* urlToLoad = @"about:blank";
+    if (loadHomepage)
+      urlToLoad = [[PreferenceManager sharedInstance] homePage:NO];
+
+    [self openBrowserWindowWithURL:urlToLoad andReferrer:nil behind:nil allowPopups:NO];
+  }
 }
 
 -(IBAction)closeTab:(id)aSender
@@ -1243,10 +1255,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
       return (![browserController bookmarkManagerIsVisible]);
     return NO;
   }
-  
-  if (action == @selector(newTab:))
-    return (browserController != nil);
-  
+    
   // check if someone has previously done a find before allowing findAgain to be enabled
   if (action == @selector(findAgain:) || action == @selector(findPrevious:))
     return (browserController && [[browserController lastFindText] length] > 0);
