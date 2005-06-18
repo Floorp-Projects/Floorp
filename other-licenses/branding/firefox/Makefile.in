@@ -19,6 +19,7 @@ include $(topsrcdir)/config/rules.mk
 
 BROWSER_APP_FILES = \
 	default.xpm \
+	mozicon128.png \
 	mozicon16.xpm \
 	mozicon50.xpm \
 	firefox.ico \
