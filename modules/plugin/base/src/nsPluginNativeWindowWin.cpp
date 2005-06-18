@@ -307,7 +307,7 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                             NP_POPUP_API_VERSION)) {
       tmp.swap(instInternal);
 
-      instInternal->PushPopupsEnabledState();
+      instInternal->PushPopupsEnabledState(PR_TRUE);
     }
   }
 
