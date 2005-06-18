@@ -3687,7 +3687,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
     if (obj && funAtom) {
         if (!OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(funAtom),
                                  OBJECT_TO_JSVAL(fun->object),
-                                 NULL, NULL, 0, NULL)) {
+                                 NULL, NULL, JSPROP_ENUMERATE, NULL)) {
             return NULL;
         }
     }
