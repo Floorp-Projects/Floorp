@@ -60,6 +60,10 @@ static const char *sProgramPath;
 
 @implementation UpdaterUI
 
+-(void)awakeFromNib {
+  [[progressBar window] center];
+}
+
 // called when the timer goes off
 -(void)updateProgressUI:(NSTimer *)aTimer
 {
@@ -96,7 +100,7 @@ ShowProgressUI()
   if (sQuit || sProgressVal > 50.0f)
     return 0;
   
-  [[NSApplication sharedApplication] run];
+  NSApplicationMain(1, *sProgramPath);
   
   [[NSTimer scheduledTimerWithTimeInterval:TIMER_INTERVAL target:[[[NSApplication sharedApplication] mainWindow] delegate]
                                   selector:@selector(updateProgressUI:)
