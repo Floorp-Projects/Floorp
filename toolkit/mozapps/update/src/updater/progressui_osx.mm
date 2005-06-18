@@ -100,7 +100,7 @@ ShowProgressUI()
   if (sQuit || sProgressVal > 50.0f)
     return 0;
   
-  NSApplicationMain(1, *sProgramPath);
+  NSApplicationMain(1, &sProgramPath);
   
   [[NSTimer scheduledTimerWithTimeInterval:TIMER_INTERVAL target:[[[NSApplication sharedApplication] mainWindow] delegate]
                                   selector:@selector(updateProgressUI:)
