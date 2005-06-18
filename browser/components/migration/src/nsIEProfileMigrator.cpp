@@ -556,9 +556,14 @@ nsIEProfileMigrator::CopyHistory(PRBool aReplace)
           // 3 - URL
           url = statURL.pwcsUrl;
 
-          nsDependentCString urlStr((const char *) url);
-          if (NS_FAILED(ios->ExtractScheme(urlStr, scheme)))
+          NS_ConvertUTF16toUTF8 urlStr(url);
+
+          if (NS_FAILED(ios->ExtractScheme(urlStr, scheme))) {
+            ::CoTaskMemFree(statURL.pwcsUrl);    
+            if (statURL.pwcsTitle) 
+              ::CoTaskMemFree(statURL.pwcsTitle);
             continue;
+          }
           ToLowerCase(scheme);
 
           // XXXben - 
@@ -578,13 +583,14 @@ nsIEProfileMigrator::CopyHistory(PRBool aReplace)
             if (uri) {
               if (tempTitle) 
                 hist->AddPageWithDetails(uri, tempTitle, lastVisited);
-              else {
-                NS_ConvertUTF8toUTF16 urlTitle(urlStr);
-                hist->AddPageWithDetails(uri, urlTitle.get(), lastVisited);
-              }
+              else
+                hist->AddPageWithDetails(uri, url, lastVisited);
             }
           }
+          ::CoTaskMemFree(statURL.pwcsUrl);    
         }
+        if (statURL.pwcsTitle) 
+          ::CoTaskMemFree(statURL.pwcsTitle);    
       }
       nsCOMPtr<nsIRDFRemoteDataSource> ds(do_QueryInterface(hist));
       if (ds)
