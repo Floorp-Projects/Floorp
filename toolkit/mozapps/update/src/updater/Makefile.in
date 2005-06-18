@@ -82,6 +82,14 @@ OS_CXXFLAGS += $(TK_CFLAGS)
 OS_LIBS += $(TK_LIBS)
 endif
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+HAVE_PROGRESSUI = 1
+CMMSRCS += \
+	progressui_osx.mm \
+	$(NULL)
+OS_LIBS += -framework Cocoa
+endif
+
 ifndef HAVE_PROGRESSUI
 CPPSRCS += progressui_null.cpp
 endif
