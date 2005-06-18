@@ -181,7 +181,7 @@ DelayedPopupsEnabledEvent_Handle(PLEvent *event)
   nsIPluginInstanceInternal *instInternal =
     (nsIPluginInstanceInternal *)event->owner;
 
-  instInternal->PushPopupsEnabledState();
+  instInternal->PushPopupsEnabledState(PR_FALSE);
 
   return nsnull;
 }
