@@ -54,6 +54,7 @@
 #include "nsIEventQueueService.h"
 
 #include "nsIPluginInstancePeer.h"
+#include "nsIPluginInstanceInternal.h"
 #include "nsPluginSafety.h"
 #include "nsPluginNativeWindow.h"
 
@@ -134,7 +135,7 @@ private:
 public:
   // locals
   WNDPROC GetWindowProc();
-  nsresult GetEventService(nsCOMPtr<nsIEventQueueService> &aEventService);
+  nsIEventQueueService *GetEventService();
   PluginWindowEvent * GetPluginWindowEvent(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam);
 
 private:
@@ -158,10 +159,11 @@ static PRBool ProcessFlashMessageDelayed(nsPluginNativeWindowWin * aWin,
     return PR_FALSE; // no need to delay
 
   // do stuff
-  nsCOMPtr<nsIEventQueueService> eventService;
-  if (NS_SUCCEEDED(aWin->GetEventService(eventService))) {
+  nsIEventQueueService *eventService = aWin->GetEventService();
+  if (eventService) {
     nsCOMPtr<nsIEventQueue> eventQueue;  
-    eventService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(eventQueue));
+    eventService->GetThreadEventQueue(PR_GetCurrentThread(),
+                                      getter_AddRefs(eventQueue));
     if (eventQueue) {
       PluginWindowEvent *pwe = aWin->GetPluginWindowEvent(hWnd, msg, wParam, lParam);
       if (pwe) {
@@ -171,6 +173,28 @@ static PRBool ProcessFlashMessageDelayed(nsPluginNativeWindowWin * aWin,
     }
   }
   return PR_FALSE;
+}
+
+PR_STATIC_CALLBACK(void*)
+DelayedPopupsEnabledEvent_Handle(PLEvent *event)
+{
+  nsIPluginInstanceInternal *instInternal =
+    (nsIPluginInstanceInternal *)event->owner;
+
+  instInternal->PushPopupsEnabledState();
+
+  return nsnull;
+}
+
+PR_STATIC_CALLBACK(void)
+DelayedPopupsEnabledEvent_Destroy(PLEvent *event)
+{
+  nsIPluginInstanceInternal *instInternal =
+    (nsIPluginInstanceInternal *)event->owner;
+
+  NS_RELEASE(instInternal);
+
+  delete event;
 }
 
 /**
@@ -220,7 +244,7 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     }
   }
 
-
+  PRBool enablePopups = PR_FALSE;
 
   // Activate/deactivate mouse capture on the plugin widget
   // here, before we pass the Windows event to the plugin
@@ -237,8 +261,11 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         widget->CaptureMouse(PR_TRUE);
       break;
     }
-    case WM_MBUTTONUP:
     case WM_LBUTTONUP:
+      enablePopups = PR_TRUE;
+
+      // fall through
+    case WM_MBUTTONUP:
     case WM_RBUTTONUP: {
       nsCOMPtr<nsIWidget> widget;
       win->GetPluginWidget(getter_AddRefs(widget));
@@ -246,8 +273,18 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         widget->CaptureMouse(PR_FALSE);
       break;
     }
-  }
+    case WM_KEYDOWN:
+      // Ignore repeating keydown messages...
+      if ((lParam & 0x40000000) != 0) {
+        break;
+      }
 
+      // fall through
+    case WM_KEYUP:
+      enablePopups = PR_TRUE;
+
+      break;
+  }
 
   // Macromedia Flash plugin may flood the message queue with some special messages
   // (WM_USER+1) causing 100% CPU consumption and GUI freeze, see mozilla bug 132759;
@@ -259,8 +296,20 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
   LRESULT res = TRUE;
 
+  nsCOMPtr<nsIPluginInstanceInternal> instInternal;
   nsCOMPtr<nsIPluginInstance> inst;
   win->GetPluginInstance(inst);
+
+  if (enablePopups) {
+    nsCOMPtr<nsIPluginInstanceInternal> tmp = do_QueryInterface(inst);
+
+    if (tmp && !nsVersionOK(tmp->GetPluginAPIVersion(),
+                            NP_POPUP_API_VERSION)) {
+      tmp.swap(instInternal);
+
+      instInternal->PushPopupsEnabledState();
+    }
+  }
 
   sInMessageDispatch = PR_TRUE;
 
@@ -269,6 +318,44 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                           nsnull, inst);
 
   sInMessageDispatch = PR_FALSE;
+
+  if (instInternal) {
+    // Popups are enabled (were enabled before the call to
+    // CallWindowProc()). Some plugins (at least the flash player)
+    // post messages from their key handlers etc that delay the actual
+    // processing, so we need to delay the disabling of popups so that
+    // popups remain enabled when the flash player ends up processing
+    // the actual key handlers. We do this by posting an event that
+    // does the disabling, this way our disabling will happen after
+    // the handlers in the plugin are done.
+
+    // Note that it's not fatal if any of this fails (which won't
+    // happen unless we're out of memory anyways) since the plugin
+    // code will pop any popup state pushed by this plugin on
+    // destruction.
+
+    nsIEventQueueService *eventService = win->GetEventService();
+    if (eventService) {
+      nsCOMPtr<nsIEventQueue> eventQueue;  
+      eventService->GetThreadEventQueue(PR_GetCurrentThread(),
+                                        getter_AddRefs(eventQueue));
+      if (eventQueue) {
+        PLEvent *event = new PLEvent;
+
+        if (event) {
+          nsIPluginInstanceInternal *eventInst = instInternal;
+
+          // Make the event own the plugin instance.
+          NS_ADDREF(eventInst);
+
+          PL_InitEvent(event, eventInst, DelayedPopupsEnabledEvent_Handle,
+                       DelayedPopupsEnabledEvent_Destroy);
+
+          eventQueue->PostEvent(event);
+        }
+      }
+    }
+  }
 
   return res;
 }
@@ -349,15 +436,13 @@ PluginWindowEvent_Destroy(PLEvent* self)
     event->Clear();
 }
 
-nsresult nsPluginNativeWindowWin::GetEventService(nsCOMPtr<nsIEventQueueService> &aEventService)
+nsIEventQueueService *nsPluginNativeWindowWin::GetEventService()
 {
   if (!mEventService) {
     mEventService = do_GetService(kEventQueueServiceCID);
-    if (!mEventService)
-      return NS_ERROR_FAILURE;
   }
-  aEventService = mEventService;
-  return NS_OK;
+
+  return mEventService;
 }
 
 PluginWindowEvent*

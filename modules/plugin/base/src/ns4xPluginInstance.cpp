@@ -49,6 +49,12 @@
 #include "nsPluginSafety.h"
 #include "nsPluginLogging.h"
 
+#include "nsPIPluginInstancePeer.h"
+#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDocument.h"
+#include "nsIScriptGlobalObject.h"
+
 #include "nsJSNPRuntime.h"
 
 #ifdef XP_OS2
@@ -877,6 +883,16 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
 
   NPError error;
 
+  // Make sure the plugin didn't leave popups enabled.
+  if (mPopupStates.Count() > 0) {
+    nsCOMPtr<nsIDOMWindow> window = GetDOMWindow();
+    nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(window);
+
+    if (piwindow) {
+      piwindow->PopPopupControlState(openAbused);
+    }
+  }
+
 #if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
   if (mXtBin) {
     gtk_widget_destroy(mXtBin);
@@ -927,6 +943,39 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
     return NS_OK;
 }
 
+already_AddRefed<nsIDOMWindow>
+ns4xPluginInstance::GetDOMWindow()
+{
+  nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(mPeer));
+  if (!pp) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsIPluginInstanceOwner> owner;
+  pp->GetOwner(getter_AddRefs(owner));
+
+  if (!owner) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsIDocument> doc;
+  owner->GetDocument(getter_AddRefs(doc));
+
+  if (!doc) {
+    return nsnull;
+  }
+
+  nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
+
+  if (!sgo) {
+    return nsnull;
+  }
+
+  nsIDOMWindow *window;
+  CallQueryInterface(sgo, &window);
+
+  return window;
+}
 
 ////////////////////////////////////////////////////////////////////////
 nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
@@ -1563,4 +1612,55 @@ ns4xPluginInstance::GetFormValue(nsAString& aValue)
   }
 
   return NS_OK;
+}
+
+void
+ns4xPluginInstance::PushPopupsEnabledState(PRBool aEnabled)
+{
+  nsCOMPtr<nsIDOMWindow> window = GetDOMWindow();
+  nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(window);
+
+  if (!piwindow)
+    return;
+
+  PopupControlState oldState =
+    piwindow->PushPopupControlState(aEnabled ? openAllowed : openAbused,
+                                    PR_TRUE);
+
+  if (!mPopupStates.AppendElement(NS_INT32_TO_PTR(oldState))) {
+    // Appending to our state stack failed, push what we just popped.
+
+    piwindow->PopPopupControlState(oldState);
+  }
+}
+
+void
+ns4xPluginInstance::PopPopupsEnabledState()
+{
+  PRInt32 last = mPopupStates.Count() - 1;
+
+  if (last < 0) {
+    // Nothing to pop.
+
+    return;
+  }
+
+  nsCOMPtr<nsIDOMWindow> window = GetDOMWindow();
+  nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(window);
+
+  if (!piwindow)
+    return;
+
+  PopupControlState oldState =
+    (PopupControlState)NS_PTR_TO_INT32(mPopupStates[last]);
+
+  piwindow->PopPopupControlState(oldState);
+
+  mPopupStates.RemoveElementAt(last);
+}
+
+PRUint16
+ns4xPluginInstance::GetPluginAPIVersion()
+{
+  return fCallbacks->version;
 }

@@ -37,7 +37,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.39 $
+ *  npapi.h $Revision: 3.40 $
  *  Netscape client plug-in API spec
  */
 
@@ -125,7 +125,7 @@
 /*----------------------------------------------------------------------*/
 
 #define NP_VERSION_MAJOR 0
-#define NP_VERSION_MINOR 15
+#define NP_VERSION_MINOR 16
 
 
 /* The OS/2 version of Netscape uses RC_DATA to define the
@@ -673,9 +673,6 @@ void    NP_LOADDS NPP_URLNotify(NPP instance, const char* url,
 jref    NP_LOADDS NPP_GetJavaClass(void);
 #endif
 NPError NP_LOADDS NPP_GetValue(NPP instance, NPPVariable variable, void *value);
-/*
- * Uh, shouldn't NPP_SetValue() take an NPPVariable and not an NPNVariable?
- */
 NPError NP_LOADDS NPP_SetValue(NPP instance, NPNVariable variable, void *value);
 
 /*
@@ -714,6 +711,8 @@ NPError NP_LOADDS NPN_SetValue(NPP instance, NPPVariable variable, void *value);
 void    NP_LOADDS NPN_InvalidateRect(NPP instance, NPRect *invalidRect);
 void    NP_LOADDS NPN_InvalidateRegion(NPP instance, NPRegion invalidRegion);
 void    NP_LOADDS NPN_ForceRedraw(NPP instance);
+void    NP_LOADDS NPN_PushPopupEnabledState(NPP instance, NPBool enabled);
+void    NP_LOADDS NPN_PopPopupEnabledState(NPP instance);
 
 #ifdef __cplusplus
 }  /* end extern "C" */

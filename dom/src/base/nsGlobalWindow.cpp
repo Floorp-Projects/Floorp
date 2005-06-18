@@ -410,9 +410,10 @@ PopPopupControlState(PopupControlState aState)
 }
 
 PopupControlState
-nsGlobalWindow::PushPopupControlState(PopupControlState aState) const
+nsGlobalWindow::PushPopupControlState(PopupControlState aState,
+                                      PRBool aForce) const
 {
-  return ::PushPopupControlState(aState, PR_FALSE);
+  return ::PushPopupControlState(aState, aForce);
 }
 
 void

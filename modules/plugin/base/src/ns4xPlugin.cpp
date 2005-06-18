@@ -169,6 +169,12 @@ PR_BEGIN_EXTERN_C
   static void NP_EXPORT
   _forceredraw(NPP npp);
 
+  static void NP_EXPORT
+  _pushpopupsenabledstate(NPP npp, NPBool enabled);
+
+  static void NP_EXPORT
+  _poppopupsenabledstate(NPP npp);
+
   static const char* NP_EXPORT
   _useragent(NPP npp);
 
@@ -374,6 +380,12 @@ ns4xPlugin::CheckClassInitialized(void)
 
   CALLBACKS.setexception =
     NewNPN_SetExceptionProc(FP2TV(_setexception));
+
+  CALLBACKS.pushpopupsenabledstate =
+    NewNPN_PushPopupsEnabledStateProc(FP2TV(_pushpopupsenabledstate));
+
+  CALLBACKS.poppopupsenabledstate =
+    NewNPN_PopPopupsEnabledStateProc(FP2TV(_poppopupsenabledstate));
 
   initialized = TRUE;
 
@@ -1858,27 +1870,16 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   }
 
   case NPNVDOMWindow: {
-    ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
+    ns4xPluginInstance *inst = (ns4xPluginInstance *)npp->ndata;
     NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
 
-    nsCOMPtr<nsIPluginInstancePeer> pip;
-    inst->GetPeer(getter_AddRefs(pip));
-    nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(pip));
-    if (pp) {
-      nsCOMPtr<nsIPluginInstanceOwner> owner;
-      pp->GetOwner(getter_AddRefs(owner));
-      if (owner) {
-        nsCOMPtr<nsIDocument> doc;
-        owner->GetDocument(getter_AddRefs(doc));
-        if (doc) {
-          nsCOMPtr<nsIDOMWindow> domWindow =
-            do_QueryInterface(doc->GetScriptGlobalObject());
-          if (domWindow) {
-            NS_ADDREF(*(nsIDOMWindow**)result = domWindow.get());
-            return NPERR_NO_ERROR;
-          }
-        }
-      }
+    nsIDOMWindow *domWindow = inst->GetDOMWindow().get();
+
+    if (domWindow) {
+      // Pass over ownership of domWindow to the caller.
+      (*(nsIDOMWindow**)result) = domWindow;
+
+      return NPERR_NO_ERROR;
     }
     return NPERR_GENERIC_ERROR;
   }
@@ -2076,5 +2077,24 @@ _getJavaPeer(NPP npp)
 
 #endif /* OJI */
 
+void NP_EXPORT
+_pushpopupsenabledstate(NPP npp, NPBool enabled)
+{
+  ns4xPluginInstance *inst = (ns4xPluginInstance *)npp->ndata;
+  if (!inst)
+    return;
+
+  inst->PushPopupsEnabledState(enabled);
+}
+
+void NP_EXPORT
+_poppopupsenabledstate(NPP npp)
+{
+  ns4xPluginInstance *inst = (ns4xPluginInstance *)npp->ndata;
+  if (!inst)
+    return;
+
+  inst->PopPopupsEnabledState();
+}
 
 NPP NPPStack::sCurrentNPP = nsnull;

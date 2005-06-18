@@ -49,6 +49,7 @@
 #endif /* HPUX11 */
 
 #include "nsCOMPtr.h"
+#include "nsVoidArray.h"
 #include "nsIPlugin.h"
 #include "nsIPluginInstance.h"
 #include "nsIPluginInstancePeer.h"
@@ -71,6 +72,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 class ns4xPluginStreamListener;
+class nsIDOMWindow;
 
 struct nsInstanceStream
 {
@@ -132,6 +134,11 @@ public:
 
     virtual nsresult GetFormValue(nsAString& aValue);
 
+    virtual void PushPopupsEnabledState(PRBool aEnabled);
+    virtual void PopPopupsEnabledState();
+
+    virtual PRUint16 GetPluginAPIVersion();
+
     ////////////////////////////////////////////////////////////////////////
     // ns4xPluginInstance-specific methods
 
@@ -174,7 +181,9 @@ public:
     {
         return mPeer;
     }
-    
+
+    already_AddRefed<nsIDOMWindow> GetDOMWindow();
+
 protected:
 
     nsresult InitializePlugin(nsIPluginInstancePeer* peer);
@@ -223,6 +232,8 @@ protected:
 public:
     PRLibrary* fLibrary;
     nsInstanceStream *mStreams;
+
+    nsVoidArray mPopupStates;
 };
 
 #endif // ns4xPluginInstance_h__
