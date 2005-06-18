@@ -37,7 +37,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.19 $
+ *  npupp.h $Revision: 3.20 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -1585,6 +1585,58 @@ typedef void (* NP_LOADDS NPN_SetExceptionUPP)(NPObject *obj, const NPUTF8 *mess
 
 #endif
 
+/* NPN_PushPopupsEnabledStateUPP */
+
+#if _NPUPP_USE_UPP_
+
+typedef UniversalProcPtr NPN_PushPopupsEnabledStateUPP;
+enum {
+	uppNPN_PushPopupsEnabledStateProcInfo = kThinkCStackBased
+		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPP)))
+        | STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPBool)))
+		| RESULT_SIZE(SIZE_CODE(0))
+};
+
+#define NewNPN_PushPopupsEnabledStateProc(FUNC)		\
+		(NPN_PushPopupsEnabledStateUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_PushPopupsEnabledStateProcInfo, GetCurrentArchitecture())
+#define CallNPN_PushPopupsEnabledStateProc(FUNC, ARG1, ARG2)		\
+		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_PushPopupsEnabledStateProcInfo, (ARG1), (ARG2))
+
+#else
+
+typedef bool (* NP_LOADDS NPN_PushPopupsEnabledStateUPP)(NPP npp, NPBool enabled);
+#define NewNPN_PushPopupsEnabledStateProc(FUNC)		\
+		((NPN_PushPopupsEnabledStateUPP) (FUNC))
+#define CallNPN_PushPopupsEnabledStateProc(FUNC, ARG1, ARG2)		\
+		(*(FUNC))((ARG1), (ARG2))
+
+#endif
+
+/* NPN_PopPopupsEnabledState */
+
+#if _NPUPP_USE_UPP_
+
+typedef UniversalProcPtr NPN_PopPopupsEnabledStateUPP;
+enum {
+	uppNPN_PopPopupsEnabledStateProcInfo = kThinkCStackBased
+		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPP)))
+		| RESULT_SIZE(SIZE_CODE(0))
+};
+
+#define NewNPN_PopPopupsEnabledStateProc(FUNC)		\
+		(NPN_PopPopupsEnabledStateUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_PopPopupsEnabledStateProcInfo, GetCurrentArchitecture())
+#define CallNPN_PopPopupsEnabledStateProc(FUNC, ARG1)		\
+		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_PopPopupsEnabledStateProcInfo, (ARG1))
+
+#else
+
+typedef bool (* NP_LOADDS NPN_PopPopupsEnabledStateUPP)(NPP npp);
+#define NewNPN_PopPopupsEnabledStateProc(FUNC)		\
+		((NPN_PopPopupsEnabledStateUPP) (FUNC))
+#define CallNPN_PopPopupsEnabledStateProc(FUNC, ARG1)		\
+		(*(FUNC))((ARG1))
+
+#endif
 
 
 
@@ -1660,6 +1712,8 @@ typedef struct _NPNetscapeFuncs {
     NPN_HasMethodUPP hasmethod;
     NPN_ReleaseVariantValueUPP releasevariantvalue;
     NPN_SetExceptionUPP setexception;
+    NPN_PushPopupsEnabledStateUPP pushpopupsenabledstate;
+    NPN_PopPopupsEnabledStateUPP poppopupsenabledstate;
 } NPNetscapeFuncs;
 
 #ifdef XP_MAC

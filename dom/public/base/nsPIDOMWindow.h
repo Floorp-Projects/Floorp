@@ -137,7 +137,8 @@ public:
 
   virtual void SetOpenerScriptURL(nsIURI* aURI) = 0;
 
-  virtual PopupControlState PushPopupControlState(PopupControlState aState) const = 0;
+  virtual PopupControlState PushPopupControlState(PopupControlState aState,
+                                                  PRBool aForce) const = 0;
   virtual void PopPopupControlState(PopupControlState state) const = 0;
   virtual PopupControlState GetPopupControlState() const = 0;
   virtual OpenAllowValue GetOpenAllow(const nsAString &aName) = 0;
@@ -205,7 +206,7 @@ public:
     : mWindow(aWindow), mOldState(openAbused)
   {
     if (aWindow) {
-      mOldState = aWindow->PushPopupControlState(aState);
+      mOldState = aWindow->PushPopupControlState(aState, PR_FALSE);
     }
   }
 

@@ -199,7 +199,7 @@ public:
 
   virtual NS_HIDDEN_(void) SetOpenerScriptURL(nsIURI* aURI);
 
-  virtual NS_HIDDEN_(PopupControlState) PushPopupControlState(PopupControlState state) const;
+  virtual NS_HIDDEN_(PopupControlState) PushPopupControlState(PopupControlState state, PRBool aForce) const;
   virtual NS_HIDDEN_(void) PopPopupControlState(PopupControlState state) const;
   virtual NS_HIDDEN_(PopupControlState) GetPopupControlState() const;
   virtual NS_HIDDEN_(OpenAllowValue) GetOpenAllow(const nsAString &aName);

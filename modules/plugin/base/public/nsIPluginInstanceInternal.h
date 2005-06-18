@@ -54,6 +54,11 @@ public:
   virtual JSObject *GetJSObject(JSContext *cx) = 0;
 
   virtual nsresult GetFormValue(nsAString& aValue) = 0;
+
+  virtual void PushPopupsEnabledState(PRBool aEnabled) = 0;
+  virtual void PopPopupsEnabledState() = 0;
+
+  virtual PRUint16 GetPluginAPIVersion() = 0;
 };
 
 #endif /* nsIPluginInstanceInternal_h___ */

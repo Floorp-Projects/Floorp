@@ -420,6 +420,12 @@ pref("dom.popup_maximum",                           20);
 pref("dom.popup_allowed_events", "change click dblclick mouseup reset submit");
 pref("dom.disable_open_click_delay", 1000);
 
+// Disable popups from plugins by default
+//   0 = openAllowed
+//   1 = openControlled
+//   2 = openAbused
+pref("privacy.popups.disable_from_plugins", 2);
+
 pref("dom.event.contextmenu.enabled",       true);
 
 pref("javascript.enabled",                  true);
