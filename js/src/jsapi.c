@@ -3116,9 +3116,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
             break;
 
         if (i == ida->length) {
-            /* Grow length by factor of 1.5 instead of doubling. */
-            jsint newlen = ida->length + (((jsuint)ida->length + 1) >> 1);
-            ida = js_SetIdArrayLength(cx, ida, newlen);
+            ida = js_SetIdArrayLength(cx, ida, ida->length * 2);
             if (!ida)
                 goto error;
             vector = &ida->vector[0];
