@@ -1358,7 +1358,8 @@ Downloader.prototype = {
     if (!useComplete)
       selectedPatch = partialPatch;
     if (!selectedPatch) {
-      partialPatch.selected = false;
+      if (partialPatch)
+        partialPatch.selected = false;
       selectedPatch = getPatchOfType("complete");
     }
     selectedPatch.selected = true;
