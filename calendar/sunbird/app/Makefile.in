@@ -260,9 +260,9 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 	cp $(srcdir)/default.xpm   $(DIST)/branding/default.xpm	
 endif
 ifeq ($(OS_ARCH),OS2)
-	cp $(srcdir)/sunbird.ico   $(DIST)/branding/sunbird.ico
-	cp $(srcdir)/sunbird.ico   $(DIST)/branding/app.ico
-	cp $(srcdir)/sunbird.ico  $(DIST)/branding/document.ico
+	cp $(srcdir)/sunbird-os2.ico  $(DIST)/branding/sunbird.ico
+	cp $(srcdir)/sunbird-os2.ico  $(DIST)/branding/app.ico
+	cp $(srcdir)/sunbird-os2.ico  $(DIST)/branding/document.ico
 endif
 endif
 
