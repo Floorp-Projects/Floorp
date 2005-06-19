@@ -1,26 +1,6 @@
-wizard[label=""][description=""] .wizard-header, 
 wizard[label=""] .wizard-header-label,
 wizard[description=""] .wizard-header-description {
   display: none;
-}
-
-wizard[currentpageid="license"] .wizard-buttons,
-wizard[currentpageid="errors"] .wizard-buttons,
-wizard[currentpageid="noupdatesfound"] .wizard-buttons,
-wizard[currentpageid="checking"] .wizard-buttons {
-  display: -moz-box;
-}
-
-.wizard-buttons {
-  display: none;
-}
-
-.wizard-page-box {
-  margin: 0px;
-}
-
-.content {
-  margin: 10px 44px 10px 44px;
 }
 
 #errorReason {
@@ -47,6 +27,7 @@ link > label {
   margin: 0px;
   padding: 1px;
   cursor: inherit;
+  text-decoration: underline !important;
 }
 
 link:hover:active {
@@ -139,23 +120,6 @@ license {
   font-weight: bold;
 }
 
-#updatesView {
-  -moz-binding: url("chrome://mozapps/skin/shared/richview.xml#richview");
-  overflow: auto;
-}
-
-update {
-  -moz-binding: url("chrome://mozapps/content/update/updates.xml#update");
-  -moz-box-orient: vertical;
-  background-color: #FFFFFF;
-  border-bottom: 1px dotted #C0C0C0;
-  padding: 5px;
-}
-
-#updatesView[showcompletedupdates=true] > update {
-  display: none
-}
-
 #incompatibleWarning {
   margin-right: 50px;
 }
@@ -168,10 +132,18 @@ update {
   margin: 0px 4px 7px 4px;
 }
 
-.update-item-name {
-  font-weight: bold;
+#downloadName {
+  margin-top: 3px;
 }
 
-.update-item-pause {
-  font-size: smaller;
+#downloadStatus {
+  margin-top: 6px;
 }
+#downloadThrobber {
+  margin: 5px 3px 0px 5px;
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.png");
+}
+#downloadThrobber[state="loading"] {
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+}
+

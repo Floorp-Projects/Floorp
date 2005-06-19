@@ -42,6 +42,8 @@ const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/the
 
 const PREF_UPDATE_MANUAL_URL  = "app.update.url.manual";
 
+const URI_UPDATES_PROPERTIES  = "chrome://mozapps/locale/update/updates.properties";
+
 const STATE_DOWNLOADING       = "downloading";
 const STATE_PENDING           = "pending";
 const STATE_APPLYING          = "applying";
@@ -278,18 +280,203 @@ var gLicensePage = {
   }
 };
 
-var gDownloadingPage = {
-  _updatesView: null,
+/**
+ * Formats status messages for a download operation based on the progress
+ * of the download.
+ * @constructor
+ */
+function DownloadStatusFormatter() {
+  this._startTime = Math.floor((new Date()).getTime() / 1000);
+  this._elapsed = 0;
   
-  _createAndInsertItem: function(update) {
-    var element = document.createElementNS(XMLNS_XUL, "update");
-    this._updatesView.appendChild(element);
-    element.setUpdate(update);
-    return element;
+  var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                      .getService(Components.interfaces.nsIStringBundleService);
+  var bundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
+  
+  this._statusFormat = bundle.GetStringFromName("statusFormat");
+  this._statusFormatKBMB = bundle.GetStringFromName("statusFormatKBMB");
+  this._statusFormatKBKB = bundle.GetStringFromName("statusFormatKBKB");
+  this._statusFormatMBMB = bundle.GetStringFromName("statusFormatMBMB");
+  this._statusFormatUnknownMB = bundle.GetStringFromName("statusFormatUnknownMB");
+  this._statusFormatUnknownKB = bundle.GetStringFromName("statusFormatUnknownKB");
+  this._remain = bundle.GetStringFromName("remain");
+  this._unknownFilesize = bundle.GetStringFromName("unknownFilesize");
+  this._longTimeFormat = bundle.GetStringFromName("longTimeFormat");
+  this._shortTimeFormat = bundle.GetStringFromName("shortTimeFormat");
+}
+DownloadStatusFormatter.prototype = {
+  /**
+   * Time when the download started (in seconds since epoch)
+   */
+  _startTime: 0,
+
+  /**
+   * Time elapsed since the start of the download operation (in seconds)
+   */
+  _elapsed: 0,
+  
+  /**
+   * Transfer rate of the download
+   */
+  rate: 0,
+  
+  /**
+   * Number of Kilobytes downloaded so far in the form:
+   *  376KB of 9.3MB
+   */
+  progress: "",
+
+  /**
+   * Format a human-readable status message based on the current download
+   * progress.
+   * @param   currSize
+   *          The current number of bytes transferred
+   * @param   finalSize
+   *          The total number of bytes to be transferred
+   * @returns A human readable status message, e.g.
+   *          "3.4 of 4.7MB; 01:15 remain"
+   */
+  formatStatus: function(currSize, finalSize) {
+    var now = Math.floor((new Date()).getTime() / 1000);
+    
+    // 1) Determine the Download Progress in Kilobytes
+    var total = parseInt(finalSize/1024 + 0.5);
+    this.progress = this._formatKBytes(parseInt(currSize/1024 + 0.5), total);
+    
+    // 2) Determine the Transfer Rate
+    if (!this.rate || now > (this._startTime + this._elapsed + 2)) {
+      this._elapsed = now - this._startTime;
+      this.rate = this._elapsed ? (currSize / 1024) / this._elapsed : 0;
+      if (this.rate > 100)
+        this.rate = Math.round(this.rate);
+      if (this.rate == 0)
+        this.rate = "??.?";
+    }
+
+    // 3) Determine the Time Remaining
+    var remainingTime = this._unknownFileSize;
+    if (this.rate && (finalSize > 0)) {
+      remainingTime = Math.floor(((finalSize - currSize) / 1024) / this.rate);
+      remainingTime = this._formatSeconds(remainingTime); 
+    }
+      
+    var status = this._statusFormat;
+    status = this._replaceInsert(status, 1, this.progress);
+    status = this._replaceInsert(status, 2, this.rate);
+    status = this._replaceInsert(status, 3, remainingTime);
+    status = this._replaceInsert(status, 4, this._remain);
+    return status;
   },
 
+  /**
+   * Inserts a string into another string at the specified index, e.g. for
+   * the format string var foo ="#1 #2 #3", |_replaceInsert(foo, 2, "test")|
+   * returns "#1 test #3";
+   * @param   format
+   *          The format string
+   * @param   index
+   *          The Index to insert into
+   * @param   value
+   *          The value to insert
+   * @returns The string with the value inserted. 
+   */  
+  _replaceInsert: function(format, index, value) {
+    return format.replace(new RegExp("#" + index), value);
+  },
+
+  /**
+   * Formats progress in the form of kilobytes transfered vs. total to 
+   * transfer.
+   * @param   currentKB
+   *          The current amount of data transfered, in kilobytes.
+   * @param   totalKB
+   *          The total amount of data that must be transfered, in kilobytes.
+   * @returns A string representation of the progress, formatted according to:
+   * 
+   *            KB           totalKB           returns
+   *            x, < 1MB     y < 1MB           x of y KB
+   *            x, < 1MB     y >= 1MB          x KB of y MB
+   *            x, >= 1MB    y >= 1MB          x of y MB
+   */
+   _formatKBytes: function(currentKB, totalKB) {
+    var progressHasMB = parseInt(currentKB / 1024) > 0;
+    var totalHasMB = parseInt(totalKB / 1024) > 0;
+    
+    var format = "";
+    if (!progressHasMB && !totalHasMB) {
+      if (!totalKB) {
+        format = this._statusFormatUnknownKB;
+        format = this._replaceInsert(format, 1, currentKB);
+      } else {
+        format = this._statusFormatKBKB;
+        format = this._replaceInsert(format, 1, currentKB);
+        format = this._replaceInsert(format, 2, totalKB);
+      }
+    }
+    else if (progressHasMB && totalHasMB) {
+      format = this._statusFormatMBMB;
+      format = this._replaceInsert(format, 1, (currentKB / 1024).toFixed(1));
+      format = this._replaceInsert(format, 2, (totalKB / 1024).toFixed(1));
+    }
+    else if (totalHasMB && !progressHasMB) {
+      format = this._statusFormatKBMB;
+      format = this._replaceInsert(format, 1, currentKB);
+      format = this._replaceInsert(format, 2, (totalKB / 1024).toFixed(1));
+    }
+    else if (progressHasMB && !totalHasMB) {
+      format = this._statusFormatUnknownMB;
+      format = this._replaceInsert(format, 1, (currentKB / 1024).toFixed(1));
+    }
+    return format;  
+  },
+
+  /**
+   * Formats a time in seconds into something human readable.
+   * @param   seconds
+   *          The time to format
+   * @returns A human readable string representing the date.
+   */
+  _formatSeconds: function(seconds) {
+    // Determine number of hours/minutes/seconds
+    var hours = (seconds - (seconds % 3600)) / 3600;
+    seconds -= hours * 3600;
+    var minutes = (seconds - (seconds % 60)) / 60;
+    seconds -= minutes * 60;
+    
+    // Pad single digit values
+    if (hours < 10)
+      hours = "0" + hours;
+    if (minutes < 10)
+      minutes = "0" + minutes;
+    if (seconds < 10)
+      seconds = "0" + seconds;
+    
+    // Insert hours, minutes, and seconds into result string.
+    var result = parseInt(hours) ? this._longTimeFormat : this._shortTimeFormat;
+    result = this._replaceInsert(result, 1, hours);
+    result = this._replaceInsert(result, 2, minutes);
+    result = this._replaceInsert(result, 3, seconds);
+
+    return result;
+  }
+};
+
+var gDownloadingPage = {
+  _downloadName     : null,
+  _downloadStatus   : null,
+  _downloadProgress : null,
+  _downloadThrobber : null,
+  _pauseButton      : null,
+  
+  _statusFormatter  : null,
+  
   onPageShow: function() {
-    this._updatesView = document.getElementById("updatesView");
+    this._downloadName = document.getElementById("downloadName");
+    this._downloadStatus = document.getElementById("downloadStatus");
+    this._downloadProgress = document.getElementById("downloadProgress");
+    this._downloadThrobber = document.getElementById("downloadThrobber");
+    this._pauseButton = document.getElementById("pauseButton");
+  
     if (gUpdates.update) {
       // Add this UI as a listener for active downloads
       var updates = 
@@ -301,37 +488,47 @@ var gDownloadingPage = {
       else
         updates.addDownloadListener(this);
     }
-
-    var um = Components.classes["@mozilla.org/updates/update-manager;1"]
-                       .getService(Components.interfaces.nsIUpdateManager);
-    var activeUpdate = um.activeUpdate;
-    if (activeUpdate) {
-      var element = this._createAndInsertItem(activeUpdate);
-      element.id = "activeDownloadItem";
-    }
-    this._updatesView.addEventListener("update-pause", this.onPause, false);
     
-    // Build the UI for previously installed updates
-    for (var i = 0; i < um.updateCount; ++i) {
-      var update = um.getUpdateAt(i);
-      this._createAndInsertItem(update);
-    }
-    
-    
-    gUpdates.headerVisible = false;
+    document.documentElement.getButton("back").disabled = true;
+    document.documentElement.getButton("next").disabled = true;
+    var cancelButton = document.documentElement.getButton("cancel");
+    cancelButton.label = gUpdates.updateStrings.getString("closeButtonLabel");
+    cancelButton.focus();
+    gUpdates.headerVisible = true;
+  },
+  
+  _setStatus: function(status) {
+    while (this._downloadStatus.hasChildNodes())
+      this._downloadStatus.removeChild(this._downloadStatus.firstChild);
+    this._downloadStatus.appendChild(document.createTextNode(status));
   },
   
   _paused: false,
+  _oldStatus: "",
+  _oldName: "",
+  _oldMode: "",
   onPause: function() {
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"].
         getService(Components.interfaces.nsIApplicationUpdateService);
-    if (this._paused)
+    if (this._paused) {
       updates.downloadUpdate(gUpdates.update, false);
-    else
+      this._downloadName.value = gUpdates.updateStrings.getFormattedString("downloadingPrefix", [gUpdates.update.name]);
+      this._setStatus(this._oldStatus);
+      this._downloadProgress.mode = this._oldMode;
+      this._pauseButton.label = gUpdates.updateStrings.getString("pauseButtonPause");
+    }
+    else {
       updates.pauseDownload();
+      this._oldStatus = this._downloadStatus.textContent;
+      this._oldMode = this._downloadProgress.mode;
+      this._downloadName.value = gUpdates.updateStrings.getFormattedString("pausedName", [gUpdates.update.name]);
+      this._setStatus(gUpdates.updateStrings.getFormattedString("pausedStatus", 
+          [this._statusFormatter.progress]));
+      this._downloadProgress.mode = "normal";
+      this._pauseButton.label = gUpdates.updateStrings.getString("pauseButtonResume");
+    }
     this._paused = !this._paused;
-    document.getElementById("activeDownloadItem").paused = this._paused;
   },
   
   onClose: function() {
@@ -339,8 +536,8 @@ var gDownloadingPage = {
     // fed progress and state notifications after the UI we're updating has 
     // gone away.
     var updates = 
-        Components.classes["@mozilla.org/updates/update-service;1"]
-                  .getService(Components.interfaces.nsIApplicationUpdateService);
+        Components.classes["@mozilla.org/updates/update-service;1"].
+        getService(Components.interfaces.nsIApplicationUpdateService);
     updates.removeDownloadListener(this);
     
     var um = 
@@ -349,24 +546,28 @@ var gDownloadingPage = {
     um.activeUpdate = gUpdates.update;
   },
   
-  showCompletedUpdatesChanged: function(checkbox) {
-    this._updatesView.setAttribute("showcompletedupdates", checkbox.checked);
-  },
-
   onStartRequest: function(request, context) {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("gDownloadingPage.onStartRequest: " + request.URI.spec);
+
+    this._statusFormatter = new DownloadStatusFormatter();
+    
+    this._downloadThrobber.setAttribute("state", "loading");
   },
   
   onProgress: function(request, context, progress, maxProgress) {
     request.QueryInterface(nsIIncrementalDownload);
     // LOG("gDownloadingPage.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
-    
-    var active = document.getElementById("activeDownloadItem");
-    active.startDownload();
-    active.state = STATE_DOWNLOADING;
-    active.progress = gUpdates.update.selectedPatch.progress;
-    active.status = gUpdates.update.selectedPatch.status;
+
+    gUpdates.update.selectedPatch.status = 
+      this._statusFormatter.formatStatus(progress, maxProgress);
+
+    this._downloadProgress.mode = "normal";
+    this._downloadProgress.value = gUpdates.update.selectedPatch.progress;
+    this._pauseButton.disabled = false;
+    var name = gUpdates.updateStrings.getFormattedString("downloadingPrefix", [gUpdates.update.name]);
+    this._downloadName.value = name;
+    this._setStatus(gUpdates.update.selectedPatch.status);
   },
   
   onStatus: function(request, context, status, statusText) {
@@ -378,15 +579,11 @@ var gDownloadingPage = {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("gDownloadingPage.onStopRequest: " + request.URI.spec + ", status = " + status);
     
-    // Flip the progressmeter back to "undetermined" mode in case we need to
-    // download a new (complete) update patch.
-    var active = document.getElementById("activeDownloadItem");
-    active.state = gUpdates.update.selectedPatch.state;
-    
+    this._downloadThrobber.removeAttribute("state");
+
     const NS_BINDING_ABORTED = 0x804b0002;
     switch (status) {
     case Components.results.NS_ERROR_UNEXPECTED:
-      LOG("DLP:STATE = " + gUpdates.update.selectedPatch.state);
       if (gUpdates.update.selectedPatch.state == STATE_FAILED)
         this.showVerificationError();
       else {
@@ -395,7 +592,8 @@ var gDownloadingPage = {
         
         // Reset the progress meter to "undertermined" mode so that we don't 
         // show old progress for the new download of the "complete" patch.
-        active.stopDownload();
+        this._downloadProgress.mode = "undetermined";
+        this._pauseButton.disabled = true;
         return;
       }
       break;
@@ -406,7 +604,6 @@ var gDownloadingPage = {
       return;
     }
 
-    LOG("Removing Listener");
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"].
         getService(Components.interfaces.nsIApplicationUpdateService);

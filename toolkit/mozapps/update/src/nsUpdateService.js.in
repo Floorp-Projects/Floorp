@@ -1158,181 +1158,6 @@ Checker.prototype = {
 };
 
 /**
- * Formats status messages for a download operation based on the progress
- * of the download.
- * @constructor
- */
-function DownloadStatusFormatter() {
-  this._downloadStartTime = (new Date()).getTime();
-  this._elapsed = 0;
-  
-  var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                      .getService(Components.interfaces.nsIStringBundleService);
-  var bundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
-  
-  this._statusFormat = bundle.GetStringFromName("statusFormat");
-  this._statusFormatKBMB = bundle.GetStringFromName("statusFormatKBMB");
-  this._statusFormatKBKB = bundle.GetStringFromName("statusFormatKBKB");
-  this._statusFormatMBMB = bundle.GetStringFromName("statusFormatMBMB");
-  this._statusFormatUnknownMB = bundle.GetStringFromName("statusFormatUnknownMB");
-  this._statusFormatUnknownKB = bundle.GetStringFromName("statusFormatUnknownKB");
-  this._remain = bundle.GetStringFromName("remain");
-  this._unknownFilesize = bundle.GetStringFromName("unknownFilesize");
-  this._longTimeFormat = bundle.GetStringFromName("longTimeFormat");
-  this._shortTimeFormat = bundle.GetStringFromName("shortTimeFormat");
-}
-DownloadStatusFormatter.prototype = {
-  /**
-   * Time when the download started (in seconds since epoch)
-   */
-  _downloadStartTime: 0,
-
-  /**
-   * Time elapsed since the start of the download operation (in seconds)
-   */
-  _elapsed: 0,
-
-  /**
-   * Format a human-readable status message based on the current download
-   * progress.
-   * @param   currSize
-   *          The current number of bytes transferred
-   * @param   finalSize
-   *          The total number of bytes to be transferred
-   * @returns A human readable status message, e.g.
-   *          "3.4 of 4.7MB; 1.15 remain"
-   */
-  formatStatus: function(currSize, finalSize) {
-    var now = (new Date()).getTime();
-    
-    // 1) Determine the Download Progress in Kilobytes
-    var KBTotal = parseInt(finalSize/1024 + 0.5);
-    var KBProgress = this._formatKBytes(parseInt(currSize/1024 + 0.5), KBTotal);
-    LOG("KBP = " + KBProgress);
-
-    // 2) Determine the Transfer Rate
-    this._elapsed = now - (this._startTime / 1000);
-    var rate = this._elapsed ? (currSize * 1024) / this.elapsed : 0
-    var KBRate = "??.?";
-    if (rate) {    
-      var KBRate = parseInt((rate / 1024) * 10 + 0.5);
-      var fraction = KBRate % 10;
-      KBRate = parseInt((KBRate - remainder) / 10);
-      if (KBRate < 100)
-        KBRate += "." + fraction;
-    }
-
-    // 3) Determine the Time Remaining
-    var remainingTime = this._unknownFileSize;
-    if (rate && (finalSize > 0)) {
-      remainingTime = (finalSize - currSize) / rate;
-      remainingTime = parseInt(remainingTime + 0.5);
-      remainingTime = this._formatSeconds(remainingTime); 
-    }
-      
-    var status = this._statusFormat;
-    status = this._replaceInsert(status, 1, KBProgress);
-    status = this._replaceInsert(status, 2, KBRate);
-    status = this._replaceInsert(status, 3, remainingTime);
-    return status;
-  },
-
-  /**
-   * Inserts a string into another string at the specified index, e.g. for
-   * the format string var foo ="#1 #2 #3", |_replaceInsert(foo, 2, "test")|
-   * returns "#1 test #3";
-   * @param   format
-   *          The format string
-   * @param   index
-   *          The Index to insert into
-   * @param   value
-   *          The value to insert
-   * @returns The string with the value inserted. 
-   */  
-  _replaceInsert: function(format, index, value) {
-    return format.replace(new RegExp("#" + index), value);
-  },
-
-  /**
-   * Formats progress in the form of kilobytes transfered vs. total to 
-   * transfer.
-   * @param   currentKB
-   *          The current amount of data transfered, in kilobytes.
-   * @param   totalKB
-   *          The total amount of data that must be transfered, in kilobytes.
-   * @returns A string representation of the progress, formatted according to:
-   * 
-   *            KB           totalKB           returns
-   *            x, < 1MB     y < 1MB           x of y KB
-   *            x, < 1MB     y >= 1MB          x KB of y MB
-   *            x, >= 1MB    y >= 1MB          x of y MB
-   */
-   _formatKBytes: function(currentKB, totalKB) {
-    var progressHasMB = parseInt(currentKB / 1024) > 0;
-    var totalHasMB = parseInt(totalKB / 1024) > 0;
-    
-    var format = "";
-    if (!progressHasMB && !totalHasMB) {
-      if (!totalKB) {
-        format = this._statusFormatUnknownKB;
-        format = this._replaceInsert(format, 1, currentKB);
-      } else {
-        format = this._statusFormatKBKB;
-        format = this._replaceInsert(format, 1, currentKB);
-        format = this._replaceInsert(format, 2, totalKB);
-      }
-    }
-    else if (progressHasMB && totalHasMB) {
-      format = this._statusFormatMBMB;
-      format = this._replaceInsert(format, 1, (currentKB / 1024).toFixed(1));
-      format = this._replaceInsert(format, 2, (totalKB / 1024).toFixed(1));
-    }
-    else if (totalHasMB && !progressHasMB) {
-      format = this._statusFormatKBMB;
-      format = this._replaceInsert(format, 1, currentKB);
-      format = this._replaceInsert(format, 2, (totalKB / 1024).toFixed(1));
-    }
-    else if (progressHasMB && !totalHasMB) {
-      format = this._statusFormatUnknownMB;
-      format = this._replaceInsert(format, 1, (currentKB / 1024).toFixed(1));
-    }
-    return format;  
-  },
-
-  /**
-   * Formats a time in seconds into something human readable.
-   * @param   seconds
-   *          The time to format
-   * @returns A human readable string representing the date.
-   */
-  _formatSeconds: function(seconds) {
-    // Round the number of seconds to remove fractions.
-    seconds = parseInt(seconds + .5);
-    var hours = parseInt(seconds/3600);
-    seconds -= hours * 3600;
-    
-    var minutes = parseInt(seconds/60);
-    seconds -= minutes * 60;
-    var result = hours ? this._longTimeFormat : this._shortTimeFormat;
-
-    if (hours < 10)
-      hours = "0" + hours;
-    if (minutes < 10)
-      minutes = "0" + minutes;
-    if (seconds < 10)
-      seconds = "0" + seconds;
-
-    // Insert hours, minutes, and seconds into result string.
-    result = this._replaceInsert(result, 1, hours);
-    result = this._replaceInsert(result, 2, minutes);
-    result = this._replaceInsert(result, 3, seconds);
-
-    return result;
-  }
-};
-
-
-/**
  * Manages the download of updates
  * @param   background
  *          Whether or not this downloader is operating in background
@@ -1424,6 +1249,9 @@ Downloader.prototype = {
    * this point.
    */
   _verifyDownload: function() {
+    if (!this._request)
+      return false;
+      
     var fileStream = Components.classes["@mozilla.org/network/file-input-stream;1"].
         createInstance(nsIFileInputStream);
     fileStream.init(this._request.destination, MODE_RDONLY, PERMS_FILE, 0);
@@ -1621,17 +1449,13 @@ Downloader.prototype = {
    *
    */
   removeDownloadListener: function(listener) {
-    LOG("LISTENERS0 = " + this._listeners.length);
     for (var i = 0; i < this._listeners.length; ++i) {
       if (this._listeners[i] == listener) {
         this._listeners.splice(i, 1);
         return;
       }
     }
-    LOG("LISTENERS1 = " + this._listeners.length);
   },
-  
-  _statusFormatter: null,
   
   /**
    *
@@ -1639,8 +1463,6 @@ Downloader.prototype = {
   onStartRequest: function(request, context) {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("Downloader.onStartRequest: " + request.URI.spec);
-    
-    this._statusFormatter = new DownloadStatusFormatter();
     
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i)
@@ -1655,7 +1477,6 @@ Downloader.prototype = {
     // LOG("Downloader.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
     
     this._patch.progress = Math.round(100 * (progress/maxProgress));
-    this._patch.status = this._statusFormatter.formatStatus(progress, maxProgress);
 
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i) {
