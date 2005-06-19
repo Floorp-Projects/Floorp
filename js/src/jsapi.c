@@ -1473,12 +1473,15 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
 static JSIdArray *
 AddAtomToArray(JSContext *cx, JSAtom *atom, JSIdArray *ida, jsint *ip)
 {
-    jsint i = *ip;
-
-    if (i >= ida->length) {
-        ida = js_SetIdArrayLength(cx, ida, ida->length * 2);
+    jsint i, length;
+    
+    i = *ip;
+    length = ida->length;
+    if (i >= length) {
+        ida = js_SetIdArrayLength(cx, ida, JS_MAX(length * 2, 8));
         if (!ida)
             return NULL;
+        JS_ASSERT(i < ida->length);
     }
     ida->vector[i] = ATOM_TO_JSID(atom);
     *ip = i + 1;
@@ -1490,11 +1493,8 @@ EnumerateIfResolved(JSContext *cx, JSObject *obj, JSAtom *atom, JSIdArray *ida,
                     jsint *ip, JSBool *foundp)
 {
     *foundp = AlreadyHasOwnProperty(obj, atom);
-    if (*foundp) {
+    if (*foundp)
         ida = AddAtomToArray(cx, atom, ida, ip);
-        if (!ida)
-            return NULL;
-    }
     return ida;
 }
 
@@ -3108,6 +3108,13 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
     i = 0;
     vector = &ida->vector[0];
     for (;;) {
+        if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &iter_state, &id))
+            goto error;
+
+        /* No more jsid's to enumerate ? */
+        if (iter_state == JSVAL_NULL)
+            break;
+
         if (i == ida->length) {
             /* Grow length by factor of 1.5 instead of doubling. */
             jsint newlen = ida->length + (((jsuint)ida->length + 1) >> 1);
@@ -3116,17 +3123,9 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
                 goto error;
             vector = &ida->vector[0];
         }
-
-        if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &iter_state, &id))
-            goto error;
-
-        /* No more jsid's to enumerate ? */
-        if (iter_state == JSVAL_NULL)
-            break;
         vector[i++] = id;
     }
-    ida->length = i;
-    return ida;
+    return js_SetIdArrayLength(cx, ida, i);
 
 error:
     if (iter_state != JSVAL_NULL)
