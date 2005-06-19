@@ -132,17 +132,21 @@
   </wizardpage>
   
   <wizardpage id="downloading" pageid="downloading" next="finished"
-              onpageshow="gDownloadingPage.onPageShow();" flex="1">
+              onpageshow="gDownloadingPage.onPageShow();" 
+              label="&downloading.title;">
     
-    <label id="downloadingIntro">&downloading.intro;</label>
-    <view id="updatesView" flex="1"
-          datasources="rdf:null" persist="last-selected"/>
-    <hbox id="downloadingFooter">
-      <checkbox id="showCompletedUpdates"
-                label="&showCompletedUpdates.label;" accesskey="&showCompletedUpdates.accesskey;"
-                oncommand="gDownloadingPage.showCompletedUpdatesChanged(event.target);"/>
-      <separator flex="1"/>
-      <button label="&close.label;" accesskey="&close.accesskey;" oncommand="close();"/>
+    <hbox pack="start">
+      <label id="downloadName" crop="right" flex="1">&downloading.intro;</label>
+      <link id="detailsLink">
+        <label>&details.link;</label>
+      </link>
+    </hbox>
+    <progressmeter id="downloadProgress" mode="undetermined"/>
+    <hbox align="start">
+      <image id="downloadThrobber"/>
+      <description id="downloadStatus" flex="1">&connecting.label;</description>
+      <button id="pauseButton" oncommand="gDownloadingPage.onPause();"
+              label="&pause.label;" accesskey="&pause.accesskey;"/>
     </hbox>
   </wizardpage>
   

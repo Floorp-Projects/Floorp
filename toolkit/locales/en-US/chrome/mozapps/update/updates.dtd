@@ -35,7 +35,9 @@
 <!ENTITY  license.instructions            "If you agree to the terms of this agreement, click I Agree 
                                            below to continue installing this update.">
 
-<!ENTITY  downloading.intro               "The following updates are being/have been installed:">
+<!ENTITY  downloading.title               "Downloading Update">
+<!ENTITY  downloading.intro               "Downloading the update...">
+<!ENTITY  connecting.label                "Connecting to the update server...">
 <!ENTITY  showCompletedUpdates.label      "Show old updates in this list">
 <!ENTITY  showCompletedUpdates.accesskey  "o">
 

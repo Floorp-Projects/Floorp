@@ -145,7 +145,7 @@
           var key = val ? "pauseButtonResume" : "pauseButtonPause";
           if (val) {
             this.setAttribute("old-status", this.status);
-            this.status = this._strings.getString("pausedStatus");
+            //this.status = this._strings.getString("pausedStatus");
             this.setAttribute("old-name", this.name);
             this.name = this._strings.getFormattedString("pausedName", [this.name]);
             LOG("GOAT = " + this._strings.getFormattedString("pausedName", [this.name]));
