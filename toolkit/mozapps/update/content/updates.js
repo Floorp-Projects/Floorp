@@ -462,14 +462,23 @@ DownloadStatusFormatter.prototype = {
 };
 
 var gDownloadingPage = {
+  /** 
+   * DOM Elements
+   */
   _downloadName     : null,
   _downloadStatus   : null,
   _downloadProgress : null,
   _downloadThrobber : null,
   _pauseButton      : null,
   
+  /** 
+   * An instance of the status formatter object
+   */
   _statusFormatter  : null,
   
+  /** 
+   *
+   */
   onPageShow: function() {
     this._downloadName = document.getElementById("downloadName");
     this._downloadStatus = document.getElementById("downloadStatus");
@@ -497,6 +506,9 @@ var gDownloadingPage = {
     gUpdates.headerVisible = true;
   },
   
+  /** 
+   *
+   */
   _setStatus: function(status) {
     while (this._downloadStatus.hasChildNodes())
       this._downloadStatus.removeChild(this._downloadStatus.firstChild);
@@ -507,6 +519,10 @@ var gDownloadingPage = {
   _oldStatus: "",
   _oldName: "",
   _oldMode: "",
+
+  /** 
+   *
+   */
   onPause: function() {
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"].
@@ -531,6 +547,9 @@ var gDownloadingPage = {
     this._paused = !this._paused;
   },
   
+  /** 
+   *
+   */
   onClose: function() {
     // Remove ourself as a download listener so that we don't continue to be 
     // fed progress and state notifications after the UI we're updating has 
@@ -546,6 +565,9 @@ var gDownloadingPage = {
     um.activeUpdate = gUpdates.update;
   },
   
+  /** 
+   *
+   */
   onStartRequest: function(request, context) {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("gDownloadingPage.onStartRequest: " + request.URI.spec);
@@ -555,6 +577,9 @@ var gDownloadingPage = {
     this._downloadThrobber.setAttribute("state", "loading");
   },
   
+  /** 
+   *
+   */
   onProgress: function(request, context, progress, maxProgress) {
     request.QueryInterface(nsIIncrementalDownload);
     // LOG("gDownloadingPage.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
@@ -570,11 +595,17 @@ var gDownloadingPage = {
     this._setStatus(gUpdates.update.selectedPatch.status);
   },
   
+  /** 
+   *
+   */
   onStatus: function(request, context, status, statusText) {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("gDownloadingPage.onStatus: " + request.URI.spec + " status = " + status + ", text = " + statusText);
   },
   
+  /** 
+   *
+   */
   onStopRequest: function(request, context, status) {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("gDownloadingPage.onStopRequest: " + request.URI.spec + ", status = " + status);
@@ -602,6 +633,10 @@ var gDownloadingPage = {
       // Return early, do not remove UI listener since the user may resume
       // downloading again.
       return;
+    case Components.results.NS_OK:
+      LOG("gDownloadingPage.onStopRequest: Patch Verification Succeeded");
+      document.documentElement.advance();
+      break;
     }
 
     var updates = 
@@ -610,6 +645,9 @@ var gDownloadingPage = {
     updates.removeDownloadListener(this);
   },
   
+  /** 
+   * Advance the wizard to the "Verification Error" page
+   */
   showVerificationError: function() {
     var brandName = gUpdates.brandStrings.getString("brandShortName");
     var verificationError = gUpdates.updateStrings.getFormattedString("verificationError", [brandName]);
@@ -636,6 +674,38 @@ var gErrorsPage = {
     document.documentElement.getButton("finish").focus();
     
     gUpdates.headerVisible = true;
+  }
+};
+
+var gFinishedPage = {
+  onPageShow: function() {
+    document.documentElement.getButton("back").disabled = true;
+    var finishButton = document.documentElement.getButton("finish");
+    finishButton.label = gUpdates.updateStrings.getString("restartButton");
+    finishButton.focus();
+    var cancelButton = document.documentElement.getButton("cancel");
+    cancelButton.label = gUpdates.updateStrings.getString("laterButton");
+    
+    var self = this;
+    function onRestartLater() {
+      // self.onRestartLater();
+      self._later = true;
+    }
+    cancelButton.addEventListener("command", onRestartLater, false);
+  },
+  
+  onClose: function() {
+    LOG("FINISH = " + this._later);
+  },
+  
+  onRestartLater: function() {
+    var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                       .getService(Components.interfaces.nsIPromptService);
+    var brandName = gUpdates.brandStrings.getString("brandShortName");
+    var message = gUpdates.updateStrings.getFormattedString("restartLaterMessage",
+      [brandName]);
+    ps.alert(window, gUpdates.updateStrings.getString("restartLaterTitle"), 
+             message);
   }
 };
 

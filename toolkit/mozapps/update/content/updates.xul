@@ -164,8 +164,10 @@
     </hbox>
   </wizardpage>
   
-  <wizardpage id="finished" pageid="finished" align="start">
-    <label>&finished.label;</label>
+  <wizardpage id="finished" pageid="finished" align="start"
+              label="&finished.title;"
+              onpageshow="gFinishedPage.onPageShow();">
+    <label>&finished.intro;</label>
   </wizardpage>
   
 </wizard>

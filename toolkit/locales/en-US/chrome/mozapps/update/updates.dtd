@@ -7,7 +7,8 @@
 <!ENTITY  cancel.accesskey                "C">
 
 <!ENTITY  noupdatesfound.title            "No Updates Found">
-<!ENTITY  noupdatesfound.intro            "There are no new updates available. &brandShortName; may check periodically for new updates.">
+<!ENTITY  noupdatesfound.intro            "There are no new updates available. &brandShortName; may check 
+                                           periodically for new updates.">
 
 <!ENTITY  updatesfound.title              "Updates Available">
 
@@ -53,4 +54,7 @@
 <!ENTITY  errorManual.label               "You can update &brandShortName; manually by visiting this link
                                            and downloading the latest version:">
 
-<!ENTITY  finished.label                  "Finished">
+<!ENTITY  finished.title                  "Update Downloaded">
+<!ENTITY  finished.intro                  "The update was successfully downloaded and verified. You must now restart 
+                                           &brandShortName; so that the update can be installed.">
+
