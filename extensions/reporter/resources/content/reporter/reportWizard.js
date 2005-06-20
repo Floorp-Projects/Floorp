@@ -296,7 +296,7 @@ function getBuildConfig() {
     return text.substring(start);
   } catch(ex) {
     dump(ex);
-    return;
+    return "Unknown";
   }
 }
 
