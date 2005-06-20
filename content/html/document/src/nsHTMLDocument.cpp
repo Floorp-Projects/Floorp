@@ -1826,21 +1826,6 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
   return NS_OK;
 }
 
-// static
-nsIPrincipal *
-nsHTMLDocument::GetCallerPrincipal()
-{
-  // XXX This will fail on non-DOM contexts :(
-  nsIDOMDocument *domDoc = nsContentUtils::GetDocumentFromCaller();
-
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  if (!doc) {
-    return nsnull; // No document in the window
-  }
-
-  return doc->GetPrincipal();
-}
-
 // XXX TBI: accepting arguments to the open method.
 nsresult
 nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
@@ -1868,7 +1853,9 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
   if (callerDoc) {
     securityInfo = callerDoc->GetSecurityInfo();
-    callerPrincipal = GetCallerPrincipal();
+
+    nsContentUtils::GetSecurityManager()->
+      GetSubjectPrincipal(getter_AddRefs(callerPrincipal));
   }
 
   // The URI for the document after this call. Get it from the calling
