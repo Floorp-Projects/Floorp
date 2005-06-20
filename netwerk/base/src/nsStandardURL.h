@@ -221,6 +221,7 @@ private:
     // IDN routines
     static nsresult ACEtoUTF8(const nsCSubstring &in, nsCString &out);
     static nsresult NormalizeUTF8(const nsCSubstring &in, nsCString &out);
+    static PRBool IsInWhitelist(const nsCSubstring &host);
 
     // mSpec contains the normalized version of the URL spec (UTF-8 encoded).
     nsCString mSpec;
@@ -272,6 +273,7 @@ private:
     static PRBool                       gEscapeUTF8;
     static PRBool                       gAlwaysEncodeInUTF8;
     static PRBool                       gShowPunycode;
+    static nsIPrefBranch               *gIDNWhitelistPrefBranch;
 };
 
 #define NS_THIS_STANDARDURL_IMPL_CID                 \
