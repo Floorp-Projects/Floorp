@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set sw=4 ts=8 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -1185,9 +1186,17 @@ doSimple:
         state->result->u.ucclass.startIndex = termStart - state->cpbegin;
         while (JS_TRUE) {
             if (state->cp == state->cpend) {
+                char *bytes = js_DeflateString(state->context, termStart,
+                                               state->cpend - termStart);
+                if (!bytes)
+                    return JS_FALSE;
+
                 js_ReportCompileErrorNumber(state->context, state->tokenStream,
                                             JSREPORT_TS | JSREPORT_ERROR,
-                                            JSMSG_UNTERM_CLASS, termStart);
+                                            JSMSG_UNTERM_CLASS, bytes);
+
+                JS_free(state->context, bytes);
+
                 return JS_FALSE;
             }
             if (*state->cp == '\\') {
