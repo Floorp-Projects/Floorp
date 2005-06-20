@@ -60,7 +60,8 @@ static const char *sProgramPath;
 
 @implementation UpdaterUI
 
--(void)awakeFromNib {
+-(void)awakeFromNib
+{
   [[progressBar window] center];
   [progressBar setIndeterminate:NO];
   [progressBar setDoubleValue:0.0];
@@ -82,6 +83,11 @@ static const char *sProgramPath;
   float progress = sProgressVal;
   
   [progressBar setDoubleValue:(double)progress];
+}
+
+- (BOOL)applicationShouldTerminate:(NSApplication *)sender
+{
+  return sQuit;
 }
 
 @end
