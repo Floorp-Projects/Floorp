@@ -80,23 +80,21 @@
   </wizardpage>
   
   <wizardpage id="updatesfound" pageid="updatesfound" next="downloading"
-              object="gUpdatesAvailablePage" flex="1"
+              object="gUpdatesAvailablePage" label="&updatesfound.title;"
               onpageshow="gUpdatesAvailablePage.onPageShow();">
-    <vbox id="update-info" flex="1">
-      <vbox id="update-info-inner" flex="1">
-        <hbox align="start">
-          <vbox flex="1">
-            <description id="updateType">
-              &updateAvailable.placeholder;
-            </description>
-            <label id="updateName" crop="right"/>
-            <description class="updateForMoreInfo">&forMoreInfo.label;
-              <link id="updateMoreInfoURL">&clickHere.label;</link>.
-            </description>
-          </vbox>
-          <image id="updateImage" src="chrome://branding/content/icon64.png"/>
-        </hbox>
-        <separator flex="1"/>
+    <vbox flex="1" id="updatesfoundContent">
+      <description id="updateType">&updateAvailable.placeholder;</description>
+      <separator class="thin"/>
+      <label id="updateName" crop="right"/>
+      <separator class="thin"/>
+      <description>&upgrade.evangelism;</description>
+      <hbox>
+        <button label="More Details"/>
+      </hbox>
+      <vbox hidden="true">
+        <description class="updateForMoreInfo">&forMoreInfo.label;
+          <link id="updateMoreInfoURL">&clickHere.label;</link>.
+        </description>
         <hbox align="start" id="incompatibleWarning" hidden="true">
           <image id="alertImage"/>
           <vbox flex="1">
@@ -107,19 +105,18 @@
             </hbox>
           </vbox>
         </hbox>
-        <separator flex="1"/>
-        <description class="bold">&upgrade.evangelism;</description>
-        <separator/>
-        <hbox>
-          <button label="&later.label;" accesskey="&later.accesskey;"
-                  oncommand="close();"/>
-          <separator flex="1"/>
-          <button id="download-button" 
-                  label="&download.label;" accesskey="&download.accesskey;"
-                  oncommand="gUpdatesAvailablePage.onInstallNow();"/>
-        </hbox>
       </vbox>
-    </vbox>
+      <separator flex="1"/>
+      
+    </vbox>    
+    <separator class="groove"/>
+    <hbox id="installButtons">
+      <button id="downloadLater" label="&later.label;" accesskey="&later.accesskey;"
+              oncommand="gUpdatesAvailablePage.onInstallLater();"/>
+      <spacer flex="1"/>
+      <button id="downloadNow" label="&download.label;" accesskey="&download.accesskey;"
+              oncommand="gUpdatesAvailablePage.onInstallNow();"/>
+    </hbox>
   </wizardpage>
   
   <wizardpage id="license" pageid="license" next="downloading"

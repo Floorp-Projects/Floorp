@@ -1,12 +1,8 @@
+/**
+ * General
+ */
 wizard[description=""] .wizard-header-description {
   display: none;
-}
-
-#errorReason {
-  margin-top: 1px;
-  margin-bottom: 2px;
-  -moz-margin-start: 6px !important;
-  -moz-margin-end: 5px;
 }
 
 link {
@@ -37,6 +33,9 @@ link:focus {
   border: 1px dotted black;
 }
 
+/**
+ * License Page
+ */
 license {
   -moz-binding: url("chrome://mozapps/content/update/updates.xml#license");
   display: -moz-deck;
@@ -60,46 +59,38 @@ license {
   list-style-image: url("chrome://global/skin/icons/notfound.png");
 }
 
-#updateName {
-  font-weight: bold;
-  font-size: x-large;
+/**
+ * Update Found Page
+ */
+#updatesfoundContent {
+  margin: 10px 44px 10px 44px;
 }
 
-#updateType[type=major] {
-  font-weight: bold;
-  color: #C00000;
+wizard[currentpageid="updatesfound"] .wizard-buttons {
+  display: none;
 }
 
-#updateType[type=minor] {
+wizard[currentpageid="updatesfound"] .wizard-page-box {
+  margin: 0px;
+}
+
+#installButtons {
+  margin: 10px;
+}
+
+#downloadNow {
   font-weight: bold;
-  color: #FF0000;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 #updateForMoreInfo {
   margin-left: 5px;
 }
 
-#updateImage {
-  margin-right: 5px;
-}
-
-#update-info {
-  border-bottom: 2px solid;
-  -moz-border-bottom-colors: ThreeDFace ThreeDHighlight;
-  -moz-appearance: listbox;
-  margin: 10px;
-  background-color: #FFFFFF;
-}
-
-#update-info-inner {
-  background-color: InfoBackground;
-  color: InfoText;
-  display: -moz-box;
-  padding: 7px 5px 7px 7px;
-}
-
-#updateAvailable {
-  margin: 5px;
+#updateName {
+  font-weight: bold;
+  font-size: larger;
 }
 
 #alertImage {
@@ -107,30 +98,13 @@ license {
   margin-right: 5px;
 }
 
-.action-button-box {
-  margin: 7px;
-}
-
-#download-button {
-  font-weight: bold;
-}
-
-.bold {
-  font-weight: bold;
-}
-
 #incompatibleWarning {
   margin-right: 50px;
 }
 
-#downloadingIntro {
-  margin: 10px 10px 0px 10px;
-}
-
-#downloadingFooter {
-  margin: 0px 4px 7px 4px;
-}
-
+/**
+ * Downloading Page
+ */
 #downloadName {
   margin-top: 3px;
 }
@@ -144,5 +118,15 @@ license {
 }
 #downloadThrobber[state="loading"] {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+}
+
+/**
+ * Error Page
+ */
+#errorReason {
+  margin-top: 1px;
+  margin-bottom: 2px;
+  -moz-margin-start: 6px !important;
+  -moz-margin-end: 5px;
 }
 
