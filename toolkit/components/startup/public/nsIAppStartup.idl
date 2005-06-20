@@ -52,6 +52,10 @@ interface nsIAppStartup : nsISupports
     /**
      * Runs an application event loop: normally the main event pump which
      * defines the lifetime of the application.
+     *
+     * @returnCode NS_SUCCESS_RESTART_APP
+     *             This return code indicates that the application should be
+     *             restarted because quit was called with the eRestart flag.
      */
     void run();
 
@@ -66,12 +70,50 @@ interface nsIAppStartup : nsISupports
     void enterLastWindowClosingSurvivalArea();
     void exitLastWindowClosingSurvivalArea();
 
-    const PRUint32 eConsiderQuit = 1; // attempt to quit if all windows are closed
-    const PRUint32 eAttemptQuit = 2;  // try to close all windows, then quit if successful
-    const PRUint32 eForceQuit = 3;    // quit, damnit
+    /**
+     * The following flags may be passed as the aMode parameter to the quit
+     * method.  One and only one of the "Quit" flags must be specified.  The
+     * eRestart flag may be bit-wise combined with one of the "Quit" flags to
+     * cause the application to restart after it quits.
+     */
 
     /**
-     * Exit the event loop, shut down the app
+     * Attempt to quit if all windows are closed.
      */
-    void quit(in PRUint32 aFerocity);
+    const PRUint32 eConsiderQuit = 0x01;
+
+    /**
+     * Try to close all windows, then quit if successful.
+     */
+    const PRUint32 eAttemptQuit = 0x02;
+
+    /**
+     * Quit, damnit!
+     */
+    const PRUint32 eForceQuit = 0x03;
+
+    /**
+     * Restart the application after quitting.  The application will be
+     * restarted with the same profile and an empty command line.
+     */
+    const PRUint32 eRestart = 0x10; 
+
+    /**
+     * Exit the event loop, and shut down the app.
+     *
+     * @param aMode
+     *        This parameter modifies how the app is shutdown, and it is
+     *        constructed from the constants defined above.
+     */
+    void quit(in PRUint32 aMode);
 };
+
+%{C++
+/**
+ * This success code may be returned by nsIAppStartup::Run to indicate that the
+ * application should be restarted.  This condition corresponds to the case in
+ * which nsIAppStartup::Quit was called with the eRestart flag.
+ */
+#define NS_SUCCESS_RESTART_APP \
+    NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 1)
+%}
