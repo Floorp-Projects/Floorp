@@ -1,4 +1,3 @@
-wizard[label=""] .wizard-header-label,
 wizard[description=""] .wizard-header-description {
   display: none;
 }
