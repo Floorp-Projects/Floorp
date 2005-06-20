@@ -62,6 +62,11 @@ static const char *sProgramPath;
 
 -(void)awakeFromNib {
   [[progressBar window] center];
+  [progressBar setIndeterminate:NO];
+  [progressBar setDoubleValue:0.0];
+  [[NSTimer scheduledTimerWithTimeInterval:TIMER_INTERVAL target:self
+                                  selector:@selector(updateProgressUI:)
+                                  userInfo:nil repeats:YES] retain];
 }
 
 // called when the timer goes off
@@ -101,10 +106,6 @@ ShowProgressUI()
     return 0;
   
   NSApplicationMain(1, &sProgramPath);
-  
-  [[NSTimer scheduledTimerWithTimeInterval:TIMER_INTERVAL target:[[[NSApplication sharedApplication] mainWindow] delegate]
-                                  selector:@selector(updateProgressUI:)
-                                  userInfo:nil repeats:YES] retain];
 
   return 0;
 }
