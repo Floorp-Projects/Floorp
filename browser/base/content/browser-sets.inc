@@ -273,6 +273,9 @@
     <key keycode="VK_BACK" command="Browser:Forward" modifiers="shift"/>
     <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
     <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
+#else
+    <key id="goBackKb" keycode="VK_LEFT" command="Browser:Back" modifiers="accel" />
+    <key id="goForwardKb" keycode="VK_RIGHT" command="Browser:Forward" modifiers="accel" />
 #endif
 #ifdef XP_UNIX
     <key id="goBackKb2" key="&goBackCmd.commandKey;" command="Browser:Back" modifiers="accel"/>
