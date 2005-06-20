@@ -831,7 +831,7 @@
       // copied from contextHelp.js
       // Locate existing help window for this helpFileURI.
       <method name="locateHelpWindow">
-        <paramter name="helpFileURI"/>
+        <parameter name="helpFileURI"/>
         <body>
         <![CDATA[
           const wm = Components.classes['@mozilla.org/appshell/window-mediator;1']
