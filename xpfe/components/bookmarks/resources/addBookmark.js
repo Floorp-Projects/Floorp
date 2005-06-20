@@ -62,7 +62,7 @@
  *   window.arguments[3]: Bookmark Charset. The charset that should be
  *                        used when adding a bookmark to the specified
  *                        URL. (Usually the charset of the current 
- *                        document when launching this window). 
+ *                        document when launching this window).
  *   window.arguments[4]: The mode of operation. See notes for details.
  *   window.arguments[5]: If the mode is "addGroup", this is an array
  *                        of objects with name, URL and charset
@@ -175,8 +175,14 @@ function Startup()
     }
   }
 
-  if ((arg != "newBookmark") && (bookmarkView.currentIndex == -1))
-    bookmarkView.tree.view.selection.select(0);
+  if ((arg != "newBookmark") && (bookmarkView.currentIndex == -1)) {
+    var folder = BookmarksUtils.getNewBookmarkFolder();
+    ind = bookmarkView.treeBuilder.getIndexOfResource(folder);
+    if (ind != -1)
+      bookmarkView.tree.view.selection.select(ind);
+    else
+      bookmarkView.tree.view.selection.select(0);
+  }
 
   if (shouldSetOKButton)
     onFieldInput();
