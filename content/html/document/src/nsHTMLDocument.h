@@ -229,8 +229,6 @@ protected:
   static PRBool MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
                                    nsIAtom* aAtom, const nsAString& aData);
 
-  static nsIPrincipal *GetCallerPrincipal();
-
   static void DocumentWriteTerminationFunc(nsISupports *aRef);
 
   PRBool GetBodyContent();
