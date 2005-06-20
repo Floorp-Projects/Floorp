@@ -26,24 +26,24 @@
   #%]
 
 [% PROCESS global/header.html.tmpl
-   title = "Edit Global Settings"
+   title = "Default Preferences"
  %]
 
 [% PROCESS "global/setting-descs.none.tmpl" %]
 
 <p>
-This lets you edit the global settings values.
+This lets you edit the default preferences values.
 </p>
 <p>
-The Default Value displayed for each setting will apply to all users who
+The Default Value displayed for each preference will apply to all users who
 do not choose their own value, and to anyone who is not logged in.
 </p>
 <p>
-The 'Enabled' checkbox controls whether or not this setting is available
+The 'Enabled' checkbox controls whether or not this preference is available
 to users.<br>
-If it is checked, users will see this setting on their User Preferences page,
+If it is checked, users will see this preference on their User Preferences page,
 and will be allowed to choose their own value if they desire.<br>
-If it is not checked, this setting will not appear on the User Preference
+If it is not checked, this preference will not appear on the User Preference
 page, and the Default Value will automatically apply to everyone.
 </p>
 <hr>
@@ -52,7 +52,7 @@ page, and the Default Value will automatically apply to everyone.
     <form name="adminsettingform" method="post" action="editsettings.cgi">
       <table border="1" cellpadding="4">
       <tr>
-        <th>Setting Text</th>
+        <th>Preference Text</th>
         <th>Default Value</th>
         <th>Enabled</th>
       <tr>
@@ -96,7 +96,7 @@ page, and the Default Value will automatically apply to everyone.
   
   </form>
 [% ELSE %]
-  There are no settings to edit.
+  There are no preferences to edit.
 [% END %]
 
 [% PROCESS global/footer.html.tmpl %]
