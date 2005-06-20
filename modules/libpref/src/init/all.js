@@ -556,7 +556,25 @@ pref("network.enableIDN", true);
 // This preference, if true, causes all UTF-8 domain names to be normalized to
 // punycode.  The intention is to allow UTF-8 domain names as input, but never
 // generate them from punycode.
-pref("network.IDN_show_punycode", true);
+pref("network.IDN_show_punycode", false);
+
+// TLDs with "network.IDN.whitelist.tld" explicitly set to true are treated as 
+// IDN-safe. Otherwise, they're treated as unsafe and punycode will be used
+// for displaying them in the UI (e.g. URL bar). Note that these preferences
+// are referred to ONLY when "network.IDN_show_punycode" is false. In other
+// words, all IDNs will be shown in punycode if "network.IDN_show_punycode"
+// is true.
+pref("network.IDN.whitelist.at", true);
+pref("network.IDN.whitelist.ch", true);
+pref("network.IDN.whitelist.cn", true);
+pref("network.IDN.whitelist.de", true);
+pref("network.IDN.whitelist.dk", true);
+pref("network.IDN.whitelist.jp", true);
+pref("network.IDN.whitelist.kr", true);
+pref("network.IDN.whitelist.li", true);
+pref("network.IDN.whitelist.no", true);
+pref("network.IDN.whitelist.se", true);
+pref("network.IDN.whitelist.tw", true);
 
 // This preference specifies a list of domains for which DNS lookups will be
 // IPv4 only. Works around broken DNS servers which can't handle IPv6 lookups
