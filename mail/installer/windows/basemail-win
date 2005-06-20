@@ -66,6 +66,7 @@ bin\README.txt
 ; Mail Specific Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 bin\defaults\messenger\SpamAssassin.sfd
+bin\defaults\messenger\SpamPal.sfd
 bin\defaults\profile\localstore.rdf
 bin\defaults\profile\prefs.js
 bin\defaults\profile\mimeTypes.rdf

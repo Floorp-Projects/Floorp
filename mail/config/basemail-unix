@@ -61,6 +61,7 @@ defaults/pref/*
 greprefs/*
 defaults/messenger/mailViews.dat
 defaults/messenger/SpamAssassin.sfd
+defaults/messenger/SpamPal.sfd
 defaults/profile/localstore.rdf
 defaults/profile/mimeTypes.rdf
 defaults/profile/US/localstore.rdf
