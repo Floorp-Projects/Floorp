@@ -1127,6 +1127,8 @@ nsMsgAsyncWriteProtocol::~nsMsgAsyncWriteProtocol()
 
 NS_IMETHODIMP nsMsgAsyncWriteProtocol::Cancel(nsresult status)
 {
+  mGenerateProgressNotifications = PR_FALSE;
+
   if (m_request)
     m_request->Cancel(status);
 
