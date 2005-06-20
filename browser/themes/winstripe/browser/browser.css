@@ -926,3 +926,8 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 #pageReportFirstTime statusbarpanel.statusbar-resizerpanel {
   visibility: collapse;
 }
+
+#checkForUpdates[loading="true"] {
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+}
+
