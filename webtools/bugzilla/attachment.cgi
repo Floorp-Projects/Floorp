@@ -1156,7 +1156,7 @@ sub update
           # Bugzilla::User needs to rederive groups. profiles and 
           # user_group_map would be READ locks instead of WRITE locks if it
           # weren't for derive_groups, which needs to write to those tables.
-          'bugs READ', 'profiles WRITE', 'email_setting READ',
+          'bugs WRITE', 'profiles WRITE', 'email_setting READ',
           'cc READ', 'bug_group_map READ', 'user_group_map WRITE',
           'group_group_map READ', 'groups READ');
 
@@ -1251,7 +1251,7 @@ sub update
 
   # If the user submitted a comment while editing the attachment,
   # add the comment to the bug.
-  if (defined $cgi->param('comment'))
+  if ($cgi->param('comment'))
   {
     # Prepend a string to the comment to let users know that the comment came
     # from the "edit attachment" screen.

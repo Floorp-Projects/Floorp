@@ -447,6 +447,9 @@ sub update_activity {
                   (bug_id, attach_id, who, bug_when, fieldid, removed, added)
                   VALUES ($bug_id, $attach_id, $::userid, $timestamp,
                   $field_id, $sql_removed, $sql_added)");
+
+        $dbh->do("UPDATE bugs SET delta_ts = $timestamp WHERE bug_id = ?",
+                 undef, $bug_id);
     }
 }
 
