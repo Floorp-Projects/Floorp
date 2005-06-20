@@ -8025,23 +8025,26 @@ nsresult nsImapMockChannel::OpenCacheEntry()
   m_url->GetAsciiSpec(urlSpec);
 
   // for now, truncate of the query part so we don't duplicate urls in the cache...
-  char * anchor = (char *)strrchr(urlSpec.BeginWriting(), '?');
-  if (anchor)
+  PRInt32 anchorIndex = urlSpec.RFindChar('?');
+  if (anchorIndex > 0)
   {
     // if we were trying to read a part, we failed - fall back and look for whole msg
     if (mTryingToReadPart)
     {
       mTryingToReadPart = PR_FALSE;
-      *anchor = '\0';
+      urlSpec.Truncate(anchorIndex);
     }
     else
     {
       // check if this is a filter plugin requesting the message. In that case,we're not
       // fetching a part, and we want the cache key to be just the uri.
-      if (strcmp(anchor, "?header=filter") && strcmp(anchor, "?header=attach"))
+      nsCAutoString anchor(Substring(urlSpec, anchorIndex));
+
+      if (!anchor.EqualsLiteral("?header=filter") 
+        && !anchor.EqualsLiteral("?header=attach") && !anchor.EqualsLiteral("?header=src"))
         mTryingToReadPart = PR_TRUE;
       else
-        *anchor = '\0'; 
+        urlSpec.Truncate(anchorIndex);
     }
   }
   PRInt32 uidValidity = -1;
