@@ -68,7 +68,7 @@
           label="&helpMenu.label;"
           accesskey="&helpMenu.accesskey;">
 #endif
-      <menupopup id="menu_HelpPopup">
+      <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
         <menuitem oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
 #ifdef XP_MACOSX
                   label="&helpContentsMac.label;"
@@ -94,6 +94,7 @@
         <menuitem id="checkForUpdates"
                   accesskey="&updateCmd.accesskey;"
                   label="&updateCmd.label;"
+                  class="menuitem-iconic"
                   oncommand="checkForUpdates();"/>
         <menuitem id="aboutName"
                   accesskey="&aboutCmd.accesskey;"

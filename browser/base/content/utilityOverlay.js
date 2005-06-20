@@ -450,3 +450,44 @@ function checkForUpdates()
                            .createInstance(Components.interfaces.nsIUpdatePrompt);
   prompter.checkForUpdates();  
 }
+
+function buildHelpMenu()
+{
+  var updates = 
+      Components.classes["@mozilla.org/updates/update-service;1"].
+      getService(Components.interfaces.nsIApplicationUpdateService);
+  var um = 
+      Components.classes["@mozilla.org/updates/update-manager;1"].
+      getService(Components.interfaces.nsIUpdateManager);
+  var activeUpdate = um.activeUpdate;
+
+  var strings = document.getElementById("bundle_browser");
+  
+  var label = strings.getString("updates_checkForUpdates");
+  if (activeUpdate) {
+    if (updates.isDownloading) {
+      if (activeUpdate.name) {
+        label = strings.getFormattedString("updates_downloadingUpdates", 
+          [activeUpdate.name]);
+      }
+      else
+        label = strings.getString("updates_downloadingUpdatesFallback");
+    }
+    else {
+      if (activeUpdate.name) {
+        label = strings.getFormattedString("updates_resumeDownloading",
+          [activeUpdate.name]);
+      }
+      else
+        label = strings.getString("updates_resumeDownloadingFallback");
+    }
+  }
+    
+  var checkForUpdates = document.getElementById("checkForUpdates");
+  checkForUpdates.label = label;
+  if (um.activeUpdate && updates.isDownloading)
+    checkForUpdates.setAttribute("loading", "true");
+  else
+    checkForUpdates.removeAttribute("loading");
+}
+
