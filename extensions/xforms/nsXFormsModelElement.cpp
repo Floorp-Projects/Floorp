@@ -186,13 +186,14 @@ nsXFormsModelElement::nsXFormsModelElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED5(nsXFormsModelElement,
+NS_IMPL_ISUPPORTS_INHERITED6(nsXFormsModelElement,
                              nsXFormsStubElement,
                              nsIXFormsModelElement,
                              nsIModelElementPrivate,
                              nsISchemaLoadListener,
                              nsIWebServiceErrorHandler,
-                             nsIDOMEventListener)
+                             nsIDOMEventListener,
+                             nsIXFormsContextControl)
 
 NS_IMETHODIMP
 nsXFormsModelElement::OnDestroyed()
@@ -1031,6 +1032,62 @@ nsXFormsModelElement::HandleInstanceDataNode(nsIDOMNode *aInstanceDataNode, unsi
 
   return NS_OK;
 }
+
+// nsIXFormsContextControl
+
+NS_IMETHODIMP
+nsXFormsModelElement::SetContext(nsIDOMNode *aContextNode,
+                                 PRInt32     aContextPosition,
+                                 PRInt32     aContextSize)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::GetContext(nsAString      &aModelID,
+                                 nsIDOMNode    **aContextNode,
+                                 PRInt32        *aContextPosition,
+                                 PRInt32        *aContextSize)
+{
+  // Adding the nsIXFormsContextControl interface to model to allow 
+  // submission elements to call our binding evaluation methods, like
+  // EvaluateNodeBinding.  If GetContext can get called outside of the binding
+  // codepath, then this MIGHT lead to problems.
+
+  NS_ENSURE_ARG(aContextSize);
+  NS_ENSURE_ARG(aContextPosition);
+  *aContextNode = nsnull;
+
+  // better get the stuff most likely to fail out of the way first.  No sense
+  // changing the other values that we are returning unless this is successful.
+  nsresult rv = NS_ERROR_FAILURE;
+
+  // Anybody (like a submission element) asking a model element for its context 
+  // for XPath expressions will want the root node of the default instance
+  // document
+  nsCOMPtr<nsIDOMDocument> firstInstanceDoc =
+    FindInstanceDocument(EmptyString());
+  NS_ENSURE_TRUE(firstInstanceDoc, rv);
+
+  nsCOMPtr<nsIDOMElement> firstInstanceRoot;
+  rv = firstInstanceDoc->GetDocumentElement(getter_AddRefs(firstInstanceRoot));
+  NS_ENSURE_TRUE(firstInstanceRoot, rv);
+
+  nsCOMPtr<nsIDOMNode>rootNode = do_QueryInterface(firstInstanceRoot);
+  rootNode.swap(*aContextNode);
+
+  // found the context, so can finish up assinging the rest of the values that
+  // we are returning
+  *aContextPosition = 1;
+  *aContextSize = 1;
+
+  nsAutoString id;
+  mElement->GetAttribute(NS_LITERAL_STRING("id"), id);
+  aModelID.Assign(id);
+
+  return NS_OK;
+}
+
 
 // internal methods
 

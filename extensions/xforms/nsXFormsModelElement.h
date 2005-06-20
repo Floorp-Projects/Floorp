@@ -52,6 +52,7 @@
 
 #include "nsISchemaLoader.h"
 #include "nsISchema.h"
+#include "nsIXFormsContextControl.h"
 
 class nsIDOMElement;
 class nsIDOMNode;
@@ -70,7 +71,8 @@ class nsXFormsControl;
 class nsXFormsModelElement : public nsXFormsStubElement,
                              public nsIModelElementPrivate,
                              public nsISchemaLoadListener,
-                             public nsIDOMEventListener
+                             public nsIDOMEventListener,
+                             public nsIXFormsContextControl
 {
 public:
   nsXFormsModelElement() NS_HIDDEN;
@@ -81,6 +83,7 @@ public:
   NS_DECL_NSISCHEMALOADLISTENER
   NS_DECL_NSIWEBSERVICEERRORHANDLER
   NS_DECL_NSIDOMEVENTLISTENER
+  NS_DECL_NSIXFORMSCONTEXTCONTROL
 
   // nsIXTFGenericElement overrides
   NS_IMETHOD OnDestroyed();
