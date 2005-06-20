@@ -414,6 +414,7 @@
         <rdf:li> <rdf:Description ID="menu-help-help-contents" nc:name="Help Contents" nc:link="menu_reference.xhtml#help_contents"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help-for-ie-users" nc:name="For Internet Explorer Users (Windows only)" nc:link="menu_reference.xhtml#for_ie_users"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help-relnotes" nc:name="Release Notes" nc:link="menu_reference.xhtml#relnotes"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-help-report-broken-web-site" nc:name="Report Broken Web Site" nc:link="menu_reference.xhtml#reporter"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help-check-for-updates" nc:name="Check for Updates..." nc:link="menu_reference.xhtml#check_for_updates"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help-about-mozilla-firebird" nc:name="About &brandFullName;" nc:link="menu_reference.xhtml#about_mozilla_firebird"/> </rdf:li>
       </rdf:Seq>
