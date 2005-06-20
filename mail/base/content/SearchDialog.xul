@@ -107,7 +107,9 @@
          <hbox align="center">
          <label value="&searchHeading.label;" accesskey="&searchHeading.accesskey;"
                 control="searchableFolders"/>
-         <menulist id="searchableFolders" flex="2"/>
+         <menulist id="searchableFolders" flex="2">
+           <menupopup class="searchPopup" oncommand="updateSearchFolderPicker(this.getAttribute('uri'));"/>
+         </menulist>
          <spacer flex="10"/>
          <button label="&searchButton.label;" id="search-button" oncommand="onSearchButton(event);" default="true" accesskey="&searchButton.accesskey;"/>
  

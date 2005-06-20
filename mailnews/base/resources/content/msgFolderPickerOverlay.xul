@@ -37,6 +37,7 @@
  ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://messenger/skin/folderMenus.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/folderPane.css" type="text/css"?>
 
 <!DOCTYPE overlay SYSTEM "chrome://messenger/locale/msgFolderPickerOverlay.dtd">
 
@@ -423,50 +424,6 @@
     </template>
     <menupopup />
   </menulist>
-
-    <menulist id="searchableFolders"
-              sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
-              sortDirection="ascending"
-              datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-              ref="msgaccounts:/">
-      <template>
-        <rule nc:CanSearchMessages="false">
-          <!-- don't show servers which do not allow message searching -->
-        </rule>
-        <rule iscontainer="true" isempty="false" nc:CanSearchMessages="true">
-          <menupopup>
-            <menu uri="..." 
-              class="folderMenuItem menu-iconic"
-              oncommand="onChooseFolder(event.target)"
-              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-              IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
-              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
-              label="rdf:http://home.netscape.com/NC-rdf#Name">
-              <menupopup class="menulist-menupopup">
-                <menuitem label="&filemessageschoosethis.label;"
-                          oncommand="onChooseFolder(event.target.parentNode.parentNode)"/>
-                <menuseparator/>
-              </menupopup>
-            </menu>
-          </menupopup>
-        </rule>
-        <rule nc:CanSearchMessages="true" nc:Virtual="false">
-          <menupopup>
-            <menuitem uri="..." value="..." 
-               class="folderMenuItem menuitem-iconic"
-               oncommand="onChooseFolder(event.target)"
-               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-               IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
-               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
-               label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-          </menupopup>
-        </rule>
-      </template>
-    </menulist>
 
     <menulist id="actionTargetFolder"
               containment="http://home.netscape.com/NC-rdf#child"

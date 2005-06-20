@@ -1699,4 +1699,204 @@
       </method>
     </implementation>
   </binding>
+
+  <!-- Folder picker helper widgets -->
+  <binding id="popup-base" extends="chrome://global/content/bindings/popup.xml#popup">
+    <implementation>
+      <field name="tree" readonly="true">
+        document.getAnonymousNodes(this)[0];
+      </field>
+      <method name="updateHover">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            var box = this.tree.boxObject;
+            if (event.originalTarget == box.treeBody) {
+              var eventX = event.screenX - box.screenX + box.x;
+              var eventY = event.screenY - box.screenY + box.y;
+              box.view.selection.select(box.getRowAt(eventX, eventY));
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="fire">
+        <body>
+          <![CDATA[
+            this.hidePopup();
+            if (this.tree.currentIndex >= 0) {
+              this.setAttribute("uri", this.tree.builderView.getResourceAtIndex(this.tree.currentIndex).Value);
+              this.doCommand();
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="onBlurMenuList">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            this.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject).openMenu(false);
+          ]]>
+        </body>
+      </method>
+      <field name="onKeyDownMenuList" readonly="true">
+        <![CDATA[
+          ({
+            parentNode: this.parentNode,
+            handleEvent: function handleEvent(event) {
+              if (this.parentNode.hasAttribute("open"))
+                event.stopPropagation();
+            }
+          })
+        ]]>
+      </field>
+      <field name="onKeyPressMenuList" readonly="true">
+        <![CDATA[
+          ({
+            self: this,
+            tree: this.tree,
+            parentNode: this.parentNode,
+            getLastVisibleRow: function getLastVisibleRow(box) {
+              var f = box.getFirstVisibleRow();
+              var p = box.getPageCount();
+              var l = box.view.rowCount;
+              return (l < f + p ? l : f + p) - 1;
+            },
+            handleEvent: function handleEvent(event) {
+              if (this.parentNode.hasAttribute("open")) {
+                event.stopPropagation();
+                var index = this.tree.currentIndex;
+                var box = this.tree.treeBoxObject;
+                switch (event.keyCode) {
+                  case event.DOM_VK_ESCAPE:
+                    this.self.hidePopup();
+                    return;
+                  case event.DOM_VK_UP:
+                    if (index <= 0) return;
+                    index--;
+                    break;
+                  case event.DOM_VK_DOWN:
+                    index++;
+                    if (index == box.view.rowCount) return;
+                    break;
+                  case event.DOM_VK_PAGE_UP:
+                    if (index == box.getFirstVisibleRow())
+                      box.scrollByPages(-1);
+                    index = box.getFirstVisibleRow();
+                    break;
+                  case event.DOM_VK_PAGE_DOWN:
+                    if (index == this.getLastVisibleRow(box))
+                      box.scrollByPages(1);
+                    index = this.getLastVisibleRow(box);
+                    break;
+                  case event.DOM_VK_HOME:
+                    index = 0;
+                    break;
+                  case event.DOM_VK_END:
+                    index = box.view.rowCount - 1;
+                    break;
+                  case event.DOM_VK_ENTER:
+                  case event.DOM_VK_RETURN:
+                    this.self.fire();
+                    return;
+                  default:
+                    return;
+                }
+                box.view.selection.select(index);
+                box.ensureRowIsVisible(index);
+              }
+            }
+          })
+        ]]>
+      </field>
+    </implementation>
+    <handlers>
+      <handler event="mousemove" action="this.updateHover(event);"/>
+      <handler event="click" action="this.updateHover(event);this.fire();"/>
+      <handler event="popupshowing">
+        <![CDATA[
+          this.parentNode.addEventListener("blur", this.onBlurMenuList, false);
+          window.top.document.addEventListener("keydown", this.onKeyDownMenuList, true);
+          window.top.document.addEventListener("keypress", this.onKeyPressMenuList, true);
+          var box = this.tree.treeBoxObject;
+          box.focused = true;
+          var view = box.view;
+          view.selection.selectEventsSuppressed = true;
+          for (var i = 0; i < view.rowCount; i++) {
+            if (view.isContainer(i)) {
+              if (view.isContainerEmpty(i) == view.isContainerOpen(i))
+                view.toggleOpenState(i);
+              if (view.isContainerOpen(i)) {
+                if (i + 1 == view.rowCount ||
+                    view.getLevel(i + 1) <= view.getLevel(i)) {
+                  view.toggleOpenState(i);
+                }
+              }
+            }
+          }
+          var height = view.rowCount * box.rowHeight;
+          height += this.boxObject.height - box.treeBody.boxObject.height;
+          this.height = height;
+          var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+          var index = this.tree.builderView.getIndexOfResource(RDF.GetResource(this.parentNode.getAttribute("uri")));
+          if (index >= 0) {
+            view.selection.select(index);
+            setTimeout(function() { box.ensureRowIsVisible(index); }, 0);
+          }
+        ]]>
+      </handler>
+      <handler event="popuphiding">
+        <![CDATA[
+          this.parentNode.removeEventListener("blur", this.onBlurMenuList, false);
+          window.top.document.removeEventListener("keydown", this.onKeyDownMenuList, true);
+          window.top.document.removeEventListener("keypress", this.onKeyPressMenuList, true);
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="locationpopup" extends="chrome://messenger/content/mailWidgets.xml#popup-base">
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+      <tree class="foldersTree" flex="1" datasources="rdf:null" flags="dont-build-content" selstyle="primary" hidecolumnpicker="true">
+        <treecols>
+          <treecol flex="1" primary="true" sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true" sortActive="true" sortDirection="ascending" crop="center" hideheader="true"/>
+        </treecols>
+        <treechildren class="foldersTreeChildren"/>
+        <template>
+          <rule>
+            <treechildren>
+              <treeitem uri="rdf:*">
+                <treerow sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true">
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"
+                    properties="folderNameCol specialFolder-rdf:http://home.netscape.com/NC-rdf#SpecialFolder biffState-rdf:http://home.netscape.com/NC-rdf#BiffState isServer-rdf:http://home.netscape.com/NC-rdf#IsServer newMessages-rdf:http://home.netscape.com/NC-rdf#NewMessages hasUnreadMessages-rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages isSecure-rdf:http://home.netscape.com/NC-rdf#IsSecure serverType-rdf:http://home.netscape.com/NC-rdf#ServerType noSelect-rdf:http://home.netscape.com/NC-rdf#NoSelect"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </rule>
+        </template>
+      </tree>
+    </xbl:content>
+  </binding>
+
+  <binding id="searchpopup" extends="chrome://messenger/content/mailWidgets.xml#popup-base">
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+      <tree class="foldersTree" flex="1" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/" flags="dont-build-content" selstyle="primary" hidecolumnpicker="true">
+        <treecols>
+          <treecol flex="1" primary="true" sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true" sortActive="true" sortDirection="ascending" crop="center" hideheader="true"/>
+        </treecols>
+        <treechildren class="foldersTreeChildren"/>
+        <template>
+          <rule nc:CanSearchMessages="true" nc:Virtual="false">
+            <treechildren>
+              <treeitem uri="rdf:*">
+                <treerow sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true">
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#FolderTreeSimpleName"
+                    properties="folderNameCol specialFolder-rdf:http://home.netscape.com/NC-rdf#SpecialFolder isServer-rdf:http://home.netscape.com/NC-rdf#IsServer isSecure-rdf:http://home.netscape.com/NC-rdf#IsSecure serverType-rdf:http://home.netscape.com/NC-rdf#ServerType noSelect-rdf:http://home.netscape.com/NC-rdf#NoSelect"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </rule>
+        </template>
+      </tree>
+    </xbl:content>
+  </binding>
 </bindings>
