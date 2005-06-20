@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -394,6 +395,17 @@ protected:
    * @param aName the name of the event to dispatch
    */
   void DispatchDOMEvent(const nsAString& aName);
+
+  /**
+   * Is this a combobox?
+   */
+  PRBool IsCombobox() {
+    PRBool isMultiple = PR_TRUE;
+    PRInt32 size = 1;
+    GetSize(&size);
+    GetMultiple(&isMultiple);
+    return !isMultiple && size <= 1;
+  }
 
   /** The options[] array */
   nsHTMLOptionCollection* mOptions;
@@ -1601,11 +1613,7 @@ PRBool
 nsHTMLSelectElement::CheckSelectSomething()
 {
   if (mIsDoneAddingChildren) {
-    PRInt32 size = 1;
-    GetSize(&size);
-    PRBool isMultiple;
-    GetMultiple(&isMultiple);
-    if (mSelectedIndex < 0 && !isMultiple && size <= 1) {
+    if (mSelectedIndex < 0 && IsCombobox()) {
       return SelectSomething();
     }
   }
@@ -1905,13 +1913,7 @@ nsHTMLSelectElement::Reset()
   //
   // If nothing was selected and it's not multiple, select something
   //
-  PRInt32 size = 1;
-  GetSize(&size);
-
-  PRBool isMultiple = PR_FALSE;
-  GetMultiple(&isMultiple);
-
-  if (numSelected == 0 && !isMultiple && size <= 1) {
+  if (numSelected == 0 && IsCombobox()) {
     SelectSomething();
   }
 

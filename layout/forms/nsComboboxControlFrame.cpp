@@ -1898,10 +1898,11 @@ nsComboboxControlFrame::DoneAddingChildren(PRBool aIsDone)
 NS_IMETHODIMP
 nsComboboxControlFrame::AddOption(nsPresContext* aPresContext, PRInt32 aIndex)
 {
-#ifdef DO_REFLOW_DEBUGXX
-  printf("*********AddOption: %d\n", aIndex);
-#endif
-  nsListControlFrame * lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
+  if (aIndex <= mDisplayedIndex) {
+    ++mDisplayedIndex;
+  }
+
+  nsListControlFrame* lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
   return lcf->AddOption(aPresContext, aIndex);
 }
   
@@ -1909,10 +1910,18 @@ nsComboboxControlFrame::AddOption(nsPresContext* aPresContext, PRInt32 aIndex)
 NS_IMETHODIMP
 nsComboboxControlFrame::RemoveOption(nsPresContext* aPresContext, PRInt32 aIndex)
 {
-  // If we removed the last option, we need to blank things out
   PRInt32 len;
   mListControlFrame->GetNumberOfOptions(&len);
-  if (len == 0) {
+  if (len > 0) {
+    if (aIndex < mDisplayedIndex) {
+      --mDisplayedIndex;
+    } else if (aIndex == mDisplayedIndex) {
+      mDisplayedIndex = 0; // IE6 compat
+      RedisplayText(mDisplayedIndex);
+    }
+  }
+  else {
+    // If we removed the last option, we need to blank things out
     RedisplayText(-1);
   }
 
