@@ -1582,6 +1582,7 @@
           this.mCurrentTab = this.mTabContainer.firstChild;
           document.addEventListener("keypress", this._keyEventHandler, false);
           this.mTabBox.handleCtrlTab = !/Mac/.test(navigator.platform);
+          this.enterTabbedMode();
         ]]>
       </constructor>
 
