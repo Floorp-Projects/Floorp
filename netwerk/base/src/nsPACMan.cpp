@@ -373,16 +373,11 @@ nsPACMan::OnStreamComplete(nsIStreamLoader *loader,
         NS_WARNING("failed to instantiate PAC component");
     }
     if (NS_SUCCEEDED(status)) {
-      // We assume that the PAC text is ASCII.  We've had this assumption
-      // forever, so no reason to change this now.
+      // We assume that the PAC text is ASCII (or ISO-Latin-1).  We've had this
+      // assumption forever, and some real-world PAC scripts actually have some
+      // non-ASCII text in comment blocks (see bug 296163).
       const char *text = (const char *) data;
-      if (!nsCRT::IsAscii(text, dataLen)) {
-        NS_WARNING("PAC text is not ASCII");
-        status = NS_ERROR_UNEXPECTED;
-      }
-      else {
-        status = mPAC->Init(pacURI, NS_ConvertASCIItoUTF16(text, dataLen));
-      }
+      status = mPAC->Init(pacURI, NS_ConvertASCIItoUTF16(text, dataLen));
     }
   }
 
