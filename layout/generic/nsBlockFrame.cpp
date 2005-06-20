@@ -1454,7 +1454,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       aMetrics.mMaximumWidth = aMetrics.width;
     } else {
       // We need to add in for the right border/padding
-      // XXXldb Why right and not left?
+      // The maximum width in the reflow state includes the left
+      // border/padding but not the right.
       aMetrics.mMaximumWidth = aState.mMaximumWidth + borderPadding.right;
     }
 #ifdef NOISY_MAXIMUM_WIDTH
@@ -3568,7 +3569,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // If we asked the block to update its maximum width, then record the
         // updated value in the line, and update the current maximum width
         if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
-          aLine->mMaximumWidth = brc.GetMaximumWidth();
+          // The maximum width in the line box includes the left
+          // border/padding of this block, but not the right.
+          aLine->mMaximumWidth = brc.GetMaximumWidth() + availSpace.x;
           aState.UpdateMaximumWidth(aLine->mMaximumWidth);
         }
         PostPlaceLine(aState, aLine, maxElementWidth);
