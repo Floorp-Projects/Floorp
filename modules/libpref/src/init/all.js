@@ -623,10 +623,9 @@ pref("network.negotiate-auth.allow-proxies", true);
 
 // The following prefs are used to enable automatic use of the operating
 // system's NTLM implementation to silently authenticate the user with their
-// Window's domain logon.  By default, this is disabled for proxy servers due
-// to bug 256949.  The trusted-uris pref follows the format of the trusted-uris
-// pref for negotiate authentication.
-pref("network.automatic-ntlm-auth.allow-proxies", false);
+// Window's domain logon.  The trusted-uris pref follows the format of the
+// trusted-uris pref for negotiate authentication.
+pref("network.automatic-ntlm-auth.allow-proxies", true);
 pref("network.automatic-ntlm-auth.trusted-uris", "");
 
 // This preference controls whether or not the LM hash will be included in
