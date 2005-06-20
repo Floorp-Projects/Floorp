@@ -78,7 +78,8 @@ NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 nsAppStartup::nsAppStartup() :
   mConsiderQuitStopper(0),
   mShuttingDown(PR_FALSE),
-  mAttemptingQuit(PR_FALSE)
+  mAttemptingQuit(PR_FALSE),
+  mRestart(PR_FALSE)
 { }
 
 
@@ -141,15 +142,21 @@ nsAppStartup::CreateHiddenWindow()
 NS_IMETHODIMP
 nsAppStartup::Run(void)
 {
-  return mAppShell->Run();
+  nsresult rv = mAppShell->Run();
+  if (NS_FAILED(rv))
+    return rv;
+
+  return mRestart ? NS_SUCCESS_RESTART_APP : NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsAppStartup::Quit(PRUint32 aFerocity)
+nsAppStartup::Quit(PRUint32 aMode)
 {
+  PRUint32 ferocity = (aMode & 0xF);
+
   // Quit the application. We will asynchronously call the appshell's
-  // Exit() method via the ExitCallback() to allow one last pass
+  // Exit() method via HandleExitEvent() to allow one last pass
   // through any events in the queue. This guarantees a tidy cleanup.
   nsresult rv = NS_OK;
   PRBool postedExitEvent = PR_FALSE;
@@ -160,17 +167,18 @@ nsAppStartup::Quit(PRUint32 aFerocity)
   /* eForceQuit doesn't actually work; it can cause a subtle crash if
      there are windows open which have unload handlers which open
      new windows. Use eAttemptQuit for now. */
-  if (aFerocity == eForceQuit) {
+  if (ferocity == eForceQuit) {
     NS_WARNING("attempted to force quit");
     // it will be treated the same as eAttemptQuit, below
   }
 
   mShuttingDown = PR_TRUE;
+  mRestart = aMode & eRestart;
 
   nsCOMPtr<nsIWindowMediator> mediator
     (do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
 
-  if (aFerocity == eConsiderQuit && mConsiderQuitStopper == 0) {
+  if (ferocity == eConsiderQuit && mConsiderQuitStopper == 0) {
     // attempt quit if the last window has been unregistered/closed
 
     PRBool windowsRemain = PR_TRUE;
@@ -182,15 +190,15 @@ nsAppStartup::Quit(PRUint32 aFerocity)
         windowEnumerator->HasMoreElements(&windowsRemain);
     }
     if (!windowsRemain) {
-      aFerocity = eAttemptQuit;
+      ferocity = eAttemptQuit;
     }
   }
 
-  /* Currently aFerocity can never have the value of eForceQuit here.
+  /* Currently ferocity can never have the value of eForceQuit here.
      That's temporary (in an unscheduled kind of way) and logically
      this code is part of the eForceQuit case, so I'm checking against
      that value anyway. Reviewers made me add this comment. */
-  if (aFerocity == eAttemptQuit || aFerocity == eForceQuit) {
+  if (ferocity == eAttemptQuit || ferocity == eForceQuit) {
 
     AttemptingQuit(PR_TRUE);
 
@@ -224,9 +232,9 @@ nsAppStartup::Quit(PRUint32 aFerocity)
         }
       }
 
-      if (aFerocity == eAttemptQuit) {
+      if (ferocity == eAttemptQuit) {
 
-        aFerocity = eForceQuit; // assume success
+        ferocity = eForceQuit; // assume success
 
         /* Were we able to immediately close all windows? if not, eAttemptQuit
            failed. This could happen for a variety of reasons; in fact it's
@@ -240,7 +248,7 @@ nsAppStartup::Quit(PRUint32 aFerocity)
           while (windowEnumerator->HasMoreElements(&more), more) {
             /* we can't quit immediately. we'll try again as the last window
                finally closes. */
-            aFerocity = eAttemptQuit;
+            ferocity = eAttemptQuit;
             nsCOMPtr<nsISupports> window;
             windowEnumerator->GetNext(getter_AddRefs(window));
             nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(window));
@@ -258,7 +266,7 @@ nsAppStartup::Quit(PRUint32 aFerocity)
     }
   }
 
-  if (aFerocity == eForceQuit) {
+  if (ferocity == eForceQuit) {
     // do it!
 
     // No chance of the shutdown being cancelled from here on; tell people

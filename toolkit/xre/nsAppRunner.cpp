@@ -1133,12 +1133,21 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
 
 #define NS_ERROR_LAUNCHED_CHILD_PROCESS NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_PROFILE, 200)
 
-static nsresult LaunchChild(nsINativeAppSupport* aNative)
+// If aBlankCommandLine is true, then the application will be launched with a
+// blank command line instead of being launched with the same command line that
+// it was initially started with.
+static nsresult LaunchChild(nsINativeAppSupport* aNative,
+                            PRBool aBlankCommandLine = PR_FALSE)
 {
   aNative->Quit(); // release DDE mutex, if we're holding it
 
   // Restart this process by exec'ing it into the current process
   // if supported by the platform.  Otherwise, use NSPR.
+ 
+  if (aBlankCommandLine) {
+    gRestartArgc = 1;
+    gRestartArgv[gRestartArgc] = nsnull;
+  }
 
 #if defined(XP_MACOSX)
   LaunchChildMac(gRestartArgc, gRestartArgv);
@@ -1678,6 +1687,34 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
   file->Remove(PR_FALSE);
 }
 
+// To support application initiated restart via nsIAppStartup.quit, we
+// need to save various environment variables, and then restore them
+// before re-launching the application.
+
+static struct {
+  const char *name;
+  char *value;
+} gSavedVars[] = {
+  {"XUL_APP_FILE", nsnull}
+};
+
+static void SaveStateForAppInitiatedRestart()
+{
+  for (size_t i = 0; i < NS_ARRAY_LENGTH(gSavedVars); ++i) {
+    const char *s = PR_GetEnv(gSavedVars[i].name);
+    if (s)
+      gSavedVars[i].value = PR_smprintf("%s=%s", gSavedVars[i].name, s);
+  }
+}
+
+static void RestoreStateForAppInitiatedRestart()
+{
+  for (size_t i = 0; i < NS_ARRAY_LENGTH(gSavedVars); ++i) {
+    if (gSavedVars[i].value)
+      PR_SetEnv(gSavedVars[i].value);
+  }
+}
+
 const nsXREAppData* gAppData = nsnull;
 
 #if defined(XP_OS2)
@@ -1996,6 +2033,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
 
   PRBool needsRestart = PR_FALSE;
+  PRBool appInitiatedRestart = PR_FALSE;
 
   // Allows the user to forcefully bypass the restart process at their
   // own risk. Useful for debugging or for tinderboxes where child 
@@ -2103,6 +2141,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       }
 
       if (!upgraded && !needsRestart) {
+        SaveStateForAppInitiatedRestart();
 
         // clear out any environment variables which may have been set 
         // during the relaunch process now that we know we won't be relaunching.
@@ -2177,6 +2216,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
             gLogConsoleErrors = PR_TRUE;
           }
 
+          // Check for an application initiated restart.  This is one that
+          // corresponds to nsIAppStartup.quit(eRestart)
+          if (rv == NS_SUCCESS_RESTART_APP) {
+            needsRestart = PR_TRUE;
+            appInitiatedRestart = PR_TRUE;
+          }
+
 #ifdef MOZ_ENABLE_XREMOTE
           // shut down the x remote proxy window
           if (remoteService)
@@ -2204,12 +2250,17 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   // Restart the app after XPCOM has been shut down cleanly. 
   if (needsRestart) {
-    char* noEMRestart = PR_GetEnv("NO_EM_RESTART");
-    if (noEMRestart && *noEMRestart) {
-      PR_SetEnv("NO_EM_RESTART=1");
+    if (appInitiatedRestart) {
+      RestoreStateForAppInitiatedRestart();
     }
     else {
-      PR_SetEnv("NO_EM_RESTART=0");
+      char* noEMRestart = PR_GetEnv("NO_EM_RESTART");
+      if (noEMRestart && *noEMRestart) {
+        PR_SetEnv("NO_EM_RESTART=1");
+      }
+      else {
+        PR_SetEnv("NO_EM_RESTART=0");
+      }
     }
 
     nsCAutoString path1, path2;
@@ -2222,7 +2273,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     PR_SetEnv(kEnvVar1);
     PR_SetEnv(kEnvVar2);
 
-    return LaunchChild(nativeApp) == NS_ERROR_LAUNCHED_CHILD_PROCESS ? 0 : 1;
+    rv = LaunchChild(nativeApp, appInitiatedRestart);
+    return rv == NS_ERROR_LAUNCHED_CHILD_PROCESS ? 0 : 1;
   }
 
   return NS_FAILED(rv) ? 1 : 0;

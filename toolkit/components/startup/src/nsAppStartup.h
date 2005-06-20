@@ -84,6 +84,7 @@ private:
   PRInt32      mConsiderQuitStopper; // if > 0, Quit(eConsiderQuit) fails
   PRPackedBool mShuttingDown;   // Quit method reentrancy check
   PRPackedBool mAttemptingQuit; // Quit(eAttemptQuit) still trying
+  PRPackedBool mRestart;        // Quit(eRestart)
 };
 
 #endif // nsAppStartup_h__
