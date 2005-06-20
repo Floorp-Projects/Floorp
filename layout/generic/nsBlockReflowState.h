@@ -245,6 +245,8 @@ public:
   nsFloatCacheFreeList mBelowCurrentLineFloats;
 
   nscoord mMaxElementWidth;
+
+  // maximum width includes the left border/padding but not the right
   nscoord mMaximumWidth;
 
   nscoord mMinLineHeight;

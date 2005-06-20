@@ -451,6 +451,7 @@ public:
   nsRect mBounds;
   nscoord mMaxElementWidth;  // width part of max-element-size
   nscoord mMaximumWidth;     // maximum width (needed for incremental reflow of tables)
+                             // includes the left border/padding but not the right
 
   struct FlagBits {
     PRUint32 mDirty : 1;
