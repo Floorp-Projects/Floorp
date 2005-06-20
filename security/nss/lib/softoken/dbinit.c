@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dbinit.c,v 1.26 2005/06/20 23:11:25 relyea%netscape.com Exp $ */
+/* $Id: dbinit.c,v 1.27 2005/06/20 23:14:45 relyea%netscape.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -48,8 +48,6 @@
 #include "pcert.h"
 #include "cdbhdl.h"
 #include "pkcs11i.h"
-
-#define ALWAYS_MULTIACCESS "CommonClient"
 
 static char *
 sftk_certdb_name_cb(void *arg, int dbVersion)
@@ -123,9 +121,6 @@ sftk_keydb_name_cb(void *arg, int dbVersion)
 const char *
 sftk_EvaluateConfigDir(const char *configdir,char **appName)
 {
-#ifdef ALWAYS_MULTIACCESS
-    *appName = PORT_Strdup(ALWAYS_MULTIACCESS);
-#else
     if (PORT_Strncmp(configdir, MULTIACCESS, sizeof(MULTIACCESS)-1) == 0) {
 	char *cdir;
 
@@ -143,7 +138,6 @@ sftk_EvaluateConfigDir(const char *configdir,char **appName)
 	}
 	configdir = cdir;
     }
-#endif
     return configdir;
 }
 
