@@ -278,8 +278,10 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
   rv = GetStringFromName(nsDependentString(aName), tmpstr);
   if (NS_FAILED(rv))
   {
+#if 0
+    // it is not uncommon for apps to request a string name which may not exist
+    // so be quiet about it. 
     NS_WARNING("String missing from string bundle");
-#if DEBUG
     printf("  '%s' missing from bundle %s\n", NS_ConvertUCS2toUTF8(aName).get(), mPropertiesURL.get());
 #endif
     return rv;
