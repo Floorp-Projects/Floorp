@@ -137,14 +137,14 @@ sub initBug  {
       return $self;
   }
 
-# default userid 0, or get DBID if you used an email address
-  unless (defined $user_id) {
+  # If the user is not logged in, sets $user_id to 0.
+  # Else gets $user_id from the user login name if this
+  # argument is not numeric.
+  my $stored_user_id = $user_id;
+  if (!defined $user_id) {
     $user_id = 0;
-  }
-  else {
-     if ($user_id =~ /^\@/) {
-        $user_id = login_to_id($user_id); 
-     }
+  } elsif (!detaint_natural($user_id)) {
+    $user_id = login_to_id($stored_user_id); 
   }
 
   $self->{'who'} = new Bugzilla::User($user_id);
