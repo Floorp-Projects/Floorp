@@ -923,6 +923,10 @@ public:
 
 #endif // MOZILLA_INTERNAL_API
 
+protected:
+  // Prevent people from allocating a nsAString directly.
+  ~nsAString_external() {}
+
 private:
   void *v;
 };
@@ -1023,6 +1027,10 @@ public:
   NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
 
 #endif // MOZILLA_INTERNAL_API
+
+protected:
+  // Prevent people from allocating a nsACString directly.
+  ~nsACString_external() {}
 
 private:
   void *v;
