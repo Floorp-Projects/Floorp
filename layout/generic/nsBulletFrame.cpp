@@ -1376,7 +1376,7 @@ nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
   return success;
 }
 
-#define MIN_BULLET_SIZE 5               // from laytext.c
+#define MIN_BULLET_SIZE 1
 
 
 #define MINMAX(_value,_min,_max) \
@@ -1514,7 +1514,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       fm->GetMaxAscent(ascent);
       bulletSize = NSTwipsToIntPixels(
         (nscoord)NSToIntRound(0.8f * (float(ascent) / 2.0f)), t2p);
-      if (bulletSize < 1) {
+      if (bulletSize < MIN_BULLET_SIZE) {
         bulletSize = MIN_BULLET_SIZE;
       }
       p2t = aCX->PixelsToTwips();
