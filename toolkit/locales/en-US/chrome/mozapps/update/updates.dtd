@@ -10,7 +10,7 @@
 <!ENTITY  noupdatesfound.intro            "There are no new updates available. &brandShortName; may check 
                                            periodically for new updates.">
 
-<!ENTITY  updatesfound.title              "Updates Available">
+<!ENTITY  updatesfound.title              "Update Available">
 
 <!ENTITY  forMoreInfo.label               "For more information, ">
 <!ENTITY  clickHere.label                 "Click Here">
@@ -24,11 +24,11 @@
 
 <!ENTITY  later.label                     "Later">
 <!ENTITY  later.accesskey                 "a">
-<!ENTITY  download.label                  "Download &amp; Install &#0187;">
+<!ENTITY  download.label                  "Download &amp; Install Now &#0187;">
 <!ENTITY  download.accesskey              "D">
 
 <!ENTITY  upgrade.evangelism              "It is strongly recommended that you upgrade &brandShortName; 
-                                           as soon as possible by clicking Download &amp; Install &#0187;.">
+                                           as soon as possible.">
 
 <!ENTITY  license.title                   "License Agreement">
 <!ENTITY  license.intro                   "To install this update you must agree to this license agreement. 

@@ -291,14 +291,15 @@ var gUpdatesAvailablePage = {
       
       this._incompatibleItems = items;
     }
-    
-    var dlButton = document.getElementById("download-button");
-    dlButton.focus();
   },
   
   onInstallNow: function() {
     var nextPageID = gUpdates.update.licenseURL ? "license" : "downloading";
     document.documentElement.currentPage = document.getElementById(nextPageID);
+  },
+  
+  onInstallLater: function() {
+    close();
   },
   
   showIncompatibleItems: function() {
@@ -320,6 +321,8 @@ var gLicensePage = {
 
     this._licenseContent.addEventListener("load", this.onLicenseLoad, false);
     this._licenseContent.url = gUpdates.update.licenseURL;
+    
+    document.documentElement._wizardButtons.removeAttribute("type");
   },
   
   onLicenseLoad: function() {
@@ -539,6 +542,8 @@ var gDownloadingPage = {
    *
    */
   onPageShow: function() {
+    document.documentElement._wizardButtons.removeAttribute("type");
+
     this._downloadName = document.getElementById("downloadName");
     this._downloadStatus = document.getElementById("downloadStatus");
     this._downloadProgress = document.getElementById("downloadProgress");
