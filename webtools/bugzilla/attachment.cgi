@@ -1251,7 +1251,7 @@ sub update
 
   # If the user submitted a comment while editing the attachment,
   # add the comment to the bug.
-  if ($cgi->param('comment'))
+  if (defined $cgi->param('comment'))
   {
     # Prepend a string to the comment to let users know that the comment came
     # from the "edit attachment" screen.
