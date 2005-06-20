@@ -72,6 +72,22 @@ struct addrinfo {
     struct addrinfo *ai_next;
 };
 #endif
+#define _PR_HAVE_MD_SOCKADDR_IN6
+/* isomorphic to struct in6_addr on Windows */
+struct _md_in6_addr {
+    union {
+        PRUint8  _S6_u8[16];
+        PRUint16 _S6_u16[8];
+    } _S6_un;
+};
+/* isomorphic to struct sockaddr_in6 on Windows */
+struct _md_sockaddr_in6 {
+    PRInt16 sin6_family;
+    PRUint16 sin6_port;
+    PRUint32 sin6_flowinfo;
+    struct _md_in6_addr sin6_addr;
+    PRUint32 sin6_scope_id;
+};
 #endif
 #define _PR_HAVE_THREADSAFE_GETHOST
 #define _PR_HAVE_ATOMIC_OPS

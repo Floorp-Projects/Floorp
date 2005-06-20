@@ -1409,7 +1409,7 @@ extern PRUintn _PR_NetAddrSize(const PRNetAddr* addr);
 #define PR_NETADDR_SIZE(_addr) 					\
         ((_addr)->raw.family == PR_AF_INET		\
         ? sizeof((_addr)->inet)					\
-        : sizeof(struct _md_sockaddr_in6)
+        : sizeof(struct _md_sockaddr_in6))
 #endif /* defined(XP_UNIX) */
 
 #else
