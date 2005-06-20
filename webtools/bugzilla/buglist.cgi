@@ -862,7 +862,7 @@ while (my @row = $buglist_sth->fetchrow_array()) {
         $bug->{'opendate'} = DiffDate($bug->{'opendate'});
     }
 
-    # Record the owner, product, and status in the big hashes of those things.
+    # Record the assignee, product, and status in the big hashes of those things.
     $bugowners->{$bug->{'assigned_to'}} = 1 if $bug->{'assigned_to'};
     $bugproducts->{$bug->{'product'}} = 1 if $bug->{'product'};
     $bugstatuses->{$bug->{'bug_status'}} = 1 if $bug->{'bug_status'};

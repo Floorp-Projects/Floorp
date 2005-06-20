@@ -531,13 +531,13 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
     push (@values, SqlQuote($exporterid) );
     push (@query, "assigned_to");
     $changed_owner = 1;
-    $err .= "The original owner of this bug does not have\n";
+    $err .= "The original assignee of this bug does not have\n";
     $err .= "   an account here. Reassigning to the person who moved\n";
     $err .= "   it here, $exporter.\n";
     if ( $bug_fields{'assigned_to'} ) {
-      $err .= "   Previous owner was $bug_fields{'assigned_to'}.\n";
+      $err .= "   Previous assignee was $bug_fields{'assigned_to'}.\n";
     } else {
-      $err .= "   Previous owner is unknown.\n";
+      $err .= "   Previous assignee is unknown.\n";
     }
   }
 
@@ -550,13 +550,13 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
     $err .= "Unknown resolution \"$bug_fields{'resolution'}\".\n";
   }
 
-  # if the bug's owner changed, mark the bug NEW, unless a valid 
+  # if the bug's assignee changed, mark the bug NEW, unless a valid 
   # resolution is set, which indicates that the bug should be closed.
   #
   if ( ($changed_owner) && (!$resolution[0]) ) {
     push (@values, SqlQuote("NEW"));
     push (@query, "bug_status");
-    $err .= "Bug assigned to new owner, setting status to \"NEW\".\n";
+    $err .= "Bug reassigned, setting status to \"NEW\".\n";
     $err .= "   Previous status was \"";
     $err .= (defined $bug_fields{'bug_status'})?
                      $bug_fields{'bug_status'}:"unknown";

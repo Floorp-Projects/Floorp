@@ -2231,7 +2231,7 @@ if ($comp_init_owner && $comp_init_owner->{TYPE} eq 'TINYTEXT') {
         my $initialownerid = $s2->fetchrow_array();
 
         unless (defined $initialownerid) {
-            print "Warning: You have an invalid initial owner '$initialowner'\n" .
+            print "Warning: You have an invalid default assignee '$initialowner'\n" .
               "in component '$value' of program '$program'. !\n";
             $initialownerid = 0;
         }
@@ -2271,7 +2271,7 @@ if ($comp_init_qa && $comp_init_qa->{TYPE} eq 'TINYTEXT') {
 
         unless (defined $initialqacontactid) {
             if ($initialqacontact ne '') {
-                print "Warning: You have an invalid initial QA contact $initialqacontact' in program '$program', component '$value'!\n";
+                print "Warning: You have an invalid default QA contact $initialqacontact' in program '$program', component '$value'!\n";
             }
             $initialqacontactid = 0;
         }
@@ -3528,7 +3528,7 @@ if (!$series_exists) {
     }
 }
 
-AddFDef("owner_idle_time", "Time Since Owner Touched", 0);
+AddFDef("owner_idle_time", "Time Since Assignee Touched", 0);
 
 # 2004-04-12 - Keep regexp-based group permissions up-to-date - Bug 240325
 if ($dbh->bz_column_info("user_group_map", "isderived")) {

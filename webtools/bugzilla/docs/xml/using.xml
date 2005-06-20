@@ -487,12 +487,12 @@
 
       If your account is sufficiently empowered, you can make the same
       change to all the bugs in the list - for example, changing their
-      owner.</member>
+      assignee.</member>
 
       <member>
-      <emphasis>Send mail to bug owners:</emphasis>
+      <emphasis>Send mail to bug assignees:</emphasis>
 
-      Sends mail to the owners of all bugs on the list.</member>
+      Sends mail to the assignees of all bugs on the list.</member>
 
       <member>
       <emphasis>Edit Search:</emphasis>

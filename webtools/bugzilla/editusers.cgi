@@ -404,7 +404,7 @@ if ($action eq 'search') {
     $vars->{'otheruser'}      = $otherUser;
     $vars->{'editcomponents'} = UserInGroup('editcomponents');
 
-    # If the user is initial owner or initial QA contact of a component,
+    # If the user is default assignee or default QA contact of a component,
     # then no deletion is possible.
     $vars->{'product_responsibilities'} = productResponsibilities($otherUserID);
 

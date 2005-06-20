@@ -811,7 +811,7 @@ Generally, this means one of three things:
 (2) You decide the bug doesn\'t belong to you, and you reassign it to someone
     else.  (Hint: if you don\'t know who to reassign it to, make sure that
     the Component field seems reasonable, and then use the "Reassign bug to
-    owner of selected component" option.)
+    default assignee of selected component" option.)
 (3) You decide the bug belongs to you, but you can\'t solve it this moment.
     Just use the "Accept bug" command.
 

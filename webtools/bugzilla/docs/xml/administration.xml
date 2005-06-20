@@ -193,7 +193,7 @@
         <listitem>
           <para>
             This allows you to define an email address for each component, 
-            in addition to that of the default owner, who will be sent
+            in addition to that of the default assignee, who will be sent
             carbon copies of incoming bugs.
           </para>
         </listitem>
@@ -580,12 +580,12 @@
     company.</para>
 
     <para>
-    Each component has a owner and (if you turned it on in the parameters),
-    a QA Contact. The owner should be the primary person who fixes bugs in
+    Each component has a default assignee and (if you turned it on in the parameters),
+    a QA Contact. The default assignee should be the primary person who fixes bugs in
     that component. The QA Contact should be the person who will ensure
-    these bugs are completely fixed. The Owner, QA Contact, and Reporter
+    these bugs are completely fixed. The Assignee, QA Contact, and Reporter
     will get email when new bugs are created in this Component and when
-    these bugs change. Default Owner and Default QA Contact fields only
+    these bugs change. Default Assignee and Default QA Contact fields only
     dictate the 
     <emphasis>default assignments</emphasis>; 
     these can be changed on bug submission, or at any later point in
@@ -605,9 +605,9 @@
 
       <listitem>
         <para>Fill out the "Component" field, a short "Description", 
-        the "Initial Owner" and "Initial QA Contact" (if enabled.) 
+        the "Default Assignee" and "Default QA Contact" (if enabled.) 
         The Component and Description fields may contain HTML; 
-        the "Initial Owner" field must be a login name
+        the "Default Assignee" field must be a login name
         already existing in the database. 
         </para>
       </listitem>
@@ -874,7 +874,7 @@
        </para>
        <para>
          Only users with the ability to edit the bug may 
-         set flags on bugs. This includes the owner, reporter, and 
+         set flags on bugs. This includes the assignee, reporter, and 
          any user with the <computeroutput>editbugs</computeroutput> 
          permission.
        </para>

@@ -45,7 +45,7 @@
       </td>
     </tr>
     <tr>
-      <th align="right"><label for="initialowner">Initial Owner:</label></th>
+      <th align="right"><label for="initialowner">Default Assignee:</label></th>
       <td>
         [% INCLUDE global/userselect.html.tmpl
            name => "initialowner"
@@ -59,7 +59,7 @@
 [% IF Param('useqacontact') %]
     <tr>
       <th align="right">
-        <label for="initialqacontact">Initial QA Contact:</label></th>
+        <label for="initialqacontact">Default QA Contact:</label></th>
       <td>
         [% INCLUDE global/userselect.html.tmpl
            name => "initialqacontact"

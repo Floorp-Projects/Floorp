@@ -47,8 +47,8 @@ The generic format for a ``word'' is
 &nbsp;<tt>field1,...,fieldN:value1,...,valueM</tt>&nbsp;.
 A bug qualifies if at least one of the values occurs as a substring in 
 at least one of the fields. 
-For example, &nbsp;<tt>owner,reporter,qa:ibm,sun</tt>&nbsp;
-will give you bugs where the owner, reporter, or qa contact 
+For example, &nbsp;<tt>assignee,reporter,qa:ibm,sun</tt>&nbsp;
+will give you bugs where the assignee, reporter, or qa contact 
 has an email address that contains 
 &nbsp;<tt>ibm</tt>&nbsp; or &nbsp;<tt>sun</tt>&nbsp;.
 If only &nbsp;<tt>value1,...,valueM</tt>&nbsp; is given,
@@ -123,7 +123,7 @@ for access speed):
 
 <tr>
   <td>&nbsp;</td>
-  <td><b>@</b><i>owner</i></td>
+  <td><b>@</b><i>assignee</i></td>
   <td><tt>assignedto</tt></td>
   <td><tt>assignee, owner</tt></td>
   <td><a href="page.cgi?id=fields.html#assigned_to">Assignee</a> <i>("assigned_to")</i></td>
@@ -317,8 +317,8 @@ Examples for some useful abbreviations:
   <td><i>high-priority bugs</i></td>
 </tr>
 <tr>
-  <td><b>@</b><i>owner</i></td>
-  <td><b>assignedto:</b><i>owner</i></td>
+  <td><b>@</b><i>assignee</i></td>
+  <td><b>assignedto:</b><i>assignee</i></td>
 </tr>
 <!--
 <tr>

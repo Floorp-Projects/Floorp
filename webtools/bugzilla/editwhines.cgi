@@ -203,7 +203,7 @@ if ($cgi->param('update')) {
 
             for my $sid (@scheduleids) {
                 if ($cgi->param("remove_schedule_$sid")) {
-                    # having the owner id in here is a security failsafe
+                    # having the assignee id in here is a security failsafe
                     $sth = $dbh->prepare("SELECT whine_schedules.id " .
                                          "FROM whine_schedules " .
                                          "LEFT JOIN whine_events " .

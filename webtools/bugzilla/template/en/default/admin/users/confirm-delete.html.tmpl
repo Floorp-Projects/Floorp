@@ -24,8 +24,8 @@
   # product_responsibilities: list of hashes, one entry per Bugzilla component.
   #                           productname:      Name of the product.
   #                           componentname:    Name of the component.
-  #                           initialowner:     User ID of initial owner.
-  #                           initialqacontact: User ID of initial QA contact.
+  #                           initialowner:     User ID of default assignee.
+  #                           initialqacontact: User ID of default QA contact.
   # bugs:                     number of bugs the viewed user has a role in
   # bug_activity:             number of bugs the viewed user has activity
   #                           entries on
@@ -57,8 +57,8 @@
 %]
 
 [% responsibilityterms = {
-  'initialowner'     => 'Initial Owner',
-  'initialqacontact' => 'Initial QA Contact'
+  'initialowner'     => 'Default Assignee',
+  'initialqacontact' => 'Default QA Contact'
   }
 %]
 

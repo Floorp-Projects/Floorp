@@ -30,9 +30,9 @@
   #
   # description & updated_description: the component description
   #
-  # initialowner & updated_initialowner: the initial owner
+  # initialowner & updated_initialowner: the default assignee
   #
-  # initialqacontact & updated_initialqacontact: the initial qa contact
+  # initialqacontact & updated_initialqacontact: the default qa contact
   #
   # product: string; the name of the product the component belongs to
   #%]
@@ -54,15 +54,15 @@
 [% END %]
 
 [% IF updated_initialowner %]
-  <p>Updated Initial Owner to: '[% initialowner FILTER html %]'.</p>
+  <p>Updated Default Assignee to: '[% initialowner FILTER html %]'.</p>
 [% END %]
 
 [% IF updated_initialqacontact %]
   <p>
   [% IF initialqacontact %]
-    Updated Initial QA Contact to '[% initialqacontact FILTER html %]'.
+    Updated Default QA Contact to '[% initialqacontact FILTER html %]'.
   [% ELSE %]
-    Removed initial QA Contact.
+    Removed Default QA Contact.
   [% END %]
   </p>
 [% END %]

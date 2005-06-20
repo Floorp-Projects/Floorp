@@ -665,7 +665,7 @@
       Certain marked sections should not be changed - these are
       the <quote>plumbing</quote> which makes the rest of the function work.
       In between those sections, you'll find snippets of code like:
-      <programlisting>    # Allow the owner to change anything.
+      <programlisting>    # Allow the assignee to change anything.
     if ($ownerid eq $whoid) {
         return 1;
     }</programlisting>

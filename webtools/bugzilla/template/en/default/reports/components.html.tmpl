@@ -24,8 +24,8 @@
   # components: List of hashes. May be empty. Each hash has four members:
   #   name: string. Name of the component.
   #   description: string. Description of the component. May contain HTML.
-  #   initialowner: string. Component's initial owner.
-  #   initialqacontact: string. Component's initial QA contact.
+  #   initialowner: string. Component's default assignee.
+  #   initialqacontact: string. Component's default QA contact.
   #%]
   
 [% filtered_product = product FILTER html %]
@@ -45,7 +45,7 @@
   <table>
     <tr>
       <th align="left">Component</th>
-      <th align="left">Default Owner</th>
+      <th align="left">Default Assignee</th>
       [% IF Param("useqacontact") %]
         <th align="left">Default QA Contact</th>
       [% END %]

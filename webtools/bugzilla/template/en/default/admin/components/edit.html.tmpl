@@ -24,9 +24,9 @@
   #
   # description: string; Component description, may be empty
   #
-  # initialowner: string; initial owner, may be empty
+  # initialowner: string; default assignee, may be empty
   #
-  # initialqacontact: string; initial qa contact, may be empty
+  # initialqacontact: string; default qa contact, may be empty
   #
   # product: string; The product the component belongs to
   #
@@ -55,7 +55,7 @@
       </td>
     </tr>
     <tr>
-      <td valign="top"><label for="initialowner">Initial owner:</label></td>
+      <td valign="top"><label for="initialowner">Default Assignee:</label></td>
       <td>
         [% INCLUDE global/userselect.html.tmpl
            name => "initialowner"
@@ -69,7 +69,7 @@
 [% IF Param('useqacontact') %]
     </tr>
     <tr>
-      <td valign="top"><label for="initialqacontact">Initial QA contact:</label></td>
+      <td valign="top"><label for="initialqacontact">Default QA contact:</label></td>
       <td>
         [% INCLUDE global/userselect.html.tmpl
            name => "initialqacontact"

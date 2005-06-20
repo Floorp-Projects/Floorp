@@ -23,7 +23,7 @@
   # components: array of hashes having the properties:
   #   - name: string; The name of the component.
   #   - description: string; The description of the component.
-  #   - initialowner: string; The initial owner of the component.
+  #   - initialowner: string; The default assignee of the component.
   #   - initialqacontact: string; The qa_contact of the component.
   #   - bug_count: number; The number of bugs in the component
   #                        (if showbugcounts defined).
@@ -65,7 +65,7 @@
      },
      { 
        name => "initialowner"
-       heading => "Initial owner"
+       heading => "Default Assignee"
      },
    ]
 %]

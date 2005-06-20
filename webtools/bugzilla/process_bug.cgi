@@ -447,8 +447,8 @@ sub CheckCanChangeField {
     # variable which gets passed to the error template.
     #
     # $PrivilegesRequired = 0 : no privileges required;
-    # $PrivilegesRequired = 1 : the reporter, owner or an empowered user;
-    # $PrivilegesRequired = 2 : the owner or an empowered user;
+    # $PrivilegesRequired = 1 : the reporter, assignee or an empowered user;
+    # $PrivilegesRequired = 2 : the assignee or an empowered user;
     # $PrivilegesRequired = 3 : an empowered user.
 
     # Allow anyone with "editbugs" privs to change anything.
@@ -468,7 +468,7 @@ sub CheckCanChangeField {
 
     # START DO_NOT_CHANGE
     # $reporterid, $ownerid and $qacontactid are caches of the results of
-    # the call to find out the owner, reporter and qacontact of the current bug.
+    # the call to find out the assignee, reporter and qacontact of the current bug.
     if ($lastbugid != $bugid) {
         SendSQL("SELECT reporter, assigned_to, qa_contact FROM bugs
                  WHERE bug_id = $bugid");
@@ -477,7 +477,7 @@ sub CheckCanChangeField {
     }    
     # END DO_NOT_CHANGE
 
-    # Allow the owner to change anything else.
+    # Allow the assignee to change anything else.
     if ($ownerid == $whoid) {
         return 1;
     }
@@ -494,7 +494,7 @@ sub CheckCanChangeField {
     # The reporter may not:
     # - reassign bugs, unless the bugs are assigned to him;
     #   in that case we will have already returned 1 above
-    #   when checking for the owner of the bug.
+    #   when checking for the assignee of the bug.
     if ($field eq "assigned_to") {
         $PrivilegesRequired = 2;
         return 0;
@@ -1770,7 +1770,7 @@ foreach my $id (@idlist) {
             }
 
             # save off the old value for passing to Bugzilla::BugMail so
-            # the old owner can be notified
+            # the old assignee can be notified
             #
             if ($col eq 'assigned_to') {
                 $old = ($old) ? DBID_to_name($old) : "";

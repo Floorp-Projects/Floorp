@@ -26,9 +26,9 @@
   #
   # bug_count: number; The number of bugs belonging to the component
   #
-  # initialowner: string; initial owner, may be empty
+  # initialowner: string; default assignee, may be empty
   #
-  # initialqacontact: string; if system parameter is set to use the initial
+  # initialqacontact: string; if system parameter is set to use the default
   #                           qa contact field, then this will be it, 
   #                           may be empty
   #
@@ -63,13 +63,13 @@
   <td valign="top">[% description FILTER html %]</td>
 </tr>
 <tr>
-  <td valign="top">Initial owner:</td>
+  <td valign="top">Default assignee:</td>
   <td valign="top">[% initialowner FILTER html %]</td>
   
 [% IF Param('useqacontact') %]
 </tr>
 <tr>
-  <td valign="top">Initial QA contact:</td>
+  <td valign="top">Default QA contact:</td>
   <td valign="top">[% initialqacontact FILTER html %]</td>
 [% END %]
   

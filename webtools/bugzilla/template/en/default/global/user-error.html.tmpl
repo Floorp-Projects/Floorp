@@ -280,17 +280,17 @@
     '[% name FILTER html %]' is too long ([% name.size %] characters).
 
   [% ELSIF error == "component_need_initialowner" %]
-    [% title = "Component Requires Initial Owner" %]
-    You must enter an initial owner for component '[% name FILTER html %]'.
+    [% title = "Component Requires Default Assignee" %]
+    You must enter a default assignee for component '[% name FILTER html %]'.
 
   [% ELSIF error == "component_need_valid_initialowner" %]
-    [% title = "Component Requires A Valid Initial Owner" %]
-    You must use an existing [% terms.Bugzilla %] account as initial owner for
+    [% title = "Component Requires A Valid Default Assignee" %]
+    You must use an existing [% terms.Bugzilla %] account as the default assignee for
     component '[% name FILTER html %]'.
 
   [% ELSIF error == "component_need_valid_initialqacontact" %]
-    [% title = "Component Requires A Valid Initial QA Contact" %]
-    You must use an existing [% terms.Bugzilla %] account as initial QA contact for
+    [% title = "Component Requires A Valid Default QA Contact" %]
+    You must use an existing [% terms.Bugzilla %] account as default QA contact for
     component '[% name FILTER html %]'.
      
   [% ELSIF error == "product_not_specified" %]
@@ -516,7 +516,7 @@
     from <em>[% oldvalue FILTER html %]</em> to 
     <em>[% newvalue FILTER html %]</em>, but only
     [% IF privs < 3 %]
-      the owner
+      the assignee
       [% IF privs < 2 %] or reporter [% END %]
       of the [% terms.bug %], or
     [% END %]
@@ -797,12 +797,12 @@
                 
   [% ELSIF error == "need_component" %]
     [% title = "Component Required" %]
-    You must specify a component to help determine the new owner of these 
+    You must specify a component to help determine the new assignee of these 
     [% terms.bugs %].
 
   [% ELSIF error == "need_product" %]
     [% title = "Product Required" %]
-    You must specify a product to help determine the new owner of these [% terms.bugs %].
+    You must specify a product to help determine the new assignee of these [% terms.bugs %].
 
   [% ELSIF error == "need_quip" %]
     [% title = "Quip Required" %]
@@ -958,7 +958,7 @@
   [% ELSIF error == "reassign_to_empty" %]
     [% title = "Illegal Reassignment" %]
     To reassign [% terms.abug %], you must provide an address for
-    the new owner. If you did not intentionally clear out the 
+    the new assignee. If you did not intentionally clear out the 
     "Reassign [% terms.bug %] to" field, [% Param("browserbugmessage") %]
 
   [% ELSIF error == "report_access_denied" %]
@@ -1088,8 +1088,8 @@
 
   [% ELSIF error == "user_has_responsibility" %]
     [% title = "Can't Delete User Account" %]
-    The user you want to delete is set up for roles as initial [% terms.bug %]
-    owner or QA contact for at least one component.
+    The user you want to delete is set up for roles as default [% terms.bug %]
+    assignee or QA contact for at least one component.
     For this reason, you cannot delete the account at this time.
 
   [% ELSIF error == "user_login_required" %]
