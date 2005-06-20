@@ -273,6 +273,11 @@ interface nsIApplicationUpdateService : nsISupports
    * Pauses the active update download process
    */
   void pauseDownload();
+
+  /**
+   * Whether or not there is an download happening at the moment.
+   */
+  readonly attribute boolean isDownloading;
 };
 
 [scriptable, uuid(fede66a9-9f96-4507-a22a-775ee885577e)]

@@ -52,8 +52,8 @@
         title="&updateWizard.title;" 
         label="" description=""
         windowtype="Update:Wizard" style="width: 36em;"
-        onwizardfinished="gUpdates.onFinish();"
-        onclose="return gUpdates.onClose();"
+        onwizardfinish="gUpdates.onWizardFinish();"
+        onwizardcancel="gUpdates.onWizardCancel();"
         onload="gUpdates.onLoad();">
 
   <script type="application/x-javascript" src="chrome://mozapps/content/update/updates.js"/>
@@ -62,25 +62,26 @@
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="updateStrings" src="chrome://mozapps/locale/update/updates.properties"/>
   </stringbundleset>
+  
+  <wizardpage id="dummy" pageid="dummy" firstpage="true"/>
 
   <wizardpage id="checking" pageid="checking" next="updatesfound"
-              label="&checking.title;" 
+              label="&checking.title;" object="gCheckingPage"
               onpageshow="gCheckingPage.onPageShow();">
-    <vbox class="content" flex="1">
-      <label>&checking.label;</label>
-      <separator/>
-      <progressmeter id="checkingProgress" mode="undetermined"/>
-    </vbox>
+    <label>&checking.label;</label>
+    <separator/>
+    <progressmeter id="checkingProgress" mode="undetermined"/>
   </wizardpage>
   
-  <wizardpage id="noupdatesfound" pageid="noupdatesfound" class="content"
-              label="&noupdatesfound.title;"
+  <wizardpage id="noupdatesfound" pageid="noupdatesfound"
+              label="&noupdatesfound.title;" object="gNoUpdatesPage"
               onpageshow="gNoUpdatesPage.onPageShow();">
     <label>&noupdatesfound.intro;</label>
   </wizardpage>
   
   <wizardpage id="updatesfound" pageid="updatesfound" next="downloading"
-              onpageshow="gUpdatesAvailablePage.onPageShow();" flex="1">
+              object="gUpdatesAvailablePage" flex="1"
+              onpageshow="gUpdatesAvailablePage.onPageShow();">
     <vbox id="update-info" flex="1">
       <vbox id="update-info-inner" flex="1">
         <hbox align="start">
@@ -122,8 +123,8 @@
   </wizardpage>
   
   <wizardpage id="license" pageid="license" next="downloading"
-              onpageshow="gLicensePage.onPageShow();" class="content"
-              label="&license.title;">
+              object="gLicensePage" label="&license.title;"
+              onpageshow="gLicensePage.onPageShow();">
     <label>&license.intro;</label>
     <separator class="thin"/>
     <license id="licenseContent" flex="1"/>
@@ -132,9 +133,8 @@
   </wizardpage>
   
   <wizardpage id="downloading" pageid="downloading" next="finished"
-              onpageshow="gDownloadingPage.onPageShow();" 
-              label="&downloading.title;">
-    
+              object="gDownloadingPage" label="&downloading.title;"
+              onpageshow="gDownloadingPage.onPageShow();">
     <hbox pack="start">
       <label id="downloadName" crop="right" flex="1">&downloading.intro;</label>
       <link id="detailsLink">
@@ -150,7 +150,7 @@
     </hbox>
   </wizardpage>
   
-  <wizardpage id="errors" pageid="errors" class="content"
+  <wizardpage id="errors" pageid="errors" object="gErrorsPage"
               onpageshow="gErrorsPage.onPageShow();">
     <label id="errorIntro">&error.label;</label>
     <separator/>
@@ -165,7 +165,7 @@
   </wizardpage>
   
   <wizardpage id="finished" pageid="finished" align="start"
-              label="&finished.title;"
+              label="&finished.title;" object="gFinishedPage"
               onpageshow="gFinishedPage.onPageShow();">
     <label>&finished.intro;</label>
   </wizardpage>

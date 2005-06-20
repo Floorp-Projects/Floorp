@@ -50,6 +50,9 @@ const STATE_APPLYING          = "applying";
 const STATE_SUCCEEDED         = "succeeded";
 const STATE_FAILED            = "failed";
 
+const SRCEVT_FOREGROUND       = 1;
+const SRCEVT_BACKGROUND       = 2;
+
 /**
  * Logs a string to the error console. 
  * @param   string
@@ -60,62 +63,117 @@ function LOG(string) {
 }
 
 var gUpdates = {
-  update: null,
-  updateStrings: null,
-  brandStrings: null,
-  onClose: function() {
-    var objects = {
-      checking: gCheckingPage,
-      updatesfound: gUpdatesAvailablePage
-    };
+  update    : null,
+  strings   : null,
+  brandName : null,
+  
+  /**
+   * A hash of |pageid| attribute to page object. Can be used to dispatch
+   * function calls to the appropriate page. 
+   */
+  _pages        : { },
+
+  /**
+   * Called when the user presses the "Finish" button on the wizard, dispatches
+   * the function call to the selected page.
+   */
+  onWizardFinish: function() {
     var pageid = document.documentElement.currentPage.pageid;
-    if ("onClose" in objects[pageid]) 
-      objects[pageid].onClose();
+    if ("onWizardFinish" in this._pages[pageid])
+      this._pages[pageid].onWizardFinish();
   },
   
+  /**
+   * Called when the user presses the "Cancel" button on the wizard, dispatches
+   * the function call to the selected page.
+   */
+  onWizardCancel: function() {
+    var pageid = document.documentElement.currentPage.pageid;
+    LOG("MASTER CANCEL");
+    if ("onWizardCancel" in this._pages[pageid])
+      this._pages[pageid].onWizardCancel();
+  },
+  
+  /**
+   * The checking process that spawned this update UI. There are two types:
+   * SRCEVT_FOREGROUND:
+   *   Some user-generated event caused this UI to appear, e.g. the Help
+   *   menu item or the button in preferences. When in this mode, the UI
+   *   should remain active for the duration of the download. 
+   * SRCEVT_BACKGROUND:
+   *   A background update check caused this UI to appear, probably because
+   *   incompatibilities in Extensions or other addons were discovered and
+   *   the user's consent to continue was required. When in this mode, the
+   *   UI will disappear after the user's consent is obtained.
+   */
+  sourceEvent: SRCEVT_FOREGROUND,
+  
+  /**
+   * Called when the wizard UI is loaded.
+   */
   onLoad: function() {
-    if (window.arguments) {
-      var um = Components.classes["@mozilla.org/updates/update-manager;1"]
-                         .getService(Components.interfaces.nsIUpdateManager);
-      var arg0 = window.arguments[0];
-      if (arg0 instanceof Components.interfaces.nsIUpdate) {
-        this.update = arg0;
-        document.documentElement.advance();
-      }
-      else if (arg0 == 1 || (arg0 == 0 && um.activeUpdate)) {
-        var checking = document.getElementById("checking");
-        checking.setAttribute("next", "downloading");
-        document.documentElement.advance();
-      }
+    this.strings = document.getElementById("updateStrings");
+    var brandStrings = document.getElementById("brandStrings");
+    this.brandName = brandStrings.getString("brandShortName");
+
+    var pages = document.documentElement.childNodes;
+    for (var i = 0; i < pages.length; ++i) {
+      var page = pages[i];
+      if (page.localName == "wizardpage") 
+        this._pages[page.pageid] = eval(page.getAttribute("object"));
     }
     
-    this.updateStrings = document.getElementById("updateStrings");
-    this.brandStrings = document.getElementById("brandStrings");
+    // Advance to the Start page. 
+    document.documentElement.currentPage = this.startPage;
   },
   
-  advanceToErrorPage: function(currentPage, reason) {
-    currentPage.setAttribute("next", "errors");
+  get startPage() {
+    if (window.arguments) {
+      var arg0 = window.arguments[0];
+      if (arg0 instanceof Components.interfaces.nsIUpdate) {
+        // If the first argument is a nsIUpdate object, we are notifying the
+        // user that the background checking found an update that requires
+        // their permission to install, and it's ready for download.
+        this.update = arg0;
+        this.sourceEvent = SRCEVT_BACKGROUND;
+        return document.getElementById("updatesfound");
+      }
+    }
+    else {
+      var um = 
+          Components.classes["@mozilla.org/updates/update-manager;1"].
+          getService(Components.interfaces.nsIUpdateManager);
+      if (um.activeUpdate) {
+        this.update = um.activeUpdate;
+        return document.getElementById("downloading");
+      }
+    }
+    return document.getElementById("checking");
+  },
+  
+  /**
+   * Show the errors page.
+   * @param   reason
+   *          A text message explaining what the error was
+   */
+  advanceToErrorPage: function(reason) {
     var errorReason = document.getElementById("errorReason");
     errorReason.value = reason;
     var errorLink = document.getElementById("errorLink");
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch2);
     var manualURL = pref.getComplexValue(PREF_UPDATE_MANUAL_URL, 
-                                         Components.interfaces.nsIPrefLocalizedString);
+      Components.interfaces.nsIPrefLocalizedString);
     errorLink.href = manualURL.data;
     var errorLinkLabel = document.getElementById("errorLinkLabel");
     errorLinkLabel.value = manualURL.data;
     
-    var pageTitle = this.updateStrings.getString("errorsPageHeader");
+    var pageTitle = this.strings.getString("errorsPageHeader");
     
     var errorPage = document.getElementById("errors");
     errorPage.setAttribute("label", pageTitle);
+    document.documentElement.currentPage = document.getElementById("errors");
     document.documentElement.setAttribute("label", pageTitle);
-    document.documentElement.advance();
-  },
-  
-  set headerVisible(visible) {
-    document.documentElement.setAttribute("label", visible ? " " : "");
   }
 }
 
@@ -132,19 +190,18 @@ var gCheckingPage = {
   onPageShow: function() {
     var wiz = document.documentElement;
     wiz.getButton("next").disabled = true;
-    
-    var aus = Components.classes["@mozilla.org/updates/update-service;1"]
-                        .getService(Components.interfaces.nsIApplicationUpdateService);
+
+    var aus = 
+        Components.classes["@mozilla.org/updates/update-service;1"].
+        getService(Components.interfaces.nsIApplicationUpdateService);
     this._checker = aus.checkForUpdates(this.updateListener);
-    
-    gUpdates.headerVisible = true;
   },
   
   /**
    * The user has closed the window, either by pressing cancel or using a Window
    * Manager control, so stop checking for updates.
    */
-  onClose: function() {
+  onWizardCancel: function() {
     if (this._checker)
       this._checker.stopChecking();
   },
@@ -206,15 +263,15 @@ var gUpdatesAvailablePage = {
   _incompatibleItems: null,
   
   onPageShow: function() {
-    var brandName = gUpdates.brandStrings.getString("brandShortName");
-    var updateName = gUpdates.updateStrings.getFormattedString("updateName", 
-                                                              [brandName, gUpdates.update.version]);
+    var updateName = gUpdates.strings.getFormattedString("updateName", 
+      [gUpdates.brandName, gUpdates.update.version]);
     var updateNameElement = document.getElementById("updateName");
     updateNameElement.value = updateName;
-    var displayType = gUpdates.updateStrings.getString("updateType_" + gUpdates.update.type);
+    var displayType = gUpdates.strings.getString("updateType_" + gUpdates.update.type);
     var updateTypeElement = document.getElementById("updateType");
     updateTypeElement.setAttribute("type", gUpdates.update.type);
-    var intro = gUpdates.updateStrings.getFormattedString("introType_" + gUpdates.update.type, [brandName]);
+    var intro = gUpdates.strings.getFormattedString(
+      "introType_" + gUpdates.update.type, [gUpdates.brandName]);
     while (updateTypeElement.hasChildNodes())
       updateTypeElement.removeChild(updateTypeElement.firstChild);
     updateTypeElement.appendChild(document.createTextNode(intro));
@@ -237,15 +294,11 @@ var gUpdatesAvailablePage = {
     
     var dlButton = document.getElementById("download-button");
     dlButton.focus();
-    
-    gUpdates.headerVisible = false;
   },
   
   onInstallNow: function() {
     var nextPageID = gUpdates.update.licenseURL ? "license" : "downloading";
-    var updatesfound = document.getElementById("updatesfound");
-    updatesfound.setAttribute("next", nextPageID);
-    document.documentElement.advance();
+    document.documentElement.currentPage = document.getElementById(nextPageID);
   },
   
   showIncompatibleItems: function() {
@@ -261,21 +314,19 @@ var gLicensePage = {
     
     var nextButton = document.documentElement.getButton("next");
     nextButton.disabled = true;
-    nextButton.label = gUpdates.updateStrings.getString("IAgreeLabel");
+    nextButton.label = gUpdates.strings.getString("IAgreeLabel");
     document.documentElement.getButton("back").disabled = true;
     document.documentElement.getButton("next").focus();
 
     this._licenseContent.addEventListener("load", this.onLicenseLoad, false);
     this._licenseContent.url = gUpdates.update.licenseURL;
-    
-    gUpdates.headerVisible = true;
   },
   
   onLicenseLoad: function() {
     document.documentElement.getButton("next").disabled = false;
   },
   
-  onClose: function() {
+  onWizardCancel: function() {
     this._licenseContent.stopDownloading();
   }
 };
@@ -289,20 +340,19 @@ function DownloadStatusFormatter() {
   this._startTime = Math.floor((new Date()).getTime() / 1000);
   this._elapsed = 0;
   
-  var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                      .getService(Components.interfaces.nsIStringBundleService);
-  var bundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
-  
-  this._statusFormat = bundle.GetStringFromName("statusFormat");
-  this._statusFormatKBMB = bundle.GetStringFromName("statusFormatKBMB");
-  this._statusFormatKBKB = bundle.GetStringFromName("statusFormatKBKB");
-  this._statusFormatMBMB = bundle.GetStringFromName("statusFormatMBMB");
-  this._statusFormatUnknownMB = bundle.GetStringFromName("statusFormatUnknownMB");
-  this._statusFormatUnknownKB = bundle.GetStringFromName("statusFormatUnknownKB");
-  this._remain = bundle.GetStringFromName("remain");
-  this._unknownFilesize = bundle.GetStringFromName("unknownFilesize");
-  this._longTimeFormat = bundle.GetStringFromName("longTimeFormat");
-  this._shortTimeFormat = bundle.GetStringFromName("shortTimeFormat");
+  var us = gUpdates.strings;
+  this._statusFormat = us.getString("statusFormat");
+  this._statusFormatKBMB = us.getString("statusFormatKBMB");
+  this._statusFormatKBKB = us.getString("statusFormatKBKB");
+  this._statusFormatMBMB = us.getString("statusFormatMBMB");
+  this._statusFormatUnknownMB = us.getString("statusFormatUnknownMB");
+  this._statusFormatUnknownKB = us.getString("statusFormatUnknownKB");
+  this._rateFormatKBSec = us.getString("rateFormatKBSec");
+  this._rateFormatMBSec = us.getString("rateFormatMBSec");
+  this._remain = us.getString("remain");
+  this._unknownFilesize = us.getString("unknownFilesize");
+  this._longTimeFormat = us.getString("longTimeFormat");
+  this._shortTimeFormat = us.getString("shortTimeFormat");
 }
 DownloadStatusFormatter.prototype = {
   /**
@@ -313,12 +363,12 @@ DownloadStatusFormatter.prototype = {
   /**
    * Time elapsed since the start of the download operation (in seconds)
    */
-  _elapsed: 0,
+  _elapsed: -1,
   
   /**
    * Transfer rate of the download
    */
-  rate: 0,
+  _rate: "",
   
   /**
    * Number of Kilobytes downloaded so far in the form:
@@ -344,25 +394,34 @@ DownloadStatusFormatter.prototype = {
     this.progress = this._formatKBytes(parseInt(currSize/1024 + 0.5), total);
     
     // 2) Determine the Transfer Rate
-    if (!this.rate || now > (this._startTime + this._elapsed + 2)) {
-      this._elapsed = now - this._startTime;
-      this.rate = this._elapsed ? (currSize / 1024) / this._elapsed : 0;
-      if (this.rate > 100)
-        this.rate = Math.round(this.rate);
-      if (this.rate == 0)
-        this.rate = "??.?";
+    var oldElapsed = this._elapsed;
+    this._elapsed = now - this._startTime;
+    if (oldElapsed != this._elapsed) {
+      this._rate = this._elapsed ? Math.floor((currSize / 1024) / this._elapsed) : 0;
+      var isKB = true;
+      if (parseInt(this._rate / 1024) > 0) {
+        this._rate = (this._rate / 1024).toFixed(1);
+        isKB = false;
+      }
+      if (this._rate > 100)
+        this._rate = Math.round(this._rate);
+      if (this._rate == 0)
+        this._rate = "??.?";
+        
+      var format = isKB ? this._rateFormatKBSec : this._rateFormatMBSec;
+      this._rate = this._replaceInsert(format, 1, this._rate);
     }
 
     // 3) Determine the Time Remaining
     var remainingTime = this._unknownFileSize;
-    if (this.rate && (finalSize > 0)) {
-      remainingTime = Math.floor(((finalSize - currSize) / 1024) / this.rate);
+    if (this._rate && (finalSize > 0)) {
+      remainingTime = Math.floor(((finalSize - currSize) / 1024) / this._rate);
       remainingTime = this._formatSeconds(remainingTime); 
     }
       
     var status = this._statusFormat;
     status = this._replaceInsert(status, 1, this.progress);
-    status = this._replaceInsert(status, 2, this.rate);
+    status = this._replaceInsert(status, 2, this._rate);
     status = this._replaceInsert(status, 3, remainingTime);
     status = this._replaceInsert(status, 4, this._remain);
     return status;
@@ -486,24 +545,45 @@ var gDownloadingPage = {
     this._downloadThrobber = document.getElementById("downloadThrobber");
     this._pauseButton = document.getElementById("pauseButton");
   
-    if (gUpdates.update) {
+    var updates = 
+        Components.classes["@mozilla.org/updates/update-service;1"].
+        getService(Components.interfaces.nsIApplicationUpdateService);
+
+    var um = 
+        Components.classes["@mozilla.org/updates/update-manager;1"].
+        getService(Components.interfaces.nsIUpdateManager);
+    var activeUpdate = um.activeUpdate;
+    if (activeUpdate) {
+      gUpdates.update = activeUpdate;
+      this._togglePausedState(!updates.isDownloading);
+    }
+    
+    if (!gUpdates.update) {
+      LOG("gDownloadingPage.onPageShow: no valid update to download?!");
+      return;
+    }
+  
+    // Pause any active background download and restart it as a foreground
+    // download.
+    updates.pauseDownload();
+    var state = updates.downloadUpdate(gUpdates.update, false);
+    if (state == "failed") {
+      // We've tried as hard as we could to download a valid update - 
+      // we fell back from a partial patch to a complete patch and even
+      // then we couldn't validate. Show a validation error with instructions
+      // on how to manually update.
+      this.showVerificationError();
+    }
+    else {
       // Add this UI as a listener for active downloads
-      var updates = 
-          Components.classes["@mozilla.org/updates/update-service;1"].
-          getService(Components.interfaces.nsIApplicationUpdateService);
-      var state = updates.downloadUpdate(gUpdates.update, false);
-      if (state == "failed") 
-        this.showVerificationError();
-      else
-        updates.addDownloadListener(this);
+      updates.addDownloadListener(this);
     }
     
     document.documentElement.getButton("back").disabled = true;
     document.documentElement.getButton("next").disabled = true;
     var cancelButton = document.documentElement.getButton("cancel");
-    cancelButton.label = gUpdates.updateStrings.getString("closeButtonLabel");
+    cancelButton.label = gUpdates.strings.getString("closeButtonLabel");
     cancelButton.focus();
-    gUpdates.headerVisible = true;
   },
   
   /** 
@@ -515,10 +595,38 @@ var gDownloadingPage = {
     this._downloadStatus.appendChild(document.createTextNode(status));
   },
   
-  _paused: false,
-  _oldStatus: "",
-  _oldName: "",
-  _oldMode: "",
+  _paused       : false,
+  _oldStatus    : null,
+  _oldMode      : null,
+  _oldProgress  : 0,
+  
+  /**
+   * Adjust UI to suit a certain state of paused-ness
+   * @param   paused
+   *          Whether or not the download is paused
+   */
+  _togglePausedState: function(paused) {
+    var u = gUpdates.update;
+    if (paused) {
+      this._oldStatus = this._downloadStatus.textContent;
+      this._oldMode = this._downloadProgress.mode;
+      this._oldProgress = parseInt(this._downloadProgress.progress);
+      this._downloadName.value = gUpdates.strings.getFormattedString(
+        "pausedName", [u.name]);
+      this._setStatus(u.selectedPatch.status);
+      this._downloadProgress.mode = "normal";
+      
+      this._pauseButton.label = gUpdates.strings.getString("pauseButtonResume");
+    }
+    else {
+      this._downloadName.value = gUpdates.strings.getFormattedString(
+        "downloadingPrefix", [u.name]);
+      this._setStatus(this._oldStatus || u.selectedPatch.status);
+      this._downloadProgress.value = this._oldProgress || u.selectedPatch.progress;
+      this._downloadProgress.mode = this._oldMode || "normal";
+      this._pauseButton.label = gUpdates.strings.getString("pauseButtonPause");
+    }
+  },
 
   /** 
    *
@@ -527,30 +635,24 @@ var gDownloadingPage = {
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"].
         getService(Components.interfaces.nsIApplicationUpdateService);
-    if (this._paused) {
+    if (this._paused)
       updates.downloadUpdate(gUpdates.update, false);
-      this._downloadName.value = gUpdates.updateStrings.getFormattedString("downloadingPrefix", [gUpdates.update.name]);
-      this._setStatus(this._oldStatus);
-      this._downloadProgress.mode = this._oldMode;
-      this._pauseButton.label = gUpdates.updateStrings.getString("pauseButtonPause");
-    }
     else {
+      gUpdates.update.selectedPatch.status = 
+        gUpdates.strings.getFormattedString("pausedStatus", 
+          [this._statusFormatter.progress]);
       updates.pauseDownload();
-      this._oldStatus = this._downloadStatus.textContent;
-      this._oldMode = this._downloadProgress.mode;
-      this._downloadName.value = gUpdates.updateStrings.getFormattedString("pausedName", [gUpdates.update.name]);
-      this._setStatus(gUpdates.updateStrings.getFormattedString("pausedStatus", 
-          [this._statusFormatter.progress]));
-      this._downloadProgress.mode = "normal";
-      this._pauseButton.label = gUpdates.updateStrings.getString("pauseButtonResume");
     }
     this._paused = !this._paused;
+    
+    // Update the UI
+    this._togglePausedState(this._paused);
   },
   
   /** 
    *
    */
-  onClose: function() {
+  onWizardCancel: function() {
     // Remove ourself as a download listener so that we don't continue to be 
     // fed progress and state notifications after the UI we're updating has 
     // gone away.
@@ -563,6 +665,28 @@ var gDownloadingPage = {
         Components.classes["@mozilla.org/updates/update-manager;1"]
                   .getService(Components.interfaces.nsIUpdateManager);
     um.activeUpdate = gUpdates.update;
+    
+    // If the download was paused by the user, ask the user if they want to 
+    // have the update resume in the background. 
+    var downloadInBackground = true;
+    if (this._paused) {
+      var title = gUpdates.strings.getString("resumePausedAfterCloseTitle");
+      var message = gUpdates.strings.getFormattedString(
+        "resumePausedAfterCloseMessage", [gUpdates.brandName]);
+      var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                        .getService(Components.interfaces.nsIPromptService);
+      var flags = ps.STD_YES_NO_BUTTONS;
+      var rv = ps.confirmEx(window, title, message, flags, null, null, null, null, { });
+      if (rv == 1) {
+        downloadInBackground = false;
+      }
+    }
+    if (downloadInBackground) {
+      // Cancel the download and start it again in the background.
+      LOG("gDownloadingPage.onWizardCancel: resuming download in background");
+      updates.pauseDownload();
+      updates.downloadUpdate(gUpdates.update, true);
+    }
   },
   
   /** 
@@ -590,7 +714,7 @@ var gDownloadingPage = {
     this._downloadProgress.mode = "normal";
     this._downloadProgress.value = gUpdates.update.selectedPatch.progress;
     this._pauseButton.disabled = false;
-    var name = gUpdates.updateStrings.getFormattedString("downloadingPrefix", [gUpdates.update.name]);
+    var name = gUpdates.strings.getFormattedString("downloadingPrefix", [gUpdates.update.name]);
     this._downloadName.value = name;
     this._setStatus(gUpdates.update.selectedPatch.status);
   },
@@ -649,10 +773,10 @@ var gDownloadingPage = {
    * Advance the wizard to the "Verification Error" page
    */
   showVerificationError: function() {
-    var brandName = gUpdates.brandStrings.getString("brandShortName");
-    var verificationError = gUpdates.updateStrings.getFormattedString("verificationError", [brandName]);
+    var verificationError = gUpdates.strings.getFormattedString(
+      "verificationError", [gUpdates.brandName]);
     var downloadingPage = document.getElementById("downloading");
-    gUpdates.advanceToErrorPage(downloadingPage, verificationError);
+    gUpdates.advanceToErrorPage(verificationError);
   },
    
   /**
@@ -672,40 +796,42 @@ var gErrorsPage = {
     document.documentElement.getButton("back").disabled = true;
     document.documentElement.getButton("cancel").disabled = true;
     document.documentElement.getButton("finish").focus();
-    
-    gUpdates.headerVisible = true;
   }
 };
 
 var gFinishedPage = {
+  /**
+   * Called to initialize the Wizard Page.
+   */
   onPageShow: function() {
     document.documentElement.getButton("back").disabled = true;
     var finishButton = document.documentElement.getButton("finish");
-    finishButton.label = gUpdates.updateStrings.getString("restartButton");
+    finishButton.label = gUpdates.strings.getString("restartButton");
     finishButton.focus();
     var cancelButton = document.documentElement.getButton("cancel");
-    cancelButton.label = gUpdates.updateStrings.getString("laterButton");
-    
-    var self = this;
-    function onRestartLater() {
-      // self.onRestartLater();
-      self._later = true;
-    }
-    cancelButton.addEventListener("command", onRestartLater, false);
+    cancelButton.label = gUpdates.strings.getString("laterButton");
   },
   
-  onClose: function() {
-    LOG("FINISH = " + this._later);
+  /**
+   * Called when the wizard finishes, i.e. the "Restart Now" button is 
+   * clicked. 
+   */
+  onWizardFinish: function() {
+    // Do the restart
+    LOG("gFinishedPage.onWizardFinish: Restarting Application...");
   },
   
-  onRestartLater: function() {
+  /**
+   * Called when the wizard is canceled, i.e. when the "Later" button is
+   * clicked.
+   */
+  onWizardCancel: function() {
     var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                        .getService(Components.interfaces.nsIPromptService);
-    var brandName = gUpdates.brandStrings.getString("brandShortName");
-    var message = gUpdates.updateStrings.getFormattedString("restartLaterMessage",
-      [brandName]);
-    ps.alert(window, gUpdates.updateStrings.getString("restartLaterTitle"), 
+    var message = gUpdates.strings.getFormattedString("restartLaterMessage",
+      [gUpdates.brandName]);
+    ps.alert(window, gUpdates.strings.getString("restartLaterTitle"), 
              message);
-  }
+  },
 };
 

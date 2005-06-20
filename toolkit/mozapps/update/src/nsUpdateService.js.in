@@ -314,7 +314,17 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   checkForUpdates: function() {
-    this._showUI(0);
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var win = wm.getMostRecentWindow("Update:Wizard");
+    if (win)
+      win.focus();
+    else {
+      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                         .getService(Components.interfaces.nsIWindowWatcher);
+      ww.openWindow(null, URI_UPDATE_PROMPT_DIALOG, 
+                    "", "chrome,centerscreen,dialog,titlebar", null);
+    }
   },
     
   /**
@@ -342,34 +352,8 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   showInstalledUpdates: function() {
-    this._showUI(1);
-  },
-  
-  /**
-   * Shows the update wizard in the specified mode.
-   * @param   mode
-   *          The mode to show the update wizard in:
-   *          0 - check for updates
-   *          1 - show all installed updates
-   */
-  _showUI: function(mode) {
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
-    var win = wm.getMostRecentWindow("Update:Wizard");
-    if (win)
-      win.focus();
-    else {
-      var ary = Components.classes["@mozilla.org/supports-array;1"]
-                          .createInstance(Components.interfaces.nsISupportsArray);
-      var wizardMode = Components.classes["@mozilla.org/supports-PRUint8;1"]
-                                 .createInstance(Components.interfaces.nsISupportsPRUint8);
-      wizardMode.data = mode;
-      ary.AppendElement(wizardMode);
-      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                         .getService(Components.interfaces.nsIWindowWatcher);
-      ww.openWindow(null, URI_UPDATE_PROMPT_DIALOG, 
-                    "", "chrome,centerscreen,dialog,titlebar", ary);
-    }
+    // this._showUI(1);
+    // XXXben TODO!
   },
   
   /**
@@ -461,7 +445,7 @@ UpdateService.prototype = {
   
   notify: function(timer) {
     // If a download is in progress, then do nothing.
-    if (this._downloader && this._downloader.isBusy)
+    if (this.isDownloading)
       return;
 
     var self = this;
@@ -605,8 +589,9 @@ UpdateService.prototype = {
   downloadUpdate: function(update, background) {
     if (!update)
       throw Components.results.NS_ERROR_NULL_POINTER;
-    if (this._downloader && this._downloader.isBusy) {
-      if (update.isCompleteUpdate == this._downloader.isCompleteUpdate) {
+    if (this.isDownloading) {
+      if (update.isCompleteUpdate == this._downloader.isCompleteUpdate &&
+          background == this._downloader.background) {
         LOG("no support for downloading more than one update at a time");
         return;
       }
@@ -620,8 +605,15 @@ UpdateService.prototype = {
    * See nsIUpdateService.idl
    */
   pauseDownload: function() {
-    if (this._downloader && this._downloader.isBusy)
+    if (this.isDownloading)
       this._downloader.cancel();
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  get isDownloading() {
+    return this._downloader && this._downloader.isBusy;
   },
   
   /**
@@ -1475,7 +1467,7 @@ Downloader.prototype = {
    */
   onProgress: function(request, context, progress, maxProgress) {
     request.QueryInterface(nsIIncrementalDownload);
-    // LOG("Downloader.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
+    LOG("Downloader.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
     
     this._patch.progress = Math.round(100 * (progress/maxProgress));
 
