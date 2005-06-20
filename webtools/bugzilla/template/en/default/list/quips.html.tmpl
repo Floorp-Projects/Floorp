@@ -57,22 +57,32 @@
   <p>[% approved.size %] quips approved and [% unapproved.size %] quips unapproved</p>
 [% END %]
 
+
 <p>
-  [% terms.Bugzilla %] will pick a random quip for the headline on each [% terms.bug %] list, and
-  you can extend the quip list. Type in something clever or funny or boring
-  (but not obscene or offensive, please) and bonk on the button.
-  [% IF Param("quip_list_entry_control") == "moderated" AND !user.groups.admin %]
-    Note that your quip has to be approved before it is used.
-  [% END %]
+  [% terms.Bugzilla %] will pick a random quip for the headline on each 
+  [% terms.bug %] list.
 </p>
 
-<form method="post" action="quips.cgi">
-  <input type="hidden" name="action" value="add">
-  <input size="80" name="quip">
+[% IF Param("quip_list_entry_control") != "closed" %]
   <p>
-    <input type="submit" value="Add This Quip">
+    You can extend the quip list. Type in something clever or funny or boring
+    (but not obscene or offensive, please) and bonk on the button.
+    [% IF Param("quip_list_entry_control") == "moderated" AND !user.groups.admin %]
+      Note that your quip has to be approved before it is used.
+    [% END %]
   </p>
-</form>
+
+  <form method="post" action="quips.cgi">
+    <input type="hidden" name="action" value="add">
+    <input size="80" name="quip">
+    <p>
+      <input type="submit" value="Add This Quip">
+    </p>
+  </form>
+[% ELSE %]
+  <p>No new entries may be submitted at this time.
+  </p>
+[% END %]
 
 [% IF show_quips %]
   [% IF !UserInGroup('admin') %]
