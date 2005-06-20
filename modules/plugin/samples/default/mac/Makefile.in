@@ -95,13 +95,13 @@ endif
 libs install:: install-plugin
 
 install-plugin: build-plugin
-	$(INSTALL) "build/Default Plugin.plugin" $(DIST)/bin/plugins
+	$(INSTALL) "$(XCODE_PRODUCT_DIR)/Default Plugin.plugin" $(DIST)/bin/plugins
 
 resources: $(RESOURCE_FILES)
 
 build-plugin: resources
 	$(PBBUILD) $(PROJECT_ARG) -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_ARG)
-	echo -n NSPLMOSS > "build/Default Plugin.plugin/Contents/PkgInfo"
+	echo -n NSPLMOSS > "$(XCODE_PRODUCT_DIR)/Default Plugin.plugin/Contents/PkgInfo"
 
 _%.rsrc: %.rsrc
 	$(ASDECODE) $< $@
