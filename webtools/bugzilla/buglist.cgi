@@ -773,6 +773,7 @@ if (defined $cgi->param('limit')) {
 }
 elsif ($fulltext) {
     $query .= " " . $dbh->sql_limit(200);
+    $vars->{'sorted_by_relevance'} = 1;
 }
 
 

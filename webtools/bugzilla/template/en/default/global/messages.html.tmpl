@@ -127,8 +127,10 @@
 
   [% ELSIF message_tag == "buglist_sorted_by_relevance" %]
     [% terms.Bugs %] on this list are sorted by relevance, with the most
-    relevant [% terms.bugs %] at the top.  Only the 200 most relevant 
-    [%+ terms.bugs %] are shown.
+    relevant [% terms.bugs %] at the top.
+    [% IF bugs.size == 200 %]
+      Only the 200 most relevant [% terms.bugs %] are shown.
+    [% END %]
 
   [% ELSIF message_tag == "change_columns" %]
     [% title = "Change columns" %]
