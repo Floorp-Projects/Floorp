@@ -4077,13 +4077,11 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
         return rv;
       }
 
-      if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
-        // Mark next line dirty in case SplitLine didn't end up
-        // pushing any frames.
-        nsLineList_iterator next = aLine.next();
-        if (next != end_lines() && !next->IsBlock()) {
-          next->MarkDirty();
-        }
+      // Mark next line dirty, since a line followed by a <BR>
+      // needs to continue to reflow.
+      nsLineList_iterator next = aLine.next();
+      if (next != end_lines() && !next->IsBlock()) {
+        next->MarkDirty();
       }
     }
   }
