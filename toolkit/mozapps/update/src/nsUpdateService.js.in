@@ -222,6 +222,24 @@ function getFile(key, pathArray) {
 }
 
 /**
+ * Closes a Safe Output Stream
+ * @param   fos
+ *          The Safe Output Stream to close
+ */
+function closeSafeOutputStream(fos) {
+  if (fos instanceof Components.interfaces.nsISafeOutputStream) {
+    try {
+      fos.finish();
+    }
+    catch (e) {
+      fos.close();
+    }
+  }
+  else
+    fos.close();
+}
+
+/**
  * An enumeration of items in a JS array.
  * @constructor
  */
@@ -275,10 +293,7 @@ function writeStringToFile(file, text) {
   fos.init(file, modeFlags, PERMS_FILE, 0);
   text += "\n";
   fos.write(text, text.length);    
-  if (fos instanceof Components.interfaces.nsISafeOutputStream)
-    fos.finish();
-  else
-    fos.close();
+  closeSafeOutputStream(fos);
 }
 
 /**
@@ -661,22 +676,27 @@ UpdateManager.prototype = {
     var fileStream = Components.classes["@mozilla.org/network/file-input-stream;1"]
                                .createInstance(Components.interfaces.nsIFileInputStream);
     fileStream.init(file, MODE_RDONLY, PERMS_FILE, 0);
-    if (fileStream instanceof Components.interfaces.nsIScriptableInputStream) {
-      var data = fileStream.read(fileStream.available());    
-      var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
-                             .createInstance(Components.interfaces.nsIDOMParser);
-      var doc = parser.parseFromString(data, "text/xml");
-      
-      var updateCount = doc.documentElement.childNodes.length;
-      for (var i = 0; i < updateCount; ++i) {
-        var updateElement = doc.documentElement.childNodes[i];
-        if (updateElement.nodeType != Node.ELEMENT_NODE ||
-            updateElement.localName != "update")
-          continue;
+    try {
+      if (fileStream instanceof Components.interfaces.nsIScriptableInputStream) {
+        var data = fileStream.read(fileStream.available());    
+        var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
+                              .createInstance(Components.interfaces.nsIDOMParser);
+        var doc = parser.parseFromString(data, "text/xml");
+        
+        var updateCount = doc.documentElement.childNodes.length;
+        for (var i = 0; i < updateCount; ++i) {
+          var updateElement = doc.documentElement.childNodes[i];
+          if (updateElement.nodeType != Node.ELEMENT_NODE ||
+              updateElement.localName != "update")
+            continue;
 
-        result.push(new Update(updateNode));
+          result.push(new Update(updateNode));
+        }
       }
     }
+    catch (e) {
+    }
+    fileStream.close();
     return result;
   },
   
@@ -696,7 +716,7 @@ UpdateManager.prototype = {
   _ensureActiveUpdate: function() {
     if (!this._activeUpdate) {
       var updates = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, 
-                             [FILE_UPDATE_ACTIVE]));
+        [FILE_UPDATE_ACTIVE]));
       if (updates.length > 0)
         this._activeUpdate = updates[0];
     }
@@ -707,11 +727,7 @@ UpdateManager.prototype = {
    */
   getUpdateAt: function(index) {
     this._ensureUpdates();
-    if (this._activeUpdate && index == 0) {
-      // The "current" or "active" update is always first in the list.
-      return this._activeUpdate;
-    }
-    return this._updates[index - (this._activeUpdate ? 1 : 0)];
+    return this._updates[index];
   },
   
   /**
@@ -719,7 +735,7 @@ UpdateManager.prototype = {
    */
   get updateCount() {
     this._ensureUpdates();
-    this._updates.length + (this._activeUpdate ? 1 : 0);
+    return this._updates.length;
   },
   
   /**
@@ -734,8 +750,14 @@ UpdateManager.prototype = {
     if (!activeUpdate)
       this._updates = [this._activeUpdate].concat(this._updates);
     this._activeUpdate = activeUpdate;
-    this._writeUpdatesToXMLFile([this._activeUpdate], 
-                                getFile(KEY_APPDIR, [FILE_UPDATE_ACTIVE]));
+    if (!activeUpdate) {
+      // If |activeUpdate| is null, we have updated both lists - the active list
+      // and the history list, so we want to write both files.
+      this.saveUpdates();
+    }
+    else
+      this._writeUpdatesToXMLFile([this._activeUpdate], 
+                                  getFile(KEY_APPDIR, [FILE_UPDATE_ACTIVE]));
     return activeUpdate;
   },
   
@@ -744,16 +766,7 @@ UpdateManager.prototype = {
    */
   removeUpdateAtIndex: function(index) {
     this._ensureUpdates();
-    if (this._activeUpdate && index == 0) 
-      this._activeUpdate = null;
-    if (update == this._activeUpdate)
-      this._activeUpdate = null;
-    else {
-      for (var i = this._updates.length; i > 0; --i) {
-        if (this._updates[i] == update)
-          this._updates.splice(i, 1);
-      }
-    }
+    tihs._updates.splice(index, 1);
   },
   
   /**
@@ -767,40 +780,33 @@ UpdateManager.prototype = {
       file.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
     fos.init(file, modeFlags, PERMS_FILE, 0);
     
-    var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
-                           .createInstance(Components.interfaces.nsIDOMParser);
-    const EMPTY_UPDATES_DOCUMENT = "<?xml version=\"1.0\"?><updates xmlns=\"http://www.mozilla.org/2005/app-update\"></updates>";
-    var doc = parser.parseFromString(EMPTY_UPDATES_DOCUMENT, "text/xml");
+    try {
+      var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
+                            .createInstance(Components.interfaces.nsIDOMParser);
+      const EMPTY_UPDATES_DOCUMENT = "<?xml version=\"1.0\"?><updates xmlns=\"http://www.mozilla.org/2005/app-update\"></updates>";
+      var doc = parser.parseFromString(EMPTY_UPDATES_DOCUMENT, "text/xml");
 
-    for (var i = 0; i < updates.length; ++i) {
-      if (updates[i])
-        doc.documentElement.appendChild(updates[i].serialize(doc));
-    }
-
-    var serializer = Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
-                               .createInstance(Components.interfaces.nsIDOMSerializer);
-    serializer.serializeToStream(doc.documentElement, fos, null);
-
-    if (fos instanceof Components.interfaces.nsISafeOutputStream) {
-      try {
-        fos.finish();
+      for (var i = 0; i < updates.length; ++i) {
+        if (updates[i])
+          doc.documentElement.appendChild(updates[i].serialize(doc));
       }
-      catch (e) {
-        fos.close();
-      }
+
+      var serializer = Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
+                                .createInstance(Components.interfaces.nsIDOMSerializer);
+      serializer.serializeToStream(doc.documentElement, fos, null);
     }
-    else
-      fos.close();
+    catch (e) {
+    }
+    
+    closeSafeOutputStream(fos);
   },
 
   /**
    * See nsIUpdateService.idl
    */
   saveUpdates: function() {
-    if (this._activeUpdate) {
-      this._writeUpdatesToXMLFile([this._activeUpdate], 
-                                  getFile(KEY_APPDIR, [FILE_UPDATE_ACTIVE]));
-    }
+    this._writeUpdatesToXMLFile([this._activeUpdate], 
+                                getFile(KEY_APPDIR, [FILE_UPDATE_ACTIVE]));
     if (this._updates) {
       this._writeUpdatesToXMLFile(this._updates, 
                                   getFile(KEY_APPDIR, [FILE_UPDATES_DB]));
@@ -1516,7 +1522,6 @@ Downloader.prototype = {
           LOG("Downloader.onStopRequest: Verification of patch failed, downloading complete update");
           this._update.isCompleteUpdate = true;
           var rv = this.downloadUpdate(this._update);
-          LOG("US:STATE = " + rv);
           // This will reset the |.state| property on this._update if a new 
           // download initiates.
         }
@@ -1625,7 +1630,6 @@ TimerManager.prototype = {
       }
     };
     var tc = new TimerCallback(id, callback, interval);
-    LOG("timerInterval = " + timerInterval);
     timer.initWithCallback(tc, timerInterval, type);
     var preference = PREF_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, id);
     var lastUpdateTime = getPref("getIntPref", preference, 
