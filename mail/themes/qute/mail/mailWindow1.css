@@ -1048,10 +1048,16 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
   border-bottom: 0px;
 }
 
-/* ..... smart update statusbar panel ..... */
+/* ..... search box ..... */
 
 #searchBox {
   border-top: 1px solid ThreeDHighlight;
   height: 30px;
   background-color: transparent;
+}
+
+/* ..... update notifications ..... */
+
+#checkForUpdates[loading="true"] {
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
 }

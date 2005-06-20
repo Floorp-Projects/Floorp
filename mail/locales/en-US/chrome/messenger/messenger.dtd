@@ -412,7 +412,7 @@
 <!ENTITY hintsAndTips.label "&brandFullName; Help">
 <!ENTITY hintsAndTipsMac.commandkey "?">
 <!ENTITY hintsAndTips.accesskey "h">
-<!ENTITY updateCmd.accesskey  "U">
+<!ENTITY updateCmd.accesskey  "o">
 <!ENTITY updateCmd.label      "Check for Updates...">
 <!ENTITY aboutCmd.label "About &brandFullName;">
 <!ENTITY aboutCmd.accesskey "A">
