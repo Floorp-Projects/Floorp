@@ -158,6 +158,7 @@
                     accesskey="&menuitem.personaltoolbarfolder.accesskey;"/>
           <menuseparator/>
           <menuitem label="&command.refreshLivemark.label;"
+                    accesskey="&command.refreshLivemark.accesskey;"
                     command="cmd_bm_refreshlivemark"/>
           <menuseparator/>
           <menuitem label="&command.properties.label;"

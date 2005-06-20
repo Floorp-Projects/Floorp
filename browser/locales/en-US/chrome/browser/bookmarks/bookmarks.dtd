@@ -76,6 +76,7 @@
 <!ENTITY command.addBookmark.label     "Add...">
 <!ENTITY command.manageBookmarks.label "Manage">
 <!ENTITY command.refreshLivemark.label "Reload Live Bookmark">
+<!ENTITY command.refreshLivemark.accesskey "L">
 
 <!ENTITY menuitem.view.command.toolbar.label        "Toolbar">
 <!ENTITY menuitem.view.command.toolbar.accesskey    "t">
