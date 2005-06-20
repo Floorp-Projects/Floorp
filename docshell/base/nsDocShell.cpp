@@ -5248,15 +5248,6 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
     aSHEntry->GetRefreshURIList(getter_AddRefs(mRefreshURIList));
     aSHEntry->SetRefreshURIList(nsnull);
 
-    // Restore the page title.  Re-setting the current title on the document
-    // will update the docshell title and dispatch DOMTitleChanged.
-    nsIDocument *doc = shell->GetDocument();
-    nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(doc);
-    if (doc && nsDoc) {
-        const nsAFlatString &title = doc->GetDocumentTitle();
-        nsDoc->SetTitle(title);
-    }
-    
     // aSHEntry is now our currently-loaded document.
     mOSHE = aSHEntry;
 
@@ -5304,7 +5295,18 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
 
     SetCurrentURI(uri);
 
-    // Dispatch onload and DOMPageRestore.
+    // Restore the page title.  Re-setting the current title on the document
+    // will update the docshell title and dispatch DOMTitleChanged.
+    // (We must do this after setting mOSHE so that the correct history entry
+    // title is set).
+    nsIDocument *doc = shell->GetDocument();
+    nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(doc);
+    if (doc && nsDoc) {
+        const nsAFlatString &title = doc->GetDocumentTitle();
+        nsDoc->SetTitle(title);
+    }
+    
+    // Dispatch DOMPageShow and other events.
     rv = BeginRestore(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
