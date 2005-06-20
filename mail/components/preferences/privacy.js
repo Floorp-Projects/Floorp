@@ -55,10 +55,8 @@ var gPrivacyPane = {
   tabSelectionChanged: function ()
   {
     if (this.mInitialized)
-    {
-      var preference = document.getElementById("mail.preferences.privacy.selectedTabIndex");
-      preference.valueFromPreferences = document.getElementById("privacyPrefs").selectedIndex;
-    }
+      document.getElementById("mail.preferences.privacy.selectedTabIndex")
+              .valueFromPreferences = document.getElementById("privacyPrefs").selectedIndex;
   },
 
   updateRemoteImagesState: function()
@@ -110,11 +108,10 @@ var gPrivacyPane = {
                  status == nsIPKCS11Slot.SLOT_READY;
 
       var bundle = document.getElementById("bundlePreferences");
-      var button = document.getElementById("setMasterPassword");
-      button.label = bundle.getString(noMP ? "setMasterPassword" : "changeMasterPassword");
+      document.getElementById("setMasterPassword").label =
+        bundle.getString(noMP ? "setMasterPassword" : "changeMasterPassword");
       
-      var removeButton = document.getElementById("removeMasterPassword");
-      removeButton.disabled = noMP;
+      document.getElementById("removeMasterPassword").disabled = noMP;
     }
   },
 
@@ -160,5 +157,5 @@ var gPrivacyPane = {
   {
     document.documentElement.openSubDialog("chrome://pippki/content/device_manager.xul",
                                         "width=600,height=400", null);
-  },
+  }
 };

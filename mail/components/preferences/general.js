@@ -197,7 +197,8 @@ var gGeneralPane = {
 
   showAdvancedSound: function()
   {
-     document.documentElement.openSubDialog("chrome://messenger/content/preferences/notifications.xul",
+    document.documentElement
+      .openSubDialog("chrome://messenger/content/preferences/notifications.xul",
                                            "", null);
-  },
+  }
 };

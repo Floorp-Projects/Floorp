@@ -48,10 +48,8 @@ var gDisplayPane = {
   tabSelectionChanged: function ()
   {
     if (this.mInitialized)
-    {
-      var preference = document.getElementById("mail.preferences.display.selectedTabIndex");
-      preference.valueFromPreferences = document.getElementById("displayPrefs").selectedIndex;
-    }
+      document.getElementById("mail.preferences.display.selectedTabIndex")
+              .valueFromPreferences = document.getElementById("displayPrefs").selectedIndex;
   },
 
   restoreDefaultLabels: function()
@@ -80,11 +78,11 @@ var gDisplayPane = {
   {
     if (!this.mCharsetMenuInitialized) 
     {
-      var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-      os.notifyObservers(null, "charsetmenu-selected", "mailedit");     
+      Components.classes["@mozilla.org/observer-service;1"]
+                .getService(Components.interfaces.nsIObserverService)
+                .notifyObservers(null, "charsetmenu-selected", "mailedit");
       this.mCharsetMenuInitialized = true;
     }
     return undefined;
-  },
-
+  }
 };

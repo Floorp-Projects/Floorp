@@ -158,9 +158,8 @@ var gDownloadsPane = {
   
   showWhenStartingPrefChanged: function ()
   {
-    var showWhenStartingPref = document.getElementById("browser.download.manager.showWhenStarting");
-    var closeWhenDonePref = document.getElementById("browser.download.manager.closeWhenDone");
-    closeWhenDonePref.disabled = !showWhenStartingPref.value;
+    document.getElementById("browser.download.manager.closeWhenDone")
+            .disabled = !document.getElementById("browser.download.manager.showWhenStarting").value;
   },
   
   readShowWhenStartingPref: function ()
@@ -174,6 +173,5 @@ var gDownloadsPane = {
     document.documentElement.openWindow("Preferences:DownloadActions",
                                         "chrome://messenger/content/preferences/downloadactions.xul",
                                         "", null);
-  },
+  }
 };
-

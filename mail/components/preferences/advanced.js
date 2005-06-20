@@ -53,8 +53,8 @@ var gAdvancedPane = {
   {
     if (this.mInitialized)
     {
-      var preference = document.getElementById("mail.preferences.advanced.selectedTabIndex");
-      preference.valueFromPreferences = document.getElementById("advancedPrefs").selectedIndex;
+      document.getElementById("mail.preferences.advanced.selectedTabIndex")
+              .valueFromPreferences = document.getElementById("advancedPrefs").selectedIndex;
     }
   },
 
@@ -101,9 +101,8 @@ var gAdvancedPane = {
   updateMarkAsReadTextbox: function(aFocusTextBox) 
   {
     var textbox = document.getElementById('markAsReadDelay'); 
-    var checkbox = document.getElementById('markAsRead');
-    textbox.disabled = !checkbox.checked;
+    textbox.disabled = !document.getElementById('markAsRead').checked;
     if (!textbox.disabled && aFocusTextBox)
         textbox.focus();
-  },
+  }
 };
