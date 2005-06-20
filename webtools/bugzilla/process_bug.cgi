@@ -1444,9 +1444,8 @@ foreach my $id (@idlist) {
             while (MoreSQLData()) {
                 push(@list, FetchOneColumn());
             }
-            SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp, keywords = " .
-                    SqlQuote(join(', ', @list)) .
-                    " WHERE bug_id = $id");
+            $dbh->do("UPDATE bugs SET keywords = ? WHERE bug_id = ?",
+                     undef, join(', ', @list), $id);
         }
     }
     my $query = "$basequery\nwhere bug_id = $id";
@@ -1735,7 +1734,7 @@ foreach my $id (@idlist) {
     $i = 0;
     foreach my $col (@::log_columns) {
         # Consider NULL db entries to be equivalent to the empty string
-        $newvalues[$i] ||= '';
+        $newvalues[$i] = defined($newvalues[$i]) ? $newvalues[$i] : '';
         # Convert the deadline to the YYYY-MM-DD format.
         if ($col eq 'deadline') {
             $newvalues[$i] = format_time($newvalues[$i], "%Y-%m-%d");
