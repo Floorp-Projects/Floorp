@@ -2362,6 +2362,7 @@
 				3F44AD7105BDFB9F00CB4B08,
 				3F44AD7705BDFB9F00CB4B08,
 				3F44AD7A05BDFB9F00CB4B08,
+				4D5881750864B276001305B3,
 				3F44AD7C05BDFB9F00CB4B08,
 			);
 			buildRules = (
@@ -3522,7 +3523,7 @@
 			isa = PBXShellScriptBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Rez the version resource resources, which are required for the Directory plugin to work.\n/Developer/Tools/Rez resources/application/ChimeraVersion.r -o build/Camino.app/Contents/Resources/Camino.rsrc -useDF";
+			shellScript = "# Rez the version resource resources, which are required for the Directory plugin to work.\n/Developer/Tools/Rez resources/application/ChimeraVersion.r -o $TARGET_BUILD_DIR/Camino.app/Contents/Resources/Camino.rsrc -useDF";
 		};
 		3F44AC8205BDFB9E00CB4B08 = {
 			buildActionMask = 2147483647;
@@ -6221,6 +6222,7 @@
 				3F44AF8605BDFBA000CB4B08,
 				3F44AF9005BDFBA000CB4B08,
 				3F44AF9205BDFBA000CB4B08,
+				4D5881790864B297001305B3,
 				3F44AF9405BDFBA000CB4B08,
 			);
 			buildRules = (
@@ -7387,7 +7389,7 @@
 			isa = PBXShellScriptBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Rez the version resource resources, which are required for the Directory plugin to work.\n/Developer/Tools/Rez resources/application/ChimeraVersion.r -o build/Camino.app/Contents/Resources/Camino.rsrc -useDF";
+			shellScript = "# Rez the version resource resources, which are required for the Directory plugin to work.\n/Developer/Tools/Rez resources/application/ChimeraVersion.r -o $TARGET_BUILD_DIR/Camino.app/Contents/Resources/Camino.rsrc -useDF";
 		};
 		3F44AEBB05BDFBA000CB4B08 = {
 			buildActionMask = 2147483647;
@@ -10963,6 +10965,48 @@
 //4A2
 //4A3
 //4A4
+//4D0
+//4D1
+//4D2
+//4D3
+//4D4
+		4D5881750864B276001305B3 = {
+			buildActionMask = 2147483647;
+			dstPath = plugins;
+			dstSubfolderSpec = 6;
+			files = (
+				4D5881770864B28D001305B3,
+			);
+			isa = PBXCopyFilesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4D5881770864B28D001305B3 = {
+			fileRef = F56610BC0394775201A9666E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D5881790864B297001305B3 = {
+			buildActionMask = 2147483647;
+			dstPath = plugins;
+			dstSubfolderSpec = 6;
+			files = (
+				4D58817B0864B2AE001305B3,
+			);
+			isa = PBXCopyFilesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4D58817B0864B2AE001305B3 = {
+			fileRef = F56610BC0394775201A9666E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//4D0
+//4D1
+//4D2
+//4D3
+//4D4
 //790
 //791
 //792
@@ -13956,7 +14000,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = wrapper.cfbundle;
 			name = "Default Plugin.plugin";
-			path = "../modules/plugin/samples/default/mac/build/Default Plugin.plugin";
+			path = "../dist/bin/plugins/Default Plugin.plugin";
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
