@@ -230,6 +230,7 @@ public:
   NS_IMETHOD Display(nsIView *aView, nscoord aX, nscoord aY, const nsRect& aClipRect);
 
   NS_IMETHOD RenderOffscreen(nsIView* aView, nsRect aRect, PRBool aUntrusted,
+                             PRBool aIgnoreViewportScrolling,
                              nscolor aBackgroundColor,
                              nsIRenderingContext** aRenderedContext);
 
@@ -292,7 +293,8 @@ private:
   void DefaultRefresh(nsView* aView, const nsRect* aRect);
   PRBool BuildRenderingDisplayList(nsIView* aRootView,
     const nsRegion& aRegion, nsVoidArray* aDisplayList, PLArenaPool &aPool,
-    PRBool aIgnoreCoveringWidgets, PRBool aIgnoreOutsideClipping);
+    PRBool aIgnoreCoveringWidgets, PRBool aIgnoreOutsideClipping,
+    nsIView* aSuppressScrolling);
   void RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
                    const nsRegion& aRegion, nsIDrawingSurface* aRCSurface,
                    const nsVoidArray& aDisplayList);
@@ -313,8 +315,10 @@ private:
 
   void ReparentViews(DisplayZTreeNode* aNode, nsHashtable &);
   void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
-                        PRBool aCaptured, nsVoidArray* aDisplayList, PLArenaPool &aPool);
-  void BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured, PLArenaPool &aPool);
+                        PRBool aCaptured, nsIView* aSuppressScrolling,
+                        nsVoidArray* aDisplayList, PLArenaPool &aPool);
+  void BuildEventTargetList(nsVoidArray &aTargets, nsView* aView,
+                            nsGUIEvent* aEvent, PRBool aCaptured, PLArenaPool &aPool);
 
   PRBool CreateDisplayList(nsView *aView,
                            DisplayZTreeNode* &aResult,
@@ -322,6 +326,7 @@ private:
                            nsView *aRealView, const nsRect *aDamageRect,
                            nsView *aTopView, nscoord aX, nscoord aY,
                            PRBool aPaintFloats, PRBool aEventProcessing,
+                           nsIView* aSuppressClip,
                            nsHashtable&, PLArenaPool &aPool);
   PRBool AddToDisplayList(nsView *aView,
                           DisplayZTreeNode* &aParent, nsRect &aClipRect,
