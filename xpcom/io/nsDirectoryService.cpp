@@ -713,8 +713,8 @@ nsDirectoryService::Has(const char *prop, PRBool *_retval)
     *_retval = PR_FALSE;
     nsCOMPtr<nsIFile> value;
     nsresult rv = Get(prop, NS_GET_IID(nsIFile), getter_AddRefs(value));
-    if (NS_FAILED(rv)) 
-        return rv;
+    if (NS_FAILED(rv))
+        return NS_OK;
     
     if (value)
     {
