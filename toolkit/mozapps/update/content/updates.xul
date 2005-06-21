@@ -161,10 +161,28 @@
     </hbox>
   </wizardpage>
   
-  <wizardpage id="finished" pageid="finished" align="start"
+  <wizardpage id="finished" pageid="finished"
               label="&finished.title;" object="gFinishedPage"
               onpageshow="gFinishedPage.onPageShow();">
     <label>&finished.intro;</label>
+  </wizardpage>
+  
+  <wizardpage id="finishedBackground" pageid="finishedBackground"
+              label="&finishedBackground.title;" object="gFinishedPage"
+              onpageshow="gFinishedPage.onPageShowBackground();">
+    <label>&finishedBackground.intro;</label>
+    <separator/>
+    <hbox align="center">
+      <label>&finishedBackground.name;</label>
+      <label id="updateFinishedName" flex="1" crop="right"/>
+      <link id="finishedBackgroundLink">
+        <label>&details.link;</label>
+      </link>
+    </hbox>
+    <spacer flex="1"/>
+    <label>&finishedBackground.instruction1;</label>
+    <separator class="thin"/>
+    <label>&finishedBackground.instruction2;</label>
   </wizardpage>
   
 </wizard>

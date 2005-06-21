@@ -5,6 +5,10 @@ wizard[description=""] .wizard-header-description {
   display: none;
 }
 
+.wizard-button[dlgtype="finish"] {
+  font-weight: bold;
+}
+
 link {
   -moz-binding: url("chrome://mozapps/content/update/updates.xml#link");
   -moz-user-focus: normal;
@@ -88,7 +92,7 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
   margin-left: 5px;
 }
 
-#updateName {
+#updateName, #updateFinishedName {
   font-weight: bold;
   font-size: larger;
 }

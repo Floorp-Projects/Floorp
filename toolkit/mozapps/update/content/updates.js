@@ -89,7 +89,6 @@ var gUpdates = {
    */
   onWizardCancel: function() {
     var pageid = document.documentElement.currentPage.pageid;
-    LOG("MASTER CANCEL");
     if ("onWizardCancel" in this._pages[pageid])
       this._pages[pageid].onWizardCancel();
   },
@@ -127,6 +126,16 @@ var gUpdates = {
     document.documentElement.currentPage = this.startPage;
   },
   
+  /**
+   * Return the <wizardpage> object that should be displayed first.
+   *
+   * This is determined by how we were called by the update prompt:
+   *
+   * U'Prompt Method:     Arg0:         Update State: Src Event:
+   * showUpdateAvailable  nsIUpdate obj --            background
+   * showUpdateComplete   nsIUpdate obj pending       background
+   * checkForUpdates      null          --            foreground
+   */
   get startPage() {
     if (window.arguments) {
       var arg0 = window.arguments[0];
@@ -136,6 +145,8 @@ var gUpdates = {
         // their permission to install, and it's ready for download.
         this.update = arg0;
         this.sourceEvent = SRCEVT_BACKGROUND;
+        if (this.update.selectedPatch.state == STATE_PENDING)
+          return document.getElementById("finishedBackground");
         return document.getElementById("updatesfound");
       }
     }
@@ -291,6 +302,9 @@ var gUpdatesAvailablePage = {
       
       this._incompatibleItems = items;
     }
+    
+    var downloadNow = document.getElementById("downloadNow");
+    downloadNow.focus();
   },
   
   onInstallNow: function() {
@@ -664,6 +678,7 @@ var gDownloadingPage = {
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"].
         getService(Components.interfaces.nsIApplicationUpdateService);
+    LOG("REMOVE LISTENER");
     updates.removeDownloadListener(this);
     
     var um = 
@@ -818,12 +833,69 @@ var gFinishedPage = {
   },
   
   /**
+   * Called to initialize the Wizard Page. (Background Source Event)
+   */
+  onPageShowBackground: function() {
+    var finishedBackground = document.getElementById("finishedBackground");
+    finishedBackground.setAttribute("label", gUpdates.strings.getFormattedString(
+      "updateReadyToInstallHeader", [gUpdates.update.name]));
+    // XXXben - wizard should give us a way to set the page header.
+    document.documentElement._adjustWizardHeader();
+    var updateFinishedName = document.getElementById("updateFinishedName");
+    updateFinishedName.value = gUpdates.update.name;
+    
+    var link = document.getElementById("finishedBackgroundLink");
+    link.href = gUpdates.update.detailsURL;
+    
+    this.onPageShow();
+  },
+  
+  /**
    * Called when the wizard finishes, i.e. the "Restart Now" button is 
    * clicked. 
    */
   onWizardFinish: function() {
     // Do the restart
     LOG("gFinishedPage.onWizardFinish: Restarting Application...");
+    
+    // This process is *extremely* retarded. There should be some nice 
+    // integrated system for determining whether or not windows are allowed
+    // to close or not, and what happens when that happens. We need to 
+    // jump through all these hoops (duplicated from globalOverlay.js) to
+    // ensure that various window types (browser, downloads, etc) all 
+    // allow the app to shut down. 
+    // bsmedberg?     
+
+    // Notify all windows that an application quit has been requested.
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+    var cancelQuit = 
+        Components.classes["@mozilla.org/supports-PRBool;1"].
+        createInstance(Components.interfaces.nsISupportsPRBool);
+    os.notifyObservers(cancelQuit, "quit-application-requested", null);
+
+    // Something aborted the quit process. 
+    if (cancelQuit.data)
+      return;
+    
+    // Notify all windows that an application quit has been granted.
+    os.notifyObservers(null, "quit-application-granted", null);
+
+    // Enumerate all windows and call shutdown handlers
+    var wm =
+        Components.classes["@mozilla.org/appshell/window-mediator;1"].
+        getService(Components.interfaces.nsIWindowMediator);
+    var windows = wm.getEnumerator(null);
+    while (windows.hasMoreElements()) {
+      var win = windows.getNext();
+      if (("tryToClose" in win) && !win.tryToClose())
+        return;
+    }
+    
+    var appStartup = 
+        Components.classes["@mozilla.org/toolkit/app-startup;1"].
+        getService(Components.interfaces.nsIAppStartup);
+    appStartup.quit(appStartup.eAttemptQuit | appStartup.eRestart);
   },
   
   /**
@@ -839,4 +911,16 @@ var gFinishedPage = {
              message);
   },
 };
+
+/**
+ * Called as the application shuts down due to being quit from the File->Quit 
+ * menu item.
+ * XXXben this API is retarded.
+ */
+function tryToClose() {
+  var cp = document.documentElement.currentPage;
+  if (cp.pageid != "finished" && cp.pageid != "finishedBackground")
+    gUpdates.onWizardCancel();
+  return true;
+}
 

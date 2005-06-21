@@ -213,6 +213,15 @@ interface nsIUpdatePrompt : nsISupports
   void showUpdateAvailable(in nsIUpdate update);
 
   /**
+   * Show a message advising that an update has now been downloaded and that
+   * the user should restart their software should be restarted so that the
+   * update can be installed.
+   * @param   update
+   *          The update that was downloaded
+   */
+  void showUpdateComplete(in nsIUpdate update);
+
+  /**
    * Shows a list of all updates installed to date.
    */
   void showInstalledUpdates();
