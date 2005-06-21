@@ -62,9 +62,21 @@ static const char *sProgramPath;
 
 -(void)awakeFromNib
 {
-  [[progressBar window] center];
+  NSWindow *w = [progressBar window];
+  [w center];
+  
+  // localize strings, don't worry if it fails because nib has default text
+  char path[PATH_MAX];
+  snprintf(path, sizeof(path), "%s.ini", sProgramPath);
+  StringTable strings;
+  if (ReadStrings(path, &strings) == OK) {
+    [w setTitle:[NSString stringWithUTF8String:strings.title]];
+    [progressTextField setStringValue:[NSString stringWithUTF8String:strings.info]];
+  }
+  
   [progressBar setIndeterminate:NO];
   [progressBar setDoubleValue:0.0];
+  
   [[NSTimer scheduledTimerWithTimeInterval:TIMER_INTERVAL target:self
                                   selector:@selector(updateProgressUI:)
                                   userInfo:nil repeats:YES] retain];
@@ -73,8 +85,7 @@ static const char *sProgramPath;
 // called when the timer goes off
 -(void)updateProgressUI:(NSTimer *)aTimer
 {
-  if (sQuit)
-  {
+  if (sQuit) {
     [aTimer invalidate];
     [aTimer release];
     [[NSApplication sharedApplication] terminate:self];
@@ -85,6 +96,8 @@ static const char *sProgramPath;
   [progressBar setDoubleValue:(double)progress];
 }
 
+// leave this as returning a BOOL instead of NSApplicationTerminateReply
+// for backward compatibility
 - (BOOL)applicationShouldTerminate:(NSApplication *)sender
 {
   return sQuit;
