@@ -48,6 +48,11 @@ sub usage {
     exit(1);
 }
 
+# Force Perl to do unbuffered output
+# to avoid having Java and Perl output out of sync.
+$| = 1;
+
+# Global variables
 my $testdir;
 my $testrun = 0;
 my $testpass = 0;
