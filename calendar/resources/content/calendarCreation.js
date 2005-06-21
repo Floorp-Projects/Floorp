@@ -65,7 +65,7 @@ function doCreateCalendar()
     var uri;
     if (type == 'local') {
         provider = 'storage';
-        uri = 'moz-profile-calendar://';
+        uri = 'moz-profile-calendar://?id=2';
     } else {
         uri = document.getElementById("calendar-uri").value;
         var format = document.getElementById('calendar-format').selectedItem.value;
@@ -75,12 +75,26 @@ function doCreateCalendar()
             provider = 'caldav';
     }
         
+    var calManager = getCalendarManager();
+    var cals = calManager.getCalendars({});
+    do {
+        var already = cals.filter(function (c) { return c.uri.spec == uri; })
+        if (already.length) {
+            if (type != 'local') {
+                // signalError("Already have calendar at this URI.");
+                Components.reportError("Already have calendar with URI " + uri);
+                return false;
+            }
+            uri = uri.replace(/id=(\d+)/,
+                              function (s, id) { return "id=" + (Number(id) + 1); });
+        }
+    } while (already.length);
+
     dump(cal_name + "\n");
     dump(cal_color + "\n");
     dump(uri + "\n");
     dump(provider + "\n");
 
-    var calManager = getCalendarManager();
     try {
         var newCalendar = calManager.createCalendar(provider, makeURL(uri));
     } catch (ex) {
