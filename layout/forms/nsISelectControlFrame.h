@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -41,10 +42,10 @@
 #include "nsISupports.h"
 
 // IID for the nsISelectControlFrame class
-#define NS_ISELECTCONTROLFRAME_IID    \
-{ 0x62a3bc8e, 0x1312, 0x42f3,  \
-  { 0x96, 0x7c, 0x37, 0x0f, 0x16, 0x9a, 0xd3, 0xbf } }
-// 62a3bc8e-1312-42f3-967c-370f169ad3bf
+// 264dc2f5-1cca-47dd-9ebc-699c430be00a
+#define NS_ISELECTCONTROLFRAME_IID \
+{ 0x264dc2f5, 0x1cca, 0x47dd, \
+  { 0x9e, 0xbc, 0x69, 0x9c, 0x43, 0x0b, 0xe0, 0x0a } }
 
 class nsIDOMHTMLOptionElement;
 
@@ -85,13 +86,6 @@ public:
   NS_IMETHOD OnOptionSelected(nsPresContext* aPresContext,
                               PRInt32 aIndex,
                               PRBool aSelected) = 0;
-
-  /**
-   * Notify the frame when an option's text changes
-   * (We don't pass in the index because it would be expensive for
-   * the option to figure that out)
-   */
-  NS_IMETHOD OnOptionTextChanged(nsIDOMHTMLOptionElement* option) = 0;
 
   /**
    * For the content model to tell if there's a dummy frame or not

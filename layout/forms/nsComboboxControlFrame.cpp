@@ -99,17 +99,13 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 class RedisplayTextEvent : public PLEvent
 {
 public:
-  RedisplayTextEvent(nsComboboxControlFrame* aComboboxControlFrame,
-                     const nsAString&        aTextToDisplay);
+  RedisplayTextEvent(nsComboboxControlFrame* aComboboxControlFrame);
 
   void HandleEvent()
   {
     NS_STATIC_CAST(nsComboboxControlFrame*, owner) ->
-      HandleRedisplayTextEvent(mTextToDisplay);
+      HandleRedisplayTextEvent();
   }
-
-private:
-  nsString mTextToDisplay;
 };
 
 PR_STATIC_CALLBACK(void*)
@@ -132,9 +128,7 @@ DestroyRedisplayTextPLEvent(PLEvent* aEvent)
   delete event;
 }
 
-RedisplayTextEvent::RedisplayTextEvent(nsComboboxControlFrame* aComboboxControlFrame,
-                                       const nsAString&        aTextToDisplay)
-  : mTextToDisplay(aTextToDisplay)
+RedisplayTextEvent::RedisplayTextEvent(nsComboboxControlFrame* aComboboxControlFrame)
 {
   PL_InitEvent(this, aComboboxControlFrame,
                ::HandleRedisplayTextPLEvent,
@@ -452,23 +446,6 @@ nsComboboxControlFrame::Init(nsPresContext*  aPresContext,
   
   return nsAreaFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 }
-
-// Initialize the text string in the combobox using either the current
-// selection in the list box or the first item item in the list box.
-void 
-nsComboboxControlFrame::InitTextStr()
-{
-  nsAutoString textToDisplay;
-  PRInt32 selectedIndex;
-  mListControlFrame->GetSelectedIndex(&selectedIndex);
-  if (selectedIndex != -1) {
-    mListControlFrame->GetOptionText(selectedIndex, textToDisplay);
-  }
-
-  mDisplayedIndex = selectedIndex;
-  ActuallyDisplayText(textToDisplay, PR_FALSE);
-}
-
 
 //--------------------------------------------------------------
 void 
@@ -1238,6 +1215,17 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
     return nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
 
+  // Make sure the displayed text is the same as the selected option, bug 297389.
+  PRInt32 selectedIndex;
+  nsAutoString selectedOptionText;
+  mListControlFrame->GetSelectedIndex(&selectedIndex);
+  if (selectedIndex != -1) {
+    mListControlFrame->GetOptionText(selectedIndex, selectedOptionText);
+  }
+  if (mDisplayedOptionText != selectedOptionText) {
+    RedisplayText(selectedIndex);
+  }
+
   // We should cache this instead getting it everytime
   // the default size of the of scrollbar
   // that will be the default width of the dropdown button
@@ -1783,29 +1771,27 @@ nsresult
 nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
 {
   // Get the text to display
-  nsAutoString textToDisplay;
   if (aIndex != -1) {
-    mListControlFrame->GetOptionText(aIndex, textToDisplay);
+    mListControlFrame->GetOptionText(aIndex, mDisplayedOptionText);
+  } else {
+    mDisplayedOptionText.Truncate();
   }
   mDisplayedIndex = aIndex;
 
-#ifdef DO_REFLOW_DEBUG
-  char * str =  ToNewCString(textToDisplay);
-  REFLOW_DEBUG_MSG2("RedisplayText %s\n", str);
-  delete [] str;
-#endif
+  REFLOW_DEBUG_MSG2("RedisplayText \"%s\"\n",
+                    NS_LossyConvertUCS2toASCII(mDisplayedOptionText).get());
 
   // Send reflow command because the new text maybe larger
   nsresult rv = NS_OK;
   if (mDisplayContent && mEventQueueService) {
-    // Don't call ActuallyDisplayText(aText,PR_TRUE) directly here since that
+    // Don't call ActuallyDisplayText(PR_TRUE) directly here since that
     // could cause recursive frame construction. See bug 283117 and the comment in
     // HandleRedisplayTextEvent() below.
     nsCOMPtr<nsIEventQueue> eventQueue;
     rv = mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
                                                   getter_AddRefs(eventQueue));
     if (eventQueue) {
-      RedisplayTextEvent* event = new RedisplayTextEvent(this, textToDisplay);
+      RedisplayTextEvent* event = new RedisplayTextEvent(this);
       if (event) {
         // Revoke outstanding events to avoid out-of-order events which could mean
         // displaying the wrong text.
@@ -1830,7 +1816,7 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
 }
 
 void
-nsComboboxControlFrame::HandleRedisplayTextEvent(const nsAString& aText)
+nsComboboxControlFrame::HandleRedisplayTextEvent()
 {
   // First, make sure that the content model is up to date and we've
   // constructed the frames for all our content in the right places.
@@ -1848,26 +1834,24 @@ nsComboboxControlFrame::HandleRedisplayTextEvent(const nsAString& aText)
   mInRedisplayText = PR_TRUE;
   mRedisplayTextEventPosted = PR_FALSE;
 
-  ActuallyDisplayText(aText, PR_TRUE);
+  ActuallyDisplayText(PR_TRUE);
   mDisplayFrame->AddStateBits(NS_FRAME_IS_DIRTY);
   ReflowDirtyChild(GetPresContext()->PresShell(), mDisplayFrame);
 
   mInRedisplayText = PR_FALSE;
 }
 
-nsresult
-nsComboboxControlFrame::ActuallyDisplayText(const nsAString& aText, PRBool aNotify)
+void
+nsComboboxControlFrame::ActuallyDisplayText(PRBool aNotify)
 {
-  if (aText.IsEmpty()) {
+  if (mDisplayedOptionText.IsEmpty()) {
     // Have to use a non-breaking space for line-height calculations
     // to be right
     static const PRUnichar space = 0xA0;
     mDisplayContent->SetText(&space, 1, aNotify);
   } else {
-    mDisplayContent->SetText(aText, aNotify);
+    mDisplayContent->SetText(mDisplayedOptionText, aNotify);
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2112,7 +2096,9 @@ nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   if (labelContent) {
     // set the value of the text node
     mDisplayContent.swap(labelContent);
-    mDisplayContent->SetText(NS_LITERAL_STRING("X"), PR_TRUE);
+    mDisplayedIndex = -1;
+    mDisplayedOptionText.Truncate();
+    ActuallyDisplayText(PR_FALSE);
 
     nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
 
@@ -2286,7 +2272,6 @@ nsComboboxControlFrame::SetInitialChildList(nsPresContext* aPresContext,
     mPopupFrames.SetFrames(aChildList);
   } else {
     rv = nsAreaFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    InitTextStr();
 
     for (nsIFrame * child = aChildList; child;
          child = child->GetNextSibling()) {
@@ -2498,22 +2483,6 @@ void nsComboboxControlFrame::FireValueChangeEvent()
                                                        &defaultActionEnabled);
   }
 }
-
-NS_IMETHODIMP
-nsComboboxControlFrame::OnOptionTextChanged(nsIDOMHTMLOptionElement* option)
-{
-  RedisplaySelectedText();
-  if (mDroppedDown) {
-    nsCOMPtr<nsISelectControlFrame> selectFrame
-                                     = do_QueryInterface(mListControlFrame);
-    if (selectFrame) {
-      selectFrame->OnOptionTextChanged(option);
-    }
-  }
-
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsComboboxControlFrame::OnContentReset()

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -110,18 +111,6 @@ public:
   NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify);
 
   // nsIContent
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
-  }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual PRInt32 IntrinsicState() const;
 
 protected:
@@ -138,11 +127,6 @@ protected:
    * @param aSelectElement the select element (out param)
    */
   void GetSelect(nsIDOMHTMLSelectElement **aSelectElement) const;
-
-  /**
-   * Notify the frame that the option text or value or label has changed.
-   */
-  void NotifyTextChanged();
 
   PRPackedBool mIsInitialized;
   PRPackedBool mIsSelected;
@@ -407,9 +391,6 @@ nsHTMLOptionElement::SetText(const nsAString& aText)
       rv = domText->SetData(aText);
 
       if (NS_SUCCEEDED(rv)) {
-        // If we used an existing node, the notification will not happen (the
-        // notification typically happens in AppendChildTo).
-        NotifyTextChanged();
         usedExistingTextNode = PR_TRUE;
       }
 
@@ -427,70 +408,6 @@ nsHTMLOptionElement::SetText(const nsAString& aText)
     rv = AppendChildTo(text, PR_TRUE);
   }
 
-  return rv;
-}
-
-void
-nsHTMLOptionElement::NotifyTextChanged()
-{
-  // No need to flush here, if there's no frame yet we don't need to
-  // force it to be created just to update the selection in it.
-  nsIFormControlFrame* fcFrame = GetSelectFrame();
-
-  if (fcFrame) {
-    nsISelectControlFrame* selectFrame = nsnull;
-
-    CallQueryInterface(fcFrame, &selectFrame);
-
-    if (selectFrame) {
-      selectFrame->OnOptionTextChanged(this);
-    }
-  }
-}
-
-nsresult
-nsHTMLOptionElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                             nsIAtom* aPrefix, const nsAString& aValue,
-                             PRBool aNotify)
-{
-  nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
-                                              aValue, aNotify);
-  if (NS_SUCCEEDED(rv) && aNotify && aName == nsHTMLAtoms::label &&
-      aNameSpaceID == kNameSpaceID_None) {
-    // XXX Why does this only happen to the combobox?  and what about
-    // when the text gets set and label is blank?
-    NotifyTextChanged();
-  }
-
-  return rv;
-}
-
-//
-// Override nsIContent children changing methods so we can detect when our text
-// is changing
-//
-nsresult
-nsHTMLOptionElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                   PRBool aNotify)
-{
-  nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
-  NotifyTextChanged();
-  return rv;
-}
-
-nsresult
-nsHTMLOptionElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-  nsresult rv = nsGenericHTMLElement::AppendChildTo(aKid, aNotify);
-  NotifyTextChanged();
-  return rv;
-}
-
-nsresult
-nsHTMLOptionElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
-{
-  nsresult rv = nsGenericHTMLElement::RemoveChildAt(aIndex, aNotify);
-  NotifyTextChanged();
   return rv;
 }
 
