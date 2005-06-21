@@ -60,6 +60,7 @@
 #include "nsIDOMSerializer.h"
 #include "nsIContent.h"
 #include "nsIAttribute.h"
+#include "nsXFormsAtoms.h"
 
 #include "nsIXFormsContextControl.h"
 #include "nsIDOMDocumentEvent.h"
@@ -1298,5 +1299,15 @@ nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aPara
   if (NS_SUCCEEDED(rv)) {
     consoleService->LogMessage(errorObject);
   }
+}
+
+/* static */ PRBool
+nsXFormsUtils::IsDocumentReadyForBind(nsIDOMDocument *aDocument)
+{
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
+
+  nsIDocument *test = NS_STATIC_CAST(nsIDocument *,
+                        doc->GetProperty(nsXFormsAtoms::readyForBindProperty));
+  return test ? PR_TRUE : PR_FALSE;
 }
 

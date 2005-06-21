@@ -72,12 +72,13 @@ public:
   NS_IMETHOD BeginAddingChildren();
   NS_IMETHOD DoneAddingChildren();
 
+  // nsIXFormsControlBase overrides
+  NS_IMETHOD Refresh();
+
   // nsIXFormsSelectChild
   NS_DECL_NSIXFORMSSELECTCHILD
 
 private:
-  NS_HIDDEN_(void) Refresh();
-
   nsIDOMElement *mElement;
   nsCOMPtr<nsIDOMHTMLOptGroupElement> mOptGroup;
 };
@@ -318,15 +319,14 @@ nsXFormsChoicesElement::SetContext(nsIDOMElement *aContextNode,
 
 // internal methods
 
-void
+NS_IMETHODIMP
 nsXFormsChoicesElement::Refresh()
 {
   // Remove any existing first child that is not an option, to clear out
   // any existing label.
   nsCOMPtr<nsIDOMNode> firstChild, child2;
   nsresult rv = mOptGroup->GetFirstChild(getter_AddRefs(firstChild));
-  if (NS_FAILED(rv))
-    return;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString value;
 
@@ -343,8 +343,7 @@ nsXFormsChoicesElement::Refresh()
 
   nsCOMPtr<nsIDOMNodeList> children;
   rv = mElement->GetChildNodes(getter_AddRefs(children));
-  if (NS_FAILED(rv))
-    return;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 childCount;
   children->GetLength(&childCount);
@@ -360,6 +359,8 @@ nsXFormsChoicesElement::Refresh()
       mOptGroup->InsertBefore(child2, firstChild, getter_AddRefs(child));
     }
   }
+
+  return NS_OK;
 }
 
 NS_HIDDEN_(nsresult)

@@ -16,11 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,55 +34,20 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include "nsISupports.idl"
 
-#include "nsIXFormsContextControl.idl"
-
-interface nsIDOMNode;
-interface nsIDOMElement;
-%{C++
-  #include "nsCOMArray.h"
-%}
-
-[ptr] native nsCOMArrayPtr(nsCOMArray<nsIDOMNode>);
-
-/**
- * Interface implemented by all XForms form control classes.
- */
-[uuid(8377c845-5d55-4eee-9a76-0f86751dcbc8)]
-interface nsIXFormsControl : nsIXFormsContextControl
+[uuid(b8540fca-a671-4a1d-8471-6e89820f0848)]
+interface nsIXFormsControlBase : nsISupports
 {
   /**
-   * Tries to move focus to form control and returns true if succeeded.
+   * This tells the form control to update its node binding based on the
+   * current instance data.
    */
-  boolean tryFocus();
+  void bind();
 
   /**
-   * The instance node that the control is bound to.
+   * This tells the form control to update its state based on the current
+   * instance data.
    */
-  readonly attribute nsIDOMNode boundNode;
-
-  /**
-   * The instance nodes that the control depend on.
-   *
-   * In other words, all the instance nodes that could influence which node
-   * the control is bound to (mBoundNode). For example:
-   * If a node has @ref="/share[@owner = /me]", it depends on all /share
-   * nodes, all @owned attributes on /share nodes, and all /me nodes.
-   */
-  readonly attribute nsCOMArrayPtr dependencies;
-
-  /**
-   * Get the element that should receive events for the control.
-   *
-   * @todo This should not be necessary, we should send directly to the
-   * control (XXX)
-   */
-  readonly attribute nsIDOMElement element;
-
-  /** According to sec 4.1 in the spec, only certain controls are allowed to
-   *  be targets of the interaction and notification events.  The controls
-   *  that inherit from nsXFormsControlStub that SHOULDN'T get these events
-   *  need to override IsEventTarget() and return PR_FALSE
-   */
-  boolean isEventTarget();
+  void refresh();
 };

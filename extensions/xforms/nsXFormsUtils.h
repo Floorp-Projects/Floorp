@@ -411,6 +411,14 @@ public:
       nsXFormsUtils::ReportError(aMessageName, nsnull, 0, aElement, aElement, aErrorFlag);
     }
 
+  /**
+   * Returns whether the aDocument is ready to bind data (all instance documents
+   * loaded).
+   *
+   * @param aDocument      Document to check
+   */
+  static NS_HIDDEN_(PRBool) IsDocumentReadyForBind(nsIDOMDocument *aDocument);
+
 };
 
 #endif

@@ -42,6 +42,7 @@
 #include "nsIXTFGenericElement.h"
 #include "nsIXTFXMLVisual.h"
 #include "nsIXTFBindableElement.h"
+#include "nsIXFormsControlBase.h"
 
 /**
  * An implementation of a generic non-UI XForms element.

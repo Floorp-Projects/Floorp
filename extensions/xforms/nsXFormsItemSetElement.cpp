@@ -44,11 +44,16 @@
 #include "nsIXTFGenericElementWrapper.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDocument.h"
 #include "nsXFormsUtils.h"
+#include "nsXFormsModelElement.h"
 #include "nsArray.h"
+#include "nsIXFormsControlBase.h"
+#include "nsIXFormsControl.h"
 
 class nsXFormsItemSetElement : public nsXFormsStubElement,
-                               public nsIXFormsSelectChild
+                               public nsIXFormsSelectChild,
+                               public nsIXFormsControlBase
 {
 public:
   nsXFormsItemSetElement() : mElement(nsnull) {}
@@ -66,19 +71,22 @@ public:
   NS_IMETHOD BeginAddingChildren();
   NS_IMETHOD DoneAddingChildren();
 
+  // nsIXFormsControlBase overrides
+  NS_IMETHOD Bind();
+  NS_IMETHOD Refresh();
+
   // nsIXFormsSelectChild
   NS_DECL_NSIXFORMSSELECTCHILD
 
 private:
-  NS_HIDDEN_(void) Refresh();
-
   nsIDOMElement *mElement;
   nsCOMArray<nsIXFormsSelectChild> mItems;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsItemSetElement,
+NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsItemSetElement,
                              nsXFormsStubElement,
-                             nsIXFormsSelectChild)
+                             nsIXFormsSelectChild,
+                             nsIXFormsControlBase)
 
 NS_IMETHODIMP
 nsXFormsItemSetElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
@@ -226,15 +234,29 @@ nsXFormsItemSetElement::SetContext(nsIDOMElement *aContextNode,
 
 // internal methods
 
-void
+NS_IMETHODIMP
+nsXFormsItemSetElement::Bind()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsItemSetElement::Refresh()
 {
   mItems.Clear();
-
   // We need to create item elements for each element referenced by the
   // nodeset.  Each of these items will create an anonymous HTML option element
   // which will return from GetAnonymousNodes.  We then clone our template
   // content and insert the cloned content as children of the HTML option.
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+
+  if (!nsXFormsUtils::IsDocumentReadyForBind(domDoc)) {
+    // not ready to bind yet, defer
+    nsXFormsModelElement::DeferElementBind(domDoc, this);
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIModelElementPrivate> model;
   nsCOMPtr<nsIDOMXPathResult> result;
@@ -245,8 +267,9 @@ nsXFormsItemSetElement::Refresh()
                                      nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
                                      getter_AddRefs(model),
                                      getter_AddRefs(result));
+
   if (!result)
-    return;
+    return NS_OK;
 
   nsCOMPtr<nsIDOMNode> node, templateNode, cloneNode;
   nsCOMPtr<nsIDOMElement> itemNode, itemWrapperNode;
@@ -259,7 +282,7 @@ nsXFormsItemSetElement::Refresh()
   nsCOMPtr<nsIDOMDocument> document;
   mElement->GetOwnerDocument(getter_AddRefs(document));
   if (!document)
-    return;
+    return NS_OK;
 
   PRUint32 nodeCount;
   result->GetSnapshotLength(&nodeCount);
@@ -273,7 +296,7 @@ nsXFormsItemSetElement::Refresh()
                               getter_AddRefs(itemNode));
 
     if (!itemNode)
-      return;
+      return NS_OK;
 
     nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(model);
     nsAutoString modelID;
@@ -296,6 +319,19 @@ nsXFormsItemSetElement::Refresh()
 
     mItems.AppendObject(item);
   }
+
+  // refresh parent control, since we are being defered
+  nsCOMPtr<nsIDOMNode> parentNode;
+  mElement->GetParentNode(getter_AddRefs(parentNode));
+  if (parentNode) {
+
+    nsCOMPtr<nsIXFormsControlBase> stub = do_QueryInterface(parentNode);
+    if (stub) {
+      stub->Refresh();
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_HIDDEN_(nsresult)

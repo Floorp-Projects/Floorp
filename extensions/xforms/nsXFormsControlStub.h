@@ -56,6 +56,7 @@
 #include "nsXFormsUtils.h"
 #include "nsIXTFXMLVisualWrapper.h"
 #include "nsIXTFBindableElementWrapper.h"
+#include "nsIXFormsControlBase.h"
 
 class nsIDOMEvent;
 class nsIDOMXPathResult;
@@ -240,6 +241,7 @@ class nsXFormsControlStub : public nsXFormsControlStubBase,
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
+
   // nsIXTFXMLVisual overrides
   /** This sets the notification mask and initializes mElement */
   NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
@@ -289,7 +291,12 @@ public:
   {
     return nsXFormsControlStubBase::AttributeRemoved(aName);
   }
-  
+
+  NS_IMETHOD Bind()
+  {
+    return nsXFormsControlStubBase::Bind();
+  }
+
   /** Constructor */
   nsXFormsControlStub() : nsXFormsControlStubBase() {};
 };

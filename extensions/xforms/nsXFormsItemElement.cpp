@@ -83,11 +83,13 @@ public:
   NS_IMETHOD BeginAddingChildren();
   NS_IMETHOD DoneAddingChildren();
 
+  // nsIXFormsControlBase overrides
+  NS_IMETHOD Refresh();
+
   // nsIXFormsSelectChild
   NS_DECL_NSIXFORMSSELECTCHILD
 
 private:
-  NS_HIDDEN_(void) Refresh();
   NS_HIDDEN_(nsresult) GetValue(nsString &aValue);
 
   nsIDOMElement *mElement;
@@ -325,7 +327,7 @@ nsXFormsItemElement::GetValue(nsString &aValue)
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsXFormsItemElement::Refresh()
 {
   // Clear out all of the existing option text
@@ -338,8 +340,7 @@ nsXFormsItemElement::Refresh()
 
   nsCOMPtr<nsIDOMNodeList> children;
   nsresult rv = mElement->GetChildNodes(getter_AddRefs(children));
-  if (NS_FAILED(rv))
-    return;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 childCount;
   children->GetLength(&childCount);
@@ -377,6 +378,8 @@ nsXFormsItemElement::Refresh()
 
   nsCOMPtr<nsIDOMNode> childReturn;
   mOption->AppendChild(container, getter_AddRefs(childReturn));
+
+  return NS_OK;
 }
 
 NS_HIDDEN_(nsresult)

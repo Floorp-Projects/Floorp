@@ -70,7 +70,6 @@
 #include "nsXFormsUtils.h"
 #include "nsXFormsSchemaValidator.h"
 #include "nsIAttribute.h"
-
 #include "nsISchemaLoader.h"
 #include "nsISchema.h"
 #include "nsAutoPtr.h"
@@ -1565,7 +1564,7 @@ DeleteBindList(void    *aObject,
 
 /* static */ nsresult
 nsXFormsModelElement::DeferElementBind(nsIDOMDocument *aDoc, 
-                                       nsIXFormsControl *aControl)
+                                       nsIXFormsControlBase *aControl)
 {
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
 
@@ -1573,12 +1572,12 @@ nsXFormsModelElement::DeferElementBind(nsIDOMDocument *aDoc,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMArray<nsIXFormsControl> *deferredBindList =
-      NS_STATIC_CAST(nsCOMArray<nsIXFormsControl> *,
+  nsCOMArray<nsIXFormsControlBase> *deferredBindList =
+      NS_STATIC_CAST(nsCOMArray<nsIXFormsControlBase> *,
                     doc->GetProperty(nsXFormsAtoms::deferredBindListProperty));
 
   if (!deferredBindList) {
-    deferredBindList = new nsCOMArray<nsIXFormsControl>(16);
+    deferredBindList = new nsCOMArray<nsIXFormsControlBase>(16);
     NS_ENSURE_TRUE(deferredBindList, NS_ERROR_OUT_OF_MEMORY);
 
     doc->SetProperty(nsXFormsAtoms::deferredBindListProperty, deferredBindList,
@@ -1605,16 +1604,16 @@ nsXFormsModelElement::ProcessDeferredBinds(nsIDOMDocument *aDoc)
 
   doc->SetProperty(nsXFormsAtoms::readyForBindProperty, doc);
 
-  nsCOMArray<nsIXFormsControl> *deferredBindList =
-      NS_STATIC_CAST(nsCOMArray<nsIXFormsControl> *,
+  nsCOMArray<nsIXFormsControlBase> *deferredBindList =
+      NS_STATIC_CAST(nsCOMArray<nsIXFormsControlBase> *,
                     doc->GetProperty(nsXFormsAtoms::deferredBindListProperty));
 
   if (deferredBindList) {
     for (int i = 0; i < deferredBindList->Count(); ++i) {
-      nsIXFormsControl *control = deferredBindList->ObjectAt(i);
-      if (control) {
-        control->Bind();
-        control->Refresh();
+      nsIXFormsControlBase *base = deferredBindList->ObjectAt(i);
+      if (base) {
+        base->Bind();
+        base->Refresh();
       }
     }
 

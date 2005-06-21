@@ -94,6 +94,12 @@ public:
   NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled);
   NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
 
+  // nsIXFormsControlBase overrides
+  NS_IMETHOD Bind() {
+    // dummy method, so does nothing
+    return NS_OK;
+  };
+
   // Called after nsXFormsAtoms is registered
   static NS_HIDDEN_(void) Startup();
 
@@ -106,7 +112,7 @@ public:
    * @param aControl          XForms control waiting to be bound
    */
   static NS_HIDDEN_(nsresult) DeferElementBind(nsIDOMDocument    *aDoc,
-                                               nsIXFormsControl  *aControl);
+                                               nsIXFormsControlBase  *aControl);
 
 private:
 

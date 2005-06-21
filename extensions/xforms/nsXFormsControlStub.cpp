@@ -207,13 +207,8 @@ nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAtt
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  if (!doc) {
-    return NS_OK;
-  }
-  nsIDocument *test = NS_STATIC_CAST(nsIDocument *,
-                        doc->GetProperty(nsXFormsAtoms::readyForBindProperty));
-  if (!test) {
+
+  if (!nsXFormsUtils::IsDocumentReadyForBind(domDoc)) {
     nsXFormsModelElement::DeferElementBind(domDoc, this);
     return NS_OK;
   }
@@ -630,10 +625,11 @@ nsXFormsControlStubBase::MaybeRemoveFromModel(nsIAtom         *aName,
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsControlStub,
+NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsControlStub,
                              nsXFormsXMLVisualStub,
                              nsIXFormsContextControl,
-                             nsIXFormsControl)
+                             nsIXFormsControl,
+                             nsIXFormsControlBase)
 
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsBindableControlStub,
