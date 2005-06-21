@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Makoto Kato  <m_kato@ga2.so-net.ne.jp>
  *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -128,10 +129,6 @@
 
 #if defined(DEBUG_rods) || defined(DEBUG_bryner)
 //#define DEBUG_DOCSHELL_FOCUS
-#endif
-
-#ifdef DEBUG_DOCSHELL_FOCUS
-static char* gDocTypeNames[] = {"eChrome", "eGenericContent", "eFrameSet", "eFrame", "eIFrame"};
 #endif
 
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
@@ -3038,7 +3035,7 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   printf("DS %p  Type %s  Cnt %d  Doc %p  DW %p  EM %p\n",
     parentAsDocShell.get(),
     type==nsIDocShellTreeItem::typeChrome?"Chrome":"Content",
-    childWebshellCount, doc.get(), domwin.get(),
+    childWebshellCount, doc, domwin.get(),
     presContext->EventStateManager());
 
   if (childWebshellCount > 0) {
@@ -3234,7 +3231,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
         // ChangeFocusWith failed to move focus to nextFocus because a blur handler
         // made it unfocusable. (bug #118685)
         // Try again unless it's from the same point, bug 232368.
-        if (oldFocus != aStart) {
+        if (oldFocus != aStart && oldFocus->GetDocument()) {
           mCurrentTarget = nsnull;
           return ShiftFocusInternal(aForward, oldFocus);
         } else {
