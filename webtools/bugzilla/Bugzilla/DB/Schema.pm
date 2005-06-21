@@ -469,7 +469,8 @@ use constant ABSTRACT_SCHEMA => {
         FIELDS => [
             product_id => {TYPE => 'INT2', NOTNULL => 1},
             value      => {TYPE => 'varchar(20)', NOTNULL => 1},
-            sortkey    => {TYPE => 'INT2', NOTNULL => 1},
+            sortkey    => {TYPE => 'INT2', NOTNULL => 1,
+                           DEFAULT => 0},
         ],
         INDEXES => [
             milestones_product_id_idx => {FIELDS => [qw(product_id value)],

@@ -3960,6 +3960,11 @@ $dbh->bz_alter_column('versions', 'value',
 $dbh->bz_add_index('versions', 'versions_product_id_idx',
                    {TYPE => 'UNIQUE', FIELDS => [qw(product_id value)]});
 
+# Milestone sortkeys get a default just like all other sortkeys.
+if (!exists $dbh->bz_column_info('milestones', 'sortkey')->{DEFAULT}) {
+    $dbh->bz_alter_column('milestones', 'sortkey', 
+                          {TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0});
+}
 
 
 # If you had to change the --TABLE-- definition in any way, then add your
