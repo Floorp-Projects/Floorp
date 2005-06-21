@@ -1341,6 +1341,7 @@ NS_IMETHODIMP nsMessenger::DeleteFolders(nsIRDFCompositeDataSource *db,
 
 	parentArray->AppendElement(parentResource);
 	deletedArray->AppendElement(deletedFolderResource);
+        deletedArray->AppendElement(mMsgWindow);
 
 	rv = DoCommand(db, NS_LITERAL_CSTRING(NC_RDF_DELETE), parentArray, deletedArray);
 

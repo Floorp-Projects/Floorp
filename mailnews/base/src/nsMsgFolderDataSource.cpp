@@ -2090,6 +2090,7 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
       folderToDelete->GetFlags(&folderFlags);
       if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL)
       {
+        NS_ENSURE_ARG_POINTER(msgWindow);
         nsCOMPtr<nsIStringBundleService> sBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
         nsCOMPtr<nsIStringBundle> sMessengerStringBundle;
         nsXPIDLString confirmMsg;
