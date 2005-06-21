@@ -73,8 +73,10 @@
 #include <CoreFoundation/CoreFoundation.h>
 #define MAC_USE_CFRUNLOOPSOURCE
 #elif defined(TARGET_CARBON)
-#include <CarbonEvents.h>
-#define MAC_USE_CARBON_EVENT
+// #include <CarbonEvents.h>
+// #define MAC_USE_CARBON_EVENT
+#include <CoreFoundation/CoreFoundation.h>
+#define MAC_USE_CFRUNLOOPSOURCE
 #endif
 #endif
 
