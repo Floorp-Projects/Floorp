@@ -45,12 +45,15 @@
   <binding id="richlistbox">
     <content>
       <xul:scrollbox allowevents="true" orient="vertical" anonid="main-box"
-                     flex="1" style="overflow: auto;">
+                     flex="1" style="overflow: auto;"
+                     xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+                     xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+                     xhtml2:role="wairole:list">
         <children />
       </xul:scrollbox>
     </content>
 
-    <implementation>
+    <implementation implements="nsIDOMXULSelectControlElement">
       <field name="scrollBoxObject">null</field>
       <constructor>
         <![CDATA[
@@ -72,28 +75,38 @@
         </getter>
       </property>
 
+      <method name="fireActiveItemEvent">
+      <body>
+        <![CDATA[
+          if (this.selectedItem) {
+            var event = document.createEvent("Events");
+            event.initEvent("DOMMenuItemActive", true, true);
+            this.selectedItem.dispatchEvent(event);
+          }
+          return false;
+        ]]>
+      </body>
+      </method>
+      
       <field name="_selectedItem">null</field>
       <property name="selectedItem">
         <getter>
           return this._selectedItem;
         </getter>
         <setter>
-        <![CDATA[
-          if (this._selectedItem)
-            this._selectedItem.selected = false;
+          <![CDATA[
+            if (this._selectedItem)
+              this._selectedItem.selected = false;
 
-          this._selectedItem = val;
+            this._selectedItem = val;
 
-          if (val) {
-            val.selected = true;
-            this.scrollBoxObject.ensureElementIsVisible(val);
-          }
+            if (val) {
+              val.selected = true;
+              this.scrollBoxObject.ensureElementIsVisible(val);
+              this.fireActiveItemEvent();
+            }
 
-          this.fireEvent("select");
-
-          var event = document.createEvent("Events");
-          event.initEvent("DOMMenuItemActive", true, true);
-          this.dispatchEvent(event);
+            this.fireEvent("select");
         ]]>
         </setter>
       </property>
@@ -159,6 +172,8 @@
     <handlers>
       <handler event="keypress" keycode="VK_UP" action="goUp(); event.preventDefault();"/>
       <handler event="keypress" keycode="VK_DOWN" action="goDown(); event.preventDefault();"/>
+      <handler event="keypress" keycode="VK_HOME" action="clearSelection(); goDown(); event.preventDefault();"/>
+      <handler event="keypress" keycode="VK_END" action="clearSelection(); goUp(); event.preventDefault();"/>
       <handler event="click">
       <![CDATA[
         // clicking into nothing should unselect
@@ -177,6 +192,12 @@
         }
       ]]>
       </handler>
+      <handler event="focus">
+        <![CDATA[    
+          if (event.target == this)
+            this.fireActiveItemEvent();
+        ]]>
+      </handler>
     </handlers>
   </binding>
 
@@ -186,30 +207,92 @@
       <children />
     </content>
 
-    <implementation>
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULSelectControlItemElement">
+      <constructor>
+        <![CDATA[
+          // When first item is created, select it if we don't have a selection yet
+          var listbox = this.control;
+          if (!listbox.selectedItem) {
+            setTimeout(listbox.goDown, 0);
+          }
+        ]]>
+      </constructor>
+      <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULListitemAccessible(this);
+          ]]>
+        </getter>
+      </property>                
+      <!-- ///////////////// nsIDOMXULSelectControlItemElement ///////////////// -->
+                
+      <property name="value" onget="return this.getAttribute('value');"
+                             onset="this.setAttribute('value', val); return val;"/>
+
+      <property name="label">
+        <!-- Setter purposely not implemented; the getter returns a
+             concatentation of label text to expose via accessibility APIs-->
+        <getter>
+          <![CDATA[
+            var labelText = "";
+            var startEl = document.getAnonymousNodes(this)[0];
+            if (startEl) {
+              var labels = 
+                startEl.getElementsByTagNameNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul',
+                                              'label');
+              var numLabels = labels.length;
+              for (count = 0; count < numLabels; count ++) {
+                if (labels[count].className != 'link') {
+                  labelText += labels[count].value + ' ';
+                }
+              }
+            }
+            return labelText;
+          ]]>
+        </getter>
+      </property>
+      
       <property name="selected"
                 onget="return this.getAttribute('selected');"
                 onset="return this.setAttribute('selected',val);"/>
+
+      <property name="control">
+        <getter><![CDATA[
+          var parent = this.parentNode;
+          while (parent) {
+            if (parent.localName == "richlistbox")
+              return parent;
+            parent = parent.parentNode;
+          }
+          return null;
+        ]]></getter>
+      </property>
     </implementation>
 
     <handlers>
       <handler event="click">
-      <![CDATA[
-        if ((event.target == this) && event.ctrlKey && (this.parentNode.selectedItem == this)) {
-          this.parentNode.clearSelection();
-        } else {
-          this.parentNode.selectedItem = this;
-        }
-      ]]>
+        <![CDATA[
+          var listbox = this.control;
+          if ((event.target == this) && event.ctrlKey && (listbox.selectedItem == this)) {
+            listbox.clearSelection();
+          } else {
+            listbox.selectedItem = this;
+          }
+        ]]>
       </handler>
       <handler event="contextmenu" phase="capturing">
-      <![CDATA[
-         // This needed to be called before the contextmenu gets shown to handle
-         // someone rightclicking on an unselected item
-         if (event.target == this) {
-           this.parentNode.selectedItem = this;
-         }
-      ]]>
+        <![CDATA[
+          // This needed to be called before the contextmenu gets shown to handle
+          // someone rightclicking on an unselected item
+          if (event.target == this) {
+            var listbox = this.control;
+            if (listbox) {
+              listbox.selectedItem = this;
+            }
+          }
+        ]]>
       </handler>
     </handlers>
   </binding>
