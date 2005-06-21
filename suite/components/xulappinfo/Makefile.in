@@ -35,15 +35,30 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
+
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= \
-		components \
-		$(NULL)
+DEFINES += -DMOZ_APP_DISPLAYNAME=$(MOZ_APP_DISPLAYNAME) \
+	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
+
+MODULE		= xulappinfo
+XPIDL_MODULE	= xulappinfo
+
+XPIDLSRCS	= nsIXULAppInfo.idl
+
+EXTRA_COMPONENTS = xulappinfo.js
 
 include $(topsrcdir)/config/rules.mk
+
+nsIXULAppInfo.idl: $(topsrcdir)/toolkit/xre/nsIXULAppInfo.idl
+	$(NSINSTALL) $(topsrcdir)/toolkit/xre/nsIXULAppInfo.idl .
+
+xulappinfo.js: xulappinfo.js.in
+	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > $@
+
+GARBAGE += xulappinfo.js
