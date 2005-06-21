@@ -1782,6 +1782,67 @@ pref("font.allow_double_byte_special_chars", true);
 
 // ar
 
+#ifdef MOZ_ENABLE_XFT
+
+pref("font.name.serif.el", "serif");
+pref("font.name.sans-serif.el", "sans-serif");
+pref("font.name.monospace.el", "monospace");
+
+pref("font.name.serif.he", "serif");
+pref("font.name.sans-serif.he", "sans-serif");
+pref("font.name.monospace.he", "monospace");
+
+pref("font.name.serif.ja", "serif");
+pref("font.name.sans-serif.ja", "sans-serif");
+pref("font.name.monospace.ja", "monospace");
+
+pref("font.name.serif.ko", "serif");
+pref("font.name.sans-serif.ko", "sans-serif");
+pref("font.name.monospace.ko", "monospace");
+
+// th
+
+pref("font.name.serif.tr", "Times");
+pref("font.name.sans-serif.tr", "Helvetica");
+pref("font.name.monospace.tr", "Courier");
+
+pref("font.name.serif.x-baltic", "serif");
+pref("font.name.sans-serif.x-baltic", "sans-serif");
+pref("font.name.monospace.x-baltic", "monospace");
+
+pref("font.name.serif.x-central-euro", "Times");
+pref("font.name.sans-serif.x-central-euro", "Helvetica");
+pref("font.name.monospace.x-central-euro", "Courier");
+
+pref("font.name.serif.x-cyrillic", "serif");
+pref("font.name.sans-serif.x-cyrillic", "sans-serif");
+pref("font.name.monospace.x-cyrillic", "monospace");
+
+pref("font.name.serif.x-unicode", "Times");
+pref("font.name.sans-serif.x-unicode", "Helvetica");
+pref("font.name.monospace.x-unicode", "Courier");
+
+pref("font.name.serif.x-user-def", "Times");
+pref("font.name.sans-serif.x-user-def", "Helvetica");
+pref("font.name.monospace.x-user-def", "Courier");
+
+pref("font.name.serif.x-western", "Times");
+pref("font.name.sans-serif.x-western", "Helvetica");
+pref("font.name.monospace.x-western", "Courier");
+
+pref("font.name.serif.zh-CN", "serif");
+pref("font.name.sans-serif.zh-CN", "sans-serif");
+pref("font.name.monospace.zh-CN", "monospace");
+
+// ming_uni.ttf (HKSCS-2001) 
+// http://www.info.gov.hk/digital21/eng/hkscs/download/uime.exe
+pref("font.name.serif.zh-HK", "serif");
+pref("font.name.sans-serif.zh-HK", "sans-serif");
+pref("font.name.monospace.zh-HK", "monospace");
+
+// zh-TW
+# MOZ_ENABLE_XFT
+#else
 pref("font.name.serif.el", "misc-fixed-iso8859-7");
 pref("font.name.sans-serif.el", "misc-fixed-iso8859-7");
 pref("font.name.monospace.el", "misc-fixed-iso8859-7");
@@ -1839,6 +1900,8 @@ pref("font.name.sans-serif.zh-HK", "-arphic-Ming for ISO10646-big5hkscs-0");
 pref("font.name.monospace.zh-HK", "-arphic-Ming for ISO10646-big5hkscs-0");
 
 // zh-TW
+# MOZ_ENABLE_XFT
+#endif
 
 pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);
