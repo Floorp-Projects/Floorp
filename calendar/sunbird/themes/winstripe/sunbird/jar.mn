@@ -15,5 +15,5 @@ calendar.jar:
         skin/classic/calendar/calendartoolbar.png
         skin/classic/calendar/calendartoolbar_small.png
 classic.jar:
-   ./icon.png
-   ./preview.png
+   icon.png
+   preview.png
