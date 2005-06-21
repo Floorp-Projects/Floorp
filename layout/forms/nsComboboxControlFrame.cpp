@@ -641,19 +641,14 @@ nsComboboxControlFrame::ReflowComboChildFrame(nsIFrame* aFrame,
     viewManager->ResizeView(view, emptyRect);
   }
   
-  // Allow the child to move/size/change-visibility its view if it's currently
-  // dropped down
-  PRInt32 flags = NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_VISIBILITY | NS_FRAME_NO_SIZE_VIEW;
-  if (mDroppedDown) {
-    flags = 0;
-  }
+   // Reflow child
   nsRect rect = aFrame->GetRect();
   nsresult rv = ReflowChild(aFrame, aPresContext, aDesiredSize, kidReflowState,
-                            rect.x, rect.y, flags, aStatus);
+                            rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_VISIBILITY, aStatus);
  
    // Set the child's width and height to it's desired size
   FinishReflowChild(aFrame, aPresContext, &kidReflowState, aDesiredSize, 
-                    rect.x, rect.y, flags);
+                    rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_VISIBILITY);
   return rv;
 }
 
