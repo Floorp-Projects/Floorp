@@ -1351,7 +1351,7 @@ JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     fun_getProperty,  JS_PropertyStub,
     JS_EnumerateStub, (JSResolveOp)fun_resolve,
     fun_convert,      fun_finalize,
-    NULL,             js_SharedCheckAccess,
+    NULL,             NULL,
     NULL,             NULL,
     fun_xdrObject,    fun_hasInstance,
     fun_mark,         fun_reserveSlots

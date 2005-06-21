@@ -105,10 +105,7 @@ JSClass js_ObjectClass = {
     0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
-    NULL,             js_SharedCheckAccess,
-    NULL,             NULL,
-    NULL,             NULL,
-    NULL,             NULL
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 #if JS_HAS_OBJ_PROTO_PROP
@@ -151,18 +148,19 @@ static JSBool
 obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     uint32 slot;
+    jsid propid;
     JSAccessMode mode;
     uintN attrs;
 
     slot = (uint32) JSVAL_TO_INT(id);
     if (id == INT_TO_JSVAL(JSSLOT_PROTO)) {
-        id = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
+        propid = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
         mode = JSACC_PROTO;
     } else {
-        id = ATOM_TO_JSID(cx->runtime->atomState.parentAtom);
+        propid = ATOM_TO_JSID(cx->runtime->atomState.parentAtom);
         mode = JSACC_PARENT;
     }
-    if (!OBJ_CHECK_ACCESS(cx, obj, id, mode, vp, &attrs))
+    if (!OBJ_CHECK_ACCESS(cx, obj, propid, mode, vp, &attrs))
         return JS_FALSE;
     *vp = OBJ_GET_SLOT(cx, obj, slot);
     return JS_TRUE;
@@ -173,6 +171,7 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSObject *pobj;
     uint32 slot;
+    jsid propid;
     uintN attrs;
 
     if (!JSVAL_IS_OBJECT(*vp))
@@ -183,7 +182,8 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_FALSE;
 
     /* __parent__ is readonly and permanent, only __proto__ may be set. */
-    if (!OBJ_CHECK_ACCESS(cx, obj, id, JSACC_PROTO | JSACC_WRITE, vp, &attrs))
+    propid = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
+    if (!OBJ_CHECK_ACCESS(cx, obj, propid, JSACC_PROTO|JSACC_WRITE, vp, &attrs))
         return JS_FALSE;
 
     return js_SetProtoOrParent(cx, obj, slot, pobj);
@@ -3402,6 +3402,7 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     JSProperty *prop;
     JSScopeProperty *sprop;
     JSClass *clasp;
+    JSCheckAccessOp check;
     JSBool ok;
 
     if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
@@ -3420,31 +3421,38 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     sprop = (JSScopeProperty *)prop;
     *vp = (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)))
           ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
-          : (mode == JSACC_PROTO)
+          : ((mode & JSACC_WATCH) == JSACC_PROTO)
           ? LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PROTO)
           : (mode == JSACC_PARENT)
           ? LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PARENT)
           : JSVAL_VOID;
     *attrsp = sprop->attrs;
+
+    /*
+     * If obj's class has a stub (null) checkAccess hook, use the per-runtime
+     * checkObjectAccess callback, if configured.
+     *
+     * We don't want to require all classes to supply a checkAccess hook; we
+     * need that hook only for certain classes used when precompiling scripts
+     * and functions ("brutal sharing").  But for general safety of built-in
+     * magic properties such as __proto__ and __parent__, we route all access
+     * checks, even for classes that stub out checkAccess, through the global
+     * checkObjectAccess hook.  This covers precompilation-based sharing and
+     * (possibly unintended) runtime sharing across trust boundaries.
+     */
     clasp = LOCKED_OBJ_GET_CLASS(obj);
-    if (clasp->checkAccess) {
+    check = clasp->checkAccess;
+    if (!check)
+        check = cx->runtime->checkObjectAccess;
+    if (check) {
         JS_UNLOCK_OBJ(cx, pobj);
-        ok = clasp->checkAccess(cx, obj, ID_TO_VALUE(id), mode, vp);
+        ok = check(cx, obj, ID_TO_VALUE(id), mode, vp);
         JS_LOCK_OBJ(cx, pobj);
     } else {
         ok = JS_TRUE;
     }
     OBJ_DROP_PROPERTY(cx, pobj, prop);
     return ok;
-}
-
-JSBool
-js_SharedCheckAccess(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
-                     jsval *vp)
-{
-    if (!cx->runtime->checkObjectAccess)
-        return JS_TRUE;
-    return cx->runtime->checkObjectAccess(cx, obj, id, mode, vp);
 }
 
 #ifdef JS_THREADSAFE
@@ -3675,6 +3683,46 @@ GetClassPrototype(JSContext *cx, JSObject *scope, const char *name,
     return JS_TRUE;
 }
 
+/*
+ * For shared precompilation of function objects, we support cloning on entry
+ * to an execution context in which the function declaration or expression
+ * should be processed as if it were not precompiled, where the precompiled
+ * function's scope chain does not match the execution context's.  The cloned
+ * function object carries its execution-context scope in its parent slot; it
+ * links to the precompiled function (the "clone-parent") via its proto slot.
+ *
+ * Note that this prototype-based delegation leaves an unchecked access path
+ * from the clone to the clone-parent's 'constructor' property.  If the clone
+ * lives in a less privileged or shared scope than the clone-parent, this is
+ * a security hole, a sharing hazard, or both.  Therefore we check all such
+ * accesses with the following getter/setter pair, which we use when defining
+ * 'constructor' in f.prototype for all function objects f.
+ */
+static JSBool
+CheckCtorGetAccess(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    JSAtom *atom;
+    uintN attrs;
+
+    atom = cx->runtime->atomState.constructorAtom;
+    JS_ASSERT(id == ATOM_KEY(atom));
+    return OBJ_CHECK_ACCESS(cx, obj, ATOM_TO_JSID(atom), JSACC_READ,
+                            vp, &attrs);
+}
+
+static JSBool
+CheckCtorSetAccess(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    JSAtom *atom;
+    jsval oldval;
+    uintN attrs;
+
+    atom = cx->runtime->atomState.constructorAtom;
+    JS_ASSERT(id == ATOM_KEY(atom));
+    return OBJ_CHECK_ACCESS(cx, obj, ATOM_TO_JSID(atom), JSACC_WRITE,
+                            &oldval, &attrs);
+}
+
 JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
                      uintN attrs)
@@ -3702,7 +3750,7 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
                                ATOM_TO_JSID(cx->runtime->atomState
                                             .constructorAtom),
                                OBJECT_TO_JSVAL(ctor),
-                               JS_PropertyStub, JS_PropertyStub,
+                               CheckCtorGetAccess, CheckCtorSetAccess,
                                0, NULL);
 }
 
