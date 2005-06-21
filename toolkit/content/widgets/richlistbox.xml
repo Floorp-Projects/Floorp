@@ -180,7 +180,8 @@
     </handlers>
   </binding>
 
-  <binding id="richlistitem">
+  <binding id="richlistitem"
+           extends="chrome://global/content/bindings/general.xml#basecontrol">
     <content>
       <children />
     </content>
