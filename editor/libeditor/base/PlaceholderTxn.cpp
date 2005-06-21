@@ -199,35 +199,31 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
          (mName.get() == nsEditor::gDeleteTxnName)) 
          && !mCommitted ) 
     {
-      // but only if this placeholder started with a collapsed selection
-      if (mStartSel->IsCollapsed())
+      nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);
+      // can't do_QueryInterface() above due to our broken transaction interfaces.
+      // instead have to brute it below. ugh. 
+      editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
+      if (plcTxn)
       {
-        nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);
-        // can't do_QueryInterface() above due to our broken transaction interfaces.
-        // instead have to brute it below. ugh. 
-        editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
-        if (plcTxn)
+        nsCOMPtr<nsIAtom> atom;
+        plcTxn->GetTxnName(getter_AddRefs(atom));
+        if (atom && (atom == mName))
         {
-          nsCOMPtr<nsIAtom> atom;
-          plcTxn->GetTxnName(getter_AddRefs(atom));
-          if (atom && (atom == mName))
+          // check if start selection of next placeholder matches
+          // end selection of this placeholder
+          PRBool isSame;
+          plcTxn->StartSelectionEquals(&mEndSel, &isSame);
+          if (isSame)
           {
-            // check if start selection of next placeholder matches
-            // end selection of this placeholder
-            PRBool isSame;
-            plcTxn->StartSelectionEquals(&mEndSel, &isSame);
-            if (isSame)
-            {
-              mAbsorb = PR_TRUE;  // we need to start absorbing again
-              plcTxn->ForwardEndBatchTo(this);
-              // AppendChild(editTxn);
-              // see bug 171243: we don't need to merge placeholders
-              // into placeholders.  We just reactivate merging in the pre-existing
-              // placeholder and drop the new one on the floor.  The EndPlaceHolderBatch()
-              // call on the new placeholder will be forwarded to this older one.
-              RememberEndingSelection();
-              *aDidMerge = PR_TRUE;
-            }
+            mAbsorb = PR_TRUE;  // we need to start absorbing again
+            plcTxn->ForwardEndBatchTo(this);
+            // AppendChild(editTxn);
+            // see bug 171243: we don't need to merge placeholders
+            // into placeholders.  We just reactivate merging in the pre-existing
+            // placeholder and drop the new one on the floor.  The EndPlaceHolderBatch()
+            // call on the new placeholder will be forwarded to this older one.
+            RememberEndingSelection();
+            *aDidMerge = PR_TRUE;
           }
         }
       }
