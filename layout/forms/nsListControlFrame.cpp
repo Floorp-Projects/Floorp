@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1726,13 +1727,6 @@ nsListControlFrame::OnOptionSelected(nsPresContext* aPresContext,
   }
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsListControlFrame::OnOptionTextChanged(nsIDOMHTMLOptionElement* option)
-{
-  return NS_OK;
-}
-
 
 //---------------------------------------------------------
 PRIntn

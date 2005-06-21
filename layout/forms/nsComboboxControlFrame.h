@@ -183,7 +183,6 @@ public:
   NS_IMETHOD OnOptionSelected(nsPresContext* aPresContext,
                               PRInt32 aIndex,
                               PRBool aSelected);
-  NS_IMETHOD OnOptionTextChanged(nsIDOMHTMLOptionElement* option);
   NS_IMETHOD GetDummyFrame(nsIFrame** aFrame);
   NS_IMETHOD SetDummyFrame(nsIFrame* aFrame);
   NS_IMETHOD OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex);
@@ -242,12 +241,11 @@ protected:
   void ShowPopup(PRBool aShowPopup);
   void ShowList(nsPresContext* aPresContext, PRBool aShowList);
   void SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nscoord aHeight);
-  void InitTextStr();
   void CheckFireOnChange();
   void FireValueChangeEvent();
   nsresult RedisplayText(PRInt32 aIndex);
-  void     HandleRedisplayTextEvent(const nsAString& aText);
-  nsresult ActuallyDisplayText(const nsAString& aText, PRBool aNotify);
+  void HandleRedisplayTextEvent();
+  void ActuallyDisplayText(PRBool aNotify);
   nsresult GetPrimaryComboFrame(nsPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame);
   NS_IMETHOD ToggleList(nsPresContext* aPresContext);
 
@@ -291,6 +289,7 @@ protected:
 
   PRInt32               mRecentSelectedIndex;
   PRInt32               mDisplayedIndex;
+  nsString              mDisplayedOptionText;
 
   // make someone to listen to the button. If its programmatically pressed by someone like Accessibility
   // then open or close the combo box.
