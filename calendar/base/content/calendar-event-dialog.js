@@ -56,6 +56,10 @@ function onLoad()
 
     loadDialog(window.calendarItem);
 
+    // figure out what the title of the dialog should be and set it
+    updateTitle();
+
+    // hide rows based on if this is an event or todo
     updateStyle();
 
     // update the accept button
@@ -174,22 +178,22 @@ function loadDialog(item)
 
 function saveDialog(item)
 {
-    setEventProperty(item, "title",       getElementValue("item-title"));
-    setEventProperty(item, "LOCATION",    getElementValue("item-location"));
-    setEventProperty(item, "URL",         getElementValue("item-url"));
-    setEventProperty(item, "DESCRIPTION", getElementValue("item-description"));
+    setItemProperty(item, "title",       getElementValue("item-title"));
+    setItemProperty(item, "LOCATION",    getElementValue("item-location"));
+    setItemProperty(item, "URL",         getElementValue("item-url"));
+    setItemProperty(item, "DESCRIPTION", getElementValue("item-description"));
 
     if (isEvent(item)) {
-        // setEventProperty will only change if the value is different and 
+        // setItemProperty will only change if the value is different and 
         // does magic for startDate and endDate based on isAllDay, so set that first.
-        setEventProperty(item, "isAllDay",    getElementValue("event-all-day", "checked"));
-        setEventProperty(item, "startDate",   jsDateToDateTime(getElementValue("event-starttime")));
-        setEventProperty(item, "endDate",     jsDateToDateTime(getElementValue("event-endtime")));
+        setItemProperty(item, "isAllDay",    getElementValue("event-all-day", "checked"));
+        setItemProperty(item, "startDate",   jsDateToDateTime(getElementValue("event-starttime")));
+        setItemProperty(item, "endDate",     jsDateToDateTime(getElementValue("event-endtime")));
     }
 
     if (isToDo(item)) {
-        setEventProperty(item, "dueDate",         jsDateToDateTime(getElementValue("todo-duedate")));
-        setEventProperty(item, "percentComplete", getElementValue("todo-completed", "checked"));
+        setItemProperty(item, "dueDate",         jsDateToDateTime(getElementValue("todo-duedate")));
+        setItemProperty(item, "percentComplete", getElementValue("todo-completed", "checked"));
     }
 
     /* attendence */
@@ -226,9 +230,9 @@ function saveDialog(item)
         var alarmUnits = document.getElementById("alarm-length-units").selectedItem.value;
         var alarmRelated = document.getElementById("alarm-trigger-relation").selectedItem.value;
 
-        setEventProperty(item, "alarmLength",  alarmLength);
-        setEventProperty(item, "alarmUnits",   alarmUnits);
-        setEventProperty(item, "alarmRelated", alarmRelated);
+        setItemProperty(item, "alarmLength",  alarmLength);
+        setItemProperty(item, "alarmUnits",   alarmUnits);
+        setItemProperty(item, "alarmRelated", alarmRelated);
 
         var alarmTime = null;
 
@@ -252,10 +256,27 @@ function saveDialog(item)
 
         alarmTime.normalize();
 
-        setEventProperty(item, "alarmTime", alarmTime);
+        setItemProperty(item, "alarmTime", alarmTime);
     }
 
     dump(item.icalString + "\n");
+}
+
+function updateTitle()
+{
+    // XXX make this use string bundles
+    var isNew = window.calendarItem.isMutable;
+    if (isEvent(window.calendarItem)) {
+        if (isNew)
+            document.title = "New Event";
+        else
+            document.title = "Edit Event";
+    } else if (isToDo(window.calendarItem)) {
+        if (isNew)
+            document.title = "New Task";
+        else
+            document.title = "Edit Task";        
+    }
 }
 
 function updateStyle()
@@ -369,7 +390,7 @@ function editRecurrence()
 
 
 /* utility functions */
-function setEventProperty(item, propertyName, value)
+function setItemProperty(item, propertyName, value)
 {
     switch(propertyName) {
     case "isAllDay":
