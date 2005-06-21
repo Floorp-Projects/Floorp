@@ -41,12 +41,12 @@ function onLoad()
     var args = window.arguments[0];
 
     window.onAcceptCallback = args.onOk;
-    window.calendarEvent = args.calendarEvent;
+    window.calendarItem = args.calendarEvent;
     window.mode = args.mode;
     window.recurrenceInfo = null;
 
     /* add calendars to the calendar menulist */
-    var calendarList = document.getElementById("event-calendar");
+    var calendarList = document.getElementById("item-calendar");
     var calendars = getCalendarManager().getCalendars({});
     for (i in calendars) {
         var calendar = calendars[i];
@@ -54,7 +54,9 @@ function onLoad()
         menuitem.calendar = calendar;
     }
 
-    loadDialog(window.calendarEvent);
+    loadDialog(window.calendarItem);
+
+    updateStyle();
 
     // update the accept button
     updateAccept();
@@ -68,7 +70,10 @@ function onLoad()
     // update alarm checkbox/label/settings button
     updateAlarm();
 
-    document.getElementById("event-title").focus();
+    // update our size!
+    window.sizeToContent();
+
+    document.getElementById("item-title").focus();
 
     opener.setCursor("auto");
 
@@ -78,14 +83,14 @@ function onLoad()
 function onAccept()
 {
     // if this event isn't mutable, we need to clone it like a sheep
-    var originalEvent = window.calendarEvent;
-    var event = (originalEvent.isMutable) ? originalEvent : originalEvent.clone();
+    var originalItem = window.calendarItem;
+    var item = (originalItem.isMutable) ? originalItem : originalItem.clone();
 
-    saveDialog(event);
+    saveDialog(item);
 
-    var calendar = document.getElementById("event-calendar").selectedItem.calendar;
+    var calendar = document.getElementById("item-calendar").selectedItem.calendar;
 
-    window.onAcceptCallback(event, calendar, originalEvent);
+    window.onAcceptCallback(item, calendar, originalItem);
 
     return true;
 }
@@ -95,42 +100,50 @@ function onCancel()
 
 }
 
-function loadDialog(event)
+function loadDialog(item)
 {
     var kDefaultTimezone = calendarDefaultTimezone();
 
-    setElementValue("event-title",       event.title);
-    setElementValue("event-all-day",     event.isAllDay, "checked");
+    setElementValue("item-title",       item.title);
+    setElementValue("item-location",    item.getProperty("LOCATION"));
+    setElementValue("item-url",         item.getProperty("URL"));
+    setElementValue("item-description", item.getProperty("DESCRIPTION"));
 
-    setElementValue("event-location",    event.getProperty("LOCATION"));
-    setElementValue("event-url",         event.getProperty("URL"));
-    setElementValue("event-description", event.getProperty("DESCRIPTION"));
-
-    /* all day */
-    var startDate = event.startDate.getInTimezone(kDefaultTimezone);
-    var endDate = event.endDate.getInTimezone(kDefaultTimezone);
-    if (startDate.isDate) {
-        endDate.day -= 1;
-        endDate.normalize();
+    /* event specific properties */
+    if (isEvent(item)) {
+        /* all day */
+        setElementValue("event-all-day",    item.isAllDay, "checked");
+        var startDate = item.startDate.getInTimezone(kDefaultTimezone);
+        var endDate = item.endDate.getInTimezone(kDefaultTimezone);
+        if (startDate.isDate) {
+            endDate.day -= 1;
+            endDate.normalize();
+        }
+        setElementValue("event-starttime",   startDate.jsDate);
+        setElementValue("event-endtime",     endDate.jsDate);
     }
-    setElementValue("event-starttime",   startDate.jsDate);
-    setElementValue("event-endtime",     endDate.jsDate);
+
+    /* todo specific properties */
+    if (isToDo(item)) {
+        setElementValue("todo-duedate",   item.dueDate.jsDate);
+        setElementValue("todo-completed", (item.percentComplete == 100), "checked");
+    }
 
     /* attendence */
     var attendeeString = "";
-    for each (var attendee in event.getAttendees({})) {
+    for each (var attendee in item.getAttendees({})) {
         if (attendeeString != "")
             attendeeString += ",";
         attendeeString += attendee.id.split("mailto:")[1];
     }
-    setElementValue("event-attendees", attendeeString);
+    setElementValue("item-attendees", attendeeString);
 
-    /* event default calendar */
-    if (event.calendar) {
-        var calendarList = document.getElementById("event-calendar");
+    /* item default calendar */
+    if (item.calendar) {
+        var calendarList = document.getElementById("item-calendar");
         var calendars = getCalendarManager().getCalendars({});
         for (i in calendars) {
-            if (event.calendar.uri.equals(calendars[i].uri))
+            if (item.calendar.uri.equals(calendars[i].uri))
                 calendarList.selectedIndex = i;
         }
     }
@@ -140,81 +153,89 @@ function loadDialog(event)
      * - Setting recurrence on the item
      * - changing the calendar
      */
-    if (event.parentItem != event) {
-        setElementValue("event-recurrence", "true", "disabled");
+    if (item.parentItem != item) {
+        setElementValue("item-recurrence", "true", "disabled");
         setElementValue("set-recurrence", "true", "disabled");
-        setElementValue("event-calendar", "true", "disabled");
-    } else if (event.recurrenceInfo)
-        setElementValue("event-recurrence", "true", "checked");
+        setElementValue("item-calendar", "true", "disabled");
+    } else if (item.recurrenceInfo)
+        setElementValue("item-recurrence", "true", "checked");
 
     /* alarms */
-    if (event.alarmTime) {
-        var alarmLength = event.getProperty("alarmLength");
+    if (item.alarmTime) {
+        var alarmLength = item.getProperty("alarmLength");
         if (alarmLength != null) {
             setElementValue("alarm-length-field", alarmLength);
             setElementValue("alarm-length-units", event.getProperty("alarmUnits"));
-            setElementValue("alarm-trigger-relation", event.getProperty("alarmRelated"));
+            setElementValue("alarm-trigger-relation", item.getProperty("alarmRelated"));
         }
-        setElementValue("event-alarm", "custom");
+        setElementValue("item-alarm", "custom");
     }
 }
 
-function saveDialog(event)
+function saveDialog(item)
 {
-    // setEventProperty will only change if the value is different and 
-    // does magic for startDate and endDate based on isAllDay, so set that first.
-    setEventProperty(event, "isAllDay",    getElementValue("event-all-day", "checked"));
-    setEventProperty(event, "startDate",   jsDateToDateTime(getElementValue("event-starttime")));
-    setEventProperty(event, "endDate",     jsDateToDateTime(getElementValue("event-endtime")));
-    setEventProperty(event, "title",       getElementValue("event-title"));
-    setEventProperty(event, "LOCATION",    getElementValue("event-location"));
-    setEventProperty(event, "URL",         getElementValue("event-url"));
-    setEventProperty(event, "DESCRIPTION", getElementValue("event-description"));
+    setEventProperty(item, "title",       getElementValue("item-title"));
+    setEventProperty(item, "LOCATION",    getElementValue("item-location"));
+    setEventProperty(item, "URL",         getElementValue("item-url"));
+    setEventProperty(item, "DESCRIPTION", getElementValue("item-description"));
+
+    if (isEvent(item)) {
+        // setEventProperty will only change if the value is different and 
+        // does magic for startDate and endDate based on isAllDay, so set that first.
+        setEventProperty(item, "isAllDay",    getElementValue("event-all-day", "checked"));
+        setEventProperty(item, "startDate",   jsDateToDateTime(getElementValue("event-starttime")));
+        setEventProperty(item, "endDate",     jsDateToDateTime(getElementValue("event-endtime")));
+    }
+
+    if (isToDo(item)) {
+        setEventProperty(item, "dueDate",         jsDateToDateTime(getElementValue("todo-duedate")));
+        setEventProperty(item, "percentComplete", getElementValue("todo-completed", "checked"));
+    }
 
     /* attendence */
-    event.removeAllAttendees();
-    var attendees = getElementValue("event-attendees");
+    item.removeAllAttendees();
+    var attendees = getElementValue("item-attendees");
     if (attendees != "") {
         for each (var addr in attendees.split(",")) {
             if (addr != "") {
                 var attendee = createAttendee();
                 attendee.id = "mailto:" + addr;
-                event.addAttendee(attendee);
+                item.addAttendee(attendee);
             }
         }
     }
 
     /* recurrence */
-    if (getElementValue("event-recurrence", "checked")) {
+    if (getElementValue("item-recurrence", "checked")) {
         if (window.recurrenceInfo) {
-            event.recurrenceInfo = window.recurrenceInfo;
+            item.recurrenceInfo = window.recurrenceInfo;
         }
     } else {
-        event.recurrenceInfo = null;
+        item.recurrenceInfo = null;
     }
 
     /* alarms */
-    var hasAlarm = (getElementValue("event-alarm") != "none");
+    var hasAlarm = (getElementValue("item-alarm") != "none");
     if (!hasAlarm) {
-        event.deleteProperty("alarmLength");
-        event.deleteProperty("alarmUnits");
-        event.deleteProperty("alarmRelated");
-        event.alarmTime = null;
+        item.deleteProperty("alarmLength");
+        item.deleteProperty("alarmUnits");
+        item.deleteProperty("alarmRelated");
+        item.alarmTime = null;
     } else {
         var alarmLength = getElementValue("alarm-length-field");
         var alarmUnits = document.getElementById("alarm-length-units").selectedItem.value;
         var alarmRelated = document.getElementById("alarm-trigger-relation").selectedItem.value;
 
-        setEventProperty(event, "alarmLength",  alarmLength);
-        setEventProperty(event, "alarmUnits",   alarmUnits);
-        setEventProperty(event, "alarmRelated", alarmRelated);
+        setEventProperty(item, "alarmLength",  alarmLength);
+        setEventProperty(item, "alarmUnits",   alarmUnits);
+        setEventProperty(item, "alarmRelated", alarmRelated);
 
         var alarmTime = null;
 
         if (alarmRelated == "START") {
-            alarmTime = event.startDate.clone();
+            alarmTime = item.startDate.clone();
         } else if (alarmRelated == "END") {
-            alarmTime = event.endDate.clone();
+            alarmTime = item.endDate.clone();
         }
 
         switch (alarmUnits) {
@@ -231,18 +252,32 @@ function saveDialog(event)
 
         alarmTime.normalize();
 
-        setEventProperty(event, "alarmTime", alarmTime);
+        setEventProperty(item, "alarmTime", alarmTime);
     }
 
-    //dump(event.icalString + "\n");
+    dump(item.icalString + "\n");
 }
 
+function updateStyle()
+{
+    const kDialogStylesheet = "chrome://calendar/content/calendar-event-dialog.css";
+
+    for each(var stylesheet in document.styleSheets) {
+        if (stylesheet.href == kDialogStylesheet) {
+            if (isEvent(window.calendarItem))
+                stylesheet.insertRule(".todo-only { display: none; }", 0);
+            else if (isToDo(window.calendarItem))
+                stylesheet.insertRule(".event-only { display: none; }", 0);
+            return;
+        }
+    }
+}
 
 function updateAccept()
 {
     var acceptButton = document.getElementById("calendar-event-dialog").getButton("accept");
 
-    var title = getElementValue("event-title");
+    var title = getElementValue("item-title");
     if (title.length == 0)
         acceptButton.setAttribute("disabled", "true");
     else if (acceptButton.getAttribute("disabled"))
@@ -252,6 +287,9 @@ function updateAccept()
 
 function updateAllDay()
 {
+    if (!isEvent(window.calendarItem))
+        return;
+
     var allDay = getElementValue("event-all-day", "checked");
     setElementValue("event-starttime", allDay, "timepickerdisabled");
     setElementValue("event-endtime", allDay, "timepickerdisabled");
@@ -260,7 +298,7 @@ function updateAllDay()
 
 function updateRecurrence()
 {
-    var recur = getElementValue("event-recurrence", "checked");
+    var recur = getElementValue("item-recurrence", "checked");
     if (recur) {
         setElementValue("set-recurrence", false, "disabled");
     } else {
@@ -282,7 +320,7 @@ function setAlarmFields(alarmItem)
 }
 function updateAlarm()
 {
-    var alarmMenu = document.getElementById("event-alarm");
+    var alarmMenu = document.getElementById("item-alarm");
     var alarmItem = alarmMenu.selectedItem;
 
     var alarmItemValue = alarmItem.getAttribute("value");
@@ -313,7 +351,7 @@ function updateAlarm()
 function editRecurrence()
 {
     var args = new Object();
-    args.calendarEvent = window.calendarEvent;
+    args.calendarEvent = window.calendarItem;
     args.recurrenceInfo = window.recurrenceInfo || args.calendarEvent.recurrenceInfo;
 
     var savedWindow = window;
@@ -331,45 +369,59 @@ function editRecurrence()
 
 
 /* utility functions */
-function setEventProperty(event, propertyName, value)
+function setEventProperty(item, propertyName, value)
 {
     switch(propertyName) {
-    case "title":
-        if (value != event.title)
-            event.title = value;
-        break;
     case "isAllDay":
-        if (value != event.isAllDay)
-            event.isAllDay = value;
+        if (value != item.isAllDay)
+            item.isAllDay = value;
         break;
     case "startDate":
-        if (value.compare(event.startDate) != 0) {
-            if (event.isAllDay)
+        if (value.compare(item.startDate) != 0) {
+            if (item.isAllDay)
                 value.isDate = true;
-            event.startDate = value;
+            item.startDate = value;
         }
         break;
     case "endDate":
-        if (value.compare(event.endDate) != 0) {
-            if (event.isAllDay) {
+        if (value.compare(item.endDate) != 0) {
+            if (item.isAllDay) {
                 value.isDate = true;
                 value.day += 1;
                 value.normalize();
             }
-            event.endDate = value;
+            item.endDate = value;
         }
         break;
+
+
+    case "dueDate":
+        if (value.compare(item.dueDate) != 0) {
+            item.dueDate = value;
+        }
+        break;
+    case "percentComplete":
+        var percent = (value) ? 100 : 0;
+        if (percent != item.percentComplete)
+            item.percentComplete = percent;
+        break;
+
+    case "title":
+        if (value != item.title)
+            item.title = value;
+        break;
+
     case "alarmTime":
-        if ((value && !event.alarmTime) ||
-            (!value && event.alarmTime) ||
-            (value.compare(event.alarmTime) != 0))
-            event.alarmTime = value;
+        if ((value && !item.alarmTime) ||
+            (!value && item.alarmTime) ||
+            (value.compare(item.alarmTime) != 0))
+            item.alarmTime = value;
         break;
     default:
         if (!value || value == "")
-            event.deleteProperty(propertyName);
-        else if (event.getProperty(propertyName) != value)
-            event.setProperty(propertyName, value);
+            item.deleteProperty(propertyName);
+        else if (item.getProperty(propertyName) != value)
+            item.setProperty(propertyName, value);
         break;
     }
 }

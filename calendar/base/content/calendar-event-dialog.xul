@@ -70,24 +70,24 @@
         <rows equalsize="always">
           <row align="center">
             <label value="Title" class="label"/>
-            <textbox id="event-title" oninput="updateAccept();"/>
+            <textbox id="item-title" oninput="updateAccept();"/>
           </row>
           <row align="center">
             <label value="Location" class="label"/>
-            <textbox id="event-location"/>
+            <textbox id="item-location"/>
           </row>
 
           <row align="center">
             <label value="URL" class="label"/>
-            <textbox id="event-url"/>
+            <textbox id="item-url"/>
           </row>
 
           <row align="center">
             <label value="Attendees" class="label"/>
-            <textbox id="event-attendees"/>
+            <textbox id="item-attendees"/>
           </row>
 
-          <row align="center">
+          <row align="center" class="event-only">
             <label value="All day" class="label"/>
             <hbox>
               <checkbox id="event-all-day" oncommand="updateAllDay();"/>
@@ -95,20 +95,33 @@
             </hbox>
           </row>
 
-          <row align="center">
+          <row align="center" class="event-only">
             <label value="From" class="label"/>
             <datetimepicker id="event-starttime"/>
           </row>
 
-          <row align="center">
+          <row align="center" class="event-only">
             <label value="To" class="label"/>
             <datetimepicker id="event-endtime"/>
+          </row>
+
+          <row align="center" class="todo-only">
+            <label value="Completed" class="label"/>
+            <hbox>
+              <checkbox id="todo-completed"/>
+              <spacer flex="1"/>
+            </hbox>
+          </row>
+
+          <row align="center" class="todo-only">
+            <label value="Due date" class="label"/>
+            <datetimepicker id="todo-duedate"/>
           </row>
 
           <row align="center">
             <label value="Repeat" class="label"/>
             <hbox align="center">
-              <checkbox id="event-recurrence" oncommand="updateRecurrence();"/>
+              <checkbox id="item-recurrence" oncommand="updateRecurrence();"/>
               <spacer flex="1"/>
               <button id="set-recurrence" label="set..." oncommand="editRecurrence();"/>
             </hbox>
@@ -117,7 +130,7 @@
           <row align="center">
             <label value="Calendar" class="label"/>
             <hbox>
-              <menulist id="event-calendar"/>
+              <menulist id="item-calendar"/>
               <spacer flex="1"/>
             </hbox>
           </row>
@@ -125,7 +138,7 @@
           <row align="center">
             <label value="Alarm" class="label"/>
             <hbox>
-              <menulist id="event-alarm" oncommand="updateAlarm()">
+              <menulist id="item-alarm" oncommand="updateAlarm()">
                 <menupopup>
                   <menuitem label="none" value="none" selected="true"/>
                   <menuseparator/>
@@ -161,7 +174,7 @@
 
         </rows>
 
-        <textbox id="event-description" multiline="true" rows="4"/>
+        <textbox id="item-description" multiline="true" rows="4"/>
 
       </rows>
     </grid>

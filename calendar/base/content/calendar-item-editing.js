@@ -87,37 +87,58 @@ function createEventWithDialog(calendar, startDate, endDate, summary)
     openEventDialog(event, calendar, "new", onNewEvent);
 }
 
-
-function modifyEventWithDialog(event)
+function createTodoWithDialog(calendar, dueDate, summary)
 {
-    var onModifyEvent = function(event, calendar, originalEvent) {
+    const kDefaultTimezone = calendarDefaultTimezone();
+    var todo = createToDo();
+
+    if (summary)
+        todo.title = summary;
+
+    if (!dueDate)
+         dueDate = jsDateToDateTime(new Date());
+
+    todo.dueDate = dueDate;
+
+    var onNewItem = function(item, calendar, originalItem) {
+        calendar.addItem(item, null);
+    }
+
+    openEventDialog(todo, calendar, "new", onNewItem);
+}
+
+
+function modifyEventWithDialog(item)
+{
+    var onModifyItem = function(item, calendar, originalItem) {
         // compare cal.uri because there may be multiple instances of
         // calICalendar or uri for the same spec, and those instances are
         // not ==.
-        if (!originalEvent.calendar || 
-            (originalEvent.calendar.uri.equals(calendar.uri)))
-            calendar.modifyItem(event, originalEvent, null);
+        if (!originalItem.calendar || 
+            (originalItem.calendar.uri.equals(calendar.uri)))
+            calendar.modifyItem(item, originalItem, null);
         else {
-            originalEvent.calendar.deleteItem(event, null);
-            calendar.addItem(event, null);
+            originalItem.calendar.deleteItem(item, null);
+            calendar.addItem(item, null);
         }
     }
 
-    openEventDialog(event, event.calendar, "modify", onModifyEvent);
+    openEventDialog(item, item.calendar, "modify", onModifyItem);
 }
 
-function openEventDialog(calendarEvent, calendar, mode, callback)
+function openEventDialog(calendarItem, calendar, mode, callback)
 {
     var args = new Object();
-    args.calendarEvent = calendarEvent;
+    args.calendarEvent = calendarItem;
     args.calendar = calendar;
     args.mode = mode;
     args.onOk = callback;
 
-    // wait cursor will revert to auto in eventDialog.js loadCalendarEventDialog
+    // the dialog will reset this to auto when it is done loading.
     window.setCursor("wait");
+
     // open the dialog modally
-    //openDialog("chrome://calendar/content/eventDialog.xul", "_blank", "chrome,titlebar,modal", args);
     openDialog("chrome://calendar/content/calendar-event-dialog.xul", "_blank", "chrome,titlebar,modal", args);
+    //openDialog("chrome://calendar/content/eventDialog.xul", "_blank", "chrome,titlebar,modal", args);
 }
 
