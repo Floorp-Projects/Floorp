@@ -429,6 +429,7 @@ NS_IMETHODIMP nsDocAccessible::Init()
 
   if (mRoleMapEntry && mRoleMapEntry->role != ROLE_DIALOG &&
       mRoleMapEntry->role != ROLE_APPLICATION &&
+      mRoleMapEntry->role != ROLE_ALERT &&
       mRoleMapEntry->role != ROLE_DOCUMENT) {
     // Document accessible can only have certain roles
     // This was set in nsAccessible::Init() based on xhtml2:role attribute
