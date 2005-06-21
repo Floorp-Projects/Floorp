@@ -2253,11 +2253,6 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
     if (!fs)
         goto end;
 
-    if (!fs->nfont) {
-        rv = NS_OK;
-        goto end;
-    }
-
     // Fontconfig supports 3 generic fonts, "serif", "sans-serif", and
     // "monospace", slightly different from CSS's 5.
     if (!aGeneric)
