@@ -3449,7 +3449,7 @@ JSClass js_RegExpClass = {
     regexp_getProperty, regexp_setProperty,
     JS_EnumerateStub,   JS_ResolveStub,
     JS_ConvertStub,     regexp_finalize,
-    NULL,               js_SharedCheckAccess,
+    NULL,               NULL,
     regexp_call,        NULL,
     regexp_xdrObject,   NULL,
     regexp_mark,        0
