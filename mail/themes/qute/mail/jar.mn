@@ -159,5 +159,5 @@ classic.jar:
     skin/classic/messenger/accountcentral/manage-imap.png       (accountcentral/manage-imap.png) 
     skin/classic/messenger/accountcentral/manage-newsgroups.png (accountcentral/manage-newsgroups.png)
     skin/classic/messenger/accountcentral/manage-rss.png        (accountcentral/manage-rss.png)
-    ./preview.png
-    ./icon.png 
+    icon.png
+    preview.png
