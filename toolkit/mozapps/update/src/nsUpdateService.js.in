@@ -57,6 +57,7 @@ const PREF_UPDATE_LASTUPDATETIME_FMT      = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
+const URI_UPDATE_LIST_DIALOG    = "chrome://mozapps/content/update/updateHistory.xul";
 const URI_BRAND_PROPERTIES      = "chrome://branding/locale/brand.properties";
 const URI_UPDATES_PROPERTIES    = "chrome://mozapps/locale/update/updates.properties";
 const URI_UPDATE_NS             = "http://www.mozilla.org/2005/app-update";
@@ -329,26 +330,36 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   checkForUpdates: function() {
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
-    var win = wm.getMostRecentWindow("Update:Wizard");
-    if (win)
-      win.focus();
-    else {
-      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                         .getService(Components.interfaces.nsIWindowWatcher);
-      ww.openWindow(null, URI_UPDATE_PROMPT_DIALOG, 
-                    "", "chrome,centerscreen,dialog,titlebar", null);
-    }
+    this._showUI(null);
   },
     
   /**
    * See nsIUpdateService.idl
    */
   showUpdateAvailable: function(update) {
-    var ary = Components.classes["@mozilla.org/supports-array;1"]
-                        .createInstance(Components.interfaces.nsISupportsArray);
-    ary.AppendElement(update);
+    this._showUI(update);
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  showUpdateComplete: function(update) {
+    this._showUI(update);
+  },
+  
+  /**
+   * Show the Update Checking UI
+   * @param   update
+   *          An update to pass to the UI in the window arguments. 
+   *          Can be null.
+   */
+  _showUI: function(update) {
+    var ary = null;
+    if (update) {
+      ary = Components.classes["@mozilla.org/supports-array;1"]
+                      .createInstance(Components.interfaces.nsISupportsArray);
+      ary.AppendElement(update);
+    }
       
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Components.interfaces.nsIWindowMediator);
@@ -418,6 +429,7 @@ UpdateService.prototype = {
       var um = Components.classes["@mozilla.org/updates/update-manager;1"]
                          .getService(Components.interfaces.nsIUpdateManager);
       var activeUpdate = um.activeUpdate;
+      LOG("ACTIVEUPDATE = " + activeUpdate);
       if (activeUpdate)
         this.downloadUpdate(activeUpdate, true);
       break;
@@ -677,21 +689,24 @@ UpdateManager.prototype = {
                                .createInstance(Components.interfaces.nsIFileInputStream);
     fileStream.init(file, MODE_RDONLY, PERMS_FILE, 0);
     try {
-      if (fileStream instanceof Components.interfaces.nsIScriptableInputStream) {
-        var data = fileStream.read(fileStream.available());    
-        var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
-                              .createInstance(Components.interfaces.nsIDOMParser);
-        var doc = parser.parseFromString(data, "text/xml");
-        
-        var updateCount = doc.documentElement.childNodes.length;
-        for (var i = 0; i < updateCount; ++i) {
-          var updateElement = doc.documentElement.childNodes[i];
-          if (updateElement.nodeType != Node.ELEMENT_NODE ||
-              updateElement.localName != "update")
-            continue;
+      var sis =
+          Components.classes["@mozilla.org/scriptableinputstream;1"].
+          createInstance(Components.interfaces.nsIScriptableInputStream);
+      sis.init(fileStream);
+      var data = sis.read(sis.available());
+      var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
+                            .createInstance(Components.interfaces.nsIDOMParser);
+      var doc = parser.parseFromString(data, "text/xml");
+      
+      var updateCount = doc.documentElement.childNodes.length;
+      for (var i = 0; i < updateCount; ++i) {
+        var updateElement = doc.documentElement.childNodes.item(i);
+        if (updateElement.nodeType != Node.ELEMENT_NODE ||
+            updateElement.localName != "update")
+          continue;
 
-          result.push(new Update(updateNode));
-        }
+        updateElement.QueryInterface(Components.interfaces.nsIDOMElement);
+        result.push(new Update(updateElement));
       }
     }
     catch (e) {
@@ -709,16 +724,19 @@ UpdateManager.prototype = {
                         [FILE_UPDATES_DB]));
     this._ensureActiveUpdate();
   },
+
+  _loadedActiveUpdate: false,
   
   /**
    * Ensure that the Active Update file is loaded.
    */
   _ensureActiveUpdate: function() {
-    if (!this._activeUpdate) {
+    if (!this._loadedActiveUpdate) {
       var updates = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, 
         [FILE_UPDATE_ACTIVE]));
       if (updates.length > 0)
         this._activeUpdate = updates[0];
+      this._loadedActiveUpdate = true;
     }
   },
   
@@ -903,11 +921,12 @@ function Update(update) {
   this._patches = [];
 
   for (var i = 0; i < update.childNodes.length; ++i) {
-    var patchElement = update.childNodes[i];
+    var patchElement = update.childNodes.item(i);
     if (patchElement.nodeType != Node.ELEMENT_NODE ||
         patchElement.localName != "patch")
       continue;
 
+    patchElement.QueryInterface(Components.interfaces.nsIDOMElement);
     this._patches.push(new UpdatePatch(patchElement));
   }
   
@@ -1099,11 +1118,12 @@ Checker.prototype = {
     
     var updates = [];
     for (var i = 0; i < updatesElement.childNodes.length; ++i) {
-      var updateElement = updatesElement.childNodes[i];
+      var updateElement = updatesElement.childNodes.item(i);
       if (updateElement.nodeType != Node.ELEMENT_NODE ||
           updateElement.localName != "update")
         continue;
 
+      updateElement.QueryInterface(Components.interfaces.nsIDOMElement);
       updates.push(new Update(updateElement));
     }
 
@@ -1506,10 +1526,17 @@ Downloader.prototype = {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("Downloader.onStopRequest: " + request.URI.spec + ", status = " + status);
 
+    var shouldShowPrompt = false;
     if (Components.isSuccessCode(status)) {
       var state;
       if (this._verifyDownload()) {
         state = STATE_PENDING;
+        
+        // We only need to explicitly show the prompt if this is a backround
+        // download, since otherwise some kind of UI is already visible and 
+        // that UI will notify. 
+        if (this.background)
+          shouldShowPrompt = true;
       } else {
         LOG("download verification failed");
         state = STATE_FAILED;
@@ -1539,6 +1566,18 @@ Downloader.prototype = {
       this._listeners[i].onStopRequest(request, context, status);
 
     this._request = null;
+    
+    // Do this after *everything* else, since it will likely cause the app 
+    // to shut down. 
+    if (shouldShowPrompt) {
+      // Notify the user that an update has been downloaded and is ready for 
+      // installation (i.e. that they should restart the application). We do
+      // not notify on failed update attempts.
+      var prompter = 
+          Components.classes["@mozilla.org/updates/update-prompt;1"].
+          createInstance(Components.interfaces.nsIUpdatePrompt);
+      prompter.showUpdateComplete(this._update);
+    }
   },
    
   /**
