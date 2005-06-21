@@ -63,16 +63,18 @@ var gPrefBranch;
 var gMailSession = null;
 var gMoveToFolderCheckbox;
 var gCopyToFolderCheckbox;
-var gChangePriorityCheckbox;
 var gLabelCheckbox;
+var gChangePriorityCheckbox;
 var gJunkScoreCheckbox;
+var gForwardToCheckbox;
+var gReplyWithTemplateCheckbox;
 var gMarkReadCheckbox;
 var gMarkFlaggedCheckbox;
 var gDeleteCheckbox;
-var gKillCheckbox;
-var gWatchCheckbox;
 var gDeleteFromServerCheckbox;
 var gFetchBodyFromServerCheckbox;
+var gKillCheckbox;
+var gWatchCheckbox;
 var gFilterActionList;
 var gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
@@ -276,18 +278,18 @@ function initializeFilterWidgets()
     gActionForwardTo = document.getElementById("actionValueForward");
     gMoveToFolderCheckbox = document.getElementById("moveToFolder");
     gCopyToFolderCheckbox = document.getElementById("copyToFolder");
-    gChangePriorityCheckbox = document.getElementById("changePriority");
     gLabelCheckbox = document.getElementById("label");
+    gChangePriorityCheckbox = document.getElementById("changePriority");
+    gJunkScoreCheckbox = document.getElementById("setJunkScore");
     gForwardToCheckbox = document.getElementById("forwardTo");
     gReplyWithTemplateCheckbox = document.getElementById("replyWithTemplate");
-    gJunkScoreCheckbox = document.getElementById("setJunkScore");
     gMarkReadCheckbox = document.getElementById("markRead");
     gMarkFlaggedCheckbox = document.getElementById("markFlagged");
     gDeleteCheckbox = document.getElementById("delete");
-    gKillCheckbox = document.getElementById("kill");
-    gWatchCheckbox = document.getElementById("watch");
     gDeleteFromServerCheckbox = document.getElementById("deleteFromServer");
     gFetchBodyFromServerCheckbox = document.getElementById("fetchBodyFromServer");
+    gKillCheckbox = document.getElementById("kill");
+    gWatchCheckbox = document.getElementById("watch");
     gFilterActionList = document.getElementById("filterActionList");
 }
 
@@ -462,18 +464,19 @@ function saveFilter()
   }
 
   if (!(gMoveToFolderCheckbox.checked ||
-        gChangePriorityCheckbox.checked ||
+        gCopyToFolderCheckbox.checked ||
         gLabelCheckbox.checked ||
+        gChangePriorityCheckbox.checked ||
         gJunkScoreCheckbox.checked ||
+        gForwardToCheckbox.checked ||
+        gReplyWithTemplateCheckbox.checked ||
         gMarkReadCheckbox.checked ||
         gMarkFlaggedCheckbox.checked ||
         gDeleteCheckbox.checked ||
-        gWatchCheckbox.checked ||
-        gKillCheckbox.checked ||
         gDeleteFromServerCheckbox.checked ||
-        gForwardToCheckbox.checked ||
-        gReplyWithTemplateCheckbox.checked ||
-        gFetchBodyFromServerCheckbox.checked))
+        gFetchBodyFromServerCheckbox.checked ||
+        gKillCheckbox.checked ||
+        gWatchCheckbox.checked))
   {
     if (gPromptService)
       gPromptService.alert(window, null,
