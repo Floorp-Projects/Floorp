@@ -6152,7 +6152,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
                                       nsILineBreaker* aLineBreaker,
                                       nsLineLayout& aLineLayout,
                                       const nsHTMLReflowState& aReflowState,
-                                      nsIFrame* aTextFrame,
+                                      nsIFrame* aNextFrame,
                                       nsIContent* aContent,
                                       nsITextContent* aText,
                                       PRBool* aStop,
@@ -6162,19 +6162,25 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
                                       PRBool aCanBreakBefore)
 {
   nsTextTransformer tx(aLineBreaker, nsnull, aPresContext);
-  tx.Init(aTextFrame, aContent, 0);
+  tx.Init(aNextFrame, aContent, 0);
   PRBool isWhitespace, wasTransformed;
   PRInt32 wordLen, contentLen;
   nsTextDimensions dimensions;
 #ifdef IBMBIDI
-  wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
+  if (aNextFrame->GetStateBits() & NS_FRAME_IS_BIDI) {
+    PRInt32 nextFrameStart, nextFrameEnd;
+    aNextFrame->GetOffsets(nextFrameStart, nextFrameEnd);
+    wordLen = nextFrameEnd;
+  } else {
+    wordLen = -1;
+  }
 #endif // IBMBIDI
   PRUnichar* bp = tx.GetNextWord(PR_TRUE, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
   if (!bp) {
     //empty text node, but we need to continue lookahead measurement
     // AND we need to remember the text frame for later so that we don't 
     // bother doing the word look ahead.
-    aLineLayout.RecordWordFrame(aTextFrame);
+    aLineLayout.RecordWordFrame(aNextFrame);
     return dimensions; // 0
   }
 
@@ -6239,7 +6245,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
   if((*aStop) && (wordLen == 0))
     return dimensions; // 0;
 
-  nsStyleContext* sc = aTextFrame->GetStyleContext();
+  nsStyleContext* sc = aNextFrame->GetStyleContext();
   if (sc) {
     // Measure the piece of text. Note that we have to select the
     // appropriate font into the text first because the rendering
@@ -6269,7 +6275,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
 
     // Remember the text frame for later so that we don't bother doing
     // the word look ahead.
-    aLineLayout.RecordWordFrame(aTextFrame);
+    aLineLayout.RecordWordFrame(aNextFrame);
     return dimensions;
   }
 
