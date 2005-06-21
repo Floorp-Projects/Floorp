@@ -807,9 +807,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
     result= aToken->Consume(aChar,aScanner,mFlags);
 
     if(NS_SUCCEEDED(result)) {
-     
       AddToken(aToken,result,&mTokenDeque,theAllocator);
-      NS_ENSURE_SUCCESS(result, result);
 
       eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
 
@@ -980,8 +978,13 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,
     // Tell the new token to finish consuming text...
     result= aToken->Consume(aChar,aScanner,mFlags);
     AddToken(aToken,result,&mTokenDeque,theAllocator);
-    NS_ENSURE_SUCCESS(result, result);
-      
+    if (NS_FAILED(result)) {
+      // Note that this early-return here is safe because we have not yet
+      // added any of our tokens to the queue (AddToken only adds the token if
+      // result is a success), so we don't need to fall through.
+      return result;
+    }
+
     result = aScanner.Peek(aChar);
     if (NS_FAILED(result)) {
       aToken->SetInError(PR_TRUE);
