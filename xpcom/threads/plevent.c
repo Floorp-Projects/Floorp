@@ -68,24 +68,17 @@
 #include <kernel/OS.h>
 #endif
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 #if defined(MOZ_WIDGET_COCOA)
 #include <CoreFoundation/CoreFoundation.h>
 #define MAC_USE_CFRUNLOOPSOURCE
 #elif defined(TARGET_CARBON)
 #include <CarbonEvents.h>
 #define MAC_USE_CARBON_EVENT
-#else
-#include <Processes.h>
-#define MAC_USE_WAKEUPPROCESS
 #endif
 #endif
 
-#if defined(XP_MAC)
-#include "pprthred.h"
-#else
 #include "private/pprthred.h"
-#endif /* defined(XP_MAC) */
 
 #if defined(VMS)
 /*
@@ -171,15 +164,13 @@ struct PLEventQueue {
     PRBool              removeMsg;
 #elif defined(XP_BEOS)
     port_id             eventport;
-#elif defined(XP_MAC) || defined(XP_MACOSX)
+#elif defined(XP_MACOSX)
 #if defined(MAC_USE_CFRUNLOOPSOURCE)
     CFRunLoopSourceRef  mRunLoopSource;
     CFRunLoopRef        mMainRunLoop;
 #elif defined(MAC_USE_CARBON_EVENT)
     EventHandlerUPP     eventHandlerUPP;
     EventHandlerRef     eventHandlerRef;
-#elif defined(MAC_USE_WAKEUPPROCESS)
-    ProcessSerialNumber psn;
 #endif
 #endif
 };
@@ -264,9 +255,6 @@ static PLEventQueue * _pl_CreateEventQueue(const char *name,
 #if defined(_WIN32) || defined(XP_OS2)
     self->removeMsg = PR_TRUE;
 #endif
-#if defined(MAC_USE_WAKEUPPROCESS)
-    self->psn.lowLongOfPSN = kNoProcess;
-#endif
 
     self->notified = PR_FALSE;
 
@@ -312,9 +300,6 @@ PL_GetEventQueueMonitor(PLEventQueue* self)
 static void PR_CALLBACK
 _pl_destroyEvent(PLEvent* event, void* data, PLEventQueue* queue)
 {
-#ifdef XP_MAC
-#pragma unused (data, queue)
-#endif
     PL_DequeueEvent(event, queue);
     PL_DestroyEvent(event);
 }
@@ -740,9 +725,6 @@ PL_DestroyEvent(PLEvent* self)
 PR_IMPLEMENT(void)
 PL_DequeueEvent(PLEvent* self, PLEventQueue* queue)
 {
-#ifdef XP_MAC
-#pragma unused (queue)
-#endif
     if (self == NULL)
         return;
 
@@ -856,10 +838,6 @@ PL_EventLoop(PLEventQueue* self)
 static PRStatus
 _pl_SetupNativeNotifier(PLEventQueue* self)
 {
-#if defined(XP_MAC)
-#pragma unused (self)
-#endif
-
 #if defined(VMS)
     unsigned int status;
     self->idFunc = 0;
@@ -961,10 +939,6 @@ failed:
 static void
 _pl_CleanupNativeNotifier(PLEventQueue* self)
 {
-#if defined(XP_MAC)
-#pragma unused (self)
-#endif
-
 #if defined(VMS)
     {
         unsigned int status;
@@ -1297,7 +1271,7 @@ _pl_NativeNotify(PLEventQueue* self)
 }
 #endif /* XP_BEOS */
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
@@ -1318,12 +1292,10 @@ _pl_NativeNotify(PLEventQueue* self)
     }
     if (err != noErr)
         return PR_FAILURE;
-#elif defined(MAC_USE_WAKEUPPROCESS)
-    WakeUpProcess(&self->psn);
 #endif
     return PR_SUCCESS;
 }
-#endif /* defined(XP_MAC) || defined(XP_MACOSX) */
+#endif /* defined(XP_MACOSX) */
 
 static PRStatus
 _pl_AcknowledgeNativeNotify(PLEventQueue* self)
@@ -1381,10 +1353,6 @@ _pl_AcknowledgeNativeNotify(PLEventQueue* self)
         return PR_SUCCESS;
     return PR_FAILURE;
 #else
-
-#if defined(XP_MAC)
-#pragma unused (self)
-#endif
 
     /* nothing to do on the other platforms */
     return PR_SUCCESS;
@@ -1628,7 +1596,7 @@ static pascal Boolean _md_CarbonEventComparator(EventRef inEvent,
 
 #endif /* defined(MAC_USE_CARBON_EVENT) */
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 {
 #if defined(MAC_USE_CFRUNLOOPSOURCE)
@@ -1661,12 +1629,9 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
                                      eventQueue, &eventQueue->eventHandlerRef);
       PR_ASSERT(eventQueue->eventHandlerRef);
     }
-#elif defined(MAC_USE_WAKEUPPROCESS)
-    OSErr err = GetCurrentProcess(&eventQueue->psn);
-    PR_ASSERT(err == noErr);
 #endif
 } /* end _md_CreateEventQueue() */
-#endif /* defined(XP_MAC) || defined(XP_MACOSX) */
+#endif /* defined(XP_MACOSX) */
 
 /* extra functions for unix */
 
