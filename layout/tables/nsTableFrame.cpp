@@ -1973,9 +1973,13 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
 
       ReflowTable(aDesiredSize, aReflowState, availHeight, nextReason, 
                   lastChildReflowed, balanced, aStatus);
+      nextReason = eReflowReason_Resize;
       reflowedChildren = PR_TRUE;
     }
-    if (willInitiateSpecialReflow && NS_FRAME_IS_COMPLETE(aStatus)) {
+    // reevaluate special height reflow conditions
+    if ((NeedToInitiateSpecialReflow() || InitiatedSpecialReflow()) &&
+        (aReflowState.mFlags.mSpecialHeightReflow || !NeedSpecialReflow()) &&
+        NS_FRAME_IS_COMPLETE(aStatus)) {
       // distribute extra vertical space to rows
       CalcDesiredHeight(aReflowState, aDesiredSize); 
       ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = PR_TRUE;
