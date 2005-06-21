@@ -65,6 +65,7 @@ const kQuickSearchSender = 1;
 const kQuickSearchSenderOrSubject = 2;
 const kQuickSearchBody = 3;
 const kQuickSearchHighlight = 4;
+const kQuickSearchRecipient = 5;
 
 var gFinder = Components.classes["@mozilla.org/embedcomp/rangefind;1"].createInstance()
                         .QueryInterface(Components.interfaces.nsIFind);
@@ -466,6 +467,19 @@ function createSearchTerms()
         value.str = termList[i];
         term.value = value;
         term.attrib = searchAttrib;
+        term.op = nsMsgSearchOp.Contains; 
+        term.booleanAnd = false;
+        searchTermsArray.AppendElement(term);
+      }
+
+      // create, fill, and append the recipient
+      if (gSearchInput.searchMode == kQuickSearchRecipient)
+      {
+        term = gSearchSession.createTerm();
+        value = term.value;
+        value.str = termList[i];
+        term.value = value;
+        term.attrib = nsMsgSearchAttrib.ToOrCC;
         term.op = nsMsgSearchOp.Contains; 
         term.booleanAnd = false;
         searchTermsArray.AppendElement(term);
