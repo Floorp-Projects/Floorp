@@ -1393,8 +1393,10 @@ DocumentViewerImpl::Destroy()
 
     if (mDocument)
       mDocument->SetContainer(nsnull);
-    if (mPresContext)
+    if (mPresContext) {
       mPresContext->SetLinkHandler(nsnull);
+      mPresContext->SetContainer(nsnull);
+    }
 
     return NS_OK;
   }
