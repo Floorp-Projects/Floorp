@@ -209,7 +209,7 @@ sub processtalkback {
 }
 
 sub packit {
-  my ($packaging_dir, $package_location, $url, $stagedir, $builddir) = @_;
+  my ($packaging_dir, $package_location, $url, $stagedir, $builddir, $cachebuild) = @_;
   my $status;
 
   if (is_windows()) {
@@ -374,9 +374,74 @@ sub packit {
     }
   }
 
+  if ($cachebuild and $Settings::update_package) {
+    my $update_file = "update.mar";
+    my $update_path = "$stagedir/$update_file";
+    my $update_fullurl = "$url/$update_file";
+
+    TinderUtils::run_shell_command "pwd";
+    TinderUtils::run_shell_command "make -C $builddir/tools/update-packaging full-update STAGE_DIR=$stagedir";
+
+    if ( -f $update_path ) {
+      # Make update dist directory.
+      TinderUtils::run_shell_command "mkdir -p $builddir/dist/update/";
+      # Gather stats for update file.
+      update_create_stats( update => $update_path,
+                           type => "complete",
+                           output_file => "$builddir/dist/update/update.snippet",
+                           url => $update_fullurl,
+                         );
+
+      # Push update information to update-staging/auslite.
+      TinderUtils::run_shell_command "scp -i ~/.ssh/aus $builddir/dist/update/update.snippet cltbld\@update-staging:/opt/auslite/data/Firefox/Linux_x86-gcc3/en-US.txt";
+#      TinderUtils::run_shell_command "ssh -i ~/.ssh/aus cltbld\@update-staging svn commit -m \"commit latest version of update snippet\" /opt/auslite/data/Firefox/Linux_x86-gcc3/en-US.txt";
+    } else {
+      TinderUtils::print_log "Unable to get info on '$update_path' or include in upload because it doesn't exist!\n";
+    }
+  }
+
   # need to reverse status, since it's a "unix" truth value, where 0 means 
   # success
   return ($status)?0:1;
+}
+
+sub update_create_stats {
+  my %args = @_;
+  my $update = $args{'update'};
+  my $type = $args{'type'};
+  my $output_file = $args{'output_file'};
+  my $url = $args{'url'};
+
+  my($hashfunction, $hashvalue, $size, $output);
+
+  $hashfunction = "sha1";
+  ($size) = (stat($update))[7];
+  $hashvalue;
+
+  if ($hashfunction eq "sha1") {
+    $hashvalue = `md5sum $update`;
+  } else {
+    $hashvalue = `sha1sum $update`;
+  }
+  chomp($hashvalue);
+
+  $hashvalue =~ s:^(\w+)\s.*$:$1:g;
+  $hashfunction = uc($hashfunction);
+
+  $output  = "$type\n";
+  $output .= "$url\n";
+  $output .= "$hashfunction\n";
+  $output .= "$hashvalue\n";
+  $output .= "$size\n";
+
+  if (defined($output_file)) {
+    open(UPDATE_FILE, ">$output_file")
+      or die "ERROR: Can't open '$output_file' for writing!";
+    print UPDATE_FILE $output;
+    close(OUTPUT_FILE);
+  } else {
+    printf($output);
+  }
 }
 
 sub packit_l10n {
@@ -773,7 +838,7 @@ sub main {
 
   $upload_directory = $package_location . "/" . $upload_directory;
 
-  unless (packit($package_creation_path,$package_location,$url_path,$upload_directory,$objdir)) {
+  unless (packit($package_creation_path,$package_location,$url_path,$upload_directory,$objdir,$cachebuild)) {
     return returnStatus("Packaging failed", ("testfailed"));
   }
 
