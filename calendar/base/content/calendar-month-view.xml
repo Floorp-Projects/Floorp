@@ -79,6 +79,8 @@
           if (label.firstChild)
             label.removeChild(label.firstChild);
           label.appendChild(document.createTextNode(str));
+          this.setAttribute("class", "calendar-item");
+          this.setAttribute("item-calendar", val.calendar.uri.spec);
 
           return val;
         ]]></setter>
@@ -264,6 +266,9 @@
                 before = this.mItemData[j].box;
 
               var box = createXULElement("calendar-month-day-box-item");
+              box.setAttribute("class", "calendar-item");
+              box.setAttribute("item-calendar", itd.item.calendar.uri.spec);
+
               this.dayitems.insertBefore(box, before);
 	  
               box.item = itd.item;
