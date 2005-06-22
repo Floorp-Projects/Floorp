@@ -66,7 +66,6 @@
 //
 
 const nsIUpdateItem       = Components.interfaces.nsIUpdateItem;
-const nsIUpdateService    = Components.interfaces.nsIUpdateService;
 
 const PREF_UPDATE_EXTENSIONS_ENABLED            = "extensions.update.enabled";
 const PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED  = "extensions.update.autoUpdateEnabled";
@@ -286,7 +285,7 @@ var gUpdatePage = {
         var extensionCount = em.getItemList(nsIUpdateItem.TYPE_EXTENSION, {}).length;
         var themeCount = em.getItemList(nsIUpdateItem.TYPE_THEME, {}).length;
 
-        this._totalCount = extensionCount + themeCount + 1;
+        this._totalCount = extensionCount + themeCount;
       }
     }
     return this._totalCount;
@@ -295,48 +294,44 @@ var gUpdatePage = {
   observe: function (aSubject, aTopic, aData)
   {
     var canFinish = false;
-    dump("*** items = " + gUpdateWizard.items + "\n");
     switch (aTopic) {
     case "Update:Extension:Started":
       break;
     case "Update:Extension:Item-Started":
       break;
     case "Update:Extension:Item-Ended":
-      if (aData == "update-check-success") {
-        var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
+      var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
+      if (aData == "update-check-success")
         gUpdateWizard.itemsToUpdate.push(item);
-      
-        var updateStrings = document.getElementById("updateStrings");
-        var status = document.getElementById("checking.status");
-        var statusString = updateStrings.getFormattedString("checkingPrefix", [item.name]);
-        status.setAttribute("value", statusString);
-      }
       ++this._completeCount;
 
-      // Update the Progress Bar            
+      // Update the status text and progress bar
+      var updateStrings = document.getElementById("updateStrings");
+      var status = document.getElementById("checking.status");
+      var statusString = updateStrings.getFormattedString("checkingPrefix", [item.name]);
+      status.setAttribute("value", statusString);
+
       var progress = document.getElementById("checking.progress");
       progress.value = Math.ceil((this._completeCount / this.totalCount) * 100);
       
       break;
     case "Update:Extension:Item-Error":
-      if (aSubject) {
-        var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
-        gUpdateWizard.errorItems.push(item);
-      }
-      else {
-        for (var i = 0; i < gUpdateWizard.items.length; ++i) {
-          if (!gUpdateWizard.items[i].updateRDF)
-            gUpdateWizard.errorItems.push(gUpdateWizard.items[i]);
-        }
-      }
+      var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
+      gUpdateWizard.errorItems.push(item);
       ++this._completeCount;
+
+      // Update the status text and progress bar
+      var updateStrings = document.getElementById("updateStrings");
+      var status = document.getElementById("checking.status");
+      var statusString = updateStrings.getFormattedString("checkingPrefix", [item.name]);
+      status.setAttribute("value", statusString);
+
       var progress = document.getElementById("checking.progress");
       progress.value = Math.ceil((this._completeCount / this.totalCount) * 100);
 
       break;
     case "Update:Extension:Ended":
       canFinish = gUpdateWizard.items.length > 0;
-      dump("*** " + aTopic + "... canFinish = " + canFinish + "\n");
       break;
     case "Update:Ended":
       // If we're doing a general update check, (that is, no specific extensions/themes
@@ -373,11 +368,11 @@ var gFoundPage = {
       foundAddonsList.appendChild(checkbox);
       checkbox.setAttribute("type", "update");
       checkbox.label        = item.name + " " + item.version;
-      checkbox.URL          = item.xpiURL;
+      checkbox.setAttribute("URL", item.xpiURL);
       checkbox.infoURL      = "";
       checkbox.internalName = "";
       uri.spec              = item.xpiURL;
-      checkbox.source       = uri.host;
+      checkbox.setAttribute("source", uri.host);
       checkbox.checked      = true;
       hasExtensions         = true;
     }

@@ -40,7 +40,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 
-<!DOCTYPE dialog SYSTEM "chrome://mozapps/locale/update/errors.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://mozapps/locale/extensions/errors.dtd">
 
 <dialog id="errors"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -100,7 +100,7 @@
   <stringbundleset id="updateSet">
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="xpinstallStrings" src="chrome://global/locale/xpinstall/xpinstall.properties"/>
-    <stringbundle id="updateStrings" src="chrome://mozapps/locale/update/update.properties"/>
+    <stringbundle id="updateStrings" src="chrome://mozapps/locale/extensions/update.properties"/>
   </stringbundleset>
 
   <description id="intro"/>
