@@ -71,7 +71,7 @@ pref("extensions.ignoreMTimeChanges", false);
 pref("extensions.logging.enabled", false);
 
 // App-specific update preferences
-pref("app.update.enabled", true);               // Whether or not app updates are enabled
+pref("app.update.enabled", false);               // Whether or not app updates are enabled
 
 // Whether or not automated background app updates are enabled.
 pref("app.update.autoInstallEnabled", true);
