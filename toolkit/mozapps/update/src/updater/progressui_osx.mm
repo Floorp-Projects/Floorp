@@ -80,6 +80,9 @@ static const char *sProgramPath;
   [[NSTimer scheduledTimerWithTimeInterval:TIMER_INTERVAL target:self
                                   selector:@selector(updateProgressUI:)
                                   userInfo:nil repeats:YES] retain];
+
+  // Make sure we are on top initially
+  [NSApp activateIgnoringOtherApps:YES];
 }
 
 // called when the timer goes off
