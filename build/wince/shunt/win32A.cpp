@@ -535,38 +535,41 @@ MOZCE_SHUNT_API HDC mozce_CreateDCA(LPCSTR inDriver, LPCSTR inDevice, LPCSTR inO
     LPTSTR wDevice = a2w_malloc(inDevice, -1, NULL);
     LPTSTR wOutput = a2w_malloc(inOutput, -1, NULL);
 
-    DEVMODE wInitData;
-    memset(&wInitData, 0, sizeof(wInitData));
+	DEVMODE wInitData;
+	if (inInitData)
+    {
+		memset(&wInitData, 0, sizeof(wInitData));
 
-    wInitData.dmSpecVersion = inInitData->dmSpecVersion;
-    wInitData.dmDriverVersion = inInitData->dmDriverVersion;
-    wInitData.dmSize = inInitData->dmSize;
-    wInitData.dmDriverExtra = inInitData->dmDriverExtra;
-    wInitData.dmFields = inInitData->dmFields;
-    wInitData.dmOrientation = inInitData->dmOrientation;
-    wInitData.dmPaperSize = inInitData->dmPaperSize;
-    wInitData.dmPaperLength = inInitData->dmPaperLength;
-    wInitData.dmPaperWidth = inInitData->dmPaperWidth;
-    wInitData.dmScale = inInitData->dmScale;
-    wInitData.dmCopies = inInitData->dmCopies;
-    wInitData.dmDefaultSource = inInitData->dmDefaultSource;
-    wInitData.dmPrintQuality = inInitData->dmPrintQuality;
-    wInitData.dmColor = inInitData->dmColor;
-    wInitData.dmDuplex = inInitData->dmDuplex;
-    wInitData.dmYResolution = inInitData->dmYResolution;
-    wInitData.dmTTOption = inInitData->dmTTOption;
-    wInitData.dmCollate = inInitData->dmCollate;
-    wInitData.dmLogPixels = inInitData->dmLogPixels;
-    wInitData.dmBitsPerPel = inInitData->dmBitsPerPel;
-    wInitData.dmPelsWidth = inInitData->dmPelsWidth;
-    wInitData.dmPelsHeight = inInitData->dmPelsHeight;
-    wInitData.dmDisplayFlags = inInitData->dmDisplayFlags;
-    wInitData.dmDisplayFrequency = inInitData->dmDisplayFrequency;
+		wInitData.dmSpecVersion = inInitData->dmSpecVersion;
+		wInitData.dmDriverVersion = inInitData->dmDriverVersion;
+		wInitData.dmSize = inInitData->dmSize;
+		wInitData.dmDriverExtra = inInitData->dmDriverExtra;
+		wInitData.dmFields = inInitData->dmFields;
+		wInitData.dmOrientation = inInitData->dmOrientation;
+		wInitData.dmPaperSize = inInitData->dmPaperSize;
+		wInitData.dmPaperLength = inInitData->dmPaperLength;
+		wInitData.dmPaperWidth = inInitData->dmPaperWidth;
+		wInitData.dmScale = inInitData->dmScale;
+		wInitData.dmCopies = inInitData->dmCopies;
+		wInitData.dmDefaultSource = inInitData->dmDefaultSource;
+		wInitData.dmPrintQuality = inInitData->dmPrintQuality;
+		wInitData.dmColor = inInitData->dmColor;
+		wInitData.dmDuplex = inInitData->dmDuplex;
+		wInitData.dmYResolution = inInitData->dmYResolution;
+		wInitData.dmTTOption = inInitData->dmTTOption;
+		wInitData.dmCollate = inInitData->dmCollate;
+		wInitData.dmLogPixels = inInitData->dmLogPixels;
+		wInitData.dmBitsPerPel = inInitData->dmBitsPerPel;
+		wInitData.dmPelsWidth = inInitData->dmPelsWidth;
+		wInitData.dmPelsHeight = inInitData->dmPelsHeight;
+		wInitData.dmDisplayFlags = inInitData->dmDisplayFlags;
+		wInitData.dmDisplayFrequency = inInitData->dmDisplayFrequency;
 
-    a2w_buffer((LPCSTR)inInitData->dmDeviceName, -1, wInitData.dmDeviceName, charcount(wInitData.dmDeviceName));
-    a2w_buffer((LPCSTR)inInitData->dmFormName, -1, wInitData.dmFormName, charcount(wInitData.dmFormName));
+		a2w_buffer((LPCSTR)inInitData->dmDeviceName, -1, wInitData.dmDeviceName, charcount(wInitData.dmDeviceName));
+		a2w_buffer((LPCSTR)inInitData->dmFormName, -1, wInitData.dmFormName, charcount(wInitData.dmFormName));
+	}
 
-    retval = CreateDC(wDriver, wDevice, wOutput, &wInitData);
+    retval = CreateDC(wDriver, wDevice, wOutput, inInitData ? &wInitData : NULL);
 
     if(NULL != wDriver)
     {
