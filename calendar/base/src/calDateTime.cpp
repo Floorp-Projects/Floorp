@@ -369,9 +369,7 @@ calDateTime::GetStartOfWeek(calIDateTime **aResult)
     int day_of_week = icaltime_day_of_week(icalt);
     if (day_of_week > 1)
         icaltime_adjust(&icalt, - (day_of_week - 1), 0, 0, 0);
-    icalt.hour = 0;
-    icalt.minute = 0;
-    icalt.second = 0;
+    icalt.is_date = 1;
 
     calDateTime *cdt = new calDateTime(&icalt);
     NS_ADDREF(*aResult = cdt);
@@ -386,9 +384,7 @@ calDateTime::GetEndOfWeek(calIDateTime **aResult)
     int day_of_week = icaltime_day_of_week(icalt);
     if (day_of_week < 7)
         icaltime_adjust(&icalt, 7 - day_of_week, 0, 0, 0);
-    icalt.hour = 23;
-    icalt.minute = 59;
-    icalt.second = 59;
+    icalt.is_date = 1;
 
     calDateTime *cdt = new calDateTime(&icalt);
     NS_ADDREF(*aResult = cdt);
@@ -401,9 +397,8 @@ calDateTime::GetStartOfMonth(calIDateTime **aResult)
     struct icaltimetype icalt;
     ToIcalTime(&icalt);
     icalt.day = 1;
-    icalt.hour = 0;
-    icalt.minute = 0;
-    icalt.second = 0;
+    icalt.is_date = 1;
+
     calDateTime *cdt = new calDateTime(&icalt);
     NS_ADDREF(*aResult = cdt);
     return NS_OK;
@@ -415,9 +410,8 @@ calDateTime::GetEndOfMonth(calIDateTime **aResult)
     struct icaltimetype icalt;
     ToIcalTime(&icalt);
     icalt.day = icaltime_days_in_month(icalt.month, icalt.year);
-    icalt.hour = 23;
-    icalt.minute = 59;
-    icalt.second = 59;
+    icalt.is_date = 1;
+
     calDateTime *cdt = new calDateTime(&icalt);
     NS_ADDREF(*aResult = cdt);
     return NS_OK;
@@ -430,9 +424,8 @@ calDateTime::GetStartOfYear(calIDateTime **aResult)
     ToIcalTime(&icalt);
     icalt.month = 1;
     icalt.day = 1;
-    icalt.hour = 0;
-    icalt.minute = 0;
-    icalt.second = 0;
+    icalt.is_date = 1;
+
     calDateTime *cdt = new calDateTime(&icalt);
     NS_ADDREF(*aResult = cdt);
     return NS_OK;
@@ -445,9 +438,8 @@ calDateTime::GetEndOfYear(calIDateTime **aResult)
     ToIcalTime(&icalt);
     icalt.month = 12;
     icalt.day = 31;
-    icalt.hour = 23;
-    icalt.minute = 59;
-    icalt.second = 59;
+    icalt.is_date = 1;
+
     calDateTime *cdt = new calDateTime(&icalt);
     NS_ADDREF(*aResult = cdt);
     return NS_OK;
@@ -513,11 +505,18 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
     mYear = t.year;
     mMonth = t.month - 1;
     mDay = t.day;
-    mHour = t.hour;
-    mMinute = t.minute;
-    mSecond = t.second;
 
     mIsDate = t.is_date ? PR_TRUE : PR_FALSE;
+
+    if (!mIsDate) {
+        mHour = t.hour;
+        mMinute = t.minute;
+        mSecond = t.second;
+    } else {
+        mHour = 0;
+        mMinute = 0;
+        mSecond = 0;
+    }
 
     if (t.is_utc || t.zone == icaltimezone_get_utc_timezone())
         mTimezone.AssignLiteral("UTC");

@@ -145,7 +145,6 @@
 
 .minimonth-day:hover {
   cursor: pointer;
-  font-weight: bold;
   border: 1px solid Highlight;
 }
 

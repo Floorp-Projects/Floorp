@@ -47,7 +47,7 @@
 
   <binding id="calendar-month-day-box-item">
     <content>
-      <xul:label anonid="item-label" crop="end" class="calendar-month-day-box-item-label"/>
+      <xul:label anonid="item-label" crop="end" class="calendar-month-day-box-item-label" xbl:inherits="context"/>
     </content>
 
     <implementation>
@@ -266,6 +266,7 @@
                 before = this.mItemData[j].box;
 
               var box = createXULElement("calendar-month-day-box-item");
+              box.setAttribute("context", this.getAttribute("item-context") || this.getAttribute("context"));
               box.setAttribute("class", "calendar-item");
               box.setAttribute("item-calendar", itd.item.calendar.uri.spec);
 
@@ -386,6 +387,24 @@
 
       <field name="mShowDaysOutsideMonth">true</field>
 
+      <!-- other methods -->
+      <method name="setAttribute">
+        <parameter name="aAttr"/>
+        <parameter name="aVal"/>
+        <body><![CDATA[
+          var needsrelayout = false;
+          if (aAttr == "context" || aAttr == "item-context")
+              needsrelayout = true;
+
+          var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
+
+          if (needsrelayout)
+              this.relayout();
+
+          return ret;
+        ]]></body>
+      </method>
+
       <!-- calICalendarView -->
 
       <property name="supportsDisjointDates" readonly="true"
@@ -415,13 +434,24 @@
 
       <property name="endDate" readonly="true">
 	<getter><![CDATA[
-	  if (!this.mEndDate)
-	    return null;
-	  var realEnd = this.mEndDate.clone();
-	  realEnd.day -= 1;
-	  realEnd.normalize();
-	  return realEnd;
+	  return this.mEndDate;
 	]]></getter>
+      </property>
+
+      <!-- the end date that should be used for getItems and similar queries -->
+      <property name="queryEndDate" readonly="true">
+        <getter><![CDATA[
+	  var end = this.endDate;
+	  if (!end)
+              return null;
+
+          end = end.clone();
+          end.day += 1;
+          end.isDate = true;
+          end.normalize();
+
+          return end;
+        ]]></getter>
       </property>
 
       <property name="selectedItem">
@@ -541,15 +571,12 @@
           if (!this.mCalendar)
             return;
 
-          var queryEnd = this.endDate.clone();
-          queryEnd.day += 1;
-          queryEnd.normalize();
           this.mCalendar.getItems(this.mCalendar.ITEM_FILTER_COMPLETED_ALL |
                                   this.mCalendar.ITEM_FILTER_TYPE_ALL |
                                   this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES,
                                   0,
                                   this.startDate,
-                                  queryEnd,
+                                  this.queryEndDate,
                                   this.mOperationListener);
         ]]></body>
       </method>
@@ -594,6 +621,9 @@
 
           for each (var date in this.getDateList({})) {
             var box = createXULElement("calendar-month-day-box");
+            box.setAttribute("context", this.getAttribute("context"));
+            box.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
+
             if (lastMonth != date.month && !first) {
               isEven = !isEven;
               lastMonth = date.month;
@@ -647,7 +677,6 @@
           return null;
         ]]></body>
       </method>
-
 
       <method name="findBoxForItem">
         <parameter name="aItem"/>
@@ -747,7 +776,7 @@
           },
           onAddItem: function (aItem) {
             var occs = aItem.getOccurrencesBetween(this.calView.startDate,
-                                                   this.calView.endDate,
+                                                   this.calView.queryEndDate,
                                                    {});
             for each (var occ in occs)
               this.calView.doAddItem(occ);
@@ -755,13 +784,13 @@
           onModifyItem: function (aNewItem, aOldItem) {
             var occs;
             occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
-                                                  this.calView.endDate,
+                                                  this.calView.queryEndDate,
                                                   {});
             for each (var occ in occs)
               this.calView.doDeleteItem(occ);
 
             occs = aNewItem.getOccurrencesBetween(this.calView.startDate,
-                                                  this.calView.endDate,
+                                                  this.calView.queryEndDate,
                                                   {});
             for each (var occ in occs)
               this.calView.doAddItem(occ);
@@ -771,7 +800,7 @@
               return;
 
             var occs = aItem.getOccurrencesBetween(this.calView.startDate,
-                                                   this.calView.endDate,
+                                                   this.calView.queryEndDate,
                                                    {});
             for each (var occ in occs) {
               this.calView.doDeleteEvent(occ);

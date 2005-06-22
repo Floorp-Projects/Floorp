@@ -240,7 +240,7 @@
     <content>
       <xul:stack anonid="boxstack" flex="1" style="min-width: 1px; min-height: 1px">
         <xul:box anonid="bgbox" flex="1" style="min-width: 1px; min-height: 1px"/>
-        <xul:box anonid="topbox" flex="1" equalsize="always" style="min-width: 1px; min-height: 1px"/>
+        <xul:box xbl:inherits="context" anonid="topbox" flex="1" equalsize="always" style="min-width: 1px; min-height: 1px"/>
         <xul:box anonid="fgbox" flex="1" class="fgdragcontainer" style="min-width: 1px; min-height: 1px">
           <xul:box anonid="fgdragspacer" style="display: inherit; overflow: hidden;">
             <xul:spacer flex="1"/>
@@ -444,6 +444,9 @@
                   needsrelayout = true;
           }
 
+          if (aAttr == "context" || aAttr == "item-context")
+              needsrelayout = true;
+
           // this should be done using lookupMethod(), see bug 286629
           var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
 
@@ -629,11 +632,13 @@
 
                   if (chunk.event) {
                       var chunkBox = createXULElement("calendar-event-box");
+                      chunkBox.setAttribute("context", this.getAttribute("item-context") || this.getAttribute("context"));
                       chunkBox.setAttribute("style", "min-width: 1px; min-height: 1px;");
                       chunkBox.setAttribute("orient", orient);
                       // chunkBox.setAttribute("style", "background: #eeeeff; padding: 0px 1px 0px 1px");
 
                       // chunkBox.setAttribute("flex", "1");
+
                       if (orient == "vertical")
                           chunkBox.setAttribute("height", duration * this.mPixPerMin);
                       else
@@ -648,6 +653,7 @@
                       chunk.event.eventbox = chunkBox;
                   } else {
                       var chunkBox = createXULElement("spacer");
+                      chunkBox.setAttribute("context", this.getAttribute("context"));
                       chunkBox.setAttribute("style", "min-width: 1px; min-height: 1px;");
                       chunkBox.setAttribute("orient", orient);
                       chunkBox.setAttribute("class", "calendar-empty-space-box");
@@ -1186,7 +1192,7 @@
     <content>
       <xul:box anonid="eventbox" xbl:inherits="orient,width,height" flex="1">
         <xul:calendar-event-gripbar anonid="gripbar1" whichside="start" xbl:inherits="parentorient=orient"/>
-        <xul:vbox class="calendar-event-box-container" xbl:inherits="parentorient=orient" flex="1" align="left">
+        <xul:vbox class="calendar-event-box-container" xbl:inherits="context,parentorient=orient" flex="1" align="left">
         <xul:label anonid="event-name" flex="1" crop="right"/>
           <!-- for some reason, textboxes suck ass for reflow. -->
           <!-- <xul:textbox class="plain" style="background: transparent !important" anonid="event-name" flex="1" crop="right"/> -->
@@ -1330,7 +1336,6 @@
           <xul:box anonid="headertimespacer"/>
           <xul:box anonid="headerdaybox" flex="1" equalsize="always" />
         </xul:box>
-        <xul:splitter collapse="before"><xul:grippy/></xul:splitter>
         <xul:box anonid="childbox" flex="1">
           <!-- the orient of the calendar-time-bar needs to be the opposite of the parent -->
           <xul:calendar-time-bar xbl:inherits="orient" anonid="timebar"/>
@@ -1349,23 +1354,40 @@
         this.reorient();
       ]]></constructor>
 
+      <field name="mTimeoutScheduled">false</field>
+      <field name="mLastSize">0</field>
       <method name="onResize">
+        <parameter name="aRealSelf"/>
 	<body><![CDATA[
-          var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
-          var daybox = document.getAnonymousElementByAttribute(this, "anonid", "daybox");
+          var self = this;
+          if (aRealSelf) {
+            self = aRealSelf;
+            self.mTimeoutScheduled = false;
+          }
 
-          var orient = this.orient;
+          var timebar = document.getAnonymousElementByAttribute(self, "anonid", "timebar");
+          var daybox = document.getAnonymousElementByAttribute(self, "anonid", "daybox");
+
+          var orient = self.orient;
           var size;
-          if (this.orient == "horizontal")
-              size = daybox.boxObject.width;
+          if (self.orient == "horizontal")
+            size = daybox.boxObject.width;
           else
-              size = daybox.boxObject.height;
+            size = daybox.boxObject.height;
 
-          // ask the 
+          if (self.mLastSize > size) {
+            self.pixelsPerMinute = 0.01;
+            self.mLastSize = size;
+            if (!self.mTimeoutScheduled)
+              setTimeout(self.onResize, 0, self);
+            return;
+          }
+
+          self.mLastSize = size;
+
           var minutes = timebar.endMinute - timebar.startMinute;
           var ppm = size / minutes;
-          //dump ("new ppm: " + ppm + "\n");
-          this.pixelsPerMinute = ppm;
+          self.pixelsPerMinute = ppm;
 	]]></body>
       </method>
 
@@ -1416,7 +1438,7 @@
                 aItem = aItem.QueryInterface(Components.interfaces.calIEvent);
 
                 var occs = aItem.getOccurrencesBetween(this.calView.startDate,
-                                                       this.calView.endDate,
+                                                       this.calView.queryEndDate,
                                                        {});
                 //dump ("occs: " + occs.length + "\n");
                 for each (var occ in occs) {
@@ -1433,14 +1455,14 @@
 
                 var occs;
                 occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
-                                                      this.calView.endDate,
+                                                      this.calView.queryEndDate,
                                                       {});
                 for each (var occ in occs) {
                     this.calView.doDeleteEvent(occ);
                 }
 
                 occs = aNewItem.getOccurrencesBetween(this.calView.startDate,
-                                                      this.calView.endDate,
+                                                      this.calView.queryEndDate,
                                                       {});
                 for each (var occ in occs) {
                     this.calView.doAddEvent(occ);
@@ -1452,7 +1474,7 @@
                     return;
 
                 var occs = aItem.getOccurrencesBetween(this.calView.startDate,
-                                                       this.calView.endDate,
+                                                       this.calView.queryEndDate,
                                                        {});
                 for each (var occ in occs) {
                     this.calView.doDeleteEvent(occ);
@@ -1541,6 +1563,23 @@
           else return null;
         ]]></getter>
       </property>
+
+      <!-- the end date that should be used for getItems and similar queries -->
+      <property name="queryEndDate" readonly="true">
+        <getter><![CDATA[
+	  var end = this.endDate;
+	  if (!end)
+              return null;
+
+          end = end.clone();
+          end.day += 1;
+          end.isDate = true;
+          end.normalize();
+
+          return end;
+        ]]></getter>
+      </property>
+
 
       <method name="showDate">
 	<parameter name="aDate"/>
@@ -1738,17 +1777,20 @@
         <parameter name="aAttr"/>
         <parameter name="aVal"/>
         <body><![CDATA[
+          var needsrelayout = false;
           if (aAttr == "orient") {
               if (this.getAttribute("orient") != aVal)
                   needsrelayout = true;
           }
 
+          if (aAttr == "context" || aAttr == "item-context")
+              needsrelayout = true;
+
           // this should be done using lookupMethod(), see bug 286629
           var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
 
-          if (needsrelayout) {
+          if (needsrelayout)
               this.reorient();
-          }
 
           return ret;
         ]]></body>
@@ -1791,6 +1833,7 @@
               labelbox.removeAttribute("width");
 
               var timebarWidth = 100;
+
               timebar.setAttribute("width", timebarWidth);
               timebar.removeAttribute("height");
               headertimespacer.setAttribute("width", timebarWidth);
@@ -1840,15 +1883,12 @@
           // we get all the items, and just filter out the ones we don't
           // care about in addItem
 
-          var queryEnd = this.endDate.clone();
-          queryEnd.day += 1;
-          queryEnd.normalize();
           this.mCalendar.getItems(this.mCalendar.ITEM_FILTER_COMPLETED_ALL |
                                   this.mCalendar.ITEM_FILTER_TYPE_EVENT |
                                   this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES,
                                   0,
                                   this.startDate,
-                                  queryEnd,
+                                  this.queryEndDate,
                                   this.mOperationListener);
         ]]></body>
       </method>
@@ -1901,6 +1941,8 @@
               var dayEventsBox = createXULElement("calendar-event-column");
               dayEventsBox.setAttribute("flex", "1");
               dayEventsBox.setAttribute("class", "calendar-event-column-" + (counter % 2 == 0 ? "even" : "odd"));
+              dayEventsBox.setAttribute("context", this.getAttribute("context"));
+              dayEventsBox.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
               daybox.appendChild(dayEventsBox);
 
               dayEventsBox.setAttribute("orient", orient);
