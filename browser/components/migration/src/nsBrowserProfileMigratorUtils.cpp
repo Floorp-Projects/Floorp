@@ -40,6 +40,9 @@
 #include "nsIProperties.h"
 #include "nsIProfileMigrator.h"
 
+#include "nsIURI.h"
+#include "nsNetUtil.h"
+
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPCOMCID.h"
 #include "nsCRT.h"
@@ -47,20 +50,34 @@
 void SetProxyPref(const nsACString& aHostPort, const char* aPref, 
                   const char* aPortPref, nsIPrefBranch* aPrefs) 
 {
-  nsCAutoString hostPort(aHostPort);  
-  PRInt32 portDelimOffset = hostPort.RFindChar(':');
-  if (portDelimOffset > 0) {
-    nsCAutoString host(Substring(hostPort, 0, portDelimOffset));
-    nsCAutoString port(Substring(hostPort, portDelimOffset + 1, 
-                                 hostPort.Length() - (portDelimOffset + 1)));
-    
+  nsCOMPtr<nsIURI> uri;
+  nsCAutoString host;
+  PRInt32 portValue;
+
+  // try parsing it as a URI first
+  if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), aHostPort))
+      && NS_SUCCEEDED(uri->GetHost(host))
+      && !host.IsEmpty()
+      && NS_SUCCEEDED(uri->GetPort(&portValue))) {
     aPrefs->SetCharPref(aPref, host.get());
-    PRInt32 stringErr;
-    PRInt32 portValue = port.ToInteger(&stringErr);
     aPrefs->SetIntPref(aPortPref, portValue);
   }
-  else
-    aPrefs->SetCharPref(aPref, hostPort.get());
+  else {
+    nsCAutoString hostPort(aHostPort);  
+    PRInt32 portDelimOffset = hostPort.RFindChar(':');
+    if (portDelimOffset > 0) {
+      host = Substring(hostPort, 0, portDelimOffset);
+      nsCAutoString port(Substring(hostPort, portDelimOffset + 1, 
+                                   hostPort.Length() - (portDelimOffset + 1)));
+    
+      aPrefs->SetCharPref(aPref, host.get());
+      PRInt32 stringErr;
+      portValue = port.ToInteger(&stringErr);
+      aPrefs->SetIntPref(aPortPref, portValue);
+    }
+    else
+      aPrefs->SetCharPref(aPref, hostPort.get());
+  }
 }
 
 void ParseOverrideServers(const char* aServers, nsIPrefBranch* aBranch)
