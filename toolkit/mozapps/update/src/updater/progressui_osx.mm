@@ -88,7 +88,10 @@ static const char *sProgramPath;
   if (sQuit) {
     [aTimer invalidate];
     [aTimer release];
-    [[NSApplication sharedApplication] terminate:self];
+    // It seems to be necessary to hide ourselves before we stop, otherwise the
+    // "run" method will not return until the user focuses some other app.
+    [NSApp hide:self];
+    [NSApp stop:self];
   }
   
   float progress = sProgressVal;
@@ -124,7 +127,9 @@ ShowProgressUI()
   if (sQuit || sProgressVal > 50.0f)
     return 0;
   
-  NSApplicationMain(1, &sProgramPath);
+  [NSApplication sharedApplication];
+  [NSBundle loadNibNamed:@"MainMenu" owner:NSApp];
+  [NSApp run];
 
   return 0;
 }
