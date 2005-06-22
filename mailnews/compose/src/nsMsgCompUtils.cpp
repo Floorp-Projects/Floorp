@@ -1539,6 +1539,8 @@ mime_type_requires_b64_p (const char *type)
     "application/uuencode",     /* APPLICATION_UUENCODE3 */
     "application/sgml",
     "application/x-csh",
+    "application/javascript",
+    "application/ecmascript",
     "application/x-javascript",
     "application/x-latex",
     "application/x-macbinhex40",

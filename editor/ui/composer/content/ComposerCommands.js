@@ -1627,6 +1627,9 @@ const kSupportedTextMimeTypes =
   "text/rdf",
   "text/xsl",
   "text/javascript",
+  "text/ecmascript",
+  "application/javascript",
+  "application/ecmascript",
   "application/x-javascript",
   "text/xul",
   "application/vnd.mozilla.xul+xml"

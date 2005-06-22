@@ -91,6 +91,9 @@ static const char* const gHTMLTypes[] = {
   "text/plain",
   "text/css",
   "text/javascript",
+  "text/ecmascript",
+  "application/javascript",
+  "application/ecmascript",
   "application/x-javascript",
 #ifdef MOZ_VIEW_SOURCE
   "application/x-view-source", //XXX I wish I could just use nsMimeTypes.h here
