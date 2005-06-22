@@ -40,7 +40,9 @@ const nsIIncrementalDownload  = Components.interfaces.nsIIncrementalDownload;
 
 const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const PREF_UPDATE_MANUAL_URL  = "app.update.url.manual";
+const PREF_UPDATE_MANUAL_URL    = "app.update.url.manual";
+const PREF_UPDATE_NAGTIMER_DL   = "app.update.nagTimer.download";
+const PREF_UPDATE_NAGTIMER_RESTART = "app.update.nagTimer.restart";
 
 const URI_UPDATES_PROPERTIES  = "chrome://mozapps/locale/update/updates.properties";
 
@@ -53,6 +55,8 @@ const STATE_FAILED            = "failed";
 const SRCEVT_FOREGROUND       = 1;
 const SRCEVT_BACKGROUND       = 2;
 
+var gPref = null;
+
 /**
  * Logs a string to the error console. 
  * @param   string
@@ -60,6 +64,28 @@ const SRCEVT_BACKGROUND       = 2;
  */  
 function LOG(string) {
   dump("*** " + string + "\n");
+}
+
+/**
+ * Gets a preference value, handling the case where there is no default.
+ * @param   func
+ *          The name of the preference function to call, on nsIPrefBranch
+ * @param   preference
+ *          The name of the preference
+ * @param   defaultValue
+ *          The default value to return in the event the preference has 
+ *          no setting
+ * @returns The value of the preference, or undefined if there was no
+ *          user or default value.
+ */
+function getPref(func, preference, defaultValue) {
+  try {
+    return gPref[func](preference);
+  }
+  catch (e) {
+    LOG("FAIL = " + e);
+  }
+  return defaultValue;
 }
 
 var gUpdates = {
@@ -111,6 +137,9 @@ var gUpdates = {
    * Called when the wizard UI is loaded.
    */
   onLoad: function() {
+    gPref = Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefBranch2);
+  
     this.strings = document.getElementById("updateStrings");
     var brandStrings = document.getElementById("brandStrings");
     this.brandName = brandStrings.getString("brandShortName");
@@ -121,9 +150,17 @@ var gUpdates = {
       if (page.localName == "wizardpage") 
         this._pages[page.pageid] = eval(page.getAttribute("object"));
     }
+  
+    var de = document.documentElement;
+    
+    // Cache the standard button labels in case we need to restore them
+    this.buttonLabel_back = de.getButton("back").label;
+    this.buttonLabel_next = de.getButton("next").label;
+    this.buttonLabel_finish = de.getButton("finish").label;
+    this.buttonLabel_cancel = de.getButton("cancel").label;
     
     // Advance to the Start page. 
-    document.documentElement.currentPage = this.startPage;
+    de.currentPage = this.startPage;
   },
   
   /**
@@ -145,7 +182,8 @@ var gUpdates = {
         // their permission to install, and it's ready for download.
         this.update = arg0;
         this.sourceEvent = SRCEVT_BACKGROUND;
-        if (this.update.selectedPatch.state == STATE_PENDING)
+        if (this.update.selectedPatch &&
+            this.update.selectedPatch.state == STATE_PENDING)
           return document.getElementById("finishedBackground");
         return document.getElementById("updatesfound");
       }
@@ -185,7 +223,69 @@ var gUpdates = {
     errorPage.setAttribute("label", pageTitle);
     document.documentElement.currentPage = document.getElementById("errors");
     document.documentElement.setAttribute("label", pageTitle);
-  }
+  },
+  
+  /**
+   * Registers a timer to nag the user about something relating to update
+   * @param   timerID
+   *          The ID of the timer to register, used for persistence
+   * @param   timerInterval
+   *          The interval of the timer
+   * @param   methodName
+   *          The method to call on the Update Prompter when the timer fires
+   */
+  registerNagTimer: function(timerID, timerInterval, methodName) {
+    // Remind the user to restart their browser in a little bit.
+    var tm = 
+        Components.classes["@mozilla.org/updates/timer-manager;1"].
+        getService(Components.interfaces.nsIUpdateTimerManager);
+    
+    /**
+     * An object implementing nsITimerCallback that uses the Update Prompt
+     * component to notify the user about some event relating to app update
+     * that they should take action on.
+     * @param   update
+     *          The nsIUpdate object in question
+     * @param   methodName
+     *          The name of the method on the Update Prompter that should be 
+     *          called
+     * @constructor
+     */
+    function Callback(update, methodName) {
+      this._update = update;
+      this._methodName = methodName;
+      this._prompter = 
+        Components.classes["@mozilla.org/updates/update-prompt;1"].
+        createInstance(Components.interfaces.nsIUpdatePrompt);      
+    }
+    Callback.prototype = {
+      /**
+       * The Update we should nag about downloading
+       */
+      _update: null,
+      
+      /**
+       * The Update prompter we can use to notify the user
+       */
+      _prompter: null,
+      
+      /**
+       * The method on the update prompt that should be called
+       */
+      _methodName: "",
+      
+      /**
+       * Called when the timer fires. Notifies the user about whichever event 
+       * they need to be nagged about (e.g. update available, please restart,
+       * etc).
+       */
+      notify: function(timerCallback) {
+        this._prompter[methodName](this._update);
+      }
+    }
+    tm.registerTimer(timerID, (new Callback(gUpdates.update, methodName)), 
+                     timerInterval);
+  },
 }
 
 var gCheckingPage = {
@@ -202,10 +302,10 @@ var gCheckingPage = {
     var wiz = document.documentElement;
     wiz.getButton("next").disabled = true;
 
-    var aus = 
-        Components.classes["@mozilla.org/updates/update-service;1"].
-        getService(Components.interfaces.nsIApplicationUpdateService);
-    this._checker = aus.checkForUpdates(this.updateListener);
+    this._checker = 
+      Components.classes["@mozilla.org/updates/update-checker;1"].
+      createInstance(Components.interfaces.nsIUpdateChecker);
+    this._checker.checkForUpdates(this.updateListener);
   },
   
   /**
@@ -213,8 +313,10 @@ var gCheckingPage = {
    * Manager control, so stop checking for updates.
    */
   onWizardCancel: function() {
-    if (this._checker)
-      this._checker.stopChecking();
+    if (this._checker) {
+      const nsIUpdateChecker = Components.interfaces.nsIUpdateChecker;
+      this._checker.stopChecking(nsIUpdateChecker.CURRENT_CHECK);
+    }
   },
   
   updateListener: {
@@ -271,8 +373,14 @@ var gNoUpdatesPage = {
 };
 
 var gUpdatesAvailablePage = {
+  /**
+   * An array of installed addons incompatible with this update.
+   */
   _incompatibleItems: null,
   
+  /**
+   * Initialize.
+   */
   onPageShow: function() {
     var updateName = gUpdates.strings.getFormattedString("updateName", 
       [gUpdates.brandName, gUpdates.update.version]);
@@ -307,15 +415,38 @@ var gUpdatesAvailablePage = {
     downloadNow.focus();
   },
   
+  /**
+   * User said they wanted to install now, so advance to the License or 
+   * Downloading page, whichever is appropriate.
+   */
   onInstallNow: function() {
     var nextPageID = gUpdates.update.licenseURL ? "license" : "downloading";
     document.documentElement.currentPage = document.getElementById(nextPageID);
   },
   
+  /**
+   * User said that they would install later. Register a timer to remind them
+   * after a day or so.
+   */
   onInstallLater: function() {
+    var interval = getPref("getIntPref", PREF_UPDATE_NAGTIMER_DL, 86400000);
+    gUpdates.registerNagTimer("download-nag-timer", interval, 
+                              "showUpdateAvailable");
+
+    // The user said "Later", so stop all update checks for this session
+    // so that we don't bother them again.
+    const nsIUpdateChecker = Components.interfaces.nsIUpdateChecker;
+    var aus = 
+        Components.classes["@mozilla.org/updates/update-service;1"].
+        getService(Components.interfaces.nsIApplicationUpdateService);
+    aus.backgroundChecker.stopChecking(nsIUpdateChecker.CURRENT_SESSION);
+
     close();
   },
   
+  /** 
+   * Show a list of extensions made incompatible by this update.
+   */
   showIncompatibleItems: function() {
     openDialog("chrome://mozapps/content/update/incompatible.xul", "", 
                "dialog,centerscreen,modal,resizable,titlebar", this._incompatibleItems);
@@ -327,11 +458,15 @@ var gLicensePage = {
   onPageShow: function() {
     this._licenseContent = document.getElementById("licenseContent");
     
-    var nextButton = document.documentElement.getButton("next");
+    var de = document.documentElement;
+    var nextButton = de.getButton("next");
     nextButton.disabled = true;
     nextButton.label = gUpdates.strings.getString("IAgreeLabel");
-    document.documentElement.getButton("back").disabled = true;
-    document.documentElement.getButton("next").focus();
+    de.getButton("back").disabled = true;
+    de.getButton("next").focus();
+    
+    var cancelButton = de.getButton("cancel");
+    cancelButton.label = gUpdates.strings.getString("IDoNotAgreeLabel");
 
     this._licenseContent.addEventListener("load", this.onLicenseLoad, false);
     this._licenseContent.url = gUpdates.update.licenseURL;
@@ -345,6 +480,14 @@ var gLicensePage = {
   
   onWizardCancel: function() {
     this._licenseContent.stopDownloading();
+    
+    // The user said "Do Not Agree", so stop all update checks for this session
+    // so that we don't bother them again.
+    const nsIUpdateChecker = Components.interfaces.nsIUpdateChecker;
+    var aus = 
+        Components.classes["@mozilla.org/updates/update-service;1"].
+        getService(Components.interfaces.nsIApplicationUpdateService);
+    aus.backgroundChecker.stopChecking(nsIUpdateChecker.CURRENT_SESSION);
   }
 };
 
@@ -598,11 +741,14 @@ var gDownloadingPage = {
       updates.addDownloadListener(this);
     }
     
-    document.documentElement.getButton("back").disabled = true;
-    document.documentElement.getButton("next").disabled = true;
-    var cancelButton = document.documentElement.getButton("cancel");
+    var de = document.documentElement;
+    de.getButton("back").disabled = true;
+    var cancelButton = de.getButton("cancel");
     cancelButton.label = gUpdates.strings.getString("closeButtonLabel");
     cancelButton.focus();
+    var nextButton = de.getButton("next");
+    nextButton.disabled = true;
+    nextButton.label = gUpdates.buttonLabel_next;
   },
   
   /** 
@@ -626,13 +772,14 @@ var gDownloadingPage = {
    */
   _togglePausedState: function(paused) {
     var u = gUpdates.update;
+    var p = u.selectedPatch.QueryInterface(Components.interfaces.nsIPropertyBag);
     if (paused) {
       this._oldStatus = this._downloadStatus.textContent;
       this._oldMode = this._downloadProgress.mode;
       this._oldProgress = parseInt(this._downloadProgress.progress);
       this._downloadName.value = gUpdates.strings.getFormattedString(
         "pausedName", [u.name]);
-      this._setStatus(u.selectedPatch.status);
+      this._setStatus(p.getProperty("status"));
       this._downloadProgress.mode = "normal";
       
       this._pauseButton.label = gUpdates.strings.getString("pauseButtonResume");
@@ -640,8 +787,9 @@ var gDownloadingPage = {
     else {
       this._downloadName.value = gUpdates.strings.getFormattedString(
         "downloadingPrefix", [u.name]);
-      this._setStatus(this._oldStatus || u.selectedPatch.status);
-      this._downloadProgress.value = this._oldProgress || u.selectedPatch.progress;
+      this._setStatus(this._oldStatus || p.getProperty("status"));
+      this._downloadProgress.value = 
+        this._oldProgress || parseInt(p.getProperty("progress"));
       this._downloadProgress.mode = this._oldMode || "normal";
       this._pauseButton.label = gUpdates.strings.getString("pauseButtonPause");
     }
@@ -657,9 +805,11 @@ var gDownloadingPage = {
     if (this._paused)
       updates.downloadUpdate(gUpdates.update, false);
     else {
-      gUpdates.update.selectedPatch.status = 
+      var patch = gUpdates.update.selectedPatch;
+      patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
+      patch.setProperty("status", 
         gUpdates.strings.getFormattedString("pausedStatus", 
-          [this._statusFormatter.progress]);
+          [this._statusFormatter.progress]));
       updates.pauseDownload();
     }
     this._paused = !this._paused;
@@ -728,15 +878,18 @@ var gDownloadingPage = {
     request.QueryInterface(nsIIncrementalDownload);
     // LOG("gDownloadingPage.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
 
-    gUpdates.update.selectedPatch.status = 
-      this._statusFormatter.formatStatus(progress, maxProgress);
+    var p = gUpdates.update.selectedPatch;
+    p.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
+    p.setProperty("progress", Math.round(100 * (progress/maxProgress)));
+    p.setProperty("status", 
+      this._statusFormatter.formatStatus(progress, maxProgress));
 
     this._downloadProgress.mode = "normal";
-    this._downloadProgress.value = gUpdates.update.selectedPatch.progress;
+    this._downloadProgress.value = parseInt(p.getProperty("progress"));
     this._pauseButton.disabled = false;
     var name = gUpdates.strings.getFormattedString("downloadingPrefix", [gUpdates.update.name]);
     this._downloadName.value = name;
-    this._setStatus(gUpdates.update.selectedPatch.status);
+    this._setStatus(p.getProperty("status"));
   },
   
   /** 
@@ -909,6 +1062,11 @@ var gFinishedPage = {
       [gUpdates.brandName]);
     ps.alert(window, gUpdates.strings.getString("restartLaterTitle"), 
              message);
+
+    var interval = getPref("getIntPref", PREF_UPDATE_NAGTIMER_RESTART, 
+                           18000000);
+    gUpdates.registerNagTimer("restart-nag-timer", interval, 
+                              "showUpdateComplete");
   },
 };
 
