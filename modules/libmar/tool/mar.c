@@ -39,8 +39,15 @@
 #include <stdio.h>
 #include "mar.h"
 
+#ifdef XP_WIN
+#include <direct.h>
+#define chdir _chdir
+#else
+#include <unistd.h>
+#endif
+
 static void print_usage() {
-    printf("usage: mar {-c|-x|-t} archive.mar [files...]\n");
+    printf("usage: mar [-C dir] {-c|-x|-t} archive.mar [files...]\n");
 }
 
 static int mar_test_callback(MarFile *mar, const MarItem *item, void *unused) {
@@ -68,6 +75,12 @@ int main(int argc, char **argv) {
   if (argc < 3) {
     print_usage();
     return -1;
+  }
+
+  if (argv[1][1] == 'C') {
+    chdir(argv[2]);
+    argv += 2;
+    argc -= 2;
   }
 
   switch (argv[1][1]) {
