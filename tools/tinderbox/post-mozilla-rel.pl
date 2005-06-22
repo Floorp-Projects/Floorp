@@ -419,9 +419,9 @@ sub update_create_stats {
   $hashvalue;
 
   if ($hashfunction eq "sha1") {
-    $hashvalue = `md5sum $update`;
-  } else {
     $hashvalue = `sha1sum $update`;
+  } else {
+    $hashvalue = `md5sum $update`;
   }
   chomp($hashvalue);
 
