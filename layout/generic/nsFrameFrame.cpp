@@ -83,6 +83,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIFrameFrame.h"
 #include "nsAutoPtr.h"
+#include "nsIDOMNSHTMLDocument.h"
 
 // For Accessibility
 #ifdef ACCESSIBILITY
@@ -708,6 +709,26 @@ nsSubDocumentFrame::ShowDocShell()
     baseWindow->Create();
 
     baseWindow->SetVisibility(PR_TRUE);
+  }
+
+  // Trigger editor re-initialization if midas is turned on in the
+  // sub-document. This shouldn't be necessary, but given the way our
+  // editor works, it is. See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=284245
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  if (presShell) {
+    nsCOMPtr<nsIDOMNSHTMLDocument> doc =
+      do_QueryInterface(presShell->GetDocument());
+
+    if (doc) {
+      nsAutoString designMode;
+      doc->GetDesignMode(designMode);
+
+      if (designMode.EqualsLiteral("on")) {
+        doc->SetDesignMode(NS_LITERAL_STRING("off"));
+        doc->SetDesignMode(NS_LITERAL_STRING("on"));
+      }
+    }
   }
 
   return NS_OK;
