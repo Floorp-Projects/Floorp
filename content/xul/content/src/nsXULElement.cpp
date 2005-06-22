@@ -1998,6 +1998,9 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
                              nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                              nsEventStatus* aEventStatus)
 {
+    // Make sure to tell the event that dispatch has started.
+    NS_MARK_EVENT_DISPATCH_STARTED(aEvent);
+
     nsresult ret = NS_OK;
 
     PRBool retarget = PR_FALSE;
@@ -2031,10 +2034,10 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
         }
         if (aDOMEvent) {
             if (*aDOMEvent)
-              externalDOMEvent = PR_TRUE;
+                externalDOMEvent = PR_TRUE;
         }
         else
-          aDOMEvent = &domEvent;
+            aDOMEvent = &domEvent;
 
         aEvent->flags |= aFlags;
         aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
@@ -2077,21 +2080,21 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
                 // menu), then that breaks.
                 nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
                 if (privateEvent) {
-                  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-                  privateEvent->SetTarget(target);
+                    nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
+                    privateEvent->SetTarget(target);
                 }
                 else
-                  return NS_ERROR_FAILURE;
+                    return NS_ERROR_FAILURE;
 
                 // if we are a XUL click, we have the private event set.
                 // now switch to a left mouse click for the duration of the event
                 if (aEvent->message == NS_XUL_CLICK)
-                  aEvent->message = NS_MOUSE_LEFT_CLICK;
+                    aEvent->message = NS_MOUSE_LEFT_CLICK;
             }
         }
     }
     else if (aEvent->message == NS_IMAGE_LOAD)
-      return NS_OK; // Don't let these events bubble or be captured.  Just allow them
+        return NS_OK; // Don't let these events bubble or be captured.  Just allow them
                     // on the target image.
 
     // Find out whether we're anonymous.
@@ -2129,60 +2132,62 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
     }
 
     if (retarget || (parent != GetParent())) {
-      if (!*aDOMEvent) {
-        // We haven't made a DOMEvent yet.  Force making one now.
-        nsCOMPtr<nsIEventListenerManager> listenerManager;
-        if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
-          return ret;
-        }
-        nsAutoString empty;
-        if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, empty, aDOMEvent)))
-          return ret;
-
         if (!*aDOMEvent) {
+            // We haven't made a DOMEvent yet.  Force making one now.
+            nsCOMPtr<nsIEventListenerManager> listenerManager;
+            if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
+                return ret;
+            }
+            nsAutoString empty;
+            if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, empty, aDOMEvent)))
+                return ret;
+
+            if (!*aDOMEvent) {
+                return NS_ERROR_FAILURE;
+            }
+        }
+
+        nsCOMPtr<nsIPrivateDOMEvent> privateEvent =
+            do_QueryInterface(*aDOMEvent);
+        if (!privateEvent) {
             return NS_ERROR_FAILURE;
         }
-      }
 
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
-      if (!privateEvent) {
-        return NS_ERROR_FAILURE;
-      }
+        (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
 
-      (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
+        PRBool hasOriginal;
+        privateEvent->HasOriginalTarget(&hasOriginal);
 
-      PRBool hasOriginal;
-      privateEvent->HasOriginalTarget(&hasOriginal);
+        if (!hasOriginal)
+            privateEvent->SetOriginalTarget(oldTarget);
 
-      if (!hasOriginal)
-        privateEvent->SetOriginalTarget(oldTarget);
-
-      if (retarget) {
-          nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetParent());
-          privateEvent->SetTarget(target);
+        if (retarget) {
+            nsCOMPtr<nsIDOMEventTarget> target =
+                do_QueryInterface(GetParent());
+            privateEvent->SetTarget(target);
       }
     }
 
     //Capturing stage evaluation
     if (NS_EVENT_FLAG_CAPTURE & aFlags) {
-      //Initiate capturing phase.  Special case first call to document
-      if (parent) {
-        parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags & NS_EVENT_CAPTURE_MASK, aEventStatus);
-      }
-      else if (doc) {
-          ret = doc->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                    aFlags & NS_EVENT_CAPTURE_MASK,
-                                    aEventStatus);
-      }
+        //Initiate capturing phase.  Special case first call to document
+        if (parent) {
+            parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags & NS_EVENT_CAPTURE_MASK, aEventStatus);
+        }
+        else if (doc) {
+            ret = doc->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                      aFlags & NS_EVENT_CAPTURE_MASK,
+                                      aEventStatus);
+        }
     }
 
 
     if (retarget) {
-      // The event originated beneath us, and we performed a retargeting.
-      // We need to restore the original target of the event.
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
-      if (privateEvent)
-        privateEvent->SetTarget(oldTarget);
+        // The event originated beneath us, and we performed a retargeting.
+        // We need to restore the original target of the event.
+        nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
+        if (privateEvent)
+            privateEvent->SetTarget(oldTarget);
     }
 
     //Local handling stage
@@ -2194,12 +2199,14 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
     }
 
     if (retarget) {
-      // The event originated beneath us, and we need to perform a retargeting.
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
-      if (privateEvent) {
-        nsCOMPtr<nsIDOMEventTarget> parentTarget(do_QueryInterface(GetParent()));
-        privateEvent->SetTarget(parentTarget);
-      }
+        // The event originated beneath us, and we need to perform a
+        // retargeting.
+        nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
+        if (privateEvent) {
+            nsCOMPtr<nsIDOMEventTarget> parentTarget =
+                do_QueryInterface(GetParent());
+            privateEvent->SetTarget(parentTarget);
+        }
     }
 
     //Bubbling stage
@@ -2207,7 +2214,7 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
         if (parent != nsnull) {
             // We have a parent. Let them field the event.
             ret = parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                          aFlags & NS_EVENT_BUBBLE_MASK, aEventStatus);
+                                         aFlags & NS_EVENT_BUBBLE_MASK, aEventStatus);
       }
         else if (IsInDoc()) {
         // We must be the document root. The event should bubble to the
@@ -2218,33 +2225,37 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
     }
 
     if (retarget) {
-      // The event originated beneath us, and we performed a retargeting.
-      // We need to restore the original target of the event.
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
-      if (privateEvent)
-        privateEvent->SetTarget(oldTarget);
+        // The event originated beneath us, and we performed a retargeting.
+        // We need to restore the original target of the event.
+        nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
+        if (privateEvent)
+            privateEvent->SetTarget(oldTarget);
     }
 
     if (NS_EVENT_FLAG_INIT & aFlags) {
-      // We're leaving the DOM event loop so if we created a DOM event,
-      // release here.  If externalDOMEvent is set the event was passed in
-      // and we don't own it
-      if (*aDOMEvent && !externalDOMEvent) {
-        nsrefcnt rc;
-        NS_RELEASE2(*aDOMEvent, rc);
-        if (0 != rc) {
-          // Okay, so someone in the DOM loop (a listener, JS object)
-          // still has a ref to the DOM Event but the internal data
-          // hasn't been malloc'd.  Force a copy of the data here so the
-          // DOM Event is still valid.
-          nsCOMPtr<nsIPrivateDOMEvent> privateEvent =
-            do_QueryInterface(*aDOMEvent);
-          if (privateEvent) {
-            privateEvent->DuplicatePrivateData();
-          }
+        // We're leaving the DOM event loop so if we created a DOM event,
+        // release here.  If externalDOMEvent is set the event was passed in
+        // and we don't own it
+        if (*aDOMEvent && !externalDOMEvent) {
+            nsrefcnt rc;
+            NS_RELEASE2(*aDOMEvent, rc);
+            if (0 != rc) {
+                // Okay, so someone in the DOM loop (a listener, JS object)
+                // still has a ref to the DOM Event but the internal data
+                // hasn't been malloc'd.  Force a copy of the data here so the
+                // DOM Event is still valid.
+                nsCOMPtr<nsIPrivateDOMEvent> privateEvent =
+                    do_QueryInterface(*aDOMEvent);
+                if (privateEvent) {
+                    privateEvent->DuplicatePrivateData();
+                }
+            }
+            aDOMEvent = nsnull;
         }
-        aDOMEvent = nsnull;
-      }
+
+        // Now that we're done with this event, remove the flag that says
+        // we're in the process of dispatching this event.
+        NS_MARK_EVENT_DISPATCH_DONE(aEvent);
     }
 
     return ret;

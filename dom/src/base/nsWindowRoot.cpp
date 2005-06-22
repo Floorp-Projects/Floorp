@@ -226,10 +226,14 @@ nsWindowRoot::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWindowRoot::HandleChromeEvent(nsPresContext* aPresContext,
-   nsEvent* aEvent, nsIDOMEvent** aDOMEvent, PRUint32 aFlags, 
-   nsEventStatus* aEventStatus)
+NS_IMETHODIMP
+nsWindowRoot::HandleChromeEvent(nsPresContext* aPresContext, nsEvent* aEvent,
+                                nsIDOMEvent** aDOMEvent, PRUint32 aFlags, 
+                                nsEventStatus* aEventStatus)
 {
+  // Make sure to tell the event that dispatch has started.
+  NS_MARK_EVENT_DISPATCH_STARTED(aEvent);
+
   // Prevent the world from going
   // away until after we've finished handling the event.
   nsCOMPtr<nsIDOMWindow> kungFuDeathGrip(mWindow);
@@ -252,13 +256,16 @@ NS_IMETHODIMP nsWindowRoot::HandleChromeEvent(nsPresContext* aPresContext,
   }
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
-    // We're leaving the DOM event loop so if we created a DOM event, release here.
+    // We're leaving the DOM event loop so if we created a DOM event,
+    // release here.
     if (nsnull != *aDOMEvent) {
       nsrefcnt rc;
       NS_RELEASE2(*aDOMEvent, rc);
       if (0 != rc) {
-      //Okay, so someone in the DOM loop (a listener, JS object) still has a ref to the DOM Event but
-      //the internal data hasn't been malloc'd.  Force a copy of the data here so the DOM Event is still valid.
+        // Okay, so someone in the DOM loop (a listener, JS object)
+        // still has a ref to the DOM Event but the internal data
+        // hasn't been malloc'd.  Force a copy of the data here so the
+        // DOM Event is still valid.
         nsIPrivateDOMEvent *privateEvent;
         if (NS_OK == (*aDOMEvent)->QueryInterface(NS_GET_IID(nsIPrivateDOMEvent), (void**)&privateEvent)) {
           privateEvent->DuplicatePrivateData();
@@ -267,6 +274,10 @@ NS_IMETHODIMP nsWindowRoot::HandleChromeEvent(nsPresContext* aPresContext,
       }
     }
     aDOMEvent = nsnull;
+
+    // Now that we're done with this event, remove the flag that says
+    // we're in the process of dispatching this event.
+    NS_MARK_EVENT_DISPATCH_DONE(aEvent);
   }
 
   return ret;
