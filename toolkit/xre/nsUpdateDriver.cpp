@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include "nsUpdateDriver.h"
 #include "nsILocalFile.h"
@@ -54,8 +55,28 @@
 # include <windows.h>
 #elif defined(XP_UNIX)
 # include <unistd.h>
-#else
-# include <stdlib.h>
+#endif
+
+//
+// We use execv to spawn the updater process on all UNIX systems except Mac OSX
+// since it is known to cause problems on the Mac.  Windows has execv, but it
+// is a faked implementation that doesn't really replace the current process.
+// Instead it spawns a new process, so we gain nothing from using execv on
+// Windows.
+//
+// On platforms where we are not calling execv, we may need to make the
+// udpaterfail executable wait for the calling process to exit.  Otherwise, the
+// updater may have trouble modifying our executable image (because it might
+// still be in use).  This is accomplished by passing our PID to the updater so
+// that it can wait for us to exit.  This is not perfect as there is a race
+// condition that could bite us.  It's possible that the calling process could
+// exit before the updater waits on the specified PID, and in the meantime a
+// new process with the same PID could be created.  This situation is unlikely,
+// however, given the way most operating systems recycle PIDs.  We'll take our
+// chances ;-)
+//
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+#define USE_EXECV
 #endif
 
 #ifdef PR_LOGGING
@@ -69,6 +90,9 @@ static const char kUpdaterBin[] = "updater.exe";
 static const char kUpdaterBin[] = "updater";
 #endif
 static const char kUpdaterINI[] = "updater.ini";
+#ifdef XP_MACOSX
+static const char kUpdaterApp[] = "updater.app";
+#endif
 
 #ifdef XP_WIN
 // On windows, we need to double-quote parameters before passing them to execv.
@@ -200,8 +224,12 @@ CopyUpdaterIntoUpdateDir(nsIFile *appDir, nsIFile *updateDir,
 {
   // We have to move the updater binary and its resource file.
   const char *filesToMove[] = {
+#if defined(XP_MACOSX)
+    kUpdaterApp,
+#else
     kUpdaterINI,
     kUpdaterBin,
+#endif
     nsnull
   };
 
@@ -236,6 +264,13 @@ CopyUpdaterIntoUpdateDir(nsIFile *appDir, nsIFile *updateDir,
   rv = updateDir->Clone(getter_AddRefs(updater));
   if (NS_FAILED(rv))
     return PR_FALSE;
+#if defined(XP_MACOSX)
+  rv  = updater->AppendNative(NS_LITERAL_CSTRING(kUpdaterApp));
+  rv |= updater->AppendNative(NS_LITERAL_CSTRING("Contents"));
+  rv |= updater->AppendNative(NS_LITERAL_CSTRING("MacOS"));
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+#endif
   rv = updater->AppendNative(NS_LITERAL_CSTRING(kUpdaterBin));
   return NS_SUCCEEDED(rv); 
 }
@@ -259,9 +294,24 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   nsresult rv = updater->GetNativePath(updaterPath);
   if (NS_FAILED(rv))
     return;
-  
+
   nsCAutoString appDirPath;
+#if defined(XP_MACOSX)
+  // On Mac OSX, we need to apply the update to the Contents directory
+  // which is the parent of the parent of the appDir.
+  {
+    nsCOMPtr<nsIFile> parentDir1, parentDir2;
+    rv = appDir->GetParent(getter_AddRefs(parentDir1));
+    if (NS_FAILED(rv))
+      return;
+    rv = parentDir1->GetParent(getter_AddRefs(parentDir2));
+    if (NS_FAILED(rv))
+      return;
+    rv = parentDir2->GetNativePath(appDirPath);
+  }
+#else
   rv = appDir->GetNativePath(appDirPath);
+#endif
   if (NS_FAILED(rv))
     return;
 
@@ -273,6 +323,7 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   // Form the command line that will be used to call us back.
   nsCAutoString commandLine;
   MakeCommandLine(appArgv, commandLine);
+  LOG(("callback command line: %s\n", commandLine.get()));
 
   if (!SetStatus(statusFile, "applying")) {
     LOG(("failed setting status to 'applying'\n"));
@@ -292,17 +343,24 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   argv[0] = (char*) updaterPath.get();
   argv[1] = (char*) updateDirPath.get();
   argv[2] = (char*) commandLine.get();
+#if defined(USE_EXECV)
+  argv[3] = nsnull;
+#else
+  nsCAutoString pid;
+  pid.AppendInt((PRInt32)
 #if defined(XP_WIN)
-  nsPrintfCString pid("%u", GetCurrentProcessId());
+    GetCurrentProcessId()
+#else
+    getpid()
+#endif
+    );
   argv[3] = (char*) pid.get();
   argv[4] = nsnull;
-#else
-  argv[3] = nsnull;
 #endif
 
-  LOG(("spawning updater process...\n"));
+  LOG(("spawning updater process [%s]\n", updaterPath.get()));
 
-#if defined(XP_WIN) || defined(XP_UNIX)
+#if defined(USE_EXECV)
   chdir(appDirPath.get());
   execv(updaterPath.get(), argv);
 #else
