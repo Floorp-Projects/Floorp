@@ -81,7 +81,7 @@ FinalizeInstall(JSContext *cx, JSObject *obj);
 //
 JSClass InstallClass = {
   "Install",
-  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
+  JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
   GetInstallProperty,
@@ -1669,7 +1669,7 @@ InstallConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   PRBool checkState = PR_FALSE;
   PRInt32 nativeRet;
 
-  *rval = JSVAL_NULL;
+  *rval = JSVAL_FALSE;
 
   if(argc == 0)
   {
