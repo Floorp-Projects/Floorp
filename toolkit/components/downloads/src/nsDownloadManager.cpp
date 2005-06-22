@@ -711,12 +711,28 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
 
   internalDownload->SetDownloadState(nsIDownloadManager::DOWNLOAD_CANCELED);
 
+  // xxxmpc - this is a bit of a hack to delete the .part file
+  // created in nsExternalHelperAppService.cpp
+  nsCOMPtr<nsILocalFile> targetFile;
+  rv = internalDownload->GetTargetFile(getter_AddRefs(targetFile));
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString leafName;
+  targetFile->GetLeafName(leafName);
+  leafName.Append(NS_LITERAL_STRING(".part"));
+  targetFile->SetLeafName(leafName);
+
+  PRBool exists;
+  targetFile->Exists(&exists);
+  if (exists)
+    targetFile->Remove(PR_FALSE);
+
   // Cancel using the provided object
   nsCOMPtr<nsICancelable> cancelable;
   internalDownload->GetCancelable(getter_AddRefs(cancelable));
   if (cancelable)
     cancelable->Cancel(NS_BINDING_ABORTED);
- 
+
   DownloadEnded(aPath, nsnull);
 
   gObserverService->NotifyObservers(internalDownload, "dl-cancel", nsnull);
@@ -730,7 +746,7 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
     rv = observer->Observe(internalDownload, "oncancel", nsnull);
     if (NS_FAILED(rv)) return rv;
   }
-  
+
   return rv;
 }
 
