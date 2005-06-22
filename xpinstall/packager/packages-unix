@@ -476,3 +476,6 @@ bin/components/libmyspell.so
 bin/components/libspellchecker.so
 bin/components/spellchecker.xpt
 bin/components/myspell/*
+
+[reporter]
+bin/chrome/reporter.jar

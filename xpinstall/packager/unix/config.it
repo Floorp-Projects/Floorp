@@ -59,7 +59,7 @@ C8=Component11
 ; *** LOCALIZE ME BABY ***
 Description Short=Complete
 ; *** LOCALIZE ME BABY ***
-Description Long=Navigator, Mail & News, Spellchecker, Chatzilla, Debugger, and Inspector
+Description Long=Navigator, Mail & News, Spellchecker, Chatzilla, Debugger, Inspector, and Reporter
 C0=Component0
 C1=Component1
 C2=Component2
@@ -72,6 +72,7 @@ C8=Component8
 C9=Component9
 C10=Component10
 C11=Component11
+C12=Component12
 
 [Setup Type2]
 ; *** LOCALIZE ME BABY ***
@@ -103,6 +104,7 @@ C8=Component8
 C9=Component9
 C10=Component10
 C11=Component11
+C12=Component12
 
 
 ;-------------------------------------------------------------------------
@@ -229,6 +231,16 @@ Description Long=Spellchecker
 Archive=spellcheck.xpi
 $InstallSize$:spellcheck
 $InstallSizeArchive$:spellcheck.xpi
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component12]
+Description Short=Website Reporter
+; *** LOCALIZE ME BABY ***
+Description Long=Website Reporter
+Archive=reporter.xpi
+$InstallSize$:reporter
+$InstallSizeArchive$:reporter.xpi
 Attributes=SELECTED
 URL0=$URLPath$
 

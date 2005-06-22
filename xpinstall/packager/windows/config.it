@@ -259,6 +259,7 @@ C10=Component US region pack
 ; this component can easily remove it.
 C11=Component DOM Inspector
 C12=Component QFA
+C13=Component RPT
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -286,6 +287,7 @@ C10=Component US region pack
 ; this component can easily remove it.
 C11=Component DOM Inspector
 C12=Component QFA
+C13=Component RPT
 
 
 
@@ -733,6 +735,17 @@ Install Size System=1
 Install Size Archive=248
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\components\fullsoft.dll
+
+[Component RPT]
+Description Short=Website Reporter
+;*** LOCALIZE ME BABY ***
+Description Long=Website Reporter
+Archive=reporter.xpi
+$InstallSize$:reporter
+$InstallSizeSystem$
+$InstallSizeArchive$:reporter.xpi
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\chrome\reporter.jar
 
 ; This is to randomly set the default checkbox for this component.
 ; This particular value will set the checkbox checked [number]% of the time.

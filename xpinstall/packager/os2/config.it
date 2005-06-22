@@ -178,6 +178,7 @@ C11=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
 ;C12=Component QFA
+C12=Component RPT
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -205,6 +206,7 @@ C11=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
 ;C12=Component QFA
+C12=Component RPT
 
 
 
@@ -564,6 +566,17 @@ $InstallSizeArchive$:psm.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\Components\pipnss.dll
 Force Upgrade File1=[SETUP PATH]\psm.exe
+
+[Component RPT]
+Description Short=Website Reporter
+;*** LOCALIZE ME BABY ***
+Description Long=Website Reporter
+Archive=reporter.xpi
+$InstallSize$:reporter
+$InstallSizeSystem$
+$InstallSizeArchive$:reporter.xpi
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\chrome\reporter.jar
 
 [Core]
 Source=[XPI PATH]\xpcom.xpi

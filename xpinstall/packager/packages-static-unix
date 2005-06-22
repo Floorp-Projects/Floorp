@@ -343,3 +343,6 @@ bin/chrome/inspector.jar
 bin/defaults/pref/inspector.js
 bin/res/inspector/viewer-registry.rdf
 bin/res/inspector/search-registry.rdf
+
+[reporter]
+bin/chrome/reporter.jar
