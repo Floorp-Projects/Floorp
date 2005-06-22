@@ -429,7 +429,6 @@ UpdateService.prototype = {
       var um = Components.classes["@mozilla.org/updates/update-manager;1"]
                          .getService(Components.interfaces.nsIUpdateManager);
       var activeUpdate = um.activeUpdate;
-      LOG("ACTIVEUPDATE = " + activeUpdate);
       if (activeUpdate)
         this.downloadUpdate(activeUpdate, true);
       break;
@@ -441,8 +440,7 @@ UpdateService.prototype = {
           Components.classes["@mozilla.org/updates/timer-manager;1"]
                     .getService(Components.interfaces.nsIUpdateTimerManager);
       var interval = getPref("getIntPref", PREF_APP_UPDATE_INTERVAL, 86400000);
-      tm.registerTimer("background-update-timer", this, interval,
-                       Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+      tm.registerTimer("background-update-timer", this, interval);
       break;
     case "xpcom-shutdown":
       gOS.removeObserver(this, "xpcom-shutdown");
@@ -472,7 +470,7 @@ UpdateService.prototype = {
   
   notify: function(timer) {
     // If a download is in progress, then do nothing.
-    if (this.isDownloading)
+    if (this.isDownloading || this._downloader && this._downloader.patchIsStaged)
       return;
 
     var self = this;
@@ -484,7 +482,7 @@ UpdateService.prototype = {
       onError: function() { },
     }
 
-    this.checkForUpdates(listener);
+    this.backgroundChecker.checkForUpdates(listener);
   },
   
   /**
@@ -514,12 +512,18 @@ UpdateService.prototype = {
     // Minor            1         Yes             Notify and Confirm
     // Minor            2         Yes or No       Notify and Confirm
     //
+    // In addition, if there is a license associated with an update, regardless
+    // of type it must be agreed to. 
+    //
     // If app.update.enabled is set to false, an update check is not performed
     // at all, and so none of the decision making above is entered into.
     //
+    if (update.licenseURL)
+      return true;
+    
     var updateEnabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
     if (!updateEnabled)
-      return;
+      return false;
       
     var mode = getPref("getIntPref", PREF_APP_UPDATE_AUTOINSTALL_MODE, 0);
     var compatible = isCompatible(update);
@@ -580,12 +584,17 @@ UpdateService.prototype = {
   },
 
   /**
-   * 
+   * The Checker used for background update checks.
    */
-  checkForUpdates: function(listener) {
-    var checker = new Checker();
-    checker.findUpdates(listener);
-    return checker;
+  _backgroundChecker: null,
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  get backgroundChecker() {
+    if (!this._backgroundChecker) 
+      this._backgroundChecker = new Checker();
+    return this._backgroundChecker;
   },
   
   /**
@@ -871,15 +880,17 @@ function getPref(func, preference, defaultValue) {
  * @constructor
  */
 function UpdatePatch(patch) {
-  this.type = patch.getAttribute("type");
-  this.URL = patch.getAttribute("URL");
-  this.hashFunction = patch.getAttribute("hashFunction");
-  this.hashValue = patch.getAttribute("hashValue");
-  this.size = parseInt(patch.getAttribute("size"));
-  this.percentage = parseFloat(patch.getAttribute("percentage"));
-  this.state = patch.getAttribute("state");
-  this.status = patch.getAttribute("status");
-  this.selected = patch.getAttribute("selected") == "true";
+  for (var i = 0; i < patch.attributes.length; ++i) {
+    var attr = patch.attributes[i];
+    switch (attr.name) {
+    case "selected":
+      this.selected = attr.value == "true";
+      break;
+    default:
+      this[attr.name] = attr.value;
+      break;
+    };
+  }
 }
 UpdatePatch.prototype = {
   /**
@@ -892,11 +903,56 @@ UpdatePatch.prototype = {
     patch.setAttribute("hashFunction", this.hashFunction);
     patch.setAttribute("hashValue", this.hashValue);
     patch.setAttribute("size", this.size);
-    patch.setAttribute("percentage", this.percentage);
-    patch.setAttribute("state", this.state);
-    patch.setAttribute("status", this.status);
     patch.setAttribute("selected", this.selected);
+    
+    for (var p in this._properties) {
+      if (this._properties[p].present)
+        patch.setAttribute(p, this._properties[p].data);
+    }
+    
     return patch; 
+  },
+  
+  /**
+   * A hash of custom properties
+   */
+  _properties: { },
+  
+  /**
+   * See nsIWritablePropertyBag.idl
+   */
+  setProperty: function(name, value) {
+    this._properties[name] = { data: value, present: true };
+  },
+  
+  /**
+   * See nsIWritablePropertyBag.idl
+   */
+  deleteProperty: function(name) {
+    if ("name" in this._properties)
+      this._properties[name].present = false;
+    else
+      throw Components.results.NS_ERROR_FAILURE;
+  },
+  
+  /**
+   * See nsIPropertyBag.idl
+   */
+  get enumerator() {
+    var properties = [];
+    for (var p in this._properties)
+      properties.push(this._properties[p].data);
+    return new ArrayEnumerator(properties);
+  },
+  
+  /**
+   * See nsIPropertyBag.idl
+   */
+  getProperty: function(name) {
+    if ("name" in this._properties &&
+        this._properties[name].present)
+      return this._properties[name].data;
+    throw Components.results.NS_ERROR_FAILURE;
   },
   
   /**
@@ -904,6 +960,8 @@ UpdatePatch.prototype = {
    */
   QueryInterface: function(iid) {
     if (!iid.equals(Components.interfaces.nsIUpdatePatch) &&
+        !iid.equals(Components.interfaces.nsIPropertyBag) && 
+        !iid.equals(Components.interfaces.nsIWritablePropertyBag) && 
         !iid.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
@@ -1067,13 +1125,13 @@ Checker.prototype = {
   },
   
   /**
-   *
+   * See nsIUpdateService.idl
    */
-  findUpdates: function(callback) {
-    if (!callback)
+  checkForUpdates: function(listener) {
+    if (!listener)
       throw Components.results.NS_ERROR_NULL_POINTER;
       
-    if (!this._updateURL)
+    if (!this._updateURL || !this.enabled)
       return;
       
     this._request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -1087,10 +1145,10 @@ Checker.prototype = {
     this._request.onload      = function(event) { self.onLoad(event);     };
     this._request.onprogress  = function(event) { self.onProgress(event); };
 
-    LOG("Checker.findUpdates: sending request to " + this._updateURL);
+    LOG("Checker.checkForUpdates: sending request to " + this._updateURL);
     this._request.send(null);
     
-    this._callback = callback;
+    this._callback = listener;
   },
   
   /**
@@ -1158,10 +1216,35 @@ Checker.prototype = {
   },
   
   /**
+   * Whether or not we are allowed to do update checking.
+   */
+  _enabled: true,
+  
+  /**
    * See nsIUpdateService.idl
    */
-  stopChecking: function() {
+  get enabled() {
+    return getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true) || 
+           this._enabled;
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  stopChecking: function(duration) {
+    // Always stop the current check
     this._request.abort();
+    
+    const nsIUpdateChecker = Components.interfaces.nsIUpdateChecker;
+    switch (duration) {
+    case nsIUpdateChecker.CURRENT_SESSION:
+      this._enabled = false;
+      break;
+    case nsIUpdateChecker.ANY_CHECKS:
+      this._enabled = false;
+      gPref.setBoolPref(PREF_APP_UPDATE_ENABLED, this._enabled);
+      break;
+    }
   },
   
   /**
@@ -1209,7 +1292,7 @@ Downloader.prototype = {
   isCompleteUpdate: null,
 
   /**
-   *
+   * Cancels the active download.
    */  
   cancel: function() {
     if (this._request && 
@@ -1220,9 +1303,9 @@ Downloader.prototype = {
   },
 
   /**
-   * 
+   * Retrieves the active Updates directory, as a nsIFile object.
    */
-  _getUpdatesDir: function() {
+  get _updatesDir() {
     // Right now, we only support downloading one patch at a time, so we always
     // use the same target directory.
     var fileLocator =
@@ -1260,6 +1343,13 @@ Downloader.prototype = {
     statusFile.append(FILE_UPDATE_STATUS);
     LOG(statusFile.path);
     return readStringFromFile(statusFile);
+  },
+  
+  /**
+   * Whether or not a patch has been downloaded and staged for installation.
+   */
+  get patchIsStaged() {
+    return this._readStatusFile(this._updatesDir) == STATE_PENDING;
   },
 
   /**
@@ -1365,7 +1455,7 @@ Downloader.prototype = {
         updateDir.remove(true);
       } catch (e) {}
       // Restore the updateDir since we may have deleted it.
-      updateDir = this._getUpdatesDir();
+      updateDir = this._updatesDir;
 
       selectedPatch = null;
     }
@@ -1408,13 +1498,14 @@ Downloader.prototype = {
     if (!update)
       throw Components.results.NS_ERROR_NULL_POINTER;
     
-    var updateDir = this._getUpdatesDir();
+    var updateDir = this._updatesDir;
 
     this._update = update;
 
     // This function may return null, which indicates that there are no patches
     // to download.
     this._patch = this._selectPatch(update, updateDir);
+    LOG("PATCH = " + this._patch);
     if (!this._patch) {
       LOG("no patch to download");
       return this._readStatusFile(updateDir);
@@ -1441,6 +1532,7 @@ Downloader.prototype = {
     this._request.start(this, null);
 
     this._writeStatusFile(updateDir, STATE_DOWNLOADING);
+    this._patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
     this._patch.state = STATE_DOWNLOADING;
     var um = Components.classes["@mozilla.org/updates/update-manager;1"]
                        .getService(Components.interfaces.nsIUpdateManager);
@@ -1495,8 +1587,6 @@ Downloader.prototype = {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("Downloader.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
     
-    this._patch.progress = Math.round(100 * (progress/maxProgress));
-
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i) {
       var listener = this._listeners[i];
@@ -1553,7 +1643,8 @@ Downloader.prototype = {
           // download initiates.
         }
       }
-      this._writeStatusFile(this._getUpdatesDir(), state);
+      this._writeStatusFile(this._updatesDir, state);
+      this._patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
       this._patch.state = state;
       var um = Components.classes["@mozilla.org/updates/update-manager;1"]
                          .getService(Components.interfaces.nsIUpdateManager);
@@ -1598,82 +1689,61 @@ Downloader.prototype = {
  * @constructor
  */
 function TimerManager() {
+  const nsITimer = Components.interfaces.nsITimer;
+  this._timer = Components.classes["@mozilla.org/timer;1"]
+                          .createInstance(nsITimer);
+  var timerInterval = getPref("getIntPref", PREF_APP_UPDATE_TIMER, 5000);
+  this._timer.initWithCallback(this, timerInterval, 
+                               nsITimer.TYPE_REPEATING_SLACK);
 }
 TimerManager.prototype = {
+  /**
+   * The Checker Timer
+   */
+  _timer: null,
+  
   /**
    * The set of registered timers.
    */
   _timers: { },
   
   /**
-   *
+   * Called when the checking timer fires.
+   * @param   timer
+   *          The checking timer that fired. 
    */
-  registerTimer: function(id, callback, interval, type) {
-    const nsITimer = Components.interfaces.nsITimer;
-    var timer = Components.classes["@mozilla.org/timer;1"]
-                          .createInstance(nsITimer);
-    var timerInterval = getPref("getIntPref", PREF_APP_UPDATE_TIMER, 5000);
+  notify: function(timer) {
+    for (var timerID in this._timers) {
+      var timerData = this._timers[timerID];
+      var lastUpdateTime = timerData.lastUpdateTime;
+      var now = Math.round(Date.now() / 1000);
     
-    var self = this;
-    
-    /**
-     * A callback object implementing nsITimerCallback that determines if the
-     * user-registered callback should be invoked yet. 
-     * @param   id
-     *          The id of the timer that fired
-     * @param   callback
-     *          The nsITimerCallback object supplied by the user that should be
-     *          notified if the user's interval has expired.
-     * @param   interval
-     *          The user's interval
-     * @constructor
-     */
-    function TimerCallback(id, callback, interval) {
-      this.id = id;
-      this.callback = callback;
-      this.interval = interval;
-    }
-    TimerCallback.prototype = {
-      /**
-       *
-       */
-      notify: function(timer) {
-        // LOG("self._timers = " + self._timers.toSource());
-        var lastUpdateTime = self._timers[this.id].lastUpdateTime;
-        var now = Math.round(Date.now() / 1000);
-        // LOG("notify = " + (now - lastUpdateTime) + " > " + this.interval);
-        
-        // Fudge the lastUpdateTime by some random increment of the update 
-        // check interval (e.g. some random slice of 10 minutes) so that when
-        // the time comes to check, we offset each client request by a random
-        // amount so they don't all hit at once.
-        lastUpdateTime += Math.round(Math.random() * this.interval);
-        
-        if ((now - lastUpdateTime) > this.interval &&
-            this.callback instanceof Components.interfaces.nsITimerCallback) {
-          this.callback.notify(timer);
-          self._timers[this.id].lastUpdateTime = now;
-          var preference = PREF_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, this.id);
-          gPref.setIntPref(preference, now);
-        }
-      },
+      // Fudge the lastUpdateTime by some random increment of the update 
+      // check interval (e.g. some random slice of 10 minutes) so that when
+      // the time comes to check, we offset each client request by a random
+      // amount so they don't all hit at once.
+      lastUpdateTime += Math.round(Math.random() * timerData.interval);
 
-      /**
-       * See nsISupports.idl
-       */
-      QueryInterface: function(iid) {
-        if (!iid.equals(Components.interfaces.nsITimerCallback) &&
-            !iid.equals(Components.interfaces.nsISupports))
-          throw Components.results.NS_ERROR_NO_INTERFACE;
-        return this;
+      if ((now - lastUpdateTime) > timerData.interval &&
+          timerData.callback instanceof Components.interfaces.nsITimerCallback) {
+        timerData.callback.notify(timer);
+        timerData.lastUpdateTime = now;
+        var preference = PREF_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, timerID);
+        gPref.setIntPref(preference, now);
       }
-    };
-    var tc = new TimerCallback(id, callback, interval);
-    timer.initWithCallback(tc, timerInterval, type);
+    }
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  registerTimer: function(id, callback, interval) {
     var preference = PREF_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, id);
     var lastUpdateTime = getPref("getIntPref", preference, 
                                  Math.round(Date.now() / 1000));
-    this._timers[id] = { timer: timer, lastUpdateTime: lastUpdateTime };
+    this._timers[id] = { callback       : callback, 
+                         interval       : interval,
+                         lastUpdateTime : lastUpdateTime }; 
   },
 
   /**
@@ -1681,6 +1751,7 @@ TimerManager.prototype = {
    */
   QueryInterface: function(iid) {
     if (!iid.equals(Components.interfaces.nsIUpdateTimerManager) &&
+        !iid.equals(Components.interfaces.nsITimerCallback) &&
         !iid.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
@@ -1820,6 +1891,11 @@ var gModule = {
                className  : "Update Service",
                factory    : #1#(UpdateService)
              },
+    checker: { CID        : Components.ID("{898CDC9B-E43F-422F-9CC4-2F6291B415A3}"),
+               contractID : "@mozilla.org/updates/update-checker;1",
+               className  : "Update Checker",
+               factory    : #1#(Checker)
+             },
     manager: { CID        : Components.ID("{093C2356-4843-4C65-8709-D7DBCBBE7DFB}"),
                contractID : "@mozilla.org/updates/update-manager;1",
                className  : "Update Manager",
@@ -1860,12 +1936,14 @@ function NSGetModule(compMgr, fileSpec) {
  *          the specified update, false otherwise.
  */
 function isCompatible(update) {
-#ifdef MOZ_XULAPP
+#ifdef MOZ_XUL_APP
   var em = Components.classes["@mozilla.org/extensions/manager;1"]
                       .getService(Components.interfaces.nsIExtensionManager);
   var items = em.getIncompatibleItemList("", update.extensionVersion,
                                          nsIUpdateItem.TYPE_ADDON, { });
   return items.length == 0;
+#else
+  return true;
 #endif
 }
 

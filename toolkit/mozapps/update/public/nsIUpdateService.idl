@@ -70,16 +70,6 @@ interface nsIUpdatePatch : nsISupports
   attribute unsigned long size;
 
   /**
-   *
-   */
-  attribute double progress;
-
-  /**
-   *
-   */
-  attribute AString status;
-
-  /**
    * The state of this update
    */
   attribute AString state;
@@ -231,18 +221,56 @@ interface nsIUpdatePrompt : nsISupports
 interface nsIUpdateChecker : nsISupports
 {
   /**
-   * Ends any pending update check.
+   * Checks for available updates, notifying a listener of the results.
+   * @param   listener
+   *          An object implementing nsIUpdateCheckListener which is notified
+   *          of the results of an update check.
    */
-  void stopChecking();
+  void checkForUpdates(in nsIUpdateCheckListener listener);
+
+  /**
+   * Constants for the |stopChecking| function that tell the Checker how long
+   * to stop checking:
+   * 
+   * CURRENT_CHECK:     Stops the current (active) check only
+   * CURRENT_SESSION:   Stops all checking for the current session
+   * ANY_CHECKS:        Stops all checking, any session from now on
+   *                    (disables update checking preferences)
+   */
+  const unsigned short CURRENT_CHECK    = 1;
+  const unsigned short CURRENT_SESSION  = 2;
+  const unsigned short ANY_CHECKS       = 3;
+
+  /**
+   * Ends any pending update check.
+   * @param   duration
+   *          A value representing the set of checks to stop doing.
+   */
+  void stopChecking(in unsigned short duration);
+
+  /**
+   * Whether or not this Checker can perform update checking.
+   */
+  readonly attribute boolean enabled;
 };
 
 [scriptable, uuid(9849c4bf-5197-4d22-baa8-e3b44a1703d2)]
 interface nsIApplicationUpdateService : nsISupports
 {
   /**
-   *
+   * The Update Checker used for background update checking.
    */
-  nsIUpdateChecker checkForUpdates(in nsIUpdateCheckListener listener);
+  readonly attribute nsIUpdateChecker backgroundChecker;
+
+  /**
+   * Selects the best update to install from a list of available updates.
+   * @param   updates
+   *          An array of updates that are available
+   * @param   updateCount
+   *          The length of the |updates| array
+   */
+  nsIUpdate selectUpdate([array, size_is(updateCount)] in nsIUpdate updates,
+                         in unsigned long updateCount);
 
   /**
    * Adds a listener that receives progress and state information about the 
@@ -262,16 +290,6 @@ interface nsIApplicationUpdateService : nsISupports
    *          The listener object to remove.
    */
   void removeDownloadListener(in nsIRequestObserver listener);
-
-  /**
-   * Selects the best update to install from a list of available updates.
-   * @param   updates
-   *          An array of updates that are available
-   * @param   updateCount
-   *          The length of the |updates| array
-   */
-  nsIUpdate selectUpdate([array, size_is(updateCount)] in nsIUpdate updates,
-                         in unsigned long updateCount);
 
   /**
    * 
@@ -322,22 +340,45 @@ interface nsIUpdateManager : nsISupports
 interface nsIUpdateTimerManager : nsISupports
 {
     /**
-     *
+     * Register an interval with the timer manager. The timer manager 
+     * periodically checks to see if the interval has expired and if it has
+     * calls the specified callback. This is persistent across application
+     * restarts and can handle intervals of long durations.
+     * @param   id
+     *          An id that identifies the interval, used for persistence
+     * @param   callback
+     *          A nsITimerCallback object that is notified when the interval
+     *          expires
+     * @param   interval
+     *          The length of time, in milliseconds, of the interval
      */
     void registerTimer(in AString id, 
                        in nsITimerCallback callback, 
-                       in unsigned long interval,
-                       in unsigned long type);
+                       in unsigned long interval);
 };
 
 [scriptable, uuid(22d35700-5765-42e1-914b-a0da7c911a8c)]
 interface nsIVersionChecker : nsISupports
 {
-  // -ve      if B is newer
-  // equal    if A == B
-  // +ve      if A is newer
-  long compare(in AString aVersionA, in AString aVersionB);
+  /**
+   * Compare two FVF versions
+   * @param   versionA
+   *          The first version
+   * @param   versionB
+   *          The second version
+   * @returns < 0 if A < B
+   *          = 0 if A == B
+   *          > 0 if B > A
+   * XXXben - change the return value here to return a constant
+   */
+  long compare(in AString versionA, in AString versionB);
 
-  boolean isValidVersion(in AString aVersion);
+  /**
+   * Determines if a string is a valid FVF version
+   * @param   string
+   *          The string to validate
+   * @returns true if the string is a valid FVF version
+   */
+  boolean isValidVersion(in AString version);
 };
 

@@ -42,6 +42,8 @@
 # SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
 #  The first character after a period must be alphabetic.
 
+pref("app.update.logEnabled", true);
+
 // pref("startup.homepage_override_url","chrome://browser-region/locale/region.properties");
 pref("general.startup.browser", true);
 
@@ -80,15 +82,27 @@ pref("app.update.autoInstallMode", 0);
 
 // XXX these prefs and others like them are distribution specific and should move 
 //     into chrome://browser
+// Default service URL for testing.
 pref("app.update.url", "chrome://mozapps/locale/update/updates.properties");
+// URL user can browse to manually if for some reason all update installation
+// attempts fail.
 pref("app.update.url.manual", "chrome://mozapps/locale/update/updates.properties");
+// User-settable update preference that overrides app.update.url for testing 
+// purposes.
 pref("app.update.url.override", "chrome://mozapps/locale/update/updates.properties");
-pref("app.update.updatesAvailable", false);
-// Check for updates to Firefox every day
-pref("app.update.interval", 86400000);
+
+// Interval: Time between checks for a new version (in seconds)
+//           default=1 day
+pref("app.update.interval", 86400);
+// Interval: Time before prompting the user to download a new version that 
+//           is available (in seconds) default=1 day
+pref("app.update.nagTimer.download", 86400);
+// Interval: Time before prompting the user to restart to install the latest
+//           download (in seconds) default=30 minutes
+pref("app.update.nagTimer.restart", 1800);
+// Interval: When all registered timers should be checked (in milliseconds)
+//           default=5 seconds
 pref("app.update.timer", 5000);
-// UTC offset when last App update was performed.
-pref("app.update.lastUpdateDate", 0);
 
 // Symmetric (can be overridden by individual extensions) update preferences.
 // e.g.
