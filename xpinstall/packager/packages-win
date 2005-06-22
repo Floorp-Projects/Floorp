@@ -376,3 +376,6 @@ bin\components\myspell.dll
 bin\components\spellchk.dll
 bin\components\spellchecker.xpt
 bin\components\myspell\*
+
+[reporter]
+bin\chrome\reporter.jar

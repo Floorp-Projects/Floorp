@@ -98,6 +98,7 @@ MakeXpiFile("regus");
 MakeXpiFile("venkman");
 MakeXpiFile("inspector");
 MakeXpiFile("spellcheck");
+MakeXpiFile("reporter");
 
 # Make the config.ini file
 MakeConfigFile();

@@ -472,6 +472,9 @@ bin/components/spellchk.dll
 bin/components/spellchecker.xpt
 bin/components/myspell/*
 
+[reporter]
+bin/chrome/reporter.jar
+
 ;Things that aren't packaged and why (or not why)
 ;accproxy.dll - I don't know
 ;accessproxy.xpt - I don't know

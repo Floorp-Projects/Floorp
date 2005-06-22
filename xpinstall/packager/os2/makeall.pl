@@ -205,7 +205,8 @@ if(!(-d "$gDirStageProduct"))
                    "langenus",
                    "regus",
                    "venkman",
-                   "inspector");
+                   "inspector",
+                   "reporter");
 
 if(VerifyComponents()) # return value of 0 means no errors encountered
 {
