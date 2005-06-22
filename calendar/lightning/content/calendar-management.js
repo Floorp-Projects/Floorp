@@ -2,10 +2,53 @@
 //  calendar-management.js
 //
 
+var calendarPrefStyleSheet = null;
+for (var i = 0; i < document.styleSheets.length; i++) {
+    if (document.styleSheets[i].href == "about:blank?calendar-dynamic-style-sheet") {
+        calendarPrefStyleSheet = document.styleSheets[i];
+        break;
+    }
+}
+if (!calendarPrefStyleSheet)
+    Components.reportError("Couldn't find our magic empty style sheet.")
+
+function updateStyleSheetForCalendar(aCalendar)
+{
+    var spec = aCalendar.uri.spec;
+    var cpss = calendarPrefStyleSheet;
+    function selectorForCalendar(spec)
+    {
+        return '*[item-calendar="' + spec + '"]';
+    }
+    
+    function getRuleForCalendar(spec)
+    {
+        for (var i = 0; i < cpss.cssRules.length; i++) {
+            var rule = cpss.cssRules[i];
+            if (rule.selectorText == selectorForCalendar(spec))
+                return rule;
+        }
+        return null;
+    }
+    
+    var rule = getRuleForCalendar(spec);
+    if (!rule) {
+        cpss.insertRule(selectorForCalendar(spec) + ' { }', 0);
+        rule = cpss.cssRules[0];
+    }
+    
+    var color = getCalendarManager().getCalendarPref(aCalendar, 'color');
+    if (!color)
+        color = "black";
+    
+    rule.style.color = color;
+}
+
 function addCalendarToTree(aCalendar)
 {
     var boxobj = document.getElementById("calendarTree").treeBoxObject;
     boxobj.rowCountChanged(getCalendars().indexOf(aCalendar), 1);
+    updateStyleSheetForCalendar(aCalendar);
 }
 
 function removeCalendarFromTree(aCalendar)
@@ -37,6 +80,7 @@ var ltnCalendarManagerObserver = {
     },
 
     onCalendarPrefSet: function(aCalendar, aName, aValue) {
+        updateStyleSheetForCalendar(aCalendar);
     },
 
     onCalendarPrefDeleting: function(aCalendar, aName) {
