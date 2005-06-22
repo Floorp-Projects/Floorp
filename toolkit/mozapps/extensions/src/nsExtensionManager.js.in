@@ -5887,7 +5887,7 @@ ExtensionsDataSource.prototype = {
 
     var ctr = getContainer(this._inner, this._itemRoot);
     if (ctr.IndexOf(res) == -1)
-      ctr.InsertElementAt(res, 1, true);
+      ctr.AppendElement(res);
     
     this.Flush();
   },
@@ -5924,7 +5924,7 @@ ExtensionsDataSource.prototype = {
 
     var ctr = getContainer(this._inner, this._itemRoot);
     if (ctr.IndexOf(res) == -1)
-      ctr.InsertElementAt(res, 1, true);
+      ctr.AppendElement(res);
 
     this.Flush();
   },

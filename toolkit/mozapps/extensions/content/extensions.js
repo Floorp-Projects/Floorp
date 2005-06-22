@@ -192,7 +192,7 @@ function Startup()
   if (lastSelected != "")
     lastSelected = document.getElementById(lastSelected);
   if (!lastSelected) 
-    gExtensionsView.selectionForward();
+    gExtensionsView.goDown();
   else
     gExtensionsView.selectedItem = lastSelected;
 
@@ -256,6 +256,8 @@ function Shutdown()
   if (gWindowState != "extensions")
     gExtensionsView.removeEventListener("richview-select", onThemeSelect, false);
   
+  gExtensionsView.removeEventListener("richview-select", onExtensionSelect, false);
+
   gExtensionsView.database.RemoveDataSource(gExtensionManager.datasource);
 
   gExtensionManager.removeDownloadListenerAt(gObserverIndex);
@@ -332,6 +334,7 @@ XPInstallDownloadManager.prototype = {
     }
     
     gExtensionManager.addDownloads(items, items.length);
+    gExtensionsView.scrollBoxObject.ensureElementIsVisible(gExtensionsView.lastChild);
   },
 
   removeDownload: function (aEvent)
@@ -795,7 +798,7 @@ var gExtensionsViewController = {
       return selectedItem && (children[children.length-1] != selectedItem);
     case "cmd_showFolder":
       return selectedItem && 
-             selectedItem.getAttribute("toBeInstalled") != "true";
+             opType != OP_NEEDS_INSTALL;
 #ifndef MOZ_PHOENIX
     case "cmd_install":
       return true;   
