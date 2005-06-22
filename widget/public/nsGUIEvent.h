@@ -94,6 +94,9 @@ class nsIURI;
 #define NS_QUERYCARETRECT_EVENT           28
 #define NS_PAGETRANSITION_EVENT               29
 
+// These flags are sort of a mess. They're sort of shared between event
+// listener flags and event flags, but only some of them. You've been
+// warned!
 #define NS_EVENT_FLAG_NONE                0x0000
 #define NS_EVENT_FLAG_INIT                0x0001
 #define NS_EVENT_FLAG_BUBBLE              0x0002
@@ -106,7 +109,9 @@ class nsIURI;
 #define NS_EVENT_FLAG_NO_CONTENT_DISPATCH 0x0100
 #define NS_EVENT_FLAG_SYSTEM_EVENT        0x0200
 #define NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY 0x0400 // @see nsIDOM3Event::stopImmediatePropagation()
-#define NS_PRIV_EVENT_UNTRUSTED_PERMITTED 0x0800
+#define NS_EVENT_FLAG_DISPATCHING         0x0800
+
+#define NS_PRIV_EVENT_UNTRUSTED_PERMITTED 0x8000
 
 #define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
 #define NS_EVENT_BUBBLE_MASK              (~(NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
@@ -971,7 +976,19 @@ enum nsDragDropEventStatus {
 #define NS_IS_TRUSTED_EVENT(event) \
   (((event)->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED) != 0)
 
+// Mark an event as being dispatching.
+#define NS_MARK_EVENT_DISPATCH_STARTED(event) \
+  (event)->flags |= NS_EVENT_FLAG_DISPATCHING;
 
+#define NS_IS_EVENT_IN_DISPATCH(event) \
+  (((event)->flags & NS_EVENT_FLAG_DISPATCHING) != 0)
+
+// Mark an event as being done dispatching.
+#define NS_MARK_EVENT_DISPATCH_DONE(event) \
+  NS_ASSERTION(NS_IS_EVENT_IN_DISPATCH(event), \
+               "Event never got marked for dispatch!"); \
+  (event)->flags &= ~NS_EVENT_FLAG_DISPATCHING; \
+  (event)->flags |= NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY;
 
 /*
  * Virtual key bindings for keyboard events.

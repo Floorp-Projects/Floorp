@@ -4319,12 +4319,25 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget,
 
   nsCOMPtr<nsIPrivateDOMEvent> privEvt(do_QueryInterface(aEvent));
   if (privEvt) {
+    nsEvent * innerEvent;
+    privEvt->GetInternalNSEvent(&innerEvent);
+
+    NS_ENSURE_TRUE(innerEvent, NS_ERROR_ILLEGAL_VALUE);
+
+    // Make sure this event isn't currently in dispatch.
+    NS_ENSURE_TRUE(!NS_IS_EVENT_IN_DISPATCH(innerEvent),
+                   NS_ERROR_ILLEGAL_VALUE);
+
+    // And make sure this event wasn't already dispatched w/o being
+    // re-initialized in between.
+    NS_ENSURE_TRUE(!(innerEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY),
+                   NS_ERROR_ILLEGAL_VALUE);
+
+    // Mark this event as dispatched now that we're this far along.
+    NS_MARK_EVENT_DISPATCH_STARTED(innerEvent);
+
     nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(aTarget));
     privEvt->SetTarget(eventTarget);
-
-    //Check security state to determine if dispatcher is trusted
-    nsIScriptSecurityManager *securityManager =
-      nsContentUtils::GetSecurityManager();
 
     PRBool trusted;
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(privEvt));
@@ -4332,6 +4345,10 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget,
     nsevent->GetIsTrusted(&trusted);
 
     if (!trusted) {
+      //Check security state to determine if dispatcher is trusted
+      nsIScriptSecurityManager *securityManager =
+        nsContentUtils::GetSecurityManager();
+
       PRBool enabled;
       nsresult res =
         securityManager->IsCapabilityEnabled("UniversalBrowserWrite",
@@ -4339,45 +4356,45 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget,
       privEvt->SetTrusted(NS_SUCCEEDED(res) && enabled);
     }
 
-    nsEvent * innerEvent;
-    privEvt->GetInternalNSEvent(&innerEvent);
-
-    if (innerEvent) {
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsCOMPtr<nsIScriptGlobalObject> target(do_QueryInterface(aTarget));
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsCOMPtr<nsIScriptGlobalObject> target(do_QueryInterface(aTarget));
+    if (target) {
+      ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent,
+                                   NS_EVENT_FLAG_INIT, &status);
+    }
+    else {
+      nsCOMPtr<nsIDocument> target(do_QueryInterface(aTarget));
       if (target) {
-        ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent, NS_EVENT_FLAG_INIT, &status);
+        ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent,
+                                     NS_EVENT_FLAG_INIT, &status);
       }
       else {
-        nsCOMPtr<nsIDocument> target(do_QueryInterface(aTarget));
+        nsCOMPtr<nsIContent> target(do_QueryInterface(aTarget));
         if (target) {
-          ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent, NS_EVENT_FLAG_INIT, &status);
+          ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent,
+                                       NS_EVENT_FLAG_INIT, &status);
+
+          // Dispatch to the system event group.  Make sure to clear
+          // the STOP_DISPATCH flag since this resets for each event
+          // group per DOM3 Events.
+
+          innerEvent->flags &= ~NS_EVENT_FLAG_STOP_DISPATCH;
+          ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent,
+                                       NS_EVENT_FLAG_INIT |
+                                       NS_EVENT_FLAG_SYSTEM_EVENT,
+                                       &status);
         }
         else {
-          nsCOMPtr<nsIContent> target(do_QueryInterface(aTarget));
+          nsCOMPtr<nsIChromeEventHandler> target(do_QueryInterface(aTarget));
           if (target) {
-            ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent, NS_EVENT_FLAG_INIT, &status);
-
-            // Dispatch to the system event group.  Make sure to clear the
-            // STOP_DISPATCH flag since this resets for each event group
-            // per DOM3 Events.
-
-            innerEvent->flags &= ~NS_EVENT_FLAG_STOP_DISPATCH;
-            ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent,
-                                         NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_SYSTEM_EVENT,
-                                         &status);
-          }
-          else {
-            nsCOMPtr<nsIChromeEventHandler> target(do_QueryInterface(aTarget));
-            if (target) {
-              ret = target->HandleChromeEvent(mPresContext, innerEvent, &aEvent, NS_EVENT_FLAG_INIT, &status);
-            }
+            ret = target->HandleChromeEvent(mPresContext, innerEvent, &aEvent,
+                                            NS_EVENT_FLAG_INIT, &status);
           }
         }
       }
-
-      *aDefaultActionEnabled = status != nsEventStatus_eConsumeNoDefault;
     }
+
+    *aDefaultActionEnabled = status != nsEventStatus_eConsumeNoDefault;
   }
 
   return ret;
