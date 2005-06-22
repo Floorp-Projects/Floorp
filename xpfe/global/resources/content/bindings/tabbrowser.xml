@@ -141,16 +141,13 @@
         null
       </field>
       <field name="mProgressListeners">
-        null
+        []
       </field>
       <field name="mTabListeners">
         new Array()
       </field>
       <field name="mTabFilters">
         new Array()
-      </field>
-      <field name="mTabbedMode">
-        false
       </field>
       <field name="mIsBusy">
         false
@@ -713,38 +710,20 @@
               return;
             }
 
-            var notifyListeners = true;
-            var i;
-
             // Security says okay, now ask content policy
-            if (this.mTabbedMode) {
-              // We need to update a tab.
-              for (i = 0; i < this.browsers.length; i++) {
-                if (this.browsers[i].contentDocument == event.originalTarget.ownerDocument) {
-                  if (contentPolicy.shouldLoad(nsIContentPolicy.TYPE_IMAGE,
-                                               uri, origURI, event.target,
-                                               safeGetProperty(event.target, "type"),
-                                               null) != nsIContentPolicy.ACCEPT)
-                    return;
-
+            for (var i = 0; i < this.browsers.length; i++) {
+              if (this.browsers[i].contentDocument == event.originalTarget.ownerDocument) {
+                if (contentPolicy.shouldLoad(nsIContentPolicy.TYPE_IMAGE,
+                                             uri, origURI, event.target,
+                                             safeGetProperty(event.target, "type"),
+                                             null) == nsIContentPolicy.ACCEPT) {
                   this.mTabListeners[i].setIcon(href);
-                  notifyListeners = (this.browsers[i] == this.mCurrentBrowser);
-                  break;
+                  if (this.browsers[i] == this.mCurrentBrowser)
+                    for each (var p in this.mProgressListeners)
+                      if (p && 'onLinkIconAvailable' in p)
+                        p.onLinkIconAvailable(href);
                 }
-              }
-            }
-            else if ((this.contentDocument != event.originalTarget.ownerDocument) ||
-                     (contentPolicy.shouldLoad(nsIContentPolicy.TYPE_IMAGE,
-                                               uri, origURI, event.target,
-                                               safeGetProperty(event.target, "type"),
-                                               null) != nsIContentPolicy.ACCEPT))
-              return;
-
-            if (notifyListeners && this.mProgressListeners) {
-              for (i = 0; i < this.mProgressListeners.length; i++) {
-                var p = this.mProgressListeners[i];
-                if (p && 'onLinkIconAvailable' in p)
-                  p.onLinkIconAvailable(href);
+                return;
               }
             }
           ]]>
@@ -824,10 +803,6 @@
         <body>
         <![CDATA[
           this.mStrip.collapsed = !aShow;
-          if (aShow) {
-            if (!this.mTabbedMode)
-              this.enterTabbedMode();
-          }
         ]]>
         </body>
       </method>
@@ -838,61 +813,12 @@
         </body>
       </method>
 
-      <method name="enterTabbedMode">
-        <body>
-          <![CDATA[
-            this.mTabbedMode = true; // Welcome to multi-tabbed mode.
-
-            // Get the first tab all hooked up with a title listener.
-            this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
-
-            this.setTabTitle(this.mCurrentTab);
-
-            // Hook up our favicon.
-            var uri = this.mCurrentBrowser.currentURI;
-            if (this.shouldLoadFavIcon(uri))
-              this.loadFavIcon(uri, "image", this.mCurrentTab);
-
-            var filter;
-            if (this.mTabFilters.length > 0) {
-              // Use the filter hooked up in our addProgressListener
-              filter = this.mTabFilters[0];
-            } else {
-              // create a filter and hook it up to our first browser
-              filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
-                                 .createInstance(Components.interfaces.nsIWebProgress);
-              this.mTabFilters[0] = filter;
-              this.mCurrentBrowser.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-            }
-
-            // Remove all our progress listeners from the active browser's filter.
-            if (this.mProgressListeners) {
-              for (var i = 0; i < this.mProgressListeners.length; i++) {
-                var p = this.mProgressListeners[i];
-                if (p)
-                  filter.removeProgressListener(p);
-              }
-            }
-
-            // Wire up a progress listener to our filter.
-            const listener = this.mTabProgressListener(this.mCurrentTab,
-                                                       this.mCurrentBrowser,
-                                                       false);
-            filter.addProgressListener(listener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-            this.mTabListeners[0] = listener;
-          ]]>
-        </body>
-      </method>
-
       <method name="addTab">
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
         <parameter name="aCharset"/>
         <body>
           <![CDATA[
-            if (!this.mTabbedMode)
-              this.enterTabbedMode();
-
             var t = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                              "tab");
 
@@ -923,8 +849,7 @@
 
             b.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
 
-            if (this.mStrip.collapsed)
-              this.setStripVisibilityTo(true);
+            this.mStrip.collapsed = false;
 
             this.mPrefs.setBoolPref("browser.tabs.forceHide", false);
 
@@ -1023,7 +948,7 @@
             if (l == 1) {
               // hide the tab bar
               this.mPrefs.setBoolPref("browser.tabs.forceHide", true);
-              this.setStripVisibilityTo(false);
+              this.mStrip.collapsed = true;
               return;
             }
 
@@ -1035,7 +960,7 @@
             if (l == 2) {
               var autohide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
               if (autohide)
-                this.setStripVisibilityTo(false);
+                this.mStrip.collapsed = true;
             }
 
             var index = -1;
@@ -1137,38 +1062,7 @@
         <parameter name="aMask"/>
         <body>
           <![CDATA[
-            if (!this.mProgressListeners) {
-              this.mProgressListeners = [];
-              const autoHide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
-              const forceHide = this.mPrefs.getBoolPref("browser.tabs.forceHide");
-              if (!autoHide && !forceHide)
-                this.setStripVisibilityTo(true);
-            }
-
-            if (!this.mTabbedMode && this.mProgressListeners.length == 1) {
-              // If we are adding a 2nd progress listener, we need to enter tabbed mode
-              // because the browser status filter can only handle one progress listener.
-              // In tabbed mode, mTabProgressListener is used which will iterate over all listeners.
-              this.enterTabbedMode();
-            }
-
             this.mProgressListeners.push(aListener);
-
-            if (!this.mTabbedMode) {
-              // If someone does this:
-              // addProgressListener, removeProgressListener, addProgressListener
-              // don't create a new filter; reuse the existing filter.
-              if (this.mTabFilters.length == 0) {
-                // hook a filter up to our first browser
-                const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
-                                         .createInstance(Components.interfaces.nsIWebProgress);
-                this.mTabFilters[0] = filter;
-                this.mCurrentBrowser.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-              }
-
-              // Directly hook the listener up to the filter for better performance
-              this.mTabFilters[0].addProgressListener(aListener, aMask);
-            }
           ]]>
         </body>
       </method>
@@ -1177,17 +1071,12 @@
         <parameter name="aListener"/>
         <body>
           <![CDATA[
-            if (!this.mProgressListeners) return;
             for (var i = 0; i < this.mProgressListeners.length; i++) {
               if (this.mProgressListeners[i] == aListener) {
                 this.mProgressListeners[i] = null;
                 break;
               }
             }
-
-            if (!this.mTabbedMode)
-              // Don't forget to remove it from the filter we hooked it up to
-              this.mTabFilters[0].removeProgressListener(aListener);
          ]]>
         </body>
       </method>
@@ -1582,6 +1471,26 @@
           this.mCurrentTab = this.mTabContainer.firstChild;
           document.addEventListener("keypress", this._keyEventHandler, false);
           this.mTabBox.handleCtrlTab = !/Mac/.test(navigator.platform);
+
+          // Wire up the first title change listener.
+          this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
+
+          // Wire up the tab's progress listener and filter.
+          const nsIWebProgress = Components.interfaces.nsIWebProgress;
+          var tabListener = this.mTabProgressListener(this.mCurrentTab,
+                                                      this.mCurrentBrowser,
+                                                      false);
+          var filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
+                                 .createInstance(nsIWebProgress);
+          filter.addProgressListener(tabListener, nsIWebProgress.NOTIFY_ALL);
+          this.webProgress.addProgressListener(filter,
+                                               nsIWebProgress.NOTIFY_ALL);
+          this.mTabListeners[0] = tabListener;
+          this.mTabFilters[0] = filter;
+
+          if (!this.mPrefs.getBoolPref("browser.tabs.autoHide") &&
+              !this.mPrefs.getBoolPref("browser.tabs.forceHide"))
+            this.mStrip.collapsed = false;
         ]]>
       </constructor>
 
