@@ -385,11 +385,15 @@ sub packit {
     if ( -f $update_path ) {
       # Make update dist directory.
       TinderUtils::run_shell_command "mkdir -p $builddir/dist/update/";
+      my $buildid = `cd $builddir/config/ && cat build_number`;
+      chomp($buildid);
+      TinderUtils::print_log "Got build ID $buildid.\n";
       # Gather stats for update file.
       update_create_stats( update => $update_path,
                            type => "complete",
                            output_file => "$builddir/dist/update/update.snippet",
                            url => $update_fullurl,
+                           buildid => $buildid,
                          );
 
       # Push update information to update-staging/auslite.
@@ -411,6 +415,7 @@ sub update_create_stats {
   my $type = $args{'type'};
   my $output_file = $args{'output_file'};
   my $url = $args{'url'};
+  my $buildid = $args{'buildid'};
 
   my($hashfunction, $hashvalue, $size, $output);
 
@@ -433,6 +438,7 @@ sub update_create_stats {
   $output .= "$hashfunction\n";
   $output .= "$hashvalue\n";
   $output .= "$size\n";
+  $output .= "$buildid\n";
 
   if (defined($output_file)) {
     open(UPDATE_FILE, ">$output_file")
