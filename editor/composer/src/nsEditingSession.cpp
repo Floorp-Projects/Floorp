@@ -256,9 +256,12 @@ const char* const gSupportedTextTypes[] = {
   "text/css",
   "text/rdf",
   "text/xsl",
-  "text/javascript",    // obsolete type
-  "application/x-javascript",
-  "text/xul",           // obsolete type
+  "text/javascript",           // obsolete type
+  "text/ecmascript",           // obsolete type
+  "application/javascript",
+  "application/ecmascript",
+  "application/x-javascript",  // obsolete type
+  "text/xul",                  // obsolete type
   "application/vnd.mozilla.xul+xml",
   NULL      // IMPORTANT! Null must be at end
 };

@@ -1192,8 +1192,27 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           nsAutoString  params;
           nsParserUtils::SplitMimeType(type, mimeType, params);
 
-          isJavaScript = mimeType.LowerCaseEqualsLiteral("application/x-javascript") ||
-                         mimeType.LowerCaseEqualsLiteral("text/javascript");
+          // Table ordered from most to least likely JS MIME types. For .xul
+          // files that we host, the likeliest type is application/x-javascript.
+          // See bug 62485, feel free to add <script type="..."> survey data to it,
+          // or to a new bug once 62485 is closed.
+          static const char *jsTypes[] = {
+            "application/x-javascript",
+            "text/javascript",
+            "text/ecmascript",
+            "application/javascript",
+            "application/ecmascript",
+            nsnull
+          };
+
+          isJavaScript = PR_FALSE;
+          for (PRInt32 i = 0; jsTypes[i]; i++) {
+            if (mimeType.LowerCaseEqualsASCII(jsTypes[i])) {
+              isJavaScript = PR_TRUE;
+              break;
+            }
+          }
+
           if (isJavaScript) {
               JSVersion jsVersion = JSVERSION_DEFAULT;
               if (params.Find("version=", PR_TRUE) == 0) {
