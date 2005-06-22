@@ -525,6 +525,7 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindowInternal* window)
   PRUnichar * confirm_string = Wallet_Localize("Confirm");
 
   res = dialog->ConfirmEx(confirm_string, szMessage,
+                          nsIPrompt::BUTTON_POS_1_DEFAULT +
                           (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
                           (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1) +
                           (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_2),
