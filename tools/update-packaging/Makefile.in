@@ -50,6 +50,6 @@ STAGE_DIR	= $(DIST)/update
 
 full-update::
 	mkdir -p $(STAGE_DIR)
-	MAR=$(DIST)/host/bin/mar $(srcdir)/make_full_update.sh $(STAGE_DIR)/update.mar $(DIST)/$(MOZ_PKG_APPNAME)
+	MAR=$(DIST)/host/bin/mar $(srcdir)/make_full_update.sh "$(STAGE_DIR)/$(PKG_BASENAME).mar" "$(DIST)/$(MOZ_PKG_APPNAME)"
 
 include $(topsrcdir)/config/rules.mk
