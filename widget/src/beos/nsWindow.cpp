@@ -1214,7 +1214,6 @@ NS_METHOD nsWindow::SetBackgroundColor(const nscolor &aColor)
 	if(mView && mView->LockLooper())
 	{
 		mView->SetViewColor(NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor), NS_GET_A(aColor));
-		mView->SetLowColor(B_TRANSPARENT_COLOR);
 		mView->UnlockLooper();
 	}
 	return NS_OK;
@@ -1222,7 +1221,7 @@ NS_METHOD nsWindow::SetBackgroundColor(const nscolor &aColor)
 
 NS_METHOD nsWindow::SetForegroundColor(const nscolor &aColor)
 {
-	nsBaseWidget::SetBackgroundColor(aColor);
+	nsBaseWidget::SetForegroundColor(aColor);
 
 	if(mView && mView->LockLooper())
 	{
@@ -2691,20 +2690,16 @@ void  nsWindowBeOS::WorkspacesChanged(uint32 oldworkspace, uint32 newworkspace)
 //----------------------------------------------------
 
 nsViewBeOS::nsViewBeOS(nsIWidget *aWidgetWindow, BRect aFrame, const char *aName, uint32 aResizingMode, uint32 aFlags)
-		: BView(aFrame, aName, aResizingMode, aFlags), nsIWidgetStore(aWidgetWindow), buttons(0)
+		: BView(aFrame, aName, aResizingMode, aFlags), nsIWidgetStore(aWidgetWindow),
+		buttons(0), lastViewWidth(aFrame.Width()), lastViewHeight(aFrame.Height()), restoreMouseMask(false)
 {
 }
 
 void nsViewBeOS::AttachedToWindow()
 {
-	lastViewWidth = Bounds().Width();
-	lastViewHeight = Bounds().Height();
-	nsWindow *w = (nsWindow *)GetMozillaWidget();
-	SetHighColor(255, 255, 255);
-	FillRect(Bounds());
-	if(! w->AutoErase())
-		// view shouldn't erase
-		SetViewColor(B_TRANSPARENT_32_BIT);
+	SetHighColor(B_TRANSPARENT_COLOR);
+	SetLowColor(B_TRANSPARENT_COLOR);
+	SetViewColor(B_TRANSPARENT_COLOR);
 }
 
 void nsViewBeOS::Draw(BRect updateRect)
@@ -2748,7 +2743,10 @@ bool nsViewBeOS::GetPaintRegion(BRegion *r)
 
 void nsViewBeOS::MouseDown(BPoint point)
 {
-	SetMouseEventMask(B_POINTER_EVENTS | B_KEYBOARD_EVENTS);
+	if(!restoreMouseMask)
+		mouseMask = SetMouseEventMask(B_POINTER_EVENTS | B_KEYBOARD_EVENTS);
+	restoreMouseMask = true;
+
 	uint32 clicks = 0;
 	Window()->CurrentMessage()->FindInt32("buttons", (int32 *)&buttons);
 	Window()->CurrentMessage()->FindInt32("clicks", (int32 *)&clicks);
@@ -2778,13 +2776,18 @@ void nsViewBeOS::MouseDown(BPoint point)
 
 void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
 {
+	//We didn't start the mouse down and there is no drag in progress, so ignore.
+	Window()->CurrentMessage()->FindInt32("buttons", (int32 *)&buttons);
+	if(NULL == msg && !restoreMouseMask && buttons)
+		return;
+		
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
 	if(w && (t = w->GetToolkit()) != 0)
 	{
 		uint32	args[4];
-		args[1] = (uint32)point.x;
-		args[2] = (uint32)point.y;
+		args[1] = (int32) point.x;
+		args[2] = (int32) point.y;
 		args[3] = modifiers();
 
 		if(transit == B_ENTERED_VIEW)
@@ -2813,6 +2816,11 @@ void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
 
 void nsViewBeOS::MouseUp(BPoint point)
 {
+	if(restoreMouseMask) 
+	{
+		SetMouseEventMask(mouseMask);
+		restoreMouseMask = false;
+	}
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
 	if(w && (t = w->GetToolkit()) != 0)
