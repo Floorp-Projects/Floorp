@@ -355,7 +355,7 @@
           <menuseparator id="prefSep"/>
           <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmdUnix.accesskey;" command="cmd_account"/>
           <menuitem id="menu_preferences" label="&preferencesCmdUnix.label;" accesskey="&preferencesCmdUnix.accesskey;"
-                    oncommand="openOptionsDialog('mailcomposepref', 'chrome://messenger/content/messengercompose/pref-composing_messages.xul', 'mailcomposepref');"/>
+                    oncommand="openOptionsDialog('paneCompose');"/>
 #endif
 #endif
         </menupopup>
@@ -512,12 +512,12 @@
             <menuseparator id="prefSep"/>
             <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
             <menuitem id="menu_preferences" label="&preferencesCmd.label;" accesskey="&preferencesCmd.accesskey;"
-                      oncommand="openOptionsDialog('mailcomposepref', 'chrome://messenger/content/messengercompose/pref-composing_messages.xul', 'mailcomposepref');"/>
+                      oncommand="openOptionsDialog('paneCompose');"/>
 #else
 #ifdef XP_MACOSX
             <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
             <menuitem id="menu_preferences" label="&preferencesCmd.label;" accesskey="&preferencesCmd.accesskey;"
-                      oncommand="openOptionsDialog('mailcomposepref', 'chrome://messenger/content/messengercompose/pref-composing_messages.xul', 'mailcomposepref');"/>
+                      oncommand="openOptionsDialog('paneCompose');"/>
 #endif
 #endif
          </menupopup>

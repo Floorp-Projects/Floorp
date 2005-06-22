@@ -63,7 +63,7 @@
         <menuitem id="offlineGoOfflineCmd"/>
         <menuseparator/>
         <menuitem label="&synchronizeOfflineCmd.label;"  accesskey="&synchronizeOfflineCmd.accesskey;" observes="cmd_synchronizeOffline"/>
-        <menuitem label="&settingsOfflineCmd.label;"     accesskey="&settingsOfflineCmd.accesskey;" oncommand="openOptionsDialog();"/>
+        <menuitem label="&settingsOfflineCmd.label;"     accesskey="&settingsOfflineCmd.accesskey;"    oncommand="openOptionsDialog('paneAdvanced', 'offlineTab');"/>
         <menuseparator/>
         <menuitem label="&downloadFlaggedCmd.label;"     accesskey="&downloadFlaggedCmd.accesskey;"    observes="cmd_downloadFlagged"/>
         <menuitem label="&downloadSelectedCmd.label;"    accesskey="&downloadSelectedCmd.accesskey;"   observes="cmd_downloadSelected"/>

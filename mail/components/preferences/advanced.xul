@@ -73,7 +73,7 @@
     <tabbox id="advancedPrefs" flex="1" onselect="gAdvancedPane.tabSelectionChanged();">
       <tabs>
         <tab label="&itemGeneral.label;"/>
-        <tab label="&itemOffline.label;"/>
+        <tab id="offlineTab" label="&itemOffline.label;"/>
         <tab label="&itemUpdate.label;"/>
       </tabs>
       

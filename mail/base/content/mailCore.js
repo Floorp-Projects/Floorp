@@ -138,7 +138,8 @@ function CheckOnline()
   return true; 
 }
 
-function openOptionsDialog(containerID, paneURL, itemID)
+// aPaneID
+function openOptionsDialog(aPaneID, aTabID)
 {
   var prefsService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch(null)
   var instantApply = prefsService.getBoolPref("browser.preferences.instantApply");
@@ -149,9 +150,20 @@ function openOptionsDialog(containerID, paneURL, itemID)
   
   var win = wm.getMostRecentWindow("Mail:Preferences");
   if (win)
+  {
     win.focus();
+    if (aPaneID)
+    {
+      var pane = win.document.getElementById(aPaneID);
+      win.document.documentElement.showPane(pane);
+      
+      // I don't know how to support aTabID for an arbitrary panel when the dialog is already open
+      // This is complicated because showPane is asynchronous (it could trigger a dynamic overlay)
+      // so our tab element may not be accessible right away...
+    }
+  }
   else 
-    openDialog("chrome://messenger/content/preferences/preferences.xul","Preferences", features);
+    openDialog("chrome://messenger/content/preferences/preferences.xul","Preferences", features, aPaneID, aTabID);
 }
 
 function openExtensions(aOpenMode)

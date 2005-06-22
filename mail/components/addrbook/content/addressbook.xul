@@ -324,7 +324,7 @@
 #ifndef XP_MACOSX
         <menuseparator id="prefSep"/>
         <menuitem id="menu_preferences" label="&preferencesCmdUnix.label;" accesskey="&preferencesCmdUnix.accesskey;"
-                  oncommand="openOptionsDialog('mailnews', 'chrome://messenger/content/addressbook/pref-addressing.xul', 'mailaddressbookpref')"/>
+                  oncommand="openOptionsDialog()"/>
 #endif
 #endif
           </menupopup>
@@ -463,11 +463,11 @@
 #ifndef XP_UNIX
         <menuseparator id="prefSep"/>
             <menuitem id="menu_preferences" label="&preferencesCmd.label;" accesskey="&preferencesCmd.accesskey;"
-                      oncommand="openOptionsDialog('mailnews', 'chrome://messenger/content/addressbook/pref-addressing.xul', 'mailaddressbookpref')"/>
+                      oncommand="openOptionsDialog()"/>
 #else
 #ifdef XP_MACOSX
         <menuitem id="menu_preferences" label="&preferencesCmd.label;" accesskey="&preferencesCmd.accesskey;"
-                  oncommand="openOptionsDialog('mailnews', 'chrome://messenger/content/addressbook/pref-addressing.xul', 'mailaddressbookpref')"/>
+                  oncommand="openOptionsDialog()"/>
 #endif
 #endif
           </menupopup>

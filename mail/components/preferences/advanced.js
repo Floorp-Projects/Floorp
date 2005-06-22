@@ -43,9 +43,14 @@ var gAdvancedPane = {
     this.mPane = document.getElementById("paneAdvanced");
     this.updateMarkAsReadTextbox(false);
 
-    var preference = document.getElementById("mail.preferences.advanced.selectedTabIndex");
-    if (preference.value)
-      document.getElementById("advancedPrefs").selectedIndex = preference.value;
+    if ("arguments" in window && window.arguments[1] && document.getElementById(window.arguments[1]))
+      document.getElementById("advancedPrefs").selectedTab = document.getElementById(window.arguments[1]);
+    else 
+    {    
+      var preference = document.getElementById("mail.preferences.advanced.selectedTabIndex");
+      if (preference.value)
+        document.getElementById("advancedPrefs").selectedIndex = preference.value;
+    }
     this.mInitialized = true;
   },
 
