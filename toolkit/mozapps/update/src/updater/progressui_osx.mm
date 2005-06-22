@@ -88,7 +88,7 @@ static const char *sProgramPath;
   if (sQuit) {
     [aTimer invalidate];
     [aTimer release];
-    [[NSApplication sharedApplication] stop:self];
+    [[NSApplication sharedApplication] terminate:self];
   }
   
   float progress = sProgressVal;
