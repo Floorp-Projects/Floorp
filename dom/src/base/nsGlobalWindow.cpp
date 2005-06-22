@@ -5855,6 +5855,9 @@ WindowStateHolder::WindowStateHolder(JSContext *cx, JSObject *aObject,
 {
   NS_ASSERTION(aWindow, "null window");
 
+  // Prevent mJSObj from being gc'd for the lifetime of this object.
+  ::JS_AddNamedRoot(cx, &mJSObj, "WindowStateHolder::mJSObj");
+
   aWindow->GetListenerManager(getter_AddRefs(mListenerManager));
   mMutationBits = aWindow->mMutationBits;
 
@@ -5894,8 +5897,6 @@ WindowStateHolder::WindowStateHolder(JSContext *cx, JSObject *aObject,
 
   aWindow->mTimeouts = nsnull;
   aWindow->mTimeoutInsertionPoint = &aWindow->mTimeouts;
-
-  ::JS_AddNamedRoot(cx, &mJSObj, "WindowStateHolder::mJSObj");
 }
 
 WindowStateHolder::~WindowStateHolder()
