@@ -369,7 +369,13 @@ function shouldFastFind(evt)
              elt instanceof HTMLIsIndexElement)
       return false;
   }
-  
+
+  // disable FAYT in about:config and about:blank to prevent FAYT opening
+  // unexpectedly - to fix bugs 264562, 267150, 269712
+  var url = getBrowser().selectedBrowser.webNavigation.currentURI.spec;
+  if (url == "about:blank" || url == "about:config")
+    return false;
+
   var win = document.commandDispatcher.focusedWindow;
   if (win && win.document.designMode == "on")
     return false;
