@@ -47,4 +47,16 @@ MODULE_NAME = calBaseModule
 
 DIRS = public src build
 
+# Select a theme from which to pull our skin goodness
+# OS X: pinstripe
+# Others: winstripe
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+THEME=pinstripe
+else
+THEME=winstripe
+endif
+
+DEFINES += -DTHEME=$(THEME)
+
 include $(topsrcdir)/config/rules.mk
