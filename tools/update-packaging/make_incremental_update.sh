@@ -113,7 +113,7 @@ done
 
 $BZIP2 -z9 "$manifest" && mv -f "$manifest.bz2" "$manifest"
 
-(cd "$workdir" && eval "$MAR -c output.mar $archivefiles")
+eval "$MAR -C \"$workdir\" -c output.mar $archivefiles"
 mv -f "$workdir/output.mar" "$archive"
 
 # cleanup
