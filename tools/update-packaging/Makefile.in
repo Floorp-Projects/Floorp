@@ -48,6 +48,6 @@ STAGE_DIR	= $(DIST)/update
 
 full-update::
 	mkdir -p $(STAGE_DIR)
-	MAR=$(PWD)/$(DIST)/host/bin/mar $(srcdir)/make_full_update.sh $(STAGE_DIR)/update.mar $(DIST)/bin
+	MAR=$(DIST)/host/bin/mar $(srcdir)/make_full_update.sh $(STAGE_DIR)/update.mar $(DIST)/bin
 
 include $(topsrcdir)/config/rules.mk
