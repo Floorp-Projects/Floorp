@@ -50,10 +50,12 @@ public class JSSPackageTest {
     private static CryptoManager    cm          = null;
 
     public static void main(String[] args) {
+        String certDbPath = ".";
         try {
             try {
-                CryptoManager.initialize(".");
+                certDbPath = (String)args[0];
             } catch (Exception e) { }
+            CryptoManager.initialize(certDbPath);
 
             Package pkg = Package.getPackage("org.mozilla.jss");
 

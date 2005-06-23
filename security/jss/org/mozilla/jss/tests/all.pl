@@ -195,7 +195,7 @@ if( ! -d $testdir ) {
 {
     chdir "$testdir" or die;
     my @dbfiles = 
-        ("./cert8.db", "./key3.db", "./secmod.db");
+        ("./cert8.db", "./key3.db", "./secmod.db, ./keystore.pfx");
     unlink @dbfiles;
     (grep{ -f } @dbfiles)  and die "Unable to delete old database files";
 # if dbdir exists delete it
@@ -286,7 +286,7 @@ $result and print "Generate known cert pair for testing returned $result\n";
 # Create keystore.pfx from generated cert db
 # for "JSSCATestCert"
 print "============= convert PKCS11 cert to PKCS12 format\n";
-$result = system("$nss_lib_dir/../bin/pk12util$exe_suffix -o keystore.pfx -n JSSCATestCert -d ./$testdir -K netscape -W netscape");
+$result = system("$nss_lib_dir/../bin/pk12util$exe_suffix -o $testdir/keystore.pfx -n JSSCATestCert -d ./$testdir -K netscape -W netscape");
 $result >>=8;
 $result and print "Convert PKCS11 to PKCS12 returned $result\n";
 
@@ -302,8 +302,7 @@ $result and print "JSSE servers returned $result\n";
 # Test JSS client communication
 #
 print "============= Start JSS client tests\n";
-$result = system("cp $testdir/*.db .");
-$result = system("$java org.mozilla.jss.tests.JSS_SSLClient");
+$result = system("$java org.mozilla.jss.tests.JSS_SSLClient $testdir $pwfile");
 $result >>=8;
 $result and print "JSS client returned $result\n";
 print_case_result ($result,"JSSE server / JSS client");
@@ -320,7 +319,7 @@ $result and print "JSS servers returned $result\n";
 # Test JSSE client communication
 #
 print "============= Start JSSE client tests\n";
-$result = system("$java org.mozilla.jss.tests.JSSE_SSLClient");
+$result = system("$java org.mozilla.jss.tests.JSSE_SSLClient $testdir");
 $result >>=8;
 $result and print "JSSE client returned $result\n";
 print_case_result ($result,"JSS server / JSSE client");
@@ -329,7 +328,7 @@ print_case_result ($result,"JSS server / JSSE client");
 # Test for JSS jar and library revision
 #
 print "============= Check JSS jar version\n";
-$result = system("$java org.mozilla.jss.tests.JSSPackageTest");
+$result = system("$java org.mozilla.jss.tests.JSSPackageTest $testdir");
 $result >>=8;
 my $LIB = "$lib_jss"."4"."$lib_suffix";
 my $strings_exist = `which strings`;

@@ -67,10 +67,7 @@ public class JSS_SSLClient {
     private CryptoToken      tok         = null;
     private PasswordCallback cb          = null;
     private String  fPasswordFile        = "passwords";
-    private String  fCertDbPath          = ".";
-    
-    private static  String usage        =   "USAGE: java JSS_SSLClient " +
-            "<serverhost> <clientcertnick>";
+    private static String  fCertDbPath   = ".";
     
     /**
      * Default Constructor, do not use.
@@ -123,8 +120,16 @@ public class JSS_SSLClient {
      * Initialize the cert db path name
      * @param String CertDbPath
      */
-    public void setCertDbPath(String aCertDbPath) {
+    public static void setCertDbPath(String aCertDbPath) {
         fCertDbPath = aCertDbPath;
+    }
+    
+    /**
+     * Fetch the cert db path name
+     * @return String CertDbPath
+     */
+    public static String getCertDbPath() {
+        return fCertDbPath;
     }
     
     /**
@@ -302,35 +307,43 @@ public class JSS_SSLClient {
     public static void main(String[] args) {
         
         String  certnick   = "JSSCATestCert";
-        String  testCipher = null;
+        int     testCipher = 0;
         String  testhost   = "localhost";
         int     testport   = 29753;
         String  certDbPath = null;
-        String  passwdFile = null;
+        String  passwdFile = "passwords";
         
         String  usage      = "USAGE:\n" +
                 "java org.mozilla.jss.tests.JSS_SSLClient" +
-                " <test cipher> <server host> <server port>\n" +
-                " <cert db path> <password file>";
+                " <cert db path> <password file>\n" +
+                " <test cipher> <server host> <server port>";
         
         try {
-            if ( args.length >= 1 ) {
-                testCipher = (String)args[0];
-                if ( testCipher.toLowerCase().equals("-h"))
-                    System.out.println(usage);
+            if ( ((String)args[0]).toLowerCase().equals("-h") ) {
+                System.out.println(usage);
+                System.exit(0);
             }
             
+            if ( args.length >= 2 ) {
+                certDbPath = (String)args[0];
+                passwdFile = (String)args[1];
+            }
+            
+            if ( certDbPath != null)
+                setCertDbPath(certDbPath);
+            
             if ( args.length >= 3 ) {
-                testhost   = (String)args[1];
-                testport   = new Integer(args[2]).intValue();
+                testCipher = new Integer(args[2]).intValue();
             }
             
             if ( args.length >= 5 ) {
-                certDbPath = (String)args[3];
-                passwdFile = (String)args[4];
+                testhost   = (String)args[3];
+                testport   = new Integer(args[4]).intValue();
             }
             Thread.sleep(5000);
         } catch (Exception e) {
+            System.out.println("Exception caught " + e.toString());
+            e.printStackTrace();
         }
         
         JSS_SSLClient jssTest = new JSS_SSLClient();
@@ -344,16 +357,13 @@ public class JSS_SSLClient {
             jssTest.setTestCertCallback(true);
             jssTest.setClientCertNick(certnick);
             
-            if ( certDbPath != null )
-                jssTest.setCertDbPath(certDbPath);
-            
             if ( passwdFile != null )
                 jssTest.setPasswordFile(passwdFile);
             
-            if ( testCipher != null ) {
+            if ( testCipher != 0 ) {
                 try {
-                    jssTest.setCipher(new Integer(testCipher).intValue());
-                    jssTest.setEOF(testCipher);
+                    jssTest.setCipher(testCipher);
+                    jssTest.setEOF(new Integer(testCipher).toString());
                     jssTest.doIt();
                     while (!jssTest.isHandshakeCompleted()) {
                         // Put the main thread to sleep.  In case we do not
@@ -366,9 +376,11 @@ public class JSS_SSLClient {
                     }
                     jssTest.clearHandshakeCompleted();
                 } catch (Exception ex) {
+                    System.out.println("Exception caught " + ex.getMessage());
+                    ex.printStackTrace();
                 }
                 // Set EOF to null to trigger server socket close
-                jssTest.setCipher(new Integer(testCipher).intValue());
+                jssTest.setCipher(testCipher);
                 jssTest.setEOF("null");
                 jssTest.doIt();
                 while (!jssTest.isHandshakeCompleted()) {

@@ -50,5 +50,5 @@ then
   JAVA_BIN_AND_OPT=${JAVA_HOME}/bin/java
 fi
 
-${JAVA_BIN_AND_OPT} -classpath ${JSS_CLASSPATH} org.mozilla.jss.tests.JSSE_SSLServer 29753 SSLv3 false &
+${JAVA_BIN_AND_OPT} -classpath ${JSS_CLASSPATH} org.mozilla.jss.tests.JSSE_SSLServer 29753 SSLv3 false ${TESTDIR} &
 

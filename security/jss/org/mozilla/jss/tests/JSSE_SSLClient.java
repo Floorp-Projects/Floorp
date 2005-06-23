@@ -61,6 +61,7 @@ public class JSSE_SSLClient {
     private int     debug_level         = 0;
     private boolean handshakeCompleted  = false;
     private String  EOF                 = "test";
+    private String  keystoreLoc         = "keystore.pfx";
     
     /**
      * Set the protocol type and revision
@@ -142,6 +143,22 @@ public class JSSE_SSLClient {
      */
     public void setEOF(String fEof) {
         this.EOF = fEof;
+    }
+    
+    /**
+     * Set the location of keystore.pfx
+     * @param String fKeystoreLoc
+     */
+    public void setKeystoreLoc(String fKeystoreLoc) {
+        keystoreLoc = fKeystoreLoc + "/" + keystoreLoc;
+    }
+    
+    /**
+     * Get the location of keystore.pfx
+     * @return String fKeystoreLoc
+     */
+    public String getKeystoreLoc() {
+        return keystoreLoc;
     }
     
     /**
@@ -282,7 +299,11 @@ public class JSSE_SSLClient {
             // Load the keystore that contains the certificate
             kmf     = KeyManagerFactory.getInstance("SunX509");
             ks      = KeyStore.getInstance("PKCS12");
-            ks.load(new FileInputStream("keystore.pfx"), passphrase);
+            try {
+                ks.load(new FileInputStream(getKeystoreLoc()), passphrase);
+            } catch (Exception keyEx) {
+                System.out.println("DEBUG 306: Exception : " + keyEx.getMessage());
+            }
             kmf.init(ks, passphrase);
             
             // trust manager that trusts all cetificates
@@ -498,10 +519,11 @@ public class JSSE_SSLClient {
     /**
      * Test communication with SSL server using TLS
      */
-    public void testTlsClient(String testCipher, 
-                              String testHost, 
-                              int testPort) {
-
+    public void testTlsClient(String testCipher,
+            String testHost,
+            int testPort,
+            String keystoreLocation) {
+        
         String javaVersion = System.getProperty("java.version");
         String lastCipher  = null;
         System.out.println("\nUsing java version " + javaVersion + "\n");
@@ -510,48 +532,31 @@ public class JSSE_SSLClient {
         sslSock.setSslRevision("TLS");
         sslSock.setHost(testHost);
         sslSock.setPort(testPort);
+        sslSock.setKeystoreLoc(keystoreLocation);
         
         if ( javaVersion.indexOf("1.4") == -1 ) {
             // Validate Ciphers supported for TLS
             
             if ( testCipher != null ) {
-                // This try is for catching non supported cipher exception 
+                // This try is for catching non supported cipher exception
                 try {
                     sslSock.setCipherSuite(testCipher);
                     sslSock.setEOF(testCipher);
                     String errStr = sslSock.validateConnection();
-                    while (!sslSock.isHandshakeCompleted()) {
-                        // Put the main thread to sleep.  In case we do not get
-                        // any response within 10 sec, then we shutdown.
-                        try {
-                            Thread.currentThread().sleep(1000);
-                        } catch (InterruptedException e) {
-                            System.out.println("Thread Interrupted ...\n");
-                        }
-                    }
-                    sslSock.clearHandshakeCompleted();
+                    Thread.currentThread().sleep(1000);
                 } catch (Exception ex) {
                     System.out.println("JSSE_SSLCLient: Did not find " +
                                        "any supported ciphers for JDK 1.4.x");
                 }
             } else {
-                // This try is for catching non supported cipher exception 
+                // This try is for catching non supported cipher exception
                 try {
                     for(int i=0;i<Constants.sslciphersarray_jdk150.length;i++){
                         sslSock.setCipherSuite(
-                            Constants.sslciphersarray_jdk150[i]);
+                                Constants.sslciphersarray_jdk150[i]);
                         sslSock.setEOF(Constants.sslciphersarray_jdk150[i]);
                         String errStr = sslSock.validateConnection();
-                        while (!sslSock.isHandshakeCompleted()) {
-                            // Put the main thread to sleep.  In case we do not
-                            // get any response within 10 sec, then we shutdown.
-                            try {
-                                Thread.currentThread().sleep(1000);
-                            } catch (InterruptedException e) {
-                                System.out.println("Thread Interrupted ...\n");
-                            }
-                        }
-                        sslSock.clearHandshakeCompleted();
+                        Thread.currentThread().sleep(1000);
                     }
                 } catch (Exception ex) {
                     System.out.println("JSSE_SSLCLient: Did not find " +
@@ -561,13 +566,14 @@ public class JSSE_SSLClient {
             System.out.println("Testing TLS Cipher list complete\n");
         }
     }
-
+    
     /**
      * Test communication with SSL server using SSLv3
      */
-    public void testSslClient(String testCipher, 
-                              String testHost, 
-                              int testPort) {
+    public void testSslClient(String testCipher,
+                              String testHost,
+                              int testPort,
+                              String keystoreLocation) {
         String javaVersion = System.getProperty("java.version");
         String lastCipher  = null;
         // Validate Ciphers supported for SSLv3
@@ -576,46 +582,29 @@ public class JSSE_SSLClient {
         sslSock.setSslRevision("SSLv3");
         sslSock.setHost(testHost);
         sslSock.setPort(testPort);
+        sslSock.setKeystoreLoc(keystoreLocation);
         
         if ( javaVersion.indexOf("1.4") != -1 ) {
             if ( testCipher != null ) {
-                // This try is for catching non supported cipher exception 
+                // This try is for catching non supported cipher exception
                 try {
                     sslSock.setCipherSuite(testCipher);
                     sslSock.setEOF(testCipher);
                     String errStr = sslSock.validateConnection();
-                    while (!sslSock.isHandshakeCompleted()) {
-                        // Put the main thread to sleep.  In case we do not get
-                        // any response within 10 sec, then we shutdown.
-                        try {
-                            Thread.currentThread().sleep(1000);
-                        } catch (InterruptedException e) {
-                            System.out.println("Thread Interrupted ...\n");
-                        }
-                    }
-                    sslSock.clearHandshakeCompleted();
+                    Thread.currentThread().sleep(1000);
                 } catch (Exception ex) {
                     System.out.println("JSSE_SSLCLient: Did not find " +
                                        "any supported ciphers for JDK 1.4.x");
                 }
             } else {
-                // This try is for catching non supported cipher exception 
+                // This try is for catching non supported cipher exception
                 try {
                     for(int i=0;i<Constants.sslciphersarray_jdk142.length;i++){
                         lastCipher = Constants.sslciphersarray_jdk142[i];
                         sslSock.setCipherSuite(lastCipher);
                         sslSock.setEOF(Constants.sslciphersarray_jdk142[i]);
                         String errStr = sslSock.validateConnection();
-                        while (!sslSock.isHandshakeCompleted()) {
-                            // Put the main thread to sleep.  In case we do not
-                            // get any response within 10 sec, then we shutdown.
-                            try {
-                                Thread.currentThread().sleep(1000);
-                            } catch (InterruptedException e) {
-                                System.out.println("Thread Interrupted ...\n");
-                            }
-                        }
-                        sslSock.clearHandshakeCompleted();
+                        Thread.currentThread().sleep(1000);
                     }
                 } catch (Exception ex) {
                     System.out.println("JSSE_SSLCLient: Did not find " +
@@ -624,38 +613,26 @@ public class JSSE_SSLClient {
             }
             sslSock.setEOF("null");
             String errStr = sslSock.validateConnection();
-            while (!sslSock.isHandshakeCompleted()) {
-                //Do nothing
-            }
-            sslSock.clearHandshakeCompleted();
         } else {
             if ( testCipher != null ) {
-                // This try is for catching non supported cipher exception 
+                // This try is for catching non supported cipher exception
                 try {
                     sslSock.setCipherSuite(testCipher);
                     sslSock.setEOF(testCipher);
                     String errStr = sslSock.validateConnection();
-                    while (!sslSock.isHandshakeCompleted()) {
-                        //Do nothing
-                    }
-                    sslSock.clearHandshakeCompleted();
                 } catch (Exception ex) {
                     System.out.println("JSSE_SSLCLient: Did not find " +
                                        "any supported ciphers for JDK 1.5.x");
                 }
             } else {
-                // This try is for catching non supported cipher exception 
+                // This try is for catching non supported cipher exception
                 try {
                     for(int i=0;i<Constants.sslciphersarray_jdk150.length;i++){
                         lastCipher = Constants.sslciphersarray_jdk150[i];
                         sslSock.setCipherSuite(
-                            Constants.sslciphersarray_jdk150[i]);
+                                Constants.sslciphersarray_jdk150[i]);
                         sslSock.setEOF(Constants.sslciphersarray_jdk150[i]);
                         String errStr = sslSock.validateConnection();
-                        while (!sslSock.isHandshakeCompleted()) {
-                            //Do nothing
-                        }
-                        sslSock.clearHandshakeCompleted();
                     }
                 } catch (Exception ex) {
                     System.out.println("JSSE_SSLCLient: Did not find " +
@@ -664,37 +641,49 @@ public class JSSE_SSLClient {
             }
             sslSock.setEOF("null");
             String errStr = sslSock.validateConnection();
-            while (!sslSock.isHandshakeCompleted()) {
-                //Do nothing
-            }
-            sslSock.clearHandshakeCompleted();
         }
         System.out.println("Testing SSLv3 Cipher list complete\n");
     }
-
+    
     /**
      * Main method for local unit testing.
      */
     public static void main(String [] args) {
         
-        String testCipher      = null;
-        String testHost        = "localhost";
-        int    testPort        = 29750;
+        String testCipher       = null;
+        String testHost         = "localhost";
+        String keystoreLocation = "keystore.pfx";
+        int    testPort         = 29750;
+        String usage            = "java org.mozilla.jss.tests.JSSE_SSLClient" +
+                "\n<keystore location> " +
+                "<test cipher> <test host> <test port>";
         
         try {
+            if ( args[0].toLowerCase().equals("-h") ) {
+                System.out.println(usage);
+                System.exit(0);
+            }
+            
             if ( args.length >= 1 ) {
-                testCipher = (String)args[0];
-                testHost   = (String)args[1];
-                testPort   = new Integer(args[2]).intValue();
+                keystoreLocation = (String)args[0];
+                testCipher       = (String)args[1];
+                testHost         = (String)args[2];
+                testPort         = new Integer(args[3]).intValue();
             }
         } catch (Exception e) { }
         
         JSSE_SSLClient sslSock = new JSSE_SSLClient();
-
+        
         // Call TLS client cipher test
-        sslSock.testTlsClient(testCipher, testHost, testPort);
-
+        try {
+            Thread.currentThread().sleep(1000);
+        } catch (Exception e) { }
+        sslSock.testTlsClient(testCipher, testHost, testPort, keystoreLocation);
+        
         // Call SSLv3 client cipher test
-        sslSock.testSslClient(testCipher, testHost, testPort);
+        try {
+            Thread.currentThread().sleep(1000);
+        } catch (Exception e) { }
+        sslSock.testSslClient(testCipher, testHost, testPort, keystoreLocation);
     }
 }

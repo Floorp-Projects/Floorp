@@ -85,12 +85,12 @@ public class JSS_SSLServer  {
     }
     
     private String        serverCertNick  = null;
-    private String        serverHost      = null;
+    private String        serverHost      = "localhost";
     private boolean       TestInetAddress = false;
     private boolean       success         = true;
     public  static int    port            = 29750;
-    public  static String usage           = "USAGE: java JSS_SSLServer . " +
-            "passwords server_name " +
+    public  static String usage           = "USAGE: java JSS_SSLServer " +
+            "<cert db path> passwords server_name " +
             "servercertnick [ true | false ]";
     
     public void doIt(String[] args) throws Exception {

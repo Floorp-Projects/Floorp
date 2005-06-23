@@ -48,6 +48,7 @@ public class JSSE_SSLServer extends ClassServer {
     private static int DefaultServerPort = 29753;
     private static int port              = DefaultServerPort;
     private static String type           = "SSLv3";
+    private static String keystoreLoc    = "keystore.pfx";
     
     /**
      * Constructs a JSSE_SSLServer.
@@ -56,6 +57,22 @@ public class JSSE_SSLServer extends ClassServer {
     public JSSE_SSLServer(ServerSocket ss)
     throws IOException {
         super(ss);
+    }
+    
+    /**
+     * Set the location of keystore file.
+     * @param String fKeystoreLoc
+     */
+    public static void setKeystoreLoc(String fKeystoreLoc) {
+        keystoreLoc = fKeystoreLoc + "/" + keystoreLoc;
+    }
+    
+    /**
+     * Get the location of keystore file.
+     * @return String keystoreLoc
+     */
+    public static String getKeystoreLoc() {
+        return keystoreLoc;
     }
     
     /**
@@ -70,12 +87,13 @@ public class JSSE_SSLServer extends ClassServer {
      * </code>
      */
     public static void main(String args[]) {
+        String keystoreLoc = "keystore.pfx";
         if ( args.length <= 1 ) {
             System.out.println(
                     "USAGE: java JSSE_SSLServer port [TLS | SSLv3 [true]]");
-            System.out.println("");
+            System.out.println("<keystore location>");
             System.out.println(
-                    "If the second argument is TLS, it will start as a\n" +
+                    "\nIf the second argument is TLS, it will start as a\n" +
                     "TLS server, otherwise, it will be started in SSLv3 mode." +
                     "\nIf the third argument is true,it will require\n" +
                     "client authentication as well.");
@@ -85,6 +103,9 @@ public class JSSE_SSLServer extends ClassServer {
         if (args.length >= 2) {
             port = Integer.parseInt(args[0]);
             type = args[1];
+            keystoreLoc = args[3];
+	    if ( keystoreLoc != null )
+                setKeystoreLoc(keystoreLoc);
         }
         
         try {
@@ -115,9 +136,9 @@ public class JSSE_SSLServer extends ClassServer {
         }
         
         // Put the main thread to sleep.  In case we do not get any
-        // response within 35 sec, then we shutdown the server.
+        // response within 5 sec, then we shutdown the server.
         try {
-            Thread.currentThread().sleep(3500);
+            Thread.currentThread().sleep(5000);
         } catch (InterruptedException e) {
             System.out.println("Thread Interrupted, exiting normally ...\n");
             System.exit(0);
@@ -167,7 +188,7 @@ public class JSSE_SSLServer extends ClassServer {
                 kmf = KeyManagerFactory.getInstance("SunX509");
                 ks = KeyStore.getInstance("PKCS12");
                 
-                ks.load(new FileInputStream("keystore.pfx"), passphrase);
+                ks.load(new FileInputStream(getKeystoreLoc()), passphrase);
                 kmf.init(ks, passphrase);
                 ctx.init(kmf.getKeyManagers(), trustAllCerts, null);
                 
@@ -183,7 +204,7 @@ public class JSSE_SSLServer extends ClassServer {
                 kmf = KeyManagerFactory.getInstance("SunX509");
                 ks = KeyStore.getInstance("PKCS12");
                 
-                ks.load(new FileInputStream("keystore.pfx"), passphrase);
+                ks.load(new FileInputStream("./" + getKeystoreLoc()), passphrase);
                 kmf.init(ks, passphrase);
                 ctx.init(kmf.getKeyManagers(), trustAllCerts, null);
                 
