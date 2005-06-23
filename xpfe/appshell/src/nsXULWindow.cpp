@@ -1211,7 +1211,7 @@ PRBool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
 void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
                                   PRInt32 aSpecWidth, PRInt32 aSpecHeight)
 {
-  const PRInt32 kOffset = 22; // XXX traditionally different for mac.
+  const PRInt32 kOffset = 22;
   const PRInt32 kSlop = 4;
   nsresult rv;
   PRBool   keepTrying;
