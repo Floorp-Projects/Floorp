@@ -85,7 +85,7 @@ endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 HAVE_PROGRESSUI = 1
 CPPSRCS += readstrings.cpp
-CMMSRCS += progressui_osx.mm
+CMMSRCS += progressui_osx.mm launchchild_osx.mm
 OS_LIBS += -framework Cocoa
 endif
 

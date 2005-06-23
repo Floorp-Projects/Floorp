@@ -78,6 +78,11 @@
 # include <unistd.h>
 #endif
 
+#if defined(XP_MACOSX)
+// This function is defined in launchchild_osx.mm
+void LaunchChild(int argc, char **argv);
+#endif
+
 #ifndef _O_BINARY
 # define _O_BINARY 0
 #endif
@@ -100,6 +105,12 @@
 # else
 #  define MAXPATHLEN 1024
 # endif
+#endif
+
+// We want to use execv to invoke the callback executable on platforms where
+// we were launched using execv.  See nsUpdateDriver.cpp.
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+#define USE_EXECV
 #endif
 
 //-----------------------------------------------------------------------------
@@ -794,15 +805,18 @@ PatchFile::Finish(int status)
   backup_finish(mFile, status);
 }
 
-static int
-LaunchCallbackApp(const char *cmdLine)
+static void
+LaunchCallbackApp(int argc, char **argv)
 {
-  // Someone will probably tell me that using 'system' is a bad idea, but for
-  // now it seems like it fits the bill.  It saves us from having to parse the
-  // command line in order to call execv, and it nicely blocks this process
-  // until the command line is finished executing.
-
-  return system(cmdLine);
+#if defined(USE_EXECV)
+  execv(argv[0], argv);
+#elif defined(XP_MACOSX)
+  LaunchChild(argc, argv);
+#elif defined(XP_WIN)
+  _spawnv(_P_NOWAIT, argv[0], argv);
+#else
+# warning "Need implementaton of LaunchCallbackApp"
+#endif
 }
 
 static void
@@ -850,19 +864,25 @@ int main(int argc, char **argv)
 {
   InitProgressUI(&argc, &argv);
 
+  // The updater command line consists of the directory path containing the
+  // updater.mar file to process followed by the PID of the calling process.
+  // The updater will wait on the parent process to exit if the PID is non-
+  // zero.  This is leveraged on platforms such as Windows where it is
+  // necessary for the parent process to exit before its executable image may
+  // be altered.
+
   if (argc < 3) {
-    fprintf(stderr, "Usage: updater <dir-path> <callback> [parent-pid]\n");
+    fprintf(stderr, "Usage: updater <dir-path> <parent-pid> [callback args...]\n");
     return 1;
   }
 
-  if (argc > 3) {
-    int pid = atoi(argv[3]);
-    if (!pid)
-      return 1;
+  int pid = atoi(argv[2]);
+  if (pid) {
 #ifdef XP_WIN
     HANDLE parent = OpenProcess(SYNCHRONIZE, FALSE, (DWORD) pid);
-    // May return NULL if the parent process has already gone away.  Otherwise,
-    // wait for the parent process to exit before starting the update.
+    // May return NULL if the parent process has already gone away.
+    // Otherwise, wait for the parent process to exit before starting the
+    // update.
     if (parent) {
       DWORD result = WaitForSingleObject(parent, 5000);
       CloseHandle(parent);
@@ -892,7 +912,12 @@ int main(int argc, char **argv)
 
   LogFinish();
 
-  return LaunchCallbackApp(argv[2]);
+  // The callback to execute is given as the last N arguments of our command
+  // line.
+  if (argc > 3)
+    LaunchCallbackApp(argc - 3, argv + 3);
+
+  return 0;
 }
 
 class ActionList
