@@ -123,7 +123,7 @@ nsGREDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
 
 //*****************************************************************************
 // Implementations from nsXPCOMGlue.h and helper functions.
-//*****************************************************************************   
+//*****************************************************************************
 
 PRBool
 GRE_GetCurrentProcessDirectory(char* buffer)
@@ -162,7 +162,6 @@ GRE_GetCurrentProcessDirectory(char* buffer)
             }
             CFRelease(bundleURL);
         }
-        CFRelease(appBundle);
     }
     if (*buffer) return PR_TRUE;
 

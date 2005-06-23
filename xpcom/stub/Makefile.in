@@ -81,15 +81,26 @@ FORCE_USE_PIC	= 1
 
 FORCE_SHARED_LIB = 1
 
+EXTRA_DSO_LDOPTS = $(LIBS_DIR) $(MOZ_FIX_LINK_PATHS)
+
 ifdef MOZ_ENABLE_LIBXUL
-EXTRA_DSO_LIBS = xul
+
+ifeq (Darwin,$(OS_ARCH))
+EXTRA_DSO_LDOPTS += $(DIST)/bin/XUL
 else
+EXTRA_DSL_LIBS = xul
+endif
+
+else #!MOZ_ENABLE_LIBXUL
+
 ifeq ($(OS_TARGET),OS2)
 EXTRA_DSO_LIBS = xpcomcor
 else
 EXTRA_DSO_LIBS = xpcom_core
 endif
+
 endif
-EXTRA_DSO_LDOPTS = $(LIBS_DIR) $(MOZ_FIX_LINK_PATHS) $(EXTRA_DSO_LIBS) $(NSPR_LIBS)
+
+EXTRA_DSO_LDOPTS += $(EXTRA_DSO_LIBS) $(NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk

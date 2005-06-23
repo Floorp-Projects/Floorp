@@ -6,10 +6,6 @@
 	<string>English</string>
 	<key>CFBundleExecutable</key>
 	<string>xulrunner-bin</string>
-	<key>CFBundleGetInfoString</key>
-	<string>XULRunner APP_VERSION, © 1998-2005 Contributors</string>
-	<key>CFBundleIconFile</key>
-	<string>xulrunner</string>
 	<key>CFBundleIdentifier</key>
 	<string>org.mozilla.xulrunner</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -17,14 +13,10 @@
 	<key>CFBundleName</key>
 	<string>XULRunner</string>
 	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>APP_VERSION</string>
+	<string>FMWK</string>
 	<key>CFBundleSignature</key>
 	<string>MOZB</string>
 	<key>CFBundleVersion</key>
 	<string>APP_VERSION</string>
-	<key>NSAppleScriptEnabled</key>
-	<true/>
 </dict>
 </plist>

@@ -46,7 +46,11 @@
 #include "nsCOMPtr.h"
 #include <stdlib.h>
 
-#if XP_WIN32
+#ifdef XP_MACOSX
+#include <mach-o/dyld.h>
+#endif
+
+#ifdef XP_WIN
 #include <windows.h>
 #include <mbstring.h>
 #endif
@@ -57,21 +61,59 @@ void GRE_AddGREToEnvironment();
 nsresult GlueStartupDebug();
 void GlueShutdownDebug();
 
+#ifndef XP_MACOSX
+// You cannot unload a .dylib on Mac OS X, so we don't bother saving the
+// mach_header*
+
 static PRLibrary *xpcomLib;
+#endif
+
 static XPCOMFunctions xpcomFunctions;
 
 extern "C"
 nsresult XPCOMGlueStartup(const char* xpcomFile)
 {
-#ifdef XPCOM_GLUE_NO_DYNAMIC_LOADING
-    return NS_OK;
-#else
     nsresult rv = NS_OK;
     GetFrozenFunctionsFunc function = nsnull;
 
     xpcomFunctions.version = XPCOM_GLUE_VERSION;
     xpcomFunctions.size    = sizeof(XPCOMFunctions);
 
+#ifdef XP_MACOSX
+    if (!xpcomFile)
+        xpcomFile = XPCOM_DLL;
+
+    if ((xpcomFile[0] != '.' || xpcomFile[1] != '\0')) {
+        (void) NSAddImage(xpcomFile,
+                          NSADDIMAGE_OPTION_RETURN_ON_ERROR |
+                          NSADDIMAGE_OPTION_WITH_SEARCHING |
+                          NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
+        // We don't really care if this fails, as long as we can get
+        // NS_GetFrozenFunctions below.
+    }
+
+    if (!NSIsSymbolNameDefined("_NS_GetFrozenFunctions"))
+        return NS_ERROR_FAILURE;
+
+    NSSymbol sym = NSLookupAndBindSymbol("_NS_GetFrozenFunctions");
+    function = (GetFrozenFunctionsFunc) NSAddressOfSymbol(sym);
+        
+    if (!function)
+        return NS_ERROR_FAILURE;
+
+    rv = (*function)(&xpcomFunctions, nsnull);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = GlueStartupDebug();
+    if (NS_FAILED(rv)) {
+        memset(&xpcomFunctions, 0, sizeof(xpcomFunctions));
+        return rv;
+    }
+
+    GRE_AddGREToEnvironment();
+    return NS_OK;
+#else
     //
     // if xpcomFile == ".", then we assume xpcom is already loaded, and we'll
     // use NSPR to find NS_GetFrozenFunctions from the list of already loaded
@@ -164,23 +206,19 @@ bail:
 extern "C"
 nsresult XPCOMGlueShutdown()
 {
-#ifdef XPCOM_GLUE_NO_DYNAMIC_LOADING
-    return NS_OK;
-#else
-
     GlueShutdownDebug();
 
+#ifndef XP_MACOSX
     if (xpcomLib) {
         PR_UnloadLibrary(xpcomLib);
         xpcomLib = nsnull;
     }
+#endif
     
     memset(&xpcomFunctions, 0, sizeof(xpcomFunctions));
     return NS_OK;
-#endif
 }
 
-#ifndef XPCOM_GLUE_NO_DYNAMIC_LOADING
 extern "C" NS_COM nsresult
 NS_InitXPCOM2(nsIServiceManager* *result, 
               nsIFile* binDirectory,
@@ -479,8 +517,6 @@ NS_Free(void* ptr)
     if (xpcomFunctions.freeFunc)
         xpcomFunctions.freeFunc(ptr);
 }
-
-#endif // #ifndef  XPCOM_GLUE_NO_DYNAMIC_LOADING
 
 static char* spEnvString = 0;
 
