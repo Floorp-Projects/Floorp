@@ -319,7 +319,7 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   // On windows, we may need to quote these paths.
   DoubleQuoteIfNeeded(updaterPath);
   DoubleQuoteIfNeeded(updateDirPath);
-  DoubleQuoteIfNeeded(commandLine);
+ // DoubleQuoteIfNeeded(commandLine);
 #endif
 
   // Construct the PID argument for this process.  If we are using execv, then
