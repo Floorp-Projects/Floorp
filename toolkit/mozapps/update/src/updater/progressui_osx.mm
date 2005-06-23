@@ -91,8 +91,12 @@ static const char *sProgramPath;
   if (sQuit) {
     [aTimer invalidate];
     [aTimer release];
-    // It seems to be necessary to hide ourselves before we stop, otherwise the
-    // "run" method will not return until the user focuses some other app.
+
+    // It seems to be necessary to activate and hide ourselves before we stop,
+    // otherwise the "run" method will not return until the user focuses some
+    // other app.  The activate step is necessary if we are not the active app.
+    // This is a big hack, but it seems to do the trick.
+    [NSApp activateIgnoringOtherApps:YES];
     [NSApp hide:self];
     [NSApp stop:self];
   }
