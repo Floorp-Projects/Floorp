@@ -225,8 +225,15 @@ interface nsIUpdateChecker : nsISupports
    * @param   listener
    *          An object implementing nsIUpdateCheckListener which is notified
    *          of the results of an update check.
+   * @param   force
+   *          Forces the checker to check for updates, regardless of the 
+   *          current value of the user's update settings. This is used by
+   *          any piece of UI that offers the user the imperative option to
+   *          check for updates now, regardless of their update settings.
+   *          force will not work if the system administrator has locked
+   *          the app.update.enabled preference.
    */
-  void checkForUpdates(in nsIUpdateCheckListener listener);
+  void checkForUpdates(in nsIUpdateCheckListener listener, in boolean force);
 
   /**
    * Constants for the |stopChecking| function that tell the Checker how long
