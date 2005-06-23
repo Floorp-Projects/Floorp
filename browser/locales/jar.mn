@@ -18,7 +18,7 @@
     locale/browser/pageReportFirstTime.dtd         (%chrome/browser/pageReportFirstTime.dtd)
     locale/browser/sanitize.dtd                    (%chrome/browser/sanitize.dtd)
     locale/browser/searchbar.properties            (%chrome/browser/searchbar.properties)
-    locale/browser/setDesktopBackground.dtd                (%chrome/browser/setDesktopBackground.dtd)
+    locale/browser/setDesktopBackground.dtd        (%chrome/browser/setDesktopBackground.dtd)
     locale/browser/shellservice.properties         (%chrome/browser/shellservice.properties)
 *   locale/browser/bookmarks/bookmarks.dtd         (%chrome/browser/bookmarks/bookmarks.dtd)
 *   locale/browser/bookmarks/addBookmark.dtd       (%chrome/browser/bookmarks/addBookmark.dtd)
