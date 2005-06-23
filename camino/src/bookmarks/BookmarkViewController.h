@@ -130,6 +130,7 @@
 -(IBAction) openBookmark: (id)aSender;
 -(IBAction) openBookmarkInNewTab:(id)aSender;
 -(IBAction) openBookmarkInNewWindow:(id)aSender;
+-(IBAction) openBookmarksInTabsInNewWindow:(id)aSender;
 -(IBAction) deleteBookmarks:(id)aSender;
 -(IBAction) showBookmarkInfo:(id)aSender;
 -(IBAction) locateBookmark:(id)aSender;

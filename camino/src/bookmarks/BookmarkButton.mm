@@ -204,7 +204,8 @@
 -(NSMenu*)menuForEvent:(NSEvent*)aEvent
 {
   lastEventWasMenu = YES;
-  return [[BookmarkManager sharedBookmarkManager] contextMenuForItem:[self bookmarkItem] fromView:nil target:self];
+  NSArray* theItemArray = [NSArray arrayWithObject:[self bookmarkItem]];
+  return [[BookmarkManager sharedBookmarkManager] contextMenuForItems:theItemArray fromView:nil target:self];
 }
 
 //

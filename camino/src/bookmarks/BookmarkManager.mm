@@ -484,27 +484,51 @@ static unsigned gFirstUserCollection = 0;
 // unified context menu generator for all kinds of bookmarks
 // this can be called from a bookmark outline view
 // or from a bookmark button, which should pass a nil outlineView
-- (NSMenu *)contextMenuForItem:(id)item fromView:(BookmarkOutlineView *)outlineView target:(id)target
+- (NSMenu *)contextMenuForItems:(NSArray*)items fromView:(BookmarkOutlineView *)outlineView target:(id)target
 {
-  // don't do anything if item == nil
-  if (!item)
-    return nil;
+  if ([items count] == 0) return nil;
+
+  BOOL itemsContainsFolder = NO;
+  BOOL itemsContainsBookmark = NO;
+  BOOL multipleItems = ([items count] > 1);
   
+  NSEnumerator* itemsEnum = [items objectEnumerator];
+  id curItem;
+  while ((curItem = [itemsEnum nextObject]))
+  {
+    itemsContainsFolder   |= [curItem isKindOfClass:[BookmarkFolder class]];
+    itemsContainsBookmark |= [curItem isKindOfClass:[Bookmark class]];
+  }
+  
+  // All the methods in this context menu need to be able to handle > 1 item
+  // being selected, and the selected items containing a mixture of folders
+  // and bookmarks.
   NSMenu * contextMenu = [[[NSMenu alloc] initWithTitle:@"notitle"] autorelease];
-  BOOL isFolder = [item isKindOfClass:[BookmarkFolder class]];
-  NSString * menuTitle;
+  NSString * menuTitle = nil;
   
-  // open in new window
-  if (isFolder)
+  // open in new window(s)
+  if (itemsContainsFolder && [items count] == 1)
     menuTitle = NSLocalizedString(@"Open Tabs in New Window", @"");
+  else if (multipleItems)
+    menuTitle = NSLocalizedString(@"Open in New Windows", @"");
   else
     menuTitle = NSLocalizedString(@"Open in New Window", @"");
+
   NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) keyEquivalent:@""] autorelease];
   [menuItem setTarget:target];
   [contextMenu addItem:menuItem];
   
-  // open in new tab
-  if (isFolder)
+  // open in new tabs in new window
+  if (multipleItems)
+  {
+    menuTitle = NSLocalizedString(@"Open in Tabs in New Window", @"");
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarksInTabsInNewWindow:) keyEquivalent:@""] autorelease];
+    [menuItem setTarget:target];
+    [contextMenu addItem:menuItem];
+  }
+
+  // open in new tab in current window
+  if (itemsContainsFolder || multipleItems)
     menuTitle = NSLocalizedString(@"Open in New Tabs", @"");
   else
     menuTitle = NSLocalizedString(@"Open in New Tab", @"");
@@ -512,7 +536,7 @@ static unsigned gFirstUserCollection = 0;
   [menuItem setTarget:target];
   [contextMenu addItem:menuItem];
   
-  if (!outlineView || ([outlineView numberOfSelectedRows] == 1)) {
+  if (!outlineView || ([items count] == 1)) {
     [contextMenu addItem:[NSMenuItem separatorItem]];
     menuTitle = NSLocalizedString(@"Get Info", @"");
     menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(showBookmarkInfo:) keyEquivalent:@""] autorelease];
@@ -520,10 +544,10 @@ static unsigned gFirstUserCollection = 0;
     [contextMenu addItem:menuItem];
   }
   
-  if ([item isKindOfClass:[BookmarkFolder class]]) {
+  if (([items count] == 1) && itemsContainsFolder) {
     menuTitle = NSLocalizedString(@"Use as Dock Menu", @"");
     menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(makeDockMenu:) keyEquivalent:@""] autorelease];
-    [menuItem setTarget:item];
+    [menuItem setTarget:[items objectAtIndex:0]];
     [contextMenu addItem:menuItem];
   }
   

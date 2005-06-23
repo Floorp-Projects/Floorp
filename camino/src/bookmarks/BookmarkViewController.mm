@@ -446,17 +446,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     }
   }
 
-  // create array of items we need to delete. Deleting items out of of the
-  // selection array is problematic for some reason.
-  NSMutableArray *itemsToDelete = [[NSMutableArray alloc] init];
-  selRows = [mBookmarksOutlineView selectedRowEnumerator];
-  for (NSNumber* currIndex = [selRows nextObject];
-       currIndex != nil;
-       currIndex = [selRows nextObject]) {
-    index = [currIndex intValue];
-    BookmarkItem* item = [mBookmarksOutlineView itemAtRow: index];
-    [itemsToDelete addObject: item];
-  }
+  // create array of items we need to delete.
+  NSArray* itemsToDelete = [mBookmarksOutlineView selectedItems];
 
   // delete all bookmarks that are in our array
   int count = [itemsToDelete count];
@@ -464,7 +455,6 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     doomedItem = [itemsToDelete objectAtIndex:i];
     [[doomedItem parent] deleteChild:doomedItem];
   }
-  [itemsToDelete release];
 
   // restore selection to location near last item deleted or last item
   int total = [mBookmarksOutlineView numberOfRows];
@@ -475,93 +465,134 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 -(IBAction)openBookmark: (id)aSender
 {
-  id item = nil;
-  if (aSender == mBookmarksOutlineView)  {
-    int index = [mBookmarksOutlineView selectedRow];
-    if (index == -1)
-      return;
-    item = [mBookmarksOutlineView itemAtRow: index];
-  } else if ([aSender isKindOfClass:[BookmarkItem class]])
-    item = aSender;
+  NSArray* items = nil;
+  if ([aSender isKindOfClass:[BookmarkItem class]])
+    items = [NSArray arrayWithObject:aSender];
+  else
+    items = [mBookmarksOutlineView selectedItems];
 
-  if (!item)
-    return;
-  // see if it's a rendezvous item
-  id parent = [item parent];
-  if (![parent isKindOfClass:[BookmarkItem class]]) {
-    [[NetworkServices sharedNetworkServices] attemptResolveService:[parent intValue] forSender:item];
-    mOpenActionFlag = kOpenBookmarkAction;
-    return;
-  }
-
-  // handling toggling of folders
-  if ([item isKindOfClass:[BookmarkFolder class]])
+  NSEnumerator* itemsEnum = [items objectEnumerator];
+  id curItem;
+  while ((curItem = [itemsEnum nextObject]))
   {
-    if (![item isGroup])
+    // see if it's a rendezvous item
+    id parent = [curItem parent];
+    if (![parent isKindOfClass:[BookmarkItem class]])
     {
-      if ([mBookmarksOutlineView isItemExpanded:item])
-        [mBookmarksOutlineView collapseItem: item];
-      else
-        [mBookmarksOutlineView expandItem: item];
-      return;
+      [[NetworkServices sharedNetworkServices] attemptResolveService:[parent intValue] forSender:curItem];
+      mOpenActionFlag = kOpenBookmarkAction;
+    }
+    else if ([curItem isKindOfClass:[BookmarkFolder class]])
+    {
+      if (![curItem isGroup])
+      {
+        if ([mBookmarksOutlineView isItemExpanded:curItem])
+          [mBookmarksOutlineView collapseItem: curItem];
+        else
+          [mBookmarksOutlineView expandItem: curItem];
+      }
+    }
+    else
+    {
+      // otherwise follow the standard bookmark opening behavior
+      [[NSApp delegate] loadBookmark:curItem withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehaviorDefault];
     }
   }
-
-  // otherwise follow the standard bookmark opening behavior
-  [[NSApp delegate] loadBookmark:item withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehaviorDefault];
 }
 
 -(IBAction)openBookmarkInNewTab:(id)aSender
 {
-  id item = nil;
+  NSArray* items = nil;
+  if ([aSender isKindOfClass:[BookmarkItem class]])
+    items = [NSArray arrayWithObject:aSender];
+  else
+    items = [mBookmarksOutlineView selectedItems];
 
-  if (![aSender isKindOfClass:[BookmarkItem class]]) {
-    int index = [mBookmarksOutlineView selectedRow];
-    if (index == -1)
-      return;
-    if ([mBookmarksOutlineView numberOfSelectedRows] == 1)
-      item = [mBookmarksOutlineView itemAtRow:index];
-  } else
-    item = aSender;
-
-  if (!item)
-    return;
-  // see if it's a rendezvous item
-  id parent = [item parent];
-  if (![parent isKindOfClass:[BookmarkItem class]]) {
-    [[NetworkServices sharedNetworkServices] attemptResolveService:[parent intValue] forSender:item];
+  NSEnumerator* itemsEnum = [items objectEnumerator];
+  id curItem;
+  while ((curItem = [itemsEnum nextObject]))
+  {
+    // see if it's a rendezvous item
+    id parent = [curItem parent];
+    if (![parent isKindOfClass:[BookmarkItem class]])
+    {
+      [[NetworkServices sharedNetworkServices] attemptResolveService:[parent intValue] forSender:curItem];
       mOpenActionFlag = kOpenInNewTabAction;
-      return;
-  }    
+    }
+    else
+    {
+      // otherwise follow the standard bookmark opening behavior
+      [[NSApp delegate] loadBookmark:curItem withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehaviorNewTabDefault];
+    }
+  }
+}
 
-  // otherwise follow the standard bookmark opening behavior
-  [[NSApp delegate] loadBookmark:item withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehaviorNewTabDefault];
+-(IBAction)openBookmarksInTabsInNewWindow:(id)aSender
+{
+  NSArray* items = nil;
+  if ([aSender isKindOfClass:[BookmarkItem class]])
+    items = [NSArray arrayWithObject:aSender];
+  else
+    items = [mBookmarksOutlineView selectedItems];
+  
+  // make url array
+  NSMutableArray* urlArray = [NSMutableArray arrayWithCapacity:[items count]];
+  
+  NSEnumerator* itemsEnum = [items objectEnumerator];
+  id curItem;
+  while ((curItem = [itemsEnum nextObject]))
+  {
+    // see if it's a rendezvous item (this won't open in the new window, because we suck)
+    id parent = [curItem parent];
+    if (![parent isKindOfClass:[BookmarkItem class]])
+    {
+      [[NetworkServices sharedNetworkServices] attemptResolveService:[parent intValue] forSender:curItem];
+      mOpenActionFlag = kOpenInNewTabAction;
+    }
+    else
+    {
+      if ([curItem isKindOfClass:[Bookmark class]])
+        [urlArray addObject:[curItem url]];
+      else if ([curItem isKindOfClass:[BookmarkFolder class]])
+        [urlArray addObjectsFromArray:[curItem childURLs]];
+    }
+  }
+
+  // make new window
+  BOOL loadNewTabsInBackgroundPref = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+
+  NSWindow* behindWindow = nil;
+  if (loadNewTabsInBackgroundPref)
+    behindWindow = [mBrowserWindowController window];
+
+  [[NSApp delegate] openBrowserWindowWithURLs:urlArray behind:behindWindow allowPopups:NO];
 }
 
 -(IBAction)openBookmarkInNewWindow:(id)aSender
 {
-  id item = nil;
-  if (![aSender isKindOfClass:[BookmarkItem class]]) {
-    int index = [mBookmarksOutlineView selectedRow];
-    if (index == -1)
-      return;
-    if ([mBookmarksOutlineView numberOfSelectedRows] == 1)
-      item = [mBookmarksOutlineView itemAtRow:index];
-  } else
-    item = aSender;
-  if (!item)
-    return;
+  NSArray* items = nil;
+  if ([aSender isKindOfClass:[BookmarkItem class]])
+    items = [NSArray arrayWithObject:aSender];
+  else
+    items = [mBookmarksOutlineView selectedItems];
 
-  // see if it's a rendezvous item
-  id parent = [item parent];
-  if (![parent isKindOfClass:[BookmarkItem class]]) {
-    [[NetworkServices sharedNetworkServices] attemptResolveService:[parent intValue] forSender:item];
-    mOpenActionFlag = kOpenInNewWindowAction;
-    return;
+  NSEnumerator* itemsEnum = [items objectEnumerator];
+  id curItem;
+  while ((curItem = [itemsEnum nextObject]))
+  {
+    // see if it's a rendezvous item
+    id parent = [curItem parent];
+    if (![parent isKindOfClass:[BookmarkItem class]])
+    {
+      [[NetworkServices sharedNetworkServices] attemptResolveService:[parent intValue] forSender:curItem];
+      mOpenActionFlag = kOpenInNewWindowAction;
+    }
+    else
+    {
+      // otherwise follow the standard bookmark opening behavior
+      [[NSApp delegate] loadBookmark:curItem withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehaviorNewWindowDefault];
+    }
   }
-
-  // otherwise follow the standard bookmark opening behavior
-  [[NSApp delegate] loadBookmark:item withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehaviorNewWindowDefault];
 }
 
 -(IBAction)showBookmarkInfo:(id)aSender
@@ -598,15 +629,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 - (IBAction)copy:(id)aSender
 {
-  // Get the list of bookmark items that are selected
-  NSMutableArray *bookmarkItemsToCopy = [NSMutableArray array];
-  NSEnumerator* selRows = [mBookmarksOutlineView selectedRowEnumerator];
-  id curSelectedRow;
-  while ((curSelectedRow = [selRows nextObject])) {
-    [bookmarkItemsToCopy addObject: [mBookmarksOutlineView itemAtRow:[curSelectedRow intValue]]];
-  }
-  
-  [self copyBookmarks:bookmarkItemsToCopy toPasteboard:[NSPasteboard generalPasteboard]];
+  [self copyBookmarks:[mBookmarksOutlineView selectedItems] toPasteboard:[NSPasteboard generalPasteboard]];
 }
 
 
@@ -1386,9 +1409,9 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     return nil;
 }
 
-- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item
+- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItems:(NSArray*)items
 {
-  return [[BookmarkManager sharedBookmarkManager] contextMenuForItem:item fromView:outlineView target:self];
+  return [[BookmarkManager sharedBookmarkManager] contextMenuForItems:items fromView:outlineView target:self];
 }
 
 - (BOOL)outlineView:(NSOutlineView*)inOutlineView columnHasIcon:(NSTableColumn*)inColumn
@@ -1661,10 +1684,9 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   }
   else
   {
-    int index = [mBookmarksOutlineView selectedRow];
-    BookmarkItem* item = [mBookmarksOutlineView itemAtRow:index];
-    if (item)
-      actionMenu = [[BookmarkManager sharedBookmarkManager] contextMenuForItem:item fromView:mBookmarksOutlineView target:self];
+    NSArray* selectedBMs = [mBookmarksOutlineView selectedItems];
+    if ([selectedBMs count] > 0)
+      actionMenu = [[BookmarkManager sharedBookmarkManager] contextMenuForItems:selectedBMs fromView:mBookmarksOutlineView target:self];
     else
       actionMenu = mActionMenuBookmarks;
   }

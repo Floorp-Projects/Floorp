@@ -68,6 +68,8 @@
 -(void)setDeleteAction: (SEL)deleteAction;
 -(SEL)deleteAction;
 
+- (NSArray*)selectedItems;
+
 -(void)_editItem:(id)item;
 -(void)_cancelEditItem;
 
@@ -99,6 +101,6 @@
 @end
 
 @interface NSObject (CHOutlineViewContextMenus)
-- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item;
+- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItems:(NSArray*)items;
 @end
 

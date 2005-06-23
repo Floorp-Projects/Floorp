@@ -71,6 +71,7 @@
 - (IBAction)openHistoryItem:(id)sender;
 - (IBAction)openHistoryItemInNewWindow:(id)aSender;
 - (IBAction)openHistoryItemInNewTab:(id)aSender;
+- (IBAction)openHistoryItemsInTabsInNewWindow:(id)aSender;
 
 - (IBAction)deleteHistoryItems:(id)sender;
 

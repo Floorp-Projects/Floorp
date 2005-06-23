@@ -106,6 +106,21 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
   mDelegateTooltipStringForItem = [anObject respondsToSelector:@selector(outlineView:tooltipStringForItem:)];
 }
 
+- (NSArray*)selectedItems
+{
+  NSMutableArray* itemsArray = [NSMutableArray arrayWithCapacity:[self numberOfSelectedRows]];
+  
+  NSEnumerator* rowEnum = [self selectedRowEnumerator];
+  NSNumber* currentRow = nil;
+  while ((currentRow = [rowEnum nextObject]))
+  {
+    id item = [self itemAtRow:[currentRow intValue]];
+    [itemsArray addObject:item];
+  }
+  
+  return itemsArray;
+}
+
 -(void)keyDown:(NSEvent*)aEvent
 {
   const unichar kForwardDeleteChar = 0xf728;   // couldn't find this in any cocoa header
@@ -206,40 +221,39 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
  */
 - (NSMenu *)menuForEvent:(NSEvent *)theEvent
 {
-  id item;
-  int rowIndex;
-  NSPoint point;
-  point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-  rowIndex = [self rowAtPoint:point];
+  NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+  int rowIndex = [self rowAtPoint:point];
   
-  if (rowIndex >= 0) {
+  if (rowIndex >= 0)
+  {
     // There seems to be a bug in AppKit; selectRow is supposed to
     // abort editing, but it doesn't, thus we do it manually.
     [self abortEditing];
     
-    item = [self itemAtRow:rowIndex];
-    if (item) {
-      id delegate = [self delegate];
-      // Make sure the item is the only selected one
-      if (![delegate respondsToSelector:@selector(outlineView:shouldSelectItem:)] ||
-           [delegate outlineView:self shouldSelectItem:item])
-      {
-        // we don't want anything but what was right-clicked selected
-        // XXX sure we do. I should be able to context-click on a bunch of selected bookmarks
-        // and say 'open in tabs'. However, the current delegate method prevents this, because
-        // it only allows you to pass a single item. This needs fixing.
-        [self deselectAll:nil];
-        [self selectRow:rowIndex byExtendingSelection:NO];
-      }
-      
-      if ([delegate respondsToSelector:@selector(outlineView:contextMenuForItem:)])
-        return [delegate outlineView:self contextMenuForItem:item];
-    } else {
-      // no item, no context menu
-      return nil;
+    id item = [self itemAtRow:rowIndex];
+    if (!item) return nil;    // someone might want a menu on the blank area
+    
+    id delegate = [self delegate];
+
+    // if we click on a selected item, don't deselect other stuff.
+    // otherwise, select just the current item.
+    
+    // Make sure the item is the only selected one
+    if (![self isRowSelected:rowIndex])
+    {
+      BOOL shouldSelect = ![delegate respondsToSelector:@selector(outlineView:shouldSelectItem:)] ||
+                          [delegate outlineView:self shouldSelectItem:item];
+      if (!shouldSelect)
+        return nil;   // can't select it, so bail
+
+      [self selectRow:rowIndex byExtendingSelection:NO];
     }
+        
+    if ([delegate respondsToSelector:@selector(outlineView:contextMenuForItems:)])
+      return [delegate outlineView:self contextMenuForItems:[self selectedItems]];
   }
-  else {
+  else
+  {
     [self deselectAll:self];
   }
   

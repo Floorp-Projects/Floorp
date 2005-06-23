@@ -45,6 +45,7 @@
 #import "PreferenceManager.h"
 #import "BrowserWindowController.h"
 #import "BookmarkViewController.h"
+#import "MainController.h"
 
 #import "HistoryOutlineViewDelegate.h"
 
@@ -73,7 +74,6 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 
 - (void)historyChanged:(NSNotification *)notification;
 - (HistoryDataSource*)historyDataSource;
-- (NSArray*)selectedItems;
 - (void)recursiveDeleteItem:(HistoryItem*)item;
 - (void)saveViewToPrefs;
 - (void)updateSortMenuState;
@@ -171,29 +171,38 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 
 - (IBAction)openHistoryItem:(id)sender
 {  
-  int index = [mHistoryOutlineView selectedRow];
-  if (index == -1) return;
-
-  id item = [mHistoryOutlineView itemAtRow:index];
-  if (!item) return;
-
-  if ([mHistoryOutlineView isExpandable:item])
+  NSArray* selectedHistoryItems = [mHistoryOutlineView selectedItems];
+  if ([selectedHistoryItems count] == 0) return;
+  
+  // only do expand/collapse if just one item is selected
+  id firstItem;
+  if (([selectedHistoryItems count] == 1) &&
+      (firstItem = [selectedHistoryItems objectAtIndex:0]) &&
+      [mHistoryOutlineView isExpandable:firstItem])
   {
-    if ([mHistoryOutlineView isItemExpanded: item])
-      [mHistoryOutlineView collapseItem:item];
+    if ([mHistoryOutlineView isItemExpanded: firstItem])
+      [mHistoryOutlineView collapseItem:firstItem];
     else
-      [mHistoryOutlineView expandItem:item];
+      [mHistoryOutlineView expandItem:firstItem];
+
+    return;
   }
-  else
+
+  BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+  BOOL openInTabs       = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
+  BOOL cmdKeyDown       = (GetCurrentKeyModifiers() & cmdKey) != 0;
+  
+  NSEnumerator* itemEnum = [selectedHistoryItems objectEnumerator];
+  id curItem;
+  while ((curItem = [itemEnum nextObject]))
   {
     // The history view obeys the app preference for cmd-click -> open in new window or tab
-    if (![item isSiteItem]) return;
+    if (![curItem isSiteItem]) continue;
 
-    NSString* url = [item url];
-    BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-    if (GetCurrentKeyModifiers() & cmdKey)
+    NSString* url = [curItem url];
+    if (cmdKeyDown)
     {
-      if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
+      if (openInTabs)
         [mBrowserWindowController openNewTabWithURL:url referrer:nil loadInBackground:loadInBackground allowPopups:NO];
       else
         [mBrowserWindowController openNewWindowWithURL:url referrer: nil loadInBackground:loadInBackground allowPopups:NO];
@@ -205,15 +214,12 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 
 - (IBAction)deleteHistoryItems:(id)sender
 {
-  int index = [mHistoryOutlineView selectedRow];
-  if (index == -1)
-    return;
-
   // If just 1 row was selected, keep it so the user can delete again immediately
   BOOL clearSelectionWhenDone = ([mHistoryOutlineView numberOfSelectedRows] > 1);
   
   // make a list of doomed items first so the rows don't change under us
-  NSArray* doomedItems = [self selectedItems];
+  NSArray* doomedItems = [mHistoryOutlineView selectedItems];
+  if ([doomedItems count] == 0) return;
 
   // to avoid potentially many updates, disabled auto updating
   mUpdatesDisabled = YES;
@@ -241,7 +247,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 // called from context menu, assumes represented object has been set
 - (IBAction)openHistoryItemInNewWindow:(id)aSender
 {
-  NSArray* itemsArray = [self selectedItems];
+  NSArray* itemsArray = [mHistoryOutlineView selectedItems];
 
   BOOL backgroundLoad = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
 
@@ -257,7 +263,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 // called from context menu, assumes represented object has been set
 - (IBAction)openHistoryItemInNewTab:(id)aSender
 {
-  NSArray* itemsArray = [self selectedItems];
+  NSArray* itemsArray = [mHistoryOutlineView selectedItems];
 
   BOOL backgroundLoad = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
 
@@ -268,6 +274,31 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
     if ([curItem isKindOfClass:[HistorySiteItem class]])
       [mBrowserWindowController openNewTabWithURL:[curItem url] referrer:nil loadInBackground:backgroundLoad allowPopups:NO];
   }
+}
+
+- (IBAction)openHistoryItemsInTabsInNewWindow:(id)aSender
+{
+  NSArray* itemsArray = [mHistoryOutlineView selectedItems];
+
+  // make url array
+  NSMutableArray* urlArray = [NSMutableArray arrayWithCapacity:[itemsArray count]];
+  
+  NSEnumerator* itemsEnum = [itemsArray objectEnumerator];
+  id curItem;
+  while ((curItem = [itemsEnum nextObject]))
+  {
+    if ([curItem isKindOfClass:[HistorySiteItem class]])
+      [urlArray addObject:[curItem url]];
+  }
+
+  // make new window
+  BOOL loadNewTabsInBackgroundPref = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+
+  NSWindow* behindWindow = nil;
+  if (loadNewTabsInBackgroundPref)
+    behindWindow = [mBrowserWindowController window];
+
+  [[NSApp delegate] openBrowserWindowWithURLs:urlArray behind:behindWindow allowPopups:NO];
 }
 
 #pragma mark -
@@ -345,13 +376,59 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 }
 #endif
 
-- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item
+- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItems:(NSArray*)items
 {
-  HistoryItem* historyItem = (HistoryItem*)item;
-  if (![historyItem isKindOfClass:[HistorySiteItem class]])
-    return nil;
+  unsigned int numSiteItems = 0;
 
-  return mOutlinerContextMenu;
+  NSEnumerator* itemsEnum = [items objectEnumerator];
+  id curItem;
+  while ((curItem = [itemsEnum nextObject]))
+  {
+    if ([curItem isKindOfClass:[HistorySiteItem class]])
+      ++numSiteItems;
+  }
+  
+  if (numSiteItems == 0)
+    return [outlineView menu];
+
+  NSMenu*     contextMenu = [[[NSMenu alloc] initWithTitle:@"notitle"] autorelease];
+  NSMenuItem* menuItem = nil;
+  NSString*   menuTitle = nil;
+
+  if (numSiteItems > 1)
+    menuTitle = NSLocalizedString(@"Open in New Windows", @"");
+  else
+    menuTitle = NSLocalizedString(@"Open in New Window", @"");
+  menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openHistoryItemInNewWindow:) keyEquivalent:@""] autorelease];
+  [menuItem setTarget:self];
+  [contextMenu addItem:menuItem];
+
+  if (numSiteItems > 1)
+    menuTitle = NSLocalizedString(@"Open in New Tabs", @"");
+  else
+    menuTitle = NSLocalizedString(@"Open in New Tab", @"");
+  menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openHistoryItemInNewTab:) keyEquivalent:@""] autorelease];
+  [menuItem setTarget:self];
+  [contextMenu addItem:menuItem];
+
+  if (numSiteItems > 1)
+  {
+    menuTitle = NSLocalizedString(@"Open in Tabs in New Window", @"");
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openHistoryItemsInTabsInNewWindow:) keyEquivalent:@""] autorelease];
+    [menuItem setTarget:self];
+    [contextMenu addItem:menuItem];
+  }
+
+  // space
+  [contextMenu addItem:[NSMenuItem separatorItem]];
+
+  // delete
+  menuTitle = NSLocalizedString(@"Delete", @"");
+  menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(deleteHistoryItems:) keyEquivalent:@""] autorelease];
+  [menuItem setTarget:self];
+  [contextMenu addItem:menuItem];
+
+  return contextMenu;
 }
 
 - (void)outlineViewItemDidExpand:(NSNotification *)notification
@@ -381,6 +458,9 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
   if (action == @selector(openHistoryItemInNewTab:))
     return [self anyHistorySiteItemsSelected];
 
+  if (action == @selector(openHistoryItemsInTabsInNewWindow:))
+    return [self anyHistorySiteItemsSelected];
+  
   if (action == @selector(deleteHistoryItems:))
     return [self anyHistorySiteItemsSelected];
 
@@ -401,21 +481,6 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
     [mHistoryOutlineView reloadData];
     [self restoreFolderExpandedStates];
   }
-}
-
-- (NSArray*)selectedItems
-{
-  NSMutableArray* itemsArray = [NSMutableArray arrayWithCapacity:[mHistoryOutlineView numberOfSelectedRows]];
-  
-  NSEnumerator* rowEnum = [mHistoryOutlineView selectedRowEnumerator];
-  NSNumber* currentRow = nil;
-  while ((currentRow = [rowEnum nextObject]))
-  {
-    HistoryItem * item = [mHistoryOutlineView itemAtRow:[currentRow intValue]];
-    [itemsArray addObject:item];
-  }
-  
-  return itemsArray;
 }
 
 - (void)recursiveDeleteItem:(HistoryItem*)item
