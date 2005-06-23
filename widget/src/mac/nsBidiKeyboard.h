@@ -43,9 +43,6 @@
 #include "nsIBidiKeyboard.h"
 #include <Carbon/Carbon.h>
 
-typedef OSStatus (*fpKLGetCurrentKeyboardLayout_type) (KeyboardLayoutRef*);
-typedef OSStatus (*fpKLGetKeyboardLayoutProperty_type) 
-    (KeyboardLayoutRef, KeyboardLayoutPropertyTag, void**);
 
 class nsBidiKeyboard : public nsIBidiKeyboard
 {

@@ -202,8 +202,6 @@ ATSUILayoutCache* nsATSUIUtils::gTxLayoutCache = nsnull;
 PRBool	nsATSUIUtils::gIsAvailable = PR_FALSE;
 PRBool	nsATSUIUtils::gInitialized = PR_FALSE;
 
-fpMeasureText_type nsATSUIUtils::fpMeasureText = nsnull;
-
 
 //--------------------------------
 // Initialize
@@ -219,30 +217,6 @@ void nsATSUIUtils::Initialize()
     gTxLayoutCache = new ATSUILayoutCache();
     if (!gTxLayoutCache)
       gIsAvailable = PR_FALSE;
-
-    // ATSUMeasureText is deprecated starting in Mac OS X 10.2, and replaced by
-    // ATSUGetUnjustifiedBounds.  Try to dynamically load the latter.
-    CFBundleRef bundle =
-      ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices"));
-    if (bundle)
-    {
-      // We dynamically load the function and only use if available (OS X 10.2+)
-      fpMeasureText = (fpMeasureText_type)
-         ::CFBundleGetFunctionPointerForName(bundle,
-                                             CFSTR("ATSUGetUnjustifiedBounds"));
-    }
-    if (fpMeasureText == NULL)
-    {
-      // If the function is not found (which would happen on OS X 10.1), then
-      // default to using ATSUMeasureText.
-      bundle = ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.Carbon"));
-      if (bundle)
-      {
-        fpMeasureText = (fpMeasureText_type)
-                  ::CFBundleGetFunctionPointerForName(bundle,
-                                                      CFSTR("ATSUMeasureText"));
-      }
-    }
 
     gInitialized = PR_TRUE;
   }
@@ -450,11 +424,11 @@ nsATSUIToolkit::GetTextDimensions(
   ATSUTextMeasurement after;
   ATSUTextMeasurement ascent;
   ATSUTextMeasurement descent;
-  err = nsATSUIUtils::fpMeasureText(aTxtLayout, 0, aLen, NULL, &after, &ascent,
-                                    &descent);
+  err = ::ATSUGetUnjustifiedBounds(aTxtLayout, 0, aLen, NULL, &after, &ascent,
+                                   &descent);
   if (noErr != err)
   {
-    NS_WARNING("MeasureText failed");
+    NS_WARNING("ATSUGetUnjustifiedBounds failed");
     return NS_ERROR_FAILURE;
   }
 
@@ -506,8 +480,8 @@ nsATSUIToolkit::GetBoundingMetrics(
   oBoundingMetrics.ascent = -rect.top;
   oBoundingMetrics.descent = rect.bottom;
 
-  err = nsATSUIUtils::fpMeasureText(aTxtLayout, kATSUFromTextBeginning,
-                                    kATSUToTextEnd, NULL, &width, NULL, NULL);
+  err = ::ATSUGetUnjustifiedBounds(aTxtLayout, kATSUFromTextBeginning,
+                                   kATSUToTextEnd, NULL, &width, NULL, NULL);
   if (err != noErr)
   {
     oBoundingMetrics.width = oBoundingMetrics.rightBearing;
@@ -546,8 +520,8 @@ nsATSUIToolkit::DrawString(
 
   OSStatus err = noErr;	
   ATSUTextMeasurement iAfter; 
-  err = nsATSUIUtils::fpMeasureText(aTxtLayout, 0, aLen, NULL, &iAfter, NULL,
-                                    NULL);
+  err = ::ATSUGetUnjustifiedBounds(aTxtLayout, 0, aLen, NULL, &iAfter, NULL,
+                                   NULL);
   if (noErr != err) {
      NS_WARNING("MeasureText failed");
      return NS_ERROR_FAILURE;

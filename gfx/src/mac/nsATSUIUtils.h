@@ -50,22 +50,12 @@ class ATSUILayoutCache;
 class nsDrawingSurfaceMac;
 class nsIDeviceContext;
 
-// ATSUMeasureText and ATSUGetUnjustifiedBounds share the same signature.
-typedef OSStatus (*fpMeasureText_type) (ATSUTextLayout, UniCharArrayOffset,
-                                        UniCharCount, ATSUTextMeasurement*,
-                                        ATSUTextMeasurement*,
-                                        ATSUTextMeasurement*,
-                                        ATSUTextMeasurement*);
 
 class nsATSUIUtils
 {
 public:
   static void Initialize();
   static PRBool IsAvailable();
-
-  // Function pointer which points to either ATSUMeasureText or
-  // ATSUGetUnjustifiedBounds
-  static fpMeasureText_type fpMeasureText;
 
   static ATSUILayoutCache*  gTxLayoutCache;
 

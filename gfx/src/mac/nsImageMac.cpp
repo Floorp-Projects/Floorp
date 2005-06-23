@@ -987,44 +987,41 @@ NS_IMETHODIMP nsImageMac::DrawTile(nsIRenderingContext &aContext,
     return NS_OK;
 
 #ifdef USE_CGPATTERN_TILING
-  if (nsRenderingContextMac::OnJaguarOrLater())
-  {
-    // CGPattern is only available in 10.2 and higher
+  // CGPattern is only available in 10.2 and higher
 
-    nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
-    CGContextRef context = surface->StartQuartzDrawing();
+  nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
+  CGContextRef context = surface->StartQuartzDrawing();
 
-    static const CGPatternCallbacks callbacks = {0, &DrawTileAsPattern, NULL};
+  static const CGPatternCallbacks callbacks = {0, &DrawTileAsPattern, NULL};
 
-    CGAffineTransform trans;
-    float tx = -aSXOffset;
+  CGAffineTransform trans;
+  float tx = -aSXOffset;
 //    float ty = (aTileRect.height % mHeight) - (mHeight - aSYOffset);
-    float ty = ((portRect.bottom - portRect.top) % mHeight) - (mHeight - aSYOffset);
-    trans = ::CGAffineTransformMake(1, 0, 0, -1, tx, ty);
+  float ty = ((portRect.bottom - portRect.top) % mHeight) - (mHeight - aSYOffset);
+  trans = ::CGAffineTransformMake(1, 0, 0, -1, tx, ty);
 
-    CGPatternRef pattern;
-    pattern = ::CGPatternCreate(mImage, ::CGRectMake(0, 0, mWidth, mHeight),
-                                trans, mWidth + aPadX, mHeight + aPadY,
-                                kCGPatternTilingConstantSpacing,
-                                TRUE, &callbacks);
+  CGPatternRef pattern;
+  pattern = ::CGPatternCreate(mImage, ::CGRectMake(0, 0, mWidth, mHeight),
+                              trans, mWidth + aPadX, mHeight + aPadY,
+                              kCGPatternTilingConstantSpacing,
+                              TRUE, &callbacks);
 
-    CGColorSpaceRef patternSpace = ::CGColorSpaceCreatePattern(NULL);
-    ::CGContextSetFillColorSpace(context, patternSpace);
-    ::CGColorSpaceRelease(patternSpace);
+  CGColorSpaceRef patternSpace = ::CGColorSpaceCreatePattern(NULL);
+  ::CGContextSetFillColorSpace(context, patternSpace);
+  ::CGColorSpaceRelease(patternSpace);
 
-    float alpha = 1;
-    ::CGContextSetFillPattern(context, pattern, &alpha);
-    ::CGPatternRelease(pattern);
+  float alpha = 1;
+  ::CGContextSetFillPattern(context, pattern, &alpha);
+  ::CGPatternRelease(pattern);
     
-    CGRect tileRect = ::CGRectMake(aTileRect.x,
-                                   aTileRect.y,
-                                   aTileRect.width,
-                                   aTileRect.height);
-    ::CGContextFillRect(context, tileRect);
-    surface->EndQuartzDrawing(context);
+  CGRect tileRect = ::CGRectMake(aTileRect.x,
+                                 aTileRect.y,
+                                 aTileRect.width,
+                                 aTileRect.height);
+  ::CGContextFillRect(context, tileRect);
+  surface->EndQuartzDrawing(context);
 
-    return NS_OK;
-  }
+  return NS_OK;
 #endif /* USE_CGPATTERN_TILING */
 
   // use the manual methods of tiling
