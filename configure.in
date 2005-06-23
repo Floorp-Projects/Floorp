@@ -2567,10 +2567,10 @@ dnl Check for MacOS deployment target version
 dnl ========================================================
 
 MOZ_ARG_ENABLE_STRING(macos-target,
-                      [  --enable-macos-target=VER (default=10.1)
+                      [  --enable-macos-target=VER (default=10.2)
                           Set the minimum MacOS version needed at runtime],
                       [MACOS_DEPLOYMENT_TARGET_STR=$enableval _MACOS_DT_SET=1],
-                      [MACOS_DEPLOYMENT_TARGET_STR=10.1])
+                      [MACOS_DEPLOYMENT_TARGET_STR=10.2])
 
 case "$target" in
 *-darwin*)
