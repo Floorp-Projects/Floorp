@@ -199,17 +199,6 @@ static ssize_t (*pt_aix_sendfile_fptr)() = NULL;
 static PRBool _pr_ipv6_v6only_on_by_default;
 #endif
 
-#if defined(SOLARIS)
-#define _PRSockOptVal_t char *
-#elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(HPUX) \
-    || defined(LINUX) || defined(FREEBSD) || defined(BSDI) || defined(VMS) \
-    || defined(NTO) || defined(OPENBSD) || defined(DARWIN) \
-    || defined(UNIXWARE) || defined(NETBSD)
-#define _PRSockOptVal_t void *
-#else
-#error "Cannot determine architecture"
-#endif
-
 #if (defined(HPUX) && !defined(HPUX10_30) && !defined(HPUX11))
 #define _PRSelectFdSetArg_t int *
 #elif defined(AIX4_1)
