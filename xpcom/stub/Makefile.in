@@ -88,7 +88,7 @@ ifdef MOZ_ENABLE_LIBXUL
 ifeq (Darwin,$(OS_ARCH))
 EXTRA_DSO_LDOPTS += $(DIST)/bin/XUL
 else
-EXTRA_DSL_LIBS = xul
+EXTRA_DSO_LIBS = xul
 endif
 
 else #!MOZ_ENABLE_LIBXUL
