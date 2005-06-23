@@ -481,8 +481,7 @@ UpdateService.prototype = {
       },
       onError: function() { },
     }
-
-    this.backgroundChecker.checkForUpdates(listener);
+    this.backgroundChecker.checkForUpdates(listener, false);
   },
   
   /**
@@ -929,7 +928,7 @@ UpdatePatch.prototype = {
    * See nsIWritablePropertyBag.idl
    */
   deleteProperty: function(name) {
-    if ("name" in this._properties)
+    if (name in this._properties)
       this._properties[name].present = false;
     else
       throw Components.results.NS_ERROR_FAILURE;
@@ -949,7 +948,7 @@ UpdatePatch.prototype = {
    * See nsIPropertyBag.idl
    */
   getProperty: function(name) {
-    if ("name" in this._properties &&
+    if (name in this._properties &&
         this._properties[name].present)
       return this._properties[name].data;
     throw Components.results.NS_ERROR_FAILURE;
@@ -1127,11 +1126,11 @@ Checker.prototype = {
   /**
    * See nsIUpdateService.idl
    */
-  checkForUpdates: function(listener) {
+  checkForUpdates: function(listener, force) {
     if (!listener)
       throw Components.results.NS_ERROR_NULL_POINTER;
       
-    if (!this._updateURL || !this.enabled)
+    if (!this._updateURL || (!this.enabled && !force))
       return;
       
     this._request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -1224,8 +1223,10 @@ Checker.prototype = {
    * See nsIUpdateService.idl
    */
   get enabled() {
-    return getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true) || 
-           this._enabled;
+    var enabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true) && 
+                  this._enabled;
+    LOG("ENABLED = " + enabled);
+    return enabled;
   },
   
   /**

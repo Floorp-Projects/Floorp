@@ -305,7 +305,7 @@ var gCheckingPage = {
     this._checker = 
       Components.classes["@mozilla.org/updates/update-checker;1"].
       createInstance(Components.interfaces.nsIUpdateChecker);
-    this._checker.checkForUpdates(this.updateListener);
+    this._checker.checkForUpdates(this.updateListener, true);
   },
   
   /**
@@ -528,7 +528,12 @@ DownloadStatusFormatter.prototype = {
   /**
    * Transfer rate of the download
    */
-  _rate: "",
+  _rate: 0,
+  
+  /**
+   * Transfer rate of the download, formatted as text
+   */
+  _rateFormatted: "",
   
   /**
    * Number of Kilobytes downloaded so far in the form:
@@ -565,11 +570,13 @@ DownloadStatusFormatter.prototype = {
       }
       if (this._rate > 100)
         this._rate = Math.round(this._rate);
+      
       if (this._rate == 0)
-        this._rate = "??.?";
-        
-      var format = isKB ? this._rateFormatKBSec : this._rateFormatMBSec;
-      this._rate = this._replaceInsert(format, 1, this._rate);
+        this._rateFormatted = "??.?";
+      else {
+        var format = isKB ? this._rateFormatKBSec : this._rateFormatMBSec;
+        this._rateFormatted = this._replaceInsert(format, 1, this._rate);
+      }
     }
 
     // 3) Determine the Time Remaining
@@ -581,7 +588,7 @@ DownloadStatusFormatter.prototype = {
       
     var status = this._statusFormat;
     status = this._replaceInsert(status, 1, this.progress);
-    status = this._replaceInsert(status, 2, this._rate);
+    status = this._replaceInsert(status, 2, this._rateFormatted);
     status = this._replaceInsert(status, 3, remainingTime);
     status = this._replaceInsert(status, 4, this._remain);
     return status;
