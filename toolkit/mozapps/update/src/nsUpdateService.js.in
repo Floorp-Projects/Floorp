@@ -48,7 +48,7 @@ const PREF_APP_UPDATE_AUTOINSTALL_ENABLED = "app.update.autoInstallEnabled";
 const PREF_APP_UPDATE_AUTOINSTALL_MODE    = "app.update.autoInstallMode";
 const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
 const PREF_APP_UPDATE_TIMER               = "app.update.timer";
-const PREF_APP_UPDATE_LOG_ENABLED         = "app.update.logEnabled";
+const PREF_APP_UPDATE_LOG_BRANCH          = "app.update.log.";
 
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
@@ -105,16 +105,16 @@ var gApp        = null;
 var gPref       = null;
 var gOS         = null;
 var gConsole    = null;
-var gLogEnabled = false;
+var gLogEnabled = { };
 
 /**
  * Logs a string to the error console. 
  * @param   string
  *          The string to write to the error console..
  */  
-function LOG(string) {
-  if (gLogEnabled) {
-    dump("*** " + string + "\n");
+function LOG(module, string) {
+  if (module in gLogEnabled) {
+    dump("*** " + module + ":" + string + "\n");
     gConsole.logStringMessage(string);
   }
 }
@@ -370,7 +370,7 @@ UpdatePrompt.prototype = {
       var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                          .getService(Components.interfaces.nsIWindowWatcher);
       ww.openWindow(null, URI_UPDATE_PROMPT_DIALOG, 
-                    "", "chrome,centerscreen,dialog,titlebar", ary);
+                    "", "chrome,centerscreen,dialog,titlebar,dependent", ary);
     }
   },
   
@@ -415,8 +415,11 @@ function UpdateService() {
   // Observe xpcom-shutdown to unhook pref branch observers above to avoid 
   // shutdown leaks.
   gOS.addObserver(this, "xpcom-shutdown", false);
-
-  gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG_ENABLED, false);
+  
+  var logBranch = gPref.getBranch(PREF_APP_UPDATE_LOG_BRANCH);
+  var modules = logBranch.getChildList("", { });
+  for (var i = 0; i < modules.length; ++i)
+    gLogEnabled[modules[i]] = logBranch.getBoolPref(modules[i]);
 }
 
 UpdateService.prototype = {
@@ -572,7 +575,7 @@ UpdateService.prototype = {
     if (!update)
       return;
     if (this._shouldPrompt(update)) {
-      LOG("_selectAndInstallUpdate: need to prompt user before continuing...");
+      LOG("UpdateService", "_selectAndInstallUpdate: need to prompt user before continuing...");
       var prompter = 
           Components.classes["@mozilla.org/updates/update-prompt;1"].
           createInstance(Components.interfaces.nsIUpdatePrompt);
@@ -601,7 +604,7 @@ UpdateService.prototype = {
    */
   addDownloadListener: function(listener) {
     if (!this._downloader) {
-      LOG("addDownloadListener: no downloader!\n");
+      LOG("UpdateService", "addDownloadListener: no downloader!\n");
       return;
     }
     this._downloader.addDownloadListener(listener);
@@ -612,7 +615,7 @@ UpdateService.prototype = {
    */
   removeDownloadListener: function(listener) {
     if (!this._downloader) {
-      LOG("removeDownloadListener: no downloader!\n");
+      LOG("UpdateService", "removeDownloadListener: no downloader!\n");
       return;
     }
     this._downloader.removeDownloadListener(listener);
@@ -627,7 +630,7 @@ UpdateService.prototype = {
     if (this.isDownloading) {
       if (update.isCompleteUpdate == this._downloader.isCompleteUpdate &&
           background == this._downloader.background) {
-        LOG("no support for downloading more than one update at a time");
+        LOG("UpdateService", "no support for downloading more than one update at a time");
         return;
       }
       this._downloader.cancel();
@@ -1106,7 +1109,7 @@ Checker.prototype = {
       url = gPref.getComplexValue(PREF_APP_UPDATE_URL,
                                   nsIPrefLocalizedString).data;
     } catch (e) {
-      LOG(PREF_APP_UPDATE_URL + " not defined");
+      LOG("Checker", PREF_APP_UPDATE_URL + " not defined");
       return null;
     }
 
@@ -1119,7 +1122,7 @@ Checker.prototype = {
     url = url.replace(/%LOCALE%/g, locale);
     url = url.replace(/\+/g, "%2B");
 
-    LOG("update url: " + url);
+    LOG("Checker", "update url: " + url);
     return url;
   },
   
@@ -1144,7 +1147,7 @@ Checker.prototype = {
     this._request.onload      = function(event) { self.onLoad(event);     };
     this._request.onprogress  = function(event) { self.onProgress(event); };
 
-    LOG("Checker.checkForUpdates: sending request to " + this._updateURL);
+    LOG("Checker", "checkForUpdates: sending request to " + this._updateURL);
     this._request.send(null);
     
     this._callback = listener;
@@ -1154,7 +1157,7 @@ Checker.prototype = {
    *
    */
   onProgress: function(event) {
-    LOG("Checker.onProgress: " + event.position + "/" + event.totalSize);
+    LOG("Checker", "onProgress: " + event.position + "/" + event.totalSize);
     this._callback.onProgress(event.target, event.position, event.totalSize);
   },
   
@@ -1164,12 +1167,12 @@ Checker.prototype = {
   get _updates() {
     var updatesElement = this._request.responseXML.documentElement;
     if (!updatesElement) {
-      LOG("Checker.get_updates: empty updates document?!");
+      LOG("Checker", "get_updates: empty updates document?!");
       return [];
     }
 
     if (updatesElement.nodeName != "updates") {
-      LOG("Checker.get_updates: unexpected node name!");
+      LOG("Checker", "get_updates: unexpected node name!");
       return [];
     }
     
@@ -1191,7 +1194,7 @@ Checker.prototype = {
    *
    */
   onLoad: function(event) {
-    LOG("Checker.onLoad: request completed downloading document");
+    LOG("Checker", "onLoad: request completed downloading document");
     
     // Notify the front end that we're complete
     if (this.observer)
@@ -1200,7 +1203,7 @@ Checker.prototype = {
     // Analyze the resulting DOM and determine the set of updates to install
     var updates = this._updates;
 
-    LOG("Updates available: " + updates.length);
+    LOG("Checker", "Updates available: " + updates.length);
     
     // ... and tell the Update Service about what we discovered.
     this._callback.onCheckComplete(updates, updates.length);
@@ -1210,7 +1213,7 @@ Checker.prototype = {
    *
    */
   onError: function(event) {
-    LOG("Checker.onError: error during load");
+    LOG("Checker", "onError: error during load");
     this._callback.onError(event.target);
   },
   
@@ -1225,7 +1228,6 @@ Checker.prototype = {
   get enabled() {
     var enabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true) && 
                   this._enabled;
-    LOG("ENABLED = " + enabled);
     return enabled;
   },
   
@@ -1342,7 +1344,7 @@ Downloader.prototype = {
   _readStatusFile: function(dir) {
     var statusFile = dir.clone();
     statusFile.append(FILE_UPDATE_STATUS);
-    LOG(statusFile.path);
+    LOG("Downloader", statusFile.path);
     return readStringFromFile(statusFile);
   },
   
@@ -1379,7 +1381,7 @@ Downloader.prototype = {
       // we choose to compute these hashes.
       digest = binaryToHex(hash.finish(false));
     } catch (e) {
-      LOG("failed to compute hash of downloaded update archive");
+      LOG("Downloader", "failed to compute hash of downloaded update archive");
       digest = "";
     }
 
@@ -1426,10 +1428,10 @@ Downloader.prototype = {
     var useComplete = false;
     if (selectedPatch) {
       var state = this._readStatusFile(updateDir)
-      LOG("found existing patch [state="+state+"]");
+      LOG("Downloader", "found existing patch [state="+state+"]");
       switch (state) {
       case STATE_DOWNLOADING: 
-        LOG("resuming download");
+        LOG("Downloader", "resuming download");
         return selectedPatch;
       case STATE_PENDING:
         LOG("already downloaded and staged");
@@ -1460,6 +1462,8 @@ Downloader.prototype = {
 
       selectedPatch = null;
     }
+    
+    LOG("USE COMPLETE = " + useComplete);
 
     // If we were not able to discover an update from a previous download, we 
     // select the best patch from the given set.
@@ -1532,6 +1536,7 @@ Downloader.prototype = {
     this._request.init(uri, patchFile, DOWNLOAD_CHUNK_SIZE, interval);
     this._request.start(this, null);
 
+    LOG("setting state = " + STATE_DOWNLOADING);
     this._writeStatusFile(updateDir, STATE_DOWNLOADING);
     this._patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
     this._patch.state = STATE_DOWNLOADING;
@@ -1586,7 +1591,7 @@ Downloader.prototype = {
    */
   onProgress: function(request, context, progress, maxProgress) {
     request.QueryInterface(nsIIncrementalDownload);
-    LOG("Downloader.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
+    // LOG("Downloader.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
     
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i) {
@@ -1629,20 +1634,10 @@ Downloader.prototype = {
         if (this.background)
           shouldShowPrompt = true;
       } else {
-        LOG("download verification failed");
+        LOG("Downloader.onStopRequest: download verification failed");
         state = STATE_FAILED;
         // TODO: use more informative error code here
         status = Components.results.NS_ERROR_UNEXPECTED;
-        
-        if (!this._update.isCompleteUpdate) {
-          // If we were downloading a patch and the patch verification phase 
-          // failed, log this and then commence downloading the complete update.
-          LOG("Downloader.onStopRequest: Verification of patch failed, downloading complete update");
-          this._update.isCompleteUpdate = true;
-          var rv = this.downloadUpdate(this._update);
-          // This will reset the |.state| property on this._update if a new 
-          // download initiates.
-        }
       }
       this._writeStatusFile(this._updatesDir, state);
       this._patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
@@ -1651,6 +1646,16 @@ Downloader.prototype = {
                          .getService(Components.interfaces.nsIUpdateManager);
       um.activeUpdate = null;
       um.saveUpdates();
+      
+      if (state == STATE_FAILED && !this._update.isCompleteUpdate) {
+        // If we were downloading a patch and the patch verification phase 
+        // failed, log this and then commence downloading the complete update.
+        LOG("Downloader.onStopRequest: Verification of patch failed, downloading complete update");
+        this._update.isCompleteUpdate = true;
+        this.downloadUpdate(this._update);
+        // This will reset the |.state| property on this._update if a new 
+        // download initiates.
+      }
     }
 
     var listenerCount = this._listeners.length;

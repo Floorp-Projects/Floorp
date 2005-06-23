@@ -40,9 +40,9 @@ const nsIIncrementalDownload  = Components.interfaces.nsIIncrementalDownload;
 
 const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const PREF_UPDATE_MANUAL_URL    = "app.update.url.manual";
-const PREF_UPDATE_NAGTIMER_DL   = "app.update.nagTimer.download";
-const PREF_UPDATE_NAGTIMER_RESTART = "app.update.nagTimer.restart";
+const PREF_UPDATE_MANUAL_URL        = "app.update.url.manual";
+const PREF_UPDATE_NAGTIMER_DL       = "app.update.nagTimer.download";
+const PREF_UPDATE_NAGTIMER_RESTART  = "app.update.nagTimer.restart";
 
 const URI_UPDATES_PROPERTIES  = "chrome://mozapps/locale/update/updates.properties";
 

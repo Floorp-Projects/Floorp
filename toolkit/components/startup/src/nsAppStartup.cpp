@@ -173,7 +173,8 @@ nsAppStartup::Quit(PRUint32 aMode)
   }
 
   mShuttingDown = PR_TRUE;
-  mRestart = aMode & eRestart;
+  if (!mRestart) 
+    mRestart = aMode & eRestart;
 
   nsCOMPtr<nsIWindowMediator> mediator
     (do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
