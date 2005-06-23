@@ -1214,7 +1214,8 @@ public:
                     {return 0 != (mMemberCount & XPC_NATIVE_IFACE_MARK_FLAG);}
 
     // NOP. This is just here to make the AutoMarkingPtr code compile.
-    inline void MarkBeforeJSFinalize(JSContext*) {};
+    inline void MarkBeforeJSFinalize(JSContext*) {}
+    inline void AutoMark(JSContext*) {}
 
     static void DestroyInstance(JSContext* cx, XPCJSRuntime* rt,
                                 XPCNativeInterface* inst);
@@ -1342,7 +1343,8 @@ public:
     inline void Mark();
 
     // NOP. This is just here to make the AutoMarkingPtr code compile.
-    inline void MarkBeforeJSFinalize(JSContext*) {};
+    inline void MarkBeforeJSFinalize(JSContext*) {}
+    inline void AutoMark(JSContext*) {}
 
 private:
     void MarkSelfOnly() {mInterfaceCount |= XPC_NATIVE_SET_MARK_FLAG;}
@@ -1644,6 +1646,8 @@ public:
             JS_MarkGCThing(cx, mJSProtoObject, 
                            "XPCWrappedNativeProto::mJSProtoObject", nsnull);
          if(mScriptableInfo) mScriptableInfo->Mark();}
+    // NOP. This is just here to make the AutoMarkingPtr code compile.
+    inline void AutoMark(JSContext*) {}
 
     // Yes, we *do* need to mark the mScriptableInfo in both cases.
     void Mark() const
@@ -1710,6 +1714,10 @@ public:
     XPCWrappedNativeTearOff()
         : mInterface(nsnull), mNative(nsnull), mJSObject(nsnull) {}
     ~XPCWrappedNativeTearOff();
+
+    // NOP. This is just here to make the AutoMarkingPtr code compile.
+    inline void MarkBeforeJSFinalize(JSContext*) {}
+    inline void AutoMark(JSContext*) {}
 
     void Mark()       {mJSObject = (JSObject*)(((jsword)mJSObject) | 1);}
     void Unmark()     {mJSObject = (JSObject*)(((jsword)mJSObject) & ~1);}
@@ -1935,6 +1943,20 @@ public:
         {
             JS_MarkGCThing(cx, mNativeWrapper, 
                            "XPCWrappedNative::mNativeWrapper", nsnull);
+        }
+    }
+
+    inline void AutoMark(JSContext* cx)
+    {
+        // If this got called, we're being kept alive by someone who really
+        // needs us alive and whole.  Do not let our mFlatJSObject go away.
+        // This is the only time we should be marking our mFlatJSObject;
+        // normally we just go away quietly when it does.  Be careful not to
+        // mark the bogus JSVAL_ONE value we can have during init, though.
+        if(mFlatJSObject && mFlatJSObject != (JSObject*)JSVAL_ONE)
+        {
+            ::JS_MarkGCThing(cx, mFlatJSObject,
+                             "XPCWrappedNative::mFlatJSObject", nsnull);
         }
     }
 
@@ -3172,6 +3194,7 @@ public:
         {if(JSVAL_IS_GCTHING(*mValPtr))
             JS_MarkGCThing(cx, JSVAL_TO_GCTHING(*mValPtr), 
                            "XPCMarkableJSVal", nsnull);}
+    void AutoMark(JSContext*) {}
 private:
     XPCMarkableJSVal(); // not implemented    
     jsval  mVal;
@@ -3230,7 +3253,10 @@ public:                                                                      \
     virtual ~ class_ () {}                                                   \
                                                                              \
     virtual void MarkBeforeJSFinalize(JSContext* cx)                         \
-        {if(mPtr) mPtr->MarkBeforeJSFinalize(cx);                            \
+        {if(mPtr) {                                                          \
+           mPtr->MarkBeforeJSFinalize(cx);                                   \
+           mPtr->AutoMark(cx);                                               \
+         }                                                                   \
          if(mNext) mNext->MarkBeforeJSFinalize(cx);}                         \
                                                                              \
     virtual void MarkAfterJSFinalize()                                       \
@@ -3253,6 +3279,7 @@ protected:                                                                   \
 DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingNativeInterfacePtr, XPCNativeInterface)
 DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingNativeSetPtr, XPCNativeSet)
 DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingWrappedNativePtr, XPCWrappedNative)
+DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingWrappedNativeTearOffPtr, XPCWrappedNativeTearOff)
 DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingWrappedNativeProtoPtr, XPCWrappedNativeProto)
 DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingJSVal, XPCMarkableJSVal)
                                     

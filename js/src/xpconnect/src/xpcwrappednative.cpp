@@ -1311,7 +1311,13 @@ XPCWrappedNative::FindTearOff(XPCCallContext& ccx,
             {
                 if(needJSObject && !to->GetJSObject())
                 {
+                    AutoMarkingWrappedNativeTearOffPtr tearoff(ccx, to);
                     rv = InitTearOffJSObject(ccx, to);
+                    // During shutdown, we don't sweep tearoffs.  So make sure
+                    // to unmark manually in case the auto-marker marked us.
+                    // We shouldn't ever be getting here _during_ our
+                    // Mark/Sweep cycle, so this should be safe.
+                    to->Unmark();
                     if(NS_FAILED(rv))
                         to = nsnull;
                 }
@@ -1337,9 +1343,17 @@ XPCWrappedNative::FindTearOff(XPCCallContext& ccx,
         to = newChunk->mTearOffs;
     }
 
-    rv = InitTearOff(ccx, to, aInterface, needJSObject);
-    if(NS_FAILED(rv))
-        to = nsnull;
+    {
+        // Scope keeps |tearoff| from leaking across the return_result: label
+        AutoMarkingWrappedNativeTearOffPtr tearoff(ccx, to);
+        rv = InitTearOff(ccx, to, aInterface, needJSObject);
+        // During shutdown, we don't sweep tearoffs.  So make sure to unmark
+        // manually in case the auto-marker marked us.  We shouldn't ever be
+        // getting here _during_ our Mark/Sweep cycle, so this should be safe.
+        to->Unmark();
+        if(NS_FAILED(rv))
+            to = nsnull;
+    }
 
 return_result:
 
