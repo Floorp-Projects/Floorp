@@ -45,20 +45,15 @@
 #include "prtypes.h"
 #include "nsCppSharedAllocator.h"
 
-#ifdef XP_MAC
-#  define NS_LINEBREAK             "\015"
-#  define NS_LINEBREAK_LEN 1
+#if defined(XP_WIN) || defined(XP_OS2)
+#  define NS_LINEBREAK           "\015\012"
+#  define NS_LINEBREAK_LEN       2
 #else
-#  if defined(XP_WIN) || defined(XP_OS2)
-#    define NS_LINEBREAK           "\015\012"
-#    define NS_LINEBREAK_LEN       2
-#  else
-#    if defined(XP_UNIX) || defined(XP_BEOS)
-#      define NS_LINEBREAK         "\012"
-#      define NS_LINEBREAK_LEN     1
-#    endif /* XP_UNIX */
-#  endif /* XP_WIN || XP_OS2 */
-#endif /* XP_MAC */
+#  if defined(XP_UNIX) || defined(XP_BEOS)
+#    define NS_LINEBREAK         "\012"
+#    define NS_LINEBREAK_LEN     1
+#  endif /* XP_UNIX */
+#endif /* XP_WIN || XP_OS2 */
 
 extern const PRUnichar kIsoLatin1ToUCS2[256];
 
@@ -264,10 +259,7 @@ public:
 #define CRLF "\015\012"     /* A CR LF equivalent string */
 
 
-#if defined(XP_MAC)
-  #define FILE_PATH_SEPARATOR       ":"
-  #define FILE_ILLEGAL_CHARACTERS   ""
-#elif defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN) || defined(XP_OS2)
   #define FILE_PATH_SEPARATOR       "\\"
   #define FILE_ILLEGAL_CHARACTERS   "/:*?\"<>|"
 #elif defined(XP_UNIX) || defined(XP_BEOS)
