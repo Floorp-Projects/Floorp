@@ -18,6 +18,8 @@ REQUIRES = \
 	string \
 	pref \
 	rdf \
+	uriloader \
+	webbrowserpersist \
 	intl \
 	necko \
 	nkcache \

@@ -19,10 +19,10 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Ben Goodger    <ben@mozilla.org>     (Clients, Mail, New Default Browser)
- *  Joe Hewitt     <hewitt@netscape.com> (Set Background)
- *  Blake Ross     <blake@cs.stanford.edu (Desktop Color, DDE support)
- *  Jungshik Shin  <jshin@mailaps.org>   (I18N)
+ *  Ben Goodger    <ben@mozilla.org>       (Clients, Mail, New Default Browser)
+ *  Joe Hewitt     <hewitt@netscape.com>   (Set Background)
+ *  Blake Ross     <blake@cs.stanford.edu  (Desktop Color, DDE support)
+ *  Jungshik Shin  <jshin@mailaps.org>     (I18N)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,7 +46,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIImageLoadingContent.h"
-#include "nsIOutputStream.h"
 #include "nsIPrefService.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIServiceManager.h"
@@ -436,9 +435,14 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
             backupKey, aClaimAllTypes, aForAllUsers);
 
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService("@mozilla.org/intl/stringbundle;1"));
+  if (!bundleService)
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIStringBundle> bundle, brandBundle;
-  bundleService->CreateBundle(SHELLSERVICE_PROPERTIES, getter_AddRefs(bundle));
-  bundleService->CreateBundle(BRAND_PROPERTIES, getter_AddRefs(brandBundle));
+  rv = bundleService->CreateBundle(SHELLSERVICE_PROPERTIES, getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = bundleService->CreateBundle(BRAND_PROPERTIES, getter_AddRefs(brandBundle));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the Start Menu item subtitle
   nsXPIDLString brandFullName;
@@ -635,7 +639,7 @@ nsWindowsShellService::SetShouldCheckDefaultBrowser(PRBool aShouldCheck)
   return NS_OK;
 }
 
-nsresult
+static nsresult
 WriteBitmap(nsString& aPath, gfxIImageFrame* aImage)
 {
   PRInt32 width, height;
@@ -743,25 +747,31 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
   nsAutoString winPath;
   NS_CopyNativeToUnicode(nsDependentCString(winDir), winPath);
 
-  // get the product brand name from localized strings
-  nsXPIDLString brandName;
-  nsCID bundleCID = NS_STRINGBUNDLESERVICE_CID;
-  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(bundleCID));
-  if (bundleService) {
-    nsCOMPtr<nsIStringBundle> brandBundle;
-    rv = bundleService->CreateBundle("chrome://branding/locale/brand.properties",
-                                     getter_AddRefs(brandBundle));
-    if (NS_SUCCEEDED(rv) && brandBundle) {
-      if (NS_FAILED(rv = brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
-                            getter_Copies(brandName))))
-        return rv;
-    }
-  }
-
   // build the file name
   winPath.Append(NS_LITERAL_STRING("\\").get());
-  winPath.Append(brandName);
-  winPath.Append(NS_LITERAL_STRING(" Wallpaper.bmp").get());
+
+  // get the product brand name from localized strings
+  nsCID bundleCID = NS_STRINGBUNDLESERVICE_CID;
+  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(bundleCID));
+  if (!bundleService)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIStringBundle> brandBundle, shellBundle;
+  rv = bundleService->CreateBundle("chrome://global/locale/brand.properties",
+                                   getter_AddRefs(brandBundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = bundleService->CreateBundle("chrome://browser/locale/shellservice.properties",
+                                    getter_AddRefs(shellBundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  nsXPIDLString brandShortName;
+  brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                                 getter_Copies(brandShortName));
+  const PRUnichar* brandNameStrings[] = { brandShortName.get() };
+  nsXPIDLString backgroundFileName;
+  shellBundle->FormatStringFromName(NS_LITERAL_STRING("desktopBackgroundFileNameWin").get(),
+                                    brandNameStrings, 1, getter_Copies(backgroundFileName));
+  winPath.Append(backgroundFileName);
 
   // write the bitmap to a file in the windows dir
   rv = WriteBitmap(winPath, gfxFrame);
@@ -814,7 +824,7 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::OpenPreferredApplication(PRInt32 aApplication)
+nsWindowsShellService::OpenApplication(PRInt32 aApplication)
 {
   nsCAutoString application;
   switch (aApplication) {

@@ -383,7 +383,7 @@
             >
               <menuitem label="&search.label;" accesskey="&search.accesskey;" 
                         key="key_search" command="Tools:Search"/>
-#ifdef XP_WIN
+#ifdef HAVE_SHELL_SERVICE
               <menuseparator/>
               <menuitem label="&mailButton.readMail.label;" 
                                accesskey="&mailButton.readMail.accesskey;"

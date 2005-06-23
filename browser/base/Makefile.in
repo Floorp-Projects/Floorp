@@ -52,7 +52,7 @@ ifdef MOZ_USE_OFFICIAL_BRANDING
 DEFINES += -DMOZ_USE_OFFICIAL_BRANDING
 endif
 
-ifneq (,$(filter windows gtk2, $(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows gtk2 mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DHAVE_SHELL_SERVICE=1
 endif
 

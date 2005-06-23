@@ -39,7 +39,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(7d8a7a34-f492-43c0-9657-ec7dbbeba236)]
+[scriptable, uuid(d6f62053-3769-46f6-bd2b-0a1440d6c394)]
 interface nsIShellService : nsISupports
 {
   /**
@@ -76,9 +76,10 @@ interface nsIShellService : nsISupports
   /** 
    * Flags for positioning/sizing of the Desktop Background image.
    */
-  const long BACKGROUND_TILE      = 0x00;
-  const long BACKGROUND_STRETCH   = 0x01;
-  const long BACKGROUND_CENTER    = 0x02;
+  const long BACKGROUND_TILE      = 1;
+  const long BACKGROUND_STRETCH   = 2;
+  const long BACKGROUND_CENTER    = 3;
+  const long BACKGROUND_FILL      = 4;
 
     /**
      * Sets the desktop background image using either the HTML <IMG> 
@@ -92,16 +93,18 @@ interface nsIShellService : nsISupports
   void setDesktopBackground(in nsIDOMElement aElement, in long aPosition);
 
   /**
-   * Constants identifying preferred applications that can be opened with
-   * openPreferredApplication.
+   * Constants identifying applications that can be opened with
+   * openApplication.
    */
   const long APPLICATION_MAIL        = 0;
   const long APPLICATION_NEWS        = 1;
 
   /**
-   * Opens the preferred application specified.
+   * Opens the application specified. If more than one application of the
+   * given type is available on the system, the default or "preferred"
+   * application is used. 
    */
-  void openPreferredApplication(in long aApplication);
+  void openApplication(in long aApplication);
 
   /** 
    * The desktop background color, visible when no background image is 

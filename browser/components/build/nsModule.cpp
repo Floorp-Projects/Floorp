@@ -142,6 +142,11 @@ static const nsModuleComponentInfo components[] =
     nsIEProfileMigratorConstructor },
 
 #elif defined(XP_MACOSX)
+  { "Browser Shell Service",
+    NS_SHELLSERVICE_CID,
+    NS_SHELLSERVICE_CONTRACTID,
+    nsMacShellServiceConstructor },
+
   { "Safari Profile Migrator",
     NS_SAFARIPROFILEMIGRATOR_CID,
     NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "safari",

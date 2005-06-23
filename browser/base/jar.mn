@@ -28,7 +28,6 @@ browser.jar:
 *       content/browser/sanitize.xul                  (content/sanitize.xul)
 *       content/browser/search.xml                    (content/search.xml)
 *       content/browser/searchbarBindings.css         (content/searchbarBindings.css)
-*       content/browser/setWallpaper.xul              (content/setWallpaper.xul)
 *       content/browser/utilityOverlay.js             (content/utilityOverlay.js)
 *       content/browser/web-panels.js                 (content/web-panels.js)
 *       content/browser/web-panels.xul                (content/web-panels.xul)
