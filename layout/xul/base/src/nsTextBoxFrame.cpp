@@ -707,7 +707,7 @@ nsTextBoxFrame::UpdateAccessTitle()
                 || AlwaysAppendAccessKey()) 
             {
                 nsAutoString tmpstring;
-                if (!mTitle.IsEmpty() && !isspace(mTitle.Last())) {
+                if (!mTitle.IsEmpty() && !NS_IS_SPACE(mTitle.Last())) {
                   tmpstring += ' ';
                 }
                 tmpstring += '(';
