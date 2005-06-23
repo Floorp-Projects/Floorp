@@ -961,31 +961,23 @@ nsBidiPresUtils::CalculateCharType(PRInt32& aOffset,
 
 {
   PRBool     strongTypeFound = PR_FALSE;
-  PRBool     inFERange = PR_FALSE;
   PRInt32    offset;
   nsCharType charType;
 
   aCharType = eCharType_OtherNeutral;
 
   for (offset = aOffset; offset < aCharTypeLimit; offset++) {
-    // Make sure we give RTL chartype to all that stuff that would be classified
+    // Make sure we give RTL chartype to all characters that would be classified
     // as Right-To-Left by a bidi platform.
-    // (May differ from the UnicodeData, eg we set RTL chartype to some NSM's,
-    // and set LTR chartype to FE-ranged Arabic.)
+    // (May differ from the UnicodeData, eg we set RTL chartype to some NSMs.)
     if (IS_HEBREW_CHAR(mBuffer[offset]) ) {
       charType = eCharType_RightToLeft;
     }
     else if (IS_ARABIC_ALPHABETIC(mBuffer[offset]) ) {
       charType = eCharType_RightToLeftArabic;
     }
-    else if (IS_FE_CHAR(mBuffer[offset]) ) {
-      charType = eCharType_LeftToRight;
-      inFERange = PR_TRUE;
-    }
     else {
-      // IBMBIDI - Egypt - Start
       mBidiEngine->GetCharTypeAt(offset, &charType);
-      // IBMBIDI - Egypt - End
     }
 
     if (!CHARTYPE_IS_WEAK(charType) ) {
@@ -1016,9 +1008,6 @@ nsBidiPresUtils::CalculateCharType(PRInt32& aOffset,
       strongTypeFound = PR_TRUE;
       aCharType = charType;
     }
-  }
-  if (inFERange) {
-    aPrevCharType = eCharType_RightToLeftArabic;
   }
   aOffset = offset;
 }

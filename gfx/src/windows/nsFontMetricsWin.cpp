@@ -62,6 +62,7 @@
 #include "nsAutoBuffer.h"
 
 #define DEFAULT_TTF_SYMBOL_ENCODING "windows-1252"
+#define IS_RTL_PRESENTATION_FORM(c) ((0xfb1d <= (c)) && ((c)<= 0xfefc))
 
 #define NOT_SETUP 0x33
 static PRBool gIsWIN95OR98 = NOT_SETUP;
@@ -3979,7 +3980,8 @@ nsFontMetricsWin::ResolveBackwards(HDC                  aDC,
   if (currFont == mLoadedFonts[firstFont]) {
     while (currChar > lastChar && 
            (currFont->HasGlyph(*currChar)) &&
-           !CCMAP_HAS_CHAR_EXT(gIgnorableCCMapExt, *currChar))
+           !CCMAP_HAS_CHAR_EXT(gIgnorableCCMapExt, *currChar) &&
+           !IS_RTL_PRESENTATION_FORM(*currChar))
       --currChar;
     fontSwitch.mFontWin = currFont;
     if (!(*aFunc)(&fontSwitch, currChar+1, firstChar - currChar, aData))
@@ -4014,11 +4016,13 @@ nsFontMetricsWin::ResolveBackwards(HDC                  aDC,
       lastCharLen = 1;
     }
     if (nextFont != currFont ||
-        /* render right-to-left characters outside the BMP one by one, because
-           Windows doesn't reorder them. 
+        /* render Hebrew and Arabic presentation forms and right-to-left
+           characters outside the BMP one by one, because Windows doesn't reorder
+           them. 
        XXX If a future version of Uniscribe corrects this, we will need to make a
            run-time check and set a rendering hint accordingly */
-        codepoint > 0xFFFF) {
+        codepoint > 0xFFFF ||
+        IS_RTL_PRESENTATION_FORM(codepoint)) {
       // We have a substring that can be represented with the same font, and
       // we are about to switch fonts, it is time to notify our caller.
       fontSwitch.mFontWin = currFont;
