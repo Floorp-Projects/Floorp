@@ -604,12 +604,16 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
         ClearAllTimeouts();
 
         if (mContext && mJSObject) {
-          if (mNavigator) {
+          // If we're in the middle of shutdown, nsContentUtils may have
+          // already been notified of shutdown.
+          nsIXPConnect *xpc = nsContentUtils::XPConnect();
+
+          if (mNavigator && xpc) {
             nsIDOMNavigator* navigator =
               NS_STATIC_CAST(nsIDOMNavigator*, mNavigator.get());
-            nsContentUtils::XPConnect()->
-              WrapNative(cx, mJSObject, navigator, NS_GET_IID(nsIDOMNavigator),
-                         getter_AddRefs(mNavigatorHolder));
+            xpc->WrapNative(cx, mJSObject, navigator,
+                            NS_GET_IID(nsIDOMNavigator),
+                            getter_AddRefs(mNavigatorHolder));
           }
 
           JSObject *gsp =
