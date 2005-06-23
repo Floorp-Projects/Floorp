@@ -49,6 +49,14 @@ FORCE_USE_PIC = 1
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
 
+ifeq ($(OS_ARCH),Darwin)
+# This is going to be a framework named "XUL", not an ordinary library named
+# "libxul.dylib"
+LIBRARY_NAME=XUL
+DLL_PREFIX=
+DLL_SUFFIX=
+endif
+
 REQUIRES = \
 	xpcom \
 	string \

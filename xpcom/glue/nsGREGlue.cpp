@@ -58,8 +58,8 @@
 # define INCL_DOS
 # include <os2.h>
 #elif defined(XP_MACOSX)
-# include <Processes.h>
 # include <CFBundle.h>
+# include <unistd.h>
 #elif defined(XP_UNIX)
 # include <unistd.h>
 # include <sys/param.h>
@@ -74,6 +74,15 @@
 
 #include <sys/stat.h>
 
+
+#if defined(XP_MACOSX)
+
+static PRBool
+GRE_FindGREFramework(const char* version, const char* rootPath,
+                     char* buffer, PRUint32 buflen);
+
+#elif defined(XP_UNIX)
+
 static PRBool
 GRE_GetPathFromConfigDir(const char* version, const char* dirname,
                          char* buffer, PRUint32 buflen);
@@ -81,10 +90,12 @@ static PRBool
 GRE_GetPathFromConfigFile(const char* version, const char* dirname,
                           char* buffer, PRUint32 buflen);
 
-#ifdef XP_WIN
+#elif defined(XP_WIN)
+
 static PRBool
 GRE_GetPathFromRegKey(const char* version, HKEY aRegKey,
                       char* buffer, PRUint32 buflen);
+
 #endif
 
 nsresult
@@ -97,7 +108,7 @@ GRE_GetGREPathForVersion(const char *aVersion,
 #if XP_UNIX
     if (realpath(env, aBuffer))
       return NS_OK;
-#elif XP_WIN32
+#elif XP_WIN
     if (_fullpath(aBuffer, env, aBufLen))
       return NS_OK;
 #else
@@ -120,12 +131,58 @@ GRE_GetGREPathForVersion(const char *aVersion,
     return NS_OK;
   }
 
+#ifdef XP_MACOSX
+  aBuffer[0] = '\0';
+
+  // Check the bundle first, for <bundle>/Contents/Frameworks/XUL/libxpcom.dylib
+  CFBundleRef appBundle = CFBundleGetMainBundle();
+  if (appBundle) {
+    CFURLRef fwurl = CFBundleCopyPrivateFrameworksURL(appBundle);
+    if (fwurl) {
+      CFURLRef xulurl =
+        CFURLCreateCopyAppendingPathComponent(NULL, fwurl,
+                                              CFSTR("XUL"), PR_TRUE);
+
+      if (xulurl) {
+        CFURLRef xpcomurl =
+          CFURLCreateCopyAppendingPathComponent(NULL, xulurl,
+                                                CFSTR("libxpcom.dylib"),
+                                                PR_FALSE);
+
+        if (xpcomurl) {
+          if (!CFURLGetFileSystemRepresentation(xpcomurl, PR_TRUE,
+                                               (UInt8*) aBuffer, aBufLen) ||
+              access(aBuffer, R_OK | X_OK) != 0)
+            aBuffer[0] = '\0';
+        }
+
+        CFRelease(xulurl);
+      }
+
+      CFRelease(fwurl);
+    }
+  }
+
+  if (aBuffer[0])
+    return NS_OK;
+
+  // Check ~/Library/Frameworks/XUL/Versions/<version>/libxpcom.dylib
+  const char *home = PR_GetEnv("HOME");
+  if (home && *home && GRE_FindGREFramework(aVersion, home, aBuffer, aBufLen)) {
+    return NS_OK;
+  }
+
+  // Check /Library/Frameworks/XUL/Versions/<version>/libxpcom.dylib
+  if (GRE_FindGREFramework(aVersion, "", aBuffer, aBufLen)) {
+    return NS_OK;
+  }
+
+#elif defined(XP_UNIX)
   env = PR_GetEnv("MOZ_GRE_CONF");
   if (env && GRE_GetPathFromConfigFile(aVersion, env, aBuffer, aBufLen)) {
     return NS_OK;
   }
 
-#if XP_UNIX
   env = PR_GetEnv("HOME");
   if (env && *env) {
     char buffer[MAXPATHLEN];
@@ -158,9 +215,8 @@ GRE_GetGREPathForVersion(const char *aVersion,
   if (GRE_GetPathFromConfigDir(aVersion, GRE_CONF_DIR, aBuffer, aBufLen)) {
     return NS_OK;
   }
-#endif
 
-#if XP_WIN32
+#elif defined(XP_WIN)
   HKEY hRegKey = NULL;
     
   // A couple of key points here:
@@ -195,6 +251,24 @@ GRE_GetGREPathForVersion(const char *aVersion,
 
   return NS_ERROR_FAILURE;
 }
+
+#ifdef XP_MACOSX
+PRBool
+GRE_FindGREFramework(const char* version, const char* rootPath,
+                     char* buffer, PRUint32 buflen)
+{
+  snprintf(buffer, buflen,
+           "%s/Library/Frameworks/" GRE_FRAMEWORK_NAME "/Versions/%s/" XPCOM_DLL,
+           rootPath, version);
+
+  if (access(buffer, R_OK | X_OK) == 0)
+    return PR_TRUE;
+
+  buffer[0] = '\0';
+  return PR_FALSE;
+}
+    
+#elif defined(XP_UNIX)
 
 PRBool
 GRE_GetPathFromConfigDir(const char* version, const char* dirname,
@@ -282,7 +356,8 @@ GRE_GetPathFromConfigFile(const char* version, const char* filename,
   return (*pathBuffer != '\0');
 }
 
-#ifdef XP_WIN
+#elif defined(XP_WIN)
+
 static PRBool
 CopyWithEnvExpansion(char* aDest, const char* aSource, PRUint32 aBufLen,
                      DWORD aType)

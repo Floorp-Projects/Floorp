@@ -24,6 +24,7 @@
 #  Jonathan Wilson <jonwil@tpgi.com.au>
 #  Dan Mosedale <dmose@mozilla.org>
 #  Darin Fisher <darin@meer.net>
+#  Benjamin Smedberg <benjamin@smedbergs.us>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,9 +52,7 @@ MOZILLA_INTERNAL_API = 1
 DIRS		= profile
 
 PREF_JS_EXPORTS = $(srcdir)/xulrunner.js
-
-# hardcode en-US for the moment
-AB_CD = en-US
+GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/,xulrunner.js)
 
 DEFINES += -DAB_CD=$(AB_CD)
 
@@ -237,7 +236,7 @@ LDFLAGS += -Zlinker /NOE
 endif
 endif
 
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter-out OS2 WINNT Darwin,$(OS_ARCH)))
 
 xulrunner:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
@@ -252,8 +251,6 @@ install:: xulrunner
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
 GARBAGE += xulrunner
-GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, xulrunner.js)
-
 endif
 
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
@@ -291,9 +288,6 @@ ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/xulrunner.ico   $(DIST)/branding/app.ico
 	cp $(srcdir)/document.ico  $(DIST)/branding/document.ico
 endif
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-	cp $(srcdir)/macbuild/xulrunner.icns  $(DIST)/branding/xulrunner.icns
-endif
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/mozicon16.xpm $(DIST)/branding/mozicon16.xpm
 	cp $(srcdir)/mozicon50.xpm $(DIST)/branding/mozicon50.xpm
@@ -314,24 +308,25 @@ libs::
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
-APP_NAME = XULRunner
-APP_VERSION = $(MOZILLA_VERSION)
+FRAMEWORK_NAME = XUL
+FRAMEWORK_VERSION = $(MOZILLA_VERSION)
 
 libs:: $(PROGRAM)
-	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
-	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
-	sed -e "s/APP_VERSION/$(APP_VERSION)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
-	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
-	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS/mangle $(DIST)/$(APP_NAME).app/Contents/MacOS/shlibsign
-	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
-	-cp -L $(DIST)/bin/mangle $(DIST)/bin/shlibsign $(DIST)/$(APP_NAME).app/Contents/MacOS
-	cp -RL $(DIST)/branding/xulrunner.icns $(DIST)/$(APP_NAME).app/Contents/Resources/xulrunner.icns
-	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
-#       remove CVS dirs from packaged app
-	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
+	mkdir -p $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)/Resources
+	$(NSINSTALL) $(srcdir)/macbuild/InfoPlist.strings $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)/Resources
+	sed -e "s/APP_VERSION/$(APP_VERSION)/" $(srcdir)/macbuild/Info.plist.in > $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)/Info.plist
+	rsync -a $(DIST)/bin/ $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION) --exclude mangle --exclude shlibsign
+	rm -f $(DIST)/$(FRAMEWORK_NAME).framework/Versions/Current \
+	      $(DIST)/$(FRAMEWORK_NAME).framework/libxpcom.dylib \
+	      $(DIST)/$(FRAMEWORK_NAME).framework/XUL \
+	      $(DIST)/$(FRAMEWORK_NAME).framework/xulrunner-bin
+	ln -s $(FRAMEWORK_VERSION) $(DIST)/$(FRAMEWORK_NAME).framework/Versions/Current
+	ln -s Versions/Current/libxpcom.dylib $(DIST)/$(FRAMEWORK_NAME).framework/libxpcom.dylib
+	ln -s Versions/Current/XUL $(DIST)/$(FRAMEWORK_NAME).framework/XUL
+	ln -s Versions/Current/xulrunner-bin $(DIST)/$(FRAMEWORK_NAME).framework/xulrunner-bin
 
 clean clobber::
-	rm -rf $(DIST)/$(APP_NAME).app
+	rm -rf $(DIST)/$(FRAMEWORK_NAME).framework
 endif
 
 README_FILE = $(topsrcdir)/README.txt
