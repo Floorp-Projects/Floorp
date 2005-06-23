@@ -1362,7 +1362,7 @@ crlgen_setNextDataFn_extension(CRLGENGeneratorData *crlGenData, void *str,
     }
 
     if (extStr->extData == NULL) {
-        extStr->extData = PORT_ZAlloc(MAX_EXT_DATA_LENGTH);
+        extStr->extData = PORT_ZNewArray(char *, MAX_EXT_DATA_LENGTH);
         if (!extStr->extData) {
             return SECFailure;
         }
