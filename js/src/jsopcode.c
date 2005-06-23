@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set sw=4 ts=8 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -1102,12 +1103,18 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     if (!jp2)
                         return JS_FALSE;
                     jp2->scope = jp->scope;
-                    if (js_DecompileFunction(jp2, fun)) {
+                    js_puts(jp2, "\n");
+                    ok = js_DecompileFunction(jp2, fun);
+                    if (ok) {
+                        js_puts(jp2, "\n");
                         str = js_GetPrinterOutput(jp2);
                         if (str)
                             js_printf(jp, "%s\n", JS_GetStringBytes(str));
                     }
                     js_DestroyPrinter(jp2);
+                    if (!ok)
+                        return JS_FALSE;
+
                     break;
 
                   default:;
@@ -2707,7 +2714,6 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
      * an expression by parenthesizing.
      */
     if (jp->pretty) {
-        js_puts(jp, "\n");
         js_printf(jp, "\t");
     } else {
         if (!jp->grouped && (fun->flags & JSFUN_LAMBDA))
@@ -2783,9 +2789,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
     jp->indent -= 4;
     js_printf(jp, "\t}");
 
-    if (jp->pretty) {
-        js_puts(jp, "\n");
-    } else {
+    if (!jp->pretty) {
         if (!jp->grouped && (fun->flags & JSFUN_LAMBDA))
             js_puts(jp, ")");
     }
