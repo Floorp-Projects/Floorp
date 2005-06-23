@@ -93,10 +93,10 @@
                 label="&sendImageCmd.label;" 
                 accesskey="&sendImageCmd.accesskey;" 
                 oncommand="gContextMenu.sendImage();"/>
-      <menuitem id="context-setWallpaper"
-                label="&setWallpaperCmd.label;"
-                accesskey="&setWallpaperCmd.accesskey;"
-                oncommand="gContextMenu.setWallpaper();"/>
+      <menuitem id="context-setDesktopBackground"
+                label="&setDesktopBackgroundCmd.label;"
+                accesskey="&setDesktopBackgroundCmd.accesskey;"
+                oncommand="gContextMenu.setDesktopBackground();"/>
 
 <!--XXXBlake XUL sucks! We need autocheck for menuitems. -->
       <menuitem id="context-blockimage" class="menuitem-iconic"

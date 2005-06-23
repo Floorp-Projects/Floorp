@@ -245,8 +245,8 @@
 <!ENTITY viewImageCmd.accesskey       "I">
 <!ENTITY viewBGImageCmd.label         "View Background Image">
 <!ENTITY viewBGImageCmd.accesskey     "w">
-<!ENTITY setWallpaperCmd.label        "Set As Wallpaper...">
-<!ENTITY setWallpaperCmd.accesskey    "S">
+<!ENTITY setDesktopBackgroundCmd.label      "Set As Desktop Background...">
+<!ENTITY setDesktopBackgroundCmd.accesskey  "S">
 <!ENTITY bookmarkPageCmd.label        "Bookmark This Page...">
 <!ENTITY bookmarkPageCmd.accesskey    "m">
 <!ENTITY bookmarkLinkCmd.label        "Bookmark This Link...">

@@ -3961,19 +3961,23 @@ nsContextMenu.prototype = {
         this.showItem( "context-viewinfo", !( this.inDirList || this.onImage || this.isContentSelected || this.onLink || this.onTextInput ) );
 
         this.showItem( "context-sep-properties", !( this.inDirList || this.isContentSelected || this.onTextInput ) );
-        // Set As Wallpaper depends on whether an image was clicked on, and only works if we have a shell service.
-        var haveSetWallpaper = false;
+        // Set as Desktop background depends on whether an image was clicked on,
+        // and only works if we have a shell service.
+        var haveSetDesktopBackground = false;
 #ifdef HAVE_SHELL_SERVICE
-        // Only enable set as wallpaper if we can get the shell service.
+        // Only enable Set as Desktop Background if we can get the shell service.
         var shell = getShellService();
         if (shell)
-          haveSetWallpaper = true;
+          haveSetDesktopBackground = true;
 #endif
-        this.showItem( "context-setWallpaper", haveSetWallpaper && this.onImage );
+        this.showItem( "context-setDesktopBackground", haveSetDesktopBackground && this.onImage );
 
-        if( haveSetWallpaper && this.onImage )
-            // Disable the Set As Wallpaper menu item if we're still trying to load the image
-          this.setItemAttr( "context-setWallpaper", "disabled", (("complete" in this.target) && !this.target.complete) ? "true" : null );
+        if( haveSetDesktopBackground && this.onImage )
+          // Disable the Set as Desktop Background menu item if we're still trying
+          // to load the image
+          this.setItemAttr( "context-setDesktopBackground", "disabled",
+                            (("complete" in this.target) && !this.target.complete) ?
+                            "true" : null );
 
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage  && !this.onStandaloneImage );
@@ -4347,11 +4351,28 @@ nsContextMenu.prototype = {
         urlSecurityCheck( this.bgImageURL, document )
         openUILink( this.bgImageURL, e );
     },
-    setWallpaper: function() {
+    setDesktopBackground: function() {
       // Confirm since it's annoying if you hit this accidentally.
-      openDialog("chrome://browser/content/setWallpaper.xul", "",
+      const kDesktopBackgroundURL = 
+                    "chrome://browser/content/setDesktopBackground.xul";
+#ifdef XP_MACOSX
+      var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                         .getService(Components.interfaces.nsIWindowMediator);
+      var dbWin = wm.getMostRecentWindow("Shell:SetDesktopBackground");
+      if (dbWin) {
+        dbWin.gSetBackground.init(this.target);
+        dbWin.focus();
+      }
+      else {
+        openDialog(kDesktopBackgroundURL, "",
+                   "centerscreen,chrome,dialog=no,dependent,resizable=no",
+                   this.target);
+      }
+#else
+      openDialog(kDesktopBackgroundURL, "",
                  "centerscreen,chrome,dialog,modal,dependent",
                  this.target);
+#endif
     },
     // Save URL of clicked-on frame.
     saveFrame : function () {
@@ -5526,14 +5547,14 @@ var MailIntegration = {
   {
     var shell = getShellService();
     if (shell)
-      shell.openPreferredApplication(Components.interfaces.nsIShellService.APPLICATION_MAIL);
+      shell.openApplication(Components.interfaces.nsIShellService.APPLICATION_MAIL);
   },
 
   readNews: function ()
   {
     var shell = getShellService();
     if (shell)
-      shell.openPreferredApplication(Components.interfaces.nsIShellService.APPLICATION_NEWS);
+      shell.openApplication(Components.interfaces.nsIShellService.APPLICATION_NEWS);
   },
 
   updateUnreadCount: function ()

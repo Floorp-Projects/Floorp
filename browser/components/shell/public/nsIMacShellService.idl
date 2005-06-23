@@ -15,11 +15,11 @@
  * The Original Code is Shell Service.
  *
  * The Initial Developer of the Original Code is mozilla.org.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Ben Goodger    <ben@mozilla.org>
+ *  Ben Goodger <ben@mozilla.org> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,31 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsmacshellservice_h____
-#define nsmacshellservice_h____
+#include "nsIShellService.idl"
 
-#include "nsIMacShellService.h"
-#include "nsIWebProgressListener.h"
-#include "nsILocalFile.h"
-
-class nsMacShellService : public nsIMacShellService,
-                          public nsIWebProgressListener
+[scriptable, uuid(7f8ca08e-1df4-4735-86e9-50dedb48e5e8)]
+interface nsIMacShellService : nsIShellService
 {
-public:
-  nsMacShellService() : mCheckedThisSession(PR_FALSE) {};
-  virtual ~nsMacShellService() {};
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISHELLSERVICE
-  NS_DECL_NSIMACSHELLSERVICE
-  NS_DECL_NSIWEBPROGRESSLISTENER
-
-protected:
-
-private:
-  nsCOMPtr<nsILocalFile> mBackgroundFile;
-
-  PRBool    mCheckedThisSession;
+  const long APPLICATION_KEYCHAIN_ACCESS  = 2;
+  const long APPLICATION_NETWORK          = 3;
+  const long APPLICATION_DESKTOP          = 4;
 };
 
-#endif // nsmacshellservice_h____

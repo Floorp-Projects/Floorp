@@ -488,7 +488,7 @@ nsGNOMEShellService::SetDesktopBackgroundColor(PRUint32 aColor)
 }
 
 NS_IMETHODIMP
-nsGNOMEShellService::OpenPreferredApplication(PRInt32 aApplication)
+nsGNOMEShellService::OpenApplication(PRInt32 aApplication)
 {
   nsCAutoString scheme;
   if (aApplication == APPLICATION_MAIL)
