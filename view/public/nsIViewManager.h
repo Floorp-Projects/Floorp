@@ -452,14 +452,15 @@ public:
 
   /**
    * Dump the specified view into a new offscreen rendering context.
+   * The view is treated as the display root and is not clipped by
+   * ancestor views, nor is ancestor or sibling content displayed even
+   * if it overlaps the view.
    * @param aRect is the region to capture into the offscreen buffer, in the view's
    * coordinate system
    * @param aUntrusted set to PR_TRUE if the contents may be passed to malicious
    * agents. E.g. we might choose not to paint the contents of sensitive widgets
    * such as the file name in a file upload widget, and we might choose not
    * to paint themes.
-   * @param aIgnoreViewportScrolling ignore clipping/scrolling/scrollbar painting
-   * due to scrolling in the viewport
    * @param aBackgroundColor a background color to render onto
    * @param aRenderedContext gets set to a rendering context whose offscreen
    * buffer can be locked to get the data. The buffer's size will be aRect's size.
@@ -467,7 +468,6 @@ public:
    * cx->DestroyDrawingSurface(cx->GetDrawingSurface()).
    */
   NS_IMETHOD RenderOffscreen(nsIView* aView, nsRect aRect, PRBool aUntrusted,
-                             PRBool aIgnoreViewportScrolling,
                              nscolor aBackgroundColor,
                              nsIRenderingContext** aRenderedContext) = 0;
 

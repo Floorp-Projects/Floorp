@@ -1792,9 +1792,14 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
 
     // Dig down past the viewport scroll stuff
     nsIViewManager* vm = presContext->GetViewManager();
+    nsIScrollableView* scrollableView;
+    vm->GetRootScrollableView(&scrollableView);
     nsIView* view;
-    vm->GetRootView(view);
-    NS_ASSERTION(view, "Must have root view!");
+    if (scrollableView) {
+        scrollableView->GetScrolledView(view);
+    } else {
+        vm->GetRootView(view);
+    }
 
     nscolor bgColor;
     nsresult rv = mCSSParser->ParseColorString(PromiseFlatString(aBGColor),
@@ -1806,7 +1811,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     r.ScaleRoundOut(p2t);
 
     nsCOMPtr<nsIRenderingContext> blackCtx;
-    rv = vm->RenderOffscreen(view, r, PR_FALSE, PR_TRUE,
+    rv = vm->RenderOffscreen(view, r, PR_FALSE,
                              NS_ComposeColors(NS_RGB(0, 0, 0), bgColor),
                              getter_AddRefs(blackCtx));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1829,7 +1834,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     // But we need to compose our given background color onto black/white
     // to get the real background to use.
     nsCOMPtr<nsIRenderingContext> whiteCtx;
-    rv = vm->RenderOffscreen(view, r, PR_FALSE, PR_TRUE,
+    rv = vm->RenderOffscreen(view, r, PR_FALSE,
                              NS_ComposeColors(NS_RGB(255, 255, 255), bgColor),
                              getter_AddRefs(whiteCtx));
     if (NS_SUCCEEDED(rv)) {

@@ -869,7 +869,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
   PRBool anyTransparentPixels
     = BuildRenderingDisplayList(aView, damageRegion, &displayList, displayArena,
-                                PR_FALSE, PR_FALSE, nsnull);
+                                PR_FALSE, PR_FALSE);
   PRBool needBlending = PR_FALSE;
   for (PRInt32 i = 0; i < displayList.Count(); i++) {
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, displayList.ElementAt(i));
@@ -1276,12 +1276,10 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
 
 PRBool nsViewManager::BuildRenderingDisplayList(nsIView* aRootView,
   const nsRegion& aRegion, nsVoidArray* aDisplayList, PLArenaPool &aPool,
-  PRBool aIgnoreCoveringWidgets, PRBool aIgnoreOutsideClipping,
-  nsIView* aSuppressScrolling)
+  PRBool aIgnoreCoveringWidgets, PRBool aIgnoreOutsideClipping)
 {
   BuildDisplayList(NS_STATIC_CAST(nsView*, aRootView),
                    aRegion.GetBounds(), PR_FALSE, aIgnoreOutsideClipping,
-                   aSuppressScrolling,
                    aDisplayList, aPool);
 
   nsRegion opaqueRgn;
@@ -2335,30 +2333,6 @@ static PRBool ComputePlaceholderContainment(nsView* aView) {
   return containsPlaceholder;
 }
 
-/**
- * Returns PR_TRUE if this view is (or is part of) a viewport scrollbar/scrollcorner
- */
-static PRBool IsViewportScrollApparatus(nsView* aView, nsIView* aRootScroll) {
-  if (!aRootScroll)
-    return PR_FALSE;
-
-  // aView is NOT part of the scrolling apparatus if and only if it is a descendant
-  // of aRootScroll, OR it is a fixed position view or descendant
-  nsIView* aRootScrollframeView = aRootScroll->GetParent();
-  while (aView) {
-    if (aView == aRootScroll) {
-      // We're part of the scrolled document.
-      return PR_FALSE;
-    }
-    if (aView == aRootScrollframeView) {
-      return PR_TRUE;
-    }
-    aView = aView->GetParent();
-  }
-  // We're the root view or perhaps the view for a position:fixed element
-  return PR_FALSE;
-}
-
 /*
   Fills aDisplayList with DisplayListElement2* pointers. The caller is responsible
   for freeing these structs. The display list elements are ordered by z-order so
@@ -2368,17 +2342,15 @@ static PRBool IsViewportScrollApparatus(nsView* aView, nsIView* aRootScroll) {
   This should be changed so that the display list array is passed in as a parameter. There
   is no need to have the display list as a member of nsViewManager.
 
-  @param aRect the area in aView which we want to build a display list for
-  @param aEventProcesing PR_TRUE when the list is required for event processing
-  @param aCaptured PR_TRUE if the event or painting is being captured by the
-  given view so only views that are descended from the given view are considered
-  @param aSuppressScrolling if non-null, scrollbars associated with this scrollable
-  view are not drawn, and clipping this view and its ancestors is suppressed
+  aRect is the area in aView which we want to build a display list for.
+  Set aEventProcesing when the list is required for event processing.
+  Set aCaptured if the event or painting is being captured by the given view so
+  only views that are descended from the given view are considered.
 */
 void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect,
                                      PRBool aEventProcessing,
-                                     PRBool aCaptured, nsIView* aSuppressScrolling,
-                                     nsVoidArray* aDisplayList, PLArenaPool &aPool)
+                                     PRBool aCaptured, nsVoidArray* aDisplayList,
+                                     PLArenaPool &aPool)
 {
   // compute this view's origin
   nsPoint origin = ComputeViewOffset(aView);
@@ -2421,9 +2393,7 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect,
     CreateDisplayList(displayRoot, zTree, origin.x, origin.y,
                       aView, &aRect, displayRoot,
                       displayRootOrigin.x, displayRootOrigin.y,
-                      paintFloats, aEventProcessing,
-                      aSuppressScrolling ? aSuppressScrolling->GetFirstChild() : nsnull,
-                      PlaceholderHash, aPool);
+                      paintFloats, aEventProcessing, PlaceholderHash, aPool);
 
     // Reparent any views that need reparenting in the Z-order tree
     if(zTree) {
@@ -2436,18 +2406,6 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect,
     nsAutoVoidArray mergeTmp;
 
     SortByZOrder(zTree, *aDisplayList, mergeTmp, PR_TRUE, aPool);
-  }
-
-  if (aSuppressScrolling) {
-    // Don't render viewport scrollbars
-    for (PRInt32 i = 0; i < aDisplayList->Count(); i++) {
-      DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*,
-                                                    aDisplayList->ElementAt(i));
-      if ((element->mFlags & VIEW_RENDERED)
-          && IsViewportScrollApparatus(element->mView, aSuppressScrolling)) {
-        element->mFlags &= ~VIEW_RENDERED;
-      }
-    }
   }
 }
 
@@ -2462,7 +2420,7 @@ void nsViewManager::BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, n
 
   nsRect eventRect(aEvent->point.x, aEvent->point.y, 1, 1);
   nsAutoVoidArray displayList;
-  BuildDisplayList(aView, eventRect, PR_TRUE, aCaptured, nsnull, &displayList, aPool);
+  BuildDisplayList(aView, eventRect, PR_TRUE, aCaptured, &displayList, aPool);
 
 #ifdef DEBUG_roc
   if (getenv("MOZ_SHOW_DISPLAY_LIST")) ShowDisplayList(&displayList);
@@ -2946,7 +2904,7 @@ NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, const nsRegi
 /*
   Returns PR_TRUE if and only if aView is a (possibly indirect) child of aAncestor.
 */
-static PRBool IsAncestorOf(const nsIView* aAncestor, const nsIView* aView) 
+static PRBool IsAncestorOf(const nsView* aAncestor, const nsView* aView) 
 {
   while (nsnull != aView) {
     aView = aView->GetParent();
@@ -3033,7 +2991,7 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
   nsAutoVoidArray displayList;
   PLArenaPool displayArena;
   PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
-  BuildDisplayList(aView, r, PR_FALSE, PR_FALSE, nsnull, &displayList, displayArena);
+  BuildDisplayList(aView, r, PR_FALSE, PR_FALSE, &displayList, displayArena);
 
   PRInt32 i;
   for (i = 0; i < displayList.Count(); i++) {
@@ -3493,7 +3451,6 @@ NS_IMETHODIMP nsViewManager::GetRootScrollableView(nsIScrollableView **aScrollab
 
 NS_IMETHODIMP nsViewManager::RenderOffscreen(nsIView* aView, nsRect aRect,
                                              PRBool aUntrusted,
-                                             PRBool aIgnoreViewportScrolling,
                                              nscolor aBackgroundColor,
                                              nsIRenderingContext** aRenderedContext)
 {
@@ -3530,23 +3487,11 @@ NS_IMETHODIMP nsViewManager::RenderOffscreen(nsIView* aView, nsRect aRect,
   localcx->SetColor(aBackgroundColor);
   localcx->FillRect(aRect);
 
-  nsRect r = aRect;
-  nsIView* suppressScrolling = nsnull;
-  if (aIgnoreViewportScrolling && mRootScrollable) {
-    // Suppress clipping/scrolling/scrollbar painting due to our
-    // viewport scrollable view
-    nscoord x, y;
-    mRootScrollable->GetScrollPosition(x, y);
-    localcx->Translate(x, y);
-    r.MoveBy(-x, -y);
-    suppressScrolling = mRootScrollable->View();
-  }
-
   nsAutoVoidArray displayList;
   PLArenaPool displayArena;
   PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
-  BuildRenderingDisplayList(view, nsRegion(r), &displayList, displayArena,
-                            PR_TRUE, PR_TRUE, suppressScrolling);
+  BuildRenderingDisplayList(view, nsRegion(aRect), &displayList, displayArena,
+                            PR_TRUE, PR_TRUE);
   RenderViews(view, *localcx, nsRegion(aRect), surface, displayList);
   PL_FreeArenaPool(&displayArena);
   PL_FinishArenaPool(&displayArena);
@@ -3589,7 +3534,7 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, con
   PLArenaPool displayArena;
   PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
   BuildRenderingDisplayList(view, nsRegion(trect), &displayList, displayArena,
-                            PR_FALSE, PR_FALSE, nsnull);
+                            PR_FALSE, PR_FALSE);
   RenderViews(view, *localcx, nsRegion(trect), PR_FALSE, displayList);
   PL_FreeArenaPool(&displayArena);
   PL_FinishArenaPool(&displayArena);
@@ -3670,8 +3615,6 @@ static nsresult EnsureZTreeNodeCreated(nsView* aView, DisplayZTreeNode* &aNode, 
  * if we should avoid descending into any floating views
  * @param aEventProcessing PR_TRUE if we intend to do event processing with
  * this display list
- * @param aSuppressClip if non-null, any clipping from this view and its ancestors
- * should not be applied
  * @param aPool the arena to allocate the aResults elements from
  */
 PRBool nsViewManager::CreateDisplayList(nsView *aView,
@@ -3680,7 +3623,6 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
                                         const nsRect *aDamageRect, nsView *aTopView,
                                         nscoord aX, nscoord aY, PRBool aPaintFloats,
                                         PRBool aEventProcessing,
-                                        nsIView* aSuppressClip,
                                         nsHashtable &aMapPlaceholderViewToZTreeNode,
                                         PLArenaPool &aPool)
 {
@@ -3708,10 +3650,6 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
     (aView->GetClipChildrenToBounds(PR_FALSE)
      && !(aView->GetViewFlags() & NS_VIEW_FLAG_CONTAINS_PLACEHOLDER))
     || aView->GetClipChildrenToBounds(PR_TRUE);
-  
-  if (isClipView && aSuppressClip && IsAncestorOf(aView, aSuppressClip)) {
-    isClipView = PR_FALSE;
-  }
   PRBool overlap;
   nsRect irect;
     
@@ -3777,7 +3715,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
     // Add POP first because the z-tree is in reverse order
     retval = AddToDisplayList(aView, aResult, bounds, bounds,
                               POP_FILTER, aX - aOriginX, aY - aOriginY, PR_TRUE, aPool,
-                              aSuppressClip);
+                              aTopView);
     if (retval)
       return retval;
     
@@ -3795,7 +3733,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
       // Add POP first because the z-tree is in reverse order
       retval = AddToDisplayList(aView, aResult, bounds, bounds,
                                 POP_CLIP, aX - aOriginX, aY - aOriginY, PR_TRUE, aPool,
-                                aSuppressClip);
+                                aTopView);
 
       if (retval)
         return retval;
@@ -3814,7 +3752,6 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
       retval = CreateDisplayList(childView, createdNode,
                                  aOriginX, aOriginY, aRealView, aDamageRect, aTopView,
                                  pos.x, pos.y, aPaintFloats, aEventProcessing,
-                                 aSuppressClip,
                                  aMapPlaceholderViewToZTreeNode, aPool);
       if (createdNode != nsnull) {
         EnsureZTreeNodeCreated(aView, aResult, aPool);
@@ -3840,7 +3777,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
         retval = AddToDisplayList(aView, aResult, bounds, irect, flags,
                                   aX - aOriginX, aY - aOriginY,
                                   aEventProcessing && aTopView == aView, aPool,
-                                  aSuppressClip);
+                                  aTopView);
         // We're forcing AddToDisplayList to pick up the view only
         // during event processing, and only when aView is back at the
         // root of the tree of acceptable views (note that when event
@@ -3866,7 +3803,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
 
     if (AddToDisplayList(aView, aResult, bounds, bounds, PUSH_CLIP,
                          aX - aOriginX, aY - aOriginY, PR_TRUE, aPool,
-                         aSuppressClip)) {
+                         aTopView)) {
       retval = PR_TRUE;
     }
     
@@ -3882,7 +3819,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
     
     retval = AddToDisplayList(aView, aResult, bounds, bounds,
                               PUSH_FILTER, aX - aOriginX, aY - aOriginY, PR_TRUE, aPool,
-                              aSuppressClip);
+                              aTopView);
     if (retval)
       return retval;
     
