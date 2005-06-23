@@ -403,8 +403,8 @@ sub packit {
                          );
 
       # Push update information to update-staging/auslite.
-      TinderUtils::run_shell_command "scp -i ~/.ssh/aus $builddir/dist/update/update.snippet cltbld\@update-staging:/opt/auslite/data/Firefox/Linux_x86-gcc3/en-US.txt";
-#      TinderUtils::run_shell_command "ssh -i ~/.ssh/aus cltbld\@update-staging svn commit -m \"commit latest version of update snippet\" /opt/auslite/data/Firefox/Linux_x86-gcc3/en-US.txt";
+      TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet cltbld\@aus-staging.mozilla.org:/opt/auslite/data/Firefox/WINNT_x86-msvc/en-US.txt";
+#      TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org svn commit -m \"commit latest version of update snippet\" /opt/auslite/data/Firefox/Linux_x86-gcc3/en-US.txt";
     } else {
       TinderUtils::print_log "Unable to get info on '$update_path' or include in upload because it doesn't exist!\n";
     }
