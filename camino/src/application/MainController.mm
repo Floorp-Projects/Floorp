@@ -1285,6 +1285,13 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   if ( action == @selector(getInfo:) )
     return (browserController && [browserController canGetInfo]);
 
+  // only enable newTab if there is a browser window frontmost, or if there is no window
+  // (i.e. disable it for non-browser windows).
+  if (action == @selector(newTab:))
+  {
+    return (browserController != nil) || ([NSApp mainWindow] == nil);
+  }
+  
   // only activate if we've got multiple tabs open.
   if ((action == @selector(closeTab:) ||
        action == @selector(nextTab:) ||
