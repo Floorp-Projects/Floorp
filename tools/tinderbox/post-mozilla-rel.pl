@@ -375,7 +375,6 @@ sub packit {
   }
 
   if ($cachebuild and $Settings::update_package) {
-    TinderUtils::run_shell_command "pwd";
     TinderUtils::run_shell_command "make -C $builddir/tools/update-packaging full-update STAGE_DIR=$stagedir";
 
     my $update_file = "update.mar";
