@@ -49,10 +49,6 @@
 
 #define MAXINDENT 20
 
-#ifdef XP_MAC
-static PRIntervalTime initInterval = 0;
-#endif
-
 static PRFileDesc *timelineFD = PR_STDERR;
 static PRBool gTimelineDisabled = PR_TRUE;
 
@@ -78,8 +74,6 @@ public:
 
 /* Implementation file */
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsTimelineService, nsITimelineService)
-
-static PRTime Now(void);
 
 /*
  * Timer structure stored in a hash table to keep track of named
@@ -127,7 +121,7 @@ void nsTimelineServiceTimer::start()
 {
     TIMER_CHECK_OWNER();
     if (!mRunning) {
-        mStart = Now();
+        mStart = PR_Now();
     }
     mRunning++;
 }
@@ -160,7 +154,7 @@ PRTime nsTimelineServiceTimer::getAccum()
         accum = mAccum;
     } else {
         PRTime delta;
-        LL_SUB(delta, Now(), mStart);
+        LL_SUB(delta, PR_Now(), mStart);
         LL_ADD(accum, mAccum, delta);
     }
     return accum;
@@ -180,29 +174,6 @@ PRTime nsTimelineServiceTimer::getAccum(PRTime now)
     }
     return accum;
 }
-
-#ifdef XP_MAC
-/*
- * PR_Now() on the Mac only gives us a resolution of seconds.  Using
- * PR_IntervalNow() gives us better resolution. with the drawback that 
- * the timeline is only good for about six hours.
- *
- * PR_IntervalNow() occasionally exhibits discontinuities on Windows,
- * so we only use it on the Mac.  Bleah!
- */
-static PRTime Now(void)
-{
-    PRIntervalTime numTicks = PR_IntervalNow() - initInterval;
-    PRTime now;
-    LL_ADD(now, initTime, PR_IntervalToMilliseconds(numTicks) * 1000);
-    return now;
-}
-#else
-static PRTime Now(void)
-{
-    return PR_Now();
-}
-#endif
 
 static TimelineThreadData *GetThisThreadData()
 {
@@ -263,9 +234,7 @@ PRStatus TimelineInit(void)
     NS_WARN_IF_FALSE(status==0, "TimelineService could not allocate TLS storage.");
 
     timeStr = PR_GetEnv("NS_TIMELINE_INIT_TIME");
-#ifdef XP_MAC    
-    initInterval = PR_IntervalNow();
-#endif
+
     // NS_TIMELINE_INIT_TIME only makes sense for the main thread, so if it
     // exists, set it there.  If not, let normal thread management code take
     // care of setting the init time.
@@ -274,17 +243,9 @@ PRStatus TimelineInit(void)
         LL_MUL(tmp1, (PRInt64)secs, 1000000);
         LL_MUL(tmp2, (PRInt64)msecs, 1000);
         LL_ADD(initTime, tmp1, tmp2);
-#ifdef XP_MAC
-        initInterval -= PR_MicrosecondsToInterval(
-            (PRUint32)(PR_Now() - initTime));
-#endif
     }
     // Get the log file.
-#ifdef XP_MAC
-    fileName = "timeline.txt";
-#else
     fileName = PR_GetEnv("NS_TIMELINE_LOG_FILE");
-#endif
     if (fileName != NULL
         && (fd = PR_Open(fileName, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                          0666)) != NULL) {
@@ -357,7 +318,7 @@ static nsresult NS_TimelineMarkV(const char *text, va_list args)
 
     TimelineThreadData *thread = GetThisThreadData();
 
-    tmp = Now();
+    tmp = PR_Now();
     LL_SUB(elapsed, tmp, thread->initTime);
 
     PrintTime(elapsed, text, args);
@@ -430,7 +391,7 @@ PR_IMPLEMENT(nsresult) NS_TimelineStopTimer(const char *timerName)
      * including time spent in TLS and PL_HashTableLookup in the
      * timer.
      */
-    PRTime now = Now();
+    PRTime now = PR_Now();
 
     TimelineThreadData *thread = GetThisThreadData();
     if (thread->timers == NULL)
