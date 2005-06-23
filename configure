@@ -31,7 +31,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --with-pthreads         Force use of system pthread library with NSPR "
 ac_help="$ac_help
-  --enable-macos-target=VER (default=10.1)
+  --enable-macos-target=VER (default=10.2)
                           Set the minimum MacOS version needed at runtime"
 ac_help="$ac_help
   --with-system-nspr      Use system installed NSPR"
@@ -9252,7 +9252,7 @@ if test "${enable_macos_target+set}" = set; then
   enableval="$enable_macos_target"
   MACOS_DEPLOYMENT_TARGET_STR=$enableval _MACOS_DT_SET=1
 else
-  MACOS_DEPLOYMENT_TARGET_STR=10.1
+  MACOS_DEPLOYMENT_TARGET_STR=10.2
 fi
 
 
