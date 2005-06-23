@@ -111,6 +111,7 @@ private:
   PRUint32         mBytesParsed;
   nsCOMPtr<nsIExpatSink> mSink;
   const nsCatalogData* mCatalogData; // weak
+  nsString         mURISpec;
 };
 
 nsresult NS_NewExpatDriver(nsIDTD** aDriver);

@@ -51,6 +51,8 @@
 #include "nsTextFormatter.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCRT.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 
 #define kExpatSeparatorChar 0xFFFF
 
@@ -794,6 +796,19 @@ nsExpatDriver::HandleError(const char *aBuffer,
 
   // Adjust the column number so that it is one based rather than zero based.
   PRInt32 colNumber = XML_GetCurrentColumnNumber(mExpatParser) + 1;
+  PRInt32 lineNumber = XML_GetCurrentLineNumber(mExpatParser);
+
+  nsCOMPtr<nsIConsoleService> cs
+    (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  nsCOMPtr<nsIScriptError> serr(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+  if (serr && cs) {
+    if (NS_SUCCEEDED(serr->Init(description.get(),
+                                mURISpec.get(),
+                                sourceLine.get(),
+                                lineNumber, colNumber,
+                                nsIScriptError::errorFlag, "malformed-xml")))
+      cs->LogMessage(serr);
+  }
 
   nsAutoString errorText;
   CreateErrorText(description.get(), XML_GetBase(mExpatParser),
@@ -1008,7 +1023,9 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
   XML_SetParamEntityParsing(mExpatParser, XML_PARAM_ENTITY_PARSING_ALWAYS);
 #endif
 
-  XML_SetBase(mExpatParser, aParserContext.mScanner->GetFilename().get());
+  mURISpec = aParserContext.mScanner->GetFilename();
+
+  XML_SetBase(mExpatParser, mURISpec.get());
 
   // Set up the callbacks
   XML_SetXmlDeclHandler(mExpatParser, Driver_HandleXMLDeclaration); 
