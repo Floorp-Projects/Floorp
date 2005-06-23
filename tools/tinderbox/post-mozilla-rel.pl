@@ -383,6 +383,7 @@ sub packit {
     @updatemar = grep { -f $_ } <${stagedir}/*.mar>;
     if ( scalar(@updatemar) ge 1 ) {
       $update_file = $updatemar[0];
+      $update_file =~ s:^$stagedir/(.*)$:$1:g;
     }
 
     my $update_path = "$stagedir/$update_file";
@@ -406,7 +407,7 @@ sub packit {
       TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet cltbld\@aus-staging.mozilla.org:/opt/auslite/data/Firefox/WINNT_x86-msvc/en-US.txt";
 #      TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org svn commit -m \"commit latest version of update snippet\" /opt/auslite/data/Firefox/Linux_x86-gcc3/en-US.txt";
     } else {
-      TinderUtils::print_log "Unable to get info on '$update_path' or include in upload because it doesn't exist!\n";
+      TinderUtils::print_log "Error: Unable to get info on '$update_path' or include in upload because it doesn't exist!\n";
     }
   }
 
