@@ -613,14 +613,12 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         rv = result->SetOriginalURI(aURI);
         if (NS_FAILED(rv)) return rv;
 
-        // Get a system principal for xul files and set the owner
+        // Get a system principal for content files and set the owner
         // property of the result
         nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
-        nsCAutoString fileExtension;
-        rv = url->GetFileExtension(fileExtension);
-        if (PL_strcasecmp(fileExtension.get(), "xul") == 0 ||
-            PL_strcasecmp(fileExtension.get(), "html") == 0 ||
-            PL_strcasecmp(fileExtension.get(), "xml") == 0)
+        nsCAutoString path;
+        rv = url->GetPath(path);
+        if (StringBeginsWith(path, NS_LITERAL_CSTRING("/content/")))
         {
             nsCOMPtr<nsIScriptSecurityManager> securityManager =
                      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
