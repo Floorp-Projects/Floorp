@@ -57,11 +57,11 @@ NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
 
   OSStatus err;
   KeyboardLayoutRef currentKeyboard;
-  void* currentKeyboardResID;
 
   err = ::KLGetCurrentKeyboardLayout(&currentKeyboard);
   if (err == noErr)
   {
+    const void* currentKeyboardResID;
     err = ::KLGetKeyboardLayoutProperty(currentKeyboard, kKLIdentifier,
                                         &currentKeyboardResID);
     if (err == noErr)
