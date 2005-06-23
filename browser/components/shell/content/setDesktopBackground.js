@@ -38,7 +38,9 @@
 
 const kXUL_NS            = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kIShellService    = Components.interfaces.nsIShellService;
+#ifdef XP_MACOSX
 const kIMacShellService = Components.interfaces.nsIMacShellService;
+#endif
 
 var gSetBackground = {
   _position         : kIShellService.BACKGROUND_STRETCH,
@@ -55,7 +57,7 @@ var gSetBackground = {
            parseInt(aString.substring(5,7), 16);
   },
   
-  _rgbToHex(aR, aG, aB) 
+  _rgbToHex: function(aR, aG, aB) 
   {
     var rHex = aR.toString(16).toUpperCase();
     var gHex = aG.toString(16).toUpperCase();
@@ -195,7 +197,7 @@ var gSetBackground = {
 
   _createImage: function ()
   {
-    var img = document.createElementNS(kXULNS, "image");
+    var img = document.createElementNS(kXUL_NS, "image");
     img.setAttribute("src", this._image.src);
     return img;
   },
@@ -216,7 +218,7 @@ var gSetBackground = {
 
     this._monitor.style.backgroundColor = "white";
 
-    var text = document.createElementNS(kXULNS, "label");
+    var text = document.createElementNS(kXUL_NS, "label");
     text.setAttribute("id", "noPreviewAvailable");
     text.setAttribute("value", bundle.getString("DesktopBackgroundNoPreview"));
     this._monitor.appendChild(text);
