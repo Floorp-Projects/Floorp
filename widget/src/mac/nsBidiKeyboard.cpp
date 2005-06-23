@@ -55,40 +55,20 @@ NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
   *aIsRTL = PR_FALSE;
   nsresult rv = NS_ERROR_FAILURE;
 
-  // KLGetCurrentKeyboardLayout and KLGetKeyboardLayoutProperty are only available on OS 10.2 and later.
-  static PRBool checked = PR_FALSE;
-  static fpKLGetCurrentKeyboardLayout_type fpKLGetCurrentKeyboardLayout = NULL;
-  static fpKLGetKeyboardLayoutProperty_type fpKLGetKeyboardLayoutProperty = NULL;
+  OSStatus err;
+  KeyboardLayoutRef currentKeyboard;
+  void* currentKeyboardResID;
 
-  if (!checked) {
-    CFBundleRef bundle =
-        ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.Carbon"));
-    if (bundle) {
-      fpKLGetCurrentKeyboardLayout = (fpKLGetCurrentKeyboardLayout_type)
-          ::CFBundleGetFunctionPointerForName(bundle, CFSTR("KLGetCurrentKeyboardLayout"));
-      fpKLGetKeyboardLayoutProperty = (fpKLGetKeyboardLayoutProperty_type)
-          ::CFBundleGetFunctionPointerForName(bundle, CFSTR("KLGetKeyboardLayoutProperty"));
-    }
-    
-    checked = PR_TRUE;
-  }
-  
-  if (fpKLGetCurrentKeyboardLayout) {
-    OSStatus err;
-    KeyboardLayoutRef currentKeyboard;
-    void* currentKeyboardResID;
-  
-    err = fpKLGetCurrentKeyboardLayout(&currentKeyboard);
+  err = ::KLGetCurrentKeyboardLayout(&currentKeyboard);
+  if (err == noErr)
+  {
+    err = ::KLGetKeyboardLayoutProperty(currentKeyboard, kKLIdentifier,
+                                        &currentKeyboardResID);
     if (err == noErr)
     {
-      err = fpKLGetKeyboardLayoutProperty(currentKeyboard, 
-          kKLIdentifier, &currentKeyboardResID);
-      if (err == noErr)
-      {
-        rv = NS_OK;
-        *aIsRTL = IsRTLLanguage((SInt32)currentKeyboardResID);
-      }
-    }  
+      rv = NS_OK;
+      *aIsRTL = IsRTLLanguage((SInt32)currentKeyboardResID);
+    }
   }
 
   return rv;
