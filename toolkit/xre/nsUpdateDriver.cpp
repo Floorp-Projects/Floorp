@@ -75,6 +75,8 @@
 // however, given the way most operating systems recycle PIDs.  We'll take our
 // chances ;-)
 //
+// A similar #define lives in updater.cpp and should be kept in sync with this.
+//
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
 #define USE_EXECV
 #endif
@@ -106,18 +108,6 @@ DoubleQuoteIfNeeded(nsCString &str)
   }
 }
 #endif
-
-static void
-MakeCommandLine(char **argv, nsCString &result)
-{
-  result.Truncate();
-  while (*argv) {
-    result.Append(*argv);
-    ++argv;
-    if (*argv)
-      result.Append(' ');
-  }
-}
 
 PR_STATIC_CALLBACK(int)
 ScanDirComparator(nsIFile *a, nsIFile *b, void *unused)
@@ -320,11 +310,6 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   if (NS_FAILED(rv))
     return;
 
-  // Form the command line that will be used to call us back.
-  nsCAutoString commandLine;
-  MakeCommandLine(appArgv, commandLine);
-  LOG(("callback command line: %s\n", commandLine.get()));
-
   if (!SetStatus(statusFile, "applying")) {
     LOG(("failed setting status to 'applying'\n"));
     return;
@@ -337,26 +322,30 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   DoubleQuoteIfNeeded(commandLine);
 #endif
 
-  char **argv = new char*[5];
+  // Construct the PID argument for this process.  If we are using execv, then
+  // we pass "0" which is then ignored by the updater.
+#if defined(USE_EXECV)
+  NS_NAMED_LITERAL_CSTRING(pid, "0");
+#else
+  nsCAutoString pid;
+  pid.AppendInt((PRInt32)
+# if defined(XP_WIN)
+    GetCurrentProcessId()
+# else
+    getpid()
+# endif
+    );
+#endif
+
+  char **argv = new char*[4 + appArgc];
   if (!argv)
     return;
   argv[0] = (char*) updaterPath.get();
   argv[1] = (char*) updateDirPath.get();
-  argv[2] = (char*) commandLine.get();
-#if defined(USE_EXECV)
-  argv[3] = nsnull;
-#else
-  nsCAutoString pid;
-  pid.AppendInt((PRInt32)
-#if defined(XP_WIN)
-    GetCurrentProcessId()
-#else
-    getpid()
-#endif
-    );
-  argv[3] = (char*) pid.get();
-  argv[4] = nsnull;
-#endif
+  argv[2] = (char*) pid.get();
+  for (int i = 0; i < appArgc; ++i)
+    argv[3 + i] = appArgv[i];
+  argv[3 + appArgc] = nsnull;
 
   LOG(("spawning updater process [%s]\n", updaterPath.get()));
 
