@@ -64,14 +64,14 @@
 
       <property name="children">
         <getter>
-        <![CDATA[
-          var childNodes = [];
-          for (var i = 0; i < this.childNodes.length; ++i) {
-            if ("fireEvent" in this.childNodes[i])
-              childNodes.push(this.childNodes[i]);
-          }
-          return childNodes;
-        ]]>
+          <![CDATA[
+            var childNodes = [];
+            for (var i = 0; i < this.childNodes.length; ++i) {
+              if ("fireEvent" in this.childNodes[i])
+                childNodes.push(this.childNodes[i]);
+            }
+            return childNodes;
+          ]]>
         </getter>
       </property>
 
@@ -87,7 +87,7 @@
         ]]>
       </body>
       </method>
-      
+
       <field name="_selectedItem">null</field>
       <property name="selectedItem">
         <getter>
@@ -102,69 +102,102 @@
 
             if (val) {
               val.selected = true;
-              this.scrollBoxObject.ensureElementIsVisible(val);
+              this.scrollBoxObject.scrollToElement(val);
               this.fireActiveItemEvent();
             }
 
             this.fireEvent("select");
-        ]]>
+          ]]>
         </setter>
       </property>
 
       <method name="clearSelection">
         <body>
-        <![CDATA[
-          this.selectedItem = null;
-        ]]>
+          <![CDATA[
+            this.selectedItem = null;
+          ]]>
         </body>
       </method>
 
       <method name="goUp">
         <body>
-        <![CDATA[
-          // if nothing selected, we go from the bottom
-          for (var i = this.selectedItem ? this.selectedItem.previousSibling : this.lastChild; i; i = i.previousSibling) {
-            if ("fireEvent" in i) {
-              this.selectedItem = i;
-              return true;
+          <![CDATA[
+            // if nothing selected, we go from the bottom
+            for (var i = this.selectedItem ? this.selectedItem.previousSibling : this.lastChild; i; i = i.previousSibling) {
+              if ("fireEvent" in i) {
+                this.selectedItem = i;
+                return true;
+              }
             }
-          }
-          return false;
-        ]]>
+            return false;
+          ]]>
         </body>
       </method>
 
       <method name="goDown">
         <body>
-        <![CDATA[
-          // if nothing selected, we go from the top
-          for (var i = this.selectedItem ? this.selectedItem.nextSibling : this.firstChild; i; i = i.nextSibling) {
-            if ("fireEvent" in i) {
-              this.selectedItem = i;
-              return true;
+          <![CDATA[
+            // if nothing selected, we go from the top
+            for (var i = this.selectedItem ? this.selectedItem.nextSibling : this.firstChild; i; i = i.nextSibling) {
+              if ("fireEvent" in i) {
+                this.selectedItem = i;
+                return true;
+              }
             }
-          }
-          return false;
-        ]]>
+            return false;
+          ]]>
+        </body>
+      </method>
+
+      <method name="init">
+        <body>
+          <![CDATA[
+            var lastSelected = this.getAttribute("last-selected");
+
+            if (lastSelected != "")
+              lastSelected = document.getElementById(lastSelected);
+
+            if (!lastSelected)
+              this.goDown();
+            else
+              this.selectedItem = lastSelected;
+          ]]>
+        </body>
+      </method>
+
+      <method name="ensureElementIsVisible">
+        <parameter name="aElement"/>
+        <body>
+          <![CDATA[
+            this.scrollBoxObject.ensureElementIsVisible(aElement);
+          ]]>
+        </body>
+      </method>
+
+      <method name="ensureSelectedElementIsVisible">
+        <body>
+          <![CDATA[
+            this.scrollBoxObject.ensureElementIsVisible(this.selectedItem);
+          ]]>
         </body>
       </method>
 
       <method name="fireEvent">
         <parameter name="aEventType"/>
         <body>
-        <![CDATA[
-          var e = document.createEvent("Events");
-          var eventType = "richview-" + aEventType;
-          e.initEvent(eventType, false, true);
-          this.dispatchEvent(e);
+          <![CDATA[
+            var e = document.createEvent("Events");
+            var eventType = "richview-" + aEventType;
+            e.initEvent(eventType, false, true);
+            this.dispatchEvent(e);
 
-          var handler = this.getAttribute("onrichview-" + aEventType);
-          if (handler != "") {
-            var fn = new Function("event", handler);
-            fn(e);
-          }
-          document.commandDispatcher.updateCommands(eventType);
-        ]]>
+            var handler = this.getAttribute("onrichview-" + aEventType);
+            if (handler != "") {
+              var fn = new Function("event", handler);
+              fn(e);
+            }
+            document.commandDispatcher.updateCommands(eventType);
+          ]]>
         </body>
       </method>
     </implementation>
@@ -175,25 +208,25 @@
       <handler event="keypress" keycode="VK_HOME" action="clearSelection(); goDown(); event.preventDefault();"/>
       <handler event="keypress" keycode="VK_END" action="clearSelection(); goUp(); event.preventDefault();"/>
       <handler event="click">
-      <![CDATA[
-        // clicking into nothing should unselect
-        if (event.originalTarget.getAttribute("anonid") == "main-box")
-          this.clearSelection();
-      ]]>
+        <![CDATA[
+          // clicking into nothing should unselect
+          if (event.originalTarget.getAttribute("anonid") == "main-box")
+            this.clearSelection();
+        ]]>
       </handler>
       <handler event="contextmenu">
-      <![CDATA[
-        // if the context menu was opened via the keyboard, display it in the
-        // right location.
-        if (event.button != 2) {
-          var popup = document.getElementById(this.getAttribute("context"));
-          if (popup)
-            popup.showPopup(this.selectedItem, -1, -1, "context", "bottomleft", "topleft");
-        }
-      ]]>
+        <![CDATA[
+          // if the context menu was opened via the keyboard, display it in the
+          // right location.
+          if (event.button != 2) {
+            var popup = document.getElementById(this.getAttribute("context"));
+            if (popup)
+              popup.showPopup(this.selectedItem, -1, -1, "context", "bottomleft", "topleft");
+          }
+        ]]>
       </handler>
       <handler event="focus">
-        <![CDATA[    
+        <![CDATA[
           if (event.target == this)
             this.fireActiveItemEvent();
         ]]>
@@ -208,15 +241,6 @@
     </content>
 
     <implementation implements="nsIAccessibleProvider, nsIDOMXULSelectControlItemElement">
-      <constructor>
-        <![CDATA[
-          // When first item is created, select it if we don't have a selection yet
-          var listbox = this.control;
-          if (!listbox.selectedItem) {
-            setTimeout(listbox.goDown, 0);
-          }
-        ]]>
-      </constructor>
       <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
       <property name="accessible">
         <getter>
@@ -225,9 +249,9 @@
             return accService.createXULListitemAccessible(this);
           ]]>
         </getter>
-      </property>                
+      </property>
       <!-- ///////////////// nsIDOMXULSelectControlItemElement ///////////////// -->
-                
+
       <property name="value" onget="return this.getAttribute('value');"
                              onset="this.setAttribute('value', val); return val;"/>
 
@@ -253,21 +277,23 @@
           ]]>
         </getter>
       </property>
-      
+
       <property name="selected"
                 onget="return this.getAttribute('selected');"
                 onset="return this.setAttribute('selected',val);"/>
 
       <property name="control">
-        <getter><![CDATA[
-          var parent = this.parentNode;
-          while (parent) {
-            if (parent.localName == "richlistbox")
-              return parent;
-            parent = parent.parentNode;
-          }
-          return null;
-        ]]></getter>
+        <getter>
+          <![CDATA[
+            var parent = this.parentNode;
+            while (parent) {
+              if (parent.localName == "richlistbox")
+                return parent;
+              parent = parent.parentNode;
+            }
+            return null;
+          ]]>
+        </getter>
       </property>
     </implementation>
 
