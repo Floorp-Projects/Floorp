@@ -64,6 +64,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  nkcache \
 		  intl \
+		  xpconnect \
 		  $(NULL)
 
 SHARED_LIBRARY_LIBS = \
