@@ -375,12 +375,18 @@ sub packit {
   }
 
   if ($cachebuild and $Settings::update_package) {
-    my $update_file = "update.mar";
-    my $update_path = "$stagedir/$update_file";
-    my $update_fullurl = "$url/$update_file";
-
     TinderUtils::run_shell_command "pwd";
     TinderUtils::run_shell_command "make -C $builddir/tools/update-packaging full-update STAGE_DIR=$stagedir";
+
+    my $update_file = "update.mar";
+    my @updatemar;
+    @updatemar = grep { -f $_ } <${stagedir}/*.mar>;
+    if ( scalar(@updatemar) ge 1 ) {
+      $update_file = $updatemar[0];
+    }
+
+    my $update_path = "$stagedir/$update_file";
+    my $update_fullurl = "$url/$update_file";
 
     if ( -f $update_path ) {
       # Make update dist directory.
