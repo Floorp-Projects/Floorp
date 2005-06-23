@@ -187,14 +187,9 @@ function Startup()
     optionsButton.hidden = true;
   }
   
-  // Restore the last-selected extension
-  var lastSelected = gExtensionsView.getAttribute("last-selected");
-  if (lastSelected != "")
-    lastSelected = document.getElementById(lastSelected);
-  if (!lastSelected) 
-    gExtensionsView.goDown();
-  else
-    gExtensionsView.selectedItem = lastSelected;
+  // Initialize the richlistbox.  This will select the last selected extension
+  // or default to the first listed one.
+  gExtensionsView.init();
 
   var extensionsStrings = document.getElementById("extensionsStrings");
   document.title = extensionsStrings.getString(gWindowState + "Title");
