@@ -96,19 +96,6 @@ static const char kUpdaterINI[] = "updater.ini";
 static const char kUpdaterApp[] = "updater.app";
 #endif
 
-#ifdef XP_WIN
-// On windows, we need to double-quote parameters before passing them to execv.
-// Otherwise, they will get parsed as separate parameters by the new process.
-static void
-DoubleQuoteIfNeeded(nsCString &str)
-{
-  if (str.FindChar(' ') != kNotFound) {
-    str.Insert('\"', 0);
-    str.Append('\"');
-  }
-}
-#endif
-
 PR_STATIC_CALLBACK(int)
 ScanDirComparator(nsIFile *a, nsIFile *b, void *unused)
 {
@@ -316,9 +303,14 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   }
 
 #if defined(XP_WIN)
-  // On windows, we may need to quote these paths.
-  DoubleQuoteIfNeeded(updaterPath);
-  DoubleQuoteIfNeeded(updateDirPath);
+  // Avoid paths that contain spaces...
+  char tempBuf[_MAX_PATH];
+
+  ::GetShortPathName(updaterPath.get(), tempBuf, sizeof(tempBuf));
+  updaterPath = tempBuf;
+
+  ::GetShortPathName(updateDirPath.get(), tempBuf, sizeof(tempBuf));
+  updateDirPath = tempBuf;
 #endif
 
   // Construct the PID argument for this process.  If we are using execv, then
@@ -351,6 +343,10 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
 #if defined(USE_EXECV)
   chdir(appDirPath.get());
   execv(updaterPath.get(), argv);
+#elif defined(XP_WIN)
+  _chdir(appDirPath.get());
+  _spawnv(_P_NOWAIT, updaterPath.get(), argv);
+  _exit(0);
 #else
   PRStatus status;
   PRProcessAttr *attr;
@@ -364,7 +360,7 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
     goto end;
 
   PR_CreateProcessDetached(updaterPath.get(), argv, nsnull, attr);
-  exit(1);
+  exit(0);
 
 end:
   PR_DestroyProcessAttr(attr); 

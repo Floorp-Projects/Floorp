@@ -813,7 +813,13 @@ LaunchCallbackApp(int argc, char **argv)
 #elif defined(XP_MACOSX)
   LaunchChild(argc, argv);
 #elif defined(XP_WIN)
-  _spawnv(_P_NOWAIT, argv[0], argv);
+  // _spawnv gets angry if the executable path has spaces in it.
+  char shortPath[_MAX_PATH];
+  ::GetShortPathName(argv[0], shortPath, sizeof(shortPath));
+
+  argv[0] = shortPath;
+
+  _spawnv(_P_NOWAIT, shortPath, argv);
 #else
 # warning "Need implementaton of LaunchCallbackApp"
 #endif
