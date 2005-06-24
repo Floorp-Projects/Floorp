@@ -377,3 +377,5 @@ pref("browser.display.screen_resolution", 96);
 
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
+
+pref("browser.xul.error_pages.enabled", true);
