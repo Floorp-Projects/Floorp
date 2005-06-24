@@ -274,52 +274,55 @@ IsEventHandler(nsIAtom* aName)
         return PR_FALSE;
     }
     
-    return aName == nsLayoutAtoms::onclick         ||
-           aName == nsLayoutAtoms::ondblclick      ||
-           aName == nsLayoutAtoms::onmousedown     ||
-           aName == nsLayoutAtoms::onmouseup       ||
-           aName == nsLayoutAtoms::onmouseover     ||
-           aName == nsLayoutAtoms::onmouseout      ||
-           aName == nsLayoutAtoms::onmousemove     ||
+    return aName == nsLayoutAtoms::onclick            ||
+           aName == nsLayoutAtoms::ondblclick         ||
+           aName == nsLayoutAtoms::onmousedown        ||
+           aName == nsLayoutAtoms::onmouseup          ||
+           aName == nsLayoutAtoms::onmouseover        ||
+           aName == nsLayoutAtoms::onmouseout         ||
+           aName == nsLayoutAtoms::onmousemove        ||
 
-           aName == nsLayoutAtoms::onkeydown       ||
-           aName == nsLayoutAtoms::onkeyup         ||
-           aName == nsLayoutAtoms::onkeypress      ||
+           aName == nsLayoutAtoms::onkeydown          ||
+           aName == nsLayoutAtoms::onkeyup            ||
+           aName == nsLayoutAtoms::onkeypress         ||
 
-           aName == nsLayoutAtoms::onload          ||
-           aName == nsLayoutAtoms::onunload        ||
-           aName == nsLayoutAtoms::onabort         ||
-           aName == nsLayoutAtoms::onerror         ||
+           aName == nsLayoutAtoms::oncompositionstart ||
+           aName == nsLayoutAtoms::oncompositionend   ||
 
-           aName == nsLayoutAtoms::onpopupshowing  ||
-           aName == nsLayoutAtoms::onpopupshown    ||
-           aName == nsLayoutAtoms::onpopuphiding   ||
-           aName == nsLayoutAtoms::onpopuphidden   ||
-           aName == nsLayoutAtoms::onclose         ||
-           aName == nsLayoutAtoms::oncommand       ||
-           aName == nsLayoutAtoms::onbroadcast     ||
-           aName == nsLayoutAtoms::oncommandupdate ||
+           aName == nsLayoutAtoms::onload             ||
+           aName == nsLayoutAtoms::onunload           ||
+           aName == nsLayoutAtoms::onabort            ||
+           aName == nsLayoutAtoms::onerror            ||
 
-           aName == nsLayoutAtoms::onoverflow      ||
-           aName == nsLayoutAtoms::onunderflow     ||
-           aName == nsLayoutAtoms::onoverflowchanged ||
+           aName == nsLayoutAtoms::onpopupshowing     ||
+           aName == nsLayoutAtoms::onpopupshown       ||
+           aName == nsLayoutAtoms::onpopuphiding      ||
+           aName == nsLayoutAtoms::onpopuphidden      ||
+           aName == nsLayoutAtoms::onclose            ||
+           aName == nsLayoutAtoms::oncommand          ||
+           aName == nsLayoutAtoms::onbroadcast        ||
+           aName == nsLayoutAtoms::oncommandupdate    ||
 
-           aName == nsLayoutAtoms::onfocus         ||
-           aName == nsLayoutAtoms::onblur          ||
+           aName == nsLayoutAtoms::onoverflow         ||
+           aName == nsLayoutAtoms::onunderflow        ||
+           aName == nsLayoutAtoms::onoverflowchanged  ||
 
-           aName == nsLayoutAtoms::onsubmit        ||
-           aName == nsLayoutAtoms::onreset         ||
-           aName == nsLayoutAtoms::onchange        ||
-           aName == nsLayoutAtoms::onselect        ||
-           aName == nsLayoutAtoms::oninput         ||
+           aName == nsLayoutAtoms::onfocus            ||
+           aName == nsLayoutAtoms::onblur             ||
 
-           aName == nsLayoutAtoms::onpaint         ||
+           aName == nsLayoutAtoms::onsubmit           ||
+           aName == nsLayoutAtoms::onreset            ||
+           aName == nsLayoutAtoms::onchange           ||
+           aName == nsLayoutAtoms::onselect           ||
+           aName == nsLayoutAtoms::oninput            ||
 
-           aName == nsLayoutAtoms::ondragenter     ||
-           aName == nsLayoutAtoms::ondragover      ||
-           aName == nsLayoutAtoms::ondragexit      ||
-           aName == nsLayoutAtoms::ondragdrop      ||
-           aName == nsLayoutAtoms::ondraggesture   ||
+           aName == nsLayoutAtoms::onpaint            ||
+
+           aName == nsLayoutAtoms::ondragenter        ||
+           aName == nsLayoutAtoms::ondragover         ||
+           aName == nsLayoutAtoms::ondragexit         ||
+           aName == nsLayoutAtoms::ondragdrop         ||
+           aName == nsLayoutAtoms::ondraggesture      ||
 
            aName == nsLayoutAtoms::oncontextmenu;
 }

@@ -4,8 +4,10 @@
 
       <label value="&find.label;"/>
       <hbox id="find-field-container">
-        <textbox id="find-field" oninput="find(this.value);" onfocus="onFindBarFocus();"
-                onkeypress="onFindBarKeyPress(event);" onblur="onFindBarBlur();"/>
+        <textbox id="find-field" oninput="find(this.value);"
+                onkeypress="onFindBarKeyPress(event);" onblur="onFindBarBlur();"
+                oncompositionstart="onFindBarCompositionStart(event);"
+                oncompositionend="onFindBarCompositionEnd(event);"/>
       </hbox>
       <toolbarbutton id="find-next" label="&findNext.label;" tooltiptext="&findNext.tooltip;"
                      command="cmd_findAgain" disabled="true" accesskey="&findNext.accesskey;"/>

@@ -120,6 +120,7 @@ protected:
   PRPackedBool mLinksOnly;
   PRBool mCaretBrowsingOn;
   PRBool mFocusLinks;
+  nsCOMPtr<nsIDOMElement> mFoundLink;
   PRPackedBool mLiteralTextSearchOnly;
   PRPackedBool mDontTryExactMatch;
   // mAllTheSame Char starts out PR_TRUE, becomes false when 

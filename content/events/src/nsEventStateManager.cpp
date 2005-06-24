@@ -4169,7 +4169,17 @@ NS_IMETHODIMP
 nsEventStateManager::SetFocusedContent(nsIContent* aContent)
 {
   mCurrentFocus = aContent;
+  if (mCurrentFocus)
+    mLastFocus = mCurrentFocus;
   mCurrentFocusFrame = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::GetLastFocusedContent(nsIContent** aContent)
+{
+  *aContent = mLastFocus;
+  NS_IF_ADDREF(*aContent);
   return NS_OK;
 }
 
@@ -4202,6 +4212,11 @@ nsEventStateManager::ContentRemoved(nsIContent* aContent)
     // in response to clicks or tabbing.
 
     SetFocusedContent(nsnull);
+  }
+
+  if (mLastFocus &&
+      nsContentUtils::ContentIsDescendantOf(mLastFocus, aContent)) {
+    mLastFocus = nsnull;
   }
 
   if (mHoverContent &&
@@ -4614,10 +4629,6 @@ nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
   nsCOMPtr<nsIDOMElement> oldFocusedElement;
   focusController->GetFocusedElement(getter_AddRefs(oldFocusedElement));
   nsCOMPtr<nsIContent> oldFocusedContent(do_QueryInterface(oldFocusedElement));
-
-  // Notify focus controller of new focus for this document
-  nsCOMPtr<nsIDOMElement> newFocusedElement(do_QueryInterface(aContent));
-  focusController->SetFocusedElement(newFocusedElement);
 
   // Temporarily set mCurrentFocus so that esm::GetContentState() tells
   // layout system to show focus on this element.
