@@ -57,6 +57,8 @@
 #include "nsRDFXMLParser.h"
 #include "nsRDFXMLSerializer.h"
 
+#include "rdfISerializer.h"
+
 //----------------------------------------------------------------------
 
 // Functions used to create new instances of a given object by the
@@ -100,6 +102,36 @@ MAKE_CTOR(RDFContainerUtils,RDFContainerUtils,RDFContainerUtils)
 
 MAKE_CTOR(RDFContentSink,RDFContentSink,RDFContentSink)
 MAKE_CTOR(RDFDefaultResource,DefaultResource,RDFResource)
+
+#define MAKE_RDF_CTOR(_func,_new,_ifname)                            \
+static NS_IMETHODIMP                                                 \
+CreateNew##_func(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
+{                                                                    \
+    if (!aResult) {                                                  \
+        return NS_ERROR_INVALID_POINTER;                             \
+    }                                                                \
+    if (aOuter) {                                                    \
+        *aResult = nsnull;                                           \
+        return NS_ERROR_NO_AGGREGATION;                              \
+    }                                                                \
+    rdfI##_ifname* inst;                                             \
+    nsresult rv = NS_New##_new(&inst);                               \
+    if (NS_FAILED(rv)) {                                             \
+        *aResult = nsnull;                                           \
+        return rv;                                                   \
+    }                                                                \
+    rv = inst->QueryInterface(aIID, aResult);                        \
+    if (NS_FAILED(rv)) {                                             \
+        *aResult = nsnull;                                           \
+    }                                                                \
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      \
+    return rv;                                                       \
+}
+
+extern nsresult
+NS_NewTriplesSerializer(rdfISerializer** aResult);
+
+MAKE_RDF_CTOR(TriplesSerializer, TriplesSerializer, Serializer)
 
 // The list of components we register
 static const nsModuleComponentInfo components[] = 
@@ -173,6 +205,12 @@ static const nsModuleComponentInfo components[] =
       NS_RDFXMLSERIALIZER_CID,
       NS_RDF_CONTRACTID "/xml-serializer;1",
       nsRDFXMLSerializer::Create
+    },
+
+    { "RDF/NTriples Serializer",
+      NS_RDFNTRIPLES_SERIALIZER_CID,
+      NS_RDF_SERIALIZER "ntriples",
+      CreateNewTriplesSerializer
     },
 
     // XXX move this to XPFE at some point.

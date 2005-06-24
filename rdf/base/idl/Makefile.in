@@ -46,6 +46,9 @@ MODULE		= rdf
 GRE_MODULE	= 1
 
 XPIDLSRCS	= \
+		rdfIDataSource.idl \
+		rdfITripleVisitor.idl \
+		rdfISerializer.idl \
 		nsIRDFCompositeDataSource.idl \
 		nsIRDFContainer.idl \
 		nsIRDFContainerUtils.idl \

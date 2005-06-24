@@ -95,6 +95,9 @@ static const char kURI##prefix##_##name[] = ns #name
    willing to record the statement. */
 #define NS_RDF_ASSERTION_REJECTED NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_RDF, 3)
 
+/* Return this from rdfITripleVisitor to stop cycling */
+#define NS_RDF_STOP_VISIT         NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_RDF, 4)
+
 
 
 /* ContractID prefixes for RDF DLL registration. */
@@ -104,6 +107,8 @@ static const char kURI##prefix##_##name[] = ns #name
 #define NS_RDF_RESOURCE_FACTORY_CONTRACTID          "@mozilla.org/rdf/resource-factory;1"
 #define NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX   NS_RDF_RESOURCE_FACTORY_CONTRACTID "?name="
 #define NS_RDF_INFER_DATASOURCE_CONTRACTID_PREFIX   NS_RDF_CONTRACTID "/infer-datasource;1?engine="
+
+#define NS_RDF_SERIALIZER                            NS_RDF_CONTRACTID "/serializer;1?format="
 
 // contract ID is in the form
 // @mozilla.org/rdf/delegate-factory;1?key=<key>&scheme=<scheme>

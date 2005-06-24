@@ -123,6 +123,8 @@
 #include "nsNameSpaceMap.h"
 #include "nsCRT.h"
 
+#include "rdfIDataSource.h"
+
 //----------------------------------------------------------------------
 
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
@@ -215,7 +217,8 @@ class RDFXMLDataSourceImpl : public nsIRDFDataSource,
                              public nsIRDFRemoteDataSource,
                              public nsIRDFXMLSink,
                              public nsIRDFXMLSource,
-                             public nsIStreamListener
+                             public nsIStreamListener,
+                             public rdfIDataSource
 {
 protected:
     enum LoadState {
@@ -386,6 +389,21 @@ public:
     // nsIStreamListener
     NS_DECL_NSISTREAMLISTENER
 
+    // rdfIDataSource
+    NS_IMETHOD VisitAllSubjects(rdfITripleVisitor *aVisitor) {
+        nsresult rv;
+        nsCOMPtr<rdfIDataSource> rdfds = do_QueryInterface(mInner, &rv);
+        if (NS_FAILED(rv)) return rv;
+        return rdfds->VisitAllSubjects(aVisitor);
+    } 
+
+    NS_IMETHOD VisitAllTriples(rdfITripleVisitor *aVisitor) {
+        nsresult rv;
+        nsCOMPtr<rdfIDataSource> rdfds = do_QueryInterface(mInner, &rv);
+        if (NS_FAILED(rv)) return rv;
+        return rdfds->VisitAllTriples(aVisitor);
+    } 
+
     // Implementation methods
     PRBool
     MakeQName(nsIRDFResource* aResource,
@@ -519,13 +537,14 @@ RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
 }
 
 
-NS_IMPL_ISUPPORTS6(RDFXMLDataSourceImpl,
+NS_IMPL_ISUPPORTS7(RDFXMLDataSourceImpl,
                    nsIRDFDataSource,
                    nsIRDFRemoteDataSource,
                    nsIRDFXMLSink,
                    nsIRDFXMLSource,
                    nsIRequestObserver,
-                   nsIStreamListener)
+                   nsIStreamListener,
+                   rdfIDataSource)
 
 
 nsresult
