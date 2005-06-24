@@ -400,7 +400,9 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(Bookmark *) addBookmark:(NSString *)aTitle url:(NSString *)aURL inPosition:(unsigned)aIndex isSeparator:(BOOL)aBool
 {
-  return [self addBookmark:aTitle inPosition:aIndex keyword:[NSString string] url:aURL description:[NSString string] lastVisit:[NSDate date] status:kBookmarkOKStatus isSeparator:aBool];
+  if ([aTitle length] == 0)
+    aTitle = aURL;
+  return [self addBookmark:aTitle inPosition:aIndex keyword:@"" url:aURL description:@"" lastVisit:[NSDate date] status:kBookmarkOKStatus isSeparator:aBool];
 }
 
 // full bodied addition
