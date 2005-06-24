@@ -22,7 +22,6 @@ classic.jar:
         skin/classic/global/menulist.css
         skin/classic/global/popup.css
         skin/classic/global/preferences.css
-        skin/classic/global/printing.css
         skin/classic/global/printPageSetup.css
         skin/classic/global/printPreview.css
         skin/classic/global/progressmeter.css
@@ -70,9 +69,6 @@ classic.jar:
         skin/classic/global/icons/folder-item.png                   (icons/folder-item.png)
         skin/classic/global/icons/Minimize.gif                      (icons/Minimize.gif)
         skin/classic/global/icons/notfound.png                      (icons/notfound.png)
-        skin/classic/global/icons/pg-landscape.gif                  (icons/pg-landscape.gif)
-        skin/classic/global/icons/pg-landscape-small.gif            (icons/pg-landscape-small.gif)
-        skin/classic/global/icons/pg-portrait.gif                   (icons/pg-portrait.gif)
         skin/classic/global/icons/Print-preview.png                 (icons/Print-preview.png)
         skin/classic/global/icons/Portrait.png                      (icons/Portrait.png)
         skin/classic/global/icons/Landscape.png                     (icons/Landscape.png)
@@ -98,6 +94,7 @@ classic.jar:
         skin/classic/global/scrollbar/slider.gif                    (scrollbar/slider.gif)
         skin/classic/global/tabDragDrop/tabDragIndicator.png        (tabDragDrop/tabDragIndicator.png)
         skin/classic/global/toolbar/chevron.gif                     (toolbar/chevron.gif)
+        skin/classic/global/toolbar/chevron-rtl.gif                 (toolbar/chevron-rtl.gif)
         skin/classic/global/toolbar/Lighten.png                     (toolbar/Lighten.png)
         skin/classic/global/toolbar/spring.gif                      (toolbar/spring.gif)
         skin/classic/global/tree/columnpicker.gif                   (tree/columnpicker.gif)
