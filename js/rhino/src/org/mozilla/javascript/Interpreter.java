@@ -1521,6 +1521,10 @@ public class Interpreter
             itsData.longJumps.put(offsetSite, jumpDestination);
             offset = 0;
         }
+        int deltaCapacity = offsetSite + 2 - itsData.itsICode.length;
+        if (deltaCapacity > 0) {
+            increaseICodeCapasity(deltaCapacity);
+        }        
         itsData.itsICode[offsetSite] = (byte)(offset >> 8);
         itsData.itsICode[offsetSite + 1] = (byte)offset;
     }
