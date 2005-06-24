@@ -424,9 +424,12 @@ protected:
 
     // Determines whether we can safely cache the current mContentViewer in
     // session history.  This checks a number of factors such as cache policy,
-    // pending requests, and unload handlers.  |aNewRequest| should be the
-    // request for the document to be loaded in place of the current document.
-    PRBool CanSavePresentation(nsIRequest *aNewRequest);
+    // pending requests, and unload handlers.
+    // |aLoadType| should be the load type that will replace the current
+    // presentation.  |aNewRequest| should be the request for the document to
+    // be loaded in place of the current document, or null if such a request
+    // has not been created yet.
+    PRBool CanSavePresentation(PRUint32 aLoadType, nsIRequest *aNewRequest);
 
     // Captures the state of the supporting elements of the presentation
     // (the "window" object, docshell tree, meta-refresh loads, and security
@@ -471,8 +474,9 @@ protected:
     // Indicates that a DocShell in this "docshell tree" is printing
     PRPackedBool               mIsPrintingOrPP;
 
-    // Indicates to SetupNewViewer() that we are in the process of saving the
-    // presentation for mContentViewer.
+    // Indicates to CreateContentViewer() that it is safe to cache the old
+    // presentation of the page, and to SetupNewViewer() that the old viewer
+    // should be passed a SHEntry to save itself into.
     PRPackedBool               mSavingOldViewer;
 
     PRUint32                   mAppType;
