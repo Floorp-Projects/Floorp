@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#  Axel Hecht <axel@pike.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,39 +43,24 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= rdf
-LIBRARY_NAME	= rdfbase_s
-LIBXUL_LIBRARY  = 1
-
+PROGRAM		= triplescat$(BIN_SUFFIX)
+CPPSRCS		= triplescat.cpp
 REQUIRES	= xpcom \
-		  string \
-		  rdfutil \
+		  rdf \
 		  necko \
-		  content \
-		  htmlparser \
-		  unicharutil \
+		  string \
 		  $(NULL)
 
-CPPSRCS		= \
-		rdfTriplesSerializer.cpp \
-		nsCompositeDataSource.cpp \
-		nsContainerEnumerator.cpp \
-		nsDefaultResourceFactory.cpp \
-		nsInMemoryDataSource.cpp \
-		nsNameSpaceMap.cpp \
-		nsRDFContentSink.cpp \
-		nsRDFContainer.cpp \
-		nsRDFContainerUtils.cpp \
-		nsRDFParserUtils.cpp \
-		nsRDFService.cpp \
-		nsRDFXMLDataSource.cpp \
-		nsRDFXMLParser.cpp \
-		nsRDFXMLSerializer.cpp \
-		rdfutil.cpp \
+LIBS		= \
+		$(LIBS_DIR) \
+		$(XPCOM_LIBS) \
+		$(NSPR_LIBS) \
 		$(NULL)
 
-# we don't want the shared lib, but we want to force the creation of a static lib.
-FORCE_STATIC_LIB = 1
+ifeq ($(OS_ARCH),WINNT)
+MAPFILE=triplescat.map
+endif
 
 include $(topsrcdir)/config/rules.mk
 
+CXXFLAGS += $(MOZ_TOOLKIT_REGISTRY_CFLAGS)

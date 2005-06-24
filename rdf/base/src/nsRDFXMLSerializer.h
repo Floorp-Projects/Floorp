@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Chris Waterson <waterson@netscape.com>
+ *   Axel Hecht <axel@pike.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -45,6 +46,9 @@
 #include "nsIRDFXMLSource.h"
 #include "nsNameSpaceMap.h"
 #include "nsXPIDLString.h"
+
+#include "nsDataHashtable.h"
+#include "rdfITripleVisitor.h"
 
 class nsString;
 class nsIOutputStream;
@@ -71,11 +75,10 @@ protected:
     virtual ~nsRDFXMLSerializer();
 
     // Implementation methods
-    PRBool
-    MakeQName(nsIRDFResource* aResource,
-              nsCString& aPproperty,
-              nsCString& aNameSpacePrefix,
-              nsCString& aNameSpaceURI);
+    nsresult
+    RegisterQName(nsIRDFResource* aResource);
+    nsresult
+    GetQName(nsIRDFResource* aResource, nsCString& aQName);
 
     nsresult
     SerializeInlineAssertion(nsIOutputStream* aStream,
@@ -121,15 +124,18 @@ protected:
     nsresult
     CollectNamespaces();
 
-    nsresult
-    EnsureNameSpaceFor(nsIRDFResource* aResource);
-
     PRBool
     IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType);
 
     nsCOMPtr<nsIRDFDataSource> mDataSource;
     nsNameSpaceMap mNameSpaces;
     nsXPIDLCString mBaseURLSpec;
+
+    // hash mapping resources to utf8-encoded QNames
+    nsDataHashtable<nsISupportsHashKey, nsCString> mQNames;
+    friend class QNameCollector;
+
+    PRUint32 mPrefixID;
 
     static PRInt32 gRefCnt;
     static nsIRDFResource* kRDF_instanceOf;
