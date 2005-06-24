@@ -56,7 +56,6 @@
 
 #define kExpatSeparatorChar 0xFFFF
 
-static const char kWhitespace[] = " \r\n\t"; // Optimized for typical cases
 static const PRUnichar kUTF16[] = { 'U', 'T', 'F', '-', '1', '6', '\0' };
 
 /***************************** EXPAT CALL BACKS ******************************/
