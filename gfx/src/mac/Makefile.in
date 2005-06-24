@@ -120,6 +120,6 @@ CFLAGS      += $(TK_CFLAGS)
 INCLUDES    += $(TK_CFLAGS) -I$(srcdir)/..
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-LDFLAGS += -framework Cocoa
+EXTRA_DSO_LDOPTS += -framework Cocoa
 endif
 

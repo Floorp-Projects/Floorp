@@ -131,6 +131,11 @@
 		035A4973079DC83D0084B05F = {
 			buildActionMask = 2147483647;
 			files = (
+				4D29978D0869C95D00E84287,
+				4D29978E0869C95D00E84287,
+				4D29978F0869C95D00E84287,
+				4D2997900869C95D00E84287,
+				4D2997910869C95D00E84287,
 				035A4AA0079DCB0B0084B05F,
 				035A4AA1079DCB0B0084B05F,
 				035A4AA2079DCB0B0084B05F,
@@ -158,7 +163,7 @@
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = History;
 				SECTORDER_FLAGS = "";
@@ -430,6 +435,11 @@
 		03C5AB0E07722DFC00EAF77D = {
 			buildActionMask = 2147483647;
 			files = (
+				4D2997860869C93800E84287,
+				4D2997870869C93800E84287,
+				4D2997880869C93800E84287,
+				4D2997890869C93800E84287,
+				4D29978A0869C93800E84287,
 				03C5AC3507722FA200EAF77D,
 				03C5AC3607722FA200EAF77D,
 				03C5AC3707722FA200EAF77D,
@@ -457,7 +467,7 @@
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Downloads;
 				SECTORDER_FLAGS = "";
@@ -629,6 +639,11 @@
 		03E2D8510771F73F00BD2443 = {
 			buildActionMask = 2147483647;
 			files = (
+				4D29977F0869C91100E84287,
+				4D2997800869C91100E84287,
+				4D2997810869C91100E84287,
+				4D2997820869C91100E84287,
+				4D2997830869C91100E84287,
 				03E2D8740771F90B00BD2443,
 				03E2D8750771F90B00BD2443,
 				03E2D8760771F90B00BD2443,
@@ -656,7 +671,7 @@
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Tabs;
 				SECTORDER_FLAGS = "";
@@ -2381,7 +2396,7 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/Embed/components ../intl/unicharutil/util";
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lmozz -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lpthread -lm";
 				PREBINDING = NO;
 				PRODUCT_NAME = Camino;
 				SECTORDER_FLAGS = "";
@@ -5185,6 +5200,12 @@
 			files = (
 				3F44AD7D05BDFB9F00CB4B08,
 				3F44AD7E05BDFB9F00CB4B08,
+				4D2996660869C5FA00E84287,
+				4D29966A0869C5FA00E84287,
+				4D29966B0869C5FA00E84287,
+				4D2996690869C5FA00E84287,
+				4D2996680869C5FA00E84287,
+				4D2996670869C5FA00E84287,
 				3F44AD7F05BDFB9F00CB4B08,
 				3F44AD8005BDFB9F00CB4B08,
 				3F44AD8105BDFB9F00CB4B08,
@@ -5290,7 +5311,7 @@
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Appearance;
 				SECTORDER_FLAGS = "";
@@ -5393,6 +5414,11 @@
 		3F44AD9705BDFB9F00CB4B08 = {
 			buildActionMask = 2147483647;
 			files = (
+				4D2997680869C71C00E84287,
+				4D2997690869C71C00E84287,
+				4D29976A0869C71C00E84287,
+				4D29976B0869C71C00E84287,
+				4D29976C0869C71C00E84287,
 				3F44AD9805BDFB9F00CB4B08,
 				3F44AD9905BDFB9F00CB4B08,
 				3F44AD9A05BDFB9F00CB4B08,
@@ -5470,7 +5496,7 @@
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Navigation;
 				SECTORDER_FLAGS = "";
@@ -5559,6 +5585,11 @@
 		3F44ADAB05BDFB9F00CB4B08 = {
 			buildActionMask = 2147483647;
 			files = (
+				4D2997700869C75E00E84287,
+				4D2997710869C75E00E84287,
+				4D2997720869C75E00E84287,
+				4D2997730869C75E00E84287,
+				4D2997740869C75E00E84287,
 				3F44ADAC05BDFB9F00CB4B08,
 				3F44ADAD05BDFB9F00CB4B08,
 				3F44ADAE05BDFB9F00CB4B08,
@@ -5650,7 +5681,7 @@
 				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../intl/unicharutil/util ../js/src ../dist/Embed/components";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Privacy;
 				SECTORDER_FLAGS = "";
@@ -5733,14 +5764,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				3F44ADCE05BDFBA000CB4B08,
-				3F44ADCF05BDFBA000CB4B08,
-				3F44ADD005BDFBA000CB4B08,
-				3F44ADD105BDFBA000CB4B08,
-				3F44ADD205BDFBA000CB4B08,
+				4D29989F0869CA5200E84287,
 				3F44ADD305BDFBA000CB4B08,
 				3F44ADD405BDFBA000CB4B08,
 				3F44ADD505BDFBA000CB4B08,
 				3F44ADD605BDFBA000CB4B08,
+				3F44ADCF05BDFBA000CB4B08,
+				3F44ADD005BDFBA000CB4B08,
+				3F44ADD105BDFBA000CB4B08,
+				3F44ADD205BDFBA000CB4B08,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5845,7 +5877,7 @@
 				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../intl/unicharutil/util ../js/src ../dist/Embed/components";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Security;
 				SECTORDER_FLAGS = "";
@@ -5922,14 +5954,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				3F44ADE505BDFBA000CB4B08,
-				3F44ADE605BDFBA000CB4B08,
-				3F44ADE705BDFBA000CB4B08,
-				3F44ADE805BDFBA000CB4B08,
-				3F44ADE905BDFBA000CB4B08,
+				4D2998A20869CA5F00E84287,
 				3F44ADEA05BDFBA000CB4B08,
 				3F44ADEB05BDFBA000CB4B08,
 				3F44ADEC05BDFBA000CB4B08,
 				3F44ADED05BDFBA000CB4B08,
+				3F44ADE605BDFBA000CB4B08,
+				3F44ADE705BDFBA000CB4B08,
+				3F44ADE805BDFBA000CB4B08,
+				3F44ADE905BDFBA000CB4B08,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6034,7 +6067,7 @@
 				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../intl/unicharutil/util ../js/src ../dist/Embed/components";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = WebFeatures;
 				SECTORDER_FLAGS = "";
@@ -6111,14 +6144,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				3F44ADFC05BDFBA000CB4B08,
-				3F44ADFD05BDFBA000CB4B08,
-				3F44ADFE05BDFBA000CB4B08,
-				3F44ADFF05BDFBA000CB4B08,
-				3F44AE0005BDFBA000CB4B08,
+				4D2998A50869CA6B00E84287,
 				3F44AE0105BDFBA000CB4B08,
 				3F44AE0205BDFBA000CB4B08,
 				3F44AE0305BDFBA000CB4B08,
 				3F44AE0405BDFBA000CB4B08,
+				3F44ADFD05BDFBA000CB4B08,
+				3F44ADFE05BDFBA000CB4B08,
+				3F44ADFF05BDFBA000CB4B08,
+				3F44AE0005BDFBA000CB4B08,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6241,7 +6275,7 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader ../extensions/transformiix/build";
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lxpcom_compat -lmozjs -lmozjpeg -ljsj -lmozpng -lpthread -lm";
+				OTHER_LDFLAGS = "-lpthread -lm";
 				PRODUCT_NAME = Camino;
 				SECTORDER_FLAGS = "";
 				WRAPPER_EXTENSION = app;
@@ -8894,6 +8928,20 @@
 				3F44AFB805BDFBA000CB4B08,
 				3F44AFB905BDFBA000CB4B08,
 				3F44AFBA05BDFBA000CB4B08,
+				4D29957E0869C44B00E84287,
+				4D2995800869C44B00E84287,
+				4D29957A0869C44B00E84287,
+				4D2995790869C44B00E84287,
+				4D2995770869C44B00E84287,
+				4D29957B0869C44B00E84287,
+				4D29957D0869C44B00E84287,
+				4D2995780869C44B00E84287,
+				4D29957C0869C44B00E84287,
+				4D29957F0869C44B00E84287,
+				4D2995760869C44B00E84287,
+				4DC41D400869D7A400947044,
+				4DC41D3F0869D7A400947044,
+				4DC41D410869D7A400947044,
 				3F44AFBB05BDFBA000CB4B08,
 				3F44AFBC05BDFBA000CB4B08,
 				3F44AFBD05BDFBA000CB4B08,
@@ -10970,6 +11018,276 @@
 //4D2
 //4D3
 //4D4
+		4D2995760869C44B00E84287 = {
+			fileRef = F6BD637F01B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2995770869C44B00E84287 = {
+			fileRef = F6BD638001B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2995780869C44B00E84287 = {
+			fileRef = F5247C320228B91F013DD99A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2995790869C44B00E84287 = {
+			fileRef = F6BD638101B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29957A0869C44B00E84287 = {
+			fileRef = F6BD638201B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29957B0869C44B00E84287 = {
+			fileRef = F5247C340228B91F013DD99A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29957C0869C44B00E84287 = {
+			fileRef = F5247C350228B91F013DD99A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29957D0869C44B00E84287 = {
+			fileRef = F5247C360228B91F013DD99A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29957E0869C44B00E84287 = {
+			fileRef = F57F0F470209DF5301A967DF;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29957F0869C44B00E84287 = {
+			fileRef = 0FA8EF970423B1A500A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2995800869C44B00E84287 = {
+			fileRef = 3F12FC56072E8ECB00995ED9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2996660869C5FA00E84287 = {
+			fileRef = 3FE5B9FC068A090F0001CECD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2996670869C5FA00E84287 = {
+			fileRef = F6BD638001B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2996680869C5FA00E84287 = {
+			fileRef = F6BD638101B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2996690869C5FA00E84287 = {
+			fileRef = F6BD638201B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29966A0869C5FA00E84287 = {
+			fileRef = F57F0F470209DF5301A967DF;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29966B0869C5FA00E84287 = {
+			fileRef = 3F12FC56072E8ECB00995ED9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997680869C71C00E84287 = {
+			fileRef = F57F0F470209DF5301A967DF;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997690869C71C00E84287 = {
+			fileRef = 3F12FC56072E8ECB00995ED9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29976A0869C71C00E84287 = {
+			fileRef = F6BD638201B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29976B0869C71C00E84287 = {
+			fileRef = F6BD638101B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29976C0869C71C00E84287 = {
+			fileRef = F6BD638001B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997700869C75E00E84287 = {
+			fileRef = F57F0F470209DF5301A967DF;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997710869C75E00E84287 = {
+			fileRef = 3F12FC56072E8ECB00995ED9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997720869C75E00E84287 = {
+			fileRef = F6BD638201B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997730869C75E00E84287 = {
+			fileRef = F6BD638101B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997740869C75E00E84287 = {
+			fileRef = F6BD638001B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29977F0869C91100E84287 = {
+			fileRef = F57F0F470209DF5301A967DF;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997800869C91100E84287 = {
+			fileRef = 3F12FC56072E8ECB00995ED9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997810869C91100E84287 = {
+			fileRef = F6BD638201B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997820869C91100E84287 = {
+			fileRef = F6BD638101B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997830869C91100E84287 = {
+			fileRef = F6BD638001B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997860869C93800E84287 = {
+			fileRef = F57F0F470209DF5301A967DF;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997870869C93800E84287 = {
+			fileRef = 3F12FC56072E8ECB00995ED9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997880869C93800E84287 = {
+			fileRef = F6BD638201B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997890869C93800E84287 = {
+			fileRef = F6BD638101B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29978A0869C93800E84287 = {
+			fileRef = F6BD638001B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29978D0869C95D00E84287 = {
+			fileRef = F57F0F470209DF5301A967DF;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29978E0869C95D00E84287 = {
+			fileRef = 3F12FC56072E8ECB00995ED9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29978F0869C95D00E84287 = {
+			fileRef = F6BD638201B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997900869C95D00E84287 = {
+			fileRef = F6BD638101B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2997910869C95D00E84287 = {
+			fileRef = F6BD638001B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D29989F0869CA5200E84287 = {
+			fileRef = 3F12FC56072E8ECB00995ED9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2998A20869CA5F00E84287 = {
+			fileRef = 3F12FC56072E8ECB00995ED9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4D2998A50869CA6B00E84287 = {
+			fileRef = 3F12FC56072E8ECB00995ED9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		4D5881750864B276001305B3 = {
 			buildActionMask = 2147483647;
 			dstPath = plugins;
@@ -10998,6 +11316,48 @@
 		};
 		4D58817B0864B2AE001305B3 = {
 			fileRef = F56610BC0394775201A9666E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DC41D3C0869D7A400947044 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libjsj.a;
+			path = ../dist/lib/libjsj.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		4DC41D3D0869D7A400947044 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libmozjpeg.a;
+			path = ../dist/lib/libmozjpeg.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		4DC41D3E0869D7A400947044 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libmozpng.a;
+			path = ../dist/lib/libmozpng.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		4DC41D3F0869D7A400947044 = {
+			fileRef = 4DC41D3C0869D7A400947044;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DC41D400869D7A400947044 = {
+			fileRef = 4DC41D3D0869D7A400947044;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DC41D410869D7A400947044 = {
+			fileRef = 4DC41D3E0869D7A400947044;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -11234,7 +11594,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libtransformiix.a;
-			path = ../dist/bin/components/libtransformiix.a;
+			path = ../dist/lib/components/libtransformiix.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -11248,7 +11608,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libcomposer.a;
-			path = ../dist/bin/components/libcomposer.a;
+			path = ../dist/lib/components/libcomposer.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -14092,6 +14452,9 @@
 				A7FD31C90466004E00A80196,
 				A7C1276F0495618300A967F8,
 				3FECC8E505D1FE800068E7ED,
+				4DC41D3D0869D7A400947044,
+				4DC41D3C0869D7A400947044,
+				4DC41D3E0869D7A400947044,
 			);
 			isa = PBXGroup;
 			name = "Gecko Static Components";
@@ -14158,7 +14521,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libhtmlpars.a;
-			path = ../htmlparser/src/libhtmlpars.a;
+			path = ../dist/lib/components/libhtmlpars.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
