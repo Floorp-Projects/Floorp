@@ -99,6 +99,7 @@ public class Main implements ContextListener
     */
     public void setBreakOnExceptions(boolean value) {
         dim.breakOnExceptions = value;
+        debugGui.menubar.breakOnExceptions.setSelected(value);
     }
 
    /**
@@ -106,6 +107,7 @@ public class Main implements ContextListener
     */
     public void setBreakOnEnter(boolean value) {
         dim.breakOnEnter = value;
+        debugGui.menubar.breakOnEnter.setSelected(value);
     }
 
    /**
@@ -113,6 +115,7 @@ public class Main implements ContextListener
     */
     public void setBreakOnReturn(boolean value) {
         dim.breakOnReturn = value;
+        debugGui.menubar.breakOnReturn.setSelected(value);
     }
 
     /**
