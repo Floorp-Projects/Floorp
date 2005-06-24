@@ -5160,6 +5160,7 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
         }
 
         mContentViewer->Close(aSavePresentation ? mOSHE.get() : nsnull);
+        mContentViewer->Hide();
 
         // It's unsafe to actually destroy the content viewer here.
         // In particular, if we're called from within a plugin's event loop,
