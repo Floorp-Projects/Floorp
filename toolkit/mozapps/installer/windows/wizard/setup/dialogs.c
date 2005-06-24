@@ -613,22 +613,19 @@ int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
 
 void BrowseForDirectory(HWND hParent)
 { 
-  LPITEMIDLIST  itemIDList;
-  BROWSEINFO    browseInfo;
+	LPITEMIDLIST  itemIDList;
+	BROWSEINFO    browseInfo;
   char          currDir[MAX_PATH];
+  
+  GetCurrentDirectory(MAX_PATH, currDir);
 
-  if(SHGetSpecialFolderLocation(hParent, CSIDL_PROGRAM_FILES, &itemIDList) == S_OK)
-    SHGetPathFromIDList(itemIDList, (LPTSTR) currDir);
-  else
-    strncpy(currDir, "C:\\", sizeof(currDir));
-
-  browseInfo.hwndOwner		  = hParent;
-  browseInfo.pidlRoot			  = NULL;
-  browseInfo.pszDisplayName	= currDir;
-  browseInfo.lpszTitle		  = sgInstallGui.szBrowseInfo;
-  browseInfo.ulFlags			  = BIF_USENEWUI | BIF_RETURNONLYFSDIRS;
-  browseInfo.lpfn				    = NULL;
-  browseInfo.lParam			    = 0;
+	browseInfo.hwndOwner		  = hParent;
+	browseInfo.pidlRoot			  = NULL;
+	browseInfo.pszDisplayName	= currDir;
+	browseInfo.lpszTitle		  = sgInstallGui.szBrowseInfo;
+	browseInfo.ulFlags			  = BIF_USENEWUI | BIF_RETURNONLYFSDIRS;
+	browseInfo.lpfn				    = NULL;
+	browseInfo.lParam			    = 0;
 
   if (currDir[0]) {
     browseInfo.lParam = (LPARAM) strdup(currDir);
