@@ -44,6 +44,9 @@ var gSearchRemovedTerms = new Array;
 var gSearchScope;
 var gSearchBooleanRadiogroup;
 
+var gUniqueSearchTermCounter = 0; // gets bumped every time we add a search term so we can always 
+                                  // dynamically generate unique IDs for the terms.
+
 // cache these so we don't have to hit the string bundle for them
 var gMoreButtonTooltipText;
 var gLessButtonTooltipText;
@@ -198,38 +201,62 @@ function initializeSearchRows(scope, searchTerms)
         gTotalSearchTerms++;
     }
     initializeBooleanWidgets();
-    if (gTotalSearchTerms == 1)
-        document.getElementById("less0").setAttribute("disabled", "true");
+    updateRemoveRowButton();
 }
 
-function scrollToLastSearchTerm(index)
+// enables/disables tless button for the first row of search terms.
+function updateRemoveRowButton()
 {
-    if (index > 0)
-      gSearchTermList.ensureIndexIsVisible(index);
+  var firstListItem = gSearchTermList.getItemAtIndex(0);
+  if (firstListItem)
+    firstListItem.lastChild.lastChild.lastChild.disabled = gTotalSearchTerms == 1;
 }
  
-function onMore(event, rowNumber)
+// Returns the actual list item row index in the list of search rows
+// that contains the passed in element id.
+function getSearchRowIndexForElement(aElement)
 {
-    createSearchRow(rowNumber, gSearchScope, null);
-    gTotalSearchTerms++;
-    if(gTotalSearchTerms==1)
-        document.getElementById("less0").setAttribute("disabled", "true");
-    else if (gTotalSearchTerms == 2)
-        document.getElementById("less0").removeAttribute("disabled");
+  var listitem = aElement;
+  while (listitem)
+{
+    if (listitem.localName == "listitem") 
+      break;
+    listitem = listitem.parentNode;
+  }
 
-    // the user just added a term, so scroll to it
-    scrollToLastSearchTerm(gTotalSearchTerms == 1 ? 0 : rowNumber + 1);
+  return gSearchTermList.getIndexOfItem(listitem);
 }
 
-function onLess(event, rowNumber)
+function onMore(event)
 {
-    if (gTotalSearchTerms > 1) {
-      removeSearchRow(rowNumber);    
+  // if we have an event, extract the list row index and use that as the row number
+  // for our insertion point. If there is no event, append to the end....
+
+  var rowIndex = gSearchTermList.getRowCount();
+  if (event)
+    rowIndex = getSearchRowIndexForElement(event.target) + 1; 
+
+  createSearchRow(rowIndex, gSearchScope, null);
+    gTotalSearchTerms++;
+  updateRemoveRowButton();
+
+    // the user just added a term, so scroll to it
+  gSearchTermList.ensureIndexIsVisible(rowIndex);
+}
+
+function onLess(event)
+{
+  if (gTotalSearchTerms > 1) 
+  {
+    var rowIndex;
+    if (event)
+{
+      removeSearchRow(getSearchRowIndexForElement(event.target));    
       --gTotalSearchTerms;
     }
+  }
 
-    if (gTotalSearchTerms ==1 )
-      document.getElementById("less0").setAttribute("disabled", "true");
+  updateRemoveRowButton();
 }
 
 // set scope on all visible searchattribute tags
@@ -246,10 +273,9 @@ function setSearchScope(scope)
 
 function updateSearchAttributes()
 {
-    for (var i=0; i<gSearchTerms.length; i++) {
+    for (var i=0; i<gSearchTerms.length; i++) 
         gSearchTerms[i].obj.searchattribute.refreshList();
     }
-}
 
 function booleanChanged(event) {
     // when boolean changes, we have to update all the attributes on the search terms
@@ -276,23 +302,20 @@ function createSearchRow(index, scope, searchTerm)
     var moreButton = document.createElement("button");
     var lessButton = document.createElement("button");
     moreButton.setAttribute("class", "small-button");
-    moreButton.setAttribute("oncommand", "onMore(event," + (index + 1) + ");");
+    moreButton.setAttribute("oncommand", "onMore(event);");
     moreButton.setAttribute('label', '+');
     moreButton.setAttribute('tooltiptext', gMoreButtonTooltipText);
     lessButton.setAttribute("class", "small-button");
-    lessButton.setAttribute("oncommand", "onLess(event," + index + ");");    
+    lessButton.setAttribute("oncommand", "onLess(event);");    
     lessButton.setAttribute('label', '\u2212');
     lessButton.setAttribute('tooltiptext', gLessButtonTooltipText);
 
     enclosingBox.setAttribute('align', 'right');
 
     // now set up ids:
-    searchAttr.id = "searchAttr" + index;
-    searchOp.id  = "searchOp" + index;
-    searchVal.id = "searchVal" + index;
-
-    moreButton.id = "more" + index;
-    lessButton.id = "less" + index;
+    searchAttr.id = "searchAttr" + gUniqueSearchTermCounter;
+    searchOp.id  = "searchOp" + gUniqueSearchTermCounter;
+    searchVal.id = "searchVal" + gUniqueSearchTermCounter;
 
     buttonBox.appendChild(moreButton);
     buttonBox.appendChild(lessButton);
@@ -305,46 +328,15 @@ function createSearchRow(index, scope, searchTerm)
                             null, searchVal,
                             null, buttonBox);
     var searchrow = constructRow(rowdata);
-    searchrow.id = "searchRow" + index;
-
-    // shift items in gSearchTerms
-    if (index < gTotalSearchTerms) {
-      for (var i = gSearchTerms.length - 1; i >= index; --i) {
-        var nextSearchObj = gSearchTerms[i].obj;
-
-        var newSearchObj = new searchTermContainer;
-        gSearchTerms[i + 1] = {obj:newSearchObj, scope:scope, searchTerm:searchTerm, initialized:true};
-
-        var nextSearchAttr = nextSearchObj.searchattribute;
-        nextSearchAttr.id = "searchAttr" + (i + 1);
-
-        var nextSearchOp = nextSearchObj.searchoperator;
-        nextSearchOp.id = "searchOp" + (i + 1);
-
-        var nextSearchVal = nextSearchObj.searchvalue;
-        nextSearchVal.id = "searchVal" + (i + 1);
-
-        nextSearchAttr.setAttribute("for", nextSearchOp.id + "," + nextSearchVal.id);
-        nextSearchOp.setAttribute("opfor", nextSearchVal.id);
-
-        newSearchObj.searchattribute = nextSearchAttr;
-        newSearchObj.searchoperator = nextSearchOp;
-        newSearchObj.searchvalue = nextSearchVal;
-        newSearchObj.booleanNodes = nextSearchObj.booleanNodes;
-      }
-    }
+    searchrow.id = "searchRow" + gUniqueSearchTermCounter;
 
     var searchTermObj = new searchTermContainer;
-
-    gSearchTerms[index] = {obj:searchTermObj, scope:scope, searchTerm:searchTerm, initialized:false};
-
     searchTermObj.searchattribute = searchAttr;
     searchTermObj.searchoperator = searchOp;
     searchTermObj.searchvalue = searchVal;
 
-    // now invalidate the newly created items because they've been inserted
-    // into the document, and XBL bindings will be inserted in their place
-    //searchAttr = searchOp = searchVal = undefined;
+    // now insert the new search term into our list of terms
+    gSearchTerms.splice(index, 0, {obj:searchTermObj, scope:scope, searchTerm:searchTerm, initialized:false});
 
     // and/or string handling:
     // this is scary - basically we want to take every other
@@ -380,37 +372,16 @@ function createSearchRow(index, scope, searchTerm)
     }
     else {
       var currentItem = gSearchTermList.getItemAtIndex(index);
-      resetIdsMore(index);
       gSearchTermList.insertBefore(searchrow, currentItem);
     }
-}
-
-function resetIdsMore(startIndex) {
-  var item = gSearchTermList.getItemAtIndex(gTotalSearchTerms - 1);
-  var index = gTotalSearchTerms - 1;
-  var more, less;
-  while(index >= startIndex) {
-    item.id = "searchRow" + (index + 1);
-
-    more = document.getElementById("more" + index);
-    more.id = "more" + (index + 1);
-    more.setAttribute("oncommand", "onMore(event," + (index + 2) + ");");
-    less = document.getElementById("less" + index);
-    less.id = "less" + (index + 1);
-    less.setAttribute("oncommand", "onLess(event," + (index + 1) + ");");
     
-    item = gSearchTermList.getPreviousItem(item, 1);
-    --index;
-  }
+    // bump our unique search term counter
+    gUniqueSearchTermCounter++;
 }
 
 function initializeTermFromId(id)
 {
-    // id is of the form searchAttr<n>
-    // strlen("searchAttr") == 10
-    // turn searchAttr<n> -> <n>
-    var index = parseInt(id.slice(10)); 
-    initializeTermFromIndex(index)
+  initializeTermFromIndex(getSearchRowIndexForElement(document.getElementById(id)));
 }
 
 function initializeTermFromIndex(index)
@@ -473,6 +444,7 @@ function removeSearchRow(index)
     // need to remove row from list, so walk upwards from the
     // searchattribute to find the first <listitem>
     var listitem = searchTermObj.searchattribute;
+
     while (listitem) {
         if (listitem.localName == "listitem") break;
         listitem = listitem.parentNode;
@@ -491,40 +463,9 @@ function removeSearchRow(index)
     }
 
     listitem.parentNode.removeChild(listitem);
-    // remove it from the list of terms - XXX this does it?
-    // remove the last element
-    gSearchTerms.length--;
-    if (index < gTotalSearchTerms - 1)
-       resetIdsLess(index);
-}
-
-function resetIdsLess(startIndex) {
-  // item after the one that was removed (has the same index as the one that was removed)
-  // gTotalSearchTerms has not been updated yet
-  var item = gSearchTermList.getItemAtIndex(startIndex);
-  var index = startIndex;
-  var searchAttr, searchOp, searchVal;
-  var more, less;
-  while(index < gTotalSearchTerms - 1) {
-    item.id = "searchRow" + index;
-
-    searchAttr = document.getElementById("searchAttr" + (index + 1));
-    searchAttr.id = "searchAttr" + index;
-    searchOp = document.getElementById("searchOp" + (index + 1));
-    searchOp.id = "searchOp" + index;
-    searchVal = document.getElementById("searchVal" + (index + 1));
-    searchVal.id = "searchVal" + index;
-
-    more = document.getElementById("more" + (index + 1));
-    more.id = "more" + index;
-    more.setAttribute("oncommand", "onMore(event," + (index + 1) + ");");
-    less = document.getElementById("less" + (index + 1));
-    less.id = "less" + index;
-    less.setAttribute("oncommand", "onLess(event," + index + ");");  
     
-    item = gSearchTermList.getNextItem(item, 1);
-    index++;
-  }
+    // now remove the item from our list of terms
+    gSearchTerms.splice(index, 1); 
 }
 
 // save the search terms from the UI back to the actual search terms
@@ -574,7 +515,7 @@ function onReset(event)
 {
     while (gTotalSearchTerms>0)
         removeSearchRow(--gTotalSearchTerms);
-    onMore(event, 0);
+    onMore(null);
 }
 
 // this is a helper routine used by our search term xbl widget
