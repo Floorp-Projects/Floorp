@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Christian Biesinger <cbiesinger@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -66,11 +67,13 @@
  * @internal
  * Line buffer structure, buffers data from an input stream.
  */
-struct nsLineBuffer {
-  char buf[kLineBufferSize+1];
-  char* start;
-  char* current;
-  char* end;
+template<typename CharT>
+class nsLineBuffer {
+  public:
+  CharT buf[kLineBufferSize+1];
+  CharT* start;
+  CharT* current;
+  CharT* end;
   PRBool empty;
 };
 
@@ -95,9 +98,10 @@ struct nsLineBuffer {
  *    }
  * @endcode
  */
-static nsresult
-NS_InitLineBuffer (nsLineBuffer ** aBufferPtr) {
-  *aBufferPtr = PR_NEW(nsLineBuffer);
+template<typename CharT>
+nsresult
+NS_InitLineBuffer (nsLineBuffer<CharT> ** aBufferPtr) {
+  *aBufferPtr = PR_NEW(nsLineBuffer<CharT>);
   if (!(*aBufferPtr))
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -129,14 +133,15 @@ NS_InitLineBuffer (nsLineBuffer ** aBufferPtr) {
  *         Input stream returned an error upon read. See
  *         nsIInputStream::read.
  */
-static nsresult
-NS_ReadLine (nsIInputStream* aStream, nsLineBuffer * aBuffer,
-             nsACString & aLine, PRBool *more) {
+template<typename CharT, class StreamType, class StringType>
+nsresult
+NS_ReadLine (StreamType* aStream, nsLineBuffer<CharT> * aBuffer,
+             StringType & aLine, PRBool *more) {
   nsresult rv = NS_OK;
   PRUint32 bytesRead;
   *more = PR_TRUE;
   PRBool eolStarted = PR_FALSE;
-  char eolchar = '\0';
+  CharT eolchar = '\0';
   aLine.Truncate();
   while (1) { // will be returning out of this loop on eol or eof
     if (aBuffer->empty) { // buffer is empty.  Read into it.

@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* vim:set expandtab ts=4 sw=4 sts=4 cin: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,18 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is mozilla.org unicode stream converter code.
  *
  * The Initial Developer of the Original Code is
- * Boris Zbarsky <bzbarsky@mit.edu>.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Christian Biesinger <cbiesinger@web.de>.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,25 +35,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef NSCONVERTEROUTPUTSTREAM_H_
+#define NSCONVERTEROUTPUTSTREAM_H_
 
-interface nsILineInputStream;
+#include "nsIOutputStream.h"
+#include "nsIConverterOutputStream.h"
+#include "nsCOMPtr.h"
 
-[scriptable, uuid(c97b466c-1e6e-4773-a4ab-2b2b3190a7a6)]
-interface nsILineInputStream : nsISupports
-{
-  /**
-   * Read a single line from the stream, where a line is a 
-   * possibly zero length sequence of 8bit chars terminated by a
-   * CR, LF, CRLF, LFCR, or eof.
-   * The line terminator is not returned.
-   * @retval false
-   *         End of file. This line is the last line of the file
-   *         (aLine is valid).
-   * @retval true
-   *         The file contains further lines.
-   * @note Do not mix readLine with other read functions.
-   *       Doing so can cause various problems and is not supported.
-   */
-  boolean readLine(out ACString aLine);
+class nsIUnicodeEncoder;
+class nsIOutputStream;
+
+/* ff8780a5-bbb1-4bc5-8ee7-057e7bc5c925 */
+#define NS_CONVERTEROUTPUTSTREAM_CID \
+{ 0xff8780a5, 0xbbb1, 0x4bc5, \
+  { 0x8e, 0xe7, 0x05, 0x7e, 0x7b, 0xc5, 0xc9, 0x25 } }
+
+class nsConverterOutputStream : public nsIConverterOutputStream {
+    public:
+        nsConverterOutputStream() {}
+
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIUNICHAROUTPUTSTREAM
+        NS_DECL_NSICONVERTEROUTPUTSTREAM
+
+    private:
+        ~nsConverterOutputStream();
+
+        nsCOMPtr<nsIUnicodeEncoder> mConverter;
+        nsCOMPtr<nsIOutputStream>   mOutStream;
 };
+
+#endif

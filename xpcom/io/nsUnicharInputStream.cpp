@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #include "nsIUnicharInputStream.h"
+#include "nsIInputStream.h"
 #include "nsIByteBuffer.h"
 #include "nsIUnicharBuffer.h"
 #include "nsIServiceManager.h"
@@ -56,14 +56,7 @@ public:
                            PRBool aTakeOwnership);
 
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Read(PRUnichar* aBuf,
-                  PRUint32 aCount,
-                  PRUint32 *aReadCount);
-  NS_IMETHOD ReadSegments(nsWriteUnicharSegmentFun aWriter,
-                          void* aClosure,
-                          PRUint32 aCount, PRUint32* aReadCount);
-  NS_IMETHOD Close();
+  NS_DECL_NSIUNICHARINPUTSTREAM
 
   const nsAString* mString;
   PRUint32 mPos;
@@ -104,7 +97,6 @@ StringUnicharInputStream::Read(PRUnichar* aBuf,
   nsAString::const_iterator iter;
   mString->BeginReading(iter);
   const PRUnichar* us = iter.get();
-  NS_ASSERTION(mLen >= mPos, "unsigned madness");
   PRUint32 amount = mLen - mPos;
   if (amount > aCount) {
     amount = aCount;
@@ -148,6 +140,24 @@ StringUnicharInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+StringUnicharInputStream::ReadString(PRUint32 aCount, nsAString& aString,
+                                     PRUint32* aReadCount)
+{
+  if (mPos >= mLen) {
+    *aReadCount = 0;
+    return NS_OK;
+  }
+  PRUint32 amount = mLen - mPos;
+  if (amount > aCount) {
+    amount = aCount;
+  }
+  aString = Substring(*mString, mPos, amount);
+  mPos += amount;
+  *aReadCount = amount;
+  return NS_OK;
+}
+
 nsresult StringUnicharInputStream::Close()
 {
   mPos = mLen;
@@ -188,14 +198,7 @@ public:
   nsresult Init(nsIInputStream* aStream, PRUint32 aBufSize);
 
   NS_DECL_ISUPPORTS
-  NS_IMETHOD Read(PRUnichar* aBuf,
-                  PRUint32 aCount,
-                  PRUint32 *aReadCount);
-  NS_IMETHOD ReadSegments(nsWriteUnicharSegmentFun aWriter,
-                          void* aClosure,
-                          PRUint32 aCount,
-                          PRUint32 *aReadCount);
-  NS_IMETHOD Close();
+  NS_DECL_NSIUNICHARINPUTSTREAM
 
 private:
   ~UTF8InputStream();
@@ -259,23 +262,23 @@ nsresult UTF8InputStream::Read(PRUnichar* aBuf,
                                PRUint32 *aReadCount)
 {
   NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
-  PRUint32 rv = mUnicharDataLength - mUnicharDataOffset;
+  PRUint32 readCount = mUnicharDataLength - mUnicharDataOffset;
   nsresult errorCode;
-  if (0 == rv) {
+  if (0 == readCount) {
     // Fill the unichar buffer
-    rv = Fill(&errorCode);
-    if (rv <= 0) {
+    readCount = Fill(&errorCode);
+    if (readCount <= 0) {
       *aReadCount = 0;
       return errorCode;
     }
   }
-  if (rv > aCount) {
-    rv = aCount;
+  if (readCount > aCount) {
+    readCount = aCount;
   }
   memcpy(aBuf, mUnicharData->GetBuffer() + mUnicharDataOffset,
-         rv * sizeof(PRUnichar));
-  mUnicharDataOffset += rv;
-  *aReadCount = rv;
+         readCount * sizeof(PRUnichar));
+  mUnicharDataOffset += readCount;
+  *aReadCount = readCount;
   return NS_OK;
 }
 
@@ -321,6 +324,35 @@ UTF8InputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
   
   return NS_OK;
 }
+
+NS_IMETHODIMP
+UTF8InputStream::ReadString(PRUint32 aCount, nsAString& aString,
+                            PRUint32* aReadCount)
+{
+  NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
+  PRUint32 readCount = mUnicharDataLength - mUnicharDataOffset;
+  nsresult errorCode;
+  if (0 == readCount) {
+    // Fill the unichar buffer
+    readCount = Fill(&errorCode);
+    if (readCount <= 0) {
+      *aReadCount = 0;
+      return errorCode;
+    }
+  }
+  if (readCount > aCount) {
+    readCount = aCount;
+  }
+  const PRUnichar* buf = NS_REINTERPRET_CAST(const PRUnichar*, 
+                                             mUnicharData->GetBuffer() +
+                                             mUnicharDataOffset);
+  aString.Assign(buf, readCount);
+
+  mUnicharDataOffset += readCount;
+  *aReadCount = readCount;
+  return NS_OK;
+}
+
 
 PRInt32 UTF8InputStream::Fill(nsresult * aErrorCode)
 {

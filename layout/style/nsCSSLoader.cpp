@@ -1212,7 +1212,9 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     // 8192 is a nice magic number that happens to be what a lot of
     // other things use for buffer sizes.
     rv = converterStream->Init(stream, "UTF-8",
-                               8192, PR_TRUE);
+                               8192,
+                               nsIConverterInputStream::
+                                    DEFAULT_REPLACEMENT_CHARACTER);
     
     if (NS_FAILED(rv)) {
       LOG_ERROR(("  Failed to initialize converter stream"));

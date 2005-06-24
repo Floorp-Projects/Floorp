@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Christian Biesinger <cbiesinger@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,14 +39,12 @@
 
 #include "nsISupports.idl"
 
-interface nsILineInputStream;
-
-[scriptable, uuid(c97b466c-1e6e-4773-a4ab-2b2b3190a7a6)]
-interface nsILineInputStream : nsISupports
+[scriptable, uuid(67f42475-ba80-40f8-ac0b-649c89230184)]
+interface nsIUnicharLineInputStream : nsISupports
 {
   /**
    * Read a single line from the stream, where a line is a 
-   * possibly zero length sequence of 8bit chars terminated by a
+   * possibly zero length sequence of characters terminated by a
    * CR, LF, CRLF, LFCR, or eof.
    * The line terminator is not returned.
    * @retval false
@@ -56,5 +55,5 @@ interface nsILineInputStream : nsISupports
    * @note Do not mix readLine with other read functions.
    *       Doing so can cause various problems and is not supported.
    */
-  boolean readLine(out ACString aLine);
+  boolean readLine(out AString aLine);
 };
