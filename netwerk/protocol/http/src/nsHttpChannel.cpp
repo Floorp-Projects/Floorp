@@ -308,6 +308,8 @@ nsHttpChannel::Connect(PRBool firstTime)
         ioService->GetOffline(&offline);
         if (offline)
             mLoadFlags |= LOAD_ONLY_FROM_CACHE;
+        else if (PL_strcmp(mConnectionInfo->ProxyType(), "unknown") == 0)
+            return ResolveProxy();  // Lazily resolve proxy info
 
         // Don't allow resuming when cache must be used
         if (mResuming && (mLoadFlags & LOAD_ONLY_FROM_CACHE)) {
@@ -920,6 +922,14 @@ nsHttpChannel::ProxyFailover()
     if (NS_FAILED(rv))
         return rv;
 
+    return ReplaceWithProxy(pi);
+}
+
+nsresult
+nsHttpChannel::ReplaceWithProxy(nsIProxyInfo *pi)
+{
+    nsresult rv;
+
     nsCOMPtr<nsIChannel> newChannel;
     rv = gHttpHandler->NewProxiedChannel(mURI, pi, getter_AddRefs(newChannel));
     if (NS_FAILED(rv))
@@ -938,6 +948,21 @@ nsHttpChannel::ProxyFailover()
     mListener = nsnull;
     mListenerContext = nsnull;
     return rv;
+}
+
+nsresult
+nsHttpChannel::ResolveProxy()
+{
+    LOG(("nsHttpChannel::ResolveProxy [this=%x]\n", this));
+
+    nsresult rv;
+
+    nsCOMPtr<nsIProtocolProxyService> pps =
+            do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    return pps->AsyncResolve(mURI, 0, this, getter_AddRefs(mProxyRequest));
 }
 
 PRBool
@@ -2940,6 +2965,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIResumableChannel)
     NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
     NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
+    NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 //-----------------------------------------------------------------------------
@@ -2975,7 +3001,9 @@ nsHttpChannel::Cancel(nsresult status)
     LOG(("nsHttpChannel::Cancel [this=%x status=%x]\n", this, status));
     mCanceled = PR_TRUE;
     mStatus = status;
-    if (mTransaction)
+    if (mProxyRequest)
+        mProxyRequest->Cancel(status);
+    else if (mTransaction)
         gHttpHandler->CancelTransaction(mTransaction, status);
     else if (mCachePump)
         mCachePump->Cancel(status);
@@ -3787,6 +3815,38 @@ NS_IMETHODIMP
 nsHttpChannel::AdjustPriority(PRInt32 delta)
 {
     return SetPriority(mPriority + delta);
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsIProtocolProxyCallback
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::OnProxyAvailable(nsICancelable *request, nsIURI *uri,
+                                nsIProxyInfo *pi, nsresult status)
+{
+    mProxyRequest = nsnull;
+
+    // If status is a failure code, then it means that we failed to resolve
+    // proxy info.  That is a non-fatal error assuming it wasn't because the
+    // request was canceled.  We just failover to DIRECT when proxy resolution
+    // fails (failure can mean that the PAC URL could not be loaded).
+    
+    // Need to replace this channel with a new one.  It would be complex to try
+    // to change the value of mConnectionInfo since so much of our state may
+    // depend on its state.
+    if (!mCanceled) {
+        status = ReplaceWithProxy(pi);
+
+        // XXX(darin): It'd be nice if removing ourselves from the loadgroup
+        // could be factored into ReplaceWithProxy somehow.
+        if (mLoadGroup && NS_SUCCEEDED(status))
+            mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+    }
+
+    if (NS_FAILED(status))
+        AsyncAbort(status);
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

@@ -571,12 +571,13 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, PRInt32 defaultPort)
     return PR_TRUE;
 }
 
-static const char kProxyType_HTTP[]   = "http";
-static const char kProxyType_PROXY[]  = "proxy";
-static const char kProxyType_SOCKS[]  = "socks";
-static const char kProxyType_SOCKS4[] = "socks4";
-static const char kProxyType_SOCKS5[] = "socks5";
-static const char kProxyType_DIRECT[] = "direct";
+static const char kProxyType_HTTP[]    = "http";
+static const char kProxyType_PROXY[]   = "proxy";
+static const char kProxyType_SOCKS[]   = "socks";
+static const char kProxyType_SOCKS4[]  = "socks4";
+static const char kProxyType_SOCKS5[]  = "socks5";
+static const char kProxyType_DIRECT[]  = "direct";
+static const char kProxyType_UNKNOWN[] = "unknown";
 
 const char *
 nsProtocolProxyService::ExtractProxyInfo(const char *start, nsProxyInfo **result)
@@ -802,10 +803,18 @@ nsProtocolProxyService::Resolve(nsIURI *uri, PRUint32 flags,
         // Query the PAC file synchronously.
         nsCString pacString;
         rv = mPACMan->GetProxyForURI(uri, pacString);
-        if (NS_FAILED(rv))
-            NS_WARNING("failed querying PAC file; trying DIRECT");
-        else
+        if (NS_SUCCEEDED(rv))
             ProcessPACString(pacString, result);
+        else if (rv == NS_ERROR_IN_PROGRESS) {
+            // Construct a special UNKNOWN proxy entry that informs the caller
+            // that the proxy info is yet to be determined.
+            rv = NewProxyInfo_Internal(kProxyType_UNKNOWN, EmptyCString(), -1,
+                                       0, 0, nsnull, result);
+            if (NS_FAILED(rv))
+                return rv;
+        }
+        else
+            NS_WARNING("failed querying PAC file; trying DIRECT");
     }
 
     ApplyFilters(uri, info, result);
