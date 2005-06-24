@@ -102,6 +102,7 @@ struct nsRoleMapEntry
   nsStateMapEntry attributeMap3;
   nsStateMapEntry attributeMap4;
   nsStateMapEntry attributeMap5;
+  nsStateMapEntry attributeMap6;
 };
 
 class nsAccessible : public nsAccessNodeWrap, 
@@ -139,7 +140,8 @@ public:
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
 
 protected:
-  PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, nsStateMapEntry *aStateMapEntry);
+  PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, 
+                         PRInt32 aStateNameSpace, nsStateMapEntry *aStateMapEntry);
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
   PRBool IsPartiallyVisible(PRBool *aIsOffscreen); 
@@ -175,6 +177,8 @@ protected:
   // For accessibles that have actions
   static void DoCommandCallback(nsITimer *aTimer, void *aClosure);
   nsresult DoCommand();
+
+  PRBool IsSpecialXHTMLApplication();  // Forwards to nsPIAccessibleDocument getter
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;

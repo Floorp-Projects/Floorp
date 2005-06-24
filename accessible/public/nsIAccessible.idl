@@ -287,9 +287,12 @@ interface nsIAccessible : nsISupports
   const unsigned long  STATE_HASPOPUP           = 0x40000000;  // New in MSAA 2.0
 
   // Mapping important states that we don't have to unused alert states on MSAA
-  // as per discussions with AT vendors. On ATK there will be legitimate states for these
+  // as per discussions with AT vendors. On ATK there will be legitimate states for
+  // STATE_REQUIRED AND STATE_INVALID
   const unsigned long  STATE_REQUIRED           = STATE_ALERT_LOW;
+  const unsigned long  STATE_IMPORTANT          = STATE_ALERT_MEDIUM;
   const unsigned long  STATE_INVALID            = STATE_ALERT_HIGH;
+  const unsigned long  STATE_CHECKABLE          = STATE_MARQUEED;
 
 /**
  * Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)

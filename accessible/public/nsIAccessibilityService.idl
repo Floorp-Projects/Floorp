@@ -57,7 +57,7 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createHTMLBlockAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessibleXBL(in nsIDOMNode aNode);
-  nsIAccessible createHTMLAccessibleByMarkup(in nsISupports aFrame, in nsIWeakReference aWeakShell, in nsIDOMNode aDOMNode);
+  nsIAccessible createHTMLAccessibleByMarkup(in nsISupports aFrame, in nsIWeakReference aWeakShell, in nsIDOMNode aDOMNode, in AString aRole);
   nsIAccessible createHTMLLIAccessible(in nsISupports aFrame, in nsISupports aBulletFrame, in AString aBulletText);
   nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLCheckboxAccessibleXBL(in nsIDOMNode aNode);

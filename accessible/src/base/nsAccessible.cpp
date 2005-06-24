@@ -39,6 +39,7 @@
 
 #include "nsAccessible.h"
 #include "nsIAccessibleDocument.h"
+#include "nsPIAccessibleDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIImageDocument.h"
@@ -249,16 +250,30 @@ NS_IMETHODIMP nsAccessible::SetNextSibling(nsIAccessible *aNextSibling)
   return NS_OK;
 }
 
+PRBool nsAccessible::IsSpecialXHTMLApplication()
+{
+  nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
+  nsCOMPtr<nsPIAccessibleDocument> privateAccessibleDoc =
+    do_QueryInterface(docAccessible);
+  return privateAccessibleDoc ? 
+    privateAccessibleDoc->IsSpecialXHTMLApplication() :
+    PR_FALSE;
+}
+
 NS_IMETHODIMP nsAccessible::Init()
 {
   nsIContent *content = GetRoleContent(mDOMNode);
   nsAutoString roleString;
+
+  PRInt32 roleNameSpace = IsSpecialXHTMLApplication() ? kNameSpaceID_None :
+                          kNameSpaceID_XHTML2_Unofficial;
+
   if (content &&
-      NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_XHTML2_Unofficial, 
+      NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(roleNameSpace, 
                                                     nsAccessibilityAtoms::role, 
                                                     roleString)) {
     // QI to nsIDOM3Node causes some overhead. Unfortunately we need to do this each
-    // time there is a role attribute, because the prefixe to namespace mappings
+    // time there is a role attribute, because the prefix to namespace mappings
     // can change within any subtree via the xmlns attribute
     nsCOMPtr<nsIDOM3Node> dom3Node(do_QueryInterface(content));
     if (dom3Node) {
@@ -283,6 +298,7 @@ NS_IMETHODIMP nsAccessible::Init()
       if (length > 1 && StringBeginsWith(roleString, prefix)) {
         roleString.Cut(0, length);
         nsCString utf8Role = NS_ConvertUCS2toUTF8(roleString); // For easy comparison
+        ToLowerCase(utf8Role);
         PRUint32 index;
         for (index = 0; gWAIRoleMap[index].roleString; index ++) {
           if (utf8Role.Equals(gWAIRoleMap[index].roleString)) {
@@ -1515,13 +1531,14 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"button", ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"pressed", BOOL_STATE, STATE_PRESSED},
             {"haspopup", BOOL_STATE, STATE_HASPOPUP}, END_ENTRY},
-  {"button-submit", ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, STATE_DEFAULT, END_ENTRY},
-  {"checkbox", ROLE_CHECKBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
+  {"buttonsubmit", ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, STATE_DEFAULT, END_ENTRY},
+  {"buttoncancel", ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
+  {"checkbox", ROLE_CHECKBUTTON, eNameOkFromChildren, eNoValue, STATE_CHECKABLE,
             {"checked", BOOL_STATE, STATE_CHECKED},
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
-  {"checkbox-tristate", ROLE_CHECKBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
+  {"checkboxtristate", ROLE_CHECKBUTTON, eNameOkFromChildren, eNoValue, STATE_CHECKABLE,
             {"checked", BOOL_STATE, STATE_CHECKED},
             {"checked", "mixed", STATE_MIXED},
             {"readonly", BOOL_STATE, STATE_READONLY},
@@ -1541,19 +1558,19 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"list", ROLE_LIST, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"multiselect", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
-  {"listitem", ROLE_LISTITEM, eNameOkFromChildren, eNoValue, STATE_SELECTABLE, END_ENTRY},
-  {"listitem-checkbox", ROLE_LISTITEM, eNameOkFromChildren, eNoValue, STATE_SELECTABLE,
-            {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY },
+  {"listitem", ROLE_LISTITEM, eNameOkFromChildren, eNoValue, STATE_SELECTABLE,
+            {"checked", BOOL_STATE, STATE_CHECKED | STATE_CHECKABLE},
+            {"checked", "false", STATE_CHECKABLE}, END_ENTRY},
   {"menu", ROLE_MENUPOPUP, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"menubar", ROLE_MENUBAR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"menuitem", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"haspopup", BOOL_STATE, STATE_HASPOPUP}, END_ENTRY},
-  {"menuitem-radio", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"haspopup", BOOL_STATE, STATE_HASPOPUP},
-            {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
-  {"menuitem-checkbox", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
+            {"checked", BOOL_STATE, STATE_CHECKED | STATE_CHECKABLE},
+            {"checked", "false", STATE_CHECKABLE}, END_ENTRY},
+  {"menuitemradio", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"haspopup", BOOL_STATE, STATE_HASPOPUP},
-            {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
+            {"checked", BOOL_STATE, STATE_CHECKED | STATE_CHECKABLE},
+            {"checked", "false", STATE_CHECKABLE}, END_ENTRY},
   {"grid", ROLE_TABLE, eNameLabelOrTitle, eNoValue, STATE_FOCUSABLE,
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"gridcell", ROLE_CELL, eNameOkFromChildren, eHasValueMinMax, STATE_SELECTABLE,
@@ -1606,12 +1623,9 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"treeitem", ROLE_OUTLINEITEM, eNameOkFromChildren, eNoValue, STATE_SELECTABLE,
             {"selected", BOOL_STATE, STATE_SELECTED},
             {"expanded", BOOL_STATE, STATE_EXPANDED},
-            {"expanded", "false", STATE_COLLAPSED}, END_ENTRY},
-  {"treeitem-checkbox", ROLE_OUTLINEITEM, eNameOkFromChildren, eNoValue, STATE_SELECTABLE,
-            {"selected", BOOL_STATE, STATE_SELECTED},
-            {"expanded", BOOL_STATE, STATE_EXPANDED},
             {"expanded", "false", STATE_COLLAPSED},
-            {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
+            {"checked", BOOL_STATE, STATE_CHECKED | STATE_CHECKABLE},
+            {"checked", "false", STATE_CHECKABLE}, END_ENTRY},
   {nsnull, ROLE_NOTHING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY} // Last item
 };
 
@@ -1633,6 +1647,7 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
 }
 
 PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut,
+                                     PRInt32 aNameSpace,
                                      nsStateMapEntry *aStateMapEntry)
 {
   // Return true if we should continue
@@ -1642,7 +1657,7 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
 
   nsAutoString attribValue;
   nsCOMPtr<nsIAtom> attribAtom = do_GetAtom(aStateMapEntry->attributeName); // XXX put atoms directly in entry
-  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_StatesWAI_Unofficial,
+  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(aNameSpace,
                                                      attribAtom,
                                                      attribValue)) {
     if (aStateMapEntry->attributeValue == BOOL_STATE) {
@@ -1698,15 +1713,18 @@ NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (content) {
+    PRInt32 stateNS = IsSpecialXHTMLApplication() ? kNameSpaceID_None :
+                      kNameSpaceID_StatesWAI_Unofficial;
     finalState |= mRoleMapEntry->state;
-    if (MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap1) &&
-        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap2) &&
-        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap3) &&
-        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap4)) {
-      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap5);
+    if (MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap1) &&
+        MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap2) &&
+        MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap3) &&
+        MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap4) &&
+        MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap5)) {
+      MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap6);
     }
     // Anything can be disabled/unavailable
-    MappedAttrState(content, &finalState, &gDisabledStateMap);
+    MappedAttrState(content, &finalState, stateNS, &gDisabledStateMap);
   }
 
   *aState = finalState;

@@ -54,6 +54,7 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
+#include "nsIHTMLDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIEditingSession.h"
 #include "nsIFrame.h"
@@ -65,6 +66,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsIScrollableView.h"
+#include "nsUnicharUtils.h"
 #include "nsIURI.h"
 #include "nsIWebNavigation.h"
 #ifdef MOZ_XUL
@@ -80,7 +82,8 @@
 //-----------------------------------------------------
 nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
   nsBlockAccessible(aDOMNode, aShell), mWnd(nsnull),
-  mEditor(nsnull), mScrollPositionChangedTicks(0)
+  mEditor(nsnull), mScrollPositionChangedTicks(0),
+  mIsSpecialXHTMLApplication(PR_FALSE)
 {
   // Because of the way document loading happens, the new nsIWidget is created before
   // the old one is removed. Since it creates the nsDocAccessible, for a brief moment 
@@ -282,7 +285,7 @@ NS_IMETHODIMP nsDocAccessible::GetDocType(nsAString& aDocType)
   } else
 #endif
   if (domDoc && NS_SUCCEEDED(domDoc->GetDoctype(getter_AddRefs(docType))) && docType) {
-    return docType->GetName(aDocType);
+    return docType->GetPublicId(aDocType);
   }
 
   return NS_ERROR_FAILURE;
@@ -397,6 +400,23 @@ NS_IMETHODIMP nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *a
 
 NS_IMETHODIMP nsDocAccessible::Init()
 {
+  // If we're an HTML doc in standards mode, we might be
+  // using a special XHTML web application doc type.
+  // If we are, the DHTML role and state attributes can
+  // be in the default namespace for the document
+  nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
+  nsAutoString docType;
+  if (htmlDoc) {
+    nsCompatibility mode = htmlDoc->GetCompatibilityMode();
+    if (mode == eCompatibility_FullStandards) {
+      GetDocType(docType);
+      if (docType.Find(NS_LITERAL_STRING("Application")) >= 0) {
+        // This means role and state needn't be namespaced
+        mIsSpecialXHTMLApplication = PR_TRUE;
+      }
+    }
+  }
+
   // Hook up our new accessible with our parent
   if (!mParent) {
     nsIDocument *parentDoc = mDocument->GetParentDocument();
@@ -1067,14 +1087,15 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   if (aChangeEventType == nsIAccessibleEvent::EVENT_SHOW && aChild) {
     // Fire EVENT_SHOW, EVENT_MENUPOPUPSTART or EVENT_ALERT event for
     // newly visible content. Create new accessible if necessary to do so.
+    PRInt32 roleNameSpace = IsSpecialXHTMLApplication() ? kNameSpaceID_None :
+                            kNameSpaceID_XHTML2_Unofficial;
     nsAutoString role;
-    aChild->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role,
-                    role);
+    aChild->GetAttr(roleNameSpace, nsAccessibilityAtoms::role, role);
     PRUint32 event = 0;
-    if (StringEndsWith(role, NS_LITERAL_STRING(":alert"))) {
+    if (StringEndsWith(role, NS_LITERAL_STRING(":alert"), nsCaseInsensitiveStringComparator())) {
       event = nsIAccessibleEvent::EVENT_ALERT;
     }
-    else if (StringEndsWith(role, NS_LITERAL_STRING(":menu"))) {
+    else if (StringEndsWith(role, NS_LITERAL_STRING(":menu"), nsCaseInsensitiveStringComparator())) {
       event = nsIAccessibleEvent::EVENT_MENUPOPUPSTART;
     }
 
@@ -1134,3 +1155,7 @@ NS_IMETHODIMP nsDocAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* 
   return obsService->NotifyObservers(accEvent, NS_ACCESSIBLE_EVENT_TOPIC, nsnull);
 }
 
+PRBool nsDocAccessible::IsSpecialXHTMLApplication()
+{
+  return mIsSpecialXHTMLApplication;
+}
