@@ -94,6 +94,12 @@ interface nsIProtocolProxyService : nsISupports
      * the given URI should be loaded using the HTTP protocol handler, which
      * also supports nsIProxiedProtocolHandler.
      *
+     * NOTE: If PAC is configured, and the PAC file has not yet been loaded,
+     * then this method will return a nsIProxyInfo instance with a type of
+     * "unknown" to indicate to the consumer that asyncResolve should be used
+     * to wait for the PAC file to finish loading.  Otherwise, the consumer
+     * may choose to treat the result as type "direct" if desired.
+     *
      * @see nsIProxiedProtocolHandler::newProxiedChannel 
      */
     nsIProxyInfo resolve(in nsIURI aURI, in unsigned long aFlags);
@@ -126,10 +132,10 @@ interface nsIProtocolProxyService : nsISupports
      * @param aType
      *        The proxy type.  This is a string value that identifies the proxy
      *        type.  Standard values include:
-     *          "http"   - specifies a HTTP proxy
-     *          "socks"  - specifies a SOCKS version 5 proxy
-     *          "socks4" - specifies a SOCKS version 4 proxy
-     *          "direct" - specifies a direct connection (useful for failover)
+     *          "http"    - specifies a HTTP proxy
+     *          "socks"   - specifies a SOCKS version 5 proxy
+     *          "socks4"  - specifies a SOCKS version 4 proxy
+     *          "direct"  - specifies a direct connection (useful for failover)
      *        The type name is case-insensitive.  Other string values may be
      *        possible.
      * @param aHost

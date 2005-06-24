@@ -154,6 +154,7 @@ PendingPACQuery::OnLookupComplete(nsICancelable *request,
 nsPACMan::nsPACMan()
   : mLoadEvent(nsnull)
   , mShutdown(PR_FALSE)
+  , mStartingToLoad(PR_FALSE)
 {
   PR_INIT_CLIST(&mPendingQ);
 }
@@ -180,7 +181,14 @@ nsPACMan::GetProxyForURI(nsIURI *uri, nsACString &result)
 {
   NS_ENSURE_STATE(!mShutdown);
 
-  if (!mPAC || IsLoading())
+  if (mStartingToLoad) {
+    result.Truncate();
+    return NS_OK;
+  }
+
+  if (IsLoading())
+    return NS_ERROR_IN_PROGRESS;
+  if (!mPAC)
     return NS_ERROR_NOT_AVAILABLE;
 
   nsCAutoString spec, host;
@@ -284,7 +292,14 @@ nsPACMan::StartLoading()
   nsCOMPtr<nsIIOService> ios = do_GetIOService();
   if (ios) {
     nsCOMPtr<nsIChannel> channel;
+
+    // Calling NewChannel will result in GetProxyForURI being called, and we
+    // want to make sure that it does not return NS_ERROR_IN_PROGRESS.  So,
+    // we set this flag to cause it to indicate a DIRECT fetch for this URI.
+    mStartingToLoad = PR_TRUE;
     ios->NewChannel(mPACSpec, nsnull, nsnull, getter_AddRefs(channel));
+    mStartingToLoad = PR_FALSE;
+
     if (channel) {
       channel->SetLoadFlags(nsIRequest::LOAD_BYPASS_CACHE);
       channel->SetNotificationCallbacks(this);

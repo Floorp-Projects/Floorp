@@ -66,6 +66,7 @@ interface nsIProxyInfo : nsISupports
    *   "socks"    SOCKS v5 proxy
    *   "socks4"   SOCKS v4 proxy
    *   "direct"   no proxy
+   *   "unknown"  unknown proxy (see nsIProtocolProxyService::resolve)
    */
   readonly attribute ACString type; 
 

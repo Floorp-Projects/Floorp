@@ -91,7 +91,8 @@ public:
    * @param result
    *        Holds the PAC result string upon return.
    *
-   * @return NS_ERROR_NOT_AVAILABLE if the PAC file is not yet loaded.
+   * @return NS_ERROR_IN_PROGRESS if the PAC file is not yet loaded.
+   * @return NS_ERROR_NOT_AVAILABLE if the PAC file could not be loaded.
    */
   nsresult GetProxyForURI(nsIURI *uri, nsACString &result);
 
@@ -159,6 +160,7 @@ private:
   nsCOMPtr<nsIStreamLoader>    mLoader;
   PLEvent                     *mLoadEvent;
   PRPackedBool                 mShutdown;
+  PRPackedBool                 mStartingToLoad;
 };
 
 #endif  // nsPACMan_h__

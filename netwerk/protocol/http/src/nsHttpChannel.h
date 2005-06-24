@@ -75,6 +75,8 @@
 #include "nsIPrompt.h"
 #include "nsIResumableChannel.h"
 #include "nsISupportsPriority.h"
+#include "nsIProtocolProxyCallback.h"
+#include "nsICancelable.h"
 
 class nsHttpResponseHead;
 class nsAHttpConnection;
@@ -96,6 +98,7 @@ class nsHttpChannel : public nsHashPropertyBag
                     , public nsITransportEventSink
                     , public nsIResumableChannel
                     , public nsISupportsPriority
+                    , public nsIProtocolProxyCallback
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -112,6 +115,7 @@ public:
     NS_DECL_NSITRANSPORTEVENTSINK
     NS_DECL_NSIRESUMABLECHANNEL
     NS_DECL_NSISUPPORTSPRIORITY
+    NS_DECL_NSIPROTOCOLPROXYCALLBACK
 
     nsHttpChannel();
     virtual ~nsHttpChannel();
@@ -160,8 +164,12 @@ private:
     void     HandleAsyncRedirect();
     void     HandleAsyncNotModified();
     nsresult PromptTempRedirect();
-    nsresult ProxyFailover();
     nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, PRBool preserveMethod);
+
+    // proxy specific methods
+    nsresult ProxyFailover();
+    nsresult ReplaceWithProxy(nsIProxyInfo *);
+    nsresult ResolveProxy();
 
     // cache specific methods
     nsresult OpenCacheEntry(PRBool offline, PRBool *delayed);
@@ -216,6 +224,7 @@ private:
     nsCOMPtr<nsIURI>                  mReferrer;
     nsCOMPtr<nsISupports>             mSecurityInfo;
     nsCOMPtr<nsIEventQueue>           mEventQ;
+    nsCOMPtr<nsICancelable>           mProxyRequest;
 
     nsHttpRequestHead                 mRequestHead;
     nsHttpResponseHead               *mResponseHead;
