@@ -37,11 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
   
-#define XMLENCODING_PEEKBYTES 64
-#define DISABLE_TRANSITIONAL_MODE
-
-
-
 #include "nsIAtom.h"
 #include "nsParser.h"
 #include "nsString.h"

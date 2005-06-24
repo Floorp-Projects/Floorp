@@ -73,9 +73,6 @@ nsReadEndCondition::nsReadEndCondition(const PRUnichar* aTerminateChars) :
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-static const char kBadHTMLText[] ="<H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
-static const char kUnorderedStringError[] = "String argument must be ordered. Don't you read API's?";
-
 #ifdef __INCREMENTAL
 const int   kBufsize=1;
 #else
@@ -420,18 +417,6 @@ nsresult nsScanner::FillBuffer(void) {
   nsresult result=NS_OK;
 
   if(!mInputStream) {
-#if 0
-    //This is DEBUG code!!!!!!  XXX DEBUG XXX
-    //If you're here, it means someone tried to load a
-    //non-existent document. So as a favor, we emit a
-    //little bit of HTML explaining the error.
-    if(0==mTotalRead) {
-      mBuffer.Append((const char*)kBadHTMLText);
-      mBuffer.Append(mFilename);
-      mTotalRead+=mBuffer.Length();
-    }
-    else 
-#endif
     result=kEOF;
   }
   else {
