@@ -582,11 +582,11 @@ nsSchemaValidator::ValidateRestrictionSimpletype(const nsAString & aNodeValue,
     /* http://w3.org/TR/xmlschema-2/#nonPositiveInteger */
     case nsISchemaBuiltinType::BUILTIN_TYPE_NONPOSITIVEINTEGER: {
       if (maxExclusive.IsEmpty()) {
-        maxExclusive.EqualsLiteral("1");
+        maxExclusive.AssignLiteral("1");
       }
 
       if (minInclusive.IsEmpty()) {
-        minInclusive.EqualsLiteral("0");
+        minInclusive.AssignLiteral("0");
       }
 
       rv = ValidateBuiltinTypeInteger(aNodeValue, totalDigits, maxExclusive,
@@ -598,11 +598,11 @@ nsSchemaValidator::ValidateRestrictionSimpletype(const nsAString & aNodeValue,
     /* http://www.w3.org/TR/xmlschema-2/#negativeInteger */
     case nsISchemaBuiltinType::BUILTIN_TYPE_NEGATIVEINTEGER: {
       if (maxExclusive.IsEmpty()) {
-        maxExclusive.EqualsLiteral("0");
+        maxExclusive.AssignLiteral("0");
       }
 
       if (minInclusive.IsEmpty()) {
-        minInclusive.EqualsLiteral("-1");
+        minInclusive.AssignLiteral("-1");
       }
 
       rv = ValidateBuiltinTypeInteger(aNodeValue, totalDigits,maxExclusive,
