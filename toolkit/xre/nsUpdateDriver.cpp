@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "nsUpdateDriver.h"
+#include "nsXULAppAPI.h"
 #include "nsILocalFile.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIDirectoryEnumerator.h"
@@ -266,9 +267,20 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
     LOG(("failed copying updater\n"));
     return;
   }
+
+  // We need to use the value returned from XRE_GetBinaryPath when attempting
+  // to restart the running application.
+  nsCOMPtr<nsILocalFile> appFile;
+  XRE_GetBinaryPath(appArgv[0], getter_AddRefs(appFile));
+  if (!appFile)
+    return;
+  nsCAutoString appFilePath;
+  nsresult rv = appFile->GetNativePath(appFilePath);
+  if (NS_FAILED(rv))
+    return;
   
   nsCAutoString updaterPath;
-  nsresult rv = updater->GetNativePath(updaterPath);
+  rv = updater->GetNativePath(updaterPath);
   if (NS_FAILED(rv))
     return;
 
@@ -334,8 +346,11 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   argv[0] = (char*) updaterPath.get();
   argv[1] = (char*) updateDirPath.get();
   argv[2] = (char*) pid.get();
-  for (int i = 0; i < appArgc; ++i)
-    argv[3 + i] = appArgv[i];
+  if (appArgc) {
+    argv[3] = (char*) appFilePath.get();
+    for (int i = 1; i < appArgc; ++i)
+      argv[3 + i] = appArgv[i];
+  }
   argv[3 + appArgc] = nsnull;
 
   LOG(("spawning updater process [%s]\n", updaterPath.get()));
