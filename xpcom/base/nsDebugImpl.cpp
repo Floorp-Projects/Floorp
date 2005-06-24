@@ -93,43 +93,8 @@
 #if defined(_WIN32)
 #include <windows.h>
 #include <signal.h>
-#elif defined(XP_MAC)
-   #define TEMP_MAC_HACK
-   
-   //------------------------
-   #ifdef TEMP_MAC_HACK
-	   #include <MacTypes.h>
-	   #include <Processes.h>
-	   #include <string.h>
-
-	   // TEMPORARY UNTIL WE HAVE MACINTOSH ENVIRONMENT VARIABLES THAT CAN TURN ON
-	   // LOGGING ON MACINTOSH
-	   // At this moment, NSPR's logging is a no-op on Macintosh.
-
-	   #include <stdarg.h>
-	   #include <stdio.h>
-	 
-	   #undef PR_LOG
-	   #undef PR_LogFlush
-	   #define PR_LOG(module,level,args) dprintf args
-	   #define PR_LogFlush()
-	   static void dprintf(const char *format, ...)
-	   {
-	      va_list ap;
-	      Str255 buffer;
-	      
-	      va_start(ap, format);
-	      buffer[0] = std::vsnprintf((char *)buffer + 1, sizeof(buffer) - 1, format, ap);
-	      va_end(ap);
-	      if (PL_strcasestr((char *)&buffer[1], "warning"))
-	 	      printf("еее%s\n", (char*)buffer + 1);
-	 	  else
-	 	      DebugStr(buffer);
-	   }
-   #endif // TEMP_MAC_HACK
-   //------------------------
 #elif defined(XP_UNIX)
-#include<stdlib.h>
+#include <stdlib.h>
 #endif
 
 /*
@@ -397,8 +362,6 @@ nsDebugImpl::Abort(const char *aFile, PRInt32 aLine)
 #else /* _M_ALPHA */
   PR_Abort();
 #endif
-#elif defined(XP_MAC)
-  ExitToShell();
 #elif defined(XP_UNIX)
   PR_Abort();
 #elif defined(XP_OS2)
