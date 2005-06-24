@@ -4807,6 +4807,9 @@ function asyncOpenWebPanel(event)
          // javascript links should be executed in the current browser
          if (wrapper.href.substr(0, 11) === "javascript:")
            return true;
+         // data links should be executed in the current browser
+         if (wrapper.href.substr(0, 5) === "data:")
+           return true;
 
          if (!webPanelSecurityCheck(locWrapper.href, wrapper.href))
            return false;
