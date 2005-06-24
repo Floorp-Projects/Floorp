@@ -459,8 +459,10 @@ UpdateService.prototype = {
     var logBranch = ps.getBranch(PREF_APP_UPDATE_LOG_BRANCH);
     var modules = logBranch.getChildList("", { value: 0 });
 
-    for (var i = 0; i < modules.length; ++i)
-      gLogEnabled[modules[i]] = logBranch.getBoolPref(modules[i]);
+    for (var i = 0; i < modules.length; ++i) {
+      if (logBranch.prefHasUserValue(modules[i]))
+        gLogEnabled[modules[i]] = logBranch.getBoolPref(modules[i]);
+    }
   },
   
   /**
