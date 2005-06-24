@@ -44,6 +44,8 @@
 #include "nsIEditingSession.h"
 #include "nsIPlaintextEditor.h"
 #include "nsIHTMLEditor.h"
+#include "nsIHTMLObjectResizer.h"
+#include "nsIHTMLInlineTableEditor.h"
 
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
@@ -303,6 +305,36 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
     return htmleditor->SetReturnInParagraphCreatesNewParagraph(!insertBrOnReturn);
   }
 
+  if (!nsCRT::strcmp(aCommandName, "cmd_enableObjectResizing"))
+  {
+    NS_ENSURE_ARG_POINTER(aParams);
+    nsCOMPtr<nsIHTMLObjectResizer> resizer = do_QueryInterface(refCon);
+    if (!resizer)
+      return NS_ERROR_INVALID_ARG;
+
+    PRBool enabled;
+    nsresult rvOR = aParams->GetBooleanValue(STATE_ATTRIBUTE, &enabled);
+    if (NS_FAILED(rvOR))
+      return rvOR;
+
+    return resizer->SetObjectResizingEnabled(enabled);
+  }
+
+  if (!nsCRT::strcmp(aCommandName, "cmd_enableInlineTableEditing"))
+  {
+    NS_ENSURE_ARG_POINTER(aParams);
+    nsCOMPtr<nsIHTMLInlineTableEditor> editor = do_QueryInterface(refCon);
+    if (!editor)
+      return NS_ERROR_INVALID_ARG;
+
+    PRBool enabled;
+    nsresult rvOR = aParams->GetBooleanValue(STATE_ATTRIBUTE, &enabled);
+    if (NS_FAILED(rvOR))
+      return rvOR;
+
+    return editor->SetInlineTableEditingEnabled(enabled);
+  }
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -366,6 +398,30 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
     PRBool createPOnReturn;
     htmleditor->GetReturnInParagraphCreatesNewParagraph(&createPOnReturn);
     return aParams->SetBooleanValue(STATE_ATTRIBUTE, !createPOnReturn);
+  }
+
+  if (!nsCRT::strcmp(aCommandName, "cmd_enableObjectResizing"))
+  {
+    NS_ENSURE_ARG_POINTER(aParams);
+    nsCOMPtr<nsIHTMLObjectResizer> resizer = do_QueryInterface(refCon);
+    if (!resizer)
+      return NS_ERROR_INVALID_ARG;
+
+    PRBool enabled;
+    resizer->GetObjectResizingEnabled(&enabled);
+    return aParams->SetBooleanValue(STATE_ATTRIBUTE, enabled);
+  }
+
+  if (!nsCRT::strcmp(aCommandName, "cmd_enableInlineTableEditing"))
+  {
+    NS_ENSURE_ARG_POINTER(aParams);
+    nsCOMPtr<nsIHTMLInlineTableEditor> editor = do_QueryInterface(refCon);
+    if (!editor)
+      return NS_ERROR_INVALID_ARG;
+
+    PRBool enabled;
+    editor->GetInlineTableEditingEnabled(&enabled);
+    return aParams->SetBooleanValue(STATE_ATTRIBUTE, enabled);
   }
 
   return NS_ERROR_NOT_IMPLEMENTED;
