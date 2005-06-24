@@ -582,11 +582,11 @@ nsSchemaValidator::ValidateRestrictionSimpletype(const nsAString & aNodeValue,
     /* http://w3.org/TR/xmlschema-2/#nonPositiveInteger */
     case nsISchemaBuiltinType::BUILTIN_TYPE_NONPOSITIVEINTEGER: {
       if (maxExclusive.IsEmpty()) {
-        maxExclusive.Append('1');
+        maxExclusive.EqualsLiteral("1");
       }
 
       if (minInclusive.IsEmpty()) {
-        minInclusive.Append('0');
+        minInclusive.EqualsLiteral("0");
       }
 
       rv = ValidateBuiltinTypeInteger(aNodeValue, totalDigits, maxExclusive,
@@ -598,11 +598,11 @@ nsSchemaValidator::ValidateRestrictionSimpletype(const nsAString & aNodeValue,
     /* http://www.w3.org/TR/xmlschema-2/#negativeInteger */
     case nsISchemaBuiltinType::BUILTIN_TYPE_NEGATIVEINTEGER: {
       if (maxExclusive.IsEmpty()) {
-        maxExclusive.Append('0');
+        maxExclusive.EqualsLiteral("0");
       }
 
       if (minInclusive.IsEmpty()) {
-        minInclusive.Append('-1');
+        minInclusive.EqualsLiteral("-1");
       }
 
       rv = ValidateBuiltinTypeInteger(aNodeValue, totalDigits,maxExclusive,
@@ -1170,7 +1170,7 @@ nsSchemaValidator::IsValidSchemaGMonth(const nsAString & aNodeValue,
 
   char timezoneHour[3] = "";
   char timezoneMinute[3] = "";
-  PRUnichar tzSign = PRUnichar("");
+  PRUnichar tzSign = 0;
   int monthInt;
 
   nsAString::const_iterator start, end;
@@ -1276,7 +1276,7 @@ nsSchemaValidator::IsValidSchemaGYear(const nsAString & aNodeValue,
 
   char timezoneHour[3] = "";
   char timezoneMinute[3] = "";
-  PRUnichar tzSign = PRUnichar("");
+  PRUnichar tzSign = 0;
 
   nsAString::const_iterator start, end, buffStart;
   aNodeValue.BeginReading(start);
