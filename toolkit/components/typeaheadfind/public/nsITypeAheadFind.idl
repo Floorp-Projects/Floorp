@@ -60,5 +60,6 @@ interface nsITypeAheadFind : nsISupports
   readonly attribute AString searchString;
   attribute boolean focusLinks;
   attribute boolean caseSensitive;
+  readonly attribute nsIDOMElement foundLink;
 };
 

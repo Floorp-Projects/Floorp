@@ -278,6 +278,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
                            PRBool aIsFirstVisiblePreferred, PRBool aFindNext, PRUint16* aResult)
 {
   *aResult = FIND_NOTFOUND;
+  mFoundLink = nsnull;
   nsCOMPtr<nsISelection> selection;
   nsCOMPtr<nsISelectionController> selectionController;
   nsCOMPtr<nsIPresShell> startingPresShell (do_QueryReferent(mPresShell));
@@ -432,6 +433,13 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
         nsIEventStateManager *esm = presContext->EventStateManager();
         PRBool isSelectionWithFocus;
         esm->MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
+        if (isSelectionWithFocus) {
+          nsCOMPtr<nsIContent> lastFocusedContent;
+          esm->GetLastFocusedContent(getter_AddRefs(lastFocusedContent));
+          nsCOMPtr<nsIDOMElement>
+            lastFocusedElement(do_QueryInterface(lastFocusedContent));
+          mFoundLink = lastFocusedElement;
+        }
       }
 
       *aResult = hasWrapped ? FIND_WRAPPED : FIND_FOUND;
@@ -509,6 +517,15 @@ NS_IMETHODIMP
 nsTypeAheadFind::GetSearchString(nsAString& aSearchString)
 {
   aSearchString = mTypeAheadBuffer;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTypeAheadFind::GetFoundLink(nsIDOMElement** aFoundLink)
+{
+  NS_ENSURE_ARG_POINTER(aFoundLink);
+  *aFoundLink = mFoundLink;
+  NS_IF_ADDREF(*aFoundLink);
   return NS_OK;
 }
 

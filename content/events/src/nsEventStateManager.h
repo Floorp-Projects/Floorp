@@ -117,6 +117,7 @@ public:
   NS_IMETHOD SetContentState(nsIContent *aContent, PRInt32 aState);
   NS_IMETHOD GetFocusedContent(nsIContent **aContent);
   NS_IMETHOD SetFocusedContent(nsIContent* aContent);
+  NS_IMETHOD GetLastFocusedContent(nsIContent **aContent);
   NS_IMETHOD GetFocusedFrame(nsIFrame **aFrame);
   NS_IMETHOD ContentRemoved(nsIContent* aContent);
   NS_IMETHOD EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK);
@@ -305,6 +306,7 @@ protected:
   nsCOMPtr<nsIContent> mDragOverContent;
   nsCOMPtr<nsIContent> mURLTargetContent;
   nsCOMPtr<nsIContent> mCurrentFocus;
+  nsCOMPtr<nsIContent> mLastFocus;
   nsIFrame* mCurrentFocusFrame;
   PRInt32 mCurrentTabIndex;
 

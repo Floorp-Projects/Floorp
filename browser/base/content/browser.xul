@@ -426,7 +426,6 @@
                   flex="1" contenttooltip="aHTMLTooltip"
                   contentcontextmenu="contentAreaContextMenu"
                   onnewtab="BrowserOpenTab();"
-                  onkeyup="onBrowserKeyUp(event);"
                   autocompletepopup="PopupAutoComplete"
                   ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
                   onclick="return contentAreaClick(event, false);"/>
