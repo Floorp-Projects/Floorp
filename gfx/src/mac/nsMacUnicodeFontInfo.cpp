@@ -221,7 +221,7 @@ static void HandleFormat4(PRUint16* aEntry, PRUint8* aEnd,
   // notice aIsSpace could be nsnull in case of OpenType font
   PRUint8* end = aEnd;  
   PRUint16* s = aEntry;
-  PRUint16 segCount = s[3] / 2;
+  PRUint16 segCount = OSSwapBigToHostInt16(s[3]) / 2;
   PRUint16* endCode = &s[7];
   PRUint16* startCode = endCode + segCount + 1;
   PRUint16* idDelta = startCode + segCount;
@@ -235,16 +235,16 @@ static void HandleFormat4(PRUint16* aEntry, PRUint8* aEnd,
   {
     if (idRangeOffset[i]) 
     {
-      PRUint16 startC = startCode[i];
-      PRUint16 endC = endCode[i];
+      PRUint16 startC = OSSwapBigToHostInt16(startCode[i]);
+      PRUint16 endC = OSSwapBigToHostInt16(endCode[i]);
       for (PRUint32 c = startC; c <= endC; c++) 
       {
-        PRUint16* g = (idRangeOffset[i]/2 + (c - startC) + &idRangeOffset[i]);
+        PRUint16* g = (OSSwapBigToHostInt16(idRangeOffset[i])/2 + (c - startC) + &idRangeOffset[i]);
         if ((PRUint8*) g < end) 
         {
           if (*g) 
           {
-            PRUint16 glyph = idDelta[i] + *g;
+            PRUint16 glyph = OSSwapBigToHostInt16(idDelta[i]) + *g;
             if (glyph < aMaxGlyph) 
             {
               if (aIsSpace && aIsSpace[glyph]) 
@@ -267,10 +267,10 @@ static void HandleFormat4(PRUint16* aEntry, PRUint8* aEnd,
     }
     else 
     {
-      PRUint16 endC = endCode[i];
-      for (PRUint32 c = startCode[i]; c <= endC; c++) 
+      PRUint16 endC = OSSwapBigToHostInt16(endCode[i]);
+      for (PRUint32 c = OSSwapBigToHostInt16(startCode[i]); c <= endC; c++) 
       {
-        PRUint16 glyph = idDelta[i] + c;
+        PRUint16 glyph = OSSwapBigToHostInt16(idDelta[i]) + c;
         if (glyph < aMaxGlyph) 
         {
           if (aIsSpace && aIsSpace[glyph]) 
