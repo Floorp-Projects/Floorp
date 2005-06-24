@@ -576,9 +576,20 @@ public class Node
         putIntProp(LABEL_ID_PROP, labelId);
     }
 
-    public String toString() {
+    public String toString()
+    {
         if (Token.printTrees) {
-            StringBuffer sb = new StringBuffer(Token.name(type));
+            StringBuffer sb = new StringBuffer();
+            toString(new ObjToIntMap(), sb);
+            return sb.toString();
+        }
+        return String.valueOf(type);
+    }
+
+    private void toString(ObjToIntMap printIds, StringBuffer sb)
+    {
+        if (Token.printTrees) {
+            sb.append(Token.name(type));
             if (this instanceof StringNode) {
                 sb.append(' ');
                 sb.append(getString());
@@ -603,40 +614,43 @@ public class Node
                 Jump jump = (Jump)this;
                 if (type == Token.BREAK || type == Token.CONTINUE) {
                     sb.append(" [label: ");
-                    sb.append(jump.getJumpStatement());
+                    appendPrintId(jump.getJumpStatement(), printIds, sb);
                     sb.append(']');
                 } else if (type == Token.TRY) {
                     Node catchNode = jump.target;
                     Node finallyTarget = jump.getFinally();
                     if (catchNode != null) {
                         sb.append(" [catch: ");
-                        sb.append(catchNode);
+                        appendPrintId(catchNode, printIds, sb);
                         sb.append(']');
                     }
                     if (finallyTarget != null) {
                         sb.append(" [finally: ");
-                        sb.append(finallyTarget);
+                        appendPrintId(finallyTarget, printIds, sb);
                         sb.append(']');
                     }
                 } else if (type == Token.LABEL || type == Token.LOOP
                            || type == Token.SWITCH)
                 {
                     sb.append(" [break: ");
-                    sb.append(jump.target);
+                    appendPrintId(jump.target, printIds, sb);
                     sb.append(']');
                     if (type == Token.LOOP) {
                         sb.append(" [continue: ");
-                        sb.append(jump.getContinue());
+                        appendPrintId(jump.getContinue(), printIds, sb);
                         sb.append(']');
                     }
                 } else {
                     sb.append(" [target: ");
-                    sb.append(jump.target);
+                    appendPrintId(jump.target, printIds, sb);
                     sb.append(']');
                 }
             } else if (type == Token.NUMBER) {
                 sb.append(' ');
                 sb.append(getDouble());
+            } else if (type == Token.TARGET) {
+                sb.append(' ');
+                appendPrintId(this, printIds, sb);
             }
             if (lineno != -1) {
                 sb.append(' ');
@@ -696,28 +710,31 @@ public class Node
                 sb.append(value);
                 sb.append(']');
             }
-            return sb.toString();
         }
-        return String.valueOf(type);
     }
 
     public String toStringTree(ScriptOrFnNode treeTop) {
         if (Token.printTrees) {
             StringBuffer sb = new StringBuffer();
-            toStringTreeHelper(treeTop, this, 0, sb);
+            toStringTreeHelper(treeTop, this, null, 0, sb);
             return sb.toString();
         }
         return null;
     }
 
     private static void toStringTreeHelper(ScriptOrFnNode treeTop, Node n,
+                                           ObjToIntMap printIds,
                                            int level, StringBuffer sb)
     {
         if (Token.printTrees) {
+            if (printIds == null) {
+                printIds = new ObjToIntMap();
+                generatePrintIds(treeTop, printIds);
+            }
             for (int i = 0; i != level; ++i) {
                 sb.append("    ");
             }
-            sb.append(n.toString());
+            n.toString(printIds, sb);
             sb.append('\n');
             for (Node cursor = n.getFirstChild(); cursor != null;
                  cursor = cursor.getNext())
@@ -725,9 +742,37 @@ public class Node
                 if (cursor.getType() == Token.FUNCTION) {
                     int fnIndex = cursor.getExistingIntProp(Node.FUNCTION_PROP);
                     FunctionNode fn = treeTop.getFunctionNode(fnIndex);
-                    toStringTreeHelper(fn, fn, level + 1, sb);
+                    toStringTreeHelper(fn, fn, null, level + 1, sb);
                 } else {
-                    toStringTreeHelper(treeTop, cursor, level + 1, sb);
+                    toStringTreeHelper(treeTop, cursor, printIds, level + 1, sb);
+                }
+            }
+        }
+    }
+
+    private static void generatePrintIds(Node n, ObjToIntMap map)
+    {
+        if (Token.printTrees) {
+            map.put(n, map.size());
+            for (Node cursor = n.getFirstChild(); cursor != null;
+                 cursor = cursor.getNext())
+            {
+                generatePrintIds(cursor, map);
+            }
+        }
+    }
+
+    private static void appendPrintId(Node n, ObjToIntMap printIds,
+                                      StringBuffer sb)
+    {
+        if (Token.printTrees) {
+            if (n != null) {
+                int id = printIds.get(n, -1);
+                sb.append('#');
+                if (id != -1) {
+                    sb.append(id + 1);
+                } else {
+                    sb.append("<not_available>");
                 }
             }
         }
