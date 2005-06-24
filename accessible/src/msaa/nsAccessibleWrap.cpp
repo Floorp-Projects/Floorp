@@ -423,7 +423,9 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   if (content) {
     nsAutoString roleString;
     if (role != ROLE_CLIENT) {
-      content->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, roleString);
+      PRInt32 roleNameSpace = IsSpecialXHTMLApplication() ? kNameSpaceID_None :
+                              kNameSpaceID_XHTML2_Unofficial;
+      content->GetAttr(roleNameSpace, nsAccessibilityAtoms::role, roleString);
     }
     if (roleString.IsEmpty()) {
       nsINodeInfo *nodeInfo = content->GetNodeInfo();

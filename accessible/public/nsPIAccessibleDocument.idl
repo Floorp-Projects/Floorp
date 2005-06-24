@@ -41,7 +41,7 @@
 interface nsIAccessNode;
 interface nsIContent;
 
-[uuid(eae56f75-ee68-4120-b113-10f21b75509e)]
+[uuid(c4aa12b5-2234-4505-aafb-af3a9d6f8144)]
 interface nsPIAccessibleDocument : nsISupports
 {
    /**
@@ -64,4 +64,5 @@ interface nsPIAccessibleDocument : nsISupports
   void flushPendingEvents();
   void fireDocLoadingEvent(in boolean isFinished);
   void fireAnchorJumpEvent();
+  [notxpcom] boolean IsSpecialXHTMLApplication();
 };

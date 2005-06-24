@@ -76,6 +76,7 @@ private:
   nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell*  aDocShell);
   static nsAccessibilityService *gAccessibilityService;
   nsresult InitAccessible(nsIAccessible *aAccessibleIn, nsIAccessible **aAccessibleOut);
+  PRBool GetRole(nsIContent *aContent, nsIWeakReference *aWeakShell, nsAString& aRole);
 };
 
 #endif /* __nsIAccessibilityService_h__ */

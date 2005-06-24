@@ -86,10 +86,14 @@ ACCESSIBILITY_ATOM(optgroup, "optgroup")
 ACCESSIBILITY_ATOM(option, "option")
 ACCESSIBILITY_ATOM(q, "q")
 ACCESSIBILITY_ATOM(select, "select")
+ACCESSIBILITY_ATOM(table, "table")
 ACCESSIBILITY_ATOM(tbody, "tbody")
+ACCESSIBILITY_ATOM(td, "td")
+ACCESSIBILITY_ATOM(th, "th")
 ACCESSIBILITY_ATOM(tfoot, "tfoot")
 ACCESSIBILITY_ATOM(thead, "thead")
 ACCESSIBILITY_ATOM(toolbaritem, "toolbaritem")   // XUL
+ACCESSIBILITY_ATOM(tr, "tr")
 ACCESSIBILITY_ATOM(ul, "ul")
 
   // DHTML accessibility relationship attributes
