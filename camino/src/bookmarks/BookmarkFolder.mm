@@ -92,20 +92,24 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 {
   if ([self isSmartFolder])
     return nil;
-  id doppleganger = [super copyWithZone:zone];
-  [doppleganger setSpecialFlag:[self specialFlag]];
+
+  id folderCopy = [super copyWithZone:zone];
+  unsigned folderFlags = ([self specialFlag] & ~kBookmarkDockMenuFolder);   // don't copy dock menu flag
+  [folderCopy setSpecialFlag:folderFlags];
+
   NSEnumerator *enumerator = [[self childArray] objectEnumerator];
   id anItem, aCopiedItem;
-  //head fake the undomanager
+  // head fake the undomanager
   NSUndoManager *undoManager = [[BookmarkManager sharedBookmarkManager] undoManager];
   [undoManager disableUndoRegistration];
   while ((anItem = [enumerator nextObject])) {
     aCopiedItem = [anItem copyWithZone:[anItem zone]];
-    [doppleganger insertChild:aCopiedItem];
+    [folderCopy insertChild:aCopiedItem];
     [aCopiedItem release];
   }
   [undoManager enableUndoRegistration];
-  return doppleganger;
+
+  return folderCopy;
 }
 
 -(void)dealloc
