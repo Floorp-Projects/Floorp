@@ -134,6 +134,37 @@ crc32(const unsigned char *buf, unsigned int len)
 
 //-----------------------------------------------------------------------------
 
+// A simple stack based container for a file descriptor (int) that closes the
+// file descriptor from its destructor.
+class AutoFD
+{
+public:
+  AutoFD(int fd = -1)
+    : mFD(fd) {
+  }
+
+  ~AutoFD() {
+    if (mFD != -1)
+      close(mFD);
+  }
+
+  AutoFD &operator=(int fd) {
+    if (mFD != -1)
+      close(mFD);
+    mFD = fd;
+    return *this;
+  }
+
+  operator int() {
+    return mFD;
+  }
+
+private:
+  int mFD;
+};
+
+//-----------------------------------------------------------------------------
+
 typedef void (* ThreadFunc)(void *param);
 
 #ifdef XP_WIN
@@ -305,15 +336,13 @@ static int copy_file(const char *spath, const char *dpath)
 
   struct stat ss;
 
-  int sfd = open(spath, O_RDONLY | _O_BINARY);
+  AutoFD sfd = open(spath, O_RDONLY | _O_BINARY);
   if (sfd < 0 || fstat(sfd, &ss))
     return IO_ERROR;
 
-  int dfd = open(dpath, O_WRONLY | O_TRUNC | O_CREAT | _O_BINARY, ss.st_mode);
-  if (dfd < 0) {
-    close(sfd);
+  AutoFD dfd = open(dpath, O_WRONLY | O_TRUNC | O_CREAT | _O_BINARY, ss.st_mode);
+  if (dfd < 0)
     return IO_ERROR;
-  }
 
   char buf[BUFSIZ];
   int sc;
@@ -325,21 +354,13 @@ static int copy_file(const char *spath, const char *dpath)
         break;
       bp += dc;
     }
-    if (dc < 0) {
-      rv = IO_ERROR;
-      goto end;
-    }
+    if (dc < 0)
+      return IO_ERROR;
   }
-  if (sc < 0) {
-    rv = IO_ERROR;
-    goto end;
-  }
+  if (sc < 0)
+    return IO_ERROR;
 
-end:
-  close(sfd);
-  close(dfd);
-
-  return rv;
+  return OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -759,15 +780,13 @@ PatchFile::Prepare()
   if (rv)
     return rv;
 
-  int ofd = open(mFile, O_RDONLY | _O_BINARY);
+  AutoFD ofd = open(mFile, O_RDONLY | _O_BINARY);
   if (ofd < 0)
     return IO_ERROR;
 
   rv = LoadSourceFile(ofd);
   if (rv)
     LOG(("LoadSourceFile failed\n"));
-  close(ofd);
-
   return rv;
 }
 
@@ -790,7 +809,7 @@ PatchFile::Execute()
   if (rv)
     return IO_ERROR;
 
-  int ofd = open(mFile, O_WRONLY | O_TRUNC | O_CREAT | _O_BINARY, ss.st_mode);
+  AutoFD ofd = open(mFile, O_WRONLY | O_TRUNC | O_CREAT | _O_BINARY, ss.st_mode);
   if (ofd < 0)
     return IO_ERROR;
 
@@ -833,13 +852,12 @@ WriteStatusFile(int status)
   char filename[MAXPATHLEN];
   snprintf(filename, MAXPATHLEN, "%s/update.status", gSourcePath);
 
-  int fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT | _O_BINARY, 0644);
+  AutoFD fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT | _O_BINARY, 0644);
   if (fd < 0)
     return;
 
   const char *text = (status == OK) ? "succeeded\n" : "failed\n";
   write(fd, text, strlen(text));
-  close(fd);
 }
 
 static void
@@ -1027,7 +1045,7 @@ int DoUpdate()
   if (rv)
     return rv;
 
-  int mfd = open(manifest, O_RDONLY | _O_BINARY);
+  AutoFD mfd = open(manifest, O_RDONLY | _O_BINARY);
   if (mfd < 0)
     return -1;
 
