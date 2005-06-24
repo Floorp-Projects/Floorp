@@ -669,8 +669,6 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
   // is a child of this docshell
   mPrt->mIsIFrameSelected = IsThereAnIFrameSelected(webContainer, mPrt->mCurrentFocusWin, mPrt->mIsParentAFrameSet);
 
-  CheckForHiddenFrameSetFrames();
-
   DUMP_DOC_LIST("\nAfter Mapping------------------------------------------");
 
   rv = NS_ERROR_FAILURE;
@@ -1133,7 +1131,6 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   // is a child of this docshell
   mPrt->mIsIFrameSelected = IsThereAnIFrameSelected(webContainer, mPrt->mCurrentFocusWin, mPrt->mIsParentAFrameSet);
 
-  CheckForHiddenFrameSetFrames();
 
   DUMP_DOC_LIST("\nAfter Mapping------------------------------------------");
 
@@ -2032,23 +2029,6 @@ nsPrintEngine::IsThereAnIFrameSelected(nsIDocShell* aDocShell,
   }
 
   return iFrameIsSelected;
-}
-
-/** ---------------------------------------------------
- *  Check to see if the FrameSet Frame is Hidden
- *  if it is then don't let it be reflowed, printed, or shown
- */
-void nsPrintEngine::CheckForHiddenFrameSetFrames()
-{
-  for (PRInt32 i=0;i<mPrt->mPrintDocList->Count();i++) {
-    nsPrintObject* po = (nsPrintObject*)mPrt->mPrintDocList->ElementAt(i);
-    NS_ASSERTION(po, "nsPrintObject can't be null!");
-    nsIFrame* frame = po->mDisplayPresShell->FrameManager()->GetRootFrame();
-    if (frame && frame->GetSize().height == 0) {
-      // set this PO and its children to not print and be hidden
-      SetPrintPO(po, PR_FALSE, PR_TRUE, eSetPrintFlag | eSetHiddenFlag);
-    }
-  }
 }
 
 //---------------------------------------------------------------------
