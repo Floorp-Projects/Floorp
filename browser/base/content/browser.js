@@ -3972,12 +3972,24 @@ nsContextMenu.prototype = {
 #endif
         this.showItem( "context-setDesktopBackground", haveSetDesktopBackground && this.onImage );
 
-        if( haveSetDesktopBackground && this.onImage )
-          // Disable the Set as Desktop Background menu item if we're still trying
-          // to load the image
-          this.setItemAttr( "context-setDesktopBackground", "disabled",
-                            (("complete" in this.target) && !this.target.complete) ?
-                            "true" : null );
+        if ( haveSetDesktopBackground && this.onImage ) {
+            // Disable the Set as Desktop Background menu item if we're still trying
+            // to load the image or the load failed
+            const nsIImageLoadingContent = Components.interfaces.nsIImageLoadingContent;
+            var disableDesktopBackground = false;
+            if (("complete" in this.target) && !this.target.complete)
+                disableSetWallpaper = true;
+            else if (this.target instanceof nsIImageLoadingContent) {
+                var request = this.target.QueryInterface(nsIImageLoadingContent)
+                                  .getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
+                if (!request)
+                    disableDesktopBackground = true;
+            }
+            else if (makeURI(this.target.src).scheme == "javascript")
+                disableDesktopBackground = true;
+               
+            this.setItemAttr( "context-setDesktopBackground", "disabled", disableDesktopBackground);
+        }
 
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage  && !this.onStandaloneImage );

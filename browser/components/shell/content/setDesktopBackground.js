@@ -198,6 +198,17 @@ var gSetBackground = {
   _createImage: function ()
   {
     var img = document.createElementNS(kXUL_NS, "image");
+    const nsIImageLoadingContent = Components.interfaces.nsIImageLoadingContent;
+    if (window.arguments[0] instanceof nsIImageLoadingContent) {
+      var request = window.arguments[0].QueryInterface(nsIImageLoadingContent)
+                          .getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
+      if (!request)
+        return false;
+    }
+
+    if (makeURI(window.arguments[0].src).scheme == "javascript")
+      return false;
+       
     img.setAttribute("src", this._image.src);
     return img;
   },
