@@ -454,14 +454,18 @@ UpdateService.prototype = {
    *
    */
   _initLoggingPrefs: function() {
-    var ps = Components.classes["@mozilla.org/preferences-service;1"]
-                       .getService(Components.interfaces.nsIPrefService);
-    var logBranch = ps.getBranch(PREF_APP_UPDATE_LOG_BRANCH);
-    var modules = logBranch.getChildList("", { value: 0 });
+    try {
+      var ps = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService);
+      var logBranch = ps.getBranch(PREF_APP_UPDATE_LOG_BRANCH);
+      var modules = logBranch.getChildList("", { value: 0 });
 
-    for (var i = 0; i < modules.length; ++i) {
-      if (logBranch.prefHasUserValue(modules[i]))
-        gLogEnabled[modules[i]] = logBranch.getBoolPref(modules[i]);
+      for (var i = 0; i < modules.length; ++i) {
+        if (logBranch.prefHasUserValue(modules[i]))
+          gLogEnabled[modules[i]] = logBranch.getBoolPref(modules[i]);
+      }
+    }
+    catch (e) {
     }
   },
   
