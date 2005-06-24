@@ -1027,7 +1027,7 @@ int DoUpdate()
   if (rv)
     return rv;
 
-  int mfd = open(manifest, O_RDONLY);
+  int mfd = open(manifest, O_RDONLY | _O_BINARY);
   if (mfd < 0)
     return -1;
 
