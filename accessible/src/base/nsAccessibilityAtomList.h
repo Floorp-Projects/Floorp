@@ -69,6 +69,7 @@ ACCESSIBILITY_ATOM(area, "area")
 ACCESSIBILITY_ATOM(blockquote, "blockquote")
 ACCESSIBILITY_ATOM(br, "br")
 ACCESSIBILITY_ATOM(body, "body")
+ACCESSIBILITY_ATOM(description, "description")    // XUL
 ACCESSIBILITY_ATOM(form, "form")
 ACCESSIBILITY_ATOM(h1, "h1")
 ACCESSIBILITY_ATOM(h2, "h2")
@@ -88,7 +89,7 @@ ACCESSIBILITY_ATOM(select, "select")
 ACCESSIBILITY_ATOM(tbody, "tbody")
 ACCESSIBILITY_ATOM(tfoot, "tfoot")
 ACCESSIBILITY_ATOM(thead, "thead")
-ACCESSIBILITY_ATOM(toolbaritem, "toolbaritem")
+ACCESSIBILITY_ATOM(toolbaritem, "toolbaritem")   // XUL
 ACCESSIBILITY_ATOM(ul, "ul")
 
   // DHTML accessibility relationship attributes

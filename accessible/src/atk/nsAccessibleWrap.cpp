@@ -107,10 +107,10 @@ static gint                getChildCountCB(AtkObject *aAtkObj);
 static AtkObject*          refChildCB(AtkObject *aAtkObj, gint aChildIndex);
 static gint                getIndexInParentCB(AtkObject *aAtkObj);
 static AtkStateSet*        refStateSetCB(AtkObject *aAtkObj);
+static AtkRelationSet*     refRelationSetCB(AtkObject *aAtkObj);
 
 /* the missing atkobject virtual functions */
 /*
-  static AtkRelationSet*     refRelationSetCB(AtkObject *aAtkObj);
   static AtkLayer            getLayerCB(AtkObject *aAtkObj);
   static gint                getMdiZorderCB(AtkObject *aAtkObj);
   static void                SetNameCB(AtkObject *aAtkObj,
@@ -455,7 +455,6 @@ The following nsIAccessible states aren't translated, just ignored.
   STATE_READONLY:      The object is designated read-only.
   STATE_HOTTRACKED:    Means its appearance has changed to indicate mouse
                        over it.
-  STATE_DEFAULT:       Represents the default button in a window.
   STATE_FLOATING:      Not supported yet.
   STATE_MARQUEED:      Indicate scrolling or moving text or graphics.
   STATE_ANIMATED:
@@ -535,6 +534,11 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, PRUint32 aExtState, void *aAt
     if (aState & nsIAccessible::STATE_INVALID)
         atk_state_set_add_state (state_set, ATK_STATE_INVALID);
 
+#ifdef MAI_HAS_ATK_STATE_DEFAULT
+    if (aState & nsIAccessible::STATE_DEFAULT)
+        atk_state_set_add_state (state_set, ATK_STATE_DEFAULT);
+#endif
+
 #ifdef MAI_HAS_ATK_STATE_REQUIRED
     if (aState & nsIAccessible::STATE_REQUIRED)
         atk_state_set_add_state (state_set, ATK_STATE_REQUIRED);
@@ -595,6 +599,7 @@ classInitCB(AtkObjectClass *aClass)
     aClass->get_index_in_parent = getIndexInParentCB;
     aClass->get_role = getRoleCB;
     aClass->ref_state_set = refStateSetCB;
+    aClass->ref_relation_set = refRelationSetCB;
 
     aClass->initialize = initializeCB;
 
@@ -896,6 +901,38 @@ refStateSetCB(AtkObject *aAtkObj)
 
     nsAccessibleWrap::TranslateStates(accState, accExtState, state_set);
     return state_set;
+}
+
+AtkRelationSet *
+refRelationSetCB(AtkObject *aAtkObj)
+{
+    AtkRelationSet *relation_set = nsnull;
+    relation_set = ATK_OBJECT_CLASS(parent_class)->ref_relation_set(aAtkObj);
+
+    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), relation_set);
+    nsAccessibleWrap *accWrap =
+        NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
+
+    AtkObject *accessible_array[1];
+    AtkRelation* relation;
+    
+    PRUint32 relationType[2] = {nsIAccessible::RELATION_LABELLED_BY,
+                                nsIAccessible::RELATION_LABEL_FOR};
+
+    for (PRUint32 i = 0; i <= 1; i++) { 
+      if (!atk_relation_set_contains(relation_set, NS_STATIC_CAST(AtkRelationType, relationType[i]))) {
+          nsIAccessible* accRelated;
+          nsresult rv = accWrap->GetAccessibleRelated(relationType[i], &accRelated);
+          if (NS_SUCCEEDED(rv) && accRelated) {
+              accessible_array[0] = NS_STATIC_CAST(nsAccessibleWrap*, accRelated)->GetAtkObject();
+              relation = atk_relation_new(accessible_array, 1,
+                                           NS_STATIC_CAST(AtkRelationType, relationType[i]));
+              atk_relation_set_add(relation_set, relation);
+          }
+      }
+    }
+
+    return relation_set;
 }
 
 // Check if aAtkObj is a valid MaiAtkObject

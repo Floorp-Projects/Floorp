@@ -50,14 +50,16 @@ nsTextAccessibleWrap(aDomNode, aShell)
 }
 
 /* wstring getName (); */
-NS_IMETHODIMP nsXULTextAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP nsXULTextAccessible::GetName(nsAString& aName)
 { 
-  nsCOMPtr<nsIDOMXULDescriptionElement> descriptionElement(do_QueryInterface(mDOMNode));
-  if (descriptionElement) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    return AppendFlatStringFromSubtree(content, &_retval);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;  // Node shut down
   }
-  return NS_ERROR_FAILURE;
+  if (content->Tag() == nsAccessibilityAtoms::label) {
+    return content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
+  }
+  return nsTextAccessibleWrap::GetName(aName);
 }
 
 NS_IMETHODIMP nsXULTextAccessible::GetState(PRUint32 *_retval)

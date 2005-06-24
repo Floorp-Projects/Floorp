@@ -67,7 +67,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLBRElement.h"
 #include "nsIAtom.h"
-#include "nsAccessibilityAtoms.h"
 #include "nsGUIEvent.h"
 
 #include "nsIDOMHTMLInputElement.h"
@@ -77,8 +76,13 @@
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentXBL.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULLabelElement.h"
+#include "nsIForm.h"
+#include "nsIFormControl.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIScriptGlobalObject.h"
@@ -86,7 +90,6 @@
 #include "nsAccessibleTreeWalker.h"
 #include "nsIURI.h"
 #include "nsIImageLoadingContent.h"
-#include "nsINameSpaceManager.h"
 #include "nsITimer.h"
 #include "nsIDOMHTMLDocument.h"
 
@@ -197,10 +200,7 @@ NS_IMETHODIMP nsAccessible::GetKeyboardShortcut(nsAString& _retval)
     elt->GetAttribute(NS_LITERAL_STRING("accesskey"), accesskey);
     if (accesskey.IsEmpty()) {
       nsCOMPtr<nsIContent> content = do_QueryInterface(elt);
-      nsIContent *labelContent = 
-        content->IsContentOfType(nsIContent::eXUL) ? GetXULLabelContent(content) :
-                                                     GetHTMLLabelContent(content);
-
+      nsIContent *labelContent = GetLabelContent(content);
       if (labelContent) {
         labelContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::accesskey, accesskey);
       }
@@ -1209,10 +1209,17 @@ nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, 
   return NS_OK;
 }
 
-nsIContent* nsAccessible::GetXULLabelContent(nsIContent *aForNode)
+nsIContent *nsAccessible::GetLabelContent(nsIContent *aForNode)
+{
+  return aForNode->IsContentOfType(nsIContent::eXUL) ? GetXULLabelContent(aForNode) :
+                                                       GetHTMLLabelContent(aForNode);
+}
+ 
+nsIContent* nsAccessible::GetXULLabelContent(nsIContent *aForNode, nsIAtom *aLabelType)
 {
   nsAutoString controlID;
-  nsIContent *labelContent = GetLabelForId(aForNode, nsnull, &controlID);
+  nsIContent *labelContent = GetContentPointingTo(&controlID, aForNode, nsnull,
+                                                  kNameSpaceID_None, aLabelType);
   if (labelContent) {
     return labelContent;
   }
@@ -1232,12 +1239,14 @@ nsIContent* nsAccessible::GetXULLabelContent(nsIContent *aForNode)
     }
   }
   
-  // Look for child label of control
+  // Look for label in subtrees of nearby ancestors
   static const PRUint32 kAncestorLevelsToSearch = 3;
   PRUint32 count = 0;
   while (!labelContent && ++count <= kAncestorLevelsToSearch && 
          (aForNode = aForNode->GetParent()) != nsnull) {
-    labelContent = GetLabelForId(aForNode, nsAccessibilityAtoms::control, &controlID);
+    labelContent = GetContentPointingTo(&controlID, aForNode,
+                                        nsAccessibilityAtoms::control,
+                                        kNameSpaceID_None, aLabelType);
   }
 
   return labelContent;
@@ -1264,7 +1273,7 @@ nsIContent* nsAccessible::GetHTMLLabelContent(nsIContent *aForNode)
       if (forId.IsEmpty()) {
         break;
       }
-      return GetLabelForId(walkUpContent, nsAccessibilityAtoms::_for, &forId); 
+      return GetContentPointingTo(&forId, walkUpContent, nsAccessibilityAtoms::_for); 
     }
   }
 
@@ -1303,20 +1312,24 @@ nsresult nsAccessible::GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName
   return rv;
 }
 
-// Pass in forAttrib == nsnull if any <label> will do
-nsIContent *nsAccessible::GetLabelForId(nsIContent *aLookContent,
-                                        nsIAtom *forAttrib,
-                                        const nsAString *aId)
+// Pass in aForAttrib == nsnull if any <label> will do
+nsIContent *nsAccessible::GetContentPointingTo(const nsAString *aId,
+                                               nsIContent *aLookContent,
+                                               nsIAtom *aForAttrib,
+                                               PRUint32 aForAttribNameSpace,
+                                               nsIAtom *aTagType)
 {
-  if (aLookContent->Tag() == nsAccessibilityAtoms::label) {
-    if (forAttrib) {
+  if (!aTagType || aLookContent->Tag() == aTagType) {
+    if (aForAttrib) {
       nsAutoString labelIsFor;
-      aLookContent->GetAttr(kNameSpaceID_None, forAttrib, labelIsFor);
+      aLookContent->GetAttr(aForAttribNameSpace, aForAttrib, labelIsFor);
       if (labelIsFor.Equals(*aId)) {
         return aLookContent;
       }
     }
-    return nsnull;
+    if (aTagType) {
+      return nsnull;
+    }
   }
 
   // Recursively search descendents for labels
@@ -1324,7 +1337,8 @@ nsIContent *nsAccessible::GetLabelForId(nsIContent *aLookContent,
   nsIContent *child;
 
   while ((child = aLookContent->GetChildAt(count++)) != nsnull) {
-    nsIContent *labelContent = GetLabelForId(child, forAttrib, aId);
+    nsIContent *labelContent = GetContentPointingTo(aId, child, aForAttrib,
+                                                    aForAttribNameSpace, aTagType);
     if (labelContent) {
       return labelContent;
     }
@@ -1792,6 +1806,176 @@ NS_IMETHODIMP nsAccessible::GetAccessibleAbove(nsIAccessible **_retval)
 NS_IMETHODIMP nsAccessible::GetAccessibleBelow(nsIAccessible **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsIAccessible getAccessibleRelated(); */
+NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated)
+{
+  *aRelated = nsnull;
+
+  // Relationships are defined on the same content node
+  // that the role would be defined on
+  nsIContent *content = GetRoleContent(mDOMNode);
+  if (!content) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
+
+  nsCOMPtr<nsIDOMNode> relatedNode;
+  nsAutoString relatedID;
+
+  // Search for the related DOM node according to the specified "relation type"
+  switch (aRelationType)
+  {
+  case RELATION_LABEL_FOR:
+    {
+      if (content->Tag() == nsAccessibilityAtoms::label) {
+        nsIAtom *relatedIDAttr = content->IsContentOfType(nsIContent::eHTML) ?
+          nsAccessibilityAtoms::_for : nsAccessibilityAtoms::control;
+        content->GetAttr(kNameSpaceID_None, relatedIDAttr, relatedID);
+        if (relatedID.IsEmpty()) {
+          // Check first child for form control
+        }
+      }
+      break;
+    }
+  case RELATION_LABELLED_BY:
+    {
+      relatedNode = do_QueryInterface(GetLabelContent(content));
+      break;
+    }
+  case RELATION_DESCRIBED_BY:
+    {
+      content->GetAttr(kNameSpaceID_StatesWAI_Unofficial,
+                       nsAccessibilityAtoms::describedby, relatedID);
+      if (relatedID.IsEmpty()) {
+        nsIContent *description =
+          GetXULLabelContent(content, nsAccessibilityAtoms::description);
+        relatedNode = do_QueryInterface(description);
+      }
+      break;
+    }
+  case RELATION_DESCRIPTION_FOR:
+    {
+      nsAutoString controlID;
+      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, controlID);
+      if (!controlID.IsEmpty()) {
+        // Something might be pointing to us
+        PRUint32 count = 0;
+        nsIContent *start = content;
+        static const PRUint32 kAncestorLevelsToSearch = 3;
+        while (!relatedNode && ++count <= kAncestorLevelsToSearch && 
+              (start = start->GetParent()) != nsnull) {
+          nsIContent *description = GetContentPointingTo(&controlID, start,
+                                                         nsAccessibilityAtoms::describedby,
+                                                         kNameSpaceID_StatesWAI_Unofficial,
+                                                         nsnull);
+          relatedNode = do_QueryInterface(description);
+        }
+      }
+
+      nsIContent *description =
+        GetXULLabelContent(content, nsAccessibilityAtoms::description);
+      if (!relatedNode && content->Tag() == nsAccessibilityAtoms::description &&
+          content->IsContentOfType(nsIContent::eXUL)) {
+        // This affectively adds an optional control attribute to xul:description,
+        // which only affects accessibility, by allowing the description to be
+        // tied to a control.
+        content->GetAttr(kNameSpaceID_None,
+                         nsAccessibilityAtoms::control, relatedID);
+      }
+      break;
+    }
+  case RELATION_DEFAULT_BUTTON:
+    {
+      if (content->IsContentOfType(nsIContent::eHTML)) {
+        nsCOMPtr<nsIForm> form;
+        while ((form = do_QueryInterface(content)) == nsnull &&
+               (content = content->GetParent()) != nsnull) /* nothing */ ;
+
+        if (form) {
+          // We have a <form> element, so iterate through and try to find a submit button
+          nsCOMPtr<nsISimpleEnumerator> formControls;
+          form->GetControlEnumerator(getter_AddRefs(formControls));
+          nsCOMPtr<nsISupports> controlSupports;
+          PRBool hasMoreElements;
+          while (NS_SUCCEEDED(formControls->HasMoreElements(&hasMoreElements)) &&
+                hasMoreElements) {
+            nsresult rv = formControls->GetNext(getter_AddRefs(controlSupports));
+            nsCOMPtr<nsIFormControl> control = do_QueryInterface(controlSupports);    
+            if (control) {
+              PRInt32 type = control->GetType();
+              if (type == NS_FORM_INPUT_SUBMIT || type == NS_FORM_BUTTON_SUBMIT ||
+                  type == NS_FORM_INPUT_IMAGE) {
+                relatedNode = do_QueryInterface(control);
+                break;
+              }
+            }
+          }
+        }
+      }
+      else {
+        // In XUL, use first <button default="true" .../> in the document
+        nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(content->GetDocument());
+        nsCOMPtr<nsIDOMXULButtonElement> buttonEl;
+        if (xulDoc) {
+          nsCOMPtr<nsIDOMNodeList> possibleDefaultButtons;
+          xulDoc->GetElementsByAttribute(NS_LITERAL_STRING("default"),
+                                         NS_LITERAL_STRING("true"),
+                                         getter_AddRefs(possibleDefaultButtons));
+          if (possibleDefaultButtons) {
+            PRUint32 length;
+            possibleDefaultButtons->GetLength(&length);
+            nsCOMPtr<nsIDOMNode> possibleButton;
+            // Check for button in list of default="true" elements
+            for (PRUint32 count = 0; count < length && !buttonEl; count ++) {
+              possibleDefaultButtons->Item(count, getter_AddRefs(possibleButton));
+              buttonEl = do_QueryInterface(possibleButton);
+            }
+          }
+          if (!buttonEl) { // Check for anonymous accept button in <dialog>
+            nsCOMPtr<nsIDOMDocumentXBL> xblDoc(do_QueryInterface(xulDoc));
+            if (xblDoc) {
+              nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(xulDoc);
+              NS_ASSERTION(domDoc, "No DOM document");
+              nsCOMPtr<nsIDOMElement> rootEl;
+              domDoc->GetDocumentElement(getter_AddRefs(rootEl));
+              if (rootEl) {
+                nsCOMPtr<nsIDOMElement> possibleButtonEl;
+                xblDoc->GetAnonymousElementByAttribute(rootEl,
+                                                      NS_LITERAL_STRING("default"),
+                                                      NS_LITERAL_STRING("true"),
+                                                      getter_AddRefs(possibleButtonEl));
+                buttonEl = do_QueryInterface(possibleButtonEl);
+              }
+            }
+          }
+          relatedNode = do_QueryInterface(buttonEl);
+        }
+      }
+      break;
+    }
+  default:
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  if (!relatedID.IsEmpty()) {
+    // In some cases we need to get the relatedNode from an ID-style attribute
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
+    NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDOMElement> relatedEl;
+    domDoc->GetElementById(relatedID, getter_AddRefs(relatedEl));
+    relatedNode = do_QueryInterface(relatedEl);
+  }
+
+  // Return the corresponding accessible if the related DOM node is found
+  if (relatedNode) {
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+    return accService->GetAccessibleInWeakShell(relatedNode, mWeakShell, aRelated);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /* void addSelection (); */

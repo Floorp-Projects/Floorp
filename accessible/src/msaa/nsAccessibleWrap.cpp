@@ -698,6 +698,7 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
     return E_FAIL;
 
   VariantInit(pvarEndUpAt);
+  PRUint32 xpRelation = 0;
 
   switch(navDir) {
     case NAVDIR_DOWN: 
@@ -724,6 +725,33 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
     case NAVDIR_UP:
       xpAccessibleStart->GetAccessibleAbove(getter_AddRefs(xpAccessibleResult));
       break;
+    // MSAA relationship extensions to accNavigate
+    case NAVRELATION_CONTROLLED_BY:    xpRelation = RELATION_CONTROLLED_BY;    break;
+    case NAVRELATION_CONTROLLER_FOR:   xpRelation = RELATION_CONTROLLER_FOR;   break;
+    case NAVRELATION_LABEL_FOR:        xpRelation = RELATION_LABEL_FOR;        break;
+    case NAVRELATION_LABELLED_BY:      xpRelation = RELATION_LABELLED_BY;      break;
+    case NAVRELATION_MEMBER_OF:        xpRelation = RELATION_MEMBER_OF;        break;
+    case NAVRELATION_NODE_CHILD_OF:    xpRelation = RELATION_NODE_CHILD_OF;    break;
+    case NAVRELATION_FLOWS_TO:         xpRelation = RELATION_FLOWS_TO;         break;
+    case NAVRELATION_FLOWS_FROM:       xpRelation = RELATION_FLOWS_FROM;       break;
+    case NAVRELATION_SUBWINDOW_OF:     xpRelation = RELATION_SUBWINDOW_OF;     break;
+    case NAVRELATION_EMBEDS:           xpRelation = RELATION_EMBEDS;           break;
+    case NAVRELATION_EMBEDDED_BY:      xpRelation = RELATION_EMBEDDED_BY;      break;
+    case NAVRELATION_POPUP_FOR:        xpRelation = RELATION_POPUP_FOR;        break;
+    case NAVRELATION_PARENT_WINDOW_OF: xpRelation = RELATION_PARENT_WINDOW_OF; break;
+    case NAVRELATION_DEFAULT_BUTTON:   xpRelation = RELATION_DEFAULT_BUTTON;   break;
+    case NAVRELATION_DESCRIBED_BY:     xpRelation = RELATION_DESCRIBED_BY;     break;
+    case NAVRELATION_DESCRIPTION_FOR:  xpRelation = RELATION_DESCRIPTION_FOR;  break;
+  }
+
+  pvarEndUpAt->vt = VT_EMPTY;
+
+  if (xpRelation) {
+    nsresult rv = GetAccessibleRelated(xpRelation,
+                                       getter_AddRefs(xpAccessibleResult));
+    if (rv == NS_ERROR_NOT_IMPLEMENTED) {
+      return E_NOTIMPL;
+    }
   }
 
   if (xpAccessibleResult) {
@@ -731,7 +759,6 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
     pvarEndUpAt->vt = VT_DISPATCH;
     return NS_OK;
   } 
-  pvarEndUpAt->vt = VT_EMPTY;
   return E_FAIL;
 }
 
