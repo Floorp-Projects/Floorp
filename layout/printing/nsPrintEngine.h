@@ -201,7 +201,6 @@ public:
   nsresult CheckForPrinters(nsIPrintOptions*  aPrintOptions,
                             nsIPrintSettings* aPrintSettings);
   void CleanupDocTitleArray(PRUnichar**& aArray, PRInt32& aCount);
-  void CheckForHiddenFrameSetFrames();
 
   PRBool IsThereARangeSelection(nsIDOMWindow * aDOMWin);
 
