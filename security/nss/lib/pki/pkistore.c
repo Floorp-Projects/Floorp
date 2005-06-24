@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.24 $ $Date: 2005/01/20 02:25:49 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.25 $ $Date: 2005/06/24 00:33:28 $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -99,10 +99,12 @@ static PRIntn subject_list_sort(void *v1, void *v2)
     NSSCertificate *c2 = (NSSCertificate *)v2;
     nssDecodedCert *dc1 = nssCertificate_GetDecoding(c1);
     nssDecodedCert *dc2 = nssCertificate_GetDecoding(c2);
-    if (dc1->isNewerThan(dc1, dc2)) {
+    if (!dc1) {
+	return dc2 ? 1 : 0;
+    } else if (!dc2) {
 	return -1;
     } else {
-	return 1;
+	return dc1->isNewerThan(dc1, dc2) ? -1 : 1;
     }
 }
 
