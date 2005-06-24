@@ -69,10 +69,6 @@
 #include <dlfcn.h>
 #endif
 
-#if defined(XP_MAC) && !TARGET_CARBON
-#include "macstdlibextras.h"
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_COM void 
@@ -166,40 +162,24 @@ struct nsTraceRefcntStats {
 static void * PR_CALLBACK
 DefaultAllocTable(void *pool, PRSize size)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
     return PR_MALLOC(size);
 }
 
 static void PR_CALLBACK
 DefaultFreeTable(void *pool, void *item)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
     PR_Free(item);
 }
 
 static PLHashEntry * PR_CALLBACK
 DefaultAllocEntry(void *pool, const void *key)
 {
-#if defined(XP_MAC)
-#pragma unused (pool,key)
-#endif
-
     return PR_NEW(PLHashEntry);
 }
 
 static void PR_CALLBACK
 SerialNumberFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
     if (flag == HT_FREE_ENTRY) {
         PR_Free(NS_REINTERPRET_CAST(serialNumberRecord*,he->value));
         PR_Free(he);
@@ -209,10 +189,6 @@ SerialNumberFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
 static void PR_CALLBACK
 TypesToLogFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
     if (flag == HT_FREE_ENTRY) {
         nsCRT::free(NS_CONST_CAST(char*,
                      NS_REINTERPRET_CAST(const char*, he->key)));
@@ -417,10 +393,6 @@ protected:
 static void PR_CALLBACK
 BloatViewFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
     if (flag == HT_FREE_ENTRY) {
         BloatEntry* entry = NS_REINTERPRET_CAST(BloatEntry*,he->value);
         delete entry;
@@ -695,11 +667,6 @@ static void InitTraceLog(void)
   if (gInitialized) return;
   gInitialized = PR_TRUE;
 
-#if defined(XP_MAC) && !TARGET_CARBON
-  // this can get called before Toolbox has been initialized.
-  InitializeMacToolbox();
-#endif
-
   PRBool defined;
   defined = InitLog("XPCOM_MEM_BLOAT_LOG", "bloat/leaks", &gBloatLog);
   if (!defined)
@@ -868,98 +835,6 @@ void
 nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
 {
   DumpStackToFile(aStream);
-}
-
-#elif defined(XP_MAC)
-
-/**
- * Stack walking code for the Mac OS.
- */
-
-#include "gc_fragments.h"
-
-#include <typeinfo>
-
-extern "C" {
-void MWUnmangle(const char *mangled_name, char *unmangled_name, size_t buffersize);
-}
-
-struct traceback_table {
-	long zero;
-	long magic;
-	long reserved;
-	long codeSize;
-	short nameLength;
-	char name[2];
-};
-
-static char* pc2name(long* pc, char name[], long size)
-{
-	name[0] = '\0';
-	
-	// make sure pc is instruction aligned (at least).
-	if (UInt32(pc) == (UInt32(pc) & 0xFFFFFFFC)) {
-		long instructionsToLook = 4096;
-		long* instruction = (long*)pc;
-		
-		// look for the traceback table.
-		while (instructionsToLook--) {
-			if (instruction[0] == 0x4E800020 && instruction[1] == 0x00000000) {
-				traceback_table* tb = (traceback_table*)&instruction[1];
-				memcpy(name, tb->name + 1, --nameLength);
-				name[nameLength] = '\0';
-				break;
-			}
-			++instruction;
-		}
-	}
-	
-	return name;
-}
-
-struct stack_frame {
-	stack_frame*	next;				// savedSP
-	void*			savedCR;
-	void*			savedLR;
-	void*			reserved0;
-	void*			reserved1;
-	void*			savedTOC;
-};
-
-static asm stack_frame* getStackFrame() 
-{
-	mr		r3, sp
-	blr
-}
-
-NS_COM void
-nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
-{
-  stack_frame* currentFrame = getStackFrame();    // WalkTheStack's frame.
-	currentFrame = currentFrame->next;	            // WalkTheStack's caller's frame.
-	currentFrame = currentFrame->next;              // WalkTheStack's caller's caller's frame.
-    
-	while (true) {
-		// LR saved at 8(SP) in each frame. subtract 4 to get address of calling instruction.
-		void* pc = currentFrame->savedLR;
-
-		// convert PC to name, unmangle it, and generate source location, if possible.
-		static char symbol_name[1024], unmangled_name[1024], file_name[256]; UInt32 file_offset;
-		
-     	if (GC_address_to_source((char*)pc, symbol_name, file_name, &file_offset)) {
-			MWUnmangle(symbol_name, unmangled_name, sizeof(unmangled_name));
-     		fprintf(aStream, "%s[%s,%ld]\n", unmangled_name, file_name, file_offset);
-     	} else {
- 		    pc2name((long*)pc, symbol_name, sizeof(symbol_name));
-			MWUnmangle(symbol_name, unmangled_name, sizeof(unmangled_name));
-    		fprintf(aStream, "%s(0x%08X)\n", unmangled_name, pc);
-     	}
-
-		currentFrame = currentFrame->next;
-		// the bottom-most frame is marked as pointing to NULL, or is ODD if a 68K transition frame.
-		if (currentFrame == NULL || UInt32(currentFrame) & 0x1)
-			break;
-	}
 }
 
 #else // unsupported platform.

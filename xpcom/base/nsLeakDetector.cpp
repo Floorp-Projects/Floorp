@@ -199,15 +199,9 @@ nsresult NS_InitLeakDetector()
 	return registrar->RegisterFactory(info.mCID, info.mDescription, info.mContractID, factory);
 }
 
-#ifdef XP_MAC
-#define SHUTDOWN_LEAKS_EARLY
-#undef SHUTDOWN_LEAKS_MEDIUM
-#undef SHUTDOWN_LEAKS_LATE
-#else
 #undef SHUTDOWN_LEAKS_EARLY
 #undef SHUTDOWN_LEAKS_MEDIUM
 #define SHUTDOWN_LEAKS_LATE
-#endif
 
 class LeakDetectorFinalizer
 {
