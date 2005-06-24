@@ -835,7 +835,6 @@ var gDownloadingPage = {
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"].
         getService(Components.interfaces.nsIApplicationUpdateService);
-    LOG("REMOVE LISTENER");
     updates.removeDownloadListener(this);
     
     var um = 

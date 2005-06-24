@@ -416,10 +416,7 @@ function UpdateService() {
   // shutdown leaks.
   gOS.addObserver(this, "xpcom-shutdown", false);
   
-  var logBranch = gPref.getBranch(PREF_APP_UPDATE_LOG_BRANCH);
-  var modules = logBranch.getChildList("", { });
-  for (var i = 0; i < modules.length; ++i)
-    gLogEnabled[modules[i]] = logBranch.getBoolPref(modules[i]);
+  this._initLoggingPrefs();
 }
 
 UpdateService.prototype = {
@@ -444,6 +441,8 @@ UpdateService.prototype = {
                     .getService(Components.interfaces.nsIUpdateTimerManager);
       var interval = getPref("getIntPref", PREF_APP_UPDATE_INTERVAL, 86400000);
       tm.registerTimer("background-update-timer", this, interval);
+
+      this._initLoggingPrefs();
       break;
     case "xpcom-shutdown":
       gOS.removeObserver(this, "xpcom-shutdown");
@@ -451,6 +450,22 @@ UpdateService.prototype = {
     }
   },
   
+  /**
+   *
+   */
+  _initLoggingPrefs: function() {
+    var ps = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefService);
+    var logBranch = ps.getBranch(PREF_APP_UPDATE_LOG_BRANCH);
+    var modules = logBranch.getChildList("", { value: 0 });
+
+    for (var i = 0; i < modules.length; ++i)
+      gLogEnabled[modules[i]] = logBranch.getBoolPref(modules[i]);
+  },
+  
+  /**
+   *
+   */
   _needsToPromptForUpdate: function(updates) {
     // First, check for Extension incompatibilities. These trump any preference
     // settings.
@@ -1434,7 +1449,7 @@ Downloader.prototype = {
         LOG("Downloader", "resuming download");
         return selectedPatch;
       case STATE_PENDING:
-        LOG("already downloaded and staged");
+        LOG("Downloader", "already downloaded and staged");
         return null;
       case STATE_FAILED:
       case STATE_APPLYING:
@@ -1444,7 +1459,7 @@ Downloader.prototype = {
           useComplete = true;
         } else {
           // This is a pretty fatal error.  Just bail.
-          LOG("failed to apply complete patch!");
+          LOG("Downloader", "failed to apply complete patch!");
           return null;
         }
       }
@@ -1463,7 +1478,7 @@ Downloader.prototype = {
       selectedPatch = null;
     }
     
-    LOG("USE COMPLETE = " + useComplete);
+    LOG("Downloader", "USE COMPLETE = " + useComplete);
 
     // If we were not able to discover an update from a previous download, we 
     // select the best patch from the given set.
@@ -1510,9 +1525,9 @@ Downloader.prototype = {
     // This function may return null, which indicates that there are no patches
     // to download.
     this._patch = this._selectPatch(update, updateDir);
-    LOG("PATCH = " + this._patch);
+    LOG("Downloader", "PATCH = " + this._patch);
     if (!this._patch) {
-      LOG("no patch to download");
+      LOG("Downloader", "no patch to download");
       return this._readStatusFile(updateDir);
     }
     this.isCompleteUpdate = this._patch.type == "complete";
@@ -1528,7 +1543,7 @@ Downloader.prototype = {
         Components.classes["@mozilla.org/network/incremental-download;1"].
         createInstance(nsIIncrementalDownload);
 
-    LOG("Downloader.downloadUpdate: Downloading from " + uri.spec + " to " + 
+    LOG("Downloader", "downloadUpdate: Downloading from " + uri.spec + " to " + 
         patchFile.path);
 
     var interval = this.background ? DOWNLOAD_BACKGROUND_INTERVAL
@@ -1536,7 +1551,7 @@ Downloader.prototype = {
     this._request.init(uri, patchFile, DOWNLOAD_CHUNK_SIZE, interval);
     this._request.start(this, null);
 
-    LOG("setting state = " + STATE_DOWNLOADING);
+    LOG("Downloader", "setting state = " + STATE_DOWNLOADING);
     this._writeStatusFile(updateDir, STATE_DOWNLOADING);
     this._patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
     this._patch.state = STATE_DOWNLOADING;
@@ -1579,7 +1594,7 @@ Downloader.prototype = {
    */
   onStartRequest: function(request, context) {
     request.QueryInterface(nsIIncrementalDownload);
-    LOG("Downloader.onStartRequest: " + request.URI.spec);
+    LOG("Downloader", "onStartRequest: " + request.URI.spec);
     
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i)
@@ -1591,7 +1606,7 @@ Downloader.prototype = {
    */
   onProgress: function(request, context, progress, maxProgress) {
     request.QueryInterface(nsIIncrementalDownload);
-    // LOG("Downloader.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
+    // LOG("Downloader", "onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
     
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i) {
@@ -1606,7 +1621,7 @@ Downloader.prototype = {
    */
   onStatus: function(request, context, status, statusText) {
     request.QueryInterface(nsIIncrementalDownload);
-    LOG("Downloader.onStatus: " + request.URI.spec + " status = " + status + ", text = " + statusText);
+    LOG("Downloader", "onStatus: " + request.URI.spec + " status = " + status + ", text = " + statusText);
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i) {
       var listener = this._listeners[i];
@@ -1620,7 +1635,7 @@ Downloader.prototype = {
    */
   onStopRequest: function(request, context, status) {
     request.QueryInterface(nsIIncrementalDownload);
-    LOG("Downloader.onStopRequest: " + request.URI.spec + ", status = " + status);
+    LOG("Downloader", "onStopRequest: " + request.URI.spec + ", status = " + status);
 
     var shouldShowPrompt = false;
     if (Components.isSuccessCode(status)) {
@@ -1634,7 +1649,7 @@ Downloader.prototype = {
         if (this.background)
           shouldShowPrompt = true;
       } else {
-        LOG("Downloader.onStopRequest: download verification failed");
+        LOG("Downloader", "onStopRequest: download verification failed");
         state = STATE_FAILED;
         // TODO: use more informative error code here
         status = Components.results.NS_ERROR_UNEXPECTED;
@@ -1650,7 +1665,7 @@ Downloader.prototype = {
       if (state == STATE_FAILED && !this._update.isCompleteUpdate) {
         // If we were downloading a patch and the patch verification phase 
         // failed, log this and then commence downloading the complete update.
-        LOG("Downloader.onStopRequest: Verification of patch failed, downloading complete update");
+        LOG("Downloader", "onStopRequest: Verification of patch failed, downloading complete update");
         this._update.isCompleteUpdate = true;
         this.downloadUpdate(this._update);
         // This will reset the |.state| property on this._update if a new 
