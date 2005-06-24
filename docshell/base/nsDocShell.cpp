@@ -4799,7 +4799,7 @@ nsDocShell::CreateAboutBlankContentViewer()
 }
 
 PRBool
-nsDocShell::CanSavePresentation(nsIRequest *aNewRequest)
+nsDocShell::CanSavePresentation(PRUint32 aLoadType, nsIRequest *aNewRequest)
 {
     if (!mOSHE)
         return PR_FALSE; // no entry to save into
@@ -4807,9 +4807,9 @@ nsDocShell::CanSavePresentation(nsIRequest *aNewRequest)
     // Only save presentation for "normal" loads and link loads.  Anything else
     // probably wants to refetch the page, so caching the old presentation
     // would be incorrect.
-    if (mLoadType != LOAD_NORMAL &&
-        mLoadType != LOAD_HISTORY &&
-        mLoadType != LOAD_LINK)
+    if (aLoadType != LOAD_NORMAL &&
+        aLoadType != LOAD_HISTORY &&
+        aLoadType != LOAD_LINK)
         return PR_FALSE;
 
     // If the session history entry has the saveLayoutState flag set to false,
@@ -4842,8 +4842,13 @@ nsDocShell::CanSavePresentation(nsIRequest *aNewRequest)
 nsresult
 nsDocShell::CaptureState()
 {
+    if (!mOSHE || mOSHE == mLSHE) {
+        // No entry to save into, or we're replacing the existing entry.
+        return NS_ERROR_FAILURE;
+    }
+
     nsCOMPtr<nsPIDOMWindow> privWin = do_QueryInterface(mScriptGlobal);
-    if (!privWin || !mOSHE)
+    if (!privWin)
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsISupports> windowState;
@@ -5098,7 +5103,7 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
         printf("No valid container, clearing presentation\n");
 #endif
         aSHEntry->SetContentViewer(nsnull);
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
 
     NS_ASSERTION(mContentViewer != viewer, "Restoring existing presentation");
@@ -5357,8 +5362,15 @@ nsDocShell::CreateContentViewer(const char *aContentType,
     // wrong information :-(
     //
 
-    PRBool savePresentation = CanSavePresentation(request);
-    FirePageHideNotification(!savePresentation);
+    if (mSavingOldViewer) {
+        // We determined that it was safe to cache the document presentation
+        // at the time we initiated the new load.  We need to check whether
+        // it's still safe to do so, since there may have been DOM mutations
+        // or new requests initiated.
+        mSavingOldViewer = CanSavePresentation(mLoadType, request);
+    }
+
+    FirePageHideNotification(!mSavingOldViewer);
 
     // Set mFiredUnloadEvent = PR_FALSE so that the unload handler for the
     // *new* document will fire.
@@ -5372,8 +5384,6 @@ nsDocShell::CreateContentViewer(const char *aContentType,
     nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
 
     PRBool onLocationChangeNeeded = OnLoadingSite(aOpenedChannel, PR_FALSE);
-
-    mSavingOldViewer = savePresentation;
 
     // let's try resetting the load group if we need to...
     nsCOMPtr<nsILoadGroup> currentLoadGroup;
@@ -6242,7 +6252,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // This is necessary so that we can catch any pending requests.
     // Since the new request has not been created yet, we pass null for the
     // new request parameter.
-    PRBool savePresentation = CanSavePresentation(nsnull);
+    PRBool savePresentation = CanSavePresentation(aLoadType, nsnull);
 
     // Don't stop current network activity for javascript: URL's since
     // they might not result in any data, and thus nothing should be
@@ -6278,23 +6288,25 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // mLSHE should be assigned to aSHEntry, only after Stop() has
     // been called.
     mLSHE = aSHEntry;
+    mSavingOldViewer = savePresentation;
 
     // If we have a saved content viewer in history, restore and show it now.
-    if (aSHEntry) {
+    if (aSHEntry && (mLoadType & LOAD_CMD_HISTORY)) {
         nsCOMPtr<nsISHEntry> oldEntry = mOSHE;
         PRBool restored;
-        rv = RestorePresentation(aSHEntry, savePresentation &&
-                                 NS_SUCCEEDED(rv), &restored);
+        rv = RestorePresentation(aSHEntry, savePresentation, &restored);
         if (restored)
             return rv;
 
         // We failed to restore the presentation, so clean up.
         // Both the old and new history entries could potentially be in
         // an inconsistent state.
-        if (oldEntry)
-            oldEntry->SyncPresentationState();
+        if (NS_FAILED(rv)) {
+            if (oldEntry)
+                oldEntry->SyncPresentationState();
 
-        aSHEntry->SyncPresentationState();
+            aSHEntry->SyncPresentationState();
+        }
     }
 
     nsCOMPtr<nsIRequest> req;
