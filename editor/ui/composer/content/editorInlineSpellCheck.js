@@ -57,7 +57,7 @@ var InlineSpellChecker =
   checkDocument : function(doc)
   {
     if (!this.inlineSpellChecker || !this.inlineSpellChecker.enableRealTimeSpell) 
-      return null;
+      return;
 
     var range = doc.createRange();
     range.selectNodeContents(doc.body);
@@ -130,7 +130,7 @@ var InlineSpellChecker =
   selectSuggestion : function (newword, node, offset)
   {
     if (!this.inlineSpellChecker || !this.inlineSpellChecker.enableRealTimeSpell) 
-      return null;
+      return;
 
     if (!node) 
     {
@@ -145,7 +145,7 @@ var InlineSpellChecker =
   addToDictionary : function (node, offset)
   {
     if (!this.inlineSpellChecker || !this.inlineSpellChecker.enableRealTimeSpell) 
-      return null;
+      return;
 
     if (!node)
     {
@@ -161,7 +161,7 @@ var InlineSpellChecker =
   ignoreWord : function (node, offset)
   {
     if (!this.inlineSpellChecker || !this.inlineSpellChecker.enableRealTimeSpell) 
-      return null;
+      return;
 
     if (!node)
     {
