@@ -3638,6 +3638,8 @@ static const struct MidasCommand gMidasCommandTable[] = {
   { "useCSS",        "cmd_setDocumentUseCSS",   "", PR_FALSE, PR_TRUE },
   { "readonly",      "cmd_setDocumentReadOnly", "", PR_FALSE, PR_TRUE },
   { "insertBrOnReturn", "cmd_insertBrOnReturn", "", PR_FALSE, PR_TRUE },
+  { "enableObjectResizing", "cmd_enableObjectResizing", "", PR_FALSE, PR_TRUE },
+  { "enableInlineTableEditing", "cmd_enableInlineTableEditing", "", PR_FALSE, PR_TRUE },
 #if 0
 // no editor support to remove alignments right now
   { "justifynone",   "cmd_align",           "", PR_TRUE,  PR_FALSE },
