@@ -2022,13 +2022,13 @@ class BodyCodegen
                 addDoubleWrap();
                 break;
 
-              case Optimizer.TO_DOUBLE:
+              case Token.TO_DOUBLE:
                 // cnvt to double (not Double)
                 generateExpression(child, node);
                 addObjectToDouble();
                 break;
 
-              case Optimizer.TO_OBJECT: {
+              case Token.TO_OBJECT: {
                 // convert from double
                 int prop = -1;
                 if (child.getType() == Token.NUMBER) {
@@ -3535,7 +3535,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         } else {
             int child_dcp_register = nodeIsDirectCallParameter(child);
             if (child_dcp_register != -1
-                && rChild.getType() == Optimizer.TO_OBJECT)
+                && rChild.getType() == Token.TO_OBJECT)
             {
                 Node convertChild = rChild.getFirstChild();
                 if (convertChild.getType() == Token.NUMBER) {

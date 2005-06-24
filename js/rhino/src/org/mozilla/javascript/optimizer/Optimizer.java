@@ -48,9 +48,6 @@ class Optimizer
     static final int NumberType = 1;
     static final int AnyType = 3;
 
-    static final int TO_OBJECT = Token.LAST_TOKEN + 1;
-    static final int TO_DOUBLE = Token.LAST_TOKEN + 2;
-
     // It is assumed that (NumberType | AnyType) == AnyType
 
     void optimize(ScriptOrFnNode scriptOrFn, int optLevel)
@@ -217,7 +214,8 @@ class Optimizer
                     else if (theFunction.isNumberVar(varIndex)) {
                         if (rType != NumberType) {
                             n.removeChild(rChild);
-                            n.addChildToBack(new Node(TO_DOUBLE, rChild));
+                            n.addChildToBack(
+                                new Node(Token.TO_DOUBLE, rChild));
                         }
                         n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                         markDCPNumberContext(rChild);
@@ -227,8 +225,8 @@ class Optimizer
                         if (rType == NumberType) {
                             if (!convertParameter(rChild)) {
                                 n.removeChild(rChild);
-                                n.addChildToBack(new Node(TO_OBJECT,
-                                                          rChild));
+                                n.addChildToBack(
+                                    new Node(Token.TO_OBJECT, rChild));
                             }
                         }
                         return NoType;
@@ -343,7 +341,8 @@ class Optimizer
                         else {
                             if (!convertParameter(rChild)) {
                                 n.removeChild(rChild);
-                                n.addChildToBack(new Node(TO_DOUBLE, rChild));
+                                n.addChildToBack(
+                                    new Node(Token.TO_DOUBLE, rChild));
                                 n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             }
                             return NumberType;
@@ -353,7 +352,8 @@ class Optimizer
                         if (rType == NumberType) {
                             if (!convertParameter(lChild)) {
                                 n.removeChild(lChild);
-                                n.addChildToFront(new Node(TO_DOUBLE, lChild));
+                                n.addChildToFront(
+                                    new Node(Token.TO_DOUBLE, lChild));
                                 n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             }
                             return NumberType;
@@ -361,11 +361,13 @@ class Optimizer
                         else {
                             if (!convertParameter(lChild)) {
                                 n.removeChild(lChild);
-                                n.addChildToFront(new Node(TO_DOUBLE, lChild));
+                                n.addChildToFront(
+                                    new Node(Token.TO_DOUBLE, lChild));
                             }
                             if (!convertParameter(rChild)) {
                                 n.removeChild(rChild);
-                                n.addChildToBack(new Node(TO_DOUBLE, rChild));
+                                n.addChildToBack(
+                                    new Node(Token.TO_DOUBLE, rChild));
                             }
                             n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             return NumberType;
@@ -381,7 +383,8 @@ class Optimizer
                     if (baseType == NumberType) {// can never happen ???
                         if (!convertParameter(arrayBase)) {
                             n.removeChild(arrayBase);
-                            n.addChildToFront(new Node(TO_OBJECT, arrayBase));
+                            n.addChildToFront(
+                                new Node(Token.TO_OBJECT, arrayBase));
                         }
                     }
                     int indexType = rewriteForNumberVariables(arrayIndex);
@@ -396,7 +399,8 @@ class Optimizer
                     if (rValueType == NumberType) {
                         if (!convertParameter(rValue)) {
                             n.removeChild(rValue);
-                            n.addChildToBack(new Node(TO_OBJECT, rValue));
+                            n.addChildToBack(
+                                new Node(Token.TO_OBJECT, rValue));
                         }
                     }
                     return NoType;
@@ -408,7 +412,8 @@ class Optimizer
                     if (baseType == NumberType) {// can never happen ???
                         if (!convertParameter(arrayBase)) {
                             n.removeChild(arrayBase);
-                            n.addChildToFront(new Node(TO_OBJECT, arrayBase));
+                            n.addChildToFront(
+                                new Node(Token.TO_OBJECT, arrayBase));
                         }
                     }
                     int indexType = rewriteForNumberVariables(arrayIndex);
@@ -470,7 +475,7 @@ class Optimizer
             if (type == NumberType) {
                 if (!convertParameter(child)) {
                     n.removeChild(child);
-                    Node nuChild = new Node(TO_OBJECT, child);
+                    Node nuChild = new Node(Token.TO_OBJECT, child);
                     if (nextChild == null)
                         n.addChildToBack(nuChild);
                     else

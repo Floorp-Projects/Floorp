@@ -239,19 +239,17 @@ public class Token
         XMLATTR        = 143,  // @
         XMLEND         = 144,
 
-        LAST_TOKEN     = 144;
+        // Optimizer-only-tokens
+        TO_OBJECT      = 145,
+        TO_DOUBLE      = 146,
+
+        LAST_TOKEN     = 146;
 
     public static String name(int token)
     {
         if (!printNames) {
             return String.valueOf(token);
         }
-        if (!(-1 <= token && token <= LAST_TOKEN)) {
-            // Optimizer-only token
-            return String.valueOf(token);
-        }
-
-
         switch (token) {
           case ERROR:           return "ERROR";
           case EOF:             return "EOF";
@@ -398,6 +396,8 @@ public class Token
           case DOTQUERY:        return "DOTQUERY";
           case XMLATTR:         return "XMLATTR";
           case XMLEND:          return "XMLEND";
+          case TO_OBJECT:       return "TO_OBJECT";
+          case TO_DOUBLE:       return "TO_DOUBLE";
         }
 
         // Token without name
