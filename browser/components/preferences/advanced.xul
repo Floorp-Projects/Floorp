@@ -81,15 +81,6 @@
       <preference id="security.disable_button.openDeviceManager"
                   name="security.disable_button.openDeviceManager"
                   type="bool"/>
-      <preference id="pref.update.disable_button.update_app"
-                  name="pref.update.disable_button.update_app"
-                  type="bool"/>
-      <preference id="pref.update.disable_button.show_updates"
-                  name="pref.update.disable_button.show_updates"
-                  type="bool"/>
-      <preference id="pref.update.disable_button.update_addons"
-                  name="pref.update.disable_button.update_addons"
-                  type="bool"/>
     </preferences>
     
     <script type="application/x-javascript" src="chrome://browser/content/preferences/advanced.js"/>
@@ -172,10 +163,9 @@
                 <hbox>
                   <button label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
                           oncommand="gAdvancedPane.checkForUpdates();"
-                          preference="pref.update.disable_button.update_app"/>
+                          preference="app.update.enabled"/>
                   <button label="&showUpdates.label;" accesskey="&showUpdates.accesskey;"
-                          oncommand="gAdvancedPane.showUpdates();"
-                          preference="pref.update.disable_button.show_updates"/>
+                          oncommand="gAdvancedPane.showUpdates();"/>
                 </hbox>
               </vbox>
             </vbox>
@@ -190,8 +180,8 @@
               <separator class="thin"/>
               <hbox class="indent">
                 <button label="&checkNow.label;" accesskey="&extensionsCheckNow.accesskey;"
-                        oncommand="gAdvancedPane.checkForUpdates(Components.interfaces.nsIUpdateItem.TYPE_ADDON);"
-                        preference="pref.update.disable_button.update_addons"/>
+                        oncommand="gAdvancedPane.checkForAddonUpdates();"
+                        preference="extensions.update.autoUpdateEnabled"/>
               </hbox>
             </vbox>
           </vbox>

@@ -48,8 +48,8 @@
 <!ENTITY  close.label                     "Close">
 <!ENTITY  close.accesskey                 "C">
 
-<!ENTITY  error.label                     "There were problems installing this update. &brandShortName; could
-                                           not be updated because:">
+<!ENTITY  error.label                     "There were problems checking for, downloading or installing this 
+                                           update. &brandShortName; could not be updated because:">
                                            
 <!ENTITY  errorManual.label               "You can update &brandShortName; manually by visiting this link
                                            and downloading the latest version:">

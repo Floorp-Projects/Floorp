@@ -43,6 +43,7 @@ interface nsIRequest;
 interface nsIRequestObserver;
 interface nsISimpleEnumerator;
 interface nsITimerCallback;
+interface nsIXMLHttpRequest;
 
 [scriptable, uuid(56863a67-bd69-42de-9f40-583e625b457d)]
 interface nsIUpdatePatch : nsISupports
@@ -167,22 +168,38 @@ interface nsIUpdate : nsISupports
 interface nsIUpdateCheckListener : nsISupports
 {
   /**
-   *
+   * Called every time there is a progress notification loading the Update
+   * Service file.
+   * @param   request
+   *          The nsIXMLHttpRequest handling the update check.
+   * @param   position
+   *          The current byte downloaded
+   * @param   totalSize
+   *          The total number of bytes that have to be downloaded
    */
-  void onProgress(in nsIRequest request, 
+  void onProgress(in nsIXMLHttpRequest request, 
                   in unsigned long position,
                   in unsigned long totalSize);
 
   /**
-   *
+   * The update check was completed. 
+   * @param   request
+   *          The nsIXMLHttpRequest handling the update check.
+   * @param   updates
+   *          An array of nsIUpdate objects listing available updates.
+   * @param   updateCount
+   *          The size of the |updates| array.
    */
-  void onCheckComplete([array, size_is(updateCount)] in nsIUpdate updates,
+  void onCheckComplete(in nsIXMLHttpRequest request, 
+                       [array, size_is(updateCount)] in nsIUpdate updates,
                        in unsigned long updateCount);
 
   /**
-   *
+   * An error occurred while loading the remote update service file. 
+   * @param   request
+   *          The nsIXMLHttpRequest handling the update check.
    */
-  void onError();
+  void onError(in nsIXMLHttpRequest request);
 };
 
 [scriptable, uuid(22b00276-ec23-4034-a764-395da539b4be)]

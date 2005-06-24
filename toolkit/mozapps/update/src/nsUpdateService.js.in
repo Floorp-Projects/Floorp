@@ -499,11 +499,25 @@ UpdateService.prototype = {
 
     var self = this;
     var listener = {
-      onProgress: function() { },
-      onCheckComplete: function(updates, updateCount) {
+      /**
+       * See nsIUpdateService.idl
+       */
+      onProgress: function(request, position, totalSize) { 
+      },
+      
+      /**
+       * See nsIUpdateService.idl
+       */
+      onCheckComplete: function(request, updates, updateCount) {
         self._selectAndInstallUpdate(updates);
       },
-      onError: function() { },
+
+      /**
+       * See nsIUpdateService.idl
+       */
+      onError: function(request) { 
+        LOG("Checker", "Error during background update");
+      },
     }
     this.backgroundChecker.checkForUpdates(listener, false);
   },
@@ -1194,7 +1208,7 @@ Checker.prototype = {
 
     if (updatesElement.nodeName != "updates") {
       LOG("Checker", "get_updates: unexpected node name!");
-      return [];
+      throw "";
     }
     
     var updates = [];
@@ -1222,12 +1236,20 @@ Checker.prototype = {
       this.observer.onLoad(event.target);
 
     // Analyze the resulting DOM and determine the set of updates to install
-    var updates = this._updates;
-
-    LOG("Checker", "Updates available: " + updates.length);
-    
-    // ... and tell the Update Service about what we discovered.
-    this._callback.onCheckComplete(updates, updates.length);
+    try {
+      var updates = this._updates;
+      
+      LOG("Checker", "Updates available: " + updates.length);
+      
+      // ... and tell the Update Service about what we discovered.
+      this._callback.onCheckComplete(event.target, updates, updates.length);
+    }
+    catch (e) {
+      LOG("Checker", "There was a problem with the update service URL specified, " + 
+          "either the XML file was malformed or it does not exist at the location " + 
+          "specified");
+      this._callback.onError(event.target);
+    }
   },
   
   /**
