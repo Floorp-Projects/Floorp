@@ -184,7 +184,7 @@ nsUnicharStreamLoader::OnStopRequest(nsIRequest *request,
     rv = uin->Init(mInputStream,
                    mCharset.get(),
                    mSegmentSize,
-                   PR_TRUE);
+                   nsIConverterInputStream::DEFAULT_REPLACEMENT_CHARACTER);
     
     if (NS_FAILED(rv)) {
       rv = mObserver->OnStreamComplete(this, mContext, rv, nsnull);

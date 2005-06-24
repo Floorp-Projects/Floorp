@@ -1,4 +1,4 @@
-#
+# vim:set noet ts=8:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -62,6 +62,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  unicharutil \
 		  chardet \
+		  necko \
 		  $(NULL)
 
 CSRCS		= \
@@ -74,6 +75,7 @@ CPPSRCS		= \
 		nsUConvModule.cpp \
 		nsCharsetAliasImp.cpp \
 		nsConverterInputStream.cpp \
+		nsConverterOutputStream.cpp \
 		nsTextToSubURI.cpp \
 		nsURLProperties.cpp \
 		nsCharsetConverterManager.cpp \

@@ -56,6 +56,7 @@
 #include "nsTextToSubURI.h"
 #include "nsUTF8ConverterService.h"
 #include "nsConverterInputStream.h"
+#include "nsConverterOutputStream.h"
 #include "nsPlatformCharset.h"
 
 #ifndef MOZ_USE_NATIVE_UCONV
@@ -717,6 +718,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextToSubURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF8ConverterService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetAlias2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterInputStream)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterOutputStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPlatformCharset, Init)
 
 static const nsModuleComponentInfo components[] = 
@@ -745,6 +747,10 @@ static const nsModuleComponentInfo components[] =
   { "Unicode converter input stream", NS_CONVERTERINPUTSTREAM_CID,              
     NS_CONVERTERINPUTSTREAM_CONTRACTID, 
     nsConverterInputStreamConstructor 
+  },   
+  { "Unicode converter output stream", NS_CONVERTEROUTPUTSTREAM_CID,
+    "@mozilla.org/intl/converter-output-stream;1",
+    nsConverterOutputStreamConstructor 
   },   
 #ifdef MOZ_USE_NATIVE_UCONV
   { 

@@ -229,7 +229,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
         nsString tmp;
         rv = pc->GetCharset(kPlatformCharsetSel_FileName, tmp);
         if (NS_FAILED(rv)) return rv;
-        mFSCharset.Adopt(ToNewCString(tmp));
+        LossyCopyUTF16toASCII(tmp, mFSCharset);
 #endif   
     }
     

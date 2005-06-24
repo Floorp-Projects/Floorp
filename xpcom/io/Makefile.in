@@ -97,7 +97,6 @@ EXPORTS		= \
 		nsEscape.h \
 		nsFastLoadPtr.h \
 		nsFastLoadService.h \
-		nsIUnicharInputStream.h \
 		nsLinebreakConverter.h \
 		nsLocalFile.h \
 		nsMultiplexInputStream.h \
@@ -133,6 +132,7 @@ XPIDLSRCS	= \
 		nsIInputStreamTee.idl \
 		nsILocalFileWin.idl \
 		nsILineInputStream.idl \
+		nsIUnicharLineInputStream.idl \
 		nsIMultiplexInputStream.idl \
 		nsIObjectInputStream.idl \
 		nsIObjectOutputStream.idl \
@@ -143,6 +143,10 @@ XPIDLSRCS	= \
 		nsIStreamBufferAccess.idl \
 		nsIAsyncInputStream.idl \
 		nsIAsyncOutputStream.idl \
+		nsIUnicharInputStream.idl \
+		nsIUnicharOutputStream.idl \
+		nsIConverterInputStream.idl \
+		nsIConverterOutputStream.idl \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

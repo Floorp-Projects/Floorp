@@ -49,7 +49,7 @@
 #include "prlog.h"
 #include "prio.h"
 
-struct nsLineBuffer;
+template<class CharType> class nsLineBuffer;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,7 +101,7 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
-    nsLineBuffer     *mLineBuffer;
+    nsLineBuffer<char> *mLineBuffer;
 
     /**
      * The file being opened.  Only stored when DELETE_ON_CLOSE or

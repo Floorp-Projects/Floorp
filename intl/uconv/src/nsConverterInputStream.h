@@ -35,8 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIInputStream.h"
 #include "nsIConverterInputStream.h"
+#include "nsIUnicharLineInputStream.h"
 #include "nsString.h"
+#include "nsReadLine.h"
 
 #include "nsCOMPtr.h"
 #include "nsIUnicodeDecoder.h"
@@ -52,28 +55,24 @@
 
 
 
-class nsConverterInputStream : nsIConverterInputStream {
+class nsConverterInputStream : public nsIConverterInputStream,
+                               public nsIUnicharLineInputStream {
 
  public:
     NS_DECL_ISUPPORTS
-    NS_IMETHOD Read(PRUnichar* aBuf,
-                    PRUint32 aCount,
-                    PRUint32 *aReadCount);
-    NS_IMETHOD Close();
-    NS_IMETHOD Init(nsIInputStream* aStream, const char *aCharset,
-                    PRInt32 aBufferSize, PRBool aRecoverFromErrors);
-    NS_IMETHOD ReadSegments(nsWriteUnicharSegmentFun aWriter,
-                            void* aClosure,
-                            PRUint32 aCount, PRUint32* aReadCount);
+    NS_DECL_NSIUNICHARINPUTSTREAM
+    NS_DECL_NSIUNICHARLINEINPUTSTREAM
+    NS_DECL_NSICONVERTERINPUTSTREAM
 
     nsConverterInputStream() :
         mLastErrorCode(NS_OK),
         mLeftOverBytes(0),
         mUnicharDataOffset(0),
         mUnicharDataLength(0),
-        mRecoverFromErrors(PR_FALSE) { }
+        mReplacementChar(DEFAULT_REPLACEMENT_CHARACTER),
+        mLineBuffer(nsnull) { }
     
-    virtual ~nsConverterInputStream() {}
+    virtual ~nsConverterInputStream() { Close(); }
 
  private:
 
@@ -85,10 +84,11 @@ class nsConverterInputStream : nsIConverterInputStream {
     nsCOMPtr<nsIUnicharBuffer> mUnicharData;
     nsCOMPtr<nsIInputStream> mInput;
 
-    nsresult mLastErrorCode;
-    PRUint32 mLeftOverBytes;
-    PRUint32 mUnicharDataOffset;
-    PRUint32 mUnicharDataLength;
-    PRBool   mRecoverFromErrors;
-    
+    nsresult  mLastErrorCode;
+    PRUint32  mLeftOverBytes;
+    PRUint32  mUnicharDataOffset;
+    PRUint32  mUnicharDataLength;
+    PRUnichar mReplacementChar;
+
+    nsLineBuffer<PRUnichar>* mLineBuffer;    
 };
