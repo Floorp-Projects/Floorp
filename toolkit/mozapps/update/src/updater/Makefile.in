@@ -93,6 +93,14 @@ ifndef HAVE_PROGRESSUI
 CPPSRCS += progressui_null.cpp
 endif
 
+ifndef MOZ_WINCONSOLE
+ifdef MOZ_DEBUG
+MOZ_WINCONSOLE = 1
+else
+MOZ_WINCONSOLE = 0
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
