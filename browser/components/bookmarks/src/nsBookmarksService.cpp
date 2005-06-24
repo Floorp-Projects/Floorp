@@ -4514,7 +4514,6 @@ nsBookmarksService::ReadFavorites()
     }
 #ifdef DEBUG_varga
     PRTime now2 = PR_Now();
-#endif
     PRUint64    loadTime64;
     LL_SUB(loadTime64, now2, now);
     PRUint32    loadTime32;
