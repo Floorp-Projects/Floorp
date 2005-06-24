@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,9 +17,10 @@
  * The Initial Developer of the Original Code is
  * IBM Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2005
- * the Initial Developer. All Rights Reserved.
+ * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
+ *   Doron Rosenberg <doronr@us.ibm.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,20 +36,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef __nsSchemaDuration_h__
+#define __nsSchemaDuration_h__
 
-[scriptable, uuid(26d69f7e-f7cf-423d-afb9-43d8a9ebf3ba)]
-interface nsISchemaValidatorRegexp : nsISupports {
-  boolean runRegexp(in DOMString aString, in DOMString aRegexpString, in string aModifierString);
+#include "nsSchemaValidatorUtils.h"
+#include "nsISchemaDuration.h"
+#include "nsISchema.h"
+#include "nsCOMPtr.h"
+
+/* 85dad673-28ce-414d-b46b-5c3cf4fd18a6 */
+#define NS_SCHEMADURATION_CID \
+{ 0x85dad673, 0x28ce, 0x414d, \
+  {0xb4, 0x6b, 0x5c, 0x3c, 0xf4, 0xfd, 0x18, 0xa6}}
+
+#define NS_SCHEMADURATION_CONTRACTID "@mozilla.org/schemavalidator/schemaduration;1"
+
+
+class nsSchemaDuration : public nsISchemaDuration
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISCHEMADURATION
+
+  nsSchemaDuration(PRUint32 aYears, PRUint32 aMonths, PRUint32 aDays,
+                   PRUint32 aHours, PRUint32 aMinutes,  PRUint32 aSeconds,
+                   PRUint32 aFractionalSeconds,  PRBool aNegative);
+private:
+  ~nsSchemaDuration();
+  PRUint32 years;
+  PRUint32 months;
+  PRUint32 days;
+  PRUint32 hours;
+  PRUint32 minutes;
+  PRUint32 seconds;
+  PRUint32 fractional_seconds;
+
+  PRBool negative;
+
+protected:
+
 };
 
-%{ C++
-#define NS_SCHEMAVALIDATORREGEXP_CID                  \
-{ /* 26d69f7e-f7cf-423d-afb9-43d8a9ebf3ba */          \
- 0x26d69f7e, 0xf7cf, 0x423d,                          \
-{0xaf, 0xb9, 0x43, 0xd8, 0xa9, 0xeb, 0xf3, 0xba}}     
-
-#define NS_SCHEMAVALIDATORREGEXP_CONTRACTID "@mozilla.org/xmlextras/schemas/schemavalidatorregexp;1"
-
-
-%}
+#endif // __nsSchemaDuration_h__

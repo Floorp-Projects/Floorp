@@ -61,6 +61,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  content \
 		  js \
+		  htmlparser \
 		  necko \
 		  xmlextras \
 		  websrvcs \
@@ -69,6 +70,7 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsSchemaValidatorModule.cpp \
 		nsSchemaValidator.cpp \
+		nsSchemaDuration.cpp \
 		nsSchemaValidatorUtils.cpp \
 		$(NULL)
 

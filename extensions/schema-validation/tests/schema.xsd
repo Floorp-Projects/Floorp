@@ -1,25 +1,9 @@
 <?xml version="1.0" ?>
 <schema targetNamespace="http://www.mozilla.org/schema/test"
-        xmlns="http://www.w3.org/2001/XMLSchema" 
+        xmlns="http://www.w3.org/2001/XMLSchema"
+        xmlns:test="http://www.mozilla.org/schema/test"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <import namespace="http://schemas.xmlsoap.org/soap/encoding/" />
-
-	<element name="balance">
-		<complexType>
-			<sequence minOccurs="0" maxOccurs="unbounded">
-				<element name="transaction">
-					<complexType>
-						<sequence>
-							<element name="date" type="date"/>
-							<element name="desc" type="string"/>
-							<element name="withdraw" type="boolean"/>
-							<element name="amount" type="decimal"/>
-						</sequence>
-					</complexType>
-				</element>
-			</sequence>
-		</complexType>
-	</element>
 
   <simpleType name="integer-test-1">
     <restriction base='integer'>
@@ -97,6 +81,13 @@
     </restriction>
   </simpleType>
 
+  <simpleType name="decimal-test-4">
+    <restriction base='decimal'>
+      <totalDigits value="3"/>
+      <fractionDigits value="2"/>
+    </restriction>
+  </simpleType>
+
   <simpleType name="string-test-1">
     <restriction base='string'>
       <length value="5"/>
@@ -107,6 +98,13 @@
     <restriction base='string'>
       <minLength value="4"/>
       <maxLength value="17"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="string-test-3">
+    <restriction base='string'>
+      <enumeration value="test"/>
+      <enumeration value="test2"/>
     </restriction>
   </simpleType>
 
@@ -272,6 +270,21 @@
     </restriction>
   </simpleType>
 
+  <simpleType name="duration-test-2">
+    <restriction base='duration'>
+      <maxExclusive value="P5M"/>
+      <minExclusive value="P1M"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="duration-test-3">
+    <restriction base='duration'>
+      <maxInclusive value="P5M"/>
+      <minInclusive value="P1M"/>
+    </restriction>
+  </simpleType>
+
+
   <simpleType name="anyuri-test-1">
     <restriction base='anyURI'>
     </restriction>
@@ -308,9 +321,398 @@
     </restriction>
   </simpleType>
 
+  <simpleType name="qname-test-1">
+    <restriction base='QName'>
+      <maxLength value="13"/>
+      <minLength value="3"/>
+    </restriction>
+  </simpleType>
+
   <simpleType name='better-us-zipcode'>
     <restriction base='string'>
       <pattern value='[0-9]{5}(-[0-9]{4})?'/>
     </restriction>
   </simpleType>
+
+
+  <simpleType name="list-test-1">
+    <list itemType="boolean"/>
+  </simpleType>
+
+  <simpleType name="list-test-2">
+    <list>
+      <simpleType>
+        <restriction base="integer">
+          <enumeration value="100" />
+          <enumeration value="4" />
+          <enumeration value="33" />
+        </restriction>
+      </simpleType>
+    </list>
+  </simpleType>
+
+  <simpleType name="union-test-1">
+    <union>
+      <simpleType>
+        <restriction base="integer"/>
+      </simpleType>
+      <simpleType>
+        <restriction base="string">
+          <enumeration value="N/A"/>
+        </restriction>
+      </simpleType>
+    </union>
+  </simpleType> 
+
+  <!-- complex types -->
+
+  <element name="transaction">
+    <complexType>
+      <sequence minOccurs="0">
+        <element name="date" type="date"/>
+        <element name="desc" type="string"/>
+        <element name="withdraw" type="boolean"/>
+        <element name="amount" type="decimal"/>
+      </sequence>
+    </complexType>
+  </element>
+
+	<element name="balance">
+		<complexType>
+			<sequence>
+				<element ref="transaction" />
+			</sequence>
+      <attribute name="id" type="string"/>
+      <attribute name="xsi:type" type="string"/>
+		</complexType>
+	</element>
+
+	<element name="balance2">
+		<complexType>
+			<sequence>
+				<element name="transaction">
+					<complexType>
+						<sequence>
+							<element name="date" type="date"/>
+							<element name="desc" type="string"/>
+							<element name="withdraw" type="boolean"/>
+							<element name="amount" type="decimal" minOccurs="0"/>
+						</sequence>
+					</complexType>
+				</element>
+			</sequence>
+      <attribute name="id" type="string"/>
+      <attribute name="xsi:type" type="string"/>
+		</complexType>
+	</element>
+
+  <element name="balance3">
+		<complexType>
+			<sequence>
+				<element name="transaction">
+					<complexType>
+						<sequence>
+							<element name="date" type="date"/>
+							<element name="desc" type="string" minOccurs="0"/>
+							<element name="withdraw" type="boolean"/>
+							<element name="amount" type="decimal" minOccurs="0"/>
+						</sequence>
+					</complexType>
+				</element>
+			</sequence>
+    <attribute name="id" type="string"/>
+    <attribute name="xsi:type" type="string"/>
+		</complexType>
+	</element>
+
+  <element name="balance4">
+		<complexType>
+			<sequence>
+				<element name="transaction">
+					<complexType>
+						<sequence minOccurs="0" maxOccurs="unbounded">
+							<element name="date" type="date"/>
+							<element name="desc" type="string" minOccurs="0"/>
+							<element name="withdraw" type="boolean"/>
+							<element name="amount" type="decimal" minOccurs="0"/>
+						</sequence>
+					</complexType>
+				</element>
+			</sequence>
+    <attribute name="id" type="string"/>
+    <attribute name="xsi:type" type="string"/>
+		</complexType>
+	</element>
+
+  <element name="balance5">
+		<complexType>
+			<sequence>
+				<element name="transaction">
+					<complexType>
+						<sequence minOccurs="2" maxOccurs="4">
+							<element name="date" type="date"/>
+							<element name="desc" type="string" minOccurs="0"/>
+							<element name="withdraw" type="boolean"/>
+							<element name="amount" type="decimal" minOccurs="0"/>
+						</sequence>
+					</complexType>
+				</element>
+			</sequence>
+    <attribute name="id" type="string"/>
+    <attribute name="xsi:type" type="string"/>
+		</complexType>
+	</element>
+
+  <element name="balance6">
+		<complexType>
+			<sequence>
+				<element name="transaction">
+					<complexType>
+						<sequence>
+							<element name="date" type="date"/>
+							<element name="amount" type="decimal" minOccurs="0"/>
+							<element name="desc" type="string" minOccurs="0" maxOccurs="3"/>
+							<element name="withdraw" type="boolean"/>
+							<element name="amount" type="decimal" minOccurs="0"/>
+						</sequence>
+					</complexType>
+				</element>
+			</sequence>
+    <attribute name="id" type="string"/>
+    <attribute name="xsi:type" type="string"/>
+		</complexType>
+	</element>
+
+  <attribute name="testAttr3" type="boolean" fixed="true"/>
+  <attribute name="testAttr4" type="boolean"/>
+
+  <element name="balance7">
+		<complexType>
+			<sequence>
+				<element name="transaction">
+					<complexType>
+						<sequence>
+							<element name="date" type="date"/>
+							<element name="desc" type="string" minOccurs="0"/>
+							<element name="withdraw" type="boolean"/>
+							<element name="amount" type="decimal" minOccurs="0"/>
+						</sequence>
+            <attribute name="testAttr" type="boolean" use="required"/>
+            <attribute name="testAttr2" type="boolean" use="optional" fixed="true"/>
+            <attribute ref="testAttr3" use="optional"/>
+            <attribute ref="testAttr4" use="required"/>
+					</complexType>
+				</element>
+			</sequence>
+    <attribute name="id" type="string"/>
+    <attribute name="xsi:type" type="string"/>
+		</complexType>
+	</element>
+
+  <element name="balance8">
+		<complexType>
+			<sequence>
+				<element name="transaction">
+					<complexType>
+						<sequence>
+							<element name="date" type="date"/>
+							<element name="desc" type="string" minOccurs="0"/>
+							<element name="withdraw" type="boolean"/>
+							<element name="amount" type="decimal" minOccurs="0"/>
+						</sequence>
+					</complexType>
+				</element>
+				<sequence minOccurs="0" maxOccurs="unbounded">
+				  <element name="name" type="string"/>
+				  <element name="lastname" type="string" minOccurs="0"/>
+			  </sequence>
+			</sequence>
+      <attribute name="id" type="string"/>
+      <attribute name="xsi:type" type="string"/>
+		</complexType>
+	</element>
+
+  <element name="balance9">
+		<complexType>
+			<sequence>
+				<element name="transaction">
+					<complexType>
+						<sequence>
+							<element name="date" type="date"/>
+							<element name="desc" type="string" minOccurs="0"/>
+							<element name="withdraw" type="boolean"/>
+							<element name="amount" type="decimal" minOccurs="0"/>
+						</sequence>
+					</complexType>
+				</element>
+				<sequence minOccurs="0" maxOccurs="unbounded">
+				  <element name="name" type="string"/>
+				  <element name="lastname" type="string" minOccurs="0"/>
+			  </sequence>
+				<sequence>
+				  <element name="test" type="string"/>
+				  <element name="test2" type="string" />
+			  </sequence>
+			</sequence>
+      <attribute name="id" type="string"/>
+      <attribute name="xsi:type" type="string"/>
+		</complexType>
+	</element>
+
+  <element name="balance10">
+		<complexType>
+			<sequence>
+				<element name="transaction">
+					<complexType>
+						<sequence>
+							<element name="date" type="date"/>
+							<element name="desc" type="string" minOccurs="0"/>
+							<element name="withdraw" type="boolean"/>
+							<element name="amount" type="decimal" minOccurs="0"/>
+						</sequence>
+					</complexType>
+				</element>
+				<sequence minOccurs="0" maxOccurs="unbounded">
+				  <element name="name" type="string"/>
+				  <element name="lastname" type="string" minOccurs="0"/>
+			  </sequence>
+      </sequence>
+      <attribute name="id" type="string"/>
+      <attribute name="xsi:type" type="string"/>
+		</complexType>
+	</element>
+
+  <element name="balance11">
+		<complexType>
+			<sequence>
+				<element name="transaction">
+					<complexType>
+						<sequence>
+							<element name="date" type="date"/>
+							<element name="desc" type="string" minOccurs="0"/>
+							<element name="withdraw" type="boolean"/>
+							<element name="amount" type="decimal" minOccurs="0"/>
+              <element name="foopy">
+                <complexType>
+                  <sequence minOccurs="2" maxOccurs="4">
+			              <element ref="balance9"/>
+                  </sequence>
+                </complexType>
+              </element>
+						</sequence>
+					</complexType>
+				</element>
+			</sequence>
+      <attribute name="id" type="string"/>
+      <attribute name="xsi:type" type="string"/>
+		</complexType>
+	</element>
+
+  <element name="balance12">
+		<complexType>
+			<sequence>
+				<element name="transaction">
+					<complexType>
+						<choice minOccurs="1" maxOccurs="3">
+              <element name="amount2" type="decimal"/>
+              <sequence>
+							  <element name="date" type="date"/>
+							  <element name="desc" type="string" minOccurs="0"/>
+							  <element name="withdraw" type="boolean"/>
+							  <element name="amount" type="decimal" minOccurs="0"/>
+              </sequence>
+						  <element name="date2" type="date"/>
+						</choice>
+					</complexType>
+				</element>
+			</sequence>
+    <attribute name="id" type="string"/>
+    <attribute name="xsi:type" type="string"/>
+		</complexType>
+	</element>
+
+  <!-- Chilled -->
+
+    <simpleType name="chilledDecimal">
+        <restriction base="decimal">
+            <totalDigits value="5"/>
+            <fractionDigits value="2"/>
+            <minInclusive value="0"/>
+        </restriction>
+    </simpleType>
+
+    <simpleType name="milk">
+      <restriction base="string">
+        <enumeration value="full-cream"/>
+        <enumeration value="semi-skimmed"/>
+        <enumeration value="skimmed"/>
+      </restriction>
+    </simpleType>
+
+    <simpleType name="butter">
+        <restriction base="string">
+            <enumeration value="salted"/>
+            <enumeration value="non-salted"/>
+        </restriction>
+    </simpleType>
+
+  <element name="volume">
+      <complexType>
+          <simpleContent>
+              <extension base="test:chilledDecimal">
+                  <attribute name="uom" fixed="litres" type="string"/>
+              </extension>
+          </simpleContent>
+      </complexType>
+  </element>
+
+    <element name="weight">
+        <complexType>
+            <simpleContent>
+                <extension base="test:chilledDecimal">
+                    <attribute name="uom" fixed="kg" type="string"/>
+                </extension>
+            </simpleContent>
+        </complexType>
+    </element>
+
+<element name="fridge">
+        <complexType>
+            <sequence>
+                <element name="contents">
+                    <complexType>
+                        <sequence>
+                            <element name="dairyProduce" type="test:dairy_Produce" minOccurs="0"/>
+                        </sequence>
+                    </complexType>
+                </element>
+            </sequence>
+      <attribute name="id" type="string"/>
+      <attribute name="xsi:type" type="string"/>
+        </complexType>
+    </element>
+
+ <complexType name="dairy_Produce">
+      <sequence>
+          <element name="milk" minOccurs="1" maxOccurs="unbounded">
+              <complexType>
+                  <sequence>
+                      <element ref="volume"/>
+                  </sequence>
+                  <attribute name="type" type="test:milk"/>
+              </complexType>
+          </element>
+          <element name="butter" minOccurs="0" maxOccurs="unbounded">
+                <complexType>
+                    <sequence>
+                        <element ref="weight"/>
+                    </sequence>
+                    <attribute name="type" type="test:butter"/>
+                </complexType>
+          </element>
+      </sequence>
+      <attribute name="id" type="string"/>
+      <attribute name="xsi:type" type="string"/>
+  </complexType>
+
 </schema>

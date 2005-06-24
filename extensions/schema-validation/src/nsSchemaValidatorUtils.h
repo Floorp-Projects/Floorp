@@ -36,40 +36,117 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSchemaValidator.h"
+#ifndef __nsSchemaValidatorUtils_h__
+#define __nsSchemaValidatorUtils_h__
+
+#include "nsCOMPtr.h"
+#include "nsISchemaDuration.h"
+#include "nsCOMArray.h"
+
+struct nsSchemaGDay {
+  PRUint32 day;            // day represented (1-31)
+  PRBool tz_negative;      // is timezone negative
+  PRUint32 tz_hour;        // timezone - hour (0-23) - null if not specified
+  PRUint32 tz_minute;      // timezone - minute (0-59) - null if not specified
+} ;
+
+struct nsSchemaGMonth {
+  PRUint32 month;          // month represented (1-12)
+  PRBool tz_negative;      // is timezone negative
+  PRUint32 tz_hour;        // timezone - hour (0-23) - null if not specified
+  PRUint32 tz_minute;      // timezone - minute (0-59) - null if not specified
+} ;
+
+struct nsSchemaGYear {
+  long year;               // year
+  PRBool tz_negative;      // is timezone negative
+  PRUint32 tz_hour;        // timezone - hour (0-23) - null if not specified
+  PRUint32 tz_minute;      // timezone - minute (0-59) - null if not specified
+} ;
+
+struct nsSchemaGYearMonth {
+  nsSchemaGYear gYear;
+  nsSchemaGMonth gMonth;
+} ;
+
+struct nsSchemaGMonthDay {
+  nsSchemaGMonth gMonth;
+  nsSchemaGDay gDay;
+} ;
+
+struct nsMonthShortHand {
+  const char *number;
+  const char *shortHand;
+};
+
+const nsMonthShortHand monthShortHand[] = {
+  { "01", "Jan" },
+  { "02", "Feb" },
+  { "03", "Mar" },
+  { "04", "Apr" },
+  { "05", "May" },
+  { "06", "Jun" },
+  { "07", "Jul" },
+  { "08", "Aug" },
+  { "09", "Sep" },
+  { "10", "Oct" },
+  { "11", "Nov" },
+  { "12", "Dec" }
+};
 
 class nsSchemaValidatorUtils
 {
 public:
   static PRBool IsValidSchemaInteger(const nsAString & aNodeValue, long *aResult);
-  static PRBool IsValidSchemaInteger(char* aString, long *aResult);
+  static PRBool IsValidSchemaInteger(const char* aString, long *aResult);
 
-  static PRBool ParseSchemaDate(const char * strValue,
-    char *rv_year, char *rv_month, char *rv_day);
-  static PRBool ParseSchemaTime(const char * strValue,
-    char *rv_hour, char *rv_minute, char *rv_second, char *rv_fraction_second);
-  static PRBool ParseSchemaTimeZone(const char * strValue,
-    char *rv_tzhour, char *rv_tzminute);
+  static PRBool ParseSchemaDate(const nsAString & aStrValue, char *rv_year,
+                                char *rv_month, char *rv_day);
+  static PRBool ParseSchemaTime(const nsAString & aStrValue, char *rv_hour,
+                                char *rv_minute, char *rv_second,
+                                char *rv_fraction_second);
+
+  static PRBool ParseSchemaTimeZone(const nsAString & aStrValue, 
+                                    char *rv_tzhour, char *rv_tzminute);
 
   static void GetMonthShorthand(char* aMonth, nsACString & aReturn);
 
-  static int CompareExplodedDateTime(PRExplodedTime aDateTime1, PRBool aDateTime1IsNegative,
-    PRExplodedTime aDateTime2, PRBool aDateTime2IsNegative);
+  static PRBool GetPRTimeFromDateTime(const nsAString & aNodeValue, PRTime *aResult);
+
+  static int CompareExplodedDateTime(PRExplodedTime aDateTime1,
+                                     PRBool aDateTime1IsNegative,
+                                     PRExplodedTime aDateTime2,
+                                     PRBool aDateTime2IsNegative);
   static int CompareExplodedDate(PRExplodedTime aDateTime1, PRExplodedTime aDateTime2);
   static int CompareExplodedTime(PRExplodedTime aDateTime1, PRExplodedTime aDateTime2);
 
-  static PRBool IsStringANumber(char* aString);
+  static int CompareGYearMonth(nsSchemaGYearMonth aYearMonth1, nsSchemaGYearMonth aYearMonth2);
+  static int CompareGMonthDay(nsSchemaGMonthDay aMonthDay1, nsSchemaGMonthDay aMonthDay2);
 
-  static int CompareGYearMonth(Schema_GYearMonth aYearMonth1, Schema_GYearMonth aYearMonth2);
-  static int CompareGMonthDay(Schema_GMonthDay aMonthDay1, Schema_GMonthDay aMonthDay2);
+  static PRBool ParseSchemaDuration(const char * aStrValue,
+                                    nsISchemaDuration **aDuration);
+  static PRBool ParseSchemaDuration(const nsAString & aStrValue,
+                                    nsISchemaDuration **aDuration);
+
+  static int CompareStrings(const nsAString & aString1, const nsAString & aString2);
+
+  static int GetMaximumDayInMonthFor(int aYearValue, int aMonthValue);
+  static int CompareDurations(nsISchemaDuration *aDuration1,
+                              nsISchemaDuration *aDuration2);
+  static PRExplodedTime AddDurationToDatetime(PRExplodedTime aDatetime,
+                                              nsISchemaDuration *aDuration);
+
+  static PRBool HandleEnumeration(const nsAString &aStrValue,
+                                  const nsStringArray &aEnumerationList);
 
   static void RemoveLeadingZeros(nsAString & aString);
+  static void RemoveTrailingZeros(nsAString & aString);
 
 private:
   nsSchemaValidatorUtils();
   ~nsSchemaValidatorUtils();
 
 protected:
-
 };
 
+#endif // __nsSchemaValidatorUtils_h__

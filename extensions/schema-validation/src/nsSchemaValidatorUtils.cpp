@@ -45,152 +45,226 @@
 #include "nsSchemaValidator.h"
 #include "nsSchemaValidatorUtils.h"
 #include "nsISchemaValidatorRegexp.h"
+#include "nsSchemaDuration.h"
 
 #include <stdlib.h>
+#include <math.h>
+#include <errno.h>
+#include "prlog.h"
 #include "prprf.h"
 #include "prtime.h"
 
-PRBool nsSchemaValidatorUtils::IsValidSchemaInteger(const nsAString & aNodeValue, 
-                                                    long *aResult){
-  PRBool isValid = PR_FALSE;
-  NS_ConvertUTF16toUTF8 temp(aNodeValue);
-  char * pEnd;
-  long intValue = strtol(temp.get(), &pEnd, 10);
+#ifdef PR_LOGGING
+PRLogModuleInfo *gSchemaValidationUtilsLog = PR_NewLogModule("schemaValidation");
 
-  if (*pEnd == '\0')
-    isValid = PR_TRUE;
+#define LOG(x) PR_LOG(gSchemaValidationUtilsLog, PR_LOG_DEBUG, x)
+#define LOG_ENABLED() PR_LOG_TEST(gSchemaValidationUtilsLog, PR_LOG_DEBUG)
+#else
+#define LOG(x)
+#endif
 
-  if (aResult)
-    *aResult = intValue;
-
-  return isValid;
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaInteger(const nsAString & aNodeValue,
+                                             long *aResult)
+{
+  return !aNodeValue.IsEmpty() &&
+         IsValidSchemaInteger(NS_ConvertUTF16toUTF8(aNodeValue).get(), aResult);
 }
 
 // overloaded, for char* rather than nsAString
-PRBool nsSchemaValidatorUtils::IsValidSchemaInteger(char* aString, long *aResult){
-  PRBool isValid = PR_FALSE;
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaInteger(const char* aString, long *aResult)
+{
+  if (strlen(aString) == 0)
+    return PR_FALSE;
+
   char * pEnd;
   long intValue = strtol(aString, &pEnd, 10);
-
-  if (*pEnd == '\0')
-    isValid = PR_TRUE;
 
   if (aResult)
     *aResult = intValue;
 
-  return isValid;
+  return (!((intValue == LONG_MAX || intValue == LONG_MIN) && errno == ERANGE))
+         && *pEnd == '\0';
 }
 
-PRBool nsSchemaValidatorUtils::ParseSchemaDate(const char * strValue,
-  char *rv_year, char *rv_month, char *rv_day)
+PRBool
+nsSchemaValidatorUtils::GetPRTimeFromDateTime(const nsAString & aNodeValue,
+                                              PRTime *aResult)
 {
   PRBool isValid = PR_FALSE;
   PRBool isNegativeYear = PR_FALSE;
-  
+
   int run = 0;
-  int length = strlen(strValue);
   PRBool doneParsing = PR_FALSE;
 
-  /*
-    0 - year
-    1 - Month MM
-    2 - Day (DD)
-  */
-  int parseState = 0;
-
-  char parseBuffer[80] = "";
-  int bufferRun = 0;
   char year[80] = "";
   char month[3] = "";
   char day[3] = "";
-
+  char hour[3] = "";
+  char minute[3] = "";
+  char second[3] = "";
+  char fraction_seconds[80] = "";
   PRTime dateTime;
 
-  char fulldate[86] = "";
+  char fulldate[100] = "";
+  nsAutoString datetimeString(aNodeValue);
 
-  // overflow check
-  if (strlen(strValue) >= sizeof(fulldate))
-    return PR_FALSE;
-
-  if (strValue[0] == '-') {
+  if (datetimeString.First() == '-') {
     isNegativeYear = PR_TRUE;
     run = 1;
-    /* nspr can't handle negative years it seems.*/
- }
+  }
+
+  /*
+    http://www.w3.org/TR/xmlschema-2/#dateTime
+    (-)CCYY-MM-DDThh:mm:ss(.sss...)
+      then either: Z
+      or [+/-]hh:mm
+  */
+
+  // first handle the date part
+  // search for 'T'
+
+  LOG(("\n  Validating DateTime:"));
+
+  int findString = datetimeString.FindChar('T');
+
+  if (findString >= 0) {
+    isValid = ParseSchemaDate(Substring(aNodeValue, 0, findString+1), year,
+                              month, day);
+
+    if (isValid) {
+      isValid = ParseSchemaTime(
+                  Substring(aNodeValue, findString + 1, aNodeValue.Length()),
+                  hour, minute, second, fraction_seconds);
+    }
+  } else {
+    // no T, invalid
+    doneParsing = PR_TRUE;
+  }
+
+  if (isValid && aResult) {
+    nsCAutoString monthShorthand;
+    GetMonthShorthand(month, monthShorthand);
+
+    // 22-AUG-1993 10:59:12.82
+    sprintf(fulldate, "%s-%s-%s %s:%s:%s.%s",
+      day,
+      monthShorthand.get(),
+      year,
+      hour,
+      minute,
+      second,
+      fraction_seconds);
+
+    LOG(("\n    new date is %s", fulldate));
+    PRStatus status = PR_ParseTimeString(fulldate, PR_TRUE, &dateTime);
+
+    if (status == -1)
+      isValid = PR_FALSE;
+    else
+      *aResult = dateTime;
+  }
+
+  return isValid;
+}
+
+PRBool
+nsSchemaValidatorUtils::ParseSchemaDate(const nsAString & aStrValue,
+                                        char *rv_year, char *rv_month,
+                                        char *rv_day)
+{
+  PRBool isValid = PR_FALSE;
+
   /*
     http://www.w3.org/TR/xmlschema-2/#date
     (-)CCYY-MM-DDT
   */
-#ifdef DEBUG
-   printf("\n    Validating Date part");
-#endif
 
-  while ( (run <= length) && (!doneParsing) ) {
-    switch (parseState) {
+  PRTime dateTime;
+
+  nsAString::const_iterator start, end, buffStart;
+  aStrValue.BeginReading(start);
+  aStrValue.BeginReading(buffStart);
+  aStrValue.EndReading(end);
+  PRUint32 state = 0;
+  PRUint32 buffLength = 0;
+  PRBool done = PR_FALSE;
+  PRUnichar currentChar;
+
+  nsAutoString year;
+  char month[3] = "";
+  char day[3] = "";
+
+  // if year is negative, skip it
+  if (aStrValue.First() == '-') {
+    start++;
+    buffStart = start;
+  }
+
+  while ((start != end) && !done) {
+    currentChar = *start++;
+    switch (state) {
       case 0: {
         // year
-        if (strValue[run] == '-') {
-          // finished
-          parseState++;
-          if (strlen(parseBuffer) < 4)
-            doneParsing = PR_TRUE;
-
-          strcpy(year, parseBuffer);
-          bufferRun = 0;
+        if (currentChar == '-') {
+          year.Assign(Substring(buffStart, --start));
+          state = 1;
+          buffLength = 0;
+          buffStart = ++start;
         } else {
-          parseBuffer[bufferRun] = strValue[run];
-          bufferRun++;
+          // has to be a numerical character or else abort
+          if ((currentChar > '9') || (currentChar < '0'))
+            done = PR_TRUE;
+          buffLength++;
         }
-
         break;
       }
 
       case 1: {
         // month
-        if (strValue[run] == '-') {
-          // finished
-          parseState++;
-       
-          if (strlen(month) != 2)
-            doneParsing = PR_TRUE;
-
-          bufferRun = 0;
-        } else {
-          if (bufferRun > 1)
-            doneParsing = PR_TRUE;
-          else {
-            month[bufferRun] = strValue[run];          
-            bufferRun++;
+        if (buffLength > 2) {
+          done = PR_TRUE;
+        } else if (currentChar == '-') {
+          if (strcmp(month, "12") == 1) {
+            done = PR_TRUE;
+          } else {
+            state = 2;
+            buffLength = 0;
+            buffStart = start;
           }
+        } else {
+          // has to be a numerical character or else abort
+          if ((currentChar > '9') || (currentChar < '0'))
+            done = PR_TRUE;
+          else
+            month[buffLength] = currentChar;
+          buffLength++;
         }
-
         break;
       }
 
       case 2: {
         // day
-        if (strValue[run] == 'T') {
-          // finished
-          parseState++;
-
-          if (strlen(day) == 2)
+        if (buffLength > 2) {
+          done = PR_TRUE;
+        } else if (currentChar == 'T') {
+          if ((start == end) && (strcmp(day, "31") < 1))
             isValid = PR_TRUE;
-
-          doneParsing = PR_TRUE;
+          done = PR_TRUE;
         } else {
-          if (bufferRun > 1)
-            doneParsing = PR_TRUE;
+          // has to be a numerical character or else abort
+          if ((currentChar > '9') || (currentChar < '0'))
+            done = PR_TRUE;
           else {
-            day[bufferRun] = strValue[run];
-            bufferRun++;
+            day[buffLength] = currentChar;
           }
+          buffLength++;
         }
-
         break;
       }
-    }
 
-    run++;
+    }
   }
 
   if (isValid) {
@@ -198,13 +272,17 @@ PRBool nsSchemaValidatorUtils::ParseSchemaDate(const char * strValue,
     nsSchemaValidatorUtils::GetMonthShorthand(month, monthShorthand);
 
     // 22-AUG-1993
-    sprintf(fulldate, "%s-%s-%s",day, monthShorthand.get(), year);
+    nsAutoString fullDate;
+    fullDate.AppendLiteral(day);
+    fullDate.AppendLiteral("-");
+    AppendASCIItoUTF16(monthShorthand, fullDate);
+    fullDate.AppendLiteral("-");
+    fullDate.Append(year);
 
-#ifdef DEBUG
-    printf("\n      Parsed date is %s", fulldate);
-#endif
-    PRStatus status = PR_ParseTimeString(fulldate, 
-                                      PR_TRUE, &dateTime);  
+    LOG(("\n      Parsed date is %s", NS_ConvertUTF16toUTF8(fullDate).get()));
+
+    PRStatus status = PR_ParseTimeString(NS_ConvertUTF16toUTF8(fullDate).get(),
+                                         PR_TRUE, &dateTime);
     if (status == -1) {
       isValid = PR_FALSE;
     } else {
@@ -219,311 +297,287 @@ PRBool nsSchemaValidatorUtils::ParseSchemaDate(const char * strValue,
       if (val != explodedDateTime.tm_mday) {
         isValid = PR_FALSE;
       }
-    }    
-    strcpy(rv_day, day);
-    strcpy(rv_month, month);
-    strcpy(rv_year, year);
+    }
+
+    if (isValid) {
+      strcpy(rv_day, day);
+      strcpy(rv_month, month);
+      strcpy(rv_year, NS_ConvertUTF16toUTF8(year).get());
+    }
   }
 
-#ifdef DEBUG
-  printf("\n      Date is %s \n", ((isValid) ? "Valid" : "Not Valid"));
-#endif
+  LOG(("\n      Date is %s \n", ((isValid) ? "Valid" : "Not Valid")));
 
   return isValid;
 }
 
+
 // parses a string as a schema time type and returns the parsed
 // hour/minute/second/fraction seconds as well as if its a valid
 // schema time type.
-PRBool nsSchemaValidatorUtils::ParseSchemaTime(const char * strValue,
-  char *rv_hour, char *rv_minute, char *rv_second, char *rv_fraction_second)
+PRBool
+nsSchemaValidatorUtils::ParseSchemaTime(const nsAString & aStrValue,
+                                        char *rv_hour, char *rv_minute,
+                                        char *rv_second, char *rv_fraction_second)
 {
   PRBool isValid = PR_FALSE;
-  
-  int run = 0;
-  int length = strlen(strValue);
-  PRBool doneParsing = PR_FALSE;
 
-  int parseState = 0;
-  int bufferRun = 0;
-  char hour[3] = "";
-  char minute[3] = "";
-  char second[3] = "";
-  // there can be any amount of fraction seconds
-  char fraction_seconds[80] = "";
-  char timeZoneSign[2] = "";
+  // time looks like this: HH:MM:SS(.[S]+)(+/-HH:MM)
+
   char timezoneHour[3] = "";
   char timezoneMinute[3] = "";
+  // we store the fraction seconds because PR_ExplodeTime seems to skip them.
+  nsAutoString usec;
 
-  PRTime dateTime;
+  nsAString::const_iterator start, end, buffStart;
+  aStrValue.BeginReading(start);
+  aStrValue.BeginReading(buffStart);
+  aStrValue.EndReading(end);
+  PRUint32 state = 0;
+  PRUint32 buffLength = 0;
+  PRBool done = PR_FALSE;
+  PRUnichar currentChar;
+  PRUnichar tzSign = PRUnichar(' ');
 
-  char fulldate[100] = "";
+  while ((start != end) && !done) {
+    currentChar = *start++;
 
-  // overflow check
-  if (strlen(strValue) >= sizeof(fulldate))
-    return PR_FALSE;
-
-  /*
-    http://www.w3.org/TR/xmlschema-2/#time
-    (-)CCYY-MM-DDT
-  */
-
-#ifdef DEBUG
-  printf("\n    Validating Time part");
-#endif
-
-  while ( (run <= length) && (!doneParsing) ) {
-    switch (parseState) {
-
-     case 0: {
+    switch (state) {
+      case 0: {
         // hour
-        if (strValue[run] == ':') {
-          // finished
-          parseState++;
-
-          if ( (strlen(hour) != 2) || (strcmp(hour, "24") == 1))
-            doneParsing = PR_TRUE;
-
-          bufferRun = 0;
-        } else {
-          if (bufferRun > 1)
-            doneParsing = PR_TRUE;
-          else {
-            hour[bufferRun] = strValue[run];          
-            bufferRun++;
-          }
-        }
-
-        break;
-      }
-
-     case 1: {
-        // minutes
-        if (strValue[run] == ':') {
-          // finished
-          parseState++;
-
-          if ((strlen(minute) != 2) || (strcmp(minute, "59") == 1))
-            doneParsing = PR_TRUE;
-
-          bufferRun = 0;
-        } else {
-          if ((bufferRun > 1) || (strValue[run] > '9') || (strValue[run] < '0'))
-            doneParsing = PR_TRUE;
-          else {
-            minute[bufferRun] = strValue[run];          
-            bufferRun++;
-          }
-        }
-
-        break;
-      }
-
-     case 2: {
-        // seconds
-        if ((strValue[run] == 'Z') || (strValue[run] == '-') || (strValue[run] == '+')) {
-          // finished
-          parseState = 4;
-
-          if (strlen(second) != 2)
-            doneParsing = PR_TRUE;
-          else if (strValue[run] == 'Z') {
-            if (strValue[run+1] == '\0')
-              isValid = PR_TRUE;
-            doneParsing = PR_TRUE;
-          }
-
-          timeZoneSign[0] = strValue[run];
-
-          bufferRun = 0;
-        } else if (strValue[run] == '.') {
-          // fractional seconds
-          parseState = 3;
-
-          if (strlen(second) != 2)
-            doneParsing = PR_TRUE;
-
-          bufferRun = 0;
-
-        } else {
-          if (bufferRun > 1)
-            doneParsing = PR_TRUE;
-          else {
-            second[bufferRun] = strValue[run];          
-            bufferRun++;
-          }
-        }
-
-        break;
-      }
-
-      case 3: {
-        // fraction seconds
-        if ((strValue[run] == 'Z') || (strValue[run] == '-') || (strValue[run] == '+')) {
-          // finished
-          parseState = 4;
-
-          if (!IsStringANumber(fraction_seconds)) {
-            doneParsing = PR_TRUE;
-          } else if (strValue[run] == 'Z') {
-            if (strValue[run+1] == '\0')
-              isValid = PR_TRUE;
-
-            doneParsing = PR_TRUE;
-          }
-
-          timeZoneSign[0] = strValue[run];
-
-          bufferRun = 0;
-        } else { 
-          if (bufferRun >= sizeof(fraction_seconds)) {
-            // more fraction seconds than the variable can store
-            // so stop parseing
-            doneParsing = PR_TRUE;
+        if (buffLength > 2) {
+          done = PR_TRUE;
+        } else if (currentChar == ':') {
+          // validate hour
+          if (strcmp(NS_ConvertUTF16toUTF8(Substring(buffStart, --start)).get(), "24") == 1) {
+            done = PR_TRUE;
           } else {
-            fraction_seconds[bufferRun] = strValue[run];
-            bufferRun++;
+            state = 1;
+            buffLength = 0;
+            buffStart = ++start;
           }
+        } else {
+          // has to be a numerical character or else abort
+          if ((currentChar > '9') || (currentChar < '0'))
+            done = PR_TRUE;
+          buffLength++;
+        }
+        break;
+      }
+
+      case 1 : {
+        // minute
+        if (buffLength > 2) {
+          done = PR_TRUE;
+        } else if (currentChar == ':') {
+          // validate minute
+          if (strcmp(NS_ConvertUTF16toUTF8(Substring(buffStart, --start)).get(), "59") == 1) {
+            done = PR_TRUE;
+          } else {
+            state = 2;
+            buffLength = 0;
+            buffStart = ++start;
+          }
+        } else {
+          // has to be a numerical character or else abort
+          if ((currentChar > '9') || (currentChar < '0'))
+            done = PR_TRUE;
+          buffLength++;
+        }
+        break;
+      }
+
+      case 2 : {
+        // seconds
+        if (buffLength > 2) {
+          done = PR_TRUE;
+        } else if (currentChar == 'Z') {
+          // if its Z, has to be the last character
+          if ((start == end) &&
+            (strcmp(NS_ConvertUTF16toUTF8(Substring(buffStart, --start)).get(), "59") != 1)) {
+
+            isValid = PR_TRUE;
+            //sprintf(rv_second, "%s", NS_ConvertUTF16toUTF8(Substring(buffStart, start)).get());
+          }
+          done = PR_TRUE;
+          tzSign = currentChar;
+        } else if ((currentChar == '+') || (currentChar == '-')) {
+          // timezone exists
+          if (strcmp(NS_ConvertUTF16toUTF8(Substring(buffStart, --start)).get(), "59") == 1) {
+            done = PR_TRUE;
+          } else {
+            state = 4;
+            buffLength = 0;
+            buffStart = ++start;
+            tzSign = currentChar;
+          }
+        } else if (currentChar == '.') {
+          // fractional seconds exist
+          if (strcmp(NS_ConvertUTF16toUTF8(Substring(buffStart, --start)).get(), "59") == 1) {
+            done = PR_TRUE;
+          } else {
+            state = 3;
+            buffLength = 0;
+            buffStart = ++start;
+          }
+        } else {
+          // has to be a numerical character or else abort
+          if ((currentChar > '9') || (currentChar < '0'))
+            done = PR_TRUE;
+          buffLength++;
         }
 
         break;
       }
 
-      case 4: {
-        // validate timezone
-        char timezone[6] = "";
-        int tzLength = strlen(strValue) - run;
+      case 3 : {
+        // fractional seconds
 
-        // timezone is hh:mm
-        if (tzLength == 5) {
-          strncat(timezone, &strValue[run], tzLength);
-          timezone[sizeof(timezone)-1] = '\0';
-          isValid = ParseSchemaTimeZone(timezone, timezoneHour, timezoneMinute);
+        if (currentChar == 'Z') {
+          // if its Z, has to be the last character
+          if (start == end)
+            isValid = PR_TRUE;
+          else
+            done = PR_TRUE;
+          tzSign = currentChar;
+          usec.Assign(Substring(buffStart.get(), start.get()-1));
+        } else if ((currentChar == '+') || (currentChar == '-')) {
+          // timezone exists
+          usec.Assign(Substring(buffStart.get(), start.get()-1));
+          state = 4;
+          buffLength = 0;
+          buffStart = start;
+          tzSign = currentChar;
+        } else {
+          // has to be a numerical character or else abort
+          if ((currentChar > '9') || (currentChar < '0'))
+            done = PR_TRUE;
+          buffLength++;
         }
-        doneParsing = PR_TRUE;      
-        
         break;
+      }
+
+      case 4 : {
+        // timezone hh:mm
+       if (buffStart.size_forward() == 5)
+         isValid = ParseSchemaTimeZone(Substring(buffStart, end), timezoneHour,
+                                       timezoneMinute);
+
+       done = PR_TRUE;
+       break;
       }
     }
-    run++;
   }
 
   if (isValid) {
     // 10:59:12.82
     // use a dummy year to make nspr do the work for us
+    PRTime dateTime;
+    nsAutoString fullDate;
+    fullDate.AppendLiteral("1-1-90 ");
+    fullDate.Append(aStrValue);
 
-    sprintf(fulldate, "1-1-90 %s:%s:%s%s",
-      hour,
-      minute,
-      second,
-      timeZoneSign);
+    LOG(("\n     new time is %s", NS_ConvertUTF16toUTF8(fullDate).get()));
 
-    if (timeZoneSign[0] != 'Z') {
-      strcat(fulldate, timezoneHour);
-      strcat(fulldate, ":");
-      strcat(fulldate, timezoneMinute);
-    }
-    fulldate[sizeof(fulldate)-1] = '\0';
-
-#ifdef DEBUG
-    printf("\n     new time is %s", fulldate);
-#endif
-
-    PRStatus foo = PR_ParseTimeString(fulldate, 
-                                      PR_TRUE, &dateTime); 
-    if (foo == -1) {
+    PRStatus status = PR_ParseTimeString(NS_ConvertUTF16toUTF8(fullDate).get(),
+                                         PR_TRUE, &dateTime);
+    if (status == -1) {
       isValid = PR_FALSE;
     } else {
-
       PRExplodedTime explodedDateTime;
       PR_ExplodeTime(dateTime, PR_GMTParameters, &explodedDateTime);
 
       sprintf(rv_hour, "%d", explodedDateTime.tm_hour);
       sprintf(rv_minute, "%d", explodedDateTime.tm_min);
-      strcpy(rv_second, second);
-      strcpy(rv_fraction_second, fraction_seconds);
+      sprintf(rv_second, "%d", explodedDateTime.tm_sec);
+      sprintf(rv_fraction_second, "%s", NS_ConvertUTF16toUTF8(usec).get());
     }
   }
 
-#ifdef DEBUG
-  printf("\n     Time is %s \n", ((isValid) ? "Valid" : "Not Valid"));
-#endif
+  LOG(("\n     Time is %s \n", ((isValid) ? "Valid" : "Not Valid")));
 
   return isValid;
 }
 
-PRBool nsSchemaValidatorUtils::ParseSchemaTimeZone(const char * strValue,
-  char *rv_tzhour, char *rv_tzminute)
+PRBool
+nsSchemaValidatorUtils::ParseSchemaTimeZone(const nsAString & aStrValue,
+                                            char *rv_tzhour, char *rv_tzminute)
 {
   PRBool isValid = PR_FALSE;
-  
-  int run = 0;
-  int bufferRun = 0;
-  int length = strlen(strValue);
-
-  PRBool doneParsing = PR_FALSE;
-
-  int parseState = 0;
   char timezoneHour[3] = "";
   char timezoneMinute[3] = "";
 
-  char fulldate[100] = "";
+  nsAString::const_iterator start, end, buffStart;
+  aStrValue.BeginReading(start);
+  aStrValue.BeginReading(buffStart);
+  aStrValue.EndReading(end);
+  PRUint32 state = 0;
+  PRUint32 buffLength = 0;
+  PRBool done = PR_FALSE;
+  PRUnichar currentChar;
 
-  // overflow check
-  if (strlen(fulldate) >= strlen(strValue))
-    return PR_FALSE;
+  LOG(("\n    Validating TimeZone"));
 
-#ifdef DEBUG
-  printf("\n    Validating TimeZone");
-#endif
+  while ((start != end) && !done) {
+    currentChar = *start++;
 
-  while ( (run <= length) && (!doneParsing) ) {
-    switch (parseState) {
-
+    switch (state) {
       case 0: {
-        // timezone hh
-        if (strValue[run] == ':') {
-          parseState = 1;
-
-          if ((strlen(timezoneHour) != 2) || (strcmp(timezoneHour, "24") == 1))
-            doneParsing = PR_TRUE;
-
-          bufferRun = 0;
-        } else {
-          if ((bufferRun > 1) || (strValue[run] > '9') || (strValue[run] < '0')){
-            doneParsing = PR_TRUE;
+        // hour
+        if (buffLength > 2) {
+          done = PR_TRUE;
+        } else if (currentChar == ':') {
+          timezoneHour[2] = '\0';
+          if (strcmp(timezoneHour, "24") == 1) {
+            done = PR_TRUE;
           } else {
-            timezoneHour[bufferRun] = strValue[run];          
-            bufferRun++;
+            state = 1;
+            buffLength = 0;
+            buffStart = start;
           }
+        } else {
+          // has to be a numerical character or else abort
+          if ((currentChar > '9') || (currentChar < '0'))
+            done = PR_TRUE;
+          else {
+            timezoneHour[buffLength] = currentChar;
+          }
+          buffLength++;
         }
-
         break;
       }
 
       case 1: {
-        // timezone mm
-        if (strValue[run] == '\0') {
-          if ((strlen(timezoneMinute) == 2) || (strcmp(timezoneMinute, "59") == 1))
-            isValid = PR_TRUE;
-        } else {
-          if ((bufferRun > 1) || (strValue[run] > '9') || (strValue[run] < '0'))
-            doneParsing = PR_TRUE;
-          else {
-            timezoneMinute[bufferRun] = strValue[run];          
-            bufferRun++;
+        // minute
+        if (buffLength > 1) {
+          done = PR_TRUE;
+        } else if (start == end) {
+          if (buffLength == 1) {
+            timezoneMinute[2] = '\0';
+            if (strcmp(timezoneMinute, "59") == 1) {
+              done = PR_TRUE;
+            } else {
+              isValid = PR_TRUE;
+            }
+          } else {
+            done = PR_FALSE;
           }
+        } else {
+          // has to be a numerical character or else abort
+          if ((currentChar > '9') || (currentChar < '0')) {
+            done = PR_TRUE;
+          } else {
+            timezoneMinute[buffLength] = currentChar;
+          }
+          buffLength++;
         }
-
         break;
       }
+
     }
-    run++;
   }
 
   if (isValid) {
-    timezoneHour[2] = '\0';
-    timezoneMinute[2] = '\0';
     strncpy(rv_tzhour, timezoneHour, 3);
     strncpy(rv_tzminute, timezoneMinute, 3);
   }
@@ -536,8 +590,11 @@ PRBool nsSchemaValidatorUtils::ParseSchemaTimeZone(const char * strValue,
   0 - equal
   1 - aDateTime1 > aDateTime2
 */
-int nsSchemaValidatorUtils::CompareExplodedDateTime(PRExplodedTime aDateTime1, 
-  PRBool aDateTime1IsNegative, PRExplodedTime aDateTime2, PRBool aDateTime2IsNegative) 
+int
+nsSchemaValidatorUtils::CompareExplodedDateTime(PRExplodedTime aDateTime1,
+                                                PRBool aDateTime1IsNegative,
+                                                PRExplodedTime aDateTime2,
+                                                PRBool aDateTime2IsNegative)
 {
   int result;
 
@@ -568,8 +625,9 @@ int nsSchemaValidatorUtils::CompareExplodedDateTime(PRExplodedTime aDateTime1,
   0 - equal
   1 - aDateTime1 > aDateTime2
 */
-int nsSchemaValidatorUtils::CompareExplodedDate(PRExplodedTime aDateTime1, 
-  PRExplodedTime aDateTime2) 
+int
+nsSchemaValidatorUtils::CompareExplodedDate(PRExplodedTime aDateTime1,
+                                            PRExplodedTime aDateTime2)
 {
   int result;
   if (aDateTime1.tm_year < aDateTime2.tm_year) {
@@ -600,11 +658,12 @@ int nsSchemaValidatorUtils::CompareExplodedDate(PRExplodedTime aDateTime1,
   0 - equal
   1 - aDateTime1 > aDateTime2
 */
-int nsSchemaValidatorUtils::CompareExplodedTime(PRExplodedTime aDateTime1, 
-  PRExplodedTime aDateTime2) 
+int
+nsSchemaValidatorUtils::CompareExplodedTime(PRExplodedTime aDateTime1,
+                                            PRExplodedTime aDateTime2)
 {
   int result;
-  
+
   if (aDateTime1.tm_hour < aDateTime2.tm_hour) {
     result = -1;
   } else if (aDateTime1.tm_hour > aDateTime2.tm_hour) {
@@ -634,50 +693,25 @@ int nsSchemaValidatorUtils::CompareExplodedTime(PRExplodedTime aDateTime1,
   return result;
 }
 
-void nsSchemaValidatorUtils::GetMonthShorthand(char* aMonth, nsACString & aReturn) 
+void
+nsSchemaValidatorUtils::GetMonthShorthand(char* aMonth, nsACString & aReturn)
 {
-   if (strcmp(aMonth, "01") == 0)
-    aReturn.AssignLiteral("Jan");
-  else if (strcmp(aMonth, "02") == 0)
-    aReturn.AssignLiteral("Feb");
-  else if (strcmp(aMonth, "03") == 0)
-     aReturn.AssignLiteral("Mar");
-  else if (strcmp(aMonth, "04") == 0)
-    aReturn.AssignLiteral("Apr");
-  else if (strcmp(aMonth, "05") == 0)
-    aReturn.AssignLiteral("May");
-  else if (strcmp(aMonth, "06") == 0)
-    aReturn.AssignLiteral("Jun");
-  else if (strcmp(aMonth, "07") == 0)
-    aReturn.AssignLiteral("Jul");
-  else if (strcmp(aMonth, "08") == 0)
-    aReturn.AssignLiteral("Aug");
-  else if (strcmp(aMonth, "09") == 0)
-    aReturn.AssignLiteral("Sep");
-  else if (strcmp(aMonth, "10") == 0)
-    aReturn.AssignLiteral("Oct");
-  else if (strcmp(aMonth, "11") == 0)
-    aReturn.AssignLiteral("Nov");
-  else if (strcmp(aMonth, "12") == 0)
-    aReturn.AssignLiteral("Dec");
+  PRInt32 i, length = NS_ARRAY_LENGTH(monthShortHand);
+  for (i = 0; i < length; ++i) {
+    if (strcmp(aMonth, monthShortHand[i].number) == 0) {
+      aReturn.AssignASCII(monthShortHand[i].shortHand);
+    }
+  }
 }
-
-PRBool nsSchemaValidatorUtils::IsStringANumber(char* aChar)
-{
-  char * pEnd;
-  long intValue = strtol(aChar, &pEnd, 10);
-
-  return (*pEnd == '\0');
-}
-
 
 /*
  -1 - aYearMonth1 < aYearMonth2
   0 - equal
   1 - aYearMonth1 > aYearMonth2
 */
-int nsSchemaValidatorUtils::CompareGYearMonth(Schema_GYearMonth aYearMonth1, 
-  Schema_GYearMonth aYearMonth2)
+int
+nsSchemaValidatorUtils::CompareGYearMonth(nsSchemaGYearMonth aYearMonth1,
+                                          nsSchemaGYearMonth aYearMonth2)
 {
   int rv;
 
@@ -703,8 +737,9 @@ int nsSchemaValidatorUtils::CompareGYearMonth(Schema_GYearMonth aYearMonth1,
   0 - equal
   1 - aMonthDay1 > aMonthDay2
 */
-int nsSchemaValidatorUtils::CompareGMonthDay(Schema_GMonthDay aMonthDay1,
-  Schema_GMonthDay aMonthDay2)
+int
+nsSchemaValidatorUtils::CompareGMonthDay(nsSchemaGMonthDay aMonthDay1,
+                                         nsSchemaGMonthDay aMonthDay2)
 {
   int rv;
 
@@ -717,7 +752,7 @@ int nsSchemaValidatorUtils::CompareGMonthDay(Schema_GMonthDay aMonthDay1,
     if (aMonthDay1.gDay.day > aMonthDay2.gDay.day)
       rv = 1;
     else if (aMonthDay1.gDay.day < aMonthDay2.gDay.day)
-      rv = -1;
+      rv = -1;                
     else
       rv = 0;
   }
@@ -725,15 +760,545 @@ int nsSchemaValidatorUtils::CompareGMonthDay(Schema_GMonthDay aMonthDay1,
   return rv;
 }
 
-void nsSchemaValidatorUtils::RemoveLeadingZeros(nsAString & aString)
+PRBool
+nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
+                                            nsISchemaDuration **aDuration)
+{
+  PRBool isValid = PR_FALSE;
+
+  nsAString::const_iterator start, end, buffStart;
+  aStrValue.BeginReading(start);
+  aStrValue.BeginReading(buffStart);
+  aStrValue.EndReading(end);
+  PRUint32 state = 0;
+  PRUint32 buffLength = 0;
+  PRBool done = PR_FALSE;
+  PRUnichar currentChar;
+
+  PRBool isNegative = PR_FALSE;
+
+  // make sure leading P is present.  Take negative durations into consideration.
+  if (*start == '-') {
+    start.advance(1);
+    if (*start != 'P') {
+      return PR_FALSE;
+    } else {
+      isNegative = PR_TRUE;
+      buffStart = ++start;
+    }
+  } else { 
+    if (*start != 'P')
+      return PR_FALSE;
+    else
+      ++start;
+  }
+
+  PRBool errorParsing = PR_FALSE;
+  PRUint32 length = aStrValue.Length();
+
+  nsAutoString parseBuffer, parseBuffer2;
+  PRBool timeSeparatorFound = PR_FALSE;
+
+  // designators may not repeat, so keep track of those we find.
+  PRBool yearFound = PR_FALSE;
+  PRBool monthFound = PR_FALSE;
+  PRBool dayFound = PR_FALSE;
+  PRBool hourFound = PR_FALSE;
+  PRBool minuteFound = PR_FALSE;
+  PRBool secondFound = PR_FALSE;
+  PRBool fractionSecondFound = PR_FALSE;
+
+  PRUint32 year = 0;
+  PRUint32 month = 0;
+  PRUint32 day = 0;
+  PRUint32 hour = 0;
+  PRUint32 minute = 0;
+  PRUint32 second = 0;
+  PRUint32 fractionSecond = 0;
+
+  /* durations look like this:
+       (-)PnYnMnDTnHnMn(.n)S
+     - P is required, plus sign is invalid
+     - order is important, so day after year is invalid (PnDnY)
+     - Y,M,D,H,M,S are called designators
+     - designators are not allowed without a number before them
+     - T is the date/time seperator and is only allowed given a time part
+  */
+
+  while ((start != end) && !done) {
+    currentChar = *start++;
+    // not a number - so it has to be a type designator (YMDTHMS)
+    // it can also be |.| for fractional seconds
+    if ((currentChar > '9') || (currentChar < '0')){
+      // first check if the buffer is bigger than what long can store
+      // which is 11 digits, as we convert to long
+      if ((parseBuffer.Length() == 10) &&
+          (CompareStrings(parseBuffer, NS_LITERAL_STRING("2147483647")) == 1)) {
+        done = PR_TRUE;
+      } else if (currentChar == 'Y') {
+        if (yearFound || monthFound || dayFound || timeSeparatorFound) {
+          done = PR_TRUE;
+        } else {
+          state = 0;
+          yearFound = PR_TRUE;
+        }
+      } else if (currentChar == 'M') {
+        // M is used twice - Months and Minutes
+        if (!timeSeparatorFound)
+          if (monthFound || dayFound || timeSeparatorFound) {
+            done = PR_TRUE;
+          } else {
+            state = 1;
+            monthFound = PR_TRUE;
+          }
+        else {
+          if (!timeSeparatorFound) {
+            done = PR_TRUE;
+          } else {
+            if (minuteFound || secondFound) {
+              done = PR_TRUE;
+            } else {
+              state = 4;
+              minuteFound = PR_TRUE;
+            }
+          }
+        }
+      } else if (currentChar == 'D') {
+        if (dayFound || timeSeparatorFound) {
+          done = PR_TRUE;
+        } else {
+          state = 2;
+          dayFound = PR_TRUE;
+        }
+      } else if (currentChar == 'T') {
+        // can't have the time seperator more than once
+        if (timeSeparatorFound)
+          done = PR_TRUE;
+        else
+          timeSeparatorFound = PR_TRUE;
+      } else  if (currentChar == 'H') {
+        if (!timeSeparatorFound || hourFound || secondFound ) {
+          done = PR_TRUE;
+        } else {
+          state = 3;
+          hourFound = PR_TRUE;
+        }
+      } else if (currentChar == 'S') {
+        if (!timeSeparatorFound)
+          done = PR_TRUE;
+        else
+          if (secondFound) {
+            done = PR_TRUE;
+          } else {
+            state = 5;
+            secondFound = PR_TRUE;
+          }
+      } else if (currentChar == '.'){
+        // fractional seconds
+        if (fractionSecondFound) {
+          done = PR_TRUE;
+        } else {
+          parseBuffer2.Assign(parseBuffer);
+          parseBuffer.AssignLiteral("");
+          buffLength = 0;
+          fractionSecondFound = PR_TRUE;
+        }
+      } else {
+        done = PR_TRUE;
+      }
+
+      // if its a designator and no buffer, invalid per spec.  Rule doesn't apply
+      // if T or '.' (fractional seconds), as we need to parse on for those.
+      // so P200YM is invalid as there is no number before M
+      if ((currentChar != 'T') && (currentChar != '.') && (parseBuffer.Length() == 0)) {
+        done = PR_TRUE;
+      } else if ((currentChar == 'T') && (start == end)) {
+        // if 'T' is found but no time data after it, invalid
+        done = PR_TRUE;
+      }
+
+      if (!done && (currentChar != 'T') && (currentChar != '.')) {
+        long temp;
+        switch (state) {
+          case 0: {
+            // years
+            if (!IsValidSchemaInteger(parseBuffer, &temp))
+              done = PR_TRUE;
+            else
+              year = temp;
+            break;
+          }
+
+          case 1: {
+            // months
+            if (!IsValidSchemaInteger(parseBuffer, &temp))
+              done = PR_TRUE;
+            else
+              month = temp;
+            break;
+          }
+
+          case 2: {
+            // days
+            if (!IsValidSchemaInteger(parseBuffer, &temp))
+              done = PR_TRUE;
+            else
+              day = temp;
+            break;
+          }
+
+          case 3: {
+            // hours
+            if (!IsValidSchemaInteger(parseBuffer, &temp))
+              done = PR_TRUE;
+            else
+              hour = temp;
+            break;
+          }
+          
+          case 4: {
+            // minutes
+            if (!IsValidSchemaInteger(parseBuffer, &temp))
+              done = PR_TRUE;
+            else
+              minute = temp;
+            break;
+          }
+
+          case 5: {
+            // seconds - we have to handle optional fraction seconds as well
+            if (fractionSecondFound) {
+              long temp2;
+              if (!IsValidSchemaInteger(parseBuffer2, &temp) ||
+                  !IsValidSchemaInteger(parseBuffer, &temp2)) {
+                done = PR_TRUE;
+              } else {
+                second = temp;
+                fractionSecond = temp2;
+              }
+            } else { 
+              if (!IsValidSchemaInteger(parseBuffer, &temp))
+                done = PR_TRUE;
+              else
+                second = temp;
+            }
+            break;
+          }
+        }
+      }
+
+      // clear buffer
+      parseBuffer.AssignLiteral("");
+      buffLength = 0;
+    } else {
+      if (buffLength > 11) {
+        done = PR_TRUE;
+      } else {
+        parseBuffer.Append(currentChar);
+        buffLength++;
+      }
+    }
+  }
+
+  if ((start == end) && (!done)) {
+    isValid = PR_TRUE;
+  }
+
+  if (isValid) {
+    nsISchemaDuration* duration = new nsSchemaDuration(year, month, day, hour, minute, second, fractionSecond, isNegative);
+
+    *aDuration = duration;
+    NS_IF_ADDREF(*aDuration);
+  }
+
+  return isValid;
+}
+
+/* compares 2 strings that contain integers.
+   Schema Integers have no limit, thus converting the strings
+   into numbers won't work.
+
+ -1 - aString1 < aString2
+  0 - equal
+  1 - aString1 > aString2
+
+ */
+int
+nsSchemaValidatorUtils::CompareStrings(const nsAString & aString1,
+                                       const nsAString & aString2)
+{
+  int rv;
+
+  PRBool isNegative1 = (aString1.First() == PRUnichar('-'));
+  PRBool isNegative2 = (aString2.First() == PRUnichar('-'));
+
+  if (isNegative1 && !isNegative2) {
+    // negative is always smaller than positive
+    return -1;
+  } else if (!isNegative1 && isNegative2) {
+    // positive is always bigger than negative
+    return 1;
+  }
+
+  nsAString::const_iterator start1, start2, end1, end2;
+  aString1.BeginReading(start1);
+  aString1.EndReading(end1);
+  aString2.BeginReading(start2);
+  aString2.EndReading(end2);
+
+  // skip negative sign
+  if (isNegative1)
+    start1++;
+
+  if (isNegative2)
+    start2++;
+
+  // jump over leading zeros
+  PRBool done = PR_FALSE;
+  while ((start1 != end1) && !done) {
+    if (*start1 != '0')
+      done = PR_TRUE;
+    else
+      ++start1;
+  }
+
+  done = PR_FALSE;
+  while ((start2 != end2) && !done) {
+    if (*start2 != '0')
+      done = PR_TRUE;
+    else
+      ++start2;
+  }
+
+  nsAutoString compareString1, compareString2;
+  compareString1.Assign(Substring(start1, end1));
+  compareString2.Assign(Substring(start2, end2));
+
+  // after removing leading 0s, check if they are the same
+
+  if (compareString1.Equals(compareString2)) {
+    return 0;
+  }
+
+  if (compareString1.Length() > compareString2.Length())
+    rv = 1;
+  else if (compareString1.Length() < compareString2.Length())
+    rv = -1;
+  else
+    rv = strcmp(NS_ConvertUTF16toUTF8(compareString1).get(),
+                NS_ConvertUTF16toUTF8(compareString2).get());
+
+  // 3>2, but -2>-3
+  if (isNegative1 && isNegative2) {
+    if (rv == 1)
+      rv = -1;
+    else
+      rv = 1;
+  }
+  return rv;
+}
+
+// For xsd:duration support, the the maximum day for a month/year combo as
+// defined in http://w3.org/TR/xmlschema-2/#adding-durations-to-dateTimes.
+int
+nsSchemaValidatorUtils::GetMaximumDayInMonthFor(int aYearValue, int aMonthValue)
+{
+  int maxDay = 28;
+  int month = ((aMonthValue - 1) % 12) + 1;
+  int year = aYearValue + ((aMonthValue - 1) / 12);
+
+  /*
+    Return Value      Condition
+    31                month is either 1, 3, 5, 7, 8, 10, 12
+    30                month is either 4, 6, 9, 11
+    29                month is 2 AND either (year % 400 == 0) OR (year % 100 == 0)
+                                            AND (year % 4 == 0)
+    28                Otherwise
+  */
+
+  if ((month == 1) || (month == 3) || (month == 5) || (month == 7) ||
+      (month == 8) || (month == 10) || (month == 12))
+    maxDay = 31;
+  else if ((month == 4) || (month == 6) || (month == 9) || (month == 11))
+    maxDay = 30;
+  else if ((month == 2) && ((year % 400 == 0) || (year % 100 == 0) && (year % 4 == 0)))
+    maxDay = 29;
+
+  return maxDay;
+}
+
+/*
+ * compares 2 durations using the algorithm defined in
+ * http://w3.org/TR/xmlschema-2/#adding-durations-to-dateTimes by adding them to
+ * the 4 datetimes specified in http://w3.org/TR/xmlschema-2/#duration-order.
+ * If not all 4 result in x<y, we return indeterminate per
+ * http://www.w3.org/TR/xmlschema-2/#facet-comparison-for-durations.
+ *
+ *  0 - aDuration1 < aDuration2
+ *  1 - indeterminate
+ *
+ */
+int
+nsSchemaValidatorUtils::CompareDurations(nsISchemaDuration *aDuration1,
+                                         nsISchemaDuration *aDuration2)
+{
+  int cmp, tmpcmp, i = 0;
+
+  PRTime foo;
+  PRExplodedTime explodedTime, newTime1, newTime2;
+
+  char* datetimeArray[] = { "1696-09-01T00:00:00Z", "1697-02-01T00:00:00Z",
+                            "1903-03-01T00:00:00Z", "1903-07-01T00:00:00Z" };
+  PRBool indeterminate = PR_FALSE;
+
+  while (!indeterminate && (i < 4)) {
+    GetPRTimeFromDateTime(NS_ConvertASCIItoUTF16(datetimeArray[i]), &foo);
+    PR_ExplodeTime(foo, PR_GMTParameters, &explodedTime);
+
+    newTime1 = AddDurationToDatetime(explodedTime, aDuration1);
+    newTime2 = AddDurationToDatetime(explodedTime, aDuration2);
+
+    tmpcmp = CompareExplodedDateTime(newTime1, PR_FALSE, newTime2, PR_FALSE);
+
+    if (i > 0) {
+      if (tmpcmp != cmp || tmpcmp > -1) {
+        indeterminate = PR_TRUE;
+      }
+    }
+
+    cmp = tmpcmp;
+    ++i;
+  }
+
+  return indeterminate ? 1 : 0;
+}
+
+/* 
+ * This method implements the algorithm described at:
+ *    http://w3.org/TR/xmlschema-2/#adding-durations-to-dateTimes
+ */
+PRExplodedTime
+nsSchemaValidatorUtils::AddDurationToDatetime(PRExplodedTime aDatetime,
+                                              nsISchemaDuration *aDuration)
+{
+  PRExplodedTime resultDatetime;
+  // first handle months
+  PRUint32 temp;
+  aDuration->GetMonths(&temp);
+  temp += aDatetime.tm_month + 1;
+  resultDatetime.tm_month = ((temp - 1) % 12) + 1;
+  PRInt32 carry = (temp - 1) / 12;
+
+  // years
+  aDuration->GetYears(&temp);
+  resultDatetime.tm_year = aDatetime.tm_year + carry + temp;
+
+  /* fraction seconds
+   * XXX: Since the 4 datetimes we add durations to don't have fraction seconds
+   *      we can just add the duration's fraction second (stored as an float),
+   *      which will be < 1.0.
+   */
+  aDuration->GetFractionSeconds(&temp);
+  resultDatetime.tm_usec = temp * 1000000;
+
+  // seconds
+  aDuration->GetSeconds(&temp);
+  temp += aDatetime.tm_sec + carry;
+  resultDatetime.tm_sec = temp % 60;
+  carry = temp / 60;
+
+  // minutes
+  aDuration->GetMinutes(&temp);
+  temp += aDatetime.tm_min + carry;
+  resultDatetime.tm_min = temp % 60;
+  carry = temp / 60;
+
+  // hours
+  aDuration->GetHours(&temp);
+  temp += aDatetime.tm_hour + carry;
+  resultDatetime.tm_hour = temp % 24;
+  carry = temp / 24;
+
+  // days
+  int maxDay = GetMaximumDayInMonthFor(resultDatetime.tm_year,
+                                       resultDatetime.tm_month);
+  int tempDays = 0;
+  if (aDatetime.tm_mday > maxDay)
+    tempDays = maxDay;
+  else if (aDatetime.tm_mday < 1)
+    tempDays = 1;
+  else
+    tempDays = aDatetime.tm_mday;
+
+  aDuration->GetDays(&temp);
+  resultDatetime.tm_mday = tempDays + carry + temp;
+
+  PRBool done = PR_FALSE;
+  while (!done) {
+    maxDay = GetMaximumDayInMonthFor(resultDatetime.tm_year,
+                                         resultDatetime.tm_month);
+    if (resultDatetime.tm_mday < 1) {
+      resultDatetime.tm_mday +=
+        GetMaximumDayInMonthFor(resultDatetime.tm_year,
+                                resultDatetime.tm_month - 1);
+      carry = -1;
+    } else if (resultDatetime.tm_mday > maxDay) {
+      resultDatetime.tm_mday -= maxDay;
+      carry = 1;
+    } else {
+      done = PR_TRUE;
+    }
+
+    if (!done) {
+      temp = resultDatetime.tm_month + carry;
+      resultDatetime.tm_month = ((temp - 1) % 12) + 1;
+      resultDatetime.tm_year += (temp - 1) / 12;
+    }
+  }
+
+  LOG(("\n  New datetime is %d-%d-%d %d:%d:%d\n", resultDatetime.tm_mday,
+    resultDatetime.tm_month, resultDatetime.tm_year, resultDatetime.tm_hour,
+    resultDatetime.tm_min, resultDatetime.tm_sec));
+
+  return resultDatetime;
+}
+
+PRBool
+nsSchemaValidatorUtils::HandleEnumeration(const nsAString &aStrValue,
+                                          const nsStringArray &aEnumerationList)
+{
+  PRBool isValid = PR_FALSE;
+
+  // check enumeration
+  PRInt32 count = aEnumerationList.Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    if (aEnumerationList[i]->Equals(aStrValue)) {
+      isValid = PR_TRUE;
+      break;
+    }
+  }
+
+  if (!isValid) {
+    LOG(("  Not valid: Value doesn't match any of the enumerations"));
+  }
+
+  return isValid;
+}
+
+void
+nsSchemaValidatorUtils::RemoveLeadingZeros(nsAString & aString)
 {
   nsAString::const_iterator start, end;
   aString.BeginReading(start);
   aString.EndReading(end);
 
   PRBool done = PR_FALSE;
-  PRUint32 count = 0;
+  PRUint32 count = 0, indexstart=0;
 
+  if(*start == '+' || *start == '-'){
+    start++;
+    indexstart = 1;
+  }
   while ((start != end) && !done)
   {
     if (*start++ == '0') {
@@ -744,6 +1309,33 @@ void nsSchemaValidatorUtils::RemoveLeadingZeros(nsAString & aString)
   }
 
   // finally, remove the leading zeros
-  aString.Cut(0, count);
+  aString.Cut(indexstart, count);
+}
+
+void
+nsSchemaValidatorUtils::RemoveTrailingZeros(nsAString & aString)
+{
+  nsAString::const_iterator start, end;
+  aString.BeginReading(start);
+  aString.EndReading(end);
+
+  PRUint32 length = aString.Length();
+
+  PRBool done = PR_FALSE;
+  PRUint32 count = 0;
+  if(start != end)
+      end --;
+
+  while ((start != end) && !done)
+  {
+    if (*end-- == '0') {
+      ++count;
+    } else {
+      done = PR_TRUE;
+    }
+  }
+
+  // finally, remove the leading zeros
+  aString.Cut(length - count, count);
 }
 

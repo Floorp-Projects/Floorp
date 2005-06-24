@@ -38,15 +38,23 @@
 
 #include "nsIGenericFactory.h"
 #include "nsSchemaValidator.h"
+#include "nsSchemaDuration.h"
 
 NS_DECL_CLASSINFO(nsSchemaValidator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSchemaValidator)
+
+NS_DECL_CLASSINFO(nsSchemaDuration)
 
 static const nsModuleComponentInfo components[] = {
   { "SchemaValidator",
     NS_SCHEMAVALIDATOR_CID,
     NS_SCHEMAVALIDATOR_CONTRACTID,
-    nsSchemaValidatorConstructor }
+    nsSchemaValidatorConstructor },
+
+  { "SchemaDuration",
+    NS_SCHEMADURATION_CID,
+    NS_SCHEMADURATION_CONTRACTID,
+    nsnull }
 };
 
 PR_STATIC_CALLBACK(nsresult)
