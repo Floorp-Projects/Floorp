@@ -188,6 +188,11 @@ interface nsIAccessible : nsISupports
    */
   nsIAccessible getAccessibleBelow();
 
+  /**
+   * Accessible node related to this one 
+   */
+  nsIAccessible getAccessibleRelated(in unsigned long aRelationType);
+
   void getBounds(out long x, 
                     out long y, 
                     out long width, 
@@ -301,9 +306,56 @@ interface nsIAccessible : nsISupports
   const unsigned long  EXT_STATE_TRANSIENT      = 0x40000000;  // Tells accessibility aid "Don't add event listener - this object doesn't generate any". For example, could be used with higher level containers.    
   const unsigned long  EXT_STATE_VERTICAL       = 0x80000000;  // Especially used for sliders and scrollbars  
 
+/**
+ * Relation Types -- most of these come from ATK's atkrelationtype.h
+ * RELATION_NULL:
+ * RELATION_CONTROLLED_BY:    Controlled by one or more target objects.
+ * RELATION_CONTROLLER_FOR:   Controller for one or more target objects.
+ * RELATION_LABEL_FOR:        Label for one or more target objects.
+ * RELATION_LABELLED_BY:      Labelled by one or more target objects.
+ * RELATION_MEMBER_OF:        Member of a group of one or more target objects.
+ * RELATION_NODE_CHILD_OF:    Cell in a treetable which is displayed because a
+ *                            cell in the same col is expanded & identifies it.
+ * RELATION_FLOWS_TO:         Has content that flows logically to another
+ *                            object in a sequential way, e.g. text flow.
+ * RELATION_FLOWS_FROM:       Has content that flows logically from another
+ *                            object in a sequential way, e.g. text flow.
+ * RELATION_SUBWINDOW_OF:     Subwindow attached to a component but otherwise 
+ *                            not connected in the UI hierarchy to that component.
+ * RELATION_EMBEDS:           Visually embeds another object's content, i.e.
+ *                            this object's content flows around another's content.
+ * RELATION_EMBEDDED_BY:      Inverse of RELATION_EMBEDS; this object's content
+ *                            is visually embedded in another object.
+ * RELATION_POPUP_FOR:        Popup for another object.
+ * RELATION_PARENT_WINDOW_OF: Parent window of another object.
+ * RELATION_DEFAULT_BUTTON:   Part of a form/dialog with a related default button.
+ * RELATION_DESCRIBED_BY:     Described by one or more target objects.
+ * RELATION_DESCRIPTION_FOR:  Description for one or more target objects.
+ * RELATION_LAST_DEFINED:
+ */
+
+  const unsigned long RELATION_NUL = 0x00;               // ATK_RELATION_NUL
+  const unsigned long RELATION_CONTROLLED_BY = 0x01;     // ATK_RELATION_CONTROLLED_BY
+  const unsigned long RELATION_CONTROLLER_FOR = 0x02;    // ATK_RELATION_CONTROLLER_FOR
+  const unsigned long RELATION_LABEL_FOR = 0x03;         // ATK_RELATION_LABEL_FOR
+  const unsigned long RELATION_LABELLED_BY = 0x04;       // ATK_RELATION_LABELLED_BY
+  const unsigned long RELATION_MEMBER_OF = 0x05;         // ATK_RELATION_MEMBER_OF
+  const unsigned long RELATION_NODE_CHILD_OF = 0x06;     // ATK_RELATION_NODE_CHILD_OF
+  const unsigned long RELATION_FLOWS_TO = 0x07;          // ATK_RELATION_FLOWS_TO
+  const unsigned long RELATION_FLOWS_FROM = 0x08;        // ATK_RELATION_FLOWS_FROM
+  const unsigned long RELATION_SUBWINDOW_OF = 0x09;      // ATK_RELATION_SUBWINDOW_OF
+  const unsigned long RELATION_EMBEDS = 0x0a;            // ATK_RELATION_EMBEDS
+  const unsigned long RELATION_EMBEDDED_BY = 0x0b;       // ATK_RELATION_EMBEDDED_BY
+  const unsigned long RELATION_POPUP_FOR = 0x0c;         // ATK_RELATION_POPUP_FOR
+  const unsigned long RELATION_PARENT_WINDOW_OF = 0x0d;  // ATK_RELATION_PARENT_WINDOW_OF
+  const unsigned long RELATION_DEFAULT_BUTTON = 0x4000;  // MSAA only, no ATK relation
+  const unsigned long RELATION_DESCRIBED_BY = 0x4001;    // MSAA only, no ATK relation
+  const unsigned long RELATION_DESCRIPTION_FOR = 0x4002; // MSAA only, no ATK relation
 
 %{C++
 #ifdef MOZ_ACCESSIBILITY_ATK
+
+  enum { RELATION_LAST_DEFINED = 14U };
 
 /**
  * The following nsIAccessible roles are translated to ATK_ROLE_UNKNOWN
@@ -545,6 +597,25 @@ interface nsIAccessible : nsISupports
 // When in doubt map them to ROLE_NOTHING so that the role string is exposed
   enum { ROLE_ICON = ROLE_NOTHING };
   enum { ROLE_PASSWORD_TEXT = ROLE_TEXT };
+
+// MSAA relationship extensions to accNavigate
+  enum { NAVRELATION_CONTROLLED_BY = 0x1000 };
+  enum { NAVRELATION_CONTROLLER_FOR = 0x1001 };
+  enum { NAVRELATION_LABEL_FOR = 0x1002 };
+  enum { NAVRELATION_LABELLED_BY = 0x1003 };
+  enum { NAVRELATION_MEMBER_OF = 0x1004 };
+  enum { NAVRELATION_NODE_CHILD_OF = 0x1005 };
+  enum { NAVRELATION_FLOWS_TO = 0x1006 };
+  enum { NAVRELATION_FLOWS_FROM = 0x1007 };
+  enum { NAVRELATION_SUBWINDOW_OF = 0x1008 };
+  enum { NAVRELATION_EMBEDS = 0x1009 };
+  enum { NAVRELATION_EMBEDDED_BY = 0x100a };
+  enum { NAVRELATION_POPUP_FOR = 0x100b };
+  enum { NAVRELATION_PARENT_WINDOW_OF = 0x100c };
+  enum { NAVRELATION_DEFAULT_BUTTON = 0x100d };
+  enum { NAVRELATION_DESCRIBED_BY = 0x100e };
+  enum { NAVRELATION_DESCRIPTION_FOR = 0x100f };
+
 #endif
 %}
 };

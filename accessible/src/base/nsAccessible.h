@@ -40,10 +40,12 @@
 #define _nsAccessible_H_
 
 #include "nsAccessNodeWrap.h"
+#include "nsAccessibilityAtoms.h"
 #include "nsIAccessible.h"
 #include "nsPIAccessible.h"
-#include "nsWeakReference.h"
 #include "nsIDOMNodeList.h"
+#include "nsINameSpaceManager.h"
+#include "nsWeakReference.h"
 #include "nsString.h"
 
 struct nsRect;
@@ -142,12 +144,18 @@ protected:
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
   PRBool IsPartiallyVisible(PRBool *aIsOffscreen); 
   nsresult GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName);
-  static nsIContent *GetLabelForId(nsIContent *aLookContent,
-                                nsIAtom *forAttrib,
-                                const nsAString *aId);
-  static nsIContent *GetXULLabelContent(nsIContent *aForNode);
+
+  static nsIContent *GetContentPointingTo(const nsAString *aId,
+                                          nsIContent *aLookContent,
+                                          nsIAtom *forAttrib,
+                                          PRUint32 aForAttribNamespace = kNameSpaceID_None,
+                                          nsIAtom *aTagType = nsAccessibilityAtoms::label);
+  static nsIContent *GetXULLabelContent(nsIContent *aForNode,
+                                        nsIAtom *aLabelType = nsAccessibilityAtoms::label);
   static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);
+  static nsIContent *GetLabelContent(nsIContent *aForNode);
   static nsIContent *GetRoleContent(nsIDOMNode *aDOMNode);
+
   nsresult GetHTMLName(nsAString& _retval, PRBool aCanAggregateSubtree = PR_TRUE);
   nsresult GetXULName(nsAString& aName, PRBool aCanAggregateSubtree = PR_TRUE);
   // For accessibles that are not lists of choices, the name of the subtree should be the 
