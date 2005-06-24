@@ -352,7 +352,7 @@ var gCheckingPage = {
   
   updateListener: {
     /**
-     * See nsIUpdateCheckListener.idl
+     * See nsIUpdateCheckListener
      */
     onProgress: function(request, position, totalSize) {
       var pm = document.getElementById("checkingProgress");
@@ -361,9 +361,9 @@ var gCheckingPage = {
     },
 
     /**
-     * See nsIUpdateCheckListener.idl
+     * See nsIUpdateCheckListener
      */
-    onCheckComplete: function(updates, updateCount) {
+    onCheckComplete: function(request, updates, updateCount) {
       var aus = Components.classes["@mozilla.org/updates/update-service;1"]
                           .getService(Components.interfaces.nsIApplicationUpdateService);
       gUpdates.update = aus.selectUpdate(updates, updates.length);
@@ -378,10 +378,33 @@ var gCheckingPage = {
     },
 
     /**
-     * See nsIUpdateCheckListener.idl
+     * See nsIUpdateCheckListener
      */
-    onError: function() {
-      LOG("UI:CheckingPage", "UpdateCheckListener: ERROR");
+    onError: function(request) {
+      LOG("UI:CheckingPage", "UpdateCheckListener: error");
+      
+      try {
+        var status = request.status;
+      }
+      catch (e) {
+        var req = request.channel.QueryInterface(Components.interfaces.nsIRequest);
+        status = req.status;
+      }
+      
+      var sbs = 
+          Components.classes["@mozilla.org/intl/stringbundle;1"].
+          getService(Components.interfaces.nsIStringBundleService);
+      var updateBundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
+      var reason = updateBundle.GetStringFromName("checker_error-200");
+      try {
+        reason = updateBundle.GetStringFromName("checker_error-" + status);
+      }
+      catch (e) {
+        // If we can't find an error string specific to this status code, 
+        // just use the 200 message from above, which means everything 
+        // "looks" fine but there was probably an XML error or a bogus file.
+      }
+      gUpdates.advanceToErrorPage(reason);
     },
     
     /**

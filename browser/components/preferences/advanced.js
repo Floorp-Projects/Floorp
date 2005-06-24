@@ -93,25 +93,26 @@ var gAdvancedPane = {
   
   updateAppUpdateUI: function ()
   {
-    var preference = document.getElementById("app.update.autoUpdateEnabled");
-    var ids = ["enableAutoInstall", "autoInstallMode", "updateAnd"];
-    if (!preference.value)
-      for (var i = 0; i < ids.length; ++i)
-        document.getElementById(ids[i]).disabled = true;
-    else {
-      document.getElementById("enableAutoInstall").disabled = false;
-      this.updateAutoInstallUI();
-    }
+    var preference = document.getElementById("app.update.enabled");
+    document.getElementById("enableAutoInstall").disabled = !preference.value;
+    this.updateAutoInstallUI();
     return undefined;
   },
   
   updateAutoInstallUI: function ()
   {
-    var preference = document.getElementById("app.update.autoInstallEnabled");
+    var autoInstallPref = document.getElementById("app.update.autoInstallEnabled");
+    var updateEnabledPref = document.getElementById("app.update.enabled");
     var ids = ["autoInstallMode", "updateAnd"];
+    var disabled = !updateEnabledPref.value || !autoInstallPref.value;
     for (var i = 0; i < ids.length; ++i)
-      document.getElementById(ids[i]).disabled = !preference.value;
+      document.getElementById(ids[i]).disabled = disabled;
     return undefined;
+  },
+  
+  checkForAddonUpdates: function ()
+  {
+    goats
   },
   
   checkForUpdates: function ()

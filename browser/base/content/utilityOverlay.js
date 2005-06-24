@@ -482,12 +482,16 @@ function buildHelpMenu()
         label = strings.getString("updates_resumeDownloadingFallback");
     }
   }
-    
+  
   var checkForUpdates = document.getElementById("checkForUpdates");
   checkForUpdates.label = label;
   if (um.activeUpdate && updates.isDownloading)
     checkForUpdates.setAttribute("loading", "true");
   else
     checkForUpdates.removeAttribute("loading");
+    
+  // Disable the UI if the update enabled pref has been locked by the 
+  // administrator.
+  checkForUpdates.disabled = gPrefService.prefIsLocked("app.update.enabled");
 }
 

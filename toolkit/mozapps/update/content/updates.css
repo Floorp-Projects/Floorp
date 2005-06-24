@@ -132,5 +132,6 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
   margin-bottom: 2px;
   -moz-margin-start: 6px !important;
   -moz-margin-end: 5px;
+  font-weight: bold;
 }
 
