@@ -1054,17 +1054,21 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 - (void)selectContainer:(int)inRowIndex
 {
   [mContainersTableView selectRow:inRowIndex byExtendingSelection:NO];
-  
+
+  // reset the search
+  [self resetSearchField];
+
   if (inRowIndex == kHistoryContainerIndex)
   {
     [self setActiveOutlineView:mHistoryOutlineView];
 
+    [mHistoryOutlineViewDelegate clearSearchResults];
     [mHistoryOutlineViewDelegate historyViewMadeVisible:YES];
     
     [mActionButton setMenu:mActionMenuHistory];
     [mSortButton   setMenu:mSortMenuHistory];
-    [mSearchField setPopupMenu:mQuickSearchMenuHistory];
-    [self resetSearchField];
+    [mSearchField  setPopupMenu:mQuickSearchMenuHistory];
+    [mSearchField  selectPopupMenuItem:[[mSearchField popupMenu] itemWithTag:1]];   // select the "all" item
   } 
   else
   {
@@ -1074,6 +1078,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
     BookmarkFolder *activeCollection = [mRootBookmarks objectAtIndex:inRowIndex];
     [self setActiveCollection:activeCollection];
+    [self clearSearchResults];
     [self restoreFolderExpandedStates];
 
     if ([activeCollection isSmartFolder])
@@ -1089,8 +1094,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
     [mActionButton setMenu:mActionMenuBookmarks];
     [mSortButton   setMenu:mSortMenuBookmarks];
-    [mSearchField setPopupMenu:mQuickSearchMenuBookmarks];
-    [self resetSearchField];
+    [mSearchField  setPopupMenu:mQuickSearchMenuBookmarks];
+    [mSearchField  selectPopupMenuItem:[[mSearchField popupMenu] itemWithTag:1]];   // select the "all" item
 
     // this reload ensures that we display the newly selected activeCollection 
     [mBookmarksOutlineView reloadData];
@@ -1680,7 +1685,11 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   NSMenu* actionMenu = nil;
   if ([self activeOutlineView] == mHistoryOutlineView)
   {
-    actionMenu = mActionMenuHistory;
+    NSArray* selectedItems = [mHistoryOutlineView selectedItems];
+    if ([selectedItems count] > 0)
+      actionMenu = [mHistoryOutlineViewDelegate outlineView:mHistoryOutlineView contextMenuForItems:selectedItems];
+    else
+      actionMenu = mActionMenuHistory;
   }
   else
   {

@@ -68,6 +68,7 @@
                 openHistoryItem = id; 
                 openHistoryItemInNewTab = id; 
                 openHistoryItemInNewWindow = id; 
+                openHistoryItemsInTabsInNewWindow = id; 
                 setNoGrouping = id; 
                 sortAscending = id; 
                 sortBy = id; 
@@ -79,7 +80,6 @@
                 mBookmarksViewController = BookmarkViewController; 
                 mHistoryOutlineView = ExtendedOutlineView; 
                 mHistorySortMenu = NSMenu; 
-                mOutlinerContextMenu = NSMenu; 
             }; 
             SUPERCLASS = NSObject; 
         }, 
