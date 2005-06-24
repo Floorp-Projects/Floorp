@@ -84,7 +84,7 @@ nsConverterInputStream::Init(nsIInputStream* aStream,
 NS_IMETHODIMP
 nsConverterInputStream::Close()
 {
-    nsresult rv = mInput ? mInput->Close() : NS_OK;
+    nsresult rv = /* mInput ? mInput->Close() : */ NS_OK;
     PR_FREEIF(mLineBuffer);
     mInput = nsnull;
     mConverter = nsnull;
