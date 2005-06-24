@@ -49,7 +49,6 @@
 |   longer term, this code will be restructured to make it more reusable.      |
 ------------------------------------------------------------------------------*/
 
-const kMailToLength = 7;
 
 function nsContextMenu( xulMenu ) {
     this.target         = null;
@@ -572,14 +571,17 @@ nsContextMenu.prototype = {
         // Copy the comma-separated list of email addresses only.
         // There are other ways of embedding email addresses in a mailto:
         // link, but such complex parsing is beyond us.
+        
+        const kMailToLength = 7; // length of "mailto:"
+
         var url = this.linkURL();
         var qmark = url.indexOf( "?" );
         var addresses;
         
-        if ( qmark > 7 ) {                   // 7 == length of "mailto:"
-            addresses = url.substring( 7, qmark );
+        if ( qmark > kMailToLength ) {
+            addresses = url.substring( kMailToLength, qmark );
         } else {
-            addresses = url.substr( 7 );
+            addresses = url.substr( kMailToLength );
         }
 
         // Let's try to unescape it using a character set
