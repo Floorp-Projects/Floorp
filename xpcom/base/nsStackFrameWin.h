@@ -41,10 +41,13 @@
 #define nsStackFrameWin_h___
 
 
-#if defined(_WIN32) && defined(_M_IX86) // WIN32 x86 stack walking code
+#if defined(_WIN32) && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_IA64))
+// WIN32 x86 stack walking code
 #include "nspr.h"
 #include <windows.h>
+#ifdef _M_IX86
 #include <imagehlp.h>
+#endif
 
 // Define these as static pointers so that we can load the DLL on the
 // fly (and not introduce a link-time dependency on it). Tip o' the
@@ -74,17 +77,50 @@ typedef BOOL (__stdcall *STACKWALKPROC)(DWORD,
                                         PTRANSLATE_ADDRESS_ROUTINE);
 extern  STACKWALKPROC _StackWalk;
 
+#ifdef _IMAGEHLP64
+typedef BOOL (__stdcall *STACKWALKPROC64)(DWORD,
+                                          HANDLE,
+                                          HANDLE,
+                                          LPSTACKFRAME64,
+                                          PVOID,
+                                          PREAD_PROCESS_MEMORY_ROUTINE64,
+                                          PFUNCTION_TABLE_ACCESS_ROUTINE64,
+                                          PGET_MODULE_BASE_ROUTINE64,
+                                          PTRANSLATE_ADDRESS_ROUTINE64);
+extern  STACKWALKPROC64 _StackWalk64;
+#endif
+
 typedef LPVOID (__stdcall *SYMFUNCTIONTABLEACCESSPROC)(HANDLE, DWORD);
 extern  SYMFUNCTIONTABLEACCESSPROC _SymFunctionTableAccess;
+
+#ifdef _IMAGEHLP64
+typedef LPVOID (__stdcall *SYMFUNCTIONTABLEACCESSPROC64)(HANDLE, DWORD64);
+extern  SYMFUNCTIONTABLEACCESSPROC64 _SymFunctionTableAccess64;
+#endif
 
 typedef DWORD (__stdcall *SYMGETMODULEBASEPROC)(HANDLE, DWORD);
 extern  SYMGETMODULEBASEPROC _SymGetModuleBase;
 
+#ifdef _IMAGEHLP64
+typedef DWORD64 (__stdcall *SYMGETMODULEBASEPROC64)(HANDLE, DWORD64);
+extern  SYMGETMODULEBASEPROC64 _SymGetModuleBase64;
+#endif
+
 typedef BOOL (__stdcall *SYMGETSYMFROMADDRPROC)(HANDLE, DWORD, PDWORD, PIMAGEHLP_SYMBOL);
 extern  SYMGETSYMFROMADDRPROC _SymGetSymFromAddr;
 
+#ifdef _IMAGEHLP64
+typedef BOOL (__stdcall *SYMFROMADDRPROC)(HANDLE, DWORD64, PDWORD64, PSYMBOL_INFO);
+extern  SYMFROMADDRPROC _SymFromAddr;
+#endif
+
 typedef DWORD ( __stdcall *SYMLOADMODULE)(HANDLE, HANDLE, PSTR, PSTR, DWORD, DWORD);
 extern  SYMLOADMODULE _SymLoadModule;
+
+#ifdef _IMAGEHLP64
+typedef DWORD ( __stdcall *SYMLOADMODULE64)(HANDLE, HANDLE, PCSTR, PCSTR, DWORD64, DWORD);
+extern  SYMLOADMODULE64 _SymLoadModule64;
+#endif
 
 typedef DWORD ( __stdcall *SYMUNDNAME)(PIMAGEHLP_SYMBOL, PSTR, DWORD);
 extern  SYMUNDNAME _SymUnDName;
@@ -92,11 +128,30 @@ extern  SYMUNDNAME _SymUnDName;
 typedef DWORD ( __stdcall *SYMGETMODULEINFO)( HANDLE, DWORD, PIMAGEHLP_MODULE);
 extern  SYMGETMODULEINFO _SymGetModuleInfo;
 
+#ifdef _IMAGEHLP64
+typedef BOOL ( __stdcall *SYMGETMODULEINFO64)( HANDLE, DWORD64, PIMAGEHLP_MODULE64);
+extern  SYMGETMODULEINFO64 _SymGetModuleInfo64;
+#endif
+
 typedef BOOL ( __stdcall *ENUMLOADEDMODULES)( HANDLE, PENUMLOADED_MODULES_CALLBACK, PVOID);
 extern  ENUMLOADEDMODULES _EnumerateLoadedModules;
 
+#ifdef _IMAGEHLP64
+typedef BOOL ( __stdcall *ENUMLOADEDMODULES64)( HANDLE, PENUMLOADED_MODULES_CALLBACK64, PVOID);
+extern  ENUMLOADEDMODULES64 _EnumerateLoadedModules64;
+#endif
+
 typedef BOOL (__stdcall *SYMGETLINEFROMADDRPROC)(HANDLE, DWORD, PDWORD, PIMAGEHLP_LINE);
 extern  SYMGETLINEFROMADDRPROC _SymGetLineFromAddr;
+
+#ifdef _IMAGEHLP64
+typedef BOOL (__stdcall *SYMGETLINEFROMADDRPROC64)(HANDLE, DWORD64, PDWORD, PIMAGEHLP_LINE64);
+extern  SYMGETLINEFROMADDRPROC64 _SymGetLineFromAddr64;
+#endif
+
+extern HANDLE hStackWalkMutex; 
+
+HANDLE GetCurrentPIDorHandle();
 
 PRBool EnsureSymInitialized();
 
@@ -114,11 +169,23 @@ PRBool EnsureImageHlpInitialized();
  */
 BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aModuleInfo, PIMAGEHLP_LINE aLineInfo);
 
+struct DumpStackToFileData {
+  FILE *stream;
+  HANDLE thread;
+  HANDLE process;
+};
 
+void PrintError(char *prefix, FILE* out);
 void DumpStackToFile(FILE* out);
+DWORD WINAPI  DumpStackToFileThread(LPVOID data);
+void DumpStackToFileMain64(struct DumpStackToFileData* data);
+void DumpStackToFileMain(struct DumpStackToFileData* data);
+
 
 PR_END_EXTERN_C
 
+#else
+#pragma message( "You probably need to fix this file to handle your target platform" )
 #endif //WIN32
 
 #endif //nsStackFrameWin_h___
