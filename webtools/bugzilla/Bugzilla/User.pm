@@ -530,6 +530,27 @@ sub derive_groups {
     $dbh->bz_unlock_tables() unless $already_locked;
 }
 
+sub product_responsibilities {
+    my $self = shift;
+
+    return $self->{'product_resp'} if defined $self->{'product_resp'};
+    return [] unless $self->id;
+
+    my $h = Bugzilla->dbh->selectall_arrayref(
+        qq{SELECT products.name AS productname,
+                  components.name AS componentname,
+                  initialowner,
+                  initialqacontact
+           FROM products, components
+           WHERE products.id = components.product_id
+             AND ? IN (initialowner, initialqacontact)
+          },
+        {'Slice' => {}}, $self->id);
+    $self->{'product_resp'} = $h;
+
+    return $h;
+}
+
 sub can_bless {
     my $self = shift;
 
@@ -1385,6 +1406,32 @@ instead of using the explicit table locking we were forced to do when thats
 all MySQL supported, this will go away.
 
 =end undocumented
+
+=item C<product_responsibilities>
+
+Retrieve user's product responsibilities as a list of hashes.
+One hash per Bugzilla component the user has a responsibility for.
+These are the hash keys:
+
+=over
+
+=item productname
+
+Name of the product.
+
+=item componentname
+
+Name of the component.
+
+=item initialowner
+
+User ID of default assignee.
+
+=item initialqacontact
+
+User ID of default QA contact.
+
+=back
 
 =item C<can_bless>
 

@@ -404,10 +404,6 @@ if ($action eq 'search') {
     $vars->{'otheruser'}      = $otherUser;
     $vars->{'editcomponents'} = UserInGroup('editcomponents');
 
-    # If the user is default assignee or default QA contact of a component,
-    # then no deletion is possible.
-    $vars->{'product_responsibilities'} = productResponsibilities($otherUserID);
-
     # Find other cross references.
     $vars->{'bugs'} = $dbh->selectrow_array(
         qq{SELECT COUNT(*)
@@ -504,7 +500,7 @@ if ($action eq 'search') {
                                                {reason => "not_visible",
                                                 action => "delete",
                                                 object => "user"});
-    productResponsibilities($otherUserID)
+    @{$otherUser->product_responsibilities()}
         && ThrowUserError('user_has_responsibility');
 
     Bugzilla->logout_user_by_id($otherUserID);
@@ -670,27 +666,6 @@ sub canSeeUser {
                    };
     }
     return $dbh->selectrow_array($query, undef, $otherUserID);
-}
-
-# Retrieve product responsibilities, usable for both display and verification.
-sub productResponsibilities {
-    my $userid = shift;
-    my $h = $dbh->selectall_arrayref(
-           qq{SELECT products.name AS productname,
-                     components.name AS componentname,
-                     initialowner,
-                     initialqacontact
-              FROM products, components
-              WHERE products.id = components.product_id
-                AND ? IN (initialowner, initialqacontact)
-             },
-           {'Slice' => {}}, $userid);
-
-    if (@$h) {
-        return $h;
-    } else {
-        return undef;
-    }
 }
 
 # Retrieve user data for the user editing form. User creation and user

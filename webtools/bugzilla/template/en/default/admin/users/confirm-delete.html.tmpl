@@ -21,11 +21,6 @@
   # editusers:                is viewing user member of editusers?
   # editcomponents:           is viewing user member of editcomponents?
   # otheruser:                Bugzilla::User object of the viewed user.
-  # product_responsibilities: list of hashes, one entry per Bugzilla component.
-  #                           productname:      Name of the product.
-  #                           componentname:    Name of the component.
-  #                           initialowner:     User ID of default assignee.
-  #                           initialqacontact: User ID of default QA contact.
   # bugs:                     number of bugs the viewed user has a role in
   # bug_activity:             number of bugs the viewed user has activity
   #                           entries on
@@ -85,12 +80,12 @@
       [% END %]
     </td>
   </tr>
-  [% IF product_responsibilities.size %]
+  [% IF otheruser.product_responsibilities.size %]
     <tr>
       <th>Product responsibilities:</th>
       <td>
         <ul>
-          [% FOREACH component = product_responsibilities %]
+          [% FOREACH component = otheruser.product_responsibilities %]
             <li>
               [% andstring = '' %]
               [% FOREACH responsibility = ['initialowner', 'initialqacontact'] %]
@@ -118,7 +113,7 @@
   [% END %]
 </table>
 
-[% IF product_responsibilities.size %]
+[% IF otheruser.product_responsibilities.size %]
   <p>
     You can't delete this user at this time because
     [%+ otheruser.login FILTER html %] has got responsibilities for at least
