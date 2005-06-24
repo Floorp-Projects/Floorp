@@ -2,13 +2,8 @@
 
 @AB_CD@.jar:
 % locale messenger @AB_CD@ %locale/@AB_CD@/messenger/
-  locale/@AB_CD@/messenger/start.html                                   (%chrome/messenger/start.html)
-* locale/@AB_CD@/messenger/credits.html                                 (%chrome/messenger/credits.html)
-  locale/@AB_CD@/messenger/startpage-h1.png                             (%chrome/messenger/startpage-h1.png)
-  locale/@AB_CD@/messenger/startpage-h2.png                             (%chrome/messenger/startpage-h2.png)
-  locale/@AB_CD@/messenger/startpage-back.png                           (%chrome/messenger/startpage-back.png)
-  locale/@AB_CD@/messenger/startpage-li.png                             (%chrome/messenger/startpage-li.png)
-  locale/@AB_CD@/messenger/startpage-gecko.png                          (%chrome/messenger/startpage-gecko.png)
+  locale/@AB_CD@/messenger/start.dtd                                    (%chrome/messenger/start.dtd) 
+  locale/@AB_CD@/messenger/credits.dtd                                  (%chrome/messenger/credits.dtd)
   locale/@AB_CD@/messenger/aboutDialog.dtd                              (%chrome/messenger/aboutDialog.dtd)
   locale/@AB_CD@/messenger/virtualFolderProperties.dtd                  (%chrome/messenger/virtualFolderProperties.dtd)
   locale/@AB_CD@/messenger/virtualFolderListDialog.dtd                  (%chrome/messenger/virtualFolderListDialog.dtd)

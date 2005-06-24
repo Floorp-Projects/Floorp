@@ -88,7 +88,7 @@
 
           var iframe = document.getElementById("creditsIframe");
           if (gSelectedPage == 0) { 
-            iframe.setAttribute("src", "chrome://messenger/locale/credits.html");
+            iframe.setAttribute("src", "chrome://messenger/content/credits.xhtml");
             button.setAttribute("label", document.documentElement.getAttribute("aboutlabel"));
             gSelectedPage = 1;
           }
@@ -114,7 +114,7 @@
       </vbox>
 
       <vbox flex="1" id="creditsBox">
-        <html:iframe style="border: 0px;" id="creditsIframe" src="chrome://messenger/locale/credits.html" flex="1"/>
+        <html:iframe style="border: 0px;" id="creditsIframe" src="chrome://messenger/content/credits.xhtml" flex="1"/>
       </vbox> 
     </deck>   
   
