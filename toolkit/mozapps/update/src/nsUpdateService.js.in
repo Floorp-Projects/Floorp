@@ -1365,7 +1365,7 @@ Downloader.prototype = {
   _readStatusFile: function(dir) {
     var statusFile = dir.clone();
     statusFile.append(FILE_UPDATE_STATUS);
-    LOG("Downloader", statusFile.path);
+    LOG("Downloader", "Reading Status File: " + statusFile.path);
     return readStringFromFile(statusFile);
   },
   
@@ -1444,11 +1444,12 @@ Downloader.prototype = {
     // to select ourselves. 
     var selectedPatch = update.selectedPatch;
     
+    var state = this._readStatusFile(updateDir)
+
     // If this is a patch that we know about, then select it.  If it is a patch
     // that we do not know about, then remove it and use our default logic.
     var useComplete = false;
     if (selectedPatch) {
-      var state = this._readStatusFile(updateDir)
       LOG("Downloader", "found existing patch [state="+state+"]");
       switch (state) {
       case STATE_DOWNLOADING: 
@@ -1470,22 +1471,9 @@ Downloader.prototype = {
         }
       }
 
-      // The patch is no longer known to us, so we should assume that it is
-      // no longer valid.  Remove all from the updateDir.
-      // XXX We may want to preserve an update.log file from a failed update.
-      // We expect this operation may fail since some files (e.g., updater.exe)
-      // may still be in use. That's ok.
-      try {
-        updateDir.remove(true);
-      } catch (e) {}
-      // Restore the updateDir since we may have deleted it.
-      updateDir = this._updatesDir;
-
       selectedPatch = null;
     }
     
-    LOG("Downloader", "USE COMPLETE = " + useComplete);
-
     // If we were not able to discover an update from a previous download, we 
     // select the best patch from the given set.
     var partialPatch = getPatchOfType("partial");
@@ -1496,6 +1484,33 @@ Downloader.prototype = {
         partialPatch.selected = false;
       selectedPatch = getPatchOfType("complete");
     }
+
+    // The patch is no longer known to us, so we should assume that it is
+    // no longer valid.  Remove all from the updateDir.
+    // XXX We may want to preserve an update.log file from a failed update.
+    //     We expect this operation may fail since some files 
+    //     (e.g., updater.exe) may still be in use. That's ok.
+
+    var e = updateDir.directoryEntries;
+    while (e.hasMoreElements()) {
+      var f = e.getNext().QueryInterface(Components.interfaces.nsIFile);
+      try {
+        f.remove(false);
+      }
+      catch (e) {
+        LOG("Downloader", "Failed to remove file: " + f.path);
+      }
+    }
+    try {
+      updateDir.remove(false);
+    } catch (e) {
+      LOG("Downloader", "Failed to remove update directory: " + updateDir.path + 
+          " - This is almost always bad. Exception = " + e);
+      throw e;
+    }
+    // Restore the updateDir since we may have deleted it.
+    updateDir = this._updatesDir;
+    
     selectedPatch.selected = true;
     update.isCompleteUpdate = useComplete;
     
@@ -1531,7 +1546,6 @@ Downloader.prototype = {
     // This function may return null, which indicates that there are no patches
     // to download.
     this._patch = this._selectPatch(update, updateDir);
-    LOG("Downloader", "PATCH = " + this._patch);
     if (!this._patch) {
       LOG("Downloader", "no patch to download");
       return this._readStatusFile(updateDir);
@@ -1557,7 +1571,6 @@ Downloader.prototype = {
     this._request.init(uri, patchFile, DOWNLOAD_CHUNK_SIZE, interval);
     this._request.start(this, null);
 
-    LOG("Downloader", "setting state = " + STATE_DOWNLOADING);
     this._writeStatusFile(updateDir, STATE_DOWNLOADING);
     this._patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
     this._patch.state = STATE_DOWNLOADING;
@@ -1612,7 +1625,7 @@ Downloader.prototype = {
    */
   onProgress: function(request, context, progress, maxProgress) {
     request.QueryInterface(nsIIncrementalDownload);
-    // LOG("Downloader", "onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
+    LOG("Downloader.onProgress", "onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
     
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i) {
@@ -1643,9 +1656,9 @@ Downloader.prototype = {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("Downloader", "onStopRequest: " + request.URI.spec + ", status = " + status);
 
+    var state;
     var shouldShowPrompt = false;
     if (Components.isSuccessCode(status)) {
-      var state;
       if (this._verifyDownload()) {
         state = STATE_PENDING;
         
@@ -1667,16 +1680,6 @@ Downloader.prototype = {
                          .getService(Components.interfaces.nsIUpdateManager);
       um.activeUpdate = null;
       um.saveUpdates();
-      
-      if (state == STATE_FAILED && !this._update.isCompleteUpdate) {
-        // If we were downloading a patch and the patch verification phase 
-        // failed, log this and then commence downloading the complete update.
-        LOG("Downloader", "onStopRequest: Verification of patch failed, downloading complete update");
-        this._update.isCompleteUpdate = true;
-        this.downloadUpdate(this._update);
-        // This will reset the |.state| property on this._update if a new 
-        // download initiates.
-      }
     }
 
     var listenerCount = this._listeners.length;
@@ -1685,6 +1688,16 @@ Downloader.prototype = {
 
     this._request = null;
     
+    if (state == STATE_FAILED && !this._update.isCompleteUpdate) {
+      // If we were downloading a patch and the patch verification phase 
+      // failed, log this and then commence downloading the complete update.
+      LOG("Downloader", "onStopRequest: Verification of patch failed, downloading complete update");
+      this._update.isCompleteUpdate = true;
+      this.downloadUpdate(this._update);
+      // This will reset the |.state| property on this._update if a new 
+      // download initiates.
+    }
+
     // Do this after *everything* else, since it will likely cause the app 
     // to shut down. 
     if (shouldShowPrompt) {

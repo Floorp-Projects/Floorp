@@ -43,6 +43,10 @@ const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/the
 const PREF_UPDATE_MANUAL_URL        = "app.update.url.manual";
 const PREF_UPDATE_NAGTIMER_DL       = "app.update.nagTimer.download";
 const PREF_UPDATE_NAGTIMER_RESTART  = "app.update.nagTimer.restart";
+const PREF_APP_UPDATE_LOG_BRANCH    = "app.update.log.";
+const PREF_UPDATE_TEST_LOOP         = "app.update.test.loop";
+
+const UPDATE_TEST_LOOP_INTERVAL     = 2000;
 
 const URI_UPDATES_PROPERTIES  = "chrome://mozapps/locale/update/updates.properties";
 
@@ -55,15 +59,20 @@ const STATE_FAILED            = "failed";
 const SRCEVT_FOREGROUND       = 1;
 const SRCEVT_BACKGROUND       = 2;
 
-var gPref = null;
+var gConsole    = null;
+var gPref       = null;
+var gLogEnabled = { };
 
 /**
  * Logs a string to the error console. 
  * @param   string
  *          The string to write to the error console..
  */  
-function LOG(string) {
-  dump("*** " + string + "\n");
+function LOG(module, string) {
+  if (module in gLogEnabled) {
+    dump("*** " + module + ":" + string + "\n");
+    gConsole.logStringMessage(string);
+  }
 }
 
 /**
@@ -83,7 +92,7 @@ function getPref(func, preference, defaultValue) {
     return gPref[func](preference);
   }
   catch (e) {
-    LOG("FAIL = " + e);
+    LOG("General", "Failed to get preference " + preference);
   }
   return defaultValue;
 }
@@ -139,7 +148,10 @@ var gUpdates = {
   onLoad: function() {
     gPref = Components.classes["@mozilla.org/preferences-service;1"]
                       .getService(Components.interfaces.nsIPrefBranch2);
-  
+    gConsole = Components.classes["@mozilla.org/consoleservice;1"]
+                         .getService(Components.interfaces.nsIConsoleService);  
+    this._initLoggingPrefs();
+
     this.strings = document.getElementById("updateStrings");
     var brandStrings = document.getElementById("brandStrings");
     this.brandName = brandStrings.getString("brandShortName");
@@ -162,7 +174,26 @@ var gUpdates = {
     // Advance to the Start page. 
     de.currentPage = this.startPage;
   },
-  
+
+  /**
+   *
+   */
+  _initLoggingPrefs: function() {
+    try {
+      var ps = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService);
+      var logBranch = ps.getBranch(PREF_APP_UPDATE_LOG_BRANCH);
+      var modules = logBranch.getChildList("", { value: 0 });
+
+      for (var i = 0; i < modules.length; ++i) {
+        if (logBranch.prefHasUserValue(modules[i]))
+          gLogEnabled[modules[i]] = logBranch.getBoolPref(modules[i]);
+      }
+    }
+    catch (e) {
+    }
+  },
+    
   /**
    * Return the <wizardpage> object that should be displayed first.
    *
@@ -337,8 +368,9 @@ var gCheckingPage = {
                           .getService(Components.interfaces.nsIApplicationUpdateService);
       gUpdates.update = aus.selectUpdate(updates, updates.length);
       if (!gUpdates.update) {
-        LOG("Could not select an appropriate update, either because there were none," + 
-            " or |selectUpdate| failed.");
+        LOG("UI:CheckingPage", 
+            "Could not select an appropriate update, either because there " + 
+            "were none, or |selectUpdate| failed.");
         var checking = document.getElementById("checking");
         checking.setAttribute("next", "noupdatesfound");
       }
@@ -349,7 +381,7 @@ var gCheckingPage = {
      * See nsIUpdateCheckListener.idl
      */
     onError: function() {
-      LOG("UpdateCheckListener: ERROR");
+      LOG("UI:CheckingPage", "UpdateCheckListener: ERROR");
     },
     
     /**
@@ -728,7 +760,7 @@ var gDownloadingPage = {
     }
     
     if (!gUpdates.update) {
-      LOG("gDownloadingPage.onPageShow: no valid update to download?!");
+      LOG("UI:DownloadingPage.Progress", "no valid update to download?!");
       return;
     }
   
@@ -859,7 +891,7 @@ var gDownloadingPage = {
     }
     if (downloadInBackground) {
       // Cancel the download and start it again in the background.
-      LOG("gDownloadingPage.onWizardCancel: resuming download in background");
+      LOG("UI:DownloadingPage", "onWizardCancel: resuming download in background");
       updates.pauseDownload();
       updates.downloadUpdate(gUpdates.update, true);
     }
@@ -870,7 +902,7 @@ var gDownloadingPage = {
    */
   onStartRequest: function(request, context) {
     request.QueryInterface(nsIIncrementalDownload);
-    LOG("gDownloadingPage.onStartRequest: " + request.URI.spec);
+    LOG("UI:DownloadingPage", "onStartRequest: " + request.URI.spec);
 
     this._statusFormatter = new DownloadStatusFormatter();
     
@@ -882,7 +914,8 @@ var gDownloadingPage = {
    */
   onProgress: function(request, context, progress, maxProgress) {
     request.QueryInterface(nsIIncrementalDownload);
-    // LOG("gDownloadingPage.onProgress: " + request.URI.spec + ", " + progress + "/" + maxProgress);
+    LOG("UI:DownloadingPage.onProgress", request.URI.spec + ", " + progress + 
+        "/" + maxProgress);
 
     var p = gUpdates.update.selectedPatch;
     p.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
@@ -903,7 +936,8 @@ var gDownloadingPage = {
    */
   onStatus: function(request, context, status, statusText) {
     request.QueryInterface(nsIIncrementalDownload);
-    LOG("gDownloadingPage.onStatus: " + request.URI.spec + " status = " + status + ", text = " + statusText);
+    LOG("UI:DownloadingPage", "onStatus: " + request.URI.spec + " status = " + 
+        status + ", text = " + statusText);
   },
   
   /** 
@@ -911,7 +945,8 @@ var gDownloadingPage = {
    */
   onStopRequest: function(request, context, status) {
     request.QueryInterface(nsIIncrementalDownload);
-    LOG("gDownloadingPage.onStopRequest: " + request.URI.spec + ", status = " + status);
+    LOG("UI:DownloadingPage", "onStopRequest: " + request.URI.spec + 
+        ", status = " + status);
     
     this._downloadThrobber.removeAttribute("state");
 
@@ -932,12 +967,12 @@ var gDownloadingPage = {
       }
       break;
     case NS_BINDING_ABORTED:
-      LOG("gDownloadingPage.onStopRequest: Pausing Download");
+      LOG("UI:DownloadingPage", "onStopRequest: Pausing Download");
       // Return early, do not remove UI listener since the user may resume
       // downloading again.
       return;
     case Components.results.NS_OK:
-      LOG("gDownloadingPage.onStopRequest: Patch Verification Succeeded");
+      LOG("UI:Downloader", "onStopRequest: Patch Verification Succeeded");
       document.documentElement.advance();
       break;
     }
@@ -1007,6 +1042,13 @@ var gFinishedPage = {
     link.href = gUpdates.update.detailsURL;
     
     this.onPageShow();
+
+    if (getPref("getBoolPref", PREF_UPDATE_TEST_LOOP, false)) {
+      window.restart = function () {
+        document.documentElement.getButton("finish").click();
+      }
+      setTimeout("restart();", UPDATE_TEST_LOOP_INTERVAL);
+    }
   },
   
   /**
@@ -1015,7 +1057,7 @@ var gFinishedPage = {
    */
   onWizardFinish: function() {
     // Do the restart
-    LOG("gFinishedPage.onWizardFinish: Restarting Application...");
+    LOG("UI:FinishedPage" , "onWizardFinish: Restarting Application...");
     
     // This process is *extremely* retarded. There should be some nice 
     // integrated system for determining whether or not windows are allowed
