@@ -6347,7 +6347,9 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
 void
 nsWindow::HandleEndComposition(void)
 {
-  NS_ASSERTION(sIMEIsComposing, "conflict state");
+  if (!sIMEIsComposing)
+    return;
+
   nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_END, this);
   nsPoint point(0, 0);
 
@@ -6592,6 +6594,8 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
   // will change this if an IME message we handle
   BOOL result = PR_FALSE;
 
+  PRBool startCompositionMessageHasBeenSent = sIMEIsComposing;
+
   //
   // This catches a fixed result
   //
@@ -6630,6 +6634,24 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
     //--------------------------------------------------------
     nsCAutoString strIMECompAnsi;
     GetCompositionString(hIMEContext, GCS_COMPSTR, sIMECompUnicode, &strIMECompAnsi);
+
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=296339
+    if (sIMECompUnicode->IsEmpty() &&
+        !startCompositionMessageHasBeenSent) {
+      // In this case, maybe, the sender is MSPinYin. That sends *only*
+      // WM_IME_COMPOSITION with GCS_COMP* and GCS_RESULT* when
+      // user inputted the Chinese full stop. So, that doesn't send
+      // WM_IME_STARTCOMPOSITION and WM_IME_ENDCOMPOSITION.
+      // If WM_IME_STARTCOMPOSITION was not sent and the composition
+      // string is null (it indicates the composition transaction ended),
+      // WM_IME_ENDCOMPOSITION may not be sent. If so, we cannot run
+      // HandleEndComposition() in other place.
+#ifdef DEBUG_IME
+      printf("Aborting GCS_COMPSTR\n");
+#endif
+      HandleEndComposition();
+      return result;
+    }
 
 #ifdef DEBUG_IME
     printf("GCS_COMPSTR compStrLen = %d\n", sIMECompUnicode->Length());
@@ -6742,10 +6764,10 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
                             strIMECompAnsi.get(), sIMECursorPosition, NULL, 0);
     }
 
-#ifdef DEBUG
-    for (int kk = 0; kk < sIMECompClauseArrayLength; kk++) {
-      NS_ASSERTION(sIMECompClauseArray[kk] <= sIMECompUnicode->Length(), "illegal pos");
-    }
+    NS_ASSERTION(sIMECursorPosition <= sIMECompUnicode->Length(), "illegal pos");
+
+#ifdef DEBUG_IME
+    printf("sIMECursorPosition(Unicode): %d\n", sIMECursorPosition);
 #endif
     //--------------------------------------------------------
     // 5. Send the text event
