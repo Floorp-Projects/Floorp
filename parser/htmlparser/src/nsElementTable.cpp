@@ -245,7 +245,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, (kSelf|kInlineEntity|kFlowEntity), kNone,
-    /*special props, prop-range*/       0,kDefaultPropRange,
+    /*special props, prop-range*/       kRequiresBody,kDefaultPropRange,
     /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
@@ -355,7 +355,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,
-    /*special props, prop-range*/       kNonContainer, kNoPropRange,
+    /*special props, prop-range*/       kRequiresBody|kNonContainer, kNoPropRange,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
@@ -445,7 +445,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ &gDTCloseTags,0,&gDLKids,0,
     /*parent,incl,exclgroups*/          kInlineEntity, kFlowEntity, kNone,
-    /*special props, prop-range*/       kNoPropagate|kMustCloseSelf|kVerifyHierarchy,kDefaultPropRange,
+    /*special props, prop-range*/       kNoPropagate|kMustCloseSelf|kVerifyHierarchy|kRequiresBody,kDefaultPropRange,
     /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
@@ -505,7 +505,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ &gDTCloseTags,0,&gDLKids,0,
     /*parent,incl,exclgroups*/          kInlineEntity, (kFlowEntity-kHeading), kNone,  // dt's parent group is inline - bug 65467
-    /*special props, prop-range*/       (kNoPropagate|kMustCloseSelf|kVerifyHierarchy),kDefaultPropRange,
+    /*special props, prop-range*/       (kNoPropagate|kMustCloseSelf|kVerifyHierarchy|kRequiresBody),kDefaultPropRange,
     /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
@@ -525,7 +525,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kBlockEntity, kNone, kNone,
-    /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
+    /*special props, prop-range*/       kNonContainer|kRequiresBody,kDefaultPropRange,
     /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
@@ -656,7 +656,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ &gHRAutoClose,0,0,0,
     /*parent,incl,exclgroups*/          kBlock, kNone, kNone,
-    /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
+    /*special props, prop-range*/       kNonContainer|kRequiresBody,kDefaultPropRange,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
@@ -686,7 +686,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, (kSelf|kFlowEntity), kNone,
-    /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
+    /*special props, prop-range*/       kNoStyleLeaksIn|kRequiresBody, kNoPropRange,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
@@ -706,7 +706,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,
-    /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
+    /*special props, prop-range*/       kNonContainer|kRequiresBody,kDefaultPropRange,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
@@ -786,7 +786,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gLIRootTags,&gLIRootTags,
     /*autoclose starttags and endtags*/ &gLIAutoClose,0,0,0,
     /*parent,incl,exclgroups*/          kBlockEntity, kFlowEntity, kSelf, // changed this back to kBlockEntity so we enable RS handling for phrasals. ref bug 181697
-    /*special props, prop-range*/       kNoPropagate|kVerifyHierarchy, kDefaultPropRange,
+    /*special props, prop-range*/       kNoPropagate|kVerifyHierarchy|kRequiresBody, kDefaultPropRange,
     /*special parents,kids,skip*/       0,&gLIKids,eHTMLTag_unknown,
     /*contain-func*/                    &CanBeContainedLI
   },
@@ -826,7 +826,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,
-    /*special props, prop-range*/       0, kDefaultPropRange,
+    /*special props, prop-range*/       kRequiresBody, kDefaultPropRange,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
@@ -976,7 +976,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kBlock|kPreformatted, (kSelf|kFlowEntity), kNone,  // Note: PRE is a block level element - bug 80009
-    /*special props, prop-range*/       0, kDefaultPropRange,
+    /*special props, prop-range*/       kRequiresBody, kDefaultPropRange,
     /*special parents,kids,skip*/       0,&gPreKids,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
@@ -1026,7 +1026,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gInForm,&gInForm,
     /*autoclose starttags and endtags*/ &gInputAutoClose,0,0,0,
     /*parent,incl,exclgroups*/          kFormControl, kNone, kFlowEntity|kDLChild|kHeadMisc, // Added kHeadMisc to fix bug 287349
-    /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn, kDefaultPropRange,
+    /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn|kRequiresBody, kDefaultPropRange,
     /*special parents,kids,skip*/       &gInForm,&gContainsOpts,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
@@ -1146,7 +1146,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gTableRootTags,&gTableRootTags,
     /*autoclose starttags and endtags*/ 0,&gTableCloseTags,0,0,
     /*parent,incl,exclgroups*/          kBlock, kNone, (kSelf|kInlineEntity),
-    /*special props, prop-range*/       (kBadContentWatch|kNoStyleLeaksIn), 2,
+    /*special props, prop-range*/       (kBadContentWatch|kNoStyleLeaksIn|kRequiresBody), 2,
     /*special parents,kids,skip*/       0,&gTableKids,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
@@ -1276,7 +1276,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,
-    /*special props, prop-range*/       kNonContainer,kNoPropRange,
+    /*special props, prop-range*/       kNonContainer|kRequiresBody,kNoPropRange,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
