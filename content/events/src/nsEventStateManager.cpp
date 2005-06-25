@@ -2627,6 +2627,10 @@ nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
   if (mLastMouseOverElement == aContent)
     return;
 
+  // Remember mLastMouseOverElement as the related content for the
+  // DispatchMouseEvent() call below, since NotifyMouseOut() resets it, bug 298477.
+  nsCOMPtr<nsIContent> lastMouseOverElement = mLastMouseOverElement;
+
   NotifyMouseOut(aEvent, aContent);
 
   // Store the first mouseOver event we fire and don't refire mouseOver
@@ -2637,7 +2641,7 @@ nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
   
   // Fire mouseover
   mLastMouseOverFrame = DispatchMouseEvent(aEvent, NS_MOUSE_ENTER_SYNTH,
-                                           aContent, mLastMouseOverElement);
+                                           aContent, lastMouseOverElement);
   mLastMouseOverElement = aContent;
   
   // Turn recursion protection back off
