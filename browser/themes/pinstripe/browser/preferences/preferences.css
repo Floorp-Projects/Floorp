@@ -72,24 +72,48 @@ radio[pane=paneGeneral] {
 	-moz-image-region: rect(0px, 32px, 32px, 0px)
 }
 
+radio[pane=paneGeneral]:active {
+	-moz-image-region: rect(32px, 32px, 64px, 0px)
+}
+
 radio[pane=panePrivacy] {
 	-moz-image-region: rect(0px, 64px, 32px, 32px)
+}
+
+radio[pane=panePrivacy]:active {
+	-moz-image-region: rect(32px, 64px, 64px, 32px)
 }
 
 radio[pane=paneContent] {
 	-moz-image-region: rect(0px, 96px, 32px, 64px)
 }
 
+radio[pane=paneContent]:active {
+	-moz-image-region: rect(32px, 96px, 64px, 64px)
+}
+
 radio[pane=paneTabs] {
 	-moz-image-region: rect(0px, 128px, 32px, 96px)
+}
+
+radio[pane=paneTabs]:active {
+	-moz-image-region: rect(32px, 128px, 64px, 96px)
 }
 
 radio[pane=paneDownloads] {
 	-moz-image-region: rect(0px, 224px, 32px, 192px)
 }
 
+radio[pane=paneDownloads]:active {
+	-moz-image-region: rect(32px, 224px, 64px, 192px)
+}
+
 radio[pane=paneAdvanced] {
 	-moz-image-region: rect(0px, 192px, 32px, 160px)
+}
+
+radio[pane=paneAdvanced]:active {
+	-moz-image-region: rect(32px, 192px, 64px, 160px)
 }
 
 #browserStartupHomepage {
