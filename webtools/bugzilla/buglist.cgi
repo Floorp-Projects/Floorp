@@ -894,15 +894,15 @@ if (@bugidlist) {
             $dbh->sql_group_by('bugs.bug_id'));
     $sth->execute();
     while (my ($bug_id, $min_membercontrol) = $sth->fetchrow_array()) {
-        $min_membercontrol{$bug_id} = $min_membercontrol;
+        $min_membercontrol{$bug_id} = $min_membercontrol || CONTROLMAPNA;
     }
     foreach my $bug (@bugs) {
         next unless defined($min_membercontrol{$bug->{'bug_id'}});
-        if ($min_membercontrol{$bug->{'bug_id'}} == CONTROLMAPSHOWN
-              || $min_membercontrol{$bug->{'bug_id'}} == CONTROLMAPDEFAULT) {
-            $bug->{'secure_mode'} = 'manual';
-        } elsif ($min_membercontrol{$bug->{'bug_id'}} == CONTROLMAPMANDATORY) {
+        if ($min_membercontrol{$bug->{'bug_id'}} == CONTROLMAPMANDATORY) {
             $bug->{'secure_mode'} = 'implied';
+        }
+        else {
+            $bug->{'secure_mode'} = 'manual';
         }
     }
 }

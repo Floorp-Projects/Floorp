@@ -3314,7 +3314,7 @@ if ($mapcnt == 0) {
     # First, get all the existing products and their groups.
     $sth = $dbh->prepare("SELECT groups.id, products.id, groups.name, " .
                          "products.name FROM groups, products " .
-                         "WHERE isbuggroup != 0 AND isactive != 0");
+                         "WHERE isbuggroup != 0");
     $sth->execute();
     while (my ($groupid, $productid, $groupname, $productname) 
             = $sth->fetchrow_array()) {
