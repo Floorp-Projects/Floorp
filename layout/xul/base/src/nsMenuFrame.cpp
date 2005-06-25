@@ -951,22 +951,12 @@ nsMenuFrame::IsSizedToPopup(nsIContent* aContent, PRBool aRequireAlways)
 NS_IMETHODIMP
 nsMenuFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
-  // Our min size is the popup size (same as the pref size) if
-  // sizetopopup="always" is set.  However, we first need to check
-  // to see if a min size was set in CSS.
-  PRBool collapsed = PR_FALSE;
-  IsCollapsed(aBoxLayoutState, collapsed);
-  if (collapsed) {
-    aSize.width = aSize.height = 0;
-    return NS_OK;
-  }
+  nsresult rv = nsBoxFrame::GetMinSize(aBoxLayoutState, aSize);
 
-  nsIFrame* popupChild = mPopupFrames.FirstChild();
+  if (IsSizedToPopup(mContent, PR_TRUE))
+    SizeToPopup(aBoxLayoutState, aSize);
 
-  if (popupChild && IsSizedToPopup(mContent, PR_TRUE))
-    return GetPrefSize(aBoxLayoutState, aSize);
-
-  return nsBoxFrame::GetMinSize(aBoxLayoutState, aSize);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1907,47 +1897,51 @@ nsMenuFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
   nsMenuFrame::sDismissalListener->SetCurrentMenuParent(aMenuParent);
 }
 
-NS_IMETHODIMP
-nsMenuFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+PRBool
+nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
 {
-  aSize.width = 0;
-  aSize.height = 0;
-  nsresult rv = nsBoxFrame::GetPrefSize(aState, aSize);
-
-  if (IsSizedToPopup(mContent, PR_FALSE)) {
-    nsSize tmpSize(-1,0);
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aState, collapsed);
+  if (!collapsed) {
+    nsSize tmpSize(-1, 0);
     nsIBox::AddCSSPrefSize(aState, this, tmpSize);
     nscoord flex;
     GetFlex(aState, flex);
-
-    if (tmpSize.width == -1 && flex==0) {
+    if (tmpSize.width == -1 && flex == 0) {
       nsIFrame* frame = mPopupFrames.FirstChild();
       if (!frame) {
         MarkAsGenerated();
         frame = mPopupFrames.FirstChild();
         // No child - just return
-        if (!frame) return NS_OK;
+        if (!frame) return PR_FALSE;
       }
-    
+
       NS_ASSERTION(frame->IsBoxFrame(), "popupChild is not box!!");
 
       frame->GetPrefSize(aState, tmpSize);
       aSize.width = tmpSize.width;
-
-      // We now need to ensure that aSize is within the min size - max size range.
-      // If we are using sizetopopup="always", we know the min size will be the same
-      // as the pref size, and do not need to call GetMinSize (in fact, doing so will
-      // result in infinite recursion).
-
-      nsSize minSize, maxSize;
-      if (IsSizedToPopup(mContent, PR_TRUE))
-        minSize = aSize;
-      else
-        GetMinSize(aState, minSize);
-
-      GetMaxSize(aState, maxSize);
-      BoundsCheck(minSize, aSize, maxSize);
+      return PR_TRUE;
     }
+  }
+
+  return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsMenuFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+{
+  nsresult rv = nsBoxFrame::GetPrefSize(aState, aSize);
+
+  // If we are using sizetopopup="always" then
+  // nsBoxFrame will already have enforced the minimum size
+  if (!IsSizedToPopup(mContent, PR_TRUE) &&
+      IsSizedToPopup(mContent, PR_FALSE) &&
+      SizeToPopup(aState, aSize)) {
+    // We now need to ensure that aSize is within the min size - max size range.
+    nsSize minSize, maxSize;
+    nsBoxFrame::GetMinSize(aState, minSize);
+    GetMaxSize(aState, maxSize);
+    BoundsCheck(minSize, aSize, maxSize);
   }
 
   return rv;
