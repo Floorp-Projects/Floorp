@@ -225,7 +225,6 @@
                   this.mTab.setAttribute("busy", "true");
                   this.mTab.label = this.mTabBrowser.mStringBundle.getString("tabs.loading");
                   this.mTab.removeAttribute("image");
-                  this.mIcon = "";
 
                   if (this.mTabBrowser.mCurrentTab == this.mTab)
                     this.mTabBrowser.mIsBusy = true;
@@ -244,7 +243,7 @@
 
                 this.mTab.removeAttribute("busy");
 
-                var location = aRequest.QueryInterface(nsIChannel).URI;
+                var location = this.mBrowser.currentURI;
                 if (this.mIcon) {
                   this.mTab.setAttribute("image", this.mIcon);
                 }
@@ -273,6 +272,8 @@
 
             onLocationChange : function(aWebProgress, aRequest, aLocation)
             {
+              this.mIcon = "";
+
               if (this.mLocationChangeCount > 0 ||
                   aLocation.spec != "about:blank")
                 ++this.mLocationChangeCount;
@@ -400,8 +401,10 @@
         <parameter name="aURI"/>
         <body>
           <![CDATA[
-            var end = (aURI.port == -1) ? "/favicon.ico" : (":" + aURI.port + "/favicon.ico");
-            return aURI.scheme + "://" + aURI.host + end;
+            try {
+              aURI = this.mURIFixup.createExposableURI(aURI);
+            } catch(ex) { }
+            return aURI.resolve("/favicon.ico");
           ]]>
         </body>
       </method>
@@ -410,6 +413,9 @@
         <parameter name="aURI"/>
         <body>
           <![CDATA[
+            try {
+              aURI = this.mURIFixup.createExposableURI(aURI);
+            } catch(ex) { }
             return (aURI && this.mPrefs.getBoolPref("browser.chrome.site_icons") &&
                     this.mPrefs.getBoolPref("browser.chrome.favicons") &&
                     ("schemeIs" in aURI) && (aURI.schemeIs("http") || aURI.schemeIs("https")));
