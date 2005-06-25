@@ -1750,6 +1750,8 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
                                        PRInt32 aW, PRInt32 aH, 
                                        const nsAString& aBGColor)
 {
+    NS_ENSURE_ARG(aWindow != nsnull);
+
     // We can't allow web apps to call this until we fix at least the
     // following potential security issues:
     // -- rendering cross-domain IFRAMEs and then extracting the results
