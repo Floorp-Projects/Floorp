@@ -217,6 +217,8 @@ protected:
                               PRInt32 aModType);
   virtual ~nsMenuFrame();
 
+  PRBool SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize);
+
 protected:
 #ifdef DEBUG_LAYOUT
   nsresult SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug);
