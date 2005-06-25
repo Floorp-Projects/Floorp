@@ -83,6 +83,8 @@ use base qw(Exporter);
         
     GLOBAL_EVENTS
     EVT_FLAG_REQUESTED EVT_REQUESTED_FLAG
+
+    FULLTEXT_BUGLIST_LIMIT
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -221,5 +223,8 @@ use constant EVT_REQUESTED_FLAG     => 101; # I have requested a flag
 
 use constant GLOBAL_EVENTS => EVT_FLAG_REQUESTED, EVT_REQUESTED_FLAG;
 
+#  Number of bugs to return in a buglist when performing
+#  a fulltext search.
+use constant FULLTEXT_BUGLIST_LIMIT => 200;
 
 1;
