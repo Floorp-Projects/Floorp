@@ -17,8 +17,8 @@ link {
   cursor: pointer;
   text-decoration: underline !important;
   margin-top: 1px;
-  margin-bottom: 2px;
-  -moz-margin-start: 6px;
+  margin-bottom: 4px;
+  -moz-margin-start: 5px;
   -moz-margin-end: 5px;
 }
 
@@ -82,10 +82,17 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
   margin: 10px;
 }
 
+#moreDetails {
+  margin: 1px 5px 4px 3px;
+}
+
 #downloadNow {
   font-weight: bold;
+}
+
+#downloadNow > .button-box {
   padding-left: 15px;
-  padding-right: 15px;
+  padding-right: 15px;  
 }
 
 #updateForMoreInfo {
@@ -103,7 +110,11 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
 }
 
 #incompatibleWarning {
-  margin-right: 50px;
+  background-color: InfoBackground;
+  color: InfoText;
+  border: 1px outset InfoBackground;
+  padding: 3px;
+  margin: 1px 5px 4px 5px;
 }
 
 /**

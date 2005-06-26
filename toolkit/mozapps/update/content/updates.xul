@@ -83,31 +83,35 @@
               object="gUpdatesAvailablePage" label="&updatesfound.title;"
               onpageshow="gUpdatesAvailablePage.onPageShow();">
     <vbox flex="1" id="updatesfoundContent">
-      <description id="updateType">&updateAvailable.placeholder;</description>
+      <description id="updateType"/>
       <separator class="thin"/>
       <label id="updateName" crop="right"/>
       <separator class="thin"/>
       <description>&upgrade.evangelism;</description>
-      <hbox>
-        <button label="More Details"/>
-      </hbox>
-      <vbox hidden="true">
-        <description class="updateForMoreInfo">&forMoreInfo.label;
-          <link id="updateMoreInfoURL">&clickHere.label;</link>.
-        </description>
-        <hbox align="start" id="incompatibleWarning" hidden="true">
-          <image id="alertImage"/>
-          <vbox flex="1">
-            <description>&incompatible.warning;</description>
-            <hbox pack="end">
-              <button label="&listIncompatible.label;" accesskey="&listIncompatible.accesskey;"
-                      oncommand="gUpdatesAvailablePage.showIncompatibleItems();"/>
-            </hbox>
-          </vbox>
-        </hbox>
-      </vbox>
+      <separator/>
+      <deck id="detailsDeck">
+        <vbox align="start">
+          <button id="moreDetails" 
+                  label="&moreDetails.label;" accesskey="&moreDetails.accesskey;"
+                  oncommand="gUpdatesAvailablePage.onShowMoreDetails();"/>
+        </vbox>
+        <vbox>
+          <hbox align="start" id="incompatibleWarning" hidden="true">
+            <image id="alertImage"/>
+            <vbox flex="1">
+              <description>&incompatible.warning;</description>
+              <hbox pack="end">
+                <button label="&listIncompatible.label;" accesskey="&listIncompatible.accesskey;"
+                        oncommand="gUpdatesAvailablePage.showIncompatibleItems();"/>
+              </hbox>
+            </vbox>
+          </hbox>
+          <link id="updateMoreInfoURL">
+            <label>&clickHere.label;</label>
+          </link>
+        </vbox>
+      </deck>
       <separator flex="1"/>
-      
     </vbox>    
     <separator class="groove"/>
     <hbox id="installButtons">
@@ -151,7 +155,8 @@
               onpageshow="gErrorsPage.onPageShow();">
     <label id="errorIntro">&error.label;</label>
     <separator/>
-    <textbox class="plain" readonly="true" id="errorReason"/>
+    <textbox class="plain" readonly="true" id="errorReason" multiline="true"
+             rows="3"/>
     <separator/>
     <label id="errorManual">&errorManual.label;</label>
     <hbox>

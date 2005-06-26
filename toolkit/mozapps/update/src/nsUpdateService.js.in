@@ -1171,8 +1171,9 @@ Checker.prototype = {
     if (!this._updateURL || (!this.enabled && !force))
       return;
       
-    this._request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                              .createInstance(Components.interfaces.nsIXMLHttpRequest);
+    this._request = 
+      Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].
+      createInstance(Components.interfaces.nsIXMLHttpRequest);
     this._request.open("GET", this._updateURL, true);
     this._request.overrideMimeType("text/xml");
     this._request.setRequestHeader("Cache-Control", "no-cache");
@@ -1279,7 +1280,8 @@ Checker.prototype = {
    */
   stopChecking: function(duration) {
     // Always stop the current check
-    this._request.abort();
+    if (this._request)
+      this._request.abort();
     
     const nsIUpdateChecker = Components.interfaces.nsIUpdateChecker;
     switch (duration) {

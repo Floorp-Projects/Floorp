@@ -98,9 +98,11 @@ function getPref(func, preference, defaultValue) {
 }
 
 var gUpdates = {
-  update    : null,
-  strings   : null,
-  brandName : null,
+  update      : null,
+  strings     : null,
+  brandName   : null,
+  wiz         : null,
+  sourceEvent : SRCEVT_FOREGROUND,
   
   /**
    * A hash of |pageid| attribute to page object. Can be used to dispatch
@@ -113,7 +115,7 @@ var gUpdates = {
    * the function call to the selected page.
    */
   onWizardFinish: function() {
-    var pageid = document.documentElement.currentPage.pageid;
+    var pageid = gUpdates.wiz.currentPage.pageid;
     if ("onWizardFinish" in this._pages[pageid])
       this._pages[pageid].onWizardFinish();
   },
@@ -123,7 +125,7 @@ var gUpdates = {
    * the function call to the selected page.
    */
   onWizardCancel: function() {
-    var pageid = document.documentElement.currentPage.pageid;
+    var pageid = gUpdates.wiz.currentPage.pageid;
     if ("onWizardCancel" in this._pages[pageid])
       this._pages[pageid].onWizardCancel();
   },
@@ -146,6 +148,8 @@ var gUpdates = {
    * Called when the wizard UI is loaded.
    */
   onLoad: function() {
+    this.wiz = document.documentElement;
+    
     gPref = Components.classes["@mozilla.org/preferences-service;1"]
                       .getService(Components.interfaces.nsIPrefBranch2);
     gConsole = Components.classes["@mozilla.org/consoleservice;1"]
@@ -156,23 +160,21 @@ var gUpdates = {
     var brandStrings = document.getElementById("brandStrings");
     this.brandName = brandStrings.getString("brandShortName");
 
-    var pages = document.documentElement.childNodes;
+    var pages = gUpdates.wiz.childNodes;
     for (var i = 0; i < pages.length; ++i) {
       var page = pages[i];
       if (page.localName == "wizardpage") 
         this._pages[page.pageid] = eval(page.getAttribute("object"));
     }
   
-    var de = document.documentElement;
-    
     // Cache the standard button labels in case we need to restore them
-    this.buttonLabel_back = de.getButton("back").label;
-    this.buttonLabel_next = de.getButton("next").label;
-    this.buttonLabel_finish = de.getButton("finish").label;
-    this.buttonLabel_cancel = de.getButton("cancel").label;
+    this.buttonLabel_back = gUpdates.wiz.getButton("back").label;
+    this.buttonLabel_next = gUpdates.wiz.getButton("next").label;
+    this.buttonLabel_finish = gUpdates.wiz.getButton("finish").label;
+    this.buttonLabel_cancel = gUpdates.wiz.getButton("cancel").label;
     
     // Advance to the Start page. 
-    de.currentPage = this.startPage;
+    gUpdates.wiz.currentPage = this.startPage;
   },
 
   /**
@@ -252,8 +254,34 @@ var gUpdates = {
     
     var errorPage = document.getElementById("errors");
     errorPage.setAttribute("label", pageTitle);
-    document.documentElement.currentPage = document.getElementById("errors");
-    document.documentElement.setAttribute("label", pageTitle);
+    gUpdates.wiz.currentPage = document.getElementById("errors");
+    gUpdates.wiz.setAttribute("label", pageTitle);
+  },
+  
+  /**
+   * Show a network error message.
+   * @param   code
+   *          An error code to look up in the properties file, either
+   *          a Necko error code or a HTTP response code
+   * @param   defaultCode
+   *          The error code to fall back to if the specified code has no error
+   *          text associated with it in the properties file.
+   */
+  advanceToErrorPageWithCode: function(code, defaultCode) {
+    var sbs = 
+        Components.classes["@mozilla.org/intl/stringbundle;1"].
+        getService(Components.interfaces.nsIStringBundleService);
+    var updateBundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
+    var reason = updateBundle.GetStringFromName("checker_error-" + defaultCode);
+    try {
+      reason = updateBundle.GetStringFromName("checker_error-" + code);
+      LOG("General", "Transfer Error: " + reason + ", code: " + code);
+    }
+    catch (e) {
+      // Use the default reason
+      LOG("General", "Transfer Error: " + reason + ", code: " + defaultCode);
+    }
+    this.advanceToErrorPage(reason);
   },
   
   /**
@@ -330,8 +358,7 @@ var gCheckingPage = {
    * Starts the update check when the page is shown.
    */
   onPageShow: function() {
-    var wiz = document.documentElement;
-    wiz.getButton("next").disabled = true;
+    gUpdates.wiz.getButton("next").disabled = true;
 
     this._checker = 
       Components.classes["@mozilla.org/updates/update-checker;1"].
@@ -374,7 +401,7 @@ var gCheckingPage = {
         var checking = document.getElementById("checking");
         checking.setAttribute("next", "noupdatesfound");
       }
-      document.documentElement.advance();
+      gUpdates.wiz.advance();
     },
 
     /**
@@ -390,21 +417,11 @@ var gCheckingPage = {
         var req = request.channel.QueryInterface(Components.interfaces.nsIRequest);
         status = req.status;
       }
-      
-      var sbs = 
-          Components.classes["@mozilla.org/intl/stringbundle;1"].
-          getService(Components.interfaces.nsIStringBundleService);
-      var updateBundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
-      var reason = updateBundle.GetStringFromName("checker_error-200");
-      try {
-        reason = updateBundle.GetStringFromName("checker_error-" + status);
-      }
-      catch (e) {
-        // If we can't find an error string specific to this status code, 
-        // just use the 200 message from above, which means everything 
-        // "looks" fine but there was probably an XML error or a bogus file.
-      }
-      gUpdates.advanceToErrorPage(reason);
+
+      // If we can't find an error string specific to this status code, 
+      // just use the 200 message from above, which means everything 
+      // "looks" fine but there was probably an XML error or a bogus file.
+      gUpdates.advanceToErrorPageWithCode(status, 200);
     },
     
     /**
@@ -421,9 +438,9 @@ var gCheckingPage = {
 
 var gNoUpdatesPage = {
   onPageShow: function() {
-    document.documentElement.getButton("back").disabled = true;
-    document.documentElement.getButton("cancel").disabled = true;
-    document.documentElement.getButton("finish").focus();
+    gUpdates.wiz.getButton("back").disabled = true;
+    gUpdates.wiz.getButton("cancel").disabled = true;
+    gUpdates.wiz.getButton("finish").focus();
   }
 };
 
@@ -466,8 +483,22 @@ var gUpdatesAvailablePage = {
       this._incompatibleItems = items;
     }
     
+    // If we were invoked from a background update check, automatically show 
+    // the additional details the user may need to make this decision since 
+    // they did not consciously make the decision to check. 
+    if (gUpdates.sourceEvent == SRCEVT_BACKGROUND)
+      this.onShowMoreDetails();
+    
     var downloadNow = document.getElementById("downloadNow");
     downloadNow.focus();
+  },
+  
+  /**
+   * User clicked the "More Details..." button
+   */
+  onShowMoreDetails: function() {
+    var detailsDeck = document.getElementById("detailsDeck");
+    detailsDeck.selectedIndex = 1;
   },
   
   /**
@@ -476,7 +507,7 @@ var gUpdatesAvailablePage = {
    */
   onInstallNow: function() {
     var nextPageID = gUpdates.update.licenseURL ? "license" : "downloading";
-    document.documentElement.currentPage = document.getElementById(nextPageID);
+    gUpdates.wiz.currentPage = document.getElementById(nextPageID);
   },
   
   /**
@@ -513,24 +544,23 @@ var gLicensePage = {
   onPageShow: function() {
     this._licenseContent = document.getElementById("licenseContent");
     
-    var de = document.documentElement;
-    var nextButton = de.getButton("next");
+    var nextButton = gUpdates.wiz.getButton("next");
     nextButton.disabled = true;
     nextButton.label = gUpdates.strings.getString("IAgreeLabel");
-    de.getButton("back").disabled = true;
-    de.getButton("next").focus();
+    gUpdates.wiz.getButton("back").disabled = true;
+    gUpdates.wiz.getButton("next").focus();
     
-    var cancelButton = de.getButton("cancel");
+    var cancelButton = gUpdates.wiz.getButton("cancel");
     cancelButton.label = gUpdates.strings.getString("IDoNotAgreeLabel");
 
     this._licenseContent.addEventListener("load", this.onLicenseLoad, false);
     this._licenseContent.url = gUpdates.update.licenseURL;
     
-    document.documentElement._wizardButtons.removeAttribute("type");
+    gUpdates.wiz._wizardButtons.removeAttribute("type");
   },
   
   onLicenseLoad: function() {
-    document.documentElement.getButton("next").disabled = false;
+    gUpdates.wiz.getButton("next").disabled = false;
   },
   
   onWizardCancel: function() {
@@ -761,7 +791,7 @@ var gDownloadingPage = {
    *
    */
   onPageShow: function() {
-    document.documentElement._wizardButtons.removeAttribute("type");
+    gUpdates.wiz._wizardButtons.removeAttribute("type");
 
     this._downloadName = document.getElementById("downloadName");
     this._downloadStatus = document.getElementById("downloadStatus");
@@ -803,12 +833,11 @@ var gDownloadingPage = {
       updates.addDownloadListener(this);
     }
     
-    var de = document.documentElement;
-    de.getButton("back").disabled = true;
-    var cancelButton = de.getButton("cancel");
+    gUpdates.wiz.getButton("back").disabled = true;
+    var cancelButton = gUpdates.wiz.getButton("cancel");
     cancelButton.label = gUpdates.strings.getString("closeButtonLabel");
     cancelButton.focus();
-    var nextButton = de.getButton("next");
+    var nextButton = gUpdates.wiz.getButton("next");
     nextButton.disabled = true;
     nextButton.label = gUpdates.buttonLabel_next;
   },
@@ -975,10 +1004,12 @@ var gDownloadingPage = {
 
     const NS_BINDING_ABORTED = 0x804b0002;
     switch (status) {
-    case Components.results.NS_ERROR_UNEXPECTED:
+    case Components.results.NS_ERROR_UNEXPECTED:  
+      LOG("UI:DownloadingPage", "STATE = " + gUpdates.update.selectedPatch.state);
       if (gUpdates.update.selectedPatch.state == STATE_FAILED)
         this.showVerificationError();
       else {
+        LOG("UI:DownloadingPage", "TYPE = " + gUpdates.update.selectedPatch.type);
         // Verification failed for a partial patch, complete patch is now
         // downloading so return early and do NOT remove the download listener!
         
@@ -995,8 +1026,13 @@ var gDownloadingPage = {
       // downloading again.
       return;
     case Components.results.NS_OK:
-      LOG("UI:Downloader", "onStopRequest: Patch Verification Succeeded");
-      document.documentElement.advance();
+      LOG("UI:DownloadingPage", "onStopRequest: Patch Verification Succeeded");
+      gUpdates.wiz.advance();
+      break;
+    default:
+      LOG("UI:DownloadingPage", "onStopRequest: Transfer failed");
+      // Some kind of transfer error, die.
+      gUpdates.advanceToErrorPageWithCode(status, 2152398849);
       break;
     }
 
@@ -1030,9 +1066,9 @@ var gDownloadingPage = {
 
 var gErrorsPage = {
   onPageShow: function() {
-    document.documentElement.getButton("back").disabled = true;
-    document.documentElement.getButton("cancel").disabled = true;
-    document.documentElement.getButton("finish").focus();
+    gUpdates.wiz.getButton("back").disabled = true;
+    gUpdates.wiz.getButton("cancel").disabled = true;
+    gUpdates.wiz.getButton("finish").focus();
   }
 };
 
@@ -1041,11 +1077,11 @@ var gFinishedPage = {
    * Called to initialize the Wizard Page.
    */
   onPageShow: function() {
-    document.documentElement.getButton("back").disabled = true;
-    var finishButton = document.documentElement.getButton("finish");
+    v.getButton("back").disabled = true;
+    var finishButton = gUpdates.wiz.getButton("finish");
     finishButton.label = gUpdates.strings.getString("restartButton");
     finishButton.focus();
-    var cancelButton = document.documentElement.getButton("cancel");
+    var cancelButton = gUpdates.wiz.getButton("cancel");
     cancelButton.label = gUpdates.strings.getString("laterButton");
   },
   
@@ -1057,7 +1093,7 @@ var gFinishedPage = {
     finishedBackground.setAttribute("label", gUpdates.strings.getFormattedString(
       "updateReadyToInstallHeader", [gUpdates.update.name]));
     // XXXben - wizard should give us a way to set the page header.
-    document.documentElement._adjustWizardHeader();
+    gUpdates.wiz._adjustWizardHeader();
     var updateFinishedName = document.getElementById("updateFinishedName");
     updateFinishedName.value = gUpdates.update.name;
     
@@ -1068,7 +1104,7 @@ var gFinishedPage = {
 
     if (getPref("getBoolPref", PREF_UPDATE_TEST_LOOP, false)) {
       window.restart = function () {
-        document.documentElement.getButton("finish").click();
+        gUpdates.wiz.getButton("finish").click();
       }
       setTimeout("restart();", UPDATE_TEST_LOOP_INTERVAL);
     }
@@ -1147,7 +1183,7 @@ var gFinishedPage = {
  * XXXben this API is retarded.
  */
 function tryToClose() {
-  var cp = document.documentElement.currentPage;
+  var cp = gUpdates.wiz.currentPage;
   if (cp.pageid != "finished" && cp.pageid != "finishedBackground")
     gUpdates.onWizardCancel();
   return true;
