@@ -35,22 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <unistd.h>
+
 #include "nsChildView.h"
-#include "nsIFontMetrics.h"
-#include "nsIDeviceContext.h"
+
 #include "nsCOMPtr.h"
 #include "nsToolkit.h"
-#include "nsIEnumerator.h"
 #include "prmem.h"
 #include "nsCRT.h"
-
-#include <Appearance.h>
-#include <Timer.h>
-#include <Icons.h>
-#include <Errors.h>
-
 #include "nsplugindefs.h"
-#include "nsMacResources.h"
+
+#include "nsIFontMetrics.h"
+#include "nsIDeviceContext.h"
+#include "nsIEnumerator.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
 #include "nsIEventSink.h"
@@ -59,13 +56,10 @@
 
 #include "nsCarbonHelpers.h"
 #include "nsGfxUtils.h"
+#include "nsMacResources.h"
 
-#if PINK_PROFILING
-#include "profilerutils.h"
-#endif
-
-#include <unistd.h>
-#include "nsCursorManager.h"
+#import "nsCursorManager.h"
+#import "nsWindowMap.h"
 
 #define NSAppKitVersionNumber10_2 663
 
@@ -80,8 +74,7 @@
 
 @end
 
-
-
+//#define DEBUG_IME 1
 
 @interface ChildView(Private)
 
@@ -109,6 +102,7 @@
           modifiers:(unsigned int)inMods toGeckoEvent:(nsInputEvent*)outGeckoEvent;
 
 - (NSMenu*)getContextMenu;
+- (TopLevelWindowData*)ensureWindowData;
 
 - (void)setIsPluginView:(BOOL)aIsPlugin;
 - (BOOL)getIsPluginView;
@@ -125,6 +119,7 @@
 
 @end
 
+#pragma mark -
 
 ////////////////////////////////////////////////////
 nsIRollupListener * gRollupListener = nsnull;
@@ -435,6 +430,11 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
     mInWindow = PR_FALSE;
   }
   
+  // if this is a ChildView, make sure that our per-window data
+  // is set up
+  if ([mView isKindOfClass:[ChildView class]])
+    [mView ensureWindowData];
+
   return NS_OK;
 }
 
@@ -2044,45 +2044,52 @@ NS_IMETHODIMP nsChildView::GetAttention(PRInt32 aCycleCount)
 
 #pragma mark -
 
-
+//
+// Force Input Method Editor to commit the uncommited input
+//
 NS_IMETHODIMP nsChildView::ResetInputState()
 {
-#if 0
-  // currently, the nsMacEventHandler is owned by nsCocoaWindow, which is the top level window
-  // we delegate this call to its parent
-  nsCOMPtr<nsIWidget> parent = getter_AddRefs(GetParent());
-  NS_ASSERTION(parent, "cannot get parent");
-  if(parent)
-  {
-    nsCOMPtr<nsIKBStateControl> kb = do_QueryInterface(parent);
-    NS_ASSERTION(kb, "cannot get parent");
-    if(kb) {
-      return kb->ResetInputState();
-    }
-  }
+#ifdef DEBUG_IME
+  NSLog(@"**** ResetInputState");
 #endif
-  return NS_ERROR_ABORT;
+
+  NSInputManager *currentIM = [NSInputManager currentInputManager];
+  
+  // commit the current text
+  [currentIM unmarkText];
+
+  // and clear the input manager's string
+  [currentIM markedTextAbandoned:mView];
+  
+  return NS_OK;
 }
 
+//
+// 'open' means that it can take non-ASCII chars
+//
 NS_IMETHODIMP nsChildView::SetIMEOpenState(PRBool aState)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+//
+// 'open' means that it can take non-ASCII chars
+//
 NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+//
+// Destruct and don't commit the IME composition string.
+//
 NS_IMETHODIMP nsChildView::CancelIMEComposition()
 {
 #ifdef DEBUG_IME
-  NSLog(@"**** CancelIMEComposition\n");
+  NSLog(@"**** CancelIMEComposition");
 #endif
-  // Flush InputManager's markedText
   NSInputManager *currentIM = [NSInputManager currentInputManager];
   [currentIM markedTextAbandoned:mView];
-  [currentIM unmarkText];
   
   return NS_OK;
 }
@@ -2633,7 +2640,8 @@ nsChildView::Idle()
   // the widget.
   mGeckoChild->DispatchMouseEvent(geckoEvent);
   
-} // mouseDown
+  // XXX maybe call markedTextSelectionChanged:client: here?
+}
 
 
 - (void)mouseUp:(NSEvent *)theEvent
@@ -2662,7 +2670,7 @@ nsChildView::Idle()
   // the widget.
   mGeckoChild->DispatchMouseEvent(geckoEvent);
   
-} // mouseUp
+}
 
 - (void)mouseMoved:(NSEvent*)theEvent
 {
@@ -2721,6 +2729,8 @@ nsChildView::Idle()
   // send event into Gecko by going directly to the
   // the widget.
   mGeckoChild->DispatchMouseEvent(geckoEvent);    
+
+  // XXX maybe call markedTextSelectionChanged:client: here?
 }
 
 - (void)mouseEntered:(NSEvent*)theEvent
@@ -2866,6 +2876,20 @@ const PRInt32 kNumLines = 4;
   return [[self superview] getContextMenu];
 }
 
+- (TopLevelWindowData*)ensureWindowData
+{
+  WindowDataMap* windowMap = [WindowDataMap sharedWindowDataMap];
+
+  TopLevelWindowData* windowData = [windowMap dataForWindow:mWindow];
+  if (mWindow && !windowData)
+  {
+    windowData = [[TopLevelWindowData alloc] initWithWindow:mWindow];
+    [windowMap setData:windowData forWindow:mWindow]; // takes ownership
+    [windowData release];
+  }
+  return windowData;
+}
+
 //
 // -convert:message:toGeckoEvent:
 //
@@ -2968,7 +2992,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (nsRect)sendCompositionEvent:(PRInt32) aEventType
 {
 #ifdef DEBUG_IME
-  NSLog(@"****in sendCompositionEvent; type = %d\n", aEventType);
+  NSLog(@"****in sendCompositionEvent; type = %d", aEventType);
 #endif
 
   // static void init_composition_event( *aEvent, int aType)
@@ -2985,8 +3009,8 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
                       doCommit:(BOOL) doCommit
 {
 #ifdef DEBUG_IME
-  NSLog(@"****in sendTextEvent; string = %@\n", aString);
-  NSLog(@" markRange = %d, %d;  selRange = %d, %d\n", markRange.location, markRange.length, selRange.location, selRange.length);
+  NSLog(@"****in sendTextEvent; string = %@", aString);
+  NSLog(@" markRange = %d, %d;  selRange = %d, %d", markRange.location, markRange.length, selRange.location, selRange.length);
 #endif
 
   nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, mGeckoChild);
@@ -3007,13 +3031,13 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (void)insertText:(id)insertString
 {
 #if DEBUG_IME
-  NSLog(@"****in insertText: %@\n", insertString);
-  NSLog(@" markRange = %d, %d;  selRange = %d, %d\n", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
+  NSLog(@"****in insertText: %@", insertString);
+  NSLog(@" markRange = %d, %d;  selRange = %d, %d", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
 #endif
 
   if ( ! [insertString isKindOfClass:[NSAttributedString class]])
     insertString = [[[NSAttributedString alloc] initWithString:insertString] autorelease];
-    
+
   NSString *tmpStr = [insertString string];
   unsigned int len = [tmpStr length];
   PRUnichar buffer[MAX_BUFFER_SIZE];
@@ -3078,9 +3102,9 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (void) setMarkedText:(id)aString selectedRange:(NSRange)selRange
 {
 #if DEBUG_IME 
-  NSLog(@"****in setMarkedText location: %d, length: %d\n", selRange.location, selRange.length);
-  NSLog(@" markRange = %d, %d;  selRange = %d, %d\n", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
-  NSLog(@" aString = %@\n", aString);
+  NSLog(@"****in setMarkedText location: %d, length: %d", selRange.location, selRange.length);
+  NSLog(@" markRange = %d, %d;  selRange = %d, %d", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
+  NSLog(@" aString = %@", aString);
 #endif
 
   if ( ![aString isKindOfClass:[NSAttributedString class]] )
@@ -3128,9 +3152,9 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (void) unmarkText
 {
 #if DEBUG_IME
-  NSLog(@"****in unmarkText\n");
-  NSLog(@" markedRange   = %d, %d\n", mMarkedRange.location, mMarkedRange.length);
-  NSLog(@" selectedRange = %d, %d\n", mSelectedRange.location, mSelectedRange.length);
+  NSLog(@"****in unmarkText");
+  NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
+  NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
 
   mSelectedRange = mMarkedRange = NSMakeRange(NSNotFound, 0);
@@ -3142,7 +3166,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 
 - (BOOL) hasMarkedText
 {
-  return mMarkedRange.location != NSNotFound && mMarkedRange.length != 0;
+  return (mMarkedRange.location != NSNotFound) && (mMarkedRange.length != 0);
 }
 
 - (long) conversationIdentifier
@@ -3153,10 +3177,10 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (NSAttributedString *) attributedSubstringFromRange:(NSRange)theRange
 {
 #if DEBUG_IME
-  NSLog(@"****in attributedSubstringFromRange\n");
-  NSLog(@" theRange      = %d, %d\n", theRange.location, theRange.length);
-  NSLog(@" markedRange   = %d, %d\n", mMarkedRange.location, mMarkedRange.length);
-  NSLog(@" selectedRange = %d, %d\n", mSelectedRange.location, mSelectedRange.length);
+  NSLog(@"****in attributedSubstringFromRange");
+  NSLog(@" theRange      = %d, %d", theRange.location, theRange.length);
+  NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
+  NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
 
   nsReconversionEvent reconversionEvent(PR_TRUE, NS_RECONVERSION_QUERY,
@@ -3178,9 +3202,9 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (NSRange) markedRange
 {
 #if DEBUG_IME
-  NSLog(@"****in markedRange\n");
-  NSLog(@" markedRange   = %d, %d\n", mMarkedRange.location, mMarkedRange.length);
-  NSLog(@" selectedRange = %d, %d\n", mSelectedRange.location, mSelectedRange.length);
+  NSLog(@"****in markedRange");
+  NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
+  NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
 
   if (![self hasMarkedText]) {
@@ -3193,9 +3217,9 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (NSRange) selectedRange
 {
 #if DEBUG_IME
-  NSLog(@"****in selectedRange\n");
-  NSLog(@" markedRange   = %d, %d\n", mMarkedRange.location, mMarkedRange.length);
-  NSLog(@" selectedRange = %d, %d\n", mSelectedRange.location, mSelectedRange.length);
+  NSLog(@"****in selectedRange");
+  NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
+  NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
 
   return mSelectedRange;
@@ -3205,10 +3229,10 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (NSRect) firstRectForCharacterRange:(NSRange)theRange
 {
 #if DEBUG_IME
-  NSLog(@"****in firstRectForCharacterRange\n");
-  NSLog(@" theRange      = %d, %d\n", theRange.location, theRange.length);
-  NSLog(@" markedRange   = %d, %d\n", mMarkedRange.location, mMarkedRange.length);
-  NSLog(@" selectedRange = %d, %d\n", mSelectedRange.location, mSelectedRange.length);
+  NSLog(@"****in firstRectForCharacterRange");
+  NSLog(@" theRange      = %d, %d", theRange.location, theRange.length);
+  NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
+  NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
 
 #if BRADE_GETS_THIS_WORKING
@@ -3226,7 +3250,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 #endif
 
 #if DEBUG_IME
-  NSLog(@"********** cocoa rect (x, y, w, h): %f %f, %f, %f\n", temp.origin.x, temp.origin.y, temp.size.width, temp.size.height);
+  NSLog(@"********** cocoa rect (x, y, w, h): %f %f, %f, %f", temp.origin.x, temp.origin.y, temp.size.width, temp.size.height);
 #endif
   return temp;
 }
@@ -3235,8 +3259,8 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (unsigned int)characterIndexForPoint:(NSPoint)thePoint
 {
 #if DEBUG_IME
-  NSLog(@"****in characterIndexForPoint\n");
-  NSLog(@" markRange = %d, %d;  selectRange = %d, %d\n", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
+  NSLog(@"****in characterIndexForPoint");
+  NSLog(@" markRange = %d, %d;  selectRange = %d, %d", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
 #endif
 
 //  short regionClass;
@@ -3247,8 +3271,8 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (NSArray*) validAttributesForMarkedText
 {
 #if DEBUG_IME
-  NSLog(@"****in validAttributesForMarkedText\n");
-  NSLog(@" markRange = %d, %d;  selectRange = %d, %d\n", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
+  NSLog(@"****in validAttributesForMarkedText");
+  NSLog(@" markRange = %d, %d;  selectRange = %d, %d", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
 #endif
 
   return [NSArray array]; // empty array; we don't support any attributes right now
@@ -3408,8 +3432,8 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (BOOL)becomeFirstResponder
 {
   nsFocusEvent event(PR_TRUE, NS_GOTFOCUS, mGeckoChild);
-
   mGeckoChild->DispatchWindowEvent(event);
+
   return [super becomeFirstResponder];
 }
 
@@ -3417,11 +3441,27 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (BOOL)resignFirstResponder
 {
   nsFocusEvent event(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
-
   mGeckoChild->DispatchWindowEvent(event);
 
   return [super resignFirstResponder];
 }
+
+- (void)viewsWindowDidBecomeKey
+{
+  nsFocusEvent focusEvent(PR_TRUE, NS_GOTFOCUS, mGeckoChild);
+  mGeckoChild->DispatchWindowEvent(focusEvent);
+
+  nsFocusEvent activateEvent(PR_TRUE, NS_ACTIVATE, mGeckoChild);
+  mGeckoChild->DispatchWindowEvent(activateEvent);
+
+}
+
+- (void)viewsWindowDidResignKey
+{
+  nsFocusEvent event(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
+  mGeckoChild->DispatchWindowEvent(event);
+}
+
 
 //-------------------------------------------------------------------------
 //
