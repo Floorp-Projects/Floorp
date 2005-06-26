@@ -222,11 +222,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   mPopupWin = [[AutoCompleteWindow alloc] initWithContentRect:NSMakeRect(0,0,0,0)
                       styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:NO];
   [mPopupWin setReleasedWhenClosed:NO];
-  [mPopupWin setLevel:NSFloatingWindowLevel];
   [mPopupWin setHasShadow:YES];
   [mPopupWin setAlphaValue:0.9];
-
-// XXX set as child window
 
   // construct and configure the view
   mTableView = [[[NSTableView alloc] initWithFrame:NSMakeRect(0,0,0,0)] autorelease];
@@ -283,13 +280,6 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
   [mPopupWin setContentView:scrollView];
 
-  // listen for when window resigns from key handling
-  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onBlur:)
-                                        name:NSWindowDidResignKeyNotification object:nil];
-
-  // listen for when window is about to be moved or resized
-  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onBlur:)
-                                        name:NSWindowWillMoveNotification object:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onResize:)
                                         name:NSWindowDidResizeNotification object:nil];
 
@@ -477,7 +467,10 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
   // show the popup
   if ([mPopupWin isVisible] == NO)
+  {
+    [[self window] addChildWindow:mPopupWin ordered:NSWindowAbove];
     [mPopupWin orderFront:nil];
+  }
 }
 
 - (void) resizePopup
@@ -512,7 +505,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) closePopup
 {
-  [mPopupWin close];
+  [[mPopupWin parentWindow] removeChildWindow:mPopupWin];
+  [mPopupWin orderOut:nil];
 }
 
 - (BOOL) isOpen
@@ -724,8 +718,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 {
   if (aRow >= -1 && [mDataSource rowCount] > 0) {
     // show the popup
-    if ([mPopupWin isVisible] == NO)
-      [mPopupWin orderFront:nil];
+    [self openPopup];
 
     if ( aRow == -1 )
       [mTableView deselectAll:self];
