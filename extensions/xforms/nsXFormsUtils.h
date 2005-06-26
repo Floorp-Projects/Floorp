@@ -60,6 +60,7 @@ class nsIDOMEvent;
 #define NS_NAMESPACE_XHTML               "http://www.w3.org/1999/xhtml"
 #define NS_NAMESPACE_XML_SCHEMA          "http://www.w3.org/2001/XMLSchema"
 #define NS_NAMESPACE_XML_SCHEMA_INSTANCE "http://www.w3.org/2001/XMLSchema-instance"
+#define NS_NAMESPACE_MOZ_XFORMS_TYPE     "http://www.mozilla.org/projects/xforms/2005/type"
 
 /**
  * XForms event types
@@ -246,7 +247,7 @@ public:
    * to section 8.1.1 of the XForms specification.
    */
   static NS_HIDDEN_(void) GetNodeValue(nsIDOMNode *aDataNode,
-                                       nsString   &aNodeValue);
+                                       nsAString  &aNodeValue);
 
   /**
    * Given a node in the instance data and a string, store the value according

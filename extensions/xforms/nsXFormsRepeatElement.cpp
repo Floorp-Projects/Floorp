@@ -649,6 +649,7 @@ nsXFormsRepeatElement::Refresh()
 {
   if (!mHTMLElement || mAddingChildren || mIsParent)
     return NS_OK;
+  nsPostRefresh postRefresh = nsPostRefresh();
 
   nsresult rv;
 

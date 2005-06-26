@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Brian Ryner <bryner@brianryner.com>
+ *  Olli Pettay <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -114,6 +115,8 @@ public:
   static NS_HIDDEN_(nsresult) DeferElementBind(nsIDOMDocument    *aDoc,
                                                nsIXFormsControlBase  *aControl);
 
+  static nsresult NeedsPostRefresh(nsIXFormsControl* aControl);
+  static void CancelPostRefresh(nsIXFormsControl* aControl);
 private:
 
   NS_HIDDEN_(already_AddRefed<nsIDOMDocument>)
@@ -206,6 +209,19 @@ private:
   // This flag indicates whether a xforms-rebuild has been called, but no
   // xforms-revalidate yet
   PRBool mNeedsRefresh;
+};
+
+/**
+ * nsPostRefresh is needed by the UI Controls, which are implemented in
+ * XBL and used inside \<repeat\>. It is needed to refresh the controls,
+ * because XBL bindings are attached to XForms controls *after* refreshing
+ * the \<repeat\>.
+ */
+
+class nsPostRefresh {
+public:
+  nsPostRefresh();
+  ~nsPostRefresh();
 };
 
 NS_HIDDEN_(nsresult) NS_NewXFormsModelElement(nsIXTFElement **aResult);

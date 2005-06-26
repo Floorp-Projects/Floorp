@@ -44,6 +44,7 @@
 #include "nsIXTFXMLVisual.h"
 #include "nsIXTFXMLVisualWrapper.h"
 
+#include "nsIDOMText.h"
 #include "nsIDOM3Node.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
@@ -76,6 +77,7 @@
 #include "nsIStringBundle.h"
 #include "nsIDOMSerializer.h"
 #include "nsIServiceManager.h"
+#include "nsIXFormsDelegate.h"
 
 #define EPHEMERAL_STYLE \
   "position:absolute;z-index:2147483647; \
@@ -289,12 +291,17 @@ nsXFormsMessageElement::CloneNode(nsIDOMNode* aSrc, nsIDOMNode** aTarget)
   // to support <output> here.
   if (ns.EqualsLiteral(NS_NAMESPACE_XFORMS) &&
       localName.EqualsLiteral("output")) {
-    nsCOMPtr<nsIXTFVisual> xtfEl(do_QueryInterface(aSrc));
-    if (xtfEl) {
-      nsCOMPtr<nsIDOMElement> visual;
-      xtfEl->GetVisualContent(getter_AddRefs(visual));
-      if (visual)
-        visual->CloneNode(PR_TRUE, aTarget);
+    nsCOMPtr<nsIXFormsDelegate> outEl(do_QueryInterface(aSrc));
+    if (outEl) {
+      nsCOMPtr<nsIDOMDocument> doc;
+      aSrc->GetOwnerDocument(getter_AddRefs(doc));
+      if (doc) {
+        nsCOMPtr<nsIDOMText> text;
+        nsAutoString value;
+        outEl->GetValue(value);
+        doc->CreateTextNode(value, getter_AddRefs(text));
+        NS_IF_ADDREF(*aTarget = text);
+      }
     }
     return;
   }

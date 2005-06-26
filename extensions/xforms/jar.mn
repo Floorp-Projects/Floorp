@@ -1,5 +1,6 @@
 xforms.jar:
 	content/xforms/contents.rdf
+	content/xforms/xforms.xml
 *	content/xforms/xforms.css
 * locale/en-US/xforms/contents.rdf             (resources/locale/en-US/contents.rdf)
   locale/en-US/xforms/xforms.properties        (resources/locale/en-US/xforms.properties)

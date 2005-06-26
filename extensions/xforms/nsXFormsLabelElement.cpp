@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Brian Ryner <bryner@brianryner.com>
+ *  Olli Pettay <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,11 +39,11 @@
 
 /**
  * Implementation of the XForms \<label\> element.
- * This constructs an anonymous \<span\> to hold the inline content.
  */
 
 #include "nsXFormsUtils.h"
 #include "nsXFormsControlStub.h"
+#include "nsXFormsDelegateStub.h"
 #include "nsXFormsAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
@@ -52,10 +53,11 @@
 #include "nsIDOMText.h"
 #include "nsIXTFXMLVisualWrapper.h"
 #include "nsString.h"
+#include "nsIXFormsUIWidget.h"
 #include "nsIDocument.h"
 #include "nsNetUtil.h"
 
-class nsXFormsLabelElement : public nsXFormsControlStub,
+class nsXFormsLabelElement : public nsXFormsDelegateStub,
                              public nsIStreamListener,
                              public nsIInterfaceRequestor
 {
@@ -65,16 +67,13 @@ public:
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
 
+  // nsIXFormsDelegate
+  NS_IMETHOD GetValue(nsAString& aValue);
+
   // nsIXFormsControl
-  NS_IMETHOD Refresh();
   NS_IMETHOD IsEventTarget(PRBool *aOK);
 
-  // nsIXTFXMLVisual overrides
-  NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
-
-  // nsIXTFVisual overrides
-  NS_IMETHOD GetVisualContent(nsIDOMElement **aContent);
-  NS_IMETHOD GetInsertionPoint(nsIDOMElement **aPoint);
+  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
 
   // nsIXTFElement overrides
   NS_IMETHOD ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex);
@@ -87,93 +86,49 @@ public:
   virtual const char* Name() { return "label"; }
 #endif
 private:
-  NS_HIDDEN_(void) RefreshLabel();
   NS_HIDDEN_(void) LoadExternalLabel(const nsAString& aValue);
 
-  nsCOMPtr<nsIDOMElement> mOuterSpan;
-  nsCOMPtr<nsIDOMElement> mInnerSpan;
-
-  nsCString mSrcAttrText;
+  nsCString            mSrcAttrText;
   nsCOMPtr<nsIChannel> mChannel;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsLabelElement,
-                             nsXFormsControlStub,
+                             nsXFormsDelegateStub,
                              nsIRequestObserver,
                              nsIStreamListener,
                              nsIInterfaceRequestor)
 
 NS_IMETHODIMP
-nsXFormsLabelElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
+nsXFormsLabelElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
 {
-  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
+  nsresult rv = nsXFormsDelegateStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aWrapper->SetNotificationMask(kStandardNotificationMask |
                                 nsIXTFElement::NOTIFY_CHILD_INSERTED |
                                 nsIXTFElement::NOTIFY_CHILD_APPENDED |
                                 nsIXTFElement::NOTIFY_CHILD_REMOVED);
-
-  // Create the span that will hold our text.
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-
-  rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                               NS_LITERAL_STRING("span"),
-                               getter_AddRefs(mOuterSpan));
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Create a text node under the span.
-  nsCOMPtr<nsIDOMText> textNode;
-  rv = domDoc->CreateTextNode(EmptyString(), getter_AddRefs(textNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMNode> childReturn;
-  rv = mOuterSpan->AppendChild(textNode, getter_AddRefs(childReturn));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                               NS_LITERAL_STRING("span"),
-                               getter_AddRefs(mInnerSpan));
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return mOuterSpan->AppendChild(mInnerSpan, getter_AddRefs(childReturn));
-}
-
-NS_IMETHODIMP
-nsXFormsLabelElement::GetVisualContent(nsIDOMElement **aContent)
-{
-  NS_ADDREF(*aContent = mOuterSpan);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsLabelElement::GetInsertionPoint(nsIDOMElement **aPoint)
-{
-  NS_ADDREF(*aPoint = mInnerSpan);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXFormsLabelElement::ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex)
 {
-  RefreshLabel();
+  Refresh();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXFormsLabelElement::ChildAppended(nsIDOMNode *aChild)
 {
-  RefreshLabel();
+  Refresh();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXFormsLabelElement::ChildRemoved(PRUint32 aIndex)
 {
-  RefreshLabel();
+  Refresh();
   return NS_OK;
 }
 
@@ -188,13 +143,13 @@ nsXFormsLabelElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
 
     LoadExternalLabel(aValue);
 
-    // No need to call RefreshLabel() here, since it is called once the link
+    // No need to call Refresh() here, since it is called once the link
     // target has been read in, during OnStopRequest()
 
     return NS_OK;
   }
 
-  return nsXFormsControlStub::AttributeSet(aName, aValue);
+  return nsXFormsDelegateStub::AttributeSet(aName, aValue);
 }
 
 NS_IMETHODIMP
@@ -207,52 +162,26 @@ nsXFormsLabelElement::AttributeRemoved(nsIAtom *aName)
     }
 
     mSrcAttrText.Truncate();
-    RefreshLabel();
+    Refresh();
     return NS_OK;
   }
 
-  return nsXFormsControlStub::AttributeRemoved(aName);
+  return nsXFormsDelegateStub::AttributeRemoved(aName);
 }
 
-void
-nsXFormsLabelElement::RefreshLabel()
+NS_IMETHODIMP
+nsXFormsLabelElement::GetValue(nsAString& aValue)
 {
   // The order of precedence for determining the label is:
   //   single node binding, linking, inline text (8.3.3)
 
-  // Because of this, if we have inline text, we must copy it rather than just
-  // allowing insertionPoint to point into our anonymous content.  If a binding
-  // or linking attributes are present, we don't want to show the inline text
-  // at all.
-
-  nsAutoString labelValue;
-  PRBool foundValue = PR_FALSE;
-
-  // handle binding attribute
-  if (mBoundNode) {
-    nsXFormsUtils::GetNodeValue(mBoundNode, labelValue);
-    foundValue = PR_TRUE;
+  nsXFormsDelegateStub::GetValue(aValue);
+  if (aValue.IsVoid() && !mSrcAttrText.IsEmpty()) {
+    // handle linking ('src') attribute
+    aValue = NS_ConvertUTF8toUTF16(mSrcAttrText);
   }
 
-  // handle linking ('src') attribute
-  if (!foundValue && !mSrcAttrText.IsEmpty()) {
-    labelValue = NS_ConvertUTF8toUTF16(mSrcAttrText);
-    foundValue = PR_TRUE;
-  }
-
-  nsCOMPtr<nsIDOMNode> textNode;
-  mOuterSpan->GetFirstChild(getter_AddRefs(textNode));
-
-  if (foundValue) {
-    // Hide our inline text and use the given label value.
-    textNode->SetNodeValue(labelValue);
-    mInnerSpan->SetAttribute(NS_LITERAL_STRING("style"),
-                             NS_LITERAL_STRING("display:none"));
-  } else {
-    // Just show our inline text.
-    textNode->SetNodeValue(EmptyString());
-    mInnerSpan->RemoveAttribute(NS_LITERAL_STRING("style"));
-  }
+  return NS_OK;
 }
 
 void
@@ -307,13 +236,6 @@ nsXFormsLabelElement::LoadExternalLabel(const nsAString& aSrc)
 }
 
 // nsIXFormsControl
-
-NS_IMETHODIMP
-nsXFormsLabelElement::Refresh()
-{
-  RefreshLabel();
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsXFormsLabelElement::IsEventTarget(PRBool *aOK)
@@ -396,14 +318,16 @@ nsXFormsLabelElement::OnStopRequest(nsIRequest *aRequest,
                                strings, 1, mElement, nsnull);
 
     nsCOMPtr<nsIModelElementPrivate> modelPriv =
-                                          nsXFormsUtils::GetModel(mElement);
+      nsXFormsUtils::GetModel(mElement);
     nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
     nsXFormsUtils::DispatchEvent(model, eEvent_LinkError);
 
     mSrcAttrText.Truncate();
   }
 
-  RefreshLabel();
+  nsCOMPtr<nsIXFormsUIWidget> widget = do_QueryInterface(mElement);
+  if (widget)
+    widget->Refresh();
 
   return NS_OK;
 }

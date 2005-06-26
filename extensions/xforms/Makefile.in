@@ -89,6 +89,8 @@ XPIDLSRCS	= \
 		nsIXFormsSubmitElement.idl \
 		nsIXFormsSubmissionElement.idl \
 		nsIXFormsControlBase.idl \
+		nsIXFormsDelegate.idl \
+		nsIXFormsUIWidget.idl \
 		$(NULL)
 
 CPPSRCS		= \
@@ -141,6 +143,7 @@ CPPSRCS		= \
 		nsXFormsNodeState.cpp \
 		nsXFormsControlStub.cpp \
 		nsXFormsUtilityService.cpp \
+		nsXFormsDelegateStub.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)

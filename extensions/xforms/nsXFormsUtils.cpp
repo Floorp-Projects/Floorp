@@ -86,6 +86,7 @@
 #include "nsIDOMNSEvent.h"
 #include "nsIURI.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIDOMNamedNodeMap.h"
 
 #define CANCELABLE 0x01
 #define BUBBLES    0x02
@@ -541,7 +542,7 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
 }
 
 /* static */ void
-nsXFormsUtils::GetNodeValue(nsIDOMNode* aDataNode, nsString& aNodeValue)
+nsXFormsUtils::GetNodeValue(nsIDOMNode* aDataNode, nsAString& aNodeValue)
 {
   PRUint16 nodeType;
   aDataNode->GetNodeType(&nodeType);
@@ -1254,17 +1255,39 @@ nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aPara
     return;
   }
 
-  // if a context was defined, we clone (not deep) it, serialize it and append
-  // to the message.
+  // if a context was defined, serialize it and append to the message.
   if (aContext) {
-    nsCOMPtr<nsIDOMSerializer> ds = do_GetService(NS_XMLSERIALIZER_CONTRACTID);
-    if (ds) {
-      nsAutoString contextMsg;
-      nsCOMPtr<nsIDOMNode> tmpNode;
-      // SerializeToString always does a deep serialize, so we do a non-deep
-      // clone so that we don't serialize any children.
-      aContext->CloneNode(PR_FALSE, getter_AddRefs(tmpNode));
-      ds->SerializeToString(tmpNode, srcLine);
+    nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContext));
+    if (element) {
+      srcLine.AppendLiteral("<");
+    }
+
+    // For other than element nodes nodeName should be enough.
+    nsAutoString tmp;
+    aContext->GetNodeName(tmp);
+    srcLine.Append(tmp);
+    
+    if (element) {
+      nsCOMPtr<nsIDOMNamedNodeMap> attrs;
+      element->GetAttributes(getter_AddRefs(attrs));
+      if (attrs) {
+        PRUint32 len = 0;
+        attrs->GetLength(&len);
+        for (PRUint32 i = 0; i < len; ++i) {
+          nsCOMPtr<nsIDOMNode> attr;
+          attrs->Item(i, getter_AddRefs(attr));
+          if (attr) {
+            srcLine.AppendLiteral(" ");
+            attr->GetNodeName(tmp);
+            srcLine.Append(tmp);
+            srcLine.AppendLiteral("=\"");
+            attr->GetNodeValue(tmp);
+            srcLine.Append(tmp);
+            srcLine.AppendLiteral("\"");
+          }
+        }
+      }
+      srcLine.AppendLiteral("/>");
     }
   }
 

@@ -23,6 +23,7 @@
  *  Brian Ryner <bryner@brianryner.com>
  *  Allan Beaufour <abeaufour@novell.com>
  *  Darin Fisher <darin@meer.net>
+ *  Olli Pettay <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -69,6 +70,7 @@
 #include "nsIInstanceElementPrivate.h"
 #include "nsXFormsUtils.h"
 #include "nsXFormsSchemaValidator.h"
+#include "nsIXFormsUIWidget.h"
 #include "nsIAttribute.h"
 #include "nsISchemaLoader.h"
 #include "nsISchema.h"
@@ -174,6 +176,71 @@ static const nsIID sScriptingIIDs[] = {
 };
 
 static nsIAtom* sModelPropsList[eModel__count];
+
+// This can be nsVoidArray because elements will remove
+// themselves from the list if they are deleted during refresh.
+static nsVoidArray* sPostRefreshList = nsnull;
+
+static PRInt32 sRefreshing = 0;
+
+nsPostRefresh::nsPostRefresh()
+{
+#ifdef DEBUG_smaug
+  printf("nsPostRefresh\n");
+#endif
+  ++sRefreshing;
+}
+
+nsPostRefresh::~nsPostRefresh()
+{
+#ifdef DEBUG_smaug
+  printf("~nsPostRefresh\n");
+#endif
+  --sRefreshing;
+  if (sPostRefreshList && !sRefreshing) {
+    while (sPostRefreshList->Count()) {
+      // Iterating this way because refresh can lead to
+      // additions/deletions in sPostRefreshList.
+      // Iterating from last to first saves possibly few memcopies,
+      // see nsVoidArray::RemoveElementsAt().
+      PRInt32 last = sPostRefreshList->Count() - 1;
+      nsIXFormsControl* control =
+        NS_STATIC_CAST(nsIXFormsControl*, sPostRefreshList->ElementAt(last));
+      sPostRefreshList->RemoveElementAt(last);
+      if (control)
+        control->Refresh();
+    }
+    delete sPostRefreshList;
+    sPostRefreshList = nsnull;
+  }
+}
+
+nsresult
+nsXFormsModelElement::NeedsPostRefresh(nsIXFormsControl* aControl)
+{
+  if (sRefreshing) {
+    if (!sPostRefreshList) {
+      sPostRefreshList = new nsVoidArray();
+      NS_ENSURE_TRUE(sPostRefreshList, NS_ERROR_OUT_OF_MEMORY);
+    }
+
+    if (sPostRefreshList->IndexOf(aControl) < 0) {
+      sPostRefreshList->AppendElement(aControl);
+    }
+  } else {
+    // We are not refreshing any models, so the control
+    // can be refreshed immediately.
+    aControl->Refresh();
+  }
+  return NS_OK;
+}
+
+void
+nsXFormsModelElement::CancelPostRefresh(nsIXFormsControl* aControl)
+{
+  if (sPostRefreshList)
+    sPostRefreshList->RemoveElement(aControl);
+}
 
 nsXFormsModelElement::nsXFormsModelElement()
   : mElement(nsnull),
@@ -698,6 +765,7 @@ nsXFormsModelElement::Refresh()
 #ifdef DEBUG
   printf("nsXFormsModelElement::Refresh()\n");
 #endif
+  nsPostRefresh postRefresh = nsPostRefresh();
 
   if (mDocumentLoaded) { // if not during initialization phase
     PRInt32 controlCount = mControlsNeedingRefresh.Count();
@@ -1266,6 +1334,11 @@ nsXFormsModelElement::FinishConstruction()
 nsresult
 nsXFormsModelElement::InitializeControls()
 {
+#ifdef DEBUG
+  printf("nsXFormsModelElement::InitializeControls()\n");
+#endif
+  nsPostRefresh postRefresh = nsPostRefresh();
+
   PRInt32 controlCount = mFormControls.Count();
   nsresult rv;
   for (PRInt32 i = 0; i < controlCount; ++i) {
@@ -1602,11 +1675,13 @@ nsXFormsModelElement::ProcessDeferredBinds(nsIDOMDocument *aDoc)
     return;
   }
 
+  nsPostRefresh postRefresh = nsPostRefresh();
+
   doc->SetProperty(nsXFormsAtoms::readyForBindProperty, doc);
 
   nsCOMArray<nsIXFormsControlBase> *deferredBindList =
       NS_STATIC_CAST(nsCOMArray<nsIXFormsControlBase> *,
-                    doc->GetProperty(nsXFormsAtoms::deferredBindListProperty));
+                     doc->GetProperty(nsXFormsAtoms::deferredBindListProperty));
 
   if (deferredBindList) {
     for (int i = 0; i < deferredBindList->Count(); ++i) {

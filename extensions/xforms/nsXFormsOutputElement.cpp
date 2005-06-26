@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Allan Beaufour <abeaufour@novell.com>
+ *  Olli Pettay <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,7 +47,7 @@
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsString.h"
-
+#include "nsDOMString.h"
 #include "nsIDOM3Node.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -56,32 +57,20 @@
 #include "nsISchema.h"
 
 #include "nsIModelElementPrivate.h"
-#include "nsXFormsControlStub.h"
+#include "nsXFormsDelegateStub.h"
 #include "nsXFormsAtoms.h"
 #include "nsXFormsUtils.h"
+#include "nsIXFormsUIWidget.h"
+
 
 /**
  * Implementation of the XForms \<output\> element.
  *
  * @see http://www.w3.org/TR/xforms/slice8.html#ui-output
  */
-class nsXFormsOutputElement : public nsXFormsControlStub
+class nsXFormsOutputElement : public nsXFormsDelegateStub
 {
 public:
-  // nsIXTFXMLVisual overrides
-  NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
-
-  // nsIXTFVisual overrides
-  NS_IMETHOD GetVisualContent(nsIDOMElement **aElement);
-  NS_IMETHOD GetInsertionPoint(nsIDOMElement **aElement);
-
-  // nsIXTFElement overrides
-  NS_IMETHOD OnDestroyed();
-  NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
-  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
-  NS_IMETHOD WillRemoveAttribute(nsIAtom *aName);
-  NS_IMETHOD AttributeRemoved(nsIAtom *aName);
-
   // nsIXFormsControl
   NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
@@ -90,219 +79,108 @@ public:
   virtual const char* Name() { return "output"; }
 #endif
 
+  // nsIXFormsDelegate
+  NS_IMETHOD GetValue(nsAString& aValue); 
+
+  nsXFormsOutputElement() :
+    nsXFormsDelegateStub(NS_LITERAL_STRING("output")) {}
+
+
 private:
-  void MaybeBindAndRefresh(nsIAtom *aName);
-  void MaybeRemoveFromModel(nsIAtom *aName, const nsAString &aValue);
-
-  nsCOMPtr<nsIDOMElement> mLabel;
-  nsCOMPtr<nsIDOMElement> mContainer;
-  nsCOMPtr<nsIDOMElement> mValue;
-  PRBool                  mHasBinding;
+  PRBool   mHasBinding;
+  nsString mValue;
 };
-
-// nsIXTFXMLVisual
-
-NS_IMETHODIMP
-nsXFormsOutputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
-{
-#ifdef DEBUG_XF_OUTPUT
-  printf("nsXFormsOutputElement::OnCreated()\n");
-#endif
-
-  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  /* input uses <html:label /> as the container, but output does't need the
-     additional features html:label gives, so just use a html:span.
-  */
-
-  // Our anonymous content structure will look like this:
-  //
-  // <span>                        (mContainer)
-  //   <span/>                     (mLabel)
-  //   <span/>                     (mValue)
-  // </span>
-
-  nsCOMPtr<nsIDOMNode> childReturn;
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  rv = mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                          NS_LITERAL_STRING("span"),
-                          getter_AddRefs(mContainer));
-  NS_ENSURE_STATE(mContainer);
-
-  rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                               NS_LITERAL_STRING("span"),
-                               getter_AddRefs(mLabel));
-  NS_ENSURE_STATE(mLabel);
-
-  mContainer->AppendChild(mLabel, getter_AddRefs(childReturn));
-
-  rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                               NS_LITERAL_STRING("span"),
-                               getter_AddRefs(mValue));
-  NS_ENSURE_STATE(mValue);
-
-  mContainer->AppendChild(mValue, getter_AddRefs(childReturn));
-
-  return NS_OK;
-}
-
-// nsIXTFVisual
-
-NS_IMETHODIMP
-nsXFormsOutputElement::GetVisualContent(nsIDOMElement **aElement)
-{
-  NS_IF_ADDREF(*aElement = mContainer);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::GetInsertionPoint(nsIDOMElement **aElement)
-{
-  nsCOMPtr<nsIDOMNode> childNode;
-  mContainer->GetFirstChild(getter_AddRefs(childNode));
-  return CallQueryInterface(childNode, aElement);
-}
-
-// nsIXTFElement
-
-NS_IMETHODIMP
-nsXFormsOutputElement::OnDestroyed()
-{
-  mLabel = nsnull;
-  mContainer = nsnull;
-  mValue = nsnull;
-
-  return nsXFormsControlStub::OnDestroyed();
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
-{
-  MaybeRemoveFromModel(aName, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
-{
-  MaybeBindAndRefresh(aName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::WillRemoveAttribute(nsIAtom *aName)
-{
-  MaybeRemoveFromModel(aName, EmptyString());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::AttributeRemoved(nsIAtom *aName)
-{
-  MaybeBindAndRefresh(aName);
-  return NS_OK;
-}
 
 // nsIXFormsControl
 
 nsresult
 nsXFormsOutputElement::Bind()
 {
-  if (!mValue || !mHasParent)
-    return NS_OK;
+  // Clear existing bound node, etc.
+  mBoundNode = nsnull;
+  mDependencies.Clear();
+  RemoveIndexListeners();
 
-  nsresult rv;
-  rv = mElement->HasAttribute(NS_LITERAL_STRING("ref"), &mHasBinding);
+  if (!mHasParent)
+    return NS_OK;
+  
+  nsresult rv = mElement->HasAttribute(NS_LITERAL_STRING("ref"), &mHasBinding);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mHasBinding) {
     rv = mElement->HasAttribute(NS_LITERAL_STRING("bind"), &mHasBinding);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  nsCOMPtr<nsIDOMXPathResult> result;
   if (mHasBinding) {
-    rv = nsXFormsControlStub::Bind();
+    rv = ProcessNodeBinding(NS_LITERAL_STRING("ref"),
+                            nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                            getter_AddRefs(result));
   } else {
-    mBoundNode = nsnull;
-    // This call does a bit too much, as we do the call again in Refresh(),
-    // but we need to clear index listeners, bind to the model, get
-    // evt. context, etc. in Bind().
-    rv = ResetBoundNode(NS_LITERAL_STRING("value"),
-                        nsIDOMXPathResult::STRING_TYPE);
-  }  
-  NS_ENSURE_SUCCESS(rv, rv);
+    rv = ProcessNodeBinding(NS_LITERAL_STRING("value"),
+                            nsIDOMXPathResult::STRING_TYPE,
+                            getter_AddRefs(result));
+  }
+  
+  if (NS_FAILED(rv)) {
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("controlBindError"), mElement);
+    return rv;
+  }
+
+  if (result) {
+    result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
+  }
+
+  if (mBoundNode && mModel) {
+    mModel->SetStates(this, mBoundNode);
+  }
 
   return rv;
 }
-  
+
 NS_IMETHODIMP
 nsXFormsOutputElement::Refresh()
 {
-  if (!mValue || !mHasParent)
+  if (mRepeatState == eType_Template)
     return NS_OK;
 
-  nsAutoString text;    
-  nsresult rv;
-  if (mHasBinding) {
-    if (mBoundNode) {
-      nsXFormsUtils::GetNodeValue(mBoundNode, text);
-    }
-  } else {
-    nsCOMPtr<nsIDOMXPathResult> result;
-    rv = ResetBoundNode(NS_LITERAL_STRING("value"),
-                        nsIDOMXPathResult::STRING_TYPE,
-                        getter_AddRefs(result));
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = NS_OK;
+  SetDOMStringToNull(mValue);
 
-    if (result) {
-      rv = result->GetStringValue(text);
+  if (mModel) {
+    if (mHasBinding) {
+      if (mBoundNode) {
+        nsXFormsUtils::GetNodeValue(mBoundNode, mValue);
+      }
+    } else {
+      nsCOMPtr<nsIDOMXPathResult> result;
+      rv = ProcessNodeBinding(NS_LITERAL_STRING("value"),
+                              nsIDOMXPathResult::STRING_TYPE,
+                              getter_AddRefs(result));
       NS_ENSURE_SUCCESS(rv, rv);
+  
+      if (result) {
+        rv = result->GetStringValue(mValue);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
   }
 
-  nsCOMPtr<nsIDOM3Node> dom3Node = do_QueryInterface(mValue);
-  NS_ENSURE_STATE(dom3Node);
+  SetMozTypeAttribute();
 
-  rv = dom3Node->SetTextContent(text);
+  nsCOMPtr<nsIXFormsUIWidget> widget = do_QueryInterface(mElement);
+  if (widget)
+    widget->Refresh();
 
   return rv;
 }
 
-void
-nsXFormsOutputElement::MaybeBindAndRefresh(nsIAtom *aName)
+NS_IMETHODIMP
+nsXFormsOutputElement::GetValue(nsAString& aValue)
 {
-  if (aName == nsXFormsAtoms::bind  ||
-      aName == nsXFormsAtoms::value ||
-      aName == nsXFormsAtoms::ref   ||
-      aName == nsXFormsAtoms::model) {
-
-    Bind();
-    Refresh();
-  }
+  aValue = mValue;
+  return NS_OK;
 }
-
-void
-nsXFormsOutputElement::MaybeRemoveFromModel(nsIAtom *aName,
-                                            const nsAString &aValue)
-{
-  if (aName == nsXFormsAtoms::bind ||
-      aName == nsXFormsAtoms::ref ||
-      aName == nsXFormsAtoms::model ||
-      aName == nsXFormsAtoms::value) {
-    if (mModel)
-      mModel->RemoveFormControl(this);
-
-    if (aName != nsXFormsAtoms::model) {
-      AddRemoveSNBAttr(aName, aValue);
-    }
-  }
-}
-
-
 
 NS_HIDDEN_(nsresult)
 NS_NewXFormsOutputElement(nsIXTFElement **aResult)

@@ -1,0 +1,371 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla XForms support.
+   -
+   - The Initial Developer of the Original Code is
+   - Novell, Inc.
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Allan Beaufour <abeaufour@novell.com>
+   -  Olli Pettay <Olli.Pettay@helsinki.fi>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<bindings id="xformsBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns:xbl="http://www.mozilla.org/xbl"
+   xmlns:xforms="http://www.w3.org/2002/xforms">
+
+  <!-- BASE -->
+  <binding id="xformswidget-base">
+    <content><children/></content>
+    
+    <implementation implements="nsIXFormsUIWidget">
+      <constructor>
+        this.delegate.widgetAttached();
+      </constructor>
+
+      <destructor>
+        _delegate = null;
+      </destructor>
+
+      <field name="_delegate">null</field>
+
+      <property name="delegate" readonly="true">
+        <getter>
+          if (!this._delegate)
+            this._delegate = this.QueryInterface(Components.interfaces.nsIXFormsDelegate);
+          return this._delegate;
+        </getter>
+      </property>
+
+      <property name="stringValue" readonly="true">
+        <getter>
+          var value = this.delegate.value;
+          return value != null ? value : "";
+        </getter>
+      </property>
+
+      <method name="refresh">
+        <body>
+          return true;
+        </body>
+      </method>
+
+      <method name="disable">
+        <parameter name="aDisable"/>
+        <body>
+          return true;
+        </body>
+      </method>
+
+      <method name="focus">
+        <body>
+          return false;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+  
+  <!-- OUTPUT: <DEFAULT> -->
+  <binding id="xformswidget-output"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <children/>
+      <html:span anonid="content"></html:span>
+    </content>
+    
+    <implementation implements="nsIXFormsUIWidget">
+      <method name="refresh">
+        <body>
+          document.getAnonymousElementByAttribute(this, "anonid", "content").textContent =
+            this.stringValue;
+          return true;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- LABEL: <DEFAULT> -->
+  <binding id="xformswidget-label"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <html:span anonid="content"></html:span>
+      <html:span anonid="anoncontent">
+      <children/>
+      </html:span>
+    </content>
+    <implementation implements="nsIXFormsUIWidget">
+      <method name="refresh">
+        <body>
+          var anoncontent =
+            document.getAnonymousElementByAttribute(this, "anonid", "anoncontent");
+
+          if (this.delegate.hasBoundNode) {
+            anoncontent.setAttribute("style", "display:none");  
+          } else {
+            anoncontent.removeAttribute("style");
+          }
+
+          document.getAnonymousElementByAttribute(this, "anonid", "content").textContent =
+            this.stringValue;
+          return true;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+  
+  <!-- INPUT: <DEFAULT> -->
+  <binding id="xformswidget-input"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <children/>
+      <html:input anonid="control"
+                  onblur="this.parentNode.delegate.value = this.value;"
+                  onclick="this.parentNode._change();"
+                  onkeyup="this.parentNode._change();"/>
+    </content>
+
+    <implementation implements="nsIXFormsUIWidget">
+      <field name="_inputField">null</field>
+
+      <property name="inputField" readonly="true">
+        <getter>
+          if (!this._inputField) {
+            this._inputField =
+              document.getAnonymousElementByAttribute(this, "anonid", "control");
+          }
+          return this._inputField;
+        </getter>
+      </property>
+
+      <method name="_change">
+        <body>
+          if (this.getAttribute("incremental") == "true") {
+            this.delegate.value = this.inputField.value;
+          }
+          return true;
+        </body>
+      </method>
+
+      <method name="refresh">
+        <body>
+          this.inputField.value = this.stringValue;
+          if (this.delegate.isReadonly) {
+            this.inputField.setAttribute("readonly", "readonly");
+          } else {
+            this.inputField.removeAttribute("readonly");
+          }
+          return true;
+        </body>
+      </method>
+
+      <method name="focus">
+        <body>
+          this.inputField.focus();
+          return true;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- INPUT: BOOLEAN -->
+  <binding id="xformswidget-input-boolean"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-input">
+    <implementation>
+      <method name="refresh">
+        <body>
+          this.inputField.setAttribute("type","checkbox");
+          var value = this.stringValue;
+          if (value == "true" || value == "1") {
+            this.inputField.setAttribute("checked", "checked");
+          } else {
+            this.inputField.removeAttribute("checked");
+          }
+          
+          this.inputField.value = value;
+          if (this.delegate.isReadonly) {
+            this.inputField.setAttribute("readonly", "readonly");
+          } else {
+            this.inputField.removeAttribute("readonly");
+          }
+          return true;
+        </body>
+      </method>
+
+      <method name="_change">
+        <body>
+          if (this.getAttribute("incremental") != "false") {
+            if (this.inputField.checked) {
+              this.delegate.value = "true";
+            } else {
+              this.delegate.value = "false";
+            }
+          }
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
+  <!-- SECRET: <DEFAULT> -->
+  <binding id="xformswidget-secret"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-input">
+    <implementation>
+      <method name="refresh">
+        <body>
+          this.inputField.setAttribute("type","password");
+          this.inputField.value = this.stringValue;
+          this.inputField.readonly = this.delegate.isReadonly;
+          return true;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- TEXTAREA: <DEFAULT> -->
+  <binding id="xformswidget-textarea"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <children/>
+      <html:textarea anonid="control"
+                     onblur="this.parentNode.delegate.value = this.value;"
+                     onkeyup="this.parentNode._change();"/>
+    </content>
+
+    <implementation implements="nsIXFormsUIWidget">
+      <method name="refresh">
+        <body>
+          var control =
+            document.getAnonymousElementByAttribute(this, "anonid", "control");
+          control.readonly = this.delegate.isReadonly;
+          control.value = this.stringValue;
+          return true;
+        </body>
+      </method>
+
+      <method name="_change">
+        <body>
+          if (this.getAttribute("incremental") == "true") {
+            this.delegate.value = this.value;
+          }
+          return true;
+        </body>
+      </method>
+
+      <method name="focus">
+        <body>
+          document.getAnonymousElementByAttribute(this, "anonid", "control").focus();
+          return true;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- TRIGGER: BASE -->
+  <binding id="xformswidget-trigger-base"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content><children/></content>
+
+    <implementation implements="nsIXFormsUIWidget">
+      <method name="dispatchDOMActivate">
+        <body>
+          var ev = document.createEvent("UIEvents");
+          ev.initUIEvent("DOMActivate", true, true, window, 1);
+          this.dispatchEvent(ev);
+          return true;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- TRIGGER: <DEFAULT> -->
+  <binding id="xformswidget-trigger"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <html:button anonid="thebutton">
+        <children/>
+      </html:button>
+    </content>
+
+    <implementation implements="nsIXFormsUIWidget">
+      <method name="disable">
+        <parameter name="aDisable"/>
+        <body>
+          var control =
+            document.getAnonymousElementByAttribute(this, "anonid", "thebutton");
+          if (aDisable) {
+            control.setAttribute("disabled", "disabled");
+          } else {
+            control.removeAttribute("disabled");
+          }
+        </body>
+      </method>
+
+      <method name="focus">
+        <body>
+          document.getAnonymousElementByAttribute(this, "anonid", "thebutton").focus();
+          return true;
+        </body>
+      </method>
+
+    </implementation>
+  </binding>
+
+  <!-- TRIGGER: MINIMAL -->
+  <binding id="xformswidget-trigger-minimal"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-trigger-base">
+    <content>
+      <html:span anonid="thespan"
+                 onclick="if (!this._disabled) this.parentNode.dispatchDOMActivate();">
+        <children/>
+      </html:span>
+    </content>
+
+    <implementation implements="nsIXFormsUIWidget">
+      <field name="_disabled">false</field>
+
+      <method name="disable">
+        <parameter name="aDisable"/>
+        <body>
+          this._disabled = aDisable;
+        </body>
+      </method>
+
+      <method name="focus">
+        <body>
+          document.getAnonymousElementByAttribute(this, "anonid", "thespan").focus();
+          return true;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>
