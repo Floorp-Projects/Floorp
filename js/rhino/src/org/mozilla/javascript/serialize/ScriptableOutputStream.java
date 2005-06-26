@@ -123,7 +123,9 @@ public class ScriptableOutputStream extends ObjectOutputStream {
                            "Date", "Date.prototype",
                            "RegExp", "RegExp.prototype",
                            "Script", "Script.prototype",
-                           "Continuation", "Continuation.prototype"
+                           "Continuation", "Continuation.prototype",
+                           "XML", "XML.prototype",
+                           "XMLList", "XMLList.prototype",
                          };
         for (int i=0; i < names.length; i++) {
             addExcludedName(names[i]);
