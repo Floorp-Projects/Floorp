@@ -85,7 +85,7 @@ const float kVOffset = 20.0;
   [super dealloc];
 }
 
-- (void)showToolTipAtPoint:(NSPoint)point withString:(NSString*)string
+- (void)showToolTipAtPoint:(NSPoint)point withString:(NSString*)string overWindow:(NSWindow*)inWindow
 {
   if ([string length] == 0)
     return;
@@ -150,7 +150,9 @@ const float kVOffset = 20.0;
       movedFrame.origin.x += amountOffScreenX;
       [mPanel setFrame:movedFrame display:NO];
     }
-    
+
+    // add as a child window    
+    [inWindow addChildWindow:mPanel ordered:NSWindowAbove];
     // show the panel
     [mPanel orderFront:nil];
   }
@@ -158,6 +160,7 @@ const float kVOffset = 20.0;
 
 - (void)closeToolTip
 {
+  [[mPanel parentWindow] removeChildWindow:mPanel];
   [mPanel close];
 }
 

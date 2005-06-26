@@ -641,7 +641,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text
 {
   NSPoint point = [[self window] convertBaseToScreen:[self convertPoint: where toView:nil]];
-  [mToolTip showToolTipAtPoint: point withString: text];
+  [mToolTip showToolTipAtPoint: point withString: text overWindow:mWindow];
 }
 
 - (void)onHideTooltip
