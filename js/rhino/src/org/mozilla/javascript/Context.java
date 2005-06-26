@@ -1687,11 +1687,8 @@ public class Context
         if (e instanceof Error) {
             throw (Error)e;
         }
-        if (e instanceof EvaluatorException) {
-            throw (EvaluatorException)e;
-        }
-        if (e instanceof EcmaError) {
-            throw (EcmaError)e;
+        if (e instanceof RhinoException) {
+            throw (RhinoException)e;
         }
         throw new WrappedException(e);
     }
