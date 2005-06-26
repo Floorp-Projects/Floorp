@@ -102,6 +102,11 @@ class nsChildView;
   nscoord mHandScrollStartScrollX, mHandScrollStartScrollY;
 }
 
+// these are sent to the first responder when the window key status
+// changes
+- (void)viewsWindowDidBecomeKey;
+- (void)viewsWindowDidResignKey;
+
 @end
 
 
