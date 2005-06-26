@@ -677,7 +677,6 @@ nsColumnSetFrame::DrainOverflowColumns()
   }
 }
 
-
 NS_IMETHODIMP 
 nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
@@ -738,6 +737,18 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
     aStatus, config, unboundedLastColumn);
 
   if (isBalancing) {
+    if (feasible ||
+      // All children were reflowed as necessary, so we can go ahead
+      // and do resize reflows from now on
+        kidReason != eReflowReason_StyleChange) {
+      // Any non-stylechange reflow can be followed by resize
+      // reflows. But a stylechange reflow demands that all children
+      // be reflowed, which may not have happened yet; some of them
+      // might just have been pushed to an overflow list. So we have to
+      // keep doing stylechange reflows.
+      kidReason = eReflowReason_Resize;
+    }
+
     nscoord availableContentHeight = GetAvailableContentHeight(aReflowState);
   
     // Termination of the algorithm below is guaranteed because
@@ -834,7 +845,7 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
       
       unboundedLastColumn = PR_FALSE;
       feasible = ReflowChildren(aDesiredSize, aReflowState,
-                                eReflowReason_Resize, aStatus, config, PR_FALSE);
+                                kidReason, aStatus, config, PR_FALSE);
     }
 
     if (!feasible) {
