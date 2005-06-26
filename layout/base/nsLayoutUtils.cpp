@@ -401,13 +401,7 @@ nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
       nsPresContext::ScrollbarStyles ss =
         nsLayoutUtils::ScrollbarStylesOfView(scrollableView);
       nsIScrollableFrame *scrollableFrame = GetScrollableFrameFor(scrollableView);
-      // NS_ASSERTION(scrollableFrame, "Must have scrollable frame for view!");
-      if (!scrollableFrame) {
-        // XXX Once bug 260652 is fixed we should get scrollable frames for HTML
-        //     frames and can uncomment the above scrollableFrame assertion instead
-        //     of using this if condition.
-        break; // If scrollableView but not scrollable Frame, on an HTML <frame>
-      }
+      NS_ASSERTION(scrollableFrame, "Must have scrollable frame for view!");
       nsMargin margin = scrollableFrame->GetActualScrollbarSizes();
       // Get size of total scrollable area
       nscoord totalWidth, totalHeight;
