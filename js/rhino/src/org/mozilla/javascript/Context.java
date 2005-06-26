@@ -2090,21 +2090,28 @@ public class Context
     public final ClassLoader getApplicationClassLoader()
     {
         if (applicationClassLoader == null) {
-            // If Context was subclassed, the following gets the loader
-            // for the subclass which can be different from Rhino loader,
-            // but then proper Rhino classes should be accessible through it
-            // in any case or JVM class loading is severely broken
-            Class cxClass = this.getClass();
-            ClassLoader loader = cxClass.getClassLoader();
-            ClassLoader threadLoader
-                = VMBridge.instance.getCurrentThreadClassLoader();
-            if (threadLoader != null && threadLoader != loader) {
-                if (testIfCanUseLoader(threadLoader, cxClass)) {
+            ContextFactory f = getFactory();
+            ClassLoader loader = f.getApplicationClassLoader();
+            if (loader == null) {
+                ClassLoader threadLoader
+                    = VMBridge.instance.getCurrentThreadClassLoader();
+                if (threadLoader != null
+                    && Kit.testIfCanLoadRhinoClasses(threadLoader))
+                {
                     // Thread.getContextClassLoader is not cached since
                     // its caching prevents it from GC which may lead to
                     // a memory leak and hides updates to
                     // Thread.getContextClassLoader
                     return threadLoader;
+                }
+                // Thread.getContextClassLoader can not load Rhino classes,
+                // try to use the loader of ContextFactory or Context
+                // subclasses.
+                Class fClass = f.getClass();
+                if (fClass != ScriptRuntime.ContextFactoryClass) {
+                    loader = fClass.getClassLoader();
+                } else {
+                    loader = getClass().getClassLoader();
                 }
             }
             applicationClassLoader = loader;
@@ -2120,25 +2127,11 @@ public class Context
             applicationClassLoader = null;
             return;
         }
-        if (!testIfCanUseLoader(loader, this.getClass())) {
+        if (!Kit.testIfCanLoadRhinoClasses(loader)) {
             throw new IllegalArgumentException(
                 "Loader can not resolve Rhino classes");
         }
         applicationClassLoader = loader;
-    }
-
-    private static boolean testIfCanUseLoader(ClassLoader loader, Class cxClass)
-    {
-        // Check that Context or its suclass is accesible from this loader
-        Class x = Kit.classOrNull(loader, cxClass.getName());
-        if (x != cxClass) {
-            // The check covers the case when x == null =>
-            // loader does not know about Rhino or the case
-            // when x != null && x != cxClass =>
-            // loader loads unrelated Rhino instance
-            return false;
-        }
-        return true;
     }
 
     /********** end of API **********/

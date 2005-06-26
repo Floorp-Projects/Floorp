@@ -105,6 +105,23 @@ public class Kit
     }
 
     /**
+     * Check that testClass is accesible from the given loader.
+     */
+    static boolean testIfCanLoadRhinoClasses(ClassLoader loader)
+    {
+        Class testClass = ScriptRuntime.ContextFactoryClass;
+        Class x = Kit.classOrNull(loader, testClass.getName());
+        if (x != testClass) {
+            // The check covers the case when x == null =>
+            // loader does not know about testClass or the case
+            // when x != null && x != testClass =>
+            // loader loads a class unrelated to testClass
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * If initCause methods exists in Throwable, call
      * <tt>ex.initCause(cause)</tt> or otherwise do nothing.
      * @return The <tt>ex</tt> argument.

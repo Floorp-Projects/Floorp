@@ -143,6 +143,7 @@ public class ContextFactory
     private final Object listenersLock = new Object();
     private volatile Object listeners;
     private boolean disabledListening;
+    private ClassLoader applicationClassLoader;
 
     /**
      * Listener of {@link Context} creation and release events.
@@ -288,6 +289,38 @@ public class ContextFactory
     protected GeneratedClassLoader createClassLoader(ClassLoader parent)
     {
         return new DefiningClassLoader(parent);
+    }
+
+    /**
+     * Get ClassLoader to use when searching for Java classes.
+     * Unless it was explicitly initialized with
+     * {@link #initApplicationClassLoader(ClassLoader)} the method returns
+     * null to indicate that Thread.getContextClassLoader() should be used.
+     */
+    public final ClassLoader getApplicationClassLoader()
+    {
+        return applicationClassLoader;
+    }
+
+    /**
+     * Set explicit class loader to use when searching for Java classes.
+     *
+     * @see #getApplicationClassLoader()
+     */
+    public final void initApplicationClassLoader(ClassLoader loader)
+    {
+        if (loader == null)
+            throw new IllegalArgumentException("loader is null");
+        if (!Kit.testIfCanLoadRhinoClasses(loader))
+            throw new IllegalArgumentException(
+                "Loader can not resolve Rhino classes");
+
+        if (this.applicationClassLoader != null)
+            throw new IllegalStateException(
+                "applicationClassLoader can only be set once");
+        checkNotSealed();
+
+        this.applicationClassLoader = loader;
     }
 
     /**
