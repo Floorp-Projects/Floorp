@@ -1077,7 +1077,7 @@ var gFinishedPage = {
    * Called to initialize the Wizard Page.
    */
   onPageShow: function() {
-    v.getButton("back").disabled = true;
+    gUpdates.wiz.getButton("back").disabled = true;
     var finishButton = gUpdates.wiz.getButton("finish");
     finishButton.label = gUpdates.strings.getString("restartButton");
     finishButton.focus();
