@@ -79,7 +79,7 @@ new TestCase( SECTION, "(new Function()).name",
 	      fnName, (new Function()).name);
 
 new TestCase( SECTION, "(new Function()).toString()",
-	      '\nfunction ' + fnName + '() {\n}\n',  (new Function()).toString());
+	      'function ' + fnName + '() {\n}',  (new Function()).toString());
 
 test();
 

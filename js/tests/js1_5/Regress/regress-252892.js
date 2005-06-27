@@ -55,15 +55,15 @@ function f2novar(o){with(this)for(x in o)printStatus(o[x]); return x}
 function f3(i,o){for(var x=i in o)printStatus(o[x]); return x}
 function f4(i,o){with(this)for(var x=i in o)printStatus(o[x]); return x}
 
-const f1src = "\n" +
+const f1src = 
 "function f1(o) {\n" +
 "    for (var x in o) {\n" +
 "        printStatus(o[x]);\n" +
 "    }\n" +
 "    return x;\n" +
-"}\n";
+"}";
 
-const f2src = "\n" +
+const f2src = 
 "function f2(o) {\n" +
 "    with (this) {\n" +
 "        for (var x in o) {\n" +
@@ -71,9 +71,9 @@ const f2src = "\n" +
 "        }\n" +
 "    }\n" +
 "    return x;\n" +
-"}\n";
+"}";
 
-const f2novarsrc = "\n" +
+const f2novarsrc = 
 "function f2novar(o) {\n" +
 "    with (this) {\n" +
 "        for (x in o) {\n" +
@@ -81,18 +81,18 @@ const f2novarsrc = "\n" +
 "        }\n" +
 "    }\n" +
 "    return x;\n" +
-"}\n";
+"}";
 
-const f3src = "\n" +
+const f3src = 
 "function f3(i, o) {\n" +
 "    var x = i;\n" +
 "    for (x in o) {\n" +
 "        printStatus(o[x]);\n" +
 "    }\n" +
 "    return x;\n" +
-"}\n";
+"}";
 
-const f4src = "\n" +
+const f4src = 
 "function f4(i, o) {\n" +
 "    with (this) {\n" +
 "        var x = i;\n" +
@@ -101,7 +101,7 @@ const f4src = "\n" +
 "        }\n" +
 "    }\n" +
 "    return x;\n" +
-"}\n";
+"}";
 
 var t=0;
 function assert(c)
