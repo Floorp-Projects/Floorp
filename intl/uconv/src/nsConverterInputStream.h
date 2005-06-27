@@ -72,7 +72,7 @@ class nsConverterInputStream : public nsIConverterInputStream,
         mReplacementChar(DEFAULT_REPLACEMENT_CHARACTER),
         mLineBuffer(nsnull) { }
     
-    virtual ~nsConverterInputStream() { Close(); }
+    //virtual ~nsConverterInputStream() { Close(); }
 
  private:
 
