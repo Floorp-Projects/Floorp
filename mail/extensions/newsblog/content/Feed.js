@@ -217,7 +217,7 @@ Feed.prototype =
     if (aFeed && aFeed.downloadCallback)
     {
       if (aFeed.downloadCallback)
-        aFeed.downloadCallback.downloaded(aFeed, aFeed.request.status == 304 ? kNewsBlogNoNewItems : kNewsBlogInvalidFeed);
+        aFeed.downloadCallback.downloaded(aFeed, aFeed.request && aFeed.request.status == 304 ? kNewsBlogNoNewItems : kNewsBlogInvalidFeed);
       FeedCache.removeFeed(aFeed.url);
     }
   },
