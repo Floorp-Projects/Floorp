@@ -1680,6 +1680,9 @@ var BookmarksUtils = {
   },
  
   loadFavIcon: function (aURL, aFavIconURL) {
+    if (!RDF || !BMSVC)
+      return;
+ 
     var urlLiteral = RDF.GetLiteral(aURL);
     // don't do anything if this URI isn't bookmarked
     var bmResources = BMSVC.GetSources(RDF.GetResource(gNC_NS+"URL"), urlLiteral, true);
