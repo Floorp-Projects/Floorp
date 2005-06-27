@@ -45,22 +45,12 @@
 # a single .xpt file to improve startup performance.
 #
 
-# load modules
-use Cwd;
-#use File::Basename;
-#use File::Copy;
-#use File::Find;
-#use File::Path;
-#use File::stat;
 use Getopt::Long;
 
 # initialize variables
-$saved_cwd        = cwd();
-$component        = "";		# current component being copied
-$PD               = "";		# file Path Delimiter ( /, \, or :)
-$bindir           = "";		# directory for xpt files ("bin" or "viewer")
 $srcdir           = "";		# root directory being copied from
 $destdir          = "";		# root directory being copied to
+$finaldir         = "";   # where to put the final linked XPT
 $os               = "";  	# os type (MSDOS, Unix)
 $verbose          = 0;		# shorthand for --debug 1
 $debug            = 0;		# controls amount of debug output
@@ -69,12 +59,20 @@ $help             = 0;		# flag: if set, print usage
 # get command line options
 $return = GetOptions(	"source|s=s",           \$srcdir,
 			"destination|d=s",      \$destdir,
+      "final|f=s",            \$finaldir,
 			"os|o=s",               \$os,
 			"help|h",               \$help,
 			"debug=i",              \$debug,
 			"verbose|v",            \$verbose,
 			"<>",                   \&do_badargument
 			);
+
+if ($finaldir ne "") {
+  $bindir = "";
+}
+else {
+  $bindir = "bin/";
+}
 
 # set debug level
 if ($verbose && !($debug)) {
@@ -93,11 +91,6 @@ if (! $return)
 }
 
 $xptdirs = ();	# directories in the destination directory
-$xptfiles = ();	# list of xpt files found in current directory
-$file = "";		# file from file list
-$files = ();	# file list for removing .xpt files
-$cmdline = "";	# command line passed to system() call
-$i = 0;			# generic counter var
 
 ($debug >= 1) && print "\nLinking .xpt files...\n";
 ($debug >= 2) && print "do_xptlink():\n";
@@ -109,76 +102,65 @@ opendir (DESTDIR, "$destdir") ||
 ($debug >= 4) && print "xptdirs: @xptdirs\n";
 closedir (DESTDIR);
 
-foreach $component (@xptdirs) {
+foreach my $component (@xptdirs) {
 	($debug >= 1) && print "[$component]\n";
-	chdir ("$destdir$PD$component");
-	if (( $os eq "MacOS" && -d "$PD$bindir$PD"."components") || ( -d "$bindir$PD"."components")) {
-		if ( $os eq "MacOS" ) {
-			chdir (":$bindir$PD"."components") ;
-		} else {
-			chdir ("$bindir$PD"."components") ;
-		}	
-		if (( -f "$component".".xpt" ) || ( -f ":$component".".xpt" )) {
-			warn "Warning:  file ".$component.".xpt already exists.\n";
-		}
-		
+
+  print ("Checking for '$destdir/$component/$bindir"."components'\n") if $debug >= 3;
+
+  if (-d "$destdir/$component/$bindir"."components") {
+    warn "File '$destdir/$component/$bindir"."components/$component.xpt' already exists."
+        if -f "$destdir/$component/$bindir"."components/$component.xpt";
+
 		# create list of .xpt files in cwd
-		($debug >= 4) && print "opendir: $destdir$PD$component$PD$bindir$PD"."components\n";
-		opendir (COMPDIR, "$destdir$PD$component$PD$bindir$PD"."components") ||
-			die "Error: cannot open $destdir$PD$component$PD$bindir$PD"."components.  Exiting...\n";
+    my @xptfiles;
+
+		($debug >= 4) && print "opendir: $destdir/$component/$bindir"."components\n";
+		opendir (COMPDIR, "$destdir/$component/$bindir"."components") ||
+			die "Error: cannot open $destdir/$component/$bindir"."components.  Exiting...\n";
 		($debug >= 3) && print "Creating list of .xpt files...\n";
-		@files = sort ( grep (!/^\./, readdir (COMPDIR)));
-		foreach $file (@files) {
+		my @files = sort ( grep (!/^\./, readdir (COMPDIR)));
+		foreach my $file (@files) {
 			($debug >= 6) && print "$file\n";
 			if ( $file =~ /\.xpt$/ ) {
-				$xptfiles[$i] = $file;
-				$i++;
+        push @xptfiles, "$destdir/$component/$bindir"."components/$file";
 				($debug >= 8) && print "xptfiles:\t@xptfiles\n";
 			}
 		}
 		closedir (COMPDIR);
 
 		# merge .xpt files into one if we found any in the dir
-		if ( $#xptfiles >=1 ) {
-			if ( $os eq "MacOS" ) {
-				$cmdline = "'$srcdir$PD"."xpt_link' $component".".xpt.new"." @xptfiles";
-			} else {
-				$cmdline = "$srcdir$PD$bindir$PD"."xpt_link $component".".xpt.new"." @xptfiles";
-			}
-			($debug >= 4) && print "$cmdline\n";
-			system($cmdline);
+		if ( $#xptfiles ) {
+      my ($merged, $fmerged);
+      if ($finaldir ne "") {
+        $merged = "$finaldir/$component.xpt";
+      }
+      else {
+        $fmerged = "$destdir/$component/$bindir"."components/$component.xpt";
+        $merged = $fmerged.".new";
+      }
 
-			# remove old .xpt files in the component directory if xpt_link succeeded
-			if	(( -f "$component".".xpt.new" ) ||
-				(( -f "$PD$component".".xpt.new" ) && ( $os eq "MacOS" ))) {
-				($debug >= 2) && print "Deleting individual xpt files.\n";
-				foreach $file (@xptfiles) {
-					($debug >= 4) && print "\t$file";
-					unlink ("$destdir$PD$component$PD$bindir$PD"."components"."$PD$file") ||
-						warn "Warning: couldn't unlink file $file.\n";
-					($debug >= 4) && print "\t\tdeleted\n";
-				}
-				($debug >= 4) && print "\n";
-			} else {
-				die "Error: xpt_link failed.  Exiting...\n";
-			}
-			($debug >= 2) && print "Renaming $component".".xpt.new as $component".".xpt.\n";
-			if ( $os eq "MacOS" ) {
-				rename (":$component".".xpt.new", ":$component".".xpt") ||
-					warn "Warning: rename of $component".".xpt.new as ".$component.".xpt failed.\n";
-			} else {
-				rename ("$component".".xpt.new", "$component".".xpt") ||
-					warn "Warning: rename of $component".".xpt.new as ".$component.".xpt failed.\n";
+      my $cmdline = "$srcdir/bin/xpt_link $merged @xptfiles";
+			($debug >= 4) && print "$cmdline\n";
+			system($cmdline) == 0 || die ("'$cmdline' failed");
+
+      if ($finaldir eq "") {
+        # remove old .xpt files in the component directory.
+        ($debug >= 2) && print "Deleting individual xpt files.\n";
+        for my $file (@xptfiles) {
+          ($debug >= 4) && print "\t$file";
+          unlink ($file) ||
+              die "Couldn't unlink file $file.\n";
+          ($debug >= 4) && print "\t\tdeleted\n\n";
+        }
+
+        ($debug >= 2) && print "Renaming $merged as $fmerged\n";
+        rename ($merged, $fmerged) ||
+            die "Rename of '$merged' to '$fmerged' failed.\n";
 			}
 		}
 	}
-	# reinitialize vars for next component
-	@xptfiles = ();
-	$i = 0;
 }
 ($debug >= 1) && print "Linking .xpt files completed.\n";
-
-chdir ($saved_cwd);
 
 exit (0);
 
@@ -217,24 +199,15 @@ sub check_arguments
 		$exitval += 2;
 	}
 
-	# check OS == {mac|unix|dos}
+	# check OS == {unix|dos}
 	if ($os eq "") {
 		print "Error: OS type (--os) not specified.\n";
 		$exitval += 8;
-	} elsif ( $os =~ /mac/i ) {
-		$os = "MacOS";
-		$PD = ":";
-		$bindir = "viewer";
-		($debug >= 4) && print " OS: $os\n";
 	} elsif ( $os =~ /dos/i ) {
 		$os = "MSDOS";
-		$PD = "/";
-		$bindir = "bin";
 		($debug >= 4) && print " OS: $os\n";
 	} elsif ( $os =~ /unix/i ) {
 		$os = "Unix";       # can be anything but MacOS, MSDOS, or VMS
-		$PD = "/";
-		$bindir = "bin";
 		($debug >= 4) && print " OS: Unix\n";
 	} else {
 		print "Error: OS type \"$os\" unknown.\n";
