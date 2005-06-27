@@ -330,7 +330,7 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   checkForUpdates: function() {
-    this._showUI(null);
+    this._showUI(URI_UPDATE_PROMPT_DIALOG, "Update:Wizard", null);
   },
     
   /**
@@ -363,7 +363,7 @@ UpdatePrompt.prototype = {
       
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Components.interfaces.nsIWindowMediator);
-    var win = wm.getMostRecentWindow("Update:Wizard");
+    var win = wm.getMostRecentWindow(name);
     if (win) 
       win.focus();
     else {
