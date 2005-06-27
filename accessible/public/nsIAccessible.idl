@@ -164,7 +164,7 @@ interface nsIAccessible : nsISupports
   nsIAccessible getChildAtPoint(in long x, in long y);
 
   /**
-   * Nth accessible child using zero-based index
+   * Nth accessible child using zero-based index or last child if index less than zero
    */
   nsIAccessible getChildAt(in long aChildIndex);
 

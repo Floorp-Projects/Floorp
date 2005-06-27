@@ -484,14 +484,17 @@ NS_IMETHODIMP nsAccessible::GetLastChild(nsIAccessible * *aLastChild)
 NS_IMETHODIMP nsAccessible::GetChildAt(PRInt32 aChildNum, nsIAccessible **aChild)
 {
   // aChildNum is a zero-based index
-  // If aChildNum is out of range, last child is returned
 
   PRInt32 numChildren;
   GetChildCount(&numChildren);
 
-  if (aChildNum >= numChildren || !mWeakShell) {
+  // If no children or aChildNum is larger than numChildren, return null
+  if (aChildNum >= numChildren || numChildren == 0 || !mWeakShell) {
     *aChild = nsnull;
     return NS_ERROR_FAILURE;
+  // If aChildNum is less than zero, set aChild to last index
+  } else if (aChildNum < 0) {
+    aChildNum = numChildren - 1;
   }
 
   nsCOMPtr<nsIAccessible> current(mFirstChild), nextSibling;
