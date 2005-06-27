@@ -37,7 +37,7 @@
 /*
  * Header for CMS types.
  *
- * $Id: cmst.h,v 1.9 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: cmst.h,v 1.10 2005/06/27 22:21:19 julien.pierre.bugs%sun.com Exp $
  */
 
 #ifndef _CMST_H_
@@ -202,6 +202,9 @@ struct NSSCMSSignedDataStr {
     SECItem **			digests;
     CERTCertificate **		certs;
     CERTCertificateList **	certLists;
+    CERTCertificate **          tempCerts;              /* temporary certs, needed
+                                                         * for example for signature
+                                                         * verification */
 };
 #define NSS_CMS_SIGNED_DATA_VERSION_BASIC	1	/* what we *create* */
 #define NSS_CMS_SIGNED_DATA_VERSION_EXT		3	/* what we *create* */

@@ -42,7 +42,7 @@
  * you.  If that has a problem, then just move out what you need, changing
  * its name as appropriate!
  *
- * $Id: cmslocal.h,v 1.4 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: cmslocal.h,v 1.5 2005/06/27 22:21:18 julien.pierre.bugs%sun.com Exp $
  */
 
 #ifndef _CMSLOCAL_H_
@@ -332,6 +332,13 @@ NSS_CMSAttributeArray_AddAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs, NSSC
  */
 extern SECStatus
 NSS_CMSAttributeArray_SetAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs, SECOidTag type, SECItem *value, PRBool encoded);
+
+/*
+ * NSS_CMSSignedData_AddTempCertificate - add temporary certificate references.
+ * They may be needed for signature verification on the data, for example.
+ */
+extern SECStatus
+NSS_CMSSignedData_AddTempCertificate(NSSCMSSignedData *sigd, CERTCertificate *cert);
 
 /************************************************************************/
 SEC_END_PROTOS
