@@ -57,7 +57,7 @@ const PREF_UPDATE_LASTUPDATETIME_FMT      = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
-const URI_UPDATE_LIST_DIALOG    = "chrome://mozapps/content/update/updateHistory.xul";
+const URI_UPDATE_HISTORY_DIALOG = "chrome://mozapps/content/update/history.xul";
 const URI_BRAND_PROPERTIES      = "chrome://branding/locale/brand.properties";
 const URI_UPDATES_PROPERTIES    = "chrome://mozapps/locale/update/updates.properties";
 const URI_UPDATE_NS             = "http://www.mozilla.org/2005/app-update";
@@ -337,14 +337,14 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   showUpdateAvailable: function(update) {
-    this._showUI(update);
+    this._showUI(URI_UPDATE_PROMPT_DIALOG, "Update:Wizard", update);
   },
   
   /**
    * See nsIUpdateService.idl
    */
   showUpdateComplete: function(update) {
-    this._showUI(update);
+    this._showUI(URI_UPDATE_PROMPT_DIALOG, "Update:Wizard", update);
   },
   
   /**
@@ -353,7 +353,7 @@ UpdatePrompt.prototype = {
    *          An update to pass to the UI in the window arguments. 
    *          Can be null.
    */
-  _showUI: function(update) {
+  _showUI: function(uri, name, update) {
     var ary = null;
     if (update) {
       ary = Components.classes["@mozilla.org/supports-array;1"]
@@ -369,7 +369,7 @@ UpdatePrompt.prototype = {
     else {
       var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                          .getService(Components.interfaces.nsIWindowWatcher);
-      ww.openWindow(null, URI_UPDATE_PROMPT_DIALOG, 
+      ww.openWindow(null, uri, 
                     "", "chrome,centerscreen,dialog,titlebar,dependent", ary);
     }
   },
@@ -377,9 +377,8 @@ UpdatePrompt.prototype = {
   /**
    * See nsIUpdateService.idl
    */
-  showInstalledUpdates: function() {
-    // this._showUI(1);
-    // XXXben TODO!
+  showUpdateHistory: function() {
+    this._showUI(URI_UPDATE_HISTORY_DIALOG, "Update:History", null);
   },
   
   /**
@@ -941,6 +940,7 @@ UpdatePatch.prototype = {
     patch.setAttribute("hashValue", this.hashValue);
     patch.setAttribute("size", this.size);
     patch.setAttribute("selected", this.selected);
+    patch.setAttribute("state", this.state);
     
     for (var p in this._properties) {
       if (this._properties[p].present)
@@ -1700,6 +1700,7 @@ Downloader.prototype = {
       this._writeStatusFile(this._updatesDir, state);
       this._patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
       this._patch.state = state;
+      this._update.installDate = (new Date()).getTime();
       var um = Components.classes["@mozilla.org/updates/update-manager;1"]
                          .getService(Components.interfaces.nsIUpdateManager);
       um.activeUpdate = null;

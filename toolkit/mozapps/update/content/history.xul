@@ -38,36 +38,57 @@
 # ***** END LICENSE BLOCK *****
 
 <!DOCTYPE dialog [
-<!ENTITY % incompatibleDTD SYSTEM "chrome://mozapps/locale/update/incompatible.dtd">
+<!ENTITY % historyDTD SYSTEM "chrome://mozapps/locale/update/history.dtd">
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-%incompatibleDTD;
+%historyDTD;
 %brandDTD;
 ]>
 
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://mozapps/content/update/updates.css"?>
 
-<dialog id="incompatible"
+<dialog id="history"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 35em;"
         buttons="cancel" closebuttonlabel="&closebutton.label;"
-        title="&incompatible.title;"
-        onload="init();">
+        title="&history.title;"
+        onload="gUpdateHistory.onLoad();">
 
   <script type="application/x-javascript" 
-          src="chrome://mozapps/content/update/incompatible.js"/>
+          src="chrome://mozapps/content/update/history.js"/>
           
   <stringbundle id="updateBundle" 
                 src="chrome://mozapps/locale/update/updates.properties"/>
   
-  <label>&incompatible.intro;</label>
+  <label>&history.intro;</label>
   <separator/>
-  <listbox id="incompatibleItems" rows="10"/>
+  <tree id="historyItems" rows="10" hidecolumnpicker="true" seltype="single"
+        onselect="gUpdateHistory.onTreeSelect()">
+    <treecols>
+      <treecol id="updateNameCol" flex="1" primary="true" label="&name.header;"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="updateDate" label="&date.header;"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="updateType" label="&type.header;"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="updateState" label="&state.header;"/>
+    </treecols>
+    <treechildren id="historyChildren">
+      <treeitem>
+        <treerow>
+          <treecell>&noupdates.label;</treecell>
+          <treecell/>
+          <treecell/>
+          <treecell/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
   <separator/>
-  <label>&incompatible.update;</label>        
-  <separator class="thin"/>
-  <label class="bold">&incompatible.suffix;</label>        
-  <separator/>
-
+  <hbox>
+    <button id="details" 
+            label="&detailsButton.label;" accesskey="&detailsButton.accesskey;"
+            oncommand="gUpdateHistory.showDetails();"/>
+  </hbox>
 </dialog>
 
