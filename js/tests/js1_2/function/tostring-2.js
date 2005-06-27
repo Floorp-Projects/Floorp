@@ -173,13 +173,12 @@ function TestFunction( name, args, body ) {
     this.body = body;
 
     /* the format of Function.toString() in JavaScript 1.2 is:
-       /n
        function name ( arguments ) {
        body
        }
     */
-    this.value = "\nfunction " + (name ? name : "anonymous" )+
-	"("+args+") {\n"+ (( body ) ? body +"\n" : "") + "}\n";
+    this.value = "function " + (name ? name : "anonymous" )+
+	"("+args+") {\n"+ (( body ) ? body +"\n" : "") + "}";
 
     this.toString = new Function( "return this.value" );
     this.valueOf = new Function( "return this.value" );
