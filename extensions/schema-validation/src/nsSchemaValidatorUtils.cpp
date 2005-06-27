@@ -50,6 +50,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <errno.h>
+#include <limits.h>
 #include "prlog.h"
 #include "prprf.h"
 #include "prtime.h"
