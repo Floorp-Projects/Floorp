@@ -572,34 +572,45 @@ function getTaskTable( )
 function contextChangeProgress( event, Progress )
 {
    var tree = document.getElementById( ToDoUnifinderTreeName );
-
-   if (tree.view.selection.count > 0)
-   {
-      var todoItem = tree.taskView.getCalendarTaskAtRow( tree.currentIndex );
-      if(todoItem)
-      {
-          var newItem = todoItem.clone().QueryInterface(Components.interfaces.calITodo);
+   var start = new Object();
+   var end = new Object();
+   var numRanges = tree.view.selection.getRangeCount();
+   var toDoItem;
+   if(numRanges == 0)
+      return;
+   startBatchTransaction();
+   for (var t = 0; t < numRanges; t++) {
+      tree.view.selection.getRangeAt(t, start, end);
+      for (v = start.value; v <= end.value; v++) {
+          todoItem = tree.taskView.getCalendarTaskAtRow( v );
+          var newItem = todoItem.clone().QueryInterface( Components.interfaces.calITodo );
           newItem.percentComplete = Progress;
           doTransaction('modify', newItem, newItem.calendar, todoItem, null);
       }
    }
+   endBatchTransaction();
 }
-
 
 function contextChangePriority( event, Priority )
 {
    var tree = document.getElementById( ToDoUnifinderTreeName );
-
-   if (tree.view.selection.count > 0)
-   {
-      var todoItem = tree.taskView.getCalendarTaskAtRow( tree.currentIndex );
-      if(todoItem)
-      {
-          var newItem = todoItem.clone().QueryInterface(Components.interfaces.calITodo);
+   var start = new Object();
+   var end = new Object();
+   var numRanges = tree.view.selection.getRangeCount();
+   var toDoItem;
+   if(numRanges == 0)
+      return;
+   startBatchTransaction();
+   for (var t = 0; t < numRanges; t++) {
+      tree.view.selection.getRangeAt(t, start, end);
+      for (v = start.value; v <= end.value; v++) {
+          todoItem = tree.taskView.getCalendarTaskAtRow( v );
+          var newItem = todoItem.clone().QueryInterface( Components.interfaces.calITodo );
           newItem.priority = Priority;
           doTransaction('modify', newItem, newItem.calendar, todoItem, null);
       }
    }
+   endBatchTransaction();
 }
 
 function changeContextMenuForToDo( event )
