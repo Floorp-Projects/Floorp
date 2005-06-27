@@ -2565,4 +2565,8 @@ function buildHelpMenu()
     checkForUpdates.setAttribute("loading", "true");
   else
     checkForUpdates.removeAttribute("loading");
+
+  // Disable the UI if the update enabled pref has been locked by the 
+  // administrator.
+  checkForUpdates.disabled = gPrefBranch.prefIsLocked("app.update.enabled");
 }

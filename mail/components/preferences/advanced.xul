@@ -60,8 +60,9 @@
       <preference id="app.update.enabled"              name="app.update.enabled"              type="bool"/>
       <preference id="app.update.autoInstallEnabled"   name="app.update.autoInstallEnabled"   type="bool"/>
       <preference id="app.update.autoInstallMode"      name="app.update.autoInstallMode"      type="int"/>
-      <preference id="extensions.update.autoUpdateEnabled" name="extensions.update.autoUpdateEnabled" type="bool"/>
-      <preference id="extensions.update.autoUpdateEnabled" name="extensions.update.autoUpdateEnabled" type="bool"/>
+      <preference id="extensions.update.autoUpdateEnabled"
+                  name="extensions.update.autoUpdateEnabled"
+                  type="bool"/>
       <preference id="mailnews.tcptimeout" name="mailnews.tcptimeout" type="int"/>
       <preference id="offline.startup_state"                 name="offline.startup_state"     type="int"/>
       <preference id="offline.send.unsent_messages"          name="offline.send.unsent_messages" type="int"/>
@@ -217,8 +218,10 @@
                 <separator class="thin"/>
                 <hbox>
                   <button label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
-                          oncommand="gAdvancedPane.checkForUpdates(Components.interfaces.nsIUpdateItem.TYPE_APP);"
-                          preference="pref.update.disable_button.update_app"/>
+                          oncommand="gAdvancedPane.checkForUpdates();"
+                          preference="app.update.enabled"/>
+                  <button label="&showUpdates.label;" accesskey="&showUpdates.accesskey;"
+                          oncommand="gAdvancedPane.showUpdates();"/>
                 </hbox>
               </vbox>
             </vbox>
@@ -233,8 +236,8 @@
               <separator class="thin"/>
               <hbox class="indent">
                 <button label="&checkNow.label;" accesskey="&extensionsCheckNow.accesskey;"
-                        oncommand="gAdvancedPane.checkForUpdates(Components.interfaces.nsIUpdateItem.TYPE_ADDON);"
-                        preference="pref.update.disable_button.update_addons"/>
+                        oncommand="gAdvancedPane.checkForAddonUpdates();"
+                        preference="extensions.update.autoUpdateEnabled"/>
               </hbox>
             </vbox>
           </vbox>

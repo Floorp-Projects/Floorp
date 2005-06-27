@@ -72,35 +72,59 @@ var gAdvancedPane = {
 
   updateAppUpdateUI: function ()
   {
-    var preference = document.getElementById("app.update.autoUpdateEnabled");
-    var ids = ["enableAutoInstall", "autoInstallMode", "updateAnd"];
-    if (!preference.value)
-      for (var i = 0; i < ids.length; ++i)
-        document.getElementById(ids[i]).disabled = true;
-    else 
-    {
-      document.getElementById("enableAutoInstall").disabled = false;
-      this.updateAutoInstallUI();
-    }
+    var preference = document.getElementById("app.update.enabled");
+    document.getElementById("enableAutoInstall").disabled = !preference.value;
+    this.updateAutoInstallUI();
     return undefined;
   },
   
   updateAutoInstallUI: function ()
   {
-    var preference = document.getElementById("app.update.autoInstallEnabled");
+    var autoInstallPref = document.getElementById("app.update.autoInstallEnabled");
+    var updateEnabledPref = document.getElementById("app.update.enabled");
     var ids = ["autoInstallMode", "updateAnd"];
+    var disabled = !updateEnabledPref.value || !autoInstallPref.value;
     for (var i = 0; i < ids.length; ++i)
-      document.getElementById(ids[i]).disabled = !preference.value;
+      document.getElementById(ids[i]).disabled = disabled;
     return undefined;
   },
   
-  checkForUpdates: function (aType)
+  checkForAddonUpdates: function ()
   {
-    var updates = Components.classes["@mozilla.org/updates/update-service;1"]
-                            .getService(Components.interfaces.nsIUpdateService);
-    updates.checkForUpdates([], 0, aType, 
-                            Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER,
-                            null);  
+    var updateTypes = 
+        Components.classes["@mozilla.org/supports-PRUint8;1"].
+        createInstance(Components.interfaces.nsISupportsPRUint8);
+    updateTypes.data = Components.interfaces.nsIUpdateItem.TYPE_ADDON;
+    var showMismatch = 
+        Components.classes["@mozilla.org/supports-PRBool;1"].
+        createInstance(Components.interfaces.nsISupportsPRBool);
+    showMismatch.data = false;
+    var ary = 
+        Components.classes["@mozilla.org/supports-array;1"].
+        createInstance(Components.interfaces.nsISupportsArray);
+    ary.AppendElement(updateTypes);
+    ary.AppendElement(showMismatch);
+
+    var features = "chrome,centerscreen,dialog,titlebar";
+    const URI_EXTENSION_UPDATE_DIALOG = 
+      "chrome://mozapps/content/extensions/update.xul";
+    var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                        .getService(Components.interfaces.nsIWindowWatcher);
+    ww.openWindow(window, URI_EXTENSION_UPDATE_DIALOG, "", features, ary);  
+  },
+  
+  checkForUpdates: function ()
+  {
+    var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
+                             .createInstance(Components.interfaces.nsIUpdatePrompt);
+    prompter.checkForUpdates();  
+  },
+  
+  showUpdates: function ()
+  {
+    var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
+                             .createInstance(Components.interfaces.nsIUpdatePrompt);
+    prompter.showUpdateHistory();  
   },
 
   updateMarkAsReadTextbox: function(aFocusTextBox) 

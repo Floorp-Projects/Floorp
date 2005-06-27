@@ -46,6 +46,8 @@
 <!ENTITY checkNow.label                 "Check Now...">
 <!ENTITY appCheckNow.accesskey          "k">
 <!ENTITY extensionsCheckNow.accesskey   "h">
+<!ENTITY showUpdates.label              "Show Updates">
+<!ENTITY showUpdates.accesskey          "U">
 
 <!-- Offline and Disk Space -->
 <!ENTITY offline.label  "Offline">

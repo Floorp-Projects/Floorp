@@ -51,7 +51,8 @@ pref("update.app.url", "chrome://mozapps/locale/update/update.properties");
 pref("update.extensions.enabled", true);
 
 // App-specific update preferences
-pref("app.update.enabled", true);               // Whether or not app updates are enabled
+pref("app.update.logEnabled", true);
+pref("app.update.enabled", false);               // Whether or not app updates are enabled
 
 // Whether or not automated background app updates are enabled.
 pref("app.update.autoInstallEnabled", true); 
@@ -60,11 +61,27 @@ pref("app.update.autoInstallEnabled", true);
 // the user to install.
 pref("app.update.autoInstallMode", 0);  
 
-pref("app.update.url", "chrome://mozapps/locale/update/update.properties");
-pref("app.update.updatesAvailable", false);
-pref("app.update.interval", 86400000);  // Check for updates to Thunderbird every day
+// Default service URL for testing.
+pref("app.update.url", "chrome://mozapps/locale/update/updates.properties");
+// URL user can browse to manually if for some reason all update installation
+// attempts fail.
+pref("app.update.url.manual", "chrome://mozapps/locale/update/updates.properties");
+// User-settable update preference that overrides app.update.url for testing 
+// purposes.
+pref("app.update.url.override", "chrome://mozapps/locale/update/updates.properties");
+
+// Interval: Time between checks for a new version (in seconds)
+//           default=1 day
+pref("app.update.interval", 86400);
+// Interval: Time before prompting the user to download a new version that 
+//           is available (in seconds) default=1 day
+pref("app.update.nagTimer.download", 86400);
+// Interval: Time before prompting the user to restart to install the latest
+//           download (in seconds) default=30 minutes
+pref("app.update.nagTimer.restart", 1800);
+// Interval: When all registered timers should be checked (in milliseconds)
+//           default=5 seconds
 pref("app.update.timer", 5000);
-pref("app.update.lastUpdateDate", 0);
 
 // Developers can set this to |true| if they are constantly changing files in their
 // extensions directory so that the extension system does not constantly think that
