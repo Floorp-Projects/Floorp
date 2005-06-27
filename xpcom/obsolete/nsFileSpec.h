@@ -460,9 +460,6 @@ class NS_COM_OBSOLETE nsFileSpec
         void                    operator += (const char* inRelativeUnixPath);
 
 
-        void                    MakeUnique();
-        void                    MakeUnique(const char* inSuggestedLeafName);
-    
                                
         PRBool                  IsDirectory() const;          // More stringent than Exists()                               
         PRBool                  IsFile() const;               // More stringent than Exists()
@@ -476,6 +473,10 @@ class NS_COM_OBSOLETE nsFileSpec
     // Creation and deletion of objects.  These can modify the disk.
     //--------------------------------------------------
 
+    // For security reasons, these create the file.
+        void                    MakeUnique();
+        void                    MakeUnique(const char* inSuggestedLeafName);
+    
                                 // Called for the spec of an alias.  Modifies the spec to
                                 // point to the original.  Sets mError.
         nsresult                ResolveSymlink(PRBool& wasSymlink);

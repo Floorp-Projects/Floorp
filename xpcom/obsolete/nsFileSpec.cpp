@@ -909,34 +909,22 @@ void nsFileSpec::MakeUnique(const char* inSuggestedLeafName)
 void nsFileSpec::MakeUnique()
 //----------------------------------------------------------------------------------------
 {
-    if (!Exists())
-        return;
-
-    char* leafName = GetLeafName();
-    if (!leafName)
-        return;
-
-    char* lastDot = strrchr(leafName, '.');
-    char* suffix = "";
-    if (lastDot)
+    // XXX: updated path starts empty. In case of error this will cause
+    // any callers to fail badly, but that seems better than letting them
+    // re-use the default name which has failed to be unique.
+    nsCAutoString path;
+    nsCOMPtr<nsILocalFile> localFile;
+    NS_NewNativeLocalFile(nsDependentCString(*this), PR_TRUE, getter_AddRefs(localFile));
+    if (localFile)
     {
-        suffix = nsCRT::strdup(lastDot); // include '.'
-        *lastDot = '\0'; // strip suffix and dot.
+        nsresult rv = localFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+        if (NS_SUCCEEDED(rv))
+            localFile->GetNativePath(path);
     }
-    const int kMaxRootLength
-        = nsFileSpecHelpers::kMaxCoreLeafNameLength - strlen(suffix) - 1;
-    if ((int)strlen(leafName) > (int)kMaxRootLength)
-        leafName[kMaxRootLength] = '\0';
-    for (short indx = 1; indx < 1000 && Exists(); indx++)
-    {
-        // start with "Picture-1.jpg" after "Picture.jpg" exists
-        char newName[nsFileSpecHelpers::kMaxFilenameLength + 1];
-        sprintf(newName, "%s-%d%s", leafName, indx, suffix);
-        SetLeafName(newName);
-    }
-    if (*suffix)
-        nsCRT::free(suffix);
-    nsCRT::free(leafName);
+
+    NS_WARN_IF_FALSE(!path.IsEmpty(), "MakeUnique() failed!");
+    *this = path.get(); // reset the filepath to point to the unique location
+
 } // nsFileSpec::MakeUnique
 
 //----------------------------------------------------------------------------------------
