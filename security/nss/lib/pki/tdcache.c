@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.41 $ $Date: 2005/06/24 00:33:28 $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.42 $ $Date: 2005/06/27 21:50:06 $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -148,22 +148,6 @@ new_cache_entry(NSSArena *arena, void *value, PRBool ownArena)
 	ce->nickname = NULL;
     }
     return ce;
-}
-
-/* sort the subject list from newest to oldest */
-static PRIntn subject_list_sort(void *v1, void *v2)
-{
-    NSSCertificate *c1 = (NSSCertificate *)v1;
-    NSSCertificate *c2 = (NSSCertificate *)v2;
-    nssDecodedCert *dc1 = nssCertificate_GetDecoding(c1);
-    nssDecodedCert *dc2 = nssCertificate_GetDecoding(c2);
-    if (!dc1) {
-	return dc2 ? 1 : 0;
-    } else if (!dc2) {
-	return -1;
-    } else { 
-	return dc1->isNewerThan(dc1, dc2) ? -1 : 1;
-    }
 }
 
 /* this should not be exposed in a header, but is here to keep the above
@@ -598,7 +582,7 @@ add_subject_entry (
 	if (nickname) {
 	    ce->nickname = nssUTF8_Duplicate(nickname, arena);
 	}
-	nssList_SetSortFunction(list, subject_list_sort);
+	nssList_SetSortFunction(list, nssCertificate_SubjectListSort);
 	/* Add the cert entry to this list of subjects */
 	nssrv = nssList_AddUnique(list, cert);
 	if (nssrv != PR_SUCCESS) {
