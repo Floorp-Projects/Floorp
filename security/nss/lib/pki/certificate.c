@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.53 $ $Date: 2005/01/20 02:25:48 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.54 $ $Date: 2005/06/27 21:50:06 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -765,6 +765,26 @@ NSSCertificate_IsPrivateKeyAvailable (
     }
     nssCryptokiObjectArray_Destroy(instances);
     return isUser;
+}
+
+/* sort the subject cert list from newest to oldest */
+PRIntn
+nssCertificate_SubjectListSort (
+  void *v1,
+  void *v2
+)
+{
+    NSSCertificate *c1 = (NSSCertificate *)v1;
+    NSSCertificate *c2 = (NSSCertificate *)v2;
+    nssDecodedCert *dc1 = nssCertificate_GetDecoding(c1);
+    nssDecodedCert *dc2 = nssCertificate_GetDecoding(c2);
+    if (!dc1) {
+	return dc2 ? 1 : 0;
+    } else if (!dc2) {
+	return -1;
+    } else {
+	return dc1->isNewerThan(dc1, dc2) ? -1 : 1;
+    }
 }
 
 NSS_IMPLEMENT PRBool

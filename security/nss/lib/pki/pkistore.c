@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.25 $ $Date: 2005/06/24 00:33:28 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.26 $ $Date: 2005/06/27 21:50:06 $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -88,25 +88,6 @@ struct certificate_hash_entry_str
     NSSTrust *trust;
     nssSMIMEProfile *profile;
 };
-
-/* XXX This a common function that should be moved out, possibly an
- *     nssSubjectCertificateList should be created?
- */
-/* sort the subject list from newest to oldest */
-static PRIntn subject_list_sort(void *v1, void *v2)
-{
-    NSSCertificate *c1 = (NSSCertificate *)v1;
-    NSSCertificate *c2 = (NSSCertificate *)v2;
-    nssDecodedCert *dc1 = nssCertificate_GetDecoding(c1);
-    nssDecodedCert *dc2 = nssCertificate_GetDecoding(c2);
-    if (!dc1) {
-	return dc2 ? 1 : 0;
-    } else if (!dc2) {
-	return -1;
-    } else {
-	return dc1->isNewerThan(dc1, dc2) ? -1 : 1;
-    }
-}
 
 NSS_IMPLEMENT nssCertificateStore *
 nssCertificateStore_Create (
@@ -225,7 +206,7 @@ add_subject_entry (
 	if (!subjectList) {
 	    return PR_FAILURE;
 	}
-	nssList_SetSortFunction(subjectList, subject_list_sort);
+	nssList_SetSortFunction(subjectList, nssCertificate_SubjectListSort);
 	/* Add the cert entry to this list of subjects */
 	nssrv = nssList_Add(subjectList, cert);
 	if (nssrv != PR_SUCCESS) {
