@@ -1022,21 +1022,11 @@ function deleteToDoCommand( DoNotConfirm )
    var t;
    var v;
    var toDoItem;
-   if( numRanges == 1 ) {
-      for (t=numRanges-1; t>= 0; t--) {
-         tree.view.selection.getRangeAt(t, start, end);
-         for (v=end.value; v>=start.value; v--){
-            toDoItem = tree.taskView.getCalendarTaskAtRow( v );
-            SelectedItems.push(toDoItem);
-         }
-      }
-   } else {
-      for (t=numRanges; t >= 0; t--) {
-         tree.view.selection.getRangeAt(t,start,end);
-         for (v=end.value; v >= start.value; v--){
-            toDoItem=tree.taskView.getCalendarTaskAtRow( v );
-            SelectedItems.push(toDoItem);
-         }
+   for (t = 0; t < numRanges; t++) {
+      tree.view.selection.getRangeAt(t, start, end);
+      for (v = start.value; v <= end.value; v++) {
+         toDoItem = tree.taskView.getCalendarTaskAtRow( v );
+         SelectedItems.push( toDoItem );
       }
    }
    deleteItems( SelectedItems, DoNotConfirm );
