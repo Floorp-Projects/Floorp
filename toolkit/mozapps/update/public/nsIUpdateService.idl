@@ -71,7 +71,7 @@ interface nsIUpdatePatch : nsISupports
   attribute unsigned long size;
 
   /**
-   * The state of this update
+   * The state of this patch
    */
   attribute AString state;
 
@@ -231,7 +231,7 @@ interface nsIUpdatePrompt : nsISupports
   /**
    * Shows a list of all updates installed to date.
    */
-  void showInstalledUpdates();
+  void showUpdateHistory();
 };
 
 [scriptable, uuid(877ace25-8bc5-452a-8586-9c1cf2871994)]
