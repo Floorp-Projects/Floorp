@@ -71,7 +71,7 @@ static const int kEscapeKeyCode = 53;
       if ([self firstResponder] == [mAutoCompleteTextField fieldEditor])
         [mAutoCompleteTextField revertText];
       else
-        [[self delegate] stop:nil];
+        [(BrowserWindowController*)[self delegate] stop:nil];
   } else
     [super sendEvent:theEvent];
 }
@@ -86,21 +86,30 @@ static const int kEscapeKeyCode = 53;
 	mSuppressMakeKeyFront = inSuppress;
 }
 
-// Pass command-return off to the controller so that locations/searches may be opened in a new tab
-// and pass command-plus off to the controller to enlarge the text size.
+// Pass command-return off to the controller so that locations/searches may be opened in a new tab.
+// Pass command-plus off to the controller to enlarge the text size.
+// Pass command-shift-r off to the controller for force-reload.
 - (BOOL)performKeyEquivalent:(NSEvent *)theEvent
 {
   BrowserWindowController* windowController = (BrowserWindowController*)[self delegate];
   NSString* keyString = [theEvent charactersIgnoringModifiers];
   unichar keyChar = [keyString characterAtIndex:0];
+
   BOOL handled = NO;
   if (keyChar == NSCarriageReturnCharacter) {
     handled = [windowController handleCommandReturn];
   } else if (keyChar == '+') {
     [windowController biggerTextSize:nil];
     handled = YES;
+  } else if (keyChar == 'R') { // Capital letter implies shift key.
+    [windowController reload:nil]; // The window controller does the check for the shift key.
+    handled = YES;
   }
-  return handled ? handled : [super performKeyEquivalent:theEvent];
+  
+  if (handled)
+    return YES;
+
+  return [super performKeyEquivalent:theEvent];
 }
 
 // accessor for the 'URL' Apple Event attribute
