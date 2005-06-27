@@ -78,7 +78,6 @@
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mail3PaneWindowCommands.js"/>
-<script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/nsContextMenu.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailContextMenus.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/messengerdnd.js"/>
