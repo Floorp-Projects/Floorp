@@ -1,4 +1,6 @@
 <!ENTITY notificationsDialog.title        "New Mail Sound">
+<!ENTITY window.width                     "30em">
+
 <!ENTITY soundNotification.caption        "Configure Sound for New Mail">
 <!ENTITY preview.label                    "Preview Sound">
 <!ENTITY preview.accesskey                "v">

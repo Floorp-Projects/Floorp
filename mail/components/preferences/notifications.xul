@@ -48,7 +48,7 @@
 <prefwindow id="SoundNotificationsDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel"
-            style="width: 30em !important;"
+            style="width: &window.width; !important;"
             title="&notificationsDialog.title;">
 
   <prefpane id="NotificationsDialogPane" onpaneload="gNotificationsDialog.init();">

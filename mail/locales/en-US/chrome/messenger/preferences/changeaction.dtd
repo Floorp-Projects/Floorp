@@ -1,4 +1,5 @@
 <!ENTITY  changeAction.title                  "Change Action">
+<!ENTITY  window.width                         "36em">
 
 <!ENTITY  whenDownloading.label               "When downloading files like this:">
 
