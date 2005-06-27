@@ -92,13 +92,13 @@
 - (id) initWithGeckoChild:(nsChildView*)child eventSink:(nsIEventSink*)sink;
 
   // convert from one event system to the other for event dispatching
-- (void) convert:(NSEvent*)inEvent message:(PRInt32)inMsg toGeckoEvent:(nsInputEvent*)outGeckoEvent;
+- (void) convertEvent:(NSEvent*)inEvent message:(PRInt32)inMsg toGeckoEvent:(nsInputEvent*)outGeckoEvent;
 
   // create a gecko key event out of a cocoa event
-- (void) convert:(NSEvent*)aKeyEvent message:(PRUint32)aMessage 
+- (void) convertKeyEvent:(NSEvent*)aKeyEvent message:(PRUint32)aMessage
            isChar:(PRBool*)outIsChar
            toGeckoEvent:(nsKeyEvent*)outGeckoEvent;
-- (void) convert:(NSPoint)inPoint message:(PRInt32)inMsg 
+- (void) convertLocation:(NSPoint)inPoint message:(PRInt32)inMsg
           modifiers:(unsigned int)inMods toGeckoEvent:(nsInputEvent*)outGeckoEvent;
 
 - (NSMenu*)getContextMenu;
@@ -692,95 +692,9 @@ nsChildView::GetParent(void)
 NS_IMETHODIMP nsChildView::ModalEventFilter(PRBool aRealEvent, void *aEvent,
                                          PRBool *aForWindow)
 {
-  *aForWindow = PR_FALSE;
-  EventRecord *theEvent = (EventRecord *) aEvent;
-
-  if (aRealEvent && theEvent->what != nullEvent ) {
-
-    WindowPtr window = (WindowPtr) GetNativeData(NS_NATIVE_DISPLAY);
-    WindowPtr rollupWindow = gRollupWidget ? (WindowPtr) gRollupWidget->GetNativeData(NS_NATIVE_DISPLAY) : nsnull;
-    WindowPtr eventWindow = nsnull;
-    
-    PRInt16 where = ::FindWindow ( theEvent->where, &eventWindow );
-    PRBool inWindow = eventWindow && (eventWindow == window || eventWindow == rollupWindow);
-
-    switch ( theEvent->what ) {
-      // is it a mouse event?
-      case mouseUp:
-          *aForWindow = PR_TRUE;
-        break;
-      case mouseDown:
-        // is it in the given window?
-        // (note we also let some events questionable for modal dialogs pass through.
-        // but it makes sense that the draggability et.al. of a modal window should
-        // be controlled by whether the window has a drag bar).
-        if (inWindow) {
-             if ( where == inContent || where == inDrag   || where == inGrow ||
-                  where == inGoAway  || where == inZoomIn || where == inZoomOut )
-          *aForWindow = PR_TRUE;
-        }
-        else      // we're in another window.
-        {
-          // let's handle dragging of background windows here
-          if (eventWindow && (where == inDrag) && (theEvent->modifiers & cmdKey))
-          {
-            Rect screenRect;
-            ::GetRegionBounds(::GetGrayRgn(), &screenRect);
-            ::DragWindow(eventWindow, theEvent->where, &screenRect);
-          }
-          
-          *aForWindow = PR_FALSE;
-        }
-        break;
-      case keyDown:
-      case keyUp:
-      case autoKey:
-        *aForWindow = PR_TRUE;
-        break;
-
-      case diskEvt:
-          // I think dialogs might want to support floppy insertion, and it doesn't
-          // interfere with modality...
-      case updateEvt:
-        // always let update events through, because if we don't handle them, we're
-        // doomed!
-      case activateEvt:
-        // activate events aren't so much a request as simply informative. might
-        // as well acknowledge them.
-        *aForWindow = PR_TRUE;
-        break;
-
-      case osEvt:
-        // check for mouseMoved or suspend/resume events. We especially need to
-        // let suspend/resume events through in order to make sure the clipboard is
-        // converted correctly.
-        unsigned char eventType = (theEvent->message >> 24) & 0x00ff;
-        if (eventType == mouseMovedMessage) {
-          // I'm guessing we don't want to let these through unless the mouse is
-          // in the modal dialog so we don't see rollover feedback in windows behind
-          // the dialog.
-          if ( where == inContent && inWindow )
-            *aForWindow = PR_TRUE;
-        }
-        if ( eventType == suspendResumeMessage ) {
-          *aForWindow = PR_TRUE;
-          if (theEvent->message & resumeFlag) {
-            // divert it to our window if it isn't naturally
-            if (!inWindow) {
-              StPortSetter portSetter(window);
-              theEvent->where.v = 0;
-              theEvent->where.h = 0;
-              ::LocalToGlobal(&theEvent->where);
-            }
-            }
-        }
-
-        break;
-    } // case of which event type
-  } else
-    *aForWindow = PR_TRUE;
-
-  return NS_OK;
+  if (aForWindow)
+    *aForWindow = PR_FALSE;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -2153,7 +2067,7 @@ nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseG
   // window coordinates for convert:message:toGeckoEvent
   NSPoint pt; pt.x = aMouseGlobalX; pt.y = aMouseGlobalY;
   [[mView window] convertScreenToBase:pt];
-  [mView convert:pt message:aMessage modifiers:0 toGeckoEvent:&geckoEvent];
+  [mView convertLocation:pt message:aMessage modifiers:0 toGeckoEvent:&geckoEvent];
 
 // XXXPINK
 // hack, because we're currently getting the point in Carbon global coordinates,
@@ -2621,7 +2535,7 @@ nsChildView::Idle()
 #endif
 
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convert:theEvent message:NS_MOUSE_LEFT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_LEFT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
   
   NSPoint mouseLoc = [theEvent locationInWindow];
@@ -2652,7 +2566,7 @@ nsChildView::Idle()
     return;
   }
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convert:theEvent message:NS_MOUSE_LEFT_BUTTON_UP toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_LEFT_BUTTON_UP toGeckoEvent:&geckoEvent];
   
   NSPoint mouseLoc = [theEvent locationInWindow];
   NSPoint screenLoc = [[self window] convertBaseToScreen: mouseLoc];
@@ -2687,7 +2601,7 @@ nsChildView::Idle()
     return;
   }
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convert:theEvent message:NS_MOUSE_MOVE toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_MOVE toGeckoEvent:&geckoEvent];
 
   NSPoint mouseLoc = [theEvent locationInWindow];
   NSPoint screenLoc = [[self window] convertBaseToScreen: mouseLoc];
@@ -2715,7 +2629,7 @@ nsChildView::Idle()
     return;
   }
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convert:theEvent message:NS_MOUSE_MOVE toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_MOVE toGeckoEvent:&geckoEvent];
 
   EventRecord macEvent;
   macEvent.what = nullEvent;
@@ -2762,7 +2676,7 @@ nsChildView::Idle()
   // then send the context menu event.
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
 
-  [self convert: theEvent message: NS_MOUSE_RIGHT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_RIGHT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
 
   // plugins need a native event here
   EventRecord macEvent;
@@ -2783,7 +2697,7 @@ nsChildView::Idle()
 {
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
 
-  [self convert: theEvent message: NS_MOUSE_RIGHT_BUTTON_UP toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_RIGHT_BUTTON_UP toGeckoEvent:&geckoEvent];
 
   // plugins need a native event here
   EventRecord macEvent;
@@ -2803,7 +2717,7 @@ nsChildView::Idle()
 - (void)otherMouseDown:(NSEvent *)theEvent
 {
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convert:theEvent message:NS_MOUSE_MIDDLE_BUTTON_DOWN toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_MIDDLE_BUTTON_DOWN toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
   
   // send event into Gecko by going directly to the
@@ -2816,7 +2730,7 @@ nsChildView::Idle()
 - (void)otherMouseUp:(NSEvent *)theEvent
 {
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convert:theEvent message:NS_MOUSE_MIDDLE_BUTTON_UP toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_MIDDLE_BUTTON_UP toGeckoEvent:&geckoEvent];
   
   // send event into Gecko by going directly to the
   // the widget.
@@ -2834,7 +2748,7 @@ const PRInt32 kNumLines = 4;
   // the OS). --dwh
   nsMouseScrollEvent geckoEvent(PR_TRUE, 0, nsnull);
 
-  [self convert:theEvent message:NS_MOUSE_SCROLL toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_SCROLL toGeckoEvent:&geckoEvent];
   PRInt32 incomingDeltaX = (PRInt32)[theEvent deltaX];
   PRInt32 incomingDeltaY = (PRInt32)[theEvent deltaY];
 
@@ -2861,7 +2775,7 @@ const PRInt32 kNumLines = 4;
 {
   // Fire the context menu event into Gecko.
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convert:theEvent message:NS_CONTEXTMENU toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_CONTEXTMENU toGeckoEvent:&geckoEvent];
   
   // send event into Gecko by going directly to the
   // the widget.
@@ -2891,18 +2805,18 @@ const PRInt32 kNumLines = 4;
 }
 
 //
-// -convert:message:toGeckoEvent:
+// -convertEvent:message:toGeckoEvent:
 //
 // convert from one event system to the other for event dispatching
 //
-- (void) convert:(NSEvent*)inEvent message:(PRInt32)inMsg toGeckoEvent:(nsInputEvent*)outGeckoEvent
+- (void) convertEvent:(NSEvent*)inEvent message:(PRInt32)inMsg toGeckoEvent:(nsInputEvent*)outGeckoEvent
 {
   outGeckoEvent->nativeMsg = inEvent;
-  [self convert:[inEvent locationInWindow] message:inMsg modifiers:[inEvent modifierFlags]
+  [self convertLocation:[inEvent locationInWindow] message:inMsg modifiers:[inEvent modifierFlags]
           toGeckoEvent:outGeckoEvent];
 }
 
-- (void) convert:(NSPoint)inPoint message:(PRInt32)inMsg modifiers:(unsigned int)inMods toGeckoEvent:(nsInputEvent*)outGeckoEvent
+- (void) convertLocation:(NSPoint)inPoint message:(PRInt32)inMsg modifiers:(unsigned int)inMods toGeckoEvent:(nsInputEvent*)outGeckoEvent
 {
   outGeckoEvent->message = inMsg;
   outGeckoEvent->widget = [self widget];
@@ -3053,7 +2967,13 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     geckoEvent.charCode  = bufPtr[0]; // gecko expects OS-translated unicode
     geckoEvent.isChar    = PR_TRUE;
     geckoEvent.isShift   = ([mCurEvent modifierFlags] & NSShiftKeyMask) != 0;
+    geckoEvent.isControl = ([mCurEvent modifierFlags] & NSControlKeyMask) != 0;
+    geckoEvent.isAlt     = ([mCurEvent modifierFlags] & NSAlternateKeyMask) != 0;
+    geckoEvent.isMeta    = ([mCurEvent modifierFlags] & NSCommandKeyMask) != 0;
 
+    if (geckoEvent.isControl && geckoEvent.charCode <= 26)
+      geckoEvent.charCode += (geckoEvent.isShift) ? ('A' - 1) : ('a' - 1);
+    
     // plugins need a native autokey event here, but only if this is a repeat event
     EventRecord macEvent;
     if (mCurEvent && [mCurEvent isARepeat])
@@ -3305,9 +3225,10 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     // Fire a key down.
     nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
     geckoEvent.point.x = geckoEvent.point.y = 0;
-    [self convert: theEvent message: NS_KEY_DOWN
-          isChar: &isChar
-          toGeckoEvent: &geckoEvent];
+    [self convertKeyEvent:theEvent
+                  message:NS_KEY_DOWN
+                   isChar:&isChar
+             toGeckoEvent:&geckoEvent];
     geckoEvent.isChar = isChar;
 
     // As an optimisation, only do this when there is a plugin present.
@@ -3334,12 +3255,20 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     // Fire a key press.
     nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
     geckoEvent.point.x = geckoEvent.point.y = 0;
+
     isChar = PR_FALSE;
-    [self convert: theEvent message: NS_KEY_PRESS
-            isChar: &isChar
-            toGeckoEvent: &geckoEvent];
+    [self convertKeyEvent:theEvent
+                  message:NS_KEY_PRESS
+                   isChar:&isChar
+             toGeckoEvent:&geckoEvent];
+
     geckoEvent.isChar = isChar;
-    if (isChar)
+
+    // if it's text input, pass it on to interpretKeyEvents: so that it propagates to our
+    // insertText:.
+    // however, if the control key is down, dispatch the keydown here, so that we trap
+    // control-letter combinations before Cocoa tries to use them for emacs-style keybindings.
+    if (geckoEvent.isChar && !geckoEvent.isControl)
     {
       // we'll send the NS_KEY_PRESS event to gecko in [insertText:]
       mLastKeyEventWasSentToCocoa = YES;  // force all events to go through inserttext
@@ -3389,10 +3318,12 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   // Fire a key up.
   nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
   geckoEvent.point.x = geckoEvent.point.y = 0;
-  PRBool isChar;
-  [self convert: theEvent message: NS_KEY_UP
-        isChar: &isChar
-        toGeckoEvent: &geckoEvent];
+
+  PRBool isChar = PR_FALSE;
+  [self convertKeyEvent:theEvent
+                message:NS_KEY_UP
+                 isChar:&isChar
+           toGeckoEvent:&geckoEvent];
 
   // As an optimisation, only do this when there is a plugin present.
   EventRecord macEvent;
@@ -3720,11 +3651,11 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
 	return isSpecial;
 }
 
-- (void) convert:(NSEvent*)aKeyEvent message:(PRUint32)aMessage 
+- (void) convertKeyEvent:(NSEvent*)aKeyEvent message:(PRUint32)aMessage 
            isChar:(PRBool*)aIsChar
            toGeckoEvent:(nsKeyEvent*)outGeckoEvent
 {
-  [self convert:aKeyEvent message:aMessage toGeckoEvent:outGeckoEvent];
+  [self convertEvent:aKeyEvent message:aMessage toGeckoEvent:outGeckoEvent];
 
   // Initialize the out boolean for whether or not we are using
   // charCodes to false.
@@ -3738,10 +3669,24 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
     if (!outGeckoEvent->isControl && !outGeckoEvent->isMeta)
       outGeckoEvent->isControl = outGeckoEvent->isAlt = outGeckoEvent->isMeta = 0;
     
+    outGeckoEvent->charCode = 0;
+    outGeckoEvent->keyCode  = 0;
+
+    NSString* unmodifiedChars = [aKeyEvent charactersIgnoringModifiers];
+    if ([unmodifiedChars length] > 0)
+      outGeckoEvent->charCode = [unmodifiedChars characterAtIndex:0];
+    
     // We're not a special key.
-    outGeckoEvent->keyCode	= 0;
     if (aIsChar)
-      *aIsChar =  PR_TRUE; 
+      *aIsChar = PR_TRUE;
+
+    // convert control-modified charCode to raw charCode (with appropriate case)
+    if (outGeckoEvent->isControl && outGeckoEvent->charCode <= 26)
+      outGeckoEvent->charCode += (outGeckoEvent->isShift) ? ('A' - 1) : ('a' - 1);
+
+    // gecko also wants charCode to be in the appropriate case
+    if (outGeckoEvent->isShift && (outGeckoEvent->charCode >= 'a' && outGeckoEvent->charCode <= 'z'))
+      outGeckoEvent->charCode -= 32;    // convert to uppercase
   }
   else
   {
