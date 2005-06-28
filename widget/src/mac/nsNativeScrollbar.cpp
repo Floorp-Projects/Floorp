@@ -84,10 +84,8 @@ private:
 };
 
 
-static ControlActionUPP ScrollbarActionProc ( );
-
 static ControlActionUPP 
-ScrollbarActionProc ( )
+ScrollbarActionProc( )
 {
   static StNativeControlActionProcOwner sActionProcOwner;
   return sActionProcOwner.ActionProc();
@@ -107,6 +105,8 @@ nsNativeScrollbar::nsNativeScrollbar()
   , mMouseDownInScroll(PR_FALSE)
   , mClickedPartCode(0)
 {
+  mMax = 0;   // override the base class default
+
   WIDGET_SET_CLASSNAME("nsNativeScrollbar");
   SetControlType(kControlScrollBarLiveProc);
 }
@@ -224,13 +224,13 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
   }
   EndDraw();
     
-	// update the area of the parent uncovered by the scrolling. Since
-	// we may be in a tight loop, we need to manually validate the area
-	// we just updated so the update rect doesn't continue to get bigger
-	// and bigger the more we scroll.
-	nsCOMPtr<nsIWidget> parent ( dont_AddRef(GetParent()) );
-	parent->Update();
-	parent->Validate();
+  // update the area of the parent uncovered by the scrolling. Since
+  // we may be in a tight loop, we need to manually validate the area
+  // we just updated so the update rect doesn't continue to get bigger
+  // and bigger the more we scroll.
+  nsCOMPtr<nsIWidget> parent ( dont_AddRef(GetParent()) );
+  parent->Update();
+  parent->Validate();
 
   StartDraw();
 }
@@ -259,6 +259,20 @@ nsNativeScrollbar::UpdateContentPosition(PRUint32 inNewPos)
   SetPosition(inNewPos);
 }
 
+//-------------------------------------------------------------------------
+//
+// Get the current hilite state of the control (disables the scrollbar
+// if there is nowhere to scroll)
+// 
+//-------------------------------------------------------------------------
+ControlPartCode
+nsNativeScrollbar::GetControlHiliteState()
+{
+  if (mMaxValue == 0)
+    return kControlInactivePart;
+  
+  return Inherited::GetControlHiliteState();
+}
 
 /**-------------------------------------------------------------------------------
  * DispatchMouseEvent handle an event for this scrollbar
@@ -352,7 +366,11 @@ nsNativeScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 NS_IMETHODIMP
 nsNativeScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
-  mMaxValue = ((int)aEndRange) > 0 ? aEndRange : 10;
+  if ((PRInt32)aEndRange < 0)
+    aEndRange = 0;
+
+  mMaxValue = aEndRange;
+
   if ( GetControl() ) {
     StartDraw();
     ::SetControl32BitMaximum(GetControl(), mMaxValue);
@@ -430,8 +448,11 @@ nsNativeScrollbar::GetPosition(PRUint32* aPos)
 NS_IMETHODIMP
 nsNativeScrollbar::SetViewSize(PRUint32 aSize)
 {
-  mVisibleImageSize = ((int)aSize) > 0 ? aSize : 1;
-  
+  if ((PRInt32)aSize < 0)
+    aSize = 0;
+
+  mVisibleImageSize = aSize;
+    
   if ( GetControl() )  {
     StartDraw();
     SetControlViewSize(GetControl(), mVisibleImageSize);
