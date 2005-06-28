@@ -47,6 +47,13 @@
         if (!document.documentElement.cancelDialog())
           event.preventDefault();
       })</field>
+      <field name="enterDefaultAlways">
+#ifdef XP_MACOSX
+        true
+#else
+        false
+#endif
+      </field>
 
       <property name="buttons"
                 onget="return this.getAttribute('buttons');"
@@ -394,7 +401,7 @@
         <parameter name="evt"/>
         <body>
         <![CDATA[
-          if (evt.getPreventDefault())
+          if (!this.enterDefaultAlways && evt.getPreventDefault())
             return;
 
           var btn = this.getButton(this.defaultButton);
