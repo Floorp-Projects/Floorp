@@ -261,6 +261,7 @@ public:
 
 #ifdef MOZ_ENABLE_XFT
 
+#include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 
 class nsXftEntry
