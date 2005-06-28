@@ -52,6 +52,7 @@ typedef double gfxFloat;
  * even though it forces the functions to be virtual...
  */
 #include "nsISupportsImpl.h"
+#include "nsAutoPtr.h"
 
 #define THEBES_IMPL_REFCOUNTING(_class)                          \
     NS_IMPL_ADDREF(_class)                                     \

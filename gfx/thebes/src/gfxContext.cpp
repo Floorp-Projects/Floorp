@@ -47,6 +47,7 @@ THEBES_IMPL_REFCOUNTING(gfxContext)
 gfxContext::gfxContext(gfxASurface* surface)
 {
     mCairo = cairo_create(surface->CairoSurface());
+    mSurface = surface;
 }
 gfxContext::~gfxContext()
 {
@@ -55,10 +56,7 @@ gfxContext::~gfxContext()
 
 gfxASurface* gfxContext::CurrentSurface()
 {
-    cairo_surface_t *surface = cairo_get_target(mCairo);
-    gfxASurface *ret = gfxASurface::LookupSurface(surface);
-    NS_IF_ADDREF(ret);
-    return ret;
+    return mSurface;
 }
 
 void gfxContext::Save()
@@ -147,7 +145,7 @@ dontsnap:
     cairo_rectangle(mCairo, rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
 }
 
-void gfxContext::Polygon(const gfxPoint *points, unsigned long numPoints)
+void gfxContext::Polygon(const gfxPoint *points, PRUint32 numPoints)
 {
     if (numPoints == 0)
         return;

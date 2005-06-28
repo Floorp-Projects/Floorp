@@ -42,9 +42,6 @@
 
 #include "gfxTypes.h"
 
-// this key can be used to look up a Surface object given a cairo_surface_t
-static cairo_user_data_key_t gSurfaceMapKey;
-
 class gfxASurface {
     THEBES_DECL_REFCOUNTING
 
@@ -52,14 +49,9 @@ public:
     /*** this DOES NOT addref the surface */
     cairo_surface_t *CairoSurface() { return mSurface; }
 
-    static gfxASurface* LookupSurface(cairo_surface_t* surface) {
-        return static_cast<gfxASurface*>(cairo_surface_get_user_data(surface, &gSurfaceMapKey));
-    }
-
 protected:
     void Init(cairo_surface_t* surface) {
         mSurface = surface;
-        cairo_surface_set_user_data(mSurface, &gSurfaceMapKey, static_cast<void*>(this), 0);
     }
 
     virtual ~gfxASurface() {

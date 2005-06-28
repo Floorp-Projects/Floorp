@@ -41,12 +41,12 @@
 
 #include <cairo.h>
 
+#include "gfxASurface.h"
 #include "gfxColor.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
 #include "gfxTypes.h"
 
-class gfxASurface;
 class gfxMatrix;
 class gfxRegion;
 class gfxFilter;
@@ -60,7 +60,7 @@ public:
     gfxContext(gfxASurface* surface);
     ~gfxContext();
 
-    // this will addref
+    // this does not addref
     gfxASurface* CurrentSurface();
 
     /**
@@ -95,7 +95,7 @@ public:
 
     void Rectangle(gfxRect rect, PRBool snapToPixels = PR_FALSE);
 
-    void Polygon(const gfxPoint *points, PRUInt32 numPoints);
+    void Polygon(const gfxPoint *points, PRUint32 numPoints);
 
     /**
      ** Text
@@ -245,6 +245,7 @@ public:
 
 private:
     cairo_t *mCairo;
+    nsRefPtr<gfxASurface> mSurface;
 };
 
 #endif /* GFX_CONTEXT_H */
