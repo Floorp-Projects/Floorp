@@ -43,7 +43,25 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE	= snav
 
+ifdef MOZ_XUL_APP
+XPI_NAME = snav
+INSTALL_EXTENSION_ID = spatial-navigation@extensions.mozilla.org
+DIST_FILES = install.rdf
+
+# We should really pull FIREFOX_VERSION and THUNDERBIRD_VERSION from
+# browser/config/version.txt mail/config/version.txt but we can't be assured
+# that we've even pulled those files. So we hardcode them.
+
+XULAPP_DEFINES = \
+	-DFIREFOX_VERSION=1.0+ \
+	-DTHUNDERBIRD_VERSION=1.0+ \
+	$(NULL)
+
+ifdef TARGET_XPCOM_ABI
+XULAPP_DEFINES += -DEM_ABI=$(OS_TARGET)_$(TARGET_XPCOM_ABI)
+endif
+endif
+
 DIRS    = public src
 
 include $(topsrcdir)/config/rules.mk
-

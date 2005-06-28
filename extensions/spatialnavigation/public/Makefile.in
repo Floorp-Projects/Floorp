@@ -44,6 +44,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE=snav
 XPIDL_MODULE=snav
 
+ifdef MOZ_XUL_APP
+XPI_NAME = snav
+endif
+
 XPIDLSRCS = nsISpatialNavigation.idl \
             $(NULL)
 
