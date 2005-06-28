@@ -42,6 +42,7 @@
 #include "nsNetUtil.h"
 #include "nsILineInputStream.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsVoidArray.h"
 #include "prprf.h"
 
 ////////////////////////////////////////////////////////////////////////////////
