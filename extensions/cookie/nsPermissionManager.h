@@ -43,7 +43,6 @@
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
-#include "nsVoidArray.h"
 #include "nsIFile.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
