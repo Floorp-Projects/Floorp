@@ -304,9 +304,9 @@ const nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kNone, kNone,
-    /*special props, prop-range*/       0,kNoPropRange,
-    /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown,
+    /*parent,incl,exclgroups*/          (kFlowEntity|kHeadMisc), kNone, kNone,
+    /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
+    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
   {
@@ -736,7 +736,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,
-    /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
+    /*special props, prop-range*/       kNonContainer|kRequiresBody,kDefaultPropRange,
     /*special parents,kids,skip*/       &gInBody,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },

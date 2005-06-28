@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1690,8 +1691,12 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
       if(!isTokenHandled) {
         if(theHeadIsParent &&
-            (isExclusive || (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD))) {
+            (isExclusive || !(mFlags & NS_DTD_FLAG_HAD_BODY))) {
           // These tokens prefer to be in the head.
+          // Note: I changed the above test to be against NS_DTD_FLAG_HAD_BODY
+          // instead of NS_DTD_FLAG_HAS_OPEN_HEAD because if neither the body
+          // nor the head have been opened, we should assume the tag wants to
+          // be in the head.
           result = AddHeadLeaf(theNode);
         }
         else {
