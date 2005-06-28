@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  uconv \
 		  unicharutil \
+		  view \
 		  $(NULL)
 
 DEFINES		+= -D_IMPL_NS_WIDGET -DUSE_TLS_FOR_TOOLKIT
