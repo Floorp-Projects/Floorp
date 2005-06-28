@@ -51,7 +51,7 @@ interface nsIInputStream;
  * @created         8/Jun/2000
  * @author          Makoto Kato [m_kato@ga2.so-net.ne.jp]
  */
-[scriptable, uuid(b5a06c58-1e32-4386-85ba-f54c4e8a9b48)]
+[scriptable, uuid(1ea19c6c-c59f-4fd7-9fc7-151e946baca0)]
 interface nsIScriptableUnicodeConverter : nsISupports
 {
   /**
@@ -59,19 +59,19 @@ interface nsIScriptableUnicodeConverter : nsISupports
    * Returns the converted string. After converting, Finish should be called
    * and its return value appended to this return value.
    */
-  string ConvertFromUnicode(in AString aSrc);
+  ACString ConvertFromUnicode(in AString aSrc);
 
   /**
    * Returns the terminator string.
    * Should be called after ConvertFromUnicode() and appended to that
    * function's return value.
    */
-  string Finish();
+  ACString Finish();
 
   /**
    * Converts the data from one Charset to Unicode.
    */
-  AString ConvertToUnicode(in string aSrc);
+  AString ConvertToUnicode(in ACString aSrc);
 
   /**
    * Converts an array of bytes to a unicode string.

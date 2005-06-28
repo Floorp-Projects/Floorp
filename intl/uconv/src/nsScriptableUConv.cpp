@@ -93,12 +93,20 @@ nsScriptableUnicodeConverter::ConvertFromUnicodeWithLength(const nsAString& aSrc
   return NS_ERROR_FAILURE;
 }
 
-/* string ConvertFromUnicode ([const] in AString src); */
+/* ACString ConvertFromUnicode (in AString src); */
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::ConvertFromUnicode(const nsAString& aSrc, char **_retval)
+nsScriptableUnicodeConverter::ConvertFromUnicode(const nsAString& aSrc,
+                                                 nsACString& _retval)
 {
   PRInt32 len;
-  return ConvertFromUnicodeWithLength(aSrc, &len, _retval);
+  char* str;
+  nsresult rv = ConvertFromUnicodeWithLength(aSrc, &len, &str);
+  if (NS_SUCCEEDED(rv)) {
+    // No Adopt on nsACString :(
+    _retval.Assign(str, len);
+    nsMemory::Free(str);
+  }
+  return rv;
 }
 
 nsresult
@@ -125,19 +133,29 @@ nsScriptableUnicodeConverter::FinishWithLength(char **_retval, PRInt32* aLength)
 
 }
 
+/* ACString Finish(); */
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::Finish(char **_retval)
+nsScriptableUnicodeConverter::Finish(nsACString& _retval)
 {
   PRInt32 len;
-  return FinishWithLength(_retval, &len);
+  char* str;
+  nsresult rv = FinishWithLength(&str, &len);
+  if (NS_SUCCEEDED(rv)) {
+    // No Adopt on nsACString :(
+    _retval.Assign(str, len);
+    nsMemory::Free(str);
+  }
+  return rv;
 }
 
-/* AString ConvertToUnicode ([const] in string src); */
+/* AString ConvertToUnicode (in ACString src); */
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::ConvertToUnicode(const char *aSrc, nsAString& _retval)
+nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc, nsAString& _retval)
 {
-  return ConvertFromByteArray(NS_REINTERPRET_CAST(const PRUint8*, aSrc),
-                              strlen(aSrc),
+  nsACString::const_iterator i;
+  aSrc.BeginReading(i);
+  return ConvertFromByteArray(NS_REINTERPRET_CAST(const PRUint8*, i.get()),
+                              aSrc.Length(),
                               _retval);
 }
 
