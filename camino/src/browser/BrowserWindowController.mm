@@ -53,6 +53,7 @@
 #import "BrowserWrapper.h"
 #import "PreferenceManager.h"
 #import "BrowserTabView.h"
+#import "BrowserTabViewItem.h"
 #import "UserDefaults.h"
 #import "PageProxyIcon.h"
 #import "AutoCompleteTextField.h"
@@ -2659,7 +2660,7 @@ enum BWCOpenDest {
     int closeIndex = [urlArray count];
     int closeCount = [mTabBrowser numberOfTabViewItems] - closeIndex;
     for (int i = 0; i < closeCount; i++) {
-      [[mTabBrowser tabViewItemAtIndex:closeIndex] closeTab];
+      [(BrowserTabViewItem*)[mTabBrowser tabViewItemAtIndex:closeIndex] closeTab:nil];
     }
   }
 }
@@ -2975,19 +2976,11 @@ enum BWCOpenDest {
 - (IBAction)copyImage:(id)sender
 {
   nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([[[self getBrowserWrapper] getBrowserView] getWebBrowser]);
-
-  // nsIClipboardCommands::CopyImageContents() copies both the location and the image
-  // by default, which we don't want. Thus we need to go directly to the command manger
-  // to send the command with params to just copy the image.
   nsCOMPtr<nsICommandManager> commandMgr(do_GetInterface(webBrowser));
   if (!commandMgr)
     return;
 
-  nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID);
-  if (params)
-    params->SetLongValue("imageCopy", nsIContentViewerEdit::COPY_IMAGE_DATA);
-
-  (void)commandMgr->DoCommand("cmd_copyImageContents", params, nsnull);
+  (void)commandMgr->DoCommand("cmd_copyImageContents", nsnull, nsnull);
 }
 
 - (IBAction)copyImageLocation:(id)sender

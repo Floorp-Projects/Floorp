@@ -59,6 +59,7 @@
 - (void)updateTabVisibility:(BOOL)nowVisible;
 - (NSView*)tabItemContentsView;
 - (int)tag;
+- (void)closeTab:(id)sender;
 - (void)setTabIcon:(NSImage *)newIcon isDraggable:(BOOL)draggable;
 - (TruncatingTextAndImageCell *)labelCell;
 - (TabButtonCell *)tabButtonCell;

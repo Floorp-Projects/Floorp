@@ -343,7 +343,7 @@ const int kMenuTruncationChars = 60;
     [mCloseButton setBordered:NO];
     [mCloseButton setButtonType:NSMomentaryChangeButton];
     [mCloseButton setTarget:self];
-    [mCloseButton setAction:@selector(closeTab)];
+    [mCloseButton setAction:@selector(closeTab:)];
     [mCloseButton setAutoresizingMask:NSViewMinXMargin];
     
     // create a menu item, to be used when there are more tabs than screen real estate. keep a strong ref
@@ -391,7 +391,7 @@ const int kMenuTruncationChars = 60;
   return mTag;
 }
 
-- (void)closeTab
+- (void)closeTab:(id)sender
 {
 	[[self view] windowClosed];
 	[[self tabView] removeTabViewItem:self];
