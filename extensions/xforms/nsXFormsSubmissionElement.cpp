@@ -89,6 +89,9 @@
 #include "nsNetUtil.h"
 #include "nsXFormsUtils.h"
 #include "nsIDOMNamedNodeMap.h"
+#include "nsIPermissionManager.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 // namespace literals
 #define NAMESPACE_XML_SCHEMA \
@@ -811,20 +814,70 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
 PRBool
 nsXFormsSubmissionElement::CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI)
 {
+  PRBool result = PR_TRUE;
+
   // We require same-origin for replace="instance" or XML submission
   if (mFormat & (ENCODING_XML | ENCODING_MULTIPART_RELATED) || mIsReplaceInstance) {
 
-    // if we don't replace the instance, we allow file:// to send the data
-    PRBool schemeIsFile = PR_FALSE;
-
+    // if we don't replace the instance, we allow file:// or sites whitelisted
+    // to submit data
     if (!mIsReplaceInstance) {
-      aBaseURI->SchemeIs("file", &schemeIsFile);
+      aBaseURI->SchemeIs("file", &result);
+
+      // lets check the permission manager
+      if (!result) {
+        result = CheckPermissionManager(aBaseURI);
+      }
     }
 
-    if (!schemeIsFile)
-      return nsXFormsUtils::CheckSameOrigin(aBaseURI, aTestURI);
+    if (!result) {
+      result = nsXFormsUtils::CheckSameOrigin(aBaseURI, aTestURI);
+    }
   }
-  return PR_TRUE;
+
+  return result;
+}
+
+PRBool
+nsXFormsSubmissionElement::CheckPermissionManager(nsIURI *aBaseURI)
+{
+  PRBool result = PR_FALSE;
+
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+
+  PRUint32 permission = nsIPermissionManager::UNKNOWN_ACTION;
+
+  if (NS_SUCCEEDED(rv) && prefBranch) {
+    // check if the user has enabled the xforms cross domain preference
+    PRBool checkPermission = PR_FALSE;
+    prefBranch->GetBoolPref("xforms.crossdomain.enabled", &checkPermission);
+
+    if (checkPermission) {
+      // if the user enabled the cross domain check, query the permission
+      // manager with the URI.  It will return 1 if the URI was allowed by the
+      // user.
+      nsCOMPtr<nsIPermissionManager> permissionManager =
+        do_GetService("@mozilla.org/permissionmanager;1");
+
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+      NS_ENSURE_STATE(doc);
+
+      permissionManager->TestPermission(doc->GetDocumentURI(),
+                                       "xforms-xd", &permission);
+    }
+  }
+
+  if (permission == nsIPermissionManager::ALLOW_ACTION) {
+    // not in the permission manager
+    result = PR_TRUE;
+  }
+
+  return result;
 }
 
 nsresult

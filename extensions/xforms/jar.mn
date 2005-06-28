@@ -1,6 +1,14 @@
 xforms.jar:
-	content/xforms/contents.rdf
-	content/xforms/xforms.xml
-*	content/xforms/xforms.css
+% overlay	chrome://browser/content/preferences/preferences.xul	chrome://xforms/content/xforms-prefs.xul
+% content	xforms	%content/xforms/
+% locale	xforms	en-US	%locale/en-US/xforms/
+  content/xforms/contents.rdf                  (resources/content/contents.rdf)
+* content/xforms/xforms.css                    (resources/content/xforms.css)
+* content/xforms/xforms-prefs.xul              (resources/content/xforms-prefs.xul)
+* content/xforms/xforms-prefs-ui.xul           (resources/content/xforms-prefs-ui.xul)
+* content/xforms/xforms-prefs.js               (resources/content/xforms-prefs.js)
+	content/xforms/xforms.xml                    (resources/content/xforms.xml)
 * locale/en-US/xforms/contents.rdf             (resources/locale/en-US/contents.rdf)
   locale/en-US/xforms/xforms.properties        (resources/locale/en-US/xforms.properties)
+  locale/en-US/xforms/xforms.dtd               (resources/locale/en-US/xforms.dtd)
+

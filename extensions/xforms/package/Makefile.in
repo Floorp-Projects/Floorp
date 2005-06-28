@@ -69,6 +69,7 @@ xpi:
 	$(NSINSTALL) -D stage
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -o $(PKGCP_PLATFORM) -s $(DIST)/bin -d stage -f $(srcdir)/$(PACKAGE_FILE) -v
 	$(NSINSTALL) $(srcdir)/install.rdf stage/xforms
+	$(NSINSTALL) $(srcdir)/chrome.manifest stage/xforms
 	@echo Creating install.js...
 	rm -f xforms.js
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/makejs.pl $(srcdir)/xforms.jst $(PACKAGE_VERSION) stage/xforms

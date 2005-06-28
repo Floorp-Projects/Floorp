@@ -126,6 +126,7 @@ private:
    * there is no need for a same origin check.
    */
   PRBool CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI);
+  PRBool CheckPermissionManager(nsIURI *aBaseURI);
   nsresult AddNameSpaces(nsIDOMElement* aTarget, nsIDOMNode* aSource);
 };
 

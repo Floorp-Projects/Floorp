@@ -70,6 +70,7 @@ REQUIRES	= \
 		transformiix \
 		schemavalidation \
 		intl \
+		pref \
 		$(NULL)
 
 XPIDLSRCS	= \
