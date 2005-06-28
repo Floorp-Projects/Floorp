@@ -34,3 +34,4 @@ PATCHES:
   win32-extents.diff - correct text extents for general tranforms
       (upstream patch)
 
+  atsui-empty.diff - prevent OS-X crash with empty string
