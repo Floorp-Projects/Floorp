@@ -105,7 +105,7 @@ function getBestIdentity(identities, optionalHint)
       var tempID;
       for (id = 0; id < identities.Count(); id++) { 
         tempID = identities.GetElementAt(id).QueryInterface(Components.interfaces.nsIMsgIdentity);
-        if (optionalHint.search(tempID.email.toLowerCase()) >= 0) {
+        if (optionalHint.indexOf(tempID.email.toLowerCase()) >= 0) {
           identity = tempID;
           break;
         }
