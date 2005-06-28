@@ -56,13 +56,5 @@ XPIDLSRCS	= \
 	        nsIProfileUnlocker.idl \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
-EXPORTS		= \
-		nsIAccount.h \
-		dialshr.h \
-		resource.h \
-		$(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
