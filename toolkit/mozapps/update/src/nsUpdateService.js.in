@@ -80,6 +80,7 @@ const MODE_TRUNCATE = 0x20;
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
+const STATE_NONE        = null;
 const STATE_DOWNLOADING = "downloading";
 const STATE_PENDING     = "pending";
 const STATE_APPLYING    = "applying";
@@ -241,6 +242,90 @@ function closeSafeOutputStream(fos) {
 }
 
 /**
+ * Returns human readable status text from the updates.propreties bundle
+ * based on an error code
+ * @param   code
+ *          The error code to look up human readable status text for
+ * @param   defaultCode
+ *          The default code to look up should human readable status text
+ *          not exist for |code|
+ * @returns A human readable status text string
+ */
+function getStatusTextFromCode(code, defaultCode) {
+  var sbs = 
+      Components.classes["@mozilla.org/intl/stringbundle;1"].
+      getService(Components.interfaces.nsIStringBundleService);
+  var updateBundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
+  var reason = updateBundle.GetStringFromName("checker_error-" + defaultCode);
+  try {
+    reason = updateBundle.GetStringFromName("checker_error-" + code);
+    LOG("General", "Transfer Error: " + reason + ", code: " + code);
+  }
+  catch (e) {
+    // Use the default reason
+    LOG("General", "Transfer Error: " + reason + ", code: " + defaultCode);
+  }
+  return reason;
+}
+
+/**
+ * Get the Active Updates directory
+ * @returns The active updates directory, as a nsIFile object
+ */
+function getUpdatesDir() {
+  // Right now, we only support downloading one patch at a time, so we always
+  // use the same target directory.
+  var fileLocator =
+      Components.classes["@mozilla.org/file/directory_service;1"].
+      getService(Components.interfaces.nsIProperties);
+  var appDir = fileLocator.get(KEY_APPDIR, Components.interfaces.nsIFile);
+  appDir.append(DIR_UPDATES);
+  appDir.append("0");
+  if (!appDir.exists())
+    appDir.create(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+  return appDir;
+}
+
+/**
+ * Reads the update state from the update.status file in the specified
+ * directory.
+ * @param   dir
+ *          The dir to look for an update.status file in
+ * @returns The status value of the update.
+ */
+function readStatusFile(dir) {
+  var statusFile = dir.clone();
+  statusFile.append(FILE_UPDATE_STATUS);
+  LOG("General", "Reading Status File: " + statusFile.path);
+  return readStringFromFile(statusFile);
+}
+
+/**
+ * Removes the Updates Directory
+ */
+function cleanUpUpdatesDir() {
+  var updateDir = getUpdatesDir();
+  
+  var e = updateDir.directoryEntries;
+  while (e.hasMoreElements()) {
+    var f = e.getNext().QueryInterface(Components.interfaces.nsIFile);
+    try {
+      f.remove(false);
+    }
+    catch (e) {
+      LOG("General", "Failed to remove file: " + f.path);
+    }
+  }
+  try {
+    updateDir.remove(false);
+  } catch (e) {
+    LOG("General", "Failed to remove update directory: " + updateDir.path + 
+        " - This is almost always bad. Exception = " + e);
+    throw e;
+  }
+}
+  
+/**
  * An enumeration of items in a JS array.
  * @constructor
  */
@@ -321,7 +406,10 @@ function readStringFromFile(file) {
 }
 
 /**
- *
+ * An object which can prompt the user with information about updates, request
+ * action, etc. Embedding clients can override this component with one that 
+ * invokes a native front end. 
+ * @constructor
  */
 function UpdatePrompt() {
 }
@@ -329,31 +417,59 @@ UpdatePrompt.prototype = {
   /**
    * See nsIUpdateService.idl
    */
-  checkForUpdates: function() {
-    this._showUI(URI_UPDATE_PROMPT_DIALOG, "Update:Wizard", null);
+  checkForUpdates: function(parent) {
+    this._showUI(parent, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", null);
   },
     
   /**
    * See nsIUpdateService.idl
    */
-  showUpdateAvailable: function(update) {
-    this._showUI(URI_UPDATE_PROMPT_DIALOG, "Update:Wizard", update);
+  showUpdateAvailable: function(parent, update) {
+    this._showUI(parent, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", update);
   },
   
   /**
    * See nsIUpdateService.idl
    */
-  showUpdateComplete: function(update) {
-    this._showUI(URI_UPDATE_PROMPT_DIALOG, "Update:Wizard", update);
+  showUpdateDownloaded: function(parent, update) {
+    this._showUI(parent, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", update);
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  showUpdateInstalled: function(update) {
+    this._showUI(null, URI_UPDATE_PROMPT_DIALOG, "modal", "Update:Wizard", update);
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  showUpdateError: function(update) {
+    this._showUI(null, URI_UPDATE_PROMPT_DIALOG, "modal", "Update:Wizard", update);
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  showUpdateHistory: function(parent) {
+    this._showUI(parent, URI_UPDATE_HISTORY_DIALOG, "modal", "Update:History", null);
   },
   
   /**
    * Show the Update Checking UI
+   * @param   parent
+   *          A parent window, can be null
+   * @param   uri
+   *          The URI string of the dialog to show
+   * @param   name
+   *          The Window Name of the dialog to show, in case it is already open
+   *          and can merely be focused
    * @param   update
    *          An update to pass to the UI in the window arguments. 
-   *          Can be null.
+   *          Can be null
    */
-  _showUI: function(uri, name, update) {
+  _showUI: function(parent, uri, features, name, update) {
     var ary = null;
     if (update) {
       ary = Components.classes["@mozilla.org/supports-array;1"]
@@ -367,18 +483,13 @@ UpdatePrompt.prototype = {
     if (win) 
       win.focus();
     else {
+      var openFeatures = "chrome,centerscreen,dialog";
+      if (features)
+        openFeatures += "," + features;
       var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                          .getService(Components.interfaces.nsIWindowWatcher);
-      ww.openWindow(null, uri, 
-                    "", "chrome,centerscreen,dialog,titlebar,dependent", ary);
+      ww.openWindow(parent, uri, "", openFeatures, ary);
     }
-  },
-  
-  /**
-   * See nsIUpdateService.idl
-   */
-  showUpdateHistory: function() {
-    this._showUI(URI_UPDATE_HISTORY_DIALOG, "Update:History", null);
   },
   
   /**
@@ -414,7 +525,44 @@ function UpdateService() {
   // Observe xpcom-shutdown to unhook pref branch observers above to avoid 
   // shutdown leaks.
   gOS.addObserver(this, "xpcom-shutdown", false);
-  
+  /*
+  // Detect installation failures and notify
+  var status = readStatusFile(getUpdatesDir()); 
+  if (status != null) {
+    // null status means the update.status file is not present, because either:
+    // 1) no update was performed, and so there's no UI to show
+    // 2) an update was attempted but failed during checking, transfer or 
+    //    verification, and was cleaned up at that point, and UI notifying of
+    //    that error was shown at that stage. 
+    var um = 
+        Components.classes["@mozilla.org/updates/update-manager;1"].
+        getService(Components.interfaces.nsIUpdateManager);
+    var prompter = 
+        Components.classes["@mozilla.org/updates/update-prompt;1"].
+        createInstance(Components.interfaces.nsIUpdatePrompt);
+
+    var update = um.activeUpdate;
+    if (!update)
+      update = new Update(null);
+    if (status == STATE_SUCCEEDED) {
+      update.statusText = "Install Succeeded";
+      //prompter.showUpdateInstalled(update);
+    }
+    else {
+      // Something went wrong with the patch application process.
+      update.statusText = "goats";
+      // XXXben todo: synthesize the best message
+      //prompter.showUpdateError(update);
+    }*/
+    
+    // Move the update from the Active Update list into the Past Updates list.
+    um.activeUpdate = null;
+    um.saveUpdates();
+
+    // Now trash the updates directory, since we're done with it
+    cleanUpUpdatesDir();
+  }
+
   this._initLoggingPrefs();
 }
 
@@ -450,7 +598,8 @@ UpdateService.prototype = {
   },
   
   /**
-   *
+   * Initialize Logging preferences, formatted like so:
+   *  app.update.log.<moduleName> = <true|false>
    */
   _initLoggingPrefs: function() {
     try {
@@ -514,8 +663,8 @@ UpdateService.prototype = {
       /**
        * See nsIUpdateService.idl
        */
-      onError: function(request) { 
-        LOG("Checker", "Error during background update");
+      onError: function(request, update) { 
+        LOG("Checker", "Error during background update: " + update.statusText);
       },
     }
     this.backgroundChecker.checkForUpdates(listener, false);
@@ -1014,7 +1163,14 @@ UpdatePatch.prototype = {
  */
 function Update(update) {
   this._patches = [];
+  this.installDate = 0;
+  this.isCompleteUpdate = false;
 
+  // Null <update>, assume this is a message container and do no 
+  // further initialization
+  if (!update)
+    return;
+    
   for (var i = 0; i < update.childNodes.length; ++i) {
     var patchElement = update.childNodes.item(i);
     if (patchElement.nodeType != Node.ELEMENT_NODE ||
@@ -1024,14 +1180,22 @@ function Update(update) {
     patchElement.QueryInterface(Components.interfaces.nsIDOMElement);
     this._patches.push(new UpdatePatch(patchElement));
   }
-  
-  this.type = update.getAttribute("type");
-  this.version = update.getAttribute("version");
-  this.extensionVersion = update.getAttribute("extensionVersion");
-  this.detailsURL = update.getAttribute("detailsURL");
-  this.licenseURL = update.getAttribute("licenseURL");
-  this.installDate = update.hasAttribute("installDate") ? parseInt(update.getAttribute("installDate")) : 0;
-  this.isCompleteUpdate = false;
+
+  for (var i = 0; i < update.attributes.length; ++i) {
+    var attr = update.attributes[i];
+    switch (attr.name) {
+    case "installDate":
+      if (attr.value)
+        this.installDate = parseInt(attr.value);
+      break;
+    case "isCompleteUpdate":
+      this.isCompleteUpdate = attr.value == "true";
+      break;
+    default:
+      this[attr.name] = attr.value;
+      break;
+    };
+  }
   
   // The Update Name is either the string provided by the <update> element, or
   // the string: "<App Name> <Update App Version>"
@@ -1047,7 +1211,6 @@ function Update(update) {
     name = updateBundle.formatStringFromName("updateName", 
                                              [appName, this.version], 2);
   }
-  
   this.name = name;
 }
 Update.prototype = {
@@ -1085,7 +1248,14 @@ Update.prototype = {
     update.setAttribute("detailsURL", this.detailsURL);
     update.setAttribute("licenseURL", this.licenseURL);
     update.setAttribute("installDate", this.installDate);
+    update.setAttribute("statusText", this.statusText);
+    update.setAttribute("isCompleteUpdate", this.isCompleteUpdate);
     updates.documentElement.appendChild(update);
+    
+    for (var p in this._properties) {
+      if (this._properties[p].present)
+        patch.setAttribute(p, this._properties[p].data);
+    }
     
     for (var i = 0; i < this.patchCount; ++i)
       update.appendChild(this.getPatchAt(i).serialize(updates));
@@ -1094,10 +1264,54 @@ Update.prototype = {
   },
    
   /**
+   * A hash of custom properties
+   */
+  _properties: { },
+  
+  /**
+   * See nsIWritablePropertyBag.idl
+   */
+  setProperty: function(name, value) {
+    this._properties[name] = { data: value, present: true };
+  },
+  
+  /**
+   * See nsIWritablePropertyBag.idl
+   */
+  deleteProperty: function(name) {
+    if (name in this._properties)
+      this._properties[name].present = false;
+    else
+      throw Components.results.NS_ERROR_FAILURE;
+  },
+  
+  /**
+   * See nsIPropertyBag.idl
+   */
+  get enumerator() {
+    var properties = [];
+    for (var p in this._properties)
+      properties.push(this._properties[p].data);
+    return new ArrayEnumerator(properties);
+  },
+  
+  /**
+   * See nsIPropertyBag.idl
+   */
+  getProperty: function(name) {
+    if (name in this._properties &&
+        this._properties[name].present)
+      return this._properties[name].data;
+    throw Components.results.NS_ERROR_FAILURE;
+  },
+  
+  /**
    * See nsISupports.idl
    */
   QueryInterface: function(iid) {
     if (!iid.equals(Components.interfaces.nsIUpdate) &&
+        !iid.equals(Components.interfaces.nsIPropertyBag) &&
+        !iid.equals(Components.interfaces.nsIWritablePropertyBag) &&
         !iid.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
@@ -1106,6 +1320,8 @@ Update.prototype = {
  
 /**
  * Checker
+ * Checks for new Updates
+ * @constructor
  */
 function Checker() {
 }
@@ -1116,14 +1332,9 @@ Checker.prototype = {
   _request  : null,
   
   /**
-   *
+   * The nsIUpdateCheckListener callback
    */
   _callback : null,
-  
-  /**
-   *
-   */
-  observer  : null,
   
   /**
    * The URL of the update service XML file to connect to that contains details
@@ -1190,7 +1401,9 @@ Checker.prototype = {
   },
   
   /**
-   *
+   * When progress associated with the XMLHttpRequest is received.
+   * @param   event
+   *          The nsIDOMLSProgressEvent for the load.
    */
   onProgress: function(event) {
     LOG("Checker", "onProgress: " + event.position + "/" + event.totalSize);
@@ -1198,7 +1411,7 @@ Checker.prototype = {
   },
   
   /**
-   *
+   * Returns an array of nsIUpdate objects discovered by the update check.
    */
   get _updates() {
     var updatesElement = this._request.responseXML.documentElement;
@@ -1227,15 +1440,13 @@ Checker.prototype = {
   },
   
   /**
-   *
+   * The XMLHttpRequest succeeded and the document was loaded.
+   * @param   event
+   *          The nsIDOMLSEvent for the load
    */
   onLoad: function(event) {
     LOG("Checker", "onLoad: request completed downloading document");
     
-    // Notify the front end that we're complete
-    if (this.observer)
-      this.observer.onLoad(event.target);
-
     // Analyze the resulting DOM and determine the set of updates to install
     try {
       var updates = this._updates;
@@ -1248,17 +1459,36 @@ Checker.prototype = {
     catch (e) {
       LOG("Checker", "There was a problem with the update service URL specified, " + 
           "either the XML file was malformed or it does not exist at the location " + 
-          "specified");
-      this._callback.onError(event.target);
+          "specified. Exception: " + e);
+      var update = new Update(null);
+      update.statusText = getStatusTextFromCode(404, 404);
+      this._callback.onError(event.target, update);
     }
   },
   
   /**
-   *
+   * There was an error of some kind during the XMLHttpRequest
+   * @param   event
+   *          The nsIDOMLSEvent for the load
    */
   onError: function(event) {
     LOG("Checker", "onError: error during load");
-    this._callback.onError(event.target);
+    
+    var request = event.target;
+    try {
+      var status = request.status;
+    }
+    catch (e) {
+      var req = request.channel.QueryInterface(Components.interfaces.nsIRequest);
+      status = req.status;
+    }
+    
+    // If we can't find an error string specific to this status code, 
+    // just use the 200 message from above, which means everything 
+    // "looks" fine but there was probably an XML error or a bogus file.
+    var update = new Update(null);
+    update.statusText = getStatusTextFromCode(status, 200);
+    this._callback.onError(request, update);
   },
   
   /**
@@ -1351,23 +1581,6 @@ Downloader.prototype = {
   },
 
   /**
-   * Retrieves the active Updates directory, as a nsIFile object.
-   */
-  get _updatesDir() {
-    // Right now, we only support downloading one patch at a time, so we always
-    // use the same target directory.
-    var fileLocator =
-        Components.classes["@mozilla.org/file/directory_service;1"].
-        getService(Components.interfaces.nsIProperties);
-    var appDir = fileLocator.get(KEY_APPDIR, Components.interfaces.nsIFile);
-    appDir.append(DIR_UPDATES);
-    appDir.append("0");
-    if (!appDir.exists())
-      appDir.create(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
-    return appDir;
-  },
-  
-  /**
    * Writes the current update operation/state to a file in the patch 
    * directory, indicating to the patching system that operations need
    * to be performed.
@@ -1384,20 +1597,10 @@ Downloader.prototype = {
   },
 
   /**
-   * Reads the current update state...
-   */
-  _readStatusFile: function(dir) {
-    var statusFile = dir.clone();
-    statusFile.append(FILE_UPDATE_STATUS);
-    LOG("Downloader", "Reading Status File: " + statusFile.path);
-    return readStringFromFile(statusFile);
-  },
-  
-  /**
    * Whether or not a patch has been downloaded and staged for installation.
    */
   get patchIsStaged() {
-    return this._readStatusFile(this._updatesDir) == STATE_PENDING;
+    return readStatusFile(getUpdatesDir()) == STATE_PENDING;
   },
 
   /**
@@ -1417,7 +1620,7 @@ Downloader.prototype = {
           createInstance(nsICryptoHash);
       var hashFunction = nsICryptoHash[this._patch.hashFunction.toUpperCase()];
       if (hashFunction == undefined)
-        return false;
+        throw Components.results.NS_ERROR_UNEXPECTED;
       hash.init(hashFunction);
       hash.updateFromStream(fileStream, -1);
       // NOTE: For now, we assume that the format of _patch.hashValue is hex
@@ -1468,7 +1671,7 @@ Downloader.prototype = {
     // to select ourselves. 
     var selectedPatch = update.selectedPatch;
     
-    var state = this._readStatusFile(updateDir)
+    var state = readStatusFile(updateDir)
 
     // If this is a patch that we know about, then select it.  If it is a patch
     // that we do not know about, then remove it and use our default logic.
@@ -1484,6 +1687,7 @@ Downloader.prototype = {
         return null;
       case STATE_FAILED:
       case STATE_APPLYING:
+      case STATE_NONE:
         // Something went wrong when we tried to apply the previous patch.
         // Try the complete patch next time.
         if (update && selectedPatch.type == "partial") {
@@ -1509,31 +1713,8 @@ Downloader.prototype = {
       selectedPatch = getPatchOfType("complete");
     }
 
-    // The patch is no longer known to us, so we should assume that it is
-    // no longer valid.  Remove all from the updateDir.
-    // XXX We may want to preserve an update.log file from a failed update.
-    //     We expect this operation may fail since some files 
-    //     (e.g., updater.exe) may still be in use. That's ok.
-
-    var e = updateDir.directoryEntries;
-    while (e.hasMoreElements()) {
-      var f = e.getNext().QueryInterface(Components.interfaces.nsIFile);
-      try {
-        f.remove(false);
-      }
-      catch (e) {
-        LOG("Downloader", "Failed to remove file: " + f.path);
-      }
-    }
-    try {
-      updateDir.remove(false);
-    } catch (e) {
-      LOG("Downloader", "Failed to remove update directory: " + updateDir.path + 
-          " - This is almost always bad. Exception = " + e);
-      throw e;
-    }
     // Restore the updateDir since we may have deleted it.
-    updateDir = this._updatesDir;
+    updateDir = getUpdatesDir();
     
     selectedPatch.selected = true;
     update.isCompleteUpdate = useComplete;
@@ -1563,7 +1744,7 @@ Downloader.prototype = {
     if (!update)
       throw Components.results.NS_ERROR_NULL_POINTER;
     
-    var updateDir = this._updatesDir;
+    var updateDir = getUpdatesDir();
 
     this._update = update;
 
@@ -1572,7 +1753,7 @@ Downloader.prototype = {
     this._patch = this._selectPatch(update, updateDir);
     if (!this._patch) {
       LOG("Downloader", "no patch to download");
-      return this._readStatusFile(updateDir);
+      return readStatusFile(updateDir);
     }
     this.isCompleteUpdate = this._patch.type == "complete";
 
@@ -1682,6 +1863,8 @@ Downloader.prototype = {
 
     var state;
     var shouldShowPrompt = false;
+    var deleteActiveUpdate = false;
+    const NS_BINDING_ABORTED = 0x804b0002;
     if (Components.isSuccessCode(status)) {
       if (this._verifyDownload()) {
         state = STATE_PENDING;
@@ -1691,22 +1874,65 @@ Downloader.prototype = {
         // that UI will notify. 
         if (this.background)
           shouldShowPrompt = true;
+        
+        // Tell the updater.exe we're ready to apply.
+        this._writeStatusFile(getUpdatesDir(), state);
+        this._update.installDate = (new Date()).getTime();
+        this._update.statusText = "Install Pending";
       } else {
         LOG("Downloader", "onStopRequest: download verification failed");
         state = STATE_FAILED;
+        
+        var sbs = 
+            Components.classes["@mozilla.org/intl/stringbundle;1"].
+            getService(Components.interfaces.nsIStringBundleService);
+        var updateStrings = sbs.createBundle(URI_UPDATES_PROPERTIES);
+        var brandStrings = sbs.createBundle(URI_BRAND_PROPERTIES);
+        var brandShortName = brandStrings.GetStringFromName("brandShortName");
+        this._update.statusText = updateStrings.
+          formatStringFromName("verificationError", [brandShortName], 1);
+        
         // TODO: use more informative error code here
         status = Components.results.NS_ERROR_UNEXPECTED;
-      }
-      this._writeStatusFile(this._updatesDir, state);
-      this._patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
-      this._patch.state = state;
-      this._update.installDate = (new Date()).getTime();
-      var um = Components.classes["@mozilla.org/updates/update-manager;1"]
-                         .getService(Components.interfaces.nsIUpdateManager);
-      um.activeUpdate = null;
-      um.saveUpdates();
-    }
+        
+        var message = getStatusTextFromCode("verification_failed", 
+          "verification_failed");
+        this._update.statusText = message;
+        
+        if (this._update.isCompleteUpdate)
+          deleteActiveUpdate = true;
 
+        // Destroy the updates directory, since we're done with it.
+        cleanUpUpdatesDir();
+      }
+    }
+    else if (status != NS_BINDING_ABORTED) {
+      LOG("Downloader", "onStopRequest: Non-verification failure");
+      // Some sort of other failure, log this in the |statusText| property
+      state = STATE_FAILED;
+      
+      // XXXben - if |request| (The Incremental Download) provided a means
+      // for accessing the http channel we could do more here.
+      
+      const NS_BINDING_FAILED = 2152398849;
+      this._update.statusText = getStatusTextFromCode(status, 
+        NS_BINDING_FAILED);
+      
+      // Destroy the updates directory, since we're done with it.
+      cleanUpUpdatesDir();
+      
+      deleteActiveUpdate = true;
+    }
+    this._patch.state = state;
+    var um = 
+        Components.classes["@mozilla.org/updates/update-manager;1"].
+        getService(Components.interfaces.nsIUpdateManager);
+    if (deleteActiveUpdate) {
+      this._update.installDate = (new Date()).getTime();
+      um.activeUpdate = null;
+    }
+    um.saveUpdates();
+    
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i)
       this._listeners[i].onStopRequest(request, context, status);
@@ -1732,7 +1958,7 @@ Downloader.prototype = {
       var prompter = 
           Components.classes["@mozilla.org/updates/update-prompt;1"].
           createInstance(Components.interfaces.nsIUpdatePrompt);
-      prompter.showUpdateComplete(this._update);
+      prompter.showUpdateDownloaded(this._update);
     }
   },
    

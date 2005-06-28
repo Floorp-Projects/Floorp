@@ -97,18 +97,36 @@ function getPref(func, preference, defaultValue) {
   return defaultValue;
 }
 
+/**
+ * A set of shared data and control functions for the wizard as a whole.
+ */
 var gUpdates = {
-  update      : null,
-  strings     : null,
-  brandName   : null,
-  wiz         : null,
-  sourceEvent : SRCEVT_FOREGROUND,
+  /**
+   * The nsIUpdate object being used by this window (either for downloading, 
+   * notification or both).
+   */
+  update: null,
+  
+  /**
+   * The updates.properties <stringbundle> element.
+   */
+  strings: null,
+  
+  /**
+   * The Application brandShortName (e.g. "Firefox")
+   */
+  brandName: null,
+  
+  /**
+   * The <wizard> element
+   */
+  wiz: null,
   
   /**
    * A hash of |pageid| attribute to page object. Can be used to dispatch
    * function calls to the appropriate page. 
    */
-  _pages        : { },
+  _pages: { },
 
   /**
    * Called when the user presses the "Finish" button on the wizard, dispatches
@@ -145,6 +163,12 @@ var gUpdates = {
   sourceEvent: SRCEVT_FOREGROUND,
   
   /**
+   * The global error message - the reason the update failed. This is human
+   * readable text, used to initialize the error page.
+   */
+  errorMessage: "",
+  
+  /**
    * Called when the wizard UI is loaded.
    */
   onLoad: function() {
@@ -178,7 +202,8 @@ var gUpdates = {
   },
 
   /**
-   *
+   * Initialize Logging preferences, formatted like so:
+   *  app.update.log.<moduleName> = <true|false>
    */
   _initLoggingPrefs: function() {
     try {
@@ -203,7 +228,9 @@ var gUpdates = {
    *
    * U'Prompt Method:     Arg0:         Update State: Src Event:
    * showUpdateAvailable  nsIUpdate obj --            background
-   * showUpdateComplete   nsIUpdate obj pending       background
+   * showUpdateDownloaded nsIUpdate obj pending       background
+   * showUpdateInstalled  nsIUpdate obj succeeded     either
+   * showUpdateError      nsIUpdate obj failed        either
    * checkForUpdates      null          --            foreground
    */
   get startPage() {
@@ -214,10 +241,18 @@ var gUpdates = {
         // user that the background checking found an update that requires
         // their permission to install, and it's ready for download.
         this.update = arg0;
-        this.sourceEvent = SRCEVT_BACKGROUND;
-        if (this.update.selectedPatch &&
-            this.update.selectedPatch.state == STATE_PENDING)
-          return document.getElementById("finishedBackground");
+        var p = this.update.selectedPatch;
+        if (p) {
+          switch (p.state) {
+          case STATE_PENDING:
+            this.sourceEvent = SRCEVT_BACKGROUND;
+            return document.getElementById("finishedBackground");
+          case STATE_SUCCEEDED:
+            return document.getElementById("installed");
+          case STATE_FAILED:
+            return document.getElementById("errors");
+          }
+        }
         return document.getElementById("updatesfound");
       }
     }
@@ -231,57 +266,6 @@ var gUpdates = {
       }
     }
     return document.getElementById("checking");
-  },
-  
-  /**
-   * Show the errors page.
-   * @param   reason
-   *          A text message explaining what the error was
-   */
-  advanceToErrorPage: function(reason) {
-    var errorReason = document.getElementById("errorReason");
-    errorReason.value = reason;
-    var errorLink = document.getElementById("errorLink");
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch2);
-    var manualURL = pref.getComplexValue(PREF_UPDATE_MANUAL_URL, 
-      Components.interfaces.nsIPrefLocalizedString);
-    errorLink.href = manualURL.data;
-    var errorLinkLabel = document.getElementById("errorLinkLabel");
-    errorLinkLabel.value = manualURL.data;
-    
-    var pageTitle = this.strings.getString("errorsPageHeader");
-    
-    var errorPage = document.getElementById("errors");
-    errorPage.setAttribute("label", pageTitle);
-    gUpdates.wiz.currentPage = document.getElementById("errors");
-    gUpdates.wiz.setAttribute("label", pageTitle);
-  },
-  
-  /**
-   * Show a network error message.
-   * @param   code
-   *          An error code to look up in the properties file, either
-   *          a Necko error code or a HTTP response code
-   * @param   defaultCode
-   *          The error code to fall back to if the specified code has no error
-   *          text associated with it in the properties file.
-   */
-  advanceToErrorPageWithCode: function(code, defaultCode) {
-    var sbs = 
-        Components.classes["@mozilla.org/intl/stringbundle;1"].
-        getService(Components.interfaces.nsIStringBundleService);
-    var updateBundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
-    var reason = updateBundle.GetStringFromName("checker_error-" + defaultCode);
-    try {
-      reason = updateBundle.GetStringFromName("checker_error-" + code);
-      LOG("General", "Transfer Error: " + reason + ", code: " + code);
-    }
-    catch (e) {
-      // Use the default reason
-      LOG("General", "Transfer Error: " + reason + ", code: " + defaultCode);
-    }
-    this.advanceToErrorPage(reason);
   },
   
   /**
@@ -347,6 +331,10 @@ var gUpdates = {
   },
 }
 
+/**
+ * The "Checking for Updates" page. Provides feedback on the update checking
+ * process.
+ */
 var gCheckingPage = {
   /**
    * The nsIUpdateChecker that is currently checking for updates. We hold onto 
@@ -377,6 +365,10 @@ var gCheckingPage = {
     }
   },
   
+  /**
+   * An object implementing nsIUpdateCheckListener that is notified as the
+   * update check commences.
+   */
   updateListener: {
     /**
      * See nsIUpdateCheckListener
@@ -407,21 +399,12 @@ var gCheckingPage = {
     /**
      * See nsIUpdateCheckListener
      */
-    onError: function(request) {
+    onError: function(request, update) {
       LOG("UI:CheckingPage", "UpdateCheckListener: error");
-      
-      try {
-        var status = request.status;
-      }
-      catch (e) {
-        var req = request.channel.QueryInterface(Components.interfaces.nsIRequest);
-        status = req.status;
-      }
 
-      // If we can't find an error string specific to this status code, 
-      // just use the 200 message from above, which means everything 
-      // "looks" fine but there was probably an XML error or a bogus file.
-      gUpdates.advanceToErrorPageWithCode(status, 200);
+      gUpdates.update = update;
+
+      gUpdates.wiz.currentPage = document.getElementById("errors");
     },
     
     /**
@@ -436,7 +419,13 @@ var gCheckingPage = {
   }
 };
 
+/**
+ * The "No Updates Are Available" page
+ */
 var gNoUpdatesPage = {
+  /**
+   * Initialize
+   */
   onPageShow: function() {
     gUpdates.wiz.getButton("back").disabled = true;
     gUpdates.wiz.getButton("cancel").disabled = true;
@@ -444,6 +433,11 @@ var gNoUpdatesPage = {
   }
 };
 
+/**
+ * The "Updates Are Available" page. Provides the user information about the
+ * available update, extensions it might make incompatible, and a means to 
+ * continue downloading and installing it.
+ */
 var gUpdatesAvailablePage = {
   /**
    * An array of installed addons incompatible with this update.
@@ -539,8 +533,20 @@ var gUpdatesAvailablePage = {
   }
 };
 
+/**
+ * The page which shows the user a license associated with an update. The
+ * user must agree to the terms of the license before continuing to install
+ * the update.
+ */
 var gLicensePage = {
+  /**
+   * The <license> element
+   */
   _licenseContent: null,
+  
+  /**
+   * Initialize
+   */
   onPageShow: function() {
     this._licenseContent = document.getElementById("licenseContent");
     
@@ -559,11 +565,20 @@ var gLicensePage = {
     gUpdates.wiz._wizardButtons.removeAttribute("type");
   },
   
+  /**
+   * When the license document has loaded
+   */
   onLicenseLoad: function() {
+    // Now that the license text is available, the user is in a position to
+    // agree to it, so enable the Agree button.
     gUpdates.wiz.getButton("next").disabled = false;
   },
   
+  /**
+   * When the user cancels the wizard
+   */
   onWizardCancel: function() {
+    // If the license was downloading, stop it.
     this._licenseContent.stopDownloading();
     
     // The user said "Do Not Agree", so stop all update checks for this session
@@ -587,17 +602,24 @@ function DownloadStatusFormatter() {
   
   var us = gUpdates.strings;
   this._statusFormat = us.getString("statusFormat");
-  this._statusFormatKBMB = us.getString("statusFormatKBMB");
-  this._statusFormatKBKB = us.getString("statusFormatKBKB");
-  this._statusFormatMBMB = us.getString("statusFormatMBMB");
-  this._statusFormatUnknownMB = us.getString("statusFormatUnknownMB");
-  this._statusFormatUnknownKB = us.getString("statusFormatUnknownKB");
+
+  this._progressFormat = us.getString("progressFormat");
+  this._progressFormatKBMB = us.getString("progressFormatKBMB");
+  this._progressFormatKBKB = us.getString("progressFormatKBKB");
+  this._progressFormatMBMB = us.getString("progressFormatMBMB");
+  this._progressFormatUnknownMB = us.getString("progressFormatUnknownMB");
+  this._progressFormatUnknownKB = us.getString("progressFormatUnknownKB");
+
+  this._rateFormat = us.getString("rateFormat");
   this._rateFormatKBSec = us.getString("rateFormatKBSec");
   this._rateFormatMBSec = us.getString("rateFormatMBSec");
-  this._remain = us.getString("remain");
-  this._unknownFilesize = us.getString("unknownFilesize");
+
+  this._timeFormat = us.getString("timeFormat");
   this._longTimeFormat = us.getString("longTimeFormat");
   this._shortTimeFormat = us.getString("shortTimeFormat");
+
+  this._remain = us.getString("remain");
+  this._unknownFilesize = us.getString("unknownFilesize");
 }
 DownloadStatusFormatter.prototype = {
   /**
@@ -619,6 +641,11 @@ DownloadStatusFormatter.prototype = {
    * Transfer rate of the download, formatted as text
    */
   _rateFormatted: "",
+  
+  /**
+   * Transfer rate, formatted into text container
+   */
+  _rateFormattedContainer: "",
   
   /**
    * Number of Kilobytes downloaded so far in the form:
@@ -643,6 +670,9 @@ DownloadStatusFormatter.prototype = {
     var total = parseInt(finalSize/1024 + 0.5);
     this.progress = this._formatKBytes(parseInt(currSize/1024 + 0.5), total);
     
+    var progress = this._replaceInsert(this._progressFormat, 1, this.progress);
+    var rateFormatted = "";
+    
     // 2) Determine the Transfer Rate
     var oldElapsed = this._elapsed;
     this._elapsed = now - this._startTime;
@@ -656,26 +686,38 @@ DownloadStatusFormatter.prototype = {
       if (this._rate > 100)
         this._rate = Math.round(this._rate);
       
-      if (this._rate == 0)
-        this._rateFormatted = "??.?";
-      else {
+      if (this._rate) {
         var format = isKB ? this._rateFormatKBSec : this._rateFormatMBSec;
         this._rateFormatted = this._replaceInsert(format, 1, this._rate);
+        this._rateFormattedContainer = this._replaceInsert(" " + this._rateFormat, 1, this._rateFormatted);
       }
     }
+    progress = this._replaceInsert(progress, 2, this._rateFormattedContainer);
+    
 
     // 3) Determine the Time Remaining
-    var remainingTime = this._unknownFileSize;
+    var remainingTime = "";
     if (this._rate && (finalSize > 0)) {
       remainingTime = Math.floor(((finalSize - currSize) / 1024) / this._rate);
-      remainingTime = this._formatSeconds(remainingTime); 
+      remainingTime = this._formatSeconds(remainingTime);
+      remainingTime = this._replaceInsert(this._timeFormat, 1, remainingTime)
+      remainingTime = this._replaceInsert(remainingTime, 2, this._remain);
     }
-      
+    
+    //
+    // [statusFormat:
+    //  [progressFormat:
+    //   [[progressFormatKBKB|
+    //     progressFormatKBMB|
+    //     progressFormatMBMB|
+    //     progressFormatUnknownKB|
+    //     progressFormatUnknownMB
+    //    ][rateFormat]]
+    //  ][timeFormat]
+    // ]
     var status = this._statusFormat;
-    status = this._replaceInsert(status, 1, this.progress);
-    status = this._replaceInsert(status, 2, this._rateFormatted);
-    status = this._replaceInsert(status, 3, remainingTime);
-    status = this._replaceInsert(status, 4, this._remain);
+    status = this._replaceInsert(status, 1, progress);
+    status = this._replaceInsert(status, 2, remainingTime);
     return status;
   },
 
@@ -709,33 +751,33 @@ DownloadStatusFormatter.prototype = {
    *            x, < 1MB     y >= 1MB          x KB of y MB
    *            x, >= 1MB    y >= 1MB          x of y MB
    */
-   _formatKBytes: function(currentKB, totalKB) {
+  _formatKBytes: function(currentKB, totalKB) {
     var progressHasMB = parseInt(currentKB / 1024) > 0;
     var totalHasMB = parseInt(totalKB / 1024) > 0;
     
     var format = "";
     if (!progressHasMB && !totalHasMB) {
       if (!totalKB) {
-        format = this._statusFormatUnknownKB;
+        format = this._progressFormatUnknownKB;
         format = this._replaceInsert(format, 1, currentKB);
       } else {
-        format = this._statusFormatKBKB;
+        format = this._progressFormatKBKB;
         format = this._replaceInsert(format, 1, currentKB);
         format = this._replaceInsert(format, 2, totalKB);
       }
     }
     else if (progressHasMB && totalHasMB) {
-      format = this._statusFormatMBMB;
+      format = this._progressFormatMBMB;
       format = this._replaceInsert(format, 1, (currentKB / 1024).toFixed(1));
       format = this._replaceInsert(format, 2, (totalKB / 1024).toFixed(1));
     }
     else if (totalHasMB && !progressHasMB) {
-      format = this._statusFormatKBMB;
+      format = this._progressFormatKBMB;
       format = this._replaceInsert(format, 1, currentKB);
       format = this._replaceInsert(format, 2, (totalKB / 1024).toFixed(1));
     }
     else if (progressHasMB && !totalHasMB) {
-      format = this._statusFormatUnknownMB;
+      format = this._progressFormatUnknownMB;
       format = this._replaceInsert(format, 1, (currentKB / 1024).toFixed(1));
     }
     return format;  
@@ -772,6 +814,10 @@ DownloadStatusFormatter.prototype = {
   }
 };
 
+/**
+ * The "Update is Downloading" page - provides feedback for the download 
+ * process plus a pause/resume UI
+ */
 var gDownloadingPage = {
   /** 
    * DOM Elements
@@ -786,9 +832,14 @@ var gDownloadingPage = {
    * An instance of the status formatter object
    */
   _statusFormatter  : null,
+  get statusFormatter() {
+    if (!this._statusFormatter) 
+      this._statusFormatter = new DownloadStatusFormatter();
+    return this._statusFormatter;
+  },
   
   /** 
-   *
+   * Initialize
    */
   onPageShow: function() {
     gUpdates.wiz._wizardButtons.removeAttribute("type");
@@ -843,7 +894,7 @@ var gDownloadingPage = {
   },
   
   /** 
-   *
+   * Updates the text status message
    */
   _setStatus: function(status) {
     while (this._downloadStatus.hasChildNodes())
@@ -851,9 +902,24 @@ var gDownloadingPage = {
     this._downloadStatus.appendChild(document.createTextNode(status));
   },
   
+  /**
+   * Whether or not we are currently paused
+   */
   _paused       : false,
+  
+  /**
+   * The status before we were paused
+   */
   _oldStatus    : null,
+
+  /**
+   * The mode of the <progressmeter> before we were paused
+   */
   _oldMode      : null,
+
+  /**
+   * The progress through the download before we were paused
+   */
   _oldProgress  : 0,
   
   /**
@@ -887,7 +953,7 @@ var gDownloadingPage = {
   },
 
   /** 
-   *
+   * When the user clicks the Pause/Resume button
    */
   onPause: function() {
     var updates = 
@@ -900,7 +966,7 @@ var gDownloadingPage = {
       patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
       patch.setProperty("status", 
         gUpdates.strings.getFormattedString("pausedStatus", 
-          [this._statusFormatter.progress]));
+          [this.statusFormatter.progress]));
       updates.pauseDownload();
     }
     this._paused = !this._paused;
@@ -910,7 +976,7 @@ var gDownloadingPage = {
   },
   
   /** 
-   *
+   * When the user closes the Wizard UI
    */
   onWizardCancel: function() {
     // Remove ourself as a download listener so that we don't continue to be 
@@ -950,19 +1016,29 @@ var gDownloadingPage = {
   },
   
   /** 
-   *
+   * When the data transfer begins
+   * @param   request
+   *          The nsIRequest object for the transfer
+   * @param   context
+   *          Additional data
    */
   onStartRequest: function(request, context) {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("UI:DownloadingPage", "onStartRequest: " + request.URI.spec);
-
-    this._statusFormatter = new DownloadStatusFormatter();
     
     this._downloadThrobber.setAttribute("state", "loading");
   },
   
   /** 
-   *
+   * When new data has been downloaded
+   * @param   request
+   *          The nsIRequest object for the transfer
+   * @param   context
+   *          Additional data
+   * @param   progress
+   *          The current number of bytes transferred
+   * @param   maxProgress
+   *          The total number of bytes that must be transferred
    */
   onProgress: function(request, context, progress, maxProgress) {
     request.QueryInterface(nsIIncrementalDownload);
@@ -973,7 +1049,7 @@ var gDownloadingPage = {
     p.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
     p.setProperty("progress", Math.round(100 * (progress/maxProgress)));
     p.setProperty("status", 
-      this._statusFormatter.formatStatus(progress, maxProgress));
+      this.statusFormatter.formatStatus(progress, maxProgress));
 
     this._downloadProgress.mode = "normal";
     this._downloadProgress.value = parseInt(p.getProperty("progress"));
@@ -984,16 +1060,31 @@ var gDownloadingPage = {
   },
   
   /** 
-   *
+   * When we have new status text
+   * @param   request
+   *          The nsIRequest object for the transfer
+   * @param   context
+   *          Additional data
+   * @param   status
+   *          A status code
+   * @param   statusText
+   *          Human readable version of |status|
    */
   onStatus: function(request, context, status, statusText) {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("UI:DownloadingPage", "onStatus: " + request.URI.spec + " status = " + 
         status + ", text = " + statusText);
+    this._setStatus(statusText);
   },
   
   /** 
-   *
+   * When data transfer ceases
+   * @param   request
+   *          The nsIRequest object for the transfer
+   * @param   context
+   *          Additional data
+   * @param   status
+   *          Status code containing the reason for the cessation.
    */
   onStopRequest: function(request, context, status) {
     request.QueryInterface(nsIIncrementalDownload);
@@ -1002,14 +1093,16 @@ var gDownloadingPage = {
     
     this._downloadThrobber.removeAttribute("state");
 
+    var u = gUpdates.update;
     const NS_BINDING_ABORTED = 0x804b0002;
     switch (status) {
-    case Components.results.NS_ERROR_UNEXPECTED:  
-      LOG("UI:DownloadingPage", "STATE = " + gUpdates.update.selectedPatch.state);
-      if (gUpdates.update.selectedPatch.state == STATE_FAILED)
-        this.showVerificationError();
+    case Components.results.NS_ERROR_UNEXPECTED:
+      if (u.selectedPatch.state == STATE_FAILED && u.isCompleteUpdate) {
+        // Verification error of complete patch, informational text is held in 
+        // the update object.
+        gUpdates.wiz.currentPage = document.getElementById("errors");
+      }
       else {
-        LOG("UI:DownloadingPage", "TYPE = " + gUpdates.update.selectedPatch.type);
         // Verification failed for a partial patch, complete patch is now
         // downloading so return early and do NOT remove the download listener!
         
@@ -1017,6 +1110,11 @@ var gDownloadingPage = {
         // show old progress for the new download of the "complete" patch.
         this._downloadProgress.mode = "undetermined";
         this._pauseButton.disabled = true;
+        
+        var verificationFailed = document.getElementById("verificationFailed");
+        verificationFailed.hidden = false;
+
+        this._statusFormatter = null;
         return;
       }
       break;
@@ -1032,7 +1130,7 @@ var gDownloadingPage = {
     default:
       LOG("UI:DownloadingPage", "onStopRequest: Transfer failed");
       // Some kind of transfer error, die.
-      gUpdates.advanceToErrorPageWithCode(status, 2152398849);
+      gUpdates.wiz.currentPage = document.getElementById("errors");
       break;
     }
 
@@ -1042,16 +1140,6 @@ var gDownloadingPage = {
     updates.removeDownloadListener(this);
   },
   
-  /** 
-   * Advance the wizard to the "Verification Error" page
-   */
-  showVerificationError: function() {
-    var verificationError = gUpdates.strings.getFormattedString(
-      "verificationError", [gUpdates.brandName]);
-    var downloadingPage = document.getElementById("downloading");
-    gUpdates.advanceToErrorPage(verificationError);
-  },
-   
   /**
    * See nsISupports.idl
    */
@@ -1064,14 +1152,35 @@ var gDownloadingPage = {
   }
 };
 
+/**
+ * The "There was an error during the update" page.
+ */
 var gErrorsPage = {
+  /**
+   * Initialize
+   */
   onPageShow: function() {
     gUpdates.wiz.getButton("back").disabled = true;
     gUpdates.wiz.getButton("cancel").disabled = true;
     gUpdates.wiz.getButton("finish").focus();
-  }
+    
+    var errorReason = document.getElementById("errorReason");
+    errorReason.value = gUpdates.update.statusText;
+    var errorLink = document.getElementById("errorLink");
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch2);
+    var manualURL = pref.getComplexValue(PREF_UPDATE_MANUAL_URL, 
+      Components.interfaces.nsIPrefLocalizedString);
+    errorLink.href = manualURL.data;
+    var errorLinkLabel = document.getElementById("errorLinkLabel");
+    errorLinkLabel.value = manualURL.data;
+  },
 };
 
+/**
+ * The "Update has been downloaded" page. Shows information about what
+ * was downloaded.
+ */
 var gFinishedPage = {
   /**
    * Called to initialize the Wizard Page.
@@ -1174,6 +1283,18 @@ var gFinishedPage = {
                            18000000);
     gUpdates.registerNagTimer("restart-nag-timer", interval, 
                               "showUpdateComplete");
+  },
+};
+
+/**
+ * The "Update was Installed Successfully" page.
+ */
+var gInstalledPage = {
+  /**
+   * Initialize
+   */
+  onPageShow: function() {
+  
   },
 };
 

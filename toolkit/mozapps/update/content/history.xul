@@ -61,34 +61,10 @@
                 src="chrome://mozapps/locale/update/updates.properties"/>
   
   <label>&history.intro;</label>
-  <separator/>
-  <tree id="historyItems" rows="10" hidecolumnpicker="true" seltype="single"
-        onselect="gUpdateHistory.onTreeSelect()">
-    <treecols>
-      <treecol id="updateNameCol" flex="1" primary="true" label="&name.header;"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="updateDate" label="&date.header;"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="updateType" label="&type.header;"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="updateState" label="&state.header;"/>
-    </treecols>
-    <treechildren id="historyChildren">
-      <treeitem>
-        <treerow>
-          <treecell>&noupdates.label;</treecell>
-          <treecell/>
-          <treecell/>
-          <treecell/>
-        </treerow>
-      </treeitem>
-    </treechildren>
-  </tree>
-  <separator/>
-  <hbox>
-    <button id="details" 
-            label="&detailsButton.label;" accesskey="&detailsButton.accesskey;"
-            oncommand="gUpdateHistory.showDetails();"/>
-  </hbox>
+  <separator class="thin"/>
+  <richlistbox id="historyItems" flex="1">
+    <label>&noupdates.label;</label>
+  </richlistbox>
+  <separator class="thin"/>
 </dialog>
 
