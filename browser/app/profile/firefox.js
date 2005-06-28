@@ -309,7 +309,7 @@ pref("update_notifications.enabled", true);
 pref("update_notifications.provider.0.frequency", 7); // number of days
 pref("update_notifications.provider.0.datasource", "chrome://browser-region/locale/region.properties");
 
-pref("browser.xul.error_pages.enabled", false);
+pref("browser.xul.error_pages.enabled", true);
 
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
@@ -377,5 +377,3 @@ pref("browser.display.screen_resolution", 96);
 
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
-
-pref("browser.xul.error_pages.enabled", true);
