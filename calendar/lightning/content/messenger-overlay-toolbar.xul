@@ -8,13 +8,24 @@
   <menupopup id="menu_NewPopup">
     <menuitem id="ltnNewEvent" label="New Calendar Event"
               oncommand="createEventWithDialog();"/>
+    <menuitem id="ltnNewTask" label="New Calendar Task"
+              oncommand="createTodoWithDialog();"/>
   </menupopup>
 
+  <menubar id="mail-menubar">
+    <menu id="ltnCalendarMenu" label="Calendar" insertbefore="tasksMenu">
+      <menupopup id="ltncalendarMenuPopup">
+        <menuitem id="ltnChangeViewDay" label="Day View" oncommand="switchView('day')"/>
+        <menuitem id="ltnChangeViewWeek" label="Week View" oncommand="switchView('week')"/>
+        <menuitem id="ltnChangeViewMonth" label="Month View" oncommand="switchView('month')"/>
+      </menupopup>
+    </menu>
+  </menubar>
 
   <toolbarpalette id="MailToolbarPalette">
 
     <toolbarbutton id="calendar-new-event-button" class="cal-toolbarbutton-1" label="New Event" tooltiptext="New Event" oncommand="createEventWithDialog()"/>
-    <toolbarbutton id="calendar-new-task-button" class="cal-toolbarbutton-1" label="New Todo" tooltiptext="New Todo" oncommand="createTodoWithDialog()"/>
+    <toolbarbutton id="calendar-new-task-button" class="cal-toolbarbutton-1" label="New Task" tooltiptext="New Task" oncommand="createTodoWithDialog()"/>
     <toolbarbutton id="calendar-week-view-button" class="cal-toolbarbutton-1" label="Week View" tooltiptext="Month View" oncommand="switchView('week')"/>
     <toolbarbutton id="calendar-month-view-button" class="cal-toolbarbutton-1" label="Month View" tooltiptext="Month View" oncommand="switchView('month')"/>
     <toolbarbutton id="calendar-day-view-button" class="cal-toolbarbutton-1" label="Day View" tooltiptext="Day View" oncommand="switchView('day')"/>
