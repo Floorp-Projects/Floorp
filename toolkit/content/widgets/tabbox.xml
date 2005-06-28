@@ -56,6 +56,14 @@
         </getter>
       </property>
 
+      <field name="_handleMetaAltArrows" readonly="true">
+#ifdef XP_MACOSX
+        true
+#else
+        false
+#endif
+      </field>
+
       <property name="_tabs">
         <getter>
         <![CDATA[
@@ -146,6 +154,26 @@
               if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
                 if (this.tabbox._tabs && this.tabbox.handleCtrlPageUpDown) {
                   this.tabbox._tabs.advanceSelectedTab(1, true);
+                  event.stopPropagation();
+                  event.preventDefault();
+                }
+              break;
+            case event.DOM_VK_LEFT:
+              if (event.metaKey &&  event.altKey && !event.shiftKey && !event.ctrlKey)
+                if (this.tabbox._tabs && this.tabbox._handleMetaAltArrows) {
+                  var offset = window.getComputedStyle(this.tabbox, "")
+                                     .direction == "ltr" ? -1 : 1;
+                  this.tabbox._tabs.advanceSelectedTab(offset, true);
+                  event.stopPropagation();
+                  event.preventDefault();
+                }
+              break;
+            case event.DOM_VK_RIGHT:
+              if (event.metaKey &&  event.altKey && !event.shiftKey && !event.ctrlKey)
+                if (this.tabbox._tabs && this.tabbox._handleMetaAltArrows) {
+                  var offset = window.getComputedStyle(this.tabbox, "")
+                                     .direction == "ltr" ? 1 : -1;
+                  this.tabbox._tabs.advanceSelectedTab(offset, true);
                   event.stopPropagation();
                   event.preventDefault();
                 }
