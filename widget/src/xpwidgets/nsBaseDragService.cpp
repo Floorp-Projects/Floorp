@@ -50,6 +50,7 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
+#include "nsIViewManager.h"
 #include "nsIDOMNode.h"
 #include "nsPresContext.h"
 
@@ -208,13 +209,22 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   // When the mouse goes down, the selection code starts a mouse
   // capture. However, this gets in the way of determining drag
   // feedback for things like trees because the event coordinates
-  // are in the wrong coord system. Turn off capture by getting the
-  // frame associated with the DOM Node.
-  nsIFrame* dragFrame = nsnull;
-  nsCOMPtr<nsPresContext> context;
-  GetFrameFromNode(aDOMNode, &dragFrame, getter_AddRefs(context));
-  if (dragFrame && context)
-    dragFrame->CaptureMouse(context, PR_FALSE);
+  // are in the wrong coord system. Turn off mouse capture in
+  // the associated view manager.
+  nsCOMPtr<nsIContent> contentNode = do_QueryInterface(aDOMNode);
+  if (contentNode) {
+    nsIDocument* doc = contentNode->GetCurrentDoc();
+    if (doc) {
+      nsIPresShell* presShell = doc->GetShellAt(0);
+      if (presShell) {
+        nsIViewManager* vm = presShell->GetViewManager();
+        if (vm) {
+          PRBool notUsed;
+          vm->GrabMouseEvents(nsnull, notUsed);
+        }
+      }
+    }
+  }
 
   return NS_OK;
 }

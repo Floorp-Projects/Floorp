@@ -1214,7 +1214,7 @@ nsEventStateManager::FireContextClick()
   // event and it will get reset on the very next event to the correct frame).
   mCurrentTarget = nsnull;
   if ( mGestureDownContent ) {
-    mPresContext->GetPresShell()->GetPrimaryFrameFor(mGestureDownContent,
+    mPresContext->GetPresShell()->GetPrimaryFrameFor(mGestureDownFrameOwner,
                                                      &mCurrentTarget);
 
     if ( mCurrentTarget ) {
@@ -1293,8 +1293,9 @@ nsEventStateManager::FireContextClick()
   }
 
   // now check if the event has been handled. If so, stop tracking a drag
-  if ( status == nsEventStatus_eConsumeNoDefault )
+  if ( status == nsEventStatus_eConsumeNoDefault ) {
     StopTrackingDragGesture();
+  }
 
   KillClickHoldTimer();
 
@@ -1330,6 +1331,7 @@ nsEventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
   inDownFrame->GetContentForEvent(aPresContext, inDownEvent,
                                   getter_AddRefs(mGestureDownContent));
 
+  mGestureDownFrameOwner = inDownFrame->GetContent();
   mGestureDownShift = inDownEvent->isShift;
   mGestureDownControl = inDownEvent->isControl;
   mGestureDownAlt = inDownEvent->isAlt;
@@ -1352,6 +1354,7 @@ void
 nsEventStateManager::StopTrackingDragGesture()
 {
   mGestureDownContent = nsnull;
+  mGestureDownFrameOwner = nsnull;
 }
 
 
@@ -1448,7 +1451,7 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 {
   NS_WARN_IF_FALSE(aPresContext, "This shouldn't happen.");
   if ( IsTrackingDragGesture() ) {
-    aPresContext->GetPresShell()->GetPrimaryFrameFor(mGestureDownContent,
+    aPresContext->GetPresShell()->GetPrimaryFrameFor(mGestureDownFrameOwner,
                                                      &mCurrentTarget);
     if (!mCurrentTarget) {
       StopTrackingDragGesture();
