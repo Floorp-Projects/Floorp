@@ -64,10 +64,9 @@ tab[selected="true"] {
 }
 
 tab:focus {
-  margin-bottom: 2px !important;
-  border: 1.4pt solid -moz-mac-focusring !important;
-  -moz-border-radius-topleft: 50% !important;
-  -moz-border-radius-topright: 50% !important;
+  outline: 1.4pt solid -moz-mac-focusring;
+  -moz-outline-radius-topleft: 50%;
+  -moz-outline-radius-topright: 50%;
 }
 
 tab[selected="true"], tab:hover {
