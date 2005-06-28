@@ -297,4 +297,9 @@ typedef struct _BLENDFUNCTION
 #define DFCS_SCROLLSIZEGRIP     0x0008
 #endif
 
+
+#ifndef RDW_NOINTERNALPAINT
+#define RDW_NOINTERNALPAINT 0
+#endif
+
 #endif
