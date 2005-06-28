@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
     if (!creatorCallback)
         return 1;
 
-    const static char* start_url = "chrome://embed/content/mini-nav.xul";
+    const static char* start_url = "chrome://minimo/content/minimo.xul";
     //const static char* start_url = "http://www.meer.net/~dougt/test.html";
     
     nsCOMPtr<nsIDOMWindow> newWindow;
