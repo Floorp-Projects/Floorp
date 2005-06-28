@@ -46,7 +46,6 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIContent.h"
 #include "nsIWidget.h"
-#include "winEmbed.h"
 #include "WebBrowserChrome.h"
 #include "nsIWebBrowserSetup.h"
 
