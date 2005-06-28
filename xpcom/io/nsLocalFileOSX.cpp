@@ -22,6 +22,7 @@
  * Contributor(s):
  *  Conrad Carlen <ccarlen@netscape.com>
  *  Jungshik Shin <jshin@mailaps.org>
+ *  Asaf Romano <mozilla.mano@sent.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsLocalFile.h"
+#include "nsDirectoryServiceDefs.h"
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -1113,18 +1115,32 @@ NS_IMETHODIMP nsLocalFile::InitWithPath(const nsAString& filePath)
 /* [noscript] void initWithNativePath (in ACString filePath); */
 NS_IMETHODIMP nsLocalFile::InitWithNativePath(const nsACString& filePath)
 {
-  if (filePath.IsEmpty() || filePath.First() != '/')
+  nsCAutoString fixedPath;
+  if (Substring(filePath, 0, 2).EqualsLiteral("~/")) {
+    nsCOMPtr<nsIFile> homeDir;
+    nsCAutoString homePath;
+    nsresult rv = NS_GetSpecialDirectory(NS_OS_HOME_DIR,
+                                        getter_AddRefs(homeDir));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = homeDir->GetNativePath(homePath);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    fixedPath = homePath + Substring(filePath, 1, filePath.Length() - 1);
+  }
+  else if (filePath.IsEmpty() || filePath.First() != '/')
     return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-  // On 10.2, huge paths crash CFURLGetFSRef()
-  if (filePath.Length() > PATH_MAX)
-    return NS_ERROR_FILE_NAME_TOO_LONG;
-  // And, a path with consecutive '/'s which are not between
-  // nodes also crashes CFURLGetFSRef(). Consecutive '/'s which
+  else
+    fixedPath.Assign(filePath);
+
+  // A path with consecutive '/'s which are not between
+  // nodes crashes CFURLGetFSRef(). Consecutive '/'s which
   // are between actual nodes are OK. So, convert consecutive
   // '/'s to a single one.
-  nsCAutoString fixedPath;
-  fixedPath.Assign(filePath);
   fixedPath.ReplaceSubstring("//", "/");
+
+  // On 10.2, huge paths also crash CFURLGetFSRef()
+  if (fixedPath.Length() > PATH_MAX)
+    return NS_ERROR_FILE_NAME_TOO_LONG;
 
   CFStringRef pathAsCFString;
   CFURLRef pathAsCFURL;
