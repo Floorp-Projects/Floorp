@@ -117,14 +117,14 @@ var gAdvancedPane = {
   {
     var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
                              .createInstance(Components.interfaces.nsIUpdatePrompt);
-    prompter.checkForUpdates();  
+    prompter.checkForUpdates(window);  
   },
   
   showUpdates: function ()
   {
     var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
                              .createInstance(Components.interfaces.nsIUpdatePrompt);
-    prompter.showUpdateHistory();  
+    prompter.showUpdateHistory(window);  
   },
 
   updateMarkAsReadTextbox: function(aFocusTextBox) 

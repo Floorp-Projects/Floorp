@@ -2524,7 +2524,7 @@ function checkForUpdates()
 {
   var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
                            .createInstance(Components.interfaces.nsIUpdatePrompt);
-  prompter.checkForUpdates();
+  prompter.checkForUpdates(window);
 }
 
 function buildHelpMenu()
