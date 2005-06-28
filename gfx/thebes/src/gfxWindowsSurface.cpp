@@ -37,6 +37,8 @@
 
 #include "gfxWindowsSurface.h"
 
+THEBES_IMPL_REFCOUNTING(gfxWindowsSurface)
+
 gfxWindowsSurface::gfxWindowsSurface(HDC dc)
 {
     Init(cairo_win32_surface_create(dc));

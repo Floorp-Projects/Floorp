@@ -48,19 +48,22 @@
 class gfxPattern {
 public:
     // from another surface
-    gfxPattern(gfxASurface& surface) {
-        mPattern = cairo_pattern_create_for_surface(surface.CairoSurface());
+    gfxPattern(gfxASurface* surface) {
+        mPattern = cairo_pattern_create_for_surface(surface->CairoSurface());
     }
+
     // linear
     gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1) {
         mPattern = cairo_pattern_create_linear(x0, y0, x1, y1);
     }
+
     // radial
     gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0,
                gfxFloat cx1, gfxFloat cy1, gfxFloat radius1) {
         mPattern = cairo_pattern_create_radial(cx0, cy0, radius0,
                                                cx1, cy1, radius1);
     }
+
     ~gfxPattern() {
         cairo_pattern_destroy(mPattern);
     }
@@ -70,28 +73,25 @@ public:
     }
 
     void AddColorStop(gfxFloat offset, const gfxRGBA& c) {
-        cairo_pattern_add_color_stop(mPattern, offset, c.r, c.g, c.b, c.a);
+        cairo_pattern_add_color_stop_rgba(mPattern, offset, c.r, c.g, c.b, c.a);
     }
 
     void SetMatrix(const gfxMatrix& matrix) {
-        cairo_matrix_t *t = cairo_matrix_create();
-        matrix.FillInCairoMatrix(t);
-        cairo_pattern_set_matrix(mPattern, t); // this does a copy
-        cairo_matrix_destroy(t);
+        cairo_matrix_t mat = matrix.ToCairoMatrix();
+        cairo_pattern_set_matrix(mPattern, &mat);
     }
+
     gfxMatrix CurrentMatrix() const {
-        gfxMatrix matrix;
-        cairo_matrix_t *t = cairo_matrix_create();
-        cairo_pattern_get_matrix(mPattern, t);
-        matrix = t;
-        cairo_matrix_destroy(t);
-        return matrix;
+        cairo_matrix_t mat;
+        cairo_pattern_get_matrix(mPattern, &mat);
+        return gfxMatrix(mat);
     }
 
     // none, repeat, reflect
     void SetExtend(int extend) {
         cairo_pattern_set_extend(mPattern, (cairo_extend_t)extend);
     }
+
     int Extend() const {
         return (int)cairo_pattern_get_extend(mPattern);
     }
@@ -99,11 +99,12 @@ public:
     void SetFilter(int filter) {
         cairo_pattern_set_filter(mPattern, (cairo_filter_t)filter);
     }
+
     int Filter() const {
         return (int)cairo_pattern_get_filter(mPattern);
     }
 
-private:
+protected:
     gfxPattern(cairo_pattern_t *pattern) : mPattern(pattern) {}
     cairo_pattern_t *mPattern;
 };

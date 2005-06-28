@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@pavlov.net>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,69 +54,134 @@ class gfxTextRun;
 class gfxPattern;
 
 class gfxContext {
+    THEBES_DECL_REFCOUNTING
+
 public:
-    gfxContext();
+    gfxContext(gfxASurface* surface);
     ~gfxContext();
 
-    // <insert refcount stuff here>
-    // XXX document ownership
-    // XXX can you call SetSurface more than once?
-    // What happens to the current drawing state if you do that? or filters?
-    // XXX need a fast way to save and restore the current translation as
-    // we traverse the frame hierarchy. adding and subtracting an offset
-    // can create inconsistencies due to FP phenomena.
-    void SetSurface(gfxASurface* surface);
+    // this will addref
     gfxASurface* CurrentSurface();
 
-    // state
+    /**
+     ** State
+     **/
+    // XXX document exactly what bits are saved
     void Save();
     void Restore();
 
-    // drawing
-    // XXX are these the only things that affect the current path?
+    /**
+     ** Paths & Drawing
+     **/
+
+    // these do not consume the current path
+    void Stroke();
+    void Fill();
+
     void NewPath();
     void ClosePath();
 
-    void Stroke();
-    void Fill();
-    
     void MoveTo(gfxPoint pt);
     void LineTo(gfxPoint pt);
     void CurveTo(gfxPoint pt1, gfxPoint pt2, gfxPoint pt3);
 
+    // clockwise arc
     void Arc(gfxPoint center, gfxFloat radius,
              gfxFloat angle1, gfxFloat angle2);
 
-    void Rectangle(gfxRect rect);
-    void Polygon(const gfxPoint points[], unsigned long numPoints);
+    // counterclockwise arc
+    void NegativeArc(gfxPoint center, gfxFloat radius,
+                     gfxFloat angle1, gfxFloat angle2);
+
+    void Rectangle(gfxRect rect, PRBool snapToPixels = PR_FALSE);
+
+    void Polygon(const gfxPoint *points, PRUInt32 numPoints);
+
+    /**
+     ** Text
+     **/
 
     // Add the text outline to the current path
     void AddStringToPath(gfxTextRun& text, int pos, int len);
 
-    // XXX These next two don't affect the current path?
-    // XXX document 'size'
-    void DrawSurface(gfxASurface *surface, gfxSize size);
-
     // Draw a substring of the text run at the current point
     void DrawString(gfxTextRun& text, int pos, int len);
 
-    // transform stuff
+    /**
+     ** Transformation Matrix manipulation
+     **/
+
     void Translate(gfxPoint pt);
     void Scale(gfxFloat x, gfxFloat y);
-    void Rotate(gfxFloat angle);
+    void Rotate(gfxFloat angle); // radians
+
+    // post-multiplies 'other' onto the current CTM
+    void Multiply(const gfxMatrix& other);
 
     void SetMatrix(const gfxMatrix& matrix);
     gfxMatrix CurrentMatrix() const;
 
-    // properties
+    gfxPoint DeviceToUser(gfxPoint point) const;
+    gfxSize DeviceToUser(gfxSize size) const;
+    gfxPoint UserToDevice(gfxPoint point) const;
+    gfxSize UserToDevice(gfxSize size) const;
+
+    /**
+     ** Painting sources
+     **/
+
     void SetColor(const gfxRGBA& c);
-    gfxRGBA CurrentColor() const;
+    void SetPattern(gfxPattern* pattern);
+    void SetSource(gfxASurface* surface) {
+        SetSource(surface, gfxPoint(0, 0));
+    }
+    void SetSource(gfxASurface* surface, gfxPoint origin);
+
+    /**
+     ** Painting
+     **/
+    void Paint(gfxFloat alpha = 1.0);
+
+    /**
+     ** Shortcuts
+     **/
+
+    // Creates a new path with a rectangle from 0,0 to size.w,size.h
+    // and calls cairo_fill
+    void DrawSurface(gfxASurface* surface, gfxSize size);
+
+    /**
+     ** Line Properties
+     **/
 
     void SetDash(gfxFloat* dashes, int ndash, gfxFloat offset);
     //void getDash() const;
 
     void SetLineWidth(gfxFloat width);
     gfxFloat CurrentLineWidth() const;
+
+    enum GraphicsLineCap {
+        LINE_CAP_BUTT,
+        LINE_CAP_ROUND,
+        LINE_CAP_SQUARE
+    };
+    void SetLineCap(GraphicsLineCap cap);
+    GraphicsLineCap CurrentLineCap() const;
+
+    enum GraphicsLineJoin {
+        LINE_JOIN_MITER,
+        LINE_JOIN_ROUND,
+        LINE_JOIN_BEVEL
+    };
+    void SetLineJoin(GraphicsLineJoin join);
+    GraphicsLineJoin CurrentLineJoin() const;
+
+    void SetMiterLimit(gfxFloat limit);
+    gfxFloat CurrentMiterLimit() const;
+
+    /**
+     ** Operators and Rendering control
+     **/
 
     // define enum for operators (clear, src, dst, etc)
     enum GraphicsOperator {
@@ -149,41 +215,28 @@ public:
     void SetAntialiasMode(AntialiasMode mode);
     AntialiasMode CurrentAntialiasMode();
 
-    enum GraphicsLineCap {
-        LINE_CAP_BUTT,
-        LINE_CAP_ROUND,
-        LINE_CAP_SQUARE
-    };
-    void SetLineCap(GraphicsLineCap cap);
-    GraphicsLineCap CurrentLineCap() const;
+    /**
+     ** Clipping
+     **/
 
-    enum GraphicsLineJoin {
-        LINE_JOIN_MITER,
-        LINE_JOIN_ROUND,
-        LINE_JOIN_BEVEL
-    };
-    void SetLineJoin(GraphicsLineJoin join);
-    GraphicsLineJoin CurrentLineJoin() const;
-
-    void SetMiterLimit(gfxFloat limit);
-    gfxFloat CurrentMiterLimit() const;
-
-
-    // clipping
-    void Clip(const gfxRect& rect); // will clip to a rect
-    void Clip(const gfxRegion& region); // will clip to a region
     void Clip(); // will clip the last path you've drawn
-    void ResetClip();
+    void ResetClip(); // will remove any clip set
+    // Helper functions that will create a rect path and call Clip().
+    // Any current path will be destroyed by these functions!
+    //
+    void Clip(gfxRect rect); // will clip to a rect
+    void Clip(const gfxRegion& region); // will clip to a region
 
-    // patterns
-    void SetPattern(gfxPattern& pattern);
-
-    // filters
-    // Start rendering under the filter. We guarantee not to draw outside 'maxArea'.
+    /**
+     ** Filters/Group Rendering
+     ** XXX these aren't really "filters" and should be renamed properly.
+     **/
     enum FilterHints {
         // Future drawing will completely cover the specified maxArea
         FILTER_OPAQUE_DRAW
     };
+
+    // Start rendering under the filter. We guarantee not to draw outside 'maxArea'.
     void PushFilter(gfxFilter& filter, FilterHints hints, gfxRect& maxArea);
 
     // Completed rendering under the filter, composite what we rendered back to the

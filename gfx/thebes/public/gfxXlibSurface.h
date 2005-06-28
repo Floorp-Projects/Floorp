@@ -43,12 +43,12 @@
 #include <cairo-xlib.h>
 
 class gfxXlibSurface : public gfxASurface {
+    THEBES_DECL_ISUPPORTS_INHERITED
+
 public:
     gfxXlibSurface(Display *dpy, Drawable drawable,
-                   Visual *visual, Colormap colormap);
+                   Visual *visual);
     virtual ~gfxXlibSurface();
-
-    // <insert refcount stuff here>
 };
 
 #endif /* GFX_XLIBSURFACE_H */

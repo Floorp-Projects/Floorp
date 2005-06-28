@@ -38,10 +38,39 @@
 #ifndef GFX_TYPES_H
 #define GFX_TYPES_H
 
+#include "prtypes.h"
 /**
  * Currently needs to be 'double' for Cairo compatibility. Could
  * become 'float', perhaps, in some configurations.
  */
 typedef double gfxFloat;
+
+
+
+/**
+ * Define refcounting for Thebes.  For now use the stuff from nsISupportsImpl
+ * even though it forces the functions to be virtual...
+ */
+#include "nsISupportsImpl.h"
+
+#define THEBES_IMPL_REFCOUNTING(_class)                          \
+    NS_IMPL_ADDREF(_class)                                     \
+    NS_IMPL_RELEASE(_class)
+
+
+#define THEBES_DECL_REFCOUNTING                                  \
+public:                                                          \
+  NS_IMETHOD_(nsrefcnt) AddRef(void);                            \
+  NS_IMETHOD_(nsrefcnt) Release(void);                           \
+protected:                                                       \
+  nsAutoRefCnt mRefCnt;                                          \
+  NS_DECL_OWNINGTHREAD                                           \
+public:
+
+#define THEBES_DECL_ISUPPORTS_INHERITED                          \
+public:                                                          \
+  NS_IMETHOD_(nsrefcnt) AddRef(void);                            \
+  NS_IMETHOD_(nsrefcnt) Release(void);                           \
+
 
 #endif /* GFX_TYPES_H */

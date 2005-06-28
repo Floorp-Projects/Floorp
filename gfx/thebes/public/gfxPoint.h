@@ -38,6 +38,8 @@
 #ifndef GFX_POINT_H
 #define GFX_POINT_H
 
+#include <math.h>
+
 #include "gfxTypes.h"
 
 struct gfxSize {
@@ -55,6 +57,9 @@ struct gfxSize {
     int operator!=(const gfxSize& s) const {
         return ((width != s.width) || (height != s.height));
     }
+    gfxSize operator+(const gfxSize& s) const {
+        return gfxSize(width + s.width, height + s.height);
+    }
 };
 
 struct gfxPoint {
@@ -71,6 +76,17 @@ struct gfxPoint {
     }
     int operator!=(const gfxPoint& p) const {
         return ((x != p.x) || (y != p.y));
+    }
+    gfxPoint operator+(const gfxPoint& p) const {
+        return gfxPoint(x + p.x, y + p.y);
+    }
+    gfxPoint operator+(const gfxSize& s) const {
+        return gfxPoint(x + s.width, y + s.height);
+    }
+    gfxPoint& round() {
+        x = ::floor(x + 0.5);
+        y = ::floor(y + 0.5);
+        return *this;
     }
 };
 

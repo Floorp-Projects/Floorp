@@ -48,7 +48,7 @@ struct gfxRGBA {
     gfxRGBA() { }
     gfxRGBA(const gfxRGBA& c) : r(c.r), g(c.g), b(c.b), a(c.a) {}
     gfxRGBA(gfxFloat _r, gfxFloat _g, gfxFloat _b, gfxFloat _a=1.0) : r(_r), g(_g), b(_b), a(_a) {}
-    gfxRGBA(uint32_t c) {
+    gfxRGBA(PRUint32 c) {
         a = (c & 0xff) / 255.0;
         r = ((c >> 8) & 0xff) / 255.0;
         g = ((c >> 16) & 0xff) / 255.0;
@@ -61,17 +61,17 @@ struct gfxRGBA {
         // if aString[0] is a number, parse it loosely as hex
     }
 
-    uint32_t Packed() const {
-        return (((uint8_t)(a * 255.0) << 24) |
-                 ((uint8_t)(b * 255.0) << 16) |
-                 ((uint8_t)(g * 255.0) << 8) |
-                 ((uint8_t)(r * 255.0)));
+    PRUint32 Packed() const {
+        return (((PRUint8)(a * 255.0) << 24) |
+                ((PRUint8)(b * 255.0) << 16) |
+                ((PRUint8)(g * 255.0) << 8) |
+                ((PRUint8)(r * 255.0)));
     }
 
     // XXX I'd really prefer to just have this return an nsACString
     // Does this function even make sense, since we're just ignoring the alpha value?
     void Hex(nsACString& result) const {
-        nsPrintfCString hex(8, "%02x%02x%02x", uint8_t(r*255.0), uint8_t(g*255.0), uint8_t(b*255.0));
+        nsPrintfCString hex(8, "%02x%02x%02x", PRUint8(r*255.0), PRUint8(g*255.0), PRUint8(b*255.0));
         result.Assign(hex);
     }
 
