@@ -126,6 +126,7 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
 
 #downloadStatus {
   margin-top: 6px;
+  height: 3em !important;
 }
 #downloadThrobber {
   margin: 5px 3px 0px 5px;
@@ -133,6 +134,11 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
 }
 #downloadThrobber[state="loading"] {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+}
+
+#verificationFailedIcon {
+  list-style-image: url("chrome://global/skin/icons/notfound.png");
+  margin: 5px 3px 0px 5px;
 }
 
 /**
@@ -144,5 +150,42 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
   -moz-margin-start: 6px !important;
   -moz-margin-end: 5px;
   font-weight: bold;
+}
+
+/**
+ * Update History Window
+ */
+update {
+  -moz-binding: url("chrome://mozapps/content/update/updates.xml#update");
+  display: -moz-box;
+  -moz-box-orient: vertical;
+  border-bottom: 1px dotted #C0C0C0;
+}
+
+.update-name {
+  font-weight: bold;
+}
+
+.update-label-column {
+  -moz-box-align: end;
+}
+
+.update-details-link {
+  margin: 0px;
+}
+
+.update-type {
+  font-weight: bold;
+  color: #990000;
+}
+
+#historyItems {
+  -moz-appearance: listbox;
+  height: 200px;
+  margin: 1px 5px 4px 5px;
+}
+
+#historyItems > scrollbox {
+  margin-bottom: 1px;
 }
 

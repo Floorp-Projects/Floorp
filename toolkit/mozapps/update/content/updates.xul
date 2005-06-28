@@ -146,8 +146,13 @@
     <hbox align="start">
       <image id="downloadThrobber"/>
       <description id="downloadStatus" flex="1">&connecting.label;</description>
-      <button id="pauseButton" oncommand="gDownloadingPage.onPause();"
-              label="&pause.label;" accesskey="&pause.accesskey;"/>
+      <button id="pauseButton" oncommand="gDownloadingPage.onPause();" 
+              disabled="true" label="&pause.label;" accesskey="&pause.accesskey;"/>
+    </hbox>
+    <separator/>
+    <hbox id="verificationFailed" align="start" hidden="true">
+      <image id="verificationFailedIcon"/>
+      <description flex="1">&verificationFailedText.label;</description>
     </hbox>
   </wizardpage>
   
@@ -188,6 +193,12 @@
     <label>&finishedBackground.instruction1;</label>
     <separator class="thin"/>
     <label>&finishedBackground.instruction2;</label>
+  </wizardpage>
+  
+  <wizardpage id="installed" pageid="installed"
+              label="&installed.title;" object="gInstalledPage"
+              onpageshow="gInstalledPage.onPageShow();">
+    <label>&installed.intro;</label>
   </wizardpage>
   
 </wizard>

@@ -38,44 +38,34 @@
 const NS_XUL  = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 var gUpdateHistory = {
-  _children: null,
+  _view: null,
   
   /**
    * Initialize the User Interface
    */
   onLoad: function() {
-    this._children = document.getElementById("historyChildren");
+    this._view = document.getElementById("historyItems");
     
     var um = 
         Components.classes["@mozilla.org/updates/update-manager;1"].
         getService(Components.interfaces.nsIUpdateManager);
     var uc = um.updateCount;
     if (uc) {
-      while (this._children.hasChildNodes())
-        this._children.removeChild(this._children.firstChild);
+      while (this._view.hasChildNodes())
+        this._view.removeChild(this._view.firstChild);
     
+      var bundle = document.getElementById("updateBundle");
+      
       for (var i = 0; i < uc; ++i) {
         var update = um.getUpdateAt(i);
         
-        var treeitem = document.createElementNS(NS_XUL, "treeitem");
-        var treerow = document.createElementNS(NS_XUL, "treerow");
-        var nameCell = document.createElementNS(NS_XUL, "treecell");
-        nameCell.setAttribute("label", update.name);
-        var dateCell = document.createElementNS(NS_XUL, "treecell");
-        var formattedDate = this._formatDate(update.installDate);
-        dateCell.setAttribute("label", formattedDate);
-        var typeCell = document.createElementNS(NS_XUL, "treecell");
-        typeCell.setAttribute("label", update.type);
-        dump("*** name = " + update.name + ", date = " + update.installDate + ", type = " + update.type + ", state = " + update.state + "\n");
-        var stateCell = document.createElementNS(NS_XUL, "treecell");
-        stateCell.setAttribute("label", update.selectedPatch.state);
-        treerow.appendChild(nameCell);
-        treerow.appendChild(dateCell);
-        treerow.appendChild(typeCell);
-        treerow.appendChild(stateCell);
-        treeitem.appendChild(treerow);
-        
-        this._children.appendChild(treeitem);
+        var element = document.createElementNS(NS_XUL, "update");
+        this._view.appendChild(element);
+        element.name = update.name;
+        element.type = bundle.getString("updateType_" + update.type);
+        element.installDate = this._formatDate(update.installDate);
+        element.detailsURL = update.detailsURL;
+        element.status = update.statusText;
       }
     }
           
@@ -104,20 +94,6 @@ var gUpdateHistory = {
                               date.getHours(),
                               date.getMinutes(),
                               date.getSeconds());
-  },
-  
-  /**
-   * Called when a tree row is selected
-   */
-  onTreeSelect: function() {
-  
-  },
-  
-  /**
-   * Open the Details page for an item
-   */
-  showDetails: function() {
-  
-  },
+  }
 };
 

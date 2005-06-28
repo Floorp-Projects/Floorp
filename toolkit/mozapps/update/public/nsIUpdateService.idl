@@ -39,6 +39,7 @@
 
 interface nsIDOMDocument;
 interface nsIDOMElement;
+interface nsIDOMWindow;
 interface nsIRequest;
 interface nsIRequestObserver;
 interface nsISimpleEnumerator;
@@ -141,7 +142,12 @@ interface nsIUpdate : nsISupports
   attribute long long installDate;
 
   /**
-   * 
+   * A message associated with this update, if any.
+   */
+  attribute AString statusText;
+
+  /**
+   * The currently selected patch for this update.
    */
   readonly attribute nsIUpdatePatch selectedPatch;
 
@@ -198,8 +204,12 @@ interface nsIUpdateCheckListener : nsISupports
    * An error occurred while loading the remote update service file. 
    * @param   request
    *          The nsIXMLHttpRequest handling the update check.
+   * @param   update
+   *          A nsIUpdate object that contains details about the 
+   *          error in its |statusText| property.
    */
-  void onError(in nsIXMLHttpRequest request);
+  void onError(in nsIXMLHttpRequest request,
+               in nsIUpdate update);
 };
 
 [scriptable, uuid(22b00276-ec23-4034-a764-395da539b4be)]
@@ -208,30 +218,55 @@ interface nsIUpdatePrompt : nsISupports
   /**
    * Shows a user interface that checks for and then displays the available
    * updates.
+   * @param   parent
+   *          A parent window to anchor this window to. Can be null.
    */
-  void checkForUpdates();
+  void checkForUpdates(in nsIDOMWindow parent);
 
   /**
    * Show a message advising that an update is available for download and
    * install.
+   * @param   parent
+   *          A parent window to anchor this window to. Can be null.
    * @param   update
    *          The update to be downloaded and installed
    */
-  void showUpdateAvailable(in nsIUpdate update);
+  void showUpdateAvailable(in nsIDOMWindow parent, 
+                           in nsIUpdate update);
 
   /**
    * Show a message advising that an update has now been downloaded and that
    * the user should restart their software should be restarted so that the
    * update can be installed.
+   * @param   parent
+   *          A parent window to anchor this window to. Can be null.
    * @param   update
    *          The update that was downloaded
    */
-  void showUpdateComplete(in nsIUpdate update);
+  void showUpdateDownloaded(in nsIDOMWindow parent,
+                            in nsIUpdate update);
+
+  /**
+   * Shows a message detailing the update which was installed.
+   * @param   update
+   *          The nsIUpdate object which was just installed
+   */
+  void showUpdateInstalled(in nsIUpdate update);
+
+  /**
+   * Shows an error message UI telling the user about some kind of update
+   * failure, e.g. failure to apply patch.
+   * @param   update
+   *          The nsIUpdate object which we could not install
+   */
+  void showUpdateError(in nsIUpdate update);
 
   /**
    * Shows a list of all updates installed to date.
+   * @param   parent
+   *          A parent window to anchor this window to. Can be null.
    */
-  void showUpdateHistory();
+  void showUpdateHistory(in nsIDOMWindow parent);
 };
 
 [scriptable, uuid(877ace25-8bc5-452a-8586-9c1cf2871994)]

@@ -38,8 +38,9 @@
 <!ENTITY  downloading.title               "Downloading Update">
 <!ENTITY  downloading.intro               "Downloading the update...">
 <!ENTITY  connecting.label                "Connecting to the update server...">
-<!ENTITY  showCompletedUpdates.label      "Show old updates in this list">
-<!ENTITY  showCompletedUpdates.accesskey  "o">
+<!ENTITY  verificationFailedText.label    "&brandShortName; was unable to verify the integrity of the 
+                                           incremental update it downloaded, so it is now downloading
+                                           the complete update package.">
 
 <!ENTITY  details.link                    "Details">
 <!ENTITY  pause.label                     "Pause">
@@ -65,5 +66,10 @@
                                            the update.">
 <!ENTITY  finishedBackground.instruction2 "Click Later to continue without restarting. The update will be installed
                                            the next time you start &brandShortName;.">
-                                           
 
+<!ENTITY  installed.title                 "Update Installed">
+<!ENTITY  installed.intro                 "The update was successfully installed.">
+
+<!ENTITY  update.details.label            "Details">
+<!ENTITY  update.installedOn.label        "Installed on:">
+<!ENTITY  update.status.label             "Status:">
