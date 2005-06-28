@@ -4399,7 +4399,8 @@ nsContextMenu.prototype = {
     },
     // Save URL of clicked-on image.
     saveImage : function () {
-        saveURL( this.imageURL, null, "SaveImageTitle", false );
+        saveImageURL( this.imageURL, null, "SaveImageTitle", false,
+                      false, getReferrer(document) );
     },
     sendImage : function () {
         MailIntegration.sendMessage(this.imageURL, "");
@@ -4983,13 +4984,6 @@ function findParentNode(node, parentNode)
     node = node.parentNode;
   }
   return null;
-}
-
-function saveFrameDocument()
-{
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (isContentFrame(focusedWindow))
-    saveDocument(focusedWindow.document);
 }
 
 /*

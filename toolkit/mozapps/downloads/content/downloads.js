@@ -604,7 +604,7 @@ var XPInstallDownloadManager = {
       if (!iconURL) 
         iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
       
-      var targetUrl = makeFileURL(localTarget);
+      var targetUrl = makeFileURI(localTarget);
       var download = gDownloadManager.addDownload(Components.interfaces.nsIXPInstallManagerUI.DOWNLOAD_TYPE_INSTALL, 
                                                   uri, targetUrl, displayName, iconURL, mimeInfo, 0, null);
       
