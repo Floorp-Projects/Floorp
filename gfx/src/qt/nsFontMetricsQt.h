@@ -171,7 +171,7 @@ public:
 
     nsCOMPtr<nsIAtom> mLangGroup;
     nsCStringArray    mFonts;
-    PRUint16          mFontsIndex;
+    PRInt32           mFontsIndex;
     nsVoidArray       mFontIsGeneric;
     nsCAutoString     mDefaultFont;
     nsCString         *mGeneric;

@@ -275,11 +275,11 @@ public:
 
   nsCOMPtr<nsIAtom>   mLangGroup;
   nsStringArray       mFonts;
-  PRUint16            mFontsIndex;
+  PRInt32             mFontsIndex;
   nsVoidArray         mLoadedFonts;
   nsFontWin          *mSubstituteFont;
 
-  PRUint16            mGenericIndex;
+  PRInt32             mGenericIndex;
   nsString            mGeneric;
 
   nsString            mUserDefined;
