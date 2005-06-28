@@ -48,6 +48,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsIEventStateManager.h"
 #include "nsXULAtoms.h"
 #include "nsIDOMElement.h"
