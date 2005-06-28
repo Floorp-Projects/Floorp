@@ -54,7 +54,7 @@
 # include <direct.h>
 # include <process.h>
 # include <windows.h>
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_OS2)
 # include <unistd.h>
 #endif
 
