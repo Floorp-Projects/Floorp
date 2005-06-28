@@ -12,7 +12,7 @@ if (verifyDiskSpace(fProgram, srDest))
   
   var jarFolder = getFolder("Chrome", "reporter.jar");
   registerChrome(PACKAGE | DELAYED_CHROME, jarFolder, "content/reporter/");
-  registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/classic/inspector/");
+  registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/classic/reporter/");
   
   err = getLastError();
   if (err==SUCCESS)
