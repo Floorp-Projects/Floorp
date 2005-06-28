@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -290,7 +291,12 @@ protected:
 
   // member variables for the d&d gesture state machine
   nsPoint mGestureDownPoint; // screen coordinates
+  // The content to use as target if we start a d&d (what we drag).
   nsCOMPtr<nsIContent> mGestureDownContent;
+  // The content of the frame where the mouse-down event occurred. It's the same
+  // as the target in most cases but not always - for example when dragging
+  // an <area> of an image map this is the image. (bug 289667)
+  nsCOMPtr<nsIContent> mGestureDownFrameOwner;
   // State of keys when the original gesture-down happened
   PRPackedBool mGestureDownShift;
   PRPackedBool mGestureDownControl;
