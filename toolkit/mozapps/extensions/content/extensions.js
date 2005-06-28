@@ -211,6 +211,7 @@ function Startup()
     var themePreviewArea = document.getElementById("themePreviewArea");
     themePreviewArea.hidden = false;
     gExtensionsView.removeAttribute("flex");
+    gExtensionsView.style.width = "20em";
   }
   
   // Set Initial Size
