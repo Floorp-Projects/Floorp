@@ -145,7 +145,7 @@ NS_IMETHODIMP nsAccessible::GetName(nsAString& aName)
     return NS_ERROR_FAILURE;  // Node shut down
   }
 
-  PRBool canAggregateName = !mRoleMapEntry ||
+  PRBool canAggregateName = mRoleMapEntry &&
                             mRoleMapEntry->nameRule == eNameOkFromChildren;
 
   if (content->IsContentOfType(nsIContent::eHTML)) {

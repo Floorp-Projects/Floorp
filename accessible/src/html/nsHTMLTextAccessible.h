@@ -126,6 +126,7 @@ public:
   NS_IMETHOD Shutdown() { nsresult rv = nsAccessibleWrap::Shutdown(); mBulletAccessible = nsnull; return rv; }
   NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = ROLE_LISTITEM; return NS_OK; }
   NS_IMETHOD GetState(PRUint32 *aState) { nsAccessibleWrap::GetState(aState); *aState &= ~STATE_FOCUSABLE; *aState |= STATE_READONLY; return NS_OK; }
+  NS_IMETHOD GetName(nsAString& aName) { aName.SetIsVoid(PR_TRUE); return NS_OK; }
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
   void CacheChildren(PRBool aWalkAnonContent);  // Include bullet accessible
 protected:
