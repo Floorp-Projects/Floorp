@@ -61,6 +61,8 @@ var gUpdateHistory = {
         
         var element = document.createElementNS(NS_XUL, "update");
         this._view.appendChild(element);
+        if (!update.name)
+          continue;
         element.name = update.name;
         element.type = bundle.getString("updateType_" + update.type);
         element.installDate = this._formatDate(update.installDate);

@@ -459,11 +459,18 @@ function buildHelpMenu()
   var um = 
       Components.classes["@mozilla.org/updates/update-manager;1"].
       getService(Components.interfaces.nsIUpdateManager);
-  var activeUpdate = um.activeUpdate;
+
+  // Disable the UI if the update enabled pref has been locked by the 
+  // administrator or if we cannot update for some other reason
+  var checkForUpdates = document.getElementById("checkForUpdates");
+  var canUpdate = updates.canUpdate;
+  checkForUpdates.setAttribute("disabled", !canUpdate);
+  if (!canUpdate)
+    return; 
 
   var strings = document.getElementById("bundle_browser");
-  
   var label = strings.getString("updates_checkForUpdates");
+  var activeUpdate = um.activeUpdate;
   if (activeUpdate) {
     if (updates.isDownloading) {
       if (activeUpdate.name) {
@@ -483,15 +490,10 @@ function buildHelpMenu()
     }
   }
   
-  var checkForUpdates = document.getElementById("checkForUpdates");
   checkForUpdates.label = label;
   if (um.activeUpdate && updates.isDownloading)
     checkForUpdates.setAttribute("loading", "true");
   else
     checkForUpdates.removeAttribute("loading");
-    
-  // Disable the UI if the update enabled pref has been locked by the 
-  // administrator.
-  checkForUpdates.disabled = gPrefService.prefIsLocked("app.update.enabled");
 }
 
