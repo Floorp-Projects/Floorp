@@ -74,6 +74,9 @@ else {
   $bindir = "bin/";
 }
 
+# remove extra slashes from $destdir
+$destdir =~ s:/+:/:g;
+
 # set debug level
 if ($verbose && !($debug)) {
 	$debug = 1;
