@@ -230,16 +230,7 @@ sub do_copyfile
 
 	# set the destination path, if alternate destination given, use it.
 	if ($flat) {
-    if ($srcsuffix eq ".xpt" && $srcpath =~ m|bin/components/$|) {
-      if ($component eq "") {
-        die ("XPT file was not part of a component.");
-      }
-
-      $destpathcomp = "$srcdir/xpt/$component";
-    }
-    else {
-  	  $destpathcomp = "$destdir";
-    }
+	  $destpathcomp = "$destdir";
 	} else {
 	  # double-check that we have a valid component before appending the path
 	  # delimiter. If $component is empty, we'd end up placing an extra : at 
@@ -289,10 +280,6 @@ sub do_copyfile
 				print " file copy w/o altdest: $destpath $destname $destsuffix\n";
 		}
 	}
-
-  if ($flat) {
-    $destpath =~ s|bin[/\\]||;
-  }
 
 	# create the destination path if it doesn't exist
 	if (! -d "$destpath" ) {
