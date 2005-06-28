@@ -431,6 +431,14 @@ SVG_TestLanguage(const nsSubstring& lstr, const nsSubstring& prefs)
 }
 #endif
 
+static inline nsIFrame*
+GetFieldSetAreaFrame(nsIFrame* aFieldsetFrame)
+{
+  // Depends on the fieldset child frame order - see ConstructFieldSetFrame() below.
+  nsIFrame* firstChild = aFieldsetFrame->GetFirstChild(nsnull);
+  return firstChild->GetNextSibling() ? firstChild->GetNextSibling() : firstChild;
+}
+
 //----------------------------------------------------------------------
 //
 // When inline frames get weird and have block frames in them, we
@@ -7802,7 +7810,7 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
         } else if (nsLayoutAtoms::fieldSetFrame == frameType) {
           // If the positioned frame is a fieldset, use the area frame inside it.
           // We don't use GetContentInsertionFrame for fieldsets yet.
-          containingBlock = wrappedFrame->GetFirstChild(nsnull);
+          containingBlock = GetFieldSetAreaFrame(wrappedFrame);
         }
       }
 
@@ -8280,11 +8288,7 @@ GetAdjustedParentFrame(nsIFrame*       aParentFrame,
     // parent unless the new content is a legend. 
     nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(childContent));
     if (!legendContent) {
-      // Depends on the fieldset child frame order - see ConstructFieldSetFrame() above.
-      newParent = aParentFrame->GetFirstChild(nsnull);
-      if (newParent->GetNextSibling()) {
-        newParent = newParent->GetNextSibling();
-      }
+      newParent = GetFieldSetAreaFrame(aParentFrame);
     }
   }
   return (newParent) ? newParent : aParentFrame;
@@ -11167,7 +11171,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       // Create a continuing area frame
       // XXXbz we really shouldn't have to do this by hand!
       nsIFrame* continuingAreaFrame;
-      nsIFrame* areaFrame = aFrame->GetFirstChild(nsnull);
+      nsIFrame* areaFrame = GetFieldSetAreaFrame(aFrame);
       CreateContinuingFrame(aPresContext, areaFrame, newFrame, &continuingAreaFrame);
 
       // Set the fieldset's initial child list
