@@ -74,7 +74,7 @@
       <checkbox label="&itemHistory.label;"   preference="privacy.item.history"/>
       <checkbox label="&itemFormData.label;"  preference="privacy.item.formdata"/>
       <checkbox label="&itemPasswords.label;" preference="privacy.item.passwords"
-                onpreferenceread="return gSanitizeDialog.onReadSanitizePasswords();"/>
+                onsyncfrompreference="return gSanitizeDialog.onReadSanitizePasswords();"/>
       <checkbox label="&itemDownloads.label;" preference="privacy.item.downloads"/>
       <checkbox label="&itemCookies.label;"   preference="privacy.item.cookies"/>
       <checkbox label="&itemCache.label;"     preference="privacy.item.cache"/>

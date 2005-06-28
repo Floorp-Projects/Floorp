@@ -131,7 +131,7 @@
             this.valueFromPreferences = aValue;
           else {
             // I wonder if we should synthesize a change event handler here. 
-            // As it stands we only fire onpreferenceread when UE calls 
+            // As it stands we only fire onsyncfrompreference when UE calls 
             // setElementValue. That's enough to reinit the UI element but
             // may be counter intuitive.
             this.updateElements();
@@ -322,13 +322,13 @@
             return;
           
           var rv = undefined;
-          if (aElement.hasAttribute("onpreferenceread")) {
+          if (aElement.hasAttribute("onsyncfrompreference")) {
             // Value changed, synthesize an event
             try {
               var event = document.createEvent("Events");
               event.initEvent("preferenceread", false, true);
               var f = new Function ("event", 
-                                    aElement.getAttribute("onpreferenceread"));
+                                    aElement.getAttribute("onsyncfrompreference"));
               rv = f(event);
             }
             catch (e) {
@@ -348,13 +348,13 @@
         <parameter name="aElement"/>
         <body>
         <![CDATA[
-          if (aElement.hasAttribute("onpreferencewrite")) {
+          if (aElement.hasAttribute("onsynctopreference")) {
             // Value changed, synthesize an event
             try {
               var event = document.createEvent("Events");
               event.initEvent("preferencewrite", false, true);
               var f = new Function ("event", 
-                                    aElement.getAttribute("onpreferencewrite"));
+                                    aElement.getAttribute("onsynctopreference"));
               var rv = f(event);
               if (rv !== undefined) 
                 return rv;

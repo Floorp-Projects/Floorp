@@ -75,7 +75,7 @@
       
       <radiogroup id="askOnSave" flex="1"
                   preference="browser.download.useDownloadDir"
-                  onpreferenceread="return gDownloadsPane.onReadUseDownloadDir();">
+                  onsyncfrompreference="return gDownloadsPane.onReadUseDownloadDir();">
         <radio id="alwaysAsk" label="&alwaysAsk.label;" value="false"/>
         <vbox flex="1">
           <radio id="neverAsk" label="&neverAsk.label;" value="true"/>
@@ -83,11 +83,11 @@
             <filefield id="downloadFolder" flex="1"
                        preference="browser.download.folderList"
                        preference-editable="true"
-                       onpreferenceread="return gDownloadsPane.readDownloadDirPref();"
-                       onpreferencewrite="return gDownloadsPane.writeFolderList()"/>
+                       onsyncfrompreference="return gDownloadsPane.readDownloadDirPref();"
+                       onsynctopreference="return gDownloadsPane.writeFolderList()"/>
             <button id="chooseFolder" oncommand="gDownloadsPane.chooseFolder();"
                     preference="browser.download.folderList"
-                    onpreferencewrite="return gDownloadsPane.writeFolderList()"
+                    onsynctopreference="return gDownloadsPane.writeFolderList()"
 #ifdef XP_MACSOX
                     label="&chooseFolderMac.label;"/>
 #else
@@ -103,7 +103,7 @@
       
       <checkbox id="showWhenStarting" label="&showWhenStarting.label;" 
                 preference="browser.download.manager.showWhenStarting"
-                onpreferenceread="return gDownloadsPane.readShowWhenStartingPref();"/>
+                onsyncfrompreference="return gDownloadsPane.readShowWhenStartingPref();"/>
       <checkbox id="closeWhenDone" label="&closeWhenDone.label;" class="indent"
                 preference="browser.download.manager.closeWhenDone"/>
     </groupbox>

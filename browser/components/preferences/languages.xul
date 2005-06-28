@@ -84,8 +84,8 @@
           <listbox id="activeLanguages" flex="1" rows="6"
                     seltype="multiple" onselect="gLanguagesDialog.onLanguageSelect();"
                     preference="intl.accept_languages"
-                    onpreferenceread="return gLanguagesDialog.readAcceptLanguages();"
-                    onpreferencewrite="return gLanguagesDialog.writeAcceptLanguages();"/>
+                    onsyncfrompreference="return gLanguagesDialog.readAcceptLanguages();"
+                    onsynctopreference="return gLanguagesDialog.writeAcceptLanguages();"/>
           <vbox>
             <button id="up" class="up" oncommand="gLanguagesDialog.moveUp();" disabled="true"
                     label="&languages.customize.moveUp.label;"
