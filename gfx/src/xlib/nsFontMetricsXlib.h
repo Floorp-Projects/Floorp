@@ -415,7 +415,7 @@ public:
   nsFontXlib  *mSubstituteFont;
 
   nsCStringArray    mFonts;
-  PRUint16          mFontsIndex;
+  PRInt32           mFontsIndex;
   nsAutoVoidArray   mFontIsGeneric;
 
   nsCAutoString     mDefaultFont;
