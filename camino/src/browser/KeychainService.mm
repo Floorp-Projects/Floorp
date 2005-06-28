@@ -1044,7 +1044,11 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 {
 }
 
-- (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes
+- (void)onProgressChange:(long)currentBytes outOf:(long)maxBytes
+{
+}
+
+- (void)onProgressChange64:(long long)currentBytes outOf:(long long)maxBytes
 {
 }
 
@@ -1073,6 +1077,10 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 }
 
 - (void)onPopupBlocked:(nsIURI*)inURIBlocked fromSite:(nsIURI*)inSite
+{
+}
+
+- (void)onFoundShortcutIcon:(NSString*)inIconURI
 {
 }
 

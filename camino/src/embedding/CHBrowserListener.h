@@ -81,7 +81,7 @@ public:
   void AddListener(id <CHBrowserListener> aListener);
   void RemoveListener(id <CHBrowserListener> aListener);
 
-  void SetContainer(id <CHBrowserContainer> aContainer);
+  void SetContainer(NSView<CHBrowserListener, CHBrowserContainer>* aContainer);
 
 protected:
 
@@ -91,7 +91,7 @@ protected:
 private:
   CHBrowserView*          mView;     // WEAK - it owns us
   NSMutableArray*         mListeners;
-  id <CHBrowserContainer> mContainer;
+  NSView<CHBrowserListener, CHBrowserContainer>* mContainer;
   PRBool                  mIsModal;
   PRUint32                mChromeFlags;
 };

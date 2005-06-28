@@ -69,7 +69,9 @@ class nsISupports;
 // Invoked regularly as data associated with a page streams
 // in. If the total number of bytes expected is unknown,
 // maxBytes is -1.
-- (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes;
+- (void)onProgressChange:(long)currentBytes outOf:(long)maxBytes;
+- (void)onProgressChange64:(long long)currentBytes outOf:(long long)maxBytes;
+
 - (void)onLocationChange:(NSString*)urlSpec requestOK:(BOOL)isOK;
 - (void)onStatusChange:(NSString*)aMessage;
 - (void)onSecurityStateChange:(unsigned long)newState;
@@ -155,7 +157,7 @@ enum {
 // nsIWebBrowser methods
 - (void)addListener:(id <CHBrowserListener>)listener;
 - (void)removeListener:(id <CHBrowserListener>)listener;
-- (void)setContainer:(id <CHBrowserContainer>)container;
+- (void)setContainer:(NSView<CHBrowserListener, CHBrowserContainer>*)container;
 - (nsIDOMWindow*)getContentWindow;	// addrefs
 
 // nsIWebNavigation methods

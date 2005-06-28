@@ -670,7 +670,7 @@ CHBrowserListener::RemoveListener(id <CHBrowserListener> aListener)
 }
 
 void 
-CHBrowserListener::SetContainer(id <CHBrowserContainer> aContainer)
+CHBrowserListener::SetContainer(NSView<CHBrowserListener, CHBrowserContainer>* aContainer)
 {
   [mContainer autorelease];
   mContainer = aContainer;

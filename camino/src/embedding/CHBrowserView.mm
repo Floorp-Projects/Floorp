@@ -263,7 +263,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     _listener->RemoveListener(listener);
 }
 
-- (void)setContainer:(id <CHBrowserContainer>)container
+- (void)setContainer:(NSView<CHBrowserListener, CHBrowserContainer>*)container
 {
   if ( _listener )
     _listener->SetContainer(container);
