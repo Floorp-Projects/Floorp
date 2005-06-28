@@ -525,6 +525,7 @@ function UpdateService() {
   // Observe xpcom-shutdown to unhook pref branch observers above to avoid 
   // shutdown leaks.
   gOS.addObserver(this, "xpcom-shutdown", false);
+  
   /*
   // Detect installation failures and notify
   var status = readStatusFile(getUpdatesDir()); 
@@ -553,7 +554,7 @@ function UpdateService() {
       update.statusText = "goats";
       // XXXben todo: synthesize the best message
       //prompter.showUpdateError(update);
-    }*/
+    }
     
     // Move the update from the Active Update list into the Past Updates list.
     um.activeUpdate = null;
@@ -562,6 +563,7 @@ function UpdateService() {
     // Now trash the updates directory, since we're done with it
     cleanUpUpdatesDir();
   }
+  */
 
   this._initLoggingPrefs();
 }

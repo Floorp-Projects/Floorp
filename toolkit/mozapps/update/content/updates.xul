@@ -125,7 +125,8 @@
   
   <wizardpage id="license" pageid="license" next="downloading"
               object="gLicensePage" label="&license.title;"
-              onpageshow="gLicensePage.onPageShow();">
+              onpageshow="gLicensePage.onPageShow();"
+              onwizardnext="gLicensePage.onWizardNext();">
     <label>&license.intro;</label>
     <separator class="thin"/>
     <license id="licenseContent" flex="1"/>

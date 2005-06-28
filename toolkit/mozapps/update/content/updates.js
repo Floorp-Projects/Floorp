@@ -240,7 +240,7 @@ var gUpdates = {
         // If the first argument is a nsIUpdate object, we are notifying the
         // user that the background checking found an update that requires
         // their permission to install, and it's ready for download.
-        this.update = arg0;
+        this.setUpdate(arg0);
         var p = this.update.selectedPatch;
         if (p) {
           switch (p.state) {
@@ -261,11 +261,24 @@ var gUpdates = {
           Components.classes["@mozilla.org/updates/update-manager;1"].
           getService(Components.interfaces.nsIUpdateManager);
       if (um.activeUpdate) {
-        this.update = um.activeUpdate;
+        this.setUpdate(um.activeUpdate);
         return document.getElementById("downloading");
       }
     }
     return document.getElementById("checking");
+  },
+  
+  /**
+   * Sets the Update object for this wizard
+   * @param   update
+   *          The update object 
+   */
+  setUpdate: function(update) {
+    this.update = update;
+    this.update.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
+    var p = this.update.selectedPatch;
+    if (p)
+      p.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
   },
   
   /**
@@ -385,7 +398,7 @@ var gCheckingPage = {
     onCheckComplete: function(request, updates, updateCount) {
       var aus = Components.classes["@mozilla.org/updates/update-service;1"]
                           .getService(Components.interfaces.nsIApplicationUpdateService);
-      gUpdates.update = aus.selectUpdate(updates, updates.length);
+      gUpdates.setUpdate(aus.selectUpdate(updates, updates.length));
       if (!gUpdates.update) {
         LOG("UI:CheckingPage", 
             "Could not select an appropriate update, either because there " + 
@@ -402,7 +415,7 @@ var gCheckingPage = {
     onError: function(request, update) {
       LOG("UI:CheckingPage", "UpdateCheckListener: error");
 
-      gUpdates.update = update;
+      gUpdates.setUpdate(update);
 
       gUpdates.wiz.currentPage = document.getElementById("errors");
     },
@@ -500,7 +513,18 @@ var gUpdatesAvailablePage = {
    * Downloading page, whichever is appropriate.
    */
   onInstallNow: function() {
-    var nextPageID = gUpdates.update.licenseURL ? "license" : "downloading";
+    var nextPageID = "downloading";
+    if (gUpdates.update.licenseURL) {
+      try {
+        var licenseAccepted = gUpdates.update.getProperty("licenseAccepted");
+      }
+      catch(e) {
+        // |getProperty| throws NS_ERROR_FAILURE if the property is not
+        // defined on the property bag.
+      }
+      if (licenseAccepted != "true")
+        nextPageID = "license";
+    }
     gUpdates.wiz.currentPage = document.getElementById(nextPageID);
   },
   
@@ -561,8 +585,6 @@ var gLicensePage = {
 
     this._licenseContent.addEventListener("load", this.onLicenseLoad, false);
     this._licenseContent.url = gUpdates.update.licenseURL;
-    
-    gUpdates.wiz._wizardButtons.removeAttribute("type");
   },
   
   /**
@@ -572,6 +594,13 @@ var gLicensePage = {
     // Now that the license text is available, the user is in a position to
     // agree to it, so enable the Agree button.
     gUpdates.wiz.getButton("next").disabled = false;
+  },
+  
+  /**
+   * When the user accepts the license
+   */
+  onWizardNext: function() {
+    gUpdates.update.setProperty("licenseAccepted", "true");
   },
   
   /**
@@ -842,8 +871,6 @@ var gDownloadingPage = {
    * Initialize
    */
   onPageShow: function() {
-    gUpdates.wiz._wizardButtons.removeAttribute("type");
-
     this._downloadName = document.getElementById("downloadName");
     this._downloadStatus = document.getElementById("downloadStatus");
     this._downloadProgress = document.getElementById("downloadProgress");
@@ -859,7 +886,7 @@ var gDownloadingPage = {
         getService(Components.interfaces.nsIUpdateManager);
     var activeUpdate = um.activeUpdate;
     if (activeUpdate) {
-      gUpdates.update = activeUpdate;
+      gUpdates.setUpdate(activeUpdate);
       this._togglePausedState(!updates.isDownloading);
     }
     
@@ -963,7 +990,6 @@ var gDownloadingPage = {
       updates.downloadUpdate(gUpdates.update, false);
     else {
       var patch = gUpdates.update.selectedPatch;
-      patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
       patch.setProperty("status", 
         gUpdates.strings.getFormattedString("pausedStatus", 
           [this.statusFormatter.progress]));
@@ -1046,7 +1072,6 @@ var gDownloadingPage = {
         "/" + maxProgress);
 
     var p = gUpdates.update.selectedPatch;
-    p.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
     p.setProperty("progress", Math.round(100 * (progress/maxProgress)));
     p.setProperty("status", 
       this.statusFormatter.formatStatus(progress, maxProgress));
