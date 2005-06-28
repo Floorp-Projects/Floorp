@@ -65,13 +65,8 @@ ifneq (,$(NEXT_ROOT))
         DARWIN_SDK_CFLAGS += -isystem $(NEXT_ROOT)/usr/include/gcc/darwin/$(GCC_VERSION)
     else
         # GCC >= 4
-        DARWIN_TARGET_MAJOR := $(shell echo $(NEXT_ROOT) | sed -e 's/^.*MacOSX10\.//' | awk -F. '{ print $$1 }')
-        ifeq (,$(DARWIN_TARGET_MAJOR))
-            DARWIN_TARGET_MAJOR := $(shell echo $(OS_RELEASE) | awk -F. '{ print $$1 }')
-        else
-            DARWIN_TARGET_MAJOR := $(shell expr $(DARWIN_TARGET_MAJOR) + 4)
-        endif
-        DARWIN_TARGET_ARCH_LIB := powerpc-apple-darwin$(DARWIN_TARGET_MAJOR)
+        CPU_ARCH_LONG := $(shell uname -p)
+        DARWIN_TARGET_ARCH_LIB := $(CPU_ARCH_LONG)-apple-darwin$(shell echo $NEXT_ROOT | perl -pe 's/MacOSX10\.([\d]*)//;if ($$1) {$$_=$$1+4;} else {$$_="'${OS_RELEASE}'";s/(\d+)//;$$_=$$1;}')
         DARWIN_SDK_CFLAGS += -isystem $(NEXT_ROOT)/usr/lib/gcc/$(DARWIN_TARGET_ARCH_LIB)/$(GCC_VERSION_FULL)/include
     endif
 
