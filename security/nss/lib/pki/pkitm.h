@@ -38,7 +38,7 @@
 #define PKITM_H
 
 #ifdef DEBUG
-static const char PKITM_CVS_ID[] = "@(#) $RCSfile: pkitm.h,v $ $Revision: 1.13 $ $Date: 2005/03/04 04:32:04 $";
+static const char PKITM_CVS_ID[] = "@(#) $RCSfile: pkitm.h,v $ $Revision: 1.14 $ $Date: 2005/06/28 17:55:29 $";
 #endif /* DEBUG */
 
 /*
@@ -103,16 +103,6 @@ struct NSSUsageStr {
     SECCertUsage nss3usage;
     PRBool nss3lookingForCA;
 #endif
-};
-
-typedef struct nssBestCertificateCBStr nssBestCertificateCB;
-
-struct nssBestCertificateCBStr {
-    NSSCertificate *cert;
-    NSSTime *time;
-    NSSTime sTime; /* to avoid allocating when unnecessary */
-    NSSUsage *usage;
-    NSSPolicies *policies;
 };
 
 typedef struct nssPKIObjectCollectionStr nssPKIObjectCollection;
