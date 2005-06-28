@@ -103,6 +103,7 @@ struct nsRoleMapEntry
   nsStateMapEntry attributeMap4;
   nsStateMapEntry attributeMap5;
   nsStateMapEntry attributeMap6;
+  nsStateMapEntry attributeMap7;
 };
 
 class nsAccessible : public nsAccessNodeWrap, 

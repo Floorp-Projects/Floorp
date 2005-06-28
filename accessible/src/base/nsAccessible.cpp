@@ -1547,8 +1547,9 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}},
-  {"columnheader", ROLE_COLUMNHEADER, eNameOkFromChildren, eNoValue, STATE_SELECTABLE,
-            {"selected", BOOL_STATE, STATE_SELECTED},
+  {"columnheader", ROLE_COLUMNHEADER, eNameOkFromChildren, eNoValue, eNoReqStates,
+            {"selected", BOOL_STATE, STATE_SELECTED | STATE_SELECTABLE},
+            {"selected", "false", STATE_SELECTABLE},
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"combobox", ROLE_COMBOBOX, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
@@ -1561,7 +1562,9 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"list", ROLE_LIST, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"multiselect", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
-  {"listitem", ROLE_LISTITEM, eNameOkFromChildren, eNoValue, STATE_SELECTABLE,
+  {"listitem", ROLE_LISTITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
+            {"selected", BOOL_STATE, STATE_SELECTED | STATE_SELECTABLE},
+            {"selected", "false", STATE_SELECTABLE},
             {"checked", BOOL_STATE, STATE_CHECKED | STATE_CHECKABLE},
             {"checked", "false", STATE_CHECKABLE}, END_ENTRY},
   {"menu", ROLE_MENUPOPUP, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
@@ -1570,14 +1573,15 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
             {"haspopup", BOOL_STATE, STATE_HASPOPUP},
             {"checked", BOOL_STATE, STATE_CHECKED | STATE_CHECKABLE},
             {"checked", "false", STATE_CHECKABLE}, END_ENTRY},
-  {"menuitemradio", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"haspopup", BOOL_STATE, STATE_HASPOPUP},
-            {"checked", BOOL_STATE, STATE_CHECKED | STATE_CHECKABLE},
-            {"checked", "false", STATE_CHECKABLE}, END_ENTRY},
+  {"menuitemcheckable", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, STATE_CHECKABLE,
+            {"checked", BOOL_STATE, STATE_CHECKED }, END_ENTRY},
+  {"menuitemradio", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, STATE_CHECKABLE,
+            {"checked", BOOL_STATE, STATE_CHECKED }, END_ENTRY},
   {"grid", ROLE_TABLE, eNameLabelOrTitle, eNoValue, STATE_FOCUSABLE,
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
-  {"gridcell", ROLE_CELL, eNameOkFromChildren, eHasValueMinMax, STATE_SELECTABLE,
-            {"selected", BOOL_STATE, STATE_SELECTED},
+  {"gridcell", ROLE_CELL, eNameOkFromChildren, eHasValueMinMax, eNoReqStates,
+            {"selected", BOOL_STATE, STATE_SELECTED | STATE_SELECTABLE},
+            {"selected", "false", STATE_SELECTABLE},
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
@@ -1590,8 +1594,9 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"radiogroup", ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
-  {"rowheader", ROLE_ROWHEADER, eNameOkFromChildren, eNoValue, STATE_SELECTABLE,
-            {"selected", BOOL_STATE, STATE_SELECTED},
+  {"rowheader", ROLE_ROWHEADER, eNameOkFromChildren, eNoValue, eNoReqStates,
+            {"selected", BOOL_STATE, STATE_SELECTED | STATE_SELECTABLE},
+            {"selected", "false", STATE_SELECTABLE},
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"secret", ROLE_PASSWORD_TEXT, eNameLabelOrTitle, eNoValue, STATE_PROTECTED,
             {"invalid", BOOL_STATE, STATE_INVALID},
@@ -1623,8 +1628,9 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"tree", ROLE_OUTLINE, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"multiselectable", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
-  {"treeitem", ROLE_OUTLINEITEM, eNameOkFromChildren, eNoValue, STATE_SELECTABLE,
-            {"selected", BOOL_STATE, STATE_SELECTED},
+  {"treeitem", ROLE_OUTLINEITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
+            {"selected", BOOL_STATE, STATE_SELECTED | STATE_SELECTABLE},
+            {"selected", "false", STATE_SELECTABLE},
             {"expanded", BOOL_STATE, STATE_EXPANDED},
             {"expanded", "false", STATE_COLLAPSED},
             {"checked", BOOL_STATE, STATE_CHECKED | STATE_CHECKABLE},
@@ -1723,8 +1729,9 @@ NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
         MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap2) &&
         MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap3) &&
         MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap4) &&
-        MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap5)) {
-      MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap6);
+        MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap5) &&
+        MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap6)) {
+      MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap7);
     }
     // Anything can be disabled/unavailable
     MappedAttrState(content, &finalState, stateNS, &gDisabledStateMap);
