@@ -38,12 +38,38 @@ nsresult PR_CALLBACK
 app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 
-// Profile chooser stuff
-static nsresult StartupProfile();
-
 // Global variables
 static PRBool    gRunCondition = PR_TRUE;
 static UINT      gBrowserCount = 0;
+static UINT      gActivateCount = 0;
+
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+
+nsresult StartupProfile()
+{    
+	nsCOMPtr<nsIFile> appDataDir;
+	nsresult rv = NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_DIR, getter_AddRefs(appDataDir));
+	if (NS_FAILED(rv))
+        return rv;
+    
+	rv = appDataDir->Append(NS_LITERAL_STRING("minimo"));
+	if (NS_FAILED(rv))
+        return rv;
+
+	nsCOMPtr<nsILocalFile> localAppDataDir(do_QueryInterface(appDataDir));
+    
+	nsCOMPtr<nsProfileDirServiceProvider> locProvider;
+    NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
+    if (!locProvider)
+        return NS_ERROR_FAILURE;
+    
+	rv = locProvider->Register();
+    if (NS_FAILED(rv))
+        return rv;
+    
+	return locProvider->SetProfileDir(localAppDataDir);   
+}
 
 LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
@@ -65,18 +91,21 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
 
     case WM_ACTIVATE:
         {
+            SetTimer(hWnd, 1, 500, NULL);
             nsCOMPtr<nsIWebBrowserFocus> focus(do_GetInterface(webBrowser));
-            if (!focus)
-                return 0;
             
             switch (wParam)
             {
             case WA_ACTIVE:
-                focus->Activate();
+                gActivateCount++;
+                if (focus)
+                    focus->Activate();
                 break;
                 
             case WA_INACTIVE:
-                focus->Deactivate();
+                gActivateCount--;
+                if (focus)
+                    focus->Deactivate();
             }
         }
         return 0;
@@ -90,6 +119,36 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
             gRunCondition = PR_FALSE;
         return 0;
 
+    case WM_TIMER:
+        if (gActivateCount)
+        {
+            PRBool eventAvail;
+
+            nsCOMPtr<nsIEventQueue> eventQ;
+            nsCOMPtr<nsIEventQueueService> eqs = do_GetService(kEventQueueServiceCID);
+            if (!eqs)
+                return 0;
+
+            eqs->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
+
+            if (!eventQ)
+                return 0;
+
+            eventQ->PendingEvents(&eventAvail);
+
+            if (eventAvail)
+                eventQ->ProcessPendingEvents();
+
+            // reset the timer
+            SetTimer(hWnd, 1, 500, NULL);
+        }
+        return 0;
+
+    case WM_SIZE:
+        {
+            ResizeEmbedding(chrome);
+			return 0;
+        }
     default:
         return DefWindowProc(hWnd, Msg, wParam, lParam);
 	}
@@ -118,7 +177,20 @@ void RegisterMainWindowClass()
     
 }
 
-int main(int argc, char *argv[])
+PRUint32 RunEventLoop(PRBool &aRunCondition)
+{
+    MSG msg;
+    while (aRunCondition ) 
+    {
+        ::GetMessage(&msg, NULL, 0, 0);
+        ::TranslateMessage(&msg);
+        ::DispatchMessage(&msg);
+    }
+        
+    return msg.wParam;
+}
+
+PRBool CheckForProcess()
 {
     const HANDLE hMutex = CreateMutexW(0, 0, L"_MINIMO_EXE_MUTEX_");
     
@@ -151,15 +223,27 @@ int main(int argc, char *argv[])
 	{
 		return FALSE;
 	}
-    
+
+    return TRUE;
+}
+
+
+int main(int argc, char *argv[])
+{
+
+    if (!CheckForProcess())
+        return 0;
+
 #ifdef _BUILD_STATIC_BIN
     // Initialize XPCOM's module info table
     NSGetStaticModuleInfo = app_getModuleInfo;
 #endif
     
+
     // Init Embedding APIs
     NS_InitEmbedding(nsnull, nsnull);
     
+
     // Choose the new profile
     if (NS_FAILED(StartupProfile()))
     {
@@ -167,57 +251,32 @@ int main(int argc, char *argv[])
         return 1;
     }
     
-    
 	RegisterMainWindowClass();
 
     WindowCreator *creatorCallback = new WindowCreator();
     if (!creatorCallback)
         return 1;
 
-    {
-        const static char* start_url = "chrome://embed/content/mini-nav.xul";
-        //const static char* start_url = "http://www.meer.net/~dougt/test.html";
-        //const static char*  start_url = "resource://gre/res/start.html";
-
-
-        nsCOMPtr<nsIDOMWindow> newWindow;
-        nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-        
-        wwatch->SetWindowCreator(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback));
-        wwatch->OpenWindow(nsnull, start_url, "_blank", "chrome,dialog=no,all", nsnull, getter_AddRefs(newWindow));
-    }
+    const static char* start_url = "chrome://embed/content/mini-nav.xul";
+    //const static char* start_url = "http://www.meer.net/~dougt/test.html";
+    
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+    
+    wwatch->SetWindowCreator(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback));
+    wwatch->OpenWindow(nsnull, start_url, "_blank", "chrome,dialog=no,all", nsnull, getter_AddRefs(newWindow));
     
     RunEventLoop(gRunCondition);
+
+    // Null things out before going away.
     
+    newWindow = nsnull;
+    wwatch = nsnull;
+
     // Close down Embedding APIs
     NS_TermEmbedding();
 
     return NS_OK;
-}
-
-nsresult StartupProfile()
-{    
-	nsCOMPtr<nsIFile> appDataDir;
-	nsresult rv = NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_DIR, getter_AddRefs(appDataDir));
-	if (NS_FAILED(rv))
-        return rv;
-    
-	rv = appDataDir->Append(NS_LITERAL_STRING("minimo"));
-	if (NS_FAILED(rv))
-        return rv;
-
-	nsCOMPtr<nsILocalFile> localAppDataDir(do_QueryInterface(appDataDir));
-    
-	nsCOMPtr<nsProfileDirServiceProvider> locProvider;
-    NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
-    if (!locProvider)
-        return NS_ERROR_FAILURE;
-    
-	rv = locProvider->Register();
-    if (NS_FAILED(rv))
-        return rv;
-    
-	return locProvider->SetProfileDir(localAppDataDir);   
 }
 
 nativeWindow 
@@ -297,43 +356,3 @@ void WebBrowserChromeUI::Destroyed(nsIWebBrowserChrome* chrome)
     }
 }
 
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-PRUint32 RunEventLoop(PRBool &aRunCondition)
-{
-    MSG msg;
-    PRBool eventAvail;
-
-    nsCOMPtr<nsIEventQueue> eventQ;
-    nsCOMPtr<nsIEventQueueService> eqs = do_GetService(kEventQueueServiceCID);
-    if (!eqs)
-        return -1;
-    
-    eqs->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
-    
-    while (aRunCondition ) 
-    {
-        // Process pending messages
-        while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) 
-        {
-            if (!::GetMessage(&msg, NULL, 0, 0)) 
-            {
-                aRunCondition = PR_FALSE;
-                break;
-            }
-
-            eventQ->PendingEvents(&eventAvail);
-            if (eventAvail)
-                eventQ->ProcessPendingEvents();
-            
-            ::TranslateMessage(&msg);
-            ::DispatchMessage(&msg);
-        }
-        
-        // Do idle stuff
-        eventQ->PendingEvents(&eventAvail);
-        if (eventAvail)
-            eventQ->ProcessPendingEvents();
-    }
-    return msg.wParam;
-}

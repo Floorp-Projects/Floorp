@@ -68,11 +68,6 @@ CPPSRCS		= \
 		WindowCreator.cpp \
 		$(NULL)
 
-
-EXPORT_RESOURCE = \
-                 start.html \
-                 $(NULL)
-
 EXTRA_DSO_LIBS	= embed_base_s profdirserviceprovider_s
 
 LIBS		= \
@@ -120,8 +115,3 @@ include $(topsrcdir)/config/static-rules.mk
 endif # BUILD_STATIC_LIBS
 
 
-libs:: $(EXPORT_RESOURCE)
-	$(INSTALL) $^ $(DIST)/bin/res
-
-install:: $(EXPORT_RESOURCE)
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res 

@@ -72,10 +72,12 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
 
     nsresult CreateBrowser(PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **aBrowser);
-   
+
 protected:
 
     nativeWindow mNativeWindow;
+    nativeWindow mNativeMozWindow;
+
     PRUint32     mChromeFlags;
     PRBool       mContinueModalLoop;
 

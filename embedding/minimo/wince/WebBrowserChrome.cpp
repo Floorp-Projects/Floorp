@@ -45,7 +45,7 @@
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIContent.h"
-
+#include "nsIWidget.h"
 #include "winEmbed.h"
 #include "WebBrowserChrome.h"
 #include "nsIWebBrowserSetup.h"
@@ -90,6 +90,10 @@ nsresult WebBrowserChrome::CreateBrowser(PRInt32 aX, PRInt32 aY,
 
     browserBaseWindow->InitWindow( mNativeWindow, nsnull, aX, aY, aCX, aCY);
     browserBaseWindow->Create();
+
+    nsCOMPtr<nsIWidget> mozWidget;
+    browserBaseWindow->GetMainWidget(getter_AddRefs(mozWidget));
+    mNativeMozWindow = mozWidget->GetNativeData(NS_NATIVE_WINDOW);
 
     if (mWebBrowser)
     {
