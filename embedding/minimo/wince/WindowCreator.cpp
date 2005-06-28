@@ -28,7 +28,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIWebBrowserChrome.h"
 #include "WindowCreator.h"
 #include "MinimoPrivate.h"
 

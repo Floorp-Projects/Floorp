@@ -34,7 +34,7 @@
 #include "nsIWindowCreator.h"
 
 class WindowCreator :
-      public nsIWindowCreator
+    public nsIWindowCreator
 {
 public:
     WindowCreator();
