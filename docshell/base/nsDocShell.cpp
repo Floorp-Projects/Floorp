@@ -5299,6 +5299,11 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
         }
     }
 
+    // Tell the event loop to favor plevents over user events, see comments
+    // in CreateContentViewer.
+    if (++gNumberOfDocumentsLoading == 1)
+      PL_FavorPerformanceHint(PR_TRUE, NS_EVENT_STARVATION_DELAY_HINT);
+
     SetCurrentURI(uri);
 
     // Restore the page title.  Re-setting the current title on the document
