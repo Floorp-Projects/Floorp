@@ -306,11 +306,6 @@ interface nsIUpdateChecker : nsISupports
    *          A value representing the set of checks to stop doing.
    */
   void stopChecking(in unsigned short duration);
-
-  /**
-   * Whether or not this Checker can perform update checking.
-   */
-  readonly attribute boolean enabled;
 };
 
 [scriptable, uuid(9849c4bf-5197-4d22-baa8-e3b44a1703d2)]
@@ -364,6 +359,13 @@ interface nsIApplicationUpdateService : nsISupports
    * Whether or not there is an download happening at the moment.
    */
   readonly attribute boolean isDownloading;
+
+  /**
+   * Whether or not the Update Service can download and install updates.
+   * This is a function of whether or not the current user has access 
+   * privileges to the install directory.
+   */
+  readonly attribute boolean canUpdate;
 };
 
 [scriptable, uuid(fede66a9-9f96-4507-a22a-775ee885577e)]

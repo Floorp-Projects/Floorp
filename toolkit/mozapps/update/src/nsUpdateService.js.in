@@ -37,22 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
-const PREF_APP_UPDATE_AUTOINSTALL_ENABLED = "app.update.autoInstallEnabled";
-// Defines the notification behavior when updates are encountered
-//
-// 0 = download and install all updates (including major versions, provided
-//     no addons are made incompatible)
-// 1 = download and install minor (security) updates
-// 2 = ask before doing anything
-//
-const PREF_APP_UPDATE_AUTOINSTALL_MODE    = "app.update.autoInstallMode";
+const PREF_APP_UPDATE_MODE                = "app.update.mode";
+const PREF_APP_UPDATE_SILENT              = "app.update.silent";
 const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
 const PREF_APP_UPDATE_TIMER               = "app.update.timer";
 const PREF_APP_UPDATE_LOG_BRANCH          = "app.update.log.";
-
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
-
 const PREF_UPDATE_LASTUPDATETIME_FMT      = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
 
@@ -70,6 +61,7 @@ const FILE_UPDATE_ARCHIVE = "update.mar";
 const FILE_UPDATE_INFO    = "update.info";
 const FILE_UPDATES_DB     = "updates.xml";
 const FILE_UPDATE_ACTIVE  = "active-update.xml";
+const FILE_PERMS_TEST     = "update.test";
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
@@ -425,28 +417,40 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   showUpdateAvailable: function(parent, update) {
-    this._showUI(parent, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", update);
+    if (this._enabled) {
+      this._showUI(parent, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", 
+                   update);
+    }
   },
   
   /**
    * See nsIUpdateService.idl
    */
   showUpdateDownloaded: function(parent, update) {
-    this._showUI(parent, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", update);
+    if (this._enabled) {
+      this._showUI(parent, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", 
+                   update);
+    }
   },
   
   /**
    * See nsIUpdateService.idl
    */
   showUpdateInstalled: function(update) {
-    this._showUI(null, URI_UPDATE_PROMPT_DIALOG, "modal", "Update:Wizard", update);
+    if (this._enabled) {
+      this._showUI(null, URI_UPDATE_PROMPT_DIALOG, "modal", "Update:Wizard", 
+                   update);
+    }
   },
   
   /**
    * See nsIUpdateService.idl
    */
   showUpdateError: function(update) {
-    this._showUI(null, URI_UPDATE_PROMPT_DIALOG, "modal", "Update:Wizard", update);
+    if (this._enabled) {
+      this._showUI(null, URI_UPDATE_PROMPT_DIALOG, "modal", "Update:Wizard", 
+                   update);
+    }
   },
   
   /**
@@ -454,6 +458,13 @@ UpdatePrompt.prototype = {
    */
   showUpdateHistory: function(parent) {
     this._showUI(parent, URI_UPDATE_HISTORY_DIALOG, "modal", "Update:History", null);
+  },
+  
+  /**
+   * Whether or not we are enabled (i.e. not in Silent mode)
+   */
+  get _enabled() {
+    return !getPref("getBoolPref", PREF_APP_UPDATE_SILENT, false);
   },
   
   /**
@@ -689,15 +700,17 @@ UpdateService.prototype = {
     // The outcome we follow is determined as follows:
     // 
     // Update Type      Mode      Incompatible    Outcome
-    // Major            0         No              Auto Install
-    // Major            0         Yes             Notify and Confirm
-    // Major            1         Yes or No       Notify and Confirm
+    // Major            0         Yes or No       Auto Install
+    // Major            1         No              Auto Install
+    // Major            1         Yes             Notify and Confirm
     // Major            2         Yes or No       Notify and Confirm
-    // Minor            0         No              Auto Install
-    // Minor            0         Yes             Notify and Confirm
+    // Major            3         Yes or No       Notify and Confirm
+    // Minor            0         Yes or No       Auto Install
     // Minor            1         No              Auto Install
     // Minor            1         Yes             Notify and Confirm
-    // Minor            2         Yes or No       Notify and Confirm
+    // Minor            2         No              Auto Install
+    // Minor            2         Yes             Notify and Confirm
+    // Minor            3         Yes or No       Notify and Confirm
     //
     // In addition, if there is a license associated with an update, regardless
     // of type it must be agreed to. 
@@ -705,18 +718,30 @@ UpdateService.prototype = {
     // If app.update.enabled is set to false, an update check is not performed
     // at all, and so none of the decision making above is entered into.
     //
-    if (update.licenseURL)
+    update.QueryInterface(Components.interfaces.nsIPropertyBag);
+    var licenseAccepted = update.getProperty("licenseAccepted") == "true";
+    if (update.licenseURL && !licenseAccepted)
       return true;
     
     var updateEnabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
     if (!updateEnabled)
       return false;
       
-    var mode = getPref("getIntPref", PREF_APP_UPDATE_AUTOINSTALL_MODE, 0);
-    var compatible = isCompatible(update);
-    if ((update.type == "major" && (mode == 0)) ||
-        (update.type == "minor" && (mode == 0 || mode == 1)))
-      return !compatible;
+    switch (getPref("getIntPref", PREF_APP_UPDATE_MODE, 1)) {
+    case 0:
+      // Mode 0 is do not prompt regardless of incompatibilities
+      return false;
+    case 1:
+      // Mode 1 is do not prompt only if there are no incompatibilities
+      // releases
+      return !isCompatible(update);
+    case 2:
+      // Mode 2 is do not prompt only if there are no incompatibilities for 
+      // minor updates only
+      if (update.type == "minor")
+        return !isCompatible(update);
+    }
+    // Mode 3 is prompt, regardless.
     return true;
   },
   
@@ -782,6 +807,24 @@ UpdateService.prototype = {
     if (!this._backgroundChecker) 
       this._backgroundChecker = new Checker();
     return this._backgroundChecker;
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  get canUpdate() {
+    try {
+      var file = getFile(KEY_APPDIR, [FILE_PERMS_TEST]);
+      if (!file.exists()) {
+        file.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+        file.remove(false);
+      }
+    }
+    catch (e) {
+      // No write privileges to install directory
+      return false;
+    }
+    return true;
   },
   
   /**
@@ -921,18 +964,15 @@ UpdateManager.prototype = {
     this._ensureActiveUpdate();
   },
 
-  _loadedActiveUpdate: false,
-  
   /**
    * Ensure that the Active Update file is loaded.
    */
   _ensureActiveUpdate: function() {
-    if (!this._loadedActiveUpdate) {
+    if (!this._activeUpdate) {
       var updates = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, 
         [FILE_UPDATE_ACTIVE]));
       if (updates.length > 0)
         this._activeUpdate = updates[0];
-      this._loadedActiveUpdate = true;
     }
   },
   
@@ -962,7 +1002,7 @@ UpdateManager.prototype = {
   set activeUpdate(activeUpdate) {
     this._ensureActiveUpdate();
     if (!activeUpdate)
-      this._updates = [this._activeUpdate].concat(this._updates);
+      this._addUpdate(this._activeUpdate);
     this._activeUpdate = activeUpdate;
     if (!activeUpdate) {
       // If |activeUpdate| is null, we have updated both lists - the active list
@@ -984,7 +1024,32 @@ UpdateManager.prototype = {
   },
   
   /**
-   *
+   * Add an update to the Updates list. If the item already exists in the list,
+   * replace the existing value with the new value.
+   * @param   update
+   *          The nsIUpdate object to add.
+   */
+  _addUpdate: function(update) {
+    if (this._updates) {
+      for (var i = 0; i < this._updates.length; ++i) {
+        if (this._updates[i].version == update.version) {
+          // Replace the existing entry with the new value, updating
+          // all metadata.
+          this._updates[i] = update;
+          return;
+        }
+      }
+    }
+    // Otherwise add it to the front of the list.
+    this._updates = [this._activeUpdate].concat(this._updates);
+  },
+  
+  /**
+   * Serializes an array of updates to an XML file
+   * @param   updates
+   *          An array of nsIUpdate objects
+   * @param   file
+   *          The nsIFile object to serialize to
    */
   _writeUpdatesToXMLFile: function(updates, file) {
     var fos = Components.classes["@mozilla.org/network/safe-file-output-stream;1"]
@@ -1256,7 +1321,7 @@ Update.prototype = {
     
     for (var p in this._properties) {
       if (this._properties[p].present)
-        patch.setAttribute(p, this._properties[p].data);
+        update.setAttribute(p, this._properties[p].data);
     }
     
     for (var i = 0; i < this.patchCount; ++i)
@@ -1502,8 +1567,11 @@ Checker.prototype = {
    * See nsIUpdateService.idl
    */
   get enabled() {
+    var aus = 
+        Components.classes["@mozilla.org/updates/update-service;1"].
+        getService(Components.interfaces.nsIApplicationUpdateService);
     var enabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true) && 
-                  this._enabled;
+                  aus.canUpdate && this._enabled;
     return enabled;
   },
   
@@ -1867,6 +1935,7 @@ Downloader.prototype = {
     var shouldShowPrompt = false;
     var deleteActiveUpdate = false;
     const NS_BINDING_ABORTED = 0x804b0002;
+    const NS_ERROR_ABORT = 0x80004004;
     if (Components.isSuccessCode(status)) {
       if (this._verifyDownload()) {
         state = STATE_PENDING;
@@ -1908,7 +1977,8 @@ Downloader.prototype = {
         cleanUpUpdatesDir();
       }
     }
-    else if (status != NS_BINDING_ABORTED) {
+    else if (status != NS_BINDING_ABORTED &&
+             status != NS_ERROR_ABORT) {
       LOG("Downloader", "onStopRequest: Non-verification failure");
       // Some sort of other failure, log this in the |statusText| property
       state = STATE_FAILED;

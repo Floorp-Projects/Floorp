@@ -133,7 +133,7 @@ var gUpdates = {
    * the function call to the selected page.
    */
   onWizardFinish: function() {
-    var pageid = gUpdates.wiz.currentPage.pageid;
+    var pageid = document.documentElement.currentPage.pageid;
     if ("onWizardFinish" in this._pages[pageid])
       this._pages[pageid].onWizardFinish();
   },
@@ -143,9 +143,22 @@ var gUpdates = {
    * the function call to the selected page.
    */
   onWizardCancel: function() {
-    var pageid = gUpdates.wiz.currentPage.pageid;
+    var pageid = document.documentElement.currentPage.pageid;
     if ("onWizardCancel" in this._pages[pageid])
       this._pages[pageid].onWizardCancel();
+  },
+  
+  /**
+   * Called when the user presses the "Next" button on the wizard, dispatches
+   * the function call to the selected page.
+   */
+  onWizardNext: function() {
+    var cp = document.documentElement.currentPage;
+    if (!cp)  
+      return;
+    var pageid = cp.pageid;
+    if ("onWizardNext" in this._pages[pageid])
+      this._pages[pageid].onWizardNext();
   },
   
   /**
@@ -276,9 +289,6 @@ var gUpdates = {
   setUpdate: function(update) {
     this.update = update;
     this.update.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
-    var p = this.update.selectedPatch;
-    if (p)
-      p.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
   },
   
   /**
@@ -493,8 +503,16 @@ var gUpdatesAvailablePage = {
     // If we were invoked from a background update check, automatically show 
     // the additional details the user may need to make this decision since 
     // they did not consciously make the decision to check. 
-    if (gUpdates.sourceEvent == SRCEVT_BACKGROUND)
-      this.onShowMoreDetails();
+    // if (gUpdates.sourceEvent == SRCEVT_BACKGROUND)
+    // This is ridiculous... always show the additional info.
+    this.onShowMoreDetails();
+      
+    try {
+      gUpdates.update.getProperty("licenseAccepted");
+    }
+    catch (e) {
+      gUpdates.update.setProperty("licenseAccepted", "false");
+    }
     
     var downloadNow = document.getElementById("downloadNow");
     downloadNow.focus();
@@ -601,6 +619,10 @@ var gLicensePage = {
    */
   onWizardNext: function() {
     gUpdates.update.setProperty("licenseAccepted", "true");
+    var um = 
+        Components.classes["@mozilla.org/updates/update-manager;1"].
+        getService(Components.interfaces.nsIUpdateManager);
+    um.saveUpdates();
   },
   
   /**
@@ -885,10 +907,8 @@ var gDownloadingPage = {
         Components.classes["@mozilla.org/updates/update-manager;1"].
         getService(Components.interfaces.nsIUpdateManager);
     var activeUpdate = um.activeUpdate;
-    if (activeUpdate) {
+    if (activeUpdate)
       gUpdates.setUpdate(activeUpdate);
-      this._togglePausedState(!updates.isDownloading);
-    }
     
     if (!gUpdates.update) {
       LOG("UI:DownloadingPage.Progress", "no valid update to download?!");
@@ -910,6 +930,9 @@ var gDownloadingPage = {
       // Add this UI as a listener for active downloads
       updates.addDownloadListener(this);
     }
+    
+    if (activeUpdate)
+      this._setUIState(!updates.isDownloading);
     
     gUpdates.wiz.getButton("back").disabled = true;
     var cancelButton = gUpdates.wiz.getButton("cancel");
@@ -954,24 +977,28 @@ var gDownloadingPage = {
    * @param   paused
    *          Whether or not the download is paused
    */
-  _togglePausedState: function(paused) {
+  _setUIState: function(paused) {
     var u = gUpdates.update;
     var p = u.selectedPatch.QueryInterface(Components.interfaces.nsIPropertyBag);
+    var status = p.getProperty("status");
     if (paused) {
       this._oldStatus = this._downloadStatus.textContent;
       this._oldMode = this._downloadProgress.mode;
       this._oldProgress = parseInt(this._downloadProgress.progress);
       this._downloadName.value = gUpdates.strings.getFormattedString(
         "pausedName", [u.name]);
-      this._setStatus(p.getProperty("status"));
+      if (status)
+        this._setStatus(status);
       this._downloadProgress.mode = "normal";
-      
       this._pauseButton.label = gUpdates.strings.getString("pauseButtonResume");
     }
     else {
       this._downloadName.value = gUpdates.strings.getFormattedString(
         "downloadingPrefix", [u.name]);
-      this._setStatus(this._oldStatus || p.getProperty("status"));
+      if (this._oldStatus)
+        this._setStatus(this._oldStatus);
+      else if (status)
+        this._setStatus(status);
       this._downloadProgress.value = 
         this._oldProgress || parseInt(p.getProperty("progress"));
       this._downloadProgress.mode = this._oldMode || "normal";
@@ -990,6 +1017,7 @@ var gDownloadingPage = {
       updates.downloadUpdate(gUpdates.update, false);
     else {
       var patch = gUpdates.update.selectedPatch;
+      patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
       patch.setProperty("status", 
         gUpdates.strings.getFormattedString("pausedStatus", 
           [this.statusFormatter.progress]));
@@ -998,7 +1026,7 @@ var gDownloadingPage = {
     this._paused = !this._paused;
     
     // Update the UI
-    this._togglePausedState(this._paused);
+    this._setUIState(this._paused);
   },
   
   /** 
@@ -1072,6 +1100,7 @@ var gDownloadingPage = {
         "/" + maxProgress);
 
     var p = gUpdates.update.selectedPatch;
+    p.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
     p.setProperty("progress", Math.round(100 * (progress/maxProgress)));
     p.setProperty("status", 
       this.statusFormatter.formatStatus(progress, maxProgress));
@@ -1081,7 +1110,9 @@ var gDownloadingPage = {
     this._pauseButton.disabled = false;
     var name = gUpdates.strings.getFormattedString("downloadingPrefix", [gUpdates.update.name]);
     this._downloadName.value = name;
-    this._setStatus(p.getProperty("status"));
+    var status = p.getProperty("status");
+    if (status)
+      this._setStatus(status);
   },
   
   /** 
