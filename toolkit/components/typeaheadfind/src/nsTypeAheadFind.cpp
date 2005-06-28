@@ -118,11 +118,10 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 nsTypeAheadFind::nsTypeAheadFind():
   mLinksOnlyPref(PR_FALSE), mStartLinksOnlyPref(PR_FALSE),
   mLinksOnly(PR_FALSE), mCaretBrowsingOn(PR_FALSE),
-  mLiteralTextSearchOnly(PR_FALSE), mDontTryExactMatch(PR_FALSE),
-  mAllTheSameChar(PR_TRUE),
+  mFocusLinks(PR_FALSE), mLiteralTextSearchOnly(PR_FALSE),
+  mDontTryExactMatch(PR_FALSE), mAllTheSameChar(PR_TRUE),
   mRepeatingMode(eRepeatingNone), mLastFindLength(0),
-  mFocusLinks(PR_FALSE),
-  mSoundInterface(nsnull), mIsSoundInitialized(PR_FALSE)
+  mIsSoundInitialized(PR_FALSE)
 {
 }
 
@@ -281,7 +280,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
   mFoundLink = nsnull;
   nsCOMPtr<nsISelection> selection;
   nsCOMPtr<nsISelectionController> selectionController;
-  nsCOMPtr<nsIPresShell> startingPresShell (do_QueryReferent(mPresShell));
+  nsCOMPtr<nsIPresShell> startingPresShell (GetPresShell());
   if (!startingPresShell) {    
     nsCOMPtr<nsIDocShell> ds = do_QueryReferent(mDocShell);
     NS_ENSURE_TRUE(ds, NS_ERROR_FAILURE);
@@ -442,7 +441,10 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
         }
       }
 
-      *aResult = hasWrapped ? FIND_WRAPPED : FIND_FOUND;
+      if (hasWrapped)
+        *aResult = FIND_WRAPPED;
+      else
+        *aResult = FIND_FOUND;
 
       return NS_OK;
     }
@@ -603,7 +605,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   // Consider current selection as null if
   // it's not in the currently focused document
   nsCOMPtr<nsIDOMRange> currentSelectionRange;
-  nsCOMPtr<nsIPresShell> selectionPresShell (do_QueryReferent(mPresShell));
+  nsCOMPtr<nsIPresShell> selectionPresShell (GetPresShell());
   if (aCanUseDocSelection && selectionPresShell && selectionPresShell == presShell) {
     nsCOMPtr<nsISelection> selection;
     nsCOMPtr<nsISelectionController> selectionController;
@@ -819,7 +821,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly, PRUint1
 
   nsCOMPtr<nsISelection> selection;
   nsCOMPtr<nsISelectionController> selectionController;
-  nsCOMPtr<nsIPresShell> presShell (do_QueryReferent(mPresShell));
+  nsCOMPtr<nsIPresShell> presShell (GetPresShell());
   if (!presShell) {    
     nsCOMPtr<nsIDocShell> ds (do_QueryReferent(mDocShell));
     NS_ENSURE_TRUE(ds, NS_ERROR_FAILURE);
@@ -1135,4 +1137,22 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   }
 
   return PR_FALSE;
+}
+
+already_AddRefed<nsIPresShell>
+nsTypeAheadFind::GetPresShell()
+{
+  if (!mPresShell)
+    return nsnull;
+
+  nsIPresShell *shell = nsnull;
+  CallQueryReferent(mPresShell.get(), &shell);
+  if (shell) {
+    nsPresContext *pc = shell->GetPresContext();
+    if (!pc || !nsCOMPtr<nsISupports>(pc->GetContainer())) {
+      NS_RELEASE(shell);
+    }
+  }
+
+  return shell;
 }

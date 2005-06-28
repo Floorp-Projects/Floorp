@@ -183,6 +183,10 @@ protected:
                      PRBool aClearStatus, const PRUnichar *aText = nsnull);
   nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
 
+  // Get the pres shell from mFocusedWeakShell and return it only if it is
+  // still attached to the DOM window.
+  NS_HIDDEN_(already_AddRefed<nsIPresShell>) GetPresShell();
+
   // Used by GetInstance and ReleaseInstance
   static nsTypeAheadFind *sInstance;
 
