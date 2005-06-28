@@ -1206,6 +1206,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
     rv = parentFolder->AddSubfolder(safeName, getter_AddRefs(newFolder));
     if (newFolder) 
     {
+      // Because we just renamed the db, w/o setting the pretty name in it, 
+      // we need to force the pretty name to be correct. 
+      // SetPrettyName won't write the name to the db if it doesn't think the 
+      // name has changed. This hack forces the pretty name to get set in the db.
+      // We could set the new pretty name on the db before renaming the .msf file,
+      // but if the rename failed, it would be out of sync.
+      newFolder->SetPrettyName(NS_LITERAL_STRING("").get());
       newFolder->SetPrettyName(aNewName);
       PRBool changed = PR_FALSE;
       MatchOrChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
