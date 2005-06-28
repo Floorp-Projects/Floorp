@@ -80,7 +80,7 @@
           <hbox class="indent">
             <filefield id="soundUrlLocation" flex="1" preference="mail.biff.play_sound.url"
                        preference-editable="true"
-                       onpreferenceread="return gNotificationsDialog.readSoundLocation();"/>
+                       onsyncfrompreference="return gNotificationsDialog.readSoundLocation();"/>
             <button id="browse" label="&browse.label;" 
                     accesskey="&browse.accesskey;" oncommand="gNotificationsDialog.browseForSoundFile();"/>
           </hbox>

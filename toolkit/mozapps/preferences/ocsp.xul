@@ -62,7 +62,7 @@
     
     <description>&validation.ocsp.description;</description>
     <radiogroup id="securityOCSPEnabled" preference="security.OCSP.enabled"
-                onpreferenceread="return gOCSPDialog._updateUI();">
+                onsyncfrompreference="return gOCSPDialog._updateUI();">
       <radio value="0" label="&disableOCSP.label;"/>
       <radio value="1" label="&certOCSP.label;"/>
       <radio value="2" label="&proxyOCSP.label;"/>

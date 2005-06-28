@@ -83,7 +83,7 @@
             <vbox align="start">
               <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
                         label="&popupReject.label;" accesskey="&popupReject.accesskey;"
-                        onpreferenceread="return gContentPane.updateButtons('popupPolicyButton', 
+                        onsyncfrompreference="return gContentPane.updateButtons('popupPolicyButton', 
                                                                             'dom.disable_open_during_load');"/>
             </vbox>
             <button id="popupPolicyButton" label="&allowedSites.label;"
@@ -93,7 +93,7 @@
             <vbox align="start">
               <checkbox id="enableSoftwareInstall" preference="xpinstall.enabled"
                         label="&enableXPInstall.label;" accesskey="&enableXPInstall.accesskey;"
-                        onpreferenceread="return gContentPane.updateButtons('enableSoftwareInstallButton', 
+                        onsyncfrompreference="return gContentPane.updateButtons('enableSoftwareInstallButton', 
                                                                             'xpinstall.enabled');"/>
             </vbox>
             <button id="enableSoftwareInstallButton" label="&allowedSites.label;"
@@ -105,14 +105,14 @@
                         label="&enableImages.label;" 
                         accesskey="&enableImages.accesskey;"
                         preference="permissions.default.image"
-                        onpreferenceread="return gContentPane.readEnableImagesPref();"
-                        onpreferencewrite="return gContentPane.writeEnableImagesPref();"/>
+                        onsyncfrompreference="return gContentPane.readEnableImagesPref();"
+                        onsynctopreference="return gContentPane.writeEnableImagesPref();"/>
               <checkbox id="enableRestricted" class="indent"
                         label="&forOriginatingSiteOnly.label;" 
                         accesskey="&forOriginatingSiteOnly.accesskey;"
                         preference="permissions.default.image"
-                        onpreferenceread="return gContentPane.readEnableRestrictedPref();"
-                        onpreferencewrite="return gContentPane.writeEnableImagesPref();"/>
+                        onsyncfrompreference="return gContentPane.readEnableRestrictedPref();"
+                        onsynctopreference="return gContentPane.writeEnableImagesPref();"/>
             </vbox>
             <vbox>
               <button id="manageImages" label="&exceptions.label;"
@@ -131,13 +131,13 @@
             <vbox align="start">
               <checkbox id="enableJavaScript" preference="javascript.enabled"
                         label="&enableJavaScript.label;" accesskey="&enableJavaScript.accesskey;"
-                        onpreferenceread="return gContentPane.updateButtons('disableAnnoyances', 
+                        onsyncfrompreference="return gContentPane.updateButtons('disableAnnoyances', 
                                                                             'javascript.enabled');"/>
               <checkbox id="disableAnnoyances" class="indent" 
                         preference="browser.jsannoyances.disabled"
                         label="&disableAnnoyances.label;" accesskey="&disableAnnoyances.accesskey;"
-                        onpreferenceread="return gContentPane.readAnnoyancesEnabled();"
-                        onpreferencewrite="return gContentPane.writeAnnoyancesEnabled();"/>
+                        onsyncfrompreference="return gContentPane.readAnnoyancesEnabled();"
+                        onsynctopreference="return gContentPane.writeAnnoyancesEnabled();"/>
             </vbox>
           </row>
         </rows>

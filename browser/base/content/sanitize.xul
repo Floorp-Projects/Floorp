@@ -139,17 +139,17 @@
       <caption label="&sanitizeItems.label;"/>
       
       <checkbox label="&itemHistory.label;"   preference="privacy.item.history"
-                onpreferenceread="return gSanitizePromptDialog.onReadGeneric();"/>
+                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
       <checkbox label="&itemFormData.label;"  preference="privacy.item.formdata"
-                onpreferenceread="return gSanitizePromptDialog.onReadGeneric();"/>
+                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
       <checkbox label="&itemPasswords.label;" preference="privacy.item.passwords"
                 onpreferenceread="return gSanitizePromptDialog.onReadSanitizePasswords();"/>
       <checkbox label="&itemDownloads.label;" preference="privacy.item.downloads"
-                onpreferenceread="return gSanitizePromptDialog.onReadGeneric();"/>
+                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
       <checkbox label="&itemCookies.label;"   preference="privacy.item.cookies"
-                onpreferenceread="return gSanitizePromptDialog.onReadGeneric();"/>
+                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
       <checkbox label="&itemCache.label;"     preference="privacy.item.cache"
-                onpreferenceread="return gSanitizePromptDialog.onReadGeneric();"/>
+                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
     </groupbox>
     
     <groupbox orient="vertical" align="start">

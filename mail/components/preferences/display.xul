@@ -228,7 +228,7 @@
                   <label control="sendDefaultCharsetList"
                          value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;"/>
                   <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
-                            preference="mailnews.send_default_charset" onpreferenceread="return gDisplayPane.readDefaultCharset();">
+                            preference="mailnews.send_default_charset" onsyncfrompreference="return gDisplayPane.readDefaultCharset();">
                     <template>
                       <menupopup>
                         <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>

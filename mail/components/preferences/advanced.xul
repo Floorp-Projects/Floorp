@@ -191,13 +191,13 @@
                         label="&enableSmartUpdate.label;"
                         accesskey="&enableSmartUpdate.accesskey;"
                         preference="app.update.enabled"
-                        onpreferenceread="return gAdvancedPane.updateAppUpdateUI();"/>
+                        onsyncfrompreference="return gAdvancedPane.updateAppUpdateUI();"/>
               <vbox class="indent" align="start">
                 <checkbox id="enableAutoInstall"
                           label="&enableAutoInstall.label;"
                           accesskey="&enableAutoInstall.accesskey;"
                           preference="app.update.autoInstallEnabled"
-                          onpreferenceread="return gAdvancedPane.updateAutoInstallUI();"/>
+                          onsyncfrompreference="return gAdvancedPane.updateAutoInstallUI();"/>
                 <radiogroup id="autoInstallMode" preference="app.update.autoInstallMode">
                   <grid class="indent">
                     <columns>

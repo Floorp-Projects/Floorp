@@ -71,7 +71,7 @@
         <hbox align="center">
           <label value="&language.label;" accesskey="&language.accesskey;" control="selectLangs"/>
         </hbox>
-        <menulist id="selectLangs" onpreferenceread="return gFontsDialog.readFontLanguageGroup();"
+        <menulist id="selectLangs" onsyncfrompreference="return gFontsDialog.readFontLanguageGroup();"
                   preference="font.language.group">
           <menupopup>
             <menuitem value="x-western" label="&font.langGroup.latin1;"/>
@@ -172,7 +172,7 @@
               <label accesskey="&serif.accesskey;" control="serif">&serif.label;</label>
             </hbox>
             <menulist id="serif" flex="1" style="width: 0px;"
-                      onpreferenceread="return gFontsDialog.readFontSelection(document.getElementById('serif'));"/>
+                      onsyncfrompreference="return gFontsDialog.readFontSelection(document.getElementById('serif'));"/>
             <spacer/>
           </row>
           <row align="center">
@@ -180,7 +180,7 @@
               <label accesskey="&sans-serif.accesskey;" control="sans-serif">&sans-serif.label;</label>
             </hbox>
             <menulist id="sans-serif" flex="1" style="width: 0px;"
-                      onpreferenceread="return gFontsDialog.readFontSelection(document.getElementById('sans-serif'));"/>
+                      onsyncfrompreference="return gFontsDialog.readFontSelection(document.getElementById('sans-serif'));"/>
             <spacer/>
           </row>
           <row align="center">
@@ -188,7 +188,7 @@
               <label accesskey="&monospace.accesskey;" control="monospace">&monospace.label;</label>
             </hbox>
             <menulist id="monospace" flex="1" style="width: 0px;" crop="right"
-                      onpreferenceread="return gFontsDialog.readFontSelection(document.getElementById('monospace'));"/>
+                      onsyncfrompreference="return gFontsDialog.readFontSelection(document.getElementById('monospace'));"/>
             <hbox align="center" pack="end">
               <label>&sizes.label;</label>
             </hbox> 
@@ -234,7 +234,7 @@
           <menulist id="screenResolution" 
                     oncommand="gFontsDialog.changeScreenResolution(this)"
                     preference="browser.display.screen_resolution"
-                    onpreferenceread="return gFontsDialog.readScreenResolution();">
+                    onsyncfrompreference="return gFontsDialog.readScreenResolution();">
             <menupopup>
               <menuitem id="otherResolution" value="72"/>
               <menuitem id="defaultResolution" value="96"/>
@@ -279,8 +279,8 @@
         <checkbox id="useDocumentFonts" 
                   label="&useDocumentFonts.label;" accesskey="&useDocumentFonts.accesskey;"
                   preference="browser.display.use_document_fonts"
-                  onpreferenceread="return gFontsDialog.readUseDocumentFonts();"
-                  onpreferencewrite="return gFontsDialog.writeUseDocumentFonts();"/>
+                  onsyncfrompreference="return gFontsDialog.readUseDocumentFonts();"
+                  onsynctopreference="return gFontsDialog.writeUseDocumentFonts();"/>
       </hbox>
     </groupbox>
     <separator/>

@@ -199,8 +199,8 @@
             <hbox>
               <checkbox id="enableCookies" preference="network.cookie.cookieBehavior"
                         label="&enableCookies.label;" accesskey="&enableCookies.accesskey;"
-                        onpreferenceread="return gPrivacyPane.readEnableCookiesPref();"
-                        onpreferencewrite="return gPrivacyPane.writeEnableCookiesPref();"/>
+                        onsyncfrompreference="return gPrivacyPane.readEnableCookiesPref();"
+                        onsynctopreference="return gPrivacyPane.writeEnableCookiesPref();"/>
               <button id="cookieExceptions" oncommand="gPrivacyPane.viewCookieExceptions();"
                       label="&exceptions.label;" accesskey="&cookieExceptions.accesskey;"
                       preference="pref.privacy.disable_button.cookie_exceptions"/>
@@ -210,8 +210,8 @@
                         label="&enableCookiesForOriginating.label;"
                         accesskey="&enableCookiesForOriginating.accesskey;"
                         preference="network.cookie.cookieBehavior"
-                        onpreferenceread="return gPrivacyPane.readEnableRestrictedPref();"
-                        onpreferencewrite="return gPrivacyPane.writeEnableCookiesPref();"/>
+                        onsyncfrompreference="return gPrivacyPane.readEnableRestrictedPref();"
+                        onsynctopreference="return gPrivacyPane.writeEnableCookiesPref();"/>
               <checkbox id="enableCookiesNotRemoved" class="indent"
                         label="&enableCookiesNotRemoved.label;"
                         accesskey="&enableCookiesNotRemoved.accesskey;"
@@ -249,8 +249,8 @@
           <hbox align="center">
             <label accesskey="&cacheUseUpTo.accesskey;" control="cacheSize">&cacheUseUpTo.label;</label>
             <textbox id="cacheSize" size="2" preference="browser.cache.disk.capacity"
-                     onpreferenceread="return gPrivacyPane.readCacheSizePref();"
-                     onpreferencewrite="return gPrivacyPane.writeCacheSizePref();"/>
+                     onsyncfrompreference="return gPrivacyPane.readCacheSizePref();"
+                     onsynctopreference="return gPrivacyPane.writeCacheSizePref();"/>
             <label>&cacheSize.label;</label>
           </hbox>
           <separator flex="1"/>
@@ -354,8 +354,8 @@
             <hbox>
               <checkbox id="enableCookies" preference="network.cookie.cookieBehavior"
                         label="&enableCookies.label;" accesskey="&enableCookies.accesskey;"
-                        onpreferenceread="return gPrivacyPane.readEnableCookiesPref();"
-                        onpreferencewrite="return gPrivacyPane.writeEnableCookiesPref();"/>
+                        onsyncfrompreference="return gPrivacyPane.readEnableCookiesPref();"
+                        onsynctopreference="return gPrivacyPane.writeEnableCookiesPref();"/>
               <spring flex="1"/>
               <button id="cookieExceptions" oncommand="gPrivacyPane.viewCookieExceptions();"
                       label="&exceptions.label;" accesskey="&cookieExceptions.accesskey;"/>
@@ -365,8 +365,8 @@
                         label="&enableCookiesForOriginating.label;"
                         accesskey="&enableCookiesForOriginating.accesskey;"
                         preference="network.cookie.cookieBehavior"
-                        onpreferenceread="return gPrivacyPane.readEnableRestrictedPref();"
-                        onpreferencewrite="return gPrivacyPane.writeEnableCookiesPref();"/>
+                        onsyncfrompreference="return gPrivacyPane.readEnableRestrictedPref();"
+                        onsynctopreference="return gPrivacyPane.writeEnableCookiesPref();"/>
               <checkbox id="enableCookiesNotRemoved" class="indent"
                         label="&enableCookiesNotRemoved.label;"
                         accesskey="&enableCookiesNotRemoved.accesskey;"
@@ -402,8 +402,8 @@
           <hbox align="center">
             <label accesskey="&cacheUseUpTo.accesskey;" control="cacheSize">&cacheUseUpTo.label;</label>
             <textbox id="cacheSize" size="2" preference="browser.cache.disk.capacity"
-                     onpreferenceread="return gPrivacyPane.readCacheSizePref();"
-                     onpreferencewrite="return gPrivacyPane.writeCacheSizePref();"/>
+                     onsyncfrompreference="return gPrivacyPane.readCacheSizePref();"
+                     onsynctopreference="return gPrivacyPane.writeCacheSizePref();"/>
             <label>&cacheSize.label;</label>
           </hbox>
           <separator flex="1"/>

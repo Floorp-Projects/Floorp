@@ -67,7 +67,7 @@
       
       <radiogroup id="askOnSave" flex="1"
                   preference="browser.download.useDownloadDir"
-                  onpreferenceread="return gDownloadsPane.onReadUseDownloadDir();">
+                  onsyncfrompreference="return gDownloadsPane.onReadUseDownloadDir();">
         <radio id="alwaysAsk" label="&alwaysAsk.label;" accesskey="&alwaysAsk.accesskey;" value="false"/>
         <vbox flex="1">
           <radio id="neverAsk" label="&neverAsk.label;" accesskey="&neverAsk.accesskey;" value="true"/>
@@ -75,11 +75,11 @@
             <filefield id="downloadFolder" flex="1"
                        preference="browser.download.folderList"
                        preference-editable="true"
-                       onpreferenceread="return gDownloadsPane.readDownloadDirPref();"
-                       onpreferencewrite="return gDownloadsPane.writeFolderList()"/>
+                       onsyncfrompreference="return gDownloadsPane.readDownloadDirPref();"
+                       onsynctopreference="return gDownloadsPane.writeFolderList()"/>
             <button id="chooseFolder" oncommand="gDownloadsPane.chooseFolder();"
                     preference="browser.download.folderList"
-                    onpreferencewrite="return gDownloadsPane.writeFolderList()"
+                    onsynctopreference="return gDownloadsPane.writeFolderList()"
 #ifdef XP_MACSOX
                     accesskey="&chooseFolderMac.accesskey;" label="&chooseFolderMac.label;"/>
 #else

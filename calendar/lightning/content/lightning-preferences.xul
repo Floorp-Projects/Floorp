@@ -72,8 +72,8 @@
           <label value="Default timezone"/>
           <listbox id="timezone-listbox" preference="calendar.timezone.local"
                    onselect="document.getElementById('paneLightning').userChangedValue(event.target);"
-                   onpreferencewrite="return gLightningPane.getTimezoneResult();"
-                   onpreferenceread="gLightningPane.setTimezone();"/>
+                   onsynctopreference="return gLightningPane.getTimezoneResult();"
+                   onsyncfrompreference="gLightningPane.setTimezone();"/>
         </tabpanel>
       </tabpanels>
     </tabbox>

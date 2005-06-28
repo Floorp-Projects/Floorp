@@ -98,7 +98,7 @@
 
           <hbox>
             <listbox id="html_domains" flex="1" seltype="multiple" rows="5"
-                     preference="mailnews.html_domains" onpreferencewrite="return gSendOptionsDialog.saveDomainPref(true);"
+                     preference="mailnews.html_domains" onsynctopreference="return gSendOptionsDialog.saveDomainPref(true);"
                      onkeypress="if (event.keyCode == 8 || event.keyCode == 46) gSendOptionsDialog.removeDomains(true);"/>
             <vbox>
               <button label="&AddButton.label;" oncommand="gSendOptionsDialog.addDomain(true);" accesskey="&AddHtmlDomain.accesskey;"/>
@@ -112,7 +112,7 @@
 
           <hbox>
             <listbox id="plaintext_domains" flex="1" seltype="multiple" rows="5"
-                     preference="mailnews.plaintext_domains" onpreferencewrite="return gSendOptionsDialog.saveDomainPref(false);"
+                     preference="mailnews.plaintext_domains" onsynctopreference="return gSendOptionsDialog.saveDomainPref(false);"
                      onkeypress="if (event.keyCode == 8 || event.keyCode == 46) gSendOptionsDialog.removeDomains(false);"/>
             <vbox>
               <button label="&AddButton.label;" oncommand="gSendOptionsDialog.addDomain(false);" accesskey="&AddPlainText.accesskey;"/>
