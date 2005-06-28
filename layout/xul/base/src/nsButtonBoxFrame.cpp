@@ -112,6 +112,8 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
       }
       break;
 
+// On mac, Return fires the defualt button, not the focused one.
+#ifndef XP_MACOSX
     case NS_KEY_PRESS:
       if (NS_KEY_EVENT == aEvent->eventStructType) {
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
@@ -119,10 +121,12 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
           nsCOMPtr<nsIDOMXULButtonElement> buttonEl(do_QueryInterface(mContent));
           if (buttonEl) {
             MouseClicked(aPresContext, aEvent);
+            aEvent->PreventDefault();
           }
         }
       }
       break;
+#endif
 
     case NS_KEY_UP:
       if (NS_KEY_EVENT == aEvent->eventStructType) {

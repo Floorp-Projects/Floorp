@@ -35,7 +35,6 @@
         if (!document.documentElement.cancelDialog())
           event.preventDefault();
       })</field>
-      <field name="enterDefaultAlways">false</field>
 
       <property name="buttons"
                 onget="return this.getAttribute('buttons');"
@@ -287,7 +286,7 @@
         <parameter name="evt"/>
         <body>
         <![CDATA[
-          if (!this.enterDefaultAlways && evt.getPreventDefault())
+          if (evt.getPreventDefault())
             return;
 
           // only accept dialog if accept button is the default
