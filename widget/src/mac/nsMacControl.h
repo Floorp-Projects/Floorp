@@ -81,6 +81,8 @@ protected:
 	
 	NS_METHOD			CreateOrReplaceMacControl(short inControlType);
 	virtual void		GetRectForMacControl(nsRect &outRect);
+	virtual ControlPartCode	GetControlHiliteState();
+
 	void				SetupMacControlFont();
 	void				ControlChanged(PRInt32 aNewValue);
 	void				NSStringSetControlTitle(ControlHandle theControl, nsString title);

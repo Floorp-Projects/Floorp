@@ -174,15 +174,11 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 		}
 
 		// update hilite
-		PRInt16 hilite;
-		if (mEnabled)
-			hilite = (mWidgetArmed && mMouseInButton ? 1 : 0);
-		else
-			hilite = kControlInactivePart;
-		if (hilite != mLastHilite)
+		PRInt16 curHilite = GetControlHiliteState();
+		if (curHilite != mLastHilite)
 		{
-			mLastHilite = hilite;
-			::HiliteControl(mControl, hilite);
+			mLastHilite = curHilite;
+			::HiliteControl(mControl, curHilite);
 		}
 
 		::SetControlVisibility(mControl, isVisible, false);
@@ -319,6 +315,23 @@ void nsMacControl::GetRectForMacControl(nsRect &outRect)
 {
 		outRect = mBounds;
 		outRect.x = outRect.y = 0;
+}
+
+//-------------------------------------------------------------------------
+//
+// Get the current hilite state of the control
+//
+//-------------------------------------------------------------------------
+ControlPartCode nsMacControl::GetControlHiliteState()
+{
+	// update hilite
+	PRInt16 curHilite;
+	if (mEnabled)
+		curHilite = (mWidgetArmed && mMouseInButton ? 1 : 0);
+	else
+		curHilite = kControlInactivePart;
+
+	return curHilite;
 }
 
 //-------------------------------------------------------------------------

@@ -88,9 +88,11 @@ protected:
   
   void RecreateHorizontalScrollbar();
 
-  virtual NSView*   CreateCocoaView() ;
-  virtual GrafPtr   GetQuickDrawPort() ;
+  virtual NSView*   CreateCocoaView();
+  virtual GrafPtr   GetQuickDrawPort();
 
+  void              UpdateScroller();
+  
 // DATA
 private:
 
@@ -101,7 +103,8 @@ private:
   PRUint32          mValue;
   PRUint32          mMaxValue;
   PRUint32          mVisibleImageSize;
-  PRUint32          mLineIncrement;  
+  PRUint32          mLineIncrement;
+  PRBool            mIsEnabled;
 };
 
 
