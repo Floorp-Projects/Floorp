@@ -302,4 +302,8 @@ typedef struct _BLENDFUNCTION
 #define RDW_NOINTERNALPAINT 0
 #endif
 
+#ifndef LR_LOADFROMFILE
+#define LR_LOADFROMFILE 0
+#endif
+
 #endif
