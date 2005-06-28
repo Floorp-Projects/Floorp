@@ -54,13 +54,18 @@ nsTextAccessibleWrap(aDomNode, aShell), mFrame(aFrame)
 }
 
 NS_IMETHODIMP nsHTMLTextAccessible::GetName(nsAString& aName)
-{ 
-  nsAutoString accName;
-  if (NS_FAILED(mDOMNode->GetNodeValue(accName)))
+{
+  aName.Truncate();
+  if (!mDOMNode) {
     return NS_ERROR_FAILURE;
-  accName.CompressWhitespace();
-  aName = accName;
-  return NS_OK;
+  }
+  nsAutoString name;
+  nsresult rv = mDOMNode->GetNodeValue(name);
+  if (NS_SUCCEEDED(rv)) {
+    name.ReplaceChar("\r\n\t", ' ');
+    aName = name;
+  }
+  return rv;
 }
 
 nsIFrame* nsHTMLTextAccessible::GetFrame()
