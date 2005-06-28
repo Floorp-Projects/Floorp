@@ -959,7 +959,7 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
   NSImage* iconImage = [[inNotification userInfo] objectForKey:SiteIconLoadImageKey];
   if (iconImage)
   {
-    [theItem setSiteIcon:iconImage];
+    [(HistorySiteItem*)theItem setSiteIcon:iconImage];
     [self notifyChanged:theItem itemOnly:YES];
   }
 }
