@@ -529,10 +529,27 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
-NS_IMPL_URI_ATTR(nsHTMLFormElement, Action, action)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Enctype, enctype)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Method, method)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Name, name)
+
+NS_IMETHODIMP
+nsHTMLFormElement::GetAction(nsAString& aValue)
+{
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::action, aValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aValue.IsEmpty()) {
+    // Avoid resolving action="" to the base uri, bug 297761.
+    return NS_OK;
+  }
+  return GetURIAttr(nsHTMLAtoms::action, aValue);
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::SetAction(const nsAString& aValue)
+{
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::action, aValue, PR_TRUE);
+}
 
 NS_IMETHODIMP
 nsHTMLFormElement::GetTarget(nsAString& aValue)
