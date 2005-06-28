@@ -102,7 +102,7 @@
 
             if (val) {
               val.selected = true;
-              this.scrollBoxObject.scrollToElement(val);
+              this.scrollBoxObject.ensureElementIsVisible(val);
               this.fireActiveItemEvent();
             }
 
@@ -161,6 +161,8 @@
               this.goDown();
             else
               this.selectedItem = lastSelected;
+
+            this.scrollBoxObject.scrollToElement(this.selectedItem);
           ]]>
         </body>
       </method>
