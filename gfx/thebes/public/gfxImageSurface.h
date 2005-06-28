@@ -44,11 +44,11 @@
 // ARGB -- raw buffer.. wont be changed.. good for storing data.
 
 class gfxImageSurface : public gfxASurface {
+    THEBES_DECL_ISUPPORTS_INHERITED
+
 public:
     gfxImageSurface(int format, long width, long height);
     virtual ~gfxImageSurface();
-
-    // <insert refcount stuff here>
 
     // ImageSurface methods
     int Format() const { return 0; }

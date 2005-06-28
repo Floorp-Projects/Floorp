@@ -38,34 +38,34 @@
 #ifndef GFX_MATRIX_H
 #define GFX_MATRIX_H
 
-#ifdef _MSC_VER
-#define _USE_MATH_DEFINES
-#endif
 #include <math.h>
 
 #include <cairo.h>
 
 #include "gfxTypes.h"
 
+// XX - I don't think this class should use gfxFloat at all,
+// but should use 'double' and be called gfxDoubleMatrix;
+// we can then typedef that to gfxMatrix where we typedef
+// double to be gfxFloat.
+
 class gfxMatrix {
-private:
-    gfxFloat m0, m1, m2, m3, m4, m5;
+protected:
+    cairo_matrix_t mat;
 
 public:
     gfxMatrix() { Reset(); }
-    gfxMatrix(const gfxMatrix& m) :
-        m0(m.m0), m1(m.m1), m2(m.m2), m3(m.m3), m4(m.m4), m5(m.m5) {}
-    gfxMatrix(gfxFloat a, gfxFloat b, gfxFloat c, gfxFloat d, gfxFloat tx, gfxFloat ty) :
-        m0(a), m1(b), m2(c), m3(d), m4(tx), m5(ty) {}
-
-    gfxMatrix(const cairo_matrix_t* m) {
-        cairo_matrix_get_affine(const_cast<cairo_matrix_t*>(m),
-                                &m0, &m1, &m2, &m3, &m4, &m5);
+    gfxMatrix(const gfxMatrix& m) : mat(m.mat) {}
+    gfxMatrix(gfxFloat a, gfxFloat b, gfxFloat c, gfxFloat d, gfxFloat tx, gfxFloat ty) {
+        mat.xx = a; mat.yx = b; mat.xy = c; mat.yy = d; mat.x0 = tx; mat.y0 = ty;
     }
 
-    gfxMatrix& operator=(const cairo_matrix_t* m) {
-        cairo_matrix_get_affine(const_cast<cairo_matrix_t*>(m),
-                                &m0, &m1, &m2, &m3, &m4, &m5);
+    gfxMatrix(const cairo_matrix_t& m) {
+        mat = m;
+    }
+
+    gfxMatrix& operator=(const cairo_matrix_t& m) {
+        mat = m;
         return *this;
     }
 
@@ -77,30 +77,41 @@ public:
         return gfxMatrix(*this).Multiply(m);
     }
 
-    // this name sucks ass. pick something better
-    void FillInCairoMatrix(cairo_matrix_t* m) const {
-        cairo_matrix_set_affine(m, m0, m1, m2, m3, m4, m5);
+    // conversion to other types
+    cairo_matrix_t ToCairoMatrix() const {
+        return mat;
     }
 
+    void ToValues(gfxFloat *xx, gfxFloat *yx,
+                  gfxFloat *xy, gfxFloat *yy,
+                  gfxFloat *x0, gfxFloat *y0) const
+    {
+        *xx = mat.xx;
+        *yx = mat.yx;
+        *xy = mat.xy;
+        *x0 = mat.x0;
+        *y0 = mat.y0;
+    }
+
+    // matrix operations
     const gfxMatrix& Reset() {
-        m0 = m3 = 1.0;
-        m1 = m2 = m4 = m5 = 0.0;
+        cairo_matrix_init_identity(&mat);
         return *this;
     }
 
     const gfxMatrix& Invert() {
-        // impl me
+        cairo_matrix_invert(&mat);
         return *this;
     }
 
     const gfxMatrix& Scale(gfxFloat x, gfxFloat y) {
-        gfxMatrix t(x, 0, 0, y, 0, 0);
-        return *this = t.Multiply(*this);
+        cairo_matrix_scale(&mat, x, y);
+        return *this;
     }
 
-    const gfxMatrix& Translate(gfxFloat x, gfxFloat y) {
-        gfxMatrix t(1, 0, 0, 1, x, y);
-        return *this = t.Multiply(*this);
+    const gfxMatrix& Translate(const gfxPoint& pt) {
+        cairo_matrix_translate(&mat, pt.x, pt.y);
+        return *this;
     }
 
     const gfxMatrix& Rotate(gfxFloat radians) {
@@ -113,29 +124,16 @@ public:
     }
 
     const gfxMatrix& Multiply(const gfxMatrix& m) {
-        gfxFloat t0 = m0 * m.m0 + m1 * m.m2;
-        gfxFloat t2 = m2 * m.m0 + m3 * m.m2;
-        gfxFloat t4 = m4 * m.m0 + m5 * m.m2 + m.m4;
-        m1 = m0 * m.m1 + m1 * m.m3;
-        m3 = m2 * m.m1 + m3 * m.m3;
-        m5 = m4 * m.m1 + m5 * m.m3 + m.m5;
-        m0 = t0;
-        m2 = t2;
-        m4 = t4;
+        cairo_matrix_multiply(&mat, &mat, &m.mat);
         return *this;
     }
 
     void TransformDistance(gfxFloat *dx, gfxFloat *dy) const {
-        gfxFloat new_x = m0 * *dx  +  m2 * *dy;
-        gfxFloat new_y = m1 * *dx  +  m3 * *dy;
-        *dx = new_x;
-        *dy = new_y;
+        cairo_matrix_transform_distance(&mat, dx, dy);
     }
 
     void TransformPoint(gfxFloat *x, gfxFloat *y) const {
-        TransformDistance(x, y);
-        *x += m4;
-        *y += m5;
+        cairo_matrix_transform_point(&mat, x, y);
     }
 };
 

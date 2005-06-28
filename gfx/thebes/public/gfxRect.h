@@ -39,20 +39,24 @@
 #define GFX_RECT_H
 
 #include "gfxTypes.h"
+#include "gfxPoint.h"
 
 struct gfxRect {
-    gfxFloat x, y, width, height;
+    // pt? point?
+    gfxPoint pos;
+    gfxSize size;
 
     gfxRect() {}
-    gfxRect(const gfxRect& s) : x(s.x), y(s.y), width(s.width), height(s.height) {}
+    gfxRect(const gfxRect& s) : pos(s.pos), size(s.size) {}
+    gfxRect(const gfxPoint& _pos, const gfxSize& _size) : pos(_pos), size(_size) {}
     gfxRect(gfxFloat _x, gfxFloat _y, gfxFloat _width, gfxFloat _height) :
-        x(_x), y(_y), width(_width), height(_height) {}
+        pos(_x, _y), size(_width, _height) {}
 
     int operator==(const gfxRect& s) const {
-        return ((x == s.x) && (y == s.y) && (width == s.width) && (height == s.height));
+        return (pos == s.pos) && (size == s.size);
     }
     int operator!=(const gfxRect& s) const {
-        return ((x != s.x) || (y != s.y) || (width != s.width) || (height != s.height));
+        return (pos != s.pos) || (size != s.size);
     }
 
     // XXX figure out what methods (intersect, union, etc) we use and add them.

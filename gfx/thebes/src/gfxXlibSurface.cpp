@@ -37,10 +37,12 @@
 
 #include "gfxXlibSurface.h"
 
+THEBES_IMPL_REFCOUNTING(gfxXlibSurface)
+
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable,
-                               Visual *visual, Colormap colormap)
+                               Visual *visual)
 {
-    Init(cairo_xlib_surface_create(display, drawable, visual, CAIRO_FORMAT_ARGB32, colormap);
+    Init(cairo_xlib_surface_create(display, drawable, visual, CAIRO_FORMAT_ARGB32);
 }
 
 gfxXlibSurface::~gfxXlibSurface()

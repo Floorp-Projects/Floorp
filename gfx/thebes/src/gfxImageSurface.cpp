@@ -37,12 +37,14 @@
 
 #include "gfxImageSurface.h"
 
+THEBES_IMPL_REFCOUNTING(gfxImageSurface)
+
 gfxImageSurface::gfxImageSurface(int format, long width, long height) :
     mFormat(format), mWidth(width), mHeight(height)
 {
     mData = new unsigned char[width * height * 4];
 
-    Init(cairo_image_surface_create_for_data((char*)mData,
+    Init(cairo_image_surface_create_for_data((unsigned char*)mData,
                                              CAIRO_FORMAT_ARGB32,
                                              width,
                                              height,

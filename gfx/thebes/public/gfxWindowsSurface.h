@@ -41,15 +41,14 @@
 #include "gfxASurface.h"
 #include "gfxPoint.h"
 
-#define CAIRO_HAS_WIN32_SURFACE 1
 #include <cairo-win32.h>
 
 class gfxWindowsSurface : public gfxASurface {
+    THEBES_DECL_ISUPPORTS_INHERITED
+
 public:
     gfxWindowsSurface(HDC dc);
     virtual ~gfxWindowsSurface();
-
-    // <insert refcount stuff here>
 };
 
 #endif /* GFX_WINDOWSSURFACE_H */
