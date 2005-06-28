@@ -1414,7 +1414,7 @@
         var self = this;
         this.mResizeHandler = function() { self.onResize(); };
         window.addEventListener("resize", this.mResizeHandler, true);
-        this.reorient();
+	this.reorient();
       ]]></constructor>
 
       <field name="mTimeoutScheduled">false</field>
@@ -1448,7 +1448,7 @@
 
           self.mLastSize = size;
 
-          var minutes = timebar.endMinute - timebar.startMinute;
+          var minutes = self.mEndMin - self.mStartMin;
           var ppm = size / minutes;
           self.pixelsPerMinute = ppm;
         ]]></body>
@@ -1876,7 +1876,7 @@
           // this should be done using lookupMethod(), see bug 286629
           var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
 
-          if (needsrelayout)
+          if (needsrelayout && !needsreorient)
               this.relayout();
 
           if (needsreorient)
@@ -1955,6 +1955,8 @@
                   child = child.nextSibling;
               }
           }
+
+	  this.relayout();
         ]]></body>
       </method>
 
