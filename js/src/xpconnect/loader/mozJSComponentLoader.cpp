@@ -328,6 +328,7 @@ static JSFunctionSpec gGlobalFun[] = {
 
 mozJSComponentLoader::mozJSComponentLoader()
     : mRuntime(nsnull),
+      mContext(nsnull),
       mModules(nsnull),
       mGlobals(nsnull),
       mInitialized(PR_FALSE)
@@ -402,7 +403,7 @@ NS_IMETHODIMP
 mozJSComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
 {
     mCompMgr = aCompMgr;
-         
+
     nsresult rv;
     mLoaderManager = do_QueryInterface(mCompMgr, &rv);
     if (NS_FAILED(rv))
@@ -426,6 +427,14 @@ mozJSComponentLoader::ReallyInit()
     if (NS_FAILED(rv) ||
         NS_FAILED(rv = mRuntimeService->GetRuntime(&mRuntime)))
         return rv;
+
+    // Create our compilation context.
+    mContext = JS_NewContext(mRuntime, 256);
+    if (!mContext)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    uint32 options = JS_GetOptions(mContext);
+    JS_SetOptions(mContext, options | JSOPTION_XML);
 
 #ifndef XPCONNECT_STANDALONE
     nsCOMPtr<nsIScriptSecurityManager> secman = 
@@ -846,9 +855,7 @@ mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
     if (!xpc)
         return nsnull;
 
-    JSCLAutoContext cx(mRuntime);
-    if(NS_FAILED(cx.GetError()))
-        return nsnull;
+    JSCLContextHelper cx(mContext);
 
     JSObject* cm_jsobj;
     nsCOMPtr<nsIXPConnectJSObjectHolder> cm_holder;
@@ -944,9 +951,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     nsresult rv;
     JSPrincipals* jsPrincipals = nsnull;
 
-    JSCLAutoContext cx(mRuntime);
-    if (NS_FAILED(cx.GetError()))
-        return nsnull;
+    JSCLContextHelper cx(mContext);
 
 #ifndef XPCONNECT_STANDALONE
     rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
@@ -965,6 +970,10 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID);
     if (!xpc)
         goto out;
+
+    // Make sure InitClassesWithNewWrappedGlobal() installs the
+    // backstage pass as the global in our compilation context.
+    JS_SetGlobalObject(cx, nsnull);
 
     rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
                                               NS_GET_IID(nsISupports),
@@ -1132,11 +1141,9 @@ mozJSComponentLoader::UnloadAll(PRInt32 aWhen)
         PL_HashTableDestroy(mGlobals);
         mGlobals = nsnull;
 
-        JSContext* cx = JS_NewContext(mRuntime, 256);
-        if (cx) {
-            JS_GC(cx);
-            JS_DestroyContext(cx);
-        }
+        // Destroying our context will force a GC.
+        JS_DestroyContext(mContext);
+        mContext = nsnull;
 
         mRuntimeService = nsnull;
     }
@@ -1150,54 +1157,20 @@ mozJSComponentLoader::UnloadAll(PRInt32 aWhen)
 
 //----------------------------------------------------------------------
 
-JSCLAutoContext::JSCLAutoContext(JSRuntime* rt)
-    : mContext(nsnull), mError(NS_OK), mPopNeeded(JS_FALSE), mContextThread(0)
+JSCLContextHelper::JSCLContextHelper(JSContext *cx)
+    : mContext(cx), mContextThread(0)
 {
-    nsCOMPtr<nsIThreadJSContextStack> cxstack = 
-        do_GetService(kJSContextStackContractID, &mError);
-    
-    if (NS_SUCCEEDED(mError)) {
-        mError = cxstack->GetSafeJSContext(&mContext);
-        if (NS_SUCCEEDED(mError) && mContext) {
-            mError = cxstack->Push(mContext);
-            if (NS_SUCCEEDED(mError)) {
-                mPopNeeded = JS_TRUE;   
-            } 
-        } 
-    }
-    
-    if (mContext) {
-        mSavedOptions = JS_GetOptions(mContext);
-        JS_SetOptions(mContext, mSavedOptions | JSOPTION_XML);
-        mContextThread = JS_GetContextThread(mContext);
-        if (mContextThread) {
-            JS_BeginRequest(mContext);
-        } 
-    } else {
-        if (NS_SUCCEEDED(mError)) {
-            mError = NS_ERROR_FAILURE;
-        }
-    }
+    mContextThread = JS_GetContextThread(mContext);
+    if (mContextThread) {
+        JS_BeginRequest(mContext);
+    } 
 }
 
-JSCLAutoContext::~JSCLAutoContext()
+JSCLContextHelper::~JSCLContextHelper()
 {
-    if (mContext) {
-        JS_ClearNewbornRoots(mContext);
-        JS_SetOptions(mContext, mSavedOptions);
-        if (mContextThread)
-            JS_EndRequest(mContext);
-    }
-
-    if (mPopNeeded) {
-        nsCOMPtr<nsIThreadJSContextStack> cxstack = 
-            do_GetService(kJSContextStackContractID);
-        if (cxstack) {
-            JSContext* cx;
-            nsresult rv = cxstack->Pop(&cx);
-            NS_ASSERTION(NS_SUCCEEDED(rv) && cx == mContext, "push/pop mismatch");
-        }        
-    }        
+    JS_ClearNewbornRoots(mContext);
+    if (mContextThread)
+        JS_EndRequest(mContext);
 }        
 
 //----------------------------------------------------------------------
