@@ -52,6 +52,32 @@
 
     <implementation>
       <field name="mItem">null</field>
+      <field name="mSelected">false</field>
+      <field name="mCalendarView">null</field>
+
+      <property name="selected">
+        <getter><![CDATA[
+          return this.mSelected;
+        ]]></getter>
+        <setter><![CDATA[
+          if (val && !this.mSelected) {
+              this.mSelected = true;
+              this.setAttribute("selected", "true");
+          } else if (!val && this.mSelected) {
+              this.mSelected = false;
+              this.removeAttribute("selected");
+          }
+        ]]></setter>
+      </property>
+      <property name="calendarView">
+        <getter><![CDATA[
+          return this.mCalendarView;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mCalendarView = val;
+        ]]></setter>
+      </property>
+
 
       <property name="item">
         <getter><![CDATA[
@@ -86,6 +112,21 @@
         ]]></setter>
       </property>
     </implementation>
+
+    <handlers>
+      <handler event="click"><![CDATA[
+        if (this.calendarView)
+            this.calendarView.selectedItem = this.item;
+      ]]></handler>
+
+      <handler event="dblclick"><![CDATA[
+        if (this.calendarView && this.calendarView.controller) {
+            event.preventBubble();
+            var occurrence = (event.ctrlKey) ? this.item.parentItem : this.item;
+            this.calendarView.controller.modifyOccurrence(occurrence);
+        }
+      ]]></handler>
+    </handlers>
   </binding>
 
   <binding id="calendar-month-day-box">
@@ -175,6 +216,28 @@
           this.mItemData.push({ item: aItem });
 
           this.relayout();
+        ]]></body>
+      </method>
+
+      <method name="selectItem">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          for each (var itd in this.mItemData) {
+              if (itd.item.id == aItem.id) {
+                  itd.box.selected = true;
+              }
+          }
+        ]]></body>
+      </method>
+
+      <method name="unselectItem">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          for each (var itd in this.mItemData) {
+              if (itd.item.id == aItem.id) {
+                  itd.box.selected = false;
+              }
+          }
         ]]></body>
       </method>
 
@@ -271,7 +334,8 @@
               box.setAttribute("item-calendar", itd.item.calendar.uri.spec);
 
               this.dayitems.insertBefore(box, before);
-	  
+
+              box.calendarView = this.monthView;
               box.item = itd.item;
               itd.box = box;
             }
@@ -459,6 +523,17 @@
           return this.mSelectedItem;
         ]]></getter>
         <setter><![CDATA[
+          if (this.mSelectedItem) {
+              var oldbox = this.findBoxForItem(this.mSelectedItem);
+              oldbox.box.unselectItem(this.mSelectedItem);
+          }
+
+          this.mSelectedItem = val;
+
+          if (this.mSelectedItem) {
+              var newbox = this.findBoxForItem(this.mSelectedItem);
+              newbox.box.selectItem(this.mSelectedItem);
+          }
         ]]></setter>
       </property>
 
@@ -713,6 +788,9 @@
           if (!box)
             return;
 
+          if (this.mSelectedItem == aItem)
+              this.mSelectedItem = null;
+
           box.deleteItem(aItem);
         ]]></body>
       </method>
@@ -829,6 +907,20 @@
       ]]></field>
 
     </implementation>
+
+    <handlers>
+      <handler event="keypress"><![CDATA[
+        const kKE = Components.interfaces.nsIDOMKeyEvent;
+        if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
+            event.keyCode == kKE.DOM_VK_DELETE)
+        {
+            if (this.selectedItem && this.controller) {
+                var item = (event.ctrlKey) ? this.selectedItem.parentItem : this.selectedItem;
+                this.controller.deleteOccurrence(item);
+            }
+        }
+      ]]></handler>
+    </handlers>
   </binding>
 
 </bindings>

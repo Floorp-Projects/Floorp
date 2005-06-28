@@ -89,13 +89,25 @@
         onget="return this.mPixPerMin"
         onset="if (this.mPixPerMin != val) { this.mPixPerMin = val; this.relayout(); } return val;"/>
 
-      <property name="startMinute"
-        onget="return this.mStartMin"
-        onset="if (this.mStartMin != val) { this.mStartMin = val; this.relayout(); } return val;"/>
+      <method name="setStartEndMinutes">
+        <parameter name="aStartMin"/>
+        <parameter name="aEndMin"/>
+        <body><![CDATA[
+	  if (aStartMin < 0 || aStartMin > aEndMin)
+              throw Components.results.NS_ERROR_INVALID_ARG;
+          if (aEndMin < 0 || aEndMin >= 24*60)
+              throw Components.results.NS_ERROR_INVALID_ARG;
 
-      <property name="endMinute"
-        onget="return this.mEndMin"
-        onset="if (this.mEndMin != val) { this.mEndMin = val; this.relayout(); } return val;"/>
+          if (this.mStartMin != aStartMin ||
+              this.mEndMin != aEndMin)
+          {
+              this.mStartMin = aStartMin;
+              this.mEndMin = aEndMin;
+
+              this.relayout();
+          }
+        ]]></body>
+      </method>
 
       <method name="relayout">
         <body><![CDATA[
@@ -360,35 +372,27 @@
         readonly="true"
         onget="return this.mEvents"/>
 
-      <property name="startMinute">
-        <getter><![CDATA[
-          return this.mStartMin;
-        ]]></getter>
-        <setter><![CDATA[
-          if (val < 0)
-            throw "Bad start minute";
-          if (val != this.mStartMin) {
-            this.mStartMin = val;
-            this.relayout();
-          }
-        ]]></setter>
-      </property>
-
-      <property name="endMinute">
-        <getter><![CDATA[
-          return this.mEndMin;
-        ]]></getter>
-        <setter><![CDATA[
-          if (val < 0)
-            throw "Bad end minute";
-          if (val != this.mEndMin) {
-            this.mEndMin = val;
-            this.relayout();
-          }
-        ]]></setter>
-      </property>
-
       <!-- methods -->
+
+      <method name="setStartEndMinutes">
+        <parameter name="aStartMin"/>
+        <parameter name="aEndMin"/>
+        <body><![CDATA[
+	  if (aStartMin < 0 || aStartMin > aEndMin)
+              throw Components.results.NS_ERROR_INVALID_ARG;
+          if (aEndMin < 0 || aEndMin >= 24*60)
+              throw Components.results.NS_ERROR_INVALID_ARG;
+
+          if (this.mStartMin != aStartMin ||
+              this.mEndMin != aEndMin)
+          {
+              this.mStartMin = aStartMin;
+              this.mEndMin = aEndMin;
+
+              this.relayout();
+          }
+        ]]></body>
+      </method>
 
       <method name="selectOccurrence">
         <parameter name="aOccurrence"/>
@@ -399,9 +403,7 @@
               return;
 
           if (this.mCurrentSelection) {
-              // XXX FIXME don't unconditionally removeAttribute("class"), instead
-              // just remove the "selected" class.
-              this.mCurrentSelection.eventbox.removeAttribute("class");
+              this.mCurrentSelection.eventbox.selected = false;
               this.mCurrentSelection = null;
           }
 
@@ -412,7 +414,7 @@
                   return;
               }
 
-              chunk.eventbox.setAttribute("class", "selected");
+              chunk.eventbox.selected = true;
               this.mCurrentSelection = chunk;
           }
         ]]></body>
@@ -845,8 +847,8 @@
 
           var dragState = col.mDragState;
 
-	  // check if we need to jump a column
-	  if (dragState.dragType == "move") {
+          // check if we need to jump a column
+          if (dragState.dragType == "move") {
               newcol = col.calendarView.findColumnForClientPoint(event.screenX, event.screenY);
               if (newcol && newcol != col) {
                   // kill our drag state
@@ -861,7 +863,7 @@
 
                   return;
               }
-	  }
+          }
 
           var pos;
           var sizeattr;
@@ -1091,17 +1093,17 @@
          - of an event.  Used by "move".
         -->
       <method name="acceptInProgressSweep">
-	<parameter name="aDragState"/>
+        <parameter name="aDragState"/>
         <body><![CDATA[
-	  this.mDragState = aDragState;
-	  document.calendarEventColumnDragging = this;
+          this.mDragState = aDragState;
+          document.calendarEventColumnDragging = this;
 
-	  this.fgboxes.box.setAttribute("dragging", "true");
-	  this.fgboxes.dragbox.setAttribute("dragging", "true");
+          this.fgboxes.box.setAttribute("dragging", "true");
+          this.fgboxes.dragbox.setAttribute("dragging", "true");
 
-	  // the same event handlers are still valid,
-	  // because they use document.calendarEventColumnDragging.
-	  // So we really don't have anything to do here.
+          // the same event handlers are still valid,
+          // because they use document.calendarEventColumnDragging.
+          // So we really don't have anything to do here.
         ]]></body>
       </method>
 
@@ -1193,9 +1195,9 @@
       <xul:box anonid="eventbox" xbl:inherits="orient,width,height" flex="1">
         <xul:calendar-event-gripbar anonid="gripbar1" whichside="start" xbl:inherits="parentorient=orient"/>
         <xul:vbox class="calendar-event-box-container" xbl:inherits="context,parentorient=orient" flex="1" align="left">
-        <xul:label anonid="event-name" flex="1" crop="right"/>
-          <!-- for some reason, textboxes suck ass for reflow. -->
-          <!-- <xul:textbox class="plain" style="background: transparent !important" anonid="event-name" flex="1" crop="right"/> -->
+          <xul:textbox class="plain" style="background: transparent !important"
+            anonid="event-name" crop="right" readonly="true"/>
+          <xul:spacer flex="1"/>
         </xul:vbox>
         <xul:calendar-event-gripbar anonid="gripbar2" whichside="end" xbl:inherits="parentorient=orient"/>
       </xul:box>
@@ -1204,9 +1206,12 @@
     <implementation>
       <constructor><![CDATA[
          this.orient = this.getAttribute("orient");
-          var otherorient = "vertical";
-          if (!orient) orient = "horizontal";
-          if (orient == "vertical") otherorient = "horizontal";
+         var otherorient = "vertical";
+         if (!orient) orient = "horizontal";
+         if (orient == "vertical") otherorient = "horizontal";
+
+         var self = this;
+         this.eventNameElement.onchange = function() { self.stopEditing(); };
       ]]></constructor>
 
       <!-- fields -->
@@ -1248,7 +1253,7 @@
         ]]></body>
       </method>
 
-      <property name="eventNameLabel" readonly="true"
+      <property name="eventNameElement" readonly="true"
         onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name');"/>
 
       <property name="occurrence">
@@ -1257,14 +1262,28 @@
         ]]></getter>
         <setter><![CDATA[
           this.mOccurrence = val;
-          var evl = this.eventNameLabel;
-          while (evl.firstChild)
-              evl.removeChild(evl.firstChild);
+          var evl = this.eventNameElement;
 
           if (val) {
-              evl.appendChild(document.createTextNode(val.title));
+              evl.value = val.title;
           } else {
-              evl.appendChild(document.createTextNode("Untitled Event"));
+              evl.value = "Untitled Event";
+          }
+          return val;
+        ]]></setter>
+      </property>
+
+      <property name="selected">
+        <getter><![CDATA[
+          return this.mSelected;
+        ]]></getter>
+        <setter><![CDATA[
+          if (val && !this.mSelected) {
+              this.mSelected = true;
+              this.setAttribute("selected", "true");
+          } else if (!val && this.mSelected) {
+              this.mSelected = null;
+              this.removeAttribute("selected");
           }
           return val;
         ]]></setter>
@@ -1279,12 +1298,47 @@
 
       <property name="endMinute" readonly="true"
         onget="if (!this.mOccurrence) return 0; return this.mOccurrence.endDate.hour * 60 + this.mOccurrence.endDate.minute"/>
+
+      <method name="startEditing">
+        <body><![CDATA[
+           this.eventNameElement.removeAttribute("readonly");
+           this.mOriginalTextLabel = this.eventNameElement.value;
+           this.eventNameElement.select();
+           this.mEditing = true;
+        ]]></body>
+      </method>
+
+      <method name="stopEditing">
+        <body><![CDATA[
+           if (this.eventNameElement.value != this.mOriginalTextLabel) {
+               var clone = this.mOccurrence.clone();
+               clone.title = this.eventNameElement.value;
+               clone.calendar.modifyItem(clone, this.mOccurrence, null);
+           }
+
+           // Note that as soon as we do the modifyItem, this element ceases to exist,
+           // so don't bother trying to modify anything further here! ('this' exists,
+           // because it's being kept alive, but our child content etc. is all gone)
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
+      <handler event="click"><![CDATA[
+        if (!this.mInMouseDown && this.selected) {
+            this.mInMouseDown = false;
+            this.mEditing = true;
+            this.startEditing();
+        } else {
+            this.calendarView.selectedItem = this.mOccurrence;
+        }
+      ]]></handler>
+
       <handler event="mousedown"><![CDATA[
         event.preventBubble();
-        this.calendarView.selectedItem = this.mOccurrence;
+
+        if (this.mEditing)
+            return;
 
         this.mInMouseDown = true;
         this.mMouseX = event.screenX;
@@ -1300,6 +1354,9 @@
         // more than a 3 pixel move?
         if ((dx*dx + dy*dy) > 9) {
             if (this.parentColumn) {
+                this.calendarView.selectedItem = this.mOccurrence;
+
+                this.mEditing = false;
                 this.parentColumn.startSweepingToModifyEvent(this, this.mOccurrence, "middle", this.mMouseX, this.mMouseY);
                 this.mInMouseDown = false;
             }
@@ -1307,10 +1364,16 @@
       ]]></handler>
 
       <handler event="mouseup"><![CDATA[
+        if (this.mEditing)
+            return;
+
         this.mInMouseDown = false;
       ]]></handler>
 
       <handler event="dblclick"><![CDATA[
+        if (this.mEditing)
+            return;
+
         event.preventBubble();
         if (this.calendarView.controller && this.mOccurrence) {
             var occurrence = (event.ctrlKey) ? this.mOccurrence.parentItem : this.mOccurrence;
@@ -1348,9 +1411,9 @@
 
       <field name="mResizeHandler">null</field>
       <constructor><![CDATA[
-	var self = this;
-	this.mResizeHandler = function() { self.onResize(); };
-	window.addEventListener("resize", this.mResizeHandler, true);
+        var self = this;
+        this.mResizeHandler = function() { self.onResize(); };
+        window.addEventListener("resize", this.mResizeHandler, true);
         this.reorient();
       ]]></constructor>
 
@@ -1358,7 +1421,7 @@
       <field name="mLastSize">0</field>
       <method name="onResize">
         <parameter name="aRealSelf"/>
-	<body><![CDATA[
+        <body><![CDATA[
           var self = this;
           if (aRealSelf) {
             self = aRealSelf;
@@ -1388,7 +1451,7 @@
           var minutes = timebar.endMinute - timebar.startMinute;
           var ppm = size / minutes;
           self.pixelsPerMinute = ppm;
-	]]></body>
+        ]]></body>
       </method>
 
       <field name="mController">null</field>
@@ -1403,6 +1466,9 @@
       <field name="mPixPerMin">0.6</field>
       <field name="mSelectedItem">null</field>
       <field name="mSelectedDayCol">null</field>
+
+      <field name="mStartMin">8*60</field>
+      <field name="mEndMin">20*60</field>
 
       <field name="mObserver"><![CDATA[
         // the calIObserver, and calICompositeObserver
@@ -1567,8 +1633,8 @@
       <!-- the end date that should be used for getItems and similar queries -->
       <property name="queryEndDate" readonly="true">
         <getter><![CDATA[
-	  var end = this.endDate;
-	  if (!end)
+          var end = this.endDate;
+          if (!end)
               return null;
 
           end = end.clone();
@@ -1582,12 +1648,12 @@
 
 
       <method name="showDate">
-	<parameter name="aDate"/>
-	<body><![CDATA[
-	  var targetDate = aDate.clone();
-	  targetDate.isDate = true;
+        <parameter name="aDate"/>
+        <body><![CDATA[
+          var targetDate = aDate.clone();
+          targetDate.isDate = true;
 
-	  if (this.mStartDate && this.mEndDate) {
+          if (this.mStartDate && this.mEndDate) {
               if (this.mStartDate.compare(targetDate) <= 0 &&
                   this.mEndDate.compare(targetDate) >= 0)
                   return;
@@ -1599,11 +1665,11 @@
               }
           }
 
-	  // if we're only showing one date, then continue
-	  // to only show one date; otherwise, show the week.
-	  if (this.numVisibleDates == 1) {
+          // if we're only showing one date, then continue
+          // to only show one date; otherwise, show the week.
+          if (this.numVisibleDates == 1) {
             this.setDateRange(aDate, aDate);
-	  } else {
+          } else {
             this.setDateRange(aDate.startOfWeek, aDate.endOfWeek);
           }
 
@@ -1773,14 +1839,35 @@
         <setter>this.setAttribute("orient", val); return val;</setter>
       </property>
 
+      <method name="setStartEndMinutes">
+	<parameter name="aStartMin"/>
+        <parameter name="aEndMin"/>
+        <body><![CDATA[
+	  if (aStartMin < 0 || aStartMin > aEndMin)
+              throw Components.results.NS_ERROR_INVALID_ARG;
+          if (aEndMin < 0 || aEndMin >= 24*60)
+              throw Components.results.NS_ERROR_INVALID_ARG;
+
+          if (this.mStartMin != aStartMin ||
+              this.mEndMin != aEndMin)
+          {
+              this.mStartMin = aStartMin;
+              this.mEndMin = aEndMin;
+
+              this.relayout();
+          }
+	]]></body>
+      </method>
+
       <method name="setAttribute">
         <parameter name="aAttr"/>
         <parameter name="aVal"/>
         <body><![CDATA[
+          var needsreorient = false;
           var needsrelayout = false;
           if (aAttr == "orient") {
               if (this.getAttribute("orient") != aVal)
-                  needsrelayout = true;
+                  needsreorient = true;
           }
 
           if (aAttr == "context" || aAttr == "item-context")
@@ -1790,6 +1877,9 @@
           var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
 
           if (needsrelayout)
+              this.relayout();
+
+          if (needsreorient)
               this.reorient();
 
           return ret;
@@ -1936,6 +2026,10 @@
           if (!computedDateList || computedDateList.length == 0)
               return;
 
+          // update timebar
+          var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
+          timebar.setStartEndMinutes(this.mStartMin, this.mEndMin);
+
           var counter = 0;
           for each (var d in computedDateList) {
               var dayEventsBox = createXULElement("calendar-event-column");
@@ -1945,6 +2039,7 @@
               dayEventsBox.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
               daybox.appendChild(dayEventsBox);
 
+              dayEventsBox.setStartEndMinutes(this.mStartMin, this.mEndMin);
               dayEventsBox.setAttribute("orient", orient);
               dayEventsBox.date = d;
               dayEventsBox.calendarView = this;
@@ -2017,8 +2112,8 @@
          - no column contains it, return null.
         -->
       <method name="findColumnForClientPoint">
-	<parameter name="aClientX"/>
-	<parameter name="aClientY"/>
+        <parameter name="aClientX"/>
+        <parameter name="aClientY"/>
         <body><![CDATA[
           for each (var col in this.mDateColumns) {
               var bo = col.column.topbox.boxObject;
@@ -2027,8 +2122,8 @@
               {
                   return col.column;
               }
-	  }
-	  return null;
+          }
+          return null;
         ]]></body>
       </method>
 

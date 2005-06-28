@@ -23,6 +23,7 @@ calendar-month-day-box {
 
 calendar-month-day-box { 
   border: 1px solid #999999;
+  overflow: hidden;
 }
 
 .calendar-month-day-box-odd {
@@ -52,6 +53,10 @@ calendar-month-day-box[selected="true"] {
 /*== calendar-month-day-box-item ==*/
 calendar-month-day-box-item { 
   -moz-binding: url(chrome://calendar/content/calendar-month-view.xml#calendar-month-day-box-item);
+}
+
+calendar-month-day-box-item[selected="true"] { 
+  background: #ffdb67 !important;
 }
 
 .calendar-month-day-box-item-label {
