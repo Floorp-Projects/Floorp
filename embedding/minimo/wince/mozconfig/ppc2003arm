@@ -23,7 +23,6 @@ ac_add_options --disable-md
 ac_add_options --disable-activex
 ac_add_options --disable-activex-scripting
 ac_add_options --disable-oji
-#ac_add_options --disable-plugins
 
 WINCE=1
 mk_add_options WINCE=1
@@ -53,6 +52,7 @@ ac_add_options --disable-installer
 ac_add_options --disable-xpinstall
 ac_add_options --disable-xpfe-components
 ac_add_options --disable-necko-disk-cache
+ac_add_options --disable-updater
 
 # configure necko to allocate smaller network buffers
 ac_add_options --enable-necko-small-buffers
