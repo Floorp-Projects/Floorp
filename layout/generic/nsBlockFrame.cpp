@@ -5361,6 +5361,23 @@ nsBlockFrame::RemoveFloat(nsIFrame* aFloat) {
   return line_end;
 }
 
+static void MarkAllDescendantLinesDirty(nsBlockFrame* aBlock)
+{
+  nsLineList::iterator line = aBlock->begin_lines();
+  nsLineList::iterator endLine = aBlock->end_lines();
+  while (line != endLine) {
+    if (line->IsBlock()) {
+      nsIFrame* f = line->mFirstChild;
+      void* bf;
+      if (NS_SUCCEEDED(f->QueryInterface(kBlockFrameCID, &bf))) {
+        MarkAllDescendantLinesDirty(NS_STATIC_CAST(nsBlockFrame*, f));
+      }
+    }
+    line->MarkDirty();
+    ++line;
+  }
+}
+
 NS_IMETHODIMP
 nsBlockFrame::RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame)
@@ -5381,14 +5398,23 @@ nsBlockFrame::RemoveFrame(nsIAtom*        aListName,
     return mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
   }
   else if (nsLayoutAtoms::floatList == aListName) {
-    line_iterator line = RemoveFloat(aOldFrame);
-    line_iterator line_end = end_lines();
+    RemoveFloat(aOldFrame);
 
-    // Mark every line at and below the line where the float was dirty
-    // XXXldb This could be done more efficiently.
-    for ( ; line != line_end; ++line) {
-      line->MarkDirty();
+    nsBlockFrame* blockWithSpaceMgr = this;
+    while (!(blockWithSpaceMgr->GetStateBits() & NS_BLOCK_SPACE_MGR)) {
+      void* bf;
+      if (NS_FAILED(blockWithSpaceMgr->GetParent()->
+                    QueryInterface(kBlockFrameCID, &bf))) {
+        break;
+      }
+      blockWithSpaceMgr = NS_STATIC_CAST(nsBlockFrame*, blockWithSpaceMgr->GetParent());
     }
+
+    // Mark every line at and below the line where the float was
+    // dirty, and mark their lines dirty too. We could probably do
+    // something more efficient --- e.g., just dirty the lines that intersect
+    // the float vertically.
+    MarkAllDescendantLinesDirty(blockWithSpaceMgr);
   }
 #ifdef IBMBIDI
   else if (nsLayoutAtoms::nextBidi == aListName) {
