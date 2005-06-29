@@ -1257,8 +1257,11 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            if (aEvent.originalTarget.localName != 'tab' && aEvent.button == 0)
-              this.selectedTab = this.addTab();
+            if (aEvent.originalTarget.localName != 'tab' && aEvent.button == 0) {
+              var e = document.createEvent("Events");
+              e.initEvent("NewTab", false, true);
+              this.dispatchEvent(e);
+            }
           ]]>
         </body>
       </method>
