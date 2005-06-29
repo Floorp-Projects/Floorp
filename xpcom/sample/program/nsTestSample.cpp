@@ -51,6 +51,7 @@
 
 #ifdef XPCOM_GLUE
 #include "nsXPCOMGlue.h"
+#include "nsMemory.h"
 #endif
 
 #define NS_SAMPLE_CONTRACTID "@mozilla.org/sample;1"
@@ -114,8 +115,14 @@ main(void)
         return -3;
     }
     printf("Set value to: %s\n", testValue);
+#ifndef XPCOM_GLUE
     nsXPIDLCString str;
     rv = mysample->GetValue(getter_Copies(str));
+#else
+    char *str;
+    rv = mysample->GetValue(&str);
+#endif
+
     if (NS_FAILED(rv))
     {
         printf("ERROR: Calling nsISample::GetValue() [%x]\n", rv);
@@ -127,6 +134,9 @@ main(void)
         return -4;
     }
 
+#ifdef XPCOM_GLUE
+    nsMemory::Free(str);
+#endif
     rv = mysample->WriteValue("Final print :");
     printf("Test passed.\n");
     
