@@ -31,6 +31,8 @@
 #include <nsIServiceManager.h>
 #include <nsXPIDLString.h>
 
+#define NS_SAMPLE_PROGID "component://netscape/sample"
+
 main()
 {
     nsresult rv;
