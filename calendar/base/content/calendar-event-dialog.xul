@@ -44,7 +44,7 @@
 
 <dialog
   id="calendar-event-dialog"
-  title="Edit Event"
+  title="Edit Item"
   buttons="accept,cancel"
   ondialogaccept="return onAccept();"
   ondialogcancel="return onCancel();"
@@ -115,7 +115,10 @@
 
           <row align="center" class="todo-only">
             <label value="Due date" class="label"/>
-            <datetimepicker id="todo-duedate"/>
+            <hbox>
+              <checkbox id="todo-has-duedate" oncommand="updateDuedate();"/>
+              <datetimepicker id="todo-duedate"/>
+            </hbox>
           </row>
 
           <row align="center">

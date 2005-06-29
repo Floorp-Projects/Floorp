@@ -66,6 +66,9 @@ function onLoad()
     updateAccept();
 
     // update datetime pickers
+    updateDuedate();
+
+    // update datetime pickers
     updateAllDay();
 
     // update recurrence button
@@ -129,7 +132,10 @@ function loadDialog(item)
 
     /* todo specific properties */
     if (isToDo(item)) {
-        setElementValue("todo-duedate",   item.dueDate.jsDate);
+        var hasDueDate = (item.dueDate != null);
+        setElementValue("todo-has-duedate", hasDueDate, "checked");
+        if (hasDueDate)
+            setElementValue("todo-duedate",   item.dueDate.jsDate);
         setElementValue("todo-completed", (item.percentComplete == 100), "checked");
     }
 
@@ -192,7 +198,9 @@ function saveDialog(item)
     }
 
     if (isToDo(item)) {
-        setItemProperty(item, "dueDate",         jsDateToDateTime(getElementValue("todo-duedate")));
+        var dueDate = getElementValue("todo-has-duedate", "checked") ? 
+            jsDateToDateTime(getElementValue("todo-duedate")) : null;
+        setItemProperty(item, "dueDate",         dueDate);
         setItemProperty(item, "percentComplete", getElementValue("todo-completed", "checked"));
     }
 
@@ -303,6 +311,17 @@ function updateAccept()
         acceptButton.setAttribute("disabled", "true");
     else if (acceptButton.getAttribute("disabled"))
         acceptButton.removeAttribute("disabled");
+}
+
+function updateDuedate()
+{
+    if (!isToDo(window.calendarItem))
+        return;
+
+    // force something to get set if there was nothing there before
+    setElementValue("todo-duedate", getElementValue("todo-duedate"));
+
+    setElementValue("todo-duedate", !getElementValue("todo-has-duedate", "checked"), "disabled");
 }
 
 
@@ -417,9 +436,12 @@ function setItemProperty(item, propertyName, value)
 
 
     case "dueDate":
-        if (value.compare(item.dueDate) != 0) {
+        if (value == item.dueDate)
+            break;
+        if ((value && !item.dueDate) ||
+            (!value && item.dueDate) ||
+            (value.compare(item.dueDate) != 0))
             item.dueDate = value;
-        }
         break;
     case "percentComplete":
         var percent = (value) ? 100 : 0;

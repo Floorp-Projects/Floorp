@@ -95,10 +95,8 @@ function createTodoWithDialog(calendar, dueDate, summary)
     if (summary)
         todo.title = summary;
 
-    if (!dueDate)
-         dueDate = jsDateToDateTime(new Date());
-
-    todo.dueDate = dueDate;
+    if (dueDate)
+        todo.dueDate = dueDate;
 
     var onNewItem = function(item, calendar, originalItem) {
         calendar.addItem(item, null);
