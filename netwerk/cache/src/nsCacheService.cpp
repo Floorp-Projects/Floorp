@@ -48,7 +48,6 @@
 #include "nsCacheDevice.h"
 #include "nsMemoryCacheDevice.h"
 #include "nsICacheVisitor.h"
-#include "nsCRT.h"
 
 #ifdef NECKO_DISK_CACHE_SQL
 #include "nsDiskCacheDeviceSQL.h"
