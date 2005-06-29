@@ -62,11 +62,11 @@ echo Copying over customized files
 
 popd
 
-cp -a ../all.js       wince/greprefs
+cp -a ../all.js                                         $MOZ_OBJDIR/dist/wince/greprefs
 
 echo Applying SSR
 
-cat ../smallScreen.css >>   wince/res/ua.css
+cat ../smallScreen.css >>                               $MOZ_OBJDIR/dist/wince/res/ua.css
 
 echo Copying ARM shunt lib.  Adjust if you are not building ARM
 
