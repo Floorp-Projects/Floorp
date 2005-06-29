@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.94 2005/06/29 21:22:09 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.95 2005/06/29 23:43:33 zach%zachlipton.com Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1008,7 +1008,6 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
   ns_register_filter preauth GET /bugzilla/\#localconfig\# filter_deny
   ns_register_filter preauth GET /bugzilla/*.pl filter_deny
   ns_register_filter preauth GET /bugzilla/syncshadowdb filter_deny
-  ns_register_filter preauth GET /bugzilla/runtests.sh filter_deny
   ns_register_filter preauth GET /bugzilla/data/* filter_deny
   ns_register_filter preauth GET /bugzilla/template/* filter_deny
 

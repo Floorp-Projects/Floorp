@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: security.xml,v 1.5 2005/06/07 19:40:25 jocuri%softhome.net Exp $ -->
+<!-- $Id: security.xml,v 1.6 2005/06/29 23:43:33 zach%zachlipton.com Exp $ -->
 
 <chapter id="security">
 <title>Bugzilla Security</title>
@@ -204,7 +204,6 @@ skip-networking
               <simplelist type="inline">
                 <member><filename>*.pl</filename></member>
                 <member><filename>*localconfig*</filename></member>
-                <member><filename>runtests.sh</filename></member>
               </simplelist>
               </para>
             </listitem>

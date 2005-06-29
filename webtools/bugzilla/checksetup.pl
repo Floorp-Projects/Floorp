@@ -992,7 +992,7 @@ if ($my_create_htaccess) {
     open HTACCESS, '>', '.htaccess';
     print HTACCESS <<'END';
 # don't allow people to retrieve non-cgi executable files or our private data
-<FilesMatch ^(.*\.pl|.*localconfig.*|runtests.sh)$>
+<FilesMatch ^(.*\.pl|.*localconfig.*)$>
   deny from all
 </FilesMatch>
 <FilesMatch ^(localconfig.js|localconfig.rdf)$>
@@ -1290,7 +1290,7 @@ unless ($switch{'no_templates'}) {
 
 # These are the files which need to be marked executable
 my @executable_files = ('whineatnews.pl', 'collectstats.pl',
-   'checksetup.pl', 'importxml.pl', 'runtests.sh', 'testserver.pl',
+   'checksetup.pl', 'importxml.pl', 'runtests.pl', 'testserver.pl',
    'whine.pl');
 
 # tell me if a file is executable.  All CGI files and those in @executable_files
