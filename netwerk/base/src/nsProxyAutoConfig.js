@@ -74,19 +74,19 @@ nsProxyAutoConfig.prototype = {
         if (pacURI == "" || pacText == "") {
             this._findProxyForURL = null;
             this._sandBox = null;
+            return;
         }
 
         // allocate a fresh Sandbox to clear global scope for new PAC script
-        this._sandBox = new Sandbox();
+        this._sandBox = Components.util.evalInSandbox(pacUtils, pacURI);
 
         // add predefined functions to pac
-        var mypac = pacUtils + pacText;
         this._sandBox.myIpAddress = myIpAddress;
         this._sandBox.dnsResolve = dnsResolve;
         this._sandBox.alert = proxyAlert;
 
         // evaluate loaded js file
-        evalInSandbox(mypac, this._sandBox, pacURI);
+        Components.util.evalInSandbox(pacText, pacURI, this._sandBox);
         this._findProxyForURL = this._sandBox.FindProxyForURL;
     },
 
