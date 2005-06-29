@@ -474,8 +474,8 @@ class NS_COM_OBSOLETE nsFileSpec
     //--------------------------------------------------
 
     // For security reasons, these create the file.
-        void                    MakeUnique();
-        void                    MakeUnique(const char* inSuggestedLeafName);
+        void                    MakeUnique(PRBool inCreateFile = PR_TRUE);
+        void                    MakeUnique(const char* inSuggestedLeafName, PRBool inCreateFile = PR_TRUE);
     
                                 // Called for the spec of an alias.  Modifies the spec to
                                 // point to the original.  Sets mError.

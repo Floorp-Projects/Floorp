@@ -75,7 +75,7 @@ interface nsIInputStream;
 [ref] native nsFileSpecRef(nsFileSpec);
 [ptr] native nsFileSpecPtr(nsFileSpec);
 
-[scriptable, uuid(d8c0a080-0868-11d3-915f-d9d889d48e3c)]
+[scriptable, uuid(37ef2e71-edef-46c7-acd9-f0b6e0b15083)]
 interface nsIFileSpec : nsISupports
 {
 	void fromFileSpec([const] in nsIFileSpec original);
@@ -105,6 +105,9 @@ interface nsIFileSpec : nsISupports
 
 	void makeUnique();
 	void makeUniqueWithSuggestedName(in string suggestedName);
+
+	void makeUniqueDir();
+	void makeUniqueDirWithSuggestedName(in string suggestedName);
 
 	readonly attribute unsigned long modDate;
 	boolean modDateChanged(in unsigned long oldStamp);

@@ -896,17 +896,16 @@ nsFileSpec::nsFileSpec(const nsFileURL& inURL)
 }
 
 //----------------------------------------------------------------------------------------
-void nsFileSpec::MakeUnique(const char* inSuggestedLeafName)
+void nsFileSpec::MakeUnique(const char* inSuggestedLeafName, PRBool inCreateFile)
 //----------------------------------------------------------------------------------------
 {
     if (inSuggestedLeafName && *inSuggestedLeafName)
         SetLeafName(inSuggestedLeafName);
-
-    MakeUnique();
+    MakeUnique(inCreateFile);
 } // nsFileSpec::MakeUnique
 
 //----------------------------------------------------------------------------------------
-void nsFileSpec::MakeUnique()
+void nsFileSpec::MakeUnique(PRBool inCreateFile)
 //----------------------------------------------------------------------------------------
 {
     // XXX: updated path starts empty. In case of error this will cause
@@ -917,7 +916,8 @@ void nsFileSpec::MakeUnique()
     NS_NewNativeLocalFile(nsDependentCString(*this), PR_TRUE, getter_AddRefs(localFile));
     if (localFile)
     {
-        nsresult rv = localFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+        nsresult rv = localFile->CreateUnique(inCreateFile ? nsIFile::NORMAL_FILE_TYPE : 
+                                                             nsIFile::DIRECTORY_TYPE, 0600);
         if (NS_SUCCEEDED(rv))
             localFile->GetNativePath(path);
     }
