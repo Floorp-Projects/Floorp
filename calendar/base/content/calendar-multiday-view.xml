@@ -1211,7 +1211,7 @@
          if (orient == "vertical") otherorient = "horizontal";
 
          var self = this;
-         this.eventNameElement.onchange = function() { self.stopEditing(); };
+         this.eventNameElement.onblur = function() { self.stopEditing(); };
       ]]></constructor>
 
       <!-- fields -->
@@ -1254,7 +1254,7 @@
       </method>
 
       <property name="eventNameElement" readonly="true"
-        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name');"/>
+        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name').inputField;"/>
 
       <property name="occurrence">
         <getter><![CDATA[
@@ -1301,36 +1301,58 @@
 
       <method name="startEditing">
         <body><![CDATA[
+           this.editingTimer = null;
            this.eventNameElement.removeAttribute("readonly");
            this.mOriginalTextLabel = this.eventNameElement.value;
-           this.eventNameElement.select();
            this.mEditing = true;
+           this.eventNameElement.focus();
+           this.eventNameElement.select();
         ]]></body>
       </method>
 
       <method name="stopEditing">
         <body><![CDATA[
-           if (this.eventNameElement.value != this.mOriginalTextLabel) {
-               var clone = this.mOccurrence.clone();
-               clone.title = this.eventNameElement.value;
-               clone.calendar.modifyItem(clone, this.mOccurrence, null);
-           }
+          this.mEditing = false;
+          if (this.eventNameElement.value != this.mOriginalTextLabel) {
+              var clone = this.mOccurrence.clone();
+              clone.title = this.eventNameElement.value;
+              clone.calendar.modifyItem(clone, this.mOccurrence, null);
 
-           // Note that as soon as we do the modifyItem, this element ceases to exist,
-           // so don't bother trying to modify anything further here! ('this' exists,
-           // because it's being kept alive, but our child content etc. is all gone)
+              // Note that as soon as we do the modifyItem, this element ceases to exist,
+              // so don't bother trying to modify anything further here! ('this' exists,
+              // because it's being kept alive, but our child content etc. is all gone)
+          }
+
         ]]></body>
       </method>
     </implementation>
 
     <handlers>
       <handler event="click"><![CDATA[
-        if (!this.mInMouseDown && this.selected) {
-            this.mInMouseDown = false;
-            this.mEditing = true;
-            this.startEditing();
-        } else {
+        var evTime = Date.now();
+        if (this.mMouseDownTime && (evTime - this.mMouseDownTime > 1000)) {
+            // not even a click!
+            return;
+        }
+
+	if (this.mLastClickTime && (evTime - this.mLastClickTime < 350)) {
+            // double click
+            if (this.editingTimer) {
+                clearTimeout(this.editingTimer);
+                this.editingTimer = null;
+            }
+
+            if (this.calendarView.controller && this.mOccurrence) {
+                var occurrence = (event.ctrlKey) ? this.mOccurrence.parentItem : this.mOccurrence;
+                this.calendarView.controller.modifyOccurrence(occurrence);
+            }
+	} else {
+            // start single click timeout
             this.calendarView.selectedItem = this.mOccurrence;
+            var self = this;
+            if (this.editingTimer) clearTimeout(this.editingTimer);
+            this.editingTimer = setTimeout(function () { self.startEditing(); }, 350);
+            this.mLastClickTime = evTime;
         }
       ]]></handler>
 
@@ -1343,7 +1365,7 @@
         this.mInMouseDown = true;
         this.mMouseX = event.screenX;
         this.mMouseY = event.screenY;
-        this.mMouseTime = event.timeStamp;
+        this.mMouseDownTime = Date.now();
       ]]></handler>
 
       <handler event="mousemove"><![CDATA[
@@ -1354,6 +1376,11 @@
         // more than a 3 pixel move?
         if ((dx*dx + dy*dy) > 9) {
             if (this.parentColumn) {
+                if (this.editingTimer) {
+                    clearTimeout(this.editingTimer);
+                    this.editingTimer = null;
+                }
+
                 this.calendarView.selectedItem = this.mOccurrence;
 
                 this.mEditing = false;
@@ -1368,18 +1395,6 @@
             return;
 
         this.mInMouseDown = false;
-      ]]></handler>
-
-      <handler event="dblclick"><![CDATA[
-        if (this.mEditing)
-            return;
-
-        event.preventBubble();
-        if (this.calendarView.controller && this.mOccurrence) {
-            var occurrence = (event.ctrlKey) ? this.mOccurrence.parentItem : this.mOccurrence;
-            this.calendarView.controller.modifyOccurrence(occurrence);
-        }
-
       ]]></handler>
     </handlers>
   </binding>
