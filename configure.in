@@ -901,6 +901,9 @@ WINCE)
     OS_ARCH=WINCE
     OS_TARGET=WINCE
     ;;
+Darwin)
+    OS_TEST=`uname -p`
+    ;;
 esac
 
 if test "$OS_ARCH" = "NCR"; then
