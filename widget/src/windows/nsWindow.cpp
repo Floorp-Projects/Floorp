@@ -7706,7 +7706,7 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
 BOOL
 nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult )
 {
-  if ( gRollupListener && gRollupWidget) {
+  if (gRollupListener && gRollupWidget && IsWindowVisible(inWnd)) {
 
     if (inMsg == WM_ACTIVATE || inMsg == WM_LBUTTONDOWN ||
       inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
