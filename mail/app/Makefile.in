@@ -80,10 +80,10 @@ LIBS = \
 	$(STATIC_COMPONENTS_LINKER_PATH) \
 	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
 	$(MOZ_JS_LIBS) \
-	$(TK_LIBS) \
 	$(EXTRA_DSO_LIBS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
+	$(TK_LIBS) \
 	$(NULL)
 
 # Add explicit X11 dependency when building against X11 toolkits
