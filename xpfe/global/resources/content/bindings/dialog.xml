@@ -40,6 +40,23 @@
                 onget="return this.getAttribute('buttons');"
                 onset="this._configureButtons(val); return val;"/>
 
+      <property name="defaultButton">
+        <getter>
+        <![CDATA[
+          if (this.hasAttribute("defaultButton"))
+            return this.getAttribute("defaultButton");
+          else // default to the accept button
+            return "accept";
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          this._setDefaultButton(val);
+          return val;
+        ]]>
+        </setter>
+      </property>
+
       <method name="acceptDialog">
         <body>
         <![CDATA[
@@ -207,8 +224,8 @@
             }
           }
 
-          // ensure that hitting enter triggers ondialogaccept
-          buttons["accept"].setAttribute("default", "true");
+          // ensure that hitting enter triggers the default button command
+          this.defaultButton = this.defaultButton;
           
           // if there is a special button configuration, use it
           if (aButtons) {
@@ -229,7 +246,26 @@
         ]]>
         </body>
       </method>
-      
+
+      <method name="_setDefaultButton">
+        <parameter name="aNewDefault"/>
+        <body>
+        <![CDATA[
+          // remove the default attribute from the previous default button, if any
+          var oldDefaultButton = this.getButton(this.defaultButton);
+          if (oldDefaultButton)
+            oldDefaultButton.removeAttribute("default");
+
+          var newDefaultButton = this.getButton(aNewDefault);
+          if (newDefaultButton) {
+            newDefaultButton.setAttribute("default", "true");
+          }
+
+          this.setAttribute("defaultButton", aNewDefault);
+        ]]>
+        </body>
+      </method>
+
       <method name="_handleButtonCommand">
         <parameter name="aEvent"/>
         <body>
@@ -289,10 +325,9 @@
           if (evt.getPreventDefault())
             return;
 
-          // only accept dialog if accept button is the default
-          var btn = this.getButton("accept");
-          if (btn && btn.hasAttribute("default"))
-            this.acceptDialog();
+          var btn = this.getButton(this.defaultButton);
+          if (btn)
+            this._doButtonCommand(this.defaultButton);
         ]]>
         </body>
       </method>
