@@ -247,22 +247,27 @@ var gUpdates = {
    * checkForUpdates      null          --            foreground
    */
   get startPage() {
+    dump("*** GET STARTPAGE\n");
     if (window.arguments) {
       var arg0 = window.arguments[0];
+      dump("*** arg0 = " + arg0 + "\n");
       if (arg0 instanceof Components.interfaces.nsIUpdate) {
         // If the first argument is a nsIUpdate object, we are notifying the
         // user that the background checking found an update that requires
         // their permission to install, and it's ready for download.
         this.setUpdate(arg0);
         var p = this.update.selectedPatch;
+        dump("*** P = " + p + "\n");
         if (p) {
           switch (p.state) {
           case STATE_PENDING:
             this.sourceEvent = SRCEVT_BACKGROUND;
             return document.getElementById("finishedBackground");
           case STATE_SUCCEEDED:
+            dump("*** :::::: goats\n");
             return document.getElementById("installed");
           case STATE_FAILED:
+          case STATE_APPLYING:
             return document.getElementById("errors");
           }
         }
@@ -346,7 +351,8 @@ var gUpdates = {
        * etc).
        */
       notify: function(timerCallback) {
-        this._prompter[methodName](this._update);
+        if (methodName in this._prompter) 
+          this._prompter[methodName](null, this._update);
       }
     }
     tm.registerTimer(timerID, (new Callback(gUpdates.update, methodName)), 
@@ -596,7 +602,6 @@ var gLicensePage = {
     nextButton.disabled = true;
     nextButton.label = gUpdates.strings.getString("IAgreeLabel");
     gUpdates.wiz.getButton("back").disabled = true;
-    gUpdates.wiz.getButton("next").focus();
     
     var cancelButton = gUpdates.wiz.getButton("cancel");
     cancelButton.label = gUpdates.strings.getString("IDoNotAgreeLabel");
@@ -612,6 +617,7 @@ var gLicensePage = {
     // Now that the license text is available, the user is in a position to
     // agree to it, so enable the Agree button.
     gUpdates.wiz.getButton("next").disabled = false;
+    gUpdates.wiz.getButton("next").focus();
   },
   
   /**

@@ -31,3 +31,5 @@ browser.jar:
 *   content/browser/preferences/sanitize.js
 *   content/browser/preferences/tabs.xul
 *   content/browser/preferences/tabs.js
+*   content/browser/preferences/update.xul
+*   content/browser/preferences/update.js

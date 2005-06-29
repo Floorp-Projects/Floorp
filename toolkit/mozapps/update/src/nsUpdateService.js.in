@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
+const PREF_APP_UPDATE_AUTO                = "app.update.auto";
 const PREF_APP_UPDATE_MODE                = "app.update.mode";
 const PREF_APP_UPDATE_SILENT              = "app.update.silent";
 const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
@@ -482,6 +483,7 @@ UpdatePrompt.prototype = {
    */
   _showUI: function(parent, uri, features, name, update) {
     var ary = null;
+    dump("*** UUUU = " + update + "\n");
     if (update) {
       ary = Components.classes["@mozilla.org/supports-array;1"]
                       .createInstance(Components.interfaces.nsISupportsArray);
@@ -536,47 +538,6 @@ function UpdateService() {
   // Observe xpcom-shutdown to unhook pref branch observers above to avoid 
   // shutdown leaks.
   gOS.addObserver(this, "xpcom-shutdown", false);
-  
-  /*
-  // Detect installation failures and notify
-  var status = readStatusFile(getUpdatesDir()); 
-  if (status != null) {
-    // null status means the update.status file is not present, because either:
-    // 1) no update was performed, and so there's no UI to show
-    // 2) an update was attempted but failed during checking, transfer or 
-    //    verification, and was cleaned up at that point, and UI notifying of
-    //    that error was shown at that stage. 
-    var um = 
-        Components.classes["@mozilla.org/updates/update-manager;1"].
-        getService(Components.interfaces.nsIUpdateManager);
-    var prompter = 
-        Components.classes["@mozilla.org/updates/update-prompt;1"].
-        createInstance(Components.interfaces.nsIUpdatePrompt);
-
-    var update = um.activeUpdate;
-    if (!update)
-      update = new Update(null);
-    if (status == STATE_SUCCEEDED) {
-      update.statusText = "Install Succeeded";
-      //prompter.showUpdateInstalled(update);
-    }
-    else {
-      // Something went wrong with the patch application process.
-      update.statusText = "goats";
-      // XXXben todo: synthesize the best message
-      //prompter.showUpdateError(update);
-    }
-    
-    // Move the update from the Active Update list into the Past Updates list.
-    um.activeUpdate = null;
-    um.saveUpdates();
-
-    // Now trash the updates directory, since we're done with it
-    cleanUpUpdatesDir();
-  }
-  */
-
-  this._initLoggingPrefs();
 }
 
 UpdateService.prototype = {
@@ -584,16 +545,12 @@ UpdateService.prototype = {
 
   observe: function(subject, topic, data) {
     switch (topic) {
-    case "app-startup":
-      // Resume fetching...
-      var um = Components.classes["@mozilla.org/updates/update-manager;1"]
-                         .getService(Components.interfaces.nsIUpdateManager);
-      var activeUpdate = um.activeUpdate;
-      if (activeUpdate)
-        this.downloadUpdate(activeUpdate, true);
-      break;
     case "profile-after-change":
       gOS.removeObserver(this, "profile-after-change");
+
+      this._initLoggingPrefs();
+      
+      //this._postUpdateCleanup();
 
       // Register a background update check timer
       var tm = 
@@ -602,11 +559,66 @@ UpdateService.prototype = {
       var interval = getPref("getIntPref", PREF_APP_UPDATE_INTERVAL, 86400000);
       tm.registerTimer("background-update-timer", this, interval);
 
-      this._initLoggingPrefs();
+      // Resume fetching...
+      var um = Components.classes["@mozilla.org/updates/update-manager;1"]
+                         .getService(Components.interfaces.nsIUpdateManager);
+      var activeUpdate = um.activeUpdate;
+      if (activeUpdate)
+        this.downloadUpdate(activeUpdate, true);
+      
       break;
     case "xpcom-shutdown":
       gOS.removeObserver(this, "xpcom-shutdown");
       break;
+    }
+  },
+  
+  /**
+   *
+   */
+  _postUpdateCleanup: function() {
+    // Detect installation failures and notify
+    var status = readStatusFile(getUpdatesDir()); 
+    if (status != null) {
+      // null status means the update.status file is not present, because either:
+      // 1) no update was performed, and so there's no UI to show
+      // 2) an update was attempted but failed during checking, transfer or 
+      //    verification, and was cleaned up at that point, and UI notifying of
+      //    that error was shown at that stage. 
+      var um = 
+          Components.classes["@mozilla.org/updates/update-manager;1"].
+          getService(Components.interfaces.nsIUpdateManager);
+      var prompter = 
+          Components.classes["@mozilla.org/updates/update-prompt;1"].
+          createInstance(Components.interfaces.nsIUpdatePrompt);
+
+      var update = um.activeUpdate;
+      if (!update)
+        update = new Update(null);
+      update.state = status;
+      if (status == STATE_SUCCEEDED) {
+        update.statusText = "Install Succeeded";
+        LOG("Downloader", "STATE = " + update.selectedPatch.state);
+        LOG("Downloader", "_postUpdateCleanup: Install Succeeded, Showing UI");
+        prompter.showUpdateInstalled(update);
+      }
+      else {
+        // Something went wrong with the patch application process.
+        update.statusText = "goats";
+        // XXXben todo: synthesize the best message
+        LOG("Downloader", "_postUpdateCleanup: Install Failed, Showing UI");
+        prompter.showUpdateError(update);
+      }
+      
+      // Move the update from the Active Update list into the Past Updates list.
+      um.activeUpdate = null;
+      um.saveUpdates();
+
+      // Now trash the updates directory, since we're done with it
+      cleanUpUpdatesDir();
+    }
+    else {
+      LOG("Downloader", "_postUpdateCleanup: No Status, No Update");
     }
   },
   
@@ -704,13 +716,11 @@ UpdateService.prototype = {
     // Major            1         No              Auto Install
     // Major            1         Yes             Notify and Confirm
     // Major            2         Yes or No       Notify and Confirm
-    // Major            3         Yes or No       Notify and Confirm
     // Minor            0         Yes or No       Auto Install
     // Minor            1         No              Auto Install
     // Minor            1         Yes             Notify and Confirm
     // Minor            2         No              Auto Install
     // Minor            2         Yes             Notify and Confirm
-    // Minor            3         Yes or No       Notify and Confirm
     //
     // In addition, if there is a license associated with an update, regardless
     // of type it must be agreed to. 
@@ -719,30 +729,49 @@ UpdateService.prototype = {
     // at all, and so none of the decision making above is entered into.
     //
     update.QueryInterface(Components.interfaces.nsIPropertyBag);
-    var licenseAccepted = update.getProperty("licenseAccepted") == "true";
-    if (update.licenseURL && !licenseAccepted)
+    try {
+      var licenseAccepted = update.getProperty("licenseAccepted") == "true";
+    }
+    catch (e) {
+      licenseAccepted = false;
+    }
+    if (update.licenseURL && !licenseAccepted) {
+      LOG("Checker", "_shouldPrompt: Prompting because of an un-accepted " + 
+          "license");
       return true;
+    }
     
     var updateEnabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
-    if (!updateEnabled)
+    if (!updateEnabled) {
+      LOG("Checker", "_shouldPrompt: Not prompting because update is " + 
+          "disabled");
       return false;
-      
+    }
+    
+    // User has turned off automatic download and install
+    var autoEnabled = getPref("getBoolPref", PREF_APP_UPDATE_AUTO, true);
+    if (!autoEnabled) {
+      LOG("Checker", "_shouldPrompt: Prompting because auto install is disabled");
+      return true;
+    }
+    
     switch (getPref("getIntPref", PREF_APP_UPDATE_MODE, 1)) {
-    case 0:
-      // Mode 0 is do not prompt regardless of incompatibilities
-      return false;
     case 1:
       // Mode 1 is do not prompt only if there are no incompatibilities
       // releases
+      LOG("Checker", "_shouldPrompt: Prompting if there are incompatibilities");
       return !isCompatible(update);
     case 2:
       // Mode 2 is do not prompt only if there are no incompatibilities for 
       // minor updates only
-      if (update.type == "minor")
-        return !isCompatible(update);
+      LOG("Checker", "_shouldPrompt: Prompting if major or there are " + 
+          "incompatibilities");
+      return update.type == "minor" ? !isCompatible(update) : true;
     }
-    // Mode 3 is prompt, regardless.
-    return true;
+    // Mode 0 is do not prompt regardless of incompatibilities
+    LOG("Checker", "_shouldPrompt: Not prompting the user - they choose to " +
+        "ignore incompatibilities");
+    return false;
   },
   
   /**
@@ -781,6 +810,14 @@ UpdateService.prototype = {
    *          An array of available updates
    */
   _selectAndInstallUpdate: function(updates) {
+    // Don't prompt if there's an active update - the user is already 
+    // aware and is downloading, or performed some user action to prevent
+    // notification.
+    var um = Components.classes["@mozilla.org/updates/update-manager;1"]
+                       .getService(Components.interfaces.nsIUpdateManager);
+    if (um.activeUpdate)
+      return;
+    
     var update = this.selectUpdate(updates, updates.length);
     if (!update)
       return;
@@ -789,7 +826,7 @@ UpdateService.prototype = {
       var prompter = 
           Components.classes["@mozilla.org/updates/update-prompt;1"].
           createInstance(Components.interfaces.nsIUpdatePrompt);
-      prompter.showUpdateAvailable(update);
+      prompter.showUpdateAvailable(null, update);
     } else {
       this.downloadUpdate(update, true);
     }
@@ -900,6 +937,11 @@ UpdateService.prototype = {
  * @constructor
  */
 function UpdateManager() {
+  // Ensure the Active Update file is loaded
+  var updates = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, 
+    [FILE_UPDATE_ACTIVE]));
+  if (updates.length > 0)
+    this._activeUpdate = updates[0];
 }
 UpdateManager.prototype = {
   /**
@@ -920,9 +962,11 @@ UpdateManager.prototype = {
    * @returns The array of nsIUpdate items held in the file.
    */
   _loadXMLFileIntoArray: function(file) {
-    if (!file.exists())
+    if (!file.exists()) {
+      LOG("UpdateManager", "_loadXMLFileIntoArray: XML File does not exist");
       return [];
-    
+    }
+
     var result = [];
     var fileStream = Components.classes["@mozilla.org/network/file-input-stream;1"]
                                .createInstance(Components.interfaces.nsIFileInputStream);
@@ -949,6 +993,8 @@ UpdateManager.prototype = {
       }
     }
     catch (e) {
+      LOG("UpdateManager", "_loadXMLFileIntoArray: Error constructing update list " + 
+          e);
     }
     fileStream.close();
     return result;
@@ -961,21 +1007,8 @@ UpdateManager.prototype = {
     if (!this._updates)
       this._updates = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, 
                         [FILE_UPDATES_DB]));
-    this._ensureActiveUpdate();
   },
 
-  /**
-   * Ensure that the Active Update file is loaded.
-   */
-  _ensureActiveUpdate: function() {
-    if (!this._activeUpdate) {
-      var updates = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, 
-        [FILE_UPDATE_ACTIVE]));
-      if (updates.length > 0)
-        this._activeUpdate = updates[0];
-    }
-  },
-  
   /**
    * See nsIUpdateService.idl
    */
@@ -996,12 +1029,18 @@ UpdateManager.prototype = {
    * See nsIUpdateService.idl
    */
   get activeUpdate() {
-    this._ensureActiveUpdate();
+    if (this._activeUpdate &&
+        this._activeUpdate.serviceURL != Checker.prototype.updateURL) {
+      // User switched channels, clear out any old active updates and remove
+      // partial downloads
+      this._activeUpdate = null;
+      
+      // Destroy the updates directory, since we're done with it.
+      cleanUpUpdatesDir();
+    }
     return this._activeUpdate;
   },
   set activeUpdate(activeUpdate) {
-    this._ensureActiveUpdate();
-    if (!activeUpdate)
       this._addUpdate(this._activeUpdate);
     this._activeUpdate = activeUpdate;
     if (!activeUpdate) {
@@ -1013,14 +1052,6 @@ UpdateManager.prototype = {
       this._writeUpdatesToXMLFile([this._activeUpdate], 
                                   getFile(KEY_APPDIR, [FILE_UPDATE_ACTIVE]));
     return activeUpdate;
-  },
-  
-  /**
-   * See nsIUpdateService.idl
-   */
-  removeUpdateAtIndex: function(index) {
-    this._ensureUpdates();
-    tihs._updates.splice(index, 1);
   },
   
   /**
@@ -1041,7 +1072,8 @@ UpdateManager.prototype = {
       }
     }
     // Otherwise add it to the front of the list.
-    this._updates = [this._activeUpdate].concat(this._updates);
+    if (this._activeUpdate) 
+      this._updates = [this._activeUpdate].concat(this._updates);
   },
   
   /**
@@ -1133,7 +1165,8 @@ function getPref(func, preference, defaultValue) {
  */
 function UpdatePatch(patch) {
   for (var i = 0; i < patch.attributes.length; ++i) {
-    var attr = patch.attributes[i];
+    var attr = patch.attributes.item(i);
+    attr.QueryInterface(Components.interfaces.nsIDOMAttr);
     switch (attr.name) {
     case "selected":
       this.selected = attr.value == "true";
@@ -1249,19 +1282,14 @@ function Update(update) {
   }
 
   for (var i = 0; i < update.attributes.length; ++i) {
-    var attr = update.attributes[i];
-    switch (attr.name) {
-    case "installDate":
-      if (attr.value)
-        this.installDate = parseInt(attr.value);
-      break;
-    case "isCompleteUpdate":
+    var attr = update.attributes.item(i);
+    attr.QueryInterface(Components.interfaces.nsIDOMAttr);
+    if (attr.name == "installDate" && attr.value) 
+      this.installDate = parseInt(attr.value);
+    else if (attr.name == "isCompleteUpdate")
       this.isCompleteUpdate = attr.value == "true";
-      break;
-    default:
+    else
       this[attr.name] = attr.value;
-      break;
-    };
   }
   
   // The Update Name is either the string provided by the <update> element, or
@@ -1294,7 +1322,27 @@ Update.prototype = {
   getPatchAt: function(index) {
     return this._patches[index];
   },
-  
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  _state: "",
+  set state(state) {
+    if (this.selectedPatch)
+      this.selectedPatch.state = state;
+    else
+      this._state = state;
+    return state;
+  },
+  get state() {
+    if (this.selectedPatch)
+      return this.selectedPatch.state;
+    return this._state;
+  },
+    
+  /**
+   * See nsIUpdateService.idl
+   */
   get selectedPatch() {
     for (var i = 0; i < this.patchCount; ++i) {
       if (this._patches[i].selected)
@@ -1314,6 +1362,7 @@ Update.prototype = {
     update.setAttribute("extensionVersion", this.extensionVersion);
     update.setAttribute("detailsURL", this.detailsURL);
     update.setAttribute("licenseURL", this.licenseURL);
+    update.setAttribute("serviceURL", this.serviceURL);
     update.setAttribute("installDate", this.installDate);
     update.setAttribute("statusText", this.statusText);
     update.setAttribute("isCompleteUpdate", this.isCompleteUpdate);
@@ -1407,7 +1456,7 @@ Checker.prototype = {
    * The URL of the update service XML file to connect to that contains details
    * about available updates.
    */
-  get _updateURL() {
+  get updateURL() {
     var url;
     try {
       // Use the override URL if specified.
@@ -1446,13 +1495,13 @@ Checker.prototype = {
     if (!listener)
       throw Components.results.NS_ERROR_NULL_POINTER;
       
-    if (!this._updateURL || (!this.enabled && !force))
+    if (!this.updateURL || (!this.enabled && !force))
       return;
       
     this._request = 
       Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].
       createInstance(Components.interfaces.nsIXMLHttpRequest);
-    this._request.open("GET", this._updateURL, true);
+    this._request.open("GET", this.updateURL, true);
     this._request.overrideMimeType("text/xml");
     this._request.setRequestHeader("Cache-Control", "no-cache");
     
@@ -1461,7 +1510,7 @@ Checker.prototype = {
     this._request.onload      = function(event) { self.onLoad(event);     };
     this._request.onprogress  = function(event) { self.onProgress(event); };
 
-    LOG("Checker", "checkForUpdates: sending request to " + this._updateURL);
+    LOG("Checker", "checkForUpdates: sending request to " + this.updateURL);
     this._request.send(null);
     
     this._callback = listener;
@@ -1500,7 +1549,10 @@ Checker.prototype = {
         continue;
 
       updateElement.QueryInterface(Components.interfaces.nsIDOMElement);
-      updates.push(new Update(updateElement));
+      var update = new Update(updateElement);
+      update.serviceURL = this.updateURL;
+      LOG("Checker", "Creating service URL" + update.serviceURL);
+      updates.push(update);
     }
 
     return updates;
@@ -1856,12 +1908,16 @@ Downloader.prototype = {
   },
   
   /**
-   *
+   * An array of download listeners to notify when we receive 
+   * nsIRequestObserver or nsIProgressEventSink method calls.
    */
   _listeners: [],
 
   /** 
-   * 
+   * Adds a listener to the download process
+   * @param   listener
+   *          A download listener, implementing nsIRequestObserver and
+   *          nsIProgressEventSink
    */
   addDownloadListener: function(listener) {
     for (var i = 0; i < this._listeners.length; ++i) {
@@ -1872,7 +1928,9 @@ Downloader.prototype = {
   },
   
   /** 
-   *
+   * Removes a download listener
+   * @param   listener
+   *          The listener to remove.
    */
   removeDownloadListener: function(listener) {
     for (var i = 0; i < this._listeners.length; ++i) {
@@ -1884,7 +1942,11 @@ Downloader.prototype = {
   },
   
   /**
-   *
+   * When the async request begins
+   * @param   request
+   *          The nsIRequest object for the transfer
+   * @param   context
+   *          Additional data
    */
   onStartRequest: function(request, context) {
     request.QueryInterface(nsIIncrementalDownload);
@@ -1895,8 +1957,16 @@ Downloader.prototype = {
       this._listeners[i].onStartRequest(request, context);
   },
   
-  /**
-   *
+  /** 
+   * When new data has been downloaded
+   * @param   request
+   *          The nsIRequest object for the transfer
+   * @param   context
+   *          Additional data
+   * @param   progress
+   *          The current number of bytes transferred
+   * @param   maxProgress
+   *          The total number of bytes that must be transferred
    */
   onProgress: function(request, context, progress, maxProgress) {
     request.QueryInterface(nsIIncrementalDownload);
@@ -1910,8 +1980,16 @@ Downloader.prototype = {
     }
   },
   
-  /**
-   *
+  /** 
+   * When we have new status text
+   * @param   request
+   *          The nsIRequest object for the transfer
+   * @param   context
+   *          Additional data
+   * @param   status
+   *          A status code
+   * @param   statusText
+   *          Human readable version of |status|
    */
   onStatus: function(request, context, status, statusText) {
     request.QueryInterface(nsIIncrementalDownload);
@@ -1924,8 +2002,14 @@ Downloader.prototype = {
     }
   },
   
-  /**
-   *
+  /** 
+   * When data transfer ceases
+   * @param   request
+   *          The nsIRequest object for the transfer
+   * @param   context
+   *          Additional data
+   * @param   status
+   *          Status code containing the reason for the cessation.
    */
   onStopRequest: function(request, context, status) {
     request.QueryInterface(nsIIncrementalDownload);
@@ -1947,6 +2031,7 @@ Downloader.prototype = {
           shouldShowPrompt = true;
         
         // Tell the updater.exe we're ready to apply.
+        dump("*** WRITING STATUS = " + state);
         this._writeStatusFile(getUpdatesDir(), state);
         this._update.installDate = (new Date()).getTime();
         this._update.statusText = "Install Pending";
@@ -1995,6 +2080,7 @@ Downloader.prototype = {
       
       deleteActiveUpdate = true;
     }
+    LOG("Downloader", "Setting state to: " + state);
     this._patch.state = state;
     var um = 
         Components.classes["@mozilla.org/updates/update-manager;1"].
@@ -2030,7 +2116,7 @@ Downloader.prototype = {
       var prompter = 
           Components.classes["@mozilla.org/updates/update-prompt;1"].
           createInstance(Components.interfaces.nsIUpdatePrompt);
-      prompter.showUpdateDownloaded(this._update);
+      prompter.showUpdateDownloaded(null, this._update);
     }
   },
    
@@ -2076,6 +2162,7 @@ TimerManager.prototype = {
    *          The checking timer that fired. 
    */
   notify: function(timer) {
+dump("*** STATUS = " + readStatusFile(getUpdatesDir()) + "\n");
     for (var timerID in this._timers) {
       var timerData = this._timers[timerID];
       var lastUpdateTime = timerData.lastUpdateTime;
@@ -2209,6 +2296,8 @@ VersionChecker.prototype = {
   }
 };
 
+var gUpdateManager = null;
+
 var gModule = {
   registerSelf: function(componentManager, fileSpec, location, type) {
     componentManager = componentManager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
@@ -2259,11 +2348,6 @@ var gModule = {
                className  : "Update Checker",
                factory    : #1#(Checker)
              },
-    manager: { CID        : Components.ID("{093C2356-4843-4C65-8709-D7DBCBBE7DFB}"),
-               contractID : "@mozilla.org/updates/update-manager;1",
-               className  : "Update Manager",
-               factory    : #1#(UpdateManager)
-             },
     prompt:  { CID        : Components.ID("{27ABA825-35B5-4018-9FDD-F99250A0E722}"),
                contractID : "@mozilla.org/updates/update-prompt;1",
                className  : "Update Prompt",
@@ -2278,7 +2362,12 @@ var gModule = {
                contractID : "@mozilla.org/updates/timer-manager;1",
                className  : "Timer Manager",
                factory    : #1#(TimerManager)
-             }
+             },
+    manager: { CID        : Components.ID("{093C2356-4843-4C65-8709-D7DBCBBE7DFB}"),
+               contractID : "@mozilla.org/updates/update-manager;1",
+               className  : "Update Manager",
+               factory    : #1#(UpdateManager)
+             },
   },
   
   canUnload: function(componentManager) {
