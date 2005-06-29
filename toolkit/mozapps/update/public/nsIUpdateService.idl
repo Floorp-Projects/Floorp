@@ -130,6 +130,11 @@ interface nsIUpdate : nsISupports
   attribute AString licenseURL;
 
   /**
+   * The URL to the Update Service that supplied this update.
+   */
+  attribute AString serviceURL;
+
+  /**
    * Whether or not the update being downloaded is a complete replacement of
    * the user's existing installation or a patch representing the difference
    * between the new version and the previous version.
@@ -150,6 +155,11 @@ interface nsIUpdate : nsISupports
    * The currently selected patch for this update.
    */
   readonly attribute nsIUpdatePatch selectedPatch;
+
+  /**
+   * The state of the selected patch.
+   */
+  attribute AString state;
 
   /**
    * The number of patches supplied by this update.
@@ -372,27 +382,25 @@ interface nsIApplicationUpdateService : nsISupports
 interface nsIUpdateManager : nsISupports
 {
   /**
-   *
+   * Gets the update at the specified index
+   * @param   index
+   *          The index within the updates array
+   * @returns The nsIUpdate object at the specified index
    */
   nsIUpdate getUpdateAt(in long index);
 
   /**
-   * 
+   * Gets the total number of updates in the history list. 
    */
   readonly attribute long updateCount;
 
   /**
-   *
+   * The active (current) update. The active update is not in the history list.
    */
   attribute nsIUpdate activeUpdate;
 
   /**
-   *
-   */
-  void removeUpdateAtIndex(in long index);
-
-  /**
-   *
+   * Saves all updates to disk. 
    */
   void saveUpdates();
 };
@@ -400,22 +408,22 @@ interface nsIUpdateManager : nsISupports
 [scriptable, uuid(0765c92c-6145-4253-9db4-594d8023087e)]
 interface nsIUpdateTimerManager : nsISupports
 {
-    /**
-     * Register an interval with the timer manager. The timer manager 
-     * periodically checks to see if the interval has expired and if it has
-     * calls the specified callback. This is persistent across application
-     * restarts and can handle intervals of long durations.
-     * @param   id
-     *          An id that identifies the interval, used for persistence
-     * @param   callback
-     *          A nsITimerCallback object that is notified when the interval
-     *          expires
-     * @param   interval
-     *          The length of time, in milliseconds, of the interval
-     */
-    void registerTimer(in AString id, 
-                       in nsITimerCallback callback, 
-                       in unsigned long interval);
+  /**
+   * Register an interval with the timer manager. The timer manager 
+   * periodically checks to see if the interval has expired and if it has
+   * calls the specified callback. This is persistent across application
+   * restarts and can handle intervals of long durations.
+   * @param   id
+   *          An id that identifies the interval, used for persistence
+   * @param   callback
+   *          A nsITimerCallback object that is notified when the interval
+   *          expires
+   * @param   interval
+   *          The length of time, in milliseconds, of the interval
+   */
+  void registerTimer(in AString id, 
+                     in nsITimerCallback callback, 
+                     in unsigned long interval);
 };
 
 [scriptable, uuid(22d35700-5765-42e1-914b-a0da7c911a8c)]

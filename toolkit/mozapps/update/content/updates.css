@@ -189,3 +189,9 @@ update {
   margin-bottom: 1px;
 }
 
+.updatePrefsInfo {
+  font-size: smaller;
+  margin-left: 27px;
+  margin-bottom: 10px;
+}
+

@@ -1,0 +1,22 @@
+<!ENTITY update.title                   "Automatic Update">
+<!ENTITY window.width                   "30em">
+<!ENTITY window.height                  "25em">
+
+<!ENTITY update.intro                   "Automatically download and install updates for:">
+
+<!ENTITY ausMode0Name.label             "Security/Incremental Updates and New Releases, even if
+                                         some of my Extensions and Themes will stop working">
+<!ENTITY ausMode0Name.accesskey         "S">
+<!ENTITY ausMode0Name.info              "&brandShortName; will automatically download and install all
+                                         Updates and New Releases in the background">
+<!ENTITY ausMode1Name.label             "Security/Incremental Updates and New Releases, provided
+                                         my Extensions and Themes will still work">
+<!ENTITY ausMode1Name.accesskey         "e">
+<!ENTITY ausMode1Name.info              "&brandShortName; will ask your permission before downloading 
+                                         and installing any New Release that will cause some of your
+                                         Extensions and/or Themes to stop working">
+<!ENTITY ausMode2Name.label             "Security/Incremental Updates only">
+<!ENTITY ausMode2Name.accesskey         "c">
+<!ENTITY ausMode2Name.info              "&brandShortName; will ask your permission before downloading
+                                         any New Release">
+

@@ -75,13 +75,17 @@ pref("extensions.logging.enabled", false);
 // Whether or not app updates are enabled
 pref("app.update.enabled", false);               
 
+// This preference turns on app.update.mode and allows automatic download and
+// install to take place. We use a separate boolean toggle for this to make
+// the UI easier to construct.
+pref("app.update.auto", true);
+
 // Defines how the Application Update Service notifies the user about updates:
 //
 // AUM Set to:        Minor Releases:     Major Releases:
 // 0                  download no prompt  download no prompt
 // 1                  download no prompt  download no prompt if no incompatibilities
 // 2                  download no prompt  prompt
-// 3                  prompt              prompt
 //
 // See chart in nsUpdateService.js.in for more details
 //
