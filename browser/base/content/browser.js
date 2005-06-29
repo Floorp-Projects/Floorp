@@ -632,6 +632,7 @@ function prepareForStartup()
   gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
   gBrowser.addEventListener("DOMLinkAdded", livemarkOnLinkAdded, false);
   gBrowser.addEventListener("PluginNotFound", gMissingPluginInstaller.newMissingPlugin, false);
+  gBrowser.addEventListener("NewTab", BrowserOpenTab, false);
 
   var webNavigation;
   try {
