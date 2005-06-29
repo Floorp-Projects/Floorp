@@ -1140,7 +1140,7 @@ password=mypassword
             regularly updated at intervals from the main database.
           </para>
           <para>
-            MySQL has some synchronization features builtin to the
+            MySQL has some synchronization features built-in to the
             latest releases. It would be great if someone looked into
             the possibilities there and provided a report to the
             newsgroup on how to effectively synchronize two Bugzilla
