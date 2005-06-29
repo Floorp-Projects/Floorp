@@ -49,7 +49,6 @@
 @interface HistoryOutlineViewDelegate : NSObject
 {
   IBOutlet ExtendedOutlineView*     mHistoryOutlineView;
-  IBOutlet NSMenu*                  mOutlinerContextMenu;
   
   IBOutlet NSMenu*                  mHistorySortMenu;
   IBOutlet BookmarkViewController*  mBookmarksViewController;
