@@ -1017,49 +1017,6 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
         }//if
       }
       break;
-    case eHTMLTag_textarea:
-      {
-        // In HTML, we need to strip the first newline from the textarea's text.
-        CToken* theNextToken = mTokenizer->PeekToken();
-        if (theNextToken) {
-#ifdef DEBUG
-          eHTMLTokenTypes theType = eHTMLTokenTypes(theNextToken->GetTokenType());
-          NS_ASSERTION(eToken_text == theType, "Textareas should always have at "
-                                             "least one text token as a child.");
-#endif
-          CTextToken* text = NS_STATIC_CAST(CTextToken*, theNextToken);
-          const nsSubstring &content = text->GetStringValue();
-          PRBool chop = PR_FALSE;
-
-          if (!content.IsEmpty()) {
-            nsSubstring::const_iterator start, end;
-            content.BeginReading(start);
-            content.EndReading(end);
-
-            if (*start == nsCRT::CR) {
-              ++start;
-
-              if (start != end && *start == nsCRT::LF) {
-                ++start;
-              }
-
-              chop = PR_TRUE;
-            }
-            else if (*start == nsCRT::LF) {
-              ++start;
-              chop = PR_TRUE;
-            }
-
-            if (chop) {
-              // XXX See bug 294599 for why the nsAutoString is necessary.
-              nsAutoString chopped(Substring(start, end));
-              text->Bind(chopped);
-              ++mLineNumber;
-            }
-          }
-        }
-        break;
-      }
     default:
       break;
   }//switch 
