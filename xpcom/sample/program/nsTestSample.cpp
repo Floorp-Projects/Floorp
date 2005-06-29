@@ -42,9 +42,10 @@
  * to be a sample application for using xpcom standalone.
  */
 
-#include <nsISample.h>
-#include <nsIServiceManager.h>
-#include <nsXPIDLString.h>
+#include "nsISample.h"
+#include "nsIServiceManager.h"
+#include "nsXPIDLString.h"
+#include "nsIComponentRegistrar.h"
 
 #define NS_SAMPLE_CONTRACTID "@mozilla.org/sample;1"
 
@@ -54,25 +55,18 @@ main(void)
     nsresult rv;
 
     // Initialize XPCOM
-    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    nsCOMPtr<nsIServiceManager> servMan;
+    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
     if (NS_FAILED(rv))
     {
         printf("ERROR: XPCOM intialization error [%x].\n", rv);
         return -1;
     }
-
-    // Do Autoreg to make sure our component is registered. The real way of
-    // doing this is running the xpcom registraion tool, regxpcom, at install
-    // time to get components registered and not make this call everytime.
-    // Ignore return value.
-    //
-    // Here we use the global component manager. Note that this will cause
-    // linkage dependency to XPCOM library. We feel that linkage dependency
-    // to XPCOM is inevitable and this is simpler to code.
-    // To break free from such dependencies, we can GetService() the component
-    // manager from the service manager that is returned from NS_InitXPCOM().
-    // We feel that linkage dependency to XPCOM library is inevitable.
-    (void) nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, nsnull);
+    // register all components in our default component directory
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
+    
 
     // Create an instance of our component
     nsCOMPtr<nsISample> mysample = do_CreateInstance(NS_SAMPLE_CONTRACTID, &rv);
