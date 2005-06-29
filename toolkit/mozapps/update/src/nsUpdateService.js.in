@@ -483,7 +483,6 @@ UpdatePrompt.prototype = {
    */
   _showUI: function(parent, uri, features, name, update) {
     var ary = null;
-    dump("*** UUUU = " + update + "\n");
     if (update) {
       ary = Components.classes["@mozilla.org/supports-array;1"]
                       .createInstance(Components.interfaces.nsISupportsArray);
@@ -598,15 +597,14 @@ UpdateService.prototype = {
       update.state = status;
       if (status == STATE_SUCCEEDED) {
         update.statusText = "Install Succeeded";
-        LOG("Downloader", "STATE = " + update.selectedPatch.state);
-        LOG("Downloader", "_postUpdateCleanup: Install Succeeded, Showing UI");
+        LOG("UpdateService", "_postUpdateCleanup: Install Succeeded, Showing UI");
         prompter.showUpdateInstalled(update);
       }
       else {
         // Something went wrong with the patch application process.
         update.statusText = "goats";
         // XXXben todo: synthesize the best message
-        LOG("Downloader", "_postUpdateCleanup: Install Failed, Showing UI");
+        LOG("UpdateService", "_postUpdateCleanup: Install Failed, Showing UI");
         prompter.showUpdateError(update);
       }
       
@@ -618,7 +616,7 @@ UpdateService.prototype = {
       cleanUpUpdatesDir();
     }
     else {
-      LOG("Downloader", "_postUpdateCleanup: No Status, No Update");
+      LOG("UpdateService", "_postUpdateCleanup: No Status, No Update");
     }
   },
   
@@ -2031,7 +2029,6 @@ Downloader.prototype = {
           shouldShowPrompt = true;
         
         // Tell the updater.exe we're ready to apply.
-        dump("*** WRITING STATUS = " + state);
         this._writeStatusFile(getUpdatesDir(), state);
         this._update.installDate = (new Date()).getTime();
         this._update.statusText = "Install Pending";
@@ -2162,7 +2159,6 @@ TimerManager.prototype = {
    *          The checking timer that fired. 
    */
   notify: function(timer) {
-dump("*** STATUS = " + readStatusFile(getUpdatesDir()) + "\n");
     for (var timerID in this._timers) {
       var timerData = this._timers[timerID];
       var lastUpdateTime = timerData.lastUpdateTime;
