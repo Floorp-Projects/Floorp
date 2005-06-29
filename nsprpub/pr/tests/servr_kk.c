@@ -196,9 +196,9 @@ WorkerThreadFunc(void *_listenSock)
                                   PR_UNJOINABLE_THREAD,
                                   THREAD_STACKSIZE);
 
-                if (!WorkerThread)
+                if (!WorkerThread) {
                     if (debug_mode) printf("Error creating client thread %d\n", workerThreads);
-                else {
+                } else {
                     PR_AtomicIncrement(&workerThreads);
                     if (debug_mode) DPRINTF("\tServer creates worker (%d)\n", workerThreads);
                 }
@@ -225,11 +225,12 @@ WorkerThreadFunc(void *_listenSock)
                                bytesToWrite, 
                                0, 
                                PR_INTERVAL_NO_TIMEOUT);
-        if (bytesWritten != _server_data)
+        if (bytesWritten != _server_data) {
             if (debug_mode) printf("\tError sending data to client (%d, %d)\n", 
                 bytesWritten, PR_GetOSError());
-        else
+        } else {
             if (debug_mode) DPRINTF("\tServer sent %d bytes\n", bytesWritten);
+        }
 
         PR_Close(newSock);
         PR_AtomicDecrement(&workerThreadsBusy);
