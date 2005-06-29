@@ -549,6 +549,9 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     nscoord oldComputedWidth = aFrameRS.mComputedWidth;
 
     aFrameRS.availableWidth = NS_UNCONSTRAINEDSIZE;
+    // XXX Is this really correct? This means we don't compute the
+    // correct maximum width if the element's width is determined by
+    // its 'width' style
     aFrameRS.mComputedWidth = NS_UNCONSTRAINEDSIZE;
     rv = mFrame->Reflow(mPresContext, mMetrics, aFrameRS, aFrameReflowStatus);
 
