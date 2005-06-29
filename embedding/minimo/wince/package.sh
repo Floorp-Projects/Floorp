@@ -1,9 +1,14 @@
-#!/bin/sh
+#!/bin/bash
 
-
+if [ -z "$MOZ_OBJDIR" ]
+then
+echo MOZ_OBJDIR is not set!!
+exit 1
+else
 echo MOZ_OBJDIR is $MOZ_OBJDIR
+fi
 
-cd $MOZ_OBJDIR/dist
+pushd $MOZ_OBJDIR/dist
 rm -rf wince
 
 echo Copying over files from MOZ_OBJDIR
@@ -55,12 +60,16 @@ xpt_link wince/components/all.xpt                        bin/components/*.xpt
 
 echo Copying over customized files
 
-cp -a $MOZ_OBJDIR/../embedding/minimo/wince/all.js       wince/greprefs
+popd
+
+cp -a ../all.js       wince/greprefs
 
 echo Applying SSR
 
-cat $MOZ_OBJDIR/../embedding/minimo/smallScreen.css >>   wince/res/ua.css
+cat ../smallScreen.css >>   wince/res/ua.css
 
-#cp -a $MOZ_OBJDIR/../build/wince/shunt/build/ARMV4Rel/shunt.dll wince
+echo Copying ARM shunt lib.  Adjust if you are not building ARM
+
+cp -a ../../../build/wince/shunt/build/ARMV4Rel/shunt.dll $MOZ_OBJDIR/dist/wince
 
 echo Done.
