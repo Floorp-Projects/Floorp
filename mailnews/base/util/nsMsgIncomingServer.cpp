@@ -1022,7 +1022,7 @@ nsMsgIncomingServer::GetLocalPath(nsIFileSpec **aLocalPath)
 	nsXPIDLCString hostname;
     rv = GetHostName(getter_Copies(hostname));
     if (NS_FAILED(rv)) return rv;
-	rv = path->MakeUniqueWithSuggestedName((const char *)hostname);
+    rv = path->MakeUniqueDirWithSuggestedName((const char *)hostname);
     if (NS_FAILED(rv)) return rv;
 
     rv = SetLocalPath(path);
