@@ -111,7 +111,7 @@ protected:
   // it is very rare that we actually have a certificate.
   nsAutoPtr<Certificate> mCert;
 
-  void* mSecurityPolicy;
+  DomainPolicy* mSecurityPolicy;
 
   nsCOMPtr<nsIURI> mCodebase;
   nsCOMPtr<nsIURI> mDomain;

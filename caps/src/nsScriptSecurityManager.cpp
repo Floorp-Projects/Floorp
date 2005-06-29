@@ -121,6 +121,17 @@ inline void SetPendingException(JSContext *cx, const PRUnichar *aMsg)
         JS_SetPendingException(cx, STRING_TO_JSVAL(str));
 }
 
+// DomainPolicy members
+#ifdef DEBUG_CAPS_DomainPolicyLifeCycle
+PRUint32 DomainPolicy::sObjects=0;
+void DomainPolicy::_printPopulationInfo()
+{
+    printf("CAPS.DomainPolicy: Gen. %d, %d DomainPolicy objects.\n",
+        sGeneration, sObjects);
+}
+#endif
+PRUint32 DomainPolicy::sGeneration = 0;
+
 // Helper class to get stuff from the ClassInfo and not waste extra time with
 // virtual method calls for things it has already gotten
 class ClassInfoData
@@ -2953,25 +2964,36 @@ nsScriptSecurityManager::SystemPrincipalSingletonConstructor()
 nsresult
 nsScriptSecurityManager::InitPolicies()
 {
-    // Reset the "dirty" flag
-    mPolicyPrefsChanged = PR_FALSE;
-
     // Clear any policies cached on XPConnect wrappers
     NS_ENSURE_STATE(sXPConnect);
     nsresult rv = sXPConnect->ClearAllWrappedNativeSecurityPolicies();
     if (NS_FAILED(rv)) return rv;
 
-    //-- Reset mOriginToPolicyMap
+    //-- Clear mOriginToPolicyMap: delete mapped DomainEntry items,
+    //-- whose dtor decrements refcount of stored DomainPolicy object
     delete mOriginToPolicyMap;
+    
+    //-- Marks all the survivor DomainPolicy objects (those cached
+    //-- by nsPrincipal objects) as invalid: they will be released
+    //-- on first nsPrincipal::GetSecurityPolicy() attempt.
+    DomainPolicy::InvalidateAll();
+    
+    //-- Release old default policy
+    if(mDefaultPolicy)
+        mDefaultPolicy->Drop();
+    
+    //-- Initialize a new mOriginToPolicyMap
     mOriginToPolicyMap =
       new nsObjectHashtable(nsnull, nsnull, DeleteDomainEntry, nsnull);
-
-    //-- Reset and initialize the default policy
-    delete mDefaultPolicy;
-    mDefaultPolicy = new DomainPolicy();
-    if (!mOriginToPolicyMap || !mDefaultPolicy)
+    if (!mOriginToPolicyMap)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    //-- Create, refcount and initialize a new default policy 
+    mDefaultPolicy = new DomainPolicy();
+    if (!mDefaultPolicy)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    mDefaultPolicy->Hold();
     if (!mDefaultPolicy->Init())
         return NS_ERROR_UNEXPECTED;
 
@@ -3101,6 +3123,9 @@ nsScriptSecurityManager::InitPolicies()
         if (NS_FAILED(rv))
             return rv;
     }
+
+    // Reset the "dirty" flag
+    mPolicyPrefsChanged = PR_FALSE;
 
 #ifdef DEBUG_CAPS_HACKER
     PrintPolicyDB();
