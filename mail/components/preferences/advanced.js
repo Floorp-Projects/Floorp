@@ -81,18 +81,16 @@ var gAdvancedPane = {
     var checkNowButton = document.getElementById("checkNowButton");
     checkNowButton.disabled = !aus.canUpdate;
     
-    this.updateAutoInstallUI();
+    this.updateAutoPref();
     return undefined;
   },
   
-  updateAutoInstallUI: function ()
+  updateAutoPref: function ()
   {
-    var autoInstallPref = document.getElementById("app.update.autoInstallEnabled");
+    var preference = document.getElementById("app.update.auto");
     var updateEnabledPref = document.getElementById("app.update.enabled");
-    var ids = ["autoInstallMode", "updateAnd"];
-    var disabled = !updateEnabledPref.value || !autoInstallPref.value;
-    for (var i = 0; i < ids.length; ++i)
-      document.getElementById(ids[i]).disabled = disabled;
+    var autoInstallOptions = document.getElementById("autoInstallOptions");
+    autoInstallOptions.disabled = !preference.value || !updateEnabledPref.value;
     return undefined;
   },
   
@@ -127,7 +125,13 @@ var gAdvancedPane = {
                              .createInstance(Components.interfaces.nsIUpdatePrompt);
     prompter.checkForUpdates(window);  
   },
-  
+
+  showAutoInstallOptions: function () 
+  {
+    document.documentElement.openSubDialog("chrome://mozapps/content/preferences/update.xul",
+                                           "", null);  
+  },
+    
   showUpdates: function ()
   {
     var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]

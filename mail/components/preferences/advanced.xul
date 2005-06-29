@@ -58,8 +58,7 @@
       <preference id="mail.showFolderPaneColumns" name="mail.showFolderPaneColumns" type="bool"/>
       <preference id="mailnews.reuse_message_window" name="mailnews.reuse_message_window" type="bool"/>
       <preference id="app.update.enabled"              name="app.update.enabled"              type="bool"/>
-      <preference id="app.update.autoInstallEnabled"   name="app.update.autoInstallEnabled"   type="bool"/>
-      <preference id="app.update.mode"                 name="app.update.mode" type="int"/>
+      <preference id="app.update.auto"                 name="app.update.auto" type="bool"/>
       <preference id="extensions.update.autoUpdateEnabled"
                   name="extensions.update.autoUpdateEnabled"
                   type="bool"/>
@@ -187,34 +186,23 @@
             <label>&softwareupdateinfo.label;</label>
             <separator class="thin"/>
             <vbox align="start">
-              <checkbox id="enableSmartUpdate"
-                        label="&enableSmartUpdate.label;"
-                        accesskey="&enableSmartUpdate.accesskey;"
+              <checkbox id="enableAppUpdate"
+                        label="&enableAppUpdate.label;"
+                        accesskey="&enableAppUpdate.accesskey;"
                         preference="app.update.enabled"
                         onsyncfrompreference="return gAdvancedPane.updateAppUpdateUI();"/>
               <vbox class="indent" align="start">
-                <checkbox id="enableAutoInstall"
-                          label="&enableAutoInstall.label;"
-                          accesskey="&enableAutoInstall.accesskey;"
-                          preference="app.update.autoInstallEnabled"
-                          onsyncfrompreference="return gAdvancedPane.updateAutoInstallUI();"/>
-                <radiogroup id="autoInstallMode" preference="app.update.mode">
-                  <grid class="indent">
-                    <columns>
-                      <column/>
-                      <column flex="1"/>
-                    </columns>
-                    <rows>
-                      <row><label id="updateAnd"
-                                  preference="app.update.enabled">&updateAnd.label;</label>
-                           <radio label="&autoDownloadAndInstall.label;" 
-                                  accesskey="&autoDownloadAndInstall.accesskey;" value="0"/></row>
-                      <row><hbox/>
-                           <radio label="&autoDownloadAndPrompt.label;" 
-                                  accesskey="&autoDownloadAndPrompt.accesskey;" value="1"/></row>
-                    </rows>
-                  </grid>
-                </radiogroup>
+                <hbox>
+                  <checkbox id="enableAutoInstall"
+                            label="&enableAutoInstall.label;"
+                            accesskey="&enableAutoInstall.accesskey;"
+                            preference="app.update.auto"
+                            onsyncfrompreference="return gAdvancedPane.updateAutoPref();"/>
+                  <spacer flex="1"/>
+                  <button id="autoInstallOptions"
+                          label="&autoInstallOptions.label;" accesskey="&autoInstallOptions.accesskey;"
+                          oncommand="gAdvancedPane.showAutoInstallOptions();"/>
+                </hbox>
                 <separator class="thin"/>
                 <hbox>
                   <button id="checkNowButton" label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
@@ -225,9 +213,7 @@
                 </hbox>
               </vbox>
             </vbox>
-            <separator class="thin"/>
-            <separator class="groove"/>
-            <separator class="thin"/>
+            <separator/>
             <vbox align="start">
               <checkbox id="enableExtensionUpdate"
                         label="&enableExtensionUpdate.label;"

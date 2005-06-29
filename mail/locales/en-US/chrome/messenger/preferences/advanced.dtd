@@ -32,15 +32,12 @@
 
 <!-- Update -->
 <!ENTITY softwareupdateinfo.label       "Periodically check for updates to:">
-<!ENTITY enableSmartUpdate.label        "&brandShortName;">
-<!ENTITY enableSmartUpdate.accesskey    "T">
-<!ENTITY enableAutoInstall.label        "automatically download updates">
-<!ENTITY enableAutoInstall.accesskey    "d">
-<!ENTITY updateAnd.label                "and:">
-<!ENTITY autoDownloadAndInstall.label   "install them">
-<!ENTITY autoDownloadAndInstall.accesskey "i">
-<!ENTITY autoDownloadAndPrompt.label    "prompt me when ready to install">
-<!ENTITY autoDownloadAndPrompt.accesskey "p">
+<!ENTITY enableAppUpdate.label          "&brandShortName;">
+<!ENTITY enableAppUpdate.accesskey      "T">
+<!ENTITY enableAutoInstall.label        "Automatically Download and Install updates">
+<!ENTITY enableAutoInstall.accesskey    "A">
+<!ENTITY autoInstallOptions.label       "Advanced...">
+<!ENTITY autoInstallOptions.accesskey   "d">
 <!ENTITY enableExtensionUpdate.label    "My Extensions and Themes">
 <!ENTITY enableExtensionUpdate.accesskey "M">
 <!ENTITY checkNow.label                 "Check Now...">
