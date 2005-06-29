@@ -44,6 +44,8 @@ function onLoad()
     window.calendarEvent = args.calendarEvent;
     window.originalRecurrenceInfo = args.recurrenceInfo;
 
+    window.removedExceptions = [];
+
     loadDialog();
 
     updateDeck();
@@ -76,77 +78,88 @@ function loadDialog()
     if (!window.originalRecurrenceInfo)
         return;
 
-    var ritems = window.originalRecurrenceInfo.getRecurrenceItems({});
-
     /* split out rules and exceptions */
-    var rules = [];
-    var exceptions = [];
+    var rrules = splitRecurrenceRules(window.originalRecurrenceInfo);
+    var rules = rrules[0];
+    var exceptions = rrules[1];
 
-    for each (var r in ritems) {
-        if (r instanceof calIRecurrenceRule) {
-            if (r.isNegative)
-                exceptions.push(r);
-            else
-                rules.push(r);
-        }
-    }
-
+    /* deal with the rules */
     if (rules.length > 0) {
         // we only handle 1 rule currently
         var rule = rules[0];
+        if (rule instanceof calIRecurrenceRule) {
 
-        switch(rule.type) {
-        case "DAILY":
-            document.getElementById("period-list").selectedIndex = 0;
+            switch(rule.type) {
+            case "DAILY":
+                document.getElementById("period-list").selectedIndex = 0;
 
-            setElementValue("daily-days", rule.interval);
-            break;
-        case "WEEKLY":
-            document.getElementById("period-list").selectedIndex = 1;
+                setElementValue("daily-days", rule.interval);
+                break;
+            case "WEEKLY":
+                document.getElementById("period-list").selectedIndex = 1;
 
-            const byDayTable = { 1 : "sun", 2 : "mon", 3 : "tue", 4 : "wed",
-                                 5 : "thu", 6 : "fri", 7: "sat" };
+                const byDayTable = { 1 : "sun", 2 : "mon", 3 : "tue", 4 : "wed",
+                                     5 : "thu", 6 : "fri", 7: "sat" };
 
-            for each (var i in rule.getComponent("BYDAY", {})) {
-                setElementValue("weekly-" + byDayTable[i], "true", "checked");
+                for each (var i in rule.getComponent("BYDAY", {})) {
+                    setElementValue("weekly-" + byDayTable[i], "true", "checked");
+                }
+                break;
+            case "MONTHLY":
+                document.getElementById("period-list").selectedIndex = 2;
+                break;
+            case "YEARLY":
+                document.getElementById("period-list").selectedIndex = 3;
+                break;
+            default:
+                dump("unable to handle your rule type!\n");
+                break;
             }
-            break;
-        case "MONTHLY":
-            document.getElementById("period-list").selectedIndex = 2;
-            break;
-        case "YEARLY":
-            document.getElementById("period-list").selectedIndex = 3;
-            break;
-        default:
-            dump("unable to handle your rule type!\n");
-            break;
-        }
 
-        /* load up the duration of the event radiogroup */
-        if (rule.count == -1) {
-            setElementValue("recurrence-duration", "forever");
-        } else if (rule.isByCount) {
-            setElementValue("recurrence-duration", "ntimes");
-            setElementValue("repeat-ntimes-count", rule.count );
-        } else {
-            setElementValue("recurrence-duration", "until");
-            setElementValue("repeat-until-date", rule.endDate.jsDate); // XXX getInTimezone()
-        }        
+            /* load up the duration of the event radiogroup */
+            if (rule.count == -1) {
+                setElementValue("recurrence-duration", "forever");
+            } else if (rule.isByCount) {
+                setElementValue("recurrence-duration", "ntimes");
+                setElementValue("repeat-ntimes-count", rule.count );
+            } else {
+                setElementValue("recurrence-duration", "until");
+                setElementValue("repeat-until-date", rule.endDate.jsDate); // XXX getInTimezone()
+            }        
+        }
     }
 
+    /* Deal with exceptions */
+    var exceptionListBox = document.getElementById("recurrence-exceptions-listbox");
 
-    // XXX handle exceptions
+    for each (exception in exceptions) {
+        if (exception instanceof calIRecurrenceDate) {
+            exceptionListBox.appendItem(exception.date.toString()).date = exception.date;
+        } else if (exception instanceof calIRecurrenceDateSet) {
+            var dateSet = exception.getDates({});
+            for each(date in dateSet)
+                exceptionListBox.appendItem(date.toString()).date = date;
+        } else
+            dump(exception);
+    }
 }
 
 function saveDialog()
 {
     var deckNumber = Number(getElementValue("period-list"));
     
-    var recurrenceInfo = createRecurrenceInfo();
-    recurrenceInfo.item = window.calendarEvent;
+    var recurrenceInfo = null;
+    if (window.originalRecurrenceInfo) {
+        recurrenceInfo = window.originalRecurrenceInfo.clone();
+        var rrules = splitRecurrenceRules(recurrenceInfo);
+        if (rrules[0].length > 0)
+            recurrenceInfo.deleteRecurrenceItem(rrules[0][0]);
+    } else {
+        recurrenceInfo = createRecurrenceInfo();
+        recurrenceInfo.item = window.calendarEvent;
+    }
 
     var recRule = new calRecurrenceRule();
-
     switch (deckNumber) {
     case 0:
         recRule.type = "DAILY";
@@ -197,6 +210,11 @@ function saveDialog()
 
     recurrenceInfo.appendRecurrenceItem(recRule);
 
+
+    for each (date in window.removedExceptions) {
+        recurrenceInfo.restoreOccurrenceAt(date);
+    }
+
     return recurrenceInfo;
 }
 
@@ -225,4 +243,29 @@ function updateDuration()
     } else {
         setElementValue("repeat-until-date", "true", "disabled");
     }
+}
+
+function removeSelectedException()
+{
+    var exceptionList = document.getElementById("recurrence-exceptions-listbox");
+    var item = exceptionList.selectedItem;
+    window.removedExceptions.push(item.date);
+    exceptionList.removeItemAt(exceptionList.getIndexOfItem(item));
+}
+
+function splitRecurrenceRules(recurrenceInfo)
+{
+    var ritems = recurrenceInfo.getRecurrenceItems({});
+
+    var rules = [];
+    var exceptions = [];
+
+    for each (var r in ritems) {
+        if (r.isNegative)
+            exceptions.push(r);
+        else
+            rules.push(r);
+    }
+
+    return [rules, exceptions];
 }

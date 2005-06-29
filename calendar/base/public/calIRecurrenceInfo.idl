@@ -76,6 +76,7 @@ interface calIRecurrenceInfo : nsISupports
 
   calIRecurrenceItem getRecurrenceItemAt (in unsigned long aIndex);
   void deleteRecurrenceItemAt (in unsigned long aIndex);
+  void deleteRecurrenceItem (in calIRecurrenceItem aItem);
   // inserts the item at the given index, pushing the item that was previously there forward
   void insertRecurrenceItemAt (in calIRecurrenceItem aItem, in unsigned long aIndex);
 

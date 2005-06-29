@@ -185,10 +185,9 @@
     <label value="Exceptions:"/>
 
     <hbox align="center">
-      <listbox id="recurrence-dates-listbox" rows="8" flex="1"/>
-      <vbox>
-        <button label="Add..."/>
-        <button label="Remove"/>
+      <listbox id="recurrence-exceptions-listbox" rows="8" flex="1"/>
+      <vbox align="top">
+        <button label="Remove" oncommand="removeSelectedException();"/>
       </vbox>
     </hbox>
 
