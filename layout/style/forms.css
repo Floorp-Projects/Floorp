@@ -90,7 +90,7 @@ input {
   word-spacing: normal;
   letter-spacing: normal;
   cursor: text;
-  -moz-binding: url("resource://gre/res/builtin/platformHTMLBindings.xml#inputFields");
+  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#inputFields");
   text-indent: 0;
 }
 
@@ -110,7 +110,7 @@ textarea {
   letter-spacing: normal;
   vertical-align: text-bottom;
   cursor: text;
-  -moz-binding: url("resource://gre/res/builtin/platformHTMLBindings.xml#textAreas");
+  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#textAreas");
   -moz-appearance: textfield;
   text-indent: 0;
 }

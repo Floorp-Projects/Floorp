@@ -270,8 +270,6 @@ bin/res/rdf/loading.gif
 bin/res/html/*
 bin/res/fonts/*
 bin/res/dtd/*
-bin/res/builtin/htmlBindings.xml
-bin/res/builtin/platformHTMLBindings.xml
 
 ; p3p
 bin/components/p3p.xpt

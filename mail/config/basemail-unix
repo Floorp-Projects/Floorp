@@ -399,7 +399,6 @@ res/charsetalias.properties
 res/langGroups.properties
 res/language.properties
 ;res/wincharset.properties
-res/builtin/*
 res/entityTables/*
 
 ; editor resource files
@@ -454,7 +453,6 @@ components/filepicker.xpt
 ;;res/arrowd.gif
 ;;res/loading-image.gif
 ;;res/broken-image.gif
-;;res/builtin/*
 ;;res/entityTables/html40Special.properties
 ;;res/entityTables/htmlEntityVersion.properties
 ;;res/entityTables/html40Latin1.properties

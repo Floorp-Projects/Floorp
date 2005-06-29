@@ -331,7 +331,6 @@ bin\res\charsetalias.properties
 bin\res\langGroups.properties
 bin\res\language.properties
 bin\res\wincharset.properties
-bin\res\builtin\*
 bin\res\entityTables\*
 
 ; editor resource files

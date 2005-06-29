@@ -309,7 +309,6 @@ res\charsetalias.properties
 res\langGroups.properties
 res\language.properties
 res\os2charset.properties
-res\builtin\*
 res\entityTables\*
 
 ; editor resource files

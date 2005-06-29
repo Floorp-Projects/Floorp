@@ -39,8 +39,6 @@ dist/bin/res/arrowd.gif
 dist/bin/res/ua.css
 dist/bin/res/broken-image.gif
 dist/bin/res/loading-image.gif
-dist/bin/res/builtin/htmlBindings.xml
-dist/bin/res/builtin/platformHTMLBindings.xml
 dist/bin/res/html/gopher-audio.gif
 dist/bin/res/html/gopher-binary.gif
 dist/bin/res/html/gopher-find.gif

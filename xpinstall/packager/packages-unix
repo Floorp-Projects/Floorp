@@ -363,7 +363,6 @@ bin/res/rdf/loading.gif
 bin/res/html/*
 bin/res/fonts/*
 bin/res/dtd/*
-bin/res/builtin/platformHTMLBindings.xml
 
 ; svg
 bin/res/svg.css
