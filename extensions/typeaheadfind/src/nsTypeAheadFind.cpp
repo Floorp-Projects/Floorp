@@ -1361,10 +1361,11 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
         // Get selection controller and selection for new frame/iframe
         GetSelection(presShell, getter_AddRefs(mFocusedDocSelCon), 
                      getter_AddRefs(mFocusedDocSelection));
-        if (!mFocusedDocSelection || !mFocusedDocSelCon) {
-          // Apparently these can go away even though presshell/prescontext exist
-          return NS_ERROR_FAILURE;
-        }
+      }
+ 
+     if (!mFocusedDocSelection || !mFocusedDocSelCon) {
+        // Apparently these can go away even though presshell/prescontext exist
+        return NS_ERROR_FAILURE;
       }
 
       // Select the found text and focus it
