@@ -643,8 +643,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
  *  @param   aFlushTokens -- PR_TRUE if we found the terminal tag.
  *  @return  error result
  */
-nsresult CTextToken::ConsumeCharacterData(PRUnichar aChar,
-                                          PRBool aConservativeConsume,
+nsresult CTextToken::ConsumeCharacterData(PRBool aConservativeConsume,
                                           PRBool aIgnoreComments,
                                           nsScanner& aScanner,
                                           const nsAString& aEndTagName,
@@ -798,7 +797,7 @@ nsresult CTextToken::ConsumeCharacterData(PRUnichar aChar,
  *  @param   aFlushTokens -- PR_TRUE if we found the terminal tag.
  *  @return  error result
  */
-nsresult CTextToken::ConsumeParsedCharacterData(PRUnichar aChar,
+nsresult CTextToken::ConsumeParsedCharacterData(PRBool aDiscardFirstNewline,
                                                 PRBool aConservativeConsume,
                                                 nsScanner& aScanner,
                                                 const nsAString& aEndTagName,
@@ -844,6 +843,39 @@ nsresult CTextToken::ConsumeParsedCharacterData(PRUnichar aChar,
   do {
     result = ConsumeUntil(theContent, mNewlineCount, aScanner, 
                           theEndCondition, PR_TRUE, aFlag);
+
+    if (aDiscardFirstNewline && 
+        (NS_SUCCEEDED(result) || !aScanner.IsIncremental()) &&
+        !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+      // Check if the very first character is a newline, and if so discard it.
+      // Note that we don't want to discard it in view source!
+      // Also note that this has to happen here (as opposed to before the
+      // ConsumeUntil) because we have to expand any entities.
+      // XXX It would be nice to be able to do this without calling
+      // writable()!
+      const nsSubstring &firstChunk = theContent.str();
+      if (!firstChunk.IsEmpty()) {
+        PRUint32 where = 0;
+        PRUnichar newline = firstChunk.First();
+
+        if (newline == kCR || newline == kNewLine) {
+          ++where;
+
+          if (firstChunk.Length() > 1) {
+            if (newline == kCR && firstChunk.CharAt(1) == kNewLine) {
+              // Handle \r\n = 1 newline.
+              ++where;
+            }
+            // Note: \n\r = 2 newlines.
+          }
+        }
+
+        if (where != 0) {
+          theContent.writable() = Substring(firstChunk, where);
+        }
+      }
+    }
+    aDiscardFirstNewline = PR_FALSE;
 
     if (NS_FAILED(result)) {
       if (kEOF == result && !aScanner.IsIncremental()) {
@@ -895,9 +927,7 @@ nsresult CTextToken::ConsumeParsedCharacterData(PRUnichar aChar,
         }
       }
     }
-    // IE only consumes <!-- --> as comments in PCDATA. We'll accept a bit
-    // more in quirks mode, but lets ensure that this really is a comment
-    // start to maintain the illusion of compatability.
+    // IE only consumes <!-- --> as comments in PCDATA.
     if (Distance(currPos, endPos) >= commentStartLen) {
       nsScannerIterator start(currPos), end(currPos);
       end.advance(commentStartLen);

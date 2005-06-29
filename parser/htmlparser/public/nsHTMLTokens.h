@@ -291,15 +291,14 @@ public:
                     nsScannerIterator& aEnd);
   virtual void Bind(const nsAString& aStr);
 
-  nsresult ConsumeCharacterData(PRUnichar aChar,
-                                PRBool aConservativeConsume,
+  nsresult ConsumeCharacterData(PRBool aConservativeConsume,
                                 PRBool aIgnoreComments,
                                 nsScanner& aScanner,
                                 const nsAString& aEndTagName,
                                 PRInt32 aFlag,
                                 PRBool& aFlushTokens);
 
-  nsresult ConsumeParsedCharacterData(PRUnichar aChar,
+  nsresult ConsumeParsedCharacterData(PRBool aDiscardFirstNewline,
                                       PRBool aConservativeConsume,
                                       nsScanner& aScanner,
                                       const nsAString& aEndTagName,

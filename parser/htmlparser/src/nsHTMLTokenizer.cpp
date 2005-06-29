@@ -872,8 +872,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
           if (isCDATA) {
             // The only tags that consume conservatively are <script> and
             // <style>, the rest all consume until the end of the document.
-            result = textToken->ConsumeCharacterData(0,
-                                                     theTag==eHTMLTag_script ||
+            result = textToken->ConsumeCharacterData(theTag==eHTMLTag_script ||
                                                      theTag==eHTMLTag_style,
                                                      theTag!=eHTMLTag_script,
                                                      aScanner,
@@ -888,12 +887,13 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
           else if (isPCDATA) {
             // Title is consumed conservatively in order to not regress
             // bug 42945
-            result = textToken->ConsumeParsedCharacterData(0,
-                                                           theTag==eHTMLTag_title,
-                                                           aScanner,
-                                                           endTagName,
-                                                           mFlags,
-                                                           done);
+            result = textToken->ConsumeParsedCharacterData(
+                                                        theTag==eHTMLTag_textarea,
+                                                        theTag==eHTMLTag_title,
+                                                        aScanner,
+                                                        endTagName,
+                                                        mFlags,
+                                                        done);
 
             // Note: we *don't* set aFlushTokens here.
           }
