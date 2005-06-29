@@ -2882,7 +2882,7 @@ class nsJSRuntimeServiceImpl : public nsIJSRuntimeService,
     NS_DECL_ISUPPORTS
     NS_DECL_NSIJSRUNTIMESERVICE
 
-    // This returns and AddRef'd pointer. It does not do this with an out param
+    // This returns an AddRef'd pointer. It does not do this with an out param
     // only because this form  is required by generic module macro:
     // NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR
     static nsJSRuntimeServiceImpl* GetSingleton();
@@ -2940,6 +2940,7 @@ private:
     nsXPCComponents_ID*             mID;
     nsXPCComponents_Exception*      mException;
     nsXPCComponents_Constructor*    mConstructor;
+    nsXPCComponents_Util*           mUtil;
 };
 
 /***************************************************************************/

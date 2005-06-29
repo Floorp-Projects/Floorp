@@ -63,6 +63,7 @@ REQUIRES	= xpcom \
 		  string \
 		  js \
 		  caps \
+		  necko \
 		  dom \
 		  $(NULL)
 
