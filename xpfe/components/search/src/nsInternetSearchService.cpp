@@ -987,14 +987,6 @@ InternetSearchDataSource::DeferredInit()
   gEngineListBuilt = PR_TRUE;
 
   // get available search engines
-  nsCOMPtr<nsIFile> dir;
-  rv = dirSvc->Get(NS_APP_SEARCH_DIR,
-                   NS_GET_IID(nsIFile), getter_AddRefs(dir));
-  if (NS_SUCCEEDED(rv))
-  {
-    GetSearchEngineList(dir, PR_FALSE);
-  }
-
   nsCOMPtr<nsISimpleEnumerator> dirlist;
   rv = dirSvc->Get(NS_APP_SEARCH_DIR_LIST,
                    NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(dirlist));
@@ -1003,6 +995,7 @@ InternetSearchDataSource::DeferredInit()
     PRBool more;
     while (NS_SUCCEEDED(dirlist->HasMoreElements(&more)) && more) {
       nsCOMPtr<nsISupports> suppfile;
+      nsCOMPtr<nsIFile> dir;
       dirlist->GetNext(getter_AddRefs(suppfile));
       dir = do_QueryInterface(suppfile);
       if (dir)
@@ -2561,10 +2554,19 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 		}
 	}
 
-	nsCOMPtr<nsIFile>	outFile;
-  rv = NS_GetSpecialDirectory(NS_APP_SEARCH_DIR, getter_AddRefs(outFile));
-  if (NS_FAILED(rv))
-    return rv;
+    nsCOMPtr<nsIFile> outFile;
+    rv = NS_GetSpecialDirectory(NS_APP_USER_SEARCH_DIR, getter_AddRefs(outFile));
+    if (NS_FAILED(rv))
+        return rv;
+
+    PRBool exists;
+    rv = outFile->Exists(&exists);
+    if (NS_FAILED(rv)) return(rv);
+    if (!exists)
+    {
+        rv = outFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
+        if (NS_FAILED(rv)) return(rv);
+    }
 
 	const PRUnichar	*dataBuf = nsnull;
 	if (NS_FAILED(rv = context->GetBufferConst(&dataBuf)))	return(rv);
