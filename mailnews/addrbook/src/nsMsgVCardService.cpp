@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMsgVCardService.h"
+#include "nsVCard.h"
 #include "prmem.h"
 #include "plstr.h"
     

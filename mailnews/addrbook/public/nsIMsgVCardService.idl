@@ -39,7 +39,6 @@
 
 %{C++
 #include "nsVCardObj.h"
-#include "nsVCard.h"
 %}
 
 [ptr] native VObject_ptr(VObject);

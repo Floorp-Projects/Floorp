@@ -113,7 +113,6 @@ EXPORTS		= \
 		nsDirPrefs.h \
 		nsAbCardProperty.h \
 		nsAbMDBCardProperty.h \
-                nsVCard.h \
                 nsVCardObj.h \
 		$(NULL)
 
