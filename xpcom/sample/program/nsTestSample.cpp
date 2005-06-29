@@ -48,6 +48,7 @@
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsIComponentRegistrar.h"
+#include "nsXPCOMGlue.h"
 
 #define NS_SAMPLE_CONTRACTID "@mozilla.org/sample;1"
 
@@ -55,6 +56,8 @@ int
 main(void)
 {
     nsresult rv;
+
+    XPCOMGlueStartup(nsnull);
 
     // Initialize XPCOM
     nsCOMPtr<nsIServiceManager> servMan;
@@ -121,8 +124,17 @@ main(void)
 
     rv = mysample->WriteValue("Final print :");
     printf("Test passed.\n");
-
+    
+    // All nsCOMPtr's must be deleted prior to calling shutdown XPCOM
+    // as we should not hold references passed XPCOM Shutdown.
+    servMan = 0;
+    registrar = 0;
+    manager = 0;
+    mysample = 0;
+    
     // Shutdown XPCOM
     NS_ShutdownXPCOM(nsnull);
+
+
     return 0;
 }
