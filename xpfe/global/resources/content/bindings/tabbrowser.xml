@@ -247,6 +247,9 @@
                 if (this.mIcon) {
                   this.mTab.setAttribute("image", this.mIcon);
                 }
+                else if (this.mBrowser.contentDocument instanceof ImageDocument) {
+                  this.mTab.setAttribute("image", this.mBrowser.currentURI.spec);
+                }
                 else if (this.mTabBrowser.shouldLoadFavIcon(location))
                   this.mTabBrowser.loadFavIcon(location, "image", this.mTab);
 
