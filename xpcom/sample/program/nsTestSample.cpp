@@ -48,7 +48,10 @@
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsIComponentRegistrar.h"
+
+#ifdef XPCOM_GLUE
 #include "nsXPCOMGlue.h"
+#endif
 
 #define NS_SAMPLE_CONTRACTID "@mozilla.org/sample;1"
 
@@ -57,7 +60,9 @@ main(void)
 {
     nsresult rv;
 
+#ifdef XPCOM_GLUE
     XPCOMGlueStartup(nsnull);
+#endif
 
     // Initialize XPCOM
     nsCOMPtr<nsIServiceManager> servMan;
@@ -135,6 +140,8 @@ main(void)
     // Shutdown XPCOM
     NS_ShutdownXPCOM(nsnull);
 
-
+#ifdef XPCOM_GLUE
+    XPCOMGlueShutdown();
+#endif
     return 0;
 }
