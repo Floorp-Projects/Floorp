@@ -368,6 +368,7 @@ enum BWCOpenDest {
 - (void)performSearch:(SearchTextField *)inSearchField inView:(BWCOpenDest)inDest inBackground:(BOOL)inLoadInBG;
 - (void)goToLocationFromToolbarURLField:(AutoCompleteTextField *)inURLField inView:(BWCOpenDest)inDest inBackground:(BOOL)inLoadInBG;
 
+- (BrowserTabViewItem*)tabForBrowser:(BrowserWrapper*)inWrapper;
 - (BookmarkViewController*)bookmarkViewControllerForCurrentTab;
 - (void)bookmarkableTitle:(NSString **)outTitle URL:(NSString**)outURLString forWrapper:(BrowserWrapper*)inWrapper;
 
@@ -1358,6 +1359,18 @@ enum BWCOpenDest {
 
 #pragma mark -
 
+- (BrowserTabViewItem*)tabForBrowser:(BrowserWrapper*)inWrapper
+{
+  NSEnumerator* tabsEnum = [[mTabBrowser tabViewItems] objectEnumerator];
+  id curTabItem;
+  while ((curTabItem = [tabsEnum nextObject]))
+  {
+    if ([curTabItem isKindOfClass:[BrowserTabViewItem class]] && ([(BrowserTabViewItem*)curTabItem view] == inWrapper))
+      return curTabItem;
+  }
+  return nil;
+}
+
 - (BookmarkViewController*)bookmarkViewControllerForCurrentTab
 {
   id viewProvider = [mBrowserView contentViewProviderForURL:@"about:bookmarks"];
@@ -2338,6 +2351,19 @@ enum BWCOpenDest {
     if (!mClosingWindow)
       [[self window] close];
   }
+}
+
+- (void)willShowPromptForBrowser:(BrowserWrapper*)inBrowser
+{
+  // bring the tab to the front (for security reasons)
+  BrowserTabViewItem* tabItem = [self tabForBrowser:inBrowser];
+  [mTabBrowser selectTabViewItem:tabItem];
+  // force a display, so that the tab view redraws before the sheet is shown
+  [mTabBrowser display];
+}
+
+- (void)didDismissPromptForBrowser:(BrowserWrapper*)inBrowser
+{
 }
 
 - (void)createNewTab:(ENewTabContents)contents

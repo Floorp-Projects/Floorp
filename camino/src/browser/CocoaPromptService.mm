@@ -38,13 +38,11 @@
 
 #import "NSString+Utils.h"
 
+#import "CHBrowserView.h"
 #import "CHBrowserService.h"
 #import "CocoaPromptService.h"
 
 #include "nsCRT.h"
-#include "nsIWindowWatcher.h"
-#include "nsIWebBrowserChrome.h"
-#include "nsIEmbeddingSiteWindow.h"
 #include "nsString.h"
 #include "nsServiceManagerUtils.h"
 
@@ -71,11 +69,14 @@ CocoaPromptService::Alert(nsIDOMWindow *parent,
 
   NSString* titleStr = [NSString stringWithPRUnichars:dialogTitle];
   NSString* textStr = [NSString stringWithPRUnichars:text];
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
-  if (!window)
+
+  CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
+  if (!browserView)
     return NS_ERROR_FAILURE;
 
-  [controller alert:window title:titleStr text:textStr];
+  [browserView doBeforePromptDisplay];
+  [controller alert:[browserView getNativeWindow] title:titleStr text:textStr];
+  [browserView doAfterPromptDismissal];
 
   return NS_OK;
 }
@@ -96,18 +97,23 @@ CocoaPromptService::AlertCheck(nsIDOMWindow *parent,
   NSString* titleStr = [NSString stringWithPRUnichars:dialogTitle];
   NSString* textStr = [NSString stringWithPRUnichars:text];
   NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
+
+  CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
+  if (!browserView)
+    return NS_ERROR_FAILURE;
+
+  [browserView doBeforePromptDisplay];
 
   if (checkValue) {
     BOOL valueBool = *checkValue ? YES : NO;
-
-    [controller alertCheck:window title:titleStr text:textStr checkMsg:msgStr checkValue:&valueBool];
-
+    [controller alertCheck:[browserView getNativeWindow] title:titleStr text:textStr checkMsg:msgStr checkValue:&valueBool];
     *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
   }
   else {
-    [controller alert:window title:titleStr text:textStr];
+    [controller alert:[browserView getNativeWindow] title:titleStr text:textStr];
   }
+
+  [browserView doAfterPromptDismissal];
 
   return NS_OK;
 }
@@ -126,9 +132,14 @@ CocoaPromptService::Confirm(nsIDOMWindow *parent,
 
   NSString* titleStr = [NSString stringWithPRUnichars:dialogTitle];
   NSString* textStr = [NSString stringWithPRUnichars:text];
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
 
-  *_retval = (PRBool)[controller confirm:window title:titleStr text:textStr];
+  CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
+  if (!browserView)
+    return NS_ERROR_FAILURE;
+
+  [browserView doBeforePromptDisplay];
+  *_retval = (PRBool)[controller confirm:[browserView getNativeWindow] title:titleStr text:textStr];
+  [browserView doAfterPromptDismissal];
 
   return NS_OK;
 }
@@ -149,18 +160,23 @@ CocoaPromptService::ConfirmCheck(nsIDOMWindow *parent,
   NSString* titleStr = [NSString stringWithPRUnichars:dialogTitle];
   NSString* textStr = [NSString stringWithPRUnichars:text];
   NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
+
+  CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
+  if (!browserView)
+    return NS_ERROR_FAILURE;
+
+  [browserView doBeforePromptDisplay];
 
   if (checkValue) {
     BOOL valueBool = *checkValue ? YES : NO;
-
-    *_retval = (PRBool)[controller confirmCheck:window title:titleStr text:textStr checkMsg:msgStr checkValue:&valueBool];
-
+    *_retval = (PRBool)[controller confirmCheck:[browserView getNativeWindow] title:titleStr text:textStr checkMsg:msgStr checkValue:&valueBool];
     *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
   }
   else {
-    *_retval = (PRBool)[controller confirm:window title:titleStr text:textStr];
+    *_retval = (PRBool)[controller confirm:[browserView getNativeWindow] title:titleStr text:textStr];
   }
+
+  [browserView doAfterPromptDismissal];
 
   return NS_OK;
 }
@@ -192,25 +208,32 @@ CocoaPromptService::ConfirmEx(nsIDOMWindow *parent,
   NSString* titleStr = [NSString stringWithPRUnichars:dialogTitle];
   NSString* textStr = [NSString stringWithPRUnichars:text];
   NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
 
   NSString* btn1Str = GetButtonStringFromFlags(buttonFlags, kButton0, button0Title);
   NSString* btn2Str = GetButtonStringFromFlags(buttonFlags, kButton1, button1Title);
   NSString* btn3Str = GetButtonStringFromFlags(buttonFlags, kButton2, button2Title);
 
+  CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
+  if (!browserView)
+    return NS_ERROR_FAILURE;
+
+  [browserView doBeforePromptDisplay];
+
   if (checkValue) {
     BOOL valueBool = *checkValue ? YES : NO;
 
-    *buttonPressed = [controller confirmCheckEx:window title:titleStr text:textStr
+    *buttonPressed = [controller confirmCheckEx:[browserView getNativeWindow] title:titleStr text:textStr
                                         button1: btn1Str button2: btn2Str button3: btn3Str
                                        checkMsg:msgStr checkValue:&valueBool];
 
     *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
   }
   else {
-    *buttonPressed = [controller confirmEx:window title:titleStr text:textStr
+    *buttonPressed = [controller confirmEx:[browserView getNativeWindow] title:titleStr text:textStr
                                    button1: btn1Str button2: btn2Str button3: btn3Str];
   }
+
+  [browserView doAfterPromptDismissal];
 
   return NS_OK;
 
@@ -242,9 +265,14 @@ CocoaPromptService::Prompt(nsIDOMWindow *parent,
   if (checkValue) {
     valueBool = *checkValue ? YES : NO;
   }
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
 
-  *_retval = (PRBool)[controller prompt:window title:titleStr text:textStr promptText:valueStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
+  CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
+  if (!browserView)
+    return NS_ERROR_FAILURE;
+
+  [browserView doBeforePromptDisplay];
+  *_retval = (PRBool)[controller prompt:[browserView getNativeWindow] title:titleStr text:textStr promptText:valueStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
+  [browserView doAfterPromptDismissal];
 
   // the caller only cares about |value| and |checkValue| if |_retval| 
   // is something other than cancel. If it is, we'd leak any string we allocated
@@ -288,9 +316,14 @@ CocoaPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
   if (checkValue) {
     valueBool = *checkValue ? YES : NO;
   }
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
 
-  *_retval = (PRBool)[controller promptUserNameAndPassword:window title:titleStr text:textStr userNameText:userNameStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
+  CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
+  if (!browserView)
+    return NS_ERROR_FAILURE;
+
+  [browserView doBeforePromptDisplay];
+  *_retval = (PRBool)[controller promptUserNameAndPassword:[browserView getNativeWindow] title:titleStr text:textStr userNameText:userNameStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
+  [browserView doAfterPromptDismissal];
 
   // the caller only cares about |username|, |password|, and |checkValue| if |_retval|
   // is something other than cancel. If it is, we'd leak any string we allocated
@@ -333,9 +366,14 @@ CocoaPromptService::PromptPassword(nsIDOMWindow *parent,
   if (checkValue) {
     valueBool = *checkValue ? YES : NO;
   }
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
 
-  *_retval = (PRBool)[controller promptPassword:window title:titleStr text:textStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
+  CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
+  if (!browserView)
+    return NS_ERROR_FAILURE;
+
+  [browserView doBeforePromptDisplay];
+  *_retval = (PRBool)[controller promptPassword:[browserView getNativeWindow] title:titleStr text:textStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
+  [browserView doAfterPromptDismissal];
 
   // the caller only cares about |password| and |checkValue| if |_retval|
   // is something other than cancel. If it is, we'd leak any string we allocated
@@ -366,34 +404,6 @@ CocoaPromptService::Select(nsIDOMWindow *parent,
   NSLog(@"Uh-oh. Select has not been implemented.");
 #endif
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NSWindow*
-CocoaPromptService::GetNSWindowForDOMWindow(nsIDOMWindow* window)
-{
-  nsCOMPtr<nsIWindowWatcher> watcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  if (!watcher) {
-    return nsnull;
-  }
-
-  nsCOMPtr<nsIWebBrowserChrome> chrome;
-  watcher->GetChromeForWindow(window, getter_AddRefs(chrome));
-  if (!chrome) {
-    return nsnull;
-  }
-
-  nsCOMPtr<nsIEmbeddingSiteWindow> siteWindow(do_QueryInterface(chrome));
-  if (!siteWindow) {
-    return nsnull;
-  }
-
-  NSWindow* nswin;
-  nsresult rv = siteWindow->GetSiteWindow((void**)&nswin);
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  return nswin;
 }
 
 NSString *

@@ -36,6 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "NSString+Utils.h"
+#import "NSPasteboard+Utils.h"
+
 #import "CHClickListener.h"
 
 #include "nsCWebBrowser.h"
@@ -66,14 +68,16 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIContentViewer.h"
 
+// nsIDOMWindow->CHBrowserView
+#include "nsIWindowWatcher.h"
+#include "nsIEmbeddingSiteWindow.h"
+
 // Saving of links/images/docs
 #include "nsIWebBrowserFocus.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMLocation.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIProperties.h"
-//#include "nsIRequest.h"
-//#include "nsIPrefService.h"
 #include "nsISHistory.h"
 #include "nsIHistoryEntry.h"
 #include "nsISHEntry.h"
@@ -95,7 +99,6 @@ typedef unsigned int DragReference;
 // Cut/copy/paste
 #include "nsIClipboardCommands.h"
 #include "nsIInterfaceRequestorUtils.h"
-#import "NSPasteboard+Utils.h"
 
 // Undo/redo
 #include "nsICommandManager.h"
@@ -110,13 +113,41 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 @interface CHBrowserView(Private)
 
+- (id<CHBrowserContainer>)getBrowserContainer;
 - (nsIContentViewer*)getContentViewer;		// addrefs return value
 - (float)getTextZoom;
 - (void)incrementTextZoom:(float)increment min:(float)min max:(float)max;
 - (nsIDocShell*)getDocShell;
+
 @end
 
+#pragma mark -
+
 @implementation CHBrowserView
+
++ (CHBrowserView*)browserViewFromDOMWindow:(nsIDOMWindow*)inWindow
+{
+  nsCOMPtr<nsIWindowWatcher> watcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  if (!watcher)
+    return nil;
+
+  nsCOMPtr<nsIWebBrowserChrome> chrome;
+  watcher->GetChromeForWindow(inWindow, getter_AddRefs(chrome));
+  if (!chrome)
+    return nil;
+
+  nsCOMPtr<nsIEmbeddingSiteWindow> siteWindow(do_QueryInterface(chrome));
+  if (!siteWindow)
+    return nil;
+
+  CHBrowserView* browserView;
+  nsresult rv = siteWindow->GetSiteWindow((void**)&browserView);
+  if (NS_FAILED(rv))
+    return nil;
+    
+  return browserView;
+}
+
 
 - (id)initWithFrame:(NSRect)frame andWindow:(NSWindow*)aWindow
 {
@@ -881,6 +912,16 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   [self doCommand: "cmd_selectBottom"];
 }
 
+- (void)doBeforePromptDisplay
+{
+  [[self getBrowserContainer] willShowPrompt];
+}
+
+- (void)doAfterPromptDismissal
+{
+  [[self getBrowserContainer] didDismissPrompt];
+}
+
 // how does this differ from getCurrentURI?
 -(NSString*)getCurrentURLSpec
 {
@@ -924,13 +965,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 -(NSMenu*)getContextMenu
 {
-  if ([[self superview] conformsToProtocol:@protocol(CHBrowserContainer)])
-  {
-    id<CHBrowserContainer> browserContainer = [self superview];
-  	return [browserContainer getContextMenu];
-  }
-  
-  return nil;
+	return [[self getBrowserContainer] getContextMenu];
 }
 
 -(NSWindow*)getNativeWindow
@@ -946,13 +981,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   
   // Finally, see if our parent responds to the getNativeWindow selector,
   // and if they do, let them handle it.
-  if ([[self superview] conformsToProtocol:@protocol(CHBrowserContainer)])
-  {
-    id<CHBrowserContainer> browserContainer = [self superview];
-    return [browserContainer getNativeWindow];
-  }
-    
-  return nil;
+  return [[self getBrowserContainer] getNativeWindow];
 }
 
 
@@ -986,6 +1015,15 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   if (!global)
     return NULL;
   return global->GetDocShell();
+}
+
+- (id<CHBrowserContainer>)getBrowserContainer
+{
+  // i'm not sure why this doesn't return whatever -setContainer: was called with
+  if ([[self superview] conformsToProtocol:@protocol(CHBrowserContainer)])
+    return (id<CHBrowserContainer>)[self superview];
+
+  return nil;
 }
 
 - (nsIContentViewer*)getContentViewer		// addrefs return value
@@ -1033,11 +1071,10 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 - (BOOL)shouldAcceptDrag:(id <NSDraggingInfo>)sender
 {
-  if ([[self superview] conformsToProtocol:@protocol(CHBrowserContainer)])
-  {
-    id<CHBrowserContainer> browserContainer = [self superview];
+  id<CHBrowserContainer> browserContainer = [self getBrowserContainer];
+  if (browserContainer)
     return [browserContainer shouldAcceptDragFromSource:[sender draggingSource]];
-  }
+
   return YES;
 }
 

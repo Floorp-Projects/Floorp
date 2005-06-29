@@ -56,7 +56,6 @@ public:
   NS_DECL_NSICOOKIEPROMPTSERVICE;
 
 private:
-  NSWindow *GetNSWindowForDOMWindow(nsIDOMWindow* window);
   NSString *GetCommonDialogLocaleString(const char *s);
   NSString *GetButtonStringFromFlags(PRUint32 btnFlags, PRUint32 btnIDAndShift,
                                      const PRUnichar *btnTitle);

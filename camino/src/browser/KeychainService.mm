@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "NSString+Utils.h"
+
 #import "KeychainService.h"
 #import "CHBrowserService.h"
 #import "PreferenceManager.h"
@@ -858,29 +859,8 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
 NSWindow*
 KeychainFormSubmitObserver::GetNSWindow(nsIDOMWindowInternal* inWindow)
 {
-  //
-  // TODO: Refactor: Getting the NSWindow for the nsIDOMWindowInternal
-  // is already implemented in CocoaPromptService.
-  //
-  nsCOMPtr<nsIWindowWatcher> watcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  if (!watcher)
-    return nsnull;
-
-  nsCOMPtr<nsIWebBrowserChrome> chrome;
-  watcher->GetChromeForWindow(inWindow, getter_AddRefs(chrome));
-  if (!chrome)
-    return nsnull;
-
-  nsCOMPtr<nsIEmbeddingSiteWindow> siteWindow(do_QueryInterface(chrome));
-  if (!siteWindow)
-    return nsnull;
-
-  NSWindow* nswindow;
-  nsresult rv = siteWindow->GetSiteWindow((void**)&nswindow);
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  return nswindow;
+  CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:inWindow];
+  return [browserView getNativeWindow];
 }
 
 KeychainPromptResult

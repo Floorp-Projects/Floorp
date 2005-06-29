@@ -118,6 +118,10 @@ typedef enum {
 // behavior.
 - (void)closeBrowserWindow;
 
+// Called before and after a prompt is shown for the contained view
+- (void)willShowPrompt;
+- (void)didDismissPrompt;
+
 @end
 
 enum {
@@ -146,6 +150,9 @@ enum {
   nsIPrintSettings*     mPrintSettings; // we own this
   BOOL                  mUseGlobalPrintSettings;
 }
+
+// class method to get at the browser view for a given nsIDOMWindow
++ (CHBrowserView*)browserViewFromDOMWindow:(nsIDOMWindow*)inWindow;
 
 // NSView overrides
 - (id)initWithFrame:(NSRect)frame;
@@ -210,6 +217,12 @@ enum {
 
 - (BOOL)canMakeTextBigger;
 - (BOOL)canMakeTextSmaller;
+
+// ideally these would not have to be called from outside the CHBrowerView, but currently
+// the cocoa impl of nsIPromptService is at the app level, so it needs to call down
+// here. We'll just turn around and call the CHBrowserContainer methods
+- (void)doBeforePromptDisplay;
+- (void)doAfterPromptDismissal;
 
 -(NSString*)getCurrentURLSpec;
 
