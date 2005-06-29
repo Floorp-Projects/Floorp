@@ -51,6 +51,20 @@ interface calITodo : calIItemBase
   const long CAL_TODO_STATUS_COMPLETED = 5;
   const long CAL_TODO_STATUS_INPROCESS = 6;
 
+  // as per the rather broken RFC2445,
+
+  // entryDate maps to DTSTART, which is the day
+  // this todo shows up on, if set. (optional).
+  //
+  // dueDate maps to DUE, which is the day
+  // this todo is due, if set. (optional).
+  //
+  // If neither DUE nor DTSTART are set, then
+  // the todo appears "today" until it is completed.
+  //
+  // The completeDate is the date the todo was completed,
+  // or null if it hasn't been completed yet.
+
   attribute calIDateTime entryDate;
   attribute calIDateTime dueDate;
   attribute calIDateTime completedDate;

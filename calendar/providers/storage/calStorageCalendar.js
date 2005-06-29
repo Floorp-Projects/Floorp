@@ -528,7 +528,6 @@ calStorageCalendar.prototype = {
         if (aRangeEnd)
             endTime = aRangeEnd.nativeTime;
 
-        // only events for now
         var wantEvents = ((aItemFilter & kCalICalendar.ITEM_FILTER_TYPE_EVENT) != 0);
         var wantTodos = ((aItemFilter & kCalICalendar.ITEM_FILTER_TYPE_TODO) != 0);
         var asOccurrences = ((aItemFilter & kCalICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0);
@@ -542,6 +541,9 @@ calStorageCalendar.prototype = {
             return;
         }
 
+        var wantCompletedItems = ((aItemFilter & kCalICalendar.ITEM_FILTER_COMPLETED_YES) != 0);
+        var wantNotCompletedItems = ((aItemFilter & kCalICalendar.ITEM_FILTER_COMPLETED_NO) != 0);
+        
         // sending items to the listener 1 at a time sucks. instead,
         // queue them up.
         // if we ever have more than maxQueueSize items outstanding,
@@ -693,6 +695,18 @@ calStorageCalendar.prototype = {
                 var item = this.getTodoFromRow(row, flags);
                 flags = flags.value;
 
+                var itemIsCompleted = false;
+                if (item.todo_complete == 100 ||
+                    item.todo_completed != null ||
+                    item.ical_status == calITodo.CAL_TODO_STATUS_COMPLETED)
+                    itemIsCompleted = true;
+
+                if (!itemIsCompleted && !wantNotCompletedItems)
+                    continue;
+                if (itemIsCompleted && !wantCompletedItems)
+                    continue;
+
+                var completed = 
                 resultItems.push({item: item, flags: flags});
                 if (asOccurrences && row.flags & CAL_ITEM_FLAG_HAS_RECURRENCE)
                     handledRecurringTodos[row.id] = true;
@@ -712,6 +726,17 @@ calStorageCalendar.prototype = {
                     var flags = {};
                     var item = this.getTodoFromRow(row, flags);
                     flags = flags.value;
+
+                    var itemIsCompleted = false;
+                    if (item.todo_complete == 100 ||
+                        item.todo_completed != null ||
+                        item.ical_status == calITodo.CAL_TODO_STATUS_COMPLETED)
+                        itemIsCompleted = true;
+
+                    if (!itemIsCompleted && !wantNotCompletedItems)
+                        continue;
+                    if (itemIsCompleted && !wantCompletedItems)
+                        continue;
 
                     resultItems.push({item: item, flags: flags});
                 }
@@ -944,7 +969,7 @@ calStorageCalendar.prototype = {
         this.mSelectTodosByRange = createStatement(
             this.mDB,
             "SELECT * FROM cal_todos " +
-            "WHERE todo_entry >= :todo_start AND todo_entry < :todo_end " +
+            "WHERE ((todo_entry >= :todo_start AND todo_entry < :todo_end) OR (todo_entry IS NULL)) " +
             "  AND cal_id = :cal_id AND recurrence_id IS NULL"
             );
 

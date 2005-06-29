@@ -101,19 +101,14 @@ calTodo.prototype = {
     },
 
     initTodo: function () {
-        this.mEntryDate = new CalDateTime();
-        this.mDueDate = new CalDateTime();
-        this.mCompletedDate = new CalDateTime();
-        this.mPercentComplete = undefined;
+        // todos by default don't have any of the dates set
+        this.percentComplete = 0;
     },
 
     cloneShallow: function (aNewParent) {
         var m = new calTodo();
         this.cloneItemBaseInto(m, aNewParent);
-        m.mEntryDate = this.mEntryDate.clone();
-        m.mDueDate = this.mDueDate.clone();
-        m.mCompletedDate = this.mCompletedDate.clone();
-        m.mPercentComplete = this.mPercentComplete;
+
         return m;
     },
 
@@ -131,6 +126,11 @@ calTodo.prototype = {
     },
 
     createProxy: function () {
+        if (this.mIsProxy) {
+            calDebug("Tried to create a proxy for an existing proxy!\n");
+            throw Components.results.NS_ERROR_UNEXPECTED;
+        }
+
         var m = new calTodo();
         m.initializeProxy(this);
 
@@ -138,15 +138,11 @@ calTodo.prototype = {
     },
 
     makeImmutable: function () {
-        this.mEntryDate.makeImmutable();
-        this.mDueDate.makeImmutable();
-        this.mCompletedDate.makeImmutable();
-
         this.makeItemBaseImmutable();
     },
 
     get recurrenceStartDate() {
-        return this.mEntryDate;
+        return this.entryDate;
     },
 
     icsEventPropMap: [
@@ -176,12 +172,6 @@ calTodo.prototype = {
         var icalcomp = icssvc.createIcalComponent("VTODO");
         this.fillIcalComponentFromBase(icalcomp);
         this.mapPropsToICS(icalcomp, this.icsEventPropMap);
-
-        if (this.mPercentComplete != undefined) {
-            var percentprop = icssvc.createIcalProperty("PERCENT-COMPLETE");
-            percentprop.stringValue = this.mPercentComplete;
-            icalcomp.addProperty(percentprop);
-        }
 
         var bagenum = this.mProperties.enumerator;
         while (bagenum.hasMoreElements()) {
@@ -232,5 +222,5 @@ if (makeMemberAttr) {
     makeMemberAttr(calTodo, "DTSTART", null, "entryDate", true);
     makeMemberAttr(calTodo, "DUE", null, "dueDate", true);
     makeMemberAttr(calTodo, "COMPLETED", null, "completedDate", true);
-    makeMemberAttr(calTodo, "mPercentComplete", 0, "percentComplete");
+    makeMemberAttr(calTodo, "PERCENT-COMPLETE", 0, "percentComplete", true);
 }
