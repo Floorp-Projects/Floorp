@@ -54,6 +54,7 @@
 
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
+static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -83,6 +84,8 @@ nsSimpleURI::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         *aInstancePtr = NS_STATIC_CAST(nsIURI*, this);
     } else if (aIID.Equals(NS_GET_IID(nsISerializable))) {
         *aInstancePtr = NS_STATIC_CAST(nsISerializable*, this);
+    } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
+        *aInstancePtr = NS_STATIC_CAST(nsIClassInfo*, this);
     } else {
         *aInstancePtr = nsnull;
         return NS_NOINTERFACE;
@@ -380,3 +383,68 @@ nsSimpleURI::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+
+//----------------------------------------------------------------------------
+// nsSimpleURI::nsIClassInfo
+//----------------------------------------------------------------------------
+
+NS_IMETHODIMP 
+nsSimpleURI::GetInterfaces(PRUint32 *count, nsIID * **array)
+{
+    *count = 0;
+    *array = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSimpleURI::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
+{
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSimpleURI::GetContractID(char * *aContractID)
+{
+    *aContractID = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSimpleURI::GetClassDescription(char * *aClassDescription)
+{
+    *aClassDescription = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSimpleURI::GetClassID(nsCID * *aClassID)
+{
+    *aClassID = (nsCID*) nsMemory::Alloc(sizeof(nsCID));
+    if (!*aClassID)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return GetClassIDNoAlloc(*aClassID);
+}
+
+NS_IMETHODIMP 
+nsSimpleURI::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+{
+    *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSimpleURI::GetFlags(PRUint32 *aFlags)
+{
+    *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSimpleURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
+{
+    *aClassIDNoAlloc = kSimpleURICID;
+    return NS_OK;
+}
+
