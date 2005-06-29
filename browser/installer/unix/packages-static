@@ -266,7 +266,6 @@ bin/res/charsetData.properties
 bin/res/langGroups.properties
 bin/res/language.properties
 bin/res/entityTables/*
-bin/res/builtin/platformHTMLBindings.xml
 
 ; svg
 bin/res/svg.css
