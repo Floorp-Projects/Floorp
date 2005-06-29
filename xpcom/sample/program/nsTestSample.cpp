@@ -31,7 +31,7 @@
 #include <nsIServiceManager.h>
 #include <nsXPIDLString.h>
 
-#define NS_SAMPLE_PROGID "component://netscape/sample"
+#define NS_SAMPLE_CONTRACTID "@mozilla.org/sample;1"
 
 main()
 {
@@ -59,10 +59,10 @@ main()
     (void) nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
 
     // Create an instance of our component
-    nsCOMPtr<nsISample> mysample = do_CreateInstance(NS_SAMPLE_PROGID, &rv);
+    nsCOMPtr<nsISample> mysample = do_CreateInstance(NS_SAMPLE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
     {
-        printf("ERROR: Cannot create instance of component " NS_SAMPLE_PROGID " [%x].\n"
+        printf("ERROR: Cannot create instance of component " NS_SAMPLE_CONTRACTID " [%x].\n"
                "Debugging hint:\n"
                "\tsetenv NSPR_LOG_MODULES nsComponentManager:5\n"
                "\tsetenv NSPR_LOG_FILE xpcom.log\n"
