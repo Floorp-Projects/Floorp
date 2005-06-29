@@ -88,7 +88,7 @@ protected:
   
   void RecreateHorizontalScrollbar();
 
-  virtual NSView*   CreateCocoaView();
+  virtual NSView*   CreateCocoaView(NSRect inFrame);
   virtual GrafPtr   GetQuickDrawPort();
 
   void              UpdateScroller();

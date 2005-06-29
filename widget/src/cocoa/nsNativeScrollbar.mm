@@ -95,14 +95,9 @@ nsNativeScrollbar::Destroy()
 // we find we're horizontal, we can update then.
 //
 NSView*
-nsNativeScrollbar::CreateCocoaView ( )
+nsNativeScrollbar::CreateCocoaView(NSRect inFrame)
 {
-  NSRect orientation;
-  orientation.origin.x = orientation.origin.y = 0;
-  orientation.size.width = 20;
-  orientation.size.height = 100;
-
-  return [[[NativeScrollbarView alloc] initWithFrame:orientation geckoChild:this] autorelease];
+  return [[[NativeScrollbarView alloc] initWithFrame:inFrame geckoChild:this] autorelease];
 }
 
 
