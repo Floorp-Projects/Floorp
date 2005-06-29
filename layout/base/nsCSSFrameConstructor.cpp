@@ -189,8 +189,10 @@ nsresult
 NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 nsresult
 NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+#ifdef MOZ_SVG_FOREIGNOBJECT
 nsresult
 NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+#endif
 nsresult
 NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 nsresult
@@ -7293,10 +7295,12 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     rv = NS_NewSVGLineFrame(mPresShell, aContent, &newFrame);
   else if (aTag == nsSVGAtoms::rect)
     rv = NS_NewSVGRectFrame(mPresShell, aContent, &newFrame);
+#ifdef MOZ_SVG_FOREIGNOBJECT
   else if (aTag == nsSVGAtoms::foreignObject) {
     processChildren = PR_TRUE;
     rv = NS_NewSVGForeignObjectFrame(mPresShell, aContent, &newFrame);
   }
+#endif
   else if (aTag == nsSVGAtoms::path)
     rv = NS_NewSVGPathFrame(mPresShell, aContent, &newFrame);
   else if (aTag == nsSVGAtoms::text) {
@@ -7355,6 +7359,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
   if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
+#ifdef MOZ_SVG_FOREIGNOBJECT
     if (aTag == nsSVGAtoms::foreignObject) {
       // Claim to be relatively positioned so that we end up being the
       // absolute containing block.  Also, push "null" as the floater
@@ -7365,7 +7370,9 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
       rv = ConstructBlock(aState, disp, aContent,
                           geometricParent, aParentFrame, aStyleContext,
                           &newFrame, aFrameItems, PR_TRUE);
-    } else {
+    } else
+#endif  // MOZ_SVG_FOREIGNOBJECT
+    {
       InitAndRestoreFrame(aState, aContent, geometricParent, aStyleContext,
                           nsnull, newFrame);
 

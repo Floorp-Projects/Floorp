@@ -336,7 +336,9 @@
 #include "nsIDOMSVGEllipseElement.h"
 #include "nsIDOMSVGException.h"
 #include "nsIDOMSVGFitToViewBox.h"
+#ifdef MOZ_SVG_FOREIGNOBJECT
 #include "nsIDOMSVGForeignObjectElem.h"
+#endif
 #include "nsIDOMSVGGElement.h"
 #include "nsIDOMSVGGradientElement.h"
 #include "nsIDOMSVGImageElement.h"
@@ -857,8 +859,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGEllipseElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGForeignObjectElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGGElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGGradientElement, nsElementSH,
@@ -1008,6 +1008,14 @@ static nsDOMClassInfoData sClassInfoData[] = {
                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
  NS_DEFINE_CLASSINFO_DATA(PageTransitionEvent, nsDOMGenericSH,
                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  // Define MOZ_SVG_FOREIGNOBJECT here so that when it gets switched on,
+  // we preserve binary compatibility. New classes should be added
+  // at the end.
+#if defined(MOZ_SVG) && defined(MOZ_SVG_FOREIGNOBJECT)
+  NS_DEFINE_CLASSINFO_DATA(SVGForeignObjectElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+#endif
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -2385,11 +2393,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(SVGForeignObjectElement, nsIDOMSVGForeignObjectElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGForeignObjectElement)
-    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(SVGGElement, nsIDOMSVGGElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGGElement)
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
@@ -2712,6 +2715,13 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCanvasPattern)
   DOM_CLASSINFO_MAP_END
 #endif // MOZ_ENABLE_CANVAS
+
+#if defined(MOZ_SVG) && defined(MOZ_SVG_FOREIGNOBJECT)
+  DOM_CLASSINFO_MAP_BEGIN(SVGForeignObjectElement, nsIDOMSVGForeignObjectElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGForeignObjectElement)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+#endif
 
 #ifdef NS_DEBUG
   {

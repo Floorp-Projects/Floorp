@@ -248,7 +248,9 @@ LAYOUT_ATOM(svgCircleFrame,"SVGCircleFrame")
 LAYOUT_ATOM(svgClipPathFrame,"SVGClipPathFrame")
 LAYOUT_ATOM(svgDefsFrame,"SVGDefsFrame")
 LAYOUT_ATOM(svgEllipseFrame,"SVGEllipseFrame")
+#ifdef MOZ_SVG_FOREIGNOBJECT
 LAYOUT_ATOM(svgForeignObjectFrame,"SVGForeignObjectFrame")
+#endif
 LAYOUT_ATOM(svgGenericContainerFrame,"SVGGenericContainerFrame")
 LAYOUT_ATOM(svgGFrame,"SVGGFrame")
 LAYOUT_ATOM(svgGlyphFrame,"SVGGlyphFrame")

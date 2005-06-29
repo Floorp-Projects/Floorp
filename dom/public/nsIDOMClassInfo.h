@@ -198,8 +198,7 @@ enum nsDOMClassInfoID {
 
   // We are now trying to preserve binary compat in classinfo.  No
   // more putting things in those categories up there.  New entries
-  // are to be added right before eDOMClassInfoIDCount (or, for now,
-  // before the MOZ_SVG ifdefs, since they're off by default).
+  // are to be added right before eDOMClassInfoIDCount.
 
   // Rect object used by getComputedStyle
   eDOMClassInfo_CSSRect_id,
@@ -254,7 +253,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGDefsElement_id,
   eDOMClassInfo_SVGDescElement_id,
   eDOMClassInfo_SVGEllipseElement_id,
-  eDOMClassInfo_SVGForeignObjectElement_id,
   eDOMClassInfo_SVGGElement_id,
   eDOMClassInfo_SVGGradientElement_id,
   eDOMClassInfo_SVGImageElement_id,
@@ -337,6 +335,12 @@ enum nsDOMClassInfoID {
   
   // PageTransition Events
   eDOMClassInfo_PageTransitionEvent_id,
+
+  // Define this near the end so that enabling/disabling foreignobject doesn't
+  // break binary compatibility
+#if defined(MOZ_SVG) && defined(MOZ_SVG_FOREIGNOBJECT)
+  eDOMClassInfo_SVGForeignObjectElement_id,
+#endif
 
   // This one better be the last one in this list
   eDOMClassInfoIDCount
