@@ -833,11 +833,9 @@ Status("Checking for bugs with groups violating their product's group controls")
 BugCheck("bugs
          INNER JOIN bug_group_map
             ON bugs.bug_id = bug_group_map.bug_id
-         INNER JOIN groups
-            ON bug_group_map.group_id = groups.id
           LEFT JOIN group_control_map
             ON bugs.product_id = group_control_map.product_id
-            AND bug_group_map.group_id = group_control_map.group_id
+           AND bug_group_map.group_id = group_control_map.group_id
          WHERE ((group_control_map.membercontrol = " . CONTROLMAPNA . ")
          OR (group_control_map.membercontrol IS NULL))",
          'Have groups not permitted for their products',
@@ -846,15 +844,16 @@ BugCheck("bugs
           (set member control to <code>SHOWN</code>)');
 
 BugCheck("bugs
-         INNER JOIN bug_group_map
-            ON bugs.bug_id = bug_group_map.bug_id
-         INNER JOIN groups
-            ON bug_group_map.group_id = groups.id
-          LEFT JOIN group_control_map
+         INNER JOIN group_control_map
             ON bugs.product_id = group_control_map.product_id
-            AND bug_group_map.group_id = group_control_map.group_id
+         INNER JOIN groups
+            ON group_control_map.group_id = groups.id
+          LEFT JOIN bug_group_map
+            ON bugs.bug_id = bug_group_map.bug_id
+           AND group_control_map.group_id = bug_group_map.group_id
          WHERE group_control_map.membercontrol = " . CONTROLMAPMANDATORY . "
-         AND bug_group_map.group_id IS NULL",
+           AND bug_group_map.group_id IS NULL
+           AND groups.isactive != 0",
          "Are missing groups required for their products");
 
 
