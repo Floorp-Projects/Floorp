@@ -20,18 +20,20 @@ main(int argc, char **argv)
 
   args[i++] = "clarm.exe";
   args[i++] = "/I\"" WCE_INC "\""; 
-  args[i++] = "/I\"" SHUNT_INC "\""; 
-
+  args[i++] = "/I\"" SHUNT_INC "\"";
   args[i++] = "/FI\"mozce_shunt.h\"";
 
   args[i++] = "/DARM";
   args[i++] = "/DWINCE";
-  args[i++] = "/D_WIN32_WCE";
+  args[i++] = "/D_WIN32_WCE=420";
+  args[i++] = "/DUNDER_CE=420";
+  args[i++] = "/DWIN32_PLATFORM_PSPC=400";
   args[i++] = "/D_ARM_";
   args[i++] = "/DDEPRECATE_SUPPORTED";
   args[i++] = "/DSTDC_HEADERS";
 
   args[i++] = "/F5000000";
+  args[i++] = "/Gy";  // For link warning LNK1166
 
   startOfArgvs = i;
   
@@ -72,7 +74,7 @@ main(int argc, char **argv)
     args[i++] = "/link";
     args[i++] = "-STACK:0x5000000,1000000";
     args[i++] = "-ENTRY:mainACRTStartup";
-    args[i++] = "-SUBSYSTEM:WINDOWSCE";
+    args[i++] = "-SUBSYSTEM:WINDOWSCE,4.20";
     args[i++] = "-MACHINE:ARM";
     args[i++] = "-LIBPATH:\"" WCE_LIB "\"";
     args[i++] = "-LIBPATH:\"" SHUNT_LIB "\"";

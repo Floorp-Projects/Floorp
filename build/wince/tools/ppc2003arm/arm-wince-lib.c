@@ -11,7 +11,7 @@ main(int argc, char **argv)
   int i = 0;
 
   args[i++] = "lib.exe";
-  args[i++] = "/SUBSYSTEM:WINDOWSCE";
+  args[i++] = "/SUBSYSTEM:WINDOWSCE,4.20";
   args[i++] = "/MACHINE:ARM";
 
   argpath_conv(&argv[1], &args[i]);

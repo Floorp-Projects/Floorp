@@ -1,11 +1,14 @@
+#ifndef TOPSRCDIR
+#include "../topsrcdir.h"
+#endif
 
-#define WCE_BIN   "C:/Program Files/Microsoft eMbedded C++ 4.0/EVC/wce420/bin/"
+#define WCE_BIN   "c:/Program Files/Microsoft eMbedded C++ 4.0/EVC/wce420/bin/"
 
 #define WCE_INC   "c:/Program Files/Windows CE Tools/wce420/Pocket PC 2003/Include/Emulator/"
 #define WCE_LIB   "c:/Program Files/Windows CE Tools/wce420/Pocket PC 2003/Lib/Emulator/"
 
-#define SHUNT_LIB "c:/builds/wince/mozilla/build/wince/shunt/build/emulatorRel/"
-#define SHUNT_INC "c:/builds/wince/mozilla/build/wince/shunt/include/"
+#define SHUNT_LIB TOPSRCDIR "/build/wince/shunt/build/emulatorRel/"
+#define SHUNT_INC TOPSRCDIR "/build/wince/shunt/include/"
 
 #define ASM_PATH WCE_BIN "asm.exe"
 #define CL_PATH WCE_BIN "cl.exe"
