@@ -87,9 +87,7 @@ endif
 
 ifndef COMPILER_DEPEND
 ifndef MOZ_NATIVE_MAKEDEPEND
-ifneq ($(OS_ARCH), WINCE)
 DIRS		+= mkdepend
-endif
 endif
 endif
 

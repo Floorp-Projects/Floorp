@@ -241,7 +241,7 @@ OBJS	= $(strip $(_OBJS))
 endif
 
 ifndef HOST_OBJS
-HOST_OBJS		= $(addprefix host_,$(HOST_CSRCS:.c=.o))
+HOST_OBJS		= $(addprefix host_,$(HOST_CSRCS:.c=.$(OBJ_SUFFIX)))
 endif
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
@@ -279,7 +279,7 @@ GARBAGE			+= $(SIMPLE_PROGRAMS:%=%.$(OBJ_SUFFIX))
 endif
 
 ifdef HOST_SIMPLE_PROGRAMS
-GARBAGE			+= $(addprefix host_,$(HOST_SIMPLE_PROGRAMS:%=%.o))
+GARBAGE			+= $(addprefix host_,$(HOST_SIMPLE_PROGRAMS:%=%.$(OBJ_SUFFIX)))
 endif
 
 #
@@ -846,7 +846,7 @@ distclean:: $(SUBMAKEFILES)
 	-rm -rf $(ALL_TRASH_DIRS) 
 	-rm -f $(ALL_TRASH)  \
 	Makefile .HSancillary \
-	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) $(wildcard host_*.o) \
+	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) $(wildcard host_*.o*) \
 	$(wildcard *.$(LIB_SUFFIX)) $(wildcard *$(DLL_SUFFIX)) \
 	$(wildcard *.$(IMPORT_LIB_SUFFIX))
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
@@ -901,12 +901,12 @@ else
 
 ifeq (WINCE,$(OS_ARCH))
 	$(HOST_LD) -NOLOGO -OUT:$@ $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
-endif
-
+else
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(HOST_LD) -NOLOGO -OUT:$@ -PDB:$(PDBFILE) $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
 	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(HOST_LDFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+endif
 endif
 endif
 
@@ -944,7 +944,7 @@ ifdef MOZ_POST_PROGRAM_COMMAND
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 endif
 
-$(HOST_SIMPLE_PROGRAMS): host_%$(HOST_BIN_SUFFIX): host_%.o $(HOST_LIBS_DEPS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
+$(HOST_SIMPLE_PROGRAMS): host_%$(HOST_BIN_SUFFIX): host_%.$(OBJ_SUFFIX) $(HOST_LIBS_DEPS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
 	$(HOST_CC) $(OUTOPTION)$@ $(HOST_CFLAGS) $(INCLUDES) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 
 #
@@ -1122,7 +1122,7 @@ endif # !COMPILER_DEPEND
 endif # MOZ_AUTO_DEPS
 
 # Rules for building native targets must come first because of the host_ prefix
-host_%.o: %.c Makefile Makefile.in
+host_%.$(OBJ_SUFFIX): %.c Makefile Makefile.in
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
