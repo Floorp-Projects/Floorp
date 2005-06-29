@@ -409,36 +409,40 @@ WeekView.prototype.createEventBoxInternal = function (event)
     eventBox.occurrence = itemOccurrence;
     eventBox.event = calEvent;
 
-    var ElementOfRef = document.getElementById("week-tree-day-" + gRefColumnIndex + "-item-" + startHour) ;
-    var hourHeight = ElementOfRef.boxObject.height;
-    var ElementOfRefEnd = document.getElementById("week-tree-day-" + gRefColumnIndex + "-item-" + endDate.hour) ;
-    var hourHeightEnd = ElementOfRefEnd.boxObject.height;
-   
-    var hourWidth = ElementOfRef.boxObject.width;
-    var eventSlotWidth = Math.round(hourWidth / event.totalSlotCount);
-   
-    var Width = ( event.drawSlotCount * eventSlotWidth ) - 1;
-    eventBox.setAttribute( "width", Width );
-
-    var top = eval( ElementOfRef.boxObject.y + ( ( startMinutes/60 ) * hourHeight ) );
-    top = top - ElementOfRef.parentNode.boxObject.y - 2;
-    eventBox.setAttribute("top", top);
-
-    var bottom = eval( ElementOfRefEnd.boxObject.y + ( ( endDate.minute/60 ) * hourHeightEnd ) );
-    bottom = bottom - ElementOfRefEnd.parentNode.boxObject.y - 2;
-    eventBox.setAttribute("height", bottom - top);
-
     // figure out what column we need to put this on
     debug("d: "+gHeaderDateItemArray[1].getAttribute("date")+"\n");
     var dayIndex = new Date(gHeaderDateItemArray[1].getAttribute("date"));
     var index = startDate.weekday - dayIndex.getDay();
     debug("index is:" + index + "(" + startDate.weekday + " - " + dayIndex.getDay() + ")\n");
 
-    var boxLeft = document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
-                  document.getElementById( "week-view-content-box" ).boxObject.x +
-                  ( event.startDrawSlot * eventSlotWidth );
-    //dump(boxLeft + "\n");
-    eventBox.setAttribute("left", boxLeft);
+    var ElementOfRef = document.getElementById("week-tree-day-" + gRefColumnIndex + "-item-" + startHour) ;
+    var hourHeight = ElementOfRef.boxObject.height;
+    var ElementOfRefEnd = document.getElementById("week-tree-day-" + gRefColumnIndex + "-item-" + endDate.hour) ;
+    var hourHeightEnd = ElementOfRefEnd.boxObject.height;
+    var hourWidth = ElementOfRef.boxObject.width;
+
+    if (!startDate.isDate) {
+      var eventSlotWidth = Math.round(hourWidth / event.totalSlotCount);
+
+      var Width = ( event.drawSlotCount * eventSlotWidth ) - 1;
+      eventBox.setAttribute( "width", Width );
+
+      var top = eval( ElementOfRef.boxObject.y + ( ( startMinutes/60 ) * hourHeight ) );
+      top = top - ElementOfRef.parentNode.boxObject.y - 2;
+      eventBox.setAttribute("top", top);
+
+      var bottom = eval( ElementOfRefEnd.boxObject.y + ( ( endDate.minute/60 ) * hourHeightEnd ) );
+      bottom = bottom - ElementOfRefEnd.parentNode.boxObject.y - 2;
+      eventBox.setAttribute("height", bottom - top);
+
+      var boxLeft = document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
+                    document.getElementById( "week-view-content-box" ).boxObject.x +
+                    ( event.startDrawSlot * eventSlotWidth );
+      //dump(boxLeft + "\n");
+      eventBox.setAttribute("left", boxLeft);
+    } else {
+      eventBox.setAttribute( "width", hourWidth );
+    }
    
     // set the event box to be of class week-view-event-class and the appropriate calendar-color class
     this.setEventboxClass(eventBox, calEvent, "week-view");
@@ -474,7 +478,12 @@ WeekView.prototype.createEventBoxInternal = function (event)
     }
 
     debug("Adding eventBox " + eventBox + "\n");
-    document.getElementById("week-view-content-board").appendChild(eventBox);
+    if (!startDate.isDate) {
+      document.getElementById("week-view-content-board").appendChild(eventBox);
+    } else {
+      var allDayBox = document.getElementById("all-day-content-box-week-"+(index+1));
+      allDayBox.appendChild(eventBox);
+    }
 }
 
 /** PUBLIC

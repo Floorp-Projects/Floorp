@@ -156,14 +156,14 @@ function loadCalendarEventDialog()
         setElementValue("all-day-event-checkbox", event.isAllDay, "checked");
         break;
     case "todo":
-        var hasEntry = event.entryDate.isValid;
-        var entryDate = (hasEntry? event.entryDate.jsDate : null);
+        var hasEntry = event.entryDate ? true : false;
+        var entryDate = (hasEntry ? event.entryDate.jsDate : null);
 
         setElementValue("start-datetime", entryDate);
         setElementValue("start-datetime", !hasEntry, "disabled");
         setElementValue("start-checkbox", hasEntry,  "checked");
 
-        var hasDue = event.dueDate.isValid;
+        var hasDue = event.dueDate ? true : false;
         var dueDate = (hasDue? event.dueDate.jsDate : null);
 
         setElementValue("due-datetime", dueDate);
@@ -489,6 +489,10 @@ function onOKCommand()
             endDate.setDate(endDate.getDate() + 1); 
         }
         event.endDate = jsDateToDateTime(endDate);
+        if (event.isAllDay) {
+            event.startDate.isDate = true;
+            event.endDate.isDate = true;
+        }
 
         var status = getElementValue("event-status-field");
         if (status)
@@ -501,13 +505,13 @@ function onOKCommand()
         if ( getElementValue("start-checkbox", "checked") ) {
             event.entryDate = jsDateToDateTime(getElementValue("start-datetime"));
         } else {
-            event.entryDate.reset();
+            event.entryDate = null;
         }
 
         if ( getElementValue("due-checkbox", "checked") ) {
             event.dueDate = jsDateToDateTime(getElementValue("due-datetime"));
         } else {
-            event.dueDate.reset();
+            event.dueDate = null;
         }
 
         event.status          = getElementValue("todo-status-field");

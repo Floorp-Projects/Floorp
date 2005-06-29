@@ -468,11 +468,12 @@ DayView.prototype.createEventBoxInternal = function(event)
    eventBox.setAttribute("class", "day-view-event-class");
    this.setEventboxClass( eventBox, calEvent, "day-view");
 
-   eventBox.setAttribute( "top", eventTop );
-   eventBox.setAttribute( "left", eventLeft );
-   eventBox.setAttribute( "height", eventHeight );
-   eventBox.setAttribute( "width", eventWidth );
-   
+   if (!startDate.isDate) {
+      eventBox.setAttribute( "top", eventTop );
+      eventBox.setAttribute( "left", eventLeft );
+      eventBox.setAttribute( "height", eventHeight );
+      eventBox.setAttribute( "width", eventWidth );
+   }
    eventBox.setAttribute( "flex", "1" );
    eventBox.setAttribute( "eventbox", "dayview" ); // ?
    
@@ -490,8 +491,13 @@ DayView.prototype.createEventBoxInternal = function(event)
    
    eventBox.appendChild( eventTitleLabel );
    eventBox.appendChild( eventDescription );   
-
-   document.getElementById("day-view-content-board").appendChild(eventBox);
+   if (!startDate.isDate) {
+      document.getElementById("day-view-content-board").appendChild(eventBox);
+   } else {
+      allDayRow = document.createElement("hbox");
+      allDayRow.appendChild(eventBox);
+      document.getElementById("all-day-content-box").appendChild(allDayRow);
+   }
 }
 
 /** PUBLIC

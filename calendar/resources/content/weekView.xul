@@ -134,7 +134,7 @@
                          <label id="week-header-date-text-1" class="week-header-date-text" value="&day.1.DDD;" />
                       </hbox>
 
-                      <hbox class="all-day-content-box-week" id="all-day-content-box-week-1" flex="1"/>
+                      <vbox class="all-day-content-box-week" id="all-day-content-box-week-1" flex="1"/>
 
                   </column>
 
@@ -145,7 +145,7 @@
                          <label id="week-header-date-text-2" class="week-header-date-text" value="&day.2.DDD;" />
                       </hbox>
 
-                      <hbox class="all-day-content-box-week" id="all-day-content-box-week-2" flex="1"/>
+                      <vbox class="all-day-content-box-week" id="all-day-content-box-week-2" flex="1"/>
 
                   </column>
 
@@ -156,7 +156,7 @@
                          <label id="week-header-date-text-3" class="week-header-date-text" value="&day.3.DDD;" />
                       </hbox>
 
-                      <hbox class="all-day-content-box-week" id="all-day-content-box-week-3" flex="1"/>
+                      <vbox class="all-day-content-box-week" id="all-day-content-box-week-3" flex="1"/>
                   </column>
 
                   <!-- DAY 3 -->
@@ -166,7 +166,7 @@
                          <label id="week-header-date-text-4" class="week-header-date-text" value="&day.4.DDD;" />
                       </hbox>
 
-                      <hbox class="all-day-content-box-week" id="all-day-content-box-week-4" flex="1"/>
+                      <vbox class="all-day-content-box-week" id="all-day-content-box-week-4" flex="1"/>
                   </column>
 
                   <!-- DAY 4 -->
@@ -176,7 +176,7 @@
                          <label id="week-header-date-text-5" class="week-header-date-text" value="&day.5.DDD;" />
                       </hbox>
 
-                      <hbox class="all-day-content-box-week" id="all-day-content-box-week-5" flex="1"/>
+                      <vbox class="all-day-content-box-week" id="all-day-content-box-week-5" flex="1"/>
                   </column>
 
                   <!-- DAY 5 -->
@@ -186,7 +186,7 @@
                          <label id="week-header-date-text-6" class="week-header-date-text" value="&day.6.DDD;" />
                       </hbox>
 
-                      <hbox class="all-day-content-box-week" id="all-day-content-box-week-6" flex="1"/>
+                      <vbox class="all-day-content-box-week" id="all-day-content-box-week-6" flex="1"/>
                   </column>
 
                   <!-- DAY 6 -->
@@ -196,7 +196,7 @@
                          <label id="week-header-date-text-7" class="week-header-date-text" value="&day.7.DDD;" />
                       </hbox>
 
-                      <hbox class="all-day-content-box-week" id="all-day-content-box-week-7" flex="1"/>
+                      <vbox class="all-day-content-box-week" id="all-day-content-box-week-7" flex="1"/>
                   </column>
                </columns>
             </grid>         

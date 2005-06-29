@@ -295,7 +295,7 @@ MultiweekView.prototype.createEventBoxInternal = function multiweekView_createEv
     eventBoxText.setAttribute( "crop", "end" );
     eventBoxText.setAttribute( "class", "multiweek-day-event-text-class" );
 
-    if(calEvent.isAllDay)
+    if(calEvent.startDate.isDate)
     {
         eventBox.setAttribute("allday", "true");
         eventBoxText.setAttribute("value", calEvent.title );
