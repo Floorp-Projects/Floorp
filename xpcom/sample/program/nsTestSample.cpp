@@ -72,7 +72,7 @@ main(void)
     // To break free from such dependencies, we can GetService() the component
     // manager from the service manager that is returned from NS_InitXPCOM().
     // We feel that linkage dependency to XPCOM library is inevitable.
-    (void) nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+    (void) nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, nsnull);
 
     // Create an instance of our component
     nsCOMPtr<nsISample> mysample = do_CreateInstance(NS_SAMPLE_CONTRACTID, &rv);
