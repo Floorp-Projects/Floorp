@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.93 2005/06/13 09:30:33 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.94 2005/06/29 21:22:09 mozilla%colinogilvie.co.uk Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -59,8 +59,7 @@
         </para>
       </step>
       <step>
-        <para><link linkend="install-mysql">Install MySQL</link>
-        (&min-mysql-ver; or above)
+        <para><link linkend="install-database">Install a Database Engine</link>
         </para>
       </step>
       <step>
@@ -100,33 +99,57 @@
       As of this writing, that is Perl &newest-perl-ver;.</para>
     </section>
 
-    <section id="install-mysql">
-      <title>MySQL</title>
+    <section id="install-database">
+      <title>Database Engine</title>
+      
+      <para>From Bugzilla 2.20, support is included for using both the MySQL and
+      PostgreSQL database servers. You only require one of these systems to make
+      use of Bugzilla.</para>
 
-      <para>Installed Version Test: <filename>mysql -V</filename></para>
+      <section id="install-mysql">
+          <title>MySQL</title>
+          <para>Installed Version Test: <filename>mysql -V</filename></para>
       
-      <para>
-      If you don't have it and your OS doesn't provide official packages, 
-      visit <ulink url="http://www.mysql.com"/>. You need MySQL version
-      &min-mysql-ver; or higher.
-      </para>
+          <para>
+          If you don't have it and your OS doesn't provide official packages, 
+          visit <ulink url="http://www.mysql.com"/>. You need MySQL version
+          &min-mysql-ver; or higher.
+          </para>
       
-      <note>
-        <para> Many of the binary
-        versions of MySQL store their data files in 
-        <filename class="directory">/var</filename>.
-        On some Unix systems, this is part of a smaller root partition,
-        and may not have room for your bug database. To change the data
-         directory, you have to build MySQL from source yourself, and
-         set it as an option to <filename>configure</filename>.</para>
-      </note> 
+          <note>
+            <para> Many of the binary
+            versions of MySQL store their data files in 
+            <filename class="directory">/var</filename>.
+            On some Unix systems, this is part of a smaller root partition,
+            and may not have room for your bug database. To change the data
+            directory, you have to build MySQL from source yourself, and
+            set it as an option to <filename>configure</filename>.</para>
+          </note> 
            
-      <para>If you install from something other than a packaging/installation
-      system, such as .rpm (Redhat Package), .deb (Debian Package), .exe
-      (Windows Executable), or .msi (Microsoft Installer), make sure the MySQL
-      server is started when the machine boots.
-      </para>
-
+          <para>If you install from something other than a packaging/installation
+          system, such as .rpm (Redhat Package), .deb (Debian Package), .exe
+          (Windows Executable), or .msi (Microsoft Installer), make sure the MySQL
+          server is started when the machine boots.
+          </para>
+      </section>
+      
+      <section id="install-pg">
+          <title>PostgreSQL</title>
+          <para>Installed Version Test: <filename>psql -V</filename></para>
+      
+          <para>
+          If you don't have it and your OS doesn't provide official packages, 
+          visit <ulink url="http://www.postgresql.org/"/>. You need PostgreSQL
+          version &min-pg-ver; or higher.
+          </para>
+           
+          <para>If you install from something other than a packaging/installation
+          system, such as .rpm (Redhat Package), .deb (Debian Package), .exe
+          (Windows Executable), or .msi (Microsoft Installer), make sure the
+          PostgreSQL server is started when the machine boots.
+          </para>
+      </section>
+      
     </section>
     
     <section id="install-webserver">
@@ -301,7 +324,13 @@
         <listitem>
           <para>
             <link linkend="install-modules-dbd-mysql">DBD::mysql</link>
-            (&min-dbd-mysql-ver;)
+            (&min-dbd-mysql-ver;) if using MySQL
+          </para>
+        </listitem>
+        
+        <listitem>
+          <para>
+            DBD::Pg (&min-dbd-pg-ver;) if using PostgreSQL
           </para>
         </listitem>
 
@@ -327,6 +356,18 @@
         <listitem>
           <para>
             Text::Wrap (&min-text-wrap-ver;)
+          </para>
+        </listitem>
+        
+        <listitem>
+          <para>
+            Mail::Mailer (&min-mail-mailer-ver;)
+          </para>
+        </listitem>
+        
+        <listitem>
+          <para>
+            Storable (&min-storable-ver;)
           </para>
         </listitem>
       </orderedlist>

@@ -44,6 +44,7 @@
 
 <!-- For minimum versions -->
 <!ENTITY min-mysql-ver "3.23.41">
+<!ENTITY min-pg-ver "7.3.x">
 <!ENTITY min-perl-ver "5.6.1">
 <!ENTITY min-perl-ver-win "5.8.1">
 <!ENTITY min-template-ver "2.08">
@@ -53,9 +54,12 @@
 <!ENTITY min-file-spec-ver "0.82">
 <!ENTITY min-data-dumper-ver "any">
 <!ENTITY min-dbd-mysql-ver "2.9003">
+<!ENTITY min-dbd-pg-ver "1.31">
 <!ENTITY min-dbi-ver "1.38">
 <!ENTITY min-date-format-ver "2.21">
 <!ENTITY min-cgi-ver "2.93">
+<!ENTITY min-mail-mailer-ver "1.65">
+<!ENTITY min-storable-ver "any">
 <!-- Optional modules -->
 <!ENTITY min-gd-ver "1.20">
 <!ENTITY min-gd-graph-ver "any">
