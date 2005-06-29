@@ -87,6 +87,7 @@
 #include "nsIURI.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMNamedNodeMap.h"
+#include "nsIParserService.h"
 
 #define CANCELABLE 0x01
 #define BUBBLES    0x02
@@ -535,6 +536,73 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
                                                   contextSize,
                                                   aDeps,
                                                   aIndexesUsed);
+
+  // If the evaluation failed because the node wasn't there and we should be
+  // lazy authoring, then create it (if the situation qualifies, of course).
+  // Novell only allows lazy authoring of single bound nodes.
+  if (aResultType == nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE) {
+    if (res) {
+      nsCOMPtr<nsIDOMNode> node;
+      rv = res->GetSingleNodeValue(getter_AddRefs(node));
+      if (NS_SUCCEEDED(rv) && !node) {
+        PRBool lazy = PR_FALSE;
+        if (*aModel)
+          (*aModel)->GetLazyAuthored(&lazy);
+        if (lazy) {
+          // according to sec 4.2.2 in the spec, "An instance data element node
+          // will be created using the binding expression from the user
+          // interface control as the name. If the name is not a valid QName, 
+          // processing halts with an exception (xforms-binding-exception)"
+          nsCOMPtr<nsIParserService> parserService =
+                                    do_GetService(NS_PARSERSERVICE_CONTRACTID);
+          if (NS_SUCCEEDED(rv) && parserService) {
+            const PRUnichar* colon;
+            rv = parserService->CheckQName(expr, PR_TRUE, &colon);
+            if (NS_SUCCEEDED(rv)) {
+              nsAutoString namespaceURI(EmptyString());
+
+              // if we detect a namespace, we'll add it to the node, otherwise
+              // we'll use the empty namespace.  If we should have gotten a
+              // namespace and didn't, then we might as well give up.
+              if (colon) {
+                nsCOMPtr<nsIDOM3Node> dom3node = do_QueryInterface(aElement);
+                rv = dom3node->LookupNamespaceURI(Substring(expr.get(), colon), 
+                                                  namespaceURI);
+                NS_ENSURE_SUCCESS(rv, rv);
+              }
+
+              if (NS_SUCCEEDED(rv)) {
+                nsCOMArray<nsIInstanceElementPrivate> *instList = nsnull;
+                (*aModel)->GetInstanceList(&instList);
+                nsCOMPtr<nsIInstanceElementPrivate> instance = 
+                  instList->ObjectAt(0);
+                nsCOMPtr<nsIDOMDocument> domdoc;
+                instance->GetDocument(getter_AddRefs(domdoc));
+                nsCOMPtr<nsIDOMElement> instanceDataEle;
+                nsCOMPtr<nsIDOMNode> childReturn;
+                rv = domdoc->CreateElementNS(namespaceURI, expr,
+                                             getter_AddRefs(instanceDataEle));
+                NS_ENSURE_SUCCESS(rv, rv);
+                nsCOMPtr<nsIDOMElement> instanceRoot;
+                rv = domdoc->GetDocumentElement(getter_AddRefs(instanceRoot));
+                rv = instanceRoot->AppendChild(instanceDataEle, 
+                                               getter_AddRefs(childReturn));
+                NS_ENSURE_SUCCESS(rv, rv);
+              }
+
+              // now that we inserted the lazy authored node, try to bind
+              // again
+              res = EvaluateXPath(expr, contextNode, aElement, aResultType,
+                                  contextPosition, contextSize, aDeps,
+                                  aIndexesUsed);
+            } else {
+              nsXFormsUtils::DispatchEvent(aElement, eEvent_BindingException);
+            }
+          }
+        }
+      }
+    }
+  }
 
   res.swap(*aResult); // exchanges ref
 
@@ -1116,22 +1184,14 @@ nsXFormsUtils::GetInstanceNodeForData(nsIDOMNode             *aInstanceDataNode,
     instanceDoc = do_QueryInterface(aInstanceDataNode);
   NS_ENSURE_TRUE(instanceDoc, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDOMElement> modelElem = do_QueryInterface(aModel);
-  NS_ENSURE_STATE(modelElem);
-  nsCOMPtr<nsIDOMNodeList> nodeList;
-  nsresult rv = modelElem->GetElementsByTagNameNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
-                                                  NS_LITERAL_STRING("instance"),
-                                                  getter_AddRefs(nodeList));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMArray<nsIInstanceElementPrivate> *instList = nsnull;
+  aModel->GetInstanceList(&instList);
+  NS_ENSURE_TRUE(instList, NS_ERROR_FAILURE);
 
-  PRUint32 childCount = 0;
-  nodeList->GetLength(&childCount);
   PRUint32 i;
+  PRUint32 childCount = instList->Count();
   for (i = 0; i < childCount; ++i) {
-    nodeList->Item(i, aInstanceNode);
-    nsCOMPtr<nsIInstanceElementPrivate> instPriv = do_QueryInterface(*aInstanceNode);
-    if (!instPriv)
-      continue;
+    nsCOMPtr<nsIInstanceElementPrivate> instPriv = instList->ObjectAt(i); 
 
     nsCOMPtr<nsIDOMDocument> tmpDoc;
     instPriv->GetDocument(getter_AddRefs(tmpDoc));

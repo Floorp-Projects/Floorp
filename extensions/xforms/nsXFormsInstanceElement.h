@@ -78,6 +78,7 @@ public:
   NS_IMETHOD BeginAddingChildren();
   NS_IMETHOD DoneAddingChildren();
   NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
+  NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
 
   nsXFormsInstanceElement() NS_HIDDEN;
 

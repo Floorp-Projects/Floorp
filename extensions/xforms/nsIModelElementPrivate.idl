@@ -42,6 +42,11 @@ interface nsIXFormsControl;
 interface nsISchemaType;
 interface nsIInstanceElementPrivate;
 interface nsIDOMNode;
+%{C++
+  #include "nsCOMArray.h"
+%}
+
+[ptr] native nsCOMArrayPtr(nsCOMArray<nsIInstanceElementPrivate>);
 
 /**
  * Private interface implemented by the model element for other
@@ -119,4 +124,21 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    * @param aBoundNode        The node the control is bound to
    */
   void setStates(in nsIXFormsControl aControl, in nsIDOMNode aBoundNode);
+
+  /**
+   * The list of instance elements held by this model.  Includes lazy-authored
+   * instance elements
+   */
+  readonly attribute nsCOMArrayPtr instanceList;
+
+  /**
+   * Add an instance element to the model's instance list
+   * @param aInstanceElement        The instance element to add to the list
+   */
+  void addInstanceElement(in nsIInstanceElementPrivate aInstanceElement);
+
+  /**
+   * This attribute is set when the model's instance was lazy authored
+   */
+  readonly attribute boolean lazyAuthored;
 };

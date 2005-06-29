@@ -71,6 +71,7 @@ REQUIRES	= \
 		schemavalidation \
 		intl \
 		pref \
+		htmlparser \
 		$(NULL)
 
 XPIDLSRCS	= \
@@ -145,6 +146,7 @@ CPPSRCS		= \
 		nsXFormsControlStub.cpp \
 		nsXFormsUtilityService.cpp \
 		nsXFormsDelegateStub.cpp \
+		nsXFormsLazyInstanceElement.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)

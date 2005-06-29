@@ -76,6 +76,7 @@
 #include "nsISchema.h"
 #include "nsAutoPtr.h"
 #include "nsArray.h"
+#include "nsXFormsLazyInstanceElement.h"
 
 #ifdef DEBUG
 //#define DEBUG_MODEL
@@ -248,7 +249,9 @@ nsXFormsModelElement::nsXFormsModelElement()
     mSchemaTotal(0),
     mPendingInstanceCount(0),
     mDocumentLoaded(PR_FALSE),
-    mNeedsRefresh(PR_FALSE)
+    mNeedsRefresh(PR_FALSE),
+    mInstanceList(16),
+    mLazyModel(PR_FALSE)
 {
 }
 
@@ -268,6 +271,8 @@ nsXFormsModelElement::OnDestroyed()
 
   mElement = nsnull;
   mSchemas = nsnull;
+
+  mInstanceList.Clear();
   return NS_OK;
 }
 
@@ -395,6 +400,22 @@ nsXFormsModelElement::DoneAddingChildren()
         nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
         return NS_OK;
       }
+    }
+  }
+
+  // If all of the children are added and there aren't any instance elements,
+  // yet, then we need to make sure that one is ready in case the form author
+  // is using lazy authoring.
+  PRUint32 instCount = mInstanceList.Count();
+  if (!instCount) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+    if (domDoc) {
+      nsXFormsLazyInstanceElement *lazyInstance = 
+                                             new nsXFormsLazyInstanceElement();
+      lazyInstance->CreateLazyInstanceDocument(domDoc);
+      AddInstanceElement(lazyInstance);
+      mLazyModel = PR_TRUE;
     }
   }
 
@@ -990,32 +1011,34 @@ nsXFormsModelElement::FindInstanceElement(const nsAString &aID,
 {
   *aElement = nsnull;
 
-  nsCOMPtr<nsIDOMNodeList> children;
-  mElement->GetChildNodes(getter_AddRefs(children));
+  PRUint32 instCount = mInstanceList.Count();
+  if (instCount) {
+    nsCOMPtr<nsIDOMElement> element;
+    nsAutoString id;
+    for (int i = 0; i < instCount; ++i) {
+      nsIInstanceElementPrivate* instEle = mInstanceList.ObjectAt(i);
+      instEle->GetElement(getter_AddRefs(element));
 
-  if (!children)
-    return NS_OK;
-
-  PRUint32 childCount = 0;
-  children->GetLength(&childCount);
-
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIDOMElement> element;
-  nsAutoString id;
-
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    children->Item(i, getter_AddRefs(node));
-    NS_ASSERTION(node, "incorrect NodeList length?");
-
-    element = do_QueryInterface(node);
-    if (!element)
-      continue;
-
-    element->GetAttribute(NS_LITERAL_STRING("id"), id);
-    if (aID.IsEmpty() || aID.Equals(id)) {
-      CallQueryInterface(element, aElement);
-      if (*aElement)
+      if (aID.IsEmpty()) {
+        NS_ADDREF(instEle);
+        *aElement = instEle;
         break;
+      } else if (!element) {
+        // this should only happen if the instance on the list is lazy authored
+        // and as far as I can tell, a lazy authored instance should be the
+        // first (and only) instance in the model and unable to have an ID.  
+        // But that isn't clear to me reading the spec, so for now
+        // we'll play it safe in case the WG more clearly defines lazy authoring
+        // in the future.
+        continue;
+      }
+
+      element->GetAttribute(NS_LITERAL_STRING("id"), id);
+      if (aID.Equals(id)) {
+        NS_ADDREF(instEle);
+        *aElement = instEle;
+        break;
+      }
     }
   }
 
@@ -1155,6 +1178,12 @@ nsXFormsModelElement::GetContext(nsAString      &aModelID,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsModelElement::GetLazyAuthored(PRBool *aLazyInstance)
+{
+  *aLazyInstance = mLazyModel;
+  return NS_OK;
+}
 
 // internal methods
 
@@ -1244,40 +1273,23 @@ nsXFormsModelElement::Ready()
 void
 nsXFormsModelElement::BackupOrRestoreInstanceData(PRBool restore)
 {
-  // I imagine that this can be done more elegantly.  But in the end, the
-  // bulk of the work is walking the model's children looking for instance
-  // elements.  After one is found, just need to ask the instance element to
-  // backup or restore.
 
-  nsCOMPtr<nsIDOMNodeList> children;
-  mElement->GetChildNodes(getter_AddRefs(children));
+  PRUint32 instCount = mInstanceList.Count();
+  if (instCount) {
+    for (int i = 0; i < instCount; ++i) {
+      nsIInstanceElementPrivate *instance = mInstanceList.ObjectAt(i);
 
-  if (!children)
-    return;
-
-  PRUint32 childCount = 0;
-  children->GetLength(&childCount);
-
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIInstanceElementPrivate> instance;
-
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    children->Item(i, getter_AddRefs(node));
-    NS_ASSERTION(node, "incorrect NodeList length?");
-
-    instance = do_QueryInterface(node);
-    if (!instance)
-      continue;
-
-    // Don't know what to do with error if we get one.
-    // Restore/BackupOriginalDocument will already output warnings.
-    if(restore) {
-      instance->RestoreOriginalDocument();
-    }
-    else {
-      instance->BackupOriginalDocument();
+      // Don't know what to do with error if we get one.
+      // Restore/BackupOriginalDocument will already output warnings.
+      if(restore) {
+        instance->RestoreOriginalDocument();
+      }
+      else {
+        instance->BackupOriginalDocument();
+      }
     }
   }
+
 }
 
 
@@ -1612,6 +1624,26 @@ NS_IMETHODIMP
 nsXFormsModelElement::SetStates(nsIXFormsControl *aControl, nsIDOMNode *aBoundNode)
 {
   return SetStatesInternal(aControl, aBoundNode, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::GetInstanceList(nsCOMArray<nsIInstanceElementPrivate> **aInstanceList)
+{
+  if (aInstanceList) {
+    *aInstanceList = &mInstanceList;
+  }
+  return NS_OK;  
+}
+
+nsresult
+nsXFormsModelElement::AddInstanceElement(nsIInstanceElementPrivate *aInstEle) 
+{
+  // always append to the end of the list.  We need to keep the elements in
+  // document order since the first instance element is the default instance
+  // document for the model.
+  mInstanceList.AppendObject(aInstEle);
+
+  return NS_OK;
 }
 
 /* static */ void

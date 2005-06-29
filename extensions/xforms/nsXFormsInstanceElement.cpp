@@ -140,9 +140,9 @@ nsXFormsInstanceElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
                                 nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED |
+                                nsIXTFElement::NOTIFY_PARENT_CHANGED |
                                 nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN |
                                 nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
-  // XXX observe nsIXTFElement::NOTIFY_PARENT_CHANGED ??
 
   nsCOMPtr<nsIDOMElement> node;
   aWrapper->GetElementNode(getter_AddRefs(node));
@@ -154,6 +154,23 @@ nsXFormsInstanceElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   mElement = node;
   NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInstanceElement::ParentChanged(nsIDOMElement *aNewParent)
+{
+  if (!aNewParent)
+    return NS_OK;
+
+  // Once we are set up in the DOM, can find the model and make sure that this
+  // instance is on the list of instance elements that model keeps
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+  NS_ENSURE_TRUE(model, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIInstanceElementPrivate> instance = 
+                              NS_STATIC_CAST(nsIInstanceElementPrivate*, this);
+  model->AddInstanceElement(this);
+  
   return NS_OK;
 }
 
@@ -298,10 +315,11 @@ nsXFormsInstanceElement::RestoreOriginalDocument()
 {
   nsresult rv = NS_OK;
 
-  // This is called when xforms-ready is received by the model.  By now we know 
-  // that the instance document, whether external or inline, is loaded into 
-  // mDocument.  Get the root node, clone it, and insert it into our copy of 
-  // the document.  This is the magic behind getting xforms-reset to work.
+  // This is called when xforms-reset is received by the model.  We assume
+  // that the backup of the instance document has been populated and is
+  // loaded into mOriginalDocument.  Get the backup's root node, clone it, and 
+  // insert it into the live copy of the instance document.  This is the magic 
+  // behind getting xforms-reset to work. 
   if(mDocument && mOriginalDocument) {
     nsCOMPtr<nsIDOMNode> newNode, instanceRootNode, nodeReturn;
     nsCOMPtr<nsIDOMElement> instanceRoot;
@@ -332,6 +350,12 @@ nsXFormsInstanceElement::RestoreOriginalDocument()
   return rv;
 }
 
+NS_IMETHODIMP
+nsXFormsInstanceElement::GetElement(nsIDOMElement **aElement)
+{
+  NS_IF_ADDREF(*aElement = mElement);
+  return NS_OK;  
+}
 
 // private methods
 
@@ -446,7 +470,7 @@ nsXFormsInstanceElement::CreateInstanceDocument()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = domImpl->CreateDocument(EmptyString(), EmptyString(), nsnull,
-                                 getter_AddRefs(mDocument));
+                               getter_AddRefs(mDocument));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // I don't know if not being able to create a backup document is worth

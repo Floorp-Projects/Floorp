@@ -159,6 +159,19 @@ nsXFormsControlStubBase::ResetBoundNode(const nsString     &aBindAttribute,
 
   if (mBoundNode && mModel) {
     mModel->SetStates(this, mBoundNode);
+  } else if (mModel) {
+    // we should have been successful.  Must be pointing to a node that
+    // doesn't exist in the instance document.  Disable the control
+    // per 4.2.2 in the spec
+
+    // Set pseudo class
+    ///
+    /// @bug Set via attributes right now. Bug 271720. (XXX)
+    mElement->SetAttribute(NS_LITERAL_STRING("disabled"), 
+                           NS_LITERAL_STRING("1"));
+    mElement->RemoveAttribute(NS_LITERAL_STRING("enabled"));
+    // Dispatch event
+    nsXFormsUtils::DispatchEvent(mElement, eEvent_Disabled);
   }
 
   if (aResult) {

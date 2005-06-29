@@ -209,6 +209,15 @@ private:
   // This flag indicates whether a xforms-rebuild has been called, but no
   // xforms-revalidate yet
   PRBool mNeedsRefresh;
+
+  /**
+   * List of instance elements contained by this model, including lazy-authored
+   * instance elements.
+   */
+  nsCOMArray<nsIInstanceElementPrivate>    mInstanceList;
+
+  /** Indicates whether the model's instance was built by lazy authoring */
+  PRBool mLazyModel;
 };
 
 /**

@@ -116,12 +116,10 @@ nsXFormsUtilityService::IsNodeAssocWithModel( nsIDOMNode *aNode,
 
     if (modelNode && (modelNode == aModel)) {
       *aModelAssocWithNode = PR_TRUE;
-    }
-    else {
+    } else { 
       *aModelAssocWithNode = PR_FALSE;
     }
-  }
-  else {
+  } else { 
     // We are assuming that if the node coming in isn't a proper XForms element,
     //   then it is an instance element in an instance doc.  Now we just have
     //   to determine if the given model contains this instance document.
@@ -137,26 +135,16 @@ nsXFormsUtilityService::IsNodeAssocWithModel( nsIDOMNode *aNode,
       //   document.  If it is equal to the document that contains aNode,
       //   then aNode is associated with this aModel element and we can return
       //   true.
-      nsCOMPtr<nsIDOMNodeList> children;
-      aModel->GetChildNodes(getter_AddRefs(children));
-    
-      if (!children)
-        return NS_OK;
-    
-      PRUint32 childCount = 0;
-      children->GetLength(&childCount);
-    
-      nsCOMPtr<nsIDOMNode> node;
+      nsCOMPtr<nsIModelElementPrivate>model = do_QueryInterface(modelEle);
       nsCOMPtr<nsIInstanceElementPrivate> instElement;
       nsCOMPtr<nsIDOMDocument> instDocument;
-    
-      for (PRUint32 i = 0; i < childCount; ++i) {
-        children->Item(i, getter_AddRefs(node));
-        NS_ASSERTION(node, "incorrect NodeList length?");
-    
-        instElement = do_QueryInterface(node);
-        if (!instElement)
-          continue;
+
+      nsCOMArray<nsIInstanceElementPrivate> *instList = nsnull;
+      model->GetInstanceList(&instList);
+      NS_ENSURE_TRUE(instList, NS_ERROR_FAILURE);
+
+      for (int i = 0; i < instList->Count(); ++i) {
+        instElement = instList->ObjectAt(i);
     
         instElement->GetDocument(getter_AddRefs(instDocument));
         if (instDocument) {

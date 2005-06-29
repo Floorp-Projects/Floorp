@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,11 +16,11 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
+ *  Aaron Reed <aaronr@us.ibm.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,22 +36,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsXFormsLazyInstanceElement_h_
+#define nsXFormsLazyInstanceElement_h_
 
-interface nsIDOMDocument;
-interface nsIDOMElement;
+#include "nsXFormsStubElement.h"
+#include "nsIDOMDocument.h"
+#include "nsCOMPtr.h"
+#include "nsIModelElementPrivate.h"
+#include "nsIInstanceElementPrivate.h"
+#include "nsIInterfaceRequestor.h"
+
+class nsIDOMElement;
 
 /**
- * Private interface implemented by the instance element.
+ * Implementation of the XForms \<instance\> element created through lazy
+ * authoring.  It creates an instance document by cloning the contained 
+ * instance data.
  */
-[uuid(8c9dd10d-4189-4a7b-a2eb-fd695cf33b27)]
-interface nsIInstanceElementPrivate : nsISupports
+
+class nsXFormsLazyInstanceElement : public nsXFormsStubElement,
+                                    public nsIInstanceElementPrivate,
+                                    public nsIInterfaceRequestor
 {
-  /**
-   * The document which holds the live instance data.
-   */
-  attribute nsIDOMDocument document;
-  readonly attribute nsIDOMElement element;
-  void backupOriginalDocument();
-  void restoreOriginalDocument();
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIINSTANCEELEMENTPRIVATE
+  NS_DECL_NSIINTERFACEREQUESTOR
+
+  NS_HIDDEN_(nsresult) CreateLazyInstanceDocument(nsIDOMDocument *aXFormsDocument);
+
+  nsXFormsLazyInstanceElement() NS_HIDDEN;
+
+private:
+
+  nsCOMPtr<nsIDOMDocument>         mDocument;
+  nsCOMPtr<nsIDOMDocument>         mOriginalDocument;
 };
+
+#endif

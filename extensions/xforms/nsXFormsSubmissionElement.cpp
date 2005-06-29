@@ -775,11 +775,20 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
 
   // add namespaces from the main document to the submission document, but only
   // if the instance data is local, not remote.
-  PRBool hasSrc = PR_FALSE;
+  PRBool serialize = PR_FALSE;
   nsCOMPtr<nsIDOMElement> instanceElement(do_QueryInterface(instanceNode));
-  instanceElement->HasAttribute(NS_LITERAL_STRING("src"), &hasSrc);
 
-  if (!hasSrc) {
+  // make sure that this is a DOMElement.  It won't be if it was lazy
+  // authored.  Lazy authored instance documents don't inherit namespaces
+  // from parent nodes or the original document (in formsPlayer and Novell,
+  // at least).
+  if (instanceElement) {
+    PRBool hasSrc = PR_FALSE;
+    instanceElement->HasAttribute(NS_LITERAL_STRING("src"), &hasSrc);
+    serialize = !hasSrc;
+  }
+
+  if (serialize) {
     rv = AddNameSpaces(newDocElm, node);
     NS_ENSURE_SUCCESS(rv, rv);
 
