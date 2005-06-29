@@ -75,6 +75,7 @@ endif
 
 CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCSRCS) \
+		$(XPCOM_GLUENS_SRC_LCSRCS) \
 		nsXPComInit.cpp \
 		nsStringAPI.cpp \
 		$(NULL)
@@ -144,7 +145,7 @@ endif
 # UNIX98 iconv support
 OS_LIBS += $(LIBICONV)
 
-GARBAGE         += $(XPCOM_GLUE_SRC_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
+GARBAGE         += $(XPCOM_GLUE_SRC_LCSRCS) $(XPCOM_GLUENS_SRC_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
 
@@ -177,5 +178,5 @@ EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,imagehlp)
 endif
 endif # WINNT
 
-export:: $(XPCOM_GLUE_SRC_CSRCS)
+export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUENS_SRC_CSRCS)
 	$(INSTALL) $^ .
