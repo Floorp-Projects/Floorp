@@ -23,10 +23,6 @@
       </xul:hbox>
     </content>
 
-    <implementation>
-      <field name="enterDefaultAlways">true</field>
-    </implementation>
-
     <handlers>
       <handler event="keypress" key="." modifiers="meta" phase="capturing" action="this.cancelDialog();"/>
     </handlers>
