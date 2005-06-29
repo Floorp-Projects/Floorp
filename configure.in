@@ -561,16 +561,17 @@ tools are selected during the Xcode/Developer Tools installation.])
 
   GCC_VERSION_MAJOR=`echo $GCC_VERSION_FULL | $PERL -pe 's/(^\d*).*/$1/;'`
   if test "$GCC_VERSION_MAJOR" -lt "4" ; then
+    dnl gcc < 4.0 only supports PowerPC, OK to hard-code
     TARGET_ARCH_LIB="darwin"
     TARGET_ARCH_INCLUDE="ppc-darwin"
     SDK_C_INCLUDE="-isystem ${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION} -isystem ${MACOS_SDK_DIR}/usr/include -F${MACOS_SDK_DIR}/System/Library/Frameworks"
   else
-    dnl If gcc >= 4, use powerpc-apple-darwin#, where # is the version of
+    dnl If gcc >= 4, use cpu-apple-darwin#, where # is the version of
     dnl the Darwin release corresponding to the target Mac OS X release.
     dnl For OS X >= 10.1.1, take the minor version number and add 4 to get
     dnl the Darwin major version number.  If it can't be determined, use the
     dnl current Darwin major version number and hope that there's a symlink.
-    TARGET_ARCH_LIB=powerpc-apple-darwin`echo $MACOS_SDK_DIR | $PERL -pe 's/MacOSX10\.([^\.]*)//;if ($1) {$_=$1+4;} else {$_="'${target_os}'";s/(\d+)//;$_=$1;}'`
+    TARGET_ARCH_LIB=${target_cpu}-${target_vendor}-darwin`echo $MACOS_SDK_DIR | $PERL -pe 's/MacOSX10\.([\d]*)//;if ($1) {$_=$1+4;} else {$_="'${target_os}'";s/(\d+)//;$_=$1;}'`
     TARGET_ARCH_INCLUDE=$TARGET_ARCH_LIB
     SDK_C_INCLUDE="-isystem ${MACOS_SDK_DIR}/usr/lib/gcc/${TARGET_ARCH_LIB}/${GCC_VERSION_FULL}/include -isystem ${MACOS_SDK_DIR}/usr/include -F${MACOS_SDK_DIR}/System/Library/Frameworks"
   fi
