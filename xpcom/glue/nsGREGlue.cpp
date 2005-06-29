@@ -281,7 +281,7 @@ GRE_GetPathFromConfigDir(const char* version, const char* dirname,
   // Open the directory provided and try to read any files in that
   // directory that end with .conf.  We look for an entry that might
   // point to the GRE that we're interested in.
-  struct DIR *dir = opendir(dirname);
+  DIR *dir = opendir(dirname);
   if (!dir)
     return nsnull;
 
