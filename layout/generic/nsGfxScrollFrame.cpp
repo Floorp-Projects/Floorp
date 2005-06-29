@@ -434,19 +434,28 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
     // their content box can be squeezed down to 0, as they will either create
     // a scrollbar so that content of the scrollframe will not leak out or it
     // will cut the content at the frame boundaries.
-    aState->mMaxElementWidth = vScrollbarActualWidth +
-      aState->mReflowState.mComputedPadding.LeftRight() +
-      aState->mReflowState.AdjustIntrinsicMinContentWidthForStyle(0);
+    
+    // The width of the vertical scrollbar comes out of the budget for the
+    // content width (see above where we include the scrollbar width before
+    // we call ComputeInsideBorderSize, which overrides the given
+    // width with the style computed width if there is one). So allow
+    // the vertical scrollbar width to be overridden by style information
+    // here, too.
+    nscoord minContentWidth =
+      aState->mReflowState.AdjustIntrinsicMinContentWidthForStyle(vScrollbarActualWidth);
+    aState->mMaxElementWidth = minContentWidth +
+      aState->mReflowState.mComputedPadding.LeftRight();
     // borders get added on the way out of Reflow()
   }
   if (aKidMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+    // We need to do what we did above: include the vertical scrollbar width in the
+    // content width before applying style.
     nscoord kidMaxWidth = aKidMetrics.mMaximumWidth;
     if (kidMaxWidth != NS_UNCONSTRAINEDSIZE) {
       nscoord kidContentMaxWidth = kidMaxWidth -
-        aState->mReflowState.mComputedPadding.LeftRight();
+        aState->mReflowState.mComputedPadding.LeftRight() + vScrollbarActualWidth;
       NS_ASSERTION(kidContentMaxWidth >= 0, "max-width didn't include padding?");
-      kidMaxWidth = vScrollbarActualWidth +
-        aState->mReflowState.mComputedPadding.LeftRight() +
+      kidMaxWidth = aState->mReflowState.mComputedPadding.LeftRight() +
         aState->mReflowState.AdjustIntrinsicContentWidthForStyle(kidContentMaxWidth);
     }
     aState->mMaximumWidth = kidMaxWidth;
