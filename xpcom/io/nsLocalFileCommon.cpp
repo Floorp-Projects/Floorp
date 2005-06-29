@@ -249,6 +249,8 @@ nsLocalFile::SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString& rel
         rv = targetFile->GetParent(getter_AddRefs(parentDir));
         if (NS_FAILED(rv))
             return rv;
+        if (!parentDir)
+            return NS_ERROR_FILE_UNRECOGNIZED_PATH;
         targetFile = parentDir;
 
         nodeBegin = nodeEnd;

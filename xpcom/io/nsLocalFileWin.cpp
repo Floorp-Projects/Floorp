@@ -1904,7 +1904,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
       return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     if (offset == 1 && parentPath[0] == '\\') {
-        aParent = nsnull;
+        *aParent = nsnull;
         return NS_OK;
     }
     if (offset > 0)
