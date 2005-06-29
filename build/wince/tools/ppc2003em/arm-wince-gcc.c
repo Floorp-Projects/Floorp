@@ -20,22 +20,22 @@ main(int argc, char **argv)
 
   args[i++] = "cl.exe";
   args[i++] = "/I\"" WCE_INC "\""; 
-  args[i++] = "/I\"" SHUNT_INC "\""; 
-
+  args[i++] = "/I\"" SHUNT_INC "\"";
   args[i++] = "/FI\"mozce_shunt.h\"";
 
   args[i++] = "/D_i386_";
   args[i++] = "/D_X86_";
   args[i++] = "/Dx86";
 
-  args[i++] = "/D_WIN32_WCE=310";
-  args[i++] = "/DWIN32_PLATFORM_PSPC=310";
-  args[i++] = "/DUNDER_CE=310";
- 
   args[i++] = "/DWINCE";
+  args[i++] = "/D_WIN32_WCE=420";
+  args[i++] = "/DUNDER_CE=420";
+  args[i++] = "/DWIN32_PLATFORM_PSPC=400"; 
   args[i++] = "/DDEPRECATE_SUPPORTED";
+  args[i++] = "/DSTDC_HEADERS";
 
   args[i++] = "/F5000000";
+  args[i++] = "/Gy";  // For link warning LNK1166
 
   startOfArgvs = i;
   
@@ -76,23 +76,23 @@ main(int argc, char **argv)
     args[i++] = "/link";
     args[i++] = "-STACK:0x5000000,1000000";
     args[i++] = "-ENTRY:mainACRTStartup";
-    args[i++] = "-SUBSYSTEM:WINDOWSCE";
+    args[i++] = "-SUBSYSTEM:WINDOWSCE,4.20";
     args[i++] = "-MACHINE:X86";
-    args[i++] = "\\\"-LIBPATH:\""WCE_LIB"\"\\\"";
-    args[i++] = "\\\"-LIBPATH:\""SHUNT_LIB"\\\"";
+    args[i++] = "-LIBPATH:\"" WCE_LIB "\"";
+    args[i++] = "-LIBPATH:\"" SHUNT_LIB "\"";
     args[i++] = "shunt.lib";
     args[i++] = "winsock.lib"; 
-    args[i++] = "corelibc.lib"; 
+    args[i++] = "corelibc.lib";
     args[i++] = "coredll.lib";
   }
   args[i] = NULL;
 
-  //  dumpargs(args);
+  //dumpargs(args);
 
-  iRetVal = _spawnv( _P_WAIT, CL_PATH, args);
+  iRetVal = _spawnv( _P_WAIT, CL_PATH, args );
   if (iRetVal == -1)
   {
     printf("-----------------> %d <----------------------\n\n\n\n", errno);
   }
-  return iRetVal;
+  return 0;
 }

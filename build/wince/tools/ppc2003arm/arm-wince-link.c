@@ -14,7 +14,7 @@ main(int argc, char **argv)
   int k = 0;
 
   args[i++] = "link.exe";
-  args[i++] = "/SUBSYSTEM:WINDOWSCE";
+  args[i++] = "/SUBSYSTEM:WINDOWSCE,4.20";
   args[i++] = "/MACHINE:ARM";
   args[i++] = "/LIBPATH:\"" WCE_LIB "\"";
   args[i++] = "/LIBPATH:\"" SHUNT_LIB "\"";
@@ -41,7 +41,7 @@ main(int argc, char **argv)
     }
     j++;
   }
-
+  
   if (k==0)
     args[i++] = "/ENTRY:mainACRTStartup";
 
