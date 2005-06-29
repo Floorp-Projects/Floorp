@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Doron Rosenberg <doronr@us.ibm.com> (original author)
+ *   Laurent Jouanneau <laurent@xulfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1467,7 +1468,7 @@ nsSchemaValidator::IsValidSchemaGYearMonth(const nsAString & aNodeValue,
       // back one up since we have the separator included
       year = Substring(buffStart, --start);
 
-      isValid = IsValidSchemaGYear(year, &aYearMonth->gYear);
+      isValid = IsValidSchemaGYear(year, aYearMonth ? &aYearMonth->gYear : nsnull);
 
       if (isValid) {
         nsAutoString month;
@@ -1475,7 +1476,7 @@ nsSchemaValidator::IsValidSchemaGYearMonth(const nsAString & aNodeValue,
         start++;
         month.Append(Substring(start, end));
 
-        isValid = IsValidSchemaGMonth(month, &aYearMonth->gMonth);
+        isValid = IsValidSchemaGMonth(month, aYearMonth ? &aYearMonth->gMonth : nsnull);
       }
       done = PR_TRUE;
     } else {
@@ -1590,7 +1591,7 @@ nsSchemaValidator::IsValidSchemaGMonthDay(const nsAString & aNodeValue,
       nsAutoString month;
       month.AppendLiteral("--");
       month.Append(Substring(buffStart, start.advance(2)));
-      isValid = IsValidSchemaGMonth(month, &aMonthDay->gMonth);
+      isValid = IsValidSchemaGMonth(month, aMonthDay ? &aMonthDay->gMonth : nsnull);
 
       if (isValid) {
         buffStart = start;
@@ -1603,7 +1604,7 @@ nsSchemaValidator::IsValidSchemaGMonthDay(const nsAString & aNodeValue,
       nsAutoString day;
       day.AppendLiteral("---");
       day.Append(Substring(++buffStart, end));
-      isValid = IsValidSchemaGDay(day, &aMonthDay->gDay);
+      isValid = IsValidSchemaGDay(day, aMonthDay ? &aMonthDay->gDay : nsnull);
       done = PR_TRUE;
     }
   }
@@ -1708,15 +1709,17 @@ NS_IMETHODIMP
 nsSchemaValidator::ValidateBuiltinTypeTime(const nsAString & aValue,
                                            PRTime *aResult)
 {
+  nsresult rv = NS_OK;
   PRTime time;
 
   if (IsValidSchemaTime(aValue, &time)) {
     *aResult = time;
   } else {
     *aResult = nsnull;
+    rv = NS_ERROR_ILLEGAL_VALUE;
   }
 
-  return NS_OK;
+  return rv;
 }
 
 PRBool
@@ -1871,16 +1874,19 @@ NS_IMETHODIMP
 nsSchemaValidator::ValidateBuiltinTypeDate(const nsAString & aValue,
                                            PRTime *aResult)
 {
+  nsresult rv = NS_OK;
   PRTime time;
 
   if (IsValidSchemaDate(aValue, &time)) {
     *aResult = time;
   } else {
     *aResult = nsnull;
+    rv = NS_ERROR_ILLEGAL_VALUE;
   }
 
-  return NS_OK;
+  return rv;
 }
+
 
 /* http://www.w3.org/TR/xmlschema-2/#dateTime */
 nsresult
@@ -1958,15 +1964,17 @@ NS_IMETHODIMP
 nsSchemaValidator::ValidateBuiltinTypeDateTime(const nsAString & aValue,
                                                PRTime *aResult)
 {
+  nsresult rv = NS_OK;
   PRTime time;
 
   if (IsValidSchemaDateTime(aValue, &time)) {
     *aResult = time;
   } else {
     *aResult = nsnull;
+    rv = NS_ERROR_ILLEGAL_VALUE;
   }
 
-  return NS_OK;
+  return rv;
 }
 
 int
@@ -2108,14 +2116,17 @@ NS_IMETHODIMP
 nsSchemaValidator::ValidateBuiltinTypeDuration(const nsAString & aValue,
                                                nsISchemaDuration **aDuration)
 {
+  nsresult rv = NS_OK;
   *aDuration = nsnull;
   nsCOMPtr<nsISchemaDuration> duration;
 
   if (IsValidSchemaDuration(aValue, getter_AddRefs(duration))) {
     duration.swap(*aDuration);
+  } else {
+    rv = NS_ERROR_ILLEGAL_VALUE;
   }
 
-  return NS_OK;
+  return rv;
 }
 
 PRBool

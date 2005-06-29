@@ -38,9 +38,14 @@
 
 // XPCOM includes
 #include "nsIServiceManager.h"
+#include "nsString.h"
 
+#include "nsXFormsUtils.h"
 #include "nsISchemaValidator.h"
+#include "nsISchemaDuration.h"
 #include "nsXFormsSchemaValidator.h"
+
+#include "nsIDOM3Node.h"
 
 #define NS_SCHEMAVALIDATOR_CONTRACTID "@mozilla.org/schemavalidator;1"
 
@@ -49,39 +54,185 @@ nsXFormsSchemaValidator::nsXFormsSchemaValidator()
   mSchemaValidator = do_GetService(NS_SCHEMAVALIDATOR_CONTRACTID);
 }
 
-nsresult nsXFormsSchemaValidator::LoadSchema(nsISchema* aSchema)
+nsresult
+nsXFormsSchemaValidator::LoadSchema(nsISchema* aSchema)
 {
   NS_ENSURE_TRUE(mSchemaValidator, NS_ERROR_UNEXPECTED);
 
   return mSchemaValidator->LoadSchema(aSchema);
 }
 
-PRBool nsXFormsSchemaValidator::ValidateString(const nsAString & aValue,
-  const nsAString & aType, const nsAString & aNamespace)
+PRBool
+nsXFormsSchemaValidator::ValidateString(const nsAString & aValue,
+                                        const nsAString & aType,
+                                        const nsAString & aNamespace)
 {
   PRBool isValid = PR_FALSE;
 
   NS_ENSURE_TRUE(mSchemaValidator, isValid);
-  mSchemaValidator->ValidateString(aValue, aType, aNamespace, &isValid);
+
+  // if it is the XForms namespace, handle it internally, else delegate to
+  // nsISchemaValidator
+  if (aNamespace.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
+    isValid = ValidateXFormsTypeString(aValue, aType);
+  } else {
+    mSchemaValidator->ValidateString(aValue, aType, aNamespace, &isValid);
+  }
 
   return isValid;
 }
 
-PRBool nsXFormsSchemaValidator::Validate(nsIDOMNode* aElement)
+PRBool
+nsXFormsSchemaValidator::ValidateNode(nsIDOMNode* aElement,
+                                      const nsAString & aType,
+                                      const nsAString & aNamespace)
 {
   PRBool isValid = PR_FALSE;
-
   NS_ENSURE_TRUE(mSchemaValidator, isValid);
-  mSchemaValidator->Validate(aElement, &isValid);
+
+  if (aNamespace.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
+    // XXX: currently, we will only support validating a lone node.  When
+    // we get complex type support, we should load the schema for the xforms
+    // types and use ValidateAgainstType like below.
+    nsAutoString nodeValue;
+    nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(aElement);
+    domNode3->GetTextContent(nodeValue);
+
+    isValid = ValidateString(nodeValue, aType, aNamespace);
+  } else {
+    nsCOMPtr<nsISchemaType> type;
+    if (GetType(aType, aNamespace, getter_AddRefs(type))) {
+      mSchemaValidator->ValidateAgainstType(aElement, type, &isValid);
+    }
+  }
 
   return isValid;
 }
 
-PRBool nsXFormsSchemaValidator::GetType(const nsAString & aType,
-  const nsAString & aNamespace, nsISchemaType **aSchemaType)
+PRBool
+nsXFormsSchemaValidator::GetType(const nsAString & aType,
+                                 const nsAString & aNamespace,
+                                 nsISchemaType **aSchemaType)
 {
   NS_ENSURE_TRUE(mSchemaValidator, PR_FALSE);
+
+  PRBool success = PR_FALSE;
   nsresult rv = mSchemaValidator->GetType(aType, aNamespace, aSchemaType);
 
-  return( NS_SUCCEEDED(rv) );
+  return NS_SUCCEEDED(rv);
 }
+
+// xforms schema types
+PRBool
+nsXFormsSchemaValidator::ValidateXFormsTypeString(const nsAString & aValue,
+                                                  const nsAString & aType)
+{
+  if (aType.IsEmpty()) {
+    return PR_FALSE;
+  }
+
+  PRBool isValid = PR_FALSE;
+
+  if (aType.EqualsLiteral("yearMonthDuration")) {
+    isValid = IsValidSchemaYearMonthDuration(aValue);
+  } else if (aType.EqualsLiteral("dayTimeDuration")) {
+    isValid = IsValidSchemaDayTimeDuration(aValue);
+  } else if (aType.EqualsLiteral("listItem")) {
+    isValid = IsValidSchemaListItem(aValue);
+  } else if (aType.EqualsLiteral("listItems")) {
+    isValid = IsValidSchemaListItems(aValue);
+  }
+
+  return isValid;
+}
+
+PRBool
+nsXFormsSchemaValidator::IsValidSchemaYearMonthDuration(const nsAString & aValue)
+{
+  PRBool isValid = PR_FALSE;
+
+  nsCOMPtr<nsISchemaDuration> duration;
+  nsresult rv =
+    mSchemaValidator->ValidateBuiltinTypeDuration(aValue,
+                                                  getter_AddRefs(duration));
+
+  // valid duration
+  if (NS_SUCCEEDED(rv)) {
+    // check if no days/hours/minutes/seconds/fractionseconds were set
+    PRUint32 temp;
+    duration->GetDays(&temp);
+
+    if (temp == 0) {
+      duration->GetHours(&temp);
+      if (temp == 0) {
+        duration->GetMinutes(&temp);
+        if (temp == 0) {
+          duration->GetSeconds(&temp);
+          if (temp == 0) {
+            duration->GetFractionSeconds(&temp);
+            if (temp == 0) {
+              isValid = PR_TRUE;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return isValid;
+}
+
+PRBool
+nsXFormsSchemaValidator::IsValidSchemaDayTimeDuration(const nsAString & aValue)
+{
+  PRBool isValid = PR_FALSE;
+
+  nsCOMPtr<nsISchemaDuration> duration;
+  nsresult rv =
+    mSchemaValidator->ValidateBuiltinTypeDuration(aValue,
+                                                  getter_AddRefs(duration));
+
+  if (NS_SUCCEEDED(rv)) {
+    PRUint32 years, months;
+    duration->GetYears(&years);
+    duration->GetMonths(&months);
+
+    // if years/months exist, invalid
+    if ((years == 0) && (months == 0))
+      isValid = PR_TRUE;
+  }
+
+  return isValid;
+}
+
+PRBool
+nsXFormsSchemaValidator::IsValidSchemaListItem(const nsAString & aValue)
+{
+  PRBool isValid = PR_FALSE;
+
+  // like a string, but no whitespace
+  nsAutoString string(aValue);
+  if (string.FindCharInSet(" \t\r\n") == kNotFound) {
+    mSchemaValidator->ValidateString(aValue, NS_LITERAL_STRING("string"),
+                                     NS_LITERAL_STRING("http://www.w3.org/1999/XMLSchema"),
+                                     &isValid);
+  }
+
+  return isValid;
+}
+
+PRBool
+nsXFormsSchemaValidator::IsValidSchemaListItems(const nsAString & aValue)
+{
+  PRBool isValid = PR_FALSE;
+
+  // listItem is like a string, but no whitespace.  listItems is a whitespace
+  // delimeted list of listItem, so therefore just need to see if it is a valid
+  // xsd:string
+  mSchemaValidator->ValidateString(aValue, NS_LITERAL_STRING("string"),
+                                   NS_LITERAL_STRING("http://www.w3.org/1999/XMLSchema"),
+                                   &isValid);
+
+  return isValid;
+}
+

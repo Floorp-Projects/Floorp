@@ -42,16 +42,70 @@
 class nsXFormsSchemaValidator
 {
 public:
-
   nsXFormsSchemaValidator();
 
+  /**
+   * Loads a schema into the validator
+   *
+   * @param aSchema           The schema to load
+   * @return                  If it succeeded or not
+   */
   nsresult LoadSchema(nsISchema* aSchema);
+
+  /**
+   * Validates a string against a namespace and schema type
+   *
+   * @param aValue            Value to validate
+   * @param aType             Type
+   * @param aNamespace        Namespace
+   * @return                  Whether the string is valid or not
+   */
   PRBool ValidateString(const nsAString & aValue, const nsAString & aType,
-    const nsAString & aNamespace);
-  PRBool Validate(nsIDOMNode* aElement);
+                        const nsAString & aNamespace);
+
+  /**
+   * Validates a node against a namespace and schema type
+   *
+   * @param aElement          Node to validate
+   * @param aType             Type
+   * @param aNamespace        Namespace
+   * @return                  Whether the string is valid or not
+   */
+  PRBool ValidateNode(nsIDOMNode* aElement, const nsAString & aType,
+                      const nsAString & aNamespace);
+
+  /**
+   * Returns a nsISchemaType given an type and namespace
+   *
+   * @param aType             Type
+   * @param aNamespace        Namespace
+   * @param aSchemaType       The nsISchemaType is stored here.
+   * @return                  Whether a type was found or not
+   */
   PRBool GetType(const nsAString & aType, const nsAString & aNamespace,
                  nsISchemaType **aSchemaType);
-    
+
+  /**
+   * Validates a string against an XForms Schema Type
+   *
+   * @param aValue            Value to validate
+   * @param aType             Type
+   * @return                  Whether the string is valid or not
+   */
+  PRBool ValidateXFormsTypeString(const nsAString & aValue,
+                                  const nsAString & aType);
+
+  // Returns if the string is a valid XForms YearMonth duration
+  PRBool IsValidSchemaYearMonthDuration(const nsAString & aValue);
+
+  // Returns if the string is a valid XForms DayTime duration
+  PRBool IsValidSchemaDayTimeDuration(const nsAString & aValue);
+
+  // Returns if the string is a valid XForms listitem
+  PRBool IsValidSchemaListItem(const nsAString & aValue);
+
+  // Returns if the string is a valid XForms list of listitems
+  PRBool IsValidSchemaListItems(const nsAString & aValue);
 
 protected:
   nsCOMPtr<nsISchemaValidator> mSchemaValidator;
