@@ -149,7 +149,7 @@ var gAdvancedPane = {
   
   showAutoInstallOptions: function () 
   {
-    document.documentElement.openSubDialog("chrome://browser/content/preferences/update.xul",
+    document.documentElement.openSubDialog("chrome://mozapps/content/preferences/update.xul",
                                            "", null);  
   },
   
