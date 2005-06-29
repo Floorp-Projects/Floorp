@@ -858,11 +858,6 @@
     and an error
     occurred opening yesterday's dupes file: [% error_msg FILTER html %].
 
-  [% ELSIF error == "no_html_in_quips" %]
-    [% title = "No HTML In Quips" %]
-    Sorry - for security reasons, support for HTML tags has been turned off
-    in quips.
-
   [% ELSIF error == "no_new_quips" %]
     [% title = "No New Quips" %]
     This site does not permit the addition of new quips.

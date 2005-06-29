@@ -79,7 +79,6 @@ if ($action eq "add") {
       (Param('quip_list_entry_control') eq "open") || (UserInGroup('admin')) || 0;
     my $comment = $cgi->param("quip");
     $comment || ThrowUserError("need_quip");
-    $comment !~ m/</ || ThrowUserError("no_html_in_quips");
 
     SendSQL("INSERT INTO quips (userid, quip, approved) VALUES " .
            '(' . $userid . ', ' . SqlQuote($comment) . ', ' . $approved . ')');
