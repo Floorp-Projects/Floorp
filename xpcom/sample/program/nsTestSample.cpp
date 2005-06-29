@@ -67,9 +67,15 @@ main(void)
     NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
     registrar->AutoRegister(nsnull);
     
-
+    nsCOMPtr<nsIComponentManager> manager = do_QueryInterface(registrar);
+    NS_ASSERTION(registrar, "Null nsIComponentManager");
+    
     // Create an instance of our component
-    nsCOMPtr<nsISample> mysample = do_CreateInstance(NS_SAMPLE_CONTRACTID, &rv);
+    nsCOMPtr<nsISample> mysample;
+    rv = manager->CreateInstanceByContractID(NS_SAMPLE_CONTRACTID,
+                                             nsnull,
+                                             NS_GET_IID(nsISample),
+                                             getter_AddRefs(mysample));
     if (NS_FAILED(rv))
     {
         printf("ERROR: Cannot create instance of component " NS_SAMPLE_CONTRACTID " [%x].\n"
@@ -110,6 +116,7 @@ main(void)
         printf("Test FAILED.\n");
         return -4;
     }
+
     rv = mysample->WriteValue("Final print :");
     printf("Test passed.\n");
 
