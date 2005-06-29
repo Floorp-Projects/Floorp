@@ -41,6 +41,8 @@
 #include "nsCPrefetchService.h"
 #include "nsIGenericFactory.h"
 #include "nsIObserver.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIChannelEventSink.h"
 #include "nsIWebProgressListener.h"
 #include "nsIStreamListener.h"
 #include "nsIChannel.h"
@@ -68,12 +70,12 @@ public:
     NS_DECL_NSIOBSERVER
 
     nsPrefetchService();
-    virtual ~nsPrefetchService();
 
     nsresult Init();
     void     ProcessNextURI();
 
 private:
+    ~nsPrefetchService();
 
     void     AddProgressListener();
     void     RemoveProgressListener();
@@ -95,16 +97,21 @@ private:
 //-----------------------------------------------------------------------------
 
 class nsPrefetchListener : public nsIStreamListener
+                         , public nsIInterfaceRequestor
+                         , public nsIChannelEventSink
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSICHANNELEVENTSINK
 
     nsPrefetchListener(nsPrefetchService *aPrefetchService);
-    virtual ~nsPrefetchListener();
 
 private:
+    ~nsPrefetchListener();
+
     static NS_METHOD ConsumeSegments(nsIInputStream *, void *, const char *,
                                      PRUint32, PRUint32, PRUint32 *);
 

@@ -52,6 +52,7 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsAutoPtr.h"
 #include "prtime.h"
 #include "prlog.h"
 #include "plstr.h"
@@ -127,9 +128,11 @@ nsPrefetchListener::ConsumeSegments(nsIInputStream *aInputStream,
 // nsPrefetchListener::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS2(nsPrefetchListener,
+NS_IMPL_ISUPPORTS4(nsPrefetchListener,
                    nsIRequestObserver,
-                   nsIStreamListener)
+                   nsIStreamListener,
+                   nsIInterfaceRequestor,
+                   nsIChannelEventSink)
 
 //-----------------------------------------------------------------------------
 // nsPrefetchListener::nsIStreamListener
@@ -198,6 +201,46 @@ nsPrefetchListener::OnStopRequest(nsIRequest *aRequest,
 }
 
 //-----------------------------------------------------------------------------
+// nsPrefetchListener::nsIInterfaceRequestor
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsPrefetchListener::GetInterface(const nsIID &aIID, void **aResult)
+{
+    if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
+        NS_ADDREF_THIS();
+        *aResult = NS_STATIC_CAST(nsIChannelEventSink *, this);
+        return NS_OK;
+    }
+
+    return NS_ERROR_NO_INTERFACE;
+}
+
+//-----------------------------------------------------------------------------
+// nsPrefetchListener::nsIChannelEventSink
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsPrefetchListener::OnChannelRedirect(nsIChannel *aOldChannel,
+                                      nsIChannel *aNewChannel,
+                                      PRUint32 aFlags)
+{
+    nsCOMPtr<nsIURI> newURI;
+    nsresult rv = aNewChannel->GetURI(getter_AddRefs(newURI));
+    if (NS_FAILED(rv))
+        return rv;
+
+    PRBool match;
+    rv = newURI->SchemeIs("http", &match); 
+    if (NS_FAILED(rv) || !match) {
+        LOG(("rejected: URL is not of type http\n"));
+        return NS_ERROR_ABORT;
+    }
+
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
 // nsPrefetchService <public>
 //-----------------------------------------------------------------------------
 
@@ -259,7 +302,7 @@ nsPrefetchService::ProcessNextURI()
 
     mCurrentChannel = nsnull;
 
-    nsCOMPtr<nsIStreamListener> listener(new nsPrefetchListener(this));
+    nsRefPtr<nsPrefetchListener> listener(new nsPrefetchListener(this));
     if (!listener) return;
 
     do {
@@ -278,7 +321,7 @@ nsPrefetchService::ProcessNextURI()
         // if opening the channel fails, then just skip to the next uri
         //
         rv = NS_NewChannel(getter_AddRefs(mCurrentChannel), uri,
-                           nsnull, nsnull, nsnull,
+                           nsnull, nsnull, listener,
                            nsIRequest::LOAD_BACKGROUND |
                            nsICachingChannel::LOAD_ONLY_IF_MODIFIED);
         if (NS_FAILED(rv)) continue;
