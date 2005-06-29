@@ -501,6 +501,7 @@ extern "C" void RunInstallOnThread(void *data)
 #ifdef MOZ_XUL_APP
         if (NS_SUCCEEDED(hZip->Test("install.rdf")))
         {
+            hZip->Close();
             // appears to be an Extension Manager install
             nsIExtensionManager* em = installInfo->GetExtensionManager();
             if (em)

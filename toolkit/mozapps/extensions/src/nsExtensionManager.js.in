@@ -1553,7 +1553,13 @@ Installer.prototype = {
           "Failure exception: " + e);
       showMessage("malformedRegistrationTitle", [], "malformedRegistrationMessage",
                   [BundleManager.appName]);
+
+      var stageFile = this._installLocation.getStageFile(this._id);
+      if (stageFile)
+        this._installLocation.removeFile(stageFile);
+
       StartupCache.put(this._installLocation, this._id, OP_NEEDS_UNINSTALL, true);
+      StartupCache.write();
     }
   },
 
@@ -1611,7 +1617,13 @@ Installer.prototype = {
           "Failure exception: " + e);
       showMessage("malformedRegistrationTitle", [], "malformedRegistrationMessage",
                   [BundleManager.appName]);
+
+      var stageFile = this._installLocation.getStageFile(this._id);
+      if (stageFile)
+        this._installLocation.removeFile(stageFile);
+
       StartupCache.put(this._installLocation, this._id, OP_NEEDS_UNINSTALL, true);
+      StartupCache.write();
     }
   },
   
