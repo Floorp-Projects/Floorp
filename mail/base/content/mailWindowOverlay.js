@@ -2535,12 +2535,20 @@ function buildHelpMenu()
   var um = 
       Components.classes["@mozilla.org/updates/update-manager;1"].
       getService(Components.interfaces.nsIUpdateManager);
-  var activeUpdate = um.activeUpdate;
+  
+  // Disable the UI if the update enabled pref has been locked by the
+  // administrator or if we cannot update for some other reason 
+  var checkForUpdates = document.getElementById("checkForUpdates");
+  var canUpdate = updates.canUpdate;
+  checkForUpdates.setAttribute("disabled", !canUpdate);
+  if (!canUpdate)
+    return;
 
   if (!gMessengerBundle)
     gMessengerBundle = document.getElementById("bundle_messenger");
   
   var label = gMessengerBundle.getString("updates_checkForUpdates");
+  var activeUpdate = um.activeUpdate;
   if (activeUpdate) 
   {
     if (updates.isDownloading) 
@@ -2558,15 +2566,10 @@ function buildHelpMenu()
         label = gMessengerBundle.getString("updates_resumeDownloadingFallback");
     }
   }
-    
-  var checkForUpdates = document.getElementById("checkForUpdates");
+
   checkForUpdates.label = label;
   if (um.activeUpdate && updates.isDownloading)
     checkForUpdates.setAttribute("loading", "true");
   else
     checkForUpdates.removeAttribute("loading");
-
-  // Disable the UI if the update enabled pref has been locked by the 
-  // administrator.
-  checkForUpdates.disabled = gPrefBranch.prefIsLocked("app.update.enabled");
 }

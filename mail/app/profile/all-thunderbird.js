@@ -51,15 +51,24 @@ pref("update.app.url", "chrome://mozapps/locale/update/update.properties");
 pref("update.extensions.enabled", true);
 
 // App-specific update preferences
-pref("app.update.logEnabled", true);
-pref("app.update.enabled", false);               // Whether or not app updates are enabled
 
-// Whether or not automated background app updates are enabled.
-pref("app.update.autoInstallEnabled", true); 
-// If automatic download is enabled, whether or not the Update system should 
-// automatically install the downloaded updates or just download them and prompt
-// the user to install.
-pref("app.update.autoInstallMode", 0);  
+// Whether or not app updates are enabled
+pref("app.update.enabled", false);               
+
+// Defines how the Application Update Service notifies the user about updates:
+//
+// AUM Set to:        Minor Releases:     Major Releases:
+// 0                  download no prompt  download no prompt
+// 1                  download no prompt  download no prompt if no incompatibilities
+// 2                  download no prompt  prompt
+// 3                  prompt              prompt
+//
+// See chart in nsUpdateService.js.in for more details
+//
+pref("app.update.mode", 1);
+// If set to true, the Update Service will present no UI for any event.
+pref("app.update.silent", false);
+pref("app.update.logEnabled", true);
 
 // Default service URL for testing.
 pref("app.update.url", "chrome://mozapps/locale/update/updates.properties");

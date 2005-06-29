@@ -74,6 +74,13 @@ var gAdvancedPane = {
   {
     var preference = document.getElementById("app.update.enabled");
     document.getElementById("enableAutoInstall").disabled = !preference.value;
+
+    var aus = 
+        Components.classes["@mozilla.org/updates/update-service;1"].
+        getService(Components.interfaces.nsIApplicationUpdateService);
+    var checkNowButton = document.getElementById("checkNowButton");
+    checkNowButton.disabled = !aus.canUpdate;
+    
     this.updateAutoInstallUI();
     return undefined;
   },
@@ -108,8 +115,9 @@ var gAdvancedPane = {
     var features = "chrome,centerscreen,dialog,titlebar";
     const URI_EXTENSION_UPDATE_DIALOG = 
       "chrome://mozapps/content/extensions/update.xul";
-    var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                        .getService(Components.interfaces.nsIWindowWatcher);
+    var ww = 
+        Components.classes["@mozilla.org/embedcomp/window-watcher;1"].
+        getService(Components.interfaces.nsIWindowWatcher);
     ww.openWindow(window, URI_EXTENSION_UPDATE_DIALOG, "", features, ary);  
   },
   

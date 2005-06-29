@@ -59,7 +59,7 @@
       <preference id="mailnews.reuse_message_window" name="mailnews.reuse_message_window" type="bool"/>
       <preference id="app.update.enabled"              name="app.update.enabled"              type="bool"/>
       <preference id="app.update.autoInstallEnabled"   name="app.update.autoInstallEnabled"   type="bool"/>
-      <preference id="app.update.autoInstallMode"      name="app.update.autoInstallMode"      type="int"/>
+      <preference id="app.update.mode"                 name="app.update.mode" type="int"/>
       <preference id="extensions.update.autoUpdateEnabled"
                   name="extensions.update.autoUpdateEnabled"
                   type="bool"/>
@@ -198,7 +198,7 @@
                           accesskey="&enableAutoInstall.accesskey;"
                           preference="app.update.autoInstallEnabled"
                           onsyncfrompreference="return gAdvancedPane.updateAutoInstallUI();"/>
-                <radiogroup id="autoInstallMode" preference="app.update.autoInstallMode">
+                <radiogroup id="autoInstallMode" preference="app.update.mode">
                   <grid class="indent">
                     <columns>
                       <column/>
@@ -217,7 +217,7 @@
                 </radiogroup>
                 <separator class="thin"/>
                 <hbox>
-                  <button label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
+                  <button id="checkNowButton" label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
                           oncommand="gAdvancedPane.checkForUpdates();"
                           preference="app.update.enabled"/>
                   <button label="&showUpdates.label;" accesskey="&showUpdates.accesskey;"
