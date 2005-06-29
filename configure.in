@@ -4840,6 +4840,20 @@ if test -n "$MOZ_SVG"; then
   esac
 fi
 
+dnl COMMENTED OUT because foreignobject support should
+dnl not be tweakable by distributors!
+dnl ========================================================
+dnl SVG <foreignObject>
+dnl ========================================================
+dnl MOZ_ARG_ENABLE_BOOL(svg-foreignobject,
+dnl [  --enable-svg-foreignobject
+dnl                          Enable SVG <foreignObject> support],
+dnl    MOZ_SVG_FOREIGNOBJECT=1,
+dnl    MOZ_SVG_FOREIGNOBJECT= )
+dnl if test -n "$MOZ_SVG_FOREIGNOBJECT"; then
+dnl   AC_DEFINE(MOZ_SVG_FOREIGNOBJECT)
+dnl fi
+
 dnl ========================================================
 dnl Transformiix
 dnl ========================================================
@@ -6464,6 +6478,7 @@ AC_SUBST(MINIMO)
 AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_SVG)
+AC_SUBST(MOZ_SVG_FOREIGNOBJECT)
 AC_SUBST(MOZ_SVG_RENDERER_GDIPLUS)
 AC_SUBST(MOZ_SVG_RENDERER_LIBART)
 AC_SUBST(MOZ_SVG_RENDERER_CAIRO)

@@ -60,7 +60,9 @@ SVG_ATOM(clipPath, "clipPath")
 SVG_ATOM(defs, "defs")
 SVG_ATOM(desc, "desc")
 SVG_ATOM(ellipse, "ellipse")
+#ifdef MOZ_SVG_FOREIGNOBJECT
 SVG_ATOM(foreignObject, "foreignObject")
+#endif
 SVG_ATOM(g, "g")
 SVG_ATOM(generic, "generic")
 SVG_ATOM(image, "image")

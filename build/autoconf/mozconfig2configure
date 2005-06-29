@@ -68,7 +68,9 @@ ac_add_options() {
 
     # Avoid adding duplicates
     case "$ac_options" in
-      *"$_opt"* ) ;;
+      # Note that all options in $ac_options are enclosed in quotes,
+      # so there will always be a last character to match [^-A-Za-z0-9_]
+      *"\"$_opt[^-A-Za-z0-9_]"* ) ;;
       * ) mozconfig_ac_options="$mozconfig_ac_options $_opt" ;;
     esac
   done

@@ -89,7 +89,6 @@ CPPSRCS		= \
 		nsSVGEllipseElement.cpp \
 		nsSVGEnum.cpp \
 		nsSVGFeatures.cpp \
-		nsSVGForeignObjectElement.cpp \
 		nsSVGGElement.cpp \
 		nsSVGGenericStringValue.cpp \
 		nsSVGGradientElement.cpp \
@@ -129,6 +128,10 @@ CPPSRCS		= \
 		nsSVGUseElement.cpp \
 		nsSVGValue.cpp \
 		$(NULL)
+
+ifdef MOZ_SVG_FOREIGNOBJECT
+CPPSRCS += nsSVGForeignObjectElement.cpp
+endif
 
 include $(topsrcdir)/config/config.mk
 
