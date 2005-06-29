@@ -46,12 +46,13 @@
 
 #include "nsISample.h"
 #include "nsIServiceManager.h"
-#include "nsXPIDLString.h"
 #include "nsIComponentRegistrar.h"
 
 #ifdef XPCOM_GLUE
 #include "nsXPCOMGlue.h"
 #include "nsMemory.h"
+#else
+#include "nsXPIDLString.h"
 #endif
 
 #define NS_SAMPLE_CONTRACTID "@mozilla.org/sample;1"
