@@ -271,6 +271,12 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(SEARCH_DIR_NAME);
     }
+    else if (nsCRT::strcmp(prop, NS_APP_USER_SEARCH_DIR) == 0)
+    {
+        rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, _retval);
+        if (NS_SUCCEEDED(rv))
+            rv = (*_retval)->AppendNative(SEARCH_DIR_NAME);
+    }
     else if (nsCRT::strcmp(prop, NS_APP_INSTALL_CLEANUP_DIR) == 0)
     {   
         // This is cloned so that embeddors will have a hook to override
@@ -612,6 +618,17 @@ nsAppFileLocationProvider::GetFiles(const char *prop, nsISimpleEnumerator **_ret
         }
         *_retval = new nsPathsDirectoryEnumerator(this, keys);
 #endif
+        NS_IF_ADDREF(*_retval);
+        rv = *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
+    }
+    if (!nsCRT::strcmp(prop, NS_APP_SEARCH_DIR_LIST))
+    {
+        static const char* keys[] = { nsnull, NS_APP_SEARCH_DIR, NS_APP_USER_SEARCH_DIR, nsnull };
+        if (!keys[0] && !(keys[0] = PR_GetEnv("MOZ_SEARCH_ENGINE_PATH"))) {
+            static const char nullstr = 0;
+            keys[0] = &nullstr;
+        }
+        *_retval = new nsPathsDirectoryEnumerator(this, keys);
         NS_IF_ADDREF(*_retval);
         rv = *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
     }
