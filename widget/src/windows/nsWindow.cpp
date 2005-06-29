@@ -1252,16 +1252,17 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     NS_ADDREF(this);
 
 #ifndef WINCE
-
     if (!gMsgFilterHook && !gCallProcHook && !gCallMouseHook) {
       RegisterSpecialDropdownHooks();
     }
     gProcessHook = PR_TRUE;
+#endif
     
   } else {
     NS_IF_RELEASE(gRollupListener);
     NS_IF_RELEASE(gRollupWidget);
     
+#ifndef WINCE
     gProcessHook = PR_FALSE;
     UnregisterSpecialDropdownHooks();
 #endif
@@ -1314,11 +1315,9 @@ BOOL nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow * ptr) {
 //-------------------------------------------------------------------------
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-#ifndef WINCE
   LRESULT popupHandlingResult;
   if ( DealWithPopups(hWnd, msg, wParam, lParam, &popupHandlingResult) )
     return popupHandlingResult;
-#endif
 
   // Get the window which caused the event and ask it to process the message
   nsWindow *someWindow = GetNSWindowPtr(hWnd);
@@ -2712,7 +2711,7 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
   ::DeleteObject(tBitmap);
   ::DeleteDC(dc);
   return bmp;
-#endif
+#endif  // WINCE
 }
 
 // static
@@ -4091,7 +4090,7 @@ static nsresult HeapDump(const char *filename, const char *heading)
 
   PR_Close(prfd);
   return NS_OK;
-#endif
+#endif // WINCE
 }
 
 // Recursively dispatch synchronous paints for nsIWidget
@@ -4642,7 +4641,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
       break;
 
-#ifndef WINCE
     case WM_WINDOWPOSCHANGED:
     {
 #ifdef MOZ_XUL
@@ -4729,6 +4727,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
          an impending min/max/restore change (WM_NCCALCSIZE would
          also work, but it's also sent when merely resizing.)) */
       if (wp->flags & SWP_FRAMECHANGED && ::IsWindowVisible(mWnd)) {
+#ifndef WINCE
         WINDOWPLACEMENT pl;
         pl.length = sizeof(pl);
         ::GetWindowPlacement(mWnd, &pl);
@@ -4763,10 +4762,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         }
 
         NS_RELEASE(event.widget);
+#else
+        result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
+        result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
+#endif // WINCE
       }
     }
     break;
-#endif
 
     case WM_SETTINGCHANGE:
       getWheelInfo = PR_TRUE;
@@ -4860,7 +4862,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         ::DragQueryFile(hDropInfo, iFile, szFileName, _MAX_PATH);
 #ifdef DEBUG
         printf("szFileName [%s]\n", szFileName);
-#endif
+#endif  // DEBUG
         nsAutoString fileStr(szFileName);
         nsEventStatus status;
         nsDragDropEvent event(NS_DRAGDROP_EVENT, this);
@@ -4871,10 +4873,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         DispatchEvent(&event, status);
         NS_RELEASE(event.widget);
       }
-#endif
+#endif // 0
     }
     break;
-#endif 
+#endif // WINCE
 
     case WM_DESTROYCLIPBOARD:
     {
@@ -4958,7 +4960,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 ulScrollLines = (int) SendMessage(hdlMsWheel, uiMsh_MsgScrollLines, 0, 0);
               }
             }
-#endif
+#endif // __MINGW32__
           }
           else if (osversion.dwMajorVersion >= 4) {
             // This is the Win98/NT4/Win2K case
@@ -5347,7 +5349,7 @@ DWORD nsWindow::WindowStyle()
     if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_maximize))
       style &= ~WS_MAXIMIZEBOX;
   }
-#endif
+#endif // WINCE
   return style;
 }
 
@@ -6087,9 +6089,6 @@ NS_METHOD nsWindow::SetIcon(const nsAString& aIconSpec)
   // XXX this should use MZLU (see bug 239279)
 
   ::SetLastError(0);
-#ifdef WINCE
-#define LR_LOADFROMFILE 0
-#endif
 
   HICON bigIcon = (HICON)::LoadImageW(NULL,
                                       (LPCWSTR)iconPath.get(),
@@ -7697,6 +7696,8 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
   }
 }
 
+#endif // WinCE
+
 //
 // DealWithPopups
 //
@@ -7711,6 +7712,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
     if (inMsg == WM_ACTIVATE || inMsg == WM_LBUTTONDOWN ||
       inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
       inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL
+#ifndef WINCE
         || 
         inMsg == WM_NCRBUTTONDOWN || 
         inMsg == WM_MOVING || 
@@ -7722,6 +7724,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
         inMsg == WM_ACTIVATEAPP ||
         inMsg == WM_MENUSELECT ||
         (inMsg == WM_GETMINMAXINFO && !::GetParent(inWnd))
+#endif
         )
     {
       // Rollup if the event is outside the popup.
@@ -7759,6 +7762,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
         } // if rollup listener knows about menus
       }
 
+#ifndef WINCE
       if (inMsg == WM_MOUSEACTIVATE) {
         // Prevent the click inside the popup from causing a change in window
         // activation. Since the popup is shown non-activated, we need to eat
@@ -7786,6 +7790,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
       }
       // if we've still determined that we should still rollup everything, do it.
       else 
+#endif // WINCE
      if ( rollup ) {
         gRollupListener->Rollup();
 
@@ -7809,7 +7814,6 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
   return FALSE;
 } // DealWithPopups
 
-#endif // WinCE
 
 
 #ifdef ACCESSIBILITY
