@@ -51,12 +51,13 @@
     {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-class nsSimpleURI : public nsIURI, public nsISerializable
+class nsSimpleURI : public nsIURI, public nsISerializable, public nsIClassInfo
 {
 public:
     NS_DECL_AGGREGATED
     NS_DECL_NSIURI
     NS_DECL_NSISERIALIZABLE
+    NS_DECL_NSICLASSINFO
 
     // nsSimpleURI methods:
 
