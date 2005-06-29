@@ -89,7 +89,7 @@
                        doCommit:(BOOL)doCommit;
 
   // sets up our view, attaching it to its owning gecko view
-- (id) initWithGeckoChild:(nsChildView*)child eventSink:(nsIEventSink*)sink;
+- (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild eventSink:(nsIEventSink*)inSink;
 
   // convert from one event system to the other for event dispatching
 - (void) convertEvent:(NSEvent*)inEvent message:(PRInt32)inMsg toGeckoEvent:(nsInputEvent*)outGeckoEvent;
@@ -377,10 +377,8 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
   // that NS_NATIVE_WIDGET is the NSView.
   NSRect r;
   ConvertGeckoToCocoaRect(mBounds, r);
-  mView = [CreateCocoaView() retain];
+  mView = [CreateCocoaView(r) retain];
   if (!mView) return NS_ERROR_FAILURE;
-  
-  [mView setFrame:r];
   
 #if DEBUG
   // if our parent is a popup window, we're most certainly coming from a <select> list dropdown which
@@ -446,9 +444,9 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
 // our |ChildView| object. Autoreleases, so caller must retain.
 //
 NSView*
-nsChildView::CreateCocoaView( )
+nsChildView::CreateCocoaView(NSRect inFrame)
 {
-  return [[[ChildView alloc] initWithGeckoChild:this eventSink:nsnull] autorelease];
+  return [[[ChildView alloc] initWithFrame:inFrame geckoChild:this eventSink:nsnull] autorelease];
 }
 
 //-------------------------------------------------------------------------
@@ -574,7 +572,7 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       break;
       
     case NS_NATIVE_GRAPHIC:           // quickdraw port
-      // XXX this can return NULL if we are not the focussed view
+      // XXX this can return NULL if we are not the focused view
       retVal = [mView qdPort];
       break;
       
@@ -2120,13 +2118,17 @@ nsChildView::Idle()
 @implementation ChildView
 
 //
-// initWithGeckoChild:eventSink:
+// initWithFrame:geckoChild:eventSink:
 //
 // do init stuff
 //
-- (id)initWithGeckoChild:(nsChildView*)inChild eventSink:(nsIEventSink*)inSink
+- (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild eventSink:(nsIEventSink*)inSink
 {
-  if ((self = [super init]))
+  // Set the current GrafPort to a "safe" port before initting the NSQuickDrawView,
+  // so that the NSQuickDrawView stashes a pointer to this known-good port internally.
+  // It will set the port back to this port on destruction.
+  SetPort(NULL);
+  if ((self = [super initWithFrame:inFrame]))
   {
     mGeckoChild = inChild;
     mEventSink = inSink;
@@ -2153,9 +2155,9 @@ nsChildView::Idle()
 
 - (void)dealloc
 {
-  [super dealloc];    // this sets the current port to _savePort
-  SetPort(NULL);      // this is safe on OS X; it will set the port to
-                      // an empty fallback port.
+  [super dealloc];    // This sets the current port to _savePort (which should be
+                      // the known-good port).
+  SetPort(NULL);      // Bullet-proof against future changes in NSQDView
 }
 
 //
@@ -2545,7 +2547,6 @@ nsChildView::Idle()
   macEvent.what = mouseDown;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
-  // macEvent.where.h = screenLoc.x, macEvent.where.v = screenLoc.y; XXX fix this, they are flipped!
   GetGlobalMouse(&macEvent.where);
   macEvent.modifiers = GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
@@ -2556,7 +2557,6 @@ nsChildView::Idle()
   
   // XXX maybe call markedTextSelectionChanged:client: here?
 }
-
 
 - (void)mouseUp:(NSEvent *)theEvent
 {
@@ -2575,7 +2575,6 @@ nsChildView::Idle()
   macEvent.what = mouseUp;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
-  // macEvent.where.h = screenLoc.x, macEvent.where.v = screenLoc.y; XXX fix this, they are flipped!
   GetGlobalMouse(&macEvent.where);
   macEvent.modifiers = GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
@@ -2610,7 +2609,6 @@ nsChildView::Idle()
   macEvent.what = nullEvent;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
-  // macEvent.where.h = screenLoc.x, macEvent.where.v = screenLoc.y; XXX fix this, they are flipped!
   GetGlobalMouse(&macEvent.where);
   
   macEvent.modifiers = GetCurrentKeyModifiers();
@@ -2635,7 +2633,6 @@ nsChildView::Idle()
   macEvent.what = nullEvent;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
-  // macEvent.where.h = screenLoc.x, macEvent.where.v = screenLoc.y; XXX fix this, they are flipped!
   GetGlobalMouse(&macEvent.where);
   macEvent.modifiers = btnState | GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
@@ -2949,7 +2946,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   NSLog(@" markRange = %d, %d;  selRange = %d, %d", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
 #endif
 
-  if ( ! [insertString isKindOfClass:[NSAttributedString class]])
+  if (![insertString isKindOfClass:[NSAttributedString class]])
     insertString = [[[NSAttributedString alloc] initWithString:insertString] autorelease];
 
   NSString *tmpStr = [insertString string];
@@ -3231,7 +3228,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
              toGeckoEvent:&geckoEvent];
     geckoEvent.isChar = isChar;
 
-    // As an optimisation, only do this when there is a plugin present.
+    //XXX Maybe we should only do this when there is a plugin present.
     EventRecord macEvent;
     ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
     geckoEvent.nativeMsg = &macEvent;

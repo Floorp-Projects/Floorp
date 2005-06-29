@@ -270,7 +270,7 @@ protected:
 
     // override to create different kinds of child views. Autoreleases, so
     // caller must retain.
-  virtual NSView* CreateCocoaView() ;
+  virtual NSView* CreateCocoaView(NSRect inFrame);
   void            TearDownView();
 
     // Find a quickdraw port in which to draw (needed by GFX until it
