@@ -693,16 +693,12 @@ endif # HAS_XCODE_2_1=1
 endif # OS_ARCH=Darwin
 
 
-ifeq (,$(filter-out WINCE,$(OS_ARCH)))
-MKDEPEND	= mkdepend.exe
-else
 ifdef MOZ_NATIVE_MAKEDEPEND
 MKDEPEND_DIR	=
 MKDEPEND	= $(CYGWIN_WRAPPER) $(MOZ_NATIVE_MAKEDEPEND)
 else
 MKDEPEND_DIR	= $(CONFIG_TOOLS)/mkdepend
 MKDEPEND	= $(CYGWIN_WRAPPER) $(MKDEPEND_DIR)/mkdepend$(BIN_SUFFIX)
-endif
 endif
 
 # Set link flags according to whether we want a console.
