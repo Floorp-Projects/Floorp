@@ -55,7 +55,6 @@
 #include "nsReadableUtils.h"
 
 #include "nsEscape.h"
-#include "nsVoidArray.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
