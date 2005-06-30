@@ -40,7 +40,7 @@
 #include "nsAFMObject.h" 
 
 
-AFMFontInformation CourierAFM = {
+const AFMFontInformation CourierAFM = {
 2.000000,
 "Courier",
 "Courier",
@@ -72,7 +72,7 @@ PR_FALSE,
 
 
 
-AFMscm AFMCourierChars[] = {
+const AFMscm AFMCourierChars[] = {
 {
 32, 
 600.000000, 

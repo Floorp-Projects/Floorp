@@ -40,7 +40,7 @@
 #include "nsAFMObject.h" 
 
 
-AFMFontInformation Courier_ObliqueAFM = {
+const AFMFontInformation Courier_ObliqueAFM = {
 2.000000,
 "Courier-Oblique",
 "Courier Oblique",
@@ -72,7 +72,7 @@ PR_FALSE,
 
 
 
-AFMscm AFMCourier_ObliqueChars[] = {
+const AFMscm AFMCourier_ObliqueChars[] = {
 {
 32, 
 600.000000, 

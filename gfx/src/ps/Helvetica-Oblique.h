@@ -40,7 +40,7 @@
 #include "nsAFMObject.h" 
 
 
-AFMFontInformation Helvetica_ObliqueAFM = {
+const AFMFontInformation Helvetica_ObliqueAFM = {
 2.000000,
 "Helvetica-Oblique",
 "Helvetica Oblique",
@@ -72,7 +72,7 @@ PR_FALSE,
 
 
 
-AFMscm AFMHelvetica_ObliqueChars[] = {
+const AFMscm AFMHelvetica_ObliqueChars[] = {
 {
 32, 
 278.000000, 

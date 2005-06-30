@@ -40,7 +40,7 @@
 #include "nsAFMObject.h" 
 
 
-AFMFontInformation SymbolAFM = {
+const AFMFontInformation SymbolAFM = {
 2.000000,
 "Symbol",
 "Symbol",
@@ -72,7 +72,7 @@ PR_FALSE,
 
 
 
-AFMscm AFMSymbolChars[] = {
+const AFMscm AFMSymbolChars[] = {
 {
 32, 
 250.000000, 

@@ -40,7 +40,7 @@
 #include "nsAFMObject.h" 
 
 
-AFMFontInformation Helvetica_BoldAFM = {
+const AFMFontInformation Helvetica_BoldAFM = {
 2.000000,
 "Helvetica-Bold",
 "Helvetica Bold",
@@ -72,7 +72,7 @@ PR_FALSE,
 
 
 
-AFMscm AFMHelvetica_BoldChars[] = {
+const AFMscm AFMHelvetica_BoldChars[] = {
 {
 32, 
 278.000000, 
