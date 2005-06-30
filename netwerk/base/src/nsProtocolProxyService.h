@@ -370,7 +370,6 @@ protected:
     PRInt32                      mSOCKSProxyVersion;
     PRBool                       mSOCKSProxyRemoteDNS;
 
-    nsCString                    mPACURI;
     nsRefPtr<nsPACMan>           mPACMan;  // non-null if we are using PAC
 
     PRTime                       mSessionStart;

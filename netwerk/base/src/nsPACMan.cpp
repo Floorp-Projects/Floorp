@@ -154,7 +154,6 @@ PendingPACQuery::OnLookupComplete(nsICancelable *request,
 nsPACMan::nsPACMan()
   : mLoadEvent(nsnull)
   , mShutdown(PR_FALSE)
-  , mStartingToLoad(PR_FALSE)
 {
   PR_INIT_CLIST(&mPendingQ);
 }
@@ -181,7 +180,7 @@ nsPACMan::GetProxyForURI(nsIURI *uri, nsACString &result)
 {
   NS_ENSURE_STATE(!mShutdown);
 
-  if (mStartingToLoad) {
+  if (IsPACURI(uri)) {
     result.Truncate();
     return NS_OK;
   }
@@ -210,8 +209,11 @@ nsPACMan::AsyncGetProxyForURI(nsIURI *uri, nsPACManCallback *callback)
   PR_APPEND_LINK(query, &mPendingQ);
 
   // If we're waiting for the PAC file to load, then delay starting the query.
-  // See OnStreamComplete.
-  if (IsLoading())
+  // See OnStreamComplete.  However, if this is the PAC URI then query right
+  // away since we know the result will be DIRECT.  We could shortcut some code
+  // in this case by issuing the callback directly from here, but that would
+  // require extra code, so we just go through the usual async code path.
+  if (IsLoading() && !IsPACURI(uri))
     return NS_OK;
 
   nsresult rv = query->Start();
@@ -241,7 +243,7 @@ nsPACMan::LoadEvent_Destroy(PLEvent *ev)
 }
 
 nsresult
-nsPACMan::LoadPACFromURI(const nsACString &uriSpec)
+nsPACMan::LoadPACFromURI(nsIURI *pacURI)
 {
   NS_ENSURE_STATE(!mShutdown);
 
@@ -274,7 +276,7 @@ nsPACMan::LoadPACFromURI(const nsACString &uriSpec)
   CancelExistingLoad();
 
   mLoader = loader;
-  mPACSpec = uriSpec;
+  mPACURI = pacURI;
   mPAC = nsnull;
   return NS_OK;
 }
@@ -293,12 +295,8 @@ nsPACMan::StartLoading()
   if (ios) {
     nsCOMPtr<nsIChannel> channel;
 
-    // Calling NewChannel will result in GetProxyForURI being called, and we
-    // want to make sure that it does not return NS_ERROR_IN_PROGRESS.  So,
-    // we set this flag to cause it to indicate a DIRECT fetch for this URI.
-    mStartingToLoad = PR_TRUE;
-    ios->NewChannel(mPACSpec, nsnull, nsnull, getter_AddRefs(channel));
-    mStartingToLoad = PR_FALSE;
+    // NOTE: This results in GetProxyForURI being called
+    ios->NewChannelFromURI(mPACURI, getter_AddRefs(channel));
 
     if (channel) {
       channel->SetLoadFlags(nsIRequest::LOAD_BYPASS_CACHE);
@@ -347,7 +345,8 @@ nsPACMan::ProcessPendingQ(nsresult status)
   }
 }
 
-NS_IMPL_ISUPPORTS2(nsPACMan, nsIStreamLoaderObserver, nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS3(nsPACMan, nsIStreamLoaderObserver, nsIInterfaceRequestor,
+                   nsIChannelEventSink)
 
 NS_IMETHODIMP
 nsPACMan::OnStreamComplete(nsIStreamLoader *loader,
@@ -412,5 +411,19 @@ nsPACMan::GetInterface(const nsIID &iid, void **result)
     return CallCreateInstance(NS_DEFAULTAUTHPROMPT_CONTRACTID,
                               nsnull, iid, result);
 
+  // In case loading the PAC file results in a redirect.
+  if (iid.Equals(NS_GET_IID(nsIChannelEventSink))) {
+    NS_ADDREF_THIS();
+    *result = NS_STATIC_CAST(nsIChannelEventSink *, this);
+    return NS_OK;
+  }
+
   return NS_ERROR_NO_INTERFACE;
+}
+
+NS_IMETHODIMP
+nsPACMan::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel,
+                            PRUint32 flags)
+{
+  return newChannel->GetURI(getter_AddRefs(mPACURI));
 }

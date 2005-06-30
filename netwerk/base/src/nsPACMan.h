@@ -41,7 +41,9 @@
 
 #include "nsIStreamLoader.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIChannelEventSink.h"
 #include "nsIProxyAutoConfig.h"
+#include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "prclist.h"
@@ -69,7 +71,9 @@ public:
  * This class provides an abstraction layer above the PAC thread.  The methods
  * defined on this class are intended to be called on the main thread only.
  */
-class nsPACMan : public nsIStreamLoaderObserver, public nsIInterfaceRequestor
+class nsPACMan : public nsIStreamLoaderObserver
+               , public nsIInterfaceRequestor
+               , public nsIChannelEventSink
 {
 public:
   NS_DECL_ISUPPORTS
@@ -114,10 +118,10 @@ public:
    * the PAC file, any asynchronous PAC queries will be queued up to be
    * processed once the PAC file finishes loading.
    *
-   * @param uriSpec
-   *        The URI spec of the PAC file to load.
+   * @param pacURI
+   *        The nsIURI of the PAC file to load.
    */
-  nsresult LoadPACFromURI(const nsACString &uriSpec);
+  nsresult LoadPACFromURI(nsIURI *pacURI);
 
   /**
    * Returns true if we are currently loading the PAC file.
@@ -127,6 +131,7 @@ public:
 private:
   NS_DECL_NSISTREAMLOADEROBSERVER
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSICHANNELEVENTSINK
 
   ~nsPACMan();
 
@@ -148,6 +153,14 @@ private:
   nsresult StartLoading();
 
   /**
+   * Returns true if the given URI matches the URI of our PAC file.
+   */
+  PRBool IsPACURI(nsIURI *uri) {
+    PRBool result;
+    return mPACURI && NS_SUCCEEDED(mPACURI->Equals(uri, &result)) && result;
+  }
+
+  /**
    * Event fu for calling StartLoading asynchronously.
    */
   PR_STATIC_CALLBACK(void *) LoadEvent_Handle(PLEvent *);
@@ -155,12 +168,11 @@ private:
 
 private:
   nsCOMPtr<nsIProxyAutoConfig> mPAC;
-  nsCString                    mPACSpec;
+  nsCOMPtr<nsIURI>             mPACURI;
   PRCList                      mPendingQ;
   nsCOMPtr<nsIStreamLoader>    mLoader;
   PLEvent                     *mLoadEvent;
-  PRPackedBool                 mShutdown;
-  PRPackedBool                 mStartingToLoad;
+  PRBool                       mShutdown;
 };
 
 #endif  // nsPACMan_h__
