@@ -54,7 +54,6 @@ function calTodo() {
         "DTSTAMP": true,
         "DUE": true,
         "COMPLETED": true,
-        "PERCENT-COMPLETE": true,
         __proto__: this.itemBasePromotedProps
     };
 }
@@ -97,12 +96,12 @@ calTodo.prototype = {
         if (aIID.equals(Components.interfaces.nsIClassInfo))
             return calTodoClassInfo;
 
-        return this.__proto__.__proto__.QueryInterface.apply(this, aIID);
+        return this.__proto__.__proto__.QueryInterface.call(this, aIID);
     },
 
     initTodo: function () {
-        // todos by default don't have any of the dates set
-        this.percentComplete = 0;
+        // todos by default don't have any of the dates set, or status, or
+        // percentComplete
     },
 
     cloneShallow: function (aNewParent) {
@@ -139,6 +138,25 @@ calTodo.prototype = {
 
     makeImmutable: function () {
         this.makeItemBaseImmutable();
+    },
+
+    get isCompleted() {
+        return this.completedDate != null ||
+               this.percentComplete == 100 ||
+               this.status == "COMPLETED";
+    },
+    
+    set isCompleted(v) {
+        if (v) {
+            if (!this.completedDate)
+                this.completedDate = NewCalDateTime(new Date);
+            this.status = "COMPLETED";
+            this.percentComplete = 100;
+        } else {
+            this.deleteProperty("COMPLETED");
+            this.deleteProperty("STATUS");
+            this.deleteProperty("PERCENT-COMPLETE");
+        }
     },
 
     get recurrenceStartDate() {
@@ -178,7 +196,7 @@ calTodo.prototype = {
             var iprop = bagenum.getNext().
                 QueryInterface(Components.interfaces.nsIProperty);
             try {
-                if (!this.eventPromotedProps[iprop.name]) {
+                if (!this.todoPromotedProps[iprop.name]) {
                     var icalprop = icssvc.createIcalProperty(iprop.name);
                     icalprop.stringValue = iprop.value;
                     icalcomp.addProperty(icalprop);
