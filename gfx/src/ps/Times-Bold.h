@@ -40,7 +40,7 @@
 #include "nsAFMObject.h" 
 
 
-AFMFontInformation Times_BoldAFM = {
+const AFMFontInformation Times_BoldAFM = {
 2.000000,
 "Times-Bold",
 "Times Bold",
@@ -72,7 +72,7 @@ PR_FALSE,
 
 
 
-AFMscm AFMTimes_BoldChars[] = {
+const AFMscm AFMTimes_BoldChars[] = {
 {
 32, 
 250.000000, 

@@ -40,7 +40,7 @@
 #include "nsAFMObject.h" 
 
 
-AFMFontInformation Times_RomanAFM = {
+const AFMFontInformation Times_RomanAFM = {
 2.000000,
 "Times-Roman",
 "Times Roman",
@@ -72,7 +72,7 @@ PR_FALSE,
 
 
 
-AFMscm AFMTimes_RomanChars[] = {
+const AFMscm AFMTimes_RomanChars[] = {
 {
 32, 
 250.000000, 

@@ -164,19 +164,19 @@ struct AFM_Single_Char_Metrics
 {
 
   PRInt32   mCharacter_Code;      // default charcode (-1 if not encoded) 
-  double    mW0x;                 // character width x in writing direction 0, 
-  double    mW0y;                 // character width y in writing direction 0
-  double    mW1x;                 // character width x in writing direction 1
-  double    mW1y;                 // character width y in writing direction 1
+  float     mW0x;                 // character width x in writing direction 0, 
+  float     mW0y;                 // character width y in writing direction 0
+  float     mW1x;                 // character width x in writing direction 1
+  float     mW1y;                 // character width y in writing direction 1
   //char      *mName;             // character name ,  not using currently
   //double    mVv_x;              // local VVector x ,  not using currently
   //double    mVv_y;              // local VVector y ,  not using currently
 
   // character bounding box. 
-  double    mLlx;
-  double    mLly;
-  double    mUrx;
-  double    mUry;
+  float     mLlx;
+  float     mLly;
+  float     mUrx;
+  float     mUry;
 
   //double num_ligatures;      
 
@@ -195,10 +195,10 @@ struct fontInformation
   const char *mFullName;
   const char *mFamilyName;
   const char *mWeight;
-  double      mFontBBox_llx;
-  double      mFontBBox_lly;
-  double      mFontBBox_urx;
-  double      mFontBBox_ury;
+  float       mFontBBox_llx;
+  float       mFontBBox_lly;
+  float       mFontBBox_urx;
+  float       mFontBBox_ury;
   const char *mVersion;
   char       *mNotice;         // DO NOT MAKE "const" (125341)
   const char *mEncodingScheme;
@@ -207,15 +207,15 @@ struct fontInformation
   const char *mCharacterSet;
   PRInt32     mCharacters;
   PRBool      mIsBaseFont;
-  double      mVVector_0;
-  double      mVVector_1;
+  float       mVVector_0;
+  float       mVVector_1;
   PRBool      mIsFixedV;
-  double      mCapHeight;
-  double      mXHeight;
-  double      mAscender;
-  double      mDescender;
-  double      mUnderlinePosition;
-  double      mUnderlineThickness;
+  float       mCapHeight;
+  float       mXHeight;
+  float       mAscender;
+  float       mDescender;
+  float       mUnderlinePosition;
+  float       mUnderlineThickness;
 
   PRInt32     mNumCharacters;
   AFMscm     *mAFMCharMetrics;
@@ -377,6 +377,7 @@ protected:
    * @return -- the current floating point
    */
   void    GetAFMNumber (double *aFloat){GetToken();*aFloat = atof (mToken);}
+  void    GetAFMNumber (float  *aFloat){GetToken();*aFloat = atof (mToken);}
 
   /** ---------------------------------------------------
    * Get a boolean from the currently parsed file
@@ -423,8 +424,8 @@ struct AFM_SubstituteFonts
   const char*         mFamily;
   PRUint16            mWeight;
   PRUint8             mStyle;
-  AFMFontInformation* mFontInfo;
-  AFMscm*             mCharInfo;
+  const AFMFontInformation* mFontInfo;
+  const AFMscm*             mCharInfo;
   PRInt32             mIndex;
 };
 

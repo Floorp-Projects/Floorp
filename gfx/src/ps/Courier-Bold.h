@@ -40,7 +40,7 @@
 #include "nsAFMObject.h" 
 
 
-AFMFontInformation Courier_BoldAFM = {
+const AFMFontInformation Courier_BoldAFM = {
 2.000000,
 "Courier-Bold",
 "Courier Bold",
@@ -72,7 +72,7 @@ PR_FALSE,
 
 
 
-AFMscm AFMCourier_BoldChars[] = {
+const AFMscm AFMCourier_BoldChars[] = {
 {
 32, 
 600.000000, 
