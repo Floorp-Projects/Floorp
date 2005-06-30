@@ -287,17 +287,28 @@ NS_IMETHODIMP nsFontMetricsQt::GetFontHandle(nsFontHandle &aHandle)
 static nsresult EnumFonts(nsIAtom *aLangGroup,const char *aGeneric,
                           PRUint32 *aCount,PRUnichar ***aResult)
 {
+    *aResult = nsnull;
+    *aCount = 0;
     /* Get list of all fonts */
     QStringList qFamilies = QFontDatabase().families();
     int count = qFamilies.count();
 
     PRUnichar **array = (PRUnichar**)nsMemory::Alloc(count * sizeof(PRUnichar*));
+    NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
 
     int i = 0;
     for (QStringList::ConstIterator famIt = qFamilies.begin(); famIt != qFamilies.end(); ++famIt) {
         QString family = *famIt;
         array[i] = new PRUnichar[family.length()];
-        memcpy(array[i], family.unicode(), family.length()*sizeof(PRUnichar));
+        if (array[i]) {
+            memcpy(array[i], family.unicode(), family.length()*sizeof(PRUnichar));
+            i++;
+        }
+        else {
+            // OOM. Decrease the count and resize the array accordingly.
+            count--;
+            array = (PRUnichar**)nsMemory::Realloc((void*)array, count * sizeof(PRUnichar*));
+        }
     }
 
     *aCount = count;
