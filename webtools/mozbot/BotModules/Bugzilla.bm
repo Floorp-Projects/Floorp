@@ -281,7 +281,10 @@ sub FetchBug {
     my $uri;
     my $type;
     if ($subtype eq 'bug') {
-        $uri = "$self->{'bugsURI'}show_bug.cgi?ctype=xml&excludefield=long_desc&id=".join(',',split(' ',$bugParams));
+        # Code taken from Bugzilla's xml.cgi
+        my @ids = ();
+        @ids = split(' ', $bugParams);
+        $uri = "$self->{'bugsURI'}show_bug.cgi?ctype=xml&excludefield=long_desc".join('', map { $_ = "&id=" . $_ } @ids);
         $type = 'xml';
     } elsif ($subtype eq 'dwim') {
         # XXX should escape query string
