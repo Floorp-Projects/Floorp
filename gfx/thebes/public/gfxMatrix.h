@@ -38,10 +38,9 @@
 #ifndef GFX_MATRIX_H
 #define GFX_MATRIX_H
 
-#include <math.h>
-
 #include <cairo.h>
 
+#include "gfxPoint.h"
 #include "gfxTypes.h"
 
 // XX - I don't think this class should use gfxFloat at all,
@@ -89,6 +88,7 @@ public:
         *xx = mat.xx;
         *yx = mat.yx;
         *xy = mat.xy;
+        *yy = mat.yy;
         *x0 = mat.x0;
         *y0 = mat.y0;
     }
@@ -134,6 +134,18 @@ public:
 
     void TransformPoint(gfxFloat *x, gfxFloat *y) const {
         cairo_matrix_transform_point(&mat, x, y);
+    }
+
+    gfxSize GetScale() const {
+        return gfxSize(mat.xx, mat.yy);
+    }
+
+    gfxPoint GetTranslate() const {
+        return gfxPoint(mat.x0, mat.y0);
+    }
+
+    bool HasShear() const {
+        return ((mat.xy != 0.0) || (mat.yx != 0.0));
     }
 };
 

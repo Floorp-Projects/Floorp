@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef _MSC_VER
+#define _USE_MATH_DEFINES
+#endif
+#include <math.h>
+
 #include "gfxContext.h"
 
 #include "gfxColor.h"
@@ -42,19 +47,20 @@
 #include "gfxASurface.h"
 #include "gfxPattern.h"
 
+
 THEBES_IMPL_REFCOUNTING(gfxContext)
 
-gfxContext::gfxContext(gfxASurface* surface)
+gfxContext::gfxContext(gfxASurface *surface) :
+    mSurface(surface)
 {
     mCairo = cairo_create(surface->CairoSurface());
-    mSurface = surface;
 }
 gfxContext::~gfxContext()
 {
     cairo_destroy(mCairo);
 }
 
-gfxASurface* gfxContext::CurrentSurface()
+gfxASurface *gfxContext::CurrentSurface()
 {
     return mSurface;
 }
@@ -108,14 +114,20 @@ void gfxContext::Arc(gfxPoint center, gfxFloat radius,
     cairo_arc(mCairo, center.x, center.y, radius, angle1, angle2);
 }
 
+void gfxContext::Line(gfxPoint start, gfxPoint end)
+{
+    MoveTo(start);
+    LineTo(end);
+}
+
 void gfxContext::Rectangle(gfxRect rect, PRBool snapToPixels)
 {
     if (snapToPixels) {
-        gfxPoint p1 = UserToDevice (rect.pos);
-        gfxPoint p2 = UserToDevice (rect.pos + rect.size);
+        gfxPoint p1 = UserToDevice(rect.pos);
+        gfxPoint p2 = UserToDevice(rect.pos + rect.size);
 
-        gfxPoint p3 = UserToDevice (rect.pos + gfxSize(rect.size.width, 0.0));
-        gfxPoint p4 = UserToDevice (rect.pos + gfxSize(0.0, rect.size.height));
+        gfxPoint p3 = UserToDevice(rect.pos + gfxSize(rect.size.width, 0.0));
+        gfxPoint p4 = UserToDevice(rect.pos + gfxSize(0.0, rect.size.height));
 
         if (p1.x != p4.x ||
             p2.x != p3.x ||
@@ -145,14 +157,49 @@ dontsnap:
     cairo_rectangle(mCairo, rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
 }
 
+void gfxContext::Ellipse(gfxPoint center, gfxSize dimensions)
+{
+    // circle?
+    if (dimensions.width == dimensions.height) {
+        double radius = dimensions.width / 2.0;
+
+        cairo_arc(mCairo, center.x, center.y, radius, 0, 2.0 * M_PI);
+    } else {
+        double x = center.x;
+        double y = center.y;
+        double w = dimensions.width;
+        double h = dimensions.height;
+
+        cairo_new_path(mCairo);
+        cairo_move_to(mCairo, x + w/2.0, y);
+
+        cairo_rel_curve_to(mCairo,
+                           0, 0,
+                           w / 2.0, 0,
+                           w / 2.0, h / 2.0);
+        cairo_rel_curve_to(mCairo,
+                           0, 0,
+                           0, h / 2.0,
+                           - w / 2.0, h / 2.0);
+        cairo_rel_curve_to(mCairo,
+                           0, 0,
+                           - w / 2.0, 0,
+                           - w / 2.0, - h / 2.0);
+        cairo_rel_curve_to(mCairo,
+                           0, 0,
+                           0, - h / 2.0,
+                           w / 2.0, - h / 2.0);
+    }
+}
+
 void gfxContext::Polygon(const gfxPoint *points, PRUint32 numPoints)
 {
     if (numPoints == 0)
         return;
 
-    cairo_move_to(mCairo, (gfxFloat)points[0].x, (gfxFloat)points[0].y);
-    for (unsigned long i = 1; i < numPoints; ++i) {
-        cairo_line_to(mCairo, (gfxFloat)points[i].x, (gfxFloat)points[i].y);
+    cairo_move_to(mCairo, points[0].x, points[0].y);
+    for (PRUint32 i = 1; i < numPoints; ++i) {
+        cairo_line_to(mCairo, points[i].x, points[i].y);
     }
 }
 
@@ -192,6 +239,11 @@ void gfxContext::SetMatrix(const gfxMatrix& matrix)
 {
     cairo_matrix_t mat = matrix.ToCairoMatrix();
     cairo_set_matrix(mCairo, &mat);
+}
+
+void gfxContext::IdentityMatrix()
+{
+    cairo_identity_matrix(mCairo);
 }
 
 gfxMatrix gfxContext::CurrentMatrix() const
@@ -239,7 +291,26 @@ gfxContext::AntialiasMode gfxContext::CurrentAntialiasMode()
     return MODE_COVERAGE;
 }
 
-void gfxContext::SetDash(gfxFloat* dashes, int ndash, gfxFloat offset)
+void gfxContext::SetDash(gfxLineType ltype)
+{
+    static double dash[] = {5.0, 5.0};
+    static double dot[] = {1.0, 1.0};
+
+    switch (ltype) {
+        case gfxLineDashed:
+            SetDash(dash, 2, 0.0);
+            break;
+        case gfxLineDotted:
+            SetDash(dot, 2, 0.0);
+            break;
+        case gfxLineSolid:
+        default:
+            SetDash(nsnull, 0, 0.0);
+            break;
+    }
+}
+
+void gfxContext::SetDash(gfxFloat *dashes, int ndash, gfxFloat offset)
 {
     cairo_set_dash(mCairo, dashes, ndash, offset);
 }
@@ -321,7 +392,7 @@ void gfxContext::SetColor(const gfxRGBA& c)
     cairo_set_source_rgba(mCairo, c.r, c.g, c.b, c.a);
 }
 
-void gfxContext::SetPattern(gfxPattern* pattern)
+void gfxContext::SetPattern(gfxPattern *pattern)
 {
     cairo_set_source(mCairo, pattern->CairoPattern());
 }

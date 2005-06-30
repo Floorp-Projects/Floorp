@@ -39,7 +39,6 @@
 #define GFX_WINDOWSSURFACE_H
 
 #include "gfxASurface.h"
-#include "gfxPoint.h"
 
 #include <cairo-win32.h>
 

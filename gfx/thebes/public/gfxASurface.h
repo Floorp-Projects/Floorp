@@ -43,22 +43,37 @@
 #include "gfxTypes.h"
 
 class gfxASurface {
-    THEBES_DECL_REFCOUNTING
+    THEBES_DECL_REFCOUNTING_ABSTRACT
 
 public:
     /*** this DOES NOT addref the surface */
-    cairo_surface_t *CairoSurface() { return mSurface; }
+    cairo_surface_t* CairoSurface() { return mSurface; }
 
 protected:
-    void Init(cairo_surface_t* surface) {
+    void Init(cairo_surface_t *surface) {
+        mDestroyed = PR_FALSE;
         mSurface = surface;
     }
 
-    virtual ~gfxASurface() {
+    void Destroy() {
+        if (mDestroyed) {
+            NS_WARNING("Calling Destroy on an already-destroyed surface!");
+            return;
+        }
+
         cairo_surface_destroy(mSurface);
+        mDestroyed = PR_TRUE;
     }
 
-    cairo_surface_t* mSurface;
+    virtual ~gfxASurface() {
+        if (!mDestroyed) {
+            NS_WARNING("gfxASurface::~gfxASurface called, but cairo surface was not destroyed! (Did someone forget to call Destroy()?)");
+        }
+    }
+
+protected:
+    cairo_surface_t *mSurface;
+    PRBool mDestroyed;
 };
 
 #endif /* GFX_ASURFACE_H */

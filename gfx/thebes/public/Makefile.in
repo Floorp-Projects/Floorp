@@ -26,4 +26,8 @@ ifeq ($(MOZ_GFX_TOOLKIT),windows)
 EXPORTS	+=	gfxWindowsSurface.h
 endif
 
+ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
+EXPORTS	+=	gfxXlibSurface.h
+endif
+
 include $(topsrcdir)/config/rules.mk
