@@ -750,7 +750,7 @@ nsSVGPathFrame::GetMarkPoints(nsVoidArray *aMarks) {
         root = 0.0;
       } else {
         root = sqrt(numerator/(r1*r1*yp*yp + r2*r2*xp*xp));
-        if (largeArcFlag != sweepFlag)
+        if (largeArcFlag == sweepFlag)
           root = -root;
       }
       cxp = root*r1*yp/r2;
@@ -767,9 +767,15 @@ nsSVGPathFrame::GetMarkPoints(nsVoidArray *aMarks) {
       float tx1, ty1, tx2, ty2;
       tx1 = -cos(angle)*r1*sin(theta) - sin(angle)*r2*cos(theta);
       ty1 = -sin(angle)*r1*sin(theta) + cos(angle)*r2*cos(theta);
-
       tx2 = -cos(angle)*r1*sin(theta+delta) - sin(angle)*r2*cos(theta+delta);
       ty2 = -sin(angle)*r1*sin(theta+delta) + cos(angle)*r2*cos(theta+delta);
+
+      if (delta < 0.0f) {
+        tx1 = -tx1;
+        ty1 = -ty1;
+        tx2 = -tx2;
+        ty2 = -ty2;
+      }
 
       startAngle = atan2(ty1, tx1);
       endAngle = atan2(ty2, tx2);
