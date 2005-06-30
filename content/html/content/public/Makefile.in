@@ -63,6 +63,7 @@ EXPORTS		= \
 		nsITextControlElement.h \
 		nsIFormSubmission.h \
 		nsIFrameSetElement.h \
+		nsIPluginElement.h \
                 $(NULL)
 
 include $(topsrcdir)/config/rules.mk

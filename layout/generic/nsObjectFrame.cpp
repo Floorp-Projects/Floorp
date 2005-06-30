@@ -61,6 +61,7 @@
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsINodeInfo.h"
+#include "nsIPluginElement.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIPluginInstanceOwner.h"
@@ -3080,26 +3081,20 @@ nsObjectFrame::PluginNotAvailable(const char *aMimeType)
     return;
   }
   
+  nsDependentCString type(aMimeType);
+
   // Tell mContent about the mime type
 
-  nsCOMPtr<nsIDOMHTMLObjectElement> object(do_QueryInterface(mContent));
-  NS_ConvertASCIItoUTF16 mimeType(aMimeType);
+  nsCOMPtr<nsIPluginElement> pluginElement(do_QueryInterface(mContent));
 
-  if (object) {
-    object->SetType(mimeType);
-  } else {
-    nsCOMPtr<nsIDOMHTMLEmbedElement> embed(do_QueryInterface(mContent));
-    if (embed) {
-      embed->SetType(mimeType);
-    }
+  if (pluginElement) {
+    pluginElement->SetActualType(type);
   }
 
   if (!sDefaultPluginDisabled) {
     // The default plugin is enabled, don't fire events etc.
     return;
   }
-
-  nsDependentCString type(aMimeType);
 
   // For non-image and non-document mime types, fire the plugin not
   // found event and mark this plugin as broken.
