@@ -96,6 +96,13 @@ pref("app.update.nagTimer.restart", 1800);
 //           default=5 seconds
 pref("app.update.timer", 5000);
 
+// Whether or not we show a dialog box informing the user that the update was
+// successfully applied. This is off in Firefox by default since we show a 
+// upgrade start page instead! Other apps may wish to show this UI, and supply
+// a whatsNewURL field in their brand.properties that contains a link to a page
+// which tells users what's new in this new update.
+pref("app.update.showInstalledUI", false);
+
 // Developers can set this to |true| if they are constantly changing files in their
 // extensions directory so that the extension system does not constantly think that
 // their extensions are being updated and thus reregistered every time the app is started
@@ -410,11 +417,6 @@ pref("alerts.slideIncrement", 1);
 pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 4000);
 pref("alerts.height", 50);
-
-// update notifications prefs
-pref("update_notifications.enabled", true);
-pref("update_notifications.provider.0.frequency", 7); // number of days
-pref("update_notifications.provider.0.datasource", "chrome://communicator-region/locale/region.properties");
 
 // 0 opens the download manager
 // 1 opens a progress dialog
