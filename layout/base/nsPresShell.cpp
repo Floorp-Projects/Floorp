@@ -6587,8 +6587,21 @@ PresShell::Freeze()
 static void
 StartPluginInstance(PresShell *aShell, nsIContent *aContent)
 {
-  // For now we just reconstruct the frame.
-  aShell->RecreateFramesFor(aContent);
+  // For now we just reconstruct the frame, but only if the element
+  // has a plugin instance.
+  nsIFrame *frame = nsnull;
+  aShell->GetPrimaryFrameFor(aContent, &frame);
+  if (frame) {
+    nsIObjectFrame *objFrame = nsnull;
+    CallQueryInterface(frame, &objFrame);
+    if (objFrame) {
+      nsCOMPtr<nsIPluginInstance> instance;
+      objFrame->GetPluginInstance(*getter_AddRefs(instance));
+      if (instance) {
+        aShell->RecreateFramesFor(aContent);
+      }
+    }
+  }
 }
 
 PR_STATIC_CALLBACK(PRBool)
