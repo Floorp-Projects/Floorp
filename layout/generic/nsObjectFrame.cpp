@@ -1564,11 +1564,11 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
     id = kNameSpaceID_XHTML;
 
   nsCOMPtr<nsIContent> anchor;
-  nsresult rv = doc->CreateElem(nsHTMLAtoms::a, nsnull, id,
-                                PR_TRUE, getter_AddRefs(anchor));
+  nsresult rv = doc->CreateElem(nsHTMLAtoms::a, nsnull, id, htmldoc != nsnull,
+                                getter_AddRefs(anchor));
 
   nsCOMPtr<nsIContent> img;
-  rv |= doc->CreateElem(nsHTMLAtoms::img, nsnull, id, PR_TRUE,
+  rv |= doc->CreateElem(nsHTMLAtoms::img, nsnull, id, htmldoc != nsnull,
                         getter_AddRefs(img));
 
   nsCOMPtr<nsITextContent> text;
