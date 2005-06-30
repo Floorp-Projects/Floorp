@@ -47,7 +47,7 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://mozapps/content/update/updates.css"?>
 
-<dialog id="history"
+<dialog id="history" windowtype="Update:History"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 35em;"
         buttons="cancel" closebuttonlabel="&closebutton.label;"

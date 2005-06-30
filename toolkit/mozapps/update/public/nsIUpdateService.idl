@@ -228,33 +228,25 @@ interface nsIUpdatePrompt : nsISupports
   /**
    * Shows a user interface that checks for and then displays the available
    * updates.
-   * @param   parent
-   *          A parent window to anchor this window to. Can be null.
    */
-  void checkForUpdates(in nsIDOMWindow parent);
+  void checkForUpdates();
 
   /**
    * Show a message advising that an update is available for download and
    * install.
-   * @param   parent
-   *          A parent window to anchor this window to. Can be null.
    * @param   update
    *          The update to be downloaded and installed
    */
-  void showUpdateAvailable(in nsIDOMWindow parent, 
-                           in nsIUpdate update);
+  void showUpdateAvailable(in nsIUpdate update);
 
   /**
    * Show a message advising that an update has now been downloaded and that
    * the user should restart their software should be restarted so that the
    * update can be installed.
-   * @param   parent
-   *          A parent window to anchor this window to. Can be null.
    * @param   update
    *          The update that was downloaded
    */
-  void showUpdateDownloaded(in nsIDOMWindow parent,
-                            in nsIUpdate update);
+  void showUpdateDownloaded(in nsIUpdate update);
 
   /**
    * Shows a message detailing the update which was installed.

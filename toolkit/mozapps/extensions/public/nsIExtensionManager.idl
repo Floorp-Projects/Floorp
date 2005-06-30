@@ -194,7 +194,7 @@ interface nsIExtensionDownloadListener : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface, 
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(344c6fd1-ed48-4c84-a472-abdec533d1e2)]
+[scriptable, uuid(e454bc28-cba8-4c27-83bd-01f2d5a2096c)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -320,6 +320,9 @@ interface nsIExtensionManager : nsISupports
    *          The version of the application to check compatibility against
    * @param   type
    *          The type of item to return
+   * @param   includeDisabled
+   *          true if disabled items should be included in the result set, 
+   *          false otherwise
    * @param   countRef
    *          The XPCJS reference to the number of items returned.
    * @returns An array of incompatible nsIUpdateItems.
@@ -327,6 +330,7 @@ interface nsIExtensionManager : nsISupports
   void getIncompatibleItemList(in AString id, 
                                in AString version,
                                in unsigned long type,
+                               in boolean includeDisabled,
                                out unsigned long itemCount,
                                [retval, array, size_is(itemCount)] out nsIUpdateItem items);
 

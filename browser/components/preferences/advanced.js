@@ -144,7 +144,7 @@ var gAdvancedPane = {
   {
     var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
                              .createInstance(Components.interfaces.nsIUpdatePrompt);
-    prompter.checkForUpdates(window);
+    prompter.checkForUpdates();
   },
   
   showAutoInstallOptions: function () 
