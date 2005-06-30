@@ -51,6 +51,7 @@
 #include "nsRuleData.h"
 #include "nsMappedAttributes.h"
 #include "nsStyleContext.h"
+#include "nsIPluginElement.h"
 
 #ifdef MOZ_SVG
 #include "nsIDOMGetSVGDocument.h"
@@ -63,6 +64,7 @@ extern nsAttrValue::EnumTable kListTypeTable[];
 
 class nsHTMLSharedElement : public nsGenericHTMLElement,
                             public nsImageLoadingContent,
+                            public nsIPluginElement,
                             public nsIDOMHTMLEmbedElement,
 #ifdef MOZ_SVG
                             public nsIDOMGetSVGDocument,
@@ -81,6 +83,9 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIPluginElement
+  virtual void SetActualType(const nsACString& aActualType);
 
   // nsIDOMNode
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
@@ -138,7 +143,7 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
-  nsCString mType;
+  nsCString mActualType;
 };
 
 
@@ -169,6 +174,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedElement,
 #endif
   NS_INTERFACE_MAP_ENTRY_IF_TAG(imgIDecoderObserver, embed)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIImageLoadingContent, embed)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIPluginElement, embed)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLParamElement, param)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLIsIndexElement, isindex)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLBaseElement, base)
@@ -203,6 +209,12 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Width, width)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Name, name)
 //NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Src, src)
+
+void
+nsHTMLSharedElement::SetActualType(const nsACString& aActualType)
+{
+  mActualType = aActualType;
+}
 
 #ifdef MOZ_SVG
 // nsIDOMGetSVGDocument
@@ -252,10 +264,10 @@ NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLSharedElement, TabIndex, tabindex,
 NS_IMETHODIMP
 nsHTMLSharedElement::GetType(nsAString& aType)
 {
-  if (!mNodeInfo->Equals(nsHTMLAtoms::embed) || mType.IsEmpty()) {
+  if (!mNodeInfo->Equals(nsHTMLAtoms::embed) || mActualType.IsEmpty()) {
     GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType);
   } else {
-    CopyUTF8toUTF16(mType, aType);
+    CopyUTF8toUTF16(mActualType, aType);
   }
 
   return NS_OK;
@@ -265,10 +277,10 @@ NS_IMETHODIMP
 nsHTMLSharedElement::SetType(const nsAString& aType)
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
-    CopyUTF16toUTF8(aType, mType);
-  } else {
-    SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType, PR_TRUE);
+    mActualType.Truncate();
   }
+
+  SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType, PR_TRUE);
 
   return NS_OK;
 }

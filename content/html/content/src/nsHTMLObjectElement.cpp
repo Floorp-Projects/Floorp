@@ -49,9 +49,11 @@
 #include "nsIObjectFrame.h"
 #include "nsIPluginInstance.h"
 #include "nsIPluginInstanceInternal.h"
+#include "nsIPluginElement.h"
 
 class nsHTMLObjectElement : public nsGenericHTMLFormElement,
                             public nsImageLoadingContent,
+                            public nsIPluginElement,
                             public nsIDOMHTMLObjectElement
 {
 public:
@@ -60,6 +62,9 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIPluginElement
+  virtual void SetActualType(const nsACString& aActualType);
 
   // nsIDOMNode
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
@@ -95,7 +100,7 @@ public:
 
 protected:
   PRPackedBool mIsDoneAddingChildren;
-  nsCString mType;
+  nsCString mActualType;
 };
 
 
@@ -134,8 +139,16 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLObjectElement,
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLObjectElement)
   NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
   NS_INTERFACE_MAP_ENTRY(nsIImageLoadingContent)
+  NS_INTERFACE_MAP_ENTRY(nsIPluginElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLObjectElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
+
+
+void
+nsHTMLObjectElement::SetActualType(const nsACString& aActualType)
+{
+  mActualType = aActualType;
+}
 
 // nsIDOMHTMLObjectElement
 
@@ -249,10 +262,10 @@ NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Width, width)
 NS_IMETHODIMP
 nsHTMLObjectElement::GetType(nsAString& aType)
 {
-  if (mType.IsEmpty()) {
+  if (mActualType.IsEmpty()) {
     GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType);
   } else {
-    CopyUTF8toUTF16(mType, aType);
+    CopyUTF8toUTF16(mActualType, aType);
   }
 
   return NS_OK;
@@ -261,7 +274,9 @@ nsHTMLObjectElement::GetType(nsAString& aType)
 NS_IMETHODIMP
 nsHTMLObjectElement::SetType(const nsAString& aType)
 {
-  CopyUTF16toUTF8(aType, mType);
+  mActualType.Truncate();
+
+  SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType, PR_TRUE);
 
   return NS_OK;
 }
