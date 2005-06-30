@@ -172,6 +172,12 @@
     </hbox>
   </wizardpage>
   
+  <wizardpage id="errorpatching" pageid="errorpatching" next="downloading"
+              label="&errorpatching.title;" object="gErrorsPage"
+              onpageshow="gErrorsPage.onPageShowPatching();">
+    <label>&errorpatching.intro;</label>
+  </wizardpage>
+  
   <wizardpage id="finished" pageid="finished"
               label="&finished.title;" object="gFinishedPage"
               onpageshow="gFinishedPage.onPageShow();">
@@ -200,6 +206,12 @@
               label="&installed.title;" object="gInstalledPage"
               onpageshow="gInstalledPage.onPageShow();">
     <label>&installed.intro;</label>
+    <separator/>
+    <hbox>
+      <link id="whatsnewLink" hidden="true">
+        <label>&whatsnew.label;</label>
+      </link>
+    </hbox>
   </wizardpage>
   
 </wizard>

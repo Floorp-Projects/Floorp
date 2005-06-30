@@ -54,6 +54,7 @@ const STATE_DOWNLOADING       = "downloading";
 const STATE_PENDING           = "pending";
 const STATE_APPLYING          = "applying";
 const STATE_SUCCEEDED         = "succeeded";
+const STATE_DOWNLOAD_FAILED   = "download-failed";
 const STATE_FAILED            = "failed";
 
 const SRCEVT_FOREGROUND       = 1;
@@ -239,34 +240,63 @@ var gUpdates = {
    *
    * This is determined by how we were called by the update prompt:
    *
-   * U'Prompt Method:     Arg0:         Update State: Src Event:
-   * showUpdateAvailable  nsIUpdate obj --            background
-   * showUpdateDownloaded nsIUpdate obj pending       background
-   * showUpdateInstalled  nsIUpdate obj succeeded     either
-   * showUpdateError      nsIUpdate obj failed        either
-   * checkForUpdates      null          --            foreground
+   * U'Prompt Method:     Arg0:         Update State: Src Event:  p'Failed: Result:
+   * showUpdateAvailable  nsIUpdate obj --            background  --        updatesfound
+   * showUpdateDownloaded nsIUpdate obj pending       background  --        finishedBackground
+   * showUpdateInstalled  nsIUpdate obj succeeded     either      --        installed
+   * showUpdateError      nsIUpdate obj failed        either      partial   errorpatching
+   * showUpdateError      nsIUpdate obj failed        either      complete  errors
+   * checkForUpdates      null          --            foreground  --        checking
+   * checkForUpdates      null          downloading   foreground  --        downloading
    */
   get startPage() {
-    dump("*** GET STARTPAGE\n");
     if (window.arguments) {
       var arg0 = window.arguments[0];
-      dump("*** arg0 = " + arg0 + "\n");
       if (arg0 instanceof Components.interfaces.nsIUpdate) {
         // If the first argument is a nsIUpdate object, we are notifying the
         // user that the background checking found an update that requires
         // their permission to install, and it's ready for download.
         this.setUpdate(arg0);
         var p = this.update.selectedPatch;
-        dump("*** P = " + p + "\n");
         if (p) {
-          switch (p.state) {
+          LOG("Downloader", "WIZARD UI STATE = " + p.state);
+          var state = p.state;
+          if (state == STATE_DOWNLOADING) {
+            var patchFailed = false;
+            try {
+              patchFailed = this.update.getProperty("patchingFailed");
+            }
+            catch (e) {
+            }
+            if (patchFailed == "partial") {
+              // If the system failed to apply the partial patch, show the 
+              // screen which best describes this condition, which is triggered
+              // by the |STATE_FAILED| state.
+              state = STATE_FAILED; 
+            }
+            else if (patchFailed == "complete") {
+              // Otherwise, if the complete patch failed, which is far less 
+              // likely, show the error text held by the update object in the
+              // generic errors page, triggered by the |STATE_DOWNLOAD_FAILED|
+              // state.
+              state = STATE_DOWNLOAD_FAILED;
+            }
+          }
+          
+          // Now select the best page to start with, given the current state of
+          // the Update.
+          switch (state) {
           case STATE_PENDING:
             this.sourceEvent = SRCEVT_BACKGROUND;
             return document.getElementById("finishedBackground");
           case STATE_SUCCEEDED:
-            dump("*** :::::: goats\n");
             return document.getElementById("installed");
+          case STATE_DOWNLOADING:
+            return document.getElementById("downloading");
           case STATE_FAILED:
+            window.getAttention();            
+            return document.getElementById("errorpatching");
+          case STATE_DOWNLOAD_FAILED:
           case STATE_APPLYING:
             return document.getElementById("errors");
           }
@@ -920,6 +950,11 @@ var gDownloadingPage = {
       LOG("UI:DownloadingPage.Progress", "no valid update to download?!");
       return;
     }
+    
+    // Say that this was a foreground download, not a background download, 
+    // since the user cared enough to look in on this process.
+    gUpdates.update.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
+    gUpdates.update.setProperty("foregroundDownload", "true");
   
     // Pause any active background download and restart it as a foreground
     // download.
@@ -1159,7 +1194,8 @@ var gDownloadingPage = {
     const NS_BINDING_ABORTED = 0x804b0002;
     switch (status) {
     case Components.results.NS_ERROR_UNEXPECTED:
-      if (u.selectedPatch.state == STATE_FAILED && u.isCompleteUpdate) {
+      if (u.selectedPatch.state == STATE_DOWNLOAD_FAILED && 
+          u.isCompleteUpdate) {
         // Verification error of complete patch, informational text is held in 
         // the update object.
         gUpdates.wiz.currentPage = document.getElementById("errors");
@@ -1236,6 +1272,15 @@ var gErrorsPage = {
     errorLink.href = manualURL.data;
     var errorLinkLabel = document.getElementById("errorLinkLabel");
     errorLinkLabel.value = manualURL.data;
+  },
+  
+  /**
+   * Initialize, for the "Error Applying Patch" case.
+   */
+  onPageShowPatching: function() {
+    gUpdates.wiz.getButton("back").disabled = true;
+    gUpdates.wiz.getButton("cancel").disabled = true;
+    gUpdates.wiz.getButton("next").focus();
   },
 };
 
@@ -1356,7 +1401,22 @@ var gInstalledPage = {
    * Initialize
    */
   onPageShow: function() {
+    var ai = 
+        Components.classes["@mozilla.org/xre/app-info;1"].
+        getService(Components.interfaces.nsIXULAppInfo);
+    
+    var branding = document.getElementById("brandStrings");
+    try {
+      var url = branding.getFormattedString("whatsNewURL", [ai.version]);
+      var whatsnewLink = document.getElementById("whatsnewLink");
+      whatsnewLink.href = url;
+      whatsnewLink.hidden = false;
+    }
+    catch (e) {
+    }
   
+    gUpdates.wiz.getButton("cancel").disabled = true;
+    gUpdates.wiz.getButton("finish").focus();
   },
 };
 
@@ -1370,5 +1430,15 @@ function tryToClose() {
   if (cp.pageid != "finished" && cp.pageid != "finishedBackground")
     gUpdates.onWizardCancel();
   return true;
+}
+
+/**
+ * Callback for the Update Prompt to set the current page if an Update Wizard
+ * window is already found to be open.
+ * @param   pageid
+ *          The ID of the page to switch to
+ */
+function setCurrentPage(pageid) {
+  gUpdates.wiz.currentPage = document.getElementById(pageid);
 }
 

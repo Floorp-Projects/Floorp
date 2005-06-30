@@ -42,9 +42,7 @@
 # SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
 #  The first character after a period must be alphabetic.
 
-pref("app.update.logEnabled", true);
-
-// pref("startup.homepage_override_url","chrome://browser-region/locale/region.properties");
+pref("startup.homepage_override_url","chrome://browser-region/locale/region.properties");
 pref("general.startup.browser", true);
 
 pref("browser.chromeURL","chrome://browser/content/");
@@ -118,6 +116,13 @@ pref("app.update.nagTimer.restart", 1800);
 //           default=5 seconds
 pref("app.update.timer", 5000);
 
+// Whether or not we show a dialog box informing the user that the update was
+// successfully applied. This is off in Firefox by default since we show a 
+// upgrade start page instead! Other apps may wish to show this UI, and supply
+// a whatsNewURL field in their brand.properties that contains a link to a page
+// which tells users what's new in this new update.
+pref("app.update.showInstalledUI", false);
+
 // Symmetric (can be overridden by individual extensions) update preferences.
 // e.g.
 //  extensions.{GUID}.update.enabled
@@ -172,9 +177,6 @@ pref("browser.shell.checkDefaultBrowser", true);
 // XXXBlake Remove this stupid pref
 pref("browser.startup.page",                1);
 pref("browser.startup.homepage",	          "resource:/browserconfig.properties");
-
-// "browser.startup.homepage_override" was for 4.x
-pref("browser.startup.homepage_override.1", false);
 
 pref("browser.cache.disk.capacity",         50000);
 pref("browser.enable_automatic_image_resizing", true);
@@ -318,11 +320,6 @@ pref("alerts.slideIncrement", 1);
 pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 4000);
 pref("alerts.height", 50);
-
-// update notifications prefs
-pref("update_notifications.enabled", true);
-pref("update_notifications.provider.0.frequency", 7); // number of days
-pref("update_notifications.provider.0.datasource", "chrome://browser-region/locale/region.properties");
 
 pref("browser.xul.error_pages.enabled", true);
 

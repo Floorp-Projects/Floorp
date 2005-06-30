@@ -53,6 +53,10 @@
                                            
 <!ENTITY  errorManual.label               "You can update &brandShortName; manually by visiting this link
                                            and downloading the latest version:">
+                                           
+<!ENTITY  errorpatching.title             "Update Failed">
+<!ENTITY  errorpatching.intro             "The partial Update could not be applied. 
+                                           &brandShortName; will try again by downloading a complete Update.">
 
 <!ENTITY  finished.title                  "Update Downloaded">
 <!ENTITY  finished.intro                  "The update was successfully downloaded and verified. You must now restart 
@@ -69,6 +73,7 @@
 
 <!ENTITY  installed.title                 "Update Installed">
 <!ENTITY  installed.intro                 "The update was successfully installed.">
+<!ENTITY  whatsnew.label                  "Read more about what's new...">
 
 <!ENTITY  update.details.label            "Details">
 <!ENTITY  update.installedOn.label        "Installed on:">

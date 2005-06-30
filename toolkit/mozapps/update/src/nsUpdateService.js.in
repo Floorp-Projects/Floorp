@@ -45,7 +45,8 @@ const PREF_APP_UPDATE_TIMER               = "app.update.timer";
 const PREF_APP_UPDATE_LOG_BRANCH          = "app.update.log.";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
-const PREF_UPDATE_LASTUPDATETIME_FMT      = "app.update.lastUpdateTime.%ID%";
+const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
+const PREF_APP_UPDATE_LASTUPDATETIME_FMT  = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
@@ -73,12 +74,13 @@ const MODE_TRUNCATE = 0x20;
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
-const STATE_NONE        = null;
-const STATE_DOWNLOADING = "downloading";
-const STATE_PENDING     = "pending";
-const STATE_APPLYING    = "applying";
-const STATE_SUCCEEDED   = "succeeded";
-const STATE_FAILED      = "failed";
+const STATE_NONE            = null;
+const STATE_DOWNLOADING     = "downloading";
+const STATE_PENDING         = "pending";
+const STATE_APPLYING        = "applying";
+const STATE_SUCCEEDED       = "succeeded";
+const STATE_DOWNLOAD_FAILED = "download-failed";
+const STATE_FAILED          = "failed";
 
 const DOWNLOAD_CHUNK_SIZE           = 65536;
 const DOWNLOAD_BACKGROUND_INTERVAL  = 1;
@@ -411,7 +413,8 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   checkForUpdates: function(parent) {
-    this._showUI(parent, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", null);
+    this._showUI(parent, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", 
+                 null, null);
   },
     
   /**
@@ -420,7 +423,7 @@ UpdatePrompt.prototype = {
   showUpdateAvailable: function(parent, update) {
     if (this._enabled) {
       this._showUI(parent, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", 
-                   update);
+                   "updatesavailable", update);
     }
   },
   
@@ -430,7 +433,7 @@ UpdatePrompt.prototype = {
   showUpdateDownloaded: function(parent, update) {
     if (this._enabled) {
       this._showUI(parent, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", 
-                   update);
+                   "finishedBackground", update);
     }
   },
   
@@ -438,9 +441,11 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   showUpdateInstalled: function(update) {
-    if (this._enabled) {
-      this._showUI(null, URI_UPDATE_PROMPT_DIALOG, "modal", "Update:Wizard", 
-                   update);
+    var showUpdateInstalledUI = getPref("getBoolPref", 
+      PREF_APP_UPDATE_SHOW_INSTALLED_UI, true);
+    if (this._enabled && showUpdateInstalledUI) {
+      this._showUI(null, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", 
+                   "installed", update);
     }
   },
   
@@ -449,8 +454,8 @@ UpdatePrompt.prototype = {
    */
   showUpdateError: function(update) {
     if (this._enabled) {
-      this._showUI(null, URI_UPDATE_PROMPT_DIALOG, "modal", "Update:Wizard", 
-                   update);
+      this._showUI(null, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", 
+                   "errors", update);
     }
   },
   
@@ -458,7 +463,8 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   showUpdateHistory: function(parent) {
-    this._showUI(parent, URI_UPDATE_HISTORY_DIALOG, "modal", "Update:History", null);
+    this._showUI(parent, URI_UPDATE_HISTORY_DIALOG, "modal", "Update:History", 
+                 null, null);
   },
   
   /**
@@ -477,11 +483,13 @@ UpdatePrompt.prototype = {
    * @param   name
    *          The Window Name of the dialog to show, in case it is already open
    *          and can merely be focused
+   * @param   page
+   *          The page of the wizard to be displayed, if one is already open.
    * @param   update
    *          An update to pass to the UI in the window arguments. 
    *          Can be null
    */
-  _showUI: function(parent, uri, features, name, update) {
+  _showUI: function(parent, uri, features, name, page, update) {
     var ary = null;
     if (update) {
       ary = Components.classes["@mozilla.org/supports-array;1"]
@@ -492,8 +500,11 @@ UpdatePrompt.prototype = {
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Components.interfaces.nsIWindowMediator);
     var win = wm.getMostRecentWindow(name);
-    if (win) 
+    if (win) {
+      if (page && "setCurrentPage" in win)
+        win.setCurrentPage(page);
       win.focus();
+    }
     else {
       var openFeatures = "chrome,centerscreen,dialog";
       if (features)
@@ -573,9 +584,24 @@ UpdateService.prototype = {
   },
   
   /**
-   *
+   * Perform post-processing on updates lingering in the updates directory
+   * from a previous browser session - either report install failures (and
+   * optionally attempt to fetch a different version if appropriate) or 
+   * notify the user of install success.
    */
   _postUpdateCleanup: function() {
+    /**
+     * Clean up updates list and the updates directory.
+     */
+    function cleanup() {
+      // Move the update from the Active Update list into the Past Updates list.
+      um.activeUpdate = null;
+      um.saveUpdates();
+
+      // Now trash the updates directory, since we're done with it
+      cleanUpUpdatesDir();
+    }
+    
     // Detect installation failures and notify
     var status = readStatusFile(getUpdatesDir()); 
     if (status != null) {
@@ -591,29 +617,45 @@ UpdateService.prototype = {
           Components.classes["@mozilla.org/updates/update-prompt;1"].
           createInstance(Components.interfaces.nsIUpdatePrompt);
 
+      var shouldCleanup = true;
       var update = um.activeUpdate;
       if (!update)
         update = new Update(null);
       update.state = status;
+      var sbs = 
+          Components.classes["@mozilla.org/intl/stringbundle;1"].
+          getService(Components.interfaces.nsIStringBundleService);
+      var bundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
       if (status == STATE_SUCCEEDED) {
-        update.statusText = "Install Succeeded";
+        update.statusText = bundle.GetStringFromName("installSuccess");
         LOG("UpdateService", "_postUpdateCleanup: Install Succeeded, Showing UI");
         prompter.showUpdateInstalled(update);
+        
+        // Done with this update. Clean it up.
+        cleanup();
       }
       else {
         // Something went wrong with the patch application process.
-        update.statusText = "goats";
-        // XXXben todo: synthesize the best message
-        LOG("UpdateService", "_postUpdateCleanup: Install Failed, Showing UI");
+        cleanup();
+
+        update.statusText = bundle.GetStringFromName("patchApplyFailure");
+        var oldType = update.selectedPatch ? update.selectedPatch.type 
+                                           : "complete";
+        if (update.selectedPatch && oldType == "partial") {
+          // Partial patch application failed, try downloading the complete
+          // update in the background instead.
+          LOG("UpdateService", "_postUpdateCleanup: Install of Partial Patch " + 
+              "failed, downloading Complete Patch and maybe showing UI");
+          this.downloadUpdate(update, true);
+        }
+        else {
+          LOG("UpdateService", "_postUpdateCleanup: Install of Complete or " + 
+              "only patch failed. Showing error.");
+        }
+        update.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
+        update.setProperty("patchingFailed", oldType);
         prompter.showUpdateError(update);
       }
-      
-      // Move the update from the Active Update list into the Past Updates list.
-      um.activeUpdate = null;
-      um.saveUpdates();
-
-      // Now trash the updates directory, since we're done with it
-      cleanUpUpdatesDir();
     }
     else {
       LOG("UpdateService", "_postUpdateCleanup: No Status, No Update");
@@ -1059,6 +1101,8 @@ UpdateManager.prototype = {
    *          The nsIUpdate object to add.
    */
   _addUpdate: function(update) {
+    if (!update)
+      return;
     if (this._updates) {
       for (var i = 0; i < this._updates.length; ++i) {
         if (this._updates[i].version == update.version) {
@@ -1806,6 +1850,7 @@ Downloader.prototype = {
         LOG("Downloader", "already downloaded and staged");
         return null;
       case STATE_FAILED:
+      case STATE_DOWNLOAD_FAILED:
       case STATE_APPLYING:
       case STATE_NONE:
         // Something went wrong when we tried to apply the previous patch.
@@ -2013,7 +2058,8 @@ Downloader.prototype = {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("Downloader", "onStopRequest: " + request.URI.spec + ", status = " + status);
 
-    var state;
+    var state = this._patch.state;
+    LOG("Downloader", "STATE SET = " + state);
     var shouldShowPrompt = false;
     var deleteActiveUpdate = false;
     const NS_BINDING_ABORTED = 0x804b0002;
@@ -2034,7 +2080,7 @@ Downloader.prototype = {
         this._update.statusText = "Install Pending";
       } else {
         LOG("Downloader", "onStopRequest: download verification failed");
-        state = STATE_FAILED;
+        state = STATE_DOWNLOAD_FAILED;
         
         var sbs = 
             Components.classes["@mozilla.org/intl/stringbundle;1"].
@@ -2063,7 +2109,7 @@ Downloader.prototype = {
              status != NS_ERROR_ABORT) {
       LOG("Downloader", "onStopRequest: Non-verification failure");
       // Some sort of other failure, log this in the |statusText| property
-      state = STATE_FAILED;
+      state = STATE_DOWNLOAD_FAILED;
       
       // XXXben - if |request| (The Incremental Download) provided a means
       // for accessing the http channel we could do more here.
@@ -2094,14 +2140,39 @@ Downloader.prototype = {
 
     this._request = null;
     
-    if (state == STATE_FAILED && !this._update.isCompleteUpdate) {
-      // If we were downloading a patch and the patch verification phase 
-      // failed, log this and then commence downloading the complete update.
-      LOG("Downloader", "onStopRequest: Verification of patch failed, downloading complete update");
-      this._update.isCompleteUpdate = true;
-      this.downloadUpdate(this._update);
-      // This will reset the |.state| property on this._update if a new 
-      // download initiates.
+    if (state == STATE_DOWNLOAD_FAILED) {
+      if (!this._update.isCompleteUpdate) {
+        // If we were downloading a patch and the patch verification phase 
+        // failed, log this and then commence downloading the complete update.
+        LOG("Downloader", "onStopRequest: Verification of patch failed, downloading complete update");
+        this._update.isCompleteUpdate = true;
+        this.downloadUpdate(this._update);
+        // This will reset the |.state| property on this._update if a new 
+        // download initiates.
+      }
+      else {
+        // In all other failure cases, i.e. we're S.O.L. - no more failing over
+        // ...
+        
+        // If this was ever a foreground download, and now there is no UI active
+        // (e.g. because the user closed the download window) and there was an
+        // error, we must notify now. Otherwise we can keep the failure to 
+        // ourselves since the user won't be expecting it. 
+        var fgdl = false;
+        try {
+          fgdl = this._update.getProperty("foregroundDownload");
+        }
+        catch (e) {
+        }
+        if (fgdl == "true") {
+          var prompter = 
+              Components.classes["@mozilla.org/updates/update-prompt;1"].
+              createInstance(Components.interfaces.nsIUpdatePrompt);
+          this._update.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
+          this._update.setProperty("downloadFailed", "true");
+          prompter.showUpdateError(this._update);
+        }
+      }
     }
 
     // Do this after *everything* else, since it will likely cause the app 
@@ -2174,7 +2245,7 @@ TimerManager.prototype = {
           timerData.callback instanceof Components.interfaces.nsITimerCallback) {
         timerData.callback.notify(timer);
         timerData.lastUpdateTime = now;
-        var preference = PREF_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, timerID);
+        var preference = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, timerID);
         gPref.setIntPref(preference, now);
       }
     }
@@ -2184,7 +2255,7 @@ TimerManager.prototype = {
    * See nsIUpdateService.idl
    */
   registerTimer: function(id, callback, interval) {
-    var preference = PREF_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, id);
+    var preference = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, id);
     var lastUpdateTime = getPref("getIntPref", preference, 
                                  Math.round(Date.now() / 1000));
     this._timers[id] = { callback       : callback, 
