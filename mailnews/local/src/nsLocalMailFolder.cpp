@@ -1228,6 +1228,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
         parentFolder->PropagateDelete(this, PR_FALSE, msgWindow);
         parentFolder->NotifyItemAdded(newFolder);
       }
+      SetPath(nsnull); // forget our path, since this folder object renamed itself
       folderRenameAtom = do_GetAtom("RenameCompleted");
       newFolder->NotifyFolderEvent(folderRenameAtom);
     }
