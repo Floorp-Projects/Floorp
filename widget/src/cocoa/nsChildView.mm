@@ -2964,13 +2964,10 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     geckoEvent.charCode  = bufPtr[0]; // gecko expects OS-translated unicode
     geckoEvent.isChar    = PR_TRUE;
     geckoEvent.isShift   = ([mCurEvent modifierFlags] & NSShiftKeyMask) != 0;
-    geckoEvent.isControl = ([mCurEvent modifierFlags] & NSControlKeyMask) != 0;
-    geckoEvent.isAlt     = ([mCurEvent modifierFlags] & NSAlternateKeyMask) != 0;
-    geckoEvent.isMeta    = ([mCurEvent modifierFlags] & NSCommandKeyMask) != 0;
-
-    if (geckoEvent.isControl && geckoEvent.charCode <= 26)
-      geckoEvent.charCode += (geckoEvent.isShift) ? ('A' - 1) : ('a' - 1);
-    
+    // don't set other modifiers from the current event, because here in
+    // -insertText: they've already been taken into account in creating
+    // the input string.
+        
     // plugins need a native autokey event here, but only if this is a repeat event
     EventRecord macEvent;
     if (mCurEvent && [mCurEvent isARepeat])

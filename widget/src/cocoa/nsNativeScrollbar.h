@@ -73,6 +73,8 @@ public:
     // called from the NativeScrollbarView when someone hits a part
     // of the scrollbar.
   void DoScroll(NSScrollerPart inPart);
+
+  virtual PRBool OnPaint(nsPaintEvent& aEvent);
   
 protected:
 
@@ -104,7 +106,9 @@ private:
   PRUint32          mMaxValue;
   PRUint32          mVisibleImageSize;
   PRUint32          mLineIncrement;
-  PRBool            mIsEnabled;
+
+  PRPackedBool      mIsEnabled;
+  PRPackedBool      mInPaint;
 };
 
 
