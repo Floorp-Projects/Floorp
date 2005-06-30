@@ -2194,7 +2194,8 @@ nsXPCComponents_Util::EvalInSandbox(const nsAString &source,
     JS_SetErrorReporter(cx, borrowedReporter);
 
     if(!JS_EvaluateUCScriptForPrincipals(sandcx, sandbox, jsPrincipals,
-                                         PromiseFlatString(source).get(),
+                                         NS_REINTERPRET_CAST(const jschar *,
+                                             PromiseFlatString(source).get()),
                                          source.Length(),
                                          PromiseFlatUTF8String(codebase).get(),
                                          1, rval)) {
