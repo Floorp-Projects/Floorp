@@ -236,6 +236,10 @@ PK11SymKey *PK11_KeyGen(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 PK11SymKey *PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
 				SECItem *param, int keySize, SECItem *keyid,
 				PRBool isToken, void *wincx);
+PK11SymKey *PK11_TokenKeyGenWithFlags(PK11SlotInfo *slot,
+				CK_MECHANISM_TYPE type, SECItem *param,
+				int keySize, SECItem *keyid, CK_FLAGS flags,
+				PRBool isToken, void *wincx);
 PK11SymKey * PK11_ListFixedKeysInSlot(PK11SlotInfo *slot, char *nickname,
 								void *wincx);
 PK11SymKey *PK11_GetNextSymKey(PK11SymKey *symKey);
