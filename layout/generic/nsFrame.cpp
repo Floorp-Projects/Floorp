@@ -3267,7 +3267,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       //resultFrame is not a block frame
 
       nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
-      result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
+      result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), EXTENSIVE,
                                     aPresContext, resultFrame, aPos->mScrollViewStop);
       if (NS_FAILED(result))
         return result;
@@ -3364,7 +3364,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
 
       if (!found){
         resultFrame = storeOldResultFrame;
-        result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
+        result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), EXTENSIVE,
                                       aPresContext, resultFrame, aPos->mScrollViewStop);
       }
       while ( !found ){
