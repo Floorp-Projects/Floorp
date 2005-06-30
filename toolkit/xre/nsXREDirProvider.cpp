@@ -332,7 +332,10 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
     if (NS_FAILED(rv))
       break;
 
-    nsCOMPtr<nsILocalFile> dir(do_CreateInstance("@mozilla.org/file/local;1"));
+    nsCOMPtr<nsILocalFile> dir = do_CreateInstance("@mozilla.org/file/local;1", &rv);
+    if (NS_FAILED(rv))
+      continue;
+
     nsCOMPtr<nsIFile> platformDir;
 #ifdef TARGET_OS_ABI
     nsCOMPtr<nsIFile> platformABIDir;
@@ -349,12 +352,18 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
         continue;
     }
 
-    dir->Clone(getter_AddRefs(platformDir));
+    rv = dir->Clone(getter_AddRefs(platformDir));
+    if (NS_FAILED(rv))
+      continue;
+
     platformDir->AppendNative(platform);
     platformDir->AppendNative(osTarget);
 
 #ifdef TARGET_OS_ABI
-    dir->Clone(getter_AddRefs(platformABIDir));
+    rv = dir->Clone(getter_AddRefs(platformABIDir));
+    if (NS_FAILED(rv))
+      continue;
+
     platformABIDir->AppendNative(platform);
     platformABIDir->AppendNative(targetOSABI);
 #endif
