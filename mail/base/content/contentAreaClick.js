@@ -53,30 +53,20 @@
     var linkNode;
     var linkNodeText;
 
-    var local_name = target.localName;
-
-    if (local_name) {
-      local_name = local_name.toLowerCase();
-    }
-    
     var isKeyPress = (event.type == "keypress");
 
-    switch (local_name) {
-      case "a":
-      case "area":
-      case "link":
-        if (target.hasAttribute("href")) 
-          linkNode = target;
-        break;
-      case "input":
-        break;
-      default:
-        linkNode = findParentNode(event.originalTarget, "a");
-        // <a> cannot be nested.  So if we find an anchor without an
-        // href, there is no useful <a> around the target
-        if (linkNode && !linkNode.hasAttribute("href"))
-          linkNode = null;
-        break;
+    if ( target instanceof HTMLAnchorElement ||
+         target instanceof HTMLAreaElement   ||
+         target instanceof HTMLLinkElement ) {
+      if (target.hasAttribute("href")) 
+        linkNode = target;
+    }
+    else if (!(target instanceof HTMLInputElement)) {
+      linkNode = findParentNode(event.originalTarget, "a");
+      // <a> cannot be nested.  So if we find an anchor without an
+      // href, there is no useful <a> around the target
+      if (linkNode && !linkNode.hasAttribute("href"))
+        linkNode = null;
     }
 
     return linkNode;

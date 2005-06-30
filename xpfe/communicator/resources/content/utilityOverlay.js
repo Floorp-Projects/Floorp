@@ -420,8 +420,7 @@ function goUpdateFindTypeMenuItems()
 }
 
 // function that extracts the filename from a url
-function extractFileNameFromUrl(urlstr)
-{
+function extractFileNameFromUrl(urlstr) {
   if (!urlstr) return null;
 
   // For "http://foo/bar/cheese.jpg", return "cheese.jpg".
@@ -450,8 +449,7 @@ function gatherTextUnder ( root )
     if ( node.nodeType == Node.TEXT_NODE ) {
       // Add this text to our collection.
       text += " " + node.data;
-    } else if ( node.nodeType == Node.ELEMENT_NODE 
-                && node.localName.toUpperCase() == "IMG" ) {
+    } else if ( node instanceof HTMLImageElement ) {
       // If it has an alt= attribute, use that.
       var altText = node.getAttribute( "alt" );
       if ( altText && altText != "" ) {
