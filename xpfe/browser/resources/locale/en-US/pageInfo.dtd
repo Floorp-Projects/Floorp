@@ -99,6 +99,7 @@
 <!ENTITY  mediaName             "Name">
 <!ENTITY  mediaAddress          "Address">
 <!ENTITY  mediaType             "Type">
+<!ENTITY  mediaCount            "Count">
 <!ENTITY  mediaPlugin           "Plugin:">
 <!ENTITY  mediaCharset          "Encoding:">
 <!ENTITY  mediaDimensions       "Specified Dimensions:">

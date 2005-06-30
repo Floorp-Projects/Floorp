@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -272,6 +272,9 @@
             <splitter class="tree-splitter"/>
             <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="4" 
                          width="4"  id="image-alt"    label="&mediaAltHeader;"/>
+            <splitter class="tree-splitter"/>
+            <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="1"
+                         width="1"  id="image-count"    label="&mediaCount;"/>
           </treecols>
           <treechildren flex="1"/>
         </tree>
