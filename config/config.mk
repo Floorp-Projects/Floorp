@@ -513,8 +513,8 @@ XPIDL_LINK	= $(CYGWIN_WRAPPER) $(DIST)/bin/xpt_link$(BIN_SUFFIX)
 endif
 
 ifeq (,$(filter-out WINCE,$(OS_ARCH)))
-XPIDL_COMPILE 	= $(CYGWIN_WRAPPER) $(topsrcdir)/../tools/xpidl.exe
-XPIDL_LINK	    = $(CYGWIN_WRAPPER) $(topsrcdir)/../tools/xpt_link.exe
+XPIDL_COMPILE 	= $(CYGWIN_WRAPPER) $(MOZ_TOOLS)/bin/xpidl.exe
+XPIDL_LINK	    = $(CYGWIN_WRAPPER) $(MOZ_TOOLS)/bin/xpt_link.exe
 endif
 
 REQ_INCLUDES	= $(foreach d,$(REQUIRES),-I$(DIST)/include/$d)
