@@ -48,6 +48,8 @@
 #include "nsIXFormsSubmissionElement.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsHashSets.h"
+
 
 class nsIMultiplexInputStream;
 class nsIDOMElement;
@@ -127,7 +129,9 @@ private:
    */
   PRBool CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI);
   PRBool CheckPermissionManager(nsIURI *aBaseURI);
-  nsresult AddNameSpaces(nsIDOMElement* aTarget, nsIDOMNode* aSource);
+  nsresult AddNameSpaces(nsIDOMElement* aTarget, nsIDOMNode* aSource,
+                         nsStringHashSet* aPrefixHash);
+  nsresult GetIncludeNSPrefixesAttr(nsStringHashSet** aHash);
 };
 
 NS_HIDDEN_(nsresult)

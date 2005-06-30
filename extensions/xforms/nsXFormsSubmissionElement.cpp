@@ -101,6 +101,9 @@
 #define kXMLNSNameSpaceURI \
         NS_LITERAL_STRING("http://www.w3.org/2000/xmlns/")
 
+#define kIncludeNamespacePrefixes \
+        NS_LITERAL_STRING("includenamespaceprefixes")
+
 // submission methods
 #define METHOD_GET                    0x01
 #define METHOD_POST                   0x02
@@ -789,23 +792,36 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
   }
 
   if (serialize) {
-    rv = AddNameSpaces(newDocElm, node);
+    // Handle "includenamespaceprefixes" attribute, if present
+    nsStringHashSet* prefixHash = nsnull;
+    PRBool hasPrefixAttr = PR_FALSE;
+    mElement->HasAttribute(kIncludeNamespacePrefixes, &hasPrefixAttr);
+    if (hasPrefixAttr) {
+      rv = GetIncludeNSPrefixesAttr(&prefixHash);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // handle namespace on main document
+    rv = AddNameSpaces(newDocElm, node, prefixHash);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // handle namespaces on the model
     node = do_QueryInterface(model);
     NS_ENSURE_STATE(node);
-    rv = AddNameSpaces(newDocElm, node);
+    rv = AddNameSpaces(newDocElm, node, prefixHash);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // handle namespaces on the xforms:instance
-    rv = AddNameSpaces(newDocElm, instanceNode);
+    rv = AddNameSpaces(newDocElm, instanceNode, prefixHash);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // handle namespaces on the root element of the instance document
     doc->GetDocumentElement(getter_AddRefs(docElm));
-    rv = AddNameSpaces(newDocElm, docElm);
+    rv = AddNameSpaces(newDocElm, docElm, prefixHash);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (prefixHash)
+      delete prefixHash;
   }
 
   // Serialize content
@@ -890,7 +906,9 @@ nsXFormsSubmissionElement::CheckPermissionManager(nsIURI *aBaseURI)
 }
 
 nsresult
-nsXFormsSubmissionElement::AddNameSpaces(nsIDOMElement* aTarget, nsIDOMNode* aSource)
+nsXFormsSubmissionElement::AddNameSpaces(nsIDOMElement* aTarget,
+                                         nsIDOMNode* aSource,
+                                         nsStringHashSet* aPrefixHash)
 {
   nsCOMPtr<nsIDOMNamedNodeMap> attrMap;
   nsCOMPtr<nsIDOMNode> attrNode;
@@ -913,11 +931,55 @@ nsXFormsSubmissionElement::AddNameSpaces(nsIDOMElement* aTarget, nsIDOMNode* aSo
       attrName.AssignLiteral("xmlns");
       // xmlns:foo, not xmlns=
       if (!localName.EqualsLiteral("xmlns")) {
+        // If "includenamespaceprefixes" attribute is present, don't add
+        // namespace unless it appears in hash
+        if (aPrefixHash && !aPrefixHash->Contains(localName))
+          continue;
         attrName.AppendLiteral(":");
         attrName.Append(localName);
       }
 
       aTarget->SetAttribute(attrName, value);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsXFormsSubmissionElement::GetIncludeNSPrefixesAttr(nsStringHashSet** aHash)
+{
+  NS_PRECONDITION(aHash, "null ptr");
+  if (!aHash)
+    return NS_ERROR_NULL_POINTER;
+
+  *aHash = new nsStringHashSet();
+  if (!*aHash)
+    return NS_ERROR_OUT_OF_MEMORY;
+  (*aHash)->Init(5);
+
+  nsAutoString prefixes;
+  mElement->GetAttribute(kIncludeNamespacePrefixes, prefixes);
+
+  // Cycle through space-delimited list and populate hash set
+  if (!prefixes.IsEmpty()) {
+    PRInt32 start = 0, end;
+    PRInt32 length = prefixes.Length();
+
+    do {
+      end = prefixes.FindCharInSet(" \t\r\n", start);
+      if (end != kNotFound) {
+        if (start != end) {   // this line handles consecutive space chars
+          const nsAString& p = Substring(prefixes, start, end - start);
+          (*aHash)->Put(p);
+        }
+        start = end + 1;
+      }
+    } while (end != kNotFound && start != length);
+
+    if (start != length) {
+      const nsAString& p = Substring(prefixes, start);
+      (*aHash)->Put(p);
     }
   }
 
