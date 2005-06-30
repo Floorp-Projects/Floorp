@@ -193,9 +193,14 @@ xpcarraytest::CallEchoMethodOnEachInArray(nsIID * *uuid, PRUint32 *count, void *
 
     *uuid = (nsIID*) nsMemory::Clone(&NS_GET_IID(nsIXPCTestArray), 
                                         sizeof(nsIID));
+    NS_ENSURE_TRUE(*uuid, NS_ERROR_OUT_OF_MEMORY);
 
     nsISupports** outArray = (nsISupports**) 
             nsMemory::Alloc(2 * sizeof(nsISupports*));
+    if (!outArray) {
+      nsMemory::Free(*uuid);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     outArray[0] = outArray[1] = this;    
     NS_ADDREF(this);
