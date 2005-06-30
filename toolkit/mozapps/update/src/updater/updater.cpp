@@ -585,10 +585,10 @@ class AddFile : public Action
 public:
   AddFile() : mFile(NULL) { }
 
-  int Parse(char *line);
-  int Prepare(); // check that the source file exists
-  int Execute();
-  void Finish(int status);
+  virtual int Parse(char *line);
+  virtual int Prepare(); // check that the source file exists
+  virtual int Execute();
+  virtual void Finish(int status);
 
 private:
   const char *mFile;
@@ -654,12 +654,12 @@ class PatchFile : public Action
 {
 public:
   PatchFile() : mPatchIndex(-1), pfd(-1), buf(NULL) { }
-  ~PatchFile();
+  virtual ~PatchFile();
 
-  int Parse(char *line);
-  int Prepare(); // check for the patch file and for checksums
-  int Execute();
-  void Finish(int status);
+  virtual int Parse(char *line);
+  virtual int Prepare(); // check for the patch file and for checksums
+  virtual int Execute();
+  virtual void Finish(int status);
 
 private:
   int LoadSourceFile(int ofd);
@@ -823,6 +823,130 @@ PatchFile::Finish(int status)
 
   backup_finish(mFile, status);
 }
+
+class AddIfFile : public AddFile
+{
+public:
+  AddIfFile() : mTestFile(NULL) { }
+
+  virtual int Parse(char *line);
+  virtual int Prepare(); // check that the source file exists
+  virtual int Execute();
+  virtual void Finish(int status);
+
+protected:
+  const char *mTestFile;
+};
+
+int
+AddIfFile::Parse(char *line)
+{
+  // format "<testfile>" "<newfile>"
+
+  mTestFile = mstrtok(kQuote, &line);
+  if (!mTestFile)
+    return PARSE_ERROR;
+
+  // consume whitespace between args
+  char *q = mstrtok(kQuote, &line);
+  if (!q)
+    return PARSE_ERROR;
+
+  return AddFile::Parse(line);
+}
+
+int
+AddIfFile::Prepare()
+{
+  // If the test file does not exist, then turn disable this action.
+  if (access(mTestFile, F_OK)) {
+    mTestFile = NULL;
+    return OK;
+  }
+
+  return AddFile::Prepare();
+}
+
+int
+AddIfFile::Execute()
+{
+  if (!mTestFile)
+    return OK;
+
+  return AddFile::Execute();
+}
+
+void
+AddIfFile::Finish(int status)
+{
+  if (!mTestFile)
+    return;
+
+  AddFile::Finish(status);
+}
+
+class PatchIfFile : public PatchFile
+{
+public:
+  PatchIfFile() : mTestFile(NULL) { }
+
+  virtual int Parse(char *line);
+  virtual int Prepare(); // check for the patch file and for checksums
+  virtual int Execute();
+  virtual void Finish(int status);
+
+private:
+  const char *mTestFile;
+};
+
+int
+PatchIfFile::Parse(char *line)
+{
+  // format "<testfile>" "<patchfile>" "<filetopatch>"
+
+  mTestFile = mstrtok(kQuote, &line);
+  if (!mTestFile)
+    return PARSE_ERROR;
+
+  // consume whitespace between args
+  char *q = mstrtok(kQuote, &line);
+  if (!q)
+    return PARSE_ERROR;
+
+  return PatchFile::Parse(line);
+}
+
+int
+PatchIfFile::Prepare()
+{
+  // If the test file does not exist, then turn disable this action.
+  if (access(mTestFile, F_OK)) {
+    mTestFile = NULL;
+    return OK;
+  }
+
+  return PatchFile::Prepare();
+}
+
+int
+PatchIfFile::Execute()
+{
+  if (!mTestFile)
+    return OK;
+
+  return PatchFile::Execute();
+}
+
+void
+PatchIfFile::Finish(int status)
+{
+  if (!mTestFile)
+    return;
+
+  PatchFile::Finish(status);
+}
+
+//-----------------------------------------------------------------------------
 
 static void
 LaunchCallbackApp(int argc, char **argv)
@@ -1095,6 +1219,12 @@ int DoUpdate()
     }
     else if (strcmp(token, "patch") == 0) {
       action = new PatchFile();
+    }
+    else if (strcmp(token, "add-if") == 0) {
+      action = new AddIfFile();
+    }
+    else if (strcmp(token, "patch-if") == 0) {
+      action = new PatchIfFile();
     }
     else {
       return PARSE_ERROR;
