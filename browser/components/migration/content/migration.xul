@@ -65,8 +65,8 @@
       <radio id="phoenix"   label="&importFromPhoenix.label;"   accesskey="&importFromPhoenix.accesskey;"/>
 #ifdef XP_UNIX
 #ifdef XP_MACOSX
-<!-- XXXben - uncomment these as we write migrators for them
       <radio id="safari"    label="&importFromSafari.label;"    accesskey="&importFromSafari.accesskey;"/>
+<!-- XXXben - uncomment these as we write migrators for them
       <radio id="macie"     label="&importFromIE.label;"        accesskey="&importFromIE.accesskey;"/>
       <radio id="camino"    label="&importFromCamino.label;"    accesskey="&importFromCamino.accesskey;"/>
       <radio id="omniweb"   label="&importFromOmniWeb.label;"   accesskey="&importFromOmniWeb.accesskey;"/>

@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  Ben Goodger <ben@bengoodger.com>
+ *  Asaf Romano <mozilla.mano@sent.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,8 +38,13 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsBrowserProfileMigratorUtils.h"
+#include "nsCRT.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsIBookmarksService.h"
+#include "nsIBrowserHistory.h"
+#include "nsICookieManager2.h"
 #include "nsIFileProtocolHandler.h"
+#include "nsIFormHistory.h"
 #include "nsIIOService.h"
 #include "nsILocalFileMac.h"
 #include "nsIObserverService.h"
@@ -50,13 +56,26 @@
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
+#include "nsIStringBundle.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
 #include "nsSafariProfileMigrator.h"
+#include "nsToolkitCompsCID.h"
+#include "nsNetUtil.h"
+#include "nsAutoBuffer.h"
 
-#include <InternetConfig.h>
+#include <Carbon/Carbon.h>
 
-#define SAFARI_PREFERENCES_FILE_NAME NS_LITERAL_STRING("com.apple.Safari.plist")
+#define SAFARI_PREFERENCES_FILE_NAME      NS_LITERAL_STRING("com.apple.Safari.plist")
+#define SAFARI_BOOKMARKS_FILE_NAME        NS_LITERAL_STRING("Bookmarks.plist")
+#define SAFARI_HISTORY_FILE_NAME          NS_LITERAL_STRING("History.plist")
+#define SAFARI_COOKIES_FILE_NAME          NS_LITERAL_STRING("Cookies.plist")
+#define SAFARI_COOKIE_BEHAVIOR_FILE_NAME  NS_LITERAL_STRING("com.apple.WebFoundation.plist")
+#define SAFARI_HISTORY_DATE_OFFSET        978307200
+#define MIGRATION_BUNDLE                  "chrome://browser/locale/migration/migration.properties"
+
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsSafariProfileMigrator
@@ -76,24 +95,27 @@ nsSafariProfileMigrator::~nsSafariProfileMigrator()
 // nsIBrowserProfileMigrator
 
 NS_IMETHODIMP
-nsSafariProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup, const PRUnichar* aProfile)
+nsSafariProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup,
+                                 const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
 
-  PRBool aReplace = PR_FALSE;
+  PRBool replace = PR_FALSE;
 
   if (aStartup) {
-    aReplace = PR_TRUE;
+    replace = PR_TRUE;
     rv = aStartup->DoStartup();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
-  
-  COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS);
-  COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES);
-  COPY_DATA(CopyHistory,      aReplace, nsIBrowserProfileMigrator::HISTORY);
-  COPY_DATA(CopyBookmarks,    aReplace, nsIBrowserProfileMigrator::BOOKMARKS);
+
+  COPY_DATA(CopyPreferences,  replace, nsIBrowserProfileMigrator::SETTINGS);
+  COPY_DATA(CopyCookies,      replace, nsIBrowserProfileMigrator::COOKIES);
+  COPY_DATA(CopyHistory,      replace, nsIBrowserProfileMigrator::HISTORY);
+  COPY_DATA(CopyBookmarks,    replace, nsIBrowserProfileMigrator::BOOKMARKS);
+  COPY_DATA(CopyFormData,     replace, nsIBrowserProfileMigrator::FORMDATA);
+  COPY_DATA(CopyOtherData,    replace, nsIBrowserProfileMigrator::OTHERDATA);
 
   NOTIFY_OBSERVERS(MIGRATION_ENDED, nsnull);
 
@@ -101,18 +123,68 @@ nsSafariProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup, c
 }
 
 NS_IMETHODIMP
-nsSafariProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
-                                        PRBool aReplace, 
+nsSafariProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
+                                        PRBool aReplace,
                                         PRUint16* aResult)
 {
-  *aResult = 0; // XXXben implement me
+  *aResult = 0;
+  nsCOMPtr<nsIProperties> fileLocator(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+  nsCOMPtr<nsILocalFile> safariSettingsDir, safariCookiesDir;
+  fileLocator->Get(NS_MAC_USER_LIB_DIR, NS_GET_IID(nsILocalFile),
+                   getter_AddRefs(safariSettingsDir));
+  safariSettingsDir->Append(NS_LITERAL_STRING("Safari"));
+  fileLocator->Get(NS_MAC_USER_LIB_DIR, NS_GET_IID(nsILocalFile),
+                   getter_AddRefs(safariCookiesDir));
+  safariCookiesDir->Append(NS_LITERAL_STRING("Cookies"));
+
+  // Safari stores most of its user settings under ~/Library/Safari/
+  MigrationData data[] = { { ToNewUnicode(SAFARI_HISTORY_FILE_NAME),
+                             nsIBrowserProfileMigrator::HISTORY,
+                             PR_FALSE },
+                           { ToNewUnicode(SAFARI_BOOKMARKS_FILE_NAME),
+                             nsIBrowserProfileMigrator::BOOKMARKS,
+                             PR_FALSE } };
+  // Frees file name strings allocated above.
+  GetMigrateDataFromArray(data, sizeof(data)/sizeof(MigrationData),
+                          aReplace, safariSettingsDir, aResult);
+
+  // Safari stores Cookies under ~/Library/Cookies/Cookies.plist
+  MigrationData data2[] = { { ToNewUnicode(SAFARI_COOKIES_FILE_NAME),
+                              nsIBrowserProfileMigrator::COOKIES,
+                              PR_FALSE } };
+  GetMigrateDataFromArray(data2, sizeof(data2)/sizeof(MigrationData),
+                          aReplace, safariCookiesDir, aResult);
+
+  // Safari stores Preferences under ~/Library/Preferences/
+  nsCOMPtr<nsILocalFile> systemPrefsDir;
+  fileLocator->Get(NS_OSX_USER_PREFERENCES_DIR, NS_GET_IID(nsILocalFile),
+                   getter_AddRefs(systemPrefsDir));
+  MigrationData data3[]= { { ToNewUnicode(SAFARI_PREFERENCES_FILE_NAME),
+                             nsIBrowserProfileMigrator::SETTINGS,
+                             PR_FALSE } };
+  GetMigrateDataFromArray(data3, sizeof(data3)/sizeof(MigrationData),
+                          aReplace, systemPrefsDir, aResult);
+
+  // Don't offer to import the Safari user style sheet if the active profile
+  // already has a content style sheet (userContent.css)
+  PRBool hasContentStylesheet = PR_FALSE;
+  if (NS_SUCCEEDED(ProfileHasContentStyleSheet(&hasContentStylesheet)) &&
+      !hasContentStylesheet) {
+    nsCOMPtr<nsILocalFile> safariUserStylesheetFile;
+    if (NS_SUCCEEDED(GetSafariUserStyleSheet(getter_AddRefs(safariUserStylesheetFile))))
+      *aResult |= nsIBrowserProfileMigrator::OTHERDATA;
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSafariProfileMigrator::GetSourceExists(PRBool* aResult)
 {
-  *aResult = PR_FALSE; // XXXben implement me
+  PRUint16 data;
+  GetMigrateData(nsnull, PR_FALSE, &data);
+
+  *aResult = data != 0;
 
   return NS_OK;
 }
@@ -120,6 +192,7 @@ nsSafariProfileMigrator::GetSourceExists(PRBool* aResult)
 NS_IMETHODIMP
 nsSafariProfileMigrator::GetSourceHasMultipleProfiles(PRBool* aResult)
 {
+  // Safari only has one profile per-user.
   *aResult = PR_FALSE;
   return NS_OK;
 }
@@ -134,70 +207,147 @@ nsSafariProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 ///////////////////////////////////////////////////////////////////////////////
 // nsSafariProfileMigrator
 
-nsresult
-GetPListFromFile(nsILocalFile* aPListFile, CFPropertyListRef* aResult)
+CFPropertyListRef CopyPListFromFile(nsILocalFile* aPListFile)
 {
   PRBool exists;
   aPListFile->Exists(&exists);
   nsCAutoString filePath;
   aPListFile->GetNativePath(filePath);
   if (!exists)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
   nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(aPListFile));
   CFURLRef urlRef;
   macFile->GetCFURL(&urlRef);
-  
+
   CFDataRef resourceData;
 
   SInt32 errorCode;
-  Boolean status = ::CFURLCreateDataAndPropertiesFromResource(kCFAllocatorDefault, 
-                                                              urlRef, 
-                                                              &resourceData, 
-                                                              NULL, 
-                                                              NULL, 
+  Boolean status = ::CFURLCreateDataAndPropertiesFromResource(kCFAllocatorDefault,
+                                                              urlRef,
+                                                              &resourceData,
+                                                              NULL,
+                                                              NULL,
                                                               &errorCode);
   if (!status)
-    return NS_ERROR_FAILURE;
-                                                            
-  CFStringRef errorString;
-  *aResult = ::CFPropertyListCreateFromXMLData(kCFAllocatorDefault,
-                                               resourceData,
-                                               kCFPropertyListImmutable,
-                                               &errorString);
+    return nsnull;
+
+  CFPropertyListRef result = ::CFPropertyListCreateFromXMLData(kCFAllocatorDefault,
+                                                               resourceData,
+                                                               kCFPropertyListImmutable,
+                                                               NULL);
   ::CFRelease(resourceData);
   ::CFRelease(urlRef);
-  
-  return NS_OK;
+
+  return result;
+}
+
+CFDictionaryRef CopySafariPrefs()
+{
+  nsCOMPtr<nsIProperties> fileLocator(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+  nsCOMPtr<nsILocalFile> safariPrefsFile;
+  fileLocator->Get(NS_OSX_USER_PREFERENCES_DIR,
+                   NS_GET_IID(nsILocalFile),
+                   getter_AddRefs(safariPrefsFile));
+
+  safariPrefsFile->Append(SAFARI_PREFERENCES_FILE_NAME);
+
+  return (CFDictionaryRef)CopyPListFromFile(safariPrefsFile);
+}
+
+char*
+GetNullTerminatedString(CFStringRef aStringRef)
+{
+  CFIndex bufferSize = ::CFStringGetLength(aStringRef) + 1;
+  char* buffer = (char*)malloc(sizeof(char) * bufferSize);
+  if (!buffer)
+    return nsnull;
+  if (::CFStringGetCString(aStringRef, buffer, bufferSize,
+                           kCFStringEncodingASCII))
+    buffer[bufferSize-1] = '\0';
+  return buffer;
+}
+
+void
+FreeNullTerminatedString(char* aString)
+{
+  nsCRT::free(aString);
+  aString = nsnull;
+}
+
+PRBool
+GetDictionaryStringValue(CFDictionaryRef aDictionary, CFStringRef aKey,
+                         nsAString& aResult)
+{
+  CFStringRef value = (CFStringRef)::CFDictionaryGetValue(aDictionary, aKey);
+  if (value) {
+    nsAutoBuffer<UniChar, 1024> buffer;
+    CFIndex valueLength = ::CFStringGetLength(value);
+    buffer.EnsureElemCapacity(valueLength);
+
+    ::CFStringGetCharacters(value, CFRangeMake(0, valueLength), buffer.get());
+    aResult.Assign(buffer.get(), valueLength);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool
+GetDictionaryCStringValue(CFDictionaryRef aDictionary, CFStringRef aKey,
+                          nsACString& aResult, CFStringEncoding aEncoding)
+{
+  CFStringRef value = (CFStringRef)::CFDictionaryGetValue(aDictionary, aKey);
+  if (value) {
+    nsAutoBuffer<char, 1024> buffer;
+    CFIndex valueLength = ::CFStringGetLength(value);
+    buffer.EnsureElemCapacity(valueLength);
+
+    if (::CFStringGetCString(value, buffer.get(), sizeof(buffer.get()), aEncoding)) {
+      aResult = buffer.get();
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+PRBool
+GetArrayStringValue(CFArrayRef aArray, PRInt32 aIndex, nsAString& aResult)
+{
+  CFStringRef value = (CFStringRef)::CFArrayGetValueAtIndex(aArray, aIndex);
+  if (value) {
+    nsAutoBuffer<UniChar, 1024> buffer;
+    CFIndex valueLength = ::CFStringGetLength(value);
+    buffer.EnsureElemCapacity(valueLength);
+
+    ::CFStringGetCharacters(value, CFRangeMake(0, valueLength), buffer.get());
+    aResult.Assign(buffer.get(), valueLength);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 #define _SPM(type) nsSafariProfileMigrator::type
 
-static
+static const
 nsSafariProfileMigrator::PrefTransform gTransforms[] = {
-  { CFSTR("AlwaysShowTabBar"),            _SPM(BOOL),   "browser.tabs.autoHide",          _SPM(SetBoolInverted), PR_FALSE, -1 },
-  { CFSTR("AutoFillPasswords"),           _SPM(BOOL),   "signon.rememberSignons",         _SPM(SetBool), PR_FALSE, -1 },
-  { CFSTR("OpenNewTabsInFront"),          _SPM(BOOL),   "browser.tabs.loadInBackground",  _SPM(SetBoolInverted), PR_FALSE, -1 },
-  { CFSTR("NSDefaultOpenDir"),            _SPM(STRING), "browser.download.dir",           _SPM(SetDownloadFolder), PR_FALSE, -1 },
-  { CFSTR("AutoOpenSafeDownloads"),       _SPM(BOOL),   "", _SPM(SetDownloadHandlers), PR_FALSE, -1 },
-  { CFSTR("DownloadsClearingPolicy"),     _SPM(INT),    "", _SPM(SetDownloadRetention), PR_FALSE, -1 },
-  { CFSTR("RecentSearchStrings"),         _SPM(STRING), "", _SPM(SetGoogleBar), PR_FALSE, -1 },
-  { CFSTR("WebKitDefaultTextEncodingName"),_SPM(STRING), "", _SPM(SetDefaultEncoding), PR_FALSE, -1 },
-  { CFSTR("WebKitStandardFont"),          _SPM(STRING), "", _SPM(SetString), PR_FALSE, -1 },
-  { CFSTR("WebKitDefaultFontSize"),       _SPM(INT),    "", _SPM(SetInt), PR_FALSE, -1 },
-  { CFSTR("WebKitFixedFont"),             _SPM(STRING), "", _SPM(SetString), PR_FALSE, -1 },
-  { CFSTR("WebKitDefaultFixedFontSize"),  _SPM(INT),    "", _SPM(SetInt), PR_FALSE, -1 },
-  { CFSTR("WebKitDisplayImagesKey"),      _SPM(BOOL),   "", _SPM(SetBool), PR_FALSE, -1 },
-  { CFSTR("WebKitJavaEnabled"),           _SPM(BOOL),   "", _SPM(SetBool), PR_FALSE, -1 },
-  { CFSTR("WebKitJavaScriptEnabled"),     _SPM(BOOL),   "", _SPM(SetBool), PR_FALSE, -1 },
-  { CFSTR("WebKitMinimumFontSize"),       _SPM(INT),    "", _SPM(SetInt), PR_FALSE, -1 },
-  { CFSTR("WebKitJavaScriptCanOpenWindowsAutomatically"), _SPM(BOOL), "", _SPM(SetBoolInverted), PR_FALSE, -1 }
+  { CFSTR("AlwaysShowTabBar"),            _SPM(BOOL),     "browser.tabs.autoHide",          _SPM(SetBoolInverted), PR_FALSE, -1 },
+  { CFSTR("AutoFillPasswords"),           _SPM(BOOL),     "signon.rememberSignons",         _SPM(SetBool), PR_FALSE, -1 },
+  { CFSTR("OpenNewTabsInFront"),          _SPM(BOOL),     "browser.tabs.loadInBackground",  _SPM(SetBoolInverted), PR_FALSE, -1 },
+  { CFSTR("NSDefaultOpenDir"),            _SPM(STRING),   "browser.download.dir",           _SPM(SetDownloadFolder), PR_FALSE, -1 },
+  { CFSTR("AutoOpenSafeDownloads"),       _SPM(BOOL),     nsnull,                           _SPM(SetDownloadHandlers), PR_FALSE, -1 },
+  { CFSTR("DownloadsClearingPolicy"),     _SPM(INT),      "browser.download.manager.retention", _SPM(SetDownloadRetention), PR_FALSE, -1 },
+  { CFSTR("WebKitDefaultTextEncodingName"),_SPM(STRING),  "intl.charset.default",           _SPM(SetDefaultEncoding), PR_FALSE, -1 },
+  { CFSTR("WebKitStandardFont"),          _SPM(STRING),   "font.name.serif.",               _SPM(SetFontName), PR_FALSE, -1 },
+  { CFSTR("WebKitDefaultFontSize"),       _SPM(INT),      "font.size.serif.",               _SPM(SetFontSize), PR_FALSE, -1 },
+  { CFSTR("WebKitFixedFont"),             _SPM(STRING),   "font.name.fixed.",               _SPM(SetFontName), PR_FALSE, -1 },
+  { CFSTR("WebKitDefaultFixedFontSize"),  _SPM(INT),      "font.size.fixed.",               _SPM(SetFontSize), PR_FALSE, -1 },
+  { CFSTR("WebKitMinimumFontSize"),       _SPM(INT),      "font.minimum-size.",             _SPM(SetFontSize), PR_FALSE, -1 },
+  { CFSTR("WebKitDisplayImagesKey"),      _SPM(BOOL),     "network.image.imageBehavior",    _SPM(SetDisplayImages), PR_FALSE, -1 },
+  { CFSTR("WebKitJavaEnabled"),           _SPM(BOOL),     "security.enable_java",           _SPM(SetBool), PR_FALSE, -1 },
+  { CFSTR("WebKitJavaScriptEnabled"),     _SPM(BOOL),     "javascript.enabled",             _SPM(SetBool), PR_FALSE, -1 },
+  { CFSTR("WebKitJavaScriptCanOpenWindowsAutomatically"),
+                                          _SPM(BOOL),     "dom.disable_open_during_load",   _SPM(SetBoolInverted), PR_FALSE, -1 }
 };
-
-#if 0
-WebKitUserStyleSheetEnabledPreferenceKey - BOOLEAN
-WebKitUserStyleSheetLocationPreferenceKey - STRING
-#endif
 
 nsresult
 nsSafariProfileMigrator::SetBool(void* aTransform, nsIPrefBranch* aBranch)
@@ -227,63 +377,92 @@ nsSafariProfileMigrator::SetInt(void* aTransform, nsIPrefBranch* aBranch)
   return aBranch->SetIntPref(xform->targetPrefName, !xform->intValue);
 }
 
+struct charsetEntry {
+  const char *webkitLabel;
+  size_t webkitLabelLength;
+  const char *mozLabel;
+  const char *associatedLangGroup;
+};
+
+static const charsetEntry gCharsets[] = {
+#define CHARSET_ENTRY(charsetLabel, associatedLangGroup) \
+  {#charsetLabel, sizeof(#charsetLabel) - 1, #charsetLabel, #associatedLangGroup}
+#define CHARSET_ENTRY2(webkitLabel, mozLabel, associatedLangGroup) \
+  {#webkitLabel, sizeof(#webkitLabel) - 1, #mozLabel, #associatedLangGroup}
+
+  CHARSET_ENTRY(ISO-8859-1,x-western),
+  CHARSET_ENTRY2(MACINTOSH,x-mac-roman,x-western),
+  // Since "x-unicode" in the font dialog means "Other Languages" (that is,
+  // languages which don't have their own script), we're picking the default
+  // font group - "Western".
+  CHARSET_ENTRY(UTF-8,x-western),
+  CHARSET_ENTRY2(SHIFT_JIS,Shift_JIS,ja),
+  CHARSET_ENTRY(ISO-2022-JP,ja),
+  CHARSET_ENTRY(EUC-JP,ja),
+  CHARSET_ENTRY2(BIG5,Big5,zh-TW),
+  CHARSET_ENTRY(CP950,zh-TW),
+  CHARSET_ENTRY(Big5-HKSCS,zh-HK),
+  CHARSET_ENTRY(ISO-2022-KR,ko),
+  // XXX: fallback to the generic Korean encoding
+  CHARSET_ENTRY2(X-MAC-KOREAN,ISO-2022-KR,ko),
+  CHARSET_ENTRY(CP949,ko),
+  CHARSET_ENTRY(ISO-8859-6,ar),
+  CHARSET_ENTRY2(WINDOWS-1256,windows-1256,ar),
+  CHARSET_ENTRY(ISO-8859-8,he),
+  CHARSET_ENTRY2(WINDOWS-1255,windows-1255,he),
+  CHARSET_ENTRY(ISO-8859-7,el),
+  CHARSET_ENTRY2(WINDOWS-1253,windows-1253,el),
+  CHARSET_ENTRY(ISO-8859-5,x-cyrillic),
+  CHARSET_ENTRY2(X-MAC-CYRILLIC,x-mac-cyrillic,x-cyrillic),
+  CHARSET_ENTRY(KOI8-R,x-cyrillic),
+  CHARSET_ENTRY2(WINDOWS-1251,windows-1251,x-cyrillic),
+  CHARSET_ENTRY(CP874,th),
+  CHARSET_ENTRY2(GB_2312-80,GB2312,zh-CN),
+  CHARSET_ENTRY(HZ-GB-2312,zh-CN),
+  CHARSET_ENTRY2(GB18030,gb18030,zh-CN),
+  CHARSET_ENTRY(ISO-8859-2,x-central-euro),
+  CHARSET_ENTRY2(X-MAC-CENTRALEURROMAN,x-mac-ce,x-central-euro),
+  CHARSET_ENTRY2(WINDOWS-1250,windows-1250,x-central-euro),
+  CHARSET_ENTRY(ISO-8859-4,x-central-euro),
+  CHARSET_ENTRY(ISO-8859-9,tr),
+  CHARSET_ENTRY2(WINDOWS-125,windows-1254,tr),
+  CHARSET_ENTRY2(WINDOWS-1257,windows-1257,x-baltic)
+  
+#undef CHARSET_ENTRY
+#undef CHARSET_ENTRY2
+};
+
 nsresult
 nsSafariProfileMigrator::SetDefaultEncoding(void* aTransform, nsIPrefBranch* aBranch)
 {
   PrefTransform* xform = (PrefTransform*)aTransform;
-  
-  nsCAutoString encodingSuffix;
+
+  nsCAutoString associatedLangGroup;
   nsDependentCString encoding(xform->stringValue);
-  if (encoding.Equals(NS_LITERAL_CSTRING("MACINTOSH")) || 
-      encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-1")))
-    encodingSuffix = "x-western";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("UTF-8")))
-    encodingSuffix = "x-unicode";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("SHIFT_JIS")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("ISO-2822-JP")) |
-           encoding.Equals(NS_LITERAL_CSTRING("EUC-JP"))) 
-    encodingSuffix = "ja";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("BIG5")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("CP950")))
-    encodingSuffix = "zh-TW";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("Big5-HKSCS")))
-    encodingSuffix = "zh-HK";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-2022-KR")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("X-MAC-KOREAN")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("CP949")))
-    encodingSuffix = "ko";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-6")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1256")))
-    encodingSuffix = "ar";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-8")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1255")))
-    encodingSuffix = "he";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-7")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1253")))
-    encodingSuffix = "el";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-5")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("X-MAC-CYRILLIC")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("KOI8-R")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1251")))
-    encodingSuffix = "x-cyrillic";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("CP874")))
-    encodingSuffix = "th";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("GB_2312-80")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("HZ-GB-2312")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("GB18030")))
-    encodingSuffix = "zh-CN";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-2")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("X-MAC-CENTRALEURROMAN")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1250")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-4")))
-    encodingSuffix = "x-central-euro";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-9")) ||
-           encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1254")))
-    encodingSuffix = "tr";
-  else if (encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1257")))
-    encodingSuffix = "x-baltic";
-  
-  return aBranch->SetCharPref("migration.fontEncodingSuffix", encodingSuffix.get());
+  PRUint32 encodingLength = encoding.Length();
+  const char* encodingStr = encoding.get();
+
+  PRInt16 charsetIndex = -1;
+  for (PRUint16 i = 0; (charsetIndex == -1) &&
+                       i < (sizeof(gCharsets) / sizeof(gCharsets[0])); ++i) {
+    if (gCharsets[i].webkitLabelLength == encodingLength &&
+        !nsCRT::strcmp(gCharsets[i].webkitLabel, encodingStr))
+      charsetIndex = (PRInt16)i;
+  }
+  if (charsetIndex == -1) // Default to "Western"
+    charsetIndex = 0;
+
+  aBranch->SetCharPref(xform->targetPrefName, gCharsets[charsetIndex].mozLabel);
+
+  // We also want to use the default encoding for picking the default language
+  // in the fonts preferences dialog, and its associated preferences.
+
+  aBranch->SetCharPref("font.language.group",
+                       gCharsets[charsetIndex].associatedLangGroup);
+  aBranch->SetCharPref("migration.associatedLangGroup",
+                       gCharsets[charsetIndex].associatedLangGroup);
+
+  return NS_OK;
 }
 
 nsresult
@@ -291,21 +470,25 @@ nsSafariProfileMigrator::SetDownloadFolder(void* aTransform, nsIPrefBranch* aBra
 {
   PrefTransform* xform = (PrefTransform*)aTransform;
 
-  nsCOMPtr<nsILocalFile> downloadFolder(do_CreateInstance("@mozilla.org/file/local;1"));
-  downloadFolder->InitWithNativePath(nsDependentCString(xform->stringValue));
-  
-  // If the Safari download folder is the desktop, set the folderList pref appropriately so that
-  // "Desktop" is selected in the list in our Preferences UI instead of just the raw path being
-  // shown. 
-  nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1"));
+  nsCOMPtr<nsILocalFile> downloadFolder;
+  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(xform->stringValue),
+                                      PR_TRUE, getter_AddRefs(downloadFolder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If the Safari download folder is the desktop, set the folderList pref
+  // appropriately so that "Desktop" is selected in the list in our Preferences
+  // UI instead of just the raw path being shown.
+  nsCOMPtr<nsIProperties> fileLocator(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
   nsCOMPtr<nsILocalFile> desktopFolder;
-  fileLocator->Get(NS_OSX_USER_DESKTOP_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(desktopFolder));
-  
+  fileLocator->Get(NS_OSX_USER_DESKTOP_DIR, NS_GET_IID(nsILocalFile),
+                   getter_AddRefs(desktopFolder));
+
   PRBool equals;
   downloadFolder->Equals(desktopFolder, &equals);
   aBranch->SetIntPref("browser.download.folderList", equals ? 0 : 2);
-  aBranch->SetComplexValue("browser.download.defaultFolder", NS_GET_IID(nsILocalFile), downloadFolder);
-  
+  aBranch->SetComplexValue("browser.download.defaultFolder",
+                           NS_GET_IID(nsILocalFile), downloadFolder);
+
   return NS_OK;
 }
 
@@ -314,87 +497,96 @@ nsSafariProfileMigrator::SetDownloadHandlers(void* aTransform, nsIPrefBranch* aB
 {
   PrefTransform* xform = (PrefTransform*)aTransform;
   if (!xform->boolValue) {
-    // If we're not set to auto-open safe downloads, we need to clear out the mime types 
-    // list which contains default handlers. 
-    
-    nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1"));
+    // If we're not set to auto-open safe downloads, we need to clear out the
+    // mime types list which contains default handlers.
+
+    nsCOMPtr<nsIProperties> fileLocator(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
     nsCOMPtr<nsILocalFile> mimeRegistryFile;
-    fileLocator->Get(NS_APP_USER_MIMETYPES_50_FILE, NS_GET_IID(nsILocalFile), getter_AddRefs(mimeRegistryFile));
-    
+    fileLocator->Get(NS_APP_USER_MIMETYPES_50_FILE, NS_GET_IID(nsILocalFile),
+                     getter_AddRefs(mimeRegistryFile));
+
     nsCOMPtr<nsIIOService> ioService(do_GetService("@mozilla.org/network/io-service;1"));
     nsCOMPtr<nsIProtocolHandler> ph;
     ioService->GetProtocolHandler("file", getter_AddRefs(ph));
     nsCOMPtr<nsIFileProtocolHandler> fph(do_QueryInterface(ph));
-    
+
     nsCOMPtr<nsIRDFService> rdfService(do_GetService("@mozilla.org/rdf/rdf-service;1"));
     nsCOMPtr<nsIRDFDataSource> mimeTypes;
-    
+
     nsCAutoString dsURL;
     fph->GetURLSpecFromFile(mimeRegistryFile, dsURL);
     rdfService->GetDataSourceBlocking(dsURL.get(), getter_AddRefs(mimeTypes));
-    
+
     nsCOMPtr<nsIRDFResource> overridesListResource;
-    rdfService->GetResource(NS_LITERAL_CSTRING("urn:mimetypes:root"), getter_AddRefs(overridesListResource));
-    
+    rdfService->GetResource(NS_LITERAL_CSTRING("urn:mimetypes:root"),
+                            getter_AddRefs(overridesListResource));
+
     nsCOMPtr<nsIRDFContainer> overridesList(do_CreateInstance("@mozilla.org/rdf/container;1"));
     overridesList->Init(mimeTypes, overridesListResource);
-    
+
     nsCOMPtr<nsIRDFResource> handlerPropArc, externalApplicationArc;
-    rdfService->GetResource(NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#handlerProp"), getter_AddRefs(handlerPropArc));
-    rdfService->GetResource(NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#externalApplication"), getter_AddRefs(externalApplicationArc));
-    
+    rdfService->GetResource(NC_URI(handlerProp), getter_AddRefs(handlerPropArc));
+    rdfService->GetResource(NC_URI(externalApplication),
+                            getter_AddRefs(externalApplicationArc));
+
     PRInt32 count;
     overridesList->GetCount(&count);
     for (PRInt32 i = count; i >= 1; --i) {
       nsCOMPtr<nsIRDFNode> currOverrideNode;
       overridesList->RemoveElementAt(i, PR_FALSE, getter_AddRefs(currOverrideNode));
       nsCOMPtr<nsIRDFResource> currOverride(do_QueryInterface(currOverrideNode));
-      
+
       nsCOMPtr<nsIRDFNode> handlerPropNode;
-      mimeTypes->GetTarget(currOverride, handlerPropArc, PR_TRUE, getter_AddRefs(handlerPropNode));
+      mimeTypes->GetTarget(currOverride, handlerPropArc, PR_TRUE,
+                           getter_AddRefs(handlerPropNode));
       nsCOMPtr<nsIRDFResource> handlerPropResource(do_QueryInterface(handlerPropNode));
-      
+
       if (handlerPropResource) {
         nsCOMPtr<nsIRDFNode> externalApplicationNode;
-        mimeTypes->GetTarget(handlerPropResource, externalApplicationArc, PR_TRUE, getter_AddRefs(externalApplicationNode));
+        mimeTypes->GetTarget(handlerPropResource, externalApplicationArc,
+                             PR_TRUE, getter_AddRefs(externalApplicationNode));
         nsCOMPtr<nsIRDFResource> externalApplicationResource(do_QueryInterface(externalApplicationNode));
 
-        // Strip the resources down so that the datasource is completely flushed. 
+        // Strip the resources down so that the datasource is completely flushed.
         if (externalApplicationResource)
           CleanResource(mimeTypes, externalApplicationResource);
-        
+
         CleanResource(mimeTypes, handlerPropResource);
       }
       CleanResource(mimeTypes, currOverride);
     }
 
     nsCOMPtr<nsIRDFRemoteDataSource> rds(do_QueryInterface(mimeTypes));
-    if (rds) 
+    if (rds)
       rds->Flush();
   }
   return NS_OK;
 }
 
-void 
-nsSafariProfileMigrator::CleanResource(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource)
+void
+nsSafariProfileMigrator::CleanResource(nsIRDFDataSource* aDataSource,
+                                       nsIRDFResource* aResource)
 {
   nsCOMPtr<nsISimpleEnumerator> arcLabels;
   aDataSource->ArcLabelsOut(aResource, getter_AddRefs(arcLabels));
-  
+  if (!arcLabels)
+    return;
+
   do {
     PRBool hasMore;
     arcLabels->HasMoreElements(&hasMore);
-    
+
     if (!hasMore)
       break;
-    
+
     nsCOMPtr<nsIRDFResource> currArc;
     arcLabels->GetNext(getter_AddRefs(currArc));
-    
+
     if (currArc) {
       nsCOMPtr<nsIRDFNode> currTarget;
-      aDataSource->GetTarget(aResource, currArc, PR_TRUE, getter_AddRefs(currTarget));
-      
+      aDataSource->GetTarget(aResource, currArc, PR_TRUE,
+                             getter_AddRefs(currTarget));
+
       aDataSource->Unassert(aResource, currArc, currTarget);
     }
   }
@@ -402,15 +594,63 @@ nsSafariProfileMigrator::CleanResource(nsIRDFDataSource* aDataSource, nsIRDFReso
 }
 
 nsresult
-nsSafariProfileMigrator::SetDownloadRetention(void* aTransform, nsIPrefBranch* aBranch)
+nsSafariProfileMigrator::SetDownloadRetention(void* aTransform,
+                                              nsIPrefBranch* aBranch)
 {
+  // Safari stores Download Retention in the opposite order of Firefox, namely:
+  // Retention Mode:        Safari      Firefox
+  // Remove Manually        0           2
+  // Remove on Exit         1           1
+  // Remove on DL Complete  2           0
+  PrefTransform* xform = (PrefTransform*)aTransform;
+  aBranch->SetIntPref(xform->targetPrefName,
+                      xform->intValue == 0 ? 2 : xform->intValue == 2 ? 0 : 1);
   return NS_OK;
 }
 
 nsresult
-nsSafariProfileMigrator::SetGoogleBar(void* aTransform, nsIPrefBranch* aBranch)
+nsSafariProfileMigrator::SetDisplayImages(void* aTransform, nsIPrefBranch* aBranch)
 {
+  // Firefox has an elaborate set of Image preferences. The correlation is:
+  // Mode:                            Safari    Firefox
+  // Blocked                          FALSE     2
+  // Allowed                          TRUE      0
+  // Allowed, originating site only   --        1
+  PrefTransform* xform = (PrefTransform*)aTransform;
+  aBranch->SetIntPref(xform->targetPrefName, xform->boolValue ? 0 : 2);
   return NS_OK;
+}
+
+nsresult
+nsSafariProfileMigrator::SetFontName(void* aTransform, nsIPrefBranch* aBranch)
+{
+  nsXPIDLCString associatedLangGroup;
+  nsresult rv = aBranch->GetCharPref("migration.associatedLangGroup",
+                                     getter_Copies(associatedLangGroup));
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  PrefTransform* xform = (PrefTransform*)aTransform;
+  nsCAutoString prefName(xform->targetPrefName);
+  prefName.Append(associatedLangGroup);
+
+  return aBranch->SetCharPref(prefName.get(), xform->stringValue);
+}
+
+nsresult
+nsSafariProfileMigrator::SetFontSize(void* aTransform, nsIPrefBranch* aBranch)
+{
+  nsXPIDLCString associatedLangGroup;
+  nsresult rv = aBranch->GetCharPref("migration.associatedLangGroup",
+                                     getter_Copies(associatedLangGroup));
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  PrefTransform* xform = (PrefTransform*)aTransform;
+  nsCAutoString prefName(xform->targetPrefName);
+  prefName.Append(associatedLangGroup);
+
+  return aBranch->SetIntPref(prefName.get(), xform->intValue);
 }
 
 nsresult
@@ -418,87 +658,129 @@ nsSafariProfileMigrator::CopyPreferences(PRBool aReplace)
 {
   nsCOMPtr<nsIPrefBranch> branch(do_GetService(NS_PREFSERVICE_CONTRACTID));
 
-  nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1"));
-  nsCOMPtr<nsILocalFile> safariPrefsFile;
-  fileLocator->Get(NS_MAC_USER_LIB_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(safariPrefsFile));
-  safariPrefsFile->Append(NS_LITERAL_STRING("Preferences"));
-  safariPrefsFile->Append(SAFARI_PREFERENCES_FILE_NAME);
+  CFDictionaryRef safariPrefs = CopySafariPrefs();
+  if (!safariPrefs)
+    return NS_ERROR_FAILURE;
 
-  CFDictionaryRef safariPrefs; 
-  nsresult rv = GetPListFromFile(safariPrefsFile, (CFPropertyListRef*)&safariPrefs);
-  if (NS_FAILED(rv)) 
-    return NS_OK;
-  
   // Traverse the standard transforms
   PrefTransform* transform;
-  PrefTransform* end = gTransforms + sizeof(gTransforms)/sizeof(PrefTransform);
+  const PrefTransform* end = gTransforms +
+                             sizeof(gTransforms) / sizeof(PrefTransform);
 
   for (transform = gTransforms; transform < end; ++transform) {
     Boolean hasValue = ::CFDictionaryContainsKey(safariPrefs, transform->keyName);
     if (!hasValue)
       continue;
-      
+
+    transform->prefHasValue = PR_FALSE;
     switch (transform->type) {
-    case _SPM(STRING):
+    case _SPM(STRING): {
+        CFStringRef stringValue = (CFStringRef)
+                                  ::CFDictionaryGetValue(safariPrefs,
+                                                         transform->keyName);
+        char* value = GetNullTerminatedString(stringValue);
+        if (value) {
+          transform->stringValue = value;
+          transform->prefHasValue = PR_TRUE;
+        }
+      }
       break;
-    case _SPM(INT):
+    case _SPM(INT): {
+        CFNumberRef intValue = (CFNumberRef)
+                               ::CFDictionaryGetValue(safariPrefs,
+                                                      transform->keyName);
+        PRInt32 value = 0;
+        if (::CFNumberGetValue(intValue, kCFNumberSInt32Type, &value)) {
+          transform->intValue = value;
+          transform->prefHasValue = PR_TRUE;
+        }
+      }
       break;
     case _SPM(BOOL): {
-      CFBooleanRef boolValue = (CFBooleanRef) ::CFDictionaryGetValue(safariPrefs, transform->keyName);
-      transform->boolValue = boolValue == kCFBooleanTrue;
+        CFBooleanRef boolValue = (CFBooleanRef)
+                                 ::CFDictionaryGetValue(safariPrefs,
+                                                        transform->keyName);
+        transform->boolValue = boolValue == kCFBooleanTrue;
+        transform->prefHasValue = PR_TRUE;
       }
       break;
     default:
       break;
     }
-    
-    transform->prefHasValue = PR_TRUE;
-    transform->prefSetterFunc(transform, branch);
+
+    if (transform->prefHasValue)
+      transform->prefSetterFunc(transform, branch);
+
+    if (transform->type == _SPM(STRING))
+      FreeNullTerminatedString(transform->stringValue);
   }
-    
+
   ::CFRelease(safariPrefs);
-  
+
   // Now get some of the stuff that only InternetConfig has for us, such as
   // the default home page.
-  
+
   ICInstance internetConfig;
   OSStatus error = ::ICStart(&internetConfig, 'FRFX');
   if (error == noErr) {
     ICAttr dummy;
-    
+
     char* buf = nsnull;
     SInt32 size = 256;
     do {
       buf = (char*)malloc((unsigned int)size+1);
       if (!buf)
         break;
-        
+
       error = ::ICGetPref(internetConfig, kICWWWHomePage, &dummy, buf, &size);
-      if (error != noErr && error != icTruncatedErr) {
-        free(buf);
-        *buf = nsnull;
-      }
-      else 
-        buf[size] = '\0';
-      
+      if (error != noErr && error != icTruncatedErr)
+        FreeNullTerminatedString(buf);
       size *= 2;
     }
     while (error == icTruncatedErr);
-    
-    if (*buf != 0) {
-      // This is kind of a hack... skip the first byte on the pascal string
-      // (which is the length).
-      branch->SetCharPref("browser.startup.homepage", buf + 1);
+
+    if (buf && *buf != 0) {
+      CopyPascalStringToC((ConstStr255Param)buf, buf);
+      branch->SetCharPref("browser.startup.homepage", buf);
     }
-    
-    if (buf) {
-      free(buf);
-      *buf = nsnull;
-    }
-    
+
+    if (buf)
+      FreeNullTerminatedString(buf);
+
     ::ICStop(internetConfig);
   }
 
+  // Safari stores the Cookie "Accept/Don't Accept/Don't Accept Foreign" cookie
+  // setting in a separate WebFoundation preferences PList.
+  nsCOMPtr<nsIProperties> fileLocator(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+  nsCOMPtr<nsILocalFile> safariWebFoundationPrefsFile;
+  fileLocator->Get(NS_OSX_USER_PREFERENCES_DIR, NS_GET_IID(nsILocalFile),
+                   getter_AddRefs(safariWebFoundationPrefsFile));
+  safariWebFoundationPrefsFile->Append(SAFARI_COOKIE_BEHAVIOR_FILE_NAME);
+
+  CFDictionaryRef safariWebFoundationPrefs =
+                  (CFDictionaryRef)CopyPListFromFile(safariWebFoundationPrefsFile);
+  if (safariWebFoundationPrefs) {
+    // Mapping of Safari preference values to Firefox preference values:
+    //
+    // Setting                    Safari          Firefox
+    // Always Accept              always          0
+    // Accept from Originating    current page    1
+    // Never Accept               never           2
+    nsAutoString acceptCookies;
+    if (GetDictionaryStringValue(safariWebFoundationPrefs,
+                                 CFSTR("NSHTTPAcceptCookies"), acceptCookies)) {
+      PRInt32 cookieValue = 0;
+      if (acceptCookies.EqualsLiteral("never"))
+        cookieValue = 2;
+      else if (acceptCookies.EqualsLiteral("current page"))
+        cookieValue = 1;
+
+      branch->SetIntPref("network.cookie.cookieBehavior", cookieValue);
+    }
+
+    ::CFRelease(safariWebFoundationPrefs);
+  }
 
   return NS_OK;
 }
@@ -506,18 +788,388 @@ nsSafariProfileMigrator::CopyPreferences(PRBool aReplace)
 nsresult
 nsSafariProfileMigrator::CopyCookies(PRBool aReplace)
 {
+  nsCOMPtr<nsIProperties> fileLocator(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+  nsCOMPtr<nsILocalFile> safariCookiesFile;
+  fileLocator->Get(NS_MAC_USER_LIB_DIR,
+                   NS_GET_IID(nsILocalFile),
+                   getter_AddRefs(safariCookiesFile));
+  safariCookiesFile->Append(NS_LITERAL_STRING("Cookies"));
+  safariCookiesFile->Append(SAFARI_COOKIES_FILE_NAME);
+
+  CFArrayRef safariCookies = (CFArrayRef)CopyPListFromFile(safariCookiesFile);
+  if (!safariCookies)
+    return NS_OK;
+
+  nsCOMPtr<nsICookieManager2> cookieManager(do_GetService(NS_COOKIEMANAGER_CONTRACTID));
+  CFIndex count = ::CFArrayGetCount(safariCookies);
+  for (PRInt32 i = 0; i < count; ++i) {
+    CFDictionaryRef entry = (CFDictionaryRef)::CFArrayGetValueAtIndex(safariCookies, i);
+
+    CFDateRef date = (CFDateRef)::CFDictionaryGetValue(entry, CFSTR("Expires"));
+
+    nsCAutoString domain, path, name, value;
+    if (date &&
+        GetDictionaryCStringValue(entry, CFSTR("Domain"), domain,
+                                  kCFStringEncodingUTF8) &&
+        GetDictionaryCStringValue(entry, CFSTR("Path"), path,
+                                  kCFStringEncodingUTF8) &&
+        GetDictionaryCStringValue(entry, CFSTR("Name"), name,
+                                  kCFStringEncodingASCII) &&
+        GetDictionaryCStringValue(entry, CFSTR("Value"), value,
+                                  kCFStringEncodingASCII)) {
+      PRInt64 expiryTime;
+      LL_D2L(expiryTime, (double)::CFDateGetAbsoluteTime(date));
+
+      cookieManager->Add(domain, path, name, value,
+                         PR_FALSE, PR_FALSE, expiryTime);
+    }
+  }
+  ::CFRelease(safariCookies);
+
   return NS_OK;
 }
 
 nsresult
 nsSafariProfileMigrator::CopyHistory(PRBool aReplace)
 {
+  nsCOMPtr<nsIProperties> fileLocator(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+  nsCOMPtr<nsILocalFile> safariHistoryFile;
+  fileLocator->Get(NS_MAC_USER_LIB_DIR, NS_GET_IID(nsILocalFile),
+                   getter_AddRefs(safariHistoryFile));
+  safariHistoryFile->Append(NS_LITERAL_STRING("Safari"));
+  safariHistoryFile->Append(SAFARI_HISTORY_FILE_NAME);
+
+  CFDictionaryRef safariHistory = (CFDictionaryRef)CopyPListFromFile(safariHistoryFile);
+  if (!safariHistory)
+    return NS_OK;
+
+  if (!::CFDictionaryContainsKey(safariHistory, CFSTR("WebHistoryDates"))) {
+    ::CFRelease(safariHistory);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIBrowserHistory> history(do_GetService(kGlobalHistoryCID));
+
+  CFArrayRef children = (CFArrayRef)
+                ::CFDictionaryGetValue(safariHistory, CFSTR("WebHistoryDates"));
+  if (children) {
+    CFIndex count = ::CFArrayGetCount(children);
+    for (PRInt32 i = 0; i < count; ++i) {
+      CFDictionaryRef entry = (CFDictionaryRef)::CFArrayGetValueAtIndex(children, i);
+
+      CFStringRef lastVisitedDate = (CFStringRef)
+                        ::CFDictionaryGetValue(entry, CFSTR("lastVisitedDate"));
+      nsAutoString url, title;
+      if (GetDictionaryStringValue(entry, CFSTR(""), url) &&
+          GetDictionaryStringValue(entry, CFSTR("title"), title) &&
+          lastVisitedDate) {
+
+        double lvd = ::CFStringGetDoubleValue(lastVisitedDate) + SAFARI_HISTORY_DATE_OFFSET;
+        PRTime lastVisitTime;
+        PRInt64 temp, million;
+        LL_D2L(temp, lvd);
+        LL_I2L(million, PR_USEC_PER_SEC);
+        LL_MUL(lastVisitTime, temp, million);
+
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), url);
+        if (uri)
+          history->AddPageWithDetails(uri, title.get(), lastVisitTime);
+      }
+    }
+  }
+
+  ::CFRelease(safariHistory);
+
   return NS_OK;
 }
 
-nsresult 
+nsresult
 nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
 {
+  // If "aReplace" is true, merge into the root level of bookmarks. Otherwise, create
+  // a folder called "Imported IE Favorites" and place all the Bookmarks there.
+  nsresult rv;
+
+  nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1"));
+  nsCOMPtr<nsIRDFResource> root;
+  rdf->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"), getter_AddRefs(root));
+
+  nsCOMPtr<nsIBookmarksService> bms(do_GetService("@mozilla.org/browser/bookmarks-service;1"));
+  NS_ENSURE_TRUE(bms, NS_ERROR_FAILURE);
+  PRBool dummy;
+  bms->ReadBookmarks(&dummy);
+
+  nsCOMPtr<nsIRDFResource> folder;
+  if (!aReplace) {
+    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIStringBundle> bundle;
+    bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(bundle));
+
+    nsXPIDLString sourceNameSafari;
+    bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameSafari").get(),
+                              getter_Copies(sourceNameSafari));
+
+    const PRUnichar* sourceNameStrings[] = { sourceNameSafari.get() };
+    nsXPIDLString importedSafariBookmarksTitle;
+    bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
+                                 sourceNameStrings, 1,
+                                 getter_Copies(importedSafariBookmarksTitle));
+
+    bms->CreateFolderInContainer(importedSafariBookmarksTitle.get(), root, -1,
+                                 getter_AddRefs(folder));
+  }
+  else {
+    // In non-replace mode we are merging at the top level.
+    folder = root;
+  }
+
+  nsCOMPtr<nsIProperties> fileLocator(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+  nsCOMPtr<nsILocalFile> safariBookmarksFile;
+  fileLocator->Get(NS_MAC_USER_LIB_DIR, NS_GET_IID(nsILocalFile),
+                   getter_AddRefs(safariBookmarksFile));
+  safariBookmarksFile->Append(NS_LITERAL_STRING("Safari"));
+  safariBookmarksFile->Append(SAFARI_BOOKMARKS_FILE_NAME);
+
+  CFDictionaryRef safariBookmarks = (CFDictionaryRef)CopyPListFromFile(safariBookmarksFile);
+  if (!safariBookmarks)
+    return NS_OK;
+
+  // The Safari Bookmarks file looks like this:
+  // At the top level are all the Folders, Special Folders and Proxies. Proxies
+  // are references to other data sources such as History, Rendezvous etc.
+  // We ignore these. Special folders exist for the Bookmarks Toolbar folder
+  // (called "BookmarksBar" and the Bookmarks Menu (called "BookmarksMenu").
+  // We put the contents of the "BookmarksBar" folder into our Personal Toolbar
+  // and merge the contents of the "BookmarksMenu" folder and the other toplevel
+  // non-special folders under our NC:BookmarksRoot.
+  if (!::CFDictionaryContainsKey(safariBookmarks, CFSTR("Children")) ||
+      !::CFDictionaryContainsKey(safariBookmarks, CFSTR("WebBookmarkFileVersion")) ) {
+    ::CFRelease(safariBookmarks);
+    return NS_OK;
+  }
+
+  CFNumberRef intValue = (CFNumberRef)::CFDictionaryGetValue(safariBookmarks,
+                                                             CFSTR("WebBookmark" \
+                                                             "FileVersion"));
+  PRInt32 value = 0;
+  if (!::CFNumberGetValue(intValue, kCFNumberSInt32Type, &value) || value != 1)
+    return NS_OK;
+
+  CFArrayRef children = (CFArrayRef)::CFDictionaryGetValue(safariBookmarks,
+                                                           CFSTR("Children"));
+  if (children) {
+    nsresult rv = ParseBookmarksFolder(children, folder, bms, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  ::CFRelease(safariBookmarks);
+
   return NS_OK;
 }
 
+nsresult
+nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
+                                              nsIRDFResource* aParentResource,
+                                              nsIBookmarksService* aBookmarksService,
+                                              PRBool aIsAtRootLevel)
+{
+  nsresult rv;
+
+  CFIndex count = ::CFArrayGetCount(aChildren);
+  for (PRInt32 i = 0; i < count; ++i) {
+    CFDictionaryRef entry = (CFDictionaryRef)::CFArrayGetValueAtIndex(aChildren, i);
+
+    nsAutoString type;
+    if (!GetDictionaryStringValue(entry, CFSTR("WebBookmarkType"), type))
+      continue;
+
+    if (!type.EqualsLiteral("WebBookmarkTypeList") &&
+        !type.EqualsLiteral("WebBookmarkTypeLeaf"))
+      continue;
+
+    if (::CFDictionaryContainsKey(entry, CFSTR("Children")) &&
+        type.EqualsLiteral("WebBookmarkTypeList")) {
+      nsAutoString title;
+      if (!GetDictionaryStringValue(entry, CFSTR("Title"), title))
+        continue;
+
+      CFArrayRef children = (CFArrayRef)::CFDictionaryGetValue(entry,
+                                                               CFSTR("Children"));
+
+      // Look for the BookmarksBar Bookmarks and add them into the appropriate
+      // Personal Toolbar Root
+      if (title.EqualsLiteral("BookmarksBar") && aIsAtRootLevel) {
+        nsCOMPtr<nsIRDFResource> toolbarFolder;
+        aBookmarksService->GetBookmarksToolbarFolder(getter_AddRefs(toolbarFolder));
+
+        rv |= ParseBookmarksFolder(children,
+                                   toolbarFolder,
+                                   aBookmarksService,
+                                   PR_FALSE);
+      }
+      // Look for the BookmarksMenu Bookmarks and flatten them into the top level
+      else if (title.EqualsLiteral("BookmarksMenu") && aIsAtRootLevel) {
+        rv |= ParseBookmarksFolder(children,
+                                   aParentResource,
+                                   aBookmarksService,
+                                   PR_TRUE);
+      }
+      else {
+        // Encountered a Folder, so create one in our Bookmarks DataSource and then
+        // parse the contents of the Safari one into it...
+        nsCOMPtr<nsIRDFResource> folder;
+        rv |= aBookmarksService->CreateFolderInContainer(title.get(),
+                                                         aParentResource,
+                                                         -1,
+                                                         getter_AddRefs(folder));
+        rv |= ParseBookmarksFolder(children,
+                                   folder,
+                                   aBookmarksService,
+                                   PR_FALSE);
+      }
+    }
+    else if (type.EqualsLiteral("WebBookmarkTypeLeaf")) {
+      // Encountered a Bookmark, so add it to the current folder...
+      CFDictionaryRef URIDictionary = (CFDictionaryRef)
+                      ::CFDictionaryGetValue(entry, CFSTR("URIDictionary"));
+      nsAutoString title, url;
+      if (GetDictionaryStringValue(URIDictionary, CFSTR("title"), title) &&
+          GetDictionaryStringValue(entry, CFSTR("URLString"), url)) {
+        nsCOMPtr<nsIRDFResource> bookmark;
+        rv |= aBookmarksService->CreateBookmarkInContainer(title.get(),
+                                                           url.get(),
+                                                           nsnull,
+                                                           nsnull,
+                                                           nsnull,
+                                                           nsnull,
+                                                           aParentResource,
+                                                           -1,
+                                                           getter_AddRefs(bookmark));
+      }
+    }
+  }
+  return rv;
+}
+
+nsresult
+nsSafariProfileMigrator::CopyFormData(PRBool aReplace)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  CFDictionaryRef safariPrefs = CopySafariPrefs();
+  if (safariPrefs) {
+    // We lump saved Searches in with Form Data since that's how we store it.
+    // Safari stores this data in an array under the "RecentSearchStrings" key
+    // in its Preferences file.
+    Boolean hasSearchStrings = ::CFDictionaryContainsKey(safariPrefs,
+                                                         CFSTR("RecentSearchStrings"));
+    if (hasSearchStrings) {
+      nsCOMPtr<nsIFormHistory> formHistory(do_GetService("@mozilla.org/satchel/form-history;1"));
+      if (formHistory) {
+        CFArrayRef strings = (CFArrayRef)::CFDictionaryGetValue(safariPrefs,
+                                                                CFSTR("RecentSearchStrings"));
+        if (strings) {
+          CFIndex count = ::CFArrayGetCount(strings);
+          for (PRInt32 i = 0; i < count; ++i) {
+            nsAutoString value;
+            GetArrayStringValue(strings, i, value);
+            formHistory->AddEntry(NS_LITERAL_STRING("searchbar-history"), value);
+          }
+        }
+        rv = NS_OK;
+      }
+    }
+    else
+      rv = NS_OK;
+
+    ::CFRelease(safariPrefs);
+  }
+
+  return rv;
+}
+
+// Returns whether or not the active profile has a content style sheet
+// (That is chrome/userContent.css)
+nsresult
+nsSafariProfileMigrator::ProfileHasContentStyleSheet(PRBool *outExists)
+{
+  NS_ENSURE_ARG(outExists);
+
+  // Get the profile's chrome/ directory native path
+  nsCOMPtr<nsIFile> userChromeDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_CHROME_DIR,
+                                      getter_AddRefs(userChromeDir));
+  nsCAutoString userChromeDirPath;
+  rv = userChromeDir->GetNativePath(userChromeDirPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString path = userChromeDirPath + NS_LITERAL_CSTRING("/userContent.css");
+  nsCOMPtr<nsILocalFile> file;
+  rv = NS_NewNativeLocalFile(path, PR_FALSE,
+                            getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  file->Exists(outExists);
+  return NS_OK;
+}
+
+nsresult
+nsSafariProfileMigrator::GetSafariUserStyleSheet(nsILocalFile** aResult)
+{
+  *aResult = nsnull;
+
+  CFDictionaryRef safariPrefs = CopySafariPrefs();
+  if (!safariPrefs)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv = NS_ERROR_FAILURE;
+  // Check whether or not a user style sheet has been specified
+  if (::CFDictionaryContainsKey
+        (safariPrefs, CFSTR("WebKitUserStyleSheetEnabledPreferenceKey")) &&
+      ::CFDictionaryContainsKey
+        (safariPrefs, CFSTR("WebKitUserStyleSheetLocationPreferenceKey"))) {
+    CFBooleanRef hasSheet = (CFBooleanRef)::CFDictionaryGetValue(safariPrefs,
+                             CFSTR("WebKitUserStyleSheetEnabledPreferenceKey"));
+    if (hasSheet == kCFBooleanTrue) {
+      nsAutoString path;
+      // Get its path
+      if (GetDictionaryStringValue(safariPrefs,
+                                   CFSTR("WebKitUserStyleSheetLocation" \
+                                   "PreferenceKey"), path)) {
+        nsCOMPtr<nsILocalFile> file;
+        rv = NS_NewLocalFile(path, PR_FALSE, getter_AddRefs(file));
+        if (NS_SUCCEEDED(rv)) {
+          PRBool exists = PR_FALSE;
+          file->Exists(&exists);
+          if (exists) {
+            NS_ADDREF(*aResult = file);
+            rv = NS_OK;
+          }
+          else
+            rv = NS_ERROR_FILE_NOT_FOUND;
+        }
+      }
+    }
+  }
+  ::CFRelease(safariPrefs);
+
+  return rv;
+}
+
+nsresult
+nsSafariProfileMigrator::CopyOtherData(PRBool aReplace)
+{
+  // Get the Safari user style sheet and copy it into the active profile's
+  // chrome folder
+  nsCOMPtr<nsILocalFile> stylesheetFile;
+  if (NS_SUCCEEDED(GetSafariUserStyleSheet(getter_AddRefs(stylesheetFile)))) {
+    nsCOMPtr<nsIFile> userChromeDir;
+    NS_GetSpecialDirectory(NS_APP_USER_CHROME_DIR,
+                           getter_AddRefs(userChromeDir));
+
+    stylesheetFile->CopyTo(userChromeDir, NS_LITERAL_STRING("userContent.css"));
+  }
+  return NS_OK;
+}

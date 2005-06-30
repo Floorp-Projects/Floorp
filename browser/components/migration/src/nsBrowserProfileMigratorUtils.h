@@ -55,6 +55,9 @@
     NOTIFY_OBSERVERS(MIGRATION_ITEMAFTERMIGRATE, index.get()); \
   }
 
+#define NC_URI(property) \
+  NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#"#property)
+
 #include "nsIPrefBranch.h"
 #include "nsIFile.h"
 #include "nsString.h"
