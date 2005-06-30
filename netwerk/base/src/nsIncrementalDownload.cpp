@@ -235,9 +235,12 @@ nsIncrementalDownload::ProcessTimeout()
   }
 
   // Fetch next chunk
+  
+  nsCOMPtr<nsIInterfaceRequestor> callbacks = do_QueryInterface(mObserver);
 
   nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NS_NewChannel(getter_AddRefs(channel), mFinalURI);
+  nsresult rv = NS_NewChannel(getter_AddRefs(channel), mFinalURI, nsnull,
+                              nsnull, callbacks, mLoadFlags);
   if (NS_FAILED(rv))
     return rv;
 

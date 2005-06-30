@@ -901,11 +901,14 @@ nsProtocolProxyService::ConfigureFromPAC(const nsACString &spec)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    mPACURI = spec;
     mFailedProxies.Clear();
 
-    LOG(("LoadPACFromURI(\"%s\")\n", mPACURI.get()));
-    return mPACMan->LoadPACFromURI(mPACURI);
+    nsCOMPtr<nsIURI> pacURI;
+    nsresult rv = NS_NewURI(getter_AddRefs(pacURI), spec);
+    if (NS_FAILED(rv))
+        return rv;
+
+    return mPACMan->LoadPACFromURI(pacURI);
 }
 
 NS_IMETHODIMP
