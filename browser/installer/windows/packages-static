@@ -304,5 +304,7 @@ bin\components\talkback.exe
 bin\components\talkback.hlp
 
 [reporter]
-bin\chrome\reporter.jar
-bin\chrome\reporter.manifest
+bin\extensions\reporter@mozilla.org\install.rdf
+bin\extensions\reporter@mozilla.org\reporter.manifest
+bin\extensions\reporter@mozilla.org\chrome\reporter.jar
+bin\extensions\reporter@mozilla.org\defaults\preferences\reporter.js
