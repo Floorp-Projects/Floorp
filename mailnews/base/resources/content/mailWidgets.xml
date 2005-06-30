@@ -901,7 +901,7 @@
       <xul:label anonid="emailValue" class="emailDisplayButton plain"                 
                  xbl:inherits="value=label,crop"/>
       <xul:image class="emailDisplayImage" anonid="emailImage"
-                 context="emailAddressPopup" xbl:inherits="src=image"/>
+                 xbl:inherits="src=image"/>
     </content>
     
     <implementation>  
