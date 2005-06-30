@@ -743,6 +743,7 @@ CERT_FindCRLDistributionPoints (CERTCertificate *cert)
 {
     SECItem encodedExtenValue;
     SECStatus rv;
+    CERTCrlDistributionPoints *dps;
 
     encodedExtenValue.data = NULL;
     encodedExtenValue.len = 0;
@@ -753,8 +754,11 @@ CERT_FindCRLDistributionPoints (CERTCertificate *cert)
 	return (NULL);
     }
 
-    return (CERT_DecodeCRLDistributionPoints (cert->arena,
-					      &encodedExtenValue));
+    dps = CERT_DecodeCRLDistributionPoints(cert->arena, &encodedExtenValue);
+
+    PORT_Free(encodedExtenValue.data);
+
+    return dps;
 }
 
 /* From crl.c */
