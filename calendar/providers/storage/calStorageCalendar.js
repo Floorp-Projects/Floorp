@@ -698,7 +698,7 @@ calStorageCalendar.prototype = {
                 var itemIsCompleted = false;
                 if (item.todo_complete == 100 ||
                     item.todo_completed != null ||
-                    item.ical_status == calITodo.CAL_TODO_STATUS_COMPLETED)
+                    item.ical_status == kCalITodo.CAL_TODO_STATUS_COMPLETED)
                     itemIsCompleted = true;
 
                 if (!itemIsCompleted && !wantNotCompletedItems)
