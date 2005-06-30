@@ -621,6 +621,12 @@ pref("network.negotiate-auth.delegation-uris", "");
 // Allow SPNEGO by default when challenged by a proxy server.
 pref("network.negotiate-auth.allow-proxies", true);
 
+// Path to a specific gssapi library
+pref("network.negotiate-auth.gsslib", "");
+
+// Specify if the gss lib comes standard with the OS
+pref("network.negotiate-auth.using-native-gsslib", true);
+
 // The following prefs are used to enable automatic use of the operating
 // system's NTLM implementation to silently authenticate the user with their
 // Window's domain logon.  The trusted-uris pref follows the format of the

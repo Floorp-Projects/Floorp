@@ -4632,10 +4632,8 @@ if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth
     dnl
     if test -n "$GSSAPI_DIR"; then
         _GSSAPI_INC="-I$GSSAPI_DIR/include"
-        _GSSAPI_LIB="-L$GSSAPI_DIR/lib"
     else
         _GSSAPI_INC=
-        _GSSAPI_LIB=
     fi
 
     _SAVE_CPPFLAGS="$CPPFLAGS"
@@ -4643,7 +4641,6 @@ if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth
     _SAVE_LIBS="$LIBS"
 
     CPPFLAGS="$CPPFLAGS $_GSSAPI_INC"
-    LDFLAGS="$LDFLAGS $_GSSAPI_LIB"
 
     dnl
     dnl Try to set GSSAPI_INCLUDES ...
@@ -4656,46 +4653,14 @@ if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth
     fi
     CPPFLAGS="$_SAVE_CPPFLAGS $GSSAPI_INCLUDES"
 
-    dnl
-    dnl Try to set GSSAPI_LIBS ...
-    dnl
-    AC_CHECK_LIB(gss, gss_init_sec_context,
-        [GSSAPI_LIBS="$_GSSAPI_LIB -lgss"],)
-
-    dnl
-    dnl If libgss was not found, look for the MIT Kerberos V5 GSSAPI
-    dnl libraries instead.
-    dnl
-    if test -z "$GSSAPI_LIBS" ; then
-        dnl
-        dnl We only need to link to libgssapi_krb5.so
-        dnl
-        _GSS_LIBS="$_GSSAPI_LIB -lgssapi_krb5"
-        LIBS="$LIBS $_GSS_LIBS"
-        AC_CHECK_FUNC(gss_init_sec_context, 
-            [GSSAPI_LIBS="$_GSS_LIBS"],)
-        LIBS="$_SAVE_LIBS"
-    fi
-
-    dnl
-    dnl If GSS libs were STILL not found, try looking for Heimdal
-    dnl Kerberos V5 libraries.
-    dnl
-    if test -z "$GSSAPI_LIBS" ; then
+    if test -z "$GSSAPI_INCLUDES" ; then
         if test -n "$GSSAPI_DIR" ; then
             AC_PATH_PROG(KRB5CONFIG, krb5-config, :, [$GSSAPI_DIR/bin:$PATH:/usr/bin])
         else
             AC_PATH_PROG(KRB5CONFIG, krb5-config, :, [$PATH:/usr/bin])
         fi
         if test -n "$KRB5CONFIG" -a -x "$KRB5CONFIG" ; then
-            TMP_GSSAPI_LIBS=`$KRB5CONFIG --libs gssapi 2>/dev/null`
-            TMP_GSSAPI_INCLUDES=`$KRB5CONFIG --cflags gssapi 2>/dev/null`
-
-            LIBS="$LIBS $TMP_GSSAPI_LIBS"
-            AC_CHECK_LIB(gssapi, gss_init_sec_context,
-                [GSSAPI_LIBS="$TMP_GSSAPI_LIBS"
-                 GSSAPI_INCLUDES="$TMP_GSSAPI_INCLUDES"],
-                [GSSAPI_LIBS=""])
+            GSSAPI_INCLUDES=`$KRB5CONFIG --cflags gssapi 2>/dev/null`
 
             CPPFLAGS="$_SAVE_CPPFLAGS $GSSAPI_INCLUDES"
         fi
@@ -4705,27 +4670,9 @@ if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth
     dnl If GSSAPI libs were not found, remove extension from the list to be
     dnl built.
     dnl
-    if test -z "$GSSAPI_LIBS" ; then
+    if test -z "$GSSAPI_INCLUDES" ; then
         AC_MSG_WARN([Cannot build negotiateauth without GSSAPI. Removing negotatiate from MOZ_EXTENSIONS.])
         MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|negotiateauth||'`
-        GSSAPI_INCLUDES=
-    else
-        dnl
-        dnl Try to determine if the GSS_C_NT_HOSTBASED_SERVICE value is
-        dnl defined.  Older MIT releases did not define this correctly.
-        dnl
-        AC_CHECK_HEADERS([gssapi_generic.h])
-        AC_CHECK_HEADERS([gssapi/gssapi_generic.h])
-
-        AC_TRY_COMPILE([ #if defined(HAVE_GSSAPI_H)
-                         #include <gssapi.h>
-                         #elif defined(HAVE_GSSAPI_GSSAPI_H)
-                         #include <gssapi/gssapi.h>
-                         #endif ],
-            [ gss_OID oid = GSS_C_NT_HOSTBASED_SERVICE; ],
-            [AC_DEFINE(HAVE_GSS_C_NT_HOSTBASED_SERVICE)],[
-             AC_MSG_WARN([GSS_C_NT_HOSTBASED_SERVICE not found])
-            ])
     fi
 
     LIBS="$_SAVE_LIBS"
