@@ -328,7 +328,7 @@ GetArrayStringValue(CFArrayRef aArray, PRInt32 aIndex, nsAString& aResult)
 
 #define _SPM(type) nsSafariProfileMigrator::type
 
-static const
+static
 nsSafariProfileMigrator::PrefTransform gTransforms[] = {
   { CFSTR("AlwaysShowTabBar"),            _SPM(BOOL),     "browser.tabs.autoHide",          _SPM(SetBoolInverted), PR_FALSE, -1 },
   { CFSTR("AutoFillPasswords"),           _SPM(BOOL),     "signon.rememberSignons",         _SPM(SetBool), PR_FALSE, -1 },
@@ -664,8 +664,8 @@ nsSafariProfileMigrator::CopyPreferences(PRBool aReplace)
 
   // Traverse the standard transforms
   PrefTransform* transform;
-  const PrefTransform* end = gTransforms +
-                             sizeof(gTransforms) / sizeof(PrefTransform);
+  PrefTransform* end = gTransforms +
+                       sizeof(gTransforms) / sizeof(PrefTransform);
 
   for (transform = gTransforms; transform < end; ++transform) {
     Boolean hasValue = ::CFDictionaryContainsKey(safariPrefs, transform->keyName);
