@@ -46,6 +46,8 @@
 #include "gfxTypes.h"
 
 class gfxPattern {
+    THEBES_DECL_REFCOUNTING
+
 public:
     // from another surface
     gfxPattern(gfxASurface* surface) {
@@ -64,7 +66,7 @@ public:
                                                cx1, cy1, radius1);
     }
 
-    ~gfxPattern() {
+    virtual ~gfxPattern() {
         cairo_pattern_destroy(mPattern);
     }
 

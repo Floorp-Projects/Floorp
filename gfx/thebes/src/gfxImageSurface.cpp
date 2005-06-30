@@ -35,24 +35,55 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stdio.h>
+
 #include "gfxImageSurface.h"
 
 THEBES_IMPL_REFCOUNTING(gfxImageSurface)
 
-gfxImageSurface::gfxImageSurface(int format, long width, long height) :
+gfxImageSurface::gfxImageSurface(gfxImageFormat format, long width, long height) :
     mFormat(format), mWidth(width), mHeight(height)
 {
-    mData = new unsigned char[width * height * 4];
+    long stride = Stride();
+    mData = new unsigned char[height * stride];
 
-    Init(cairo_image_surface_create_for_data((unsigned char*)mData,
-                                             CAIRO_FORMAT_ARGB32,
-                                             width,
-                                             height,
-                                             width * 4));
+    //memset(mData, 0xff, height*stride);
 
+    cairo_surface_t *surface =
+        cairo_image_surface_create_for_data((unsigned char*)mData,
+                                            (cairo_format_t)format,
+                                            width,
+                                            height,
+                                            stride);
+    Init(surface);
 }
 
 gfxImageSurface::~gfxImageSurface()
 {
+    Destroy();
+
     delete[] mData;
+}
+
+long
+gfxImageSurface::Stride() const
+{
+    long stride;
+
+    if (mFormat == ImageFormatARGB32)
+        stride = mWidth * 4;
+    else if (mFormat == ImageFormatRGB24)
+        stride = mWidth * 3;
+    else if (mFormat == ImageFormatA8)
+        stride = mWidth;
+    else if (mFormat == ImageFormatA1) {
+        stride = (mWidth + 7) / 8;
+    } else {
+        NS_WARNING("Unknown format specified to gfxImageSurface!");
+        stride = mWidth * 4;
+    }
+
+    stride = ((stride + 3) / 4) * 4;
+
+    return stride;
 }

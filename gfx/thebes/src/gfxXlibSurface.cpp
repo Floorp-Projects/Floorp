@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@pavlov.net>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,12 +40,52 @@
 
 THEBES_IMPL_REFCOUNTING(gfxXlibSurface)
 
-gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable,
-                               Visual *visual)
+gfxXlibSurface::gfxXlibSurface(Display* dpy, Drawable drawable, Visual* visual) :
+    mOwnsPixmap(PR_FALSE), mDisplay(dpy), mDrawable(drawable)
 {
-    Init(cairo_xlib_surface_create(display, drawable, visual, CAIRO_FORMAT_ARGB32);
+    // figure out width/height/depth
+    Window root_ignore;
+    int x_ignore, y_ignore;
+    unsigned int bwidth_ignore, width, height, depth;
+
+    XGetGeometry(dpy,
+                 drawable,
+                 &root_ignore, &x_ignore, &y_ignore,
+                 &width, &height,
+                 &bwidth_ignore, &depth);
+
+    mWidth = width;
+    mHeight = height;
+
+    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, width, height);
+    Init(surf);
+}
+
+gfxXlibSurface::gfxXlibSurface(Display* dpy, Drawable drawable, Visual* visual,
+                               unsigned long width, unsigned long height) :
+    mOwnsPixmap(PR_FALSE), mDisplay(dpy), mDrawable(drawable), mWidth(width), mHeight(height)
+{
+    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, width, height);
+    Init(surf);
+}
+
+gfxXlibSurface::gfxXlibSurface(Display* dpy, Visual* visual, unsigned long width, unsigned long height) :
+    mOwnsPixmap(PR_TRUE), mDisplay(dpy), mWidth(width), mHeight(height)
+
+{
+    mDrawable = (Drawable)XCreatePixmap(dpy,
+                                        RootWindow(dpy, DefaultScreen(dpy)),
+                                        width, height,
+                                        DefaultDepth(dpy, DefaultScreen(dpy)));
+
+    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, pixmap, visual, width, height);
+    Init(surf);
 }
 
 gfxXlibSurface::~gfxXlibSurface()
 {
+    Destroy();
+
+    if (mOwnsPixmap)
+        XFreePixmap(mDisplay, mDrawable);
 }

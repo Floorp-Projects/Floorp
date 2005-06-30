@@ -55,8 +55,17 @@ typedef double gfxFloat;
 #include "nsAutoPtr.h"
 
 #define THEBES_IMPL_REFCOUNTING(_class)                          \
-    NS_IMPL_ADDREF(_class)                                     \
+    NS_IMPL_ADDREF(_class)                                       \
     NS_IMPL_RELEASE(_class)
+
+#define THEBES_DECL_REFCOUNTING_ABSTRACT                         \
+public:                                                          \
+  NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;                        \
+  NS_IMETHOD_(nsrefcnt) Release(void) = 0;                       \
+protected:                                                       \
+  nsAutoRefCnt mRefCnt;                                          \
+  NS_DECL_OWNINGTHREAD                                           \
+public:
 
 
 #define THEBES_DECL_REFCOUNTING                                  \

@@ -7,7 +7,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= thebes
-LIBRARY_NAME	= libthebes
+LIBRARY_NAME	= thebes
 LIBXUL_LIBRARY = 1
 
 REQUIRES = \
@@ -18,11 +18,17 @@ REQUIRES = \
 
 CPPSRCS	= \
 	gfxContext.cpp \
-	gfxImageSurface.cpp
+	gfxImageSurface.cpp \
+	gfxPattern.cpp \
+	$(NULL)
 
 
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
 CPPSRCS	+= 	gfxWindowsSurface.cpp
+endif
+
+ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
+CPPSRCS	+= 	gfxXlibSurface.cpp
 endif
 
 FORCE_STATIC_LIB = 1

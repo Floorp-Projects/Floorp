@@ -47,17 +47,25 @@ class gfxImageSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:
-    gfxImageSurface(int format, long width, long height);
+    typedef enum {
+        ImageFormatARGB32,
+        ImageFormatRGB24,
+        ImageFormatA8,
+        ImageFormatA1
+    } gfxImageFormat;
+
+    gfxImageSurface(gfxImageFormat format, long width, long height);
     virtual ~gfxImageSurface();
 
     // ImageSurface methods
-    int Format() const { return 0; }
+    int Format() const { return mFormat; }
     long Width() const { return mWidth; }
     long Height() const { return mHeight; }
-    unsigned char* GetData() { return mData; } // delete this data under us and die.
+    long Stride() const;
+    unsigned char* Data() { return mData; } // delete this data under us and die.
 
 private:
-    unsigned char* mData;
+    unsigned char *mData;
     int mFormat;
     long mWidth;
     long mHeight;

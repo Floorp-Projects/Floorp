@@ -46,9 +46,35 @@ class gfxXlibSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:
-    gfxXlibSurface(Display *dpy, Drawable drawable,
-                   Visual *visual);
+    // create a surface for the specified dpy/drawable/visual.
+    // Will use XGetGeometry to query the window/pixmap size.
+    gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual);
+
+    // create a surface for the specified dpy/drawable/visual,
+    // with explicitly provided width/height.
+    gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, unsigned long width, unsigned long height);
+
+    // create a new Pixmap on the display dpy, with
+    // the root window as the parent and the default depth
+    // for the default screen, and attach the given visual
+    gfxXlibSurface(Display *dpy, Visual *visual, unsigned long width, unsigned long height);
+
     virtual ~gfxXlibSurface();
+
+    unsigned long Width() { return mWidth; }
+    unsigned long Height() { return mHeight; }
+
+    Display* XDisplay() { return mDisplay; }
+    Drawable XDrawable() { return mDrawable; }
+
+protected:
+    PRBool mOwnsPixmap;
+
+    Display *mDisplay;
+    Drawable mDrawable;
+
+    unsigned long mWidth;
+    unsigned long mHeight;
 };
 
 #endif /* GFX_XLIBSURFACE_H */

@@ -46,22 +46,23 @@
 #include "gfxPoint.h"
 #include "gfxRect.h"
 #include "gfxTypes.h"
+#include "gfxMatrix.h"
+#include "gfxPattern.h"
 
-class gfxMatrix;
 class gfxRegion;
 class gfxFilter;
 class gfxTextRun;
-class gfxPattern;
 
 class gfxContext {
     THEBES_DECL_REFCOUNTING
 
 public:
-    gfxContext(gfxASurface* surface);
+    gfxContext(gfxASurface *surface);
     ~gfxContext();
 
     // this does not addref
     gfxASurface* CurrentSurface();
+    cairo_t* GetCairo() { return mCairo; }
 
     /**
      ** State
@@ -93,8 +94,10 @@ public:
     void NegativeArc(gfxPoint center, gfxFloat radius,
                      gfxFloat angle1, gfxFloat angle2);
 
+    // path helpers
+    void Line(gfxPoint start, gfxPoint end); // XXX snapToPixels option?
     void Rectangle(gfxRect rect, PRBool snapToPixels = PR_FALSE);
-
+    void Ellipse(gfxPoint center, gfxSize dimensions);
     void Polygon(const gfxPoint *points, PRUint32 numPoints);
 
     /**
@@ -119,6 +122,7 @@ public:
     void Multiply(const gfxMatrix& other);
 
     void SetMatrix(const gfxMatrix& matrix);
+    void IdentityMatrix();
     gfxMatrix CurrentMatrix() const;
 
     gfxPoint DeviceToUser(gfxPoint point) const;
@@ -131,8 +135,8 @@ public:
      **/
 
     void SetColor(const gfxRGBA& c);
-    void SetPattern(gfxPattern* pattern);
-    void SetSource(gfxASurface* surface) {
+    void SetPattern(gfxPattern *pattern);
+    void SetSource(gfxASurface *surface) {
         SetSource(surface, gfxPoint(0, 0));
     }
     void SetSource(gfxASurface* surface, gfxPoint origin);
@@ -148,13 +152,20 @@ public:
 
     // Creates a new path with a rectangle from 0,0 to size.w,size.h
     // and calls cairo_fill
-    void DrawSurface(gfxASurface* surface, gfxSize size);
+    void DrawSurface(gfxASurface *surface, gfxSize size);
 
     /**
      ** Line Properties
      **/
 
-    void SetDash(gfxFloat* dashes, int ndash, gfxFloat offset);
+    typedef enum {
+        gfxLineSolid,
+        gfxLineDashed,
+        gfxLineDotted
+    } gfxLineType;
+
+    void SetDash(gfxLineType ltype);
+    void SetDash(gfxFloat *dashes, int ndash, gfxFloat offset);
     //void getDash() const;
 
     void SetLineWidth(gfxFloat width);
