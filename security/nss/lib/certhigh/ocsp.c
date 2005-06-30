@@ -38,7 +38,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.20 2004/05/22 01:03:26 nelsonb%netscape.com Exp $
+ * $Id: ocsp.c,v 1.21 2005/06/30 20:53:57 wtchang%redhat.com Exp $
  */
 
 #include "prerror.h"
@@ -2296,14 +2296,9 @@ static PRBool
 ocsp_CertHasNoCheckExtension(CERTCertificate *cert)
 {
     SECStatus rv;
-    SECItem extItem;
     
-    extItem.data = NULL;
     rv = CERT_FindCertExtension(cert, SEC_OID_PKIX_OCSP_NO_CHECK, 
-				&extItem);
-    if (extItem.data != NULL) {
-	PORT_Free(extItem.data);
-    }
+				NULL);
     if (rv == SECSuccess) {
 	return PR_TRUE;
     }

@@ -37,7 +37,7 @@
 /*
  * Code for dealing with x.509 v3 crl and crl entries extensions.
  *
- * $Id: crlv2.c,v 1.3 2005/03/08 07:08:47 julien.pierre.bugs%sun.com Exp $
+ * $Id: crlv2.c,v 1.4 2005/06/30 20:53:57 wtchang%redhat.com Exp $
  */
 
 #include "cert.h"
@@ -133,9 +133,8 @@ SECStatus CERT_FindInvalidDateExten (CERTCrl *crl, int64 *value)
 
     rv = SEC_ASN1DecodeItem (NULL, &decodedExtenValue,
 			     SEC_GeneralizedTimeTemplate, &encodedExtenValue);
-    if (rv != SECSuccess)
-	return (rv);
-    rv = DER_GeneralizedTimeToTime(value, &encodedExtenValue);
+    if (rv == SECSuccess)
+	rv = DER_GeneralizedTimeToTime(value, &encodedExtenValue);
     PORT_Free (decodedExtenValue.data);
     PORT_Free (encodedExtenValue.data);
     return (rv);

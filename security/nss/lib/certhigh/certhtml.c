@@ -37,7 +37,7 @@
 /*
  * certhtml.c --- convert a cert to html
  *
- * $Id: certhtml.c,v 1.5 2004/04/25 15:03:03 gerv%gerv.net Exp $
+ * $Id: certhtml.c,v 1.6 2005/06/30 20:53:57 wtchang%redhat.com Exp $
  */
 
 #include "seccomon.h"
@@ -407,7 +407,6 @@ CERT_HTMLCertInfo(CERTCertificate *cert, PRBool showImages, PRBool showIssuer)
     char *notBefore, *notAfter;
     char *ret;
     char *nickname;
-    SECItem dummyitem;
     unsigned char fingerprint[16];   /* result of MD5, always 16 bytes */
     char *fpstr;
     SECItem fpitem;
@@ -435,12 +434,8 @@ CERT_HTMLCertInfo(CERTCertificate *cert, PRBool showImages, PRBool showIssuer)
 	showImages = PR_FALSE;
     }
 
-    dummyitem.data = NULL;
     rv = CERT_FindCertExtension(cert, SEC_OID_NS_CERT_EXT_SUBJECT_LOGO,
-			       &dummyitem);
-    if ( dummyitem.data ) {
-	PORT_Free(dummyitem.data);
-    }
+			       NULL);
     
     if ( rv || !showImages ) {
 	htmlcertstrings[1] = "";
@@ -468,13 +463,8 @@ CERT_HTMLCertInfo(CERTCertificate *cert, PRBool showImages, PRBool showIssuer)
     
     htmlcertstrings[5] = subject;
 
-    dummyitem.data = NULL;
-    
     rv = CERT_FindCertExtension(cert, SEC_OID_NS_CERT_EXT_ISSUER_LOGO,
-			       &dummyitem);
-    if ( dummyitem.data ) {
-	PORT_Free(dummyitem.data);
-    }
+			       NULL);
     
     if ( rv || !showImages ) {
 	htmlcertstrings[7] = "";
@@ -500,6 +490,7 @@ CERT_HTMLCertInfo(CERTCertificate *cert, PRBool showImages, PRBool showIssuer)
     pubk = CERT_ExtractPublicKey(cert);
     DSSPriv = NULL;
     if (pubk && (pubk->keyType == fortezzaKey)) {
+	SECItem dummyitem;
 	htmlcertstrings[18] = "</b><br><b>Clearance:</b>";
 	htmlcertstrings[19] = sec_FortezzaClearance(
 					&pubk->u.fortezza.clearance);

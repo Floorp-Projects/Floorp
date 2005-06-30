@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.72 2005/03/05 08:03:03 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.73 2005/06/30 20:53:46 wtchang%redhat.com Exp $
  */
 
 #include "nssilock.h"
@@ -545,6 +545,7 @@ cert_GetCertType(CERTCertificate *cert)
 
     tmpitem.data = NULL;
     CERT_FindNSCertTypeExtension(cert, &tmpitem);
+    encodedExtKeyUsage.data = NULL;
     rv = CERT_FindCertExtension(cert, SEC_OID_X509_EXT_KEY_USAGE, 
 				&encodedExtKeyUsage);
     if (rv == SECSuccess) {
@@ -671,8 +672,10 @@ cert_GetCertType(CERTCertificate *cert)
 	}
     }
 
-    if (extKeyUsage != NULL) {
+    if (encodedExtKeyUsage.data != NULL) {
 	PORT_Free(encodedExtKeyUsage.data);
+    }
+    if (extKeyUsage != NULL) {
 	CERT_DestroyOidSequence(extKeyUsage);
     }
     /* Assert that it is safe to cast &cert->nsCertType to "PRInt32 *" */
