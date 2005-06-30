@@ -438,7 +438,7 @@ GetFieldSetAreaFrame(nsIFrame* aFieldsetFrame)
 {
   // Depends on the fieldset child frame order - see ConstructFieldSetFrame() below.
   nsIFrame* firstChild = aFieldsetFrame->GetFirstChild(nsnull);
-  return firstChild->GetNextSibling() ? firstChild->GetNextSibling() : firstChild;
+  return firstChild && firstChild->GetNextSibling() ? firstChild->GetNextSibling() : firstChild;
 }
 
 //----------------------------------------------------------------------
