@@ -118,11 +118,10 @@ function loadDialog(item)
 
     /* event specific properties */
     if (isEvent(item)) {
-        /* all day */
-        setElementValue("event-all-day",    item.isAllDay, "checked");
         var startDate = item.startDate.getInTimezone(kDefaultTimezone);
         var endDate = item.endDate.getInTimezone(kDefaultTimezone);
         if (startDate.isDate) {
+            setElementValue("event-all-day", true, "checked");
             endDate.day -= 1;
             endDate.normalize();
         }
@@ -190,11 +189,20 @@ function saveDialog(item)
     setItemProperty(item, "DESCRIPTION", getElementValue("item-description"));
 
     if (isEvent(item)) {
-        // setItemProperty will only change if the value is different and 
-        // does magic for startDate and endDate based on isAllDay, so set that first.
-        setItemProperty(item, "isAllDay",    getElementValue("event-all-day", "checked"));
-        setItemProperty(item, "startDate",   jsDateToDateTime(getElementValue("event-starttime")));
-        setItemProperty(item, "endDate",     jsDateToDateTime(getElementValue("event-endtime")));
+        var startDate = jsDateToDateTime(getElementValue("event-starttime"));
+        var endDate = jsDateToDateTime(getElementValue("event-endtime"));
+
+        var isAllDay = getElementValue("event-all-day", "checked");
+        if (isAllDay) {
+            startDate.isDate = true;
+            startDate.normalize();
+
+            endDate.isDate = true;
+            endDate.day += 1;
+            endDate.normalize();
+        }
+        setItemProperty(item, "startDate",   startDate);
+        setItemProperty(item, "endDate",     endDate);
     }
 
     if (isToDo(item)) {
@@ -412,26 +420,17 @@ function editRecurrence()
 function setItemProperty(item, propertyName, value)
 {
     switch(propertyName) {
-    case "isAllDay":
-        if (value != item.isAllDay)
-            item.isAllDay = value;
-        break;
     case "startDate":
-        if (value.compare(item.startDate) != 0) {
-            if (item.isAllDay)
-                value.isDate = true;
+        if (value.isDate && !item.startDate.isDate ||
+            !value.isDate && item.startDate.isDate ||
+            value.compare(item.startDate) != 0)
             item.startDate = value;
-        }
         break;
     case "endDate":
-        if (value.compare(item.endDate) != 0) {
-            if (item.isAllDay) {
-                value.isDate = true;
-                value.day += 1;
-                value.normalize();
-            }
+        if (value.isDate && !item.endDate.isDate ||
+            !value.isDate && item.endDate.isDate ||
+            value.compare(item.endDate) != 0)
             item.endDate = value;
-        }
         break;
 
 

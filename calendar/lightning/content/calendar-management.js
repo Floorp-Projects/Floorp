@@ -147,7 +147,6 @@ var ltnCalendarViewController = {
             aCalendar.addItem(event, null);
         } else if (aStartTime && aStartTime.isDate) {
             var event = createEvent();
-            event.isAllDay = true;
             event.startDate = aStartTime;
             aCalendar.addItem(event, null);
         } else {

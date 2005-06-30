@@ -1146,7 +1146,6 @@ calStorageCalendar.prototype = {
         if (row.event_stamp)
             item.stampTime = newDateTime(row.event_stamp, "UTC");
         if ((row.flags & CAL_ITEM_FLAG_EVENT_ALLDAY) != 0) {
-            item.isAllDay = true;
             item.startDate.isDate = true;
             item.endDate.isDate = true;
         }
@@ -1480,7 +1479,7 @@ calStorageCalendar.prototype = {
         //if (tmp instanceof kCalIDateTime) {}
         this.setDateParamHelper(ip, "event_end", tmp);
 
-        if (item.isAllDay)
+        if (item.startDate.isDate)
             flags |= CAL_ITEM_FLAG_EVENT_ALLDAY;
 
         ip.flags = flags;

@@ -72,9 +72,4 @@ interface calIEvent : calIItemBase
    */
   readonly attribute calIDuration duration;
 
-  /**
-   * Indicates if the event is an all-day event.
-   * All-day event have isDate in startDate and endDate set to true.
-   */
-  attribute boolean isAllDay;
 };
