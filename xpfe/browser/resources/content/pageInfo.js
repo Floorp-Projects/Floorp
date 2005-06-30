@@ -170,7 +170,9 @@ var metaView = new pageInfoTreeView(["meta-name","meta-content"], COPYCOL_META_C
 var formView = new pageInfoTreeView(["form-name","form-method","form-action","form-node"], COPYCOL_FORM_ACTION);
 var fieldView = new pageInfoTreeView(["field-label","field-field","field-type","field-value"], COPYCOL_NONE);
 var linkView = new pageInfoTreeView(["link-name","link-address","link-type","link-accesskey"], COPYCOL_LINK_ADDRESS);
-var imageView = new pageInfoTreeView(["image-address","image-type","image-alt","image-node", "image-bg"], COPYCOL_IMAGE_ADDRESS);
+var imageView = new pageInfoTreeView(["image-address","image-type","image-alt","image-count","image-node","image-bg"], COPYCOL_IMAGE_ADDRESS);
+
+var imageHash = {};
 
 var kmsPerSec = 1000;
 
@@ -499,18 +501,37 @@ function ensureSelection(view)
     view.selection.select(0);
 }
 
+function addImage(url, type, alt, elem, isBg)
+{
+  if (url == "")
+    return;
+    //|imageHash[url][type][alt] === undefined| avoids matching row index 0.
+  if (!imageHash[url] || !imageHash[url][type] || imageHash[url][type][alt] === undefined) {
+    imageView.addRow([url, type, alt, 1, elem, isBg]);
+    // I wish I could do imageHash[url][type][alt] = imageView.data.length without getting errors.
+    if (!imageHash[url])
+      imageHash[url] = {};
+    if (!imageHash[url][type])
+      imageHash[url][type] = {};
+    imageHash[url][type][alt] = imageView.data.length - 1;
+  } else {
+    var i = imageHash[url][type][alt];
+    imageView.data[i][3]++;
+  }
+}
+
 function grabAll(elem)
 {
   // check for background images, any node may have one
   var url = elem.ownerDocument.defaultView.getComputedStyle(elem, "").getPropertyCSSValue("background-image");
   if (url && url.primitiveType == CSSPrimitiveValue.CSS_URI)
-    imageView.addRow([url.getStringValue(), gStrings.mediaBGImg, gStrings.notSet, elem, true]);
+    addImage(url.getStringValue(), gStrings.mediaBGImg, gStrings.notSet, elem, true);
 
   // one swi^H^H^Hif-else to rule them all
   if (elem instanceof nsIAnchorElement)
     linkView.addRow([getValueText(elem), elem.href, gStrings.linkAnchor, elem.target, elem.accessKey]);
   else if (elem instanceof nsIImageElement)
-    imageView.addRow([elem.src, gStrings.mediaImg, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem, false]);
+    addImage(elem.src, gStrings.mediaImg, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem, false);
   else if (elem instanceof nsIAreaElement)
     linkView.addRow([elem.alt, elem.href, gStrings.linkArea, elem.target]);
   else if (elem instanceof nsILinkElement)
@@ -519,7 +540,7 @@ function grabAll(elem)
     {
       var rel = elem.rel;
       if (/\bicon\b/i.test(rel))
-        imageView.addRow([elem.href, gStrings.mediaLink, "", elem, false]);
+        addImage(elem.href, gStrings.mediaLink, "", elem, false);
       else if (/\bstylesheet\b/i.test(rel))
         linkView.addRow([elem.rel, elem.href, gStrings.linkStylesheet, elem.target]);
       else
@@ -533,7 +554,7 @@ function grabAll(elem)
     switch (elem.type.toLowerCase())
     {
       case "image":
-        imageView.addRow([elem.src, gStrings.mediaInput, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem, false]);
+        addImage(elem.src, gStrings.mediaInput, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem, false);
         // Fall through, <input type="image"> submits, too
       case "submit":
         // Form element properties can be hidden by child elements with the same name, so
@@ -559,12 +580,12 @@ function grabAll(elem)
     // content from two hosts (bug 136539) so just drop applets from Page Info when
     // Java is on. For the 1.0.1 branch; get a real fix on the trunk.
     if (!navigator.javaEnabled())
-      imageView.addRow([elem.code || elem.object, gStrings.mediaApplet, "", elem, false]);
+      addImage(elem.code || elem.object, gStrings.mediaApplet, "", elem, false);
   }
   else if (elem instanceof nsIObjectElement)
-    imageView.addRow([elem.data, gStrings.mediaObject, getValueText(elem), elem, false]);
+    addImage(elem.data, gStrings.mediaObject, getValueText(elem), elem, false);
   else if (elem instanceof nsIEmbedElement)
-    imageView.addRow([elem.src, gStrings.mediaEmbed, "", elem, false]);
+    addImage(elem.src, gStrings.mediaEmbed, "", elem, false);
   else
     if (elem.hasAttributeNS(XLinkNS, "href"))
       linkView.addRow([getValueText(elem),
@@ -711,7 +732,7 @@ function getSelectedImage(tree)
   // Only works if only one item is selected
   var clickedRow = tree.currentIndex;
   // image-node
-  return imageView.data[clickedRow][3];
+  return imageView.data[clickedRow][4];
 }
 
 function saveMedia()
@@ -746,7 +767,7 @@ function makePreview(row)
   var col = imageTree.columns["image-address"];
   var url = imageView.getCellText(row, col);
   // image-bg
-  var isBG = imageView.data[row][4];
+  var isBG = imageView.data[row][5];
 
   setItemValue("imageurltext", url);
 
