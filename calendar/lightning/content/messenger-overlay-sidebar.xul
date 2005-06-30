@@ -33,8 +33,9 @@
 
   <vbox flex="1">
     <hbox>
-      <minimonth id="ltnMinimonthLeft" onchange="ltnMinimonthPick('left', this);" flex="1"/>
-      <minimonth id="ltnMinimonthRight" onchange="ltnMinimonthPick('right', this);" flex="1"/>
+      <spacer flex="1"/>
+      <minimonth id="ltnMinimonth" onchange="ltnMinimonthPick(this);" flex="2"/>
+      <spacer flex="1"/>
     </hbox>
   
     <tabbox flex="1">

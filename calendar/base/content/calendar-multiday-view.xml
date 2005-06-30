@@ -1305,6 +1305,8 @@
            this.eventNameElement.removeAttribute("readonly");
            this.mOriginalTextLabel = this.eventNameElement.value;
            this.mEditing = true;
+           if (this.calendarView)
+               this.calendarView.activeInPlaceEdit = true;
            this.eventNameElement.focus();
            this.eventNameElement.select();
         ]]></body>
@@ -1313,6 +1315,9 @@
       <method name="stopEditing">
         <body><![CDATA[
           this.mEditing = false;
+           if (this.calendarView)
+               this.calendarView.activeInPlaceEdit = false;
+
           if (this.eventNameElement.value != this.mOriginalTextLabel) {
               var clone = this.mOccurrence.clone();
               clone.title = this.eventNameElement.value;
@@ -1348,10 +1353,13 @@
             }
 	} else {
             // start single click timeout
-            this.calendarView.selectedItem = this.mOccurrence;
-            var self = this;
-            if (this.editingTimer) clearTimeout(this.editingTimer);
-            this.editingTimer = setTimeout(function () { self.startEditing(); }, 350);
+            if (this.selected) {
+                var self = this;
+                if (this.editingTimer) clearTimeout(this.editingTimer);
+                this.editingTimer = setTimeout(function () { self.startEditing(); }, 350);
+            } else {
+                this.calendarView.selectedItem = this.mOccurrence;
+            }
             this.mLastClickTime = evTime;
         }
       ]]></handler>
@@ -1384,6 +1392,9 @@
                 this.calendarView.selectedItem = this.mOccurrence;
 
                 this.mEditing = false;
+                if (this.calendarView)
+                    this.calendarView.activeInPlaceEdit = false;
+
                 this.parentColumn.startSweepingToModifyEvent(this, this.mOccurrence, "middle", this.mMouseX, this.mMouseY);
                 this.mInMouseDown = false;
             }
@@ -1432,7 +1443,6 @@
 	this.reorient();
       ]]></constructor>
 
-      <field name="mTimeoutScheduled">false</field>
       <field name="mLastSize">0</field>
       <method name="onResize">
         <parameter name="aRealSelf"/>
@@ -1440,7 +1450,6 @@
           var self = this;
           if (aRealSelf) {
             self = aRealSelf;
-            self.mTimeoutScheduled = false;
           }
 
           var timebar = document.getAnonymousElementByAttribute(self, "anonid", "timebar");
@@ -1456,16 +1465,19 @@
           if (self.mLastSize > size) {
             self.pixelsPerMinute = 0.01;
             self.mLastSize = size;
-            if (!self.mTimeoutScheduled)
-              setTimeout(self.onResize, 0, self);
-            return;
+
+            if (self.orient == "horizontal")
+              size = daybox.boxObject.width;
+            else
+              size = daybox.boxObject.height;
           }
 
           self.mLastSize = size;
 
+          //self.removeAttribute("hidden");
           var minutes = self.mEndMin - self.mStartMin;
           var ppm = size / minutes;
-          self.pixelsPerMinute = ppm;
+          self.pixelsPerMinute = Math.round(ppm * 10) / 10;
         ]]></body>
       </method>
 
@@ -1827,6 +1839,15 @@
       <property name="pixelsPerMinute">
         <getter>return this.mPixPerMin</getter>
         <setter>this.setPixelsPerMin(val); return val;</setter>
+      </property>
+
+      <property name="activeInPlaceEdit">
+        <getter><![CDATA[
+          return this.mInPlaceEditActive;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mInPlaceEditActive = val;
+        ]]></setter>
       </property>
 
       <!-- private -->
@@ -2202,7 +2223,7 @@
         if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
             event.keyCode == kKE.DOM_VK_DELETE)
         {
-            if (this.selectedItem && this.controller) {
+            if (!this.activeInPlaceEdit && this.selectedItem && this.controller) {
                 var occurrence = (event.ctrlKey) ? this.selectedItem.parentItem : this.selectedItem;
                 this.controller.deleteOccurrence(occurrence);
             }

@@ -43,16 +43,10 @@ function nextMonth(dt)
 }
 
 var gMiniMonthLoading = false;
-function ltnMinimonthPick(which, minimonth)
+function ltnMinimonthPick(minimonth)
 {
     if (gMiniMonthLoading)
         return;
-
-    if (which == "left") {
-        // update right
-        var d2 = nextMonth(minimonth.value);
-        document.getElementById("ltnMinimonthRight").showMonth(d2);
-    }
 
     var cdt = new CalDateTime();
     cdt.jsDate = minimonth.value;
@@ -69,8 +63,7 @@ function ltnOnLoad(event)
     var today = new Date();
     var nextmo = nextMonth(today);
 
-    document.getElementById("ltnMinimonthLeft").value = today;
-    document.getElementById("ltnMinimonthRight").showMonth(nextmo);
+    document.getElementById("ltnMinimonth").value = today;
 
     gMiniMonthLoading = false;
 

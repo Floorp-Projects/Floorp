@@ -165,6 +165,10 @@ calendar-multiday-view {
   -moz-user-focus: normal;
 }
 
+calendar-multiday-view[hidden="true"] { 
+  display: none;
+}
+
 .calendar-day-label-box { 
   background: #dddddd;
 }
