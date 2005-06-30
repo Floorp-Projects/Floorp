@@ -55,6 +55,8 @@
 #include <mbstring.h>
 #endif
 
+void GRE_AddGREToEnvironment();
+
 // functions provided by nsDebug.cpp
 nsresult GlueStartupDebug();
 void GlueShutdownDebug();
@@ -109,6 +111,7 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
         return rv;
     }
 
+    GRE_AddGREToEnvironment();
     return NS_OK;
 #else
     //
@@ -189,6 +192,7 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
     if (NS_FAILED(rv))
         goto bail;
 
+    GRE_AddGREToEnvironment();
     return NS_OK;
 
 bail:
@@ -513,6 +517,53 @@ NS_Free(void* ptr)
     if (xpcomFunctions.freeFunc)
         xpcomFunctions.freeFunc(ptr);
 }
+
+static char* spEnvString = 0;
+
+void
+GRE_AddGREToEnvironment()
+{
+#ifdef WINCE
+    return;
+#else
+
+  const char* grePath = GRE_GetGREPath();
+  if (!grePath)
+    return;
+
+  const char* path = PR_GetEnv(XPCOM_SEARCH_KEY);
+  if (!path) {
+    path = "";
+  }
+
+  /**
+   * This buffer will leak at shutdown due to a restriction in PR_SetEnv
+   *   See: https://bugzilla.mozilla.org/show_bug.cgi?id=25982#c3
+   *   See-Also: http://lxr.mozilla.org/mozilla/source/nsprpub/pr/include/prenv.h
+   */
+  char * tempPath = PR_smprintf(XPCOM_SEARCH_KEY "=%s" XPCOM_ENV_PATH_SEPARATOR "%s",
+                                grePath, path);
+  if (tempPath){
+    if (PR_SetEnv(tempPath) == PR_SUCCESS){
+      if (spEnvString) PR_smprintf_free(spEnvString);
+      spEnvString = tempPath;
+    }else
+      PR_smprintf_free(tempPath);
+  }
+                 
+#ifdef XP_WIN32
+  // On windows, the current directory is searched before the 
+  // PATH environment variable.  This is a very bad thing 
+  // since libraries in the cwd will be picked up before
+  // any that are in either the application or GRE directory.
+
+  if (grePath) {
+      SetCurrentDirectory(grePath);
+  }
+#endif // XP_WIN32
+#endif // WINCE
+}
+
 
 // Default GRE startup/shutdown code
 

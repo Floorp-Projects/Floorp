@@ -45,13 +45,8 @@
 #include "nsISupportsBase.h"
 #endif
 
-#ifndef XPCOM_GLUE
-// If we're being linked as standalone glue, we don't want a dynamic dependency
-// on NSPR libs, so we skip the debug thread-safety checks.
-
 #include "prthread.h" /* needed for thread-safety checks */
 #include "pratom.h"   /* needed for PR_AtomicIncrement and PR_AtomicDecrement */
-#endif
 
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h" 
@@ -59,7 +54,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Macros to help detect thread-safety:
 
-#if defined(NS_DEBUG) && !defined(XPCOM_GLUE)
+#if defined(NS_DEBUG)
 
 class nsAutoOwningThread {
 public:
@@ -74,7 +69,7 @@ private:
 #define NS_ASSERT_OWNINGTHREAD(_class) \
   NS_CheckThreadSafe(_mOwningThread.GetThread(), #_class " not thread-safe")
 
-#else // !(defined(NS_DEBUG) && !defined(XPCOM_GLUE))
+#else // !(defined(NS_DEBUG))
 
 #define NS_DECL_OWNINGTHREAD            /* nothing */
 #define NS_ASSERT_OWNINGTHREAD(_class)  ((void)0)
@@ -680,13 +675,9 @@ NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                                 \
 ///////////////////////////////////////////////////////////////////////////////
 /**
  *
- * Threadsafe implementations of the ISupports convenience macros.
+ * Threadsafe implementations of the ISupports convenience macros
  *
- * @note  These are not available when linking against the standalone glue,
- *        because the implementation requires PR_ symbols.
  */
-
-#ifndef XPCOM_GLUE
 
 /**
  * Use this macro to implement the AddRef method for a given <i>_class</i>
@@ -724,15 +715,6 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
   }                                                                           \
   return count;                                                               \
 }
-
-#else // XPCOM_GLUE
-#define NS_IMPL_THREADSAFE_ADDREF(_class)                                     \
-  THREADSAFE_ISUPPORTS_NOT_AVAILABLE_IN_STANDALONE_GLUE;
-
-#define NS_IMPL_THREADSAFE_RELEASE(_class)                                    \
-  THREADSAFE_ISUPPORTS_NOT_AVAILABLE_IN_STANDALONE_GLUE;
-
-#endif // XPCOM_GLUE
 
 #define NS_IMPL_THREADSAFE_ISUPPORTS0(_class)                                 \
   NS_IMPL_THREADSAFE_ADDREF(_class)                                           \

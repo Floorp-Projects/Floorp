@@ -59,6 +59,7 @@ static PRBool gUnreg = PR_FALSE, gQuiet = PR_FALSE;
 static const char* gXPCOMLocation = nsnull;
 static const char* gCompRegLocation = nsnull;
 static const char* gXPTIDatLocation = nsnull;
+static char* gPathEnvString = nsnull;
 
 class DirectoryServiceProvider : public nsIDirectoryServiceProvider
 {
@@ -119,10 +120,21 @@ int startup_xpcom()
 
     free(xpcomPath);
 
-    const char* path = getenv(XPCOM_SEARCH_KEY);
+    const char* path = PR_GetEnv(XPCOM_SEARCH_KEY);
     if (!path) {
       path = "";
     }
+
+    if (gPathEnvString)
+      PR_smprintf_free(gPathEnvString);
+
+    gPathEnvString = PR_smprintf("%s=%s;%s",
+                                 XPCOM_SEARCH_KEY,
+                                 gXPCOMLocation,
+                                 path);
+
+    if (gXPCOMLocation)
+      PR_SetEnv(gPathEnvString);
   }
   else 
   {
@@ -179,6 +191,8 @@ void shutdown_xpcom()
   if (NS_FAILED(rv)) {
     printf("Can not shutdown XPCOM Glue cleanly\n");
   }
+  if (gPathEnvString)
+    PR_smprintf_free(gPathEnvString);
 }
 
 

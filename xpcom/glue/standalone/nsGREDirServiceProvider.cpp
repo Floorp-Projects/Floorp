@@ -182,13 +182,13 @@ GRE_GetCurrentProcessDirectory(char* buffer)
     // We do this py putenv()ing the default value into the environment.  Note that
     // we only do this if it is not already set.
 #ifdef MOZ_DEFAULT_MOZILLA_FIVE_HOME
-    if (getenv("MOZILLA_FIVE_HOME") == nsnull)
+    if (PR_GetEnv("MOZILLA_FIVE_HOME") == nsnull)
     {
         putenv("MOZILLA_FIVE_HOME=" MOZ_DEFAULT_MOZILLA_FIVE_HOME);
     }
 #endif
 
-    char *moz5 = getenv("MOZILLA_FIVE_HOME");
+    char *moz5 = PR_GetEnv("MOZILLA_FIVE_HOME");
 
     if (moz5 && *moz5)
     {
@@ -332,7 +332,7 @@ GRE_GetXPCOMPath()
   const char* grePath = GRE_GetGREPath();
 
   if (!grePath) {
-    grePath = getenv("MOZILLA_FIVE_HOME");
+    grePath = PR_GetEnv("MOZILLA_FIVE_HOME");
     if (!grePath || !*grePath) {
       return nsnull;
     }

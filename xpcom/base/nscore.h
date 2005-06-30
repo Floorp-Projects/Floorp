@@ -242,18 +242,9 @@
 #endif
 
 #ifdef MOZILLA_INTERNAL_API
-#  define NS_COM_GLUE NS_COM
-   /*
-     The frozen string API has different definitions of nsAC?String
-     classes than the internal API. On systems that explicitly declare
-     dllexport symbols this is not a problem, but on ELF systems
-     internal symbols can accidentally "shine through"; we rename the
-     internal classes to avoid symbol conflicts.
-   */
-#  define nsAString nsAString_internal
-#  define nsACString nsACString_internal
+#define NS_COM_GLUE NS_COM
 #else
-#  define NS_COM_GLUE
+#define NS_COM_GLUE
 #endif
 
 

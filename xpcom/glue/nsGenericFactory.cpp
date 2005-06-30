@@ -382,6 +382,14 @@ nsGenericModule::GetClassObject(nsIComponentManager *aCompMgr,
         desc++;
     }
     // not found in descriptions
+#ifndef XPCOM_GLUE
+#ifdef DEBUG 
+    char* cs = aClass.ToString();
+    fprintf(stderr, "+++ nsGenericModule %s: unable to create factory for %s\n", mModuleName, cs);
+    // leak until we resolve the nsID Allocator. 
+    // nsCRT::free(cs);
+#endif        // XXX put in stop-gap so that we don't search for this one again
+#endif 
     return NS_ERROR_FACTORY_NOT_REGISTERED;
 }
 

@@ -44,6 +44,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "prenv.h"
+#include "prio.h"
+#include "plstr.h"
+
 #ifdef XP_WIN32
 # include <windows.h>
 # include <mbstring.h>
@@ -59,7 +63,6 @@
 #elif defined(XP_UNIX)
 # include <unistd.h>
 # include <sys/param.h>
-# include <dirent.h>
 #elif defined(XP_BEOS)
 # include <FindDirectory.h>
 # include <Path.h>
@@ -100,7 +103,7 @@ GRE_GetGREPathForVersion(const char *aVersion,
                          char *aBuffer, PRUint32 aBufLen)
 {
   // if GRE_HOME is in the environment, use that GRE
-  const char* env = getenv("GRE_HOME");
+  const char* env = PR_GetEnv("GRE_HOME");
   if (env && *env) {
 #if XP_UNIX
     if (realpath(env, aBuffer))
@@ -122,7 +125,7 @@ GRE_GetGREPathForVersion(const char *aVersion,
   }
 
   // the Gecko bits that sit next to the application or in the LD_LIBRARY_PATH
-  env = getenv("USE_LOCAL_GRE");
+  env = PR_GetEnv("USE_LOCAL_GRE");
   if (env && *env) {
     *aBuffer = nsnull;
     return NS_OK;
@@ -164,7 +167,7 @@ GRE_GetGREPathForVersion(const char *aVersion,
     return NS_OK;
 
   // Check ~/Library/Frameworks/XUL/Versions/<version>/libxpcom.dylib
-  const char *home = getenv("HOME");
+  const char *home = PR_GetEnv("HOME");
   if (home && *home && GRE_FindGREFramework(aVersion, home, aBuffer, aBufLen)) {
     return NS_OK;
   }
@@ -174,13 +177,13 @@ GRE_GetGREPathForVersion(const char *aVersion,
     return NS_OK;
   }
 
-#elif defined(XP_UNIX) 
-  env = getenv("MOZ_GRE_CONF");
+#elif defined(XP_UNIX)
+  env = PR_GetEnv("MOZ_GRE_CONF");
   if (env && GRE_GetPathFromConfigFile(aVersion, env, aBuffer, aBufLen)) {
     return NS_OK;
   }
 
-  env = getenv("HOME");
+  env = PR_GetEnv("HOME");
   if (env && *env) {
     char buffer[MAXPATHLEN];
 
@@ -249,13 +252,6 @@ GRE_GetGREPathForVersion(const char *aVersion,
   return NS_ERROR_FAILURE;
 }
 
-static PRBool IsConfFile(const char *filename)
-{
-  const char *dot = strrchr(filename, '.');
-
-  return (dot && strcmp(dot, ".conf") == 0);
-}
-
 #ifdef XP_MACOSX
 PRBool
 GRE_FindGREFramework(const char* version, const char* rootPath,
@@ -281,28 +277,33 @@ GRE_GetPathFromConfigDir(const char* version, const char* dirname,
   // Open the directory provided and try to read any files in that
   // directory that end with .conf.  We look for an entry that might
   // point to the GRE that we're interested in.
-  DIR *dir = opendir(dirname);
+  PRDir *dir = PR_OpenDir(dirname);
   if (!dir)
     return nsnull;
 
   PRBool found = PR_FALSE;
-  struct dirent *entry;
+  PRDirEntry *entry;
 
-  while (!found && (entry = readdir(dir))) {
+  while (!found && (entry = PR_ReadDir(dir, PR_SKIP_BOTH))) {
+
+    static const char kExt[] = ".conf";
 
     // Only look for files that end in .conf
-    // IsConfFile will skip "." and ".."
-    if (!IsConfFile(entry->d_name))
+    char *offset = PL_strrstr(entry->name, kExt);
+    if (!offset)
+      continue;
+
+    if (offset != entry->name + strlen(entry->name) - (sizeof(kExt) - 1))
       continue;
 
     char fullPath[MAXPATHLEN];
     snprintf(fullPath, sizeof(fullPath), "%s" XPCOM_FILE_PATH_SEPARATOR "%s",
-             dirname, entry->d_name);
+             dirname, entry->name);
 
     found = GRE_GetPathFromConfigFile(version, fullPath, buffer, buflen);
   }
 
-  closedir(dir);
+  PR_CloseDir(dir);
 
   return found;
 }
