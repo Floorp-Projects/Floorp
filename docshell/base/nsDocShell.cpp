@@ -5006,20 +5006,22 @@ nsDocShell::FinishRestore()
         }
     }
 
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
+    if (mContentViewer) {
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
 
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-    if (doc) {
-        // Finally, we remove the request from the loadgroup.  This will cause
-        // onStateChange(STATE_STOP) to fire, which will fire the PageShow
-        // event to the chrome.
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+        if (doc) {
+            // Finally, we remove the request from the loadgroup.  This will
+            // cause onStateChange(STATE_STOP) to fire, which will fire the
+            // PageShow event to the chrome.
 
-        nsIChannel *channel = doc->GetChannel();
-        if (channel) {
-            mIsRestoringDocument = PR_TRUE;
-            mLoadGroup->RemoveRequest(channel, nsnull, NS_OK);
-            mIsRestoringDocument = PR_FALSE;
+            nsIChannel *channel = doc->GetChannel();
+            if (channel) {
+                mIsRestoringDocument = PR_TRUE;
+                mLoadGroup->RemoveRequest(channel, nsnull, NS_OK);
+                mIsRestoringDocument = PR_FALSE;
+            }
         }
     }
 
