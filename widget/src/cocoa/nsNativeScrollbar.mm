@@ -47,14 +47,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsIDOMElement.h"
 #include "nsIScrollbarMediator.h"
-#include "nsPresContext.h"
 
-
-@interface NativeScrollbarView(Private)
-
-- (void)drawRectInternal:(NSRect)inRect;
-
-@end
+NS_IMPL_ISUPPORTS_INHERITED1(nsNativeScrollbar, nsChildView, nsINativeScrollbar)
 
 inline void BoundsCheck(PRInt32 low, PRUint32& value, PRUint32 high)
 {
@@ -63,32 +57,6 @@ inline void BoundsCheck(PRInt32 low, PRUint32& value, PRUint32 high)
   if (value > high)
     value = high;
 }
-
-#define NSAppKitVersionNumber10_2 663
-
-//
-// Convenience routines to go from a gecko rect to cocoa NSRects and back
-//
-
-static inline void
-ConvertGeckoToCocoaRect ( const nsRect & inGeckoRect, NSRect & outCocoaRect )
-{
-  outCocoaRect.origin.x = inGeckoRect.x;
-  outCocoaRect.origin.y = inGeckoRect.y;
-  outCocoaRect.size.width = inGeckoRect.width;
-  outCocoaRect.size.height = inGeckoRect.height;
-}
-
-static inline void
-ConvertCocoaToGeckoRect ( const NSRect & inCocoaRect, nsRect & outGeckoRect )
-{
-  outGeckoRect.x = NS_STATIC_CAST(nscoord, inCocoaRect.origin.x);
-  outGeckoRect.y = NS_STATIC_CAST(nscoord, inCocoaRect.origin.y);
-  outGeckoRect.width = NS_STATIC_CAST(nscoord, inCocoaRect.size.width);
-  outGeckoRect.height = NS_STATIC_CAST(nscoord, inCocoaRect.size.height);
-}
-
-#pragma mark -
 
 nsNativeScrollbar::nsNativeScrollbar()
   : nsChildView()
@@ -100,7 +68,6 @@ nsNativeScrollbar::nsNativeScrollbar()
   , mVisibleImageSize(0)
   , mLineIncrement(0)
   , mIsEnabled(PR_TRUE)
-  , mInPaint(PR_FALSE)
 {
   WIDGET_SET_CLASSNAME("nsNativeScrollbar");
 }
@@ -116,8 +83,6 @@ nsNativeScrollbar::Destroy()
   [mView scrollbarDestroyed];
   return NS_OK;
 }
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsNativeScrollbar, nsChildView, nsINativeScrollbar)
 
 //
 // CreateCocoaView
@@ -467,63 +432,6 @@ nsNativeScrollbar::SetContent(nsIContent* inContent, nsISupports* inScrollbar,
   return NS_OK;
 }
 
-//
-// Paint
-//
-NS_IMETHODIMP
-nsNativeScrollbar::Paint(const nsRect& aRect)
-{
-  // NSLog(@"nsNativeScrollbar::Paint");
-
-  // This function will get called several times, but we only want to draw the
-  // scrollbar if the event has first gone through OnPaint(), below.
-  if (mInPaint)
-  {
-    mInPaint = PR_FALSE;
-    
-    // NSLog(@"displaying scrollbar %p", this);
-        
-    NSRect rectToDraw;
-    ConvertGeckoToCocoaRect(aRect, rectToDraw);
-    
-    [mView drawRectInternal:rectToDraw];
-  }
-  return NS_OK;
-}
-
-//
-// OnPaint
-//
-PRBool
-nsNativeScrollbar::OnPaint(nsPaintEvent &aEvent)
-{
-  // NSLog(@"nsNativeScrollbar::OnPaint");
-
-  // Returning TRUE here makes it so the event is dispatched back through
-  // Gecko, which will eventually call back into Paint(), above.
-  mInPaint = PR_TRUE;
-  return PR_TRUE;
-}
-
-//
-// HandleMouseEvent
-//
-// Handle any mouse events on the native scrollbar control.
-//
-NS_IMETHODIMP
-nsNativeScrollbar::HandleMouseEvent(nsPresContext* aPresContext,
-                                    nsGUIEvent* aEvent)
-{
-  // convert point to pixels before passing to DispatchMouseEvent()
-  nsMouseEvent* mouseEvent = NS_STATIC_CAST(nsMouseEvent*, aEvent);
-  float t2p = aPresContext->TwipsToPixels();
-  mouseEvent->point.x = NSTwipsToIntPixels(mouseEvent->point.x, t2p);
-  mouseEvent->point.y = NSTwipsToIntPixels(mouseEvent->point.y, t2p);
-  DispatchMouseEvent(*mouseEvent);
-  return NS_OK;
-}
-
-#pragma mark -
 
 //
 // RecreateHorizontalScrollbar
@@ -726,57 +634,6 @@ nsNativeScrollbar::UpdateScroller()
 - (void)mouseMoved:(NSEvent*)theEvent
 {
   // do nothing
-}
-
-- (void)drawRect:(NSRect)aRect
-{
-  PRBool isVisible;
-  mGeckoChild->IsVisible(isVisible);
-  if (!isVisible)
-    return;
-
-  // tell gecko to paint.
-  // If < 10.3, just paint the rect
-  if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_2) {
-    nsRect r;
-    ConvertCocoaToGeckoRect(aRect, r);
-    nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
-    mGeckoChild->UpdateWidget(r, rendContext);
-  }
-  // If >10.3, only paint the sub-rects that need it. This avoids the
-  // nasty coalesced updates that result in big white areas.
-  else {
-    const NSRect *rects;
-    int count, i;
-    [self getRectsBeingDrawn:&rects count:&count];
-    for (i=0; i<count; ++i) {
-      nsRect r;
-      ConvertCocoaToGeckoRect(rects[i], r);
-      nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
-      mGeckoChild->UpdateWidget(r, rendContext);
-    }
-  }
-}
-
-- (void)drawRectInternal:(NSRect)inRect
-{
-  // NSLog(@"scroller %@ drawing rect %@", self, NSStringFromRect(inRect));
-  
-  CGRect theRect = *(CGRect*)&inRect;
-  ::CGContextClipToRect((CGContextRef)[NSGraphicsContext currentContext], theRect);
-  
-  [super drawRect:inRect];
-}
-
-// XXX hack
-- (void*)qdPort
-{
-  return nsnull;
-}
-
-- (BOOL)isOpaque
-{
-  return NO;
 }
 
 //
