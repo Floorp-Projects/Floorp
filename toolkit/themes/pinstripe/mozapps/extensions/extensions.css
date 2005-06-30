@@ -2,9 +2,8 @@
   padding: 0;
 }
 
-view {
+richlistbox {
   -moz-appearance: none !important;
-  -moz-user-focus: normal;
   margin: 0;
   padding: 0;
 }
