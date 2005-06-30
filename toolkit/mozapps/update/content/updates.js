@@ -259,7 +259,6 @@ var gUpdates = {
         this.setUpdate(arg0);
         var p = this.update.selectedPatch;
         if (p) {
-          LOG("Downloader", "WIZARD UI STATE = " + p.state);
           var state = p.state;
           if (state == STATE_DOWNLOADING) {
             var patchFailed = false;
@@ -526,7 +525,8 @@ var gUpdatesAvailablePage = {
     var em = Components.classes["@mozilla.org/extensions/manager;1"]
                        .getService(Components.interfaces.nsIExtensionManager);
     var items = em.getIncompatibleItemList("", gUpdates.update.version,
-                                           nsIUpdateItem.TYPE_ADDON, { });
+                                           nsIUpdateItem.TYPE_ADDON, false, 
+                                           { });
     if (items.length > 0) {
       // There are addons that are incompatible with this update, so show the 
       // warning message.

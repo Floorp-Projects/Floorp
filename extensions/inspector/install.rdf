@@ -26,6 +26,14 @@
       </Description>
     </em:targetApplication>
     
+    <!-- EXTENSION AUTHORS!
+         DO NOT COPY THIS PROPERTY INTO YOUR INSTALL RDF FILES
+         It will cause users not to be informed of incompatibilities 
+         with your extension when they are updated with Software Update
+         and your extension will become unavailable to them!
+         -->
+    <em:appManaged>true</em:appManaged>
+
     <!-- front-end metadata -->
     <em:name>DOM Inspector</em:name>
     <em:description>Inspect the DOM of HTML, XUL, and XML pages, including the browser chrome.</em:description>

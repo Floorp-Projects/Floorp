@@ -3037,7 +3037,8 @@ ExtensionManager.prototype = {
       var ds = this.datasource;
       var currAppID = gApp.ID;
       var items = ds.getIncompatibleItemList(currAppID, currAppVersion,
-                                             nsIUpdateItem.TYPE_ADDON);
+                                             nsIUpdateItem.TYPE_ADDON,
+                                             true); // XXXben - maybe we should only show enabled items? 
       if (items.length > 0) {
         // Now disable the items so they won't hurt anything. 
         for (var i = 0; i < items.length; ++i)
@@ -4301,8 +4302,10 @@ ExtensionManager.prototype = {
   /**  
    * See nsIExtensionManager.idl
    */
-  getIncompatibleItemList: function(id, version, type, countRef) {
-    var items = this.datasource.getIncompatibleItemList(id, version, type);
+  getIncompatibleItemList: function(id, version, type, includeDisabled, 
+                                    countRef) {
+    var items = this.datasource.getIncompatibleItemList(id, version, type,
+                                                        includeDisabled);
     countRef.value = items.length;
     return items;
   },
@@ -5260,10 +5263,12 @@ ExtensionsDataSource.prototype = {
    *          The Version of the application to check for incompatibility against.
    * @param   desiredType
    *          The nsIUpdateItem type of items to look for
+   * @param   includeDisabled
+   *          Whether or not disabled items should be included in the set returned
    * @returns An array of nsIUpdateItems that are incompatible with the application
    *          ID/Version supplied.
    */
-  getIncompatibleItemList: function(appID, appVersion, desiredType) {
+  getIncompatibleItemList: function(appID, appVersion, desiredType, includeDisabled) {
     var items = [];
     var ctr = getContainer(this._inner, this._itemRoot);
     var elements = ctr.GetElements();
@@ -5271,7 +5276,25 @@ ExtensionsDataSource.prototype = {
       var item = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
       var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
       var type = this.getItemProperty(id, "type");
-      if (type != -1 && (type & desiredType) && !this.isCompatible(this, item, appVersion))
+      // Skip this item if we're not seeking disabled items
+      var disabled = this.getItemProperty(id, "disabled") == "true";
+      if (!includeDisabled && disabled) 
+        continue;
+      
+      // If the id of this item matches one of the items potentially installed
+      // with and maintained by this application AND it is installed in the 
+      // global install location (i.e. the place installed by the app installer)
+      // it is and can be managed by the update file - it's not an item that has
+      // been manually installed by the user into their profile dir, and as such
+      // it is always compatible with the next release of the application since
+      // we will continue to support it.
+      var locationKey = this.getItemProperty(id, "installLocation");
+      var appManaged = this.getItemProperty(id, "appManaged") == "true";
+      if (!includeDisabled && appManaged && locationKey == KEY_APP_GLOBAL)
+        continue;
+
+      if (type != -1 && (type & desiredType) && 
+          !this.isCompatible(this, item, appVersion))
         items.push(this.getItemForID(id));
     }
     return items;
@@ -5734,6 +5757,8 @@ ExtensionsDataSource.prototype = {
     // (can't be removed or disabled), and hidden (not shown in the UI)
     if (installLocation.restricted)
       singleProps = singleProps.concat(["locked", "hidden"]);
+    if (installLocation.name == KEY_APP_GLOBAL) 
+      singleProps = singleProps.concat(["appManaged"]);
     for (var i = 0; i < singleProps.length; ++i) {
       var property = EM_R(singleProps[i]);
       var literal = installManifest.GetTarget(gInstallManifestRoot, property, true);
