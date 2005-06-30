@@ -210,8 +210,12 @@ function execute(n, x) {
 
     switch (n.type) {
       case FUNCTION:
-        if (!n.declared) {
-            if (n.name) {
+        if (n.functionForm != DECLARED_FORM) {
+            if (!n.name || n.functionForm == STATEMENT_FORM) {
+                v = new FunctionObject(n, x.scope);
+                if (n.functionForm == STATEMENT_FORM)
+                    x.scope.object.__defineProperty__(n.name, v, true);
+            } else {
                 t = new Object;
                 x.scope = {object: t, parent: x.scope};
                 try {
@@ -220,8 +224,6 @@ function execute(n, x) {
                 } finally {
                     x.scope = x.scope.parent;
                 }
-            } else {
-                v = new FunctionObject(n, x.scope);
             }
         }
         break;

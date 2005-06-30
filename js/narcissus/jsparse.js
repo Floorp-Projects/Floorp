@@ -315,6 +315,8 @@ function Block(t, x) {
     return n;
 }
 
+const DECLARED_FORM = 0, EXPRESSED_FORM = 1, STATEMENT_FORM = 2;
+
 function Statement(t, x) {
     var i, label, n, n2, ss, tt = t.get();
 
@@ -322,7 +324,10 @@ function Statement(t, x) {
     // common semicolon insertion magic after this switch.
     switch (tt) {
       case FUNCTION:
-        return FunctionDeclaration(t, x, true, true);
+        return FunctionDeclaration(t, x, true,
+                                   (x.stmtStack.length > 1)
+                                   ? STATEMENT_FORM
+                                   : DECLARED_FORM);
 
       case LEFT_CURLY:
         n = Statements(t, x);
@@ -557,7 +562,7 @@ function Statement(t, x) {
     return n;
 }
 
-function FunctionDeclaration(t, x, requireName, declaration) {
+function FunctionDeclaration(t, x, requireName, functionForm) {
     var f = new Node(t);
     if (f.type != FUNCTION)
         f.type = (f.value == "get") ? GETTER : SETTER;
@@ -581,10 +586,10 @@ function FunctionDeclaration(t, x, requireName, declaration) {
     var x2 = new CompilerContext(true);
     f.body = Script(t, x2);
     t.mustMatch(RIGHT_CURLY);
-
     f.end = t.token.end;
-    f.declared = declaration;
-    if (declaration)
+
+    f.functionForm = functionForm;
+    if (functionForm == DECLARED_FORM)
         x.funDecls.push(f);
     return f;
 }
@@ -798,7 +803,7 @@ loop:
           case FUNCTION:
             if (!t.scanOperand)
                 break loop;
-            operands.push(FunctionDeclaration(t, x, false, false));
+            operands.push(FunctionDeclaration(t, x, false, EXPRESSED_FORM));
             t.scanOperand = false;
             break;
 
@@ -859,7 +864,7 @@ loop:
                         t.peek() == IDENTIFIER) {
                         if (x.ecmaStrictMode)
                             throw t.newSyntaxError("Illegal property accessor");
-                        n.push(FunctionDeclaration(t, x, true, false));
+                        n.push(FunctionDeclaration(t, x, true, EXPRESSED_FORM));
                     } else {
                         switch (tt) {
                           case IDENTIFIER:
