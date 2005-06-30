@@ -495,7 +495,18 @@ function loadStartPage()
     var startpageenabled = pref.getBoolPref("mailnews.start_page.enabled");
     if (startpageenabled) 
     {
+      
       var startpage = pref.getComplexValue("mailnews.start_page.url", Components.interfaces.nsIPrefLocalizedString).data;
+
+      // Some users have our old default start page
+      // showing up as a user pref instead of a default pref. If this is the case, clear the user pref by hand 
+      // and re-read it again so we get the correct default start page.
+      if (startpage == "chrome://messenger/locale/start.html")
+      {
+        pref.clearUserPref("mailnews.start_page.url");
+        startpage = pref.getComplexValue("mailnews.start_page.url", Components.interfaces.nsIPrefLocalizedString).data;
+      }
+
       if (startpage != "") 
       {
         GetMessagePaneFrame().location.href = startpage;
