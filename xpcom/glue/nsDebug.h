@@ -270,11 +270,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef XPCOM_GLUE
-#define NS_CheckThreadSafe
-#else
 #define NS_CheckThreadSafe(owningThread, msg)                 \
   NS_ASSERTION(owningThread == PR_GetCurrentThread(), msg)
-#endif
 
 #endif /* nsDebug_h___ */
