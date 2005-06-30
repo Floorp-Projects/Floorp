@@ -526,12 +526,58 @@ function getTargetFile(aFpP, aSkipPrompt)
   // to place every download - this will force the prompt to ask the user
   // where to put saved files. 
   var dir = null;
-  try {
-    dir = prefs.getComplexValue("defaultFolder", nsILocalFile);
+  var useDownloadDir = prefs.getBoolPref("useDownloadDir");
+  
+  function getSpecialFolderKey(aFolderType) 
+  {
+    if (aFolderType == "Desktop")
+      return "Desk";
+    
+    if (aFolderType != "Downloads")
+      throw "ASSERTION FAILED: folder type should be 'Desktop' or 'Downloads'";
+    
+#ifdef XP_WIN
+    return "Pers";
+#else
+#ifdef XP_MACOSX
+    return "UsrDocs";
+#else
+    return "Home";
+#endif
+#endif
   }
-  catch (e) { }
-
-  if (!aSkipPrompt || !dir) {
+  
+  function getDownloadsFolder(aFolder)
+  {
+    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
+                                .getService(Components.interfaces.nsIProperties);
+    
+    var dir = fileLocator.get(getSpecialFolderKey(aFolder), Components.interfaces.nsILocalFile);
+    
+    var bundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                           .getService(Components.interfaces.nsIStringBundleService);
+    bundle = bundle.createBundle("chrome://mozapps/locale/downloads/unknownContentType.properties");
+    
+    var description = bundle.GetStringFromName("myDownloads");
+    if (aFolder != "Desktop")
+      dir.append(description);
+    
+    return dir;
+  }
+  
+  switch (prefs.getIntPref("folderList")) {
+  case 0:
+    dir = getDownloadsFolder("Desktop")
+    break;
+  case 1:
+    dir = getDownloadsFolder("Downloads");
+    break;
+  case 2:
+    dir = prefs.getComplexValue("dir", nsILocalFile);
+    break;
+  }
+  
+  if (!aSkipPrompt || !useDownloadDir || !dir) {
     // If we're asking the user where to save the file, root the Save As...
     // dialog on they place they last picked. 
     try {
@@ -539,26 +585,10 @@ function getTargetFile(aFpP, aSkipPrompt)
     }
     catch (e) {
       // No default download location. Default to desktop. 
-      var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-
-      function getDesktopKey()
-      {      
-#ifdef XP_WIN
-        return "DeskP";
-#endif
-#ifdef XP_MACOSX
-        return "UsrDsk";
-#endif
-#ifdef XP_OS2
-        return "Desk";
-#endif
-#ifdef XP_BEOS
-        return "Desk";
-#endif
-        return "Home";
-      }
+      var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
+                                  .getService(Components.interfaces.nsIProperties);
       
-      dir = fileLocator.get(getDesktopKey(), Components.interfaces.nsILocalFile);
+      dir = fileLocator.get(getSpecialFolderKey("Desktop"), nsILocalFile);
     }
 
     var fp = makeFilePicker();
@@ -590,13 +620,6 @@ function getTargetFile(aFpP, aSkipPrompt)
   
     if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
       return false;
-  
-    var useDownloadDir = false;
-    try {
-      useDownloadDir = prefs.getBoolPref("useDownloadDir");
-    }
-    catch(ex) {
-    }
     
     var directory = fp.file.parent.QueryInterface(nsILocalFile);
     prefs.setComplexValue("lastDir", nsILocalFile, directory);
@@ -610,10 +633,6 @@ function getTargetFile(aFpP, aSkipPrompt)
       prefs.setIntPref("save_converter_index", aFpP.saveAsType);
   }
   else {
-    // ben 07/31/2003: 
-    // We don't nullcheck dir here because dir should never be null if we get here
-    // unless something is badly wrong, and if it is, I want to know about it in
-    // bugs. 
     dir.append(getNormalizedLeafName(aFpP.fileInfo.fileName,
                                      aFpP.fileInfo.fileExt));
     var file = dir;
