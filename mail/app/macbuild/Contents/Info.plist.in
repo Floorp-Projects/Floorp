@@ -24,6 +24,17 @@
 	<string>MOZM</string>
 	<key>CFBundleVersion</key>
 	<string>APP_VERSION</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Email Address URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>mailto</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 </dict>
