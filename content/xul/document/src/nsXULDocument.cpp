@@ -2961,9 +2961,9 @@ nsXULDocument::ResumeWalk()
                     // stale and must be reloaded.
                     PRBool blocked;
                     rv = LoadScript(scriptproto, &blocked);
-                    if (NS_FAILED(rv)) return rv;
+                    // If the script cannot be loaded, just keep going!
 
-                    if (blocked)
+                    if (NS_SUCCEEDED(rv) && blocked)
                         return NS_OK;
                 }
                 else if (scriptproto->mJSObject) {
