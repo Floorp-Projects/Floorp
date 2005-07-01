@@ -203,7 +203,7 @@ ifdef MOZ_PKG_MANIFEST
 	$(RM) -rf $(DIST)/xpt
 	$(PERL) -I$(topsrcdir)/xpinstall/packager -e 'use Packager; \
 	  Packager::Copy("$(DIST)", "$(DIST)/$(MOZ_PKG_APPNAME)", \
-	                 "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 10);'
+	                 "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1);'
 	$(PERL) $(topsrcdir)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DIST)/$(MOZ_PKG_APPNAME)/components -v -o $(PKGCP_OS)
 else # !MOZ_PKG_MANIFEST
 ifeq ($(MOZ_PKG_FORMAT),DMG)

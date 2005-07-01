@@ -125,14 +125,14 @@ foreach my $component (@xptdirs) {
 		foreach my $file (@files) {
 			($debug >= 6) && print "$file\n";
 			if ( $file =~ /\.xpt$/ ) {
-        push @xptfiles, "$destdir/$component/$bindir"."components/$file";
+                            push @xptfiles, "$destdir/$component/$bindir"."components/$file";
 				($debug >= 8) && print "xptfiles:\t@xptfiles\n";
 			}
 		}
 		closedir (COMPDIR);
 
 		# merge .xpt files into one if we found any in the dir
-		if ( $#xptfiles ) {
+		if ( scalar(@xptfiles) ) {
       my ($merged, $fmerged);
       if ($finaldir ne "") {
         $merged = "$finaldir/$component.xpt";
@@ -142,7 +142,21 @@ foreach my $component (@xptdirs) {
         $merged = $fmerged.".new";
       }
 
-      my $cmdline = "$srcdir/bin/xpt_link $merged @xptfiles";
+      my @realxptfiles;
+      my $realmerged;
+      if ($os eq "MSDOS") {
+          @realxptfiles = map {my $file = `cygpath -t mixed $_`;
+                               chomp $file;
+                               $file} @xptfiles;
+	  $realmerged = `cygpath -t mixed $merged`;
+	  chomp $realmerged;
+      }
+      else {
+          @realxptfiles = @xptfiles;
+	  $realmerged = $merged;
+      }
+
+      my $cmdline = "$srcdir/bin/xpt_link $realmerged @realxptfiles";
 			($debug >= 4) && print "$cmdline\n";
 			system($cmdline) == 0 || die ("'$cmdline' failed");
 

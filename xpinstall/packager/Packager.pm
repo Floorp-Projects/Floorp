@@ -258,8 +258,6 @@ sub do_copyfile
     }
   } else {
     if ( $dirflag ) { # directory copy, no altdest
-      print ("XXXBsmedberg: copying '$destpathcomp', '$File::Find::name'\n");
-
       my $destfile = $File::Find::name;
       if ($os eq "MSDOS") {
         $destfile =~ s|\\|/|;
@@ -267,8 +265,6 @@ sub do_copyfile
       $destfile =~ s|$srcdir/||;
 
       ($destname, $destpath, $destsuffix) = fileparse("$destpathcomp/$destfile", '\..*?$');
-
-      print ("XXXXbsmedberg: destpath = '$destpath' srcdir='$srcdir'\n");
 
       ($debug >= 5) &&
         print " dir copy w/o altdest: $destpath $destname $destsuffix\n";
