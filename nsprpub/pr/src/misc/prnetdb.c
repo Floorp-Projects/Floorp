@@ -188,8 +188,8 @@ static PRBool _pr_have_inet6_if = PR_FALSE;
 
 #if defined(AIX) \
     || (defined(DARWIN) && (!defined(HAVE_GETIFADDRS) \
-        || (defined(MACOS_DEPLOYMENT_TARGET) \
-        && MACOS_DEPLOYMENT_TARGET < 100200)))
+        || (defined(XP_MACOSX) && (!defined(MAC_OS_X_VERSION_10_2) || \
+        MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_2))))
 
 /*
  * Use SIOCGIFCONF ioctl on platforms that don't have routing

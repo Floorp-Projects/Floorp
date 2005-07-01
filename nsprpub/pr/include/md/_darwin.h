@@ -42,6 +42,10 @@
 
 #include <sys/syscall.h>
 
+#ifdef XP_MACOSX
+#include <AvailabilityMacros.h>
+#endif
+
 #define PR_LINKER_ARCH	"darwin"
 #define _PR_SI_SYSNAME  "DARWIN"
 #ifdef i386
@@ -77,17 +81,21 @@
  * if you pass an IPv4-mapped IPv6 address to it.
  */
 #define _PR_GHBA_DISALLOW_V4MAPPED
+#ifdef XP_MACOSX
+#if !defined(MAC_OS_X_VERSION_10_3) || \
+    MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_3
 /*
  * socket(AF_INET6) fails with EPROTONOSUPPORT on Mac OS X 10.1.
  * IPv6 under OS X 10.2 and below is not complete (see bug 222031).
  */
-#if MACOS_DEPLOYMENT_TARGET < 100300
 #define _PR_INET6_PROBE
-#endif
+#endif /* DT < 10.3 */
+#if defined(MAC_OS_X_VERSION_10_2) && \
+    MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_2
 /* Mac OS X 10.2 has inet_ntop and inet_pton. */
-#if MACOS_DEPLOYMENT_TARGET >= 100200
 #define _PR_HAVE_INET_NTOP
-#endif
+#endif /* DT >= 10.2 */
+#endif /* XP_MACOSX */
 #define _PR_IPV6_V6ONLY_PROBE
 /* The IPV6_V6ONLY socket option is not defined on Mac OS X 10.1. */
 #ifndef IPV6_V6ONLY
