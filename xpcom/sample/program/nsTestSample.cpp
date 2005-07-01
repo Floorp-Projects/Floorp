@@ -44,19 +44,13 @@
 
 #include <stdio.h>
 
+#include "nsXPCOMGlue.h"
 #include "nsXPCOM.h"
 #include "nsCOMPtr.h"
 #include "nsISample.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
-
-#ifdef XPCOM_GLUE
-#include "nsXPCOMGlue.h"
-#include "nsMemory.h"
-#else
-#include "nsXPIDLString.h"
-#endif
 
 #define NS_SAMPLE_CONTRACTID "@mozilla.org/sample;1"
 
@@ -65,9 +59,7 @@ main(void)
 {
     nsresult rv;
 
-#ifdef XPCOM_GLUE
     XPCOMGlueStartup(nsnull);
-#endif
 
     // Initialize XPCOM
     nsCOMPtr<nsIServiceManager> servMan;
@@ -119,13 +111,8 @@ main(void)
         return -3;
     }
     printf("Set value to: %s\n", testValue);
-#ifndef XPCOM_GLUE
-    nsXPIDLCString str;
-    rv = mysample->GetValue(getter_Copies(str));
-#else
     char *str;
     rv = mysample->GetValue(&str);
-#endif
 
     if (NS_FAILED(rv))
     {
@@ -138,9 +125,8 @@ main(void)
         return -4;
     }
 
-#ifdef XPCOM_GLUE
-    nsMemory::Free(str);
-#endif
+    NS_Free(str);
+
     rv = mysample->WriteValue("Final print :");
     printf("Test passed.\n");
     
@@ -154,8 +140,6 @@ main(void)
     // Shutdown XPCOM
     NS_ShutdownXPCOM(nsnull);
 
-#ifdef XPCOM_GLUE
     XPCOMGlueShutdown();
-#endif
     return 0;
 }
