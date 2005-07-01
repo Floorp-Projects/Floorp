@@ -57,13 +57,18 @@ WinMain(HINSTANCE  hInstance, HINSTANCE  hPrevInstance,
      */
     DWORD regType;
     DWORD regValue = -1;
+    DWORD regLength = sizeof regValue;
     HKEY hkeyCU, hkeyLM;
     RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\mozilla.org\\windbgdlg", 0, KEY_READ, &hkeyCU);
     RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\mozilla.org\\windbgdlg", 0, KEY_READ, &hkeyLM);
+    const char * const * argv = __argv;
     for (int i = __argc - 1; regValue == (DWORD)-1 && i; --i) {
-        DWORD regLength = sizeof regValue;
-        if ((hkeyCU && RegQueryValueEx(hkeyCU, __argv[i], 0, &regType, (LPBYTE)&regValue, &regLength) != ERROR_SUCCESS) ||
-            (hkeyLM && RegQueryValueEx(hkeyLM, __argv[i], 0, &regType, (LPBYTE)&regValue, &regLength) != ERROR_SUCCESS))
+        bool ok = false;
+        if (hkeyCU)
+            ok = RegQueryValueEx(hkeyCU, argv[i], 0, &regType, (LPBYTE)&regValue, &regLength) == ERROR_SUCCESS;
+        if (!ok && hkeyLM)
+            ok = RegQueryValueEx(hkeyLM, argv[i], 0, &regType, (LPBYTE)&regValue, &regLength) == ERROR_SUCCESS;
+        if (!ok)
             regValue = -1;
     }
     if (hkeyCU)
