@@ -464,7 +464,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
 
 - (NSPanel*)getAlertPanelWithTitle:(NSString*)title message:(NSString*)message
                 defaultButton:(NSString*)defaultLabel altButton:(NSString*)altLabel
-otherButton:(NSString*)otherLabel extraView:(NSView*)extraView lastResponder:(NSView*)lastResponder
+                otherButton:(NSString*)otherLabel extraView:(NSView*)extraView lastResponder:(NSView*)lastResponder
 {
   NSRect rect = NSMakeRect(0, 0, kMinDialogWidth, kMaxDialogHeight);
   NSPanel* panel = [[[NSPanel alloc] initWithContentRect: rect styleMask: NSTitledWindowMask backing: NSBackingStoreBuffered defer: YES] autorelease];
