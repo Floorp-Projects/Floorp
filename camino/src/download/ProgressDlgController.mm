@@ -54,6 +54,9 @@ static NSString *ProgressWindowFrameSaveName = @"ProgressWindow";
 -(void)makeDLInstanceVisibleIfItsNotAlready:(ProgressViewController*)controller;
 -(void)killDownloadTimer;
 -(void)setupDownloadTimer;
+-(BOOL)shouldAllowCancelAction;
+-(BOOL)shouldAllowRemoveAction;
+-(BOOL)shouldAllowOpenAction;
 
 @end
 
@@ -320,7 +323,7 @@ static id gSharedProgressController = nil;
       if (i < 0) { // if nothing was selected select the first item
         instanceToSelect = ([mProgressViewControllers count] - 1);
       }
-      else if (i == ([mProgressViewControllers count] - 1)) { // if selection was already at the bottom leave it there
+      else if (i == ((int)[mProgressViewControllers count] - 1)) { // if selection was already at the bottom leave it there
         instanceToSelect = ([mProgressViewControllers count] - 1);
       }
       else { // select the next lowest instance
