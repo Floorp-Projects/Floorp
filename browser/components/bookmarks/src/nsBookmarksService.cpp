@@ -5590,6 +5590,7 @@ nsBookmarksService::ClearBookmarksContainer(nsIRDFResource* aContainer)
     nsresult rv;
 
     nsCOMPtr<nsIRDFContainer> itemsContainer = do_CreateInstance (kRDFContainerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
     rv = itemsContainer->Init (mInner, aContainer);
     if (NS_FAILED(rv)) return rv;
 
