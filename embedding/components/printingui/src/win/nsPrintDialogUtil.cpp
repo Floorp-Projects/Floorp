@@ -79,6 +79,9 @@ static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 
 #include "nsRect.h"
 
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+
 #include "nsCRT.h"
 #include "prenv.h" /* for PR_GetEnv */
 
@@ -838,6 +841,23 @@ static PRUnichar * GetDefaultPrinterNameFromGlobalPrinters()
   return printerName;
 }
 
+// Determine whether we have a completely native dialog
+// or whether we cshould extend it
+static PRBool ShouldExtendPrintDialog()
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+
+  PRBool result;
+  rv = prefBranch->GetBoolPref("print.extend_native_print_dialog", &result);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+  return result;
+}
 
 //------------------------------------------------------------------
 // Displays the native Print Dialog
@@ -922,19 +942,6 @@ ShowNativePrintDialog(HWND              aHWnd,
   }
   aPrintSettings->GetHowToEnableFrameUI(&howToEnableFrameUI);
 
-  // Determine whether we have a completely native dialog
-  // or whether we cshould extend it
-  // true  - do only the native
-  // false - extend the dialog
-  PRPackedBool doExtend = PR_FALSE;
-  nsCOMPtr<nsIStringBundle> strBundle;
-  if (NS_SUCCEEDED(GetLocalizedBundle(PRINTDLG_PROPERTIES, getter_AddRefs(strBundle)))) {
-    nsAutoString doExtendStr;
-    if (NS_SUCCEEDED(GetLocalizedString(strBundle, "extend", doExtendStr))) {
-      doExtend = doExtendStr.EqualsLiteral("true");
-    }
-  }
-
   PRInt32 pg = 1;
   aPrintSettings->GetStartPageRange(&pg);
   prntdlg.nFromPage           = pg;
@@ -953,7 +960,7 @@ ShowNativePrintDialog(HWND              aHWnd,
   prntdlg.hInstance           = NULL;
   prntdlg.lpPrintTemplateName = NULL;
 
-  if (!doExtend) {
+  if (!ShouldExtendPrintDialog()) {
     prntdlg.lCustData         = NULL;
     prntdlg.lpfnPrintHook     = NULL;
   } else {
@@ -1269,19 +1276,6 @@ ShowNativePrintDialogEx(HWND              aHWnd,
     aPrintSettings->GetHowToEnableFrameUI(&howToEnableFrameUI);
   }
 
-  // Determine whether we have a completely native dialog
-  // or whether we cshould extend it
-  // true  - do only the native
-  // false - extend the dialog
-  PRPackedBool doExtend = PR_FALSE;
-  nsCOMPtr<nsIStringBundle> strBundle;
-  if (NS_SUCCEEDED(GetLocalizedBundle(PRINTDLG_PROPERTIES, getter_AddRefs(strBundle)))) {
-    nsAutoString doExtendStr;
-    if (NS_SUCCEEDED(GetLocalizedString(strBundle, "extend", doExtendStr))) {
-      doExtend = doExtendStr.LowerCaseEqualsLiteral("true");
-    }
-  }
-
   // At the moment we can only support one page range
   // from all the documentation I can find, it appears that this 
   // will get cleanup automatically when the struct goes away
@@ -1297,7 +1291,7 @@ ShowNativePrintDialogEx(HWND              aHWnd,
   prntdlg.nMaxPage       = 0xFFFF;
   prntdlg.nCopies        = 1;
 
-  if (doExtend) {
+  if (ShouldExtendPrintDialog()) {
     // lLcalize the Property Sheet (Tab) title
     nsCAutoString title;
     nsString optionsStr;
