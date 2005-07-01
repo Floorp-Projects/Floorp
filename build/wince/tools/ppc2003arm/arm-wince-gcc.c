@@ -72,7 +72,7 @@ main(int argc, char **argv)
   if (link)
   {
     args[i++] = "/link";
-    args[i++] = "-STACK:0x5000000,1000000";
+    args[i++] = "-STACK:0x5000000"; //,1000000
     args[i++] = "-ENTRY:mainACRTStartup";
     args[i++] = "-SUBSYSTEM:WINDOWSCE,4.20";
     args[i++] = "-MACHINE:ARM";

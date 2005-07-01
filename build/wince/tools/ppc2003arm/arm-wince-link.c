@@ -7,11 +7,14 @@
 int 
 main(int argc, char **argv)
 {
-  int     iRetVal;
+  int iRetVal;
   char* args[1000];
   int i = 0;
   int j = 0;
   int k = 0;
+
+  // Clear any link env variable that might get us tangled up
+  _putenv("LINK=");
 
   args[i++] = "link.exe";
   args[i++] = "/SUBSYSTEM:WINDOWSCE,4.20";
@@ -29,7 +32,8 @@ main(int argc, char **argv)
   args[i++] = "/NODEFAULTLIB:LIBC";
   args[i++] = "/NODEFAULTLIB:OLDNAMES";
 
-  args[i++] = "/STACK:0x5000000,1000000";
+  args[i++] = "/STACK:0x5000000"; //,1000000
+  //LARGEADDRESSAWARE 
 
   // if -DLL is not passed, then change the entry to 'main'
   while(argv[j])
@@ -47,7 +51,7 @@ main(int argc, char **argv)
 
   argpath_conv(&argv[1], &args[i]);
 
-  //  dumpargs(args);
+  dumpargs(args);
 
   iRetVal = _spawnv( _P_WAIT, LINK_PATH, args );
 
