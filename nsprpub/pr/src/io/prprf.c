@@ -394,7 +394,7 @@ static int cvt_s(SprintfState *ss, const char *s, int width, int prec,
 }
 
 /*
-** BiuldArgArray stands for Numbered Argument list Sprintf
+** BuildArgArray stands for Numbered Argument list Sprintf
 ** for example,  
 **	fmp = "%4$i, %2$d, %3s, %1d";
 ** the number must start from 1, and no gap among them
@@ -410,7 +410,7 @@ static struct NumArg* BuildArgArray( const char *fmt, va_list ap, int* rv, struc
 
     /*
     **	first pass:
-    **	detemine how many legal % I have got, then allocate space
+    **	determine how many legal % I have got, then allocate space
     */
 
     p = fmt;
