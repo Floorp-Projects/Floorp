@@ -115,6 +115,8 @@ _PR_DestroyZones(void)
 ** its address.
 */
 
+#ifdef HAVE_DLL
+
 #ifdef USE_DLFCN
 
 #include <dlfcn.h>
@@ -162,6 +164,16 @@ pr_FindSymbolInProg(const char *name)
 #error "The zone allocator is not supported on this platform"
 
 #endif
+
+#else /* !defined(HAVE_DLL) */
+
+static void *
+pr_FindSymbolInProg(const char *name)
+{
+    /* can't be implemented */
+    return NULL;
+
+#endif /* HAVE_DLL */
 
 void
 _PR_InitZones(void)
