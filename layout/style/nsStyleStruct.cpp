@@ -1618,6 +1618,13 @@ nsChangeHint nsStyleText::MaxDifference()
 // nsStyleUserInterface
 //
 
+nsCursorImage::nsCursorImage()
+  : mHaveHotspot(PR_FALSE)
+  , mHotspotX(0.0f)
+  , mHotspotY(0.0f)
+{
+}
+
 nsStyleUserInterface::nsStyleUserInterface(void) 
 { 
   mUserInput = NS_STYLE_USER_INPUT_AUTO;
@@ -1625,19 +1632,23 @@ nsStyleUserInterface::nsStyleUserInterface(void)
   mUserFocus = NS_STYLE_USER_FOCUS_NONE;
 
   mCursor = NS_STYLE_CURSOR_AUTO; // fix for bugzilla bug 51113
+
+  mCursorArrayLength = 0;
+  mCursorArray = nsnull;
 }
 
 nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource) :
   mUserInput(aSource.mUserInput),
   mUserModify(aSource.mUserModify),
   mUserFocus(aSource.mUserFocus),
-  mCursor(aSource.mCursor),
-  mCursorArray(aSource.mCursorArray)
+  mCursor(aSource.mCursor)
 { 
+  CopyCursorArrayFrom(aSource);
 }
 
 nsStyleUserInterface::~nsStyleUserInterface(void) 
 { 
+  delete [] mCursorArray;
 }
 
 nsChangeHint nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aOther) const
@@ -1648,7 +1659,7 @@ nsChangeHint nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aO
 
   // We could do better. But it wouldn't be worth it, URL-specified cursors are
   // rare.
-  if (mCursorArray.Count() > 0 || aOther.mCursorArray.Count() > 0)
+  if (mCursorArrayLength > 0 || aOther.mCursorArrayLength > 0)
     NS_UpdateHint(hint, nsChangeHint_UpdateCursor);
 
   if (mUserModify != aOther.mUserModify)
@@ -1672,6 +1683,21 @@ nsChangeHint nsStyleUserInterface::MaxDifference()
   return nsChangeHint(nsChangeHint_UpdateCursor | NS_STYLE_HINT_FRAMECHANGE);
 }
 #endif
+
+void
+nsStyleUserInterface::CopyCursorArrayFrom(const nsStyleUserInterface& aSource)
+{
+  mCursorArray = nsnull;
+  mCursorArrayLength = 0;
+  if (aSource.mCursorArrayLength) {
+    mCursorArray = new nsCursorImage[aSource.mCursorArrayLength];
+    if (mCursorArray) {
+      mCursorArrayLength = aSource.mCursorArrayLength;
+      for (PRUint32 i = 0; i < mCursorArrayLength; ++i)
+        mCursorArray[i] = aSource.mCursorArray[i];
+    }
+  }
+}
 
 //-----------------------
 // nsStyleUIReset

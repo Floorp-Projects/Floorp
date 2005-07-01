@@ -1147,6 +1147,14 @@ struct nsStyleUIReset: public nsStyleStruct {
   PRUint8   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)
 };
 
+struct nsCursorImage {
+  nsCOMPtr<imgIRequest> mImage;
+  PRBool mHaveHotspot;
+  float mHotspotX, mHotspotY;
+
+  nsCursorImage();
+};
+
 struct nsStyleUserInterface: public nsStyleStruct {
   nsStyleUserInterface(void);
   nsStyleUserInterface(const nsStyleUserInterface& aOther);
@@ -1172,12 +1180,16 @@ struct nsStyleUserInterface: public nsStyleStruct {
   PRUint8   mUserFocus;       // [inherited] (auto-select)
   
   PRUint8   mCursor;          // [inherited] See nsStyleConsts.h
-  nsCOMArray<imgIRequest> mCursorArray; // [inherited] The specified URL values. Takes precedence over mCursor.
-  // NOTE: Using nsCOMArray here means that copying this struct is slower (and
-  // takes more memory) than it could be if we used nsISupportsArray, because
-  // we have to append all objects to the new array. However, since these
-  // properties are rarely set, they are usually cached, and thus this is not
-  // much of a problem.
+
+  PRUint32 mCursorArrayLength;
+  nsCursorImage *mCursorArray;// [inherited] The specified URL values
+                              //   and coordinates.  Takes precedence over
+                              //   mCursor.  Zero-length array is represented
+                              //   by null pointer.
+
+  // Does not free mCursorArray; the caller is responsible for calling
+  // |delete [] mCursorArray| first if it is needed.
+  void CopyCursorArrayFrom(const nsStyleUserInterface& aSource);
 };
 
 struct nsStyleXUL : public nsStyleStruct {

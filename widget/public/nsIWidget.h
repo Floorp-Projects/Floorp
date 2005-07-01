@@ -92,10 +92,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_SCREEN      9
 #define NS_NATIVE_SHELLWIDGET 10      // Get the shell GtkWidget
 
-// {18032AD5-B265-11d1-AA2A-000000000000}
+// e7f09105-d21b-406a-89d5-e6b731b8f665
 #define NS_IWIDGET_IID \
-{ 0x18032ad5, 0xb265, 0x11d1, \
-{ 0xaa, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
+{ 0xe7f09105, 0xd21b, 0x406a, \
+  { 0x89, 0xd5, 0xe6, 0xb7, 0x31, 0xb8, 0xf6, 0x65 } }
 
 
 // Hide the native window systems real window type so as to avoid
@@ -651,10 +651,13 @@ class nsIWidget : public nsISupports {
      * Sets an image as the cursor for this widget.
      *
      * @param aCursor the cursor to set
+     * @param aX the X coordinate of the hotspot (from left).
+     * @param aY the Y coordinate of the hotspot (from top).
      * @retval NS_ERROR_NOT_IMPLEMENTED if setting images as cursors is not
      *         supported
      */
-    NS_IMETHOD SetCursor(imgIContainer* aCursor) = 0;
+    NS_IMETHOD SetCursor(imgIContainer* aCursor,
+                         PRUint32 aHotspotX, PRUint32 aHotspotY) = 0;
 
     /** 
      * Get the window type of this widget

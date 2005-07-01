@@ -232,6 +232,12 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
           AppendCSSValueToString(aProperty, val->mValue, aResult);
           val = val->mNext;
           if (val) {
+            if (aProperty == eCSSProperty_cursor
+#ifdef MOZ_SVG
+                || aProperty == eCSSProperty_stroke_dasharray
+#endif
+               )
+              aResult.Append(PRUnichar(','));
             aResult.Append(PRUnichar(' '));
           }
         } while (val);

@@ -2127,21 +2127,43 @@ nsComputedDOMStyle::GetCursor(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)ui, aFrame);
 
   if (ui) {
-    PRInt32 count = ui->mCursorArray.Count();
-    for (PRInt32 i = 0; i < count; i++) {
+    for (nsCursorImage *item = ui->mCursorArray,
+                   *item_end = ui->mCursorArray + ui->mCursorArrayLength;
+         item < item_end; ++item) {
+      nsDOMCSSValueList *itemList = GetROCSSValueList(PR_FALSE);
+      if (!itemList || !valueList->AppendCSSValue(itemList)) {
+        delete itemList;
+        delete valueList;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
       nsCOMPtr<nsIURI> uri;
-      ui->mCursorArray[i]->GetURI(getter_AddRefs(uri));
+      item->mImage->GetURI(getter_AddRefs(uri));
 
       nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-      if (!val) {
+      if (!val || !itemList->AppendCSSValue(val)) {
+        delete val;
         delete valueList;
         return NS_ERROR_OUT_OF_MEMORY;
       }
       val->SetURI(uri);
-      if (!valueList->AppendCSSValue(val)) {
-        delete valueList;
-        delete val;
-        return NS_ERROR_OUT_OF_MEMORY;
+
+      if (item->mHaveHotspot) {
+        nsROCSSPrimitiveValue *valX = GetROCSSPrimitiveValue();
+        if (!valX || !itemList->AppendCSSValue(valX)) {
+          delete valX;
+          delete valueList;
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        nsROCSSPrimitiveValue *valY = GetROCSSPrimitiveValue();
+        if (!valY || !itemList->AppendCSSValue(valY)) {
+          delete valY;
+          delete valueList;
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        valX->SetNumber(item->mHotspotX);
+        valY->SetNumber(item->mHotspotY);
       }
     }
 
