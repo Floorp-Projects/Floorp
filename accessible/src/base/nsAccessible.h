@@ -141,8 +141,7 @@ public:
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
 
 protected:
-  PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, 
-                         PRInt32 aStateNameSpace, nsStateMapEntry *aStateMapEntry);
+  PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, nsStateMapEntry *aStateMapEntry);
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
   PRBool IsPartiallyVisible(PRBool *aIsOffscreen); 
@@ -178,8 +177,6 @@ protected:
   // For accessibles that have actions
   static void DoCommandCallback(nsITimer *aTimer, void *aClosure);
   nsresult DoCommand();
-
-  PRBool IsSpecialXHTMLApplication();  // Forwards to nsPIAccessibleDocument getter
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;
