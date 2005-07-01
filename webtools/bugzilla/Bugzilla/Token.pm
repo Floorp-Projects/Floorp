@@ -32,8 +32,10 @@ package Bugzilla::Token;
 use Bugzilla::Config;
 use Bugzilla::Error;
 use Bugzilla::BugMail;
+use Bugzilla::Util;
 
 use Date::Format;
+use Date::Parse;
 
 # This module requires that its caller have said "require CGI.pl" to import
 # relevant functions from that script and its companion globals.pl.
@@ -46,34 +48,15 @@ use Date::Format;
 my $maxtokenage = 3;
 
 ################################################################################
-# Functions
+# Public Functions
 ################################################################################
 
 sub IssueEmailChangeToken {
     my ($userid, $old_email, $new_email) = @_;
 
-    my $dbh = Bugzilla->dbh;
-    my $token_ts = time();
-    my $issuedate = time2str("%Y-%m-%d %H:%M", $token_ts);
+    my ($token, $token_ts) = _create_token($userid, 'emailold', $old_email . ":" . $new_email);
 
-    # Generate a unique token and insert it into the tokens table.
-    # We have to lock the tokens table before generating the token, 
-    # since the database must be queried for token uniqueness.
-    $dbh->bz_lock_tables('tokens WRITE');
-    my $token = GenerateUniqueToken();
-    my $quotedtoken = &::SqlQuote($token);
-    my $quoted_emails = &::SqlQuote($old_email . ":" . $new_email);
-    &::SendSQL("INSERT INTO tokens ( userid , issuedate , token , 
-                                     tokentype , eventdata )
-                VALUES             ( $userid , '$issuedate' , $quotedtoken , 
-                                     'emailold' , $quoted_emails )");
-    my $newtoken = GenerateUniqueToken();
-    $quotedtoken = &::SqlQuote($newtoken);
-    &::SendSQL("INSERT INTO tokens ( userid , issuedate , token , 
-                                     tokentype , eventdata )
-                VALUES             ( $userid , '$issuedate' , $quotedtoken , 
-                                     'emailnew' , $quoted_emails )");
-    $dbh->bz_unlock_tables();
+    my $newtoken = _create_token($userid, 'emailnew', $old_email . ":" . $new_email);
 
     # Mail the user the token along with instructions for using it.
 
@@ -128,18 +111,7 @@ sub IssuePasswordToken {
         ThrowUserError('too_soon_for_new_token');
     };
 
-    my $token_ts = time();
-
-    # Generate a unique token and insert it into the tokens table.
-    # We have to lock the tokens table before generating the token, 
-    # since the database must be queried for token uniqueness.
-    $dbh->bz_lock_tables('tokens WRITE');
-    my $token = GenerateUniqueToken();
-    my $quotedtoken = &::SqlQuote($token);
-    my $quotedipaddr = &::SqlQuote($::ENV{'REMOTE_ADDR'});
-    &::SendSQL("INSERT INTO tokens ( userid , issuedate , token , tokentype , eventdata )
-                VALUES      ( $userid , NOW() , $quotedtoken , 'password' , $quotedipaddr )");
-    $dbh->bz_unlock_tables();
+    my ($token, $token_ts) = _create_token($userid, 'password', $::ENV{'REMOTE_ADDR'});
 
     # Mail the user the token along with instructions for using it.
     
@@ -160,6 +132,13 @@ sub IssuePasswordToken {
     Bugzilla::BugMail::MessageToMTA($message);
 }
 
+sub IssueSessionToken {
+    # Generates a random token, adds it to the tokens table, and returns
+    # the token to the caller.
+
+    my $data = shift;
+    return _create_token(Bugzilla->user->id, 'session', $data);
+}
 
 sub CleanTokenTable {
     my $dbh = Bugzilla->dbh;
@@ -170,7 +149,6 @@ sub CleanTokenTable {
     $dbh->bz_unlock_tables();
 }
 
-
 sub GenerateUniqueToken {
     # Generates a unique random token.  Uses &GenerateRandomPassword 
     # for the tokens themselves and checks uniqueness by searching for
@@ -180,22 +158,22 @@ sub GenerateUniqueToken {
     my $token;
     my $duplicate = 1;
     my $tries = 0;
-    while ($duplicate) {
 
+    my $dbh = Bugzilla->dbh;
+    my $sth = $dbh->prepare("SELECT userid FROM tokens WHERE token = ?");
+
+    while ($duplicate) {
         ++$tries;
         if ($tries > 100) {
             ThrowCodeError("token_generation_error");
         }
-
         $token = &::GenerateRandomPassword();
-        &::SendSQL("SELECT userid FROM tokens WHERE token = " . &::SqlQuote($token));
-        $duplicate = &::FetchSQLData();
+        $sth->execute($token);
+        $duplicate = $sth->fetchrow_array;
     }
 
     return $token;
-
 }
-
 
 sub Cancel {
     # Cancels a previously issued token and notifies the system administrator.
@@ -210,7 +188,8 @@ sub Cancel {
     my $quotedtoken = &::SqlQuote($token);
     
     # Get information about the token being cancelled.
-    &::SendSQL("SELECT  issuedate , tokentype , eventdata , login_name , realname
+    &::SendSQL("SELECT  " . $dbh->sql_date_format('issuedate') . ",
+                        tokentype , eventdata , login_name , realname
                 FROM    tokens, profiles 
                 WHERE   tokens.userid = profiles.userid
                 AND     token = $quotedtoken");
@@ -240,9 +219,7 @@ sub Cancel {
     Bugzilla::BugMail::MessageToMTA($message);
 
     # Delete the token from the database.
-    $dbh->bz_lock_tables('tokens WRITE');
-    &::SendSQL("DELETE FROM tokens WHERE token = $quotedtoken");
-    $dbh->bz_unlock_tables();
+    DeleteToken($token);
 }
 
 sub DeletePasswordTokens {
@@ -272,5 +249,63 @@ sub HasEmailChangeToken {
     return $token;
 }
 
+sub GetTokenData($) {
+    # Returns the userid, issuedate and eventdata for the specified token
+
+    my ($token) = @_;
+    return unless defined $token;
+    trick_taint($token);
+    
+    my $dbh = Bugzilla->dbh;
+    return $dbh->selectrow_array(
+        "SELECT userid, " . $dbh->sql_date_format('issuedate') . ", eventdata 
+         FROM   tokens 
+         WHERE  token = ?", undef, $token);
+}
+
+sub DeleteToken($) {
+    # Deletes specified token
+
+    my ($token) = @_;
+    return unless defined $token;
+    trick_taint($token);
+
+    my $dbh = Bugzilla->dbh;
+    $dbh->bz_lock_tables('tokens WRITE');
+    $dbh->do("DELETE FROM tokens WHERE token = ?", undef, $token);
+    $dbh->bz_unlock_tables();
+}
+
+################################################################################
+# Internal Functions
+################################################################################
+
+sub _create_token($$$) {
+    # Generates a unique token and inserts it into the database
+    # Returns the token and the token timestamp
+    my ($userid, $tokentype, $eventdata) = @_;
+
+    detaint_natural($userid);
+    trick_taint($tokentype);
+    trick_taint($eventdata);
+
+    my $dbh = Bugzilla->dbh;
+    $dbh->bz_lock_tables('tokens WRITE');
+
+    my $token = GenerateUniqueToken();
+
+    $dbh->do("INSERT INTO tokens (userid, issuedate, token, tokentype, eventdata)
+        VALUES (?, NOW(), ?, ?, ?)", undef, ($userid, $token, $tokentype, $eventdata));
+
+    $dbh->bz_unlock_tables();
+
+    if (wantarray) {
+        my (undef, $token_ts, undef) = GetTokenData($token);
+        $token_ts = str2time($token_ts);
+        return ($token, $token_ts);
+    } else {
+        return $token;
+    }
+}
 
 1;
