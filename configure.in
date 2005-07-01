@@ -4646,14 +4646,13 @@ if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth
     dnl Try to set GSSAPI_INCLUDES ...
     dnl
     AC_CHECK_HEADERS(gssapi.h,
-        [GSSAPI_INCLUDES="$_GSSAPI_INC"])
-    if test -z "$GSSAPI_INCLUDES" ; then
+        [GSSAPI_INCLUDES="$_GSSAPI_INC" _GSSAPI_FOUND=1])
+    if test -z "$_GSSAPI_FOUND" ; then
         AC_CHECK_HEADERS(gssapi/gssapi.h,
-            [GSSAPI_INCLUDES="$_GSSAPI_INC"])
+            [GSSAPI_INCLUDES="$_GSSAPI_INC" _GSSAPI_FOUND=1])
     fi
-    CPPFLAGS="$_SAVE_CPPFLAGS $GSSAPI_INCLUDES"
 
-    if test -z "$GSSAPI_INCLUDES" ; then
+    if test -z "$_GSSAPI_FOUND" ; then
         if test -n "$GSSAPI_DIR" ; then
             AC_PATH_PROG(KRB5CONFIG, krb5-config, :, [$GSSAPI_DIR/bin:$PATH:/usr/bin])
         else
@@ -4661,8 +4660,7 @@ if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth
         fi
         if test -n "$KRB5CONFIG" -a -x "$KRB5CONFIG" ; then
             GSSAPI_INCLUDES=`$KRB5CONFIG --cflags gssapi 2>/dev/null`
-
-            CPPFLAGS="$_SAVE_CPPFLAGS $GSSAPI_INCLUDES"
+            _GSSAPI_FOUND=1
         fi
     fi
 
@@ -4670,9 +4668,10 @@ if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth
     dnl If GSSAPI libs were not found, remove extension from the list to be
     dnl built.
     dnl
-    if test -z "$GSSAPI_INCLUDES" ; then
+    if test -z "$_GSSAPI_FOUND" ; then
         AC_MSG_WARN([Cannot build negotiateauth without GSSAPI. Removing negotatiate from MOZ_EXTENSIONS.])
         MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|negotiateauth||'`
+        USE_GSSAPI=
     fi
 
     LIBS="$_SAVE_LIBS"
@@ -4680,8 +4679,8 @@ if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth
     CPPFLAGS="$_SAVE_CPPFLAGS"
 
     AC_SUBST(GSSAPI_INCLUDES)
-    AC_SUBST(GSSAPI_LIBS)
 fi
+AC_SUBST(USE_GSSAPI)
 
 
 dnl Remove dupes
