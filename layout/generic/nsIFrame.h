@@ -94,9 +94,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// 715842c9-8d33-41e9-8d71-78c81850c882
+// 2fb5effc-5eeb-4ccb-b9fa-325f8642200f
 #define NS_IFRAME_IID \
- { 0x715842c9, 0x8d33, 0x41e9, { 0x8d, 0x71, 0x78, 0xc8, 0x18, 0x50, 0xc8, 0x82 } }
+{ 0x2fb5effc, 0x5eeb, 0x4ccb, \
+  { 0xb9, 0xfa, 0x32, 0x5f, 0x86, 0x42, 0x20, 0x0f } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -765,6 +766,8 @@ public:
   struct Cursor {
     nsCOMPtr<imgIContainer> mContainer;
     PRInt32                 mCursor;
+    PRBool                  mHaveHotspot;
+    float                   mHotspotX, mHotspotY;
   };
   /**
    * Get the cursor for a given frame.

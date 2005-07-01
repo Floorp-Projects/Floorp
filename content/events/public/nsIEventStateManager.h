@@ -53,9 +53,11 @@ class imgIContainer;
 /*
  * Event state manager interface.
  */
-// {5D47ACA5-B50B-479b-A1C6-2A90C0B8095F}
+// 2270e188-6743-441e-b6e1-af83f1047a53
 #define NS_IEVENTSTATEMANAGER_IID \
-{ 0x5d47aca5, 0xb50b, 0x479b, { 0xa1, 0xc6, 0x2a, 0x90, 0xc0, 0xb8, 0x9, 0x5f } };
+{ 0x2270e188, 0x6743, 0x441e, \
+  { 0xb6, 0xe1, 0xaf, 0x83, 0xf1, 0x04, 0x7a, 0x53 } }
+
 
 #define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_FOCUS_EVENT(event))
 
@@ -126,7 +128,9 @@ public:
   NS_IMETHOD RegisterAccessKey(nsIContent* aContent, PRUint32 aKey) = 0;
   NS_IMETHOD UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey) = 0;
 
-  NS_IMETHOD SetCursor(PRInt32 aCursor, imgIContainer* aContainer, nsIWidget* aWidget, PRBool aLockCursor) = 0;
+  NS_IMETHOD SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
+                       PRBool aHaveHotspot, float aHotspotX, float aHotspotY,
+                       nsIWidget* aWidget, PRBool aLockCursor) = 0;
 
   //Method for centralized distribution of new DOM events
   NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent, PRBool* aDefaultActionEnabled) = 0;

@@ -89,8 +89,6 @@ static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility"
 #include "gfxIImageFrame.h"
 #include "nsIImage.h"
 #include "nsIGdkPixbufImage.h"
-#include "nsIProperties.h"
-#include "nsISupportsPrimitives.h"
 #include "nsIInterfaceRequestorUtils.h"
 
 /* utility functions */
@@ -789,7 +787,8 @@ nsWindow::SetCursor(nsCursor aCursor)
 
 
 NS_IMETHODIMP
-nsWindow::SetCursor(imgIContainer* aCursor)
+nsWindow::SetCursor(imgIContainer* aCursor,
+                    PRUint32 aHotspotX, PRUint32 aHotspotY)
 {
     // if we're not the toplevel window pass up the cursor request to
     // the toplevel window to handle it.
@@ -797,7 +796,7 @@ nsWindow::SetCursor(imgIContainer* aCursor)
         GtkWidget *widget =
             get_gtk_widget_for_gdk_window(mDrawingarea->inner_window);
         nsWindow *window = get_window_for_gtk_widget(widget);
-        return window->SetCursor(aCursor);
+        return window->SetCursor(aCursor, aHotspotX, aHotspotY);
     }
 
     if (!sPixbufCursorChecked) {
@@ -831,21 +830,6 @@ nsWindow::SetCursor(imgIContainer* aCursor)
     if (!pixbuf)
         return NS_ERROR_NOT_AVAILABLE;
 
-    // Get the hotspot
-    PRUint32 hX = 0, hY = 0;
-    nsCOMPtr<nsIProperties> props(do_QueryInterface(aCursor));
-    if (props) {
-      nsCOMPtr<nsISupportsPRUint32> hXWrap, hYWrap;
-
-      props->Get("hotspotX", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hXWrap));
-      props->Get("hotspotY", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hYWrap));
-
-      if (hXWrap)
-        hXWrap->GetData(&hX);
-      if (hYWrap)
-        hYWrap->GetData(&hY);
-    }
-
     // Looks like all cursors need an alpha channel (tested on Gtk 2.4.4). This
     // is of course not documented anywhere...
     // So add one if there isn't one yet
@@ -861,7 +845,7 @@ nsWindow::SetCursor(imgIContainer* aCursor)
     // Now create the cursor
     GdkCursor* cursor = _gdk_cursor_new_from_pixbuf(_gdk_display_get_default(),
                                                     pixbuf,
-                                                    hX, hY);
+                                                    aHotspotX, aHotspotY);
     gdk_pixbuf_unref(pixbuf);
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     if (cursor) {

@@ -2437,20 +2437,45 @@ nsRuleNode::ComputeUserInterfaceData(nsStyleStruct* aStartData,
   // cursor: enum, auto, url, inherit
   nsCSSValueList*  list = uiData.mCursor;
   if (nsnull != list) {
-    ui->mCursorArray.Clear();
+    delete [] ui->mCursorArray;
+    ui->mCursorArray = nsnull;
+    ui->mCursorArrayLength = 0;
+
     if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
       inherited = PR_TRUE;
       ui->mCursor = parentUI->mCursor;
-      ui->mCursorArray.AppendObjects(parentUI->mCursorArray);
+      ui->CopyCursorArrayFrom(*parentUI);
     }
     else {
       // The parser will never create a list that is *all* URL values --
       // that's invalid.
-      while (list->mValue.GetUnit() == eCSSUnit_Image) {
-        imgIRequest* req = list->mValue.GetImageValue();
-        if (req)
-          ui->mCursorArray.AppendObject(req);
-        list = list->mNext;
+      PRUint32 arrayLength = 0;
+      for (nsCSSValueList *list2 = list;
+           list2->mValue.GetUnit() == eCSSUnit_Array; list2 = list2->mNext)
+        if (list2->mValue.GetArrayValue()->Item(0).GetImageValue())
+          ++arrayLength;
+
+      if (arrayLength != 0) {
+        ui->mCursorArray = new nsCursorImage[arrayLength];
+        if (ui->mCursorArray) {
+          ui->mCursorArrayLength = arrayLength;
+
+          for (nsCursorImage *item = ui->mCursorArray;
+               list->mValue.GetUnit() == eCSSUnit_Array;
+               list = list->mNext) {
+            nsCSSValue::Array *arr = list->mValue.GetArrayValue();
+            imgIRequest *req = arr->Item(0).GetImageValue();
+            if (req) {
+              item->mImage = req;
+              if (arr->Item(1).GetUnit() != eCSSUnit_Null) {
+                item->mHaveHotspot = PR_TRUE;
+                item->mHotspotX = arr->Item(1).GetFloatValue(),
+                item->mHotspotY = arr->Item(2).GetFloatValue();
+              }
+              ++item;
+            }
+          }
+        }
       }
 
       if (eCSSUnit_Enumerated == list->mValue.GetUnit()) {

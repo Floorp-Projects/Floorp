@@ -6396,8 +6396,9 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
     NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
     // Call esm and set cursor.
-    rv = presContext->EventStateManager()->SetCursor(cursor, nsnull, widget,
-                                                     PR_TRUE);
+    rv = presContext->EventStateManager()->SetCursor(cursor, nsnull,
+                                                     PR_FALSE, 0.0f, 0.0f,
+                                                     widget, PR_TRUE);
   }
 
   return rv;

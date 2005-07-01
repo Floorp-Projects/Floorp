@@ -130,7 +130,9 @@ public:
   NS_IMETHOD RegisterAccessKey(nsIContent* aContent, PRUint32 aKey);
   NS_IMETHOD UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey);
 
-  NS_IMETHOD SetCursor(PRInt32 aCursor, imgIContainer* aContainer, nsIWidget* aWidget, PRBool aLockCursor);
+  NS_IMETHOD SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
+                       PRBool aHaveHotspot, float aHotspotX, float aHotspotY,
+                       nsIWidget* aWidget, PRBool aLockCursor);
 
   //Method for centralized distribution of new DOM events
   NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent, PRBool *aDefaultActionEnabled);

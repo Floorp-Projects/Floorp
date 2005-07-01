@@ -4734,14 +4734,20 @@ void nsFrame::FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
                                              nsIFrame::Cursor& aCursor)
 {
   aCursor.mCursor = ui->mCursor;
+  aCursor.mHaveHotspot = PR_FALSE;
+  aCursor.mHotspotX = aCursor.mHotspotY = 0.0f;
 
-  PRInt32 count = ui->mCursorArray.Count();
-  for (int i = 0; i < count; i++) {
+  for (nsCursorImage *item = ui->mCursorArray,
+                 *item_end = ui->mCursorArray + ui->mCursorArrayLength;
+       item < item_end; ++item) {
     PRUint32 status;
-    nsresult rv = ui->mCursorArray[i]->GetImageStatus(&status);
+    nsresult rv = item->mImage->GetImageStatus(&status);
     if (NS_SUCCEEDED(rv) && (status & imgIRequest::STATUS_FRAME_COMPLETE)) {
       // This is the one we want
-      ui->mCursorArray[i]->GetImage(getter_AddRefs(aCursor.mContainer));
+      item->mImage->GetImage(getter_AddRefs(aCursor.mContainer));
+      aCursor.mHaveHotspot = item->mHaveHotspot;
+      aCursor.mHotspotX = item->mHotspotX;
+      aCursor.mHotspotY = item->mHotspotY;
       break;
     }
   }

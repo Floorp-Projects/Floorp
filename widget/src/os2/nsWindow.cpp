@@ -80,14 +80,11 @@
 #include "nsXPIDLString.h"
 #include "nsIFile.h"
 
-#include "nsISupportsPrimitives.h"
-
 #include "nsOS2Uni.h"
 #include "nsPaletteOS2.h"
 
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
-#include "nsIProperties.h"
 
 #include <stdlib.h>
 #include <ctype.h>
@@ -1840,7 +1837,8 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 // substantially modified to accommodate platform differences and to
 // improve efficiency
 
-NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor)
+NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
+                                  PRUint32 aHotspotX, PRUint32 aHotspotY)
 {
 
   // if this is the same image as last time, reuse the saved hptr;
@@ -1873,29 +1871,6 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor)
   if (format != gfxIFormats::BGR_A1 && format != gfxIFormats::BGR_A8 &&
       format != gfxIFormats::BGR)
     return NS_ERROR_UNEXPECTED;
-
-  // get the hotspot;  if it doesn't have one, put it in the
-  // upper-left corner of the image (per CSS standards);
-  // PM will scale its location when it rescales the image
-  PRUint32 hotspotX = (PRUint32)-1, hotspotY = (PRUint32)-1;
-
-  nsCOMPtr<nsIProperties> props(do_QueryInterface(aCursor));
-  if (props) {
-    nsCOMPtr<nsISupportsPRUint32> hotspotXWrap, hotspotYWrap;
-
-    props->Get("hotspotX", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hotspotXWrap));
-    props->Get("hotspotY", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hotspotYWrap));
-    if (hotspotXWrap)
-      hotspotXWrap->GetData(&hotspotX);
-    if (hotspotYWrap)
-      hotspotYWrap->GetData(&hotspotY);
-  }
-  if (hotspotX == (PRUint32)-1)
-    hotspotX = 0;
-  if (hotspotY == (PRUint32)-1)
-    hotspotY = height;
-  else
-    hotspotY = height - hotspotY - 1;
 
   frame->LockImageData();
   PRUint32 dataLen;
@@ -1946,8 +1921,8 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor)
 
   POINTERINFO info = {0};
   info.fPointer = TRUE;
-  info.xHotspot = hotspotX;
-  info.yHotspot = hotspotY;
+  info.xHotspot = aHotspotX;
+  info.yHotspot = height - aHotspotY - 1;
   info.hbmPointer = hAlpha;
   info.hbmColor = hBmp;
 

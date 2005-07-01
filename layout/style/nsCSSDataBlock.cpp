@@ -243,12 +243,18 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                 } break;
 
                 case eCSSType_ValueList:
-                    if (iProp == eCSSProperty_content ||
-                        iProp == eCSSProperty_cursor) {
+                    if (iProp == eCSSProperty_content) {
                         for (nsCSSValueList* l = ValueListAtCursor(cursor);
                              l; l = l->mNext)
                             if (l->mValue.GetUnit() == eCSSUnit_URL)
                                 l->mValue.StartImageLoad(
+                                    aRuleData->mPresContext->GetDocument());
+                    } else if (iProp == eCSSProperty_cursor) {
+                        for (nsCSSValueList* l = ValueListAtCursor(cursor);
+                             l; l = l->mNext)
+                            if (l->mValue.GetUnit() == eCSSUnit_Array)
+                                l->mValue.GetArrayValue()->Item(0).
+                                    StartImageLoad(
                                     aRuleData->mPresContext->GetDocument());
                     }
                 // fall through

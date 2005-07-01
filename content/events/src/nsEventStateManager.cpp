@@ -122,6 +122,8 @@
 #include "nsContentUtils.h"
 
 #include "imgIContainer.h"
+#include "nsIProperties.h"
+#include "nsISupportsPrimitives.h"
 
 #if defined (XP_MAC) || defined(XP_MACOSX)
 #include <Events.h>
@@ -2312,6 +2314,8 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
 {
   PRInt32 cursor = NS_STYLE_CURSOR_DEFAULT;
   imgIContainer* container = nsnull;
+  PRBool haveHotspot = PR_FALSE;
+  float hotspotX = 0.0f, hotspotY = 0.0f;
 
   //If cursor is locked just use the locked one
   if (mLockCursor) {
@@ -2324,6 +2328,9 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
         return;  // don't update the cursor if we failed to get it from the frame see bug 118877
       cursor = framecursor.mCursor;
       container = framecursor.mContainer;
+      haveHotspot = framecursor.mHaveHotspot;
+      hotspotX = framecursor.mHotspotX;
+      hotspotY = framecursor.mHotspotY;
   }
 
   // Check whether or not to show the busy cursor
@@ -2343,7 +2350,8 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
   }
 
   if (aTargetFrame) {
-    SetCursor(cursor, container, aTargetFrame->GetWindow(), PR_FALSE);
+    SetCursor(cursor, container, haveHotspot, hotspotX, hotspotY,
+              aTargetFrame->GetWindow(), PR_FALSE);
   }
 
   if (mLockCursor || NS_STYLE_CURSOR_AUTO != cursor) {
@@ -2353,6 +2361,8 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsEventStateManager::SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
+                               PRBool aHaveHotspot,
+                               float aHotspotX, float aHotspotY,
                                nsIWidget* aWidget, PRBool aLockCursor)
 {
   nsCursor c;
@@ -2476,8 +2486,37 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
 
   // First, try the imgIContainer, if non-null
   nsresult rv = NS_ERROR_FAILURE;
-  if (aContainer)
-    rv = aWidget->SetCursor(aContainer);
+  if (aContainer) {
+    PRUint32 hotspotX, hotspotY;
+
+    // css3-ui says to use the CSS-specified hotspot if present,
+    // otherwise use the intrinsic hotspot, otherwise use the top left
+    // corner.
+    if (aHaveHotspot) {
+      // XXX NSToUintRound?
+      hotspotX = aHotspotX > 0.0f
+                   ? PRUint32(aHotspotX + ROUND_CONST_FLOAT) : PRUint32(0);
+      hotspotY = aHotspotY > 0.0f
+                   ? PRUint32(aHotspotY + ROUND_CONST_FLOAT) : PRUint32(0);
+    } else {
+      hotspotX = 0;
+      hotspotY = 0;
+      nsCOMPtr<nsIProperties> props(do_QueryInterface(aContainer));
+      if (props) {
+        nsCOMPtr<nsISupportsPRUint32> hotspotXWrap, hotspotYWrap;
+
+        props->Get("hotspotX", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hotspotXWrap));
+        props->Get("hotspotY", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hotspotYWrap));
+
+        if (hotspotXWrap)
+          hotspotXWrap->GetData(&hotspotX);
+        if (hotspotYWrap)
+          hotspotYWrap->GetData(&hotspotY);
+      }
+    }
+
+    rv = aWidget->SetCursor(aContainer, hotspotX, hotspotY);
+  }
 
   if (NS_FAILED(rv))
     aWidget->SetCursor(c);

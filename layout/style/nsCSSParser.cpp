@@ -3572,6 +3572,7 @@ PRBool CSSParserImpl::ParsePositiveVariant(nsresult& aErrorCode,
   return PR_FALSE; 
 } 
 
+// Assigns to aValue iff it returns PR_TRUE.
 PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
                                    PRInt32 aVariantMask,
                                    const PRInt32 aKeywordTable[])
@@ -5325,30 +5326,48 @@ PRBool CSSParserImpl::ParseCursor(nsresult& aErrorCode)
     cur = *curp = new nsCSSValueList();
     if (!cur) {
       aErrorCode = NS_ERROR_OUT_OF_MEMORY;
-      delete list;
-      return PR_FALSE;
+      break;
     }
     if (!ParseVariant(aErrorCode, cur->mValue,
                       (cur == list) ? VARIANT_AHUK : VARIANT_AUK,
                       nsCSSProps::kCursorKTable)) {
-      delete list;
-      return PR_FALSE;
-    }
-    if (cur->mValue.GetUnit() != eCSSUnit_URL)
       break;
+    }
+    if (cur->mValue.GetUnit() != eCSSUnit_URL) {
+      if (!ExpectEndProperty(aErrorCode, PR_TRUE)) {
+        break;
+      }
+      // Only success case here, since having the failure case at the
+      // end allows more sharing of code.
+      mTempData.SetPropertyBit(eCSSProperty_cursor);
+      mTempData.mUserInterface.mCursor = list;
+      aErrorCode = NS_OK;
+      return PR_TRUE;
+    } 
+    // We have a URL, so make a value array with three values.
+    nsRefPtr<nsCSSValue::Array> val = nsCSSValue::Array::Create(3);
+    if (!val) {
+      aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+      break;
+    }
+    val->Item(0) = cur->mValue;
+    cur->mValue.SetArrayValue(val, eCSSUnit_Array);
+
+    // Parse optional x and y position of cursor hotspot (css3-ui).
+    if (ParseVariant(aErrorCode, val->Item(1), VARIANT_NUMBER, nsnull)) {
+      // If we have one number, we must have two.
+      if (!ParseVariant(aErrorCode, val->Item(2), VARIANT_NUMBER, nsnull)) {
+        break;
+      }
+    }
+
     if (!ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
-      delete list;
-      return PR_FALSE;
+      break;
     }
   }
-  if (!ExpectEndProperty(aErrorCode, PR_TRUE)) {
-    delete list;
-    return PR_FALSE;
-  }
-  mTempData.SetPropertyBit(eCSSProperty_cursor);
-  mTempData.mUserInterface.mCursor = list;
-  aErrorCode = NS_OK;
-  return PR_TRUE;
+  // Have failure case at the end so we can |break| to get to it.
+  delete list;
+  return PR_FALSE;
 }
 
 

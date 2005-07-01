@@ -74,8 +74,6 @@
 #include "nsIEventQueue.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
-#include "nsIProperties.h"
-#include "nsISupportsPrimitives.h"
 #include "nsNativeCharsetUtils.h"
 #include <windows.h>
 
@@ -2735,7 +2733,8 @@ HBITMAP nsWindow::CreateOpaqueAlphaChannel(PRUint32 aWidth, PRUint32 aHeight)
   SM_CXCURSOR, SM_CYCURSOR (::GetSystemMetrics).  However, ::CreateIconIndirect
   returns null when the size is not correct.
 */
-NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor)
+NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
+                                  PRUint32 aHotspotX, PRUint32 aHotspotY)
 {
   if (gCursorImgContainer == aCursor && gHCursor) {
     ::SetCursor(gHCursor);
@@ -2751,21 +2750,6 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor)
   PRInt32 width, height;
   frame->GetWidth(&width);
   frame->GetHeight(&height);
-
-  PRUint32 hotspotX = 0, hotspotY = 0;
-
-  nsCOMPtr<nsIProperties> props(do_QueryInterface(aCursor));
-  if (props) {
-    nsCOMPtr<nsISupportsPRUint32> hotspotXWrap, hotspotYWrap;
-
-    props->Get("hotspotX", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hotspotXWrap));
-    props->Get("hotspotY", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hotspotYWrap));
-
-    if (hotspotXWrap)
-      hotspotXWrap->GetData(&hotspotX);
-    if (hotspotYWrap)
-      hotspotYWrap->GetData(&hotspotY);
-  }
 
   gfx_format format;
   nsresult rv = frame->GetFormat(&format);
@@ -2866,8 +2850,8 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor)
 
   ICONINFO info = {0};
   info.fIcon = FALSE;
-  info.xHotspot = hotspotX;
-  info.yHotspot = hotspotY;
+  info.xHotspot = aHotspotX;
+  info.yHotspot = aHotspotY;
   info.hbmMask = hAlpha;
   info.hbmColor = hBMP;
   

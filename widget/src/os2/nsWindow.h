@@ -167,7 +167,8 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              SetFont( const nsFont &aFont);
    NS_IMETHOD              SetColorMap( nsColorMap *aColorMap);
    NS_IMETHOD              SetCursor( nsCursor aCursor);
-   NS_IMETHOD              SetCursor(imgIContainer* aCursor);
+   NS_IMETHOD              SetCursor(imgIContainer* aCursor,
+                                     PRUint32 aHotspotX, PRUint32 aHotspotY);
    NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
    NS_IMETHOD              SetTitle( const nsAString& aTitle); 
    NS_IMETHOD              SetIcon(const nsAString& aIconSpec); 
