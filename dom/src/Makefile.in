@@ -46,3 +46,12 @@ DIRS		= base jsurl events
 
 include $(topsrcdir)/config/rules.mk
 
+_FILES = \
+	$(srcdir)/res/hiddenWindow.html \
+	$(NULL)
+
+libs::
+	$(INSTALL) $(_FILES) $(DIST)/bin/res
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(_FILES) $(DESTDIR)$(mozappdir)/res
