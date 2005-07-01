@@ -49,6 +49,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsVoidArray.h"
 
 #include "TextDebugLog.h"
 
