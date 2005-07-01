@@ -195,7 +195,7 @@ function initializeBooleanWidgets()
 
 function initializeSearchRows(scope, searchTerms)
 {
-    for (i = 0; i < searchTerms.Count(); i++) {
+    for (var i = 0; i < searchTerms.Count(); i++) {
         var searchTerm = searchTerms.QueryElementAt(i, nsIMsgSearchTerm);
         createSearchRow(i, scope, searchTerm);
         gTotalSearchTerms++;
@@ -204,56 +204,51 @@ function initializeSearchRows(scope, searchTerms)
     updateRemoveRowButton();
 }
 
-// enables/disables tless button for the first row of search terms.
+// enables/disables the less button for the first row of search terms.
 function updateRemoveRowButton()
 {
   var firstListItem = gSearchTermList.getItemAtIndex(0);
   if (firstListItem)
-    firstListItem.lastChild.lastChild.lastChild.disabled = gTotalSearchTerms == 1;
+    firstListItem.lastChild.lastChild.lastChild.setAttribute("disabled", gTotalSearchTerms == 1);
 }
  
 // Returns the actual list item row index in the list of search rows
 // that contains the passed in element id.
 function getSearchRowIndexForElement(aElement)
 {
-  var listitem = aElement;
-  while (listitem)
-{
-    if (listitem.localName == "listitem") 
-      break;
-    listitem = listitem.parentNode;
-  }
-
-  return gSearchTermList.getIndexOfItem(listitem);
+  var listItem = aElement;
+  
+  while (listItem && listItem.localName != "listitem")
+    listItem = listItem.parentNode;
+    
+  return gSearchTermList.getIndexOfItem(listItem);
 }
 
 function onMore(event)
 {
   // if we have an event, extract the list row index and use that as the row number
   // for our insertion point. If there is no event, append to the end....
+  var rowIndex; 
 
-  var rowIndex = gSearchTermList.getRowCount();
   if (event)
-    rowIndex = getSearchRowIndexForElement(event.target) + 1; 
+    rowIndex = getSearchRowIndexForElement(event.target) + 1;
+  else
+    rowIndex = gSearchTermList.getRowCount();
 
   createSearchRow(rowIndex, gSearchScope, null);
-    gTotalSearchTerms++;
+  gTotalSearchTerms++;
   updateRemoveRowButton();
 
-    // the user just added a term, so scroll to it
+  // the user just added a term, so scroll to it
   gSearchTermList.ensureIndexIsVisible(rowIndex);
 }
 
 function onLess(event)
 {
-  if (gTotalSearchTerms > 1) 
+  if (event && gTotalSearchTerms > 1) 
   {
-    var rowIndex;
-    if (event)
-{
-      removeSearchRow(getSearchRowIndexForElement(event.target));    
-      --gTotalSearchTerms;
-    }
+    removeSearchRow(getSearchRowIndexForElement(event.target));    
+    --gTotalSearchTerms;
   }
 
   updateRemoveRowButton();

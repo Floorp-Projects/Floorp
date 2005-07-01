@@ -105,14 +105,9 @@ function onLoad()
 function setupSearchRows(aSearchTerms)
 {
   if (aSearchTerms && aSearchTerms.Count() > 0)
-  {
-    // load the search terms for the folder
-    initializeSearchRows(nsMsgSearchScope.offlineMail, aSearchTerms);
-    if (aSearchTerms.Count() == 1)
-      document.getElementById("less0").setAttribute("disabled", "true");
-  }
+    initializeSearchRows(nsMsgSearchScope.offlineMail, aSearchTerms); // load the search terms for the folder
   else
-    onMore(null, 0);
+    onMore(null);
 }
 
 function updateOnlineSearchState()
