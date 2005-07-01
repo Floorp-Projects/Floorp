@@ -413,7 +413,7 @@ function shouldFastFind(evt)
 
   // disable FAYT in about:config and about:blank to prevent FAYT opening
   // unexpectedly - to fix bugs 264562, 267150, 269712
-  var url = getBrowser().selectedBrowser.webNavigation.currentURI.spec;
+  var url = getBrowser().currentURI.spec;
   if (url == "about:blank" || url == "about:config")
     return false;
 
