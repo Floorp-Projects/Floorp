@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.95 2005/06/29 23:43:33 zach%zachlipton.com Exp $ -->
+<!-- $Id: installation.xml,v 1.96 2005/07/01 15:44:36 jake%bugzilla.org Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1176,7 +1176,7 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
       </para>
    </section>
 
-    <section>
+    <section id="installation-whining-cron">
       <title>The Whining Cron</title>
 
       <para>What good are
@@ -1191,6 +1191,45 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
       </para>
 
       <programlisting>55 0 * * * cd &lt;your-bugzilla-directory&gt; ; ./whineatnews.pl</programlisting>
+
+      <note>
+        <para>
+          Windows does not have 'cron', but it does have the Task
+          Scheduler, which performs the same duties. There are also
+          third-party tools that can be used to implement cron, such as
+          <ulink url="http://www.nncron.ru/">nncron</ulink>.
+        </para>
+      </note>
+    </section>
+
+    <section id="installation-whining">
+      <title>Whining</title>
+
+      <para>
+        As of Bugzilla 2.20, users can configure Bugzilla to regularly annoy 
+        them at regular intervals, by having Bugzilla execute saved searches
+        at certain times and emailing the results to the user.  This is known
+        as "Whining".  The process of configuring Whining is described 
+        in <xref linkend="whining"/>, but for it to work a Perl script must be
+        executed at regular intervals.
+      </para>
+
+      <para>
+        This can be done by adding the following command as a daily
+        crontab entry, in the same manner as explained above for bug
+        graphs. This example runs it every 15 minutes. 
+      </para>
+
+      <programlisting>*/15 * * * * cd &lt;your-bugzilla-directory&gt; ; ./whine.pl</programlisting>
+
+      <note>
+        <para>
+          Whines can be executed as often as every 15 minutes, so if you specify
+          longer intervals between executions of whine.pl, some users may not 
+          be whined at as often as they would expect.  Depending on the person,
+          this can either be a very Good Thing or a very Bad Thing.
+        </para>
+      </note>
 
       <note>
         <para>
