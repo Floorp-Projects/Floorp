@@ -42,6 +42,7 @@
 #include "nsAbMDBCardProperty.h"
 #include "nsIAbMDBCard.h"
 #include "nsISupportsArray.h"
+#include "nsVoidArray.h"
 #include "IPalmSync.h"
 
 // these are states of Palm record
