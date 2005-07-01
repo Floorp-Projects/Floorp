@@ -1195,8 +1195,9 @@
       <xul:box anonid="eventbox" xbl:inherits="orient,width,height" flex="1">
         <xul:calendar-event-gripbar anonid="gripbar1" whichside="start" xbl:inherits="parentorient=orient"/>
         <xul:vbox class="calendar-event-box-container" xbl:inherits="context,parentorient=orient" flex="1" align="left">
+          <xul:label anonid="event-name" flex="1" crop="right"/>
           <xul:textbox class="plain" style="background: transparent !important"
-            anonid="event-name" crop="right" readonly="true"/>
+            anonid="event-name-textbox" crop="right" hidden="true" wrap="true"/>
           <xul:spacer flex="1"/>
         </xul:vbox>
         <xul:calendar-event-gripbar anonid="gripbar2" whichside="end" xbl:inherits="parentorient=orient"/>
@@ -1211,7 +1212,15 @@
          if (orient == "vertical") otherorient = "horizontal";
 
          var self = this;
-         this.eventNameElement.onblur = function() { self.stopEditing(); };
+         this.eventNameInput.onblur = function() { self.stopEditing(true); };
+         this.eventNameInput.onkeypress = function(event) {
+             // save on enter
+             if (event.keyCode == 13)
+                 self.stopEditing(true);
+             // abort on escape
+             else if (event.keyCode == 27)
+                 self.stopEditing(false);
+         };
       ]]></constructor>
 
       <!-- fields -->
@@ -1253,8 +1262,12 @@
         ]]></body>
       </method>
 
-      <property name="eventNameElement" readonly="true"
-        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name').inputField;"/>
+      <property name="eventNameLabel" readonly="true"
+        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name');"/>
+      <property name="eventNameTextbox" readonly="true"
+        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name-textbox');"/>
+      <property name="eventNameInput" readonly="true"
+        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name-textbox').inputField;"/>
 
       <property name="occurrence">
         <getter><![CDATA[
@@ -1262,13 +1275,15 @@
         ]]></getter>
         <setter><![CDATA[
           this.mOccurrence = val;
-          var evl = this.eventNameElement;
+          var evl = this.eventNameLabel;
 
-          if (val) {
-              evl.value = val.title;
-          } else {
-              evl.value = "Untitled Event";
-          }
+          while (evl.firstChild)
+              evl.removeChild(evl.firstChild);
+
+          if (val && val != "")
+              evl.appendChild(document.createTextNode(val.title));
+          else
+              evl.appendChild(document.createTextNode("Untitled Event"));
           return val;
         ]]></setter>
       </property>
@@ -1301,33 +1316,45 @@
 
       <method name="startEditing">
         <body><![CDATA[
-           this.editingTimer = null;
-           this.eventNameElement.removeAttribute("readonly");
-           this.mOriginalTextLabel = this.eventNameElement.value;
-           this.mEditing = true;
-           if (this.calendarView)
-               this.calendarView.activeInPlaceEdit = true;
-           this.eventNameElement.focus();
-           this.eventNameElement.select();
+          this.editingTimer = null;
+          this.mOriginalTextLabel = this.mOccurrence.title;
+
+          this.eventNameLabel.setAttribute("hidden", "true");
+
+          this.mEditing = true;
+
+          this.eventNameTextbox.value = this.mOriginalTextLabel;
+          this.eventNameTextbox.removeAttribute("hidden");
+          if (this.calendarView)
+              this.calendarView.activeInPlaceEdit = true;
+          this.eventNameInput.focus();
+          this.eventNameInput.select();
         ]]></body>
       </method>
 
       <method name="stopEditing">
+        <parameter name="saveChanges"/>
         <body><![CDATA[
           this.mEditing = false;
-           if (this.calendarView)
-               this.calendarView.activeInPlaceEdit = false;
 
-          if (this.eventNameElement.value != this.mOriginalTextLabel) {
+          if (this.calendarView)
+              this.calendarView.activeInPlaceEdit = false;
+
+          if (!saveChanges) {
+              this.eventNameTextbox.setAttribute("hidden", "true");
+              this.eventNameLabel.removeAttribute("hidden");
+              return;
+          }
+
+          if (this.eventNameTextbox.value != this.mOriginalTextLabel) {
               var clone = this.mOccurrence.clone();
-              clone.title = this.eventNameElement.value;
+              clone.title = this.eventNameTextbox.value;
               clone.calendar.modifyItem(clone, this.mOccurrence, null);
 
               // Note that as soon as we do the modifyItem, this element ceases to exist,
               // so don't bother trying to modify anything further here! ('this' exists,
               // because it's being kept alive, but our child content etc. is all gone)
           }
-
         ]]></body>
       </method>
     </implementation>
