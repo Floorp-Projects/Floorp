@@ -79,8 +79,5 @@ ac_add_options --disable-debug
 ac_add_options --disable-shared
 ac_add_options --enable-static
 
-#for now
-ac_add_options --disable-crypto
-
 #xptcall busted
 ac_add_options --disable-jsloader
