@@ -96,7 +96,6 @@
 
   // create a gecko key event out of a cocoa event
 - (void) convertKeyEvent:(NSEvent*)aKeyEvent message:(PRUint32)aMessage
-           isChar:(PRBool*)outIsChar
            toGeckoEvent:(nsKeyEvent*)outGeckoEvent;
 - (void) convertLocation:(NSPoint)inPoint message:(PRInt32)inMsg
           modifiers:(unsigned int)inMods toGeckoEvent:(nsInputEvent*)outGeckoEvent;
@@ -3205,7 +3204,6 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 {
   PRBool isKeyDownEventHandled = PR_TRUE;
   PRBool isKeyEventHandled = PR_FALSE;
-  PRBool isChar = PR_FALSE;
   BOOL isARepeat = [theEvent isARepeat];
 
   mCurEvent = theEvent;
@@ -3221,9 +3219,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     geckoEvent.point.x = geckoEvent.point.y = 0;
     [self convertKeyEvent:theEvent
                   message:NS_KEY_DOWN
-                   isChar:&isChar
              toGeckoEvent:&geckoEvent];
-    geckoEvent.isChar = isChar;
 
     //XXX Maybe we should only do this when there is a plugin present.
     EventRecord macEvent;
@@ -3250,13 +3246,9 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
     geckoEvent.point.x = geckoEvent.point.y = 0;
 
-    isChar = PR_FALSE;
     [self convertKeyEvent:theEvent
                   message:NS_KEY_PRESS
-                   isChar:&isChar
              toGeckoEvent:&geckoEvent];
-
-    geckoEvent.isChar = isChar;
 
     // if it's text input, pass it on to interpretKeyEvents: so that it propagates to our
     // insertText:.
@@ -3313,10 +3305,8 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
   geckoEvent.point.x = geckoEvent.point.y = 0;
 
-  PRBool isChar = PR_FALSE;
   [self convertKeyEvent:theEvent
                 message:NS_KEY_UP
-                 isChar:&isChar
            toGeckoEvent:&geckoEvent];
 
   // As an optimisation, only do this when there is a plugin present.
@@ -3646,15 +3636,12 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
 }
 
 - (void) convertKeyEvent:(NSEvent*)aKeyEvent message:(PRUint32)aMessage 
-           isChar:(PRBool*)aIsChar
-           toGeckoEvent:(nsKeyEvent*)outGeckoEvent
+            toGeckoEvent:(nsKeyEvent*)outGeckoEvent
 {
   [self convertEvent:aKeyEvent message:aMessage toGeckoEvent:outGeckoEvent];
 
-  // Initialize the out boolean for whether or not we are using
-  // charCodes to false.
-  if (aIsChar)
-    *aIsChar = PR_FALSE;
+  // Initialize whether or not we are using charCodes to false.
+  outGeckoEvent->isChar = PR_FALSE;
     
   // Check to see if the message is a key press that does not involve
   // one of our special key codes.
@@ -3671,8 +3658,7 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
       outGeckoEvent->charCode = [unmodifiedChars characterAtIndex:0];
     
     // We're not a special key.
-    if (aIsChar)
-      *aIsChar = PR_TRUE;
+    outGeckoEvent->isChar = PR_TRUE;
 
     // convert control-modified charCode to raw charCode (with appropriate case)
     if (outGeckoEvent->isControl && outGeckoEvent->charCode <= 26)
