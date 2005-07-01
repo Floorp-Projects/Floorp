@@ -254,14 +254,14 @@ nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dir
     
       PRUint32 num = marks.Count();
       
-      if (markerStart)
+      if (num && markerStart)
         markerStart->PaintMark(canvas, this, (nsSVGMark *)marks[0], strokeWidth);
       
-      if (markerMid)
+      if (num && markerMid)
         for (PRUint32 i = 1; i < num - 1; i++)
           markerMid->PaintMark(canvas, this, (nsSVGMark *)marks[i], strokeWidth);
 
-      if (markerEnd)
+      if (num && markerEnd)
         markerEnd->PaintMark(canvas, this, (nsSVGMark *)marks[num-1], strokeWidth);
     }
   }
