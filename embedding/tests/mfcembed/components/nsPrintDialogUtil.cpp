@@ -68,6 +68,9 @@ WIN_LIBS=                                       \
 #include "nsUnitConversion.h"
 #include "nsIPrintOptions.h"
 #include "nsGfxCIID.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+
 static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 
 #include "nsRect.h"
