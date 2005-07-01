@@ -44,7 +44,7 @@
 ** is not guaranteed, so programming using priority based synchronization
 ** is a no-no.
 **
-** NSPR threads are scheduled based loosly on their client set priority.
+** NSPR threads are scheduled based loosely on their client set priority.
 ** In general, a thread of a higher priority has a statistically better
 ** chance of running relative to threads of lower priority. However,
 ** NSPR uses multiple strategies to provide execution vehicles for thread
