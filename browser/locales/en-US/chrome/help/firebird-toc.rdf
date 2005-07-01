@@ -171,9 +171,11 @@
   <rdf:Description about="#tabbed-browsing">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="tabbed-browsing-using" nc:name="Using Tabbed Browsing" nc:link="tabbed_browsing.xhtml#using_tabbed_browsing"/> </rdf:li>
         <rdf:li> <rdf:Description ID="tabbed-browsing-creating-loading-tabs" nc:name="Creating and Loading Tabs" nc:link="tabbed_browsing.xhtml#creating_loading_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="tabbed-browsing-moving-tabs" nc:name="Moving Tabs Within a Window" nc:link="tabbed_browsing.xhtml#moving_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="tabbed-browsing-closing-tabs" nc:name="Closing Tabs" nc:link="tabbed_browsing.xhtml#closing_tabs"/> </rdf:li>
         <rdf:li> <rdf:Description ID="tabbed-browsing-customizing" nc:name="Customizing Tabbed Browsing" nc:link="tabbed_browsing.xhtml#customizing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="tabbed-browsing-tips-tricks" nc:name="Tips and Tricks" nc:link="tabbed_browsing.xhtml#tips_tricks"/> </rdf:li>
        </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
