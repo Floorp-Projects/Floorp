@@ -51,77 +51,73 @@ extern "C" {
 MOZCE_SHUNT_API int mozce_stat(const char* inPath, struct stat* outStats)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("mozce_stat called\n");
+        mozce_printf("mozce_stat called\n");
 #endif
-
+    
     int retval = -1;
-
+    
     if(NULL != outStats)
     {
         memset(outStats, 0, sizeof(struct stat));
-
+        
         if(NULL != inPath)
         {
             WCHAR wPath[MAX_PATH];
-
+            
             int convRes = a2w_buffer(inPath, -1, wPath, sizeof(wPath) / sizeof(WCHAR));
             if(0 != convRes)
             {
-                HANDLE readHandle = NULL;
+                HANDLE readHandle;
+                WIN32_FIND_DATA findData;
+                readHandle = FindFirstFileW(wPath, &findData); 
                 
-                readHandle = CreateFileW(
-                    wPath,
-                    GENERIC_READ,
-                    FILE_SHARE_READ | FILE_SHARE_WRITE,
-                    NULL,
-                    OPEN_EXISTING,
-                    FILE_ATTRIBUTE_NORMAL,
-                    NULL);
-
-                if(NULL != readHandle)
+                if (readHandle != INVALID_HANDLE_VALUE && readHandle != NULL)
                 {
-                    BOOL bRes = FALSE;
-                    BY_HANDLE_FILE_INFORMATION fileInfo;
                     
-                    bRes = GetFileInformationByHandle(readHandle, &fileInfo);
-                    CloseHandle(readHandle);
-                    readHandle = NULL;
-
-                    if(FALSE != bRes)
+                    retval = 0;
+                    outStats->st_size = findData.nFileSizeLow;
+                    
+                    if(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                     {
-                        FILETIME_2_time_t(outStats->st_ctime, fileInfo.ftCreationTime);
-                        FILETIME_2_time_t(outStats->st_atime, fileInfo.ftLastAccessTime);
-                        FILETIME_2_time_t(outStats->st_mtime, fileInfo.ftLastWriteTime);
-                        
-                        outStats->st_size = (long)fileInfo.nFileSizeLow;
-                        
-                        outStats->st_mode |= _S_IREAD;
-                        if(0 == (FILE_ATTRIBUTE_READONLY & fileInfo.dwFileAttributes))
-                        {
-                            outStats->st_mode |= _S_IWRITE;
-                        }
-                        if(FILE_ATTRIBUTE_DIRECTORY & fileInfo.dwFileAttributes)
-                        {
-                            outStats->st_mode |= _S_IFDIR;
-                        }
-                        else
-                        {
-                            outStats->st_mode |= _S_IFREG;
-                        }
-                    }                    
+                        outStats->st_mode = _S_IFDIR;
+                    }
+                    else
+                    {
+                        outStats->st_mode = _S_IFREG;
+                    }
+                    
+                    
+                    FILETIME_2_time_t(outStats->st_ctime, findData.ftCreationTime);
+                    FILETIME_2_time_t(outStats->st_atime, findData.ftLastAccessTime);
+                    FILETIME_2_time_t(outStats->st_mtime, findData.ftLastWriteTime);
+                    
+                    outStats->st_mode |= _S_IREAD;
+                    if(0 == (FILE_ATTRIBUTE_READONLY & findData.dwFileAttributes))
+                    {
+                        outStats->st_mode |= _S_IWRITE;
+                    }
+                    if(FILE_ATTRIBUTE_DIRECTORY & findData.dwFileAttributes)
+                    {
+                        outStats->st_mode |= _S_IFDIR;
+                    }
+                    else
+                    {
+                        outStats->st_mode |= _S_IFREG;
+                    }
+                    
                 }
                 else
                 {	
-					// From Errno.
-					extern int mozce_errno;
+                    // From Errno.
+                    extern int mozce_errno;
                     mozce_errno = ENOENT;
                 }
             }
         }
     }
-
+    
     return retval;
 }
 

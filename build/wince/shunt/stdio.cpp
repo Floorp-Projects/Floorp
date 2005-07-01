@@ -48,62 +48,100 @@ extern "C" {
 #endif
 
 
+#define MAXFDS 100
+
+typedef struct _fdtab_block
+{
+    int fd;
+    FILE* file;
+    
+} _fdtab_block;
+
+
+_fdtab_block _fdtab[MAXFDS];
+
+
+
+
+
+void
+_initfds()
+{
+    static int fdsinitialized = 0;
+    
+    if(fdsinitialized)
+        return;
+    
+    for (int i = 0; i < MAXFDS; i++)
+        _fdtab[i].fd = -1;
+    
+    fdsinitialized = 1;
+}
+
+int
+_getnewfd()
+{
+    int i;
+    
+    for(i = 0; i < MAXFDS; i++)
+    {
+        if(_fdtab[i].fd == -1)
+            return i;
+    }
+    
+    return -1;
+}
+
+
+
+
 MOZCE_SHUNT_API int mozce_access(const char *path, int mode)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("-- mozce_access called\n");
+        mozce_printf("-- mozce_access called\n");
 #endif
-
+    
     return 0;
 }
 
 MOZCE_SHUNT_API void mozce_rewind(FILE* inStream)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("mozce_rewind called\n");
+        mozce_printf("mozce_rewind called\n");
 #endif
-
+    
     fseek(inStream, 0, SEEK_SET);
 }
 
 
-MOZCE_SHUNT_API FILE* mozce_fdopen(int inFD, const char* inMode)
+MOZCE_SHUNT_API FILE* mozce_fdopen(int fd, const char* inMode)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("mozce_fdopen called\n");
+        mozce_printf("-- mozce_fdopen called (mode is ignored!) \n");
 #endif
-
-    FILE* retval = NULL;
-
-    if(NULL != inMode)
-    {
-        WCHAR buffer[16];
-
-        int convRes = a2w_buffer(inMode, -1, buffer, sizeof(buffer) / sizeof(WCHAR));
-        if(0 != convRes)
-        {
-            retval = _wfdopen((void*)inFD, buffer);
-        }
-    }
-
-    return retval;
+    
+    
+    if(fd < 0 || fd >= MAXFDS || _fdtab[fd].fd == -1)
+	return 0;
+    
+    return _fdtab[fd].file;
 }
 
 
 MOZCE_SHUNT_API void mozce_perror(const char* inString)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("mozce_perror called\n");
+        mozce_printf("mozce_perror called\n");
 #endif
-
+    
     fprintf(stderr, "%s", inString);
 }
 
@@ -111,45 +149,45 @@ MOZCE_SHUNT_API void mozce_perror(const char* inString)
 MOZCE_SHUNT_API int mozce_remove(const char* inPath)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("mozce_remove called on %s\n", inPath);
+        mozce_printf("mozce_remove called on %s\n", inPath);
 #endif
-
+    
     int retval = -1;
-
+    
     if(NULL != inPath)
     {
         unsigned short wPath[MAX_PATH];
-
+        
         if(0 != a2w_buffer(inPath, -1, wPath, sizeof(wPath) / sizeof(unsigned short)))
         {
             if(FALSE != DeleteFileW(wPath))
             {
                 retval = 0;
-
+                
             }
         }
     }
-
+    
     return retval;
 }
 
 MOZCE_SHUNT_API char* mozce_getcwd(char* buff, size_t size)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("mozce_getcwd called.\n");
+        mozce_printf("mozce_getcwd called.\n");
 #endif
-
-	unsigned short dir[MAX_PATH];
-	GetModuleFileName(GetModuleHandle (NULL), dir, MAX_PATH);
-	for (int i = _tcslen(dir); i && dir[i] != TEXT('\\'); i--) {}
-	dir[i + 1] = TCHAR('\0');
-
-	w2a_buffer(dir, -1, buff, size);
-
+    
+    unsigned short dir[MAX_PATH];
+    GetModuleFileName(GetModuleHandle (NULL), dir, MAX_PATH);
+    for (int i = _tcslen(dir); i && dir[i] != TEXT('\\'); i--) {}
+    dir[i + 1] = TCHAR('\0');
+    
+    w2a_buffer(dir, -1, buff, size);
+    
     return buff;
 }
 
@@ -158,108 +196,187 @@ MOZCE_SHUNT_API int mozce_printf(const char * format, ...)
     return 0;
 }
 
+static void mode2binstr(int mode, char* buffer)
+{
+    if (mode | O_RDWR || (mode | O_WRONLY))  // write only == read|write
+    {
+        if (mode | O_CREAT)
+        {
+            strcpy(buffer, "wb+");
+        }
+        else if (mode | O_APPEND)
+        {
+            strcpy(buffer, "ab+");
+        }
+        else if (mode | O_TRUNC)
+        {
+            strcpy(buffer, "wb+");
+        }
+        
+        else if (mode == O_RDWR)
+        {
+            strcpy(buffer, "rb+");
+        }
+    }
+    else if (mode | O_RDONLY)
+    {
+        strcpy(buffer, "rb");
+    }
+}
 
 MOZCE_SHUNT_API int mozce_open(const char *pathname, int flags, int mode)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("mozce_open called\n");
+        mozce_printf("mozce_open called\n");
 #endif
-    if (mode | O_RDONLY)
+    
+    _initfds();
+    
+    
+    char modestr[10];
+    *modestr = '\0';
+    
+    mode2binstr(mode, modestr);
+    if (*modestr == '\0')
+        return -1;
+    
+    
+    FILE* file = fopen(pathname, modestr);
+    
+    int fd = -1;
+    
+    if (file)
     {
-        return (int) fopen(pathname, "r");
+        fd = _getnewfd();
+        
+        _fdtab[fd].fd = fd;
+        _fdtab[fd].file = file;
+        
+        fflush(file);
+        fread(NULL, 0, 0, file);
     }
+    
+    return fd;
+}
 
-    if (mode | O_RDWR && mode | O_CREAT)
-    {
-        return (int) fopen(pathname, "w+");
-    }
 
-    if (mode | O_RDWR && mode | O_APPEND)
-    {
-        return (int) fopen(pathname, "a+");
-    }
-
-    if (mode | O_RDWR)
-    {
-        return (int) fopen(pathname, "r+");
-    }
-
-    if (mode | O_WRONLY && mode | O_CREAT)
-    {
-        return (int) fopen(pathname, "w+");
-    }
-
-    if (mode | O_WRONLY && mode | O_APPEND)
-    {
-        return (int) fopen(pathname, "a");
-    }
-
-    if (mode | O_WRONLY)
-    {
-        return (int) fopen(pathname, "w");
-    }
-
+MOZCE_SHUNT_API int mozce_close(int fd)
+{
+    MOZCE_PRECHECK
+        
 #ifdef DEBUG
-    mozce_printf("-- Unsupported mode!\n");
+        mozce_printf("mozce_close called\n");
 #endif
+    
+    
+    
+    
+    if(fd < 0 || fd >= MAXFDS || _fdtab[fd].fd == -1)
+	return -1;
+    
+    
+    fclose(_fdtab[fd].file);
+    _fdtab[fd].fd = -1;
+    
     return 0;
 }
 
-MOZCE_SHUNT_API int mozce_close(int fp)
+MOZCE_SHUNT_API size_t mozce_read(int fd, void* buffer, size_t count)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("mozce_close called\n");
+        mozce_printf("mozce_read called\n");
 #endif
-    return fclose((FILE*) fp);
+    
+    if(fd < 0 || fd >= MAXFDS || _fdtab[fd].fd == -1)
+	return -1;
+    
+    size_t num = fread(buffer, 1, count, _fdtab[fd].file);
+    
+    if (ferror(_fdtab[fd].file))
+        return -1;
+    
+    return num;
 }
 
-MOZCE_SHUNT_API size_t mozce_read(int fp, void* buffer, size_t count)
+
+MOZCE_SHUNT_API size_t mozce_write(int fd, const void* buffer, size_t count)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("mozce_read called\n");
+        mozce_printf("mozce_write called\n");
 #endif
-    return fread(buffer, count, 1, (void*)fp);
-}
-
-
-MOZCE_SHUNT_API size_t mozce_write(int fp, const void* buffer, size_t count)
-{
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("mozce_write called\n");
-#endif
-    return fwrite(buffer, count, 1, (void*)fp);
+    
+    if(fd < 0 || fd >= MAXFDS || _fdtab[fd].fd == -1)
+	return -1;
+    
+    size_t num = fwrite(buffer, 1, count, _fdtab[fd].file);
+    if (ferror(_fdtab[fd].file))
+        return -1;
+    
+    return num;
 }
 
 
 MOZCE_SHUNT_API int mozce_unlink(const char *pathname)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("mozce_unlink called\n");
+        mozce_printf("mozce_unlink called\n");
 #endif
     return mozce_remove(pathname);
 }
 
 
-MOZCE_SHUNT_API int mozce_lseek(int fildes, int offset, int whence)
+MOZCE_SHUNT_API int mozce_lseek(int fd, int offset, int whence)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("mozce_lseek called\n");
+        mozce_printf("mozce_lseek called\n");
 #endif
-
-    return fseek((FILE*) fildes, offset, whence);
+    
+    
+    if(fd < 0 || fd >= MAXFDS || _fdtab[fd].fd == -1)
+	return -1;
+    
+    int newpos = -1;
+    int error = fseek(_fdtab[fd].file, offset, whence);
+    
+    if (!error)
+        newpos = ftell(_fdtab[fd].file);
+    return newpos;
 }
+
+
+
+MOZCE_SHUNT_API int mozce_fileno(FILE* f)
+{
+    MOZCE_PRECHECK
+        
+#ifdef DEBUG
+        mozce_printf("mozce_fileno called\n");
+#endif
+    
+    // Windows SDK is broken.  _fileno should return an int, but for whatever god forsaken reason, CE returns void*.
+    int fd;
+    
+    for(fd = 0; fd < MAXFDS; fd++)
+    {
+        if(_fdtab[fd].file == f)
+	{
+            return _fdtab[fd].fd;
+	}
+    }
+    return (int) fileno(f);
+    
+}
+
 
 #if 0
 {
