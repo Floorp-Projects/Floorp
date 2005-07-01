@@ -80,16 +80,19 @@ nsRDFXMLSerializer::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
-    nsRDFXMLSerializer* result = new nsRDFXMLSerializer();
+    nsCOMPtr<nsIRDFXMLSerializer> result = new nsRDFXMLSerializer();
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(result);
+    // The serializer object is here, addref gRefCnt so that the
+    // destructor can safely release it.
+    gRefCnt++;
 
     nsresult rv;
     rv = result->QueryInterface(aIID, aResult);
 
-    if (NS_SUCCEEDED(rv) && (gRefCnt++ == 0)) do {
+    if (NS_FAILED(rv)) return rv;
+
+    if (gRefCnt == 1) do {
         nsCOMPtr<nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
         if (NS_FAILED(rv)) break;
 
@@ -120,8 +123,6 @@ nsRDFXMLSerializer::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
         rv = CallGetService("@mozilla.org/rdf/container-utils;1", &gRDFC);
         if (NS_FAILED(rv)) break;
     } while (0);
-
-    NS_RELEASE(result);
 
     return rv;
 }
