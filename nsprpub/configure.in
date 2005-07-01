@@ -56,7 +56,7 @@ USE_64=
 USE_CPLUS=
 USE_IPV6=
 USE_MDUPDATE=
-MACOS_DEPLOYMENT_TARGET=
+_MACOSX_DEPLOYMENT_TARGET=
 _OPTIMIZE_FLAGS=-O
 _DEBUG_FLAGS=-g
 MOZ_DEBUG=1
@@ -227,10 +227,9 @@ AC_ARG_ENABLE(mdupdate,
       fi ])
 
 AC_ARG_ENABLE(macos-target,
-             [  --enable-macos-target=VER (default=10.1)
+             [  --enable-macos-target=VER (default=10.1 for ppc, 10.4 for x86)
                           Set the minimum MacOS version needed at runtime],
-             [MACOS_DEPLOYMENT_TARGET_STR=$enableval],
-             [MACOS_DEPLOYMENT_TARGET_STR=10.1])
+             [_MACOSX_DEPLOYMENT_TARGET=$enableval])
 
 dnl ========================================================
 dnl =
@@ -950,23 +949,24 @@ case "$target" in
         AC_DEFINE(XP_MACOSX)
         OS_TARGET=MacOSX
 
-        dnl The C preprocessor can only handle integers in comparisons, so
-        dnl convert the version to the form AABBCC where AA=major release,
-        dnl BB=minor release, and CC=point/micro release.
-
-        MACOS_VERSION_MAJOR=`echo $MACOS_DEPLOYMENT_TARGET_STR | cut -d . -f 1`
-        MACOS_VERSION_MINOR=`echo $MACOS_DEPLOYMENT_TARGET_STR | cut -d . -f 2`
-        MACOS_VERSION_MICRO=`echo $MACOS_DEPLOYMENT_TARGET_STR | cut -d . -f 3`
-        if test -z "$MACOS_VERSION_MINOR"; then
-            MACOS_VERSION_MINOR=0
+        if test -n "$_MACOSX_DEPLOYMENT_TARGET" ; then
+            dnl Use the specified value
+            export MACOSX_DEPLOYMENT_TARGET=$_MACOSX_DEPLOYMENT_TARGET
+        elif test -z "$MACOSX_DEPLOYMENT_TARGET" ; then
+            dnl No value specified on the command line or in the environment,
+            dnl use the lesser of the library's minimum or the architecture's
+            dnl minimum.
+            case "${target_cpu}" in
+                powerpc*)
+                    dnl Architecture minimum 10.1
+                    export MACOSX_DEPLOYMENT_TARGET=10.1
+                    ;;
+                i*86*)
+                    dnl Architecture minimum 10.4
+                    export MACOSX_DEPLOYMENT_TARGET=10.4
+                    ;;
+            esac
         fi
-        if test -z "$MACOS_VERSION_MICRO"; then
-            MACOS_VERSION_MICRO=0
-        fi
-        MACOS_DEPLOYMENT_TARGET=`printf "%02d%02d%02d" "$MACOS_VERSION_MAJOR" "$MACOS_VERSION_MINOR" "$MACOS_VERSION_MICRO"`
-        AC_DEFINE_UNQUOTED(MACOS_DEPLOYMENT_TARGET, $MACOS_DEPLOYMENT_TARGET)
-
-        export MACOSX_DEPLOYMENT_TARGET="$MACOS_VERSION_MAJOR.$MACOS_VERSION_MINOR"
     fi
 
     # do the right thing for SDK support
@@ -2595,7 +2595,6 @@ AC_SUBST(OS_TARGET)
 AC_SUBST(OS_ARCH)
 AC_SUBST(OS_RELEASE)
 AC_SUBST(OS_TEST)
-AC_SUBST(MACOS_DEPLOYMENT_TARGET)
 AC_SUBST(MACOSX_DEPLOYMENT_TARGET)
 
 AC_SUBST(DEFINES)
