@@ -129,7 +129,7 @@ Tokenizer.prototype = {
                 input = this.input;
             }
 
-            if (!(match = /^\/(?:\*(?:.|\n)*\*\/|\/.*)/(input)))
+            if (!(match = /^\/(?:\*(?:.|\n)*?\*\/|\/.*)/(input)))
                 break;
             var comment = match[0];
             this.cursor += comment.length;
