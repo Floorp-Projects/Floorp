@@ -249,6 +249,7 @@ nsSVGMarkerFrame::InitSVG()
   marker->GetOrientType(getter_AddRefs(mOrientType));
 
   mMarkerParent = nsnull;
+  mInUse = PR_FALSE;
 
   return NS_OK;
 }
@@ -321,6 +322,13 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
                             nsSVGPathGeometryFrame *aParent,
                             nsSVGMark *aMark, float aStrokeWidth)
 {
+  // If the flag is set when we get here, it means this marker frame
+  // has already been used painting the current mark, and the document
+  // has a marker reference loop.
+  if (mInUse)
+    return;
+
+  mInUse = PR_TRUE;
   mStrokeWidth = aStrokeWidth;
   mX = aMark->x;
   mY = aMark->y;
@@ -338,6 +346,7 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
     }
   }
   mMarkerParent = nsnull;
+  mInUse = PR_FALSE;
 }
 
 
