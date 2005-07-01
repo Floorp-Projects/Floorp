@@ -177,7 +177,8 @@ static void
 namespace_finalize(JSContext *cx, JSObject *obj)
 {
     JSXMLNamespace *ns;
-    JSAtom *functionAtom;
+    JSRuntime *rt;
+    JSAtom *fnAtom;
 
     ns = (JSXMLNamespace *) JS_GetPrivate(cx, obj);
     if (!ns)
@@ -186,10 +187,10 @@ namespace_finalize(JSContext *cx, JSObject *obj)
     ns->object = NULL;
     UNMETER(xml_stats.livenamespaceobj);
 
-    functionAtom = cx->runtime->atomState.lazy.functionNamespaceAtom;
-    if (functionAtom && JSVAL_TO_OBJECT(ATOM_KEY(functionAtom)) == obj) {
-        cx->runtime->atomState.lazy.functionNamespaceAtom = NULL;
-    }
+    rt = cx->runtime;
+    fnAtom = rt->atomState.lazy.functionNamespaceAtom;
+    if (fnAtom && ATOM_TO_OBJECT(fnAtom) == obj)
+        rt->atomState.lazy.functionNamespaceAtom = NULL;
 }
 
 static void
@@ -398,9 +399,13 @@ qname_finalize(JSContext *cx, JSObject *obj)
 static void
 anyname_finalize(JSContext* cx, JSObject* obj)
 {
-    /* Make sure the next call to js_GetAnyName doesn't try to use
-       this object */
-    cx->runtime->atomState.lazy.anynameAtom = NULL;
+    JSRuntime *rt;
+
+    /* Make sure the next call to js_GetAnyName doesn't try to use obj. */
+    rt = cx->runtime;
+    if (obj == ATOM_TO_OBJECT(rt->atomState.lazy.anynameAtom))
+        rt->atomState.lazy.anynameAtom = NULL;
+
     qname_finalize(cx, obj);
 }
 
