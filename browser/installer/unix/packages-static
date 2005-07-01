@@ -25,6 +25,7 @@ bin/defaults/profile/prefs.js
 bin/defaults/profile/search.rdf
 bin/defaults/profile/mimeTypes.rdf
 bin/defaults/profile/chrome/*
+bin/updater.ini
 
 [xpcom]
 bin/libmozjs.so
@@ -285,6 +286,10 @@ bin/libssl3.so
 bin/chrome/pipnss.jar
 bin/chrome/pippki.jar
 bin/chrome/pippki.manifest
+
+; [Updater]
+;
+bin/updater
 
 ; [Extensions]
 ;
