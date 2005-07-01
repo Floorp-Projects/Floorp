@@ -1225,7 +1225,7 @@ DocumentViewerImpl::Open()
 
   // XXX re-enable image animations once that works correctly
 
-  mEnableRendering = PR_TRUE;
+  PrepareToStartLoad();
   return NS_OK;
 }
 

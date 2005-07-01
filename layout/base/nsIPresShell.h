@@ -89,8 +89,8 @@ class nsIStyleSheet;
 class nsCSSFrameConstructor;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x3861ee48, 0xb397, 0x11d9, \
-  {0x86, 0x9e, 0x00, 0x11, 0x24, 0x78, 0xd6, 0x26} }
+{ 0x1dd0fbb6, 0xe856, 0x11d9, \
+  {0xa1, 0x56, 0x00, 0x11, 0x24, 0x78, 0xd6, 0x26} }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -681,16 +681,16 @@ public:
 
   /**
    * Stop all active elements (plugins and the caret) in this presentation and
-   * in the presentations of subdocuments.
+   * in the presentations of subdocuments.  Resets painting to a suppressed state.
    * XXX this should include image animations
    */
   virtual void Freeze() = 0;
 
   /**
    * Restarts active elements (plugins) in this presentation and in the
-   * presentations of subdocuments.
+   * presentations of subdocuments, then do a full invalidate of the content area.
    */
-  virtual void Thaw() = 0;
+  virtual void Thaw(PRBool aTopLevel = PR_TRUE) = 0;
 
 protected:
   // IMPORTANT: The ownership implicit in the following member variables

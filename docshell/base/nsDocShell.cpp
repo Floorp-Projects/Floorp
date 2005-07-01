@@ -5326,18 +5326,9 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
     rv = mContentViewer->Show();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Restart plugins
+    // Restart plugins, and paint the content.
     if (shell)
         shell->Thaw();
-
-    // XXXbryner  Making this invalidate synchronous causes unpainted areas
-    // (on Mac, at least) if the above locationchanged event hides Firefox's
-    // infobar.  Doing it asynchronously seems to work around the problem, but
-    // shouldn't the style change that hides the infobar handle all necessary
-    // invalidation, including the newly-exposed area?
-
-    rv = mParentWidget->Invalidate(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     *aRestored = PR_TRUE;
     return NS_OK;
