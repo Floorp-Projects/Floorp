@@ -1393,6 +1393,7 @@ nsSanePluginInstance::GetDeviceOptions(char ** aDeviceOptions)
     // allocate string to contain data to return to caller
     string_size = ((optdesc->size - 1) * MAX_OPT_SIZE) + 1;
     *aDeviceOptions = (char*) nsMemory::Alloc(string_size);
+    NS_ENSURE_TRUE(*aDeviceOptions, NS_ERROR_OUT_OF_MEMORY);
 
     // initialize options string
     for (int n=0; n<string_size; n++)
@@ -1598,6 +1599,7 @@ nsSanePluginInstance::GetActiveDevice(char ** aActiveDevice)
         return NS_OK;
     
     *aActiveDevice = (char*) nsMemory::Alloc(PL_strlen(mSaneDevice) + 1);
+    NS_ENSURE_TRUE(*aActiveDevice, NS_ERROR_OUT_OF_MEMORY);
     PL_strcpy(*aActiveDevice, mSaneDevice);
     
     return NS_OK;
