@@ -44,7 +44,6 @@
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
 #include "nsIServiceManager.h"
-#include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"

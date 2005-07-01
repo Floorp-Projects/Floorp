@@ -64,7 +64,6 @@
 #include "nsWidgetsCID.h"
 #include "nsCRT.h"
 
-#include "nsVoidArray.h"
 #include "nsNetUtil.h"
 
 #include "nsIImage.h"

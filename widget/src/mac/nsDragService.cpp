@@ -53,7 +53,6 @@
 #include "nsMimeMapper.h"
 #include "nsClipboard.h"
 #include "nsIRegion.h"
-#include "nsVoidArray.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"

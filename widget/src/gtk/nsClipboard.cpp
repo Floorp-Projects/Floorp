@@ -60,7 +60,6 @@
 #include "nsPrimitiveHelpers.h"
 
 #include "nsTextFormatter.h"
-#include "nsVoidArray.h"
 
 #include "nsIServiceManager.h"
 

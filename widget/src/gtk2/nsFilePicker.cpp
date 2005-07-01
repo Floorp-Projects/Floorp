@@ -47,7 +47,6 @@
 #include "nsIStringBundle.h"
 
 #include "nsArrayEnumerator.h"
-#include "nsVoidArray.h"
 #include "nsMemory.h"
 #include "nsEnumeratorUtils.h"
 #include "nsNetUtil.h"

@@ -52,7 +52,6 @@ Notes to self:
 #include "nsReadableUtils.h"
 #include "nsVoidArray.h"
 #include "nsIFormatConverter.h"
-#include "nsVoidArray.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"

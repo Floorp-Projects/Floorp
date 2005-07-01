@@ -53,8 +53,6 @@
 #include "nsIEventListener.h"
 #include "nsString.h"
 
-#include "nsVoidArray.h"
-
 #include <Window.h>
 #include <View.h>
 #include <Region.h>
