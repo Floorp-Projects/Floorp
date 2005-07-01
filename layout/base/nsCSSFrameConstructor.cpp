@@ -5199,8 +5199,13 @@ nsCSSFrameConstructor::ConstructTextFrame(nsFrameConstructorState& aState,
   // XXX kipp: temporary
   newFrame->AddStateBits(NS_FRAME_REPLACED_ELEMENT);
 
-  InitAndRestoreFrame(aState, aContent, aParentFrame, aStyleContext, nsnull,
-                      newFrame);
+  rv = InitAndRestoreFrame(aState, aContent, aParentFrame, aStyleContext,
+                           nsnull, newFrame);
+
+  if (NS_FAILED(rv)) {
+    newFrame->Destroy(aState.mPresContext);
+    return rv;
+  }
 
   // We never need to create a view for a text frame.
 

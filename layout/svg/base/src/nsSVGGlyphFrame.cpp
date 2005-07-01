@@ -280,6 +280,7 @@ nsSVGGlyphFrame::Init(nsPresContext*  aPresContext,
   nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
   if (!outerSVGFrame) {
     NS_ERROR("No outerSVGFrame");
+    SetStyleContext(aPresContext, aContext);
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsISVGRenderer> renderer;
