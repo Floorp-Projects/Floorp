@@ -42,9 +42,7 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
 #include "nsIFileSpec.h"
-#include "nsISupportsArray.h"
 #include "nsIImportFieldMap.h"
 #include "nsIImportService.h"
 

@@ -41,12 +41,6 @@
 
 interface nsIAddrDatabase;
 
-[ptr] native nsVoidArray(nsVoidArray);
-
-%{C++
-#include "nsVoidArray.h"
-%}
-
 [scriptable, uuid(5F414A80-1DD2-11B2-AAD0-AA4A15D5A1E8)]
 interface nsIAbMDBCard : nsISupports {
 	// used by the absync code

@@ -45,8 +45,6 @@
 #define nsAbCardProperty_h__
 
 #include "nsIAbCard.h"  
-#include "nsISupportsArray.h"
-#include "nsVoidArray.h"
 #include "nsCOMPtr.h"
 #include "nsIAddressBook.h"
 

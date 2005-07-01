@@ -41,7 +41,6 @@
 #define nsAbUtils_h__
 
 #include "nsMemory.h"
-#include "nsVoidArray.h"
 #include "nsHashtable.h"
 
 /*

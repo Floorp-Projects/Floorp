@@ -40,7 +40,6 @@
 
 #include "nsIAddrBookSession.h"
 #include "nsISupports.h"
-#include "nsVoidArray.h"
 #include "nsIStringBundle.h"
 #include "nsUInt32Array.h"
 

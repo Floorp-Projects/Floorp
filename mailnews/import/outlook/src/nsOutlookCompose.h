@@ -43,7 +43,6 @@
 #include "nsString.h"
 #include "nsIFileSpec.h"
 #include "nsVoidArray.h"
-#include "nsISupportsArray.h"
 #include "nsIImportService.h"
 
 class nsIMsgSend;
