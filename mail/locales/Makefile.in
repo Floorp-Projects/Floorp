@@ -74,7 +74,7 @@ libs:: $(addprefix $(LOCALE_SRCDIR)/,$(README_FILES))
 
 libs-%:
 	@$(MAKE) -C ../../toolkit/locales libs-$*
- 	@$(MAKE) -C ../../editor/ui/locales AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -C ../../editor/ui/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
 ifdef MOZ_USE_OFFICIAL_BRANDING
 	@$(MAKE) -C ../../other-licenses/branding/thunderbird/locales AB_CD=$* XPI_NAME=locale-$*
@@ -90,7 +90,7 @@ repackage-win32-installer: $(WIN32_INSTALLER_IN)
 	$(RM) -rf $(DIST)/l10n-stage
 	mkdir $(DIST)/l10n-stage
 	cd $(DIST)/l10n-stage &&
-	  $(CYGWIN_WRAPPER) 7z e $(WIN32_INSTALLER_IN)
+	  $(CYGWIN_WRAPPER) 7z e -y $(WIN32_INSTALLER_IN)
 	$(RM) $(DIST)/l10n-stage/en-US.xpi
 	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
 	$(MAKE) libs-$(AB_CD)
