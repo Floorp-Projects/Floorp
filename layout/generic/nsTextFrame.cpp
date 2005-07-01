@@ -4543,8 +4543,6 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           if (NS_FAILED(result))
             return result;
         }
-        else if (NS_FAILED(result))
-          return result;
       }
       else
         aPos->mResultContent = mContent;
