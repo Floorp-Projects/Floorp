@@ -969,6 +969,8 @@ nsPrefLocalizedString::GetData(PRUnichar** _retval)
 NS_IMETHODIMP
 nsPrefLocalizedString::SetData(const PRUnichar *aData)
 {
+  if (!aData)
+    return SetData(EmptyString());
   return SetData(nsDependentString(aData));
 }
 
@@ -976,6 +978,8 @@ NS_IMETHODIMP
 nsPrefLocalizedString::SetDataWithLength(PRUint32 aLength,
                                          const PRUnichar* aData)
 {
+  if (!aData)
+    return SetData(EmptyString());
   return SetData(Substring(aData, aData + aLength));
 }
 
