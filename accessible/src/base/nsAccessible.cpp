@@ -39,7 +39,6 @@
 
 #include "nsAccessible.h"
 #include "nsIAccessibleDocument.h"
-#include "nsPIAccessibleDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIImageDocument.h"
@@ -250,30 +249,16 @@ NS_IMETHODIMP nsAccessible::SetNextSibling(nsIAccessible *aNextSibling)
   return NS_OK;
 }
 
-PRBool nsAccessible::IsSpecialXHTMLApplication()
-{
-  nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
-  nsCOMPtr<nsPIAccessibleDocument> privateAccessibleDoc =
-    do_QueryInterface(docAccessible);
-  return privateAccessibleDoc ? 
-    privateAccessibleDoc->IsSpecialXHTMLApplication() :
-    PR_FALSE;
-}
-
 NS_IMETHODIMP nsAccessible::Init()
 {
   nsIContent *content = GetRoleContent(mDOMNode);
   nsAutoString roleString;
-
-  PRInt32 roleNameSpace = IsSpecialXHTMLApplication() ? kNameSpaceID_None :
-                          kNameSpaceID_XHTML2_Unofficial;
-
   if (content &&
-      NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(roleNameSpace, 
+      NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_XHTML2_Unofficial, 
                                                     nsAccessibilityAtoms::role, 
                                                     roleString)) {
     // QI to nsIDOM3Node causes some overhead. Unfortunately we need to do this each
-    // time there is a role attribute, because the prefix to namespace mappings
+    // time there is a role attribute, because the prefixe to namespace mappings
     // can change within any subtree via the xmlns attribute
     nsCOMPtr<nsIDOM3Node> dom3Node(do_QueryInterface(content));
     if (dom3Node) {
@@ -1656,7 +1641,6 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
 }
 
 PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut,
-                                     PRInt32 aNameSpace,
                                      nsStateMapEntry *aStateMapEntry)
 {
   // Return true if we should continue
@@ -1666,7 +1650,7 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
 
   nsAutoString attribValue;
   nsCOMPtr<nsIAtom> attribAtom = do_GetAtom(aStateMapEntry->attributeName); // XXX put atoms directly in entry
-  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(aNameSpace,
+  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_StatesWAI_Unofficial,
                                                      attribAtom,
                                                      attribValue)) {
     if (aStateMapEntry->attributeValue == BOOL_STATE) {
@@ -1722,19 +1706,17 @@ NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (content) {
-    PRInt32 stateNS = IsSpecialXHTMLApplication() ? kNameSpaceID_None :
-                      kNameSpaceID_StatesWAI_Unofficial;
     finalState |= mRoleMapEntry->state;
-    if (MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap1) &&
-        MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap2) &&
-        MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap3) &&
-        MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap4) &&
-        MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap5) &&
-        MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap6)) {
-      MappedAttrState(content, &finalState, stateNS, &mRoleMapEntry->attributeMap7);
+    if (MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap1) &&
+        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap2) &&
+        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap3) &&
+        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap4) &&
+        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap5) &&
+        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap6)) {
+      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap7);
     }
     // Anything can be disabled/unavailable
-    MappedAttrState(content, &finalState, stateNS, &gDisabledStateMap);
+    MappedAttrState(content, &finalState, &gDisabledStateMap);
   }
 
   *aState = finalState;

@@ -116,7 +116,6 @@ class nsDocAccessible : public nsBlockAccessible,
     nsCOMPtr<nsIEditor> mEditor; // Editor, if there is one
     PRUint16 mScrollPositionChangedTicks; // Used for tracking scroll events
     nsCOMArray<nsIAccessibleEvent> mEventsToFire;
-    PRBool mIsSpecialXHTMLApplication;
 };
 
 #endif  

@@ -474,21 +474,9 @@ PRBool nsAccessibilityService::GetRole(nsIContent *aContent,
                                        nsIWeakReference *aWeakShell,
                                        nsAString& aRole)
 {
-  nsCOMPtr<nsIAccessibleDocument> docAccessible =
-    nsAccessNode::GetDocAccessibleFor(aWeakShell);
-  nsCOMPtr<nsPIAccessibleDocument> privateAccessibleDoc =
-    do_QueryInterface(docAccessible);
-  PRInt32 roleNameSpace = kNameSpaceID_None;
-  if (!privateAccessibleDoc ||
-      privateAccessibleDoc->IsSpecialXHTMLApplication()) {
-    // Application doctype does not need namespaced attributes for role and states
-    roleNameSpace = kNameSpaceID_None;
-  }
-  else {
-    roleNameSpace = kNameSpaceID_XHTML2_Unofficial;
-  }
   return NS_CONTENT_ATTR_HAS_VALUE ==
-         aContent->GetAttr(roleNameSpace, nsAccessibilityAtoms::role, aRole);
+         aContent->GetAttr(kNameSpaceID_XHTML2_Unofficial,
+                           nsAccessibilityAtoms::role, aRole);
 }
 
 nsresult
