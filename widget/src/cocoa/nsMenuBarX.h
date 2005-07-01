@@ -45,7 +45,6 @@
 #include "nsIMenuCommandDispatcher.h"
 #include "nsPresContext.h"
 #include "nsSupportsArray.h"
-#include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "nsWeakReference.h"
 #include "nsIContent.h"

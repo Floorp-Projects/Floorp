@@ -48,7 +48,6 @@
 #include "nsCOMPtr.h"
 #include "nsClipboard.h"
 
-#include "nsVoidArray.h"
 #include "nsIClipboardOwner.h"
 #include "nsString.h"
 #include "nsIFormatConverter.h"

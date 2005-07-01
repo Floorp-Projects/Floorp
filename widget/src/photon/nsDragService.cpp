@@ -40,7 +40,6 @@
 #include "nsString.h"
 #include "nsClipboard.h"
 #include "nsIRegion.h"
-#include "nsVoidArray.h"
 #include "nsISupportsPrimitives.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsCOMPtr.h"
