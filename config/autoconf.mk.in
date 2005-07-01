@@ -499,7 +499,7 @@ MOZ_PSM=@MOZ_PSM@
 
 # Gssapi (krb5) libraries and headers for the Negotiate auth method
 GSSAPI_INCLUDES = @GSSAPI_INCLUDES@
-GSSAPI_LIBS	= @GSSAPI_LIBS@
+USE_GSSAPI	= @USE_GSSAPI@
 
 # for Qt build
 MOC=@MOC@
