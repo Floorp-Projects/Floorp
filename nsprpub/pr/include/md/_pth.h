@@ -146,7 +146,7 @@
 	|| defined(HPUX) || defined(LINUX) || defined(FREEBSD) \
 	|| defined(NETBSD) || defined(OPENBSD) || defined(BSDI) \
 	|| defined(VMS) || defined(NTO) || defined(DARWIN) \
-	|| defined(UNIXWARE)
+	|| defined(UNIXWARE) || defined(RISCOS)
 #define _PT_PTHREAD_INVALIDATE_THR_HANDLE(t)  (t) = 0
 #define _PT_PTHREAD_THR_HANDLE_IS_INVALID(t)  (t) == 0
 #define _PT_PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
@@ -259,7 +259,8 @@
 #define PT_PRIO_MIN            0
 #define PT_PRIO_MAX            31
 #elif defined(NETBSD) \
-	|| defined(BSDI) || defined(DARWIN) || defined(UNIXWARE) /* XXX */
+	|| defined(BSDI) || defined(DARWIN) || defined(UNIXWARE) \
+	|| defined(RISCOS) /* XXX */
 #define PT_PRIO_MIN            0
 #define PT_PRIO_MAX            126
 #else

@@ -1692,6 +1692,17 @@ mips-sony-newsos*)
     PR_MD_CSRCS=qnx.c
     ;;
 
+*-riscos*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(RISCOS)
+    AC_DEFINE(_PR_NEED_H_ERRNO)
+    USE_PTHREADS=1
+    MDCPUCFG_H=_riscos.cfg
+    PR_MD_CSRCS=riscos.c
+    DLL_SUFFIX=a
+    LD="/home/riscos/env/ro-ar cr"
+    ;;
+
 *-*-sco*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(SCO)
