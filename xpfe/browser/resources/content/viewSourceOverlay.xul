@@ -111,6 +111,9 @@
     <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
     <key key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
     <keyset id="viewZoomKeys"/>
+
+    <!-- Window Menu -->
+    <keyset id="tasksKeys"/>
   </keyset>
 
   <!-- context menu -->
@@ -193,6 +196,8 @@
                     label="&menu_highlightSyntax.label;" accesskey="&menu_highlightSyntax.accesskey;"/>
         </menupopup>
       </menu>
+
+      <menu id="windowMenu"/>
 
       <menu id="menu_Help"/>
     </menubar>  

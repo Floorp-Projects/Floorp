@@ -17,11 +17,16 @@
     <menuitem label="&openHelpCmd.label;" 
       accesskey="&openHelpCmd.accesskey;" 
       position="1" id="help"
-      oncommand="openHelp();" />   
+      key="key_openHelp"
+      command="cmd_openHelp"/>
     <menuitem label="&helpForIEUsers.label;"
       accesskey="&helpForIEUsers.accesskey;"
       position="2"
       oncommand="openHelp('ieusers');" />
   </menupopup>
   
+  <commandset id="tasksCommands">
+    <command id="cmd_openHelp" oncommand="openHelp();"/>
+  </commandset>
+
 </overlay>
