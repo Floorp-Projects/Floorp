@@ -640,6 +640,8 @@ inline PRInt32 ConvertOverflow(PRUint8 aOverflow)
     case NS_STYLE_OVERFLOW_SCROLL:
       return nsIScrollable::Scrollbar_Always;
   }
+  NS_NOTREACHED("invalid overflow value passed to ConvertOverflow");
+  return nsIScrollable::Scrollbar_Auto;
 }
 
 nsresult
