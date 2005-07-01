@@ -110,7 +110,7 @@
             </menupopup>
           </menulist>
           <spacer flex="10"/>
-          <button label="&searchButton.label;" id="search-button" oncommand="onSearchButton(event);" default="true" accesskey="&searchButton.accesskey;"/>
+          <button id="search-button" oncommand="onSearchButton(event);" default="true" />
         </hbox>
         <hbox align="center">
           <spacer flex="1"/>

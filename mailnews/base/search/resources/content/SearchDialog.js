@@ -255,6 +255,8 @@ function searchOnLoad()
   CreateMessenger();
 
   gSearchBundle = document.getElementById("bundle_search");
+  gSearchStopButton.setAttribute("label", gSearchBundle.getString("labelForSearchButton"));
+  gSearchStopButton.setAttribute("accesskey", gSearchBundle.getString("accesskeyForSearchButton"));
   gMessengerBundle = document.getElementById("bundle_messenger");
   setupDatasource();
   setupSearchListener();
