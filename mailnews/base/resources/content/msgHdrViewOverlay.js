@@ -842,7 +842,7 @@ function updateEmailAddressNode(emailAddressNode, emailAddress, fullAddress, dis
     emailAddressNode.setAttribute("label", displayName);
     emailAddressNode.setAttribute("tooltiptext", emailAddress);
   } else {
-    emailAddressNode.setAttribute("label", fullAddress);
+    emailAddressNode.setAttribute("label", fullAddress || displayName);
     emailAddressNode.removeAttribute("tooltiptext");
   }
   emailAddressNode.setTextAttribute("emailAddress", emailAddress);
