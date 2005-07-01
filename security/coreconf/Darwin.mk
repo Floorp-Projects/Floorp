@@ -98,6 +98,7 @@ endif
 
 ARCH		= darwin
 
+DSO_CFLAGS	= -fPIC
 # May override this with -bundle to create a loadable module.
 DSO_LDOPTS	= -dynamiclib -compatibility_version 1 -current_version 1 -install_name @executable_path/$(notdir $@) -headerpad_max_install_names $(DARWIN_SDK_LDFLAGS)
 
