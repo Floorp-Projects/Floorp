@@ -740,15 +740,6 @@ function Activation(f, a) {
     this.__defineProperty__('arguments', a, true);
 }
 
-
-// Null Activation.prototype's proto slot so that Object.prototype.* does not
-// pollute the scope of heavyweight functions.  Also delete its 'constructor'
-// property so that id doesn't pollute function scopes.  But first, we must
-// copy __defineProperty__ down from Object.prototype.
-Activation.prototype.__defineProperty__ = Object.prototype.__defineProperty__;
-Activation.prototype.__proto__ = null;
-delete Activation.prototype.constructor;
-
 function FunctionObject(node, scope) {
     this.node = node;
     this.scope = scope;
