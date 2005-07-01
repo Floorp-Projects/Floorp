@@ -16,9 +16,8 @@ ac_add_options --target=arm-wince
 ac_add_options --enable-win32-target=WINCE
 ac_add_options --enable-default-toolkit=windows
 
-ac_add_options --without-libIDL
-
-ac_add_options --disable-md
+#ac_add_options --without-libIDL
+#ac_add_options --disable-md
 
 ac_add_options --disable-activex
 ac_add_options --disable-activex-scripting
@@ -79,5 +78,3 @@ ac_add_options --disable-debug
 ac_add_options --disable-shared
 ac_add_options --enable-static
 
-#for now.
-ac_add_options --disable-crypto

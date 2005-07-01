@@ -23,6 +23,13 @@ cp -a bin/xpcom.dll                                      wince
 cp -a bin/xpcom_compat.dll                               wince
 cp -a bin/xpcom_core.dll                                 wince
 
+cp -a bin/nss3.dll                                       wince
+cp -a bin/nssckbi.dll                                    wince
+cp -a bin/smime3.dll                                     wince
+cp -a bin/softokn3.dll                                   wince
+cp -a bin/ssl3.dll                                       wince
+
+
 mkdir -p wince/chrome
 cp -a bin/chrome/classic.jar                             wince/chrome
 cp -a bin/chrome/comm.jar                                wince/chrome
@@ -34,6 +41,9 @@ cp -a bin/chrome/modern.jar                              wince/chrome
 cp -a bin/chrome/toolkit.jar                             wince/chrome
 cp -a bin/chrome/US.jar                                  wince/chrome
 
+cp -a bin/chrome/pippki.jar                              wince/chrome
+cp -a bin/chrome/pipnss.jar                              wince/chrome
+
 mkdir -p wince/components
 cp -a bin/components/nsDictionary.js                     wince/components
 cp -a bin/components/nsHelperAppDlg.js                   wince/components
@@ -43,6 +53,8 @@ cp -a bin/components/nsProxyAutoConfig.js                wince/components
 cp -a bin/components/nsXmlRpcClient.js                   wince/components
 cp -a bin/components/xulappinfo.js                       wince/components
 
+cp -a bin/components/snav.dll                            wince/components
+
 mkdir -p wince/greprefs
 cp -a bin/greprefs/*                                     wince/greprefs
 
@@ -50,7 +62,6 @@ mkdir -p wince/res
 cp -a bin/res/*                                          wince/res
 rm -rf wince/res/samples
 rm -rf wince/res/throbber
-
 
 mkdir -p wince/plugins
 
@@ -71,5 +82,9 @@ cat ../smallScreen.css >>                               $MOZ_OBJDIR/dist/wince/r
 echo Copying ARM shunt lib.  Adjust if you are not building ARM
 
 cp -a ../../../build/wince/shunt/build/ARMV4Rel/shunt.dll $MOZ_OBJDIR/dist/wince
+
+echo Zipping
+
+zip $MOZ_OBJDIR/dist/wince.zip $MOZ_OBJDIR/dist/wince
 
 echo Done.
