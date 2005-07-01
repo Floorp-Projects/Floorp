@@ -1209,7 +1209,7 @@ public:
 
   virtual nsresult ReconstructFrames(void);
   virtual void Freeze();
-  virtual void Thaw();
+  virtual void Thaw(PRBool aIsTopLevel);
 
 #ifdef IBMBIDI
   NS_IMETHOD SetCaretBidiLevel(PRUint8 aLevel);
@@ -6580,6 +6580,8 @@ PresShell::Freeze()
   if (mCaret)
     mCaret->SetCaretVisible(PR_FALSE);
 
+  mPaintingSuppressed = PR_TRUE;
+
   if (mDocument)
     mDocument->EnumerateSubDocuments(FreezeSubDocument, nsnull);
 }
@@ -6609,13 +6611,13 @@ ThawSubDocument(nsIDocument *aDocument, void *aData)
 {
   nsIPresShell *shell = aDocument->GetShellAt(0);
   if (shell)
-    shell->Thaw();
+    shell->Thaw(PR_FALSE);
 
   return PR_TRUE;
 }
 
 void
-PresShell::Thaw()
+PresShell::Thaw(PRBool aIsTopLevel)
 {
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
   if (domDoc) {
@@ -6626,6 +6628,9 @@ PresShell::Thaw()
 
   if (mDocument)
     mDocument->EnumerateSubDocuments(ThawSubDocument, nsnull);
+
+  if (aIsTopLevel)
+    UnsuppressPainting();
 }
 
 //--------------------------------------------------------
