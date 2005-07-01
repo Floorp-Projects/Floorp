@@ -146,6 +146,13 @@ function loadDialog()
 
 function saveDialog()
 {
+    // This works, but if we ever support more complex recurrence,
+    // e.g. recurrence for Martians, then we're going to want to
+    // not clone and just recreate the recurrenceInfo each time.
+    // The reason is that the order of items (rules/dates/datesets)
+    // matters, so we can't always just append at the end.  This
+    // code here always inserts a rule first, because all our
+    // exceptions should come afterward.
     var deckNumber = Number(getElementValue("period-list"));
     
     var recurrenceInfo = null;
@@ -208,8 +215,7 @@ function saveDialog()
         break;
     }
 
-    recurrenceInfo.appendRecurrenceItem(recRule);
-
+    recurrenceInfo.insertRecurrenceItemAt(recRule, 0);
 
     for each (date in window.removedExceptions) {
         recurrenceInfo.restoreOccurrenceAt(date);
