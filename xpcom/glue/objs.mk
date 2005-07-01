@@ -38,12 +38,21 @@ XPCOM_GLUE_SRC_LCSRCS =			       \
 		nsCOMPtr.cpp		       \
 		nsComponentManagerUtils.cpp    \
 		nsDebug.cpp		       \
-		nsGenericFactory.cpp	       \
 		nsIInterfaceRequestorUtils.cpp \
 		nsMemory.cpp		       \
 		nsTraceRefcnt.cpp              \
 		nsWeakReference.cpp	       \
 		nsGREGlue.cpp                  \
-		$(NULL)			       \
+		$(NULL)
 
 XPCOM_GLUE_SRC_CSRCS := $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCSRCS))
+
+# nsGenericFactory is not really all that helpful in the standalone glue,
+# and it has a bad dependency on the NSPR AtomicIncrement function, so we
+# only build it for the dependent XPCOM glue and builtin to xpcom-core.
+
+XPCOM_GLUENS_SRC_LCSRCS =                      \
+		nsGenericFactory.cpp           \
+		$(NULL)
+
+XPCOM_GLUENS_SRC_CSRCS := $(addprefix $(topsrcdir)/xpcom/glue/,$(XPCOM_GLUENS_SRC_LCSRCS))

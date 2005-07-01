@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+# Benjamin Smedberg <benjamin@smedbergs.us>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -41,6 +42,9 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
+# This makefile builds the "program" subdirectory.
+DIRS = program
 
 # MODULE specifies where header files from this Makefile are installed,
 # i.e. dist/include/xpcomsample
@@ -65,10 +69,6 @@ IS_COMPONENT	= 1
 # name specified in NS_IMPL_NSGETMODULE
 MODULE_NAME	= nsSampleModule
 
-# Ensure that the xpcom classes that we build
-# do not export themselves
-DEFINES		+= -DXPCOM_GLUE 
-
 # CPPSRCS specifies C++ files to be built into a library.
 CPPSRCS		=		   \
 		nsSample.cpp	   \
@@ -79,11 +79,6 @@ CPPSRCS		=		   \
 # files to generate C++ headers and .xpt typelib files.
 XPIDLSRCS	= nsISample.idl
 
-TESTCPPSRCS	= nsTestSample.cpp
-
-# SIMPLE_PROGRAMS builds an executable program from a single source file.
-SIMPLE_PROGRAMS	= $(TESTCPPSRCS:.cpp=$(BIN_SUFFIX))
-
 include $(topsrcdir)/config/config.mk
 
 # EXTRA_COMPONENTS installs components written JavaScript to
@@ -91,31 +86,23 @@ include $(topsrcdir)/config/config.mk
 EXTRA_COMPONENTS = nsSample.js
 
 # EXTRA_DSO_LDOPTS specifies linker flags when building a shared library
-# from this Makefile
+# from this Makefile. We link against the "dependent glue" and against the
+# frozen XPCOM shared library.
 EXTRA_DSO_LDOPTS = \
-		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
-		$(NSPR_LIBS) \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-# LIBS specifies linker flags when building an executable program from
-# this Makefile.
-LIBS            = \
-		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
-		$(NSPR_LIBS) \
-		$(NULL)
+# XXXNOTE: We should be using XPCOM_FROZEN_LDOPTS instead of
+# MOZ_COMPONENT_LIBS, but that doesn't work on mac xcode < 1.5 and
+# on some other ports yet. Soon!
+#		$(XPCOM_FROZEN_LDOPTS) \
+#		$(NSPR_LIBS) \
 
-# Needed to resolve __yylex (?)
-ifeq ($(OS_ARCH)$(OS_RELEASE),FreeBSD2)
-LIBS		+= -lpcap
-endif
 
 # Need to link with CoreFoundation on Mac
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += \
-		$(TK_LIBS) \
-		$(NULL)
-
-LIBS += \
 		$(TK_LIBS) \
 		$(NULL)
 endif
