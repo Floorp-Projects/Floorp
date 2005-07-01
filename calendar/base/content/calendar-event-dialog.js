@@ -134,8 +134,8 @@ function loadDialog(item)
         var hasDueDate = (item.dueDate != null);
         setElementValue("todo-has-duedate", hasDueDate, "checked");
         if (hasDueDate)
-            setElementValue("todo-duedate",   item.dueDate.jsDate);
-        setElementValue("todo-completed", (item.percentComplete == 100), "checked");
+            setElementValue("todo-duedate", item.dueDate.jsDate);
+        setElementValue("todo-completed", item.isCompleted, "checked");
     }
 
     /* attendence */
@@ -208,8 +208,8 @@ function saveDialog(item)
     if (isToDo(item)) {
         var dueDate = getElementValue("todo-has-duedate", "checked") ? 
             jsDateToDateTime(getElementValue("todo-duedate")) : null;
-        setItemProperty(item, "dueDate",         dueDate);
-        setItemProperty(item, "percentComplete", getElementValue("todo-completed", "checked"));
+        setItemProperty(item, "dueDate",     dueDate);
+        setItemProperty(item, "isCompleted", getElementValue("todo-completed", "checked"));
     }
 
     /* attendence */
@@ -442,10 +442,9 @@ function setItemProperty(item, propertyName, value)
             (value.compare(item.dueDate) != 0))
             item.dueDate = value;
         break;
-    case "percentComplete":
-        var percent = (value) ? 100 : 0;
-        if (percent != item.percentComplete)
-            item.percentComplete = percent;
+    case "isCompleted":
+        if (value != item.isCompleted)
+            item.isCompleted = value;
         break;
 
     case "title":
