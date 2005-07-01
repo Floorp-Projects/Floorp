@@ -1091,6 +1091,11 @@
         // the user in this window. 
         this.userChangedValue(event.target);
       </handler>
+      <handler event="input">
+        // This "input" event handler tracks changes made to preferences by 
+        // the user in this window.
+        this.userChangedValue(event.target);
+      </handler>
       <handler event="paneload">
       <![CDATA[
         // Initialize all values from preferences.
