@@ -47,6 +47,12 @@
 #include <windows.h>
 #ifdef _M_IX86
 #include <imagehlp.h>
+// We need a way to know if we are building for WXP (or later), as if we are, we
+// need to use the newer 64-bit APIs. API_VERSION_NUMBER seems to fit the bill.
+// A value of 9 indicates we want to use the new APIs.
+#if API_VERSION_NUMBER >= 9
+#define USING_WXP_VERSION 1
+#endif
 #endif
 
 // Define these as static pointers so that we can load the DLL on the
@@ -77,7 +83,7 @@ typedef BOOL (__stdcall *STACKWALKPROC)(DWORD,
                                         PTRANSLATE_ADDRESS_ROUTINE);
 extern  STACKWALKPROC _StackWalk;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 typedef BOOL (__stdcall *STACKWALKPROC64)(DWORD,
                                           HANDLE,
                                           HANDLE,
@@ -93,7 +99,7 @@ extern  STACKWALKPROC64 _StackWalk64;
 typedef LPVOID (__stdcall *SYMFUNCTIONTABLEACCESSPROC)(HANDLE, DWORD);
 extern  SYMFUNCTIONTABLEACCESSPROC _SymFunctionTableAccess;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 typedef LPVOID (__stdcall *SYMFUNCTIONTABLEACCESSPROC64)(HANDLE, DWORD64);
 extern  SYMFUNCTIONTABLEACCESSPROC64 _SymFunctionTableAccess64;
 #endif
@@ -101,7 +107,7 @@ extern  SYMFUNCTIONTABLEACCESSPROC64 _SymFunctionTableAccess64;
 typedef DWORD (__stdcall *SYMGETMODULEBASEPROC)(HANDLE, DWORD);
 extern  SYMGETMODULEBASEPROC _SymGetModuleBase;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 typedef DWORD64 (__stdcall *SYMGETMODULEBASEPROC64)(HANDLE, DWORD64);
 extern  SYMGETMODULEBASEPROC64 _SymGetModuleBase64;
 #endif
@@ -109,7 +115,7 @@ extern  SYMGETMODULEBASEPROC64 _SymGetModuleBase64;
 typedef BOOL (__stdcall *SYMGETSYMFROMADDRPROC)(HANDLE, DWORD, PDWORD, PIMAGEHLP_SYMBOL);
 extern  SYMGETSYMFROMADDRPROC _SymGetSymFromAddr;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 typedef BOOL (__stdcall *SYMFROMADDRPROC)(HANDLE, DWORD64, PDWORD64, PSYMBOL_INFO);
 extern  SYMFROMADDRPROC _SymFromAddr;
 #endif
@@ -117,7 +123,7 @@ extern  SYMFROMADDRPROC _SymFromAddr;
 typedef DWORD ( __stdcall *SYMLOADMODULE)(HANDLE, HANDLE, PSTR, PSTR, DWORD, DWORD);
 extern  SYMLOADMODULE _SymLoadModule;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 typedef DWORD ( __stdcall *SYMLOADMODULE64)(HANDLE, HANDLE, PCSTR, PCSTR, DWORD64, DWORD);
 extern  SYMLOADMODULE64 _SymLoadModule64;
 #endif
@@ -128,7 +134,7 @@ extern  SYMUNDNAME _SymUnDName;
 typedef DWORD ( __stdcall *SYMGETMODULEINFO)( HANDLE, DWORD, PIMAGEHLP_MODULE);
 extern  SYMGETMODULEINFO _SymGetModuleInfo;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 typedef BOOL ( __stdcall *SYMGETMODULEINFO64)( HANDLE, DWORD64, PIMAGEHLP_MODULE64);
 extern  SYMGETMODULEINFO64 _SymGetModuleInfo64;
 #endif
@@ -136,7 +142,7 @@ extern  SYMGETMODULEINFO64 _SymGetModuleInfo64;
 typedef BOOL ( __stdcall *ENUMLOADEDMODULES)( HANDLE, PENUMLOADED_MODULES_CALLBACK, PVOID);
 extern  ENUMLOADEDMODULES _EnumerateLoadedModules;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 typedef BOOL ( __stdcall *ENUMLOADEDMODULES64)( HANDLE, PENUMLOADED_MODULES_CALLBACK64, PVOID);
 extern  ENUMLOADEDMODULES64 _EnumerateLoadedModules64;
 #endif
@@ -144,7 +150,7 @@ extern  ENUMLOADEDMODULES64 _EnumerateLoadedModules64;
 typedef BOOL (__stdcall *SYMGETLINEFROMADDRPROC)(HANDLE, DWORD, PDWORD, PIMAGEHLP_LINE);
 extern  SYMGETLINEFROMADDRPROC _SymGetLineFromAddr;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 typedef BOOL (__stdcall *SYMGETLINEFROMADDRPROC64)(HANDLE, DWORD64, PDWORD, PIMAGEHLP_LINE64);
 extern  SYMGETLINEFROMADDRPROC64 _SymGetLineFromAddr64;
 #endif
@@ -189,5 +195,3 @@ PR_END_EXTERN_C
 #endif //WIN32
 
 #endif //nsStackFrameWin_h___
-
-

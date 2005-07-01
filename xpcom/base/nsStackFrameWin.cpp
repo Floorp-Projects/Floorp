@@ -60,35 +60,35 @@ SYMINITIALIZEPROC _SymInitialize;
 SYMCLEANUPPROC _SymCleanup;
 
 STACKWALKPROC _StackWalk;
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 STACKWALKPROC64 _StackWalk64;
 #else
 #define _StackWalk64 0
 #endif
 
 SYMFUNCTIONTABLEACCESSPROC _SymFunctionTableAccess;
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 SYMFUNCTIONTABLEACCESSPROC64 _SymFunctionTableAccess64;
 #else
 #define _SymFunctionTableAccess64 0
 #endif
 
 SYMGETMODULEBASEPROC _SymGetModuleBase;
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 SYMGETMODULEBASEPROC64 _SymGetModuleBase64;
 #else
 #define _SymGetModuleBase64 0
 #endif
 
 SYMGETSYMFROMADDRPROC _SymGetSymFromAddr;
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 SYMFROMADDRPROC _SymFromAddr;
 #else
 #define _SymFromAddr 0
 #endif
 
 SYMLOADMODULE _SymLoadModule;
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 SYMLOADMODULE64 _SymLoadModule64;
 #else
 #define _SymLoadModule64 0
@@ -97,21 +97,21 @@ SYMLOADMODULE64 _SymLoadModule64;
 SYMUNDNAME _SymUnDName;
 
 SYMGETMODULEINFO _SymGetModuleInfo;
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 SYMGETMODULEINFO64 _SymGetModuleInfo64;
 #else
 #define _SymGetModuleInfo64 0
 #endif
 
 ENUMLOADEDMODULES _EnumerateLoadedModules;
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 ENUMLOADEDMODULES64 _EnumerateLoadedModules64;
 #else
 #define _EnumerateLoadedModules64 0
 #endif
 
 SYMGETLINEFROMADDRPROC _SymGetLineFromAddr;
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 SYMGETLINEFROMADDRPROC64 _SymGetLineFromAddr64;
 #else
 #define _SymGetLineFromAddr64 0
@@ -176,31 +176,31 @@ EnsureImageHlpInitialized()
     _SymCleanup = (SYMCLEANUPPROC)GetProcAddress(module, "SymCleanup");
     if (!_SymCleanup) return PR_FALSE;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
     _StackWalk64 = (STACKWALKPROC64)GetProcAddress(module, "StackWalk64");
 #endif
     _StackWalk = (STACKWALKPROC)GetProcAddress(module, "StackWalk");
     if (!_StackWalk64  && !_StackWalk) return PR_FALSE;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
     _SymFunctionTableAccess64 = (SYMFUNCTIONTABLEACCESSPROC64) GetProcAddress(module, "SymFunctionTableAccess64");
 #endif
     _SymFunctionTableAccess = (SYMFUNCTIONTABLEACCESSPROC) GetProcAddress(module, "SymFunctionTableAccess");
     if (!_SymFunctionTableAccess64 && !_SymFunctionTableAccess) return PR_FALSE;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
     _SymGetModuleBase64 = (SYMGETMODULEBASEPROC64)GetProcAddress(module, "SymGetModuleBase64");
 #endif
     _SymGetModuleBase = (SYMGETMODULEBASEPROC)GetProcAddress(module, "SymGetModuleBase");
     if (!_SymGetModuleBase64 && !_SymGetModuleBase) return PR_FALSE;
 
     _SymGetSymFromAddr = (SYMGETSYMFROMADDRPROC)GetProcAddress(module, "SymGetSymFromAddr");
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
     _SymFromAddr = (SYMFROMADDRPROC)GetProcAddress(module, "SymFromAddr");
 #endif
     if (!_SymFromAddr && !_SymGetSymFromAddr) return PR_FALSE;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
     _SymLoadModule64 = (SYMLOADMODULE64)GetProcAddress(module, "SymLoadModule64");
 #endif
     _SymLoadModule = (SYMLOADMODULE)GetProcAddress(module, "SymLoadModule");
@@ -209,19 +209,19 @@ EnsureImageHlpInitialized()
     _SymUnDName = (SYMUNDNAME)GetProcAddress(module, "SymUnDName");
     if (!_SymUnDName) return PR_FALSE;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
     _SymGetModuleInfo64 = (SYMGETMODULEINFO64)GetProcAddress(module, "SymGetModuleInfo64");
 #endif
     _SymGetModuleInfo = (SYMGETMODULEINFO)GetProcAddress(module, "SymGetModuleInfo");
     if (!_SymGetModuleInfo64 && !_SymGetModuleInfo) return PR_FALSE;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
     _EnumerateLoadedModules64 = (ENUMLOADEDMODULES64)GetProcAddress(module, "EnumerateLoadedModules64");
 #endif
     _EnumerateLoadedModules = (ENUMLOADEDMODULES)GetProcAddress(module, "EnumerateLoadedModules");
     if (!_EnumerateLoadedModules64 && !_EnumerateLoadedModules) return PR_FALSE;
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
     _SymGetLineFromAddr64 = (SYMGETLINEFROMADDRPROC64)GetProcAddress(module, "SymGetLineFromAddr64");
 #endif
     _SymGetLineFromAddr = (SYMGETLINEFROMADDRPROC)GetProcAddress(module, "SymGetLineFromAddr");
@@ -266,7 +266,7 @@ static BOOL CALLBACK callbackEspecial64(
   ULONG aModuleSize,
   PVOID aUserContext)
 {
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
     BOOL retval = TRUE;
     DWORD64 addr = *(DWORD64*)aUserContext;
 
@@ -351,7 +351,7 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
     return retval;
 }
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
 BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE64 aModuleInfo, PIMAGEHLP_LINE64 aLineInfo)
 {
     BOOL retval = FALSE;
@@ -459,10 +459,16 @@ DumpStackToFile(FILE* aStream)
     data.thread = myThread;
     data.process = myProcess;
     walkerThread = ::CreateThread( NULL, 0, DumpStackToFileThread, (LPVOID) &data, 0, NULL ) ;
-    walkerReturn = ::WaitForSingleObject(walkerThread, INFINITE);
-    CloseHandle(myThread) ;
-    if (walkerReturn != WAIT_OBJECT_0)
-        PrintError("ThreadWait", aStream);
+    if (walkerThread) {
+        walkerReturn = ::WaitForSingleObject(walkerThread, 2000); // no timeout is never a good idea
+        CloseHandle(myThread) ;
+        if (walkerReturn != WAIT_OBJECT_0) {
+            PrintError("ThreadWait", aStream);
+        }
+    }
+    else {
+        PrintError("ThreadCreate", aStream);
+    }
     return;
 }
 
@@ -495,7 +501,7 @@ DumpStackToFileThread(LPVOID lpdata)
 void
 DumpStackToFileMain64(struct DumpStackToFileData* data)
 {
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
     // Get the context information for the thread. That way we will
     // know where our sp, fp, pc, etc. are and can fill in the
     // STACKFRAME64 with the initial values.
@@ -708,7 +714,7 @@ DumpStackToFileMain(struct DumpStackToFileData* data)
             BOOL modInfoRes;
             modInfoRes = SymGetModuleInfoEspecial(myProcess, addr, &modInfo, nsnull);
 
-#ifdef _IMAGEHLP64
+#ifdef USING_WXP_VERSION
             ULONG64 buffer[(sizeof(SYMBOL_INFO) +
               MAX_SYM_NAME*sizeof(TCHAR) + sizeof(ULONG64) - 1) / sizeof(ULONG64)];
             PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
@@ -716,6 +722,8 @@ DumpStackToFileMain(struct DumpStackToFileData* data)
             pSymbol->MaxNameLen = MAX_SYM_NAME;
 
             DWORD64 displacement;
+
+            ok = _SymFromAddr && _SymFromAddr(myProcess, addr, &displacement, pSymbol);
 #else
             char buf[sizeof(IMAGEHLP_SYMBOL) + 512];
             PIMAGEHLP_SYMBOL pSymbol = (PIMAGEHLP_SYMBOL) buf;
@@ -723,19 +731,12 @@ DumpStackToFileMain(struct DumpStackToFileData* data)
             pSymbol->MaxNameLength = 512;
 
             DWORD displacement;
-#endif
 
-#ifdef _IMAGEHLP64
-            ok = _SymFromAddr && _SymFromAddr(myProcess, addr, &displacement, pSymbol);
+            ok = _SymGetSymFromAddr(myProcess,
+                        frame.AddrPC.Offset,
+                        &displacement,
+                        pSymbol);
 #endif
-            if (!ok)
-            {
-                ok = _SymGetSymFromAddr(myProcess,
-                                        frame.AddrPC.Offset,
-                                        &displacement,
-                                        pSymbol);
-            }
-
 
             // All done with debug calls so release our lock.
             ReleaseMutex(hStackWalkMutex);
@@ -759,4 +760,3 @@ DumpStackToFileMain(struct DumpStackToFileData* data)
     return;
 
 }
-
