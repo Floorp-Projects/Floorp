@@ -139,6 +139,7 @@ typedef long _off_t;
 #define _S_IFREG    0100000 /* stat, is a normal file */
 #define _S_IREAD    0000400 /* stat, can read */
 #define _S_IWRITE   0000200 /* stat, can write */
+#define	_S_IEXEC	0000100
 
 struct mozce_stat
 {
