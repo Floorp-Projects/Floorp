@@ -227,6 +227,7 @@ bin/defaults/autoconfig/prefcalls.js
 
 ; [Layout Engine Resources]
 ; Style Sheets, Graphics and other Resources used by the layout engine. 
+bin/res/hiddenWindow.css
 bin/res/ua.css
 bin/res/html.css
 bin/res/quirk.css
