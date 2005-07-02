@@ -57,7 +57,6 @@
 #include <CFString.h>
 #endif
 
-#include <Gestalt.h>
 #include <Quickdraw.h>
 
 #if UNIVERSAL_INTERFACES_VERSION < 0x0340
@@ -82,8 +81,6 @@ static NS_DEFINE_CID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 // externs defined in nsWindow.cpp
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
-
-static PRBool OnMacOSX();
 
 #define kWindowPositionSlop 20
 
@@ -124,7 +121,7 @@ SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModifiers
 
 //еее this should probably go into the drag session as a static
 pascal OSErr
-nsCocoaWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
+nsCocoaWindow::DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
                     void *handlerRefCon, DragReference theDrag)
 {
   // holds our drag service across multiple calls to this callback. The reference to
@@ -229,7 +226,7 @@ nsCocoaWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr
 
 //еее this should probably go into the drag session as a static
 pascal OSErr
-nsCocoaWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
+nsCocoaWindow::DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
                   DragReference theDragRef)
 {
   // get our window back from the refCon
@@ -686,7 +683,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
 #if 0
 
 pascal OSStatus
-nsCocoaWindow :: ScrollEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
+nsCocoaWindow::ScrollEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
 {
   EventMouseWheelAxis axis = kEventMouseWheelAxisY;
   SInt32 delta = 0;
@@ -709,7 +706,7 @@ nsCocoaWindow :: ScrollEventHandler ( EventHandlerCallRef inHandlerChain, EventR
 
 
 pascal OSStatus
-nsCocoaWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
+nsCocoaWindow::WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
 {
   OSStatus retVal = noErr;
   
@@ -1258,9 +1255,7 @@ void nsCocoaWindow::CalculateAndSetZoomedSize()
       if (screen == primaryScreen) {
         int iconSpace = 96;
 #if TARGET_CARBON
-        if(::OnMacOSX()) {
-          iconSpace = 128;  //icons/grid is wider on Mac OS X
-        }
+        iconSpace = 128;
 #endif
         newWindowRect.width -= iconSpace;
       }
@@ -1526,26 +1521,6 @@ void nsCocoaWindow::IsActive(PRBool* aActive)
 {
 //  *aActive = mIsActive;
 }
-
-
-//
-// Return true if we are on Mac OS X, caching the result after the first call
-//
-static PRBool
-OnMacOSX()
-{
-
-  static PRBool gInitVer = PR_FALSE;
-  static PRBool gOnMacOSX = PR_FALSE;
-  if(! gInitVer) {
-    long version;
-    OSErr err = ::Gestalt(gestaltSystemVersion, &version);
-    gOnMacOSX = (err == noErr && version >= 0x00001000);
-    gInitVer = PR_TRUE;
-  }
-  return gOnMacOSX;
-}
-
 
 #if 0
 
