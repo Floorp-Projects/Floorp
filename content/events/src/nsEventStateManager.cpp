@@ -2493,11 +2493,19 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
     // otherwise use the intrinsic hotspot, otherwise use the top left
     // corner.
     if (aHaveHotspot) {
+      PRInt32 imgWidth, imgHeight;
+      aContainer->GetWidth(&imgWidth);
+      aContainer->GetHeight(&imgHeight);
+
       // XXX NSToUintRound?
       hotspotX = aHotspotX > 0.0f
                    ? PRUint32(aHotspotX + ROUND_CONST_FLOAT) : PRUint32(0);
+      if (hotspotX >= PRUint32(imgWidth))
+        hotspotX = imgWidth - 1;
       hotspotY = aHotspotY > 0.0f
                    ? PRUint32(aHotspotY + ROUND_CONST_FLOAT) : PRUint32(0);
+      if (hotspotY >= PRUint32(imgHeight))
+        hotspotY = imgHeight - 1;
     } else {
       hotspotX = 0;
       hotspotY = 0;
