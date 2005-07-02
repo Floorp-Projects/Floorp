@@ -360,23 +360,32 @@ nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRe
   canvas->PushClip();
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
-    nsCOMPtr<nsIDOMSVGRect> vb;
-    nsCOMPtr<nsIDOMSVGAnimatedRect> viewBox;
-    nsCOMPtr<nsIDOMSVGFitToViewBox> svgElement = do_QueryInterface(mContent);
+    nsCOMPtr<nsIDOMSVGAnimatedLength> anim;
+    nsCOMPtr<nsIDOMSVGLength> val;
+    nsCOMPtr<nsISVGSVGElement> svg = do_QueryInterface(mContent);
 
-    if (svgElement)
-      svgElement->GetViewBox(getter_AddRefs(viewBox));
-    if (viewBox)
-      viewBox->GetAnimVal(getter_AddRefs(vb));
-    if (vb) {
-      float x, y, width, height;
-      vb->GetX(&x);
-      vb->GetY(&y);
-      vb->GetWidth(&width);
-      vb->GetHeight(&height);
-      nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
-      canvas->SetClipRect(ctm, x, y, width, height);
+    float x, y, width, height;
+    mX->GetValue(&x);
+    mY->GetValue(&y);
+    svg->GetWidth(getter_AddRefs(anim));
+    anim->GetAnimVal(getter_AddRefs(val));
+    val->GetValue(&width);
+    svg->GetHeight(getter_AddRefs(anim));
+    anim->GetAnimVal(getter_AddRefs(val));
+    val->GetValue(&height);
+
+    nsCOMPtr<nsIDOMSVGMatrix> clipTransform;
+    if (!mPropagateTransform) {
+      NS_NewSVGMatrix(getter_AddRefs(clipTransform));
+    } else {
+      nsISVGContainerFrame *parent;
+      CallQueryInterface(mParent, &parent);
+      if (parent)
+        clipTransform = parent->GetCanvasTM();
     }
+
+    if (clipTransform)
+      canvas->SetClipRect(clipTransform, x, y, width, height);
   }
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;

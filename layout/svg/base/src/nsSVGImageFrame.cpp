@@ -333,6 +333,8 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectT
     }
   }
 
+  canvas->PushClip();
+
   /* check for a clip path */
   nsIURI *aURI;
   nsSVGClipPathFrame *clip = NULL;
@@ -343,7 +345,6 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectT
     if (clip) {
       nsCOMPtr<nsIDOMSVGMatrix> matrix;
       GetCanvasTM(getter_AddRefs(matrix));
-      canvas->PushClip();
       clip->ClipPaint(canvas, this, matrix);
     }
   }
@@ -352,9 +353,15 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectT
     nsCOMPtr<nsIDOMSVGMatrix> ctm;
     GetCanvasTM(getter_AddRefs(ctm));
 
-    float width, height;
+    float x, y, width, height;
+    mX->GetValue(&x);
+    mY->GetValue(&y);
     mWidth->GetValue(&width);
     mHeight->GetValue(&height);
+
+    if (GetStyleDisplay()->IsScrollableOverflow())
+      canvas->SetClipRect(ctm, x, y, width, height);
+
     PRUint32 nativeWidth, nativeHeight;
     mSurface->GetWidth(&nativeWidth);
     mSurface->GetHeight(&nativeHeight);
@@ -429,9 +436,6 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectT
       else NS_NOTREACHED("Unknown value for meetOrSlice");
     }
 
-    float x, y;
-    mX->GetValue(&x);
-    mY->GetValue(&y);
     nsCOMPtr<nsIDOMSVGMatrix> trans;
     ctm->Translate(x + e, y + f, getter_AddRefs(trans));
 
@@ -443,8 +447,7 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectT
                                    mStyleContext->GetStyleDisplay()->mOpacity);
   }
 
-  if (clip)
-    canvas->PopClip();
+  canvas->PopClip();
 
   return NS_OK;
 }
