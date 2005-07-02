@@ -1357,6 +1357,7 @@ function serv_001 (e)
 CIRCServer.prototype.on005 =
 function serv_005 (e)
 {
+    var oldCaseMapping = this.supports["casemapping"];
     /* Drop params 0 and 1. */
     for (var i = 2; i < e.params.length; i++) {
         var itemStr = e.params[i];
@@ -1385,6 +1386,30 @@ function serv_005 (e)
         {
             // Boolean-type items stored as 'true'.
             this.supports[name] = !(("1" in item) && item[1] == "-");
+        }
+    }
+    // Update all users and channels if the casemapping changed.
+    if (this.supports["casemapping"] != oldCaseMapping)
+    {
+        var newName, encodedName;
+        for (var user in this.users)
+        {
+            newName = this.toLowerCase(this.users[user].encodedName);
+            renameProperty(this.users, user, newName);
+            this.users[newName].canonicalName = newName;
+        }
+        for (var channel in this.channels)
+        {
+            newName = this.toLowerCase(this.channels[channel].encodedName);
+            renameProperty(this.channels, this.channels[channel].canonicalName,
+                           newName);
+            this.channels[channel].canonicalName = newName;
+            for (user in this.channels[channel].users)
+            {
+                encodedName = this.channels[channel].users[user].encodedName;
+                newName = this.toLowerCase(encodedName);
+                renameProperty(this.channels[channel].users, user, newName);
+            }
         }
     }
 
