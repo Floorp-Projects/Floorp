@@ -312,7 +312,8 @@ class nsXULDocument;
 class nsXULPrototypeScript : public nsXULPrototypeNode
 {
 public:
-    nsXULPrototypeScript(PRUint16 aLineNo, const char *aVersion);
+    nsXULPrototypeScript(PRUint32 aLineNo, const char *aVersion,
+                         PRBool aHasE4XOption);
     virtual ~nsXULPrototypeScript();
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -333,14 +334,15 @@ public:
                                   nsIScriptContext* aContext);
 
     nsresult Compile(const PRUnichar* aText, PRInt32 aTextLength,
-                     nsIURI* aURI, PRUint16 aLineNo,
+                     nsIURI* aURI, PRUint32 aLineNo,
                      nsIDocument* aDocument,
                      nsIXULPrototypeDocument* aPrototypeDocument);
 
     nsCOMPtr<nsIURI>         mSrcURI;
-    PRUint16                 mLineNo;
+    PRUint32                 mLineNo;
     PRPackedBool             mSrcLoading;
     PRPackedBool             mOutOfLine;
+    PRPackedBool             mHasE4XOption;
     nsXULDocument*           mSrcLoadWaiters;   // [OWNER] but not COMPtr
     JSObject*                mJSObject;
     const char*              mLangVersion;

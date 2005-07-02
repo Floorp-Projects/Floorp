@@ -3180,8 +3180,8 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                                          aNodeInfos);
                 break;
             case eType_Script: {
-                // language version obtained during deserialization.
-                nsXULPrototypeScript* script = new nsXULPrototypeScript(0, nsnull);
+                // language version/options obtained during deserialization.
+                nsXULPrototypeScript* script = new nsXULPrototypeScript(0, nsnull, PR_FALSE);
                 if (! script)
                     return NS_ERROR_OUT_OF_MEMORY;
                 child = script;
@@ -3189,10 +3189,9 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
 
                 rv |= aStream->Read8(&script->mOutOfLine);
                 if (! script->mOutOfLine) {
-                    rv |= script->Deserialize(aStream, aContext,
-                                              aDocumentURI, aNodeInfos);
-                }
-                else {
+                    rv |= script->Deserialize(aStream, aContext, aDocumentURI,
+                                              aNodeInfos);
+                } else {
                     rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(script->mSrcURI));
 
                     rv |= script->DeserializeOutOfLine(aStream, aContext);
@@ -3277,11 +3276,12 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
 // nsXULPrototypeScript
 //
 
-nsXULPrototypeScript::nsXULPrototypeScript(PRUint16 aLineNo, const char *aVersion)
+nsXULPrototypeScript::nsXULPrototypeScript(PRUint32 aLineNo, const char *aVersion, PRBool aHasE4XOption)
     : nsXULPrototypeNode(eType_Script),
       mLineNo(aLineNo),
       mSrcLoading(PR_FALSE),
       mOutOfLine(PR_TRUE),
+      mHasE4XOption(aHasE4XOption),
       mSrcLoadWaiters(nsnull),
       mJSObject(nsnull),
       mLangVersion(aVersion)
@@ -3310,7 +3310,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
     nsresult rv;
 
     // Write basic prototype data
-    aStream->Write16(mLineNo);
+    aStream->Write32(mLineNo);
 
     JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
                                         aContext->GetNativeContext());
@@ -3436,7 +3436,7 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
     nsresult rv;
 
     // Read basic prototype data
-    aStream->Read16(&mLineNo);
+    aStream->Read32(&mLineNo);
 
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull || !mJSObject,
                  "prototype script not well-initialized when deserializing?!");
@@ -3619,7 +3619,7 @@ nsresult
 nsXULPrototypeScript::Compile(const PRUnichar* aText,
                               PRInt32 aTextLength,
                               nsIURI* aURI,
-                              PRUint16 aLineNo,
+                              PRUint32 aLineNo,
                               nsIDocument* aDocument,
                               nsIXULPrototypeDocument* aPrototypeDocument)
 {
@@ -3636,7 +3636,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     nsresult rv;
 
     // Use the prototype document's special context
-    nsIScriptContext *context = nsnull;
+    nsIScriptContext *context;
 
     {
         nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner =
@@ -3663,6 +3663,23 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     aURI->GetSpec(urlspec);
 
     // Ok, compile it to create a prototype script object!
+
+    // XXXbe violate nsIScriptContext layering because its version parameter
+    // is mis-typed as const char * -- if it were uint32, we could more easily
+    // extend version to include compile-time option, as the JS engine does.
+    // It'd also be more efficient than converting to and from a C string.
+
+    JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
+                                        context->GetNativeContext());
+    uint32 options = ::JS_GetOptions(cx);
+    JSBool changed = (mHasE4XOption ^ !!(options & JSOPTION_XML));
+    if (changed) {
+        ::JS_SetOptions(cx,
+                        mHasE4XOption
+                        ? options | JSOPTION_XML
+                        : options & ~JSOPTION_XML);
+    }
+
     rv = context->CompileScript(aText,
                                 aTextLength,
                                 nsnull,
@@ -3672,6 +3689,9 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
                                 mLangVersion,
                                 (void**)&mJSObject);
 
+    if (changed) {
+        ::JS_SetOptions(cx, options);
+    }
     return rv;
 }
 

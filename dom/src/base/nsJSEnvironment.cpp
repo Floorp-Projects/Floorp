@@ -1566,8 +1566,20 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
   if (!global) {
     nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
+    PRUint32 flags = 0;
+    
+    if (chromeWindow) {
+      // Flag this object and scripts compiled against it as "system", for
+      // optional automated XPCNativeWrapper construction when chrome views
+      // a content DOM.
+      flags = nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
 
-    PRUint32 flags = chromeWindow ? nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT : 0;
+      // Always enable E4X for XUL and other chrome content -- there is no
+      // need to preserve the <!-- script hiding hack from JS-in-HTML daze
+      // (introduced in 1995 for graceful script degradation in Netscape 1,
+      // Mosaic, and other pre-JS browsers).
+      ::JS_SetOptions(mContext, ::JS_GetOptions(mContext) | JSOPTION_XML);
+    }
 
     rv = xpc->InitClassesWithNewWrappedGlobal(mContext, aGlobalObject,
                                               NS_GET_IID(nsISupports),

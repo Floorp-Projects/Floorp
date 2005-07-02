@@ -83,6 +83,7 @@
 #include "nsNetUtil.h"
 #include "nsRDFCID.h"
 #include "nsParserUtils.h"
+#include "nsIMIMEHeaderParam.h"
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
 #include "nsXPIDLString.h"
@@ -1177,6 +1178,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
 {
   nsresult rv = NS_OK;
   PRBool isJavaScript = PR_TRUE;
+  PRBool hasE4XOption = PR_TRUE;
   const char* jsVersionString = nsnull;
 
   // Look for SRC attribute and look for a LANGUAGE attribute
@@ -1187,38 +1189,52 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           src.Assign(aAttributes[1]);
       }
       else if (key.EqualsLiteral("type")) {
-          nsAutoString  type(aAttributes[1]);
-          nsAutoString  mimeType;
-          nsAutoString  params;
-          nsParserUtils::SplitMimeType(type, mimeType, params);
+          nsCOMPtr<nsIMIMEHeaderParam> mimeHdrParser =
+              do_GetService("@mozilla.org/network/mime-hdrparam;1");
+          NS_ENSURE_TRUE(mimeHdrParser, NS_ERROR_FAILURE);
+
+          NS_ConvertUTF16toUTF8 typeAndParams(aAttributes[1]);
+
+          nsAutoString mimeType;
+          rv = mimeHdrParser->GetParameter(typeAndParams, nsnull,
+                                           EmptyCString(), PR_FALSE, nsnull,
+                                           mimeType);
+          NS_ENSURE_SUCCESS(rv, rv);
 
           // Table ordered from most to least likely JS MIME types. For .xul
           // files that we host, the likeliest type is application/x-javascript.
           // See bug 62485, feel free to add <script type="..."> survey data to it,
           // or to a new bug once 62485 is closed.
           static const char *jsTypes[] = {
-            "application/x-javascript",
-            "text/javascript",
-            "text/ecmascript",
-            "application/javascript",
-            "application/ecmascript",
-            nsnull
+              "application/x-javascript",
+              "text/javascript",
+              "text/ecmascript",
+              "application/javascript",
+              "application/ecmascript",
+              nsnull
           };
 
           isJavaScript = PR_FALSE;
           for (PRInt32 i = 0; jsTypes[i]; i++) {
-            if (mimeType.LowerCaseEqualsASCII(jsTypes[i])) {
-              isJavaScript = PR_TRUE;
-              break;
-            }
+              if (mimeType.LowerCaseEqualsASCII(jsTypes[i])) {
+                  isJavaScript = PR_TRUE;
+                  break;
+              }
           }
 
           if (isJavaScript) {
               JSVersion jsVersion = JSVERSION_DEFAULT;
-              if (params.Find("version=", PR_TRUE) == 0) {
-                  if (params.Length() != 11 || params[8] != '1' || params[9] != '.')
+              nsAutoString value;
+              rv = mimeHdrParser->GetParameter(typeAndParams, "version",
+                                               EmptyCString(), PR_FALSE, nsnull,
+                                               value);
+              if (NS_FAILED(rv)) {
+                  if (rv != NS_ERROR_INVALID_ARG)
+                      return rv;
+              } else {
+                  if (value.Length() != 3 || value[0] != '1' || value[1] != '.')
                       jsVersion = JSVERSION_UNKNOWN;
-                  else switch (params[10]) {
+                  else switch (value[2]) {
                       case '0': jsVersion = JSVERSION_1_0; break;
                       case '1': jsVersion = JSVERSION_1_1; break;
                       case '2': jsVersion = JSVERSION_1_2; break;
@@ -1228,12 +1244,24 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
                       default:  jsVersion = JSVERSION_UNKNOWN;
                   }
               }
-              jsVersionString = JS_VersionToString(jsVersion);
+              jsVersionString = ::JS_VersionToString(jsVersion);
+
+              rv = mimeHdrParser->GetParameter(typeAndParams, "e4x",
+                                               EmptyCString(), PR_FALSE, nsnull,
+                                               value);
+              if (NS_FAILED(rv)) {
+                  if (rv != NS_ERROR_INVALID_ARG)
+                      return rv;
+              } else {
+                  if (value.Length() == 1 && value[0] == '0')
+                      hasE4XOption = PR_FALSE;
+              }
           }
       }
       else if (key.EqualsLiteral("language")) {
-        nsAutoString  lang(aAttributes[1]);
-        isJavaScript = nsParserUtils::IsJavaScriptLanguage(lang, &jsVersionString);
+          nsAutoString lang(aAttributes[1]);
+          isJavaScript =
+              nsParserUtils::IsJavaScriptLanguage(lang, &jsVersionString);
       }
       aAttributes += 2;
   }
@@ -1241,8 +1269,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
   // Don't process scripts that aren't JavaScript
   if (isJavaScript) {
       nsXULPrototypeScript* script =
-          new nsXULPrototypeScript(aLineNumber,
-                                   jsVersionString);
+          new nsXULPrototypeScript(aLineNumber, jsVersionString, hasE4XOption);
       if (! script)
           return NS_ERROR_OUT_OF_MEMORY;
 
