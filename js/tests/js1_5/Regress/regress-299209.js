@@ -43,6 +43,12 @@ var expect = 'No Crash';
 printBugNumber (bug);
 printStatus (summary);
 
-eval('for (a = 0; a <= 10000; a++) { try { function(){("");} } catch(e) {} }');
+try
+{
+  eval('for (a = 0; a <= 10000; a++) { function(){("");} }');
+}
+catch(e)
+{
+}
  
 reportCompare(expect, actual, summary);
