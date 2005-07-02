@@ -121,7 +121,16 @@ var global = {
     TypeError: TypeError, URIError: URIError,
 
     // Other properties.
-    Math: Math
+    Math: Math,
+
+    // Extensions to ECMA
+    snarf: snarf,
+    load: function load(s) {
+        if (typeof s != "string")
+            return s;
+
+        evaluate(snarf(s), s, 1)
+    }
 };
 
 // Reflect a host class into the target global environment by delegation.
