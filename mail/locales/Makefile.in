@@ -109,7 +109,7 @@ repackage-win32-installer: $(WIN32_INSTALLER_IN)
 	  -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/install.it \
 	  $(topsrcdir)/mail/installer/windows/install.it > $(DIST)/l10n-stage/install.ini
 	cd $(DIST)/l10n-stage && \
-	  $(CYGWIN_WRAPPER) 7z a -tz7 ../l10n-temp-stage/app.7z *.* -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
+	  $(CYGWIN_WRAPPER) 7z a -t7z ../l10n-temp-stage/app.7z *.* -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
 	$(CYGWIN_WRAPPER) upx -9 -o $(DIST)/l10n-temp-stage/7zSD.sfxc $(topsrcdir)/other-licenses/7zstub/thunderbird/7zSD.sfx
 	$(INSTALL) $(topsrcdir)/mail/installer/windows/app.tag $(DIST)/l10n-temp-stage
 	cd $(DIST)/l10n-temp-stage &&
