@@ -2,15 +2,15 @@ mozilla/xpfe/bootstrap/init.d/README
 
 This file describes the mechanism for installing and executing
 initialization and termination scripts used to implement pluggable
-shell scripts to modify the behaviour of Mozilla/FireFox/ThunderBird/SunBird.
+shell scripts to modify the behaviour of SeaMonkey/FireFox/ThunderBird/SunBird.
 
 File names in the mozilla/init.d/ and %user_profile%/init.d/
-(for example ${HOME}/.mozilla/init.d/ for Mozilla) are of the form
+(for example ${HOME}/.mozilla/init.d/ for SeaMonkey) are of the form
 [SK]nn<filename> where 'S' means "run this script at application startup",
 'K' means "run this script at application termination", and 'nn' is the
 sequence number for killing or starting the job.
-When the application (e.g. Mozilla) starts scripts prefixed with 'S' are
-executed (first those in Mozilla's installation directory, then those in
+When the application (e.g. SeaMonkey) starts scripts prefixed with 'S' are
+executed (first those in the app's installation directory, then those in
 user's profile directory), on termination those scripts prefixed with 'K'
 are being executed (first those in user's profile dir, finally those in
 mozilla's installation directory).
@@ -20,9 +20,9 @@ mozilla's installation directory).
   'stop' for scripts prefixed with 'K' and the argument 'start' for scripts
   prefixed with 'S'.
   An exception of this rule are scripts with the suffix *.sh - they are called
-  "inline" in the current shell process which starts/terminates Mozilla. These
+  "inline" in the current shell process which starts/terminates the app. These
   scripts have FULL ACCESS to all variables of the calling script (which means
-  these scripts can set/modify/unset environment variables used by Mozilla).
+  these scripts can set/modify/unset environment variables used by the app).
   Since these scripts run in the same shell the author of such scripts should
   ensure that no namespace collisions occur (e.g. accidential modify variable
   names used by the parent script).
@@ -41,9 +41,9 @@ mozilla's installation directory).
     Relative (!!) or absolute path to the location where the mozilla binary
     is located.
   - "MOZ_PIS_SESSION_PID":
-    Process id of the initial mozilla launch script. In this case used as
-    session identifier. The value identifies the current mozilla
-    session. Note that one user may run multiple mozilla sessions (with
+    Process id of the initial application launch script. In this case used as
+    session identifier. The value identifies the current application
+    session. Note that one user may run multiple application sessions (with
     differnt profiles) in parallel. "stop"-scripts must ensure that they
     only affect resources created by the "start"-script of the same session
     (identified via "MOZ_PIS_SESSION_PID") and same machine (use 'uname -n'
