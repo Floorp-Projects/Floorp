@@ -49,10 +49,10 @@ struct gfxRGBA {
     gfxRGBA(const gfxRGBA& c) : r(c.r), g(c.g), b(c.b), a(c.a) {}
     gfxRGBA(gfxFloat _r, gfxFloat _g, gfxFloat _b, gfxFloat _a=1.0) : r(_r), g(_g), b(_b), a(_a) {}
     gfxRGBA(PRUint32 c) {
-        a = (c & 0xff) / 255.0;
-        r = ((c >> 8) & 0xff) / 255.0;
-        g = ((c >> 16) & 0xff) / 255.0;
-        b = ((c >> 24) & 0xff) / 255.0;
+        r = ((c >> 0) & 0xff) / 255.0;
+        g = ((c >> 8) & 0xff) / 255.0;
+        b = ((c >> 16) & 0xff) / 255.0;
+        a = ((c >> 24) & 0xff) / 255.0;
     }
     gfxRGBA(const char* str) {
         a = 1.0;
