@@ -547,9 +547,10 @@ function Statement(t, x) {
             return n;
         }
 
-        t.unget();
         n = new Node(t, SEMICOLON);
+        t.unget();
         n.expression = Expression(t, x);
+        n.end = n.expression.end;
         break;
     }
 
