@@ -27,7 +27,7 @@ EXPORTS	+=	gfxWindowsSurface.h
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
-EXPORTS	+=	gfxXlibSurface.h
+EXPORTS +=	gfxXlibSurface.h
 endif
 
 include $(topsrcdir)/config/rules.mk

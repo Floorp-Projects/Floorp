@@ -136,11 +136,11 @@ public:
         cairo_matrix_transform_point(&mat, x, y);
     }
 
-    gfxSize GetScale() const {
+    gfxSize GetScaling() const {
         return gfxSize(mat.xx, mat.yy);
     }
 
-    gfxPoint GetTranslate() const {
+    gfxPoint GetTranslation() const {
         return gfxPoint(mat.x0, mat.y0);
     }
 

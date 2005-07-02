@@ -267,6 +267,14 @@ gfxSize gfxContext::DeviceToUser(gfxSize size) const
     return ret;
 }
 
+gfxRect gfxContext::DeviceToUser(gfxRect rect) const
+{
+    gfxRect ret = rect;
+    cairo_device_to_user(mCairo, &ret.pos.x, &ret.pos.y);
+    cairo_device_to_user_distance(mCairo, &ret.size.width, &ret.size.height);
+    return ret;
+}
+
 gfxPoint gfxContext::UserToDevice(gfxPoint point) const
 {
     gfxPoint ret = point;
@@ -278,6 +286,14 @@ gfxSize gfxContext::UserToDevice(gfxSize size) const
 {
     gfxSize ret = size;
     cairo_user_to_device_distance(mCairo, &ret.width, &ret.height);
+    return ret;
+}
+
+gfxRect gfxContext::UserToDevice(gfxRect rect) const
+{
+    gfxRect ret = rect;
+    cairo_user_to_device(mCairo, &ret.pos.x, &ret.pos.y);
+    cairo_user_to_device_distance(mCairo, &ret.size.width, &ret.size.height);
     return ret;
 }
 
@@ -376,7 +392,7 @@ void gfxContext::Clip(const gfxRegion& region)
 
 void gfxContext::Clip()
 {
-    cairo_clip(mCairo);
+    cairo_clip_preserve(mCairo);
 }
 
 void gfxContext::ResetClip()
@@ -397,9 +413,9 @@ void gfxContext::SetPattern(gfxPattern *pattern)
     cairo_set_source(mCairo, pattern->CairoPattern());
 }
 
-void gfxContext::SetSource(gfxASurface *surface, gfxPoint origin)
+void gfxContext::SetSource(gfxASurface *surface, gfxPoint offset)
 {
-    cairo_set_source_surface(mCairo, surface->CairoSurface(), origin.x, origin.y);
+    cairo_set_source_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
 }
 
 // fonts?

@@ -127,8 +127,10 @@ public:
 
     gfxPoint DeviceToUser(gfxPoint point) const;
     gfxSize DeviceToUser(gfxSize size) const;
+    gfxRect DeviceToUser(gfxRect rect) const;
     gfxPoint UserToDevice(gfxPoint point) const;
     gfxSize UserToDevice(gfxSize size) const;
+    gfxRect UserToDevice(gfxRect rect) const;
 
     /**
      ** Painting sources
@@ -139,7 +141,7 @@ public:
     void SetSource(gfxASurface *surface) {
         SetSource(surface, gfxPoint(0, 0));
     }
-    void SetSource(gfxASurface* surface, gfxPoint origin);
+    void SetSource(gfxASurface* surface, gfxPoint offset);
 
     /**
      ** Painting
