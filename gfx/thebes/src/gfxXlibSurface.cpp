@@ -78,7 +78,7 @@ gfxXlibSurface::gfxXlibSurface(Display* dpy, Visual* visual, unsigned long width
                                         width, height,
                                         DefaultDepth(dpy, DefaultScreen(dpy)));
 
-    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, pixmap, visual, width, height);
+    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, mDrawable, visual, width, height);
     Init(surf);
 }
 
