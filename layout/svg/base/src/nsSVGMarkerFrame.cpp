@@ -54,6 +54,7 @@
 #include "nsIDocument.h"
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryFrame.h"
+#include "nsISVGRendererCanvas.h"
 
 NS_IMETHODIMP_(nsrefcnt)
   nsSVGMarkerFrame::AddRef()
@@ -335,6 +336,38 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
   mAngle = aMark->angle;
   mMarkerParent = aParent;
 
+  if (GetStyleDisplay()->IsScrollableOverflow()) {
+    aCanvas->PushClip();
+
+    nsCOMPtr<nsIDOMSVGMatrix> parentTransform, markerTransform, clipTransform;
+    nsCOMPtr<nsIDOMSVGMatrix> viewTransform;
+
+    nsISVGGeometrySource *parent;
+    CallQueryInterface(mMarkerParent, &parent);
+    if (parent)
+      parent->GetCanvasTM(getter_AddRefs(parentTransform));
+
+    nsCOMPtr<nsIDOMSVGMarkerElement> element = do_QueryInterface(mContent);
+    element->GetMarkerTransform(mStrokeWidth, mX, mY, mAngle,
+                                getter_AddRefs(markerTransform));
+
+    element->GetViewboxToViewportTransform(getter_AddRefs(viewTransform));
+
+    if (parentTransform && markerTransform)
+      parentTransform->Multiply(markerTransform,
+                                getter_AddRefs(clipTransform));
+
+    if (clipTransform && viewTransform) {
+      float x, y, width, height;
+
+      viewTransform->GetE(&x);
+      viewTransform->GetF(&y);
+      mMarkerWidth->GetValue(&width);
+      mMarkerHeight->GetValue(&height);
+      aCanvas->SetClipRect(clipTransform, x, y, width, height);
+    }
+  }
+
   nsRect dirtyRectTwips;
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
@@ -345,6 +378,10 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
       SVGFrame->PaintSVG(aCanvas, dirtyRectTwips);
     }
   }
+
+  if (GetStyleDisplay()->IsScrollableOverflow())
+    aCanvas->PopClip();
+
   mMarkerParent = nsnull;
   mInUse = PR_FALSE;
 }
