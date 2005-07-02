@@ -64,7 +64,7 @@ bin\components\xpcom_compat_c.dll
 [browser]
 bin\README.txt,bin\readme.txt
 bin\LICENSE,bin\license.txt
-bin\mozilla.exe
+bin\seamonkey.exe
 bin\plugins\npnul32.dll
 bin\res\cmessage.txt
 bin\regxpcom.exe

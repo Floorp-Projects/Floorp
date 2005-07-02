@@ -5,7 +5,7 @@ var fDesktop;
 var szFolderDesktop;
 
 srDest = $SpaceRequired$;
-err    = initInstall("Mozilla Installer", "/mozilla.org/Mozilla Installer", "$Version$"); 
+err    = initInstall("SeaMonkey Installer", "/mozilla.org/SeaMonkey Installer", "$Version$"); 
 logComment("initInstall: " + err);
 
 // Find the current user's desktop
@@ -24,13 +24,13 @@ if(verifyDiskSpace(fDesktop, srDest))
 
   err =  addFile("",
                  "",
-                 "mozilla-win32-stub-installer.exe", // dir name in jar to extract 
+                 "seamonkey-win32-stub-installer.exe", // dir name in jar to extract 
                  fDesktop,             // Where to put this file (Returned from getFolder) 
                  "");                  // subdir name to create relative to fProgram
 
   logComment("addFile() returned: " + err);
 
-  err = execute("mozilla-win32-stub-installer.exe", "", false);
+  err = execute("SeaMonkey-win32-stub-installer.exe", "", false);
   logComment("execute() returned: " + err);
 
   // check return value

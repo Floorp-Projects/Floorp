@@ -444,8 +444,8 @@ sub GetProductMilestoneVersion
     print "   aDirConfigTopSrc: $aDirConfigTopSrc\n";
   }
 
-  chdir("$aDirMozTopSrc/config");
-  $versionMilestone = `perl milestone.pl --topsrcdir $aDirConfigTopSrc`;
+  #chdir("$aDirMozTopSrc/config");
+  $versionMilestone = `cat $aDirMozTopSrc/xpfe/bootstrap/version.txt`;
 
   if(defined($ENV{DEBUG_INSTALLER_BUILD}))
   {

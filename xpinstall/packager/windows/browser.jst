@@ -195,7 +195,7 @@ function createShortcuts()
 
     /* log this so if the user turns on turbo mode in the browser the uninstaller will undo it */
 
-    logComment( "store registry value string: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run [Mozilla Quick Launch]");
+    logComment( "store registry value string: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run [SeaMonkey Quick Launch]");
     if (regvalue && regvalue != undefined && regvalue.length != 0) 
     {
         var value = new String(regvalue);
@@ -208,7 +208,7 @@ function createShortcuts()
                 turboarg = value.slice(index2 + 1, index2 + 2);
                 winreg.setRootKey(winreg.HKEY_CURRENT_USER);
                 subkey = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
-                valname = "Mozilla Quick Launch";
+                valname = "SeaMonkey Quick Launch";
                 if ( turboarg == "Y" || turboarg == "y") 
                 {
                     fTemp = fileExe;

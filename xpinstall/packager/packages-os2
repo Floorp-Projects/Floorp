@@ -73,7 +73,7 @@ bin/components/wdgtos2.dll
 ;bin/jpeg3250.dll
 ;bin/jsj3250.dll
 bin/jsj.dll
-bin/mozilla.exe
+bin/seamonkey.exe
 bin/mozturbo.exe
 ;bin/mozctl.dll
 ;bin/mozctlx.dll

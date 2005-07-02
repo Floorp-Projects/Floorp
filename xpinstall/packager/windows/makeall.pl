@@ -88,7 +88,7 @@ if(defined($ENV{DEBUG_INSTALLER_BUILD}))
 $gDefaultProductVersion   = StageUtils::GetProductY2KVersion($topobjdir, $topsrcdir, $topsrcdir);
 
 print "\n";
-print " Building Mozilla\n";
+print " Building SeaMonkey\n";
 print "  Raw version id   : $gDefaultProductVersion\n";
 
 # $gDefaultProductVersion has the form maj.min.release.bld where maj, min, release
@@ -162,9 +162,9 @@ copy("$gDirDistInstGre/$seiGreFileNameSpecific", "$gDirStageProduct/gre") ||
 
 $versionLanguage               = "en";
 $ENV{WIZ_nameCompany}          = "mozilla.org";
-$ENV{WIZ_nameProduct}          = "Mozilla";
-$ENV{WIZ_nameProductInternal}  = "Mozilla"; # product name without the version string
-$ENV{WIZ_fileMainExe}          = "Mozilla.exe";
+$ENV{WIZ_nameProduct}          = "SeaMonkey";
+$ENV{WIZ_nameProductInternal}  = "SeaMonkey"; # product name without the version string
+$ENV{WIZ_fileMainExe}          = "SeaMonkey.exe";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
 $ENV{WIZ_fileUninstallZip}     = $seuzFileNameSpecific;
 # The following variables are for displaying version info in the 

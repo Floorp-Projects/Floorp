@@ -59,8 +59,8 @@ bin/libxpcom_compat.so
 bin/components/libxpcom_compat_c.so
 
 [browser]
-bin/mozilla
-bin/mozilla-bin
+bin/seamonkey
+bin/seamonkey-bin
 bin/init.d/README
 bin/init.d/S02solaris_patchchecker.sh
 bin/moz_patch_checker.dtksh
