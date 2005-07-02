@@ -101,7 +101,7 @@ function initCommands()
          ["eval",              cmdEval,                            CMD_CONSOLE],
          ["find",              cmdFind,                                      0],
          ["find-again",        cmdFindAgain,                                 0],
-         ["focus-input",       cmdFocusInput,                      CMD_CONSOLE],
+         ["focus-input",       cmdFocusInput,                                0],
          ["font-family",       cmdFont,                            CMD_CONSOLE],
          ["font-family-other", cmdFont,                                      0],
          ["font-size",         cmdFont,                            CMD_CONSOLE],
@@ -196,7 +196,7 @@ function initCommands()
          ["j",                "join",                              CMD_CONSOLE],
          ["name",             "pref username",                     CMD_CONSOLE],
          ["part",             "leave",                             CMD_CONSOLE],
-         ["raw",              "quote",              CMD_NEED_SRV | CMD_CONSOLE],
+         ["raw",              "quote",                             CMD_CONSOLE],
          // Used to display a nickname in the menu only.
          ["label-user",       "echo",                                        0],
          // These are all the font family/size menu commands...
@@ -222,7 +222,7 @@ function initCommands()
          ["motif-dark",       "motif dark",                                  0],
          ["motif-light",      "motif light",                                 0],
          ["motif-default",    "motif default",                               0],
-         ["sync-output",      "eval syncOutputFrame(this)",        CMD_CONSOLE],
+         ["sync-output",      "eval syncOutputFrame(this)",                  0],
          ["userlist",         "toggle-ui userlist",                CMD_CONSOLE],
          ["tabstrip",         "toggle-ui tabstrip",                CMD_CONSOLE],
          ["statusbar",        "toggle-ui status",                  CMD_CONSOLE],
