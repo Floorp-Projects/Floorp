@@ -56,22 +56,25 @@ push(@INC, "$topsrcdir/xpinstall/packager");
 require StageUtils;
 require "$topsrcdir/config/zipcfunc.pl";
 
+ParseArgv(@ARGV);
+
+$topobjdir                = "$topsrcdir"                     if !defined($topobjdir);
+$inStagePath              = "$topobjdir/stage"               if !defined($inStagePath);
+$inDistPath               = "$topobjdir/dist"                if !defined($inDistPath);
+$inXpiURL                 = "ftp://not.supplied.invalid"     if !defined($inXpiURL);
+$inRedirIniURL            = $inXpiURL                        if !defined($inRedirIniURL);
+$inInstName               = "seamonkey-win32-installer"      if !defined($inInstName);
+$inStubName               = "seamonkey-win32-stub-installer" if !defined($inStubName);
+
 $seiFileNameGeneric       = "nsinstall.exe";
-$seiFileNameSpecific      = "mozilla-win32-installer.exe";
-$seiStubRootName          = "mozilla-win32-stub-installer";
+$seiFileNameSpecific      = "$inInstName.exe";
+$seiStubRootName          = $inStubName;
 $seiFileNameSpecificStub  = "$seiStubRootName.exe";
-$seuFileNameSpecific      = "MozillaUninstall.exe";
-$seuzFileNameSpecific     = "mozillauninstall.zip";
+$seuFileNameSpecific      = "SeaMonkeyUninstall.exe";
+$seuzFileNameSpecific     = "seamonkeyuninstall.zip";
 $seiGreFileNameSpecific   = "gre-win32-installer.exe";
 $seizGreFileNameSpecific  = "gre-win32-installer.zip";
 
-ParseArgv(@ARGV);
-
-$topobjdir                = "$topsrcdir"                 if !defined($topobjdir);
-$inStagePath              = "$topobjdir/stage"           if !defined($inStagePath);
-$inDistPath               = "$topobjdir/dist"            if !defined($inDistPath);
-$inXpiURL                 = "ftp://not.supplied.invalid" if !defined($inXpiURL);
-$inRedirIniURL            = $inXpiURL                    if !defined($inRedirIniURL);
 
 if(defined($ENV{DEBUG_INSTALLER_BUILD}))
 {
@@ -474,6 +477,16 @@ sub PrintUsage
                                        redirec.ini resides.  If not supplied, it
                                        will be assumed to be the same as archive
                                        url.
+
+           -instname <filename base> : the base of the filename to be used for
+                                       the installer, e.g.
+                                       mozilla-1.8b2.en-US.win32.installer
+                                       (.exe will be appended in any case)
+
+           -stubname <filename base> : the base of the filename to be used for
+                                       the stub installer, e.g.
+                                       mozilla-1.8b2.en-US.win32.stub-installer
+                                       (.exe will be appended in any case)
        \n";
 }
 
@@ -530,6 +543,22 @@ sub ParseArgv
       {
         ++$counter;
         $inRedirIniURL = $myArgv[$counter];
+      }
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]instname$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $inInstName = $myArgv[$counter];
+      }
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]stubname$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $inStubName = $myArgv[$counter];
       }
     }
   }
