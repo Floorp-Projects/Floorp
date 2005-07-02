@@ -92,12 +92,6 @@ struct gfxPoint {
     gfxPoint operator-(const gfxSize& s) const {
         return gfxPoint(x - s.width, y - s.height);
     }
-    gfxPoint operator-(const gfxPoint& p) const {
-        return gfxPoint(x - p.x, y - p.y);
-    }
-    gfxPoint operator-(const gfxSize& s) const {
-        return gfxPoint(x - s.width, y - s.height);
-    }
     gfxPoint operator-() const {
         return gfxPoint(- x, - y);
     }
