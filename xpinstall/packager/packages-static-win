@@ -248,6 +248,7 @@ bin\chrome\chromelist.txt
 bin\greprefs\*
 bin\defaults\pref\*
 bin\defaults\autoconfig\*
+bin\res\hiddenWindow.html
 bin\res\ua.css
 bin\res\html.css
 bin\res\quirk.css

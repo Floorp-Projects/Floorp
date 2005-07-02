@@ -319,6 +319,7 @@ bin/chrome/icons/default/main-window.ico
 bin/greprefs/*
 bin/defaults/pref/*
 bin/defaults/autoconfig/*
+bin/res/hiddenWindow.html
 bin/res/ua.css
 bin/res/html.css
 bin/res/quirk.css
