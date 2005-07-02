@@ -45,7 +45,13 @@ printStatus (summary);
 
 for (a = 0; a <= 10000; a++)
 {
-   function(){("");}
+   try
+   {
+     eval('function(){("");}');
+   }
+   catch(e)
+   {
+   }
 }
  
 reportCompare(expect, actual, summary);
