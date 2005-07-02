@@ -61,14 +61,14 @@ Uninstall Filename=$UninstallFile$
 Defaults Info Filename=defaults_info.ini
 
 [Check Instance0]
-Class Name=MozillaMessageWindow
+Class Name=SeaMonkeyMessageWindow
 Window Name=
-Process Name=Mozilla.exe
-Pretty Name=Mozilla
+Process Name=seamonkey.exe
+Pretty Name=SeaMonkey
 ;*** LOCALIZE ME BABY ***
-Message=Mozilla is detected to be currently running.  Please quit Mozilla before continuing.  Click OK to exit Mozilla automatically and proceed with uninstallation.
+Message=SeaMonkey is detected to be currently running.  Please quit SeaMonkey before continuing.  Click OK to exit SeaMonkey automatically and proceed with uninstallation.
 ;*** LOCALIZE ME BABY ***
-Message wait=Shutting down Mozilla.  Please wait...
+Message wait=Shutting down SeaMonkey.  Please wait...
 
 ; This key indicates whether or not to close all the windows associated with
 ; the process id of this app instance window found.
@@ -77,7 +77,7 @@ Close All Process Windows=TRUE
 ; These keys are not normally necessary for checking instances.  They are
 ; set here because Mozilla requires a way to shut down it's turbo mode.
 Extra Cmd0 Reg Key Root=HKEY_LOCAL_MACHINE
-Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\Mozilla.exe
+Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\seamonkey.exe
 Extra Cmd0 Reg Name=
 Extra Cmd0 Parameter=-kill
 

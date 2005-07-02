@@ -56,8 +56,8 @@ bin/libxpcom_compat.so
 bin/components/libxpcom_compat_c.so
 
 [browser]
-bin/mozilla
-bin/mozilla-bin
+bin/seamonkey
+bin/seamonkey-bin
 bin/icons/*
 bin/run-mozilla.sh
 bin/regExport
