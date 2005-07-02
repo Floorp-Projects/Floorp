@@ -512,7 +512,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           // we will be focusing it again later when we receive the NS_ACTIVATE
           // event.  See bug 120209.
 
-          nsIFocusController *focusController = nsnull;
+          // Hold a strong ref to the focus controller, since we need
+          // it after event dispatch.
+          nsCOMPtr<nsIFocusController> focusController;
           PRBool isAlreadySuppressed = PR_FALSE;
 
           if (ourWindow) {
@@ -749,8 +751,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         return NS_ERROR_NULL_POINTER;
       }
 
-      nsIFocusController *focusController = win->GetRootFocusController();
-
+      // Hold a strong ref to the focus controller, since we need
+      // it after event dispatch.
+      nsCOMPtr<nsIFocusController> focusController = win->GetRootFocusController();
       nsCOMPtr<nsIDOMElement> focusedElement;
       nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
 
