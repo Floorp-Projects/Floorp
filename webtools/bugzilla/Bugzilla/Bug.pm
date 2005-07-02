@@ -163,12 +163,16 @@ sub initBug  {
       reporter_accessible, cclist_accessible,
       estimated_time, remaining_time, " .
       $dbh->sql_date_format('deadline', '%Y-%m-%d') . "
-    FROM bugs LEFT JOIN votes using(bug_id),
-      classifications, products, components
-    WHERE bugs.bug_id = ?
-      AND classifications.id = products.classification_id
-      AND products.id = bugs.product_id
-      AND components.id = bugs.component_id " .
+    FROM bugs
+       LEFT JOIN votes
+           USING (bug_id)
+      INNER JOIN components
+              ON components.id = bugs.component_id
+      INNER JOIN products
+              ON products.id = bugs.product_id
+      INNER JOIN classifications
+              ON classifications.id = products.classification_id
+      WHERE bugs.bug_id = ? " .
     $dbh->sql_group_by('bugs.bug_id', 'alias, products.classification_id,
       classifications.name, bugs.product_id, products.name, version,
       rep_platform, op_sys, bug_status, resolution, priority,

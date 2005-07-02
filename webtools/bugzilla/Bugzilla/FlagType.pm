@@ -101,9 +101,9 @@ my @base_columns =
 Which database(s) is the data coming from?
 
 Note: when adding tables to @base_tables, make sure to include the separator 
-(i.e. a comma or words like C<LEFT OUTER JOIN>) before the table name, 
-since tables take multiple separators based on the join type, and therefore 
-it is not possible to join them later using a single known separator.
+(i.e. words like "LEFT OUTER JOIN") before the table name, since tables take
+multiple separators based on the join type, and therefore it is not possible
+to join them later using a single known separator.
 B<Used by get, match, sqlify_criteria and perlify_record>
 
 =back

@@ -112,9 +112,9 @@ my @base_columns =
 Which database(s) is the data coming from?
 
 Note: when adding tables to @base_tables, make sure to include the separator 
-(i.e. a comma or words like "LEFT OUTER JOIN") before the table name, 
-since tables take multiple separators based on the join type, and therefore 
-it is not possible to join them later using a single known separator.
+(i.e. words like "LEFT OUTER JOIN") before the table name, since tables take
+multiple separators based on the join type, and therefore it is not possible
+to join them later using a single known separator.
 B<Used by get, match, sqlify_criteria and perlify_record>
 
 =back
@@ -400,14 +400,16 @@ sub process {
     # no longer valid.
     my $flag_ids = $dbh->selectcol_arrayref(
         "SELECT flags.id 
-        FROM (flags INNER JOIN bugs ON flags.bug_id = bugs.bug_id)
-          LEFT OUTER JOIN flaginclusions i
-            ON (flags.type_id = i.type_id 
+           FROM flags
+     INNER JOIN bugs
+             ON flags.bug_id = bugs.bug_id
+      LEFT JOIN flaginclusions AS i
+             ON flags.type_id = i.type_id 
             AND (bugs.product_id = i.product_id OR i.product_id IS NULL)
-            AND (bugs.component_id = i.component_id OR i.component_id IS NULL))
-        WHERE bugs.bug_id = ?
-        AND flags.is_active = 1
-        AND i.type_id IS NULL",
+            AND (bugs.component_id = i.component_id OR i.component_id IS NULL)
+          WHERE bugs.bug_id = ?
+            AND flags.is_active = 1
+            AND i.type_id IS NULL",
         undef, $bug_id);
 
     foreach my $flag_id (@$flag_ids) { clear($flag_id) }
