@@ -2747,13 +2747,15 @@ NS_IMETHODIMP nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
   return err;
 }
 
-class nsMsgDBThreadEnumerator : public nsISimpleEnumerator
+class nsMsgDBThreadEnumerator : public nsISimpleEnumerator, public nsIDBChangeListener
 {
 public:
     NS_DECL_ISUPPORTS
 
     // nsISimpleEnumerator methods:
     NS_DECL_NSISIMPLEENUMERATOR
+
+    NS_DECL_NSIDBCHANGELISTENER
 
     // nsMsgDBEnumerator methods:
     typedef nsresult (*nsMsgDBThreadEnumeratorFilter)(nsIMsgThread* thread);
@@ -2778,17 +2780,63 @@ nsMsgDBThreadEnumerator::nsMsgDBThreadEnumerator(nsMsgDatabase* db,
       mFilter(filter)
 {
     NS_ADDREF(mDB);
+    mDB->AddListener(this);
     mNextPrefetched = PR_FALSE;
 }
 
 nsMsgDBThreadEnumerator::~nsMsgDBThreadEnumerator()
 {
   mTableCursor->Release();
-	NS_IF_RELEASE(mResultThread);
-    NS_RELEASE(mDB);
+  NS_IF_RELEASE(mResultThread);
+  NS_IF_RELEASE(mDB);
 }
 
-NS_IMPL_ISUPPORTS1(nsMsgDBThreadEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS2(nsMsgDBThreadEnumerator, nsISimpleEnumerator, nsIDBChangeListener)
+
+
+/* void onHdrChange (in nsIMsgDBHdr aHdrChanged, in unsigned long aOldFlags, in unsigned long aNewFlags, in nsIDBChangeListener aInstigator); */
+NS_IMETHODIMP nsMsgDBThreadEnumerator::OnHdrChange(nsIMsgDBHdr *aHdrChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, nsIDBChangeListener *aInstigator)
+{
+    return NS_OK;
+}
+
+/* void onHdrDeleted (in nsIMsgDBHdr aHdrChanged, in nsMsgKey aParentKey, in long aFlags, in nsIDBChangeListener aInstigator); */
+NS_IMETHODIMP nsMsgDBThreadEnumerator::OnHdrDeleted(nsIMsgDBHdr *aHdrChanged, nsMsgKey aParentKey, PRInt32 aFlags, nsIDBChangeListener *aInstigator)
+{
+    return NS_OK;
+}
+
+/* void onHdrAdded (in nsIMsgDBHdr aHdrChanged, in nsMsgKey aParentKey, in long aFlags, in nsIDBChangeListener aInstigator); */
+NS_IMETHODIMP nsMsgDBThreadEnumerator::OnHdrAdded(nsIMsgDBHdr *aHdrChanged, nsMsgKey aParentKey, PRInt32 aFlags, nsIDBChangeListener *aInstigator)
+{
+    return NS_OK;
+}
+
+/* void onParentChanged (in nsMsgKey aKeyChanged, in nsMsgKey oldParent, in nsMsgKey newParent, in nsIDBChangeListener aInstigator); */
+NS_IMETHODIMP nsMsgDBThreadEnumerator::OnParentChanged(nsMsgKey aKeyChanged, nsMsgKey oldParent, nsMsgKey newParent, nsIDBChangeListener *aInstigator)
+{
+    return NS_OK;
+}
+
+/* void onAnnouncerGoingAway (in nsIDBChangeAnnouncer instigator); */
+NS_IMETHODIMP nsMsgDBThreadEnumerator::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator)
+{
+  mDB->RemoveListener(this);
+  mDB = nsnull;
+  return NS_OK;
+}
+
+/* void onReadChanged (in nsIDBChangeListener aInstigator); */
+NS_IMETHODIMP nsMsgDBThreadEnumerator::OnReadChanged(nsIDBChangeListener *aInstigator)
+{
+    return NS_OK;
+}
+
+/* void onJunkScoreChanged (in nsIDBChangeListener aInstigator); */
+NS_IMETHODIMP nsMsgDBThreadEnumerator::OnJunkScoreChanged(nsIDBChangeListener *aInstigator)
+{
+    return NS_OK;
+}
 
 nsresult nsMsgDBThreadEnumerator::GetTableCursor(void)
 {
@@ -2830,7 +2878,10 @@ nsresult nsMsgDBThreadEnumerator::PrefetchNext()
 {
   nsresult rv;
   nsIMdbTable *table = nsnull;
-  
+
+  if (!mDB)
+    return NS_ERROR_NULL_POINTER;
+
   if (!mTableCursor)
   {
     rv = GetTableCursor();

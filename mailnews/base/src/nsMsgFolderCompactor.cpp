@@ -117,10 +117,10 @@ void nsFolderCompactState::CleanupTempFilesAfterError()
 
 nsresult nsFolderCompactState::BuildMessageURI(const char *baseURI, PRUint32 key, nsCString& uri)
 {
-	uri.Append(baseURI);
-	uri.Append('#');
-	uri.AppendInt(key);
-	return NS_OK;
+  uri.Append(baseURI);
+  uri.Append('#');
+  uri.AppendInt(key);
+  return NS_OK;
 }
 
 
@@ -411,26 +411,49 @@ nsFolderCompactState::FinishCompact()
   // close down database of the original folder and remove the folder node
   // and all it's message node from the tree
   m_folder->ForceDBClosed();
+
+  PRBool folderRenameSucceeded = PR_FALSE;
+  PRBool msfRenameSucceeded = PR_FALSE;
     // remove the old folder and database
   fileSpec.Delete(PR_FALSE);
-  summarySpec.Delete(PR_FALSE);
-    // rename the copied folder and database to be the original folder and
-    // database 
-  m_fileSpec.Rename(leafName.get());
-  newSummarySpec.Rename(dbName.get());
- 
+  if (!fileSpec.Exists())
+  {
+    summarySpec.Delete(PR_FALSE);
+    if (!summarySpec.Exists())
+    {
+      // rename the copied folder and database to be the original folder and
+      // database 
+      rv = m_fileSpec.Rename(leafName.get());
+      NS_ASSERTION(NS_SUCCEEDED(rv), "error renaming compacted folder");
+      if (NS_SUCCEEDED(rv))
+      {
+        folderRenameSucceeded = PR_TRUE;
+        rv = newSummarySpec.Rename(dbName.get());
+        NS_ASSERTION(NS_SUCCEEDED(rv), "error renaming compacted folder's db");
+        msfRenameSucceeded = NS_SUCCEEDED(rv);
+      }
+    }
+  }
+  NS_ASSERTION(msfRenameSucceeded && folderRenameSucceeded, "rename failed in compact");
+  if (!folderRenameSucceeded)
+    m_fileSpec.Delete(PR_FALSE);
+  if (!msfRenameSucceeded)
+    newSummarySpec.Delete(PR_FALSE);
   rv = ReleaseFolderLock();
   NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
-  m_folder->SetDBTransferInfo(transferInfo);
+  if (msfRenameSucceeded && folderRenameSucceeded)
+  {
+    m_folder->SetDBTransferInfo(transferInfo);
 
-  nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+    nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
 
-  m_folder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(m_db));
+    m_folder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(m_db));
 
-  // since we're transferring info from the old db, we need to reset the expunged bytes,
-  // and set the summary valid again.
-  if(dbFolderInfo)
-    dbFolderInfo->SetExpungedBytes(0);
+    // since we're transferring info from the old db, we need to reset the expunged bytes,
+    // and set the summary valid again.
+    if(dbFolderInfo)
+      dbFolderInfo->SetExpungedBytes(0);
+  }
   if (m_db)
     m_db->Close(PR_TRUE);
   m_db = nsnull;
