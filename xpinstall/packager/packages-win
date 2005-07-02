@@ -234,6 +234,7 @@ bin\chrome\icons\default\xul-file.ico
 ; to prevent migration bugs
 bin\defaults\pref\*
 bin\defaults\autoconfig\*
+bin\res\hiddenWindow.html
 bin\res\EditorOverride.css
 bin\res\grabber.gif
 bin\res\table-add-column-after-active.gif

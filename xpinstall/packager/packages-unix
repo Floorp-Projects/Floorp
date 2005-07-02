@@ -323,6 +323,7 @@ bin/defaults/wallet/DistinguishedSchema.tbl
 bin/defaults/wallet/SchemaStrings.tbl
 bin/defaults/wallet/PositionalSchema.tbl
 bin/defaults/wallet/StateSchema.tbl
+bin/res/hiddenWindow.html
 bin/res/arrow.gif
 bin/res/loading-image.gif
 bin/res/broken-image.gif
