@@ -322,6 +322,7 @@ bin\components\lwbrk.xpt
 bin\components\nsCloseAllWindows.js
 bin\components\winhooks.xpt
 
+bin\res\hiddenWindow.html
 bin\res\ua.css
 bin\res\html.css
 bin\res\quirk.css
