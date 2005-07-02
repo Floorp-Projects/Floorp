@@ -160,7 +160,7 @@ function InitDialogWithVirtualFolder(aVirtualFolderURI)
 
   // update the window title based on the name of the saved search
   var messengerBundle = document.getElementById("bundle_messenger");
-  document.getElementById('virtualFolderPropertiesDialog').setAttribute('title',messengerBundle.getFormattedString('editVirtualFolderPropertiesTitle', [msgFolder.prettyName]));
+  document.title = messengerBundle.getFormattedString('editVirtualFolderPropertiesTitle', [msgFolder.prettyName]);
 }
 
 function onOK()
