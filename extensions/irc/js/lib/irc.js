@@ -3018,7 +3018,7 @@ function usr_ctcp (code, msg, type)
 CIRCUser.prototype.whois =
 function usr_whois ()
 {
-    this.parent.whois(this.encodedName);
+    this.parent.whois(this.unicodeName);
 }
 
 /*
