@@ -6175,9 +6175,13 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             if (mOSHE) {
                 /* save current position of scroller(s) (bug 59774) */
                 mOSHE->SetScrollPosition(cx, cy);
-                // Get the postdata and page ident from the current page,
-                // if the new load is being done via normal means.
-                if (aLoadType == LOAD_NORMAL || aLoadType == LOAD_LINK) {
+                // Get the postdata and page ident from the current page, if
+                // the new load is being done via normal means.  Note that
+                // "normal means" can be checked for just by checking for
+                // LOAD_CMD_NORMAL, given the loadType and allowScroll check
+                // above -- it filters out some LOAD_CMD_NORMAL cases that we
+                // wouldn't want here.
+                if (aLoadType & LOAD_CMD_NORMAL) {
                     mOSHE->GetPostData(getter_AddRefs(postData));
                     mOSHE->GetPageIdentifier(&pageIdent);
                 }
