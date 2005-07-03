@@ -110,7 +110,7 @@ calICSCalendar.prototype = {
     mUri: null,
     get uri() { return this.mUri },
     set uri(aUri) {
-        this.mMemoryCalendar.uri = aUri;
+        this.mMemoryCalendar.uri = this.mUri;
         // Lock other changes to the item list.
         this.locked = true;
         // set to prevent writing after loading, without any changes
@@ -121,7 +121,7 @@ calICSCalendar.prototype = {
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                   .getService(Components.interfaces.nsIIOService);
 
-        var channel = ioService.newChannelFromURI(this.mUri);
+        var channel = ioService.newChannelFromURI(fixupUri(this.mUri));
         channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
         channel.notificationCallbacks = this;
 
@@ -229,7 +229,7 @@ calICSCalendar.prototype = {
 
                 var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                           .getService(Components.interfaces.nsIIOService);
-                var channel = ioService.newChannelFromURI(savedthis.mUri);
+                var channel = ioService.newChannelFromURI(fixupUri(savedthis.mUri));
                 channel.notificationCallbacks = savedthis;
                 var uploadChannel = channel.QueryInterface(Components.interfaces.nsIUploadChannel);
                 var postStream = Components.classes["@mozilla.org/io/string-input-stream;1"]
@@ -371,6 +371,15 @@ calICSCalendar.prototype = {
         return null;
     }
 };
+
+function fixupUri(aUri) {
+    var uri = aUri;
+    if (uri.scheme == 'webcal')
+        uri.scheme = 'http';
+    if (uri.scheme == 'webcals')
+        uri.scheme = 'https';
+    return uri;
+}
 
 function calICSObserver(aCalendar) {
     this.mCalendar = aCalendar;

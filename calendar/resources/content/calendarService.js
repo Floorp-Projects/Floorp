@@ -161,51 +161,43 @@ function (iid) {
 }
 
 ICALContentHandler.prototype.handleContent =
-function (aContentType, param2, param3, param4)
+function(aContentType, aWindowTarget, aRequest)
 {
-
-    var aWindowTarget, aRequest;
-    if (param4 === undefined)
-    {// Moz1.8+ uses 3 params: (aContentType, aWindowTarget, aRequest)
-        aWindowTarget = param2;
-        aRequest      = param3;
-    }
-    else
-    {// Moz1.7- uses 4 params: (aContentType, aCommand, aWindowTarget, aRequest)
-        aWindowTarget = param3;
-        aRequest      = param4;
-    }
-
-    var e;
     var channel = aRequest.QueryInterface(nsIChannel);
 
-    /*
-    dump ("ICALContentHandler.handleContent (" + aContentType + ", " +
-           aWindowTarget + ", " + channel.URI.spec + ")\n");
-    */
+    // Cancel the request ...
+    var uri = channel.URI;
+    const NS_BINDING_ABORTED = 0x804b0002 // from nsNetError.h
+    aRequest.cancel(NS_BINDING_ABORTED);
 
-    var windowManager =
-        Components.classes[MEDIATOR_CONTRACTID].getService(nsIWindowMediator);
+    // ... Subscribe to the uri ...
+    var calendarManager = Components.classes["@mozilla.org/calendar/manager;1"]
+                                    .getService(Components.interfaces.calICalendarManager);
+
+    var newCalendar = calendarManager.createCalendar('ics', uri);
+    calendarManager.registerCalendar(newCalendar);
+
+    // XXX Come up with a better name, like the filename or X-WR-CALNAME
+    // XXX Also, make up a color
+    newCalendar.name = "temp";
+
+    // ... and open or focus a calendar window.
+    var windowManager = Components.classes[MEDIATOR_CONTRACTID]
+                                  .getService(nsIWindowMediator);
 
     var w = windowManager.getMostRecentWindow("calendarMainWindow");
 
-    if (w)
-    {
+    if (w) {
         w.focus();
-
-        w.gCalendarWindow.calendarManager.checkCalendarURL( channel );
-    }
-    else
-    {
-        var ass =
-            Components.classes[ASS_CONTRACTID].getService(nsIAppShellService);
+    } else {
+        var ass = Components.classes[ASS_CONTRACTID]
+                            .getService(nsIAppShellService);
         w = ass.hiddenDOMWindow;
 
         var args = new Object ();
         args.channel = channel;
         w.openDialog("chrome://calendar/content/calendar.xul", "calendar", "chrome,menubar,resizable,scrollbars,status,toolbar,dialog=no", args);
     }
-
 }
 
 /* content handler factory object (ICALContentHandler) */
