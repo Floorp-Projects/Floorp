@@ -933,12 +933,12 @@ public class Interpreter
                     addIndexOp(type, argCount);
                 }
                 // adjust stack
-                if (type == Token.NEW || type == Token.REF_CALL) {
+                if (type == Token.NEW) {
                     // new: f, args -> result
-                    // ref_call: f, thisObj, args -> ref ref_target
                     stackChange(-argCount);
                 } else {
-                    // f, thisObj, args -> result
+                    // call: f, thisObj, args -> result
+                    // ref_call: f, thisObj, args -> ref
                     stackChange(-1 - argCount);
                 }
                 if (argCount > itsData.itsMaxCalleeArgs) {

@@ -2016,8 +2016,8 @@ public class ScriptRuntime {
      * can be GC-reachable after this method returns. If this is necessary,
      * store args.clone(), not args array itself.
      */
-    public static Object callRef(Function function, Scriptable thisObj,
-                                 Object[] args, Context cx, Scriptable scope)
+    public static Ref callRef(Function function, Scriptable thisObj,
+                              Object[] args, Context cx, Scriptable scope)
     {
         if (function instanceof BaseFunction) {
             BaseFunction bf = (BaseFunction)function;

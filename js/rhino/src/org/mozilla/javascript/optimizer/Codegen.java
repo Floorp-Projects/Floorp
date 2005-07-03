@@ -1780,7 +1780,7 @@ class BodyCodegen
                     +"[Ljava/lang/Object;"
                     +"Lorg/mozilla/javascript/Context;"
                     +"Lorg/mozilla/javascript/Scriptable;"
-                    +")Ljava/lang/Object;");
+                    +")Lorg/mozilla/javascript/Ref;");
                 break;
 
               case Token.NUMBER:
