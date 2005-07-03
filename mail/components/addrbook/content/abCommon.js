@@ -23,6 +23,7 @@
 #
 # Contributor(s):
 #   Seth Spitzer <sspitzer@netscape.com>
+#   Mark Banner <mark@standard8.demon.co.uk>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -660,8 +661,10 @@ function DirPaneSelectionChange()
 {
   // clear out the search box when changing folders...
   onClearSearch();
-  if (dirTree && dirTree.view.selection && dirTree.view.selection.count == 1)
+  if (dirTree && dirTree.view.selection && dirTree.view.selection.count == 1) {
+    gPreviousDirTreeIndex = dirTree.currentIndex;
     ChangeDirectoryByURI(GetSelectedDirectory());
+  }
 }
 
 function GetAbResultsBoxObject()

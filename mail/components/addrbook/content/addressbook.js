@@ -23,6 +23,7 @@
 #
 # Contributor(s):
 #   Seth Spitzer <sspitzer@netscape.com>
+#   Mark Banner <mark@standard8.demon.co.uk>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,6 +51,7 @@ var gDirTree;
 var gSearchBox;
 var gCardViewBox;
 var gCardViewBoxEmail1;
+var gPreviousDirTreeIndex = -1;
 
 // Constants that correspond to choices
 // in Address Book->View -->Show Name as
@@ -59,6 +61,9 @@ const kFirstNameFirst = 2;
 const kLDAPDirectory = 0; // defined in nsDirPrefs.h
 const kPABDirectory  = 2; // defined in nsDirPrefs.h
 
+// Note: We need to keep this listener as it does not just handle dir
+// pane deletes but also deletes of address books and lists from places like
+// the sidebar and LDAP preference pane.
 var gAddressBookAbListener = {
   onItemAdded: function(parentDir, item) {
     // will not be called
@@ -66,12 +71,42 @@ var gAddressBookAbListener = {
   onItemRemoved: function(parentDir, item) {
     // will only be called when an addressbook is deleted
     try {
-      var directory = item.QueryInterface(Components.interfaces.nsIAbDirectory);
-      // check if the item being removed is the directory
-      // that we are showing in the addressbook
-      // if so, select the personal addressbook (it can't be removed)
-      if (directory && directory == GetAbView().directory) {
+      // If we don't have a record of the previous selection, the only
+      // option is to select the first.
+      if (gPreviousDirTreeIndex == -1) {
         SelectFirstAddressBook();
+      }
+      else {
+        // Don't reselect if we already have a valid selection, this may be
+        // the case if items are being removed via other methods, e.g. sidebar,
+        // LDAP preference pane etc.
+        if (dirTree.currentIndex == -1) {
+          var directory = item.QueryInterface(Components.interfaces.nsIAbDirectory);
+
+          // If we are a mail list, move the selection up the list before
+          // trying to find the parent. This way we'll end up selecting the
+          // parent address book when we remove a mailing list.
+          //
+          // For simple address books we don't need to move up the list, as
+          // we want to select the next one upon removal.
+          if (directory.isMailList && gPreviousDirTreeIndex > 0)
+            --gPreviousDirTreeIndex;
+
+          // Now get the parent of the row.
+          var newRow = dirTree.view.getParentIndex(gPreviousDirTreeIndex);
+
+          // if we have no parent (i.e. we are an address book), use the
+          // previous index.
+          if (newRow == -1)
+            newRow = gPreviousDirTreeIndex;
+
+          // Fall back to the first adddress book if we're not in a valid range
+          if (newRow >= dirTree.view.rowCount)
+            newRow = 0;
+
+          // Now select the new item.
+          dirTree.view.selection.select(newRow);
+        }
       }
     }
     catch (ex) {
@@ -174,8 +209,13 @@ function delayedOnLoadAddressBook()
   // add a listener, so we can switch directories if
   // the current directory is deleted
   var addrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
-  // this listener only cares when a directory is removed
-  addrbookSession.addAddressBookListener(gAddressBookAbListener, Components.interfaces.nsIAbListener.directoryRemoved);
+  // this listener cares when a directory (= address book), or a directory item
+  // is/are removed. In the case of directory items, we are only really
+  // interested in mailing list changes and not cards but we have to have both.
+  addrbookSession.addAddressBookListener(
+    gAddressBookAbListener,
+    Components.interfaces.nsIAbListener.directoryRemoved |
+    Components.interfaces.nsIAbListener.directoryItemRemoved);
 
   var dirTree = GetDirTree();
   dirTree.addEventListener("click",DirPaneClick,true);
@@ -576,7 +616,6 @@ function AbDeleteDirectory()
   resourceArray.AppendElement(selectedABResource);
 
   top.addressbook.deleteAddressBooks(dirTree.database, parentArray, resourceArray);
-  SelectFirstAddressBook();
 }
 
 function SetStatusText(total)
