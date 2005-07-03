@@ -602,6 +602,9 @@ nsIRenderingContext* nsBaseWidget::GetRenderingContext()
   nsresult                      rv;
   nsCOMPtr<nsIRenderingContext> renderingCtx;
 
+  if (mOnDestroyCalled)
+    return nsnull;
+
   rv = mContext->CreateRenderingContextInstance(*getter_AddRefs(renderingCtx));
   if (NS_SUCCEEDED(rv)) {
     rv = renderingCtx->Init(mContext, this);

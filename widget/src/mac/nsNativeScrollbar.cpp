@@ -119,6 +119,22 @@ nsNativeScrollbar::~nsNativeScrollbar()
 
 
 //
+// Destroy
+//
+// Now you're gone, gone, gone, whoa-oh...
+//
+NS_IMETHODIMP
+nsNativeScrollbar::Destroy()
+{
+  if (mMouseDownInScroll)
+  {
+    PostEvent(mouseUp, 0);
+  }
+  return nsMacControl::Destroy();
+}
+
+
+//
 // ScrollActionProc
 //
 // Called from the OS toolbox while the scrollbar is being tracked.
@@ -146,6 +162,19 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
   PRUint32 oldPos, newPos;
   PRUint32 incr;
   PRUint32 visibleImageSize;
+
+  if (mOnDestroyCalled)
+    return;
+
+  nsCOMPtr<nsIWidget> parent ( dont_AddRef(GetParent()) );
+  if (!parent)
+  {
+    // parent disappeared while scrolling was in progress.  Handling Destroy
+    // should have prevented this.  Bail out.
+    NS_ASSERTION(parent, "no parent in DoScrollAction");
+    return;
+  }
+
   GetPosition(&oldPos);
   GetLineIncrement(&incr);
   GetViewSize(&visibleImageSize);
@@ -228,7 +257,6 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
   // we may be in a tight loop, we need to manually validate the area
   // we just updated so the update rect doesn't continue to get bigger
   // and bigger the more we scroll.
-  nsCOMPtr<nsIWidget> parent ( dont_AddRef(GetParent()) );
   parent->Update();
   parent->Validate();
 
@@ -288,6 +316,7 @@ nsNativeScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
   {
     case NS_MOUSE_LEFT_DOUBLECLICK:
     case NS_MOUSE_LEFT_BUTTON_DOWN:
+      mMouseDownInScroll = PR_TRUE;
       NS_ASSERTION(this != 0, "NULL nsNativeScrollbar2");
       ::SetControlReference(mControl, (UInt32) this);
       StartDraw();
@@ -328,6 +357,7 @@ nsNativeScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 
 
     case NS_MOUSE_LEFT_BUTTON_UP:
+      mMouseDownInScroll = PR_FALSE;
       mClickedPartCode = 0;
       break;
 

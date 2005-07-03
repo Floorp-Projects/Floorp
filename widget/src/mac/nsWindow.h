@@ -267,7 +267,6 @@ protected:
   RgnHandle         mVisRegion;
   WindowPtr         mWindowPtr;
 
-  PRPackedBool      mDestroyCalled;
   PRPackedBool      mDestructorCalled;
 
   PRPackedBool      mAcceptFocusOnClick;

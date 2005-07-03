@@ -272,7 +272,6 @@ nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this), nsIKBStateContro
   mVisRegion = nsnull;
   mWindowPtr = nsnull;
   mDrawing = PR_FALSE;
-  mDestroyCalled = PR_FALSE;
   mDestructorCalled = PR_FALSE;
 
   SetBackgroundColor(NS_RGB(255, 255, 255));
@@ -418,9 +417,9 @@ NS_IMETHODIMP nsWindow::Create(nsNativeWidget aNativeParent,		// this is a nsWin
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Destroy()
 {
-	if (mDestroyCalled)
+	if (mOnDestroyCalled)
 		return NS_OK;
-	mDestroyCalled = PR_TRUE;
+	mOnDestroyCalled = PR_TRUE;
 
 	nsBaseWidget::OnDestroy();
 	nsBaseWidget::Destroy();
@@ -1112,7 +1111,7 @@ inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
 //-------------------------------------------------------------------------
 void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 {
-	if (mDrawing)
+	if (mDrawing || mOnDestroyCalled)
 		return;
 	mDrawing = PR_TRUE;
 
@@ -1167,7 +1166,7 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 //-------------------------------------------------------------------------
 void nsWindow::EndDraw()
 {
-	if (! mDrawing)
+	if (! mDrawing || mOnDestroyCalled)
 		return;
 	mDrawing = PR_FALSE;
 
