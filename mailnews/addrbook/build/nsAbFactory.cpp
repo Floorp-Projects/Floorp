@@ -75,6 +75,7 @@
 #include "nsAbDirectoryQueryProxy.h"
 #include "nsAbView.h"
 #include "nsMsgVCardService.h"
+#include "nsAbLDIFService.h"
 
 #if defined(MOZ_LDAP_XPCOM)
 #include "nsAbLDAPDirectory.h"
@@ -130,6 +131,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPProcessChangeLogData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgVCardService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDIFService)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -328,8 +330,12 @@ static const nsModuleComponentInfo components[] =
   { "vcard helper service",
     NS_MSGVCARDSERVICE_CID,
     NS_MSGVCARDSERVICE_CONTRACTID,
-    nsMsgVCardServiceConstructor }
+    nsMsgVCardServiceConstructor },
 
+  { "ldif handler service",
+    NS_ABLDIFSERVICE_CID,
+    NS_ABLDIFSERVICE_CONTRACTID,
+    nsAbLDIFServiceConstructor }
 };
 
 

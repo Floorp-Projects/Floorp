@@ -106,6 +106,7 @@ CPPSRCS		= \
                 nsVCard.cpp \
                 nsVCardObj.cpp \
                 nsMsgVCardService.cpp \
+                nsAbLDIFService.cpp \
 		$(NULL)
 
 EXPORTS		= \

@@ -45,14 +45,39 @@ interface nsIFileSpec;
 interface nsIAbDirectory;
 interface nsIAbCard;
 
-[scriptable, uuid(53ab7004-8740-42d6-858a-802acee5ed68)]
+[scriptable, uuid(a5996dae-92a0-4caf-8e3e-3cfa5ed5b555)]
 interface nsIAddressBook : nsISupports 
 {
   void newAddressBook(in nsIAbDirectoryProperties aProperties);
   void modifyAddressBook(in nsIRDFDataSource aDS, in nsIAbDirectory aParentDir, in nsIAbDirectory aDirectory, in nsIAbDirectoryProperties aProperties);
   void deleteAddressBooks(in nsIRDFDataSource aDS, in nsISupportsArray aParentDir, in nsISupportsArray aResourceArray);
   void exportAddressBook(in nsIDOMWindow aParentWin, in nsIAbDirectory aDirectory);
-  void convertLDIFtoMAB(in nsIFileSpec fileSpec, in boolean migrating, in nsIAddrDatabase db, in boolean bStoreLocAsHome, in boolean bImportingComm4x);
+  /**
+   * Migrates a 4x ldif address book to our format.
+   *
+   * @param       aFileSpec       The source file to import
+   *    
+   * @param       aMigrating      If PR_TRUE then the preferences are not
+   *                              created for the address book. If PR_FALSE,
+   *                              then the preferences will be created for the
+   *                              address book.
+   *    
+   * @param       aStoreLocAsHome If PR_TRUE then the location will be stored
+   *                              as the home address, otherwise it will be
+   *                              stored as the company address.
+   *    
+   */
+  void migrate4xAb(in nsIFileSpec aFileSpec, in boolean aMigrating, in boolean aStoreLocAsHome);
+
+  /**
+   * Converts a Netscape NA2 file to an LDIF file. Will only work on Commercial
+   * builds.
+   *
+   * @param       srcFileSpec     The source file to convert
+   *
+   * @param       dstFileSpec     The destination file for the conversion
+   *
+   */
   void convertNA2toLDIF(in nsIFileSpec srcFileSpec, in nsIFileSpec dstFileSpec);
   nsIAddrDatabase getAbDatabaseFromURI(in string URI);
   boolean mailListNameExists(in wstring name);

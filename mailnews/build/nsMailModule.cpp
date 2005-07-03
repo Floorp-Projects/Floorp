@@ -146,6 +146,7 @@
 #include "nsAbDirectoryQueryProxy.h"
 #include "nsAbView.h"
 #include "nsMsgVCardService.h"
+#include "nsAbLDIFService.h"
 
 #if defined(MOZ_LDAP_XPCOM)
 #include "nsAbLDAPDirectory.h"
@@ -385,6 +386,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPProcessChangeLogData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgVCardService) 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDIFService)
 
 ////////////////////////////////////////////////////////////////////////////////
 // bayesian spam filter factories
@@ -926,6 +928,7 @@ static const nsModuleComponentInfo gComponents[] = {
       NS_ABDIRECTORYQUERYPROXY_CONTRACTID, nsAbDirectoryQueryProxyConstructor},
     { "addressbook view", NS_ABVIEW_CID, NS_ABVIEW_CONTRACTID, nsAbViewConstructor},
     { "vcard helper service", NS_MSGVCARDSERVICE_CID, NS_MSGVCARDSERVICE_CONTRACTID, nsMsgVCardServiceConstructor },
+    { "ldif handler service", NS_ABLDIFSERVICE_CID, NS_ABLDIFSERVICE_CONTRACTID, nsAbLDIFServiceConstructor },
 
     ////////////////////////////////////////////////////////////////////////////////
     // bayesian spam filter components

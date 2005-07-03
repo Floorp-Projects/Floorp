@@ -63,6 +63,8 @@
 #include "nsIImportFieldMap.h"
 #include "nsIOutputStream.h"
 #include "nsIAddrDatabase.h"
+#include "nsIAbLDIFService.h"
+#include "nsAbBaseCID.h"
 #include "nsTextFormatter.h"
 #include "nsTextStringBundle.h"
 #include "nsIStringBundle.h"
@@ -517,7 +519,16 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
 	
     nsresult rv = NS_OK;
 	PRBool	isLDIF = PR_FALSE;
-	rv = nsTextAddress::IsLDIFFile( inFile, &isLDIF);
+
+    nsCOMPtr<nsIAbLDIFService> ldifService = do_GetService(NS_ABLDIFSERVICE_CONTRACTID, &rv);
+
+    if (NS_SUCCEEDED(rv)) {
+      rv = ldifService->IsLDIFFile(inFile, &isLDIF);
+      if (NS_FAILED(rv)) {
+        IMPORT_LOG0( "*** Error reading address file\n");
+      }
+    }
+
 	if (NS_FAILED( rv)) {
 		inFile->Release();
 		ReportError( TEXTIMPORT_ADDRESS_CONVERTERROR, name, &error);
@@ -526,11 +537,10 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
 	}
 	
     if (isLDIF) {
-		// This get's tricky, the database really requires the thing
-		// to have an .ldi extension so if it doesn't we may need to
-		// copy the file to a temp file with the correct name, then
-		// import it!
-		rv = m_text.ImportLDIF( &addrAbort, name.get(), inFile, pDestination, error, &m_bytesImported);
+        if (ldifService)
+          rv = ldifService->ImportLDIFFile(pDestination, inFile, PR_FALSE, &m_bytesImported);
+        else
+          return NS_ERROR_FAILURE;
 	}
 	else {	
 		rv = m_text.ImportAddresses( &addrAbort, name.get(), inFile, pDestination, fieldMap, error, &m_bytesImported);
@@ -579,7 +589,11 @@ NS_IMETHODIMP ImportAddressImpl::GetNeedsFieldMap(nsIFileSpec *location, PRBool 
 		return( NS_ERROR_FAILURE);
 
 	PRBool	isLDIF = PR_FALSE;
-	rv = nsTextAddress::IsLDIFFile( location, &isLDIF);
+    nsCOMPtr<nsIAbLDIFService> ldifService = do_GetService(NS_ABLDIFSERVICE_CONTRACTID, &rv);
+
+    if (NS_SUCCEEDED(rv))
+      rv = ldifService->IsLDIFFile(location, &isLDIF);
+
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG0( "*** Error determining if file is of type LDIF\n");
 		return( rv);
