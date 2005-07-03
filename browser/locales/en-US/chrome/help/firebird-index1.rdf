@@ -222,7 +222,7 @@
     <rdf:Description about="#h">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="help-viewer" nc:name="Help Viewer" nc:link="welcome.xhtml"/></rdf:li>
+                <rdf:li><rdf:Description ID="help-window" nc:name="Help Window" nc:link="chrome://help/locale/welcome.xhtml"/></rdf:li>
                 <rdf:li><rdf:Description ID="helper-apps" nc:name="Helper Applications" nc:link="using_firebird.xhtml#managing_different_file_types"/></rdf:li>
                 <rdf:li><rdf:Description ID="history" nc:name="History" nc:link="using_firebird.xhtml#moving_to_another_page"/></rdf:li>
                 <rdf:li><rdf:Description ID="home-page" nc:name="Home Page" nc:link="using_firebird.xhtml#viewing_your_home_page"/></rdf:li>
@@ -231,12 +231,12 @@
         </nc:subheadings>
     </rdf:Description>
 
-    <rdf:Description about="#help-viewer">
+    <rdf:Description about="#help-window">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="help-viewer:how-to-use" nc:name="How To Use" nc:link="welcome.xhtml"/></rdf:li>
-                <rdf:li><rdf:Description ID="help-viewer:finding-a-topic" nc:name="Finding a Topic" nc:link="welcome.xhtml#finding_the_topic_you_want"/></rdf:li>
-                <rdf:li><rdf:Description ID="help-viewer:search-tips" nc:name="Search Tips" nc:link="welcome.xhtml#search_tips"/></rdf:li>
+                <rdf:li><rdf:Description ID="help-window-how-to-use" nc:name="How To Use" nc:link="chrome://help/locale/welcome.xhtml"/></rdf:li>
+                <rdf:li><rdf:Description ID="help-window-finding-a-topic" nc:name="Finding a Topic" nc:link="chrome://help/locale/welcome.xhtml#finding_the_topic_you_want"/></rdf:li>
+                <rdf:li><rdf:Description ID="help-window-search-tips" nc:name="Search Tips" nc:link="chrome://help/locale/welcome.xhtml#search_tips"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
