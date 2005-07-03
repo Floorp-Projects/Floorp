@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.297 $ ';
+$::UtilsVersion = '$Revision: 1.298 $ ';
 
 package TinderUtils;
 
@@ -1079,6 +1079,10 @@ sub create_profile {
 # Find mozilla profile.
 sub get_profile_dir {
     my $build_dir = shift;
+    my $profile_product_name = $Settings::ProductName;
+
+    $profile_product_name = "Mozilla" if ($profile_product_name eq "SeaMonkey");
+
     my $profile_dir;
 
     # XXXldb Many of these codepaths look like they won't actually return
@@ -1102,30 +1106,30 @@ sub get_profile_dir {
         if ($Settings::VendorName) {
           $profile_dir .= "\\$Settings::VendorName";
         }
-        $profile_dir .= "\\$Settings::ProductName\\Profiles\\";
+        $profile_dir .= "\\$profile_product_name\\Profiles\\";
         $profile_dir =~ s|\\|/|g;
         ($profile_dir) = <"$profile_dir*$Settings::MozProfileName*">;
     } elsif ($Settings::OS eq "BeOS") {
         $profile_dir = "/boot/home/config/settings/Mozilla/$Settings::MozProfileName";
     } elsif ($Settings::OS eq "Darwin") {
         # This is ifdef'd in nsXREDirProvider.cpp
-        if ($Settings::ProductName eq 'Thunderbird') {
-            $profile_dir = "$ENV{HOME}/Library/$Settings::ProductName/Profiles";
+        if ($profile_product_name eq 'Thunderbird') {
+            $profile_dir = "$ENV{HOME}/Library/$profile_product_name/Profiles";
             ($profile_dir) = <$profile_dir/*.$Settings::MozProfileName>;
-        } elsif ($Settings::ProductName eq 'Firefox') {
-            $profile_dir = "$ENV{HOME}/Library/Application Support/$Settings::ProductName/Profiles";
+        } elsif ($profile_product_name eq 'Firefox') {
+            $profile_dir = "$ENV{HOME}/Library/Application Support/$profile_product_name/Profiles";
             ($profile_dir) = <"$profile_dir/*$Settings::MozProfileName*">;
         } else { # Mozilla's Profiles/profilename/salt
-            $profile_dir = "$ENV{HOME}/Library/$Settings::ProductName/Profiles/$Settings::MozProfileName/";
+            $profile_dir = "$ENV{HOME}/Library/$profile_product_name/Profiles/$Settings::MozProfileName/";
         }
     } else {
         # *nix
         if ($Settings::VendorName) {
-          $profile_dir = "$build_dir/.".lc($Settings::VendorName)."/".lc($Settings::ProductName)."/";
+          $profile_dir = "$build_dir/.".lc($Settings::VendorName)."/".lc($profile_product_name)."/";
           ($profile_dir) = <$profile_dir . "*" . $Settings::MozProfileName . "*">;
         }
         else {
-          $profile_dir = "$build_dir/." . lc($Settings::ProductName) . "/";
+          $profile_dir = "$build_dir/." . lc($profile_product_name) . "/";
           ($profile_dir) = <$profile_dir*$Settings::MozProfileName*>;
         }
     }
