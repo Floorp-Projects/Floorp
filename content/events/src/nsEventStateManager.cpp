@@ -934,7 +934,8 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
   // Alt or other accesskey modifier is down, we may need to do an accesskey
   if (mAccessKeys) {
     // Someone registered an accesskey.  Find and activate it.
-    PRUnichar accKey = nsCRT::ToLower((char)aEvent->charCode);
+    PRUint32 accKey = (IS_IN_BMP(aEvent->charCode)) ? 
+      ToLowerCase((PRUnichar)aEvent->charCode) : aEvent->charCode;
 
     nsVoidKey key(NS_INT32_TO_PTR(accKey));
     if (mAccessKeys->Exists(&key)) {
@@ -4330,7 +4331,7 @@ nsEventStateManager::RegisterAccessKey(nsIContent* aContent, PRUint32 aKey)
   }
 
   if (aContent) {
-    PRUnichar accKey = nsCRT::ToLower((char)aKey);
+    PRUint32 accKey = (IS_IN_BMP(aKey)) ? ToLowerCase((PRUnichar)aKey) : aKey;
 
     nsVoidKey key(NS_INT32_TO_PTR(accKey));
 
@@ -4352,7 +4353,7 @@ nsEventStateManager::UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey)
   }
 
   if (aContent) {
-    PRUnichar accKey = nsCRT::ToLower((char)aKey);
+    PRUint32 accKey = (IS_IN_BMP(aKey)) ? ToLowerCase((PRUnichar)aKey) : aKey;
 
     nsVoidKey key(NS_INT32_TO_PTR(accKey));
 
