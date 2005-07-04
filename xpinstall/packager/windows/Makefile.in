@@ -60,9 +60,12 @@ ifeq (,$(INSTALLER_URL))
 INSTALLER_URL = "http://ftp.mozilla.org/pub/mozilla.org/pub/seamonkey/nightly/latest-trunk/windows-xpi"
 endif
 
-installer:
+installer: $(srcdir)/$(STUB_NAME).jst
 	$(PERL) $(srcdir)/makeall.pl -aurl $(INSTALLER_URL) -objdir $(OBJDIR) \
                 -instname $(SEA_NAME) -stubname $(STUB_NAME)
 
 include $(topsrcdir)/config/rules.mk
+
+$(srcdir)/$(STUB_NAME).jst: mozilla-win32-stub-installer.jst
+	sed -e "s|seamonkey-win32-stub-installer|$(STUB_NAME)|" $^ > $@
 
