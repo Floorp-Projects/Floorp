@@ -13,6 +13,13 @@ VERSIONS:
   cairo 0.5.0
   libpixman 0.1.5
 
+***** NOTE FOR VISUAL C++ 6.0 *****
+
+VC6 cannot build pixman correctly for various reasons.  There is a static
+win32 pixman library provided in libpixman/src/pixman-vc71.lib that will
+be used instead of building on all Win32/Visual C++ builds.  Building with
+VC7.1, gcc/mingw, or anything else other than VC6 is fine.
+
 PATCHES:
 
   stdint.h - select between inttypes.h, stdint.h, and mozstdint.h.

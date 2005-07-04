@@ -47,6 +47,10 @@ MODULE		= libpixman
 LIBRARY_NAME	= mozlibpixman
 LIBXUL_LIBRARY = 1
 
+ifeq ($(OS_ARCH)_$(GNU_CC), WINNT_)
+USE_STATIC_VC71_LIB = 1
+endif
+
 CSRCS	= \
 	fbedge.c \
 	fbtrap.c \
@@ -77,3 +81,9 @@ FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq ($(USE_STATIC_VC71_LIB),1)
+libs:: $(srcdir)/pixman-vc71.lib
+	$(RM) $(DIST)/lib/$(LIBRARY)
+	$(INSTALL) $(IFLAGS1) $(srcdir)/pixman-vc71.lib $(DIST)/lib/$(LIBRARY)
+endif
