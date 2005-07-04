@@ -916,8 +916,13 @@ void nsFileSpec::MakeUnique(PRBool inCreateFile)
     NS_NewNativeLocalFile(nsDependentCString(*this), PR_TRUE, getter_AddRefs(localFile));
     if (localFile)
     {
-        nsresult rv = localFile->CreateUnique(inCreateFile ? nsIFile::NORMAL_FILE_TYPE : 
-                                                             nsIFile::DIRECTORY_TYPE, 0600);
+        nsresult rv;
+
+        if (inCreateFile)
+            rv = localFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+        else
+            rv = localFile->CreateUnique(nsIFile::DIRECTORY_TYPE, 0700);
+
         if (NS_SUCCEEDED(rv))
             localFile->GetNativePath(path);
     }
