@@ -202,11 +202,13 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
             g_value_set_pointer (&values.new_value, pAtkPropChange->newvalue);
             rv = NS_OK;
         }
-        if (NS_SUCCEEDED(rv))
-            g_signal_emit_by_name(accWrap->GetAtkObject(),
-                                  g_strconcat("property_change::",
-                                              values.property_name, NULL),
+        if (NS_SUCCEEDED(rv)) {
+            char *signal_name = g_strconcat("property_change::",
+                                            values.property_name, NULL);
+            g_signal_emit_by_name(accWrap->GetAtkObject(), signal_name,
                                   &values, NULL);
+            g_free (signal_name);
+        }
 
         break;
 
