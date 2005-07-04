@@ -167,8 +167,6 @@ nsXFormsInstanceElement::ParentChanged(nsIDOMElement *aNewParent)
   // instance is on the list of instance elements that model keeps
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
   NS_ENSURE_TRUE(model, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIInstanceElementPrivate> instance = 
-                              NS_STATIC_CAST(nsIInstanceElementPrivate*, this);
   model->AddInstanceElement(this);
   
   return NS_OK;

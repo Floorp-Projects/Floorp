@@ -1196,16 +1196,23 @@ nsXFormsUtils::GetInstanceNodeForData(nsIDOMNode             *aInstanceDataNode,
     nsCOMPtr<nsIDOMDocument> tmpDoc;
     instPriv->GetDocument(getter_AddRefs(tmpDoc));
 
-    if (tmpDoc == instanceDoc)
-      break;
+    if (tmpDoc == instanceDoc) {
+      // ok, so we found the instance element that contains the provided
+      // aInstanceDataNode.  Now set the return value.
+      nsCOMPtr<nsIDOMElement> instanceElement;
+      instPriv->GetElement(getter_AddRefs(instanceElement));
+      if (instanceElement) {
+        nsCOMPtr<nsIDOMNode> node = do_QueryInterface(instanceElement);
+        node.swap(*aInstanceNode);
+        return NS_OK;
+      }
+
+    }
   }
 
-  if (!childCount || i == childCount)
-    // No instance nodes in model or instance node not found?
-    // Doesn't make sense!
-    return NS_ERROR_ABORT;
-
-  return NS_OK;
+  // Two possibilities.  No instance nodes in model (which should never happen)
+  // or instance node not found.
+  return NS_ERROR_ABORT;
 }
 
 /* static */ nsresult
