@@ -48,7 +48,8 @@ LIBRARY_NAME	= mozlibpixman
 LIBXUL_LIBRARY = 1
 
 ifeq ($(OS_ARCH)_$(GNU_CC), WINNT_)
-USE_STATIC_VC71_LIB = 1
+# disabled due to tinderbox horkage
+##USE_STATIC_VC71_LIB = 1
 endif
 
 CSRCS	= \
