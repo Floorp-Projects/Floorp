@@ -1015,7 +1015,7 @@ nsXFormsModelElement::FindInstanceElement(const nsAString &aID,
   if (instCount) {
     nsCOMPtr<nsIDOMElement> element;
     nsAutoString id;
-    for (int i = 0; i < instCount; ++i) {
+    for (PRUint32 i = 0; i < instCount; ++i) {
       nsIInstanceElementPrivate* instEle = mInstanceList.ObjectAt(i);
       instEle->GetElement(getter_AddRefs(element));
 
@@ -1276,7 +1276,7 @@ nsXFormsModelElement::BackupOrRestoreInstanceData(PRBool restore)
 
   PRUint32 instCount = mInstanceList.Count();
   if (instCount) {
-    for (int i = 0; i < instCount; ++i) {
+    for (PRUint32 i = 0; i < instCount; ++i) {
       nsIInstanceElementPrivate *instance = mInstanceList.ObjectAt(i);
 
       // Don't know what to do with error if we get one.

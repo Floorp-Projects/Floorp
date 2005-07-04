@@ -116,7 +116,6 @@ nsXFormsSchemaValidator::GetType(const nsAString & aType,
 {
   NS_ENSURE_TRUE(mSchemaValidator, PR_FALSE);
 
-  PRBool success = PR_FALSE;
   nsresult rv = mSchemaValidator->GetType(aType, aNamespace, aSchemaType);
 
   return NS_SUCCEEDED(rv);
