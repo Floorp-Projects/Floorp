@@ -250,10 +250,10 @@ function checkboxClick(thisTodo, completed)
 {
     var newTodo = thisTodo.clone().QueryInterface(Components.interfaces.calITodo);
     if(completed) {
-        newTodo.completedDate.jsDate = new Date();
+        newTodo.completedDate = jsDateToDateTime(new Date());
         newTodo.percentComplete = 100;
     } else {
-        newTodo.completedDate.reset();
+        newTodo.completedDate = null;
         if (newTodo.percentComplete == 100)
             newTodo.percentComplete = 0;
     }
@@ -338,16 +338,17 @@ var toDoTreeView =
    getImageSrc : function(){return("");},
    cycleCell : function(row,col)
    {
-    calendarToDo = gTaskArray[row];
-    if( !calendarToDo ) return;
+      calendarToDo = gTaskArray[row];
+      if(!calendarToDo)
+         return;
 
-    // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
-    if( (typeof(col)=="object" ? col.id : col) == "unifinder-todo-tree-col-completed")  {
-          if (calendarToDo.completedDate.isValid)
-              checkboxClick( calendarToDo, false ) ;
-	  else 
-              checkboxClick( calendarToDo, true ) ;
-	}
+       // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
+       if (col.id == "unifinder-todo-tree-col-completed")  {
+          if (calendarToDo.completedDate)
+             checkboxClick( calendarToDo, false ) ;
+          else 
+             checkboxClick( calendarToDo, true ) ;
+       }
    },
    cycleHeader : function(col, element) // element parameter used in Moz1.7-
    {                                    // not in Moz1.8+
@@ -424,7 +425,7 @@ var toDoTreeView =
          case "unifinder-todo-tree-col-status":
             return getToDoStatusString(calendarToDo);
          case "unifinder-todo-tree-col-calendarname":
-            return( calendarToDo.parent.name );
+            return( calendarToDo.calendar.name );
          default:
             return false;
       }

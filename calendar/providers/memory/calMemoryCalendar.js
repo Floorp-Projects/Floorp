@@ -405,7 +405,8 @@ calMemoryCalendar.prototype = {
                 else if (item.percentComplete < 100 && !itemNotCompletedFilter)
                     continue;
 
-                itemEndTime = itemStartTime = item.entryDate.nativeTime || 0;
+                itemEndTime = itemStartTime = 
+                    item.entryDate ? item.entryDate.nativeTime : 0;
             } else {
                 // XXX unknown item type, wth do we do?
                 continue;
