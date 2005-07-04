@@ -101,7 +101,7 @@ nsresult
 EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
 {
     mWindow = gtk_dialog_new_with_buttons(mTitle.get(), aParentWindow,
-                                          GTK_DIALOG_DESTROY_WITH_PARENT,
+                                          (GtkDialogFlags)0,
                                           NULL);
 
     // only add the dialog to the window group if the parent already has a window group,
