@@ -531,15 +531,22 @@ function onWindowKeyPress (e)
         case 119:
         case 120:
         case 121: /* F10 */
+            var modifier = (e.ctrlKey || e.shiftKey || e.Altkey || e.metaKey);
             var idx = code - 112;
-            if ((idx in client.viewsArray) && client.viewsArray[idx].source)
-                dispatch("set-current-view", { view: client.viewsArray[idx].source });
+            if (!modifier && (idx in client.viewsArray) &&
+                client.viewsArray[idx].source)
+            {
+                var newView = client.viewsArray[idx].source;
+                dispatch("set-current-view", { view: newView });
+                e.preventDefault();
+            }
             break;
 
         case 33: /* pgup */
             if (e.ctrlKey)
             {
                 cycleView(-1);
+                e.preventDefault();
                 break;
             }
 
@@ -559,6 +566,7 @@ function onWindowKeyPress (e)
             if (e.ctrlKey)
             {
                 cycleView(1);
+                e.preventDefault();
                 break;
             }
 
