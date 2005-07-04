@@ -59,16 +59,8 @@
 
 #include <Quickdraw.h>
 
-#if UNIVERSAL_INTERFACES_VERSION < 0x0340
-enum {
-  kEventWindowConstrain = 83
-};
-const UInt32 kWindowLiveResizeAttribute = (1L << 28);
-#endif
-
 // Define Class IDs -- i hate having to do this
 static NS_DEFINE_CID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
-//static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
 
 // from MacHeaders.c
 #ifndef topLeft

@@ -60,6 +60,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAppShellCocoa, nsIAppShell)
 //-------------------------------------------------------------------------
 nsAppShellCocoa::nsAppShellCocoa()
 {
+  mainPool = [[NSAutoreleasePool alloc] init];
 }
 
 //-------------------------------------------------------------------------
@@ -69,6 +70,7 @@ nsAppShellCocoa::nsAppShellCocoa()
 //-------------------------------------------------------------------------
 nsAppShellCocoa::~nsAppShellCocoa()
 {
+  [mainPool release];
 }
 
 
@@ -76,15 +78,17 @@ nsAppShellCocoa::~nsAppShellCocoa()
 //
 // Create the application shell
 //
+// There's reallly not a whole lot that needs to be done here. The
+// window will register its own interest in the necessary events
+// so there's no need for us to create a pump or a sink.
+//
 //-------------------------------------------------------------------------
 
 NS_IMETHODIMP
 nsAppShellCocoa::Create(int* argc, char ** argv)
 {
-  // There's reallly not a whole lot that needs to be done here. The
-  // window will register its own interest in the necessary events
-  // so there's no need for us to create a pump or a sink. 
-
+  // this call initializes NSApplication
+  [NSApplication sharedApplication];
 	return NS_OK;
 }
 
