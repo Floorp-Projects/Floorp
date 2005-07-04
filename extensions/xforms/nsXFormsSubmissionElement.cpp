@@ -488,21 +488,33 @@ nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
     }
   }
 
-  // set new instance document
+  // get the nodeset that we are currently bound to
+  nsCOMPtr<nsIDOMNode> data;
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
   NS_ENSURE_STATE(model);
-  
-  nsCOMPtr<nsIInstanceElementPrivate> instance;
-  model->FindInstanceElement(EmptyString(), getter_AddRefs(instance));
-  NS_ENSURE_STATE(instance);
+  nsresult rv = GetSelectedInstanceData(getter_AddRefs(data));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIDOMNode> instanceNode;
+    rv = nsXFormsUtils::GetInstanceNodeForData(data, model, 
+                                               getter_AddRefs(instanceNode));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  instance->SetDocument(newDoc);
+    nsCOMPtr<nsIInstanceElementPrivate> instanceElement =
+      do_QueryInterface(instanceNode);
 
-  // refresh everything
-  model->Rebuild();
-  model->Recalculate();
-  model->Revalidate();
-  model->Refresh();
+    // replace the document referenced by this instance element with the info
+    // returned back from the submission
+    if (instanceElement) {
+      instanceElement->SetDocument(newDoc);
+
+      // refresh everything
+      model->Rebuild();
+      model->Recalculate();
+      model->Revalidate();
+      model->Refresh();
+    }
+  }
+
 
   return NS_OK;
 }
