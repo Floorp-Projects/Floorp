@@ -60,7 +60,7 @@ class nsAppShellCocoa : public nsIAppShell
     NS_DECL_NSIAPPSHELL
   
   private:
-    
+    NSAutoreleasePool *mainPool;
 };
 
 
