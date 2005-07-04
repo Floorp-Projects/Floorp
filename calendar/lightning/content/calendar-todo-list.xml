@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+
+<bindings id="calendar-todo-bindings"
+ xmlns="http://www.mozilla.org/xbl"
+ xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+ xmlns:xbl="http://www.mozilla.org/xbl">
+    <binding id="calendar-todo-item" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+        <content>
+            <xul:hbox flex="1">
+                <xul:checkbox anonid="todo-check" xbl:inherits="checked=completed" oncommand="document.getBindingParent(this).updateTodoFromDisplay();"/>
+                <xul:label anonid="todo-label" crop="end" xbl:inherits="item-calendar,value=label"/>
+            </xul:hbox>
+        </content>
+        <implementation>
+        <field name="mTodo">null</field>
+      
+      <property name="checkbox">
+      <getter><![CDATA[ return document.getAnonymousElementByAttribute(this, "anonid", "todo-check");]]></getter>
+      </property>
+      
+      <property name="manager">
+      <getter><![CDATA[ return this.mManager; ]]></getter>
+      <setter><![CDATA[ this.mManager = val; ]]></setter>
+      </property>
+      
+      <property name="label">
+      <getter><![CDATA[ return document.getAnonymousElementByAttribute(this, "anonid", "todo-label");]]></getter>
+      </property>
+      
+      <method name="fireEvent">
+        <parameter name="aEventType"/>
+        <body>
+        <![CDATA[
+          var e = document.createEvent("Events");
+          e.initEvent("todo-" + aEventType, false, true);
+          
+          this.dispatchEvent(e);
+        ]]>
+        </body>
+      </method>
+
+      <method name="setAttribute">
+        <parameter name="aAttr"/>
+        <parameter name="aVal"/>
+        <body><![CDATA[
+    	  if (aAttr == "completed")
+    	     this.checkbox.setAttribute("checked", aVal);
+    	  else if (aAttr == "label")
+    	     this.label.setAttribute("value", aVal);
+          return XULElement.prototype.setAttribute.call(this, aAttr, aVal);
+        ]]></body>
+      </method>
+      
+      <method name="updateTodoFromDisplay">
+        <body><![CDATA[
+        var dirty = false;
+        var clone = this.mTodo.clone();
+        if (this.mTodo.isCompleted != this.checkbox.checked) {
+            dump("checked changed (" + uneval(this.mTodo.isCompleted) +
+                 " => " + uneval(this.checkbox.checked) + "\n");
+            clone.isCompleted = this.checkbox.checked;
+            dirty = true;
+        } else {
+            dump("checked not changed (" + uneval(this.mTodo.isCompleted) +
+                 " == " + uneval(this.checkbox.checked) + "\n");
+        }
+        if (this.mTodo.title != this.label.value) {
+            clone.title = this.label.value;
+            dirty = true;
+        }
+        if (dirty) {
+            this.mTodo.calendar.modifyItem(clone, this.mTodo, null);
+            dump(clone.icalComponent.serializeToICS() + "\n");
+            this.mTodo = clone;
+        }
+        ]]></body>
+      </method>
+      
+      <method name="updateDisplayFromTodo">
+        <body><![CDATA[
+            this.setAttribute("completed", this.mTodo.isCompleted);
+            this.setAttribute("label", this.mTodo.title);
+        ]]></body>
+      </method>
+
+      <method name="setTodo">
+        <parameter name="aTodo"/>
+        <body><![CDATA[
+            this.mTodo = aTodo;
+            this.updateDisplayFromTodo();
+        ]]></body>
+      </method>
+      
+        </implementation>
+    </binding>
+</bindings>

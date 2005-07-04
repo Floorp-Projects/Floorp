@@ -11,6 +11,10 @@ lightning.jar:
   content/lightning/lightning-preferences.xul		(content/lightning-preferences.xul)
   content/lightning/lightning-preferences.js		(content/lightning-preferences.js)
   content/lightning/messenger-overlay-toolbar.xul	(content/messenger-overlay-toolbar.xul)
+  content/lightning/todo-list-overlay.xul             (content/todo-list-overlay.xul)
+  content/lightning/todo-list.js			(content/todo-list.js)
+  content/lightning/calendar-todo-list.css		(content/calendar-todo-list.css)
+  content/lightning/calendar-todo-list.xml		(content/calendar-todo-list.xml)
 
 en-US.jar:
   locale/en-US/lightning/lightning.dtd				(locale/lightning.dtd)

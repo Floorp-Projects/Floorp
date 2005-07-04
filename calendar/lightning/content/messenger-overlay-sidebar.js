@@ -97,7 +97,6 @@ function showCalendar(aDate1, aDate2)
 }
 
 function switchView(type) {
-    var messengerDisplayDeck = document.getElementById("displayDeck");
     var calendarViewBox = document.getElementById("calendar-view-box");
 
     var monthView = document.getElementById("calendar-month-view");
@@ -141,8 +140,9 @@ function selectedCalendarPane(event)
     document.getElementById("displayDeck").selectedPanel =
         document.getElementById("calendar-view-box");
 
-    // give the view the calendar
-    showCalendar(today());
+    // give the view the calendar, but make sure that everything
+    // has uncollapsed first before we try to relayout!
+    setTimeout(0, function() { showCalendar(today()); });
 }
 
 function LtnObserveDisplayDeckChange(event)
@@ -154,8 +154,9 @@ function LtnObserveDisplayDeckChange(event)
         GetMessagePane().collapsed = true;
         document.getElementById("threadpane-splitter").collapsed = true;
         gSearchBox.collapsed = true;
+        document.getElementById("calendar-view-box").collapsed = false;
     } else {
-        // nothing to "undo" for now
+        document.getElementById("calendar-view-box").collapsed = true;
         // Later: mark the view as not needing reflow due to new events coming
         // in, for better performance and batching.
     }

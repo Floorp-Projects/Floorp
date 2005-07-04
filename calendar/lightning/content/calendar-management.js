@@ -4,7 +4,7 @@
 
 var calendarPrefStyleSheet = null;
 for (var i = 0; i < document.styleSheets.length; i++) {
-    if (document.styleSheets[i].href == "about:blank?calendar-dynamic-style-sheet") {
+    if (document.styleSheets[i].title == "calendar-dynamic-style-sheet") {
         calendarPrefStyleSheet = document.styleSheets[i];
         break;
     }

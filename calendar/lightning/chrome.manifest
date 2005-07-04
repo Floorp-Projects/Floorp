@@ -4,6 +4,7 @@ overlay chrome://messenger/content/messenger.xul chrome://lightning/content/mess
 overlay chrome://messenger/content/preferences/preferences.xul chrome://lightning/content/messenger-overlay-preferences.xul
 overlay chrome://messenger/content/messenger.xul chrome://lightning/content/messenger-overlay-toolbar.xul
 overlay chrome://lightning/content/messenger-overlay-sidebar.xul chrome://lightning/content/agenda-tree-overlay.xul
+overlay chrome://lightning/content/messenger-overlay-sidebar.xul chrome://lightning/content/todo-list-overlay.xul
 overlay chrome://lightning/content/lightning-standalone.xul chrome://lightning/content/messenger-overlay-sidebar.xul
 skin	lightning classic/1.0	jar:chrome/classic.jar!/skin/classic/lightning/
 # shared pieces for chrome://calendar/
