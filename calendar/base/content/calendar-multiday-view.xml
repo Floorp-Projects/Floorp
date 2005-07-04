@@ -287,7 +287,7 @@
         ]]></getter>
         <setter><![CDATA[
           if (val <= 0.0)
-            throw "Bad pixpermin";
+            val = 0.01;
           if (val != this.mPixPerMin) {
             this.mPixPerMin = val;
             this.relayout();
