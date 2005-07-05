@@ -1542,6 +1542,14 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
           multiMIP = PR_TRUE;
           break;
         }
+
+        if (j == eModel_type) {
+          // Inform MDG that it needs to check type. The only arguments
+          // actually used are |eModel_constraint| and |node|.
+          rv = mMDG.AddMIP(eModel_constraint, nsnull, nsnull, PR_FALSE, node, 1,
+                           1);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
       } else {
         // the rest of the MIPs are given to the MDG
         nsCOMPtr<nsIDOMNSXPathExpression> expr = props[j];
