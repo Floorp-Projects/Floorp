@@ -44,6 +44,19 @@ copy_perm() {
   fi
 }
 
+make_add_instruction() {
+  f="$1"
+  is_extension=$(echo "$f" | grep -c 'extensions/.*/')
+  if [ $is_extension = "1" ]; then
+    # Use the subdirectory of the extensions folder as the file to test
+    # before performing this add instruction.
+    testdir=$(echo "$f" | sed 's/\(extensions\/[^\/]*\)\/.*/\1/')
+    echo "add-if \"$testdir\" \"$f\""
+  else
+    echo "add \"$f\""
+  fi
+}
+
 archive="$1"
 targetdir="$2"
 workdir="$targetdir.work"
@@ -64,7 +77,7 @@ for ((i=0; $i<$num_files; i=$i+1)); do
 
   echo "  processing $f"
 
-  echo "add \"$f\"" >> $manifest
+  make_add_instruction "$f" >> $manifest
 
   dir=$(dirname "$f")
   mkdir -p "$workdir/$dir"

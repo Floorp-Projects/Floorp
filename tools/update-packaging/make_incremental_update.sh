@@ -39,6 +39,32 @@ get_file_size() {
   echo ${info[4]}
 }
 
+make_add_instruction() {
+  f="$1"
+  is_extension=$(echo "$f" | grep -c 'extensions/.*/')
+  if [ $is_extension = "1" ]; then
+    # Use the subdirectory of the extensions folder as the file to test
+    # before performing this add instruction.
+    testdir=$(echo "$f" | sed 's/\(extensions\/[^\/]*\)\/.*/\1/')
+    echo "add-if \"$testdir\" \"$f\""
+  else
+    echo "add \"$f\""
+  fi
+}
+
+make_patch_instruction() {
+  f="$1"
+  is_extension=$(echo "$f" | grep -c 'extensions/.*/')
+  if [ $is_extension = "1" ]; then
+    # Use the subdirectory of the extensions folder as the file to test
+    # before performing this add instruction.
+    testdir=$(echo "$f" | sed 's/\(extensions\/[^\/]*\)\/.*/\1/')
+    echo "patch-if \"$testdir\" \"$f.patch\" \"$f\""
+  else
+    echo "patch \"$f.patch\" \"$f\""
+  fi
+}
+
 archive="$1"
 olddir="$2"
 newdir="$3"
@@ -74,12 +100,12 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       patchsize=$(get_file_size "$patchfile")
       fullsize=$(get_file_size "$workdir/$f")
       if [ $patchsize -lt $fullsize ]; then
-        echo "patch \"$f.patch\" \"$f\"" >> $manifest
+        make_patch_instruction "$f" >> $manifest
         mv -f "$patchfile" "$workdir/$f.patch"
         rm -f "$workdir/$f"
         archivefiles="$archivefiles \"$f.patch\""
       else
-        echo "add \"$f\"" >> $manifest
+        make_add_instruction "$f" >> $manifest
         rm -f "$patchfile"
         archivefiles="$archivefiles \"$f\""
       fi
@@ -107,7 +133,7 @@ for ((i=0; $i<$num_newfiles; i=$i+1)); do
 
   $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
 
-  echo "add \"$f\"" >> "$manifest"
+  make_add_instruction "$f" >> "$manifest"
   archivefiles="$archivefiles \"$f\""
 done
 
