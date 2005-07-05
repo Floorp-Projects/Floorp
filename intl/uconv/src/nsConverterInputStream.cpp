@@ -42,8 +42,8 @@
 
 #define CONVERTER_BUFFER_SIZE 8192
 
-NS_IMPL_ISUPPORTS3(nsConverterInputStream, nsIConverterInputStream,
-                   nsIUnicharInputStream, nsIUnicharLineInputStream)
+NS_IMPL_ISUPPORTS2(nsConverterInputStream, nsIConverterInputStream,
+                   nsIUnicharInputStream/*, nsIUnicharLineInputStream*/)
     
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -53,8 +53,8 @@ nsConverterInputStream::Init(nsIInputStream* aStream,
                              PRInt32 aBufferSize,
                              PRUnichar aReplacementChar)
 {
-    if (!aCharset)
-        aCharset = "UTF-8";
+//    if (!aCharset)
+//        aCharset = "UTF-8";
 
     nsresult rv;
 
@@ -85,7 +85,7 @@ NS_IMETHODIMP
 nsConverterInputStream::Close()
 {
     nsresult rv = mInput ? mInput->Close() : NS_OK;
-    PR_FREEIF(mLineBuffer);
+//    PR_FREEIF(mLineBuffer);
     mInput = nsnull;
     mConverter = nsnull;
     mByteData = nsnull;
@@ -262,6 +262,7 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
   return mUnicharDataLength;
 }
 
+#if 0
 NS_IMETHODIMP
 nsConverterInputStream::ReadLine(nsAString& aLine, PRBool* aResult)
 {
@@ -271,3 +272,4 @@ nsConverterInputStream::ReadLine(nsAString& aLine, PRBool* aResult)
   }
   return NS_ReadLine(this, mLineBuffer, aLine, aResult);
 }
+#endif
