@@ -88,7 +88,7 @@ class nsConverterInputStream : public nsIConverterInputStream,
     PRUint32  mLeftOverBytes;
     PRUint32  mUnicharDataOffset;
     PRUint32  mUnicharDataLength;
-    PRUint32  mReplacementChar;
+    PRUnichar mReplacementChar;
 
     nsLineBuffer<PRUnichar>* mLineBuffer;    
 };
