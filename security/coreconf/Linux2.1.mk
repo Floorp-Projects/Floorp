@@ -38,7 +38,7 @@
 include $(CORE_DEPTH)/coreconf/Linux.mk
 ifeq ($(OS_RELEASE),2.1)
         OS_REL_CFLAGS   += -DLINUX2_1
-        MKSHLIB         = $(CC) -shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so)
+        MKSHLIB         = $(CC) $(DSO_LDOPTS) -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so)
         ifdef BUILD_OPT
                 OPTIMIZER       = -O2
         endif
