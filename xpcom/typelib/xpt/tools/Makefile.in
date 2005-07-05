@@ -54,17 +54,15 @@ SDK_BINARY     =                   \
 		$(NULL)
 
 ifdef CROSS_COMPILE
-ifndef WINCE
 HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(SIMPLE_PROGRAMS:$(BIN_SUFFIX)=$(HOST_BIN_SUFFIX)))
 HOST_CSRCS		= $(CSRCS)
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk
 
 # Compile directly against the static lib, so we can use the tools
 # during the build without the shared library path being set.
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 DEFINES		+= -DEXPORT_XPT_API
 endif
 
@@ -75,14 +73,22 @@ LIBS		= $(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX)
 EXTRA_DEPS	= $(wildcard $(DIST)/lib/$(LIB_PREFIX)xpt.*)
 
 ifdef CROSS_COMPILE
-ifndef WINCE
-HOST_LIBS		= $(DIST)/host/lib/libhostxpt.$(LIB_SUFFIX)
-HOST_EXTRA_DEPS		= $(wildcard $(DIST)/host/lib/libhostxpt.*)
+HOST_LIBS		= $(DIST)/host/lib/$(LIB_PREFIX)hostxpt.$(LIB_SUFFIX)
+HOST_EXTRA_DEPS		= $(wildcard $(DIST)/host/lib/$(LIB_PREFIX)hostxpt.*)
 
 ifdef HOST_NSPR_MDCPUCFG
 HOST_CFLAGS	+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
 endif
+
+ifdef WINCE
+# Compile directly against the static lib, so we can use the tools
+# during the build without the shared library path being set.
+HOST_CFLAGS +=  -DEXPORT_XPT_API
+
+# Force MOZ_NO_DEBUG_RTL=1
+HOST_CFLAGS	+= /MD
 endif
+
 endif
 
 

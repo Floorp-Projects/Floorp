@@ -1361,6 +1361,7 @@ case "$target" in
 
 *-wince*)
 
+    MOZ_TOOLS_DIR=`echo $MOZ_TOOLS`
     AR_LIST="$AR -list"
     AR_EXTRACT="$AR -extract"
     AR_DELETE="$AR d"
@@ -1379,6 +1380,7 @@ case "$target" in
     HOST_CXX=cl
     HOST_LD=link
     HOST_AR='lib -OUT:$@'
+    HOST_RANLIB='echo ranlib'
         
 	MOZ_OPTIMIZE_FLAGS='-O1'
     AR_FLAGS='-NOLOGO -OUT:"$@"'
@@ -1420,6 +1422,8 @@ case "$target" in
     XPCOM_GLUE_LDOPTS='$(DIST)/lib/xpcomglue_s.lib $(DIST)/lib/xpcom.lib'
     XPCOM_STANDALONE_GLUE_LDOPTS='$(DIST)/lib/xpcomglue.lib'
     ZIP=zip
+    LIBIDL_CFLAGS="-I$MOZ_TOOLS_DIR/include ${GLIB_CFLAGS}"
+    LIBIDL_LIBS="$MOZ_TOOLS_DIR/lib/libidl-0.6.lib $MOZ_TOOLS_DIR/lib/glib-1.2.lib"
 
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
@@ -6020,7 +6024,7 @@ int main() {
 fi
 
 if test -n "$CROSS_COMPILE"; then
-    if test -z "$HOST_LIBIDL_CONFIG"; then
+     if test -z "$HOST_LIBIDL_CONFIG"; then
         HOST_LIBIDL_CONFIG="$LIBIDL_CONFIG"
     fi
     if test -n "$HOST_LIBIDL_CONFIG"; then
