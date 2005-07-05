@@ -67,7 +67,7 @@ mkdir -p wince/plugins
 
 echo Linking XPT files.
 
-xpt_link wince/components/all.xpt                        bin/components/*.xpt
+host/bin/host_xpt_link wince/components/all.xpt                        bin/components/*.xpt
 
 echo Copying over customized files
 
