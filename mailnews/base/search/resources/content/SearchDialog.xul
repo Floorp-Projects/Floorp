@@ -111,11 +111,12 @@
  
         </hbox>
         <hbox align="center">
+           <checkbox id="checkSearchSubFolders" label="&searchSubfolders.label;" checked="true" accesskey="&searchSubfolders.accesskey;"/>
            <spacer flex="2"/>
            <button label="&resetButton.label;" oncommand="onResetSearch(event);" accesskey="&resetButton.accesskey;"/>
          </hbox>
          <hbox align="center">
-           <checkbox id="checkSearchSubFolders" label="&searchSubfolders.label;" checked="true" accesskey="&searchSubfolders.accesskey;"/>
+           <checkbox id="checkSearchLocalSystem" label="&searchLocalSystem.label;" persist="checked" accesskey="&searchLocalSystem.accesskey;" oncommand="updateSearchLocalSystem();"/>
            <spacer flex="2"/>
            <button label="&helpButton.label;" align="end" oncommand="openHelp('search_messages');" accesskey="&helpButton.accesskey;"/> 
          </hbox>

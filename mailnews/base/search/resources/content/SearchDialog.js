@@ -367,7 +367,15 @@ function updateSearchFolderPicker(folderURI)
     gCurrentFolder =
         RDF.GetResource(folderURI).QueryInterface(nsIMsgFolder);
 
+    var searchLocalSystem = document.getElementById("checkSearchLocalSystem");
+    if (searchLocalSystem)
+        searchLocalSystem.disabled = gCurrentFolder.server.searchScope == nsMsgSearchScope.offlineMail;
     setSearchScope(GetScopeForFolder(gCurrentFolder));
+}
+
+function updateSearchLocalSystem()
+{
+  setSearchScope(GetScopeForFolder(gCurrentFolder));
 }
 
 function UpdateAfterCustomHeaderChange()
@@ -510,7 +518,8 @@ function AddSubFoldersToURI(folder)
 
 function GetScopeForFolder(folder) 
 {
-  return folder.server.searchScope;
+  var searchLocalSystem = document.getElementById("checkSearchLocalSystem");
+  return searchLocalSystem && searchLocalSystem.checked ? nsMsgSearchScope.offlineMail : folder.server.searchScope;
 }
 
 var nsMsgViewSortType = Components.interfaces.nsMsgViewSortType;

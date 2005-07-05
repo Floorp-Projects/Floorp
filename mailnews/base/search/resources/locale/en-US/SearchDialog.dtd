@@ -4,6 +4,8 @@
 <!ENTITY searchHeading.accesskey     "h">
 <!ENTITY searchSubfolders.label      "Search subfolders">
 <!ENTITY searchSubfolders.accesskey  "e">
+<!ENTITY searchLocalSystem.label     "Search local system">
+<!ENTITY searchLocalSystem.accesskey "y">
 <!ENTITY resetButton.label           "Clear">
 <!ENTITY resetButton.accesskey       "C">
 <!ENTITY helpButton.label            "Help">
