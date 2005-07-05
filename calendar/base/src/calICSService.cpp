@@ -589,31 +589,31 @@ calIcalComponent::Get##Attrname(calIDateTime **dtp)                     \
                                          ICAL_##ICALNAME##_PROPERTY);   \
     calDateTime *dt;                                                    \
     if (!prop) {                                                        \
-        dt = new calDateTime();  /* invalid date */                     \
-    } else {                                                            \
-        struct icaltimetype itt =                                       \
-            icalvalue_get_datetime(icalproperty_get_value(prop));       \
-        const char *tzid = icalproperty_get_parameter_as_string(prop, "TZID"); \
-        if (tzid) {                                                   \
-            /* Now, see, libical sucks.  We have to walk up to our parent VCALENDAR and try to find this tzid */ \
-            icalcomponent *vcalendar = mComponent;                      \
-            while (vcalendar && icalcomponent_isa(vcalendar) != ICAL_VCALENDAR_COMPONENT) \
-                vcalendar = icalcomponent_get_parent(vcalendar);        \
-            if (!vcalendar) {                                           \
-                NS_WARNING("VCALENDAR not found while looking for VTIMEZONE!"); \
-                return NS_ERROR_FAILURE;                                \
-            }                                                           \
-            icaltimezone *zone = icalcomponent_get_timezone(vcalendar, tzid); \
-            if (!zone) {                                                \
-                NS_WARNING("Can't find specified VTIMEZONE in VCALENDAR!"); \
-                return NS_ERROR_FAILURE;                                \
-            }                                                           \
-            icaltimezone_convert_time(&itt, zone, icaltimezone_get_utc_timezone()); \
-            itt.is_utc = 1;                                             \
-            itt.zone = icaltimezone_get_utc_timezone();                 \
-        }                                                               \
-        dt = new calDateTime(&itt);                                     \
+        *dtp = nsnull;  /* invalid date */                              \
+        return NS_OK;                                                   \
     }                                                                   \
+    struct icaltimetype itt =                                           \
+        icalvalue_get_datetime(icalproperty_get_value(prop));           \
+    const char *tzid = icalproperty_get_parameter_as_string(prop, "TZID"); \
+    if (tzid) {                                                         \
+        /* Now, see, libical sucks.  We have to walk up to our parent VCALENDAR and try to find this tzid */ \
+        icalcomponent *vcalendar = mComponent;                          \
+        while (vcalendar && icalcomponent_isa(vcalendar) != ICAL_VCALENDAR_COMPONENT) \
+            vcalendar = icalcomponent_get_parent(vcalendar);            \
+        if (!vcalendar) {                                               \
+            NS_WARNING("VCALENDAR not found while looking for VTIMEZONE!"); \
+            return NS_ERROR_FAILURE;                                    \
+        }                                                               \
+        icaltimezone *zone = icalcomponent_get_timezone(vcalendar, tzid); \
+        if (!zone) {                                                    \
+            NS_WARNING("Can't find specified VTIMEZONE in VCALENDAR!"); \
+            return NS_ERROR_FAILURE;                                    \
+        }                                                               \
+        icaltimezone_convert_time(&itt, zone, icaltimezone_get_utc_timezone()); \
+        itt.is_utc = 1;                                                 \
+        itt.zone = icaltimezone_get_utc_timezone();                     \
+    }                                                                   \
+    dt = new calDateTime(&itt);                                         \
     if (!dt)                                                            \
         return NS_ERROR_OUT_OF_MEMORY;                                  \
     NS_ADDREF(*dtp = dt);                                               \
