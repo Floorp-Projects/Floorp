@@ -89,8 +89,8 @@ repackage-win32-installer: $(WIN32_INSTALLER_IN)
 	@echo "Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT)."
 	$(RM) -rf $(DIST)/l10n-stage
 	mkdir $(DIST)/l10n-stage
-	cd $(DIST)/l10n-stage &&
-	  $(CYGWIN_WRAPPER) 7z e -y $(WIN32_INSTALLER_IN)
+	cd $(DIST)/l10n-stage && \
+	  $(CYGWIN_WRAPPER) 7z e $(WIN32_INSTALLER_IN)
 	$(RM) $(DIST)/l10n-stage/en-US.xpi
 	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
 	$(MAKE) libs-$(AB_CD)
@@ -112,7 +112,7 @@ repackage-win32-installer: $(WIN32_INSTALLER_IN)
 	  $(CYGWIN_WRAPPER) 7z a -t7z ../l10n-temp-stage/app.7z *.* -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
 	$(CYGWIN_WRAPPER) upx -9 -o $(DIST)/l10n-temp-stage/7zSD.sfxc $(topsrcdir)/other-licenses/7zstub/thunderbird/7zSD.sfx
 	$(INSTALL) $(topsrcdir)/mail/installer/windows/app.tag $(DIST)/l10n-temp-stage
-	cd $(DIST)/l10n-temp-stage &&
+	cd $(DIST)/l10n-temp-stage && \
 	  $(CYGWIN_WRAPPER) cmd /C copy /b 7zSD.sfxc+app.tag+app.7z thunderbird-installer.exe
 	mv -f $(DIST)/l10n-temp-stage/thunderbird-installer.exe $(WIN32_INSTALLER_OUT)
 
