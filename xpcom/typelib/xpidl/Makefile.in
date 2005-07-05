@@ -27,7 +27,13 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
+
+ifndef WINCE
+# Sadly, the code here is too smart for the WinCE compiler's brain
 PROGRAM		= xpidl$(BIN_SUFFIX)
+SDK_BINARY  = $(PROGRAM)
+endif
+
 INTERNAL_TOOLS	= 1
 
 # glib and libIDL link against the non-debug msvcrt
@@ -43,10 +49,6 @@ CSRCS		= \
 		xpidl_java.c \
 		$(NULL)
 
-SDK_BINARY     =           \
-		$(PROGRAM) \
-		$(NULL)
-
 ifdef CROSS_COMPILE
 HOST_PROGRAM	= host_xpidl$(HOST_BIN_SUFFIX)
 HOST_CSRCS	= $(CSRCS)
@@ -58,7 +60,7 @@ CFLAGS		+= $(LIBIDL_CFLAGS)
 
 # Compile directly against the static lib, so we can use xpidl during the build
 # without the shared library path being set.
-ifeq (WINNT,$(OS_ARCH))
+ifneq (,$(filter WINNT WINCE OS2,$(OS_ARCH)))
 DEFINES		+= -DEXPORT_XPT_API
 ifndef GNU_CC
 LDFLAGS		+= -SUBSYSTEM:CONSOLE -NODEFAULTLIB:MSVCRTD
@@ -70,13 +72,25 @@ LIBS		= $(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX) $(LIBIDL_LIBS)
 EXTRA_DEPS	= $(wildcard $(DIST)/lib/$(LIB_PREFIX)xpt.*)
 
 ifdef CROSS_COMPILE
+
+
 HOST_CFLAGS	+= $(HOST_LIBIDL_CFLAGS)
-HOST_LIBS	= $(DIST)/host/lib/libhostxpt.$(LIB_SUFFIX) $(HOST_LIBIDL_LIBS)
-HOST_EXTRA_DEPS	= $(wildcard $(DIST)/host/lib/libhostxpt.*)
+HOST_LIBS	= $(DIST)/host/lib/$(LIB_PREFIX)hostxpt.$(LIB_SUFFIX) $(HOST_LIBIDL_LIBS)
+HOST_EXTRA_DEPS	= $(wildcard $(DIST)/host/lib/$(LIB_PREFIX)hostxpt.*)
 
 ifdef HOST_NSPR_MDCPUCFG
 HOST_CFLAGS	+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
 endif
+
+ifdef WINCE
+# Compile directly against the static lib, so we can use the tools
+# during the build without the shared library path being set.
+HOST_CFLAGS +=  -DEXPORT_XPT_API
+
+# Force MOZ_NO_DEBUG_RTL=1
+HOST_CFLAGS	+= /MD
+endif
+
 endif
 
 ifdef MACOS_SDK_DIR

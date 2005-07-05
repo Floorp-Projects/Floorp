@@ -45,10 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 LIBRARY_NAME	= xpt
 LIB_IS_C_ONLY	= 1
+
 ifdef CROSS_COMPILE
-ifndef WINCE
 HOST_LIBRARY_NAME	= hostxpt
-endif
 endif
 
 CSRCS		= xpt_arena.c xpt_struct.c xpt_xdr.c
@@ -71,9 +70,7 @@ export::
 	@$(MAKE) libs
 
 ifdef CROSS_COMPILE
-ifndef WINCE
 ifdef HOST_NSPR_MDCPUCFG
 HOST_CFLAGS     += -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
-endif
 endif
 endif
