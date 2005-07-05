@@ -43,11 +43,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= src
-
-# Cross-compiling the mar executable is not yet supported.
-ifndef CROSS_COMPILE
-DIRS		+= tool
-endif
+DIRS		= src tool
 
 include $(topsrcdir)/config/rules.mk

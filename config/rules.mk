@@ -48,10 +48,6 @@ ifndef INCLUDED_CONFIG_MK
 include $(topsrcdir)/config/config.mk
 endif
 
-ifdef CROSS_COMPILE
-HOST_AR_FLAGS		= $(AR_FLAGS)
-endif
-
 ifndef INCLUDED_VERSION_MK
 include $(topsrcdir)/config/version.mk
 endif

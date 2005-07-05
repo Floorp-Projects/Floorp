@@ -56,9 +56,9 @@ HOST_CSRCS	= \
 		mar.c \
 		$(NULL)
 
-HOST_LIBS	= $(DIST)/lib/$(LIB_PREFIX)mar.$(LIB_SUFFIX)
+HOST_LIBS	= $(DIST)/host/lib/$(LIB_PREFIX)hostmar.$(LIB_SUFFIX)
 
-ifeq (WINNT,$(OS_ARCH))
+ifeq ($(HOST_OS_ARCH),WINNT)
 HOST_EXTRA_LIBS += $(call EXPAND_LIBNAME,ws2_32)
 ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))
 WIN32_EXE_LDFLAGS += -NODEFAULTLIB:LIBC
@@ -68,3 +68,9 @@ endif
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef CROSS_COMPILE
+ifdef HOST_NSPR_MDCPUCFG
+HOST_CFLAGS     += -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
+endif
+endif
