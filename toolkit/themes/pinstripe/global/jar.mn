@@ -37,6 +37,7 @@ classic.jar:
 +  skin/classic/global/popup.css
 +  skin/classic/global/progressmeter.css
 +  skin/classic/global/radio.css
++  skin/classic/global/richlistbox.css
 +  skin/classic/global/scrollbars.css
 +  skin/classic/global/scrollbox.css
 +  skin/classic/global/spinbuttons.css
