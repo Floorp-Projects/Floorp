@@ -1075,7 +1075,7 @@ var BookmarksToolbarRDFObserver =
   onEndUpdateBatch: function (aDataSource)
   {
     this._overflowTimerInEffect = true;
-    setTimeout(BookmarksToolbar.resizeFunc, 0);
+    setTimeout(BookmarksToolbar.resizeFunc, 0, null);
   },
   _overflowTimerInEffect: false,
   setOverflowTimeout: function (aSource, aProperty)
@@ -1086,6 +1086,6 @@ var BookmarksToolbarRDFObserver =
         || aProperty.Value == gNC_NS+"LastModifiedDate")
       return;
     this._overflowTimerInEffect = true;
-    setTimeout(BookmarksToolbar.resizeFunc, 0);
+    setTimeout(BookmarksToolbar.resizeFunc, 0, null);
   }
 }
