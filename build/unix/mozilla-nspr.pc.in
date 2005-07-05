@@ -5,7 +5,7 @@ includedir=%includedir%
 
 Name: NSPR
 Description: The Netscape Portable Runtime
-Version: %MOZILLA_VERSION%
+Version: %NSPR_VERSION%
 Libs: %FULL_NSPR_LIBS%
 Cflags: %FULL_NSPR_CFLAGS%
 
