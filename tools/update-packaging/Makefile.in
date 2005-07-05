@@ -48,8 +48,14 @@ include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 # Default output location for update archive
 STAGE_DIR	= $(DIST)/update
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+PACKAGE_DIR	= $(DIST)/$(MOZ_PKG_APPNAME)/$(MOZ_APP_DISPLAYNAME).app
+else
+PACKAGE_DIR	= $(DIST)/$(MOZ_PKG_APPNAME)
+endif
+
 full-update::
 	mkdir -p $(STAGE_DIR)
-	MAR=$(DIST)/host/bin/mar $(srcdir)/make_full_update.sh "$(STAGE_DIR)/$(PKG_BASENAME).mar" "$(DIST)/$(MOZ_PKG_APPNAME)"
+	MAR=$(DIST)/host/bin/mar $(srcdir)/make_full_update.sh "$(STAGE_DIR)/$(PKG_BASENAME).mar" "$(PACKAGE_DIR)"
 
 include $(topsrcdir)/config/rules.mk
