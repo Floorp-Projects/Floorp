@@ -1338,7 +1338,14 @@ case "$target" in
         PR_MD_ASFILES=os_Linux_ia64.s
         ;;
     x86_64)
-        PR_MD_ASFILES=os_Linux_x86_64.s
+        if test -n "$USE_64"; then
+            PR_MD_ASFILES=os_Linux_x86_64.s
+        else
+            AC_DEFINE(i386)
+            PR_MD_ASFILES=os_Linux_x86.s
+            CC="$CC -m32"
+            CXX="$CXX -m32"
+        fi
         ;;
     m68k)
         CFLAGS="$CFLAGS -m68020-60"
