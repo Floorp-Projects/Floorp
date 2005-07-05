@@ -6030,10 +6030,18 @@ then
     fi
 
     if test "$MOZ_ENABLE_GTK2"; then
-        PKG_CHECK_MODULES(LIBIDL, libIDL-2.0 >= 0.8.0,_LIBIDL_FOUND=1)
+        PKG_CHECK_MODULES(LIBIDL, libIDL-2.0 >= 0.8.0,_LIBIDL_FOUND=1,_LIBIDL_FOUND=)
     fi
+    if test "$MOZ_ENABLE_GTK"; then
+        AM_PATH_LIBIDL($LIBIDL_VERSION,_LIBIDL_FOUND=1)
+    fi
+    dnl if no gtk/libIDL1 or gtk2/libIDL2 combination was found, fall back
+    dnl to either libIDL1 or libIDL2.
     if test -z "$_LIBIDL_FOUND"; then
         AM_PATH_LIBIDL($LIBIDL_VERSION,_LIBIDL_FOUND=1)
+        if test -z "$_LIBIDL_FOUND"; then
+            PKG_CHECK_MODULES(LIBIDL, libIDL-2.0 >= 0.8.0,_LIBIDL_FOUND=1)
+        fi
     fi
     dnl
     dnl If we don't have a libIDL config program & not cross-compiling, 
