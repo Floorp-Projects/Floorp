@@ -202,8 +202,7 @@ calMemoryCalendar.prototype = {
             return;
         }
 
-        if (aOldItem.id != this.mItems[aOldItem.id] ||
-            aOldItem.generation != aOldItem.generation) {
+        if (aOldItem != this.mItems[aOldItem.id]) {
             if (aListener)
                 aListener.onOperationComplete (this.calendarToReturn,
                                                Components.results.NS_ERROR_FAILURE,
@@ -226,7 +225,7 @@ calMemoryCalendar.prototype = {
         var modifiedItem = aNewItem.clone();
         modifiedItem.generation += 1;
         modifiedItem.makeImmutable();
-        this.mItems[newItem.id] = modifiedItem;
+        this.mItems[aNewItem.id] = modifiedItem;
 
         if (aListener)
             aListener.onOperationComplete (this.calendarToReturn,
