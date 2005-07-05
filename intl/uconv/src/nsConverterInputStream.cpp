@@ -245,8 +245,7 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
       NS_ASSERTION(0 < mUnicharData->GetBufferSize() - mUnicharDataLength,
                    "Decoder returned an error but filled the output buffer! "
                    "Should not happen.");
-      mUnicharData->GetBuffer()[mUnicharDataLength++] =
-                                             PRUnichar(mReplacementChar);
+      mUnicharData->GetBuffer()[mUnicharDataLength++] = mReplacementChar;
       ++srcConsumed;
       // XXX this is needed to make sure we don't underrun our buffer;
       // bug 160784 again
