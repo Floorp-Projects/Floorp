@@ -2023,7 +2023,7 @@ function handleURLBarCommand(aTriggeringEvent)
   canonizeUrl(aTriggeringEvent, postData);
 
   try {
-    addToUrlbarHistory();
+    addToUrlbarHistory(gURLBar.value);
   } catch (ex) {
     // Things may go wrong when adding url to session history,
     // but don't let that interfere with the loading of the url.
@@ -2772,12 +2772,11 @@ function FillHistoryMenu(aParent, aMenu)
     return true;
   }
 
-function addToUrlbarHistory()
+function addToUrlbarHistory(aUrlToAdd)
 {
-  var urlToAdd = gURLBar.value;
-  if (!urlToAdd)
+  if (!aUrlToAdd)
      return;
-  if (urlToAdd.search(/[\x00-\x1F]/) != -1) // don't store bad URLs
+  if (aUrlToAdd.search(/[\x00-\x1F]/) != -1) // don't store bad URLs
      return;
 
   if (!gGlobalHistory)
@@ -2788,8 +2787,8 @@ function addToUrlbarHistory()
     gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
                           .getService(Components.interfaces.nsIURIFixup);
    try {
-     if (urlToAdd.indexOf(" ") == -1) {
-       var fixedUpURI = gURIFixup.createFixupURI(urlToAdd, 0);
+     if (aUrlToAdd.indexOf(" ") == -1) {
+       var fixedUpURI = gURIFixup.createFixupURI(aUrlToAdd, 0);
        gGlobalHistory.markPageAsTyped(fixedUpURI);
      }
    }
@@ -4916,6 +4915,13 @@ function middleMousePaste(event)
   url = getShortcutOrURI(url, postData);
   if (!url)
     return;
+
+  try {
+    addToUrlbarHistory(url);
+  } catch (ex) {
+    // Things may go wrong when adding url to session history,
+    // but don't let that interfere with the loading of the url.
+  }
 
   openUILink(url,
              event,
