@@ -44,6 +44,7 @@
 #import "UserDefaults.h"
 #import "CHBrowserService.h"
 
+#include "nsBuildID.h"
 #include "nsIServiceManager.h"
 #include "nsProfileDirServiceProvider.h"
 #include "nsIPref.h"
@@ -61,6 +62,11 @@
 nsresult PR_CALLBACK
 app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
+
+// This is an arbitrary version stamp that gets written to the prefs file.
+// It can be used to detect when a new version of Camino is run that needs
+// some prefs to be upgraded.
+static const PRInt32 kCurrentPrefsVersion = 1;
 
 @interface PreferenceManager(PreferenceManagerPrivate)
 
@@ -330,12 +336,16 @@ static BOOL gMadePrefManager;
         NSLog(@"Mozilla prefs not set up successfully");
         return;
     }
-
-    // set the universal charset detector pref. we can't set it in chimera.js
-    // because it's a funky locale-specific pref.
-    static const char* const kUniversalCharsetDetectorPref = "intl.charset.detector";
-    mPrefs->SetCharPref(kUniversalCharsetDetectorPref, "universal_charset_detector");
     
+    PRInt32 lastRunPrefsVersion = 0;
+    mPrefs->GetIntPref("camino.prefs_version", &lastRunPrefsVersion);
+    mLastRunPrefsVersion = lastRunPrefsVersion;
+
+    if (mLastRunPrefsVersion < 1) // version at which we turn off the universal charset detector
+      mPrefs->SetCharPref("intl.charset.detector", "");
+
+    mPrefs->SetIntPref("camino.prefs_version", kCurrentPrefsVersion);
+        
     // fix up the cookie prefs. If 'p3p' or 'accept foreign cookies' are on, remap them to
     // something that chimera can deal with.
     PRInt32 acceptCookies = 0;
@@ -959,4 +969,3 @@ static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changed
 }
 
 @end
-

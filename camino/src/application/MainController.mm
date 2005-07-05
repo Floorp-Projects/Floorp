@@ -111,6 +111,7 @@ const int kReuseWindowOnAE = 2;
 - (BOOL)bookmarksItemsEnabled;
 - (void)adjustBookmarkMenuItems;
 - (void)doBookmarksMenuEnabling;
+- (void)adjustTextEncodingMenu;
 - (void)windowLayeringDidChange:(NSNotification*)inNotifiction;
 - (void)menuWillDisplay:(NSNotification*)inNotification;
 - (void)openPanelDidEnd:(NSOpenPanel*)inOpenPanel returnCode:(int)inReturnCode contextInfo:(void*)inContextInfo;
@@ -809,6 +810,16 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   }
 }
 
+-(IBAction) toggleAutoCharsetDetection:(id)aSender
+{
+  NSString* detectorValue = [[PreferenceManager sharedInstance] getStringPref:"intl.charset.detector" withSuccess:NULL];
+  BOOL universalChardetOn = [detectorValue isEqualToString:@"universal_charset_detector"];
+  NSString* newValue = universalChardetOn ? @"" : @"universal_charset_detector";
+  [[PreferenceManager sharedInstance] setPref:"intl.charset.detector" toString:newValue];
+  // and reload
+  [self doReload:nil];
+}
+
 -(IBAction) doStop:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -856,6 +867,10 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   if ([mBookmarksMenu isTargetOfWillDisplayNotification:[inNotification object]])
   {
     [self adjustBookmarkMenuItems];
+  }
+  else if ([mTextEncodingsMenu isTargetOfWillDisplayNotification:[inNotification object]])
+  {
+    [self adjustTextEncodingMenu];
   }
 }
 
@@ -1208,32 +1223,37 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   }
 }
 
+- (void)adjustTextEncodingMenu
+{
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+  {
+    // enable all items
+    [mTextEncodingsMenu setAllItemsEnabled:YES startingWithItemAtIndex:0 includingSubmenus:YES];
+
+    NSString* charset = [browserController currentCharset];
+#if DEBUG_CHARSET
+    NSLog(@"charset is %@", charset);
+#endif
+    NSNumber* tag = [mCharsets objectForKey:[charset lowercaseString]];
+    [mTextEncodingsMenu checkItemWithTag:[tag intValue] uncheckingOtherItems:YES];
+  }
+  else
+  {
+    [mTextEncodingsMenu setAllItemsEnabled:NO startingWithItemAtIndex:0 includingSubmenus:YES];
+    // always enable the autodetect item
+    [[mTextEncodingsMenu itemWithTag:kEncodingMenuAutodetectItemTag] setEnabled:YES];
+  }
+  
+  // update the state of the autodetect item
+  NSString* detectorValue = [[PreferenceManager sharedInstance] getStringPref:"intl.charset.detector" withSuccess:NULL];
+  BOOL universalChardetOn = [detectorValue isEqualToString:@"universal_charset_detector"];
+  [[mTextEncodingsMenu itemWithTag:kEncodingMenuAutodetectItemTag] setState:universalChardetOn ? NSOnState : NSOffState];
+}
+
 -(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
-
-  // Handle the encoding menu first, since there are many of those items. They're
-  // identifyable because they have a specific tag. 
-  const int kEncodingMenuTag = 10;
-  if ( [aMenuItem tag] >= kEncodingMenuTag ) {
-    if ( browserController ) {
-      NSString* charset = [browserController currentCharset];
-#if DEBUG_CHARSET
-      NSLog(@"charset is %@", charset);
-#endif
-      // given the document's charset, check if it maps to the same int as the
-      // current item's key. If yes, we select this item because it's our charset.
-      // Note that this relies on the key in the nib mapping to the right integer
-      // in the plist.
-      NSNumber* tag = [mCharsets objectForKey:[charset lowercaseString]];
-      if (tag && [[NSNumber numberWithInt:[aMenuItem tag]] isEqualToNumber:tag])
-        [aMenuItem setState:NSOnState];
-      else
-        [aMenuItem setState:NSOffState];
-      return YES;
-    }
-    return NO;
-  }
 
   // disable items that aren't relevant if there's no main browser window open
   // or the bookmark/history manager is open

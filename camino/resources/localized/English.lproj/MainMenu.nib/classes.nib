@@ -29,6 +29,7 @@
                 aboutServers = id; 
                 aboutWindow = id; 
                 biggerTextSize = id; 
+                clearHistory = id; 
                 closeTab = id; 
                 connectToServer = id; 
                 displayPreferencesWindow = id; 
@@ -68,6 +69,7 @@
                 showHistory = id; 
                 smallerTextSize = id; 
                 tipsTricksLink = id; 
+                toggleAutoCharsetDetection = id; 
                 toggleBookmarksToolbar = id; 
                 toggleOfflineMode = id; 
                 viewSource = id; 
@@ -90,6 +92,7 @@
                 mGoMenu = NSMenu; 
                 mServersSubmenu = NSMenu; 
                 mShowAllBookmarksMenuItem = NSMenuItem; 
+                mTextEncodingsMenu = NSMenu; 
             }; 
             SUPERCLASS = NSObject; 
         }, 

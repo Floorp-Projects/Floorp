@@ -46,6 +46,10 @@
 const int kRendezvousRelatedItemTag = 3000;
 const int kDividerTag = 4000;
 
+// Tags 10-80 are reserved for text encoding items
+const int kEncodingMenuTagBase = 10;
+const int kEncodingMenuAutodetectItemTag = 200;
+
 
 // Bookmarks menu
 

@@ -38,6 +38,8 @@
 
 // This file contains Camino-specific default preferences.
 
+#error unused
+
 // What to load in a new tab: 0 = blank, 1 = homepage, 2 = last page
 pref("browser.tabs.startPage", 0);
 

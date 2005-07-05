@@ -43,11 +43,12 @@ class nsIPref;
 
 @interface PreferenceManager : NSObject
 {
-    NSUserDefaults*	mDefaults;
-    ICInstance 			mInternetConfig;
+@private
+    NSUserDefaults* mDefaults;
+    ICInstance      mInternetConfig;
     nsProfileDirServiceProvider* mProfileProvider;
     nsIPref*        mPrefs;
-    
+    long            mLastRunPrefsVersion;
     // proxies notification stuff
     CFRunLoopSourceRef  mRunLoopSource;
 }

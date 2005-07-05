@@ -78,6 +78,8 @@ typedef enum EBookmarkOpenBehavior
     IBOutlet NSMenu*        mDockMenu;
     IBOutlet NSMenu*        mServersSubmenu;
 
+    IBOutlet NSMenu*        mTextEncodingsMenu;
+
     IBOutlet NSMenu*        mBookmarksHelperMenu; // not shown, used to get enable state
 	
     IBOutlet NSMenuItem*    mBookmarksToolbarMenuItem;
@@ -142,6 +144,7 @@ typedef enum EBookmarkOpenBehavior
 -(IBAction) showHistory:(id)aSender;
 -(IBAction) clearHistory:(id)aSender;
 -(IBAction) reloadWithCharset:(id)aSender;
+-(IBAction) toggleAutoCharsetDetection:(id)aSender;
 
 // Bookmarks menu actions.
 -(IBAction) importBookmarks:(id)aSender;

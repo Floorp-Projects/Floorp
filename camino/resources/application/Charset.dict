@@ -61,26 +61,27 @@
 	<integer>32</integer>
 	<key>hz-gb-2312</key>
 	<integer>33</integer>
+	<key>gb18030</key>
+	<integer>34</integer>
 
 	<key>iso-8859-2</key>
-	<integer>34</integer>
+	<integer>40</integer>
 	<key>windows-1250</key>
-	<integer>35</integer>
+	<integer>41</integer>
 	<key>iso-8859-4</key>
-	<integer>36</integer>
-
+	<integer>42</integer>
 	<key>windows-1258</key>
-	<integer>37</integer>
+	<integer>43</integer>
 
 	<key>iso-8859-9</key>
-	<integer>38</integer>
-	<key>windows-1254</key>
-	<integer>39</integer>
+	<integer>45</integer>
 
+	<key>windows-1254</key>
+	<integer>50</integer>
 	<key>windows-1257</key>
-	<integer>40</integer>
+	<integer>51</integer>
 
 	<key>utf-8</key>
-	<integer>41</integer>
+	<integer>60</integer>
 </dict>
 </plist>
