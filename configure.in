@@ -4078,6 +4078,11 @@ MOZ_ARG_ENABLE_BOOL(official-branding,
 
 AC_SUBST(MOZ_USE_OFFICIAL_BRANDING)
 
+# Rebrand Firefox as DeerPark for unofficial builds.
+if test -z "$MOZ_USE_OFFICIAL_BRANDING" && test "$MOZ_BUILD_APP" = "browser"; then
+    MOZ_APP_DISPLAYNAME="DeerPark"
+fi
+
 dnl ========================================================
 dnl = Distribution ID
 dnl ========================================================
