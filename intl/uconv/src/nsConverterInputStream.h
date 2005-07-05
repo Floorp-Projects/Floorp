@@ -37,7 +37,7 @@
 
 #include "nsIInputStream.h"
 #include "nsIConverterInputStream.h"
-//#include "nsIUnicharLineInputStream.h"
+#include "nsIUnicharLineInputStream.h"
 #include "nsString.h"
 #include "nsReadLine.h"
 
@@ -55,13 +55,13 @@
 
 
 
-class nsConverterInputStream : public nsIConverterInputStream /*,
-                               public nsIUnicharLineInputStream*/ {
+class nsConverterInputStream : public nsIConverterInputStream,
+                               public nsIUnicharLineInputStream {
 
  public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIUNICHARINPUTSTREAM
-//    NS_DECL_NSIUNICHARLINEINPUTSTREAM
+    NS_DECL_NSIUNICHARLINEINPUTSTREAM
     NS_DECL_NSICONVERTERINPUTSTREAM
 
     nsConverterInputStream() :
@@ -69,8 +69,8 @@ class nsConverterInputStream : public nsIConverterInputStream /*,
         mLeftOverBytes(0),
         mUnicharDataOffset(0),
         mUnicharDataLength(0),
-        mReplacementChar(DEFAULT_REPLACEMENT_CHARACTER) /*,
-        mLineBuffer(nsnull) */ { }
+        mReplacementChar(DEFAULT_REPLACEMENT_CHARACTER),
+        mLineBuffer(nsnull) { }
     
     virtual ~nsConverterInputStream() { Close(); }
 
@@ -90,5 +90,5 @@ class nsConverterInputStream : public nsIConverterInputStream /*,
     PRUint32  mUnicharDataLength;
     PRUnichar mReplacementChar;
 
-//    nsLineBuffer<PRUnichar>* mLineBuffer;    
+    nsLineBuffer<PRUnichar>* mLineBuffer;    
 };
