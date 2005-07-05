@@ -111,7 +111,7 @@
         <setter><![CDATA[
           if (!val)
             return val;
-          uppercaseVal = val.toUpperCase();
+          var uppercaseVal = val.toUpperCase();
           // Translate standard HTML color strings:
           if (uppercaseVal[0] != "#") {
             switch (val) {
@@ -215,7 +215,8 @@
             event.initEvent(aEventName, false, true);
             var cancel = !aTarget.dispatchEvent(event);
             if (aTarget.hasAttribute("on" + aEventName)) {
-              var rv = (new Function ("event", aTarget.getAttribute("on" + aEventName)))(event);
+              var fn = new Function ("event", aTarget.getAttribute("on" + aEventName));
+              var rv = fn.call(aTarget, event);
               if (rv == false)
                 cancel = true;
             }
@@ -485,7 +486,8 @@
             event.initEvent(aEventName, false, true);
             var cancel = !aTarget.dispatchEvent(event);
             if (aTarget.hasAttribute("on" + aEventName)) {
-              var rv = (new Function ("event", aTarget.getAttribute("on" + aEventName)))(event);
+              var fn = new Function ("event", aTarget.getAttribute("on" + aEventName));
+              var rv = fn.call(aTarget, event);
               if (rv == false)
                 cancel = true;
             }
