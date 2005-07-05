@@ -268,8 +268,10 @@ function MsgFolderProperties()
               tabID:"", tabIndex:0, name:name});
 }
 
-function FolderProperties(name, uri)
+function FolderProperties(name, oldName, uri)
 {
+  if (name != oldName)
+    RenameFolder(name, uri);
 }
 
 function MsgToggleMessagePane()
