@@ -690,6 +690,8 @@ DIRENT_INO=d_ino
 CYGWIN_WRAPPER=
 WIN_TOP_SRC=
 MOZ_USER_DIR=".mozilla"
+HOST_AR='$(AR)'
+HOST_AR_FLAGS='$(AR_FLAGS)'
 
 MOZ_JPEG_CFLAGS=
 MOZ_JPEG_LIBS='-L$(DIST)/lib -lmozjpeg'
@@ -741,6 +743,8 @@ else
 fi
 _COMPILER_PREFIX=
 
+HOST_OS_ARCH=`echo $host_os | sed -e 's|/|_|g'`
+
 #######################################################################
 # Master "Core Components" macros for getting the OS target           #
 #######################################################################
@@ -788,12 +792,66 @@ esac
 
 #
 # Define and override various archtecture-specific variables, including
+# HOST_OS_ARCH
 # OS_ARCH
 # OS_TEST
 # OS_TARGET
 # OS_RELEASE
 # OS_MINOR_RELEASE
 #
+
+case "$HOST_OS_ARCH" in
+cygwin*|mingw*|mks*|msvc*)
+    HOST_OS_ARCH=WINNT
+    ;;
+linux*)
+    HOST_OS_ARCH=Linux
+    ;;
+solaris*)
+    HOST_OS_ARCH=SunOS
+    ;;
+BSD_386)
+    HOST_OS_ARCH=BSD
+    ;;
+dgux)
+    HOST_OS_ARCH=DGUX
+    ;;
+IRIX64)
+    HOST_OS_ARCH=IRIX
+    ;;
+UNIX_SV)
+    if "`cat /etc/bcheckrc | grep -c NCR 2>/dev/null`" != "0"; then
+        HOST_OS_ARCH=NCR
+    else
+        HOST_OS_ARCH=UNIXWARE
+    fi
+    ;;
+ncr)
+    HOST_OS_ARCH=NCR
+    ;;
+UNIX_SYSTEM_V)
+    HOST_OS_ARCH=NEC
+    ;;
+OSF1)
+    ;;
+*OpenVMS*)
+    HOST_OS_ARCH=OpenVMS
+    ;;
+OS_2)
+    HOST_OS_ARCH=OS2
+    ;;
+QNX)
+    ;;
+SCO_SV)
+    HOST_OS_ARCH=SCOOS
+    ;;
+SINIX-N | SINIX-Y | SINIX-Z |ReliantUNIX-M)
+    HOST_OS_ARCH=SINIX
+    ;;
+UnixWare)
+    HOST_OS_ARCH=UNIXWARE
+    ;;
+esac
 
 case "$OS_ARCH" in
 WINNT)
@@ -1062,6 +1120,8 @@ case "$host" in
 
 *cygwin*|*mingw*|*mks*|*msvc*|*wince)
     if test -n "$_WIN32_MSVC"; then
+        HOST_AR=lib
+        HOST_AR_FLAGS='-NOLOGO -OUT:"$@"'
         HOST_CFLAGS="$HOST_CFLAGS -TC -nologo"
     else
         HOST_CFLAGS="$HOST_CFLAGS -mno-cygwin"
@@ -6651,10 +6711,12 @@ AC_SUBST(HOST_CFLAGS)
 AC_SUBST(HOST_CXXFLAGS)
 AC_SUBST(HOST_OPTIMIZE_FLAGS)
 AC_SUBST(HOST_AR)
+AC_SUBST(HOST_AR_FLAGS)
 AC_SUBST(HOST_LD)
 AC_SUBST(HOST_RANLIB)
 AC_SUBST(HOST_NSPR_MDCPUCFG)
 AC_SUBST(HOST_BIN_SUFFIX)
+AC_SUBST(HOST_OS_ARCH)
 
 AC_SUBST(TARGET_CPU)
 AC_SUBST(TARGET_VENDOR)
