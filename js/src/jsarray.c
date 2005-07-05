@@ -1274,10 +1274,23 @@ array_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 if (!ValueIsLength(cx, v, &alength))
                     return JS_FALSE;
                 for (slot = 0; slot < alength; slot++) {
+                    JSProperty *prop;
+                    JSObject *obj2;
+
                     if (!IndexToId(cx, slot, &id))
                         return JS_FALSE;
                     if (!IndexToId(cx, length + slot, &id2))
                         return JS_FALSE;
+                    if (!OBJ_LOOKUP_PROPERTY(cx, aobj, id, &obj2, &prop))
+                        return JS_FALSE;
+                    if (!prop) {
+                        /* 
+                         * Per ECMA 262, 15.4.4.4, step 9, ignore non-existent
+                         * properties.
+                         */
+                        continue;
+                    }
+                    OBJ_DROP_PROPERTY(cx, obj2, prop);
                     if (!OBJ_GET_PROPERTY(cx, aobj, id, &v))
                         return JS_FALSE;
                     if (!OBJ_SET_PROPERTY(cx, nobj, id2, &v))
@@ -1295,7 +1308,7 @@ array_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         length++;
     }
 
-    return JS_TRUE;
+    return js_SetLengthProperty(cx, nobj, length);
 }
 
 static JSBool
