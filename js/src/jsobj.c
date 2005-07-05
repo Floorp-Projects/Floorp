@@ -3825,6 +3825,12 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
     JSErrorReporter older;
     jsval fval;
     JSBool ok;
+    int stackDummy;
+
+    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        return JS_FALSE;
+    }
 
     /*
      * Report failure only if an appropriate method was found, and calling it
