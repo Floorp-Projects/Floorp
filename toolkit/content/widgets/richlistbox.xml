@@ -53,6 +53,10 @@
       </xul:scrollbox>
     </content>
 
+    <resources>
+      <stylesheet src="chrome://global/skin/richlistbox.css"/>
+    </resources>
+
     <implementation implements="nsIDOMXULSelectControlElement">
       <field name="scrollBoxObject">null</field>
       <constructor>
@@ -124,7 +128,8 @@
           <![CDATA[
             // if nothing selected, we go from the bottom
             for (var i = this.selectedItem ? this.selectedItem.previousSibling : this.lastChild; i; i = i.previousSibling) {
-              if ("fireEvent" in i) {
+              // could have a template element, which would be a sibling
+              if (i instanceof Components.interfaces.nsIDOMXULSelectControlItemElement) {
                 this.selectedItem = i;
                 return true;
               }
@@ -139,7 +144,8 @@
           <![CDATA[
             // if nothing selected, we go from the top
             for (var i = this.selectedItem ? this.selectedItem.nextSibling : this.firstChild; i; i = i.nextSibling) {
-              if ("fireEvent" in i) {
+              // could have a template element, which would be a sibling
+              if (i instanceof Components.interfaces.nsIDOMXULSelectControlItemElement) {
                 this.selectedItem = i;
                 return true;
               }
@@ -242,6 +248,10 @@
       <children />
     </content>
 
+    <resources>
+      <stylesheet src="chrome://global/skin/richlistbox.css"/>
+    </resources>
+
     <implementation implements="nsIAccessibleProvider, nsIDOMXULSelectControlItemElement">
       <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
       <property name="accessible">
@@ -289,7 +299,7 @@
           <![CDATA[
             var parent = this.parentNode;
             while (parent) {
-              if (parent.localName == "richlistbox")
+              if (parent instanceof Components.interfaces.nsIDOMXULSelectControlElement)
                 return parent;
               parent = parent.parentNode;
             }
