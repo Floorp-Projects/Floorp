@@ -53,6 +53,7 @@
 <dialog xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="aboutDialog"
+        windowtype="Browser:About"
         onload="init(event);" onunload="uninit(event);"
 #ifdef XP_MACOSX
         buttons="extra2"
