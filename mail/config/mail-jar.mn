@@ -129,6 +129,7 @@ content/global/XPCNativeWrapper.js,                   toolkit/content/global/XPC
 content/global/fontpackage.xul,                       toolkit/content/global/fontpackage.xul
 content/global/fontpackage.js,                        toolkit/content/global/fontpackage.js
 content/global/alerts,                                toolkit/content/global/alerts
+content/global/platformHTMLBindings.xml,              toolkit/content/global/platformHTMLBindings.xml
 
 #from mozapps
 content/mozapps/downloads,                            toolkit/content/mozapps/downloads
