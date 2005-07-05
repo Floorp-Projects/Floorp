@@ -62,11 +62,6 @@ window {
     margin-left: 0.5em;
 }
 
-#input-widgets {
-    border: none;
-    -moz-binding: none;
-}
-
 #input-widget,
 #input-widget-multiline {
     border: thin silver inset;

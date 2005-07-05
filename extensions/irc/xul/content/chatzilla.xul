@@ -138,8 +138,8 @@
     <splitter id="input-splitter" orient="vertical" collapse="after"
       collapsed="true"/>
   
-    <toolbar id="input-widgets">
-      <toolbarbutton id="server-nick" type="menu"/>
+    <hbox id="input-widgets">
+      <button id="server-nick" type="menu" label=""/>
       <hbox id="multiline-box" flex="1" collapsed="true">
         <textbox id="multiline-input" multiline="true" flex="1" height="100px"
           class="multiline-input-widget" onfocus="onInputFocus();"/>
@@ -159,7 +159,7 @@
           oncommand="dispatch('pref multiline true');" 
           tooltiptext="&multiline-expand.tooltip;"/>
       </hbox>
-    </toolbar>
+    </hbox>
   
   <overlaytarget id="statusbar-overlay-target"/>
 
