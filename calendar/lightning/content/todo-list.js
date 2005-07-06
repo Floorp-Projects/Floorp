@@ -12,6 +12,15 @@ function initialize()
     this.populateTodoList();
 };
 
+todoListManager.rebuildList =
+function rebuildList()
+{
+    while (this.mOuterBox.firstChild)
+        this.mOuterBox.removeChild(this.mOuterBox.firstChild);
+    
+    this.populateTodoList();
+};
+
 todoListManager.addTodo =
 function addTodo(newTodo)
 {
@@ -46,6 +55,44 @@ function listener_onGetResult(calendar, status, itemtype, detail, count, items)
 
 todoListManager.calendarObserver =
 {
+};
+
+todoListManager.calendarObserver.QueryInterface =
+function QueryInterface(aIID)
+{
+    if (!aIID.equals(Components.interfaces.calIObserver) &&
+        !aIID.equals(Components.interfaces.calICompositeObserver) &&
+        !aIID.equals(Components.interfaces.nsISupports)) {
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    }
+
+    return this;
+};
+
+
+todoListManager.calendarObserver.onCalendarAdded =
+todoListManager.calendarObserver.onCalendarRemoved =
+function observer_onCalendarAddedOrRemoved(calendar)
+{
+    todoListManager.rebuildList();
+};
+
+todoListManager.calendarObserver.onModifyItem =
+function observer_onModifyItem(item)
+{
+    if (!(item instanceof Components.interfaces.calITodo))
+        return;
+
+    todoListManager.rebuildList();    
+};
+
+todoListManager.calendarObserver.onDeleteItem =
+function observer_onDeleteItem(item)
+{
+    if (!(item instanceof Components.interfaces.calITodo))
+        return;
+
+    todoListManager.rebuildList();
 };
 
 todoListManager.calendarObserver.onAddItem =

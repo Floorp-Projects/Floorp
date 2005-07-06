@@ -1,10 +1,17 @@
 /* Skin-domain style rules for lightning UI (pinstripe version) */
 
-#calendarTree { 
-  background: #cccccc;
+calendar-todo-item {
+  -moz-box-align: center;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
-treechildren::-moz-tree-cell(checked) {
+calendar-todo-item[selected="true"] {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+#calendarTree > treechildren::-moz-tree-cell(checked) {
   background: #ff0000;
   list-style-image: url("chrome://calendar/skin/dot.png");
 }

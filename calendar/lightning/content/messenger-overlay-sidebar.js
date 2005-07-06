@@ -142,7 +142,8 @@ function selectedCalendarPane(event)
 
     // give the view the calendar, but make sure that everything
     // has uncollapsed first before we try to relayout!
-    setTimeout(0, function() { showCalendar(today()); });
+    showCalendar(today());
+    //setTimeout(function() { showCalendar(today()); }, 0);
 }
 
 function LtnObserveDisplayDeckChange(event)
