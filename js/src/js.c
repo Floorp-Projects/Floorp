@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -401,7 +402,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-PswWx] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [-S maxstacksize] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: js [-PswWx] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -454,10 +455,12 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
           case 'b':
           case 'c':
           case 'f':
+          case 'e':
           case 'v':
           case 'S':
             ++i;
             break;
+          default:;
         }
     }
 
@@ -550,12 +553,28 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             Process(cx, obj, argv[i]);
             /*
              * XXX: js -f foo.js should interpret foo.js and then
-             * drop into interactive mode, but that breaks test
+             * drop into interactive mode, but that breaks the test
              * harness. Just execute foo.js for now.
              */
             isInteractive = JS_FALSE;
             break;
 
+        case 'e':
+        {
+            jsval rval;
+
+            if (++i == argc) {
+                return usage();
+            }
+
+            /* Pass a filename of -e to imitate PERL */
+            JS_EvaluateScript(cx, obj, argv[i], strlen(argv[i]),
+                              "-e", 1, &rval);
+
+            isInteractive = JS_FALSE;
+            break;
+
+        }
         case 'S':
             if (++i == argc) {
                 return usage();

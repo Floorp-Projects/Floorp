@@ -686,7 +686,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-PswW] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-PswWx] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -722,8 +722,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         switch (argv[i][1]) {
           case 'v':
           case 'f':
+          case 'e':
             ++i;
             break;
+          default:;
         }
     }
 
@@ -772,6 +774,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 's':
             JS_ToggleOptions(cx, JSOPTION_STRICT);
             break;
+        case 'x':
+            JS_ToggleOptions(cx, JSOPTION_XML);
+            break;
         case 'P':
             if (JS_GET_CLASS(cx, JS_GetPrototype(cx, obj)) != &global_class) {
                 JSObject *gobj;
@@ -800,6 +805,21 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
              */
             isInteractive = JS_FALSE;
             break;
+
+        case 'e':
+        {
+            jsval rval;
+
+            if (++i == argc) {
+                return usage();
+            }
+
+            JS_EvaluateScript(cx, obj, argv[i], strlen(argv[i]), 
+                              "-e", 1, &rval);
+
+            isInteractive = JS_FALSE;
+            break;
+        }
         default:
             return usage();
         }
