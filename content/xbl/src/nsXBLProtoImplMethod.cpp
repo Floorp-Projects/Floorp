@@ -329,6 +329,10 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   }
 
   if (!ok) {
+    // Tell XPConnect about any pending exceptions. This is needed
+    // to avoid dropping JS exceptions in case we got here through
+    // nested calls through XPConnect.
+    nsContentUtils::NotifyXPCIfExceptionPending(cx);
     return NS_ERROR_FAILURE;
   }
 
