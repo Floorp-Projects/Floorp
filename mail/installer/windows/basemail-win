@@ -45,15 +45,15 @@ bin\components\newsblog.js
 
 ; Optional Talkback
 [talkback]
-bin\components\qfaservices.dll
-bin\components\qfaservices.xpt
-bin\components\BrandRes.dll
-bin\components\fullsoft.dll
-bin\components\master.ini
-bin\components\talkback-l10n.ini
-bin\components\talkback.cnt
-bin\components\talkback.exe
-bin\components\talkback.hlp
+bin\extensions\talkback@mozilla.org\components\qfaservices.dll
+bin\extensions\talkback@mozilla.org\components\qfaservices.xpt
+bin\extensions\talkback@mozilla.org\components\BrandRes.dll
+bin\extensions\talkback@mozilla.org\components\fullsoft.dll
+bin\extensions\talkback@mozilla.org\components\master.ini
+bin\extensions\talkback@mozilla.org\components\talkback-l10n.ini
+bin\extensions\talkback@mozilla.org\components\talkback.cnt
+bin\extensions\talkback@mozilla.org\components\talkback.exe
+bin\extensions\talkback@mozilla.org\components\talkback.hlp
 
 [mail]
 
