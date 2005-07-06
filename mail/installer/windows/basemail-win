@@ -70,6 +70,7 @@ bin\defaults\messenger\SpamPal.sfd
 bin\defaults\profile\localstore.rdf
 bin\defaults\profile\prefs.js
 bin\defaults\profile\mimeTypes.rdf
+bin\updater.ini
 
 bin\components\addrbook.xpt
 bin\components\mime.xpt
@@ -360,3 +361,6 @@ bin\res\table-remove-row.gif
 bin\gksvggdiplus.dll
 bin\res\svg.css
 bin\components\dom_svg.xpt
+
+; [Updater]
+bin\updater.exe

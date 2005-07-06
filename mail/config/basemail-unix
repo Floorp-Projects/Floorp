@@ -70,6 +70,7 @@ defaults/isp/US/movemail.rdf
 defaults/isp/movemail.rdf
 defaults/autoconfig/platform.js
 defaults/autoconfig/prefcalls.js
+updater.ini
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; App extensions to Mail
@@ -385,6 +386,8 @@ components/libfileview.so
 ;;components/nsHelperAppDlg.js
 ;;components/nsDownloadProgressListener.js
 
+; updater
+updater
 
 ; xmlextras, optional for XMLHttpRequest support
 components/libxmlextras.so

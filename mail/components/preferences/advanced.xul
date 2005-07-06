@@ -206,8 +206,7 @@
                 <separator class="thin"/>
                 <hbox>
                   <button id="checkNowButton" label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
-                          oncommand="gAdvancedPane.checkForUpdates();"
-                          preference="app.update.enabled"/>
+                          oncommand="gAdvancedPane.checkForUpdates();"/>
                   <button label="&showUpdates.label;" accesskey="&showUpdates.accesskey;"
                           oncommand="gAdvancedPane.showUpdates();"/>
                 </hbox>
