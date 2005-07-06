@@ -731,6 +731,11 @@
 #endif
 #define CreateFontIndirectA       mozce_CreateFontIndirectA
 
+#ifdef CreateMutexA
+#undef CreateMutexA
+#endif
+#define CreateMutexA              mozce_CreateMutexA
+
 #ifdef CreateProcessA
 #undef CreateProcessA
 #endif
@@ -1354,6 +1359,7 @@ extern "C" {
   MOZCE_SHUNT_API BOOL mozce_CopyFileA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, BOOL bFailIfExists);
   MOZCE_SHUNT_API BOOL mozce_CreateDirectoryA(LPCSTR lpPathName, LPSECURITY_ATTRIBUTES lpSecurityAttributes);
   MOZCE_SHUNT_API BOOL mozce_RemoveDirectoryA(LPCSTR lpPathName);
+  MOZCE_SHUNT_API HANDLE CreateMutex(LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCSTR lpName);
   MOZCE_SHUNT_API BOOL mozce_CreateProcessA(LPCSTR pszImageName, LPCSTR pszCmdLine, LPSECURITY_ATTRIBUTES psaProcess, LPSECURITY_ATTRIBUTES psaThread, BOOL fInheritHandles, DWORD fdwCreate, LPVOID pvEnvironment, LPSTR pszCurDir, LPSTARTUPINFO psiStartInfo, LPPROCESS_INFORMATION pProcInfo);
   MOZCE_SHUNT_API BOOL mozce_ExtTextOutA(HDC inDC, int inX, int inY, UINT inOptions, LPCRECT inRect, LPCSTR inString, UINT inCount, const LPINT inDx);
   MOZCE_SHUNT_API BOOL mozce_TextOutA(HDC  hdc, int  nXStart, int  nYStart, LPCSTR  lpString, int  cbString);

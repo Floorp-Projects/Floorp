@@ -212,6 +212,23 @@ MOZCE_SHUNT_API DWORD mozce_GetFileAttributesA(LPCSTR lpFileName)
     return retval;
 }
 
+MOZCE_SHUNT_API HANDLE mozce_CreateMutexA(LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCSTR lpName)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_CreateMutexA called\n");
+#endif
+    
+    if (!lpName)
+        return CreateMutexW(lpMutexAttributes, bInitialOwner, NULL);
+    
+    LPTSTR widestr = a2w_malloc(lpName, -1, NULL);
+    HANDLE h = CreateMutexW(lpMutexAttributes, bInitialOwner, widestr);
+    free(widestr);
+    return h;
+}
+
 MOZCE_SHUNT_API BOOL mozce_CreateProcessA(LPCSTR pszImageName, LPCSTR pszCmdLine, LPSECURITY_ATTRIBUTES psaProcess, LPSECURITY_ATTRIBUTES psaThread, BOOL fInheritHandles, DWORD fdwCreate, LPVOID pvEnvironment, LPSTR pszCurDir, LPSTARTUPINFO psiStartInfo, LPPROCESS_INFORMATION pProcInfo)
 {
     MOZCE_PRECHECK
@@ -535,42 +552,39 @@ MOZCE_SHUNT_API HDC mozce_CreateDCA(LPCSTR inDriver, LPCSTR inDevice, LPCSTR inO
     LPTSTR wDevice = a2w_malloc(inDevice, -1, NULL);
     LPTSTR wOutput = a2w_malloc(inOutput, -1, NULL);
 
-	DEVMODE wInitData;
-	if (inInitData)
+    DEVMODE wInitData;
+    if (inInitData)
     {
-		memset(&wInitData, 0, sizeof(wInitData));
-
-		wInitData.dmSpecVersion = inInitData->dmSpecVersion;
-		wInitData.dmDriverVersion = inInitData->dmDriverVersion;
-		wInitData.dmSize = inInitData->dmSize;
-		wInitData.dmDriverExtra = inInitData->dmDriverExtra;
-		wInitData.dmFields = inInitData->dmFields;
-		wInitData.dmOrientation = inInitData->dmOrientation;
-		wInitData.dmPaperSize = inInitData->dmPaperSize;
-		wInitData.dmPaperLength = inInitData->dmPaperLength;
-		wInitData.dmPaperWidth = inInitData->dmPaperWidth;
-		wInitData.dmScale = inInitData->dmScale;
-		wInitData.dmCopies = inInitData->dmCopies;
-		wInitData.dmDefaultSource = inInitData->dmDefaultSource;
-		wInitData.dmPrintQuality = inInitData->dmPrintQuality;
-		wInitData.dmColor = inInitData->dmColor;
-		wInitData.dmDuplex = inInitData->dmDuplex;
-		wInitData.dmYResolution = inInitData->dmYResolution;
-		wInitData.dmTTOption = inInitData->dmTTOption;
-		wInitData.dmCollate = inInitData->dmCollate;
-		wInitData.dmLogPixels = inInitData->dmLogPixels;
-		wInitData.dmBitsPerPel = inInitData->dmBitsPerPel;
-		wInitData.dmPelsWidth = inInitData->dmPelsWidth;
-		wInitData.dmPelsHeight = inInitData->dmPelsHeight;
-		wInitData.dmDisplayFlags = inInitData->dmDisplayFlags;
-		wInitData.dmDisplayFrequency = inInitData->dmDisplayFrequency;
-
-		a2w_buffer((LPCSTR)inInitData->dmDeviceName, -1, wInitData.dmDeviceName, charcount(wInitData.dmDeviceName));
-		a2w_buffer((LPCSTR)inInitData->dmFormName, -1, wInitData.dmFormName, charcount(wInitData.dmFormName));
-	}
-
+        memset(&wInitData, 0, sizeof(wInitData));
+        
+        wInitData.dmSpecVersion = inInitData->dmSpecVersion;
+        wInitData.dmDriverVersion = inInitData->dmDriverVersion;
+        wInitData.dmSize = inInitData->dmSize;
+        wInitData.dmDriverExtra = inInitData->dmDriverExtra;
+        wInitData.dmFields = inInitData->dmFields;
+        wInitData.dmOrientation = inInitData->dmOrientation;
+        wInitData.dmPaperSize = inInitData->dmPaperSize;
+        wInitData.dmPaperLength = inInitData->dmPaperLength;
+        wInitData.dmPaperWidth = inInitData->dmPaperWidth;
+        wInitData.dmScale = inInitData->dmScale;
+        wInitData.dmCopies = inInitData->dmCopies;
+        wInitData.dmDefaultSource = inInitData->dmDefaultSource;
+        wInitData.dmPrintQuality = inInitData->dmPrintQuality;
+        wInitData.dmColor = inInitData->dmColor;
+        wInitData.dmDuplex = inInitData->dmDuplex;
+        wInitData.dmYResolution = inInitData->dmYResolution;
+        wInitData.dmTTOption = inInitData->dmTTOption;
+        wInitData.dmCollate = inInitData->dmCollate;
+        wInitData.dmLogPixels = inInitData->dmLogPixels;
+        wInitData.dmBitsPerPel = inInitData->dmBitsPerPel;
+        wInitData.dmPelsWidth = inInitData->dmPelsWidth;
+        wInitData.dmPelsHeight = inInitData->dmPelsHeight;
+        wInitData.dmDisplayFlags = inInitData->dmDisplayFlags;
+        wInitData.dmDisplayFrequency = inInitData->dmDisplayFrequency;
+        a2w_buffer((LPCSTR)inInitData->dmDeviceName, -1, wInitData.dmDeviceName, charcount(wInitData.dmDeviceName));
+        a2w_buffer((LPCSTR)inInitData->dmFormName, -1, wInitData.dmFormName, charcount(wInitData.dmFormName));
+    }
     retval = CreateDC(wDriver, wDevice, wOutput, inInitData ? &wInitData : NULL);
-
     if(NULL != wDriver)
     {
         free(wDriver);
