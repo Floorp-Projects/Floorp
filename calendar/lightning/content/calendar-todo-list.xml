@@ -15,21 +15,21 @@
             
             onAddItem: function onAddItem(aItem)
             {
-                if (!(item instanceof Components.interfaces.calITodo))
+                if (!(aItem instanceof Components.interfaces.calITodo))
                     return;
                 this.todoList.addTodo(aItem);
             },
             
             onDeleteItem: function onDeleteItem(aItem)
             {
-                if (!(item instanceof Components.interfaces.calITodo))
+                if (!(aItem instanceof Components.interfaces.calITodo))
                     return;
                 this.todoList.rebuildDisplay();
             },
             
             onModifyItem: function onModifyItem(aItem)
             {
-                if (!(item instanceof Components.interfaces.calITodo))
+                if (!(aItem instanceof Components.interfaces.calITodo))
                     return;
                 this.todoList.rebuildDisplay();
             },
@@ -72,6 +72,7 @@
             }
         })
         ]]></field>
+
         <property name="calendar">
             <getter><![CDATA[ return this.mCalendar; ]]></getter>
             <setter><![CDATA[
@@ -84,15 +85,24 @@
             ]]></setter>
         </property>
 
+        <method name="fireEvent">
+            <parameter name="aEventType"/>
+            <body><![CDATA[
+                var e = document.createEvent("Events");
+                e.initEvent("todo-" + aEventType, false, true);
+                this.dispatchEvent(e);
+            ]]></body>
+          </method>
+
         <method name="addTodo">
             <parameter name="aTodo"/>
             <body><![CDATA[
-                dump("adding new todo " + aTodo.title + "\n");
+                void("adding new todo " + aTodo.title + "\n");
                 var newTodoElt = document.createElement("calendar-todo-item");
                 newTodoElt.setAttribute("item-calendar", aTodo.calendar.uri.spec);
 
                 this.appendChild(newTodoElt);
-                newTodoElt.setTodo(aTodo);
+                newTodoElt.todo = aTodo;
             ]]></body>
         </method>
 
@@ -125,7 +135,6 @@
             ]]></handler>
 
             <handler event="keypress"><![CDATA[
-                dump("handling keypress " + event.keyCode + "\n");
                 const kKE = Components.interfaces.nsIDOMKeyEvent;
                 if (event.keyCode == kKE.DOM_VK_RETURN ||
                     event.keyCode == kKE.DOM_VK_ENTER) {
@@ -165,19 +174,10 @@
       <property name="label">
       <getter><![CDATA[ return document.getAnonymousElementByAttribute(this, "anonid", "todo-label");]]></getter>
       </property>
-      
-      <method name="fireEvent">
-        <parameter name="aEventType"/>
-        <body>
-        <![CDATA[
-          var e = document.createEvent("Events");
-          e.initEvent("todo-" + aEventType, false, true);
-          
-          this.dispatchEvent(e);
-        ]]>
-        </body>
-      </method>
 
+      <property name="todo" onget="return this.mTodo;"
+                onset="this.mTodo = val; this.updateDisplayFromTodo();"/>
+      
       <method name="setAttribute">
         <parameter name="aAttr"/>
         <parameter name="aVal"/>
@@ -195,13 +195,8 @@
         var dirty = false;
         var clone = this.mTodo.clone();
         if (this.mTodo.isCompleted != this.checkbox.checked) {
-            dump("checked changed (" + uneval(this.mTodo.isCompleted) +
-                 " => " + uneval(this.checkbox.checked) + "\n");
             clone.isCompleted = this.checkbox.checked;
             dirty = true;
-        } else {
-            dump("checked not changed (" + uneval(this.mTodo.isCompleted) +
-                 " == " + uneval(this.checkbox.checked) + "\n");
         }
         if (this.mTodo.title != this.label.value) {
             clone.title = this.label.value;
@@ -209,7 +204,7 @@
         }
         if (dirty) {
             this.mTodo.calendar.modifyItem(clone, this.mTodo, null);
-            dump(clone.icalComponent.serializeToICS() + "\n");
+            // dump(clone.icalComponent.serializeToICS() + "\n");
             this.mTodo = clone;
         }
         ]]></body>
@@ -222,13 +217,6 @@
         ]]></body>
       </method>
 
-      <method name="setTodo">
-        <parameter name="aTodo"/>
-        <body><![CDATA[
-            this.mTodo = aTodo;
-            this.updateDisplayFromTodo();
-        ]]></body>
-      </method>
         </implementation>
 
     </binding>
