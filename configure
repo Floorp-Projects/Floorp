@@ -5298,7 +5298,7 @@ case "$host" in
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:"$@"'
-        HOST_CFLAGS="$HOST_CFLAGS -TC -nologo"
+        HOST_CFLAGS="$HOST_CFLAGS -TC -nologo -Fd\$(HOST_PDBFILE)"
     else
         HOST_CFLAGS="$HOST_CFLAGS -mno-cygwin"
     fi
