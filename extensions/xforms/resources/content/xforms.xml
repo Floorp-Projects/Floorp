@@ -262,12 +262,27 @@
     </content>
 
     <implementation implements="nsIXFormsUIWidget">
+      <field name="_controlField">null</field>
+
+      <property name="controlField" readonly="true">
+        <getter>
+          if (!this._controlField) {
+            this._controlField =
+              document.getAnonymousElementByAttribute(this, "anonid", "control");
+          }
+          return this._controlField;
+        </getter>
+      </property>
+
       <method name="refresh">
         <body>
-          var control =
-            document.getAnonymousElementByAttribute(this, "anonid", "control");
-          control.readonly = this.delegate.isReadonly;
-          control.value = this.stringValue;
+          this.controlField.readonly = this.delegate.isReadonly;
+          // If the value has not changed, no need to update the
+          // value of the control, because that makes the textarea widget
+          // to scroll up.
+          if (this.controlField.value != this.stringValue) {
+            this.controlField.value = this.stringValue;
+          }
           return true;
         </body>
       </method>
@@ -275,7 +290,7 @@
       <method name="_change">
         <body>
           if (this.getAttribute("incremental") == "true") {
-            this.delegate.value = this.value;
+            this.delegate.value = this.controlField.value;
           }
           return true;
         </body>
@@ -283,7 +298,7 @@
 
       <method name="focus">
         <body>
-          document.getAnonymousElementByAttribute(this, "anonid", "control").focus();
+          this.controlField.focus();
           return true;
         </body>
       </method>
