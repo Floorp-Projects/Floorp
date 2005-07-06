@@ -322,7 +322,8 @@ var gUpdates = {
    */
   setUpdate: function(update) {
     this.update = update;
-    this.update.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
+    if (this.update)
+      this.update.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
   },
   
   /**
