@@ -72,7 +72,7 @@ public:
     
     rv = dm->AddDownload(nsIDownloadManager::DOWNLOAD_TYPE_DOWNLOAD, aSource,
                          aTarget, aDisplayName, EmptyString(), aMIMEInfo,
-                         aStartTime, aCancelable, aTempFile,
+                         aStartTime, aTempFile, aCancelable,
                          getter_AddRefs(mInner));
     if (NS_FAILED(rv)) return rv;
 
