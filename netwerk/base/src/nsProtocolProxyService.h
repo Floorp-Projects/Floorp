@@ -60,7 +60,7 @@
 typedef nsDataHashtable<nsCStringHashKey, PRUint32> nsFailedProxyTable;
 
 class nsProxyInfo;
-class nsProtocolInfo;
+struct nsProtocolInfo;
 
 class nsProtocolProxyService : public nsPIProtocolProxyService
                              , public nsIObserver
