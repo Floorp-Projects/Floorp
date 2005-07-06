@@ -51,17 +51,6 @@
 class nsWindow;
 class nsMacWindow;
 
-
-#if UNIVERSAL_INTERFACES_VERSION < 0x0337
-enum {
-  kEventMouseWheelAxisX         = 0,
-  kEventMouseWheelAxisY         = 1
-};
-typedef UInt16                          EventMouseWheelAxis;
-#endif
-
-
-
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------

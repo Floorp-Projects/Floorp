@@ -256,11 +256,8 @@ static	OSErr	PreflightDirectoryCopySpace(short srcVRefNum,
 	if ( error == noErr )
 	{
 		/* Convert freeBytes to free disk blocks (512-byte blocks) */
-#if (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
 		dstFreeBlocks = (pb.ioVFreeBytes >> 9);
-#else
-		dstFreeBlocks = (pb.ioVFreeBytes.hi << 23) + (pb.ioVFreeBytes.lo >> 9);
-#endif		
+	
 		/* get allocation block size (always multiple of 512) and divide by 512
 		  to get number of 512-byte blocks per allocation block */
 		theGlobals.dstBlksPerAllocBlk = ((unsigned long)pb.ioVAlBlkSiz >> 9);

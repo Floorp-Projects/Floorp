@@ -39,24 +39,10 @@
 #define CarbonHelpers_h__
 
 #include <ConditionalMacros.h>
-
-#if (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
 #include <ControlDefinitions.h>
-#else
-#include <Controls.h>
-#endif
 #include <Menus.h>
 #include <MacWindows.h>
 #include <LowMem.h>
-
-#if UNIVERSAL_INTERFACES_VERSION < 0x0341
-enum {
-  inToolbarButton               = 13    	/* Mac OS X forward*/
-};
-enum {
-  kWindowToolbarButtonAttribute = (1L << 6)	/* this window has a toolbar button widget in the titlebar (Mac OS X only)*/
-};
-#endif
 
 //
 // for non-carbon builds, provide various accessors to keep the code below free of ifdefs.
