@@ -169,7 +169,8 @@ nsProgressDialog.prototype = {
                                      this );
     },
 
-    init: function( aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime, aOperation ) {
+    init: function( aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime,
+                    aTempFile, aOperation ) {
       this.source = aSource;
       this.target = aTarget;
       this.displayName = aDisplayName;

@@ -71,7 +71,8 @@ NS_IMPL_ISUPPORTS_INHERITED4(nsDownloadListener, CHDownloader, nsIDownload,
 /* void init (in nsIURI aSource, in nsIURI aTarget, in AString aDisplayName, in wstring openingWith, in long long startTime, in nsICancelable aCancelable); */
 NS_IMETHODIMP
 nsDownloadListener::Init(nsIURI *aSource, nsIURI *aTarget, const nsAString &aDisplayName,
-        nsIMIMEInfo* aMIMEInfo, PRInt64 startTime, nsICancelable* aCancelable)
+        nsIMIMEInfo* aMIMEInfo, PRInt64 startTime, nsILocalFile* aTempFile,
+        nsICancelable* aCancelable)
 { 
   // get the local file corresponding to the given target URI
   nsCOMPtr<nsILocalFile> targetFile;

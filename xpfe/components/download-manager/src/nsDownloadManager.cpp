@@ -435,6 +435,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
                                const nsAString& aDisplayName,
                                nsIMIMEInfo *aMIMEInfo,
                                PRTime aStartTime,
+                               nsILocalFile* aTempFile,
                                nsICancelable* aCancelable,
                                nsIDownload** aDownload)
 {
@@ -761,7 +762,8 @@ nsDownloadManager::OpenProgressDialogFor(nsIDownload* aDownload, nsIDOMWindow* a
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
   aDownload->GetMIMEInfo(getter_AddRefs(mimeInfo));
 
-  dialog->Init(source, target, EmptyString(), mimeInfo, startTime, nsnull); 
+  dialog->Init(source, target, EmptyString(), mimeInfo, startTime, nsnull,
+               nsnull); 
   dialog->SetObserver(internalDownload);
 
   // now set the listener so we forward notifications to the dialog
@@ -1307,6 +1309,7 @@ nsDownload::Init(nsIURI* aSource,
                  const nsAString& aDisplayName,
                  nsIMIMEInfo *aMIMEInfo,
                  PRTime aStartTime,
+                 nsILocalFile* aTempFile,
                  nsICancelable* aCancelable)
 {
   NS_NOTREACHED("Huh...how did we get here?!");

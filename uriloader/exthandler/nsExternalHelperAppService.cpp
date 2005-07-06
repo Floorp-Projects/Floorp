@@ -2085,14 +2085,10 @@ nsresult nsExternalAppHandler::InitializeDownload(nsITransfer* aTransfer)
   rv = NS_NewFileURI(getter_AddRefs(target), mFinalFileDestination);
   if (NS_FAILED(rv)) return rv;
   
+  nsCOMPtr<nsILocalFile> lf(do_QueryInterface(mTempFile));
   rv = aTransfer->Init(mSourceUrl, target, EmptyString(),
-                       mMimeInfo, mTimeDownloadStarted, this);
+                       mMimeInfo, mTimeDownloadStarted, lf, this);
   if (NS_FAILED(rv)) return rv;
-
-  // Tell the listener about the location of the target file
-  nsCOMPtr<nsIObserver> obs(do_QueryInterface(aTransfer));
-  if (obs)
-    obs->Observe(mTempFile, "temp-file", nsnull);
 
   return rv;
 }

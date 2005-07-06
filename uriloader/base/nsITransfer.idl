@@ -41,8 +41,9 @@
 interface nsIURI;
 interface nsICancelable;
 interface nsIMIMEInfo;
+interface nsILocalFile;
 
-[scriptable, uuid(0721AAF2-28AC-46cd-BCFA-5F8CA2A8B99B)]
+[scriptable, uuid(23c51569-e9a1-4a92-adeb-3723db82ef7c)]
 interface nsITransfer : nsIWebProgressListener2 {
 
     /**
@@ -64,6 +65,12 @@ interface nsITransfer : nsIWebProgressListener2 {
      *                  response from the server was received)
      *                  XXX presumably wbp and exthandler do this differently
      *
+     * @param aTempFile The location of a temporary file; i.e. a file in which
+     *                  the received data will be stored, but which is not
+     *                  equal to the target file. (will be moved to the real
+     *                  target by the caller, when the download is finished)
+     *                  May be null.
+     *
      * @param aCancelable An object that can be used to abort the download.
      *                    Must not be null.
      *                    Implementations are expected to hold a strong
@@ -76,6 +83,7 @@ interface nsITransfer : nsIWebProgressListener2 {
               in AString aDisplayName,
               in nsIMIMEInfo aMIMEInfo,
               in PRTime startTime,
+              in nsILocalFile aTempFile,
               in nsICancelable aCancelable);
 };
 
@@ -87,18 +95,10 @@ interface nsITransfer : nsIWebProgressListener2 {
  * Notifications of the download progress will happen via
  * nsIWebProgressListener/nsIWebProgressListener2.
  *
- * If nsIObserver is implemented, the component may get a notification with
- * topic "temp-file" and an nsILocalFile instance as subject, which indicates
- * the location of a temporary file; i.e. a file in which the received data will
- * be stored, but which is not equal to the target file.
- *
  * INTERFACES THAT MUST BE IMPLEMENTED:
  *   nsITransfer
  *   nsIWebProgressListener
  *   nsIWebProgressListener2
- *
- * INTERFACES THAT MAY BE IMPLEMENTED:
- *   nsIObserver
  *
  * XXX move this to nsEmbedCID.h once the interfaces (and the contract ID) are
  * frozen.

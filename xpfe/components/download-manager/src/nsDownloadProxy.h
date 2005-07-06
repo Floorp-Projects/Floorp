@@ -64,13 +64,15 @@ public:
                      const nsAString& aDisplayName,
                      nsIMIMEInfo *aMIMEInfo,
                      PRTime aStartTime,
+                     nsILocalFile* aTempFile,
                      nsICancelable* aCancelable) {
     nsresult rv;
     nsCOMPtr<nsIDownloadManager> dm = do_GetService("@mozilla.org/download-manager;1", &rv);
     if (NS_FAILED(rv))
       return rv;
     
-    rv = dm->AddDownload(aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime, aCancelable, getter_AddRefs(mInner));
+    rv = dm->AddDownload(aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime,
+                         aTempFile, aCancelable, getter_AddRefs(mInner));
     if (NS_FAILED(rv))
       return rv;
 
