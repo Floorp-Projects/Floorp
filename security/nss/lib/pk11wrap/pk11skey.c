@@ -1183,7 +1183,7 @@ PK11_DeriveWithFlagsPerm( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
 	int keySize, CK_FLAGS flags, PRBool isPerm)
 {
     CK_BBOOL        cktrue	= CK_TRUE; 
-    CK_ATTRIBUTE    keyTemplate[MAX_TEMPL_ATTRS+1];
+    CK_ATTRIBUTE    keyTemplate[MAX_TEMPL_ATTRS];
     CK_ATTRIBUTE    *attrs;
     unsigned int    templateCount = 0;
 
