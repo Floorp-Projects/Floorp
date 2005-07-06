@@ -43,30 +43,7 @@
 #include "nsString.h"
 #include "nsDependentString.h"
 
-
-#ifdef XP_MAC
-
-#include <Folders.h>
-#include <Files.h>
-#include <Memory.h>
-#include <Processes.h>
-#include <Gestalt.h>
-#include "nsIInternetConfigService.h"
-
-
-#if UNIVERSAL_INTERFACES_VERSION < 0x0340
-    enum {
-      kSystemDomain                 = -32766, /* Read-only system hierarchy.*/
-      kLocalDomain                  = -32765, /* All users of a single machine have access to these resources.*/
-      kNetworkDomain                = -32764, /* All users configured to use a common network server has access to these resources.*/
-      kUserDomain                   = -32763, /* Read/write. Resources that are private to the user.*/
-      kClassicDomain                = -32762, /* Domain referring to the currently configured Classic System Folder*/
-
-      kDomainLibraryFolderType      = FOUR_CHAR_CODE('dlib')
-    };
-#endif
-
-#elif defined(XP_WIN)
+#if defined(XP_WIN)
 
 #include <windows.h>
 #include <shlobj.h>
@@ -292,12 +269,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 {
     char path[MAXPATHLEN];
 
-#ifdef XP_MAC
-    OSErr err;
-    short vRefNum;
-    long dirID;
-#endif
-
     switch (aSystemSystemDirectory)
     {
         case OS_CurrentWorkingDirectory:
@@ -341,10 +312,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                                          PR_TRUE, 
                                          aFile);
         }
-#elif defined(XP_MAC)
-        {
-            return nsIFileFromOSType(kVolumeRootFolderType, aFile);
-        }
 #else
         return NS_NewNativeLocalFile(nsDependentCString("/"), 
                                      PR_TRUE, 
@@ -381,9 +348,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                                          PR_TRUE, 
                                          aFile);
         } 
-#elif defined(XP_MAC)
-        return nsIFileFromOSType(kTemporaryFolderType, aFile);
-
 #elif defined(XP_MACOSX)
         {
             return GetOSXFolderType(kUserDomain, kTemporaryFolderType, aFile);
@@ -410,82 +374,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         }
 #else
         break;
-#endif
-
-#if defined(XP_MAC)
-        case Mac_SystemDirectory:
-            return nsIFileFromOSType(kSystemFolderType, aFile);
-
-        case Mac_DesktopDirectory:
-            return nsIFileFromOSType(kDesktopFolderType, aFile);
-
-        case Mac_TrashDirectory:
-            return nsIFileFromOSType(kTrashFolderType, aFile);
-
-        case Mac_StartupDirectory:
-            return nsIFileFromOSType(kStartupFolderType, aFile);
-
-        case Mac_ShutdownDirectory:
-            return nsIFileFromOSType(kShutdownFolderType, aFile);
-
-        case Mac_AppleMenuDirectory:
-            return nsIFileFromOSType(kAppleMenuFolderType, aFile);
-
-        case Mac_ControlPanelDirectory:
-            return nsIFileFromOSType(kControlPanelFolderType, aFile);
-
-        case Mac_ExtensionDirectory:
-            return nsIFileFromOSType(kExtensionFolderType, aFile);
-
-        case Mac_FontsDirectory:
-            return nsIFileFromOSType(kFontsFolderType, aFile);
-
-        case Mac_ClassicPreferencesDirectory:
-        {
-            // whether Mac OS X or pre-Mac OS X, return Classic's Prefs folder
-            short domain;
-            long response;
-            err = ::Gestalt(gestaltSystemVersion, &response);
-            domain = (!err && response >= 0x00001000) ? kClassicDomain : kOnSystemDisk;
-            err = ::FindFolder(domain, kPreferencesFolderType, true, &vRefNum, &dirID);
-            if (!err) {
-                err = ::FSMakeFSSpec(vRefNum, dirID, "\p", &mSpec);
-            }
-            return NS_FILE_RESULT(err);
-        }
-
-        case Mac_PreferencesDirectory:
-        {
-            // if Mac OS X, return Mac OS X's Prefs folder
-            // if pre-Mac OS X, return Mac OS's Prefs folder
-            err = ::FindFolder(kOnSystemDisk, kPreferencesFolderType, true, &vRefNum, &dirID);
-            if (!err) {
-                err = ::FSMakeFSSpec(vRefNum, dirID, "\p", &mSpec);
-            }
-            return NS_FILE_RESULT(err);
-        }
-
-        case Mac_DocumentsDirectory:
-            return nsIFileFromOSType(kDocumentsFolderType, aFile);
-
-        case Mac_InternetSearchDirectory:
-            return nsIFileFromOSType(kInternetSearchSitesFolderType, aFile);
-
-        case Mac_DefaultDownloadDirectory:
-            return nsIFileFromOSType(kDefaultDownloadFolderType, aFile);
-            
-        case Mac_UserLibDirectory:
-        {
-            FSSpec spec;
-            err = ::FindFolder(kUserDomain, kDomainLibraryFolderType, true, &vRefNum, &dirID);
-            if (!err) {
-                err = ::FSMakeFSSpec(vRefNum, dirID, "\p", &spec);
-            }
-
-            return NS_NewLocalFileWithFSSpec(&spec, PR_FALUE, aFile);
-        }
-#endif
-            
+#endif            
 #if defined (XP_WIN)
         case Win_SystemDirectory:
         {    

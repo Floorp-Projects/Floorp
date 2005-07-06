@@ -130,7 +130,6 @@ int nsToolkitBase::QuartzChangedCallback(const char* pref, void* data)
 void nsToolkitBase::SetupQuartzRendering()
 {
   // from Apple's technote at http://developer.apple.com/qa/qa2001/qa1193.html
-#if UNIVERSAL_INTERFACES_VERSION <= 0x0400
   enum {
     kQDDontChangeFlags = 0xFFFFFFFF,         // don't change anything
     kQDUseDefaultTextRendering = 0,          // bit 0
@@ -138,7 +137,6 @@ void nsToolkitBase::SetupQuartzRendering()
     kQDUseCGTextRendering = (1 << 1),        // bit 2
     kQDUseCGTextMetrics = (1 << 2)
   };
-#endif
 
   const int kFlagsWeUse = kQDUseCGTextRendering | kQDUseCGTextMetrics;
 
