@@ -2334,3 +2334,17 @@ nsContentUtils::IsChromeDoc(nsIDocument *aDocument)
 
   return principal == systemPrincipal;
 }
+
+void
+nsContentUtils::NotifyXPCIfExceptionPending(JSContext* aCx)
+{
+  if (!::JS_IsExceptionPending(aCx)) {
+    return;
+  }
+
+  nsCOMPtr<nsIXPCNativeCallContext> nccx;
+  XPConnect()->GetCurrentNativeCallContext(getter_AddRefs(nccx));
+  if (nccx) {
+    nccx->SetExceptionWasThrown(PR_TRUE);
+  }
+}

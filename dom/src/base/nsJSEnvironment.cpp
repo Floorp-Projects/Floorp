@@ -476,21 +476,6 @@ LocaleCompare(JSContext *cx, JSString *src1, JSString *src2, jsval *rval)
   return JS_TRUE;
 }
 
-static void
-NotifyXPCIfExceptionPending(JSContext *cx)
-{
-  if (!::JS_IsExceptionPending(cx)) {
-    return;
-  }
-
-  nsCOMPtr<nsIXPCNativeCallContext> nccx;
-  nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(getter_AddRefs(nccx));
-  if (nccx) {
-    nccx->SetExceptionWasThrown(PR_TRUE);
-  }
-}
-
 // The number of branch callbacks between calls to JS_MaybeGC
 #define MAYBE_GC_BRANCH_COUNT_MASK 0x00000fff // 4095
 
@@ -888,7 +873,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
         // to avoid dropping JS exceptions in case we got here through
         // nested calls through XPConnect.
 
-        NotifyXPCIfExceptionPending(mContext);
+        nsContentUtils::NotifyXPCIfExceptionPending(mContext);
       }
     }
   }
@@ -975,7 +960,7 @@ JSValueToAString(JSContext *cx, jsval val, nsAString *result,
     // avoid dropping JS exceptions in case we got here through nested
     // calls through XPConnect.
 
-    NotifyXPCIfExceptionPending(cx);
+    nsContentUtils::NotifyXPCIfExceptionPending(cx);
   }
 
   return NS_OK;
@@ -1083,7 +1068,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
         // to avoid dropping JS exceptions in case we got here through
         // nested calls through XPConnect.
 
-        NotifyXPCIfExceptionPending(mContext);
+        nsContentUtils::NotifyXPCIfExceptionPending(mContext);
       }
     }
   }
@@ -1246,7 +1231,7 @@ nsJSContext::ExecuteScript(void* aScriptObject,
     // avoid dropping JS exceptions in case we got here through nested
     // calls through XPConnect.
 
-    NotifyXPCIfExceptionPending(mContext);
+    nsContentUtils::NotifyXPCIfExceptionPending(mContext);
   }
 
   // Pop here, after JS_ValueToString and any other possible evaluation.
@@ -1419,7 +1404,7 @@ nsJSContext::CallEventHandler(JSObject *aTarget, JSObject *aHandler,
       // to avoid dropping JS exceptions in case we got here through
       // nested calls through XPConnect.
 
-      NotifyXPCIfExceptionPending(mContext);
+      nsContentUtils::NotifyXPCIfExceptionPending(mContext);
 
       // Don't pass back results from failed calls.
       *rval = JSVAL_VOID;

@@ -539,6 +539,11 @@ public:
    */
   static PRBool IsChromeDoc(nsIDocument *aDocument);
 
+  /**
+   * Notify XPConnect if an exception is pending on aCx.
+   */
+  static void NotifyXPCIfExceptionPending(JSContext *aCx);
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,
