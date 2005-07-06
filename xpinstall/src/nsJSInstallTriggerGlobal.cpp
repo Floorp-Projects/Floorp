@@ -240,13 +240,13 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
     return JS_TRUE;
 
-
+  
   // make sure XPInstall is enabled, return false if not
   nsIScriptGlobalObject *globalObject = nsnull;
   nsIScriptContext *scriptContext = GetScriptContextFromJSContext(cx);
   if (scriptContext)
-      globalObject = scriptContext->GetGlobalObject();
-
+    globalObject = scriptContext->GetGlobalObject();
+  
   PRBool enabled = PR_FALSE;
   nativeThis->UpdateEnabled(globalObject, XPI_WHITELIST, &enabled);
   if (!enabled || !globalObject)
@@ -262,6 +262,21 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
 
 
+  nsCOMPtr<nsIScriptSecurityManager> secman(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
+  if (!secman)
+  {
+    JS_ReportError(cx, "Could not the script security manager service.");
+    return JS_FALSE;
+  }
+  // get the principal.  if it doesn't exist, die.
+  nsCOMPtr<nsIPrincipal> principal;
+  secman->GetSubjectPrincipal(getter_AddRefs(principal));
+  if (!principal)
+  {
+    JS_ReportError(cx, "Could not get the Subject Principal during InstallTrigger.Install()");
+    return JS_FALSE;
+  }
+  
   // get window.location to construct relative URLs
   nsCOMPtr<nsIURI> baseURL;
   JSObject* global = JS_GetGlobalObject(cx);
@@ -284,6 +299,8 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     nsXPITriggerInfo *trigger = new nsXPITriggerInfo();
     if (!trigger)
       return JS_FALSE;
+
+    trigger->SetPrincipal(principal);
 
     JSIdArray *ida = JS_Enumerate( cx, JSVAL_TO_OBJECT(argv[0]) );
     if ( ida )
