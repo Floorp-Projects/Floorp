@@ -178,29 +178,6 @@ function openNewTabWith(url, sendReferrer, reverseBackgroundPref)
   }
 }
 
-function findParentNode(node, parentNode)
-{
-  if (node && node.nodeType == Node.TEXT_NODE) {
-    node = node.parentNode;
-  }
-  while (node) {
-    if (node.nodeType == Node.DOCUMENT_NODE) {
-      return null;
-    }
-    var nodeName = node.localName;
-    if (!nodeName)
-      return null;
-    nodeName = nodeName.toLowerCase();
-    if (nodeName == "body" || nodeName == "html") {
-      return null;
-    }
-    if (nodeName == parentNode)
-      return node;
-    node = node.parentNode;
-  }
-  return null;
-}
-
 // Clientelle: (Make sure you don't break any of these)
 //  - File    ->  Save Page/Frame As...
 //  - Context ->  Save Page/Frame As...
