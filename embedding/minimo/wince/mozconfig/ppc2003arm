@@ -1,4 +1,5 @@
 mk_add_options NSPR_CO_TAG=NSPRPUB_PRE_4_2_WINCE_BRANCH
+mk_add_options NSS_CO_TAG=NSS_WINCE_CLIENT_TAG
 
 mk_add_options MOZ_CO_PROJECT=suite
 ac_add_options --enable-application=suite
@@ -15,9 +16,6 @@ mk_add_options AR=arm-wince-lib
 ac_add_options --target=arm-wince
 ac_add_options --enable-win32-target=WINCE
 ac_add_options --enable-default-toolkit=windows
-
-#ac_add_options --without-libIDL
-#ac_add_options --disable-md
 
 ac_add_options --disable-activex
 ac_add_options --disable-activex-scripting
@@ -73,6 +71,8 @@ ac_add_options --disable-debug
 
 #ac_add_options --disable-optimize
 #ac_add_options --enable-debug
+
+ac_add_options --enable-optimize=-Os
 
 # enable static build
 ac_add_options --disable-shared
