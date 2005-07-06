@@ -407,6 +407,7 @@ PK11_CreateNewObject(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
 }
 
 
+/* This function may add a maximum of 9 attributes. */
 unsigned int
 pk11_FlagsToAttributes(CK_FLAGS flags, CK_ATTRIBUTE *attrs, CK_BBOOL *ckTrue)
 {
@@ -428,8 +429,10 @@ pk11_FlagsToAttributes(CK_FLAGS flags, CK_ATTRIBUTE *attrs, CK_BBOOL *ckTrue)
     for (; flags && test <= CKF_DERIVE; test <<= 1, ++pType) {
     	if (test & flags) {
 	    flags ^= test;
-	    PK11_SETATTRS(attr, *pType, ckTrue, sizeof *ckTrue); 
-	    ++attr;
+	    if (*pType) {
+		PK11_SETATTRS(attr, *pType, ckTrue, sizeof *ckTrue); 
+		++attr;
+	    }
 	}
     }
     return (attr - attrs);
