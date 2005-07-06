@@ -138,6 +138,8 @@
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
+#include "nsIURIFixup.h"
+#include "nsCDefaultURIFixup.h"
 
 #include "plbase64.h"
 
@@ -2374,27 +2376,77 @@ nsGlobalWindow::MakeScriptDialogTitle(const nsAString &aInTitle,
 {
   aOutTitle.Truncate();
 
-  // Load the string to be prepended to titles for script
-  // confirm/alert/prompt boxes.
+  // Try to get a host from the running principal -- this will do the
+  // right thing for javascript: and data: documents.
 
-  nsCOMPtr<nsIStringBundleService> stringBundleService =
-     do_GetService(kCStringBundleServiceCID);
+  nsresult rv = NS_OK;
+  NS_WARN_IF_FALSE(sSecMan, "Global Window has no security manager!");
+  if (sSecMan) {
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = sSecMan->GetSubjectPrincipal(getter_AddRefs(principal));
 
-  if (stringBundleService) {
-    nsCOMPtr<nsIStringBundle> stringBundle;
-    stringBundleService->CreateBundle(kDOMBundleURL,
-                                      getter_AddRefs(stringBundle));
+    if (NS_SUCCEEDED(rv) && principal) {
+      nsCOMPtr<nsIURI> uri;
+      rv = principal->GetURI(getter_AddRefs(uri));
 
-    if (stringBundle) {
-      nsAutoString inTitle(aInTitle);
-      nsXPIDLString tempString;
-      const PRUnichar *formatStrings[1];
-      formatStrings[0] = inTitle.get();
-      stringBundle->FormatStringFromName(NS_LITERAL_STRING("ScriptDlgTitle").get(),
-                                         formatStrings, 1,
-                                         getter_Copies(tempString));
+      if (NS_SUCCEEDED(rv) && uri) {
+        // remove user:pass for privacy and spoof prevention
 
-      aOutTitle = tempString;
+        nsCOMPtr<nsIURIFixup> fixup(do_GetService(NS_URIFIXUP_CONTRACTID));
+        if (fixup) {
+          nsCOMPtr<nsIURI> fixedURI;
+          rv = fixup->CreateExposableURI(uri, getter_AddRefs(fixedURI));
+          if (NS_SUCCEEDED(rv) && fixedURI) {
+            nsCAutoString host;
+            fixedURI->GetHost(host);
+
+            if (!host.IsEmpty()) {
+              // if this URI has a host we'll show it. For other
+              // schemes (e.g. file:) we fall back to the localized
+              // generic string
+
+              nsCAutoString prepath;
+              fixedURI->GetPrePath(prepath);
+
+              aOutTitle = NS_ConvertUTF8toUTF16(prepath);
+              if (!aInTitle.IsEmpty()) {
+                aOutTitle.Append(NS_LITERAL_STRING(" - ") + aInTitle);
+              }
+            }
+          }
+        }
+      }
+    }
+    else { // failed to get subject principal
+      NS_WARNING("No script principal? Who is calling alert/confirm/prompt?!");
+    }
+  }
+
+  if (aOutTitle.IsEmpty()) {
+    // We didn't find a host so use the generic title modifier.  Load
+    // the string to be prepended to titles for script
+    // confirm/alert/prompt boxes.
+
+    nsCOMPtr<nsIStringBundleService> stringBundleService =
+      do_GetService(kCStringBundleServiceCID);
+
+    if (stringBundleService) {
+      nsCOMPtr<nsIStringBundle> stringBundle;
+      stringBundleService->CreateBundle(kDOMBundleURL,
+                                        getter_AddRefs(stringBundle));
+
+      if (stringBundle) {
+        nsAutoString inTitle(aInTitle);
+        nsXPIDLString tempString;
+        const PRUnichar *formatStrings[1];
+        formatStrings[0] = inTitle.get();
+        stringBundle->FormatStringFromName(
+          NS_LITERAL_STRING("ScriptDlgTitle").get(),
+          formatStrings, 1, getter_Copies(tempString));
+        if (tempString) {
+          aOutTitle = tempString.get();
+        }
+      }
     }
   }
 
