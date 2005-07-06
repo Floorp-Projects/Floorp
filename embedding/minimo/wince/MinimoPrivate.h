@@ -42,6 +42,9 @@
 #include "nsIDOMWindow.h"
 #include "nsIComponentRegistrar.h"
 
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+
 #include "nsIWidget.h"
 
 // Local header files

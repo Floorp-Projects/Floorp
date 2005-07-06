@@ -71,6 +71,15 @@ nsresult StartupProfile()
 	return locProvider->SetProfileDir(localAppDataDir);   
 }
 
+void SetPreferences()
+{
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefBranch)
+        return;
+
+
+}
+
 LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     nsIWebBrowserChrome *chrome = (nsIWebBrowserChrome *) GetWindowLong(hWnd, GWL_USERDATA);
@@ -230,7 +239,6 @@ PRBool CheckForProcess()
 
 int main(int argc, char *argv[])
 {
-
     if (!CheckForProcess())
         return 0;
 
@@ -252,6 +260,8 @@ int main(int argc, char *argv[])
     }
     
 	RegisterMainWindowClass();
+
+    SetPreferences();
 
     WindowCreator *creatorCallback = new WindowCreator();
     if (!creatorCallback)
