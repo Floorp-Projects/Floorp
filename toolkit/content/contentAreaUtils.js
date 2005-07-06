@@ -418,13 +418,13 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
 
     const kWrapColumn = 80;
     tr.init((aChosenData ? aChosenData.uri : fileInfo.uri),
-            persistArgs.target, "", null, null, persist);
+            persistArgs.target, "", null, null, null, persist);
     persist.progressListener = tr;
     persist.saveDocument(persistArgs.source, persistArgs.target, filesFolder,
                          persistArgs.contentType, encodingFlags, kWrapColumn);
   } else {
     tr.init((aChosenData ? aChosenData.uri : source),
-            persistArgs.target, "", null, null, persist);
+            persistArgs.target, "", null, null, null, persist);
     persist.progressListener = tr;
     persist.saveURI((aChosenData ? aChosenData.uri : source),
                     null, aReferrer, persistArgs.postData, null,

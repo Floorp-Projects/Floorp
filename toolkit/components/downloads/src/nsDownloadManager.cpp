@@ -500,6 +500,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
                                nsIMIMEInfo *aMIMEInfo,
                                PRTime aStartTime,
                                nsICancelable* aCancelable,
+                               nsILocalFile* aTempFile,
                                nsIDownload** aDownload)
 {
   NS_ENSURE_ARG_POINTER(aSource);
@@ -2177,6 +2178,7 @@ nsDownload::Init(nsIURI* aSource,
                  const nsAString& aDisplayName,
                  nsIMIMEInfo *aMIMEInfo,
                  PRTime aStartTime,
+                 nsILocalFile* aTempFile,
                  nsICancelable* aCancelable)
 {
   NS_WARNING("Huh...how did we get here?!");

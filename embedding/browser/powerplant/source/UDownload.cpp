@@ -75,8 +75,10 @@ NS_IMPL_ISUPPORTS4(CDownload, nsIDownload, nsITransfer,
 #pragma mark -
 #pragma mark [CDownload::nsIDownload]
 
-/* void init (in nsIURI aSource, in nsILocalFile aTarget, in wstring aDisplayName, in nsIMIMEInfo aMIMEInfo, in long long startTime, in nsICancelable aCancelable); */
-NS_IMETHODIMP CDownload::Init(nsIURI *aSource, nsILocalFile *aTarget, const PRUnichar *aDisplayName, nsIMIMEInfo *aMIMEInfo, PRInt64 startTime, nsICancelable* aCancelable)
+/* void init (in nsIURI aSource, in nsILocalFile aTarget, in wstring aDisplayName, in nsIMIMEInfo aMIMEInfo, in long long startTime, in nsILocalFile aTempFile, in nsICancelable aCancelable); */
+NS_IMETHODIMP CDownload::Init(nsIURI *aSource, nsILocalFile *aTarget,
+    const PRUnichar *aDisplayName, nsIMIMEInfo *aMIMEInfo, PRInt64 startTime,
+    nsILocalFile* aTempFile, nsICancelable* aCancelable)
 {
     try {
         mSource = aSource;

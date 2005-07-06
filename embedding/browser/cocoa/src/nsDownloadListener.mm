@@ -64,10 +64,11 @@ NS_IMPL_ISUPPORTS_INHERITED4(nsDownloadListener, CHDownloader, nsIDownload,
 
 #pragma mark -
 
-/* void init (in nsIURI aSource, in nsILocalFile aTarget, in AString aDisplayName, in wstring openingWith, in long long startTime, in nsICancelable aCancelable); */
+/* void init (in nsIURI aSource, in nsILocalFile aTarget, in AString aDisplayName, in wstring openingWith, in long long startTime, in nsILocalFile aTempFile, in nsICancelable aCancelable); */
 NS_IMETHODIMP
 nsDownloadListener::Init(nsIURI *aSource, nsILocalFile *aTarget, const nsAString &aDisplayName,
-        nsIMIMEInfo *aMIMEInfo, PRInt64 startTime, nsICancelable* aCancelable)
+        nsIMIMEInfo *aMIMEInfo, PRInt64 startTime, nsILocalFile* aTempFile,
+        nsICancelable* aCancelable)
 { 
   CreateDownloadDisplay(); // call the base class to make the download UI
 

@@ -63,6 +63,7 @@ public:
                      const nsAString& aDisplayName,
                      nsIMIMEInfo *aMIMEInfo,
                      PRTime aStartTime,
+                     nsILocalFile* aTempFile,
                      nsICancelable* aCancelable) {
     nsresult rv;
     nsCOMPtr<nsIDownloadManager> dm = do_GetService("@mozilla.org/download-manager;1", &rv);
@@ -71,7 +72,8 @@ public:
     
     rv = dm->AddDownload(nsIDownloadManager::DOWNLOAD_TYPE_DOWNLOAD, aSource,
                          aTarget, aDisplayName, EmptyString(), aMIMEInfo,
-                         aStartTime, aCancelable, getter_AddRefs(mInner));
+                         aStartTime, aCancelable, aTempFile,
+                         getter_AddRefs(mInner));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
