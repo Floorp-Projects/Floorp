@@ -763,6 +763,18 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
                    JSAccessMode mode, jsval *vp)
 {
+  // Prevent setting __proto__ on an XPCNativeWrapper
+  if ((mode & JSACC_WATCH) == JSACC_PROTO && (mode & JSACC_WRITE)) {
+    return ThrowException(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
+  }
+
+  // Forward to the checkObjectAccess hook in the JSContext, if any.
+  if (cx->runtime->checkObjectAccess &&
+      !cx->runtime->checkObjectAccess(cx, obj, id, mode, vp)) {
+    return JS_FALSE;
+  }
+
+  // Do our own thing...
   XPC_NW_BYPASS_TEST(cx, obj, checkAccess, (cx, obj, id, mode, vp));
 
   return JS_TRUE;
