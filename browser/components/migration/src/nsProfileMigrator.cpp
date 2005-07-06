@@ -57,6 +57,7 @@
 #include "nsCRT.h"
 #include "NSReg.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsString.h"
 #ifdef XP_WIN
 #include <windows.h>
@@ -187,12 +188,20 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
   if (NS_FAILED(regKey->ReadStringValue(EmptyString(), value)))
     return NS_ERROR_FAILURE;
 
-  PRInt32 lastIndex = value.Find(NS_LITERAL_STRING(".exe"), PR_TRUE);
-  if (lastIndex == kNotFound)
+  nsAString::const_iterator start, end;
+  value.BeginReading(start);
+  value.EndReading(end);
+  nsAString::const_iterator tmp = start;
+
+  if (!FindInReadable(NS_LITERAL_STRING(".exe"), tmp, end, 
+                      nsCaseInsensitiveStringComparator()))
     return NS_ERROR_FAILURE;
 
-  int index = (value.CharAt(1) == ':') ? 0 : 1;
-  nsDependentSubstring filePath(value, index, lastIndex + 4 - index); 
+  // skip an opening quotation mark if present
+  if (value.CharAt(1) != ':')
+    ++start;
+
+  nsDependentSubstring filePath(start, end); 
 
   // We want to find out what the default browser is but the path in and of itself
   // isn't enough. Why? Because sometimes on Windows paths get truncated like so:
