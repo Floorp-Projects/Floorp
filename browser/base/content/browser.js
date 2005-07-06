@@ -1520,7 +1520,7 @@ function addBookmarkForTabBrowser(aTabBrowser, aSelect)
     var webNav = browsers[i].webNavigation;
     var url = webNav.currentURI.spec;
     var name = "";
-    var charSet;
+    var charSet, description;
     try {
       var doc = webNav.document;
       name = doc.title || url;
@@ -1548,6 +1548,7 @@ function addBookmarkForBrowser(aDocShell, aIsWebPanel)
   // may still be obtained from the webNavigation.
   var url = aDocShell.currentURI.spec;
   var title, charSet = null;
+  var description;
   try {
     title = aDocShell.document.title || url;
     charSet = aDocShell.document.characterSet;
