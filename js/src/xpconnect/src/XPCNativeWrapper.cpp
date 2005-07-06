@@ -313,25 +313,6 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return JS_TRUE;
   }
 
-  // We can't use XPC_NW_BYPASS here, because we need to do a full
-  // OBJ_SET_PROPERTY or OBJ_GET_PROPERTY on the wrapped native's
-  // object, in order to trigger reflection done by the underlying
-  // OBJ_LOOKUP_PROPERTY done by SET and GET.
-
-  if (ShouldBypassNativeWrapper(cx, obj)) {
-    XPCWrappedNative *wn = XPCNativeWrapper::GetWrappedNative(cx, obj);
-    jsid interned_id;
-
-    if (!::JS_ValueToId(cx, id, &interned_id)) {
-      return JS_FALSE;
-    }
-
-    JSObject *wn_obj = wn->GetFlatJSObject();
-    return aIsSet
-           ? OBJ_SET_PROPERTY(cx, wn_obj, interned_id, vp)
-           : OBJ_GET_PROPERTY(cx, wn_obj, interned_id, vp);
-  }
-
   // Be paranoid, don't let people use this as another object's
   // prototype or anything like that.
   if (!XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
@@ -342,10 +323,27 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     XPCNativeWrapper::GetWrappedNative(cx, obj);
 
   if (!wrappedNative) {
-    return ThrowException(NS_ERROR_UNEXPECTED, cx);
+    return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }
 
   JSObject *nativeObj = wrappedNative->GetFlatJSObject();
+
+  // We can't use XPC_NW_BYPASS here, because we need to do a full
+  // OBJ_SET_PROPERTY or OBJ_GET_PROPERTY on the wrapped native's
+  // object, in order to trigger reflection done by the underlying
+  // OBJ_LOOKUP_PROPERTY done by SET and GET.
+
+  if (ShouldBypassNativeWrapper(cx, obj)) {
+    jsid interned_id;
+
+    if (!::JS_ValueToId(cx, id, &interned_id)) {
+      return JS_FALSE;
+    }
+
+    return aIsSet
+           ? OBJ_SET_PROPERTY(cx, nativeObj, interned_id, vp)
+           : OBJ_GET_PROPERTY(cx, nativeObj, interned_id, vp);
+  }
 
   if (!aIsSet &&
       id == GetStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
@@ -1125,7 +1123,15 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
                    nsnull, nsnull);
   if (!class_obj) {
     NS_WARNING("can't initialize the XPCNativeWrapper class");
-    return NS_ERROR_OUT_OF_MEMORY;
+    return PR_FALSE;
+  }
+  
+  // Make sure our prototype chain is empty and that people can't mess
+  // with XPCNativeWrapper.prototype.
+  ::JS_SetPrototype(ccx, class_obj, nsnull);
+  if (!::JS_SealObject(ccx, class_obj, JS_FALSE)) {
+    NS_WARNING("Failed to seal XPCNativeWrapper.prototype");
+    return PR_FALSE;
   }
 
   JSBool found;
