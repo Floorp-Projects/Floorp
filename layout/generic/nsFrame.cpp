@@ -3364,7 +3364,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
 
       if (!found){
         resultFrame = storeOldResultFrame;
-        result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), EXTENSIVE,
+        result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
                                       aPresContext, resultFrame, aPos->mScrollViewStop);
       }
       while ( !found ){
