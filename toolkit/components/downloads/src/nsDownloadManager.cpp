@@ -499,8 +499,8 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
                                const nsAString& aIconURL, 
                                nsIMIMEInfo *aMIMEInfo,
                                PRTime aStartTime,
-                               nsICancelable* aCancelable,
                                nsILocalFile* aTempFile,
+                               nsICancelable* aCancelable,
                                nsIDownload** aDownload)
 {
   NS_ENSURE_ARG_POINTER(aSource);
