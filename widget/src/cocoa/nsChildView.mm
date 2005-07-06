@@ -2123,10 +2123,6 @@ nsChildView::Idle()
 //
 - (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild eventSink:(nsIEventSink*)inSink
 {
-  // Set the current GrafPort to a "safe" port before initting the NSQuickDrawView,
-  // so that the NSQuickDrawView stashes a pointer to this known-good port internally.
-  // It will set the port back to this port on destruction.
-  SetPort(NULL);
   if ((self = [super initWithFrame:inFrame]))
   {
     mGeckoChild = inChild;
@@ -2154,8 +2150,10 @@ nsChildView::Idle()
 
 - (void)dealloc
 {
+  NS_ASSERTION(!_savePort || IsValidPort(_savePort), "Bad port");
+
   [super dealloc];    // This sets the current port to _savePort (which should be
-                      // the known-good port).
+                      // a valid port, checked with the assertion above.
   SetPort(NULL);      // Bullet-proof against future changes in NSQDView
 }
 
@@ -2396,6 +2394,8 @@ nsChildView::Idle()
     mGeckoChild->RemovedFromWindow();
   if (mMouseEnterExitTag)
     [self removeTrackingRect:mMouseEnterExitTag];
+
+  [super viewWillMoveToWindow:newWindow];
 }
 
 - (void)viewDidMoveToWindow
@@ -2406,23 +2406,38 @@ nsChildView::Idle()
   mMouseEnterExitTag = [self addTrackingRect:[self bounds] owner:self
                                     userData:nil assumeInside: [[self window]
                                     acceptsMouseMovedEvents]];
+
+  [super viewDidMoveToWindow];
 }
 
 - (void)viewWillStartLiveResize
 {
   if (mGeckoChild && mIsPluginView)
     mGeckoChild->LiveResizeStarted();
+  
+  [super viewWillStartLiveResize];
 }
 
 - (void)viewDidEndLiveResize
 {
   if (mGeckoChild && mIsPluginView)
     mGeckoChild->LiveResizeEnded();
+
+  [super viewDidEndLiveResize];
 }
 
 - (BOOL)mouseDownCanMoveWindow
 {
   return NO;
+}
+
+- (void)lockFocus
+{
+  // Set the current GrafPort to a "safe" port before calling [NSQuickDrawView lockFocus],
+  // so that the NSQuickDrawView stashes a pointer to this known-good port internally.
+  // It will set the port back to this port on destruction.
+  SetPort(NULL);
+  [super lockFocus];
 }
 
 //
