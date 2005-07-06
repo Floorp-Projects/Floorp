@@ -858,4 +858,3 @@ SECMOD_HasRootCerts;
 ;+    local:
 ;+       *;
 ;+};
-;+    global:
