@@ -4748,7 +4748,8 @@ function asyncOpenWebPanel(event)
        linkNode = target;
    }
    else {
-     linkNode = findParentNode(event.originalTarget, "a");
+     while (linkNode && !(linkNode instanceof HTMLAnchorElement))
+       linkNode = linkNode.parentNode;
      // <a> cannot be nested.  So if we find an anchor without an
      // href, there is no useful <a> around the target
      if (linkNode && !linkNode.hasAttribute("href"))
@@ -4855,7 +4856,7 @@ function asyncOpenWebPanel(event)
      }
    }
    if (event.button == 1 &&
-       !findParentNode(event.originalTarget, "scrollbar") &&
+       !event.getPreventDefault() &&
        gPrefService.getBoolPref("middlemouse.contentLoadURL")) {
      middleMousePaste(event);
    }
@@ -4938,29 +4939,6 @@ function makeURLAbsolute( base, url )
   var baseURI  = ioService.newURI(base, null, null);
 
   return ioService.newURI(baseURI.resolve(url), null, null).spec;
-}
-
-function findParentNode(node, parentNode)
-{
-  if (node && node.nodeType == Node.TEXT_NODE) {
-    node = node.parentNode;
-  }
-  while (node) {
-    if (node.nodeType == Node.DOCUMENT_NODE) {
-      return null;
-    }
-    var nodeName = node.localName;
-    if (!nodeName)
-      return null;
-    nodeName = nodeName.toLowerCase();
-    if (nodeName == "body" || nodeName == "html") {
-      return null;
-    }
-    if (nodeName == parentNode)
-      return node;
-    node = node.parentNode;
-  }
-  return null;
 }
 
 /*

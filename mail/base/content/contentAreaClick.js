@@ -62,7 +62,8 @@
         linkNode = target;
     }
     else if (!(target instanceof HTMLInputElement)) {
-      linkNode = findParentNode(event.originalTarget, "a");
+      while (linkNode && !(linkNode instanceof HTMLAnchorElement))
+        linkNode = linkNode.parentNode;
       // <a> cannot be nested.  So if we find an anchor without an
       // href, there is no useful <a> around the target
       if (linkNode && !linkNode.hasAttribute("href"))
@@ -119,27 +120,3 @@
 
     return ioService.newURI(baseURI.resolve(url), null, null).spec;
   }
-
-  function findParentNode(node, parentNode)
-  {
-    if (node && node.nodeType == Node.TEXT_NODE) {
-      node = node.parentNode;
-    }
-    
-    while (node) {
-      var nodeName = node.localName;
-      if (!nodeName)
-        return null;
-      nodeName = nodeName.toLowerCase();
-      if (nodeName == "body" || nodeName == "html" ||
-          nodeName == "#document") {
-        return null;
-      }
-      if (nodeName == parentNode)
-        return node;
-      node = node.parentNode;
-    }
-    
-    return null;
-  }
-
