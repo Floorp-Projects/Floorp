@@ -177,6 +177,8 @@ ifndef GNU_CC
 # See bug 286179 <https://bugzilla.mozilla.org/show_bug.cgi?id=286179> for
 # details. -- chase@mozilla.org
 #
+# Changes to the PDBFILE naming scheme should also be reflected in HOST_PDBFILE
+# 
 PDBFILE=$(basename $(@F)).pdb
 ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
@@ -219,6 +221,10 @@ endif # _MSC_VER
 endif # GNU_CC
 endif # ENABLE_CXX_EXCEPTIONS
 endif # WINNT
+
+ifeq (,$(filter-out WINNT WINCE,$(HOST_OS_ARCH)))
+HOST_PDBFILE=$(basename $(@F)).pdb
+endif
 
 ifndef TARGETS
 TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS)
