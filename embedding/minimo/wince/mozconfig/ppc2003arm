@@ -72,7 +72,7 @@ ac_add_options --disable-debug
 #ac_add_options --disable-optimize
 #ac_add_options --enable-debug
 
-ac_add_options --enable-optimize=-Os
+#ac_add_options --enable-optimize=-Os
 
 # enable static build
 ac_add_options --disable-shared

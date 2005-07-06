@@ -69,3 +69,13 @@ a {
 img[src*="spacer"] {
   display: none ! important;
 } 
+
+
+/* google maps hack */ 
+div#rhs { display: none ! important;}
+
+div#map { height: 100%; 
+          width: 100%;
+          overflow: hidden;
+          position: inherit;
+        }

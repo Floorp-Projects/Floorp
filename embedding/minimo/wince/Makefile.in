@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  content \
 		  profdirserviceprovider \
+		  pref \
 		  embedcomponents \
 		  appcomps \
 		  $(NULL)
