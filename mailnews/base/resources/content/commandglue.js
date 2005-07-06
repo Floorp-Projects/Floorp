@@ -510,7 +510,11 @@ function UpdateStatusMessageCounts(folder)
   var totalElement = GetTotalCountElement();
   if(folder && unreadElement && totalElement)
   {
-    var numUnread =
+    var numSelected = GetNumSelectedMessages();
+
+    var numUnread = (numSelected > 1) ?
+            gMessengerBundle.getFormattedString("selectedMsgStatus",
+                                                [numSelected]) :
             gMessengerBundle.getFormattedString("unreadMsgStatus",
                                                 [ folder.getNumUnread(false)]);
     var numTotal =
