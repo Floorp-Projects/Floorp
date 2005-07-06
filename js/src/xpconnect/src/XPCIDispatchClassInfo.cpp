@@ -64,14 +64,20 @@ void XPCIDispatchClassInfo::FreeSingleton()
 NS_IMETHODIMP 
 XPCIDispatchClassInfo::GetInterfaces(PRUint32 *count, nsIID * **array)
 {
-    *count = 1;
-    *array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(1 * sizeof(nsIID*)));
-    if(!*array)
-        return NS_ERROR_OUT_OF_MEMORY;
+    *count = 0;
+    *array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(sizeof(nsIID*)));
+    NS_ENSURE_TRUE(*array, NS_ERROR_OUT_OF_MEMORY);
 
     **array = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NSID_IDISPATCH,
                                                       sizeof(NSID_IDISPATCH)));
+    if(!**array)
+    {
+        nsMemory::Free(*array);
+        *array = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
+    *count = 1;
     return NS_OK;
 }
 
