@@ -1,7 +1,23 @@
 /* Skin-domain style rules for lightning UI (winstripe version) */
 
-#calendarTree { 
-  background: #cccccc;
+calendar-todo-list {
+    background-color: -moz-Field;
+    color: -moz-FieldText;
+}
+
+calendar-todo-list[disabled="true"] {
+    color: GrayText;
+}
+
+calendar-todo-item {
+  -moz-box-align: center;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+calendar-todo-item[selected="true"] {
+  background-color: Highlight;
+  color: HighlightText;
 }
 
 treechildren::-moz-tree-cell(checked) {

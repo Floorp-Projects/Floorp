@@ -4,6 +4,145 @@
  xmlns="http://www.mozilla.org/xbl"
  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
  xmlns:xbl="http://www.mozilla.org/xbl">
+    <binding id="calendar-todo-list" extends="chrome://global/content/bindings/richlistbox.xml#richlistbox"
+             implements="calIObserver, calICompositeObserver, calIOperationListener">
+        <implementation>
+
+        <field name="mCalendar">null</field>
+        <field name="mOperationListener"><![CDATA[
+        ({
+            todoList: this,
+            
+            onAddItem: function onAddItem(aItem)
+            {
+                if (!(item instanceof Components.interfaces.calITodo))
+                    return;
+                this.todoList.addTodo(aItem);
+            },
+            
+            onDeleteItem: function onDeleteItem(aItem)
+            {
+                if (!(item instanceof Components.interfaces.calITodo))
+                    return;
+                this.todoList.rebuildDisplay();
+            },
+            
+            onModifyItem: function onModifyItem(aItem)
+            {
+                if (!(item instanceof Components.interfaces.calITodo))
+                    return;
+                this.todoList.rebuildDisplay();
+            },
+
+            onCalendarAdded: function onCalendarAdded(aCalendar)
+            {
+                this.todoList.rebuildDisplay();
+            },
+            
+            onCalendarRemoved: function onCalendarRemoved(aCalendar)
+            {
+                this.todoList.rebuildDisplay();
+            },
+            
+            onGetResult: function onGetResult(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
+            {
+                if (!Components.isSuccessCode(aStatus))
+                    return Components.util.reportError("Failed to fetch todo items: " + aStatus)
+
+                aItems.forEach(this.todoList.addTodo, this.todoList);
+            },
+            
+            onOperationComplete: function onOperationComplete(aCalendar, aStatus, aOperationType, aId,
+                                                              aDetail)
+            {
+                if (!Components.isSuccessCode(aStatus))
+                    Components.util.reportError("Failed to fetch todo item (" +
+                                                aId + "): " + aStatus);
+            },
+
+            QueryInterface: function QueryInterface(aIID) {
+                if (!aIID.equals(Components.interfaces.calIObserver) &&
+                    !aIID.equals(Components.interfaces.calICompositeObserver) &&
+                    !aIID.equals(Components.interfaces.calIOperationListener) &&
+                    !aIID.equals(Components.interfaces.nsISupports)) {
+                    throw Components.results.NS_ERROR_NO_INTERFACE;
+                }
+                
+                return this;
+            }
+        })
+        ]]></field>
+        <property name="calendar">
+            <getter><![CDATA[ return this.mCalendar; ]]></getter>
+            <setter><![CDATA[
+                if (this.mCalendar)
+                    this.mCalendar.removeObserver(this.mOperationListener);
+                this.mCalendar = val;
+                if (this.mCalendar)
+                    this.mCalendar.addObserver(this.mOperationListener);
+                this.rebuildDisplay();
+            ]]></setter>
+        </property>
+
+        <method name="addTodo">
+            <parameter name="aTodo"/>
+            <body><![CDATA[
+                dump("adding new todo " + aTodo.title + "\n");
+                var newTodoElt = document.createElement("calendar-todo-item");
+                newTodoElt.setAttribute("item-calendar", aTodo.calendar.uri.spec);
+
+                this.appendChild(newTodoElt);
+                newTodoElt.setTodo(aTodo);
+            ]]></body>
+        </method>
+
+        <method name="fetchTodos">
+            <body><![CDATA[
+                if (!this.mCalendar)
+                    return;
+                const cIC = Components.interfaces.calICalendar;
+                var filter = cIC.ITEM_FILTER_TYPE_TODO | cIC.ITEM_FILTER_COMPLETED_ALL;
+                this.mCalendar.getItems(filter, 0, null, null, this.mOperationListener);
+            ]]></body>
+        </method>
+
+        <method name="rebuildDisplay">
+            <body><![CDATA[
+                while (this.firstChild)
+                    this.removeChild(this.firstChild);
+                this.fetchTodos();
+            ]]></body>
+        </method>
+
+        </implementation>
+        
+        <handlers>
+            <handler event="dblclick"><![CDATA[
+                if (this.selectedItem)                
+                    this.fireEvent("item-open");
+                else
+                    this.fireEvent("empty-dblclick");
+            ]]></handler>
+
+            <handler event="keypress"><![CDATA[
+                dump("handling keypress " + event.keyCode + "\n");
+                const kKE = Components.interfaces.nsIDOMKeyEvent;
+                if (event.keyCode == kKE.DOM_VK_RETURN ||
+                    event.keyCode == kKE.DOM_VK_ENTER) {
+                  this.fireEvent("item-open");
+                } else if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
+                           event.keyCode == kKE.DOM_VK_DELETE) {
+                  this.fireEvent("item-delete");
+                } else if (event.keyCode == kKE.DOM_VK_SPACE) {
+                  var selected = this.selectedItem;
+                  selected.checkbox.checked = !this.checkbox.checked;
+                  selected.updateTodoFromDisplay();
+                }
+            ]]></handler>
+        </handlers>
+      
+    </binding>
+
     <binding id="calendar-todo-item" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
         <content>
             <xul:hbox flex="1">
@@ -92,27 +231,5 @@
       </method>
         </implementation>
 
-        <handlers>
-        <handler event="dblclick"><![CDATA[
-          this.fireEvent("item-open");
-        ]]>
-        </handler>
-
-        <handler event="keypress"><![CDATA[
-          dump("handling keypress " + event.keyCode + "\n");
-          const kKE = Components.interfaces.nsIDOMKeyEvent;
-          if (event.keyCode == 13) {
-            this.fireEvent("item-open");
-          } else if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
-                     event.keyCode == kKE.DOM_VK_DELETE) {
-            this.fireEvent("item-delete");
-          } else if (event.keyCode == kKE.DOM_VK_SPACE) {
-            this.checkbox.checked = !this.checkbox.checked;
-            this.updateTodoFromDisplay();
-          }
-        ]]>
-        </handler>
-        </handlers>
-      
     </binding>
 </bindings>

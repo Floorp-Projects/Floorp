@@ -1,5 +1,14 @@
 /* Skin-domain style rules for lightning UI (pinstripe version) */
 
+calendar-todo-list {
+    background-color: -moz-Field;
+    color: -moz-FieldText;
+}
+
+calendar-todo-list[disabled="true"] {
+    color: GrayText;
+}
+
 calendar-todo-item {
   -moz-box-align: center;
   margin-top: 0;

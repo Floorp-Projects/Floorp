@@ -7,7 +7,7 @@
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://lightning/content/todo-list.js"/>
-<vbox id="todo-tab-panel">
-  <richlistbox flex="1" id="todo-outer-box"/>
+<vbox id="todo-tab-panel" flex="1">
+  <calendar-todo-list id="calendar-todo-list" flex="1"/>
 </vbox>
 </overlay>

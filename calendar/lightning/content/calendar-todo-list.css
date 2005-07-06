@@ -1,3 +1,7 @@
+calendar-todo-list {
+    -moz-binding: url("calendar-todo-list.xml#calendar-todo-list");
+}
+
 calendar-todo-item {
     -moz-binding: url("calendar-todo-list.xml#calendar-todo-item");
 }
