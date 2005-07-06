@@ -54,7 +54,7 @@
     mAddressBookFolder = [folder retain];
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
     [nc addObserver:self selector:@selector(fillAddressBook:) name:kABDatabaseChangedNotification object:nil];
-    [nc addObserver:self selector:@selector(fillAddressBook:) name: kABDatabaseChangedExternallyNotification object:nil];
+    [nc addObserver:self selector:@selector(fillAddressBook:) name:kABDatabaseChangedExternallyNotification object:nil];
     [self fillAddressBook:nil];
   }
   return self;

@@ -44,6 +44,7 @@
 
 @class BookmarkFolder;
 @class BookmarkManager;
+@class AddressBookManager;
 
 // KindaSmart? How smart? What does it do?
 @interface KindaSmartFolderManager : NSObject {
@@ -51,7 +52,7 @@
   BookmarkFolder* mTop10Folder;
   BookmarkFolder* mAddressBookFolder;
   BookmarkFolder* mRendezvousFolder;
-  id                mAddressBookManager;
+  AddressBookManager*  mAddressBookManager;
   unsigned          mFewestVisits;
 }
 

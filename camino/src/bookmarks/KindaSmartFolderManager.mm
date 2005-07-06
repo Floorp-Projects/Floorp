@@ -81,6 +81,7 @@
   [mTop10Folder release];
   [mAddressBookFolder release];
   [mRendezvousFolder release];
+  [mAddressBookManager release];
   [super dealloc];
 }
 
@@ -104,15 +105,9 @@
   }
 }
 
-// when 10.1 support is dropped, most of "init" method of AddressBookManager goes here.
-// we'd also need to add that class' fillAddressBook method to this class
 -(void) setupAddressBook
 {
-  NSBundle *appBundle = [NSBundle mainBundle];
-  NSString *addressBookManagerBundlePath = [[appBundle resourcePath] stringByAppendingPathComponent:@"AddressBookManager.bundle"];
-  NSBundle *addressBookBundle = [NSBundle bundleWithPath:addressBookManagerBundlePath];
-  Class principalClass = [addressBookBundle principalClass];
-  mAddressBookManager = [(AddressBookManager*)[principalClass alloc] initWithFolder:mAddressBookFolder];
+  mAddressBookManager = [[AddressBookManager alloc] initWithFolder:mAddressBookFolder];
   if (mAddressBookManager)
     [mAddressBookFolder release];
 }

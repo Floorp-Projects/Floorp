@@ -1614,7 +1614,6 @@
 			children = (
 				29B97325FDCFA39411CA2CEA,
 				29B97324FDCFA39411CA2CEA,
-				3FB2BAE30545EB52002B9691,
 			);
 			isa = PBXGroup;
 			name = "Other Frameworks";
@@ -1640,7 +1639,6 @@
 				3F44ADF105BDFBA000CB4B08,
 				3F44AE0805BDFBA000CB4B08,
 				3F44AFC605BDFBA100CB4B08,
-				3F44AFD405BDFBA100CB4B08,
 				03E2D8530771F73F00BD2443,
 				03C5AB1007722DFC00EAF77D,
 				035A4975079DC83D0084B05F,
@@ -1686,7 +1684,6 @@
 			targets = (
 				3F44ABD005BDFB9E00CB4B08,
 				3F44AE0905BDFBA000CB4B08,
-				3F44AFC805BDFBA100CB4B08,
 				3F44AD8A05BDFB9F00CB4B08,
 				3F44ADA005BDFB9F00CB4B08,
 				3F44ADC305BDFBA000CB4B08,
@@ -2153,6 +2150,18 @@
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
+		3F383A47087C6D3C00A2594D = {
+			fileRef = 3FB2BAE00545EB30002B9691;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F383A49087C6D4600A2594D = {
+			fileRef = 3FB2BAE00545EB30002B9691;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		3F42E91905EAD4580045A30C = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.tiff;
@@ -2402,7 +2411,6 @@
 				WRAPPER_EXTENSION = app;
 			};
 			dependencies = (
-				3F44AFE005BDFBA100CB4B08,
 				3F44AFD605BDFBA100CB4B08,
 				3F44AFD805BDFBA100CB4B08,
 				3F44AFDA05BDFBA100CB4B08,
@@ -3046,7 +3054,6 @@
 				3F44AC7B05BDFB9E00CB4B08,
 				3F44AC7C05BDFB9E00CB4B08,
 				3F44AC7D05BDFB9E00CB4B08,
-				3F44AFED05BDFBA100CB4B08,
 				3F42E91C05EAD4580045A30C,
 				3F42E91D05EAD4580045A30C,
 				3F42E91E05EAD4580045A30C,
@@ -3632,6 +3639,7 @@
 				3FBDC7DB08252CF300D7F8E0,
 				3FBDC7DC08252CF300D7F8E0,
 				3FE4ECEA082C2D89003BF39E,
+				3F383A47087C6D3C00A2594D,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6263,7 +6271,6 @@
 				WRAPPER_EXTENSION = app;
 			};
 			dependencies = (
-				3F44AFEC05BDFBA100CB4B08,
 				3F44AFE205BDFBA100CB4B08,
 				3F44AFE405BDFBA100CB4B08,
 				3F44AFE605BDFBA100CB4B08,
@@ -6907,7 +6914,6 @@
 				3F44AEB405BDFBA000CB4B08,
 				3F44AEB505BDFBA000CB4B08,
 				3F44AEB605BDFBA000CB4B08,
-				3F44AFF305BDFBA100CB4B08,
 				3F42E91F05EAD4580045A30C,
 				3F42E92005EAD4580045A30C,
 				3F42E92105EAD4580045A30C,
@@ -7501,6 +7507,7 @@
 				3FBDC7DD08252CF300D7F8E0,
 				3FBDC7DE08252CF300D7F8E0,
 				3FE4ECEB082C2D89003BF39E,
+				3F383A49087C6D4600A2594D,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -9211,113 +9218,6 @@
 			refType = 3;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		3F44AFC805BDFBA100CB4B08 = {
-			buildPhases = (
-				3F44AFC905BDFBA100CB4B08,
-				3F44AFCB05BDFBA100CB4B08,
-				3F44AFCC05BDFBA100CB4B08,
-				3F44AFCE05BDFBA100CB4B08,
-				3F44AFD105BDFBA100CB4B08,
-			);
-			buildRules = (
-			);
-			buildSettings = {
-				INFOPLIST_FILE = "Info-AddressBookManager.plist";
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = AddressBookManager;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
-				WRAPPER_EXTENSION = bundle;
-			};
-			dependencies = (
-			);
-			isa = PBXNativeTarget;
-			name = AddressBookManager;
-			productInstallPath = "$(USER_LIBRARY_DIR)/Bundles";
-			productName = AddressBookManager;
-			productReference = 3F44AFD405BDFBA100CB4B08;
-			productType = "com.apple.product-type.bundle";
-		};
-		3F44AFC905BDFBA100CB4B08 = {
-			buildActionMask = 2147483647;
-			files = (
-				3F44AFCA05BDFBA100CB4B08,
-			);
-			isa = PBXHeadersBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F44AFCA05BDFBA100CB4B08 = {
-			fileRef = 3FB2BADF0545EB30002B9691;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AFCB05BDFBA100CB4B08 = {
-			buildActionMask = 2147483647;
-			files = (
-			);
-			isa = PBXResourcesBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F44AFCC05BDFBA100CB4B08 = {
-			buildActionMask = 2147483647;
-			files = (
-				3F44AFCD05BDFBA100CB4B08,
-			);
-			isa = PBXSourcesBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F44AFCD05BDFBA100CB4B08 = {
-			fileRef = 3FB2BAE00545EB30002B9691;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AFCE05BDFBA100CB4B08 = {
-			buildActionMask = 2147483647;
-			files = (
-				3F44AFCF05BDFBA100CB4B08,
-				3F44AFD005BDFBA100CB4B08,
-			);
-			isa = PBXFrameworksBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F44AFCF05BDFBA100CB4B08 = {
-			fileRef = 3FB2BAE30545EB52002B9691;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AFD005BDFBA100CB4B08 = {
-			fileRef = 29B97325FDCFA39411CA2CEA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AFD105BDFBA100CB4B08 = {
-			buildActionMask = 2147483647;
-			files = (
-			);
-			isa = PBXRezBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F44AFD305BDFBA100CB4B08 = {
-			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
-			path = "Info-AddressBookManager.plist";
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		3F44AFD405BDFBA100CB4B08 = {
-			explicitFileType = wrapper.cfbundle;
-			includeInIndex = 0;
-			isa = PBXFileReference;
-			path = AddressBookManager.bundle;
-			refType = 3;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		3F44AFD505BDFBA100CB4B08 = {
 			containerPortal = 29B97313FDCFA39411CA2CEA;
 			isa = PBXContainerItemProxy;
@@ -9377,18 +9277,6 @@
 			isa = PBXTargetDependency;
 			target = 3F44ADF205BDFBA000CB4B08;
 			targetProxy = 3F44AFDD05BDFBA100CB4B08;
-		};
-		3F44AFDF05BDFBA100CB4B08 = {
-			containerPortal = 29B97313FDCFA39411CA2CEA;
-			isa = PBXContainerItemProxy;
-			proxyType = 1;
-			remoteGlobalIDString = 3F44AFC805BDFBA100CB4B08;
-			remoteInfo = "AddressBookManager (Upgraded)";
-		};
-		3F44AFE005BDFBA100CB4B08 = {
-			isa = PBXTargetDependency;
-			target = 3F44AFC805BDFBA100CB4B08;
-			targetProxy = 3F44AFDF05BDFBA100CB4B08;
 		};
 		3F44AFE105BDFBA100CB4B08 = {
 			containerPortal = 29B97313FDCFA39411CA2CEA;
@@ -9450,24 +9338,6 @@
 			target = 3F44ADF205BDFBA000CB4B08;
 			targetProxy = 3F44AFE905BDFBA100CB4B08;
 		};
-		3F44AFEB05BDFBA100CB4B08 = {
-			containerPortal = 29B97313FDCFA39411CA2CEA;
-			isa = PBXContainerItemProxy;
-			proxyType = 1;
-			remoteGlobalIDString = 3F44AFC805BDFBA100CB4B08;
-			remoteInfo = "AddressBookManager (Upgraded)";
-		};
-		3F44AFEC05BDFBA100CB4B08 = {
-			isa = PBXTargetDependency;
-			target = 3F44AFC805BDFBA100CB4B08;
-			targetProxy = 3F44AFEB05BDFBA100CB4B08;
-		};
-		3F44AFED05BDFBA100CB4B08 = {
-			fileRef = 3F44AFD405BDFBA100CB4B08;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		3F44AFEE05BDFBA100CB4B08 = {
 			fileRef = 3F44AD9F05BDFB9F00CB4B08;
 			isa = PBXBuildFile;
@@ -9494,12 +9364,6 @@
 		};
 		3F44AFF205BDFBA100CB4B08 = {
 			fileRef = 3F44ADF105BDFBA000CB4B08;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AFF305BDFBA100CB4B08 = {
-			fileRef = 3F44AFD405BDFBA100CB4B08;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -9951,14 +9815,6 @@
 			path = src/bookmarks/AddressBookManager.m;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
-		};
-		3FB2BAE30545EB52002B9691 = {
-			isa = PBXFileReference;
-			lastKnownFileType = wrapper.framework;
-			name = AddressBook.framework;
-			path = /System/Library/Frameworks/AddressBook.framework;
-			refType = 0;
-			sourceTree = "<absolute>";
 		};
 		3FB2BAE50545EBAB002B9691 = {
 			children = (
@@ -10509,7 +10365,6 @@
 				3F44ADF005BDFBA000CB4B08,
 				3F44AE0705BDFBA000CB4B08,
 				3F44AFC505BDFBA100CB4B08,
-				3F44AFD305BDFBA100CB4B08,
 				03E2D8540771F73F00BD2443,
 				03C5AB1107722DFD00EAF77D,
 				035A4976079DC83E0084B05F,
