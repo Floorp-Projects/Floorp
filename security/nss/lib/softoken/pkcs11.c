@@ -2789,6 +2789,24 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
     /* initialize the key and cert db's */
     nsslowkey_SetDefaultKeyDBAlg
 			     (SEC_OID_PKCS12_PBE_WITH_SHA1_AND_TRIPLE_DES_CBC);
+    if (init_args && (!(init_args->flags & CKF_OS_LOCKING_OK))) {
+        if (init_args->CreateMutex && init_args->DestroyMutex &&
+            init_args->LockMutex && init_args->UnlockMutex) {
+            /* softoken always uses NSPR (ie. OS locking), and doesn't know how
+             * to use the lock functions provided by the application.
+             */
+            crv = CKR_CANT_LOCK;
+            return crv;
+        }
+        if (init_args->CreateMutex || init_args->DestroyMutex ||
+            init_args->LockMutex || init_args->UnlockMutex) {
+            /* only some of the lock functions were provided by the
+             * application. This is invalid per PKCS#11 spec.
+             */
+            crv = CKR_ARGUMENTS_BAD;
+            return crv;
+        }
+    }
     crv = CKR_ARGUMENTS_BAD;
     if ((init_args && init_args->LibraryParameters)) {
 	sftk_parameters paramStrings;
