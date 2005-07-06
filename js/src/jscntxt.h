@@ -244,6 +244,10 @@ struct JSRuntime {
     const char          *decimalSeparator;
     const char          *numGrouping;
 
+    /* Weak references to lazily-created, well-known XML singletons. */
+    JSObject            *anynameObject;
+    JSObject            *functionNamespaceObject;
+
 #ifdef DEBUG
     /* Function invocation metering. */
     jsrefcount          inlineCalls;

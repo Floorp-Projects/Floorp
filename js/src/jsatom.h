@@ -230,7 +230,6 @@ struct JSAtomState {
         JSAtom          *TypeErrorAtom;
         JSAtom          *URIErrorAtom;
         JSAtom          *XMLListAtom;
-        JSAtom          *anynameAtom;
         JSAtom          *decodeURIAtom;
         JSAtom          *decodeURIComponentAtom;
         JSAtom          *defineGetterAtom;
@@ -238,7 +237,6 @@ struct JSAtomState {
         JSAtom          *encodeURIAtom;
         JSAtom          *encodeURIComponentAtom;
         JSAtom          *escapeAtom;
-        JSAtom          *functionNamespaceAtom;
         JSAtom          *functionNamespaceURIAtom;
         JSAtom          *hasOwnPropertyAtom;
         JSAtom          *isFiniteAtom;
