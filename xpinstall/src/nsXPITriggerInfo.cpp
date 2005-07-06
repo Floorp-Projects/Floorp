@@ -44,6 +44,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIJSContextStack.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -235,6 +236,32 @@ static void* handleTriggerEvent(XPITriggerEvent* event)
             do_GetService("@mozilla.org/js/xpc/ContextStack;1");
         if (stack)
             stack->Push(event->cx);
+        
+        nsCOMPtr<nsIScriptSecurityManager> secman = 
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+        
+        if (!secman)
+        {
+            JS_ReportError(event->cx, "Could not get script security manager service");
+            return 0;
+        }
+
+        nsCOMPtr<nsIPrincipal> principal;
+        secman->GetSubjectPrincipal(getter_AddRefs(principal));
+        if (!principal)
+        {
+            JS_ReportError(event->cx, "Could not get principal from script security manager");
+            return 0;
+        }
+
+        PRBool equals = PR_FALSE;
+        principal->Equals(event->princ, &equals);
+
+        if (!equals)
+        {
+            JS_ReportError(event->cx, "Principal of callback context is different then InstallTriggers");
+            return 0;
+        }
 
         JS_CallFunctionValue( event->cx,
                               JSVAL_TO_OBJECT(event->global),
@@ -279,6 +306,7 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
                     event->URL      = URL;
                     event->status   = status;
                     event->cx       = mCx;
+                    event->princ    = mPrincipal;
 
                     JSObject *obj = nsnull;
 
