@@ -39,7 +39,6 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://help/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://help/skin/sidebar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/findBar.css" type="text/css"?>
 
 <?xul-overlay href="chrome://help/content/helpContextOverlay.xul"?>
@@ -73,365 +72,308 @@
         onload="init();"
         onunload="uninitFindBar(); window.XULBrowserWindow.destroy();">
 
-    <script type="application/x-javascript" src="chrome://help/content/toolbarCustomization.js"/>
-    <script type="application/x-javascript" src="chrome://help/content/help.js"/>
-    <script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
-    <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
-    <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
-    <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>
+  <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>
     
-    <menupopup id="backMenu" position="after_start"
-        onpopupshowing="return createBackMenu(event);"
-        oncommand="gotoHistoryIndex(event);"/>
-    <menupopup id="forwardMenu" position="after_start"
-        onpopupshowing="return createForwardMenu(event);"
-        oncommand="gotoHistoryIndex(event);"/>
-    <popupset id="contentAreaContextSet"/>
-    <popup id="toolbar-context-menu">
-      <menuitem command="cmd_CustomizeToolbars"
-                label="&viewCustomizeToolbar.label;"
-                accesskey="&viewCustomizeToolbar.accesskey;"/>
-    </popup>
-    <broadcasterset id="helpBroadcasters">
-        <broadcaster id="canGoBack"    disabled="true"/>
-        <broadcaster id="canGoForward" disabled="true"/>
-    </broadcasterset>
-    <commandset id="globalEditMenuItems"/>
-    <commandset id="selectEditMenuItems">
-        <command id="cmd_close" oncommand="close();"/>
-        <command id="Help:Home" oncommand="goHome();"/>
-        <command id="Help:Back" oncommand="goBack();"       observes="canGoBack"/>
-        <command id="Help:Forward" oncommand="goForward();" observes="canGoForward"/>
-        <command id="Help:ToggleSidebar" oncommand="toggleSidebar();"/>
-        <command id="cmd_closeWindow" oncommand="close();"/>
-        <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
-        <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
-        <command id="cmd_CustomizeToolbars" oncommand="CustomizeToolbar('help-toolbox');"/>
-        <command id="cmd_find" oncommand="onFindCmd();"/>
-        <command id="cmd_findAgain" oncommand="onFindAgainCmd();"/>
-        <command id="cmd_findPrevious" oncommand="onFindPreviousCmd();"/>    
-    </commandset>
-    <keyset id="keys">
-        <key id="goHome"      keycode="VK_HOME"  command="Help:Home" modifiers="alt"/>
+  <menupopup id="backMenu" position="after_start"
+             onpopupshowing="return createBackMenu(event);"
+             oncommand="gotoHistoryIndex(event);"/>
+  <menupopup id="forwardMenu" position="after_start"
+             onpopupshowing="return createForwardMenu(event);"
+             oncommand="gotoHistoryIndex(event);"/>
+  <popupset id="contentAreaContextSet"/>
+
+  <broadcasterset id="helpBroadcasters">
+    <broadcaster id="canGoBack"    disabled="true"/>
+    <broadcaster id="canGoForward" disabled="true"/>
+  </broadcasterset>
+  <commandset id="globalEditMenuItems"/>
+  <commandset id="selectEditMenuItems">
+    <command id="cmd_close" oncommand="close();"/>
+    <command id="Help:Home" oncommand="goHome();"/>
+    <command id="Help:Back" oncommand="goBack();"       observes="canGoBack"/>
+    <command id="Help:Forward" oncommand="goForward();" observes="canGoForward"/>
+    <command id="Help:ToggleSidebar" oncommand="toggleSidebar();"/>
+    <command id="cmd_closeWindow" oncommand="close();"/>
+    <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
+    <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
+    <command id="cmd_find" oncommand="onFindCmd();"/>
+    <command id="cmd_findAgain" oncommand="onFindAgainCmd();"/>
+    <command id="cmd_findPrevious" oncommand="onFindPreviousCmd();"/>    
+  </commandset>
+  <keyset id="keys">
+    <key id="goHome"      keycode="VK_HOME"  command="Help:Home" modifiers="alt"/>
 #ifdef XP_UNIX
-        <key key="&goBackCmd.commandkey;" command="Help:Back" modifiers="accel"/>
-        <key key="&goForwardCmd.commandkey;" command="Help:Forward" modifiers="accel"/>
+    <key key="&goBackCmd.commandkey;" command="Help:Back" modifiers="accel"/>
+    <key key="&goForwardCmd.commandkey;" command="Help:Forward" modifiers="accel"/>
 #endif
 #ifdef XP_MACOSX
-        <key id="goBackKb"    keycode="VK_LEFT"  command="Help:Back" modifiers="accel"/>
-        <key id="goForwardKb" keycode="VK_RIGHT" command="Help:Forward" modifiers="accel"/>
+    <key id="goBackKb"    keycode="VK_LEFT"  command="Help:Back" modifiers="accel"/>
+    <key id="goForwardKb" keycode="VK_RIGHT" command="Help:Forward" modifiers="accel"/>
 #else
-        <key id="goBackKb"    keycode="VK_LEFT"  command="Help:Back" modifiers="alt"/>
-        <key id="goForwardKb" keycode="VK_RIGHT" command="Help:Forward" modifiers="alt"/>
-        <key keycode="VK_BACK" command="Help:Back"/>
-        <key keycode="VK_BACK" command="Help:Forward" modifiers="shift"/>
+    <key id="goBackKb"     keycode="VK_LEFT"  command="Help:Back" modifiers="alt"/>
+    <key id="goForwardKb"  keycode="VK_RIGHT" command="Help:Forward" modifiers="alt"/>
+    <key keycode="VK_BACK" command="Help:Back"/>
+    <key keycode="VK_BACK" command="Help:Forward" modifiers="shift"/>
 #endif
-        <key id="printKb" key="&printCmd.commandkey;" oncommand="print();"
-            modifiers="accel"/>  
-        <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
-        <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
-        <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
-        <key keycode="&findAgainCmd.commandkey2;" command="cmd_findAgain"/>
-        <key keycode="&findAgainCmd.commandkey2;"  command="cmd_findPrevious" modifiers="shift"/>
-        <key keycode="VK_F5" oncommand="reload();"/>
-        <key id="key_closeWindow" key="&closeWindow.commandkey;"
-            command="cmd_closeWindow" modifiers="accel"/>
-        <key id="key_closeWindow2" keycode="VK_ESCAPE"
-            command="cmd_closeWindow"/>
-        <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"
-            command="cmd_textZoomEnlarge" modifiers="accel"/>
-        <key id="key_textZoomEnlarge2" key="&textZoomEnlargeCmd.commandkey2;"
-            command="cmd_textZoomEnlarge" modifiers="accel"/>
-        <key id="key_textZoomReduce" key="&textZoomReduceCmd.commandkey;"
-            command="cmd_textZoomReduce" modifiers="accel"/>
-        <key id="key_textZoomReset" key="&textZoomResetCmd.commandkey;"
-            oncommand="ZoomManager.prototype.getInstance().reset();" modifiers="accel"/>
-        <key id="key_toggleSidebar" keycode="VK_F9" command="Help:ToggleSidebar"/>
-        <key id="key_viewNextHelpPanel" keycode="VK_TAB"
-             oncommand="showRelativePanel(true);" modifiers="control"/>
-        <key id="key_viewPrevHelpPanel" keycode="VK_TAB"
-             oncommand="showRelativePanel(false);" modifiers="control,shift"/>
-    </keyset>
-    <stringbundle id="bundle_viewZoom"/>
-    <stringbundle id="findBundle"
-        src="chrome://global/locale/finddialog.properties"/>
-    <stringbundle id="bundle_help"
-        src="chrome://help/locale/help.properties"/>
+    <key id="printKb" key="&printCmd.commandkey;" oncommand="print();"
+         modifiers="accel"/>  
+    <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
+    <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
+    <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
+    <key keycode="&findAgainCmd.commandkey2;" command="cmd_findAgain"/>
+    <key keycode="&findAgainCmd.commandkey2;"  command="cmd_findPrevious" modifiers="shift"/>
+    <key keycode="VK_F5" oncommand="reload();"/>
+    <key id="key_closeWindow" key="&closeWindow.commandkey;"
+         command="cmd_closeWindow" modifiers="accel"/>
+    <key id="key_closeSearchSidebar" keycode="VK_ESCAPE"
+         oncommand="hideSearchSidebar(event)"/>
+    <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"
+         command="cmd_textZoomEnlarge" modifiers="accel"/>
+    <key id="key_textZoomEnlarge2" key="&textZoomEnlargeCmd.commandkey2;"
+         command="cmd_textZoomEnlarge" modifiers="accel"/>
+    <key id="key_textZoomReduce" key="&textZoomReduceCmd.commandkey;"
+         command="cmd_textZoomReduce" modifiers="accel"/>
+    <key id="key_textZoomReset" key="&textZoomResetCmd.commandkey;"
+         oncommand="ZoomManager.prototype.getInstance().reset();" modifiers="accel"/>
+    <key id="key_focusSearch" key="&helpSearch.commandkey;"
+         oncommand="focusSearch()" modifiers="accel"/>
 
-    <vbox flex="1">
+  </keyset>
+  <stringbundle id="bundle_viewZoom"/>
+  <stringbundle id="findBundle"
+                src="chrome://global/locale/finddialog.properties"/>
+  <stringbundle id="bundle_help"
+                src="chrome://help/locale/help.properties"/>
 
-        <toolbox id="help-toolbox" class="toolbox-top" mode="icons" iconsize="small" customizable="true">
+  <vbox flex="1">
+    <toolbox id="help-toolbox" class="toolbox-top">
+      <toolbar id="HelpToolbar" class="chromeclass-toolbar">
+        <toolbarbutton id="help-back-button" type="menu-button"
+                       class="browserButton" label="&backButton.label;"
+                       oncommand="if (event.target == this) goBack(); else gotoHistoryIndex(event);"
+                       observes="canGoBack" context="backMenu"
+                       tooltiptext="&backButton.tooltip;"
+                       chromedir="&locale.dir;">
+          <menupopup context="" onpopupshowing="createBackMenu(event);"/>
+        </toolbarbutton>
+        <toolbarbutton id="help-forward-button" type="menu-button"
+                       class="browserButton"
+                       oncommand="if (event.target == this) goForward(); else gotoHistoryIndex(event);"
+                       tooltiptext="&forwardButton.tooltip;"
+                       observes="canGoForward"
+                       chromedir="&locale.dir;">
+          <menupopup context="" onpopupshowing="createForwardMenu(event);"/>
+        </toolbarbutton>
+        <toolbarbutton id="help-home-button" class="browserButton"
+                       tooltiptext="&homeButton.tooltip;"
+                       command="Help:Home"/>
+        <toolbarseparator/>
+        <toolbarbutton id="help-print-button" class="browserButton"
+                       label="&printButton.label;"
+                       oncommand="print();"
+                       tooltiptext="&printButton.tooltip;"/>
+        <toolbarspring flex="1"/>
+        <toolbaritem id="search-box"
+                     align="center" pack="center">
+          <label value="&searchtab.label;" accesskey="&searchtab.accesskey;" 
+                 control="findText"/>
+          <textbox id="findText" type="timed" timeout="500"
+                   onfocus="SearchbarFocusHandler(event, this);"
+                   onmousedown="SearchbarMouseDownHandler(event, this);"
+                   onclick="SearchbarClickHandler(event, this);"
+                   oncommand="doFind();"/>
+        </toolbaritem>
+      </toolbar>
+    </toolbox>
 
-            <toolbarpalette id="HelpToolbarPalette">
+    <hbox flex="1">
+      <vbox id="help-sidebar" persist="width">
+        <vbox flex="1" id="help-toc-sidebar">
+          <sidebarheader align="center">
+            <label id="help-toc-sidebar-header" flex="1" crop="end" value="&toctab.label;"
+                   accesskey="&toctab.accesskey;" control="help-toc-panel"/>
+          </sidebarheader>
+          <tree id="help-toc-panel" class="focusring"
+                flex="1"  hidecolumnpicker="true"
+                datasources="rdf:null"
+                containment="http://home.netscape.com/NC-rdf#subheadings"
+                ref="urn:root" flags="dont-build-content"
+                onselect="onselect_loadURI(this)">
+            <template>
+              <rule>
+                <conditions>
+                  <content uri="?uri"/>
+                  <triple subject="?uri"
+                          predicate="http://home.netscape.com/NC-rdf#subheadings"
+                          object="?subheadings"/>
+                  <member container="?subheadings"
+                          child="?subheading"/>
+                </conditions>
+                <bindings>
+                  <binding subject="?subheading"
+                           predicate="http://home.netscape.com/NC-rdf#name"
+                           object="?name"/>
+                </bindings>
+                <action>
+                  <treechildren>
+                    <treeitem uri="?subheading">
+                      <treerow>
+                        <treecell label="?name"/>
+                      </treerow>
+                    </treeitem>
+                  </treechildren>
+                </action>
+              </rule>
+            </template>
+            <treecols>
+              <treecol id="NameColumn" flex="1" hideheader="true"
+                       primary="true"/>
+            </treecols>
+          </tree>
+        </vbox>
+        <vbox id="help-search-sidebar" hidden="true" flex="1">
+          <sidebarheader align="center">
+            <label id="help-search-sidebar-header" flex="1" crop="end" value="&searchtab.label;"/>
+            <toolbarbutton id="find-closebutton"  oncommand="hideSearchSidebar();"/>
+          </sidebarheader>
+          <tree id="help-search-tree" class="focusring"
+                flex="1" hidecolumnpicker="true"
+                datasources="rdf:null"
+                containment="http://home.netscape.com/NC-rdf#child"
+                ref="urn:root" flags="dont-build-content"
+                onselect="onselect_loadURI(this)">
+            <template>
+              <rule>
+                <conditions>
+                  <content uri="?uri"/>
+                  <member container="?uri"
+                          child="?subheading"/>
+                </conditions>
+                <bindings>
+                  <binding subject="?subheading"
+                           predicate="http://home.netscape.com/NC-rdf#name"
+                           object="?name"/>
+                </bindings>
+                <action>
+                  <treechildren>
+                    <treeitem uri="?subheading">
+                      <treerow>
+                        <treecell label="?name"/>
+                      </treerow>
+                    </treeitem>
+                  </treechildren>
+                </action>
+              </rule>
+            </template>
+            <treecols>
+            <treecol id="ResultsColumn" flex="1"
+                     hideheader="true" primary="true"
+                     sortActive="true" sortDirection="ascending"
+                     sort="?name"/>
+            </treecols>
+          </tree>
+        </vbox>
 
-                <toolbarbutton id="help-sidebar-button"
-                	class="toolbarbutton-1"
-                	tooltiptext="&sidebarBtn.tooltip;"
-                	customizeable="true" label="&sidebarBtn.label;"
-                	command="Help:ToggleSidebar"/>
-                <toolbarbutton id="help-back-button" type="menu-button"
-                        class="browserButton" label="&backButton.label;"
-                        oncommand="if (event.target==this) goBack(); else gotoHistoryIndex(event);"
-                        observes="canGoBack" context="backMenu"
-                        tooltiptext="&backButton.tooltip;"
-                        chromedir="&locale.dir;">
-                    <menupopup context=""
-                        onpopupshowing="createBackMenu(event);"/>
-                </toolbarbutton>
-                <toolbarbutton id="help-forward-button" type="menu-button"
-                        class="browserButton"
-                        label="&forwardButton.label;"
-                        oncommand="if (event.target==this) goForward(); else gotoHistoryIndex(event);"
-                        tooltiptext="&forwardButton.tooltip;"
-                        observes="canGoForward"
-                        chromedir="&locale.dir;">
-                    <menupopup context=""
-                        onpopupshowing="createForwardMenu(event);"/>
-                </toolbarbutton>
-                <toolbarbutton id="help-home-button"
-                    class="browserButton" label="&homeButton.label;"
-                    tooltiptext="&homeButton.tooltip;"
-                    command="Help:Home"/>
-                <toolbarbutton id="help-find-button"
-                    class="toolbarbutton-1" label="&findBtn.label;"
-                    command="cmd_find"/>
-                <toolbarbutton id="help-zoom-small-button"
-                    class="toolbarbutton-1" label="&textZoomReduceBtn.label;"
-                    tooltiptext="&textZoomReduceBtn.tooltip;"
-                    command="cmd_textZoomReduce"/>
-                <toolbarbutton id="help-zoom-large-button"
-                    class="toolbarbutton-1" label="&textZoomEnlargeBtn.label;"
-                    tooltiptext="&textZoomEnlargeBtn.tooltip;"
-                    command="cmd_textZoomEnlarge"/>
-                <toolbarbutton id="help-print-button" class="browserButton"
-                    label="&printButton.label;"
-                    oncommand="print();"
-                    tooltiptext="&printButton.tooltip;"/>
-                <toolbarbutton id="help-toolbar-customization" class="toolbarbutton-1"
-                    label="&cmd_CustomizeToolbars.label;"
-                    command="cmd_CustomizeToolbars"
-                    tooltiptext="&customizeButton.tooltip;"/>
+        <!-- BEGIN hidden trees used for searching -->
+        <!-- xxxmpc: we need a better solution for this -->
 
-                <toolbaritem id="throbber-box" title="&throbberItem.title;"
-                    align="center" pack="center">
-                  <button id="help-throbber" tooltiptext="&throbber.tooltip;"
-                    command="Help:Home"/>
-                </toolbaritem>
-            </toolbarpalette>
-            <toolbar id="helpToolbar" toolbarname="Help Toolbar" class="toolbar-primary
-                    chromeclass-toolbar" mode="icons" iconsize="small"
-                    customizable="true"
-                    defaultset="help-sidebar-button,separator,help-back-button,help-forward-button,help-home-button,separator,help-toolbar-customization,spring,help-print-button,separator,spacer,throbber-box"
-                    context="toolbar-context-menu"/>
-            <toolbarset id="customToolbars"/>
-        </toolbox>
+        <vbox id="help-sidebar-hidden-trees" hidden="true">
+          <tree id="help-glossary-panel" class="focusring"
+                flex="1" hidecolumnpicker="true"
+                datasources="rdf:null"
+                containment="http://home.netscape.com/NC-rdf#subheadings"
+                ref="urn:root" flags="dont-build-content"
+                onselect="onselect_loadURI(this)">
+            <template>
+              <rule>
+                <conditions>
+                  <content uri="?uri"/>
+                  <triple subject="?uri"
+                          predicate="http://home.netscape.com/NC-rdf#subheadings"
+                          object="?subheadings"/>
+                  <member container="?subheadings"
+                          child="?subheading"/>
+                </conditions>
+                <bindings>
+                  <binding subject="?subheading"
+                           predicate="http://home.netscape.com/NC-rdf#name"
+                           object="?name"/>
+                </bindings>
+                <action>
+                  <treechildren>
+                    <treeitem uri="?subheading">
+                      <treerow>
+                        <treecell label="?name"/>
+                      </treerow>
+                    </treeitem>
+                  </treechildren>
+                </action>
+              </rule>
+            </template>
+            <treecols>
+              <treecol id="GlossaryNameColumn" flex="1"
+                       hideheader="true" primary="true"/>
+            </treecols>
+          </tree>
+          <tree id="help-index-panel" class="focusring"
+                flex="1" datasources="rdf:null"
+                hidecolumnpicker="true"
+                containment="http://home.netscape.com/NC-rdf#subheadings"
+                ref="urn:root"
+                flags="dont-build-content dont-test-empty"
+                onselect="onselect_loadURI(this)">
+            <template>
+              <rule>
+                <conditions>
+                  <content uri="?uri"/>
+                  <triple subject="?uri"
+                          predicate="http://home.netscape.com/NC-rdf#subheadings"
+                          object="?subheadings"/>
+                  <member container="?subheadings"
+                          child="?subheading"/>
+                </conditions>
+                <bindings>
+                  <binding subject="?subheading"
+                           predicate="http://home.netscape.com/NC-rdf#name"
+                           object="?name"/>
+                </bindings>
+                <action>
+                  <treechildren>
+                    <treeitem uri="?subheading">
+                      <treerow>
+                        <treecell label="?name"/>
+                      </treerow>
+                    </treeitem>
+                  </treechildren>
+                </action>
+              </rule>
+            </template>
+            <treecols>
+              <treecol id="IndexNameColumn" flex="1" hideheader="true"
+                       primary="true" sortActive="true"
+                       sortDirection="ascending" sort="?name"/>
+            </treecols>
+          </tree>
+        </vbox>
 
-        <hbox flex="1">
-            <vbox id="helpsidebar-box" persist="width">
+        <!-- END HIDDEN ITEMS -->
+      </vbox>
 
-                <!-- glossary panel -->
-                <toolbarbutton id="help-glossary-btn"
-                    class="box-texttab texttab-sidebar"
-                    label="&glossarytab.label;"
-                    oncommand="showPanel('help-glossary')"
-                    accesskey="&glossarytab.accesskey;"
-                    chromedir="&locale.dir;"/>
-                <tree id="help-glossary-panel" class="focusring"
-                        flex="1" hidecolumnpicker="true"
-                        hidden="true" datasources="rdf:null"
-                        containment="http://home.netscape.com/NC-rdf#subheadings"
-                        ref="urn:root" flags="dont-build-content"
-                        onselect="onselect_loadURI(this)">
-                    <template>
-                        <rule>
-                            <conditions>
-                                <content uri="?uri"/>
-                                <triple subject="?uri"
-                                    predicate="http://home.netscape.com/NC-rdf#subheadings"
-                                    object="?subheadings"/>
-                                <member container="?subheadings"
-                                    child="?subheading"/>
-                            </conditions>
-                            <bindings>
-                                <binding subject="?subheading"
-                                    predicate="http://home.netscape.com/NC-rdf#name"
-                                    object="?name"/>
-                            </bindings>
+      <splitter id="help-sidebar-splitter" collapse="before"/>
 
-                            <action>
-                                <treechildren>
-                                    <treeitem uri="?subheading">
-                                        <treerow>
-                                            <treecell label="?name"/>
-                                        </treerow>
-                                    </treeitem>
-                                </treechildren>
-                            </action>
-                        </rule>
-                    </template>
-                    <treecols>
-                        <treecol id="GlossaryNameColumn" flex="1"
-                            hideheader="true" primary="true"/>
-                    </treecols>
-                </tree>
-
-                <toolbarbutton id="help-index-btn" class="box-texttab texttab-sidebar"
-                    label="&indextab.label;"
-                    oncommand="showPanel('help-index');expandAllIndexEntries();"
-                    accesskey="&indextab.accesskey;"
-                    chromedir="&locale.dir;"/>
-
-                <tree id="help-index-panel" class="focusring"
-                        flex="1" datasources="rdf:null"
-                        hidecolumnpicker="true" hidden="true"
-                        containment="http://home.netscape.com/NC-rdf#subheadings"
-                        ref="urn:root"
-                        flags="dont-build-content dont-test-empty"
-                        onselect="onselect_loadURI(this)">
-                    <template>
-                        <rule>
-                            <conditions>
-                                <content uri="?uri"/>
-                                <triple subject="?uri"
-                                    predicate="http://home.netscape.com/NC-rdf#subheadings"
-                                    object="?subheadings"/>
-                                <member container="?subheadings"
-                                    child="?subheading"/>
-                            </conditions>
-                            <bindings>
-                                <binding subject="?subheading"
-                                    predicate="http://home.netscape.com/NC-rdf#name"
-                                    object="?name"/>
-                            </bindings>
-
-                            <action>
-                                <treechildren>
-                                    <treeitem uri="?subheading">
-                                        <treerow>
-                                            <treecell label="?name"/>
-                                        </treerow>
-                                    </treeitem>
-                                </treechildren>
-                            </action>
-                        </rule>
-                    </template>
-                    <treecols>
-                        <treecol id="IndexNameColumn" flex="1" hideheader="true"
-                            primary="true" sortActive="true"
-                            sortDirection="ascending" sort="?name"/>
-                    </treecols>
-                </tree>
-
-                <toolbarbutton id="help-search-btn" class="box-texttab texttab-sidebar"
-                    label="&searchtab.label;"
-                    oncommand="showPanel('help-search')"
-                    accesskey="&searchtab.accesskey;"
-                    chromedir="&locale.dir;"/>
-
-                <vbox id="help-search-panel" hidden="true" flex="1">
-                    <textbox id="findText" type="timed" timeout="500"
-                             oncommand="doFind();"/>
-                    <tree id="help-search-tree" class="focusring"
-                            flex="1" hidecolumnpicker="true"
-                            datasources="rdf:null"
-                            containment="http://home.netscape.com/NC-rdf#child"
-                            ref="urn:root" flags="dont-build-content"
-                            onselect="onselect_loadURI(this)">
-                        <template>
-                            <rule>
-                                <conditions>
-                                    <content uri="?uri"/>
-                                    <member container="?uri"
-                                        child="?subheading"/>
-                                </conditions>
-
-                                <bindings>
-                                    <binding subject="?subheading"
-                                        predicate="http://home.netscape.com/NC-rdf#name"
-                                        object="?name"/>
-                                </bindings>
-
-                                <action>
-                                    <treechildren>
-                                        <treeitem uri="?subheading">
-                                            <treerow>
-                                                <treecell label="?name"/>
-                                            </treerow>
-                                        </treeitem>
-                                    </treechildren>
-                                </action>
-                            </rule>
-                        </template>
-
-                        <treecols>
-                            <treecol id="ResultsColumn" flex="1"
-                                hideheader="true" primary="true"
-                                sortActive="true" sortDirection="ascending"
-                                sort="?name"/>
-                        </treecols>
-                    </tree>
-                </vbox>
-
-                <toolbarbutton id="help-toc-btn" class="box-texttab texttab-sidebar"
-                    label="&toctab.label;"
-                    oncommand="showPanel('help-toc')"
-                    accesskey="&toctab.accesskey;"
-                    chromedir="&locale.dir;"/>
-                <tree id="help-toc-panel" class="focusring"
-                        flex="1"  hidecolumnpicker="true"
-                        datasources="rdf:null"
-                        containment="http://home.netscape.com/NC-rdf#subheadings"
-                        ref="urn:root" flags="dont-build-content"
-                        onselect="onselect_loadURI(this)">
-                    <template>
-                        <rule>
-                            <conditions>
-                                <content uri="?uri"/>
-                                <triple subject="?uri"
-                                    predicate="http://home.netscape.com/NC-rdf#subheadings"
-                                    object="?subheadings"/>
-                                <member container="?subheadings"
-                                    child="?subheading"/>
-                            </conditions>
-
-                            <bindings>
-                                <binding subject="?subheading"
-                                    predicate="http://home.netscape.com/NC-rdf#name"
-                                    object="?name"/>
-                            </bindings>
-
-                            <action>
-                                <treechildren>
-                                    <treeitem uri="?subheading">
-                                        <treerow>
-                                            <treecell label="?name"/>
-                                        </treerow>
-                                    </treeitem>
-                                </treechildren>
-                            </action>
-                        </rule>
-                    </template>
-                    <treecols>
-                        <treecol id="NameColumn" flex="1" hideheader="true"
-                            primary="true"/>
-                    </treecols>
-                </tree>
-
-            </vbox>
-
-            <splitter id="helpsidebar-splitter" collapse="before"
-                    persist="state hidden" state="open">
-            </splitter>
-
-            <vbox id="appcontent" flex="3">
-              <!-- type attribute is used by frame construction to locate
-                  iframes intended to hold (html) content -->
-              <browser context="contentAreaContextMenu"
-                  type="content-primary" id="help-content"
-                  src="about:blank" flex="1"/>
+      <vbox id="appcontent" flex="3">
+        <!-- type attribute is used by frame construction to locate
+             iframes intended to hold (html) content -->
+        <browser context="contentAreaContextMenu"
+                 type="content-primary" id="help-content"
+                 src="about:blank" flex="1"/>
 #include ../../typeaheadfind/content/findBar.inc
-            </vbox>
-        </hbox>
-    </vbox>
+      </vbox>
+    </hbox>
+  </vbox>
 </window>
