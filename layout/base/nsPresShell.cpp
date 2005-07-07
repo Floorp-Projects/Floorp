@@ -3641,6 +3641,10 @@ PresShell::AppendReflowCommand(nsIFrame*    aTargetFrame,
   if (! mDidInitialReflow)
     return NS_OK;
 
+  // If we're already destroying, don't bother with this either.
+  if (mIsDestroying)
+    return NS_OK;
+
 #ifdef DEBUG
   //printf("gShellCounter: %d\n", gShellCounter++);
   if (mInVerifyReflow) {
@@ -6711,7 +6715,7 @@ PresShell::PostReflowEvent()
   mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
                                            getter_AddRefs(eventQueue));
 
-  if (eventQueue != mReflowEventQueue &&
+  if (eventQueue != mReflowEventQueue && !mIsDestroying &&
       !mIsReflowing && mReflowCommands.Count() > 0) {
     ReflowEvent* ev = new ReflowEvent(NS_STATIC_CAST(nsIPresShell*, this));
     if (NS_FAILED(eventQueue->PostEvent(ev))) {
