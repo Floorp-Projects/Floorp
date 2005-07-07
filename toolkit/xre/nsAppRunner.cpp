@@ -1117,7 +1117,6 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
   if(get_next_image_info(0, &cookie, &info) != B_OK)
     return NS_ERROR_FAILURE;
 
-  PL_strncpy(aResult, info.name, MAXPATHLEN);
   rv = NS_NewNativeLocalFile(nsDependentCString(info.name), PR_TRUE,
                              getter_AddRefs(lf));
   if (NS_FAILED(rv))
