@@ -234,6 +234,11 @@
     [% title = "Classification Does Not Exist" %]
     The classification '[% name FILTER html %]' does not exist.
 
+  [% ELSIF error == "classification_doesnt_exist_for_product" %]
+    [% title = "Classification Does Not Exist For Product" %]
+    The classification '[% classification FILTER html %]' does not exist
+    for product '[% product FILTER html %]'.
+
   [% ELSIF error == "classification_not_deletable" %]
     [% title = "Default Classification Can Not Be Deleted" %]
     You can not delete the default classification

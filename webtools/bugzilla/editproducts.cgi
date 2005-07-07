@@ -139,16 +139,21 @@ sub CheckClassificationProduct ($$)
 {
     my $cl = shift;
     my $prod = shift;
+    my $dbh = Bugzilla->dbh;
 
     CheckClassification($cl);
     CheckProduct($prod);
 
-    # does the classification exist?
-    SendSQL("SELECT products.name
-             FROM products,classifications
-             WHERE products.name=" . SqlQuote($prod) .
-            " AND classifications.name=" . SqlQuote($cl));
-    my $res = FetchOneColumn();
+    trick_taint($prod);
+    trick_taint($cl);
+
+    my $query = q{SELECT products.name
+                  FROM products
+                  INNER JOIN classifications
+                    ON products.classification_id = classifications.id
+                  WHERE products.name = ?
+                    AND classifications.name = ?};
+    my $res = $dbh->selectrow_array($query, undef, ($prod, $cl));
 
     unless ($res) {
         print "Sorry, classification->product '$cl'->'$prod' does not exist.";
@@ -157,6 +162,26 @@ sub CheckClassificationProduct ($$)
     }
 }
 
+sub CheckClassificationProductNew ($$)
+{
+    my ($cl, $prod) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    CheckClassificationNew($cl);
+
+    my ($res) = $dbh->selectrow_array(q{
+        SELECT products.name
+        FROM products
+        INNER JOIN classifications
+          ON products.classification_id = classifications.id
+        WHERE products.name = ? AND classifications.name = ?},
+        undef, ($prod, $cl));
+
+    unless ($res) {
+        ThrowUserError('classification_doesnt_exist_for_product',
+                       { product => $prod, classification => $cl });
+    }
+}
 
 #
 # Displays the form to edit a products parameters
@@ -604,180 +629,93 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-    PutHeader("Delete product");
-    CheckProduct($product);
-    my $classification_id=1;
-    if (Param('useclassification')) {
-        CheckClassificationProduct($classification,$product);
-        $classification_id = get_classification_id($classification);
-    }
-
-    # display some data about the product
-    SendSQL("SELECT classifications.description,
-                    products.id, products.description, milestoneurl, disallownew
-             FROM products,classifications
-             WHERE products.name=" . SqlQuote($product) .
-            " AND classifications.id=" . SqlQuote($classification_id));
-    my ($class_description, $product_id, $prod_description, $milestoneurl, $disallownew) = FetchSQLData();
-    my $milestonelink = $milestoneurl ? "<a href=\"$milestoneurl\">$milestoneurl</a>"
-                                      : "<font color=\"red\">missing</font>";
-    $prod_description ||= "<FONT COLOR=\"red\">description missing</FONT>";
-    $class_description ||= "<FONT COLOR=\"red\">description missing</FONT>";
-    $disallownew = $disallownew ? 'closed' : 'open';
     
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
-    print "<TR BGCOLOR=\"#6666FF\">\n";
-    print "  <TH VALIGN=\"top\" ALIGN=\"left\">Part</TH>\n";
-    print "  <TH VALIGN=\"top\" ALIGN=\"left\">Value</TH>\n";
+    if (!$product) {
+        ThrowUserError('product_not_specified');
+    }
+
+    my $product_id = get_product_id($product);
+    $product_id || ThrowUserError('product_doesnt_exist',
+                                  {product => $product});
+
+    my $classification_id = 1;
 
     if (Param('useclassification')) {
-        print "</TR><TR>\n";
-        print "  <TD VALIGN=\"top\">Classification:</TD>\n";
-        print "  <TD VALIGN=\"top\">$classification</TD>\n";
-
-        print "</TR><TR>\n";
-        print "  <TD VALIGN=\"top\">Description:</TD>\n";
-        print "  <TD VALIGN=\"top\">$class_description</TD>\n";
+        CheckClassificationProductNew($classification, $product);
+        $classification_id = get_classification_id($classification);
+        $vars->{'classification'} = $classification;
     }
 
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Product:</TD>\n";
-    print "  <TD VALIGN=\"top\">$product</TD>\n";
+    # Extract some data about the product
+    my $query = q{SELECT classifications.description,
+                         products.description,
+                         products.milestoneurl,
+                         products.disallownew
+                  FROM products
+                  INNER JOIN classifications
+                    ON products.classification_id = classifications.id
+                  WHERE products.id = ?};
 
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Description:</TD>\n";
-    print "  <TD VALIGN=\"top\">$prod_description</TD>\n";
+    my ($class_description,
+        $prod_description,
+        $milestoneurl,
+        $disallownew) = $dbh->selectrow_array($query, undef,
+                                              $product_id);
 
+    $vars->{'class_description'} = $class_description;
+    $vars->{'product_id'}        = $product_id;
+    $vars->{'prod_description'}  = $prod_description;
+    $vars->{'milestoneurl'}      = $milestoneurl;
+    $vars->{'disallownew'}       = $disallownew;
+    $vars->{'product_name'}      = $product;
+
+    $vars->{'components'} = $dbh->selectall_arrayref(q{
+        SELECT name, description FROM components
+        WHERE product_id = ? ORDER BY name}, {'Slice' => {}},
+        $product_id);
+
+    $vars->{'versions'} = $dbh->selectcol_arrayref(q{
+            SELECT value FROM versions
+            WHERE product_id = ? ORDER BY value}, undef,
+            $product_id);
+
+    # Adding listing for associated target milestones - 
+    # matthew@zeroknowledge.com
     if (Param('usetargetmilestone')) {
-        print "</TR><TR>\n";
-        print "  <TD VALIGN=\"top\">Milestone URL:</TD>\n";
-        print "  <TD VALIGN=\"top\">$milestonelink</TD>\n";
+        $vars->{'milestones'} = $dbh->selectcol_arrayref(q{
+            SELECT value FROM milestones
+            WHERE product_id = ?
+            ORDER BY sortkey, value}, undef, $product_id);
     }
 
-
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Closed for bugs:</TD>\n";
-    print "  <TD VALIGN=\"top\">$disallownew</TD>\n";
-
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Components:</TD>\n";
-    print "  <TD VALIGN=\"top\">";
-    SendSQL("SELECT name,description
-             FROM components
-             WHERE product_id=$product_id");
-    if (MoreSQLData()) {
-        print "<table>";
-        while ( MoreSQLData() ) {
-            my ($component, $description) = FetchSQLData();
-            $description ||= "<FONT COLOR=\"red\">description missing</FONT>";
-            print "<tr><th align=right valign=top>$component:</th>";
-            print "<td valign=top>$description</td></tr>\n";
-        }
-        print "</table>\n";
-    } else {
-        print "<FONT COLOR=\"red\">missing</FONT>";
-    }
-
-    print "</TD>\n</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Versions:</TD>\n";
-    print "  <TD VALIGN=\"top\">";
-    SendSQL("SELECT value
-             FROM versions
-             WHERE product_id=$product_id
-             ORDER BY value");
-    if (MoreSQLData()) {
-        my $br = 0;
-        while ( MoreSQLData() ) {
-            my ($version) = FetchSQLData();
-            print "<BR>" if $br;
-            print $version;
-            $br = 1;
-        }
-    } else {
-        print "<FONT COLOR=\"red\">missing</FONT>";
-    }
-
-    #
-    # Adding listing for associated target milestones - matthew@zeroknowledge.com
-    #
-    if (Param('usetargetmilestone')) {
-        print "</TD>\n</TR><TR>\n";
-        print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editmilestones.cgi?product=", url_quote($product), $classhtmlvar, "\">Edit milestones:</A></TH>\n";
-        print "  <TD>";
-        SendSQL("SELECT value
-                 FROM milestones
-                 WHERE product_id=$product_id
-                 ORDER BY sortkey,value");
-        if(MoreSQLData()) {
-            my $br = 0;
-            while ( MoreSQLData() ) {
-                my ($milestone) = FetchSQLData();
-                print "<BR>" if $br;
-                print $milestone;
-                $br = 1;
-            }
-        } else {
-            print "<FONT COLOR=\"red\">missing</FONT>";
-        }
-    }
-
-    print "</TD>\n</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Bugs:</TD>\n";
-    print "  <TD VALIGN=\"top\">";
-    SendSQL("SELECT count(bug_id), product_id
-             FROM bugs " .
-            $dbh->sql_group_by('product_id') . "
-             HAVING product_id = $product_id");
-    my $bugs = FetchOneColumn();
-    print $bugs || 'none';
-
-
-    print "</TD>\n</TR></TABLE>";
-
-    print "<H2>Confirmation</H2>\n";
-
-    if ($bugs) {
-        if (!Param("allowbugdeletion")) {
-            print "Sorry, there are $bugs bugs outstanding for this product.
-You must reassign those bugs to another product before you can delete this
-one.";
-            PutTrailer($localtrailer);
-            exit;
-        }
-        print "<TABLE BORDER=0 CELLPADDING=20 WIDTH=\"70%\" BGCOLOR=\"red\"><TR><TD>\n",
-              "There are bugs entered for this product!  When you delete this ",
-              "product, <B><BLINK>ALL</BLINK></B> stored bugs and their history will be ",
-              "deleted too.\n",
-              "</TD></TR></TABLE>\n";
-    }
-
-    print "<P>Do you really want to delete this product?<P>\n";
-    print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Yes, delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
-        html_quote($product) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"classification\" VALUE=\"" .
-        html_quote($classification) . "\">\n";
-    print "</FORM>";
-
-    PutTrailer($localtrailer);
+    ($vars->{'bug_count'}) = $dbh->selectrow_array(q{
+        SELECT COUNT(*) FROM bugs WHERE product_id = ?},
+        undef, $product_id) || 0;
+ 
+    $template->process("admin/products/confirm-delete.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
     exit;
 }
-
-
 
 #
 # action='delete' -> really delete the product
 #
 
 if ($action eq 'delete') {
-    CheckProduct($product);
-    my $product_id = get_product_id($product);
+    
+    if (!$product) {
+        ThrowUserError('product_not_specified');
+    }
 
-    my $bug_ids =
-      $dbh->selectcol_arrayref("SELECT bug_id FROM bugs WHERE product_id = ?",
-                               undef, $product_id);
+    my $product_id = get_product_id($product);
+    $product_id || ThrowUserError('product_doesnt_exist',
+                                  {product => $product});
+
+    $vars->{'product'} = $product;
+
+    my $bug_ids = $dbh->selectcol_arrayref(q{
+        SELECT bug_id FROM bugs
+        WHERE product_id = ?}, undef, $product_id);
 
     my $nb_bugs = scalar(@$bug_ids);
     if ($nb_bugs) {
@@ -790,46 +728,43 @@ if ($action eq 'delete') {
         else {
             ThrowUserError("product_has_bugs", { nb => $nb_bugs });
         }
+        $vars->{'nb_bugs'} = $nb_bugs;
     }
-
-    PutHeader("Deleting product");
-    print "All references to deleted bugs removed.<P>\n" if $nb_bugs;
 
     $dbh->bz_lock_tables('products WRITE', 'components WRITE',
                          'versions WRITE', 'milestones WRITE',
                          'group_control_map WRITE',
                          'flaginclusions WRITE', 'flagexclusions WRITE');
 
-    $dbh->do("DELETE FROM components WHERE product_id = ?", undef, $product_id);
-    print "Components deleted.<BR>\n";
+    $dbh->do("DELETE FROM components WHERE product_id = ?",
+             undef, $product_id);
 
-    $dbh->do("DELETE FROM versions WHERE product_id = ?", undef, $product_id);
-    print "Versions deleted.<BR>\n";
+    $dbh->do("DELETE FROM versions WHERE product_id = ?",
+             undef, $product_id);
 
-    $dbh->do("DELETE FROM milestones WHERE product_id = ?", undef, $product_id);
-    print "Milestones deleted.<P>\n";
+    $dbh->do("DELETE FROM milestones WHERE product_id = ?",
+             undef, $product_id);
 
     $dbh->do("DELETE FROM group_control_map WHERE product_id = ?",
              undef, $product_id);
-    print "Group controls deleted.<BR>\n";
 
     $dbh->do("DELETE FROM flaginclusions WHERE product_id = ?",
              undef, $product_id);
+             
     $dbh->do("DELETE FROM flagexclusions WHERE product_id = ?",
              undef, $product_id);
-    print "Flag inclusions and exclusions deleted.<P>\n";
-
-    $dbh->do("DELETE FROM products WHERE id = ?", undef, $product_id);
-    print "Product '$product' deleted.<P>\n";
+             
+    $dbh->do("DELETE FROM products WHERE id = ?",
+             undef, $product_id);
 
     $dbh->bz_unlock_tables();
 
     unlink "$datadir/versioncache";
-    PutTrailer($localtrailer);
+
+    $template->process("admin/products/deleted.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
     exit;
 }
-
-
 
 #
 # action='edit' -> present the 'edit product' form
