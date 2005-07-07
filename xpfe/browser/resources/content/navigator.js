@@ -438,6 +438,16 @@ function nsBrowserAccess() {
 
 nsBrowserAccess.prototype = {
   openURI: function openURI(aURI, aOpener, aWhere, aContext) {
+    var isExternal = (aContext == nsCI.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+
+    if (isExternal && aURI && aURI.schemeIs("chrome")) {
+      dump("use -chrome command-line option to load external chrome urls\n");
+      return null;
+    }
+
+    var loadflags = isExternal ?
+                      nsCI.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
+                      nsCI.nsIWebNavigation.LOAD_FLAGS_NONE;
     if (aWhere == nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW)
       if (aContext == nsIBrowserDOMWindow.OPEN_EXTERNAL)
         aWhere = pref.getIntPref("browser.link.open_external");
@@ -457,20 +467,19 @@ nsBrowserAccess.prototype = {
           gBrowser.selectedTab = newTab;
         var browser = gBrowser.getBrowserForTab(newTab);
         try {
-          browser.loadURI(uri, referrer);
+          browser.loadURIWithFlags(uri, loadflags, referrer);
         } catch (e) {}
         return browser.contentWindow;
       default:
         if (!aOpener) {
-          loadURI(uri);
+          loadURIWithFlags(uri, loadflags);
           return content;
         }
         aOpener = new XPCNativeWrapper(aOpener, "top").top;
         try {
           aOpener.QueryInterface(nsIInterfaceRequestor)
                  .getInterface(nsIWebNavigation)
-                 .loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE,
-                          referrer, null, null);
+                 .loadURI(uri, loadflags, referrer, null, null);
         } catch (e) {}
         return aOpener;
     }
@@ -653,6 +662,15 @@ function Startup()
     browser.popupDomain = null;
     browser.popupUrls = [];
     browser.popupFeatures = [];
+
+    try {
+      if (makeURI(uriToLoad).schemeIs("chrome")) {
+        dump("*** Preventing external load of chrome: URI into browser window\n");
+        dump("    Use -chrome <uri> instead\n");
+        window.close();
+        return;
+      }
+    } catch (e) {}
 
     if (uriToLoad != "about:blank") {
       gURLBar.value = uriToLoad;

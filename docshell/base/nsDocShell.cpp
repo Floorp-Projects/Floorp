@@ -489,6 +489,9 @@ ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType)
     case nsIDocShellLoadInfo::loadNormalReplace:
         loadType = LOAD_NORMAL_REPLACE;
         break;
+    case nsIDocShellLoadInfo::loadNormalExternal:
+        loadType = LOAD_NORMAL_EXTERNAL;
+        break;
     case nsIDocShellLoadInfo::loadHistory:
         loadType = LOAD_HISTORY;
         break;
@@ -538,6 +541,9 @@ nsDocShell::ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType)
         break;
     case LOAD_NORMAL_REPLACE:
         docShellLoadType = nsIDocShellLoadInfo::loadNormalReplace;
+        break;
+    case LOAD_NORMAL_EXTERNAL:
+        docShellLoadType = nsIDocShellLoadInfo::loadNormalExternal;
         break;
     case LOAD_HISTORY:
         docShellLoadType = nsIDocShellLoadInfo::loadHistory;
@@ -658,7 +664,9 @@ nsDocShell::LoadURI(nsIURI * aURI,
                 if (mCurrentURI == nsnull) {
                     // This is a newly created frame. Check for exception cases first. 
                     // By default the subframe will inherit the parent's loadType.
-                    if (shEntry && (parentLoadType == LOAD_NORMAL || parentLoadType == LOAD_LINK)) {
+                    if (shEntry && (parentLoadType == LOAD_NORMAL ||
+                                    parentLoadType == LOAD_LINK   ||
+                                    parentLoadType == LOAD_NORMAL_EXTERNAL)) {
                         // The parent was loaded normally. In this case, this *brand new* child really shouldn't
                         // have a SHEntry. If it does, it could be because the parent is replacing an
                         // existing frame with a new frame, in the onLoadHandler. We don't want this
@@ -6109,6 +6117,25 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     //
     if (mIsBeingDestroyed) {
         return NS_ERROR_FAILURE;
+    }
+
+    // Before going any further vet loads initiated by external programs.
+    if (aLoadType == LOAD_NORMAL_EXTERNAL) {
+        // Disallow external chrome: loads targetted at content windows
+        PRBool isChrome = PR_FALSE;
+        if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome) {
+            NS_WARNING("blocked external chrome: url -- use '-chrome' option");
+            return NS_ERROR_FAILURE;
+        }
+
+        // clear the decks to prevent context bleed-through (bug 298255)
+        rv = CreateAboutBlankContentViewer();
+        if (NS_FAILED(rv))
+            return NS_ERROR_FAILURE;
+
+        // reset loadType so we don't have to add lots of tests for
+        // LOAD_NORMAL_EXTERNAL after this point
+        aLoadType = LOAD_NORMAL;
     }
 
     rv = CheckLoadingPermissions();

@@ -172,6 +172,11 @@ interface nsIWebNavigation : nsISupports
   const unsigned long LOAD_FLAGS_STOP_CONTENT    = 0x0800;
 
   /**
+   * A hint this load was prompted by an external program: take care!
+   */
+  const unsigned long LOAD_FLAGS_FROM_EXTERNAL   = 0x1000;
+
+  /**
    * Loads a given URI.  This will give priority to loading the requested URI
    * in the object implementing	this interface.  If it can't be loaded here
    * however, the URI dispatcher will go through its normal process of content
