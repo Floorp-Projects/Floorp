@@ -111,10 +111,10 @@ interface nsIXPCConstructor : nsISupports
 };
 
 /**
-* interface of Components.util
+* interface of Components.utils
 */
 [scriptable, uuid(24E63203-A931-43B5-B2C7-3053B48A9E4F)]
-interface nsIXPCComponents_Util : nsISupports
+interface nsIXPCComponents_Utils : nsISupports
 {
 
     /* reportError is designed to be called from JavaScript only.
@@ -177,7 +177,7 @@ interface nsIXPCComponents : nsISupports
     readonly attribute nsIStackFrame                stack;
     readonly attribute nsIXPCComponents_Results     results;
     readonly attribute nsIComponentManager          manager;
-    readonly attribute nsIXPCComponents_Util        util;
+    readonly attribute nsIXPCComponents_Utils        utils;
 
     readonly attribute nsIXPCComponents_ID          ID;
     readonly attribute nsIXPCComponents_Exception   Exception;
@@ -185,13 +185,13 @@ interface nsIXPCComponents : nsISupports
 
     boolean isSuccessCode(in nsresult result);
 
-    /* DEPRECATED: use Components.util.lookupMethod instead.
+    /* DEPRECATED: use Components.utils.lookupMethod instead.
      * (But are you sure you really want this method any more?
      *  See http://developer-test.mozilla.org/en/docs/XPCNativeWrapper )
      */
     void lookupMethod();
 
-    /* DEPRECATED: use Components.util.reportError instead. */
+    /* DEPRECATED: use Components.utils.reportError instead. */
     void reportError();
 
     /* 'lastResult' is accessable via JavaScript only */

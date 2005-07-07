@@ -47,7 +47,7 @@
             onGetResult: function onGetResult(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
             {
                 if (!Components.isSuccessCode(aStatus))
-                    return Components.util.reportError("Failed to fetch todo items: " + aStatus)
+                    return Components.utils.reportError("Failed to fetch todo items: " + aStatus)
 
                 aItems.forEach(this.todoList.addTodo, this.todoList);
             },
@@ -56,7 +56,7 @@
                                                               aDetail)
             {
                 if (!Components.isSuccessCode(aStatus))
-                    Components.util.reportError("Failed to fetch todo item (" +
+                    Components.utils.reportError("Failed to fetch todo item (" +
                                                 aId + "): " + aStatus);
             },
 

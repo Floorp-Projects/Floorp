@@ -78,7 +78,7 @@ nsProxyAutoConfig.prototype = {
         }
 
         // allocate a fresh Sandbox to clear global scope for new PAC script
-        this._sandBox = Components.util.evalInSandbox(pacUtils, pacURI);
+        this._sandBox = Components.utils.evalInSandbox(pacUtils, pacURI);
 
         // add predefined functions to pac
         this._sandBox.myIpAddress = myIpAddress;
@@ -86,7 +86,7 @@ nsProxyAutoConfig.prototype = {
         this._sandBox.alert = proxyAlert;
 
         // evaluate loaded js file
-        Components.util.evalInSandbox(pacText, pacURI, this._sandBox);
+        Components.utils.evalInSandbox(pacText, pacURI, this._sandBox);
         this._findProxyForURL = this._sandBox.FindProxyForURL;
     },
 
