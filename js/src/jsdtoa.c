@@ -989,7 +989,7 @@ static Bigint *diff(Bigint *a, Bigint *b)
 static double ulp(double x)
 {
     register Long L;
-    double a;
+    double a = 0;
 
     L = (word0(x) & Exp_mask) - (P-1)*Exp_msk1;
 #ifndef Sudden_Underflow
@@ -1020,7 +1020,7 @@ static double b2d(Bigint *a, int32 *e)
 {
     ULong *xa, *xa0, w, y, z;
     int32 k;
-    double d;
+    double d = 0;
 #define d0 word0(d)
 #define d1 word1(d)
 #define set_d0(x) set_word0(d, x)

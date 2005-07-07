@@ -107,7 +107,8 @@ C6  = -1.13596475577881948265e-11; /* 0xBDA8FAE9, 0xBE8838D4 */
 #endif
 {
         fd_twoints u;
-	double a,hz,z,r,qx;
+        double qx = 0;
+	double a,hz,z,r;
 	int ix;
         u.d = x;
 	ix = __HI(u)&0x7fffffff;	/* ix = |x|'s high word*/
