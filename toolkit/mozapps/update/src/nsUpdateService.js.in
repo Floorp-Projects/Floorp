@@ -803,7 +803,10 @@ UpdateService.prototype = {
     
     // Detect installation failures and notify
     var status = readStatusFile(getUpdatesDir()); 
-    if (status != null) {
+    if (status == STATE_DOWNLOADING) {
+      LOG("UpdateService", "_postUpdateProcessing: Downloading patch, resuming...");
+    }
+    else if (status != null) {
       // null status means the update.status file is not present, because either:
       // 1) no update was performed, and so there's no UI to show
       // 2) an update was attempted but failed during checking, transfer or 
@@ -827,7 +830,7 @@ UpdateService.prototype = {
       var bundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
       if (status == STATE_SUCCEEDED) {
         update.statusText = bundle.GetStringFromName("installSuccess");
-        LOG("UpdateService", "_postUpdateCleanup: Install Succeeded, Showing UI");
+        LOG("UpdateService", "_postUpdateProcessing: Install Succeeded, Showing UI");
         prompter.showUpdateInstalled(update);
         
         // Done with this update. Clean it up.
@@ -843,12 +846,12 @@ UpdateService.prototype = {
         if (update.selectedPatch && oldType == "partial") {
           // Partial patch application failed, try downloading the complete
           // update in the background instead.
-          LOG("UpdateService", "_postUpdateCleanup: Install of Partial Patch " + 
+          LOG("UpdateService", "_postUpdateProcessing: Install of Partial Patch " + 
               "failed, downloading Complete Patch and maybe showing UI");
           this.downloadUpdate(update, true);
         }
         else {
-          LOG("UpdateService", "_postUpdateCleanup: Install of Complete or " + 
+          LOG("UpdateService", "_postUpdateProcessing: Install of Complete or " + 
               "only patch failed. Showing error.");
         }
         update.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
@@ -857,7 +860,7 @@ UpdateService.prototype = {
       }
     }
     else {
-      LOG("UpdateService", "_postUpdateCleanup: No Status, No Update");
+      LOG("UpdateService", "_postUpdateProcessing: No Status, No Update");
     }
   },
   
@@ -1969,7 +1972,6 @@ Downloader.prototype = {
     LOG("Downloader", "onStopRequest: " + request.URI.spec + ", status = " + status);
 
     var state = this._patch.state;
-    LOG("Downloader", "STATE SET = " + state);
     var shouldShowPrompt = false;
     var deleteActiveUpdate = false;
     const NS_BINDING_ABORTED = 0x804b0002;
