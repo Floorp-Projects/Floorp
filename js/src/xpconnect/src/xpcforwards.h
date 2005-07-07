@@ -90,7 +90,7 @@ class nsXPCComponents_Results;
 class nsXPCComponents_ID;
 class nsXPCComponents_Exception;
 class nsXPCComponents_Constructor;
-class nsXPCComponents_Util;
+class nsXPCComponents_Utils;
 class nsXPCConstructor;
 
 class AutoMarkingPtr;

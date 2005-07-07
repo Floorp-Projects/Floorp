@@ -1755,8 +1755,8 @@ nsXPCComponents_Constructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
 /***************************************************************************/
 
-class nsXPCComponents_Util :
-            public nsIXPCComponents_Util,
+class nsXPCComponents_Utils :
+            public nsIXPCComponents_Utils,
             public nsIXPCScriptable
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
           , public nsISecurityCheckedComponent
@@ -1769,34 +1769,34 @@ public:
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
 #endif
-    NS_DECL_NSIXPCCOMPONENTS_UTIL
+    NS_DECL_NSIXPCCOMPONENTS_UTILS
 
 public:
-    nsXPCComponents_Util() { }
-    virtual ~nsXPCComponents_Util() { }
+    nsXPCComponents_Utils() { }
+    virtual ~nsXPCComponents_Utils() { }
 };
 
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Util)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_Util)
+NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Utils)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_Utils)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
   NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
 #endif
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Util)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Utils)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_Util)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_Util)
+NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_Utils)
+NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_Utils)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
-#define XPC_MAP_CLASSNAME           nsXPCComponents_Util
-#define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents_Util"
+#define XPC_MAP_CLASSNAME           nsXPCComponents_Utils
+#define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents_Utils"
 #define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
 /* void lookupMethod (); */
 NS_IMETHODIMP
-nsXPCComponents_Util::LookupMethod()
+nsXPCComponents_Utils::LookupMethod()
 {
     nsresult rv;
 
@@ -1819,7 +1819,7 @@ nsXPCComponents_Util::LookupMethod()
     cc->GetCallee(getter_AddRefs(callee));
     if(!callee || callee.get() != 
                   NS_STATIC_CAST(const nsISupports*,
-                                 NS_STATIC_CAST(const nsIXPCComponents_Util*,this)))
+                                 NS_STATIC_CAST(const nsIXPCComponents_Utils*,this)))
         return NS_ERROR_FAILURE;
 #endif
 
@@ -1905,7 +1905,7 @@ nsXPCComponents_Util::LookupMethod()
 
 /* void reportError (); */
 NS_IMETHODIMP
-nsXPCComponents_Util::ReportError()
+nsXPCComponents_Utils::ReportError()
 {
     // This function shall never fail! Silently eat any failure conditions.
     nsresult rv;
@@ -1934,7 +1934,7 @@ nsXPCComponents_Util::ReportError()
     cc->GetCallee(getter_AddRefs(callee));
     if(!callee || callee.get() != 
                   NS_STATIC_CAST(const nsISupports*,
-                                 NS_STATIC_CAST(const nsIXPCComponents_Util*,this))) {
+                                 NS_STATIC_CAST(const nsIXPCComponents_Utils*,this))) {
         NS_ERROR("reportError() must only be called from JS!");
         return NS_ERROR_FAILURE;
     }
@@ -2085,7 +2085,7 @@ static JSFunctionSpec SandboxFunctions[] = {
 
 /* void evalInSandbox(in AString source, in AUTF8String codebase); */
 NS_IMETHODIMP
-nsXPCComponents_Util::EvalInSandbox(const nsAString &source,
+nsXPCComponents_Utils::EvalInSandbox(const nsAString &source,
                                     const nsAUTF8String &codebase)
 {
 #ifdef XPCONNECT_STANDALONE
@@ -2216,7 +2216,7 @@ nsXPCComponents_Util::EvalInSandbox(const nsAString &source,
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 /* string canCreateWrapper (in nsIIDPtr iid); */
 NS_IMETHODIMP
-nsXPCComponents_Util::CanCreateWrapper(const nsIID * iid, char **_retval)
+nsXPCComponents_Utils::CanCreateWrapper(const nsIID * iid, char **_retval)
 {
     // We let anyone do this...
     *_retval = xpc_CloneAllAccess();
@@ -2225,7 +2225,7 @@ nsXPCComponents_Util::CanCreateWrapper(const nsIID * iid, char **_retval)
 
 /* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
 NS_IMETHODIMP
-nsXPCComponents_Util::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
+nsXPCComponents_Utils::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
 {
     static const char* allowed[] = { "lookupMethod", "evalInSandbox", nsnull };
     *_retval = xpc_CheckAccessList(methodName, allowed);
@@ -2234,7 +2234,7 @@ nsXPCComponents_Util::CanCallMethod(const nsIID * iid, const PRUnichar *methodNa
 
 /* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
 NS_IMETHODIMP
-nsXPCComponents_Util::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+nsXPCComponents_Utils::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
     *_retval = nsnull;
     return NS_OK;
@@ -2242,7 +2242,7 @@ nsXPCComponents_Util::CanGetProperty(const nsIID * iid, const PRUnichar *propert
 
 /* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
 NS_IMETHODIMP
-nsXPCComponents_Util::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+nsXPCComponents_Utils::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
     // If you have to ask, then the answer is NO
     *_retval = nsnull;
@@ -2278,7 +2278,7 @@ nsXPCComponents::nsXPCComponents()
         mID(nsnull),
         mException(nsnull),
         mConstructor(nsnull),
-        mUtil(nsnull)
+        mUtils(nsnull)
 {
 }
 
@@ -2298,7 +2298,7 @@ nsXPCComponents::ClearMembers()
     NS_IF_RELEASE(mID);
     NS_IF_RELEASE(mException);
     NS_IF_RELEASE(mConstructor);
-    NS_IF_RELEASE(mUtil);
+    NS_IF_RELEASE(mUtils);
 }
 
 /*******************************************/
@@ -2325,7 +2325,7 @@ XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Results)
 XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, ID)
 XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Exception)
 XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Constructor)
-XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Util)
+XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Utils)
 
 #undef XPC_IMPL_GET_OBJ_METHOD
 /*******************************************/
@@ -2504,28 +2504,28 @@ nsXPCComponents::AttachNewComponentsObject(XPCCallContext& ccx,
 NS_IMETHODIMP nsXPCComponents::LookupMethod()
 {
     nsresult rv;
-    nsCOMPtr<nsIXPCComponents_Util> util;
+    nsCOMPtr<nsIXPCComponents_Utils> utils;
 
-    NS_WARNING("Components.lookupMethod deprecated, use Components.util.lookupMethod");    
-    rv = GetUtil(getter_AddRefs(util));
+    NS_WARNING("Components.lookupMethod deprecated, use Components.utils.lookupMethod");    
+    rv = GetUtils(getter_AddRefs(utils));
     if (NS_FAILED(rv))
         return rv;
 
-    return util->LookupMethod();
+    return utils->LookupMethod();
 }
 
 /* void reportError (); */
 NS_IMETHODIMP nsXPCComponents::ReportError()
 {
     nsresult rv;
-    nsCOMPtr<nsIXPCComponents_Util> util;
+    nsCOMPtr<nsIXPCComponents_Utils> utils;
 
-    NS_WARNING("Components.reportError deprecated, use Components.util.reportError");    
-    rv = GetUtil(getter_AddRefs(util));
+    NS_WARNING("Components.reportError deprecated, use Components.utils.reportError");    
+    rv = GetUtils(getter_AddRefs(utils));
     if (NS_FAILED(rv))
         return rv;
 
-    return util->ReportError();
+    return utils->ReportError();
 }
 
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
