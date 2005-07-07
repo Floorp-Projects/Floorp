@@ -234,7 +234,7 @@ calRecurrenceInfo.prototype = {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_OBJECT_IS_IMMUTABLE;
 
-        if (aIndex < 0 || aIndex >= this.mRecurrenceItems.length)
+        if (aIndex < 0 || aIndex > this.mRecurrenceItems.length)
             throw Components.results.NS_ERROR_INVALID_ARG;
 
         this.mRecurrenceItems.splice(aIndex, 0, aItem);
