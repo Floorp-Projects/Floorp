@@ -58,7 +58,9 @@
  
   [% FOREACH bug = bugs %]
   <item rdf:about="[% Param('urlbase') FILTER xml %]show_bug.cgi?id=[% bug.bug_id FILTER xml %]">
-    <title>[% bug.short_desc FILTER xml %]</title>
+    <title>
+      [% "@" IF bug.secure_mode %] [[% terms.Bug %] [%+ bug.bug_id FILTER xml %]] [% bug.short_desc FILTER xml %]
+    </title>
     <link>[% Param('urlbase') FILTER xml %]show_bug.cgi?id=[% bug.bug_id FILTER xml %]</link>
     <dc:creator>[% bug.reporter_realname FILTER xml %]</dc:creator>
     <dc:date>[% date.format( format=>"%Y-%m-%dT%H:%MZ",time=>bug.opentime) FILTER xml %]</dc:date> 
