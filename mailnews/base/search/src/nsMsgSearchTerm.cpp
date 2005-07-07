@@ -113,17 +113,17 @@ nsresult NS_MsgGetAttributeFromString(const char *string, PRInt16 *attrib)
   NS_ENSURE_ARG_POINTER(string);
   NS_ENSURE_ARG_POINTER(attrib);
   
-	PRBool found = PR_FALSE;
-	for (int idxAttrib = 0; idxAttrib < (int)(sizeof(SearchAttribEntryTable) / sizeof(nsMsgSearchAttribEntry)); idxAttrib++)
-	{
-		if (!PL_strcasecmp(string, SearchAttribEntryTable[idxAttrib].attribName))
-		{
-			found = PR_TRUE;
-			*attrib = SearchAttribEntryTable[idxAttrib].attrib;
-			break;
-		}
-	}  
-	if (!found)
+  PRBool found = PR_FALSE;
+  for (int idxAttrib = 0; idxAttrib < (int)(sizeof(SearchAttribEntryTable) / sizeof(nsMsgSearchAttribEntry)); idxAttrib++)
+  {
+    if (!PL_strcasecmp(string, SearchAttribEntryTable[idxAttrib].attribName))
+    {
+      found = PR_TRUE;
+      *attrib = SearchAttribEntryTable[idxAttrib].attrib;
+      break;
+    }
+  }  
+  if (!found)
   {
     nsresult rv;
     PRBool goodHdr;
@@ -167,7 +167,14 @@ nsresult NS_MsgGetAttributeFromString(const char *string, PRInt16 *attrib)
       }
     }
   }
-	return (found) ? NS_OK : NS_ERROR_INVALID_ARG;
+  // If we didn't find the header in MAILNEWS_CUSTOM_HEADERS, we're 
+  // going to return NS_OK and an attrib of nsMsgSearchAttrib::OtherHeader+1.
+  // in case it's a client side spam filter description filter, 
+  // which doesn't add its headers to mailnews.customMailHeaders.
+  // We've already checked that it's a valid header and returned
+  // an error if so.
+
+  return NS_OK;
 }
 
 nsresult NS_MsgGetStringForAttribute(PRInt16 attrib, const char **string)
