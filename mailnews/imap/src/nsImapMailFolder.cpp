@@ -4125,6 +4125,11 @@ nsImapMailFolder::GetNotifyDownloadedLines(PRBool *notifyDownloadedLines)
 NS_IMETHODIMP
 nsImapMailFolder::SetNotifyDownloadedLines(PRBool notifyDownloadedLines)
 {
+  // ignore this if we're downloading the whole folder and someone says
+  // to turn off downloading for offline use, which can happen if a 3rd party
+  // app tries to stream a message while we're downloading for offline use.
+  if (!notifyDownloadedLines && m_downloadingFolderForOfflineUse)
+    return NS_OK;
   m_downloadMessageForOfflineUse = notifyDownloadedLines;
   return NS_OK;
 }
