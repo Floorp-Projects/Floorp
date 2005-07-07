@@ -56,7 +56,8 @@ WebBrowserChrome::WebBrowserChrome()
 
 WebBrowserChrome::~WebBrowserChrome()
 {
-    WebBrowserChromeUI::Destroyed(this);
+  if (mNativeWindow)
+    DestroyWindow((HWND)mNativeWindow);
 }
 
 nsresult WebBrowserChrome::CreateBrowser(PRInt32 aX, PRInt32 aY,
@@ -174,9 +175,34 @@ NS_IMETHODIMP WebBrowserChrome::SetChromeFlags(PRUint32 aChromeMask)
 }
 
 NS_IMETHODIMP WebBrowserChrome::DestroyBrowserWindow(void)
-{
-    WebBrowserChromeUI::Destroy(this);
-    return NS_OK;
+{    
+   nsCOMPtr<nsIWebBrowser> webBrowser;
+   nsCOMPtr<nsIWebNavigation> webNavigation;
+   
+   GetWebBrowser(getter_AddRefs(webBrowser));
+   
+   webNavigation = do_QueryInterface(webBrowser);
+   if (webNavigation)
+     webNavigation->Stop(nsIWebNavigation::STOP_ALL);
+   
+   ExitModalEventLoop(NS_OK);
+   
+    // First the browser
+   nsCOMPtr<nsIBaseWindow> browserAsWin = do_QueryInterface(webBrowser);
+   if (browserAsWin)
+     browserAsWin->Destroy();
+   
+   // Now the chrome
+   mWebBrowser = nsnull;
+
+   if (mNativeWindow)
+   {
+     DestroyWindow((HWND)mNativeWindow);
+     mNativeWindow = nsnull;
+   }
+
+   WebBrowserChromeUI::Destroy(this);
+   return NS_OK;
 }
 
 
