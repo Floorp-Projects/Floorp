@@ -1,4 +1,6 @@
 /* ***** BEGIN LICENSE BLOCK *****
+ * vim: set ts=4 sw=4 et tw=80:
+ *
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -96,7 +98,15 @@ var global = {
             }
             b += arguments[m];
         }
-        var f = parse("function (" + p + ") {" + b + "}");
+
+        // XXX We want to pass a good file and line to the tokenizer.
+        // Note the anonymous name to maintain parity with Spidermonkey.
+        var t = new Tokenizer("anonymous(" + p + ") {" + b + "}");
+
+        // NB: Use the STATEMENT_FORM constant since we don't want to push this
+        // function onto the null compilation context.
+        var f = FunctionDefinition(t, null, false,
+                                   STATEMENT_FORM);
         var s = {object: global, parent: null};
         return new FunctionObject(f, s);
     },
@@ -123,14 +133,15 @@ var global = {
     // Other properties.
     Math: Math,
 
-    // Extensions to ECMA
+    // Extensions to ECMA.
     snarf: snarf,
     load: function load(s) {
         if (typeof s != "string")
             return s;
 
         evaluate(snarf(s), s, 1)
-    }
+    },
+    print: print, version: null
 };
 
 // Reflect a host class into the target global environment by delegation.
@@ -149,6 +160,7 @@ var gSp = reflectClass('String', new String);
 gSp.toSource = function () { return this.value.toSource(); };
 gSp.toString = function () { return this.value; };
 gSp.valueOf  = function () { return this.value; };
+global.String.fromCharCode = String.fromCharCode;
 
 var XCp = ExecutionContext.prototype;
 ExecutionContext.current = XCp.caller = XCp.callee = null;
@@ -910,6 +922,9 @@ function thunk(f, x) {
 }
 
 function evaluate(s, f, l) {
+    if (typeof s != "string")
+        return s;
+
     var x = ExecutionContext.current;
     var x2 = new ExecutionContext(GLOBAL_CODE);
     ExecutionContext.current = x2;

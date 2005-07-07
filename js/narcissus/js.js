@@ -58,6 +58,6 @@
  *      const declarations
  *      get and set functions in object initialisers
  */
-load('jsdefs.js');
-load('jsparse.js');
-load('jsexec.js');
+load('../narcissus/jsdefs.js');
+load('../narcissus/jsparse.js');
+load('../narcissus/jsexec.js');
