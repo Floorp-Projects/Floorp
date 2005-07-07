@@ -2160,7 +2160,8 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
     nsCAutoString inFilePath;
     inFile->GetNativePath(inFilePath);
 
-    *_retval = inFilePath.Equals(mWorkingPath);
+    *_retval = (_mbsicmp((unsigned char*) inFilePath.get(),
+                         (unsigned char*) mWorkingPath.get()) == 0);
     return NS_OK;
 }
 
