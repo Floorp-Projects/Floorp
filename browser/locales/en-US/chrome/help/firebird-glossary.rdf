@@ -14,7 +14,6 @@
         <rdf:li> <rdf:Description nc:name="certificate" nc:link="glossary.xhtml#certificate"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="client" nc:link="glossary.xhtml#client"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="cookie" nc:link="glossary.xhtml#cookie"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="Cookie Manager" nc:link="glossary.xhtml#Cookie_Manager"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="cryptography" nc:link="glossary.xhtml#cryptography"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="decryption" nc:link="glossary.xhtml#decryption"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="digital ID" nc:link="glossary.xhtml#digital_ID"/> </rdf:li>

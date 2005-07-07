@@ -100,7 +100,7 @@
                 <rdf:li><rdf:Description ID="connection-settings" nc:name="Connection Settings" nc:link="prefs.xhtml#connection_settings"/></rdf:li>
                 <rdf:li><rdf:Description ID="content-options" nc:name="Content Options" nc:link="prefs.xhtml#content_options"/></rdf:li>
                 <rdf:li><rdf:Description ID="controlling-popups" nc:name="Controlling Popups" nc:link="popup.xhtml"/></rdf:li>
-                <rdf:li><rdf:Description ID="cookies" nc:name="Cookies" nc:link="cookies.xhtml#accepting_and_blocking_cookies"/></rdf:li>
+                <rdf:li><rdf:Description ID="cookies" nc:name="Cookies" nc:link="cookies.xhtml"/></rdf:li>
                 <rdf:li><rdf:Description ID="copying" nc:name="Copying" nc:link="using_firebird.xhtml#copying_part_of_a_page"/></rdf:li>
                 <rdf:li><rdf:Description ID="customize-toolbars" nc:name="Customizable Toolbars" nc:link="customization.xhtml#can_i_customize_my_toolbars"/></rdf:li>
                 <rdf:li><rdf:Description ID="customize" nc:name="Customize" nc:link="customization.xhtml"/></rdf:li>
@@ -135,7 +135,8 @@
                 <rdf:li><rdf:Description ID="cookies-defined" nc:name="defined" nc:link="cookies.xhtml#what_is_a_cookie"/></rdf:li>
                 <rdf:li><rdf:Description ID="cookies-accepting-and-blocking" nc:name="Accepting and Blocking Cookies" nc:link="cookies.xhtml#accepting_and_blocking_cookies"/></rdf:li>
                 <rdf:li><rdf:Description ID="cookies-setting-up-rules" nc:name="Setting up rules" nc:link="cookies.xhtml#setting_up_cookie_rules"/></rdf:li>
-                <rdf:li><rdf:Description ID="cookies-options" nc:name="Managing" nc:link="cookies.xhtml#the_cookie_manager"/></rdf:li>
+                <rdf:li><rdf:Description ID="cookies-exceptions" nc:name="The Cookies Exceptions Window" nc:link="cookies.xhtml#cookies_exceptions"/></rdf:li>
+                <rdf:li><rdf:Description ID="cookies-view" nc:name="The View Cookies Window" nc:link="cookies.xhtml#view_cookies"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
