@@ -152,18 +152,10 @@
       <rdf:Seq>
         <rdf:li><rdf:Description ID="cookies-what-is-a-cookie" nc:name="What is a Cookie?" nc:link="cookies.xhtml#what_is_a_cookie"/> </rdf:li>
         <rdf:li><rdf:Description ID="cookies-setting-up-cookie-rules" nc:name="Setting Up Cookie Rules" nc:link="cookies.xhtml#setting_up_cookie_rules"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cookies-setting-up-cookie-rules-other-settings" nc:name="Other Settings" nc:link="cookies.xhtml#other_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cookies-all-the-settings" nc:name="Cookie Settings" nc:link="cookies.xhtml#all_the_settings"/> </rdf:li>
         <rdf:li><rdf:Description ID="cookies-accepting-and-blocking-cookies" nc:name="Accepting and Blocking Cookies" nc:link="cookies.xhtml#accepting_and_blocking_cookies"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cookies-manager" nc:name="The Cookie Manager" nc:link="cookies.xhtml#the_cookie_manager"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
-  <rdf:Description about="#cookies-manager">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li><rdf:Description ID="cookies-manager-the-cookies-list" nc:name="The Cookie List" nc:link="cookies.xhtml#the_cookie_list"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cookies-manager-the-site-list" nc:name="The Site List" nc:link="cookies.xhtml#the_site_list"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cookies-exceptions" nc:name="The Cookies Exceptions Window" nc:link="cookies.xhtml#cookies_exceptions"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cookies-view" nc:name="The View Cookies Window" nc:link="cookies.xhtml#view_cookies"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>

@@ -8,6 +8,7 @@
 <!--
 Contributors:
   David Tenser <david.tenser@comhem.se> (original author)
+  Steffen Wilberg <steffen.wilberg@web.de>
 -->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -27,7 +28,8 @@ Contributors:
     <li><a href="#what_is_a_cookie">What is a Cookie?</a></li>
     <li><a href="#setting_up_cookie_rules">Setting Up Cookie Rules</a></li>
     <li><a href="#accepting_and_blocking_cookies">Accepting and Blocking Cookies</a></li>
-    <li><a href="#the_cookie_manager">Managing Cookies</a></li>
+    <li><a href="#cookies_exceptions">The Cookies Exceptions Window</a></li>
+    <li><a href="#view_cookies">The View Cookies Window</a></li>
   </ul>
 </div>
 
@@ -51,36 +53,43 @@ Contributors:
 
 <p>When you use the default cookie settings, this activity is invisible to you,
   and you won't know when a web site is setting a cookie or when &brandShortName;
-  is sending a web site its cookie. However, you can set your cookies &pref.plural; so that
-  you will be asked before a cookie is set.</p>
+  is sending a web site its cookie. However, you can set your cookies
+  &pref.plural; so that you will be asked before a cookie is set. You can also
+  restrict the lifetime of cookies to your current &brandShortName; session.</p>
 
 <h2 id="setting_up_cookie_rules">Setting Up Cookie Rules</h2>
 
-<p>By default &brandShortName; accepts all cookies. If you want to gain more control over
-what cookies are stored, follow these instructions:</p>
+<p>By default &brandShortName; accepts all cookies, including cookies which
+  would allow a site to recognize you effectively forever. If this doesn't suit
+  you, you can tell &brandShortName; to delete all cookies when you close
+  &brandShortName;:</p>
 
 <ol>
   <li>Select &pref.menuPath;.</li>
-  <li>Click the Privacy panel and then click on the Cookies tab.</li>
-  <li>Select the <em>ask me every time</em> &pref.singular; from the <span class="menuPath">
-    Keep Cookies</span> combo box.</li>
+  <li>Click the <em>Privacy</em> panel, and then click on the <em>Cookies</em>
+    tab.</li>
+  <li>Select the <em>until I close &brandShortName;</em> &pref.singular; from
+    the <em>Keep Cookies</em> combo box.</li>
 </ol>
 
-<p><img src="&images.baseURL;/cookie_ask.png" alt=""
-  width="425" height="317"/></p>
+<p>If you want to grant sites you trust the ability to store cookies permanently
+  (e.g., to allow you to log in automatically to a site), click
+  <a href="#cookies_exceptions"><em>Exceptions</em></a>, enter the site address,
+  and click <em>Allow</em>.</p>
 
-<p>After this is done, you may decide exactly which cookies should and should not be saved.</p>
+<h3 id="all_the_settings">All the Settings</h3>
 
-<h3 id="other_settings">Other Settings</h3>
-
-<p>There are also other &pref.plural; that affect how cookies are managed by &brandShortName;.
-  They are not needed for the cookie rules to work but are explained anyway:</p>
+<p>These are the &pref.plural; that affect how cookies are managed by
+  &brandShortName;:</p>
 
 <dl>
   <dt>Allow sites to set cookies</dt>
   <dd><p>If you don't want any sites to store cookies on your computer, uncheck
-    this &pref.singular;. Note that some sites may not work properly when cookies are
-    disabled.</p></dd>
+    this &pref.singular;. Note that some sites may not work properly when
+    cookies are disabled. If you want to grant certain sites the ability to
+    store cookies, open the <a href="#cookies_exceptions">Cookies Exceptions
+    Window</a> by clicking <em>Exceptions</em>, enter the site address, and
+    click <em>Allow</em> or <em>Allow for Session</em>.</p></dd>
   <dt>for the originating web site only</dt>
   <dd>
     <p>If &brandShortName; stores a site's cookie, it will return the cookie
@@ -100,16 +109,19 @@ what cookies are stored, follow these instructions:</p>
       visitors use the site, or customize your browsing experience.
       (Transparent GIFs are also known as web beacons or web bugs.) When this
       checkbox is checked, it blocks these foreign cookies from being
-      saved.</p>
+      stored.</p>
   </dd>
+  <dt>unless I have removed Cookies set by the site</dt>
+  <dd><p>If you remove Cookies in the <em>View Cookies</em> dialog while this
+    checkbox is checked, &brandShortName; won't allow the respective sites to
+    store cookies again.</p></dd>
   <dt>Keep Cookies:</dt>
   <dd>
   <ul>
     <li><strong>until they expire</strong>: If this &pref.singular; is selected,
-      cookie information will be removed when it hits its expiration
-      date.</li>
-    <li><strong>until I close &brandShortName;:</strong> If this &pref.singular; is
-      selected, the cookie information will be removed when you restart
+      each cookie will be removed when it reaches its expiration date.</li>
+    <li><strong>until I close &brandShortName;:</strong> If this &pref.singular;
+      is selected, cookies will be removed when you restart
       &brandShortName;. Web sites requiring the use of cookies will still
       work, but if you restart &brandShortName;, the web site will think that
       you logged into the site for the first time again.</li>
@@ -122,73 +134,65 @@ what cookies are stored, follow these instructions:</p>
 
 <h2 id="accepting_and_blocking_cookies">Accepting and Blocking Cookies</h2>
 
-<p>Assuming that you've enabled the cookie rules explained above, you'll see a
-  dialog whenever a site tries to save a cookie on your computer:</p>
-
-<p><img src="&images.baseURL;/cookie_accept.png"
-  alt="" width="286" height="87"/></p>
+<p>If you've chosen <em>ask me every time</em> from the <em>Keep Cookies</em>
+  combo box, you'll see a dialog whenever a site tries to store a cookie on your
+  computer providing the following options:</p>
 
 <dl>
-  <dt>Allowing a Cookie</dt>
-  <dd>To allow this particular cookie, just click <em>Allow</em>. If you trust
-    the site and don't want this dialog to be shown each time the site tries to
-    save a cookie, check the <em>Use my choice for all cookies from this
-    site</em> checkbox and then click <em>Allow</em>. &brandShortName; will
-    remember this and never ask about cookies for this site again. If you later
-    regret your choice, read about the <em>Cookie Manager</em>.</dd>
-  <dt>Blocking a Cookie</dt>
-  <dd>If you don't want this cookie to be saved, click Deny. If you don't trust
-    the site or suspect that it's compromising your privacy, check the <em>Use
-    my choice for all cookies from this site</em> checkbox and then click
-    <em>Block</em>. &brandShortName; will then put this site on the list of
-    blocked sites and never save cookies for it. This choice can be undone using
-    the Cookie Manager.</dd>
+  <dt>Allow</dt>
+  <dd>To allow this particular cookie, just click <em>Allow</em>. Use this if
+    you trust the site.</dd>
+  <dt>Allow for Session</dt>
+  <dd>If you want to allow this cookie for now, but have it deleted when you
+    exit &brandShortName;, click <em>Allow for Session</em>. Use this if the
+    site doesn't work without cookies, but you don't want to have a permanent
+    cookie stored for it.</dd>
+  <dt>Deny</dt>
+  <dd>If you don't want this cookie to be stored, click <em>Deny</em>. Use this
+    if you don't trust the site or suspect that it's compromising your privacy.</dd>
+  <dt>Use my choice for all cookies from this site</dt>
+  <dd>Select this checkbox before clicking any of the buttons if you want
+    &brandShortName; to remember your decision and not ask again. The site will
+    be added to the <a href="#cookies_exceptions">Cookie Exceptions Window</a>,
+    where you can revert your choice should you wish to do so later.</dd>
 </dl>
 
-<h2 id="the_cookie_manager">Managing Cookies</h2>
+<h2 id="cookies_exceptions">The Cookies Exceptions Window</h2>
 
-<p>Use the Cookie Manager to view and remove cookies and manage per-site cookie
-  &pref.plural;. It is accessible through the Cookies tab in the Privacy panel
-  of &pref.singularCaps;.</p>
+<p>Access this window by clicking the <em>Exceptions</em> button in cookies
+  &pref.plural;. Here you can make exceptions from your general cookies
+  &pref.plural; for specific sites. Using exceptions, you can allow all cookies,
+  reject all cookies, or allow all cookies but have them deleted when you exit
+  &brandShortName;, regardless of your other cookie settings.</p>
 
-<h3 id="the_cookie_list">The Cookie Manager</h3>
+<p>To add a site to this list, simply type the site's domain name in the field
+  labeled <em>Address of web site</em>. Then click <em>Block</em> to reject
+  cookies from the site, click <em>Allow</em> to allow cookies from the site,
+  or click <em>Allow for Session</em> to allow cookies from the site but have
+  them deleted when you exit &brandShortName;.</p>
 
-<p><img src="&images.baseURL;/cookie_list.png"
-  width="274" height="297" alt=""/></p>
+<p>To remove a site from this list, select it and click <em>Remove Site</em>. To
+  clear the list completely, click <em>Remove All Sites</em>. This will clear
+  the exceptions list so your general cookies &pref.plural; apply.</p>
 
-<p>The <em>Cookie Manager</em> dialog lists all cookies currently stored on your
+<h2 id="view_cookies">The View Cookies Window</h2>
+
+<p>Use the <em>View Cookies</em> window to view and remove cookies. To access it,
+  click the <em>View Cookies</em> button in cookies &pref.plural;.</p>
+
+<p>This window lists all cookies currently stored on your
   computer, grouped by site. You can expand the sites and select a cookie to
   display more information about it. You can also search for a site or a cookie
-  name by typing in the search bar. To access the Cookie Manager, click the
-  <em>View Cookies</em> button in cookies &pref.plural;.</p>
+  name by typing in the search bar.</p>
 
 <p>To remove a cookie from the list, select it and click <em>Remove Cookie</em>.
   To remove a site's cookies, select the site and click <em>Remove
   Cookie(s)</em>. To wipe all cookies, click <em>Remove All Cookies</em>.
   (This is the same as clicking the <em>Clear Cookies Now</em> button from the
-  <a href="prefs.xhtml#privacy_cookies">Cookies tab</a> of the Privacy panel of
-  the &pref.pluralCaps; window.)</p>
+  <a href="prefs.xhtml#privacy_cookies"><em>Cookies</em> tab</a> of the
+  <em>Privacy</em> panel of the &pref.pluralCaps; window.)</p>
 
-<h3 id="the_site_list">The Site List</h3>
-
-<p><img src="&images.baseURL;/cookie_manager.png"
-  alt="" width="247" height="291"/></p>
-
-<p>This is the list of sites that are either allowed or not allowed to store
-  cookies on your computer. In the Status column, you can see if a site is
-  blocked or allowed. Use the <em>Exceptions</em> button in cookies &pref.plural; to
-  access this window.</p>
-
-<p>To add a site to the this list, simply type the site's domain name in the
-  field labeled <em>Address of web site:</em>.  Then click <em>Block</em> to
-  reject cookies from the site, or click <em>Allow</em> to allow cookies from
-  the site.</p>
-
-<p>To remove a site from this list, select it and click <em>Remove Site</em>. To
-  clear the list completely, click <em>Remove All Sites</em>. This will reset
-  the cookie rules and you will see dialogs for each cookie again.</p>
-
-<div class="contentsBox"><em>22 March 2005</em></div>
+<div class="contentsBox"><em>07 July 2005</em></div>
 <p>Copyright &copy; 2003-2005 Contributors to the Mozilla Help Viewer Project.</p>
 
 </body>
