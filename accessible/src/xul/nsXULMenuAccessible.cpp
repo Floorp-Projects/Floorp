@@ -78,10 +78,10 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
   element->GetAttribute(NS_LITERAL_STRING("type"), menuItemType); 
 
   if (!menuItemType.IsEmpty()) {
-    // Selectable?
+    // Checkable?
     if (menuItemType.EqualsIgnoreCase("radio") ||
         menuItemType.EqualsIgnoreCase("checkbox"))
-      *_retval |= STATE_SELECTABLE;
+      *_retval |= STATE_CHECKABLE;
 
     // Checked?
     nsAutoString checkValue;
