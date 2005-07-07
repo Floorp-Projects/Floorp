@@ -965,11 +965,7 @@ sub insert
                 $cgi->param('description') . "\n";
   $comment .= ("\n" . $cgi->param('comment')) if defined $cgi->param('comment');
 
-  AppendComment($bugid,
-                Bugzilla->user->login,
-                $comment,
-                $isprivate,
-                $timestamp);
+  AppendComment($bugid, $userid, $comment, $isprivate, $timestamp);
 
   # Make existing attachments obsolete.
   my $fieldid = GetFieldID('attachments.isobsolete');
@@ -1245,10 +1241,6 @@ sub update
   # Unlock all database tables now that we are finished updating the database.
   $dbh->bz_unlock_tables();
 
-  # Get the user's login name since the AppendComment and header functions
-  # need it.
-  my $who = Bugzilla->user->login;
-
   # If the user submitted a comment while editing the attachment,
   # add the comment to the bug.
   if ($cgi->param('comment'))
@@ -1259,11 +1251,11 @@ sub update
                   $cgi->param('comment');
 
     # Append the comment to the list of comments in the database.
-    AppendComment($bugid, $who, $comment, $cgi->param('isprivate'), $timestamp);
+    AppendComment($bugid, $userid, $comment, $cgi->param('isprivate'), $timestamp);
   }
   
   # Define the variables and functions that will be passed to the UI template.
-  $vars->{'mailrecipients'} = { 'changer' => $who };
+  $vars->{'mailrecipients'} = { 'changer' => Bugzilla->user->login };
   $vars->{'attachid'} = $attach_id; 
   $vars->{'bugid'} = $bugid; 
 

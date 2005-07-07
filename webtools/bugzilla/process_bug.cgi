@@ -1346,7 +1346,7 @@ foreach my $id (@idlist) {
     }
 
     if ($cgi->param('comment') || $work_time) {
-        AppendComment($id, Bugzilla->user->login, $cgi->param('comment'),
+        AppendComment($id, $whoid, $cgi->param('comment'),
                       $cgi->param('commentprivacy'), $timestamp, $work_time);
         $bug_changed = 1;
     }
@@ -1775,7 +1775,7 @@ foreach my $id (@idlist) {
                     "VALUES ($reporter, $duplicate)");
         }
         # Bug 171639 - Duplicate notifications do not need to be private. 
-        AppendComment($duplicate, Bugzilla->user->login,
+        AppendComment($duplicate, $whoid,
                       "*** Bug " . $cgi->param('id') .
                       " has been marked as a duplicate of this bug. ***",
                       0, $timestamp);

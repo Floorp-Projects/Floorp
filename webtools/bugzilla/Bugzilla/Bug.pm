@@ -696,7 +696,7 @@ sub bug_alias_to_id ($) {
 #####################################################################
 
 sub AppendComment ($$$;$$$) {
-    my ($bugid, $who, $comment, $isprivate, $timestamp, $work_time) = @_;
+    my ($bugid, $whoid, $comment, $isprivate, $timestamp, $work_time) = @_;
     $work_time ||= 0;
     my $dbh = Bugzilla->dbh;
 
@@ -717,7 +717,6 @@ sub AppendComment ($$$;$$$) {
     # Comments are always safe, because we always display their raw contents,
     # and we use them in a placeholder below.
     trick_taint($comment); 
-    my $whoid = &::DBNameToIdAndCheck($who);
     my $privacyval = $isprivate ? 1 : 0 ;
     $dbh->do(q{INSERT INTO longdescs
                       (bug_id, who, bug_when, thetext, isprivate, work_time)
@@ -968,7 +967,7 @@ sub CheckIfVotedConfirmed {
                  "VALUES (?, ?, ?, ?, ?, ?)",
                  undef, ($id, $who, $timestamp, $fieldid, '0', '1'));
 
-        AppendComment($id, &::DBID_to_name($who),
+        AppendComment($id, $who,
                       "*** This bug has been confirmed by popular vote. ***",
                       0, $timestamp);
 
