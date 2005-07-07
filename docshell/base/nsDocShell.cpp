@@ -3005,13 +3005,9 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     }
 #endif
     // Create an shistory entry for the old load, if we have a channel
-    // XXXbz except what happens if this got called in EndPageLoad?  Then we've
-    // already cleared out mLSHE, so we're just setting mOSHE to null.  That
-    // can't be a good idea.
     if (aFailedChannel) {
         mURIResultedInDocument = PR_TRUE;
         OnLoadingSite(aFailedChannel, PR_TRUE);
-        mOSHE = mLSHE;
     }
 
     nsCAutoString url;
@@ -6315,10 +6311,14 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     }
 
     mLoadType = aLoadType;
+    
     // mLSHE should be assigned to aSHEntry, only after Stop() has
-    // been called.
-    mLSHE = aSHEntry;
-    mSavingOldViewer = savePresentation;
+    // been called. But when loading an error page, do not clear the
+    // mLSHE for the real page.
+    if (mLoadType != LOAD_ERROR_PAGE) {
+        mLSHE = aSHEntry;
+        mSavingOldViewer = savePresentation;
+    }
 
     // If we have a saved content viewer in history, restore and show it now.
     if (aSHEntry && (mLoadType & LOAD_CMD_HISTORY)) {
