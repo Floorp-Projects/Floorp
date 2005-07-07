@@ -108,9 +108,6 @@
       ]]></constructor>
 
       <destructor><![CDATA[
-        if (this.parentNode.parentNode.parentNode.localName ==
-            "toolbarpaletteitem")
-          return;
         this.controllers.removeController(this.searchbarController);
       ]]></destructor>
 
