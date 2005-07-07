@@ -155,6 +155,11 @@
 #endif
 #define _mbctolower tolower 
 
+#ifdef _mbsicmp
+#undef _mbsicmp
+#endif
+#define _mbsicmp    mozce_mbsicmp
+
 
 // From process.cpp
 #ifdef abort
@@ -1230,6 +1235,7 @@ extern "C" {
   MOZCE_SHUNT_API unsigned char* mozce_mbspbrk(const unsigned char* inString, const unsigned char* inStrCharSet);
   MOZCE_SHUNT_API unsigned char* mozce_mbschr(const unsigned char* inString, unsigned int inC);
   MOZCE_SHUNT_API unsigned char* mozce_mbsrchr(const unsigned char* inString, unsigned int inC);
+  MOZCE_SHUNT_API int            mozce_mbsicmp(const unsigned char *string1, const unsigned char *string2);
   
   // From process.cpp
   MOZCE_SHUNT_API void mozce_abort(void);

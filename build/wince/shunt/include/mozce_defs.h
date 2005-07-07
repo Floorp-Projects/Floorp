@@ -95,6 +95,7 @@
 #define EDEADLK             __LINE__
 #define ERANGE              __LINE__
 #define EPERM               __LINE__
+#define ENOSYS              __LINE__
 
 // From signal.h
 #define SIGABRT         0
