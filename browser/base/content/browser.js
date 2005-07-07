@@ -4749,6 +4749,7 @@ function asyncOpenWebPanel(event)
        linkNode = target;
    }
    else {
+     linkNode = event.originalTarget;
      while (linkNode && !(linkNode instanceof HTMLAnchorElement))
        linkNode = linkNode.parentNode;
      // <a> cannot be nested.  So if we find an anchor without an
