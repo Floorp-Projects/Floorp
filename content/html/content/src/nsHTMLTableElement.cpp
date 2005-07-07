@@ -1208,10 +1208,15 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
     if (readDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
       if (NS_STYLE_BORDER_SEPARATE == tableStyle->mBorderCollapse) {
-        // Set the cell's border from the table in the separate border model. If there is a border
-        // on the table, then the mapping to rules=all will take care of borders in the collapsing model.
+        // Set the cell's border from the table in the separate border
+        // model. If there is a border on the table, then the mapping to
+        // rules=all will take care of borders in the collapsing model.
+        // But if rules="none", we don't want to do this.
         const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::border);
-        if (value &&
+        const nsAttrValue* rulesValue = aAttributes->GetAttr(nsHTMLAtoms::rules);
+        if ((!rulesValue || rulesValue->Type() != nsAttrValue::eEnum ||
+             rulesValue->GetEnumValue() != NS_STYLE_TABLE_RULES_NONE) &&
+            value &&
             ((value->Type() == nsAttrValue::eInteger &&
               value->GetIntegerValue() > 0) ||
              value->IsEmptyString())) {
