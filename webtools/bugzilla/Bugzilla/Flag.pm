@@ -74,8 +74,6 @@ use Bugzilla::Attachment;
 use Bugzilla::BugMail;
 use Bugzilla::Constants;
 
-use constant TABLES_ALREADY_LOCKED => 1;
-
 # Note that this line doesn't actually import these variables for some reason,
 # so I have to use them as $::template and $::vars in the package code.
 use vars qw($template $vars); 
@@ -865,7 +863,7 @@ sub notify {
         my @new_cc_list;
         foreach my $cc (split(/[, ]+/, $flag->{'type'}->{'cc_list'})) {
             my $ccuser = Bugzilla::User->new_from_login($cc,
-                                                        TABLES_ALREADY_LOCKED)
+                                                        DERIVE_GROUPS_TABLES_ALREADY_LOCKED)
               || next;
 
             next if $flag->{'target'}->{'bug'}->{'restricted'}

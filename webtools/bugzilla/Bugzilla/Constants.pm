@@ -68,6 +68,8 @@ use base qw(Exporter);
 
     COMMENT_COLS
 
+    DERIVE_GROUPS_TABLES_ALREADY_LOCKED
+
     UNLOCK_ABORT
     
     RELATIONSHIPS
@@ -173,6 +175,10 @@ use constant DEFAULT_QUERY_NAME => '(Default query)';
 
 # The column length for displayed (and wrapped) bug comments.
 use constant COMMENT_COLS => 80;
+
+# Used to indicate to User::new and User::new_from_login calls
+# that the derive_groups tables are already locked
+use constant DERIVE_GROUPS_TABLES_ALREADY_LOCKED => 1;
 
 # used by Bugzilla::DB to indicate that tables are being unlocked
 # because of error
