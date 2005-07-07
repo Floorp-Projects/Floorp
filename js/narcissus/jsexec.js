@@ -85,9 +85,10 @@ var global = {
     decodeURIComponent: decodeURIComponent,
     encodeURIComponent: encodeURIComponent,
 
-    // Class constructors.
+    // Class constructors.  Where ECMA-262 requires C.length == 1, we declare
+    // a dummy formal parameter.
     Object: Object,
-    Function: function Function() {
+    Function: function Function(dummy) {
         var p = "", b = "", n = arguments.length;
         if (n) {
             var m = n - 1;
@@ -109,13 +110,13 @@ var global = {
         var s = {object: global, parent: null};
         return new FunctionObject(f, s);
     },
-    Array: function Array() {
+    Array: function Array(dummy) {
         // Array when called as a function acts as a constructor.
         return GLOBAL.Array.apply(this, arguments);
     },
-    String: function String() {
+    String: function String(s) {
         // Called as function or constructor: convert argument to string type.
-        var s = arguments.length ? "" + arguments[0] : "";
+        s = arguments.length ? "" + s : "";
         if (this instanceof String) {
             // Called as constructor: save the argument as the string value
             // of this String object and return this object.
