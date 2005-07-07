@@ -124,6 +124,44 @@ var gUpdates = {
   wiz: null,
   
   /**
+   * Set the state for the Wizard's control buttons (labels and disabled
+   * state).
+   * @param   backButtonLabel
+   *          The label to put on the Back button, or null for default.
+   * @param   backButtonDisabled
+   *          true if the Back button should be disabled, false otherwise
+   * @param   nextButtonLabel
+   *          The label to put on the Next button, or null for default.
+   * @param   nextButtonDisabled
+   *          true if the Next button should be disabled, false otherwise
+   * @param   finishButtonLabel
+   *          The label to put on the Finish button, or null for default.
+   * @param   finishButtonDisabled
+   *          true if the Finish button should be disabled, false otherwise
+   * @param   cancelButtonLabel
+   *          The label to put on the Cancel button, or null for default.
+   * @param   cancelButtonDisabled
+   *          true if the Cancel button should be disabled, false otherwise
+   */
+  setButtons: function(backButtonLabel, backButtonDisabled, 
+                       nextButtonLabel, nextButtonDisabled,
+                       finishButtonLabel, finishButtonDisabled,
+                       cancelButtonLabel, cancelButtonDisabled) {
+    var bb = this.wiz.getButton("back");
+    var bn = this.wiz.getButton("next");
+    var bf = this.wiz.getButton("finish");
+    var bc = this.wiz.getButton("cancel");
+    bb.label    = backButtonLabel   || this._buttonLabel_back;
+    bn.label    = nextButtonLabel   || this._buttonLabel_next;
+    bf.label    = finishButtonLabel || this._buttonLabel_finish;
+    bc.label    = cancelButtonLabel || this._buttonLabel_cancel;
+    bb.disabled = backButtonDisabled;
+    bn.disabled = nextButtonDisabled;
+    bf.disabled = finishButtonDisabled;
+    bc.disabled = cancelButtonDisabled;      
+  },
+  
+  /**
    * A hash of |pageid| attribute to page object. Can be used to dispatch
    * function calls to the appropriate page. 
    */
@@ -204,12 +242,14 @@ var gUpdates = {
       if (page.localName == "wizardpage") 
         this._pages[page.pageid] = eval(page.getAttribute("object"));
     }
+    
+    this.wiz.getButton("cancel").label = this.strings.getString("closeButtonLabel");
   
     // Cache the standard button labels in case we need to restore them
-    this.buttonLabel_back = gUpdates.wiz.getButton("back").label;
-    this.buttonLabel_next = gUpdates.wiz.getButton("next").label;
-    this.buttonLabel_finish = gUpdates.wiz.getButton("finish").label;
-    this.buttonLabel_cancel = gUpdates.wiz.getButton("cancel").label;
+    this._buttonLabel_back = this.wiz.getButton("back").label;
+    this._buttonLabel_next = this.wiz.getButton("next").label;
+    this._buttonLabel_finish = this.wiz.getButton("finish").label;
+    this._buttonLabel_cancel = this.wiz.getButton("cancel").label;
     
     // Advance to the Start page. 
     gUpdates.wiz.currentPage = this.startPage;
@@ -405,7 +445,7 @@ var gCheckingPage = {
    * Starts the update check when the page is shown.
    */
   onPageShow: function() {
-    gUpdates.wiz.getButton("next").disabled = true;
+    gUpdates.setButtons(null, true, null, true, null, true, null, false);
 
     this._checker = 
       Components.classes["@mozilla.org/updates/update-checker;1"].
@@ -486,8 +526,7 @@ var gNoUpdatesPage = {
    * Initialize
    */
   onPageShow: function() {
-    gUpdates.wiz.getButton("back").disabled = true;
-    gUpdates.wiz.getButton("cancel").disabled = true;
+    gUpdates.setButtons(null, true, null, true, null, false, null, true);
     gUpdates.wiz.getButton("finish").focus();
   }
 };
@@ -629,13 +668,9 @@ var gLicensePage = {
   onPageShow: function() {
     this._licenseContent = document.getElementById("licenseContent");
     
-    var nextButton = gUpdates.wiz.getButton("next");
-    nextButton.disabled = true;
-    nextButton.label = gUpdates.strings.getString("IAgreeLabel");
-    gUpdates.wiz.getButton("back").disabled = true;
-    
-    var cancelButton = gUpdates.wiz.getButton("cancel");
-    cancelButton.label = gUpdates.strings.getString("IDoNotAgreeLabel");
+    var IAgree = gUpdates.strings.getString("IAgreeLabel");
+    var IDoNotAgree = gUpdates.strings.getString("IDoNotAgreeLabel");
+    gUpdates.setButtons(null, true, IAgree, true, null, true, IDoNotAgree, false);
 
     this._licenseContent.addEventListener("load", this.onLicenseLoad, false);
     this._licenseContent.url = gUpdates.update.licenseURL;
@@ -975,14 +1010,8 @@ var gDownloadingPage = {
     
     if (activeUpdate)
       this._setUIState(!updates.isDownloading);
-    
-    gUpdates.wiz.getButton("back").disabled = true;
-    var cancelButton = gUpdates.wiz.getButton("cancel");
-    cancelButton.label = gUpdates.strings.getString("closeButtonLabel");
-    cancelButton.focus();
-    var nextButton = gUpdates.wiz.getButton("next");
-    nextButton.disabled = true;
-    nextButton.label = gUpdates.buttonLabel_next;
+      
+    gUpdates.setButtons(null, true, null, true, null, true, null, false);
   },
   
   /** 
@@ -1259,8 +1288,7 @@ var gErrorsPage = {
    * Initialize
    */
   onPageShow: function() {
-    gUpdates.wiz.getButton("back").disabled = true;
-    gUpdates.wiz.getButton("cancel").disabled = true;
+    gUpdates.setButtons(null, true, null, true, null, false, null, true);
     gUpdates.wiz.getButton("finish").focus();
     
     var errorReason = document.getElementById("errorReason");
@@ -1293,13 +1321,12 @@ var gFinishedPage = {
   /**
    * Called to initialize the Wizard Page.
    */
-  onPageShow: function() {
-    gUpdates.wiz.getButton("back").disabled = true;
-    var finishButton = gUpdates.wiz.getButton("finish");
-    finishButton.label = gUpdates.strings.getString("restartButton");
-    finishButton.focus();
-    var cancelButton = gUpdates.wiz.getButton("cancel");
-    cancelButton.label = gUpdates.strings.getString("laterButton");
+  onPageShow: function() {  
+    var restart = gUpdates.strings.getFormattedString("restartButton",
+      [gUpdates.brandName]);
+    var later = gUpdates.strings.getString("laterButton");
+    gUpdates.setButtons(null, true, null, true, restart, false, later, false);
+    gUpdates.wiz.getButton("finish").focus();
   },
   
   /**
@@ -1415,8 +1442,8 @@ var gInstalledPage = {
     }
     catch (e) {
     }
-  
-    gUpdates.wiz.getButton("cancel").disabled = true;
+    
+    this.setButtons(null, true, null, true, null, false, null, true);
     gUpdates.wiz.getButton("finish").focus();
   },
 };
