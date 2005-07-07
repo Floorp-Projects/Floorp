@@ -471,8 +471,8 @@ sub get_events {
     $sth->execute($userid);
     while (my ($ev, $sub, $bod) = $sth->fetchrow_array) {
         $events->{$ev} = {
-            'subject' => $sub,
-            'body' => $bod,
+            'subject' => $sub || '',
+            'body' => $bod || '',
         };
     }
     return $events;
