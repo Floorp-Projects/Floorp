@@ -105,6 +105,10 @@ var helpBaseURI;
 var searchDatasources = "rdf:null";
 var searchDS = null;
 
+var gIgnoreFocus = false;
+var gClickSelectsAll;
+var gIgnoreClick = false;
+
 /* defaultTopic is either set
    1. in the openHelp() call, passed as an argument to the Help window and
       evaluated in init(), or
@@ -135,158 +139,171 @@ function displayTopic(topic) {
 
 # Initialize the Help window
 function init() {
-    // Cache panel references.
-    helpSearchPanel = document.getElementById("help-search-panel");
-    helpTocPanel = document.getElementById("help-toc-panel");
-    helpIndexPanel = document.getElementById("help-index-panel");
-    helpGlossaryPanel = document.getElementById("help-glossary-panel");
-    helpBrowser = document.getElementById("help-content");
-    
-    strBundle = document.getElementById("bundle_help");
-    emptySearchText = strBundle.getString("emptySearchText");
+  // Cache panel references.
+  helpSearchPanel = document.getElementById("help-search-panel");
+  helpTocPanel = document.getElementById("help-toc-panel");
+  helpIndexPanel = document.getElementById("help-index-panel");
+  helpGlossaryPanel = document.getElementById("help-glossary-panel");
+  helpBrowser = document.getElementById("help-content");
 
-    initFindBar();
+  strBundle = document.getElementById("bundle_help");
+  emptySearchText = strBundle.getString("emptySearchText");
 
-    // Get the content pack, base URL, and help topic
-    var helpTopic = defaultTopic;
-    if ("arguments" in window
-            && window.arguments[0]
-            instanceof Components.interfaces.nsIDialogParamBlock) {
-        helpFileURI = window.arguments[0].GetString(0);
-        // trailing "/" included.
-        helpBaseURI = helpFileURI.substring(0, helpFileURI.lastIndexOf("/")+1);
-        helpTopic = window.arguments[0].GetString(1);
-    }
+  initFindBar();
 
-    loadHelpRDF();
-    displayTopic(helpTopic);
+  // Get the content pack, base URL, and help topic
+  var helpTopic = defaultTopic;
+  if ("arguments" in window && 
+       window.arguments[0] instanceof Components.interfaces.nsIDialogParamBlock) {
+    helpFileURI = window.arguments[0].GetString(0);
+    // trailing "/" included.
+    helpBaseURI = helpFileURI.substring(0, helpFileURI.lastIndexOf("/")+1);
+    helpTopic = window.arguments[0].GetString(1);
+  }
 
-    // Move to Center of Screen
-    const width = document.documentElement.getAttribute("width");
-    const height = document.documentElement.getAttribute("height");
-    window.moveTo((screen.availWidth - width) / 2, (screen.availHeight - height) / 2);
+  loadHelpRDF();
+  displayTopic(helpTopic);
 
-    // Initialize history.
-    getWebNavigation().sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
-        .createInstance(Components.interfaces.nsISHistory);
-    window.XULBrowserWindow = new nsHelpStatusHandler();
+  // Move to Center of Screen
+  const width = document.documentElement.getAttribute("width");
+  const height = document.documentElement.getAttribute("height");
+  window.moveTo((screen.availWidth - width) / 2, (screen.availHeight - height) / 2);
 
-    //Start the status handler.
-    window.XULBrowserWindow.init();
+  // Initialize history.
+  getWebNavigation().sessionHistory = 
+    Components.classes["@mozilla.org/browser/shistory;1"]
+              .createInstance(Components.interfaces.nsISHistory);
+  window.XULBrowserWindow = new nsHelpStatusHandler();
 
-    // Hook up UI through Progress Listener
-    const interfaceRequestor = helpBrowser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    const webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
+  //Start the status handler.
+  window.XULBrowserWindow.init();
 
-    webProgress.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+  // Hook up UI through Progress Listener
+  const interfaceRequestor = helpBrowser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+  const webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
 
-    //Display the Table of Contents
-    showPanel("help-toc");
+  webProgress.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
-    // initialize the customizeDone method on the customizeable toolbar
-    var toolbox = document.getElementById("help-toolbox");
-    toolbox.customizeDone = ToolboxCustomizeDone;
+  gClickSelectsAll = getBoolPref("browser.urlbar.clickSelectsAll", true);
+}
 
-    var toolbarset = document.getElementById("customToolbars");
-    toolbox.toolbarset = toolbarset;
+function showSearchSidebar() {
+  // if you tab too quickly, you end up with stuck focus, revert focus to the searchbar
+  var searchTree = document.getElementById("help-toc-panel");
+  if (searchTree.treeBoxObject.focused) {
+    focusSearch();
+  }
 
-    // Set the text of the sidebar toolbar button to "Hide Sidebar" taken the properties file.
-    // This is needed so that it says "Toggle Sidebar" in toolbar customization, but outside
-    // of it, it says either "Show Sidebar" or "Hide Sidebar".
-    document.getElementById("help-sidebar-button").label = strBundle.getString("hideSidebarLabel");
+  var tableOfContents = document.getElementById("help-toc-sidebar");
+  tableOfContents.setAttribute("hidden", "true");
+
+  var sidebar = document.getElementById("help-search-sidebar");
+  sidebar.removeAttribute("hidden");
+}
+
+function hideSearchSidebar(aEvent) {
+  // if we're focused in the search results, focus content
+  var searchTree = document.getElementById("help-search-tree");
+  if (searchTree.treeBoxObject.focused) {
+    content.focus();
+  }
+
+  var sidebar = document.getElementById("help-search-sidebar");
+  sidebar.setAttribute("hidden", "true");
+
+  var tableOfContents = document.getElementById("help-toc-sidebar");
+  tableOfContents.removeAttribute("hidden");
 }
 
 function loadHelpRDF() {
-    if (!helpFileDS) {
-        try {
-            helpFileDS = RDF.GetDataSourceBlocking(helpFileURI);
-        } catch (e if (e.result == NSRESULT_RDF_SYNTAX_ERROR)) {
-            log("Help file: " + helpFileURI + " contains a syntax error.");
-        } catch (e) {
-            log("Help file: " + helpFileURI + " was not found.");
-        }
-        try {
-            document.title = getAttribute(helpFileDS, RDF_ROOT, NC_TITLE, "");
-            helpBaseURI = getAttribute(helpFileDS, RDF_ROOT, NC_BASE, helpBaseURI);
-            // if there's no nc:defaulttopic in the content pack, set "welcome"
-            // as the default topic
-            defaultTopic = getAttribute(helpFileDS,
-                RDF_ROOT, NC_DEFAULTTOPIC, "welcome");
-
-            var panelDefs = helpFileDS.GetTarget(RDF_ROOT, NC_PANELLIST, true);
-            RDFContainer.Init(helpFileDS, panelDefs);
-            var iterator = RDFContainer.GetElements();
-            while (iterator.hasMoreElements()) {
-                var panelDef = iterator.getNext();
-                var panelID = getAttribute(helpFileDS, panelDef, NC_PANELID,
-                    null);
-
-                var datasources = getAttribute(helpFileDS, panelDef,
-                    NC_DATASOURCES, "rdf:none");
-                datasources = normalizeLinks(helpBaseURI, datasources);
-
-                var panelPlatforms = getAttribute(helpFileDS, panelDef, NC_PLATFORM, platform);
-                panelPlatforms = panelPlatforms.split(/\s+/);
-
-                if (panelPlatforms.indexOf(platform) == -1)
-                   continue; // ignore datasources for other platforms
-
-                // Cache Additional Datasources to Augment Search Datasources.
-                if (panelID == "search") {
-                    emptySearchText = getAttribute(helpFileDS, panelDef,
-                        NC_EMPTY_SEARCH_TEXT, emptySearchText);
-                    emptySearchLink = getAttribute(helpFileDS, panelDef,
-                        NC_EMPTY_SEARCH_LINK, emptySearchLink);
-                    searchDatasources += " " + datasources;
-                    continue; // Don't try to display them yet!
-                }
-
-                // Cache TOC Datasources for Use by ID Lookup.
-                var tree = document.getElementById("help-" + panelID + "-panel");
-                loadDatabasesBlocking(datasources);
-                tree.setAttribute("datasources",
-                    tree.getAttribute("datasources") + " " + datasources);
-            }
-        } catch (e) {
-            log(e + "");
-        }
+  if (!helpFileDS) {
+    try {
+      helpFileDS = RDF.GetDataSourceBlocking(helpFileURI);
+    } catch (e if (e.result == NSRESULT_RDF_SYNTAX_ERROR)) {
+      log("Help file: " + helpFileURI + " contains a syntax error.");
+    } catch (e) {
+      log("Help file: " + helpFileURI + " was not found.");
     }
+
+    try {
+      document.title = getAttribute(helpFileDS, RDF_ROOT, NC_TITLE, "");
+      helpBaseURI = getAttribute(helpFileDS, RDF_ROOT, NC_BASE, helpBaseURI);
+      // if there's no nc:defaulttopic in the content pack, set "welcome"
+      // as the default topic
+      defaultTopic = getAttribute(helpFileDS,
+        RDF_ROOT, NC_DEFAULTTOPIC, "welcome");
+
+      var panelDefs = helpFileDS.GetTarget(RDF_ROOT, NC_PANELLIST, true);
+      RDFContainer.Init(helpFileDS, panelDefs);
+      var iterator = RDFContainer.GetElements();
+      while (iterator.hasMoreElements()) {
+        var panelDef = iterator.getNext();
+        var panelID = getAttribute(helpFileDS, panelDef, NC_PANELID, null);
+
+        var datasources = getAttribute(helpFileDS, panelDef, NC_DATASOURCES, "rdf:none");
+        datasources = normalizeLinks(helpBaseURI, datasources);
+
+        var panelPlatforms = getAttribute(helpFileDS, panelDef, NC_PLATFORM, platform);
+        panelPlatforms = panelPlatforms.split(/\s+/);
+
+        if (panelPlatforms.indexOf(platform) == -1)
+          continue; // ignore datasources for other platforms
+
+        // Cache Additional Datasources to Augment Search Datasources.
+        if (panelID == "search") {
+          emptySearchText = getAttribute(helpFileDS, panelDef,
+          NC_EMPTY_SEARCH_TEXT, emptySearchText);
+          emptySearchLink = getAttribute(helpFileDS, panelDef,
+          NC_EMPTY_SEARCH_LINK, emptySearchLink);
+          searchDatasources += " " + datasources;
+          continue; // Don't try to display them yet!
+        }
+
+        // Cache TOC Datasources for Use by ID Lookup.
+        var tree = document.getElementById("help-" + panelID + "-panel");
+        loadDatabasesBlocking(datasources);
+        tree.setAttribute("datasources",
+        tree.getAttribute("datasources") + " " + datasources);
+      }
+    } catch (e) {
+      log(e + "");
+    }
+  }
 }
 
 function loadDatabasesBlocking(datasources) {
-	var ds = datasources.split(/\s+/);
-    for (var i=0; i < ds.length; ++i) {
-        if (ds[i] == "rdf:null" || ds[i] == "")
-            continue;
-        try {
-            // We need blocking here to ensure the database is loaded so
-            // getLink(topic) works.
-            var datasource = RDF.GetDataSourceBlocking(ds[i]);
-        } catch (e) {
-            log("Datasource: " + ds[i] + " was not found.");
-        }
+  var ds = datasources.split(/\s+/);
+  for (var i=0; i < ds.length; ++i) {
+    if (ds[i] == "rdf:null" || ds[i] == "")
+      continue;
+    try {
+      // We need blocking here to ensure the database is loaded so
+      // getLink(topic) works.
+      var datasource = RDF.GetDataSourceBlocking(ds[i]);
+    } catch (e) {
+      log("Datasource: " + ds[i] + " was not found.");
     }
+  }
 }
 
 # Prepend helpBaseURI to list of space separated links if the don't start with
 # "chrome:"
 function normalizeLinks(helpBaseURI, links) {
-    if (!helpBaseURI) {
-        return links;
-    }
-    var ls = links.split(/\s+/);
-    if (ls.length == 0) {
-        return links;
-    }
-    for (var i=0; i < ls.length; ++i) {
-        if (ls[i] == "") {
-            continue;
-        }
-        if (ls[i].substr(0,7) != "chrome:" && ls[i].substr(0,4) != "rdf:") {
-            ls[i] = helpBaseURI + ls[i];
-        }
-    }
-    return ls.join(" ");
+  if (!helpBaseURI) {
+    return links;
+  }
+  var ls = links.split(/\s+/);
+  if (ls.length == 0) {
+    return links;
+  }
+  for (var i=0; i < ls.length; ++i) {
+    if (ls[i] == "")
+      continue;
+      
+    if (ls[i].substr(0,7) != "chrome:" && ls[i].substr(0,4) != "rdf:")
+      ls[i] = helpBaseURI + ls[i];
+  }
+  return ls.join(" ");
 }
 
 function getLink(ID) {
@@ -579,30 +596,6 @@ function getMarkupDocumentViewer() {
     return helpBrowser.markupDocumentViewer;
 }
 
-# Show the selected sidebar panel
-function showPanel(panelId) {
-    //hide other sidebar panels and show the panel name taken in.
-    helpSearchPanel.setAttribute("hidden", "true");
-    helpTocPanel.setAttribute("hidden", "true");
-    helpIndexPanel.setAttribute("hidden", "true");
-    helpGlossaryPanel.setAttribute("hidden", "true");
-    var thePanel = document.getElementById(panelId + "-panel");
-    thePanel.setAttribute("hidden","false");
-
-    //remove the selected style from the previous panel selected.
-    var theButton = document.getElementById(panelId + "-btn");
-    document.getElementById("help-glossary-btn").removeAttribute("selected");
-    document.getElementById("help-index-btn").removeAttribute("selected");
-    document.getElementById("help-search-btn").removeAttribute("selected");
-    document.getElementById("help-toc-btn").removeAttribute("selected");
-    //add the selected style to the correct panel.
-    theButton.setAttribute("selected", "true");
-
-    //focus the searchbox if the search sidebar panel is shown.
-    if (panelId == "help-search")
-      document.getElementById("findText").focus();
-}
-
 function findParentNode(node, parentNode)
 {
   if (node && node.nodeType == Node.TEXT_NODE) {
@@ -629,8 +622,8 @@ function findParentNode(node, parentNode)
 function onselect_loadURI(tree) {
     try {
         var resource = tree.view.getResourceAtIndex(tree.currentIndex);
-	var link = tree.database.GetTarget(resource, NC_LINK, true);
-	if (link) {
+        var link = tree.database.GetTarget(resource, NC_LINK, true);
+        if (link) {
             link = link.QueryInterface(Components.interfaces.nsIRDFLiteral);
             loadURI(link.Value);
         }
@@ -638,9 +631,44 @@ function onselect_loadURI(tree) {
     }// when switching between tabs a spurious row number is returned.
 }
 
+// copied from browser.js to handle the searchbar
+function SearchbarFocusHandler(aEvent, aElt)
+{
+  if (gIgnoreFocus)
+    gIgnoreFocus = false;
+  else if (gClickSelectsAll)
+    aElt.select();
+}
+
+function SearchbarMouseDownHandler(aEvent, aElt)
+{
+  if (aElt.hasAttribute("focused")) {
+    gIgnoreClick = true;
+  } else {
+    gIgnoreFocus = true;
+    gIgnoreClick = false;
+    aElt.setSelectionRange(0, 0);
+  }
+}
+
+function SearchbarClickHandler(aEvent, aElt)
+{
+  if (!gIgnoreClick && gClickSelectsAll && aElt.selectionStart == aElt.selectionEnd)
+    aElt.select();
+}
+
+
+function focusSearch() {
+  var searchBox = document.getElementById("findText");
+  searchBox.focus();
+}
+
 # doFind - Searches the help files for what is located in findText and outputs into
-#	the find search tree.
+#        the find search tree.
 function doFind() {
+    if (document.getElementById("help-search-sidebar").hidden)
+      showSearchSidebar();
+
     var searchTree = document.getElementById("help-search-tree");
     var findText = document.getElementById("findText");
 
@@ -651,6 +679,7 @@ function doFind() {
     RE = findText.value.match(/\S+/g);
     if (!RE) {
       searchTree.builder.rebuild();
+      hideSearchSidebar();
       return;
     }
 
@@ -672,7 +701,7 @@ function doFind() {
     sourceDS = tree.database;
     // If the glossary has never been displayed this will be null (sigh!).
     if (!sourceDS)
-        sourceDS = loadCompositeDS(tree.datasources);
+      sourceDS = loadCompositeDS(tree.datasources);
 
     doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
@@ -753,18 +782,18 @@ function doFindOnSeq(resultsDS, sourceDS, resource, level) {
 
 function assertSearchEmpty(resultsDS) {
     var resSearchEmpty = RDF.GetResource("urn:emptySearch");
-	resultsDS.Assert(RDF_ROOT,
-	    NC_CHILD,
-		resSearchEmpty,
-		true);
-	resultsDS.Assert(resSearchEmpty,
-	    NC_NAME,
-		RDF.GetLiteral(emptySearchText),
-		true);
-	resultsDS.Assert(resSearchEmpty,
-		NC_LINK,
-		RDF.GetLiteral(emptySearchLink),
-		true);
+        resultsDS.Assert(RDF_ROOT,
+            NC_CHILD,
+                resSearchEmpty,
+                true);
+        resultsDS.Assert(resSearchEmpty,
+            NC_NAME,
+                RDF.GetLiteral(emptySearchText),
+                true);
+        resultsDS.Assert(resSearchEmpty,
+                NC_LINK,
+                RDF.GetLiteral(emptySearchLink),
+                true);
 }
 
 function isMatch(text) {
@@ -839,51 +868,16 @@ function expandAllIndexEntries() {
     }
 }
 
-# toggleSidebarStatus - Toggles the visibility of the sidebar.
-function toggleSidebar()
+function getBoolPref (aPrefname, aDefault)
 {
-    var sidebar = document.getElementById("helpsidebar-box");
-    var separator = document.getElementById("helpsidebar-splitter");
-    var sidebarButton = document.getElementById("help-sidebar-button");
-
-    //Use the string bundle to retrieve the text "Hide Sidebar"
-    //and "Show Sidebar" from the locale directory.
-    if (sidebar.hidden) {
-      sidebar.removeAttribute("hidden");
-      sidebarButton.label = strBundle.getString("hideSidebarLabel");
-
-      separator.removeAttribute("hidden");
-    } else {
-      sidebar.setAttribute("hidden","true");
-      sidebarButton.label = strBundle.getString("showSidebarLabel");
-
-      separator.setAttribute("hidden","true");
-    }
-}
-
-// Shows the panel relative to the currently selected panel.
-// Takes a boolean parameter - if true it will show the next panel, 
-// otherwise it will show the previous panel.
-function showRelativePanel(goForward) {
-  var selectedIndex = -1;
-  var sidebarBox = document.getElementById("helpsidebar-box");
-  var sidebarButtons = new Array();
-  for (var i = 0; i < sidebarBox.childNodes.length; i++) {
-    var btn = sidebarBox.childNodes[i];
-    if (btn.nodeName == "toolbarbutton") {
-      if (btn.getAttribute("selected") == "true")
-        selectedIndex = sidebarButtons.length;
-      sidebarButtons.push(btn);
-    }
+  try { 
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    return pref.getBoolPref(aPrefname);
   }
-  if (selectedIndex == -1)
-    return;
-  selectedIndex += goForward ? 1 : -1;
-  if (selectedIndex >= sidebarButtons.length)
-    selectedIndex = 0;
-  else if (selectedIndex < 0)
-    selectedIndex = sidebarButtons.length - 1;
-  sidebarButtons[selectedIndex].doCommand();
+  catch(e) {
+    return aDefault;
+  }
 }
 
 # getXulWin - Returns the current Help window as a nsIXULWindow.

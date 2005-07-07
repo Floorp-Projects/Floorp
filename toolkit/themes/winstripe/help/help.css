@@ -38,31 +38,27 @@
 @import url("chrome://global/skin/");
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+toolbarbutton {
+	-moz-box-orient: horizontal;
+}
+
 .toolbarbutton-1 {
-	-moz-box-orient: vertical;
+	-moz-box-orient: horizontal;
 	min-width: 0px;
 	list-style-image: url("chrome://help/skin/Toolbar.png");
 }
 
 .browserButton {
-  -moz-box-orient: vertical;
+  -moz-box-orient: horizontal;
   min-width: 0px;
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
-.toolbarbutton-1, .browserButton, .toolbarbutton-menubutton-button {
-  padding: 5px;
-}
-
-.toolbarbutton-1 .toolbarbutton-icon,
-.browserButton .toolbarbutton-icon {
-  -moz-margin-end: 0px;
-}
-
-#helpToolbar[mode="full"] .toolbarbutton-1,
-#helpToolbar[mode="full"] .browserButton,
-#helpToolbar[mode="full"] .toolbarbutton-menubutton-button {
-  min-width: 57px;
+#helpToolbar .toolbarbutton-1,
+#helpToolbar .browserButton,
+#helpToolbar .toolbarbutton-menubutton-button {
+  min-width: 16px;
+  -moz-box-orient: horizontal !important;
 }
 
 toolbarbutton:not([disabled="true"]):hover,
@@ -73,7 +69,7 @@ menubutton:not([disabled="true"]):hover:active {
 }
 
 /* Set the minimum sidebar width so the help contents aren't squeezed together.*/
-#helpsidebar-box { width: 200px; }
+#help-sidebar { min-width: 15em; width: 20em; max-width: 25em; }
 
 #help-back-button, 
 #help-forward-button[chromedir="rtl"] { -moz-image-region: rect(0px 24px 24px 0px); }
@@ -82,17 +78,15 @@ menubutton:not([disabled="true"]):hover:active {
 #help-back-button[disabled="true"], 
 #help-forward-button[disabled="true"][chromedir="rtl"] { -moz-image-region: rect(48px 24px 72px 0px); }
 
-#help-forward-button, #help-back-button[chromedir="rtl"] { -moz-image-region: rect(0px 48px 24px 24px); }
-#help-forward-button:hover, 
-#help-back-button[chromedir="rtl"]:hover { -moz-image-region: rect(24px 48px 48px 24px); }
-#help-forward-button[disabled="true"], 
-#help-back-button[disabled="true"][chromedir="rtl"] { -moz-image-region: rect(48px 48px 72px 24px); }
-
-#help-find-button { -moz-image-region: rect(0px 192px 24px 168px); }
-#help-find-button:hover { -moz-image-region: rect(24px 192px 48px 168px); }
-
-#help-toolbar-customization { -moz-image-region: rect(0px 216px 24px 192px); }
-#help-toolbar-customization:hover { -moz-image-region: rect(24px 216px 48px 192px); }
+#help-forward-button, #help-back-button[chromedir="rtl"] { 
+  -moz-image-region: rect(0px 48px 24px 24px);
+}
+#help-forward-button:hover, #help-back-button[chromedir="rtl"]:hover {
+  -moz-image-region: rect(24px 48px 48px 24px);
+}
+#help-forward-button[disabled="true"],#help-back-button[disabled="true"][chromedir="rtl"] {
+  -moz-image-region: rect(48px 48px 72px 24px);
+}
 
 #help-home-button { -moz-image-region: rect(0px 120px 24px 96px); }
 #help-home-button:hover { -moz-image-region: rect(24px 120px 48px 96px); }
@@ -100,44 +94,5 @@ menubutton:not([disabled="true"]):hover:active {
 #help-print-button { -moz-image-region: rect(0px 216px 24px 192px); }
 #help-print-button:hover { -moz-image-region: rect(24px 216px 48px 192px); }
 
-#help-zoom-large-button { -moz-image-region: rect(0px 24px 24px 0px); }
-#help-zoom-large-button:hover { -moz-image-region: rect(24px 24px 48px 0px); }
 
-#help-zoom-small-button { -moz-image-region: rect(0px 48px 24px 24px); }
-#help-zoom-small-button:hover { -moz-image-region: rect(24px 48px 48px 24px); }
 
-#help-sidebar-button { -moz-image-region: rect(0px 72px 24px 48px); }
-#help-sidebar-button:hover { -moz-image-region: rect(24px 72px 48px 48px); }
-
-/** Toolbar Customization stuff **/
-toolbar[mode="icons"] > toolbarbutton > .toolbarbutton-icon,
-toolbar[mode="text"] > toolbarbutton > .toolbarbutton-text, 
-toolbar[mode="icons"] > toolbarbutton[type="menu-button"] > .toolbarbutton-icon,
-toolbar[mode="text"] > toolbarbutton[type="menu-button"] > .toolbarbutton-text {
-	display: -moz-box;
-}
-
-toolbar[mode="icons"] .toolbarbutton-text,
-toolbar[mode="text"] .toolbarbutton-icon {
-	display: none;
-}
-
-/* Small icons are not supported. */
-#smallicons { display: none; }
-
-/*** THROBBER ***/
-#help-throbber {
-  -moz-appearance: none;
-  -moz-user-focus: ignore;
-  margin: 0 !important;
-  border: none !important;
-  padding: 0 !important;
-  min-width: 0;
-  background-color: transparent;
-  list-style-image: url("chrome://browser/skin/Throbber-small.png");
-}
-
-#help-throbber[busy="true"] {
-  list-style-image: url("chrome://browser/skin/Throbber-small.gif");
-  opacity: 0.5;
-}
