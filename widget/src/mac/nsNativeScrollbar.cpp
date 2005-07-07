@@ -47,7 +47,6 @@
 #include "nsIDOMElement.h"
 #include "nsIScrollbarMediator.h"
 
-#include "Sound.h"
 
 inline void BoundsCheck(PRInt32 low, PRUint32& value, PRUint32 high)
 {
@@ -178,7 +177,8 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
   GetPosition(&oldPos);
   GetLineIncrement(&incr);
   GetViewSize(&visibleImageSize);
-  switch(part)
+
+  switch (part)
   {
     //
     // For the up/down buttons, scroll up or down by the line height and 
@@ -485,7 +485,7 @@ nsNativeScrollbar::SetViewSize(PRUint32 aSize)
     
   if ( GetControl() )  {
     StartDraw();
-    SetControlViewSize(GetControl(), mVisibleImageSize);
+    ::SetControlViewSize(GetControl(), mVisibleImageSize);
     EndDraw();
   }
   return NS_OK;

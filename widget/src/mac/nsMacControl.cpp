@@ -40,6 +40,7 @@
 #include "nsFont.h"
 #include "nsFontUtils.h"
 #include "nsToolkit.h"
+#include "nsGfxUtils.h"
 
 #include "nsMacControl.h"
 #include "nsColor.h"
@@ -55,11 +56,83 @@
 #include <UnicodeConverter.h>
 #include <Fonts.h>
 
+#if 0
+void DumpControlState(ControlHandle inControl, const char* message)
+{
+  if (!message) message = "gdb called";
+  
+  CGrafPtr curPort;
+  ::GetPort((GrafPtr*)&curPort);
+  Rect portBounds;
+  ::GetPortBounds(curPort, &portBounds);
+
+  Rect controlBounds = {0, 0, 0, 0};
+  if (inControl)
+    ::GetControlBounds(inControl, &controlBounds);
+    
+  printf("%20s -- port %p bounds %d, %d, %d, %d, control bounds %d, %d, %d, %d\n", message, curPort,
+    portBounds.left, portBounds.top, portBounds.right, portBounds.bottom,
+    controlBounds.left, controlBounds.top, controlBounds.right, controlBounds.bottom);
+}
+#endif
+
+
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 // TODO: leaks, need to release when unloading the dll
 nsIUnicodeEncoder * nsMacControl::mUnicodeEncoder = nsnull;
 nsIUnicodeDecoder * nsMacControl::mUnicodeDecoder = nsnull;
 
+static const EventTypeSpec kControlEventList[] = 
+{
+	{ kEventClassControl, kEventControlDraw }
+};
+
+
+static pascal OSStatus MacControlDrawHandler(EventHandlerCallRef inHandlerCallRef, EventRef inEvent, void *inUserData)
+{
+  nsMacControl* macControl = NS_REINTERPRET_CAST(nsMacControl*, inUserData);
+
+  ControlRef theControl;
+  ::GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, NULL, sizeof(ControlRef), NULL, &theControl);
+  
+  CGrafPtr controlPort;   // port we're drawing into (usually the control's port)
+  if (::GetEventParameter(inEvent, kEventParamGrafPort, typeGrafPtr, NULL, sizeof(CGrafPtr), NULL, &controlPort) != noErr)
+    controlPort = ::GetWindowPort(::GetControlOwner(theControl));
+
+  OSStatus err = eventNotHandledErr;
+  
+  // see if we're already inside a StartDraw/EndDraw (e.g. OnPaint())
+  if (macControl->IsDrawing())
+  {
+    // we need to make sure that the port origin is set correctly for the control's
+    // widget, because other handlers before us may have messed with it.
+    nsRect controlBounds;
+    macControl->GetBounds(controlBounds);
+    
+    nsPoint origin(controlBounds.x, controlBounds.y);
+    macControl->LocalToWindowCoordinate(origin);
+
+    Point newOrigin;
+    newOrigin.h = -origin.x;
+    newOrigin.v = -origin.y;
+    
+    StOriginSetter setter(controlPort, &newOrigin);
+    
+    err = ::CallNextEventHandler(inHandlerCallRef, inEvent);
+  }
+  else
+  {  
+    // make sure we leave the origin set for other controls
+    StOriginSetter originSetter(controlPort);
+    macControl->StartDraw();
+    err = ::CallNextEventHandler(inHandlerCallRef, inEvent);
+    macControl->EndDraw();
+  }
+  
+  return err;
+}
+
+#pragma mark -
 
 //-------------------------------------------------------------------------
 //
@@ -74,6 +147,7 @@ nsMacControl::nsMacControl()
 	mMouseInButton	= PR_FALSE;
 
 	mControl		= nsnull;
+	mControlEventHandler = nsnull;
 	mControlType	= pushButProc;
 
 	mLastBounds.SetRect(0,0,0,0);
@@ -115,7 +189,7 @@ nsMacControl::~nsMacControl()
 	if (mControl)
 	{
 		Show(PR_FALSE);
-		::DisposeControl(mControl);
+		ClearControl();
 		mControl = nsnull;
 	}
 }
@@ -339,21 +413,23 @@ ControlPartCode nsMacControl::GetControlHiliteState()
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsMacControl::CreateOrReplaceMacControl(short inControlType)
+nsresult nsMacControl::CreateOrReplaceMacControl(short inControlType)
 {
 	nsRect		controlRect;
 	GetRectForMacControl(controlRect);
 	Rect macRect;
 	nsRectToMacRect(controlRect, macRect);
 
-	if(nsnull != mWindowPtr)
+	if (nsnull != mWindowPtr)
 	{
-		if (mControl)
-			::DisposeControl(mControl);
+		ClearControl();
 
 		StartDraw();
 		mControl = ::NewControl(mWindowPtr, &macRect, "\p", mVisible, mValue, mMin, mMax, inControlType, nil);
-  		EndDraw();
+		EndDraw();
+		
+		if (mControl)
+			InstallEventHandlerOnControl();
 		
 		// need to reset the font now
 		// XXX to do: transfer the text in the old control over too
@@ -366,6 +442,47 @@ NS_METHOD nsMacControl::CreateOrReplaceMacControl(short inControlType)
 	return (mControl) ? NS_OK : NS_ERROR_NULL_POINTER;
 }
 
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void nsMacControl::ClearControl()
+{
+	RemoveEventHandlerFromControl();
+	if (mControl)
+	{
+		::DisposeControl(mControl);
+		mControl = nsnull;
+	}
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+DEFINE_ONE_SHOT_HANDLER_GETTER(MacControlDrawHandler)
+
+OSStatus nsMacControl::InstallEventHandlerOnControl()
+{ 
+	return ::InstallControlEventHandler(mControl,
+		GetMacControlDrawHandlerUPP(),
+		GetEventTypeCount(kControlEventList), kControlEventList,
+		(void*)this, &mControlEventHandler);
+}
+
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void nsMacControl::RemoveEventHandlerFromControl()
+{
+	if (mControlEventHandler)
+	{
+		::RemoveEventHandler(mControlEventHandler);
+		mControlEventHandler = nsnull;
+	}
+}
 
 //-------------------------------------------------------------------------
 //
