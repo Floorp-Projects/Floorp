@@ -686,7 +686,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, (kSelf|kFlowEntity), kNone,
-    /*special props, prop-range*/       kNoStyleLeaksIn|kRequiresBody, kNoPropRange,
+    /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
