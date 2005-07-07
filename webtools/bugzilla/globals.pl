@@ -468,19 +468,30 @@ sub CanEnterProduct {
     }
 
     # Check if the product is open for new bugs and has
-    # at least one component.
-    my $allow_new_bugs =
-        $dbh->selectrow_array("SELECT CASE WHEN disallownew = 0 THEN 1 ELSE 0 END
-                               FROM products INNER JOIN components
-                               ON components.product_id = products.id
-                               WHERE products.name = ? " .
-                               $dbh->sql_limit(1),
-                               undef, $productname);
+    # at least one component and has at least one version.
+    my ($allow_new_bugs, $has_version) = 
+        $dbh->selectrow_array('SELECT CASE WHEN disallownew = 0 THEN 1 ELSE 0 END, ' .
+                              'versions.value IS NOT NULL ' .
+                              'FROM products INNER JOIN components ' .
+                              'ON components.product_id = products.id ' .
+                              'LEFT JOIN versions ' .
+                              'ON versions.product_id = products.id ' .
+                              'WHERE products.name = ? ' .
+                              $dbh->sql_limit(1), undef, $productname);
 
-    # Return 1 if the user can enter bugs into that product;
-    # return 0 if the product is closed for new bug entry;
-    # return undef if the product has no component.
-    return $allow_new_bugs;
+
+    if (defined $verbose) {
+        # Return (undef, undef) if the product has no components,
+        # Return (?,     0)     if the product has no versions,
+        # Return (0,     ?)     if the product is closed for new bug entry,
+        # Return (1,     1)     if the user can enter bugs into the product,
+        return ($allow_new_bugs, $has_version);
+    } else {
+        # Return undef if the product has no components
+        # Return 0 if the product has no versions, or is closed for bug entry
+        # Return 1 if the user can enter bugs into the product
+        return ($allow_new_bugs && $has_version);
+    }
 }
 
 # Call CanEnterProduct() and display an error message
@@ -491,17 +502,23 @@ sub CanEnterProductOrWarn {
     if (!defined($product)) {
         ThrowUserError("no_products");
     }
-    my $status = CanEnterProduct($product, 1);
+    my ($allow_new_bugs, $has_version) = CanEnterProduct($product, 1);
     trick_taint($product);
 
-    if (!defined($status)) {
-        ThrowUserError("no_components", { product => $product});
-    } elsif (!$status) {
+    if (!defined $allow_new_bugs) {
+        ThrowUserError("missing_version_or_component", 
+                       { product      => $product,
+                         missing_item => 'Component' })
+    } elsif (!$allow_new_bugs) {
         ThrowUserError("product_disabled", { product => $product});
-    } elsif ($status < 0) {
+    } elsif ($allow_new_bugs < 0) {
         ThrowUserError("entry_access_denied", { product => $product});
+    } elsif (!$has_version) {
+        ThrowUserError("missing_version_or_component", 
+                       { product      => $product,
+                         missing_item => 'Version' });
     }
-    return $status;
+    return 1;
 }
 
 sub GetEnterableProducts {

@@ -746,7 +746,21 @@
   [% ELSIF error == "missing_category" %]
     [% title = "Missing Category" %]
     You did not specify a category for this series.
-                
+
+  [% ELSIF error == "missing_version_or_component" %]
+    [% title = BLOCK %]Missing [% missing_item FILTER none %][% END %]
+    Sorry; there needs to be at least one [% missing_item FILTER lower %]
+    associated with the product <em>[% product FILTER html %]</em> in order to
+    create a new [% terms.bug %].
+    [% IF UserInGroup("editcomponents") %]
+      <a href="edit[% missing_item FILTER lower %]s.cgi?product=
+      [%- product FILTER url_quote %]">Create a new
+      [%+ missing_item FILTER lower %]</a>.
+    [% ELSE %]
+       Please contact [% Param("maintainer") %], giving the name of
+       the product in which you tried to create a new [% terms.bug %].
+    [% END %]
+
   [% ELSIF error == "missing_content_type" %]
     [% title = "Missing Content-Type" %]
      You asked [% terms.Bugzilla %] to auto-detect the content type, but
@@ -824,18 +838,6 @@
     [% title = "Action Not Permitted" %]
     You cannot change the component for a list of [% terms.bugs %] covering more than
     one product.
-
-  [% ELSIF error == "no_components" %]
-    [% title = "No Components" %]
-    Sorry; there needs to be at least one component for this product in order
-    to create a new [% terms.bug %].
-    [% IF UserInGroup("editcomponents") %]
-      <a href="editcomponents.cgi?product=[% product FILTER url_quote %]">Create
-        a new component</a>.
-    [% ELSE %]
-       Please contact [% Param("maintainer") %], giving the name of
-       the product in which you tried to create a new [% terms.bug %].
-    [% END %]
 
   [% ELSIF error == "no_dupe_stats" %]
     [% title = "Cannot Find Duplicate Statistics" %]
