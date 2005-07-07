@@ -142,7 +142,7 @@ ValidateComment(scalar $cgi->param('comment'));
 # is a bug alias that gets converted to its corresponding bug ID
 # during validation.
 foreach my $field ("dependson", "blocked") {
-    if (defined $cgi->param($field) && $cgi->param($field) ne "") {
+    if ($cgi->param($field)) {
         my @validvalues;
         foreach my $id (split(/[\s,]+/, $cgi->param($field))) {
             next unless $id;
@@ -1319,71 +1319,11 @@ foreach my $id (@idlist) {
           || ThrowTemplateError($template->error());
         exit;
     }
-        
-    my %deps;
-    if (defined $cgi->param('dependson')) {
-        my $me = "blocked";
-        my $target = "dependson";
-        my %deptree;
-        for (1..2) {
-            $deptree{$target} = [];
-            my %seen;
-            foreach my $i (split('[\s,]+', $cgi->param($target))) {
-                next if $i eq "";
-                
-                if ($id eq $i) {
-                    ThrowUserError("dependency_loop_single");
-                }
-                if (!exists $seen{$i}) {
-                    push(@{$deptree{$target}}, $i);
-                    $seen{$i} = 1;
-                }
-            }
-            # populate $deps{$target} as first-level deps only.
-            # and find remainder of dependency tree in $deptree{$target}
-            @{$deps{$target}} = @{$deptree{$target}};
-            my @stack = @{$deps{$target}};
-            while (@stack) {
-                my $i = shift @stack;
-                SendSQL("SELECT $target FROM dependencies WHERE $me = " .
-                        SqlQuote($i));
-                while (MoreSQLData()) {
-                    my $t = FetchOneColumn();
-                    # ignore any _current_ dependencies involving this bug,
-                    # as they will be overwritten with data from the form.
-                    if ($t != $id && !exists $seen{$t}) {
-                        push(@{$deptree{$target}}, $t);
-                        push @stack, $t;
-                        $seen{$t} = 1;
-                    }
-                }
-            }
 
-            if ($me eq 'dependson') {
-                my @deps   =  @{$deptree{'dependson'}};
-                my @blocks =  @{$deptree{'blocked'}};
-                my @union = ();
-                my @isect = ();
-                my %union = ();
-                my %isect = ();
-                foreach my $b (@deps, @blocks) { $union{$b}++ && $isect{$b}++ }
-                @union = keys %union;
-                @isect = keys %isect;
-                if (@isect > 0) {
-                    my $both;
-                    foreach my $i (@isect) {
-                       $both = $both . GetBugLink($i, "#" . $i) . " ";
-                    }
-
-                    ThrowUserError("dependency_loop_multi",
-                                   { both => $both });
-                }
-            }
-            my $tmp = $me;
-            $me = $target;
-            $target = $tmp;
-        }
-    }
+    # Gather the dependency list, and make sure there are no circular refs
+    my %deps = Bugzilla::Bug::ValidateDependencies($cgi->param('dependson'),
+                                                   $cgi->param('blocked'),
+                                                   $id);
 
     #
     # Start updating the relevant database entries
@@ -1567,7 +1507,7 @@ foreach my $id (@idlist) {
                                                   undef, $id)};
         @dependencychanged{@oldlist} = 1;
 
-        if (defined $cgi->param('dependson')) {
+        if (defined $cgi->param($target)) {
             my %snapshot;
             my @newlist = sort {$a <=> $b} @{$deps{$target}};
             @dependencychanged{@newlist} = 1;

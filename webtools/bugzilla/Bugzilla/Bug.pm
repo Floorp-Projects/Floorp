@@ -1037,6 +1037,78 @@ sub ValidateBugAlias {
     $_[0] = $alias;
 }
 
+# Validate and return a hash of dependencies
+sub ValidateDependencies($$$) {
+    my $fields = {};
+    $fields->{'dependson'} = shift;
+    $fields->{'blocked'} = shift;
+    my $id = shift || 0;
+
+    unless (defined($fields->{'dependson'})
+            || defined($fields->{'blocked'}))
+    {
+        return;
+    }
+
+    my $dbh = Bugzilla->dbh;
+    my %deps;
+    my %deptree;
+    foreach my $pair (["blocked", "dependson"], ["dependson", "blocked"]) {
+        my ($me, $target) = @{$pair};
+        $deptree{$target} = [];
+        $deps{$target} = [];
+        next unless $fields->{$target};
+
+        my %seen;
+        foreach my $i (split('[\s,]+', $fields->{$target})) {
+            if ($id == $i) {
+                ThrowUserError("dependency_loop_single");
+            }
+            if (!exists $seen{$i}) {
+                push(@{$deptree{$target}}, $i);
+                $seen{$i} = 1;
+            }
+        }
+        # populate $deps{$target} as first-level deps only.
+        # and find remainder of dependency tree in $deptree{$target}
+        @{$deps{$target}} = @{$deptree{$target}};
+        my @stack = @{$deps{$target}};
+        while (@stack) {
+            my $i = shift @stack;
+            my $dep_list =
+                $dbh->selectcol_arrayref("SELECT $target
+                                          FROM dependencies
+                                          WHERE $me = ?", undef, $i);
+            foreach my $t (@$dep_list) {
+                # ignore any _current_ dependencies involving this bug,
+                # as they will be overwritten with data from the form.
+                if ($t != $id && !exists $seen{$t}) {
+                    push(@{$deptree{$target}}, $t);
+                    push @stack, $t;
+                    $seen{$t} = 1;
+                }
+            }
+        }
+    }
+
+    my @deps   = @{$deptree{'dependson'}};
+    my @blocks = @{$deptree{'blocked'}};
+    my @union = ();
+    my @isect = ();
+    my %union = ();
+    my %isect = ();
+    foreach my $b (@deps, @blocks) { $union{$b}++ && $isect{$b}++ }
+    @union = keys %union;
+    @isect = keys %isect;
+    if (scalar(@isect) > 0) {
+        my $both = "";
+        foreach my $i (@isect) {
+           $both .= &::GetBugLink($i, "#" . $i) . " ";
+        }
+        ThrowUserError("dependency_loop_multi", { both => $both });
+    }
+    return %deps;
+}
 
 sub AUTOLOAD {
   use vars qw($AUTOLOAD);

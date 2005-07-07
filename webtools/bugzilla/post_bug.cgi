@@ -264,8 +264,7 @@ if ($cgi->param('keywords') && UserInGroup("editbugs")) {
 
 # Check for valid dependency info. 
 foreach my $field ("dependson", "blocked") {
-    if (UserInGroup("editbugs") && defined($cgi->param($field)) &&
-        $cgi->param($field) ne "") {
+    if (UserInGroup("editbugs") && $cgi->param($field)) {
         my @validvalues;
         foreach my $id (split(/[\s,]+/, $cgi->param($field))) {
             next unless $id;
@@ -275,63 +274,12 @@ foreach my $field ("dependson", "blocked") {
         $cgi->param(-name => $field, -value => join(",", @validvalues));
     }
 }
-# Gather the dependecy list, and make sure there are no circular refs
+# Gather the dependency list, and make sure there are no circular refs
 my %deps;
-if (UserInGroup("editbugs") && defined($cgi->param('dependson'))) {
-    my $me = "blocked";
-    my $target = "dependson";
-    my %deptree;
-    for (1..2) {
-        $deptree{$target} = [];
-        my %seen;
-        foreach my $i (split('[\s,]+', $cgi->param($target))) {
-            if (!exists $seen{$i}) {
-                push(@{$deptree{$target}}, $i);
-                $seen{$i} = 1;
-            }
-        }
-        # populate $deps{$target} as first-level deps only.
-        # and find remainder of dependency tree in $deptree{$target}
-        @{$deps{$target}} = @{$deptree{$target}};
-        my @stack = @{$deps{$target}};
-        while (@stack) {
-            my $i = shift @stack;
-            SendSQL("SELECT $target FROM dependencies WHERE $me = " .
-                    SqlQuote($i));
-            while (MoreSQLData()) {
-                my $t = FetchOneColumn();
-                if (!exists $seen{$t}) {
-                    push(@{$deptree{$target}}, $t);
-                    push @stack, $t;
-                    $seen{$t} = 1;
-                } 
-            }
-        }
-        
-        if ($me eq 'dependson') {
-            my @deps   =  @{$deptree{'dependson'}};
-            my @blocks =  @{$deptree{'blocked'}};
-            my @union = ();
-            my @isect = ();
-            my %union = ();
-            my %isect = ();
-            foreach my $b (@deps, @blocks) { $union{$b}++ && $isect{$b}++ }
-            @union = keys %union;
-            @isect = keys %isect;
-            if (@isect > 0) {
-                my $both;
-                foreach my $i (@isect) {
-                    $both = $both . GetBugLink($i, "#" . $i) . " ";
-                }
-
-                ThrowUserError("dependency_loop_multi",
-                               { both => $both });
-            }
-        }
-        my $tmp = $me;
-        $me = $target;
-        $target = $tmp;
-    }
+if (UserInGroup("editbugs")) {
+    %deps = Bugzilla::Bug::ValidateDependencies($cgi->param('dependson'),
+                                                $cgi->param('blocked'),
+                                                undef);
 }
 
 # get current time
@@ -473,10 +421,10 @@ if (UserInGroup("editbugs")) {
                 " keywords = " . SqlQuote(join(', ', @list)) .
                 " WHERE bug_id = $id");
     }
-    if (defined $cgi->param('dependson')) {
-        my $me = "blocked";
-        my $target = "dependson";
-        for (1..2) {
+    if ($cgi->param('dependson') || $cgi->param('blocked')) {
+        foreach my $pair (["blocked", "dependson"], ["dependson", "blocked"]) {
+            my ($me, $target) = @{$pair};
+
             foreach my $i (@{$deps{$target}}) {
                 SendSQL("INSERT INTO dependencies ($me, $target) values " .
                         "($id, $i)");
@@ -484,9 +432,6 @@ if (UserInGroup("editbugs")) {
                 # Log the activity for the other bug:
                 LogActivityEntry($i, $me, "", $id, $user->id, $timestamp);
             }
-            my $tmp = $me;
-            $me = $target;
-            $target = $tmp;
         }
     }
 }
