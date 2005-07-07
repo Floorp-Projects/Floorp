@@ -68,7 +68,7 @@
 </vbox>
 
 <deck id="displayDeck">
-  <deck flex="1" collapsed="true" id="calendar-view-box">
+  <deck flex="1" id="calendar-view-box">
     <calendar-month-view id="calendar-month-view" flex="1"/>
     <calendar-multiday-view orient="vertical" id="calendar-multiday-view" flex="1"/>
   </deck>

@@ -142,8 +142,8 @@ function selectedCalendarPane(event)
 
     // give the view the calendar, but make sure that everything
     // has uncollapsed first before we try to relayout!
-    showCalendar(today());
-    //setTimeout(function() { showCalendar(today()); }, 0);
+    // showCalendar(today());
+    setTimeout(function() { showCalendar(today()); }, 0);
 }
 
 function LtnObserveDisplayDeckChange(event)
@@ -155,11 +155,9 @@ function LtnObserveDisplayDeckChange(event)
         GetMessagePane().collapsed = true;
         document.getElementById("threadpane-splitter").collapsed = true;
         gSearchBox.collapsed = true;
-        document.getElementById("calendar-view-box").collapsed = false;
+        deck.selectedPanel.style.visibility = "";
     } else {
-        document.getElementById("calendar-view-box").collapsed = true;
-        // Later: mark the view as not needing reflow due to new events coming
-        // in, for better performance and batching.
+        document.getElementById("calendar-view-box").style.visibility = "collapse";
     }
 }
 
