@@ -535,6 +535,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   internalDownload->SetDownloadManager(this);
   internalDownload->SetTarget(aTarget);
   internalDownload->SetSource(aSource);
+  internalDownload->SetTempFile(aTempFile);
 
   // The path is the uniquifier of the download resource. 
   // XXXben - this is a little risky - really we should be using anonymous
@@ -712,22 +713,6 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
 
   internalDownload->SetDownloadState(nsIDownloadManager::DOWNLOAD_CANCELED);
 
-  // xxxmpc - this is a bit of a hack to delete the .part file
-  // created in nsExternalHelperAppService.cpp
-  nsCOMPtr<nsILocalFile> targetFile;
-  rv = internalDownload->GetTargetFile(getter_AddRefs(targetFile));
-  if (NS_FAILED(rv)) return rv;
-
-  nsAutoString leafName;
-  targetFile->GetLeafName(leafName);
-  leafName.Append(NS_LITERAL_STRING(".part"));
-  targetFile->SetLeafName(leafName);
-
-  PRBool exists;
-  targetFile->Exists(&exists);
-  if (exists)
-    targetFile->Remove(PR_FALSE);
-
   // Cancel using the provided object
   nsCOMPtr<nsICancelable> cancelable;
   internalDownload->GetCancelable(getter_AddRefs(cancelable));
@@ -735,6 +720,16 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
     cancelable->Cancel(NS_BINDING_ABORTED);
 
   DownloadEnded(aPath, nsnull);
+
+  // dump the temp file.  This should really be done when the transfer
+  // is cancelled, but there's other cancelallation causes that shouldn't 
+  // remove this, we need to improve those bits
+  nsCOMPtr<nsILocalFile> tempFile;
+  rv = internalDownload->GetTempFile(getter_AddRefs(tempFile));
+  PRBool exists;
+  tempFile->Exists(&exists);
+  if (exists)
+    tempFile->Remove(PR_FALSE);
 
   gObserverService->NotifyObservers(internalDownload, "dl-cancel", nsnull);
 
@@ -1849,6 +1844,21 @@ nsDownload::GetDialog(nsIProgressDialog** aDialog)
 {
   *aDialog = mDialog;
   NS_IF_ADDREF(*aDialog);
+  return NS_OK;
+}
+
+nsresult
+nsDownload::SetTempFile(nsILocalFile* aTempFile)
+{
+  mTempFile = aTempFile;
+  return NS_OK;
+}
+
+nsresult
+nsDownload::GetTempFile(nsILocalFile** aTempFile)
+{
+  *aTempFile = mTempFile;
+  NS_IF_ADDREF(*aTempFile);
   return NS_OK;
 }
 
