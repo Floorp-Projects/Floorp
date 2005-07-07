@@ -6,6 +6,7 @@ calendar-todo-item {
     -moz-binding: url("calendar-todo-list.xml#calendar-todo-item");
 }
 
-.calendar-todo-item-label {
-    -moz-box-align: inherit;
+.calendar-todo-item-label, .calendar-todo-item-checkbox {
+    -moz-box-align: center;
+    margin: 0px;
 }

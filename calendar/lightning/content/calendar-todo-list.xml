@@ -154,7 +154,7 @@
 
     <binding id="calendar-todo-item" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
         <content>
-            <xul:hbox flex="1">
+            <xul:hbox align="center" flex="1">
                 <xul:checkbox class="calendar-todo-item-checkbox" anonid="todo-check" xbl:inherits="checked=completed" oncommand="document.getBindingParent(this).updateTodoFromDisplay();"/>
                 <xul:label class="calendar-todo-item-label" anonid="todo-label" crop="end" xbl:inherits="item-calendar,value=label"/>
             </xul:hbox>

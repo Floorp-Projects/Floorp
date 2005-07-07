@@ -7,20 +7,32 @@ function eventToTodo(event)
     }
 }
 
-function handleTodoListEvent(event)
+function editTodoItem(event)
 {
     var todo = eventToTodo(event);
-    var name = todo ? ('"' + todo.title + '"') : "<none>";
-    dump("Todo list event: " + event.type + " (" + name + ")\n");
+    if (todo)
+        modifyEventWithDialog(todo);
+}
+
+function newTodoItem(event)
+{
+    createTodoWithDialog();
+}
+
+function deleteTodoItem(event)
+{
+    var todo = eventToTodo(event);
+    if (todo)
+        todo.calendar.deleteItem(todo, null);
 }
 
 function initializeTodoList()
 {
     var todoList = document.getElementById("calendar-todo-list");
     todoList.calendar = getCompositeCalendar();
-    todoList.addEventListener("todo-item-open", handleTodoListEvent, false);
-    todoList.addEventListener("todo-item-delete", handleTodoListEvent, false);
-    todoList.addEventListener("todo-empty-dblclick", handleTodoListEvent, false);
+    todoList.addEventListener("todo-item-open", editTodoItem, false);
+    todoList.addEventListener("todo-item-delete", deleteTodoItem, false);
+    todoList.addEventListener("todo-empty-dblclick", newTodoItem, false);
 }
 
 window.addEventListener("load", initializeTodoList, false);
