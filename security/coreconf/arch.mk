@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+# 		Howard Chu <hyc@symas.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -261,6 +262,24 @@ ifeq (CYGWIN_NT,$(findstring CYGWIN_NT,$(OS_ARCH)))
 	CPU_ARCH := $(shell uname -m)
 	#
 	# Cygwin's uname -m returns "i686" on a Pentium Pro machine.
+	#
+	ifneq (,$(findstring 86,$(CPU_ARCH)))
+	    CPU_ARCH = x386
+	endif
+    endif
+endif
+#
+# If uname -s returns "MINGW32_NT-5.1", we assume that we are using
+# the uname.exe in the MSYS toolkit.
+#
+ifeq (MINGW32_NT,$(findstring MINGW32_NT,$(OS_ARCH)))
+    OS_RELEASE := $(patsubst MINGW32_NT-%,%,$(OS_ARCH))
+    OS_ARCH = WINNT
+    USE_MSYS = 1
+    ifndef CPU_ARCH
+	CPU_ARCH := $(shell uname -m)
+	#
+	# MSYS's uname -m returns "i686" on a Pentium Pro machine.
 	#
 	ifneq (,$(findstring 86,$(CPU_ARCH)))
 	    CPU_ARCH = x386
