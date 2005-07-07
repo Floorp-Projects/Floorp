@@ -77,7 +77,8 @@ public:
   NS_IMETHOD  GetPageScrollDistances(nsSize *aDistances);
   NS_IMETHOD  ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPagesY);
   NS_IMETHOD  ScrollByWhole(PRBool aTop);
-  
+  NS_IMETHOD  CanScroll(PRBool aHorizontal, PRBool aForward, PRBool &aResult);
+
   NS_IMETHOD_(nsIView*) View();
 
   NS_IMETHOD  AddScrollPositionListener(nsIScrollPositionListener* aListener);
