@@ -100,8 +100,7 @@ if ($userid) {
                 }
                 $dbh->bz_unlock_tables();
             }
-            $cgi->send_cookie(-name => $cookiename,
-                              -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
+            $cgi->remove_cookie($cookiename);
         }
     }
 }

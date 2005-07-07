@@ -232,12 +232,8 @@ sub logout {
 
 sub clear_browser_cookies {
     my $cgi = Bugzilla->cgi;
-    $cgi->send_cookie(-name => "Bugzilla_login",
-                      -value => "",
-                      -expires => "Tue, 15-Sep-1998 21:49:00 GMT");
-    $cgi->send_cookie(-name => "Bugzilla_logincookie",
-                      -value => "",
-                      -expires => "Tue, 15-Sep-1998 21:49:00 GMT");
+    $cgi->remove_cookie('Bugzilla_login');
+    $cgi->remove_cookie('Bugzilla_logincookie');
 }
 
 1;

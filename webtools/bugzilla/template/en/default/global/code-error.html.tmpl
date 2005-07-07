@@ -86,6 +86,9 @@
     Charts will not work without the Chart::Lines Perl module being installed.
     Run checksetup.pl for installation instructions.
 
+  [% ELSIF error == "cookies_need_value" %]
+    Every cookie must have a value.
+
   [% ELSIF error == "field_type_mismatch" %]
     Cannot seem to handle <code>[% field FILTER html %]</code>
     and <code>[% type FILTER html %]</code> together.

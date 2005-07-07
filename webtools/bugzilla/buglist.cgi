@@ -707,8 +707,7 @@ if ($order) {
                 else {
                     my $vars = { fragment => $fragment };
                     if ($order_from_cookie) {
-                        $cgi->send_cookie(-name => 'LASTORDER',
-                                          -expires => 'Tue, 15-Sep-1998 21:49:00 GMT');
+                        $cgi->remove_cookie('LASTORDER');
                         ThrowCodeError("invalid_column_name_cookie", $vars);
                     }
                     else {
@@ -1020,8 +1019,7 @@ if ($format->{'extension'} eq "html") {
                           -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
     }
     else {
-        $cgi->send_cookie(-name => 'BUGLIST',
-                          -expires => 'Tue, 15-Sep-1998 21:49:00 GMT');
+        $cgi->remove_cookie('BUGLIST');
         $vars->{'toolong'} = 1;
     }
 

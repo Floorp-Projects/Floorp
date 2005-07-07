@@ -19,6 +19,7 @@
 #
 # Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Byron Jones <bugzilla@glob.com.au>
+#                 Marc Schumann <wurblzap@gmail.com>
 
 use strict;
 
@@ -28,6 +29,7 @@ use CGI qw(-no_xhtml -oldstyle_urls :private_tempfiles :unique_headers SERVER_PU
 
 use base qw(CGI);
 
+use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Config;
 
@@ -177,21 +179,42 @@ sub multipart_start {
 sub send_cookie {
     my $self = shift;
 
-    # Add the default path in
-    unshift(@_, '-path' => Param('cookiepath'));
-    if (Param('cookiedomain'))
-    {
-        unshift(@_, '-domain' => Param('cookiedomain'));
+    # Move the param list into a hash for easier handling.
+    my %paramhash;
+    my @paramlist;
+    my ($key, $value);
+    while ($key = shift) {
+        $value = shift;
+        $paramhash{$key} = $value;
     }
 
-    # Use CGI::Cookie directly, because CGI.pm's |cookie| method gives the
-    # current value if there isn't a -value attribute, which happens when
-    # we're expiring an entry.
-    require CGI::Cookie;
-    my $cookie = CGI::Cookie->new(@_);
-    push @{$self->{Bugzilla_cookie_list}}, $cookie;
+    # Complain if -value is not given or empty (bug 268146).
+    if (!exists($paramhash{'-value'}) || !$paramhash{'-value'}) {
+        ThrowCodeError('cookies_need_value');
+    }
 
-    return;
+    # Add the default path and the domain in.
+    $paramhash{'-path'} = Param('cookiepath');
+    $paramhash{'-domain'} = Param('cookiedomain') if Param('cookiedomain');
+
+    # Move the param list back into an array for the call to cookie().
+    foreach (keys(%paramhash)) {
+        unshift(@paramlist, $_ => $paramhash{$_});
+    }
+
+    push(@{$self->{'Bugzilla_cookie_list'}}, $self->cookie(@paramlist));
+}
+
+# Cookies are removed by setting an expiry date in the past.
+# This method is a send_cookie wrapper doing exactly this.
+sub remove_cookie {
+    my $self = shift;
+    my ($cookiename) = (@_);
+
+    # Expire the cookie, giving a non-empty dummy value (bug 268146).
+    $self->send_cookie('-name'    => $cookiename,
+                       '-expires' => 'Tue, 15-Sep-1998 21:49:00 GMT',
+                       '-value'   => 'X');
 }
 
 # Redirect to https if required
@@ -256,11 +279,21 @@ Values in C<@exclude> are not included in the result.
 
 =item C<send_cookie>
 
-This routine is identical to CGI.pm's C<cookie> routine, except that the cookie
-is sent to the browser, rather than returned. This should be used by all
-Bugzilla code (instead of C<cookie> or the C<-cookie> argument to C<header>),
-so that under mod_perl the headers can be sent correctly, using C<print> or
-the mod_perl APIs as appropriate.
+This routine is identical to the cookie generation part of CGI.pm's C<cookie>
+routine, except that it knows about Bugzilla's cookie_path and cookie_domain
+parameters and takes them into account if necessary.
+This should be used by all Bugzilla code (instead of C<cookie> or the C<-cookie>
+argument to C<header>), so that under mod_perl the headers can be sent
+correctly, using C<print> or the mod_perl APIs as appropriate.
+
+To remove (expire) a cookie, use C<remove_cookie>.
+
+=item C<remove_cookie>
+
+This is a wrapper around send_cookie, setting an expiry date in the past,
+effectively removing the cookie.
+
+As its only argument, it takes the name of the cookie to expire.
 
 =item C<require_https($baseurl)>
 
