@@ -324,10 +324,10 @@ function Statement(t, x) {
     // common semicolon insertion magic after this switch.
     switch (tt) {
       case FUNCTION:
-        return FunctionDeclaration(t, x, true,
-                                   (x.stmtStack.length > 1)
-                                   ? STATEMENT_FORM
-                                   : DECLARED_FORM);
+        return FunctionDefinition(t, x, true,
+                                  (x.stmtStack.length > 1)
+                                  ? STATEMENT_FORM
+                                  : DECLARED_FORM);
 
       case LEFT_CURLY:
         n = Statements(t, x);
@@ -563,7 +563,7 @@ function Statement(t, x) {
     return n;
 }
 
-function FunctionDeclaration(t, x, requireName, functionForm) {
+function FunctionDefinition(t, x, requireName, functionForm) {
     var f = new Node(t);
     if (f.type != FUNCTION)
         f.type = (f.value == "get") ? GETTER : SETTER;
@@ -804,7 +804,7 @@ loop:
           case FUNCTION:
             if (!t.scanOperand)
                 break loop;
-            operands.push(FunctionDeclaration(t, x, false, EXPRESSED_FORM));
+            operands.push(FunctionDefinition(t, x, false, EXPRESSED_FORM));
             t.scanOperand = false;
             break;
 
@@ -865,7 +865,7 @@ loop:
                         t.peek() == IDENTIFIER) {
                         if (x.ecmaStrictMode)
                             throw t.newSyntaxError("Illegal property accessor");
-                        n.push(FunctionDeclaration(t, x, true, EXPRESSED_FORM));
+                        n.push(FunctionDefinition(t, x, true, EXPRESSED_FORM));
                     } else {
                         switch (tt) {
                           case IDENTIFIER:
