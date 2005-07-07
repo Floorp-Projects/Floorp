@@ -904,13 +904,17 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
                   // wrong. So we collect the whole tag as misplaced in one
                   // gulp. Note that the tokenizer guarantees that there will
                   // be an end tag.
-                  while (aToken->GetTokenType() != eToken_end ||
-                         aToken->GetTypeID() != theTag) {
-                    aToken = NS_STATIC_CAST(CHTMLToken *, mTokenizer->PopToken());
-                    PushIntoMisplacedStack(aToken);
+                  CToken *current = aToken;
+                  while (current->GetTokenType() != eToken_end ||
+                         current->GetTypeID() != theTag) {
+                    current = NS_STATIC_CAST(CToken *, mTokenizer->PopToken());
+                    NS_ASSERTION(current, "The tokenizer is not creating good "
+                                          "alternate tags");
+                    PushIntoMisplacedStack(current);
                   }
 
-                  return result;
+                  // XXX Add code to also collect incorrect attributes on the
+                  // end tag.
                 }
 
                 if(DoesRequireBody(aToken,mTokenizer)) {
