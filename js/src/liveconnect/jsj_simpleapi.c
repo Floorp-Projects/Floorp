@@ -97,7 +97,7 @@ default_create_java_vm(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
 
     /* Prepend the classpath argument to the default JVM classpath */
     if (user_classpath) {
-#if defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_MAC)
+#if defined(XP_UNIX) || defined(XP_BEOS)
         full_classpath = JS_smprintf("%s:%s", user_classpath, vm_args.classpath);
 #else
         full_classpath = JS_smprintf("%s;%s", user_classpath, vm_args.classpath);

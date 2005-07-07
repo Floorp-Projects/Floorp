@@ -306,7 +306,7 @@ init_java_VM_reflection(JSJavaVM *jsjava_vm, JNIEnv *jEnv)
     return JS_TRUE;
 }
 
-#if defined(XP_MAC) || !defined(OJI) 
+#if !defined(OJI) 
 
 /**
  * Workaround for the fact that MRJ loads a different instance of the shared library.
@@ -359,7 +359,7 @@ init_netscape_java_classes(JSJavaVM *jsjava_vm, JNIEnv *jEnv)
     LOAD_CLASS(netscape/javascript/JSException, njJSException);
     LOAD_CLASS(netscape/javascript/JSUtil,      njJSUtil);
 
-#if defined(XP_MAC) || !defined(OJI) 
+#if !defined(OJI) 
     JSObject_RegisterNativeMethods(jEnv);
 #endif
 

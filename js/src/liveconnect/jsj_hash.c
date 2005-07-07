@@ -74,40 +74,24 @@
 static void *
 DefaultAllocTable(void *pool, size_t size)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
     return malloc(size);
 }
 
 static void
 DefaultFreeTable(void *pool, void *item)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
     free(item);
 }
 
 static JSJHashEntry *
 DefaultAllocEntry(void *pool, const void *key)
 {
-#if defined(XP_MAC)
-#pragma unused (pool,key)
-#endif
-
     return malloc(sizeof(JSJHashEntry));
 }
 
 static void
 DefaultFreeEntry(void *pool, JSJHashEntry *he, JSUintn flag)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
     if (flag == HT_FREE_ENTRY)
         free(he);
 }

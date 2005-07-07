@@ -62,19 +62,6 @@
 #include <winbase.h>
 #endif
 
-#ifdef XP_MAC
-#include <OSUtils.h>
-#include <TextUtils.h>
-#include <Resources.h>
-#include <Timer.h>
-#include <UTCUtils.h>
-#include <Power.h>
-#include <CodeFragments.h>
-#if !TARGET_CARBON
-#include <Traps.h>
-#endif
-#endif
-
 #if defined(XP_UNIX) || defined(XP_BEOS)
 
 #ifdef _SVID_GETTOD   /* Defined only on Solaris, see Solaris <sys/types.h> */
@@ -84,128 +71,6 @@ extern int gettimeofday(struct timeval *tv);
 #include <sys/time.h>
 
 #endif /* XP_UNIX */
-
-#ifdef XP_MAC
-static uint64 			 dstLocalBaseMicroseconds;
-static unsigned long	 gJanuaryFirst1970Seconds;
-
-static void MacintoshInitializeTime(void)
-{
-    uint64					upTime;
-    unsigned long			currentLocalTimeSeconds,
-	   startupTimeSeconds;
-    uint64				startupTimeMicroSeconds;
-    uint32				upTimeSeconds;
-    uint64				oneMillion, upTimeSecondsLong, microSecondsToSeconds;
-    DateTimeRec				firstSecondOfUnixTime;
-
-    /*
-     * Figure out in local time what time the machine started up. This information can be added to
-     * upTime to figure out the current local time as well as GMT.
-     */
-
-    Microseconds((UnsignedWide*)&upTime);
-
-    GetDateTime(&currentLocalTimeSeconds);
-
-    JSLL_I2L(microSecondsToSeconds, PRMJ_USEC_PER_SEC);
-    JSLL_DIV(upTimeSecondsLong, upTime, microSecondsToSeconds);
-    JSLL_L2I(upTimeSeconds, upTimeSecondsLong);
-
-    startupTimeSeconds = currentLocalTimeSeconds - upTimeSeconds;
-
-    /*  Make sure that we normalize the macintosh base seconds to the unix base of January 1, 1970.
-     */
-
-    firstSecondOfUnixTime.year = 1970;
-    firstSecondOfUnixTime.month = 1;
-    firstSecondOfUnixTime.day = 1;
-    firstSecondOfUnixTime.hour = 0;
-    firstSecondOfUnixTime.minute = 0;
-    firstSecondOfUnixTime.second = 0;
-    firstSecondOfUnixTime.dayOfWeek = 0;
-
-    DateToSeconds(&firstSecondOfUnixTime, &gJanuaryFirst1970Seconds);
-
-    startupTimeSeconds -= gJanuaryFirst1970Seconds;
-
-    /*  Now convert the startup time into a wide so that we can figure out GMT and DST.
-     */
-
-    JSLL_I2L(startupTimeMicroSeconds, startupTimeSeconds);
-    JSLL_I2L(oneMillion, PRMJ_USEC_PER_SEC);
-    JSLL_MUL(dstLocalBaseMicroseconds, oneMillion, startupTimeMicroSeconds);
-}
-
-static SleepQRec  gSleepQEntry = { NULL, sleepQType, NULL, 0 };
-static JSBool     gSleepQEntryInstalled = JS_FALSE;
-
-static pascal long MySleepQProc(long message, SleepQRecPtr sleepQ)
-{
-    /* just woke up from sleeping, so must recompute dstLocalBaseMicroseconds. */
-    if (message == kSleepWakeUp)
-        MacintoshInitializeTime();
-    return 0;
-}
-
-/* Because serial port and SLIP conflict with ReadXPram calls,
- * we cache the call here
- */
-
-static void MyReadLocation(MachineLocation * loc)
-{
-    static MachineLocation storedLoc;	/* InsideMac, OSUtilities, page 4-20 */
-    static JSBool didReadLocation = JS_FALSE;
-    if (!didReadLocation)
-    {
-        MacintoshInitializeTime();
-        ReadLocation(&storedLoc);
-        /* install a sleep queue routine, so that when the machine wakes up, time can be recomputed. */
-        if (&SleepQInstall != (void*)kUnresolvedCFragSymbolAddress
-#if !TARGET_CARBON
-            && NGetTrapAddress(0xA28A, OSTrap) != NGetTrapAddress(_Unimplemented, ToolTrap)
-#endif
-           ) {
-            if ((gSleepQEntry.sleepQProc = NewSleepQUPP(MySleepQProc)) != NULL) {
-                SleepQInstall(&gSleepQEntry);
-                gSleepQEntryInstalled = JS_TRUE;
-            }
-        }
-        didReadLocation = JS_TRUE;
-     }
-     *loc = storedLoc;
-}
-
-
-#ifndef XP_MACOSX
-
-/* CFM library init and terminate routines. We'll use the terminate routine
-   to clean up the sleep Q entry. On Mach-O, the sleep Q entry gets cleaned
-   up for us, so nothing to do there.
-*/
-
-extern pascal OSErr __NSInitialize(const CFragInitBlock* initBlock);
-extern pascal void __NSTerminate();
-
-pascal OSErr __JSInitialize(const CFragInitBlock* initBlock);
-pascal void __JSTerminate(void);
-
-pascal OSErr __JSInitialize(const CFragInitBlock* initBlock)
-{
-	return __NSInitialize(initBlock);
-}
-
-pascal void __JSTerminate()
-{
-  /* clean up the sleepQ entry */
-  if (gSleepQEntryInstalled)
-    SleepQRemove(&gSleepQEntry);
-
-	__NSTerminate();
-}
-#endif /* XP_MACOSX */
-
-#endif /* XP_MAC */
 
 #define IS_LEAP(year) \
    (year != 0 && ((((year & 0x3) == 0) &&  \
@@ -238,32 +103,6 @@ PRMJ_LocalGMTDifference()
 #else
     return mktime(&ltime) - (24L * 3600L);
 #endif
-#endif
-#if defined(XP_MAC)
-    static JSInt32   zone = -1L;
-    MachineLocation  machineLocation;
-    JSInt32 	     gmtOffsetSeconds;
-
-    /* difference has been set no need to recalculate */
-    if (zone != -1)
-        return zone;
-
-    /* Get the information about the local machine, including
-     * its GMT offset and its daylight savings time info.
-     * Convert each into wides that we can add to
-     * startupTimeMicroSeconds.
-     */
-
-    MyReadLocation(&machineLocation);
-
-    /* Mask off top eight bits of gmtDelta, sign extend lower three. */
-    gmtOffsetSeconds = (machineLocation.u.gmtDelta << 8);
-    gmtOffsetSeconds >>= 8;
-
-    /* Backout OS adjustment for DST, to give consistent GMT offset. */
-    if (machineLocation.u.dlsDelta != 0)
-        gmtOffsetSeconds -= PRMJ_HOUR_SECONDS;
-    return (zone = -gmtOffsetSeconds);
 #endif
 }
 
@@ -323,14 +162,6 @@ PRMJ_Now(void)
     struct timeval tv;
     JSInt64 s, us, s2us;
 #endif /* XP_UNIX */
-#ifdef XP_MAC
-    JSUint64 upTime;
-    JSInt64	 localTime;
-    JSInt64       gmtOffset;
-    JSInt64    dstOffset;
-    JSInt32       gmtDiff;
-    JSInt64	 s2us;
-#endif /* XP_MAC */
 
 #ifdef XP_OS2
     ftime(&b);
@@ -378,24 +209,6 @@ PRMJ_Now(void)
     JSLL_ADD(s, s, us);
     return s;
 #endif /* XP_UNIX */
-#ifdef XP_MAC
-    JSLL_UI2L(localTime,0);
-    gmtDiff = PRMJ_LocalGMTDifference();
-    JSLL_I2L(gmtOffset,gmtDiff);
-    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
-    JSLL_MUL(gmtOffset,gmtOffset,s2us);
-
-    /* don't adjust for DST since it sets ctime and gmtime off on the MAC */
-    Microseconds((UnsignedWide*)&upTime);
-    JSLL_ADD(localTime,localTime,gmtOffset);
-    JSLL_ADD(localTime,localTime, dstLocalBaseMicroseconds);
-    JSLL_ADD(localTime,localTime, upTime);
-
-    dstOffset = PRMJ_DSTOffset(localTime);
-    JSLL_SUB(localTime,localTime,dstOffset);
-
-    return *((JSUint64 *)&localTime);
-#endif /* XP_MAC */
 }
 
 /* Get the DST timezone offset for the time passed in */
@@ -403,24 +216,6 @@ JSInt64
 PRMJ_DSTOffset(JSInt64 local_time)
 {
     JSInt64 us2s;
-#ifdef XP_MAC
-    /*
-     * Convert the local time passed in to Macintosh epoch seconds. Use UTC utilities to convert
-     * to UTC time, then compare difference with our GMT offset. If they are the same, then
-     * DST must not be in effect for the input date/time.
-     */
-    UInt32 macLocalSeconds = (local_time / PRMJ_USEC_PER_SEC) + gJanuaryFirst1970Seconds, utcSeconds;
-    ConvertLocalTimeToUTC(macLocalSeconds, &utcSeconds);
-    if ((utcSeconds - macLocalSeconds) == PRMJ_LocalGMTDifference())
-        return 0;
-    else {
-        JSInt64 dlsOffset;
-    	JSLL_UI2L(us2s, PRMJ_USEC_PER_SEC);
-    	JSLL_UI2L(dlsOffset, PRMJ_HOUR_SECONDS);
-    	JSLL_MUL(dlsOffset, dlsOffset, us2s);
-        return dlsOffset;
-    }
-#else
     time_t local;
     JSInt32 diff;
     JSInt64  maxtimet;
@@ -467,14 +262,13 @@ PRMJ_DSTOffset(JSInt64 local_time)
     JSLL_MUL(local_time,local_time,us2s);
 
     return(local_time);
-#endif
 }
 
 /* Format a time value into a buffer. Same semantics as strftime() */
 size_t
 PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
 {
-#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
     struct tm a;
 
     /* Zero out the tm struct.  Linux, SunOS 4 struct tm has extra members int

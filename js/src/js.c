@@ -102,133 +102,6 @@ JSBool gQuitting = JS_FALSE;
 FILE *gErrFile = NULL;
 FILE *gOutFile = NULL;
 
-#ifdef XP_MAC
-#if defined(MAC_TEST_HACK) || defined(XP_MAC_MPW)
-/* this is the data file that all Print strings will be echoed into */
-FILE *gTestResultFile = NULL;
-#define isatty(f) 0
-#else
-#define isatty(f) 1
-#endif
-
-char *strdup(const char *str)
-{
-    char *copy = (char *) malloc(strlen(str)+1);
-    if (copy)
-        strcpy(copy, str);
-    return copy;
-}
-
-#ifdef XP_MAC_MPW
-/* Macintosh MPW replacements for the ANSI routines.  These translate LF's to CR's because
-   the MPW libraries supplied by Metrowerks don't do that for some reason.  */
-static void translateLFtoCR(char *str, int length)
-{
-    char *limit = str + length;
-    while (str != limit) {
-        if (*str == '\n')
-            *str = '\r';
-        str++;
-    }
-}
-
-int fputc(int c, FILE *file)
-{
-    char buffer = c;
-    if (buffer == '\n')
-        buffer = '\r';
-    return fwrite(&buffer, 1, 1, file);
-}
-
-int fputs(const char *s, FILE *file)
-{
-    char buffer[4096];
-    int n = strlen(s);
-    int extra = 0;
-
-    while (n > sizeof buffer) {
-        memcpy(buffer, s, sizeof buffer);
-        translateLFtoCR(buffer, sizeof buffer);
-        extra += fwrite(buffer, 1, sizeof buffer, file);
-        n -= sizeof buffer;
-        s += sizeof buffer;
-    }
-    memcpy(buffer, s, n);
-    translateLFtoCR(buffer, n);
-    return extra + fwrite(buffer, 1, n, file);
-}
-
-int fprintf(FILE* file, const char *format, ...)
-{
-    va_list args;
-    char smallBuffer[4096];
-    int n;
-    int bufferSize = sizeof smallBuffer;
-    char *buffer = smallBuffer;
-    int result;
-
-    va_start(args, format);
-    n = vsnprintf(buffer, bufferSize, format, args);
-    va_end(args);
-    while (n < 0) {
-        if (buffer != smallBuffer)
-            free(buffer);
-        bufferSize <<= 1;
-        buffer = malloc(bufferSize);
-        if (!buffer) {
-            JS_ASSERT(JS_FALSE);
-            return 0;
-        }
-        va_start(args, format);
-        n = vsnprintf(buffer, bufferSize, format, args);
-        va_end(args);
-    }
-    translateLFtoCR(buffer, n);
-    result = fwrite(buffer, 1, n, file);
-    if (buffer != smallBuffer)
-        free(buffer);
-    return result;
-}
-
-
-#else
-#include <SIOUX.h>
-#include <MacTypes.h>
-
-static char* mac_argv[] = { "js", NULL };
-
-static void initConsole(StringPtr consoleName, const char* startupMessage, int *argc, char** *argv)
-{
-    SIOUXSettings.autocloseonquit = true;
-    SIOUXSettings.asktosaveonclose = false;
-    /* SIOUXSettings.initializeTB = false;
-     SIOUXSettings.showstatusline = true;*/
-    puts(startupMessage);
-    SIOUXSetTitle(consoleName);
-
-    /* set up a buffer for stderr (otherwise it's a pig). */
-    setvbuf(stderr, (char *) malloc(BUFSIZ), _IOLBF, BUFSIZ);
-
-    *argc = 1;
-    *argv = mac_argv;
-}
-
-#ifdef LIVECONNECT
-/* Little hack to provide a default CLASSPATH on the Mac. */
-#define getenv(var) mac_getenv(var)
-static char* mac_getenv(const char* var)
-{
-    if (strcmp(var, "CLASSPATH") == 0) {
-        static char class_path[] = "liveconnect.jar";
-        return class_path;
-    }
-    return NULL;
-}
-#endif /* LIVECONNECT */
-
-#endif
-#endif
-
 #ifdef JSDEBUGGER
 static JSDContext *_jsdc;
 #ifdef JSDEBUGGER_JAVA_UI
@@ -279,10 +152,6 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
         char line[256];
         fprintf(gOutFile, prompt);
         fflush(gOutFile);
-#ifdef XP_MAC_MPW
-        /* Print a CR after the prompt because MPW grabs the entire line when entering an interactive command */
-        fputc('\n', gOutFile);
-#endif
         if (!fgets(line, sizeof line, file))
             return JS_FALSE;
         strcpy(bufp, line);
@@ -2412,45 +2281,6 @@ main(int argc, char **argv, char **envp)
     gErrFile = stderr;
     gOutFile = stdout;
 
-#ifdef XP_MAC
-#ifndef XP_MAC_MPW
-    initConsole("\pJavaScript Shell", "Welcome to js shell.", &argc, &argv);
-#endif
-#endif
-
-#ifdef MAC_TEST_HACK
-/*
-    Open a file "testArgs.txt" and read each line into argc/argv.
-    Re-direct all output to "results.txt"
-*/
-    {
-        char argText[256];
-        FILE *f = fopen("testargs.txt", "r");
-        if (f) {
-            int maxArgs = 32; /* arbitrary max !!! */
-            int argText_strlen;
-            argc = 1;
-            argv = malloc(sizeof(char *) * maxArgs);
-            argv[0] = NULL;
-            while (fgets(argText, 255, f)) {
-                 /* argText includes '\n' */
-                argText_strlen = strlen(argText);
-                argv[argc] = malloc(argText_strlen);
-                strncpy(argv[argc], argText, argText_strlen - 1);
-                argv[argc][argText_strlen - 1] = '\0';
-                argc++;
-                if (argc >= maxArgs)
-                    break;
-            }
-            fclose(f);
-        }
-        gTestResultFile = fopen("results.txt", "w");
-    }
-
-    gErrFile = gTestResultFile;
-    gOutFile = gTestResultFile;
-#endif
-
     argc--;
     argv++;
 
@@ -2554,10 +2384,6 @@ main(int argc, char **argv, char **envp)
     if (_jsdc)
         JSD_DebuggerOff(_jsdc);
 #endif  /* JSDEBUGGER */
-
-#ifdef MAC_TEST_HACK
-    fclose(gTestResultFile);
-#endif
 
     JS_DestroyContext(cx);
     JS_DestroyRuntime(rt);

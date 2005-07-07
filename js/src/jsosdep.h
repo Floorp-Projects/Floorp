@@ -52,21 +52,6 @@
 #endif
 #endif /* XP_WIN || XP_OS2 */
 
-#ifdef XP_MAC
-#define JS_HAVE_LONG_LONG
-
-JS_BEGIN_EXTERN_C
-
-#include <stddef.h>
-
-extern void* reallocSmaller(void* block, size_t newSize);
-
-extern char* strdup(const char* str);
-
-JS_END_EXTERN_C
-
-#endif /* XP_MAC */
-
 #ifdef XP_BEOS
 #define JS_HAVE_LONG_LONG
 #endif

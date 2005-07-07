@@ -39,20 +39,11 @@
 
 #if 0
 
-#ifndef XP_MAC
 #include "_stubs/netscape_jsdebug_Script.c"
 #include "_stubs/netscape_jsdebug_DebugController.c"
 #include "_stubs/netscape_jsdebug_JSThreadState.c"
 #include "_stubs/netscape_jsdebug_JSStackFrameInfo.c"
 #include "_stubs/netscape_jsdebug_JSPC.c"
 #include "_stubs/netscape_jsdebug_JSSourceTextProvider.c"
-#else
-#include "netscape_jsdebug_Script.c"
-#include "n_jsdebug_DebugController.c"
-#include "n_jsdebug_JSThreadState.c"
-#include "n_jsdebug_JSStackFrameInfo.c"
-#include "netscape_jsdebug_JSPC.c"
-#include "n_j_JSSourceTextProvider.c"
-#endif
 
 #endif

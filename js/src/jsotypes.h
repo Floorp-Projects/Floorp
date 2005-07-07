@@ -75,7 +75,7 @@ typedef JSUintn uint;
 
 typedef JSUintn uintn;
 typedef JSUint64 uint64;
-#if !defined(XP_MAC) && !defined(_WIN32) && !defined(XP_OS2)
+#if !defined(_WIN32) && !defined(XP_OS2)
 typedef JSUint32 uint32;
 #else
 typedef unsigned long uint32;
@@ -102,7 +102,7 @@ typedef JSInt64 int64;
 #ifdef HPUX
 #include <model.h>
 #else
-#if !defined(XP_MAC) && !defined(_WIN32) && !defined(XP_OS2)
+#if !defined(_WIN32) && !defined(XP_OS2)
 typedef JSInt32 int32;
 #else
 typedef long int32;
@@ -198,14 +198,5 @@ typedef JSFloat64 float64;
 #define PR_HashString PL_HashString
 #define PR_CompareStrings PL_CompareStrings
 #define PR_CompareValues PL_CompareValues
-
-#ifdef XP_MAC
-#ifndef TRUE                            /* Mac standard is lower case true */
-        #define TRUE 1
-#endif
-#ifndef FALSE                           /* Mac standard is lower case false */
-        #define FALSE 0
-#endif
-#endif
 
 #endif /* !defined(PROTYPES_H) */
