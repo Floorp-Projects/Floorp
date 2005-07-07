@@ -134,6 +134,7 @@ nsCairoImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequir
 
     PRInt32 size = aWidth*aHeight*4;
     mImageSurfaceBuf = (PRUint32*)nsMemory::Alloc(size);
+    NS_ENSURE_TRUE(mImageSurfaceBuf, NS_ERROR_OUT_OF_MEMORY);
     // Fill it in. Setting alpha to FF is important for images with no
     // alpha of their own
     memset(mImageSurfaceBuf, 0xFF, size);
