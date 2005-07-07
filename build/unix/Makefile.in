@@ -40,7 +40,6 @@ DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-NSPR_CONFIG     = @NSPR_CONFIG@
 
 include $(DEPTH)/config/autoconf.mk
 
