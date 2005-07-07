@@ -6719,7 +6719,8 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
                                            nsIFrame*                aParentFrame,
                                            nsStyleContext*          aStyleContext,
                                            nsIFrame*                aPrevInFlow,
-                                           nsIFrame*                aNewFrame)
+                                           nsIFrame*                aNewFrame,
+                                           PRBool                   aAllowCounters)
 {
   nsresult rv = NS_OK;
   
@@ -6736,7 +6737,7 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
     aState.mFrameManager->RestoreFrameStateFor(aNewFrame, aState.mFrameState);
   }
 
-  if (!aPrevInFlow &&
+  if (aAllowCounters && !aPrevInFlow &&
       mCounterManager.AddCounterResetsAndIncrements(aNewFrame)) {
     CountersDirty();
   }
@@ -12990,7 +12991,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
                                                           aStyleContext);
 
   InitAndRestoreFrame(aState, aContent, aParentFrame, blockSC, nsnull,
-                      blockFrame);  
+                      blockFrame, PR_FALSE);  
 
   // Any inline frame could have a view (e.g., opacity)
   // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -13028,7 +13029,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
     }
 
     InitAndRestoreFrame(aState, aContent, aParentFrame, aStyleContext, nsnull,
-                        inlineFrame);
+                        inlineFrame, PR_FALSE);
 
     // Any frame might need a view
     // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -13418,7 +13419,8 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsFrameConstructorState& aState,
     ResolvePseudoStyleFor(content, nsCSSAnonBoxes::mozAnonymousBlock,
                           styleContext);
 
-  InitAndRestoreFrame(aState, content, nsnull, blockSC, nsnull, blockFrame);
+  InitAndRestoreFrame(aState, content, nsnull, blockSC, nsnull, blockFrame,
+                      PR_FALSE);
 
   blockFrame->SetInitialChildList(aState.mPresContext, nsnull, aBlockChildFrame);
   MoveChildrenTo(aState.mFrameManager, blockSC, blockFrame, aBlockChildFrame,
@@ -13434,7 +13436,7 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsFrameConstructorState& aState,
     return NS_ERROR_OUT_OF_MEMORY;
 
   InitAndRestoreFrame(aState, content, nsnull, styleContext, nsnull,
-                      inlineFrame);
+                      inlineFrame, PR_FALSE);
 
   inlineFrame->SetInitialChildList(aState.mPresContext, nsnull,
                                    aRightInlineChildFrame);
