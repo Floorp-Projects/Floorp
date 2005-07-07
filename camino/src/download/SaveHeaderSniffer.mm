@@ -371,7 +371,8 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
   
   nsCOMPtr<nsIDownload> downloader = do_CreateInstance(NS_TRANSFER_CONTRACTID);
   // dlListener attaches to its progress dialog here, which gains ownership
-  rv = downloader->Init(inOriginalURI, destURI, inFileName, nsnull, timeNow, webPersist);
+  rv = downloader->Init(inOriginalURI, destURI, inFileName, nsnull, timeNow,
+                        nsnull, webPersist);
   if (NS_FAILED(rv)) return rv;
     
   PRInt32 flags = nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES;
