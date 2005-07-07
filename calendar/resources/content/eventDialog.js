@@ -607,7 +607,7 @@ function onOKCommand()
     if (getElementValue("repeat-checkbox", "checked")) {
         var recurrenceInfo = createRecurrenceInfo();
         debug("** recurrenceInfo: " + recurrenceInfo);
-        recurrenceInfo.initialize(event);
+        recurrenceInfo.item = event;
 
         var recRule = new calRecurrenceRule();
 

@@ -422,7 +422,7 @@ calICSObserver.prototype = {
     },
     onDeleteItem: function(aDeletedItem) {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].onDeleteItem(aItem);
+            this.mObservers[i].onDeleteItem(aDeletedItem);
 
         if (!this.mInBatch)
             this.mCalendar.writeICS();
