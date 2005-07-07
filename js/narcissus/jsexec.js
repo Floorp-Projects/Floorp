@@ -105,8 +105,7 @@ var global = {
 
         // NB: Use the STATEMENT_FORM constant since we don't want to push this
         // function onto the null compilation context.
-        var f = FunctionDefinition(t, null, false,
-                                   STATEMENT_FORM);
+        var f = FunctionDefinition(t, null, false, STATEMENT_FORM);
         var s = {object: global, parent: null};
         return new FunctionObject(f, s);
     },
@@ -143,6 +142,11 @@ var global = {
     },
     print: print, version: null
 };
+
+// Helper to avoid Object.prototype.hasOwnProperty polluting scope objects.
+function hasDirectProperty(o, p) {
+    return Object.prototype.hasOwnProperty.call(o, p);
+}
 
 // Reflect a host class into the target global environment by delegation.
 function reflectClass(name, proto) {
@@ -261,11 +265,11 @@ function execute(n, x) {
         for (i = 0, j = a.length; i < j; i++) {
             u = a[i];
             s = u.name;
-            if (u.readOnly && t.hasOwnProperty(s)) {
+            if (u.readOnly && hasDirectProperty(t, s)) {
                 throw new TypeError("Redeclaration of const " + s,
                                     u.filename, u.lineno);
             }
-            if (u.readOnly || !t.hasOwnProperty(s)) {
+            if (u.readOnly || !hasDirectProperty(t, s)) {
                 t.__defineProperty__(s, undefined, x.type != EVAL_CODE,
                                      u.readOnly);
             }
@@ -435,7 +439,7 @@ function execute(n, x) {
                 continue;
             t = n[i].name;
             for (s = x.scope; s; s = s.parent) {
-                if (s.object.hasOwnProperty(t))
+                if (hasDirectProperty(s.object, t))
                     break;
             }
             u = getValue(execute(u, x));
@@ -760,6 +764,15 @@ function Activation(f, a) {
         this.__defineProperty__(f.params[i], a[i], true);
     this.__defineProperty__('arguments', a, true);
 }
+
+// Null Activation.prototype's proto slot so that Object.prototype.* does not
+// pollute the scope of heavyweight functions.  Also delete its 'constructor'
+// property so that it doesn't pollute function scopes.  But first, we must
+// copy __defineProperty__ down from Object.prototype.
+
+Activation.prototype.__defineProperty__ = Object.prototype.__defineProperty__;
+Activation.prototype.__proto__ = null;
+delete Activation.prototype.constructor;
 
 function FunctionObject(node, scope) {
     this.node = node;
