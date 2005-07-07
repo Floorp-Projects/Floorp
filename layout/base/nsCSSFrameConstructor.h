@@ -211,7 +211,8 @@ private:
                                 nsIFrame*                      aParentFrame,
                                 nsStyleContext*                aStyleContext,
                                 nsIFrame*                      aPrevInFlow,
-                                nsIFrame*                      aNewFrame);
+                                nsIFrame*                      aNewFrame,
+                                PRBool                         aAllowCounters = PR_TRUE);
 
   already_AddRefed<nsStyleContext>
   ResolveStyleContext(nsIFrame*         aParentFrame,
