@@ -224,6 +224,9 @@ pref("privacy.popups.statusbar_icon_enabled",     true);
 pref("privacy.popups.prefill_whitelist",          false);
 pref("privacy.popups.remove_blacklist",           true);
 
+// Show XUL error pages instead of alerts for errors
+pref("browser.xul.error_pages.enabled", true);
+
 #ifdef XP_MACOSX
 // determines the behavior upon starting a download.
 //  0 - open the download manager
