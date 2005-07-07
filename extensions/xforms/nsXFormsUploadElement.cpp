@@ -85,6 +85,8 @@ public:
 
   // nsIXTFElement overrides
   NS_IMETHOD OnDestroyed();
+  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
+  NS_IMETHOD AttributeRemoved(nsIAtom *aName);
 
   // nsIXFormsControl
   NS_IMETHOD Refresh();
@@ -161,6 +163,28 @@ nsXFormsUploadElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   NS_ASSERTION(targ, "input must be an event target!");
 
   targ->AddEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsUploadElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
+{
+  if (aName == nsXFormsAtoms::accesskey) {
+    // accesskey
+    mInput->SetAttribute(NS_LITERAL_STRING("accesskey"), aValue);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsUploadElement::AttributeRemoved(nsIAtom *aName)
+{
+  if (aName == nsXFormsAtoms::accesskey) {
+    // accesskey
+    mInput->RemoveAttribute(NS_LITERAL_STRING("accesskey"));
+  }
+
   return NS_OK;
 }
 

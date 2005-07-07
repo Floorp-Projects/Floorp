@@ -61,6 +61,7 @@ nsIAtom *nsXFormsAtoms::incremental;
 nsIAtom *nsXFormsAtoms::clazz;
 nsIAtom *nsXFormsAtoms::deferredBindListProperty;
 nsIAtom *nsXFormsAtoms::readyForBindProperty;
+nsIAtom *nsXFormsAtoms::accesskey;
 
 const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "src",                      &nsXFormsAtoms::src },
@@ -84,7 +85,8 @@ const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "incremental",              &nsXFormsAtoms::incremental },
   { "class",                    &nsXFormsAtoms::clazz },
   { "DeferredBindListProperty", &nsXFormsAtoms::deferredBindListProperty },
-  { "ReadyForBindProperty",     &nsXFormsAtoms::readyForBindProperty }
+  { "ReadyForBindProperty",     &nsXFormsAtoms::readyForBindProperty },
+  { "accesskey",                &nsXFormsAtoms::accesskey }
 };
 
 void
