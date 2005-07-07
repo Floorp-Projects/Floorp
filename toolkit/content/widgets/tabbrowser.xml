@@ -60,7 +60,7 @@
         <xul:hbox id="tab-drop-indicator-bar">
           <xul:hbox id="tab-drop-indicator"/>
         </xul:hbox>          
-        <xul:hbox class="tabbrowser-strip chromeclass-toolbar" collapsed="true" tooltip="_child" context="_child"
+        <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child"
                   ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode); event.stopPropagation();"
                   ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode); event.stopPropagation();"
                   ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode); event.stopPropagation();"
@@ -1147,7 +1147,8 @@
 
             if (l == 2) {
               var autohide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
-              if (autohide)
+              var tabStripHide = !window.toolbar.visible;
+              if (autohide || tabStripHide)
                 this.setStripVisibilityTo(false);
             }
 
@@ -1276,9 +1277,10 @@
           <![CDATA[
             if (!this.mProgressListeners) {
               this.mProgressListeners = [];
-              const autoHide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
-              const forceHide = this.mPrefs.getBoolPref("browser.tabs.forceHide");
-              if (!autoHide && !forceHide)
+              var autoHide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
+              var forceHide = this.mPrefs.getBoolPref("browser.tabs.forceHide");
+              var tabStripHide = !window.toolbar.visible;
+              if (!autoHide && !forceHide && !tabStripHide)
                 this.setStripVisibilityTo(true);
 
               // Hook up a listener for <link>s.

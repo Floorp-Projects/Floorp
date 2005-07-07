@@ -1108,14 +1108,14 @@ AutoHideTabbarPrefListener.prototype =
 
   toggleAutoHideTabbar: function ()
   {
-    var aVisible = false;
-    try {
-      aVisible = !gPrefService.getBoolPref(this.domain);
-    }
-    catch (e) {
-    }
-
-    if (gBrowser.tabContainer.childNodes.length == 1) {
+    if (gBrowser.tabContainer.childNodes.length == 1 &&
+        window.toolbar.visible) {
+      var aVisible = false;
+      try {
+        aVisible = !gPrefService.getBoolPref(this.domain);
+      }
+      catch (e) {
+      }
       gBrowser.setStripVisibilityTo(aVisible);
       gPrefService.setBoolPref("browser.tabs.forceHide", false);
     }
