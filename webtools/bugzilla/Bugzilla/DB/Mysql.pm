@@ -64,7 +64,7 @@ sub new {
 
     # all class local variables stored in DBI derived class needs to have
     # a prefix 'private_'. See DBI documentation.
-    $self->{private_bz_tables_locked} = 0;
+    $self->{private_bz_tables_locked} = "";
 
     bless ($self, $class);
     
@@ -159,13 +159,15 @@ sub sql_group_by {
 sub bz_lock_tables {
     my ($self, @tables) = @_;
 
+    my $list = join(', ', @tables);
     # Check first if there was no lock before
     if ($self->{private_bz_tables_locked}) {
-        ThrowCodeError("already_locked");
+        ThrowCodeError("already_locked", { current => $self->{private_bz_tables_locked},
+                                           new => $list });
     } else {
-        $self->do('LOCK TABLE ' . join(', ', @tables)); 
+        $self->do('LOCK TABLE ' . $list); 
     
-        $self->{private_bz_tables_locked} = 1;
+        $self->{private_bz_tables_locked} = $list;
     }
 }
 
@@ -180,7 +182,7 @@ sub bz_unlock_tables {
     } else {
         $self->do("UNLOCK TABLES");
     
-        $self->{private_bz_tables_locked} = 0;
+        $self->{private_bz_tables_locked} = "";
     }
 }
 

@@ -70,7 +70,7 @@ sub new {
 
     # all class local variables stored in DBI derived class needs to have
     # a prefix 'private_'. See DBI documentation.
-    $self->{private_bz_tables_locked} = 0;
+    $self->{private_bz_tables_locked} = "";
 
     bless ($self, $class);
 
@@ -147,9 +147,11 @@ sub sql_string_concat {
 sub bz_lock_tables {
     my ($self, @tables) = @_;
    
+    my $list = join(', ', @tables);
     # Check first if there was no lock before
     if ($self->{private_bz_tables_locked}) {
-        ThrowCodeError("already_locked");
+        ThrowCodeError("already_locked", { current => $self->{private_bz_tables_locked},
+                                           new => $list });
     } else {
         my %read_tables;
         my %write_tables;
@@ -175,7 +177,7 @@ sub bz_lock_tables {
                           ' IN ROW SHARE MODE') if keys %read_tables;
         Bugzilla->dbh->do('LOCK TABLE ' . join(', ', keys %write_tables) .
                           ' IN ROW EXCLUSIVE MODE') if keys %write_tables;
-        $self->{private_bz_tables_locked} = 1;
+        $self->{private_bz_tables_locked} = $list;
     }
 }
 
@@ -188,7 +190,7 @@ sub bz_unlock_tables {
         return if $abort;
         ThrowCodeError("no_matching_lock");
     } else {
-        $self->{private_bz_tables_locked} = 0;
+        $self->{private_bz_tables_locked} = "";
         # End transaction, tables will be unlocked automatically
         if ($abort) {
             $self->bz_rollback_transaction();
