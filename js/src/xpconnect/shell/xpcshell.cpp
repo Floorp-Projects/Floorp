@@ -72,9 +72,6 @@
 #include <io.h>     /* for isatty() */
 #elif defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>     /* for isatty() */
-#elif defined(XP_MAC)
-#include <unistd.h>
-#include <unix.h>
 #endif
 
 #include "nsIJSContextStack.h"
@@ -202,11 +199,6 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     char *bytes = JS_GetStringBytes(str);
     bytes = strdup(bytes);
 
-#ifdef XP_MAC
-    for (char *c = bytes; *c; c++)
-        if (*c == '\r')
-            *c = '\n';
-#endif
     fputs(bytes, gOutFile);
     nsMemory::Free(bytes);
     return JS_TRUE;
@@ -873,34 +865,6 @@ FullTrustSecMan::CanAccess(PRUint32 aAction, nsIXPCNativeCallContext *aCallConte
 
 /***************************************************************************/
 
-#if defined(XP_MAC)
-#include <SIOUX.h>
-#include <MacTypes.h>
-
-static void initConsole(StringPtr consoleName, const char* startupMessage, int *argc, char** *argv)
-{
-    SIOUXSettings.autocloseonquit = true;
-    SIOUXSettings.asktosaveonclose = false;
-    SIOUXSettings.userwindowtitle = consoleName;
-    SIOUXSettings.standalone = true;
-    SIOUXSettings.setupmenus = true;
-    SIOUXSettings.toppixel = 42;
-    SIOUXSettings.leftpixel = 6;
-    SIOUXSettings.rows = 40;
-    SIOUXSettings.columns = 100;
-    // SIOUXSettings.initializeTB = false;
-    // SIOUXSettings.showstatusline = true;
-    puts(startupMessage);
-
-    /* set up a buffer for stderr (otherwise it's a pig). */
-    setvbuf(stderr, (char *) malloc(BUFSIZ), _IOLBF, BUFSIZ);
-
-    static char* mac_argv[] = { "xpcshell", NULL };
-    *argc = 1;
-    *argv = mac_argv;
-}
-#endif
-
 // #define TEST_InitClassesWithNewWrappedGlobal
 
 #ifdef TEST_InitClassesWithNewWrappedGlobal
@@ -991,10 +955,6 @@ main(int argc, char **argv, char **envp)
     JSObject *glob, *envobj;
     int result;
     nsresult rv;
-
-#if defined(XP_MAC)
-    initConsole("\pXPConnect Shell", "Welcome to the XPConnect Shell.\n", &argc, &argv);
-#endif
 
     gErrFile = stderr;
     gOutFile = stdout;

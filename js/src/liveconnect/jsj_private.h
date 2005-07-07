@@ -63,11 +63,6 @@
 #   include "jsutil.h"
 #   include "jshash.h"
 
-#ifdef XP_MAC
-/* #include "macstdlibextras.h"  *//* for strdup() */
-extern char* strdup(const char* str);
-#endif
-
 #include "jsj_hash.h"        /* Hash tables */
 #include "jni.h"             /* Java Native Interface */
 #include "jsapi.h"           /* JavaScript engine API */

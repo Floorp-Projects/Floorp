@@ -128,11 +128,6 @@ static JSFunctionSpec boolean_methods[] = {
     {0,0,0,0,0}
 };
 
-#ifdef XP_MAC
-#undef Boolean
-#define Boolean js_Boolean
-#endif
-
 static JSBool
 Boolean(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {

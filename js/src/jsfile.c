@@ -45,12 +45,7 @@
 #include "jsstddef.h"
 
 /* ----------------- Platform-specific includes and defines ----------------- */
-#ifdef XP_MAC
-#   define FILESEPARATOR         ':'
-#   define FILESEPARATOR2        '\0'
-#   define CURRENT_DIR          "HARD DISK:Desktop Folder"
-/*  TODO: #include <???> */
-#elif defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN) || defined(XP_OS2)
 #   include <direct.h>
 #   include <io.h>
 #   include <sys/types.h>
@@ -253,14 +248,9 @@ static JSBool file_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 static JSBool
 js_filenameHasAPipe(const char *filename)
 {
-#ifdef XP_MAC
-    /* pipes are not supported on the MAC */
-    return JS_FALSE;
-#else
     if(!filename) return JS_FALSE;
     return  filename[0]==PIPE_SYMBOL ||
             filename[strlen(filename)-1]==PIPE_SYMBOL;
-#endif
 }
 
 static JSBool
@@ -2040,9 +2030,6 @@ js_NewFileObjectFromFILE(JSContext *cx, FILE *nativehandle, char *filename,
 {
     JSObject *obj;
     JSFile   *file;
-#ifdef XP_MAC
-    JS_ReportWarning(cx, "Native files are not fully supported on the MAC");
-#endif
 
     obj = JS_NewObject(cx, &file_class, NULL, NULL);
     if (!obj){

@@ -63,10 +63,6 @@
 #include "jsscan.h"
 #include "jsstr.h"
 
-#ifdef XP_MAC
-#include <MacMemory.h>
-#endif
-
 #if JS_HAS_REGEXPS
 
 /* Note : contiguity of 'simple opcodes' is important for SimpleMatch() */

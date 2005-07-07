@@ -42,7 +42,6 @@
 #include "native.h"
 #include "jsdebug.h"
 
-#ifndef XP_MAC
 #include "_gen/netscape_jsdebug_DebugController.h"
 #include "_gen/netscape_jsdebug_Script.h"
 #include "_gen/netscape_jsdebug_JSThreadState.h"
@@ -50,15 +49,6 @@
 #include "_gen/netscape_jsdebug_JSPC.h"
 #include "_gen/netscape_jsdebug_JSSourceTextProvider.h"
 #include "_gen/netscape_jsdebug_JSErrorReporter.h"
-#else
-#include "n_jsdebug_DebugController.h"
-#include "netscape_jsdebug_Script.h"
-#include "n_jsdebug_JSThreadState.h"
-#include "n_jsdebug_JSStackFrameInfo.h"
-#include "netscape_jsdebug_JSPC.h"
-#include "n_j_JSSourceTextProvider.h"
-#include "n_jsdebug_JSErrorReporter.h"
-#endif
 
 static JSDContext* context = 0;
 static struct Hnetscape_jsdebug_DebugController* controller = 0;

@@ -51,109 +51,16 @@
 #    include <windows.h>
 #endif
 
-#ifdef XP_MAC
-#    include <Types.h>
-#    include <stdarg.h>
-#    include "jsprf.h"
-#endif
-
-#ifdef XP_MAC
-/*
- * PStrFromCStr converts the source C string to a destination
- * pascal string as it copies. The dest string will
- * be truncated to fit into an Str255 if necessary.
- * If the C String pointer is NULL, the pascal string's length is
- * set to zero.
- */
-static void PStrFromCStr(const char *src, Str255 dst)
-{
-    short length = 0;
-
-    /* handle case of overlapping strings */
-    if ( (void*)src == (void*)dst )
-    {
-        unsigned char *curdst = &dst[1];
-        unsigned char thisChar;
-
-        thisChar = *(const unsigned char*)src++;
-        while ( thisChar != '\0' )
-        {
-            unsigned char nextChar;
-
-            /*
-             * Use nextChar so we don't overwrite what we
-             * are about to read
-             */
-            nextChar = *(const unsigned char*)src++;
-            *curdst++ = thisChar;
-            thisChar = nextChar;
-
-            if ( ++length >= 255 )
-                break;
-        }
-    }
-    else if ( src != NULL )
-    {
-        unsigned char *curdst = &dst[1];
-        /* count down so test it loop is faster */
-        short overflow = 255;
-        register char temp;
-
-        /*
-         * Can't do the K&R C thing of while (*s++ = *t++)
-         * because it will copy trailing zero which might
-         * overrun pascal buffer.  Instead we use a temp variable.
-         */
-        while ( (temp = *src++) != 0 )
-        {
-            *(char*)curdst++ = temp;
-
-            if ( --overflow <= 0 )
-                break;
-        }
-        length = 255 - overflow;
-    }
-    dst[0] = length;
-}
-
-static void jsdebugstr(const char *debuggerMsg)
-{
-    Str255 pStr;
-
-    PStrFromCStr(debuggerMsg, pStr);
-    DebugStr(pStr);
-}
-
-static void dprintf(const char *format, ...)
-{
-    va_list ap;
-    char *buffer;
-
-    va_start(ap, format);
-    buffer = (char *)JS_vsmprintf(format, ap);
-    va_end(ap);
-
-    jsdebugstr(buffer);
-    JS_smprintf_free(buffer);
-}
-#endif   /* XP_MAC */
-
 JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
 {
-#ifdef XP_MAC
-    dprintf("Assertion failure: %s, at %s:%d\n", s, file, ln);
-#else
     fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
-#endif
 #if defined(WIN32)
     DebugBreak();
 #endif
 #if defined(XP_OS2)
     asm("int $3");
 #endif
-#ifndef XP_MAC
     abort();
-#endif
 }
 
 #if defined DEBUG_notme && defined XP_UNIX

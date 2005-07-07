@@ -850,10 +850,6 @@ jsj_get_jlObject_descriptor(JSContext *cx, JNIEnv *jEnv)
 
 /****************** Implementation of methods of JSObject *******************/
 
-#ifdef XP_MAC
-#pragma export on
-#endif
-
 /*
  * Class:     netscape_javascript_JSObject
  * Method:    initClass

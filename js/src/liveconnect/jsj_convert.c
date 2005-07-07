@@ -384,77 +384,6 @@ conversion_error:
             java_value->member_name = member_name;                       \
     }
 
-#if XP_MAC
-
-/* on MRJ jlong is typedef'd to wide, which is a struct. */
-#include <Math64.h>
-
-static jsint jlong_to_jsint(jlong lvalue)
-{
-    SInt64 val = WideToSInt64(lvalue);
-    return S32Set(val);
-}
-
-static jlong jsint_to_jlong(jsint ivalue)
-{
-    SInt64 val = S64Set(ivalue);
-    wide wval =SInt64ToWide(val);
-    return *(jlong*)&wval;
-}
-
-static jdouble jlong_to_jdouble(jlong lvalue)
-{
-    SInt64 val = WideToSInt64(lvalue);
-    return SInt64ToLongDouble(val);
-}
-
-static jlong jdouble_to_jlong(jdouble dvalue)
-{
-    SInt64 val = LongDoubleToSInt64(dvalue);
-    wide wval = SInt64ToWide(val);
-    return *(jlong*)&wval;
-}
-
-/* Mac utility macro for jsj_ConvertJSValueToJavaValue(), below */
-#define JSVAL_TO_JLONG_JVALUE(member_name, member_type, jsvalue, java_value) \
-if (!JSVAL_IS_NUMBER(jsvalue)) {                                         \
-        if (!JS_ConvertValue(cx, jsvalue, JSTYPE_NUMBER, &jsvalue))      \
-        goto conversion_error;                                           \
-    (*cost)++;                                                           \
-    }                                                                    \
-    {                                                                    \
-        member_type member_name;                                         \
-                                                                         \
-        if (JSVAL_IS_INT(jsvalue)) {                                     \
-            jsint ival = JSVAL_TO_INT(jsvalue);                          \
-            member_name = jsint_to_jlong(ival);                          \
-                                                                         \
-        } else {                                                         \
-            jdouble dval = *JSVAL_TO_DOUBLE(jsvalue);                    \
-                                                                         \
-            /* NaN becomes zero when converted to integral value */      \
-            if (JSDOUBLE_IS_NaN(dval))                                   \
-                goto numeric_conversion_error;                           \
-                                                                         \
-            /* Unrepresentably large numbers, including infinities, */   \
-            /* cause an error. */                                        \
-            else if ((dval >= member_type ## _MAX_VALUE + 1) ||          \
-                     (dval <= member_type ## _MIN_VALUE - 1)) {          \
-                goto numeric_conversion_error;                           \
-            } else                                                       \
-                member_name = jdouble_to_jlong(dval);                    \
-                                                                         \
-            /* Don't allow a non-integral number to be converted         \
-               to an integral type */                                    \
-            /* Actually, we have to allow this for LC1 compatibility */  \
-            /*if (jlong_to_jdouble(member_name) != dval)                 \
-                (*cost)++;*/                                             \
-        }                                                                \
-        if (java_value)                                                  \
-            java_value->member_name = member_name;                       \
-    }
-
-#else
 #ifdef XP_OS2
 
 /* OS2 utility macro for jsj_ConvertJSValueToJavaValue(), below             */
@@ -508,7 +437,6 @@ static jdouble jlong_to_jdouble(jlong lvalue)
 
 #define jlong_to_jdouble(lvalue) ((jdouble) lvalue)
 
-#endif
 #endif
 
 /*
@@ -573,7 +501,7 @@ jsj_ConvertJSValueToJavaValue(JSContext *cx, JNIEnv *jEnv, jsval v_arg,
         break;
 
     case JAVA_SIGNATURE_LONG:
-#if defined(XP_MAC) || (defined(XP_OS2) && !defined(HAVE_LONG_LONG))
+#if (defined(XP_OS2) && !defined(HAVE_LONG_LONG))
         JSVAL_TO_JLONG_JVALUE(j, jlong, v, java_value);
 #else
         JSVAL_TO_INTEGRAL_JVALUE(long, j, jlong, v, java_value);

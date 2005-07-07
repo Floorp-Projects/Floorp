@@ -42,52 +42,7 @@
 
 #include "jsosdep.h"
 
-#ifdef XP_MAC
-#undef  IS_LITTLE_ENDIAN
-#define IS_BIG_ENDIAN 1
-
-#define JS_BYTES_PER_BYTE   1L
-#define JS_BYTES_PER_SHORT  2L
-#define JS_BYTES_PER_INT    4L
-#define JS_BYTES_PER_INT64  8L
-#define JS_BYTES_PER_LONG   4L
-#define JS_BYTES_PER_FLOAT  4L
-#define JS_BYTES_PER_DOUBLE 8L
-#define JS_BYTES_PER_WORD   4L
-#define JS_BYTES_PER_DWORD  8L
-
-#define JS_BITS_PER_BYTE    8L
-#define JS_BITS_PER_SHORT   16L
-#define JS_BITS_PER_INT     32L
-#define JS_BITS_PER_INT64   64L
-#define JS_BITS_PER_LONG    32L
-#define JS_BITS_PER_FLOAT   32L
-#define JS_BITS_PER_DOUBLE  64L
-#define JS_BITS_PER_WORD    32L
-
-#define JS_BITS_PER_BYTE_LOG2   3L
-#define JS_BITS_PER_SHORT_LOG2  4L
-#define JS_BITS_PER_INT_LOG2    5L
-#define JS_BITS_PER_INT64_LOG2  6L
-#define JS_BITS_PER_LONG_LOG2   5L
-#define JS_BITS_PER_FLOAT_LOG2  5L
-#define JS_BITS_PER_DOUBLE_LOG2 6L
-#define JS_BITS_PER_WORD_LOG2   5L
-
-#define JS_ALIGN_OF_SHORT   2L
-#define JS_ALIGN_OF_INT     4L
-#define JS_ALIGN_OF_LONG    4L
-#define JS_ALIGN_OF_INT64   2L
-#define JS_ALIGN_OF_FLOAT   4L
-#define JS_ALIGN_OF_DOUBLE  4L
-#define JS_ALIGN_OF_POINTER 4L
-#define JS_ALIGN_OF_WORD    4L
-
-#define JS_BYTES_PER_WORD_LOG2   2L
-#define JS_BYTES_PER_DWORD_LOG2  3L
-#define PR_WORDS_PER_DWORD_LOG2  1L
-
-#elif defined(XP_WIN) || defined(XP_OS2) || defined(WINCE)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(WINCE)
 
 #ifdef __WATCOMC__
 #define HAVE_VA_LIST_AS_ARRAY
@@ -193,7 +148,7 @@
 
 #else
 
-#error "Must define one of XP_BEOS, XP_MAC, XP_OS2, XP_WIN, or XP_UNIX"
+#error "Must define one of XP_BEOS, XP_OS2, XP_WIN, or XP_UNIX"
 
 #endif
 

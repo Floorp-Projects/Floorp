@@ -129,10 +129,6 @@ math_asin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     if (!js_ValueToNumber(cx, argv[0], &x))
         return JS_FALSE;
-#ifdef XP_MAC
-    if (x == 0)
-        return js_NewNumberValue(cx, x, rval);
-#endif
     z = fd_asin(x);
     return js_NewNumberValue(cx, z, rval);
 }
@@ -144,10 +140,6 @@ math_atan(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     if (!js_ValueToNumber(cx, argv[0], &x))
         return JS_FALSE;
-#ifdef XP_MAC
-    if (x == 0)
-        return js_NewNumberValue(cx, x, rval);
-#endif
     z = fd_atan(x);
     return js_NewNumberValue(cx, z, rval);
 }

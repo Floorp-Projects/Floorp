@@ -49,17 +49,10 @@
 #define INT64 PRInt64
 #else
 
-#ifdef __MWERKS__
-#define XP_MAC 1
-#endif
-
 /************************************************************************/
 
 /* Generate cpucfg.h */
-#ifdef XP_MAC
-#include <Types.h>
-#define INT64   UnsignedWide
-#else
+
 #if defined(XP_WIN) || defined(XP_OS2)
 #ifdef WIN32
 #if defined(__GNUC__)
@@ -75,7 +68,6 @@
 #define INT64   long
 #else
 #define INT64   long long
-#endif
 #endif
 #endif
 

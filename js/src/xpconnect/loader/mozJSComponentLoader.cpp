@@ -165,11 +165,6 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     char *bytes = JS_GetStringBytes(str);
     bytes = nsCRT::strdup(bytes);
 
-#ifdef XP_MAC
-    for (char *c = bytes; *c; c++)
-        if (*c == '\r')
-            *c = '\n';
-#endif
     fputs(bytes, stderr);
     nsMemory::Free(bytes);
     return JS_TRUE;
