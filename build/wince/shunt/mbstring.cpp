@@ -113,6 +113,18 @@ MOZCE_SHUNT_API unsigned char* mozce_mbschr(const unsigned char* inString, unsig
 }
 
 
+MOZCE_SHUNT_API int mozce_mbsicmp(const unsigned char *string1, const unsigned char *string2)
+{
+    MOZCE_PRECHECK
+
+#ifdef LOG_CALLS
+#ifdef DEBUG
+    mozce_printf("mozce_mbsicmp called\n");
+#endif
+#endif
+    return _stricmp((const char*)string1, (const char*)string2);
+}
+
 #if 0
 {
 #endif
