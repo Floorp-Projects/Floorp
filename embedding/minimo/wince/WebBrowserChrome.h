@@ -52,7 +52,6 @@ class WebBrowserChromeUI
 public:
     static nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome);
     static void Destroy(nsIWebBrowserChrome* chrome);
-    static void Destroyed(nsIWebBrowserChrome* chrome);
 };
 
 class WebBrowserChrome   : public nsIWebBrowserChrome,

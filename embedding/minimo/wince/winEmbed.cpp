@@ -41,7 +41,9 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 // Global variables
 static PRBool    gRunCondition = PR_TRUE;
 static UINT      gBrowserCount = 0;
-static UINT      gActivateCount = 0;
+static UINT_PTR  gEventTimer = 0;
+
+#define PLEVENT_TIMEOUT 500
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -76,8 +78,6 @@ void SetPreferences()
     nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!prefBranch)
         return;
-
-
 }
 
 LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
@@ -100,19 +100,20 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
 
     case WM_ACTIVATE:
         {
-            SetTimer(hWnd, 1, 500, NULL);
             nsCOMPtr<nsIWebBrowserFocus> focus(do_GetInterface(webBrowser));
             
             switch (wParam)
             {
             case WA_ACTIVE:
-                gActivateCount++;
+                gEventTimer = SetTimer(hWnd, 1, PLEVENT_TIMEOUT, NULL);
                 if (focus)
                     focus->Activate();
                 break;
                 
             case WA_INACTIVE:
-                gActivateCount--;
+                KillTimer(hWnd, gEventTimer);
+                gEventTimer = NULL;
+
                 if (focus)
                     focus->Deactivate();
             }
@@ -120,7 +121,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
         return 0;
         
     case WM_CLOSE:
-        WebBrowserChromeUI::Destroy(chrome);
+        chrome->DestroyBrowserWindow();
         return 0;
 
     case WM_DESTROY:
@@ -129,7 +130,6 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
         return 0;
 
     case WM_TIMER:
-        if (gActivateCount)
         {
             PRBool eventAvail;
 
@@ -149,7 +149,8 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
                 eventQ->ProcessPendingEvents();
 
             // reset the timer
-            SetTimer(hWnd, 1, 500, NULL);
+            if (gEventTimer)
+                gEventTimer = SetTimer(hWnd, 1, 500, NULL);
         }
         return 0;
 
@@ -321,44 +322,6 @@ WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
 void 
 WebBrowserChromeUI::Destroy(nsIWebBrowserChrome* chrome)
 {
-    nsCOMPtr<nsIWebBrowser> webBrowser;
-    nsCOMPtr<nsIWebNavigation> webNavigation;
-    
-    chrome->GetWebBrowser(getter_AddRefs(webBrowser));
-    webNavigation = do_QueryInterface(webBrowser);
-    if (webNavigation)
-        webNavigation->Stop(nsIWebNavigation::STOP_ALL);
-    
-    chrome->ExitModalEventLoop(NS_OK);
-    
-    nsCOMPtr<nsIEmbeddingSiteWindow> baseWindow = do_QueryInterface(chrome);
-    HWND hwndDlg = NULL;
-    baseWindow->GetSiteWindow((void **) & hwndDlg);
-    if (hwndDlg == NULL)
-        return;
-    
-    // Explicitly destroy the embedded browser and then the chrome
-    
-    // First the browser
-    nsCOMPtr<nsIWebBrowser> browser = nsnull;
-    chrome->GetWebBrowser(getter_AddRefs(browser));
-    nsCOMPtr<nsIBaseWindow> browserAsWin = do_QueryInterface(browser);
-    if (browserAsWin)
-        browserAsWin->Destroy();
-    
-    // Now the chrome
-    chrome->SetWebBrowser(nsnull);
-    NS_RELEASE(chrome);
-}
-
-void WebBrowserChromeUI::Destroyed(nsIWebBrowserChrome* chrome)
-{
-    nsCOMPtr<nsIEmbeddingSiteWindow> baseWindow = do_QueryInterface(chrome);
-    HWND hwnd = NULL;
-    baseWindow->GetSiteWindow((void **) & hwnd);
-    if (hwnd)
-        DestroyWindow(hwnd);
-
     if (--gBrowserCount == 0)
     {
         // Quit when there are no more browser objects
