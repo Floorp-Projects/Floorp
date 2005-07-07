@@ -113,6 +113,8 @@ nsCairoBlender::GetAlphas(const nsRect& aRect, nsIDrawingSurface* aBlack,
                           nsIDrawingSurface* aWhite, PRUint8** aAlphas)
 {
     *aAlphas = (PRUint8*) nsMemory::Alloc(aRect.width * aRect.height);
+    NS_ENSURE_TRUE(*aAlphas, NS_ERROR_OUT_OF_MEMORY);
+
     memset(*aAlphas, 0, aRect.width * aRect.height);
     return NS_OK;
 }
