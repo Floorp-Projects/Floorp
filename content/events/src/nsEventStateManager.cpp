@@ -1722,21 +1722,11 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     scrollView->GetLineHeight(&lineHeight);
 
     if (lineHeight != 0) {
-      nscoord xPos, yPos;
-      scrollView->GetScrollPosition(xPos, yPos);
-
-      if (aNumLines < 0) {
-        passToParent = aScrollHorizontal ? (xPos <= 0) : (yPos <= 0);
-      } else {
-        nsSize scrolledSize;
-        scrollView->GetContainerSize(&scrolledSize.width, &scrolledSize.height);
-
-        nsRect portRect = scrollView->View()->GetBounds();
-
-        passToParent = (aScrollHorizontal ?
-                        (xPos + portRect.width >= scrolledSize.width) :
-                        (yPos + portRect.height >= scrolledSize.height));
-      }
+      PRBool canScroll;
+      nsresult rv = scrollView->CanScroll(aScrollHorizontal,
+                                          (aNumLines > 0), canScroll);
+      if (NS_SUCCEEDED(rv))
+        passToParent = !canScroll;
 
       // Comboboxes need special care.
       nsIComboboxControlFrame* comboBox = nsnull;

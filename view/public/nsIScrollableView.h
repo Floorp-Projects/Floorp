@@ -176,6 +176,15 @@ public:
   NS_IMETHOD ScrollByWhole(PRBool aTop) = 0;
 
   /**
+   * Check the view can scroll from current offset.
+   * @param aHorizontal If checking to Left or to Right, true. Otherwise, false.
+   * @param aForward    If checking to Right or Bottom, true. Otherwise, false.
+   * @param aResult     If the view can scroll, true. Otherwise, false.
+   * @return            error status
+   */
+  NS_IMETHOD CanScroll(PRBool aHorizontal, PRBool aForward, PRBool &aResult) = 0;
+
+  /**
    * Returns the view as an nsIView*
    */
   NS_IMETHOD_(nsIView*) View() = 0;
