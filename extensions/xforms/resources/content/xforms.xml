@@ -151,7 +151,8 @@
       <html:input anonid="control"
                   onblur="this.parentNode.delegate.value = this.value;"
                   onclick="this.parentNode._change();"
-                  onkeyup="this.parentNode._change();"/>
+                  onkeyup="this.parentNode._change();"
+                  xbl:inherits="accesskey"/>
     </content>
 
     <implementation implements="nsIXFormsUIWidget">
@@ -258,7 +259,8 @@
       <children/>
       <html:textarea anonid="control"
                      onblur="this.parentNode.delegate.value = this.value;"
-                     onkeyup="this.parentNode._change();"/>
+                     onkeyup="this.parentNode._change();"
+                     xbl:inherits="accesskey"/>
     </content>
 
     <implementation implements="nsIXFormsUIWidget">
@@ -326,7 +328,7 @@
   <binding id="xformswidget-trigger"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
-      <html:button anonid="thebutton">
+      <html:button anonid="thebutton" xbl:inherits="accesskey">
         <children/>
       </html:button>
     </content>
@@ -359,7 +361,7 @@
   <binding id="xformswidget-trigger-minimal"
            extends="chrome://xforms/content/xforms.xml#xformswidget-trigger-base">
     <content>
-      <html:span anonid="thespan"
+      <html:span anonid="thespan" xbl:inherits="accesskey"
                  onclick="if (!this._disabled) this.parentNode.dispatchDOMActivate();">
         <children/>
       </html:span>
