@@ -1357,7 +1357,7 @@ sub init {
     }
 
     $query .= " WHERE " . join(' AND ', (@wherepart, @andlist)) .
-              " AND ((bug_group_map.group_id IS NULL)";
+              " AND bugs.creation_ts IS NOT NULL AND ((bug_group_map.group_id IS NULL)";
 
     if ($user->id) {
         my $userid = $user->id;

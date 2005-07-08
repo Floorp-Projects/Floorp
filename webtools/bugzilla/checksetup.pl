@@ -3966,6 +3966,9 @@ if (!exists $dbh->bz_column_info('milestones', 'sortkey')->{DEFAULT}) {
                           {TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0});
 }
 
+# 2005-06-14 - LpSolit@gmail.com - Bug 292544: only set creation_ts
+# when all bug fields have been correctly set.
+$dbh->bz_alter_column('bugs', 'creation_ts', {TYPE => 'DATETIME'});
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

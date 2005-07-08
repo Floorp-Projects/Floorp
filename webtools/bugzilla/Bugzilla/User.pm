@@ -356,7 +356,7 @@ sub can_see_bug {
     # is cached because this may be called for every row in buglists or
     # every bug in a dependency list.
     unless ($sth) {
-        $sth = $dbh->prepare("SELECT reporter, assigned_to, qa_contact,
+        $sth = $dbh->prepare("SELECT 1, reporter, assigned_to, qa_contact,
                              reporter_accessible, cclist_accessible,
                              COUNT(cc.who), COUNT(bug_group_map.bug_id)
                              FROM bugs
@@ -367,22 +367,23 @@ sub can_see_bug {
                                ON bugs.bug_id = bug_group_map.bug_id
                                AND bug_group_map.group_ID NOT IN(" .
                                join(',',(-1, values(%{$self->groups}))) .
-                               ") WHERE bugs.bug_id = ? " .
+                               ") WHERE bugs.bug_id = ? 
+                               AND creation_ts IS NOT NULL " .
                              $dbh->sql_group_by('bugs.bug_id', 'reporter, ' .
                              'assigned_to, qa_contact, reporter_accessible, ' .
                              'cclist_accessible'));
     }
     $sth->execute($bugid);
-    my ($reporter, $owner, $qacontact, $reporter_access, $cclist_access,
+    my ($ready, $reporter, $owner, $qacontact, $reporter_access, $cclist_access,
         $isoncclist, $missinggroup) = $sth->fetchrow_array();
     $sth->finish;
     $self->{sthCanSeeBug} = $sth;
-    return ( (($reporter == $userid) && $reporter_access)
-           || (Param('useqacontact') && $qacontact && 
-              ($qacontact == $userid))
-           || ($owner == $userid)
-           || ($isoncclist && $cclist_access)
-           || (!$missinggroup) );
+    return ($ready
+            && ((($reporter == $userid) && $reporter_access)
+                || (Param('useqacontact') && $qacontact && ($qacontact == $userid))
+                || ($owner == $userid)
+                || ($isoncclist && $cclist_access)
+                || (!$missinggroup)));
 }
 
 sub get_selectable_products {

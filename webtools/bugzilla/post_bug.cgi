@@ -288,8 +288,9 @@ my $timestamp = FetchOneColumn();
 my $sql_timestamp = SqlQuote($timestamp);
 
 # Build up SQL string to add bug.
+# creation_ts will only be set when all other fields are defined.
 my $sql = "INSERT INTO bugs " . 
-  "(" . join(",", @used_fields) . ", reporter, creation_ts, delta_ts, " .
+  "(" . join(",", @used_fields) . ", reporter, delta_ts, " .
   "estimated_time, remaining_time, deadline) " .
   "VALUES (";
 
@@ -303,7 +304,7 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$sql .= "$::userid, $sql_timestamp, $sql_timestamp, ";
+$sql .= "$::userid, $sql_timestamp, ";
 
 # Time Tracking
 if (UserInGroup(Param("timetrackinggroup")) &&
@@ -377,6 +378,11 @@ while (MoreSQLData()) {
 }
 
 # Add the bug report to the DB.
+$dbh->bz_lock_tables('bugs WRITE', 'bug_group_map WRITE', 'longdescs WRITE',
+                     'cc WRITE', 'keywords WRITE', 'dependencies WRITE',
+                     'bugs_activity WRITE', 'groups READ', 'user_group_map READ',
+                     'keyworddefs READ', 'fielddefs READ');
+
 SendSQL($sql);
 
 # Get the bug ID back.
@@ -435,6 +441,13 @@ if (UserInGroup("editbugs")) {
         }
     }
 }
+
+# All fields related to the newly created bug are set.
+# The bug can now be made accessible.
+$dbh->do("UPDATE bugs SET creation_ts = ? WHERE bug_id = ?",
+          undef, ($timestamp, $id));
+
+$dbh->bz_unlock_tables();
 
 # Email everyone the details of the new bug 
 $vars->{'mailrecipients'} = {'changer' => Bugzilla->user->login};
