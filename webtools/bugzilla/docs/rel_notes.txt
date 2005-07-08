@@ -1,5 +1,5 @@
 *****************************************
-*** The Bugzilla 2.18.1 Release Notes ***
+*** The Bugzilla 2.18.2 Release Notes ***
 *****************************************
 
 Table of Contents
@@ -8,6 +8,7 @@ Table of Contents
 - Introduction
 - Important Updates In This Point Release
     * Version 2.18.1
+    * Version 2.18.2
 - Requirements
     * Dependency Requirements
 - What's New?
@@ -79,6 +80,22 @@ Version 2.18.1
 
 + Dependency mails are now properly sent during a mass-change of bugs.
   (Bug 178157)
+
+
+Version 2.18.2
+--------------
+
++ You can now create accounts with createaccount.cgi even
+  when the "requirelogin" parameter is turned on. (Bug 294778)
+
++ Bugs that are in disabled groups may not show a padlock
+  on the bug list, or may otherwise behave strangely. You
+  can now fix this using sanitycheck.cgi. (Bug 277454)
+
++ If sendmail dies while you are marking a bug 
+  as a duplicate, the duplicates table will no longer become 
+  corrupted. (Bug 225042)
+
 
 Requirements
 ************
@@ -601,7 +618,7 @@ They each have a bug number for http://bugzilla.mozilla.org/
 
 - bug 266579: Users may be able to circumvent not having "canconfirm" privileges
   in some circumstances. This is fixed starting with 2.19.3, but will not
-  be fixed in any 2.18 release, as the changes require to fix it are quite
+  be fixed in any 2.18 release, as the changes required to fix it are quite
   large.
 
 - bug 99215: Attachment changes have no mid-air collision detection, unlike bug
@@ -613,10 +630,7 @@ They each have a bug number for http://bugzilla.mozilla.org/
 
 - bug 151509: Using the boolean chart option "contains the string" with the 
   "flag name" field or certain other fields will cause Bugzilla to emit an 
-  error.
-
-- bug 225042: If sendmail dies while you are marking a bug as a duplicate, 
-  the duplicates table can become corrupted.
+  error. This is fixed in 2.20rc1, but will not be fixed in the 2.18 series.
 
 - bug 234159: Bugzilla may sometimes send multiple notices in one email.
 
@@ -656,6 +670,16 @@ Two security issues were fixed in Bugzilla 2.18.1, neither of them
 critical.
 
 See http://www.bugzilla.org/security/2.16.8/ for details.
+
+
+Version 2.18.2
+--------------
+
+Two security issues were fixed in Bugzilla 2.18.2. One of them
+is a major Information Leak/Unauthorized Bug Change. The other
+is a minor Information Leak.
+
+See http://www.bugzilla.org/security/2.18.1/ for details.
 
 
 Detailed Version-To-Version Release Notes
