@@ -213,6 +213,14 @@ SECStatus pk11_TraverseAllSlots( SECStatus (*callback)(PK11SlotInfo *,void *),
 SECStatus pk11_RetrieveCrls(CERTCrlHeadNode *nodes, SECItem* issuer,
                                    void *wincx);
 
+/* set global options for NSS PKCS#11 module loader */
+SECStatus pk11_setGlobalOptions(PRBool noSingleThreadedModules,
+                                PRBool allowAlreadyInitializedModules,
+                                PRBool dontFinalizeModules);
+
+/* return whether NSS is allowed to call C_Finalize */
+PRBool pk11_getFinalizeModulesOption(void);
+
 SEC_END_PROTOS
 
 #endif
