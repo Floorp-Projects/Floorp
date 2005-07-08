@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nss.h,v 1.42 2005/06/27 18:21:02 christophe.ravel.bugs%sun.com Exp $ */
+/* $Id: nss.h,v 1.43 2005/07/08 04:41:29 julien.pierre.bugs%sun.com Exp $ */
 
 #ifndef __nss_h_
 #define __nss_h_
@@ -119,6 +119,36 @@ extern SECStatus NSS_InitReadWrite(const char *configdir);
  *      NSS_INIT_NOROOTINIT - Don't try to look for the root certs module
  *			automatically.
  *      NSS_INIT_OPTIMIZESPACE - Use smaller tables and caches.
+ *      NSS_INIT_PK11THREADSAFE - only load PKCS#11 modules that are
+ *                      thread-safe, ie. that support locking - either OS
+ *                      locking or NSS-provided locks . If a PKCS#11
+ *                      module isn't thread-safe, don't serialize its
+ *                      calls; just don't load it instead. This is necessary
+ *                      if another piece of code is using the same PKCS#11
+ *                      modules that NSS is accessing without going through
+ *                      NSS, for example the Java SunPKCS11 provider.
+ *      NSS_INIT_PK11RELOAD - ignore the CKR_CRYPTOKI_ALREADY_INITIALIZED
+ *                      error when loading PKCS#11 modules. This is necessary
+ *                      if another piece of code is using the same PKCS#11
+ *                      modules that NSS is accessing without going through
+ *                      NSS, for example Java SunPKCS11 provider.
+ *      NSS_INIT_NOPK11FINALIZE - never call C_Finalize on any
+ *                      PKCS#11 module. This may be necessary in order to
+ *                      ensure continuous operation and proper shutdown
+ *                      sequence if another piece of code is using the same
+ *                      PKCS#11 modules that NSS is accessing without going
+ *                      through NSS, for example Java SunPKCS11 provider.
+ *                      The following limitation applies when this is set :
+ *                      SECMOD_WaitForAnyTokenEvent will not use
+ *                      C_WaitForSlotEvent, in order to prevent the need for
+ *                      C_Finalize. This call will be emulated instead.
+ *      NSS_INIT_RESERVED - Currently has no effect, but may be used in the
+ *                      future to trigger better cooperation between PKCS#11
+ *                      modules used by both NSS and the Java SunPKCS11
+ *                      provider. This should occur after a new flag is defined
+ *                      for C_Initialize by the PKCS#11 working group.
+ *      NSS_INIT_COOPERATE - Sets 4 recommended options for applications that
+ *                      use both NSS and the Java SunPKCS11 provider.
  *
  * Also NOTE: This is not the recommended method for initializing NSS. 
  * The prefered method is NSS_init().
@@ -129,6 +159,15 @@ extern SECStatus NSS_InitReadWrite(const char *configdir);
 #define NSS_INIT_FORCEOPEN	0x8
 #define NSS_INIT_NOROOTINIT     0x10
 #define NSS_INIT_OPTIMIZESPACE  0x20
+#define NSS_INIT_PK11THREADSAFE   0x40
+#define NSS_INIT_PK11RELOAD       0x80
+#define NSS_INIT_NOPK11FINALIZE   0x100
+#define NSS_INIT_RESERVED         0x200
+
+#define NSS_INIT_COOPERATE NSS_INIT_PK11THREADSAFE | \
+        NSS_INIT_PK11RELOAD | \
+        NSS_INIT_NOPK11FINALIZE | \
+        NSS_INIT_RESERVED
 
 #ifdef macintosh
 #define SECMOD_DB "Security Modules"

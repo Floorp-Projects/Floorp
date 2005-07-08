@@ -1060,6 +1060,11 @@ SECMOD_WaitForAnyTokenEvent(SECMODModule *mod, unsigned long flags,
     CK_RV crv;
     PK11SlotInfo *slot;
 
+    if (!pk11_getFinalizeModulesOption()) {
+        /* if we are sharing the module with other software in our
+         * address space, we can't reliably use C_WaitForSlotEvent() */
+	return secmod_HandleWaitForSlotEvent(mod, flags, latency);
+    }
     /* first the the PKCS #11 call */
     PZ_Lock(mod->refLock);
     if (mod->evControlMask & SECMOD_END_WAIT) {
@@ -1130,16 +1135,24 @@ SECMOD_CancelWait(SECMODModule *mod)
     mod->evControlMask |= SECMOD_END_WAIT;
     controlMask = mod->evControlMask;
     if (controlMask & SECMOD_WAIT_PKCS11_EVENT) {
+        if (!pk11_getFinalizeModulesOption()) {
+            /* can't get here unless pk11_getFinalizeModulesOption is set */
+            PORT_Assert(0);
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            rv = SECFailure;
+            goto loser;
+        }
 	/* NOTE: this call will drop all transient keys, in progress
 	 * operations, and any authentication. This is the only documented
 	 * way to get WaitForSlotEvent to return. Also note: for non-thread
 	 * safe tokens, we need to hold the module lock, this is not yet at
-	 * system shutdown/starup time, so we need to protect these calls */
+	 * system shutdown/startup time, so we need to protect these calls */
 	crv = PK11_GETTAB(mod)->C_Finalize(NULL);
 	/* ok, we slammed the module down, now we need to reinit it in case
 	 * we intend to use it again */
 	if (CKR_OK == crv) {
-	    secmod_ModuleInit(mod);
+            PRBool alreadyLoaded;
+	    secmod_ModuleInit(mod, &alreadyLoaded);
 	} else {
 	    /* Finalized failed for some reason,  notify the application
 	     * so maybe it has a prayer of recovering... */
@@ -1151,6 +1164,7 @@ SECMOD_CancelWait(SECMODModule *mod)
 				/* Simulated events will eventually timeout
 				 * and wake up in the loop */
     }
+loser:
     PZ_Unlock(mod->refLock);
     return rv;
 }

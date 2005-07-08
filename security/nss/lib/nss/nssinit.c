@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.67 2004/06/21 23:01:51 relyea%netscape.com Exp $ */
+/* $Id: nssinit.c,v 1.68 2005/07/08 04:41:29 julien.pierre.bugs%sun.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -400,7 +400,9 @@ static SECStatus
 nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 		 const char *secmodName, PRBool readOnly, PRBool noCertDB, 
 			PRBool noModDB, PRBool forceOpen, PRBool noRootInit,
-			PRBool optimizeSpace)
+			PRBool optimizeSpace, PRBool noSingleThreadedModules,
+			PRBool allowAlreadyInitializedModules,
+			PRBool dontFinalizeModules)
 {
     char *moduleSpec = NULL;
     char *flags = NULL;
@@ -441,6 +443,12 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
     lsecmodName = nss_doubleEscape(secmodName);
     if (lsecmodName == NULL) {
 	goto loser;
+    }
+    if (noSingleThreadedModules || allowAlreadyInitializedModules ||
+        dontFinalizeModules) {
+        pk11_setGlobalOptions(noSingleThreadedModules,
+                              allowAlreadyInitializedModules,
+                              dontFinalizeModules);
     }
 
     moduleSpec = PR_smprintf("name=\"%s\" parameters=\"configdir='%s' certPrefix='%s' keyPrefix='%s' secmod='%s' flags=%s %s\" NSS=\"flags=internal,moduleDB,moduleDBOnly,critical\"",
@@ -493,14 +501,14 @@ SECStatus
 NSS_Init(const char *configdir)
 {
     return nss_Init(configdir, "", "", SECMOD_DB, PR_TRUE, 
-		PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE, PR_TRUE);
+		PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE, PR_TRUE, PR_FALSE, PR_FALSE, PR_FALSE);
 }
 
 SECStatus
 NSS_InitReadWrite(const char *configdir)
 {
     return nss_Init(configdir, "", "", SECMOD_DB, PR_FALSE, 
-		PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE, PR_TRUE);
+		PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE, PR_TRUE, PR_FALSE, PR_FALSE, PR_FALSE);
 }
 
 /*
@@ -520,6 +528,36 @@ NSS_InitReadWrite(const char *configdir)
  *			initialize the 	PKCS #11 module.
  *      NSS_INIT_FORCEOPEN - Continue to force initializations even if the 
  * 			databases cannot be opened.
+ *      NSS_INIT_PK11THREADSAFE - only load PKCS#11 modules that are
+ *                      thread-safe, ie. that support locking - either OS
+ *                      locking or NSS-provided locks . If a PKCS#11
+ *                      module isn't thread-safe, don't serialize its
+ *                      calls; just don't load it instead. This is necessary
+ *                      if another piece of code is using the same PKCS#11
+ *                      modules that NSS is accessing without going through
+ *                      NSS, for example the Java SunPKCS11 provider.
+ *      NSS_INIT_PK11RELOAD - ignore the CKR_CRYPTOKI_ALREADY_INITIALIZED
+ *                      error when loading PKCS#11 modules. This is necessary
+ *                      if another piece of code is using the same PKCS#11
+ *                      modules that NSS is accessing without going through
+ *                      NSS, for example Java SunPKCS11 provider.
+ *      NSS_INIT_NOPK11FINALIZE - never call C_Finalize on any
+ *                      PKCS#11 module. This may be necessary in order to
+ *                      ensure continuous operation and proper shutdown
+ *                      sequence if another piece of code is using the same
+ *                      PKCS#11 modules that NSS is accessing without going
+ *                      through NSS, for example Java SunPKCS11 provider.
+ *                      The following limitation applies when this is set :
+ *                      SECMOD_WaitForAnyTokenEvent will not use
+ *                      C_WaitForSlotEvent, in order to prevent the need for
+ *                      C_Finalize. This call will be emulated instead.
+ *      NSS_INIT_RESERVED - Currently has no effect, but may be used in the
+ *                      future to trigger better cooperation between PKCS#11
+ *                      modules used by both NSS and the Java SunPKCS11
+ *                      provider. This should occur after a new flag is defined
+ *                      for C_Initialize by the PKCS#11 working group.
+ *      NSS_INIT_COOPERATE - Sets 4 recommended options for applications that
+ *                      use both NSS and the Java SunPKCS11 provider. 
  */
 SECStatus
 NSS_Initialize(const char *configdir, const char *certPrefix, 
@@ -531,7 +569,10 @@ NSS_Initialize(const char *configdir, const char *certPrefix,
 	((flags & NSS_INIT_NOMODDB) == NSS_INIT_NOMODDB),
 	((flags & NSS_INIT_FORCEOPEN) == NSS_INIT_FORCEOPEN),
 	((flags & NSS_INIT_NOROOTINIT) == NSS_INIT_NOROOTINIT),
-	((flags & NSS_INIT_OPTIMIZESPACE) == NSS_INIT_OPTIMIZESPACE));
+	((flags & NSS_INIT_OPTIMIZESPACE) == NSS_INIT_OPTIMIZESPACE),
+        ((flags & NSS_INIT_PK11THREADSAFE) == NSS_INIT_PK11THREADSAFE),
+        ((flags & NSS_INIT_PK11RELOAD) == NSS_INIT_PK11RELOAD),
+        ((flags & NSS_INIT_NOPK11FINALIZE) == NSS_INIT_NOPK11FINALIZE));
 }
 
 /*
@@ -541,7 +582,8 @@ SECStatus
 NSS_NoDB_Init(const char * configdir)
 {
       return nss_Init("","","","",
-			PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+			PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE,
+			PR_FALSE,PR_FALSE,PR_FALSE);
 }
 
 extern const NSSError NSS_ERROR_BUSY;
