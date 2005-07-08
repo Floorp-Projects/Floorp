@@ -3687,8 +3687,8 @@ if ($dbh->isa('Bugzilla::DB::Mysql')
         print "Removing paths from filenames in attachments table...\n";
         
         $sth = $dbh->prepare("SELECT attach_id, filename FROM attachments " . 
-                             "WHERE " . $dbh->sql_position(q{'/'}, 'filename') .
-                             " OR " . $dbh->sql_position(q{'\\\\'}, 'filename'));
+                "WHERE " . $dbh->sql_position(q{'/'}, 'filename') . " > 0 OR " .
+                           $dbh->sql_position(q{'\\\\'}, 'filename') . " > 0");
         $sth->execute;
         
         while (my ($attach_id, $filename) = $sth->fetchrow_array) {

@@ -988,10 +988,10 @@ sub init {
              $term = "$ff != $q";
          },
          ",casesubstring" => sub {
-             $term = $dbh->sql_position($q, $ff);
+             $term = $dbh->sql_position($q, $ff) . " > 0";
          },
          ",substring" => sub {
-             $term = $dbh->sql_position(lc($q), "LOWER($ff)");
+             $term = $dbh->sql_position(lc($q), "LOWER($ff)") . " > 0";
          },
          ",substr" => sub {
              $funcsbykey{",substring"}->();
@@ -1466,7 +1466,7 @@ sub ListIDsForEmail {
     } elsif ($type eq 'substring') {
         &::SendSQL("SELECT userid FROM profiles WHERE " .
             $dbh->sql_position(lc(::SqlQuote($email)), "LOWER(login_name)") .
-            " " . $dbh->sql_limit(51));
+            " > 0 " . $dbh->sql_limit(51));
         while (&::MoreSQLData()) {
             my ($id) = &::FetchSQLData();
             push(@list, $id);
@@ -1522,7 +1522,7 @@ sub GetByWordListSubstr {
     foreach my $word (split(/[\s,]+/, $strs)) {
         if ($word ne "") {
             push(@list, $dbh->sql_position(lc(::SqlQuote($word)),
-                                           "LOWER($field)"));
+                                           "LOWER($field)") . " > 0");
         }
     }
 

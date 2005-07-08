@@ -682,7 +682,7 @@ sub match {
         && (length($str) >= 3))
     {
 
-        my $sqlstr = &::SqlQuote(uc($str));
+        my $sqlstr = &::SqlQuote(lc($str));
 
         my $query   = "SELECT DISTINCT userid, realname, login_name, " .
                       "LENGTH(login_name) AS namelength " .
@@ -690,10 +690,10 @@ sub match {
         if (&::Param('usevisibilitygroups')) {
             $query .= ", user_group_map";
         }
-        $query     .= " WHERE " . $dbh->sql_position($sqlstr,
-                                                     "UPPER(login_name)") .
-                      " OR " . $dbh->sql_position($sqlstr,
-                                                  "UPPER(realname)");
+        $query     .= " WHERE " .
+                $dbh->sql_position($sqlstr, 'LOWER(login_name)') . " > 0" .
+                      " OR " .
+                $dbh->sql_position($sqlstr, 'LOWER(realname)') . " > 0";
         if (&::Param('usevisibilitygroups')) {
             $query .= " AND user_group_map.user_id = userid" .
                       " AND isbless = 0" .
