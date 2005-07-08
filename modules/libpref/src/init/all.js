@@ -564,17 +564,23 @@ pref("network.IDN_show_punycode", false);
 // are referred to ONLY when "network.IDN_show_punycode" is false. In other
 // words, all IDNs will be shown in punycode if "network.IDN_show_punycode"
 // is true.
+
+// ccTLDs
 pref("network.IDN.whitelist.at", true);
 pref("network.IDN.whitelist.ch", true);
 pref("network.IDN.whitelist.cn", true);
 pref("network.IDN.whitelist.de", true);
 pref("network.IDN.whitelist.dk", true);
+pref("network.IDN.whitelist.hu", true);
 pref("network.IDN.whitelist.jp", true);
 pref("network.IDN.whitelist.kr", true);
 pref("network.IDN.whitelist.li", true);
 pref("network.IDN.whitelist.no", true);
 pref("network.IDN.whitelist.se", true);
 pref("network.IDN.whitelist.tw", true);
+
+// non-ccTLDs
+pref("network.IDN.whitelist.museum", true);
 
 // This preference specifies a list of domains for which DNS lookups will be
 // IPv4 only. Works around broken DNS servers which can't handle IPv6 lookups
