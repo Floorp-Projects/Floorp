@@ -362,19 +362,16 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
       NS_IF_RELEASE(m_newMailParser);
       rv = NS_OK;
     }
-    else if (!m_downloadingToTempFile)
+    else 
     {
       // Share the inbox fileStream so that moz-status-line flags can be set in the Inbox 
       m_newMailParser->SetDBFolderStream(m_outFileStream); 
-    }
-    else // if (m_downloadingToTempFile)
-    {
+      if (m_downloadingToTempFile)
       // Tell the parser to use the offset that will be in the dest folder,
       // not the temp folder, so that the msg hdr will start off with
       // the correct mdb oid
       m_newMailParser->SetEnvelopePos(fileSpec.GetFileSize());
     }
-
     if (m_newMailParser)
     {
       if (uidlDownload)
