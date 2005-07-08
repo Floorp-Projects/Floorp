@@ -1142,7 +1142,9 @@ NS_IMETHODIMP nsMsgComposeService::ForwardMessage(const nsAString &forwardTo, ns
     aMsgHdr->GetFolder(getter_AddRefs(folder));
     folder->GetUriForMsg(aMsgHdr, getter_Copies(msgUri));
     // populate the compose params
-    pMsgComposeParams->SetType(forwardType ? nsIMsgCompType::ForwardInline : nsIMsgCompType::ForwardAsAttachment);
+    // right now, forward inline won't work, since that requires opening a compose window,
+    // and would require major whackage of the compose code.
+    pMsgComposeParams->SetType(/* forwardType ? nsIMsgCompType::ForwardInline : */nsIMsgCompType::ForwardAsAttachment);
     pMsgComposeParams->SetFormat(nsIMsgCompFormat::Default);
     pMsgComposeParams->SetIdentity(identity);
     pMsgComposeParams->SetComposeFields(compFields); 
