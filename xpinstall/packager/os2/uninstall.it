@@ -25,13 +25,13 @@ Decrypt App=TRUE
 Uninstall Filename=$UninstallFile$
 
 [Check Instance0]
-Class Name=MozillaMessageWindow
+Class Name=SeaMonkeyMessageWindow
 Window Name=
 ;*** LOCALIZE ME BABY ***
 Message=$ProductName$ is detected to be currently running.  Please quit $ProductName$ before continuing.  Click Retry to perform the check again, or Cancel to exit the uninstaller.
 
 ; These keys are not normally necessary for checking instances.  They are
-; set here because Mozilla requires a way to shut down it's turbo mode.
+; set here because SeaMonkey requires a way to shut down it's turbo mode.
 Extra Cmd0 Parameter=-kill
 
 [Check Instance1]
@@ -56,7 +56,7 @@ Yes=~Yes
 YesToAll=Y~es to all
 
 ;[Check Instance0]
-;Class Name=MozillaWindowClass
+;Class Name=SeaMonkeyWindowClass
 ;Window Name=
 ;Message=Setup has detected that an instance of Seamonkey is currently running.  Please quit Seamonkey before continuing Setup.
 

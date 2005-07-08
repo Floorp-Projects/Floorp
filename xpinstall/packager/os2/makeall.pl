@@ -57,19 +57,19 @@ require StageUtils;
 require "$topsrcdir/config/zipcfunc.pl";
 
 $seiFileNameGeneric       = "stubinstall.exe";
-$seiFileNameSpecific      = "mozilla-os2-installer.exe";
-$seiStubRootName          = "mozilla-os2-stub-installer";
+$seiFileNameSpecific      = "seamonkey-os2-installer.exe";
+$seiStubRootName          = "seamonkey-os2-stub-installer";
 $seiFileNameSpecificStub  = "$seiStubRootName.exe";
-$seuFileNameSpecific      = "MozillaUninstall.exe";
-$seuzFileNameSpecific     = "mozillauninstall.zip";
+$seuFileNameSpecific      = "seamonkeyUninstall.exe";
+$seuzFileNameSpecific     = "seamonkeyuninstall.zip";
 
 $seiFileNameGenericRes       = "stubinstall.res";
-$seiFileNameSpecificRes  = "mozilla-os2-installer.res";
-$seiFileNameSpecificRC  = "mozilla-os2-installer.rc";
+$seiFileNameSpecificRes  = "seamonkey-os2-installer.res";
+$seiFileNameSpecificRC  = "seamonkey-os2-installer.rc";
 $seiFileNameSpecificStubRC = "$seiStubRootName.rc";
 $seiFileNameSpecificStubRes  = "$seiStubRootName.res";
-$seuFileNameSpecificRes   = "MozillaUninstall.res";
-$seuFileNameSpecificRC  = "MozillaUninstall.rc";
+$seuFileNameSpecificRes   = "SeaMonkeyUninstall.res";
+$seuFileNameSpecificRC  = "SeaMonkeyUninstall.rc";
 
 ParseArgv(@ARGV);
 
@@ -81,7 +81,7 @@ $inRedirIniURL            = $inXpiURL                    if !defined($inRedirIni
 
 if(defined($ENV{DEBUG_INSTALLER_BUILD}))
 {
-  print " windows/makeall.pl\n";
+  print " os2/makeall.pl\n";
   print "   topobjdir  : $topobjdir\n";
   print "   topsrcdir  : $topsrcdir\n";
   print "   inStagePath: $inStagePath\n";
@@ -91,7 +91,7 @@ if(defined($ENV{DEBUG_INSTALLER_BUILD}))
 $gDefaultProductVersion   = StageUtils::GetProductY2KVersion($topobjdir, $topsrcdir, $topsrcdir);
 
 print "\n";
-print " Building Mozilla\n";
+print " Building SeaMonkey\n";
 print "  Raw version id   : $gDefaultProductVersion\n";
 
 # $gDefaultProductVersion has the form maj.min.release.bld where maj, min, release
@@ -135,7 +135,7 @@ $gDirDistInstall      = "$inDistPath/install";
 
 if(defined($ENV{DEBUG_INSTALLER_BUILD}))
 {
-  print " back in windows/makeall.pl\n";
+  print " back in os2/makeall.pl\n";
   print "   inStagePath: $inStagePath\n";
   print "   inDistPath : $inDistPath\n";
 }
@@ -149,9 +149,9 @@ if(system("perl \"$gDirPackager/make_stage.pl\" -pn mozilla -os os2 -sd \"$inSta
 
 $versionLanguage               = "en";
 $ENV{WIZ_nameCompany}          = "mozilla.org";
-$ENV{WIZ_nameProduct}          = "Mozilla";
-$ENV{WIZ_nameProductInternal}  = "Mozilla"; # product name without the version string
-$ENV{WIZ_fileMainExe}          = "Mozilla.exe";
+$ENV{WIZ_nameProduct}          = "SeaMonkey";
+$ENV{WIZ_nameProductInternal}  = "SeaMonkey"; # product name without the version string
+$ENV{WIZ_fileMainExe}          = "seamonkey.exe";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
 $ENV{WIZ_fileUninstallZip}     = $seuzFileNameSpecific;
 # The following variables are for displaying version info in the 
@@ -173,7 +173,7 @@ $ENV{WIZ_greBuildID}       = StageUtils::GetProductBuildID("$inDistPath/include/
 $ENV{WIZ_greFileVersion}       = StageUtils::GetGreFileVersion($topobjdir, $topsrcdir);
 
 # GetGreSpecialID() will return the GRE ID to be used in the windows registry.
-# This ID is also the same one being querried for by the mozilla glue code.
+# This ID is also the same one being querried for by the seamonkey glue code.
 #  ie:
 #      given milestone.txt    : 1.4a
 #      given nsBuildID.h      : 2003030610
@@ -495,13 +495,13 @@ sub PrintUsage
 
            -objDir <path>            : path to the objdir.  default is topsrcdir
 
-           -stagePath <staging path> : full path to where the mozilla components are staged at
+           -stagePath <staging path> : full path to where the seamonkey components are staged at
                                        Default stage path, if this is not set, is:
-                                         [mozilla]/stage
+                                         [seamonkey]/stage
 
-           -distPath <dist path>     : full path to where the mozilla dist dir is at.
+           -distPath <dist path>     : full path to where the seamonkey dist dir is at.
                                        Default stage path, if this is not set, is:
-                                         [mozilla]/dist
+                                         [seamonkey]/dist
 
            -aurl <archive url>       : either ftp:// or http:// url to where the
                                        archives (.xpi, .exe, .zip, etc...) reside

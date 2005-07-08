@@ -41,8 +41,8 @@
 
 #
 # Purpose:
-#    To build the mozilla self-extracting installer and its corresponding .xpi files
-#    given a mozilla build on a local system.
+#    To build the seamonkey self-extracting installer and its corresponding .xpi files
+#    given a seamonkey build on a local system.
 #
 # Requirements:
 # 1. perl needs to be installed correctly on the build system because cwd.pm is used.
@@ -97,11 +97,11 @@ close(FILENEW);
 chomp($dateversion);
 $fullversion           = join('.0.',$version,$dateversion);
 
-# Check for existence of mozilla.exe
-$fileMozilla = "$DEPTH/$ENV{MOZ_OBJDIR}/dist/bin/mozilla.exe";
-if(!(-e "$fileMozilla"))
+# Check for existence of seamonkey.exe
+$fileSeamonkey = "$DEPTH/$ENV{MOZ_OBJDIR}/dist/bin/seamonkey.exe";
+if(!(-e "$fileSeamonkey"))
 {
-  print "file not found: $fileMozilla\n";
+  print "file not found: $fileSeamonkey\n";
   exit(1);
 }
 
