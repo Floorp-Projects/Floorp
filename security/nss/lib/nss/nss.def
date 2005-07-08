@@ -852,6 +852,7 @@ NSS_Get_CERT_SignedCrlTemplate;
 ;+};
 ;+NSS_3.11 { 	# NSS 3.11 release
 ;+    global:
+CERT_CompareValidityTimes;
 PK11_GenerateRandomOnSlot;
 PK11_TokenKeyGenWithFlags;
 SECMOD_HasRootCerts;
