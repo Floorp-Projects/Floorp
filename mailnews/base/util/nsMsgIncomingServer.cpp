@@ -227,6 +227,7 @@ NS_IMETHODIMP
 nsMsgIncomingServer::Shutdown()
 {
   nsresult rv = CloseCachedConnections();
+  mFilterPlugin = nsnull;
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (mFilterList) 
@@ -1019,7 +1020,7 @@ nsMsgIncomingServer::GetLocalPath(nsIFileSpec **aLocalPath)
 	// set the leaf name to "dummy", and then call MakeUnique with a suggested leaf name
     rv = path->AppendRelativeUnixPath("dummy");
     if (NS_FAILED(rv)) return rv;
-	nsXPIDLCString hostname;
+    nsXPIDLCString hostname;
     rv = GetHostName(getter_Copies(hostname));
     if (NS_FAILED(rv)) return rv;
     rv = path->MakeUniqueDirWithSuggestedName((const char *)hostname);
