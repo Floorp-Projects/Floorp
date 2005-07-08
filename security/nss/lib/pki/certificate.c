@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.55 $ $Date: 2005/06/28 17:55:29 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.56 $ $Date: 2005/07/08 17:06:15 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -481,7 +481,7 @@ nssCertificate_BuildChain (
 {
     NSSCertificate **rvChain = NULL;
     NSSUsage issuerUsage = *usage;
-    nssPKIObjectCollection *collection;
+    nssPKIObjectCollection *collection = NULL;
     PRUint32  rvCount = 0;
     PRStatus  st;
     PRStatus  ret = PR_SUCCESS;
