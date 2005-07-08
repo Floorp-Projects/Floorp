@@ -55,6 +55,7 @@
 #include "nsIStreamListener.h"
 #include "nsCRT.h"
 #include "nsMimeTypes.h"
+#include "nsAutoPtr.h"
 
 #include "ParseFTPList.h"
 
@@ -134,16 +135,18 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     nsresult rv;
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request, &rv);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     
     PRUint32 read, streamLen;
 
     rv = inStr->Available(&streamLen);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    char *buffer = (char*)nsMemory::Alloc(streamLen + 1);
+    nsAutoArrayPtr<char> buffer(new char[streamLen + 1]);
+    NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
+
     rv = inStr->Read(buffer, streamLen, &read);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // the dir listings are ascii text, null terminate this sucker.
     buffer[streamLen] = '\0';
@@ -154,8 +157,11 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
         // we have data left over from a previous OnDataAvailable() call.
         // combine the buffers so we don't lose any data.
         mBuffer.Append(buffer);
-        nsMemory::Free(buffer);
-        buffer = ToNewCString(mBuffer);
+
+        buffer = new char[mBuffer.Length()+1];
+        NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
+
+        strncpy(buffer, mBuffer.get(), mBuffer.Length()+1);
         mBuffer.Truncate();
     }
 
@@ -165,15 +171,15 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     printf("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer);
 #endif // DEBUG_dougt
 
-    nsCString indexFormat;
+    nsCAutoString indexFormat;
     if (!mSentHeading) {
         // build up the 300: line
         nsCOMPtr<nsIURI> uri;
         rv = channel->GetURI(getter_AddRefs(uri));
-        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
 
         rv = GetHeaders(indexFormat, uri);
-        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
 
         mSentHeading = PR_TRUE;
     }
@@ -186,6 +192,8 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
         indexFormat.Length(), indexFormat.get()) );
 #else
     char *unescData = ToNewCString(indexFormat);
+    NS_ENSURE_TRUE(unescData, NS_ERROR_OUT_OF_MEMORY);
+    
     nsUnescape(unescData);
     printf("::OnData() sending the following %d bytes...\n\n%s\n\n", indexFormat.Length(), unescData);
     nsMemory::Free(unescData);
@@ -198,18 +206,15 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
             PL_strlen(line), line) );
     }
 
-    nsMemory::Free(buffer);
-
     // send the converted data out.
     nsCOMPtr<nsIInputStream> inputData;
 
     rv = NS_NewCStringInputStream(getter_AddRefs(inputData), indexFormat);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mFinalListener->OnDataAvailable(mPartChannel, ctxt, inputData, 0, indexFormat.Length());
-    if (NS_FAILED(rv)) return rv;
 
-    return NS_OK;
+    return rv;
 }
 
 
