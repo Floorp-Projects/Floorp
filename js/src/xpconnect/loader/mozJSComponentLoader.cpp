@@ -198,8 +198,10 @@ mozJSComponentLoader::mozJSComponentLoader()
 static PRIntn PR_CALLBACK
 UnrootGlobals(PLHashEntry *he, PRIntn i, void *arg)
 {
-    JSRuntime *rt = (JSRuntime *)arg;
-    JS_RemoveRootRT(rt, &he->value);
+    JSContext *cx = (JSContext *)arg;
+    JSObject *global = (JSObject *)he->value;
+    JS_ClearScope(cx, global);
+    JS_RemoveRoot(cx, &he->value);
     nsCRT::free((char *)he->key);
     return HT_ENUMERATE_REMOVE;
 }
@@ -997,7 +999,7 @@ mozJSComponentLoader::UnloadAll(PRInt32 aWhen)
         PL_HashTableDestroy(mModules);
         mModules = nsnull;
 
-        PL_HashTableEnumerateEntries(mGlobals, UnrootGlobals, mRuntime);
+        PL_HashTableEnumerateEntries(mGlobals, UnrootGlobals, mContext);
         PL_HashTableDestroy(mGlobals);
         mGlobals = nsnull;
 
