@@ -1,5 +1,567 @@
+***************************************
+*** The Bugzilla 2.20 Release Notes ***
+***************************************
+
+Table of Contents
+*****************
+
+- Introduction
+- Minimum Requirements
+    * Perl
+    * For MySQL Users
+    * For PostgreSQL Users
+    * Required Perl Modules
+    * Optional Perl Modules
+- What's New?
+    * Experimental PostgreSQL Support
+    * New User-Interface Color/Style
+    * Higher-Level Categorization of Bugs (above "Product")
+    * Regular Reports by Email of Complex Queries ("Whining")
+    * "Environment Variable" Authentication Method
+    * User-List Drop-Down Menus
+    * Server-Side Comment Wrapping
+    * UI for Editing Priority, OS, Platform, and Severity
+    * Bugzilla Queries as RSS
+    * Choice of E-Mail Sending Methods
+    * "User Preferences"
+    * "Large Attachment" Storage
+    * Miscellaneous Improvements
+    * All Changes
+- Deprecated Features
+- Outstanding Issues (<======================== IMPORTANT, PLEASE READ)
+- How to Upgrade From An Older Bugzilla
+    * Steps for Upgrading
+- Code Changes Which May Affect Customizations
+    * The New Database-Compatibility Layer
+    * If You Customize Your Database...
+    * Many Functions Renamed
+    * User Preferences
+    * Other Changes
+- Security Fixes In 2.20 Releases
+- Release Notes for Previous Versions
+
+
+Introduction
+************
+
+This document contains the release notes for Bugzilla 2.20.
+In this document, recently added, changed, and removed features
+of Bugzilla are described. If you are upgrading from an older version,
+you will definitely want to read these release notes in detail, so that
+you have an idea of what has changed.
+
+If you are upgrading from a version before 2.18, also read the 2.18 release
+notes (lower in this file) and any previous release notes.
+
+If you are installing a new Bugzilla, you will still want to look over
+the release notes to see if there is any particularly important information
+that affects your installation.
+
+The 2.20 release is our current stable series. It has had about nine 
+months of development since 2.18, but they were nearly the most active
+nine months in Bugzilla's history. We hope that users will appreciate 
+our many external changes, and that Bugzilla administators will find 
+that our internal changes make their lives easier.
+
+If you would like to contribute code to Bugzilla, read our 
+Contributor's Guide at:
+
+http://www.bugzilla.org/docs/contributor.html
+
+
+Minimum Requirements
+********************
+
+Perl
+----
+
+  Perl v5.6.1            (changed from 2.18)  (Non-Windows platforms)
+  ActiveState Perl v5.8.1                     (Windows only)
+
+For MySQL Users
+---------------
+
+  MySQL v3.23.41                   (Note: 2.22 will require MySQL 4.x)
+  perl module: DBD::mysql v2.9003  (changed from 2.18)
+
+For PostgreSQL Users       (new in 2.20)
+--------------------
+
+  PostgreSQL 7.3.x         (8.x has not been tested, but may work)
+  perl module: DBD::Pg 1.31
+
+Required Perl Modules
+---------------------
+
+  AppConfig v1.52
+  CGI v2.93
+  Data::Dumper (any)
+  Date::Format v2.21
+  DBI v1.38              (changed from 2.18)
+  File::Spec v0.82
+  File::Temp (any)
+  Template Toolkit v2.08
+  Text::Wrap v2001.0131
+  Mail::Mailer 1.65      (new in 2.20)
+  Storable (any)         (new in 2.20)
+
+Optional Perl Modules
+---------------------
+
+  Chart::Base v1.0
+  GD v1.20
+  GD::Graph (any)
+  GD::Text::Align (any)
+  Net::LDAP (any)
+  PatchReader v0.9.4
+  XML::Parser (any)
+
+
+What's New?
+***********
+
+Experimental PostgreSQL Support
+-------------------------------
+
+In addition to MySQL, Bugzilla now also supports PostgreSQL. PostgreSQL
+support is still somewhat experimental. Although most major features of
+Bugzilla work on PostgreSQL in 2.20, there are probably still a few bugs
+that need to be worked out.
+
+PostgreSQL support in 2.20 is acceptable for smaller production
+environments that don't mind running into a bug or two now and then.
+
+
+New User-Interface Color/Style
+------------------------------
+
+You'll notice that Bugzilla looks a bit nicer, now! We've made a few
+color and style changes to update the overall "feel" of Bugzilla's
+User Inteface. We plan to do even more work on the UI for 2.22.
+
+
+Higher-Level Categorization of Bugs (above "Product")
+-----------------------------------------------------
+
+Previous Bugzillas had "Products" that you could file bugs in,
+and "Components" for those products. Now, "Products" can be grouped
+into "Classifications."
+
+To enable this, a Bugzilla administrator can turn on the 
+"useclassification" parameter, using editparams.cgi.
+
+
+Regular Reports by Email of Complex Queries ("Whining")
+-------------------------------------------------------
+
+You can now tell Bugzilla to do a specific query (or set of queries)
+every X minutes/hours/days, and send you the results by email. This is
+great for keeping track on a daily basis of what's going on in 
+your Bugzilla.
+
+
+"Environment Variable" Authentication Method
+--------------------------------------------
+
+You can now tell Bugzilla to accept a certain value passed in from
+Apache as authentication for Bugzilla users. This means that Bugzilla
+now "supports" any type of authentication that Apache supports.
+
+To use this, FIXME ----- EXPLAIN THIS BEFORE 2.20 RELEASE ----- FIXME
+
+
+User-List Drop-Down Menus
+-------------------------
+
+Now, anywhere in Bugzilla where you previously had to type in an
+email address by hand, you have the choice of having Bugzilla instead
+display a drop-down menu of users to pick from.
+
+This feature is best for small installations with few users, because
+on large installations the list grows too large to be useful.
+
+To enable the feature, turn on the "usemenuforusers" parameter in
+editparams.cgi.
+
+
+Server-Side Comment Wrapping
+----------------------------
+
+In older Bugzillas, comments were wrapped to 80 characters by the
+user's web browser, and then stored in the database that way. This caused
+problems because some browsers did not wrap comments properly.
+
+Now, Bugzilla stores comments unwrapped and wraps them at display time, so
+all new comments should be properly wrapped. Also, when you upgrade, Bugzilla
+will look for old "mis-wrapped" comments and attempt to wrap them properly.
+
+Lines beginning with the ">" character are assumed to be quotes, and are
+*not* wrapped.
+
+
+UI for Editing Priority, OS, Platform, and Severity
+---------------------------------------------------
+
+Bugzilla now has a User Interface for adding and removing values
+from the OS, Platform, Priority, and Severity fields. You can also
+rename values. Any user in the "editcomponents" group can click
+on the "Field Values" link in their page footer to edit these fields.
+
+Also, the default list of choices for OS and Platform for new 
+installations is now much smaller. Old installations will keep 
+the same list they have now.
+
+
+Bugzilla Queries as RSS
+-----------------------
+
+You can now view a Bugzilla query as valid RSS 1.0. This means that you
+could add a particular query to your RSS aggregator, if you wanted, to
+keep track of changes in Bugzilla.
+
+To see a query as RSS, just click on the "RSS" link on the bottom of
+your query results. Your query must return at least 1 result in order
+for you to see the link.
+
+
+Choice of E-Mail Sending Methods
+--------------------------------
+
+Bugzilla now uses perl's Mail::Mailer to send e-mail. This means that
+you have several choices of how Bugzilla can send email. By default, it
+still uses sendmail, but it can also use SMTP, qmail, or send all email
+to a file instead of out to users.
+
+A Bugzilla administrator can change which method is used by setting the
+"mail_delivery_method" parameter in editparams.cgi.
+
+
+"User Preferences"
+------------------
+
+Bugzilla users will now notice a section in their Preferences called
+"General Preferences." Administrators will notice a new link called
+"User Preferences."
+
+The Preferences system allows Bugzilla developers to specify arbitrary
+"user preferences" that change the behavior of certain parts of Bugzilla.
+Administrators can control whether or not users are allowed to use these
+preferences, and what the default settings are for a user who is not
+logged in.
+
+The first two preferences that we have implemented are:
+  + "Show a quip at the top of each bug list"
+  + "When viewing a bug, show comments in this order..."
+
+We plan to implement more preferences in the future.
+
+
+"Large Attachment" Storage
+--------------------------
+
+Bugzilla can now store very large attachments on disk instead of in the
+database. These attachments can't be searched with Boolean Charts, but
+they also don't take up database space, and they can be deleted individually
+by the admin.
+
+When uploading an attachment, a user chooses if it's a "Big File." If so,
+it's stored on the disk instead of in the database.
+
+To enable this feature, set the "maxlocalattachmentsize" parameter to
+a non-zero value, in editparams.cgi.
+
+
+Miscellaneous Improvements
+--------------------------
+
+- Marking an attachment as obsolete will now cancel all pending flag
+  requests for that attachment. That is, any flag that was set to "?"
+  on that attachment will be cleared.
+
+- You can now see which users are "watching" you, on the email 
+  preferences page.
+
+- You can tell Bugzilla to mark certain comments in a different
+  color by adding "&mark=1,2,3,5-7" to the end of the show_bug.cgi URL,
+  where "1,2,3,5-7" means "highlight comment 1, comment 2, comment 3, and
+  comments 5 through 7."
+
+- "QA Contact" now also appears on the New Bug page, if QA Contacts are
+  enabled on your installation.
+
+- Bugzilla email now has the "In-Reply-To" header added to it, so if
+  you use an email client that supports threads, you can view your
+  Bugzilla email in threads. If you are upgrading to a new version of
+  Bugzilla, and you want this support, please see the instructions at:
+  https://bugzilla.mozilla.org/attachment.cgi?id=172267
+
+- The email preferences system has been slightly updated. You will notice
+  the changes on your Email Preferences page.
+
+- You can now negate individual "boolean charts" (in the 
+  "Advanced Searching" section at the bottom of the "Advanced 
+   Search" page). That is, you can add "NOT" to the front of them.
+
+- You can add the words %assignee%, %reporter%, %user% (yourself), or
+  %qacontact% on the right-hand side of a Boolean Chart. For example, you
+  could make a Boolean Chart which said "Reporter" "does not equal" 
+  "%assignee%". That would give you all bugs where the Reporter was not
+  the same as the Assignee.
+
+- You can now search Boolean Charts by "commenter."
+
+- If you have a group with no name, it will be re-named to "group_#" where
+  "#" is the numeric Bugzilla Group ID for that group.
+
+- If you are using time-tracking, you can now see a report of time spent
+  on bugs using summarize_time.cgi.
+
+- If you are using time-tracking, bugzilla will now set "hours remaining"
+  to "0" automatically if you RESOLVE a bug, whether you are in the
+  time-tracking group or not.
+
+
+Deprecated Features
+*******************
+
+- Bugzilla 2.20 is the last Bugzilla version to support MySQL 3.23.x.
+  Starting with Bugzilla 2.22, Bugzilla will require MySQL 4.0.x. This will
+  allow Bugzilla to take advantage of the advanced features of MySQL 4.
+
+
+Outstanding Issues
+******************
+
+- (No Bug Number) VERY IMPORTANT: If you have customized the values in
+  your Status/Resolution field, you must edit checksetup.pl BEFORE YOU
+  RUN IT. Find the line that starts like this:
+
+  my @states = ("UNCONFIRMED",
+
+  That's where you set the values for the Status field.
+
+  my @resolutions = ("","FIXED",
+
+  And that's where you set values for the Resolution field.
+
+  Those are both near line 1786 in checksetup.pl.
+
+  If you forget to do this, you will have to manually edit the "bug_status"
+  and "resolution" tables in the database to contain the correct values.
+
+- bug 37765: VERY IMPORTANT: If you use the "sendmail" support of Bugzilla,
+  and you use an MTA which is *not* Sendmail (such as Postfix, Exim, etc.) 
+  you MUST turn on the "sendmailnow" parameter or Bugzilla will not send 
+  e-mail correctly.
+
+- (No Bug Number) If you close your web browser while the process_bug.cgi
+  or post_bug.cgi screen is running, not all emails will be sent, and
+  the next time that that bug is updated, there will be two updates. This
+  is because of a behavior of Apache that is beyond our control.
+
+- bug 276230: The support for restricting access to particular Categories of 
+  New Charts is not complete. You should treat the 'chartgroup' Param as the 
+  only access mechanism available. However, additionally, charts migrated from
+  Old Charts will be restricted to the groups that are marked MANDATORY for 
+  the corresponding Product. There is currently no way to change this 
+  restriction, and the groupings will not be updated if the group configuration
+  for the Product changes.
+
+- bug 69621: If you rename or remove a keyword that is in use on bugs, you will
+  need to rebuild the "keyword cache" by running sanitycheck.cgi and choosing
+  the option to rebuild the cache when it asks. Otherwise keywords may not show
+  up properly in search results.
+
+- (No Bug Number) If you have a lot of non-ASCII data in your Bugzilla (for 
+  example, if you use a translation of Bugzilla), don't enable the XS::Stash
+  option when you install the Template Toolkit, or your Bugzilla installation
+  may become slow. This problem is fixed in a not-yet-released version of the
+  Template Toolkit (after 2.14).
+
+- If at any time you upgraded from a version of Bugzilla between 2.17.4 -
+  2.17.7 to either 2.18rc3 or 2.19.1, you must manually fix your New Charts in
+  order for them to work. See the following link for instructions on how to do
+  this: https://bugzilla.mozilla.org/show_bug.cgi?id=276237#c18
+  If you are using 2.18rc3, but did not upgrade from version 2.17.4 or newer,
+  then you don't need to do this.
+
+- (No Bug Number) If your DBI is really, really old, Bugzilla might fail
+  with a strange error message when you try to run checksetup.pl. Try
+  upgrading your DBI using: perl -MCPAN -e'install DBI'
+
+- Bug 298659: LDAP support may be broken on Windows.
+
+- Bug 126266: Bugzilla does not use UTF-8 to display pages. This means
+  that if you enter non-ASCII characters into Bugzilla, they may
+  display strangely, or Bugzilla may have other problems. For a workaround,
+  see: http://www.bugzilla.org/docs/tip/html/security-bugzilla.html
+
+- Bug 99215: Flags are not protected by "mid-air collision" detection.
+  Nor are any attachment changes.
+
+- Bug 89822: When changing multiple bugs at the same time, there is no
+  "mid-air collision" protection.
+
+- Bug 285614: importxml.pl may be broken in many different ways.
+
+
+Upgrading From An Older Bugzilla
+************************************
+
+NOTE: Running checksetup.pl to upgrade a large installation (over 10,000 bugs)
+      may take a significant amount of time. checksetup will try to let
+      you know how long it will take, but expect downtime of an hour or
+      more if you have many bugs, many attachments, or many users.
+
+Steps for Upgrading
+-------------------
+
+1) View the Sanity Check (sanitycheck.cgi) page on your installation before
+   upgrading. Attempt to fix all warnings that the page produces before
+   you go any further, or you may experience problems during your upgrade.
+
+2) Make a backup of the  Bugzilla database before you upgrade, perhaps 
+   by using mysqldump.
+
+   Example:
+
+      mysqldump -u root -p --databases bugs > bugs.db.backup
+
+3) Replace the files in your installation with the new version of Bugzilla,
+   or you can try to use CVS to upgrade. The Bugzilla.org website has 
+   instructions on how to do the actual installation.
+
+4) Make sure that you run checksetup.pl after you install the new version.
+
+5) View the Sanity Check page again after you run checksetup.pl.
+
+6) It is recommended that, if possible, you fix any problems you find
+   immediately. Failure to do this may mean that Bugzilla will not work 
+   correctly. Be aware that if the sanity check page contains more errors after
+   an upgrade, it doesn't necessarily mean there are more errors in your 
+   database, as additional tests are added to the sanity check over time, and 
+   it is possible that those errors weren't being checked for in the old 
+   version.
+
+7) If you want threading support on your Bugzilla email (see the 
+   "Miscellaneous Improvements" section above for a description),
+    you need to follow the instructions at:
+    https://bugzilla.mozilla.org/attachment.cgi?id=172267
+
+
+Code Changes Which May Affect Customizations
+********************************************
+
+The New Database-Compatibility Layer
+------------------------------------
+
+For most customizations, this should have no effect. However, you should
+be aware that Bugzilla->dbh is now an instance of "Bugzilla::DB" instead
+of being a DBI object directly. In fact, it's actually a 
+Bugzilla::DB::Mysql for MySQL users, and a Bugzilla::DB::Pg for 
+PostgreSQL users.
+
+Anything called from $dbh (like $dbh->bz_last_key) that starts with
+"bz_" or "sql_" is a custom Bugzilla function. Anything *not* starting
+with those two prefixes is a normal DBI function.
+
+Methods whose names start with "sql_" generate a piece of a SQL statement.
+They generate the correct version of the statement for whichever database
+you are using.
+
+Methods whose names start with "bz_" do something directly.
+
+You can see more documentation about this at:
+
+http://www.bugzilla.org/docs/2.20/pod/Bugzilla/DB.pm
+
+
+If You Customize Your Database...
+---------------------------------
+
+In order to support multiple databases, we had to do something sort of
+tricky. Bugzilla now stores what it *thinks* the current database schema
+is, in a table called bz_schema.
+
+This means that when checksetup changes the database, it updates the
+bz_schema table. When *you* update the database, without using 
+checksetup to do it, the bz_schema table is *not* updated.
+
+So, if you're going to add/remove a new column/table to Bugzilla, or if you're
+going to change the definition of a column, try to do it by adding code to
+checksetup in the correct place. (It's one of the places where you find
+the word "--TABLE--".)
+
+You can see the documentation on the $dbh functions used to do this at:
+
+http://www.bugzilla.org/docs/2.20/pod/Bugzilla/DB.pm#schema_modification_methods
+
+
+Many Functions Renamed
+----------------------
+
+We are reorganizing the Bugzilla code so that it can support mod_perl. As
+part of this, we are moving all functions out of globals.pl and CGI.pl, and
+into modules in the Bugzilla/ directory.
+
+Sometimes when we moved them, we also renamed them. The new Bugzilla standard
+is to have functions_named_like_this, instead of FunctionsNamedLikeThis.
+
+So if you were using a FunctionNamedLikeThis that no longer works, try just
+using it as function_named_like_this. If that doesn't work, you may have to
+search for where we put it, and what we renamed it to. Most of the functions
+moved to logical places.
+
+If you really can't find it, search bugzilla.mozilla.org using the name
+of the old function. We usually moved one function per bug, so the new
+name will be somewhere in a bug report.
+
+
+User Preferences
+----------------
+
+Bugzilla now has a "User Preferences" system! These preferences are stored
+in the database, and specified by a Bugzilla developer. The Bugzilla
+developers actually call these "settings," but we called them "User 
+Preferences" in the UI to make things clearer.
+
+You access a user's settings differently depending on if you are in a
+.cgi file or in a template file:
+
+CGI: Bugzilla->user->settings->{'setting_name'}->value
+Template: Bugzilla.user.settings.setting_name.value
+
+Where "setting_name" is the name of the setting. You can see the current
+setting names in the "setting" table in the database.
+
+Remember that sometimes you may want to check a user's settings when 
+making a customization.
+
+To see how to add new settings, search for "add_setting" in checksetup.pl.
+Also see the template: template/en/default/global/setting-descs.none.tmpl.
+
+Other Changes
+-------------
+
+- The $::unconfirmedstate variable has been replaced by the actual string
+  "UNCONFIRMED" everywhere in Bugzilla code.
+
+- The %::FORM and %::MFORM variables are no longer used to access form
+  data. Instead, use $cgi->param(). There are many examples of how to do
+  this, all over the Bugzilla code.
+
+- SendSQL() and related calls are deprecated, and the various $dbh methods
+  should be used instead, such as $dbh->prepare() and $dbh->execute().
+  Bugzilla->dbh is the $dbh handle to use. We expect SendSQL to completely
+  disappear by 2.22. For more information on how to use the $dbh methods, 
+  see:  http://search.cpan.org/dist/DBI/DBI.pm
+
+
+Release Notes for Previous Versions
+***********************************
+
 *****************************************
-*** The Bugzilla 2.18.2 Release Notes ***
+*** The Bugzilla 2.18.x Release Notes ***
 *****************************************
 
 Table of Contents
