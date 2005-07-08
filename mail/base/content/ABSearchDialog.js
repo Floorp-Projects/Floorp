@@ -97,7 +97,7 @@ function searchOnLoad()
   abList = document.getElementById("abPopup");
   gAbResultsTree = document.getElementById("abResultsTree");
 
-  onMore(null, 0);
+  onMore(null);
 }
 
 function searchOnUnload()
