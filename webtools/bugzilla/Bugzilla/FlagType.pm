@@ -325,13 +325,32 @@ and returning just the ID portion of matching field names.
 =cut
 
 sub validate {
-    my $user = Bugzilla->user;
     my ($cgi, $bug_id, $attach_id) = @_;
-  
+
+    my $user = Bugzilla->user;
+    my $dbh = Bugzilla->dbh;
+
     my @ids = map(/^flag_type-(\d+)$/ ? $1 : (), $cgi->param());
   
-    foreach my $id (@ids)
-    {
+    return unless scalar(@ids);
+    
+    # No flag reference should exist when changing several bugs at once.
+    ThrowCodeError("flags_not_available", { type => 'b' }) unless $bug_id;
+
+    # We don't check that these flag types are valid for
+    # this bug/attachment. This check will be done later when
+    # processing new flags, see Flag::FormToNewFlags().
+
+    # All flag types have to be active
+    my $inactive_flagtypes =
+        $dbh->selectrow_array("SELECT 1 FROM flagtypes
+                               WHERE id IN (" . join(',', @ids) . ")
+                               AND is_active = 0 " .
+                               $dbh->sql_limit(1));
+
+    ThrowCodeError("flag_type_inactive") if $inactive_flagtypes;
+
+    foreach my $id (@ids) {
         my $status = $cgi->param("flag_type-$id");
         
         # Don't bother validating types the user didn't touch.
@@ -353,22 +372,31 @@ sub validate {
                            { id => $id , status => $status });
         }
         
+        # Make sure the user didn't specify a requestee unless the flag
+        # is specifically requestable.
+        my $new_requestee = trim($cgi->param("requestee_type-$id") || '');
+
+        if ($status eq '?'
+            && !$flag_type->{is_requesteeble}
+            && $new_requestee)
+        {
+            ThrowCodeError("flag_requestee_disabled",
+                           { name => $flag_type->{name} });
+        }
+
         # Make sure the requestee is authorized to access the bug
         # (and attachment, if this installation is using the "insider group"
         # feature and the attachment is marked private).
         if ($status eq '?'
             && $flag_type->{is_requesteeble}
-            && trim($cgi->param("requestee_type-$id")))
+            && $new_requestee)
         {
-            my $requestee_email = trim($cgi->param("requestee_type-$id"));
-
             # We know the requestee exists because we ran
             # Bugzilla::User::match_field before getting here.
-            my $requestee = Bugzilla::User->new_from_login($requestee_email);
+            my $requestee = Bugzilla::User->new_from_login($new_requestee);
 
             # Throw an error if the user can't see the bug.
-            if (!$requestee->can_see_bug($bug_id))
-            {
+            if (!$requestee->can_see_bug($bug_id)) {
                 ThrowUserError("flag_requestee_unauthorized",
                                { flag_type => $flag_type,
                                  requestee => $requestee,

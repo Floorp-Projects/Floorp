@@ -913,8 +913,11 @@ sub insert
         $vars->{'message'} = 'user_match_multiple';
     }
 
-    Bugzilla::Flag::validate($cgi, $bugid);
-    Bugzilla::FlagType::validate($cgi, $bugid, $cgi->param('id'));
+    # Flag::validate() should not detect any reference to existing
+    # flags when creating a new attachment. Setting the third param
+    # to -1 will force this function to check this point.
+    Bugzilla::Flag::validate($cgi, $bugid, -1);
+    Bugzilla::FlagType::validate($cgi, $bugid);
 
     # Escape characters in strings that will be used in SQL statements.
     my $sql_filename = SqlQuote($filename);
@@ -1148,7 +1151,7 @@ sub update
     Bugzilla::User::match_field($cgi, {
         '^requestee(_type)?-(\d+)$' => { 'type' => 'single' }
     });
-    Bugzilla::Flag::validate($cgi, $bugid);
+    Bugzilla::Flag::validate($cgi, $bugid, $attach_id);
     Bugzilla::FlagType::validate($cgi, $bugid, $attach_id);
 
   # Lock database tables in preparation for updating the attachment.

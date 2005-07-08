@@ -135,6 +135,15 @@
     [% title = "Invalid Dimensions" %]
     The width or height specified is not a positive integer.
 
+  [% ELSIF error == "invalid_flag_association" %]
+    [% title = "Invalid Flag Association" %]
+    Some flags do not belong to
+    [% IF attach_id %]
+      attachment [% attach_id FILTER html %].
+    [% ELSE %]
+      [%+ terms.bug %] [%+ bug_id FILTER html %].
+    [% END %]
+
   [% ELSIF error == "invalid_isactive_flag" %]
     [% title = "Invalid isactive flag" %]        
     The active flag was improperly set.  There may be
@@ -153,6 +162,20 @@
         
   [% ELSIF error == "flag_nonexistent" %]
     There is no flag with ID #[% id FILTER html %].
+
+  [% ELSIF error == "flags_not_available" %]
+    [% title = "Flag Editing not Allowed" %]
+    [% IF type == "b" %]
+      Flags cannot be set or changed when
+      changing several [% terms.bugs %] at once.
+    [% ELSE %]
+      References to existing flags when creating
+      a new attachment are invalid.
+    [% END %] 
+
+  [% ELSIF error == "flag_requestee_disabled" %]
+    [% title = "Flag not Specifically Requestable" %]
+    The flag <em>[% name FILTER html %]</em> is not specifically requestable.
   
   [% ELSIF error == "flag_status_invalid" %]
     The flag status <em>[% status FILTER html %]</em>
@@ -171,6 +194,10 @@
   [% ELSIF error == "flag_type_id_invalid" %]
     The flag type ID <em>[% id FILTER html %]</em> is not
     a positive integer.
+
+  [% ELSIF error == "flag_type_inactive" %]
+    [% title = "Inactive Flag Types" %]
+    Some flag types are inactive and cannot be used to create new flags.
 
   [% ELSIF error == "flag_type_nonexistent" %]
     There is no flag type with the ID <em>[% id FILTER html %]</em>.
