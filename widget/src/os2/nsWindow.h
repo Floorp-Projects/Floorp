@@ -63,6 +63,12 @@ class imgIContainer;
 
 //#define DEBUG_FOCUS
 
+#ifdef DEBUG_FOCUS
+  #define DEBUGFOCUS(what) printf("[%x] "#what" (%d)\n", (int)this, mWindowIdentifier)
+#else
+  #define DEBUGFOCUS(what)
+#endif
+
 // Base widget class.
 // This is abstract.  Controls (labels, radio buttons, listboxen) derive
 // from here.  A thing called a child window derives from here, and the

@@ -155,7 +155,7 @@ static PRBool gIsDBCS = PR_FALSE;
 static PRUint32 gLastInputEventTime = 0;
 
 #ifdef DEBUG_FOCUS
-static int currentWindowIdentifier = 0;
+  int currentWindowIdentifier = 0;
 #endif
 
 //-------------------------------------------------------------------------
@@ -951,11 +951,10 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 #ifdef DEBUG_FOCUS
    mWindowIdentifier = currentWindowIdentifier;
    currentWindowIdentifier++;
-   if (aInitData && (aInitData->mWindowType == eWindowType_toplevel)) {
-      printf("[%x] Create Frame Window (%d)\n", this, mWindowIdentifier);
-   } else {
-     printf("[%x] Create Window  (%d)\n", this, mWindowIdentifier);
-   }
+   if (aInitData && (aInitData->mWindowType == eWindowType_toplevel))
+     DEBUGFOCUS(Create Frame Window);
+   else
+     DEBUGFOCUS(Create Window);
 #endif
 
    // Create a window: create hidden & then size to avoid swp_noadjust problems
@@ -1127,9 +1126,7 @@ NS_METHOD nsWindow::Destroy()
       if( mWnd)
       {
          HWND hwndBeingDestroyed = mFrameWnd ? mFrameWnd : mWnd;
-#ifdef DEBUG_FOCUS
-         printf("[%x] Destroy (%d)\n", this, mWindowIdentifier);
-#endif
+         DEBUGFOCUS(Destroy);
          if (hwndBeingDestroyed == WinQueryFocus(HWND_DESKTOP)) {
            WinSetFocus(HWND_DESKTOP, WinQueryWindow(hwndBeingDestroyed, QW_PARENT));
          }
@@ -1270,30 +1267,44 @@ NS_METHOD nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 //
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
+// when the frame has its controls, this method is advisory because
+// the min/max/restore has already occurred;  only when the frame is
+// in kiosk/fullscreen mode does it perform the minimize or restore
 
+NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode)
+{
   nsresult rv;
-  PRBool visible;
 
   // save the requested state
   rv = nsBaseWidget::SetSizeMode(aMode);
 
-  IsVisible( visible);
-  if (NS_SUCCEEDED(rv) && visible) {
-    ULONG mode;
-    switch (aMode) {
-      case nsSizeMode_Maximized :
-        mode = SWP_MAXIMIZE;
-        break;
-      case nsSizeMode_Minimized :
-        mode = SWP_MINIMIZE;
-        break;
-      default :
-        mode = SWP_RESTORE;
-    }
-    ::WinSetWindowPos(GetMainWindow(), NULLHANDLE, 0L, 0L, 0L, 0L, mode);
+  // this is part of a kludge to keep minimized windows from getting
+  // restored when they get the focus - we defer the activation event
+  // until the window has actually been restored;  see WM_FOCUSCHANGED
+  if (gJustGotActivate) {
+    DEBUGFOCUS(deferred NS_ACTIVATE);
+    gJustGotActivate = PR_FALSE;
+    gJustGotDeactivate = PR_FALSE;
+    DispatchFocus(NS_ACTIVATE, TRUE);
   }
-  return rv;
+
+  // nothing to do in these cases
+  if (!NS_SUCCEEDED(rv) || !mChromeHidden || aMode == nsSizeMode_Maximized)
+    return rv;
+
+  HWND  hFrame = GetMainWindow();
+  ULONG ulStyle = WinQueryWindowULong( hFrame, QWL_STYLE);
+
+  // act on the request if the frame isn't already in the requested state
+  if (aMode == nsSizeMode_Minimized) {
+    if (!(ulStyle & WS_MINIMIZED))
+      WinSetWindowPos(hFrame, 0, 0, 0, 0, 0, SWP_MINIMIZE | SWP_DEACTIVATE);
+  }
+  else
+    if (ulStyle & (WS_MAXIMIZED | WS_MINIMIZED))
+      WinSetWindowPos(hFrame, 0, 0, 0, 0, 0, SWP_RESTORE);
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1535,9 +1546,7 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
     else
     if (mWnd) {
         if (!mInSetFocus) {
-#ifdef DEBUG_FOCUS
-           printf("[%x] SetFocus (%d)\n", this, mWindowIdentifier);
-#endif
+           DEBUGFOCUS(SetFocus);
            mInSetFocus = TRUE;
            WinSetFocus( HWND_DESKTOP, mWnd);
            mInSetFocus = FALSE;
@@ -2629,7 +2638,6 @@ void nsWindow::ConstrainZLevel(HWND *aAfter) {
 PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
 {
     PRBool result = PR_FALSE; // call the default window procedure
-    PRBool isMozWindowTakingFocus = PR_TRUE;
 
     switch (msg) {
 //#if 0
@@ -2910,68 +2918,66 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           result = OnScroll( msg, mp1, mp2);
           break;
 
-       case WM_ACTIVATE:
-#ifdef DEBUG_FOCUS
-          printf("[%x] WM_ACTIVATE (%d)\n", this, mWindowIdentifier);
-#endif
-          if (mp1) {
-            /* The window is being activated */
+        case WM_ACTIVATE:
+          DEBUGFOCUS(WM_ACTIVATE);
+          if (mp1)
             gJustGotActivate = PR_TRUE;
-          } else {
-            /* The window is being deactivated */
+          else
             gJustGotDeactivate = PR_TRUE;
-          }
           break;
 
         case WM_FOCUSCHANGED:
-#ifdef DEBUG_FOCUS
-          printf("[%x] WM_FOCUSCHANGED (%d)\n", this, mWindowIdentifier);
-#endif
+        {
+          PRBool isMozWindowTakingFocus = PR_TRUE;
+          DEBUGFOCUS(WM_FOCUSCHANGED);
+
+          // If the frame was activated earlier or mp1 is 0, dispatch
+          // focus & activation events.  However, if the frame is minimized,
+          // defer activation and let SetSizeMode() dispatch it after the
+          // window has been restored by the user - otherwise, Show() will
+          // restore it involuntarily.  
+
           if (SHORT1FROMMP(mp2)) {
-            /* We are receiving focus */
-#ifdef DEBUG_FOCUS
-            printf("[%x] NS_GOTFOCUS (%d)\n", this, mWindowIdentifier);
-#endif
+            DEBUGFOCUS(NS_GOTFOCUS);
             result = DispatchFocus(NS_GOTFOCUS, isMozWindowTakingFocus);
-            /* If mp1 is 0, this is the special WM_FOCUSCHANGED we got */
-            /* from the frame activate, so act like we just got activated */
+
             if (gJustGotActivate || mp1 == 0) {
-              gJustGotActivate = PR_FALSE;
-              gJustGotDeactivate = PR_FALSE;
-#ifdef DEBUG_FOCUS
-              printf("[%x] NS_ACTIVATE (%d)\n", this, mWindowIdentifier);
-#endif
-              result = DispatchFocus(NS_ACTIVATE, isMozWindowTakingFocus);
+              HWND hActive = WinQueryActiveWindow( HWND_DESKTOP);
+              if (!(WinQueryWindowULong( hActive, QWL_STYLE) & WS_MINIMIZED)) {
+                DEBUGFOCUS(NS_ACTIVATE);
+                gJustGotActivate = PR_FALSE;
+                gJustGotDeactivate = PR_FALSE;
+                result = DispatchFocus(NS_ACTIVATE, isMozWindowTakingFocus);
+              }
             }
+
             if ( WinIsChild( mWnd, HWNDFROMMP(mp1)) && mNextID == 1) {
-#ifdef DEBUG_FOCUS
-              printf("[%x] NS_PLUGIN_ACTIVATE (%d)\n", this, mWindowIdentifier);
-#endif
+              DEBUGFOCUS(NS_PLUGIN_ACTIVATE);
               result = DispatchFocus(NS_PLUGIN_ACTIVATE, isMozWindowTakingFocus);
               WinSetFocus(HWND_DESKTOP, mWnd);
             }
-
-          } else {
-            /* We are losing focus */
+          }
+          // We are losing focus
+          else {
             char className[19];
             ::WinQueryClassName((HWND)mp1, 19, className);
             if (strcmp(className, WindowClass()) != 0 && 
                 strcmp(className, WC_SCROLLBAR_STRING) != 0) {
-               isMozWindowTakingFocus = PR_FALSE;
+              isMozWindowTakingFocus = PR_FALSE;
             }
+
             if (gJustGotDeactivate) {
-               gJustGotDeactivate = PR_FALSE;
-#ifdef DEBUG_FOCUS
-               printf("[%x] NS_DEACTIVATE (%d)\n", this, mWindowIdentifier);
-#endif
-               result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
+              DEBUGFOCUS(NS_DEACTIVATE);
+              gJustGotDeactivate = PR_FALSE;
+              result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
             }
-#ifdef DEBUG_FOCUS
-            printf("[%x] NS_LOSTFOCUS (%d)\n", this, mWindowIdentifier);
-#endif
+
+            DEBUGFOCUS(NS_LOSTFOCUS);
             result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
           }
+
           break;
+        }
 
         case WM_WINDOWPOSCHANGED: 
           result = OnReposition( (PSWP) mp1);
@@ -3707,28 +3713,43 @@ NS_METHOD nsWindow::SetTitle(const nsAString& aTitle)
    return NS_OK;
 } 
 
+// this implementation guarantees that sysmenus & minimized windows
+// will always have some icon other than the sysmenu default
+
 NS_METHOD nsWindow::SetIcon(const nsAString& aIconSpec) 
 {
-  // Assume the given string is a local identifier for an icon file.
+  static HPOINTER hDefaultIcon = 0;
+  HPOINTER        hWorkingIcon = 0;
 
+  // Assume the given string is a local identifier for an icon file.
   nsCOMPtr<nsILocalFile> iconFile;
   ResolveIconName(aIconSpec, NS_LITERAL_STRING(".ico"),
                   getter_AddRefs(iconFile));
-  if (!iconFile)
-    return NS_OK; // not an error if icon is not found
 
-  // Now try the char* path.
-  nsCAutoString path;
-  iconFile->GetNativePath( path );
+  // if the file was found, try to use it
+  if (iconFile) {
+    nsCAutoString path;
+    iconFile->GetNativePath(path);
 
-  if (mFrameIcon) {
-    WinFreeFileIcon(mFrameIcon);
-    mFrameIcon = NULLHANDLE;
+    if (mFrameIcon)
+      WinFreeFileIcon(mFrameIcon);
+
+    mFrameIcon = WinLoadFileIcon(path.get(), FALSE);
+    hWorkingIcon = mFrameIcon;
   }
-  mFrameIcon = WinLoadFileIcon(path.get(), FALSE);
-  if (mFrameIcon)
-    WinSendMsg(mFrameWnd, WM_SETICON, (MPARAM)mFrameIcon, (MPARAM)0);
 
+  // if that doesn't work, use the app's icon (let's hope it can be
+  // loaded because nobody should have to look at SPTR_APPICON - ugggh!)
+  if (hWorkingIcon == 0) {
+    if (hDefaultIcon == 0) {
+      hDefaultIcon = WinLoadPointer(HWND_DESKTOP, 0, 1);
+      if (hDefaultIcon == 0)
+        hDefaultIcon =  WinQuerySysPointer(HWND_DESKTOP, SPTR_APPICON, FALSE);
+    }
+    hWorkingIcon = hDefaultIcon;
+  }
+
+  WinSendMsg(mFrameWnd, WM_SETICON, (MPARAM)hWorkingIcon, (MPARAM)0);
   return NS_OK;
 }
 
@@ -4108,7 +4129,7 @@ ULONG nsWindow::WindowStyle()
 ULONG nsWindow::GetFCFlags()
 {
   ULONG style = FCF_TITLEBAR | FCF_SYSMENU | FCF_TASKLIST |
-                FCF_CLOSEBUTTON | FCF_NOBYTEALIGN |
+                FCF_CLOSEBUTTON | FCF_NOBYTEALIGN | FCF_AUTOICON |
                 (gIsDBCS ? FCF_DBE_APPSTAT : 0);
 
   if (mWindowType == eWindowType_dialog) {
