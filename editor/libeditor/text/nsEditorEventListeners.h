@@ -52,6 +52,9 @@
 #include "nsIEditor.h"
 #include "nsIPlaintextEditor.h"
 #include "nsICaret.h"
+#include "nsIPresShell.h"
+#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 
 /** The nsTextEditorKeyListener public nsIDOMKeyListener
  *  This class will delegate events to its editor according to the translation
@@ -206,7 +209,9 @@ public:
    *  @param aEditor the editor this listener calls for editing operations
    */
   void SetEditor(nsIEditor *aEditor)          { mEditor = aEditor; }
-  void SetPresShell(nsIPresShell *aPresShell) { mPresShell = aPresShell; }
+  void SetPresShell(nsIPresShell *aPresShell) {
+    mPresShell = do_GetWeakReference(aPresShell);
+  }
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -226,8 +231,8 @@ protected:
   
 protected:
 
-  nsIEditor*    mEditor;
-  nsIPresShell* mPresShell;
+  nsIEditor* mEditor;
+  nsWeakPtr  mPresShell;
   
   nsCOMPtr<nsICaret> mCaret;
   PRBool             mCaretDrawn;

@@ -514,14 +514,15 @@ nsTextEditorDragListener::DragGesture(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 {
-  if (mPresShell)
+  if (!mCaret)
   {
-    if (!mCaret)
+    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+    if (presShell)
     {
       mCaret = do_CreateInstance("@mozilla.org/layout/caret;1");
       if (mCaret)
       {
-        mCaret->Init(mPresShell);
+        mCaret->Init(presShell);
         mCaret->SetCaretReadOnly(PR_TRUE);
       }
       mCaretDrawn = PR_FALSE;
