@@ -56,28 +56,33 @@ push(@INC, "$topsrcdir/xpinstall/packager");
 require StageUtils;
 require "$topsrcdir/config/zipcfunc.pl";
 
-$seiFileNameGeneric       = "stubinstall.exe";
-$seiFileNameSpecific      = "seamonkey-os2-installer.exe";
-$seiStubRootName          = "seamonkey-os2-stub-installer";
-$seiFileNameSpecificStub  = "$seiStubRootName.exe";
-$seuFileNameSpecific      = "seamonkeyUninstall.exe";
-$seuzFileNameSpecific     = "seamonkeyuninstall.zip";
-
-$seiFileNameGenericRes       = "stubinstall.res";
-$seiFileNameSpecificRes  = "seamonkey-os2-installer.res";
-$seiFileNameSpecificRC  = "seamonkey-os2-installer.rc";
-$seiFileNameSpecificStubRC = "$seiStubRootName.rc";
-$seiFileNameSpecificStubRes  = "$seiStubRootName.res";
-$seuFileNameSpecificRes   = "SeaMonkeyUninstall.res";
-$seuFileNameSpecificRC  = "SeaMonkeyUninstall.rc";
-
 ParseArgv(@ARGV);
 
-$topobjdir                = "$topsrcdir"                 if !defined($topobjdir);
-$inStagePath              = "$topobjdir/stage"           if !defined($inStagePath);
-$inDistPath               = "$topobjdir/dist"            if !defined($inDistPath);
-$inXpiURL                 = "ftp://not.supplied.invalid" if !defined($inXpiURL);
-$inRedirIniURL            = $inXpiURL                    if !defined($inRedirIniURL);
+$topobjdir                = "$topsrcdir"                     if !defined($topobjdir);
+$inStagePath              = "$topobjdir/stage"               if !defined($inStagePath);
+$inDistPath               = "$topobjdir/dist"                if !defined($inDistPath);
+$inXpiURL                 = "ftp://not.supplied.invalid"     if !defined($inXpiURL);
+$inRedirIniURL            = $inXpiURL                        if !defined($inRedirIniURL);
+$inInstName               = "seamonkey-os2-installer"        if !defined($inInstName);
+$inStubName               = "seamonkey-os2-stub-installer"   if !defined($inStubName);
+
+$seiFileNameGeneric       = "stubinstall.exe";
+$seiFileNameSpecific      = "$inInstName.exe";
+$seiStubRootName          = $inStubName;
+$seiFileNameSpecificStub  = "$seiStubRootName.exe";
+$seuFileNameSpecific      = "SeaMonkeyUninstall.exe";
+$seuzFileNameSpecific     = "seamonkeyuninstall.zip";
+$seiGreFileNameSpecific   = "gre-os2-installer.exe";
+$seizGreFileNameSpecific  = "gre-os2-installer.zip";
+
+$seiFileNameGenericRes      = "stubinstall.res";
+$seiFileNameSpecificRes     = "$inInstName.res";
+$seiFileNameSpecificRC      = "$inInstName.rc";
+$seiFileNameSpecificStubRC  = "$seiStubRootName.rc";
+$seiFileNameSpecificStubRes = "$seiStubRootName.res";
+$seuFileNameSpecificRes     = "SeaMonkeyUninstall.res";
+$seuFileNameSpecificRC      = "SeaMonkeyUninstall.rc";
+
 
 if(defined($ENV{DEBUG_INSTALLER_BUILD}))
 {
@@ -132,6 +137,13 @@ print "\n";
 $gDirPackager         = "$topsrcdir/xpinstall/packager";
 $gDirStageProduct     = "$inStagePath/mozilla";
 $gDirDistInstall      = "$inDistPath/install";
+$gDirDistInstGre      = "$inDistPath/inst_gre";
+
+# Build GRE installer package first before building Mozilla!  GRE installer is required by the mozilla installer.
+#if(system("perl \"$gDirPackager/win_gre/makeall.pl\" -objDir \"$topobjdir\" -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
+#{
+#  die "\n Error: perl \"$gDirPackager/win_gre/makeall.pl\" -objDir \"$topobjdir\" -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
+#}
 
 if(defined($ENV{DEBUG_INSTALLER_BUILD}))
 {
@@ -146,6 +158,15 @@ if(system("perl \"$gDirPackager/make_stage.pl\" -pn mozilla -os os2 -sd \"$inSta
 {
   die "\n Error: perl \"$gDirPackager/make_stage.pl\" -pn mozilla -os os2 -sd \"$inStagePath\" -dd \"$inDistPath\"\n";
 }
+
+# Copy the GRE installer to the Ns' stage area
+#if(!(-e "$gDirDistInstGre/$seiGreFileNameSpecific"))
+#{
+#  die "\"$gDirDistInstGre/$seiGreFileNameSpecific\": file missing\n";
+#}
+#mkdir "$gDirStageProduct/gre";
+#copy("$gDirDistInstGre/$seiGreFileNameSpecific", "$gDirStageProduct/gre") ||
+#  die "copy(\"$gDirDistInstGre/$seiGreFileNameSpecific\", \"$gDirStageProduct/gre\"): $!\n";
 
 $versionLanguage               = "en";
 $ENV{WIZ_nameCompany}          = "mozilla.org";
@@ -245,6 +266,12 @@ else
 {
   mkdir ("$gDirDistInstall/setup",0775);
 }
+
+#if(!(-e "$inDistPath/inst_gre/$seiGreFileNameSpecific"))
+#{
+#  die "\"$inDistPath/inst_gre/$seiGreFileNameSpecific\": file missing\n";
+#}
+#MakeExeZip("$inDistPath/inst_gre", $seiGreFileNameSpecific, $seizGreFileNameSpecific);
 
 if(MakeXpiFile())
 {
@@ -495,13 +522,13 @@ sub PrintUsage
 
            -objDir <path>            : path to the objdir.  default is topsrcdir
 
-           -stagePath <staging path> : full path to where the seamonkey components are staged at
+           -stagePath <staging path> : full path to where the mozilla components are staged at
                                        Default stage path, if this is not set, is:
-                                         [seamonkey]/stage
+                                         [mozilla]/stage
 
-           -distPath <dist path>     : full path to where the seamonkey dist dir is at.
+           -distPath <dist path>     : full path to where the mozilla dist dir is at.
                                        Default stage path, if this is not set, is:
-                                         [seamonkey]/dist
+                                         [mozilla]/dist
 
            -aurl <archive url>       : either ftp:// or http:// url to where the
                                        archives (.xpi, .exe, .zip, etc...) reside
@@ -510,6 +537,16 @@ sub PrintUsage
                                        redirec.ini resides.  If not supplied, it
                                        will be assumed to be the same as archive
                                        url.
+
+           -instname <filename base> : the base of the filename to be used for
+                                       the installer, e.g.
+                                       mozilla-1.8b2.en-US.os2.installer
+                                       (.exe will be appended in any case)
+
+           -stubname <filename base> : the base of the filename to be used for
+                                       the stub installer, e.g.
+                                       mozilla-1.8b2.en-US.os2.stub-installer
+                                       (.exe will be appended in any case)
        \n";
 }
 
@@ -566,6 +603,22 @@ sub ParseArgv
       {
         ++$counter;
         $inRedirIniURL = $myArgv[$counter];
+      }
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]instname$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $inInstName = $myArgv[$counter];
+      }
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]stubname$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $inStubName = $myArgv[$counter];
       }
     }
   }
