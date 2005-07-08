@@ -133,7 +133,7 @@ repackage-zip: $(ZIP_IN)
 	mkdir $(DIST)/l10n-stage
 	cd $(DIST)/l10n-stage && \
 	  $(UNMAKE_PACKAGE)
-	$(RM) $(STAGEDIR)/chrome/en-US.jar \
+	$(RM) $(STAGEDIST)/chrome/en-US.jar \
 	  $(STAGEDIST)/chrome/en-US.manifest \
 	  $(STAGEDIST)/defaults/pref/all-l10n.js
 	$(RM) -r $(STAGEDIST)/searchplugins \
