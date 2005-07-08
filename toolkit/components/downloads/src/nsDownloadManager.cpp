@@ -725,11 +725,13 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
   // is cancelled, but there's other cancelallation causes that shouldn't 
   // remove this, we need to improve those bits
   nsCOMPtr<nsILocalFile> tempFile;
-  rv = internalDownload->GetTempFile(getter_AddRefs(tempFile));
-  PRBool exists;
-  tempFile->Exists(&exists);
-  if (exists)
-    tempFile->Remove(PR_FALSE);
+  internalDownload->GetTempFile(getter_AddRefs(tempFile));
+  if (tempFile) {
+    PRBool exists;
+    tempFile->Exists(&exists);
+    if (exists)
+      tempFile->Remove(PR_FALSE);
+  }
 
   gObserverService->NotifyObservers(internalDownload, "dl-cancel", nsnull);
 
