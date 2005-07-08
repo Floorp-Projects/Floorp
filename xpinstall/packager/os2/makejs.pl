@@ -91,7 +91,7 @@ $greFileVersion   = $ENV{WIZ_greFileVersion};
 $greUniqueID      = $ENV{WIZ_greUniqueID};
 
 # Get the name of the file replacing the .jst extension with a .js extension
-@inJstFileSplit   = split(/\./,$inJstFile);
+@inJstFileSplit   = split(/\.jst/,$inJstFile);
 $outJsFile        = $inJstFileSplit[0];
 $outJsFile       .= ".js";
 $outTempFile      = $inJstFileSplit[0];
