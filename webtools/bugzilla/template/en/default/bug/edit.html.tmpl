@@ -125,240 +125,289 @@
 
 [%# *** Hardware Reporter Product OS AddCC *** %]
 
-  <table cellspacing="1" cellpadding="1" border="0">
+  <table>
+
     <tr>
-      <td align="right">
-        [% IF Param('useclassification') %]
-          [% IF bug.classification_id != "1" %]
-            <b>[[% bug.classification FILTER html %]]</b>
+      <td valign="top">
+        <table cellspacing="1" cellpadding="1">
+  
+          <tr>
+            <td align="right">
+              [% IF Param('useclassification') %]
+                [% IF bug.classification_id != "1" %]
+                  <b>[[% bug.classification FILTER html %]]</b>
+                [% END %]
+              [% END %]
+              <b>[% terms.Bug %]#:</b>
+            </td>
+            <td>
+              <a href="[% Param('urlbase') %]show_bug.cgi?id=[% bug.bug_id %]">
+                [% bug.bug_id %]</a>
+                [% IF Param("usebugaliases") %]
+                  <label for="alias" title="a name for the [% terms.bug %] that can be used in place of its ID number, f.e. when adding it to a list of dependencies">
+                    <b>alias:</b>
+                    <input id="alias" name="alias" value="[% bug.alias FILTER html %]" size="20" maxlength="20">
+                  </label>
+                [% END %]
+            </td>
+          </tr>
+
+          <tr>
+            <td align="right">
+              <b><u>P</u>roduct:</b>
+            </td>
+            [% PROCESS select selname => "product" accesskey => "p" %]
+          </tr>
+
+          [%# *** Component Version CC Priority Severity AssignedTo Milestone *** %]
+
+          <tr>
+            <td align="right">
+              <b>
+                <a href="describecomponents.cgi?product=[% bug.product FILTER url_quote %]">
+                  Co<u>m</u>ponent</a>:
+              </b>
+            </td>
+            [% PROCESS select selname => "component" accesskey => "m" %]
+          </tr>
+
+          <tr>
+            <td align="right">
+              <b>
+                <a href="page.cgi?id=fields.html#status">Status</a>:
+              </b>
+            </td>
+            <td>[% status_descs.${bug.bug_status} FILTER html %]</td>
+          </tr>
+
+          <tr>
+            <td align="right">
+              <b>
+                <a href="page.cgi?id=fields.html#resolution">Resolution</a>:
+              </b>
+            </td>
+            <td>
+              [% resolution_descs.${bug.resolution} FILTER html %]
+              [% IF bug.resolution == "DUPLICATE" %]
+                of [% terms.bug %] [%+ "${bug.dup_id}" FILTER bug_link(bug.dup_id) %]
+              [% END %]
+            </td>
+          </tr>
+
+          <tr>
+            <td align="right">
+              <b>
+                <a href="page.cgi?id=fields.html#assigned_to">Assigned&nbsp;To</a>:
+              </b>
+            </td>
+            <td>[% bug.assigned_to.identity FILTER html %]</td>
+          </tr>
+
+        </table>
+
+      </td>
+      <td valign="top">
+
+        <table cellspacing="1" cellpadding="1">
+
+          <tr>
+            <td align="right">
+              <b><u>H</u>ardware:</b>
+            </td>
+            [% PROCESS select selname => "rep_platform" accesskey => "h" %]
+          </tr>
+
+          <tr>
+            <td align="right">
+              <b><u>O</u>S:</b>
+            </td>
+            [% PROCESS select selname => "op_sys" accesskey => "o" %]
+          </tr>
+
+          <tr>
+            <td align="right">
+              <b><u>V</u>ersion:</b>
+            </td>
+            [% PROCESS select selname => "version" accesskey => "v" %]
+          </tr>
+
+          <tr>
+            <td align="right">
+              <b><a href="page.cgi?id=fields.html#priority">Pr<u>i</u>ority</a>:</b>
+            </td>
+            [% PROCESS select selname => "priority" accesskey => "i" %]
+          </tr>
+
+          <tr>
+            <td align="right">
+              <b><a href="page.cgi?id=fields.html#bug_severity">S<u>e</u>verity</a>:</b>
+            </td>
+            [% PROCESS select selname = "bug_severity" accesskey => "e" %]
+          </tr>
+
+          [% IF Param("usetargetmilestone") && bug.target_milestone %]
+            <tr>
+              <td align="right">
+                <b>
+                  [% IF bug.milestoneurl %]
+                    <a href="[% bug.milestoneurl FILTER html %]">
+                  [% END %]
+                  <u>T</u>arget Milestone[% "</a>" IF bug.milestoneurl %]:
+                </b>
+              </td>
+              [% PROCESS select selname = "target_milestone" accesskey => "t" %]
+            </tr>
           [% END %]
-        [% END %]
-        <b>[% terms.Bug %]#:</b>
-      </td>
-      <td>
-        <a href="[% Param('urlbase') %]show_bug.cgi?id=[% bug.bug_id %]">
-          [% bug.bug_id %]</a>
-          [% IF Param("usebugaliases") %]
-            <label for="alias" title="a name for the [% terms.bug %] that can be used in place of its ID number, f.e. when adding it to a list of dependencies">
-              <b>alias:</b>
-              <input id="alias" name="alias" value="[% bug.alias FILTER html %]" size="20" maxlength="20">
-            </label>
-          [% END %]
+
+        </table>
       </td>
 
-      <td>&nbsp;</td>
+      <td valign="top">
 
-      <td align="right">
-        <b><u>H</u>ardware:</b>
-      </td>
-      [% PROCESS select selname => "rep_platform" accesskey => "h" %]
+        <table cellpadding="1" cellspacing="1">
 
-      <td align="right">
-        <b>Reporter:</b>
-      </td>
-      <td>
-        <a href="mailto:[% bug.reporter.email FILTER html %]">
-          [% bug.reporter.identity FILTER html %]</a>
-      </td>
-    </tr>
+          <tr>
+            <td align="right">
+              <b>Reporter:</b>
+            </td>
+            <td>
+              <a href="mailto:[% bug.reporter.email FILTER html %]">
+                [% bug.reporter.identity FILTER html %]</a>
+            </td>
+          </tr>
 
-    <tr>
-      <td align="right">
-        <b><u>P</u>roduct:</b>
-      </td>
-      [% PROCESS select selname => "product" accesskey => "p" %]
+          <tr>
+            <td align="right" valign="top">
+              <b><u>A</u>dd&nbsp;CC:</b>
+            </td>
+            <td>
+               [% INCLUDE global/userselect.html.tmpl
+                  name => "newcc"
+                  value => ""
+                  accesskey => "a"
+                  size => 30
+                  multiple => 5
+                %]
+            </td>
+          </tr>
 
-      <td align="right">
-        <b><u>O</u>S:</b>
-      </td>
-      [% PROCESS select selname => "op_sys" accesskey => "o" %]
-
-      <td align="right">
-        <b><u>A</u>dd&nbsp;CC:</b>
-      </td>
-      <td>
-         [% INCLUDE global/userselect.html.tmpl
-            name => "newcc"
-            value => ""
-            accesskey => "a"
-            size => 30
-            multiple => 5
-          %]
-      </td>
-    </tr>
-
-[%# *** Component Version CC Priority Severity AssignedTo Milestone *** %]
-
-    <tr>
-      <td align="right">
-        <b>
-          <a href="describecomponents.cgi?product=[% bug.product FILTER url_quote %]">
-            Co<u>m</u>ponent</a>:
-        </b>
-      </td>
-      [% PROCESS select selname => "component" accesskey => "m" %]
-
-      <td align="right">
-        <b><u>V</u>ersion:</b>
-      </td>
-      [% PROCESS select selname => "version" accesskey => "v" %]
-
-      <td rowspan="4" align="right" valign="top">
-        <b>CC:</b>
-      </td>
-      <td rowspan="4" valign="top">
-      [% IF bug.cc %]
-        <select name="cc" multiple="multiple" size="5">
-        [% FOREACH c = bug.cc %]
-          <option value="[% c FILTER html %]">[% c FILTER html %]</option>
-        [% END %]
-        </select>
-        <br>
-        <input type="checkbox" name="removecc">Remove selected CCs
-        <br>
-      [% ELSE %]
-        <input type="hidden" name="cc" value="">
-      [% END %]
-      </td>
-    </tr>
-
-    <tr>
-      <td align="right">
-        <b>
-          <a href="page.cgi?id=fields.html#status">Status</a>:
-        </b>
-      </td>
-      <td>[% status_descs.${bug.bug_status} FILTER html %]</td>
-      <td>&nbsp;</td>
-
-      <td align="right">
-        <b><a href="page.cgi?id=fields.html#priority">Pr<u>i</u>ority</a>:</b>
-      </td>
-      [% PROCESS select selname => "priority" accesskey => "i" %]
-    </tr>
-
-    <tr>
-      <td align="right">
-        <b>
-          <a href="page.cgi?id=fields.html#resolution">Resolution</a>:
-        </b>
-      </td>
-      <td>
-        [% resolution_descs.${bug.resolution} FILTER html %]
-        [% IF bug.resolution == "DUPLICATE" %]
-          of [% terms.bug %] [%+ "${bug.dup_id}" FILTER bug_link(bug.dup_id) %]
-        [% END %]
-      </td>
-      <td>&nbsp;</td>
-
-      <td align="right">
-        <b><a href="page.cgi?id=fields.html#bug_severity">S<u>e</u>verity</a>:</b>
-      </td>
-      [% PROCESS select selname = "bug_severity" accesskey => "e" %]
-
-    </tr>
-
-    <tr>
-      <td align="right">
-        <b>
-          <a href="page.cgi?id=fields.html#assigned_to">Assigned&nbsp;To</a>:
-        </b>
-      </td>
-      <td>[% bug.assigned_to.identity FILTER html %]</td>
-      <td>&nbsp;</td>
-
-      [% IF Param("usetargetmilestone") && bug.target_milestone %]
-        <td align="right">
-          <b>
-            [% IF bug.milestoneurl %]
-              <a href="[% bug.milestoneurl FILTER html %]">
+          <tr>
+            <td align="right" valign="top">
+              <b>CC:</b>
+            </td>
+            <td valign="top">
+            [% IF bug.cc %]
+              <select name="cc" multiple="multiple" size="5">
+              [% FOREACH c = bug.cc %]
+                <option value="[% c FILTER html %]">[% c FILTER html %]</option>
+              [% END %]
+              </select>
+              <br>
+              <input type="checkbox" name="removecc">Remove selected CCs
+              <br>
+            [% ELSE %]
+              <input type="hidden" name="cc" value="">
             [% END %]
-            <u>T</u>arget Milestone[% "</a>" IF bug.milestoneurl %]:
-          </b>
-        </td>
-        [% PROCESS select selname = "target_milestone" accesskey => "t" %]
-      [% ELSE %]
-        <td colspan="3">&nbsp;</td>
-      [% END %]
-    </tr>
+            </td>
+          </tr>
 
-[%# *** QAContact URL Requests Summary Whiteboard Keywords *** %]
+        </table>
 
-   [% IF Param('useqacontact') %]
-     <tr>
-       <td align="right">
-       <b><u>Q</u>A Contact:</b>
-       </td>
-       <td colspan="7">
-         [% INCLUDE global/userselect.html.tmpl
-            name => "qa_contact"
-            value => bug.qa_contact.login
-            accesskey => "q"
-            size => 60
-            emptyok => 1
-          %]
-       </td>
-     </tr>
-   [% END %]
-
-  <tr>
-    <td align="right">
-      <b>
-        [% IF bug.bug_file_loc 
-           AND NOT bug.bug_file_loc.match("^(javascript|data)") %]
-          <a href="[% bug.bug_file_loc FILTER html %]"><u>U</u>RL</a>:
-        [% ELSE %]
-          <u>U</u>RL:
-        [% END %]
-      </b>
-    </td>
-    <td colspan="5">
-      <input name="bug_file_loc" accesskey="u"
-             value="[% bug.bug_file_loc FILTER html %]" size="60">
-    </td>
-    <td rowspan="4" colspan="2" valign="top">
-        [% IF bug.flag_types.size > 0 %]
-          [% PROCESS "flag/list.html.tmpl"
-             flag_types = bug.flag_types
-             any_flags_requesteeble = bug.any_flags_requesteeble %]
-        [% END %]
-    </td>
-  </tr>
-
-  <tr>
-    <td align="right">
-      <b><u>S</u>ummary:</b>
-    </td>
-    <td colspan="5">
-      <input name="short_desc" accesskey="s"
-             value="[% bug.short_desc FILTER html %]" size="60">
-    </td>
-  </tr>
-
-  [% IF Param('usestatuswhiteboard') %]
-    <tr>
-      <td align="right">
-        <b>Status <u>W</u>hiteboard:</b>
       </td>
-      <td colspan="5">
-        <input name="status_whiteboard" accesskey="w"
-               value="[% bug.status_whiteboard FILTER html %]" size="60">
-      </td>
-    </tr>
-  [% END %]
+      </tr>
 
-  [% IF bug.use_keywords %]
-    <tr>
-      <td align="right">
-        <b>
-          <a href="describekeywords.cgi"><u>K</u>eywords</a>:
-        </b>
-      <td colspan="5">
-        <input name="keywords" accesskey="k"
-               value="[% bug.keywords.join(', ') FILTER html %]" size="60">
+      <tr>
+        <td colspan="2">
+          <table cellspacing="1" cellpadding="1">
+
+      [%# *** QAContact URL Requests Summary Whiteboard Keywords *** %]
+
+         [% IF Param('useqacontact') %]
+           <tr>
+             <td align="right">
+             <b><u>Q</u>A Contact:</b>
+             </td>
+             <td colspan="7">
+               [% INCLUDE global/userselect.html.tmpl
+                  name => "qa_contact"
+                  value => bug.qa_contact.login
+                  accesskey => "q"
+                  size => 60
+                  emptyok => 1
+                %]
+             </td>
+           </tr>
+         [% END %]
+
+          <tr>
+            <td align="right">
+              <b>
+                [% IF bug.bug_file_loc 
+                   AND NOT bug.bug_file_loc.match("^(javascript|data)") %]
+                  <a href="[% bug.bug_file_loc FILTER html %]"><u>U</u>RL</a>:
+                [% ELSE %]
+                  <u>U</u>RL:
+                [% END %]
+              </b>
+            </td>
+            <td colspan="5">
+              <input name="bug_file_loc" accesskey="u"
+                     value="[% bug.bug_file_loc FILTER html %]" size="60">
+            </td>
+          </tr>
+
+          <tr>
+            <td align="right">
+              <b><u>S</u>ummary:</b>
+            </td>
+            <td colspan="5">
+              <input name="short_desc" accesskey="s"
+                     value="[% bug.short_desc FILTER html %]" size="60">
+            </td>
+          </tr>
+
+          [% IF Param('usestatuswhiteboard') %]
+            <tr>
+              <td align="right">
+                <b>Status <u>W</u>hiteboard:</b>
+              </td>
+              <td colspan="5">
+                <input name="status_whiteboard" accesskey="w"
+                       value="[% bug.status_whiteboard FILTER html %]" size="60">
+              </td>
+            </tr>
+          [% END %]
+
+          [% IF bug.use_keywords %]
+            <tr>
+              <td align="right">
+                <b>
+                  <a href="describekeywords.cgi"><u>K</u>eywords</a>:
+                </b>
+              <td colspan="5">
+                <input name="keywords" accesskey="k"
+                       value="[% bug.keywords.join(', ') FILTER html %]" size="60">
+              </td>
+            </tr>
+          [% END %]
+
+        </table>
+      </td>
+
+      <td valign="top">
+        <table cellspacing="1" cellpadding="1">
+          <tr>
+            <td colspan="2" valign="top">
+                [% IF bug.flag_types.size > 0 %]
+                  [% PROCESS "flag/list.html.tmpl"
+                     flag_types = bug.flag_types
+                     any_flags_requesteeble = bug.any_flags_requesteeble %]
+                [% END %]
+            </td>
+          </tr>
+        </table>
       </td>
     </tr>
-  [% END %]
   </table>
 
   [% IF UserInGroup(Param('timetrackinggroup')) %]
