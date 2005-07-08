@@ -411,8 +411,10 @@ sub GotURI {
                 foreach my $field (keys %fieldMap) {
                     my @arr = $xml_bug->getElementsByTagName($field);
                     if (@arr) {
-                        my $str = $arr[0]->getFirstChild->getData();
-                        $bug{$fieldMap{$field}} = $str;
+                        my $firstChild = $arr[0]->getFirstChild();
+                        if (defined $firstChild) {
+                            $bug{$fieldMap{$field}} = $firstChild->getData();
+                        }
                     }
                 }
             }
