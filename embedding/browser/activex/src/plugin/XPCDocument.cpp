@@ -112,6 +112,7 @@ public:
 #include "nsString.h"
 #include "nsNetUtil.h"
 
+#include "nsIContent.h"
 #include "nsIURI.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
@@ -925,6 +926,7 @@ public:
 
     nsCOMPtr<nsIDOMWindow> mDOMWindow;
     nsCOMPtr<nsIDOMDocument> mDOMDocument;
+    nsCOMPtr<nsIDOMElement> mDOMElement;
     CComObject<IEWindow> *mWindow;
     CComObject<IEBrowser> *mBrowser;
     CComBSTR mURL;
@@ -942,14 +944,13 @@ public:
     HRESULT Init(PluginInstanceData *pData)
     {
         mData = pData;
-        nsCOMPtr<nsIDOMElement> element;
 
         // Get the DOM document
         NPN_GetValue(mData->pPluginInstance, NPNVDOMElement, 
-                     NS_STATIC_CAST(nsIDOMElement **, getter_AddRefs(element)));
-        if (element)
+                     NS_STATIC_CAST(nsIDOMElement **, getter_AddRefs(mDOMElement)));
+        if (mDOMElement)
         {
-            element->GetOwnerDocument(getter_AddRefs(mDOMDocument));
+            mDOMElement->GetOwnerDocument(getter_AddRefs(mDOMDocument));
         }
 
         // Get the DOM window
@@ -1838,7 +1839,9 @@ END_COM_MAP()
                         nsAutoPopupStatePusher popupStatePusher(window,
                                                                 openAllowed);
 
-                        lh->OnLinkClick(nsnull, eLinkVerb_Replace,
+                        nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMElement));
+
+                        lh->OnLinkClick(content, eLinkVerb_Replace,
                             uri, szTargetFrame ? szTargetFrame : mUseTarget);
                     }
                 }
