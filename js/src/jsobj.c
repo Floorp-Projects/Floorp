@@ -1120,12 +1120,20 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 #endif
 
-    /* Belt-and-braces: check that this eval callee has access to scopeobj. */
-    rt = cx->runtime;
-    if (rt->findObjectPrincipals) {
-        scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
-        if (scopePrincipals != principals)
-            scopeobj = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]));
+    /*
+     * Belt-and-braces: check that the lesser of eval's principals and the
+     * caller's principals has access to scopeobj.
+     */
+    if (principals) {
+        rt = cx->runtime;
+        if (rt->findObjectPrincipals) {
+            scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
+            if (!principals->subsume(principals, scopePrincipals)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_BAD_INDIRECT_CALL, js_eval_str);
+                return JS_FALSE;
+            }
+        }
     }
 
     ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);

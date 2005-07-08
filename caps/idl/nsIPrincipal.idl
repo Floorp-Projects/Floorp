@@ -51,7 +51,7 @@ interface nsIURI;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-[uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
+[uuid(a67c4736-9a95-4ce1-9ffc-3f88c0913a34)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -151,4 +151,24 @@ interface nsIPrincipal : nsISerializable
      * Throws if there is no certificate associated with this principal.
      */
     attribute string commonName;
+
+    /**
+     * Returns whether the other principal is equal to or weaker than this
+     * principal.  Principals are equal if they are the same object, they
+     * have the same origin, or they have the same certificate ID.
+     *
+     * Thus a principal subsumes itself if it is equal to itself.
+     *
+     * The system principal subsumes itself and all other principals except
+     * the non-principal.
+     *
+     * The non-principal is not equal to itself or any other principal, and
+     * therefore does not subsume itself.
+     *
+     * Both codebase and certificate principals are subsumed by the system
+     * principal, but no codebase or certificate principal yet subsumes any
+     * other codebase or certificate principal.  This may change in a future
+     * release; note that nsIPrincipal is unfrozen, not slated to be frozen.
+     */
+    boolean subsumes(in nsIPrincipal other);
 };
