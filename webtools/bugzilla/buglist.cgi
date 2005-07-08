@@ -1013,7 +1013,10 @@ if ($format->{'extension'} eq "html") {
     }
     my $bugids = join(":", @bugidlist);
     # See also Bug 111999
-    if (length($bugids) < 4000) {
+    if (length($bugids) == 0) {
+        $cgi->remove_cookie('BUGLIST');
+    }
+    elsif (length($bugids) < 4000) {
         $cgi->send_cookie(-name => 'BUGLIST',
                           -value => $bugids,
                           -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
