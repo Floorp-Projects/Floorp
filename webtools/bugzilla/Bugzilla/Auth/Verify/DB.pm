@@ -34,6 +34,10 @@ use strict;
 use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Util;
+# Because of the screwy way that Auth works, it thinks
+# that we're redefining subroutines if we "use" anything
+# that "uses" Bugzilla::Auth.
+require Bugzilla::User;
 
 my $edit_options = {
     'new' => 1,
@@ -52,11 +56,8 @@ sub authenticate {
 
     return (AUTH_NODATA) unless defined $username && defined $passwd;
 
-    # We're just testing against the db: any value is ok
-    trick_taint($username);
-
-    my $userid = $class->get_id_from_username($username);
-    return (AUTH_LOGINFAILED) unless defined $userid;
+    my $userid = Bugzilla::User::login_to_id($username);
+    return (AUTH_LOGINFAILED) unless $userid;
 
     return (AUTH_LOGINFAILED, $userid) 
         unless $class->check_password($userid, $passwd);
@@ -72,15 +73,6 @@ sub authenticate {
       if $disabledtext ne '';
 
     return (AUTH_OK, $userid);
-}
-
-sub get_id_from_username {
-    my ($class, $username) = @_;
-    my $dbh = Bugzilla->dbh;
-    my $sth = $dbh->prepare_cached("SELECT userid FROM profiles " .
-                                   "WHERE login_name=?");
-    my ($userid) = $dbh->selectrow_array($sth, undef, $username);
-    return $userid;
 }
 
 sub get_disabled {

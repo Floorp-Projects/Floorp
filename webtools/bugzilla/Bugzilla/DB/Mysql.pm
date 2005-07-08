@@ -111,6 +111,12 @@ sub sql_fulltext_search {
     return "MATCH($column) AGAINST($text)";
 }
 
+sub sql_istring {
+    my ($self, $string) = @_;
+    
+    return $string;
+}
+
 sub sql_to_days {
     my ($self, $date) = @_;
 

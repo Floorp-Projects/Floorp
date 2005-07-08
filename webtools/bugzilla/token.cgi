@@ -36,6 +36,7 @@ use Bugzilla::Constants;
 use Bugzilla::Auth;
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
@@ -114,7 +115,8 @@ if ( $::action eq 'reqpw' ) {
     CheckEmailSyntax($cgi->param('loginname'));
 
     my $quotedloginname = SqlQuote($cgi->param('loginname'));
-    SendSQL("SELECT userid FROM profiles WHERE login_name = $quotedloginname");
+    SendSQL("SELECT userid FROM profiles WHERE " .
+            $dbh->sql_istrcmp('login_name', $quotedloginname));
     FetchSQLData()
       || ThrowUserError("account_inexistent");
 }

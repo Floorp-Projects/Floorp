@@ -31,6 +31,8 @@ require "globals.pl";
 
 use strict;
 
+my $dbh = Bugzilla->dbh;
+
 my $EMAIL_TRANSFORM_NONE = "email_transform_none";
 my $EMAIL_TRANSFORM_BASE_DOMAIN = "email_transform_base_domain";
 my $EMAIL_TRANSFORM_NAME_ONLY = "email_transform_name_only";
@@ -45,13 +47,15 @@ sub findUser($) {
   my ($address) = @_;
   # if $email_transform is $EMAIL_TRANSFORM_NONE, return the address, otherwise, return undef
   if ($email_transform eq $EMAIL_TRANSFORM_NONE) {
-    my $stmt = "SELECT login_name FROM profiles WHERE profiles.login_name = \'$address\';";
+    my $stmt = "SELECT login_name FROM profiles WHERE " .
+               $dbh->sql_istrcmp('login_name', $dbh->quote($address));
     SendSQL($stmt);
     my $found_address = FetchOneColumn();
     return $found_address;
   } elsif ($email_transform eq $EMAIL_TRANSFORM_BASE_DOMAIN) {
     my ($username) = ($address =~ /(.+)@/);
-    my $stmt = "SELECT login_name FROM profiles WHERE profiles.login_name RLIKE \'$username\';";
+    my $stmt = "SELECT login_name FROM profiles WHERE " . $dbh->sql_istrcmp(
+               'login_name', $dbh->quote($username), $dbh->sql_regexp());
     SendSQL($stmt);
 
     my $domain;
@@ -68,7 +72,8 @@ sub findUser($) {
     return $new_address;
   } elsif ($email_transform eq $EMAIL_TRANSFORM_NAME_ONLY) {
     my ($username) = ($address =~ /(.+)@/);
-    my $stmt = "SELECT login_name FROM profiles WHERE profiles.login_name RLIKE \'$username\';";
+    my $stmt = "SELECT login_name FROM profiles WHERE " .$dbh->sql_istrcmp(
+                'login_name', $dbh->quote($username), $dbh->sql_regexp());
     SendSQL($stmt);
     my $found_address = FetchOneColumn();
     return $found_address;

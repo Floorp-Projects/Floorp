@@ -218,6 +218,19 @@ sub import {
     $Exporter::ExportLevel-- if $is_exporter;
 }
 
+sub sql_istrcmp {
+    my ($self, $left, $right, $op) = @_;
+    $op ||= "=";
+
+    return $self->sql_istring($left) . " $op " . $self->sql_istring($right);
+}
+
+sub sql_istring {
+    my ($self, $string) = @_;
+
+    return "LOWER($string)";
+}
+
 sub sql_position {
     my ($self, $fragment, $text) = @_;
 
@@ -1152,6 +1165,33 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
  Params:      $column = name of column to search (scalar)
               $text = text to search for (scalar)
  Returns:     formatted SQL for for full text search
+
+=item C<sql_istrcmp>
+
+ Description: Returns SQL for a case-insensitive string comparison.
+ Params:      $left - What should be on the left-hand-side of the
+                      operation.
+              $right - What should be on the right-hand-side of the
+                       operation.
+              $op (optional) - What the operation is. Should be a 
+                  valid ANSI SQL comparison operator, like "=", "<", 
+                  "LIKE", etc. Defaults to "=" if not specified.
+ Returns:     A SQL statement that will run the comparison in 
+              a case-insensitive fashion.
+ Note:        Uses sql_istring, so it has the same performance concerns.
+              Try to avoid using this function unless absolutely necessary.
+              Subclass Implementors: Override sql_istring instead of this
+              function, most of the time (this function uses sql_istring).
+
+=item C<sql_istring>
+
+ Description: Returns SQL syntax "preparing" a string or text column for
+              case-insensitive comparison. 
+ Params:      $string - string to convert (scalar)
+ Returns:     formatted SQL making the string case insensitive
+ Note:        The default implementation simply calls LOWER on the parameter.
+              If this is used to search on a text column with index, the index
+              will not be usually used unless it was created as LOWER(column).
 
 =item C<bz_lock_tables>
 

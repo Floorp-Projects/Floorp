@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.27 2005/05/12 19:13:56 lpsolit%gmail.com Exp $
+# $Id: bug_email.pl,v 1.28 2005/07/08 02:31:43 mkanat%kerio.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -111,6 +111,8 @@ my $test = 0;
 my $restricted = 0;
 my $SenderShort;
 my $Message_ID;
+
+my $dbh = Bugzilla->dbh;
 
 # change to use default product / component functionality
 my $DEFAULT_PRODUCT = "PENDING";
@@ -1149,7 +1151,8 @@ END
     $query .=  $state . ", \'$bug_when\', \'$bug_when\', $ever_confirmed)\n";
 #    $query .=  SqlQuote( "NEW" ) . ", now(), " . SqlQuote($comment) . " )\n";
 
-    SendSQL("SELECT userid FROM profiles WHERE login_name=\'$reporter\'");
+    SendSQL("SELECT userid FROM profiles WHERE " .
+            $dbh->sql_istrcmp('login_name', $dbh->quote($reporter)));
     my $userid = FetchOneColumn();
 
     my $id;

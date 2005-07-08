@@ -84,7 +84,8 @@ sub login {
             # also sent), and the id, so that we have a way of telling that we
             # got something instead of a bunch of NULLs
             $sth = $dbh->prepare("SELECT extern_id, userid, disabledtext " .
-                                 "FROM profiles WHERE login_name=?");
+                                 "FROM profiles WHERE " .
+                                 $dbh->sql_istrcmp('login_name', '?'));
             $sth->execute($env_email);
 
             $sth->execute();

@@ -145,12 +145,14 @@ sub queue {
     
     # Filter results by exact email address of requester or requestee.
     if (defined $cgi->param('requester') && $cgi->param('requester') ne "") {
-        push(@criteria, "requesters.login_name = " . SqlQuote($cgi->param('requester')));
+        push(@criteria, $dbh->sql_istrcmp('requesters.login_name',
+                                          SqlQuote($cgi->param('requester'))));
         push(@excluded_columns, 'requester') unless $cgi->param('do_union');
     }
     if (defined $cgi->param('requestee') && $cgi->param('requestee') ne "") {
         if ($cgi->param('requestee') ne "-") {
-            push(@criteria, "requestees.login_name = " . SqlQuote($cgi->param('requestee')));
+            push(@criteria, $dbh->sql_istrcmp('requestees.login_name',
+                            SqlQuote($cgi->param('requestee'))));
         }
         else { push(@criteria, "flags.requestee_id IS NULL") }
         push(@excluded_columns, 'requestee') unless $cgi->param('do_union');

@@ -84,7 +84,8 @@ sub new {
 # in the id its already had to validate (or the User.pm object, of course)
 sub new_from_login {
     my $invocant = shift;
-    return $invocant->_create("login_name=?", @_);
+    my $dbh = Bugzilla->dbh;
+    return $invocant->_create($dbh->sql_istrcmp('login_name', '?'), @_);
 }
 
 # Internal helper for the above |new| methods
@@ -637,8 +638,9 @@ sub match {
         if (&::Param('usevisibilitygroups')) {
             $query .= ", user_group_map ";
         }
-        $query    .= "WHERE (login_name LIKE $sqlstr " .
-                     "OR realname LIKE $sqlstr) ";
+        $query .= "WHERE ("  
+            . $dbh->sql_istrcmp('login_name', $sqlstr, "LIKE") . " OR " .
+              $dbh->sql_istrcmp('realname', $sqlstr, "LIKE") . ") ";
         if (&::Param('usevisibilitygroups')) {
             $query .= "AND user_group_map.user_id = userid " .
                       "AND isbless = 0 " .
@@ -664,7 +666,7 @@ sub match {
         my $sqlstr = &::SqlQuote($str);
         my $query  = "SELECT userid, realname, login_name " .
                      "FROM profiles " .
-                     "WHERE login_name = $sqlstr ";
+                     "WHERE " . $dbh->sql_istrcmp('login_name', $sqlstr);
         # Exact matches don't care if a user is disabled.
 
         &::PushGlobalSQLState();
@@ -1213,8 +1215,9 @@ sub login_to_id ($) {
     my $dbh = Bugzilla->dbh;
     # $login will only be used by the following SELECT statement, so it's safe.
     trick_taint($login);
-    my $user_id = $dbh->selectrow_array(
-        "SELECT userid FROM profiles WHERE login_name = ?", undef, $login);
+    my $user_id = $dbh->selectrow_array("SELECT userid FROM profiles WHERE " .
+                                        $dbh->sql_istrcmp('login_name', '?'),
+                                        undef, $login);
     if ($user_id) {
         return $user_id;
     } else {

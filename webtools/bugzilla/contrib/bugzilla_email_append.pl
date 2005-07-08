@@ -42,6 +42,8 @@ use BugzillaEmail;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::BugMail;
 
+my $dbh = Bugzilla->dbh;
+
 # Create a new MIME parser:
 my $parser = new MIME::Parser;
 
@@ -101,7 +103,8 @@ if (!defined($found_id)) {
 }
 
 # get the user id
-SendSQL("SELECT userid FROM profiles WHERE login_name = \'$SenderShort\';");
+SendSQL("SELECT userid FROM profiles WHERE " . 
+        $dbh->sql_istrcmp('login_name', $dbh->quote($SenderShort)));
 my $userid = FetchOneColumn();
 if (!defined($userid)) {
   DealWithError("Userid not found for $SenderShort");

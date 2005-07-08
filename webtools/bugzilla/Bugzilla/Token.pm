@@ -104,7 +104,7 @@ sub IssuePasswordToken {
                     AND tokens.tokentype = 'password'
                     AND tokens.issuedate > NOW() - " .
                     $dbh->sql_interval('10 MINUTE') . "
-                    WHERE login_name = $quotedloginname");
+                 WHERE " . $dbh->sql_istrcmp('login_name', $quotedloginname));
     my ($userid, $toosoon) = &::FetchSQLData();
 
     if ($toosoon) {

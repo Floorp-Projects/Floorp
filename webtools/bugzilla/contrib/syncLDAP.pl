@@ -30,6 +30,7 @@ use lib qw(.);
 use Net::LDAP;
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 
 my $readonly = 0;
 my $nodisable = 0;
@@ -237,7 +238,9 @@ if($readonly == 0) {
    print "Performing DB update:\nPhase 1: disabling not-existing users... " unless $quiet;
    if($nodisable == 0) {
       while( my ($key, $value) = each(%disable_users) ) {
-        SendSQL("UPDATE profiles SET disabledtext = 'auto-disabled by ldap sync' WHERE login_name='$key'" );
+        SendSQL("UPDATE profiles SET disabledtext = 'auto-disabled by ldap " .
+                "sync' WHERE " . $dbh->sql_istrcmp('login_name', 
+                $dbh->quote($key)));
       }
       print "done!\n" unless $quiet;
    }
@@ -249,9 +252,12 @@ if($readonly == 0) {
    if($noupdate == 0) {
       while( my ($key, $value) = each(%update_users) ) {
         if(defined @$value{'new_login_name'}) {
-          SendSQL("UPDATE profiles SET login_name = '" . @$value{'new_login_name'} . "' WHERE login_name='$key'" );
+          SendSQL("UPDATE profiles SET login_name = '" . 
+                  @$value{'new_login_name'} . "' WHERE " .
+                  $dbh->sql_istrcmp('login_name', $dbh->quote($key)));
         } else {
-          SendSQL("UPDATE profiles SET realname = '" . @$value{'realname'} . "' WHERE login_name='$key'" );
+          SendSQL("UPDATE profiles SET realname = '" . @$value{'realname'} .
+                   "' WHERE " . $dbh->sql_istrcmp('login_name', $dbh->quote($key)));
         }
       }
       print "done!\n" unless $quiet;

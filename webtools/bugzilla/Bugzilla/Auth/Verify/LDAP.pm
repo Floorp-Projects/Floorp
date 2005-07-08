@@ -137,7 +137,8 @@ sub authenticate {
     my $dbh = Bugzilla->dbh;
     my $sth = $dbh->prepare_cached("SELECT userid, disabledtext " .
                                    "FROM profiles " .
-                                   "WHERE login_name=?");
+                                   "WHERE " .
+                                   $dbh->sql_istrcmp('login_name', '?'));
     my ($userid, $disabledtext) =
       $dbh->selectrow_array($sth,
                             undef,

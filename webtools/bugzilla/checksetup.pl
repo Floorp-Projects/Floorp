@@ -4155,7 +4155,7 @@ if ($sth->rows == 0) {
             }
         }
         $sth = $dbh->prepare("SELECT login_name FROM profiles " .
-                              "WHERE login_name = ?");
+                              "WHERE " . $dbh->sql_istrcmp('login_name', '?'));
         $sth->execute($login);
         if ($sth->rows > 0) {
             print "$login already has an account.\n";
@@ -4258,9 +4258,10 @@ if ($sth->rows == 0) {
     }
 
     # Put the admin in each group if not already    
-    my $userid = $dbh->selectrow_array(
-        "SELECT userid FROM profiles WHERE login_name = ?", undef, $login); 
-   
+    my $userid = $dbh->selectrow_array("SELECT userid FROM profiles WHERE " .
+                                       $dbh->sql_istrcmp('login_name', '?'),
+                                       undef, $login);
+
     # Admins get explicit membership and bless capability for the admin group
     my ($admingroupid) = $dbh->selectrow_array("SELECT id FROM groups 
                                                 WHERE name = 'admin'");
