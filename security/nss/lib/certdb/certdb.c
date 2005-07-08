@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.73 2005/06/30 20:53:46 wtchang%redhat.com Exp $
+ * $Id: certdb.c,v 1.74 2005/07/08 07:06:55 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -1913,6 +1913,55 @@ CERT_IsRootDERCert(SECItem *derCert)
     return isRoot;
 }
 
+static CERT_CompareValidityStatus GetNewestTime(PRTime a, PRTime b)
+{
+    if ( LL_CMP (a, == , b) ) {
+        return ValidityEqual;
+    } else if (LL_CMP(a, >, b)) {
+        return ValidityChooseA;
+    } else {
+        return ValidityChooseB;
+    }
+}
+
+CERT_CompareValidityStatus
+CERT_CompareValidityTimes(CERTValidity* val_a, CERTValidity* val_b)
+{
+    PRTime notBeforeA, notBeforeB, notAfterA, notAfterB;
+    SECStatus rv;
+    CERT_CompareValidityStatus afterStatus, beforeStatus;
+
+    if (!val_a || !val_b)
+    {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return ValidityUndetermined;
+    }
+
+    if ( SECSuccess != DER_DecodeTimeChoice(&notBeforeA, &val_a->notBefore) ||
+         SECSuccess != DER_DecodeTimeChoice(&notBeforeB, &val_b->notBefore) ||
+         SECSuccess != DER_DecodeTimeChoice(&notAfterA, &val_a->notAfter) ||
+         SECSuccess != DER_DecodeTimeChoice(&notAfterB, &val_b->notAfter) ) {
+        return ValidityUndetermined;
+    }
+
+    /* sanity check */
+    if (ValidityChooseA == GetNewestTime(notBeforeA, notAfterA) ||
+        ValidityChooseA == GetNewestTime(notBeforeB, notAfterB)) {
+        PORT_SetError(SEC_ERROR_INVALID_TIME);
+        return ValidityUndetermined;
+    }
+
+    beforeStatus = GetNewestTime(notBeforeA, notBeforeB);
+    afterStatus = GetNewestTime(notAfterA, notAfterB);
+    if (afterStatus != ValidityEqual) {
+        /* one cert validity goes farthest into the future, select it */
+        return afterStatus;
+    }
+    /* the two certs have the same expiration date */
+    PORT_Assert(LL_CMP(notAfterA, == , notAfterB));
+    /* choose cert with the latest start date */
+    return beforeStatus;
+}
 
 /*
  * is certa newer than certb?  If one is expired, pick the other one.
