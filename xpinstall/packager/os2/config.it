@@ -335,7 +335,7 @@ Show Dialog=AUTO
 
 [Check Instance0]
 ; If you create your own product, make sure to change this name to something else
-Class Name=MozillaMessageWindow
+Class Name=SeaMonkeyMessageWindow
 Window Name=
 ;*** LOCALIZE ME BABY ***
 Message=Download of $ProductName$ was successful. $ProductNameNoVersion$ must be closed to proceed with installation. Click OK to exit $ProductNameNoVersion$ automatically and to begin installation.
@@ -356,7 +356,7 @@ Extra Cmd0 Parameter=-u
 Message=Unable to close mozturbo.exe. Please press OK to try again. If this problem persists, press the Cancel button and close mozturbo.exe manually. To do this, go to the directory where $ProductName$ is installed and type 'mozturbo -u'.
 
 [Component XPCOM]
-Description Short=Mozilla XPCOM
+Description Short=XPCOM
 ;*** LOCALIZE ME BABY ***
 Description Long=Install Engine
 Archive=xpcom.xpi
@@ -788,7 +788,7 @@ Timing=post smartupdate
 ClassName=WPFolder
 Title=$ProductName$
 Location=[DESKTOP]
-Object ID=<MOZILLAFLDR>
+Object ID=<SEAMONKEYFLDR>
 Attributes=FAIL
 
 [Component Navigator-Program Folder0]
@@ -802,7 +802,7 @@ Working Dir=[SETUP PATH]
 Location=[Default Folder]
 Association Filters=*.HTM,*.HTML
 Association Types=HTML,text/html
-Object ID=<MOZILLAEXE>
+Object ID=<SEAMONKEYEXE>
 Attributes=UPDATE
 
 [Component Navigator-Program Folder0-Object1]
@@ -812,7 +812,7 @@ File=[SETUP PATH]\$MainExeFile$
 Parameters=-ProfileManager
 Working Dir=[SETUP PATH]
 Location=[Default Folder]
-Object ID=<MOZILLAPROFMANAGER>
+Object ID=<SEAMONKEYPROFMANAGER>
 Attributes=UPDATE
 
 [Component Uninstaller-Program Folder0]
@@ -825,7 +825,7 @@ File=[SETUP PATH]\Uninstall\$UninstallFile$
 Parameters=/ua \"$UserAgent$\"
 Working Dir=[SETUP PATH]
 Location=[Default Folder]
-Object ID=<MOZILLA_UNINSTALL>
+Object ID=<SEAMONKEY_UNINSTALL>
 Attributes=UPDATE
 
 [Component MailNews-Program Folder0]
@@ -838,7 +838,7 @@ File=[SETUP PATH]\$MainExeFile$
 Parameters=-mail
 Working Dir=[SETUP PATH]
 Location=[Default Folder]
-Object ID=<MOZILLAMAIL>
+Object ID=<SEAMONKEYMAIL>
 Attributes=UPDATE
 
 [Strings]

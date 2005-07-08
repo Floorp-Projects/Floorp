@@ -60,7 +60,7 @@ if($#ARGV < 1)
        .it file      : input ini template file
 
        version       : version to be shown in setup.  Typically the same version
-                       as show in mozilla.exe.  This version string will be shown
+                       as show in seamonkey.exe.  This version string will be shown
                        on the title of the main dialog.
 
                      ie: perl makeuninstallini.pl uninstall.it 6.0.0.1999120608
