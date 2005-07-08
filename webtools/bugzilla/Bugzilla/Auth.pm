@@ -107,13 +107,15 @@ sub authenticate {
     my @args   = @_;
     my @firstresult = ();
     my @result = ();
+    my $current_verify_method;
     for my $method (split /,\s*/, Param("user_verify_class")) {
+        $current_verify_method = $method;
         $method = "Bugzilla::Auth::Verify::" . $method;
         @result = $method->authenticate(@args);
         @firstresult = @result unless @firstresult;
 
         if (($result[0] != AUTH_NODATA)&&($result[0] != AUTH_LOGINFAILED)) {
-            $current_verify_class = $method;
+            unshift @result, ($current_verify_method);
             return @result;
         }
     }
@@ -123,13 +125,16 @@ sub authenticate {
     # see if we can set $current to the first verify method that
     # will allow a new login
 
+    my $chosen_verify_method;
     for my $method (split /,\s*/, Param("user_verify_class")) {
+        $current_verify_method = $method;
         $method = "Bugzilla::Auth::Verify::" . $method;
         if ($method->can_edit('new')) {
-            $current_verify_class = $method;
+            $chosen_verify_method = $method;
         }
     }
 
+    unshift @result, $chosen_verify_method;
     return @result;
 }
 
@@ -222,16 +227,17 @@ This method is passed a username and a password, and returns a list
 containing up to four return values, depending on the results of the
 authentication.
 
-The first return value is one of the status codes defined in
-L<Bugzilla::Constants|Bugzilla::Constants> and described below.  The
-rest of the return values are status code-specific and are explained in
-the status code descriptions.
+The first return value is the name of the class that generated the results 
+constined in the remaining return values.  The second return value is one of 
+the status codes defined in L<Bugzilla::Constants|Bugzilla::Constants> and 
+described below.  The rest of the return values are status code-specific 
+and are explained in the status code descriptions.
 
 =over 4
 
 =item C<AUTH_OK>
 
-Authentication succeeded. The second variable is the userid of the new
+Authentication succeeded. The third variable is the userid of the new
 user.
 
 =item C<AUTH_NODATA>
@@ -241,11 +247,11 @@ cases, such as cookie authentication when the cookie is not present.
 
 =item C<AUTH_ERROR>
 
-An error occurred when trying to use the login mechanism. The second return
+An error occurred when trying to use the login mechanism. The third return
 value may contain the Bugzilla userid, but will probably be C<undef>,
-signifiying that the userid is unknown. The third value is a tag describing
+signifiying that the userid is unknown. The fourth value is a tag describing
 the error used by the authentication error templates to print a description
-to the user. The optional fourth argument is a hashref of values used as part
+to the user. The optional fifth argument is a hashref of values used as part
 of the tag's error descriptions.
 
 This error template must have a name/location of
@@ -255,22 +261,22 @@ I<account/auth/C<lc(authentication-type)>-error.html.tmpl>.
 
 An incorrect username or password was given. Note that for security reasons,
 both cases return the same error code. However, in the case of a valid
-username, the second argument may be the userid. The authentication
+username, the third argument may be the userid. The authentication
 mechanism may not always be able to discover the userid if the password is
 not known, so whether or not this argument is present is implementation
 specific. For security reasons, the presence or lack of a userid value should
 not be communicated to the user.
 
-The third argument is an optional tag from the authentication server
+The fourth argument is an optional tag from the authentication server
 describing the error. The tag can be used by a template to inform the user
 about the error.  Similar to C<AUTH_ERROR>, an optional hashref may be
-present as a fourth argument, to be used by the tag to give more detailed 
+present as a fifth argument, to be used by the tag to give more detailed 
 information.
 
 =item C<AUTH_DISABLED>
 
 The user successfully logged in, but their account has been disabled.
-The second argument in the returned array is the userid, and the third
+The third argument in the returned array is the userid, and the fourth
 is some text explaining why the account was disabled. This text would
 typically come from the C<disabledtext> field in the C<profiles> table.
 Note that this argument is a string, not a tag.

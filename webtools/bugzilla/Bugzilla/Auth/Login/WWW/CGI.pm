@@ -53,8 +53,8 @@ sub login {
     
     $cgi->delete('Bugzilla_login', 'Bugzilla_password');
 
-    my $authmethod = Param("user_verify_class");
-    my ($authres, $userid, $extra, $info) =
+    # Perform the actual authentication, get the method name from the class name
+    my ($authmethod, $authres, $userid, $extra, $info) =
       Bugzilla::Auth->authenticate($username, $passwd);
 
     if ($authres == AUTH_OK) {
