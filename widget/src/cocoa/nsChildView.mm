@@ -318,6 +318,12 @@ nsChildView::nsChildView() : nsBaseWidget()
 //-------------------------------------------------------------------------
 nsChildView::~nsChildView()
 {
+  // notify the children that we're gone
+  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
+    nsChildView* childView = NS_STATIC_CAST(nsChildView*, kid);
+    childView->mParentWidget = nsnull;
+  }
+
   TearDownView(); // should have already been done from Destroy
   
   NS_IF_RELEASE(mTempRenderingContext); 
