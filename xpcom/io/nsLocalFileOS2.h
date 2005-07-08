@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK *****
  *
- * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM
  * described herein are Copyright (c) International Business Machines Corporation, 2000.
  * Modifications to Mozilla code or documentation identified per MPL Section 3.3
  *
@@ -74,17 +74,17 @@ class NS_COM nsLocalFile : public nsILocalFileOS2
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
-    
+
     nsLocalFile();
 
     static NS_METHOD nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
-    
+
     // nsIFile interface
     NS_DECL_NSIFILE
-    
+
     // nsILocalFile interface
     NS_DECL_NSILOCALFILE
 
@@ -96,25 +96,26 @@ public:
     static void GlobalShutdown();
 
 private:
+    nsLocalFile(const nsLocalFile& other);
     ~nsLocalFile() {}
 
-    nsLocalFile(const nsLocalFile& other);
-
-    // this is the flag which indicates if I can used cached information about the file
+    // cached information can only be used when this is PR_FALSE
     PRPackedBool mDirty;
 
-    // this string will alway be in native format!
+    // this string will always be in native format!
     nsCString mWorkingPath;
-    
+
     PRFileInfo64  mFileInfo64;
-    
-    void MakeDirty();
+
+    void MakeDirty() { mDirty = PR_TRUE; }
+
     nsresult Stat();
-    
+
     nsresult CopyMove(nsIFile *newParentDir, const nsACString &newName, PRBool move);
     nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const nsACString &newName, PRBool move);
 
     nsresult SetModDate(PRInt64 aLastModifiedTime);
+    nsresult AppendNativeInternal(const nsAFlatCString &node, PRBool multipleComponents);
 
     nsresult GetEA(const char *eaName, PFEA2LIST pfea2list);
     friend class TypeEaEnumerator;
