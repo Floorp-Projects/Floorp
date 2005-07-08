@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Rich Walsh <dragtext@e-vertise.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,6 +61,10 @@
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 extern PRBool              gRollupConsumeRollupEvent;
+
+#ifdef DEBUG_FOCUS
+  extern int currentWindowIdentifier;
+#endif
 
 nsFrameWindow::nsFrameWindow() : nsWindow()
 {
@@ -144,6 +149,14 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
          style &= ~WS_CLIPSIBLINGS;
    }
 
+#ifdef DEBUG_FOCUS
+   mWindowIdentifier = currentWindowIdentifier;
+   currentWindowIdentifier++;
+   if (aInitData && (aInitData->mWindowType == eWindowType_toplevel))
+     DEBUGFOCUS(Create Frame Window);
+   else
+     DEBUGFOCUS(Create Window);
+#endif
 
    mFrameWnd = WinCreateStdWindow( HWND_DESKTOP,
                                    0,
@@ -388,28 +401,46 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
 
          break;
       }
-       case WM_ADJUSTWINDOWPOS:
-          {
-            PSWP pswp = (PSWP)mp1;
-#if 0
-            if (pswp->fl & SWP_ZORDER)
-              ConstrainZLevel(&pswp->hwndInsertBehind);
-#endif
-            if (mChromeHidden) {
-              if (pswp->fl & SWP_MINIMIZE) {
-                 HWND hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndSysMenu");
-                 if (hwndTemp)
-                   WinSetParent(hwndTemp, mFrameWnd, TRUE);
-              }
-              if (pswp->fl & SWP_RESTORE) {
-                HWND hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndSysMenu");
-                if (hwndTemp)
-                  WinSetParent(hwndTemp, HWND_OBJECT, TRUE);
-              }
-            }
-          }
-          break;
+
+      // a frame window in kiosk/fullscreen mode must have its frame
+      // controls reattached before it's minimized & detached after it's
+      // restored;  if this doesn't happen at the correct times, clicking
+      // on the icon won't restore it, the sysmenu will have the wrong
+      // items, and/or the minmax button will have the wrong buttons
+
+      case WM_ADJUSTWINDOWPOS:
+      {
+        if (mChromeHidden && ((PSWP)mp1)->fl & SWP_MINIMIZE) {
+          HWND hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndMinMax");
+          if (hwndTemp)
+            WinSetParent(hwndTemp, mFrameWnd, TRUE);
+          hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndTitleBar");
+          if (hwndTemp)
+            WinSetParent(hwndTemp, mFrameWnd, TRUE);
+          hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndSysMenu");
+          if (hwndTemp)
+            WinSetParent(hwndTemp, mFrameWnd, TRUE);
+        }
+        break;
+      }
+      case WM_ADJUSTFRAMEPOS:
+      {
+        if (mChromeHidden && ((PSWP)mp1)->fl & SWP_RESTORE) {
+          HWND hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndSysMenu");
+          if (hwndTemp)
+            WinSetParent(hwndTemp, HWND_OBJECT, TRUE);
+          hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndTitleBar");
+          if (hwndTemp)
+            WinSetParent(hwndTemp, HWND_OBJECT, TRUE);
+          hwndTemp = (HWND)WinQueryProperty(mFrameWnd, "hwndMinMax");
+          if (hwndTemp)
+            WinSetParent(hwndTemp, HWND_OBJECT, TRUE);
+        }
+        break;
+      }
+
       case WM_DESTROY:
+         DEBUGFOCUS(frame WM_DESTROY);
          WinSubclassWindow( mFrameWnd, fnwpDefFrame);
          WinSetWindowPtr( mFrameWnd, QWL_USER, 0);
          WinRemoveProperty(mFrameWnd, "hwndTitleBar");
@@ -442,19 +473,10 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
             }
          }
          break;
-      /* To simulate Windows better, we need to send a focus message to the */
-      /* client when the frame is activated if there is a non mozilla window focused */
+
       case WM_ACTIVATE:
-#ifdef DEBUG_FOCUS
-         printf("[%x] WM_ACTIVATE (%d)\n", this, mWindowIdentifier);
-#endif
-         if (SHORT1FROMMP(mp1)) {
-#ifdef DEBUG_FOCUS
-            printf("[%x] NS_GOTFOCUS (%d)\n", this, mWindowIdentifier);
-#endif
-            bDone = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
-         }
-         break;
+        DEBUGFOCUS(frame WM_ACTIVATE);
+        break;
    }
 
    if( !bDone)
