@@ -50,7 +50,7 @@ OBJ_DIR=$(shell cygpath -a $(DEPTH))
 SRC_DIR=$(shell cygpath -a $(topsrcdir))
 
 PP_LOCALIZED_FILES = \
-	basemail-win \
+	packages-static \
 	uninstall.it \
 	installer.cfg \
 	$(NULL)
