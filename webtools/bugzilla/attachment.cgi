@@ -23,6 +23,7 @@
 #                 Daniel Raichle <draichle@gmx.net>
 #                 Dave Miller <justdave@syndicomm.com>
 #                 Alexander J. Vincent <ajvincent@juno.com>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 ################################################################################
 # Script Initialization
@@ -900,9 +901,18 @@ sub insert
     # The order of these function calls is important, as both Flag::validate
     # and FlagType::validate assume User::match_field has ensured that the
     # values in the requestee fields are legitimate user email addresses.
-    Bugzilla::User::match_field($cgi, {
-        '^requestee(_type)?-(\d+)$' => { 'type' => 'single' }
-    });
+    my $match_status = Bugzilla::User::match_field($cgi, {
+        '^requestee(_type)?-(\d+)$' => { 'type' => 'single' },
+    }, MATCH_SKIP_CONFIRM);
+
+    $vars->{'match_field'} = 'requestee';
+    if ($match_status == USER_MATCH_FAILED) {
+        $vars->{'message'} = 'user_match_failed';
+    }
+    elsif ($match_status == USER_MATCH_MULTIPLE) {
+        $vars->{'message'} = 'user_match_multiple';
+    }
+
     Bugzilla::Flag::validate($cgi, $bugid);
     Bugzilla::FlagType::validate($cgi, $bugid, $cgi->param('id'));
 

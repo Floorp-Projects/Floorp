@@ -48,7 +48,19 @@ use base qw(Exporter);
 @Bugzilla::User::EXPORT = qw(insert_new_user is_available_username
     login_to_id
     UserInGroup
+    USER_MATCH_MULTIPLE USER_MATCH_FAILED USER_MATCH_SUCCESS
+    MATCH_SKIP_CONFIRM
 );
+
+#####################################################################
+# Constants
+#####################################################################
+
+use constant USER_MATCH_MULTIPLE => -1;
+use constant USER_MATCH_FAILED   => 0;
+use constant USER_MATCH_SUCCESS  => 1;
+
+use constant MATCH_SKIP_CONFIRM  => 1;
 
 ################################################################################
 # Functions
@@ -723,6 +735,11 @@ sub match {
 # searchable fields have been replaced by exact fields and the calling script
 # is executed as normal.
 #
+# You also have the choice of *never* displaying the confirmation screen.
+# In this case, match_field will return one of the three USER_MATCH 
+# constants described in the POD docs. To make match_field behave this
+# way, pass in MATCH_SKIP_CONFIRM as the third argument.
+#
 # match_field must be called early in a script, before anything external is
 # done with the form data.
 #
@@ -744,9 +761,11 @@ sub match {
 sub match_field {
     my $cgi          = shift;   # CGI object to look up fields in
     my $fields       = shift;   # arguments as a hash
+    my $behavior     = shift || 0; # A constant that tells us how to act
     my $matches      = {};      # the values sent to the template
     my $matchsuccess = 1;       # did the match fail?
     my $need_confirm = 0;       # whether to display confirmation screen
+    my $match_multiple = 0;     # whether we ever matched more than one user
 
     # prepare default form values
 
@@ -881,6 +900,7 @@ sub match_field {
             elsif ((scalar(@{$users}) > 1)
                     && (&::Param('maxusermatches') != 1)) {
                 $need_confirm = 1;
+                $match_multiple = 1;
 
                 if ((&::Param('maxusermatches'))
                    && (scalar(@{$users}) > &::Param('maxusermatches')))
@@ -899,7 +919,19 @@ sub match_field {
         }
     }
 
-    return 1 unless $need_confirm; # skip confirmation if not needed.
+    my $retval;
+    if (!$matchsuccess) {
+        $retval = USER_MATCH_FAILED;
+    }
+    elsif ($match_multiple) {
+        $retval = USER_MATCH_MULTIPLE;
+    }
+    else {
+        $retval = USER_MATCH_SUCCESS;
+    }
+
+    # Skip confirmation if we were told to, or if we don't need to confirm.
+    return $retval if ($behavior == MATCH_SKIP_CONFIRM || !$need_confirm);
 
     $vars->{'script'}        = $ENV{'SCRIPT_NAME'}; # for self-referencing URLs
     $vars->{'fields'}        = $fields; # fields being matched
@@ -1218,6 +1250,28 @@ there is currently no way to modify a user from this package.
 
 Note that the currently logged in user (if any) is available via
 L<Bugzilla-E<gt>user|Bugzilla/"user">.
+
+=head1 CONSTANTS
+
+=item C<USER_MATCH_MULTIPLE>
+
+Returned by C<match_field()> when at least one field matched more than 
+one user, but no matches failed.
+
+=item C<USER_MATCH_FAILED>
+
+Returned by C<match_field()> when at least one field failed to match 
+anything.
+
+=item C<USER_MATCH_SUCCESS>
+
+Returned by C<match_field()> when all fields successfully matched only one
+user.
+
+=item C<MATCH_SKIP_CONFIRM>
+
+Passed in to match_field to tell match_field to never display a 
+confirmation screen.
 
 =head1 METHODS
 
