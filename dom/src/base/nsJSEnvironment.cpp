@@ -2122,6 +2122,9 @@ nsJSEnvironment::Startup()
 JS_STATIC_DLL_CALLBACK(JSPrincipals *)
 ObjectPrincipalFinder(JSContext *cx, JSObject *obj)
 {
+  if (!sSecurityManager)
+    return nsnull;
+
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv =
     sSecurityManager->GetObjectPrincipal(cx, obj,
@@ -2245,6 +2248,14 @@ void nsJSEnvironment::ShutDown()
     // We're being shutdown, and there are no more contexts
     // alive, release the JS runtime service and the security manager.
 
+    if (sRuntimeService && sSecurityManager) {
+      // No chaining to a pre-existing callback here, we own this problem space.
+#ifdef NS_DEBUG
+      JSObjectPrincipalsFinder oldfop =
+#endif
+        ::JS_SetObjectPrincipalsFinder(sRuntime, nsnull);
+      NS_ASSERTION(oldfop == ObjectPrincipalFinder, " fighting over the findObjectPrincipals callback!");
+    }
     NS_IF_RELEASE(sRuntimeService);
     NS_IF_RELEASE(sSecurityManager);
     NS_IF_RELEASE(gCollation);
