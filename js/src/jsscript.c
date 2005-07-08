@@ -239,8 +239,8 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSScript *script;
     JSObject *scopeobj, *parent;
     JSStackFrame *fp, *caller;
+    JSPrincipals *principals, *scopePrincipals;
     JSRuntime *rt;
-    JSPrincipals *scopePrincipals;
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
         return JS_FALSE;
@@ -301,14 +301,17 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /* Belt-and-braces: check that this script object has access to scopeobj. */
-    rt = cx->runtime;
-    if (rt->findObjectPrincipals) {
-        scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
-        if (scopePrincipals != script->principals) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_INDIRECT_CALL,
-                                 "Script.prototype.exec");
-            return JS_FALSE;
+    principals = script->principals;
+    if (principals) {
+        rt = cx->runtime;
+        if (rt->findObjectPrincipals) {
+            scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
+            if (!principals->subsume(principals, scopePrincipals)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_BAD_INDIRECT_CALL,
+                                     "Script.prototype.exec");
+                return JS_FALSE;
+            }
         }
     }
 

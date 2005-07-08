@@ -104,6 +104,13 @@ nsSystemPrincipal::Equals(nsIPrincipal *other, PRBool *result)
 }
 
 NS_IMETHODIMP
+nsSystemPrincipal::Subsumes(nsIPrincipal *other, PRBool *result)
+{
+    *result = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSystemPrincipal::GetHashValue(PRUint32 *result)
 {
     *result = NS_PTR_TO_INT32(this);

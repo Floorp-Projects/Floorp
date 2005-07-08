@@ -168,10 +168,10 @@ JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp);
 
 /*
  * This API is like JS_StackFramePrincipals(cx, caller), except that if
- * cx->runtime->findObjectPrincipals is non-null, it returns the object
- * principals for fp's callee function object (fp->argv[-2]), which is eval,
- * Function, or a similar eval-like method.  The caller parameter should be
- * the result of JS_GetScriptedCaller(cx, fp).
+ * cx->runtime->findObjectPrincipals is non-null, it returns the weaker of
+ * the caller's principals and the object principals of fp's callee function
+ * object (fp->argv[-2]), which is eval, Function, or a similar eval-like
+ * method.  The caller parameter should be JS_GetScriptedCaller(cx, fp).
  *
  * All eval-like methods must use JS_EvalFramePrincipals to acquire a weak
  * reference to the correct principals for the eval call to be secure, given

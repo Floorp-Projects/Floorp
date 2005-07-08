@@ -701,13 +701,23 @@ JS_PUBLIC_API(JSPrincipals *)
 JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
 {
     JSRuntime *rt;
+    JSObject *callee;
+    JSPrincipals *principals, *callerPrincipals;
 
     rt = cx->runtime;
-    if (rt->findObjectPrincipals)
-        return rt->findObjectPrincipals(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
+    if (rt->findObjectPrincipals) {
+        callee = JSVAL_TO_OBJECT(fp->argv[-2]);
+        principals = rt->findObjectPrincipals(cx, callee);
+    } else {
+        principals = NULL;
+    }
     if (!caller)
-        return NULL;
-    return JS_StackFramePrincipals(cx, caller);
+        return principals;
+    callerPrincipals = JS_StackFramePrincipals(cx, caller);
+    return (principals && callerPrincipals &&
+            principals->subsume(principals, callerPrincipals))
+           ? callerPrincipals
+           : principals;
 }
 
 JS_PUBLIC_API(void *)
