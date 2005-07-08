@@ -255,7 +255,7 @@ TTYinfo()
 #if	defined(USE_TERMCAP)
     char		*term;
     char		buff[2048];
-    char		*bp;
+    char		*bp, *p;
 #endif	/* defined(USE_TERMCAP) */
 #if	defined(TIOCGWINSZ)
     struct winsize	W;
@@ -284,7 +284,8 @@ TTYinfo()
        TTYrows = SCREEN_ROWS;
        return;
     }
-    backspace = strdup(tgetstr("le", &bp));
+    p = tgetstr("le", &bp);
+    backspace = p ? strdup(p) : NULL;
     TTYwidth = tgetnum("co");
     TTYrows = tgetnum("li");
 #endif	/* defined(USE_TERMCAP) */
@@ -1047,7 +1048,7 @@ add_history(p)
 	return;
 
 #if	defined(UNIQUE_HISTORY)
-    if (H.Pos && strcmp(p, H.Lines[H.Pos - 1]) == 0)
+    if (H.Size && strcmp(p, H.Lines[H.Size - 1]) == 0)
         return;
 #endif	/* defined(UNIQUE_HISTORY) */
     hist_add((CHAR *)p);
