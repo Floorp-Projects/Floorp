@@ -717,6 +717,10 @@ nsSafariProfileMigrator::CopyPreferences(PRBool aReplace)
 
   ::CFRelease(safariPrefs);
 
+#if 0
+  // XXXmano 7/9/2005: I'm keeping this code for reference. For the time being,
+  // importing the homepage setting isn't a desired feature.
+
   // Now get some of the stuff that only InternetConfig has for us, such as
   // the default home page.
 
@@ -749,7 +753,7 @@ nsSafariProfileMigrator::CopyPreferences(PRBool aReplace)
 
     ::ICStop(internetConfig);
   }
-
+#endif
   // Safari stores the Cookie "Accept/Don't Accept/Don't Accept Foreign" cookie
   // setting in a separate WebFoundation preferences PList.
   nsCOMPtr<nsIProperties> fileLocator(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
