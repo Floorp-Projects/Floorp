@@ -481,9 +481,10 @@ function onOKCommand()
             event = originalEvent.clone().QueryInterface(Components.interfaces.calIEvent);
 
         event.startDate = jsDateToDateTime(getElementValue("start-datetime"));
-        event.endDate = jsDateToDateTime(getElementValue("end-datetime"));
         var endDate = getElementValue("end-datetime");
-        if (event.startDate.isDate) {
+        if (getElementValue("all-day-event-checkbox", "checked") ) {
+            event.startDate.isDate = true;
+            event.endDate.isDate = true;
             // displayed all day end date is inclusive date, convert to exclusive end date.
             endDate.setDate(endDate.getDate() + 1); 
         }
