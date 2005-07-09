@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.98 2005/07/01 22:41:31 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.99 2005/07/09 22:37:26 mozilla%colinogilvie.co.uk Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -96,7 +96,7 @@
       visit <ulink url="http://www.perl.com"/>.
       Although Bugzilla runs with Perl &min-perl-ver;,
       it's a good idea to be using the latest stable version. 
-      As of this writing, that is Perl &newest-perl-ver;.</para>
+      </para>
     </section>
 
     <section id="install-database">
