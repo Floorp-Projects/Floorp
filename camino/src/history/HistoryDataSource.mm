@@ -432,7 +432,9 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
   [yesterdayItem release];
 
   NSCalendarDate* curDayStart = startYesterday;
-
+  NSDictionary* curCalendarLocale = [[NSUserDefaults standardUserDefaults] dictionaryRepresentation];
+  NSString* dateFormat = NSLocalizedString(@"HistoryMenuDateFormat", @"");
+  
   // do previous 6 days
   for (int i = 0; i < 6; i ++)
   {
@@ -443,7 +445,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
                                          minutes:0
                                          seconds:0];
 
-    HistoryCategoryItem* dayItem = [[HistoryDateCategoryItem alloc] initWithDataSource:mDataSource startDate:curDayStart ageInDays:(i + 2) title:[curDayStart descriptionWithCalendarFormat:@"%A %B %d"] childCapacity:10];
+    HistoryCategoryItem* dayItem = [[HistoryDateCategoryItem alloc] initWithDataSource:mDataSource startDate:curDayStart ageInDays:(i + 2) title:[curDayStart descriptionWithCalendarFormat:dateFormat locale:curCalendarLocale] childCapacity:10];
     [mDateCategories addObject:dayItem];
     [dayItem release];
   }
