@@ -750,6 +750,7 @@ CalendarView.prototype.getViewLimits = function calView_getViewLimits( dayDispla
   var dateEnd = tmpDate.valueOf();
   
   for ( var i = 0; i < dayDisplayEventList.length; i++ ) {
+    this.checkDisplayDatesInvariant(dayDisplayEventList[i]);
     if( dayDisplayEventList[i].event.startDate.isDate != true ) {
       
       if( dayDisplayEventList[i].displayDate < dateStart ) {
@@ -796,11 +797,14 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
   var currEventSlotsIsEmpty
   var done = false;
 
+  // Add non-allday events to dayEventStartList and dayEventEndList.
   var i;
-  for( i = 0; i < dayEventList.length; i++ ) {
-    if (!dayEventList[i].event.startDate.isDate) {
-      dayEventStartList.push(dayEventList[i]);
-      dayEventEndList.push(dayEventList[i]);
+  for (i = 0; i < dayEventList.length; i++) {
+    var displayEvent = dayEventList[i];
+    if (!displayEvent.event.startDate.isDate) {
+      this.checkDisplayDatesInvariant(displayEvent);
+      dayEventStartList.push(displayEvent);
+      dayEventEndList.push(displayEvent);
     }
   }
     
@@ -887,6 +891,30 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
     //  set totalSlotCount for the last contiguous group of events
     for ( i = groupStartIndex; i < dayEventStartList.length; i++ )
       dayEventStartList[i].totalSlotCount = currEventSlots.length;
+  }
+}
+
+/** PRIVATE
+
+    Check for error displayEvent.displayDateEnd < displayEvent.displayDate,
+    caused by rare end < start error in input.  Graceful workaround swaps
+    display times to avoid later error that aborts rest of display
+    (bug 285892).
+ **/
+CalendarView.prototype.checkDisplayDatesInvariant = function calView_checkDisplayDatesInvariant(displayEvent) {
+  if (displayEvent.displayEndDate < displayEvent.displayDate) {
+    var JSCONSOLE = Components.classes["@mozilla.org/consoleservice;1"]
+                      .getService(Components.interfaces.nsIConsoleService);
+    JSCONSOLE.logStringMessage
+      ("Warning: event end < start, will swap display times"+
+       "\n  title: "+displayEvent.event.title+
+       "\n  end:   "+displayEvent.event.end+
+       "\n  start: "+displayEvent.event.start+
+       "\n  displayEndDate:   "+new Date(displayEvent.displayEndDate)+
+       "\n  displayStartDate: "+new Date(displayEvent.displayDate));
+    var swapDate = displayEvent.displayEndDate;
+    displayEvent.displayEndDate = displayEvent.displayDate;
+    displayEvent.displayDate = swapDate;
   }
 }
 
