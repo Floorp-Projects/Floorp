@@ -66,7 +66,7 @@ interface nsISHEntry;
 interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
 
-[scriptable, uuid(5d1529b3-f825-45af-a2ee-1ae4bc2b2b2a)]
+[scriptable, uuid(1c9bcef6-98ef-4a3e-9df2-beda50fce980)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -382,5 +382,8 @@ interface nsIDocShell : nsISupports
 
   /* Track whether we're currently restoring a document presentation. */
   readonly attribute boolean restoringDocument;
+
+  /* attribute to access whether error pages are enabled */
+  attribute boolean useErrorPages;
 };
 

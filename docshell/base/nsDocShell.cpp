@@ -1697,6 +1697,20 @@ nsDocShell::SetSecurityUI(nsISecureBrowserUI *aSecurityUI)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocShell::GetUseErrorPages(PRBool *aUseErrorPages)
+{
+    *aUseErrorPages = mUseErrorPages;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetUseErrorPages(PRBool aUseErrorPages)
+{
+    mUseErrorPages = aUseErrorPages;
+    return NS_OK;
+}
+
 //*****************************************************************************
 // nsDocShell::nsIDocShellTreeItem
 //*****************************************************************************   
