@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.74 2005/07/08 07:06:55 julien.pierre.bugs%sun.com Exp $
+ * $Id: certdb.c,v 1.75 2005/07/09 00:34:43 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -1913,47 +1913,47 @@ CERT_IsRootDERCert(SECItem *derCert)
     return isRoot;
 }
 
-static CERT_CompareValidityStatus GetNewestTime(PRTime a, PRTime b)
+static CERTCompareValidityStatus GetNewestTime(PRTime a, PRTime b)
 {
     if ( LL_CMP (a, == , b) ) {
-        return ValidityEqual;
+        return certValidityEqual;
     } else if (LL_CMP(a, >, b)) {
-        return ValidityChooseA;
+        return certValidityChooseA;
     } else {
-        return ValidityChooseB;
+        return certValidityChooseB;
     }
 }
 
-CERT_CompareValidityStatus
+CERTCompareValidityStatus
 CERT_CompareValidityTimes(CERTValidity* val_a, CERTValidity* val_b)
 {
     PRTime notBeforeA, notBeforeB, notAfterA, notAfterB;
     SECStatus rv;
-    CERT_CompareValidityStatus afterStatus, beforeStatus;
+    CERTCompareValidityStatus afterStatus, beforeStatus;
 
     if (!val_a || !val_b)
     {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return ValidityUndetermined;
+        return certValidityUndetermined;
     }
 
     if ( SECSuccess != DER_DecodeTimeChoice(&notBeforeA, &val_a->notBefore) ||
          SECSuccess != DER_DecodeTimeChoice(&notBeforeB, &val_b->notBefore) ||
          SECSuccess != DER_DecodeTimeChoice(&notAfterA, &val_a->notAfter) ||
          SECSuccess != DER_DecodeTimeChoice(&notAfterB, &val_b->notAfter) ) {
-        return ValidityUndetermined;
+        return certValidityUndetermined;
     }
 
     /* sanity check */
-    if (ValidityChooseA == GetNewestTime(notBeforeA, notAfterA) ||
-        ValidityChooseA == GetNewestTime(notBeforeB, notAfterB)) {
+    if (certValidityChooseA == GetNewestTime(notBeforeA, notAfterA) ||
+        certValidityChooseA == GetNewestTime(notBeforeB, notAfterB)) {
         PORT_SetError(SEC_ERROR_INVALID_TIME);
-        return ValidityUndetermined;
+        return certValidityUndetermined;
     }
 
     beforeStatus = GetNewestTime(notBeforeA, notBeforeB);
     afterStatus = GetNewestTime(notAfterA, notAfterB);
-    if (afterStatus != ValidityEqual) {
+    if (afterStatus != certValidityEqual) {
         /* one cert validity goes farthest into the future, select it */
         return afterStatus;
     }
