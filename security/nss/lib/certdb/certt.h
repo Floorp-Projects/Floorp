@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.31 2005/07/08 07:06:55 julien.pierre.bugs%sun.com Exp $
+ * $Id: certt.h,v 1.32 2005/07/09 00:34:43 julien.pierre.bugs%sun.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -522,13 +522,18 @@ typedef enum SECCertTimeValidityEnum {
                                    cert, most likely because it was NULL */
 } SECCertTimeValidity;
 
-typedef enum CERT_CompareValidityStatusType
+/*
+ * This is used with CERT_CompareValidityTimes when comparing the validity
+ * periods of two certificates A and B.
+ */
+
+typedef enum CERTCompareValidityStatusEnum
 {
-    ValidityUndetermined = 0,
-    ValidityChooseB = 1,
-    ValidityEqual = 2,
-    ValidityChooseA = 3,
-} CERT_CompareValidityStatus;
+    certValidityUndetermined = 0,
+    certValidityChooseB = 1,
+    certValidityEqual = 2,
+    certValidityChooseA = 3
+} CERTCompareValidityStatus;
 
 /*
  * Interface for getting certificate nickname strings out of the database
