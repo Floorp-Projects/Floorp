@@ -191,6 +191,7 @@ bin\components\nsBackgroundUpdateService.js
 bin\components\extensions.xpt
 bin\components\update.xpt
 bin\components\calendarService.js
+bin\components\calAlarmMonitor.js
 
 ; [Browser Chrome Files]
 bin\chrome\calendar.jar

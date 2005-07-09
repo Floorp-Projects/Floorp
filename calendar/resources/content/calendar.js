@@ -1045,29 +1045,6 @@ function goFindNewCalendars()
    }
 }
 
-function playSound( ThisURL )
-{
-   ThisURL = "chrome://calendar/content/sound.wav";
-
-   var url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance();
-   url = url.QueryInterface(Components.interfaces.nsIURL);
-   url.spec = ThisURL;
-
-   var sample = Components.classes["@mozilla.org/sound;1"].createInstance();
-   
-   sample = sample.QueryInterface(Components.interfaces.nsISound);
-
-   try
-   {
-      sample.play( url );
-   }
-   catch ( ex )
-   {
-      sample.beep();
-      //alert( ex );
-   }
-}
-
 var gSelectAll = false;
 
 function selectAllEvents()
