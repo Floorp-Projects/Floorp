@@ -527,6 +527,7 @@ function SetFocusOnStartup()
 function EditorStartup()
 {
   var ds = GetCurrentEditorElement().docShell;
+  ds.useErrorPages = false;
   var root = ds.QueryInterface(Components.interfaces.nsIDocShellTreeItem).
     rootTreeItem.QueryInterface(Components.interfaces.nsIDocShell);
 

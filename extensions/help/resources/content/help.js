@@ -144,6 +144,7 @@ function init() {
   helpGlossaryPanel = document.getElementById("help-glossary-panel");
   helpBrowser = document.getElementById("help-content");
   helpExternal = document.getElementById("help-external");
+  helpExternal.docShell.useErrorPages = false;
   helpExternal
     .docShell
     .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
