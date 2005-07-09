@@ -92,7 +92,7 @@ function OnLoadNewCard()
 
     if ("escapedVCardStr" in window.arguments[0]) {
       // hide non vcard values
-      HideNonVcardFields(); 
+      HideNonVcardFields();
       var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
       gEditCard.card =
         addressbook.escapedVCardToAbCard(window.arguments[0].escapedVCardStr);
@@ -124,7 +124,7 @@ function OnLoadNewCard()
 
   // focus on first or last name based on the pref
   var focus = document.getElementById(gEditCard.displayLastNameFirst
-                                      ? 'LastName' : 'FirstName');
+                                      ? "LastName" : "FirstName");
   if ( focus ) {
     // XXX Using the setTimeout hack until bug 103197 is fixed
     setTimeout( function(firstTextBox) { firstTextBox.focus(); }, 0, focus );
@@ -413,7 +413,7 @@ function GetCardValues(cardproperty, doc)
   }
 }
 
-// when the ab card dialog is being loaded to show a vCard, 
+// when the ab card dialog is being loaded to show a vCard,
 // hide the fields which aren't supported
 // by vCard so the user does not try to edit them.
 function HideNonVcardFields()
@@ -499,7 +499,6 @@ function CleanUpWebPage(webPage)
     return(webPage);
 }
 
-
 function GenerateDisplayName()
 {
   if (gEditCard.generateDisplayName)
@@ -512,8 +511,8 @@ function GenerateDisplayName()
 
     if (lastNameField.value && firstNameField.value) {
       displayName = (gEditCard.displayLastNameFirst)
-        ? gAddressBookBundle.getFormattedString("lastFirstFormat", [ lastNameField.value, firstNameField.value ])
-        : gAddressBookBundle.getFormattedString("firstLastFormat", [ firstNameField.value, lastNameField.value ]);
+        ? gAddressBookBundle.getFormattedString("lastFirstFormat", [lastNameField.value, firstNameField.value])
+        : gAddressBookBundle.getFormattedString("firstLastFormat", [firstNameField.value, lastNameField.value]);
     }
     else {
       // one (or both) of these is empty, so this works.
@@ -531,7 +530,7 @@ function DisplayNameChanged()
   // turn off generateDisplayName if the user changes the display name
   gEditCard.generateDisplayName = false;
 
-  SetCardDialogTitle(document.getElementById('DisplayName').value);
+  SetCardDialogTitle(document.getElementById("DisplayName").value);
 }
 
 function SetCardDialogTitle(displayName)
