@@ -3400,13 +3400,14 @@ nsBookmarksService::UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource)
 }
 
 NS_IMETHODIMP
-nsBookmarksService::ResolveKeyword(const PRUnichar* aUserInput,
-                                   nsAString& aPostData,
-                                   nsAString& aShortcutURL)
+nsBookmarksService::ResolveKeyword(const PRUnichar *aUserInput, PRUnichar** aPostData, char **aShortcutURL)
 {
     NS_PRECONDITION(aUserInput != nsnull, "null ptr");
-    aPostData.Truncate();
     if (! aUserInput)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aShortcutURL != nsnull, "null ptr");
+    if (! aShortcutURL)
         return NS_ERROR_NULL_POINTER;
 
     // Shortcuts are always lowercased internally.
@@ -3435,13 +3436,22 @@ nsBookmarksService::ResolveKeyword(const PRUnichar* aUserInput,
             const PRUnichar* postDataVal = nsnull;
             postData->GetValueConst(&postDataVal);
 
-            aPostData = postDataVal;
+            nsDependentString postDataStr(postDataVal);
+            *aPostData = ToNewUnicode(postDataStr);
         }
 
-        return GetURLFromResource(source, aShortcutURL);
+        nsAutoString url;
+        rv = GetURLFromResource(source, url);
+        if (NS_FAILED(rv))
+           return rv;
+
+        if (!url.IsEmpty()) {
+            *aShortcutURL = ToNewUTF8String(url);
+            return NS_OK;
+        }
     }
 
-    aShortcutURL.Truncate();
+    *aShortcutURL = nsnull;
     return NS_RDF_NO_VALUE;
 }
 
