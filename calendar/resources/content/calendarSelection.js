@@ -84,7 +84,7 @@ CalendarEventSelection.prototype.removeObserver = function calSel_removeObserver
 
 CalendarEventSelection.prototype.addToSelection = function calSel_addToSelection( Event )
 {
-   this.selectedEvents[ this.selectedEvents.length ] = Event;
+   this.selectedEvents[ this.selectedEvents.length ] = Event.parentItem;
 
    this.onSelectionChanged();
 }
@@ -93,7 +93,7 @@ CalendarEventSelection.prototype.replaceSelection = function calSel_replaceSelec
 {
    this.selectedEvents = new Array();
 
-   this.selectedEvents[ this.selectedEvents.length ] = Event;
+   this.selectedEvents[ this.selectedEvents.length ] = Event.parentItem;
 
    this.onSelectionChanged();
    
@@ -112,7 +112,7 @@ CalendarEventSelection.prototype.setArrayToSelection = function calSel_setArrayT
 
    for( var i = 0; i < ArrayOfEvents.length; i++ )
    {
-      this.selectedEvents[ this.selectedEvents.length ] = ArrayOfEvents[i];
+      this.selectedEvents[ this.selectedEvents.length ] = ArrayOfEvents[i].parentItem;
    }
    
    this.onSelectionChanged();
@@ -123,7 +123,7 @@ CalendarEventSelection.prototype.isSelectedEvent = function calSel_isSelectedEve
 {
    for( var i = 0; i < this.selectedEvents.length; i++ )
    {
-      if( this.selectedEvents[i] == Event )
+      if( this.selectedEvents[i] == Event.parentItem )
          return true;
    }
    return false;

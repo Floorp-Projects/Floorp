@@ -368,7 +368,7 @@ function dayEventItemDoubleClick( eventBox, event )
    // we only care about button 0 (left click) events
    if (event.button != 0) return;
    
-   editEvent( eventBox.event );
+   editEvent( eventBox.event.parentItem );
 
    if ( event ) 
    {
@@ -468,7 +468,7 @@ function weekEventItemDoubleClick( eventBox, event )
    // we only care about button 0 (left click) events
    if (event.button != 0) return;
    
-   editEvent( eventBox.event );
+   editEvent( eventBox.event.parentItem );
 
    if ( event ) 
    {
@@ -576,7 +576,7 @@ function monthEventBoxDoubleClickEvent( eventBox, event )
    
    gCalendarWindow.monthView.clearSelectedDate();
    
-   editEvent( eventBox.event );
+   editEvent( eventBox.event.parentItem );
 
    if ( event ) 
    {
@@ -630,7 +630,7 @@ function multiweekToDoBoxDoubleClickEvent( todoBox, event )
    
    gCalendarWindow.multiweekView.clearSelectedDate();
    
-   editEvent( todoBox.calendarToDo );
+   editEvent( todoBox.calendarToDo.parentItem );
 
    if ( event ) 
    {
@@ -952,7 +952,7 @@ function editEventCommand()
 
       if( calendarEvent != null )
       {
-         editEvent( calendarEvent );
+         editEvent( calendarEvent.parentItem );
       }
    }
 }
