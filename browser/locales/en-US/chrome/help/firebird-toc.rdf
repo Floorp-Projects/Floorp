@@ -11,7 +11,7 @@
   <rdf:Description about="urn:root">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="firefox-help" nc:name="&brandFullName; Help" nc:link="firefox_welcome.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="firefox-help" nc:name="Welcome to &brandFullName; Help" nc:link="firefox_welcome.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-firebird" nc:name="Using &brandFullName;" nc:link="using_firebird.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-download-manager" nc:name="Using the Download Manager" nc:link="download_manager.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="customize-firebird" nc:name="Customization" nc:link="customization.xhtml"/> </rdf:li>
