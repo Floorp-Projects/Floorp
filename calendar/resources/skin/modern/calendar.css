@@ -478,9 +478,10 @@
 
 .multiweek-view-event-class[eventselected="true"]
 {
-   background-color     :  #D5E3F2;  
-   border	        : 2px solid #990000;
+   background-color     :  #D5E3F2 !important;  
+   border	         : 2px solid #990000 !important;
    margin               : 0px;
+   color                : #000000 !important;
 }
 
 .multiweek-view-event-dot-class
@@ -725,9 +726,10 @@
 
 .month-view-event-class[eventselected="true"]
 {
-   background-color     :  #D5E3F2;  
-   border	        : 2px solid #990000;
+   background-color     :  #D5E3F2 !important;  
+   border	         : 2px solid #990000 !important;
    margin               : 0px;
+   color                : #000000 !important;
 }
 
 .all-day-event-class,
@@ -949,7 +951,7 @@
 
 .day-view-all-day-event-class[eventselected="true"]
 {
-  border            : 2px solid #990000;
+  border            : 2px solid #990000 !important;
   /* !important to prevent calendar-specific color setting from overriding this */
   background-color  : #D5E3F2 !important;
   color             : #000000 !important;
@@ -984,7 +986,7 @@
 
 .day-view-event-class[eventselected="true"]
 {
-  border            : 2px solid #990000;
+  border            : 2px solid #990000 !important;
   /* set padding to prevent jittering when border width is changed */
   padding-left      : 0px;
   padding-right     : 0px;
@@ -1261,8 +1263,9 @@ then observed (ERic 20/06/03)
 
 .week-view-event-class[eventselected="true"]
 {
-   background-color     :  #D5E3F2;
-   border               : 2px solid #990000;
+   background-color     : #D5E3F2 !important;
+   border               : 2px solid #990000 !important;
+   color                : #000000 !important;
 }
 
 /*--------------------------------------------------------------------

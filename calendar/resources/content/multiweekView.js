@@ -262,16 +262,99 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
                        0, jsDateToDateTime(startDate), jsDateToDateTime(endDate),
                        getListener);
 
+}
+
+MultiweekView.prototype.createEventDotInternal = function(itemOccurrence, startDate, endDate)
+{
+    //This is a HACK because startDate and indexOfDate don't get along well
+    //in terms of timezones.
+    var adjustedDate = new Date();
+    adjustedDate.setFullYear(startDate.year);
+    adjustedDate.setMonth(startDate.month);
+    adjustedDate.setDate(startDate.day);
+    dayBoxItem = this.dayBoxItemArray[this.indexOfDate(adjustedDate)];
+
+    var dotBoxHolder
+    if( !document.getElementById( "dotboxholder"+startDate.month+'-'+startDate.day ) ) {
+        dotBoxHolder = document.createElement( "box" );
+        dotBoxHolder.setAttribute( "id", "dotboxholder"+startDate.month+'-'+startDate.day );
+        dotBoxHolder.setAttribute( "eventbox", "multiweekview" );
+        dayBoxItem.appendChild( dotBoxHolder );
+    }
+    else {
+        dotBoxHolder = document.getElementById( "dotboxholder"+startDate.month+'-'+startDate.day );
+    }
+
+    if( dotBoxHolder.childNodes.length >= kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW )
+        return;
+
+    var calEvent = itemOccurrence.QueryInterface(Components.interfaces.calIEvent);
+
+    var eventDotBox = document.createElement( "box" );
+    eventDotBox.setAttribute( "eventbox", "multiweekview" );
+    eventDot = document.createElement( "image" );
+    eventDot.setAttribute( "class", "multiweek-view-event-dot-class" );
+    eventDot.setAttribute("id", "multiweek-view-event-box-" + itemOccurrence.id );
+    eventDot.setAttribute("name", "multiweek-view-event-box-" + itemOccurrence.id );
+
+    eventDot.setAttribute("onclick", "monthEventBoxClickEvent( this, event )" );
+    eventDot.setAttribute("ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
+    eventDot.setAttribute("onmouseover", "onMouseOverGridOccurrence(event)" );
+    eventDot.setAttribute("tooltip", "gridOccurrenceTooltip" );
+    eventDot.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
+    eventDot.occurrence = itemOccurrence; // for mouseover preview
+    eventDot.event = calEvent;
+    eventDotBox.appendChild( eventDot );
+    dotBoxHolder.appendChild( eventDotBox );
+
+}
+
+MultiweekView.prototype.maxEventsToShow = function( dayBox ) {
+    //create a dummy eventBox to get its height
+    eventBox = document.createElement("box");
+    eventBox.setAttribute("id", "multiweek-view-event-box-dummy" );
+    eventBox.setAttribute("class", "multiweek-view-event-class default");
+    eventBox.setAttribute("eventbox", "multiweekview" );
+
+    // Make a text item to show the event title
+    var eventBoxText = document.createElement("label");
+    eventBoxText.setAttribute("crop", "end");
+    eventBoxText.setAttribute("class", "multiweek-day-event-text-class");
+        
+    var eventStartTime = new Date(new Date().getTime());
+    var StartFormattedTime = this.calendarWindow.dateFormater.getFormatedTime(eventStartTime);
+    eventBoxText.setAttribute("value", StartFormattedTime+' '+ "Dummy");
+    eventBoxText.setAttribute("flex", "1");
+    eventBox.appendChild(eventBoxText);        
+    dayBoxItem.appendChild(eventBox);
+
+    //Subtract the height of the number label
+    var offsetY = dayBoxItem.firstChild.boxObject.height;
+    var useableSpace = dayBoxItem.boxObject.height - offsetY;
+    var maxEvents = useableSpace/eventBox.boxObject.height;
+    dayBoxItem.removeChild(eventBox);
+    return maxEvents;
 }      
 // JT: Liberal code reuse (ie. Cut and Paste)
 // Create an eventbox. Expects an ItemOccurence
 MultiweekView.prototype.createEventBoxInternal = function multiweekView_createEventBox(itemOccurrence, startDate, endDate)
 {
-    var DisplayDate = new Date(startDate.jsDate);
+    //This is a HACK because startDate and indexOfDate don't get along well
+    //in terms of timezones.
+    var adjustedDate = new Date();
+    adjustedDate.setFullYear(startDate.year);
+    adjustedDate.setMonth(startDate.month);
+    adjustedDate.setDate(startDate.day);
+    var DisplayDate = new Date(adjustedDate);
     dayBoxItem = this.dayBoxItemArray[this.indexOfDate(DisplayDate)];
     // Check if the day is visible
     if (!dayBoxItem)
         return;
+
+    if(dayBoxItem.childNodes.length >= this.maxEventsToShow( dayBoxItem ) ) {
+        this.createEventDotInternal(itemOccurrence, startDate, endDate);
+        return;
+    }
 
     var calEvent = itemOccurrence.QueryInterface(Components.interfaces.calIEvent);
     // Make a box item to hold the event
@@ -294,6 +377,7 @@ MultiweekView.prototype.createEventBoxInternal = function multiweekView_createEv
     var eventBoxText = document.createElement( "label" );
     eventBoxText.setAttribute( "crop", "end" );
     eventBoxText.setAttribute( "class", "multiweek-day-event-text-class" );
+    this.setEventboxClass(eventBox, calEvent, "week-view");
 
     if(calEvent.startDate.isDate)
     {
@@ -311,6 +395,8 @@ MultiweekView.prototype.createEventBoxInternal = function multiweekView_createEv
         // display as "12:15 titleevent"
         eventBoxText.setAttribute("value", StartFormattedTime+' '+ calEvent.title);
     }
+    if(this.calendarWindow.EventSelection.isSelectedEvent(calEvent)) 
+        eventBox.setAttribute( "eventselected", "true" );
 
     eventBoxText.setAttribute( "flex", "1" );
 

@@ -112,19 +112,6 @@ DayView.prototype.refreshEvents = function()
     this.removeElementsByAttribute("eventbox", "dayview");
     this.eventList = new Array();
 
-    // set view limits for the day
-    // XXX expand if event outside this window. Or better, always display the
-    //     complete day, but stroll as needed
-    var sHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8);
-    var eHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17);
-    var i;
-    for (i = 0; i < 24; i++) {
-        if ((i < sHour) || (i > eHour))
-            document.getElementById("day-tree-item-"+i).setAttribute("hidden", "true");
-        else
-            document.getElementById("day-tree-item-"+i).removeAttribute("hidden");
-    }
-
     // Figure out the start and end days for the week we're currently viewing
     var selectedDateTime = this.calendarWindow.getSelectedDate();
     this.displayStartDate = new Date(selectedDateTime.getFullYear(),
@@ -364,12 +351,43 @@ DayView.prototype.createAllDayEventBox = function dayview_createAllDayEventBox( 
 }
 
 DayView.prototype.addToDisplayList = function(itemOccurrence, startDate, endDate)
-{
-    this.eventList.push({event:itemOccurrence, start:startDate, end:endDate});
+{    
+    //HACK because startDate is convert to the proper TZ, but
+    //startDate.jsDate is not
+    var adjustedStartDate = new Date();
+    var adjustedEndDate = new Date();
+    adjustedStartDate.setFullYear(startDate.year);
+    adjustedStartDate.setMonth(startDate.month);
+    adjustedStartDate.setDate(startDate.day);
+    adjustedEndDate.setFullYear(endDate.year);
+    adjustedEndDate.setMonth(endDate.month);
+    adjustedEndDate.setDate(endDate.day);
+
+    // Check if the event is within the bounds of events to be displayed.
+    if ((adjustedEndDate < this.displayStartDate) ||
+        (adjustedStartDate > this.displayEndDate))
+        return;
+
+    this.eventList.push({event:itemOccurrence, start:startDate.clone(), end:endDate.clone()});
 }
 
 DayView.prototype.drawEventBoxes = function()
 {
+    var sHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8);
+    var eHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17);
+    for each (event in this.eventList) {        
+        if(event.end.hour > eHour)
+            eHour = event.end.hour;
+        if(event.start.hour < sHour)
+            sHour = event.start.hour;
+    }
+    var i;
+    for (i = 0; i < 24; i++) {
+        if ((i < sHour) || (i > eHour))
+            document.getElementById("day-tree-item-"+i).setAttribute("hidden", "true");
+        else
+            document.getElementById("day-tree-item-"+i).removeAttribute("hidden");
+    }
     this.setDrawProperties(this.eventList);
     var event;
     for (event in this.eventList) {
@@ -387,20 +405,6 @@ DayView.prototype.createEventBoxInternal = function(event)
     var startDate = event.start;
     var endDate = event.end;
     var calEvent = itemOccurrence.QueryInterface(Components.interfaces.calIEvent);
-
-    // XXX Centralize this next checks
-    // Check if the event is within the bounds of events to be displayed.
-    if ((endDate.jsDate < this.displayStartDate) ||
-        (startDate.jsDate > this.displayEndDate))
-        return;
-
-    // XXX Should this really be done? better would be to adjust the
-    // display boundaries
-    if (startDate.jsDate < this.displayStartDate)
-        startDate.jsDate = this.displayStartDate;
-
-    if (endDate.jsDate > this.displayEndDate)
-        endDate.jsDate = this.displayEndDate;
 
     startDate.normalize();
     endDate.normalize();

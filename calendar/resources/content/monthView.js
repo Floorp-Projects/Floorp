@@ -158,7 +158,7 @@ function MonthView( calendarWindow )
       }
    }
       
-   //calendarWindow.EventSelection.addObserver( monthViewEventSelectionObserver );
+   calendarWindow.EventSelection.addObserver( monthViewEventSelectionObserver );
    
    this.showingLastDay = false;
   
@@ -249,21 +249,102 @@ MonthView.prototype.refreshEvents = function()
                       0, jsDateToDateTime(startDate), jsDateToDateTime(endDate), getListener);
 }
 
+MonthView.prototype.createEventDotInternal = function(itemOccurrence, startDate, endDate)
+{
+    //This is a HACK because startDate and indexOfDate don't get along well
+    //in terms of timezones.
+    var adjustedDate = new Date();
+    adjustedDate.setFullYear(startDate.year);
+    adjustedDate.setMonth(startDate.month);
+    adjustedDate.setDate(startDate.day);
+    dayBoxItem = this.dayBoxItemArray[this.indexOfDate(adjustedDate)];
+
+    var dotBoxHolder
+    if( !document.getElementById( "dotboxholder"+startDate.month+'-'+startDate.day ) ) {
+        dotBoxHolder = document.createElement( "hbox" );
+        dotBoxHolder.setAttribute( "id", "dotboxholder"+startDate.month+'-'+startDate.day );
+        dotBoxHolder.setAttribute( "eventbox", "monthview" );
+        dayBoxItem.appendChild( dotBoxHolder );
+    }
+    else {
+        dotBoxHolder = document.getElementById( "dotboxholder"+startDate.month+'-'+startDate.day );
+    }
+
+    if( dotBoxHolder.childNodes.length >= kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW )
+        return;
+
+    var calEvent = itemOccurrence.QueryInterface(Components.interfaces.calIEvent);
+
+    var eventDotBox = document.createElement( "box" );
+    eventDotBox.setAttribute( "eventbox", "monthview" );
+    eventDot = document.createElement( "image" );
+    eventDot.setAttribute( "class", "month-view-event-dot-class" );
+    eventDot.setAttribute("id", "month-view-event-box-" + itemOccurrence.id );
+    eventDot.setAttribute("name", "month-view-event-box-" + itemOccurrence.id );
+
+    eventDot.setAttribute("onclick", "monthEventBoxClickEvent( this, event )" );
+    eventDot.setAttribute("ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
+    eventDot.setAttribute("onmouseover", "onMouseOverGridOccurrence(event)" );
+    eventDot.setAttribute("tooltip", "gridOccurrenceTooltip" );
+    eventDot.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
+    eventDot.occurrence = itemOccurrence; // for mouseover preview
+    eventDot.event = calEvent;
+    eventDotBox.appendChild( eventDot );
+    dotBoxHolder.appendChild( eventDotBox );
+}
+
+MonthView.prototype.maxEventsToShow = function( dayBox ) {
+    //create a dummy eventBox to get its height
+    eventBox = document.createElement("box");
+    eventBox.setAttribute("id", "month-view-event-box-dummy" );
+    eventBox.setAttribute("class", "month-view-event-class default");
+    eventBox.setAttribute("eventbox", "monthview" );
+
+    // Make a text item to show the event title
+    var eventBoxText = document.createElement("label");
+    eventBoxText.setAttribute("crop", "end");
+    eventBoxText.setAttribute("class", "month-day-event-text-class");
+        
+    var eventStartTime = new Date(new Date().getTime());
+    var StartFormattedTime = this.calendarWindow.dateFormater.getFormatedTime(eventStartTime);
+    eventBoxText.setAttribute("value", StartFormattedTime+' '+ "Dummy");
+    eventBoxText.setAttribute("flex", "1");
+    eventBox.appendChild(eventBoxText);        
+    dayBoxItem.appendChild(eventBox);
+
+    //Subtract the height of the number label
+    var offsetY = dayBoxItem.firstChild.boxObject.height;
+    var useableSpace = dayBoxItem.boxObject.height - offsetY;
+    var maxEvents = useableSpace/eventBox.boxObject.height;
+    dayBoxItem.removeChild(eventBox);
+    return maxEvents;
+}
+
 MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, endDate)
 {
-    dayBoxItem = this.dayBoxItemArray[this.indexOfDate(startDate.jsDate)];
+    //This is a HACK because startDate and indexOfDate don't get along well
+    //in terms of timezones.
+    var adjustedDate = new Date();
+    adjustedDate.setFullYear(startDate.year);
+    adjustedDate.setMonth(startDate.month);
+    adjustedDate.setDate(startDate.day);
+    dayBoxItem = this.dayBoxItemArray[this.indexOfDate(adjustedDate)];
     if (!dayBoxItem)
         return;
 
     var calEvent = itemOccurrence.QueryInterface(Components.interfaces.calIEvent);
- 
+
+    if(dayBoxItem.childNodes.length >= this.maxEventsToShow( dayBoxItem ) ) {
+        this.createEventDotInternal(itemOccurrence, startDate, endDate);
+        return;
+    }
+
     // Make a box item to hold the event
     eventBox = document.createElement("box");
     eventBox.setAttribute("id", "month-view-event-box-" + itemOccurrence.id );
     eventBox.setAttribute("name", "month-view-event-box-" + itemOccurrence.id );
     //eventBox.setAttribute( "event"+toString(calendarEventDisplay.event.id), true );
 
-    this.setEventboxClass(eventBox, calEvent, "month-view");
     eventBox.setAttribute("class", "month-view-event-class default");
     
     eventBox.setAttribute("eventbox", "monthview" );
@@ -282,6 +363,7 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
     var eventBoxText = document.createElement("label");
     eventBoxText.setAttribute("crop", "end");
     eventBoxText.setAttribute("class", "month-day-event-text-class");
+    this.setEventboxClass(eventBox, calEvent, "month-view");
 
     if (calEvent.startDate.isDate) {
         eventBox.setAttribute("allday", "true");
@@ -297,6 +379,8 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
         // display as "12:15 titleevent"
         eventBoxText.setAttribute("value", StartFormattedTime+' '+ calEvent.title);
     }
+    if(this.calendarWindow.EventSelection.isSelectedEvent(calEvent)) 
+        eventBox.setAttribute( "eventselected", "true" );
 
     eventBoxText.setAttribute("flex", "1");
     eventBoxText.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);");
@@ -305,7 +389,6 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
 
     eventBox.appendChild(eventBoxText);        
 
-    // XXX need to look at the number of children here and determine what we're supposed to do
     dayBoxItem.appendChild(eventBox);
 
 /*

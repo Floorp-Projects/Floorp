@@ -115,21 +115,6 @@ function WeekView( calendarWindow )
 */
 WeekView.prototype.refreshEvents = function()
 {
-    //initialize view limits from prefs
-    this.lowestStartHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8);
-    this.highestEndHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17);
-
-    //now hide those that aren't applicable
-    for (var i = 0; i < 24; i++) {
-        document.getElementById("week-view-row-"+i).removeAttribute("collapsed");
-    }
-    for (i = 0; i < this.lowestStartHour; i++) {
-        document.getElementById("week-view-row-"+i).setAttribute("collapsed", "true");
-    }
-    for (i = (this.highestEndHour + 1); i < 24; i++) {
-        document.getElementById("week-view-row-"+i ).setAttribute("collapsed", "true");
-    }
-
     // clean up anything that was here before
     this.removeElementsByAttribute("eventbox", "weekview");
     this.eventList = new Array();
@@ -329,11 +314,32 @@ WeekView.prototype.refreshEvents = function()
 
 WeekView.prototype.addToDisplayList = function(itemOccurrence, startDate, endDate)
 {
-    this.eventList.push({event:itemOccurrence, start:startDate, end:endDate});
+    this.eventList.push({event:itemOccurrence, start:startDate.clone(), end:endDate.clone()});
 }
 
 WeekView.prototype.drawEventBoxes = function()
 {
+    //initialize view limits from prefs
+    this.lowestStartHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8);
+    this.highestEndHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17);
+    for each (event in this.eventList) {
+        if(event.end.hour > this.highestEndHour)
+            this.highestEndHour = event.end.hour;
+        if(event.start.hour < this.lowestStartHour)
+            this.lowestStartHour = event.start.hour;
+    }
+
+    //now hide those that aren't applicable
+    for (var i = 0; i < 24; i++) {
+        document.getElementById("week-view-row-"+i).removeAttribute("collapsed");
+    }
+    for (i = 0; i < this.lowestStartHour; i++) {
+        document.getElementById("week-view-row-"+i).setAttribute("collapsed", "true");
+    }
+    for (i = (this.highestEndHour + 1); i < 24; i++) {
+        document.getElementById("week-view-row-"+i ).setAttribute("collapsed", "true");
+    }
+
     // Need to split in seperate lists for each day.
     var lists = new Array();
     for (var i=0; i<7; ++i) {
@@ -365,25 +371,21 @@ WeekView.prototype.createEventBoxInternal = function (event)
     var endDate = event.end;
     var calEvent = itemOccurrence.QueryInterface(Components.interfaces.calIEvent);
 
-    // Check if the event is within the bounds of events to be displayed.
-    if ((endDate.jsDate < this.displayStartDate) ||
-        (startDate.jsDate > this.displayEndDate))
-        return;
+    //HACK because event.start is convert to the proper TZ, but
+    //event.start.jsDate is not!
+    var adjustedStartDate = new Date();
+    var adjustedEndDate = new Date();
+    adjustedStartDate.setFullYear(startDate.year);
+    adjustedStartDate.setMonth(startDate.month);
+    adjustedStartDate.setDate(startDate.day);
+    adjustedEndDate.setFullYear(endDate.year);
+    adjustedEndDate.setMonth(endDate.month);
+    adjustedEndDate.setDate(endDate.day);
 
-    // XXX Should this really be done? better would be to adjust the
-    // lowestStart and highestEnd
-    if ((endDate.hour < this.lowestStartHour) ||
-        (startDate.hour > this.highestEndHour))
+    // Check if the event is within the bounds of events to be displayed.
+    if ((adjustedEndDate < this.displayStartDate) ||
+        (adjustedStartDate > this.displayEndDate))
         return;
-     
-    if (startDate.hour < this.lowestStartHour) {
-        startDate.hour = this.lowestStartHour;
-        startDate.normalize();
-    }
-    if (endDate.hour > this.highestEndHour) {
-        endDate.hour = this.highestEndHour;
-        endDate.normalize();
-    }
 
     /*
     if (calEvent.isAllDay) {
@@ -476,6 +478,8 @@ WeekView.prototype.createEventBoxInternal = function (event)
       descriptionElement.appendChild(document.createTextNode(descriptionText));
       eventBox.appendChild( descriptionElement );
     }
+    if(this.calendarWindow.EventSelection.isSelectedEvent(calEvent))
+        eventBox.setAttribute( "eventselected", "true" );
 
     debug("Adding eventBox " + eventBox + "\n");
     if (!startDate.isDate) {
