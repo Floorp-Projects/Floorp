@@ -54,6 +54,8 @@ var gCalendarEventTreeClicked = false; //set this to true when the calendar even
 
 var gEventArray = new Array();
 
+var kDefaultTimezone;
+
 function resetAllowSelection()
 {
    /* 
@@ -206,6 +208,9 @@ function prepareCalendarUnifinder( )
    
    var ccalendar = getDisplayComposite();
    ccalendar.addObserver(unifinderObserver);
+
+   kDefaultTimezone = calendarDefaultTimezone();
+
    refreshEventTree(); //Display something upon first load. onLoad doesn't work properly for observers
 }
 
@@ -226,7 +231,8 @@ function finishCalendarUnifinder( )
 
 function formatUnifinderEventDateTime( datetime, isAllDay )
 {
-  return gCalendarWindow.dateFormater.formatDateTime( datetime, true, isAllDay );
+  var d = datetime.getInTimezone(kDefaultTimezone).jsDate;
+  return gCalendarWindow.dateFormater.formatDateTime( d, true, datetime.isDate );
 }
 
 
@@ -445,19 +451,15 @@ var treeView =
             return( calendarEvent.title );
          
          case "unifinder-search-results-tree-col-startdate":
-            var eventStartDate = calendarEvent.startDate.jsDate;
-            // XXX reimplement
-            //var eventStartDate = getCurrentNextOrPreviousRecurrence( calendarEvent );
-            return formatUnifinderEventDateTime(eventStartDate, calendarEvent.isAllDay);
+            return formatUnifinderEventDateTime(calendarEvent.startDate);
          
          case "unifinder-search-results-tree-col-enddate":
-            var eventEndDate = calendarEvent.endDate.jsDate;
+            var eventEndDate = calendarEvent.endDate.clone();
             // XXX reimplement
             //var eventEndDate = getCurrentNextOrPreviousRecurrence( calendarEvent );
-            if (calendarEvent.isAllDay) // display enddate is ical enddate - 1
-               //user-enddate is ical-enddate - 1
-               eventEndDate.setDate( eventEndDate.getDate() - 1 );
-            return formatUnifinderEventDateTime(eventEndDate, calendarEvent.isAllDay);         
+            if (calendarEvent.startDate.isDate) // display enddate is ical enddate - 1
+               eventEndDate.day = eventEndDate.day - 1;
+            return formatUnifinderEventDateTime(eventEndDate);         
 
          case "unifinder-search-results-tree-col-categories":
             return( calendarEvent.categories );

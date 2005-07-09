@@ -750,7 +750,7 @@ CalendarView.prototype.getViewLimits = function calView_getViewLimits( dayDispla
   var dateEnd = tmpDate.valueOf();
   
   for ( var i = 0; i < dayDisplayEventList.length; i++ ) {
-    if( dayDisplayEventList[i].event.isAllDay != true ) {
+    if( dayDisplayEventList[i].event.startDate.isDate != true ) {
       
       if( dayDisplayEventList[i].displayDate < dateStart ) {
         sHour=0;
@@ -933,7 +933,7 @@ CalendarView.prototype.setAllDayDrawProperties = function calView_setAllDayDrawP
   }
   
   for( i = 0; i < eventList.length; i++ ) {
-    if( eventList[i].event.isAllDay) {
+    if( eventList[i].event.startDate.isDate) {
       
       if( eventList[i].event.recur ) {
         //get start time for correct occurrence

@@ -776,7 +776,7 @@ function newEvent(startDate, endDate, allDay)
    calendarEvent.endDate.jsDate = endDate
 
    if (allDay)
-       calendarEvent.isAllDay = true;
+       calendarEvent.startDate.isDate = true;
 
    var calendar = getSelectedCalendarOrNull();
 

@@ -229,7 +229,7 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
     {
       var eventStart = new Date(event.startDate.jsDate);
       var eventEnd = event.endDate && new Date(event.endDate.jsDate);
-      if (event.isAllDay && eventEnd) { 
+      if (event.startDate.isDate && eventEnd) { 
         eventEnd.setDate(eventEnd.getDate() - 1);
       }
       var relativeToDate;
@@ -257,7 +257,7 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
         endDate = new Date(startDate.getTime() + eventDuration);
       }
       boxAppendLabeledDateTimeInterval(vbox, "tooltipDate",
-                                       startDate, endDate, event.isAllDay,
+                                       startDate, endDate, event.startDate.isDate,
                                        relativeToDate);
     }
 

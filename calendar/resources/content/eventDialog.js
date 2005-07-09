@@ -131,7 +131,7 @@ function loadCalendarEventDialog()
         gDurationMSec = endDate - startDate;
 
         var displayEndDate = new Date(endDate);
-        if (event.isAllDay) {
+        if (event.startDate.isDate) {
             //displayEndDate == icalEndDate - 1, in the case of allday events
             displayEndDate.setDate(displayEndDate.getDate() - 1);
         }
@@ -153,7 +153,7 @@ function loadCalendarEventDialog()
                   event.status + "\n");
         }
         
-        setElementValue("all-day-event-checkbox", event.isAllDay, "checked");
+        setElementValue("all-day-event-checkbox", event.startDate.isDate, "checked");
         break;
     case "todo":
         var hasEntry = event.entryDate ? true : false;
@@ -327,7 +327,7 @@ function loadCalendarEventDialog()
                 break;
             }
 
-            if (theRule.count == -1) {
+            if (!theRule.isFinite) {
                 setElementValue("repeat-forever-radio", true, "selected");
             } else {
                 if (theRule.isByCount) {
@@ -480,17 +480,15 @@ function onOKCommand()
         if (!event.isMutable) // I will cut vlad for making me do this QI
             event = originalEvent.clone().QueryInterface(Components.interfaces.calIEvent);
 
-        event.isAllDay = getElementValue("all-day-event-checkbox", "checked");
         event.startDate = jsDateToDateTime(getElementValue("start-datetime"));
         event.endDate = jsDateToDateTime(getElementValue("end-datetime"));
         var endDate = getElementValue("end-datetime");
-        if (event.isAllDay) {
+        if (event.startDate.isDate) {
             // displayed all day end date is inclusive date, convert to exclusive end date.
             endDate.setDate(endDate.getDate() + 1); 
         }
         event.endDate = jsDateToDateTime(endDate);
-        if (event.isAllDay) {
-            event.startDate.isDate = true;
+        if (event.startDate.isDate) {
             event.endDate.isDate = true;
         }
 

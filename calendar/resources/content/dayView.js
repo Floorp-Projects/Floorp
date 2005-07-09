@@ -192,7 +192,7 @@ DayView.prototype.refreshEvents = function()
    
    // Divide events into all day and other events
    for( i = 0; i < dayEventList.length; i++ ) {
-      if ( dayEventList[i].event.isAllDay == true )
+      if (dayEventList[i].event.startDate.isDate)
          allDayEvents.push(dayEventList[i]);
       else
          normalEvents.push(dayEventList[i]);
@@ -413,7 +413,7 @@ DayView.prototype.createEventBoxInternal = function(event)
         endDate.normalize();
     }
     */
-    dump("all day:   " + calEvent.isAllDay + "\n");
+    dump("all day:   " + calEvent.startDate.isDate + "\n");
     dump("startdate: " + startDate + "\n");
     dump("enddate:   " + endDate + "\n");
 

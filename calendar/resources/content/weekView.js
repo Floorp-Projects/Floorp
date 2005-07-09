@@ -393,7 +393,7 @@ WeekView.prototype.createEventBoxInternal = function (event)
         endDate.normalize();
     }
     */
-    debug("all day:   " + calEvent.isAllDay + "\n");
+    debug("all day:   " + calEvent.startDate.isDate + "\n");
     debug("startdate: " + startDate + "\n");
     debug("enddate:   " + endDate + "\n");
 
