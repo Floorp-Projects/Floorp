@@ -5,7 +5,7 @@
   <rdf:Description about="urn:root">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="use-help" nc:name="How to Use Help"
+        <rdf:li> <rdf:Description ID="use-help" nc:name="Using the Help Window"
                   nc:link="chrome://help/locale/welcome.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
