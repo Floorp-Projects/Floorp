@@ -75,7 +75,8 @@ sub query
   my $list = $dbh->selectall_arrayref("SELECT attach_id, " .
                                       $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') .
                                       ", mimetype, description, ispatch,
-                                      isobsolete, isprivate, LENGTH(thedata)
+                                      isobsolete, isprivate, LENGTH(thedata),
+                                      submitter_id
                                       FROM attachments
                                       WHERE bug_id = ? ORDER BY attach_id",
                                       undef, $bugid);
@@ -85,7 +86,9 @@ sub query
     my %a;
     ($a{'attachid'}, $a{'date'}, $a{'contenttype'},
      $a{'description'}, $a{'ispatch'}, $a{'isobsolete'},
-     $a{'isprivate'}, $a{'datasize'}) = @$row;
+     $a{'isprivate'}, $a{'datasize'}, $a{'submitter_id'}) = @$row;
+
+    $a{'submitter'} = new Bugzilla::User($a{'submitter_id'});
 
     # Retrieve a list of flags for this attachment.
     $a{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a{'attachid'},

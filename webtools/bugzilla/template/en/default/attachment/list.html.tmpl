@@ -24,6 +24,7 @@
   <tr>
     <th bgcolor="#cccccc" align="left">Attachment</th>
     <th bgcolor="#cccccc" align="left">Type</th>
+    <th bgcolor="#cccccc" align="left">Creator</th>
     <th bgcolor="#cccccc" align="left">Created</th>
     <th bgcolor="#cccccc" align="left">Size</th>
     [% IF show_attachment_flags %]
@@ -47,6 +48,11 @@
           [% END %]
         </td>
 
+        <td valign="top">
+          <a href="mailto:[% attachment.submitter.email FILTER html %]">
+          [% attachment.submitter.name || attachment.submitter.login FILTER html %]
+          </a>
+        </td>
         <td valign="top">[% attachment.date FILTER time %]</td>
         <td valign="top">[% attachment.datasize FILTER unitconvert %]</td>
 
