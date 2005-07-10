@@ -98,10 +98,12 @@
           [% flag.setter.nick FILTER html %]:
         </td>
         <td>
-          [% type.name FILTER html FILTER no_break %]
+          <label title="[% type.description FILTER html %]">
+            [%- type.name FILTER html FILTER no_break %]</label>
         </td>
         <td>
           <select id="flag-[% flag.id %]" name="flag-[% flag.id %]" 
+                  title="[% type.description FILTER html %]"
                   onchange="toggleRequesteeField(this);">
             <option value="X"></option>
             [% IF type.is_active %]
@@ -137,9 +139,13 @@
     [% IF (!type.flags || type.flags.size == 0) && type.is_active %]
       <tr>
         <td>&nbsp;</td>
-        <td>[% type.name FILTER html FILTER no_break %]</td>
+        <td>
+          <label title="[% type.description FILTER html %]">
+            [%- type.name FILTER html FILTER no_break %]</label>
+        </td>
         <td>
           <select id="flag_type-[% type.id %]" name="flag_type-[% type.id %]" 
+                  title="[% type.description FILTER html %]"
                   onchange="toggleRequesteeField(this);">
             <option value="X"></option>
             <option value="+">+</option>
@@ -172,9 +178,13 @@
         [% separator_displayed = 1 %]
     [% END %]
     <tr>
-      <td colspan="2">addl. [% type.name FILTER html FILTER no_break %]</td>
+      <td colspan="2">
+        addl. <label title="[% type.description FILTER html %]">
+          [%- type.name FILTER html FILTER no_break %]</label>
+      </td>
       <td>
         <select id="flag_type-[% type.id %]" name="flag_type-[% type.id %]" 
+                title="[% type.description FILTER html %]"
                 onchange="toggleRequesteeField(this);">
           <option value="X"></option>
           <option value="+">+</option>
