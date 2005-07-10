@@ -698,7 +698,10 @@ CalendarView.prototype.createEventBox = function(aItemOccurrence, aInteralFuncti
         endDate.day = endDate.day + 1;
         endDate.normalize();
     }
-    aInteralFunction(aItemOccurrence, startDate, origEndDate);
+    // Allday has exclusive enddate. Need to skip the last day from displaying
+    // (would have zero length, but we show it anyway)
+    if (!aItemOccurrence.startDate.isDate)
+        aInteralFunction(aItemOccurrence, startDate, origEndDate);
 }
 
 
