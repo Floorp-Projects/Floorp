@@ -104,8 +104,16 @@ function toSOutputStream(stream, binary)
 
 function CBSConnection (binary)
 {
-    var sockServiceClass =
+    /* Since 2003-01-17 18:14, Mozilla has had this contract ID for the STS.
+     * Prior to that it didn't have one, so we also include the CID for the
+     * STS back then - DO NOT UPDATE THE ID if it changes in Mozilla.
+     */
+    const sockClassByName =
+        Components.classes["@mozilla.org/network/socket-transport-service;1"];
+    const sockClassByID =
         Components.classesByID["{c07e81e0-ef12-11d2-92b6-00105a1b0d64}"];
+
+    var sockServiceClass = (sockClassByName || sockClassByID);
 
     if (!sockServiceClass)
         throw ("Couldn't get socket service class.");
