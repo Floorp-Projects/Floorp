@@ -282,6 +282,15 @@ function set_assign_to() {
   </tr>
 [% END %]
 
+[% IF Param("usebugaliases") %]
+  <tr>
+    <td align="right"><strong>Alias:</strong></td>
+    <td colspan="3">
+      <input name="alias" size="20">
+    </td>
+  </tr>
+[% END %]
+
   <tr>
     <td align="right"><strong>URL:</strong></td>
     <td colspan="3">
