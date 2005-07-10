@@ -2215,8 +2215,14 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             baseView->GetDimensions(baseViewDimensions);
           }
 
-          aEvent->point.x = baseViewDimensions.x + NSIntPixelsToTwips(aEvent->point.x, p2t);
-          aEvent->point.y = baseViewDimensions.y + NSIntPixelsToTwips(aEvent->point.y, p2t);
+          nsPoint oldpt = aEvent->point;
+          // Set the mouse cursor to the middle of the pixel, because
+          // that's how we paint --- a frame paints a pixel if it covers
+          // the center of the pixel
+          aEvent->point.x = baseViewDimensions.x +
+            NSFloatPixelsToTwips(float(aEvent->point.x) + 0.5f, p2t);
+          aEvent->point.y = baseViewDimensions.y +
+            NSFloatPixelsToTwips(float(aEvent->point.y) + 0.5f, p2t);
 
           aEvent->point.x += offset.x;
           aEvent->point.y += offset.y;
@@ -2224,12 +2230,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           *aStatus = HandleEvent(view, aEvent, capturedEvent);
 
           // From here on out, "this" could have been deleted!!!
-
-          aEvent->point.x -= offset.x;
-          aEvent->point.y -= offset.y;
-
-          aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x - baseViewDimensions.x, t2p);
-          aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y - baseViewDimensions.y, t2p);
+          aEvent->point = oldpt;
 
           //
           // if the event is an nsTextEvent, we need to map the reply back into platform coordinates
