@@ -335,7 +335,7 @@ function net_doconnect(e)
         catch(ex)
         {
             this.state = NET_OFFLINE;
-    
+
             ev = new CEvent ("network", "error", this, "onError");
             ev.server = this;
             ev.debug = "Exception opening socket: " + ex;
@@ -1330,10 +1330,13 @@ function serv_001 (e)
                           c: ['l'],
                           d: ['i', 'm', 'n', 'p', 's', 't']
                         };
+    // Default to support of v/+ and o/@ only.
     this.userModes = [
                        { mode: 'o', symbol: '@' },
                        { mode: 'v', symbol: '+' }
                      ];
+    // Assume the server supports no extra interesting commands.
+    this.servCmds = {};
 
     if (this.parent.INITIAL_UMODE)
     {
@@ -1459,6 +1462,14 @@ function serv_005 (e)
                                            d: cmlist[3].split('')
                                          };
         }
+    }
+
+    if ("cmds" in this.supports)
+    {
+        // Map this.supports.cmds [comma-list] into this.servCmds [props].
+        var cmdlist = this.supports.cmds.split(/,/);
+        for (var i = 0; i < cmdlist.length; i++)
+            this.servCmds[cmdlist[i].toLowerCase()] = true;
     }
 
     this.supports.rpl_isupport = true;
