@@ -2705,11 +2705,9 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   PRInt32 selectedIndex;
   if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
-    if (!IsInDropDownMode()) {
-      // Handle Like List
-      CaptureMouseEvents(GetPresContext(), PR_TRUE);
-      mChangesSinceDragStart = HandleListSelection(aMouseEvent, selectedIndex);
-    }
+    // Handle Like List
+    CaptureMouseEvents(GetPresContext(), PR_TRUE);
+    mChangesSinceDragStart = HandleListSelection(aMouseEvent, selectedIndex);
   } else {
     // NOTE: the combo box is responsible for dropping it down
     if (mComboboxFrame) {
