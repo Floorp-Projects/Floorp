@@ -55,13 +55,12 @@ function CIRCDCC(parent)
     this.last = null;
     this.lastTime = null;
 
-    this.sendChunk = 1024;
-    this.maxUnAcked = 0;
+    this.sendChunk = 4096;
+    this.maxUnAcked = 32; // 4096 * 32 == 128KiB 'in transit'.
 
     this.requestTimeout = 3 * 60 * 1000; // 3 minutes.
 
     // Can't do anything 'til this is set!
-    //FIXME: Can we use Moz's Components here?
     this.localIPlist = new Array();
     this.localIP = null;
     this._lastPort = null;
@@ -1108,7 +1107,11 @@ function dfile_onSocketAccepted(socket, transport)
         this.filestream.setInputStream(this.localFile.baseInputStream);
 
         // Start the reading!
-        var d = this.filestream.readBytes(this.parent.sendChunk);
+        var d;
+        if (this.parent.sendChunk > this.size)
+            d = this.filestream.readBytes(this.size);
+        else
+            d = this.filestream.readBytes(this.parent.sendChunk);
         this.position += d.length;
         this.connection.sendData(d);
     }
