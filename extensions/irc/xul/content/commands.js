@@ -1893,7 +1893,13 @@ function cmdNick(e)
 {
     if (!e.nickname)
     {
-        e.nickname = prompt(MSG_NICK_PROMPT);
+        var curNick;
+        if (e.network)
+            curNick = e.network.prefs["nickname"];
+        else
+            curNick = client.prefs["nickname"];
+
+        e.nickname = prompt(MSG_NICK_PROMPT, curNick);
         if (e.nickname == null)
             return;
     }
