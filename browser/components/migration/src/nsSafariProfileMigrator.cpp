@@ -71,7 +71,7 @@
 #define SAFARI_HISTORY_FILE_NAME          NS_LITERAL_STRING("History.plist")
 #define SAFARI_COOKIES_FILE_NAME          NS_LITERAL_STRING("Cookies.plist")
 #define SAFARI_COOKIE_BEHAVIOR_FILE_NAME  NS_LITERAL_STRING("com.apple.WebFoundation.plist")
-#define SAFARI_HISTORY_DATE_OFFSET        978307200
+#define SAFARI_DATE_OFFSET                978307200
 #define MIGRATION_BUNDLE                  "chrome://browser/locale/migration/migration.properties"
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -300,9 +300,9 @@ GetDictionaryCStringValue(CFDictionaryRef aDictionary, CFStringRef aKey,
   if (value) {
     nsAutoBuffer<char, 1024> buffer;
     CFIndex valueLength = ::CFStringGetLength(value);
-    buffer.EnsureElemCapacity(valueLength);
+    buffer.EnsureElemCapacity(valueLength + 1);
 
-    if (::CFStringGetCString(value, buffer.get(), sizeof(buffer.get()), aEncoding)) {
+    if (::CFStringGetCString(value, buffer.get(), valueLength + 1, aEncoding)) {
       aResult = buffer.get();
       return PR_TRUE;
     }
@@ -824,6 +824,7 @@ nsSafariProfileMigrator::CopyCookies(PRBool aReplace)
       PRInt64 expiryTime;
       LL_D2L(expiryTime, (double)::CFDateGetAbsoluteTime(date));
 
+      expiryTime += SAFARI_DATE_OFFSET;
       cookieManager->Add(domain, path, name, value,
                          PR_FALSE, PR_FALSE, expiryTime);
     }
@@ -868,7 +869,7 @@ nsSafariProfileMigrator::CopyHistory(PRBool aReplace)
           GetDictionaryStringValue(entry, CFSTR("title"), title) &&
           lastVisitedDate) {
 
-        double lvd = ::CFStringGetDoubleValue(lastVisitedDate) + SAFARI_HISTORY_DATE_OFFSET;
+        double lvd = ::CFStringGetDoubleValue(lastVisitedDate) + SAFARI_DATE_OFFSET;
         PRTime lastVisitTime;
         PRInt64 temp, million;
         LL_D2L(temp, lvd);
