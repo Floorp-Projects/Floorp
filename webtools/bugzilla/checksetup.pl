@@ -4046,6 +4046,13 @@ add_setting ("comment_sort_order", {"oldest_to_newest" => 1,
                                     "newest_to_oldest_desc_first" => 3}, 
              "oldest_to_newest" );
 
+# 2005-05-12 bugzilla@glob.com.au -- Bug 63536
+add_setting ("post_bug_submit_action", {"next_bug" => 1,
+                                        "same_bug" => 2,
+                                        "nothing" => 3,
+                                       },
+             "next_bug" );
+
 ###########################################################################
 # Create Administrator  --ADMIN--
 ###########################################################################

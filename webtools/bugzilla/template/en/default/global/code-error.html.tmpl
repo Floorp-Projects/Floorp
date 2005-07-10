@@ -297,6 +297,9 @@
     There is an internal error in the SQL query generation code,
     creating queries with implicit JOIN.
 
+  [% ELSIF error == "invalid_post_bug_submit_action" %]
+    Invalid setting for post_bug_submit_action
+
   [% ELSE %]
     [% title = "Internal error" %]
     An internal error has occured, but [% terms.Bugzilla %] doesn't know

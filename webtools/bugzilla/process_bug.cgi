@@ -193,20 +193,10 @@ if (defined $cgi->param('id')) {
 }
 
 # Set up the vars for nagiavtional <link> elements
-my $next_bug;
+my @bug_list;
 if ($cgi->cookie("BUGLIST") && defined $cgi->param('id')) {
-    my @bug_list = split(/:/, $cgi->cookie("BUGLIST"));
+    @bug_list = split(/:/, $cgi->cookie("BUGLIST"));
     $vars->{'bug_list'} = \@bug_list;
-    my $cur = lsearch(\@bug_list, $cgi->param("id"));
-    if ($cur >= 0 && $cur < $#bug_list) {
-        $next_bug = $bug_list[$cur + 1];
-
-        # Note that we only bother with the bug_id here, and get
-        # the full bug object at the end, before showing the edit
-        # page. If you change this, remember that we have not
-        # done the security checks on the next bug yet
-        $vars->{'bug'} = { bug_id => $next_bug };
-    }
 }
 
 GetVersionTable();
@@ -1829,28 +1819,47 @@ foreach my $id (@idlist) {
     }
 }
 
-# now show the next bug
-if ($next_bug) {
-    if (detaint_natural($next_bug) && Bugzilla->user->can_see_bug($next_bug)) {
-        my $bug = new Bugzilla::Bug($next_bug, $whoid);
-        ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;
+# Determine if Patch Viewer is installed, for Diff link
+# (NB: Duplicate code with show_bug.cgi.)
+eval {
+    require PatchReader;
+    $vars->{'patchviewerinstalled'} = 1;
+};
 
-        # next.html.tmpl includes edit.html.tmpl, and therefore we
-        # need $bug defined in $vars.
-        $vars->{'bug'} = $bug;
+$action = Bugzilla->user->settings->{'post_bug_submit_action'}->{'value'};
 
-        # And we need to determine if Patch Viewer is installed, for
-        # Diff link (NB: Duplicate code with show_bug.cgi.)
-        eval {
-            require PatchReader;
-            $vars->{'patchviewerinstalled'} = 1;
-        };
-
-        $template->process("bug/process/next.html.tmpl", $vars)
-          || ThrowTemplateError($template->error());
-
-        exit;
+if ($action eq 'next_bug') {
+    my $next_bug;
+    my $cur = lsearch(\@bug_list, $cgi->param("id"));
+    if ($cur >= 0 && $cur < $#bug_list) {
+        $next_bug = $bug_list[$cur + 1];
     }
+    if ($next_bug) {
+        if (detaint_natural($next_bug) && Bugzilla->user->can_see_bug($next_bug)) {
+            my $bug = new Bugzilla::Bug($next_bug, $whoid);
+            ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;
+
+            $vars->{'bugs'} = [$bug];
+            $vars->{'nextbug'} = $bug->bug_id;
+
+            $template->process("bug/show.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());
+
+            exit;
+        }
+    }
+} elsif ($action eq 'same_bug') {
+    my $bug = new Bugzilla::Bug($cgi->param('id'), $whoid);
+    ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;
+
+    $vars->{'bugs'} = [$bug];
+
+    $template->process("bug/show.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+
+    exit;
+} elsif ($action ne 'nothing') {
+    ThrowCodeError("invalid_post_bug_submit_action");
 }
 
 # End the response page.

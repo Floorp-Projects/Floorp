@@ -364,6 +364,10 @@
   'bug.deadline',
 ],
 
+'bug/show.html.tmpl' => [
+  'bug.bug_id',
+],
+
 'bug/show.xml.tmpl' => [
   'VERSION', 
   'a.attachid', 
@@ -405,10 +409,6 @@
 
 'bug/process/midair.html.tmpl' => [
   'bug_id', 
-],
-
-'bug/process/next.html.tmpl' => [
-  'bug.bug_id', 
 ],
 
 'bug/process/results.html.tmpl' => [
