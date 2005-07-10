@@ -1695,6 +1695,7 @@ AddFDef("attachments.isobsolete", "Attachment is obsolete", 0);
 AddFDef("attachments.isprivate", "Attachment is private", 0);
 
 AddFDef("target_milestone", "Target Milestone", 0);
+AddFDef("creation_ts", "Creation date", 0);
 AddFDef("delta_ts", "Last changed date", 0);
 AddFDef("(" . $dbh->sql_to_days('NOW()') . " - " .
               $dbh->sql_to_days('bugs.delta_ts') . ")",
