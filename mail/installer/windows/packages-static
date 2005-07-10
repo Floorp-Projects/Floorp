@@ -130,7 +130,7 @@ bin\chrome\classic.manifest
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; default pref files
-bin\defaults\pref\
+bin\defaults\pref\*
 bin\greprefs\
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
