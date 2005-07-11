@@ -646,6 +646,7 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
             filterAction->GetLabel(&filterLabel);
             m_curFolder->SetLabelForMessages(m_searchHitHdrs, filterLabel);
         }
+        break;
       case nsMsgFilterAction::JunkScore:
       {
         nsCAutoString junkScoreStr;
