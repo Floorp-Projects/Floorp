@@ -190,7 +190,6 @@ components/xultmpl.xpt
 components/xuldoc.xpt
 
 ;;libmoz_art_lgpl.so
-;;res/dtd/xhtml11.dtd
 components/libgklayout.so                   
 components/layout_base.xpt              
 components/layout_printing.xpt              
@@ -403,6 +402,7 @@ res/langGroups.properties
 res/language.properties
 ;res/wincharset.properties
 res/entityTables/*
+res/dtd/xhtml11.dtd
 
 ; editor resource files
 res/EditorOverride.css
