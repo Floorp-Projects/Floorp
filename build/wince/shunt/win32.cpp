@@ -177,7 +177,7 @@ MOZCE_SHUNT_API int mozce_ExtSelectClipRgn(HDC inDC, HRGN inRGN, int inMode)
     
     if (result == NULLREGION) 
     {
-        if (inMode == RGN_DIFF || inMode == RGN_DIFF)
+        if (inMode == RGN_DIFF || inMode == RGN_AND)
             result = SelectClipRgn(inDC,NULL);
         else
             result = SelectClipRgn(inDC,inRGN);
