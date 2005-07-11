@@ -186,18 +186,6 @@ sub CheckEmailSyntax {
     }
 }
 
-sub MailPassword {
-    my ($login, $password) = (@_);
-    my $urlbase = Param("urlbase");
-    my $template = Param("passwordmail");
-    my $msg = PerformSubsts($template,
-                            {"mailaddress" => $login . Param('emailsuffix'),
-                             "login" => $login,
-                             "password" => $password});
-
-    Bugzilla::BugMail::MessageToMTA($msg);
-}
-
 sub PutHeader {
     ($vars->{'title'}, $vars->{'h1'}, $vars->{'h2'}) = (@_);
      

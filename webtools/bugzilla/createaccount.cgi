@@ -32,6 +32,7 @@ require "CGI.pl";
 
 use Bugzilla::Constants;
 use Bugzilla::User;
+use Bugzilla::BugMail;
 
 # Shut up misguided -w warnings about "used only once":
 use vars qw(
@@ -81,7 +82,7 @@ if (defined($login)) {
 
     # Create account
     my $password = insert_new_user($login, $realname);
-    MailPassword($login, $password);
+    Bugzilla::BugMail::MailPassword($login, $password);
     
     $template->process("account/created.html.tmpl", $vars)
       || ThrowTemplateError($template->error());

@@ -658,4 +658,15 @@ sub PerformSubsts ($;$) {
     return $str;
 }
 
+# Send the login name and password of the newly created account to the user.
+sub MailPassword ($$) {
+    my ($login, $password) = (@_);
+    my $template = Param("passwordmail");
+    my $msg = PerformSubsts($template,
+                            {"mailaddress" => $login . Param('emailsuffix'),
+                             "login" => $login,
+                             "password" => $password});
+    MessageToMTA($msg);
+}
+
 1;
