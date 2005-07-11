@@ -1499,12 +1499,6 @@ if ($my_db_check) {
             "   Bugzilla requires version $sql_want or later of $sql_server.\n" . 
             "   Please download and install a newer version.\n";
     }
-    # This message is specific to MySQL.
-    if ($dbh->isa('Bugzilla::DB::Mysql') && ($sql_vers =~ /^4\.0\.(\d+)/) && ($1 < 2)) {
-        die "\nYour MySQL server is incompatible with Bugzilla.\n" .
-            "   Bugzilla does not support versions 4.x.x below 4.0.2.\n" .
-            "   Please visit http://www.mysql.com/ and download a newer version.\n";
-    }
 
     # See if we can connect to the database.
     my $conn_success = eval { 

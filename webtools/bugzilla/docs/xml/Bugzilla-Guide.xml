@@ -42,7 +42,7 @@
 <!ENTITY mysql "http://www.mysql.com/">
 
 <!-- For minimum versions -->
-<!ENTITY min-mysql-ver "3.23.41">
+<!ENTITY min-mysql-ver "4.0.14">
 <!ENTITY min-pg-ver "7.3.x">
 <!ENTITY min-perl-ver "5.6.1">
 <!ENTITY min-perl-ver-win "5.8.1">
