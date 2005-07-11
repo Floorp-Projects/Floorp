@@ -136,7 +136,7 @@ function filterEditorOnLoad()
           }
           else{
             // fake the first more button press
-            onMore(null, 0);
+            onMore(null);
           }
         }
     }
@@ -376,8 +376,6 @@ function initializeDialog(filter)
     var scope = getScope(filter);
     setSearchScope(scope);
     initializeSearchRows(scope, filter.searchTerms);
-    if (filter.searchTerms.Count() == 1)
-      document.getElementById("less0").setAttribute("disabled", "true");
 }
 
 function InitMessageLabel()
