@@ -882,7 +882,7 @@ VerifyInstallation(nsIFile* aAppDir)
 static void
 DumpVersion()
 {
-  printf("%s %s %s, %s\n", gAppData->vendor, gAppData->name, gAppData->version, gAppData->copyright);
+  printf("%s %s %s, %s\n", gAppData->vendor ? gAppData->vendor : "", gAppData->name, gAppData->version, gAppData->copyright);
 }
 
 #ifdef MOZ_ENABLE_XREMOTE
