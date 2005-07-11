@@ -1,0 +1,10 @@
+* handle asp style tags in $php_handler
+* fix all E_NOTICE warnings
+* make simple math easier
+* caching all but parts of the template
+* change plugins so $smarty variable always comes first
+* get cache ttl with function call
+FIX: make inserts use normal functions before plugins
+UPD: change it so that if template comes from some resource,
+     that resource stays as the default, no need to specify it
+     in includes.
