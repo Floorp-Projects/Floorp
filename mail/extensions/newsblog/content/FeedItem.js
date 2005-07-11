@@ -293,24 +293,6 @@ FeedItem.prototype =
       ds.Assert(resource, FZ_STORED, RDF_LITERAL_TRUE, true);
   },
 
-  markStored: function() 
-  {
-    var ds = getItemsDS(this.feed.server);
-    var resource = rdf.GetResource(this.mURL || ("urn:" + this.id));
-   
-    if (!ds.HasAssertion(resource, FZ_FEED, rdf.GetResource(this.feed.url), true))
-      ds.Assert(resource, FZ_FEED, rdf.GetResource(this.feed.url), true);
-    
-    var currentValue;
-    if (ds.hasArcOut(resource, FZ_STORED)) 
-    {
-      currentValue = ds.GetTarget(resource, FZ_STORED, true);
-      ds.Change(resource, FZ_STORED, currentValue, RDF_LITERAL_TRUE);
-    }
-    else 
-      ds.Assert(resource, FZ_STORED, RDF_LITERAL_TRUE, true);
-  },
-
   mimeEncodeSubject: function(aSubject, aCharset)
   {  
     // get the mime header encoder service
