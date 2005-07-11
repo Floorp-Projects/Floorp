@@ -25,7 +25,8 @@
 
 #
 # Basic graph cgi, wrapper for gnuplot that generates a png file.
-#
+# Download gnuplot here:  http://www.gnuplot.info/download.html
+# 
 # OSX 10.3 (possibly 10.4) needs to install libpng, gnuplot from sourceforge.
 # 
 
@@ -33,9 +34,9 @@
 # These are the perl modules we went with at the time, there are probably
 # more-standard packages now.
 #
-use CGI::Carp qw(fatalsToBrowser);
+use CGI::Carp qw(fatalsToBrowser); # CPAN
 use CGI::Request; # http://stein.cshl.org/WWW/software/CGI::modules/
-use Date::Calc qw(Add_Delta_Days);  # http://www.engelschall.com/u/sb/download/Date-Calc/
+use Date::Calc qw(Add_Delta_Days);  # CPAN, or http://www.engelschall.com/u/sb/download/Date-Calc/
 
 
 my $req = new CGI::Request;
