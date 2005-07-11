@@ -310,7 +310,7 @@ use constant ABSTRACT_SCHEMA => {
         INDEXES => [
             attachments_bug_id_idx => ['bug_id'],
             attachments_creation_ts_idx => ['creation_ts'],
-            attachments_submitter_id_idx => ['submitter_id'],
+            attachments_submitter_id_idx => ['submitter_id', 'bug_id'],
         ],
     },
 

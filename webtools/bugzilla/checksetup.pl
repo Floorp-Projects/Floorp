@@ -3771,8 +3771,6 @@ if ($emptygroupid) {
 }
 
 # 2005-02-12 bugreport@peshkin.net, bug 281787
-$dbh->bz_add_index('attachments', 'attachments_submitter_id_idx',
-                   [qw(submitter_id)]);
 $dbh->bz_add_index('bugs_activity', 'bugs_activity_who_idx', [qw(who)]);
 
 # This lastdiffed change and these default changes are unrelated,
@@ -3993,6 +3991,16 @@ AddGroup('editcomponents', 'Can create, destroy, and edit components.');
 AddGroup('editkeywords', 'Can create, destroy, and edit keywords.');
 AddGroup('admin', 'Administrators');
 
+# 2005-06-29 bugreport@peshkin.net, bug 299156
+if ($dbh->bz_index_info('attachments', 'attachments_submitter_id_idx') 
+   && (scalar(@{$dbh->bz_index_info('attachments', 
+                                    'attachments_submitter_id_idx'
+                                   )->{FIELDS}}) < 2)
+      ) {
+    $dbh->bz_drop_index('attachments', 'attachments_submitter_id_idx');
+}
+$dbh->bz_add_index('attachments', 'attachments_submitter_id_idx',
+                   [qw(submitter_id bug_id)]);
 
 if (!GroupDoesExist("editbugs")) {
     my $id = AddGroup('editbugs', 'Can edit all bug fields.', ".*");
