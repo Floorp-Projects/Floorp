@@ -55,6 +55,11 @@ cp -a bin/components/xulappinfo.js                       wince/components
 
 cp -a bin/components/snav.dll                            wince/components
 
+cp -a bin/components/pipboot.dll                         wince/components
+cp -a bin/components/pipnss.dll                          wince/components
+cp -a bin/components/pippki.dll                          wince/components
+
+
 mkdir -p wince/greprefs
 cp -a bin/greprefs/*                                     wince/greprefs
 
@@ -73,7 +78,7 @@ echo Copying over customized files
 
 popd
 
-cp -a ../all.js                                         $MOZ_OBJDIR/dist/wince/greprefs
+cp -a all.js                                            $MOZ_OBJDIR/dist/wince/greprefs
 
 echo Applying SSR
 
