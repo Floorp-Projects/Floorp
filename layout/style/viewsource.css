@@ -38,7 +38,7 @@
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
-html {
+*|*:root {
   background-color: white;
 }
 #viewsource {
