@@ -1981,6 +1981,37 @@ nsMsgIncomingServer::ConfigureTemporaryServerSpamFilters(nsIMsgFilterList *filte
   if (newFilter && serverFilterTrustFlags & nsISpamSettings::TRUST_POSITIVES)
   {
     newFilter->SetTemporary(PR_TRUE);
+    // check if we're supposed to move junk mail to junk folder; if so,
+    // add filter action to do so.
+    PRBool moveOnSpam, markAsReadOnSpam;
+    spamSettings->GetMoveOnSpam(&moveOnSpam);
+    if (moveOnSpam)
+    {
+      nsXPIDLCString spamFolderURI;
+      rv = spamSettings->GetSpamFolderURI(getter_Copies(spamFolderURI));
+      if (NS_SUCCEEDED(rv) && (!spamFolderURI.IsEmpty()))
+      {
+        nsCOMPtr <nsIMsgRuleAction> moveAction;
+        rv = newFilter->CreateAction(getter_AddRefs(moveAction));
+        if (NS_SUCCEEDED(rv))
+        {
+          moveAction->SetType(nsMsgFilterAction::MoveToFolder);
+          moveAction->SetTargetFolderUri(spamFolderURI);
+          newFilter->AppendAction(moveAction);
+        }
+      }
+    }
+    spamSettings->GetMarkAsReadOnSpam(&markAsReadOnSpam);
+    if (markAsReadOnSpam)
+    {
+      nsCOMPtr <nsIMsgRuleAction> markAsReadAction;
+      rv = newFilter->CreateAction(getter_AddRefs(markAsReadAction));
+      if (NS_SUCCEEDED(rv))
+      {
+        markAsReadAction->SetType(nsMsgFilterAction::MarkRead);
+        newFilter->AppendAction(markAsReadAction);
+      }
+    }
     filterList->InsertFilterAt(0, newFilter);
   }
 
