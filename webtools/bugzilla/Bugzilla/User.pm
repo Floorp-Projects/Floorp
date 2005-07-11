@@ -42,7 +42,6 @@ use Bugzilla::Util;
 use Bugzilla::Constants;
 use Bugzilla::User::Setting;
 use Bugzilla::Auth;
-use Bugzilla::BugMail;
 
 use base qw(Exporter);
 @Bugzilla::User::EXPORT = qw(insert_new_user is_available_username
