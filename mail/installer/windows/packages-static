@@ -131,7 +131,7 @@ bin\chrome\classic.manifest
 
 ; default pref files
 bin\defaults\pref\*
-bin\greprefs\
+bin\greprefs\*
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; App extensions to Mail
