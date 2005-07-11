@@ -114,7 +114,7 @@ var nsOfflineStartup =
   {
     debug("observe: " + aTopic);
 
-    if (aTopic == "profile-approve-change")
+    if (aTopic == "profile-change-net-teardown")
     {
       debug("remembering offline state");
       var prefs = Components.classes["@mozilla.org/preferences-service;1"]
@@ -128,7 +128,7 @@ var nsOfflineStartup =
       var observerService = Components.classes["@mozilla.org/observer-service;1"]
                                       .getService(Components.interfaces.nsIObserverService);
       observerService.addObserver(this, "profile-after-change", false);
-      observerService.addObserver(this, "profile-approve-change", false);
+      observerService.addObserver(this, "profile-change-net-teardown", false);
     }
     else if (aTopic == "profile-after-change")
     {
