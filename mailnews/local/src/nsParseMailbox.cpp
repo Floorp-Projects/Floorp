@@ -1802,6 +1802,8 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
         PRInt32 junkScore;
         filterAction->GetJunkScore(&junkScore);
         junkScoreStr.AppendInt(junkScore);
+        if (junkScore > 50)
+          msgIsNew = PR_FALSE;
         nsMsgKey msgKey;
         msgHdr->GetMessageKey(&msgKey);
         m_mailDB->SetStringProperty(msgKey, "junkscore", junkScoreStr.get());
@@ -2093,7 +2095,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
     return NS_MSG_ERROR_WRITING_MAIL_FOLDER;
   }
     
-  PRBool movedMsgIsNew = PR_TRUE;
+  PRBool movedMsgIsNew = PR_FALSE;
   // if we have made it this far then the message has successfully been written to the new folder
   // now add the header to the destMailDB.
   if (NS_SUCCEEDED(rv) && destMailDB)
@@ -2109,12 +2111,14 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
       newHdr->GetFlags(&newFlags);
       if (! (newFlags & MSG_FLAG_READ))
       {
-        newHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
-        destMailDB->AddToNewList(newMsgPos);
-      }
-      else
-      {
-        movedMsgIsNew = PR_FALSE;
+        nsXPIDLCString junkScoreStr;
+        (void) newHdr->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
+        if (atoi(junkScoreStr.get()) < 50)
+        {
+          newHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
+          destMailDB->AddToNewList(newMsgPos);
+          movedMsgIsNew = PR_TRUE;
+        }
       }
       destMailDB->AddNewHdrToDB(newHdr, PR_TRUE);
     }

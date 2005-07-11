@@ -3376,6 +3376,8 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
             NS_ASSERTION(keysToClassify, "error getting key bucket");
             if (keysToClassify)
               keysToClassify->Add(msgKey);
+            if (junkScore == 100)
+              msgIsNew = PR_FALSE;
           }
         }
         break;
@@ -4331,7 +4333,11 @@ nsresult nsImapMailFolder::HandleCustomFlags(nsMsgKey uidOfMessage, nsIMsgDBHdr 
     mDatabase->SetStringProperty(uidOfMessage, "junkscore", "0");
   // ### TODO: we really should parse the keywords into space delimited keywords before checking
   else if (FindInReadable(NS_LITERAL_CSTRING("Junk"), keywords.BeginReading(b), keywords.EndReading(e)))
+  {
+    PRUint32 newFlags;
+    dbHdr->AndFlags(~MSG_FLAG_NEW, &newFlags);
     mDatabase->SetStringProperty(uidOfMessage, "junkscore", "100");
+  }
   else
     messageClassified = PR_FALSE;
   if (messageClassified)

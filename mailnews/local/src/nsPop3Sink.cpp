@@ -839,8 +839,13 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow, PRInt32 aSize)
             hdr->GetFlags(&newFlags);
             if (! (newFlags & MSG_FLAG_READ))
             {
-              hdr->OrFlags(MSG_FLAG_NEW, &newFlags);
-              m_newMailParser->m_mailDB->AddToNewList(newMsgPos);
+              nsXPIDLCString junkScoreStr;
+              (void) hdr->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
+              if (atoi(junkScoreStr.get()) < 50)
+              {
+                hdr->OrFlags(MSG_FLAG_NEW, &newFlags);
+                m_newMailParser->m_mailDB->AddToNewList(newMsgPos);
+              }
             }
             m_newMailParser->m_mailDB->AddNewHdrToDB(hdr, PR_TRUE);
           }
