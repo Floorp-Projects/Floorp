@@ -2545,6 +2545,10 @@ nsPluginHostImpl::nsPluginHostImpl()
 
     mPrefService->GetBoolPref("plugin.default_plugin_disabled", &tmp);
     mDefaultPluginDisabled = tmp;
+
+#ifdef WINCE
+    mDefaultPluginDisabled = PR_TRUE;
+#endif
   }
 
   nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
