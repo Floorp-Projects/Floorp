@@ -129,10 +129,8 @@ public:
   virtual nsresult CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPluginInstance);
 
 private:
-#ifndef WINCE
   nsresult SubclassAndAssociateWindow();
   nsresult UndoSubclassAndAssociateWindow();
-#endif
 
 public:
   // locals
@@ -476,24 +474,16 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
 {
   // check the incoming instance, null indicates that window is going away and we are
   // not interested in subclassing business any more, undo and don't subclass
-
-  // WINCE does not subclass windows.  See bug 300011 for the details.
-#ifndef WINCE
   if (!aPluginInstance)
     UndoSubclassAndAssociateWindow();
-#endif
 
   nsPluginNativeWindow::CallSetWindow(aPluginInstance);
 
-#ifndef WINCE
   if (aPluginInstance)
     SubclassAndAssociateWindow();
-#endif
 
   return NS_OK;
 }
-
-#ifndef WINCE
 
 nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
 {
@@ -542,7 +532,6 @@ nsresult nsPluginNativeWindowWin::UndoSubclassAndAssociateWindow()
 
   return NS_OK;
 }
-#endif // WINCE
 
 nsresult PLUG_NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow)
 {
