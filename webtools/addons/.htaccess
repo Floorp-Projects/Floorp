@@ -1,0 +1,2 @@
+php_value auto_prepend_file inc/init.php
+php_value auto_append_file inc/finish.php
