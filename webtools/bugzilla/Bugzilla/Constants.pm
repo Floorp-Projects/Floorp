@@ -87,6 +87,8 @@ use base qw(Exporter);
     EVT_FLAG_REQUESTED EVT_REQUESTED_FLAG
 
     FULLTEXT_BUGLIST_LIMIT
+
+    ADMIN_GROUP_NAME
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -232,5 +234,8 @@ use constant GLOBAL_EVENTS => EVT_FLAG_REQUESTED, EVT_REQUESTED_FLAG;
 #  Number of bugs to return in a buglist when performing
 #  a fulltext search.
 use constant FULLTEXT_BUGLIST_LIMIT => 200;
+
+# Default administration group name.
+use constant ADMIN_GROUP_NAME => 'admin';
 
 1;

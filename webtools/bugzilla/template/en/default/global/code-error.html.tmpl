@@ -149,6 +149,11 @@
     The active flag was improperly set.  There may be
     a problem with [% terms.Bugzilla %] or [% terms.abug %] in your browser.
 
+  [% ELSIF error == "invalid_numeric_argument" %]
+    [% title = "Invalid number argument" %]
+    The argument <code>[% argument FILTER html %] = [% value FILTER html %]</code>
+    of <code>[% function FILTER html %]</code> is not a natural number.
+
   [% ELSIF error == "invalid_series_id" %]
     [% title = "Invalid Series" %]
     The series_id [% series_id FILTER html %] is not valid. It may be that
