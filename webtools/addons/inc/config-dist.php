@@ -1,17 +1,22 @@
 <?php
 /**
  * AMO global configuration document.
+ * Unless otherwise noted, trailing slashes should not be used.
  * @package amo
  * @subpackage inc
  */
 
 // Set runtime error options.
 // See http://php.oregonstate.edu/manual/en/ref.errorfunc.php#errorfunc.constants
-define('DISPLAY_ERRORS',E_ALL);
-define('ERROR_REPORTING',1);
+define('DISPLAY_ERRORS',1);
+define('ERROR_REPORTING',2047);
 
 define('ROOT_PATH','/home/morgamic/public_html/v2');
 define('WEB_PATH','/~morgamic/v2');
+
+// The repository directory is the place to store all addons binaries.
+// This directory should be writable by the webserver (apache:apache).
+define('REPO_DIR',ROOT_PATH.'/files');
 
 define('LIB',ROOT_PATH.'/lib');
 

@@ -1,0 +1,5 @@
+Installation
+    Update .htaccess include_path value to point to [yourpath]/inc
+    Copy inc/config-dist.php to inc/config.php
+    Define required information in inc/config.php
+    Set apache as owner, chmod 700.

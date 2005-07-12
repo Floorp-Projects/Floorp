@@ -3,6 +3,7 @@
  * systemMessage function -- just a snippet
  * @todo incorporate into OO, using $db->query to pull messages (if they exist and are flagged as active)
  * @todo add db tables to SQL schema
+ */
 
 #define PAGE_TYPE_FRONT_PAGE        1
 #define PAGE_TYPE_DEVELOPER_PAGE    2

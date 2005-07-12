@@ -29,6 +29,13 @@ $smarty->compile_dir = COMPILE_DIR;
 $smarty->cache_dir = CACHE_DIR;
 $smarty->config_dir = CONFIG_DIR;
 
+// Pass config variables to Smarty object.
+$smarty->assign('config',
+    array(  'webpath'   => WEB_PATH,
+            'rootpath'  => ROOT_PATH,
+            'repo'      => REPO_DIR)
+);
+
 // Instantiate SQL class.
 $db = new SQL();
 
