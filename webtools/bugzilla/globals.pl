@@ -310,7 +310,8 @@ sub GenerateVersionTable {
     print $fh "1;\n";
     close $fh;
 
-    rename $tmpname, "$datadir/versioncache" || die "Can't rename $tmpname to versioncache";
+    rename ($tmpname, "$datadir/versioncache")
+        || die "Can't rename $tmpname to versioncache";
     ChmodDataFile("$datadir/versioncache", 0666);
 }
 
