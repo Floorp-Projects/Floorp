@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 // NOTE: alphabetically ordered
-#include "nsAccessibilityAtoms.h"
 #include "nsIDOMXULDescriptionElement.h"
 #include "nsXULTextAccessible.h"
 
@@ -57,13 +56,10 @@ NS_IMETHODIMP nsXULTextAccessible::GetName(nsAString& aName)
   if (!content) {
     return NS_ERROR_FAILURE;  // Node shut down
   }
-  nsresult rv = content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-    // if the value doesn't exist, flatten the inner content as the name (for descriptions)
-    return AppendFlatStringFromSubtree(content, &aName);
+  if (content->Tag() == nsAccessibilityAtoms::label) {
+    return content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
   }
-  // otherwise, use the value attribute as the name (for labels)
-  return NS_OK;
+  return nsTextAccessibleWrap::GetName(aName);
 }
 
 NS_IMETHODIMP nsXULTextAccessible::GetState(PRUint32 *_retval)
