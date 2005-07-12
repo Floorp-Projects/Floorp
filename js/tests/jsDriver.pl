@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#
+# vim: set ts=4 sw=4 et tw=80:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -69,12 +69,14 @@ my $opt_bug_url = "https://bugzilla.mozilla.org/show_bug.cgi?id=";
 my $opt_console_failures = 0;
 my $opt_lxr_url = "http://lxr.mozilla.org/mozilla/source/js/tests/";
 my $opt_exit_munge = ($os_type ne "MAC") ? 1 : 0;
+my $opt_enable_narcissus = 0;
+my $opt_narcissus_path = "";
 
 # command line option definition
 my $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
   "h help>h i j=s javapath>j k confail>k l=s list>l L=s neglist>L " .
   "o=s opt>o p=s testpath>p s=s shellpath>s t trace>t u=s lxrurl>u " .
-  "x noexitmunge>x";
+  "x noexitmunge>x n:s narcissus>n";
 
 if ($os_type eq "MAC") {
     $opt_suite_path = `directory`;
@@ -150,10 +152,19 @@ sub main {
     }
 }
 
+sub append_file_to_command {
+    my ($command, $file) = @_;
+
+    if ($opt_enable_narcissus == 1) {
+        $command .= " -e 'evaluate(\"load(\\\"$file\\\")\")'"
+    } else {
+        $command .= " -f $file";
+    }
+}
+
 sub execute_tests {
     my (@test_list) = @_;
     my ($test, $shell_command, $line, @output, $path);
-    my $file_param = " -f ";
     my ($last_suite, $last_test_dir);
 
     &status ("Executing " . ($#test_list + 1) . " test(s).");
@@ -180,13 +191,15 @@ sub execute_tests {
 
             $path = &xp_path($opt_suite_path . $suite . "/shell.js");
             if (-f $path) {
-                $shell_command .= $file_param . $path;
+                $shell_command = &append_file_to_command($shell_command,
+                                                         $path);
             }
 
             $path = &xp_path($opt_suite_path . $suite . "/" .
                              $test_dir . "/shell.js");
             if (-f $path) {
-                $shell_command .= $file_param . $path;
+                $shell_command = &append_file_to_command($shell_command,
+                                                         $path);
             }
 
             $last_suite = $suite;
@@ -194,10 +207,10 @@ sub execute_tests {
         }
          
         $path = &xp_path($opt_suite_path . $test);
-        &dd ("executing: " . $shell_command . $file_param . $path);
+        my $command = &append_file_to_command($shell_command, $path);
+        &dd ("executing: " . $command);
 
-        open (OUTPUT, $shell_command . $file_param . $path .
-              $redirect_command . " |");
+        open (OUTPUT, $command . $redirect_command . " |");
         @output = <OUTPUT>;
         close (OUTPUT);
 
@@ -458,6 +471,13 @@ sub parse_args {
             &dd ("opt: turning off exit munging.");
             $opt_exit_munge = 0;
 
+        } elsif ($option eq "n") {
+            &dd ("opt: enabling narcissus.");
+            $opt_enable_narcissus = 1;
+            if ($value) {
+                $opt_narcissus_path = $value;
+            }
+
         } else {
             &usage;
         }
@@ -504,7 +524,10 @@ sub usage {
        "                          (default is $opt_lxr_url)\n" .
        "(-x|--noexitmunge)        Don't do exit code munging (try this if it\n" .
        "                          seems like your exit codes are turning up\n" .
-       "                          as exit signals.)\n");
+       "                          as exit signals.)\n" .
+       "(-n|--narcissus)[=<path>] Run the test suite through Narcissus, run\n" .
+       "                          through the given shell. The optional path\n".
+       "                          is the path to Narcissus' js.js file.\n");
     exit (1);
 
 }
@@ -555,7 +578,7 @@ sub get_engine_command {
     } elsif ($opt_engine_type =~ /^sm(opt|debug)$/) {
         &dd ("getting spidermonkey engine command.");
         $retval = &get_sm_engine_command;
-    }  elsif ($opt_engine_type =~ /^ep(opt|debug)$/) {
+    } elsif ($opt_engine_type =~ /^ep(opt|debug)$/) {
         &dd ("getting epimetheus engine command.");
         $retval = &get_ep_engine_command;
     } else {
@@ -564,10 +587,35 @@ sub get_engine_command {
 
     $retval .= " $opt_engine_params";
 
+    if ($opt_enable_narcissus == 1) {
+        my $narcissus_path = &get_narcissus_path;
+        $retval .= " -f $narcissus_path";
+    }
+
     &dd ("got '$retval'");
 
     return $retval;
+}
 
+#
+# get the path to the Narcissus js.js file.
+#
+sub get_narcissus_path {
+    my $retval;
+
+    if ($opt_narcissus_path) {
+        $retval = $opt_narcissus_path;
+    } else {
+        # For now, just assume that we're in js/tests.
+        $retval = "../narcissus/js.js";
+    }
+
+    if (!-e $retval) {
+        # XXX if it didn't exist, try something more fancy?
+        die "Unable to find Narcissus' js.js at $retval";
+    }
+
+    return $retval;
 }
 
 #
