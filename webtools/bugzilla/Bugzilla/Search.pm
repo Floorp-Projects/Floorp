@@ -25,6 +25,7 @@
 #                 Myk Melez <myk@mozilla.org>
 #                 Michael Schindler <michael@compressconsult.com>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Joel Peshkin <bugreport@peshkin.net>
 
 use strict;
 
@@ -427,9 +428,14 @@ sub init {
              $term = "bugs.$f <> " . pronoun($1, $user);
           },
          "^(assigned_to|reporter),(?!changed)" => sub {
-             push(@supptables, "INNER JOIN profiles AS map_$f " .
-                               "ON bugs.$f = map_$f.userid");
-             $f = "map_$f.login_name";
+             my $list = $self->ListIDsForEmail($t, $v);
+             if ($list) {
+                 $term = "bugs.$f IN ($list)"; 
+             } else {
+                 push(@supptables, "INNER JOIN profiles AS map_$f " .
+                                   "ON bugs.$f = map_$f.userid");
+                 $f = "map_$f.login_name";
+             }
          },
          "^qa_contact,(?!changed)" => sub {
              push(@supptables, "LEFT JOIN profiles AS map_qa_contact " .
@@ -489,7 +495,7 @@ sub init {
                                "AND cc_$chartseq.who = $match");
              $term = "cc_$chartseq.who IS NULL";
          },
-         "^cc,(anyexact|substring)" => sub {
+         "^cc,(anyexact|substring|regexp)" => sub {
              my $list;
              $list = $self->ListIDsForEmail($t, $v);
              my $chartseq = $chartid;
@@ -1450,8 +1456,8 @@ sub SqlifyDate {
 # ListIDsForEmail returns a string with a comma-joined list
 # of userids matching email addresses
 # according to the type specified.
-# Currently, this only supports exact, anyexact, and substring matches.
-# Substring matches will return up to 50 matching userids
+# Currently, this only supports regexp, exact, anyexact, and substring matches.
+# Matches will return up to 50 matching userids
 # If a match type is unsupported or returns too many matches,
 # ListIDsForEmail returns an undef.
 sub ListIDsForEmail {
@@ -1480,7 +1486,18 @@ sub ListIDsForEmail {
             my ($id) = &::FetchSQLData();
             push(@list, $id);
         }
-        if (@list < 50) {
+        if (scalar(@list) < 50) {
+            $list = join(',', @list);
+        }
+    } elsif ($type eq 'regexp') {
+        &::SendSQL("SELECT userid FROM profiles WHERE " .
+            "login_name " . $dbh->sql_regexp() . ::SqlQuote($email) .
+            " " . $dbh->sql_limit(51));
+        while (&::MoreSQLData()) {
+            my ($id) = &::FetchSQLData();
+            push(@list, $id);
+        }
+        if (scalar(@list) < 50) {
             $list = join(',', @list);
         }
     }
