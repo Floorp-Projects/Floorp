@@ -234,8 +234,12 @@
       <listitem>
         <para>
         <emphasis>Attachments:</emphasis>
-        You can attach files (e.g. testcases or patches) to bugs. If there
-        are any attachments, they are listed in this section.</para>
+          You can attach files (e.g. testcases or patches) to bugs. If there
+          are any attachments, they are listed in this section.  Attachments are
+          normally stored in the Bugzilla database, unless they are marked as
+          Big Files, which are stored directly on disk and (unlike attachments
+          kept in the database) may be deleted at some future time.
+        </para>
       </listitem>
 
       <listitem>
@@ -774,7 +778,17 @@
       Content-Type (e.g. application/xhtml+xml), you can override this 
       using a 'content-type' parameter on the URL, e.g.
       <filename>&amp;content-type=text/plain</filename>.
-      </para>     
+      </para> 
+
+      <para>
+        If you have a really large attachment, something that does not need to
+        be recorded forever (as most attachments are), you can mark your
+        attachment as a Big File, Assuming the administrator of the
+        installation has enabled this feature.  Big Files are stored directly on
+        disk instead of in the database, and can be deleted when it is no longer
+        needed.  The maximum size of a Big File is normally larger than the
+        maximum size of a regular attachment.
+      </para>
     </section>
   </section>
   

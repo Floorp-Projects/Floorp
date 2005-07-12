@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.99 2005/07/09 22:37:26 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.100 2005/07/12 10:56:52 mozilla%colinogilvie.co.uk Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -651,6 +651,14 @@
           'max_allowed_packet' or 'maxattachmentsize' value will not be
           accepted by Bugzilla.
         </para>
+
+        <note>
+          <para>
+            This does not affect Big Files, attachments that are stored directly
+            on disk instead of in the database.  Their maximum size is
+            controlled using the 'maxlocalattachment' parameter.
+          </para>
+        </note>
       </section>
 
 
@@ -707,6 +715,13 @@
           to make a temporary copy of your entire table to do this. Ideally, 
           you should do this when your attachments table is still small.
         </para>
+
+        <note>
+          <para>
+            This does not affect Big Files, attachments that are stored directly
+            on disk instead of in the database.
+          </para>
+        </note>
       </section>
             
       <section id="install-setupdatabase-adduser">
