@@ -1290,6 +1290,7 @@ case "$target" in
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
+    MOZ_OPTIMIZE_LDFLAGS="-Wl,-dead_strip"
     case "${target_cpu}" in
     powerpc*)
         _PLATFORM_DEFAULT_TOOLKIT='mac'
