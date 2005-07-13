@@ -24,7 +24,7 @@
 <div id="header">
 
 <div id="key-title">
-    <h1><a href="/" title="Return to home page" accesskey="1">Mozilla Update: Beta</a></h1>
+    <h1><a href="{$config.webpath}/" title="Return to home page" accesskey="1">Mozilla Update: Beta</a></h1>
     <ul>
         <li><a href="{$config.webpath}/" title="Addons Home">home</a></li>
         <li><a href="{$config.webpath}/faq.php" title="Frequently Asked Questions">FAQ</a></li>
