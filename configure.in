@@ -1123,6 +1123,7 @@ case "$host" in
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:"$@"'
         HOST_CFLAGS="$HOST_CFLAGS -TC -nologo -Fd\$(HOST_PDBFILE)"
+        HOST_RANLIB='echo ranlib'
     else
         HOST_CFLAGS="$HOST_CFLAGS -mno-cygwin"
     fi
