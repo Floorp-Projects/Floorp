@@ -62,12 +62,12 @@ public:
   nsresult Init();
 
   NS_IMETHOD ProcessValue(nsIDOMHTMLElement *aElement, 
-                          const nsString& aName, 
-                          nsString& aValue); 
+                          const nsAString& aName, 
+                          nsAString& aValue); 
 
-  NS_IMETHOD ProvideContent(const nsString& aFormType, 
+  NS_IMETHOD ProvideContent(const nsAString& aFormType, 
                             nsVoidArray& aContent, 
-                            nsString& aAttribute); 
+                            nsAString& aAttribute); 
   NS_DECL_ISUPPORTS 
 
   static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);

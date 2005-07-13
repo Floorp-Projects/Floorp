@@ -598,8 +598,8 @@ loser:
 
 NS_METHOD 
 nsKeygenFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement, 
-				    const nsString& aName, 
-				    nsString& aValue) 
+				    const nsAString& aName, 
+				    nsAString& aValue) 
 { 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDOMHTMLSelectElement>selectElement;
@@ -629,9 +629,9 @@ nsKeygenFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement,
   return rv; 
 } 
 
-NS_METHOD nsKeygenFormProcessor::ProvideContent(const nsString& aFormType, 
+NS_METHOD nsKeygenFormProcessor::ProvideContent(const nsAString& aFormType, 
 						nsVoidArray& aContent, 
-						nsString& aAttribute) 
+						nsAString& aAttribute) 
 { 
   if (Compare(aFormType, NS_LITERAL_STRING("SELECT"), 
     nsCaseInsensitiveStringComparator()) == 0) {

@@ -140,28 +140,29 @@ protected:
    * @param aSource the HTML element the name/value is associated with
    * @param aName the name that will be submitted
    * @param aValue the value that will be submitted
-   * @return the new value (or null if the value was not changed)
+   * @param the processed value that will be sent to the server. [OUT]
    */
-  nsString* ProcessValue(nsIDOMHTMLElement* aSource,
-                         const nsAString& aName, const nsAString& aValue);
+  nsresult ProcessValue(nsIDOMHTMLElement* aSource, const nsAString& aName, 
+                        const nsAString& aValue, nsAString& aResult);
 
   // Encoding Helpers
   /**
-   * Encode a Unicode string to bytes using the encoder (or just do ToNewCString
+   * Encode a Unicode string to bytes using the encoder (or just copy the input
    * if there is no encoder).
    * @param aStr the string to encode
-   * @return a char* pointing to the encoded bytes (use nsMemory::Free to free)
+   * @param aResult the encoded string [OUT]
+   * @throws an error if UnicodeToNewBytes fails
    */
-  char* EncodeVal(const nsAString& aStr);
+  nsresult EncodeVal(const nsAString& aStr, nsACString& aResult);
   /**
    * Encode a Unicode string to bytes using an encoder.  (Used by EncodeVal)
    * @param aStr the string to encode
-   * @param aLen the length of aStr
    * @param aEncoder the encoder to encode the bytes with (cannot be null)
-   * @return a char* pointing to the encoded bytes (use nsMemory::Free to free)
+   * @param aOut the encoded string [OUT] 
+   * @throws an error if the encoder fails
    */
-  char* UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
-                          nsISaveAsCharset* aEncoder);
+  nsresult UnicodeToNewBytes(const nsAString& aStr, nsISaveAsCharset* aEncoder,
+                             nsACString& aOut);
 
   /** The name of the encoder charset */
   nsCString mCharset;
@@ -346,25 +347,28 @@ nsFSURLEncoded::AddNameValuePair(nsIDOMHTMLElement* aSource,
   //
   // Let external code process (and possibly change) value
   //
-  nsString* processedValue = ProcessValue(aSource, aName, aValue);
-
-  //
-  // Encode name
-  //
-  nsCString convName;
-  nsresult rv = URLEncode(aName, convName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoString processedValue;
+  nsresult rv = ProcessValue(aSource, aName, aValue, processedValue);
 
   //
   // Encode value
   //
   nsCString convValue;
-  if (processedValue) {
-    rv = URLEncode(*processedValue, convValue);
-  } else {
+  if (NS_SUCCEEDED(rv)) {
+    rv = URLEncode(processedValue, convValue);
+  }
+  else {
     rv = URLEncode(aValue, convValue);
   }
   NS_ENSURE_SUCCESS(rv, rv);
+
+  //
+  // Encode name
+  //
+  nsCAutoString convName;
+  rv = URLEncode(aName, convName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
 
   //
   // Append data to string
@@ -375,8 +379,6 @@ nsFSURLEncoded::AddNameValuePair(nsIDOMHTMLElement* aSource,
     mQueryString += NS_LITERAL_CSTRING("&") + convName
                   + NS_LITERAL_CSTRING("=") + convValue;
   }
-
-  delete processedValue;
 
   return NS_OK;
 }
@@ -571,22 +573,20 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
 nsresult
 nsFSURLEncoded::URLEncode(const nsAString& aStr, nsCString& aEncoded)
 {
-  char* inBuf = EncodeVal(aStr);
-
-  if (!inBuf)
-    inBuf = ToNewCString(aStr);
-
-  NS_ENSURE_TRUE(inBuf, NS_ERROR_OUT_OF_MEMORY);
-
   // convert to CRLF breaks
-  char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(inBuf,
-                           nsLinebreakConverter::eLinebreakAny,
-                           nsLinebreakConverter::eLinebreakNet);
-  nsMemory::Free(inBuf);
+  PRUnichar* convertedBuf =
+    nsLinebreakConverter::ConvertUnicharLineBreaks(PromiseFlatString(aStr).get(),
+                                                   nsLinebreakConverter::eLinebreakAny,
+                                                   nsLinebreakConverter::eLinebreakNet);
+  NS_ENSURE_TRUE(convertedBuf, NS_ERROR_OUT_OF_MEMORY);
 
-  char* escapedBuf = nsEscape(convertedBuf, url_XPAlphas);
+  nsCAutoString encodedBuf;
+  nsresult rv = EncodeVal(nsDependentString(convertedBuf), encodedBuf);
   nsMemory::Free(convertedBuf);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  char* escapedBuf = nsEscape(encodedBuf.get(), url_XPAlphas);
+  NS_ENSURE_TRUE(escapedBuf, NS_ERROR_OUT_OF_MEMORY);
   aEncoded.Adopt(escapedBuf);
 
   return NS_OK;
@@ -723,36 +723,31 @@ nsFSMultipartFormData::ProcessAndEncode(nsIDOMHTMLElement* aSource,
   //
   // Let external code process (and possibly change) value
   //
-  nsString* processedValue = ProcessValue(aSource, aName, aValue);
-
-  //
-  // Get name
-  //
-  char * encodedVal = EncodeVal(aName);
-  if (!encodedVal) {
-    delete processedValue;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  aProcessedName.Adopt(encodedVal);
+  nsAutoString processedValue;
+  nsresult rv = ProcessValue(aSource, aName, aValue, processedValue);
 
   //
   // Get value
   //
-  if (processedValue) {
-    encodedVal = EncodeVal(*processedValue);
-    delete processedValue;
+  nsCAutoString encodedVal;
+  if (NS_SUCCEEDED(rv)) {
+    rv = EncodeVal(processedValue, encodedVal);
   } else {
-    encodedVal = EncodeVal(aValue);
+    rv = EncodeVal(aValue, encodedVal);
   }
-  if (!encodedVal) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  aProcessedValue.Adopt(encodedVal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  //
+  // Get name
+  //
+  rv  = EncodeVal(aName, aProcessedName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
 
   //
   // Convert linebreaks in value
   //
-  aProcessedValue.Adopt(nsLinebreakConverter::ConvertLineBreaks(aProcessedValue.get(),
+  aProcessedValue.Adopt(nsLinebreakConverter::ConvertLineBreaks(encodedVal.get(),
                         nsLinebreakConverter::eLinebreakAny,
                         nsLinebreakConverter::eLinebreakNet));
   return NS_OK;
@@ -766,7 +761,7 @@ nsFSMultipartFormData::AddNameValuePair(nsIDOMHTMLElement* aSource,
                                         const nsAString& aName,
                                         const nsAString& aValue)
 {
-  nsCString nameStr;
+  nsCAutoString nameStr;
   nsCString valueStr;
   nsresult rv = ProcessAndEncode(aSource, aName, aValue, nameStr, valueStr);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -774,6 +769,9 @@ nsFSMultipartFormData::AddNameValuePair(nsIDOMHTMLElement* aSource,
   //
   // Make MIME block for name/value pair
   //
+  // XXX: name parameter should be encoded per RFC 2231
+  // RFC 2388 specifies that RFC 2047 be used, but I think it's not 
+  // consistent with MIME standard.
   mPostDataChunk += NS_LITERAL_CSTRING("--") + mBoundary
                  + NS_LITERAL_CSTRING(CRLF)
                  + NS_LITERAL_CSTRING("Content-Disposition: form-data; name=\"")
@@ -791,8 +789,8 @@ nsFSMultipartFormData::AddNameFilePair(nsIDOMHTMLElement* aSource,
                                        const nsACString& aContentType,
                                        PRBool aMoreFilesToCome)
 {
-  nsCString nameStr;
-  nsCString filenameStr;
+  nsCAutoString nameStr;
+  nsCAutoString filenameStr;
   nsresult rv = ProcessAndEncode(aSource, aName, aFilename, nameStr, filenameStr);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -807,6 +805,9 @@ nsFSMultipartFormData::AddNameFilePair(nsIDOMHTMLElement* aSource,
     mPostDataChunk +=
           NS_LITERAL_CSTRING("Content-Transfer-Encoding: binary" CRLF);
   }
+  // XXX: name/filename parameter should be encoded per RFC 2231
+  // RFC 2388 specifies that RFC 2047 be used, but I think it's not 
+  // consistent with the MIME standard.
   mPostDataChunk +=
          NS_LITERAL_CSTRING("Content-Disposition: form-data; name=\"")
        + nameStr + NS_LITERAL_CSTRING("\"; filename=\"")
@@ -976,16 +977,16 @@ nsFSTextPlain::AddNameValuePair(nsIDOMHTMLElement* aSource,
   //
   // Let external code process (and possibly change) value
   //
-  nsString* processedValue = ProcessValue(aSource, aName, aValue);
+  nsString processedValue;
+  nsresult rv = ProcessValue(aSource, aName, aValue, processedValue);
 
   // XXX This won't work well with a name like "a=b" or "a\nb" but I suppose
   // text/plain doesn't care about that.  Parsers aren't built for escaped
   // values so we'll have to live with it.
-  if (processedValue) {
-    mBody.Append(aName + NS_LITERAL_STRING("=") + *processedValue +
+  if (NS_SUCCEEDED(rv)) {
+    mBody.Append(aName + NS_LITERAL_STRING("=") + processedValue +
                  NS_LITERAL_STRING(CRLF));
 
-    delete processedValue;
   } else {
     mBody.Append(aName + NS_LITERAL_STRING("=") + aValue +
                  NS_LITERAL_STRING(CRLF));
@@ -1035,9 +1036,11 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
     HandleMailtoSubject(path);
 
     // Append the body to and force-plain-text args to the mailto line
+    char* escapedBuf = nsEscape(NS_ConvertUTF16toUTF8(mBody).get(),
+                                url_XAlphas);
+    NS_ENSURE_TRUE(escapedBuf, NS_ERROR_OUT_OF_MEMORY);
     nsCString escapedBody;
-    escapedBody.Adopt(nsEscape(NS_ConvertUTF16toUTF8(mBody).get(),
-                               url_XAlphas));
+    escapedBody.Adopt(escapedBuf);
 
     path += NS_LITERAL_CSTRING("&force-plain-text=Y&body=") + escapedBody;
 
@@ -1260,8 +1263,9 @@ nsFormSubmission::GetSubmitCharset(nsGenericHTMLElement* aForm,
           nsAutoString uCharset;
           acceptCharsetValue.Mid(uCharset, offset, cnt);
 
-          nsCAutoString charset; charset.AssignWithConversion(uCharset);
-          if (NS_SUCCEEDED(calias->GetPreferred(charset, oCharset)))
+          if (NS_SUCCEEDED(calias->
+                           GetPreferred(NS_LossyConvertUTF16toASCII(uCharset),
+                                        oCharset)))
             return;
         }
         offset = spPos + 1;
@@ -1311,8 +1315,18 @@ nsFormSubmission::GetEncoder(nsGenericHTMLElement* aForm,
   nsresult rv = NS_OK;
 
   nsCAutoString charset(aCharset);
-  if(charset.EqualsLiteral("ISO-8859-1"))
+  // canonical name is passed so that we just have to check against
+  // *our* canonical names listed in charsetaliases.properties
+  if (charset.EqualsLiteral("ISO-8859-1")) {
     charset.AssignLiteral("windows-1252");
+  }
+
+  // use UTF-8 for UTF-16* and UTF-32* (per WHATWG and existing practice of
+  // MS IE/Opera). 
+  if (StringBeginsWith(charset, NS_LITERAL_CSTRING("UTF-16")) || 
+      StringBeginsWith(charset, NS_LITERAL_CSTRING("UTF-32"))) {
+    charset.AssignLiteral("UTF-8");
+  }
 
   rv = CallCreateInstance( NS_SAVEASCHARSET_CONTRACTID, aEncoder);
   NS_ASSERTION(NS_SUCCEEDED(rv), "create nsISaveAsCharset failed");
@@ -1329,16 +1343,14 @@ nsFormSubmission::GetEncoder(nsGenericHTMLElement* aForm,
 }
 
 // i18n helper routines
-char*
-nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
-                                    nsISaveAsCharset* aEncoder)
+nsresult
+nsFormSubmission::UnicodeToNewBytes(const nsAString& aStr, 
+                                    nsISaveAsCharset* aEncoder,
+                                    nsACString& aOut)
 {
-  nsresult rv = NS_OK;
-
   PRUint8 ctrlsModAtSubmit = GET_BIDI_OPTION_CONTROLSTEXTMODE(mBidiOptions);
   PRUint8 textDirAtSubmit = GET_BIDI_OPTION_DIRECTION(mBidiOptions);
   //ahmed 15-1
-  nsAutoString temp;
   nsAutoString newBuffer;
   //This condition handle the RTL,LTR for a logical file
   if (ctrlsModAtSubmit == IBMBIDI_CONTROLSTEXTMODE_VISUAL
@@ -1347,8 +1359,6 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
     Conv_06_FE_WithReverse(nsString(aStr),
                            newBuffer,
                            textDirAtSubmit);
-    aStr = newBuffer.get();
-    aLen=newBuffer.Length();
   }
   else if (ctrlsModAtSubmit == IBMBIDI_CONTROLSTEXTMODE_LOGICAL
           && mCharset.Equals(NS_LITERAL_CSTRING("IBM864"),
@@ -1356,19 +1366,16 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
     //For 864 file, When it is logical, if LTR then only convert
     //If RTL will mak a reverse for the buffer
     Conv_FE_06(nsString(aStr), newBuffer);
-    aStr = newBuffer.get();
-    temp = newBuffer;
-    aLen=newBuffer.Length();
     if (textDirAtSubmit == 2) { //RTL
     //Now we need to reverse the Buffer, it is by searching the buffer
-      PRUint32 loop = aLen;
-      PRUint32 z;
-      for (z=0; z<=aLen; z++) {
-        temp.SetCharAt((PRUnichar)aStr[loop], z);
-        loop--;
-      }
+      PRInt32 len = newBuffer.Length();
+      PRUint32 z = 0;
+      nsAutoString temp;
+      temp.SetLength(len);
+      while (--len >= 0)
+        temp.SetCharAt(newBuffer.CharAt(len), z++);
+      newBuffer = temp;
     }
-    aStr = temp.get();
   }
   else if (ctrlsModAtSubmit == IBMBIDI_CONTROLSTEXTMODE_VISUAL
           && mCharset.Equals(NS_LITERAL_CSTRING("IBM864"),
@@ -1376,28 +1383,28 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
                   && textDirAtSubmit == IBMBIDI_TEXTDIRECTION_RTL) {
 
     Conv_FE_06(nsString(aStr), newBuffer);
-    aStr = newBuffer.get();
-    temp = newBuffer;
-    aLen=newBuffer.Length();
     //Now we need to reverse the Buffer, it is by searching the buffer
-    PRUint32 loop = aLen;
-    PRUint32 z;
-    for (z=0; z<=aLen; z++) {
-      temp.SetCharAt((PRUnichar)aStr[loop], z);
-      loop--;
-    }
-    aStr = temp.get();
+    PRInt32 len = newBuffer.Length();
+    PRUint32 z = 0;
+    nsAutoString temp;
+    temp.SetLength(len);
+    while (--len >= 0)
+      temp.SetCharAt(newBuffer.CharAt(len), z++);
+    newBuffer = temp;
+  }
+  else {
+    newBuffer = aStr;
   }
 
-  
-  char* res = nsnull;
-  if(aStr && aStr[0]) {
-    rv = aEncoder->Convert(aStr, &res);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "conversion failed");
-  } 
-  if(! res)
-    res = nsCRT::strdup("");
-  return res;
+  nsXPIDLCString res;
+  if (!newBuffer.IsEmpty()) {
+    aOut.Truncate();
+    nsresult rv = aEncoder->Convert(newBuffer.get(), getter_Copies(res));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  aOut = res;
+  return NS_OK;
 }
 
 
@@ -1412,49 +1419,38 @@ nsFormSubmission::GetEnumAttr(nsGenericHTMLElement* aContent,
   }
 }
 
-char*
-nsFormSubmission::EncodeVal(const nsAString& aStr)
+nsresult
+nsFormSubmission::EncodeVal(const nsAString& aStr, nsACString& aOut)
 {
-  char* retval;
-  if (mEncoder) {
-    retval = UnicodeToNewBytes(PromiseFlatString(aStr).get(), aStr.Length(),
-                               mEncoder);
-  } else {
-    retval = ToNewCString(aStr);
-  }
+  NS_ASSERTION(mEncoder, "Encoder not available. Losing data !");
+  if (mEncoder)
+    return UnicodeToNewBytes(aStr, mEncoder, aOut);
 
-  return retval;
+  // fall back to UTF-8
+  CopyUTF16toUTF8(aStr, aOut);
+  return NS_OK;
 }
 
-nsString*
+nsresult
 nsFormSubmission::ProcessValue(nsIDOMHTMLElement* aSource,
-                               const nsAString& aName, const nsAString& aValue)
+                               const nsAString& aName, const nsAString& aValue,
+                               nsAString& aResult) 
 {
   // Hijack _charset_ (hidden inputs only) for internationalization (bug 18643)
   if (aName.EqualsLiteral("_charset_")) {
     nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aSource);
-    if (formControl) {
-      if (formControl->GetType() == NS_FORM_INPUT_HIDDEN) {
-        return new NS_ConvertASCIItoUTF16(mCharset);
-      }
+    if (formControl && formControl->GetType() == NS_FORM_INPUT_HIDDEN) {
+        CopyASCIItoUTF16(mCharset, aResult);
+        return NS_OK;
     }
   }
 
-  nsString* retval = nsnull;
+  nsresult rv = NS_OK;
+  aResult = aValue;
   if (mFormProcessor) {
-    // XXX We need to change the ProcessValue interface to take nsAString
-    nsString tmpNameStr(aName);
-    retval = new nsString(aValue);
-    if (!retval) {
-      return nsnull;
-    }
-
-#ifdef DEBUG
-    nsresult rv =
-#endif
-    mFormProcessor->ProcessValue(aSource, tmpNameStr, *retval);
+    rv = mFormProcessor->ProcessValue(aSource, aName, aResult);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to Notify form process observer");
   }
 
-  return retval;
+  return rv;
 }
