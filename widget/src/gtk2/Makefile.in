@@ -123,13 +123,3 @@ test_container: mozdrawingarea.o mozcontainer.o test_container.c
 		mozdrawingarea.o mozcontainer.o \
 		$(MOZ_GTK2_LIBS)
 
-ICON_FILES	= \
-		$(srcdir)/default.xpm \
-		$(NULL)
-
-libs::
-	$(INSTALL) $(ICON_FILES) $(DIST)/bin/chrome/icons/default
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/chrome/icons/default
-
