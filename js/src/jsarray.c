@@ -218,6 +218,23 @@ IndexToId(JSContext *cx, jsuint length, jsid *idp)
     return JS_TRUE;
 }
 
+static JSBool
+PropertyExists(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp)
+{
+    JSObject *obj2;
+    JSProperty *prop;
+
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+        return JS_FALSE;
+
+    *foundp = prop != NULL;
+    if (*foundp) {
+        OBJ_DROP_PROPERTY(cx, obj2, prop);
+    }
+
+    return JS_TRUE;
+}
+
 JSBool
 js_SetLengthProperty(JSContext *cx, JSObject *obj, jsuint length)
 {
@@ -602,6 +619,7 @@ array_reverse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsuint len, half, i;
     jsid id, id2;
     jsval v, v2;
+    JSBool idexists, id2exists;
 
     if (!js_GetLengthProperty(cx, obj, &len))
         return JS_FALSE;
@@ -612,27 +630,31 @@ array_reverse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             return JS_FALSE;
         if (!IndexToId(cx, len - i - 1, &id2))
             return JS_FALSE;
-        if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
-            return JS_FALSE;
-        if (!OBJ_GET_PROPERTY(cx, obj, id2, &v2))
-            return JS_FALSE;
 
-#if JS_HAS_SPARSE_ARRAYS
-        /* This part isn't done yet. */
-
-        if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+        /* Check for holes to make sure they don't get filled. */
+        if (!PropertyExists(cx, obj, id, &idexists) ||
+            !PropertyExists(cx, obj, id2, &id2exists)) {
             return JS_FALSE;
-        if (!prop) {
-            OBJ_DELETE_PROPERTY(cx, obj, id2, &v); /* v is junk. */
-            continue;
         }
-        OBJ_DROP_PROPERTY(cx, obj2, prop);
-#endif
 
-        if (!OBJ_SET_PROPERTY(cx, obj, id, &v2))
-            return JS_FALSE;
-        if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
-            return JS_FALSE;
+        if (idexists) {
+            if (!OBJ_GET_PROPERTY(cx, obj, id, &v) ||
+                !OBJ_SET_PROPERTY(cx, obj, id2, &v)) {
+                return JS_FALSE;
+            }
+        } else {
+            if (!OBJ_DELETE_PROPERTY(cx, obj, id2, &v))
+                return JS_FALSE;
+        }
+        if (id2exists) {
+            if (!OBJ_GET_PROPERTY(cx, obj, id2, &v2) ||
+                !OBJ_SET_PROPERTY(cx, obj, id, &v2)) {
+                return JS_FALSE;
+            }
+        } else {
+            if (!OBJ_DELETE_PROPERTY(cx, obj, id2, &v2))
+                return JS_FALSE;
+        }
     }
 
     *rval = OBJECT_TO_JSVAL(obj);
@@ -835,6 +857,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSStackFrame *fp;
     jsid id;
     size_t nbytes;
+    JSBool idexists;
 
     /*
      * Optimize the default compare function case if all of obj's elements
@@ -887,19 +910,15 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         ca.status = IndexToId(cx, i, &id);
         if (!ca.status)
             goto out;
-        {
-            JSObject *obj2;
-            JSProperty *prop;
-            ca.status = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
-            if (!ca.status)
-                goto out;
-            if (!prop) {
-                vec[i] = JSVAL_HOLE;
-                continue;
-            }
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
-            newlen++;
+
+        ca.status = PropertyExists(cx, obj, id, &idexists);
+        if (!ca.status)
+            goto out;
+        if (!idexists) {
+            vec[i] = JSVAL_HOLE;
+            continue;
         }
+        newlen++;
 
         ca.status = OBJ_GET_PROPERTY(cx, obj, id, &vec[i]);
         if (!ca.status)
@@ -1048,10 +1067,7 @@ array_unshift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     uintN i;
     jsid id, id2;
     jsval v;
-#if JS_HAS_SPARSE_ARRAYS
-    JSObject *obj2;
-    JSProperty *prop;
-#endif
+    JSBool propExists;
 
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
@@ -1064,15 +1080,12 @@ array_unshift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                     return JS_FALSE;
                 if (!IndexToId(cx, last + argc, &id2))
                     return JS_FALSE;
-#if JS_HAS_SPARSE_ARRAYS
-                if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+                if (!PropertyExists(cx, obj, id, &propExists))
                     return JS_FALSE;
-                if (!prop) {
+                if (!propExists) {
                     OBJ_DELETE_PROPERTY(cx, obj, id2, &v); /* v is junk. */
                     continue;
                 }
-                OBJ_DROP_PROPERTY(cx, obj2, prop);
-#endif
                 if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
                     return JS_FALSE;
                 if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
@@ -1105,6 +1118,7 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsid id, id2;
     jsval v;
     JSObject *obj2;
+    JSBool propExists;
 
     /* Nothing to do if no args.  Otherwise lock and load length. */
     if (argc == 0)
@@ -1182,11 +1196,18 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                         return JS_FALSE;
                     if (!IndexToId(cx, last - begin, &id2))
                         return JS_FALSE;
+                    if (!PropertyExists(cx, obj, id, &propExists))
+                        return JS_FALSE;
+                    if (!propExists)
+                        continue; /* Don't fill holes in the new array */
                     if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
                         return JS_FALSE;
                     if (!OBJ_SET_PROPERTY(cx, obj2, id2, &v))
                         return JS_FALSE;
                 }
+
+                if (!js_SetLengthProperty(cx, obj2, end - begin))
+                    return JS_FALSE;
             }
         }
     }
@@ -1201,10 +1222,17 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 return JS_FALSE;
             if (!IndexToId(cx, last + delta, &id2))
                 return JS_FALSE;
-            if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+            if (!PropertyExists(cx, obj, id, &propExists))
                 return JS_FALSE;
-            if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
-                return JS_FALSE;
+            if (propExists) {
+                if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+                    return JS_FALSE;
+                if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
+                    return JS_FALSE;
+            } else {
+                if (!OBJ_DELETE_PROPERTY(cx, obj, id2, &v))
+                    return JS_FALSE;
+            }
         }
         length += delta;
     } else if (argc < count) {
@@ -1214,10 +1242,17 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 return JS_FALSE;
             if (!IndexToId(cx, last - delta, &id2))
                 return JS_FALSE;
-            if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+            if (!PropertyExists(cx, obj, id, &propExists))
                 return JS_FALSE;
-            if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
-                return JS_FALSE;
+            if (propExists) {
+                if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+                    return JS_FALSE;
+                if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
+                    return JS_FALSE;
+            } else {
+                if (!OBJ_DELETE_PROPERTY(cx, obj, id2, &v))
+                    return JS_FALSE;
+            }
         }
         length -= delta;
     }
@@ -1274,23 +1309,21 @@ array_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 if (!ValueIsLength(cx, v, &alength))
                     return JS_FALSE;
                 for (slot = 0; slot < alength; slot++) {
-                    JSProperty *prop;
-                    JSObject *obj2;
+                    JSBool propExists;
 
                     if (!IndexToId(cx, slot, &id))
                         return JS_FALSE;
                     if (!IndexToId(cx, length + slot, &id2))
                         return JS_FALSE;
-                    if (!OBJ_LOOKUP_PROPERTY(cx, aobj, id, &obj2, &prop))
+                    if (!PropertyExists(cx, aobj, id, &propExists))
                         return JS_FALSE;
-                    if (!prop) {
+                    if (!propExists) {
                         /* 
                          * Per ECMA 262, 15.4.4.4, step 9, ignore non-existent
                          * properties.
                          */
                         continue;
                     }
-                    OBJ_DROP_PROPERTY(cx, obj2, prop);
                     if (!OBJ_GET_PROPERTY(cx, aobj, id, &v))
                         return JS_FALSE;
                     if (!OBJ_SET_PROPERTY(cx, nobj, id2, &v))
@@ -1319,6 +1352,7 @@ array_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsdouble d;
     jsid id, id2;
     jsval v;
+    JSBool propExists;
 
     nobj = js_NewArrayObject(cx, 0, NULL);
     if (!nobj)
@@ -1362,13 +1396,17 @@ array_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
         if (!IndexToId(cx, slot - begin, &id2))
             return JS_FALSE;
+        if (!PropertyExists(cx, obj, id, &propExists))
+            return JS_FALSE;
+        if (!propExists)
+            continue;
         if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
             return JS_FALSE;
         if (!OBJ_SET_PROPERTY(cx, nobj, id2, &v))
             return JS_FALSE;
     }
     *rval = OBJECT_TO_JSVAL(nobj);
-    return JS_TRUE;
+    return js_SetLengthProperty(cx, nobj, end - begin);
 }
 #endif /* JS_HAS_SEQUENCE_OPS */
 
