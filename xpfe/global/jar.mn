@@ -12,7 +12,11 @@ toolkit.jar:
         content/global/commonDialog.xul             (resources/content/commonDialog.xul) 
         content/global/commonDialog.js              (resources/content/commonDialog.js) 
         content/global/strres.js                    (resources/content/strres.js) 
+#ifdef MOZ_SUITE
+        content/global/logo.gif                     (/suite/branding/content/logo.gif) 
+#else
         content/global/logo.gif                     (resources/content/logo.gif) 
+#endif
         content/global/aboutAbout.html              (resources/content/aboutAbout.html) 
         content/global/about.xul                    (resources/content/about.xul) 
         content/global/config.xul                   (resources/content/config.xul) 
