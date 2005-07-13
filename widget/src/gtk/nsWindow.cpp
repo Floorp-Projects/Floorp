@@ -1907,6 +1907,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     mMozArea = gtk_mozarea_new();
     gtk_container_add(GTK_CONTAINER(mShell), mMozArea);
     gtk_widget_realize(GTK_WIDGET(mMozArea));
+    SetIcon(NS_LITERAL_STRING("default"));
     mSuperWin = GTK_MOZAREA(mMozArea)->superwin;
     // set the back pixmap to None so that we don't get a flash of
     // black
@@ -1957,6 +1958,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     mMozArea = gtk_mozarea_new();
     gtk_container_add(GTK_CONTAINER(mShell), mMozArea);
     gtk_widget_realize(GTK_WIDGET(mMozArea));
+    SetIcon(NS_LITERAL_STRING("default"));
     mSuperWin = GTK_MOZAREA(mMozArea)->superwin;
     // set the back pixmap to None so that we don't get a flash of
     // black
