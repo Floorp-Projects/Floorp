@@ -125,6 +125,20 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
   exdata->quotelevel = 0;
   exdata->isSig = PR_FALSE;
 
+  // check for DelSp=yes (RFC 3676)
+
+  char *content_type_row =
+    (obj->headers
+     ? MimeHeaders_get(obj->headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE)
+     : 0);
+  char *content_type_delsp =
+    (content_type_row
+     ? MimeHeaders_get_parameter(content_type_row, "delsp", NULL,NULL)
+     : 0);
+  ((MimeInlineTextPlainFlowed *)obj)->delSp = content_type_delsp && !nsCRT::strcasecmp(content_type_delsp, "yes");
+  PR_Free(content_type_delsp);
+  PR_Free(content_type_row);
+
   // Get Prefs for viewing
 
   exdata->fixedwidthfont = PR_FALSE;
@@ -324,7 +338,16 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   if (index > linep - line && ' ' == line[index])
        /* Ignore space stuffing, i.e. lines with just
           (quote marks and) a space count as empty */
+  {
     flowed = PR_TRUE;
+    if (((MimeInlineTextPlainFlowed *) obj)->delSp)
+       /* If line is flowed and DelSp=yes, logically
+          delete trailing space (RFC 3676) */
+    {
+      length--;
+      line[index] = '\0';
+    }
+  }
 
   mozITXTToHTMLConv *conv = GetTextConverter(obj->options);
 

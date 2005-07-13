@@ -58,6 +58,7 @@ extern MimeInlineTextPlainFlowedClass mimeInlineTextPlainFlowedClass;
 
 struct MimeInlineTextPlainFlowed {
   MimeInlineText  text;
+  PRBool          delSp;                // DelSp=yes (RFC 3676)
   PRInt32         mQuotedSizeSetting;   // mail.quoted_size
   PRInt32         mQuotedStyleSetting;  // mail.quoted_style
   char            *mCitationColor;      // mail.citation_color
