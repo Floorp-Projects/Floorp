@@ -214,4 +214,19 @@ sub bz_setup_database {
     $self->bz_drop_index('longdescs', 'longdescs_thetext_idx');
 }
 
+#####################################################################
+# Custom Schema Information Functions
+#####################################################################
+
+# Pg includes the PostgreSQL system tables in table_list_real, so 
+# we need to remove those.
+sub bz_table_list_real {
+    my $self = shift;
+
+    my @full_table_list = $self->SUPER::bz_table_list_real(@_);
+    # All PostgreSQL system tables start with "pg_" or "sql_"
+    my @table_list = grep(!/(^pg_)|(^sql_)/, @full_table_list);
+    return @table_list;
+}
+
 1;
