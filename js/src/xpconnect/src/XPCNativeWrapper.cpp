@@ -385,9 +385,9 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   // interface :)
   XPCNativeInterface* iface = ccx.GetInterface();
   if (!iface) {
-    // No interface, no property -- unless we're getting an indexed
-    // property such as frames[0].  Handle that as a special case
-    // here, now that we know there's no XPConnected .item() method.
+    // No interface, no IDL property.  Check whet her we're getting an indexed
+    // property such as frames[0].  Handle that as a special case here, now
+    // that we know there's no XPConnected .item() method.
 
     if (methodName != id) {
       jsid index_id;
@@ -425,8 +425,6 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
       }
     }
 
-    *vp = JSVAL_VOID;
-
     return JS_TRUE;
   }
 
@@ -434,9 +432,7 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   XPCNativeMember* member = ccx.GetMember();
   NS_ASSERTION(member, "not doing IDispatch, how'd this happen?");
   if (!member) {
-    // No member, no property.
-
-    *vp = JSVAL_VOID;
+    // No member, no IDL property to expose.
 
     return JS_TRUE;
   }
