@@ -2963,6 +2963,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
     event.isControl = aEvent->isControl;
     event.isAlt = aEvent->isAlt;
     event.isMeta = aEvent->isMeta;
+    event.time = aEvent->time;
 
     nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
     if (presShell) {
