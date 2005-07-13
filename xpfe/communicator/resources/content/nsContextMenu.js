@@ -282,8 +282,7 @@ nsContextMenu.prototype = {
 
         // See if the user clicked on an image.
         if ( this.target.nodeType == Node.ELEMENT_NODE ) {
-             if ( this.target instanceof Components.interfaces.nsIImageLoadingContent &&
-                  this.target.currentURI != null ) {
+             if ( this.isImageSaveable( this.target ) ) {
                 this.onImage = true;
                 this.imageURL = this.target.currentURI.spec;
 
@@ -462,6 +461,15 @@ nsContextMenu.prototype = {
          var url = elem.ownerDocument.defaultView.getComputedStyle( elem, '' ).getPropertyCSSValue( prop );
          return ( url.primitiveType == CSSPrimitiveValue.CSS_URI ) ? url.getStringValue() : null;
     },
+    // Returns true iff clicked on image is saveable.
+    isImageSaveable : function ( image ) {
+        if (image instanceof Components.interfaces.nsIImageLoadingContent) {
+            var request = image.getRequest(image.CURRENT_REQUEST);
+            if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
+                return true;
+        }
+        return false;
+    },
     // Returns true iff clicked on link is saveable.
     isLinkSaveable : function ( link ) {
         // We don't do the Right Thing for news/snews yet, so turn them off
@@ -581,12 +589,12 @@ nsContextMenu.prototype = {
     },
     // Change current window to the URL of the image.
     viewImage : function () {
-        urlSecurityCheck( this.imageURL, document )
+        urlSecurityCheck( this.imageURL, document );
         openTopWin( this.imageURL );
     },
     // Change current window to the URL of the background image.
     viewBGImage : function () {
-        urlSecurityCheck( this.bgImageURL, document )
+        urlSecurityCheck( this.bgImageURL, document );
         openTopWin( this.bgImageURL );
     },
     setWallpaper: function() {

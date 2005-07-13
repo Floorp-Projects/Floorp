@@ -4135,8 +4135,7 @@ nsContextMenu.prototype = {
 
         // See if the user clicked on an image.
         if ( this.target.nodeType == Node.ELEMENT_NODE ) {
-             if ( this.target instanceof Components.interfaces.nsIImageLoadingContent &&
-                  this.target.currentURI != null ) {
+             if ( this.isImageSaveable( this.target ) ) {
                 this.onImage = true;
                 this.imageURL = this.target.currentURI.spec;
 
@@ -4276,6 +4275,15 @@ nsContextMenu.prototype = {
     getComputedURL: function( elem, prop ) {
          var url = elem.ownerDocument.defaultView.getComputedStyle( elem, '' ).getPropertyCSSValue( prop );
          return ( url.primitiveType == CSSPrimitiveValue.CSS_URI ) ? url.getStringValue() : null;
+    },
+    // Returns true iff clicked on image is saveable.
+    isImageSaveable : function ( image ) {
+        if (image instanceof Components.interfaces.nsIImageLoadingContent) {
+            var request = image.getRequest(image.CURRENT_REQUEST);
+            if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
+                return true;
+        }
+        return false;
     },
     // Returns true iff clicked on link is saveable.
     isLinkSaveable : function ( link ) {
