@@ -723,6 +723,7 @@
           rows = listBox.getNumberOfVisibleRows();
 
         listBox.scrollByLines(rows);
+        event.preventDefault();
       ]]>
       </handler>
     </handlers>
