@@ -421,6 +421,7 @@ input[type="submit"] {
   -moz-box-sizing: border-box;
   -moz-user-select: none;
   -moz-binding: none;
+  text-align: center;
 }
 
 button {
@@ -431,7 +432,6 @@ button {
 
 *|*::-moz-button-content {
   display: block;
-  text-align: center;
 }
 
 button:active:hover,
