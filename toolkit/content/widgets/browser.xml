@@ -22,6 +22,7 @@
    -
    - Contributor(s):
    -   Peter Annema <disttsc@bart.nl> (Original Author of <browser>)
+   -   Peter Parente <parente@cs.unc.edu>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1021,17 +1022,30 @@
       <property name="buttonText">
         <getter>
           <![CDATA[
-            return this._buttonElement.getAttribute("label");
+            return this._buttonElement.label;
           ]]>
         </getter>
         <setter>
           <![CDATA[
             if (val != "") {
               this._buttonElement.removeAttribute("style");
-              this._buttonElement.setAttribute("label", val);
+              this._buttonElement.label = val;
             }
             else
               this._buttonElement.setAttribute("style", "max-width: 1px; visibility: hidden;");
+            return val;
+          ]]>
+        </setter>
+      </property>
+      <property name="buttonAccesskey">
+        <getter>
+          <![CDATA[
+            return this._buttonElement.getAttribute("accesskey");
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            this._buttonElement.setAttribute("accesskey", val);
             return val;
           ]]>
         </setter>
