@@ -43,7 +43,6 @@
   locale/@AB_CD@/messenger/mailEditorOverlay.dtd                        (%chrome/messenger/mailEditorOverlay.dtd)
   locale/@AB_CD@/messenger/msgSynchronize.dtd                           (%chrome/messenger/msgSynchronize.dtd)
   locale/@AB_CD@/messenger/offline.properties                           (%chrome/messenger/offline.properties)
-  locale/@AB_CD@/messenger/mail_mozilla.gif                             (%chrome/messenger/mail_mozilla.gif)
   locale/@AB_CD@/messenger/junkMailInfo.dtd                             (%chrome/messenger/junkMailInfo.dtd)
   locale/@AB_CD@/messenger/viewLog.dtd                                  (%chrome/messenger/viewLog.dtd)
   locale/@AB_CD@/messenger/junkLog.dtd                                  (%chrome/messenger/junkLog.dtd)
