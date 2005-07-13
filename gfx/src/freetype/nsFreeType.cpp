@@ -244,7 +244,13 @@ nsFreeType2::InitFreeType(FT_Library *library)
 { 
   // call the FreeType2 function via the function pointer
   FT_Error error = nsFT_Init_FreeType(library);
-  return error ? NS_ERROR_FAILURE : NS_OK;
+  if (error)
+  {
+    FREETYPE_PRINTF(("\n\n*********\nFreeType initialization error = %d",
+                         error));
+    return NS_ERROR_FAILURE;
+  }
+  else return NS_OK;
 } 
  
 NS_IMETHODIMP
@@ -636,7 +642,6 @@ nsFreeType2::Init()
 PRBool
 nsFreeType2::InitLibrary()
 {
-  FT_Error error;
 #ifdef MOZ_MATHML
   // do not yet support MathML
   // goto cleanup_and_return;
@@ -653,8 +658,6 @@ nsFreeType2::InitLibrary()
   // use "this->" to make sure it is obivious we are calling the member func
   nsresult rv = this->InitFreeType(&mFreeTypeLibrary);
   if (NS_FAILED(rv)) {
-    FREETYPE_PRINTF(("\n\n*********\nFreeType initialization error = %d",
-                         error));
     mFreeTypeLibrary = nsnull;
     goto cleanup_and_return;
   }
