@@ -5248,8 +5248,16 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
         nsIViewManager *parentVM = rootViewParent->GetViewManager();
 
         if (parentVM && newRootView) {
+            // InsertChild(parent, child, sib, PR_TRUE) inserts the child after
+            // sib in content order, which is before sib in view order. BUT
+            // when sib is null it inserts at the end of the the document
+            // order, i.e., first in view order.  But when oldRootSibling is
+            // null, the old root as at the end of the view list --- last in
+            // content order --- and we want to call InsertChild(parent, child,
+            // nsnull, PR_FALSE) in that case.
             parentVM->InsertChild(rootViewParent, newRootView,
-                                  rootViewSibling, PR_TRUE);
+                                  rootViewSibling,
+                                  rootViewSibling ? PR_TRUE : PR_FALSE);
 
             NS_ASSERTION(newRootView->GetNextSibling() == rootViewSibling,
                          "error in InsertChild");
