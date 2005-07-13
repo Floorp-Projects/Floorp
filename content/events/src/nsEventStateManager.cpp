@@ -4501,11 +4501,12 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
   *aStartContent = *aEndContent = nsnull;
   nsresult rv = NS_ERROR_FAILURE;
 
+  NS_ASSERTION(mPresContext, "mPresContent is null!!");
+  EnsureDocument(mPresContext);
   if (!mDocument)
     return rv;
-  nsIPresShell *shell = nsnull;
-  if (mPresContext)
-    shell = mPresContext->GetPresShell();
+  nsIPresShell *shell;
+  shell = mPresContext->GetPresShell();
 
   nsIFrameSelection *frameSelection = nsnull;
   if (shell)
