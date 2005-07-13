@@ -165,7 +165,7 @@ nsresult nsReadConfig::readConfigFile()
     if (NS_FAILED(rv))
         return rv;
 
-    rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    rv = prefService->GetDefaultBranch(nsnull, getter_AddRefs(prefBranch));
     if (NS_FAILED(rv))
         return rv;
         
