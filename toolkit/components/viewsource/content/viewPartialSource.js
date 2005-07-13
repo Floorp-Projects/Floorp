@@ -235,6 +235,9 @@ function getPath(ancestor, node)
 // on the inflated view-source DOM
 function drawSelection()
 {
+  getBrowser().contentDocument.title =
+    getViewSourceBundle().getString("viewSelectionSourceTitle");
+
   // find the special selection markers that we added earlier, and
   // draw the selection between the two...
   var findService = null;
@@ -343,18 +346,19 @@ function viewPartialSourceForFragment(node, context)
   if (!topNode)
     return;
 
-  // serialize (note: the main window overrides the title set here)
+  // serialize
+  var title = getViewSourceBundle().getString("viewMathMLSourceTitle");
   var wrapClass = gWrapLongLines ? ' class="wrap"' : '';
   var source =
     '<html>'
-  + '<head><title>Mozilla</title>'
+  + '<head><title>' + title + '</title>'
   + '<link rel="stylesheet" type="text/css" href="' + gViewSourceCSS + '">'
   + '<style type="text/css">'
   + '#target { border: dashed 1px; background-color: lightyellow; }'
   + '</style>'
   + '</head>'
   + '<body id="viewsource"' + wrapClass
-  +        ' onload="document.getElementById(\'target\').scrollIntoView(true)">'
+  +        ' onload="document.title=\''+title+'\';document.getElementById(\'target\').scrollIntoView(true)">'
   + '<pre>'
   + getOuterMarkup(topNode, 0)
   + '</pre></body></html>'
