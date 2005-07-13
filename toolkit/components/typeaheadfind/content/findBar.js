@@ -507,6 +507,7 @@ function onFindBarKeyPress(evt)
         tmpLink.focus(); // In this function, gFoundLink is set null.
         fireKeypressEvent(tmpLink, evt);
         evt.preventDefault();
+        closeFindBar();
       }
     }
   }

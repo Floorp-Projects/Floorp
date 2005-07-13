@@ -42,7 +42,7 @@
 
 interface nsIDocShell;
 
-[scriptable, uuid(1a834a64-3b06-4b75-b05b-96ca4e35a2a1)]
+[scriptable, uuid(09ccaa1d-422c-48a8-93fe-9c6e03dc4746)]
 interface nsITypeAheadFind : nsISupports
 {
   void init(in nsIDocShell aDocShell);
