@@ -932,7 +932,7 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
 
     for (PRUint32 sub = 0, sub_end; sub < aBuffer.Length(); sub = sub_end + 1) {
       sub_end = aBuffer.FindChar(PRUnichar(','), sub);
-      if (sub_end == -1)
+      if (sub_end == PRUint32(kNotFound))
         sub_end = aBuffer.Length();
 
       PRUint32 parse_start, parse_end;
