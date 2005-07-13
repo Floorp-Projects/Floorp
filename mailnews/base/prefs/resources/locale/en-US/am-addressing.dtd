@@ -2,6 +2,8 @@
 
 <!ENTITY addressing.label          "Composition &amp; Addressing">
 <!ENTITY addressingGroupTitle.label "Addressing">
+<!ENTITY autocompleteToMyDomain.label     "Automatically append my domain to addresses">
+<!ENTITY autocompleteToMyDomain.accesskey "u">
 <!ENTITY addressingText.label      "When looking up addresses:">
 <!-- LOCALIZATION NOTE (override.label) : do not translate "LDAP" in below line -->
 <!ENTITY useGlobal.label           "Use my global LDAP server preferences for this account">

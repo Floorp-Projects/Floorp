@@ -41,6 +41,10 @@
   width: 0;
 }  
 
+.textbox-addressingWidget[noMatchesFound="true"] {
+  color: red;
+}
+
 #typecol-addressingWidget {
   min-width: 9em;
   border-right: 1px solid #C4CADC;

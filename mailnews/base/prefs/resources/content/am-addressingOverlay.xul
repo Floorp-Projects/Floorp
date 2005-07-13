@@ -106,6 +106,16 @@
 
     <groupbox>
       <caption label="&addressingGroupTitle.label;"/>
+      <hbox align="center">
+        <checkbox wsm_persist="true" id="identity.autocompleteToMyDomain"
+                  label="&autocompleteToMyDomain.label;"
+                  accesskey="&autocompleteToMyDomain.accesskey;"
+                  prefattribute="value"
+                  prefstring="mail.identity.%identitykey%.autocompleteToMyDomain"/>
+      </hbox>
+
+      <separator class="thin"/>
+
       <description>&addressingText.label;</description>
       <radiogroup class="indent" id="ldapAutocomplete" wsm_persist="true" oncommand="enabling();">
         <observes element="identity.overrideGlobalPref" attribute="disabled"/>

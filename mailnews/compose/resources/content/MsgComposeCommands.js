@@ -1681,7 +1681,7 @@ function GenericSendMessage( msgType )
             var result = {value:sComposeMsgsBundle.getString("defaultSubject")};
             if (gPromptService.prompt(
                   window,
-                  sComposeMsgsBundle.getString("subjectDlogTitle"),
+                  sComposeMsgsBundle.getString("sendMsgTitle"),
                   sComposeMsgsBundle.getString("subjectDlogMessage"),
                   result,
                   null,
@@ -1745,6 +1745,11 @@ function GenericSendMessage( msgType )
         // Before sending the message, check what to do with HTML message, eventually abort.
         var convert = DetermineConvertibility();
         var action = DetermineHTMLAction(convert);
+        // check if e-mail addresses are complete, in case user
+        // has turned off autocomplete to local domain.
+        if (!CheckValidEmailAddress(msgCompFields.to, msgCompFields.cc, msgCompFields.bcc))
+          return;
+
         if (action == nsIMsgCompSendFormat.AskUser)
         {
                     var recommAction = convert == nsIMsgCompConvertible.No
@@ -1851,6 +1856,28 @@ function GenericSendMessage( msgType )
   }
   else
     dump("###SendMessage Error: composeAppCore is null!\n");
+}
+
+function CheckValidEmailAddress(aTo, aCC, aBCC)
+{
+  var invalidStr = null;
+  // crude check that the to, cc, and bcc fields contain at least one '@'.
+  // We could parse each address, but that might be overkill.
+  if (aTo.length > 0 && (aTo.indexOf("@") <= 0 || aTo.indexOf("@") == aTo.length - 1))
+    invalidStr = aTo;
+  else if (aCC.length > 0 && (aCC.indexOf("@") <= 0 || aCC.indexOf("@") == aCC.length - 1))
+    invalidStr = aCC;
+  else if (aBCC.length > 0 && (aBCC.indexOf("@") <= 0 || aBCC.indexOf("@") == aBCC.length - 1))
+    invalidStr = aBCC;
+  if (invalidStr)
+  {
+    var errorTitle = sComposeMsgsBundle.getString("sendMsgTitle");
+    var errorMsg = sComposeMsgsBundle.getFormattedString("addressInvalid", [invalidStr], 1);
+    if (gPromptService)
+      gPromptService.alert(window, errorTitle, errorMsg);
+    return false;
+  } 
+  return true;
 }
 
 function SendMessage()
@@ -2707,6 +2734,8 @@ function LoadIdentity(startup)
             gAutocompleteSession = Components.classes["@mozilla.org/autocompleteSession;1?type=addrbook"].getService(Components.interfaces.nsIAbAutoCompleteSession);
           if (gAutocompleteSession)
             setDomainName();
+          if (sPrefs.getBoolPref("mail.autoComplete.highlightNonMatches"))
+            document.getElementById('addressCol2#1').highlightNonMatches = true;
 
           try {
               setupLdapAutocompleteSession();
@@ -2723,9 +2752,17 @@ function LoadIdentity(startup)
 
 function setDomainName()
 {
-  var emailAddr = gCurrentIdentity.email;
-  var start = emailAddr.lastIndexOf("@");
-  gAutocompleteSession.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
+  var defaultDomain = "";
+
+  if (gCurrentIdentity.autocompleteToMyDomain)
+  {
+    var emailAddr = gCurrentIdentity.email;
+    var start = emailAddr.lastIndexOf("@");
+    defaultDomain = emailAddr.slice(start + 1);
+  }
+
+  // If autocompleteToMyDomain is false the defaultDomain is emptied
+  gAutocompleteSession.defaultDomain = defaultDomain;
 }
 
 function setupAutocomplete()
@@ -2736,15 +2773,22 @@ function setupAutocomplete()
     if (gAutocompleteSession) {
       setDomainName();
 
+      var autoCompleteWidget = document.getElementById("addressCol2#1");
+      // When autocompleteToMyDomain is off, there is no default entry with the domain
+      // appended, so reduce the minimum results for a popup to 2 in this case.
+      if (!gCurrentIdentity.autocompleteToMyDomain)
+        autoCompleteWidget.minResultsForPopup = 2;
+
       // if the pref is set to turn on the comment column, honor it here.
       // this element then gets cloned for subsequent rows, so they should 
       // honor it as well
       //
       try {
-          if (sPrefs.getIntPref("mail.autoComplete.commentColumn")) {
-              document.getElementById('addressCol2#1').showCommentColumn =
-                  true;
-          }
+          if (sPrefs.getBoolPref("mail.autoComplete.highlightNonMatches"))
+            autoCompleteWidget.highlightNonMatches = true;
+
+          if (sPrefs.getIntPref("mail.autoComplete.commentColumn"))
+            autoCompleteWidget.showCommentColumn = true;
       } catch (ex) {
           // if we can't get this pref, then don't show the columns (which is
           // what the XUL defaults to)

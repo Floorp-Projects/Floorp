@@ -13,7 +13,8 @@
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["emailCollectionOutgoing", 
+    var _elementIDs = ["emailCollectionOutgoing",
+                       "highlightNonMatches",
                        "addressingAutocomplete",
                        "autocompleteLDAP",
                        "localDirectoriesList",
@@ -63,6 +64,14 @@
 	
     <groupbox id="addressAutocompletion">
       <caption label="&addressingTitle.label;"/>
+    <hbox align="center">
+      <checkbox id="highlightNonMatches" label="&highlightNonMatches.label;"
+                prefstring="mail.autoComplete.highlightNonMatches"
+                accesskey="&highlightNonMatches.accesskey;"/>
+    </hbox>
+
+    <separator class="thin"/>
+
       <description>&autocompleteText.label;</description>
       <hbox align="center">
         <checkbox id="addressingAutocomplete" label="&addressingEnable.label;"

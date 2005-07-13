@@ -38,12 +38,13 @@
 <!ENTITY pane.title                            "Addressing">
 <!ENTITY emailCollectiontitle.label            "Email Address Collection">
 <!ENTITY emailCollectionPicker.label           "Add email addresses to my:">
-<!ENTITY emailCollectionPicker.accesskey       "A">
+<!ENTITY emailCollectionPicker.accesskey       "m">
 <!ENTITY emailCollectiontext.label             "Email addresses from outgoing messages can be automatically added to a local address book.">
 
 <!-- Autocompletion -->
 <!ENTITY addressingTitle.label                 "Address Autocompletion">
-<!-- LOCALIZATION NOTE (addressingText.label) : do not translate "LDAP" in below line -->
+<!ENTITY highlightNonMatches.label             "Highlight addresses that do not autocomplete">
+<!ENTITY highlightNonMatches.accesskey         "a">
 <!ENTITY addressingEnable.label                "Local Address Books">
 <!ENTITY addressingEnable.accesskey            "L">
 <!ENTITY autocompleteText.label                "When addressing messages, look for matching entries in:">
