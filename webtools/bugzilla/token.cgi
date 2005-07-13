@@ -33,7 +33,7 @@ use vars qw($template $vars);
 
 use Bugzilla;
 use Bugzilla::Constants;
-use Bugzilla::Auth;
+use Bugzilla::Util;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;

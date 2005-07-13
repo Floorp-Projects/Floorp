@@ -29,7 +29,7 @@ use lib qw(.);
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Search;
-use Bugzilla::Auth;
+use Bugzilla::Util;
 use Bugzilla::User;
 
 require "CGI.pl";

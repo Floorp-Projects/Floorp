@@ -36,7 +36,6 @@ use Bugzilla::Util;
 # Bring ChmodDataFile in until this is all moved to the module
 use Bugzilla::Config qw(:DEFAULT ChmodDataFile $localconfig $datadir);
 use Bugzilla::BugMail;
-use Bugzilla::Auth;
 use Bugzilla::User;
 
 # Shut up misguided -w warnings about "used only once".  For some reason,

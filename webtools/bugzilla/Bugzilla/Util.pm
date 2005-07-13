@@ -37,7 +37,8 @@ use base qw(Exporter);
                              diff_arrays diff_strings
                              trim wrap_comment find_wrap_point
                              format_time format_time_decimal
-                             file_mod_time);
+                             file_mod_time
+                             bz_crypt);
 
 use Bugzilla::Config;
 use Bugzilla::Error;
@@ -309,6 +310,31 @@ sub file_mod_time ($) {
     return $mtime;
 }
 
+sub bz_crypt ($) {
+    my ($password) = @_;
+
+    # The list of characters that can appear in a salt.  Salts and hashes
+    # are both encoded as a sequence of characters from a set containing
+    # 64 characters, each one of which represents 6 bits of the salt/hash.
+    # The encoding is similar to BASE64, the difference being that the
+    # BASE64 plus sign (+) is replaced with a forward slash (/).
+    my @saltchars = (0..9, 'A'..'Z', 'a'..'z', '.', '/');
+
+    # Generate the salt.  We use an 8 character (48 bit) salt for maximum
+    # security on systems whose crypt uses MD5.  Systems with older
+    # versions of crypt will just use the first two characters of the salt.
+    my $salt = '';
+    for ( my $i=0 ; $i < 8 ; ++$i ) {
+        $salt .= $saltchars[rand(64)];
+    }
+
+    # Crypt the password.
+    my $cryptedpassword = crypt($password, $salt);
+
+    # Return the crypted password.
+    return $cryptedpassword;
+}
+
 sub ValidateDate {
     my ($date, $format) = @_;
     my $date2;
@@ -368,6 +394,9 @@ Bugzilla::Util - Generic utility functions for bugzilla
 
   # Functions for dealing with files
   $time = file_mod_time($filename);
+
+  # Cryptographic Functions
+  $crypted_password = bz_crypt($password);
 
 =head1 DESCRIPTION
 
@@ -563,3 +592,25 @@ of the "mtime" parameter of the perl "stat" function.
 
 =back
 
+=head2 Cryptography
+
+=over 4
+
+=item C<bz_crypt($password)>
+
+Takes a string and returns a C<crypt>ed value for it, using a random salt.
+
+Please always use this function instead of the built-in perl "crypt"
+when initially encrypting a password.
+
+=begin undocumented
+
+Random salts are generated because the alternative is usually
+to use the first two characters of the password itself, and since
+the salt appears in plaintext at the beginning of the encrypted
+password string this has the effect of revealing the first two
+characters of the password to anyone who views the encrypted version.
+
+=end undocumented
+
+=back

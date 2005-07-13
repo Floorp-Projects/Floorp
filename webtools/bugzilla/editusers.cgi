@@ -27,7 +27,6 @@ use Bugzilla;
 use Bugzilla::User;
 use Bugzilla::Config;
 use Bugzilla::Constants;
-use Bugzilla::Auth;
 use Bugzilla::Util;
 
 Bugzilla->login(LOGIN_REQUIRED);

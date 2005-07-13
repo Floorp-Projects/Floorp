@@ -34,10 +34,7 @@ use strict;
 use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Util;
-# Because of the screwy way that Auth works, it thinks
-# that we're redefining subroutines if we "use" anything
-# that "uses" Bugzilla::Auth.
-require Bugzilla::User;
+use Bugzilla::User;
 
 my $edit_options = {
     'new' => 1,
