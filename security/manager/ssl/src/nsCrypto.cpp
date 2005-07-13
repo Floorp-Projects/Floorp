@@ -362,7 +362,7 @@ cryptojs_GetFramePrincipal(JSContext *cx, JSStackFrame *fp,
   return cryptojs_GetFunctionObjectPrincipal(cx, obj, principal);
 }
 
-nsIPrincipal*
+already_AddRefed<nsIPrincipal>
 nsCrypto::GetScriptPrincipal(JSContext *cx)
 {
   JSStackFrame *fp = nsnull;
@@ -385,7 +385,7 @@ nsCrypto::GetScriptPrincipal(JSContext *cx)
     nsCOMPtr<nsIScriptObjectPrincipal> globalData =
       do_QueryInterface(scriptContext->GetGlobalObject());
     NS_ENSURE_TRUE(globalData, nsnull);
-    principal = globalData->GetPrincipal();
+    NS_IF_ADDREF(principal = globalData->GetPrincipal());
   }
 
   return principal;

@@ -92,7 +92,7 @@ public:
   NS_DECL_NSIDOMCRYPTO
 
 private:
-  static nsIPrincipal* GetScriptPrincipal(JSContext *cx);
+  static already_AddRefed<nsIPrincipal> GetScriptPrincipal(JSContext *cx);
 
   PRBool mEnableSmartCardEvents;
 };
