@@ -6978,23 +6978,56 @@ void nsImapProtocol::Copy(const char * messageList,
   
   char *escapedDestination = CreateEscapedMailboxName(destinationMailbox);
 
-  nsCAutoString protocolString(GetServerCommandTag());
+  // turn messageList back into key array and then back into a message id list,
+  // but use the flag state to handle ranges correctly.
+  nsCString messageIdList;
+  nsMsgKeyArray msgKeys;
   if (idsAreUid)
-    protocolString.Append(" uid");
-  // If it's a MOVE operation on aol servers then use 'xaol-move' cmd.
-  if ((m_imapAction == nsIImapUrl::nsImapOnlineMove) &&
-      GetServerStateParser().ServerIsAOLServer())
-    protocolString.Append(" xaol-move ");
-  else
-    protocolString.Append(" copy ");
-  protocolString.Append(messageList);
-  protocolString.Append(" \"");
-  protocolString.Append(escapedDestination);
-  protocolString.Append("\"" CRLF);
+    ParseUidString(messageList, msgKeys);
+
+  PRInt32 msgCountLeft = msgKeys.GetSize();
+  PRUint32 msgsHandled = 0;
+  const char *formatString;
+  formatString = (idsAreUid)
+      ? "%s uid store %s %s"CRLF
+      : "%s store %s %s"CRLF;
+
+  do 
+  {
+    nsCString idString;
+
+    PRUint32 msgsToHandle = msgCountLeft;
+    if (idsAreUid)
+      AllocateImapUidString(msgKeys.GetArray() + msgsHandled, msgsToHandle, m_flagState, idString);
+    else
+      idString.Assign(messageList);
+
+    msgsHandled += msgsToHandle;
+    msgCountLeft -= msgsToHandle;
+
+    IncrementCommandTagNumber();
+    nsCAutoString protocolString(GetServerCommandTag());
+    if (idsAreUid)
+      protocolString.Append(" uid");
+    // If it's a MOVE operation on aol servers then use 'xaol-move' cmd.
+    if ((m_imapAction == nsIImapUrl::nsImapOnlineMove) &&
+        GetServerStateParser().ServerIsAOLServer())
+      protocolString.Append(" xaol-move ");
+    else
+      protocolString.Append(" copy ");
+
+
+    protocolString.Append(idString);
+    protocolString.Append(" \"");
+    protocolString.Append(escapedDestination);
+    protocolString.Append("\"" CRLF);
       
-  nsresult rv = SendData(protocolString.get());
-  if (NS_SUCCEEDED(rv))
-     ParseIMAPandCheckForNewMail(protocolString.get());
+    nsresult rv = SendData(protocolString.get());
+    if (NS_SUCCEEDED(rv))
+       ParseIMAPandCheckForNewMail(protocolString.get());
+  }
+  while (msgCountLeft > 0 && !DeathSignalReceived());
+
         
   nsMemory::Free(escapedDestination);
 }
