@@ -641,6 +641,10 @@ pref("mail.password_protect_local_cache", false);
 // overridden by stand alone mail
 pref("mail.standalone", false);
 
+// import option to skip the first record, recorded so that we can save
+// the users last used preference.
+pref("mailnews.import.text.skipfirstrecord", true);
+
 #ifdef XP_WIN
 // Unread mail count timer. Value to be specified in seconds
 // default is 5 minutes, i.e., 5 * 60 seconds = 300

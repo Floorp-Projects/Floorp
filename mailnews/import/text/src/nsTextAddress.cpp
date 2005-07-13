@@ -88,6 +88,18 @@ nsresult nsTextAddress::ImportAddresses( PRBool *pAbort, const PRUnichar *pName,
     
     PRInt32    loc;
     PRInt32    lineLen = 0;
+    PRBool     skipRecord = PR_FALSE;
+
+    rv = m_fieldMap->GetSkipFirstRecord(&skipRecord);
+    if (NS_FAILED(rv)) {
+      IMPORT_LOG0("*** Error checking to see if we should skip the first record\n");
+      return rv;
+    }
+
+    // Skip the first record if the user has requested it.
+    if (skipRecord)
+      rv = ReadRecord( pSrc, pLine, kTextAddressBufferSz, m_delim, &lineLen);
+
     while (!(*pAbort) && !eof && NS_SUCCEEDED( rv)) {
         rv = pSrc->Tell( &loc);
         if (NS_SUCCEEDED( rv) && pProgress)

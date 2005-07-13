@@ -52,9 +52,16 @@ interface nsIMdbRow;
 interface nsIAbCard;
 
 
-[scriptable, uuid(1CEB9241-ADC1-11d3-A9C2-00A0CC26DA63)]
+[scriptable, uuid(0e376da3-e289-4d14-bdec-867764585eb7)]
 interface nsIImportFieldMap : nsISupports
 {
+  /*
+    Flag to indicate whether or not to skip the first record,
+    for instance csv files often have field names as the first
+    record
+  */
+  attribute boolean skipFirstRecord;
+
 	readonly attribute long	numMozFields;
 	readonly attribute long	mapSize;
 	

@@ -72,6 +72,7 @@ private:
 	PRInt32		m_allocated;
 	nsVoidArray	m_descriptions;
 	PRInt32		m_mozFieldCount;
+  PRBool      m_skipFirstRecord;
 };
 
 

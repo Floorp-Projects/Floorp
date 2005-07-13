@@ -8,6 +8,7 @@ var gNextButton;
 var gMoveUpButton;
 var gMoveDownButton;
 var gListbox;
+var gSkipFirstRecordButton;
 
 function OnLoadFieldMapImport()
 {
@@ -31,6 +32,11 @@ function OnLoadFieldMapImport()
   gPreviousButton = document.getElementById("previous");
   gNextButton = document.getElementById("next");
   gListbox = document.getElementById("fieldList");
+  gSkipFirstRecordButton = document.getElementById("skipFirstRecord");
+
+  // Set the state of the skip first record button
+  gSkipFirstRecordButton.checked = top.fieldMap.skipFirstRecord;
+
   ListFields();
   Browse(1);
   gListbox.selectedItem = gListbox.getItemAtIndex(0);
@@ -164,6 +170,8 @@ function FieldImportOKButton()
     top.fieldMap.SetFieldMap( i, fIndex);
     top.fieldMap.SetFieldActive( i, (on == "true"));
   }
+
+  top.fieldMap.skipFirstRecord = gSkipFirstRecordButton.checked;
 
   top.dialogResult.ok = true;
 

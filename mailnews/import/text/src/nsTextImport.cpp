@@ -773,6 +773,14 @@ NS_IMETHODIMP ImportAddressImpl::InitFieldMap(nsIFileSpec *location, nsIImportFi
 				}
 			}
 		}
+
+        // Now also get the last used skip first record value.
+        PRBool skipFirstRecord = PR_FALSE;
+        rv = prefs->GetBoolPref("mailnews.import.text.skipfirstrecord", &skipFirstRecord);
+        if (NS_SUCCEEDED(rv))
+        {
+          fieldMap->SetSkipFirstRecord(skipFirstRecord);
+        }
 	}
 
 	return( NS_OK);
@@ -820,4 +828,12 @@ void ImportAddressImpl::SaveFieldMap( nsIImportFieldMap *pMap)
 			rv = prefs->SetCharPref( "mailnews.import.text.fieldmap", str.get());
 		}
 	}
+
+    // Now also save last used skip first record value.
+    PRBool skipFirstRecord = PR_FALSE;
+    rv = pMap->GetSkipFirstRecord(&skipFirstRecord);
+    if (NS_SUCCEEDED(rv))
+    {
+      prefs->SetBoolPref("mailnews.import.text.skipfirstrecord", skipFirstRecord);
+    }
 }

@@ -61,6 +61,12 @@
             accesskey="&fieldMapImport.next.accesskey;"/>      
   </hbox>
 
+  <hbox align="center">
+    <checkbox id="skipFirstRecord"
+              label="&fieldMapImport.skipFirstRecord;"
+              accesskey="&fieldMapImport.skipFirstRecord.accessKey;"/>
+  </hbox>
+
   <separator class="thin"/>
   <description>&fieldMapImport.text;</description>
   <separator class="thin"/>

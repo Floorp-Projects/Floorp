@@ -42,6 +42,7 @@
 #include "nsImportFieldMap.h"
 #include "nsImportStringBundle.h"
 #include "nsReadableUtils.h"
+#include "nsISupportsObsolete.h"
 
 #include "ImportDebug.h"
 
@@ -68,6 +69,8 @@ NS_METHOD nsImportFieldMap::Create( nsISupports *aOuter, REFNSIID aIID, void **a
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsImportFieldMap, nsIImportFieldMap)
 
+NS_IMPL_GETSET(nsImportFieldMap, SkipFirstRecord, PRBool, m_skipFirstRecord)
+
 nsImportFieldMap::nsImportFieldMap() 
 { 
 	m_numFields = 0;
@@ -76,6 +79,7 @@ nsImportFieldMap::nsImportFieldMap()
 	m_allocated = 0;
 	// need to init the description array
 	m_mozFieldCount = 0;
+    m_skipFirstRecord = false;
 	nsIStringBundle *pBundle = nsImportStringBundle::GetStringBundleProxy();
 
 	nsString *pStr;
