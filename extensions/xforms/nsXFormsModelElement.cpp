@@ -419,6 +419,7 @@ nsXFormsModelElement::DoneAddingChildren()
     }
   }
 
+  // (XForms 4.2.1 - cont)
   // 2. construct an XPath data model from inline or external initial instance
   // data.  This is done by our child instance elements as they are inserted
   // into the document, and all of the instances will be processed by this
@@ -858,9 +859,6 @@ nsXFormsModelElement::HandleEvent(nsIDOMEvent* aEvent)
   // xforms-model-construct is not cancellable, so always proceed.
 
   nsXFormsUtils::DispatchEvent(mElement, eEvent_ModelConstruct);
-  nsXFormsUtils::DispatchEvent(mElement, eEvent_Rebuild);
-  nsXFormsUtils::DispatchEvent(mElement, eEvent_Recalculate);
-  nsXFormsUtils::DispatchEvent(mElement, eEvent_Revalidate);
 
   if (mPendingInlineSchemas.Count() > 0) {
     nsCOMPtr<nsIDOMElement> el;
@@ -1331,6 +1329,7 @@ nsXFormsModelElement::FinishConstruction()
     }
   }
 
+  // (XForms 4.2.1 - cont)
   // 3. if applicable, initialize P3P
 
   // 4. construct instance data from initial instance data.  apply all
@@ -1339,6 +1338,12 @@ nsXFormsModelElement::FinishConstruction()
   // we get the instance data from our instance child nodes
 
   // We're done initializing this model.
+  // 5. Perform an xforms-rebuild, xforms-recalculate, and xforms-revalidate in 
+  // sequence, for this model element. (The xforms-refresh is not performed
+  // since the user interface has not yet been initialized).
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Rebuild);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Recalculate);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Revalidate);
 
   return NS_OK;
 }
