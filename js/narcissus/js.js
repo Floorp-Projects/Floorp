@@ -58,6 +58,16 @@
  *      const declarations
  *      get and set functions in object initialisers
  */
-load('../narcissus/jsdefs.js');
-load('../narcissus/jsparse.js');
-load('../narcissus/jsexec.js');
+
+/*
+ * Loads a file relative to the calling script's (our) source directory, and not
+ * the directory that the executing shell is being run out of.
+ */
+function my_load(filename) {
+    evaluate(snarf(filename), filename, 1);
+}
+
+my_load('jsdefs.js');
+my_load('jsparse.js');
+my_load('jsexec.js');
+

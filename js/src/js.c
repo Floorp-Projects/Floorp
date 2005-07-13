@@ -2199,14 +2199,89 @@ defineProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                                attrs);
 }
 
+static JSBool
+Evaluate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    /* function evaluate(source, filename, lineno) { ... } */
+    JSString *source;
+    const char *filename = "";
+    jsuint lineno = 0;
+    uint32 oldopts;
+    JSBool ok;
+
+    if (argc == 0) {
+        *rval = JSVAL_VOID;
+        return JS_TRUE;
+    }
+
+    if (!JS_ConvertArguments(cx, argc, argv, "S/su",
+                             &source, &filename, &lineno)) {
+        return JS_FALSE;
+    }
+
+    oldopts = JS_GetOptions(cx);
+    JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
+    ok = JS_EvaluateUCScript(cx, obj, JSSTRING_CHARS(source),
+                             JSSTRING_LENGTH(source), filename,
+                             lineno, rval);
+    JS_SetOptions(cx, oldopts);
+    
+    return ok;
+}
+
 #include <fcntl.h>
 #include <sys/stat.h>
+
+/*
+ * Returns a JS_malloc'd string (that the caller needs to JS_free)
+ * containing the directory (non-leaf) part of |from| prepended to |leaf|.
+ * If |from| is empty or a leaf, MakeAbsolutePathname returns a copy of leaf.
+ * Returns NULL to indicate an error.
+ */
+static char *
+MakeAbsolutePathname(JSContext *cx, const char *from, const char *leaf)
+{
+    size_t dirlen;
+    char *dir;
+    const char *slash = NULL, *cp;
+
+    cp = from;
+    while (*cp) {
+        if (*cp == '/'
+#ifdef XP_WIN
+            || *cp == '\\'
+#endif
+           ) {
+            slash = cp;
+        }
+
+        ++cp;
+    }
+
+    if (!slash) {
+        /* We were given a leaf or |from| was empty. */
+        return JS_strdup(cx, leaf);
+    }
+
+    /* Else, we were given a real pathname, return that + the leaf. */
+    dirlen = slash - from + 1;
+    dir = JS_malloc(cx, dirlen + strlen(leaf) + 1);
+    if (!dir)
+        return NULL;
+
+    strncpy(dir, from, dirlen);
+    strcpy(dir + dirlen, leaf); /* Note: we can't use strcat here. */
+
+    return dir;
+}
 
 static JSBool
 snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
     const char *filename;
+    char *pathname;
+    JSStackFrame *fp;
     int fd, cc;
     JSBool ok;
     size_t len;
@@ -2217,15 +2292,23 @@ snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!str)
         return JS_FALSE;
     filename = JS_GetStringBytes(str);
-    fd = open(filename, O_RDONLY);
+    
+    /* Get the currently executing script's name. */
+    fp = JS_GetScriptedCaller(cx, NULL);
+    JS_ASSERT(fp && fp->script->filename);
+    pathname = MakeAbsolutePathname(cx, fp->script->filename, filename);
+    if (!pathname)
+        return JS_FALSE;
+
+    fd = open(pathname, O_RDONLY);
     ok = JS_TRUE;
     len = 0;
     buf = NULL;
     if (fd < 0) {
-        JS_ReportError(cx, "can't open %s: %s", filename, strerror(errno));
+        JS_ReportError(cx, "can't open %s: %s", pathname, strerror(errno));
         ok = JS_FALSE;
     } else if (fstat(fd, &sb) < 0) {
-        JS_ReportError(cx, "can't stat %s", filename);
+        JS_ReportError(cx, "can't stat %s", pathname);
         ok = JS_FALSE;
     } else {
         len = sb.st_size;
@@ -2234,12 +2317,13 @@ snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             ok = JS_FALSE;
         } else if ((cc = read(fd, buf, len)) != len) {
             JS_free(cx, buf);
-            JS_ReportError(cx, "can't read %s: %s", filename,
+            JS_ReportError(cx, "can't read %s: %s", pathname,
                            (cc < 0) ? strerror(errno) : "short read");
             ok = JS_FALSE;
         }
     }
     close(fd);
+    JS_free(cx, pathname);
     if (!ok)
         return ok;
     buf[len] = '\0';
@@ -2366,6 +2450,9 @@ main(int argc, char **argv, char **envp)
 
         if (!JS_DefineFunction(cx, glob, "snarf", snarf, 1, 0))
             return 1;
+        if (!JS_DefineFunction(cx, glob, "evaluate", Evaluate, 3, 0))
+            return 1;
+
         if (!JS_EvaluateScript(cx, glob,
                                Object_prototype, sizeof Object_prototype - 1,
                                NULL, 0, &v)) {
