@@ -579,6 +579,9 @@ void nsAbLDIFService::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, ch
     else if (colType.Equals("member") && bIsList)
       mDatabase->AddLdifListMember(newRow, column.get());
 
+    else if (colType.Equals("mozilla_aimscreenname"))
+      mDatabase->AddAimScreenName(newRow, column.get());
+
 //          else if (colType.Equals("manager") )
 //            ioRow->AddColumn(ev, this->ColManager(), yarn);
 
@@ -596,6 +599,9 @@ void nsAbLDIFService::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, ch
 
     if (colType.Equals("notes"))
       mDatabase->AddNotes(newRow, column.get());
+
+    else if (colType.Equals("nscpaimscreenname"))
+      mDatabase->AddAimScreenName(newRow, column.get());
 
 //          else if (colType.Equals("n") )
 //            ioRow->AddColumn(ev, this->ColN(), yarn);
