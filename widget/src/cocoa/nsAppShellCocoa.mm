@@ -168,32 +168,15 @@ nsAppShellCocoa::Spindown(void)
 NS_METHOD
 nsAppShellCocoa::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
-  NS_WARNING("GetNativeEvent NOT YET IMPLEMENTED");
-  
-#if 0
-	static EventRecord	theEvent;	// icky icky static (can't really do any better)
-
-	if (!mMacPump.get())
-		return NS_ERROR_NOT_INITIALIZED;
-
-	aRealEvent = mMacPump->GetEvent(theEvent);
-	aEvent = &theEvent;
-#endif
-	return NS_OK;
+  aEvent = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:nil inMode:NSEventTrackingRunLoopMode dequeue:YES];
+  aRealEvent = (aEvent != nil);
+  return NS_OK;
 }
 
 NS_METHOD
 nsAppShellCocoa::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
-  NS_WARNING("DispatchNativeEvent NOT YET IMPLEMENTED");
-  
-#if 0
-	if (!mMacPump.get())
-		return NS_ERROR_NOT_INITIALIZED;
-
-	mMacPump->DispatchEvent(aRealEvent, (EventRecord *) aEvent);
-#endif
-	return NS_OK;
+  if (aRealEvent)
+    [NSApp sendEvent:(NSEvent*)aEvent];
+  return NS_OK;
 }
-
-
