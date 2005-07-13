@@ -53,15 +53,16 @@
 class nsString;
 class nsVoidArray;
 
-// {7E4BB410-8740-11d3-967F-00105A1B1B76}
+// {0ae53c0f-8ea2-4916-bedc-717443c3e185}
 #define NS_FORMPROCESSOR_CID \
-{ 0x7e4bb410, 0x8740, 0x11d3, { 0x96, 0x7f, 0x0, 0x10, 0x5a, 0x1b, 0x1b, 0x76 } }
+{ 0x0ae53c0f, 0x8ea2, 0x4916, { 0xbe, 0xdc, 0x71, 0x74, 0x43, 0xc3, 0xe1, 0x85 } }
 
 #define NS_FORMPROCESSOR_CONTRACTID "@mozilla.org/layout/form-processor;1"
 
-// F11C1E20-873F-11d3-967F-00105A1B1B76
+// 4ff86376-6982-4f64-a683-a6ae4984afd7
 #define NS_IFORMPROCESSOR_IID      \
-{ 0xf11c1e20, 0x873f, 0x11d3, { 0x96, 0x7f, 0x0, 0x10, 0x5a, 0x1b, 0x1b, 0x76 } }
+{ 0x4ff86376, 0x6982, 0x4f64, { 0xa6, 0x83, 0xa6, 0xae, 0x49, 0x84, 0xaf, 0xd7 } }
+
 
 
 // XXX:In the future, we should examine combining this interface with nsIFormSubmitObserver.
@@ -87,8 +88,8 @@ public:
    *                   
    */
   NS_IMETHOD ProcessValue(nsIDOMHTMLElement *aElement, 
-                          const nsString& aName, 
-                          nsString& aValue) = 0;
+                          const nsAString& aName,
+                          nsAString& aValue) = 0;
 
   /* Provide content for a form element. This method provides a mechanism to provide 
    * content which comes from a source other than the document (i.e. a local database)
@@ -99,9 +100,9 @@ public:
    *                      the form element contains non-standard content.
    */
 
-  NS_IMETHOD ProvideContent(const nsString& aFormType, 
+  NS_IMETHOD ProvideContent(const nsAString& aFormType, 
                             nsVoidArray& aContent,
-                            nsString& aAttribute) = 0;
+                            nsAString& aAttribute) = 0;
 
 };
 
