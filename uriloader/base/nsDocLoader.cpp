@@ -311,6 +311,17 @@ nsDocLoader::Stop(void)
   if (mLoadGroup)
     rv = mLoadGroup->Cancel(NS_BINDING_ABORTED);
 
+  // Make sure to call DocLoaderIsEmpty now so that we reset mDocumentRequest,
+  // etc, as needed.  We could be getting into here from a subframe onload, in
+  // which case the call to DocLoaderIsEmpty() is coming but hasn't quite
+  // happened yet, Canceling the loadgroup did nothing (because it was already
+  // empty), and we're about to start a new load (which is what triggered this
+  // Stop() call).
+
+  // XXXbz If the child frame loadgroups were requests in mLoadgroup, I suspect
+  // we wouldn't need the call here....
+  DocLoaderIsEmpty();
+  
   return rv;
 }       
 

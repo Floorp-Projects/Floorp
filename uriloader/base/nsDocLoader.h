@@ -133,6 +133,9 @@ protected:
 
     virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);
 
+    // DocLoaderIsEmpty should be called whenever the docloader may be empty.
+    // This method is idempotent and does nothing if the docloader is not in
+    // fact empty.
     void DocLoaderIsEmpty();
 
     PRBool IsBusy();
