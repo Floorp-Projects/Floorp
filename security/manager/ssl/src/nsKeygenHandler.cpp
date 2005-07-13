@@ -310,12 +310,24 @@ GetSlotWithMechanism(PRUint32 aMechanism,
 
         // Allocate the slot name buffer //
         tokenNameList = NS_STATIC_CAST(PRUnichar**, nsMemory::Alloc(sizeof(PRUnichar *) * numSlots));
+        if (!tokenNameList) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto loser;
+        }
+
         i = 0;
         slotElement = PK11_GetFirstSafe(slotList);
         while (slotElement) {
-			tokenNameList[i] = ToNewUnicode(NS_ConvertUTF8toUCS2(PK11_GetTokenName(slotElement->slot)));
+            tokenNameList[i] = UTF8ToNewUnicode(nsDependentCString(PK11_GetTokenName(slotElement->slot)));
             slotElement = PK11_GetNextSafe(slotList, slotElement, PR_FALSE);
-            i++;
+            if (tokenNameList[i])
+                i++;
+            else {
+                // OOM. adjust numSlots so we don't free unallocated memory. 
+                numSlots = i;
+                rv = NS_ERROR_OUT_OF_MEMORY;
+                goto loser;
+            }
         }
 
 		/* Throw up the token list dialog and get back the token */
@@ -327,7 +339,10 @@ GetSlotWithMechanism(PRUint32 aMechanism,
 
     {
       nsPSMUITracker tracker;
-      if (tracker.isUIForbidden()) {
+      if (!tokenNameList || !*tokenNameList) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+      else if (tracker.isUIForbidden()) {
         rv = NS_ERROR_NOT_AVAILABLE;
       }
       else {
@@ -362,7 +377,7 @@ loser:
           PK11_FreeSlotList(slotList);
       }
       if (tokenNameList) {
-          nsMemory::Free(tokenNameList);
+          NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(numSlots, tokenNameList);
       }
       return rv;
 }
@@ -394,6 +409,7 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
     SECItem pkacItem;
     SECItem signedItem;
     CERTPublicKeyAndChallenge pkac;
+    pkac.challenge.data = nsnull;
     SECKeySizeChoiceInfo *choice = SECKeySizeChoiceList;
     nsIGeneratingKeypairInfoDialogs * dialogs;
     nsKeygenThread *KeygenRunnable = 0;
@@ -423,11 +439,16 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
     } else if (aKeyType.LowerCaseEqualsLiteral("dsa")) {
         char * end;
         pqgString = ToNewCString(aPqg);
+        if (!pqgString) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto loser;
+        }
+
         type = dsaKey;
         keyGenMechanism = CKM_DSA_KEY_PAIR_GEN;
         if (strcmp(pqgString, "null") == 0)
             goto loser;
-            str = pqgString;
+        str = pqgString;
         do {
             end = strchr(str, ',');
             if (end != nsnull)
@@ -540,8 +561,12 @@ found_match:
      * set up the PublicKeyAndChallenge data structure, then DER encode it
      */
     pkac.spki = spkiItem;
-	pkac.challenge.len = aChallenge.Length();
+    pkac.challenge.len = aChallenge.Length();
     pkac.challenge.data = (unsigned char *)ToNewCString(aChallenge);
+    if (!pkac.challenge.data) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto loser;
+    }
     
     sec_rv = DER_Encode(arena, &pkacItem, CERTPublicKeyAndChallengeTemplate, &pkac);
     if ( sec_rv != SECSuccess ) {
@@ -561,6 +586,10 @@ found_match:
      * Convert the signed public key and challenge into base64/ascii.
      */
     keystring = BTOA_DataToAscii(signedItem.data, signedItem.len);
+    if (!keystring) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto loser;
+    }
 
     CopyASCIItoUTF16(keystring, aOutPublicKey);
     nsCRT::free(keystring);
@@ -592,6 +621,12 @@ loser:
     }
     if (KeygenRunnable) {
       NS_RELEASE(KeygenRunnable);
+    }
+    if (pqgString) {
+        nsMemory::Free(pqgString);
+    }
+    if (pkac.challenge.data) {
+        nsMemory::Free(pkac.challenge.data);
     }
     return rv;
 }
