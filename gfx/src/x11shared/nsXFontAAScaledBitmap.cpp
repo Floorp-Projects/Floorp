@@ -414,7 +414,8 @@ nsXFontAAScaledBitmap::GetScaledGreyImage(const char *aChar,
       return PR_FALSE;
     }
     if (!scaled_image->Init()) {
-      NS_ASSERTION(0, "failed to create scaled_image");
+      NS_ASSERTION(0, "failed to initialize scaled_image");
+      delete scaled_image;
       return PR_FALSE;
     }
     scaled_image->SetSize(&glyphMetrics);
