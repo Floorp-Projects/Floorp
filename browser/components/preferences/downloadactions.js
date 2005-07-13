@@ -662,8 +662,11 @@ var gDownloadActionsWindow = {
   
   onSelectionChanged: function ()
   {
-    if (this._tree.view.rowCount == 0)
+    if (this._tree.view.rowCount == 0) {
+      this._removeButton.disabled = true;
+      this._editButton.disabled = true;
       return;
+    }
       
     var selection = this._tree.view.selection; 
     var selected = selection.count;
@@ -822,7 +825,10 @@ var gDownloadActionsWindow = {
       // Clear the display
       gDownloadActionsWindow._updateRowCount(view._filterSet.length);
       
-      view.selection.select(0);
+      // if the view is not empty then select the first item
+      if (view.rowCount > 0)
+        view.selection.select(0);
+
       document.getElementById("actionsIntro").value = gDownloadActionsWindow._bundle.getString("actionsFiltered");
       document.getElementById("clearFilter").disabled = false;
     }

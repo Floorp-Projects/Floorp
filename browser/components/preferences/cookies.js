@@ -845,7 +845,10 @@ var gCookiesWindow = {
       view._rowCount = view._filterSet.length;
       gCookiesWindow._tree.treeBoxObject.rowCountChanged(0, view.rowCount);
       
-      view.selection.select(0);
+      // if the view is not empty then select the first item
+      if (view.rowCount > 0)
+        view.selection.select(0);
+
       document.getElementById("cookiesIntro").value = gCookiesWindow._bundle.getString("cookiesFiltered");
       document.getElementById("clearFilter").disabled = false;
     }
