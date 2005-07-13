@@ -37,9 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDirectoryServiceDefs.h"
-#include "nsIDOM3Node.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLImageElement.h"
+#include "nsIImageLoadingContent.h"
+#include "nsIDocument.h"
+#include "nsIContent.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
@@ -207,49 +209,44 @@ nsMacShellService::SetDesktopBackground(nsIDOMElement* aElement,
 {
   // Note: We don't support aPosition on OS X.
 
-  nsCOMPtr<nsIDOMHTMLImageElement> image(do_QueryInterface(aElement));
-  if (!image)
-    return NS_ERROR_INVALID_ARG;
+  // Get the image URI:
+  nsresult rv;
+  nsCOMPtr<nsIImageLoadingContent> imageContent = do_QueryInterface(aElement,
+                                                                    &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIURI> imageURI;
+  rv = imageContent->GetCurrentURI(getter_AddRefs(imageURI));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // Get the image URL:
-  nsAutoString src;
-  image->GetSrc(src);
+  // We need the referer URI for nsIWebBrowserPersist::saveURI
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocument> doc;
+  doc = content->GetOwnerDoc();
+  if (!doc)
+    return NS_ERROR_FAILURE;
 
-  PRUint32 flags = nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION | 
-                   nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES |
-                   nsIWebBrowserPersist::PERSIST_FLAGS_FROM_CACHE;
-  nsCOMPtr<nsIWebBrowserPersist> wbp
-          (do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1"));
-  if (!wbp)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsIURI *docURI = doc->GetDocumentURI();
+  if (!docURI)
+    return NS_ERROR_FAILURE;
 
-  wbp->SetPersistFlags(flags);
-
-  nsAutoString baseURI;
-  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(aElement));
-  node->GetBaseURI(baseURI);
-
-  nsCOMPtr<nsIURI> imageURI, docURI;
-  NS_NewURI(getter_AddRefs(imageURI), src);
-  NS_NewURI(getter_AddRefs(docURI), baseURI);
-
-  if (!imageURI || !docURI)
-    return NS_ERROR_OUT_OF_MEMORY;
-
+  // Get the desired image file name
   nsCOMPtr<nsIURL> imageURL(do_QueryInterface(imageURI));
+  if (!imageURL) {
+    // XXXmano (bug 300293): Non-URL images (e.g. the data: protocol) are not
+    // yet supported. What filename should we take here?
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   nsCAutoString fileName;
   imageURL->GetFileName(fileName);
-
-  nsresult rv;
-  nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1",
-                                      &rv));
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsIProperties> fileLocator
+    (do_GetService("@mozilla.org/file/directory_service;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the current user's "Pictures" folder (That's ~/Pictures):
   fileLocator->Get(NS_OSX_PICTURE_DOCUMENTS_DIR, NS_GET_IID(nsILocalFile),
                    getter_AddRefs(mBackgroundFile));
-
   if (!mBackgroundFile)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -259,10 +256,20 @@ nsMacShellService::SetDesktopBackground(nsIDOMElement* aElement,
   // and add the imgage file name itself:
   mBackgroundFile->Append(fileNameUnicode);
 
+  // Download the image; the desktop background will be set in OnStateChange()
+  nsCOMPtr<nsIWebBrowserPersist> wbp
+    (do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 flags = nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION | 
+                   nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES |
+                   nsIWebBrowserPersist::PERSIST_FLAGS_FROM_CACHE;
+
+  wbp->SetPersistFlags(flags);
   wbp->SetProgressListener(this);
 
-  // Download the image; the desktop background will be set in OnStateChange()
-  return wbp->SaveURI(imageURI, nsnull, docURI, nsnull, nsnull, mBackgroundFile);
+  return wbp->SaveURI(imageURI, nsnull, docURI, nsnull, nsnull,
+                      mBackgroundFile);
 }
 
 NS_IMETHODIMP
