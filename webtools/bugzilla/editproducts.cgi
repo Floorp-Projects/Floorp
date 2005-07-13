@@ -169,6 +169,9 @@ sub CheckClassificationProductNew ($$)
     
     CheckClassificationNew($cl);
 
+    trick_taint($prod);
+    trick_taint($cl);
+
     my ($res) = $dbh->selectrow_array(q{
         SELECT products.name
         FROM products
