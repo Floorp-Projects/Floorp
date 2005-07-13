@@ -1232,8 +1232,17 @@ nsXFormsSubmissionElement::SerializeDataURLEncoded(nsIDOMNode *data,
     }
     else
     {
-      // XXX validate input?  take only the first character?
-      CopyUTF16toUTF8(temp, separator);
+      // Separator per spec can only be |;| or |&|
+      if (!temp.EqualsLiteral(";") && !temp.EqualsLiteral("&")) {
+        // invalid separator, report the error and abort submission.
+        // XXX: we probably should add a visual indicator
+        const PRUnichar *strings[] = { temp.get() };
+        nsXFormsUtils::ReportError(NS_LITERAL_STRING("invalidSeparator"),
+                                   strings, 1, mElement, mElement);
+        return NS_ERROR_ILLEGAL_VALUE;
+      } else {
+        CopyUTF16toUTF8(temp, separator);
+      }
     }
   }
 
@@ -1264,6 +1273,11 @@ nsXFormsSubmissionElement::SerializeDataURLEncoded(nsIDOMNode *data,
     NS_WARNING("unexpected submission format");
     return NS_ERROR_UNEXPECTED;
   }
+
+  // For HTML 4 compatibility sake, trailing separator is to be removed per an
+  // upcoming erratum.
+  if (StringEndsWith(uri, separator))
+    uri.Cut(uri.Length() - 1, 1);
 
   return NS_OK;
 }
