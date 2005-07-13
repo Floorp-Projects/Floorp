@@ -1326,8 +1326,6 @@ DocumentViewerImpl::Destroy()
 
   // If we were told to put ourselves into session history instead of destroy
   // the presentation, do that now.
-  PRBool updateHistory = (mSHEntry != nsnull);
-
   if (mSHEntry) {
     if (mPresShell)
       mPresShell->Freeze();
