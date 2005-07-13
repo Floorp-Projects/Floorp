@@ -417,7 +417,7 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
                                strings, 1, aContextNode, nsnull);
     return nsnull;
   }
-  
+
   nsCOMPtr<nsISupports> supResult;
   nsresult rv = expression->EvaluateWithContext(aContextNode,
                                                 aContextPosition,
@@ -793,7 +793,8 @@ nsXFormsUtils::GetSingleNodeBindingValue(nsIDOMElement* aElement,
 }
 
 /* static */ nsresult
-nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent)
+nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent,
+                             PRBool *aDefaultActionEnabled)
 {
   if (!aTarget)
     return NS_ERROR_FAILURE;
@@ -846,14 +847,19 @@ nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent)
   const EventData *data = &sXFormsEventsEntries[aEvent];
   event->InitEvent(NS_ConvertUTF8toUTF16(data->name),
                    data->canBubble, data->canCancel);
-  
+
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTarget);
   NS_ENSURE_STATE(target);
 
   SetEventTrusted(event, aTarget);
 
-  PRBool defaultActionEnabled;
-  return target->DispatchEvent(event, &defaultActionEnabled);
+  PRBool defaultActionEnabled = PR_TRUE;
+  nsresult rv = target->DispatchEvent(event, &defaultActionEnabled);
+
+  if (NS_SUCCEEDED(rv) && aDefaultActionEnabled)
+    *aDefaultActionEnabled = defaultActionEnabled;
+
+  return rv;
 }
 
 /* static */ nsresult

@@ -265,10 +265,12 @@ public:
     GetSingleNodeBindingValue(nsIDOMElement* aElement, nsString& aValue);
 
   /**
-   * Dispatch an XForms event. 
+   * Dispatch an XForms event.  aDefaultActionEnabled is returned indicating
+   * if the default action of the dispatched event was enabled.
    */
   static NS_HIDDEN_(nsresult)
-    DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent);
+    DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent,
+                  PRBool *aDefaultActionEnabled = nsnull);
 
   /**
    * Sets aEvent trusted if aRelatedNode is in chrome.

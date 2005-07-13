@@ -429,6 +429,7 @@ nsXFormsMessageElement::HandleAction(nsIDOMEvent* aEvent,
       // <help> is equivalent to a
       // <message level="modeless" ev:event="xforms-help" ev:propagate="stop>.
       aEvent->StopPropagation();
+      aEvent->PreventDefault();
       break;
     case eType_Alert:
       if (HandleInlineAlert(aEvent))

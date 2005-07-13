@@ -76,8 +76,18 @@ nsXFormsHintHelpListener::HandleEvent(nsIDOMEvent* aEvent)
     if (keyEvent) {
       PRUint32 code = 0;
       keyEvent->GetKeyCode(&code);
-      if (code == nsIDOMKeyEvent::DOM_VK_F1)
-        nsXFormsUtils::DispatchEvent(targetNode, eEvent_Help);
+      if (code == nsIDOMKeyEvent::DOM_VK_F1) {
+        PRBool defaultEnabled = PR_TRUE;
+        nsresult rv = nsXFormsUtils::DispatchEvent(targetNode, eEvent_Help,
+                                                   &defaultEnabled);
+
+        // If the xforms event's default behavior was disabled, prevent the DOM
+        // event's default action as well.  This means that the F1 key was
+        // handled (a help dialog was shown) and we don't want the browser to
+        // show it's help dialog.
+        if (NS_SUCCEEDED(rv) && !defaultEnabled)
+          aEvent->PreventDefault();
+      }
     } else {
       nsAutoString type;
       aEvent->GetType(type);
