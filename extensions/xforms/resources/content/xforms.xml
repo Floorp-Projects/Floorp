@@ -129,8 +129,8 @@
           var anoncontent =
             document.getAnonymousElementByAttribute(this, "anonid", "anoncontent");
 
-          if (this.delegate.hasBoundNode) {
-            anoncontent.setAttribute("style", "display:none");  
+          if (this.delegate.hasBoundNode || this.delegate.value != null) {
+            anoncontent.setAttribute("style", "display:none;");
           } else {
             anoncontent.removeAttribute("style");
           }
