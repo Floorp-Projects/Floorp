@@ -890,18 +890,18 @@ var Fp = Function.prototype;
 var REp = RegExp.prototype;
 
 if (!('__call__' in Fp)) {
-    Fp.__call__ = function (t, a, x) {
+    Fp.__defineProperty__('__call__', function (t, a, x) {
         // Curse ECMA yet again!
         a = Array.prototype.splice.call(a, 0, a.length);
         return this.apply(t, a);
-    };
+    }, true, true, true);
 
-    REp.__call__ = function (t, a, x) {
+    REp.__defineProperty__('__call__', function (t, a, x) {
         a = Array.prototype.splice.call(a, 0, a.length);
         return this.exec.apply(this, a);
-    };
+    }, true, true, true);
 
-    Fp.__construct__ = function (a, x) {
+    Fp.__defineProperty__('__construct__', function (a, x) {
         switch (a.length) {
           case 0:
             return new this();
@@ -921,14 +921,14 @@ if (!('__call__' in Fp)) {
             return new this(a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
         }
         throw "PANIC: too many arguments to constructor";
-    };
+    }, true, true, true);
 
     // Since we use native functions such as Date along with host ones such
     // as global.eval, we want both to be considered instances of the native
     // Function constructor.
-    Fp.__hasInstance__ = function (v) {
+    Fp.__defineProperty__('__hasInstance__', function (v) {
         return v instanceof Function || v instanceof global.Function;
-    };
+    }, true, true, true);
 }
 
 function thunk(f, x) {
