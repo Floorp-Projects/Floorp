@@ -335,7 +335,7 @@ bin\res\langGroups.properties
 bin\res\language.properties
 bin\res\wincharset.properties
 bin\res\entityTables\*
-bin\dtd\xhtml11.dtd
+bin\res\dtd\xhtml11.dtd
 
 ; editor resource files
 bin\res\EditorOverride.css
