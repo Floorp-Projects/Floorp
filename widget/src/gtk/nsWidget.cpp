@@ -524,11 +524,11 @@ NS_IMETHODIMP nsWidget::SetZIndex(PRInt32 aZIndex)
 
     nsBaseWidget::SetZIndex(aZIndex);
 
-    if (GetPrevSibling() == oldPrev) {
-        return NS_OK;
+    if (GetPrevSibling() != oldPrev) {
+        ResetZOrder();
     }
 
-    ResetZOrder();
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
