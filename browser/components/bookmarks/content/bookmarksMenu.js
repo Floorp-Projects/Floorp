@@ -1069,7 +1069,10 @@ var BookmarksToolbarRDFObserver =
   {
     this.setOverflowTimeout(aSource, aProperty);
   },
-  onChange: function (aDataSource, aSource, aProperty, aOldTarget, aNewTarget) {},
+  onChange: function (aDataSource, aSource, aProperty, aOldTarget, aNewTarget)
+  {
+    this.setOverflowTimeout(aSource, aProperty);
+  },
   onMove: function (aDataSource, aOldSource, aNewSource, aProperty, aTarget) {},
   onBeginUpdateBatch: function (aDataSource) {},
   onEndUpdateBatch: function (aDataSource)
@@ -1082,8 +1085,7 @@ var BookmarksToolbarRDFObserver =
   {
     if (this._overflowTimerInEffect)
       return;
-    if (aSource != BMSVC.getBookmarksToolbarFolder()
-        || aProperty.Value == gNC_NS+"LastModifiedDate")
+    if (aProperty.Value == gWEB_NS+"LastModifiedDate")
       return;
     this._overflowTimerInEffect = true;
     setTimeout(BookmarksToolbar.resizeFunc, 0, null);
