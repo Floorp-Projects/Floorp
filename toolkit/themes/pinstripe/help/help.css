@@ -78,11 +78,11 @@ menubutton:not([disabled="true"]):hover:active {
 #help-sidebar { min-width: 15em; width: 20em; max-width: 25em; }
 
 #help-back-button { -moz-image-region: rect(0px 32px 32px 0px); }
-#help-back-button:hover:active { -moz-image-region: rect(32px 32px 64px 0px); }
+#help-back-button:not([disabled="true"]):hover:active { -moz-image-region: rect(32px 32px 64px 0px); }
 #help-back-button[disabled="true"] { -moz-image-region: rect(64px 32px 96px 0px); }
 
 #help-forward-button { -moz-image-region: rect(0px 64px 32px 32px); }
-#help-forward-button:hover:active { -moz-image-region: rect(32px 64px 64px 32px); }
+#help-forward-button:not([disabled="true"]):hover:active { -moz-image-region: rect(32px 64px 64px 32px); }
 #help-forward-button[disabled="true"] { -moz-image-region: rect(64px 64px 96px 32px); }
 
 #help-home-button { -moz-image-region: rect(0px 160px 32px 128px); }
