@@ -32,6 +32,7 @@
 #   Alec Flett <alecf@netscape.com>
 #   Asaf Romano <mozilla.mano@sent.com>
 #   Jason Barnabe <jason_barnabe@fastmail.fm>
+#   Peter Parente <parente@cs.unc.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -215,8 +216,10 @@ const gPopupBlockerObserver = {
         var popupCount = gBrowser.selectedBrowser.pageReport.length;
 #ifdef XP_WIN
         var popupButtonText = bundle_browser.getString("popupWarningButton");
+        var popupButtonAccesskey = bundle_browser.getString("popupWarningButton.accesskey");
 #else
         var popupButtonText = bundle_browser.getString("popupWarningButtonUnix");
+        var popupButtonAccesskey = bundle_browser.getString("popupWarningButtonUnix.accesskey");
 #endif
         if (popupCount > 1)
           message = bundle_browser.getFormattedString("popupWarningMultiple", [brandShortName, popupCount]);
@@ -224,7 +227,8 @@ const gPopupBlockerObserver = {
           message = bundle_browser.getFormattedString("popupWarning", [brandShortName]);
 
         gBrowser.showMessage(gBrowser.selectedBrowser, "chrome://browser/skin/Info.png",
-                             message, popupButtonText, null, null, "blockedPopupOptions", "top", true);
+                             message, popupButtonText, popupButtonAccesskey, null, null,
+                             "blockedPopupOptions", "top", true);
       }
     }
     else
@@ -447,7 +451,7 @@ const gXPInstallObserver = {
       if (browser) {
         var host = browser.docShell.QueryInterface(Components.interfaces.nsIWebNavigation).currentURI.host;
         var brandShortName = brandBundle.getString("brandShortName");
-        var iconURL, messageKey, buttonKey;
+        var iconURL, messageKey, buttonKey, buttonAccesskeyKey;
         if (aData == "install-chrome") {
           // XXXben - use regular software install warnings for now until we can
           // properly differentiate themes. It's likely in fact that themes won't
@@ -455,28 +459,32 @@ const gXPInstallObserver = {
           iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
           messageKey = "xpinstallWarning";
           buttonKey = "xpinstallWarningButton";
+          buttonAccesskeyKey = "xpinstallWarningButton.accesskey";
         }
         else {
           iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
           messageKey = "xpinstallWarning";
           buttonKey = "xpinstallWarningButton";
+          buttonAccesskeyKey = "xpinstallWarningButton.accesskey";
         }
-        var messageString, buttonString;
+        var messageString, buttonString, buttonAccesskeyString;
         if (!gPrefService.getBoolPref("xpinstall.enabled")) {
           messageString = browserBundle.getFormattedString("xpinstallDisabledWarning",
                                                            [brandShortName, host]);
-          buttonString = browserBundle.getString("xpinstallDisabledWarningButton");
+          buttonKey = browserBundle.getString("xpinstallDisabledWarningButton.accesskey");
+          buttonAccesskeyString = browserBundle.getString("xpinstallDisabledWarningButton");
           getBrowser().showMessage(browser, iconURL, messageString, buttonString,
-                                   null, "xpinstall-install-edit-prefs",
+                                   buttonAccesskeyString, null, "xpinstall-install-edit-prefs",
                                    null, "top", false);
         }
         else {
           messageString = browserBundle.getFormattedString(messageKey, [brandShortName, host]);
           buttonString = browserBundle.getString(buttonKey);
+          buttonAccesskeyString = browserBundle.getString(buttonAccesskeyKey);
           webNav = shell.QueryInterface(Components.interfaces.nsIWebNavigation);
           getBrowser().showMessage(browser, iconURL, messageString, buttonString,
-                                   shell, "xpinstall-install-edit-permissions",
-                                   null, "top", false);
+                                   buttonAccesskeyString, shell,
+                                   "xpinstall-install-edit-permissions", null, "top", false);
         }
       }
       break;
@@ -5867,8 +5875,9 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   var bundle_browser = document.getElementById("bundle_browser");
   var messageString = bundle_browser.getString("missingpluginsMessage.title");
   var buttonString = bundle_browser.getString("missingpluginsMessage.button.label");
+  var buttonAccesskeyString = bundle_browser.getString("missingpluginsMessage.button.accesskey");
 
-  tabbrowser.showMessage(browser, iconURL, messageString, buttonString,
+  tabbrowser.showMessage(browser, iconURL, messageString, buttonString, buttonAccesskeyString,
                          "", "missing-plugin", null, "top", true);
 }
 
