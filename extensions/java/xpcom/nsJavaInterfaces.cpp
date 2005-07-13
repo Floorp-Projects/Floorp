@@ -69,18 +69,15 @@ InitEmbedding_Impl(JNIEnv* env, jobject aMozBinDirectory,
   }
 
   // create nsAppFileLocProviderProxy from given Java object
-  nsAppFileLocProviderProxy* provider = nsnull;
+  nsCOMPtr<nsIDirectoryServiceProvider> provider;
   if (aAppFileLocProvider) {
-    provider = new nsAppFileLocProviderProxy(aAppFileLocProvider);
-    if (!provider)
-      return NS_ERROR_OUT_OF_MEMORY;
+    rv = NS_NewAppFileLocProviderProxy(aAppFileLocProvider,
+                                       getter_AddRefs(provider));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // init Gecko
   rv = NS_InitEmbedding(directory, provider);
-  if (provider) {
-    delete provider;
-  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   // init Event Queue
