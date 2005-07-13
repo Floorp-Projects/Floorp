@@ -61,7 +61,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoadViewPartialSource();"
         onunload="onUnloadViewPartialSource();"
-        contenttitlesetting="false"
+        contenttitlesetting="true"
         title="&mainWindow.title;" 
         titlemodifier="&mainWindow.titlemodifier;" 
         titlepreface=""
@@ -79,6 +79,7 @@
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
 
+  <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
   <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>
 
   <command id="cmd_savePage" oncommand="ViewSourceSavePage();"/>
