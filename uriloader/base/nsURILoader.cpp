@@ -318,16 +318,39 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
       if (contentEncoding.IsEmpty()) {
         // OK, this is initial dispatch of an HTTP response and its Content-Type
         // header is exactly "text/plain".  We need to check whether this is
-        // really text....
-        LOG(("  Possibly bogus text/plain; resetting type to " APPLICATION_MAYBE_TEXT));
-        httpChannel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_MAYBE_TEXT));
+        // really text....  Note that some of our listeners will actually
+        // accept all types, including the APPLICATION_MAYBE_TEXT internal
+        // type, so we need to call ConvertData here manually instead of
+        // relying on DispatchContent to do it.
+        LOG(("  Possibly bogus text/plain; trying to sniff for real type"));
+        rv = ConvertData(request, m_contentListener,
+                         NS_LITERAL_CSTRING(APPLICATION_MAYBE_TEXT),
+                         NS_LITERAL_CSTRING("*/*"));
+        if (NS_FAILED(rv)) {
+          // We failed to convert.  Just go ahead and handle as the original
+          // type.  If ConvertData happened to set our m_targetStreamListener,
+          // we don't want it!
+          m_targetStreamListener = nsnull;
+        }
+        else {
+          LOG((APPLICATION_MAYBE_TEXT " converter taking over now"));
+        }
       }
     }
   }
-  
-  rv = DispatchContent(request, aCtxt);
 
-  LOG(("  After dispatch, m_targetStreamListener: 0x%p", m_targetStreamListener.get()));
+  // If we sniffed text/plain above, m_targetStreamListener may already be
+  // non-null.
+  if (!m_targetStreamListener) {
+    rv = DispatchContent(request, aCtxt);
+  }
+
+  LOG(("  After dispatch, m_targetStreamListener: 0x%p, rv: 0x%08X", m_targetStreamListener.get(), rv));
+
+  NS_ASSERTION(NS_SUCCEEDED(rv) || !m_targetStreamListener,
+               "Must not have an m_targetStreamListener with a failure return!");
+
+  NS_ENSURE_SUCCESS(rv, rv);
   
   if (m_targetStreamListener)
     rv = m_targetStreamListener->OnStartRequest(request, aCtxt);
@@ -392,6 +415,15 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     rv = aChannel->GetContentType(mContentType);
     if (NS_FAILED(rv)) return rv;
     LOG(("  Got type from channel: '%s'", mContentType.get()));
+  }
+
+  PRBool isGuessFromExt =
+    mContentType.LowerCaseEqualsASCII(APPLICATION_GUESS_FROM_EXT);
+  if (isGuessFromExt) {
+    // Reset to application/octet-stream for now; no one other than the
+    // external helper app service should see APPLICATION_GUESS_FROM_EXT.
+    mContentType = APPLICATION_OCTET_STREAM;
+    aChannel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
   }
 
   // Check whether the data should be forced to be handled externally.  This
@@ -593,6 +625,11 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     request->GetLoadFlags(&loadFlags);
     request->SetLoadFlags(loadFlags | nsIChannel::LOAD_RETARGETED_DOCUMENT_URI
                                     | nsIChannel::LOAD_TARGETED);
+
+    if (isGuessFromExt) {
+      mContentType = APPLICATION_GUESS_FROM_EXT;
+      aChannel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_GUESS_FROM_EXT));
+    }
 
     rv = helperAppService->DoContent(mContentType,
                                      request,
