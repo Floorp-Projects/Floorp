@@ -1079,9 +1079,6 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   SetIsCreatingPrintPreview(PR_TRUE);
   SetIsPrintPreview(PR_TRUE);
 
-  // Very important! Turn Off scripting
-  TurnScriptingOn(PR_FALSE);
-
   // Get the currently focused window and cache it
   // because the Print Dialog will "steal" focus and later when you try
   // to get the currently focused windows it will be NULL
@@ -1096,7 +1093,6 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
     if (!mPrt->mPrintDocList) {
       SetIsCreatingPrintPreview(PR_FALSE);
       SetIsPrintPreview(PR_FALSE);
-      TurnScriptingOn(PR_TRUE);
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else {
@@ -1233,6 +1229,9 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   PRBool notifyOnInit = PR_FALSE;
   ShowPrintProgress(PR_FALSE, notifyOnInit);
 
+  // Very important! Turn Off scripting
+  TurnScriptingOn(PR_FALSE);
+  
   if (!notifyOnInit) {
     rv = FinishPrintPreview();
   } else {
@@ -4411,14 +4410,30 @@ nsPrintEngine::ShowDocList(PRBool aShow)
 void
 nsPrintEngine::TurnScriptingOn(PRBool aDoTurnOn)
 {
-  NS_ASSERTION(mDocument, "We MUST have a document.");
+  nsPrintData* prt = mPrt;
+#ifdef NS_PRINT_PREVIEW
+  if (!prt) {
+    prt = mPrtPreview;
+  }
+#endif
+  if (!prt) {
+    return;
+  }
 
-  // get the script global object
-  nsIScriptGlobalObject *scriptGlobalObj = mDocument->GetScriptGlobalObject();
-  if (scriptGlobalObj) {
-    nsIScriptContext *scx = scriptGlobalObj->GetContext();
-    NS_ASSERTION(scx, "Can't get nsIScriptContext");
-    scx->SetScriptsEnabled(aDoTurnOn, PR_TRUE);
+  NS_ASSERTION(mDocument, "We MUST have a document.");
+  // First, get the script global object from the document...
+
+  for (PRInt32 i=0;i<prt->mPrintDocList->Count();i++) {
+    nsPrintObject* po = (nsPrintObject*)prt->mPrintDocList->ElementAt(i);
+    NS_ASSERTION(po, "nsPrintObject can't be null!");
+    
+    // get the script global object
+    nsIScriptGlobalObject *scriptGlobalObj = po->mDocument->GetScriptGlobalObject();
+    if (scriptGlobalObj) {
+      nsIScriptContext *scx = scriptGlobalObj->GetContext();
+      NS_ASSERTION(scx, "Can't get nsIScriptContext");
+      scx->SetScriptsEnabled(aDoTurnOn, PR_TRUE);
+    }
   }
 }
 
