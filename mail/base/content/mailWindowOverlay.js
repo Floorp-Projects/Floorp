@@ -1329,6 +1329,7 @@ function MsgDownloadSelected()
 
 function MsgMarkThreadAsRead()
 {
+  ClearPendingReadTimer();
   gDBView.doCommand(nsMsgViewCommandType.markThreadRead);
 }
 
@@ -2253,6 +2254,7 @@ function MsgIsNotAScam()
 
 function MarkCurrentMessageAsRead()
 {
+  ClearPendingReadTimer();
   gDBView.doCommand(nsMsgViewCommandType.markMessagesRead);
 }
 
@@ -2307,7 +2309,10 @@ function OnMsgLoaded(aUrl)
     {
       var wintype = document.firstChild.getAttribute('windowtype');
       if (markReadOnADelay && wintype == "mail:3pane") // only use the timer if viewing using the 3-pane preview pane and the user has set the pref
+      {
+        ClearPendingReadTimer();
         gMarkViewedMessageAsReadTimer = setTimeout(MarkCurrentMessageAsRead, gPrefBranch.getIntPref("mailnews.mark_message_read.delay.interval") * 1000);
+      }
       else
         MarkCurrentMessageAsRead();
     }
@@ -2352,7 +2357,7 @@ function OnMsgLoaded(aUrl)
 
         res = outputPFC.copyMessages(currentMsgFolder, messages, false /*isMove*/, msgWindow /* nsIMsgWindow */, null /* listener */, false /* isFolder */, false /*allowUndo*/ );
       }
-     }
+   }
 }
 
 //

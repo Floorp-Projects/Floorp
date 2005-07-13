@@ -444,6 +444,7 @@ function SaveAsTemplate(uri, folder)
 
 function MarkSelectedMessagesRead(markRead)
 {
+  ClearPendingReadTimer();
   gDBView.doCommand(markRead ? nsMsgViewCommandType.markMessagesRead : nsMsgViewCommandType.markMessagesUnread);
 }
 

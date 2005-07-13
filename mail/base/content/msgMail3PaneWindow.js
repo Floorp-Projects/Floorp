@@ -1285,6 +1285,7 @@ function ClearMessagePane()
     // hide the message header view AND the message pane...
     HideMessageHeaderPane();
     gMessageNotificationBar.clearMsgNotifications();
+	ClearPendingReadTimer();
   }
 }
 

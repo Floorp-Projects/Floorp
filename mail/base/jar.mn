@@ -1,6 +1,5 @@
 messenger.jar:
 % content messenger %content/messenger/ xpcnativewrappers=yes
-*   content/messenger/mail3PaneWindowVertLayout.xul (content/mail3PaneWindowVertLayout.xul)
     content/messenger/mailTasksOverlay.xul          (content/mailTasksOverlay.xul)
 *   content/messenger/mailWindow.js                 (content/mailWindow.js)
 *   content/messenger/mailWindowOverlay.js          (content/mailWindowOverlay.js)
