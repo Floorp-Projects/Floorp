@@ -71,8 +71,7 @@
 /*
  * The HTML implementation of nsIAccessibleSelectable.
  */
-class nsHTMLSelectableAccessible : public nsAccessibleWrap,
-                                   public nsIAccessibleSelectable
+class nsHTMLSelectableAccessible : public nsAccessibleWrap
 {
 public:
 

@@ -92,6 +92,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsITimer.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsArray.h"
 
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
@@ -105,7 +106,52 @@
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-NS_IMPL_ISUPPORTS_INHERITED2(nsAccessible, nsAccessNode, nsIAccessible, nsPIAccessible)
+NS_IMPL_ADDREF_INHERITED(nsAccessible, nsAccessNode)
+NS_IMPL_RELEASE_INHERITED(nsAccessible, nsAccessNode)
+
+nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  // Custom-built QueryInterface() knows when we support nsIAccessibleSelectable
+  // based on xhtml2:role and waistate:multiselect
+  *aInstancePtr = nsnull;
+  
+  if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIAccessible*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  if(aIID.Equals(NS_GET_IID(nsPIAccessible))) {
+    *aInstancePtr = NS_STATIC_CAST(nsPIAccessible*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsIAccessibleSelectable))) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    if (!content) {
+      return NS_ERROR_FAILURE; // This accessible has been shut down
+    }
+    if (!content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
+                         nsAccessibilityAtoms::role)) {
+      // If we have an XHTML role attribute present and the
+      // waistate multiselect attribute not empty or false, then we need
+      // to support nsIAccessibleSelectable
+      // If either attribute (role or multiselect) change, then we'll
+      // destroy this accessible so that we can follow COM identity rules.
+      nsAutoString multiSelect;
+      content->GetAttr(kNameSpaceID_StatesWAI_Unofficial,
+                       nsAccessibilityAtoms::multiselect,
+                       multiSelect);
+      if (!multiSelect.IsEmpty() && !multiSelect.EqualsLiteral("false")) {
+        *aInstancePtr = NS_STATIC_CAST(nsIAccessibleSelectable*, this);
+        NS_ADDREF_THIS();
+      }
+    }
+  }
+
+  return nsAccessNode::QueryInterface(aIID, aInstancePtr);
+}
 
 nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): nsAccessNodeWrap(aNode, aShell), 
   mParent(nsnull), mFirstChild(nsnull), mNextSibling(nsnull), mRoleMapEntry(nsnull)
@@ -968,12 +1014,73 @@ nsIFrame* nsAccessible::GetBoundsFrame()
   return GetFrame();
 }
 
+already_AddRefed<nsIAccessible>
+nsAccessible::GetMultiSelectFor(nsIDOMNode *aNode)
+{
+  NS_ENSURE_TRUE(aNode, nsnull);
+  nsCOMPtr<nsIAccessibilityService> accService =
+    do_GetService("@mozilla.org/accessibilityService;1");
+  NS_ENSURE_TRUE(accService, nsnull);
+  nsCOMPtr<nsIAccessible> accessible;
+  accService->GetAccessibleFor(aNode, getter_AddRefs(accessible));
+  if (!accessible) {
+    return nsnull;
+  }
+
+  PRUint32 state;
+  accessible->GetFinalState(&state);
+  if (0 == (state & STATE_SELECTABLE)) {
+    return nsnull;
+  }
+
+  PRUint32 containerRole;
+  while (0 == (state & STATE_MULTISELECTABLE)) {
+    nsIAccessible *current = accessible;
+    current->GetParent(getter_AddRefs(accessible));
+    if (!accessible || (NS_SUCCEEDED(accessible->GetFinalRole(&containerRole)) &&
+                        containerRole == ROLE_PANE)) {
+      return nsnull;
+    }
+    accessible->GetFinalState(&state);
+  }
+  nsIAccessible *returnAccessible = nsnull;
+  accessible.swap(returnAccessible);
+  return returnAccessible;
+}
+
+nsresult nsAccessible::SetNonTextSelection(PRBool aSelect)
+{
+  nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(mDOMNode);
+  if (!multiSelect) {
+    return aSelect ? TakeFocus() : NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(content, "Called for dead accessible");
+
+  // For DHTML widgets use WAI namespace
+  PRUint32 nameSpaceID = mRoleMapEntry ? kNameSpaceID_StatesWAI_Unofficial : kNameSpaceID_None;
+  if (aSelect) {
+    return content->SetAttr(nameSpaceID, nsAccessibilityAtoms::selected, NS_LITERAL_STRING("true"), PR_TRUE);
+  }
+  return content->UnsetAttr(nameSpaceID, nsAccessibilityAtoms::selected, PR_TRUE);
+}
+
 /* void removeSelection (); */
 NS_IMETHODIMP nsAccessible::RemoveSelection()
 {
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUint32 state;
+  GetFinalState(&state);
+  if (state & STATE_SELECTABLE) {
+    return SetNonTextSelection(PR_TRUE);
+  }
+
   nsCOMPtr<nsISelectionController> control(do_QueryReferent(mWeakShell));
   if (!control) {
-     return NS_ERROR_FAILURE;  
+    return NS_ERROR_FAILURE;  
   }
 
   nsCOMPtr<nsISelection> selection;
@@ -996,9 +1103,20 @@ NS_IMETHODIMP nsAccessible::RemoveSelection()
 /* void takeSelection (); */
 NS_IMETHODIMP nsAccessible::TakeSelection()
 {
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUint32 state;
+  GetFinalState(&state);
+  if (state & STATE_SELECTABLE) {
+    return SetNonTextSelection(PR_TRUE);
+  }
+
   nsCOMPtr<nsISelectionController> control(do_QueryReferent(mWeakShell));
-  if (!control)
+  if (!control) {
     return NS_ERROR_FAILURE;  
+  }
  
   nsCOMPtr<nsISelection> selection;
   nsresult rv = control->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
@@ -2065,6 +2183,177 @@ nsresult nsAccessible::DoCommand()
   return gDoCommandTimer->InitWithFuncCallback(DoCommandCallback,
                                                (void*)mDOMNode, 0,
                                                nsITimer::TYPE_ONE_SHOT);
+}
+
+already_AddRefed<nsIAccessible>
+nsAccessible::GetNextWithState(nsIAccessible *aStart, PRUint32 matchState)
+{
+  // Return the next descendant that matches one of the states in matchState
+  // Uses depth first search
+  NS_ASSERTION(matchState, "GetNextWithState() not called with a state to match");
+  NS_ASSERTION(aStart, "GetNextWithState() not called with an accessible to start with");
+  nsCOMPtr<nsIAccessible> look, current = aStart;
+  PRUint32 state = 0;
+  while (0 == (state & matchState)) {
+    current->GetFirstChild(getter_AddRefs(look));
+    while (!look) {
+      if (current == this) {
+        return nsnull; // At top of subtree
+      }
+      current->GetNextSibling(getter_AddRefs(look));
+      if (!look) {
+        current->GetParent(getter_AddRefs(look));
+        current.swap(look);
+        continue;
+      }
+    }
+    current.swap(look);
+    current->GetFinalState(&state);
+  }
+
+  nsIAccessible *returnAccessible = nsnull;
+  current.swap(returnAccessible);
+
+  return current;
+}
+
+// nsIAccessibleSelectable
+NS_IMETHODIMP nsAccessible::GetSelectedChildren(nsIArray **aSelectedAccessibles)
+{
+  *aSelectedAccessibles = nsnull;
+
+  nsCOMPtr<nsIMutableArray> selectedAccessibles;
+  NS_NewArray(getter_AddRefs(selectedAccessibles));
+  if (!selectedAccessibles)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsIAccessible> selected = this;
+  while ((selected = GetNextWithState(selected, STATE_SELECTED)) != nsnull) {
+    selectedAccessibles->AppendElement(selected, PR_FALSE);
+  }
+
+  PRUint32 length = 0;
+  selectedAccessibles->GetLength(&length); 
+  if (length) { // length of nsIArray containing selected options
+    *aSelectedAccessibles = selectedAccessibles;
+    NS_ADDREF(*aSelectedAccessibles);
+  }
+
+  return NS_OK;
+}
+
+// return the nth selected descendant nsIAccessible object
+NS_IMETHODIMP nsAccessible::RefSelection(PRInt32 aIndex, nsIAccessible **aSelected)
+{
+  *aSelected = nsnull;
+  if (aIndex < 0) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIAccessible> selected = this;
+  PRInt32 count = 0;
+  while (count ++ <= aIndex) {
+    selected = GetNextWithState(selected, STATE_SELECTED);
+    if (!selected) {
+      return NS_ERROR_FAILURE; // aIndex out of range
+    }
+  }
+  NS_IF_ADDREF(*aSelected = selected);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessible::GetSelectionCount(PRInt32 *aSelectionCount)
+{
+  *aSelectionCount = 0;
+  nsCOMPtr<nsIAccessible> selected = this;
+  while ((selected = GetNextWithState(selected, STATE_SELECTED)) != nsnull) {
+    ++ *aSelectionCount;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessible::AddChildToSelection(PRInt32 aIndex)
+{
+  // Tree views and other container widgets which may have grandchildren should
+  // implement a selection methods for their specific interfaces, because being
+  // able to deal with selection on a per-child basis would not be enough.
+
+  NS_ENSURE_TRUE(aIndex >= 0, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIAccessible> child;
+  GetChildAt(aIndex, getter_AddRefs(child));
+
+  PRUint32 state;
+  nsresult rv = child->GetFinalState(&state);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!(state & STATE_SELECTABLE)) {
+    return NS_OK;
+  }
+
+  return child->TakeSelection();
+}
+
+NS_IMETHODIMP nsAccessible::RemoveChildFromSelection(PRInt32 aIndex)
+{
+  // Tree views and other container widgets which may have grandchildren should
+  // implement a selection methods for their specific interfaces, because being
+  // able to deal with selection on a per-child basis would not be enough.
+
+  NS_ENSURE_TRUE(aIndex >= 0, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIAccessible> child;
+  GetChildAt(aIndex, getter_AddRefs(child));
+
+  PRUint32 state;
+  nsresult rv = child->GetFinalState(&state);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!(state & STATE_SELECTED)) {
+    return NS_OK;
+  }
+
+  return child->RemoveSelection();
+}
+
+NS_IMETHODIMP nsAccessible::IsChildSelected(PRInt32 aIndex, PRBool *aIsSelected)
+{
+  // Tree views and other container widgets which may have grandchildren should
+  // implement a selection methods for their specific interfaces, because being
+  // able to deal with selection on a per-child basis would not be enough.
+
+  *aIsSelected = PR_FALSE;
+  NS_ENSURE_TRUE(aIndex >= 0, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIAccessible> child;
+  GetChildAt(aIndex, getter_AddRefs(child));
+
+  PRUint32 state;
+  nsresult rv = child->GetFinalState(&state);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (state & STATE_SELECTED) {
+    *aIsSelected = PR_TRUE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessible::ClearSelection()
+{
+  nsCOMPtr<nsIAccessible> selected = this;
+  while ((selected = GetNextWithState(selected, STATE_SELECTED)) != nsnull) {
+    selected->RemoveSelection();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessible::SelectAllSelection(PRBool *_retval)
+{
+  nsCOMPtr<nsIAccessible> selectable = this;
+  while ((selectable = GetNextWithState(selectable, STATE_SELECTED)) != nsnull) {
+    selectable->TakeSelection();
+  }
+  return NS_OK;
 }
 
 #ifdef MOZ_ACCESSIBILITY_ATK

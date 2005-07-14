@@ -43,6 +43,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsIAccessible.h"
 #include "nsPIAccessible.h"
+#include "nsIAccessibleSelectable.h"
 #include "nsIDOMNodeList.h"
 #include "nsINameSpaceManager.h"
 #include "nsWeakReference.h"
@@ -108,7 +109,8 @@ struct nsRoleMapEntry
 
 class nsAccessible : public nsAccessNodeWrap, 
                      public nsIAccessible, 
-                     public nsPIAccessible
+                     public nsPIAccessible,
+                     public nsIAccessibleSelectable
 {
 public:
   // to eliminate the confusion of "magic numbers" -- if ( 0 ){ foo; }
@@ -122,6 +124,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLE
   NS_DECL_NSPIACCESSIBLE
+  NS_DECL_NSIACCESSIBLESELECTABLE
 
   // nsIAccessNode
   NS_IMETHOD Init();
@@ -173,6 +176,11 @@ protected:
   void GetScreenOrigin(nsPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect);
   nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString);
   virtual void CacheChildren(PRBool aWalkAnonContent);
+
+  // Selection helpers
+  already_AddRefed<nsIAccessible> GetNextWithState(nsIAccessible *aStart, PRUint32 matchState);
+  static already_AddRefed<nsIAccessible> GetMultiSelectFor(nsIDOMNode *aNode);
+  nsresult SetNonTextSelection(PRBool aSelect);
 
   // For accessibles that have actions
   static void DoCommandCallback(nsITimer *aTimer, void *aClosure);
