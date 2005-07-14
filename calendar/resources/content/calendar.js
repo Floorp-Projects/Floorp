@@ -668,6 +668,26 @@ function editCalendarDialog(event)
     openCalendarProperties(document.popupNode.calendar, null);
 }
 
+function calendarListboxDoubleClick(event) {
+    if(event.target.calendar)
+        openCalendarProperties(event.target.calendar, null);
+    else
+        openCalendarWizard();
+}
+
+function checkCalListTarget() {
+    if(!document.popupNode.calendar) {
+        document.getElementById("calpopup-edit").setAttribute("disabled", "true");
+        document.getElementById("calpopup-delete").setAttribute("disabled", "true");
+        document.getElementById("calpopup-publish").setAttribute("disabled", "true");
+    }
+    else {
+        document.getElementById("calpopup-edit").removeAttribute("disabled");
+        document.getElementById("calpopup-delete").removeAttribute("disabled");
+        document.getElementById("calpopup-publish").removeAttribute("disabled");
+    }
+}
+
 function deleteCalendar(event)
 {
     var cal = document.popupNode.calendar

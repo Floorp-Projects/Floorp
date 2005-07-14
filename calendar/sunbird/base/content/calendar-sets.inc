@@ -72,12 +72,9 @@
   <command id="modify_todo_command" oncommand="modifyToDoCommand( event )"/>
   <command id="delete_todo_command" oncommand="deleteToDoCommand()" disabled="true"/>
 
-  <command id="new_local_calendar_command" oncommand="newCalendarDialog()"/>
-  <command id="open_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchOpenCalendarFileDialog()"/>
-  <command id="edit_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>
-  <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddRemoteCalendarDialog()"/>
-  <command id="edit_server_command" oncommand="gCalendarWindow.calendarManager.launchEditRemoteCalendarDialog()"/>
-  <command id="delete_server_command" oncommand="deleteCalendar(event)"/>
+  <command id="new_calendar_command" oncommand="newCalendarDialog()"/>
+  <command id="edit_calendar_command" oncommand="editCalendarDialog(event)"/>
+  <command id="delete_calendar_command" oncommand="deleteCalendar(event)"/>
   <command id="find_new_calendar_command" oncommand="goFindNewCalendars()"/>
 
   <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
@@ -125,7 +122,7 @@
   <key id="new_journal_key"      key="J"               modifiers="accel"/>
 
   <key id="modify_event_key"     key="&event.edit.event.key;"            observes="modify_command"              modifiers="accel"/>
-  <key id="new_calendar_key"     key="&calendar.new.server.key;"         observes="new_local_calendar_command"  modifiers="accel"/>
+  <key id="new_calendar_key"     key="&calendar.new.server.key;"         observes="new_calendar_command"  modifiers="accel"/>
   <key id="open_calendar_key"    key="&calendar.open.file.key;"          observes="open_local_calendar_command" modifiers="accel"/>
   <key id="key_close"            key="&calendar.menu.options.close.key;" observes="close_calendar_command"      modifiers="accel"/>
 #ifdef XP_MACOSX

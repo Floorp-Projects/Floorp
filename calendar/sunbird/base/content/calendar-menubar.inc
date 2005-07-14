@@ -67,7 +67,7 @@
                      key="new_calendar_key"
                      label="&calendar.new.server.label;"
                      accesskey="&calendar.new.server.accesskey;"
-                     observes="new_local_calendar_command"/>
+                     observes="new_calendar_command"/>
            <menuitem id="calendar-open-calendar-menu"
                      key="open_calendar_key"
                      label="&calendar.open.file.label;"
@@ -89,7 +89,7 @@
            <menuitem id="calendar-addserver-menu"
                      label="&calendar.subscribe.label;"
                      accesskey="&calendar.subscribe.accesskey;"
-                     observes="new_server_command"/>
+                     observes="new_calendar_command"/>
            <menuitem id="calendar-reloadserver-menu"
                      key="reload_server_key"
                      label="&calendar.reloadserver.label;"

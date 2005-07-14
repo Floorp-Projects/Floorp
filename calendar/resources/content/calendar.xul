@@ -141,7 +141,7 @@
   <key id="new_event_key"        key="&event.new.event.key;"             observes="new_command"                 modifiers="accel"/>
   <key id="new_todo_key"         key="&event.new.todo.key;"              observes="new_todo_command"            modifiers="accel"/>
   <key id="modify_event_key"     key="&event.edit.event.key;"            observes="modify_command"              modifiers="accel"/>
-  <key id="new_calendar_key"     key="&calendar.new.server.key;"         observes="new_local_calendar_command"  modifiers="accel"/>
+  <key id="new_calendar_key"     key="&calendar.new.server.key;"         observes="new_calendar_command"  modifiers="accel"/>
   <key id="open_calendar_key"    key="&calendar.open.file.key;"          observes="open_local_calendar_command" modifiers="accel"/>
   <key id="key_close"            key="&calendar.menu.options.close.key;" observes="close_calendar_command"      modifiers="accel"/>
 #ifdef XP_MACOSX
@@ -401,20 +401,25 @@
 </popup>
 
 <!-- CALENDAR LIST CONTEXT MENU -->
-<popup id="calendarlist-context-menu">
+<popup id="calendarlist-context-menu" onpopupshowing="checkCalListTarget()">
   <menuitem label="&calendar.context.newserver.label;"
+            id="calpopup-new"
             accesskey="&calendar.context.newserver.accesskey;"
             observes="new_calendar_command"/>
   <menuitem label="&calendar.context.editserver.label;"
+            id="calpopup-edit"
             accesskey="&calendar.context.editserver.accesskey;"
             observes="edit_calendar_command"/>
   <menuitem label="&calendar.context.deleteserver.label;"
+            id="calpopup-delete"
             accesskey="&calendar.context.deleteserver.accesskey;"
             observes="delete_calendar_command"/>
   <menuitem label="&calendar.context.reloadserver.label;"
+            id="calpopup-reload"
             accesskey="&calendar.context.reloadserver.accesskey;"
             observes="reload_remote_calendars"/>
   <menuitem label="&calendar.context.publish.label;"
+            id="calpopup-publish"
             accesskey="&calendar.context.publish.accesskey;"
             observes="publish_calendar"/>
 </popup>
@@ -525,7 +530,8 @@
           <tabpanel>
             <!--<vbox id="left-hand-above-splitter" flex="1">-->
             <listbox id="list-calendars-listbox" class="unifinder-tree-class" flex="1" 
-                     contextmenu="calendarlist-context-menu">
+                     contextmenu="calendarlist-context-menu"
+                     ondblclick="calendarListboxDoubleClick(event)">
               <listcols>
                 <listcol/>
                 <listcol/>

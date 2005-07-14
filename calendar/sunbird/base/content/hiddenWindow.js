@@ -46,7 +46,7 @@ function hiddenWindowStartup()
   window.focus();
 
   // Disable menus which are not appropriate
-  var disabledItems = ['new_command', 'new_local_calendar_command', 
+  var disabledItems = ['new_command', 'new_calendar_command', 
                        'modify_command', 'close_calendar_command', 'send_event_command', 
                        'print_command', 'cut_command', 'copy_command', 'paste_command', 
                        'delete_command', 'delete_todo_command', 'select_all_command', 
@@ -54,9 +54,9 @@ function hiddenWindowStartup()
                        'month_view_command', 'cmd_CustomizeToolbars', 'go_today_command', 
                        'go_date_command', 'previous_command', 'next_command', 
                        'wizard_command', 'import_command', 'export_command', 
-                       'new_server_command', 'publish_events_command', 'modify_todo_command', 
-                       'edit_local_calendar_command', 'edit_server_command', 
-                       'delete_server_command', 'find_new_calendar_command', 
+                       'publish_events_command', 'modify_todo_command', 
+                       'edit_calendar_command', 
+                       'delete_calendar_command', 'find_new_calendar_command', 
                        'reload_remote_calendars', 'publish_calendar'];
   for (var id in disabledItems) 
   {
