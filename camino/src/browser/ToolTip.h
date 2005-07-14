@@ -43,7 +43,7 @@
 
 @interface ToolTip : NSObject
 {
-  NSPanel*      mPanel;
+  NSWindow*     mPanel;
   NSTextField*  mTextField;
   NSTextView*   mTextView;
 }

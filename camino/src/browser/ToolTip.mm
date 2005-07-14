@@ -42,6 +42,8 @@
 
 @interface ToolTip (ToolTipPrivateMethods)
 
+- (void)parentWindowDidResignKey:(NSNotification*)inNotification;
+
 @end
 
 const float kBorderPadding = 2.0;
@@ -54,7 +56,10 @@ const float kVOffset = 20.0;
 {
   self = [super init];
   if (self) {
-    mPanel = [[NSPanel alloc] initWithContentRect:NSMakeRect(0.0, 0.0, kMaxTextFieldWidth, 0.0) styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:YES];
+    mPanel = [[NSWindow alloc] initWithContentRect:NSMakeRect(0.0, 0.0, kMaxTextFieldWidth, 0.0)
+                                         styleMask:NSBorderlessWindowMask
+                                           backing:NSBackingStoreBuffered
+                                             defer:YES];
     
     // Create a textfield as the content of our new window.
     // Field occupies all but the top 2 and bottom 2 pixels of the panel (bug 149635)
@@ -65,7 +70,7 @@ const float kVOffset = 20.0;
     // set up the panel
     [mPanel setHasShadow:YES];
     [mPanel setBackgroundColor:[NSColor colorWithCalibratedRed:1.0 green:1.0 blue:0.81 alpha:1.0]];
-    
+
     // set up the text view
     [mTextView setDrawsBackground:NO];
     [mTextView setEditable:NO];
@@ -80,8 +85,9 @@ const float kVOffset = 20.0;
 
 - (void)dealloc
 {
-  [mPanel close];
-  [mPanel release];
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+
+  [mPanel close];   // this releases
   [super dealloc];
 }
 
@@ -94,74 +100,89 @@ const float kVOffset = 20.0;
   if (!screen)
     screen = [NSScreen mainScreen];
 
-  if (screen) {
-    NSRect screenFrame = [screen visibleFrame];
-    NSSize screenSize = screenFrame.size;
+  if (!screen)
+    return;
 
-    // for some reason, text views suffer from hysteresis; the answer you get this time
-    // depends on what you had in there before. so clear state first.
-    [mTextView setString:@""];
-    [mTextView setFrame:NSMakeRect(0, kBorderPadding, 0, 0)];
+  // register for window losing key status notifications, so we can hide the tooltip
+  // on window deactivation
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(parentWindowDidResignKey:)
+                                               name:NSWindowDidResignKeyNotification
+                                             object:inWindow];
 
-    // -sizeToFit sucks. For some reason it likes to wrap short words, so
-    // we measure the text by hand and set that as the min width.
-    NSSize stringSize = [string sizeWithAttributes:[NSDictionary dictionaryWithObject:[NSFont toolTipsFontOfSize:[NSFont smallSystemFontSize]] forKey:NSFontAttributeName]];
-    float textViewWidth = ceil(stringSize.width);
-    if (textViewWidth > kMaxTextFieldWidth)
-      textViewWidth = kMaxTextFieldWidth;
+  NSRect screenFrame = [screen visibleFrame];
+  NSSize screenSize = screenFrame.size;
 
-    textViewWidth += 2.0 * 5.0;   // magic numbers required to make the text not wrap. No, this isn't -textContainerInset.
-    
-    // set up the text view
-    [mTextView setMaxSize:NSMakeSize(kMaxTextFieldWidth, screenSize.height - 2 * kBorderPadding)]; // do this here since we know screen size
-    [mTextView setString:string]; // do this after setting max size, before setting constrained frame size, 
-                                  // reset to max width - it will not grow horizontally when resizing, only vertically
-    [mTextView setConstrainedFrameSize:NSMakeSize(kMaxTextFieldWidth, 0.0)];
-    // to avoid wrapping when we don't want it, set the min width
-    [mTextView setMinSize:NSMakeSize(textViewWidth, 0.0)];
+  // for some reason, text views suffer from hysteresis; the answer you get this time
+  // depends on what you had in there before. so clear state first.
+  [mTextView setString:@""];
+  [mTextView setFrame:NSMakeRect(0, kBorderPadding, 0, 0)];
 
-    // finally, do the buggy sizeToFit
-    [mTextView sizeToFit];
-    
-    // set the origin back where its supposed to be
-    NSRect textViewFrame = [mTextView frame];
-    [mTextView setFrame:NSMakeRect(0, kBorderPadding, textViewFrame.size.width, textViewFrame.size.height)];
-    
-    // size the panel correctly, taking border into account
-    NSSize textSize = textViewFrame.size;
-    textSize.height += kBorderPadding + kBorderPadding;
-    [mPanel setContentSize:textSize];
-    
-    // We try to put the top left point right below the cursor. If that doesn't fit
-    // on screen, put the bottom left point above the cursor.
-    if (point.y - kVOffset - textSize.height > NSMinY(screenFrame)) {
-      point.y -= kVOffset;
-      [mPanel setFrameTopLeftPoint:point];
-    }
-    else {
-      point.y += kVOffset / 2.5;
-      [mPanel setFrameOrigin:point];
-    }
-    
-    // if it doesn't fit on screen horizontally, adjust so that it does
-    float amountOffScreenX = NSMaxX(screenFrame) - NSMaxX([mPanel frame]);
-    if (amountOffScreenX < 0) {
-      NSRect movedFrame = [mPanel frame];
-      movedFrame.origin.x += amountOffScreenX;
-      [mPanel setFrame:movedFrame display:NO];
-    }
+  // -sizeToFit sucks. For some reason it likes to wrap short words, so
+  // we measure the text by hand and set that as the min width.
+  NSSize stringSize = [string sizeWithAttributes:[NSDictionary dictionaryWithObject:[NSFont toolTipsFontOfSize:[NSFont smallSystemFontSize]] forKey:NSFontAttributeName]];
+  float textViewWidth = ceil(stringSize.width);
+  if (textViewWidth > kMaxTextFieldWidth)
+    textViewWidth = kMaxTextFieldWidth;
 
-    // add as a child window    
-    [inWindow addChildWindow:mPanel ordered:NSWindowAbove];
-    // show the panel
-    [mPanel orderFront:nil];
+  textViewWidth += 2.0 * 5.0;   // magic numbers required to make the text not wrap. No, this isn't -textContainerInset.
+  
+  // set up the text view
+  [mTextView setMaxSize:NSMakeSize(kMaxTextFieldWidth, screenSize.height - 2 * kBorderPadding)]; // do this here since we know screen size
+  [mTextView setString:string]; // do this after setting max size, before setting constrained frame size, 
+                                // reset to max width - it will not grow horizontally when resizing, only vertically
+  [mTextView setConstrainedFrameSize:NSMakeSize(kMaxTextFieldWidth, 0.0)];
+  // to avoid wrapping when we don't want it, set the min width
+  [mTextView setMinSize:NSMakeSize(textViewWidth, 0.0)];
+
+  // finally, do the buggy sizeToFit
+  [mTextView sizeToFit];
+  
+  // set the origin back where its supposed to be
+  NSRect textViewFrame = [mTextView frame];
+  [mTextView setFrame:NSMakeRect(0, kBorderPadding, textViewFrame.size.width, textViewFrame.size.height)];
+  
+  // size the panel correctly, taking border into account
+  NSSize textSize = textViewFrame.size;
+  textSize.height += kBorderPadding + kBorderPadding;
+  [mPanel setContentSize:textSize];
+  
+  // We try to put the top left point right below the cursor. If that doesn't fit
+  // on screen, put the bottom left point above the cursor.
+  if (point.y - kVOffset - textSize.height > NSMinY(screenFrame)) {
+    point.y -= kVOffset;
+    [mPanel setFrameTopLeftPoint:point];
   }
+  else {
+    point.y += kVOffset / 2.5;
+    [mPanel setFrameOrigin:point];
+  }
+  
+  // if it doesn't fit on screen horizontally, adjust so that it does
+  float amountOffScreenX = NSMaxX(screenFrame) - NSMaxX([mPanel frame]);
+  if (amountOffScreenX < 0) {
+    NSRect movedFrame = [mPanel frame];
+    movedFrame.origin.x += amountOffScreenX;
+    [mPanel setFrame:movedFrame display:NO];
+  }
+
+  // add as a child window    
+  [inWindow addChildWindow:mPanel ordered:NSWindowAbove];
+  // show the panel
+  [mPanel orderFront:nil];
 }
 
 - (void)closeToolTip
 {
   [[mPanel parentWindow] removeChildWindow:mPanel];
-  [mPanel close];
+  [mPanel orderOut:nil];
+
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)parentWindowDidResignKey:(NSNotification*)inNotification
+{
+  [self closeToolTip];
 }
 
 @end
