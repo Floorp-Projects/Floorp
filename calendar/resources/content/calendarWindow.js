@@ -681,12 +681,25 @@ CalendarView.prototype.createEventBox = function(aItemOccurrence, aInteralFuncti
         origEndDate.normalize();
     }
 
+    var displayStart = gCalendarWindow.currentView.displayStartDate;
+    var displayEnd = gCalendarWindow.currentView.displayEndDate;
+
+    //multiweek and month views call their display range something else
+    if(!displayStart) {
+        displayStart = gCalendarWindow.currentView.firstDateOfView;
+        displayEnd = gCalendarWindow.currentView.lastDateOfView;
+    }
+    if(startDate.jsDate < displayStart) {
+        startDate.jsDate = displayStart;
+        startDate.normalize();
+    }
+
     var endDate = startDate.clone();
     endDate.hour = 23;
     endDate.minute = 59;
     endDate.second = 59;
     endDate.normalize();
-    while (endDate.compare(origEndDate) < 0) {
+    while (endDate.compare(origEndDate) < 0 && startDate.jsDate < displayEnd) {
         aInteralFunction(aItemOccurrence, startDate, endDate);
 
         startDate.day = startDate.day + 1;
