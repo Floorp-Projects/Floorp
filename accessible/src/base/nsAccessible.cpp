@@ -2214,7 +2214,7 @@ nsAccessible::GetNextWithState(nsIAccessible *aStart, PRUint32 matchState)
   nsIAccessible *returnAccessible = nsnull;
   current.swap(returnAccessible);
 
-  return current;
+  return returnAccessible;
 }
 
 // nsIAccessibleSelectable
