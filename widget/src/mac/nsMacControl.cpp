@@ -82,56 +82,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 nsIUnicodeEncoder * nsMacControl::mUnicodeEncoder = nsnull;
 nsIUnicodeDecoder * nsMacControl::mUnicodeDecoder = nsnull;
 
-static const EventTypeSpec kControlEventList[] = 
-{
-	{ kEventClassControl, kEventControlDraw }
-};
-
-
-static pascal OSStatus MacControlDrawHandler(EventHandlerCallRef inHandlerCallRef, EventRef inEvent, void *inUserData)
-{
-  nsMacControl* macControl = NS_REINTERPRET_CAST(nsMacControl*, inUserData);
-
-  ControlRef theControl;
-  ::GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, NULL, sizeof(ControlRef), NULL, &theControl);
-  
-  CGrafPtr controlPort;   // port we're drawing into (usually the control's port)
-  if (::GetEventParameter(inEvent, kEventParamGrafPort, typeGrafPtr, NULL, sizeof(CGrafPtr), NULL, &controlPort) != noErr)
-    controlPort = ::GetWindowPort(::GetControlOwner(theControl));
-
-  OSStatus err = eventNotHandledErr;
-  
-  // see if we're already inside a StartDraw/EndDraw (e.g. OnPaint())
-  if (macControl->IsDrawing())
-  {
-    // we need to make sure that the port origin is set correctly for the control's
-    // widget, because other handlers before us may have messed with it.
-    nsRect controlBounds;
-    macControl->GetBounds(controlBounds);
-    
-    nsPoint origin(controlBounds.x, controlBounds.y);
-    macControl->LocalToWindowCoordinate(origin);
-
-    Point newOrigin;
-    newOrigin.h = -origin.x;
-    newOrigin.v = -origin.y;
-    
-    StOriginSetter setter(controlPort, &newOrigin);
-    
-    err = ::CallNextEventHandler(inHandlerCallRef, inEvent);
-  }
-  else
-  {  
-    // make sure we leave the origin set for other controls
-    StOriginSetter originSetter(controlPort);
-    macControl->StartDraw();
-    err = ::CallNextEventHandler(inHandlerCallRef, inEvent);
-    macControl->EndDraw();
-  }
-  
-  return err;
-}
-
 #pragma mark -
 
 //-------------------------------------------------------------------------
@@ -147,7 +97,6 @@ nsMacControl::nsMacControl()
 	mMouseInButton	= PR_FALSE;
 
 	mControl		= nsnull;
-	mControlEventHandler = nsnull;
 	mControlType	= pushButProc;
 
 	mLastBounds.SetRect(0,0,0,0);
@@ -192,6 +141,25 @@ nsMacControl::~nsMacControl()
 		ClearControl();
 		mControl = nsnull;
 	}
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMacControl::Destroy()
+{
+	if (mOnDestroyCalled)
+		return NS_OK;
+
+	// Hide the control to avoid drawing.  Even if we're very careful
+	// and avoid drawing the control ourselves after Destroy() is
+	// called, the system still might draw it, and it might wind up
+	// in the wrong location.
+	Show(PR_FALSE);
+
+	return Inherited::Destroy();
 }
 
 #pragma mark -
@@ -428,9 +396,6 @@ nsresult nsMacControl::CreateOrReplaceMacControl(short inControlType)
 		mControl = ::NewControl(mWindowPtr, &macRect, "\p", mVisible, mValue, mMin, mMax, inControlType, nil);
 		EndDraw();
 		
-		if (mControl)
-			InstallEventHandlerOnControl();
-		
 		// need to reset the font now
 		// XXX to do: transfer the text in the old control over too
 		if (mControl && mFontMetrics)
@@ -448,39 +413,10 @@ nsresult nsMacControl::CreateOrReplaceMacControl(short inControlType)
 //-------------------------------------------------------------------------
 void nsMacControl::ClearControl()
 {
-	RemoveEventHandlerFromControl();
 	if (mControl)
 	{
 		::DisposeControl(mControl);
 		mControl = nsnull;
-	}
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-DEFINE_ONE_SHOT_HANDLER_GETTER(MacControlDrawHandler)
-
-OSStatus nsMacControl::InstallEventHandlerOnControl()
-{ 
-	return ::InstallControlEventHandler(mControl,
-		GetMacControlDrawHandlerUPP(),
-		GetEventTypeCount(kControlEventList), kControlEventList,
-		(void*)this, &mControlEventHandler);
-}
-
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-void nsMacControl::RemoveEventHandlerFromControl()
-{
-	if (mControlEventHandler)
-	{
-		::RemoveEventHandler(mControlEventHandler);
-		mControlEventHandler = nsnull;
 	}
 }
 

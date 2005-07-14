@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mark Mentovai <mark@moxienet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -70,6 +71,10 @@
 nsRenderingContextMac::nsRenderingContextMac()
 : mP2T(1.0f)
 , mContext(nsnull)
+#ifndef MOZ_WIDGET_COCOA
+, mSavePort(nsnull)
+, mSaveDevice(nsnull)
+#endif /* ! MOZ_WIDGET_COCOA */
 , mCurrentSurface(nsnull)
 , mPort(nsnull)
 , mGS(nsnull)
@@ -87,6 +92,13 @@ nsRenderingContextMac::~nsRenderingContextMac()
 {
 	// restore stuff
 	NS_IF_RELEASE(mContext);
+
+#ifndef MOZ_WIDGET_COCOA
+  if (mSavePort) {
+    ::SetGWorld(mSavePort, mSaveDevice);
+    ::SetOrigin(mSavePortRect.left, mSavePortRect.top);
+  }
+#endif /* ! MOZ_WIDGET_COCOA */
 
 	// release surfaces
 	NS_IF_RELEASE(mFrontSurface);
@@ -190,6 +202,15 @@ void nsRenderingContextMac::SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, 
 		return;
 
   NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
+
+#ifndef MOZ_WIDGET_COCOA
+  if (!mSavePort) {
+    ::GetGWorld(&mSavePort, &mSaveDevice);
+    if (mSavePort) {
+      ::GetPortBounds(mSavePort, &mSavePortRect);
+    }
+  }
+#endif /* ! MOZ_WIDGET_COCOA */
 	
 	// if surface is changing, be extra conservative about graphic state changes.
 	if (mCurrentSurface != aSurface)
