@@ -268,22 +268,35 @@ function initStatic()
 
     var ver = __cz_version + (__cz_suffix ? "-" + __cz_suffix : "");
 
-    var ary = navigator.userAgent.match (/(rv:[^;)\s]+).*?Gecko\/(\d+)/);
     var ua = navigator.userAgent;
-    if (ary)
+    var app = getService("@mozilla.org/xre/app-info;1", "nsIXULAppInfo");
+    if (app)
     {
-        if (navigator.vendor)
-            ua = navigator.vendor + " " + navigator.vendorSub;
-        else
-            ua = client.entities.brandShortName + " " + ary[1];
-        ua = ua + "/" + ary[2];
+        // Use the XUL host app info, and Gecko build ID.
+        // FIXME: What happens in XULRunner, where we /are/ the app?
+        ua = app.name + " " + app.version + "/" + app.geckoBuildID;  // 1.1+
+        // "Mozilla Firefox 1.0+, Windows"
+        CIRCServer.prototype.HOST_RPLY = app.vendor + " " + app.name + " " +
+                                         app.version + ", " + client.platform;
     }
+    else
+    {
+        // Extract the revision number, and Gecko build ID.
+        var ary = navigator.userAgent.match(/(rv:[^;)\s]+).*?Gecko\/(\d+)/);
+        if (ary)
+        {
+            if (navigator.vendor)
+                ua = navigator.vendor + " " + navigator.vendorSub; // FF 1.0
+            else
+                ua = client.entities.brandShortName + " " + ary[1]; // Suite
+            ua = ua + "/" + ary[2];
+        }
+        CIRCServer.prototype.HOST_RPLY = client.entities.brandShortName + ", " +
+                                         client.platform;
+    }
+
     client.userAgent = getMsg(MSG_VERSION_REPLY, [ver, ua]);
-
-    CIRCServer.prototype.HOST_RPLY = client.entities.brandShortName + ", " + 
-                                     client.platform;
     CIRCServer.prototype.VERSION_RPLY = client.userAgent;
-
     CIRCServer.prototype.SOURCE_RPLY = MSG_SOURCE_REPLY;
 
     client.statusBar = new Object();
