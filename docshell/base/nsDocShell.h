@@ -445,6 +445,9 @@ protected:
                                  PRBool aSavePresentation,
                                  PRBool *aRestored);
 
+    // Call BeginRestore(nsnull, PR_FALSE) for each child of this shell.
+    nsresult BeginRestoreChildren();
+
 protected:
     // Override the parent setter from nsDocLoader
     virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);

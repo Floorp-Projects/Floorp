@@ -4955,18 +4955,23 @@ RestorePresentationEvent::RestorePresentationEvent(nsDocShell *aShell)
 }
 
 NS_IMETHODIMP
-nsDocShell::BeginRestore(PRBool aTop)
+nsDocShell::BeginRestore(nsIContentViewer *aContentViewer, PRBool aTop)
 {
+    nsresult rv;
+    if (!aContentViewer) {
+        rv = EnsureContentViewer();
+        NS_ENSURE_TRUE(rv, rv);
+
+        aContentViewer = mContentViewer;
+    }
+
     // Dispatch events for restoring the presentation.  We try to simulate
     // the progress notifications loading the document would cause, so we add
     // the document's channel to the loadgroup to initiate stateChange
     // notifications.
 
-    nsresult rv = EnsureContentViewer();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsIDOMDocument> domDoc;
-    mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
+    aContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
     if (doc) {
         nsIChannel *channel = doc->GetChannel();
@@ -4977,22 +4982,10 @@ nsDocShell::BeginRestore(PRBool aTop)
         }
     }
 
-    // These events start from the top-down and finish from the bottom-up.
-    // So, next we tell all of our children to call AddRequest, then post
-    // a PLEvent, which will cause us to call finishRestore() on our children.
-
-    PRInt32 n = mChildList.Count();
-    for (PRInt32 i = 0; i < n; ++i) {
-        nsCOMPtr<nsIDocShell> child = do_QueryInterface(ChildAt(i));
-        if (child) {
-            rv = child->BeginRestore(PR_FALSE);
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
-    }
-
     if (aTop) {
-        // We finish up the restore processing on a PLEvent to mimic the way
-        // RemoveRequest is called by nsIChannel implementations.
+        // Post a PLEvent that will remove the request after we've returned
+        // to the event loop.  This mimics the way it is called by nsIChannel
+        // implementations.
 
         nsCOMPtr<nsIEventQueue> uiThreadQueue;
         NS_GetMainEventQ(getter_AddRefs(uiThreadQueue));
@@ -5005,9 +4998,30 @@ nsDocShell::BeginRestore(PRBool aTop)
         if (NS_FAILED(rv)) {
             PL_DestroyEvent(evt);
         }
+    } else {
+        // For non-top frames, there is no notion of making sure that the
+        // previous document is in the domwindow when STATE_START notifications
+        // happen.  We can just call BeginRestore for all of the child shells
+        // now.
+        rv = BeginRestoreChildren();
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    return rv;
+    return NS_OK;
+}
+
+nsresult
+nsDocShell::BeginRestoreChildren()
+{
+    PRInt32 n = mChildList.Count();
+    for (PRInt32 i = 0; i < n; ++i) {
+        nsCOMPtr<nsIDocShell> child = do_QueryInterface(ChildAt(i));
+        if (child) {
+            nsresult rv = child->BeginRestore(nsnull, PR_FALSE);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5136,6 +5150,14 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
     FirePageHideNotification(!aSavePresentation);
     mFiredUnloadEvent = PR_FALSE;
 
+    // Add the request to our load group.  We do this before swapping out
+    // the content viewers so that consumers of STATE_START can access
+    // the old document.  We only deal with the toplevel load at this time --
+    // to be consistent with normal document loading, subframes cannot start
+    // loading until after data arrives, which is after STATE_START completes.
+
+    BeginRestore(viewer, PR_TRUE);
+
     // Save off the root view's parent and sibling so that we can insert the
     // new content viewer's root view at the same position.  Also save the
     // bounds of the root view's widget.
@@ -5223,6 +5245,10 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
 
     // And release the references in the history entry.
     aSHEntry->ClearChildShells();
+
+    // Dispatch STATE_START notifications for the new child shells.
+    rv = BeginRestoreChildren();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Restore the sticky state of the viewer.  The viewer has set this state
     // on the history entry in Destroy() just before marking itself non-sticky,
@@ -5345,13 +5371,6 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
         nsDoc->SetTitle(title);
     }
     
-    // Dispatch DOMPageShow and other events.
-    rv = BeginRestore(PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mContentViewer->Show();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // Restart plugins, and paint the content.
     if (shell)
         shell->Thaw();
