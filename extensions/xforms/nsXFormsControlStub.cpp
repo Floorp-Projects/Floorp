@@ -465,6 +465,11 @@ nsXFormsControlStubBase::Create(nsIXTFElementWrapper *aWrapper)
 
   ResetHelpAndHint(PR_TRUE);
 
+  // enabled is on pr. default
+  ///
+  /// @bug This is only a hack until bug 271720 is landed (XXX)
+  mElement->SetAttribute(kStateAttributes[6], NS_LITERAL_STRING("1"));
+
 #ifdef DEBUG_smaug
   sControlList->AppendElement(this);
 #endif
@@ -595,6 +600,11 @@ nsXFormsControlStubBase::ResetProperties()
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kStateAttributes); ++i) {
     mElement->RemoveAttribute(kStateAttributes[i]);
   }
+
+  // enabled is on pr. default
+  ///
+  /// @bug This is only a hack until bug 271720 is landed (XXX)
+  mElement->SetAttribute(kStateAttributes[6], NS_LITERAL_STRING("1"));
 }
 
 void
