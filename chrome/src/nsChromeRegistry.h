@@ -148,13 +148,15 @@ public:
       ANY = 2
     };
 
-    ProviderEntry* GetProvider(const nsACString& aPreferred, MatchType aType);
     nsIURI* GetBase(const nsACString& aPreferred, MatchType aType);
     const nsACString& GetSelected(const nsACString& aPreferred, MatchType aType);
-    void    SetBase(const nsACString& aPreferred, nsIURI* base);
+    void    SetBase(const nsACString& aProvider, nsIURI* base);
+    void    EnumerateToArray(nsCStringArray *a);
     void    Clear();
 
   private:
+    ProviderEntry* GetProvider(const nsACString& aPreferred, MatchType aType);
+
     nsVoidArray mArray;
   };
 

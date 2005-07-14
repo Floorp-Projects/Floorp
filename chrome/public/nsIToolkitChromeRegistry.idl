@@ -39,8 +39,9 @@
 #include "nsIChromeRegistry.idl"
 
 interface nsIURI;
+interface nsIUTF8StringEnumerator;
 
-[scriptable, uuid(717FA4AB-FD62-412b-AEF5-54A50B340449)]
+[scriptable, uuid(94490b3f-f094-418e-b1b9-73878d29bff3)]
 interface nsIToolkitChromeRegistry : nsIXULChromeRegistry
 {
   /**
@@ -76,6 +77,11 @@ interface nsIToolkitChromeRegistry : nsIXULChromeRegistry
    * call this method during the startup process.
    */
   void checkForOSAccessibility();
+
+  /**
+   * Get a list of locales available for the specified package.
+   */
+  nsIUTF8StringEnumerator getLocalesForPackage(in AUTF8String aPackage);
 };
 
 /**
