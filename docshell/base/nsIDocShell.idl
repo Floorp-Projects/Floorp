@@ -66,7 +66,7 @@ interface nsISHEntry;
 interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
 
-[scriptable, uuid(1c9bcef6-98ef-4a3e-9df2-beda50fce980)]
+[scriptable, uuid(cfe93f8d-bd92-4e77-a9b7-c37296fe0986)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -366,12 +366,14 @@ interface nsIDocShell : nsISupports
 
   /**
    * Begin firing WebProgressListener notifications and DOM events for
-   * restoring a page presentation. |top| should be true for the toplevel
-   * docshell that is being restored; it will be set to false when this method
-   * is called for child docshells.  This method will post an event to call
-   * finishRestore() after returning to the event loop.
+   * restoring a page presentation. |viewer| is the content viewer whose
+   * document we are starting to load.  If null, it defaults to the docshell's
+   * current content viewer, creating one if necessary.  |top| should be true
+   * for the toplevel docshell that is being restored; it will be set to false
+   * when this method is called for child docshells.  This method will post an
+   * event to call finishRestore() after returning to the event loop.
    */
-  void beginRestore(in boolean top);
+  void beginRestore(in nsIContentViewer viewer, in boolean top);
 
   /**
    * Finish firing WebProgressListener notifications and DOM events for
