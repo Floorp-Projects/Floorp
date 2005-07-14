@@ -200,7 +200,7 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     bytes = strdup(bytes);
 
     fputs(bytes, gOutFile);
-    nsMemory::Free(bytes);
+    free(bytes);
     return JS_TRUE;
 }
 
