@@ -102,4 +102,8 @@ public:
 bool
 JSValToNPVariant(NPP npp, JSContext *cx, jsval val, NPVariant *variant);
 
+bool
+CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
+                     NPObject *npobj, jsval id, jsval *vp);
+
 #endif // nsJSNPRuntime_h__
