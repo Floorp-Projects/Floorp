@@ -39,7 +39,10 @@
 
 // NOTE: alphabetically ordered
 #include "nsAccessibilityAtoms.h"
+#include "nsBaseWidgetAccessible.h"
 #include "nsIDOMXULDescriptionElement.h"
+#include "nsINameSpaceManager.h"
+#include "nsString.h"
 #include "nsXULTextAccessible.h"
 
 /**
@@ -101,4 +104,66 @@ NS_IMETHODIMP nsXULTooltipAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_TOOLTIP;
   return NS_OK;
+}
+
+/**
+ * For XUL text links
+ */
+nsXULLinkAccessible::nsXULLinkAccessible(nsIDOMNode *aDomNode, nsIWeakReference *aShell):
+nsXULTextAccessible(aDomNode, aShell)
+{
+}
+
+NS_IMETHODIMP nsXULLinkAccessible::GetValue(nsAString& aValue)
+{
+  if (IsALink()) {
+    return mLinkContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::href, aValue);
+  }
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULLinkAccessible::GetState(PRUint32 *aState)
+{
+  // must set focusable state manually because parent class logic can't detect it without ILink
+  nsresult rv = nsLinkableAccessible::GetState(aState);
+  if (NS_SUCCEEDED(rv) && IsALink()) {
+    *aState |= STATE_FOCUSABLE;
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsXULLinkAccessible::GetRole(PRUint32 *aRole)
+{
+  if (IsALink()) {
+    *aRole = ROLE_LINK;
+  } else {
+    // default to calling the link a button; might have javascript
+    *aRole = ROLE_PUSHBUTTON;
+  }
+  // should there be a third case where it becomes just text?
+  return NS_OK;
+}
+
+PRBool nsXULLinkAccessible::IsALink()
+{
+  // use the cached answer if it exists
+  if (mIsALinkCached) {
+    return mLinkContent ? PR_TRUE : PR_FALSE;
+  }
+  // indicate the test result is cached
+  mIsALinkCached = PR_TRUE;
+
+  // not a link if no content
+  nsCOMPtr<nsIContent> mTempContent = do_QueryInterface(mDOMNode);
+  if (!mTempContent) {
+    return PR_FALSE;
+  }
+  // not a link if there no href attribute
+  if (!mTempContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::href)) {
+    return PR_FALSE;
+  }
+  // it's a link, but can't detect traversed yet (no ILink interface)
+  mLinkContent = mTempContent;
+  mIsLinkVisited = PR_FALSE;
+  return PR_TRUE;
 }

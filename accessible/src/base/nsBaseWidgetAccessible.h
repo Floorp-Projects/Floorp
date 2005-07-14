@@ -94,7 +94,7 @@ public:
   NS_IMETHOD Shutdown();
 
 protected:
-  PRBool IsALink();
+  virtual PRBool IsALink();
   nsCOMPtr<nsIContent> mLinkContent;
   PRPackedBool mIsALinkCached;  // -1 = unknown, 0 = not a link, 1 = is a link
   PRPackedBool mIsLinkVisited;

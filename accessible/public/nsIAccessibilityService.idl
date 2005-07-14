@@ -87,6 +87,7 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createXULDropmarkerAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULGroupboxAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULImageAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULLinkAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULListboxAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULListitemAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULMenubarAccessible(in nsIDOMNode aNode);

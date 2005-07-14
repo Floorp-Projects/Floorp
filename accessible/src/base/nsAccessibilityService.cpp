@@ -1171,6 +1171,25 @@ nsAccessibilityService::CreateXULImageAccessible(nsIDOMNode *aNode, nsIAccessibl
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAccessibilityService::CreateXULLinkAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULLinkAccessible(aNode, weakShell);
+  if (! *_retval)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP 
 nsAccessibilityService::CreateXULListboxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
