@@ -209,7 +209,7 @@ PRBool nsMapiHook::DisplayLoginDialog(PRBool aLogin, PRUnichar **aUsername,
 
         nsXPIDLString brandName;
         rv = brandBundle->GetStringFromName(
-                           NS_LITERAL_STRING("brandShortName").get(),
+                           NS_LITERAL_STRING("brandFullName").get(),
                            getter_Copies(brandName));
         if (NS_FAILED(rv)) return PR_FALSE;
         

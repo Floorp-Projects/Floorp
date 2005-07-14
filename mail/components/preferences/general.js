@@ -124,7 +124,7 @@ var gGeneralPane = {
     var mapiReg = Components.classes["@mozilla.org/mapiregistry;1"]
                    .getService(Components.interfaces.nsIMapiRegistry);
 
-    var brandShortName = this.mBrandBundle.getString("brandRealShortName");
+    var brandShortName = this.mBrandBundle.getString("brandShortName");
     var promptTitle = this.mMapiBundle.getFormattedString("dialogTitle",
                                                     [brandShortName]);
     var promptMessage;

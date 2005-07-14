@@ -212,7 +212,7 @@ function isIPv4HostName(aHostName)
 // returns true if the user confirms the URL is a scam
 function confirmSuspiciousURL(aPhishingType, aSuspiciousHostName)
 {
-  var brandShortName = gBrandBundle.getString("brandRealShortName");
+  var brandShortName = gBrandBundle.getString("brandShortName");
   var titleMsg = gMessengerBundle.getString("confirmPhishingTitle");
   var dialogMsg;
 

@@ -108,7 +108,7 @@ void nsMapiRegistryUtils::getVarValue(const PRUnichar * varName, nsAutoString & 
 const PRUnichar * nsMapiRegistryUtils::brandName() 
 {
     if (m_brand.IsEmpty())
-        getVarValue(NS_LITERAL_STRING("brandShortName").get(), m_brand);
+        getVarValue(NS_LITERAL_STRING("brandFullName").get(), m_brand);
     return m_brand.get();
 }
 
@@ -789,7 +789,7 @@ nsresult nsMapiRegistryUtils::registerMailApp(PRBool aForceRegistration)
           appKeyName.AppendLiteral("\\shell\\properties");
 
           nsAutoString brandShortName;
-          getVarValue(NS_LITERAL_STRING("brandRealShortName").get(), brandShortName);
+          getVarValue(NS_LITERAL_STRING("brandShortName").get(), brandShortName);
 
           const PRUnichar* brandNameStrings[] = { brandShortName.get() };
 
