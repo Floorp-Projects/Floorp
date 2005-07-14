@@ -1038,6 +1038,40 @@
 			settings = {
 			};
 		};
+		0F5187C308858E620091F3FB = {
+			isa = PBXFileReference;
+			lastKnownFileType = "compiled.mach-o.bundle";
+			name = libpermissions.dylib;
+			path = ../dist/bin/components/libpermissions.dylib;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F5187C408858E620091F3FB = {
+			fileRef = 0F5187C308858E620091F3FB;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F518833088592020091F3FB = {
+			fileRef = 0F5187C308858E620091F3FB;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F518834088593F30091F3FB = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libpermissions.a;
+			path = ../dist/lib/libpermissions.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F518835088593F30091F3FB = {
+			fileRef = 0F518834088593F30091F3FB;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0F5FD71B07F48CDC00E8EDBD = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -1128,6 +1162,7 @@
 				3F44AD2905BDFB9F00CB4B08,
 				3F44AD2A05BDFB9F00CB4B08,
 				3F44AD2B05BDFB9F00CB4B08,
+				0F518833088592020091F3FB,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1189,6 +1224,7 @@
 				A708E74103FB9041003C038B,
 				A708E74303FB90AB003C038B,
 				A7D88E680465D94000A80196,
+				0F5187C308858E620091F3FB,
 			);
 			isa = PBXGroup;
 			name = Components;
@@ -3119,6 +3155,7 @@
 				3FFFEBDA081C2CC500843C07,
 				3FBDC8E00827C44B00D7F8E0,
 				3FFE23530847CB0D00D6CAFC,
+				0F5187C408858E620091F3FB,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6263,7 +6300,7 @@
 				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/uconv ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/mork ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
 				INFOPLIST_FILE = "Info-CaminoStatic.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader ../extensions/transformiix/build";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../js/src/liveconnect ../js/src/xpconnect/loader";
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lpthread -lm";
 				PRODUCT_NAME = Camino;
@@ -8929,6 +8966,7 @@
 				3FE5BA0C068A1A140001CECD,
 				82CE286E0736605800B4DE07,
 				34884A37074F7C5D000EA76B,
+				0F518835088593F30091F3FB,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10331,7 +10369,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = "compiled.mach-o.dylib";
 			name = libmozz.dylib;
-			path = ../modules/zlib/src/libmozz.dylib;
+			path = ../dist/Embed/libmozz.dylib;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -10339,7 +10377,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libmozz.a;
-			path = ../modules/zlib/src/libmozz.a;
+			path = ../dist/lib/libmozz.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -12750,9 +12788,9 @@
 		};
 		F50DCB4302C2856001A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = "compiled.mach-o.dylib";
+			lastKnownFileType = file;
 			name = libjsj.dylib;
-			path = ../js/src/liveconnect/libjsj.dylib;
+			path = ../dist/bin/libjsj.dylib;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -13314,7 +13352,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libgkgfx.a;
-			path = ../gfx/src/libgkgfx.a;
+			path = ../dist/lib/libgkgfx.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -14271,6 +14309,7 @@
 				A72CB3D8041A0BA100A967F8,
 				0FEBFCA1044F989900A96652,
 				A7FD31C90466004E00A80196,
+				0F518834088593F30091F3FB,
 				A7C1276F0495618300A967F8,
 				3FECC8E505D1FE800068E7ED,
 				4DC41D3D0869D7A400947044,
@@ -15603,10 +15642,10 @@
 				0FA8EF970423B1A500A80166,
 				3F12FC56072E8ECB00995ED9,
 				F6BD637F01B30EA301A962F7,
-				F50DCB4302C2856001A967F3,
 				F6BD638001B30EA301A962F7,
 				F6BD638101B30EA301A962F7,
 				F6BD638201B30EA301A962F7,
+				F50DCB4302C2856001A967F3,
 				F6BD638701B30F5301A962F7,
 				3FE5B9FC068A090F0001CECD,
 				F5F14E9602A5A43A01A967F3,
