@@ -1120,14 +1120,7 @@ static void convertNameValue(VObject *vObj, nsIAbCard *aCard)
           return;
   }
   else if (PL_strcasecmp(VCEmailAddressProp, vObjectName(vObj)) == 0)
-  {       
-      // only treat it as a match if it is an internet property
-      VObject* iprop = isAPropertyOf(vObj, VCInternetProp);
-      if (iprop)
-          cardColName = kPriEmailColumn;
-      else
-          return;
-  }
+      cardColName = kPriEmailColumn;
   else if (PL_strcasecmp(VCFamilyNameProp, vObjectName(vObj)) == 0) 
       cardColName = kLastNameColumn;
   else if (PL_strcasecmp(VCFullNameProp, vObjectName(vObj)) == 0)

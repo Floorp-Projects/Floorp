@@ -583,7 +583,6 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
   char * htmlLine2 = NULL;
   char * htmlLine = NULL;
   VObject *prop = NULL;
-  VObject* prop2 = NULL;
   char * urlstring = NULL;
   char * namestring = NULL;
   char * emailstring = NULL;
@@ -629,12 +628,7 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
          emailstring = vCardService->FakeCString(prop);
           if (emailstring)
           {
-            /* if its an internet address prepend the mailto url */
-            prop2 = vCardService->IsAPropertyOf(prop, VCInternetProp);
-            if (prop2)
-              htmlLine2 = PR_smprintf ("&lt;<A HREF=""mailto:%s"" PRIVATE>%s</A>&gt;", emailstring, emailstring);
-            else
-              htmlLine2 = PR_smprintf ("%s", emailstring);
+            htmlLine2 = PR_smprintf ("&lt;<A HREF=""mailto:%s"" PRIVATE>%s</A>&gt;", emailstring, emailstring);
             PR_FREEIF (emailstring);
           }
         }
@@ -2009,7 +2003,6 @@ static int OutputBasicVcard(MimeObject *aMimeObj, VObject *aVcard, nsACString& v
   int status = 0;
 
   VObject *prop = NULL;
-  VObject *prop2 = NULL;
   nsCAutoString urlstring;
   nsCAutoString namestring;
   nsCAutoString emailstring;
@@ -2052,12 +2045,7 @@ static int OutputBasicVcard(MimeObject *aMimeObj, VObject *aVcard, nsACString& v
           emailstring.Adopt(vCardService->FakeCString(prop));
           if (!emailstring.IsEmpty())
           {
-            /* if its an internet address prepend the mailto url */
-            prop2 = vCardService->IsAPropertyOf(prop, VCInternetProp);
-            if (prop2)
-              vCardOutput += nsPrintfCString(512, "&nbsp;&lt;<a href=""mailto:%s"" private>%s</a>&gt;", emailstring.get(), emailstring.get());
-            else
-              vCardOutput += emailstring;
+            vCardOutput += nsPrintfCString(512, "&nbsp;&lt;<a href=""mailto:%s"" private>%s</a>&gt;", emailstring.get(), emailstring.get());
           }
         } // if email address property
 
