@@ -753,7 +753,31 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
   }
 
   PRUint32 eventType = 0;
-  if (aNameSpaceID == kNameSpaceID_StatesWAI_Unofficial) {
+  if (aAttribute == nsAccessibilityAtoms::selected) {
+    // DHTML or XUL selection
+    nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(targetNode);
+    // Multi selects use selection_add and selection_remove
+    // Single select widgets just mirror event_selection for
+    // whatever gets event_focus, which is done in
+    // nsRootAccessible::FireAccessibleFocusEvent()
+    // So right here we make sure only to deal with multi selects
+    if (multiSelect) {
+      // Need to find the right event to use here, SELECTION_WITHIN would
+      // seem right but we had started using it for something else
+      FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
+                       multiSelect, nsnull);
+      nsAutoString attrValue;
+      aContent->GetAttr(kNameSpaceID_StatesWAI_Unofficial,
+                        nsAccessibilityAtoms::selected, attrValue);
+      if (attrValue.IsEmpty() || attrValue.EqualsLiteral("false")) {
+        eventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
+      }
+      else {
+        eventType = nsIAccessibleEvent::EVENT_SELECTION_ADD;
+      }
+    }
+  }
+  else if (aNameSpaceID == kNameSpaceID_StatesWAI_Unofficial) {
     // DHTML accessibility attributes
     nsCOMPtr<nsIContent> changedContent(do_QueryInterface(targetNode));
     if (!changedContent->HasAttr(kNameSpaceID_XHTML2_Unofficial,
@@ -774,6 +798,18 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     }
     else if (aAttribute == nsAccessibilityAtoms::valuenow) {
       eventType = nsIAccessibleEvent::EVENT_VALUE_CHANGE;
+    }
+    else if (aAttribute == nsAccessibilityAtoms::multiselect) {
+      // This affects whether the accessible supports nsIAccessibleSelectable.
+      // COM says we cannot change what interfaces are supported on-the-fly,
+      // so invalidate this object. A new one will be created on demand.
+      nsCOMPtr<nsIContent> changedContent(do_QueryInterface(targetNode));
+      if (changedContent->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
+                                  nsAccessibilityAtoms::role)) {
+        // The multiselect and other waistate attributes only take affect
+        // when XHTML2:role is present
+        InvalidateCacheSubtree(changedContent, nsIAccessibleEvent::EVENT_REORDER);
+      }
     }
   }
 

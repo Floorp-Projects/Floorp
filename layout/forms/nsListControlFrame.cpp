@@ -1331,10 +1331,6 @@ nsListControlFrame::PerformSelection(PRInt32 aClickedIndex,
     wasChanged = SingleSelection(aClickedIndex, PR_FALSE);
   }
 
-#ifdef ACCESSIBILITY
-  FireMenuItemActiveEvent(); // Inform assistive tech what got focus
-#endif
-
   return wasChanged;
 }
 
@@ -2189,6 +2185,10 @@ nsListControlFrame::OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex)
   mStartSelectionIndex = aNewIndex;
   mEndSelectionIndex = aNewIndex;
 
+#ifdef ACCESSIBILITY
+  FireMenuItemActiveEvent();
+#endif
+
   return NS_OK;
 }
 
@@ -2558,8 +2558,18 @@ PRBool nsListControlFrame::IgnoreMouseEventForSelection(nsIDOMEvent* aEvent)
 void
 nsListControlFrame::FireMenuItemActiveEvent()
 {
+  if (mFocused != this && !IsInDropDownMode()) {
+    return;
+  }
+
+  // The mEndSelectionIndex is what is currently being selected
+  // use the selected index if this is kNothingSelected
   PRInt32 focusedIndex;
-  GetSelectedIndex(&focusedIndex);
+  if (mEndSelectionIndex == kNothingSelected) {
+    GetSelectedIndex(&focusedIndex);
+  } else {
+    focusedIndex = mEndSelectionIndex;
+  }
   if (focusedIndex == kNothingSelected) {
     return;
   }
@@ -2708,6 +2718,9 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     // Handle Like List
     CaptureMouseEvents(GetPresContext(), PR_TRUE);
     mChangesSinceDragStart = HandleListSelection(aMouseEvent, selectedIndex);
+    if (mChangesSinceDragStart) {
+      UpdateSelection(); // dispatch event, update combobox, etc.
+    }
   } else {
     // NOTE: the combo box is responsible for dropping it down
     if (mComboboxFrame) {
@@ -3075,7 +3088,11 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
                     keycode == nsIDOMKeyEvent::DOM_VK_LEFT ||
                     keycode == nsIDOMKeyEvent::DOM_VK_DOWN ||
                     keycode == nsIDOMKeyEvent::DOM_VK_RIGHT)) {
-    mControlSelectMode = PR_TRUE;
+    PRBool isMultiple;
+    GetMultiple(&isMultiple);
+    // Don't go into multiple select mode unless this list can handle it
+    mControlSelectMode = isMultiple;
+    isControl = isMultiple;
   } else if (charcode != ' ') {
     mControlSelectMode = PR_FALSE;
   }
@@ -3254,18 +3271,24 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   // do the scrolling for us
   if (newIndex != kNothingSelected) {
     // If you hold control, no key will actually do anything except space.
+    PRBool wasChanged = PR_FALSE;
     if (isControl && charcode != ' ') {
       mStartSelectionIndex = newIndex;
       mEndSelectionIndex = newIndex;
       ScrollToIndex(newIndex);
     } else if (mControlSelectMode && charcode == ' ') {
-      SingleSelection(newIndex, PR_TRUE);
+      wasChanged = SingleSelection(newIndex, PR_TRUE);
     } else {
-      PRBool wasChanged = PerformSelection(newIndex, isShift, isControl);
-      if (wasChanged) {
-        UpdateSelection(); // dispatch event, update combobox, etc.
-      }
+      wasChanged = PerformSelection(newIndex, isShift, isControl);
     }
+    if (wasChanged) {
+      UpdateSelection(); // dispatch event, update combobox, etc.
+    }
+#ifdef ACCESSIBILITY
+    if (charcode != ' ') {
+      FireMenuItemActiveEvent();
+    }
+#endif
 
     // XXX - Are we cover up a problem here???
     // Why aren't they getting flushed each time?

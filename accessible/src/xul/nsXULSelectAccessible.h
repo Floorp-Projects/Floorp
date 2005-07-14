@@ -69,8 +69,7 @@ class nsIWeakReference;
 /*
  * The basic implemetation of nsIAccessibleSelectable.
  */
-class nsXULSelectableAccessible : public nsAccessibleWrap,
-                                  public nsIAccessibleSelectable
+class nsXULSelectableAccessible : public nsAccessibleWrap
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

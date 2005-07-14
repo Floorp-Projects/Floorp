@@ -121,10 +121,11 @@ ACCESSIBILITY_ATOM(type, "type")
 ACCESSIBILITY_ATOM(value, "value")
 
   // DHTML accessibility attributes
-ACCESSIBILITY_ATOM(valuenow, "valuenow")    // For DHTML widget values
-ACCESSIBILITY_ATOM(role, "role")
 ACCESSIBILITY_ATOM(checked, "checked")
 ACCESSIBILITY_ATOM(expanded, "expanded")
-ACCESSIBILITY_ATOM(required, "required")
 ACCESSIBILITY_ATOM(invalid, "invalid")
+ACCESSIBILITY_ATOM(multiselect, "multiselect")
+ACCESSIBILITY_ATOM(required, "required")
+ACCESSIBILITY_ATOM(role, "role")
 ACCESSIBILITY_ATOM(selected, "selected")
+ACCESSIBILITY_ATOM(valuenow, "valuenow")    // For DHTML widget values
