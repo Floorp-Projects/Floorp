@@ -79,15 +79,13 @@ DLLStore_Destroy(nsHashKey *aKey, void *aData, void* closure)
 
 nsNativeComponentLoader::nsNativeComponentLoader() :
     mCompMgr(nsnull),
-    mLoadedDependentLibs(16, PR_TRUE),
     mDllStore(nsnull, nsnull, DLLStore_Destroy, 
               nsnull, 256, PR_TRUE)
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsNativeComponentLoader, 
-                              nsIComponentLoader,
-                              nsINativeComponentLoader)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNativeComponentLoader, 
+                              nsIComponentLoader)
 
 NS_IMETHODIMP
 nsNativeComponentLoader::GetFactory(const nsIID & aCID,
@@ -419,10 +417,6 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll,
          *************************************************************/
         nsresult res2 = dll->GetDllSpec(getter_AddRefs(fs));    // don't change 'res2' -- see warning, above
         if (NS_SUCCEEDED(res2)) {
-            // in the case of re-registering a component, we want to remove 
-            // any optional data that this file may have had.
-            AddDependentLibrary(fs, nsnull);
-
             res = mobj->RegisterSelf(mCompMgr, fs, registryLocation,
                                      nativeComponentType);
         }
@@ -1062,37 +1056,4 @@ nsNativeComponentLoader::GetFactoryFromModule(nsDll *aDll, const nsCID &aCID,
 
     return module->GetClassObject(mCompMgr, aCID, NS_GET_IID(nsIFactory),
                                   (void **)aFactory);
-}
-
-
-NS_IMETHODIMP
-nsNativeComponentLoader::AddDependentLibrary(nsIFile* aFile, const char* libName)
-{
-    nsCOMPtr<nsIComponentLoaderManager> manager = do_QueryInterface(mCompMgr);
-    if (!manager) 
-    {
-        NS_WARNING("Something is terribly wrong");
-        return NS_ERROR_FAILURE;
-    }
-
-    // the native component loader uses the optional data
-    // to store a space delimited list of dependent library 
-    // names
-
-    if (!libName) 
-    {
-        manager->SetOptionalData(aFile, nsnull, nsnull);
-        return NS_OK;
-    }
-
-    nsXPIDLCString data;
-    manager->GetOptionalData(aFile, nsnull, getter_Copies(data));
-
-    if (!data.IsEmpty())
-        data.AppendLiteral(" ");
-
-    data.Append(nsDependentCString(libName));
-    
-    manager->SetOptionalData(aFile, nsnull, data);
-    return NS_OK;
 }

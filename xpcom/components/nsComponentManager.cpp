@@ -952,14 +952,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS8(nsComponentManagerImpl,
 nsresult
 nsComponentManagerImpl::GetInterface(const nsIID & uuid, void **result)
 {
-    if (uuid.Equals(NS_GET_IID(nsINativeComponentLoader)))
-    {
-        if (!mNativeComponentLoader)
-            return NS_ERROR_NOT_INITIALIZED;
-
-        return mNativeComponentLoader->QueryInterface(uuid, result);
-    }
-
     NS_WARNING("This isn't supported");
     // fall through to QI as anything QIable is a superset of what can be
     // got via the GetInterface()
