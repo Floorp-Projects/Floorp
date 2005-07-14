@@ -420,6 +420,10 @@ nsComponentsDlg::Show()
     gtk_widget_show(gCtx->back);
     gtk_widget_show(gCtx->next);
 
+    GTK_WIDGET_SET_FLAGS(gCtx->next, GTK_CAN_DEFAULT);
+    gtk_widget_grab_default(gCtx->next);
+    gtk_widget_grab_focus(gCtx->next);
+
     return err;
 }
 

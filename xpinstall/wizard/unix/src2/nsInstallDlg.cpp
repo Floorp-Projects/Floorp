@@ -518,6 +518,10 @@ nsInstallDlg::Show()
         gtk_widget_show(gCtx->back);
     }
 
+    GTK_WIDGET_SET_FLAGS(gCtx->next, GTK_CAN_DEFAULT);
+    gtk_widget_grab_default(gCtx->next);
+    gtk_widget_grab_focus(gCtx->next);
+
     // show back and next button, but make title of next button "Install"
     gCtx->backLabel = gtk_label_new(gCtx->Res("BACK"));
     gCtx->installLabel = gtk_label_new(gCtx->Res("INSTALL"));

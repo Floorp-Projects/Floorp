@@ -200,6 +200,7 @@ nsWelcomeDlg::Show()
 
     GTK_WIDGET_SET_FLAGS(gCtx->next, GTK_CAN_DEFAULT);
     gtk_widget_grab_default(gCtx->next);
+    gtk_widget_grab_focus(gCtx->next);
 
     // show the Next button
     gCtx->nextLabel = gtk_label_new(gCtx->Res("NEXT"));

@@ -218,6 +218,10 @@ nsLicenseDlg::Show()
     gCtx->nextID = gtk_signal_connect(GTK_OBJECT(gCtx->next), "clicked",
                    GTK_SIGNAL_FUNC(nsLicenseDlg::Next), gCtx->ldlg);
 
+    GTK_WIDGET_SET_FLAGS(gCtx->next, GTK_CAN_DEFAULT);
+    gtk_widget_grab_default(gCtx->next);
+    gtk_widget_grab_focus(gCtx->next);
+    
     // always change the button titles to Accept/Decline
     gCtx->acceptLabel = gtk_label_new(gCtx->Res("ACCEPT"));
     gCtx->declineLabel = gtk_label_new(gCtx->Res("DECLINE"));
