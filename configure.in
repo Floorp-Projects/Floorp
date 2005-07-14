@@ -1291,6 +1291,13 @@ case "$target" in
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
+
+    dnl check for the presence of the -dead_strip linker flag
+    HAVE_DEAD_STRIP=
+    if gcc -o conftest -dynamiclib -Wl,-dead_strip >/dev/null 2>&1 ; then
+        rm conftest
+        MOZ_OPTIMIZE_LDFLAGS="-Wl,-dead_strip"
+    fi
     case "${target_cpu}" in
     powerpc*)
         _PLATFORM_DEFAULT_TOOLKIT='mac'
