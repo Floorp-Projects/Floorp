@@ -77,7 +77,6 @@ XPIDLSRCS	= \
 		nsIComponentLoader.idl \
 		nsIComponentLoaderManager.idl \
 		nsIComponentManagerObsolete.idl \
-		nsINativeComponentLoader.idl  \
 		$(NULL)
 
 SDK_XPIDLSRCS	= \

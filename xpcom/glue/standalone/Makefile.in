@@ -53,10 +53,29 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../build \
 		$(NULL)
 
+ifeq (Darwin,$(OS_ARCH))
+LINKSRC = nsGlueLinkingOSX.cpp
+endif
+ifeq (WINNT,$(OS_ARCH))
+LINKSRC = nsGlueLinkingWin.cpp
+endif
+ifneq (,$(filter Linux,$(OS_ARCH)))
+LINKSRC = nsGlueLinkingDlopen.cpp
+endif
+ifeq (OS2,$(OS_ARCH))
+LINKSRC = nsGlueLinkingOS2.cpp
+endif
+
+ifndef LINKSRC
+LINKSRC = nsGlueLinkingNull.cpp
+$(warning TinderboxPrint:<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=298044">Error: XPCOM Glue</a>)
+endif
+
 CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCSRCS)     \
 		nsXPCOMGlue.cpp              \
 		nsGREDirServiceProvider.cpp  \
+		$(LINKSRC)                   \
 		$(NULL)
 
 SDK_HEADERS     = \

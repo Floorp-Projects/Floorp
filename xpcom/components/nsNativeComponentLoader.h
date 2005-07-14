@@ -43,22 +43,20 @@
 #include "nsHashtable.h"
 #include "nsVoidArray.h"
 #include "xcDll.h"
-#include "nsINativeComponentLoader.h"
 
 #ifndef nsNativeComponentLoader_h__
 #define nsNativeComponentLoader_h__
 
-class nsNativeComponentLoader : public nsIComponentLoader, public nsINativeComponentLoader {
+class nsNativeComponentLoader : public nsIComponentLoader
+{
 
  public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICOMPONENTLOADER
-    NS_DECL_NSINATIVECOMPONENTLOADER
 
     nsNativeComponentLoader();
  
     nsIComponentManager* mCompMgr;      // weak reference -- backpointer
-    nsHashtable          mLoadedDependentLibs;
 
  private:
     nsObjectHashtable   mDllStore;

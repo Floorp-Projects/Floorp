@@ -41,9 +41,6 @@
 #include "nsIFactory.h"
 #include "nsIModule.h"
 #include "nsIClassInfo.h"
-#ifdef HAVE_DEPENDENT_LIBS
-#include "dependentLibs.h"
-#endif
 
 // {3bc97f01-ccdf-11d2-bab8-b548654461fc}
 #define NS_GENERICFACTORY_CID                                                 \
@@ -280,8 +277,6 @@ typedef void (PR_CALLBACK *nsModuleDestructorProc) (nsIModule *self);
  * @param mCount       : Count of mComponents
  * @param mCtor        : Module user defined constructor
  * @param mDtor        : Module user defined destructor
- * @param mLibraryDependencies : array of library which this module is 
- *                               dependent on. 
  *
  **/
 
@@ -292,7 +287,6 @@ struct nsModuleInfo {
     PRUint32                mCount;
     nsModuleConstructorProc mCtor;
     nsModuleDestructorProc  mDtor;
-    const char**            mLibraryDependencies;
 };
 
 /**
@@ -323,13 +317,9 @@ NS_NewGenericModule(const char* moduleName,
 #  define NS_MODULEINFO                   nsModuleInfo
 #  define NSMODULEINFO(_name)             _name##_gModuleInfo
 #  define NSGETMODULE_ENTRY_POINT(_info)
-#  define NSDEPENDENT_LIBS(_name)         const char* _name##_gDependlibs[]={DEPENDENT_LIBS "\0"};
-#  define NSDEPENDENT_LIBS_NAME(_name)    _name##_gDependlibs
 #else
 #  define NS_MODULEINFO                   static nsModuleInfo
 #  define NSMODULEINFO(_name)             gModuleInfo
-#  define NSDEPENDENT_LIBS(_name)         static const char* gDependlibs[]={DEPENDENT_LIBS "\0"};
-#  define NSDEPENDENT_LIBS_NAME(_name)    gDependlibs
 #  define NSGETMODULE_ENTRY_POINT(_info)                                      \
 extern "C" NS_EXPORT nsresult                                                 \
 NSGetModule(nsIComponentManager *servMgr,                                     \
@@ -355,8 +345,6 @@ NSGetModule(nsIComponentManager *servMgr,                                     \
 #define NS_IMPL_NSGETMODULE_WITH_DTOR(_name, _components, _dtor)              \
     NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, nsnull, _dtor)
 
-#ifndef DEPENDENT_LIBS
-
 #define NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, _ctor, _dtor)  \
 NS_MODULEINFO NSMODULEINFO(_name) = {                                         \
     NS_MODULEINFO_VERSION,                                                    \
@@ -364,27 +352,9 @@ NS_MODULEINFO NSMODULEINFO(_name) = {                                         \
     (_components),                                                            \
     (sizeof(_components) / sizeof(_components[0])),                           \
     (_ctor),                                                                  \
-    (_dtor),                                                                  \
-    (nsnull)                                                                  \
+    (_dtor)                                                                   \
 };                                                                            \
 NSGETMODULE_ENTRY_POINT(NSMODULEINFO(_name))
-
-#else // DEPENDENT_LIBS
-
-#define NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, _ctor, _dtor)  \
-NSDEPENDENT_LIBS(_name)                                                       \
-NS_MODULEINFO NSMODULEINFO(_name) = {                                         \
-    NS_MODULEINFO_VERSION,                                                    \
-    (#_name),                                                                 \
-    (_components),                                                            \
-    (sizeof(_components) / sizeof(_components[0])),                           \
-    (_ctor),                                                                  \
-    (_dtor),                                                                  \
-    (NSDEPENDENT_LIBS_NAME(_name))                                            \
-};                                                                            \
-NSGETMODULE_ENTRY_POINT(NSMODULEINFO(_name))
-
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

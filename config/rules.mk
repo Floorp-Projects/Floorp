@@ -649,34 +649,6 @@ endif # IS_COMPONENT
 endif # EXPORT_LIBRARY
 endif # LIBRARY_NAME
 
-# Dependent libs
-ifdef USE_DEPENDENT_LIBS
-ifdef IS_COMPONENT
-
-ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH))$(GNU_CXX))
-DEPENDENT_LIBS = $(filter-out %_s$(DLL_SUFFIX), $(patsubst %.$(IMPORT_LIB_SUFFIX),$(LIB_PREFIX)%$(DLL_SUFFIX),$(notdir $(filter %.$(IMPORT_LIB_SUFFIX), $(EXTRA_DSO_LDOPTS)))))
-else
-DEPENDENT_LIBS = $(filter-out %_s$(DLL_SUFFIX), $(patsubst -l%,$(DLL_PREFIX)%$(DLL_SUFFIX),$(filter -l%, $(EXTRA_DSO_LDOPTS))))
-endif
-
-ifneq (,$(strip $(DEPENDENT_LIBS)))
-DEFINES	+= -DHAVE_DEPENDENT_LIBS
-INCLUDES += -I.
-# This must match value in nsIGenericFactory.h
-DEPENDENT_LIBS_H = dependentLibs.h
-GARBAGE += $(DEPENDENT_LIBS_H)
-
-export:: $(DEPENDENT_LIBS_H)
-
-$(DEPENDENT_LIBS_H): Makefile Makefile.in
-	@rm -f $@
-	echo "#define DEPENDENT_LIBS $(foreach f,$(DEPENDENT_LIBS),\"${f}\",) " > $@
-
-endif
-endif
-endif
-
-
 # Create dependencies on static libraries
 LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(LIBS))
 HOST_LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(HOST_LIBS))

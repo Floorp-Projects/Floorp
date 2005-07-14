@@ -45,6 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 LIBRARY_NAME	= xpcom
 
+# The XPCOM glue uses realpath() on libxpcom.so to resolve any symlinks. We
+# want it to find dist/bin and not xpcom/stub so we copy instead of symlinking.
+NSDISTMODE = copy
+
 PACKAGE_FILE = xpcom.pkg
 PACKAGE_VARS += USE_SHORT_LIBNAME
 
