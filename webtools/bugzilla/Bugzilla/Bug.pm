@@ -805,6 +805,119 @@ sub GetComments {
     return \@comments;
 }
 
+# Get the activity of a bug, starting from $starttime (if given).
+# This routine assumes ValidateBugID has been previously called.
+sub GetBugActivity {
+    my ($id, $starttime) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    # Arguments passed to the SQL query.
+    my @args = ($id);
+
+    # Only consider changes since $starttime, if given.
+    my $datepart = "";
+    if (defined $starttime) {
+        trick_taint($starttime);
+        push (@args, $starttime);
+        $datepart = "AND bugs_activity.bug_when > ?";
+    }
+
+    # Only includes attachments the user is allowed to see.
+    my $suppjoins = "";
+    my $suppwhere = "";
+    if (Param("insidergroup") && !UserInGroup(Param('insidergroup'))) {
+        $suppjoins = "LEFT JOIN attachments 
+                   ON attachments.attach_id = bugs_activity.attach_id";
+        $suppwhere = "AND COALESCE(attachments.isprivate, 0) = 0";
+    }
+
+    my $query = "
+        SELECT COALESCE(fielddefs.description, " 
+               # This is a hack - PostgreSQL requires both COALESCE
+               # arguments to be of the same type, and this is the only
+               # way supported by both MySQL 3 and PostgreSQL to convert
+               # an integer to a string. MySQL 4 supports CAST.
+               . $dbh->sql_string_concat('bugs_activity.fieldid', q{''}) .
+               "), fielddefs.name, bugs_activity.attach_id, " .
+        $dbh->sql_date_format('bugs_activity.bug_when', '%Y.%m.%d %H:%i:%s') .
+            ", bugs_activity.removed, bugs_activity.added, profiles.login_name
+          FROM bugs_activity
+               $suppjoins
+     LEFT JOIN fielddefs
+            ON bugs_activity.fieldid = fielddefs.fieldid
+    INNER JOIN profiles
+            ON profiles.userid = bugs_activity.who
+         WHERE bugs_activity.bug_id = ?
+               $datepart
+               $suppwhere
+      ORDER BY bugs_activity.bug_when";
+
+    my $list = $dbh->selectall_arrayref($query, undef, @args);
+
+    my @operations;
+    my $operation = {};
+    my $changes = [];
+    my $incomplete_data = 0;
+
+    foreach my $entry (@$list) {
+        my ($field, $fieldname, $attachid, $when, $removed, $added, $who) = @$entry;
+        my %change;
+        my $activity_visible = 1;
+
+        # check if the user should see this field's activity
+        if ($fieldname eq 'remaining_time'
+            || $fieldname eq 'estimated_time'
+            || $fieldname eq 'work_time'
+            || $fieldname eq 'deadline')
+        {
+            $activity_visible = UserInGroup(Param('timetrackinggroup')) ? 1 : 0;
+        } else {
+            $activity_visible = 1;
+        }
+
+        if ($activity_visible) {
+            # This gets replaced with a hyperlink in the template.
+            $field =~ s/^Attachment// if $attachid;
+
+            # Check for the results of an old Bugzilla data corruption bug
+            $incomplete_data = 1 if ($added =~ /^\?/ || $removed =~ /^\?/);
+
+            # An operation, done by 'who' at time 'when', has a number of
+            # 'changes' associated with it.
+            # If this is the start of a new operation, store the data from the
+            # previous one, and set up the new one.
+            if ($operation->{'who'}
+                && ($who ne $operation->{'who'}
+                    || $when ne $operation->{'when'}))
+            {
+                $operation->{'changes'} = $changes;
+                push (@operations, $operation);
+
+                # Create new empty anonymous data structures.
+                $operation = {};
+                $changes = [];
+            }
+
+            $operation->{'who'} = $who;
+            $operation->{'when'} = $when;
+
+            $change{'field'} = $field;
+            $change{'fieldname'} = $fieldname;
+            $change{'attachid'} = $attachid;
+            $change{'removed'} = $removed;
+            $change{'added'} = $added;
+            push (@$changes, \%change);
+        }
+    }
+
+    if ($operation->{'who'}) {
+        $operation->{'changes'} = $changes;
+        push (@operations, $operation);
+    }
+
+    return(\@operations, $incomplete_data);
+}
+
 # CountOpenDependencies counts the number of open dependent bugs for a
 # list of bugs and returns a list of bug_id's and their dependency count
 # It takes one parameter:

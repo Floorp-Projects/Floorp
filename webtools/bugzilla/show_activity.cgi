@@ -28,6 +28,9 @@ use lib qw(.);
 use vars qw ($template $vars);
 
 require "CGI.pl";
+
+use Bugzilla::Bug;
+
 my $cgi = Bugzilla->cgi;
 
 ###############################################################################
@@ -47,7 +50,7 @@ ValidateBugID($bug_id);
 ###############################################################################
 
 ($vars->{'operations'}, $vars->{'incomplete_data'}) = 
-                                                 GetBugActivity($bug_id);
+    Bugzilla::Bug::GetBugActivity($bug_id);
 
 $vars->{'bug_id'} = $bug_id;
 
