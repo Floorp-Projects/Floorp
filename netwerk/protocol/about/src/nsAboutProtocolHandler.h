@@ -40,6 +40,8 @@
 
 #include "nsIProtocolHandler.h"
 
+class nsCString;
+
 #define NS_ABOUTPROTOCOLHANDLER_CID                  \
 { /* 9e3b6c90-2f75-11d3-8cd0-0060b0fc14a3 */         \
     0x9e3b6c90,                                      \
@@ -64,6 +66,8 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsresult Init();
+
+    static void StripQueryAndHash(nsCString& aPath);
 
 protected:
 };
