@@ -25,9 +25,18 @@ use strict;
 
 package Bugzilla::CGI;
 
+BEGIN {
+    if ($^O =~ /MSWin32/i) {
+        # Help CGI find the correct temp directory as the default list
+        # isn't Windows friendly (Bug 248988)
+        $ENV{'TMPDIR'} = $ENV{'TEMP'} || $ENV{'TMP'} || "$ENV{'WINDIR'}\\TEMP";
+    }
+}
+
 use CGI qw(-no_xhtml -oldstyle_urls :private_tempfiles :unique_headers SERVER_PUSH);
 
 use base qw(CGI);
+use CGI::Carp qw(fatalsToBrowser);
 
 use Bugzilla::Error;
 use Bugzilla::Util;

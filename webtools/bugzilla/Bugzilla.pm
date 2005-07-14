@@ -33,6 +33,59 @@ use Bugzilla::Constants;
 use Bugzilla::DB;
 use Bugzilla::Template;
 use Bugzilla::User;
+use Bugzilla::Error;
+use Bugzilla::Util;
+
+use File::Basename;
+
+#####################################################################
+# Constants
+#####################################################################
+
+# Scripts that are not stopped by shutdownhtml being in effect.
+use constant SHUTDOWNHTML_EXEMPT => [
+    'doeditparams.cgi',
+    'editparams.cgi',
+    'checksetup.pl',
+];
+
+#####################################################################
+# Global Code
+#####################################################################
+
+# If Bugzilla is shut down, do not allow anything to run, just display a
+# message to the user about the downtime.  Scripts listed in 
+# SHUTDOWNHTML_EXEMPT are exempt from this message.
+#
+# This code must go here. It cannot go anywhere in Bugzilla::CGI, because
+# it uses Template, and that causes various dependency loops.
+if (Param("shutdownhtml") 
+    && lsearch(SHUTDOWNHTML_EXEMPT, basename($0)) == -1) 
+{
+    my $template = Bugzilla->template;
+    my $vars = {};
+    $vars->{'message'} = 'shutdown';
+    # Generate and return a message about the downtime, appropriately
+    # for if we're a command-line script or a CGI sript.
+    my $extension;
+    if (i_am_cgi() && (!Bugzilla->cgi->param('format') 
+                       || Bugzilla->cgi->param('format') eq 'html')) {
+        $extension = 'html';
+    }
+    else {
+        $extension = 'txt';
+    }
+    print Bugzilla->cgi->header() if i_am_cgi();
+    my $t_output;
+    $template->process("global/message.$extension.tmpl", $vars, \$t_output)
+        || ThrowTemplateError($template->error);
+    print $t_output . "\n";
+    exit;
+}
+
+#####################################################################
+# Subroutines and Methods
+#####################################################################
 
 my $_template;
 sub template {

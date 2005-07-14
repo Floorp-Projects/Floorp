@@ -32,14 +32,6 @@ use lib ".";
 
 # use Carp;                       # for confess
 
-BEGIN {
-    if ($^O =~ /MSWin32/i) {
-        # Help CGI find the correct temp directory as the default list
-        # isn't Windows friendly (Bug 248988)
-        $ENV{'TMPDIR'} = $ENV{'TEMP'} || $ENV{'TMP'} || "$ENV{'WINDIR'}\\TEMP";
-    }
-}
-
 use Bugzilla::Util;
 use Bugzilla::Config;
 use Bugzilla::Constants;
@@ -60,27 +52,9 @@ sub CGI_pl_sillyness {
     $zz = $::buffer;
 }
 
-use CGI::Carp qw(fatalsToBrowser);
-
 require 'globals.pl';
 
 use vars qw($template $vars);
-
-# If Bugzilla is shut down, do not go any further, just display a message
-# to the user about the downtime.  (do)editparams.cgi is exempted from
-# this message, of course, since it needs to be available in order for
-# the administrator to open Bugzilla back up.
-if (Param("shutdownhtml") && $0 !~ m:(^|[\\/])(do)?editparams\.cgi$:) {
-    $::vars->{'message'} = "shutdown";
-    
-    # Return the appropriate HTTP response headers.
-    print Bugzilla->cgi->header();
-    
-    # Generate and return an HTML message about the downtime.
-    $::template->process("global/message.html.tmpl", $::vars)
-      || ThrowTemplateError($::template->error());
-    exit;
-}
 
 # Implementations of several of the below were blatently stolen from CGI.pm,
 # by Lincoln D. Stein.

@@ -33,6 +33,7 @@ use base qw(Exporter);
                              detaint_signed
                              html_quote url_quote value_quote xml_quote
                              css_class_quote
+                             i_am_cgi
                              lsearch max min
                              diff_arrays diff_strings
                              trim wrap_comment find_wrap_point
@@ -128,6 +129,12 @@ sub xml_quote {
     $var =~ s/\"/\&quot;/g;
     $var =~ s/\'/\&apos;/g;
     return $var;
+}
+
+sub i_am_cgi () {
+    # I use SERVER_SOFTWARE because it's required to be
+    # defined for all requests in the CGI spec.
+    return exists $ENV{'SERVER_SOFTWARE'} ? 1 : 0;
 }
 
 sub lsearch {
@@ -376,6 +383,9 @@ Bugzilla::Util - Generic utility functions for bugzilla
   value_quote($var);
   xml_quote($var);
 
+  # Functions that tell you about your environment
+  my $is_cgi = i_am_cgi();
+
   # Functions for searching
   $loc = lsearch(\@arr, $val);
   $val = max($a, $b, $c);
@@ -479,6 +489,12 @@ into &#013;, suitable for use in html attributes.
 This is similar to C<html_quote>, except that ' is escaped to &apos;. This
 is kept separate from html_quote partly for compatibility with previous code
 (for &apos;) and partly for future handling of non-ASCII characters.
+
+=item C<i_am_cgi()>
+
+Tells you whether or not you are being run as a CGI script in a web
+server. For example, it would return false if the caller is running
+in a command-line script.
 
 =back
 
