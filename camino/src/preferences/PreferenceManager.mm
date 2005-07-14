@@ -217,7 +217,6 @@ static BOOL gMadePrefManager;
 
 - (BOOL)initMozillaPrefs
 {
-
 #ifdef _BUILD_STATIC_BIN
     // Initialize XPCOM's module info table
     NSGetStaticModuleInfo = app_getModuleInfo;

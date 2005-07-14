@@ -89,6 +89,7 @@ typedef enum EBookmarkOpenBehavior
     IBOutlet NSMenuItem*    mShowAllBookmarksMenuItem;
     
     BOOL                    mOffline;
+    BOOL                    mGeckoInitted;
 
     BookmarkMenu*           mMenuBookmarks;
     BookmarkMenu*           mDockBookmarks;
@@ -165,6 +166,8 @@ typedef enum EBookmarkOpenBehavior
 -(IBAction) searchCustomizeLink:(id)aSender;
 
 -(IBAction) aboutPlugins:(id)aSender;
+
+- (void)ensureGeckoInitted;
 
 - (BrowserWindowController*)openBrowserWindowWithURL:(NSString*)aURL andReferrer:(NSString*)aReferrer behind:(NSWindow*)window allowPopups:(BOOL)inAllowPopups;
 - (BrowserWindowController*)openBrowserWindowWithURLs:(NSArray*)urlArray behind:(NSWindow*)window allowPopups:(BOOL)inAllowPopups;

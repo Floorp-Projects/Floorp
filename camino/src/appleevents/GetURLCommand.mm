@@ -46,7 +46,13 @@
 
 - (id)performDefaultImplementation 
 {
-  [(MainController*)[NSApp delegate] openNewWindowOrTabWithURL:[self directParameter] andReferrer:nil];
+  MainController* mainController = (MainController*)[NSApp delegate];
+
+  // we can get here before -applicationDidFinishLaunching: is called,
+  // so we have to make sure that gecko has been initted
+  [mainController ensureGeckoInitted];
+
+  [mainController openNewWindowOrTabWithURL:[self directParameter] andReferrer:nil];
   return nil;
 }
 

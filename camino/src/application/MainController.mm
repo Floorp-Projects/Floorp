@@ -243,10 +243,13 @@ const int kReuseWindowOnAE = 2;
   // will get called more than once.
 }
 
--(void)applicationDidFinishLaunching:(NSNotification *)aNotification
+- (void)ensureGeckoInitted
 {
-  // initialize prefs if we haven't already.
-  PreferenceManager *pm = [PreferenceManager sharedInstance];
+  if (mGeckoInitted)
+    return;
+
+  // bring up prefs manager (which inits gecko)
+  [PreferenceManager sharedInstance];
 
   // register our app components with the embed layer
   unsigned int numComps = 0;
@@ -256,11 +259,18 @@ const int kReuseWindowOnAE = 2;
   // To work around a bug on Tiger where the view hookup order has been changed from postfix to prefix
   // order, we need to set a user default to return to the old behavior.
   [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"NSViewSetAncestorsWindowFirst"];
-  
+
+  mGeckoInitted = YES;
+}
+
+-(void)applicationDidFinishLaunching:(NSNotification *)aNotification
+{
+  [self ensureGeckoInitted];
+
   // previous versions would keep the cache in the profile folder. If we find it there, remove it so
   // that backup apps can more easily back up our profile. This will mean if anyone goes back to 
   // 0.8.x, they'll lose their favicons and cache, but that's ok.
-  NSString* cacheDir = [[pm newProfilePath] stringByAppendingPathComponent:@"Cache"];
+  NSString* cacheDir = [[[PreferenceManager sharedInstance] newProfilePath] stringByAppendingPathComponent:@"Cache"];
   [[NSFileManager defaultManager] removeFileAtPath:cacheDir handler:nil];
 
   NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
@@ -297,7 +307,7 @@ const int kReuseWindowOnAE = 2;
   
   // bring up the JS console service
   BOOL success;
-  if ([pm getBooleanPref:"chimera.log_js_to_console" withSuccess:&success])
+  if ([[PreferenceManager sharedInstance] getBooleanPref:"chimera.log_js_to_console" withSuccess:&success])
     [JSConsole sharedJSConsole];
 
   [self setupRendezvous];
@@ -382,8 +392,7 @@ const int kReuseWindowOnAE = 2;
 {
   BOOL doingRendezvous = NO;
   
-  PreferenceManager *pm = [PreferenceManager sharedInstance];
-  if ([pm getBooleanPref:"chimera.enable_rendezvous" withSuccess:NULL]) {
+  if ([[PreferenceManager sharedInstance] getBooleanPref:"chimera.enable_rendezvous" withSuccess:NULL]) {
     if ([MainController supportsBonjour]) {
       NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
       [notificationCenter addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
@@ -1149,6 +1158,10 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
+  // We can get called before -applicationDidFinishLaunching, so make sure gecko
+  // has been initted
+  [self ensureGeckoInitted];
+  
   NSURL* urlToOpen = [MainController decodeLocalFileURL:[NSURL fileURLWithPath:filename]];
   [self openNewWindowOrTabWithURL:[urlToOpen absoluteString] andReferrer:nil];
   return YES;    
