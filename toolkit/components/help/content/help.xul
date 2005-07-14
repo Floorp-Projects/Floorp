@@ -49,8 +49,8 @@
     %helpDTD;
     <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
     %findBarDTD;
-    <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
-    %globalRegionDTD;
+    <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+    %globalDTD;
 ]>
 
 <window id="help"

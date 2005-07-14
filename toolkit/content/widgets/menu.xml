@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 
 <!DOCTYPE bindings [
-  <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
-  %globalRegionDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
 ]>
 
 <bindings id="menuitemBindings"

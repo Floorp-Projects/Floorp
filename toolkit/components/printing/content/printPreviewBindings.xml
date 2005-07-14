@@ -42,8 +42,8 @@
 <!DOCTYPE window [
 <!ENTITY % printPreviewDTD SYSTEM "chrome://global/locale/printPreview.dtd" >
 %printPreviewDTD;
-<!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
-%globalRegionDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
 ]>
 
 <bindings id="printPreviewBindings"
