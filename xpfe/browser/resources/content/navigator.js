@@ -2159,7 +2159,7 @@ function handleURLBarRevert()
 function handleURLBarCommand(aUserAction, aTriggeringEvent)
 {
   try {
-    addToUrlbarHistory();
+    addToUrlbarHistory(gURLBar.value);
   } catch (ex) {
     // Things may go wrong when adding url to session history,
     // but don't let that interfere with the loading of the url.
