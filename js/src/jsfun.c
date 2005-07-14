@@ -107,9 +107,6 @@ js_GetArgsValue(JSContext *cx, JSStackFrame *fp, jsval *vp)
     return JS_TRUE;
 }
 
-#define MAXARGS(fp)     ((fp)->fun ? JS_MAX((fp)->argc, (fp)->fun->nargs)     \
-                                   : (fp)->argc)
-
 static JSBool
 MarkArgDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
 {
@@ -120,7 +117,7 @@ MarkArgDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
 
     argsobj = fp->argsobj;
     (void) JS_GetReservedSlot(cx, argsobj, 0, &bmapval);
-    nbits = MAXARGS(fp);
+    nbits = fp->argc;
     JS_ASSERT(slot < nbits);
     if (JSVAL_IS_VOID(bmapval)) {
         if (nbits <= JSVAL_INT_BITS) {
@@ -163,7 +160,7 @@ ArgWasDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
     (void) JS_GetReservedSlot(cx, argsobj, 0, &bmapval);
     if (JSVAL_IS_VOID(bmapval))
         return JS_FALSE;
-    if (MAXARGS(fp) <= JSVAL_INT_BITS) {
+    if (fp->argc <= JSVAL_INT_BITS) {
         bmapint = JSVAL_TO_INT(bmapval);
         bitmap = (jsbitmap *) &bmapint;
     } else {
@@ -203,10 +200,25 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
     *vp = JSVAL_VOID;
     if (JSID_IS_INT(id)) {
         slot = (uintN) JSID_TO_INT(id);
-        if (slot < MAXARGS(fp)) {
+        if (slot < fp->argc) {
             if (fp->argsobj && ArgWasDeleted(cx, fp, slot))
                 return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
             *vp = fp->argv[slot];
+        } else {
+            /*
+             * Per ECMA-262 Ed. 3, 10.1.8, last bulleted item, do not share
+             * storage between the formal parameter and arguments[k] for all
+             * k >= fp->argc && k < fp->fun->nargs.  For example, in
+             *
+             *   function f(x) { x = 42; return arguments[0]; }
+             *   f();
+             *
+             * the call to f should return undefined, not 42.  If fp->argsobj
+             * is null at this point, as it would be in the example, return
+             * undefined in *vp.
+             */
+            if (fp->argsobj)
+                return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
         }
     } else {
         if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
@@ -268,7 +280,7 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
     (void) JS_GetReservedSlot(cx, argsobj, 0, &bmapval);
     if (!JSVAL_IS_VOID(bmapval)) {
         JS_SetReservedSlot(cx, argsobj, 0, JSVAL_VOID);
-        if (MAXARGS(fp) > JSVAL_INT_BITS)
+        if (fp->argc > JSVAL_INT_BITS)
             JS_free(cx, JSVAL_TO_PRIVATE(bmapval));
     }
 
@@ -318,7 +330,7 @@ args_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       default:
-        if ((uintN)slot < MAXARGS(fp) && !MarkArgDeleted(cx, fp, slot))
+        if ((uintN)slot < fp->argc && !MarkArgDeleted(cx, fp, slot))
             return JS_FALSE;
         break;
     }
@@ -352,7 +364,7 @@ args_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       default:
-        if ((uintN)slot < MAXARGS(fp) && !ArgWasDeleted(cx, fp, slot))
+        if ((uintN)slot < fp->argc && !ArgWasDeleted(cx, fp, slot))
             *vp = fp->argv[slot];
         break;
     }
@@ -381,7 +393,7 @@ args_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       default:
-        if ((uintN)slot < MAXARGS(fp) && !ArgWasDeleted(cx, fp, slot))
+        if ((uintN)slot < fp->argc && !ArgWasDeleted(cx, fp, slot))
             fp->argv[slot] = *vp;
         break;
     }
@@ -408,7 +420,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
     if (JSVAL_IS_INT(id)) {
         slot = JSVAL_TO_INT(id);
-        if (slot < MAXARGS(fp) && !ArgWasDeleted(cx, fp, slot)) {
+        if (slot < fp->argc && !ArgWasDeleted(cx, fp, slot)) {
             /* XXX ECMA specs DontEnum, contrary to other array-like objects */
             if (!js_DefineProperty(cx, obj, INT_JSVAL_TO_JSID(id),
                                    fp->argv[slot],
@@ -461,7 +473,7 @@ args_enumerate(JSContext *cx, JSObject *obj)
     JSStackFrame *fp;
     JSObject *pobj;
     JSProperty *prop;
-    uintN slot, nargs;
+    uintN slot, argc;
 
     fp = (JSStackFrame *)
          JS_GetInstancePrivate(cx, obj, &js_ArgumentsClass, NULL);
@@ -492,8 +504,8 @@ args_enumerate(JSContext *cx, JSObject *obj)
     if (prop)
         OBJ_DROP_PROPERTY(cx, pobj, prop);
 
-    nargs = MAXARGS(fp);
-    for (slot = 0; slot < nargs; slot++) {
+    argc = fp->argc;
+    for (slot = 0; slot < argc; slot++) {
         if (!js_LookupProperty(cx, obj, INT_TO_JSID((jsint)slot), &pobj, &prop))
             return JS_FALSE;
         if (prop)
