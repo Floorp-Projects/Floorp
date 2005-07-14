@@ -104,7 +104,7 @@ function executeUrlBarHistoryCommand( aTarget )
       {
         if (gURLBar) {
           gURLBar.value = label;
-          addToUrlbarHistory();
+          addToUrlbarHistory(gURLBar.value);
           BrowserLoadURL();
         } else {
           var uri = getShortcutOrURI(label);
@@ -156,89 +156,6 @@ function createUBHistoryMenu( aParent )
       }
     }
   }
-
-function addToUrlbarHistory()
-{
-  var urlToAdd = gURLBar.value;
-
-  // Remove leading and trailing spaces first
-  urlToAdd = urlToAdd.replace(/^\s+/, '').replace(/\s+$/, '');
-
-  if (!urlToAdd)
-    return;
-  if (urlToAdd.search(/[\x00-\x1F]/) != -1) // don't store bad URLs
-    return;
-
-  if (!gRDF)
-    gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                     .getService(Components.interfaces.nsIRDFService);
- 
-  if (!gGlobalHistory)
-    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
-                               .getService(Components.interfaces.nsIBrowserHistory);
-
-  if (!gURIFixup)
-    gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
-                          .getService(Components.interfaces.nsIURIFixup);
-  if (!gLocalStore)
-    gLocalStore = gRDF.GetDataSource("rdf:local-store");
-
-  if (!gRDFC)
-    gRDFC = Components.classes["@mozilla.org/rdf/container-utils;1"]
-                      .getService(Components.interfaces.nsIRDFContainerUtils);
-
-  var entries = gRDFC.MakeSeq(gLocalStore, gRDF.GetResource("nc:urlbar-history"));
-  if (!entries)
-    return;
-  var elements = entries.GetElements();
-  if (!elements)
-    return;
-  var index = 0;
-
-  var urlToCompare = urlToAdd.toUpperCase();
-  while(elements.hasMoreElements()) {
-    var entry = elements.getNext();
-    if (!entry) continue;
-
-    index ++;
-    try {
-      entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
-    } catch(ex) {
-      // XXXbar not an nsIRDFLiteral for some reason. see 90337.
-      continue;
-    }
-
-    if (urlToCompare == entry.Value.toUpperCase()) {
-      // URL already present in the database
-      // Remove it from its current position.
-      // It is inserted to the top after the while loop.
-      entries.RemoveElementAt(index, true);
-      break;
-    }
-  }   // while
-
-  // Otherwise, we've got a new URL in town. Add it!
-
-  try {
-    var url = getShortcutOrURI(urlToAdd);
-    var fixedUpURI = gURIFixup.createFixupURI(url, 0);
-    if (!fixedUpURI.schemeIs("data"))
-      gGlobalHistory.markPageAsTyped(fixedUpURI);
-  }
-  catch(ex) {
-  }
-
-  // Put the value as it was typed by the user in to RDF
-  // Insert it to the beginning of the list.
-  var entryToAdd = gRDF.GetLiteral(urlToAdd);
-  entries.InsertElementAt(entryToAdd, 1, true);
-
-  // Remove any expired history items so that we don't let
-  // this grow without bound.
-  for (index = entries.GetCount(); index > MAX_URLBAR_HISTORY_ITEMS; --index) {
-      entries.RemoveElementAt(index, true);
-  }  // for
-}
 
 function createMenuItem( aParent, aIndex, aLabel)
   {
