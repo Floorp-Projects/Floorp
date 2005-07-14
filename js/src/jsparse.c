@@ -830,7 +830,9 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             }
             if (prop)
                 OBJ_DROP_PROPERTY(cx, pobj, prop);
-            if (!prop || pobj != varobj) {
+            if (!prop ||
+                pobj != varobj ||
+                ((JSScopeProperty *)prop)->getter != js_GetLocalVariable) {
                 if (!js_AddHiddenProperty(cx, varobj, ATOM_TO_JSID(funAtom),
                                           js_GetLocalVariable,
                                           js_SetLocalVariable,
