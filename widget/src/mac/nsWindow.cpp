@@ -1249,7 +1249,7 @@ NS_IMETHODIMP	nsWindow::Update()
 
     // draw the widget
     StPortSetter portSetter(mWindowPtr);
-    ::SetOrigin(0, 0);
+    StOriginSetter originSetter(mWindowPtr);
 
     // BeginUpate replaces the visRgn with the intersection of the
     // visRgn and the updateRgn.
@@ -2205,7 +2205,7 @@ NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aLocalRect, nsRect& aGlobal
 		// When there is no parent, we're at the top level window. Use
 		// the origin (shifted into global coordinates) to find the offset.
 		StPortSetter	portSetter(mWindowPtr);
-		::SetOrigin(0,0);
+		StOriginSetter	originSetter(mWindowPtr);
 		
 		// convert origin into global coords and shift output rect by that ammount
 		Point origin = {0, 0};
@@ -2246,7 +2246,7 @@ NS_IMETHODIMP nsWindow::ScreenToWidget(const nsRect& aGlobalRect, nsRect& aLocal
 		// When there is no parent, we're at the top level window. Use
 		// the origin (shifted into local coordinates) to find the offset.
 		StPortSetter	portSetter(mWindowPtr);
-		::SetOrigin(0,0);
+		StOriginSetter	originSetter(mWindowPtr);
 		
 		// convert origin into local coords and shift output rect by that ammount
 		Point origin = {0, 0};

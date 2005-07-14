@@ -59,6 +59,7 @@ public:
 				              nsIAppShell *aAppShell = nsnull,
 				              nsIToolkit *aToolkit = nsnull,
 				              nsWidgetInitData *aInitData = nsnull);
+	NS_IMETHOD			Destroy();
 
 	virtual void		SetControlType(short type)	{mControlType = type;}
 	short				GetControlType()			{return mControlType;}
@@ -81,9 +82,6 @@ protected:
 	
 	nsresult			CreateOrReplaceMacControl(short inControlType);
 
- 	OSStatus 			InstallEventHandlerOnControl();
- 	void				RemoveEventHandlerFromControl();
- 	
  	void				ClearControl();
 
 	virtual void		GetRectForMacControl(nsRect &outRect);
@@ -103,7 +101,6 @@ protected:
 	PRInt32				mMin;
 	PRInt32				mMax;
 	ControlHandle		mControl;
-	EventHandlerRef		mControlEventHandler;
 	short				mControlType;
 
 	nsString			mLastLabel;

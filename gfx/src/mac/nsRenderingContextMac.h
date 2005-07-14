@@ -196,6 +196,12 @@ protected:
     float                   mP2T;               // Pixel to Twip conversion factor
     nsIDeviceContext *      mContext;
 
+#ifndef MOZ_WIDGET_COCOA
+    CGrafPtr                mSavePort;
+    GDHandle                mSaveDevice;
+    Rect                    mSavePortRect;
+#endif /* ! MOZ_WIDGET_COCOA */
+
     nsDrawingSurfaceMac*    mFrontSurface;
     nsDrawingSurfaceMac*    mCurrentSurface;    // pointer to the current surface
 
