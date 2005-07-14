@@ -2036,7 +2036,7 @@ nsSelection::GetPrevNextBidiLevels(nsPresContext *aPresContext,
     thisBlock = blockFrame;
     blockFrame = blockFrame->GetParent();
     if (blockFrame) {
-      CallQueryInterface(blockFrame, &it);
+      result = CallQueryInterface(blockFrame, &it);
     }
   }
   if (!blockFrame || !it)
