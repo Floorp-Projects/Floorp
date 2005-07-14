@@ -54,22 +54,28 @@ const float kVOffset = 20.0;
 
 - (id)init
 {
-  self = [super init];
-  if (self) {
-    mPanel = [[NSWindow alloc] initWithContentRect:NSMakeRect(0.0, 0.0, kMaxTextFieldWidth, 0.0)
+  if ((self = [super init]))
+  {
+    // the ref from -alloc is balanced by the -release in dealloc
+    mTooltipWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0.0, 0.0, kMaxTextFieldWidth, 0.0)
                                          styleMask:NSBorderlessWindowMask
                                            backing:NSBackingStoreBuffered
                                              defer:YES];
+
+    // we don't want closing the window to release it, because we aren't always in control
+    // of the close (AppKit may do it on quit).
+    [mTooltipWindow setReleasedWhenClosed:NO];
     
     // Create a textfield as the content of our new window.
     // Field occupies all but the top 2 and bottom 2 pixels of the panel (bug 149635)
     mTextView = [[NSTextView alloc] initWithFrame:NSMakeRect(0.0, kBorderPadding, kMaxTextFieldWidth, 0.0)];
-    [[mPanel contentView] addSubview:mTextView];
+    [[mTooltipWindow contentView] addSubview:mTextView];
     [mTextView release]; // window holds ref
     
     // set up the panel
-    [mPanel setHasShadow:YES];
-    [mPanel setBackgroundColor:[NSColor colorWithCalibratedRed:1.0 green:1.0 blue:0.81 alpha:1.0]];
+    [mTooltipWindow setHasShadow:YES];
+    [mTooltipWindow setBackgroundColor:[NSColor colorWithCalibratedRed:1.0 green:1.0 blue:0.81 alpha:1.0]];
+    
 
     // set up the text view
     [mTextView setDrawsBackground:NO];
@@ -87,7 +93,9 @@ const float kVOffset = 20.0;
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 
-  [mPanel close];   // this releases
+  [mTooltipWindow close];   // we set the window not to release on -close
+  [mTooltipWindow release];
+
   [super dealloc];
 }
 
@@ -145,37 +153,37 @@ const float kVOffset = 20.0;
   // size the panel correctly, taking border into account
   NSSize textSize = textViewFrame.size;
   textSize.height += kBorderPadding + kBorderPadding;
-  [mPanel setContentSize:textSize];
+  [mTooltipWindow setContentSize:textSize];
   
   // We try to put the top left point right below the cursor. If that doesn't fit
   // on screen, put the bottom left point above the cursor.
   if (point.y - kVOffset - textSize.height > NSMinY(screenFrame)) {
     point.y -= kVOffset;
-    [mPanel setFrameTopLeftPoint:point];
+    [mTooltipWindow setFrameTopLeftPoint:point];
   }
   else {
     point.y += kVOffset / 2.5;
-    [mPanel setFrameOrigin:point];
+    [mTooltipWindow setFrameOrigin:point];
   }
   
   // if it doesn't fit on screen horizontally, adjust so that it does
-  float amountOffScreenX = NSMaxX(screenFrame) - NSMaxX([mPanel frame]);
+  float amountOffScreenX = NSMaxX(screenFrame) - NSMaxX([mTooltipWindow frame]);
   if (amountOffScreenX < 0) {
-    NSRect movedFrame = [mPanel frame];
+    NSRect movedFrame = [mTooltipWindow frame];
     movedFrame.origin.x += amountOffScreenX;
-    [mPanel setFrame:movedFrame display:NO];
+    [mTooltipWindow setFrame:movedFrame display:NO];
   }
 
   // add as a child window    
-  [inWindow addChildWindow:mPanel ordered:NSWindowAbove];
+  [inWindow addChildWindow:mTooltipWindow ordered:NSWindowAbove];
   // show the panel
-  [mPanel orderFront:nil];
+  [mTooltipWindow orderFront:nil];
 }
 
 - (void)closeToolTip
 {
-  [[mPanel parentWindow] removeChildWindow:mPanel];
-  [mPanel orderOut:nil];
+  [[mTooltipWindow parentWindow] removeChildWindow:mTooltipWindow];
+  [mTooltipWindow orderOut:nil];
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
