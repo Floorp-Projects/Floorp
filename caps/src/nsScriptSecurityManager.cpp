@@ -1566,7 +1566,8 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     {
         nsCAutoString spec;
         principalURI->GetSpec(spec);
-        if (spec.EqualsLiteral("about:"))
+        if (spec.EqualsLiteral("about:") ||
+            StringBeginsWith(spec, NS_LITERAL_CSTRING("about:neterror?")))
         {
             *result = PR_TRUE;
             return NS_OK;              

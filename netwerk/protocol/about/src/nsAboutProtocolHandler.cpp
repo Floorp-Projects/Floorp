@@ -131,32 +131,31 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
     return rv;
 }
 
+void
+nsAboutProtocolHandler::StripQueryAndHash(nsCString& aPath)
+{
+    PRInt32 f = aPath.FindCharInSet(NS_LITERAL_CSTRING("#?"));
+    if (f != kNotFound) {
+        aPath.Truncate(f);
+    }
+
+    // convert to lowercase, as all about: modules are lowercase
+    ToLowerCase(aPath);
+}
+
 NS_IMETHODIMP
 nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
     // about:what you ask?
     nsresult rv;
-    nsCAutoString what;
-    rv = uri->GetPath(what);
+    nsCAutoString contractID;
+    rv = uri->GetPath(contractID);
     if (NS_FAILED(rv)) return rv;
-    
-    // look up a handler to deal with "whatStr"
-    nsCAutoString contractID(NS_ABOUT_MODULE_CONTRACTID_PREFIX);
 
-    // only take up to a question-mark if there is one:
-    nsACString::const_iterator begin, end;
-    what.BeginReading(begin);
-    what.EndReading(end);
-    FindCharInReadable('?', begin, end); // moves begin to first '?' or to end
-    end = begin;
-    what.BeginReading(begin);
-    FindCharInReadable('#', begin, end); // moves begin to first '#' or to end
-    end = begin;
-    what.BeginReading(begin);
-    contractID.Append(Substring(begin, end));
+    StripQueryAndHash(contractID);
 
-    // convert to lowercase, as all about: modules are lowercase
-    ToLowerCase(contractID);
+    // look up a handler to deal with "what"
+    contractID.Insert(NS_LITERAL_CSTRING(NS_ABOUT_MODULE_CONTRACTID_PREFIX), 0);
 
     nsCOMPtr<nsIAboutModule> aboutMod(do_GetService(contractID.get(), &rv));
     if (NS_SUCCEEDED(rv)) {
