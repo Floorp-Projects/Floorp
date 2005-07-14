@@ -118,8 +118,17 @@ function onLoad() {
       </td>
     </tr>
   </table>
+  <input type="hidden" name="useragent" id="useragent" value=""/>  
+  
+  <script type="text/javascript">
+    if (document.getElementById)
+    {
+      var useragent = navigator.userAgent;
+      document.getElementById("useragent").setAttribute("value", useragent);
+    }
+  </script>
+  
   <input type="hidden" name="action" value="submit"/>  
-  <input type="hidden" name="stylesheet" value="[% stylesheet FILTER html %]"/>  
 </form>
 
 <p>

@@ -31,3 +31,7 @@ Summary: [% form.subject %]
 
 Comments: 
 [%+ form.comments %]
+
+[% IF form.useragent %]
+Browser Details: [% form.useragent %]
+[% END %]
