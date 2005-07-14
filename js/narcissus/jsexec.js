@@ -134,7 +134,7 @@ var global = {
     Math: Math,
 
     // Extensions to ECMA.
-    snarf: snarf,
+    snarf: snarf, evaluate: evaluate,
     load: function load(s) {
         if (typeof s != "string")
             return s;
