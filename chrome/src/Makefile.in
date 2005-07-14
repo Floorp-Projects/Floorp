@@ -73,6 +73,7 @@ REQUIRES	= xpcom \
 		  jar \
 		  xulapp \
 		  unicharutil \
+		  update \
 		  $(NULL)
 
 CPPSRCS		= \

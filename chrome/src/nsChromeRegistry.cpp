@@ -47,6 +47,7 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsArrayEnumerator.h"
+#include "nsStringEnumerator.h"
 #include "nsEnumeratorUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
@@ -95,8 +96,10 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIStyleSheet.h"
 #include "nsISupportsArray.h"
+#include "nsIUpdateService.h" // for nsIVersionChecker
 #include "nsIWindowMediator.h"
 #include "nsIXPConnect.h"
+#include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
 
 // keep all the RDF stuff together, in case we can remove it in the far future
@@ -305,6 +308,16 @@ nsChromeRegistry::nsProviderArray::SetBase(const nsACString& aProvider, nsIURI* 
     return; // It's safe to silently fail on OOM
 
   mArray.AppendElement(provider);
+}
+
+void
+nsChromeRegistry::nsProviderArray::EnumerateToArray(nsCStringArray *a)
+{
+  PRInt32 i = mArray.Count();
+  while (i--) {
+    ProviderEntry *entry = NS_REINTERPRET_CAST(ProviderEntry*, mArray[i]);
+    a->AppendCString(entry->provider);
+  }
 }
 
 void
@@ -739,6 +752,30 @@ nsChromeRegistry::GetSelectedLocale(const nsACString& aPackage, nsACString& aLoc
     return NS_ERROR_FAILURE;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::GetLocalesForPackage(const nsACString& aPackage,
+                                       nsIUTF8StringEnumerator* *aResult)
+{
+  nsCStringArray *a = new nsCStringArray;
+  if (!a)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  PackageEntry* entry =
+    NS_STATIC_CAST(PackageEntry*, PL_DHashTableOperate(&mPackagesHash,
+                                                       & aPackage,
+                                                       PL_DHASH_LOOKUP));
+
+  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+    entry->locales.EnumerateToArray(a);
+  }
+
+  nsresult rv = NS_NewAdoptingUTF8StringEnumerator(aResult, a);
+  if (NS_FAILED(rv))
+    delete a;
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1853,6 +1890,139 @@ CheckFlag(const nsSubstring& aFlag, const nsSubstring& aData, PRBool& aResult)
   return PR_FALSE;
 }
 
+enum TriState {
+  eUnspecified,
+  eBad,
+  eOK
+};
+
+/**
+ * Check for a modifier flag of the following form:
+ *   "flag=string"
+ * @param aFlag The flag to compare.
+ * @param aData The tokenized data to check; this is lowercased
+ *              before being passed in.
+ * @param aValue The value that is expected.
+ * @param aResult If this is "ok" when passed in, this is left alone.
+ *                Otherwise if the flag is found it is set to eBad or eOK.
+ * @return Whether the flag was handled.
+ */
+static PRBool
+CheckStringFlag(const nsSubstring& aFlag, const nsSubstring& aData,
+                const nsSubstring& aValue, TriState& aResult)
+{
+  if (aData.Length() < aFlag.Length() + 1)
+    return PR_FALSE;
+
+  if (!StringBeginsWith(aData, aFlag))
+    return PR_FALSE;
+
+  if (aData[aFlag.Length()] != '=')
+    return PR_FALSE;
+
+  if (aResult != eOK) {
+    nsDependentSubstring testdata = Substring(aData, aFlag.Length() + 1);
+    if (testdata.Equals(aValue))
+      aResult = eOK;
+    else
+      aResult = eBad;
+  }
+
+  return PR_TRUE;
+}
+
+/**
+ * Check for a modifier flag of the following form:
+ *   "flag=version"
+ *   "flag<=version"
+ *   "flag<version"
+ *   "flag>=version"
+ *   "flag>version"
+ * @param aFlag The flag to compare.
+ * @param aData The tokenized data to check; this is lowercased
+ *              before being passed in.
+ * @param aValue The value that is expected.
+ * @param aChecker the version checker to use. If null, aResult will always
+ *                 be eBad.
+ * @param aResult If this is eOK when passed in, this is left alone.
+ *                Otherwise if the flag is found it is set to eBad or eOK.
+ * @return Whether the flag was handled.
+ */
+
+#define COMPARE_EQ    1 << 0
+#define COMPARE_LT    1 << 1
+#define COMPARE_GT    1 << 2
+
+static PRBool
+CheckVersionFlag(const nsSubstring& aFlag, const nsSubstring& aData,
+                 const nsSubstring& aValue, nsIVersionChecker* aChecker,
+                 TriState& aResult)
+{
+  if (! (aData.Length() > aFlag.Length() + 2))
+    return PR_FALSE;
+
+  if (!StringBeginsWith(aData, aFlag))
+    return PR_FALSE;
+
+  PRUint32 comparison;
+  nsAutoString testdata;
+
+  switch (aData[aFlag.Length()]) {
+  case '=':
+    comparison = COMPARE_EQ;
+    testdata = Substring(aData, aFlag.Length() + 1);
+    break;
+
+  case '<':
+    if (aData[aFlag.Length() + 1] == '=') {
+      comparison = COMPARE_EQ | COMPARE_LT;
+      testdata = Substring(aData, aFlag.Length() + 2);
+    }
+    else {
+      comparison = COMPARE_LT;
+      testdata = Substring(aData, aFlag.Length() + 1);
+    }
+    break;
+
+  case '>':
+    if (aData[aFlag.Length() + 1] == '=') {
+      comparison = COMPARE_EQ | COMPARE_GT;
+      testdata = Substring(aData, aFlag.Length() + 2);
+    }
+    else {
+      comparison = COMPARE_GT;
+      testdata = Substring(aData, aFlag.Length() + 1);
+    }
+    break;
+
+  default:
+    return PR_FALSE;
+  }
+
+  if (aResult != eOK) {
+    if (!aChecker) {
+      aResult = eBad;
+    }
+    else {
+      PRInt32 c;
+      nsresult rv = aChecker->Compare(aValue, testdata, &c);
+      if (NS_FAILED(rv)) {
+        aResult = eBad;
+      }
+      else {
+        if ((c == 0 && comparison & COMPARE_EQ) ||
+            (c < 0 && comparison & COMPARE_LT) ||
+            (c > 0 && comparison & COMPARE_GT))
+          aResult = eOK;
+        else
+          aResult = eBad;
+      }
+    }
+  }
+
+  return PR_TRUE;
+}
+
 nsresult
 nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
                                         nsILocalFile* aManifest,
@@ -1860,8 +2030,10 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 {
   nsresult rv;
 
-  NS_NAMED_LITERAL_STRING(kToken, "platform");
+  NS_NAMED_LITERAL_STRING(kPlatform, "platform");
   NS_NAMED_LITERAL_STRING(kXPCNativeWrappers, "xpcnativewrappers");
+  NS_NAMED_LITERAL_STRING(kApplication, "application");
+  NS_NAMED_LITERAL_STRING(kAppVersion, "appversion");
 
   nsCOMPtr<nsIIOService> io (do_GetIOService());
   if (!io) return NS_ERROR_FAILURE;
@@ -1871,6 +2043,21 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIXPConnect> xpc (do_GetService("@mozilla.org/js/xpc/XPConnect;1"));
+  nsCOMPtr<nsIVersionChecker> vc (do_GetService("@mozilla.org/updates/version-checker;1"));
+
+  nsAutoString appID;
+  nsAutoString appVersion;
+  nsCOMPtr<nsIXULAppInfo> xapp (do_GetService(XULAPPINFO_SERVICE_CONTRACTID));
+  if (xapp) {
+    nsCAutoString s;
+    rv = xapp->GetID(s);
+    if (NS_SUCCEEDED(rv))
+      CopyUTF8toUTF16(s, appID);
+
+    rv = xapp->GetVersion(s);
+    if (NS_SUCCEEDED(rv))
+      CopyUTF8toUTF16(s, appVersion);
+  }
 
   char *token;
   char *newline = buf;
@@ -1906,20 +2093,30 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
       PRBool platform = PR_FALSE;
       PRBool xpcNativeWrappers = PR_FALSE;
+      TriState stAppVersion = eUnspecified;
+      TriState stApp = eUnspecified;
 
-      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace))) {
+      PRBool badFlag = PR_FALSE;
+
+      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
+             !badFlag) {
         NS_ConvertASCIItoUTF16 wtoken(token);
         ToLowerCase(wtoken);
-        
-        if (CheckFlag(kToken, wtoken, platform))
-          continue;
-        if (CheckFlag(kXPCNativeWrappers, wtoken, xpcNativeWrappers))
+
+        if (CheckFlag(kPlatform, wtoken, platform) ||
+            CheckFlag(kXPCNativeWrappers, wtoken, xpcNativeWrappers) ||
+            CheckStringFlag(kApplication, wtoken, appID, stApp) ||
+            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
           continue;
 
         LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
                               "Warning: Unrecognized chrome registration modifier '%s'.",
                               token);
+        badFlag = PR_TRUE;
       }
+
+      if (badFlag || stApp == eBad || stAppVersion == eBad)
+        continue;
 
       nsCOMPtr<nsIURI> resolved;
       rv = io->NewURI(nsDependentCString(uri), nsnull, manifestURI,
@@ -1965,6 +2162,29 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         continue;
       }
 
+      TriState stAppVersion = eUnspecified;
+      TriState stApp = eUnspecified;
+
+      PRBool badFlag = PR_FALSE;
+
+      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
+             !badFlag) {
+        NS_ConvertASCIItoUTF16 wtoken(token);
+        ToLowerCase(wtoken);
+
+        if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
+            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
+          continue;
+
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Unrecognized chrome registration modifier '%s'.",
+                              token);
+        badFlag = PR_TRUE;
+      }
+
+      if (badFlag || stApp == eBad || stAppVersion == eBad)
+        continue;
+
       nsCOMPtr<nsIURI> resolved;
       rv = io->NewURI(nsDependentCString(uri), nsnull, manifestURI,
                       getter_AddRefs(resolved));
@@ -1989,6 +2209,29 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
                               "Warning: Malformed skin registration.");
         continue;
       }
+
+      TriState stAppVersion = eUnspecified;
+      TriState stApp = eUnspecified;
+
+      PRBool badFlag = PR_FALSE;
+
+      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
+             !badFlag) {
+        NS_ConvertASCIItoUTF16 wtoken(token);
+        ToLowerCase(wtoken);
+
+        if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
+            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
+          continue;
+
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Unrecognized chrome registration modifier '%s'.",
+                              token);
+        badFlag = PR_TRUE;
+      }
+
+      if (badFlag || stApp == eBad || stAppVersion == eBad)
+        continue;
 
       nsCOMPtr<nsIURI> resolved;
       rv = io->NewURI(nsDependentCString(uri), nsnull, manifestURI,
@@ -2019,6 +2262,29 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         continue;
       }
 
+      TriState stAppVersion = eUnspecified;
+      TriState stApp = eUnspecified;
+
+      PRBool badFlag = PR_FALSE;
+
+      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
+             !badFlag) {
+        NS_ConvertASCIItoUTF16 wtoken(token);
+        ToLowerCase(wtoken);
+
+        if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
+            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
+          continue;
+
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Unrecognized chrome registration modifier '%s'.",
+                              token);
+        badFlag = PR_TRUE;
+      }
+
+      if (badFlag || stApp == eBad || stAppVersion == eBad)
+        continue;
+
       nsCOMPtr<nsIURI> baseuri, overlayuri;
       rv  = io->NewURI(nsDependentCString(base), nsnull, nsnull,
                        getter_AddRefs(baseuri));
@@ -2039,6 +2305,29 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
                               "Warning: malformed chrome style instruction.");
         continue;
       }
+
+      TriState stAppVersion = eUnspecified;
+      TriState stApp = eUnspecified;
+
+      PRBool badFlag = PR_FALSE;
+
+      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
+             !badFlag) {
+        NS_ConvertASCIItoUTF16 wtoken(token);
+        ToLowerCase(wtoken);
+
+        if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
+            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
+          continue;
+
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Unrecognized chrome registration modifier '%s'.",
+                              token);
+        badFlag = PR_TRUE;
+      }
+
+      if (badFlag || stApp == eBad || stAppVersion == eBad)
+        continue;
 
       nsCOMPtr<nsIURI> baseuri, overlayuri;
       rv  = io->NewURI(nsDependentCString(base), nsnull, nsnull,
@@ -2064,6 +2353,29 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
                               "Warning: malformed chrome override instruction.");
         continue;
       }
+
+      TriState stAppVersion = eUnspecified;
+      TriState stApp = eUnspecified;
+
+      PRBool badFlag = PR_FALSE;
+
+      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
+             !badFlag) {
+        NS_ConvertASCIItoUTF16 wtoken(token);
+        ToLowerCase(wtoken);
+
+        if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
+            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
+          continue;
+
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Unrecognized chrome registration modifier '%s'.",
+                              token);
+        badFlag = PR_TRUE;
+      }
+
+      if (badFlag || stApp == eBad || stAppVersion == eBad)
+        continue;
 
       nsCOMPtr<nsIURI> chromeuri, resolveduri;
       rv  = io->NewURI(nsDependentCString(chrome), nsnull, nsnull,
