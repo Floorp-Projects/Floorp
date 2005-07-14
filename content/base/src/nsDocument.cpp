@@ -4201,9 +4201,12 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
 
       nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
 
-      if (doc) {
-        // If we have a parent we must flush the parent too to ensure
-        // that our container is reflown if its size was changed.
+      // If we have a parent we must flush the parent too to ensure that our
+      // container is reflown if its size was changed.  But if it's not safe to
+      // flush ourselves, then don't flush the parent, since that can cause
+      // things like resizes of our frame's widget, which we can't handle while
+      // flushing is unsafe.
+      if (doc && IsSafeToFlush()) {
         doc->FlushPendingNotifications(aType);
       }
     }
@@ -4641,6 +4644,23 @@ nsDocument::CreateElement(nsINodeInfo *aNodeInfo, PRInt32 aElementType,
   content.swap(*aResult);
 
   return NS_OK;
+}
+
+PRBool
+nsDocument::IsSafeToFlush() const
+{
+  PRBool isSafeToFlush = PR_TRUE;
+  PRInt32 i = 0, n = mPresShells.Count();
+  while (i < n && isSafeToFlush) {
+    nsCOMPtr<nsIPresShell> shell =
+      NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+
+    if (shell) {
+      shell->IsSafeToFlush(isSafeToFlush);
+    }
+    ++i;
+  }
+  return isSafeToFlush;
 }
 
 void*
