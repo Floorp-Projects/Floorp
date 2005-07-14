@@ -8,6 +8,9 @@
   <!ENTITY % netErrorDTD
        SYSTEM "chrome://global/locale/netError.dtd">
   %netErrorDTD;
+  <!ENTITY % globalDTD
+       SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
 ]>
 
 <!-- ***** BEGIN LICENSE BLOCK *****
@@ -62,7 +65,7 @@
       margin-top: 2em;
       margin-bottom: 1em;
       font-size: large;
-      text-align: left;
+      text-align: start;
       font-weight: bold;
       color: #5D616E;
     }
@@ -85,7 +88,7 @@
   ]]></style>
 </head>
 
-<body style="font: message-box;">
+<body style="font: message-box;" dir="&locale.dir;">
 
   <!-- ERROR TITLE -->
   <div id="errorTitle">
