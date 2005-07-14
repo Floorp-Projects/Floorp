@@ -205,7 +205,28 @@
   </binding>
 
   <binding id="text-link" extends="chrome://global/content/bindings/text.xml#text-label">
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULLinkAccessible(this);
+          ]]>
+        </getter>
+      </property>
+      <property name="href" onget="return this.getAttribute('href');"
+                            onset="this.setAttribute('href', val); return val;" />
+    </implementation>
     <handlers>
+      <handler event="click">
+      <![CDATA[
+        if (this.disabled)
+          return;
+        var href = this.getAttribute('href');
+        if (href)
+          open(href);
+      ]]>
+      </handler>
      <handler event="keypress" keycode="VK_ENTER" action="this.click()" />
      <handler event="keypress" keycode="VK_RETURN" action="this.click()" />
     </handlers>
