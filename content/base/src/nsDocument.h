@@ -583,6 +583,9 @@ protected:
   nsresult CreateElement(nsINodeInfo *aNodeInfo, PRInt32 aElementType,
                          nsIContent** aResult);
 
+  // Return whether all the presshells for this document are safe to flush
+  PRBool IsSafeToFlush() const;
+  
   virtual PRInt32 GetDefaultNamespaceID() const
   {
     return kNameSpaceID_None;

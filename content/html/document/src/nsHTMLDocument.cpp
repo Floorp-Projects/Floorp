@@ -1190,29 +1190,14 @@ nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
 void
 nsHTMLDocument::FlushPendingNotifications(mozFlushType aType)
 {
-  if (aType & Flush_Content) {
-    // Determine if it is safe to flush the sink
-    // by determining if it safe to flush all the presshells.
-    PRBool isSafeToFlush = PR_TRUE;
-    if (aType & Flush_SinkNotifications) {
-      PRInt32 i = 0, n = mPresShells.Count();
-      while ((i < n) && (isSafeToFlush)) {
-        nsCOMPtr<nsIPresShell> shell =
-          NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
-
-        if (shell) {
-          shell->IsSafeToFlush(isSafeToFlush);
-        }
-        ++i;
-      }
-    }
-
-    if (isSafeToFlush && mParser) {
-      nsCOMPtr<nsIContentSink> sink = mParser->GetContentSink();
-      if (sink) {
-        PRBool notify = ((aType & Flush_SinkNotifications) != 0);
-        sink->FlushContent(notify);
-      }
+  // Determine if it is safe to flush the sink notifications
+  // by determining if it safe to flush all the presshells.
+  if ((aType & Flush_Content) && mParser &&
+      (!(aType & Flush_SinkNotifications) || IsSafeToFlush())) {
+    nsCOMPtr<nsIContentSink> sink = mParser->GetContentSink();
+    if (sink) {
+      PRBool notify = ((aType & Flush_SinkNotifications) != 0);
+      sink->FlushContent(notify);
     }
   }
   
