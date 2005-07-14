@@ -2905,6 +2905,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (cg->treeContext.flags & TCF_IN_FUNCTION) {
             JSObject *obj, *pobj;
             JSProperty *prop;
+            JSScopeProperty *sprop;
             uintN slot;
 
             obj = OBJ_GET_PARENT(cx, fun->object);
@@ -2912,8 +2913,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                                          &pobj, &prop)) {
                 return JS_FALSE;
             }
+
             JS_ASSERT(prop && pobj == obj);
-            slot = ((JSScopeProperty *) prop)->shortid;
+            sprop = (JSScopeProperty *) prop;
+            JS_ASSERT(sprop->getter == js_GetLocalVariable);
+            slot = sprop->shortid;
             OBJ_DROP_PROPERTY(cx, pobj, prop);
 
             if (atomIndex >= JS_BIT(16)) {
