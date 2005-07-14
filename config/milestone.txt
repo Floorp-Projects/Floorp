@@ -10,5 +10,5 @@
 # hardcoded milestones in the tree from these two files.
 #--------------------------------------------------------
 
-
-1.8b3
+MILESTONE=1.8b3
+MILESTONE_EM=1.7+

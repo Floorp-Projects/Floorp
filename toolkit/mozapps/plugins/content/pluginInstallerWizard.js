@@ -534,7 +534,7 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
   // set the get more info link to contain the mimetypes we couldn't install.
   notInstalledList +=
     "&appID=" + app.ID +
-    "&appVersion=" + app.geckoBuildID +
+    "&appVersion=" + app.platformBuildID +
     "&clientOS=" + this.getOS() +
     "&chromeLocale=" + this.getChromeLocale();
 

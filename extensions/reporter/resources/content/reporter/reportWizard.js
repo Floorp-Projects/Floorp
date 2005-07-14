@@ -376,7 +376,7 @@ function getGecko() {
     var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
                             .getService(Components.interfaces.nsIXULAppInfo);
     // Use App info if possible
-    return appInfo.geckoBuildID;
+    return appInfo.platformBuildID;
   }
   catch(ex) {
     return "00000000"; // 8 0's to ignore as we have historically
