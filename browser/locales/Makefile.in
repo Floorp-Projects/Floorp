@@ -153,7 +153,10 @@ repackage-win32-installer: $(WIN32_INSTALLER_IN)
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
 	  -I$(DIST)/l10n-temp-stage/installer.inc \
 	  -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/install.it \
-	  $(topsrcdir)/browser/installer/windows/install.it > $(DIST)/l10n-stage/install.ini
+	  $(topsrcdir)/browser/installer/windows/install.it > install.it
+	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/makeinstallini.pl \
+	  $(topsrcdir)/browser/installer/windows/installer.cfg install.it
+	$(SYSINSTALL) install.ini $(DIST)/l10n-stage
 	cd $(DIST)/l10n-stage && \
 	  $(CYGWIN_WRAPPER) 7z a -t7z ../l10n-temp-stage/app.7z *.* -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
 	$(CYGWIN_WRAPPER) upx -9 -o $(DIST)/l10n-temp-stage/7zSD.sfxc $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx

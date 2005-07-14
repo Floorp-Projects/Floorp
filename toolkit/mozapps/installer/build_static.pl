@@ -57,6 +57,7 @@
 
 use Cwd;
 use File::Path;
+use File::Basename;
 
 $inXpiURL = "";
 $inRedirIniURL = "";
@@ -92,8 +93,6 @@ if ($inObjDir eq "")
     $inObjDir = $inSrcDir;
 }
 
-ParseInstallerCfg();
-
 $win32 = ($^O =~ / ((MS)?win32)|cygwin|os2/i) ? 1 : 0;
 if ($win32) {
     $platform = 'dos';
@@ -101,7 +100,14 @@ if ($win32) {
     $platform = 'unix';
 }
 
-ParseInstallerCfg();
+# ensure that CFGParser.pm is in @INC, since we might not be called from
+# mozilla/toolkit/mozapps/installer
+my $top_path = $0;
+$top_path =~ s/\\/\//g if $win32;
+push(@INC, dirname($top_path));
+
+require CFGParser;
+CFGParser::ParseInstallerCfg("$inConfigFiles/installer.cfg");
 
 $STAGE  = "$inObjDir/stage";
 $DIST   = "$inObjDir/dist";
@@ -152,80 +158,6 @@ sub copy
         die "--- deliver.pl: couldn't cp cause ".$_[0]." doesn't exist: $!";
     }
     system ("cp ".$_[0]." ".$_[1]);
-}
-
-# Initialize global installer environment variables.  This information comes
-# from the application's installer.cfg file which specifies such things as name
-# and installer executable file names.
-
-sub ParseInstallerCfg
-{
-    $ENV{WIZ_distSubdir} = "bin";
-    $ENV{WIZ_packagesFile} = "packages-static";
-
-    open(fpInstallCfg, "$inConfigFiles/installer.cfg") || die"\ncould not open $inConfigFiles/installer.cfg: $!\n";
-
-    while ($line = <fpInstallCfg>)
-    {
-      if (substr($line, -2, 2) eq "\r\n") {
-        $line = substr($line, 0, length($line) - 2) . "\n";
-      }
-      ($prop, $value) = ($line =~ m/(\w*)\s+=\s+(.*)\n/);
-
-      if ($prop eq "VersionLanguage") {
-        $ENV{WIZ_versionLanguage} = $value;
-      }
-      elsif ($prop eq "NameCompany") {
-        $ENV{WIZ_nameCompany} = $value;
-      }
-      elsif ($prop eq "NameProduct") {
-        $ENV{WIZ_nameProduct} = $value;
-      }
-      elsif ($prop eq "ShortNameProduct") {
-        $ENV{WIZ_shortNameProduct} = $value;
-      }
-      elsif ($prop eq "NameProductInternal") {
-        $ENV{WIZ_nameProductInternal} = $value;
-      }
-      elsif ($prop eq "VersionProduct") {
-        $ENV{WIZ_versionProduct} = $value;
-      }
-      elsif ($prop eq "FileInstallerEXE") {
-        $ENV{WIZ_fileInstallerExe} = $value;
-      }
-      elsif ($prop eq "FileUninstall") {
-        $ENV{WIZ_fileUninstall} = $value;
-      }
-      elsif ($prop eq "FileUninstallZIP") {
-        $ENV{WIZ_fileUninstallZip} = $value;
-      }
-      elsif ($prop eq "FileMainEXE") {
-        $ENV{WIZ_fileMainExe} = $value;
-      }
-      elsif ($prop eq "FileInstallerNETRoot") {
-        $ENV{WIZ_fileNetStubRootName} = $value;
-      }
-      elsif ($prop eq "ComponentList") {
-        $ENV{WIZ_componentList} = $value;
-      }
-      elsif ($prop eq "7ZipSFXModule") {
-        $ENV{WIZ_sfxModule} = $value;
-      }
-      elsif ($prop eq "DistSubdir") {
-        $ENV{WIZ_distSubdir} = $value;
-      }
-      elsif ($prop eq "packagesFile") {
-        $ENV{WIZ_packagesFile} = $value;
-      }
-      elsif ($prop eq "GREVersion") {
-        $ENV{WIZ_greVersion} = $value;
-      }
-      elsif ($prop eq "LicenseFile") {
-        $ENV{WIZ_licenseFile} = $value;
-      }
-    }
-
-    close(fpInstallCfg);
 }
 
 sub ParseArgv
