@@ -2568,12 +2568,15 @@ nsMsgDBFolder::parseURI(PRBool needServer)
 
     if (serverPath) 
     {
-      rv = serverPath->AppendRelativeUnixPath(newPath.get());
-      NS_ASSERTION(NS_SUCCEEDED(rv),"failed to append to the serverPath");
-      if (NS_FAILED(rv)) 
+      if (!newPath.IsEmpty())
       {
-        mPath = nsnull;
-        return rv;
+        rv = serverPath->AppendRelativeUnixPath(newPath.get());
+        NS_ASSERTION(NS_SUCCEEDED(rv),"failed to append to the serverPath");
+        if (NS_FAILED(rv)) 
+        {
+          mPath = nsnull;
+          return rv;
+        }
       }
       mPath = serverPath;
     }
