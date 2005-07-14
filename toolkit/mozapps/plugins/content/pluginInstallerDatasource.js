@@ -47,7 +47,7 @@ function nsRDFItemUpdater(aClientOS, aChromeLocale){
   var app = Components.classes["@mozilla.org/xre/app-info;1"]
                       .getService(Components.interfaces.nsIXULAppInfo);
   this.appID = app.ID;
-  this.buildID = app.geckoBuildID;
+  this.buildID = app.platformBuildID;
 
   this.clientOS = aClientOS;
   this.chromeLocale = aChromeLocale;

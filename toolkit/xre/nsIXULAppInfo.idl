@@ -44,7 +44,7 @@
  *                        isn't frozen yet. Use with caution.
  */
 
-[scriptable, uuid(1f4e76cb-414f-4c50-b31e-be52c43502ff)]
+[scriptable, uuid(a61ede2a-ef09-11d9-a5ce-001124787b2e)]
 interface nsIXULAppInfo : nsISupports
 {
   /**
@@ -59,26 +59,35 @@ interface nsIXULAppInfo : nsISupports
   readonly attribute ACString name;
 
   /**
-   * @see nsXREAppData.version
-   * @returns an empty string if nsXREAppData.version is not set.
-   */
-  readonly attribute ACString version;
-
-  /**
    * @see nsXREAppData.ID
    * @returns an empty string if nsXREAppData.ID is not set.
    */
   readonly attribute ACString ID;
 
   /**
+   * This is the version of the XUL application. It is different than the
+   * version of the XULRunner platform. Be careful about which one you want.
+   *
+   * @see nsXREAppData.version
+   * @returns an empty string if nsXREAppData.version is not set.
+   */
+  readonly attribute ACString version;
+
+  /**
    * The build ID/date of the application. For xulrunner applications,
-   * this will be different than the build ID of gecko. Be careful
+   * this will be different than the build ID of the platform. Be careful
    * about which one you want.
    */
   readonly attribute ACString appBuildID;
 
   /**
-   * The build ID/date of gecko and the xulrunner.
+   * The version of the XULRunner platform, in an extension-manager compatible
+   * format (1.7+, not 1.8b2).
    */
-  readonly attribute ACString geckoBuildID;
+  readonly attribute ACString platformVersion;
+
+  /**
+   * The build ID/date of gecko and the XULRunner platform.
+   */
+  readonly attribute ACString platformBuildID;
 };

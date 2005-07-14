@@ -425,6 +425,14 @@ nsXULAppInfo::GetVersion(nsACString& aResult)
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetPlatformVersion(nsACString& aResult)
+{
+  aResult.AssignLiteral(TOOLKIT_EM_VERSION);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetAppBuildID(nsACString& aResult)
 {
   aResult.Assign(gAppData->buildID);
@@ -433,7 +441,7 @@ nsXULAppInfo::GetAppBuildID(nsACString& aResult)
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::GetGeckoBuildID(nsACString& aResult)
+nsXULAppInfo::GetPlatformBuildID(nsACString& aResult)
 {
   aResult.Assign(NS_STRINGIFY(BUILD_ID));
 
