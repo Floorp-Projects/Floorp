@@ -107,7 +107,7 @@ public:
     int     DeleteXPIs(int aCustom, nsComponentList *aComps);
 
     static void ProgressCallback(const char* aMsg, PRInt32 aVal, PRInt32 aMax);
-    static int  ExistAllXPIs(int aCustom, nsComponentList *aComps, int *aTotal);
+    static int  ExistAllXPIs(int aCustom, nsComponentList *aComps);
 
     enum
     {
@@ -134,10 +134,11 @@ private:
     PRBool  CRCCheckDownloadedArchives(char *dlPath, short dlPathLen, 
               nsComponentList *aComps, int aCustom);
     PRBool  IsArchiveFile(char *path);
-    int     VerifyArchive(char *szArchive);
     PRBool  CheckConn( char *URL, int type, CONN *myConn, PRBool force );
+
+    static int  VerifyArchive(char *szArchive);
+    
     char    *mTmp;
-    int     mTotalComps;
     char    *mOriginalDir;
 };
 

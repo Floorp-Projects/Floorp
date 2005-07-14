@@ -129,8 +129,6 @@ void
 nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("Next");
-    int bCus;
-    nsComponentList *comps = NULL;
     GtkWidget *pauseLabel, *resumeLabel;
 
     if (aData != gCtx->idlg) return;
@@ -143,16 +141,7 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     }
 #endif
 
-    bCus = (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
-    comps = gCtx->sdlg->GetSelectedSetupType()->GetComponents();
-
     // initialize progress bar cleanly
-    int totalComps = 0;
-    if (nsXIEngine::ExistAllXPIs(bCus, comps, &totalComps))
-        bDownload = FALSE;
-    else
-        bDownload = TRUE;
-
     if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT) {
         gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), FALSE);
         gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), (gfloat) 0);
@@ -392,10 +381,11 @@ int
 nsInstallDlg::Show()
 {
     int err = OK;
-    int totalComps = 0;
     GtkWidget *hbox = NULL;
     GtkWidget *vbox = NULL;
     GtkWidget *dlFrame, *dlCheckbox, *dlProxyBtn;
+    int bCus;
+    nsComponentList *comps = NULL;
 
     XI_VERIFY(gCtx);
     XI_VERIFY(gCtx->notebook);
@@ -495,15 +485,17 @@ nsInstallDlg::Show()
         gtk_widget_show(mTable);
     }
 
-    int bCus = 
-        (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
-    nsComponentList *comps = 
-        gCtx->sdlg->GetSelectedSetupType()->GetComponents(); 
+    bCus = (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
+    comps = gCtx->sdlg->GetSelectedSetupType()->GetComponents();
 
-    if (!nsXIEngine::ExistAllXPIs(bCus, comps, &totalComps))
+    if (!nsXIEngine::ExistAllXPIs(bCus, comps))
     {
         bDownload = TRUE;
         gtk_widget_show(sDLTable);
+    }
+    else
+    {
+        bDownload = FALSE;
     }
 
     // signal connect the buttons
@@ -625,40 +617,38 @@ nsInstallDlg::PerformInstall()
     nsComponentList *comps = NULL;
     nsComponent *xpiengine = NULL;
     int bCus = (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
-    comps = gCtx->sdlg->GetSelectedSetupType()->GetComponents(); 
-    if (!comps)
-    {
-        ErrorHandler(E_NO_COMPONENTS);
-        return E_NO_COMPONENTS;
-    }
+    comps = gCtx->sdlg->GetSelectedSetupType()->GetComponents();
     
     if (!sXPInstallEngine) return E_PARAM;
     xpiengine = comps->GetCompByArchive(sXPInstallEngine);
 
     // 1> download
-    err = engine->Download(bCus, comps);
-    if (err == E_DL_DROP_CXN)
+    if (bDownload)
     {
-        ShowCxnDroppedDlg();
-        if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
-            DLPause(NULL, NULL);
-        return err;
-    }
-    else if (err == E_CRC_FAILED)
-    {
-        ErrorHandler(err);
-        goto BAIL;
-    }
-    else if (err == E_DL_PAUSE || err == E_DL_CANCEL)
-    {
-        DUMP("Pause or Cancel pressed");
-        goto BAIL;
-    }
-    else if (err != OK)
-    {
-        DUMP("dammit... hopped into the wrong hole!");
-        ErrorHandler(err);
-        goto BAIL;
+        err = engine->Download(bCus, comps);
+        if (err == E_DL_DROP_CXN)
+        {
+            ShowCxnDroppedDlg();
+            if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
+                DLPause(NULL, NULL);
+            return err;
+        }
+        else if (err == E_CRC_FAILED)
+        {
+            ErrorHandler(err);
+            goto BAIL;
+        }
+        else if (err == E_DL_PAUSE || err == E_DL_CANCEL)
+        {
+            DUMP("Pause or Cancel pressed");
+            goto BAIL;
+        }
+        else if (err != OK)
+        {
+            DUMP("dammit... hopped into the wrong hole!");
+            ErrorHandler(err);
+            goto BAIL;
+        }
     }
 
     // prepare install UI
