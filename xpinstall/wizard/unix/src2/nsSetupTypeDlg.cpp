@@ -480,6 +480,10 @@ nsSetupTypeDlg::Show()
     sBrowseBtnID = gtk_signal_connect(GTK_OBJECT(sBrowseBtn), "clicked",
                    GTK_SIGNAL_FUNC(nsSetupTypeDlg::SelectFolder), NULL);  
 
+    GTK_WIDGET_SET_FLAGS(gCtx->next, GTK_CAN_DEFAULT);
+    gtk_widget_grab_default(gCtx->next);
+    gtk_widget_grab_focus(gCtx->next);
+
     // set up the next button.
     gCtx->nextLabel = gtk_label_new(gCtx->Res("NEXT"));
     gtk_widget_show(gCtx->nextLabel);

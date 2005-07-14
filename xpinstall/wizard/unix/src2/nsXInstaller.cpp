@@ -319,8 +319,6 @@ nsXInstaller::DrawNavButtons()
     gCtx->back = gtk_button_new(); 
     XI_VERIFY(gCtx->next);
     XI_VERIFY(gCtx->back);
-    GTK_WIDGET_SET_FLAGS(gCtx->next, GTK_CAN_DEFAULT);
-    gtk_widget_grab_default(gCtx->next);
     
     navbtnhbox = gtk_hbox_new(TRUE, 10);
     canvasvbox = gtk_vbox_new(TRUE, 10);
@@ -344,6 +342,9 @@ nsXInstaller::DrawNavButtons()
     gtk_widget_show(navbtnhbox); 
     gtk_widget_show(canvasvbox);
 
+    GTK_WIDGET_SET_FLAGS(gCtx->next, GTK_CAN_DEFAULT);
+    gtk_widget_grab_default(gCtx->next);
+    gtk_widget_grab_focus(gCtx->next);
     gtk_widget_show(gCtx->mainbox);
 
     XI_VERIFY(canvasvbox);
