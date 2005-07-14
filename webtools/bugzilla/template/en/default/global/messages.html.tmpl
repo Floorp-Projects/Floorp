@@ -94,7 +94,6 @@
       You didn't request any change on the user account
       [%+ otheruser.login FILTER html %].
     [% END %]
-    [%# changed_fields.join(', ') %]
 
   [% ELSIF message_tag == "account_deleted" %]
     [% title = "User $otheruser.login deleted" %]
