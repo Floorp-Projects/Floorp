@@ -53,7 +53,6 @@ const char kDLMarkerPath[] = "./xpi/.current_download";
 
 nsXIEngine::nsXIEngine() :
     mTmp(NULL),
-    mTotalComps(0),
     mOriginalDir(NULL)
 {
 }
@@ -123,13 +122,6 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
     {
         sprintf(localPath, "%s/%s", XPI_DIR, markedComp->GetArchive());
         markedComp->SetResumePos(GetFileSize(localPath));
-    }
-    else
-    {
-        // if all .xpis exist in the ./xpi dir (blob/CD) 
-        // we don't need to download
-        if (ExistAllXPIs(aCustom, aComps, &mTotalComps))
-            return OK; 
     }
 
     // check if ./xpi dir exists else create it
@@ -504,10 +496,13 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
     char new_LD_LIBRARY_PATH[MAXPATHLEN];
     int i;
     int compNum = 1;
+    int numComps;
     nsComponent *currComp = NULL;
 
     if (!aComps || !aDestination)
         return E_PARAM;
+
+    numComps = aCustom ? aComps->GetLengthSelected() : aComps->GetLength();
 
     // handle LD_LIBRARY_PATH settings
 #if defined (SOLARIS) || defined (IRIX)
@@ -542,7 +537,7 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
                 {
                     if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
                         nsInstallDlg::MajorProgressCB(currComp->GetDescShort(),
-                            compNum, mTotalComps, nsInstallDlg::ACT_INSTALL);
+                            compNum, numComps, nsInstallDlg::ACT_INSTALL);
                     err = InstallXPI(currComp, &stub);
                     if (err != OK)
                     if (err == E_INSTALL)
@@ -750,12 +745,10 @@ nsXIEngine::ProgressCallback(const char* aMsg, PRInt32 aVal, PRInt32 aMax)
 }
 
 int 
-nsXIEngine::ExistAllXPIs(int aCustom, nsComponentList *aComps, int *aTotal)
+nsXIEngine::ExistAllXPIs(int aCustom, nsComponentList *aComps)
 {
-    // param check
-    if (!aComps || !aTotal)
-        return E_PARAM;
-    
+    DUMP("ExistAllXPIs");
+
     int bAllExist = TRUE;
     nsComponent *currComp = aComps->GetHead();
     char currArchivePath[256];
@@ -768,12 +761,11 @@ nsXIEngine::ExistAllXPIs(int aCustom, nsComponentList *aComps, int *aTotal)
             sprintf(currArchivePath, "%s/%s", XPI_DIR, currComp->GetArchive());
             DUMP(currArchivePath);
             
-            if (0 != stat(currArchivePath, &dummy))
+            if (0 != stat(currArchivePath, &dummy)
+                  || VerifyArchive(currArchivePath) != ZIP_OK)
                 bAllExist = FALSE;
             else
                 currComp->SetDownloaded(TRUE);
-
-            (*aTotal)++;
         }
         
         currComp = aComps->GetNext();
