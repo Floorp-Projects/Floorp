@@ -431,9 +431,11 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                                    propFlags, nsnull);
     }
 
-    if(scriptableInfo &&
-       scriptableInfo->GetFlags().DontEnumQueryInterface() &&
-       idval == rt->GetStringJSVal(XPCJSRuntime::IDX_QUERY_INTERFACE))
+    if(idval == rt->GetStringJSVal(XPCJSRuntime::IDX_TO_STRING) ||
+       idval == rt->GetStringJSVal(XPCJSRuntime::IDX_TO_SOURCE) ||
+       (scriptableInfo &&
+        scriptableInfo->GetFlags().DontEnumQueryInterface() &&
+        idval == rt->GetStringJSVal(XPCJSRuntime::IDX_QUERY_INTERFACE)))
         propFlags &= ~JSPROP_ENUMERATE;
 
     JSObject* funobj;
