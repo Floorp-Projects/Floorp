@@ -88,24 +88,25 @@ function doEnabling()
 function open()
 {
   var url;
+  var postData = {};
   if (browser)
-    url = browser.getShortcutOrURI(dialog.input.value);
+    url = browser.getShortcutOrURI(dialog.input.value, postData);
   else
     url = dialog.input.value;
 
   try {
     switch (dialog.openWhereList.value) {
       case "0":
-        browser.loadURI(url);
+        browser.loadURI(url, null, postData.value);
         break;
       case "1":
-        window.opener.delayedOpenWindow(getBrowserURL(), "all,dialog=no", url);
+        window.opener.delayedOpenWindow(getBrowserURL(), "all,dialog=no", url, postData);
         break;
       case "3":
         if (browser.getBrowser && browser.getBrowser().localName == "tabbrowser")
-          browser.delayedOpenTab(url);
+          browser.delayedOpenTab(url, null, null, postData.value);
         else
-          browser.loadURI(url); // Just do a normal load.
+          browser.loadURI(url, null, postData.value); // Just do a normal load.
         break;
     }
   }

@@ -1622,21 +1622,21 @@ function BrowserOpenTab()
    its opener to open a new window and then step completely out of the way.
    Anything less byzantine is causing horrible crashes, rather believably,
    though oddly only on Linux. */
-function delayedOpenWindow(chrome,flags,url)
+function delayedOpenWindow(chrome, flags, href, postData)
 {
   // The other way to use setTimeout,
   // setTimeout(openDialog, 10, chrome, "_blank", flags, url),
   // doesn't work here.  The extra "magic" extra argument setTimeout adds to
   // the callback function would confuse prepareForStartup() by making
   // window.arguments[1] be an integer instead of null.
-  setTimeout(function() { openDialog(chrome, "_blank", flags, url); }, 10);
+  setTimeout(function() { openDialog(chrome, "_blank", flags, href, null, null, postData); }, 10);
 }
 
 /* Required because the tab needs time to set up its content viewers and get the load of
    the URI kicked off before becoming the active content area. */
-function delayedOpenTab(url)
+function delayedOpenTab(aUrl, aReferrer, aCharset, aPostData)
 {
-  setTimeout(function(aTabElt) { gBrowser.selectedTab = aTabElt; }, 0, gBrowser.addTab(url));
+  setTimeout(function(aTabElt) { gBrowser.selectedTab = aTabElt; }, 0, gBrowser.addTab(aUrl, aReferrer, aCharset, aPostData));
 }
 
 function BrowserOpenFileWindow()
