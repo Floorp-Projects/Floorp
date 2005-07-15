@@ -109,6 +109,7 @@
 - (BOOL)childViewHasPlugin;
 
 - (void)flushRect:(NSRect)inRect;
+- (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
@@ -2463,7 +2464,12 @@ nsChildView::Idle()
   if (!isVisible) {
     return;
   }
-
+  
+  // Workaround for the fact that NSQuickDrawViews can't be opaque; see the rect
+  // being drawn is covered by a subview, and, if so, just bail.
+  if ([self isRectObscuredBySubview:aRect])
+    return;
+  
   // tell gecko to paint.
   // If < 10.3, just paint the rect
   if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_2) {
@@ -2478,13 +2484,26 @@ nsChildView::Idle()
     const NSRect *rects;
     int count, i;
     [self getRectsBeingDrawn:&rects count:&count];
-    for (i=0; i<count; ++i) {
+    for (i = 0; i < count; ++i) {
       nsRect r;
       ConvertCocoaToGeckoRect(rects[i], r);
       nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
       mGeckoChild->UpdateWidget(r, rendContext);
     }
   }
+}
+
+- (BOOL)isRectObscuredBySubview:(NSRect)inRect
+{
+  unsigned int numSubviews = [[self subviews] count];
+  for (unsigned int i = 0; i < numSubviews; i++)
+  {
+    NSRect subviewFrame = [[[self subviews] objectAtIndex:i] frame];
+    if (NSContainsRect(subviewFrame, inRect))
+      return YES;
+  }
+  
+  return NO;
 }
 
 - (void)flushRect:(NSRect)inRect
