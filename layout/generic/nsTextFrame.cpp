@@ -3411,12 +3411,12 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor, canDarkenColor));
             RenderString(aRenderingContext, aStyleContext, aPresContext,
                          aTextStyle, currenttext, currentlength, isEndOfFrame,
-                         currentX, dy, width, details);
+                         currentX, dy, newDimensions.width, details);
           } else if (!isPaginated) {
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor, canDarkenColor));
             RenderString(aRenderingContext,aStyleContext, aPresContext,
                          aTextStyle, currenttext, currentlength, isEndOfFrame,
-                         currentX, dy, width, details);
+                         currentX, dy, newDimensions.width, details);
           }
 
 #ifdef IBMBIDI
