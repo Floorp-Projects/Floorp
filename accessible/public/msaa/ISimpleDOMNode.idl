@@ -121,6 +121,12 @@ cpp_quote("// get_localInterface(/* [out] */ void **localInterface);")
 cpp_quote("// ---------------------------------------------------------------------------------------------------=")
 cpp_quote("// Only available in Gecko's process - casts to an XPCOM nsIAccessNode interface pointer")
 cpp_quote("//")
+cpp_quote("//")
+cpp_quote("// get_language(/* [out] */ BSTR *htmlText);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Returns the computed language for this node, or empty string if unknown.")
+cpp_quote("//")
+cpp_quote("//")
 cpp_quote("///////////////////////////////////////////////////////////////////////////////////////////////////////")
 cpp_quote("")
 cpp_quote("")
@@ -133,8 +139,9 @@ const long DISPID_NODE_ATTRIBUTES = -5901;
 const long DISPID_NODE_ATTRIBUTESFORNAMES = -5902;
 const long DISPID_NODE_COMPSTYLE  = -5903;
 const long DISPID_NODE_COMPSTYLEFORPROPS = -5904;
+const long DISPID_NODE_LANGUAGE = -5905;
 
-[object, uuid(261f5f21-c4ff-4d45-b4d9-ea7b59cc30f6)]
+[object, uuid(1814ceeb-49e2-407f-af99-fa755a7d2607)]
 interface ISimpleDOMNode : IUnknown
 {
   const unsigned short NODETYPE_ELEMENT = 1;
@@ -202,6 +209,8 @@ interface ISimpleDOMNode : IUnknown
   [propget] HRESULT innerHTML([out, retval] BSTR *innerHTML);
 
   [propget, local] HRESULT localInterface([out][retval] void **localInterface);
+
+  [propget, id(DISPID_NODE_LANGUAGE)] HRESULT language([out, retval] BSTR *language);
 }
 
 
