@@ -871,12 +871,19 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
                                                                  this)));
   nsresult rv = NS_OK;
 
+  nsAutoString contentType;
+  doc->GetContentType(contentType);
+  
   nsCOMPtr<nsIDocumentEncoder> docEncoder;
-  docEncoder = do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/html");
+  docEncoder =
+    do_CreateInstance(PromiseFlatCString(
+        nsDependentCString(NS_DOC_ENCODER_CONTRACTID_BASE) +
+        NS_ConvertUTF16toUTF8(contentType)
+      ).get());
 
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
-  docEncoder->Init(doc, NS_LITERAL_STRING("text/html"),
+  docEncoder->Init(doc, contentType,
                    nsIDocumentEncoder::OutputEncodeBasicEntities |
                    // Output DOM-standard newlines
                    nsIDocumentEncoder::OutputLFLineBreak |
