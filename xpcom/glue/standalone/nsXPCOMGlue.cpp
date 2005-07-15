@@ -51,6 +51,8 @@
 #ifdef XP_WIN
 #include <windows.h>
 #include <mbstring.h>
+
+#define snprintf _snprintf
 #endif
 
 // functions provided by nsDebug.cpp
