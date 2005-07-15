@@ -6270,9 +6270,16 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
 #ifdef ACCESSIBILITY
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT)
   {
+    NS_STATIC_CAST(nsAccessibleEvent*, aEvent)->accessible = nsnull;
     nsCOMPtr<nsIAccessibilityService> accService = 
       do_GetService("@mozilla.org/accessibilityService;1");
     if (accService) {
+      nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+      if (!container) {
+        // This presshell is not active. This often happens when a
+        // preshell is being held onto for fastback.
+        return NS_OK;
+      }
       nsIAccessible* acc;
       nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mDocument));
       NS_ASSERTION(domNode, "No dom node for doc");

@@ -838,7 +838,7 @@ NS_IMETHODIMP nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //
 //-------------------------------------------------------------------------
 #ifdef ACCESSIBILITY
-nsWindow::nsWindow() : nsBaseWidget(), mRootAccessible(NULL)
+nsWindow::nsWindow() : nsBaseWidget()
 #else
 nsWindow::nsWindow() : nsBaseWidget()
 #endif
@@ -1614,10 +1614,6 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Destroy()
 {
-#ifdef ACCESSIBILITY
-  ClearRootAccessible();
-#endif
-
   // Switch to the "main gui thread" if necessary... This method must
   // be executed on the "gui thread"...
   nsToolkit* toolkit = (nsToolkit *)mToolkit;
@@ -4604,7 +4600,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       }
 #ifdef ACCESSIBILITY
       if (nsWindow::gIsAccessibilityOn) {
-        CreateRootAccessible();
+        // Create it for the first time so that it can start firing events
+        GetRootAccessible();
       }
 #endif
       break;
@@ -4875,14 +4872,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     case WM_GETOBJECT:
     {
       LRESULT lAcc = 0;
-      CreateRootAccessible();
-      if (mRootAccessible) {
+      nsIAccessible *rootAccessible = GetRootAccessible();
+      if (rootAccessible) {
         IAccessible *msaaAccessible = NULL;
         if (lParam == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
-          mRootAccessible->GetNativeInterface((void**)&msaaAccessible); // does an addref
+          rootAccessible->GetNativeInterface((void**)&msaaAccessible); // does an addref
         }
         else if (lParam == OBJID_CARET) {  // each root accessible owns a caret accessible
-          nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mRootAccessible));
+          nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(rootAccessible));
           if (accDoc) {
             nsCOMPtr<nsIAccessible> accessibleCaret;
             accDoc->GetCaretAccessible(getter_AddRefs(accessibleCaret));
@@ -7801,55 +7798,41 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
 
 
 #ifdef ACCESSIBILITY
-void nsWindow::CreateRootAccessible()
+nsIAccessible* nsWindow::GetRootAccessible()
 {
   nsWindow::gIsAccessibilityOn = TRUE;
 
   if (mIsDestroying || mOnDestroyCalled || mWindowType == eWindowType_invisible) {
-    if (mRootAccessible) {
-      ClearRootAccessible();
-    }
-    return;
+    return nsnull;
   }
 
-  // Create this as early as possible in new window, if accessibility is turned on
-  // We need it to be created early so it can generate accessibility events right away
+  nsIAccessible *rootAccessible = nsnull;
 
-  if (!mRootAccessible) {
-    nsWindow* accessibleWindow = nsnull;
-    if (mContentType != eContentTypeInherit) {
-      // Windows that wrap content or UI client areas should use their child client's
-      // accessibility info
-      if (mWnd) {
-        HWND firstChild = ::FindWindowEx(mWnd, NULL, kClassNameGeneral, NULL);
-        if (firstChild) {
-          accessibleWindow = GetNSWindowPtr(firstChild);
+  // If accessibility is turned on, we create this even before it is requested
+  // when the window gets focused. We need it to be created early so it can 
+  // generate accessibility events right away
+  nsWindow* accessibleWindow = nsnull;
+  if (mContentType != eContentTypeInherit) {
+    // We're on a MozillaContentWindowClass or MozillaUIWindowClass window.
+    // Search for the correct visible child window to get an accessible 
+    // document from. Make sure to use an active child window
+    HWND accessibleWnd = ::GetTopWindow(mWnd);
+    while (accessibleWnd) {
+      // Loop through windows and find the first one with accessibility info
+      accessibleWindow = GetNSWindowPtr(accessibleWnd);
+      if (accessibleWindow) {
+        accessibleWindow->DispatchAccessibleEvent(NS_GETACCESSIBLE, &rootAccessible);
+        if (rootAccessible) {
+          break;  // Success, one of the child windows was active
         }
       }
-    }
-    else {
-      accessibleWindow = this;
-    }
-    if (accessibleWindow) {
-      accessibleWindow->DispatchAccessibleEvent(NS_GETACCESSIBLE, &mRootAccessible);
+      accessibleWnd = ::GetNextWindow(accessibleWnd, GW_HWNDNEXT);
     }
   }
-}
-
-void nsWindow::ClearRootAccessible()
-{
-  if (mRootAccessible) {
-    NS_RELEASE(mRootAccessible);
-    mRootAccessible = nsnull;
+  else {
+    DispatchAccessibleEvent(NS_GETACCESSIBLE, &rootAccessible);
   }
-  // Recursively clear out all the windows holding this same root accessible
-  if (mWnd && mContentType == eContentTypeInherit) {
-    HWND parent = ::GetParent(mWnd);
-    nsWindow *parentWidget = GetNSWindowPtr(parent);
-    if (parentWidget) {
-      parentWidget->ClearRootAccessible();
-    }
-  }
+  return rootAccessible;
 }
 
 HINSTANCE nsWindow::gmAccLib = 0;
