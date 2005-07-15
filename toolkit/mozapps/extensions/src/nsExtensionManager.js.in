@@ -4251,10 +4251,9 @@ ExtensionManager.prototype = {
     var appVersion = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
                                             gApp.version);
 
-    if (items.length == 0) {
-      var addonType = nsIUpdateItem.TYPE_ADDON;
-      items = this.getItemList(addonType, { });
-    }
+    if (items.length == 0)
+      items = this.getUpdateableItemList(nsIUpdateItem.TYPE_ADDON, { });
+
     var updater = new ExtensionItemUpdater(appID, appVersion, this);
     updater.checkForUpdates(items, items.length, versionUpdateOnly);
   },
@@ -4297,6 +4296,23 @@ ExtensionManager.prototype = {
    */
   getItemList: function(type, countRef) {
     return this.datasource.getItemList(type, countRef);
+  },
+
+  /*
+   * Retrieves a list of nsIUpdateItems of items matching the specified type
+   * that can be updated.
+   * @param   type
+   *          The type of item to return.
+   * @param   countRef
+   *          The XPCJS reference to the number of items returned.
+   * @returns An array of nsIUpdateItems matching the type filter that can be
+   *          updated based on if the item is not appManaged, does not have
+   *          a pending install, upgrade, or uninstall operation, the item's
+   *          update.enabled pref is not set to false, and the item's location
+   *          is writeable.
+   */
+  getUpdateableItemList: function(type, countRef) {
+    return this.datasource.getUpdateableItemList(type, countRef);
   },
 
   /**  
@@ -5325,6 +5341,36 @@ ExtensionsDataSource.prototype = {
     return items;
   },
 
+  /*
+   * Retrieves a list of nsIUpdateItems of items matching the specified type
+   * that can be updated.
+   * @param   type
+   *          The type of item to return.
+   * @param   countRef
+   *          The XPCJS reference to the number of items returned.
+   * @returns An array of nsIUpdateItems matching the type filter that can be
+   *          updated based on if the item is not appManaged, does not have
+   *          a pending install, upgrade, or uninstall operation, the item's
+   *          update.enabled pref is not set to false, and the item's location
+   *          is writeable.
+   */
+  getUpdateableItemList: function(desiredType, countRef) {
+    var items = [];
+    var ctr = getContainer(this, this._itemRoot);
+    var elements = ctr.GetElements();
+    while (elements.hasMoreElements()) {
+      var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var eID = stripPrefix(e.Value, PREFIX_ITEM_URI);
+      var type = this.getItemProperty(eID, "type");
+      if (type != -1 && type & desiredType) {
+        if (this.getItemProperty(eID, "updateable") == "true")
+          items.push(this.getItemForID(eID));
+      }
+    }
+    countRef.value = items.length;
+    return items;
+  },
+
   /**
    * Get a list of Item IDs that have a flag set
    * @param   flag
@@ -6225,7 +6271,7 @@ ExtensionsDataSource.prototype = {
     return this.GetTarget(item, EM_R("description"), true);
   },
   
-    /**
+  /**
    * Get the em:opType property (controls widget state for the EM UI)
    * from the Startup Cache (e.g. extensions-startup.manifest)
    */
@@ -6290,6 +6336,31 @@ ExtensionsDataSource.prototype = {
    */
   _rdfGet_homepageURL: function(item, property) {
     return this._getLocalizablePropertyValue(item, property);
+  },
+
+  /**
+   * Get the em:updateable property - this specifies whether the item is
+   * allowed to be updated
+   */
+  _rdfGet_updateable: function(item, property) {
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    var opType = this.getItemProperty(id, "opType");
+    if (opType == OP_NEEDS_INSTALL || opType == OP_NEEDS_UNINSTALL ||
+        opType == OP_NEEDS_UPGRADE ||
+        this.getItemProperty(id, "appManaged") == "true")
+      return EM_L("false");
+
+    try {
+      if (!gPref.getBoolPref(PREF_EM_ITEM_UPDATE_ENABLED.replace(/%UUID%/, id)))
+        return EM_L("false");
+    }
+    catch (e) { }
+
+    var installLocation = InstallLocations.get(this.getInstallLocationKey(id));
+    if (!installLocation.canAccess)
+      return EM_L("false");
+
+    return EM_L("true");
   },
 
   /**

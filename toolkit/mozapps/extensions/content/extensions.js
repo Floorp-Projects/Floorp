@@ -564,8 +564,9 @@ function buildContextMenu(aEvent)
   }
   else {
     var enableMenu = document.getElementById("menuitem_enable_clone");
-    if (gExtensionsView.selectedItem.getAttribute("compatible") == "false" ||
-        gExtensionsView.selectedItem.disabled) 
+    if (gExtensionsView.selectedItem &&
+       (gExtensionsView.selectedItem.getAttribute("compatible") == "false" ||
+        gExtensionsView.selectedItem.disabled))
       // don't let the user activate incompatible themes, but show a (disabled) Enable
       // menuitem to give visual feedback; it's disabled because cmd_enable returns false
       enableMenu.hidden = false;
@@ -763,10 +764,7 @@ var gExtensionsViewController = {
     case "cmd_update":
       return !selectedItem && gExtensionsView.children.length > 0 ||
              (selectedItem &&
-              opType != OP_NEEDS_INSTALL &&
-              opType != OP_NEEDS_UNINSTALL &&
-              opType != OP_NEEDS_UPGRADE &&
-              canWriteToLocation(selectedItem));
+              selectedItem.getAttribute("updateable") != "false");
     case "cmd_reallyEnable":
     // controls whether to show Enable or Disable in extensions' context menu
       return selectedItem && 
