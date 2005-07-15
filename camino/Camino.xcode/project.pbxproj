@@ -1062,7 +1062,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libpermissions.a;
-			path = ../dist/lib/libpermissions.a;
+			path = ../dist/lib/components/libpermissions.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};

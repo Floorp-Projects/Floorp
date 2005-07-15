@@ -93,6 +93,7 @@ DECL_NSGETMODULE(nsXMLExtrasModule)
 DECL_NSGETMODULE(nsUniversalCharDetModule)
 DECL_NSGETMODULE(nsTypeAheadFind)
 DECL_NSGETMODULE(TransformiixModule)
+DECL_NSGETMODULE(nsPermissionsModule)
 DECL_NSGETMODULE(nsComposerModule)
 DECL_NSGETMODULE(BOOT)
 DECL_NSGETMODULE(NSS)
@@ -133,6 +134,7 @@ MODULE(nsXMLExtrasModule),
 MODULE(nsUniversalCharDetModule),
 MODULE(nsTypeAheadFind),
 MODULE(TransformiixModule),
+MODULE(nsPermissionsModule),
 MODULE(nsComposerModule),
 MODULE(BOOT),
 MODULE(NSS),
