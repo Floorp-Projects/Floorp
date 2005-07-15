@@ -93,15 +93,15 @@ XPCOMGlueLoad(const char *xpcomFile)
         }
     }
 
-    void *libHandle = RTLD_DEFAULT;
+    // RTLD_DEFAULT is not defined in non-GNU toolchains, and it is
+    // (void*) 0 in any case.
+
+    void *libHandle = nsnull;
 
     if (xpcomFile[0] != '.' || xpcomFile[1] != '\0') {
         libHandle = dlopen(xpcomFile, RTLD_GLOBAL | RTLD_LAZY);
         if (libHandle) {
             AppendDependentLib(libHandle);
-        }
-        else {
-            libHandle = RTLD_DEFAULT;
         }
     }
 
