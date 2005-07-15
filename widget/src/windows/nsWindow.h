@@ -417,8 +417,7 @@ public:
   virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam = NULL, nsPoint* aPoint = nsnull);
 #ifdef ACCESSIBILITY
   virtual PRBool          DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAccessible, nsPoint* aPoint = nsnull);
-  void                    CreateRootAccessible();
-  void                    ClearRootAccessible();
+  nsIAccessible*          GetRootAccessible();
 #endif
   virtual PRBool          AutoErase();
   nsPoint*                GetLastPoint() { return &mLastPoint; }
@@ -703,7 +702,6 @@ protected:
 
 
 #ifdef ACCESSIBILITY
-  nsIAccessible* mRootAccessible;
   static BOOL gIsAccessibilityOn;
   static HINSTANCE gmAccLib;
   static LPFNLRESULTFROMOBJECT gmLresultFromObject;
