@@ -292,7 +292,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
   // pasting just the cell text which is what we want anyway. 
   // A paste from an excel cell always starts with a new line, two spaces and then the td tag
   if (StringBeginsWith(aInputString, NS_LITERAL_STRING("\n  <td"))) 
-    contextStr = NS_LITERAL_STRING("");
+    contextStr.Truncate();
 #endif
 
   res = CreateDOMFragmentFromPaste(aInputString, contextStr, aInfoStr, 
