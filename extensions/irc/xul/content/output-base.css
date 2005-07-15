@@ -171,6 +171,8 @@ body.chatzilla-body {               /* The topmost container in the ChatZilla */
 /* links */
 a.chatzilla-link {
     text-decoration: none;
+    direction: ltr;
+    unicode-bidi: embed;
 }
 
 /* link hover effect */
