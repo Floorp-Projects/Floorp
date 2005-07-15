@@ -257,22 +257,23 @@ sub sql_fulltext_search {
 
     # This is as close as we can get to doing full text search using
     # standard ANSI SQL, without real full text search support. DB specific
-    # modules shoud override this, as this will be always much slower.
-
-    # the text is already sql-quoted, so we need to remove the quotes first
-    my $quote = substr($self->quote(''), 0, 1);
-    $text = $1 if ($text =~ /^$quote(.*)$quote$/);
+    # modules should override this, as this will be always much slower.
 
     # make the string lowercase to do case insensitive search
     my $lower_text = lc($text);
 
-    # split the text we search for to separate words
+    # split the text we search for into separate words
     my @words = split(/\s+/, $lower_text);
 
-    # search for occurence of all specified words in the column
-    return "CASE WHEN (LOWER($column) LIKE ${quote}%" .
-           join("%${quote} AND LOWER($column) LIKE ${quote}%", @words) .
-           "%${quote}) THEN 1 ELSE 0 END";
+    # surround the words with wildcards and SQL quotes so we can use them
+    # in LIKE search clauses
+    @words = map($self->quote("%$_%"), @words);
+
+    # turn the words into a set of LIKE search clauses
+    @words = map("LOWER($column) LIKE $_", @words);
+
+    # search for occurrences of all specified words in the column
+    return "CASE WHEN (" . join(" AND ", @words) . ") THEN 1 ELSE 0 END";
 }
 
 #####################################################################
@@ -1159,12 +1160,12 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
               specified text on a given column.
               There is a ANSI SQL version of this method implemented using
               LIKE operator, but it's not a real full text search. DB specific
-              modules shoud override this, as this generic implementation will
+              modules should override this, as this generic implementation will
               be always much slower. This generic implementation returns
               'relevance' as 0 for no match, or 1 for a match.
  Params:      $column = name of column to search (scalar)
               $text = text to search for (scalar)
- Returns:     formatted SQL for for full text search
+ Returns:     formatted SQL for full text search
 
 =item C<sql_istrcmp>
 

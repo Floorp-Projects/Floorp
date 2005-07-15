@@ -42,6 +42,7 @@ package Bugzilla::DB::Mysql;
 
 use strict;
 
+use Bugzilla::Util;
 use Bugzilla::Error;
 
 # This module extends the DB interface via inheritance
@@ -108,7 +109,17 @@ sub sql_string_concat {
 sub sql_fulltext_search {
     my ($self, $column, $text) = @_;
 
-    return "MATCH($column) AGAINST($text)";
+    # Add the boolean mode modifier if the search string contains
+    # boolean operators.
+    my $mode = ($text =~ /[+-<>()~*"]/ ? "IN BOOLEAN MODE" : "");
+
+    # quote the text for use in the MATCH AGAINST expression
+    $text = $self->quote($text);
+
+    # untaint the text, since it's safe to use now that we've quoted it
+    trick_taint($text);
+
+    return "MATCH($column) AGAINST($text $mode)";
 }
 
 sub sql_istring {

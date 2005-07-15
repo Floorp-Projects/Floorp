@@ -582,10 +582,8 @@ sub init {
              # $term1 searches comments.
              # $term2 searches summaries, which contributes to the relevance
              # ranking in SELECT but doesn't limit which bugs get retrieved.
-             my $term1 = $dbh->sql_fulltext_search("${table}.thetext",
-                                                   ::SqlQuote($v));
-             my $term2 = $dbh->sql_fulltext_search("bugs.short_desc",
-                                                   ::SqlQuote($v));
+             my $term1 = $dbh->sql_fulltext_search("${table}.thetext", $v);
+             my $term2 = $dbh->sql_fulltext_search("bugs.short_desc", $v);
 
              # The term to use in the WHERE clause.
              $term = "$term1 > 0";
