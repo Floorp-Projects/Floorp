@@ -714,10 +714,10 @@ JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
     if (!caller)
         return principals;
     callerPrincipals = JS_StackFramePrincipals(cx, caller);
-    return (principals && callerPrincipals &&
-            principals->subsume(principals, callerPrincipals))
-           ? callerPrincipals
-           : principals;
+    return (callerPrincipals && principals &&
+            callerPrincipals->subsume(callerPrincipals, principals))
+           ? principals
+           : callerPrincipals;
 }
 
 JS_PUBLIC_API(void *)
