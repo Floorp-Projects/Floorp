@@ -1,7 +1,11 @@
 #filter substitution
 
 @AB_CD@.jar:
+#ifdef MOZ_XUL_APP
+% locale editor @AB_CD@ %locale/@AB_CD@/editor/
+#else
 * locale/@AB_CD@/editor/contents.rdf                         (generic/chrome/composer/contents.rdf)
+#endif
   locale/@AB_CD@/editor/editorSmileyOverlay.dtd              (%chrome/composer/editorSmileyOverlay.dtd)
   locale/@AB_CD@/editor/editorOverlay.dtd                    (%chrome/composer/editorOverlay.dtd)
   locale/@AB_CD@/editor/editor.properties                    (%chrome/composer/editor.properties)
