@@ -114,7 +114,7 @@ nsAppShellCocoa::Run(void)
 NS_IMETHODIMP
 nsAppShellCocoa::Exit(void)
 {
-  [NSApp stop];
+  [NSApp stop:nil];
 	return NS_OK;
 }
 
