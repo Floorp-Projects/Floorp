@@ -377,14 +377,18 @@ nsCSSValue::Image::Image(nsIURI* aURI, const PRUnichar* aString,
   if (!mString)
     return;
 
-  // If Paint Forcing is enabled, then force all background image loads to
+  // If the pref is enabled, force all background image loads to
   // complete before firing onload for the document.  Otherwise, background
   // image loads are special and don't block onload.
-  static PRBool bg_in_bg = !PR_GetEnv("MOZ_FORCE_PAINT_AFTER_ONLOAD");
-
-  PRInt32 loadFlag = (!aIsBGImage || !bg_in_bg)
-    ? (PRInt32)nsIRequest::LOAD_NORMAL
-    : (PRInt32)nsIRequest::LOAD_BACKGROUND;
+  PRInt32 loadFlag = (PRInt32)nsIRequest::LOAD_NORMAL;
+  if (aIsBGImage) {
+    static PRBool onloadAfterImageBackgroundLoads =
+      nsContentUtils::GetBoolPref
+        ("layout.fire_onload_after_image_background_loads");
+    if (!onloadAfterImageBackgroundLoads) {
+      loadFlag = (PRInt32)nsIRequest::LOAD_BACKGROUND;
+    }
+  }
 
   if (mURI &&
       nsContentUtils::CanLoadImage(mURI, aDocument, aDocument)) {
