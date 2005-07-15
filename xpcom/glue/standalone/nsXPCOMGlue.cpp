@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXPCOMGlue.h"
+#include "nsGlueLinking.h"
 
 #include "nspr.h"
 #include "nsDebug.h"
@@ -45,10 +46,7 @@
 #include "nsXPCOMPrivate.h"
 #include "nsCOMPtr.h"
 #include <stdlib.h>
-
-#ifdef XP_MACOSX
-#include <mach-o/dyld.h>
-#endif
+#include <stdio.h>
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -59,144 +57,74 @@
 nsresult GlueStartupDebug();
 void GlueShutdownDebug();
 
-#ifndef XP_MACOSX
-// You cannot unload a .dylib on Mac OS X, so we don't bother saving the
-// mach_header*
-
-static PRLibrary *xpcomLib;
-#endif
-
 static XPCOMFunctions xpcomFunctions;
 
 extern "C"
 nsresult XPCOMGlueStartup(const char* xpcomFile)
 {
-    nsresult rv = NS_OK;
-    GetFrozenFunctionsFunc function = nsnull;
-
     xpcomFunctions.version = XPCOM_GLUE_VERSION;
     xpcomFunctions.size    = sizeof(XPCOMFunctions);
 
-#ifdef XP_MACOSX
+    GetFrozenFunctionsFunc func = nsnull;
+
     if (!xpcomFile)
         xpcomFile = XPCOM_DLL;
 
-    if ((xpcomFile[0] != '.' || xpcomFile[1] != '\0')) {
-        (void) NSAddImage(xpcomFile,
-                          NSADDIMAGE_OPTION_RETURN_ON_ERROR |
-                          NSADDIMAGE_OPTION_WITH_SEARCHING |
-                          NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
-        // We don't really care if this fails, as long as we can get
-        // NS_GetFrozenFunctions below.
-    }
+    func = XPCOMGlueLoad(xpcomFile);
 
-    if (!NSIsSymbolNameDefined("_NS_GetFrozenFunctions"))
+    if (!func)
         return NS_ERROR_FAILURE;
 
-    NSSymbol sym = NSLookupAndBindSymbol("_NS_GetFrozenFunctions");
-    function = (GetFrozenFunctionsFunc) NSAddressOfSymbol(sym);
-        
-    if (!function)
-        return NS_ERROR_FAILURE;
-
-    rv = (*function)(&xpcomFunctions, nsnull);
-    if (NS_FAILED(rv))
+    nsresult rv = (*func)(&xpcomFunctions, nsnull);
+    if (NS_FAILED(rv)) {
+        XPCOMGlueUnload();
         return rv;
+    }
 
     rv = GlueStartupDebug();
     if (NS_FAILED(rv)) {
         memset(&xpcomFunctions, 0, sizeof(xpcomFunctions));
+        XPCOMGlueUnload();
         return rv;
     }
 
     return NS_OK;
+}
+
+#if defined(XP_WIN) || defined(XP_OS2)
+#define READ_TEXTMODE "t"
 #else
-    //
-    // if xpcomFile == ".", then we assume xpcom is already loaded, and we'll
-    // use NSPR to find NS_GetFrozenFunctions from the list of already loaded
-    // libraries.
-    //
-    // otherwise, we try to load xpcom and then look for NS_GetFrozenFunctions.
-    // if xpcomFile == NULL, then we try to load xpcom by name w/o a fully
-    // qualified path.
-    //
-
-    if (xpcomFile && (xpcomFile[0] == '.' && xpcomFile[1] == '\0')) {
-        function = (GetFrozenFunctionsFunc)
-                PR_FindSymbolAndLibrary("NS_GetFrozenFunctions", &xpcomLib);
-        if (!function) {
-            // The symbol was not found, so failover to loading XPCOM_DLL,
-            // and look for the symbol there.  See bug 240986 for details.
-            xpcomFile = nsnull;
-        }
-        else {
-            char *libPath = PR_GetLibraryFilePathname(XPCOM_DLL, (PRFuncPtr) function);
-            if (!libPath)
-                rv = NS_ERROR_FAILURE;
-            else {
-                rv = (*function)(&xpcomFunctions, libPath);
-                PR_Free(libPath);
-            }
-        }
-    }
-
-    if (!function) {
-        PRLibSpec libSpec;
-
-        libSpec.type = PR_LibSpec_Pathname;
-        if (!xpcomFile)
-            libSpec.value.pathname = XPCOM_DLL;
-        else {
-            libSpec.value.pathname = xpcomFile;
-#ifdef XP_WIN32
-            // Add directory containing xpcomFile to the DLL search path.  This
-            // is done so that the OS knows where to find xpcom_core.dll and
-            // any other dependent libs.
-            const char *lastSlash =
-                    (const char *) _mbsrchr((const unsigned char *) xpcomFile, '\\');
-            if (lastSlash) {
-                char path[32767];
-                DWORD pathLen = GetEnvironmentVariable("PATH", path, sizeof(path));
-                if (pathLen != 0)
-                    path[pathLen++] = ';';
-                DWORD dirLen = lastSlash - xpcomFile;
-                if (sizeof(path) - pathLen > dirLen) {
-                    memcpy(&path[pathLen], xpcomFile, dirLen);
-                    path[pathLen + dirLen] = '\0';
-                    SetEnvironmentVariable("PATH", path);
-                }
-            }
+#define READ_TEXTMODE
 #endif
-        }
 
-        xpcomLib = PR_LoadLibraryWithFlags(libSpec, PR_LD_LAZY|PR_LD_GLOBAL);
+void
+XPCOMGlueLoadDependentLibs(const char *xpcomDir, DependentLibsCallback cb)
+{
+    char buffer[MAXPATHLEN];
+    sprintf(buffer, "%s" XPCOM_FILE_PATH_SEPARATOR XPCOM_DEPENDENT_LIBS_LIST,
+            xpcomDir);
 
-        if (!xpcomLib)
-            return NS_ERROR_FAILURE;
+    FILE *flist = fopen(buffer, "r" READ_TEXTMODE);
+    if (!flist)
+        return;
 
-        function = (GetFrozenFunctionsFunc) PR_FindSymbol(xpcomLib, "NS_GetFrozenFunctions");
+    while (fgets(buffer, sizeof(buffer), flist)) {
+        int l = strlen(buffer);
 
-        if (!function)
-            rv = NS_ERROR_FAILURE;
-        else
-            rv = (*function)(&xpcomFunctions, libSpec.value.pathname);
+        // ignore empty lines and comments
+        if (l == 0 || *buffer == '#')
+            continue;
+
+        // cut the trailing newline, if present
+        if (buffer[l - 1] == '\n')
+            buffer[l - 1] = '\0';
+
+        char buffer2[MAXPATHLEN];
+        snprintf(buffer2, sizeof(buffer2),
+                 "%s" XPCOM_FILE_PATH_SEPARATOR "%s",
+                 xpcomDir, buffer);
+        cb(buffer2);
     }
-
-    if (NS_FAILED(rv))
-        goto bail;
-
-    rv = GlueStartupDebug();
-    if (NS_FAILED(rv))
-        goto bail;
-
-    return NS_OK;
-
-bail:
-    PR_UnloadLibrary(xpcomLib);
-    xpcomLib = nsnull;
-    memset(&xpcomFunctions, 0, sizeof(xpcomFunctions));
-    return NS_ERROR_FAILURE;
-#endif
 }
 
 extern "C"
@@ -204,12 +132,7 @@ nsresult XPCOMGlueShutdown()
 {
     GlueShutdownDebug();
 
-#ifndef XP_MACOSX
-    if (xpcomLib) {
-        PR_UnloadLibrary(xpcomLib);
-        xpcomLib = nsnull;
-    }
-#endif
+    XPCOMGlueUnload();
     
     memset(&xpcomFunctions, 0, sizeof(xpcomFunctions));
     return NS_OK;
