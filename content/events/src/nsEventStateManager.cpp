@@ -1270,21 +1270,27 @@ nsEventStateManager::FireContextClick()
       }
 
       if (allowedToDispatch) {
+        // make sure the widget sticks around
+        nsCOMPtr<nsIWidget> targetWidget(mCurrentTarget->GetWindow());
+        // init the event while mCurrentTarget is still good
+        nsMouseEvent event(PR_TRUE, NS_CONTEXTMENU,
+                           targetWidget,
+                           nsMouseEvent::eReal);
+        event.clickCount = 1;
+        FillInEventFromGestureDown(&event);
+        
         // stop selection tracking, we're in control now
         nsCOMPtr<nsIFrameSelection> frameSel;
         GetSelection(mCurrentTarget, mPresContext, getter_AddRefs(frameSel));
         if (frameSel) {
           PRBool mouseDownState = PR_TRUE;
           frameSel->GetMouseDownState(&mouseDownState);
-          if (mouseDownState)
+          if (mouseDownState) {
+            // note that this can cause selection changed events to fire if we're in
+            // a text field, which will null out mCurrentTarget
             frameSel->SetMouseDownState(PR_FALSE);
+          }
         }
-
-        nsMouseEvent event(PR_TRUE, NS_CONTEXTMENU,
-                           mCurrentTarget->GetWindow(),
-                           nsMouseEvent::eReal);
-        event.clickCount = 1;
-        FillInEventFromGestureDown(&event);
 
         // dispatch to DOM
         mGestureDownContent->HandleDOMEvent(mPresContext, &event, nsnull,
