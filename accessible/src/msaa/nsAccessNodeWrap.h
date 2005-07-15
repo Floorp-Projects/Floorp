@@ -120,6 +120,9 @@ class nsAccessNodeWrap :  public nsAccessNode, public ISimpleDOMNode
     virtual /* [local][propget] */ HRESULT STDMETHODCALLTYPE get_localInterface( 
         /* [retval][out] */ void __RPC_FAR *__RPC_FAR *localInterface);
         
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_language(
+        /* [out][retval] */ BSTR __RPC_FAR *language);
+
     static void InitAccessibility();
     static void ShutdownAccessibility();
 

@@ -38,6 +38,7 @@
 
 #include "nsAccessNodeWrap.h"
 #include "ISimpleDOMNode_i.c"
+#include "nsAccessibilityAtoms.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessible.h"
 #include "nsIDocument.h"
@@ -512,6 +513,27 @@ nsAccessNodeWrap::get_innerHTML(BSTR __RPC_FAR *aInnerHTML)
   domNSElement->GetInnerHTML(innerHTML);
   *aInnerHTML = ::SysAllocString(innerHTML.get());
 
+  return S_OK;
+}
+
+STDMETHODIMP 
+nsAccessNodeWrap::get_language(BSTR __RPC_FAR *aLanguage)
+{
+  *aLanguage = nsnull;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return E_FAIL;
+  }
+
+  nsAutoString language;
+  for (nsIContent *walkUp = content; walkUp = walkUp->GetParent(); walkUp) {
+    if (NS_CONTENT_ATTR_HAS_VALUE ==
+        walkUp->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::lang, language)) {
+      break;
+    }
+  }
+ 
+  *aLanguage = ::SysAllocString(language.get());
   return S_OK;
 }
 
