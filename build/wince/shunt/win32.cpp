@@ -172,8 +172,10 @@ MOZCE_SHUNT_API int mozce_ExtSelectClipRgn(HDC inDC, HRGN inRGN, int inMode)
         RECT cRect;
         GetClipBox(inDC,&cRect);
         cRGN = CreateRectRgn(cRect.left,cRect.top,cRect.right,cRect.bottom);
-        result = SelectClipRgn(inDC,cRGN);		
     }
+
+    // now select the proper region as the current clipping region
+    result = SelectClipRgn(inDC,cRGN);		
     
     if (result == NULLREGION) 
     {
