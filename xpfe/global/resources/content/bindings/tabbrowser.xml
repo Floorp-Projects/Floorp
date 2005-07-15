@@ -55,7 +55,7 @@
     <content>
       <xul:stringbundle src="chrome://global/locale/tabbrowser.properties"/>
       <xul:tabbox flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown">
-        <xul:hbox class="tabbrowser-strip chromeclass-toolbar" collapsed="true" tooltip="_child" context="_child">
+        <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child">
           <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
           <xul:menupopup onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
             <xul:menuitem label="&closeTab.label;" accesskey="&closeTab.accesskey;"
@@ -967,8 +967,7 @@
               return;
 
             if (l == 2) {
-              var autohide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
-              if (autohide)
+              if (this.mPrefs.getBoolPref("browser.tabs.autoHide"))
                 this.mStrip.collapsed = true;
             }
 
@@ -1498,7 +1497,8 @@
           this.mTabFilters[0] = filter;
 
           if (!this.mPrefs.getBoolPref("browser.tabs.autoHide") &&
-              !this.mPrefs.getBoolPref("browser.tabs.forceHide"))
+              !this.mPrefs.getBoolPref("browser.tabs.forceHide") &&
+              window.toolbar.visible)
             this.mStrip.collapsed = false;
         ]]>
       </constructor>
