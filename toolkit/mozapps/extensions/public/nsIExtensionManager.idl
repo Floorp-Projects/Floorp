@@ -497,6 +497,7 @@ interface nsIUpdateItem : nsISupports
   const unsigned long TYPE_THEME       = 0x04;
   const unsigned long TYPE_LOCALE      = 0x08;
   const unsigned long TYPE_PLUGIN      = 0x10;
+  const unsigned long TYPE_MULTI_XPI   = 0x20;
   const unsigned long TYPE_ADDON       = TYPE_EXTENSION + TYPE_THEME + TYPE_LOCALE + TYPE_PLUGIN;
   const unsigned long TYPE_ANY         = TYPE_APP + TYPE_ADDON;
 

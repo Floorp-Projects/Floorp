@@ -48,6 +48,7 @@ const nsIUpdateItem                   = Components.interfaces.nsIUpdateItem;
 const nsILocalFile                    = Components.interfaces.nsILocalFile;
 const nsILineInputStream              = Components.interfaces.nsILineInputStream;
 const nsIInstallLocation              = Components.interfaces.nsIInstallLocation;
+const nsIURL                          = Components.interfaces.nsIURL
 // XXXrstrong calling hasMoreElements on a nsIDirectoryEnumerator after
 // it has been removed will cause a crash on Mac OS X - bug 292823
 const nsIDirectoryEnumerator          = Components.interfaces.nsIDirectoryEnumerator;
@@ -67,6 +68,7 @@ const PREF_DSS_SWITCHPENDING          = "extensions.dss.switchPending";
 const PREF_DSS_SKIN_TO_SELECT         = "extensions.lastSelectedSkin";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
 const PREF_EM_LOGGING_ENABLED         = "extensions.logging.enabled";
+const PREF_XPINSTALL_STATUS_DLG_SKIN  = "xpinstall.dialog.progress.skin";
 
 const DIR_EXTENSIONS                  = "extensions";
 const DIR_UNINSTALL                   = "uninstall";
@@ -790,7 +792,7 @@ function getInstallManifest(file) {
     var uri = Components.classes["@mozilla.org/network/io-service;1"]
                         .getService(Components.interfaces.nsIIOService)
                         .newFileURI(file);
-    var url = uri.QueryInterface(Components.interfaces.nsIURL);
+    var url = uri.QueryInterface(nsIURL);
     showMessage("malformedTitle", [], "malformedMessage", 
                 [BundleManager.appName, url.fileName]);
   }
@@ -2387,7 +2389,7 @@ ExtensionManager.prototype = {
    */
   _getItemForDroppedFile: function(file, location) {
     var fileURL = getURIFromFile(file);
-    if (fileURL instanceof Components.interfaces.nsIURL) {
+    if (fileURL instanceof nsIURL) {
       if (fileIsItemPackage(fileURL)) {
         // We know nothing about this item, it is not something we've
         // staged in preparation for finalization, so assume it's something
@@ -3635,6 +3637,96 @@ ExtensionManager.prototype = {
     }
     
     /**
+     * Extracts and then starts the install for extensions / themes contained
+     * within a xpi.
+     */
+    function installMultiXPI(xpiFile, installData) {
+      var fileURL = getURIFromFile(xpiFile).QueryInterface(nsIURL);
+      if (fileURL.fileExtension.toLowerCase() != "xpi") {
+        LOG("Invalid File Extension: Item: \"" + fileURL.fileName + "\" has an " + 
+            "invalid file extension. Only xpi file extensions are allowed for " +
+            "multiple item packages.");
+        var bundle = BundleManager.getBundle(URI_EXTENSIONS_PROPERTIES);
+        showMessage("invalidFileExtTitle", [], 
+                    "invalidFileExtMessage", [installData.name,
+                    fileURL.fileExtension,
+                    bundle.GetStringFromName("type-" + installData.type)]);
+        return;
+      }
+
+      try {
+        var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
+                                  .createInstance(Components.interfaces.nsIZipReader);
+        zipReader.init(xpiFile);
+        zipReader.open();
+      }
+      catch (e) {
+        zipReader.close();
+        LOG("installMultiXPI: failed to open xpi file: " + xpiFile.path);
+        throw e;
+      }
+
+      var searchForEntries = ["*.xpi", "*.jar"];
+      var files = [];
+      for (var i = 0; i < searchForEntries.length; ++i) {
+        var entries = zipReader.findEntries(searchForEntries[i]);
+        while (entries.hasMoreElements()) {
+          var entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
+          var target = getFile(KEY_TEMPDIR, [entry.name]);
+          try {
+            target.createUnique(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+          }
+          catch (e) {
+            LOG("installMultiXPI: failed to create target file for extraction " +
+                " file = " + target.path + ", exception = " + e + "\n");
+          }
+          zipReader.extract(entry.name, target);
+          files.push(target);
+        }
+      }
+      zipReader.close();
+
+      if (files.length == 0) {
+        LOG("Multiple Item Package: Item: \"" + fileURL.fileName + "\" does " +
+            "not contain a valid package to install.");
+        var bundle = BundleManager.getBundle(URI_EXTENSIONS_PROPERTIES);
+        showMessage("missingPackageFilesTitle",
+                    [bundle.GetStringFromName("type-" + installData.type)],
+                    "missingPackageFilesMessage", [installData.name,
+                    bundle.GetStringFromName("type-" + installData.type)]);
+        return;
+      }
+
+      // When installing themes we need to open the theme manager if it is not
+      // already opened except when we are installing a xpi dropped into a
+      // extensions directory.
+      fileURL = getURIFromFile(files[files.length - 1]).QueryInterface(nsIURL);
+      if (fileURL.fileExtension.toLowerCase() == "jar") {
+        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                           .getService(Components.interfaces.nsIWindowMediator);
+        var win = wm.getMostRecentWindow("Extension:Manager-extensions");
+        if (win) {
+          win = wm.getMostRecentWindow("Extension:Manager-themes");
+          if (win) {
+            win.focus();
+          }
+          else {
+            var themeManagerURL = gPref.getCharPref(PREF_XPINSTALL_STATUS_DLG_SKIN);
+            var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                               .getService(Components.interfaces.nsIWindowWatcher);
+            ww.openWindow(null, themeManagerURL, 
+                          "", "chrome,centerscreen,titlebar,dialog=no,resizable", []);
+          }
+        }
+      }
+
+      for (i = 0; i < files.length; ++i) {
+        em.installItemFromFileInternal(files[i], aInstallLocationKey, null);
+        files[i].remove(false);
+      }
+    }
+
+    /**
      * An observer for the Extension Update System.
      * @constructor
      */
@@ -3802,6 +3894,12 @@ ExtensionManager.prototype = {
       }
       break;
     case INSTALLERROR_SUCCESS:
+      // Installation of multiple extensions / themes contained within a single xpi.
+      if (installData.type == nsIUpdateItem.TYPE_MULTI_XPI) {
+        installMultiXPI(aXPIFile, installData);
+        break;
+      }
+
       // Stage the extension's XPI so it can be extracted at the next restart.
       var installLocation = getInstallLocation(installData.id, aInstallLocationKey);
       if (!installLocation) {
@@ -5990,6 +6088,10 @@ ExtensionsDataSource.prototype = {
    *          The version of the item
    */
   addIncompatibleUpdateItem: function(name, url, type, version) {
+    // type must be TYPE_EXTENSION for a multi_xpi to display in the manager.
+    if (type == nsIUpdateItem.TYPE_MULTI_XPI)
+      type = nsIUpdateItem.TYPE_EXTENSION;
+
     var iconURL = (type == nsIUpdateItem.TYPE_THEME) ? URI_GENERIC_ICON_THEME :
                                                        URI_GENERIC_ICON_XPINSTALL;
     var extensionsStrings = BundleManager.getBundle(URI_EXTENSIONS_PROPERTIES);
