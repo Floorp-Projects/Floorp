@@ -878,7 +878,7 @@ static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changed
     return nil;
 
   nsCOMPtr<nsILocalFile> profDirFile;
-  rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(profDirFile));
+  rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(profDirFile));
   if (NS_SUCCEEDED(rv)) {
     // profDirDesc is ASCII so no loss
     rv = profDirFile->SetPersistentDescriptor(NS_LossyConvertUCS2toASCII(profDirDesc));

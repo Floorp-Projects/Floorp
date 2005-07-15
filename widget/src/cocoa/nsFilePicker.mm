@@ -196,7 +196,7 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
     if (theURL)
     {
       nsCOMPtr<nsILocalFile> localFile;
-      NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(localFile));
+      NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localFile));
       nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
       if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)theURL)))
         outFiles.AppendObject(localFile);
@@ -250,7 +250,7 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
   if (theURL)
   {
     nsCOMPtr<nsILocalFile> localFile;
-    NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(localFile));
+    NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localFile));
     nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
     if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)theURL)))
     {
@@ -304,7 +304,7 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
   if (fileURL)
   { 
     nsCOMPtr<nsILocalFile> localFile;
-    NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(localFile));
+    NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localFile));
     nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
     if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)fileURL)))
     {

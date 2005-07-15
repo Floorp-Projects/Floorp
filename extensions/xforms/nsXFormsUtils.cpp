@@ -350,7 +350,7 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement           *aElement,
     NS_ENSURE_STATE(modelInt);
 
     nsCOMPtr<nsIDOMDocument> instanceDoc;
-    modelInt->GetInstanceDocument(NS_LITERAL_STRING(""),
+    modelInt->GetInstanceDocument(EmptyString(),
                                   getter_AddRefs(instanceDoc));
     NS_ENSURE_STATE(instanceDoc);
 

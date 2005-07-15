@@ -166,7 +166,7 @@ wsLoadFromStreamEvent::handleEvent ()
 	
         rv = mNativeBrowserControl->mWindow->LoadStream(mShim, uri, 
 						nsDependentCString(mContentType),
-					        NS_LITERAL_CSTRING(""),
+					        EmptyCString(),
                                                 nsnull);
         // make it so we don't issue multiple LoadStream calls 
         // for this InputStreamShim instance.
