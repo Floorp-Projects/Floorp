@@ -505,7 +505,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
       
-  if (eventType.LowerCaseEqualsLiteral("pagehide")) {
+  if (eventType.LowerCaseEqualsLiteral("unload")) {
     // Only get cached accessible for pagehide -- so that we don't create it
     // just to destroy it.
     nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(eventShell));

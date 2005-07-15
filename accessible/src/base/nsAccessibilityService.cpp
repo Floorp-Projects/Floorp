@@ -160,8 +160,7 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
 {
   NS_ASSERTION(aStateFlags & STATE_IS_DOCUMENT, "Other notifications excluded");
 
-  // Not interested in START_STOP, because document object has not been created yet
-  if (0 == (aStateFlags & (STATE_TRANSFERRING | STATE_STOP))) {
+  if (0 == (aStateFlags & (STATE_START | STATE_STOP))) {
     return NS_OK;
   }
 
@@ -199,7 +198,7 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
   nsCOMPtr<nsPIAccessibleDocument> docAccessible =
     do_QueryInterface(accessible);
   NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
-  docAccessible->FireDocLoadingEvent(!(aStateFlags & STATE_TRANSFERRING));
+  docAccessible->FireDocLoadingEvent(!(aStateFlags & STATE_START));
 
   return NS_OK;
 }
