@@ -115,8 +115,8 @@ const gTabStripPrefListener =
     if (topic != "nsPref:changed")
       return;
 
-    var stripVisibility = !pref.getBoolPref(prefName);
-    if (gBrowser.tabContainer.childNodes.length == 1) {
+    if (gBrowser.tabContainer.childNodes.length == 1 && window.toolbar.visible) {
+      var stripVisibility = !pref.getBoolPref(prefName);
       gBrowser.setStripVisibilityTo(stripVisibility);
       pref.setBoolPref("browser.tabs.forceHide", false);
     }
