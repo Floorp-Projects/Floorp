@@ -168,7 +168,8 @@
             else
               this.selectedItem = lastSelected;
 
-            this.scrollBoxObject.scrollToElement(this.selectedItem);
+            if (this.selectedItem)
+              this.scrollBoxObject.scrollToElement(this.selectedItem);
           ]]>
         </body>
       </method>
