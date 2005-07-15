@@ -2156,7 +2156,11 @@ nsChildView::Idle()
 
 - (void)dealloc
 {
+#if __GNUC__ < 4
+  // _savePort is @private and there's no other way to access it.
+  // gcc 3.3 doesn't care.
   NS_ASSERTION(!_savePort || IsValidPort(_savePort), "Bad port");
+#endif
 
   [super dealloc];    // This sets the current port to _savePort (which should be
                       // a valid port, checked with the assertion above.
