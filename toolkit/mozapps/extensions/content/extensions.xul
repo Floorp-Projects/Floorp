@@ -219,6 +219,9 @@
             <binding subject="?extension"
                      predicate="http://www.mozilla.org/2004/em-rdf#incompatibleUpdate"
                      object="?incompatibleUpdate"/>
+            <binding subject="?extension"
+                     predicate="http://www.mozilla.org/2004/em-rdf#updateable"
+                     object="?updateable"/>
           </bindings>
           <action>
             <!-- XXXben - we could really use a variety of different templates
@@ -233,7 +236,8 @@
                        previewImage="?previewImage" internalName="?internalName"
                        opType="?opType" downloadURL="?downloadURL"
                        state="?state" progress="?progress" status="?status"
-                       incompatibleUpdate="?incompatibleUpdate"/>
+                       incompatibleUpdate="?incompatibleUpdate"
+                       updateable="?updateable"/>
           </action>
         </rule>
       </template>

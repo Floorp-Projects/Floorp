@@ -194,7 +194,7 @@ interface nsIExtensionDownloadListener : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface, 
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(e454bc28-cba8-4c27-83bd-01f2d5a2096c)]
+[scriptable, uuid(2c981b79-6873-41da-8341-7cda018b6e18)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -310,6 +310,23 @@ interface nsIExtensionManager : nsISupports
    */
   void getItemList(in unsigned long type, out unsigned long itemCount,
                    [retval, array, size_is(itemCount)] out nsIUpdateItem items);
+
+  /*
+   * Retrieves a list of nsIUpdateItems of items matching the specified type
+   * that can be updated.
+   * @param   type
+   *          The type of item to return.
+   * @param   countRef
+   *          The XPCJS reference to the number of items returned.
+   * @returns An array of nsIUpdateItems matching the type filter that can be
+   *          updated based on if the item is not appManaged, does not have
+   *          a pending install, upgrade, or uninstall operation, the item's
+   *          update.enabled pref is not set to false, and the item's location
+   *          is writeable.
+   */
+  void getUpdateableItemList(in unsigned long type,
+                             out unsigned long itemCount,
+                             [retval, array, size_is(itemCount)] out nsIUpdateItem items);
 
   /**
    * Retrieves a list of nsIUpdateItems of items that are incompatible

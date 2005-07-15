@@ -101,7 +101,7 @@ var gUpdateWizard = {
     if (window.arguments.length == 2) {
       var em = Components.classes["@mozilla.org/extensions/manager;1"]
                          .getService(Components.interfaces.nsIExtensionManager);
-      items = [0,0].concat(em.getItemList(nsIUpdateItem.TYPE_ADDON, { }));
+      items = [0,0].concat(em.getUpdateableItemList(gUpdateTypes, { }));
     }
     
     for (var i = 2; i < items.length; ++i)
@@ -282,10 +282,10 @@ var gUpdatePage = {
       if (this._totalCount == 0) {
         var em = Components.classes["@mozilla.org/extensions/manager;1"]
                            .getService(Components.interfaces.nsIExtensionManager);
-        var extensionCount = em.getItemList(nsIUpdateItem.TYPE_EXTENSION, {}).length;
-        var themeCount = em.getItemList(nsIUpdateItem.TYPE_THEME, {}).length;
+        if (!gUpdateTypes)
+          gUpdateTypes = nsIUpdateItem.TYPE_ADDON;
 
-        this._totalCount = extensionCount + themeCount;
+        this._totalCount = em.getUpdateableItemList(gUpdateTypes, {}).length;
       }
     }
     return this._totalCount;
