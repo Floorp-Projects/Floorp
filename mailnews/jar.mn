@@ -48,7 +48,7 @@ messenger.jar:
     content/messenger/am-offline.xul                                           (base/prefs/resources/content/am-offline.xul)
     content/messenger/am-offline.js                                            (base/prefs/resources/content/am-offline.js)
     content/messenger/am-addressing.xul                                        (base/prefs/resources/content/am-addressing.xul)
-    content/messenger/am-addressingOverlay.xul                                 (base/prefs/resources/content/am-addressingOverlay.xul)
+*   content/messenger/am-addressingOverlay.xul                                 (base/prefs/resources/content/am-addressingOverlay.xul)
     content/messenger/am-addressing.js                                         (base/prefs/resources/content/am-addressing.js)
     content/messenger/am-server-advanced.xul                                   (base/prefs/resources/content/am-server-advanced.xul)
     content/messenger/am-server-advanced.js                                    (base/prefs/resources/content/am-server-advanced.js)
