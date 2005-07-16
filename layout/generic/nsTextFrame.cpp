@@ -4226,7 +4226,10 @@ nsTextFrame::GetPointFromOffset(nsPresContext* aPresContext,
   }
 #ifdef IBMBIDI
   if (NS_GET_EMBEDDING_LEVEL(this) & 1) {
-    outPoint->x = mRect.width - width;
+    if (width > mRect.width)
+      outPoint->x = 0;
+    else
+      outPoint->x = mRect.width - width;
   }
   else
 #endif // IBMBIDI
