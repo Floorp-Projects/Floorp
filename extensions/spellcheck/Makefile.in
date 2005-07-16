@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= spellchecker
-DIRS		= src idl myspell
+DIRS		= src idl myspell locales
 
 include $(topsrcdir)/config/rules.mk
 
