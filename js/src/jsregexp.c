@@ -405,9 +405,9 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack, intN op
     case REOP_LPARENNON:
     case REOP_LPAREN:
         /* These should have been processed by a close paren. */
-        js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                    JSREPORT_TS | JSREPORT_ERROR,
-                                    JSMSG_MISSING_PAREN, opData->errPos);
+        js_ReportCompileErrorNumberUC(state->context, state->tokenStream,
+                                      JSREPORT_TS | JSREPORT_ERROR,
+                                      JSMSG_MISSING_PAREN, opData->errPos);
         return JS_FALSE;
     default:;
     }
@@ -644,9 +644,9 @@ restartOperator:
         case '*':
         case '?':
         case '{':
-            js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                        JSREPORT_TS | JSREPORT_ERROR,
-                                        JSMSG_BAD_QUANTIFIER, state->cp);
+            js_ReportCompileErrorNumberUC(state->context, state->tokenStream,
+                                          JSREPORT_TS | JSREPORT_ERROR,
+                                          JSMSG_BAD_QUANTIFIER, state->cp);
             result = JS_FALSE;
             goto out;
         default:
@@ -1182,16 +1182,9 @@ doSimple:
         state->result->u.ucclass.startIndex = termStart - state->cpbegin;
         while (JS_TRUE) {
             if (state->cp == state->cpend) {
-                char *bytes = js_DeflateString(state->context, termStart,
-                                               state->cpend - termStart);
-                if (!bytes)
-                    return JS_FALSE;
-
-                js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                            JSREPORT_TS | JSREPORT_ERROR,
-                                            JSMSG_UNTERM_CLASS, bytes);
-
-                JS_free(state->context, bytes);
+                js_ReportCompileErrorNumberUC(state->context, state->tokenStream,
+                                              JSREPORT_TS | JSREPORT_ERROR,
+                                              JSMSG_UNTERM_CLASS, termStart);
 
                 return JS_FALSE;
             }
@@ -1242,9 +1235,9 @@ doSimple:
     case '*':
     case '+':
     case '?':
-        js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                    JSREPORT_TS | JSREPORT_ERROR,
-                                    JSMSG_BAD_QUANTIFIER, state->cp - 1);
+        js_ReportCompileErrorNumberUC(state->context, state->tokenStream,
+                                      JSREPORT_TS | JSREPORT_ERROR,
+                                      JSMSG_BAD_QUANTIFIER, state->cp - 1);
         return JS_FALSE;
     default:
         state->result = NewRENode(state, REOP_FLAT);
@@ -1344,10 +1337,10 @@ ParseQuantifier(CompilerState *state)
                 state->cp = errp;
                 return JS_TRUE;
 quantError:
-                js_ReportCompileErrorNumber(state->context,
-                                            state->tokenStream,
-                                            JSREPORT_TS | JSREPORT_ERROR,
-                                            err, errp);
+                js_ReportCompileErrorNumberUC(state->context,
+                                              state->tokenStream,
+                                              JSREPORT_TS | JSREPORT_ERROR,
+                                              err, errp);
                 return JS_FALSE;
             }
         }

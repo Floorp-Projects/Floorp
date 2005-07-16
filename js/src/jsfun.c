@@ -1447,7 +1447,7 @@ fun_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 #endif
 
-static const char js_call_str[] = "call";
+static const char call_str[] = "call";
 
 #if JS_HAS_CALL_FUNCTION
 static JSBool
@@ -1467,7 +1467,7 @@ fun_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!JSVAL_IS_FUNCTION(cx, fval)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_INCOMPATIBLE_PROTO,
-                             js_Function_str, js_call_str,
+                             js_Function_str, call_str,
                              JS_GetStringBytes(JS_ValueToString(cx, fval)));
         return JS_FALSE;
     }
@@ -1606,7 +1606,7 @@ static JSFunctionSpec function_methods[] = {
     {"apply",           fun_apply,      2,0,0},
 #endif
 #if JS_HAS_CALL_FUNCTION
-    {js_call_str,       fun_call,       1,0,0},
+    {call_str,          fun_call,       1,0,0},
 #endif
     {0,0,0,0,0}
 };
