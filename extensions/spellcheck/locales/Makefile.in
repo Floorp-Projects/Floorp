@@ -11,14 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Spellchecker Component.
+# The Original Code is the Mozilla Browser code.
 #
 # The Initial Developer of the Original Code is
-# David Einstein.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# Benjamin Smedberg <benjamin@smedbergs.us>
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
-# Contributor(s): David Einstein <Deinst@world.std.com>
+# Contributor(s):
+#   Zbigniew Braniecki <gandalf@e-gandalf.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,23 +35,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH          = ../../..
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
+relativesrcdir = extensions/spellcheck/locales
 
 include $(DEPTH)/config/autoconf.mk
 
+DEFINES += -DAB_CD=$(AB_CD)
 
 include $(topsrcdir)/config/rules.mk
 
-DICTIONARY_FILES=\
-	$(srcdir)/en-US.dic \
-	$(srcdir)/en-US.aff \
-	$(NULL)
+DICTIONARY_FILES = $(strip $(wildcard $(LOCALE_SRCDIR)/myspell/*.dic) $(wildcard $(LOCALE_SRCDIR)/myspell/*.aff))
 
+ifneq (,$(DICTIONARY_FILES))
 libs::
-	$(INSTALL) $(DICTIONARY_FILES) $(DIST)/bin/components/myspell
+        $(INSTALL)  $(DICTIONARY_FILES) $(DIST)/bin/components/myspell
 
 install::
-	$(SYSINSTALL) $(IFLAGS1) $(DICTIONARY_FILES) $(DESTDIR)$(mozappdir)/components/myspell
+        $(SYSINSTALL) $(IFLAGS1) $(DICTIONARY_FILE_PREFIX) $(DESTDIR)$(mozappdir)/components/myspell
+endif
