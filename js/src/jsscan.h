@@ -297,6 +297,10 @@ extern JSBool
 js_ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
                             uintN errorNumber, ...);
 
+extern JSBool
+js_ReportCompileErrorNumberUC(JSContext *cx, void *handle, uintN flags,
+                              uintN errorNumber, ...);
+
 /* Steal some JSREPORT_* bits (see jsapi.h) to tell handle's type. */
 #define JSREPORT_HANDLE 0x300
 #define JSREPORT_TS     0x000
