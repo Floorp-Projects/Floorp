@@ -250,6 +250,5 @@ var gChangeActionDialog = {
       return true;
     }
     return false;
-  },
+  }
 };
-
