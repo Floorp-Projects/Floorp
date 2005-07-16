@@ -241,7 +241,7 @@ RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
 
       return XPCNativeWrapperCtor(cx, nsnull, 1, &v, rval);
     }
-
+    
 #ifdef DEBUG_XPCNativeWrapper
     printf("Rewrapping for deep implicit wrapper\n");
 #endif
@@ -679,18 +679,17 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   }
 
   jsval v;
-  uintN attrs = JSPROP_ENUMERATE;
 
   if (member->IsConstant()) {
     v = memberval;
   } else if (member->IsAttribute()) {
     // An attribute is being resolved. Define the property, the value
-    // will be dealt with in the get/set hooks.  Use JSPROP_SHARED to
-    // avoid entraining last-got or last-set garbage beyond the life
-    // of the value in the getter or setter call site.
+    // will be dealt with in the get/set hooks.
+
+    // XXX: We should really just have getters and setters for
+    // properties and not do it the hard and expensive way.
 
     v = JSVAL_VOID;
-    attrs |= JSPROP_SHARED;
   } else {
     // We're dealing with a method member here. Clone a function we can
     // use for this object.  NB: cx's newborn roots will protect funobj
@@ -723,7 +722,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
   if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                              ::JS_GetStringLength(str), v, nsnull, nsnull,
-                             attrs)) {
+                             0)) {
     return JS_FALSE;
   }
 
@@ -829,7 +828,7 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   // |obj| almost always has the wrong proto and parent so we have to create
   // our own object anyway.  Set |obj| to null so we don't use it by accident.
   obj = nsnull;
-
+  
   jsval native = argv[0];
 
   if (JSVAL_IS_PRIMITIVE(native)) {
@@ -941,7 +940,7 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   if (!parent) {
     parent = wrappedNative->GetScope()->GetGlobalJSObject();
   }
-
+    
   if (!::JS_SetParent(cx, wrapperObj, parent))
     return JS_FALSE;
 
@@ -964,7 +963,7 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       JS_smprintf_free(s);
   }
 #endif
-
+  
   *rval = OBJECT_TO_JSVAL(wrapperObj);
 
   {
@@ -1122,7 +1121,7 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
     NS_WARNING("can't initialize the XPCNativeWrapper class");
     return PR_FALSE;
   }
-
+  
   // Make sure our prototype chain is empty and that people can't mess
   // with XPCNativeWrapper.prototype.
   ::JS_SetPrototype(ccx, class_obj, nsnull);
@@ -1196,7 +1195,7 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
       JS_smprintf_free(s);
   }
 #endif
-
+  
   return obj;
 }
 
