@@ -468,8 +468,8 @@ var gDownloadActionsWindow = {
     var title = this._bundle.getString("removeTitle" + (selection.count > 1 ? "Multiple" : "Single"));
     var message = this._bundle.getString("removeMessage" + (selection.count > 1 ? "Multiple" : "Single"));
     var button = this._bundle.getString("removeButton" + (selection.count > 1 ? "Multiple" : "Single"));
-    rv = promptService.confirmEx(window, title, message, flags, button, 
-                                 null, null, null, { value: 0 });
+    var rv = promptService.confirmEx(window, title, message, flags, button, 
+                                     null, null, null, { value: 0 });
     if (rv != 0)
       return;     
 
@@ -755,7 +755,7 @@ var gDownloadActionsWindow = {
 
     // Restore selection
     this._view.selection.clearSelection();
-    for (i = 0; i < this._lastSelectedRanges.length; ++i) {
+    for (var i = 0; i < this._lastSelectedRanges.length; ++i) {
       var range = this._lastSelectedRanges[i];
       this._view.selection.rangedSelect(range.min, range.max, true);
     }
