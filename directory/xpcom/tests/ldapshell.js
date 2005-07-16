@@ -94,14 +94,24 @@ function findIface(iface)
     dump("No interface found for " + iface + "\n");
 }
 
-function findOpName(op)
+function findMsgTypeName(type)
 {
-    for (var i in Ci.calIOperationListener) {
-        if (op == Ci.calIOperationListener[i]) {
+    for (var i in Ci.nsILDAPMessage) {
+        if (type == Ci.nsILDAPMessage[i]) {
             return i;
         }
     }
-    dump("Operation type " + op + "unknown\n");
+    dump("message type " + op + "unknown\n");
+}
+
+function findLDAPErr(err)
+{
+    for (var i in Ci.nsILDAPErrors) {
+        if (err == Ci.nsILDAPErrors[i]) {
+            return i;
+        }
+    }
+    dump("ldap error " + err + "unknown\n");
 }
 
 function getService(contract, iface)
@@ -133,15 +143,23 @@ ldapMsgListener.prototype =
     },
 
     onLDAPMessage: function onLDAPMessage(aMsg) {
-        // if this is just a search entry, don't stop the pump, since
-        // the result won't have arrived yet
-        if (aMsg.type != 0x64) {
+
+        dump(findMsgTypeName(aMsg.type) + " received; ");
+
+        if (aMsg.type == 0x64) {
+            dump("dn: " + aMsg.dn);
+
+            // if this is just a search entry, don't stop the pump, since
+            // the result won't have arrived yet
+
+        } else{
+            dump("errorCode: " + findLDAPErr(aMsg.errorCode));
             stopEventPump();
         }
 
+        dump("\n");
+
         mMessage = aMsg;
-        dump("message received: type = " + aMsg.type + ", errorCode = "
-             + aMsg.errorCode + "\n");
         return;
     }
 }
@@ -167,6 +185,17 @@ function createConn(host, bindname) {
     runEventPump();
 }
 
+function jsArrayToMutableArray(a)
+{
+    var mArray = createInstance("@mozilla.org/array;1", "nsIMutableArray");
+
+    for each ( i in a ) {
+        mArray.appendElement(i, false);
+    }
+
+    return mArray;
+}
+
 /**
  * convenience wrappers around various nsILDAPOperation methods so that shell 
  * callers don't have to deal with lots of async and objectivity
@@ -182,7 +211,7 @@ function simpleBind(passwd)
     op.simpleBind(passwd);
 }
 
-function search(basedn, scope, filter, sControl)
+function searchExt(basedn, scope, filter, serverControls, clientControls)
 {
     var op = createInstance("@mozilla.org/network/ldap-operation;1",
                             "nsILDAPOperation");
@@ -190,6 +219,8 @@ function search(basedn, scope, filter, sControl)
     var listener = new ldapMsgListener();
     op.init(conn, listener, null);
 
+    op.serverControls = jsArrayToMutableArray(serverControls);
+    op.clientControls = jsArrayToMutableArray(clientControls);
     op.searchExt(basedn, scope, filter, null, null, 0, 0);
 }
 
