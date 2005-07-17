@@ -54,6 +54,7 @@ class nsIPref;
 }
 
 + (PreferenceManager *)sharedInstance;
++ (PreferenceManager *)sharedInstanceDontCreate;
 
 - (id) init;
 - (void) dealloc;

@@ -70,8 +70,6 @@ static const PRInt32 kCurrentPrefsVersion = 1;
 
 @interface PreferenceManager(PreferenceManagerPrivate)
 
-+ (PreferenceManager *) sharedInstanceDontCreate;
-
 - (void)registerNotificationListener;
 
 - (void)termEmbedding: (NSNotification*)aNotification;

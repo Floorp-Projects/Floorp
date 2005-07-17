@@ -1475,6 +1475,12 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApp hasVisibleWindows:(BOOL)flag
 {
+  // we might be sitting there with the "there is another copy of camino running" dialog up
+  // (which means we're in a modal loop in [PreferenceManager init]). So if we haven't
+  // finished initting prefs yet, just bail.
+  if (![PreferenceManager sharedInstanceDontCreate])
+    return NO;
+
   // ignore |hasVisibleWindows| because we always want to show a browser window when
   // the user clicks on the app icon, even if, say, prefs or the d/l window are open.
   // If there is no browser, create one. If there is one, unminimize it if it's in the dock.
