@@ -211,14 +211,14 @@ function Startup()
     var themePreviewArea = document.getElementById("themePreviewArea");
     themePreviewArea.hidden = false;
     gExtensionsView.removeAttribute("flex");
-    gExtensionsView.style.width = "20em";
+    gExtensionsView.style.width = extensionsStrings.getString("themesManagerLeftColumn");
   }
   
   // Set Initial Size
   var win = document.documentElement;
   if (!win.hasAttribute("width") || !win.hasAttribute("height")) {
-    win.setAttribute("width", isExtensions ? 460 : 560);
-    win.setAttribute("height", isExtensions ? 300 : 380);
+    win.setAttribute("width", isExtensions ? (extensionsStrings.getString("extensionsManagerWidth")) : (extensionsStrings.getString("themesManagerWidth")));
+    win.setAttribute("height", isExtensions ? (extensionsStrings.getString("extensionsManagerHeight")) : (extensionsStrings.getString("themesManagerHeight")));
   }
 
   // Now look and see if we're being opened by XPInstall
