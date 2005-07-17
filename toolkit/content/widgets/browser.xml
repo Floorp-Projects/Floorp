@@ -649,8 +649,8 @@
       <field name="_scrollCount">0</field>
       <field name="_startX">null</field>
       <field name="_startY">null</field>
-      <field name="_clientX">null</field>
-      <field name="_clientY">null</field>
+      <field name="_screenX">null</field>
+      <field name="_screenY">null</field>
 
       <method name="stopScroll">
         <body>
@@ -670,8 +670,8 @@
        <body>
          <![CDATA[
            if (this._isScrolling) {
-             var x = (this._clientX - this._startX) / this._AUTOSCROLL_SPEED;
-             var y = (this._clientY - this._startY) / this._AUTOSCROLL_SPEED;
+             var x = (this._screenX - this._startX) / this._AUTOSCROLL_SPEED;
+             var y = (this._screenY - this._startY) / this._AUTOSCROLL_SPEED;
          
              if(Math.abs(x) > 0 && Math.abs(y) > 0)
              {
@@ -775,12 +775,12 @@
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          this._clientX = aEvent.clientX;
-          this._clientY = aEvent.clientY;
+          this._screenX = aEvent.screenX;
+          this._screenY = aEvent.screenY;
         
           if (this._isScrolling) {
-            var x = this._clientX - this._startX;
-            var y = this._clientY - this._startY;
+            var x = this._screenX - this._startX;
+            var y = this._screenY - this._startY;
         
             if ((x > this._AUTOSCROLL_SNAP || x < -this._AUTOSCROLL_SNAP) ||
                 (y > this._AUTOSCROLL_SNAP || y < -this._AUTOSCROLL_SNAP))
@@ -898,10 +898,10 @@
                 this.isAutoscrollBlocker(event.originalTarget))
               return;
             this.addEventListener('mousemove', this.handleMouseMove, false);
-            this._clientX = event.clientX;
-            this._clientY = event.clientY;
-            this._startX = event.clientX;
-            this._startY = event.clientY;
+            this._screenX = event.screenX;
+            this._screenY = event.screenY;
+            this._startX = event.screenX;
+            this._startY = event.screenY;
             this._clientFrameDoc = event.originalTarget.ownerDocument;
             this._isScrolling = true;
             this._snapOn = true; 
