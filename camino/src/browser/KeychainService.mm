@@ -1032,7 +1032,7 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 {
 }
 
-- (void)onLocationChange:(NSString*)urlSpec requestOK:(BOOL)isOK
+- (void)onLocationChange:(NSString*)urlSpec isNewPage:(BOOL)newPage requestSucceeded:(BOOL)requestOK
 {
 }
 

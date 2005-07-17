@@ -196,7 +196,7 @@ class nsISupportsArray;
 - (void)onLoadingCompleted:(BOOL)succeeded;
 - (void)onProgressChange64:(long long)currentBytes outOf:(long long)maxBytes;
 - (void)onProgressChange:(long)currentBytes outOf:(long)maxBytes;
-- (void)onLocationChange:(NSString*)urlSpec requestOK:(BOOL)isOK;
+- (void)onLocationChange:(NSString*)urlSpec isNewPage:(BOOL)newPage requestSucceeded:(BOOL)requestOK;
 - (void)onStatusChange:(NSString*)aMessage;
 - (void)onSecurityStateChange:(unsigned long)newState;
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text;

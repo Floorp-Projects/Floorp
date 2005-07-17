@@ -478,49 +478,52 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   }
 }
 
-- (void)onLocationChange:(NSString*)urlSpec requestOK:(BOOL)isOK
+- (void)onLocationChange:(NSString*)urlSpec isNewPage:(BOOL)newPage requestSucceeded:(BOOL)requestOK
 {
-  BOOL useSiteIcons = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL];
-  
-  NSString* faviconURI = [SiteIconProvider faviconLocationStringFromURI:urlSpec];
-  if (isOK && useSiteIcons && [faviconURI length] > 0)
+  if (newPage)
   {
-    SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];
-
-    // if the favicon uri has changed, fire off favicon load. When it completes, our
-    // imageLoadedNotification selector gets called.
-    if (![faviconURI isEqualToString:mSiteIconURI])
+    BOOL useSiteIcons = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL];
+    
+    NSString* faviconURI = [SiteIconProvider faviconLocationStringFromURI:urlSpec];
+    if (requestOK && useSiteIcons && [faviconURI length] > 0)
     {
-      // first get a cached image for this site, if we have one. we'll go ahead
-      // and request the load anyway, in case the site updated their icon.
-      NSImage*  cachedImage = [faviconProvider favoriteIconForPage:urlSpec];
-      NSString* cachedImageURI = nil;
+      SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];
 
-      if (cachedImage)
-        cachedImageURI = faviconURI;
-      
-      // immediately update the site icon (to the cached one, or the default)
-      [self updateSiteIconImage:cachedImage withURI:cachedImageURI loadError:!isOK];
+      // if the favicon uri has changed, fire off favicon load. When it completes, our
+      // imageLoadedNotification selector gets called.
+      if (![faviconURI isEqualToString:mSiteIconURI])
+      {
+        // first get a cached image for this site, if we have one. we'll go ahead
+        // and request the load anyway, in case the site updated their icon.
+        NSImage*  cachedImage = [faviconProvider favoriteIconForPage:urlSpec];
+        NSString* cachedImageURI = nil;
 
-      // note that this is the only time we hit the network for site icons.
-      // note also that we may get a site icon from a link element later,
-      // which will replace any we get from the default location.
-      [faviconProvider fetchFavoriteIconForPage:urlSpec
-                               withIconLocation:nil
-                                   allowNetwork:YES
-                                notifyingClient:self];
+        if (cachedImage)
+          cachedImageURI = faviconURI;
+        
+        // immediately update the site icon (to the cached one, or the default)
+        [self updateSiteIconImage:cachedImage withURI:cachedImageURI loadError:NO];
+
+        // note that this is the only time we hit the network for site icons.
+        // note also that we may get a site icon from a link element later,
+        // which will replace any we get from the default location.
+        [faviconProvider fetchFavoriteIconForPage:urlSpec
+                                 withIconLocation:nil
+                                     allowNetwork:YES
+                                  notifyingClient:self];
+      }
+    }
+    else
+    {
+      if ([urlSpec isEqualToString:@"about:blank"])
+        faviconURI = urlSpec;
+      else
+      	faviconURI = @"";
+
+      [self updateSiteIconImage:nil withURI:faviconURI loadError:!requestOK];
     }
   }
-  else
-  {
-    if ([urlSpec isEqualToString:@"about:blank"])
-      faviconURI = urlSpec;
-    else
-    	faviconURI = @"";
-
-    [self updateSiteIconImage:nil withURI:faviconURI loadError:!isOK];
-  }
-
+  
   [mDelegate updateLocationFields:urlSpec ignoreTyping:NO];
 
   // see if someone wants to replace the main view

@@ -625,7 +625,7 @@ CHBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aR
   NSEnumerator* enumerator = [mListeners objectEnumerator];
   id<CHBrowserListener> obj;
   while ((obj = [enumerator nextObject]))
-    [obj onLocationChange:str requestOK:requestOK];
+    [obj onLocationChange:str isNewPage:(aRequest != nsnull) requestSucceeded:requestOK];
 
   return NS_OK;
 }

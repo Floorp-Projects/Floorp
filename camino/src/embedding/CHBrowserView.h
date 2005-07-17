@@ -72,7 +72,7 @@ class nsISupports;
 - (void)onProgressChange:(long)currentBytes outOf:(long)maxBytes;
 - (void)onProgressChange64:(long long)currentBytes outOf:(long long)maxBytes;
 
-- (void)onLocationChange:(NSString*)urlSpec requestOK:(BOOL)isOK;
+- (void)onLocationChange:(NSString*)urlSpec isNewPage:(BOOL)newPage requestSucceeded:(BOOL)requestOK;
 - (void)onStatusChange:(NSString*)aMessage;
 - (void)onSecurityStateChange:(unsigned long)newState;
 // Called when a context menu should be shown.
