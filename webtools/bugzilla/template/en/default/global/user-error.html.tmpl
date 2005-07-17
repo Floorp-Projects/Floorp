@@ -752,15 +752,14 @@
     [% title = "Missing Category" %]
     You did not specify a category for this series.
 
-  [% ELSIF error == "missing_version_or_component" %]
-    [% title = BLOCK %]Missing [% missing_item FILTER none %][% END %]
-    Sorry; there needs to be at least one [% missing_item FILTER lower %]
+  [% ELSIF error == "missing_component" %]
+    [% title = "Missing Component" %]
+    Sorry; there needs to be at least one component
     associated with the product <em>[% product FILTER html %]</em> in order to
     create a new [% terms.bug %].
     [% IF UserInGroup("editcomponents") %]
-      <a href="edit[% missing_item FILTER lower %]s.cgi?product=
-      [%- product FILTER url_quote %]">Create a new
-      [%+ missing_item FILTER lower %]</a>.
+      <a href="editcomponents.cgi?product=[% product FILTER url_quote %]">Create
+      a new component</a>.
     [% ELSE %]
        Please contact [% Param("maintainer") %], giving the name of
        the product in which you tried to create a new [% terms.bug %].
@@ -814,6 +813,19 @@
     [% title = "Missing Subcategory" %]
     You did not specify a subcategory for this series.
                 
+  [% ELSIF error == "missing_version" %]
+    [% title = "Missing Version" %]
+    Sorry; there needs to be at least one version
+    associated with the product <em>[% product FILTER html %]</em> in order to
+    create a new [% terms.bug %].
+    [% IF UserInGroup("editcomponents") %]
+      <a href="editversions.cgi?product=[% product FILTER url_quote %]">Create
+      a new version</a>.
+    [% ELSE %]
+       Please contact [% Param("maintainer") %], giving the name of
+       the product in which you tried to create a new [% terms.bug %].
+    [% END %]
+
   [% ELSIF error == "need_component" %]
     [% title = "Component Required" %]
     You must specify a component to help determine the new assignee of these 

@@ -506,17 +506,13 @@ sub CanEnterProductOrWarn {
     trick_taint($product);
 
     if (!defined $allow_new_bugs) {
-        ThrowUserError("missing_version_or_component", 
-                       { product      => $product,
-                         missing_item => 'Component' })
+        ThrowUserError("missing_component", { product => $product });
     } elsif (!$allow_new_bugs) {
         ThrowUserError("product_disabled", { product => $product});
     } elsif ($allow_new_bugs < 0) {
         ThrowUserError("entry_access_denied", { product => $product});
     } elsif (!$has_version) {
-        ThrowUserError("missing_version_or_component", 
-                       { product      => $product,
-                         missing_item => 'Version' });
+        ThrowUserError("missing_version", { product => $product });
     }
     return 1;
 }
