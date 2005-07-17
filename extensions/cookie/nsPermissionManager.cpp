@@ -288,6 +288,13 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
   PRUint32 oldPermission = entry->GetPermission(aTypeIndex);
   entry->SetPermission(aTypeIndex, aPermission);
 
+  // If no more types are present, remove the entry
+  // Can happen if this add() is resetting the permission to default.
+  if (entry->PermissionsAreEmpty()) {
+    mHostTable.RawRemoveEntry(entry);
+    --mHostCount;
+  }
+
   // check whether we are deleting, adding, or changing a permission,
   // so we can notify observers. this would be neater to do in Add(),
   // but we need to do it here because we only know what type of notification
