@@ -220,8 +220,9 @@ enum {
 
 -(IBAction)cancel:(id)sender
 {
-  // don't allow download to be cancelled twice or we get a nasty crash
-  if (!mUserCancelled) {
+  // don't allow download to be cancelled twice or we get a nasty crash,
+  // and don't cancel completed downloads, because that deletes the file
+  if (!mUserCancelled && !mDownloadDone) {
     mUserCancelled = YES;
     
     if (mDownloader) { // we should always have one
