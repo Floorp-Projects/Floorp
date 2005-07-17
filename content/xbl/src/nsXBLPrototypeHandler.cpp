@@ -459,10 +459,9 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   if (isXULKey) {
     nsCAutoString documentURI;
     keyCommandContent->GetOwnerDoc()->GetDocumentURI()->GetSpec(documentURI);
-    boundContext->CompileEventHandler(scriptObject, onEventAtom, eventName,
-                                      xulText,
-                                      documentURI.get(), 0,
-                                      PR_TRUE, &handler);
+    rv = boundContext->CompileEventHandler(scriptObject, onEventAtom, eventName,
+                                           xulText, documentURI.get(), 0, 
+                                           PR_TRUE, &handler);
   }
   else {
     nsDependentString handlerText(mHandlerText);
@@ -472,25 +471,25 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     nsCAutoString bindingURI;
     mPrototypeBinding->DocURI()->GetSpec(bindingURI);
     
-    boundContext->CompileEventHandler(scriptObject, onEventAtom, eventName,
-                                      handlerText,
-                                      bindingURI.get(),
-                                      mLineNumber,
-                                      PR_TRUE, &handler);
+    rv = boundContext->CompileEventHandler(scriptObject, onEventAtom, eventName,
+                                           handlerText, bindingURI.get(),
+                                           mLineNumber, PR_TRUE, &handler);
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Temporarily bind it to the bound element
   boundContext->BindCompiledEventHandler(scriptObject, onEventAtom, handler);
 
   // Execute it.
   nsCOMPtr<nsIDOMScriptObjectFactory> factory =
-    do_GetService(kDOMScriptObjectFactoryCID);
-  NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
+    do_GetService(kDOMScriptObjectFactoryCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMEventListener> eventListener;
 
-  factory->NewJSEventListener(boundContext, aReceiver,
-                              getter_AddRefs(eventListener));
+  rv = factory->NewJSEventListener(boundContext, aReceiver,
+                                   getter_AddRefs(eventListener));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIJSEventListener> jsListener(do_QueryInterface(eventListener));
   jsListener->SetEventName(onEventAtom);
