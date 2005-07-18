@@ -2557,7 +2557,6 @@ nsXULElement::GetControllers(nsIControllers** aResult)
 
         // Set the command dispatcher on the new controllers object
         nsCOMPtr<nsIDOMXULDocument> domxuldoc = do_QueryInterface(doc);
-        NS_ASSERTION(domxuldoc != nsnull, "not an nsIDOMXULDocument");
         if (! domxuldoc)
             return NS_ERROR_UNEXPECTED;
 
