@@ -1070,10 +1070,15 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 
   nsCOMPtr<nsIAccessible> containerAccessible;
   if (childNode == mDOMNode) {
-    // Don't go any higher in parent chain than this
-    containerAccessible = this;
+    // Don't get parent accessible if already at the root of a docshell chain like UI or content
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(docShell));
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
+    docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+    if (sameTypeRoot == docShellTreeItem) {
+      containerAccessible = this;  // At the root of UI or content
+    }
   }
-  else {
+  if (!containerAccessible) {
     GetAccessibleInParentChain(childNode, getter_AddRefs(containerAccessible));
   }
   nsCOMPtr<nsPIAccessible> privateContainerAccessible =

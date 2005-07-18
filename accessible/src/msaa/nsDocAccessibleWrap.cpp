@@ -406,15 +406,26 @@ void nsDocAccessibleWrap::DocLoadCallback(nsITimer *aTimer, void *aClosure)
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(docDomNode));
   if (doc) {
     nsCOMPtr<nsISupports> container = doc->GetContainer();
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = do_QueryInterface(container);
+    if (!docShellTreeItem) {
+      return;
+    }
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
+    docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+    if (sameTypeRoot != docShellTreeItem) {
+      // A frame or iframe has finished loading new content
+      docAcc->InvalidateCacheSubtree(nsnull, nsIAccessibleEvent::EVENT_REORDER);
+      return;
+    }
+
     nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-    if (docShell) {
-      PRBool hasFocus;
-      docShell->GetHasFocus(&hasFocus);
-      if (hasFocus) {
-        docAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
-                                docAcc, nsnull);
-        docAcc->FireAnchorJumpEvent();
-      }
+    NS_ASSERTION(docShell, "No docShell for docShellTreeItem");
+    PRBool hasFocus;
+    docShell->GetHasFocus(&hasFocus);
+    if (hasFocus) {
+      docAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
+                              docAcc, nsnull);
+      docAcc->FireAnchorJumpEvent();
     }
   }
 }
