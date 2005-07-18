@@ -901,6 +901,7 @@ DirectoryInstallLocation.prototype = {
   _locationToIDMap: null,
   _restricted     : false,
   _priority       : 0,
+  _canAccess      : null,
   
   /**
    * See nsIExtensionManager.idl
@@ -1009,16 +1010,20 @@ DirectoryInstallLocation.prototype = {
    * See nsIExtensionManager.idl
    */
   get canAccess() {
+    if (this._canAccess != null)
+      return this._canAccess;
+
     var testFile = this.location;
     testFile.append("Access Privileges Test");
     try {
       testFile.createUnique(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
       testFile.remove(false);
+      this._canAccess = true;
     }
     catch (e) {
-      return false;
+      this._canAccess = false;
     }
-    return true;
+    return this._canAccess;
   },
   
   /**
