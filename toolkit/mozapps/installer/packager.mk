@@ -210,7 +210,7 @@ ifeq ($(MOZ_PKG_FORMAT),DMG)
 	@cd $(DIST) && rsync -auvL $(_APPNAME) $(MOZ_PKG_APPNAME)
 else
 	@cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_APPNAME); tar -xf -)
-ifdef MOZ_NATIVE_NSPR
+ifndef MOZ_NATIVE_NSPR
 ifndef EXCLUDE_NSPR_LIBS
 	@echo "Copying NSPR libs..."
 	@cp -p $(NSPR_LDIR)/*$(DLL_SUFFIX) $(DIST)/$(MOZ_PKG_APPNAME)
