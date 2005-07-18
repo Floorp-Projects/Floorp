@@ -5,3 +5,4 @@ comm.jar:
     content/xbl-marquee/contents.rdf
 #endif
     content/xbl-marquee/xbl-marquee.xml
+    content/xbl-marquee/xbl-marquee.css
