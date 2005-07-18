@@ -1713,12 +1713,15 @@
 #else
           <menuitem id="releaseNotes" accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="loadThrobberUrl('mailnews.release_notes.url');"/>
           <menuitem id="hintsAndTips" accesskey="&hintsAndTips.accesskey;" label="&hintsAndTips.label;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');"/>
-#endif
           <menuseparator id="menu_HelpAboutSeparator"/>
+#endif
           <menuitem id="checkForUpdates" accesskey="&updateCmd.accesskey;" 
                     label="&updateCmd.label;" oncommand="checkForUpdates();"/>
           <menuitem id="aboutName" accesskey="&aboutCmd.accesskey;"
                     label="&aboutCmd.label;"
+#ifdef XP_MACOSX
+                    hidden="true"
+#endif
                     oncommand="openAboutDialog();"/>
         </menupopup>
       </menu>
