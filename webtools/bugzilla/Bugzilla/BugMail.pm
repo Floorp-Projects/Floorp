@@ -36,10 +36,15 @@ use base qw(Exporter);
     PerformSubsts
 );
 
+use Bugzilla;
+use Bugzilla::DB qw(:deprecated);
+use Bugzilla::User;
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Util;
 
+use Date::Parse;
+use Date::Format;
 use Mail::Mailer;
 use Mail::Header;
 
@@ -61,20 +66,6 @@ $sitespec =~ s/:\/\//\./; # Make the protocol look like part of the domain
 $sitespec =~ s/^([^:\/]+):(\d+)/$1/; # Remove a port number, to relocate
 if ($2) {
     $sitespec = "-$2$sitespec"; # Put the port number back in, before the '@'
-}
-
-# I got sick of adding &:: to everything.
-# However, 'Yuck!'
-# I can't require, cause that pulls it in only once, so it won't then be
-# in the global package, and these aren't modules, so I can't use globals.pl
-# Remove this evilness once our stuff uses real packages.
-sub AUTOLOAD {
-    no strict 'refs';
-    use vars qw($AUTOLOAD);
-    my $subName = $AUTOLOAD;
-    $subName =~ s/.*::/::/; # remove package name
-    *$AUTOLOAD = \&$subName;
-    goto &$AUTOLOAD;
 }
 
 # This is run when we load the package
@@ -121,7 +112,7 @@ sub Send($;$) {
 
     # This only works in a sub. Probably something to do with the
     # require abuse we do.
-    GetVersionTable();
+    &::GetVersionTable();
 
     return ProcessOneBug($id, $forced);
 }
@@ -152,8 +143,8 @@ sub ProcessOneBug($$) {
     foreach my $i (@::log_columns) {
         $values{$i} = shift(@row);
     }
-    $values{product} = get_product_name($values{product_id});
-    $values{component} = get_component_name($values{component_id});
+    $values{product} = &::get_product_name($values{product_id});
+    $values{component} = &::get_component_name($values{component_id});
 
     my ($start, $end) = (@row);
 
@@ -170,24 +161,24 @@ sub ProcessOneBug($$) {
     # At this point, we don't care if there are duplicates in these arrays.
     my $changer = $forced->{'changer'};
     if ($forced->{'owner'}) {
-        push (@assignees, DBNameToIdAndCheck($forced->{'owner'}));
+        push (@assignees, &::DBNameToIdAndCheck($forced->{'owner'}));
     }
     
     if ($forced->{'qacontact'}) {
-        push (@qa_contacts, DBNameToIdAndCheck($forced->{'qacontact'}));
+        push (@qa_contacts, &::DBNameToIdAndCheck($forced->{'qacontact'}));
     }
     
     if ($forced->{'cc'}) {
         foreach my $cc (@{$forced->{'cc'}}) {
-            push(@ccs, DBNameToIdAndCheck($cc));
+            push(@ccs, &::DBNameToIdAndCheck($cc));
         }
     }
     
     # Convert to names, for later display
-    $values{'assigned_to'} = DBID_to_name($values{'assigned_to'});
-    $values{'reporter'} = DBID_to_name($values{'reporter'});
+    $values{'assigned_to'} = &::DBID_to_name($values{'assigned_to'});
+    $values{'reporter'} = &::DBID_to_name($values{'reporter'});
     if ($values{'qa_contact'}) {
-        $values{'qa_contact'} = DBID_to_name($values{'qa_contact'});
+        $values{'qa_contact'} = &::DBID_to_name($values{'qa_contact'});
     }
     $values{'estimated_time'} = format_time_decimal($values{'estimated_time'});
 
@@ -299,7 +290,7 @@ sub ProcessOneBug($$) {
             $interestingchange = 0;
         }
         $thisdiff .= FormatTriple($fielddescription{$what}, $old, $new);
-        if ($what eq 'bug_status' && IsOpenedState($old) ne IsOpenedState($new)) {
+        if ($what eq 'bug_status' && &::IsOpenedState($old) ne &::IsOpenedState($new)) {
             $interestingchange = 1;
         }
         
@@ -319,7 +310,7 @@ sub ProcessOneBug($$) {
     }
 
 
-    my ($newcomments, $anyprivate) = GetLongDescriptionAsText($id, $start, $end);
+    my ($newcomments, $anyprivate) = &::GetLongDescriptionAsText($id, $start, $end);
 
     ###########################################################################
     # Start of email filtering code
@@ -364,14 +355,15 @@ sub ProcessOneBug($$) {
             # remove your vote.
             if ($what eq "CC") {
                 foreach my $cc_user (split(/[\s,]+/, $old)) {
-                    push(@{$recipients{DBNameToIdAndCheck($cc_user)}}, REL_CC);
+                    push(@{$recipients{&::DBNameToIdAndCheck($cc_user)}},
+                         REL_CC);
                 }
             }
             elsif ($what eq "QAContact") {
-                push(@{$recipients{DBNameToIdAndCheck($old)}}, REL_QA);
+                push(@{$recipients{&::DBNameToIdAndCheck($old)}}, REL_QA);
             }
             elsif ($what eq "AssignedTo") {
-                push(@{$recipients{DBNameToIdAndCheck($old)}}, REL_ASSIGNEE);
+                push(@{$recipients{&::DBNameToIdAndCheck($old)}}, REL_ASSIGNEE);
             }
         }
     }
