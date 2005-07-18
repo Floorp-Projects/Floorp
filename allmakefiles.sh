@@ -1050,7 +1050,7 @@ mail/components/compose/Makefile
 mail/components/addrbook/Makefile
 mail/components/preferences/Makefile
 mail/components/build/Makefile
-mail/components/gnome/Makefile
+mail/components/shell/Makefile
 mail/extensions/Makefile
 mail/extensions/smime/Makefile
 mail/extensions/offline/Makefile
