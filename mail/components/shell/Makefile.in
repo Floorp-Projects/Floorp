@@ -42,9 +42,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = mail_gnome
-LIBRARY_NAME = mail_gnome_s
-MODULE_NAME = nsMailGNOMEModule
+MODULE = shellservice
+LIBRARY_NAME = shellservice_s
+MODULE_NAME = nsMailShellModule
 MOZILLA_INTERNAL_API = 1
 
 REQUIRES = \
@@ -60,7 +60,9 @@ REQUIRES = \
 	embed_base \
 	$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
 CPPSRCS = nsMailGNOMEIntegration.cpp
+endif
 
 FORCE_STATIC_LIB = 1
 

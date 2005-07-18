@@ -76,7 +76,7 @@ SHARED_LIBRARY_LIBS = \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mail_gnome_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX)
 endif
 
 EXTRA_DSO_LDOPTS += \
