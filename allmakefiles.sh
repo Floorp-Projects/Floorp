@@ -1036,7 +1036,6 @@ toolkit/themes/winstripe/global/Makefile
 toolkit/themes/winstripe/help/Makefile
 toolkit/themes/winstripe/mozapps/Makefile
 toolkit/xre/Makefile
-toolkit/components/passwordmgr/resources/content/contents.rdf
 "
 
 
