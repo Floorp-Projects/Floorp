@@ -68,7 +68,7 @@ CPPSRCS = nsModule.cpp \
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../migration/src \
-	-I$(srcdir)/../gnome \
+	-I$(srcdir)/../shell \
 	$(NULL)
 
 SHARED_LIBRARY_LIBS = \
