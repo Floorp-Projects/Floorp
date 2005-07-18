@@ -46,6 +46,9 @@
 
   <binding id="marquee" inheritstyle="false">
 
+    <resources>
+      <stylesheet src="chrome://xbl-marquee/content/xbl-marquee.css"/>
+    </resources>
     <implementation>
 
       <field name="defaultScrollAmount">6</field>
