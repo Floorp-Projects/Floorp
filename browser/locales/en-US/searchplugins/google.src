@@ -5,9 +5,6 @@
    description="Google Search"
    method="GET"
    action="http://www.google.com/search"
-   update="http://www.google.com/mozilla/google.src"
-   updateCheckDays=1   
-   queryEncoding="utf-8"
    queryCharset="utf-8"
 >
 
@@ -26,3 +23,9 @@
     resultItemEnd="<!--n-->"
 >
 </search>
+
+<browser
+    update="http://www.mozilla.org/products/firefox/plugins/google.src"
+    updateIcon="http://www.mozilla.org/products/firefox/plugins/google.gif"
+    updateCheckDays="1"
+>

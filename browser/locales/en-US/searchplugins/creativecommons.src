@@ -28,12 +28,11 @@
 	resultListEnd="<!-- end results -->"
 	resultItemStart='<p class="resultitem">'
 	resultItemEnd="</p>"
-<
-</search>
-
+>
 <browser
-	update="http://mycroft.mozdev.org/plugins/creativecommons.src"
-	updateIcon="http://mycroft.mozdev.org/plugins/creativecommons.png"
+	update="http://www.mozilla.org/products/firefox/plugins/creativecommons.src"
+	updateIcon="http://www.mozilla.org/products/firefox/plugins/creativecommons.png"
 	updateCheckDays="3"
 >
+</search>
 
