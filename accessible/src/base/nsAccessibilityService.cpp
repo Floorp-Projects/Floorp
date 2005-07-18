@@ -183,11 +183,6 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
   if (contentType != nsIDocShellTreeItem::typeContent) {
     return NS_OK; // Not interested in chrome loading, just content
   }
-  nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-  docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
-  if (sameTypeRoot != docShellTreeItem) {
-    return NS_OK;  // Not interested in frames or iframes, just the root content
-  }
 
   // Get the accessible for the new document.
   // If it not created yet this will create it & cache it, as well as 
@@ -198,7 +193,15 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
   nsCOMPtr<nsPIAccessibleDocument> docAccessible =
     do_QueryInterface(accessible);
   NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
-  docAccessible->FireDocLoadingEvent(!(aStateFlags & STATE_START));
+
+  nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
+  docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+  PRBool isFinished = !(aStateFlags & STATE_START);
+  if (sameTypeRoot != docShellTreeItem && !isFinished) {
+    return NS_OK;   // A frame or iframe has begun to load new content
+  }
+
+  docAccessible->FireDocLoadingEvent(isFinished);
 
   return NS_OK;
 }
