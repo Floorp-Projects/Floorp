@@ -65,6 +65,7 @@ $db->query("
         TM.ID id, 
         TM.Name name, 
         TM.Rating,
+        LEFT(TM.Description,255) as Description,
         TM.downloadcount dc
     FROM
         main TM
