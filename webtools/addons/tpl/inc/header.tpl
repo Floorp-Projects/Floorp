@@ -54,18 +54,18 @@
 
 <div id="key-menu"> 
     <dl id="menu-firefox">
-    <dt>Firefox:</dt>
-    <dd><a href="{$config.webpath}/overview.php?app=firefox&amp;type=E" title="Get Extensions for the Firefox Browser">Extensions</a>, <a href="{$config.webpath}/overview.php?app=firefox&amp;type=T" title="Get Themes for the Firefox Browser">Themes</a>, <a href="https://pfs.mozilla.org/plugins/" title="Get Plugins for Firefox">Plugins</a></dd>
+    <dt><a href="./overview.php?app=Firefox">Firefox</a>:</dt>
+    <dd><a href="{$config.webpath}/search.php?app=firefox&amp;type=E" title="Get Extensions for the Firefox Browser">Extensions</a>, <a href="{$config.webpath}/search.php?app=firefox&amp;type=T" title="Get Themes for the Firefox Browser">Themes</a>, <a href="https://pfs.mozilla.org/plugins/" title="Get Plugins for Firefox">Plugins</a></dd>
 
     </dl>
     <dl id="menu-thunderbird">
-    <dt>Thunderbird:</dt>
-    <dd><a href="{$config.webpath}/overview.php?app=thunderbird&amp;type=T" title="Get Extensions for Thunderbird Email">Extensions</a>, <a href="{$config.webpath}/overview.php?app=thunderbird&type=T" title="Get Themes for Thunderbird Email">Themes</a></dd>
+    <dt><a href="./overview.php?app=Thunderbird">Thunderbird</a>:</dt>
+    <dd><a href="{$config.webpath}/search.php?app=thunderbird&amp;type=T" title="Get Extensions for Thunderbird Email">Extensions</a>, <a href="{$config.webpath}/search.php?app=thunderbird&amp;type=T" title="Get Themes for Thunderbird Email">Themes</a></dd>
     </dl>
     <dl id="menu-mozillasuite">
-    <dt>Mozilla Suite:</dt>
+    <dt><a href="./overview.php?app=Mozilla">Mozilla Suite</a>:</dt>
 
-    <dd><a href="{$config.webpath}/overview.php?app=mozilla&amp;type=E" title="Get Extensions for the Mozilla Suite">Extensions</a>, <a href="{$config.webpath}/overview.php?app=mozilla&amp;type=T" title="Get Themes for the Mozilla Suite">Themes</a>, <a href="https://pfs.mozilla.org/plugins/" title="Get Plugins for Mozilla Suite">Plugins</a></dd>
+    <dd><a href="{$config.webpath}/search.php?app=mozilla&amp;type=E" title="Get Extensions for the Mozilla Suite">Extensions</a>, <a href="{$config.webpath}/search.php?app=mozilla&amp;type=T" title="Get Themes for the Mozilla Suite">Themes</a>, <a href="https://pfs.mozilla.org/plugins/" title="Get Plugins for Mozilla Suite">Plugins</a></dd>
     </dl>
     <div class="ie-clear-menu">&nbsp;</div>
 </div>
