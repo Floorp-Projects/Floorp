@@ -837,12 +837,16 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
     if (server)
     {
-      server->GetLimitOfflineMessageSize(&limitMessageSize);
-      if (limitMessageSize)
+      // size limits are superseded by headers_only mode
+      if (!m_pop3ConData->headers_only)
       {
-        PRInt32 max_size = 0; // default size
-        server->GetMaxMessageSize(&max_size);
-        m_pop3ConData->size_limit = (max_size) ? max_size * 1024 : 50 * 1024;
+        server->GetLimitOfflineMessageSize(&limitMessageSize);
+        if (limitMessageSize)
+        {
+          PRInt32 max_size = 0; // default size
+          server->GetMaxMessageSize(&max_size);
+          m_pop3ConData->size_limit = (max_size) ? max_size * 1024 : 50 * 1024;
+       }
       }
       m_pop3Server->GetDeleteByAgeFromServer(&deleteByAgeFromServer);
       if (deleteByAgeFromServer)
