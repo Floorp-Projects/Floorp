@@ -50,7 +50,7 @@
 //
 // set NSPR_LOG_MODULES=nsPipe:5
 //
-static PRLogModuleInfo *gPipeLog = nsnull;
+static PRLogModuleInfo *gPipeLog = PR_NewLogModule("nsPipe");
 #define LOG(args) PR_LOG(gPipeLog, PR_LOG_DEBUG, args)
 #else
 #define LOG(args)
@@ -1248,11 +1248,6 @@ NS_NewPipe2(nsIAsyncInputStream **pipeIn,
 {
     nsresult rv;
 
-#if defined(PR_LOGGING)
-    if (!gPipeLog)
-        gPipeLog = PR_NewLogModule("nsPipe");
-#endif
-
     nsPipe *pipe = new nsPipe();
     if (!pipe)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1271,6 +1266,20 @@ NS_NewPipe2(nsIAsyncInputStream **pipeIn,
     pipe->GetInputStream(pipeIn);
     pipe->GetOutputStream(pipeOut);
     return NS_OK;
+}
+
+NS_METHOD
+nsPipeConstructor(nsISupports *outer, REFNSIID iid, void **result)
+{
+    if (outer)
+        return NS_ERROR_NO_AGGREGATION;
+    nsPipe *pipe = new nsPipe();
+    if (!pipe)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(pipe);
+    nsresult rv = pipe->QueryInterface(iid, result);
+    NS_RELEASE(pipe);
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
