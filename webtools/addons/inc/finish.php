@@ -1,12 +1,13 @@
 <?php
-// Close database connection.
+/**
+ * Finish script.
+ */
+
+// Disconnect from our database.
 $db->disconnect();
 
-// If our $wrapper var is not set, fallback to default.
-if (!isset($wrapper)) {
-    $wrapper = 'inc/wrappers/default.tpl';
-}
+// Set our wrapper if it has not been set.
+$wrapper = (!isset($wrapper)) ? 'inc/wrappers/nonav.tpl' : $wrapper;
 
 // Display output.
-$smarty->display($wrapper);
-?>
+$tpl->display($wrapper);

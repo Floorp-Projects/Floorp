@@ -11,6 +11,7 @@ ini_set('magic_quotes_gpc',0);
 // Include required libraries and classes.
 require_once('DB.php');
 require_once(LIB.'/smarty/libs/Smarty.class.php');
+require_once(LIB.'/amo.class.php');
 require_once(LIB.'/addon.class.php');
 require_once(LIB.'/auth.class.php');
 require_once(LIB.'/rdf.class.php');
@@ -20,45 +21,45 @@ require_once(LIB.'/sql.class.php');
 require_once(LIB.'/user.class.php');
 require_once(LIB.'/version.class.php');
 
-// Instantiate Smarty class.
-$smarty = new Smarty();
+// Smarty configuration.
+class AMO_Smarty extends Smarty
+{
+    function AMO_Smarty()
+    {
+        $this->template_dir = TEMPLATE_DIR;
+        $this->compile_dir = COMPILE_DIR;
+        $this->cache_dir = CACHE_DIR;
+        $this->config_dir = CONFIG_DIR;
 
-// Set up smarty.
-$smarty->template_dir = TEMPLATE_DIR;
-$smarty->compile_dir = COMPILE_DIR;
-$smarty->cache_dir = CACHE_DIR;
-$smarty->config_dir = CONFIG_DIR;
-
-// Pass config variables to Smarty object.
-$smarty->assign('config',
-    array(  'webpath'   => WEB_PATH,
-            'rootpath'  => ROOT_PATH,
-            'repo'      => REPO_DIR)
-);
-
-// Instantiate SQL class.
-$db = new SQL();
-
-// Define PEAR options.
-$dsn = array (
-    'phptype'  => 'mysql',
-    'dbsyntax' => 'mysql',
-    'username' => DB_USER,
-    'password' => DB_PASS,
-    'hostspec' => DB_HOST,
-    'database' => DB_NAME
-);
-
-// Try to connect.  If we do not connect, show standard 'gone fishing' error page.
-if (!$db->connect($dsn)) {
-    $wrapper = 'inc/wrappers/nonav.tpl';
-    $smarty->assign(
-        array(
-            'content'=>'site-down.tpl',
-            'error'=>$db->error
-        )
-    );
-    $smarty->display($wrapper);
-    exit;
+        // Pass config variables to Smarty object.
+        $this->assign('config',
+            array(  'webpath'   => WEB_PATH,
+                    'rootpath'  => ROOT_PATH,
+                    'repo'      => REPO_DIR)
+        );
+    }
 }
+
+// Database configuration.
+class AMO_SQL extends SQL 
+{
+    function AMO_SQL()
+    {
+        $dsn = array (
+            'phptype'  => 'mysql',
+            'dbsyntax' => 'mysql',
+            'username' => DB_USER,
+            'password' => DB_PASS,
+            'hostspec' => DB_HOST,
+            'database' => DB_NAME
+        );
+        $this->connect($dsn);
+    }
+}
+
+// Global template object.
+$tpl = new AMO_Smarty();
+
+// Global DB object.
+$db = new AMO_SQL();
 ?>

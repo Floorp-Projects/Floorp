@@ -4,5 +4,5 @@ php_value include_path /home/morgamic/public_html/v2/inc:.:/usr/share/pear
 # Init script to set up required libraries.
 php_value auto_prepend_file init.php
 
-# Finish script closes connections and begins output.
+# Finish script that calls $tpl->display for global Smarty object.
 php_value auto_append_file finish.php

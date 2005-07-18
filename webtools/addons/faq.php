@@ -34,7 +34,7 @@ $links = array(
 );
 
 // Send FAQ data to Smarty object.
-$smarty->assign(
+$tpl->assign(
    array(   'faq'       => $faq,
             'links'     => $links,
             'sidebar'   => 'inc/nav.tpl',

@@ -74,13 +74,10 @@ $db->query("
 $newest = $db->record;
 
 // Assign template variables.
-$smarty->assign(
+$tpl->assign(
     array(  'popularExtensions' => $popularExtensions,
             'popularThemes'     => $popularThemes,
             'newest'            => $newest,
             'content'           => 'index.tpl')
 );
-
-// Set custom wrapper for this page.
-$wrapper = 'inc/wrappers/nonav.tpl';
 ?>

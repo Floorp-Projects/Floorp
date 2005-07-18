@@ -28,7 +28,7 @@ New graphics and colors. Browse themes for:
 <dd>Plugins are programs that allow websites to provide content to
 you and have it appear in your browser. Examples of Plugins are Flash,
 RealPlayer, and Java. Browse plug-ins for: 
-<a href="./plugins/">Mozilla Suite &amp; Firefox</a>
+<a href="https://pfs.mozilla.org/plugins/">Mozilla Suite &amp; Firefox</a>
 </dd>
 </dl>
 </div>
@@ -38,21 +38,21 @@ RealPlayer, and Java. Browse plug-ins for:
 <h2>Popular Extensions</h2>
 <ol class="popularlist">
 {section name=pe loop=$popularExtensions}
-<li><a href="./item.php?id={$popularExtensions[pe].id}">{$popularExtensions[pe].name}</a> <span class="downloads">({$popularExtensions[pe].dc} downloads)</span></li>
+<li><a href="./addon.php?id={$popularExtensions[pe].id}">{$popularExtensions[pe].name}</a> <span class="downloads">({$popularExtensions[pe].dc} downloads)</span></li>
 {/section}
 </ol>
 
 <h2>Popular Themes</h2>
 <ol class="popularlist">
 {section name=pt loop=$popularThemes}
-<li><a href="./item.php?id={$popularThemes[pt].id}">{$popularThemes[pt].name}</a> <span class="downloads">({$popularThemes[pt].dc} downloads)</span></li>
+<li><a href="./addon.php?id={$popularThemes[pt].id}">{$popularThemes[pt].name}</a> <span class="downloads">({$popularThemes[pt].dc} downloads)</span></li>
 {/section}
 </ol>
 
 <h2>Newest Addons</h2>
 <ol class="popularlist">
 {section name=new loop=$newest}
-<li><a href="./item.php?id={$newest[new].ID}">{$newest[new].Name} {$newest[new].Version}</a> ({$newest[new].DateAdded|date_format})</li>
+<li><a href="./addon.php?id={$newest[new].ID}">{$newest[new].Name} {$newest[new].Version}</a> ({$newest[new].DateAdded|date_format})</li>
 {/section}
 </ol>
 </div>
