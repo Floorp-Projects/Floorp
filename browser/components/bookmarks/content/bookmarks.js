@@ -83,6 +83,8 @@ var kIOContractID;
 var kIOIID;
 var IOSVC;
 
+var gBmProperties;
+
 // should be moved in a separate file
 function initServices()
 {
@@ -126,6 +128,13 @@ function initServices()
   kIOContractID     = "@mozilla.org/network/io-service;1";
   kIOIID            = Components.interfaces.nsIIOService;
   IOSVC             = Components.classes[kIOContractID].getService(kIOIID);
+  
+  gBmProperties     = [RDF.GetResource(gNC_NS+"Name"),
+                       RDF.GetResource(gNC_NS+"URL"),
+                       RDF.GetResource(gNC_NS+"ShortcutURL"),
+                       RDF.GetResource(gNC_NS+"Description"),
+                       RDF.GetResource(gNC_NS+"WebPanel"),
+                       RDF.GetResource(gNC_NS+"FeedURL")];
 }
 
 function initBMService()
@@ -287,6 +296,7 @@ var BookmarksCommand = {
       return null;
 
     var ptype = null;
+    aParent =  (aParent != null) ? aParent : BMSVC.getParent(aNodeID);
     if (aParent) {
       ptype = BookmarksUtils.resolveType(aParent, aDS);
       if (ptype == "Livemark") {
@@ -423,12 +433,14 @@ var BookmarksCommand = {
   undoBookmarkTransaction: function ()
   {
     BMSVC.transactionManager.undoTransaction();
+    BookmarksUtils.refreshSearch();
     BookmarksUtils.flushDataSource();
   },
 
   redoBookmarkTransaction: function ()
   {
     BMSVC.transactionManager.redoTransaction();
+    BookmarksUtils.refreshSearch();
     BookmarksUtils.flushDataSource();
   },
 
@@ -456,14 +468,60 @@ var BookmarksCommand = {
     var unicodestring = Components.classes[kSuppWStringContractID].createInstance(kSuppWStringIID);
     var htmlstring = Components.classes[kSuppWStringContractID].createInstance(kSuppWStringIID);
   
-    var sBookmarkItem = ""; var sTextUnicode = ""; var sTextHTML = "";
+    var sBookmarkItem = ""; var sTextUnicode = ""; var sTextHTML = ""; var tmpBmItem = [];
     for (var i = 0; i < aSelection.length; ++i) {
+      sBookmarkItem += aSelection.item[i].Value + "\n";
+
+      // save the selection property into text string that we will use later in paste function
+      // and in BookmarkInsertTransaction
+      // (if the selection is folder or livemark save all childs property)
+      var aType = BookmarksUtils.resolveType(aSelection.item[i]);
+      if (aType == "Livemark") {
+        sBookmarkItem += "\n\n\n\n\n\n"; // don't change livemark properties
+      } else {
+         for (var j = 0; j < gBmProperties.length; ++j) {
+            var itemValue = BMDS.GetTarget(aSelection.item[i], gBmProperties[j], true);
+            if (itemValue)
+                sBookmarkItem += itemValue.QueryInterface(kRDFLITIID).Value + "\n";
+            else
+                sBookmarkItem += "\n";
+         }
+      }
+      var childCount = 1;
+      if (aType == "Folder" || aType == "Livemark") {
+         var propArray = [];
+         BookmarksUtils.getAllChildren(aSelection.item[i], propArray);
+         for (var k = 0; k < propArray.length; ++k) {
+            for (var j = 0; j < gBmProperties.length + 1; ++j) {
+               if (propArray[k][j])
+                   sBookmarkItem += propArray[k][j].Value + "\n";
+               else
+                   sBookmarkItem += "\n";
+            }
+         }
+         childCount += propArray.length;
+      }
+      tmpBmItem.push(childCount +  "\n" + sBookmarkItem);
+      sBookmarkItem = "";
+
+
       var url  = BookmarksUtils.getProperty(aSelection.item[i], gNC_NS+"URL" );
       var name = BookmarksUtils.getProperty(aSelection.item[i], gNC_NS+"Name");
-      sBookmarkItem += aSelection.item[i].Value + "\n";
+
       sTextUnicode += url + "\n";
       sTextHTML += "<A HREF=\"" + url + "\">" + name + "</A>";
     }
+    // generate unique separator and combine the array to one string 
+    var bmSeparator = "]-[", extrarSeparator = "@";
+    for (var i = 0; i < tmpBmItem.length; ++i) {
+        while (tmpBmItem[i].indexOf(bmSeparator)>-1)
+           bmSeparator += extrarSeparator;
+    }
+    for (var i = 0; i < tmpBmItem.length; ++i) {
+      sBookmarkItem += tmpBmItem[i] + bmSeparator;
+    }
+    // insert the separator to sBookmarkItem so we can extract it in pasteBookmark
+    sBookmarkItem = bmSeparator + "\n" + sBookmarkItem;
     
     const kXferableContractID = "@mozilla.org/widget/transferable;1";
     const kXferableIID = Components.interfaces.nsITransferable;
@@ -505,15 +563,34 @@ var BookmarksCommand = {
     var data    = { };
     var length  = { };
     xferable.getAnyTransferData(flavour, data, length);
-    var items, name, url;
+    var items, name, url, childs, removedProps = [];
     data = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
     switch (flavour.value) {
     case "moz/bookmarkclipboarditem":
-      items = data.split("\n");
-      // since data are ended by \n, remove the last empty node
+      var tmpItem = data.split("\n");
+      var sep = tmpItem.shift();
+      data = tmpItem.join("\n");
+      items = data.split(sep);
+      // since data are ended by separator, remove the last empty node
       items.pop(); 
-      for (var i=0; i<items.length; ++i) {
-        items[i] = RDF.GetResource(items[i]);
+      // convert propery from text string to array
+      var p = gBmProperties.length+1;
+      for (var i = 0; i < items.length; ++i) {
+        childs = items[i].split("\n");
+        childs.pop();
+        var childCount = childs.shift();
+        items[i] = RDF.GetResource(childs[0]);
+        var propArray = [];
+        for (var k = 0; k < childCount; ++k) {
+          var props = [RDF.GetResource(childs[p*k]), null, null, null, null, null, null];
+          for (var j = 1; j < p; ++j) {
+             var prop = childs[p*k+j];
+             if (prop)
+                 props[j] = RDF.GetLiteral(prop);
+          }
+          propArray.push(props);
+        }
+        removedProps.push(propArray);
       }
       break;
     case "text/x-moz-url":
@@ -529,7 +606,7 @@ var BookmarksCommand = {
       return;
     }
    
-    var selection = {item: items, parent:Array(items.length), length: items.length};
+    var selection = {item: items, parent:Array(items.length), length: items.length, prop: removedProps};
     BookmarksUtils.checkSelection(selection);
     BookmarksUtils.insertAndCheckSelection("paste", selection, aTarget, -1);
   },
@@ -969,12 +1046,14 @@ var BookmarksController = {
 
   isCommandEnabled: function (aCommand, aSelection, aTarget)
   {
-    var item0, type0, junk;
+    var item0, type0, junk, parent0, ptype0;
     var length = 0;
     if (aSelection && aSelection.length != 0) {
       length = aSelection.length;
       item0 = aSelection.item[0].Value;
       type0 = aSelection.type[0];
+      parent0 =  (aSelection.parent[0] != null) ? aSelection.parent[0] : BMSVC.getParent(aSelection.item[0]);
+      ptype0 = BookmarksUtils.resolveType(parent0);
     }
     var i;
 
@@ -986,7 +1065,7 @@ var BookmarksController = {
     case "cmd_bm_redo":
       return BMSVC.transactionManager.numberOfRedoItems > 0;
     case "cmd_paste":
-      if (aTarget && !BookmarksUtils.isValidTargetContainer(aTarget.parent))
+      if (ptype0 == "Livemark" || (aTarget && !BookmarksUtils.isValidTargetContainer(aTarget.parent)))
         return false;
       const kClipboardContractID = "@mozilla.org/widget/clipboard;1";
       const kClipboardIID = Components.interfaces.nsIClipboard;
@@ -1009,7 +1088,7 @@ var BookmarksController = {
       return length > 0;
     case "cmd_cut":
     case "cmd_delete":
-      return length > 0 && !aSelection.containsImmutable && !aSelection.containsPTF;
+      return length > 0 && !aSelection.containsImmutable && ptype0 != "Livemark" && !aSelection.containsPTF;
     case "cmd_selectAll":
       return true;
     case "cmd_bm_open":
@@ -1042,13 +1121,13 @@ var BookmarksController = {
     case "cmd_bm_newlivemark":
     case "cmd_bm_newfolder":
     case "cmd_bm_newseparator":
-      return ((type0 == "PersonalToolbarFolder") ||
-              (aTarget && BookmarksUtils.isValidTargetContainer(aTarget.parent)));
+      return (ptype0 != "Livemark" && ((type0 == "PersonalToolbarFolder") ||
+              (aTarget && BookmarksUtils.isValidTargetContainer(aTarget.parent))));
     case "cmd_bm_properties":
     case "cmd_bm_rename":
       if (length != 1 ||
           aSelection.item[0].Value == "NC:BookmarksRoot" ||
-          BookmarksUtils.resolveType(aSelection.parent[0]) == "Livemark")
+          ptype0 == "Livemark")
         return false;
       return true;
     case "cmd_bm_setpersonaltoolbarfolder":
@@ -1057,7 +1136,7 @@ var BookmarksController = {
       return item0 != BMSVC.getBookmarksToolbarFolder().Value && 
              item0 != "NC:BookmarksRoot" && type0 == "Folder";
     case "cmd_bm_movebookmark":
-      return length > 0 && !aSelection.containsImmutable;
+      return length > 0 && !aSelection.containsImmutable && ptype0 != "Livemark";
     case "cmd_bm_refreshlivemark":
       for (i=0; i<length; ++i) {
         if (aSelection.type[i] != "Livemark")
@@ -1409,6 +1488,7 @@ var BookmarksUtils = {
     }
     this.removeSelection(aAction, aSelection);
     BookmarksUtils.flushDataSource();
+    BookmarksUtils.refreshSearch();
     return true;
   },
 
@@ -1418,16 +1498,82 @@ var BookmarksUtils = {
     transaction.item   = [];
     transaction.parent = [];
     transaction.index  = [];
+    transaction.removedProp = [];
     for (var i = 0; i < aSelection.length; ++i) {
+      // try to put back aSelection.parent[i] if it's null, so we can delete after searching
+      if (aSelection.parent[i] == null)
+          aSelection.parent[i] = BMDS.getParent(aSelection.item[i]);
+
       if (aSelection.parent[i]) {
         RDFC.Init(BMDS, aSelection.parent[i]);
         transaction.item  .push(aSelection.item[i]);
         transaction.parent.push(aSelection.parent[i]);
         transaction.index .push(RDFC.IndexOf(aSelection.item[i]));
+
+        // save the selection property into array that uses later in BookmarkRemoveTransaction
+        // (if the selection is folder save all childs property)
+        if (aAction != "move") {
+            var propArray = [];
+            propArray.push([aSelection.item[i], null, null, null, null, null, null]);
+            var aType = BookmarksUtils.resolveType(aSelection.item[i]);            
+            if (aType != "Livemark") {// don't change livemark properties
+               for (var j = 0; j < gBmProperties.length; ++j) {
+                  var oldValue = BMDS.GetTarget(aSelection.item[i], gBmProperties[j], true);
+                  if (oldValue)
+                      propArray[0][j+1] = oldValue.QueryInterface(kRDFLITIID);
+               }
+            }
+            if (aType == "Folder" || aType == "Livemark")
+                BookmarksUtils.getAllChildren(aSelection.item[i], propArray);
+            transaction.removedProp.push(propArray);
+        } else {
+            transaction.removedProp.push(null);
+        }
       }
     }
     BMSVC.transactionManager.doTransaction(transaction);
     return true;
+  },
+
+  //  this recursive function return array of all childrens properties for given folder
+  getAllChildren: function (folder, propArray)
+  {
+    var container = Components.classes[kRDFCContractID].createInstance(kRDFCIID);
+    container.Init(BMDS, folder);
+    var children = container.GetElements();
+    while (children.hasMoreElements()){
+      var child = children.getNext() ;
+      if (child instanceof Components.interfaces.nsIRDFResource){
+         var aType = BookmarksUtils.resolveType(child);
+         var childResource = child.QueryInterface(kRDFRSCIID);
+         var props = [childResource, null, null, null, null, null, null];
+         // don't change livemark properties
+         if (aType != "Livemark") {
+            for (var j = 0; j < gBmProperties.length; ++j) {
+               var oldValue = BMDS.GetTarget(childResource, gBmProperties[j], true);
+               if (oldValue)
+                   props[(j+1)] = oldValue.QueryInterface(kRDFLITIID);
+            }
+         }
+         propArray.push(props);
+         if (aType == "Folder" || aType == "Livemark")
+             BookmarksUtils.getAllChildren(child, propArray);
+      }
+    }
+  },
+
+  // if we are in search mode i.e. "find:" is in ref attribute we refresh the Search
+  refreshSearch: function ()
+  {
+   var bmTree, bmView = document.getElementById("bookmarks-view");
+   if (bmView) bmTree = bmView.tree;
+   else return;
+   var aRef = bmTree.getAttribute("ref");
+   var aProtocol = aRef.split(":")[0];
+   if (aProtocol == "find"){
+      bmTree.setAttribute("ref", "");
+      bmTree.setAttribute("ref", aRef);
+   }
   },
         
   insertAndCheckSelection: function (aAction, aSelection, aTarget, aTargetIndex)
@@ -1439,6 +1585,7 @@ var BookmarksUtils = {
     }
     this.insertSelection(aAction, aSelection, aTarget, aTargetIndex);
     BookmarksUtils.flushDataSource();
+    BookmarksUtils.refreshSearch();
     return true;
   },
 
@@ -1448,6 +1595,7 @@ var BookmarksUtils = {
     transaction.item   = new Array(aSelection.length);
     transaction.parent = new Array(aSelection.length);
     transaction.index  = new Array(aSelection.length);
+    transaction.removedProp = new Array(aSelection.length);
     var index = aTarget.index;
     for (var i=0; i<aSelection.length; ++i) {
       var rSource = aSelection.item[i];
@@ -1455,6 +1603,8 @@ var BookmarksUtils = {
         rSource = BMSVC.cloneResource(rSource);
       transaction.item  [i] = rSource;
       transaction.parent[i] = aTarget.parent;
+      // we only have aSelection.prop if insertSelection call by paste action we don't use it for move
+      transaction.removedProp[i] = aSelection.prop ? aSelection.prop[i] : null;
       // Broken Insert Code attempts to always insert items in the
       // right place (i.e. after the selected item).  However, because
       // of RDF Container suckyness, this code gets very confused, due
@@ -1754,6 +1904,11 @@ function BookmarkInsertTransaction (aAction)
   this.item    = null;
   this.parent  = null;
   this.index   = null;
+  this.removedProp = null;
+  this.Properties = gBmProperties;
+  // move container declaration to her so it can be recognize if
+  // undoTransaction is call after the BM manager is close and reopen.
+  this.container = Components.classes[kRDFCContractID].createInstance(kRDFCIID);
 }
 
 BookmarkInsertTransaction.prototype =
@@ -1787,6 +1942,23 @@ BookmarkInsertTransaction.prototype =
         this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
 #endif
       }
+
+      // insert back all the properties
+      var props = this.removedProp[i];
+      if (props) {
+         for (var k = 0; k < props.length; ++k) {
+            for (var j = 0; j < this.Properties.length; ++j) {
+               var oldValue = this.BMDS.GetTarget(props[k][0], this.Properties[j], true);
+               // must check, if paste call after copy the oldvalue didn't remove.
+               if (!oldValue) {
+                  var newValue = props[k][j+1];
+                  if (newValue)
+                      this.BMDS.Assert(props[k][0], this.Properties[j], newValue, true);
+               }
+            }
+         }
+      }
+
     }
     this.endUpdateBatch();
   },
@@ -1795,10 +1967,23 @@ BookmarkInsertTransaction.prototype =
   {
     this.beginUpdateBatch();
     // XXXvarga Can't use |RDFC| here because it's being "reused" elsewhere.
-    var container = Components.classes[kRDFCContractID].createInstance(kRDFCIID);
-    for (var i=this.item.length-1; i>=0; i--) {
-      container.Init(this.BMDS, this.parent[i]);
-      container.RemoveElementAt(this.index[i], true);
+    for (var i = this.item.length-1; i >= 0; i--) {
+      this.container.Init(this.BMDS, this.parent[i]);
+
+      // remove all properties befor we remove the element so nsLocalSearchService
+      // don't return deleted element in Search
+      var props = this.removedProp[i];
+      if (props){
+         for (var k = 0; k < props.length; ++k) {
+            for (var j = 0; j < this.Properties.length; ++j) {
+               var oldValue = props[k][j+1];
+               if (oldValue)
+                   this.BMDS.Unassert(props[k][0], this.Properties[j], oldValue);
+            }
+         }
+      }
+
+      this.container.RemoveElementAt(this.index[i], true);
     }
     this.endUpdateBatch();
   },
@@ -1817,6 +2002,8 @@ function BookmarkRemoveTransaction (aAction)
   this.item    = null;
   this.parent  = null;
   this.index   = null;
+  this.removedProp = null;
+  this.Properties = gBmProperties;
 }
 
 BookmarkRemoveTransaction.prototype =
@@ -1830,6 +2017,20 @@ BookmarkRemoveTransaction.prototype =
     this.beginUpdateBatch();
     for (var i=0; i<this.item.length; ++i) {
       this.RDFC.Init(this.BMDS, this.parent[i]);
+
+      // remove all properties befor we remove the element so nsLocalSearchService
+      // don't return deleted element in Search
+      var props = this.removedProp[i];
+      if (props) {
+         for (var k = 0; k < props.length; ++k) {
+            for (var j = 0; j < this.Properties.length; ++j) {
+               var oldValue = props[k][j+1];
+               if (oldValue)
+                   this.BMDS.Unassert(props[k][0], this.Properties[j], oldValue);
+            }
+         }
+      }
+
       this.RDFC.RemoveElementAt(this.index[i], false);
     }
     this.endUpdateBatch();
@@ -1841,6 +2042,19 @@ BookmarkRemoveTransaction.prototype =
     for (var i=this.item.length-1; i>=0; i--) {
       this.RDFC.Init(this.BMDS, this.parent[i]);
       this.RDFC.InsertElementAt(this.item[i], this.index[i], false);
+
+      // insert back all the properties
+      var props = this.removedProp[i];
+      if (props) {
+         for (var k = 0; k < props.length; ++k) {
+            for (var j = 0; j < this.Properties.length; ++j) {
+               var newValue = props[k][j+1];
+               if (newValue)
+                   this.BMDS.Assert(props[k][0], this.Properties[j], newValue, true);
+            }
+         }
+      }
+
     }
     this.endUpdateBatch();
   },
