@@ -211,6 +211,18 @@ nsMailGNOMEIntegration::SetIsDefaultNewsClient(PRBool aIsDefault)
 }
 
 NS_IMETHODIMP
+nsMailGNOMEIntegration::GetIsDefaultFeedClient(PRBool *aIsDefault)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailGNOMEIntegration::SetIsDefaultFeedClient(PRBool aIsDefault)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsMailGNOMEIntegration::GetShowDialog(PRBool *aShow)
 {
   *aShow = (mShowMailDialog || mShowNewsDialog);
