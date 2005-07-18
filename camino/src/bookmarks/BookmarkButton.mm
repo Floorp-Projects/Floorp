@@ -287,6 +287,11 @@
   // kCaminoBookmarkListPBoardType
   NSArray *pointerArray = [BookmarkManager serializableArrayWithBookmarkItems:[NSArray arrayWithObject:item]];
   [pboard setPropertyList:pointerArray forType: kCaminoBookmarkListPBoardType];
+
+  // If the drag results in the bookmark button being (re)moved, it could get
+  // deallocated too soon.  This occurs with SDK >= 10.3, but not earlier.
+  // Change in cleanup strategy?  Hold on tight.
+  [[self retain] autorelease];
   [self dragImage: [MainController createImageForDragging:[self image] title:title]
                at: NSMakePoint(0,NSHeight([self bounds])) offset: NSMakeSize(0,0)
             event: aEvent pasteboard: pboard source: self slideBack: YES];
