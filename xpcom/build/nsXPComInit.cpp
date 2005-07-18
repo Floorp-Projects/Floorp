@@ -48,6 +48,7 @@
 #include "nsScriptableInputStream.h"
 #include "nsBinaryStream.h"
 #include "nsStorageStream.h"
+#include "nsPipe.h"
 
 #include "nsMemoryImpl.h"
 #include "nsDebugImpl.h"
@@ -311,6 +312,7 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(BINARYINPUTSTREAM, nsBinaryInputStreamConstructor),
     COMPONENT(BINARYOUTPUTSTREAM, nsBinaryOutputStreamConstructor),
     COMPONENT(STORAGESTREAM, nsStorageStreamConstructor),
+    COMPONENT(PIPE, nsPipeConstructor),
 
 #define NS_PROPERTIES_CLASSNAME  "Properties"
     COMPONENT(PROPERTIES, nsProperties::Create),
