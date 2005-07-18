@@ -422,14 +422,21 @@ nsresult nsDeviceContextWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLo
 
 nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsFont* aFont) const
 {
-#ifdef WINCE
-  return NS_ERROR_NOT_IMPLEMENTED;
-#else
-  NONCLIENTMETRICS ncm;
   HGDIOBJ hGDI;
 
   LOGFONT logFont;
   LOGFONT* ptrLogFont = NULL;
+
+#ifdef WINCE
+  hGDI = ::GetStockObject(SYSTEM_FONT);
+  if (hGDI == NULL)
+    return NS_ERROR_UNEXPECTED;
+  
+  if (::GetObject(hGDI, sizeof(logFont), &logFont) > 0)
+    ptrLogFont = &logFont;
+#else
+
+  NONCLIENTMETRICS ncm;
 
   BOOL status;
   if (anID == eSystemFont_Icon) 
@@ -505,6 +512,8 @@ nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsF
       break;
   } // switch 
 
+#endif // WINCE
+
   if (nsnull == ptrLogFont)
   {
     return NS_ERROR_FAILURE;
@@ -513,7 +522,6 @@ nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsF
   aFont->systemFont = PR_TRUE;
 
   return CopyLogFontToNSFont(&aHDC, ptrLogFont, aFont);
-#endif
 }
 
 NS_IMETHODIMP nsDeviceContextWin :: GetSystemFont(nsSystemFontID anID, nsFont *aFont) const

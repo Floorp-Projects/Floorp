@@ -1471,6 +1471,7 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
   mHas3DBorder = (extendedStyle & WS_EX_CLIENTEDGE) > 0;
 
+#ifndef WINCE
   if (mWindowType == eWindowType_dialog) {
     struct {
       DLGTEMPLATE t;
@@ -1496,7 +1497,11 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
                                        parent,
                                        (DLGPROC)DummyDialogProc,
                                        NULL);
-  } else {
+
+  } 
+  else 
+#endif //WINCE
+  {
 
     mWnd = nsToolkit::mCreateWindowEx(extendedStyle,
                                       aInitData && aInitData->mDropShadow ?
@@ -2620,9 +2625,6 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
                                PRUint32 aHeight,
                                PRUint32 aDepth)
 {
-#ifdef WINCE
-  return NULL;
-#else
   if (aDepth == 8 || aDepth == 4) {
     NS_WARNING("nsWindow::DataToBitmap can't handle 4 or 8 bit images");
     return NULL;
@@ -2639,6 +2641,7 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
   HBITMAP tBitmap = ::CreateBitmap(1, 1, planes, bpp, NULL);
   HBITMAP oldbits = (HBITMAP)::SelectObject(dc, tBitmap);
 
+#ifndef WINCE
   if (aDepth == 32 && IsCursorTranslucencySupported()) {
     // Alpha channel. We need the new header.
     BITMAPV4HEADER head = { 0 };
@@ -2671,6 +2674,7 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
     ::DeleteDC(dc);
     return bmp;
   }
+#endif
 
   BITMAPINFOHEADER head = { 0 };
 
@@ -2705,7 +2709,6 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
   ::DeleteObject(tBitmap);
   ::DeleteDC(dc);
   return bmp;
-#endif  // WINCE
 }
 
 // static
@@ -5261,10 +5264,26 @@ DWORD nsWindow::WindowStyle()
   DWORD style;
 
 #ifdef WINCE
-    if (mWindowType == eWindowType_popup)
-      style = WS_POPUP;
-    else
-      style = WS_CHILD;
+  switch (mWindowType) {
+    case eWindowType_child:
+	    style = WS_CHILD;
+      break;
+
+    case eWindowType_dialog:
+	  case eWindowType_popup:
+		  style = WS_BORDER | WS_POPUP;
+		  break;
+
+    default:
+      NS_ASSERTION(0, "unknown border style");
+      // fall through
+
+    case eWindowType_toplevel:
+    case eWindowType_invisible:
+      style = WS_BORDER;
+      break;
+  }
+
 #else
 
   switch (mWindowType) {
@@ -5351,7 +5370,7 @@ DWORD nsWindow::WindowExStyle()
       return WS_EX_WINDOWEDGE;
 
     case eWindowType_popup:
-      return WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
+      return WS_EX_TOOLWINDOW;
 
     default:
       NS_ASSERTION(0, "unknown border style");
@@ -5359,7 +5378,11 @@ DWORD nsWindow::WindowExStyle()
 
     case eWindowType_toplevel:
     case eWindowType_invisible:
+#ifndef WINCE
+		return WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
+#else
       return WS_EX_WINDOWEDGE;
+#endif
   }
 }
 
