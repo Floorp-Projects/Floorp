@@ -64,6 +64,10 @@ sub RegisterConfig {
         ['channelMuteFields', 1, 1, {}],
         # How frequently we check for new bugmail we've received, in seconds.
         ['updateDelay', 1, 1, 10],
+        # Do we want to report the component as the product?
+        # List of products to report the component as instead, can also restrict
+        # to specific components by using Product::::Component syntax.
+        ['reportComponentAsProduct', 1, 1, []],
         ['mutes', 1, 1, ''],  # "channel channel channel"
     );
 }
@@ -601,7 +605,12 @@ sub CheckForBugMail {
             push(@chan_list, $self->CreateChannelList($product, $old))
                 unless grep($_ eq $field, @comp_mute_fields);
         }
-
+        # Enable Mozbot to report that a bug has been filed in a component
+        # instead of the product
+        if (grep(lc($_) eq lc($product), @{$self->{'reportComponentAsProduct'}}) ||
+            grep(lc($_) eq lc($product.$sep.$component), @{$self->{'reportComponentAsProduct'}})) {
+            $message =~ s/^New $product bug/New $component bug/i;
+        }
         unless ($self->ignoringMailProducedBy($who)) {
             # Keep track of which channels we've told already, to avoid
             # duplicate messages.
