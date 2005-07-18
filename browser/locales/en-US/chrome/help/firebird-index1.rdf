@@ -306,6 +306,7 @@
             <rdf:Seq>
                 <rdf:li>
                     <rdf:Description ID="live-bookmark" nc:name="Live Bookmark" nc:link="glossary.xhtml#live_bookmark"/>
+                    <rdf:Description ID="prefs-languages" nc:name="Languages" nc:link="prefs.xhtml#languages"/>                    
                 </rdf:li>
             </rdf:Seq>
         </nc:subheadings>

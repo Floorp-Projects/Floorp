@@ -426,5 +426,8 @@
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
+  
+  <!-- The following nodes are intentionally linkable but not displayable -->
+  <rdf:Description ID="prefs-languages" nc:name="Languages" nc:link="prefs.xhtml#languages"/>
 
 </rdf:RDF>
