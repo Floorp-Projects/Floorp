@@ -896,7 +896,6 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolyline(const nsPoint aPoints[], PRInt
 {
 	SetupPortState();
 
-	PRUint32   i;
 	PRInt32    x,y;
 
 	x = aPoints[0].x;
@@ -904,7 +903,8 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolyline(const nsPoint aPoints[], PRInt
 	mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
 	::MoveTo(x,y);
 
-	for (i = 1; i < aNumPoints; i++){
+	for (PRInt32 i = 1; i < aNumPoints; i++)
+	{
 		x = aPoints[i].x;
 		y = aPoints[i].y;
 
@@ -996,7 +996,6 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolygon(const nsPoint aPoints[], PRInt3
 {
 	SetupPortState();
 
-	PRUint32   i;
 	PolyHandle thepoly;
 	PRInt32    x,y;
 
@@ -1010,7 +1009,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolygon(const nsPoint aPoints[], PRInt3
 	mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
 	::MoveTo(x,y);
 
-	for (i = 1; i < aNumPoints; i++) {
+	for (PRInt32 i = 1; i < aNumPoints; i++) {
 		x = aPoints[i].x;
 		y = aPoints[i].y;
 		
@@ -1032,7 +1031,6 @@ NS_IMETHODIMP nsRenderingContextMac::FillPolygon(const nsPoint aPoints[], PRInt3
 {
 	SetupPortState();
 
-	PRUint32   i;
 	PolyHandle thepoly;
 	PRInt32    x,y;
 
@@ -1046,7 +1044,7 @@ NS_IMETHODIMP nsRenderingContextMac::FillPolygon(const nsPoint aPoints[], PRInt3
 	mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
 	::MoveTo(x,y);
 
-	for (i = 1; i < aNumPoints; i++) {
+	for (PRInt32 i = 1; i < aNumPoints; i++) {
 		x = aPoints[i].x;
 		y = aPoints[i].y;
 		mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
@@ -1141,7 +1139,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawArc(nscoord aX, nscoord aY, nscoord aWi
 
 	mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
 	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
-	::FrameArc(&therect,aStartAngle,aEndAngle);
+	::FrameArc(&therect, (short)aStartAngle, (short)aEndAngle);
 
 	return NS_OK;
 }
@@ -1171,7 +1169,7 @@ NS_IMETHODIMP nsRenderingContextMac::FillArc(nscoord aX, nscoord aY, nscoord aWi
 
 	mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
 	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
-	::PaintArc(&therect,aStartAngle,aEndAngle);
+	::PaintArc(&therect, (short)aStartAngle, (short)aEndAngle);
 
 	return NS_OK;
 }
@@ -1416,25 +1414,25 @@ NS_IMETHODIMP
 nsRenderingContextMac::FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
 #ifdef MOZ_WIDGET_COCOA
-    if (mPort) {
-        SetupPortState();
+  if (mPort) {
+    SetupPortState();
 
-        nscoord x,y,w,h;
-        Rect	therect;
-    
-        x = aX;
-        y = aY;
-        w = aWidth;
-        h = aHeight;
-    
-        mGS->mTMatrix.TransformCoord(&x, &y, &w, &h);
-        RgnHandle rgn = ::NewRgn();
-        ::SetRectRgn(rgn, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
-        ::QDFlushPortBuffer(mPort, rgn);
-        ::DisposeRgn(rgn);
-    }
+    nscoord x,y,w,h;
+    Rect	therect;
+
+    x = aX;
+    y = aY;
+    w = aWidth;
+    h = aHeight;
+
+    mGS->mTMatrix.TransformCoord(&x, &y, &w, &h);
+    RgnHandle rgn = ::NewRgn();
+    ::SetRectRgn(rgn, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
+    ::QDFlushPortBuffer(mPort, rgn);
+    ::DisposeRgn(rgn);
+  }
 #endif
-    return NS_OK;
+  return NS_OK;
 }
 
 #ifdef MOZ_MATHML
@@ -1477,6 +1475,22 @@ nsRenderingContextMac::SetRightToLeftText(PRBool aIsRTL)
 {
   mRightToLeftText = aIsRTL;
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextMac::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect)
+{
+  SetupPortState();
+  return nsRenderingContextImpl::DrawImage(aImage, aSrcRect, aDestRect);
+}
+
+NS_IMETHODIMP
+nsRenderingContextMac::DrawTile(imgIContainer *aImage,
+                    nscoord aXImageStart, nscoord aYImageStart,
+                    const nsRect * aTargetRect)
+{
+  SetupPortState();
+  return nsRenderingContextImpl::DrawTile(aImage, aXImageStart, aYImageStart, aTargetRect);
 }
 
 #pragma mark -

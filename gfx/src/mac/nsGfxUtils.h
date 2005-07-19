@@ -175,7 +175,7 @@ protected:
 	  NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
 	  // we assume that if the port has been set, then the port/GDevice are
 	  // valid, and do nothing (for speed)
-	  mPortChanged = (newPort != CGrafPtr(GetQDGlobalsThePort));
+	  mPortChanged = (newPort != CGrafPtr(GetQDGlobalsThePort()));
 	  if (mPortChanged)
 	  {
   		::GetGWorld(&mOldPort, &mOldDevice);
