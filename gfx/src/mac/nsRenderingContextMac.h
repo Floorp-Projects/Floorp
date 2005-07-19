@@ -142,7 +142,7 @@ public:
                                nsTextDimensions& aDimensions);
   NS_IMETHOD GetTextDimensions(const PRUnichar *aString, PRUint32 aLength,
                                nsTextDimensions& aDimensions, PRInt32 *aFontID);
-
+                                 
   NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
@@ -173,6 +173,12 @@ public:
    * right-to-left base direction
    */
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
+
+  NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect);
+  NS_IMETHOD DrawTile(imgIContainer *aImage,
+                      nscoord aXImageStart, nscoord aYImageStart,
+                      const nsRect * aTargetRect);
+
   //locals
   nsresult   SetPortTextState();
   nsresult   Init(nsIDeviceContext* aContext, CGrafPtr aPort);
