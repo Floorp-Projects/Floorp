@@ -308,6 +308,12 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
     return nsnull;
   }
 
+  if (!result) {
+    NS_WARNING("Ran out of memory while trying to allocate memory for a unique nsStyleStruct! "
+               "Returning the non-unique data.");
+    return NS_CONST_CAST(nsStyleStruct*, current);
+  }
+
   SetStyle(aSID, result);
   mBits &= ~nsCachedStyleData::GetBitForSID(aSID);
 
