@@ -880,6 +880,18 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
         nsDependentCString(NS_DOC_ENCODER_CONTRACTID_BASE) +
         NS_ConvertUTF16toUTF8(contentType)
       ).get());
+  if (!docEncoder) {
+    // This could be some type for which we create a synthetic document.  Try
+    // again as HTML if the document is case-insensitive and as XML if it's
+    // case-sensitive
+    if (doc->IsCaseSensitive()) {
+      contentType.AssignLiteral("application/xml");
+      docEncoder = do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "application/xml");
+    } else {
+      contentType.AssignLiteral("text/html");
+      docEncoder = do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/html");
+    }
+  }
 
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
