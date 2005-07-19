@@ -105,6 +105,7 @@ html|*.menulist-editable-input {
 /* ::::: compact menulists ::::: */
 
 .menulist-compact {
+  -moz-appearance: button;
   -moz-box-align: center;
   -moz-box-pack: center;
   margin: 0;
@@ -112,10 +113,15 @@ html|*.menulist-editable-input {
 }
 
 .menulist-compact > .menulist-dropmarker {
-  -moz-appearance: menulist-button;
+  -moz-appearance: none;
   display: -moz-box;
   -moz-margin-start: 2px;
   padding: 0 !important;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+.menulist-compact[disabled="true"] > .menulist-dropmarker {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
 }
 
 .menulist-compact > .menulist-label {
