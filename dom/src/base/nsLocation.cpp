@@ -665,13 +665,16 @@ nsLocation::GetPort(nsAString& aPort)
 
   if (uri) {
     PRInt32 port;
-    uri->GetPort(&port);
+    result = uri->GetPort(&port);
 
-    if (-1 != port) {
+    if (NS_SUCCEEDED(result) && -1 != port) {
       nsAutoString portStr;
       portStr.AppendInt(port);
       aPort.Append(portStr);
     }
+
+    // Don't propagate this exception to caller
+    result = NS_OK;
   }
 
   return result;
