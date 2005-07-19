@@ -72,8 +72,7 @@
         oncommand="parentNode.navigate(-1, 0, 0);" tooltiptext="&leftarrow.tooltip;"/>
       <xul:hbox align="center" pack="center">
         <xul:textbox size="3" value="1" lastvalid="1"
-          onblur="navigate(0, this.value, 0);"
-          onkeypress="if (event.keyCode==13) navigate(0, this.value, 0);"/>
+          onchange="navigate(0, this.value, 0);"/>
         <xul:label value="&of.label;"/>
         <xul:label value="1"/>
       </xul:hbox>
