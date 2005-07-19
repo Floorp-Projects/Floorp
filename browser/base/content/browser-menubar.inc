@@ -37,7 +37,7 @@
 
        <menubar id="main-menubar" statusbar="statusbar-display"
                 style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
-            <menu label="&fileMenu.label;"
+            <menu id="file-menu" label="&fileMenu.label;"
                   accesskey="&fileMenu.accesskey;">
               <menupopup id="menu_FilePopup" onpopupshowing="getContentAreaFrameCount();">
                 <menuitem label="&newNavigatorCmd.label;"
@@ -80,7 +80,7 @@
               </menupopup>
             </menu>
   
-            <menu label="&editMenu.label;"
+            <menu id="edit-menu" label="&editMenu.label;"
                   accesskey="&editMenu.accesskey;">
               <menupopup id="menu_EditPopup">
                 <menuitem label="&undoCmd.label;"
@@ -135,7 +135,7 @@
               </menupopup>
             </menu>
   
-            <menu label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
+            <menu id="view-menu" label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
               <menupopup id="menu_viewPopup">
                 <menu id="viewToolbarsMenu" label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;"
                       onpopupshowing="onViewToolbarsPopupShowing(event);">
@@ -311,7 +311,7 @@
               </menupopup>
             </menu>
   
-            <menu label="&goMenu.label;" accesskey="&goMenu.accesskey;" 
+            <menu id="go-menu" label="&goMenu.label;" accesskey="&goMenu.accesskey;" 
                   oncommand="var url = event.target.getAttribute('statustext'); if (url) openUILink(url, event, false, true);"
                   onclick="checkForMiddleClick(this, event);">
 
@@ -375,8 +375,8 @@
               </menupopup>
             </menu>
         
-          <menu label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
-            <menupopup id="menu_ToolsPopup"
+            <menu id="tools-menu" label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
+              <menupopup id="menu_ToolsPopup"
 #ifdef XP_WIN
                        onpopupshowing="MailIntegration.updateUnreadCount();"
 #endif
@@ -429,8 +429,8 @@
                         accesskey="&preferencesCmd.accesskey;"
                         oncommand="openPreferences();"/>
 #endif
-            </menupopup>
-          </menu>
+              </menupopup>
+            </menu>
     
 #ifdef XP_MACOSX
           <menu id="windowMenu" />
