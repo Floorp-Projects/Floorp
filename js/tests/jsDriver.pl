@@ -210,9 +210,12 @@ sub execute_tests {
         my $command = &append_file_to_command($shell_command, $path);
         &dd ("executing: " . $command);
 
-        open (OUTPUT, $command . $redirect_command . " |");
+        system "$command $redirect_command > js.out";
+        open (OUTPUT, "js.out") or
+           die "failed to open js.out: $!\n";
         @output = <OUTPUT>;
         close (OUTPUT);
+        unlink "js.out";
 
         @output = grep (!/js\>/, @output);
 
