@@ -53,6 +53,8 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   orient="vertical"
   title="Minimo"
+  titlemodifier="Minimo"
+  titlemenuseparator=" - "
   onload="MiniNavStartup()"
   onunload="MiniNavShutdown()">
 
