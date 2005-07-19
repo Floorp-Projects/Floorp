@@ -605,13 +605,17 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
       aLastRS = aLastRS->parentReflowState;
     }
     if (aLastRS != &aReflowState) {
+      // The wrapper frame should be block-level. If it isn't, how the
+      // heck did it end up wrapping this block frame?
+      NS_ASSERTION(aLastRS->frame->GetStyleDisplay()->IsBlockLevel(),
+                   "Wrapping frame should be block-level");
       // We found a reflow state for the outermost wrapping frame, so use
       // its computed metrics if available
       if (aLastRS->mComputedWidth != NS_UNCONSTRAINEDSIZE) {
-        cbSize.width = aLastRS->mComputedWidth;
+        cbSize.width = aLastRS->mComputedWidth + aLastRS->mComputedPadding.LeftRight();
       }
       if (aLastRS->mComputedHeight != NS_UNCONSTRAINEDSIZE) {
-        cbSize.height = aLastRS->mComputedHeight;
+        cbSize.height = aLastRS->mComputedHeight + aLastRS->mComputedPadding.TopBottom();
       }
     }
   }
