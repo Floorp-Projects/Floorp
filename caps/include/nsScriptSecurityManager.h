@@ -23,6 +23,7 @@
  *   Norris Boyd  <nboyd@atg.com>
  *   Mitch Stoltz <mstoltz@netscape.com>
  *   Christopher A. Aillon <christopher@aillon.com>
+ *   Giorgio Maone <g.maone@informaction.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -79,6 +80,7 @@ struct ClassPolicy;
 #define DEBUG_CAPS_CanCreateWrapper
 #define DEBUG_CAPS_CanCreateInstance
 #define DEBUG_CAPS_CanGetService
+#define DEBUG_CAPS_DomainPolicyLifeCycle
 #endif
 
 /////////////////////
@@ -290,8 +292,9 @@ public:
     ~DomainPolicy()
     {
         PL_DHashTableFinish(this);
-
+        NS_ASSERTION(mRefCount == 0, "Wrong refcount in DomainPolicy dtor");
 #ifdef DEBUG_CAPS_DomainPolicyLifeCycle
+        printf("DomainPolicy deleted with mRefCount = %d\n", mRefCount);
         --sObjects;
         _printPopulationInfo();
 #endif
