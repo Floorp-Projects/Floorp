@@ -199,8 +199,14 @@ xt_event_polling_timer_callback(gpointer user_data)
   display = (Display *)user_data;
   ac = XtDisplayToApplicationContext(display);
 
-  /* don't starve the primary event queue - just process one event */
-  if (XtAppPending(ac))
+  /* We need to process many Xt events here. If we just process
+     one event we might starve one or more Xt consumers. On the other hand
+     this could hang the whole app if Xt events come pouring in. So process
+     up to 20 Xt events right now and save the rest for later. This is a hack,
+     but it oughta work. We *really* should have out of process plugins.
+  */
+  int eventsToProcess = 20;
+  while (eventsToProcess-- && XtAppPending(ac))
     XtAppProcessEvent(ac, XtIMAll);
   return TRUE;
 }
