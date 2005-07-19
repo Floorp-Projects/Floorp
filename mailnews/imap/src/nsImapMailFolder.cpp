@@ -4629,9 +4629,10 @@ NS_IMETHODIMP nsImapMailFolder::GetCurMoveCopyMessageFlags(nsIImapUrl *runningUr
       if (label != 0)
         *aResult |= label << 25;
     }
-    // if the message is being added to the Sent or Templates folders,
-    // add the seen flag so the message gets marked read
-    else if (mFlags & (MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_TEMPLATES))
+    // if we don't have a source header, and it's not the drafts folder,
+    // then mark the message read, since it must be an append to the 
+    // fcc or templates folder.
+    else if (! (mFlags & (MSG_FOLDER_FLAG_DRAFTS)))
       *aResult = MSG_FLAG_READ;
   }
   return NS_OK;
