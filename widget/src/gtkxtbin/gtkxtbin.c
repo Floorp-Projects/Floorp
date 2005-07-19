@@ -161,6 +161,7 @@ xt_event_polling_timer_callback(gpointer user_data)
 {
   Display * display;
   XtAppContext ac;
+  int eventsToProcess = 20;
 
   display = (Display *)user_data;
   ac = XtDisplayToApplicationContext(display);
@@ -171,7 +172,6 @@ xt_event_polling_timer_callback(gpointer user_data)
      up to 20 Xt events right now and save the rest for later. This is a hack,
      but it oughta work. We *really* should have out of process plugins.
   */
-  int eventsToProcess = 20;
   while (eventsToProcess-- && XtAppPending(ac))
     XtAppProcessEvent(ac, XtIMAll);
 
