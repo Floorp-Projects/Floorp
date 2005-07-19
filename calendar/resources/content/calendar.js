@@ -1445,7 +1445,7 @@ function getContrastingTextColor(bgColor)
 }
 
 var gTransactionMgr = Components.classes["@mozilla.org/transactionmanager;1"]
-                                .getService(Components.interfaces.nsITransactionManager);
+                                .createInstance(Components.interfaces.nsITransactionManager);
 function doTransaction(aAction, aItem, aCalendar, aOldItem, aListener) {
     var txn = new calTransaction(aAction, aItem, aCalendar, aOldItem, aListener);
     gTransactionMgr.doTransaction(txn);
