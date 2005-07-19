@@ -433,43 +433,39 @@ nsUnicodeRenderingToolkit::ATSUIFallbackGetDimensions(
                                             aBold, aItalic, aColor);
     }
     if (NS_SUCCEEDED(res)) 
-    {
       return PR_TRUE;
-    }
   }
+
   if (IN_ARABIC_PRESENTATION_A_OR_B(*aCharPt))
   {      
     PRUnichar isolated;
     if (NS_SUCCEEDED( FormAorBIsolated(*aCharPt, info, &isolated))) 
     {
-      if(NS_SUCCEEDED(ATSUIFallbackGetDimensions(&isolated, oDim, origFontNum, 
-                                                 aSize, aBold, aItalic, aColor))) 
-      {
+      if (ATSUIFallbackGetDimensions(&isolated, oDim, origFontNum, 
+                                     aSize, aBold, aItalic, aColor))
          return PR_TRUE;
-      }
     }                                                 
   }
 
   // we know some ATSUI font do not have bold, turn it off and try again
   if (aBold) 
   {
-	  if (NS_SUCCEEDED(ATSUIFallbackGetDimensions(aCharPt, oDim, origFontNum, 
-	                                              aSize, PR_FALSE, aItalic, aColor))) 
-	  {
+	  if (ATSUIFallbackGetDimensions(aCharPt, oDim, origFontNum, 
+	                                 aSize, PR_FALSE, aItalic, aColor))
 	     return PR_TRUE;
-	  }
   }
+
   // we know some ATSUI font do not have italic, turn it off and try again
   if (aItalic) 
   {
-	  if (NS_SUCCEEDED(ATSUIFallbackGetDimensions(aCharPt, oDim, origFontNum, 
-	                                              aSize, PR_FALSE, PR_FALSE, aColor))) 
-	  {
+	  if (ATSUIFallbackGetDimensions(aCharPt, oDim, origFontNum, 
+	                                 aSize, PR_FALSE, PR_FALSE, aColor))
 	     return PR_TRUE;
-	  }
   }
+
   return PR_FALSE;
 }
+
 //------------------------------------------------------------------------
 
 #ifdef MOZ_MATHML
@@ -508,41 +504,36 @@ nsUnicodeRenderingToolkit::ATSUIFallbackGetBoundingMetrics(
                                              aBold, aItalic, aColor);
     }
     if (NS_SUCCEEDED(res))
-    {
       return PR_TRUE;
-    }
   }
+
   if (IN_ARABIC_PRESENTATION_A_OR_B(*aCharPt))
   {  
     PRUnichar isolated;
-    if (NS_SUCCEEDED( FormAorBIsolated(*aCharPt, info, &isolated))) 
+    if (NS_SUCCEEDED(FormAorBIsolated(*aCharPt, info, &isolated)))
     {
-      if(NS_SUCCEEDED(ATSUIFallbackGetBoundingMetrics(&isolated, oBoundingMetrics, origFontNum, 
-                                                      aSize, aBold, aItalic, aColor))) 
-      {
+      if (ATSUIFallbackGetBoundingMetrics(&isolated, oBoundingMetrics, origFontNum, 
+                                          aSize, aBold, aItalic, aColor))
         return PR_TRUE;
-      }
     }                                                 
   }
 
   // we know some ATSUI font do not have bold, turn it off and try again
   if (aBold)
   {
-    if (NS_SUCCEEDED(ATSUIFallbackGetBoundingMetrics(aCharPt, oBoundingMetrics, origFontNum, 
-                                                     aSize, PR_FALSE, aItalic, aColor))) 
-    {
+    if (ATSUIFallbackGetBoundingMetrics(aCharPt, oBoundingMetrics, origFontNum, 
+                                        aSize, PR_FALSE, aItalic, aColor))
       return PR_TRUE;
-    }
   }
+
   // we know some ATSUI font do not have italic, turn it off and try again
   if (aItalic) 
   {
-    if (NS_SUCCEEDED(ATSUIFallbackGetBoundingMetrics(aCharPt, oBoundingMetrics, origFontNum, 
-                                                     aSize, PR_FALSE, PR_FALSE, aColor))) 
-    {
+    if (ATSUIFallbackGetBoundingMetrics(aCharPt, oBoundingMetrics, origFontNum, 
+                                        aSize, PR_FALSE, PR_FALSE, aColor))
       return PR_TRUE;
-    }
   }
+
   return PR_FALSE;
 }
 #endif // MOZ_MATHML
@@ -583,35 +574,33 @@ PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackDrawChar(
     if (NS_SUCCEEDED(res))
       return PR_TRUE;
   }
+
   if (IN_ARABIC_PRESENTATION_A_OR_B(*aCharPt))
   {      
     PRUnichar isolated;
-    if (NS_SUCCEEDED( FormAorBIsolated(*aCharPt, info, &isolated))) {
-      if (NS_SUCCEEDED(ATSUIFallbackDrawChar(&isolated, x, y, oWidth, origFontNum, 
-                                             aSize, aBold, aItalic, aColor))) 
-      {
+    if (NS_SUCCEEDED(FormAorBIsolated(*aCharPt, info, &isolated))) {
+      if (ATSUIFallbackDrawChar(&isolated, x, y, oWidth, origFontNum, 
+                                aSize, aBold, aItalic, aColor))
          return PR_TRUE;
-      }
     }                                                 
   }
+
   // we know some ATSUI font do not have bold, turn it off and try again
   if (aBold)
   {
-    if (NS_SUCCEEDED(ATSUIFallbackDrawChar(aCharPt, x, y, oWidth, origFontNum, 
-                                          aSize, PR_FALSE, aItalic, aColor))) 
-    {
+    if (ATSUIFallbackDrawChar(aCharPt, x, y, oWidth, origFontNum, 
+                              aSize, PR_FALSE, aItalic, aColor))
        return PR_TRUE;
-    }
   }
+
   // we know some ATSUI font do not have italic, turn it off and try again
   if (aItalic)
   {
-    if (NS_SUCCEEDED(ATSUIFallbackDrawChar(aCharPt, x, y, oWidth, origFontNum, 
-                                           aSize, PR_FALSE, PR_FALSE, aColor))) 
-    {
+    if (ATSUIFallbackDrawChar(aCharPt, x, y, oWidth, origFontNum, 
+                              aSize, PR_FALSE, PR_FALSE, aColor))
        return PR_TRUE;
-    }
   }
+
   return PR_FALSE;
 }
 
@@ -834,12 +823,12 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackDrawChar(
 #define NCount (VCount * TCount)
 static void UnicodePrecomposedHangulTo4EUCKR(PRUnichar in, char *out)
 {
-        static PRUint8 lMap[LCount] = {
+        static const PRUint8 lMap[LCount] = {
           0xa1, 0xa2, 0xa4, 0xa7, 0xa8, 0xa9, 0xb1, 0xb2, 0xb3, 0xb5,
           0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe
         };
 
-        static PRUint8 tMap[TCount] = {
+        static const PRUint8 tMap[TCount] = {
           0xd4, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa9, 0xaa, 
           0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb4, 0xb5, 
           0xb6, 0xb7, 0xb8, 0xba, 0xbb, 0xbc, 0xbd, 0xbe
@@ -1249,7 +1238,6 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
   if(aLength == 0) 
     return NS_OK;
   NS_PRECONDITION(BAD_FONT_NUM != fontNum, "illegal font num");
-  short textWidth = 0;
   PRUint32 processLen = 0;
   char *heapBuf = nsnull;
   PRUint32 heapBufSize = 0;
