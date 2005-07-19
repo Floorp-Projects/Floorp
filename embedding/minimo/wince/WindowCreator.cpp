@@ -1,110 +1,115 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: Mozilla-sample-code 1.0
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2002 Netscape Communications Corporation and
- * other contributors
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this Mozilla sample software and associated documentation files
- * (the "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to permit
- * persons to whom the Software is furnished to do so, subject to the
- * following conditions:
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * The Original Code is Minimo.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * The Initial Developer of the Original Code is
+ * Doug Turner <dougt@meer.net>.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
  * ***** END LICENSE BLOCK ***** */
 
-#include "WindowCreator.h"
+
 #include "MinimoPrivate.h"
 
-WindowCreator::WindowCreator()
+NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+
+WindowCreator::WindowCreator(nsIAppShell* aAppShell)
 {
+    mAppShell = aAppShell;
 }
 
 WindowCreator::~WindowCreator()
 {
 }
 
-NS_IMPL_ISUPPORTS1(WindowCreator, nsIWindowCreator)
-
-nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
-{
-    if (!chrome)
-        return NS_ERROR_FAILURE;
-    
-    nsCOMPtr<nsIEmbeddingSiteWindow> embeddingSite = do_QueryInterface(chrome);
-    HWND hWnd;
-    embeddingSite->GetSiteWindow((void **) & hWnd);
-    
-    if (!hWnd)
-        return NS_ERROR_NULL_POINTER;
-    
-    RECT rect;
-    GetClientRect(hWnd, &rect);
-    
-    // Make sure the browser is visible and sized
-    nsCOMPtr<nsIWebBrowser> webBrowser;
-    chrome->GetWebBrowser(getter_AddRefs(webBrowser));
-    nsCOMPtr<nsIBaseWindow> webBrowserAsWin = do_QueryInterface(webBrowser);
-    if (webBrowserAsWin)
-    {
-        webBrowserAsWin->SetPositionAndSize(rect.left, 
-                                            rect.top, 
-                                            rect.right - rect.left, 
-                                            rect.bottom - rect.top,
-                                            PR_TRUE);
-        webBrowserAsWin->SetVisibility(PR_TRUE);
-    }
-    
-    return NS_OK;
-}
-
+NS_IMPL_ISUPPORTS2(WindowCreator, nsIWindowCreator, nsIWindowCreator2)
 NS_IMETHODIMP
 WindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
                                   PRUint32 aChromeFlags,
-                                  nsIWebBrowserChrome **aNewWindow)
+                                  nsIWebBrowserChrome **_retval)
 {
-    NS_ENSURE_ARG_POINTER(aNewWindow);
+    PRBool cancel;
+    return CreateChromeWindow2(aParent, aChromeFlags, 0, 0, &cancel, _retval);
+}
 
-    WebBrowserChrome * chrome = new WebBrowserChrome();
-    if (!chrome)
-        return NS_ERROR_FAILURE;
+NS_IMETHODIMP
+WindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
+                                   PRUint32 aChromeFlags,
+                                   PRUint32 aContextFlags,
+                                   nsIURI *aURI,
+                                   PRBool *aCancel,
+                                   nsIWebBrowserChrome **aNewWindow)
+{
+    *aCancel = PR_FALSE;
 
-    // now an extra addref; the window owns itself (to be released by
-    // WebBrowserChromeUI::Destroy)
-    NS_ADDREF(chrome);
+	if (!mAppShell)
+        return NS_ERROR_NOT_INITIALIZED;
     
-    chrome->SetChromeFlags(aChromeFlags);
+    nsCOMPtr<nsIXULWindow> newWindow;
     
-    // Insert the browser
-    nsCOMPtr<nsIWebBrowser> newBrowser;
-    chrome->CreateBrowser(-1, -1, -1, -1, getter_AddRefs(newBrowser));
+#ifndef WINCE
+    //modality is screwy on windows ce.
+    if (aParent) {
+        nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
+        NS_ASSERTION(xulParent, "window created using non-XUL parent. that's unexpected, but may work.");
+        
+        if (xulParent)
+            xulParent->CreateNewWindow(aChromeFlags, mAppShell, getter_AddRefs(newWindow));
 
-    if (!newBrowser)
-    {
-        NS_RELEASE(chrome);
-        return NS_ERROR_FAILURE;
+        // And if it fails, don't try again without a parent. It could fail
+        // intentionally (bug 115969).
+    } 
+    else 
+#endif
+    { 
+        nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
+        if (!appShell)
+            return NS_ERROR_FAILURE;
+        
+        nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
+
+        appShell->CreateTopLevelWindow(xulParent, 
+                                       0, 
+                                       aChromeFlags,
+                                       240, //XXXXXX
+                                       320 - 24 /* 24 is the height of the menubar */,
+                                       mAppShell, 
+                                       getter_AddRefs(newWindow));
     }
-
-    // and an addref on the way out.
-    NS_ADDREF(chrome);
-    *aNewWindow = NS_STATIC_CAST(nsIWebBrowserChrome*, chrome);
-
-    ResizeEmbedding(chrome);
-
-    return NS_OK;
+    
+    // if anybody gave us anything to work with, use it
+    if (newWindow) {
+        newWindow->SetContextFlags(aContextFlags);
+        nsCOMPtr<nsIInterfaceRequestor> thing(do_QueryInterface(newWindow));
+        if (thing)
+            CallGetInterface(thing.get(), aNewWindow);
+    }
+    
+    return *aNewWindow ? NS_OK : NS_ERROR_FAILURE;
 }
