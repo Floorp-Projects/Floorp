@@ -2778,37 +2778,51 @@ nsChildView::Idle()
   
 } // mouseUp
 
-const PRInt32 kNumLines = 4;
+//
+// -scrollWheel:forAxis:
+//
+// Handle an NSScrollWheel event for a single axis only.
+//
+-(void)scrollWheel:(NSEvent*)theEvent forAxis:(enum nsMouseScrollEvent::nsMouseScrollFlags)inAxis
+{
+  float scrollDelta;
+
+  if (inAxis & nsMouseScrollEvent::kIsVertical)
+    scrollDelta = -[theEvent deltaY];
+  else if (inAxis & nsMouseScrollEvent::kIsHorizontal)
+    scrollDelta = -[theEvent deltaX];
+  else
+    // Caller screwed up
+    return;
+
+  if (scrollDelta == 0)
+    // No sense in firing off a Gecko event.  Note that as of 10.4 Tiger,
+    // a single NSScrollWheel event might result in deltaX = deltaY = 0.
+    return;
+
+  nsMouseScrollEvent geckoEvent(PR_TRUE, 0, nsnull);
+  [self convertEvent:theEvent message:NS_MOUSE_SCROLL toGeckoEvent:&geckoEvent];
+  geckoEvent.scrollFlags |= inAxis;
+
+  // Gecko only understands how to scroll by an integer value.  Using floor
+  // and ceil is better than truncating the fraction, especially when
+  // |delta| < 1.
+  if (scrollDelta < 0)
+    geckoEvent.delta = (PRInt32)floorf(scrollDelta);
+  else
+    geckoEvent.delta = (PRInt32)ceilf(scrollDelta);
+
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
+}
 
 -(void)scrollWheel:(NSEvent*)theEvent
 {
-  // XXXdwh. We basically always get 1 or -1 as the delta.  This is treated by 
-  // Gecko as the number of lines to scroll.  We go ahead and use a 
-  // default kNumLines of 4 for now (until I learn how we can get settings from
-  // the OS). --dwh
-  nsMouseScrollEvent geckoEvent(PR_TRUE, 0, nsnull);
-
-  [self convertEvent:theEvent message:NS_MOUSE_SCROLL toGeckoEvent:&geckoEvent];
-  PRInt32 incomingDeltaX = (PRInt32)[theEvent deltaX];
-  PRInt32 incomingDeltaY = (PRInt32)[theEvent deltaY];
-
-  PRInt32 scrollDelta = 0;
-  if (incomingDeltaY != 0)
-  {
-    geckoEvent.scrollFlags |= nsMouseScrollEvent::kIsVertical;
-    scrollDelta = incomingDeltaY;
-  }
-  else if (incomingDeltaX != 0)
-  {
-    geckoEvent.scrollFlags |= nsMouseScrollEvent::kIsHorizontal;
-    scrollDelta = incomingDeltaX;
-  }
-  
-  geckoEvent.delta = -scrollDelta;
-    
-  // send event into Gecko by going directly to the
-  // the widget.
-  mGeckoChild->DispatchWindowEvent(geckoEvent);
+  // It's possible for a single NSScrollWheel event to carry both useful
+  // deltaX and deltaY, for example, when the "wheel" is a trackpad.
+  // NSMouseScrollEvent can only carry one axis at a time, so the system
+  // event will be split into two Gecko events if necessary.
+  [self scrollWheel:theEvent forAxis:nsMouseScrollEvent::kIsVertical];
+  [self scrollWheel:theEvent forAxis:nsMouseScrollEvent::kIsHorizontal];
 }
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
