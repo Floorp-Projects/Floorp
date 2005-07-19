@@ -155,6 +155,38 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
   nsPoint pt = mEvent->refPoint;
 
   nsCOMPtr<nsIWidget> eventWidget = ((nsGUIEvent*)mEvent)->widget;
+  
+  // BUG 296004 (see also BUG 242833)
+  //
+  // For document events we want to return a point relative to the local view manager,
+  // (docWidget) not to the generating widget (eventWidget). However, for global events
+  // we want to leave them relative to the generating widget.
+  //
+  // To determine which we are, we use the fact that currently for the latter case our
+  // docWidget and eventWidget won't be linked together in the widget hierarchy. That
+  // means that the coordinate space transform which follows wouldn't have worked
+  // anyway... actually what we want is for all users of this and refPoint to agree
+  // gracefully on what coordinate system to use, but that's a more involved change.
+  
+  nsCOMPtr<nsIWidget> eventParent = eventWidget;
+  for (;;) {
+    nsCOMPtr<nsIWidget> t = dont_AddRef(eventParent->GetParent());
+    if (!t)
+      break;
+    eventParent = t;
+  }
+
+  nsCOMPtr<nsIWidget> docParent = docWidget;
+  for (;;) {
+    nsCOMPtr<nsIWidget> t = dont_AddRef(docParent->GetParent());
+    if (!t)
+      break;
+    docParent = t;
+  }
+
+  if (docParent != eventParent)
+    return pt;
+  
   while (eventWidget && docWidget != eventWidget) {
     nsWindowType windowType;
     eventWidget->GetWindowType(windowType);
