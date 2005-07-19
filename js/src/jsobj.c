@@ -2275,6 +2275,26 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                                    0, 0, propp);
 }
 
+/*
+ * Backward compatibility requires allowing addProperty hooks to mutate the
+ * nominal initial value of a slot-full property, while GC safety wants that
+ * value to be stored before the call-out through the hook.  Optimize to do
+ * both while saving cycles for classes that stub their addProperty hook.
+ */
+#define ADD_PROPERTY_HELPER(cx,clasp,obj,scope,sprop,vp,cleanup)              \
+    JS_BEGIN_MACRO                                                            \
+        if ((clasp)->addProperty != JS_PropertyStub) {                        \
+            jsval nominal_ = *(vp);                                           \
+            if (!(clasp)->addProperty(cx, obj, SPROP_USERID(sprop), vp)) {    \
+                cleanup;                                                      \
+            }                                                                 \
+            if (*(vp) != nominal_) {                                          \
+                if (SPROP_HAS_VALID_SLOT(sprop, scope))                       \
+                    LOCKED_OBJ_SET_SLOT(obj, (sprop)->slot, *(vp));           \
+            }                                                                 \
+        }                                                                     \
+    JS_END_MACRO
+
 JSBool
 js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
@@ -2365,10 +2385,9 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         LOCKED_OBJ_SET_SLOT(obj, sprop->slot, value);
 
     /* XXXbe called with lock held */
-    if (!clasp->addProperty(cx, obj, SPROP_USERID(sprop), &value)) {
-        (void) js_RemoveScopeProperty(cx, scope, id);
-        goto bad;
-    }
+    ADD_PROPERTY_HELPER(cx, clasp, obj, scope, sprop, &value,
+                        js_RemoveScopeProperty(cx, scope, id);
+                        goto bad);
 
 #if JS_HAS_GETTER_SETTER
 out:
@@ -2948,11 +2967,10 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             LOCKED_OBJ_SET_SLOT(obj, sprop->slot, JSVAL_VOID);
 
         /* XXXbe called with obj locked */
-        if (!clasp->addProperty(cx, obj, SPROP_USERID(sprop), vp)) {
-            (void) js_RemoveScopeProperty(cx, scope, id);
-            JS_UNLOCK_SCOPE(cx, scope);
-            return JS_FALSE;
-        }
+        ADD_PROPERTY_HELPER(cx, clasp, obj, scope, sprop, vp,
+                            js_RemoveScopeProperty(cx, scope, id);
+                            JS_UNLOCK_SCOPE(cx, scope);
+                            return JS_FALSE);
 
         PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, id, sprop);
     }
