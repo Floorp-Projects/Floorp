@@ -186,7 +186,7 @@ nsresult nsMsgComposeService::Init()
   nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv))
   {
-    rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+    rv = observerService->AddObserver(this, "quit-application", PR_TRUE);
     rv = observerService->AddObserver(this, "profile-do-change", PR_TRUE);
   }
 
@@ -335,7 +335,7 @@ void nsMsgComposeService::CloseWindow(nsIDOMWindowInternal *domWindow)
 NS_IMETHODIMP
 nsMsgComposeService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
-  if (!strcmp(aTopic,"profile-do-change") || !strcmp(aTopic,NS_XPCOM_SHUTDOWN_OBSERVER_ID))
+  if (!strcmp(aTopic, "profile-do-change") || !strcmp(aTopic, "quit-application"))
   {
     DeleteCachedWindows();
     return NS_OK;
