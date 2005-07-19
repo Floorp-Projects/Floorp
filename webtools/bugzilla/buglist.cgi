@@ -733,7 +733,15 @@ foreach my $fragment (split(/,/, $order)) {
         # Add order columns to selectnames
         # The fragment has already been validated
         $fragment =~ s/\s+(asc|desc)$//;
-        $fragment =~ tr/a-zA-Z\.0-9\-_//cd;
+        # This fixes an issue where columns being used in the ORDER BY statement
+        # can have the SQL that generates the value changed to become invalid -
+        # mainly affects time tracking.
+        if ($fragment =~ / AS (\w+)/) {
+            $fragment = $columns->{$1}->{'name'};
+        }
+        else {
+            $fragment =~ tr/a-zA-Z\.0-9\-_//cd;
+        }
         push @selectnames, $fragment;
     }
 }

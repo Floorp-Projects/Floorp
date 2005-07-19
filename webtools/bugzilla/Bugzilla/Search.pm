@@ -148,6 +148,11 @@ sub init {
         push @supptables, "INNER JOIN components AS map_components " .
                           "ON bugs.component_id = map_components.id";
     }
+    
+    if (grep($_ =~/AS (actual_time|percentage_complete)$/, @$fieldsref)) {
+        push(@supptables, "INNER JOIN longdescs AS ldtime " .
+                          "ON ldtime.bug_id = bugs.bug_id");
+    }
 
     my $minvotes;
     if (defined $params->param('votes')) {
@@ -216,11 +221,6 @@ sub init {
             $t = "anywords";
         }
         push(@specialchart, ["keywords", $t, $params->param('keywords')]);
-    }
-
-    if (lsearch($fieldsref, "(SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) AS actual_time") != -1) {
-        push(@supptables, "INNER JOIN longdescs AS ldtime " .
-                          "ON ldtime.bug_id = bugs.bug_id");
     }
 
     foreach my $id ("1", "2") {
