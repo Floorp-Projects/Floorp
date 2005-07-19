@@ -290,19 +290,15 @@ nsFrameManager::Destroy()
 
   mIsDestroyingFrames = PR_TRUE;  // This flag prevents GetPrimaryFrameFor from returning pointers to destroyed frames
 
+  // Unregister all placeholders before tearing down the frame tree
+  nsFrameManager::ClearPlaceholderFrameMap();
+
   if (mRootFrame) {
     mRootFrame->Destroy(presContext);
     mRootFrame = nsnull;
   }
   
-  if (mPrimaryFrameMap.ops) {
-    PL_DHashTableFinish(&mPrimaryFrameMap);
-    mPrimaryFrameMap.ops = nsnull;
-  }
-  if (mPlaceholderMap.ops) {
-    PL_DHashTableFinish(&mPlaceholderMap);
-    mPlaceholderMap.ops = nsnull;
-  }
+  nsFrameManager::ClearPrimaryFrameMap();
   delete mUndisplayedMap;
 
   mPresShell = nsnull;
@@ -518,14 +514,6 @@ nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame
   NS_PRECONDITION(nsLayoutAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
 
-  /*
-   * nsCSSFrameConstructor::ReconstructDocElementHierarchy calls
-   * ClearPlaceholderFrameMap and _then_ removes the fixed-positioned
-   * frames one by one.  As these are removed they call
-   * UnregisterPlaceholderFrame on their placeholders, but this is all
-   * happening when mPlaceholderMap is already finished, so there is
-   * nothing to do here.  See bug 144479.
-   */
   if (mPlaceholderMap.ops) {
     PL_DHashTableOperate(&mPlaceholderMap,
                          aPlaceholderFrame->GetOutOfFlowFrame(),
@@ -533,10 +521,20 @@ nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame
   }
 }
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+UnregisterPlaceholders(PLDHashTable* table, PLDHashEntryHdr* hdr,
+                       PRUint32 number, void* arg)
+{
+  PlaceholderMapEntry* entry = NS_STATIC_CAST(PlaceholderMapEntry*, hdr);
+  entry->placeholderFrame->SetOutOfFlowFrame(nsnull);
+  return PL_DHASH_NEXT;
+}
+
 void
 nsFrameManager::ClearPlaceholderFrameMap()
 {
   if (mPlaceholderMap.ops) {
+    PL_DHashTableEnumerate(&mPlaceholderMap, UnregisterPlaceholders, nsnull);
     PL_DHashTableFinish(&mPlaceholderMap);
     mPlaceholderMap.ops = nsnull;
   }
