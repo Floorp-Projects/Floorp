@@ -220,7 +220,8 @@ calAlarmService.prototype = {
         dump("Starting calendar alarm service\n");
         this.mStarted = true;
 
-        var calendarManager = Components.classes["@mozilla.org/calendar/manager;1"].getService(Components.interfaces.calICalendarManager);
+        this.calendarManager = Components.classes["@mozilla.org/calendar/manager;1"].getService(Components.interfaces.calICalendarManager);
+        var calendarManager = this.calendarManager;
         calendarManager.addObserver(this.calendarManagerObserver);
 
         var calendars = calendarManager.getCalendars({});
@@ -241,7 +242,8 @@ calAlarmService.prototype = {
         this.mUpdateTimer = newTimerWithCallback(timerCallback, kHoursBetweenUpdates * 3600000, true);
 
         /* tell people that we're alive so they can start monitoring alarms */
-        var notifier = Components.classes["@mozilla.org/embedcomp/appstartup-notifier;1"].getService(Components.interfaces.nsIObserver);
+        this.notifier = Components.classes["@mozilla.org/embedcomp/appstartup-notifier;1"].getService(Components.interfaces.nsIObserver);
+        var notifier = this.notifier;
         notifier.observe(null, "alarm-service-startup", null);
 
 
@@ -253,7 +255,7 @@ calAlarmService.prototype = {
 
     shutdown: function() {
         /* tell people that we're no longer running */
-        var notifier = Components.classes["@mozilla.org/embedcomp/appstartup-notifier;1"].getService(Components.interfaces.nsIObserver);
+        var notifier = this.notifier;
         notifier.observe(null, "alarm-service-shutdown", null);
 
         if (this.mUpdateTimer) {
@@ -261,7 +263,7 @@ calAlarmService.prototype = {
             this.mUpdateTimer = null;
         }
         
-        var calendarManager = Components.classes["@mozilla.org/calendar/manager;1"].getService(Components.interfaces.calICalendarManager);
+        var calendarManager = this.calendarManager;
         calendarManager.removeObserver(this.calendarManagerObserver);
 
         for each(var timer in this.mEvents) {
@@ -274,6 +276,8 @@ calAlarmService.prototype = {
             this.unobserveCalendar(calendar);
         }
 
+        this.calendarManager = null;
+        this.notifier = null;
         this.mRangeStart = null;
         this.mRangeEnd = null;
 
@@ -351,7 +355,7 @@ calAlarmService.prototype = {
         until.normalize();
         this.mRangeEnd = until.getInTimezone("UTC");
 
-        var calendarManager = Components.classes["@mozilla.org/calendar/manager;1"].getService(Components.interfaces.calICalendarManager);
+        var calendarManager = this.calendarManager;
         var calendars = calendarManager.getCalendars({});
         for each(var calendar in calendars) {
             calendar.getItems(calendar.ITEM_FILTER_TYPE_EVENT,
