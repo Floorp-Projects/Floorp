@@ -1971,26 +1971,10 @@ CSSParserImpl::ParseIDSelector(PRInt32&       aDataMask,
                                nsCSSSelector& aSelector,
                                nsresult&      aErrorCode)
 {
-  if (!mToken.mIdent.IsEmpty()) { // verify is legal ID
-    PRUnichar first = mToken.mIdent.First();
-    PRUnichar second = 0;
-    if (mToken.mIdent.Length() >= 2) {
-      second = mToken.mIdent.CharAt(1);
-    }
-    if (!nsCSSScanner::StartsIdent(first, second,
-                                   nsCSSScanner::GetLexTable())) {
-      REPORT_UNEXPECTED_TOKEN(PEIDSelNotIdent);
-      UngetToken();
-      return eSelectorParsingStatus_Error;
-    }
-    aDataMask |= SEL_MASK_ID;
-    aSelector.AddID(mToken.mIdent);
-  }
-  else {
-    REPORT_UNEXPECTED_TOKEN(PEIDSelEmpty);
-    UngetToken();
-    return eSelectorParsingStatus_Error;
-  }
+  NS_ASSERTION(!mToken.mIdent.IsEmpty(),
+               "Empty mIdent in eCSSToken_ID token?");
+  aDataMask |= SEL_MASK_ID;
+  aSelector.AddID(mToken.mIdent);
   return eSelectorParsingStatus_Continue;
 }
 
@@ -2749,6 +2733,7 @@ PRBool CSSParserImpl::ParseColor(nsresult& aErrorCode, nsCSSValue& aValue)
   nscolor rgba;
   switch (tk->mType) {
     case eCSSToken_ID:
+    case eCSSToken_Ref:
       // #xxyyzz
       if (NS_HexToRGB(tk->mIdent, &rgba)) {
         aValue.SetColorValue(rgba);
@@ -3682,6 +3667,7 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
   if ((aVariantMask & VARIANT_COLOR) != 0) {
     if ((mNavQuirkMode && !IsParsingCompoundProperty()) || // NONSTANDARD: Nav interprets 'xxyyzz' values even without '#' prefix
     		(eCSSToken_ID == tk->mType) || 
+    		(eCSSToken_Ref == tk->mType) || 
         (eCSSToken_Ident == tk->mType) ||
         ((eCSSToken_Function == tk->mType) && 
          (tk->mIdent.LowerCaseEqualsLiteral("rgb") ||
