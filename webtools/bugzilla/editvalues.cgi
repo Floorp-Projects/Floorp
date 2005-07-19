@@ -355,8 +355,8 @@ if ($action eq 'update') {
         }
         trick_taint($value);
 
-        $dbh->do("UPDATE bugs SET $field = ?, delta_ts = NOW()
-                   WHERE $field = ?", undef, $value, $valueold);
+        $dbh->do("UPDATE bugs SET $field = ? WHERE $field = ?",
+                 undef, $value, $valueold);
 
         $dbh->do("UPDATE $field SET value = ? WHERE value = ?",
                  undef, $value, $valueold);
