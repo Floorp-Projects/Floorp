@@ -396,7 +396,6 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart, PRUint32 aCount,
 nsresult
 nsGenericDOMDataNode::AppendData(const nsAString& aData)
 {
-#if 1
   PRInt32 length = 0;
 
   // See bugzilla bug 77585.
@@ -426,9 +425,6 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
   }
 
   return NS_OK;
-#else
-  return ReplaceData(mText.GetLength(), 0, aData);
-#endif
 }
 
 nsresult
@@ -453,6 +449,15 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
   PRUint32 textLength = mText.GetLength();
   if (aOffset > textLength) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  // Fast path (hit by editor when typing at the end of the paragraph, for
+  // example): aOffset == textLength (so just doing an append; note that in
+  // this case any value of aCount would just get converted to 0 by the very
+  // next if block).  Call AppendData so that we pass PR_TRUE for our aAppend
+  // arg to CharacterDataChanged.
+  if (aOffset == textLength) {
+    return AppendData(aData);
   }
 
   // Allocate new buffer
