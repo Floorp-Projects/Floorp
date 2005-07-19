@@ -44,7 +44,7 @@
   <Description about="urn:mozilla:install-manifest"
                em:id="@MOZ_LANGPACK_EID@"
                em:name="@MOZ_LANG_TITLE@ Language Pack"
-               em:version="@APP_VERSION@"
+               em:version="@MOZ_APP_VERSION@"
                em:creator="@MOZ_LANGPACK_CREATOR@">
 #ifdef MOZ_LANGPACK_CONTRIBUTORS
     @MOZ_LANGPACK_CONTRIBUTORS@

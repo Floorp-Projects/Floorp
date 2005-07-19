@@ -53,8 +53,9 @@ APP_VERSION = $(shell cat $(srcdir)/../config/version.txt)
 
 DEFINES += \
 	-DAB_CD=$(AB_CD) \
-	-DAPP_VERSION=$(APP_VERSION) \
+	-DMOZ_APP_VERSION=$(APP_VERSION) \
 	-DLOCALE_SRCDIR=$(LOCALE_SRCDIR) \
+	-DPKG_BASENAME=$(PKG_BASENAME) \
 	$(NULL)
 
 ifdef MOZ_USE_OFFICIAL_BRANDING
@@ -108,8 +109,10 @@ repackage-win32-installer: $(WIN32_INSTALLER_IN)
 	  -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/install.it \
 	  -I$(DIST)/l10n-temp-stage/installer.inc \
 	  $(topsrcdir)/mail/installer/windows/install.it > install.it
+	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
+	  $(topsrcdir)/mail/installer/windows/installer.cfg > installer.cfg
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/makeinstallini.pl \
-	  $(topsrcdir)/mail/installer/windows/installer.cfg install.it
+	  installer.cfg install.it
 	$(SYSINSTALL) install.ini $(DIST)/l10n-stage
 	cd $(DIST)/l10n-stage && \
 	  $(CYGWIN_WRAPPER) 7z a -t7z ../l10n-temp-stage/app.7z *.* -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
