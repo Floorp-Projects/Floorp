@@ -143,18 +143,26 @@ function MiniNavStartup()
 {
   try {
     gBrowserStatusHandler = new nsBrowserStatusHandler();
-    var webNavigation = getWebNavigation();
-    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
-                                             .createInstance(Components.interfaces.nsISHistory);
 
     var interfaceRequestor = getBrowser().docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
     webProgress.addProgressListener(gBrowserStatusHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+
+    var webNavigation = getWebNavigation();
+    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
+                                             .createInstance(Components.interfaces.nsISHistory);
+
   } catch (e) {}
+
+
+  try {
+    getBrowser().markupDocumentViewer.textZoom = 1;
+  }
+  catch (e) {}
 
   gURLBar = document.getElementById("urlbar");
 
-  loadURI("http://www.meer.net/~dougt/fonttest.html");
+  loadURI("http://www.meer.net/~dougt/minimo.html");
 }
 
 function MiniNavShutdown()
@@ -173,43 +181,12 @@ function getWebNavigation()
   return getBrowser().webNavigation;
 }
 
-function InitContextMenu(xulMenu)
-{
-  // Back determined by canGoBack broadcaster.
-  InitMenuItemAttrFromNode( "context-back", "disabled", "canGoBack" );
-
-  // Forward determined by canGoForward broadcaster.
-  InitMenuItemAttrFromNode( "context-forward", "disabled", "canGoForward" );
-}
-
-function InitMenuItemAttrFromNode( item_id, attr, other_id )
-{
-  var elem = document.getElementById( other_id );
-  if ( elem && elem.getAttribute( attr ) == "true" ) {
-    SetMenuItemAttr( item_id, attr, "true" );
-  } else {
-    SetMenuItemAttr( item_id, attr, null );
-  }
-}
-
-function SetMenuItemAttr( id, attr, val )
-{
-  var elem = document.getElementById( id );
-  if ( elem ) {
-    if ( val == null ) {
-      // null indicates attr should be removed.
-      elem.removeAttribute( attr );
-    } else {
-      // Set attr=val.
-      elem.setAttribute( attr, val );
-    }
-  }
-}
-
 function loadURI(uri)
 {
   getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
 }
+
+
 
 function BrowserLoadURL()
 {
