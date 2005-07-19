@@ -44,7 +44,7 @@
 
 class nsIContent;
 class nsIScrollableView;
-struct nsEvent;
+class nsEvent;
 
 class nsDOMMouseEvent : public nsIDOMMouseEvent,
                         public nsDOMUIEvent
