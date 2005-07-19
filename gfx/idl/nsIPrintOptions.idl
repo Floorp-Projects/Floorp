@@ -59,7 +59,7 @@ interface nsISimpleEnumerator;
  * John Keiser <jkeiser@netscape.com> and Roland Mainz
  * <roland.mainz@informatik.med.uni-giessen.de> for futher details.
  */
-[scriptable, uuid(CAE87E20-479E-11d4-A856-00105A183419)]
+[scriptable, uuid(d9948a4d-f49c-4456-938a-acda2c8d7741)]
 
 interface nsIPrintOptions : nsISupports
 {
@@ -84,16 +84,18 @@ interface nsIPrintOptions : nsISupports
   /**
    * Get a prefixed integer pref 
    */
-   PRInt32 getPrinterPrefInt(in nsIPrintSettings aPrintSettings, in wstring aPrefName);
+  PRInt32 getPrinterPrefInt(in nsIPrintSettings aPrintSettings, in wstring
+                            aPrefName);
 
   /**
    * display Printer Job Properties dialog
    */
-   void displayJobProperties (in wstring aPrinter, in nsIPrintSettings aPrintSettings, out boolean aDisplayed);
+  void displayJobProperties (in wstring aPrinter, in nsIPrintSettings
+                             aPrintSettings, out boolean aDisplayed);
 
+
+  void setFontNamePointSize(in AString aName, in PRInt32 aPointSize);
   // no script methods
-  [noscript] void SetFontNamePointSize(in nsNativeStringRef aName, in PRInt32 aPointSize);
-
   [noscript] void SetDefaultFont(in nsNativeFontRef aFont);
   /* Purposely made this an "in" arg */
   [noscript] void GetDefaultFont(in nsNativeFontRef aFont);
@@ -107,6 +109,7 @@ interface nsIPrintOptions : nsISupports
 };
 
 [scriptable, uuid(a6cf9128-15b3-11d2-932e-00805f8add32)]
+
 interface nsIPrinterEnumerator : nsISupports
 {
   /**
