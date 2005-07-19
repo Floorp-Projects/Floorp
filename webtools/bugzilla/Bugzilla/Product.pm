@@ -205,6 +205,33 @@ sub get_products_by_classification ($) {
     return $products;
 }
 
+sub get_all_products () {
+    my $dbh = Bugzilla->dbh;
+
+    my $ids = $dbh->selectcol_arrayref(q{
+        SELECT id FROM products ORDER BY name});
+
+    my @products;
+    foreach my $id (@$ids) {
+        push @products, new Bugzilla::Product($id);
+    }
+    return @products;
+}
+
+sub check_product ($) {
+    my ($product_name) = @_;
+
+    unless ($product_name) {
+        ThrowUserError('product_not_specified');
+    }
+    my $product = new Bugzilla::Product({name => $product_name});
+    unless ($product) {
+        ThrowUserError('product_doesnt_exist',
+                       {'product' => $product_name});
+    }
+    return $product;
+}
+
 1;
 
 __END__
@@ -326,10 +353,27 @@ Product.pm represents a product object.
 
  Description: Returns all products for a specific classification id.
 
- Params:      none.
+ Params:      $class_id - Integer with classification id.
 
  Returns:     A hash with product id as key and a Bugzilla::Product
               object as value.
+
+=item C<get_all_products()>
+
+ Description: Returns all products from the database.
+
+ Params:      none.
+
+ Returns:     Bugzilla::Product object list.
+
+=item C<check_product($product_name)>
+
+ Description: Checks if the product name was passed in and if is a valid
+              product.
+
+ Params:      $product_name - String with a product name.
+
+ Returns:     Bugzilla::Product object.
 
 =back
 

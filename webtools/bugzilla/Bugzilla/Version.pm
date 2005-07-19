@@ -73,11 +73,24 @@ sub _init {
     return $self;
 }
 
+sub bug_count {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+
+    if (!defined $self->{'bug_count'}) {
+        $self->{'bug_count'} = $dbh->selectrow_array(qq{
+            SELECT COUNT(*) FROM bugs
+            WHERE product_id = ? AND version = ?}, undef,
+            ($self->product_id, $self->name)) || 0;
+    }
+    return $self->{'bug_count'};
+}
+
 ###############################
 #####     Accessors        ####
 ###############################
 
-sub value      { return $_[0]->{'value'};      }
+sub name       { return $_[0]->{'value'};      }
 sub product_id { return $_[0]->{'product_id'}; }
 
 ###############################
@@ -103,12 +116,24 @@ sub get_versions_by_product ($) {
         SELECT value FROM versions
         WHERE product_id = ?}, undef, $product_id);
 
-    my $versions;
+    my @versions;
     foreach my $value (@$values) {
-        $versions->{$value} = new Bugzilla::Version($product_id,
-                                                    $value);
+        push @versions, new Bugzilla::Version($product_id, $value);
     }
-    return $versions;
+    return @versions;
+}
+
+sub check_version ($$) {
+    my ($product, $version_name) = @_;
+
+    $version_name || ThrowUserError('version_not_specified');
+    my $version = new Bugzilla::Version($product->id, $version_name);
+    unless ($version) {
+        ThrowUserError('version_not_valid',
+                       {'product' => $product->name,
+                        'version' => $version_name});
+    }
+    return $version;
 }
 
 1;
@@ -131,6 +156,9 @@ Bugzilla::Version - Bugzilla product version class.
     my $hash_ref = Bugzilla::Version::get_versions_by_product(1);
     my $version = $hash_ref->{'version_value'};
 
+    my $version = Bugzilla::Version::check_version($product_obj,
+                                                   'acme_version');
+
 =head1 DESCRIPTION
 
 Version.pm represents a Product Version object.
@@ -144,10 +172,18 @@ Version.pm represents a Product Version object.
  Description: The constructor is used to load an existing version
               by passing a product id and a version value.
 
- Params:      $product_id - Integer with a Bugzilla product id.
+ Params:      $product_id - Integer with a product id.
               $value - String with a version value.
 
  Returns:     A Bugzilla::Version object.
+
+=item C<bug_count()>
+
+ Description: Returns the total of bugs that belong to the version.
+
+ Params:      none.
+
+ Returns:     Integer with the number of bugs.
 
 =back
 
@@ -157,13 +193,21 @@ Version.pm represents a Product Version object.
 
 =item C<get_versions_by_product($product_id)>
 
- Description: Returns all Bugzilla product versions that belong
+ Description: Returns all product versions that belong
               to the supplied product.
 
- Params:      $product_id - Integer with a Bugzilla product id.
+ Params:      $product_id - Integer with a product id.
 
- Returns:     A hash with version value as key and a Bugzilla::Version
-              objects as value.
+ Returns:     Bugzilla::Version object list.
+
+=item C<check_version($product, $version_name)>
+
+ Description: Checks if the version name exists for the product name.
+
+ Params:      $product - A Bugzilla::Product object.
+              $version_name - String with a version name.
+
+ Returns:     Bugzilla::Version object.
 
 =back
 
