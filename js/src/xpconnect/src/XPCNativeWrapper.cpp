@@ -556,10 +556,27 @@ XPC_NW_Enumerate(JSContext *cx, JSObject *obj)
   return JS_TRUE;
 }
 
+static
+JSBool MaybePreserveWrapper(JSContext* cx, XPCWrappedNative *wn, uintN flags)
+{
+  if ((flags & JSRESOLVE_ASSIGNING) &&
+      (::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)) {
+    nsCOMPtr<nsIXPCScriptNotify> scriptNotify = 
+      do_QueryInterface(NS_STATIC_CAST(nsISupports*,
+                                       JS_GetContextPrivate(cx)));
+    if (scriptNotify) {
+      return NS_SUCCEEDED(scriptNotify->PreserveWrapper(wn));
+    }
+  }
+  return JS_TRUE;
+}
+
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                   JSObject **objp)
 {
+  // No need to preserve on sets of wrappedJSObject or toString, since
+  // callers couldn't get at those values anyway.
   if (id == GetStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT) ||
       id == GetStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
     return JS_TRUE;
@@ -619,6 +636,9 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     // An index is being resolved. Define the property and deal with
     // the value in the get/set property hooks.
 
+    // Note that we don't have to worry about preserving here, since
+    // numeric ids can't be assigned to.
+
     if (!::JS_DefineElement(cx, obj, JSVAL_TO_INT(id), JSVAL_VOID, nsnull,
                             nsnull, 0)) {
       return JS_FALSE;
@@ -633,7 +653,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     // A non-int and non-string id is being resolved. Won't be found
     // here, return early.
 
-    return JS_TRUE;
+    return MaybePreserveWrapper(cx, wrappedNative, flags);
   }
 
   JSObject *nativeObj = wrappedNative->GetFlatJSObject();
@@ -654,7 +674,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   if (!iface) {
     // No interface, nothing to resolve.
 
-    return JS_TRUE;
+    return MaybePreserveWrapper(cx, wrappedNative, flags);
   }
 
   // did we find a method/attribute by that name?
@@ -663,7 +683,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   if (!member) {
     // No member, nothing to resolve.
 
-    return JS_TRUE;
+    return MaybePreserveWrapper(cx, wrappedNative, flags);
   }
 
   // Get (and perhaps lazily create) the member's value (commonly a

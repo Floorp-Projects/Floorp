@@ -2037,6 +2037,14 @@ nsJSContext::ScriptExecuted()
   return NS_OK;
 }
 
+nsresult NS_DOMClassInfo_PreserveWrapper(nsIXPConnectWrappedNative *aWrapper);
+
+NS_IMETHODIMP
+nsJSContext::PreserveWrapper(nsIXPConnectWrappedNative *aWrapper)
+{
+  return NS_DOMClassInfo_PreserveWrapper(aWrapper);
+}
+
 NS_IMETHODIMP
 nsJSContext::Notify(nsITimer *timer)
 {

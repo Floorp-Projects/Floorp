@@ -136,10 +136,11 @@ public:
   static JSClass sDOMJSClass;
 
   /**
-   * Note that the XPConnect wrapper for |aDOMNode| should be preserved.
+   * Note that the XPConnect wrapper should be preserved.  This will only
+   * preserve aWrapper if its native QIs to nsIDOMNode; otherwise it'll just
+   * return NS_OK.
    */
-  static nsresult PreserveWrapper(nsIDOMNode *aDOMNode,
-                                  nsIXPConnectWrappedNative *aWrapper);
+  static nsresult PreserveWrapper(nsIXPConnectWrappedNative *aWrapper);
 
   /**
    * Undoes the effects of any prior |PreserveWrapper| calls on
