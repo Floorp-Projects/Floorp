@@ -75,6 +75,10 @@ enum nsCSSTokenType {
 
   // A css1 id (e.g. #foo3)
   eCSSToken_ID,             // mIdent
+  // Just like eCSSToken_ID, except the part following the '#' is not
+  // a valid CSS identifier (eg. starts with a digit, is the empty
+  // string, etc).
+  eCSSToken_Ref,            // mIdent
 
   eCSSToken_Function,       // mIdent
 
@@ -199,7 +203,7 @@ protected:
   PRBool ParseAtKeyword(nsresult& aErrorCode, PRInt32 aChar,
                         nsCSSToken& aResult);
   PRBool ParseNumber(nsresult& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
-  PRBool ParseID(nsresult& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
+  PRBool ParseRef(nsresult& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
   PRBool ParseString(nsresult& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
 #if 0
   PRBool ParseEOLComment(nsresult& aErrorCode, nsCSSToken& aResult);

@@ -157,6 +157,7 @@ nsCSSToken::AppendToString(nsString& aBuffer)
       aBuffer.Append(mSymbol);
       break;
     case eCSSToken_ID:
+    case eCSSToken_Ref:
       aBuffer.Append(PRUnichar('#'));
       aBuffer.Append(mIdent);
       break;
@@ -625,7 +626,7 @@ PRBool nsCSSScanner::Next(nsresult& aErrorCode, nsCSSToken& aToken)
 
   // ID
   if (ch == '#') {
-    return ParseID(aErrorCode, ch, aToken);
+    return ParseRef(aErrorCode, ch, aToken);
   }
 
   // STRING
@@ -915,13 +916,28 @@ PRBool nsCSSScanner::GatherIdent(nsresult& aErrorCode, PRInt32 aChar,
   return PR_TRUE;
 }
 
-PRBool nsCSSScanner::ParseID(nsresult& aErrorCode,
-                             PRInt32 aChar,
-                             nsCSSToken& aToken)
+PRBool nsCSSScanner::ParseRef(nsresult& aErrorCode,
+                              PRInt32 aChar,
+                              nsCSSToken& aToken)
 {
   aToken.mIdent.SetLength(0);
-  aToken.mType = eCSSToken_ID;
-  return GatherIdent(aErrorCode, 0, aToken.mIdent);
+  aToken.mType = eCSSToken_Ref;
+  PRUnichar ch = Read(aErrorCode);
+  if (ch < 0) {
+    return PR_FALSE;
+  }
+  if (ch > 255 || (gLexTable[ch] & IS_IDENT) || ch == CSS_ESCAPE) {
+    // First char after the '#' is a valid ident char (or an escape),
+    // so it makes sense to keep going
+    if (StartsIdent(ch, Peek(aErrorCode), gLexTable)) {
+      aToken.mType = eCSSToken_ID;
+    }
+    return GatherIdent(aErrorCode, ch, aToken.mIdent);
+  }
+
+  // No ident chars after the '#'.  Just unread |ch| and get out of here.
+  Unread();
+  return PR_TRUE;
 }
 
 PRBool nsCSSScanner::ParseIdent(nsresult& aErrorCode,
