@@ -2162,7 +2162,9 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             nsPoint rootOffset(0, 0);
             for (nsView *v = baseView; v != mRootView; v = v->GetParent())
               v->ConvertToParentCoords(&rootOffset.x, &rootOffset.y);
-
+            // aEvent->point is relative to the widget, i.e. the view top-left,
+            // so we need to add the offset to the view origin
+            rootOffset += baseView->GetDimensions().TopLeft();
             mMouseLocation.MoveTo(NSTwipsToIntPixels(rootOffset.x, t2p) +
                                     aEvent->point.x,
                                   NSTwipsToIntPixels(rootOffset.y, t2p) +
