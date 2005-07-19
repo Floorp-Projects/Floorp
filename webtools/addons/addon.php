@@ -1,5 +1,24 @@
 <?php
-$foo = new AddOn();
-print_r($foo->getAddOn(10));
-$foo->finish();
+/**
+ * Addon summary page.  Displays a top-down view of all Addon properties.
+ * 
+ * @package amo
+ * @subpackage docs
+ */
+
+// Arrays to store clean inputs.
+$clean = array();  // General array for verified inputs.
+$sql = array();  // Trusted for SQL.
+
+// Get our addon ID.
+$clean['ID'] = intval($_GET['id']);
+$sql['ID'] =& $clean['ID'];
+
+$addon = new AddOn($sql['ID']);
+
+// Assign template variables.
+$tpl->assign(
+    array(  'addon'             => $addon,
+            'content'           => 'addon.tpl')
+);
 ?>

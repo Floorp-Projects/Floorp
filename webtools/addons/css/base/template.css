@@ -150,10 +150,11 @@ p.security-update {
 .tabs a.active-tab {
     border-bottom: 1px solid #fff;
     background-color: #fff;
-    font-weight:bold;
+    color: #000;
 }
 .tabs a {
     float: left;
+    font-weight:bold;
     display: inline;
     border: 1px solid #000;
     background-color: #69c;

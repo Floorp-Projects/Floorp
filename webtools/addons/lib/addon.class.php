@@ -6,6 +6,7 @@
  */
 class AddOn extends AMO_Object
 {
+    // AddOn metadata.
     var $ID;
     var $GUID;
     var $Name;
@@ -21,10 +22,17 @@ class AddOn extends AMO_Object
     var $db;
     var $tpl;
 
+    // AddOn author metadata.
+    var $UserID;
+    var $UserName;
+    var $UserEmail;
+    var $UserWebsite;
+    var $UserEmailHide;
+
     /**
      * Class constructor.
      */
-     function AddOn() 
+     function AddOn($ID=null) 
      {
         // Our DB and Smarty objects are global to save cycles.
         global $db, $tpl;
@@ -32,11 +40,35 @@ class AddOn extends AMO_Object
         // Pass by reference in order to save memory.
         $this->db =& $db;
         $this->tpl =& $tpl;
+
+        // If $ID is set, attempt to retrieve data.
+        if (!empty($ID)) {
+            $this->getAddOn($ID);
+        }
      }
 
      function getAddOn($ID)
      {
-        $this->db->query("SELECT * FROM main WHERE ID = '{$ID}'", SQL_ALL, SQL_ASSOC);
-        return $this->db->record;
+        $this->db->query("
+            SELECT 
+                main.*,
+                userprofiles.UserID,
+                userprofiles.UserName,
+                userprofiles.UserEmail,
+                userprofiles.UserWebsite,
+                userprofiles.UserEmailHide
+            FROM 
+                main 
+            INNER JOIN authorxref ON authorxref.ID = main.ID
+            INNER JOIN userprofiles ON userprofiles.UserID = authorxref.UserID
+            WHERE 
+                main.ID = '{$ID}'
+        ", SQL_INIT, SQL_ASSOC);
+
+        if (!empty($this->db->record)) {
+            foreach ($this->db->record as $key=>$val) {
+                $this->$key = $val;
+            }
+        }
      }
 }
