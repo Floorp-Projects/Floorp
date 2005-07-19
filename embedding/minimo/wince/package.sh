@@ -20,7 +20,6 @@ cp -a bin/nspr4.dll                                      wince
 cp -a bin/plc4.dll                                       wince
 cp -a bin/plds4.dll                                      wince
 cp -a bin/xpcom.dll                                      wince
-cp -a bin/xpcom_compat.dll                               wince
 cp -a bin/xpcom_core.dll                                 wince
 
 cp -a bin/nss3.dll                                       wince
@@ -32,26 +31,22 @@ cp -a bin/ssl3.dll                                       wince
 
 mkdir -p wince/chrome
 cp -a bin/chrome/classic.jar                             wince/chrome
-cp -a bin/chrome/comm.jar                                wince/chrome
 cp -a bin/chrome/en-US.jar                               wince/chrome
-cp -a bin/chrome/en-win.jar                              wince/chrome
 cp -a bin/chrome/installed-chrome.txt                    wince/chrome
 cp -a bin/chrome/minimo.jar                              wince/chrome
-cp -a bin/chrome/modern.jar                              wince/chrome
 cp -a bin/chrome/toolkit.jar                             wince/chrome
-cp -a bin/chrome/US.jar                                  wince/chrome
 
 cp -a bin/chrome/pippki.jar                              wince/chrome
 cp -a bin/chrome/pipnss.jar                              wince/chrome
 
 mkdir -p wince/components
-cp -a bin/components/nsDictionary.js                     wince/components
+
 cp -a bin/components/nsHelperAppDlg.js                   wince/components
-cp -a bin/components/nsInterfaceInfoToIDL.js             wince/components
 cp -a bin/components/nsProgressDialog.js                 wince/components
-cp -a bin/components/nsProxyAutoConfig.js                wince/components
+
+cp -a bin/components/nsDictionary.js                     wince/components
+cp -a bin/components/nsInterfaceInfoToIDL.js             wince/components
 cp -a bin/components/nsXmlRpcClient.js                   wince/components
-cp -a bin/components/xulappinfo.js                       wince/components
 
 cp -a bin/components/snav.dll                            wince/components
 
@@ -73,6 +68,26 @@ mkdir -p wince/plugins
 echo Linking XPT files.
 
 host/bin/host_xpt_link wince/components/all.xpt                        bin/components/*.xpt
+
+echo Chewing on chrome
+
+cd wince/chrome
+
+unzip classic.jar
+rm -rf classic.jar
+rm -rf skin/classic/communicator
+rm -rf skin/classic/editor
+rm -rf skin/classic/messenger
+rm -rf skin/classic/navigator
+zip -r classic.jar skin
+rm -rf skin
+
+unzip en-US.jar
+rm -rf en-US.jar
+rm -rf locale/en-US/communicator
+rm -rf locale/en-US/navigator
+zip -r en-US.jar locale
+rm -rf locale
 
 echo Copying over customized files
 

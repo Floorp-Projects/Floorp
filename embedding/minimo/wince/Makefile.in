@@ -41,6 +41,7 @@ PROGRAM		= minimo$(BIN_SUFFIX)
 MODULE		= minimo
 
 REQUIRES	= xpcom \
+		  appshell \
 		  string \
 		  embed_base \
 		  webbrwsr \
@@ -65,9 +66,11 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= \
 		winEmbed.cpp \
-		WebBrowserChrome.cpp \
 		WindowCreator.cpp \
-		$(NULL)
+		SplashScreen.cpp \
+	    $(NULL)
+
+RCINCLUDE = SplashScreen.rc
 
 EXTRA_DSO_LIBS	= embed_base_s profdirserviceprovider_s
 

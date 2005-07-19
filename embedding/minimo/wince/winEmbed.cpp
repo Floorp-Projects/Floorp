@@ -1,32 +1,36 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: Mozilla-sample-code 1.0
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2002 Netscape Communications Corporation and
- * other contributors
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this Mozilla sample software and associated documentation files
- * (the "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to permit
- * persons to whom the Software is furnished to do so, subject to the
- * following conditions:
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * The Original Code is Minimo.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * The Initial Developer of the Original Code is
+ * Doug Turner <dougt@meer.net>.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Doug Turner <dougt@netscape.com>
- *   Adam Lock <adamlock@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -39,17 +43,99 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 
 // Global variables
-static PRBool    gRunCondition = PR_TRUE;
-static UINT      gBrowserCount = 0;
-static UINT_PTR  gEventTimer = 0;
-
-#define PLEVENT_TIMEOUT 500
+const static char* start_url = "chrome://minimo/content/minimo.xul";
+//const static char* start_url = "http://www.meer.net/~dougt/test.html";
+//const static char* start_url = "resource://gre/res/start.html";
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
+class ApplicationObserver: public nsIObserver 
+{
+public:  
+  ApplicationObserver(nsIAppShell* aAppShell);
+  ~ApplicationObserver();  
+  
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  nsCOMPtr<nsIAppShell> mAppShell;
+  int mWindowCount;
+};
+
+
+ApplicationObserver::ApplicationObserver(nsIAppShell* aAppShell)
+{
+    mAppShell = aAppShell;
+    mWindowCount = 0;
+    
+    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+
+
+    os->AddObserver(this, "nsIEventQueueActivated", PR_FALSE);
+    os->AddObserver(this, "nsIEventQueueDestroyed", PR_FALSE);
+
+    os->AddObserver(this, "xul-window-registered", PR_FALSE);
+    os->AddObserver(this, "xul-window-destroyed", PR_FALSE);
+    os->AddObserver(this, "xul-window-visible", PR_FALSE);
+}
+
+ApplicationObserver::~ApplicationObserver()
+{
+}
+
+NS_IMPL_ISUPPORTS1(ApplicationObserver, nsIObserver)
+
+NS_IMETHODIMP
+ApplicationObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+{
+    if (!strcmp(aTopic, "nsIEventQueueActivated")) 
+    {
+        nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
+        if (eq)
+        {
+            PRBool isNative = PR_TRUE;
+            // we only add native event queues to the appshell
+            eq->IsQueueNative(&isNative);
+            if (isNative)
+                mAppShell->ListenToEventQueue(eq, PR_TRUE);
+        }
+    } 
+    else if (!strcmp(aTopic, "nsIEventQueueDestroyed")) 
+    {
+        nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
+        if (eq) 
+        {
+            PRBool isNative = PR_TRUE;
+            // we only remove native event queues from the appshell
+            eq->IsQueueNative(&isNative);
+            if (isNative)
+                mAppShell->ListenToEventQueue(eq, PR_FALSE);
+        }
+    } 
+    else if (!strcmp(aTopic, "xul-window-visible"))
+    {
+        KillSplashScreen();
+    }
+ 
+    else if (!strcmp(aTopic, "xul-window-registered"))
+    {
+        mWindowCount++;
+    }
+    else if (!strcmp(aTopic, "xul-window-destroyed"))
+    {
+        mWindowCount--;
+        if (mWindowCount == 0)
+            mAppShell->Exit();
+    }
+
+    return NS_OK;
+}
 
 nsresult StartupProfile()
 {    
+    NS_TIMELINE_MARK_FUNCTION("Profile Startup");
+
 	nsCOMPtr<nsIFile> appDataDir;
 	nsresult rv = NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_DIR, getter_AddRefs(appDataDir));
 	if (NS_FAILED(rv))
@@ -78,126 +164,8 @@ void SetPreferences()
     nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!prefBranch)
         return;
-}
 
-LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-    nsIWebBrowserChrome *chrome = (nsIWebBrowserChrome *) GetWindowLong(hWnd, GWL_USERDATA);
-    nsCOMPtr<nsIWebBrowser> webBrowser;
-    if (chrome)
-        chrome->GetWebBrowser(getter_AddRefs(webBrowser));
-
-	switch (Msg) 
-	{
-
-    case WM_SYSCOMMAND:
-        if (wParam == SC_CLOSE)
-        {
-            WebBrowserChromeUI::Destroy(chrome);
-            return TRUE;
-        }
-        break;
-
-    case WM_ACTIVATE:
-        {
-            nsCOMPtr<nsIWebBrowserFocus> focus(do_GetInterface(webBrowser));
-            
-            switch (wParam)
-            {
-            case WA_ACTIVE:
-                gEventTimer = SetTimer(hWnd, 1, PLEVENT_TIMEOUT, NULL);
-                if (focus)
-                    focus->Activate();
-                break;
-                
-            case WA_INACTIVE:
-                KillTimer(hWnd, gEventTimer);
-                gEventTimer = NULL;
-
-                if (focus)
-                    focus->Deactivate();
-            }
-        }
-        return 0;
-        
-    case WM_CLOSE:
-        chrome->DestroyBrowserWindow();
-        return 0;
-
-    case WM_DESTROY:
-        if (gBrowserCount == 0)
-            gRunCondition = PR_FALSE;
-        return 0;
-
-    case WM_TIMER:
-        {
-            PRBool eventAvail;
-
-            nsCOMPtr<nsIEventQueue> eventQ;
-            nsCOMPtr<nsIEventQueueService> eqs = do_GetService(kEventQueueServiceCID);
-            if (!eqs)
-                return 0;
-
-            eqs->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
-
-            if (!eventQ)
-                return 0;
-
-            eventQ->PendingEvents(&eventAvail);
-
-            if (eventAvail)
-                eventQ->ProcessPendingEvents();
-
-            // reset the timer
-            if (gEventTimer)
-                gEventTimer = SetTimer(hWnd, 1, 500, NULL);
-        }
-        return 0;
-
-    case WM_SIZE:
-        {
-            ResizeEmbedding(chrome);
-			return 0;
-        }
-    default:
-        return DefWindowProc(hWnd, Msg, wParam, lParam);
-	}
-
-
-	return -1; // default handles all!
-}
-
-
-void RegisterMainWindowClass()
-{
-	WNDCLASS wc;
-    
-	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = (WNDPROC) MainWindowProc;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = GetModuleHandle(NULL);
-	wc.hIcon = NULL;
-	wc.hCursor = 0;
-    wc.hbrBackground = (HBRUSH) GetStockObject(GRAY_BRUSH);
-	wc.lpszMenuName = 0;
-	wc.lpszClassName = "Minimo Main Window";
-    
-	RegisterClass(&wc);
-    
-}
-
-PRUint32 RunEventLoop(PRBool &aRunCondition)
-{
-    MSG msg;
-    while (aRunCondition ) 
-    {
-        ::GetMessage(&msg, NULL, 0, 0);
-        ::TranslateMessage(&msg);
-        ::DispatchMessage(&msg);
-    }
-        
-    return msg.wParam;
+    prefBranch->SetBoolPref("snav.keyCode.modifier", 0);
 }
 
 PRBool CheckForProcess()
@@ -237,95 +205,56 @@ PRBool CheckForProcess()
     return TRUE;
 }
 
-
 int main(int argc, char *argv[])
 {
     if (!CheckForProcess())
         return 0;
+
+    CreateSplashScreen();
 
 #ifdef _BUILD_STATIC_BIN
     // Initialize XPCOM's module info table
     NSGetStaticModuleInfo = app_getModuleInfo;
 #endif
     
-
-    // Init Embedding APIs
     NS_InitEmbedding(nsnull, nsnull);
     
-
     // Choose the new profile
     if (NS_FAILED(StartupProfile()))
-    {
-        NS_TermEmbedding();
         return 1;
-    }
     
-	RegisterMainWindowClass();
-
     SetPreferences();
 
-    WindowCreator *creatorCallback = new WindowCreator();
+    NS_TIMELINE_ENTER("appStartup");
+    nsCOMPtr<nsIAppShell> appShell = do_CreateInstance(kAppShellCID);
+    appShell->Create(nsnull, nsnull);
+    
+    ApplicationObserver *appObserver = new ApplicationObserver(appShell);
+    if (!appObserver)
+        return 1;
+    NS_ADDREF(appObserver);
+    
+    WindowCreator *creatorCallback = new WindowCreator(appShell);
     if (!creatorCallback)
         return 1;
 
-    const static char* start_url = "chrome://minimo/content/minimo.xul";
-    //const static char* start_url = "http://www.meer.net/~dougt/test.html";
-    
-    nsCOMPtr<nsIDOMWindow> newWindow;
     nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-    
-    wwatch->SetWindowCreator(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback));
-    wwatch->OpenWindow(nsnull, start_url, "_blank", "chrome,dialog=no,all", nsnull, getter_AddRefs(newWindow));
-    
-    RunEventLoop(gRunCondition);
+    wwatch->SetWindowCreator(creatorCallback);
 
-    // Null things out before going away.
-    
-    newWindow = nsnull;
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    wwatch->OpenWindow(nsnull, start_url, "_blank", "chrome,dialog=no,all", nsnull, getter_AddRefs(newWindow));
+
+    appShell->Run();
+
+    appShell = nsnull;
     wwatch = nsnull;
+    newWindow = nsnull;
+
+    delete appObserver;
+    delete creatorCallback;
 
     // Close down Embedding APIs
     NS_TermEmbedding();
 
     return NS_OK;
 }
-
-nativeWindow 
-WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
-{
-	HWND mainWindow = CreateWindow("Minimo Main Window", 
-                                   "Minimo", 
-                                   WS_VISIBLE, 
-                                   CW_USEDEFAULT, 
-                                   CW_USEDEFAULT, 
-                                   CW_USEDEFAULT, 
-                                   CW_USEDEFAULT, 
-                                   NULL, 
-                                   NULL, 
-                                   GetModuleHandle(NULL), 
-                                   NULL);
-
-    SetWindowLong(mainWindow, GWL_USERDATA, (LONG)chrome);  // save the browser LONG_PTR.
-
-    PostMessage(mainWindow, WM_ACTIVATE, WA_ACTIVE, 0);
-
-    SHFullScreen(mainWindow, SHFS_HIDETASKBAR);
-    SHFullScreen(mainWindow, SHFS_HIDESIPBUTTON);
-
-    ::ShowWindow(mainWindow, SW_SHOW);
-
-    gBrowserCount++;
-
-    return mainWindow;
-}
-
-void 
-WebBrowserChromeUI::Destroy(nsIWebBrowserChrome* chrome)
-{
-    if (--gBrowserCount == 0)
-    {
-        // Quit when there are no more browser objects
-        PostQuitMessage(0);
-    }
-}
-
