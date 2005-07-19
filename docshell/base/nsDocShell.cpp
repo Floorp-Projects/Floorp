@@ -4814,7 +4814,9 @@ nsDocShell::CanSavePresentation(PRUint32 aLoadType, nsIRequest *aNewRequest)
     // would be incorrect.
     if (aLoadType != LOAD_NORMAL &&
         aLoadType != LOAD_HISTORY &&
-        aLoadType != LOAD_LINK)
+        aLoadType != LOAD_LINK &&
+        aLoadType != LOAD_STOP_CONTENT &&
+        aLoadType != LOAD_STOP_CONTENT_AND_REPLACE)
         return PR_FALSE;
 
     // If the session history entry has the saveLayoutState flag set to false,
