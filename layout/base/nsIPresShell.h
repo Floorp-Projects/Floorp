@@ -89,8 +89,8 @@ class nsIStyleSheet;
 class nsCSSFrameConstructor;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x1dd0fbb6, 0xe856, 0x11d9, \
-  {0xa1, 0x56, 0x00, 0x11, 0x24, 0x78, 0xd6, 0x26} }
+{ 0x0672be76, 0x1047, 0x4905, \
+  {0xad, 0xd1, 0xc5, 0xc6, 0x90, 0xe8, 0x70, 0x3a} }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -690,7 +690,7 @@ public:
    * Restarts active elements (plugins) in this presentation and in the
    * presentations of subdocuments, then do a full invalidate of the content area.
    */
-  virtual void Thaw(PRBool aTopLevel = PR_TRUE) = 0;
+  virtual void Thaw() = 0;
 
 protected:
   // IMPORTANT: The ownership implicit in the following member variables
