@@ -4005,14 +4005,14 @@ nsContextMenu.prototype = {
             var disableDesktopBackground = false;
             if (("complete" in this.target) && !this.target.complete)
                 disableSetWallpaper = true;
+            else if (makeURI(this.target.src).scheme == "javascript")
+                disableDesktopBackground = true;
             else if (this.target instanceof nsIImageLoadingContent) {
                 var request = this.target.QueryInterface(nsIImageLoadingContent)
                                   .getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
                 if (!request)
                     disableDesktopBackground = true;
             }
-            else if (makeURI(this.target.src).scheme == "javascript")
-                disableDesktopBackground = true;
                
             this.setItemAttr( "context-setDesktopBackground", "disabled", disableDesktopBackground);
         }
