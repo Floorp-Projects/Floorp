@@ -5576,6 +5576,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     PRBool styleDisabled;
     // |newMUDV| also serves as a flag to set the data from the above vars
     nsCOMPtr<nsIMarkupDocumentViewer> newMUDV;
+    PRBool savePresentation = mSavingOldViewer;
 
     if (mContentViewer || parent) {
         nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
@@ -5584,6 +5585,16 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             // XXX: it would be far better to just reuse the document viewer ,
             //      since we know we're just displaying the same document as before
             oldMUDV = do_QueryInterface(mContentViewer);
+
+            // Tell the old content viewer to hibernate in session history when
+            // it is destroyed.
+
+            if (savePresentation && NS_FAILED(CaptureState())) {
+                if (mOSHE) {
+                    mOSHE->SyncPresentationState();
+                }
+                savePresentation = PR_FALSE;
+            }
         }
         else {
             // No old content viewer, so get state from parent's content viewer
@@ -5705,17 +5716,6 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                     bgSet = NS_GET_A(bgcolor) != 0;
                 }
             }
-        }
-
-        // Tell the old content viewer to hibernate in session history when
-        // it is destroyed.
-
-        PRBool savePresentation = mSavingOldViewer;
-        if (savePresentation && NS_FAILED(CaptureState())) {
-            if (mOSHE) {
-                mOSHE->SyncPresentationState();
-            }
-            savePresentation = PR_FALSE;
         }
 
         mContentViewer->Close(savePresentation ? mOSHE.get() : nsnull);
