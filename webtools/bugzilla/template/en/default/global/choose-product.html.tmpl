@@ -45,11 +45,11 @@
       <a href="[% target %]?product=[% p FILTER url_quote -%]
             [%- IF cloned_bug_id %]&amp;cloned_bug_id=[% cloned_bug_id FILTER url_quote %][% END -%] 
             [%- IF format %]&amp;format=[% format FILTER url_quote %][% END %]">
-      [% p FILTER html %]</a>:
+      [% p FILTER html %]</a>:&nbsp;
     </th>
 
     [% IF proddesc.$p %]
-      <td valign="top">&nbsp;[% proddesc.$p %]</td>
+      <td valign="top">[% proddesc.$p %]</td>
     [% END %]
   </tr>
 [% END %]
