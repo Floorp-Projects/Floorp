@@ -1744,62 +1744,69 @@ nsWindow::ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTop
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-
-  
-  if (mVisible && ContainerHierarchyIsVisible())  {
-    nsRect scrollRect;	
-
-	  // If the clipping region is non-rectangular, just force a full update, sorry.
+  if (mVisible && ContainerHierarchyIsVisible())
+  {
+    // If the clipping region is non-rectangular, just force a full update, sorry.
     // XXX ?
-	  if (!IsRegionRectangular(mWindowRegion)) {
-		  Invalidate(PR_TRUE);
-		  goto scrollChildren;
-	  }
+    if (!IsRegionRectangular(mWindowRegion))
+    {
+      Invalidate(PR_TRUE);
+      goto scrollChildren;
+    }
 
-	  //--------
-	  // Scroll this widget
-	  if (aClipRect)
-		  scrollRect = *aClipRect;
-	  else
-	  {
-		  scrollRect = mBounds;
-		  scrollRect.x = scrollRect.y = 0;
-	  }
+    //--------
+    // Scroll this widget
+    nsRect scrollRect;  
+    if (aClipRect)
+      scrollRect = *aClipRect;
+    else
+    {
+      scrollRect = mBounds;
+      scrollRect.x = scrollRect.y = 0;
+    }
 
-	  Rect macRect;
-	  nsRectToMacRect(scrollRect, macRect);
+    // If we're scrolling by an amount that is larger than the height or
+    // width, just invalidate the entire area.
+    if (aDx >= scrollRect.width || aDy >= scrollRect.height)
+    {
+      Invalidate(scrollRect, PR_TRUE);
+    }
+    else
+    {
+      Rect macRect;
+      nsRectToMacRect(scrollRect, macRect);
 
+      StartDraw();
 
-	  StartDraw();
+      // Clip to the windowRegion instead of the visRegion (note: the visRegion
+      // is equal to the windowRegion minus the children). The result is that
+      // ScrollRect() scrolls the visible bits of this widget as well as its children.
+      ::SetClip(mWindowRegion);
 
-		// Clip to the windowRegion instead of the visRegion (note: the visRegion
-		// is equal to the windowRegion minus the children). The result is that
-		// ScrollRect() scrolls the visible bits of this widget as well as its children.
-		::SetClip(mWindowRegion);
+      // Scroll the bits now. We've rolled our own because ::ScrollRect looks ugly
+      ScrollBits(macRect,aDx,aDy);
 
-		// Scroll the bits now. We've rolled our own because ::ScrollRect looks ugly
-		ScrollBits(macRect,aDx,aDy);
-
-	EndDraw();
+      EndDraw();
+    }
   }
 
 scrollChildren:
-	//--------
-	// Scroll the children
-	for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-		nsWindow* childWindow = NS_STATIC_CAST(nsWindow*, kid);
+  //--------
+  // Scroll the children
+  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
+    nsWindow* childWindow = NS_STATIC_CAST(nsWindow*, kid);
 
-		nsRect bounds;
-		childWindow->GetBounds(bounds);
-		bounds.x += aDx;
-		bounds.y += aDy;
-		childWindow->SetBounds(bounds);
-	}
+    nsRect bounds;
+    childWindow->GetBounds(bounds);
+    bounds.x += aDx;
+    bounds.y += aDy;
+    childWindow->SetBounds(bounds);
+  }
 
-	// recalculate the window regions
-	CalcWindowRegions();
+  // recalculate the window regions
+  CalcWindowRegions();
 
-	return NS_OK;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
