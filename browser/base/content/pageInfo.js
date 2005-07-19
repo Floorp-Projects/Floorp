@@ -507,15 +507,13 @@ function addImage(url, type, alt, elem, isBg)
 {
   if (url == "")
     return;
-    //|imageHash[url][type][alt] === undefined| avoids matching row index 0.
-  if (!imageHash[url] || !imageHash[url][type] || imageHash[url][type][alt] === undefined) {
+  if (!(url in imageHash))
+    imageHash[url] = {};
+  if (!(type in imageHash[url]))
+    imageHash[url][type] = {};
+  if (!(alt in imageHash[url][type])) {
+    imageHash[url][type][alt] = imageView.data.length;
     imageView.addRow([url, type, alt, 1, elem, isBg]);
-    // I wish I could do imageHash[url][type][alt] = imageView.data.length without getting errors.
-    if (!imageHash[url])
-      imageHash[url] = {};
-    if (!imageHash[url][type])
-      imageHash[url][type] = {};
-    imageHash[url][type][alt] = imageView.data.length - 1;
   } else {
     var i = imageHash[url][type][alt];
     imageView.data[i][3]++;
