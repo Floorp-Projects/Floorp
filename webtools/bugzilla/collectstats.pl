@@ -181,11 +181,11 @@ FIN
 }
 
 sub calculate_dupes {
-    SendSQL("SELECT * FROM duplicates");
+    my $dbh = Bugzilla->dbh;
+    my $rows = $dbh->selectall_arrayref("SELECT dupe_of, dupe FROM duplicates");
 
     my %dupes;
     my %count;
-    my @row;
     my $key;
     my $changed = 1;
 
@@ -203,9 +203,8 @@ sub calculate_dupes {
 
     # Create a hash with key "a bug number", value "bug which that bug is a
     # direct dupe of" - straight from the duplicates table.
-    while (@row = FetchSQLData()) {
-        my $dupe_of = shift @row;
-        my $dupe = shift @row;
+    foreach my $row (@$rows) {
+        my ($dupe_of, $dupe) = @$row;
         $dupes{$dupe} = $dupe_of;
     }
 

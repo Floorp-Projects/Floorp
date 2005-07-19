@@ -1078,7 +1078,7 @@ sub wants_mail {
     }
     
     my $wants_mail = 
-        $dbh->selectrow_array("SELECT * 
+        $dbh->selectrow_array("SELECT 1 
                               FROM email_setting
                               WHERE user_id = $self->{'id'}
                               AND relationship = $relationship 
