@@ -872,6 +872,8 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
 
       if (gdk_rgb_get_visual()->depth <= 8) {
         PRUint8 *scaledRGB = (PRUint8 *)nsMemory::Alloc(3*dstWidth*dstHeight);
+        if (!scaledRGB)
+          break;
         RectStretch(mWidth, mHeight,
                     dstWidth, dstHeight,
                     0, 0, dstWidth-1, dstHeight-1,
@@ -1332,6 +1334,10 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
 
   unsigned char *readData = 
     (unsigned char *)nsMemory::Alloc(3*readWidth*readHeight);
+  if (!readData) {
+    XDestroyImage(ximage);
+    return;
+  }
 
   PRUint8 *scaledImage = 0;
   PRUint8 *scaledAlpha = 0;
@@ -1493,6 +1499,10 @@ nsImageGTK::DrawCompositeTile(nsIRenderingContext &aContext,
 
   unsigned char *readData = 
     (unsigned char *)nsMemory::Alloc(3*readWidth*readHeight);
+  if (!readData) {
+    XDestroyImage(ximage);
+    return;
+  }
 
   PRBool isLSB;
   unsigned test = 1;
