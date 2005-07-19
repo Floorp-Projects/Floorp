@@ -502,7 +502,7 @@ function NewPref(type)
                             gConfigBundle.getString("new_prompt"),
                             result,
                             null,
-                            dummy)) {
+                            dummy) && result.value) {
     var pref;
     if (result.value in gPrefHash)
       pref = gPrefHash[result.value];
