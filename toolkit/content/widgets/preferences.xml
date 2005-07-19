@@ -480,6 +480,8 @@
 #ifdef XP_MACOSX
             // no buttons on Mac except Help
             cancelButton.hidden = true;
+            // Also, don't fire onDialogAccept on enter
+            acceptButton.disabled = true;
 #else
             // morph the Cancel button into the Close button
             cancelButton.setAttribute ("icon", "close");
