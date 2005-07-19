@@ -4519,9 +4519,14 @@ static const PLDHashTableOps sWrapperSCCTableOps = {
 
 // static
 nsresult
-nsDOMClassInfo::PreserveWrapper(nsIDOMNode *aDOMNode,
-                                nsIXPConnectWrappedNative *aWrapper)
+nsDOMClassInfo::PreserveWrapper(nsIXPConnectWrappedNative *aWrapper)
 {
+  nsCOMPtr<nsIDOMNode> node = do_QueryWrappedNative(aWrapper);
+  if (!node) {
+    return NS_OK;
+  }
+  nsIDOMNode* nodePtr = node;
+  
   if (!sPreservedWrapperTable.ops &&
       !PL_DHashTableInit(&sPreservedWrapperTable, PL_DHashGetStubOps(), nsnull,
                          sizeof(PreservedWrapperEntry), 16)) {
@@ -4530,11 +4535,11 @@ nsDOMClassInfo::PreserveWrapper(nsIDOMNode *aDOMNode,
   }
 
   PreservedWrapperEntry *entry = NS_STATIC_CAST(PreservedWrapperEntry*,
-    PL_DHashTableOperate(&sPreservedWrapperTable, aDOMNode, PL_DHASH_ADD));
+    PL_DHashTableOperate(&sPreservedWrapperTable, nodePtr, PL_DHASH_ADD));
   if (!entry)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  entry->key = aDOMNode;
+  entry->key = nodePtr;
   entry->wrapper = aWrapper;
 
   return NS_OK;
@@ -4699,10 +4704,9 @@ nsDOMClassInfo::EndGCMark()
 
 // hack to give XBL access to nsDOMClassInfo::PreserveWrapper
 nsresult
-NS_DOMClassInfo_PreserveWrapper(nsIDOMNode *aDOMNode,
-                                nsIXPConnectWrappedNative *aWrapper)
+NS_DOMClassInfo_PreserveWrapper(nsIXPConnectWrappedNative *aWrapper)
 {
-  return nsDOMClassInfo::PreserveWrapper(aDOMNode, aWrapper);
+  return nsDOMClassInfo::PreserveWrapper(aWrapper);
 }
 
 // static
@@ -5543,12 +5547,12 @@ NS_IMETHODIMP
 nsNodeSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
 {
-  nsISupports *native = wrapper->Native();
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(native));
-
   // This can fail on out-of-memory, which should end up throwing a JS
   // exception.
-  return nsDOMClassInfo::PreserveWrapper(node, wrapper);
+  nsresult rv = nsDOMClassInfo::PreserveWrapper(wrapper);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return nsEventReceiverSH::AddProperty(wrapper, cx, obj, id, vp, _retval);
 }
 
 NS_IMETHODIMP
