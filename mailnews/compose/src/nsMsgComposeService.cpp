@@ -1058,7 +1058,7 @@ NS_IMETHODIMP nsMsgComposeService::ReplyWithTemplate(nsIMsgDBHdr *aMsgHdr, const
       return NS_ERROR_FAILURE;
 
     nsCAutoString folderUri(Substring(templateUri, query)); 
-    nsresult rv = aServer->GetMsgFolderFromURI(nsnull, folderUri.get(), getter_AddRefs(templateFolder));
+    nsresult rv = GetExistingFolder(folderUri.get(), getter_AddRefs(templateFolder));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = templateFolder->GetMsgDatabase(aMsgWindow, getter_AddRefs(templateDB));
     NS_ENSURE_SUCCESS(rv, rv);
