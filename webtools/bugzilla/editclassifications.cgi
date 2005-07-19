@@ -308,6 +308,8 @@ if ($action eq 'update') {
                               SET name=? WHERE id=?");
         $sth->execute($classification,$classification_id);
         $vars->{'updated_classification'} = 1;
+
+        unlink "$datadir/versioncache";
     }
 
     if ($description ne $descriptionold) {
@@ -316,11 +318,12 @@ if ($action eq 'update') {
                               WHERE id=?");
         $sth->execute($description,$classification_id);
         $vars->{'updated_description'} = 1;
+
+        unlink "$datadir/versioncache";
     }
 
     $dbh->bz_unlock_tables();
 
-    unlink "$datadir/versioncache";
     LoadTemplate($action);
 }
 

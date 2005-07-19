@@ -325,23 +325,18 @@ sub GetKeywordIdFromName {
 $::VersionTableLoaded = 0;
 sub GetVersionTable {
     return if $::VersionTableLoaded;
-    my $mtime = file_mod_time("$datadir/versioncache");
-    if (!defined $mtime || $mtime eq "" || !-r "$datadir/versioncache") {
-        $mtime = 0;
-    }
-    if (time() - $mtime > 3600) {
-        use Bugzilla::Token;
-        Bugzilla::Token::CleanTokenTable() if Bugzilla->dbwritesallowed;
+    my $file_generated = 0;
+    if (!-r "$datadir/versioncache") {
         GenerateVersionTable();
+        $file_generated = 1;
     }
     require "$datadir/versioncache";
-    if (!defined %::versions) {
+    if (!defined %::versions && !$file_generated) {
         GenerateVersionTable();
         do "$datadir/versioncache";
-
-        if (!defined %::versions) {
-            die "Can't generate file $datadir/versioncache";
-        }
+    }
+    if (!defined %::versions) {
+        die "Can't generate file $datadir/versioncache";
     }
     $::VersionTableLoaded = 1;
 }
