@@ -367,6 +367,9 @@ protected:
   // The URI to be used as a base for relative URIs.
   nsCOMPtr<nsIURI> mBaseURL;
 
+  // The URI to be used as an HTTP "Referer" and for error reporting.
+  nsCOMPtr<nsIURI> mSheetURL;
+
   // The sheet we're parsing into
   nsCOMPtr<nsICSSStyleSheet> mSheet;
 
@@ -583,6 +586,7 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
   mScannerInited = PR_TRUE;
 #endif
   mBaseURL = aBaseURI;
+  mSheetURL = aSheetURI;
 
   mHavePushBack = PR_FALSE;
 
@@ -613,6 +617,7 @@ CSSParserImpl::ReleaseScanner(void)
   mScannerInited = PR_FALSE;
 #endif
   mBaseURL = nsnull;
+  mSheetURL = nsnull;
   return NS_OK;
 }
 
@@ -3899,7 +3904,7 @@ PRBool CSSParserImpl::ParseURL(nsresult& aErrorCode, nsCSSValue& aValue)
         // Set a null value on failure.  Most failure cases should be
         // NS_ERROR_MALFORMED_URI.
         nsCSSValue::URL *url =
-          new nsCSSValue::URL(uri, tk->mIdent.get(), mBaseURL);
+          new nsCSSValue::URL(uri, tk->mIdent.get(), mSheetURL);
         if (!url || !url->mString) {
           aErrorCode = NS_ERROR_OUT_OF_MEMORY;
           delete url;
