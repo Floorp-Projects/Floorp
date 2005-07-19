@@ -4284,6 +4284,7 @@ ExtensionManager.prototype = {
     var ds = this.datasource;
     ds.updateProperty(id, "displayDescription");
     ds.updateProperty(id, "opType");
+    ds.updateProperty(id, "updateable");
     var restartRequired = this.installRequiresRestart(id, ds.getItemProperty(id, "type"))
     this._updateManifests(restartRequired);
   },
@@ -5958,6 +5959,7 @@ ExtensionsDataSource.prototype = {
     }
     this.updateProperty(id, "displayDescription");
     this.updateProperty(id, "opType");
+    this.updateProperty(id, "updateable");
     this.Flush();
   },
   
