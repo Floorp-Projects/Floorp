@@ -355,11 +355,10 @@ pref("security.warn_leaving_secure.show_once", true);
 pref("security.warn_viewing_mixed.show_once", true);
 pref("security.warn_submit_insecure.show_once", true);
 
-pref("browser.urlbar.clickSelectsAll", true);
 #ifdef XP_UNIX
-#ifndef XP_MACOSX
 pref("browser.urlbar.clickSelectsAll", false);
-#endif
+#else
+pref("browser.urlbar.clickSelectsAll", true);
 #endif
 
 pref("accessibility.typeaheadfind", false);
