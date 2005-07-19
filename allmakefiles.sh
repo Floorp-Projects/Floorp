@@ -920,7 +920,6 @@ browser/components/sidebar/src/Makefile
 browser/components/shell/Makefile
 browser/components/shell/public/Makefile
 browser/components/shell/src/Makefile
-browser/extensions/inspector/Makefile
 browser/extensions/Makefile
 browser/extensions/layout-debug/Makefile
 browser/extensions/package-fixup/Makefile
