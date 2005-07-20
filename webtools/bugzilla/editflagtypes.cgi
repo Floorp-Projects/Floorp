@@ -37,6 +37,7 @@ use Bugzilla::Constants;
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
 use Bugzilla::User;
+use Bugzilla::Util;
 
 use vars qw( $template $vars );
 
@@ -488,7 +489,7 @@ sub validateCCList {
                         { cc_list => $cgi->param('cc_list') });
     
     my @addresses = split(/[, ]+/, $cgi->param('cc_list'));
-    foreach my $address (@addresses) { CheckEmailSyntax($address) }
+    foreach my $address (@addresses) { check_email_syntax($address) }
 }
 
 sub validateProduct {

@@ -103,14 +103,6 @@ sub CheckFormFieldDefined ($$) {
     }
 }
 
-sub CheckEmailSyntax {
-    my ($addr) = (@_);
-    my $match = Param('emailregexp');
-    if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:"\[\] \t\r\n]/) {
-        ThrowUserError("illegal_email_address", { addr => $addr });
-    }
-}
-
 sub PutHeader {
     ($vars->{'title'}, $vars->{'h1'}, $vars->{'h2'}) = (@_);
      

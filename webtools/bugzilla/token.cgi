@@ -112,7 +112,7 @@ if ( $::action eq 'reqpw' ) {
 
     # Make sure the login name looks like an email address.  This function
     # displays its own error and stops execution if the login name looks wrong.
-    CheckEmailSyntax($cgi->param('loginname'));
+    check_email_syntax($cgi->param('loginname'));
 
     my $quotedloginname = SqlQuote($cgi->param('loginname'));
     SendSQL("SELECT userid FROM profiles WHERE " .

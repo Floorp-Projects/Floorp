@@ -33,6 +33,7 @@ require "CGI.pl";
 use Bugzilla::Constants;
 use Bugzilla::User;
 use Bugzilla::BugMail;
+use Bugzilla::Util;
 
 # Shut up misguided -w warnings about "used only once":
 use vars qw(
@@ -63,7 +64,7 @@ my $login = $cgi->param('login');
 if (defined($login)) {
     # We've been asked to create an account.
     my $realname = trim($cgi->param('realname'));
-    CheckEmailSyntax($login);
+    check_email_syntax($login);
     $vars->{'login'} = $login;
     
     if (!is_available_username($login)) {

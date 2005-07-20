@@ -118,7 +118,7 @@ sub SaveAccount {
             }
 
             # Before changing an email address, confirm one does not exist.
-            CheckEmailSyntax($new_login_name);
+            check_email_syntax($new_login_name);
             trick_taint($new_login_name);
             is_available_username($new_login_name)
               || ThrowUserError("account_exists", {email => $new_login_name});

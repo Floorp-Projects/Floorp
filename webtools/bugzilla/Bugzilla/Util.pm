@@ -39,7 +39,7 @@ use base qw(Exporter);
                              trim wrap_comment find_wrap_point
                              format_time format_time_decimal
                              file_mod_time
-                             bz_crypt);
+                             bz_crypt check_email_syntax);
 
 use Bugzilla::Config;
 use Bugzilla::Error;
@@ -340,6 +340,14 @@ sub bz_crypt ($) {
 
     # Return the crypted password.
     return $cryptedpassword;
+}
+
+sub check_email_syntax {
+    my ($addr) = (@_);
+    my $match = Param('emailregexp');
+    if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:"\[\] \t\r\n]/) {
+        ThrowUserError("illegal_email_address", { addr => $addr });
+    }
 }
 
 sub ValidateDate {

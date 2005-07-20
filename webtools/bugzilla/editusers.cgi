@@ -170,7 +170,7 @@ if ($action eq 'search') {
 
     # Validity checks
     $login || ThrowUserError('user_login_required');
-    CheckEmailSyntax($login);
+    check_email_syntax($login);
     is_available_username($login) || ThrowUserError('account_exists',
                                                     {'email' => $login});
     ValidatePassword($password);
@@ -246,7 +246,7 @@ if ($action eq 'search') {
         if ($login ne $loginold) {
             # Validate, then trick_taint.
             $login || ThrowUserError('user_login_required');
-            CheckEmailSyntax($login);
+            check_email_syntax($login);
             is_available_username($login) || ThrowUserError('account_exists',
                                                             {'email' => $login});
             trick_taint($login);
