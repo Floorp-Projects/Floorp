@@ -52,9 +52,21 @@ use base qw(Exporter);
     AppendComment ValidateComment
     bug_alias_to_id ValidateBugAlias ValidateBugID
     RemoveVotes CheckIfVotedConfirmed
+    LogActivityEntry
 );
 
+#####################################################################
+# Constants
+#####################################################################
+
+# Used in LogActivityEntry(). Gives the max length of lines in the
+# activity table.
+use constant MAX_LINE_LENGTH => 254;
+
+# Used in ValidateComment(). Gives the max length allowed for a comment.
 use constant MAX_COMMENT_LENGTH => 65535;
+
+#####################################################################
 
 sub fields {
     # Keep this ordering in sync with bugzilla.dtd
@@ -916,6 +928,42 @@ sub GetBugActivity {
     }
 
     return(\@operations, $incomplete_data);
+}
+
+# Update the bugs_activity table to reflect changes made in bugs.
+sub LogActivityEntry {
+    my ($i, $col, $removed, $added, $whoid, $timestamp) = @_;
+    my $dbh = Bugzilla->dbh;
+    # in the case of CCs, deps, and keywords, there's a possibility that someone
+    # might try to add or remove a lot of them at once, which might take more
+    # space than the activity table allows.  We'll solve this by splitting it
+    # into multiple entries if it's too long.
+    while ($removed || $added) {
+        my ($removestr, $addstr) = ($removed, $added);
+        if (length($removestr) > MAX_LINE_LENGTH) {
+            my $commaposition = find_wrap_point($removed, MAX_LINE_LENGTH);
+            $removestr = substr($removed, 0, $commaposition);
+            $removed = substr($removed, $commaposition);
+            $removed =~ s/^[,\s]+//; # remove any comma or space
+        } else {
+            $removed = ""; # no more entries
+        }
+        if (length($addstr) > MAX_LINE_LENGTH) {
+            my $commaposition = find_wrap_point($added, MAX_LINE_LENGTH);
+            $addstr = substr($added, 0, $commaposition);
+            $added = substr($added, $commaposition);
+            $added =~ s/^[,\s]+//; # remove any comma or space
+        } else {
+            $added = ""; # no more entries
+        }
+        trick_taint($addstr);
+        trick_taint($removestr);
+        my $fieldid = &::GetFieldID($col);
+        $dbh->do("INSERT INTO bugs_activity
+                  (bug_id, who, bug_when, fieldid, removed, added)
+                  VALUES (?, ?, ?, ?, ?, ?)",
+                  undef, ($i, $whoid, $timestamp, $fieldid, $removestr, $addstr));
+    }
 }
 
 # CountOpenDependencies counts the number of open dependent bugs for a

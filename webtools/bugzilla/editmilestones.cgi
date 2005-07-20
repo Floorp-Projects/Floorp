@@ -25,6 +25,7 @@ require "globals.pl";
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::User;
+use Bugzilla::Bug;
 
 use vars qw($template $vars);
 
