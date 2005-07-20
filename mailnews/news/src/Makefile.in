@@ -105,6 +105,7 @@ EXPORTS		= \
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
