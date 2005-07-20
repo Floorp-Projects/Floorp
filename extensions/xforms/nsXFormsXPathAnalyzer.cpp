@@ -166,7 +166,7 @@ nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
     if (aNode->mCon) {
       // Remove the leading /
       xp = Substring(*mCurExprString, aNode->mStartIndex + 1,
-                     aNode->mEndIndex - aNode->mStartIndex + 2);
+                     aNode->mEndIndex - aNode->mStartIndex - 1);
     } else {
       xp = Substring(*mCurExprString, aNode->mStartIndex,
                      aNode->mEndIndex - aNode->mStartIndex);
