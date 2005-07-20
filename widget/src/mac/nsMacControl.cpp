@@ -227,12 +227,6 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 
 		// Draw the control
 		::DrawOneControl(mControl);
-
-		Rect macRect;
-		nsRect bounds = mBounds;
-		bounds.x = bounds. y = 0;
-		nsRectToMacRect(bounds, macRect);
-		::ValidWindowRect(mWindowPtr, &macRect);
 	}
 	return PR_FALSE;
 }
