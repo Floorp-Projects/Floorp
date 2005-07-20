@@ -767,7 +767,7 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
       FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
                        multiSelect, nsnull);
       nsAutoString attrValue;
-      aContent->GetAttr(kNameSpaceID_StatesWAI_Unofficial,
+      aContent->GetAttr(kNameSpaceID_WAIProperties,
                         nsAccessibilityAtoms::selected, attrValue);
       if (attrValue.IsEmpty() || attrValue.EqualsLiteral("false")) {
         eventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
@@ -777,7 +777,7 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
       }
     }
   }
-  else if (aNameSpaceID == kNameSpaceID_StatesWAI_Unofficial) {
+  else if (aNameSpaceID == kNameSpaceID_WAIProperties) {
     // DHTML accessibility attributes
     nsCOMPtr<nsIContent> changedContent(do_QueryInterface(targetNode));
     if (!changedContent->HasAttr(kNameSpaceID_XHTML2_Unofficial,

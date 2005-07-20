@@ -140,7 +140,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
       // If either attribute (role or multiselect) change, then we'll
       // destroy this accessible so that we can follow COM identity rules.
       nsAutoString multiSelect;
-      content->GetAttr(kNameSpaceID_StatesWAI_Unofficial,
+      content->GetAttr(kNameSpaceID_WAIProperties,
                        nsAccessibilityAtoms::multiselect,
                        multiSelect);
       if (!multiSelect.IsEmpty() && !multiSelect.EqualsLiteral("false")) {
@@ -309,8 +309,8 @@ NS_IMETHODIMP nsAccessible::Init()
     nsCOMPtr<nsIDOM3Node> dom3Node(do_QueryInterface(content));
     if (dom3Node) {
       nsAutoString prefix;
-      NS_NAMED_LITERAL_STRING(kRolesWAI_Namespace, "http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#");
-      dom3Node->LookupPrefix(kRolesWAI_Namespace, prefix);
+      NS_NAMED_LITERAL_STRING(kWAIRoles_Namespace, "http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#");
+      dom3Node->LookupPrefix(kWAIRoles_Namespace, prefix);
       if (prefix.IsEmpty()) {
         // In HTML we are hardcoded to allow the exact prefix "wairole:" to 
         // always indicate that we are using the WAI roles. This allows DHTML accessibility
@@ -1058,7 +1058,7 @@ nsresult nsAccessible::SetNonTextSelection(PRBool aSelect)
   NS_ASSERTION(content, "Called for dead accessible");
 
   // For DHTML widgets use WAI namespace
-  PRUint32 nameSpaceID = mRoleMapEntry ? kNameSpaceID_StatesWAI_Unofficial : kNameSpaceID_None;
+  PRUint32 nameSpaceID = mRoleMapEntry ? kNameSpaceID_WAIProperties : kNameSpaceID_None;
   if (aSelect) {
     return content->SetAttr(nameSpaceID, nsAccessibilityAtoms::selected, NS_LITERAL_STRING("true"), PR_TRUE);
   }
@@ -1411,7 +1411,7 @@ nsresult nsAccessible::GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName
 
   nsAutoString id;
   if (NS_CONTENT_ATTR_HAS_VALUE !=
-      content->GetAttr(kNameSpaceID_StatesWAI_Unofficial, aIDAttrib, id)) {
+      content->GetAttr(kNameSpaceID_WAIProperties, aIDAttrib, id)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1768,7 +1768,7 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
 
   nsAutoString attribValue;
   nsCOMPtr<nsIAtom> attribAtom = do_GetAtom(aStateMapEntry->attributeName); // XXX put atoms directly in entry
-  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_StatesWAI_Unofficial,
+  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_WAIProperties,
                                                      attribAtom,
                                                      attribValue)) {
     if (aStateMapEntry->attributeValue == BOOL_STATE) {
@@ -1852,7 +1852,7 @@ NS_IMETHODIMP nsAccessible::GetFinalValue(nsAString& aValue)
     }
     nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
     if (content &&
-        NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_StatesWAI_Unofficial,
+        NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_WAIProperties,
                                                       nsAccessibilityAtoms::valuenow,
                                                       aValue)) {
       return NS_OK;
@@ -1973,7 +1973,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
     }
   case RELATION_DESCRIBED_BY:
     {
-      content->GetAttr(kNameSpaceID_StatesWAI_Unofficial,
+      content->GetAttr(kNameSpaceID_WAIProperties,
                        nsAccessibilityAtoms::describedby, relatedID);
       if (relatedID.IsEmpty()) {
         nsIContent *description =
@@ -1995,7 +1995,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
               (start = start->GetParent()) != nsnull) {
           nsIContent *description = GetContentPointingTo(&controlID, start,
                                                          nsAccessibilityAtoms::describedby,
-                                                         kNameSpaceID_StatesWAI_Unofficial,
+                                                         kNameSpaceID_WAIProperties,
                                                          nsnull);
           relatedNode = do_QueryInterface(description);
         }
