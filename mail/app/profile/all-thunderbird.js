@@ -237,6 +237,7 @@ pref("intl.charset.detector", "chrome://global/locale/intl.properties");
 pref("intl.charset.default",  "chrome://global-platform/locale/intl.properties");
 pref("font.language.group", "chrome://global/locale/intl.properties");
 pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
+pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
 
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);

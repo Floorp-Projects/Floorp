@@ -101,6 +101,7 @@ pref("intl.charset.detector", "chrome://global/locale/intl.properties");
 pref("intl.charset.default",  "chrome://global-platform/locale/intl.properties");
 pref("font.language.group", "chrome://global/locale/intl.properties");
 pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
+pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
 
 // 0=lines, 1=pages, 2=history , 3=text size
 pref("mousewheel.withcontrolkey.action",3);

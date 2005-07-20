@@ -28,6 +28,8 @@
       <field name="mUnderlineAccesskey">
         !/Mac/.test(navigator.platform)
       </field>
+      <field name="mInsertSeparator">true</field>
+      <field name="mAlwaysAppendAccessKey">false</field>
       <property name="accessKey">
         <getter>
           <![CDATA[
@@ -66,6 +68,22 @@
             var prefs = Components.classes["@mozilla.org/preferences-service;1"].
                                    getService(Components.interfaces.nsIPrefBranch);
             this.mUnderlineAccesskey = (prefs.getIntPref("ui.key.menuAccessKey") != 0);
+
+            const nsIPrefLocalizedString =
+              Components.interfaces.nsIPrefLocalizedString;
+
+            const prefNameInsertSeparator =
+              "intl.menuitems.insertseparatorbeforeaccesskeys";
+            const prefNameAlwaysAppendAccessKey =
+              "intl.menuitems.alwaysappendaccesskeys";
+
+            var val = prefs.getComplexValue(prefNameInsertSeparator,
+                                            nsIPrefLocalizedString).data;
+            this.mInsertSeparator = (val == "true");
+
+            val = prefs.getComplexValue(prefNameAlwaysAppendAccessKey,
+                                        nsIPrefLocalizedString).data;
+            this.mAlwaysAppendAccessKey = (val == "true");
           }
           catch (e) { }
           this.formatAccessKey();
@@ -94,13 +112,13 @@
 
             var oldAccessKey = this.getElementsByAttribute('class', 'accesskey').item(0);
             if (oldAccessKey) { // Clear old accesskey
-              if (oldAccessKey.previousSibling instanceof Text) {
-                oldAccessKey.previousSibling.appendData(oldAccessKey.textContent)
-              }
-              else {
-                oldAccessKey.parentNode.insertBefore(oldAccessKey.firstChild, oldAccessKey);
-              }
-              oldAccessKey.parentNode.removeChild(oldAccessKey);
+              this.mergeElement(oldAccessKey);
+            }
+
+            var oldHiddenSpan =
+              this.getElementsByAttribute('class', 'hiddenColon').item(0);
+            if (oldHiddenSpan) {
+              this.mergeElement(oldHiddenSpan);
             }
 
             var accessKey = this.accessKey;
@@ -108,37 +126,94 @@
             if (!accessKey || !labelText || !control) {
               return;
             }
-            var accessKeyIndex = labelText.indexOf(accessKey);
-            if (accessKeyIndex < 0) { // Try again in upper case
-              accessKeyIndex = labelText.toUpperCase().indexOf(accessKey.toUpperCase());
-            }
-            var span = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
-            span.className = "accesskey";
-            if (accessKeyIndex < 0) {
-              // If accesskey is not in string, append in parentheses
-              afterLabel.textContent = " (";
-              span.textContent = accessKey.toUpperCase();
-              afterLabel.appendChild(span);
-              afterLabel.appendChild(document.createTextNode(")"));
-              return;
-            }
-            var treeWalker = document.createTreeWalker(this, NodeFilter.SHOW_TEXT, null, true);
-            var accessKeyNode = treeWalker.nextNode();
-            
-            while (accessKeyIndex >= accessKeyNode.length) {
-              accessKeyIndex -= accessKeyNode.length;
-              accessKeyNode = treeWalker.nextNode();
+            var accessKeyIndex = -1;
+            if (!this.mAlwaysAppendAccessKey) {
+              accessKeyIndex = labelText.indexOf(accessKey);
+              if (accessKeyIndex < 0) { // Try again in upper case
+                accessKeyIndex =
+                  labelText.toUpperCase().indexOf(accessKey.toUpperCase());
+              }
             }
 
-            // Now wrap the access key in a <span class="accesskey"/>
-            if (accessKeyIndex) {
-              accessKeyNode = accessKeyNode.splitText(accessKeyIndex); // returns 2nd node from split
+            const HTML_NS = "http://www.w3.org/1999/xhtml";
+            var span = document.createElementNS(HTML_NS, "span");
+            span.className = "accesskey";
+
+            // If accesskey is not in string, append in parentheses
+            if (accessKeyIndex < 0) {
+              // If end is colon, we should insert before colon.
+              // i.e., "label:" -> "label(X):"
+              var colonHidden = false;
+              if (/:$/.test(labelText)) {
+                labelText = labelText.slice(0, -1);
+                var hiddenSpan = document.createElementNS(HTML_NS, "span");
+                hiddenSpan.className = "hiddenColon";
+                hiddenSpan.style.display = "none";
+                // Hide the last colon by using span element.
+                // I.e., label<span style="display:none;">:</span>
+                this.wrapChar(hiddenSpan, labelText.length);
+                colonHidden = true;
+              }
+              // If end is space(U+20),
+              // we should not add space before parentheses.
+              var endIsSpace = false;
+              if (/ $/.test(labelText)) {
+                endIsSpace = true;
+              }
+              if (this.mInsertSeparator && !endIsSpace)
+                afterLabel.textContent = " (";
+              else
+                afterLabel.textContent = "(";
+              span.textContent = accessKey.toUpperCase();
+              afterLabel.appendChild(span);
+              if (!colonHidden)
+                afterLabel.appendChild(document.createTextNode(")"));
+              else
+                afterLabel.appendChild(document.createTextNode("):"));
+              return;
             }
-            accessKeyNode.parentNode.insertBefore(span, accessKeyNode);
-            if (accessKeyNode.length > 1) {
-              accessKeyNode.splitText(1);
+            this.wrapChar(span, accessKeyIndex);
+          ]]>
+        </body>
+      </method>
+
+      <method name="wrapChar">
+        <parameter name="element"/>
+        <parameter name="index"/>
+        <body>
+          <![CDATA[
+             var treeWalker = document.createTreeWalker(this,
+                                                        NodeFilter.SHOW_TEXT,
+                                                        null,
+                                                        true);
+             var node = treeWalker.nextNode();
+             while (index >= node.length) {
+               index -= node.length;
+               node = treeWalker.nextNode();
+             }
+             if (index) {
+               node = node.splitText(index);
+             }
+             node.parentNode.insertBefore(element, node);
+             if (node.length > 1) {
+               node.splitText(1);
+             }
+             element.appendChild(node);
+          ]]>
+        </body>
+      </method>
+
+      <method name="mergeElement">
+        <parameter name="element"/>
+        <body>
+          <![CDATA[
+            if (element.previousSibling instanceof Text) {
+              element.previousSibling.appendData(element.textContent)
             }
-            span.appendChild(accessKeyNode);
+            else {
+              element.parentNode.insertBefore(element.firstChild, element);
+            }
+            element.parentNode.removeChild(element);
           ]]>
         </body>
       </method>
