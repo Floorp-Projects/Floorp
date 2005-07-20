@@ -173,7 +173,7 @@ nsresult NameSpaceManagerImpl::Init()
   AddNameSpace(NS_LITERAL_STRING(kXMLEventsNameSpaceURI), kNameSpaceID_XMLEvents);
   AddNameSpace(NS_LITERAL_STRING(kXHTML2UnofficialNameSpaceURI), kNameSpaceID_XHTML2_Unofficial);
   AddNameSpace(NS_LITERAL_STRING(kWAIRolesNameSpaceURI), kNameSpaceID_WAIRoles);
-  AddNameSpace(NS_LITERAL_STRING(kWAIStatesNameSpaceURI), kNameSpaceID_WAIProperties);
+  AddNameSpace(NS_LITERAL_STRING(kWAIPropertiesNameSpaceURI), kNameSpaceID_WAIProperties);
 
   return NS_OK;
 }
