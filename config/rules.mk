@@ -360,12 +360,6 @@ ifndef HOST_PROGOBJS
 HOST_PROGOBJS		= $(HOST_OBJS)
 endif
 
-# SUBMAKEFILES: List of Makefiles for next level down.
-#   This is used to update or create the Makefiles before invoking them.
-ifneq ($(DIRS)$(TOOL_DIRS),)
-SUBMAKEFILES		:= $(addsuffix /Makefile, $(TOOL_DIRS) $(filter-out $(STATIC_MAKEFILES), $(DIRS)))
-endif
-
 # MAKE_DIRS: List of directories to build while looping over directories.
 ifneq (,$(OBJS)$(SIMPLE_PROGRAMS))
 MAKE_DIRS		+= $(MDDEPDIR)

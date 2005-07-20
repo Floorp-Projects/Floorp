@@ -15,8 +15,9 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Benjamin Smedberg <benjamin@smedbergs.us>
+#
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,6 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
+
 DEPTH=../../..
 topsrcdir=@top_srcdir@
 srcdir=@srcdir@
@@ -42,7 +44,17 @@ VPATH=@srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=content skin locale
+ALL_LOCALES = \
+	en-US \
+	$(NULL)
+
+include $(topsrcdir)/config/config.mk
+
+SUBMAKEFILES += locale/Makefile
 
 include $(topsrcdir)/config/rules.mk
 
+libs::
+	for locale in $(ALL_LOCALES); do         \
+	  $(MAKE) -C locale AB_CD=$$locale;     \
+	done                                     \
