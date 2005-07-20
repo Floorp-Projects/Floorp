@@ -4474,6 +4474,13 @@ JS_ErrorFromException(JSContext *cx, jsval v)
 #endif
 }
 
+JS_PUBLIC_API(JSBool)
+JS_ThrowReportedError(JSContext *cx, const char *message,
+                      JSErrorReport *reportp)
+{
+    js_ErrorToException(cx, message, reportp);
+}
+
 #ifdef JS_THREADSAFE
 JS_PUBLIC_API(jsword)
 JS_GetContextThread(JSContext *cx)
