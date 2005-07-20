@@ -201,7 +201,7 @@
       <row>
         <hbox id="statusContainerBox" >
            <statusbarpanel id="statusText" crop="right" flex="1"/> 
-           <statusbarpanel class="statusbarpanel-progress">
+           <statusbarpanel class="statusbarpanel-progress" id="progress-panel">
              <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
            </statusbarpanel>
          </hbox>
