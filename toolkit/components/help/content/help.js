@@ -173,18 +173,10 @@ function init() {
   getWebNavigation().sessionHistory = 
     Components.classes["@mozilla.org/browser/shistory;1"]
               .createInstance(Components.interfaces.nsISHistory);
-  window.XULBrowserWindow = new nsHelpStatusHandler();
-
-  //Start the status handler.
-  window.XULBrowserWindow.init();
-
-  // Hook up UI through Progress Listener
-  const interfaceRequestor = helpBrowser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-  const webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
-
-  webProgress.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
   gClickSelectsAll = getBoolPref("browser.urlbar.clickSelectsAll", true);
+  
+  setTimeout(focusSearch, 0);
 }
 
 function showSearchSidebar() {
@@ -508,60 +500,6 @@ function gotoHistoryIndex(aEvent) {
         return false;
     }
     return true;
-}
-
-function nsHelpStatusHandler() {
-  this.init();
-}
-
-nsHelpStatusHandler.prototype = {
-
-    onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
-    {
-      const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
-
-#     //Turn on and off the throbber depending on whether or not a page is loading. This is used in case
-#     //someone has a Help Viewer Content Pack that gets pages off of a web server.
-      if (aStateFlags & nsIWebProgressListener.STATE_START) {
-        if (this.throbberElement)
-          this.throbberElement.setAttribute("busy", "true");
-      } else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
-        if (aRequest && this.throbberElement) {
-          this.throbberElement.removeAttribute("busy");
-        }
-      }
-    },
-    onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress,
-        aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {},
-    onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage) {},
-    onSecurityChange : function(aWebProgress, aRequest, state) {},
-    onLocationChange : function(aWebProgress, aRequest, aLocation) {
-        UpdateBackForwardButtons();
-    },
-    QueryInterface : function(aIID) {
-        if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-                aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-                aIID.equals(Components.interfaces.nsIXULBrowserWindow) ||
-                aIID.equals(Components.interfaces.nsISupports)) {
-            return this;
-        }
-        throw Components.results.NS_NOINTERFACE;
-    },
-
-    init : function()
-    {
-      this.throbberElement = document.getElementById("help-throbber");
-    },
-
-    destroy : function()
-    {
-      //this needed to avoid memory leaks, see bug 60729
-      this.throbberElement = null;
-    },
-
-    setJSStatus : function(status) {},
-    setJSDefaultStatus : function(status) {},
-    setOverLink : function(link) {}
 }
 
 function UpdateBackForwardButtons() {
