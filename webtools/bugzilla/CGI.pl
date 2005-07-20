@@ -107,51 +107,6 @@ sub CheckFormFieldDefined ($$) {
     }
 }
 
-sub ValidateBugID {
-    # Validates and verifies a bug ID, making sure the number is a 
-    # positive integer, that it represents an existing bug in the
-    # database, and that the user is authorized to access that bug.
-    # We detaint the number here, too
-
-    my ($id, $field) = @_;
-    
-    # Get rid of white-space around the ID.
-    $id = trim($id);
-    
-    # If the ID isn't a number, it might be an alias, so try to convert it.
-    my $alias = $id;
-    if (!detaint_natural($id)) {
-        $id = bug_alias_to_id($alias);
-        $id || ThrowUserError("invalid_bug_id_or_alias",
-                              {'bug_id' => $alias,
-                               'field'  => $field });
-    }
-    
-    # Modify the calling code's original variable to contain the trimmed,
-    # converted-from-alias ID.
-    $_[0] = $id;
-    
-    # First check that the bug exists
-    SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $id");
-
-    FetchOneColumn()
-      || ThrowUserError("invalid_bug_id_non_existent", {'bug_id' => $id});
-
-    return if (defined $field && ($field eq "dependson" || $field eq "blocked"));
-    
-    return if Bugzilla->user->can_see_bug($id);
-
-    # The user did not pass any of the authorization tests, which means they
-    # are not authorized to see the bug.  Display an error and stop execution.
-    # The error the user sees depends on whether or not they are logged in
-    # (i.e. $::userid contains the user's positive integer ID).
-    if ($::userid) {
-        ThrowUserError("bug_access_denied", {'bug_id' => $id});
-    } else {
-        ThrowUserError("bug_access_query", {'bug_id' => $id});
-    }
-}
-
 sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');

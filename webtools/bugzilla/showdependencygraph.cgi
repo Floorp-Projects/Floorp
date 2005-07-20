@@ -30,6 +30,7 @@ use Bugzilla;
 use Bugzilla::Config qw(:DEFAULT $webdotdir);
 use Bugzilla::Util;
 use Bugzilla::BugMail;
+use Bugzilla::Bug;
 
 require "CGI.pl";
 
