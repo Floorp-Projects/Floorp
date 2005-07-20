@@ -234,6 +234,11 @@ pref("browser.xul.error_pages.enabled", true);
 //  2 - do nothing
 
 pref("browser.downloadmanager.behavior", 1);
+
+// 0 goes back
+// 1 act like pgup
+// 2 and other values, nothing
+pref("browser.backspace_action", 2);
 #endif
 
 #ifndef XP_MACOSX
@@ -241,5 +246,10 @@ pref("browser.downloadmanager.behavior", 1);
 // For the download dialog
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", false);
 pref("browser.urlbar.clickSelectsAll", false);
+
+// 0 goes back
+// 1 act like pgup
+// 2 and other values, nothing
+pref("browser.backspace_action", 1);
 #endif
 #endif
