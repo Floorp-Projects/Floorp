@@ -529,10 +529,6 @@ nsXFormsModelElement::Rebuild()
   printf("nsXFormsModelElement::Rebuild()\n");
 #endif
 
-  // TODO: Clear graph and re-attach elements
-
-  mControlsNeedingRefresh.Clear();
-
   // 1 . Clear graph
   nsresult rv;
   rv = mMDG.Clear();
@@ -670,6 +666,17 @@ nsXFormsModelElement::Revalidate()
   // Revalidate nodes
   mMDG.Revalidate(&mChangedNodes);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::Refresh()
+{
+#ifdef DEBUG
+  printf("nsXFormsModelElement::Refresh()\n");
+#endif
+  nsPostRefresh postRefresh = nsPostRefresh();
+
   // Iterate over all form controls if not during initialization phase (then
   // this is handled in InitializeControls())
   if (mDocumentLoaded) {
@@ -767,8 +774,7 @@ nsXFormsModelElement::Revalidate()
       if (rebind || refresh) {
         nsresult rv = SetStatesInternal(control, boundNode);
         NS_ENSURE_SUCCESS(rv, rv);
-        if (mControlsNeedingRefresh.IndexOf(control) == -1)
-          mControlsNeedingRefresh.AppendElement(control);
+        control->Refresh();
       }
     }
 
@@ -777,29 +783,6 @@ nsXFormsModelElement::Revalidate()
   }
   
   mMDG.ClearDispatchFlags();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::Refresh()
-{
-#ifdef DEBUG
-  printf("nsXFormsModelElement::Refresh()\n");
-#endif
-  nsPostRefresh postRefresh = nsPostRefresh();
-
-  if (mDocumentLoaded) { // if not during initialization phase
-    PRInt32 controlCount = mControlsNeedingRefresh.Count();
-    for (PRInt32 i = 0; i < controlCount; ++i) {
-      nsIXFormsControl* control = NS_STATIC_CAST(nsIXFormsControl*,
-                                                 mControlsNeedingRefresh[i]);
-      if (control)
-        control->Refresh();
-    }
-
-    mControlsNeedingRefresh.Clear();
-  }
 
   return NS_OK;
 }
@@ -912,7 +895,6 @@ NS_IMETHODIMP
 nsXFormsModelElement::RemoveFormControl(nsIXFormsControl *aControl)
 {
   mFormControls.RemoveElement(aControl);
-  mControlsNeedingRefresh.RemoveElement(aControl);
   return NS_OK;
 }
 
