@@ -1345,7 +1345,11 @@ NPObjWrapperPluginDestroyedCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
 
     JSContext *cx = GetJSContext((NPP)arg);
 
-    ::JS_SetPrivate(cx, entry->mJSObj, nsnull);
+    if (cx) {
+      ::JS_SetPrivate(cx, entry->mJSObj, nsnull);
+    } else {
+      NS_ERROR("dangling entry->mJSObj JSPrivate because we can't find cx");
+    }
 
     return PL_DHASH_REMOVE;
   }
