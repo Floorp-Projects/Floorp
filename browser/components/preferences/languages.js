@@ -135,9 +135,7 @@ var gLanguagesDialog = {
       
     // Sort the list of languages by name
     this._availableLanguagesList.sort(function (a, b) {
-                                        if (a.name < b.name) return -1;
-                                        if (a.name > b.name) return 1;
-                                        return 0;
+                                        return a.name.localeCompare(b.name);
                                       });
                                   
     // Load the UI with the data
