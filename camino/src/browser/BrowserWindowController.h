@@ -85,6 +85,14 @@ typedef enum
   
 } ENewTabContents;
 
+typedef enum
+{
+  eAppendTabs,
+  eReplaceTabs,
+  eAppendFromCurrentTab
+	  
+} ETabOpenPolicy;
+
 @class BookmarkViewController;
 @class BookmarkToolbar;
 @class BrowserTabView;
@@ -268,7 +276,7 @@ typedef enum
 - (void)openNewWindowWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG allowPopups:(BOOL)inAllowPopups;
 - (void)openNewTabWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG allowPopups:(BOOL)inAllowPopups;
 
-- (void)openURLArray:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting allowPopups:(BOOL)inAllowPopups;
+- (void)openURLArray:(NSArray*)urlArray tabOpenPolicy:(ETabOpenPolicy)tabPolicy allowPopups:(BOOL)inAllowPopups;
 - (void)openURLArrayReplacingTabs:(NSArray*)urlArray closeExtraTabs:(BOOL)closeExtra allowPopups:(BOOL)inAllowPopups;
 
 -(BrowserTabViewItem*)createNewTabItem;

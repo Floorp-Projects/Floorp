@@ -395,7 +395,7 @@
         if ([aBookmark isKindOfClass:[Bookmark class]])
           return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:[aBookmark url]];
         else if ([aBookmark isKindOfClass:[BookmarkFolder class]]) {
-          [[[self window] windowController] openURLArray:[aBookmark childURLs] replaceExistingTabs:YES allowPopups:NO];
+          [[[self window] windowController] openURLArray:[aBookmark childURLs] tabOpenPolicy:eReplaceTabs allowPopups:NO];
           return YES;
         }
       } else if ([draggedItems count] > 1) {
@@ -407,7 +407,7 @@
           else if ([aBookmark isKindOfClass:[BookmarkFolder class]])
             [urlArray addObjectsFromArray:[aBookmark childURLs]];
         }
-        [[[self window] windowController] openURLArray:urlArray replaceExistingTabs:YES allowPopups:NO];
+        [[[self window] windowController] openURLArray:urlArray tabOpenPolicy:eReplaceTabs allowPopups:NO];
         return YES;
       }
     }

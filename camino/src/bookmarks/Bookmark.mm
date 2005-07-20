@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 #import <SystemConfiguration/SystemConfiguration.h>
 
+#import "NSThread+Utils.h"
 #import "Bookmark.h"
 #import "BookmarkFolder.h"
 #import "BookmarkManager.h"
@@ -177,7 +178,8 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 
 -(void) refreshIcon
 {
-  if ([BookmarkManager sharedBookmarkManager])
+  // don't invoke loads from the non-main thread (e.g. while loading bookmarks on a thread)
+  if ([NSThread inMainThread])
   {
     NSImage* siteIcon = [[SiteIconProvider sharedFavoriteIconProvider] favoriteIconForPage:[self url]];
     if (siteIcon)

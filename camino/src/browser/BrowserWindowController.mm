@@ -1601,9 +1601,9 @@ enum BWCOpenDest {
       [self loadURL:resolvedURL referrer:nil activate:YES allowPopups:NO];
   } else {
     if (inDest == kDestinationNewTab || inDest == kDestinationNewWindow)
-      [self openURLArray:resolvedURLs replaceExistingTabs:NO allowPopups:NO];
+      [self openURLArray:resolvedURLs tabOpenPolicy:eAppendTabs allowPopups:NO];
     else
-      [self openURLArray:resolvedURLs replaceExistingTabs:YES allowPopups:NO];
+      [self openURLArray:resolvedURLs tabOpenPolicy:eReplaceTabs allowPopups:NO];
   }
   
   // global history needs to know the user typed this url so it can present it
@@ -2644,34 +2644,31 @@ enum BWCOpenDest {
   [[[newTab view] getBrowserView] setPageDescriptor:aDesc displayType:aDisplayType];
 }
 
-- (void)openURLArray:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting allowPopups:(BOOL)inAllowPopups
+- (void)openURLArray:(NSArray*)urlArray tabOpenPolicy:(ETabOpenPolicy)tabPolicy allowPopups:(BOOL)inAllowPopups
 {
-  int curNumTabs	= [mTabBrowser numberOfTabViewItems];
-  int numItems 		= (int)[urlArray count];
+  int curNumTabs	 = [mTabBrowser numberOfTabViewItems];
+  int numItems 		 = (int)[urlArray count];
+  int selectedTabIndex   = [[mTabBrowser tabViewItems] indexOfObject:[mTabBrowser selectedTabViewItem]];
   
   for (int i = 0; i < numItems; i++)
   {
     NSString* thisURL = [urlArray objectAtIndex:i];
     BrowserTabViewItem* tabViewItem;
-
-    if (replaceExisting && i < curNumTabs)
-    {
-      tabViewItem = [mTabBrowser tabViewItemAtIndex:i];
-    }
+    
+    if (tabPolicy == eReplaceTabs && i < curNumTabs)
+      tabViewItem = [mTabBrowser tabViewItemAtIndex: i];
+    else if (tabPolicy == eAppendFromCurrentTab && selectedTabIndex < curNumTabs)
+      tabViewItem = [mTabBrowser tabViewItemAtIndex: selectedTabIndex++];
     else
     {
       tabViewItem = [self createNewTabItem];
       [tabViewItem setLabel: NSLocalizedString(@"UntitledPageTitle", @"")];
       [mTabBrowser addTabViewItem: tabViewItem];
     }
-
+    
     [[tabViewItem view] loadURI: thisURL referrer:nil
-                        flags: NSLoadFlagsNone activate:(i == 0) allowPopups:inAllowPopups];
-                        
+                          flags: NSLoadFlagsNone activate:(i == 0) allowPopups:inAllowPopups];
   }
- 
-  // Select the first tab.
-  [mTabBrowser selectTabViewItemAtIndex:replaceExisting ? 0 : curNumTabs];
 }
 
 -(void) openURLArrayReplacingTabs:(NSArray*)urlArray closeExtraTabs:(BOOL)closeExtra allowPopups:(BOOL)inAllowPopups
@@ -2681,7 +2678,7 @@ enum BWCOpenDest {
   if (![urlArray count])
     return;
 
-  [self openURLArray:urlArray replaceExistingTabs:YES allowPopups:inAllowPopups];
+  [self openURLArray:urlArray tabOpenPolicy:eReplaceTabs allowPopups:inAllowPopups];
   if (closeExtra) {
     int closeIndex = [urlArray count];
     int closeCount = [mTabBrowser numberOfTabViewItems] - closeIndex;

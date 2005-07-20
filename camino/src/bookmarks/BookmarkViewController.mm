@@ -271,7 +271,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   // register for notifications of when the BM manager starts up. Since it does it on a separate thread,
   // it can be created after we are and if we don't update ourselves, the bar will be blank. This
   // happens most notably when the app is launched with a 'odoc' or 'GURL' appleEvent.
-  [nc addObserver:self selector:@selector(managerStarted:) name:[BookmarkManager managerStartedNotification] object:nil];
+  [nc addObserver:self selector:@selector(managerStarted:) name:kBookmarkManagerStartedNotification object:nil];
   
   // register for dragged types
   [mContainersTableView registerForDraggedTypes:[NSArray arrayWithObjects:kCaminoBookmarkListPBoardType, kWebURLsWithTitlesPboardType, NSURLPboardType, NSStringPboardType, nil]];

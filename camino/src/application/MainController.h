@@ -183,7 +183,6 @@ typedef enum EBookmarkOpenBehavior
 - (NSView*)getSavePanelView;
 - (NSWindow*)getFrontmostBrowserWindow;
 
-- (void)setupBookmarkMenus:(BookmarkManager *)BookmarkManager;
 - (void)loadBookmark:(BookmarkItem*)item withWindowController:(BrowserWindowController*)browserWindowController openBehavior:(EBookmarkOpenBehavior)behavior;
 
 - (void)displayPreferencesWindow:(id)sender;

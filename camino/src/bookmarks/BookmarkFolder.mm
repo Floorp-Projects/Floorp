@@ -374,6 +374,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 // Adding bookmarks
 //
 
+// XXX fix to nicely autorelease etc.
 -(Bookmark *)addBookmark
 {
   if (![self isRoot]) {
@@ -830,7 +831,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   // on the off chance we've imported somebody else's bookmarks after startup,
   // we need to clear any super special flags on it.  if we have a shared bookmark manager,
   // we're not in startup, so clear things out.
-  if ([BookmarkManager sharedBookmarkManager]) {
+  if ([[BookmarkManager sharedBookmarkManager] bookmarksLoaded]) {
     if ((flag & kBookmarkRootFolder) != 0)
       flag &= ~kBookmarkRootFolder;
     if ((flag & kBookmarkToolbarFolder) != 0)

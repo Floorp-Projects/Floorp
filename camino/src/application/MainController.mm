@@ -55,7 +55,6 @@
 #import "BookmarkManager.h"
 #import "BookmarkToolbar.h"
 #import "BrowserTabView.h"
-#import "RunLoopMessenger.h"
 #import "CHBrowserService.h"
 #import "UserDefaults.h"
 #import "KeychainService.h"
@@ -112,7 +111,9 @@ const int kReuseWindowOnAE = 2;
 - (void)adjustBookmarkMenuItems;
 - (void)doBookmarksMenuEnabling;
 - (void)adjustTextEncodingMenu;
-- (void)windowLayeringDidChange:(NSNotification*)inNotifiction;
+
+- (void)windowLayeringDidChange:(NSNotification*)inNotification;
+- (void)bookmarkLoadingCompleted:(NSNotification*)inNotification;
 - (void)menuWillDisplay:(NSNotification*)inNotification;
 - (void)openPanelDidEnd:(NSOpenPanel*)inOpenPanel returnCode:(int)inReturnCode contextInfo:(void*)inContextInfo;
 
@@ -286,10 +287,10 @@ const int kReuseWindowOnAE = 2;
   [notificationCenter addObserver:self selector:@selector(windowLayeringDidChange:) name:NSWindowDidBecomeMainNotification object:nil];
   [notificationCenter addObserver:self selector:@selector(windowLayeringDidChange:) name:NSWindowDidResignMainNotification object:nil];
   
-  // start bookmarks
-  RunLoopMessenger *mainThreadRunLoopMessenger = [[RunLoopMessenger alloc] init];
-  [NSThread detachNewThreadSelector:@selector(startBookmarksManager:) toTarget:[BookmarkManager class] withObject:mainThreadRunLoopMessenger];
-  [mainThreadRunLoopMessenger release]; //bookmark manager retains this
+  // listen for bookmark loading completion
+  [notificationCenter addObserver:self selector:@selector(bookmarkLoadingCompleted:) name:kBookmarkManagerStartedNotification object:nil];
+  // and fire up bookmarks (they will be loaded on a thread)
+  [[BookmarkManager sharedBookmarkManager] loadBookmarksLoadingSynchronously:NO];
 
   [self setupStartpage];
 
@@ -356,7 +357,7 @@ const int kReuseWindowOnAE = 2;
   [self autorelease];
 }
 
-- (void)windowLayeringDidChange:(NSNotification*)inNotifiction
+- (void)windowLayeringDidChange:(NSNotification*)inNotification
 {
   [self performSelectorOnMainThread:@selector(doBookmarksMenuEnabling) withObject:nil waitUntilDone:NO];
 }
@@ -411,28 +412,24 @@ const int kReuseWindowOnAE = 2;
 }
 
 //
-// setupBookmarkMenus
+// bookmarkLoadingCompleted:
 //
-// Needs to be called at startup after we've initialized the bookmark service. Currently
-// it's called on a delayed call after we run through the event loop once, but still
-// on the main thread.
-//
-- (void)setupBookmarkMenus:(BookmarkManager *)BookmarkManager
+- (void)bookmarkLoadingCompleted:(NSNotification*)inNotification
 {
   [mBookmarksMenu setAutoenablesItems: NO];
 
   // menubar bookmarks
   int firstBookmarkItem = [mBookmarksMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
-  mMenuBookmarks = [[BookmarkMenu alloc] initWithMenu: mBookmarksMenu
-                                               firstItem: firstBookmarkItem
-                                    rootBookmarkFolder: [BookmarkManager bookmarkMenuFolder]];
+  mMenuBookmarks = [[BookmarkMenu alloc] initWithMenu:mBookmarksMenu
+                                            firstItem:firstBookmarkItem
+                                   rootBookmarkFolder:[[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder]];
 
   // dock bookmarks
   [mDockMenu setAutoenablesItems:NO];
   firstBookmarkItem = [mDockMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
-  mDockBookmarks = [[BookmarkMenu alloc] initWithMenu: mDockMenu
-                                            firstItem: firstBookmarkItem
-                                   rootBookmarkFolder: [BookmarkManager dockMenuFolder]];
+  mDockBookmarks = [[BookmarkMenu alloc] initWithMenu:mDockMenu
+                                            firstItem:firstBookmarkItem
+                                   rootBookmarkFolder:[[BookmarkManager sharedBookmarkManager] dockMenuFolder]];
 }
 
 // a central place for bookmark opening logic.
@@ -511,7 +508,7 @@ const int kReuseWindowOnAE = 2;
     if (openInNewWindow)
       [self openBrowserWindowWithURLs:[(BookmarkFolder *)item childURLs] behind:behindWindow allowPopups:YES];
     else if (openInNewTab)
-      [browserWindowController openURLArray:[(BookmarkFolder *)item childURLs] replaceExistingTabs:NO allowPopups:YES];
+      [browserWindowController openURLArray:[(BookmarkFolder *)item childURLs] tabOpenPolicy:eAppendTabs allowPopups:YES];
     else
       [browserWindowController openURLArrayReplacingTabs:[(BookmarkFolder *)item childURLs] closeExtraTabs:[(BookmarkFolder *)item isGroup] allowPopups:YES];
   }
@@ -666,7 +663,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   }
   else
   {
-    [browserController openURLArray:urlStringsArray replaceExistingTabs:YES allowPopups:YES];
+    [browserController openURLArray:urlStringsArray tabOpenPolicy:eAppendFromCurrentTab allowPopups:YES];
   }
 }
 
@@ -1012,7 +1009,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     [browser showWindow: self];
   }
 
-  [browser openURLArray:urlArray replaceExistingTabs:YES allowPopups:inAllowPopups];
+  [browser openURLArray:urlArray tabOpenPolicy:eReplaceTabs allowPopups:inAllowPopups];
   return browser;
 }
 

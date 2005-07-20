@@ -89,7 +89,7 @@ static const int kBMBarScanningStep = 5;
     // it can be created after we are and if we don't update ourselves, the bar will be blank. This
     // happens most notably when the app is launched with a 'odoc' or 'GURL' appleEvent.
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managerStarted:)
-        name:[BookmarkManager managerStartedNotification] object:nil];
+        name:kBookmarkManagerStartedNotification object:nil];
   }
   return self;
 }

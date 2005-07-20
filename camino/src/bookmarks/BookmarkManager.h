@@ -45,13 +45,14 @@
 @class BookmarkImportDlgController;
 @class BookmarkOutlineView;
 @class KindaSmartFolderManager;
-@class RunLoopMessenger;
 
 enum {
   kBookmarkMenuContainerIndex = 0,
   kToolbarContainerIndex = 1,
   kHistoryContainerIndex = 2,
 };
+
+extern NSString* const kBookmarkManagerStartedNotification;
 
 @interface BookmarkManager : NSObject <BookmarksClient>
 {
@@ -68,13 +69,18 @@ enum {
   BookmarkFolder*                 mAddressBookContainer;
   
   BookmarkFolder*                 mLastUsedFolder;
+  
+  BOOL                            mBookmarksLoaded;
 }
 
 // Class Methods & shutdown stuff
-+ (void)startBookmarksManager:(RunLoopMessenger *)mainThreadRunLoopMessenger;
 + (BookmarkManager*)sharedBookmarkManager;
-+ (NSString*)managerStartedNotification;
+
+- (void)loadBookmarksLoadingSynchronously:(BOOL)loadSync;
+
 - (void)shutdown;
+
+- (BOOL)bookmarksLoaded;
 
 + (NSArray*)serializableArrayWithBookmarkItems:(NSArray*)bmArray;
 + (NSArray*)bookmarkItemsFromSerializableArray:(NSArray*)bmArray;

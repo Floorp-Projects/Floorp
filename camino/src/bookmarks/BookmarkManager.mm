@@ -41,9 +41,9 @@
 #include "nsIContent.h"
 #include "nsIFile.h"
 #include "nsAppDirectoryServiceDefs.h"
+
 #import "NSString+Utils.h"
 #import "PreferenceManager.h"
-#import "RunLoopMessenger.h"
 #import "BookmarkManager.h"
 #import "Bookmark.h"
 #import "BookmarkFolder.h"
@@ -55,58 +55,35 @@
 #import "BrowserWindowController.h"
 #import "MainController.h" 
 
+
+NSString* const kBookmarkManagerStartedNotification = @"BookmarkManagerStartedNotification";
+
+
 @interface BookmarkManager (Private)
+
+- (void)loadBookmarksThreadEntry:(id)inObject;
+- (void)loadBookmarks;
 - (void)setPathToBookmarkFile:(NSString *)aString;
 - (void)setupSmartCollections;
 - (void)delayedStartupItems;
 - (void)writeBookmarks:(NSNotification *)note;
 - (BookmarkFolder *)findDockMenuFolderInFolder:(BookmarkFolder *)aFolder;
 - (void)writeBookmarksMetadataForSpotlight;
+
 @end
 
 @implementation BookmarkManager
 
-static NSString *WriteBookmarkNotification = @"write_bms";
-static BookmarkManager* gBookmarksManager = nil;
-static NSLock *startupLock = nil;
-static unsigned gFirstUserCollection = 0;
-
-
-//
-// Class Methods - we only need RunLoopMessenger for 10.1 Compat. On 10.2+, there
-// are built-in methods for running something on the main thread.
-//
-+ (void)startBookmarksManager:(RunLoopMessenger *)mainThreadRunLoopMessenger
-{
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  if (!gBookmarksManager && !startupLock)
-  {
-    startupLock = [[NSLock alloc] init];
-    NSLock *avoidRaceLock;
-    BookmarkManager *aManager = [[BookmarkManager alloc] init];
-    [startupLock lock];
-    gBookmarksManager = aManager;
-    avoidRaceLock = startupLock;
-    startupLock = nil;
-    [avoidRaceLock unlock];
-    [avoidRaceLock release];
-    [mainThreadRunLoopMessenger target:gBookmarksManager performSelector:@selector(delayedStartupItems)];
-  }
-  [pool release];
-}
+static NSString* const    kWriteBookmarkNotification = @"write_bms";
+static unsigned           gFirstUserCollection = 0;
 
 + (BookmarkManager*)sharedBookmarkManager
 {
-  BookmarkManager *theManager;
-  [startupLock lock];
-  theManager = gBookmarksManager;
-  [startupLock unlock];
-  return theManager;
-}
+  static BookmarkManager* sBookmarkManager = nil;
+  if (!sBookmarkManager)
+    sBookmarkManager = [[BookmarkManager alloc] init];
 
-+ (NSString*)managerStartedNotification
-{
-  return @"BookmarkManagerStartedNotification";
+  return sBookmarkManager;
 }
 
 // serialize to an array of UUIDs
@@ -144,59 +121,13 @@ static unsigned gFirstUserCollection = 0;
 #pragma mark -
 
 //
-// Init, dealloc - better get inited on background thread.
+// Init, dealloc
 //
 - (id)init
 {
-  if ((self = [super init])) {
-    BookmarkFolder* root = [[BookmarkFolder alloc] init];
-    [root setParent:self];    // XXX why?
-    [root setIsRoot:YES];
-    [root setTitle:NSLocalizedString(@"BookmarksRootName", @"")];
-    [self setRootBookmarks:root];
-    [root release];
-    // Turn off the posting of update notifications while reading in bookmarks.
-    // All interested parties haven't been init'd yet, and/or will recieve the
-    // managerStartedNotification when setup is actually complete.
-    [BookmarkItem setSuppressAllUpdateNotifications:YES];
-    if (![self readBookmarks]) {
-      // one of two things happened. we are importing off an old xml file
-      // for startup, OR we totally muffed reading the bookmarks.  we'll hope
-      // it was the former.
-      if ([root count] > 0) {
-        // find the xml toolbar menu.  it'll be in top level of bookmark menu folder
-        NSMutableArray *childArray = [[self bookmarkMenuFolder] childArray];
-        unsigned i, j=[childArray count];
-        id anObject;
-        for (i=0;i < j; i++) {
-          anObject = [childArray objectAtIndex:i];
-          if ([anObject isKindOfClass:[BookmarkFolder class]]) {
-            if ([(BookmarkFolder *)anObject isToolbar]) { //triumph!
-              [[self bookmarkMenuFolder] moveChild:anObject toBookmarkFolder:root atIndex:kToolbarContainerIndex];
-              break;
-            }
-          }
-        }
-      } else {  //we are so totally screwed
-        BookmarkFolder *aFolder = [root addBookmarkFolder];
-        if ([root count] == 1) {
-          [aFolder setTitle:NSLocalizedString(@"Bookmark Menu",@"Bookmark Menu")];
-          aFolder = [root addBookmarkFolder];
-        }
-        [aFolder setTitle:NSLocalizedString(@"Bookmark Toolbar",@"Bookmark Toolbar")];
-      }
-    }
-    [BookmarkItem setSuppressAllUpdateNotifications:NO];
-    // setup special folders
-    [self setupSmartCollections];
-    mSmartFolderManager = [[KindaSmartFolderManager alloc] initWithBookmarkManager:self];
-    // at some point, f'd up setting the bookmark toolbar folder special flag.
-    // this'll handle that little boo-boo for the time being
-    [[self toolbarFolder] setIsToolbar:YES];
-    [[self toolbarFolder] setTitle:NSLocalizedString(@"Bookmark Bar",@"Bookmark Bar")];
-    [[self bookmarkMenuFolder] setTitle:NSLocalizedString(@"Bookmark Menu","Bookmark Menu")]; 
-    // don't do this until after we've read in the bookmarks
-    mUndoManager = [[NSUndoManager alloc] init];
+  if ((self = [super init]))
+  {
+    mBookmarksLoaded = NO;
   }
   
   return self;
@@ -220,17 +151,89 @@ static unsigned gFirstUserCollection = 0;
   if (mImportDlgController)
     [mImportDlgController release];
 
-  if (self == gBookmarksManager)
-    gBookmarksManager = nil;
-
   [super dealloc];
 }
+
+- (void)loadBookmarksLoadingSynchronously:(BOOL)loadSync
+{
+  if (loadSync)
+  {
+    [self loadBookmarks];
+  }
+  else
+  {
+    [NSThread detachNewThreadSelector:@selector(loadBookmarksThreadEntry:) toTarget:self withObject:nil];
+  }
+}
+
+- (void)loadBookmarksThreadEntry:(id)inObject
+{
+  NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+  [self loadBookmarks];
+  [pool release];
+}
+
+- (void)loadBookmarks
+{
+  BookmarkFolder* root = [[BookmarkFolder alloc] init];
+  [root setParent:self];    // XXX why?
+  [root setIsRoot:YES];
+  [root setTitle:NSLocalizedString(@"BookmarksRootName", @"")];
+  [self setRootBookmarks:root];
+  [root release];
+
+  // Turn off the posting of update notifications while reading in bookmarks.
+  // All interested parties haven't been init'd yet, and/or will recieve the
+  // managerStartedNotification when setup is actually complete.
+  [BookmarkItem setSuppressAllUpdateNotifications:YES];
+  if (![self readBookmarks]) {
+    // one of two things happened. we are importing off an old xml file
+    // for startup, OR we totally muffed reading the bookmarks.  we'll hope
+    // it was the former.
+    if ([root count] > 0) {
+      // find the xml toolbar menu.  it'll be in top level of bookmark menu folder
+      NSMutableArray *childArray = [[self bookmarkMenuFolder] childArray];
+      unsigned i, j=[childArray count];
+      id anObject;
+      for (i=0;i < j; i++) {
+        anObject = [childArray objectAtIndex:i];
+        if ([anObject isKindOfClass:[BookmarkFolder class]]) {
+          if ([(BookmarkFolder *)anObject isToolbar]) { //triumph!
+            [[self bookmarkMenuFolder] moveChild:anObject toBookmarkFolder:root atIndex:kToolbarContainerIndex];
+            break;
+          }
+        }
+      }
+    } else {  //we are so totally screwed
+      BookmarkFolder *aFolder = [root addBookmarkFolder];
+      if ([root count] == 1) {
+        [aFolder setTitle:NSLocalizedString(@"Bookmark Menu",@"Bookmark Menu")];
+        aFolder = [root addBookmarkFolder];
+      }
+      [aFolder setTitle:NSLocalizedString(@"Bookmark Toolbar",@"Bookmark Toolbar")];
+    }
+  }
+  [BookmarkItem setSuppressAllUpdateNotifications:NO];
+  // setup special folders
+  [self setupSmartCollections];
+  mSmartFolderManager = [[KindaSmartFolderManager alloc] initWithBookmarkManager:self];
+  // at some point, f'd up setting the bookmark toolbar folder special flag.
+  // this'll handle that little boo-boo for the time being
+  [[self toolbarFolder] setIsToolbar:YES];
+  [[self toolbarFolder] setTitle:NSLocalizedString(@"Bookmark Bar",@"Bookmark Bar")];
+  [[self bookmarkMenuFolder] setTitle:NSLocalizedString(@"Bookmark Menu","Bookmark Menu")]; 
+  // don't do this until after we've read in the bookmarks
+  mUndoManager = [[NSUndoManager alloc] init];
+
+  [self performSelectorOnMainThread:@selector(delayedStartupItems) withObject:nil waitUntilDone:NO];
+}
+
 
 // Perform additional setup items on the main thread.
 - (void)delayedStartupItems
 {
-  [[NSApp delegate] setupBookmarkMenus:gBookmarksManager];
-  
+  mBookmarksLoaded = YES;
+
   [mSmartFolderManager postStartupInitialization:self];
   [[self toolbarFolder] refreshIcon];
 
@@ -254,7 +257,7 @@ static unsigned gFirstUserCollection = 0;
   [nc addObserver:self selector:@selector(bookmarkAdded:) name:BookmarkFolderAdditionNotification object:nil];
   [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
   [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
-  [nc addObserver:self selector:@selector(writeBookmarks:) name:WriteBookmarkNotification object:nil];
+  [nc addObserver:self selector:@selector(writeBookmarks:) name:kWriteBookmarkNotification object:nil];
 
   // pitch everything in the metadata cache and start over. Changes made from here will be incremental. It's
   // easier this way in case someone changed the bm plist directly, we know at startup we always have
@@ -262,12 +265,17 @@ static unsigned gFirstUserCollection = 0;
   [self writeBookmarksMetadataForSpotlight];
 
   // broadcast to everyone interested that we're loaded and ready for public consumption
-  [[NSNotificationCenter defaultCenter] postNotificationName:[BookmarkManager managerStartedNotification] object:nil];
+  [[NSNotificationCenter defaultCenter] postNotificationName:kBookmarkManagerStartedNotification object:nil];
 }
 
 - (void)shutdown
 {
   [self writeBookmarks:nil];
+}
+
+- (BOOL)bookmarksLoaded
+{
+  return mBookmarksLoaded;
 }
 
 
@@ -637,7 +645,7 @@ static unsigned gFirstUserCollection = 0;
     }
   }
   NSNotificationQueue* nq = [NSNotificationQueue defaultQueue];
-  NSNotification *note = [NSNotification notificationWithName:WriteBookmarkNotification object:self userInfo:nil];
+  NSNotification *note = [NSNotification notificationWithName:kWriteBookmarkNotification object:self userInfo:nil];
   [nq enqueueNotification:note postingStyle:NSPostASAP coalesceMask:NSNotificationCoalescingOnName forModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]];   
 }
 
