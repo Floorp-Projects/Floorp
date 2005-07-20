@@ -1731,7 +1731,7 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 //
 void
 nsWindow::ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTopDelta )
-{                        
+{
   ::ScrollWindowRect ( mWindowPtr, &inRectToScroll, inLeftDelta, inTopDelta, 
                         kScrollWindowInvalidate, NULL );
 }
@@ -1746,11 +1746,12 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
   if (mVisible && ContainerHierarchyIsVisible())
   {
-    // If the clipping region is non-rectangular, just force a full update, sorry.
-    // XXX ?
+    // If the clipping region is non-rectangular, just force a full update.
+    // Happens when scrolling pages with absolutely-positioned divs
+    // (see bug 289353 for examples).
     if (!IsRegionRectangular(mWindowRegion))
     {
-      Invalidate(PR_TRUE);
+      Invalidate(PR_FALSE);
       goto scrollChildren;
     }
 
@@ -1769,7 +1770,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     // width, just invalidate the entire area.
     if (aDx >= scrollRect.width || aDy >= scrollRect.height)
     {
-      Invalidate(scrollRect, PR_TRUE);
+      Invalidate(scrollRect, PR_FALSE);
     }
     else
     {
