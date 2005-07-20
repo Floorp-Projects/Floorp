@@ -410,50 +410,56 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
   eval->CreateExpression(aExpression,
                          aResolverNode,
                          getter_AddRefs(expression));
+
+  nsIDOMXPathResult *result = nsnull;
+  PRBool throwException = PR_FALSE;
   if (!expression) {
     const nsPromiseFlatString& flat = PromiseFlatString(aExpression);
     const PRUnichar *strings[] = { flat.get() };
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("exprParseError"),
                                strings, 1, aContextNode, nsnull);
-    return nsnull;
-  }
+    throwException = PR_TRUE;
+  } else {
+    nsCOMPtr<nsISupports> supResult;
+    nsresult rv = expression->EvaluateWithContext(aContextNode,
+                                                  aContextPosition,
+                                                  aContextSize,
+                                                  aResultType,
+                                                  nsnull,
+                                                  getter_AddRefs(supResult));
 
-  nsCOMPtr<nsISupports> supResult;
-  nsresult rv = expression->EvaluateWithContext(aContextNode,
-                                                aContextPosition,
-                                                aContextSize,
-                                                aResultType,
-                                                nsnull,
-                                                getter_AddRefs(supResult));
+    if (NS_SUCCEEDED(rv) && supResult) {
+      /// @todo beaufour: This is somewhat "hackish". Hopefully, this will
+      /// improve when we integrate properly with Transformiix (XXX)
+      /// @see http://bugzilla.mozilla.org/show_bug.cgi?id=265212
+      if (aSet) {
+        nsXFormsXPathParser parser;
+        nsXFormsXPathAnalyzer analyzer(eval, aResolverNode);
+        nsAutoPtr<nsXFormsXPathNode> xNode(parser.Parse(aExpression));
+        rv = analyzer.Analyze(aContextNode,
+                              xNode,
+                              expression,
+                              &aExpression,
+                              aSet,
+                              aContextPosition,
+                              aContextSize);
+        NS_ENSURE_SUCCESS(rv, nsnull);
 
-  nsIDOMXPathResult *result = nsnull;
-  if (NS_SUCCEEDED(rv) && supResult) {
-    /// @todo beaufour: This is somewhat "hackish". Hopefully, this will
-    /// improve when we integrate properly with Transformiix (XXX)
-    /// @see http://bugzilla.mozilla.org/show_bug.cgi?id=265212
-    if (aSet) {
-      nsXFormsXPathParser parser;
-      nsXFormsXPathAnalyzer analyzer(eval, aResolverNode);
-      nsAutoPtr<nsXFormsXPathNode> xNode(parser.Parse(aExpression));
-      rv = analyzer.Analyze(aContextNode,
-                            xNode,
-                            expression,
-                            &aExpression,
-                            aSet,
-                            aContextPosition,
-                            aContextSize);
-      NS_ENSURE_SUCCESS(rv, nsnull);
-
-      if (aIndexesUsed) 
-        *aIndexesUsed = analyzer.IndexesUsed();
+        if (aIndexesUsed)
+          *aIndexesUsed = analyzer.IndexesUsed();
+      }
+      CallQueryInterface(supResult, &result);  // addrefs
+    } else if (rv == NS_ERROR_XFORMS_CALCUATION_EXCEPTION) {
+      const nsPromiseFlatString& flat = PromiseFlatString(aExpression);
+      const PRUnichar *strings[] = { flat.get() };
+      nsXFormsUtils::ReportError(NS_LITERAL_STRING("exprEvaluateError"),
+                                 strings, 1, aContextNode, nsnull);
+      throwException = PR_TRUE;
     }
-    CallQueryInterface(supResult, &result);  // addrefs
   }
-  else if (rv == NS_ERROR_XFORMS_CALCUATION_EXCEPTION) {
-    const nsPromiseFlatString& flat = PromiseFlatString(aExpression);
-    const PRUnichar *strings[] = { flat.get() };
-    nsXFormsUtils::ReportError(NS_LITERAL_STRING("exprEvaluateError"),
-                               strings, 1, aContextNode, nsnull);
+
+  // Throw xforms-compute-exception
+  if (throwException) {
     nsCOMPtr<nsIDOMElement> resolverElement = do_QueryInterface(aResolverNode);
     nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(resolverElement);
     nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
