@@ -565,20 +565,29 @@ pref("network.IDN_show_punycode", false);
 // is true.
 
 // ccTLDs
+pref("network.IDN.whitelist.ac", true);
 pref("network.IDN.whitelist.at", true);
+pref("network.IDN.whitelist.br", true);
 pref("network.IDN.whitelist.ch", true);
 pref("network.IDN.whitelist.cn", true);
 pref("network.IDN.whitelist.de", true);
 pref("network.IDN.whitelist.dk", true);
+pref("network.IDN.whitelist.gr", true);
 pref("network.IDN.whitelist.hu", true);
+pref("network.IDN.whitelist.io", true);
 pref("network.IDN.whitelist.jp", true);
 pref("network.IDN.whitelist.kr", true);
 pref("network.IDN.whitelist.li", true);
+pref("network.IDN.whitelist.lt", true);
 pref("network.IDN.whitelist.no", true);
 pref("network.IDN.whitelist.se", true);
+pref("network.IDN.whitelist.sh", true);
+pref("network.IDN.whitelist.th", true);
+pref("network.IDN.whitelist.tm", true);
 pref("network.IDN.whitelist.tw", true);
 
 // non-ccTLDs
+pref("network.IDN.whitelist.info", true);
 pref("network.IDN.whitelist.museum", true);
 
 // This preference specifies a list of domains for which DNS lookups will be
