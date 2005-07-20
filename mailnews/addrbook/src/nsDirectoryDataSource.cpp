@@ -131,7 +131,7 @@ nsAbDirectoryDataSource::Init()
   NS_ENSURE_SUCCESS(rv,rv);
   
   // this listener cares about all events
-  rv = abSession->AddAddressBookListener(this, nsIAbListener::all);
+  rv = abSession->AddAddressBookListener(this, nsIAddrBookSession::all);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr <nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);

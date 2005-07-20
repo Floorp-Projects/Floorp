@@ -99,7 +99,7 @@ NS_IMETHODIMP nsAddrBookSession::NotifyItemPropertyChanged(nsISupports *item, co
   NS_ENSURE_SUCCESS(rv, rv);
   for(i = 0; i < count; i++)
   {
-    if (mListenerNotifyFlags[i] & nsIAbListener::changed) {
+    if (mListenerNotifyFlags[i] & changed) {
       nsCOMPtr<nsIAbListener> listener;
       mListeners->QueryElementAt(i, NS_GET_IID(nsIAbListener), (void **) getter_AddRefs(listener));
       NS_ASSERTION(listener, "listener is null");
@@ -120,7 +120,7 @@ NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemAdded(nsIAbDirectory *direct
     NS_ENSURE_SUCCESS(rv, rv);
     for(i = 0; i < count; i++)
     {
-      if (mListenerNotifyFlags[i] & nsIAbListener::added) {
+      if (mListenerNotifyFlags[i] & added) {
         nsCOMPtr<nsIAbListener> listener;
         mListeners->QueryElementAt(i, NS_GET_IID(nsIAbListener), (void **) getter_AddRefs(listener));
         NS_ASSERTION(listener, "listener is null");
@@ -143,7 +143,7 @@ NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemDeleted(nsIAbDirectory *dire
     NS_ENSURE_SUCCESS(rv, rv);
     for(i = 0; i < count; i++)
     {
-      if (mListenerNotifyFlags[i] & nsIAbListener::directoryItemRemoved) {
+      if (mListenerNotifyFlags[i] & directoryItemRemoved) {
         nsCOMPtr<nsIAbListener> listener;
         mListeners->QueryElementAt(i, NS_GET_IID(nsIAbListener), (void **) getter_AddRefs(listener));
         NS_ASSERTION(listener, "listener is null");
@@ -165,7 +165,7 @@ NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryDeleted(nsIAbDirectory *director
     NS_ENSURE_SUCCESS(rv, rv);
     for(i = 0; i < count; i++)
     {
-      if (mListenerNotifyFlags[i] & nsIAbListener::directoryRemoved) {
+      if (mListenerNotifyFlags[i] & directoryRemoved) {
         nsCOMPtr<nsIAbListener> listener;
         mListeners->QueryElementAt(i, NS_GET_IID(nsIAbListener), (void **) getter_AddRefs(listener));
         NS_ASSERTION(listener, "listener is null");

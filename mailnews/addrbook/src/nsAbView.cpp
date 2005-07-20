@@ -261,7 +261,7 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, PRBool aSearchView, nsIAbViewList
   NS_ENSURE_SUCCESS(rv,rv);
 
   // this listener cares about all events
-  rv = abSession->AddAddressBookListener(this, nsIAbListener::all);
+  rv = abSession->AddAddressBookListener(this, nsIAddrBookSession::all);
   NS_ENSURE_SUCCESS(rv,rv);
   
   if (mAbViewListener && !mSuppressCountChange) {

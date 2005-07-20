@@ -41,17 +41,60 @@
 
 typedef unsigned long abListenerNotifyFlagValue;
 
-[scriptable, uuid(1920E484-0709-11d3-A2EC-001083003D0C)]    
+/**
+  * nsIAbListener
+  *
+  * Implement this interface to receive notifications of address book
+  * items being added, removed or changed with loaded address books.
+  *
+  * Subscribe to events by using nsIAddrBookSession. See nsIAddrBookSession.idl
+  * for details of individual types of events that may be subscribed to.
+  *
+  */
+[scriptable, uuid(8c5b1f3d-983a-4854-a0e2-3719dba1a920)]
 interface nsIAbListener : nsISupports {
-  const abListenerNotifyFlagValue added = 0x1;
+  /**
+   * Called when an address book item (book, card or list) is added
+   *
+   * @param       parentDir       The parent of the item being added.
+   *
+   * @param       item            The item being added to the database (a
+   *                              directory or card).
+   *
+   */
   void onItemAdded(in nsISupports parentDir, in nsISupports item);
 
-  const abListenerNotifyFlagValue directoryItemRemoved = 0x2;
-  const abListenerNotifyFlagValue directoryRemoved = 0x4;
+  /**
+   * Called when an address book, mailing list or card is removed. This
+   * is partially configurable when setting up the listener via
+   * nsIAddrBookSession
+   *
+   * @param       parentDir       The parent of the item being removed, this
+   *                              may be an empty directory in the case of a
+   *                              top level address book.
+   *
+   * @param       item            The item being removed from the database.
+   *
+   */
   void onItemRemoved(in nsISupports parentDir, in nsISupports item);
 
-  const abListenerNotifyFlagValue changed = 0x8;
+  /**
+   * Called when an address book item is changed. Note the current
+   * implementation means that property is either the literal string "DirName"
+   * or null, with oldValue and newValue being specified if the property is
+   * "DirName" otherwise they are null.
+   *
+   * @param       item            The item being updated (a directory or a
+   *                              card).
+   *
+   * @param       property        The property of the item being changed.
+   *                              
+   * @param       oldValue        The old value of the item property being
+   *                              changed if it is known, null otherwise.
+   *                              
+   * @param       newValue        The new value of the item property being
+   *                              changed.
+   *                              
+   */
   void onItemPropertyChanged(in nsISupports item, in string property, in wstring oldValue, in wstring newValue);
-        
-  const abListenerNotifyFlagValue all = 0xFFFFFFFF;
 };

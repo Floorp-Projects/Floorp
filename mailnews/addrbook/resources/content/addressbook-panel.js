@@ -102,8 +102,10 @@ function AbPanelLoad()
   // selected directory's name is modified
   var addrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
   // this listener only cares when a directory is removed or modified
-  addrbookSession.addAddressBookListener(gAddressBookPanelAbListener,
-                  Components.interfaces.nsIAbListener.directoryRemoved | Components.interfaces.nsIAbListener.changed);
+  addrbookSession.addAddressBookListener(
+    gAddressBookPanelAbListener,
+    Components.interfaces.nsIAddrBookSession.directoryRemoved |
+    Components.interfaces.nsIAddrBookSession.changed);
 
   gSearchInput = document.getElementById("searchInput");
 

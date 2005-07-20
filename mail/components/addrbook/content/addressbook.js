@@ -214,8 +214,8 @@ function delayedOnLoadAddressBook()
   // interested in mailing list changes and not cards but we have to have both.
   addrbookSession.addAddressBookListener(
     gAddressBookAbListener,
-    Components.interfaces.nsIAbListener.directoryRemoved |
-    Components.interfaces.nsIAbListener.directoryItemRemoved);
+    Components.interfaces.nsIAddrBookSession.directoryRemoved |
+    Components.interfaces.nsIAddrBookSession.directoryItemRemoved);
 
   var dirTree = GetDirTree();
   dirTree.addEventListener("click",DirPaneClick,true);

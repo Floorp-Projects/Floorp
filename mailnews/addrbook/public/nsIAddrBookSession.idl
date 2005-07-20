@@ -53,9 +53,53 @@
 
 interface nsILocalFile;
 
-[scriptable, uuid(957abaa8-5cef-49d0-84a5-ce43da384990)]
+[scriptable, uuid(90533607-7205-473f-b688-ffb50eeb5d57)]
 interface nsIAddrBookSession : nsISupports {
+  /**
+   * Adds a nsIAbListener to receive notifications of address book updates
+   * according to the specified notifyFlags.
+   *
+   * @param  listener     The listener that is to receive updates.
+   *
+   * @param  notifyFlags  A bitwise-or of abListenerNotifyFlagValue items
+   *                       specifying which notifications to receive.
+   *
+   */
   void addAddressBookListener(in nsIAbListener listener, in abListenerNotifyFlagValue notifyFlags);
+
+  /**
+   * These flags specify when to receive notifications of address book updates
+   * to be passed to addAddressBookListener.
+   */
+
+  /**
+   * An address book, mailing list or card is added.
+   */
+  const abListenerNotifyFlagValue added = 0x1;
+  /**
+   * A mailing list or card is removed from an address book.
+   */
+  const abListenerNotifyFlagValue directoryItemRemoved = 0x2;
+  /**
+   * An address book is removed
+   */
+  const abListenerNotifyFlagValue directoryRemoved = 0x4;
+  /**
+   * An address book, mailing list or card is changed.
+   */
+  const abListenerNotifyFlagValue changed = 0x8;
+  /**
+   * All of the above notifications are to be received.
+   */
+  const abListenerNotifyFlagValue all = 0xFFFFFFFF;
+
+  /**
+   * Removes a nsIAbListener from receive notifications of address book
+   * updates.
+   *
+   * @param  listener     The listener that is to no longer receive updates.
+   *
+   */
   void removeAddressBookListener(in nsIAbListener listener);
   void notifyItemPropertyChanged(in nsISupports item,
                                  in string property,
