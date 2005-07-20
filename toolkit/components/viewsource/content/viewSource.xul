@@ -65,7 +65,7 @@
 #endif
 ]>
 
-<window id="main-window"
+<window id="viewSource"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoadViewSource();"
         onunload="onUnloadViewSource();"

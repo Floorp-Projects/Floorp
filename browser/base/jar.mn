@@ -7,6 +7,8 @@ browser.jar:
 %  overlay chrome://mozapps/content/extensions/extensions.xul?type=themes chrome://browser/content/extensionsManagerOverlay.xul
 %  overlay chrome://global/content/console.xul chrome://browser/content/jsConsoleOverlay.xul
 #endif
+%  overlay chrome://global/content/viewSource.xul chrome://browser/content/viewSourceOverlay.xul
+%  overlay chrome://global/content/viewPartialSource.xul chrome://browser/content/viewSourceOverlay.xul
 *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
 *       content/browser/aboutDialog.js                (content/aboutDialog.js)
 *       content/browser/aboutDialog.css               (content/aboutDialog.css)
@@ -40,6 +42,7 @@ browser.jar:
 *       content/browser/extensionsManagerOverlay.xul  (content/extensionsManagerOverlay.xul)
 *       content/browser/jsConsoleOverlay.xul          (content/jsConsoleOverlay.xul)
 #endif
+*       content/browser/viewSourceOverlay.xul         (content/viewSourceOverlay.xul)
 #ifndef MOZ_USE_OFFICIAL_BRANDING
 % content branding %content/branding/ xpcnativewrappers=yes
   content/branding/about.png                     (branding/about.png)
