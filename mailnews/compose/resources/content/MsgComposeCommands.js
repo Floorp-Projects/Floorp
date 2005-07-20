@@ -130,10 +130,13 @@ function InitializeGlobalVariables()
   gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
   
   //This migrates the LDAPServer Preferences from 4.x to mozilla format.
-  try {
-      gLDAPPrefsService = Components.classes["@mozilla.org/ldapprefs-service;1"].getService();       
-      gLDAPPrefsService = gLDAPPrefsService.QueryInterface( Components.interfaces.nsILDAPPrefsService);                  
-  } catch (ex) {dump ("ERROR: Cannot get the LDAP service\n" + ex + "\n");}
+  gLDAPPrefsService = Components.classes["@mozilla.org/ldapprefs-service;1"];
+  if (gLDAPPrefsService) {
+      try {
+          gLDAPPrefsService = gLDAPPrefsService.getService().gLDAPPrefsService
+              .QueryInterface( Components.interfaces.nsILDAPPrefsService);
+      } catch (ex) {dump ("ERROR: Cannot get the LDAP prefs service\n" + ex + "\n");}
+  }
 
   gMsgCompose = null;
   gWindowLocked = false;
@@ -788,8 +791,13 @@ function setupLdapAutocompleteSession()
         LDAPSession = gLDAPSession;
     } else {
         LDAPSession = Components.classes[
-            "@mozilla.org/autocompleteSession;1?type=ldap"].createInstance()
-            .QueryInterface(Components.interfaces.nsILDAPAutoCompleteSession);
+            "@mozilla.org/autocompleteSession;1?type=ldap"];
+        if (LDAPSession) {
+            try {
+                LDAPSession = LDAPSession.createInstance()
+                    .QueryInterface(Components.interfaces.nsILDAPAutoCompleteSession);
+            } catch (ex) {dump ("ERROR: Cannot get the LDAP autocomplete session\n" + ex + "\n");}
+        }
     }
             
     if (autocompleteDirectory && !gIsOffline) { 
