@@ -3009,7 +3009,9 @@ nsPrintEngine::PrintDocContent(nsPrintObject* aPO, nsresult& aStatus)
     }
   }
 
-  if (!aPO->mInvisible) {
+  // If |aPO->mPrintAsIs| is true, the kids are processed in |PrintPage|
+  // instead of here.
+  if (!aPO->mInvisible && !aPO->mPrintAsIs) {
     for (PRInt32 i=0;i<aPO->mKids.Count();i++) {
       nsPrintObject* po = (nsPrintObject*)aPO->mKids[i];
       PRBool printed = PrintDocContent(po, aStatus);
