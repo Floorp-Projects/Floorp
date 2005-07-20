@@ -69,7 +69,7 @@ public:
 
   // nsIDOMMouseListener
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; };
