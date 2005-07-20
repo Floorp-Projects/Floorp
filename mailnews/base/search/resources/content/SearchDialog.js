@@ -327,32 +327,14 @@ function onResetSearch(event) {
     gStatusFeedback.showStatusString("");
 }
 
-function getFirstItemByTag(root, tag)
-{
-    var node;
-    if (root.localName == tag)
-        return root;
-
-    if (root.childNodes) {
-        for (node = root.firstChild; node; node=node.nextSibling) {
-            if (node.localName != "template") {
-                var result = getFirstItemByTag(node, tag);
-                if (result) return result;
-            }
-        }
-    }
-    return null;
-}
-
 function selectFolder(folder) 
 {
     var folderURI;
 
     // if we can't search messages on this folder, just select the first one
     if (!folder || !folder.server.canSearchMessages || (folder.flags & MSG_FOLDER_FLAG_VIRTUAL)) {
-        // walk folders to find first item
-        var firstItem = getFirstItemByTag(gFolderPicker, "menu");
-        folderURI = firstItem.id;
+        // find first item in our folder picker menu list
+        folderURI = gFolderPicker.firstChild.tree.builderView.getResourceAtIndex(0).Value;
     } else {
         folderURI = folder.URI;
     }
