@@ -1842,10 +1842,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     nsGenericHTMLFormElement::MapImageSizeAttributesInto(aAttributes, aData);
     // Images treat align as "float"
     nsGenericHTMLFormElement::MapImageAlignAttributeInto(aAttributes, aData);
-  } else {
-    // Everything else treats align as "text-align"
-    nsGenericHTMLFormElement::MapDivAlignAttributeInto(aAttributes, aData);
-  }
+  } 
 
   nsGenericHTMLFormElement::MapCommonAttributesInto(aAttributes, aData);
 }
