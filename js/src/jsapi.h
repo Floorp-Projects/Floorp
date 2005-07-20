@@ -1902,6 +1902,14 @@ JS_DropExceptionState(JSContext *cx, JSExceptionState *state);
 extern JS_PUBLIC_API(JSErrorReport *)
 JS_ErrorFromException(JSContext *cx, jsval v);
 
+/*
+ * Given a reported error's message and JSErrorReport struct pointer, throw
+ * the corresponding exception on cx.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_ThrowReportedError(JSContext *cx, const char *message,
+                      JSErrorReport *reportp);
+
 #ifdef JS_THREADSAFE
 
 /*
