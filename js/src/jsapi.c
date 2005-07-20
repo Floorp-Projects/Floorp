@@ -4478,7 +4478,7 @@ JS_PUBLIC_API(JSBool)
 JS_ThrowReportedError(JSContext *cx, const char *message,
                       JSErrorReport *reportp)
 {
-    js_ErrorToException(cx, message, reportp);
+    return js_ErrorToException(cx, message, reportp);
 }
 
 #ifdef JS_THREADSAFE
