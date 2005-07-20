@@ -1,9 +1,9 @@
 /* example.c -- usage example of the zlib compression library
- * Copyright (C) 1995-2003 Jean-loup Gailly.
+ * Copyright (C) 1995-2004 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: example.c,v 1.4 2004/11/02 23:40:10 wchang0222%aol.com Exp $ */
+/* @(#) $Id: example.c,v 1.5 2005/07/20 20:32:42 wtchang%redhat.com Exp $ */
 
 #include <stdio.h>
 #include "zlib.h"
@@ -11,8 +11,6 @@
 #ifdef STDC
 #  include <string.h>
 #  include <stdlib.h>
-#else
-   extern void exit  OF((int));
 #endif
 
 #if defined(VMS) || defined(RISCOS)

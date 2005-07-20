@@ -1,5 +1,5 @@
 /* minigzip.c -- simulate gzip using the zlib compression library
- * Copyright (C) 1995-2002 Jean-loup Gailly.
+ * Copyright (C) 1995-2005 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
@@ -13,7 +13,7 @@
  * or in pipe mode.
  */
 
-/* @(#) $Id: minigzip.c,v 1.4 2004/11/02 23:40:10 wchang0222%aol.com Exp $ */
+/* @(#) $Id: minigzip.c,v 1.5 2005/07/20 20:32:42 wtchang%redhat.com Exp $ */
 
 #include <stdio.h>
 #include "zlib.h"
@@ -21,8 +21,6 @@
 #ifdef STDC
 #  include <string.h>
 #  include <stdlib.h>
-#else
-   extern void exit  OF((int));
 #endif
 
 #ifdef USE_MMAP
@@ -297,6 +295,8 @@ int main(argc, argv)
         break;
       argc--, argv++;
     }
+    if (outmode[3] == ' ')
+        outmode[3] = 0;
     if (argc == 0) {
         SET_BINARY_MODE(stdin);
         SET_BINARY_MODE(stdout);
