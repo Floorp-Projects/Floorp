@@ -40,6 +40,7 @@
 #include "nsOSHelperAppService.h"
 #include "nsISupports.h"
 #include "nsString.h"
+#include "nsAutoBuffer.h"
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
 #include "nsILocalFile.h"
@@ -58,6 +59,13 @@
 // chrome URL's
 #define HELPERAPPLAUNCHER_BUNDLE_URL "chrome://global/locale/helperAppLauncher.properties"
 #define BRAND_BUNDLE_URL "chrome://branding/locale/brand.properties"
+
+extern "C" {
+  // Returns the CFURL for application currently set as the default opener for
+  // the given URL scheme. appURL must be released by the caller.
+  extern OSStatus _LSCopyDefaultSchemeHandlerURL(CFStringRef scheme,
+                                                 CFURLRef *appURL);
+}
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
@@ -113,6 +121,51 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
       }
     }
   }
+  return rv;
+}
+
+NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
+{
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+
+  CFStringRef schemeCFString = 
+    ::CFStringCreateWithBytes(kCFAllocatorDefault,
+                              (const UInt8 *)PromiseFlatCString(aScheme).get(),
+                              aScheme.Length(),
+                              kCFStringEncodingUTF8,
+                              false);
+  if (schemeCFString) {
+    // Since the public API (LSGetApplicationForURL) fails every now and then,
+    // we're using undocumented _LSCopyDefaultSchemeHandlerURL
+    CFURLRef handlerBundleURL;
+    OSStatus err = ::_LSCopyDefaultSchemeHandlerURL(schemeCFString,
+                                                    &handlerBundleURL);
+    if (err == noErr) {
+      CFBundleRef handlerBundle = ::CFBundleCreate(NULL, handlerBundleURL);
+      if (handlerBundle) {
+        // Get the human-readable name of the default handler bundle
+        CFStringRef bundleName =
+          (CFStringRef)::CFBundleGetValueForInfoDictionaryKey(handlerBundle,
+                                                              kCFBundleNameKey);
+        if (bundleName) {
+          nsAutoBuffer<UniChar, 255> buffer;
+          CFIndex bundleNameLength = ::CFStringGetLength(bundleName);
+          buffer.EnsureElemCapacity(bundleNameLength);
+          ::CFStringGetCharacters(bundleName, CFRangeMake(0, bundleNameLength),
+                                  buffer.get());
+          _retval.Assign(buffer.get(), bundleNameLength);
+          rv = NS_OK;
+        }
+
+        ::CFRelease(handlerBundle);
+      }
+
+      ::CFRelease(handlerBundleURL);
+    }
+
+    ::CFRelease(schemeCFString);
+  }
+
   return rv;
 }
 
