@@ -631,7 +631,7 @@ ReadLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_TRUE;
     }
 
-    /* Shrink the buffer to the real size */
+    /* Shrink the buffer to the real size. */
     tmp = JS_realloc(cx, buf, buflength);
     if (!tmp) {
         JS_free(cx, buf);
@@ -2294,8 +2294,8 @@ Evaluate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     oldopts = JS_GetOptions(cx);
     JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
-    ok = JS_EvaluateUCScript(cx, obj, JSSTRING_CHARS(source),
-                             JSSTRING_LENGTH(source), filename,
+    ok = JS_EvaluateUCScript(cx, obj, JS_GetStringChars(source),
+                             JS_GetStringLength(source), filename,
                              lineno, rval);
     JS_SetOptions(cx, oldopts);
     
