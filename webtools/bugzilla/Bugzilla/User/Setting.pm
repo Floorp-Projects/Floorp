@@ -27,6 +27,7 @@ use base qw(Exporter);
      add_setting);
 
 use Bugzilla::Error;
+use Bugzilla::Util qw{trick_taint};
 
 ###############################
 ###  Module Initialization  ###
@@ -224,6 +225,19 @@ sub legal_values {
     return $self->{'legal_values'};
 }
 
+sub validate_value {
+    my $self = shift;
+
+    if (grep(/^$_[0]$/, @{$self->legal_values()})) {
+        trick_taint($_[0]);
+    }
+    else {
+        ThrowCodeError('setting_value_invalid',
+                       {'name'  => $self->{'_setting_name'},
+                        'value' => $_[0]});
+    }
+}
+
 sub reset_to_default {
     my ($self) = @_;
 
@@ -345,6 +359,15 @@ Returns:     boolean - true if the setting already exists in the DB.
 Description: Returns all legal values for this setting
 Params:      none
 Returns:     A reference to an array containing all legal values
+
+=item C<validate_value>
+
+Description: Determines whether a value is valid for the setting
+             by checking against the list of legal values.
+             Untaints the parameter if the value is indeed valid,
+             and throws a setting_value_invalid code error if not.
+Params:      An lvalue containing a candidate for a setting value
+Returns:     nothing
 
 =item C<reset_to_default>
 

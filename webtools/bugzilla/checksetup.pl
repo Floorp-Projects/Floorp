@@ -4053,6 +4053,9 @@ add_setting ("post_bug_submit_action", {"next_bug" => 1,
                                        },
              "next_bug" );
 
+# 2005-06-29 wurblzap@gmail.com -- Bug 257767
+add_setting ('csv_colsepchar', {',' => 1, ';' => 2 }, ',' );
+
 ###########################################################################
 # Create Administrator  --ADMIN--
 ###########################################################################

@@ -152,18 +152,16 @@ sub SaveSettings {
     foreach my $name (@setting_list) {
         next if ! ($settings->{$name}->{'is_enabled'});
         my $value = $cgi->param($name);
+        my $setting = new Bugzilla::User::Setting($name);
 
-        # de-taint the value.
-        if ($value =~ /^([-\w]+)$/ ) {
-            $value = $1;
-        }
         if ($value eq "${name}-isdefault" ) {
             if (! $settings->{$name}->{'is_default'}) {
-                 $settings->{$name}->reset_to_default;
+                $settings->{$name}->reset_to_default;
             }
         }
         else {
-           $settings->{$name}->set($value);
+            $setting->validate_value($value);
+            $settings->{$name}->set($value);
         }
     }
     $vars->{'settings'} = Bugzilla->user->settings(1);

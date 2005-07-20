@@ -23,19 +23,22 @@
 [% PROCESS global/variables.none.tmpl %]
 [% USE date %]
 
-bug_id,
+[% colsepchar = user.settings.csv_colsepchar.value %]
+
+bug_id
 [% FOREACH column = displaycolumns %]
-  [% column FILTER csv %],
+  [% colsepchar %][% column FILTER csv %]
 [% END %]
 
 [% FOREACH bug = bugs %]
-  [% bug.bug_id %],
+  [% bug.bug_id %]
     [% FOREACH column = displaycolumns %]
+      [% colsepchar %]
       [% IF column == "opendate" OR column == "changeddate" %]
         [% rawcolumn = column.replace("date", "time") %]
         [% bug.$column = date.format(bug.$rawcolumn, "%Y-%m-%d %H:%M:%S") %]
       [% END %]
-      [% bug.$column FILTER csv %],
+      [% bug.$column FILTER csv %]
     [% END %]
 
 [% END %]

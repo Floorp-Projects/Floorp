@@ -54,11 +54,9 @@ sub SaveSettings{
         my $old_value   = $vars->{'settings'}->{$name}->{'default_value'};
         my $enabled = defined $cgi->param("${name}-enabled") || 0;
         my $value = $cgi->param("${name}");
+        my $setting = new Bugzilla::User::Setting($name);
 
-        # remove taint
-        if ($value =~ /^(\w+)$/ ) {
-            $value = $1;
-        }
+        $setting->validate_value($value);
 
         if ( ($old_enabled != $enabled) ||
              ($old_value ne $value) ) {

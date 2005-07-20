@@ -135,7 +135,7 @@
 'reports/report-table.csv.tmpl' => [
   'num_bugs',
   'data.$tbl.$col.$row',
-  'title',
+  'colsepchar',
 ],
 
 'reports/report-table.html.tmpl' => [
@@ -190,6 +190,7 @@
 
 'reports/chart.csv.tmpl' => [
   'data.$j.$i', 
+  'colsepchar',
 ],
 
 'reports/create-chart.html.tmpl' => [
@@ -231,6 +232,7 @@
 
 'list/list.csv.tmpl' => [
   'bug.bug_id', 
+  'colsepchar',
 ],
 
 'list/list.js.tmpl' => [

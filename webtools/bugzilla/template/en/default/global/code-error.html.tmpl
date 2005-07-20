@@ -260,6 +260,10 @@
     option. Setting names must begin with a letter, and contain only
     letters, digits, or the symbols '_', '-', '.', or ':'.
 
+  [% ELSIF error == "setting_value_invalid" %]
+    The value "<code>[% value FILTER html %]</code>" is not in the list of
+    legal values for the <em>[% name FILTER html %]</em> setting.
+
   [% ELSIF error == "token_generation_error" %]
     Something is seriously wrong with the token generation system.
 

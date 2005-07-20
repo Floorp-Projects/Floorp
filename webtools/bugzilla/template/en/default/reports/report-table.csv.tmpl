@@ -23,51 +23,50 @@
   #%]
 [% PROCESS global/variables.none.tmpl %]
 
+[% colsepchar = user.settings.csv_colsepchar.value %]
+
 [% num_bugs = BLOCK %]Number of [% terms.bugs %][% END %]
 [% tbl_field_disp = field_descs.$tbl_field || tbl_field %]
 [% col_field_disp = field_descs.$col_field || col_field %]
 [% row_field_disp = field_descs.$row_field || row_field %]
 
-[% title = BLOCK %]
-  [% IF tbl_field %]
-    [% tbl_field_disp FILTER csv %]: [% tbl FILTER csv %]
-
-  [% END %]
-  [% IF row_field %]
-    [% row_field_disp FILTER csv %]
-  [% END %]
-  [% " / " IF col_field AND row_field %]
-  [% col_field_disp FILTER csv %]
+[% IF tbl_field %]
+  [% tbl_field_disp FILTER csv %]: [% tbl FILTER csv %]
 [% END %]
-
-[% title %],
+[% IF row_field %]
+  [% row_field_disp FILTER csv %]
+[% END %]
+[% " / " IF col_field AND row_field %]
+[% col_field_disp FILTER csv %]
 [% IF col_field -%]
-[% FOREACH col = col_names -%]
-  [% IF col_field == 'bug_status' %]
-    [% status_descs.$col FILTER csv -%]
-  [% ELSIF col_field == 'resolution' %]
-    [% resolution_descs.$col FILTER csv -%]
-  [% ELSE %]
-    [% col FILTER csv -%],
-  [% END %]
-[% END -%]
+  [% FOREACH col = col_names -%]
+    [% colsepchar %]
+    [% IF col_field == 'bug_status' %]
+      [% status_descs.$col FILTER csv -%]
+    [% ELSIF col_field == 'resolution' %]
+      [% resolution_descs.$col FILTER csv -%]
+    [% ELSE %]
+      [% col FILTER csv -%]
+    [% END %]
+  [% END -%]
 [% ELSE -%]
-  [% num_bugs %],
+  [% colsepchar %][% num_bugs %]
 [% END %]
 
 [% FOREACH row = row_names %]
-[% IF row_field == 'bug_status' %]
+  [% IF row_field == 'bug_status' %]
     [% status_descs.$row FILTER csv -%]
   [% ELSIF row_field == 'resolution' %]
     [% resolution_descs.$row FILTER csv -%]
   [% ELSE %]
-    [% row FILTER csv -%],
+    [% row FILTER csv -%]
   [% END %]
   [% FOREACH col = col_names %]
+    [% colsepchar %]
     [% IF data.$tbl AND data.$tbl.$col AND data.$tbl.$col.$row %]
-      [% data.$tbl.$col.$row -%],
+      [% data.$tbl.$col.$row -%]
     [% ELSE %]
-      [% -%]0,
+      [% -%]0
     [% END %]
   [% END %]
 
