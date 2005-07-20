@@ -80,7 +80,7 @@ nsSchemaComplexType::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
       nsAutoString attrName;
       nsresult rv1 = mAttributes.ObjectAt(i)->GetName(attrName);
       NS_ENSURE_SUCCESS(rv1, rv1);
-      
+
       nsAutoString errorMsg;
       errorMsg.AppendLiteral("Failure resolving schema complex type, ");
       errorMsg.AppendLiteral("cannot resolve attribute \"");
@@ -141,7 +141,7 @@ nsSchemaComplexType::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
     rv = mModelGroup->Resolve(aErrorHandler);
     if (NS_FAILED(rv)) {
       nsAutoString modelName;
-      nsresult rv1 = type->GetName(modelName);
+      nsresult rv1 = mModelGroup->GetName(modelName);
       NS_ENSURE_SUCCESS(rv1, rv1);
 
       nsAutoString errorMsg;
