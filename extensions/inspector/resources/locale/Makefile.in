@@ -15,12 +15,12 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# Benjamin Smedberg <benjamin@smedbergs.us>
+#
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Joe Hewitt <hewitt@netscape.com> (original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,43 +37,21 @@
 # ***** END LICENSE BLOCK *****
 
 
-DEPTH=../..
+DEPTH=../../../..
 topsrcdir=@top_srcdir@
 srcdir=@srcdir@
 VPATH=@srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE	= inspector
-
-DIRS=base build resources
-
 ifdef MOZ_XUL_APP
 XPI_NAME               = inspector
 USE_EXTENSION_MANIFEST = 1
 NO_JAR_AUTO_REG        = 1
-INSTALL_EXTENSION_ID   = inspector@mozilla.org
-XPI_PKGNAME            = inspector-$(MOZ_APP_VERSION)
 endif
 
-PREF_JS_EXPORTS = $(srcdir)/resources/content/prefs/inspector.js
+DEFINES += -DAB_CD=$(AB_CD)
 
-DIST_FILES = install.rdf
-
-# We should really pull FIREFOX_VERSION and THUNDERBIRD_VERSION from
-# browser/config/version.txt mail/config/version.txt but we can't be assured
-# that we've even pulled those files. So we hardcode them.
-
-XULAPP_DEFINES = \
-	-DFIREFOX_VERSION=1.0+ \
-	-DTHUNDERBIRD_VERSION=1.0+ \
-	-DEXTENSION_VERSION=1.7+ \
-	$(NULL)
+# Let jar.mn do its happy-dance
 
 include $(topsrcdir)/config/rules.mk
-
-export::
-ifeq ($(OS_ARCH),WINNT)
-	$(NSINSTALL) -D $(FINAL_TARGET)/chrome/icons/default
-	$(INSTALL) $(srcdir)/resources/content/res/winInspectorMain.ico $(FINAL_TARGET)/chrome/icons/default
-endif
