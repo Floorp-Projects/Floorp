@@ -274,6 +274,7 @@ protected:
   PRPackedBool      mAcceptFocusOnClick;
 
   PRPackedBool      mDrawing;
+  PRPackedBool      mInUpdate;    // this is only used for the top-level widget
   PRPackedBool      mTempRenderingContextMadeHere;
 
   nsIRenderingContext*    mTempRenderingContext;

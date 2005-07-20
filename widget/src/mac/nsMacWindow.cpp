@@ -82,6 +82,39 @@ const short kWindowMarginWidth = 6;
 const short kDialogTitleBarHeight = 26;
 const short kDialogMarginWidth = 6;
 
+#if 0
+
+// routines for debugging port state issues (which are legion)
+static void PrintRgn(const char* inLabel, RgnHandle inRgn)
+{
+  Rect regionBounds;
+  GetRegionBounds(inRgn, &regionBounds);
+  printf("%s left %d, top %d, right %d, bottom %d\n", inLabel,
+    regionBounds.left, regionBounds.top, regionBounds.right, regionBounds.bottom);
+}
+
+static void PrintPortState(WindowPtr inWindow, const char* label)
+{
+  CGrafPtr currentPort = CGrafPtr(GetQDGlobalsThePort());
+  Rect bounds;
+  GetPortBounds(currentPort, &bounds);
+  printf("%s: Current port: %p, top, left = %d, %d\n", label, currentPort, bounds.top, bounds.left);
+
+  StRegionFromPool savedClip;
+  ::GetClip(savedClip);
+  PrintRgn("  clip:", savedClip);
+
+  StRegionFromPool updateRgn;
+  ::GetWindowUpdateRegion(inWindow, updateRgn);
+  Rect windowBounds;
+  ::GetWindowBounds(inWindow, kWindowContentRgn, &windowBounds);
+  ::OffsetRgn(updateRgn, -windowBounds.left, -windowBounds.top);
+
+  PrintRgn("  update:", updateRgn);
+}
+
+#endif
+
 #pragma mark -
 
 pascal OSErr
@@ -537,15 +570,11 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
       { kEventClassWindow, kEventWindowCollapse },
       // to keep invisible windows off the screen
       { kEventClassWindow, kEventWindowConstrain },
-
-      // Last two are only for sheets.
+      // to handle update events
       { kEventClassWindow, kEventWindowUpdate },
-      { kEventClassWindow, kEventWindowDrawContent }
     };
 
-    // kEventWindowUpdate and kEventWindowDrawContent are only for sheets.
-    PRUint32 typeCount = mIsSheet ? GetEventTypeCount(windEventList) :
-                                    GetEventTypeCount(windEventList) - 2;
+    PRUint32 typeCount = GetEventTypeCount(windEventList);
 
     err = ::InstallWindowEventHandler(mWindowPtr,
                                       NewEventHandlerUPP(WindowEventHandler),
@@ -650,10 +679,9 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
       }      
 
       case kEventWindowUpdate:
-      case kEventWindowDrawContent:
       {
         nsMacWindow *self = NS_REINTERPRET_CAST(nsMacWindow *, userData);
-        if (self) self->mMacEventHandler->UpdateEvent();
+        if (self) self->Update();
       }
       break;
 
@@ -1400,7 +1428,32 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
       if (aWidth != 0 && aHeight != 0) {
         // make sure that we don't infinitely recurse if live-resize is on
         mResizeIsFromUs = PR_TRUE;
+        
+        // If we're in the middle of a BeginUpdate/EndUpdate pair, SizeWindow
+        // causes bad painting thereafter, because the EndUpdate restores a stale
+        // visRgn on the window. So we have to temporarily break out of the
+        // BeginUpdate/EndUpdate state.
+        StRegionFromPool savedUpdateRgn;
+        PRBool wasInUpdate = mInUpdate;
+        if (mInUpdate)
+        {
+          // Get the visRgn (which, if we're inside BeginUpdate/EndUpdate,
+          // is the intersection of the window visible region, and the
+          // update region).
+          ::GetPortVisibleRegion(::GetWindowPort(mWindowPtr), savedUpdateRgn);
+          ::EndUpdate(mWindowPtr);
+        }
+          
         ::SizeWindow(mWindowPtr, aWidth, aHeight, aRepaint);
+
+        if (wasInUpdate)
+        {
+          // restore the update region (note that is redundant
+          // if aRepaint is true, because the SizeWindow will cause a full-window
+          // invalidate anyway).
+          ::InvalWindowRgn(mWindowPtr, savedUpdateRgn);
+          ::BeginUpdate(mWindowPtr);
+        }
 
         // update userstate to match, if appropriate
         PRInt32 sizeMode;
@@ -1722,5 +1775,4 @@ void nsMacWindow::IsActive(PRBool* aActive)
 {
   *aActive = mIsActive;
 }
-
 
