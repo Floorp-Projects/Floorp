@@ -891,8 +891,8 @@ nsHttpConnectionMgr::OnMsgReclaimConnection(PRInt32, void *param)
 void
 nsHttpConnectionMgr::OnMsgUpdateParam(PRInt32, void *param)
 {
-    PRUint16 name  = (PRUint32(param) & 0xFFFF0000) >> 16;
-    PRUint16 value =  PRUint32(param) & 0x0000FFFF;
+    PRUint16 name  = (NS_PTR_TO_INT32(param) & 0xFFFF0000) >> 16;
+    PRUint16 value =  NS_PTR_TO_INT32(param) & 0x0000FFFF;
 
     switch (name) {
     case MAX_CONNECTIONS:
