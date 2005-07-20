@@ -210,7 +210,7 @@ sub execute_tests {
         my $command = &append_file_to_command($shell_command, $path);
         &dd ("executing: " . $command);
 
-        system "$command $redirect_command > js.out";
+        system "$command > js.out $redirect_command";
         open (OUTPUT, "js.out") or
            die "failed to open js.out: $!\n";
         @output = <OUTPUT>;
