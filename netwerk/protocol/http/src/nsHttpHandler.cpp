@@ -629,6 +629,17 @@ nsHttpHandler::InitUserAgentComponents()
     else if (os2ver == 45)
         mOscpu.AssignLiteral("Warp 4.5");
 
+#elif defined(WINCE)
+    OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
+    if (GetVersionEx(&info)) {
+        char *buf = PR_smprintf("Windows CE %ld.%ld",
+                                info.dwMajorVersion,
+                                info.dwMinorVersion);
+        if (buf) {
+            mOscpu = buf;
+            PR_smprintf_free(buf);
+        }
+    }
 #elif defined(XP_WIN)
     OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
     if (GetVersionEx(&info)) {
