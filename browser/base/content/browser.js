@@ -33,6 +33,7 @@
 #   Asaf Romano <mozilla.mano@sent.com>
 #   Jason Barnabe <jason_barnabe@fastmail.fm>
 #   Peter Parente <parente@cs.unc.edu>
+#   Giorgio Maone <g.maone@informaction.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -227,8 +228,8 @@ const gPopupBlockerObserver = {
           message = bundle_browser.getFormattedString("popupWarning", [brandShortName]);
 
         gBrowser.showMessage(gBrowser.selectedBrowser, "chrome://browser/skin/Info.png",
-                             message, popupButtonText, popupButtonAccesskey, null, null,
-                             "blockedPopupOptions", "top", true);
+                             message, popupButtonText, null, null, "blockedPopupOptions",
+                             "top", true, popupButtonAccesskey);
       }
     }
     else
@@ -474,8 +475,8 @@ const gXPInstallObserver = {
           buttonKey = browserBundle.getString("xpinstallDisabledWarningButton.accesskey");
           buttonAccesskeyString = browserBundle.getString("xpinstallDisabledWarningButton");
           getBrowser().showMessage(browser, iconURL, messageString, buttonString,
-                                   buttonAccesskeyString, null, "xpinstall-install-edit-prefs",
-                                   null, "top", false);
+                                   null, "xpinstall-install-edit-prefs",
+                                   null, "top", false, buttonAccesskeyString);
         }
         else {
           messageString = browserBundle.getFormattedString(messageKey, [brandShortName, host]);
@@ -483,8 +484,8 @@ const gXPInstallObserver = {
           buttonAccesskeyString = browserBundle.getString(buttonAccesskeyKey);
           webNav = shell.QueryInterface(Components.interfaces.nsIWebNavigation);
           getBrowser().showMessage(browser, iconURL, messageString, buttonString,
-                                   buttonAccesskeyString, shell,
-                                   "xpinstall-install-edit-permissions", null, "top", false);
+                                   shell, "xpinstall-install-edit-permissions",
+                                   null, "top", false, buttonAccesskeyString);
         }
       }
       break;
@@ -5887,8 +5888,8 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   var buttonString = bundle_browser.getString("missingpluginsMessage.button.label");
   var buttonAccesskeyString = bundle_browser.getString("missingpluginsMessage.button.accesskey");
 
-  tabbrowser.showMessage(browser, iconURL, messageString, buttonString, buttonAccesskeyString,
-                         "", "missing-plugin", null, "top", true);
+  tabbrowser.showMessage(browser, iconURL, messageString, buttonString,"",
+                         "missing-plugin", null, "top", true, buttonAccesskeyString);
 }
 
 missingPluginInstaller.prototype.observe = function(aSubject, aTopic, aData){

@@ -24,6 +24,7 @@
    -   David Hyatt <hyatt@netscape.com> (Original Author of <tabbrowser>)
    -   Mike Connor <mconnor@steelgryphon.com>
    -   Peter Parente <parente@cs.unc.edu>
+   -   Giorgio Maone <g.maone@informaction.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -223,19 +224,21 @@
         <parameter name="aIconURL"/>
         <parameter name="aMessage"/>
         <parameter name="aButtonLabel"/>
-        <parameter name="aButtonAccesskey"/>
         <parameter name="aDocShell"/>
         <parameter name="aSource"/>
         <parameter name="aPopup"/>
         <parameter name="aTopBottom"/>
         <parameter name="aShowCloseButton"/>
+        <parameter name="aButtonAccesskey"/>
         <body>
           <![CDATA[
             var message = this.getMessageForBrowser(aBrowser, aTopBottom);
             message.image = aIconURL;
             message.text = aMessage;
             message.buttonText = aButtonLabel;
-            message.buttonAccesskey = aButtonAccesskey;
+            message.buttonAccesskey = 
+              typeof(aButtonAccesskey) == "undefined" ? ""
+                : aButtonAccesskey;
             message.hidden = false;
             if (aSource) {
               message.source = aSource;
