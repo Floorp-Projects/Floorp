@@ -4644,7 +4644,9 @@ nsContextMenu.prototype = {
         }
         // The selection object may also report an empty text node if there is no selection.
         var node = rangeFragment.childNodes[0];
-        if (node.nodeType == node.TEXT_NODE && node.nodeValue.length == 0) {
+        if (rangeFragment.childNodes.length == 1 &&
+            node.nodeType == node.TEXT_NODE &&
+            node.nodeValue.length == 0) {
             return false;
         }
         return true;
