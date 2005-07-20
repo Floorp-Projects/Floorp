@@ -276,6 +276,9 @@ js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp);
 extern JS_FRIEND_API(JSBool)
 js_CloseTokenStream(JSContext *cx, JSTokenStream *ts);
 
+extern JS_FRIEND_API(int)
+js_fgets(char *buf, int size, FILE *file);
+
 /*
  * Initialize the scanner, installing JS keywords into cx's global scope.
  */

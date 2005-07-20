@@ -322,8 +322,8 @@ js_CloseTokenStream(JSContext *cx, JSTokenStream *ts)
     return !ts->file || fclose(ts->file) == 0;
 }
 
-static int
-my_fgets(char *buf, int size, FILE *file)
+JS_FRIEND_API(int)
+js_fgets(char *buf, int size, FILE *file)
 {
     int n, i, c;
     JSBool crflag;
@@ -373,7 +373,7 @@ GetChar(JSTokenStream *ts)
 
                     /* Fill ts->userbuf so that \r and \r\n convert to \n. */
                     crflag = (ts->flags & TSF_CRFLAG) != 0;
-                    len = my_fgets(cbuf, JS_LINE_LIMIT - crflag, ts->file);
+                    len = js_fgets(cbuf, JS_LINE_LIMIT - crflag, ts->file);
                     if (len <= 0) {
                         ts->flags |= TSF_EOF;
                         return EOF;
