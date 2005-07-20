@@ -124,7 +124,8 @@ protected:
 
 private:
 
-  PRBool  AlwaysAppendAccessKey();
+  PRBool AlwaysAppendAccessKey();
+  PRBool InsertSeparatorBeforeAccessKey();
 
   CroppingStyle mCropType;
   nsString mTitle;
@@ -138,6 +139,8 @@ private:
 
   static PRBool gAlwaysAppendAccessKey;
   static PRBool gAccessKeyPrefInitialized;
+  static PRBool gInsertSeparatorBeforeAccessKey;
+  static PRBool gInsertSeparatorPrefInitialized;
 
 }; // class nsTextBoxFrame
 

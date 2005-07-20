@@ -117,6 +117,7 @@ pref("intl.content.langcode",               "chrome://communicator-region/locale
 pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
 pref("intl.locale.matchOS",                 false);
 pref("intl.menuitems.alwaysappendaccesskeys","chrome://navigator/locale/navigator.properties");
+pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://navigator/locale/navigator.properties");
 pref("javascript.allow.mailnews",           false);
 pref("javascript.enabled",                  true);
 pref("javascript.options.showInConsole",    true);

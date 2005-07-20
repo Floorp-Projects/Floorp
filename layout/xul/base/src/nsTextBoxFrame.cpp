@@ -93,8 +93,10 @@ public:
 };
 
 
-PRBool nsTextBoxFrame::gAlwaysAppendAccessKey       = PR_FALSE;
-PRBool nsTextBoxFrame::gAccessKeyPrefInitialized    = PR_FALSE;
+PRBool nsTextBoxFrame::gAlwaysAppendAccessKey          = PR_FALSE;
+PRBool nsTextBoxFrame::gAccessKeyPrefInitialized       = PR_FALSE;
+PRBool nsTextBoxFrame::gInsertSeparatorBeforeAccessKey = PR_FALSE;
+PRBool nsTextBoxFrame::gInsertSeparatorPrefInitialized = PR_FALSE;
 
 //
 // NS_NewToolbarFrame
@@ -204,7 +206,20 @@ nsTextBoxFrame::AlwaysAppendAccessKey()
   }
   return gAlwaysAppendAccessKey;
 }
- 
+
+PRBool
+nsTextBoxFrame::InsertSeparatorBeforeAccessKey()
+{
+  if (!gInsertSeparatorPrefInitialized)
+  {
+    gInsertSeparatorPrefInitialized = PR_TRUE;
+
+    const char* prefName = "intl.menuitems.insertseparatorbeforeaccesskeys";
+    nsAdoptingString val = nsContentUtils::GetLocalizedStringPref(prefName);
+    gInsertSeparatorBeforeAccessKey = val.EqualsLiteral("true");
+  }
+  return gInsertSeparatorBeforeAccessKey;
+}
 
 void
 nsTextBoxFrame::UpdateAttributes(nsPresContext*  aPresContext,
@@ -708,7 +723,8 @@ nsTextBoxFrame::UpdateAccessTitle()
                 || AlwaysAppendAccessKey()) 
             {
                 nsAutoString tmpstring;
-                if (!mTitle.IsEmpty() && !NS_IS_SPACE(mTitle.Last())) {
+                if (InsertSeparatorBeforeAccessKey() &&
+                    !mTitle.IsEmpty() && !NS_IS_SPACE(mTitle.Last())) {
                   tmpstring += ' ';
                 }
                 tmpstring += '(';
