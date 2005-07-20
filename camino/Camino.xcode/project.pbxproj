@@ -12788,7 +12788,7 @@
 		};
 		F50DCB4302C2856001A967F3 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = "compiled.mach-o.dylib";
 			name = libjsj.dylib;
 			path = ../dist/bin/libjsj.dylib;
 			refType = 2;
