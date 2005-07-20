@@ -583,6 +583,77 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+/*
+ * function readline()
+ * Provides a hook for scripts to read a line from stdin.
+ */
+static JSBool
+ReadLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+#define BUFSIZE 256
+    FILE *from;
+    char *buf, *tmp;
+    size_t bufsize, buflength, gotlength;
+    JSString *str;
+
+    from = stdin;
+    buflength = 0;
+    bufsize = BUFSIZE;
+    buf = JS_malloc(cx, bufsize);
+    if (!buf)
+        return JS_FALSE;
+
+    while ((gotlength = 
+            js_fgets(buf + buflength, bufsize - buflength, from)) > 0) {
+        buflength += gotlength;
+
+        /* Are we done? */
+        if (buf[buflength - 1] == '\n') {
+            buf[buflength - 1] = '\0';
+            break;
+        }
+
+        /* Else, grow our buffer for another pass. */
+        tmp = JS_realloc(cx, buf, bufsize * 2);
+        if (!tmp) {
+            JS_free(cx, buf);
+            return JS_FALSE;
+        }
+
+        bufsize *= 2;
+        buf = tmp;
+    }
+
+    /* Treat the empty string specially. */
+    if (buflength == 0) {
+        *rval = JS_GetEmptyStringValue(cx);
+        JS_free(cx, buf);
+        return JS_TRUE;
+    }
+
+    /* Shrink the buffer to the real size */
+    tmp = JS_realloc(cx, buf, buflength);
+    if (!tmp) {
+        JS_free(cx, buf);
+        return JS_FALSE;
+    }
+
+    buf = tmp;
+
+    /* 
+     * Turn buf into a JSString. Note that buflength includes the trailing null
+     * character.
+     */
+    str = JS_NewString(cx, buf, buflength - 1);
+    if (!str) {
+        JS_free(cx, buf);
+        return JS_FALSE;
+    }
+
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
 static JSBool
 Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -1476,6 +1547,7 @@ static JSFunctionSpec shell_functions[] = {
     {"version",         Version,        0},
     {"options",         Options,        0},
     {"load",            Load,           1},
+    {"readline",        ReadLine,       0},
     {"print",           Print,          0},
     {"help",            Help,           0},
     {"quit",            Quit,           0},
@@ -1513,6 +1585,7 @@ static char *shell_help_messages[] = {
     "version([number])      Get or set JavaScript version number",
     "options([option ...])  Get or toggle JavaScript options",
     "load(['foo.js' ...])   Load files named by string arguments",
+    "readline()             Read a single line from stdin",
     "print([exp ...])       Evaluate and print expressions",
     "help([name ...])       Display usage and help messages",
     "quit()                 Quit the shell",
