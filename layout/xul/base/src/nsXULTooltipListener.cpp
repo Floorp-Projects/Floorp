@@ -110,6 +110,14 @@ nsXULTooltipListener::MouseDown(nsIDOMEvent* aMouseEvent)
 }
 
 NS_IMETHODIMP
+nsXULTooltipListener::MouseUp(nsIDOMEvent* aMouseEvent)
+{
+  HideTooltip();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULTooltipListener::MouseOut(nsIDOMEvent* aMouseEvent)
 {
   // if the timer is running and no tooltip is shown, we
@@ -416,7 +424,7 @@ nsXULTooltipListener::ShowTooltip()
       evtTarget->AddEventListener(NS_LITERAL_STRING("popuphiding"), 
                                   (nsIDOMMouseListener*)this, PR_FALSE);
 
-      // listen for mousedown,keydown, and DOMMouseScroll events at document level
+      // listen for mousedown, mouseup, keydown, and DOMMouseScroll events at document level
       nsIDocument* doc = mSourceNode->GetDocument();
       if (doc) {
         evtTarget = do_QueryInterface(doc);
@@ -424,6 +432,8 @@ nsXULTooltipListener::ShowTooltip()
                                     (nsIDOMMouseListener*)this, PR_TRUE);
         evtTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), 
                                     (nsIDOMMouseListener*)this, PR_TRUE);
+        evtTarget->AddEventListener(NS_LITERAL_STRING("mouseup"), 
+                                    (nsIDOMMouseListener*)this, PR_TRUE);                                    
         evtTarget->AddEventListener(NS_LITERAL_STRING("keydown"), 
                                     (nsIDOMMouseListener*)this, PR_TRUE);
       }
@@ -646,6 +656,7 @@ nsXULTooltipListener::DestroyTooltip()
       nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(doc));
       evtTarget->RemoveEventListener(NS_LITERAL_STRING("DOMMouseScroll"), (nsIDOMMouseListener*)this, PR_TRUE);
       evtTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), (nsIDOMMouseListener*)this, PR_TRUE);
+      evtTarget->RemoveEventListener(NS_LITERAL_STRING("mouseup"), (nsIDOMMouseListener*)this, PR_TRUE);
       evtTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMMouseListener*)this, PR_TRUE);
     }
 
