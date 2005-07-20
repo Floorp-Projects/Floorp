@@ -1,0 +1,29 @@
+/* XPM */
+static char *icon16[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 7 1",
+"  c black",
+". c #555500",
+"X c #636D61",
+"o c red",
+"O c #FF8080",
+"+ c gray100",
+"@ c None",
+/* pixels */
+"@  @ @ @@@@@@@@@",
+" @@@   @@o@@@@@@",
+"@ @@ @ @ooo@@@@@",
+"@@ @ @ oooo@@@@@",
+"  @@ @ ooooo@@@@",
+"@@@@@ooooooo@@@@",
+"@@@@ooooooooo@@@",
+"@@@oooooooooo@@@",
+"@@ooooooo+ooo+@@",
+"@ooooooooO+++Oo@",
+"oooooooooO + Ooo",
+"@@@@@@@ @+++++@@",
+"@@@@@@@ @+   +@@",
+"@..............@",
+"@@@...........@@",
+"@@@@@........@@@"
+};
