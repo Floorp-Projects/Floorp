@@ -18,7 +18,8 @@ $addon = new AddOn($sql['ID']);
 
 // Assign template variables.
 $tpl->assign(
-    array(  'addon'             => $addon,
-            'content'           => 'addon.tpl')
+    array(  'addon'     => $addon,
+            'title'     => $addon->Name,
+            'content'   => 'addon.tpl')
 );
 ?>

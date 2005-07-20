@@ -119,6 +119,10 @@
 	vertical-align: middle;
 }
 
+.opinions-rating {
+    font-style: italic;
+}
+
 .rating {
 	float: right;
 	font-size: 85%;

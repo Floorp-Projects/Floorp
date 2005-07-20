@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Mozilla Addons :: Add Features to Mozilla Software</title>
+    <title>{if $title}{$title} :: {/if}Mozilla Addons :: Add Features to Mozilla Software</title>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="keywords" content="mozilla update, mozilla extensions, mozilla plugins, thunderbird themes, thunderbird extensions, firefox extensions, firefox themes">
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/print.css" media="print">

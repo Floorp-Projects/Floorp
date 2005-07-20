@@ -128,6 +128,7 @@ $tpl->assign(
             'popularThemes'     => $popularThemes,
             'newest'            => $newest,
             'app'               => $clean['app'],
+            'title'             => $clean['app'].' Addons',
             'tabs'              => $tabs,
             'content'           => 'overview.tpl')
 );

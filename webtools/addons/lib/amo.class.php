@@ -17,12 +17,37 @@ class AMO_Object
     }
 
     /**
-     * Close database connection and display output.
+     * Set var.
+     *
+     * @param string $key name of object property to set
+     * @param mixed $val value to assign
+     *
+     * @return bool
      */
-    function finish()
+    function setVar($key,$val)
     {
-        $this->db->disconnect();
-        $this->tpl->display($this->wrapper);
+        $this->$key = $val;
+        return true;
     }
+
+    /**
+     * Set an array of variables based on a $db record.
+     *
+     * @param array $data associative array of data.
+     *
+     * @return bool
+     */
+    function setVars($data)
+    {
+        if (is_array($data)) {
+            foreach ($data as $key=>$val) {
+                $this->setVar($key,$val);
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }
 ?>

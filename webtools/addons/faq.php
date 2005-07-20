@@ -38,7 +38,8 @@ $tpl->assign(
    array(   'faq'       => $faq,
             'links'     => $links,
             'sidebar'   => 'inc/nav.tpl',
-            'content'   => 'faq.tpl')
+            'content'   => 'faq.tpl',
+            'title'     => 'Frequently Asked Questions')
 );
 
 // No need to set wrapper, since the left-nav wrapper is default.
