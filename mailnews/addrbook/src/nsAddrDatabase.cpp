@@ -572,10 +572,22 @@ NS_IMETHODIMP nsAddrDatabase::Open
   if (NS_SUCCEEDED(rv))
     return NS_OK;
   
+  if (rv == NS_ERROR_FILE_ACCESS_DENIED)
+  {
+    static PRBool gAlreadyAlerted;
+     // only do this once per session to avoid annoying the user
+    if (!gAlreadyAlerted)
+    {
+      gAlreadyAlerted = PR_TRUE;
+      nsXPIDLCString mabFileName;
+      mabFileName.Adopt(mabFileSpec.GetLeafName());
+      AlertAboutLockedMabFile(NS_ConvertASCIItoUCS2(mabFileName).get());
+    }
+  }
   // try one more time
   // but first rename corrupt mab file
   // and prompt the user
-  if (aCreate) 
+  else if (aCreate) 
   {
     nsFileSpec *newMabFile = new nsFileSpec(mabFileSpec);
     if (!newMabFile)
@@ -617,7 +629,7 @@ NS_IMETHODIMP nsAddrDatabase::Open
   return rv;
 }
 
-nsresult nsAddrDatabase::AlertAboutCorruptMabFile(const PRUnichar *aOldFileName, const PRUnichar *aNewFileName)
+nsresult nsAddrDatabase::DisplayAlert(const PRUnichar *titleName, const PRUnichar *alertStringName, const PRUnichar **formatStrings, PRInt32 numFormatStrings)
 {
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
@@ -626,26 +638,35 @@ nsresult nsAddrDatabase::AlertAboutCorruptMabFile(const PRUnichar *aOldFileName,
   nsCOMPtr<nsIStringBundle> bundle;
   rv = bundleService->CreateBundle("chrome://messenger/locale/addressbook/addressBook.properties", getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  const PRUnichar *formatStrings[] = { aOldFileName, aOldFileName, aNewFileName };
   
   nsXPIDLString alertMessage;
-  rv = bundle->FormatStringFromName(NS_LITERAL_STRING("corruptMabFileAlert").get(),
-    formatStrings, 3,
+  rv = bundle->FormatStringFromName(alertStringName, formatStrings, numFormatStrings,
     getter_Copies(alertMessage));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsXPIDLString alertTitle;
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("corruptMabFileTitle").get(), getter_Copies(alertTitle));
+  rv = bundle->GetStringFromName(titleName, getter_Copies(alertTitle));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPromptService> prompter =
       do_GetService(NS_PROMPTSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = prompter->Alert(nsnull /* we don't know the parent window */, alertTitle.get(), alertMessage.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+  return prompter->Alert(nsnull /* we don't know the parent window */, alertTitle.get(), alertMessage.get());
+}
+
+nsresult nsAddrDatabase::AlertAboutCorruptMabFile(const PRUnichar *aOldFileName, const PRUnichar *aNewFileName)
+{
+  const PRUnichar *formatStrings[] = { aOldFileName, aOldFileName, aNewFileName };
+  return DisplayAlert(NS_LITERAL_STRING("corruptMabFileTitle").get(),
+    NS_LITERAL_STRING("corruptMabFileAlert").get(), formatStrings, 3);
+}
+
+nsresult nsAddrDatabase::AlertAboutLockedMabFile(const PRUnichar *aFileName)
+{
+  const PRUnichar *formatStrings[] = { aFileName };
+  return DisplayAlert(NS_LITERAL_STRING("lockedMabFileTitle").get(),
+    NS_LITERAL_STRING("lockedMabFileAlert").get(), formatStrings, 1);
 }
 
 nsresult
@@ -710,6 +731,7 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
         mdb_bool    canOpen;
         mdbYarn        outFormatVersion;
         nsIMdbFile* oldFile = 0;
+        PRBool isEmptyFile = !dbName->GetFileSize();
         
         ret = myMDBFactory->OpenOldFile(m_mdbEnv, dbHeap, nativeFileName,
           dbFrozen, &oldFile);
@@ -728,11 +750,13 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
               ret = myMDBFactory->OpenFileStore(m_mdbEnv, dbHeap,
                 oldFile, &inOpenPolicy, &thumb); 
             }
-            else
-              ret = NS_ERROR_FAILURE;  //check: use the right error code
+            else if (!isEmptyFile)
+              ret = NS_ERROR_FILE_ACCESS_DENIED;
           }
           NS_RELEASE(oldFile); // always release our file ref, store has own
         }
+        if (NS_FAILED(ret))
+          ret = NS_ERROR_FILE_ACCESS_DENIED;
       }
       
       nsCRT::free(nativeFileName);
@@ -763,7 +787,7 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
           }
         }
       }
-      else if (create)    // ### need error code saying why open file store failed
+      else if (create && ret != NS_ERROR_FILE_ACCESS_DENIED)
       {
         nsIMdbFile* newFile = 0;
         ret = myMDBFactory->CreateNewFile(m_mdbEnv, dbHeap, dbName->GetCString(), &newFile);
@@ -1570,7 +1594,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDBWithKey(nsIAbCard *newCard,
 
 NS_IMETHODIMP nsAddrDatabase::CreateNewListCardAndAddToDB(nsIAbDirectory *aList, PRUint32 listRowID, nsIAbCard *newCard, PRBool notify /* = FALSE */)
 {
-    if (!newCard || !m_mdbPabTable)
+     if (!newCard || !m_mdbPabTable)
         return NS_ERROR_NULL_POINTER;
 
     nsIMdbRow* pListRow = nsnull;
@@ -1865,16 +1889,16 @@ NS_IMETHODIMP nsAddrDatabase::CreateMailListAndAddToDB(nsIAbDirectory *newList, 
 
 void nsAddrDatabase::DeleteCardFromAllMailLists(mdb_id cardRowID)
 {
-    nsIMdbTableRowCursor* rowCursor;
-    m_mdbPabTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+    nsCOMPtr <nsIMdbTableRowCursor> rowCursor;
+    m_mdbPabTable->GetTableRowCursor(GetEnv(), -1, getter_AddRefs(rowCursor));
 
     if (rowCursor)
     {
-        nsIMdbRow* pListRow = nsnull;
+        nsCOMPtr <nsIMdbRow> pListRow;
         mdb_pos rowPos;
         do 
         {
-            mdb_err err = rowCursor->NextRow(GetEnv(), &pListRow, &rowPos);
+            mdb_err err = rowCursor->NextRow(GetEnv(), getter_AddRefs(pListRow), &rowPos);
 
             if (err == NS_OK && pListRow)
             {
@@ -1885,11 +1909,8 @@ void nsAddrDatabase::DeleteCardFromAllMailLists(mdb_id cardRowID)
                     if (IsListRowScopeToken(rowOid.mOid_Scope))
                         DeleteCardFromListRow(pListRow, cardRowID);
                 }
-                                NS_RELEASE(pListRow);
             }
         } while (pListRow);
-
-        rowCursor->Release();
     }
 }
 
@@ -1946,10 +1967,6 @@ nsresult nsAddrDatabase::DeleteCardFromListRow(nsIMdbRow* pListRow, mdb_id cardR
     
     nsresult err = NS_OK;
 
-//    PRUint32 cardRowID;
-//    card->GetDbRowID(&cardRowID);
-
-    //todo: cut the card column and total column
     PRUint32 totalAddress = GetListAddressTotal(pListRow);
     
     PRUint32 pos;
@@ -3701,7 +3718,7 @@ nsAddrDatabase::HasRowButDeletedForCharColumn(const PRUnichar *unicodeStr, mdb_c
     
     // if still no deleted cards table, there are no deleted cards
     if (!m_mdbDeletedCardsTable)
-      return PR_TRUE;
+      return PR_FALSE;
     
     mdb_bool hasRow = PR_FALSE;
     rv = m_mdbDeletedCardsTable->HasRow(env, *aFindRow, &hasRow);

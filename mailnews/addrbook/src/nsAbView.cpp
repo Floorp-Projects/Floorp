@@ -506,7 +506,7 @@ nsresult nsAbView::RefreshTree()
 
 NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {
-  NS_ENSURE_TRUE(row >= 0, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(row >= 0 && row < mCards.Count(), NS_ERROR_UNEXPECTED);
 
   nsIAbCard *card = ((AbCard *)(mCards.ElementAt(row)))->card;
   // XXX fix me by converting GetCardValue to take an nsAString&

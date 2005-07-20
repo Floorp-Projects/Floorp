@@ -477,6 +477,9 @@ private:
   PRBool HasRowButDeletedForCharColumn(const PRUnichar *unicodeStr, mdb_column findColumn, PRBool aIsCard, nsIMdbRow **aFindRow);
   nsresult OpenInternal(nsFileSpec *aMabFile, PRBool aCreate, nsIAddrDatabase **pCardDB);
   nsresult AlertAboutCorruptMabFile(const PRUnichar *aOldFileName, const PRUnichar *aNewFileName);
+  nsresult AlertAboutLockedMabFile(const PRUnichar *aFileName);
+  nsresult DisplayAlert(const PRUnichar *titleName, const PRUnichar *alertStringName, 
+                        const PRUnichar **formatStrings, PRInt32 numFormatStrings);
 };
 
 #endif

@@ -766,10 +766,7 @@ NS_IMETHODIMP nsAbMDBDirectory::DropCard(nsIAbCard* aCard, PRBool needToCopyCard
      * moz-abmdbdirectory://foo/bar
      */
     NS_ENSURE_TRUE(mURI.Length() > kMDBDirectoryRootLen, NS_ERROR_UNEXPECTED);
-    if (strchr(mURI.get() + kMDBDirectoryRootLen, '/'))
-      mIsMailingList = 1;
-    else
-      mIsMailingList = 0;
+    mIsMailingList = (strchr(mURI.get() + kMDBDirectoryRootLen, '/')) ? 1 : 0;
   }
   if (!mDatabase)
     rv = GetAbDatabase();
@@ -800,8 +797,14 @@ NS_IMETHODIMP nsAbMDBDirectory::DropCard(nsIAbCard* aCard, PRBool needToCopyCard
 
   if (mIsMailingList == 1) {
     if (needToCopyCard) {
-      // first, add the card to the directory that contains the mailing list.
-      mDatabase->CreateNewCardAndAddToDB(newCard, PR_TRUE /* notify */);
+      nsCOMPtr <nsIMdbRow> cardRow;
+      // if card doesn't exist in db, add the card to the directory that 
+      // contains the mailing list.
+      mDatabase->FindRowByCard(newCard, getter_AddRefs(cardRow));
+      if (!cardRow)
+        mDatabase->CreateNewCardAndAddToDB(newCard, PR_TRUE /* notify */);
+      else
+        mDatabase->InitCardFromRow(newCard, cardRow);
     }
     // since we didn't copy the card, we don't have to notify that it was inserted
     mDatabase->CreateNewListCardAndAddToDB(this, m_dbRowID, newCard, PR_FALSE /* notify */);
