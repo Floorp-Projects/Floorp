@@ -6557,8 +6557,8 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
     instance->Destroy();
     instance->SetWindow(nsnull);
   } else {
-    instance->SetWindow(nsnull);
     instance->Stop();
+    instance->SetWindow(nsnull);
     instance->Destroy();
   }
 
