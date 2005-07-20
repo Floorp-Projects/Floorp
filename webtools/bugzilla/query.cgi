@@ -33,6 +33,7 @@ require "CGI.pl";
 use Bugzilla::Constants;
 use Bugzilla::Search;
 use Bugzilla::User;
+use Bugzilla::Util;
 
 use vars qw(
     @CheckOptionValues
@@ -165,7 +166,7 @@ sub PrefillForm {
         my $name = $el[0];
         my $value;
         if ($#el > 0) {
-            $value = url_decode($el[1]);
+            $value = Bugzilla::Util::url_decode($el[1]);
         } else {
             $value = "";
         }

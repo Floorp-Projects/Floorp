@@ -55,14 +55,6 @@ use vars qw($template $vars);
 # Implementations of several of the below were blatently stolen from CGI.pm,
 # by Lincoln D. Stein.
 
-# Get rid of all the %xx encoding and the like from the given URL.
-sub url_decode {
-    my ($todecode) = (@_);
-    $todecode =~ tr/+/ /;       # pluses become spaces
-    $todecode =~ s/%([0-9a-fA-F]{2})/pack("c",hex($1))/ge;
-    return $todecode;
-}
-
 # check and see if a given field exists, is non-empty, and is set to a 
 # legal value.  assume a browser bug and abort appropriately if not.
 # if $legalsRef is not passed, just check to make sure the value exists and 

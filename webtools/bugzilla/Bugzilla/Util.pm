@@ -131,6 +131,13 @@ sub xml_quote {
     return $var;
 }
 
+sub url_decode {
+    my ($todecode) = (@_);
+    $todecode =~ tr/+/ /;       # pluses become spaces
+    $todecode =~ s/%([0-9a-fA-F]{2})/pack("c",hex($1))/ge;
+    return $todecode;
+}
+
 sub i_am_cgi () {
     # I use SERVER_SOFTWARE because it's required to be
     # defined for all requests in the CGI spec.
@@ -391,6 +398,9 @@ Bugzilla::Util - Generic utility functions for bugzilla
   value_quote($var);
   xml_quote($var);
 
+  # Functions for decoding
+  $rv = url_decode($var);
+  
   # Functions that tell you about your environment
   my $is_cgi = i_am_cgi();
 
@@ -415,6 +425,9 @@ Bugzilla::Util - Generic utility functions for bugzilla
 
   # Cryptographic Functions
   $crypted_password = bz_crypt($password);
+
+  # Validation Functions
+  check_email_syntax($email);
 
 =head1 DESCRIPTION
 
@@ -497,6 +510,10 @@ into &#013;, suitable for use in html attributes.
 This is similar to C<html_quote>, except that ' is escaped to &apos;. This
 is kept separate from html_quote partly for compatibility with previous code
 (for &apos;) and partly for future handling of non-ASCII characters.
+
+=item C<url_decode($val)>
+
+Converts the %xx encoding from the given URL back to its original form.
 
 =item C<i_am_cgi()>
 
@@ -636,5 +653,16 @@ password string this has the effect of revealing the first two
 characters of the password to anyone who views the encrypted version.
 
 =end undocumented
+
+=back
+
+=head2 Validation
+
+=over 4
+
+=item C<check_email_syntax($email)>
+
+Do a syntax checking for a legal email address. An error is thrown
+if the validation fails.
 
 =back
