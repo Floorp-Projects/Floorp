@@ -38,10 +38,11 @@
 #define MacWindow_h__
 
 #include <memory>	// for auto_ptr
-#include <Controls.h>
+#include <Carbon/Carbon.h>
 
 using std::auto_ptr;
 
+#include "nsRegionPool.h"
 #include "nsWindow.h"
 #include "nsMacEventHandler.h"
 #include "nsIEventSink.h"
@@ -49,11 +50,7 @@ using std::auto_ptr;
 #include "nsPIWidgetMac.h"
 #include "nsPIEventSinkStandalone.h"
 
-#include <CarbonEvents.h>
-
-
 class nsMacEventHandler;
-struct PhantomScrollbarData;
 
 //-------------------------------------------------------------------------
 //
@@ -135,7 +132,7 @@ public:
     void UpdateWindowMenubar(WindowPtr parentWindow, PRBool enableFlag);
 
 protected:
-
+  
   void InstallBorderlessDefProc ( WindowPtr inWindow ) ;
   void RemoveBorderlessDefProc ( WindowPtr inWindow ) ;
 
@@ -160,7 +157,7 @@ protected:
 	PRPackedBool                    mZoomOnShow;
 	PRPackedBool                    mZooming;
 	PRPackedBool                    mResizeIsFromUs;    // we originated the resize, prevent infinite recursion
-  PRBool                          mShown;             // whether the window was actually shown on screen
+  PRPackedBool                    mShown;             // whether the window was actually shown on screen
 	Point                           mBoundsOffset;      // offset from window structure to content
 	auto_ptr<nsMacEventHandler>     mMacEventHandler;
 	nsIWidget                      *mOffsetParent;

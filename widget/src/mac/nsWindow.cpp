@@ -70,10 +70,6 @@
 
 #include <Gestalt.h>
 
-#if PINK_PROFILING
-#include "profilerutils.h"
-#endif
-
 #ifdef MAC_OS_X_VERSION_10_3
 const short PANTHER_RESIZE_UP_CURSOR     = 19;
 const short PANTHER_RESIZE_DOWN_CURSOR   = 20;
@@ -228,22 +224,6 @@ static void blinkRgn(RgnHandle rgn, PRBool isPaint)
 
 #endif
 
-#ifdef DEBUG
-static Boolean control_key_down()
-{
-	EventRecord event;
-	::EventAvail(0, &event);
-	return (event.modifiers & controlKey) != 0;
-}
-
-static long long microseconds()
-{
-	unsigned long long micros;
-	Microseconds((UnsignedWide*)&micros);
-	return micros;
-}
-#endif
-
 #pragma mark -
 
 //-------------------------------------------------------------------------
@@ -272,6 +252,7 @@ nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this), nsIKBStateContro
   mVisRegion = nsnull;
   mWindowPtr = nsnull;
   mDrawing = PR_FALSE;
+  mInUpdate = PR_FALSE;
   mDestructorCalled = PR_FALSE;
 
   SetBackgroundColor(NS_RGB(255, 255, 255));
@@ -1254,21 +1235,29 @@ NS_IMETHODIMP	nsWindow::Update()
     // BeginUpate replaces the visRgn with the intersection of the
     // visRgn and the updateRgn.
     ::BeginUpdate(mWindowPtr);
-
+    mInUpdate = PR_TRUE;
+    
     HandleUpdateEvent(regionToValidate);
 
     // EndUpdate replaces the normal visRgn
     ::EndUpdate(mWindowPtr);
-
+    mInUpdate = PR_FALSE;
+    
     // restore the window update rgn
     // saveUpdateRgn is in global coords, so we need to shift it to local coords
     Point origin = {0, 0};
     ::GlobalToLocal(&origin);
     ::OffsetRgn(saveUpdateRgn, origin.h, origin.v);
+    
+    // put the old update region back...
     ::InvalWindowRgn(mWindowPtr, saveUpdateRgn);
 
+    // and then validate the area that we knew we updated
+    // (hopefully clearing most, if not all the update region).
+    // presumably this is done because we don't necessarily own
+    // the entire window.
     ::ValidWindowRgn(mWindowPtr, regionToValidate);
-    
+
     reentrant = PR_FALSE;
   }
 
@@ -1427,13 +1416,6 @@ nsWindow::AddRectToArray ( Rect* inDirtyRect, void* inArray )
 //-------------------------------------------------------------------------
 nsresult nsWindow::HandleUpdateEvent(RgnHandle regionToValidate)
 {
-#if PINK_PROFILING
-if (KeyDown(0x39))	// press [caps lock] to start the profile
-	ProfileStart();
-else
-	ProfileStop(); 
-#endif
-
 	if (! mVisible || !ContainerHierarchyIsVisible())
 		return NS_OK;
 
@@ -1482,14 +1464,6 @@ else
     //      Note: MUST unlock before exiting this scope (see below)
     ::LockPortBits(::GetWindowPort(mWindowPtr));
 
-#if DEBUG
-		// measure the time it takes to refresh the window, if the control key is down.
-    unsigned long long start, finish;
-    Boolean measure_duration = control_key_down();
-    if (measure_duration)
-      start = microseconds();
-#endif
-
 	  // Iterate over each rect in the region, sending a paint event for each. Carbon
 	  // has a routine for this, pre-carbon doesn't so we roll our own. If the region
 	  // is very complicated (more than 15 pieces), just use a bounding box.
@@ -1530,13 +1504,6 @@ else
       PaintUpdateRect ( &boundingBox, this );
     }
 
-#if DEBUG
-    if (measure_duration) {
-      finish = microseconds();
-      printf("update took %g microseconds.\n", double(finish - start));
-    }
-#endif
-
     // Copy updateRgn to regionToValidate
     if (regionToValidate)
       ::CopyRgn(updateRgn, regionToValidate);
@@ -1547,11 +1514,6 @@ else
     ::UnlockPortBits(::GetWindowPort(mWindowPtr));
 
 	}
-
-#if PINK_PROFILING
-	ProfileSuspend();
-	ProfileStop();
-#endif
 
 	NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
 
