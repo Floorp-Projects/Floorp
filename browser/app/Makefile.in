@@ -297,6 +297,10 @@ else
 APP_NAME = DeerPark
 endif
 
+ifdef MOZ_DEBUG
+APP_NAME := $(APP_NAME)Debug
+endif
+
 AB_CD = $(MOZ_UI_LOCALE)
 
 AB := $(firstword $(subst -, ,$(AB_CD)))
