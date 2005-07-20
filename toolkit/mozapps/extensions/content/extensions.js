@@ -160,7 +160,7 @@ function Startup()
   gExtensionsView.controllers.appendController(gExtensionsViewController);
 
   // This persists the last-selected extension
-  gExtensionsView.addEventListener("richview-select", onExtensionSelect, false);
+  gExtensionsView.addEventListener("select", onExtensionSelect, false);
 
   // Finally, update the UI. 
   gExtensionsView.database.AddDataSource(gExtensionManager.datasource);
@@ -172,7 +172,7 @@ function Startup()
   var defaultPref = pref.QueryInterface(Components.interfaces.nsIPrefService)
                         .getDefaultBranch(null);
   if (!isExtensions) {
-    gExtensionsView.addEventListener("richview-select", onThemeSelect, false);
+    gExtensionsView.addEventListener("select", onThemeSelect, false);
 
     try {
         gCurrentTheme = pref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
@@ -250,9 +250,9 @@ function Startup()
 function Shutdown() 
 {
   if (gWindowState != "extensions")
-    gExtensionsView.removeEventListener("richview-select", onThemeSelect, false);
+    gExtensionsView.removeEventListener("select", onThemeSelect, false);
   
-  gExtensionsView.removeEventListener("richview-select", onExtensionSelect, false);
+  gExtensionsView.removeEventListener("select", onExtensionSelect, false);
 
   gExtensionsView.database.RemoveDataSource(gExtensionManager.datasource);
 

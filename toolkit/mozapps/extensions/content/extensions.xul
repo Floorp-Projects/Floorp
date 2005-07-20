@@ -81,7 +81,7 @@
   </keyset>
 
   <commandset id="extensionsCommands"
-              events="richview-select"
+              events="richlistbox-select"
               commandupdater="true"
               oncommandupdate="gExtensionsViewController.onCommandUpdate();"
               oncommand="gExtensionsViewController.doCommand(event.target.id);">

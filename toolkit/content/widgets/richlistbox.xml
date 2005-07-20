@@ -71,7 +71,7 @@
           <![CDATA[
             var childNodes = [];
             for (var i = 0; i < this.childNodes.length; ++i) {
-              if ("fireEvent" in this.childNodes[i])
+              if (this.childNodes[i] instanceof Components.interfaces.nsIDOMXULSelectControlItemElement)
                 childNodes.push(this.childNodes[i]);
             }
             return childNodes;
@@ -92,6 +92,42 @@
       </body>
       </method>
 
+      <property name="selectedIndex">
+        <getter>
+          <![CDATA[
+            var returnValue = -1;
+
+            // if there is a selected item, iterate the children looking for it.
+            if (this.selectedItem) {
+              var children = this.children;
+
+              var run = 0;
+              while (children[run] != this.selectedItem && run < children.length) {
+                run++;
+              }
+
+              if (children[run] == this.selectedItem)
+                returnValue = run;
+            }
+
+            return returnValue;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            if (val == -1) {
+              // clear selection
+              this.clearSelection();
+            } else if (val >= 0) {
+              // only set if we get an item returned
+              var item = this.getItemAtIndex(val);
+              if (item)
+                this.selectedItem = item
+            }
+          ]]>
+        </setter>
+      </property>
+
       <field name="_selectedItem">null</field>
       <property name="selectedItem">
         <getter>
@@ -108,9 +144,8 @@
               val.selected = true;
               this.scrollBoxObject.ensureElementIsVisible(val);
               this.fireActiveItemEvent();
+              this._fireOnSelect();
             }
-
-            this.fireEvent("select");
           ]]>
         </setter>
       </property>
@@ -119,6 +154,14 @@
         <body>
           <![CDATA[
             this.selectedItem = null;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getRowCount">
+        <body>
+          <![CDATA[
+            return this.children.length;
           ]]>
         </body>
       </method>
@@ -151,6 +194,15 @@
               }
             }
             return false;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getItemAtIndex">
+        <parameter name="aIndex"/>
+        <body>
+          <![CDATA[
+            return this.children[aIndex];
           ]]>
         </body>
       </method>
@@ -191,21 +243,26 @@
         </body>
       </method>
 
-      <method name="fireEvent">
-        <parameter name="aEventType"/>
+      <property name="suppressOnSelect">
+        <getter>
+          <![CDATA[
+            return this.getAttribute("suppressonselect") == "true";
+          ]]>
+        </getter>
+      </property>
+
+      <method name="_fireOnSelect">
         <body>
           <![CDATA[
-            var e = document.createEvent("Events");
-            var eventType = "richview-" + aEventType;
-            e.initEvent(eventType, false, true);
-            this.dispatchEvent(e);
+            if (!this.suppressOnSelect) {
+              var event = document.createEvent("Events");
+              event.initEvent("select", false, true);
+              this.dispatchEvent(event);
 
-            var handler = this.getAttribute("onrichview-" + aEventType);
-            if (handler != "") {
-              var fn = new Function("event", handler);
-              fn(e);
+              // if we have controllers, notify the command dispatcher
+              if (this.controllers.getControllerCount() > 0)
+                document.commandDispatcher.updateCommands("richlistbox-select");
             }
-            document.commandDispatcher.updateCommands(eventType);
           ]]>
         </body>
       </method>
@@ -216,6 +273,7 @@
       <handler event="keypress" keycode="VK_DOWN" action="goDown(); event.preventDefault();"/>
       <handler event="keypress" keycode="VK_HOME" action="clearSelection(); goDown(); event.preventDefault();"/>
       <handler event="keypress" keycode="VK_END" action="clearSelection(); goUp(); event.preventDefault();"/>
+
       <handler event="click">
         <![CDATA[
           // clicking into nothing should unselect
