@@ -921,6 +921,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             goto out;
         if (!idexists) {
             vec[i] = JSVAL_HOLE;
+            all_strings = JS_FALSE;
             continue;
         }
         newlen++;
