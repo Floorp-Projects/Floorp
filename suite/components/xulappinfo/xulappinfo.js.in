@@ -13,6 +13,7 @@ XULAppInfoService.prototype.ID = "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}";
 #expand XULAppInfoService.prototype.name = "__MOZ_APP_DISPLAYNAME__";
 #expand XULAppInfoService.prototype.version = "__MOZ_APP_VERSION__";
 #expand XULAppInfoService.prototype.appBuildID = "__BUILD_ID__";
+#expand XULAppInfoService.prototype.platformVersion = "__TOOLKIT_EM_VERSION__";
 #expand XULAppInfoService.prototype.platformBuildID = "__BUILD_ID__";
 
 XULAppInfoService.prototype.QueryInterface =
