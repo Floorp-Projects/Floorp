@@ -124,25 +124,7 @@ searchTermContainer.prototype = {
     stringBundle: document.getElementById("bundle_search"),
     get booleanAnd() { return this.internalBooleanAnd; },
     set booleanAnd(val) {
-        // whenever you set this, all nodes in booleanNodes
-        // are updated to reflect the string
-
-        if (this.internalBooleanAnd == val) return val;
         this.internalBooleanAnd = val;
-
-        var booleanNodes = this.booleanNodes;
-        if (!booleanNodes) return val;
-
-        var stringBundle = this.stringBundle;
-        var andString = val ? "And" : "Or";
-        for (var i=0; i<booleanNodes.length; i++) {
-            try {
-                var staticString =
-                    stringBundle.getString("search" + andString + i);
-                if (staticString && staticString.length>0)
-                    booleanNodes[i].setAttribute("label", staticString);
-            } catch (ex) { /* no error, means string not found */}
-        }
         return val;
     },
 
