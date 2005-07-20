@@ -72,3 +72,4 @@ class AddOn extends AMO_Object
         }
      }
 }
+?>

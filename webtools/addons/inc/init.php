@@ -54,6 +54,22 @@ class AMO_SQL extends SQL
             'database' => DB_NAME
         );
         $this->connect($dsn);
+
+        // Test connection; display "gone fishing" on failure.
+        if (DB::isError($this->db)) {
+            
+            $tpl =& new AMO_Smarty();
+            
+            $tpl->assign(
+                array(
+                    'content'=>'site-down.tpl',
+                    'error'=>$this->error
+                )
+            );
+
+            $tpl->display('inc/wrappers/nonav.tpl');
+            exit;
+        }
     }
 }
 

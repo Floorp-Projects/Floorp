@@ -21,9 +21,6 @@ switch( $_GET['app'] ) {
     case 'Thunderbird':
         $clean['app'] = 'Thunderbird';
         break;
-    case 'SeaMonkey':
-        $clean['app'] = 'SeaMonkey';
-        break;
     case 'Firefox':
     default:
         $clean['app'] = 'Firefox';
@@ -54,7 +51,7 @@ $db->query("
     ORDER BY
         downloadcount DESC 
     LIMIT 
-        7 
+        5 
 ", SQL_ALL, SQL_ASSOC);
 
 $popularExtensions = $db->record;
@@ -80,7 +77,7 @@ $db->query("
     ORDER BY
         downloadcount DESC 
     LIMIT 
-        7 
+        5 
 ", SQL_ALL, SQL_ASSOC);
 
 $popularThemes = $db->record;
@@ -108,7 +105,7 @@ $db->query("
     ORDER BY
         DateAdded DESC
     LIMIT
-        7
+        5
 ", SQL_ALL, SQL_ASSOC);
 
 $newest = $db->record;
@@ -130,7 +127,7 @@ $tpl->assign(
     array(  'popularExtensions' => $popularExtensions,
             'popularThemes'     => $popularThemes,
             'newest'            => $newest,
-            'app'               => ucfirst($clean['app']),
+            'app'               => $clean['app'],
             'tabs'              => $tabs,
             'content'           => 'overview.tpl')
 );

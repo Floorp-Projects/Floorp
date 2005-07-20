@@ -14,20 +14,6 @@ class AMO_Object
         // Pass by reference in order to save memory.
         $this->db =& $db;
         $this->tpl =& $tpl;
-
-        // Default wrapper for AMO template.
-        $this->wrapper = 'inc/wrappers/default.tpl';
-
-        if (DB::isError($this->db)) {
-            $this->tpl->assign(
-                array(
-                    'content'=>'site-down.tpl',
-                    'error'=>$this->db->error
-                )
-            );
-            $this->tpl->display($this->wrapper);
-            exit;
-        }
     }
 
     /**
@@ -39,3 +25,4 @@ class AMO_Object
         $this->tpl->display($this->wrapper);
     }
 }
+?>
