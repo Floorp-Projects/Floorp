@@ -47,21 +47,4 @@ DIRS		= \
 		components \
 		$(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-README_FILE = $(call EXPAND_LOCALE_SRCDIR,suite/locales)/installer/mac/README.txt
-else
-ifeq ($(OS_ARCH),OS2)
-README_FILE = $(call EXPAND_LOCALE_SRCDIR,suite/locales)/installer/os2/README.txt
-else
-ifeq ($(OS_ARCH),WINNT)
-README_FILE = $(call EXPAND_LOCALE_SRCDIR,suite/locales)/installer/windows/README.txt
-else
-README_FILE = $(call EXPAND_LOCALE_SRCDIR,suite/locales)/installer/unix/README
-endif
-endif
-endif
-
 include $(topsrcdir)/config/rules.mk
-
-libs::
-	$(INSTALL) $(README_FILE) $(DIST)/bin
