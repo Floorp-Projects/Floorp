@@ -420,8 +420,9 @@ typedef PRUint32 nsresult;
  * Use these macros to do 64bit safe pointer conversions.
  */
 
-#define NS_PTR_TO_INT32(x) ((char *)(x) - (char *)0)
-#define NS_INT32_TO_PTR(x) ((void *)((char *)0 + (x)))
+#define NS_PTR_TO_INT32(x)  ((PRInt32)  (PRWord) (x))
+#define NS_PTR_TO_UINT32(x) ((PRUint32) (PRWord) (x))
+#define NS_INT32_TO_PTR(x)  ((void *)   (PRWord) (x))
 
 /*
  * Use NS_STRINGIFY to form a string literal from the value of a macro.
