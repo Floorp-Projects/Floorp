@@ -71,6 +71,7 @@ REQUIRES	= xpcom \
 		  rdfutil \
 		  nkcache \
 		  windowwatcher \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \

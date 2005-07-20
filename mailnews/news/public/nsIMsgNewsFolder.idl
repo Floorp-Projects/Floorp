@@ -41,17 +41,23 @@
 interface nsIMsgWindow;
 interface nsINntpIncomingServer;
 
-[scriptable, uuid(3716abe4-f6d4-11d2-86d5-004005263078)]
+[scriptable, uuid(02699533-7ba8-4e78-94dc-a20374fb2711)]
 interface nsIMsgNewsFolder : nsISupports {
   attribute string groupUsername;
   attribute string groupPassword;
 
-  /** the ascii name for the newsgroup.  
-   *  newsgroup names are always ascii, and this can help simply
-   *  the code, to prevent use from having to get the name (as a wstring)
-   *  and then converting it back to ascii.
-   */
-  readonly attribute string asciiName;
+  readonly attribute AString unicodeName;
+  /**|rawName| is an 8-bit string to represent the name of a newsgroup used by 
+   * a news server. It's offered for the convenience of callers so that they 
+   * don't have to convert |unicodeName| to the server-side name when 
+   * communicating with a news server.  It's US-ASCII except for some 
+   * 'stand-alone' Chinese news servers that use GB2312 for newsgroup names 
+   * violating RFC 1036. For those servers, it's GB2312. However, it can be any
+   * other single and multibyte encoding in principle. The encoding of this 
+   * string is stored in |nsINntpIncomingServer| because that's a server-wide
+   * property.
+   **/
+  [noscript] readonly attribute ACString rawName;
   readonly attribute nsINntpIncomingServer nntpServer;
   attribute boolean saveArticleOffline;
    
@@ -61,7 +67,7 @@ interface nsIMsgNewsFolder : nsISupports {
   void forgetGroupUsername();
   void forgetGroupPassword();
 
-  nsIMsgFolder addNewsgroup(in string newsgroupName, in string setStr);
+  nsIMsgFolder addNewsgroup(in AUTF8String newsgroupName, in string setStr);
 
   void setReadSetFromStr(in string setStr);
 

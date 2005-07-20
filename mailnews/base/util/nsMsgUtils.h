@@ -69,7 +69,9 @@ NS_MSG_BASE nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriorityValue p, ns
 NS_MSG_BASE nsresult NS_MsgHashIfNecessary(nsAutoString &name);
 NS_MSG_BASE nsresult NS_MsgHashIfNecessary(nsCAutoString &name);
 
-NS_MSG_BASE nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& pathString);
+NS_MSG_BASE nsresult NS_MsgCreatePathStringFromFolderURI(const char *aFolderURI, 
+                                                         nsCString& aPathString,
+                                                         PRBool aIsNewsFolder=PR_FALSE);
 
 NS_MSG_BASE PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP, char **modifiedSubject=nsnull);
 
@@ -77,9 +79,11 @@ NS_MSG_BASE char * NS_MsgSACopy(char **destination, const char *source);
 
 NS_MSG_BASE char * NS_MsgSACat(char **destination, const char *source);
 
-NS_MSG_BASE nsresult NS_MsgEscapeEncodeURLPath(const nsAString& str, nsAFlatCString& result);
+NS_MSG_BASE nsresult NS_MsgEscapeEncodeURLPath(const nsAString& aStr,
+                                               nsAFlatCString& aResult);
 
-NS_MSG_BASE nsresult NS_MsgDecodeUnescapeURLPath(const nsASingleFragmentCString& path, nsAString& result);
+NS_MSG_BASE nsresult NS_MsgDecodeUnescapeURLPath(const nsACString& aPath,
+                                                 nsAString& aResult);
 
 NS_MSG_BASE PRBool WeAreOffline();
 

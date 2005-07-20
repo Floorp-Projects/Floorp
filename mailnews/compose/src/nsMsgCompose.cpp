@@ -2153,7 +2153,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         if (! newgroups.IsEmpty())
         {
           if ((type != nsIMsgCompType::Reply) && (type != nsIMsgCompType::ReplyToSender))
-            compFields->SetNewsgroups(NS_LossyConvertUCS2toASCII(newgroups).get());
+            compFields->SetNewsgroups(newgroups);
           if (type == nsIMsgCompType::ReplyToGroup)
             compFields->SetTo(EmptyString());
         }
@@ -2188,12 +2188,12 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
             // Clear the newsgroup: header field, because followup-to: poster
             // only follows up to the original sender
             if (! newgroups.IsEmpty())
-              compFields->SetNewsgroups(nsnull);
+              compFields->SetNewsgroups(EmptyString());
           }
           else // Process "followup-to: newsgroup-content" here
           {
             if (type != nsIMsgCompType::ReplyToSender)
-              compFields->SetNewsgroups(NS_LossyConvertUCS2toASCII(followUpTo).get());
+              compFields->SetNewsgroups(followUpTo);
             if (type == nsIMsgCompType::Reply)
               compFields->SetTo(EmptyString());
           }

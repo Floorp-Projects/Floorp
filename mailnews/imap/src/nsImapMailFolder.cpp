@@ -302,9 +302,9 @@ nsresult nsImapMailFolder::AddDirectorySeparator(nsFileSpec &path)
       // unfortunately we can't just say:
       //          path += sep;
       // here because of the way nsFileSpec concatenates
-      nsAutoString str; str.AssignWithConversion(nsFilePath(path));
-      str += sep;
-      path = nsFilePath(str);
+      nsCAutoString str(path.GetNativePathCString());
+      LossyAppendUTF16toASCII(sep, str); 
+      path = str.get();
     }
 
   return rv;

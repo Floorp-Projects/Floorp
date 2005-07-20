@@ -339,13 +339,15 @@ nsresult NS_MsgHashIfNecessary(nsAutoString &name)
 }
 
 
-nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& pathCString)
+nsresult NS_MsgCreatePathStringFromFolderURI(const char *aFolderURI,
+                                             nsCString& aPathCString,
+                                             PRBool aIsNewsFolder)
 {
   // A file name has to be in native charset. Here we convert 
   // to UTF-16 and check for 'unsafe' characters before converting 
   // to native charset.
-  NS_ENSURE_TRUE(IsUTF8(nsDependentCString(folderURI)), NS_ERROR_UNEXPECTED); 
-  NS_ConvertUTF8toUTF16 oldPath(folderURI);
+  NS_ENSURE_TRUE(IsUTF8(nsDependentCString(aFolderURI)), NS_ERROR_UNEXPECTED); 
+  NS_ConvertUTF8toUTF16 oldPath(aFolderURI);
 
   nsAutoString pathPiece, path;
 
@@ -359,11 +361,20 @@ nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& p
   while (startSlashPos != -1) {
     oldPath.Mid(pathPiece, startSlashPos + 1, endSlashPos - startSlashPos);
     // skip leading '/' (and other // style things)
-    if (!pathPiece.IsEmpty()) {
+    if (!pathPiece.IsEmpty())
+    {
 
       // add .sbd onto the previous path
-      if (haveFirst) {
+      if (haveFirst)
+      {
         path.AppendLiteral(".sbd/");
+      }
+
+      if (aIsNewsFolder)
+      {
+          nsCAutoString tmp;
+          CopyUTF16toMUTF7(pathPiece, tmp); 
+          CopyASCIItoUTF16(tmp, pathPiece);
       }
         
       NS_MsgHashIfNecessary(pathPiece);
@@ -382,7 +393,7 @@ nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& p
       break;
   }
 
-  return NS_CopyUnicodeToNative(path, pathCString);
+  return NS_CopyUnicodeToNative(path, aPathCString);
 }
 
 /* Given a string and a length, removes any "Re:" strings from the front.
@@ -563,21 +574,23 @@ char * NS_MsgSACat (char **destination, const char *source)
   return *destination;
 }
 
-nsresult NS_MsgEscapeEncodeURLPath(const nsAString& str, nsAFlatCString& result)
+nsresult NS_MsgEscapeEncodeURLPath(const nsAString& aStr, nsAFlatCString& aResult)
 {
-  char *escapedString = nsEscape(NS_ConvertUTF16toUTF8(str).get(), url_Path); 
+  char *escapedString = nsEscape(NS_ConvertUTF16toUTF8(aStr).get(), url_Path); 
   if (!*escapedString)
     return NS_ERROR_OUT_OF_MEMORY;
-  result.Adopt(escapedString);
+  aResult.Adopt(escapedString);
   return NS_OK;
 }
 
-nsresult NS_MsgDecodeUnescapeURLPath(const nsASingleFragmentCString& path, nsAString& result)
+nsresult NS_MsgDecodeUnescapeURLPath(const nsACString& aPath,
+                                     nsAString& aResult)
 {
   nsCAutoString unescapedName;
-  NS_UnescapeURL(path, esc_FileBaseName|esc_Forced|esc_AlwaysCopy,
+  NS_UnescapeURL(PromiseFlatCString(aPath), 
+                 esc_FileBaseName|esc_Forced|esc_AlwaysCopy,
                  unescapedName);
-  CopyUTF8toUTF16(unescapedName, result);
+  CopyUTF8toUTF16(unescapedName, aResult);
   return NS_OK;
 }
 

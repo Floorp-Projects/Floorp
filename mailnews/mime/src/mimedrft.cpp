@@ -383,8 +383,10 @@ CreateCompositionFields(const char        *from,
   }
   
   if (newsgroups) {
+    // fixme: the newsgroups header had better be decoded using the server-side
+    // character encoding,but this |charset| might be different from it.
     val = MIME_DecodeMimeHeader(newsgroups, charset, PR_FALSE, PR_TRUE);
-    cFields->SetNewsgroups(val ? val : newsgroups);
+    cFields->SetNewsgroups(NS_ConvertUTF8toUTF16(val ? val : newsgroups));
     PR_FREEIF(val);
   }
   

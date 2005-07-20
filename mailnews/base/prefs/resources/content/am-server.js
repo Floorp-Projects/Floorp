@@ -43,6 +43,7 @@
 
 var gRedirectorType = "";
 var gServer;
+var gObserver;
 
 function onInit() 
 {
@@ -63,6 +64,10 @@ function onPreInit(account, accountValues)
   var type = parent.getAccountValue(account, accountValues, "server", "type", null, false);
   gRedirectorType = parent.getAccountValue(account, accountValues, "server", "redirectorType", null, false);
   hideShowControls(type);
+
+  gObserver= Components.classes["@mozilla.org/observer-service;1"].
+             getService(Components.interfaces.nsIObserverService);
+  gObserver.notifyObservers(null, "charsetmenu-selected", "other");
 
   gServer = account.incomingServer;
   

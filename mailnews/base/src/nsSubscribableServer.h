@@ -100,11 +100,12 @@ private:
   nsresult FreeSubtree(SubscribeTreeNode *node);
   nsresult CreateNode(SubscribeTreeNode *parent, const char *name, SubscribeTreeNode **result);
   nsresult AddChildNode(SubscribeTreeNode *parent, const char *name, SubscribeTreeNode **child);
-  nsresult FindAndCreateNode(const char *path, SubscribeTreeNode **result);
+  nsresult FindAndCreateNode(const nsACString &aPath,
+                             SubscribeTreeNode **aResult);
   nsresult NotifyAssert(SubscribeTreeNode *subjectNode, nsIRDFResource *property, SubscribeTreeNode *objectNode);
   nsresult NotifyChange(SubscribeTreeNode *subjectNode, nsIRDFResource *property, PRBool value);
   nsresult Notify(nsIRDFResource *subject, nsIRDFResource *property, nsIRDFNode *object, PRBool isAssert, PRBool isChange);
-  void BuildURIFromNode(SubscribeTreeNode *node, nsCAutoString &uri);
+  void BuildURIFromNode(SubscribeTreeNode *node, nsACString &uri);
   nsresult EnsureSubscribeDS();
   nsresult EnsureRDFService();
 };

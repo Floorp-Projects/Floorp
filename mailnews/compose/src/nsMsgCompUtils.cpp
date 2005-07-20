@@ -578,9 +578,10 @@ RRT_HEADER:
       return nsnull;
     }
 
-    PUSH_STRING ("Newsgroups: ");
-    PUSH_STRING (newsgroupsHeaderVal.get());
-    PUSH_NEWLINE ();
+    // fixme:the newsgroups header had better be encoded as the server-side
+    // character encoding, but this |charset| might be different from it.
+    ENCODE_AND_PUSH("Newsgroups: ", PR_FALSE, newsgroupsHeaderVal.get(),
+                    charset, PR_FALSE);
 
     // If we are here, we are NOT going to send this now. (i.e. it is a Draft, 
     // Send Later file, etc...). Because of that, we need to store what the user

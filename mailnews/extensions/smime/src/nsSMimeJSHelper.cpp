@@ -390,8 +390,7 @@ nsresult nsSMimeJSHelper::getMailboxList(nsIMsgCompFields *compFields, PRUint32 
   if (NS_FAILED(res))
     return res;
 
-  nsXPIDLString to, cc, bcc;
-  nsXPIDLCString ng;
+  nsXPIDLString to, cc, bcc, ng;
 
   res = compFields->GetTo(to);
   if (NS_FAILED(res))
@@ -405,7 +404,7 @@ nsresult nsSMimeJSHelper::getMailboxList(nsIMsgCompFields *compFields, PRUint32 
   if (NS_FAILED(res))
     return res;
 
-  res = compFields->GetNewsgroups(getter_Copies(ng));
+  res = compFields->GetNewsgroups(ng);
   if (NS_FAILED(res))
     return res;
 
@@ -430,7 +429,9 @@ nsresult nsSMimeJSHelper::getMailboxList(nsIMsgCompFields *compFields, PRUint32 
       all_recipients.Append(',');
     }
 
-    all_recipients += ng;
+    if (!ng.IsEmpty()) {
+      AppendUTF16toUTF8(ng, all_recipients);
+    }
 
     char *unique_mailboxes = nsnull;
 

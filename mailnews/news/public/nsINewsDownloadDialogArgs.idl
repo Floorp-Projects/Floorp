@@ -38,9 +38,9 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(b5037f06-1dd1-11b2-bf61-fcab5b5837a7)]
+[scriptable, uuid(3634327c-392b-4686-adf5-576e6cef9196)]
 interface nsINewsDownloadDialogArgs: nsISupports {
-  attribute string groupName;
+  attribute AString groupName;
   attribute long articleCount;
   attribute string serverKey;
   attribute boolean hitOK;

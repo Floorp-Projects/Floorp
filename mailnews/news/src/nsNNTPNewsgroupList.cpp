@@ -324,16 +324,16 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow *aMsgWindow,
                 rv = args->SetArticleCount(*last - *first + 1);
                 NS_ENSURE_SUCCESS(rv,rv);
         
-                nsXPIDLCString groupName;
-                rv = m_newsFolder->GetAsciiName(getter_Copies(groupName));
+                nsXPIDLString groupName;
+                rv = m_newsFolder->GetUnicodeName(groupName);
                 NS_ENSURE_SUCCESS(rv,rv);
 
-                rv = args->SetGroupName((const char *)groupName);
+                rv = args->SetGroupName(groupName);
                 NS_ENSURE_SUCCESS(rv,rv);
 
-				// get the server key
-				nsXPIDLCString serverKey;
-				rv = server->GetKey(getter_Copies(serverKey));
+                // get the server key
+                nsXPIDLCString serverKey;
+                rv = server->GetKey(getter_Copies(serverKey));
                 NS_ENSURE_SUCCESS(rv,rv);
 
                 rv = args->SetServerKey((const char *)serverKey);

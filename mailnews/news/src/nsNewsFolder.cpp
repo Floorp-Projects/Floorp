@@ -93,6 +93,9 @@
 #include "nsNewsDownloader.h"
 #include "nsIStringBundle.h"
 #include "nsEscape.h"
+#include "nsMsgI18N.h"
+#include "nsNativeCharsetUtils.h"
+#include "nsIMsgAccountManager.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -117,7 +120,7 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
      mExpungedBytes(0), mGettingNews(PR_FALSE),
     mInitialized(PR_FALSE), mOptionLines(""), mUnsubscribedNewsgroupLines(""), 
     m_downloadMessageForOfflineUse(PR_FALSE), m_downloadingMultipleMessages(PR_FALSE), 
-    mReadSet(nsnull), mGroupUsername(nsnull), mGroupPassword(nsnull), mAsciiName(nsnull)
+    mReadSet(nsnull), mGroupUsername(nsnull), mGroupPassword(nsnull)
 {
   MOZ_COUNT_CTOR(nsNewsFolder); // double count these for now.
   /* we're parsing the newsrc file, and the line breaks are platform specific.
@@ -133,7 +136,6 @@ nsMsgNewsFolder::~nsMsgNewsFolder(void)
   delete mReadSet;
   PR_Free(mGroupUsername);
   PR_Free(mGroupPassword);
-  PR_Free(mAsciiName);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgNewsFolder, nsMsgDBFolder)
@@ -190,13 +192,13 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
 }
 
 NS_IMETHODIMP
-nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder **child)
+nsMsgNewsFolder::AddNewsgroup(const nsACString &name, const char *setStr,
+                              nsIMsgFolder **child)
 {
   nsresult rv = NS_OK;
   
   NS_ENSURE_ARG_POINTER(child);
   NS_ENSURE_ARG_POINTER(setStr);
-  NS_ENSURE_ARG_POINTER(name);
   
   nsCOMPtr <nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv); 
   if (NS_FAILED(rv)) return rv;
@@ -210,19 +212,18 @@ nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder
   uri.Append('/');
   // URI should use UTF-8
   // (see RFC2396 Uniform Resource Identifiers (URI): Generic Syntax)
-  // since we are forcing it to be latin-1 (IS0-8859-1)
-  // we can just assign with conversion
-  nsAutoString newsgroupName;
-  newsgroupName.AssignWithConversion(name);
+  
+  // we are handling newsgroup names in UTF-8
+  NS_ConvertUTF8toUTF16 nameUtf16(name);
   
   nsCAutoString escapedName;
-  rv = NS_MsgEscapeEncodeURLPath(newsgroupName, escapedName);
+  rv = NS_MsgEscapeEncodeURLPath(nameUtf16, escapedName);
   if (NS_FAILED(rv)) return rv;
   
-  rv = nntpServer->AddNewsgroup(escapedName.get());
+  rv = nntpServer->AddNewsgroup(nameUtf16);
   if (NS_FAILED(rv)) return rv;
   
-  uri.Append(escapedName.get());
+  uri.Append(escapedName);
   
   nsCOMPtr<nsIRDFResource> res;
   rv = rdf->GetResource(uri, getter_AddRefs(res));
@@ -241,7 +242,7 @@ nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder
   NS_ENSURE_SUCCESS(rv,rv);
   
   // this what shows up in the UI
-  rv = folder->SetName(newsgroupName.get());
+  rv = folder->SetName(nameUtf16.get());
   NS_ENSURE_SUCCESS(rv,rv);
   
   rv = folder->SetFlag(MSG_FOLDER_FLAG_NEWSGROUP);
@@ -516,8 +517,8 @@ NS_IMETHODIMP nsMsgNewsFolder::GetFolderURL(char **url)
 
   nsXPIDLCString hostName;
   nsresult rv = GetHostname(getter_Copies(hostName));
-  nsXPIDLCString groupName;
-  rv = GetAsciiName(getter_Copies(groupName));
+  nsXPIDLString groupName;
+  rv = GetName(getter_Copies(groupName));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIMsgIncomingServer> server;
@@ -531,7 +532,11 @@ NS_IMETHODIMP nsMsgNewsFolder::GetFolderURL(char **url)
   rv = server->GetPort(&port);
   NS_ENSURE_SUCCESS(rv, rv);
   const char *newsScheme = (isSecure) ? SNEWS_SCHEME : NEWS_SCHEME;
-  *url = PR_smprintf("%s//%s:%ld/%s", newsScheme, hostName.get(), port, groupName.get());
+  nsXPIDLCString escapedName;
+  rv = NS_MsgEscapeEncodeURLPath(groupName, escapedName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  *url = PR_smprintf("%s//%s:%ld/%s", newsScheme, hostName.get(), port,
+                     escapedName.get());
   return NS_OK;
 
 }
@@ -547,22 +552,13 @@ NS_IMETHODIMP nsMsgNewsFolder::SetNewsrcHasChanged(PRBool newsrcHasChanged)
     return nntpServer->SetNewsrcHasChanged(newsrcHasChanged);
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *uninewsgroupname, nsIMsgWindow *msgWindow)
+NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *newsgroupName, 
+                                               nsIMsgWindow *msgWindow)
 {
   nsresult rv = NS_OK;
   
-  NS_ENSURE_ARG_POINTER(uninewsgroupname);
-  if (!*uninewsgroupname) return NS_ERROR_FAILURE;
-  
-  nsCAutoString newsgroupname; 
-  newsgroupname.AssignWithConversion(uninewsgroupname);
-  
-  nsFileSpec path;
-  nsCOMPtr<nsIFileSpec> pathSpec;
-  rv = GetPath(getter_AddRefs(pathSpec));
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = pathSpec->GetFileSpec(&path);
+  NS_ENSURE_ARG_POINTER(newsgroupName);
+  if (!*newsgroupName) return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIMsgFolder> child;
   
@@ -570,23 +566,25 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *uninewsgroupname
   nsCOMPtr<nsIMsgDatabase> newsDBFactory;
   nsCOMPtr <nsIMsgDatabase> newsDB;
   
-  //Now we have a valid directory or we have returned.
-  //Make sure the new folder name is valid
-  
-  // remember, some file systems (like mac) can't handle long file names
-  nsCAutoString hashedName = newsgroupname;
-  rv = NS_MsgHashIfNecessary(hashedName);
-  path += hashedName.get();
-  
   //Now let's create the actual new folder
-  rv = AddNewsgroup(newsgroupname.get(), "", getter_AddRefs(child));
+  rv = AddNewsgroup(NS_ConvertUTF16toUTF8(newsgroupName), "",
+                    getter_AddRefs(child));
   
   if (NS_SUCCEEDED(rv))
     SetNewsrcHasChanged(PR_TRUE); // subscribe UI does this - but maybe we got here through auto-subscribe
 
-  if(NS_SUCCEEDED(rv) && child)
-    NotifyItemAdded(child);
+  if(NS_SUCCEEDED(rv) && child){
+    nsCOMPtr <nsINntpIncomingServer> nntpServer;
+    rv = GetNntpServer(getter_AddRefs(nntpServer));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCAutoString dataCharset;
+    rv = nntpServer->GetCharset(dataCharset);
+    if (NS_FAILED(rv)) return rv;
 
+    child->SetCharset(dataCharset.get());
+    NotifyItemAdded(child);
+  }
   return rv;
 }
 
@@ -619,15 +617,11 @@ NS_IMETHODIMP nsMsgNewsFolder::Delete()
   rv = GetNntpServer(getter_AddRefs(nntpServer));
   if (NS_FAILED(rv)) return rv;
   
-  nsXPIDLString name;
-  rv = GetName(getter_Copies(name));
+  nsAutoString name;
+  rv = GetUnicodeName(name);
   NS_ENSURE_SUCCESS(rv,rv);
   
-  nsCAutoString escapedName;
-  rv = NS_MsgEscapeEncodeURLPath(name, escapedName);
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  rv = nntpServer->RemoveNewsgroup(escapedName.get());
+  rv = nntpServer->RemoveNewsgroup(name);
   NS_ENSURE_SUCCESS(rv,rv);
   
   rv = SetNewsrcHasChanged(PR_TRUE);
@@ -1134,7 +1128,7 @@ nsMsgNewsFolder::HandleNewsrcLine(char* line, PRUint32 line_size)
     // we're subscribed, so add it
     nsCOMPtr <nsIMsgFolder> child;
     
-    rv = AddNewsgroup(line, setStr, getter_AddRefs(child));
+    rv = AddNewsgroup(nsDependentCString(line), setStr, getter_AddRefs(child));
     
     if (NS_FAILED(rv)) return -1;
   }
@@ -1508,12 +1502,13 @@ nsMsgNewsFolder::GetNewsrcLine(char **newsrcLine)
   
   if (!newsrcLine) return NS_ERROR_NULL_POINTER;
   
-  nsXPIDLCString newsgroupname;
-  rv = GetAsciiName(getter_Copies(newsgroupname));
+  nsXPIDLString newsgroupNameUtf16;
+  rv = GetName(getter_Copies(newsgroupNameUtf16));
   if (NS_FAILED(rv)) return rv;
-  
+  NS_ConvertUTF16toUTF8 newsgroupName(newsgroupNameUtf16);
+
   nsCAutoString newsrcLineStr;
-  newsrcLineStr = newsgroupname;
+  newsrcLineStr = newsgroupName;
   newsrcLineStr += ':';
   
   if (mReadSet) {
@@ -1580,28 +1575,45 @@ nsMsgNewsFolder::OnReadChanged(nsIDBChangeListener * aInstigator)
     return SetNewsrcHasChanged(PR_TRUE);
 }
 
+NS_IMETHODIMP
+nsMsgNewsFolder::GetUnicodeName(nsAString & aName)
+{
+  nsXPIDLString newsgroupName;
+  nsresult rv = GetName(getter_Copies(newsgroupName));
+  if (NS_SUCCEEDED(rv))
+    aName = newsgroupName;
+  return rv;
+}
 
 NS_IMETHODIMP
-nsMsgNewsFolder::GetAsciiName(char **asciiName)
+nsMsgNewsFolder::GetRawName(nsACString & aRawName)
 {
   nsresult rv;
-  NS_ENSURE_ARG_POINTER(asciiName);
-  if (!mAsciiName) 
+  if (mRawName.IsEmpty()) 
   {
     nsXPIDLString name;
     rv = GetName(getter_Copies(name));
     NS_ENSURE_SUCCESS(rv,rv);
     
-    // convert to ASCII
+    // convert to the server-side encoding 
     nsCAutoString tmpStr;
-    tmpStr.AssignWithConversion(name);
+    nsCOMPtr <nsINntpIncomingServer> nntpServer;
+    rv = GetNntpServer(getter_AddRefs(nntpServer));
+    NS_ENSURE_SUCCESS(rv,rv);
     
-    mAsciiName = nsCRT::strdup(tmpStr.get());
-    if (!mAsciiName) return NS_ERROR_OUT_OF_MEMORY;
+    nsCAutoString dataCharset;
+    rv = nntpServer->GetCharset(dataCharset);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = nsMsgI18NConvertFromUnicode(dataCharset.get(), name, tmpStr);
+
+    if (NS_FAILED(rv)) {
+      LossyCopyUTF16toASCII(name,tmpStr);
+    }
+    
+    mRawName = tmpStr;
   }
   
-  *asciiName = nsCRT::strdup(mAsciiName);
-  if (!*asciiName) return NS_ERROR_OUT_OF_MEMORY;
+  aRawName = mRawName;
   
   return NS_OK;
 }
@@ -1944,4 +1956,3 @@ nsMsgNewsFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   m_downloadingMultipleMessages = PR_FALSE;
   return nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
 }
-

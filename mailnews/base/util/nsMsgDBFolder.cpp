@@ -2503,7 +2503,8 @@ nsMsgDBFolder::parseURI(PRBool needServer)
       // XXX conversion to unicode here? is fileName in UTF8?
       // yes, let's say it is in utf8
       NS_UnescapeURL((char *)fileName.get());
-      mName = NS_ConvertUTF8toUCS2(fileName.get());
+      NS_ASSERTION(IsUTF8(fileName), "fileName is not in UTF-8");
+      CopyUTF8toUTF16(fileName, mName);
     }
   }
 
@@ -2557,8 +2558,17 @@ nsMsgDBFolder::parseURI(PRBool needServer)
       // "folder1.sbd/folder2.sbd/foldern"
       // (remove leading / and add .sbd to first n-1 folders)
       // to be appended onto the server's path
+      
+      PRBool isNewsFolder = PR_FALSE;
+      nsCAutoString scheme;
+      if (NS_SUCCEEDED(url->GetScheme(scheme)))
+      {
+        isNewsFolder = scheme.EqualsLiteral("news") ||  
+                       scheme.EqualsLiteral("snews") ||  
+                       scheme.EqualsLiteral("nntp");
+      }
 
-      NS_MsgCreatePathStringFromFolderURI(urlPath.get(), newPath);
+      NS_MsgCreatePathStringFromFolderURI(urlPath.get(), newPath, isNewsFolder);
     }
 
     // now append munged path onto server path

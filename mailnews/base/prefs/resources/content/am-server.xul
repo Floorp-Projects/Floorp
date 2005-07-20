@@ -330,4 +330,17 @@
               accesskey="&browseFolder.accesskey;" oncommand="BrowseForLocalFolders()"/>
     </hbox>
   </vbox>
+  <separator class="thin"/>
+   <hbox hidefor="imap,pop3,movemail" align="center" valign="middle" iscontrolcontainer="true">
+     <label value="&serverDefaultCharset.label;" control="nntp.charset"/>
+     <menulist hidable="true" hidefor="imap,pop3,movemail" wsm_persist="true" id="nntp.charset" 
+                 ref="NC:DecodersRoot" datasources="rdf:charset-menu"
+                 preftype="string" prefstring="mail.server.%serverkey%.charset"> 
+       <template>
+         <menupopup>
+           <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+         </menupopup>
+       </template>
+     </menulist>
+   </hbox> 
 </page>

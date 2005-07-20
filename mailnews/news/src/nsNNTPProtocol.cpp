@@ -60,6 +60,7 @@
 #include "nsIPipe.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
+#include "nsMsgI18N.h"
 
 #include "nsMsgBaseCID.h"
 #include "nsMsgNewsCID.h"
@@ -983,6 +984,8 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   rv = ParseURL(aURL, getter_Copies(group), &m_messageID, getter_Copies(commandSpecificData));
   NS_ASSERTION(NS_SUCCEEDED(rv),"failed to parse news url");
   //if (NS_FAILED(rv)) return rv;
+  // XXX group returned from ParseURL is assumed to be in UTF-8
+  NS_ASSERTION(IsUTF8(group), "newsgroup name is not in UTF-8"); 
 
   PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) m_messageID = %s",this, m_messageID?m_messageID:"(null)"));
   PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) group = %s",this,group.get()));
@@ -1051,7 +1054,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
           m_typeWanted = IDS_WANTED;
           m_commandSpecificData = ToNewCString(commandSpecificData);
           
-          rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
+          rv = m_nntpServer->FindGroup(group, getter_AddRefs(m_newsFolder));
           if (!m_newsFolder) goto FAIL;
         }
         else
@@ -1062,7 +1065,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
           m_searchData = m_commandSpecificData;
           
           
-          rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
+          rv = m_nntpServer->FindGroup(group, getter_AddRefs(m_newsFolder));
           if (!m_newsFolder) goto FAIL;
         }
       }
@@ -1082,7 +1085,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
         if (m_nntpServer)
         {
           PRBool containsGroup = PR_TRUE;
-          rv = m_nntpServer->ContainsNewsgroup(group.get(),&containsGroup);
+          rv = m_nntpServer->ContainsNewsgroup(group, &containsGroup);
           if (NS_FAILED(rv)) goto FAIL;
           
           if (!containsGroup) 
@@ -1105,8 +1108,10 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
             nsCOMPtr<nsIStringBundle> bundle;
             nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
             
-            // to handle non-ASCII newsgroup names, we store them internally as escaped.
-            // decode and unescape the newsgroup name so we'll display a proper name.
+            // to handle non-ASCII newsgroup names, we store them internally
+            // as escaped. decode and unescape the newsgroup name so we'll
+            // display a proper name.
+
             nsAutoString unescapedName;
             rv = NS_MsgDecodeUnescapeURLPath(group, unescapedName);
             NS_ENSURE_SUCCESS(rv,rv);
@@ -1125,7 +1130,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
             
             if (confirmResult)
             {
-              rv = m_nntpServer->SubscribeToNewsgroup(group.get());
+              rv = m_nntpServer->SubscribeToNewsgroup(group);
               containsGroup = PR_TRUE;
             }
             else {
@@ -1150,7 +1155,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
           // If we have a group (since before, or just subscribed), set the m_newsFolder.
           if (containsGroup)
           {
-            rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
+            rv = m_nntpServer->FindGroup(group, getter_AddRefs(m_newsFolder));
             if (!m_newsFolder) goto FAIL;
           }
         }
@@ -1739,7 +1744,15 @@ PRInt32 nsNNTPProtocol::SendListSearchesResponse(nsIInputStream * inputStream, P
 
 	if ('.' != line[0])
 	{
-		m_nntpServer->AddSearchableGroup(line);
+        nsCAutoString charset;
+        nsAutoString lineUtf16;
+        if (NS_FAILED(m_nntpServer->GetCharset(charset)) ||
+            NS_FAILED(nsMsgI18NConvertToUnicode(charset.get(),
+                                                nsDependentCString(line),
+                                                lineUtf16, PR_TRUE)))
+            CopyUTF8toUTF16(nsDependentCString(line), lineUtf16); 
+
+		m_nntpServer->AddSearchableGroup(lineUtf16);
 	}
 	else
 	{
@@ -1931,37 +1944,39 @@ PRInt32 nsNNTPProtocol::SendListSubscriptionsResponse(nsIInputStream * inputStre
 
 PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 {
-	char *command=0;
-	PRInt32 status = 0;
+    char *command=0;
+    PRInt32 status = 0;
 
-	if (m_typeWanted == ARTICLE_WANTED) {
-		if (m_key != nsMsgKey_None) {
-		    nsresult rv;
+    if (m_typeWanted == ARTICLE_WANTED) {
+        if (m_key != nsMsgKey_None) {
+            nsresult rv;
             nsXPIDLCString newsgroupName;
             if (m_newsFolder) {
-                rv = m_newsFolder->GetAsciiName(getter_Copies(newsgroupName));
+                rv = m_newsFolder->GetRawName(newsgroupName);
                 NS_ENSURE_SUCCESS(rv,rv);
             }
 
-		    PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) current group = %s, desired group = %s", this, m_currentGroup.get(), newsgroupName.get()));
+            PR_LOG(NNTP,PR_LOG_ALWAYS,
+                   ("(%p) current group = %s, desired group = %s", this,
+                   m_currentGroup.get(), newsgroupName.get()));
             // if the current group is the desired group, we can just issue the ARTICLE command
             // if not, we have to do a GROUP first
-			if (!PL_strcmp(m_currentGroup.get(), newsgroupName.get()))
-			  m_nextState = NNTP_SEND_ARTICLE_NUMBER;
-			else
-			  m_nextState = NNTP_SEND_GROUP_FOR_ARTICLE;
+            if (!PL_strcmp(m_currentGroup.get(), newsgroupName.get()))
+                m_nextState = NNTP_SEND_ARTICLE_NUMBER;
+            else
+                m_nextState = NNTP_SEND_GROUP_FOR_ARTICLE;
 
-			ClearFlag(NNTP_PAUSE_FOR_READ);
-			return 0;
-		  }
-	  }
+            ClearFlag(NNTP_PAUSE_FOR_READ);
+            return 0;
+        }
+    }
 
-	if(m_typeWanted == NEWS_POST)
-      {  /* posting to the news group */
+    if(m_typeWanted == NEWS_POST)
+    {  /* posting to the news group */
         NS_MsgSACopy(&command, "POST");
-      }
+    }
     else if(m_typeWanted == READ_NEWS_RC)
-      {
+    {
 		/* extract post method from the url when we have it... */
 #ifdef HAVE_NEWS_URL
 		if(ce->URL_s->method == URL_POST_METHOD ||
@@ -1971,7 +1986,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 #endif
         	m_nextState = NEWS_DISPLAY_NEWS_RC;
 		return(0);
-      } 
+    } 
 	else if(m_typeWanted == NEW_GROUPS)
 	{
         PRUint32 last_update;
@@ -2050,7 +2065,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
         if (!m_newsFolder) return -1;
 
         nsXPIDLCString group_name;
-		rv = m_newsFolder->GetAsciiName(getter_Copies(group_name));
+        rv = m_newsFolder->GetRawName(group_name);
         NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get newsgroup name");
         if (NS_FAILED(rv)) return -1;
 		
@@ -2090,21 +2105,21 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
             PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) doing GROUP for XPAT", this));
             nsXPIDLCString group_name;
             
-			/* for XPAT, we have to GROUP into the group before searching */
-			if (!m_newsFolder) {
-				NNTP_LOG_NOTE("m_newsFolder is null, panic!");
-				return -1;
-			}
-            rv = m_newsFolder->GetAsciiName(getter_Copies(group_name));
+            /* for XPAT, we have to GROUP into the group before searching */
+            if (!m_newsFolder) {
+                NNTP_LOG_NOTE("m_newsFolder is null, panic!");
+                return -1;
+            }
+            rv = m_newsFolder->GetRawName(group_name);
             if (NS_FAILED(rv)) return -1;
 
-			NS_MsgSACopy(&command, "GROUP ");
+            NS_MsgSACopy(&command, "GROUP ");
             NS_MsgSACat (&command, group_name);
 
             // force a GROUP next time
             m_currentGroup.Truncate();
-			m_nextState = NNTP_RESPONSE;
-			m_nextStateAfterResponse = NNTP_XPAT_SEND;
+            m_nextState = NNTP_RESPONSE;
+            m_nextStateAfterResponse = NNTP_XPAT_SEND;
 		}
 	}
 	else if (m_typeWanted == PRETTY_NAMES_WANTED)
@@ -2203,18 +2218,20 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
   {
     nsresult rv = NS_OK;
     
-    nsXPIDLCString group_name;
+    nsXPIDLString group_name;
     NS_ASSERTION(m_newsFolder, "no newsFolder");
     if (m_newsFolder) {
-      rv = m_newsFolder->GetAsciiName(getter_Copies(group_name));
+      rv = m_newsFolder->GetUnicodeName(group_name);
     }
     
     if (m_responseCode == MK_NNTP_RESPONSE_GROUP_NO_GROUP &&
       m_typeWanted == GROUP_WANTED) {
-      PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) group (%s) not found, so unset m_currentGroup",this,(const char *)group_name));
+      PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) group (%s) not found, so unset"
+                                 " m_currentGroup", this,
+                                 NS_ConvertUTF16toUTF8(group_name).get()));
       m_currentGroup.Truncate();
       
-      m_nntpServer->GroupNotFound(m_msgWindow, group_name.get(), PR_TRUE /* opening */);
+      m_nntpServer->GroupNotFound(m_msgWindow, group_name, PR_TRUE /* opening */);
     }
     
     /* if the server returned a 400 error then it is an expected
@@ -2321,7 +2338,7 @@ PRInt32 nsNNTPProtocol::SendGroupForArticle()
   PRInt32 status = 0; 
 
   nsXPIDLCString groupname;
-  rv = m_newsFolder->GetAsciiName(getter_Copies(groupname));
+  rv = m_newsFolder->GetRawName(groupname);
   NS_ASSERTION(NS_SUCCEEDED(rv) && groupname.get() && groupname.get()[0], "no group name");
 
   char outputBuffer[OUTPUT_BUFFER_SIZE];
@@ -2353,7 +2370,7 @@ nsNNTPProtocol::SetCurrentGroup()
     return NS_ERROR_UNEXPECTED;
   }
 
-  rv = m_newsFolder->GetAsciiName(getter_Copies(groupname));
+  rv = m_newsFolder->GetRawName(groupname);
   NS_ASSERTION(NS_SUCCEEDED(rv) && groupname.get()[0], "no group name");
   PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) SetCurrentGroup to %s",this,(const char *)groupname));
   m_currentGroup = groupname;
@@ -2910,13 +2927,14 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
     rv = m_nntpServer->QueryExtension("XACTIVE",&xactive);
     if (NS_SUCCEEDED(rv) && xactive)
     {
-      nsXPIDLCString groupName;
-      rv = m_nntpServer->GetFirstGroupNeedingExtraInfo(getter_Copies(groupName));
+      nsCAutoString groupName;
+      rv = m_nntpServer->GetFirstGroupNeedingExtraInfo(groupName);
       if (NS_SUCCEEDED(rv)) {
-        rv = m_nntpServer->FindGroup((const char *)groupName, getter_AddRefs(m_newsFolder));
+        rv = m_nntpServer->FindGroup(groupName, getter_AddRefs(m_newsFolder));
         NS_ASSERTION(NS_SUCCEEDED(rv), "FindGroup failed");
         m_nextState = NNTP_LIST_XACTIVE;
-        PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) listing xactive for %s", this, (const char *)groupName));
+        PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) listing xactive for %s", this, 
+                                   groupName.get()));
         PR_Free(lineToFree);
         return 0;
       }
@@ -2993,7 +3011,16 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
   rv = m_nntpServer->QueryExtension("XACTIVE",&xactive);
   if (NS_SUCCEEDED(rv) && xactive)
   {
-    m_nntpServer->SetGroupNeedsExtraInfo(line, PR_TRUE);
+    nsCAutoString charset;
+    nsAutoString lineUtf16;
+    if (NS_SUCCEEDED(m_nntpServer->GetCharset(charset)) &&
+        NS_SUCCEEDED(nsMsgI18NConvertToUnicode(charset.get(),
+                                               nsDependentCString(line),
+                                               lineUtf16, PR_TRUE)))
+      m_nntpServer->SetGroupNeedsExtraInfo(NS_ConvertUTF16toUTF8(lineUtf16),
+                                           PR_TRUE);
+    else
+      m_nntpServer->SetGroupNeedsExtraInfo(nsDependentCString(line), PR_TRUE);
   }
   
   PR_Free(lineToFree);
@@ -3878,7 +3905,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
     if (!m_newsFolder) return -1;
     
     nsXPIDLCString name;
-    rv = m_newsFolder->GetAsciiName(getter_Copies(name));
+    rv = m_newsFolder->GetRawName(name);
     if (NS_FAILED(rv)) return -1;
     if (!name) return -1;
     
@@ -3967,11 +3994,11 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
   }
   else if (m_responseCode == MK_NNTP_RESPONSE_GROUP_NO_GROUP)
   {
-    nsXPIDLCString name;
-    rv = m_newsFolder->GetAsciiName(getter_Copies(name));
+    nsXPIDLString name;
+    rv = m_newsFolder->GetUnicodeName(name);
     
     if (NS_SUCCEEDED(rv)) {
-      m_nntpServer->GroupNotFound(m_msgWindow, name.get(), PR_FALSE);
+        m_nntpServer->GroupNotFound(m_msgWindow, name, PR_FALSE);
     }
     
     PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) NO_GROUP, so unset m_currentGroup", this));
@@ -4403,7 +4430,7 @@ PRInt32 nsNNTPProtocol::ListPrettyNames()
   char outputBuffer[OUTPUT_BUFFER_SIZE];
   PRInt32 status = 0; 
   
-  nsresult rv = m_newsFolder->GetAsciiName(getter_Copies(group_name));
+  nsresult rv = m_newsFolder->GetRawName(group_name);
   PR_snprintf(outputBuffer, 
     OUTPUT_BUFFER_SIZE, 
     "LIST PRETTYNAMES %.512s" CRLF,
@@ -4421,7 +4448,6 @@ PRInt32 nsNNTPProtocol::ListPrettyNames()
 
 PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-  char *prettyName;
   PRUint32 status = 0;
   
   if (m_responseCode != MK_NNTP_RESPONSE_LIST_OK)
@@ -4447,21 +4473,34 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
   {
     if (line[0] != '.')
     {
+#if 0 // SetPrettyName is not yet implemented. No reason to bother
       int i;
       /* find whitespace separator if it exits */
       for (i=0; line[i] != '\0' && !NET_IS_SPACE(line[i]); i++)
         ;  /* null body */
       
+      char *prettyName;
       if(line[i] == '\0')
         prettyName = &line[i];
       else
         prettyName = &line[i+1];
       
       line[i] = 0; /* terminate group name */
-      if (i > 0)
-        m_nntpServer->SetPrettyNameForGroup(line, prettyName);
+      if (i > 0) {
+        nsCAutoString charset;   
+        nsAutoString lineUtf16, prettyNameUtf16;
+        if (NS_FAILED(m_nntpServer->GetCharset(charset) ||
+            NS_FAILED(ConvertToUnicode(charset, line, lineUtf16)) ||
+            NS_FAILED(ConvertToUnicode(charset, prettyName, prettyNameUtf16)))) {
+          CopyUTF8toUTF16(line, lineUtf16);
+          CopyUTF8toUTF16(prettyName, prettyNameUtf16);
+        }
+        m_nntpServer->SetPrettyNameForGroup(lineUtf16, prettyNameUtf16);
       
-      PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) adding pretty name %s", this, prettyName));
+        PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) adding pretty name %s", this, 
+               NS_ConvertUTF16toUTF8(prettyNameUtf16).get()));
+      }
+#endif
     }
     else
     {
@@ -4480,7 +4519,7 @@ PRInt32 nsNNTPProtocol::ListXActive()
 { 
   nsXPIDLCString group_name;
   nsresult rv;
-  rv = m_newsFolder->GetAsciiName(getter_Copies(group_name));
+  rv = m_newsFolder->GetRawName(group_name);
   if (NS_FAILED(rv)) return -1;
   
   PRInt32 status = 0;
@@ -4586,9 +4625,10 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
         old_newsFolder = m_newsFolder;
         nsXPIDLCString groupName;
         
-        rv = m_nntpServer->GetFirstGroupNeedingExtraInfo(getter_Copies(groupName));
+        rv = m_nntpServer->GetFirstGroupNeedingExtraInfo(groupName);
         if (NS_FAILED(rv)) return -1;
-        rv = m_nntpServer->FindGroup(groupName, getter_AddRefs(m_newsFolder));
+        rv = m_nntpServer->FindGroup(groupName,
+                                     getter_AddRefs(m_newsFolder));
         if (NS_FAILED(rv)) return -1;
         
         // see if we got a different group
@@ -4633,7 +4673,7 @@ PRInt32 nsNNTPProtocol::SendListGroup()
   if (!m_newsFolder) return -1;
   nsXPIDLCString newsgroupName;
   
-  rv = m_newsFolder->GetAsciiName(getter_Copies(newsgroupName));
+  rv = m_newsFolder->GetRawName(newsgroupName);
   NS_ENSURE_SUCCESS(rv,rv);
   
   PR_snprintf(outputBuffer, 

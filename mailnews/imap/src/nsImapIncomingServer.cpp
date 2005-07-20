@@ -1190,7 +1190,8 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
       isNamespace = (boxFlags & kNameSpace) != 0;
       if (!isNamespace)
-        rv = AddTo(dupFolderPath.get(), mDoingLsub && !noSelect/* add as subscribed */, !noSelect, mDoingLsub /* change if exists */);
+        rv = AddTo(dupFolderPath, mDoingLsub && !noSelect/* add as subscribed */,
+                   !noSelect, mDoingLsub /* change if exists */);
       NS_ENSURE_SUCCESS(rv,rv);
       return rv;
     }
@@ -2854,7 +2855,7 @@ nsImapIncomingServer::SetDelimiter(char aDelimiter)
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::SetAsSubscribed(const char *path)
+nsImapIncomingServer::SetAsSubscribed(const nsACString &path)
 {
   nsresult rv = EnsureInner();
   NS_ENSURE_SUCCESS(rv,rv);
@@ -2871,30 +2872,24 @@ nsImapIncomingServer::UpdateSubscribed()
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool aSubscribable, PRBool changeIfExists)
+nsImapIncomingServer::AddTo(const nsACString &aName, PRBool addAsSubscribed,
+                            PRBool aSubscribable, PRBool changeIfExists)
 {
   nsresult rv = EnsureInner();
   NS_ENSURE_SUCCESS(rv,rv);
   
-  // quick check if the name we are passed is really modified UTF-7
-  // if it isn't, ignore it.  (otherwise, we'll crash.  see #63186)
-  // there is a bug in the UW IMAP server where it can send us
-  // folder names as literals, instead of MUTF7
-  unsigned char *ptr = (unsigned char *)aName;
-  PRBool nameIsClean = PR_TRUE;
-  while (*ptr) 
-  {
-    if (*ptr > 127) 
-    {
-      nameIsClean = PR_FALSE;
-      break;
-    }
-    ptr++;
+  // RFC 3501 allows UTF-8 in addition to modified UTF-7
+  // If it's not UTF-8, it cannot be MUTF7, either. We just ignore it.
+  // (otherwise we'll crash. see #63186)
+  if (!IsUTF8(aName)) 
+    return NS_OK; 
+
+  if (!IsASCII(aName)) { 
+      nsCAutoString name;
+      CopyUTF16toMUTF7(NS_ConvertUTF8toUTF16(aName), name);
+      return mInner->AddTo(name, addAsSubscribed, aSubscribable, changeIfExists);
   }
-  
-  NS_ASSERTION(nameIsClean,"folder path was not in UTF7, ignore it");
-  if (!nameIsClean) return NS_OK;
-  
+ 
   return mInner->AddTo(aName, addAsSubscribed, aSubscribable, changeIfExists);
 }
 
@@ -3031,7 +3026,8 @@ nsImapIncomingServer::ReDiscoverAllFolders()
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::SetState(const char *path, PRBool state, PRBool *stateChanged)
+nsImapIncomingServer::SetState(const nsACString &path, PRBool state,
+                               PRBool *stateChanged)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -3039,7 +3035,7 @@ nsImapIncomingServer::SetState(const char *path, PRBool state, PRBool *stateChan
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::HasChildren(const char *path, PRBool *aHasChildren)
+nsImapIncomingServer::HasChildren(const nsACString &path, PRBool *aHasChildren)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -3047,7 +3043,8 @@ nsImapIncomingServer::HasChildren(const char *path, PRBool *aHasChildren)
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::IsSubscribed(const char *path, PRBool *aIsSubscribed)
+nsImapIncomingServer::IsSubscribed(const nsACString &path,
+                                   PRBool *aIsSubscribed)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -3055,7 +3052,7 @@ nsImapIncomingServer::IsSubscribed(const char *path, PRBool *aIsSubscribed)
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::IsSubscribable(const char *path, PRBool *aIsSubscribable)
+nsImapIncomingServer::IsSubscribable(const nsACString &path, PRBool *aIsSubscribable)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -3063,7 +3060,7 @@ nsImapIncomingServer::IsSubscribable(const char *path, PRBool *aIsSubscribable)
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::GetLeafName(const char *path, PRUnichar **aLeafName)
+nsImapIncomingServer::GetLeafName(const nsACString &path, nsAString &aLeafName)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -3071,7 +3068,7 @@ nsImapIncomingServer::GetLeafName(const char *path, PRUnichar **aLeafName)
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::GetFirstChildURI(const char * path, char **aResult)
+nsImapIncomingServer::GetFirstChildURI(const nsACString &path, nsACString &aResult)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -3080,7 +3077,7 @@ nsImapIncomingServer::GetFirstChildURI(const char * path, char **aResult)
 
 
 NS_IMETHODIMP
-nsImapIncomingServer::GetChildren(const char *path, nsISupportsArray *array)
+nsImapIncomingServer::GetChildren(const nsACString &path, nsISupportsArray *array)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -3486,7 +3483,7 @@ nsImapIncomingServer::GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServe
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::SetSearchValue(const char *searchValue)
+nsImapIncomingServer::SetSearchValue(const nsAString &searchValue)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

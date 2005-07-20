@@ -126,14 +126,14 @@ private:
     nsCOMPtr<nsIAtom> mSubscribedAtom;
     nsCOMPtr<nsIAtom> mNntpAtom;
 
-    nsCString mSearchValue;
+    nsString mSearchValue;
     nsCOMPtr<nsITreeBoxObject> mTree;
     nsCOMPtr<nsITreeSelection> mTreeSelection;
 
     PRBool   mHasSeenBeginGroups;
     nsresult WriteHostInfoFile();
     nsresult LoadHostInfoFile();
-    nsresult AddGroupOnServer(const char *name);
+    nsresult AddGroupOnServer(const nsACString &name);
 
     PRBool mNewsrcHasChanged;
     nsAdapterEnumerator *mGroupsEnumerator;

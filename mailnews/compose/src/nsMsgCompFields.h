@@ -115,6 +115,7 @@ public:
   nsresult SetFcc2(const char *value) {return SetAsciiHeader(MSG_FCC2_HEADER_ID, value);}
   const char* GetFcc2() {return GetAsciiHeader(MSG_FCC2_HEADER_ID);}
 
+  nsresult SetNewsgroups(const char *aValue) {return SetAsciiHeader(MSG_NEWSGROUPS_HEADER_ID, aValue);}
   const char* GetNewsgroups() {return GetAsciiHeader(MSG_NEWSGROUPS_HEADER_ID);}
 
   const char* GetNewshost() {return GetAsciiHeader(MSG_NEWSPOSTURL_HEADER_ID);}

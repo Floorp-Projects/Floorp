@@ -127,10 +127,8 @@ nsSubscribableServer::SetDelimiter(char aDelimiter)
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::SetAsSubscribed(const char *path)
+nsSubscribableServer::SetAsSubscribed(const nsACString &path)
 {
-    NS_ASSERTION(path,"no path");
-    if (!path) return NS_ERROR_NULL_POINTER;
     nsresult rv = NS_OK;
 
     SubscribeTreeNode *node = nsnull;
@@ -150,7 +148,8 @@ nsSubscribableServer::SetAsSubscribed(const char *path)
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool subscribable, PRBool changeIfExists)
+nsSubscribableServer::AddTo(const nsACString& aName, PRBool aAddAsSubscribed,
+                            PRBool aSubscribable, PRBool aChangeIfExists)
 {
     nsresult rv = NS_OK;
     
@@ -163,7 +162,7 @@ nsSubscribableServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool su
 
     SubscribeTreeNode *node = nsnull;
 
-    // todo, shouldn't we pass in addAsSubscribed, for the 
+    // todo, shouldn't we pass in aAddAsSubscribed, for the 
     // default value if we create it?
     rv = FindAndCreateNode(aName, &node);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -171,27 +170,30 @@ nsSubscribableServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool su
     NS_ASSERTION(node,"didn't find the node");
     if (!node) return NS_ERROR_FAILURE;
 
-    if (changeIfExists) {
-        node->isSubscribed = addAsSubscribed;
+    if (aChangeIfExists) {
+        node->isSubscribed = aAddAsSubscribed;
         rv = NotifyChange(node, kNC_Subscribed, node->isSubscribed);
         NS_ENSURE_SUCCESS(rv,rv);
     }
 
-    node->isSubscribable = subscribable;
+    node->isSubscribable = aSubscribable;
     return rv;
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::SetState(const char *path, PRBool state, PRBool *stateChanged)
+nsSubscribableServer::SetState(const nsACString &aPath, PRBool aState,
+                               PRBool *aStateChanged)
 {
     nsresult rv = NS_OK;
-    NS_ASSERTION(path && stateChanged, "no path or stateChanged");
-    if (!path || !stateChanged) return NS_ERROR_NULL_POINTER;
+    NS_ASSERTION(!aPath.IsEmpty() && aStateChanged, "no path or stateChanged");
+    if (aPath.IsEmpty() || !aStateChanged) return NS_ERROR_NULL_POINTER;
 
-    *stateChanged = PR_FALSE;
+    NS_ASSERTION(IsUTF8(aPath), "aPath is not in UTF-8");
+
+    *aStateChanged = PR_FALSE;
 
     SubscribeTreeNode *node = nsnull;
-    rv = FindAndCreateNode(path, &node);
+    rv = FindAndCreateNode(aPath, &node);
     NS_ENSURE_SUCCESS(rv,rv);
 
     NS_ASSERTION(node,"didn't find the node");
@@ -202,12 +204,12 @@ nsSubscribableServer::SetState(const char *path, PRBool state, PRBool *stateChan
         return NS_OK;
     }
 
-    if (node->isSubscribed == state) {
+    if (node->isSubscribed == aState) {
         return NS_OK;
     }
     else {
-        node->isSubscribed = state;
-        *stateChanged = PR_TRUE;
+        node->isSubscribed = aState;
+        *aStateChanged = PR_TRUE;
         rv = NotifyChange(node, kNC_Subscribed, node->isSubscribed);
         NS_ENSURE_SUCCESS(rv,rv);
     }
@@ -216,7 +218,7 @@ nsSubscribableServer::SetState(const char *path, PRBool state, PRBool *stateChan
 }
 
 void
-nsSubscribableServer::BuildURIFromNode(SubscribeTreeNode *node, nsCAutoString &uri)
+nsSubscribableServer::BuildURIFromNode(SubscribeTreeNode *node, nsACString &uri)
 {
     if (node->parent) {
         BuildURIFromNode(node->parent, uri);
@@ -611,11 +613,12 @@ nsSubscribableServer::AddChildNode(SubscribeTreeNode *parent, const char *name, 
 }
 
 nsresult
-nsSubscribableServer::FindAndCreateNode(const char *path, SubscribeTreeNode **result)
+nsSubscribableServer::FindAndCreateNode(const nsACString &aPath,
+                                        SubscribeTreeNode **aResult)
 {
     nsresult rv = NS_OK;
-    NS_ASSERTION(result, "no result");
-    if (!result) return NS_ERROR_NULL_POINTER;
+    NS_ASSERTION(aResult, "no result");
+    if (!aResult) return NS_ERROR_NULL_POINTER;
 
     if (!mTreeRoot) {
         nsXPIDLCString serverUri;
@@ -626,12 +629,12 @@ nsSubscribableServer::FindAndCreateNode(const char *path, SubscribeTreeNode **re
         NS_ENSURE_SUCCESS(rv,rv);
     }
 
-    if (!path || (path[0] == '\0')) {
-        *result = mTreeRoot;
+    if (aPath.IsEmpty()) {
+        *aResult = mTreeRoot;
         return NS_OK;
     }
 
-    char *pathStr = nsCRT::strdup(path);
+    char *pathStr = nsCRT::strdup(PromiseFlatCString(aPath).get());
     char *token = nsnull;
     char *rest = pathStr;
     
@@ -640,7 +643,7 @@ nsSubscribableServer::FindAndCreateNode(const char *path, SubscribeTreeNode **re
     delimstr[0] = mDelimiter;
     delimstr[1] = '\0';
     
-    *result = nsnull;
+    *aResult = nsnull;
 
     SubscribeTreeNode *parent = mTreeRoot;
     SubscribeTreeNode *child = nsnull;
@@ -658,21 +661,21 @@ nsSubscribableServer::FindAndCreateNode(const char *path, SubscribeTreeNode **re
     CRTFREEIF(pathStr);
 
     // the last child we add is the result
-    *result = child;
+    *aResult = child;
     return rv;
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::HasChildren(const char *path, PRBool *aHasChildren)
+nsSubscribableServer::HasChildren(const nsACString &aPath, PRBool *aHasChildren)
 {
     nsresult rv = NS_OK;
-    NS_ASSERTION(aHasChildren, "no aHasChildren");
+    NS_ASSERTION(aHasChildren, "no hasChildren");
     if (!aHasChildren) return NS_ERROR_NULL_POINTER;
 
     *aHasChildren = PR_FALSE;
 
     SubscribeTreeNode *node = nsnull;
-    rv = FindAndCreateNode(path, &node);
+    rv = FindAndCreateNode(aPath, &node);
     NS_ENSURE_SUCCESS(rv,rv);
 
     NS_ASSERTION(node,"didn't find the node");
@@ -684,14 +687,15 @@ nsSubscribableServer::HasChildren(const char *path, PRBool *aHasChildren)
 
 
 NS_IMETHODIMP
-nsSubscribableServer::IsSubscribed(const char *path, PRBool *aIsSubscribed)
+nsSubscribableServer::IsSubscribed(const nsACString &aPath,
+                                   PRBool *aIsSubscribed)
 {
     NS_ENSURE_ARG_POINTER(aIsSubscribed);
 
     *aIsSubscribed = PR_FALSE;
 
     SubscribeTreeNode *node = nsnull;
-    nsresult rv = FindAndCreateNode(path, &node);
+    nsresult rv = FindAndCreateNode(aPath, &node);
     NS_ENSURE_SUCCESS(rv,rv);
 
     NS_ASSERTION(node,"didn't find the node");
@@ -702,14 +706,15 @@ nsSubscribableServer::IsSubscribed(const char *path, PRBool *aIsSubscribed)
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::IsSubscribable(const char *path, PRBool *aIsSubscribable)
+nsSubscribableServer::IsSubscribable(const nsACString &aPath,
+                                     PRBool *aIsSubscribable)
 {
     NS_ENSURE_ARG_POINTER(aIsSubscribable);
 
     *aIsSubscribable = PR_FALSE;
 
     SubscribeTreeNode *node = nsnull;
-    nsresult rv = FindAndCreateNode(path, &node);
+    nsresult rv = FindAndCreateNode(aPath, &node);
     NS_ENSURE_SUCCESS(rv,rv);
 
     NS_ASSERTION(node,"didn't find the node");
@@ -720,14 +725,10 @@ nsSubscribableServer::IsSubscribable(const char *path, PRBool *aIsSubscribable)
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::GetLeafName(const char *path, PRUnichar **aLeafName)
+nsSubscribableServer::GetLeafName(const nsACString &aPath, nsAString &aLeafName)
 {
-    nsresult rv = NS_OK;
-    NS_ASSERTION(aLeafName, "no aLeafName");
-    if (!aLeafName) return NS_ERROR_NULL_POINTER;
-
     SubscribeTreeNode *node = nsnull;
-    rv = FindAndCreateNode(path, &node);
+    nsresult rv = FindAndCreateNode(aPath, &node);
     NS_ENSURE_SUCCESS(rv,rv);
 
     NS_ASSERTION(node,"didn't find the node");
@@ -739,28 +740,21 @@ nsSubscribableServer::GetLeafName(const char *path, PRUnichar **aLeafName)
     // for news, the path is escaped UTF8
     //
     // when we switch to using the tree, this hack will go away.
-    nsAutoString leafName;
     if (mShowFullName) {
-       rv = NS_MsgDecodeUnescapeURLPath(nsDependentCString(path), leafName);
+       return NS_MsgDecodeUnescapeURLPath(aPath, aLeafName);
     }
-    else {
-        rv = CopyMUTF7toUTF16(nsDependentCString(node->name), leafName);
-    }
-    if (NS_SUCCEEDED(rv)) {
-        *aLeafName = ToNewUnicode(leafName);
-        NS_ENSURE_TRUE(*aLeafName, NS_ERROR_OUT_OF_MEMORY);
-    }
-    return rv;
+
+    return CopyMUTF7toUTF16(nsDependentCString(node->name), aLeafName);
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::GetFirstChildURI(const char * path, char **aResult)
+nsSubscribableServer::GetFirstChildURI(const nsACString &aPath,
+                                       nsACString &aResult)
 {
-    nsresult rv = NS_OK;
-    if (!aResult) return NS_ERROR_NULL_POINTER;
+    aResult.Truncate();
     
     SubscribeTreeNode *node = nsnull;
-    rv = FindAndCreateNode(path, &node);
+    nsresult rv = FindAndCreateNode(aPath, &node);
     NS_ENSURE_SUCCESS(rv,rv);
 
     NS_ASSERTION(node,"didn't find the node");
@@ -769,22 +763,20 @@ nsSubscribableServer::GetFirstChildURI(const char * path, char **aResult)
     // no children
     if (!node->firstChild) return NS_ERROR_FAILURE;
     
-    nsCAutoString uri;
-    BuildURIFromNode(node->firstChild, uri);
+    BuildURIFromNode(node->firstChild, aResult); 
 
-    *aResult = ToNewCString(uri);
-    if (!*aResult) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::GetChildren(const char *path, nsISupportsArray *array)
+nsSubscribableServer::GetChildren(const nsACString &aPath,
+                                  nsISupportsArray *array)
 {
     nsresult rv = NS_OK;
     if (!array) return NS_ERROR_NULL_POINTER;
 
     SubscribeTreeNode *node = nsnull;
-    rv = FindAndCreateNode(path, &node);
+    rv = FindAndCreateNode(aPath, &node);
     NS_ENSURE_SUCCESS(rv,rv);
 
     NS_ASSERTION(node,"didn't find the node");
@@ -795,8 +787,8 @@ nsSubscribableServer::GetChildren(const char *path, nsISupportsArray *array)
     if (!mTreeRoot) return NS_ERROR_UNEXPECTED;
     uriPrefix = mTreeRoot->name; // the root's name is the server uri
     uriPrefix += "/";
-    if (path && (path[0] != '\0')) {
-        uriPrefix += path;
+    if (!aPath.IsEmpty()) {
+        uriPrefix += aPath;
         uriPrefix += mDelimiter;
     }
 
@@ -836,7 +828,7 @@ nsSubscribableServer::CommitSubscribeChanges()
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::SetSearchValue(const char *searchValue)
+nsSubscribableServer::SetSearchValue(const nsAString &aSearchValue)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

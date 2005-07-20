@@ -206,15 +206,14 @@ NS_IMETHODIMP nsMsgCompFields::GetFcc2(nsAString &_retval)
   return GetUnicodeHeader(MSG_FCC2_HEADER_ID, _retval);
 }
 
-NS_IMETHODIMP nsMsgCompFields::SetNewsgroups(const char *value)
+NS_IMETHODIMP nsMsgCompFields::SetNewsgroups(const nsAString &aValue)
 {
-  return SetAsciiHeader(MSG_NEWSGROUPS_HEADER_ID, value);
+  return SetUnicodeHeader(MSG_NEWSGROUPS_HEADER_ID, aValue);
 }
 
-NS_IMETHODIMP nsMsgCompFields::GetNewsgroups(char **_retval)
+NS_IMETHODIMP nsMsgCompFields::GetNewsgroups(nsAString &aGroup)
 {
-  *_retval = nsCRT::strdup(GetAsciiHeader(MSG_NEWSGROUPS_HEADER_ID));
-  return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return GetUnicodeHeader(MSG_NEWSGROUPS_HEADER_ID, aGroup);
 }
 
 NS_IMETHODIMP nsMsgCompFields::SetNewshost(const char *value)

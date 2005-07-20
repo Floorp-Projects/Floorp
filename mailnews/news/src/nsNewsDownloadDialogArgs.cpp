@@ -42,7 +42,6 @@
 
 nsNewsDownloadDialogArgs::nsNewsDownloadDialogArgs()
 {
-    mGroupName = "";
     mArticleCount = 0;
     mServerKey = "";
     mHitOK = PR_FALSE;
@@ -55,22 +54,19 @@ nsNewsDownloadDialogArgs::~nsNewsDownloadDialogArgs()
 
 NS_IMPL_ISUPPORTS1(nsNewsDownloadDialogArgs, nsINewsDownloadDialogArgs)
 
-NS_IMETHODIMP nsNewsDownloadDialogArgs::GetGroupName(char * *aGroupName)
-{
-    NS_ENSURE_ARG_POINTER(aGroupName);
-
-    *aGroupName = ToNewCString(mGroupName);
-
+NS_IMETHODIMP nsNewsDownloadDialogArgs::GetGroupName(nsAString & aGroupName)
+ {
+    aGroupName = mGroupName;
+ 
     return NS_OK;
-}
-NS_IMETHODIMP nsNewsDownloadDialogArgs::SetGroupName(const char * aGroupName)
-{
-    NS_ENSURE_ARG_POINTER(aGroupName);
-
-    mGroupName = aGroupName;
-
-    return NS_OK;
-}
+ }
+NS_IMETHODIMP nsNewsDownloadDialogArgs::SetGroupName(const nsAString & aGroupName)
+ {
+ 
+     mGroupName = aGroupName;
+ 
+     return NS_OK;
+ }
 NS_IMETHODIMP nsNewsDownloadDialogArgs::GetArticleCount(PRInt32 *aArticleCount)
 {
     NS_ENSURE_ARG_POINTER(aArticleCount);

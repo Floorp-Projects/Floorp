@@ -84,6 +84,7 @@
 <!ENTITY abbreviateOn.label "Full names (For example, 'netscape.public.mozilla.mail-news')">
 <!ENTITY abbreviateOff.label "Abbreviate names (For example, 'n.p.m.mail-news')">
 <!ENTITY advancedButton.label "Advanced...">
+<!ENTITY serverDefaultCharset.label "Default Character Encoding:">
 <!ENTITY advancedButton.accesskey "v">
 <!ENTITY localFolderPicker.label "Select Local Directory">
 <!ENTITY browseFolder.label "Browse...">

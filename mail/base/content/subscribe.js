@@ -344,10 +344,7 @@ function SetStateFromRow(row, state)
 {
     var col = gSearchTree.columns["nameColumn2"];
     var name = gSearchView.getCellText(row, col);
-    // we need to escape the name because
-    // some news servers have newsgroups with non ASCII names
-    // we need to escape those name before calling SetState()
-    SetState(encodeURI(name), state);
+    SetState(name, state);
 }
 
 function SetSubscribeState(state)

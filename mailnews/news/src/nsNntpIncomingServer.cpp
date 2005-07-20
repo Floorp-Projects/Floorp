@@ -40,7 +40,6 @@
 
 #include "nsNntpIncomingServer.h"
 #include "nsXPIDLString.h"
-#include "nsEscape.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIMsgNewsFolder.h"
@@ -62,12 +61,16 @@
 #include "nsITreeColumns.h"
 #include "nsIDOMElement.h"
 #include "nsMsgFolderFlags.h"
+#include "nsMsgI18N.h"
+#include "nsUnicharUtils.h"
+#include "nsEscape.h"
 
 #define INVALID_VERSION         0
 #define VALID_VERSION           1
 #define NEW_NEWS_DIR_NAME       "News"
 #define PREF_MAIL_NEWSRC_ROOT   "mail.newsrc_root"
 #define PREF_MAIL_NEWSRC_ROOT_REL "mail.newsrc_root-rel"
+#define PREF_MAILNEWS_VIEW_DEFAULT_CHARSET "mailnews.view_default_charset"
 #define HOSTINFO_FILE_NAME      "hostinfo.dat"
 
 #define NEWS_DELIMITER          '.'
@@ -305,6 +308,40 @@ nsresult nsNntpIncomingServer::SetupNewsrcSaveTimer()
 	mNewsrcSaveTimer->InitWithFuncCallback(OnNewsrcSaveTimer, (void*)this, timeInMSUint32, 
                                            nsITimer::TYPE_REPEATING_SLACK);
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetCharset(const nsACString & aCharset)
+{
+	nsresult rv;
+	rv = SetCharValue("charset", PromiseFlatCString(aCharset).get());
+	return rv;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetCharset(nsACString & aCharset)
+{
+    nsresult rv; 
+    nsXPIDLCString serverCharset;
+    //first we get the per-server settings mail.server.<serverkey>.charset
+    rv = GetCharValue("charset",getter_Copies(serverCharset));
+
+    //if the per-server setting is empty,we get the default charset from 
+    //mailnews.view_default_charset setting and set it as per-server preference.
+    if(serverCharset.IsEmpty()){
+        nsXPIDLString defaultCharset;
+        rv = NS_GetUnicharPreferenceWithDefault(nsnull,
+             PREF_MAILNEWS_VIEW_DEFAULT_CHARSET,
+             NS_LITERAL_STRING("ISO-8859-1"), defaultCharset);
+        LossyCopyUTF16toASCII(defaultCharset,serverCharset);
+        SetCharset(serverCharset);
+    }
+#ifdef DEBUG_holywen
+        printf("default charset for the server is %s\n", 
+               (const char *)serverCharset);
+#endif
+    aCharset = serverCharset;
     return NS_OK;
 }
 
@@ -748,48 +785,45 @@ nsNntpIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 PRBool
 checkIfSubscribedFunction(nsCString &aElement, void *aData)
 {
-	if (nsCRT::strcmp((const char *)aData, aElement.get()) == 0) {
-		return PR_FALSE;
-	}
-	else {
-		return PR_TRUE;
-	}
+    if (aElement.Equals(*NS_STATIC_CAST(nsACString *, aData))) {
+        return PR_FALSE;
+    }
+    else {
+        return PR_TRUE;
+    }
 }
 
 
 NS_IMETHODIMP
-nsNntpIncomingServer::ContainsNewsgroup(const char *name, PRBool *containsGroup)
+nsNntpIncomingServer::ContainsNewsgroup(const nsACString &name,
+                                        PRBool *containsGroup)
 {
-	NS_ASSERTION(name && strlen(name),"no name");
-	if (!name || !containsGroup) return NS_ERROR_NULL_POINTER;
-	if (!strlen(name)) return NS_ERROR_FAILURE;
+    if (name.IsEmpty()) return NS_ERROR_FAILURE;
+    nsCAutoString unescapedName;
+    NS_UnescapeURL(PromiseFlatCString(name), 
+                   esc_FileBaseName|esc_Forced|esc_AlwaysCopy, unescapedName);
 
-	*containsGroup = !(mSubscribedNewsgroups.EnumerateForwards((nsCStringArrayEnumFunc)checkIfSubscribedFunction, (void *)name));
-	return NS_OK;
+    *containsGroup = !(mSubscribedNewsgroups.EnumerateForwards(
+                       nsCStringArrayEnumFunc(checkIfSubscribedFunction),
+                       (void *) &unescapedName));
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
+nsNntpIncomingServer::SubscribeToNewsgroup(const nsACString &aName)
 {
-	nsresult rv;
+    NS_ASSERTION(!aName.IsEmpty(), "no name");
+    if (aName.IsEmpty()) return NS_ERROR_FAILURE;
 
-	NS_ASSERTION(name && strlen(name),"no name");
-	if (!name) return NS_ERROR_NULL_POINTER;
-	if (!strlen(name)) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIMsgFolder> msgfolder;
+    nsresult rv = GetRootMsgFolder(getter_AddRefs(msgfolder));
+    if (NS_FAILED(rv)) return rv;
+    if (!msgfolder) return NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIMsgFolder> msgfolder;
-	rv = GetRootMsgFolder(getter_AddRefs(msgfolder));
-	if (NS_FAILED(rv)) return rv;
-	if (!msgfolder) return NS_ERROR_FAILURE;
+    rv = msgfolder->CreateSubfolder(NS_ConvertUTF8toUTF16(aName).get(), nsnull);
+    if (NS_FAILED(rv)) return rv;
 
-	nsAutoString newsgroupName;
-	rv = NS_MsgDecodeUnescapeURLPath(nsDependentCString(name), newsgroupName);
-	NS_ENSURE_SUCCESS(rv,rv);
-
-	rv = msgfolder->CreateSubfolder(newsgroupName.get(), nsnull);
-	if (NS_FAILED(rv)) return rv;
-
-	return NS_OK;
+    return NS_OK;
 }
 
 PRBool
@@ -803,18 +837,8 @@ writeGroupToHostInfoFile(nsCString &aElement, void *aData)
         return PR_FALSE;
     }
 
-    nsAutoString name;
-    nsresult rv = NS_MsgDecodeUnescapeURLPath(aElement, name); 
-    if (NS_FAILED(rv)) {
-        // stop, something is bad.
-        return PR_FALSE;
-    }
-
-    nsCAutoString nameOnDisk;
-    nameOnDisk.AssignWithConversion(name.get());
-
     // XXX todo ",,1,0,0" is a temporary hack, fix it
-    *stream << nameOnDisk.get() << ",,1,0,0" << MSG_LINEBREAK;
+    *stream << aElement.get() << ",,1,0,0" << MSG_LINEBREAK;
     return PR_TRUE;
 }
 
@@ -1014,14 +1038,36 @@ nsNntpIncomingServer::StartPopulating(nsIMsgWindow *aMsgWindow, PRBool aForceToS
   return NS_OK;
 }
 
+/** 
+ * This method is the entry point for |nsNNTPProtocol| class. |aName| is now 
+ * encoded in the serverside character encoding, but we need to handle
+ * newsgroup names in UTF-8 internally, So we convert |aName| to 
+ * UTF-8 here for later use.
+ **/
 NS_IMETHODIMP
 nsNntpIncomingServer::AddNewsgroupToList(const char *aName)
 {
-	nsresult rv;
+    nsresult rv;
 
-	rv = AddTo(aName, PR_FALSE, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) return rv;
-	return NS_OK;
+    nsAutoString newsgroupName;
+    nsCAutoString dataCharset;
+    rv = GetCharset(dataCharset);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = nsMsgI18NConvertToUnicode(dataCharset.get(), 
+                                   nsDependentCString(aName),
+                                   newsgroupName);
+#ifdef DEBUG_jungshik
+    NS_ASSERTION(NS_SUCCEEDED(rv), "newsgroup name conversion failed");
+#endif
+    if (NS_FAILED(rv)) {
+        CopyASCIItoUTF16(aName, newsgroupName);
+    }
+
+    rv = AddTo(NS_ConvertUTF16toUTF8(newsgroupName),
+               PR_FALSE, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1091,9 +1137,9 @@ nsNntpIncomingServer::SetDelimiter(char aDelimiter)
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::SetAsSubscribed(const char *path)
+nsNntpIncomingServer::SetAsSubscribed(const nsACString &path)
 {
-    mTempSubscribed.AppendCString(nsCAutoString(path));
+    mTempSubscribed.AppendCString(path);
 
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -1111,7 +1157,7 @@ setAsSubscribedFunction(nsCString &aElement, void *aData)
         return PR_FALSE;
     }
  
-    rv = server->SetAsSubscribed(aElement.get());
+    rv = server->SetAsSubscribed(aElement);
     NS_ASSERTION(NS_SUCCEEDED(rv),"SetAsSubscribed failed");
     return PR_TRUE;
 }
@@ -1127,24 +1173,19 @@ nsNntpIncomingServer::UpdateSubscribed()
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool aSubscribable, PRBool changeIfExists)
+nsNntpIncomingServer::AddTo(const nsACString &aName, PRBool addAsSubscribed,
+                            PRBool aSubscribable, PRBool changeIfExists)
 {
+    NS_ASSERTION(IsUTF8(aName), "Non-UTF-8 newsgroup name");
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
 
-    nsAutoString newsgroupName;
-    newsgroupName.AssignWithConversion(aName);
-
-    char *escapedName = nsEscape(NS_ConvertUCS2toUTF8(newsgroupName.get()).get(), url_Path);
-    if (!escapedName) return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = AddGroupOnServer(escapedName);
+    rv = AddGroupOnServer(aName);
     NS_ENSURE_SUCCESS(rv,rv);
  
-    rv = mInner->AddTo(escapedName,addAsSubscribed, aSubscribable, changeIfExists);
+    rv = mInner->AddTo(aName, addAsSubscribed, aSubscribable, changeIfExists);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    PR_FREEIF(escapedName);
     return rv;
 }
 
@@ -1194,7 +1235,7 @@ nsNntpIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 NS_IMETHODIMP
 nsNntpIncomingServer::Subscribe(const PRUnichar *aUnicharName)
 {
-  return SubscribeToNewsgroup(NS_LossyConvertUCS2toASCII(aUnicharName).get());
+  return SubscribeToNewsgroup(NS_ConvertUTF16toUTF8(aUnicharName));
 }
 
 NS_IMETHODIMP
@@ -1209,14 +1250,16 @@ nsNntpIncomingServer::Unsubscribe(const PRUnichar *aUnicharName)
 
   if (!serverFolder) 
     return NS_ERROR_FAILURE;
-  
+ 
   // to handle non-ASCII newsgroup names, we store them internally as escaped.
   // so we need to escape and encode the name, in order to find it.
   nsCAutoString escapedName;
   rv = NS_MsgEscapeEncodeURLPath(nsDependentString(aUnicharName), escapedName);
 
   nsCOMPtr <nsIMsgFolder> newsgroupFolder;
-  rv = serverFolder->FindSubFolder(escapedName, getter_AddRefs(newsgroupFolder));
+  rv = serverFolder->FindSubFolder(escapedName,
+                                   getter_AddRefs(newsgroupFolder));
+
   if (NS_FAILED(rv)) 
     return rv;
 
@@ -1238,26 +1281,31 @@ nsNntpIncomingServer::Unsubscribe(const PRUnichar *aUnicharName)
 PRInt32
 nsNntpIncomingServer::HandleLine(char* line, PRUint32 line_size)
 {
-	NS_ASSERTION(line, "line is null");
-	if (!line) return 0;
+  NS_ASSERTION(line, "line is null");
+  if (!line) return 0;
 
-	// skip blank lines and comments
-	if (line[0] == '#' || line[0] == '\0') return 0;
+  // skip blank lines and comments
+  if (line[0] == '#' || line[0] == '\0') return 0;
 	
-	line[line_size] = 0;
+  line[line_size] = 0;
 
-	if (mHasSeenBeginGroups) {
-		char *commaPos = PL_strchr(line,',');
-		if (commaPos) *commaPos = 0;
+  if (mHasSeenBeginGroups) {
+    char *commaPos = PL_strchr(line,',');
+    if (commaPos) *commaPos = 0;
 
-		nsresult rv = AddTo(line, PR_FALSE, PR_TRUE, PR_TRUE);
-		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add line");
-		if (NS_SUCCEEDED(rv)) {
-          // since we've seen one group, we can claim we've loaded the hostinfo file
-          mHostInfoLoaded = PR_TRUE;
-		}
-	}
-	else {
+        // newsrc entries are all in UTF-8
+#ifdef DEBUG_jungshik
+    NS_ASSERTION(IsUTF8(nsDependentCString(line)), "newsrc line is not utf-8");
+#endif
+    nsresult rv = AddTo(nsDependentCString(line), PR_FALSE, PR_TRUE, PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add line");
+    if (NS_SUCCEEDED(rv)) {
+      // since we've seen one group, we can claim we've loaded the
+      // hostinfo file
+      mHostInfoLoaded = PR_TRUE;
+    }
+  }
+  else {
 		if (nsCRT::strncmp(line,"begingroups", 11) == 0) {
 			mHasSeenBeginGroups = PR_TRUE;
 		}
@@ -1281,30 +1329,31 @@ nsNntpIncomingServer::HandleLine(char* line, PRUint32 line_size)
 }
 
 nsresult
-nsNntpIncomingServer::AddGroupOnServer(const char *name)
+nsNntpIncomingServer::AddGroupOnServer(const nsACString &aName)
 {
-	mGroupsOnServer.AppendCString(nsCAutoString(name));
+	mGroupsOnServer.AppendCString(aName); 
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::AddNewsgroup(const char *name)
+nsNntpIncomingServer::AddNewsgroup(const nsAString &aName)
 {
-	// handle duplicates?
-	mSubscribedNewsgroups.AppendCString(nsCAutoString(name));
-	return NS_OK;
+    // handle duplicates?
+    mSubscribedNewsgroups.AppendCString(NS_ConvertUTF16toUTF8(aName));
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::RemoveNewsgroup(const char *name)
+nsNntpIncomingServer::RemoveNewsgroup(const nsAString &aName)
 {
-	// handle duplicates?
-	mSubscribedNewsgroups.RemoveCString(nsCAutoString(name));
-	return NS_OK;
+    // handle duplicates?
+    mSubscribedNewsgroups.RemoveCString(NS_ConvertUTF16toUTF8(aName));
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::SetState(const char *path, PRBool state, PRBool *stateChanged)
+nsNntpIncomingServer::SetState(const nsACString &path, PRBool state,
+                               PRBool *stateChanged)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -1312,15 +1361,15 @@ nsNntpIncomingServer::SetState(const char *path, PRBool state, PRBool *stateChan
     rv = mInner->SetState(path, state, stateChanged);
     if (*stateChanged) {
       if (state)
-        mTempSubscribed.AppendCString(nsCAutoString(path));
+        mTempSubscribed.AppendCString(path);
       else
-        mTempSubscribed.RemoveCString(nsCAutoString(path));
+        mTempSubscribed.RemoveCString(path);
     }
     return rv;
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::HasChildren(const char *path, PRBool *aHasChildren)
+nsNntpIncomingServer::HasChildren(const nsACString &path, PRBool *aHasChildren)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -1328,7 +1377,8 @@ nsNntpIncomingServer::HasChildren(const char *path, PRBool *aHasChildren)
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::IsSubscribed(const char *path, PRBool *aIsSubscribed)
+nsNntpIncomingServer::IsSubscribed(const nsACString &path,
+                                   PRBool *aIsSubscribed)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -1336,7 +1386,8 @@ nsNntpIncomingServer::IsSubscribed(const char *path, PRBool *aIsSubscribed)
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::IsSubscribable(const char *path, PRBool *aIsSubscribable)
+nsNntpIncomingServer::IsSubscribable(const nsACString &path,
+                                     PRBool *aIsSubscribable)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -1344,7 +1395,7 @@ nsNntpIncomingServer::IsSubscribable(const char *path, PRBool *aIsSubscribable)
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::GetLeafName(const char *path, PRUnichar **aLeafName)
+nsNntpIncomingServer::GetLeafName(const nsACString &path, nsAString &aLeafName)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -1352,7 +1403,7 @@ nsNntpIncomingServer::GetLeafName(const char *path, PRUnichar **aLeafName)
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::GetFirstChildURI(const char * path, char **aResult)
+nsNntpIncomingServer::GetFirstChildURI(const nsACString &path, nsACString &aResult)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -1360,7 +1411,8 @@ nsNntpIncomingServer::GetFirstChildURI(const char * path, char **aResult)
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::GetChildren(const char *path, nsISupportsArray *array)
+nsNntpIncomingServer::GetChildren(const nsACString &path,
+                                  nsISupportsArray *array)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -1507,14 +1559,14 @@ nsNntpIncomingServer::QueryPropertyForGet(const char *name, char **value)
 }
   
 NS_IMETHODIMP
-nsNntpIncomingServer::AddSearchableGroup(const char *name)
+nsNntpIncomingServer::AddSearchableGroup(const nsAString &name)
 {
   NS_ASSERTION(0,"not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::QuerySearchableGroup(const char *name, PRBool *result)
+nsNntpIncomingServer::QuerySearchableGroup(const nsAString &name, PRBool *result)
 {
   NS_ASSERTION(0,"not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1535,9 +1587,8 @@ nsNntpIncomingServer::QuerySearchableHeader(const char *name, PRBool *result)
 }
   
 NS_IMETHODIMP
-nsNntpIncomingServer::FindGroup(const char *name, nsIMsgNewsFolder **result)
+nsNntpIncomingServer::FindGroup(const nsACString &name, nsIMsgNewsFolder **result)
 {
-  NS_ENSURE_ARG_POINTER(name);
   NS_ENSURE_ARG_POINTER(result);
 
   nsresult rv;
@@ -1548,7 +1599,7 @@ nsNntpIncomingServer::FindGroup(const char *name, nsIMsgNewsFolder **result)
   if (!serverFolder) return NS_ERROR_FAILURE;
 
   nsCOMPtr <nsIMsgFolder> subFolder;
-  rv = serverFolder->FindSubFolder(nsDependentCString(name), getter_AddRefs(subFolder));
+  rv = serverFolder->FindSubFolder(name, getter_AddRefs(subFolder));
   NS_ENSURE_SUCCESS(rv,rv);
   if (!subFolder) return NS_ERROR_FAILURE;
 
@@ -1559,14 +1610,15 @@ nsNntpIncomingServer::FindGroup(const char *name, nsIMsgNewsFolder **result)
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::GetFirstGroupNeedingExtraInfo(char **result)
+nsNntpIncomingServer::GetFirstGroupNeedingExtraInfo(nsACString &result)
 {
   NS_ASSERTION(0,"not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::SetGroupNeedsExtraInfo(const char *name, PRBool needsExtraInfo)
+nsNntpIncomingServer::SetGroupNeedsExtraInfo(const nsACString &name,
+                                             PRBool needsExtraInfo)
 {
   NS_ASSERTION(0,"not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1574,10 +1626,9 @@ nsNntpIncomingServer::SetGroupNeedsExtraInfo(const char *name, PRBool needsExtra
 
 
 NS_IMETHODIMP
-nsNntpIncomingServer::GroupNotFound(nsIMsgWindow *aMsgWindow, const char *aName, PRBool aOpening)
+nsNntpIncomingServer::GroupNotFound(nsIMsgWindow *aMsgWindow,
+                                    const nsAString &aName, PRBool aOpening)
 {
-  NS_ENSURE_ARG_POINTER(aName);
-
   nsresult rv;
   nsCOMPtr <nsIPrompt> prompt;
 
@@ -1599,17 +1650,14 @@ nsNntpIncomingServer::GroupNotFound(nsIMsgWindow *aMsgWindow, const char *aName,
   rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsAutoString groupStr;
-  groupStr.AssignWithConversion(aName);
-
   nsXPIDLCString hostname;
   rv = GetHostName(getter_Copies(hostname));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsAutoString hostStr;
-  hostStr.AssignWithConversion(hostname.get());
+  NS_ConvertUTF8toUTF16 hostStr(hostname); 
 
-  const PRUnichar *formatStrings[2] = { groupStr.get(), hostStr.get() };
+  nsAFlatString groupName = PromiseFlatString(aName);
+  const PRUnichar *formatStrings[2] = { groupName.get(), hostStr.get() };
   nsXPIDLString confirmText;
   rv = bundle->FormatStringFromName(
                     NS_LITERAL_STRING("autoUnsubscribeText").get(),
@@ -1622,7 +1670,7 @@ nsNntpIncomingServer::GroupNotFound(nsIMsgWindow *aMsgWindow, const char *aName,
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (confirmResult) {
-    rv = Unsubscribe(groupStr.get());
+    rv = Unsubscribe(groupName.get());
     NS_ENSURE_SUCCESS(rv,rv);
   }
   
@@ -1630,7 +1678,8 @@ nsNntpIncomingServer::GroupNotFound(nsIMsgWindow *aMsgWindow, const char *aName,
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::SetPrettyNameForGroup(const char *name, const char *prettyName)
+nsNntpIncomingServer::SetPrettyNameForGroup(const nsAString &name,
+                                            const nsAString &prettyName)
 {
   NS_ASSERTION(0,"not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1703,26 +1752,20 @@ buildSubscribeSearchResult(nsCString &aElement, void *aData)
 nsresult
 nsNntpIncomingServer::AppendIfSearchMatch(nsCString& newsgroupName)
 {
-    // we've converted mSearchValue to lower case
-    // do the same to the newsgroup name before we do our strstr()
-    // this way searches will be case independant
-    nsCAutoString lowerCaseName;
-    ToLowerCase(newsgroupName, lowerCaseName);
-    NS_UnescapeURL(lowerCaseName);
-
-    if (PL_strstr(lowerCaseName.get(), mSearchValue.get())) {
+    NS_ConvertUTF8toUTF16 groupName(newsgroupName);
+    nsAString::const_iterator start, end;
+    groupName.BeginReading(start);
+    groupName.EndReading(end);
+    if (FindInReadable(mSearchValue, start, end, 
+                       nsCaseInsensitiveStringComparator())) 
         mSubscribeSearchResult.AppendCString(newsgroupName);
-    }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::SetSearchValue(const char *searchValue)
+nsNntpIncomingServer::SetSearchValue(const nsAString &searchValue)
 {
     mSearchValue = searchValue;
-    // force the search string to be lower case
-    // so that we can do case insensitive searching
-    ToLowerCase(mSearchValue);
 
     if (mTree) {
         mTree->BeginUpdateBatch();
@@ -1730,7 +1773,9 @@ nsNntpIncomingServer::SetSearchValue(const char *searchValue)
     }
 
     mSubscribeSearchResult.Clear();
-    mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)buildSubscribeSearchResult, (void *)this);
+    mGroupsOnServer.
+        EnumerateForwards(nsCStringArrayEnumFunc(buildSubscribeSearchResult),
+                          (void *)this);
     mSubscribeSearchResult.SortIgnoreCase();
 
     if (mTree) {
@@ -2119,8 +2164,7 @@ nsNntpIncomingServer::OnUserOrHostNameChanged(const char *oldName, const char *n
   {
     // subscribe.
     groupList.StringAt(i, groupStr);
-    cname.AssignWithConversion(groupStr.get());
-    rv = SubscribeToNewsgroup(cname.get());
+    rv = SubscribeToNewsgroup(NS_ConvertUTF16toUTF8(groupStr));
     NS_ENSURE_SUCCESS(rv,rv);
   }
 

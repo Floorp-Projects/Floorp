@@ -43,55 +43,63 @@ interface nsINNTPProtocol;
 interface nsIURI;
 interface nsIMsgWindow;
 
-[scriptable, uuid(21ea0654-f773-11d2-8aec-004005263078)]
+[scriptable, uuid(020b614c-7bb2-44a3-9e6c-550e117d86e4)]
 interface nsINntpIncomingServer : nsISupports {
-	/* the on-disk path to the newsrc file for this server */
-	attribute nsIFileSpec newsrcFilePath;
+    /* the on-disk path to the newsrc file for this server */
+    attribute nsIFileSpec newsrcFilePath;
 
-	/* the newsrc root path (the directories all the newsrc files live) */
-	attribute nsIFileSpec newsrcRootPath;
-	
-	/* ask the user before downloading more than maxArticles? */
-	attribute boolean notifyOn;
+    /* the newsrc root path (the directories all the newsrc files live) */
+    attribute nsIFileSpec newsrcRootPath;
+    
+    /* ask the user before downloading more than maxArticles? */
+    attribute boolean notifyOn;
 
-	/* the max articles to download */
-	attribute long maxArticles;
+    /* the max articles to download */
+    attribute long maxArticles;
 
     /* when we don't download all, do we mark the rest read? */
-	attribute boolean markOldRead;
+    attribute boolean markOldRead;
 
-	/* abbreviate the newsgroup names in the folder pane? */
-	attribute boolean abbreviate;
+    /* abbreviate the newsgroup names in the folder pane? */
+    attribute boolean abbreviate;
 
     /* do we use a single login per server or do we login per group */
     attribute boolean singleSignon;
 
-	/* the server keeps track of all the newsgroups we are subscribed to */
-	void addNewsgroup(in string name);
-	void removeNewsgroup(in string name);
+    /** the server charset and it may be needed to display newsgroup folder
+     *  names correctly 
+     **/
+    attribute ACString charset;
+
+    /* the server keeps track of all the newsgroups we are subscribed to */
+    void addNewsgroup(in AString name);
+    void removeNewsgroup(in AString name);
 
     void writeNewsrcFile();
 
     attribute boolean newsrcHasChanged;
 
-	attribute long maximumConnectionsNumber;
+    attribute long maximumConnectionsNumber;
 
-	readonly attribute long numGroupsNeedingCounts;
-	readonly attribute nsISupports firstGroupNeedingCounts;
+    readonly attribute long numGroupsNeedingCounts;
+    readonly attribute nsISupports firstGroupNeedingCounts;
 
-	void displaySubscribedGroup(in nsIMsgNewsFolder msgFolder, in long firstMessage, in long lastMessage, in long totalMessages);
+    void displaySubscribedGroup(in nsIMsgNewsFolder msgFolder,
+                                in long firstMessage, in long lastMessage,
+                                in long totalMessages);
 
 
-	void getNntpConnection(in nsIURI url, in nsIMsgWindow window,
-                                           out nsINNTPProtocol aNntpConnection);
-	void removeConnection(in nsINNTPProtocol aNntpConnection);
+    void getNntpConnection(in nsIURI url, in nsIMsgWindow window,
+                           out nsINNTPProtocol aNntpConnection);
+    void removeConnection(in nsINNTPProtocol aNntpConnection);
 
-	/* used for auto subscribing */
-	boolean containsNewsgroup(in string name);
-	void subscribeToNewsgroup(in string name);
+    /* used for auto subscribing */
+    boolean containsNewsgroup(in AUTF8String name);
+    void subscribeToNewsgroup(in AUTF8String name);
 
-	/* used for the subscribe dialog */
-	void addNewsgroupToList(in string name);
+    /* used for the subscribe dialog.
+       name is encoded in |charset|  (attribute declared above) */
+    [noscript] void addNewsgroupToList(in string name);
 
     attribute boolean supportsExtensions;
     void addExtension(in string extension);
@@ -100,22 +108,23 @@ interface nsINntpIncomingServer : nsISupports {
     attribute boolean postingAllowed;
     attribute boolean pushAuth;
     attribute unsigned long lastUpdatedTime;
-	
-	void addPropertyForGet(in string name, in string value);
+    
+    void addPropertyForGet(in string name, in string value);
     string queryPropertyForGet(in string name);
     
-    void addSearchableGroup(in string name);
-    boolean querySearchableGroup(in string name);
+    void addSearchableGroup(in AString name);
+    boolean querySearchableGroup(in AString name);
     
     void addSearchableHeader(in string headerName);
     boolean querySearchableHeader(in string headerName);
 
-	nsIMsgNewsFolder findGroup(in string name);
+    nsIMsgNewsFolder findGroup(in AUTF8String name);
 
-	readonly attribute string firstGroupNeedingExtraInfo;
-    void setGroupNeedsExtraInfo(in string name, in boolean needsExtraInfo);
+    readonly attribute AUTF8String firstGroupNeedingExtraInfo;
+    void setGroupNeedsExtraInfo(in AUTF8String name, in boolean needsExtraInfo);
 
-	void groupNotFound(in nsIMsgWindow window, in string group, in boolean opening);
+    void groupNotFound(in nsIMsgWindow window, in AString group,
+                       in boolean opening);
 
-	void setPrettyNameForGroup(in string name, in string prettyName);
+    void setPrettyNameForGroup(in AString name, in AString prettyName);
 };

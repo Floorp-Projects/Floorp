@@ -80,9 +80,12 @@ void nsNewsSummarySpec::CreateSummaryFileName()
 {
 	char *leafName = GetLeafName();
 
-    nsCAutoString fullLeafName((const char*)leafName);
+    nsAutoString tmp;
+    nsCAutoString fullLeafName;
 
-	// Append .msf (message summary file) 
+//  NS_CopyNativeToUnicode(nsDependentCString(leafName), tmp);
+//  CopyUTF16toMUTF7(tmp, fullLeafName); 
+//  NS_MsgHashIfNecessary(fullLeafName);
 	fullLeafName += ".msf";	
 
 	SetLeafName(fullLeafName.get());

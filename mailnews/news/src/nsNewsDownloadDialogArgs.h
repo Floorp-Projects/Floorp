@@ -52,7 +52,7 @@ public:
   NS_DECL_NSINEWSDOWNLOADDIALOGARGS
 
 private:
-  nsCString mGroupName;
+  nsString mGroupName;
   PRInt32 mArticleCount;
   nsCString mServerKey;
   PRBool mHitOK;

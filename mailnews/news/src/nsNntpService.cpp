@@ -656,7 +656,8 @@ nsNntpService::GetFolderFromUri(const char *aUri, nsIMsgFolder **aFolder)
   nsUnescape(unescapedPath);
 
   nsCOMPtr<nsISupports> subFolder;
-  rv = rootFolder->GetChildNamed(NS_ConvertASCIItoUCS2(unescapedPath).get() , getter_AddRefs(subFolder));
+  rv = rootFolder->GetChildNamed(NS_ConvertUTF8toUTF16(unescapedPath).get() ,
+                                 getter_AddRefs(subFolder));
   PL_strfree(unescapedPath);
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -685,10 +686,10 @@ nsNntpService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStr
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-typedef struct _findNewsServerEntry {
+struct findNewsServerEntry {
   const char *newsgroup;
   nsINntpIncomingServer *server;
-} findNewsServerEntry;
+};
 
 
 PRBool 
@@ -703,7 +704,10 @@ nsNntpService::findNewsServerWithGroup(nsISupports *aElement, void *data)
   
   PRBool containsGroup = PR_FALSE;
   
-  rv = newsserver->ContainsNewsgroup((const char *)(entry->newsgroup), &containsGroup);
+  NS_ASSERTION(IsUTF8(nsDependentCString(entry->newsgroup)),
+                      "newsgroup is not in UTF-8");
+  rv = newsserver->ContainsNewsgroup(nsDependentCString(entry->newsgroup),
+                                     &containsGroup);
   if (NS_FAILED(rv)) return PR_TRUE;
   
   if (containsGroup) 
@@ -785,9 +789,10 @@ nsNntpService::SetUpNntpUrlForPosting(const char *aAccountKey, char **newsUrlSpe
 
   return NS_OK;
 }
-////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // nsINntpService support
-////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// XXX : may not work with non-ASCII newsgroup names and IDN hostnames
 NS_IMETHODIMP
 nsNntpService::GenerateNewsHeaderValsForPosting(const char *newsgroupsList, char **newsgroupsHeaderVal, char **newshostHeaderVal)
 {

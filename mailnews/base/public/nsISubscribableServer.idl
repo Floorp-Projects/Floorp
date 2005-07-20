@@ -55,7 +55,7 @@ interface nsISubscribeListener : nsISupports {
 	void OnDonePopulating();
 };
 
-[scriptable, uuid(ce251379-dbcc-4dfd-9085-363b7b0b0af0)]
+[scriptable, uuid(4afd3d64-f7e9-4eb6-98bf-8200a7dab60f)]
 interface nsISubscribableServer : nsISupports {
 	attribute nsISubscribeListener subscribeListener;
 	attribute char delimiter;
@@ -65,7 +65,7 @@ interface nsISubscribableServer : nsISupports {
     void stopPopulating(in nsIMsgWindow aMsgWindow);
 
     // return true if state changed, false otherwise
-    boolean setState(in string path, in boolean state);
+    boolean setState(in AUTF8String path, in boolean state);
 
 	void subscribeCleanup();
 
@@ -76,26 +76,27 @@ interface nsISubscribableServer : nsISupports {
 
     // other stuff
 	void setIncomingServer(in nsIMsgIncomingServer server);
-	void addTo(in string aName, in boolean addAsSubscribed, in boolean aSubscribable, in boolean aChangeIfExists);
-	void setAsSubscribed(in string path);
+    void addTo(in AUTF8String aName, in boolean addAsSubscribed,
+               in boolean aSubscribable, in boolean aChangeIfExists);
+    void setAsSubscribed(in AUTF8String path);
 	void updateSubscribed();
 	void setShowFullName(in boolean showFullName);
  
     // if path is null, use the root
-    boolean hasChildren(in string path);
+    boolean hasChildren(in AUTF8String path);
     // if path is null, use the root
-    boolean isSubscribed(in string path);
-	// if path is null, use the root
-    boolean isSubscribable(in string path);
+    boolean isSubscribed(in AUTF8String path);
     // if path is null, use the root
-    wstring getLeafName(in string path);
+    boolean isSubscribable(in AUTF8String path);
     // if path is null, use the root
-    void getChildren(in string path, in nsISupportsArray array);
+    AString getLeafName(in AUTF8String path);
     // if path is null, use the root
-    void getFirstChildURI(in string path, out string result);
+    void getChildren(in AUTF8String path, in nsISupportsArray array);
+    // if path is null, use the root
+    AUTF8String getFirstChildURI(in AUTF8String path);
 
     // for searching
-    void setSearchValue(in string searchValue);
+    void setSearchValue(in AString searchValue);
     readonly attribute boolean supportsSubscribeSearch;
 };
 

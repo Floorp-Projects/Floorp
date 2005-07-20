@@ -463,8 +463,12 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
           }
           else
             group = originalMsgURI;
-          
-          pMsgCompFields->SetNewsgroups(group.get());
+
+          nsCAutoString unescapedName;
+          NS_UnescapeURL(group, 
+                         esc_FileBaseName|esc_Forced|esc_AlwaysCopy,
+                         unescapedName);
+          pMsgCompFields->SetNewsgroups(NS_ConvertUTF8toUTF16(unescapedName));
           pMsgCompFields->SetNewshost(host.get());
         }
         else
@@ -586,7 +590,7 @@ NS_IMETHODIMP nsMsgComposeService::GetParamsForMailto(nsIURI * aURI, nsIMsgCompo
           pMsgCompFields->SetTo(NS_ConvertUTF8toUTF16(aToPart));
           pMsgCompFields->SetCc(NS_ConvertUTF8toUTF16(aCcPart));
           pMsgCompFields->SetBcc(NS_ConvertUTF8toUTF16(aBccPart));
-          pMsgCompFields->SetNewsgroups(aNewsgroup);
+          pMsgCompFields->SetNewsgroups(NS_ConvertUTF8toUTF16(aNewsgroup));
           pMsgCompFields->SetReferences(aRefPart);
           pMsgCompFields->SetSubject(NS_ConvertUTF8toUTF16(aSubjectPart));
           pMsgCompFields->SetBody(composeHTMLFormat ? sanitizedBody : rawBody);

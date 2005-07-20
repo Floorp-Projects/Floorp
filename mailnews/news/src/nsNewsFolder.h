@@ -125,6 +125,7 @@ public:
   virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
 
 protected:
+  // helper routine to parse the URI and update member variables
   nsresult AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 fullwords);
   nsresult ParseFolder(nsFileSpec& path);
   nsresult CreateSubFolders(nsFileSpec &path);
@@ -161,7 +162,7 @@ protected:
   char		*mGroupPassword;
 
   // the name of the newsgroup.
-  char    *mAsciiName;
+  nsCString	mRawName;
   PRInt32 mSortOrder;
 
 private:

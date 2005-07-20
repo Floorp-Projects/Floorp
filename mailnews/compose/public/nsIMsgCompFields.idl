@@ -40,7 +40,7 @@
 #include "nsIMsgAttachment.idl"
 #include "nsISupportsArray.idl"
 
-[scriptable, uuid(5BE51577-90EA-43ae-B9AC-71993E9AA285)]
+[scriptable, uuid(f5a85828-e9ef-4821-a045-6dc7a09351d6)]
 interface nsIMsgCompFields : nsISupports {
 
   attribute AString from;
@@ -52,7 +52,7 @@ interface nsIMsgCompFields : nsISupports {
   attribute AString fcc;
   attribute AString fcc2;
   
-  attribute string  newsgroups;
+  attribute AString newsgroups;
   attribute string  newshost;
   attribute string  newspostUrl;
   attribute string  followupTo;
