@@ -79,10 +79,6 @@ static void ConvertCharStringToStr255(const char* inString, Str255& outString)
 
 nsInternetConfigService::nsInternetConfigService()
 {
-  long  version;
-  OSErr err;
-  mRunningOSX = ((err = ::Gestalt(gestaltSystemVersion, &version)) == noErr && version >= 0x00001000);
-  mRunningJaguar = (err == noErr && version >= 0x00001020);
 }
 
 nsInternetConfigService::~nsInternetConfigService()
@@ -100,35 +96,19 @@ NS_IMPL_ISUPPORTS1(nsInternetConfigService, nsIInternetConfigService)
 // Under OS X use LaunchServices instead of IC
 NS_IMETHODIMP nsInternetConfigService::LaunchURL(const char *url)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  
-#if TARGET_CARBON
-  if (mRunningOSX && ((UInt32)LSOpenCFURLRef != (UInt32)kUnresolvedCFragSymbolAddress))
+  nsresult rv = NS_ERROR_FAILURE; 
+
+  CFURLRef myURLRef = ::CFURLCreateWithBytes(
+                                             kCFAllocatorDefault,
+                                             (const UInt8*)url,
+                                             strlen(url),
+                                             kCFStringEncodingUTF8, NULL);
+  if (myURLRef)
   {
-    CFURLRef myURLRef = ::CFURLCreateWithBytes(
-                                              kCFAllocatorDefault,
-                                              (const UInt8*)url,
-                                              strlen(url),
-                                              kCFStringEncodingUTF8, NULL);
-    if (myURLRef)
-    {
-      rv = ::LSOpenCFURLRef(myURLRef, NULL);
-      ::CFRelease(myURLRef);
-    }
+    rv = ::LSOpenCFURLRef(myURLRef, NULL);
+    ::CFRelease(myURLRef);
   }
-  else
-#endif
-  {
-    size_t len = strlen(url);
-    long selStart = 0, selEnd = len;
-    ICInstance inst = nsInternetConfig::GetInstance();
-    
-    if (inst)
-    {
-      if (::ICLaunchURL(inst, "\p", (Ptr)url, (long)len, &selStart, &selEnd) == noErr)
-        rv = NS_OK;
-    }
-  }
+
   return rv;
 }
 
@@ -152,103 +132,45 @@ NS_IMETHODIMP nsInternetConfigService::HasProtocolHandler(const char *protocol, 
 {
   *_retval = PR_FALSE;            // Presume failure
   nsresult rv = NS_ERROR_FAILURE; // Ditto
-  
-#if TARGET_CARBON
-  // Use LaunchServices directly when we're running under OS X to avoid the problem of some protocols
-  // apparently not being reflected into the IC mappings (webcal for one).  Even better it seems
-  // LaunchServices under 10.1.x will often fail to find an app when using LSGetApplicationForURL
-  // so we only use it for 10.2 or later.
-  
-  // Since protocol comes in with _just_ the protocol we have to add a ':' to the end of it or
-  // LaunchServices will be very unhappy with the CFURLRef created from it (crashes trying to look
-  // up a handler for it with LSGetApplicationForURL, at least under 10.2.1)
-  if (mRunningJaguar)
-  {
-    nsCAutoString scheme(protocol);
-    scheme += ":";
-    CFURLRef myURLRef = ::CFURLCreateWithBytes(
-                                                kCFAllocatorDefault,
-                                                (const UInt8 *)scheme.get(),
-                                                scheme.Length(),
-                                                kCFStringEncodingUTF8, NULL);
-    if (myURLRef)
-    {
-      FSRef appFSRef;
-      
-      if (::LSGetApplicationForURL(myURLRef, kLSRolesAll, &appFSRef, NULL) == noErr)
-      { // Now see if the FSRef for the found app == the running app
-        ProcessSerialNumber psn;
-        if (::GetCurrentProcess(&psn) == noErr)
-        {
-          FSRef runningAppFSRef;
-          if (::GetProcessBundleLocation(&psn, &runningAppFSRef) == noErr)
-          {
-            if (::FSCompareFSRefs(&appFSRef, &runningAppFSRef) == noErr)
-            { // Oops, the current app is the handler which would cause infinite recursion
-              rv = NS_ERROR_NOT_AVAILABLE;
-            }
-            else
-            {
-              *_retval = PR_TRUE;
-              rv = NS_OK;
-            }
-          }
-        }
-      }
-      ::CFRelease(myURLRef);
-    }
-  }
-  else
-#endif
-  {
-    // look for IC pref "\pHelper¥<protocol>"
-    Str255 pref = kICHelper;
 
-    if (nsCRT::strlen(protocol) > 248)
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    else
-    {
-      memcpy(pref + pref[0] + 1, protocol, nsCRT::strlen(protocol));
-      pref[0] = pref[0] + nsCRT::strlen(protocol);
-      
-      ICInstance instance = nsInternetConfig::GetInstance();
-      if (instance)
+  // Since protocol comes in with _just_ the protocol we have to add a ':' to
+  // the end of it or LaunchServices will be very unhappy with the CFURLRef
+  // created from it (crashes trying to look up a handler for it with
+  // LSGetApplicationForURL, at least under 10.2.1)
+  nsCAutoString scheme(protocol);
+  scheme += ":";
+  CFURLRef myURLRef = ::CFURLCreateWithBytes(
+                                              kCFAllocatorDefault,
+                                              (const UInt8 *)scheme.get(),
+                                              scheme.Length(),
+                                              kCFStringEncodingUTF8, NULL);
+  if (myURLRef)
+  {
+    FSRef appFSRef;
+  
+    if (::LSGetApplicationForURL(myURLRef, kLSRolesAll, &appFSRef, NULL) == noErr)
+    { // Now see if the FSRef for the found app == the running app
+      ProcessSerialNumber psn;
+      if (::GetCurrentProcess(&psn) == noErr)
       {
-        OSStatus  err;
-        ICAttr    junk;
-        ICAppSpec spec;
-        long      ioSize = sizeof(ICAppSpec);
-        err = ::ICGetPref(instance, pref, &junk, (void *)&spec, &ioSize);
-      
-        if (err == noErr)
+        FSRef runningAppFSRef;
+        if (::GetProcessBundleLocation(&psn, &runningAppFSRef) == noErr)
         {
-          // check if registered protocol helper is us
-          // if so, return PR_FALSE because we'll go into infinite recursion
-          // continually launching back into ourselves
-          ProcessSerialNumber psn;
-          OSErr oserr = ::GetCurrentProcess(&psn);
-          if (oserr == noErr)
+          if (::FSCompareFSRefs(&appFSRef, &runningAppFSRef) == noErr)
+          { // Oops, the current app is the handler which would cause infinite recursion
+            rv = NS_ERROR_NOT_AVAILABLE;
+          }
+          else
           {
-            ProcessInfoRec info;
-            info.processInfoLength = sizeof(ProcessInfoRec);
-            info.processName = nsnull;
-            info.processAppSpec = nsnull;
-            err = ::GetProcessInformation(&psn, &info);
-            if (err == noErr)
-            {
-              if (info.processSignature != spec.fCreator)
-              {
-                *_retval = PR_TRUE;
-                rv = NS_OK;
-              }
-              else
-                rv = NS_ERROR_NOT_AVAILABLE;
-            }
+            *_retval = PR_TRUE;
+            rv = NS_OK;
           }
         }
       }
     }
+    ::CFRelease(myURLRef);
   }
+
   return rv;
 }
 
