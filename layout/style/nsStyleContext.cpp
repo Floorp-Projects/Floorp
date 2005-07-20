@@ -369,6 +369,22 @@ nsStyleContext::ApplyStyleFixups(nsPresContext* aPresContext)
       mBits |= NS_STYLE_HAS_TEXT_DECORATIONS;
   }
 
+  // Correct tables.
+  const nsStyleDisplay* disp = GetStyleDisplay();
+  if (disp->mDisplay == NS_STYLE_DISPLAY_TABLE) {
+    // -moz-center and -moz-right are used for HTML's alignment
+    // This is covering the <div align="right"><table>...</table></div> case.
+    // In this case, we don't want to inherit the text alignment into the table.
+    const nsStyleText* text = GetStyleText();
+    
+    if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
+        text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT)
+    {
+      nsStyleText* uniqueText = (nsStyleText*)GetUniqueStyleData(eStyleStruct_Text);
+      uniqueText->mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
+    }
+  }
+
   // CSS2.1 section 9.2.4 specifies fixups for the 'display' property of
   // the root element.  We can't implement them in nsRuleNode because we
   // don't want to store all display structs that aren't 'block',
@@ -377,7 +393,6 @@ nsStyleContext::ApplyStyleFixups(nsPresContext* aPresContext)
   // here if needed, by changing the style data, so that other code
   // doesn't get confused by looking at the style data.
   if (!mParent) {
-    const nsStyleDisplay* disp = GetStyleDisplay();
     if (disp->mDisplay != NS_STYLE_DISPLAY_NONE &&
         disp->mDisplay != NS_STYLE_DISPLAY_BLOCK &&
         disp->mDisplay != NS_STYLE_DISPLAY_TABLE) {
