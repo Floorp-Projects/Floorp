@@ -63,8 +63,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #define kSVGNameSpaceURI "http://www.w3.org/2000/svg"
 #define kXMLEventsNameSpaceURI "http://www.w3.org/2001/xml-events"
 #define kXHTML2UnofficialNameSpaceURI "http://www.w3.org/TR/xhtml2" // Will eventually change
-#define kRolesWAIUnofficialNameSpaceURI "http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#" // Will eventually change
-#define kStatesWAIUnofficialNameSpaceURI "http://www.w3.org/2005/01/wai-rdf/GUIStateTaxonomy#" // Will eventually change
+#define kWAIRolesNameSpaceURI "http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+#define kWAIPropertiesNameSpaceURI "http://www.w3.org/2005/07/aaa"
 
 class nsNameSpaceEntry : public PLDHashEntryHdr
 {
@@ -172,8 +172,8 @@ nsresult NameSpaceManagerImpl::Init()
   AddNameSpace(NS_LITERAL_STRING(kSVGNameSpaceURI), kNameSpaceID_SVG);
   AddNameSpace(NS_LITERAL_STRING(kXMLEventsNameSpaceURI), kNameSpaceID_XMLEvents);
   AddNameSpace(NS_LITERAL_STRING(kXHTML2UnofficialNameSpaceURI), kNameSpaceID_XHTML2_Unofficial);
-  AddNameSpace(NS_LITERAL_STRING(kRolesWAIUnofficialNameSpaceURI), kNameSpaceID_RolesWAI_Unofficial);
-  AddNameSpace(NS_LITERAL_STRING(kStatesWAIUnofficialNameSpaceURI), kNameSpaceID_StatesWAI_Unofficial);
+  AddNameSpace(NS_LITERAL_STRING(kWAIRolesNameSpaceURI), kNameSpaceID_WAIRoles);
+  AddNameSpace(NS_LITERAL_STRING(kWAIStatesNameSpaceURI), kNameSpaceID_WAIProperties);
 
   return NS_OK;
 }
