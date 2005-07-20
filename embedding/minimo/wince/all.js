@@ -1,4 +1,4 @@
-pref("general.useragent.override", "Mozilla/5.0 (X11; U; Familiar 0.72; en-US; rv:1.7a) Gecko/20040218 Minimo/0.1");
+pref("general.useragent.extra.minimo", "Minimo/0.007");
 
 pref("browser.active_color",                "#EE0000");
 pref("browser.anchor_color",                "#0000EE");
