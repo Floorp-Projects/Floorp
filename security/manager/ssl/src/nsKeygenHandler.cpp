@@ -416,14 +416,14 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
     nsCOMPtr<nsIKeygenThread> runnable;
 
     // Get the key size //
-    while (choice) {
+    while (choice->name) {
         if (aValue.Equals(choice->name)) {
             keysize = choice->size;
             break;
         }
         choice++;
     }
-    if (!choice) {
+    if (!keysize) {
         goto loser;
     }
 
