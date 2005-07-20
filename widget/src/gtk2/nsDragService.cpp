@@ -854,7 +854,7 @@ nsDragService::GetSourceList(void)
             (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
         listTarget->target = g_strdup(gMimeListType);
         listTarget->flags = 0;
-        listTarget->info = (guint)listAtom;
+        listTarget->info = GPOINTER_TO_UINT(listAtom);
         PR_LOG(sDragLm, PR_LOG_DEBUG,
                ("automatically adding target %s with id %ld\n",
                listTarget->target, listAtom));
@@ -893,7 +893,7 @@ nsDragService::GetSourceList(void)
                              (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                             listTarget->target = g_strdup(gTextUriListType);
                             listTarget->flags = 0;
-                            listTarget->info = (guint)listAtom;
+                            listTarget->info = GPOINTER_TO_UINT(listAtom);
                             PR_LOG(sDragLm, PR_LOG_DEBUG,
                                    ("automatically adding target %s with \
                                    id %ld\n", listTarget->target, listAtom));
@@ -930,7 +930,7 @@ nsDragService::GetSourceList(void)
                           (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                         target->target = g_strdup(flavorStr);
                         target->flags = 0;
-                        target->info = (guint)atom;
+                        target->info = GPOINTER_TO_UINT(atom);
                         PR_LOG(sDragLm, PR_LOG_DEBUG,
                                ("adding target %s with id %ld\n",
                                target->target, atom));
@@ -947,7 +947,7 @@ nsDragService::GetSourceList(void)
                              (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                             plainTarget->target = g_strdup(kTextMime);
                             plainTarget->flags = 0;
-                            plainTarget->info = (guint)plainAtom;
+                            plainTarget->info = GPOINTER_TO_UINT(plainAtom);
                             PR_LOG(sDragLm, PR_LOG_DEBUG,
                                    ("automatically adding target %s with \
                                    id %ld\n", plainTarget->target, plainAtom));
@@ -964,7 +964,7 @@ nsDragService::GetSourceList(void)
                              (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                             urlTarget->target = g_strdup(gMozUrlType);
                             urlTarget->flags = 0;
-                            urlTarget->info = (guint)urlAtom;
+                            urlTarget->info = GPOINTER_TO_UINT(urlAtom);
                             PR_LOG(sDragLm, PR_LOG_DEBUG,
                                    ("automatically adding target %s with \
                                    id %ld\n", urlTarget->target, urlAtom));
