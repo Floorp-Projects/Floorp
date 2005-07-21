@@ -1742,6 +1742,10 @@ LookupArgOrVar(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
     if (pn->pn_slot >= 0 || pn->pn_op == JSOP_ARGUMENTS)
         return JS_TRUE;
 
+    /* QNAME references can never be optimized to use arg/var storage. */
+    if (pn->pn_op == JSOP_QNAMEPART)
+        return JS_TRUE;
+
     /*
      * A Script object can be used to split an eval into a compile step done
      * at construction time, and an execute step done separately, possibly in
