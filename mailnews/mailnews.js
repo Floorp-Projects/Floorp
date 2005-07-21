@@ -677,8 +677,6 @@ pref("news.show_first_unread", false);
 pref("news.sash_geometry", "");
 pref("mail.signature_date", 0);
 
-// until bug #130581 is fixed, we need to override this on linux
-pref("mail.compose.max_recycled_windows", 0);
 # XP_UNIX
 #endif
 #endif
