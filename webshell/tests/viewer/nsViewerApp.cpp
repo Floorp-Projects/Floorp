@@ -69,6 +69,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsGUIEvent.h"
+#include "nsStaticComponents.h"
 
 // Needed for Dialog GUI
 #include "nsICheckButton.h"
@@ -128,13 +129,6 @@ static NS_DEFINE_CID(kFormProcessorCID,   NS_FORMPROCESSOR_CID);
 
 #define DEFAULT_WIDTH 620
 #define DEFAULT_HEIGHT 400
-
-
-#ifdef _BUILD_STATIC_BIN
-#include "nsStaticComponent.h"
-nsresult PR_CALLBACK
-app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
-#endif
 
 
 nsViewerApp::nsViewerApp()
@@ -205,13 +199,20 @@ nsViewerApp::Destroy()
   NS_IF_RELEASE(mPrefService);
 }
 
+#ifndef _BUILD_STATIC_BIN
+nsStaticModuleInfo const *const kPStaticModules = nsnull;
+PRUint32 const kStaticModuleCount = 0;
+#endif
+
 nsresult
 nsViewerApp::SetupRegistry()
 {
   nsresult rv;
 
   nsCOMPtr<nsIServiceManager> servManager;
-  NS_GetServiceManager(getter_AddRefs(servManager));
+  rv = NS_InitXPCOM3(getter_AddRefs(servManager), nsnull, nsnull,
+                     kPStaticModules, kStaticModuleCount);
+
   nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servManager);
   NS_ASSERTION(registrar, "No nsIComponentRegistrar from get service. see dougt");
   rv = registrar->AutoRegister(nsnull);
@@ -238,11 +239,6 @@ nsresult
 nsViewerApp::Initialize(int argc, char** argv)
 {
   nsresult rv;
-
-#ifdef _BUILD_STATIC_BIN
-  // Initialize XPCOM's module info table
-  NSGetStaticModuleInfo = app_getModuleInfo;
-#endif
 
   rv = SetupRegistry();
   if (NS_FAILED(rv)) {

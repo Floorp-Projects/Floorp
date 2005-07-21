@@ -102,7 +102,11 @@ ifeq ($(OS_CONFIG),SunOS4.1)
 NSPR_CFLAGS	+= -I$(srcdir)/../nsprpub/pr/include/md
 endif
 
-HEADERS		= nsBuildID.h $(DEPTH)/mozilla-config.h
+HEADERS = \
+	nsBuildID.h \
+	$(DEPTH)/mozilla-config.h \
+	$(srcdir)/nsStaticComponents.h \
+	$(NULL)
 
 export:: $(TARGETS) $(HEADERS)
 	$(INSTALL) $(IFLAGS1) $(HEADERS) $(DIST)/include

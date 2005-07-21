@@ -84,7 +84,8 @@ static const XPCOMFunctions kFrozenFunctions = {
     &NS_StringContainerInit2_P,
     &NS_CStringContainerInit2_P,
     &NS_StringGetMutableData_P,
-    &NS_CStringGetMutableData_P
+    &NS_CStringGetMutableData_P,
+    &NS_InitXPCOM3_P
 };  
 
 extern "C" NS_EXPORT nsresult
@@ -118,6 +119,18 @@ NS_InitXPCOM2(nsIServiceManager **result,
               nsIDirectoryServiceProvider *dirProvider)
 {
   return NS_InitXPCOM2_P(result, binDirectory, dirProvider);
+}
+
+#undef NS_InitXPCOM3
+extern "C" NS_EXPORT nsresult
+NS_InitXPCOM3(nsIServiceManager **result,
+	      nsIFile *binDirectory,
+	      nsIDirectoryServiceProvider *dirProvider,
+	      nsStaticModuleInfo const *staticComponents,
+	      PRUint32 componentCount)
+{
+  return NS_InitXPCOM3_P(result, binDirectory, dirProvider,
+                         staticComponents, componentCount);
 }
 
 #undef NS_ShutdownXPCOM

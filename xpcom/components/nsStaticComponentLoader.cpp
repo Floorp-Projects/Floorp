@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,8 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsStaticComponent.h"
+#include "nsXPCOMPrivate.h"
+
 #include "nsIComponentLoader.h"
+#include "nsIModule.h"
+
 #include "nsVoidArray.h"
 #include "pldhash.h"
 #include NEW_H
@@ -52,6 +56,10 @@ extern const char staticComponentType[];
 struct StaticModuleInfo : public PLDHashEntryHdr {
     nsStaticModuleInfo  info;
     nsCOMPtr<nsIModule> module;
+
+    // We want to autoregister the components in the order they come to us
+    // in the static component list, so we keep a linked list.
+    StaticModuleInfo   *next;
 };
 
 class nsStaticComponentLoader : public nsIComponentLoader
@@ -60,13 +68,13 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICOMPONENTLOADER
 
-    nsStaticComponentLoader() : 
-        mAutoRegistered(PR_FALSE), mLoadedInfo(PR_FALSE) {
-	}
+    nsStaticComponentLoader() :
+        mAutoRegistered(PR_FALSE),
+        mFirst(nsnull)
+    { }
 
-    static NS_HIDDEN_(PLDHashOperator) PR_CALLBACK
-    info_RegisterSelf(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                      PRUint32 number, void *arg);
+    nsresult Init(nsStaticModuleInfo const *aStaticModules,
+                  PRUint32 aModuleCount);
 
 private:
     ~nsStaticComponentLoader() {
@@ -75,15 +83,14 @@ private:
     }
 
 protected:
-    nsresult GetModuleInfo();
     nsresult GetInfoFor(const char *aLocation, StaticModuleInfo **retval);
 
     PRBool                        mAutoRegistered;
-    PRBool                        mLoadedInfo;
     nsCOMPtr<nsIComponentManager> mComponentMgr;
     PLDHashTable                  mInfoHash;
     static PLDHashTableOps        sInfoHashOps;
     nsVoidArray                   mDeferredComponents;
+    StaticModuleInfo             *mFirst;
 };
 
 PR_STATIC_CALLBACK(void)
@@ -111,43 +118,38 @@ info_InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsStaticComponentLoader, nsIComponentLoader)
 
-#ifndef MOZ_ENABLE_LIBXUL
-NS_COM NSGetStaticModuleInfoFunc NSGetStaticModuleInfo;
-#endif
-
 nsresult
-nsStaticComponentLoader::GetModuleInfo()
+nsStaticComponentLoader::Init(nsStaticModuleInfo const *aStaticModules,
+                              PRUint32 aModuleCount)
 {
-    if (mLoadedInfo)
-        return NS_OK;
-
-    if (!mInfoHash.ops) {       // creation failed in init, why are we here?
-        NS_WARNING("operating on uninitialized static component loader");
-        return NS_ERROR_NOT_INITIALIZED;
+    if (!PL_DHashTableInit(&mInfoHash, &sInfoHashOps, nsnull,
+                           sizeof(StaticModuleInfo), 1024)) {
+        mInfoHash.ops = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    if (! NSGetStaticModuleInfo) {
-        // We're a static build with no static modules to
-        // register. This can happen in shared uses (such as the GRE)
+    if (! aStaticModules)
         return NS_OK;
-    }
 
-    nsStaticModuleInfo *infoList;
-    PRUint32 count;
-    nsresult rv;
-    if (NS_FAILED(rv = (*NSGetStaticModuleInfo)(&infoList, &count)))
-        return rv;
-    for (PRUint32 i = 0; i < count; i++) {
+    StaticModuleInfo *prev = nsnull;
+
+    for (PRUint32 i = 0; i < aModuleCount; ++i) {
         StaticModuleInfo *info =
             NS_STATIC_CAST(StaticModuleInfo *,
-                           PL_DHashTableOperate(&mInfoHash, infoList[i].name,
+                           PL_DHashTableOperate(&mInfoHash, aStaticModules[i].name,
                                                 PL_DHASH_ADD));
         if (!info)
             return NS_ERROR_OUT_OF_MEMORY;
-        info->info = infoList[i];
+
+        info->info = aStaticModules[i];
+        if (prev)
+            prev->next = info;
+        else
+            mFirst = info;
+
+        prev = info;
     }
 
-    mLoadedInfo = PR_TRUE;
     return NS_OK;
 }
 
@@ -156,9 +158,6 @@ nsStaticComponentLoader::GetInfoFor(const char *aLocation,
                                     StaticModuleInfo **retval)
 {
     nsresult rv;
-    if (NS_FAILED(rv = GetModuleInfo()))
-        return rv;
-
     StaticModuleInfo *info = 
         NS_STATIC_CAST(StaticModuleInfo *,
                        PL_DHashTableOperate(&mInfoHash, aLocation,
@@ -183,40 +182,7 @@ NS_IMETHODIMP
 nsStaticComponentLoader::Init(nsIComponentManager *mgr, nsISupports *aReg)
 {
     mComponentMgr = mgr;
-    if (!PL_DHashTableInit(&mInfoHash, &sInfoHashOps, nsnull,
-                           sizeof(StaticModuleInfo), 1024)) {
-        mInfoHash.ops = nsnull;
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
     return NS_OK;
-}
-
-PLDHashOperator PR_CALLBACK
-nsStaticComponentLoader::info_RegisterSelf(PLDHashTable *table,
-                                           PLDHashEntryHdr *hdr,
-                                           PRUint32 number, void *arg)
-{
-    nsStaticComponentLoader *loader = NS_STATIC_CAST(nsStaticComponentLoader *,
-                                                     arg);
-    nsIComponentManager *mgr = loader->mComponentMgr;
-    StaticModuleInfo *info = NS_STATIC_CAST(StaticModuleInfo *, hdr);
-    
-    nsresult rv;
-    if (!info->module) {
-        rv = info->info.getModule(mgr, nsnull, getter_AddRefs(info->module));
-        LOG(("nSCL: getModule(\"%s\"): %lx\n", info->info.name, rv));
-        if (NS_FAILED(rv))
-            return PL_DHASH_NEXT; // oh well.
-    }
-
-    rv = info->module->RegisterSelf(mgr, nsnull, info->info.name,
-                                    staticComponentType);
-    LOG(("nSCL: autoreg of \"%s\": %lx\n", info->info.name, rv));
-
-    if (rv == NS_ERROR_FACTORY_REGISTER_AGAIN)
-        loader->mDeferredComponents.AppendElement(info);
-
-    return PL_DHASH_NEXT;
 }
 
 NS_IMETHODIMP
@@ -231,10 +197,25 @@ nsStaticComponentLoader::AutoRegisterComponents(PRInt32 when, nsIFile *dir)
         return NS_OK;
 
     nsresult rv;
-    if (NS_FAILED(rv = GetModuleInfo()))
-        return rv;
+    StaticModuleInfo *info = mFirst;
 
-    PL_DHashTableEnumerate(&mInfoHash, info_RegisterSelf, this);
+    while (info) {
+        if (!info->module) {
+            rv = info->info.getModule(mComponentMgr, nsnull, getter_AddRefs(info->module));
+            LOG(("nSCL: getModule(\"%s\"): %lx\n", info->info.name, rv));
+            if (NS_FAILED(rv) || !info->module)
+                continue; // oh well
+        }
+
+        rv = info->module->RegisterSelf(mComponentMgr, nsnull, info->info.name,
+                                        staticComponentType);
+        LOG(("nSCL: autoreg of \"%s\": %lx\n", info->info.name, rv));
+
+        if (rv == NS_ERROR_FACTORY_REGISTER_AGAIN)
+            mDeferredComponents.AppendElement(info);
+
+        info = info->next;
+    }
 
     mAutoRegistered = PR_TRUE;
     return NS_OK;
@@ -312,9 +293,20 @@ nsStaticComponentLoader::GetFactory(const nsCID &aCID, const char *aLocation,
 }
 
 nsresult
-NS_NewStaticComponentLoader(nsIComponentLoader **retval)
+NewStaticComponentLoader(nsStaticModuleInfo const *aStaticModules,
+                         PRUint32 aStaticModuleCount,
+                         nsIComponentLoader **retval)
 {
-    NS_IF_ADDREF(*retval = NS_STATIC_CAST(nsIComponentLoader *, 
-                                          new nsStaticComponentLoader));
-    return *retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsStaticComponentLoader> lthis = new nsStaticComponentLoader();
+    if (!lthis)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv = ((nsStaticComponentLoader*) lthis)->
+        Init(aStaticModules, aStaticModuleCount);
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    NS_ADDREF(*retval = lthis);
+    return NS_OK;
 }

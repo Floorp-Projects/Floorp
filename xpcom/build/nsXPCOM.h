@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -41,6 +42,7 @@
 // Map frozen functions to private symbol names if not using strict API.
 #ifdef MOZILLA_INTERNAL_API
 # define NS_InitXPCOM2               NS_InitXPCOM2_P
+# define NS_InitXPCOM3               NS_InitXPCOM3_P
 # define NS_ShutdownXPCOM            NS_ShutdownXPCOM_P
 # define NS_GetServiceManager        NS_GetServiceManager_P
 # define NS_GetComponentManager      NS_GetComponentManager_P
@@ -61,6 +63,7 @@
 class nsAString;
 class nsACString;
 
+class nsIModule;
 class nsIComponentManager;
 class nsIComponentRegistrar;
 class nsIServiceManager;
@@ -72,9 +75,19 @@ class nsIDebug;
 class nsITraceRefcnt;
 
 /**
- * Initialises XPCOM. You must call this method before proceeding 
- * to use xpcom. The one exception is that you may call 
- * NS_NewLocalFile to create a nsIFile.
+ * Every XPCOM component implements this function signature, which is the
+ * only entrypoint XPCOM uses to the function.
+ *
+ * @status FROZEN
+ */
+typedef nsresult (PR_CALLBACK *nsGetModuleProc)(nsIComponentManager *aCompMgr,
+                                                nsIFile* location,
+                                                nsIModule** return_cobj);
+
+/**
+ * Initialises XPCOM. You must call one of the NS_InitXPCOM methods
+ * before proceeding to use xpcom. The one exception is that you may
+ * call NS_NewLocalFile to create a nsIFile.
  * 
  * @status FROZEN
  *
@@ -100,22 +113,81 @@ class nsITraceRefcnt;
  * @see nsIDirectoryServiceProvider
  *
  * @return NS_OK for success;
- *         NS_ERROR_NOT_INITIALIZED if static globals were not initialied, which
- *         can happen if XPCOM is reloaded, but did not completly shutdown.  
- *         other error codes indicate a failure during initialisation.
- *
+ *         NS_ERROR_NOT_INITIALIZED if static globals were not initialized,
+ *         which can happen if XPCOM is reloaded, but did not completly
+ *         shutdown. Other error codes indicate a failure during
+ *         initialisation.
  */
 extern "C" NS_COM nsresult
 NS_InitXPCOM2(nsIServiceManager* *result, 
               nsIFile* binDirectory,
               nsIDirectoryServiceProvider* appFileLocationProvider);
+
+/**
+ * Some clients of XPCOM have statically linked components (not dynamically
+ * loaded component DLLs), which can be passed to NS_InitXPCOM3 using this
+ * structure.
+ *
+ * @status FROZEN
+ */
+struct nsStaticModuleInfo {
+  const char      *name;
+  nsGetModuleProc  getModule;
+};
+
+/**
+ * Initialises XPCOM with static components. You must call one of the
+ * NS_InitXPCOM methods before proceeding to use xpcom. The one
+ * exception is that you may call NS_NewLocalFile to create a nsIFile.
+ * 
+ * @status FROZEN
+ *
+ * @note Use <CODE>NS_NewLocalFile</CODE> or <CODE>NS_NewNativeLocalFile</CODE> 
+ *       to create the file object you supply as the bin directory path in this
+ *       call. The function may be safely called before the rest of XPCOM or 
+ *       embedding has been initialised.
+ *
+ * @param result           The service manager.  You may pass null.
+ *
+ * @param binDirectory     The directory containing the component
+ *                         registry and runtime libraries;
+ *                         or use <CODE>nsnull</CODE> to use the working
+ *                         directory.
+ *
+ * @param appFileLocationProvider The object to be used by Gecko that specifies
+ *                         to Gecko where to find profiles, the component
+ *                         registry preferences and so on; or use
+ *                         <CODE>nsnull</CODE> for the default behaviour.
+ *
+ * @param staticComponents An array of static components. Passing null is
+ *                         Equivalent to NS_InitXPCOM2. These static components
+ *                         will be registered before any other components.
+ * @param componentCount   Number of elements in staticComponents
+ *
+ * @see NS_NewLocalFile
+ * @see nsILocalFile
+ * @see nsIDirectoryServiceProvider
+ *
+ * @return NS_OK for success;
+ *         NS_ERROR_NOT_INITIALIZED if static globals were not initialized,
+ *         which can happen if XPCOM is reloaded, but did not completly
+ *         shutdown. Other error codes indicate a failure during
+ *         initialisation.
+ */
+extern "C" NS_COM nsresult
+NS_InitXPCOM3(nsIServiceManager* *result, 
+              nsIFile* binDirectory,
+              nsIDirectoryServiceProvider* appFileLocationProvider,
+              nsStaticModuleInfo const *staticComponents,
+              PRUint32 componentCount);
+
 /**
  * Shutdown XPCOM. You must call this method after you are finished
  * using xpcom. 
  *
  * @status FROZEN
  *
- * @param servMgr           The service manager which was returned by NS_InitXPCOM2.  
+ * @param servMgr           The service manager which was returned by NS_InitXPCOM.
  *                          This will release servMgr.  You may pass null.
  *
  * @return NS_OK for success;
@@ -180,7 +252,7 @@ NS_GetMemoryManager(nsIMemory* *result);
 
 /**
  * Public Method to create an instance of a nsILocalFile.  This function
- * may be called prior to NS_InitXPCOM2.  
+ * may be called prior to NS_InitXPCOM.
  * 
  * @status FROZEN
  * 
@@ -276,7 +348,7 @@ NS_Free(void* ptr);
 
 /**
  * A category which is read after component registration but before
- * NS_InitXPCOM2 returns. Each category entry is treated as the contractID of
+ * NS_InitXPCOM returns. Each category entry is treated as the contractID of
  * a service: each service is instantiated, and if it implements nsIObserver
  * the nsIObserver.observe method is called with the "xpcom-startup" topic.
  *

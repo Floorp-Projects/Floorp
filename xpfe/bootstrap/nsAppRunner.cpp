@@ -51,6 +51,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIGenericFactory.h"
 #include "nsIComponentRegistrar.h"
+#include "nsStaticComponents.h"
 
 #ifdef XP_OS2
 #include "private/pprthred.h"
@@ -214,33 +215,9 @@ extern "C" {
 }
 #endif
 
-#ifdef _BUILD_STATIC_BIN
-#include "nsStaticComponent.h"
-
-#ifdef _MOZCOMPS_SHARED_LIBRARY
-extern "C" nsresult nsMetaModule_nsGetModule(nsIComponentManager *servMgr,
-                                             nsIFile *location,
-                                             nsIModule **result);
-
-static nsStaticModuleInfo staticInfo[] = {
-  {
-    "meta component",
-    nsMetaModule_nsGetModule
-  }
-};
-
-static nsresult PR_CALLBACK
-app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count) {
-  *info = staticInfo;
-  *count = 1;
-  return NS_OK;
-}
-#else
-
-nsresult PR_CALLBACK
-app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
-
-#endif
+#ifndef _BUILD_STATIC_BIN
+nsStaticModuleInfo const *const kPStaticModules = nsnull;
+PRUint32 const kStaticModuleCount = 0;
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -1608,11 +1585,6 @@ int main(int argc, char* argv[])
   InitializeMacOSXApp(argc, argv);
 #endif
 
-#ifdef _BUILD_STATIC_BIN
-  // Initialize XPCOM's module info table
-  NSGetStaticModuleInfo = app_getModuleInfo;
-#endif
-
   // Handle -help and -version command line arguments.
   // They should% return quick, so we deal with them here.
   if (HandleDumpArguments(argc, argv))
@@ -1693,12 +1665,13 @@ int main(int argc, char* argv[])
     return 1;
   }
 #else
-  NS_TIMELINE_MARK("NS_InitXPCOM2...");
-  nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
-  NS_TIMELINE_MARK("...NS_InitXPCOM2 done");
+  NS_TIMELINE_MARK("NS_InitXPCOM3...");
+  nsresult rv = NS_InitXPCOM3(nsnull, nsnull, nsnull,
+                              kPStaticModules, kStaticModuleCount);
+  NS_TIMELINE_MARK("...NS_InitXPCOM3 done");
   if (NS_FAILED(rv)) {
     // We should be displaying a dialog here with the reason why we failed.
-    NS_WARNING("NS_InitXPCOM2 failed");
+    NS_WARNING("NS_InitXPCOM3 failed");
     return 1;
   }
 #endif

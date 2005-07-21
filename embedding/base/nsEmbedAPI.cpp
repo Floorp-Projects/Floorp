@@ -82,8 +82,11 @@ static XPCOMCleanupHack sXPCOMCleanupHack;
 #endif
 
 
-nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
-                          nsIDirectoryServiceProvider *appFileLocProvider)
+NS_METHOD
+NS_InitEmbedding(nsILocalFile *mozBinDirectory,
+                 nsIDirectoryServiceProvider *appFileLocProvider,
+                 nsStaticModuleInfo const *aStaticComponents,
+                 PRUint32 aStaticComponentCount)
 {
     nsresult rv;
 
@@ -99,7 +102,8 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
 #endif
     {
         // Initialise XPCOM
-        rv = NS_InitXPCOM2(&sServiceManager, mozBinDirectory, appFileLocProvider);
+        rv = NS_InitXPCOM3(&sServiceManager, mozBinDirectory, appFileLocProvider,
+                           aStaticComponents, aStaticComponentCount);
         NS_ENSURE_SUCCESS(rv, rv);
                 
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
@@ -193,7 +197,8 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
     return NS_OK;
 }
 
-nsresult NS_TermEmbedding()
+NS_METHOD
+NS_TermEmbedding()
 {
     // Reentrant calls to this method do nothing except decrement a counter
     if (sInitCounter > 1)

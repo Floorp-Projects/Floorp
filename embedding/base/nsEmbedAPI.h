@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Adam Lock <adamlock@netscape.com>
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,6 +41,8 @@
 #ifndef NSEMBEDAPI_H
 #define NSEMBEDAPI_H
 
+#include "nscore.h"
+#include "nsXPCOM.h"
 #include "nsILocalFile.h"
 #include "nsIDirectoryService.h"
 
@@ -49,8 +52,6 @@
  */
 
 /**
- * @fn nsresult NS_InitEmbedding(nsILocalFile *aMozBinDirectory, nsIDirectoryServiceProvider *aAppFileLocProvider)
- *
  * Initialises the Gecko embedding layer. You <I>must</I>
  * call this method before proceeding to use Gecko. This function ensures
  * XPCOM is started, creates the component registry if necessary and
@@ -71,6 +72,10 @@
  *                         to Gecko where to find profiles, the component
  *                         registry preferences and so on; or use
  *                         <CODE>nsnull</CODE> for the default behaviour.
+ * @param aStaticComponents An array of static components (see NS_InitXPCOM3).
+ *                         may be null.
+ * @param aStaticComponentCount Number of static components in the
+ *                              aStaticComponents array.
  *
  * @see NS_NewLocalFile
  * @see nsILocalFile
@@ -80,13 +85,14 @@
  *         other error codes indicate a failure during initialisation.
  *
  */
-extern "C" nsresult NS_InitEmbedding(nsILocalFile *aMozBinDirectory,
-                                 nsIDirectoryServiceProvider *aAppFileLocProvider);
+extern "C" NS_HIDDEN NS_METHOD
+NS_InitEmbedding(nsILocalFile *aMozBinDirectory,
+                 nsIDirectoryServiceProvider *aAppFileLocProvider,
+                 nsStaticModuleInfo const *aStaticComponents = nsnull,
+                 PRUint32 aStaticComponentCount = 0);
 
 
 /**
- * @fn nsresult NS_TermEmbedding()
- *
  * Terminates the Gecko embedding layer. Call this function during shutdown to
  * ensure that global services are unloaded, files are closed and
  * XPCOM is shutdown.
@@ -98,7 +104,8 @@ extern "C" nsresult NS_InitEmbedding(nsILocalFile *aMozBinDirectory,
  *
  * @return NS_OK
  */
-extern "C" nsresult NS_TermEmbedding();
+extern "C" NS_HIDDEN NS_METHOD
+NS_TermEmbedding();
 
 /*---------------------------------------------------------------------------*/
 /* Event processing APIs. The native OS dependencies mean you must be        */
@@ -156,7 +163,8 @@ typedef QMSG nsEmbedNativeEvent;
  *
  * @return NS_OK
  */
-extern "C" nsresult NS_HandleEmbeddingEvent(nsEmbedNativeEvent &aEvent, PRBool &aWasHandled);
+extern "C" NS_HIDDEN NS_METHOD
+NS_HandleEmbeddingEvent(nsEmbedNativeEvent &aEvent, PRBool &aWasHandled);
 
 #endif /* MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING */
 

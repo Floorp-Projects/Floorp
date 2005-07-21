@@ -475,7 +475,7 @@ nsGenericModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 }
 
 NS_COM_GLUE nsresult
-NS_NewGenericModule2(nsModuleInfo* info, nsIModule* *result)
+NS_NewGenericModule2(nsModuleInfo const *info, nsIModule* *result)
 {
     nsresult rv = NS_OK;
 

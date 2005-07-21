@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -432,12 +433,21 @@ nsresult NS_COM NS_GetTraceRefcnt(nsITraceRefcnt** result)
 nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                              nsIFile* binDirectory)
 {
-    return NS_InitXPCOM2(result, binDirectory, nsnull);
+    return NS_InitXPCOM3(result, binDirectory, nsnull, nsnull, 0);
 }
 
 nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
                               nsIFile* binDirectory,
                               nsIDirectoryServiceProvider* appFileLocationProvider)
+{
+    return NS_InitXPCOM3(result, binDirectory, appFileLocationProvider, nsnull, 0);
+}
+
+nsresult NS_COM NS_InitXPCOM3(nsIServiceManager* *result,
+                              nsIFile* binDirectory,
+                              nsIDirectoryServiceProvider* appFileLocationProvider,
+                              nsStaticModuleInfo const *staticComponents,
+                              PRUint32 componentCount)
 {
     nsresult rv = NS_OK;
 
@@ -516,7 +526,7 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
             if (NS_FAILED(rv)) return rv;
         }
 
-        rv = compMgr->Init();
+        rv = compMgr->Init(staticComponents, componentCount);
         if (NS_FAILED(rv))
         {
             NS_RELEASE(compMgr);

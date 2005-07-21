@@ -151,7 +151,8 @@ public:
     nsComponentManagerImpl();
 
     static nsComponentManagerImpl* gComponentManager;
-    nsresult Init(void);
+    nsresult Init(nsStaticModuleInfo const *aStaticModules,
+                  PRUint32 aStaticModuleCount);
 
     nsresult WritePersistentRegistry();
     nsresult ReadPersistentRegistry();
@@ -215,9 +216,7 @@ public:
     PRMonitor*          mMon;
 
     nsNativeComponentLoader *mNativeComponentLoader;
-#ifdef ENABLE_STATIC_COMPONENT_LOADER
     nsIComponentLoader  *mStaticComponentLoader;
-#endif
     nsCOMPtr<nsIFile>   mComponentsDir;
     PRInt32             mComponentsOffset;
 
