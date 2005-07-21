@@ -1176,7 +1176,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gInForm,&gInForm,
     /*autoclose starttags and endtags*/ &gInputAutoClose,0,0,0,
     /*parent,incl,exclgroups*/          kFormControl, kPCDATA, kNone,
-    /*special props, prop-range*/       kRequiresBody,kDefaultPropRange,
+    /*special props, prop-range*/       kRequiresBody|kNoStyleLeaksIn,kDefaultPropRange,
     /*special parents,kids,skip*/       &gInForm,&gContainsText,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
