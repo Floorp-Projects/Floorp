@@ -651,7 +651,7 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetState(PRUint32 *aState)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMMode> inputField;
+  nsCOMPtr<nsIDOMNode> inputField;
   textBox->GetInputField(getter_AddRefs(inputField));
   if (!inputField) {
     return NS_ERROR_FAILURE;
