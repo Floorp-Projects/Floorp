@@ -29,7 +29,7 @@ dnl               Dan Mosedale <dmose@mozilla.org>
 dnl                 LDAP support
 dnl               Seth Spitzer <sspitzer@netscape.com>
 dnl                 xpctools support
-dnl               Benjamin Smedberg <bsmedberg@covad.net>
+dnl               Benjamin Smedberg <benjamin@smedbergs.us>
 dnl               Howard Chu <hyc@symas.com>
 dnl                 MSYS support
 dnl               Mark Mentovai <mark@moxienet.com>:
@@ -5969,19 +5969,6 @@ else
 fi
 
 dnl ========================================================
-dnl static component loader
-dnl ========================================================
-MOZ_STATIC_COMPONENT_LOADER=1
-MOZ_ARG_DISABLE_BOOL(static-component-loader,
-[  --disable-static-component-loader
-                          Disable the static component loader],
-    MOZ_STATIC_COMPONENT_LOADER=)
-
-if test -n "$MOZ_STATIC_COMPONENT_LOADER"; then
-    AC_DEFINE(ENABLE_STATIC_COMPONENT_LOADER)
-fi
-
-dnl ========================================================
 dnl =
 dnl = Standalone module options
 dnl = 
@@ -6599,7 +6586,6 @@ AC_SUBST(MOZ_ENABLE_XINERAMA)
 AC_SUBST(XPCOM_USE_LEA)
 AC_SUBST(BUILD_SHARED_LIBS)
 AC_SUBST(BUILD_STATIC_LIBS)
-AC_SUBST(MOZ_STATIC_COMPONENT_LOADER)
 AC_SUBST(MOZ_STATIC_COMPONENT_LIBS)
 AC_SUBST(MOZ_ENABLE_LIBXUL)
 AC_SUBST(ENABLE_TESTS)
@@ -6922,7 +6908,6 @@ HAVE_MBRTOWC
 HAVE_SYS_MOUNT_H
 HAVE_SYS_VFS_H
 HAVE_WCRTOMB
-ENABLE_STATIC_COMPONENT_LOADER
 MOZ_V1_STRING_ABI
 "
 

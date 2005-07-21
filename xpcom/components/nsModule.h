@@ -41,6 +41,7 @@
 #include "nsIModule.h"
 #include "nsIFile.h"
 #include "nsIComponentManager.h"
+#include "nsXPCOM.h"
 
 // Exported Function from module dll to Create the nsIModule
 #define NS_GET_MODULE_SYMBOL "NSGetModule"
@@ -49,10 +50,5 @@ extern "C" NS_EXPORT nsresult PR_CALLBACK
 NSGetModule(nsIComponentManager *aCompMgr,
             nsIFile* location,
             nsIModule** return_cobj);
-
-typedef nsresult (PR_CALLBACK *nsGetModuleProc)(nsIComponentManager *aCompMgr,
-                                                nsIFile* location,
-                                                nsIModule** return_cobj);
-
 
 #endif /* nsModule_h__ */

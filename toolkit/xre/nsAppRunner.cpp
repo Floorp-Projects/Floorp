@@ -40,6 +40,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 
+#define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
+
 #include "nsAppRunner.h"
 #include "nsUpdateDriver.h"
 #include "nsBuildID.h"
@@ -73,6 +75,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIExtensionManager.h"
 #include "nsIFastLoadService.h" // for PLATFORM_FASL_SUFFIX
+#include "nsIGenericFactory.h"
 #include "nsIIOService.h"
 #include "nsIObserverService.h"
 #include "nsINativeAppSupport.h"
@@ -99,6 +102,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsEmbedCID.h"
 #include "nsNetUtil.h"
+#include "nsStaticComponents.h"
 #include "nsXPCOM.h"
 #include "nsXPIDLString.h"
 #include "nsXPFEComponentsCID.h"
@@ -232,12 +236,6 @@ extern "C" {
 }
 #endif
 
-#ifdef _BUILD_STATIC_BIN
-#include "nsStaticComponent.h"
-nsresult PR_CALLBACK
-app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
-#endif
-
 #if defined(XP_UNIX) || defined(XP_BEOS)
   extern void InstallUnixSignalHandlers(const char *ProgramName);
 #endif
@@ -365,20 +363,17 @@ PRBool gSafeMode = PR_FALSE;
  * singleton.
  */
 class nsXULAppInfo : public nsIXULAppInfo,
-                     public nsIXULRuntime,
-                     public nsIFactory
+                     public nsIXULRuntime
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXULAPPINFO
   NS_DECL_NSIXULRUNTIME
-  NS_DECL_NSIFACTORY
 };
 
-NS_IMPL_QUERY_INTERFACE3(nsXULAppInfo,
+NS_IMPL_QUERY_INTERFACE2(nsXULAppInfo,
                          nsIXULAppInfo,
-                         nsIXULRuntime,
-                         nsIFactory)
+                         nsIXULRuntime)
 
 NS_IMETHODIMP_(nsrefcnt)
 nsXULAppInfo::AddRef()
@@ -487,23 +482,16 @@ nsXULAppInfo::GetXPCOMABI(nsACString& aResult)
 #endif
 }
 
-NS_IMETHODIMP
-nsXULAppInfo::CreateInstance(nsISupports* aOuter,
-                             REFNSIID aIID,
-                             void** aResult)
+static const nsXULAppInfo kAppInfo;
+static NS_METHOD AppInfoConstructor(nsISupports* aOuter,
+                                    REFNSIID aIID, void **aResult)
 {
   NS_ENSURE_NO_AGGREGATION(aOuter);
 
-  return QueryInterface(aIID, aResult);
+  return NS_CONST_CAST(nsXULAppInfo*, &kAppInfo)->
+    QueryInterface(aIID, aResult);
 }
 
-NS_IMETHODIMP
-nsXULAppInfo::LockFactory(PRBool aLock)
-{
-  return NS_OK;
-}
-
-static const nsXULAppInfo kAppInfo;
 PRBool gLogConsoleErrors
 #ifdef DEBUG
          = PR_TRUE;
@@ -562,6 +550,30 @@ ScopedXPCOMStartup::~ScopedXPCOMStartup()
 static const nsCID kAppInfoCID =
   { 0x95d89e3e, 0xa169, 0x41a3, { 0x8e, 0x56, 0x71, 0x99, 0x78, 0xe1, 0x5b, 0x12 } };
 
+static nsModuleComponentInfo kComponents[] =
+{
+  {
+    "nsXULAppInfo",
+    kAppInfoCID,
+    XULAPPINFO_SERVICE_CONTRACTID,
+    AppInfoConstructor
+  }
+};
+
+NS_IMPL_NSGETMODULE(Apprunner, kComponents)
+
+#if !defined(_BUILD_STATIC_BIN) && !defined(MOZ_ENABLE_LIBXUL)
+static nsStaticModuleInfo const kXREStaticModules[] =
+{
+  {
+    "Apprunner",
+    Apprunner_NSGetModule
+  }
+};
+
+nsStaticModuleInfo const *const kPStaticModules = kXREStaticModules;
+PRUint32 const kStaticModuleCount = NS_ARRAY_LENGTH(kXREStaticModules);
+#endif
 
 nsresult
 ScopedXPCOMStartup::Initialize()
@@ -569,8 +581,9 @@ ScopedXPCOMStartup::Initialize()
   NS_ASSERTION(gDirServiceProvider, "Should not get here!");
 
   nsresult rv;
-  rv = NS_InitXPCOM2(&mServiceManager, gDirServiceProvider->GetAppDir(),
-                     gDirServiceProvider);
+  rv = NS_InitXPCOM3(&mServiceManager, gDirServiceProvider->GetAppDir(),
+                     gDirServiceProvider,
+                     kPStaticModules, kStaticModuleCount);
   if (NS_FAILED(rv)) {
     NS_ERROR("Couldn't start xpcom!");
     mServiceManager = nsnull;
@@ -579,10 +592,6 @@ ScopedXPCOMStartup::Initialize()
     nsCOMPtr<nsIComponentRegistrar> reg =
       do_QueryInterface(mServiceManager);
     NS_ASSERTION(reg, "Service Manager doesn't QI to Registrar.");
-
-    reg->RegisterFactory(kAppInfoCID, "nsXULAppInfo",
-                         XULAPPINFO_SERVICE_CONTRACTID,
-                         NS_CONST_CAST(nsXULAppInfo*,&kAppInfo));
   }
 
   return rv;
@@ -1818,11 +1827,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     return 1;
   ScopedFPHandler handler;
 #endif /* XP_OS2 */
-
-#ifdef _BUILD_STATIC_BIN
-  // Initialize XPCOM's module info table
-  NSGetStaticModuleInfo = app_getModuleInfo;
-#endif
 
   if (CheckArg("safe-mode"))
     gSafeMode = PR_TRUE;

@@ -55,20 +55,16 @@ CPPSRCS		= \
 		nsCategoryManager.cpp \
 		nsComponentManager.cpp \
 		nsNativeComponentLoader.cpp \
+		nsStaticComponentLoader.cpp \
 		nsServiceManagerObsolete.cpp \
 		xcDll.cpp \
 		$(NULL)
-
-ifdef MOZ_STATIC_COMPONENT_LOADER
-CPPSRCS		+= nsStaticComponentLoader.cpp
-endif
 
 EXPORTS		= \
 		nsCategoryManagerUtils.h \
 		nsIServiceManagerObsolete.h \
 		nsModule.h \
 		nsNativeComponentLoader.h \
-		nsStaticComponent.h \
 		nsObsoleteModuleLoading.h \
 		xcDll.h \
 		$(NULL)
@@ -91,7 +87,7 @@ SDK_XPIDLSRCS	= \
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-LOCAL_INCLUDES	= -I$(srcdir)/../base -I$(srcdir)/../thread -I$(srcdir)/../ds -I..
+LOCAL_INCLUDES	= -I$(srcdir)/../base -I$(srcdir)/../thread -I$(srcdir)/../ds -I$(srcdir)/../build -I..
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

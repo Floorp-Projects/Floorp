@@ -72,6 +72,7 @@
 #include "nsIObserverService.h"
 #include "nsISimpleEnumerator.h"
 #include "nsXPCOM.h"
+#include "nsXPCOMPrivate.h"
 #include "nsISupportsPrimitives.h"
 #include "nsLocalFile.h"
 #include "nsNativeComponentLoader.h"
@@ -712,9 +713,7 @@ nsComponentManagerImpl::nsComponentManagerImpl()
     :
     mMon(NULL),
     mNativeComponentLoader(0),
-#ifdef ENABLE_STATIC_COMPONENT_LOADER
     mStaticComponentLoader(0),
-#endif
     mShuttingDown(NS_SHUTDOWN_NEVERHAPPENED),
     mLoaderData(nsnull),
     mRegistryDirty(PR_FALSE)
@@ -723,7 +722,8 @@ nsComponentManagerImpl::nsComponentManagerImpl()
     mContractIDs.ops = nsnull;
 }
 
-nsresult nsComponentManagerImpl::Init(void)
+nsresult nsComponentManagerImpl::Init(nsStaticModuleInfo const *aStaticModules,
+                                      PRUint32 aStaticModuleCount)
 {
     PR_ASSERT(mShuttingDown != NS_SHUTDOWN_INPROGRESS);
     if (mShuttingDown == NS_SHUTDOWN_INPROGRESS)
@@ -800,12 +800,12 @@ nsresult nsComponentManagerImpl::Init(void)
     NS_ADDREF(mLoaderData[mNLoaderData].loader);
     mNLoaderData++;
 
-#ifdef ENABLE_STATIC_COMPONENT_LOADER
     if (mStaticComponentLoader == nsnull) {
-        extern nsresult NS_NewStaticComponentLoader(nsIComponentLoader **);
-        NS_NewStaticComponentLoader(&mStaticComponentLoader);
-        if (!mStaticComponentLoader)
-            return NS_ERROR_OUT_OF_MEMORY;
+        nsresult rv = NewStaticComponentLoader(aStaticModules,
+                                               aStaticModuleCount,
+                                               &mStaticComponentLoader);
+        if (NS_FAILED(rv))
+            return rv;
     }
 
     mLoaderData[mNLoaderData].type = PL_strdup(staticComponentType);
@@ -817,7 +817,6 @@ nsresult nsComponentManagerImpl::Init(void)
         /* Init the static loader */
         mStaticComponentLoader->Init(this, nsnull);
     }
-#endif
     GetLocationFromDirectoryService(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(mComponentsDir));
     if (!mComponentsDir)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -914,9 +913,7 @@ nsresult nsComponentManagerImpl::Shutdown(void)
 
     // we have an extra reference on this one, which is probably a good thing
     NS_IF_RELEASE(mNativeComponentLoader);
-#ifdef ENABLE_STATIC_COMPONENT_LOADER
     NS_IF_RELEASE(mStaticComponentLoader);
-#endif
 
     mShuttingDown = NS_SHUTDOWN_COMPLETE;
 
@@ -3185,14 +3182,14 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
                                   nsnull,
                                   "start");
 
-    /* do the native loader first, so we can find other loaders */
-    rv = mNativeComponentLoader->AutoRegisterComponents((PRInt32)when, dir);
-    if (NS_FAILED(rv)) return rv;
-
-#ifdef ENABLE_STATIC_COMPONENT_LOADER
+    /* Load static components first, then the native component loader,
+     * which can find other loaders.
+     */
     rv = mStaticComponentLoader->AutoRegisterComponents((PRInt32)when, inDirSpec);
     if (NS_FAILED(rv)) return rv;
-#endif
+
+    rv = mNativeComponentLoader->AutoRegisterComponents((PRInt32)when, dir);
+    if (NS_FAILED(rv)) return rv;
 
     /* do InterfaceInfoManager after native loader so it can use components. */
     rv = iim->AutoRegisterInterfaces();

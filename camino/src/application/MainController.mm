@@ -71,6 +71,7 @@
 #include "nsCOMPtr.h"
 #include "nsEmbedAPI.h"
 #include "nsString.h"
+#include "nsStaticComponents.h"
 
 #include "nsIWebBrowserChrome.h"
 #include "nsIServiceManager.h"
@@ -85,12 +86,6 @@
 #include "nsICookieManager.h"
 #include "nsIBrowserHistory.h"
 #include "nsICacheService.h"
-
-#ifdef _BUILD_STATIC_BIN
-#include "nsStaticComponent.h"
-nsresult PR_CALLBACK
-app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
-#endif
 
 extern const nsModuleComponentInfo* GetAppComponents(unsigned int * outNumComponents);
 
@@ -190,11 +185,8 @@ const int kReuseWindowOnAE = 2;
       NSString *path = [[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent];
       setenv("MOZILLA_FIVE_HOME", [path fileSystemRepresentation], 1);
 
-#ifdef _BUILD_STATIC_BIN
-      NSGetStaticModuleInfo = app_getModuleInfo;
-#endif
-
-      if (NS_SUCCEEDED(NS_InitEmbedding(nsnull, nsnull))) {
+      if (NS_SUCCEEDED(NS_InitEmbedding(nsnull, nsnull,
+                                        kPStaticModules, kStaticModuleCount))) {
         // Register new chrome
         nsCOMPtr<nsIChromeRegistry> chromeReg =
           do_GetService("@mozilla.org/chrome/chrome-registry;1");

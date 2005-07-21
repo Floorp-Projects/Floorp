@@ -64,7 +64,7 @@ $nofilelocks = 1 if defined($::opt_l);
 $file = shift;
 
 undef @entrylist;
-while ($entry = shift) {
+while (defined($entry = shift)) {
     push @entrylist, $entry;
 }
 

@@ -75,6 +75,7 @@
 // app component registration
 #include <nsIGenericFactory.h>
 #include <nsIComponentRegistrar.h>
+#include "nsStaticComponents.h"
 
 // all of our local includes
 #include "EmbedPrivate.h"
@@ -95,10 +96,9 @@
 #include "nsIDOMDocument.h"
 #endif
 
-#ifdef _BUILD_STATIC_BIN
-#include "nsStaticComponent.h"
-nsresult PR_CALLBACK
-gtk_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
+#ifndef _BUILD_STATIC_BIN
+nsStaticModuleInfo const *const kPStaticModules = nsnull;
+PRUint32 const kStaticModuleCount = 0;
 #endif
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -495,12 +495,7 @@ EmbedPrivate::PushStartup(void)
 	return;
     }
 
-#ifdef _BUILD_STATIC_BIN
-    // Initialize XPCOM's module info table
-    NSGetStaticModuleInfo = gtk_getModuleInfo;
-#endif
-
-    rv = NS_InitEmbedding(binDir, sAppFileLocProvider);
+    rv = NS_InitEmbedding(binDir, sAppFileLocProvider, kPStaticModules, kStaticModuleCount);
     if (NS_FAILED(rv))
       return;
 

@@ -51,6 +51,7 @@
 
 class nsStringContainer;
 class nsCStringContainer;
+class nsIComponentLoader;
 
 /**
  * Private Method to register an exit routine.  This method
@@ -84,6 +85,7 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine);
 
 // PUBLIC
 typedef nsresult   (* InitFunc)(nsIServiceManager* *result, nsIFile* binDirectory, nsIDirectoryServiceProvider* appFileLocationProvider);
+typedef nsresult   (* Init3Func)(nsIServiceManager* *result, nsIFile* binDirectory, nsIDirectoryServiceProvider* appFileLocationProvider, nsStaticModuleInfo const *staticComponents, PRUint32 componentCount);
 typedef nsresult   (* ShutdownFunc)(nsIServiceManager* servMgr);
 typedef nsresult   (* GetServiceManagerFunc)(nsIServiceManager* *result);
 typedef nsresult   (* GetComponentManagerFunc)(nsIComponentManager* *result);
@@ -172,7 +174,7 @@ typedef struct XPCOMFunctions{
     CStringContainerInit2Func cstringContainerInit2;
     StringGetMutableDataFunc stringGetMutableData;
     CStringGetMutableDataFunc cstringGetMutableData;
-   
+    Init3Func init3;
 } XPCOMFunctions;
 
 typedef nsresult (PR_CALLBACK *GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints, const char* libraryPath);
@@ -249,6 +251,9 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 #endif
 #endif
 
+nsresult
+NewStaticComponentLoader(nsStaticModuleInfo const *aStaticModules,
+                         PRUint32 aStaticModuleCount,
+                         nsIComponentLoader **retval);
+
 #endif
-
-

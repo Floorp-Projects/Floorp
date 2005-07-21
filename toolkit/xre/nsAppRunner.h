@@ -58,6 +58,7 @@
 
 class nsACString;
 struct nsXREAppData;
+struct nsStaticModuleInfo;
 
 class nsINativeAppSupport;
 class nsICmdLineService;

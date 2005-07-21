@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #  Brian Ryner <bryner@brianryner.com>
+#  Benjamin Smedberg <benjamin@smedbergs.us>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -171,7 +172,20 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES +=  -I$(topsrcdir)/xpfe/bootstrap -I$(srcdir)/../profile/src
+ifdef BUILD_STATIC_LIBS
+export::
+	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_COMP_NAMES) Apprunner
+#	embedding/browser/gtk/src/Makefile.in sucks! we need to add an empty line to 
+# FINAL_LINK_COMPS to keep the two lists in sync :-(
+	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_COMPS) ""
+endif
+
+LOCAL_INCLUDES += \
+	-I$(topsrcdir)/xpfe/bootstrap \
+	-I$(srcdir)/../profile/src \
+	-I$(topsrcdir)/config \
+	$(NULL)
+
 CXXFLAGS += $(TK_CFLAGS)
 
 ifdef BUILD_STATIC_LIBS

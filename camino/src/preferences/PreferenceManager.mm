@@ -55,12 +55,11 @@
 #include "AppDirServiceProvider.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIRegistry.h"
+#include "nsStaticComponents.h"
 
-
-#ifdef _BUILD_STATIC_BIN
-#include "nsStaticComponent.h"
-nsresult PR_CALLBACK
-app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
+#ifndef _BUILD_STATIC_BIN
+nsStaticModuleInfo const *const kPStaticModules = nsnull;
+PRUint32 const kStaticModuleCount = 0;
 #endif
 
 // This is an arbitrary version stamp that gets written to the prefs file.
@@ -215,11 +214,6 @@ static BOOL gMadePrefManager;
 
 - (BOOL)initMozillaPrefs
 {
-#ifdef _BUILD_STATIC_BIN
-    // Initialize XPCOM's module info table
-    NSGetStaticModuleInfo = app_getModuleInfo;
-#endif
-
     nsresult rv;
 
     NSString *path = [[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent];
@@ -249,7 +243,8 @@ static BOOL gMadePrefManager;
     if (!provider) return NO;
 
     nsCOMPtr<nsIDirectoryServiceProvider> dirProvider = (nsIDirectoryServiceProvider*)provider;
-    rv = NS_InitEmbedding(binDir, dirProvider);
+    rv = NS_InitEmbedding(binDir, dirProvider,
+                          kPStaticModules, kStaticModuleCount);
     if (NS_FAILED(rv)) {
       NSLog(@"Embedding init failed.");
       return NO;

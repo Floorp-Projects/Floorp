@@ -11383,11 +11383,11 @@
 		};
 		82180AC907368BDF002EFA6D = {
 			isa = PBXFileReference;
-			lastKnownFileType = "compiled.mach-o.bundle";
+			lastKnownFileType = file;
 			name = libcomposer.dylib;
-			path = ../dist/bin/components/libcomposer.dylib;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
+			path = ../../dist/bin/components/libcomposer.dylib;
+			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		82180ACB07368BF2002EFA6D = {
 			fileRef = 82180AC907368BDF002EFA6D;

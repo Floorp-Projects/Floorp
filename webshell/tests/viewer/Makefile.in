@@ -227,7 +227,6 @@ endif # BUILD_STATIC_LIBS
 
 include $(topsrcdir)/config/rules.mk
 
-
 ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
 endif # BUILD_STATIC_LIBS

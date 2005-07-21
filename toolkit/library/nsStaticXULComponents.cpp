@@ -41,9 +41,11 @@
 #define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
 
 #include "nsIGenericFactory.h"
-#include "nsStaticComponent.h"
+#include "nsXPCOM.h"
+#include "nsStaticComponents.h"
+#include "nsMemory.h"
 
-#define NSGETMODULE(_name) _name##_NSGetmodule
+#define NSGETMODULE(_name) _name##_NSGetModule
 
 #ifdef MOZ_MATHML
 #define MATHML_MODULES MODULE(nsUCvMathModule)
@@ -184,6 +186,7 @@
     MODULE(nsMorkModule)                     \
     MODULE(nsFindComponent)                  \
     MODULE(application)                      \
+    MODULE(Apprunner)                        \
     MODULE(CommandLineModule)                \
     MODULE(nsToolkitCompsModule)             \
     XREMOTE_MODULES                          \
@@ -191,36 +194,21 @@
     MODULE(JavaScript_Debugger)              \
     /* end of list */
 
-#define MODULE(_name)                                           \
-extern nsModuleInfo NSMODULEINFO(_name);                        \
-extern "C" nsresult                                             \
-NSGETMODULE(_name) (nsIComponentManager* aCompMgr,              \
-                    nsIFile*             aLocation,             \
-                    nsIModule**          aResult)               \
-{ return NS_NewGenericModule2(&NSMODULEINFO(_name), aResult); }
+#define MODULE(_name) \
+NSGETMODULE_ENTRY_POINT(_name) (nsIComponentManager*, nsIFile*, nsIModule**);
 
 XUL_MODULES
 
 #undef MODULE
 
-#define MODULE(_name) { (#_name), NSGETMODULE(_name) },
+#define MODULE(_name) { #_name, NSGETMODULE(_name) },
 
 /**
  * The nsStaticModuleInfo
  */
-static nsStaticModuleInfo gStaticModuleInfo[] = {
+static nsStaticModuleInfo const gStaticModuleInfo[] = {
 	XUL_MODULES
 };
 
-/**
- * Our NSGetStaticModuleInfoFunc
- */
-static nsresult PR_CALLBACK
-xul_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count)
-{
-  *info = gStaticModuleInfo;
-  *count = sizeof(gStaticModuleInfo) / sizeof(gStaticModuleInfo[0]);
-  return NS_OK;
-}
-
-NS_EXPORT NSGetStaticModuleInfoFunc NSGetStaticModuleInfo = &xul_getModuleInfo;
+nsStaticModuleInfo const *const kPStaticModules = gStaticModuleInfo;
+PRUint32 const kStaticModuleCount = NS_ARRAY_LENGTH(gStaticModuleInfo);

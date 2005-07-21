@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -41,6 +42,9 @@
 #include "nsIFactory.h"
 #include "nsIModule.h"
 #include "nsIClassInfo.h"
+
+class nsIFile;
+class nsIComponentManager;
 
 // {3bc97f01-ccdf-11d2-bab8-b548654461fc}
 #define NS_GENERICFACTORY_CID                                                 \
@@ -283,7 +287,7 @@ typedef void (PR_CALLBACK *nsModuleDestructorProc) (nsIModule *self);
 struct nsModuleInfo {
     PRUint32                mVersion;
     const char*             mModuleName;
-    const nsModuleComponentInfo*  mComponents;
+    const nsModuleComponentInfo *mComponents;
     PRUint32                mCount;
     nsModuleConstructorProc mCtor;
     nsModuleDestructorProc  mDtor;
@@ -301,7 +305,7 @@ struct nsModuleInfo {
  * one of its relatives, rather than using this directly.
  */
 NS_COM_GLUE nsresult
-NS_NewGenericModule2(nsModuleInfo *info, nsIModule* *result);
+NS_NewGenericModule2(nsModuleInfo const *info, nsIModule* *result);
 
 /**
  * Obsolete. Use NS_NewGenericModule2() instead.
@@ -314,20 +318,9 @@ NS_NewGenericModule(const char* moduleName,
                     nsIModule* *result);
 
 #if defined(XPCOM_TRANSLATE_NSGM_ENTRY_POINT)
-#  define NS_MODULEINFO                   nsModuleInfo
-#  define NSMODULEINFO(_name)             _name##_gModuleInfo
-#  define NSGETMODULE_ENTRY_POINT(_info)
+#  define NSGETMODULE_ENTRY_POINT(_name)  NS_VISIBILITY_HIDDEN nsresult _name##_NSGetModule
 #else
-#  define NS_MODULEINFO                   static nsModuleInfo
-#  define NSMODULEINFO(_name)             gModuleInfo
-#  define NSGETMODULE_ENTRY_POINT(_info)                                      \
-extern "C" NS_EXPORT nsresult                                                 \
-NSGetModule(nsIComponentManager *servMgr,                                     \
-            nsIFile* location,                                                \
-            nsIModule** result)                                               \
-{                                                                             \
-    return NS_NewGenericModule2(&(_info), result);                            \
-}
+#  define NSGETMODULE_ENTRY_POINT(_name)  extern "C" NS_EXPORT nsresult NSGetModule
 #endif
 
 /** 
@@ -346,7 +339,7 @@ NSGetModule(nsIComponentManager *servMgr,                                     \
     NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, nsnull, _dtor)
 
 #define NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, _ctor, _dtor)  \
-NS_MODULEINFO NSMODULEINFO(_name) = {                                         \
+static nsModuleInfo const kModuleInfo = {                                     \
     NS_MODULEINFO_VERSION,                                                    \
     (#_name),                                                                 \
     (_components),                                                            \
@@ -354,7 +347,13 @@ NS_MODULEINFO NSMODULEINFO(_name) = {                                         \
     (_ctor),                                                                  \
     (_dtor)                                                                   \
 };                                                                            \
-NSGETMODULE_ENTRY_POINT(NSMODULEINFO(_name))
+NSGETMODULE_ENTRY_POINT(_name)                                                \
+(nsIComponentManager *servMgr,                                                \
+            nsIFile* location,                                                \
+            nsIModule** result)                                               \
+{                                                                             \
+    return NS_NewGenericModule2(&kModuleInfo, result);                        \
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

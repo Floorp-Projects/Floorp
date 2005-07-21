@@ -45,7 +45,7 @@
 
 #ifdef MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING
 
-nsresult NS_HandleEmbeddingEvent(nsEmbedNativeEvent &aEvent, PRBool &aWasHandled)
+NS_METHOD NS_HandleEmbeddingEvent(nsEmbedNativeEvent &aEvent, PRBool &aWasHandled)
 {
     aWasHandled = PR_FALSE;
     return NS_OK;

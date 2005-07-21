@@ -52,7 +52,7 @@ STATIC_EXTRA_LIBS += \
 	$(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_LIBS)))) \
 	$(NULL)
 
-STATIC_COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
+STATIC_COMPONENT_LIST = $(shell cat $(FINAL_LINK_COMP_NAMES))
 
 STATIC_EXTRA_DEPS	+= $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/components/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_COMPS)))) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_LIBS))))
 
@@ -132,3 +132,4 @@ ifeq ($(OS_ARCH),AIX)
 STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME,odm cfg)
 endif
 
+LOCAL_INCLUDES += -I$(topsrcdir)/config
