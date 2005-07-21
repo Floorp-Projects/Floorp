@@ -547,14 +547,14 @@ ScopedXPCOMStartup::~ScopedXPCOMStartup()
 }
 
 // {95d89e3e-a169-41a3-8e56-719978e15b12}
-static const nsCID kAppInfoCID =
-  { 0x95d89e3e, 0xa169, 0x41a3, { 0x8e, 0x56, 0x71, 0x99, 0x78, 0xe1, 0x5b, 0x12 } };
+#define APPINFO_CID \
+  { 0x95d89e3e, 0xa169, 0x41a3, { 0x8e, 0x56, 0x71, 0x99, 0x78, 0xe1, 0x5b, 0x12 } }
 
 static nsModuleComponentInfo kComponents[] =
 {
   {
     "nsXULAppInfo",
-    kAppInfoCID,
+    APPINFO_CID,
     XULAPPINFO_SERVICE_CONTRACTID,
     AppInfoConstructor
   }
