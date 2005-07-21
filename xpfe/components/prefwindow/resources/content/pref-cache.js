@@ -8,15 +8,15 @@ const nsIProperties       = Components.interfaces.nsIProperties;
 const kCacheParentDirPref = "browser.cache.disk.parent_directory";
 
 var gFolderField;
-var dir;
+var gCacheParentDirectory;
 
 function Startup()
 {
   var prefWindow = parent.hPrefWindow;
   gFolderField = document.getElementById("browserCacheDiskCacheFolder");
 
-  dir = prefWindow.getPref("localfile", kCacheParentDirPref);
-  if (dir == "!/!ERROR_UNDEFINED_PREF!/!")
+  gCacheParentDirectory = prefWindow.getPref("localfile", kCacheParentDirPref);
+  if (gCacheParentDirectory == "!/!ERROR_UNDEFINED_PREF!/!")
   {
     try
     {
@@ -24,19 +24,19 @@ function Startup()
       var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
                              .getService(nsIProperties);
       if (dirSvc.has("ProfLD"))
-        dir = dirSvc.get("ProfLD", nsILocalFile);
+        gCacheParentDirectory = dirSvc.get("ProfLD", nsILocalFile);
       else
-        dir = dirSvc.get("ProfD", nsILocalFile);
+        gCacheParentDirectory = dirSvc.get("ProfD", nsILocalFile);
     }
     catch (ex)
     {
-      dir = null;
+      gCacheParentDirectory = null;
     }
   }
 
   // if both pref and dir svc fail leave this field blank else show directory
-  if (dir)
-    gFolderField.value = (/Mac/.test(navigator.platform)) ? dir.leafName : dir.path;
+  if (gCacheParentDirectory)
+    gFolderField.value = (/Mac/.test(navigator.platform)) ? gCacheParentDirectory.leafName : gCacheParentDirectory.path;
 
   document.getElementById("chooseDiskCacheFolder").disabled =
     prefWindow.getPrefIsLocked(kCacheParentDirPref);
@@ -53,7 +53,7 @@ function prefCacheSelectFolder()
 
   fp.init(window, title, nsIFilePicker.modeGetFolder);
 
-  fp.displayDirectory = dir;
+  fp.displayDirectory = gCacheParentDirectory;
 
   fp.appendFilters(nsIFilePicker.filterAll);
   var ret = fp.show();
@@ -62,6 +62,8 @@ function prefCacheSelectFolder()
     var localFile = fp.file.QueryInterface(nsILocalFile);
     prefWindow.setPref("localfile", kCacheParentDirPref, localFile);
     gFolderField.value = (/Mac/.test(navigator.platform)) ? fp.file.leafName : fp.file.path;
+
+    gCacheParentDirectory = fp.file;
   }
 }
 
