@@ -57,10 +57,12 @@ class AddOn extends AMO_Object
     var $History;
 
     /**
-     * Class constructor.
-     */
-     function AddOn($ID=null) 
-     {
+    * Class constructor.
+    * 
+    * @param int $ID AddOn ID
+    */
+    function AddOn($ID=null) 
+    {
         // Our DB and Smarty objects are global to save cycles.
         global $db, $tpl;
 
@@ -70,63 +72,22 @@ class AddOn extends AMO_Object
 
         // If $ID is set, attempt to retrieve data.
         if (!empty($ID)) {
-            $this->getAddOn($ID);
+            $this->ID = $ID;
+            $this->getAddOn();
         }
-     }
+    }
 
-     function getAddOn($ID)
-     {
-        // Gather addons metadata, user info.
-        $this->db->query("
-            SELECT 
-                main.*,
-                userprofiles.UserID,
-                userprofiles.UserName,
-                userprofiles.UserEmail,
-                userprofiles.UserWebsite,
-                userprofiles.UserEmailHide
-            FROM 
-                main 
-            INNER JOIN authorxref ON authorxref.ID = main.ID
-            INNER JOIN userprofiles ON userprofiles.UserID = authorxref.UserID
-            WHERE 
-                main.ID = '{$ID}'
-        ", SQL_INIT, SQL_ASSOC);
-
-        if (!empty($this->db->record)) {
-            $this->setVars($this->db->record);
-        }
-
-        // Gather version information for most current version.
-        $this->db->query("
-            SELECT 
-                version.vID, 
-                version.Version, 
-                version.MinAppVer, 
-                version.MaxAppVer, 
-                version.Size, 
-                version.URI, 
-                version.Notes, 
-                version.DateAdded as VersionDateAdded,
-                applications.AppName, 
-                os.OSName
-            FROM  
-                version
-            INNER JOIN applications ON version.AppID = applications.AppID
-            INNER JOIN os ON version.OSID = os.OSID
-            WHERE 
-                version.ID = '{$ID}' AND 
-                version.approved = 'YES'
-            ORDER BY
-                version.DateAdded DESC
-            LIMIT 1
-        ", SQL_INIT, SQL_ASSOC);
-
-        if (!empty($this->db->record)) {
-            $this->setVars($this->db->record);
-        }
-
-
+    function getAddOn()
+    {
+        $this->getCats();
+        $this->getComments();
+        $this->getCurrentVersion();
+        $this->getMainPreview();
+        $this->getUserInfo();
+    }
+    
+    function getMainPreview()
+    {
         // Gather previews information.
         $this->db->query(" 
             SELECT
@@ -136,7 +97,7 @@ class AddOn extends AMO_Object
             FROM
                 previews
             WHERE
-                ID = '{$ID}' AND
+                ID = '{$this->ID}' AND
                 preview = 'YES'
             LIMIT 1
         ", SQL_INIT, SQL_ASSOC);
@@ -144,77 +105,41 @@ class AddOn extends AMO_Object
         if (!empty($this->db->record)) {
             $this->setVars($this->db->record);
         }
+    }
 
-        // Gather 10 latest comments.
+    function getPreviews()
+    {
+        // Gather preview information
         $this->db->query("
             SELECT
-	        CommentID,
-                CommentName,
-                CommentTitle,
-                CommentNote,
-                CommentDate,
-                CommentVote
+                PreviewURI,
+                caption
             FROM
-                feedback
+                previews
             WHERE
-                ID = '{$ID}' AND
-                CommentNote IS NOT NULL
+                ID = {$this->ID} AND
+                preview = 'NO'
             ORDER BY
-                CommentDate DESC
-            LIMIT 5
-        ", SQL_ALL, SQL_ASSOC);
-        
-        $this->setVar('Comments',$this->db->record);
+                PreviewID ASC
+        ", SQL_NONE);
 
-        // Gather addon categories.
-        $this->db->query("
-            SELECT DISTINCT
-                categories.CatName
-            FROM
-                categoryxref
-            INNER JOIN categories ON categoryxref.CategoryID = categories.CategoryID 
-            INNER JOIN main ON categoryxref.ID = main.ID
-            WHERE
-                categoryxref.ID = {$ID}
-            ORDER BY
-                categories.CatName
-        ", SQL_ALL, SQL_ASSOC);
-
-        $this->Cats = $this->db->record;
+        while ($this->db->next(SQL_ASSOC)) {
+            $result = $this->db->record;
+            $uri = $result['PreviewURI'];
+            list($src_width, $src_height, $type, $attr) = getimagesize(ROOT_PATH.$uri);
+            $this->Previews[] = array(
+                'PreviewURI' => $uri,
+                'caption' => $result['caption'],
+                'width' => $src_width,
+                'height' => $src_height
+            );
+        }
     }
-    
-     function getPreviews()
-     {
-          // Gather preview information
-          $this->db->query("
-              SELECT
-                  PreviewURI,
-                  caption
-              FROM
-                  previews
-              WHERE
-                  ID = {$this->ID} AND
-                  preview = 'NO'
-              ORDER BY
-                  PreviewID ASC
-          ", SQL_NONE);
-          while ($this->db->next(SQL_ASSOC)) {
-              $result = $this->db->record;
-              $uri = $result['PreviewURI'];
-              list($src_width, $src_height, $type, $attr) = getimagesize(ROOT_PATH.$uri);
-              $this->Previews[] = array(
-                  'PreviewURI' => $uri,
-                  'caption' => $result['caption'],
-                  'width' => $src_width,
-                  'height' => $src_height
-              );
-          }
-     }
      
-     function getHistory()
-     {
-         // Gather history of an addon
-         $this->db->query("
+    function getHistory()
+    {
+        // Gather history of an addon
+        $this->db->query("
              SELECT
                  TV.vID,
                  TV.Version,
@@ -235,9 +160,108 @@ class AddOn extends AMO_Object
                 approved = 'YES'
             ORDER BY
                VerDateAdded DESC
-          ", SQL_ALL, SQL_ASSOC);
-          
-          $this->History = $this->db->record;
-     }
+        ", SQL_ALL, SQL_ASSOC);
+
+        $this->History = $this->db->record;
+    }
+
+    function getCurrentVersion()
+    {
+        // Gather version information for most current version.
+        $this->db->query("
+            SELECT 
+                version.vID, 
+                version.Version, 
+                version.MinAppVer, 
+                version.MaxAppVer, 
+                version.Size, 
+                version.URI, 
+                version.Notes, 
+                version.DateAdded as VersionDateAdded,
+                applications.AppName, 
+                os.OSName
+            FROM  
+                version
+            INNER JOIN applications ON version.AppID = applications.AppID
+            INNER JOIN os ON version.OSID = os.OSID
+            WHERE 
+                version.ID = '{$this->ID}' AND 
+                version.approved = 'YES'
+            ORDER BY
+                version.DateAdded DESC
+            LIMIT 1
+        ", SQL_INIT, SQL_ASSOC);
+
+        if (!empty($this->db->record)) {
+            $this->setVars($this->db->record);
+        }
+    }
+
+    function getUserInfo()
+    {
+        // Gather addons metadata, user info.
+        $this->db->query("
+            SELECT 
+                main.*,
+                userprofiles.UserID,
+                userprofiles.UserName,
+                userprofiles.UserEmail,
+                userprofiles.UserWebsite,
+                userprofiles.UserEmailHide
+            FROM 
+                main 
+            INNER JOIN authorxref ON authorxref.ID = main.ID
+            INNER JOIN userprofiles ON userprofiles.UserID = authorxref.UserID
+            WHERE 
+                main.ID = '{$this->ID}'
+        ", SQL_INIT, SQL_ASSOC);
+
+        if (!empty($this->db->record)) {
+            $this->setVars($this->db->record);
+        }
+    }
+
+    function getComments($limit=5)
+    {
+        // Gather 10 latest comments.
+        $this->db->query("
+            SELECT
+	        CommentID,
+                CommentName,
+                CommentTitle,
+                CommentNote,
+                CommentDate,
+                CommentVote
+            FROM
+                feedback
+            WHERE
+                ID = '{$this->ID}' AND
+                CommentNote IS NOT NULL
+            ORDER BY
+                CommentDate DESC
+            LIMIT {$limit}
+        ", SQL_ALL, SQL_ASSOC);
+        
+        $this->setVar('Comments',$this->db->record);
+    }
+
+    function getCats()
+    {
+        // Gather addon categories.
+        $this->db->query("
+            SELECT DISTINCT
+                categories.CatName
+            FROM
+                categoryxref
+            INNER JOIN categories ON categoryxref.CategoryID = categories.CategoryID 
+            INNER JOIN main ON categoryxref.ID = main.ID
+            WHERE
+                categoryxref.ID = {$this->ID}
+            ORDER BY
+                categories.CatName
+        ", SQL_ALL, SQL_ASSOC);
+
+        $this->Cats = $this->db->record;
+    }
 }
 ?>

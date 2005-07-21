@@ -69,6 +69,10 @@
 	font-family: tahoma, arial, sans-serif;
 } 
 
+#search {
+    margin-top: 15px;
+}
+
 .popularlist {
 	font-size: 85%;
 }

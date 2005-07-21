@@ -1,11 +1,10 @@
-<h2><strong>{$addon->Name}</strong></h2>
+<h2><strong>{$addon->Name}</strong> &raquo; Version History</h2>
 <p class="first">
 <strong><a href="./addon.php?id={$addon->ID}">{$addon->Name} {$addon->Version}</a></strong>,
 by <a href="./author.php?id={$addon->UserID}">{$addon->UserName}</a>,
 released on {$addon->VersionDateAdded|date_format}
 </p>
 
-<h3>History of {$addon->Name}</h3>
 {section name=version loop=$addon->History}
 <div>
 <h3><a href="addon.php?id={$addon->ID}&amp;vid=$vid">{$addon->Name} {$addon->History[version].Version}</a></h3>

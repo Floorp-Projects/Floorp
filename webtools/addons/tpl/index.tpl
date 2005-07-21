@@ -1,63 +1,74 @@
+<div class="tabs">
+<ul>
+{section name=tabs loop=$tabs}
+{if $tabs[tabs].app eq $app}
+<li><a href="./?app={$tabs[tabs].app|escape}" class="active-tab">{$tabs[tabs].app|escape}</a></li>
+{else}
+<li><a href="./?app={$tabs[tabs].app|escape}">{$tabs[tabs].app|escape}</a></li>
+{/if}
+{/section}
+</ul>
+</div>
 
 <div id="mainContent" class="right">
-<h2>What is Mozilla Update?</h2>
+<h2>Newest {$app} Addons</h2>
+<ol class="popularlist">
+{section name=new loop=$newest}
+<li>
+<a href="./addon.php?id={$newest[new].ID}">{$newest[new].Name} {$newest[new].Version}</a> ({$newest[new].DateAdded|date_format}) - {$newest[new].Description|escape} ...
+</li>
+{/section}
+</ol>
+<p><strong><a href="./search.php?app={$app}&amp;cat=Newest">More ...</a></strong></p>
 
-<p class="first">Mozilla Update is the place to get updates and extras for
-your <a href="http://www.mozilla.org/">Mozilla</a> products.</p>
+<h2>Popular {$app} Extensions</h2>
+<ol class="popularlist">
+{section name=pe loop=$popularExtensions}
+<li>
+<a href="./addon.php?id={$popularExtensions[pe].id}">{$popularExtensions[pe].name}</a> <span class="downloads">({$popularExtensions[pe].Rating} rating, {$popularExtensions[pe].dc} downloads)</span> - {$popularExtensions[pe].Description|escape} ...
+</li>
+{/section}
+</ol>
+<p><strong><a href="./search.php?app={$app}&amp;cat=Popular&amp;type=E">More ...</a></strong></p>
 
-<h2>What can I find here?</h2>
-<dl>
-<dt>Extensions</dt>
-<dd>Extensions are small add-ons that add new functionality to your
-Mozilla program. They can add anything from a toolbar button to a
-completely new feature. Browse extensions for: 
-<a href="./overview.php?app=firefox">Firefox</a>, 
-<a href="./overview.php?app=thunderbird">Thunderbird</a>,
-<a href="./overview.php?app=mozilla">Mozilla Suite</a>
-</dd>
-
-<dt>Themes</dt>
-<dd>Themes allow you to change the way your Mozilla program looks. 
-New graphics and colors. Browse themes for: 
-<a href="./overview.php?app=firefox">Firefox</a>,
-<a href="./overview.php?app=thunderbird">Thunderbird</a>,
-<a href="./overview.php?app=mozilla">Mozilla Suite</a>
-</dd>
-
-<dt>Plugins</dt>
-<dd>Plugins are programs that allow websites to provide content to
-you and have it appear in your browser. Examples of Plugins are Flash,
-RealPlayer, and Java. Browse plug-ins for: 
-<a href="https://pfs.mozilla.org/plugins/">Mozilla Suite &amp; Firefox</a>
-</dd>
-</dl>
+<h2>Popular {$app} Themes</h2>
+<ol class="popularlist">
+{section name=pt loop=$popularThemes}
+<li><a href="./addon.php?id={$popularThemes[pt].id}">{$popularThemes[pt].name}</a> <span class="downloads">({$popularThemes[pt].Rating} rating, {$popularThemes[pt].dc} downloads)</span> - {$popularThemes[pt].Description|escape} ...</li>
+{/section}
+</ol>
+<p><strong><a href="./search.php?app={$app}&amp;cat=Popular&amp;type=T">More ...</a></strong></p>
 </div>
 <!-- end mainContent -->
 
 <div id="side" class="right">
+<h2>What is <kbd>addons.mozilla.org</kbd>?</h2>
+<p><a href="./"><kbd>addons.mozilla.org</kbd></a> is the place to get updates and extras for
+your <a href="http://www.mozilla.org/">Mozilla</a> products.</p>
 
-{include file='inc/search-block.tpl'}
+<h2>What can I find here?</h2>
+<dl>
+<dt><a href="./search.php?app={$app}&amp;type=E">Extensions</a></dt>
+<dd>Extensions are small add-ons that add new functionality to your
+Mozilla program. They can add anything from a toolbar button to a
+completely new feature.</dd>
 
-<h2>Popular Extensions</h2>
-<ol class="popularlist">
-{section name=pe loop=$popularExtensions}
-<li><a href="./addon.php?id={$popularExtensions[pe].id}">{$popularExtensions[pe].name}</a> <span class="downloads">({$popularExtensions[pe].dc} downloads)</span></li>
-{/section}
-</ol>
+<dt><a href="./search.php?app={$app}&amp;type=T">Themes</a></dt>
+<dd>Themes allow you to change the way your Mozilla program looks. 
+New graphics and colors.</dd>
 
-<h2>Popular Themes</h2>
-<ol class="popularlist">
-{section name=pt loop=$popularThemes}
-<li><a href="./addon.php?id={$popularThemes[pt].id}">{$popularThemes[pt].name}</a> <span class="downloads">({$popularThemes[pt].dc} downloads)</span></li>
-{/section}
-</ol>
+<dt><a href="https://pfs.mozilla.org/plugins/">Plugins</a></dt>
+<dd>Plugins are programs that allow websites to provide content to
+you and have it appear in your browser. Examples of Plugins are Flash,
+RealPlayer, and Java.</dd>
+</dl>
 
-<h2>Newest Addons</h2>
-<ol class="popularlist">
-{section name=new loop=$newest}
-<li><a href="./addon.php?id={$newest[new].ID}">{$newest[new].Name} {$newest[new].Version}</a> ({$newest[new].DateAdded|date_format})</li>
-{/section}
-</ol>
+<h2>How can I contribute?</h2>
+<ul>
+<li><a href="#">Help us review new Addons.</a></li>
+<li><a href="#">Develop your own Addon.</a></li>
+<li><a href="#">Report a problem with an Addon.</a></li>
+<li><a href="#">Make suggestions or comments about this site.</a></li>
+</ul>
 </div>
 <!-- end side -->
-

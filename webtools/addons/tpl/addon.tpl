@@ -1,7 +1,7 @@
+<h2><strong>{$addon->Name}</strong> &raquo; Overview</h2>
 
 <script language="Javascript" type="text/javascript" src="/js/auto.js"></script>
 
-<h2><strong>{$addon->Name}</strong></h2>
 <p class="first">
 <strong><a href="./addon.php?id={$addon->ID}">{$addon->Name} {$addon->Version}</a></strong>,
 by <a href="./author.php?id={$addon->UserID}">{$addon->UserName}</a>,
@@ -29,7 +29,7 @@ Requires: {$addon->AppName} 1.0 - 1.0+ <img src="{$config.webpath}/img/{$addon->
 
 <h3 id="user-comments">User Comments</h3>
 
-<p><strong><a href="./addcomment.php?id={$addon->ID}">Add your own opinion &#187;</a></strong></p>
+<p><strong><a href="./addcomment.php?id={$addon->ID}">Add your own comment &#187;</a></strong></p>
 
 <ul id="opinions">
 {section name=comments loop=$addon->Comments max=10}
@@ -42,7 +42,7 @@ Requires: {$addon->AppName} 1.0 - 1.0+ <img src="{$config.webpath}/img/{$addon->
 {/section}
 </ul>
 
-<p><strong><a href="./comments.php?id={$addon->ID}">Read all opinions &#187;</a></strong></p>
+<p><strong><a href="./comments.php?id={$addon->ID}">Read all comments &#187;</a></strong></p>
 
 <h3>Addon Details</h3>
 <ul>

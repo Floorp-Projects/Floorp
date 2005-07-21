@@ -20,6 +20,7 @@ $addon->getHistory();
 // Assign template variables.
 $tpl->assign(
     array(  'addon'     => $addon,
-            'title'     => $addon->Name,
-            'content'   => 'history.tpl')
+            'title'     => $addon->Name.' Version History',
+            'content'   => 'history.tpl',
+            'sidebar'   => 'inc/addon-sidebar.tpl')
 );

@@ -34,20 +34,18 @@
 <!-- end key-title -->
 
 <div id="key-menu"> 
-    <dl id="menu-firefox">
-    <dt><a href="{$config.webpath}/overview.php?app=Firefox">Firefox</a>:</dt>
-    <dd><a href="{$config.webpath}/search.php?app=firefox&amp;type=E" title="Get Extensions for the Firefox Browser">Extensions</a>, <a href="{$config.webpath}/search.php?app=firefox&amp;type=T" title="Get Themes for the Firefox Browser">Themes</a>, <a href="https://pfs.mozilla.org/plugins/" title="Get Plugins for Firefox">Plugins</a></dd>
-
-    </dl>
-    <dl id="menu-thunderbird">
-    <dt><a href="{$config.webpath}/overview.php?app=Thunderbird">Thunderbird</a>:</dt>
-    <dd><a href="{$config.webpath}/search.php?app=thunderbird&amp;type=T" title="Get Extensions for Thunderbird Email">Extensions</a>, <a href="{$config.webpath}/search.php?app=thunderbird&amp;type=T" title="Get Themes for Thunderbird Email">Themes</a></dd>
-    </dl>
-    <dl id="menu-mozillasuite">
-    <dt><a href="{$config.webpath}/overview.php?app=Mozilla">Mozilla Suite</a>:</dt>
-
-    <dd><a href="{$config.webpath}/search.php?app=mozilla&amp;type=E" title="Get Extensions for the Mozilla Suite">Extensions</a>, <a href="{$config.webpath}/search.php?app=mozilla&amp;type=T" title="Get Themes for the Mozilla Suite">Themes</a>, <a href="https://pfs.mozilla.org/plugins/" title="Get Plugins for Mozilla Suite">Plugins</a></dd>
-    </dl>
+    <form id="search" method="get" action="{$config.webpath}/search.php" title="Search Mozilla Update">
+    <div>
+        <label for="q" title="Search Mozilla Update">Search</label>
+        <select name="section" id="sectionsearch">
+            <option value="A">Entire Site</option>
+            <option value="E">Extensions</option>
+            <option value="T">Themes</option>
+        </select>
+        <input type="text" id="q" name="q" accesskey="s" size="10">
+        <input type="submit" id="submit" value="Go">
+    </div>
+    </form>
     <div class="ie-clear-menu">&nbsp;</div>
 </div>
 <!-- end key-menu -->

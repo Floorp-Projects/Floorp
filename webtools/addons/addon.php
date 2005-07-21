@@ -20,6 +20,7 @@ $addon = new AddOn($sql['ID']);
 $tpl->assign(
     array(  'addon'     => $addon,
             'title'     => $addon->Name,
-            'content'   => 'addon.tpl')
+            'content'   => 'addon.tpl',
+            'sidebar'   => 'inc/addon-sidebar.tpl')
 );
 ?>
