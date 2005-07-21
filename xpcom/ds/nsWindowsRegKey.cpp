@@ -576,13 +576,13 @@ nsWindowsRegKey::WriteStringValue(const nsAString &name, const nsAString &value)
 
     rv = RegSetValueExW(mKey, PromiseFlatString(name).get(), 0, REG_SZ,
                         (const BYTE *) flatValue.get(),
-                        flatValue.Length() + sizeof(PRUnichar));
+                        (flatValue.Length() + 1) * sizeof(PRUnichar));
   } else {
     PromiseNativeString nativeValue(value);
 
     rv = RegSetValueExA(mKey, PromiseNativeString(name).get(), 0, REG_SZ,
                         (const BYTE *) nativeValue.get(),
-                        nativeValue.Length() + sizeof(char));
+                        (nativeValue.Length() + 1) * sizeof(char));
   }
 
   return (rv == ERROR_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
