@@ -220,7 +220,7 @@ gssInit()
     }
 #ifdef XP_MACOSX
     if (gssNativeImp &&
-            !((PRFuncPtr)KLCacheHasValidTickets_ptr =
+            !(KLCacheHasValidTicketsPtr =
                PR_FindFunctionSymbol(lib, "KLCacheHasValidTickets"))) {
         LOG(("Fail to load KLCacheHasValidTickets function from gssapi library\n"));
         PR_UnloadLibrary(lib);
