@@ -4669,6 +4669,9 @@ nsFrame::GetStyleDataExternal(nsStyleStructID aSID) const
 nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
 {
   PRInt32 tabIndex = -1;
+  if (aTabIndex) {
+    *aTabIndex = -1; // Default for early return is not focusable
+  }
   PRBool isFocusable = PR_FALSE;
 
   if (mContent && mContent->IsContentOfType(nsIContent::eELEMENT) &&
