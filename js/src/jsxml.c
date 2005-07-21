@@ -7800,6 +7800,7 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
     JSStackFrame *fp;
     JSObject *scobj, *listobj, *resobj, *withobj, *kidobj;
     JSXML *xml, *list, *result, *kid;
+    jsval *spbase;
     uint32 i, n;
 
     ok = JS_EnterLocalRootScope(cx);
@@ -7836,6 +7837,9 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
         goto bad;
     fp->scopeChain = withobj;
 
+    /* Save and restore fp->spbase, as js_Interpret sets and clears it. */
+    spbase = fp->spbase;
+
     for (i = 0, n = list->xml_kids.length; i < n; i++) {
         kid = XMLARRAY_MEMBER(&list->xml_kids, i, JSXML);
         kidobj = js_GetXMLObject(cx, kid);
@@ -7858,6 +7862,7 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
     *vp = OBJECT_TO_JSVAL(resobj);
 
 out:
+    fp->spbase = spbase;
     fp->scopeChain = scobj;
     JS_LeaveLocalRootScope(cx);
     return ok;
