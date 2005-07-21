@@ -49,13 +49,6 @@ LIBRARY_NAME	= xpcom
 # want it to find dist/bin and not xpcom/stub so we copy instead of symlinking.
 NSDISTMODE = copy
 
-PACKAGE_FILE = xpcom.pkg
-PACKAGE_VARS += USE_SHORT_LIBNAME
-
-ifdef ENABLE_TESTS
-PACKAGE_FILE += xpcom-tests.pkg
-endif
-
 # Do not set EXPORT_LIBRARY as we do not want xpcom in the static libs list
 #EXPORT_LIBRARY = 1
 GRE_MODULE	= 1
@@ -87,20 +80,36 @@ FORCE_SHARED_LIB = 1
 
 EXTRA_DSO_LDOPTS = $(LIBS_DIR) $(MOZ_FIX_LINK_PATHS)
 
+DEPENDENT_LIBS_LIST += \
+	$(LIB_PREFIX)nspr4$(DLL_SUFFIX) \
+	$(LIB_PREFIX)plc4$(DLL_SUFFIX) \
+	$(LIB_PREFIX)plds4$(DLL_SUFFIX) \
+	$(NULL)
+
 ifdef MOZ_ENABLE_LIBXUL
+
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+DEPENDENT_LIBS_LIST += js$(MOZ_BITS)$(VERSION_NUMBER)$(DLL_SUFFIX)
+else
+DEPENDENT_LIBS_LIST += $(LIB_PREFIX)mozjs$(DLL_SUFFIX)
+endif
 
 ifeq (Darwin,$(OS_ARCH))
 EXTRA_DSO_LDOPTS += $(DIST)/bin/XUL
+DEPENDENT_LIBS_LIST += XUL
 else
 EXTRA_DSO_LIBS = xul
+DEPENDENT_LIBS_LIST += $(LIB_PREFIX)xul$(DLL_SUFFIX)
 endif
 
 else #!MOZ_ENABLE_LIBXUL
 
 ifeq ($(OS_TARGET),OS2)
 EXTRA_DSO_LIBS = xpcomcor
+DEPENDENT_LIBS_LIST += xpcomcor.dll
 else
 EXTRA_DSO_LIBS = xpcom_core
+DEPENDENT_LIBS_LIST += $(LIB_PREFIX)xpcom_core$(DLL_SUFFIX)
 endif
 
 endif
@@ -108,3 +117,9 @@ endif
 EXTRA_DSO_LDOPTS += $(EXTRA_DSO_LIBS) $(NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
+
+libs:: $(FINAL_TARGET)/dependentlibs.list
+
+$(FINAL_TARGET)/dependentlibs.list: Makefile.in
+	$(EXIT_ON_ERROR) \
+	( $(foreach dlib,$(DEPENDENT_LIBS_LIST),echo $(dlib);) ) > $@
