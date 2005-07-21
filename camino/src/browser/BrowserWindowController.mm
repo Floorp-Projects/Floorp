@@ -2648,12 +2648,13 @@ enum BWCOpenDest {
 {
   int curNumTabs	 = [mTabBrowser numberOfTabViewItems];
   int numItems 		 = (int)[urlArray count];
-  int selectedTabIndex   = [[mTabBrowser tabViewItems] indexOfObject:[mTabBrowser selectedTabViewItem]];
+  int selectedTabIndex = [[mTabBrowser tabViewItems] indexOfObject:[mTabBrowser selectedTabViewItem]];
+  BrowserTabViewItem* tabViewToSelect = nil;
   
   for (int i = 0; i < numItems; i++)
   {
     NSString* thisURL = [urlArray objectAtIndex:i];
-    BrowserTabViewItem* tabViewItem;
+    BrowserTabViewItem* tabViewItem = nil;
     
     if (tabPolicy == eReplaceTabs && i < curNumTabs)
       tabViewItem = [mTabBrowser tabViewItemAtIndex: i];
@@ -2666,9 +2667,15 @@ enum BWCOpenDest {
       [mTabBrowser addTabViewItem: tabViewItem];
     }
     
+    if (!tabViewToSelect)
+      tabViewToSelect = tabViewItem;
+
     [[tabViewItem view] loadURI: thisURL referrer:nil
                           flags: NSLoadFlagsNone activate:(i == 0) allowPopups:inAllowPopups];
   }
+  
+  // select the first tab that we changed
+  [mTabBrowser selectTabViewItem:tabViewToSelect];  
 }
 
 -(void) openURLArrayReplacingTabs:(NSArray*)urlArray closeExtraTabs:(BOOL)closeExtra allowPopups:(BOOL)inAllowPopups
