@@ -144,6 +144,7 @@ class AddOn extends AMO_Object
         // Gather 10 latest comments.
         $this->db->query("
             SELECT
+	        CommentID,
                 CommentName,
                 CommentTitle,
                 CommentNote,
