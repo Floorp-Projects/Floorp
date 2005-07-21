@@ -983,13 +983,11 @@ SizeAnchor(nsIContent *aAnchor, PRInt32 aWidth, PRInt32 aHeight)
   nsAutoString tmp;
   tmp.AppendInt(aWidth);
   AppendASCIItoUTF16("px", tmp);
-
   css2props->SetWidth(tmp);
 
   tmp.Truncate();
   tmp.AppendInt(aHeight);
   AppendASCIItoUTF16("px", tmp);
-
   css2props->SetHeight(tmp);
 }
 
@@ -1020,11 +1018,17 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
     if (child) {
       GetDesiredSize(aPresContext, aReflowState, aMetrics);
 
+      // Build a reflow state so we can see what the child's border and
+      // padding are going to be
+      nsHTMLReflowState state(aPresContext, aReflowState, child,
+                              nsSize(aReflowState.availableWidth,
+                                     aReflowState.availableHeight));
+
       float t2p = aPresContext->TwipsToPixels();
+      PRInt32 width = NSTwipsToIntPixels(aMetrics.width - state.mComputedBorderPadding.LeftRight(), t2p);
+      PRInt32 height = NSTwipsToIntPixels(aMetrics.height - state.mComputedBorderPadding.TopBottom(), t2p);
 
-      PRInt32 width = NSTwipsToIntPixels(aMetrics.width, t2p);
-      PRInt32 height = NSTwipsToIntPixels(aMetrics.height, t2p);
-
+      // Set the child's content width and height
       SizeAnchor(child->GetContent(), width, height);
 
       // SizeAnchor() is seriously evil as it ends up setting an
