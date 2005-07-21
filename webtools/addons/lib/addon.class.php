@@ -45,6 +45,7 @@ class AddOn extends AMO_Object
     var $PreviewID;
     var $PreviewURI;
     var $Caption;
+    var $Previews = array(); // Store the information for previews
 
     // Comments.
     var $Comments;
@@ -178,5 +179,33 @@ class AddOn extends AMO_Object
 
         $this->Cats = $this->db->record;
     }
+    
+     function getPreviews()
+     {
+          // Gather preview information
+          $this->db->query("
+              SELECT
+                  PreviewURI,
+                  caption
+              FROM
+                  previews
+              WHERE
+                  ID = {$this->ID} AND
+                  preview = 'NO'
+              ORDER BY
+                  PreviewID ASC
+          ", SQL_NONE);
+          while ($this->db->next(SQL_ASSOC)) {
+              $result = $this->db->record;
+              $uri = $result['PreviewURI'];
+              list($src_width, $src_height, $type, $attr) = getimagesize(ROOT_PATH.$uri);
+              $this->Previews[] = array(
+                  'PreviewURI' => $uri,
+                  'caption' => $result['caption'],
+                  'width' => $src_width,
+                  'height' => $src_height
+              );
+          }
+     }
 }
 ?>
