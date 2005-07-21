@@ -54,18 +54,14 @@
 #define _PR_STAT_HAS_ONLY_ST_ATIME
 #define _PR_HAVE_POSIX_SEMAPHORES
 
-#define uint unsigned int
-
-#undef atoll
-
 #include <sys/select.h>
 #include <sys/poll.h>
 #include <kernel.h>
 
 
 #undef  HAVE_STACK_GROWING_UP
-#undef	HAVE_DLL
-#undef	USE_DLFCN
+#undef  HAVE_DLL
+#undef  USE_DLFCN
 #define NEED_STRFTIME_LOCK
 #define NEED_TIME_R
 #define PT_NO_SIGTIMEDWAIT

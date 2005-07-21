@@ -255,6 +255,8 @@ PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
     }
 #elif defined(IRIX)
     numCpus = sysconf( _SC_NPROC_ONLN );
+#elif defined(RISCOS)
+    numCpus = 1;
 #elif defined(XP_UNIX)
     numCpus = sysconf( _SC_NPROCESSORS_ONLN );
 #else

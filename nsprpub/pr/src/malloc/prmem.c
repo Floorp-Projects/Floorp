@@ -172,6 +172,7 @@ pr_FindSymbolInProg(const char *name)
 {
     /* can't be implemented */
     return NULL;
+}
 
 #endif /* HAVE_DLL */
 
