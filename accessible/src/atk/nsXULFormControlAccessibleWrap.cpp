@@ -104,18 +104,16 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsXULTextFieldAccessibleWrap, nsXULTextFieldAccessi
 
 nsXULTextFieldAccessibleWrap::nsXULTextFieldAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell):
 nsXULTextFieldAccessible(aNode, aShell), nsAccessibleEditableText(aNode)
-{ 
+{
   nsCOMPtr<nsIDOMXULTextBoxElement> textBox(do_QueryInterface(aNode));
   NS_ASSERTION(textBox, "Not a XUL textbox!");
   if (!textBox)
     return;
 
-  nsCOMPtr<nsIDOMHTMLInputElement> inputField;
-  textBox->GetInputField(getter_AddRefs(inputField));
-  if (!inputField)
+  textBox->GetInputField(getter_AddRefs(mTextNode));
+  if (!mTextNode)
     return;
 
-  mTextNode = inputField;
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
   if (!shell)
     return;
@@ -133,7 +131,7 @@ nsXULTextFieldAccessible(aNode, aShell), nsAccessibleEditableText(aNode)
     nsCOMPtr<nsIEditor> editor;
     textFrame->GetEditor(getter_AddRefs(editor));
     SetEditor(editor);
-  } 
+  }
 }
 
 NS_IMETHODIMP nsXULTextFieldAccessibleWrap::GetRole(PRUint32 *aRole)

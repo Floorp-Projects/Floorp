@@ -42,7 +42,9 @@ interface nsIDOMHTMLInputElement;
 [scriptable, uuid(71135B6C-294E-4634-A8E4-A72398F1E72A)]
 interface nsIDOMXULTextBoxElement : nsIDOMXULControlElement
 {
-  readonly attribute nsIDOMHTMLInputElement inputField;
+  // inputField may be any type of editable field, such as an
+  // HTML <input type="text"> or <textarea>
+  readonly attribute nsIDOMNode inputField;
 
   readonly attribute long textLength;
   attribute long maxLength;
