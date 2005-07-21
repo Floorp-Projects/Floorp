@@ -11,10 +11,12 @@
 
 <div id="mBody">
 
+
  {* sidebar gets included if set *}
  {if $sidebar}
  <div id="side">
  {include file=$sidebar}
+ {include file='inc/search-block.tpl'}
  </div>
  {/if}
 

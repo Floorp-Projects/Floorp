@@ -43,9 +43,10 @@
 
 <div id="side" class="right">
 <h2>What is <kbd>addons.mozilla.org</kbd>?</h2>
-
 <p><a href="./"><kbd>addons.mozilla.org</kbd></a> is the place to get updates and extras for
 your <a href="http://www.mozilla.org/">Mozilla</a> products.</p>
+
+{include file='inc/search-block.tpl'}
 
 <h2>What can I find here?</h2>
 <dl>

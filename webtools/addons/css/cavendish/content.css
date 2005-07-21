@@ -210,3 +210,50 @@
     cursor: help;
     border-bottom: 1px dotted;
 }
+
+#search-block:before {
+	line-height: 0.1;
+	font-size: 1px;
+	background: transparent url("../../img/key-point_tr.gif") no-repeat top right;
+	margin: -10px -10px 0 -10px;
+	height: 10px;
+	display: block;
+	border: none;
+	content: url("../../img/key-point_tl.gif");
+}
+
+#search-block{
+	background: #EFF8CE url("../../img/key-point_back.gif") right repeat-y;
+	padding: 10px;
+}
+
+#search-block label{
+    font-weight: bold;
+}
+
+#search-block select {
+    width: 13em;
+}
+
+#search-block input[type=text] {
+    width: 9.2em;
+}
+
+.right #search-block select {
+    width: 20em;
+}
+
+.right #search-block input[type=text] {
+    width: 16.2em;
+}
+
+#search-block:after {
+	display: block;
+	padding-top: 10px;
+	line-height: 0.1;
+	font-size: 1px;
+	content:  url("../../img/key-point_bl.gif");
+	margin: -10px;
+	height: 8px;
+	background: transparent url("../../img/key-point_br.gif") scroll no-repeat bottom right ;
+}

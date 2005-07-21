@@ -156,7 +156,7 @@ class AddOn extends AMO_Object
                 CommentNote IS NOT NULL
             ORDER BY
                 CommentDate DESC
-            LIMIT 10
+            LIMIT 5
         ", SQL_ALL, SQL_ASSOC);
         
         $this->setVar('Comments',$this->db->record);

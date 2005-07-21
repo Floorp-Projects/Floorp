@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/base/template.css" media="screen">
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/cavendish/template.css" title="Cavendish" media="screen">
     <link rel="home" title="Home" href="https://addons.mozilla.org/">
-    <link rel="alternate" type="application/rss+xml" title="New Firefox Extensions Additions" href="../rss/?app=firefox&amp;type=E&amp;list=newest">
+    <link rel="alternate" type="application/rss+xml" title="New Firefox Extensions Additions" href="{$config.webpath}/rss/?app=firefox&amp;type=E&amp;list=newest">
     <link rel="icon" href="/favicon.ico" type="image/png">
 </head>
 
@@ -29,41 +29,22 @@
         <li><a href="{$config.webpath}/" title="Addons Home">home</a></li>
         <li><a href="{$config.webpath}/faq.php" title="Frequently Asked Questions">FAQ</a></li>
         <li><a href="{$config.webpath}/developers/" title="Tools for Addons Developers">developers</a></li>
-        <li>
-        <form id="search" method="get" action="{$config.webpath}/quicksearch.php" title="Search Mozilla Update">
-        <div>
-            <label for="q" title="Search Mozilla Update">search:</label>
-            <input type="text" id="q" name="q" accesskey="s" size="10">
-            <select name="section" id="sectionsearch">
-                <option value="A">Entire Site</option>
-
-                <option value="E">Extensions</option>
-                <option value="T">Themes</option>
-                {*
-                <option value="P">Plugins</option>
-                <option value="S">Search Engines</option>
-                *}
-            </select>
-            <input type="submit" id="submit" value="Go">
-        </div>
-        </form>
-        </li>
     </ul>
 </div>
 <!-- end key-title -->
 
 <div id="key-menu"> 
     <dl id="menu-firefox">
-    <dt><a href="./overview.php?app=Firefox">Firefox</a>:</dt>
+    <dt><a href="{$config.webpath}/overview.php?app=Firefox">Firefox</a>:</dt>
     <dd><a href="{$config.webpath}/search.php?app=firefox&amp;type=E" title="Get Extensions for the Firefox Browser">Extensions</a>, <a href="{$config.webpath}/search.php?app=firefox&amp;type=T" title="Get Themes for the Firefox Browser">Themes</a>, <a href="https://pfs.mozilla.org/plugins/" title="Get Plugins for Firefox">Plugins</a></dd>
 
     </dl>
     <dl id="menu-thunderbird">
-    <dt><a href="./overview.php?app=Thunderbird">Thunderbird</a>:</dt>
+    <dt><a href="{$config.webpath}/overview.php?app=Thunderbird">Thunderbird</a>:</dt>
     <dd><a href="{$config.webpath}/search.php?app=thunderbird&amp;type=T" title="Get Extensions for Thunderbird Email">Extensions</a>, <a href="{$config.webpath}/search.php?app=thunderbird&amp;type=T" title="Get Themes for Thunderbird Email">Themes</a></dd>
     </dl>
     <dl id="menu-mozillasuite">
-    <dt><a href="./overview.php?app=Mozilla">Mozilla Suite</a>:</dt>
+    <dt><a href="{$config.webpath}/overview.php?app=Mozilla">Mozilla Suite</a>:</dt>
 
     <dd><a href="{$config.webpath}/search.php?app=mozilla&amp;type=E" title="Get Extensions for the Mozilla Suite">Extensions</a>, <a href="{$config.webpath}/search.php?app=mozilla&amp;type=T" title="Get Themes for the Mozilla Suite">Themes</a>, <a href="https://pfs.mozilla.org/plugins/" title="Get Plugins for Mozilla Suite">Plugins</a></dd>
     </dl>

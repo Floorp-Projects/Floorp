@@ -35,6 +35,9 @@ RealPlayer, and Java. Browse plug-ins for:
 <!-- end mainContent -->
 
 <div id="side" class="right">
+
+{include file='inc/search-block.tpl'}
+
 <h2>Popular Extensions</h2>
 <ol class="popularlist">
 {section name=pe loop=$popularExtensions}
