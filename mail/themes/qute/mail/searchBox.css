@@ -49,9 +49,7 @@
 }
 
 #quick-search-button  {
-  margin-top: 1px;
-  margin-bottom: 1px;
-  margin-right: 2px;
+  margin: 0 2px 0 0;
 }
 
 .quick-search-button-image {
