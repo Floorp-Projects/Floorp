@@ -3193,6 +3193,20 @@ nsWindow::ConvertBorderStyles(nsBorderStyle aStyle)
 }
 
 NS_IMETHODIMP
+nsWindow::MakeFullScreen(PRBool aFullScreen)
+{
+#if GTK_CHECK_VERSION(2,2,0)
+    if (aFullScreen)
+        gdk_window_fullscreen (mShell->window);
+    else
+        gdk_window_unfullscreen (mShell->window);
+#else
+    HideWindowChrome(aFullScreen);
+#endif
+    return MakeFullScreenInternal(aFullScreen);
+}
+
+NS_IMETHODIMP
 nsWindow::HideWindowChrome(PRBool aShouldHide)
 {
     if (!mShell) {
@@ -3206,12 +3220,6 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     // Sawfish, metacity, and presumably other window managers get
     // confused if we change the window decorations while the window
     // is visible.
-#if GTK_CHECK_VERSION(2,2,0)
-    if (aShouldHide)
-        gdk_window_fullscreen (mShell->window);
-    else
-        gdk_window_unfullscreen (mShell->window);
-#else
     gdk_window_hide(mShell->window);
 
     gint wmd;
@@ -3223,7 +3231,6 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     gdk_window_set_decorations(mShell->window, (GdkWMDecoration) wmd);
 
     gdk_window_show(mShell->window);
-#endif
 
     // For some window managers, adding or removing window decorations
     // requires unmapping and remapping our toplevel window.  Go ahead
