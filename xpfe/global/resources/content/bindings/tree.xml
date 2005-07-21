@@ -473,9 +473,10 @@
       <handler event="keypress">
         <![CDATA[
          var c = this.currentIndex;
-         if (event.charCode == ' '.charCodeAt(0)) {
-           if (!this.view.selection.isSelected(c))
+         if (event.charCode == ' '.charCodeAt(0) && !this.view.selection.single) {
+           if (!this.view.selection.isSelected(c) || event.ctrlKey) {
              this.view.selection.toggleSelect(c);
+           }
          }
          else if (!this.disableKeyNavigation && event.charCode > 0 &&
                   !event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
