@@ -63,7 +63,7 @@ EXTRA_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX) \
 	$(CRYPTO_LIB) \
 	$(DIST)/lib/$(LIB_PREFIX)secutil.$(LIB_SUFFIX) \
-	-L$(DIST)/lib \
+	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
 	-lplds4 \
 	-lnspr4 \
@@ -76,8 +76,8 @@ EXTRA_LIBS = \
 	$(DIST)/lib/softokn.lib \
 	$(CRYPTO_LIB) \
 	$(DIST)/lib/secutil.lib \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4_s.lib \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4_s.lib \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4_s.lib \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4_s.lib \
 	wsock32.lib \
 	winmm.lib \
 	$(NULL)
@@ -98,8 +98,8 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX) \
 	$(CRYPTO_LIB) \
 	$(DIST)/lib/$(LIB_PREFIX)secutil.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)plc4.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)plds4.$(LIB_SUFFIX) \
+	$(NSPR_LIB_DIR)/$(LIB_PREFIX)plc4.$(LIB_SUFFIX) \
+	$(NSPR_LIB_DIR)/$(LIB_PREFIX)plds4.$(LIB_SUFFIX) \
 	$(NULL)
 
 endif
