@@ -52,6 +52,7 @@
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIEventStateManager.h"
 #include "nsStyleSet.h"
 #include "nsIStyleSheet.h"
 #include "nsICSSStyleSheet.h"
@@ -3949,6 +3950,37 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
 }
 
 //------------------------------------------------------------
+// Reset ESM focus for all descendent doc shells.
+static void
+ResetFocusState(nsIDocShell* aDocShell)
+{
+  nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
+  aDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeContent,
+                                   nsIDocShell::ENUMERATE_FORWARDS,
+                                   getter_AddRefs(docShellEnumerator));
+  
+  nsCOMPtr<nsIDocShell> currentDocShell;
+  nsCOMPtr<nsISupports> currentContainer;
+  PRBool hasMoreDocShells;
+  while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells))
+         && hasMoreDocShells) {
+    docShellEnumerator->GetNext(getter_AddRefs(currentContainer));
+    currentDocShell = do_QueryInterface(currentContainer);
+    if (!currentDocShell) {
+      break;
+    }
+    nsCOMPtr<nsPresContext> presContext;
+    currentDocShell->GetPresContext(getter_AddRefs(presContext));
+    nsIEventStateManager* esm =
+      presContext ? presContext->EventStateManager() : nsnull;
+    if (esm) {
+       esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+       esm->SetFocusedContent(nsnull);
+    }
+  }
+}
+
+//------------------------------------------------------------
 void
 DocumentViewerImpl::InstallNewPresentation()
 {
@@ -3966,6 +3998,7 @@ DocumentViewerImpl::InstallNewPresentation()
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(dstParentItem));
     if (docShell) {
       docShell->SetHasFocus(PR_TRUE);
+      ::ResetFocusState(docShell);
     }
   }
 

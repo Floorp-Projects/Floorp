@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -40,6 +41,11 @@
 #include "nsIContent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNSEvent.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsIDocShell.h"
+#include "nsPresContext.h"
+#include "nsIEventStateManager.h"
 #include "nsLiteralString.h"
 
 NS_IMPL_ISUPPORTS1(nsPrintPreviewListener, nsIDOMEventListener)
@@ -108,50 +114,93 @@ nsPrintPreviewListener::RemoveListeners()
 
 //-------------------------------------------------------
 //
-// IsKeyOK
+// GetActionForEvent
 //
 // Helper function to let certain key events thru
 //
-static PRBool IsKeyOK(nsIDOMEvent* aEvent)
+enum eEventAction {
+  eEventAction_Tab,       eEventAction_ShiftTab,
+  eEventAction_Propagate, eEventAction_Suppress
+};
+
+static eEventAction
+GetActionForEvent(nsIDOMEvent* aEvent)
 {
-  const PRUint32 kOKKeyCodes[] = {nsIDOMKeyEvent::DOM_VK_PAGE_UP, nsIDOMKeyEvent::DOM_VK_PAGE_DOWN,
-                                  nsIDOMKeyEvent::DOM_VK_UP, nsIDOMKeyEvent::DOM_VK_DOWN, 
-                                  nsIDOMKeyEvent::DOM_VK_HOME, nsIDOMKeyEvent::DOM_VK_END, 
-                                  nsIDOMKeyEvent::DOM_VK_TAB, 0};
+  static const PRUint32 kOKKeyCodes[] = {
+    nsIDOMKeyEvent::DOM_VK_PAGE_UP, nsIDOMKeyEvent::DOM_VK_PAGE_DOWN,
+    nsIDOMKeyEvent::DOM_VK_UP,      nsIDOMKeyEvent::DOM_VK_DOWN, 
+    nsIDOMKeyEvent::DOM_VK_HOME,    nsIDOMKeyEvent::DOM_VK_END 
+  };
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
   if (keyEvent) {
     PRBool b;
     keyEvent->GetAltKey(&b);
-    if (b) return PR_FALSE;
+    if (b) return eEventAction_Suppress;
     keyEvent->GetCtrlKey(&b);
-    if (b) return PR_FALSE;
+    if (b) return eEventAction_Suppress;
+
     keyEvent->GetShiftKey(&b);
-    if (b) return PR_FALSE;
 
     PRUint32 keyCode;
     keyEvent->GetKeyCode(&keyCode);
-    PRInt32 i = 0;
-    while (kOKKeyCodes[i] != 0) {
+    if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB)
+      return b ? eEventAction_ShiftTab : eEventAction_Tab;
+
+    if (b) return eEventAction_Suppress;
+
+    for (PRUint32 i = 0; i < sizeof(kOKKeyCodes)/sizeof(kOKKeyCodes[0]); ++i) {
       if (keyCode == kOKKeyCodes[i]) {
-        return PR_TRUE;
+        return eEventAction_Propagate;
       }
-      i++;
     }
   }
-  return PR_FALSE;
+  return eEventAction_Suppress;
 }
 
-NS_IMETHODIMP nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aKeyEvent)
-{ 
+NS_IMETHODIMP
+nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aEvent)
+{
   nsCOMPtr<nsIDOMEventTarget> target;
-  nsCOMPtr<nsIDOMNSEvent> nsEvent = do_QueryInterface(aKeyEvent);
+  nsCOMPtr<nsIDOMNSEvent> nsEvent = do_QueryInterface(aEvent);
   if (nsEvent)
     nsEvent->GetOriginalTarget(getter_AddRefs(target));
   nsCOMPtr<nsIContent> content(do_QueryInterface(target));
-  if (content && !content->IsContentOfType(nsIContent::eXUL) && !IsKeyOK(aKeyEvent)) {
-    aKeyEvent->StopPropagation();
-    aKeyEvent->PreventDefault(); 
+  if (content && !content->IsContentOfType(nsIContent::eXUL)) {
+    eEventAction action = ::GetActionForEvent(aEvent);
+    switch (action) {
+      case eEventAction_Tab:
+      case eEventAction_ShiftTab:
+      {
+        nsAutoString eventString;
+        aEvent->GetType(eventString);
+        if (eventString == NS_LITERAL_STRING("keydown")) {
+          // Handle tabbing explicitly here since we don't want focus ending up
+          // inside the content document, bug 244128.
+          nsIDocument* doc = content->GetCurrentDoc();
+          NS_ASSERTION(doc, "no document");
+
+          nsIDocument* parentDoc = doc->GetParentDocument();
+          NS_ASSERTION(parentDoc, "no parent document");
+          nsIEventStateManager* esm =
+            parentDoc->GetShellAt(0)->GetPresContext()->EventStateManager();
+          if (esm) {
+            esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+            PRBool forward = (action == eEventAction_Tab);
+            esm->ShiftFocus(forward,
+                            forward ? nsnull : parentDoc->FindContentForSubDocument(doc));
+          }
+        }
+      }
+      // fall-through
+      case eEventAction_Suppress:
+        aEvent->StopPropagation();
+        aEvent->PreventDefault();
+        break;
+      case eEventAction_Propagate:
+        // intentionally empty
+        break;
+    }
   }
   return NS_OK; 
 }

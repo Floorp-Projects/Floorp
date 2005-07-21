@@ -5128,12 +5128,20 @@ nsEventStateManager::TabIntoDocument(nsIDocShell* aDocShell,
   nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(aDocShell);
   treeItem->GetItemType(&itemType);
 
+  nsCOMPtr<nsPresContext> presContext;
+  aDocShell->GetPresContext(getter_AddRefs(presContext));
   PRBool focusDocument;
-  if (!aForward || (itemType == nsIDocShellTreeItem::typeChrome))
-    focusDocument = PR_FALSE;
-  else {
-    // Check for a frameset document
-    focusDocument = !(IsFrameSetDoc(aDocShell));
+  if (presContext &&
+      presContext->Type() == nsPresContext::eContext_PrintPreview) {
+    // Don't focus any content in print preview mode, bug 244128.
+    focusDocument = PR_TRUE;
+  } else {
+    if (!aForward || (itemType == nsIDocShellTreeItem::typeChrome))
+      focusDocument = PR_FALSE;
+    else {
+      // Check for a frameset document
+      focusDocument = !(IsFrameSetDoc(aDocShell));
+    }
   }
 
   if (focusDocument) {
@@ -5143,10 +5151,8 @@ nsEventStateManager::TabIntoDocument(nsIDocShell* aDocShell,
   else {
     aDocShell->SetHasFocus(PR_FALSE);
 
-    nsCOMPtr<nsPresContext> pc;
-    aDocShell->GetPresContext(getter_AddRefs(pc));
-    if (pc) {
-      nsIEventStateManager *docESM = pc->EventStateManager();
+    if (presContext) {
+      nsIEventStateManager *docESM = presContext->EventStateManager();
 
       // we are about to shift focus to aDocShell
       // keep track of the document, so we don't try to go back into it.
