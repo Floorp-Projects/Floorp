@@ -1,0 +1,41 @@
+<!-- Entities for the Sample Extension Options Dialog go here -->
+<!ENTITY reportWizard.title "Report A Broken Website">
+<!ENTITY privacyNotice.label "Privacy Policy">
+<!ENTITY reportWizardPrivacy.description "This tool allows you to tell the Evangelism Team about web sites that do not work properly in Firefox, or shut Firefox out. This is your way to help us ensure the best possible experience for Firefox users. Please take a moment to read the following to learn how we use the information we collect should you choose to participate.">
+<!ENTITY reportWizardMustAgree.description "Jarraitzeko goian pribazitate politika onartu behar duzu.">
+<!ENTITY dontShowPrivacyStatement.label "Ez bistarazu Pribazitate Politika Ezarpenak Berriz">
+<!ENTITY dontShowPrivacyStatement.accesskey "i">
+<!ENTITY reportForm.label "Erreportea bete">
+<!ENTITY reportForm.description "Aurkitutako arazoaz berri eman:">
+<!ENTITY reportForm.url.title "Webgune URL-a:">
+<!-- No ":" at the end -->
+<!ENTITY reportForm.behind_login.title "Webgunea pasahitzez babestuta dago">
+<!ENTITY reportForm.behind_login.accesskey "P">
+<!ENTITY reportForm.problem_type.title "Arazo Mota:">
+<!ENTITY reportForm.problem_type.accesskey "M">
+<!ENTITY reportForm.problem_type.chooseOne.title "Bat aukeratu...">
+<!-- DO *NOT* Add/change/modify (except localization) without consulting with r.m.o server admin first! -->
+<!ENTITY reportForm.problem_type.item1.title "Nabigatzailea ez da onartzen">
+<!ENTITY reportForm.problem_type.item2.title "Ezin saioa hasi">
+<!ENTITY reportForm.problem_type.item3.title "Plugin-a ez da ageri">
+<!ENTITY reportForm.problem_type.item4.title "Beste eduki bat falta da">
+<!ENTITY reportForm.problem_type.item5.title "Okerreko jokabidea">
+<!ENTITY reportForm.problem_type.item6.title "Okerreko itxura">
+<!ENTITY reportForm.problem_type.item7.title "Beste arazoak">
+<!ENTITY reportForm.describe.title "Arazoa azaldu:">
+<!ENTITY reportForm.describe.accesskey "A">
+<!ENTITY reportForm.platform.title "Plataforma:">
+<!ENTITY reportForm.product.title "Produktua:">
+<!ENTITY reportForm.gecko.title "Gecko:">
+<!ENTITY reportForm.useragent.title "Erabiltzaile bezeroa:">
+<!ENTITY reportForm.language.title "Hizkuntza:">
+<!--  Make sure this has "(Optional)" at the end.  This is important for the user to know -->
+<!ENTITY reportForm.email.title "ePosta (aukerakoa):">
+<!ENTITY reportForm.email.accesskey "E">
+<!ENTITY reportForm.privacyPolicy.title "Pribazitate politika">
+<!ENTITY reportForm.privacyPolicy.tooltip "Pribazitate politika bistarazi">
+<!ENTITY reportResults.showDetail.title "Xehetasuna bistarazi">
+<!ENTITY reportResults.showDetail.accesskey "X">
+<!ENTITY sendReport.label "Erreportea bidaltzen">
+<!ENTITY sendReport.description "Erreportea zerbitzarira bidaltzen...">
+<!ENTITY finish.label "Erreportea bidalia">
