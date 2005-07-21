@@ -2178,6 +2178,8 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             printf("[vm=%p]setting mouse location to (%d,%d)\n",
                    this, mMouseLocation.x, mMouseLocation.y);
 #endif
+            if (aEvent->message == NS_MOUSE_ENTER)
+              SynthesizeMouseMove(PR_FALSE);
           } else if (aEvent->message == NS_MOUSE_EXIT) {
             // Although we only care about the mouse moving into an area
             // for which this view manager doesn't receive mouse move
