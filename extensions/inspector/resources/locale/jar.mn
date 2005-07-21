@@ -2,7 +2,7 @@
 
 inspector.jar:
 % locale inspector @AB_CD@ %locale/@AB_CD@/inspector/
-  locale/@AB_CD@/inspector/contents.rdf               (contents.rdf)
+* locale/@AB_CD@/inspector/contents.rdf               (contents.rdf)
   locale/@AB_CD@/inspector/inspector.dtd              (@AB_CD@/inspector.dtd)
   locale/@AB_CD@/inspector/prefs.dtd                  (@AB_CD@/prefs.dtd)
   locale/@AB_CD@/inspector/editing.dtd                (@AB_CD@/editing.dtd)
