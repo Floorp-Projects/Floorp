@@ -1015,7 +1015,7 @@ GetXMLEntity(JSContext *cx, JSTokenStream *ts)
 badncr:
     msg = JSMSG_BAD_XML_NCR;
 bad:
-    /* No match: throw a TypeError per 10.3.2.1 step 8(a). */
+    /* No match: throw a TypeError per ECMA-357 10.3.2.1 step 8(a). */
     FastAppendChar(&ts->tokenbuf, ';');
     bytes = js_DeflateString(cx, bp + 1,
                              PTRDIFF(ts->tokenbuf.ptr, bp, jschar) - 2);
@@ -1139,7 +1139,7 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
         qc = (ts->flags & TSF_XMLONLYMODE) ? '<' : '{';
 
         while ((c = GetChar(ts)) != qc && c != '<' && c != EOF) {
-            if (c == '&') {
+            if (c == '&' && qc == '<') {
                 if (!GetXMLEntity(cx, ts))
                     goto error;
                 tt = TOK_XMLTEXT;
@@ -1245,7 +1245,7 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
                     continue;
                 }
 
-                if (c == '&') {
+                if (c == '&' && (ts->flags & TSF_XMLONLYMODE)) {
                     if (!GetXMLEntity(cx, ts))
                         goto error;
                     continue;
