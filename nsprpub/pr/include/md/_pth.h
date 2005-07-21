@@ -294,7 +294,7 @@ extern int (*_PT_aix_yield_fcn)();
 #elif defined(HPUX) || defined(LINUX) || defined(SOLARIS) \
 	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
 	|| defined(BSDI) || defined(NTO) || defined(DARWIN) \
-	|| defined(UNIXWARE)
+	|| defined(UNIXWARE) || defined(RISCOS)
 #define _PT_PTHREAD_YIELD()            	sched_yield()
 #else
 #error "Need to define _PT_PTHREAD_YIELD for this platform"
