@@ -521,6 +521,7 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
            tag == nsAccessibilityAtoms::tbody ||
            tag == nsAccessibilityAtoms::tfoot ||
            tag == nsAccessibilityAtoms::thead ||
+           content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick) ||
 #else
   else if (
 #endif

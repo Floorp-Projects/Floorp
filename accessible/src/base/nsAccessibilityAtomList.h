@@ -39,7 +39,7 @@
 /******
 
   This file contains the list of all accessibility nsIAtoms and their values
-  
+
   It is designed to be used as inline input to nsAccessibilityAtoms.cpp *only*
   through the magic of C preprocessing.
 
@@ -113,6 +113,7 @@ ACCESSIBILITY_ATOM(id, "id")
 ACCESSIBILITY_ATOM(lang, "lang")
 ACCESSIBILITY_ATOM(multiline, "multiline")
 ACCESSIBILITY_ATOM(name, "name")
+ACCESSIBILITY_ATOM(onclick, "onclick")
 ACCESSIBILITY_ATOM(readonly, "readonly")
 ACCESSIBILITY_ATOM(src, "src")
 ACCESSIBILITY_ATOM(summary, "summary")
