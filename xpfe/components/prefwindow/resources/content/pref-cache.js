@@ -8,24 +8,25 @@ const nsIProperties       = Components.interfaces.nsIProperties;
 const kCacheParentDirPref = "browser.cache.disk.parent_directory";
 
 var gFolderField;
+var dir;
 
 function Startup()
 {
   var prefWindow = parent.hPrefWindow;
   gFolderField = document.getElementById("browserCacheDiskCacheFolder");
 
-  var dir = prefWindow.getPref("localfile", kCacheParentDirPref);
+  dir = prefWindow.getPref("localfile", kCacheParentDirPref);
   if (dir == "!/!ERROR_UNDEFINED_PREF!/!")
   {
     try
     {
-      // no disk cache folder found; default to profile directory
+      // no disk cache folder pref set; default to profile directory
       var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
                              .getService(nsIProperties);
-      dir = dirSvc.get("ProfD", nsILocalFile);
-
-      // now remember the new assumption
-      prefWindow.setPref("localfile", kCacheParentDirPref, dir);
+      if (dirSvc.has("ProfLD"))
+        dir = dirSvc.get("ProfLD", nsILocalFile);
+      else
+        dir = dirSvc.get("ProfD", nsILocalFile);
     }
     catch (ex)
     {
@@ -52,11 +53,7 @@ function prefCacheSelectFolder()
 
   fp.init(window, title, nsIFilePicker.modeGetFolder);
 
-  var initialDir = prefWindow.getPref("localfile", kCacheParentDirPref);
-
-  // Pref should always be set but just in case...
-  if (initialDir != "!/!ERROR_UNDEFINED_PREF!/!")
-    fp.displayDirectory = initialDir;
+  fp.displayDirectory = dir;
 
   fp.appendFilters(nsIFilePicker.filterAll);
   var ret = fp.show();
