@@ -54,6 +54,7 @@ ifdef NS_USE_GCC
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
 	-lsoftokn3 \
+	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
 	-lplds4 \
 	-lnspr4\
@@ -61,9 +62,9 @@ EXTRA_SHARED_LIBS += \
 else # ! NS_USE_GCC
 EXTRA_SHARED_LIBS += \
 	$(DIST)/lib/softokn3.lib \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4.lib \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4.lib \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)nspr4.lib \
 	$(NULL)
 endif # NS_USE_GCC
 
@@ -72,8 +73,9 @@ else
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
 EXTRA_SHARED_LIBS += \
-	-L$(DIST)/lib/ \
+	-L$(DIST)/lib \
 	-lsoftokn3 \
+	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
 	-lplds4 \
 	-lnspr4 \

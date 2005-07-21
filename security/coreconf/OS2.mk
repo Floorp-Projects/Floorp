@@ -109,12 +109,6 @@ endif   #NO_SHARED_LIB
 
 OS_CFLAGS          = -Wall -W -Wno-unused -Wpointer-arith -Wcast-align -Zomf -DDEBUG -DTRACING -g
 
-# Where the libraries are
-MOZ_COMPONENT_NSPR_LIBS=-L$(DIST)/lib $(NSPR_LIBS)
-NSPR_LIBS	= -lplds4 -lplc4 -lnspr4 
-NSPR_INCLUDE_DIR =   
-
-
 ifdef BUILD_OPT
 OPTIMIZER		= -O2 -s
 DEFINES 		+= -UDEBUG -U_DEBUG -DNDEBUG
@@ -181,12 +175,6 @@ endif   #NO_SHARED_LIB
 OS_CFLAGS          = /Q /qlibansi /Gd /Gm /Su4 /Mp /Tl-
 INCLUDES        += -I$(CORE_DEPTH)/../dist/include
 DEFINES         += -DXP_OS2_VACPP -DTCPV40HDRS
-
-# Where the libraries are
-NSPR_LIBS	= $(DIST)/lib/nspr4.lib $(DIST)/lib/plc4.lib $(DIST)/lib/plds4.lib
-MOZ_COMPONENT_NSPR_LIBS=-L$(DIST)/lib $(NSPR_LIBS)
-NSPR_INCLUDE_DIR =   
-
 
 DLLFLAGS    = /DLL /O:$@ /INC:_dllentry /MAP:$(@:.dll=.map)
 EXEFLAGS    = -PMTYPE:VIO -OUT:$@ -MAP:$(@:.exe=.map) -nologo -NOE

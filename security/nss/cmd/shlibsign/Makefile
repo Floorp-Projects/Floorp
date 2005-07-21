@@ -105,9 +105,9 @@ include ../platrules.mk
 
 %.chk: %.$(DLL_SUFFIX) 
 ifeq ($(OS_TARGET), OS2)
-	@cmd.exe /c sign.cmd $(DIST) $(OBJDIR) $(OS_TARGET) $<
+	@cmd.exe /c sign.cmd $(DIST) $(OBJDIR) $(OS_TARGET) $(NSPR_LIB_DIR) $<
 else
-	@sh ./sign.sh $(DIST) $(OBJDIR) $(OS_TARGET) $<
+	@sh ./sign.sh $(DIST) $(OBJDIR) $(OS_TARGET) $(NSPR_LIB_DIR) $<
 endif
 
 libs install :: $(CHECKLOC)

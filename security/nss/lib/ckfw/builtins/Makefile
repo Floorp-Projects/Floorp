@@ -34,7 +34,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.14 $ $Date: 2005/01/20 02:25:46 $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.15 $ $Date: 2005/07/21 23:48:18 $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -53,23 +53,23 @@ ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 # This is merely an expedient hack and not the right solution.
 ifdef NS_USE_GCC
 EXTRA_LIBS += \
-	-L$(DIST)/lib \
+	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
 	-lplds4 \
 	-lnspr4 \
 	$(NULL)
 else
 EXTRA_LIBS += \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4_s.lib \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4_s.lib \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4_s.lib \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4_s.lib \
 	$(NULL)
 endif
 
 else
 
 EXTRA_LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)plc4.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)plds4.$(LIB_SUFFIX) \
+	$(NSPR_LIB_DIR)/$(LIB_PREFIX)plc4.$(LIB_SUFFIX) \
+	$(NSPR_LIB_DIR)/$(LIB_PREFIX)plds4.$(LIB_SUFFIX) \
 	$(NULL)
 
 endif

@@ -72,9 +72,9 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)nssdev.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nssb.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)dbm.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.$(LIB_SUFFIX) \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4.$(LIB_SUFFIX) \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4.$(LIB_SUFFIX) \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)nspr4.$(LIB_SUFFIX) \
 	$(NULL)
 
 # $(PROGRAM) has NO explicit dependencies on $(OS_LIBS)
@@ -130,13 +130,13 @@ endif
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
 ifdef XP_OS2_VACPP
 EXTRA_SHARED_LIBS += \
-	$(DIST)/lib/plc4.lib \
-	$(DIST)/lib/plds4.lib \
-	$(DIST)/lib/nspr4.lib \
+	$(NSPR_LIB_DIR)/plc4.lib \
+	$(NSPR_LIB_DIR)/plds4.lib \
+	$(NSPR_LIB_DIR)/nspr4.lib \
 	$(NULL)
 else
 EXTRA_SHARED_LIBS += \
-	-L$(DIST)/lib \
+	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
 	-lplds4 \
 	-lnspr4 \
@@ -158,9 +158,9 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(IMPORT_LIB_PREFIX)smime3$(IMPORT_LIB_SUFFIX) \
 	$(DIST)/lib/$(IMPORT_LIB_PREFIX)ssl3$(IMPORT_LIB_SUFFIX) \
 	$(DIST)/lib/$(IMPORT_LIB_PREFIX)nss3$(IMPORT_LIB_SUFFIX) \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.$(LIB_SUFFIX) \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4.$(LIB_SUFFIX) \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4.$(LIB_SUFFIX) \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)nspr4.$(LIB_SUFFIX) \
 	$(NULL)
 
 # $(PROGRAM) has NO explicit dependencies on $(OS_LIBS)
@@ -222,6 +222,7 @@ EXTRA_SHARED_LIBS += \
 	-lssl3 \
 	-lsmime3 \
 	-lnss3 \
+	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
 	-lplds4 \
 	-lnspr4 \
