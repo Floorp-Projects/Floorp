@@ -158,7 +158,12 @@ NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *aRole)
         *aRole = ROLE_APPLICATION;
       }
       else if (itemType == nsIDocShellTreeItem::typeContent) {
+#ifdef MOZ_XUL
+        nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
+        *aRole = xulDoc ? ROLE_APPLICATION : ROLE_DOCUMENT;
+#else
         *aRole = ROLE_DOCUMENT;
+#endif
       }
     }
   }
