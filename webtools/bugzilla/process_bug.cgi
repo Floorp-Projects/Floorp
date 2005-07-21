@@ -46,13 +46,13 @@ my $PrivilegesRequired = 0;
 
 use lib qw(.);
 
+require "CGI.pl";
 use Bugzilla;
 use Bugzilla::Constants;
-require "CGI.pl";
-
 use Bugzilla::Bug;
 use Bugzilla::User;
 use Bugzilla::Util;
+use Bugzilla::Field;
 
 # Use the Flag module to modify flag data if the user set flags.
 use Bugzilla::Flag;
@@ -201,9 +201,9 @@ if ($cgi->cookie("BUGLIST") && defined $cgi->param('id')) {
 
 GetVersionTable();
 
-CheckFormFieldDefined($cgi, 'product');
-CheckFormFieldDefined($cgi, 'version');
-CheckFormFieldDefined($cgi, 'component');
+check_form_field_defined($cgi, 'product');
+check_form_field_defined($cgi, 'version');
+check_form_field_defined($cgi, 'component');
 
 
 # This function checks if there is a comment required for a specific
@@ -292,7 +292,7 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
 
     my $mok = 1;   # so it won't affect the 'if' statement if milestones aren't used
     if ( Param("usetargetmilestone") ) {
-       CheckFormFieldDefined($cgi, 'target_milestone');
+       check_form_field_defined($cgi, 'target_milestone');
        $mok = lsearch($::target_milestone{$prod},
                       $cgi->param('target_milestone')) >= 0;
     }
@@ -564,21 +564,21 @@ if (defined $cgi->param('id')) {
     # (XXX those error checks need to happen too, but implementing them 
     # is more work in the current architecture of this script...)
     #
-    CheckFormField($cgi, 'product', \@::legal_product);
-    CheckFormField($cgi, 'component', 
+    check_form_field($cgi, 'product', \@::legal_product);
+    check_form_field($cgi, 'component', 
                    \@{$::components{$cgi->param('product')}});
-    CheckFormField($cgi, 'version', \@{$::versions{$cgi->param('product')}});
+    check_form_field($cgi, 'version', \@{$::versions{$cgi->param('product')}});
     if ( Param("usetargetmilestone") ) {
-        CheckFormField($cgi, 'target_milestone', 
+        check_form_field($cgi, 'target_milestone', 
                        \@{$::target_milestone{$cgi->param('product')}});
     }
-    CheckFormField($cgi, 'rep_platform', \@::legal_platform);
-    CheckFormField($cgi, 'op_sys', \@::legal_opsys);
-    CheckFormField($cgi, 'priority', \@::legal_priority);
-    CheckFormField($cgi, 'bug_severity', \@::legal_severity);
-    CheckFormFieldDefined($cgi, 'bug_file_loc');
-    CheckFormFieldDefined($cgi, 'short_desc');
-    CheckFormFieldDefined($cgi, 'longdesclength');
+    check_form_field($cgi, 'rep_platform', \@::legal_platform);
+    check_form_field($cgi, 'op_sys', \@::legal_opsys);
+    check_form_field($cgi, 'priority', \@::legal_priority);
+    check_form_field($cgi, 'bug_severity', \@::legal_severity);
+    check_form_field_defined($cgi, 'bug_file_loc');
+    check_form_field_defined($cgi, 'short_desc');
+    check_form_field_defined($cgi, 'longdesclength');
 
     if (trim($cgi->param('short_desc')) eq "") {
         ThrowUserError("require_summary");
@@ -906,7 +906,7 @@ if (defined $cgi->param('qa_contact')
     }
 }
 
-CheckFormFieldDefined($cgi, 'knob');
+check_form_field_defined($cgi, 'knob');
 SWITCH: for ($cgi->param('knob')) {
     /^none$/ && do {
         last SWITCH;
@@ -930,7 +930,7 @@ SWITCH: for ($cgi->param('knob')) {
     };
     /^resolve$/ && CheckonComment( "resolve" ) && do {
         # Check here, because its the only place we require the resolution
-        CheckFormField($cgi, 'resolution', \@::settable_resolution);
+        check_form_field($cgi, 'resolution', \@::settable_resolution);
 
         # don't resolve as fixed while still unresolved blocking bugs
         if (Param("noresolveonopenblockers")
@@ -1014,7 +1014,7 @@ SWITCH: for ($cgi->param('knob')) {
     };
     /^duplicate$/ && CheckonComment( "duplicate" ) && do {
         # Make sure we can change the original bug (issue A on bug 96085)
-        CheckFormFieldDefined($cgi, 'dup_id');
+        check_form_field_defined($cgi, 'dup_id');
         $duplicate = $cgi->param('dup_id');
         ValidateBugID($duplicate, 'dup_id');
         $cgi->param('dup_id', $duplicate);
@@ -1769,7 +1769,7 @@ foreach my $id (@idlist) {
                       " has been marked as a duplicate of this bug. ***",
                       0, $timestamp);
 
-        CheckFormFieldDefined($cgi,'comment');
+        check_form_field_defined($cgi,'comment');
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, " .
                 $cgi->param('id') . ")");
     }

@@ -52,49 +52,6 @@ require 'globals.pl';
 
 use vars qw($template $vars);
 
-# Implementations of several of the below were blatently stolen from CGI.pm,
-# by Lincoln D. Stein.
-
-# check and see if a given field exists, is non-empty, and is set to a 
-# legal value.  assume a browser bug and abort appropriately if not.
-# if $legalsRef is not passed, just check to make sure the value exists and 
-# is non-NULL
-sub CheckFormField ($$;\@) {
-    my ($cgi,                    # a CGI object
-        $fieldname,              # the fieldname to check
-        $legalsRef               # (optional) ref to a list of legal values 
-       ) = @_;
-
-    if (!defined $cgi->param($fieldname)
-        || trim($cgi->param($fieldname)) eq ""
-        || (defined($legalsRef)
-            && lsearch($legalsRef, $cgi->param($fieldname))<0))
-    {
-        SendSQL("SELECT description FROM fielddefs WHERE name=" . SqlQuote($fieldname));
-        my $result = FetchOneColumn();
-        my $field;
-        if ($result) {
-            $field = $result;
-        }
-        else {
-            $field = $fieldname;
-        }
-        
-        ThrowCodeError("illegal_field", { field => $field });
-    }
-}
-
-# check and see if a given field is defined, and abort if not
-sub CheckFormFieldDefined ($$) {
-    my ($cgi,                    # a CGI object
-        $fieldname,              # the fieldname to check
-       ) = @_;
-
-    if (!defined $cgi->param($fieldname)) {
-        ThrowCodeError("undefined_field", { field => $fieldname });
-    }
-}
-
 sub PutHeader {
     ($vars->{'title'}, $vars->{'h1'}, $vars->{'h2'}) = (@_);
      

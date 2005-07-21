@@ -26,13 +26,12 @@
 use strict;
 use lib qw(.);
 
+require "CGI.pl";
 use Bugzilla;
 use Bugzilla::Constants;
-require "CGI.pl";
-
 use Bugzilla::Bug;
-
 use Bugzilla::User;
+use Bugzilla::Field;
 
 # Shut up misguided -w warnings about "used only once". For some reason,
 # "use vars" chokes on me when I try it here.
@@ -196,18 +195,18 @@ if (!Param('letsubmitterchoosepriority')) {
 GetVersionTable();
 
 # Some more sanity checking
-CheckFormField($cgi, 'product',      \@::legal_product);
-CheckFormField($cgi, 'rep_platform', \@::legal_platform);
-CheckFormField($cgi, 'bug_severity', \@::legal_severity);
-CheckFormField($cgi, 'priority',     \@::legal_priority);
-CheckFormField($cgi, 'op_sys',       \@::legal_opsys);
-CheckFormField($cgi, 'bug_status',   ['UNCONFIRMED', 'NEW']);
-CheckFormField($cgi, 'version',          $::versions{$product});
-CheckFormField($cgi, 'component',        $::components{$product});
-CheckFormField($cgi, 'target_milestone', $::target_milestone{$product});
-CheckFormFieldDefined($cgi, 'assigned_to');
-CheckFormFieldDefined($cgi, 'bug_file_loc');
-CheckFormFieldDefined($cgi, 'comment');
+check_form_field($cgi, 'product',      \@::legal_product);
+check_form_field($cgi, 'rep_platform', \@::legal_platform);
+check_form_field($cgi, 'bug_severity', \@::legal_severity);
+check_form_field($cgi, 'priority',     \@::legal_priority);
+check_form_field($cgi, 'op_sys',       \@::legal_opsys);
+check_form_field($cgi, 'bug_status',   ['UNCONFIRMED', 'NEW']);
+check_form_field($cgi, 'version',          $::versions{$product});
+check_form_field($cgi, 'component',        $::components{$product});
+check_form_field($cgi, 'target_milestone', $::target_milestone{$product});
+check_form_field_defined($cgi, 'assigned_to');
+check_form_field_defined($cgi, 'bug_file_loc');
+check_form_field_defined($cgi, 'comment');
 
 my @used_fields;
 foreach my $field (@bug_fields) {
