@@ -52,6 +52,9 @@ class AddOn extends AMO_Object
 
     // Categories.
     var $Cats;
+    
+    // History of releases
+    var $History;
 
     /**
      * Class constructor.
@@ -206,6 +209,35 @@ class AddOn extends AMO_Object
                   'height' => $src_height
               );
           }
+     }
+     
+     function getHistory()
+     {
+         // Gather history of an addon
+         $this->db->query("
+             SELECT
+                 TV.vID,
+                 TV.Version,
+                 TV.MinAppVer,
+                 TV.MaxAppVer,
+                 TV.Size,
+                 TV.URI,
+                 TV.Notes,
+                 UNIX_TIMESTAMP(TV.DateAdded) AS VerDateAdded,
+                 TA.AppName,
+                 TOS.OSName
+            FROM
+                version TV
+            INNER JOIN applications TA ON TV.AppID = TA.AppID
+            INNER JOIN os TOS ON TV.OSID = TOS.OSID
+            WHERE
+                TV.ID = {$this->ID} AND
+                approved = 'YES'
+            ORDER BY
+               VerDateAdded DESC
+          ", SQL_ALL, SQL_ASSOC);
+          
+          $this->History = $this->db->record;
      }
 }
 ?>
