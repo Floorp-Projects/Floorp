@@ -2929,6 +2929,275 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     return crv;
 }
 
+#define PAIRWISE_DIGEST_LENGTH			SHA1_LENGTH /* 160-bits */
+#define PAIRWISE_MESSAGE_LENGTH			20          /* 160-bits */
+
+/*
+ * FIPS 140-2 pairwise consistency check utilized to validate key pair.
+ *
+ * This function returns
+ *   CKR_OK               if pairwise consistency check passed
+ *   CKR_GENERAL_ERROR    if pairwise consistency check failed
+ *   other error codes    if paiswise consistency check could not be
+ *                        performed, for example, CKR_HOST_MEMORY.
+ */
+static CK_RV
+sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession,
+    SFTKObject *publicKey, SFTKObject *privateKey, CK_KEY_TYPE keyType)
+{
+    /*
+     *                      Key type    Mechanism type
+     *                      --------------------------------
+     * For encrypt/decrypt: CKK_RSA  => CKM_RSA_PKCS
+     *                      others   => CKM_INVALID_MECHANISM
+     *
+     * For sign/verify:     CKK_RSA  => CKM_RSA_PKCS
+     *                      CKK_DSA  => CKM_DSA
+     *                      CKK_EC   => CKM_ECDSA
+     *                      others   => CKM_INVALID_MECHANISM
+     *
+     * None of these mechanisms has a parameter.
+     */
+    CK_MECHANISM mech = {0, NULL, 0};
+
+    CK_ULONG modulusLen;
+    PRBool isEncryptable = PR_FALSE;
+    PRBool canSignVerify = PR_FALSE;
+    PRBool isDerivable = PR_FALSE;
+    CK_RV crv;
+
+    /* Variables used for Encrypt/Decrypt functions. */
+    unsigned char *known_message = (unsigned char *)"Known Crypto Message";
+    unsigned char plaintext[PAIRWISE_MESSAGE_LENGTH];
+    CK_ULONG bytes_decrypted;
+    unsigned char *ciphertext;
+    unsigned char *text_compared;
+    CK_ULONG bytes_encrypted;
+    CK_ULONG bytes_compared;
+
+    /* Variables used for Signature/Verification functions. */
+    /* always uses SHA-1 digest */
+    unsigned char *known_digest = (unsigned char *)"Mozilla Rules World!";
+    unsigned char *signature;
+    CK_ULONG signature_length;
+
+    if (keyType == CKK_RSA) {
+	SFTKAttribute *attribute;
+
+	/* Get modulus length of private key. */
+	attribute = sftk_FindAttribute(privateKey, CKA_MODULUS);
+	if (attribute == NULL) {
+	    return CKR_DEVICE_ERROR;
+	}
+	modulusLen = attribute->attrib.ulValueLen;
+	if (*(unsigned char *)attribute->attrib.pValue == 0) {
+	    modulusLen--;
+	}
+	sftk_FreeAttribute(attribute);
+    }
+
+    /**************************************************/
+    /* Pairwise Consistency Check of Encrypt/Decrypt. */
+    /**************************************************/
+
+    isEncryptable = sftk_isTrue(privateKey, CKA_DECRYPT); 
+
+    /*
+     * If the decryption attribute is set, attempt to encrypt
+     * with the public key and decrypt with the private key.
+     */
+    if (isEncryptable) {
+	if (keyType != CKK_RSA) {
+	    return CKR_DEVICE_ERROR;
+	}
+	bytes_encrypted = modulusLen;
+	mech.mechanism = CKM_RSA_PKCS;
+
+	/* Allocate space for ciphertext. */
+	ciphertext = (unsigned char *) PORT_ZAlloc(bytes_encrypted);
+	if (ciphertext == NULL) {
+	    return CKR_HOST_MEMORY;
+	}
+
+	/* Prepare for encryption using the public key. */
+	crv = NSC_EncryptInit(hSession, &mech, publicKey->handle);
+	if (crv != CKR_OK) {
+	    PORT_Free(ciphertext);
+	    return crv;
+	}
+
+	/* Encrypt using the public key. */
+	crv = NSC_Encrypt(hSession,
+			  known_message,
+			  PAIRWISE_MESSAGE_LENGTH,
+			  ciphertext,
+			  &bytes_encrypted);
+	if (crv != CKR_OK) {
+	    PORT_Free(ciphertext);
+	    return crv;
+	}
+
+	/* Always use the smaller of these two values . . . */
+	bytes_compared = PR_MIN(bytes_encrypted, PAIRWISE_MESSAGE_LENGTH);
+
+	/*
+	 * If there was a failure, the plaintext
+	 * goes at the end, therefore . . .
+	 */
+	text_compared = ciphertext + bytes_encrypted - bytes_compared;
+
+	/*
+	 * Check to ensure that ciphertext does
+	 * NOT EQUAL known input message text
+	 * per FIPS PUB 140-2 directive.
+	 */
+	if (PORT_Memcmp(text_compared, known_message,
+			bytes_compared) == 0) {
+	    /* Set error to Invalid PRIVATE Key. */
+	    PORT_SetError(SEC_ERROR_INVALID_KEY);
+	    PORT_Free(ciphertext);
+	    return CKR_GENERAL_ERROR;
+	}
+
+	/* Prepare for decryption using the private key. */
+	crv = NSC_DecryptInit(hSession, &mech, privateKey->handle);
+	if (crv != CKR_OK) {
+	    PORT_Free(ciphertext);
+	    return crv;
+	}
+
+	memset(plaintext, 0, PAIRWISE_MESSAGE_LENGTH);
+
+	/*
+	 * Initialize bytes decrypted to be the
+	 * expected PAIRWISE_MESSAGE_LENGTH.
+	 */
+	bytes_decrypted = PAIRWISE_MESSAGE_LENGTH;
+
+	/*
+	 * Decrypt using the private key.
+	 * NOTE:  No need to reset the
+	 *        value of bytes_encrypted.
+	 */
+	crv = NSC_Decrypt(hSession,
+			  ciphertext,
+			  bytes_encrypted,
+			  plaintext,
+			  &bytes_decrypted);
+
+	/* Finished with ciphertext; free it. */
+	PORT_Free(ciphertext);
+
+	if (crv != CKR_OK) {
+	    return crv;
+	}
+
+	/*
+	 * Check to ensure that the output plaintext
+	 * does EQUAL known input message text.
+	 */
+	if ((bytes_decrypted != PAIRWISE_MESSAGE_LENGTH) ||
+	    (PORT_Memcmp(plaintext, known_message,
+			 PAIRWISE_MESSAGE_LENGTH) != 0)) {
+	    /* Set error to Bad PUBLIC Key. */
+	    PORT_SetError(SEC_ERROR_BAD_KEY);
+	    return CKR_GENERAL_ERROR;
+	}
+    }
+
+    /**********************************************/
+    /* Pairwise Consistency Check of Sign/Verify. */
+    /**********************************************/
+
+    canSignVerify = sftk_isTrue(privateKey, CKA_SIGN);
+    
+    if (canSignVerify) {
+	/* Determine length of signature. */
+	switch (keyType) {
+	case CKK_RSA:
+	    signature_length = modulusLen;
+	    mech.mechanism = CKM_RSA_PKCS;
+	    break;
+	case CKK_DSA:
+	    signature_length = DSA_SIGNATURE_LEN;
+	    mech.mechanism = CKM_DSA;
+	    break;
+#ifdef NSS_ENABLE_ECC
+	case CKK_EC:
+	    signature_length = MAX_ECKEY_LEN * 2;
+	    mech.mechanism = CKM_ECDSA;
+#endif
+	default:
+	    return CKR_DEVICE_ERROR;
+	}
+	
+	/* Allocate space for signature data. */
+	signature = (unsigned char *) PORT_ZAlloc(signature_length);
+	if (signature == NULL) {
+	    return CKR_HOST_MEMORY;
+	}
+	
+	/* Sign the known hash using the private key. */
+	crv = NSC_SignInit(hSession, &mech, privateKey->handle);
+	if (crv != CKR_OK) {
+	    PORT_Free(signature);
+	    return crv;
+	}
+
+	crv = NSC_Sign(hSession,
+		       known_digest,
+		       PAIRWISE_DIGEST_LENGTH,
+		       signature,
+		       &signature_length);
+	if (crv != CKR_OK) {
+	    PORT_Free(signature);
+	    return crv;
+	}
+	
+	/* Verify the known hash using the public key. */
+	crv = NSC_VerifyInit(hSession, &mech, publicKey->handle);
+	if (crv != CKR_OK) {
+	    PORT_Free(signature);
+	    return crv;
+	}
+
+	crv = NSC_Verify(hSession,
+			 known_digest,
+			 PAIRWISE_DIGEST_LENGTH,
+			 signature,
+			 signature_length);
+
+	/* Free signature data. */
+	PORT_Free(signature);
+
+	if ((crv == CKR_SIGNATURE_LEN_RANGE) ||
+		(crv == CKR_SIGNATURE_INVALID)) {
+	    return CKR_GENERAL_ERROR;
+	}
+	if (crv != CKR_OK) {
+	    return crv;
+	}
+    }
+
+    /**********************************************/
+    /* Pairwise Consistency Check for Derivation  */
+    /**********************************************/
+
+    isDerivable = sftk_isTrue(privateKey, CKA_DERIVE);
+    
+    if (isDerivable) {
+	/* 
+	 * We are not doing consistency check for Diffie-Hellman Key - 
+	 * otherwise it would be here
+	 * This is also true for Elliptic Curve Diffie-Hellman keys
+	 * NOTE: EC keys are currently subjected to pairwise
+	 * consistency check for signing/verification.
+	 */
+
+    }
+
+    return CKR_OK;
+}
 
 /* NSC_GenerateKeyPair generates a public-key/private-key pair, 
  * creating new key objects. */
@@ -3406,6 +3675,18 @@ ecgn_done:
 	sftk_forceAttribute(publicKey,CKA_NEVER_EXTRACTABLE,
 						&cktrue,sizeof(CK_BBOOL));
     }
+
+    /* Perform FIPS 140-2 pairwise consistency check. */
+    crv = sftk_PairwiseConsistencyCheck(hSession,
+					publicKey, privateKey, key_type);
+    if (crv != CKR_OK) {
+	NSC_DestroyObject(hSession,publicKey->handle);
+	sftk_FreeObject(publicKey);
+	NSC_DestroyObject(hSession,privateKey->handle);
+	sftk_FreeObject(privateKey);
+	return crv;
+    }
+
     *phPrivateKey = privateKey->handle;
     *phPublicKey = publicKey->handle;
     sftk_FreeObject(publicKey);
