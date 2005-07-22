@@ -320,8 +320,6 @@ ifdef MOZ_UPDATE_XTERM
 UPDATE_TITLE = sed -e "s!Y!$@ in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$$d!" $(MOZILLA_DIR)/config/xterm.str;
 endif
 
-EXIT_ON_ERROR := set -e; # Shell loops continue past errors without this.
-
 ifdef DIRS
 LOOP_OVER_DIRS = \
     @$(EXIT_ON_ERROR) \

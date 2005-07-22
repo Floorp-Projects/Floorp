@@ -148,7 +148,6 @@ LOCALES_browser :=                              \
   $(LOCALES_toolkit)                            \
   browser                                       \
   other-licenses/branding/firefox               \
-  extensions/reporter                           \
   $(NULL)
 
 BOOTSTRAP_browser := mozilla/browser/config/mozconfig

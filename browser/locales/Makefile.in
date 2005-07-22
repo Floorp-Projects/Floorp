@@ -120,9 +120,6 @@ install:: $(addsuffix .src,$(SEARCH_PLUGIN_PREFIX)) $(foreach base,$(SEARCH_PLUG
 libs-%:
 	@$(MAKE) -C ../../toolkit/locales libs-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
-ifneq (,$(filter reporter,$(MOZ_EXTENSIONS)))
-	@$(MAKE) -C ../../extensions/reporter/locales libs AB_CD=$* XPI_NAME=locale-$*
-endif
 ifdef MOZ_USE_OFFICIAL_BRANDING
 	@$(MAKE) -C ../../other-licenses/branding/firefox/locales AB_CD=$* XPI_NAME=locale-$*
 endif
