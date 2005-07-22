@@ -43,7 +43,7 @@ function checkRequired() {
         for (var i = 0; i < eList.length && canAdvance; ++i) {
             canAdvance = (eList[i].value != "");
         }
-        if( canAdvance && document.getElementById("calendar-uri").value )
+        if (canAdvance && document.getElementById("calendar-uri").value)
             canAdvance = checkURL();
         document.getElementById('calendar-wizard').canAdvance = canAdvance;
     }
