@@ -6081,7 +6081,7 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
   NS_ENSURE_TRUE(*aState, NS_ERROR_OUT_OF_MEMORY);
 
 #ifdef DEBUG_PAGE_CACHE
-  printf("saving window state, stateObj = %p\n", stateObj);
+  printf("saving window state, stateObj = %p\n", (void*)stateObj);
 #endif
   nsresult rv = CopyJSProperties(cx, mJSObject, stateObj);
   if (NS_FAILED(rv)) {
@@ -6113,7 +6113,7 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
   NS_ENSURE_TRUE(holder, NS_ERROR_FAILURE);
 
 #ifdef DEBUG_PAGE_CACHE
-  printf("restoring window state, stateObj = %p\n", holder->GetObject());
+  printf("restoring window state, stateObj = %p\n", (void*)holder->GetObject());
 #endif
   nsresult rv = CopyJSProperties(cx, holder->GetObject(), mJSObject);
   NS_ENSURE_SUCCESS(rv, rv);
