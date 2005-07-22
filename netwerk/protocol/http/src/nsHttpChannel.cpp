@@ -3912,20 +3912,25 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     if (mCanceled || NS_FAILED(mStatus))
         status = mStatus;
 
-    if (mCachedContentIsPartial && NS_SUCCEEDED(status)) {
-        // mTransactionPump should be suspended
-        NS_ASSERTION(request != mTransactionPump,
-            "byte-range transaction finished prematurely");
+    if (mCachedContentIsPartial) {
+        if (NS_SUCCEEDED(status)) {
+            // mTransactionPump should be suspended
+            NS_ASSERTION(request != mTransactionPump,
+                "byte-range transaction finished prematurely");
 
-        if (request == mCachePump) {
-            PRBool streamDone;
-            status = OnDoneReadingPartialCacheEntry(&streamDone);
-            if (NS_SUCCEEDED(status) && !streamDone)
-                return status;
-            // otherwise, fall through and fire OnStopRequest...
+            if (request == mCachePump) {
+                PRBool streamDone;
+                status = OnDoneReadingPartialCacheEntry(&streamDone);
+                if (NS_SUCCEEDED(status) && !streamDone)
+                    return status;
+                // otherwise, fall through and fire OnStopRequest...
+            }
+            else
+                NS_NOTREACHED("unexpected request");
         }
-        else
-            NS_NOTREACHED("unexpected request");
+        // Do not to leave the transaction in a suspended state in error cases.
+        if (NS_FAILED(status) && mTransaction)
+            gHttpHandler->CancelTransaction(mTransaction, status); 
     }
 
     PRBool isPartial = PR_FALSE;
