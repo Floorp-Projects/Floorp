@@ -2558,11 +2558,10 @@ SFTK_SlotInit(char *configdir,sftk_token_parameters *params, int moduleIndex)
 	/* if the data base is initialized with a null password,remember that */
 	slot->needLogin = 
 		(PRBool)!sftk_hasNullPassword(slot->keyDB,&slot->password);
-	if (params->minPW <= SFTK_MAX_PIN) {
+	if ((params->minPW >= 0) && (params->minPW <= SFTK_MAX_PIN)) {
 	    slot->minimumPinLen = params->minPW;
 	}
-	if ((slot->minimumPinLen == 0) && (params->pwRequired) && 
-		(slot->minimumPinLen <= SFTK_MAX_PIN)) {
+	if ((slot->minimumPinLen == 0) && (params->pwRequired)) {
 	    slot->minimumPinLen = 1;
 	}
     }
@@ -3049,10 +3048,7 @@ CK_RV NSC_GetTokenInfo(CK_SLOT_ID slotID,CK_TOKEN_INFO_PTR pInfo)
 				CKF_LOGIN_REQUIRED | CKF_USER_PIN_INITIALIZED;
 	}
 	pInfo->ulMaxPinLen = SFTK_MAX_PIN;
-	pInfo->ulMinPinLen = 0;
-	if (slot->minimumPinLen > 0) {
-	    pInfo->ulMinPinLen = (CK_ULONG)slot->minimumPinLen;
-	}
+	pInfo->ulMinPinLen = (CK_ULONG)slot->minimumPinLen;
 	pInfo->ulTotalPublicMemory = 1;
 	pInfo->ulFreePublicMemory = 1;
 	pInfo->ulTotalPrivateMemory = 1;

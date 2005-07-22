@@ -167,8 +167,8 @@ secmod_parseParameters(char *param, sftk_parameters *parsed, PRBool isFIPS)
         SECMOD_HANDLE_STRING_ARG(index,slotdes,"cryptoSlotDescription=",;)
         SECMOD_HANDLE_STRING_ARG(index,pslotdes,"dbSlotDescription=",;)
         SECMOD_HANDLE_STRING_ARG(index,fslotdes,"FIPSSlotDescription=",;)
-        SECMOD_HANDLE_STRING_ARG(index,minPW,"FIPSTokenDescription=",;)
-	SECMOD_HANDLE_STRING_ARG(index,tmp,"minPWLen=",;)
+        SECMOD_HANDLE_STRING_ARG(index,fpslotdes,"FIPSTokenDescription=",;)
+	SECMOD_HANDLE_STRING_ARG(index,minPW,"minPWLen=",;)
 
 	SECMOD_HANDLE_STRING_ARG(index,tmp,"flags=", 
 		if(tmp) { secmod_parseFlags(param,parsed); PORT_Free(tmp); })
