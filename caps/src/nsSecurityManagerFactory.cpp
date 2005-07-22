@@ -51,6 +51,7 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsString.h"
 #include "nsPrefsCID.h"
 
 ///////////////////////
@@ -100,6 +101,30 @@ getStringArgument(JSContext *cx, JSObject *obj, PRUint16 argNum, uintN argc, jsv
         return nsnull;
 
     return JS_GetStringBytes(str);
+}
+
+static void
+getUTF8StringArgument(JSContext *cx, JSObject *obj, PRUint16 argNum,
+                      uintN argc, jsval *argv, nsCString& aRetval)
+{
+    if (argc <= argNum || !JSVAL_IS_STRING(argv[argNum])) {
+        JS_ReportError(cx, "String argument expected");
+        aRetval.Truncate();
+        return;
+    }
+
+    /*
+     * We don't want to use JS_ValueToString because we want to be able
+     * to have an object to represent a target in subsequent versions.
+     */
+    JSString *str = JSVAL_TO_STRING(argv[argNum]);
+    if (!str) {
+        aRetval.Truncate();
+        return;
+    }
+
+    PRUnichar *data = (PRUnichar*)JS_GetStringChars(str);
+    CopyUTF16toUTF8(data, aRetval);
 }
 
 PR_STATIC_CALLBACK(JSBool)
@@ -196,9 +221,10 @@ netscape_security_setCanEnablePrivilege(JSContext *cx, JSObject *obj, uintN argc
                                         jsval *argv, jsval *rval)
 {
     if (argc < 2) return JS_FALSE;
-    char *principalID = getStringArgument(cx, obj, 0, argc, argv);
+    nsCAutoString principalFingerprint;
+    getUTF8StringArgument(cx, obj, 0, argc, argv, principalFingerprint);
     char *cap = getStringArgument(cx, obj, 1, argc, argv);
-    if (!principalID || !cap)
+    if (principalFingerprint.IsEmpty() || !cap)
         return JS_FALSE;
 
     nsresult rv;
@@ -209,7 +235,7 @@ netscape_security_setCanEnablePrivilege(JSContext *cx, JSObject *obj, uintN argc
 
     //    NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
 
-    rv = securityManager->SetCanEnableCapability(principalID, cap, 
+    rv = securityManager->SetCanEnableCapability(principalFingerprint, cap, 
                                                  nsIPrincipal::ENABLE_GRANTED);
     if (NS_FAILED(rv))
         return JS_FALSE;
@@ -220,8 +246,9 @@ PR_STATIC_CALLBACK(JSBool)
 netscape_security_invalidate(JSContext *cx, JSObject *obj, uintN argc,
                              jsval *argv, jsval *rval)
 {
-    char *principalID = getStringArgument(cx, obj, 0, argc, argv);
-    if (!principalID)
+    nsCAutoString principalFingerprint;
+    getUTF8StringArgument(cx, obj, 0, argc, argv, principalFingerprint);
+    if (principalFingerprint.IsEmpty())
         return JS_FALSE;
 
     nsresult rv;
@@ -232,7 +259,7 @@ netscape_security_invalidate(JSContext *cx, JSObject *obj, uintN argc,
 
     //    NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
 
-    rv = securityManager->SetCanEnableCapability(principalID,
+    rv = securityManager->SetCanEnableCapability(principalFingerprint,
                                                  nsPrincipal::sInvalid,
                                                  nsIPrincipal::ENABLE_GRANTED);
     if (NS_FAILED(rv))

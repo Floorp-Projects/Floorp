@@ -1705,25 +1705,28 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
       if (NS_FAILED(rv2)) {
         break;
       }
-      nsCOMPtr<nsIPrincipal> certPrincipal;
-      rv2 = mScriptSecurityManager->
-        GetCertificatePrincipal(NS_ConvertUTF16toUTF8(fingerprint).get(),
-                                nsnull, getter_AddRefs(certPrincipal));
-      if (NS_FAILED(rv2) || !certPrincipal) {
-        break;
-      }
-      
       nsAutoString orgName;
       rv2 = pCert->GetOrganization(orgName);
       if (NS_FAILED(rv2)) {
         break;
       }
-      rv2 = certPrincipal->SetCommonName(NS_ConvertUTF16toUTF8(orgName).get());
+      nsAutoString subjectName;
+      rv2 = pCert->GetSubjectName(subjectName);
       if (NS_FAILED(rv2)) {
         break;
       }
     
-      NS_ADDREF(*aPrincipal = certPrincipal);
+      nsCOMPtr<nsIPrincipal> certPrincipal;
+      rv2 = mScriptSecurityManager->
+        GetCertificatePrincipal(NS_ConvertUTF16toUTF8(fingerprint),
+                                NS_ConvertUTF16toUTF8(subjectName),
+                                NS_ConvertUTF16toUTF8(orgName),
+                                pCert, nsnull, getter_AddRefs(certPrincipal));
+      if (NS_FAILED(rv2) || !certPrincipal) {
+        break;
+      }
+      
+      certPrincipal.swap(*aPrincipal);
     } while (0);
   }
 

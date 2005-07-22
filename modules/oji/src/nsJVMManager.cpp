@@ -903,7 +903,10 @@ nsJVMManager::IsLiveConnectEnabled(void)
  * be derived, should have been verified before this method is 
  * called.
  */
-
+// XXXbz this function has been deprecated for 4.5 years.  We have no
+// callers in the tree.  Is it time to remove it?  It's returning
+// PRBools for a NS_METHOD, and NS_METHOD for an interface method, for
+// goodness' sake!
 NS_METHOD
 nsJVMManager::IsAllPermissionGranted(
     const char * lastFP,
@@ -912,6 +915,10 @@ nsJVMManager::IsAllPermissionGranted(
     const char * rootCN, 
     PRBool * isGranted)
 {
+    if (!lastFP || !lastCN) {
+        return PR_FALSE;
+    }
+    
     nsresult rv      = NS_OK;
 
     nsCOMPtr<nsIPrincipal> pIPrincipal;
@@ -926,12 +933,15 @@ nsJVMManager::IsAllPermissionGranted(
     // The fingerprint is a one way hash of this certificate. It is used
     // as the key to store the principal in the principal database.
 
-    rv = secMan->GetCertificatePrincipal(lastFP, nsnull,
+    // XXXbz using the |lastCN| for the subjectName for lack of
+    // anything better.  Also not passing in a pointer to a cert,
+    // since we don't have one.
+    rv = secMan->GetCertificatePrincipal(nsDependentCString(lastFP),
+                                         nsDependentCString(lastCN),
+                                         nsDependentCString(lastCN),
+                                         nsnull, nsnull,
                                          getter_AddRefs(pIPrincipal));
     if (NS_FAILED(rv)) return PR_FALSE;
-
-    // Set the common name.
-    rv = pIPrincipal->SetCommonName(lastCN);
 
     PRInt16 ret;
 

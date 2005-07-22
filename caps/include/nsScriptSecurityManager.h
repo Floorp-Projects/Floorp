@@ -429,6 +429,18 @@ private:
     nsresult
     CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal** result);
 
+    // This is just like the API method, but it doesn't check that the subject
+    // name is nonempty or aCertificate is non-null, and it doesn't change the
+    // certificate in the table (if any) in any way if aModifyTable is false.
+    nsresult
+    DoGetCertificatePrincipal(const nsACString& aCertFingerprint,
+                              const nsACString& aSubjectName,
+                              const nsACString& aPrettyName,
+                              nsISupports* aCertificate,
+                              nsIURI* aURI,
+                              PRBool aModifyTable,
+                              nsIPrincipal **result);
+
     // Returns null if a principal cannot be found.  Note that rv can be NS_OK
     // when this happens -- this means that there was no script for the
     // context.  Callers MUST pass in a non-null rv here.
@@ -486,7 +498,10 @@ private:
     InitPrefs();
 
     static nsresult 
-    PrincipalPrefNames(const char* pref, char** grantedPref, char** deniedPref);
+    GetPrincipalPrefNames(const char* prefBase,
+                          nsCString& grantedPref,
+                          nsCString& deniedPref,
+                          nsCString& subjectNamePref);
 
     nsresult
     InitPolicies();

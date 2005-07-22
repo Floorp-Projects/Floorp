@@ -2646,12 +2646,14 @@ ExtensionManager.prototype = {
             var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
                                       .createInstance(Components.interfaces.nsIZipReader);
             zipReader.init(entry);
-            var commonName = "";
+            var prettyName = "";
             try {
               var jar = zipReader.QueryInterface(Components.interfaces.nsIJAR);
               var principal = { };
               var certPrincipal = zipReader.getCertificatePrincipal(null, principal);
-              commonName = principal.value.commonName;
+              // XXXbz This string could be empty.  This needs better
+              // UI to present principal.value.certificate's subject.
+              prettyName = principal.value.prettyName;
             }
             catch (e) { }
             xpinstallStrings = xpinstallStrings.concat([item.name, 
