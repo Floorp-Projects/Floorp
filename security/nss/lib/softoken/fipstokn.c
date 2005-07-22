@@ -780,6 +780,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     CK_ULONG usPrivateKeyAttributeCount, CK_OBJECT_HANDLE_PTR phPublicKey,
 					CK_OBJECT_HANDLE_PTR phPrivateKey) {
     CK_BBOOL *boolptr;
+    CK_RV crv;
 
     SFTK_FIPSCHECK();
 
@@ -792,9 +793,14 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 	    return CKR_ATTRIBUTE_VALUE_INVALID;
 	}
     }
-    return NSC_GenerateKeyPair (hSession,pMechanism,pPublicKeyTemplate,
+    crv = NSC_GenerateKeyPair (hSession,pMechanism,pPublicKeyTemplate,
     		usPublicKeyAttributeCount,pPrivateKeyTemplate,
 		usPrivateKeyAttributeCount,phPublicKey,phPrivateKey);
+    if (crv == CKR_GENERAL_ERROR) {
+	/* pairwise consistency check failed. */
+	fatalError = PR_TRUE;
+    }
+    return crv;
 }
 
 
