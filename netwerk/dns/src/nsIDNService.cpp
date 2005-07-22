@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDNService.h"
-#include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsUnicharUtils.h"
@@ -46,6 +45,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 #include "nsIObserverService.h"
+#include "nsISupportsPrimitives.h"
 #include "punycode.h"
 
 //-----------------------------------------------------------------------------
@@ -56,6 +56,14 @@ static const PRUint32 kMaxDNSNodeLen = 63;
 
 #define NS_NET_PREF_IDNTESTBED      "network.IDN_testbed"
 #define NS_NET_PREF_IDNPREFIX       "network.IDN_prefix"
+#define NS_NET_PREF_IDNBLACKLIST    "network.IDN.blacklist_chars"
+
+inline PRBool isOnlySafeChars(const nsAFlatString& in,
+                              const nsAFlatString& blacklist)
+{
+  return (blacklist.IsEmpty() ||
+          in.FindCharInSet(blacklist) == kNotFound);
+}
 
 //-----------------------------------------------------------------------------
 // nsIDNService
@@ -73,6 +81,7 @@ nsresult nsIDNService::Init()
   if (prefInternal) {
     prefInternal->AddObserver(NS_NET_PREF_IDNTESTBED, this, PR_TRUE); 
     prefInternal->AddObserver(NS_NET_PREF_IDNPREFIX, this, PR_TRUE); 
+    prefInternal->AddObserver(NS_NET_PREF_IDNBLACKLIST, this, PR_TRUE);
     prefsChanged(prefInternal, nsnull);
   }
   return NS_OK;
@@ -102,6 +111,16 @@ void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const PRUnichar *pref
     nsresult rv = prefBranch->GetCharPref(NS_NET_PREF_IDNPREFIX, getter_Copies(prefix));
     if (NS_SUCCEEDED(rv) && prefix.Length() <= kACEPrefixLen)
       PL_strncpyz(nsIDNService::mACEPrefix, prefix.get(), kACEPrefixLen + 1);
+  }
+  if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNBLACKLIST).Equals(pref)) {
+    nsCOMPtr<nsISupportsString> blacklist;
+    nsresult rv = prefBranch->GetComplexValue(NS_NET_PREF_IDNBLACKLIST,
+                                              NS_GET_IID(nsISupportsString),
+                                              getter_AddRefs(blacklist));
+    if (NS_SUCCEEDED(rv))
+      blacklist->ToString(getter_Copies(mIDNBlacklist));
+    else
+      mIDNBlacklist.Truncate();
   }
 }
 
@@ -252,9 +271,14 @@ NS_IMETHODIMP nsIDNService::Normalize(const nsACString & input, nsACString & out
 
   nsAutoString outUTF16;
   nsresult rv = stringPrep(inUTF16, outUTF16);
-  if (NS_SUCCEEDED(rv))
-    CopyUTF16toUTF8(outUTF16, output);
-  return rv;
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyUTF16toUTF8(outUTF16, output);
+  if (!isOnlySafeChars(outUTF16, mIDNBlacklist))
+    return ConvertUTF8toACE(output, output);
+
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -531,6 +555,8 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out)
   nsAutoString utf16;
   ucs4toUtf16(output, utf16);
   delete [] output;
+  if (!isOnlySafeChars(utf16, mIDNBlacklist))
+    return NS_ERROR_FAILURE;
   CopyUTF16toUTF8(utf16, out);
 
   // Validation: encode back to ACE and compare the strings

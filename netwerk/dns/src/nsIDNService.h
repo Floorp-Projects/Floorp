@@ -45,6 +45,7 @@
 #include "nsWeakReference.h"
 #include "nsIUnicodeNormalizer.h"
 #include "nsIDNKitInterface.h"
+#include "nsString.h"
 
 class nsIPrefBranch;
 
@@ -75,11 +76,12 @@ private:
   nsresult stringPrep(const nsAString& in, nsAString& out);
   nsresult decodeACE(const nsACString& in, nsACString& out);
   void prefsChanged(nsIPrefBranch *prefBranch, const PRUnichar *pref);
-  
+
   PRBool mMultilingualTestBed;  // if true generates extra node for mulitlingual testbed 
   idn_nameprep_t mNamePrepHandle;
   nsCOMPtr<nsIUnicodeNormalizer> mNormalizer;
   char mACEPrefix[kACEPrefixLen+1];
+  nsXPIDLString mIDNBlacklist;
 };
 
 #endif  // nsIDNService_h__
