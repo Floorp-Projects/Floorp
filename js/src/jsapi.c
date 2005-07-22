@@ -1990,7 +1990,8 @@ JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     if (type == JSTYPE_STRING)
         return JS_TRUE;
 #endif
-    return js_TryValueOf(cx, obj, type, vp);
+    js_TryValueOf(cx, obj, type, vp);
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(void)
