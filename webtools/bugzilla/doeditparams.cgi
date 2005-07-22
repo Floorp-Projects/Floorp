@@ -35,6 +35,7 @@ require "CGI.pl";
 Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
 
 print $cgi->header();
 
@@ -43,7 +44,7 @@ UserInGroup("tweakparams")
                                      action => "modify",
                                      object => "parameters"});
 
-PutHeader("Saving new parameters");
+$template->put_header("Saving new parameters");
 
 my $howto = "";
 
@@ -90,7 +91,7 @@ foreach my $i (GetParamList()) {
                 print "New value for " . html_quote($name) .
                   " is invalid: $ok<p>\n";
                 print "Please hit <b>Back</b> and try again.\n";
-                PutFooter();
+                $template->put_footer();
                 exit;
             }
         }
@@ -115,4 +116,4 @@ print $howto;
 print "<a href=\"editparams.cgi\">Edit the params some more.</a><p>\n";
 print "<a href=\"query.cgi\">Go back to the query page.</a>\n";
     
-PutFooter();
+$template->put_footer();

@@ -81,12 +81,12 @@ sub Unlock {
 
 if (!defined $cgi->param('buglist')) {
   print $cgi->header();
-  PutHeader("Move Bugs");
+  $template->put_header("Move Bugs");
   print "Move bugs either from the bug display page or perform a ";
   print "<A HREF=\"query.cgi\">query</A> and change several bugs at once.\n";
   print "If you don't see the move button, then you either aren't ";
   print "logged in or aren't permitted to.";
-  PutFooter();
+  $template->put_footer();
   exit;
 }
 
@@ -96,9 +96,9 @@ $movers =~ s/\s?,\s?/|/g;
 $movers =~ s/@/\@/g;
 unless ($exporter =~ /($movers)/) {
   print $cgi->header();
-  PutHeader("Move Bugs");
+  $template->put_header("Move Bugs");
   print "<P>You do not have permission to move bugs<P>\n";
-  PutFooter();
+  $template->put_footer();
   exit;
 }
 

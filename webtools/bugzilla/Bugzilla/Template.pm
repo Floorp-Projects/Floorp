@@ -34,11 +34,13 @@ use strict;
 use Bugzilla::Config qw(:DEFAULT $templatedir $datadir);
 use Bugzilla::Util;
 use Bugzilla::User;
+use Bugzilla::Error;
 
 # for time2str - replace by TT Date plugin??
 use Date::Format ();
 
 use base qw(Template);
+use vars qw($vars);
 
 # Convert the constants in the Bugzilla::Constants module into a hash we can
 # pass to the template object for reflection into its "constants" namespace
@@ -128,6 +130,23 @@ sub getTemplateIncludePath () {
               "$templatedir/$_/extension",
               "$templatedir/$_/default"),
              @usedlanguages)];
+}
+
+# Write the header for non yet templatized .cgi files.
+sub put_header {
+    my $self = shift;
+    ($vars->{'title'}, $vars->{'h1'}, $vars->{'h2'}) = (@_);
+     
+    $self->process("global/header.html.tmpl", $vars)
+      || ThrowTemplateError($self->error());
+    $vars->{'header_done'} = 1;
+}
+
+# Write the footer for non yet templatized .cgi files.
+sub put_footer {
+    my $self = shift;
+    $self->process("global/footer.html.tmpl", $vars)
+      || ThrowTemplateError($self->error());
 }
 
 

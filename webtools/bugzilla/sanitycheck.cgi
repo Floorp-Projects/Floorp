@@ -75,6 +75,7 @@ Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
+my $template = Bugzilla->template;
 
 # Make sure the user is authorized to access sanitycheck.cgi.  Access
 # is restricted to logged-in users who have "editbugs" privileges,
@@ -92,7 +93,7 @@ print $cgi->header();
 
 my @row;
 
-PutHeader("Bugzilla Sanity Check");
+$template->put_header("Bugzilla Sanity Check");
 
 ###########################################################################
 # Fix vote cache
@@ -272,7 +273,7 @@ if (defined $cgi->param('rescanallBugMail')) {
         Status("Unsent mail has been sent.");
     }
 
-    PutFooter();
+    $template->put_footer();
     exit;
 }
 
@@ -887,4 +888,4 @@ if (@badbugs > 0) {
 ###########################################################################
 
 Status("Sanity check completed.");
-PutFooter();
+$template->put_footer();

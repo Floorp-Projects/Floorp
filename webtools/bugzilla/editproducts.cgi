@@ -118,7 +118,7 @@ sub CheckClassification ($)
 # For the transition period, as this file is templatised bit by bit,
 # we need this routine, which does things properly, and will
 # eventually be the only version. (The older versions assume a
-# PutHeader() call has been made)
+# $template->put_header() call has been made)
 sub CheckClassificationNew ($)
 {
     my $cl = shift;
@@ -271,7 +271,7 @@ sub PutTrailer (@)
         }
         $num++;
     }
-    PutFooter();
+    $template->put_footer();
 }
 
 
@@ -408,7 +408,7 @@ if (!$action && !$product) {
 #
 
 if ($action eq 'add') {
-    PutHeader("Add product");
+    $template->put_header("Add product");
 
     if (Param('useclassification')) {
         CheckClassification($classification);
@@ -449,7 +449,7 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-    PutHeader("Adding new product");
+    $template->put_header("Adding new product");
 
     # Cleanups and validity checks
 
@@ -777,7 +777,7 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit' || (!$action && $product)) {
-    PutHeader("Edit product");
+    $template->put_header("Edit product");
     CheckProduct($product);
     my $classification_id=1;
     if (Param('useclassification')) {
@@ -1003,7 +1003,7 @@ if ($action eq 'updategroupcontrols') {
             exit;                
         }
     }
-    PutHeader("Update group access controls for product \"$product\"");
+    $template->put_header("Update group access controls for product \"$product\"");
     $headerdone = 1;
     SendSQL("SELECT id, name FROM groups " .
             "WHERE isbuggroup != 0 AND isactive != 0");
@@ -1167,7 +1167,7 @@ if ($action eq 'updategroupcontrols') {
 #
 
 if ($action eq 'update') {
-    PutHeader("Update product");
+    $template->put_header("Update product");
 
     my $productold          = trim($cgi->param('productold')          || '');
     my $description         = trim($cgi->param('description')         || '');
@@ -1448,5 +1448,5 @@ if ($action eq 'editgroupcontrols') {
 # No valid action found
 #
 
-PutHeader("Error");
+$template->put_header("Error");
 print "I don't have a clue what you want.<BR>\n";

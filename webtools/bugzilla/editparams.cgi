@@ -33,6 +33,8 @@ require "CGI.pl";
 
 Bugzilla->login(LOGIN_REQUIRED);
 
+my $template = Bugzilla->template;
+
 print Bugzilla->cgi->header();
 
 UserInGroup("tweakparams")
@@ -40,7 +42,7 @@ UserInGroup("tweakparams")
                                      action => "modify",
                                      object => "parameters"});
 
-PutHeader("Edit parameters");
+$template->put_header("Edit parameters");
 
 print "This lets you edit the basic operating parameters of bugzilla.\n";
 print "Be careful!\n";
@@ -141,4 +143,4 @@ print "<input type=submit value=\"Submit changes\">\n";
 print "</form>\n";
 
 print "<p><a href=query.cgi>Skip all this, and go back to the query page</a>\n";
-PutFooter();
+$template->put_footer();

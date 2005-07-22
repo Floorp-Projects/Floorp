@@ -50,20 +50,7 @@ sub CGI_pl_sillyness {
 
 require 'globals.pl';
 
-use vars qw($template $vars);
-
-sub PutHeader {
-    ($vars->{'title'}, $vars->{'h1'}, $vars->{'h2'}) = (@_);
-     
-    $::template->process("global/header.html.tmpl", $::vars)
-      || ThrowTemplateError($::template->error());
-    $vars->{'header_done'} = 1;
-}
-
-sub PutFooter {
-    $::template->process("global/footer.html.tmpl", $::vars)
-      || ThrowTemplateError($::template->error());
-}
+use vars qw($vars);
 
 ############# Live code below here (that is, not subroutine defs) #############
 

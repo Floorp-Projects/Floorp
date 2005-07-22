@@ -63,6 +63,7 @@ GetVersionTable();
 Bugzilla->switch_to_shadow_db();
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
 
 # We only want those products that the user has permissions for.
 my @myproducts;
@@ -72,7 +73,7 @@ push( @myproducts, GetSelectableProducts());
 if (! defined $cgi->param('product')) {
 
     choose_product(@myproducts);
-    PutFooter();
+    $template->put_footer();
 
 } else {
     my $product = $cgi->param('product');
@@ -93,11 +94,11 @@ if (! defined $cgi->param('product')) {
 
     print $cgi->header(-Content_Disposition=>'inline; filename=bugzilla_report.html');
 
-    PutHeader("Bug Charts");
+    $template->put_header("Bug Charts");
 
     show_chart($product);
 
-    PutFooter();
+    $template->put_footer();
 }
 
 
@@ -119,7 +120,7 @@ sub choose_product {
       || ThrowCodeError("chart_file_open_fail", {filename => "$dir/$datafile"});
  
     print $cgi->header();
-    PutHeader("Bug Charts");
+    $template->put_header("Bug Charts");
 
     print <<FIN;
 <center>
