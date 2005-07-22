@@ -60,7 +60,9 @@
         </menupopup>
       </menu>
       <menuitem id="msgOpen" onclick="msgOpen" label="&msgOpenLabel;" accesskey="&msgOpenAccel;"/>
+<!--
       <menuitem id="msgSaveAs" onclick="msgSaveAs" label="&msgSaveAsLabel;" accesskey="&msgSaveAsAccel;"/>
+-->
       <menuseparator/>
       <menuitem id="msgGetNew" onclick="msgGetNew" label="&msgGetNewLabel;" accesskey="&msgGetNewAccel;"/>
       <menuseparator/>
@@ -116,7 +118,7 @@
       <menuitem id="fwdAttachment" onclick="fwdAttachment" label="&fwdAttachmentLabel;" accesskey="&fwdAttachmentAccel;"/>
       <menuseparator/>
       <menu id="msgMark" label="&msgMarkLabel;" accesskey="&msgMarkAccel;">
-        <menupopup>     
+        <menupopup>
           <menuitem id="markMsgRead" onclick="markMsgRead" label="&markMsgReadLabel;" accesskey="&markMsgReadAccel;"/>
           <menuitem id="markThreadRead" onclick="markThreadRead" label="&markThreadReadLabel;" accesskey="&markThreadReadAccel;"/>
           <menuitem id="markAllRead" onclick="markAllRead" label="&markAllReadLabel;" accesskey="&markAllReadAccel;"/>
