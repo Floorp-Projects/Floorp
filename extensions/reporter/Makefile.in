@@ -44,16 +44,52 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS           = \
-               locales \
-               $(NULL)
-
 ifdef MOZ_XUL_APP
 XPI_NAME               = reporter
 USE_EXTENSION_MANIFEST = 1
 NO_JAR_AUTO_REG        = 1
 INSTALL_EXTENSION_ID   = reporter@mozilla.org
+XPI_PKGNAME            = reporter-$(MOZ_APP_VERSION)
 endif
+
+ALL_LOCALES = \
+	en-US \
+	ar \
+	bg \
+	ca \
+	cs \
+	el \
+	en-GB \
+	es-AR \
+	es-ES \
+	eu \
+	fi \
+	fr \
+	ga-IE \
+	gu-IN \
+	he \
+	hu \
+	hy-AM \
+	it \
+	ja \
+	ja-JP-mac \
+	ko \
+	mk \
+	mn \
+	nb-NO \
+	nl \
+	nn-NO \
+	pa-IN \
+	pl \
+	pt-BR \
+	ro \
+	ru \
+	sl \
+	sv-SE \
+	tr \
+	zh-CN \
+	zh-TW \
+	$(NULL)
 
 DIST_FILES = install.rdf
 
@@ -68,5 +104,30 @@ XULAPP_DEFINES = \
 	$(NULL)
 
 PREF_JS_EXPORTS = $(srcdir)/resources/content/prefs/reporter.js
+
+include $(topsrcdir)/config/config.mk
+
+SUBMAKEFILES += locales/Makefile
+
+# We need the locale-loop to happen before rules.mk, but we still want the
+# default all:: target. Hack it here.
+
+SUPPRESS_DEFAULT_RULES = 1
+
+all:: 
+	$(MAKE) export
+	$(MAKE) libs
+
+# Do depend as well
+alldep:: 
+	$(MAKE) export
+	$(MAKE) depend
+	$(MAKE) libs
+
+libs realchrome:: locales/Makefile
+	@$(EXIT_ON_ERROR)                    \
+	for locale in $(ALL_LOCALES); do     \
+	  $(MAKE) -C locales AB_CD=$$locale; \
+	done
 
 include $(topsrcdir)/config/rules.mk
