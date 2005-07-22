@@ -567,12 +567,16 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     // reset the insertion point. 
     NSString *result = [mDataSource resultString:aRow column:@"col1"];
     
-    // don't match letters in the protocol
+    // figure out where to start the match, depending on whether the user typed the protocol part
     int protocolLength = 0;
     NSURL* resultURL = [NSURL URLWithString:result];
+    NSURL* searchURL = [NSURL URLWithString:mSearchString];
     if (resultURL)
-      protocolLength = [[resultURL scheme] length];
-    
+    {
+      if (([[searchURL scheme] length] == 0) || ![[searchURL scheme] isEqualToString:[resultURL scheme]])
+        protocolLength = [[resultURL scheme] length];
+    }
+        
     NSRange matchRange = [result rangeOfString:mSearchString options:NSCaseInsensitiveSearch range:NSMakeRange(protocolLength, [result length] - protocolLength)];
     if (matchRange.length > 0 && matchRange.location != NSNotFound) {
       unsigned int location = matchRange.location + matchRange.length;
