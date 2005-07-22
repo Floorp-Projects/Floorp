@@ -103,7 +103,7 @@
     </target>
 
     <target name="run" description="Runs Grendel after compiling.">
-      <java classname="grendel.Main" classpath="dist"/>
+      <java classname="grendel.Main" fork="true" dir="dist"/>
     </target>
 
     <target name="clean" description="Cleans up generated class files.">
