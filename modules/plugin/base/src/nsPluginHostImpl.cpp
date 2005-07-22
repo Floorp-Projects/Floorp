@@ -2411,23 +2411,24 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   if (httpChannel) {
     httpChannel->VisitResponseHeaders(this);
 
-    // set seekability (seekable if the stream has a known length and if the
-    // http server accepts byte ranges).
     PRBool bSeekable = PR_FALSE;
-    PRUint32 length;
-    mPluginStreamInfo->GetLength(&length);
-    if (length) {
-      // first we look for a content-encoding header. If we find one,
-      // we tell the plugin that stream is not seekable,
-      // because range request on compressed content is irrelevant,
-      // so we force the plugin to use nsPluginStreamType_AsFile stream type
-      // and we have to save decompressed file into local plugin cache,
-      // because necko cache contains original compressed file.
-      nsCAutoString contentEncoding;
-      if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
-        contentEncoding))) {
-        useLocalCache = PR_TRUE;
-      } else {
+    // first we look for a content-encoding header. If we find one, we tell the
+    // plugin that stream is not seekable, because the plugin always sees
+    // uncompressed data, so it can't make meaningful range requests on a
+    // compressed entity.  Also, we force the plugin to use
+    // nsPluginStreamType_AsFile stream type and we have to save decompressed
+    // file into local plugin cache, because necko cache contains original
+    // compressed file.
+    nsCAutoString contentEncoding;
+    if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
+                                                    contentEncoding))) {
+      useLocalCache = PR_TRUE;
+    } else {
+      // set seekability (seekable if the stream has a known length and if the
+      // http server accepts byte ranges).
+      PRUint32 length;
+      mPluginStreamInfo->GetLength(&length);
+      if (length) {
         nsCAutoString range;
         if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("accept-ranges"), range)) &&
           range.Equals(NS_LITERAL_CSTRING("bytes"), nsCaseInsensitiveCStringComparator())) {
@@ -2437,21 +2438,21 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
           mPluginStreamInfo->SetSeekable(bSeekable);
         }
       }
+    }
 
-      // we require a content len
-      // get Last-Modified header for plugin info
-      nsCAutoString lastModified;
-      if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"), lastModified)) &&
+    // we require a content len
+    // get Last-Modified header for plugin info
+    nsCAutoString lastModified;
+    if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"), lastModified)) &&
         !lastModified.IsEmpty())
-      {
-        PRTime time64;
-        PR_ParseTimeString(lastModified.get(), PR_TRUE, &time64);  //convert string time to interger time
+    {
+      PRTime time64;
+      PR_ParseTimeString(lastModified.get(), PR_TRUE, &time64);  //convert string time to interger time
 
-        // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
-        double fpTime;
-        LL_L2D(fpTime, time64);
-        mPluginStreamInfo->SetLastModified((PRUint32)(fpTime * 1e-6 + 0.5));
-      }
+      // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
+      double fpTime;
+      LL_L2D(fpTime, time64);
+      mPluginStreamInfo->SetLastModified((PRUint32)(fpTime * 1e-6 + 0.5));
     }
   }
 
