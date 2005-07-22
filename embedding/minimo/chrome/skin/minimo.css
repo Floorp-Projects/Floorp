@@ -54,11 +54,6 @@
   font-family: sans-serif ! important;
 }
 
-window {
-    width: 240px;
-    height: 320px;
-}
-
 #back-button
   {
 	  list-style-image      : url("chrome://minimo/content/back.gif");
@@ -79,6 +74,12 @@ window {
   {
 	  list-style-image      : url("chrome://minimo/content/reload.gif");
   }
+
+toolbar *, #appcontent * {
+  font-size: 10px ! important;
+  padding: 0px ! important;
+  margin: 0px ! important;
+}
 
 toolbarbutton {
 }
