@@ -1807,7 +1807,7 @@ void nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
     // If a side needs a double border but will be less than two pixels,
     // force it to be solid (see bug 1781).
     if (aBorderStyle.GetBorderStyle(side) == NS_STYLE_BORDER_STYLE_DOUBLE) {
-      nscoord widths[] = { border.bottom, border.left, border.top, border.right };
+      nscoord widths[] = { border.top, border.right, border.bottom, border.left };
       forceSolid = (widths[side]/twipsPerPixel < 2);
     } else 
       forceSolid = PR_FALSE;
