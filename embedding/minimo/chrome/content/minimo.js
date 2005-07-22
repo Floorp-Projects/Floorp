@@ -247,15 +247,13 @@ function BrowserReload()
   getWebNavigation().reload(nsIWebNavigation.LOAD_FLAGS_NONE);
 }
 
-////
-/// marcio 
-//
-function urlBarIdentity() {
-    if(0) {
-    }
-    
+function urlBarIdentity() 
+{
+  if(0) { }    
 }
 
-function addTab() {
+function addTab()
+{
     getBrowser().addTab("about:blank");
 }
+
