@@ -506,6 +506,28 @@ UpdatePatch.prototype = {
   },
   
   /**
+   * Returns whether or not the update.status file for this patch exists at the 
+   * appropriate location. 
+   */
+  get statusFileExists() {
+    var statusFile = getUpdatesDir();
+    statusFile.append(FILE_UPDATE_STATUS);
+    return statusFile.exists();
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  get state() {
+    if (!this.statusFileExists)
+      return STATE_NONE;
+    return this._properties.state;
+  },
+  set state(val) {
+    this._properties.state = val;
+  },
+  
+  /**
    * See nsISupports.idl
    */
   QueryInterface: function(iid) {
@@ -589,13 +611,17 @@ Update.prototype = {
 
   /**
    * See nsIUpdateService.idl
+   * 
+   * We use a copy of the state cached on this object in |_state| only when 
+   * there is no selected patch, i.e. in the case when we could not load 
+   * |.activeUpdate| from the update manager for some reason but still have
+   * the update.status file to work with. 
    */
   _state: "",
   set state(state) {
     if (this.selectedPatch)
       this.selectedPatch.state = state;
-    else
-      this._state = state;
+    this._state = state;
     return state;
   },
   get state() {
@@ -2118,6 +2144,10 @@ Downloader.prototype = {
  * @constructor
  */
 function TimerManager() {
+  gOS = Components.classes["@mozilla.org/observer-service;1"]
+                  .getService(Components.interfaces.nsIObserverService);
+  gOS.addObserver(this, "xpcom-shutdown", false);
+
   const nsITimer = Components.interfaces.nsITimer;
   this._timer = Components.classes["@mozilla.org/timer;1"]
                           .createInstance(nsITimer);
@@ -2126,6 +2156,19 @@ function TimerManager() {
                                nsITimer.TYPE_REPEATING_SLACK);
 }
 TimerManager.prototype = {
+  /**
+   * See nsIObserver.idl
+   */
+  observe: function(subject, topic, data) {
+    if (topic == "xpcom-shutdown") {
+      gOS.removeObserver(this, "xpcom-shutdown");
+
+      // Release everything we hold onto. 
+      this._timer = null;
+      this._timers = null;
+    }
+  },
+
   /**
    * The Checker Timer
    */
@@ -2181,6 +2224,7 @@ TimerManager.prototype = {
   QueryInterface: function(iid) {
     if (!iid.equals(Components.interfaces.nsIUpdateTimerManager) &&
         !iid.equals(Components.interfaces.nsITimerCallback) &&
+        !iid.equals(Components.interfaces.nsIObserver) &&
         !iid.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;

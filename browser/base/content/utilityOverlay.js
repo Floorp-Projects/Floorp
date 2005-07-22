@@ -454,9 +454,20 @@ function openReleaseNotes(event)
  */
 function checkForUpdates()
 {
-  var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
-                           .createInstance(Components.interfaces.nsIUpdatePrompt);
-  prompter.checkForUpdates();
+  var um = 
+      Components.classes["@mozilla.org/updates/update-manager;1"].
+      getService(Components.interfaces.nsIUpdateManager);
+  var prompter = 
+      Components.classes["@mozilla.org/updates/update-prompt;1"].
+      createInstance(Components.interfaces.nsIUpdatePrompt);
+
+  // If there's an update ready to be applied, show the "Update Downloaded"
+  // UI instead and let the user know they have to restart the browser for
+  // the changes to be applied. 
+  if (um.activeUpdate && um.activeUpdate.state == "pending")
+    prompter.showUpdateDownloaded(um.activeUpdate);
+  else
+    prompter.checkForUpdates();
 }
 
 function buildHelpMenu()
@@ -477,28 +488,34 @@ function buildHelpMenu()
     return; 
 
   var strings = document.getElementById("bundle_browser");
-  var label = strings.getString("updates_checkForUpdates");
   var activeUpdate = um.activeUpdate;
-  if (activeUpdate) {
-    if (updates.isDownloading) {
-      if (activeUpdate.name) {
-        label = strings.getFormattedString("updates_downloadingUpdates", 
-          [activeUpdate.name]);
-      }
-      else
-        label = strings.getString("updates_downloadingUpdatesFallback");
-    }
-    else {
-      if (activeUpdate.name) {
-        label = strings.getFormattedString("updates_resumeDownloading",
-          [activeUpdate.name]);
-      }
-      else
-        label = strings.getString("updates_resumeDownloadingFallback");
-    }
+  
+  // If there's an active update, substitute its name into the label
+  // we show for this item, otherwise display a generic label.
+  function getStringWithUpdateName(key) {
+    if (activeUpdate && activeUpdate.name)
+      return strings.getFormattedString(key, [activeUpdate.name]);
+    return strings.getString(key + "Fallback");
   }
   
-  checkForUpdates.label = label;
+  // By default, show "Check for Updates..."
+  var key = "default";
+  if (activeUpdate) {
+    switch (activeUpdate.state) {
+    case "downloading":
+      // If we're downloading an update at present, show the text:
+      // "Downloading Firefox x.x..." otherwise we're paused, and show
+      // "Resume Downloading Firefox x.x..."
+      key = updates.isDownloading ? "downloading" : "resume";
+      break;
+    case "pending":
+      // If we're waiting for the user to restart, show: "Apply Downloaded
+      // Updates Now..."
+      key = "pending";
+      break;
+    }
+  }
+  checkForUpdates.label = getStringWithUpdateName("updatesItem_" + key);
   if (um.activeUpdate && updates.isDownloading)
     checkForUpdates.setAttribute("loading", "true");
   else
