@@ -249,18 +249,41 @@ nsXFormsUploadElement::Blur(nsIDOMEvent *aEvent)
   NS_ENSURE_STATE(content);
 
   nsILocalFile *file = nsnull;
-  NS_NewLocalFile(value, PR_FALSE, &file);
-  NS_ENSURE_STATE(file);
+  nsCAutoString spec;
 
-  content->SetProperty(nsXFormsAtoms::uploadFileProperty, file, ReleaseObject);
+  // We need to special case an empty value.  If the input field is blank,
+  // then I assume that the intention is that all bound nodes will become
+  // (or stay) empty and that there shouldn't be any file kept in the property.
+  if (!value.IsEmpty()) {
+    NS_NewLocalFile(value, PR_FALSE, &file);
+    NS_ENSURE_STATE(file);
+    NS_GetURLSpecFromFile(file, spec);
+    content->SetProperty(nsXFormsAtoms::uploadFileProperty, file, 
+                         ReleaseObject);
+  } else {
+    content->DeleteProperty(nsXFormsAtoms::uploadFileProperty);
+  }
+
 
   // update the instance data node.  this value is never used by the submission
   // code.  instead, it exists so that the instance data will appear to be in-
   // sync with what is actually submitted.
-  nsCAutoString spec;
-  NS_GetURLSpecFromFile(file, spec);
+
   PRBool changed;
-  mModel->SetNodeValue(mBoundNode, NS_ConvertUTF8toUTF16(spec), &changed);
+  nsresult rv = mModel->SetNodeValue(mBoundNode, NS_ConvertUTF8toUTF16(spec), 
+                                     &changed);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (changed) {
+    nsCOMPtr<nsIDOMNode> model = do_QueryInterface(mModel);
+    if (model) {
+      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Recalculate);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Revalidate);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Refresh);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
   return NS_OK;
 }
 
@@ -269,7 +292,7 @@ nsXFormsUploadElement::Blur(nsIDOMEvent *aEvent)
 NS_IMETHODIMP
 nsXFormsUploadElement::Refresh()
 {
-  if (!mInput)
+  if (!mInput || !mBoundNode)
     return NS_OK;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(mBoundNode);
