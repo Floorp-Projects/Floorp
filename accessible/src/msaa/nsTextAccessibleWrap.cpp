@@ -200,10 +200,10 @@ STDMETHODIMP nsTextAccessibleWrap::scrollToSubstring(
 }
 
 nsIFrame* nsTextAccessibleWrap::GetPointFromOffset(nsIFrame *aContainingFrame, 
-                                                nsPresContext *aPresContext,
-                                                nsIRenderingContext *aRendContext,
-                                                PRInt32 aOffset, 
-                                                nsPoint& aOutPoint)
+                                                   nsPresContext *aPresContext,
+                                                   nsIRenderingContext *aRendContext,
+                                                   PRInt32 aOffset, 
+                                                   nsPoint& aOutPoint)
 {
   nsIFrame *textFrame = nsnull;
   PRInt32 outOffset;
@@ -213,6 +213,10 @@ nsIFrame* nsTextAccessibleWrap::GetPointFromOffset(nsIFrame *aContainingFrame,
   }
 
   textFrame->GetPointFromOffset(aPresContext, aRendContext, aOffset, &aOutPoint);
+
+  // Add the position of this text frame
+  aOutPoint += textFrame->GetOffsetToExternal(aContainingFrame);
+
   return textFrame;
 }
 
