@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: Makefile,v 1.11 2005/06/27 18:22:02 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.12 2005/07/22 15:32:50 christophe.ravel.bugs%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
@@ -51,6 +51,11 @@ PWD         = `pwd`
 BUILDROOT   = $(PWD)\/$(NAME)-root
 
 include $(CORE_DEPTH)/coreconf/config.mk
+
+# Force i386 for non 64 bit build
+ifneq ($(USE_64),1)
+	RPMTARGET = "--target=i386"
+endif
 
 publish:
 	$(MAKE) clean
@@ -99,7 +104,7 @@ publish:
 	find opt -type f \( -name "*.h" \) \
 		| sed -e "s-^-/-" >>temp.spec
 	cp $(NAME)-$(VERSION).tar.gz SOURCES
-	rpm -ba temp.spec
+	rpmbuild $(RPMTARGET) -bb temp.spec
 
 clean::
 	rm -rf SOURCES SRPMS RPMS BUILD

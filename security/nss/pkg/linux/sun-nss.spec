@@ -62,6 +62,8 @@ Summary: Development Libraries for Network Security Services
 Group: Development/Libraries
 Requires: %{name} = %{version}-%{release}
 
+%define _unpackaged_files_terminate_build 0
+
 %description devel
 Header files for doing development with Network Security Services.
 
