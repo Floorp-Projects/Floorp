@@ -111,6 +111,16 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 #define MIN_TEXT_ZOOM 0.01f
 #define MAX_TEXT_ZOOM 20.0f
 
+// fix warnings
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
+@interface NSView(PantherViewAdditions)
+- (void)getRectsBeingDrawn:(const NSRect **)rects count:(int *)count;
+- (BOOL)needsToDrawRect:(NSRect)aRect;
+- (BOOL)wantsDefaultClipping;
+@end
+#endif
+
+
 @interface CHBrowserView(Private)
 
 - (id<CHBrowserContainer>)getBrowserContainer;
@@ -127,12 +137,18 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 + (CHBrowserView*)browserViewFromDOMWindow:(nsIDOMWindow*)inWindow
 {
+  // make sure we get the root window (e.g. for subframes in frameset)
+  nsCOMPtr<nsIDOMWindow> topWindow;
+  inWindow->GetTop(getter_AddRefs(topWindow));
+  if (!topWindow)
+    return nil;
+
   nsCOMPtr<nsIWindowWatcher> watcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
   if (!watcher)
     return nil;
 
   nsCOMPtr<nsIWebBrowserChrome> chrome;
-  watcher->GetChromeForWindow(inWindow, getter_AddRefs(chrome));
+  watcher->GetChromeForWindow(topWindow, getter_AddRefs(chrome));
   if (!chrome)
     return nil;
 
@@ -279,7 +295,25 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (void)drawRect:(NSRect)inRect
 {
   [[NSColor whiteColor] set];
-  NSRectFill(inRect);
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_3
+  // if we're on panther, only draw the rects that need drawing
+  if ([self respondsToSelector:@selector(getRectsBeingDrawn:count:)])
+#endif
+  {
+    const NSRect *rects;
+    int numRects;
+    [self getRectsBeingDrawn:&rects count:&numRects];
+
+    for (int i = 0; i < numRects; ++i)
+      NSRectFill(rects[i]);
+  }
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_3
+  else
+  {
+    NSRectFill(inRect);
+  }
+#endif
 }
 
 - (void)addListener:(id <CHBrowserListener>)listener
