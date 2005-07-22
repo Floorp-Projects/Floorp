@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Will Scullin <scullin@netscape.com>, 19 Nov 1997.
  *
@@ -103,7 +103,7 @@ public class StoreFactory {
     String proto = prefs.getType();
     URLName urlName = new URLName(proto,null,-1,null,null,null);
 
-    // ### Very wrong temporary hack -- these protocols should be registered 
+    // ### Very wrong temporary hack -- these protocols should be registered
     // correctly with JavaMail trough the javamail.providers file
 
     try {
@@ -134,6 +134,8 @@ public class StoreFactory {
 
     if (store == null) {
       try {
+        if (proto.equals(""))
+          return null;
         store = fSession.getStore(proto);
       } catch (MessagingException e) {
         System.out.println("Got exception " + e +
@@ -146,7 +148,7 @@ public class StoreFactory {
 
     return viewedStore;
   }
-  
+
   private synchronized void closeStores() {
     for (int i=0; i<fStores.length; i++) {
       try {
@@ -165,11 +167,11 @@ public class StoreFactory {
     if (fStores != null) {
       closeStores();
     }
-        
+
     ServerArray prefs = ServerArray.GetMaster();
 
     fStores = new ViewedStore[prefs.size()];
-    
+
     for (int i=0; i<prefs.size(); i++) {
       fStores[i] = createStore(i);
     }

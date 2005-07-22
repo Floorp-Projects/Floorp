@@ -202,9 +202,14 @@ public class MasterPanel extends GeneralPanel {
     fModel = new FolderModel();
     ViewedStore stores[] = StoreFactory.Instance().getStores();
     fStores = new ViewedStore[stores.length];
-    for (int i = 0; i < stores.length; i++) {
-      fModel.addStore(stores[i]);
-      fStores[i] = stores[i];
+
+    //If the first store is null, then there must not be any accounts set
+    //up by the user.
+    if (stores[0] != null) {
+      for (int i = 0; i < stores.length; i++) {
+        fModel.addStore(stores[i]);
+        fStores[i] = stores[i];
+      }
     }
 
     fFolderTree.setDataModel(fModel);
@@ -491,9 +496,13 @@ public class MasterPanel extends GeneralPanel {
       ViewedStore stores[] = StoreFactory.Instance().getStores();
       fStores = new ViewedStore[stores.length];
 
-      for (i = 0; i < stores.length; i++) {
-        fModel.addStore(stores[i]);
-        fStores[i] = stores[i];
+      //If the first store is null, then there must not be any accounts set
+      //up by the user to add.
+      if (stores[0] != null) {
+        for (i = 0; i < stores.length; i++) {
+          fModel.addStore(stores[i]);
+          fStores[i] = stores[i];
+        }
       }
     }
   }
