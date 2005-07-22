@@ -248,7 +248,7 @@ nsPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
 
       // If either subject name is empty, just let the result stand (so that
       // nsScriptSecurityManager::SetCanEnableCapability works), but if they're
-      // both nonempty, only claim equality if they're equal.
+      // both non-empty, only claim equality if they're equal.
       if (*aResult && !mCert->subjectName.IsEmpty()) {
         // Check the other principal's subject name
         aOther->GetSubjectName(str);

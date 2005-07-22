@@ -430,7 +430,7 @@ private:
     CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal** result);
 
     // This is just like the API method, but it doesn't check that the subject
-    // name is nonempty or aCertificate is non-null, and it doesn't change the
+    // name is non-empty or aCertificate is non-null, and it doesn't change the
     // certificate in the table (if any) in any way if aModifyTable is false.
     nsresult
     DoGetCertificatePrincipal(const nsACString& aCertFingerprint,
