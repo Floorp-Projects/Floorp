@@ -843,6 +843,7 @@ extensions/inspector/base/src/Makefile
 extensions/inspector/build/Makefile
 extensions/inspector/build/src/Makefile
 extensions/inspector/resources/Makefile
+extensions/inspector/resources/locale/Makefile
 "
 
 MAKEFILES_spatialnavigation="
