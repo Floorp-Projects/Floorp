@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -4457,9 +4458,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         pn2 = pn->pn_head;
 #if JS_HAS_XML_SUPPORT
-        if (JS_HAS_XML_OPTION(cx) &&
-            pn2->pn_type == TOK_DOT &&
-            pn2->pn_op != JSOP_GETMETHOD) {
+        if (pn2->pn_type == TOK_DOT && pn2->pn_op != JSOP_GETMETHOD) {
             JS_ASSERT(pn2->pn_op == JSOP_GETPROP);
             pn2->pn_op = JSOP_GETMETHOD;
         }

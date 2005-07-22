@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -6974,6 +6975,7 @@ static JSBool
 XML(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval v;
+    uint32 oldopts;
     JSXML *xml, *copy;
     JSObject *xobj, *vobj;
     JSClass *clasp;
@@ -6981,8 +6983,13 @@ XML(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     v = argv[0];
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v))
         v = STRING_TO_JSVAL(cx->runtime->emptyString);
+    /* Toggle on XML support since the script has explicitly requested it. */
+    oldopts = cx->options;
+    JS_SetOptions(cx, oldopts | JSOPTION_XML);
 
     xobj = ToXML(cx, v);
+
+    JS_SetOptions(cx, oldopts);
     if (!xobj)
         return JS_FALSE;
     *rval = OBJECT_TO_JSVAL(xobj);
