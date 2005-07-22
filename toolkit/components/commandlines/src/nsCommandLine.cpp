@@ -596,7 +596,7 @@ nsCommandLine::Run()
   return NS_OK;
 }
 
-static PRBool
+static nsresult
 EnumHelp(nsICommandLineHandler* aHandler, nsICommandLine* aThis, void* aClosure)
 {
   nsresult rv;
@@ -617,7 +617,7 @@ EnumHelp(nsICommandLineHandler* aHandler, nsICommandLine* aThis, void* aClosure)
 NS_IMETHODIMP
 nsCommandLine::GetHelpText(nsACString& aResult)
 {
-  EnumerateHandlers(EnumRun, &aResult);
+  EnumerateHandlers(EnumHelp, &aResult);
 
   return NS_OK;
 }
