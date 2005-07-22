@@ -7034,10 +7034,11 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
 
 
     /* If the url to be loaded is the same as the one already there,
-     * and the original loadType is LOAD_NORMAL or LOAD_LINK,
-     * set loadType to LOAD_NORMAL_REPLACE so that AddToSessionHistory()
-     * won't mess with the current SHEntry and if this page has any frame 
-     * children, it also will be handled properly. see bug 83684
+     * and the original loadType is LOAD_NORMAL, LOAD_LINK, or
+     * LOAD_STOP_CONTENT, set loadType to LOAD_NORMAL_REPLACE so that
+     * AddToSessionHistory() won't mess with the current SHEntry and
+     * if this page has any frame children, it also will be handled
+     * properly. see bug 83684
      *
      * XXX Hopefully changing the loadType at this time will not hurt  
      *  anywhere. The other way to take care of sequentially repeating
@@ -7046,7 +7047,8 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
      */
     if (equalUri &&
         (mLoadType == LOAD_NORMAL ||
-         mLoadType == LOAD_LINK) &&
+         mLoadType == LOAD_LINK ||
+         mLoadType == LOAD_STOP_CONTENT) &&
         !inputStream)
     {
         mLoadType = LOAD_NORMAL_REPLACE;
