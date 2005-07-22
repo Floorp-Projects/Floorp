@@ -42,7 +42,6 @@ var gURLBar = null;
 
 function nsBrowserStatusHandler()
 {
-  this.init();
 }
 
 nsBrowserStatusHandler.prototype = 
@@ -90,10 +89,10 @@ nsBrowserStatusHandler.prototype =
 
       if (aStateFlags & nsIWebProgressListener.STATE_START)
       {
-      this.transferCount=0;
-      document.styleSheets[1].cssRules[0].style.backgroundImage="url(chrome://minimo/content/transfer.gif)";
+        this.transferCount=0;
+        document.styleSheets[1].cssRules[0].style.backgroundImage="url(chrome://minimo/skin/transfer.gif)";
 
-        this.stopreloadButton.image = "chrome://minimo/content/stop.gif";
+        this.stopreloadButton.image = "chrome://minimo/skin/stop.gif";
         this.stopreloadButton.onClick = "BrowserStop()";
         this.statusbar.hidden = false;
         return;
@@ -101,11 +100,11 @@ nsBrowserStatusHandler.prototype =
       
       if (aStateFlags & nsIWebProgressListener.STATE_STOP)
       {
-      document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
-
-        this.stopreloadButton.image = "chrome://minimo/content/reload.gif";
+        document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
+      
+        this.stopreloadButton.image = "chrome://minimo/skin/reload.gif";
         this.stopreloadButton.onClick = "BrowserReload()";
-
+        
         this.statusbar.hidden = true;
         this.statusbarText.label = "";
         return;
@@ -161,26 +160,32 @@ var gBrowserStatusHandler;
 function MiniNavStartup()
 {
   try {
+
     gBrowserStatusHandler = new nsBrowserStatusHandler();
+    gBrowserStatusHandler.init();
 
     var interfaceRequestor = getBrowser().docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
     webProgress.addProgressListener(gBrowserStatusHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
     var webNavigation = getWebNavigation();
+
     webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
                                              .createInstance(Components.interfaces.nsISHistory);
 
-  } catch (e) {}
-
-
-  try {
-    getBrowser().markupDocumentViewer.textZoom = .75;
+  } 
+  catch (e) 
+  {
+    alert(e);
   }
-  catch (e) {}
+
+
+  //  try {
+  //    getBrowser().markupDocumentViewer.textZoom = .75;
+  //  }
+  //  catch (e) {}
 
   gURLBar = document.getElementById("urlbar");
-
 
   loadURI("http://www.google.com");
 
