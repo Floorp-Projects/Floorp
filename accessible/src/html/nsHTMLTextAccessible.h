@@ -118,7 +118,7 @@ public:
   NS_IMETHOD GetState(PRUint32 *aState) { nsAccessibleWrap::GetState(aState); *aState &= ~STATE_FOCUSABLE; *aState |= STATE_READONLY; return NS_OK; }
 };
 
-class nsHTMLLIAccessible : public nsAccessibleWrap
+class nsHTMLLIAccessible : public nsBlockAccessible
 {
 public:
   nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell, 
