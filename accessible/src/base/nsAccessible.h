@@ -166,7 +166,8 @@ protected:
   // For accessibles that are not lists of choices, the name of the subtree should be the 
   // sum of names in the subtree
   nsresult AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString);
-  nsresult AppendNameFromAccessibleFor(nsIContent *aContent, nsAString *aFlatString);
+  nsresult AppendNameFromAccessibleFor(nsIContent *aContent, nsAString *aFlatString,
+                                       PRBool aFromValue = PR_FALSE);
   nsresult AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString);
   nsresult AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent);
 
