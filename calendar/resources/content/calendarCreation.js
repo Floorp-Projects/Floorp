@@ -43,6 +43,8 @@ function checkRequired() {
         for (var i = 0; i < eList.length && canAdvance; ++i) {
             canAdvance = (eList[i].value != "");
         }
+        if( canAdvance && document.getElementById("calendar-uri").value )
+            canAdvance = checkURL();
         document.getElementById('calendar-wizard').canAdvance = canAdvance;
     }
 }
@@ -107,5 +109,17 @@ function doCreateCalendar()
 
     calManager.setCalendarPref(newCalendar, 'color', cal_color);
 
+    return true;
+}
+
+//Don't let the wizard advance if the URL isn't valid, since the calendar
+//creation will fail.
+function checkURL() {
+    try {
+        makeURL(document.getElementById("calendar-uri").value);
+    }
+    catch (ex) {
+        return false;
+    }
     return true;
 }

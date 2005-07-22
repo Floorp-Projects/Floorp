@@ -78,3 +78,15 @@ function onOKCommand()
    // tell standard dialog stuff to close the dialog
    return true;
 }
+
+function checkURL() {
+    document.getElementById("calendar-properties-dialog")
+            .getButton("accept").removeAttribute("disabled");
+    try {
+        makeURL(document.getElementById("calendar-uri").value);
+    }
+    catch (ex) {
+        document.getElementById("calendar-properties-dialog")
+                .getButton("accept").setAttribute("disabled", true);
+    }
+}
