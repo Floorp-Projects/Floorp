@@ -40,7 +40,6 @@ calendar.jar:
     content/calendar/goToDateDialog.xul (content/goToDateDialog.xul)
     content/calendar/outlookImportDialog.xul (content/outlookImportDialog.xul)
     content/calendar/outlookImportDialog.js (content/outlookImportDialog.js)
-    content/calendar/importExport.js (content/importExport.js)
     content/calendar/menuOverlay.xul (content/menuOverlay.xul)
     content/calendar/monthView.js (content/monthView.js)
     content/calendar/monthView.xul (content/monthView.xul)
@@ -174,3 +173,4 @@ calendar.jar:
     skin/modern/calendar/unifinder/priority_header.png (skin/modern/unifinder/priority_header.png)
     skin/modern/calendar/unifinder/priority_high.png (skin/modern/unifinder/priority_high.png)
     skin/modern/calendar/unifinder/priority_low.png (skin/modern/unifinder/priority_low.png)
+    content/calendar/import-export.js (/calendar/base/content/import-export.js)
