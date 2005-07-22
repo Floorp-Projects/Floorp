@@ -1182,18 +1182,30 @@ nsresult nsAccessible::AppendStringWithSpaces(nsAString *aFlatString, const nsAS
   return NS_OK;
 }
 
-nsresult nsAccessible::AppendNameFromAccessibleFor(nsIContent *aContent, nsAString *aFlatString)
+nsresult nsAccessible::AppendNameFromAccessibleFor(nsIContent *aContent,
+                                                   nsAString *aFlatString,
+                                                   PRBool aFromValue)
 {
-  nsAutoString textEquivalent;
+  nsAutoString textEquivalent, value;
 
   nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aContent));
-  nsCOMPtr<nsIAccessibilityService> accService =
-    do_GetService("@mozilla.org/accessibilityService;1");
-  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
   nsCOMPtr<nsIAccessible> accessible;
-  accService->GetAccessibleInWeakShell(domNode, mWeakShell, getter_AddRefs(accessible));
+  if (domNode == mDOMNode) {
+    accessible = this;
+  }
+  else {
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+    accService->GetAccessibleInWeakShell(domNode, mWeakShell, getter_AddRefs(accessible));
+  }
   if (accessible) {
-    accessible->GetName(textEquivalent);
+    if (aFromValue) {
+      accessible->GetFinalValue(textEquivalent);
+    }
+    else {
+      accessible->GetName(textEquivalent);
+    }
   }
 
   textEquivalent.CompressWhitespace();
@@ -1255,7 +1267,14 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
   nsAutoString textEquivalent;
   if (!aContent->IsContentOfType(nsIContent::eHTML)) {
     if (aContent->IsContentOfType(nsIContent::eXUL)) {
-      aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::tooltiptext, textEquivalent);
+      if (aContent->Tag() == nsAccessibilityAtoms::label) {
+        aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
+                         textEquivalent);
+      }
+      else {
+        aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::tooltiptext,
+                          textEquivalent);
+      }
       textEquivalent.CompressWhitespace();
       return AppendStringWithSpaces(aFlatString, textEquivalent);
     }
@@ -1286,6 +1305,9 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
     // If it's a line break, insert a space so that words aren't jammed together
     aFlatString->AppendLiteral("\r\n");
     return NS_OK;
+  }
+  else if (tag != nsAccessibilityAtoms::a && tag != nsAccessibilityAtoms::area) { 
+    AppendNameFromAccessibleFor(aContent, aFlatString, PR_TRUE /* use value */);
   }
 
   textEquivalent.CompressWhitespace();
@@ -1682,7 +1704,7 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
             {"checked", BOOL_STATE, STATE_CHECKED }, END_ENTRY},
   {"grid", ROLE_TABLE, eNameLabelOrTitle, eNoValue, STATE_FOCUSABLE,
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
-  {"gridcell", ROLE_CELL, eNameOkFromChildren, eHasValueMinMax, eNoReqStates,
+  {"gridcell", ROLE_CELL, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"selected", BOOL_STATE, STATE_SELECTED | STATE_SELECTABLE},
             {"selected", "false", STATE_SELECTABLE},
             {"readonly", BOOL_STATE, STATE_READONLY},
