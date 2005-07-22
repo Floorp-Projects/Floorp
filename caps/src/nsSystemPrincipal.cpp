@@ -84,12 +84,14 @@ nsSystemPrincipal::Release()
 ///////////////////////////////////////
 
 NS_IMETHODIMP
-nsSystemPrincipal::GetPreferences(char** aPrefName, char** aID, 
+nsSystemPrincipal::GetPreferences(char** aPrefName, char** aID,
+                                  char** aSubjectName,
                                   char** aGrantedList, char** aDeniedList)
 {
     // The system principal should never be streamed out
     *aPrefName = nsnull;
     *aID = nsnull;
+    *aSubjectName = nsnull;
     *aGrantedList = nsnull;
     *aDeniedList = nsnull;
 
@@ -181,22 +183,27 @@ nsSystemPrincipal::GetOrigin(char** aOrigin)
 }
 
 NS_IMETHODIMP 
-nsSystemPrincipal::GetCertificateID(char** aID)
+nsSystemPrincipal::GetFingerprint(nsACString& aID)
 {
-    *aID = nsnull;
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP 
-nsSystemPrincipal::GetCommonName(char** aName)
+nsSystemPrincipal::GetPrettyName(nsACString& aName)
 {
-    *aName = nsnull;
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP 
-nsSystemPrincipal::SetCommonName(const char* aName)
+nsSystemPrincipal::GetSubjectName(nsACString& aName)
 {
+    return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsSystemPrincipal::GetCertificate(nsISupports** aCertificate)
+{
+    *aCertificate = nsnull;
     return NS_OK;
 }
 

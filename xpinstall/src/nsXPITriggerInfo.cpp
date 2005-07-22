@@ -142,9 +142,12 @@ nsXPITriggerItem::SetPrincipal(nsIPrincipal* aPrincipal)
     PRBool hasCert;
     aPrincipal->GetHasCertificate(&hasCert);
     if (hasCert) {
-        nsXPIDLCString cName;
-        aPrincipal->GetCommonName(getter_Copies(cName));
-        CopyUTF8toUTF16(cName, mCertName);
+        nsCAutoString prettyName;
+        // XXXbz should this really be using the prettyName?  Perhaps
+        // it wants to get the subjectName or nsIX509Cert and display
+        // it sanely?
+        aPrincipal->GetPrettyName(prettyName);
+        CopyUTF8toUTF16(prettyName, mCertName);
     }
 }
 

@@ -156,8 +156,8 @@ nsCSecurityContext::GetCertificateID(char* buf, int buflen)
         return NS_ERROR_FAILURE;
     }
 
-    nsXPIDLCString certificate;
-    principal->GetCertificateID(getter_Copies(certificate));
+    nsCAutoString certificate;
+    principal->GetFingerprint(certificate);
 
     PRInt32 certlen = certificate.Length();
     if (buflen <= certlen) {

@@ -41,7 +41,7 @@
 interface nsIURI;
 
 
-[scriptable, uuid(463eb1fa-9dac-4ca7-826f-1fc921971d3a)]
+[scriptable, uuid(f4d74511-2b2d-4a14-a3e4-a392ac5ac3ff)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -161,9 +161,19 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     [noscript] nsIPrincipal getSystemPrincipal();
 
     /**
-     * Return a principal with the specified certificate ID and codebase URI.
+     * Return a principal with the specified certificate fingerprint, subject
+     * name (the full name or concatenated set of names of the entity
+     * represented by the certificate), pretty name, certificate, and
+     * codebase URI.  The certificate fingerprint and subject name MUST be
+     * nonempty; otherwise an error will be thrown.  Similarly, aCert must
+     * not be null.
      */
-    [noscript] nsIPrincipal getCertificatePrincipal(in string CertID, in nsIURI aURI);
+    [noscript] nsIPrincipal
+         getCertificatePrincipal(in AUTF8String aCertFingerprint,
+                                 in AUTF8String aSubjectName,
+                                 in AUTF8String aPrettyName,
+                                 in nsISupports aCert,
+                                 in nsIURI aURI);
 
     /**
      * Return a principal that has the same origin as aURI.
@@ -209,7 +219,11 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * Allow 'certificateID' to enable 'capability.' Can only be performed
      * by code signed by the system certificate.
      */
-    void setCanEnableCapability(in string certificateID, in string capability, 
+    // XXXbz Capabilities can't have non-ascii chars?
+    // XXXbz ideally we'd pass a subjectName here too, and the nsISupports
+    // cert we're enabling for...
+    void setCanEnableCapability(in AUTF8String certificateFingerprint,
+                                in string capability, 
                                 in short canEnable);
 
     ///////////////////////

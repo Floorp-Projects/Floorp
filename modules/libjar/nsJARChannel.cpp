@@ -455,25 +455,32 @@ nsJARChannel::GetOwner(nsISupports **result)
     if (NS_FAILED(rv)) return rv;
 
     if (cert) {
-        nsXPIDLCString certID;
-        rv = cert->GetCertificateID(getter_Copies(certID));
+        nsCAutoString certFingerprint;
+        rv = cert->GetFingerprint(certFingerprint);
         if (NS_FAILED(rv)) return rv;
 
-        nsXPIDLCString commonName;
-        rv = cert->GetCommonName(getter_Copies(commonName));
+        nsCAutoString subjectName;
+        rv = cert->GetSubjectName(subjectName);
         if (NS_FAILED(rv)) return rv;
 
+        nsCAutoString prettyName;
+        rv = cert->GetPrettyName(prettyName);
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsISupports> certificate;
+        rv = cert->GetCertificate(getter_AddRefs(certificate));
+        if (NS_FAILED(rv)) return rv;
+        
         nsCOMPtr<nsIScriptSecurityManager> secMan = 
                  do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        rv = secMan->GetCertificatePrincipal(certID, mJarBaseURI,
+        rv = secMan->GetCertificatePrincipal(certFingerprint, subjectName,
+                                             prettyName, certificate,
+                                             mJarBaseURI,
                                              getter_AddRefs(cert));
         if (NS_FAILED(rv)) return rv;
 
-        rv = cert->SetCommonName(commonName);
-        if (NS_FAILED(rv)) return rv;
-        
         mOwner = do_QueryInterface(cert, &rv);
         if (NS_FAILED(rv)) return rv;
 

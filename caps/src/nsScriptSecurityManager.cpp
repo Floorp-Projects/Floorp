@@ -1687,10 +1687,35 @@ nsScriptSecurityManager::SubjectPrincipalIsSystem(PRBool* aIsSystem)
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::GetCertificatePrincipal(const char* aCertID,
+nsScriptSecurityManager::GetCertificatePrincipal(const nsACString& aCertFingerprint,
+                                                 const nsACString& aSubjectName,
+                                                 const nsACString& aPrettyName,
+                                                 nsISupports* aCertificate,
                                                  nsIURI* aURI,
                                                  nsIPrincipal **result)
 {
+    *result = nsnull;
+    
+    NS_ENSURE_ARG(!aCertFingerprint.IsEmpty() &&
+                  !aSubjectName.IsEmpty() &&
+                  aCertificate);
+
+    return DoGetCertificatePrincipal(aCertFingerprint, aSubjectName,
+                                     aPrettyName, aCertificate, aURI, PR_TRUE,
+                                     result);
+}
+    
+nsresult
+nsScriptSecurityManager::DoGetCertificatePrincipal(const nsACString& aCertFingerprint,
+                                                   const nsACString& aSubjectName,
+                                                   const nsACString& aPrettyName,
+                                                   nsISupports* aCertificate,
+                                                   nsIURI* aURI,
+                                                   PRBool aModifyTable,
+                                                   nsIPrincipal **result)
+{
+    NS_ENSURE_ARG(!aCertFingerprint.IsEmpty());
+    
     // Create a certificate principal out of the certificate ID
     // and URI given to us.  We will use this principal to test
     // equality when doing our hashtable lookups below.
@@ -1698,7 +1723,8 @@ nsScriptSecurityManager::GetCertificatePrincipal(const char* aCertID,
     if (!certificate)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = certificate->Init(aCertID, aURI);
+    nsresult rv = certificate->Init(aCertFingerprint, aSubjectName,
+                                    aPrettyName, aCertificate, aURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Check to see if we already have this principal.
@@ -1706,7 +1732,24 @@ nsScriptSecurityManager::GetCertificatePrincipal(const char* aCertID,
     mPrincipals.Get(certificate, getter_AddRefs(fromTable));
     if (fromTable) {
         // Bingo.  We found the certificate in the table, which means
-        // that it has escalated priveleges.
+        // that it has escalated privileges.
+
+        if (aModifyTable) {
+            // Make sure this principal has names, so if we ever go to save it
+            // we'll save them.  If we get a name mismatch here we'll throw,
+            // but that's desirable.
+            rv = NS_STATIC_CAST(nsPrincipal*,
+                                NS_STATIC_CAST(nsIPrincipal*, fromTable))
+                ->EnsureCertData(aSubjectName, aPrettyName, aCertificate);
+            if (NS_FAILED(rv)) {
+                // We have a subject name mismatch for the same cert id.
+                // Hand back the |certificate| object we created and don't give
+                // it any rights from the table.
+                NS_ADDREF(*result = certificate);
+                return NS_OK;
+            }                
+        }
+        
         if (!aURI) {
             // We were asked to just get the base certificate, so output
             // what we have in the table.
@@ -1720,19 +1763,24 @@ nsScriptSecurityManager::GetCertificatePrincipal(const char* aCertID,
             // things.
             nsXPIDLCString prefName;
             nsXPIDLCString id;
+            nsXPIDLCString subjectName;
             nsXPIDLCString granted;
             nsXPIDLCString denied;
             rv = fromTable->GetPreferences(getter_Copies(prefName),
                                            getter_Copies(id),
+                                           getter_Copies(subjectName),
                                            getter_Copies(granted),
                                            getter_Copies(denied));
+            // XXXbz assert something about subjectName and aSubjectName here?
             if (NS_SUCCEEDED(rv)) {
                 certificate = new nsPrincipal();
                 if (!certificate)
                     return NS_ERROR_OUT_OF_MEMORY;
 
                 rv = certificate->InitFromPersistent(prefName, id,
+                                                     subjectName, aPrettyName,
                                                      granted, denied,
+                                                     aCertificate,
                                                      PR_TRUE, PR_FALSE);
                 if (NS_SUCCEEDED(rv))
                     certificate->SetURI(aURI);
@@ -1752,7 +1800,8 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal **re
     if (!codebase)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = codebase->Init(nsnull, aURI);
+    nsresult rv = codebase->Init(EmptyCString(), EmptyCString(),
+                                 EmptyCString(), nsnull, aURI);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2060,36 +2109,45 @@ nsScriptSecurityManager::SavePrincipal(nsIPrincipal* aToSave)
     //-- Save to prefs
     nsXPIDLCString idPrefName;
     nsXPIDLCString id;
+    nsXPIDLCString subjectName;
     nsXPIDLCString grantedList;
     nsXPIDLCString deniedList;
     nsresult rv = aToSave->GetPreferences(getter_Copies(idPrefName),
                                           getter_Copies(id),
+                                          getter_Copies(subjectName),
                                           getter_Copies(grantedList),
                                           getter_Copies(deniedList));
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-    nsXPIDLCString grantedPrefName;
-    nsXPIDLCString deniedPrefName;
-    rv = PrincipalPrefNames( idPrefName,
-                             getter_Copies(grantedPrefName),
-                             getter_Copies(deniedPrefName)  );
+    nsCAutoString grantedPrefName;
+    nsCAutoString deniedPrefName;
+    nsCAutoString subjectNamePrefName;
+    rv = GetPrincipalPrefNames( idPrefName,
+                                grantedPrefName,
+                                deniedPrefName,
+                                subjectNamePrefName );
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     mIsWritingPrefs = PR_TRUE;
     if (grantedList)
-        mSecurityPref->SecuritySetCharPref(grantedPrefName, grantedList);
+        mSecurityPref->SecuritySetCharPref(grantedPrefName.get(), grantedList);
     else
-        mSecurityPref->SecurityClearUserPref(grantedPrefName);
+        mSecurityPref->SecurityClearUserPref(grantedPrefName.get());
 
     if (deniedList)
-        mSecurityPref->SecuritySetCharPref(deniedPrefName, deniedList);
+        mSecurityPref->SecuritySetCharPref(deniedPrefName.get(), deniedList);
     else
-        mSecurityPref->SecurityClearUserPref(deniedPrefName);
+        mSecurityPref->SecurityClearUserPref(deniedPrefName.get());
 
-    if (grantedList || deniedList)
+    if (grantedList || deniedList) {
         mSecurityPref->SecuritySetCharPref(idPrefName, id);
-    else
+        mSecurityPref->SecuritySetCharPref(subjectNamePrefName.get(),
+                                           subjectName);
+    }
+    else {
         mSecurityPref->SecurityClearUserPref(idPrefName);
+        mSecurityPref->SecurityClearUserPref(subjectNamePrefName.get());
+    }
 
     mIsWritingPrefs = PR_FALSE;
 
@@ -2265,14 +2323,14 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
     PRBool hasCert;
     aPrincipal->GetHasCertificate(&hasCert);
     if (hasCert)
-        rv = aPrincipal->GetCommonName(getter_Copies(val));
+        rv = aPrincipal->GetPrettyName(val);
     else
         rv = aPrincipal->GetOrigin(getter_Copies(val));
 
     if (NS_FAILED(rv))
         return PR_FALSE;
 
-    NS_ConvertUTF8toUTF16 location(val.get());
+    NS_ConvertUTF8toUTF16 location(val);
     NS_ConvertASCIItoUTF16 capability(aCapability);
     FormatCapabilityString(capability);
     const PRUnichar *formatStrings[] = { location.get(), capability.get() };
@@ -2387,14 +2445,14 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
         nsresult rv;
         principal->GetHasCertificate(&hasCert);
         if (hasCert)
-            rv = principal->GetCommonName(getter_Copies(val));
+            rv = principal->GetPrettyName(val);
         else
             rv = principal->GetOrigin(getter_Copies(val));
 
         if (NS_FAILED(rv))
             return rv;
 
-        NS_ConvertUTF8toUTF16 location(val.get());
+        NS_ConvertUTF8toUTF16 location(val);
         NS_ConvertUTF8toUTF16 cap(capability);
         const PRUnichar *formatStrings[] = { location.get(), cap.get() };
 
@@ -2452,10 +2510,12 @@ nsScriptSecurityManager::DisableCapability(const char *capability)
 
 //////////////// Master Certificate Functions ///////////////////////////////////////
 NS_IMETHODIMP
-nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
+nsScriptSecurityManager::SetCanEnableCapability(const nsACString& certFingerprint,
                                                 const char* capability,
                                                 PRInt16 canEnable)
 {
+    NS_ENSURE_ARG(!certFingerprint.IsEmpty());
+    
     nsresult rv;
     nsIPrincipal* subjectPrincipal = doGetSubjectPrincipal(&rv);
     if (NS_FAILED(rv))
@@ -2511,7 +2571,10 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
 
     //-- Get the target principal
     nsCOMPtr<nsIPrincipal> objectPrincipal;
-    rv =  GetCertificatePrincipal(certificateID, nsnull, getter_AddRefs(objectPrincipal));
+    rv = DoGetCertificatePrincipal(certFingerprint, EmptyCString(),
+                                   EmptyCString(), nsnull,
+                                   nsnull, PR_FALSE,
+                                   getter_AddRefs(objectPrincipal));
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
     rv = objectPrincipal->SetCanEnableCapability(capability, canEnable);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
@@ -3261,33 +3324,44 @@ nsScriptSecurityManager::InitDomainPolicy(JSContext* cx,
 }
 
 
+// XXXbz We should really just get a prefbranch to handle this...
 nsresult
-nsScriptSecurityManager::PrincipalPrefNames(const char* pref,
-                                            char** grantedPref, char** deniedPref)
+nsScriptSecurityManager::GetPrincipalPrefNames(const char* prefBase,
+                                               nsCString& grantedPref,
+                                               nsCString& deniedPref,
+                                               nsCString& subjectNamePref)
 {
-    char* lastDot = PL_strrchr(pref, '.');
+    char* lastDot = PL_strrchr(prefBase, '.');
     if (!lastDot) return NS_ERROR_FAILURE;
-    PRInt32 prefLen = lastDot - pref + 1;
+    PRInt32 prefLen = lastDot - prefBase + 1;
 
-    *grantedPref = nsnull;
-    *deniedPref = nsnull;
+    grantedPref.Assign(prefBase, prefLen);
+    deniedPref.Assign(prefBase, prefLen);
+    subjectNamePref.Assign(prefBase, prefLen);
 
-    static const char granted[] = "granted";
-    *grantedPref = (char*)PR_MALLOC(prefLen + sizeof(granted));
-    if (!grantedPref) return NS_ERROR_OUT_OF_MEMORY;
-    PL_strncpy(*grantedPref, pref, prefLen);
-    PL_strcpy(*grantedPref + prefLen, granted);
+#define GRANTED "granted"
+#define DENIED "denied"
+#define SUBJECTNAME "subjectName"
 
-    static const char denied[] = "denied";
-    *deniedPref = (char*)PR_MALLOC(prefLen + sizeof(denied));
-    if (!deniedPref)
-    {
-        PR_FREEIF(*grantedPref);
+    grantedPref.AppendLiteral(GRANTED);
+    if (grantedPref.Length() != prefLen + sizeof(GRANTED) - 1) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    PL_strncpy(*deniedPref, pref, prefLen);
-    PL_strcpy(*deniedPref + prefLen, denied);
 
+    deniedPref.AppendLiteral(DENIED);
+    if (deniedPref.Length() != prefLen + sizeof(DENIED) - 1) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    subjectNamePref.AppendLiteral(SUBJECTNAME);
+    if (subjectNamePref.Length() != prefLen + sizeof(SUBJECTNAME) - 1) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+#undef SUBJECTNAME
+#undef DENIED
+#undef GRANTED
+    
     return NS_OK;
 }
 
@@ -3311,7 +3385,8 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
     static const char idSuffix[] = ".id";
     for (PRUint32 c = 0; c < aPrefCount; c++)
     {
-        PRInt32 prefNameLen = PL_strlen(aPrefNames[c]) - (sizeof(idSuffix)-1);
+        PRInt32 prefNameLen = PL_strlen(aPrefNames[c]) - 
+            (NS_ARRAY_LENGTH(idSuffix) - 1);
         if (PL_strcasecmp(aPrefNames[c] + prefNameLen, idSuffix) != 0)
             continue;
 
@@ -3319,27 +3394,35 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
         if (NS_FAILED(mSecurityPref->SecurityGetCharPref(aPrefNames[c], getter_Copies(id))))
             return NS_ERROR_FAILURE;
 
-        nsXPIDLCString grantedPrefName;
-        nsXPIDLCString deniedPrefName;
-        nsresult rv = PrincipalPrefNames(aPrefNames[c],
-                                         getter_Copies(grantedPrefName),
-                                         getter_Copies(deniedPrefName));
+        nsCAutoString grantedPrefName;
+        nsCAutoString deniedPrefName;
+        nsCAutoString subjectNamePrefName;
+        nsresult rv = GetPrincipalPrefNames(aPrefNames[c],
+                                            grantedPrefName,
+                                            deniedPrefName,
+                                            subjectNamePrefName);
         if (rv == NS_ERROR_OUT_OF_MEMORY)
             return rv;
         if (NS_FAILED(rv))
             continue;
 
         nsXPIDLCString grantedList;
-        mSecurityPref->SecurityGetCharPref(grantedPrefName, getter_Copies(grantedList));
+        mSecurityPref->SecurityGetCharPref(grantedPrefName.get(),
+                                           getter_Copies(grantedList));
         nsXPIDLCString deniedList;
-        mSecurityPref->SecurityGetCharPref(deniedPrefName, getter_Copies(deniedList));
+        mSecurityPref->SecurityGetCharPref(deniedPrefName.get(),
+                                           getter_Copies(deniedList));
+        nsXPIDLCString subjectName;
+        mSecurityPref->SecurityGetCharPref(subjectNamePrefName.get(),
+                                           getter_Copies(subjectName));
 
         //-- Delete prefs if their value is the empty string
         if (id.IsEmpty() || (grantedList.IsEmpty() && deniedList.IsEmpty()))
         {
             mSecurityPref->SecurityClearUserPref(aPrefNames[c]);
-            mSecurityPref->SecurityClearUserPref(grantedPrefName);
-            mSecurityPref->SecurityClearUserPref(deniedPrefName);
+            mSecurityPref->SecurityClearUserPref(grantedPrefName.get());
+            mSecurityPref->SecurityClearUserPref(deniedPrefName.get());
+            mSecurityPref->SecurityClearUserPref(subjectNamePrefName.get());
             continue;
         }
 
@@ -3371,8 +3454,9 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
         if (!newPrincipal)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        rv = newPrincipal->InitFromPersistent(aPrefNames[c], id.get(),
-                                              grantedList, deniedList,
+        rv = newPrincipal->InitFromPersistent(aPrefNames[c], id, subjectName,
+                                              EmptyCString(),
+                                              grantedList, deniedList, nsnull, 
                                               isCert, isTrusted);
         if (NS_SUCCEEDED(rv))
             mPrincipals.Put(newPrincipal, newPrincipal);

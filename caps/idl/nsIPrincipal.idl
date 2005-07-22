@@ -51,7 +51,7 @@ interface nsIURI;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-[uuid(a67c4736-9a95-4ce1-9ffc-3f88c0913a34)]
+[uuid(fb9ddeb9-26f9-46b8-85d5-3978aaee05aa)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -68,17 +68,19 @@ interface nsIPrincipal : nsISerializable
      * Returns the security preferences associated with this principal.
      * prefBranch will be set to the pref branch to which these preferences
      * pertain.  id is a pseudo-unique identifier, pertaining to either the
-     * certificateID or the origin.  grantedList and deniedList are
-     * space-separated lists of capabilities which were explicitly granted
-     * or denied by a pref.
+     * fingerprint or the origin.  subjectName is a name that identifies the
+     * entity this principal represents (may be empty).  grantedList and
+     * deniedList are space-separated lists of capabilities which were
+     * explicitly granted or denied by a pref.
      */
     void getPreferences(out string prefBranch, out string id,
+                        out string subjectName,
                         out string grantedList, out string deniedList);
 
     /**
      * Returns whether the other principal is equivalent to this principal.
      * Principals are considered equal if they are the same principal,
-     * they have the same origin, or have the same certificate ID
+     * they have the same origin, or have the same certificate fingerprint ID
      */
     boolean equals(in nsIPrincipal other);
 
@@ -99,9 +101,18 @@ interface nsIPrincipal : nsISerializable
     // XXXcaa should this be here?  The script security manager is the only
     // thing that should care about this.  Wouldn't storing this data in one
     // of the hashtables in nsScriptSecurityManager be better?
+    // XXXbz why is this writable?  Who should have write access to this?  What
+    // happens if this principal is in our hashtable and we pass it out of the
+    // security manager and someone writes to this field?  Especially if they
+    // write garbage?  If we need to give someone other than the security
+    // manager a way to set this (which I question, since it can increase the
+    // permissions of a page) it should be a |void clearSecurityPolicy()|
+    // method.
     attribute voidPtr securityPolicy;
 
     // XXXcaa probably should be turned into {get|set}CapabilityFlags
+    // XXXbz again, what if this lives in our hashtable and someone
+    // messes with it?  Is that OK?
     short canEnableCapability(in string capability);
     void setCanEnableCapability(in string capability, in short canEnable);
     boolean isCapabilityEnabled(in string capability, in voidPtr annotation);
@@ -143,14 +154,18 @@ interface nsIPrincipal : nsISerializable
      */
     // XXXcaa kaie says this may not be unique.  We should probably
     // consider using something else for this....
-    readonly attribute string certificateID;
+    readonly attribute AUTF8String fingerprint;
 
     /**
-     * The common name for the certificate.
-     * This pertains to the certificate authority organization.
+     * The pretty name for the certificate.  This sort of (but not really)
+     * identifies the subject of the certificate (the entity that stands behind
+     * the certificate).  Note that this may be empty; prefer to get the
+     * certificate itself and get this information from it, since that may
+     * provide more information.
+     *
      * Throws if there is no certificate associated with this principal.
      */
-    attribute string commonName;
+    readonly attribute AUTF8String prettyName;
 
     /**
      * Returns whether the other principal is equal to or weaker than this
@@ -171,4 +186,21 @@ interface nsIPrincipal : nsISerializable
      * release; note that nsIPrincipal is unfrozen, not slated to be frozen.
      */
     boolean subsumes(in nsIPrincipal other);
+
+    /**
+     * The subject name for the certificate.  This actually identifies the
+     * subject of the certificate.  This may well not be a string that would
+     * mean much to a typical user on its own (e.g. it may have a number of
+     * different names all concatenated together with some information on what
+     * they mean in between).
+     *
+     * Throws if there is no certificate associated with this principal.
+     */
+    readonly attribute AUTF8String subjectName;
+
+    /**
+     * The certificate associated with this principal, if any.  If there isn't
+     * one, this will return null.  Getting this attribute never throws.
+     */
+    readonly attribute nsISupports certificate;
 };
