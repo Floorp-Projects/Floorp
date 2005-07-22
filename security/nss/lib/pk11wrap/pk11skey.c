@@ -782,18 +782,9 @@ PK11_TokenKeyGenWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     CK_SESSION_HANDLE session;
     CK_MECHANISM mechanism;
     CK_RV crv;
-    PRBool weird = PR_FALSE;   /* hack for fortezza */
     CK_BBOOL cktrue = CK_TRUE;
     CK_ULONG ck_key_size;       /* only used for variable-length keys */
 
-    if ((keySize == -1) && (type == CKM_SKIPJACK_CBC64)) {
-	weird = PR_TRUE;
-	keySize = 0;
-    }
-
-    /* TNH: Isn't this redundant, since "handleKey" will set defaults? */
-    flags |= (!weird) ? CKF_ENCRYPT : CKF_DECRYPT;
-    
     if (keySize != 0) {
         ck_key_size = keySize; /* Convert to PK11 type */
 
@@ -836,7 +827,7 @@ PK11_TokenKeyGenWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     if (symKey == NULL) return NULL;
 
     symKey->size = keySize;
-    symKey->origin = (!weird) ? PK11_OriginGenerated : PK11_OriginFortezzaHack;
+    symKey->origin = PK11_OriginGenerated;
 
     /* Initialize the Key Gen Mechanism */
     mechanism.mechanism = PK11_GetKeyGenWithSize(type, keySize);
@@ -886,8 +877,25 @@ PK11SymKey *
 PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
     int keySize, SECItem *keyid, PRBool isToken, void *wincx)
 {
-    return PK11_TokenKeyGenWithFlags(slot, type, param, keySize, keyid,
-						CKF_SIGN, isToken, wincx);
+    PK11SymKey *symKey;
+    PRBool weird = PR_FALSE;   /* hack for fortezza */
+    CK_FLAGS flags = CKF_SIGN;
+
+    if ((keySize == -1) && (type == CKM_SKIPJACK_CBC64)) {
+	weird = PR_TRUE;
+	keySize = 0;
+    }
+
+    /* TNH: Isn't this redundant, since "handleKey" will set defaults? */
+    flags |= weird ? CKF_DECRYPT : CKF_ENCRYPT;
+
+    symKey = PK11_TokenKeyGenWithFlags(slot, type, param, keySize, keyid,
+						flags, isToken, wincx);
+    if (symKey && weird) {
+	PK11_SetFortezzaHack(symKey);
+    }
+
+    return symKey;
 }
 
 PK11SymKey *
