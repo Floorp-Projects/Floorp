@@ -35,6 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* marcio */
+#urlbar input {
+	background-position:0px 100%;
+	background-repeat:no-repeat;
+	padding:0px;
+	margin:0px;
+ 	border:1px solid black;
+}
+
+#urlbar {
+	padding:1px;
+}
+
+
+* {
+  font-size: small ! important;
+  font-family: sans-serif ! important;
+}
+
 window {
     width: 240px;
     height: 320px;
@@ -43,6 +62,7 @@ window {
 #back-button
   {
 	  list-style-image      : url("chrome://minimo/content/back.gif");
+	  margin-left:2px;
   }
 
 #forward-button
@@ -60,3 +80,5 @@ window {
 	  list-style-image      : url("chrome://minimo/content/reload.gif");
   }
 
+toolbarbutton {
+}
