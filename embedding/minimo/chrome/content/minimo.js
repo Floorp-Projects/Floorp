@@ -64,6 +64,8 @@ nsBrowserStatusHandler.prototype =
     this.statusbarText    = document.getElementById("statusbar-text");
     this.stopreloadButton = document.getElementById("reload-stop-button");
     this.statusbar        = document.getElementById("statusbar");
+    this.transferCount=0;
+
   },
 
   destroy : function()
@@ -76,10 +78,21 @@ nsBrowserStatusHandler.prototype =
 
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
   {
+
+    if(aStateFlags & nsIWebProgressListener.STATE_TRANSFERRING) { 
+      this.transferCount+=5;
+      document.styleSheets[1].cssRules[0].style.backgroundPosition=this.transferCount+"px 100%";
+
+    }
+
     if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK)
     {
+
       if (aStateFlags & nsIWebProgressListener.STATE_START)
       {
+      this.transferCount=0;
+      document.styleSheets[1].cssRules[0].style.backgroundImage="url(chrome://minimo/content/transfer.gif)";
+
         this.stopreloadButton.image = "chrome://minimo/content/stop.gif";
         this.stopreloadButton.onClick = "BrowserStop()";
         this.statusbar.hidden = false;
@@ -88,6 +101,8 @@ nsBrowserStatusHandler.prototype =
       
       if (aStateFlags & nsIWebProgressListener.STATE_STOP)
       {
+      document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
+
         this.stopreloadButton.image = "chrome://minimo/content/reload.gif";
         this.stopreloadButton.onClick = "BrowserReload()";
 
@@ -95,6 +110,8 @@ nsBrowserStatusHandler.prototype =
         this.statusbarText.label = "";
         return;
       }
+  
+
 
       return;
     }
@@ -117,7 +134,9 @@ nsBrowserStatusHandler.prototype =
 
   onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
+    //alert("aWebProgress="+aWebProgress+"aRequest.name: "+aRequest.name+"aCurSelfProgress:"+aCurSelfProgress);
   },
+
 
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
@@ -156,13 +175,19 @@ function MiniNavStartup()
 
 
   try {
-    getBrowser().markupDocumentViewer.textZoom = 1;
+    getBrowser().markupDocumentViewer.textZoom = .75;
   }
   catch (e) {}
 
   gURLBar = document.getElementById("urlbar");
 
-  loadURI("http://www.meer.net/~dougt/minimo.html");
+
+  loadURI("http://www.google.com");
+
+
+ //alert(document.styleSheets[0].cssRules[2].href);
+
+
 }
 
 function MiniNavShutdown()
@@ -217,3 +242,15 @@ function BrowserReload()
   getWebNavigation().reload(nsIWebNavigation.LOAD_FLAGS_NONE);
 }
 
+////
+/// marcio 
+//
+function urlBarIdentity() {
+    if(0) {
+    }
+    
+}
+
+function addTab() {
+    getBrowser().addTab("about:blank");
+}

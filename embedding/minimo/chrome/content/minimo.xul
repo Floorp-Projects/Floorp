@@ -61,12 +61,22 @@
   <script type="application/x-javascript" src="chrome://minimo/content/minimo.js"/>
 
   <toolbox>
-    <toolbar id="nav-bar">
+    <toolbar id="nav-bar"  >
+
+<!--
+	<menubar id="sample-menubar">
+	    <menu id="file-menu" label="?" style="margin:0px;">
+	      <menupopup id="file-popup">
+	        <menuitem label="new Tab" oncommand="addTab()" />
+	      </menupopup>
+	    </menu>
+	</menubar>
+-->
+	  <toolbarbutton id="tabnew" label="+"   onclick="addTab()"/>  
         <toolbarbutton id="back-button"    image="chrome://minimo/content/back.gif"    onclick="BrowserBack()"/>  
         <toolbarbutton id="forward-button" image="chrome://minimo/content/forward.gif" onclick="BrowserForward()"/>  
         <toolbarbutton id="reload-stop-button"  image="chrome://minimo/content/reload.gif"  onclick="BrowserReload()"/>
         <textbox id="urlbar" flex="100%" onkeypress="if( event.keyCode == 13 ) { BrowserLoadURL(); }"/>
-
     </toolbar>
   </toolbox>
 
