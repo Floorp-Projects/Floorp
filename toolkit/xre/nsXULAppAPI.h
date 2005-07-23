@@ -150,6 +150,15 @@ struct nsXREAppData
   "@mozilla.org/xre/app-info;1"
 
 /**
+ * A directory service key which provides the platform-correct
+ * "application data" directory.
+ * Windows: Documents and Settings\<User>\Application Data\<Vendor>\<Application>
+ * Unix: ~/.<vendor>/<application>
+ * Mac: ~/Library/Application Supports/<Application>
+ */
+#define XRE_USER_APP_DATA_DIR "UAppData"
+
+/**
  * A directory service key which provides a list of all enabled extension
  * directories. The list includes compatible platform-specific extension
  * subdirectories.

@@ -71,22 +71,15 @@ const PREF_EM_LOGGING_ENABLED         = "extensions.logging.enabled";
 const PREF_XPINSTALL_STATUS_DLG_SKIN  = "xpinstall.dialog.progress.skin";
 
 const DIR_EXTENSIONS                  = "extensions";
-const DIR_UNINSTALL                   = "uninstall";
 const DIR_CHROME                      = "chrome";
-const DIR_COMPONENTS                  = "components";
-const DIR_DEFAULTS                    = "defaults";
-const DIR_DEFAULTS_PREFS              = "preferences";
-const DIR_DEFAULTS_EXTENSIONS         = "extensions"; 
 const DIR_STAGE                       = "staged-xpis";
 const FILE_EXTENSIONS                 = "extensions.rdf";
 const FILE_EXTENSION_MANIFEST         = "extensions.ini";
-const FILE_EXTENSIONS_STARTUP_CACHE   = "extensions-startup.manifest";
+const FILE_EXTENSIONS_STARTUP_CACHE   = "extensions.cache";
 const FILE_AUTOREG                    = ".autoreg";
 const FILE_INSTALL_MANIFEST           = "install.rdf";
 const FILE_CONTENTS_MANIFEST          = "contents.rdf";
 const FILE_CHROME_MANIFEST            = "chrome.manifest";
-const FILE_INSTALLED_EXTENSIONS       = "installed-extensions.txt"
-const FILE_INSTALLED_EXTENSIONS_PROCESSED = "installed-extensions-processed.txt"
 
 #expand const OS_TARGET               = __OS_TARGET__;
 
@@ -106,9 +99,7 @@ const FILE_DEFAULT_THEME_JAR          = "classic.jar";
 const KEY_PROFILEDIR                  = "ProfD";
 const KEY_PROFILEDS                   = "ProfDS";
 const KEY_APPDIR                      = "XCurProcD";
-const KEY_DEFAULTS                    = "ProfDefNoLoc";
 const KEY_TEMPDIR                     = "TmpD";
-const KEY_DEFAULT_THEME               = "classic/1.0";
 
 const EM_ACTION_REQUESTED_TOPIC       = "em-action-requested";
 const EM_ITEM_INSTALLED               = "item-installed";
@@ -183,8 +174,8 @@ var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\
  */
 function getVersionChecker() {
   if (!gVersionChecker) {
-    gVersionChecker = Components.classes["@mozilla.org/updates/version-checker;1"]
-                                .getService(Components.interfaces.nsIVersionChecker);
+    gVersionChecker = Components.classes["@mozilla.org/xpcom/version-comparator;1"]
+                                .getService(Components.interfaces.nsIVersionComparator);
   }
   return gVersionChecker;
 }
@@ -373,40 +364,53 @@ function getFile(key, pathArray) {
 }
 
 /**
- * Gets the descriptor of a directory, either as an absolute path (for
- * most Install Locations), or as a relative path (for app-profile
- * items, so that the profile directory can move or become remotely
- * hosted easily, without pain)
+ * Gets the descriptor of a directory as a relative path to common base
+ * directories (profile, user home, app install dir, etc).
  *
- * @param   locationKey
- *          The Install Location where the item is stored
  * @param   itemLocation
- *          The nsILocalFile representing the item's directory
+ *          The nsILocalFile representing the item's directory.
+ * @param   installLocation the nsIInstallLocation for this item
  */
-function getDescriptorFromFile(locationKey, itemLocation) {
-  if (locationKey == KEY_APP_PROFILE)
-    return itemLocation.getRelativeDescriptor(getDir(KEY_PROFILEDS, []));
+function getDescriptorFromFile(itemLocation, installLocation) {
+  var baseDir = installLocation.location;
+
+  if (baseDir && baseDir.contains(itemLocation, true)) {
+    return "rel%" + itemLocation.getRelativeDescriptor(baseDir);
+  }
+
+  return "abs%" + itemLocation.persistentDescriptor;
+}
+
+function getAbsoluteDescriptor(itemLocation) {
   return itemLocation.persistentDescriptor;
 }
 
 /**
- * Initializes a Local File object based on a descriptor, if the item is 
- * installed in the App Profile Install Location the descriptor is relative
- * to the profile dir, otherwise it is a persistent (absolute) descriptor.
- * @param   locationKey
- *          The name of the Install Location where the item is installed
+ * Initializes a Local File object based on a descriptor
+ * provided by "getDescriptorFromFile".
+ *
  * @param   descriptor
  *          The descriptor that locates the directory
+ * @param   installLocation
+ *          The nsIInstallLocation object for this item.
  * @returns The nsILocalFile object representing the location of the item
  */
-function getFileFromDescriptor(locationKey, descriptor) {
-  var lf = Components.classes["@mozilla.org/file/local;1"]
-                      .createInstance(nsILocalFile);
-  if (locationKey == KEY_APP_PROFILE) 
-    lf.setRelativeDescriptor(getDir(KEY_PROFILEDS, []), descriptor);
-  else 
-    lf.persistentDescriptor = descriptor;
-  return lf;
+function getFileFromDescriptor(descriptor, installLocation) {
+  var location = Components.classes["@mozilla.org/file/local;1"]
+                           .createInstance(nsILocalFile);
+
+  var m = descriptor.match(/^(abs|rel)\%(.*)$/);
+  if (!m)
+    throw Components.results.NS_ERROR_INVALID_ARG;
+
+  if (m[1] == "rel") {
+    location.setRelativeDescriptor(installLocation.location, m[2]);
+  }
+  else {
+    location.persistentDescriptor = m[2];
+  }
+
+  return location;
 }
 
 /**
@@ -884,7 +888,7 @@ function DirectoryInstallLocation(name, location, restricted, priority) {
   this._name = name;
   if (location.exists()) {
     if (!location.isDirectory())
-      throw "location must be a directoy!";
+      throw new Error("location must be a directoy!");
   }
   else {
     location.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
@@ -1505,7 +1509,7 @@ Installer.prototype = {
           }
           LOG("Theme JAR file: " + jarFile.leafName + " contains an Old-Style " + 
               "Theme that is not compatible with this version of the software.");
-          throw "Old Theme"; // let the safe-op clean up
+          throw new Error("Old Theme"); // let the safe-op clean up
         }
       }
     }
@@ -1853,7 +1857,7 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
  */
 var PendingOperations = {
   _ops: { },
-  
+
   /**
    * Adds an entry to the Pending Operations List
    * @param   opType
@@ -1865,9 +1869,13 @@ var PendingOperations = {
    *          "id"            The GUID of the item.
    */
   addItem: function(opType, entry) {
-    if (!(opType in this._ops))
-      this._ops[opType] = [];
-    this._ops[opType].push(entry);
+    if (opType == "") {
+      delete this._ops[entry.id];
+    }
+    else {
+      entry.opType = opType;
+      this._ops[entry.id] = entry;
+    }
   },
   
   /**
@@ -1877,13 +1885,8 @@ var PendingOperations = {
    * @param   id
    *          The GUID of the item to remove the entry for
    */
-  clearItem: function(opType, id) {
-    if (!(opType in this._ops))
-      return;
-    for (var i = 0; i < this._ops[opType].length; ++i) {
-      if (this._ops[opType][i].id == id)
-        this._ops[opType].splice(i, 1);
-    }
+  clearItem: function(id) {
+    delete this._ops[id];
   },
   
   /**
@@ -1892,8 +1895,11 @@ var PendingOperations = {
    *          The type of Operation to remove all entries for
    */
   clearItems: function(opType) {
-    if (opType in this._ops)
-      this._ops[opType] = [];
+    for (var id in this._ops) {
+      if (this._ops[id].opType == opType) {
+        delete this._ops[id];
+      }
+    }
   },
   
   /**
@@ -1902,7 +1908,13 @@ var PendingOperations = {
    *          The type of Operation to return a list of
    */
   getOperations: function(opType) {
-    return opType in this._ops ? this._ops[opType] : [];
+    ops = [];
+    for (var id in this._ops) {
+      if (this._ops[id].opType == opType) {
+        ops.push(this._ops[id]);
+      }
+    }
+    return ops;
   },
   
   /**
@@ -1910,8 +1922,8 @@ var PendingOperations = {
    */
   get size() {
     var size = 0;
-    for (var opType in this._ops)
-      size += this._ops[opType].length;
+    for (var id in this._ops)
+      ++size;
     return size;
   }
 };
@@ -1953,7 +1965,7 @@ var InstallLocations = {
 
 /**
  * Manages the Startup Cache. The Startup Cache is a representation
- * of the contents of extensions-startup.manifest, a list of all
+ * of the contents of extensions.cache, a list of all
  * items the Extension System knows about, whether or not they
  * are active or visible.
  */
@@ -1987,7 +1999,7 @@ var StartupCache = {
     var mtime = null;
     if (itemLocation) {
       itemLocation.QueryInterface(nsILocalFile);
-      descriptor = getDescriptorFromFile(installLocation.name, itemLocation);
+      descriptor = getDescriptorFromFile(itemLocation, installLocation);
       if (itemLocation.exists() && itemLocation.isDirectory())
         mtime = Math.floor(itemLocation.lastModifiedTime / 1000);
     }
@@ -2005,7 +2017,7 @@ var StartupCache = {
    * @param id
    *        The ID of the item.
    * @param descriptor
-   *        Value returned from getDescriptorFromFile.  May be null, in which
+   *        Value returned from absoluteDescriptor.  May be null, in which
    *        case the descriptor field is not updated.
    * @param mtime
    *        The last modified time of the item.  May be null, in which case the
@@ -2130,19 +2142,22 @@ var StartupCache = {
       for (var id in this.entries[locationKey]) {
         var entry = this.entries[locationKey][id];
         if (entry) {
-          var itemLocation = getFileFromDescriptor(locationKey, entry.descriptor);
+          try {
+            var itemLocation = getFileFromDescriptor(entry.descriptor, InstallLocations.get(locationKey));
 
-          // Update our knowledge of this item's last-modified-time.
-          // XXXdarin: this may cause us to miss changes in some cases.
-          var itemMTime = 0;
-          if (itemLocation.exists() && itemLocation.isDirectory())
-            itemMTime = Math.floor(itemLocation.lastModifiedTime / 1000);
+            // Update our knowledge of this item's last-modified-time.
+            // XXXdarin: this may cause us to miss changes in some cases.
+            var itemMTime = 0;
+            if (itemLocation.exists() && itemLocation.isDirectory())
+              itemMTime = Math.floor(itemLocation.lastModifiedTime / 1000);
 
-          // Each line in the startup cache manifest is in this form:
-          // location-key\tid-of-item\tpd-to-extension1\tmtime-of-pd\tpending-op
-          var line = locationKey + "\t" + id + "\t" + entry.descriptor + "\t" +
-                     itemMTime + "\t" + entry.op + "\r\n";
-          fos.write(line, line.length);
+            // Each line in the startup cache manifest is in this form:
+            // location-key\tid-of-item\tpd-to-extension1\tmtime-of-pd\tpending-op
+            var line = locationKey + "\t" + id + "\t" + entry.descriptor + "\t" +
+                       itemMTime + "\t" + entry.op + "\r\n";
+            fos.write(line, line.length);
+          }
+          catch (e) {}
         }
       }
     }
@@ -2310,13 +2325,9 @@ ExtensionManager.prototype = {
     if (dsExists && iniExists && cacheExists)
       return false;
 
-    // If any one file is missing, remove all the others.
-    if (dsExists) 
-      extensionsDS.remove(false);
+    // If any of the files are missing, remove the .ini file
     if (iniExists)
       extensionsINI.remove(false);
-    if (cacheExists) 
-      extensionsCache.remove(false);
 
     return true;
   },
@@ -2335,7 +2346,7 @@ ExtensionManager.prototype = {
       isDirty = true;
     
     // Check for missing manifests - e.g. missing extensions.ini, missing
-    // extensions-startup.manifest, extensions.rdf etc. If any of these files 
+    // extensions.cache, extensions.rdf etc. If any of these files 
     // is missing then we are in some kind of weird or initial state and need
     // to force a regeneration.
     if (this._ensureDatasetIntegrity())
@@ -2704,9 +2715,13 @@ ExtensionManager.prototype = {
           else if (!ignoreMTimeChanges) {
             // Look for items whose mtime has changed, and as such we can assume 
             // they have been "upgraded".
-            var lf = getFileFromDescriptor(location.name, 
-                                           StartupCache.entries[location.name][id].descriptor);
-            if (lf.exists()) {
+            var lf = { path: StartupCache.entries[location.name][id].descriptor };
+            try {
+               lf = getFileFromDescriptor(StartupCache.entries[location.name][id].descriptor, location);
+            }
+            catch (e) { }
+
+            if (lf.exists && lf.exists()) {
               var actualMTime = Math.floor(lf.lastModifiedTime / 1000);
               if (actualMTime != StartupCache.entries[location.name][id].mtime) {
                 LOG("Item Location path changed: " + lf.path + " Item ID: " + 
@@ -2722,9 +2737,20 @@ ExtensionManager.prototype = {
               }
             }
             else {
-              LOG("Install Location returned an item path that does not exist! " + 
+              isDirty = true;
+              LOG("Install Location returned a missing or malformed item path! " + 
                   "Item Path: " + lf.path + ", Location Key: " + location.name + 
                   " Item ID: " + id);
+              if (canUse(id, location)) {
+                // Load the Extensions Datasource and force this item into the visible
+                // items list if it is not already. This allows us to handle the case 
+                // where there is an entry for an item in the Startup Cache but not
+                // in the extensions.rdf file - in that case the item will not be in
+                // the visible list and calls to |getInstallLocation| will mysteriously
+                // fail.
+                this.datasource.updateVisibleList(id, location.name, false);
+                this.uninstallItem(id);
+              }
             }
           }
         }
@@ -2929,7 +2955,7 @@ ExtensionManager.prototype = {
           ds.setItemProperty(id, EM_R("disabled"), null);
           var installLocation = this.getInstallLocation(id);
           StartupCache.put(installLocation, id, OP_NONE, true);
-          PendingOperations.clearItem(OP_NEEDS_ENABLE, id);
+          PendingOperations.clearItem(id);
           needsRestart = true;
         }
         PendingOperations.clearItems(OP_NEEDS_ENABLE);
@@ -2941,7 +2967,7 @@ ExtensionManager.prototype = {
           ds.setItemProperty(id, EM_R("disabled"), EM_L("true"));
           installLocation = this.getInstallLocation(id);
           StartupCache.put(installLocation, id, OP_NONE, true);
-          PendingOperations.clearItem(OP_NEEDS_DISABLE, id);
+          PendingOperations.clearItem(id);
         }
         PendingOperations.clearItems(OP_NEEDS_DISABLE);
 
@@ -3011,7 +3037,8 @@ ExtensionManager.prototype = {
       }
     }
     catch (e) {
-      LOG("ExtensionManager:_finishOperations - failure, catching exception... " + e);
+      LOG("ExtensionManager:_finishOperations - failure, catching exception - lineno: " +
+          e.lineNumber + " - file: " + e.fileName + " - " + e);
     }
     return needsRestart;
   },
@@ -3338,7 +3365,7 @@ ExtensionManager.prototype = {
     for (i = 0; i < validExtensions.length; ++i) {
       var e = validExtensions[i];
       var itemLocation = e.location.getItemLocation(e.id).QueryInterface(nsILocalFile);
-      var descriptor = getDescriptorFromFile(e.location.name, itemLocation);
+      var descriptor = getAbsoluteDescriptor(itemLocation);
       var line = "Extension" + i + "=" + descriptor + "\r\n";
       fos.write(line, line.length);
     }
@@ -3348,7 +3375,7 @@ ExtensionManager.prototype = {
     for (i = 0; i < validThemes.length; ++i) {
       var e = validThemes[i];
       var itemLocation = e.location.getItemLocation(e.id).QueryInterface(nsILocalFile);
-      var descriptor = getDescriptorFromFile(e.location.name, itemLocation);
+      var descriptor = getAbsoluteDescriptor(itemLocation);
       var line = "Extension" + i + "=" + descriptor + "\r\n";
       fos.write(line, line.length);
     }
@@ -3506,12 +3533,6 @@ ExtensionManager.prototype = {
       return installData;
     }
      
-    // Validate the Item Version
-    if (!getVersionChecker().isValidVersion(installData.version)) {
-      installData.error = INSTALLERROR_INVALID_VERSION;
-      return installData;
-    }
-        
     // Check the target application range specified by the extension metadata.
     if (!this.datasource.isCompatible(installManifest, gInstallManifestRoot, undefined))
       installData.error = INSTALLERROR_INCOMPATIBLE_VERSION;
@@ -4107,7 +4128,7 @@ ExtensionManager.prototype = {
       for (var i = 0; i < entries.length; ++i) {
         var location = InstallLocations.get(entries[i].location);
         StartupCache.clearEntry(location, id);
-        PendingOperations.clearItem(OP_NEEDS_INSTALL, id);
+        PendingOperations.clearItem(id);
       }
       return;
     }
@@ -4128,7 +4149,7 @@ ExtensionManager.prototype = {
     
     // Clear the op flag from the Startup Cache and Pending Operations sets
     StartupCache.put(installLocation, id, OP_NONE, true);
-    PendingOperations.clearItem(OP_NEEDS_INSTALL, id);
+    PendingOperations.clearItem(id);
   },
 
   /**
@@ -4170,7 +4191,7 @@ ExtensionManager.prototype = {
     // Clear the op flag from the Pending Operations set. Do NOT clear op flag in 
     // the startup cache since this may have been reset to OP_NEEDS_INSTALL by
     // |_configureForthcomingItem|.
-    PendingOperations.clearItem(OP_NEEDS_UPGRADE, id);
+    PendingOperations.clearItem(id);
   },
   
   /**
@@ -4211,7 +4232,7 @@ ExtensionManager.prototype = {
     
     // Clear the op flag from the Startup Cache and the Pending Operations set.
     StartupCache.clearEntry(installLocation, id);
-    PendingOperations.clearItem(OP_NEEDS_UNINSTALL, id);
+    PendingOperations.clearItem(id);
   },
   
   /**
@@ -4690,7 +4711,6 @@ ExtensionManager.prototype = {
    */
   _ensureDS: function() {
     if (!this._ds) {
-      dump("*** loading the extensions datasource\n");
       this._ds = new ExtensionsDataSource(this);
       if (this._ds)
         this._ds.loadExtensions();
@@ -6384,7 +6404,7 @@ ExtensionsDataSource.prototype = {
   
   /**
    * Get the em:opType property (controls widget state for the EM UI)
-   * from the Startup Cache (e.g. extensions-startup.manifest)
+   * from the Startup Cache (e.g. extensions.cache)
    */
   _rdfGet_opType: function(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);

@@ -2160,8 +2160,23 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
     nsCAutoString inFilePath;
     inFile->GetNativePath(inFilePath);
 
-    *_retval = (_mbsicmp((unsigned char*) inFilePath.get(),
-                         (unsigned char*) mWorkingPath.get()) == 0);
+    // Normalize both paths to the short form, failing back to a string
+    // comparison of the long form.
+
+    char thisshort[MAX_PATH];
+    char thatshort[MAX_PATH];
+
+    DWORD thisr = GetShortPathName(mWorkingPath.get(), thisshort, sizeof(thisshort));
+    DWORD thatr = GetShortPathName(inFilePath.get(), thatshort, sizeof(thatshort));
+
+    if (thisr && thatr && thisr < sizeof(thisshort) && thatr < sizeof(thatshort)) {
+        *_retval = (_mbsicmp((unsigned char*) thisshort,
+                             (unsigned char*) thatshort) == 0);
+    }
+    else {
+        *_retval = (_mbsicmp((unsigned char*) inFilePath.get(),
+                             (unsigned char*) mWorkingPath.get()) == 0);
+    }
     return NS_OK;
 }
 
