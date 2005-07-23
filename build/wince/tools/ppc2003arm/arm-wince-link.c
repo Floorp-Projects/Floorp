@@ -32,8 +32,7 @@ main(int argc, char **argv)
   args[i++] = "/NODEFAULTLIB:LIBC";
   args[i++] = "/NODEFAULTLIB:OLDNAMES";
 
-  args[i++] = "/STACK:0x5000000"; //,1000000
-  //LARGEADDRESSAWARE 
+  args[i++] = "/STACK:0x5000000,0x100000";
 
   // if -DLL is not passed, then change the entry to 'main'
   while(argv[j])
@@ -51,7 +50,7 @@ main(int argc, char **argv)
 
   argpath_conv(&argv[1], &args[i]);
 
-  dumpargs(args);
+  //  dumpargs(args);
 
   iRetVal = _spawnv( _P_WAIT, LINK_PATH, args );
 
