@@ -115,5 +115,5 @@ install::
 ifndef CROSS_COMPILE
 libs::
 	@echo "Running TestVersionComparator tests"
-	@$(PERL) -w $(srcdir)/TestVersionComparatorRunner.pl $(FINAL_TARGET)/TestVersionComparator$(BIN_SUFFIX)
+	@$(PERL) -w $(srcdir)/TestVersionComparatorRunner.pl "$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestVersionComparator$(BIN_SUFFIX)"
 endif
