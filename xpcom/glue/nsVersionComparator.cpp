@@ -104,7 +104,7 @@ ParseVP(char *part, VersionPart &result)
   }
 
   return dot;
-};
+}
 
 // compare two null-terminated strings, which may be null pointers
 static PRInt32
