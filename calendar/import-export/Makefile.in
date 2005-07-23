@@ -43,7 +43,7 @@ VPATH   = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXTRA_COMPONENTS = \
-	calCsvImportExport.js \
+	calOutlookCSVImportExport.js \
 	calHtmlExport.js \
 	calIcsImportExport.js \
 	calImportExportModule.js \
