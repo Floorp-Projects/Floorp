@@ -78,3 +78,5 @@ ac_add_options --enable-static
 
 #xptcall busted
 ac_add_options --disable-jsloader
+
+ac_add_options --disable-v1-string-abi
