@@ -43,6 +43,7 @@ XPCOM_GLUE_SRC_LCSRCS =			       \
 		nsTraceRefcnt.cpp              \
 		nsWeakReference.cpp	       \
 		nsGREGlue.cpp                  \
+		nsVersionComparator.cpp        \
 		$(NULL)
 
 XPCOM_GLUE_SRC_CSRCS := $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCSRCS))

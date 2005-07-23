@@ -83,6 +83,7 @@
 #include "nsThread.h"
 #include "nsProcess.h"
 #include "nsEnvironment.h"
+#include "nsVersionComparatorImpl.h"
 
 #include "nsEmptyEnumerator.h"
 
@@ -191,6 +192,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBinaryOutputStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBinaryInputStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStorageStream)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsVersionComparatorImpl)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVariant)
 
@@ -313,6 +315,7 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(BINARYINPUTSTREAM, nsBinaryInputStreamConstructor),
     COMPONENT(BINARYOUTPUTSTREAM, nsBinaryOutputStreamConstructor),
     COMPONENT(STORAGESTREAM, nsStorageStreamConstructor),
+    COMPONENT(VERSIONCOMPARATOR, nsVersionComparatorImplConstructor),
     COMPONENT(PIPE, nsPipeConstructor),
 
 #define NS_PROPERTIES_CLASSNAME  "Properties"

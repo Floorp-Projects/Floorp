@@ -96,7 +96,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIStyleSheet.h"
 #include "nsISupportsArray.h"
-#include "nsIUpdateService.h" // for nsIVersionChecker
+#include "nsIVersionComparator.h"
 #include "nsIWindowMediator.h"
 #include "nsIXPConnect.h"
 #include "nsIXULAppInfo.h"
@@ -1955,7 +1955,7 @@ CheckStringFlag(const nsSubstring& aFlag, const nsSubstring& aData,
 
 static PRBool
 CheckVersionFlag(const nsSubstring& aFlag, const nsSubstring& aData,
-                 const nsSubstring& aValue, nsIVersionChecker* aChecker,
+                 const nsSubstring& aValue, nsIVersionComparator* aChecker,
                  TriState& aResult)
 {
   if (! (aData.Length() > aFlag.Length() + 2))
@@ -2005,7 +2005,8 @@ CheckVersionFlag(const nsSubstring& aFlag, const nsSubstring& aData,
     }
     else {
       PRInt32 c;
-      nsresult rv = aChecker->Compare(aValue, testdata, &c);
+      nsresult rv = aChecker->Compare(NS_ConvertUTF16toUTF8(aValue),
+                                      NS_ConvertUTF16toUTF8(testdata), &c);
       if (NS_FAILED(rv)) {
         aResult = eBad;
       }
@@ -2043,7 +2044,7 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIXPConnect> xpc (do_GetService("@mozilla.org/js/xpc/XPConnect;1"));
-  nsCOMPtr<nsIVersionChecker> vc (do_GetService("@mozilla.org/updates/version-checker;1"));
+  nsCOMPtr<nsIVersionComparator> vc (do_GetService("@mozilla.org/xpcom/version-comparator;1"));
 
   nsAutoString appID;
   nsAutoString appVersion;

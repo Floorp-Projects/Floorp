@@ -53,6 +53,7 @@ REQUIRES	= string \
 
 CPPSRCS		= \
 		nsAllocator.cpp \
+		nsVersionComparatorImpl.cpp \
 		nsConsoleMessage.cpp \
 		nsConsoleService.cpp \
 		nsDebugImpl.cpp \
@@ -118,6 +119,7 @@ XPIDLSRCS	= \
 		nsIErrorService.idl \
 		nsIException.idl \
 		nsIExceptionService.idl \
+		nsIVersionComparator.idl \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR
