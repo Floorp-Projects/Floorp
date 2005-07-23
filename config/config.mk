@@ -856,3 +856,7 @@ endif
 #
 BUILD_ID := $(shell cat $(DEPTH)/config/build_number)
 DEFINES += -DBUILD_ID=$(BUILD_ID)
+
+ifeq (,$(filter WINCE WINNT OS2,$(OS_ARCH)))
+RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
+endif
