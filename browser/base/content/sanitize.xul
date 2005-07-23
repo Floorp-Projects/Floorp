@@ -143,7 +143,7 @@
       <checkbox label="&itemFormData.label;"  preference="privacy.item.formdata"
                 onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
       <checkbox label="&itemPasswords.label;" preference="privacy.item.passwords"
-                onpreferenceread="return gSanitizePromptDialog.onReadSanitizePasswords();"/>
+                onsyncfrompreference="return gSanitizePromptDialog.onReadSanitizePasswords();"/>
       <checkbox label="&itemDownloads.label;" preference="privacy.item.downloads"
                 onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
       <checkbox label="&itemCookies.label;"   preference="privacy.item.cookies"
