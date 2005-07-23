@@ -4047,7 +4047,7 @@ nsContextMenu.prototype = {
 
           var hostLabel;
           // this throws if the image URI doesn't have a host (eg, data: image URIs)
-          // see bug 296758 for details
+          // see bug 293758 for details
           try {
             hostLabel = uri.host;
           } catch (ex) { }
