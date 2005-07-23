@@ -417,29 +417,3 @@ interface nsIUpdateTimerManager : nsISupports
                      in nsITimerCallback callback, 
                      in unsigned long interval);
 };
-
-[scriptable, uuid(22d35700-5765-42e1-914b-a0da7c911a8c)]
-interface nsIVersionChecker : nsISupports
-{
-  /**
-   * Compare two FVF versions
-   * @param   versionA
-   *          The first version
-   * @param   versionB
-   *          The second version
-   * @returns < 0 if A < B
-   *          = 0 if A == B
-   *          > 0 if B > A
-   * XXXben - change the return value here to return a constant
-   */
-  long compare(in AString versionA, in AString versionB);
-
-  /**
-   * Determines if a string is a valid FVF version
-   * @param   string
-   *          The string to validate
-   * @returns true if the string is a valid FVF version
-   */
-  boolean isValidVersion(in AString version);
-};
-

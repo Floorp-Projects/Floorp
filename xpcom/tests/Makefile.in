@@ -78,6 +78,7 @@ CPPSRCS		= \
 		TestMinStringAPI.cpp \
 		TestStrings.cpp \
 		TestStorageStream.cpp \
+		TestVersionComparator.cpp \
 		$(NULL)
 
 #CPPSRCS		+= TimerTest.cpp
@@ -111,3 +112,8 @@ libs::
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/test.properties $(DESTDIR)$(mozappdir)/res
 
+ifndef CROSS_COMPILE
+libs::
+	@echo "Running TestVersionComparator tests"
+	@$(PERL) -w $(srcdir)/TestVersionComparatorRunner.pl $(FINAL_TARGET)/TestVersionComparator$(BIN_SUFFIX)
+endif

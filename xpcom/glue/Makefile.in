@@ -76,6 +76,7 @@ SDK_HEADERS     = \
 		nsWeakReference.h \
 		nsComponentManagerUtils.h \
 		nsServiceManagerUtils.h \
+		nsVersionComparator.h \
 		$(NULL)
 
 SDK_LIBRARY     =                        \

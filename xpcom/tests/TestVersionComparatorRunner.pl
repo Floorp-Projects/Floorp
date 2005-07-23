@@ -1,4 +1,4 @@
-#
+#!/usr/bin/perl -w
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,11 +12,12 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is Mozilla XPCOM Tests.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Benjamin Smedberg <benjamin@smedbergs.us>.
+#
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,56 +36,54 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+my $executable = shift;
 
-include $(DEPTH)/config/autoconf.mk
+@comparisons = (
+  "1.0pre1",
+  "1.0pre2",
+  "1.0",
+  "1.1pre",
+  "1.1pre1a",
+  "1.1pre1",
+  "1.1pre10a",
+  "1.1pre10",
+  "1.1"
+);
 
-MODULE          = chrome
-LIBRARY_NAME    = chrome
-EXPORT_LIBRARY = 1
-IS_COMPONENT    = 1
-MODULE_NAME     = nsChromeModule
-GRE_MODULE      = 1
-LIBXUL_LIBRARY  = 1
+@equality = (
+  "1.1pre",
+  "1.1pre0",
+  "1.0+"
+);
 
-PACKAGE_FILE = chrome.pkg
+# Do the comparisons in both directions
 
-REQUIRES	= xpcom \
-		  string \
-		  rdf \
-		  content \
-		  xuldoc \
-		  gfx \
-		  layout \
-		  locale \
-		  necko \
-		  dom \
-		  widget \
-		  js \
-		  appshell \
-		  toolkitcomps \
-		  caps \
-		  pref \
-		  docshell \
-		  xpconnect \
-		  jar \
-		  xulapp \
-		  unicharutil \
-		  $(NULL)
+sub run_testprog {
+    my ($executable, $args, $expected) = @_;
 
-CPPSRCS		= \
-		nsChromeFactory.cpp \
-		nsChromeRegistry.cpp \
-		nsChromeProtocolHandler.cpp \
-		$(NULL)
+    my $result = `$executable $args`;
+    $result =~ s/\r|\n//g;
 
-EXTRA_DSO_LDOPTS = \
-                $(MOZ_UNICHARUTIL_LIBS) \
-                $(MOZ_COMPONENT_LIBS) \
-                $(NULL)
+    if ($result ne $expected) {
+	print STDERR "Testing '$args' expected '$expected', got '$result'.\n";
+	exit 1;
+    }
+}
 
-include $(topsrcdir)/config/rules.mk
+for (my $i = 0; $i < scalar(@comparisons) - 1; ++$i) {
+    run_testprog($executable,
+		 "$comparisons[$i] $comparisons[$i + 1]",
+		 "$comparisons[$i] < $comparisons[$i + 1]");
+    run_testprog($executable,
+		 "$comparisons[$i + 1] $comparisons[$i]",
+		 "$comparisons[$i + 1] > $comparisons[$i]");
+}
 
+for (my $i = 0; $i < scalar(@equality) - 1; ++$i) {
+    run_testprog($executable,
+		 "$equality[$i] $equality[$i + 1]",
+		 "$equality[$i] = $equality[$i + 1]");
+}
+
+print "All comparisons OK\n";
+exit 0;
