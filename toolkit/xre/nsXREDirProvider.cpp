@@ -198,7 +198,8 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
         rv = file->AppendNative(NS_LITERAL_CSTRING("pref"));
     }
   }
-  else if (!strcmp(aProperty, NS_APP_APPLICATION_REGISTRY_DIR)) {
+  else if (!strcmp(aProperty, NS_APP_APPLICATION_REGISTRY_DIR) ||
+           !strcmp(aProperty, XRE_USER_APP_DATA_DIR)) {
     rv = GetUserAppDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
   }
   else if (!strcmp(aProperty, NS_APP_APPLICATION_REGISTRY_FILE)) {
@@ -341,16 +342,8 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
     nsCOMPtr<nsIFile> platformABIDir;
 #endif
     rv = dir->SetPersistentDescriptor(nsDependentCString(parserBuf));
-    if (NS_FAILED(rv)) {
-      // Must be a relative descriptor, relative to the profile directory, 
-      // try that instead.
-      nsCOMPtr<nsIFile> profileDir;
-      aComponentsList->GetParent(getter_AddRefs(profileDir));
-      nsCOMPtr<nsILocalFile> lfProfileDir(do_QueryInterface(profileDir));
-      rv = dir->SetRelativeDescriptor(lfProfileDir, nsDependentCString(parserBuf));
-      if (NS_FAILED(rv))
-        continue;
-    }
+    if (NS_FAILED(rv))
+      continue;
 
     rv = dir->Clone(getter_AddRefs(platformDir));
     if (NS_FAILED(rv))

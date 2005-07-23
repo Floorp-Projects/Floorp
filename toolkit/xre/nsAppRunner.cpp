@@ -1612,23 +1612,63 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
 
 #define FILE_COMPATIBILITY_INFO NS_LITERAL_CSTRING("compatibility.ini")
 
-static void GetVersion(nsIFile* aProfileDir, char* aVersion, int aVersionLength)
+static PRBool
+CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
+                   nsIFile* aXULRunnerDir, nsIFile* aAppDir)
 {
-  aVersion[0] = '\0';
-
   nsCOMPtr<nsIFile> file;
   aProfileDir->Clone(getter_AddRefs(file));
   if (!file)
-    return;
+    return PR_FALSE;
   file->AppendNative(FILE_COMPATIBILITY_INFO);
 
   nsINIParser parser;
   nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file));
   nsresult rv = parser.Init(localFile);
   if (NS_FAILED(rv))
-    return;
+    return PR_FALSE;
 
-  parser.GetString("Compatibility", "LastVersion", aVersion, aVersionLength);
+  char buffer[MAXPATHLEN];
+  rv = parser.GetString("Compatibility", "LastVersion", buffer, sizeof(buffer));
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  if (!aVersion.Equals(buffer))
+    return PR_FALSE;
+
+  rv = parser.GetString("Compatibility", "LastPlatformDir",
+                        buffer, sizeof(buffer));
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  nsCOMPtr<nsILocalFile> lf;
+  rv = NS_NewNativeLocalFile(nsDependentCString(buffer), PR_FALSE,
+                             getter_AddRefs(lf));
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  PRBool eq;
+  rv = lf->Equals(aXULRunnerDir, &eq);
+  if (NS_FAILED(rv) || !eq)
+    return PR_FALSE;
+
+  if (aAppDir) {
+    rv = parser.GetString("Compatibility", "LastAppDir",
+                          buffer, sizeof(buffer));
+    if (NS_FAILED(rv))
+      return PR_FALSE;
+
+    rv = NS_NewNativeLocalFile(nsDependentCString(buffer), PR_FALSE,
+                               getter_AddRefs(lf));
+    if (NS_FAILED(rv))
+      return PR_FALSE;
+
+    rv = lf->Equals(aXULRunnerDir, &eq);
+    if (NS_FAILED(rv) || !eq)
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
 }
 
 static void BuildVersion(nsCString &aBuf)
@@ -1640,7 +1680,9 @@ static void BuildVersion(nsCString &aBuf)
   aBuf.AppendLiteral(GRE_BUILD_ID);
 }
 
-static void WriteVersion(nsIFile* aProfileDir, const nsCSubstring &version)
+static void
+WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
+             nsIFile* aXULRunnerDir, nsIFile* aAppDir)
 {
   nsCOMPtr<nsIFile> file;
   aProfileDir->Clone(getter_AddRefs(file));
@@ -1650,6 +1692,13 @@ static void WriteVersion(nsIFile* aProfileDir, const nsCSubstring &version)
 
   nsCOMPtr<nsILocalFile> lf = do_QueryInterface(file);
 
+  nsCAutoString platformDir;
+  aXULRunnerDir->GetNativePath(platformDir);
+
+  nsCAutoString appDir;
+  if (aAppDir)
+    aAppDir->GetNativePath(appDir);
+
   PRFileDesc *fd = nsnull;
   lf->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, &fd);
   if (!fd) {
@@ -1657,12 +1706,26 @@ static void WriteVersion(nsIFile* aProfileDir, const nsCSubstring &version)
     return;
   }
 
-  nsCAutoString buf;
-  buf.AssignLiteral("[Compatibility]\r\nLastVersion=");
-  buf.Append(version);
-  buf.AppendLiteral(NS_LINEBREAK);
+  static const char kHeader[] = "[Compatibility]" NS_LINEBREAK
+                                "LastVersion=";
 
-  PR_Write(fd, buf.get(), buf.Length());
+  PR_Write(fd, kHeader, sizeof(kHeader) - 1);
+  PR_Write(fd, aVersion.get(), aVersion.Length());
+
+  static const char kPlatformDirHeader[] = NS_LINEBREAK "LastPlatformDir=";
+
+  PR_Write(fd, kPlatformDirHeader, sizeof(kPlatformDirHeader) - 1);
+  PR_Write(fd, platformDir.get(), platformDir.Length());
+
+  static const char kAppDirHeader[] = NS_LINEBREAK "LastAppDir=";
+  if (aAppDir) {
+    PR_Write(fd, kAppDirHeader, sizeof(kAppDirHeader) - 1);
+    PR_Write(fd, appDir.get(), appDir.Length());
+  }
+
+  static const char kNL[] = NS_LINEBREAK;
+  PR_Write(fd, kNL, sizeof(kNL) - 1);
+
   PR_Close(fd);
 }
 
@@ -1679,7 +1742,8 @@ static PRBool ComponentsListChanged(nsIFile* aProfileDir)
   return exists;
 }
 
-static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfileDir)
+static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfileDir,
+                                      PRBool aRemoveEMFiles)
 {
   nsCOMPtr<nsIFile> file;
   aProfileDir->Clone(getter_AddRefs(file));
@@ -1694,6 +1758,11 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
 
   file->SetNativeLeafName(NS_LITERAL_CSTRING(".autoreg"));
   file->Remove(PR_FALSE);
+
+  if (aRemoveEMFiles) {
+    file->SetNativeLeafName(NS_LITERAL_CSTRING("extensions.ini"));
+    file->Remove(PR_FALSE);
+  }
 
   aLocalProfileDir->Clone(getter_AddRefs(file));
   if (!file)
@@ -1997,15 +2066,15 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   PRBool upgraded = PR_FALSE;
 
+  nsCAutoString version;
+  BuildVersion(version);
+
   // Check for version compatibility with the last version of the app this 
   // profile was started with.  The format of the version stamp is defined
   // by the BuildVersion function.
-  char lastVersion[MAXPATHLEN];
-  GetVersion(profD, lastVersion, MAXPATHLEN);
-
-  // Build the version stamp for the running application.
-  nsCAutoString version;
-  BuildVersion(version);
+  PRBool versionOK = CheckCompatibility(profD, version,
+                                        dirProvider.GetAppDir(),
+                                        gAppData->directory);
 
   // Every time a profile is loaded by a build with a different version,
   // it updates the compatibility.ini file saying what version last wrote
@@ -2015,16 +2084,17 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // re-generated to prevent mysterious component loading failures.
   //
   if (gSafeMode) {
-    RemoveComponentRegistries(profD, profLD);
-    WriteVersion(profD, NS_LITERAL_CSTRING("Safe Mode"));
+    RemoveComponentRegistries(profD, profLD, PR_FALSE);
+    WriteVersion(profD, NS_LITERAL_CSTRING("Safe Mode"),
+                 dirProvider.GetAppDir(), gAppData->directory);
   }
-  else if (version.Equals(lastVersion)) {
+  else if (versionOK) {
     if (ComponentsListChanged(profD)) {
       // Remove compreg.dat and xpti.dat, forcing component re-registration,
       // with the new list of additional components directories specified
       // in "components.ini" which we have just discovered changed since the
       // last time the application was run. 
-      RemoveComponentRegistries(profD, profLD);
+      RemoveComponentRegistries(profD, profLD, PR_FALSE);
     }
     // Nothing need be done for the normal startup case.
   }
@@ -2032,7 +2102,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     // Remove compreg.dat and xpti.dat, forcing component re-registration
     // with the default set of components (this disables any potentially
     // troublesome incompatible XPCOM components). 
-    RemoveComponentRegistries(profD, profLD);
+    RemoveComponentRegistries(profD, profLD, PR_TRUE);
 
     // Tell the Extension Manager it should check for incompatible 
     // Extensions and re-write the Components manifest ("components.ini")
@@ -2040,7 +2110,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     upgraded = PR_TRUE;
 
     // Write out version
-    WriteVersion(profD, version);
+    WriteVersion(profD, version,
+                 dirProvider.GetAppDir(), gAppData->directory);
   }
 
   PRBool needsRestart = PR_FALSE;
