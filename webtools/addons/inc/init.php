@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * Global initialization script.
+ *
+ * @package amo
+ * @subpackage docs
+ * @todo find a more elegant way to push in global template data (like $cats)
+ */
 // Include config file.
 require_once('config.php');
 
@@ -78,4 +84,9 @@ $tpl = new AMO_Smarty();
 
 // Global DB object.
 $db = new AMO_SQL();
+
+// Global categories array.
+$db->query("SELECT DISTINCT CatName FROM categories ORDER BY CatName", SQL_ALL, SQL_ASSOC);
+$cats = $db->record;
+$tpl->assign('cats',$cats); 
 ?>

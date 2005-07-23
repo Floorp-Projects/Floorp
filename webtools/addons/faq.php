@@ -26,11 +26,7 @@ $links = array(
 
     array(  'href'  => './policy.php',
             'title' => 'Addons Policies', 
-            'text'  => 'Policy'),
-
-    array(  'href'  => './about.php',
-            'title' => 'About this Site', 
-            'text'  => 'About'),
+            'text'  => 'Policy')
 );
 
 // Send FAQ data to Smarty object.

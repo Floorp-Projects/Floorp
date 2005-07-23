@@ -26,23 +26,26 @@
 <div id="key-title">
     <h1><a href="{$config.webpath}/" title="Return to home page" accesskey="1">Mozilla Update: Beta</a></h1>
     <ul>
-        <li><a href="{$config.webpath}/" title="Addons Home">home</a></li>
         <li><a href="{$config.webpath}/faq.php" title="Frequently Asked Questions">FAQ</a></li>
-        <li><a href="{$config.webpath}/developers/" title="Tools for Addons Developers">developers</a></li>
+        <li><a href="{$config.webpath}/developers/" title="Tools for Addons Developers">Developers</a></li>
+        <li><a href="{$config.webpath}/search.php" title="Find an Addon">Search</a></li>
     </ul>
 </div>
 <!-- end key-title -->
 
-<div id="key-menu"> 
+<div id="key-menu" class="earth"> 
     <form id="search" method="get" action="{$config.webpath}/search.php" title="Search Mozilla Update">
     <div>
-        <label for="q" title="Search Mozilla Update">Search</label>
-        <select name="section" id="sectionsearch">
-            <option value="A">Entire Site</option>
-            <option value="E">Extensions</option>
-            <option value="T">Themes</option>
-        </select>
+        <label for="q" title="Search Mozilla Update">Search for</label>
         <input type="text" id="q" name="q" accesskey="s" size="10">
+        in
+        <select name="cat" id="cat">
+        <option value="">All Categories</option>
+        {section name="inc_cats" loop=$cats}
+        <option value="{$cats[inc_cats].CatName}">{$cats[inc_cats].CatName}</option>
+        {/section}
+        </select>
+
         <input type="submit" id="submit" value="Go">
     </div>
     </form>
