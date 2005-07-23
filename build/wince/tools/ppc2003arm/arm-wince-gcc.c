@@ -35,6 +35,12 @@ main(int argc, char **argv)
   args[i++] = "/F5000000";
   args[i++] = "/Gy";  // For link warning LNK1166
 
+  //  args[i++] = "/Gf";
+  //  args[i++] = "/GF";
+  //  args[i++] = "/QRxscale";
+  //  args[i++] = "/QRxscalesched";
+  //  args[i++] = "/Ox";
+
   startOfArgvs = i;
   
   i += argpath_conv(&argv[1], &args[i]);
@@ -72,7 +78,8 @@ main(int argc, char **argv)
   if (link)
   {
     args[i++] = "/link";
-    args[i++] = "-STACK:0x5000000"; //,1000000
+    args[i++] = "-STACK:0x5000000,0x100000";
+
     args[i++] = "-ENTRY:mainACRTStartup";
     args[i++] = "-SUBSYSTEM:WINDOWSCE,4.20";
     args[i++] = "-MACHINE:ARM";
