@@ -81,7 +81,13 @@ MOZCE_SHUNT_API char* mozce_getenv(const char* inName)
         return "nspr.log";
 #endif  
 
-
+#ifdef TIMELINE
+    if (!strcmp(inName, "NS_TIMELINE_LOG_FILE"))
+        return "\\bin\\timeline.log";
+    
+    if (!strcmp(inName, "NS_TIMELINE_ENABLE"))
+        return "1";
+#endif
     return retval;
 }
 
