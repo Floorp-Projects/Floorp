@@ -36,17 +36,8 @@
 <div id="key-menu" class="earth"> 
     <form id="search" method="get" action="{$config.webpath}/search.php" title="Search Mozilla Update">
     <div>
-        <label for="q" title="Search Mozilla Update">Search for</label>
-        <input type="text" id="q" name="q" accesskey="s" size="10">
-        in
-        <select name="cat" id="cat">
-        <option value="">All Categories</option>
-        {section name="inc_cats" loop=$cats}
-        <option value="{$cats[inc_cats].CatName}">{$cats[inc_cats].CatName}</option>
-        {/section}
-        </select>
-
-        <input type="submit" id="submit" value="Go">
+        <input type="text" id="q" name="q" accesskey="s" size="10" value="{$clean.q}">
+        <input type="submit" id="submit" value="Search">
     </div>
     </form>
     <div class="ie-clear-menu">&nbsp;</div>

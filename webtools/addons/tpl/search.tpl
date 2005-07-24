@@ -6,7 +6,7 @@
 
 <form id="search-side" action="{$smarty.server.PHP_SELF}" method="get">
 
-<input type="text" name="q" value="{$clean[q]}">
+<input type="text" name="q" value="{$clean.q}" maxlength="32">
 <input type="submit" value="Search"><br><br>
 
 <fieldset>
@@ -15,17 +15,17 @@
     <div class="search-option">
     <label for="cat">Category:</label>
     <select name="cat" id="cat">
-    <option>Any</option>
-    <option>Foo</option>
+    <option value="null">Any</option>
+    {html_options options=$cats selected=$clean.cat}
     </select>
     </div>
 
     <div class="search-option">
     <label for="type">Type:</label>
     <select id="type" name="type">
-    <option>Any</option>
-    <option>Extensions</option>
-    <option>Themes</option>
+    <option value="null">Any</option>
+    <option value="E"{if $clean.type eq 'E'} selected="selected"{/if}>Extensions</option>
+    <option value="T"{if $clean.type eq 'T'} selected="selected"{/if}>Themes</option>
     </select>
     </div>
 
@@ -33,43 +33,34 @@
     <label for="app">App:</label>
     <select id="app" name="app">
     <option>Any</option>
-    <option>Firefox</option>
-    <option>Thunderbird</option>
-    <option>Mozilla</option>
+    {html_options options=$apps selected=$clean.app}
     </select>
     </div>
 
     <div class="search-option">   
-    <label for="os">Platform:</label>
-    <select id="os" name="os">
-    <option>Windows</option>
-    <option>Linux</option>
-    <option>OSX</option>
+    <label for="platform">Platform:</label>
+    <select id="platform" name="platform">
+    <option value="null">Any</option>
+    {html_options options=$platforms selected=$clean.platform}
     </select>
     </div>
 
     <div class="search-option">
     <label for="date">Date:</label>
     <select id="date" name="date">
-    <option>Any</option>
-    <option>Today</option>
-    <option>This Week</option>
-    <option>This Month</option>
-    <option>This Year</option>
+    <option value="null">Any</option>
+    {html_options options=$dates selected=$clean.date}
     </select>
     </div>
 
     <div class="search-option">
     <label for="sort">Sort by:</label>
     <select id="sort" name="sort">
-    <option>Name</option>
-    <option>Date</option>
-    <option>Rating</option>
-    <option>Popularity</option>
+    {html_options options=$sort selected=$clean.sort}
     </select>
     </div>
 
-    </fieldset>
+</fieldset>
 
 <input type="submit" value="Search"><br><br>
 

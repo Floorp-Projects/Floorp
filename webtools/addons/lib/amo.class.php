@@ -4,7 +4,9 @@
  */
 class AMO_Object
 {
-    var $wrapper;
+    var $cats;
+    var $apps;
+    var $platforms;
 
     function AMO_Object()
     {
@@ -49,5 +51,63 @@ class AMO_Object
         }
     }
 
+    function getCats()
+    {
+        // Gather categories.
+        $this->db->query("
+            SELECT
+                CategoryID,
+                CatName
+            FROM
+                categories
+            GROUP BY
+                CatName
+            ORDER BY
+                CatName
+        ", SQL_INIT, SQL_ASSOC);
+
+        do {
+            $this->Cats[$this->db->record['CategoryID']] = $this->db->record['CatName'];
+        } while ($this->db->next(SQL_ASSOC));
+    }
+    
+    function getPlatforms()
+    {
+        // Gather platforms..
+        $this->db->query("
+            SELECT
+                OSID,
+                OSName
+            FROM
+                os
+            ORDER BY
+                OSName
+        ", SQL_INIT, SQL_ASSOC);
+
+        do { 
+            $this->Platforms[$this->db->record['OSID']] = $this->db->record['OSName'];
+        } while ($this->db->next(SQL_ASSOC));
+
+    }
+
+    function getApps()
+    {
+        // Gather aapplications.
+        $this->db->query("
+            SELECT DISTINCT
+                AppID,
+                AppName
+            FROM
+                applications
+            WHERE
+                public_ver = 'YES'
+            GROUP BY
+                AppName
+        ", SQL_INIT, SQL_ASSOC);
+
+        do {
+            $this->Apps[$this->db->record['AppID']] = $this->db->record['AppName'];
+        } while ($this->db->next(SQL_ASSOC));
+    }
 }
 ?>

@@ -17,8 +17,8 @@
     </ul>
 <li><span>Find similar Addons...</span>
     <ul>
-    {section name=cats loop=$addon->Cats}
-    <li><a href="./search.php?cat={$addon->Cats[cats].CatName}" title="See other Addons in this category.">{$addon->Cats[cats].CatName}</a></li>
+    {section name=cats loop=$addon->AddonCats}
+    <li><a href="./search.php?cat={$addon->AddonCats[cats].CatName}" title="See other Addons in this category.">{$addon->AddonCats[cats].CatName}</a></li>
     {/section}
     <li><a href="./search.php?app={$addon->AppName}">Other {$addon->AppName} Addons</a></li>
     </ul>

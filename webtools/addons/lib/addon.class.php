@@ -51,7 +51,7 @@ class AddOn extends AMO_Object
     var $Comments;
 
     // Categories.
-    var $Cats;
+    var $AddonCats;
     
     // History of releases
     var $History;
@@ -79,7 +79,7 @@ class AddOn extends AMO_Object
 
     function getAddOn()
     {
-        $this->getCats();
+        $this->getAddonCats();
         $this->getComments();
         $this->getCurrentVersion();
         $this->getMainPreview();
@@ -245,11 +245,12 @@ class AddOn extends AMO_Object
         $this->setVar('Comments',$this->db->record);
     }
 
-    function getCats()
+    function getAddonCats()
     {
         // Gather addon categories.
         $this->db->query("
             SELECT DISTINCT
+                categories.CatID,
                 categories.CatName
             FROM
                 categoryxref
@@ -261,7 +262,7 @@ class AddOn extends AMO_Object
                 categories.CatName
         ", SQL_ALL, SQL_ASSOC);
 
-        $this->Cats = $this->db->record;
+        $this->AddonCats = $this->db->record;
     }
 }
 ?>

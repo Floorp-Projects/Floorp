@@ -17,6 +17,7 @@ $sql['ID'] =& $clean['ID'];
 
 $addon = new AddOn($sql['ID']);
 $addon->getHistory();
+
 // Assign template variables.
 $tpl->assign(
     array(  'addon'     => $addon,
@@ -24,3 +25,4 @@ $tpl->assign(
             'content'   => 'history.tpl',
             'sidebar'   => 'inc/addon-sidebar.tpl')
 );
+?>
