@@ -100,7 +100,7 @@ function loadEventsFromFile()
         var items;
         try
         {
-           inputStream.init( fp.file, MODE_RDONLY, 0444, {} );
+           inputFromStream.init( fp.file, MODE_RDONLY, 0444, {} );
 
            var scriptableInputStream = 
                Components.classes["@mozilla.org/scriptableinputstream;1"]
@@ -223,7 +223,7 @@ function saveEventsToFile(calendarEventArray)
          outputStream.init(localFileInstance, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
          // XXX Do the right thing with unicode and stuff. Or, again, should the
          //     exporter handle that?
-         exporter.exportStream(outputStream, calendarEventArray.length, calendarEventArray);
+         exporter.exportToStream(outputStream, calendarEventArray.length, calendarEventArray);
          outputStream.close();
       }
       catch(ex)
