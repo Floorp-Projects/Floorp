@@ -1577,6 +1577,27 @@
 			settings = {
 			};
 		};
+		0FC4B33D08941B4F009C5F41 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = ChimeraUtils.h;
+			path = src/includes/ChimeraUtils.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FC4B33E08941B4F009C5F41 = {
+			fileRef = 0FC4B33D08941B4F009C5F41;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FC4B33F08941B4F009C5F41 = {
+			fileRef = 0FC4B33D08941B4F009C5F41;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0FCCE56707D6D7DA006DD3D1 = {
 			isa = PBXFileReference;
 			lastKnownFileType = file;
@@ -2597,6 +2618,7 @@
 				0F5FD71C07F48CDC00E8EDBD,
 				3FFFEC1E081C3F0B00843C07,
 				0F84BF1808862E4B00E23BC4,
+				0FC4B33E08941B4F009C5F41,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6446,6 +6468,7 @@
 				0F5FD71D07F48CDC00E8EDBD,
 				3FFFEC20081C3F0B00843C07,
 				0F84BF1708862E4B00E23BC4,
+				0FC4B33F08941B4F009C5F41,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -13136,6 +13159,7 @@
 				F558B1F0030F6E470166970F,
 				F5DE10E80209DC0601A967DF,
 				F5DE10E70209DC0601A967DF,
+				0FC4B33D08941B4F009C5F41,
 				F5C8D55203A2A42401A8016F,
 				F566BD1202EFA9AD01A967F3,
 				F59E9F3D0237E28401A967DF,
