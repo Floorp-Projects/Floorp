@@ -9,7 +9,6 @@
 // Array to store clean inputs.
 $clean = array();
 $sql = array();
-$html = array();
 
 // Category.
 if (isset($_GET['cat'])&&ctype_alpha($_GET['cat'])) {
@@ -49,13 +48,12 @@ if (isset($_GET['sort'])&&ctype_alpha($_GET['sort'])) {
 }
 
 // Query.
-if (isset($_GET['q'])&&preg_match("/^[a-zA-Z0-9'\.-]*$/",$_GET['q'])) {
+if (isset($_GET['q'])&&preg_match("/[a-zA-Z0-9'\.-]*/",$_GET['q'])) {
     $clean['q'] = $_GET['q'];
 }
 
 // Prepared verified inputs for their destinations.
 foreach ($clean as $key=>$val) {
-    $html[$key] = strip_tags(htmlentities($val));
     $sql[$key] = mysql_real_escape_string($val);
 }
 
@@ -63,10 +61,15 @@ foreach ($clean as $key=>$val) {
 
 $tpl->assign(
     array(
-        'content'    =>'search.tpl',
-        'title'     =>'Search',
+        'clean'     => $clean,
+        'content'   => 'search.tpl',
+        'title'     => 'Search',
     )
 );
 
 $wrapper = 'inc/wrappers/nonav.tpl';
+
+echo '<pre>';
+print_r($clean);
+echo '</pre>';
 ?>

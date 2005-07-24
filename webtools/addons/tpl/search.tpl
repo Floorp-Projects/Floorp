@@ -6,7 +6,7 @@
 
 <form id="search-side" action="{$smarty.server.PHP_SELF}" method="get">
 
-<input type="text" name="q">
+<input type="text" name="q" value="{$clean[q]}">
 <input type="submit" value="Search"><br><br>
 
 <fieldset>
@@ -82,6 +82,7 @@
 <!-- end side -->
 
 <div id="mainContent">
+
 <h2>Addon Search</h2>
 {if $results}
 {else}
@@ -89,4 +90,5 @@
 {/if}
 
 </div>
+<!-- end mainContent -->
 
