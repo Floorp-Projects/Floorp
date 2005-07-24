@@ -1,13 +1,14 @@
 
+<div id="side">
 {* @todo fix the javascript hide/show so it's not n00bl3t1z3t3d *}
-<h2>Find an Addon</h2>
 
-<form action="{$smarty.server.PHP_SELF}" method="get">
+<div id="nav">
 
-<div class="key-point">
+<form id="search-side" action="{$smarty.server.PHP_SELF}" method="get">
+
 <input type="text" name="q">
-<div id="advanced-search" style="display:none;">
-<a href="#" onclick="getElementById('advanced-search').style.display='none';getElementById('toggle-advanced-search').style.display='inline';">Hide Search Options</a>
+<input type="submit" value="Search"><br><br>
+
 <fieldset>
     <legend>Search Options</legend>
 
@@ -29,7 +30,7 @@
     </div>
 
     <div class="search-option">
-    <label for="app">Application:</label>
+    <label for="app">App:</label>
     <select id="app" name="app">
     <option>Any</option>
     <option>Firefox</option>
@@ -39,7 +40,7 @@
     </div>
 
     <div class="search-option">   
-    <label for="os">Operating System:</label>
+    <label for="os">Platform:</label>
     <select id="os" name="os">
     <option>Windows</option>
     <option>Linux</option>
@@ -48,7 +49,7 @@
     </div>
 
     <div class="search-option">
-    <label for="date">Date Modified:</label>
+    <label for="date">Date:</label>
     <select id="date" name="date">
     <option>Any</option>
     <option>Today</option>
@@ -70,12 +71,22 @@
 
     </fieldset>
 
-</div>
-<input type="submit" value="Search"><br>
-
-<a id="toggle-advanced-search" href="#" onclick="this.style.display='none';getElementById('advanced-search').style.display='block';">Show Search Options</a>
-</div>
-
+<input type="submit" value="Search"><br><br>
 
 </form>
+
+</div>
+<!-- end nav -->
+
+</div>
+<!-- end side -->
+
+<div id="mainContent">
+<h2>Addon Search</h2>
+{if $results}
+{else}
+<p class="first">There are currently no results.  Please use the options at the left to begin a search or try adjusting your search terms.</p>
+{/if}
+
+</div>
 

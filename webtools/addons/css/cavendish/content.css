@@ -73,6 +73,10 @@
     margin-top: 15px;
 }
 
+#search-side {
+    padding: 10px;
+}
+
 .popularlist {
 	font-size: 85%;
 }
