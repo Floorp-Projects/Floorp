@@ -512,6 +512,8 @@ static id gSharedProgressController = nil;
 - (void)setupDownloadTimer
 {
   [self killDownloadTimer];
+  // note that this sets up a retain cycle between |self| and the timer,
+  // which has to be broken out of band, before we'll be dealloc'd.
   mDownloadTimer = [[NSTimer scheduledTimerWithTimeInterval:1.0
                                                      target:self
                                                    selector:@selector(setDownloadProgress:)
