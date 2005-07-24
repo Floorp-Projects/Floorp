@@ -47,6 +47,9 @@ ifdef MOZ_XUL_APP
 XPI_NAME = snav
 INSTALL_EXTENSION_ID = spatial-navigation@extensions.mozilla.org
 DIST_FILES = install.rdf
+NO_JAR_AUTO_REG        = 1
+USE_EXTENSION_MANIFEST = 1
+XPI_PKGNAME            = snav-$(MOZ_APP_VERSION)
 
 # We should really pull FIREFOX_VERSION and THUNDERBIRD_VERSION from
 # browser/config/version.txt mail/config/version.txt but we can't be assured

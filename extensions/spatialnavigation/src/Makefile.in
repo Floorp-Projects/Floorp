@@ -43,16 +43,24 @@ VPATH=@srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE       = snav
-MODULE_NAME  = snav
 LIBRARY_NAME = snav
-
-MOZILLA_INTERNAL_API = 1
-FORCE_SHARED_LIB = 1
 IS_COMPONENT = 1
 
+MOZILLA_INTERNAL_API = 1
+
 ifdef MOZ_XUL_APP
-XPI_NAME = snav
+XPI_NAME               = snav
 endif
+
+# We should really pull FIREFOX_VERSION and THUNDERBIRD_VERSION from
+# # browser/config/version.txt mail/config/version.txt but we can't be assured
+# # that we've even pulled those files. So we hardcode them.
+
+XULAPP_DEFINES = \
+	-DFIREFOX_VERSION=1.0+ \
+	-DTHUNDERBIRD_VERSION=1.0+ \
+	-DMOZILLA_VERSION_U=$(MOZILLA_VERSION) \
+	$(NULL)
 
 REQUIRES	= xpcom \
 		      string \
@@ -67,19 +75,32 @@ REQUIRES	= xpcom \
 		      locale \
 		      necko \
 		      docshell \
+              unicharutil \
 		      view \
 		      webshell \
 			  windowwatcher \
 			  webbrwsr \
 		      $(NULL)
 
-CPPSRCS= \
-              nsSpatialNavigation.cpp \
+CPPSRCS     = nsSpatialNavigation.cpp \
 			  nsSpatialNavigationUtils.cpp \
 			  nsSpatialNavigationService.cpp \
 	          $(NULL)
 
-EXTRA_DSO_LIBS = gkgfx
+
+# This is just terrible... we need nsRect to be able to
+# interact with the layout.  However, we can't link to get
+# this class in GFX in a static build (GFX is linked into
+# the application and symbols are not expored from
+# applications).  
+#
+# nsFont.cpp is required because one of our #includes brings
+# in nsFont.h. This class requires nsFont::Equals() be
+# defined.  We do not use this class anywhere in this
+# extension.
+
+DEFINES += -D_IMPL_NS_GFX
+CPPSRCS += nsRect.cpp nsFont.cpp
 
 EXTRA_DSO_LDOPTS += $(LIBS_DIR)          \
                     $(EXTRA_DSO_LIBS)    \
@@ -96,3 +117,11 @@ endif
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+# Copy the nsRect and nsFont source files here and make sure
+# they can be clobbered.
+export::
+	$(NSINSTALL) $(topsrcdir)/gfx/src/nsRect.cpp .
+	$(NSINSTALL) $(topsrcdir)/gfx/src/nsFont.cpp .
+
+GARBAGE += nsRect.cpp nsFont.cpp

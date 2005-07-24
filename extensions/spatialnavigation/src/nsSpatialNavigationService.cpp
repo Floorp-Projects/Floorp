@@ -252,7 +252,7 @@ static NS_METHOD SpatialNavigationServiceUnregistration(nsIComponentManager *aCo
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSpatialNavigationService)
   
   
-  static const nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "SpatialNavigationService", 
     SpatialNavigationService_CID, 
