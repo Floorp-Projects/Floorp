@@ -566,6 +566,16 @@ enum BWCOpenDest {
   [mThrobberImages release];
   [mURLFieldEditor release];
 
+  // release top-level nib items (balancing the retain at nib loading)
+  [mPageMenu release];
+  [mImageMenu release];
+  [mInputMenu release];
+  [mLinkMenu release];
+  [mMailToLinkMenu release];
+  [mImageLinkMenu release];
+  [mImageMailToLinkMenu release];
+  [mTabMenu release];
+  
   [super dealloc];
 }
 
