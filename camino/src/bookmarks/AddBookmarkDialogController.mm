@@ -174,7 +174,7 @@ NSString* const kAddBookmarkItemPrimaryTabKey = @"primary";
 {
   NSString* bookmarkTitle = [inItem objectForKey:kAddBookmarkItemTitleKey];
   bookmarkTitle  = [bookmarkTitle stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
-  if (!bookmarkTitle)
+  if (!bookmarkTitle || ![bookmarkTitle length])
     bookmarkTitle = [AddBookmarkDialogController bookmarkUrlForItem:inItem];
   return bookmarkTitle;
 }
