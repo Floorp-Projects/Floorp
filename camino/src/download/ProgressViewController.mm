@@ -146,7 +146,8 @@ enum {
 
 -(id)init
 {
-  if ((self = [super init])) {
+  if ((self = [super init]))
+  {
     [NSBundle loadNibNamed:@"ProgressView" owner:self];
     [self viewDidLoad];
   }
@@ -192,7 +193,7 @@ enum {
 {
   [mProgressBar retain]; // make sure it survives being moved between views
                          // this isn't necessarily better. Need to profile.
-  [mProgressBar setUsesThreadedAnimation:YES];
+  [mProgressBar setUsesThreadedAnimation:NO];
   // give the views this controller as their controller
   [mCompletedView setController:self];
   [mProgressView setController:self];
