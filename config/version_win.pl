@@ -152,6 +152,8 @@ my $BUILDID_FILE = "$depth/config/build_number";
 #WIN32_MODULE_TRADEMARKS
 #WIN32_MODULE_ORIGINAL_FILENAME
 #WIN32_MODULE_PRODUCTNAME
+#WIN32_MODULE_PRODUCTVERSION
+#WIN32_MODULE_PRODUCTVERSION_STRING
 
 #Override values obtained from the .ver file
 my $override_comment;
@@ -164,6 +166,8 @@ my $override_copyright;
 my $override_trademarks;
 my $override_filename;
 my $override_productname;
+my $override_productversion;
+my $override_mpversion;
 if (open(VERFILE, "<$srcdir/module.ver")) 
 {
 
@@ -180,6 +184,8 @@ if (open(VERFILE, "<$srcdir/module.ver"))
 		if ($a eq "WIN32_MODULE_TRADEMARKS") { $override_trademarks = $b; }
 		if ($a eq "WIN32_MODULE_ORIGINAL_FILENAME") { $override_filename = $b; }
 		if ($a eq "WIN32_MODULE_PRODUCTNAME") { $override_productname = $b; }
+		if ($a eq "WIN32_MODULE_PRODUCTVERSION") { $override_productversion = $b; }
+		if ($a eq "WIN32_MODULE_PRODUCTVERSION_STRING") { $override_mpversion = $b; }
 		($a,$b) = getNextEntry();
 	}
 	close(VERFILE)
@@ -266,6 +272,8 @@ if (defined($override_copyright)){$override_copyright =~ s/\@MOZ_APP_DISPLAYNAME
 if (defined($override_trademarks)){$override_trademarks =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g; $trademarks=$override_trademarks;}
 if (defined($override_filename)){$binary=$override_filename;}
 if (defined($override_productname)){$override_productname =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g; $productname=$override_productname;}
+if (defined($override_productversion)){$productversion=$override_productversion;}
+if (defined($override_mpversion)){$mpversion=$override_mpversion;}
 
 
 #Override section
