@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "ChimeraUtils.h"
 #import "NSString+Utils.h"
 
 #import "RemoteDataProvider.h"
@@ -98,6 +99,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(StreamLoaderContext, nsISupports)
 
 void StreamLoaderContext::LoadComplete(nsresult inLoadStatus, const void* inData, unsigned int inDataLength)
 {
+  StAutoreleasePool pool;
+
   if (mLoadListener)
   {
     NSData* loadData = nil;
