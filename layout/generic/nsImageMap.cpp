@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -955,22 +956,12 @@ nsImageMap::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
   }
 }
 
-PRBool
-nsImageMap::IsAncestorOf(nsIContent* aContent,
-                         nsIContent* aAncestorContent)
-{
-  for (nsIContent *a = aContent->GetParent(); a; a = a->GetParent())
-    if (a == aAncestorContent)
-      return PR_TRUE;
-
-  return PR_FALSE;
-}
-
 void
 nsImageMap::MaybeUpdateAreas(nsIContent *aContent)
 {
-  if (aContent == mMap || 
-      (mContainsBlockContents && IsAncestorOf(aContent, mMap))) {
+  if (aContent && (aContent == mMap ||
+                   (mContainsBlockContents &&
+                    nsContentUtils::ContentIsDescendantOf(aContent, mMap)))) {
     UpdateAreas();
   }
 }

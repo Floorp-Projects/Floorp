@@ -116,9 +116,6 @@ protected:
   nsresult UpdateAreas();
   nsresult UpdateAreasForBlock(nsIContent* aParent, PRBool* aFoundAnchor);
 
-  static PRBool IsAncestorOf(nsIContent* aContent,
-                             nsIContent* aAncestorContent);
-
   nsresult AddArea(nsIContent* aArea);
  
   nsresult ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus);
