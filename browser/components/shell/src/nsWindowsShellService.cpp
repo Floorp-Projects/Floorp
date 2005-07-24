@@ -57,6 +57,8 @@
 #include "nsICategoryManager.h"
 #include "nsBrowserCompsCID.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #include <mbstring.h>
 
@@ -640,7 +642,7 @@ nsWindowsShellService::SetShouldCheckDefaultBrowser(PRBool aShouldCheck)
 }
 
 static nsresult
-WriteBitmap(nsString& aPath, gfxIImageFrame* aImage)
+WriteBitmap(nsIFile* aFile, gfxIImageFrame* aImage)
 {
   PRInt32 width, height;
   aImage->GetWidth(&width);
@@ -679,14 +681,10 @@ WriteBitmap(nsString& aPath, gfxIImageFrame* aImage)
 
   // get a file output stream
   nsresult rv;
-  nsCOMPtr<nsILocalFile> path;
-  rv = NS_NewLocalFile(aPath, PR_TRUE, getter_AddRefs(path));
-
-  if (NS_FAILED(rv))
-    return rv;
 
   nsCOMPtr<nsIOutputStream> stream;
-  NS_NewLocalFileOutputStream(getter_AddRefs(stream), path);
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(stream), aFile);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // write the bitmap headers and rgb pixel data to the file
   rv = NS_ERROR_FAILURE;
@@ -741,40 +739,39 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
   if (!gfxFrame)
     return NS_ERROR_FAILURE;
 
-  // get the windows directory ('c:\windows' usually)
-  char winDir[256];
-  ::GetWindowsDirectory(winDir, sizeof(winDir));
-  nsAutoString winPath;
-  NS_CopyNativeToUnicode(nsDependentCString(winDir), winPath);
-
-  // build the file name
-  winPath.Append(NS_LITERAL_STRING("\\").get());
-
-  // get the product brand name from localized strings
-  nsCID bundleCID = NS_STRINGBUNDLESERVICE_CID;
-  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(bundleCID));
-  if (!bundleService)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIStringBundle> brandBundle, shellBundle;
-  rv = bundleService->CreateBundle("chrome://global/locale/brand.properties",
-                                   getter_AddRefs(brandBundle));
+  // get the file name from localized strings
+  nsCOMPtr<nsIStringBundleService>
+    bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = bundleService->CreateBundle("chrome://browser/locale/shellservice.properties",
-                                    getter_AddRefs(shellBundle));
+
+  nsCOMPtr<nsIStringBundle> shellBundle;
+  rv = bundleService->CreateBundle(SHELLSERVICE_PROPERTIES,
+                                   getter_AddRefs(shellBundle));
   NS_ENSURE_SUCCESS(rv, rv);
  
-  nsXPIDLString brandShortName;
-  brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
-                                 getter_Copies(brandShortName));
-  const PRUnichar* brandNameStrings[] = { brandShortName.get() };
-  nsXPIDLString backgroundFileName;
-  shellBundle->FormatStringFromName(NS_LITERAL_STRING("desktopBackgroundFileNameWin").get(),
-                                    brandNameStrings, 1, getter_Copies(backgroundFileName));
-  winPath.Append(backgroundFileName);
+  // e.g. "Desktop Background.bmp"
+  nsXPIDLString fileLeafName;
+  rv = shellBundle->GetStringFromName
+                      (NS_LITERAL_STRING("desktopBackgroundLeafNameWin").get(),
+                       getter_Copies(fileLeafName));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // write the bitmap to a file in the windows dir
-  rv = WriteBitmap(winPath, gfxFrame);
+  // get the profile root directory
+  nsCOMPtr<nsIFile> file;
+  rv = NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_DIR,
+                              getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // eventually, the path is "%APPDATA%\Mozilla\Firefox\Desktop Background.bmp"
+  rv = file->Append(fileLeafName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString nativePath;
+  rv = file->GetNativePath(nativePath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // write the bitmap to a file in the profile directory
+  rv = WriteBitmap(file, gfxFrame);
 
   // if the file was written successfully, set it as the system wallpaper
   if (NS_SUCCEEDED(rv)) {
@@ -811,11 +808,8 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
       style[1] = '\0';
       ::RegSetValueEx(key, "TileWallpaper", 0, REG_SZ, tile, sizeof(tile));
       ::RegSetValueEx(key, "WallpaperStyle", 0, REG_SZ, style, sizeof(style));
-      nsCAutoString nativePath;
-      NS_CopyUnicodeToNative(winPath, nativePath);
-      char *pathCStr = ToNewCString(nativePath);
-      ::SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, pathCStr, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
-      nsMemory::Free(pathCStr);
+      ::SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) nativePath.get(),
+                             SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
       // Close the key we opened.
       ::RegCloseKey(key);
     }
