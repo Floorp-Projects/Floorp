@@ -80,6 +80,7 @@
 #include "nsIDOMNSEvent.h"
 #include "nsGUIEvent.h"
 #include "nsIServiceManager.h"
+#include "nsINodeInfo.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -595,7 +596,7 @@ static void printSize(char * aDesc, nscoord aSize)
 #endif
 
 static nscoord
-GetMaxOptionHeight(nsPresContext *aPresContext, nsIFrame *aContainer)
+GetMaxOptionHeight(nsIFrame* aContainer)
 {
   nscoord result = 0;
   for (nsIFrame* option = aContainer->GetFirstChild(nsnull);
@@ -604,7 +605,7 @@ GetMaxOptionHeight(nsPresContext *aPresContext, nsIFrame *aContainer)
     if (nsCOMPtr<nsIDOMHTMLOptGroupElement>
         (do_QueryInterface(option->GetContent()))) {
       // an optgroup
-      optionHeight = GetMaxOptionHeight(aPresContext, option);
+      optionHeight = GetMaxOptionHeight(option);
     } else {
       // an option
       optionHeight = option->GetSize().height;
@@ -613,6 +614,60 @@ GetMaxOptionHeight(nsPresContext *aPresContext, nsIFrame *aContainer)
       result = optionHeight;
   }
   return result;
+}
+
+static inline PRBool
+IsOptGroup(nsIContent *aContent)
+{
+  nsINodeInfo *ni = aContent->GetNodeInfo();
+  return (ni && ni->Equals(nsHTMLAtoms::optgroup) &&
+          aContent->IsContentOfType(nsIContent::eHTML));
+}
+
+static inline PRBool
+IsOption(nsIContent *aContent)
+{
+  nsINodeInfo *ni = aContent->GetNodeInfo();
+  return (ni && ni->Equals(nsHTMLAtoms::option) &&
+          aContent->IsContentOfType(nsIContent::eHTML));
+}
+
+static PRUint32
+GetNumberOfOptionsRecursive(nsIContent* aContent)
+{
+  PRUint32 optionCount = 0;
+  const PRUint32 childCount = aContent ? aContent->GetChildCount() : 0;
+  for (PRUint32 index = 0; index < childCount; ++index) {
+    nsIContent* child = aContent->GetChildAt(index);
+    if (::IsOption(child)) {
+      ++optionCount;
+    }
+    else if (::IsOptGroup(child)) {
+      optionCount += ::GetNumberOfOptionsRecursive(child);
+    }
+  }
+  return optionCount;
+}
+
+static nscoord
+GetOptGroupLabelsHeight(nsPresContext* aPresContext,
+                        nsIContent*    aContent,
+                        nscoord        aRowHeight)
+{
+  nscoord height = 0;
+  const PRUint32 childCount = aContent ? aContent->GetChildCount() : 0;
+  for (PRUint32 index = 0; index < childCount; ++index) {
+    nsIContent* child = aContent->GetChildAt(index);
+    if (::IsOptGroup(child)) {
+      PRUint32 numOptions = ::GetNumberOfOptionsRecursive(child);
+      nscoord optionsHeight = aRowHeight * numOptions;
+      nsIFrame* frame = nsnull;
+      aPresContext->GetPresShell()->GetPrimaryFrameFor(child, &frame);
+      nscoord totalHeight = frame ? frame->GetSize().height : 0;
+      height += PR_MAX(0, totalHeight - optionsHeight);
+    }
+  }
+  return height;
 }
 
 //-----------------------------------------------------------------
@@ -875,7 +930,7 @@ nsListControlFrame::Reflow(nsPresContext*          aPresContext,
    // be visible or invisible.
   nsIFrame *optionsContainer;
   GetOptionsContainer(aPresContext, &optionsContainer);
-  PRInt32 heightOfARow = GetMaxOptionHeight(aPresContext, optionsContainer);
+  PRInt32 heightOfARow = GetMaxOptionHeight(optionsContainer);
 
   // Check to see if we have zero items 
   PRInt32 length = 0;
@@ -966,17 +1021,24 @@ nsListControlFrame::Reflow(nsPresContext*          aPresContext,
     } else {
       mNumDisplayRows = 1;
       GetSizeAttribute(&mNumDisplayRows);
-      // because we are not a drop down 
-      // we will always have 2 or more rows
       if (mNumDisplayRows >= 1) {
         visibleHeight = mNumDisplayRows * heightOfARow;
       } else {
+        // When SIZE=0 or unspecified we constrain the height to [2..kMaxDropDownRows] rows.
+        // We add in the height of optgroup labels (within the constraint above), bug 300474.
+        visibleHeight = ::GetOptGroupLabelsHeight(GetPresContext(), mContent, heightOfARow);
+
         PRBool multipleSelections = PR_FALSE;
         GetMultiple(&multipleSelections);
         if (multipleSelections) {
-          visibleHeight = PR_MIN(length, kMaxDropDownRows) * heightOfARow;
+          if (length < 2) {
+            // Add in 1 heightOfARow also when length==0 to match how we calculate the desired size.
+            visibleHeight = heightOfARow + PR_MAX(heightOfARow, visibleHeight);
+          } else {
+            visibleHeight = PR_MIN(kMaxDropDownRows * heightOfARow, length * heightOfARow + visibleHeight);
+          }
         } else {
-          visibleHeight = 2 * heightOfARow;
+          visibleHeight += 2 * heightOfARow;
         }
       }
     }
@@ -1922,6 +1984,7 @@ nsListControlFrame::GetNumberOfOptions(PRInt32* aNumOptions)
     }
     return NS_OK;
   }
+  *aNumOptions = 0;
   return NS_ERROR_FAILURE;
 }
 
