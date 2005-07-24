@@ -77,6 +77,10 @@
 #include "nsNativeCharsetUtils.h"
 #include <windows.h>
 
+#ifdef WINCE
+#include "aygshell.h"
+#endif
+
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <unknwn.h>
 
@@ -172,6 +176,59 @@ static UpdateLayeredWindowProc* GetUpdateLayeredWindowProc()
 static UpdateLayeredWindowProc* pUpdateLayeredWindow = GetUpdateLayeredWindowProc();
 
 static inline PRBool IsAlphaTranslucencySupported() { return pUpdateLayeredWindow != nsnull; }
+
+#endif
+
+
+#ifdef WINCE
+static PRBool gUseOkayButton  = PR_FALSE;
+static PRBool gOverrideHWKeys = PR_TRUE;
+
+typedef BOOL (__stdcall *UnregisterFunc1Proc)( UINT, UINT );
+static UnregisterFunc1Proc gProcUnregisterFunc = NULL;
+static HINSTANCE gCoreDll = NULL;
+
+static void MapHardwareButtons(HWND window)
+{
+  if (!gOverrideHWKeys)
+    return;
+
+  // handle hardware buttons so that they broadcast into our
+  // application. the following code is based on an article
+  // on the Pocket PC Developer Network:
+  //
+  // http://www.pocketpcdn.com/articles/handle_hardware_keys.html
+  
+  if (!gProcUnregisterFunc)
+  {
+    gCoreDll = LoadLibrary(_T("coredll.dll"));
+  
+    if (gCoreDll)
+      gProcUnregisterFunc = (UnregisterFunc1Proc)GetProcAddress( gCoreDll, _T("UnregisterFunc1"));
+  }
+  
+  if (!gProcUnregisterFunc)
+    return;
+
+  for (int i=0xc1; i<=0xcf; i++) 
+  {
+    gProcUnregisterFunc(MOD_WIN, i);
+    RegisterHotKey(window, i, MOD_WIN, i);
+  }
+  // Other interesting ones which may not work if we are in
+  // a DLL according to msdn.
+  //
+  // Volume Up - 0x75 Modifier - 0
+  // Volume Down - 0x76 Modifier - 0
+  // Answer - 0x72 Modifier - 0
+  // Hangup - 0x73 Modifier - 0 
+
+  gProcUnregisterFunc(MOD_WIN, 0x75);
+  RegisterHotKey(window, 0x75, MOD_WIN, i);
+  
+  gProcUnregisterFunc(MOD_WIN, 0x76);
+  RegisterHotKey(window, 0x76, MOD_WIN, 0x76);
+}
 
 #endif
 
@@ -925,6 +982,19 @@ nsWindow::nsWindow() : nsBaseWidget()
   if (!nsWindow::uMSH_MOUSEWHEEL)
     nsWindow::uMSH_MOUSEWHEEL = RegisterWindowMessage(MSH_MOUSEWHEEL);
 #endif
+  
+#ifdef WINCE
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    prefs->GetBranch(0, getter_AddRefs(prefBranch));
+    if (prefBranch)
+    {
+      prefBranch->GetBoolPref("config.wince.useOKBtn", &gUseOkayButton);
+      prefBranch->GetBoolPref("config.wince.overrideHWKeys", &gOverrideHWKeys);
+    }
+  }
+#endif
 }
 
 
@@ -1565,6 +1635,9 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
       }
     }
   }
+#ifdef WINCE
+  MapHardwareButtons(mWnd);
+#endif
 
   return NS_OK;
 }
@@ -4161,6 +4234,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         result = DispatchWindowEvent(&event);
         NS_RELEASE(event.widget);
       }
+#ifdef WINCE
+      else if (gUseOkayButton && LOWORD(wParam) == IDOK)
+      {
+        PostMessage(mWnd, WM_CLOSE, 0, 0);
+        PostMessage(mWnd, WM_DESTROY, 0, 0);
+      }
+#endif
     }
     break;
 
@@ -4271,6 +4351,39 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       break;
 #endif
 			
+#ifdef WINCE
+    case WM_HOTKEY:
+    {
+      switch (wParam) 
+      {
+        case VK_APP1:
+          result = DispatchKeyEvent(NS_KEY_PRESS, NS_VK_F1, 0, 0, 0);
+          break;
+
+        case VK_APP2:
+          result = DispatchKeyEvent(NS_KEY_PRESS, NS_VK_F2, 0, 0, 0);
+          break;
+
+        case VK_APP3:
+          result = DispatchKeyEvent(NS_KEY_PRESS, NS_VK_F3, 0, 0, 0);
+          break;
+
+        case VK_APP4:
+          result = DispatchKeyEvent(NS_KEY_PRESS, NS_VK_F4, 0, 0, 0);
+          break;
+
+        case VK_APP5:
+          result = DispatchKeyEvent(NS_KEY_PRESS, NS_VK_F5, 0, 0, 0);
+          break;
+
+        case VK_APP6:
+          result = DispatchKeyEvent(NS_KEY_PRESS, NS_VK_F6, 0, 0, 0);
+          break;
+      }
+    }
+    break;
+#endif
+
     case WM_SYSCHAR:
     case WM_CHAR:
     {
@@ -5381,7 +5494,10 @@ DWORD nsWindow::WindowExStyle()
 #ifndef WINCE
 		return WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
 #else
-      return WS_EX_WINDOWEDGE;
+    if (gUseOkayButton)
+      return WS_EX_WINDOWEDGE | WS_EX_CAPTIONOKBTN;
+    else
+      return WS_EX_WINDOWEDGE;      
 #endif
   }
 }
@@ -5999,6 +6115,11 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocu
 
     PRBool result = DispatchWindowEvent(&event);
     NS_RELEASE(event.widget);
+
+#ifdef WINCE
+    if (isMozWindowTakingFocus && aEventType == NS_GOTFOCUS)
+      MapHardwareButtons(mWnd);
+#endif
     return result;
   }
   return PR_FALSE;
@@ -6277,7 +6398,7 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
 {
 #ifdef WINCE
   return false;
-#endif
+#else
   // ATOK send the messages following order at starting composition.
   // 1. WM_IME_COMPOSITION
   // 2. WM_IME_STARTCOMPOSITION
@@ -6345,6 +6466,7 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
   sIMEIsComposing = PR_TRUE;
 
   return PR_TRUE;
+#endif // WINCE
 }
 
 void
