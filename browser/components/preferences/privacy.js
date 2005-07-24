@@ -141,7 +141,8 @@ var gPrivacyPane = {
   writeCacheSizePref: function ()
   {
     var cacheSize = document.getElementById("cacheSize");
-    return cacheSize.value * 1000;
+    var intValue = parseInt(cacheSize.value, 10) + '';
+    return intValue != "NaN" ? intValue * 1000 : 0;
   },
   
   _sanitizer: null,
