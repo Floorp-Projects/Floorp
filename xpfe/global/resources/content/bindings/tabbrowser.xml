@@ -1168,6 +1168,9 @@
                 /^\s*(javascript|data):/.test(url))
               return;
 
+            // Perform a security check before loading the URI
+            nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
+
             var bgLoad = this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
 
             var tab = null;
