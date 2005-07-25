@@ -312,6 +312,13 @@
     </resources>
 
     <implementation implements="nsIAccessibleProvider, nsIDOMXULSelectControlItemElement">
+      <constructor>
+        <![CDATA[
+          var listBox = this.control;
+          if (!listBox.selectedItem)
+            listBox.goDown();  // Ensure viable initial focus position
+        ]]>
+      </constructor>
       <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
       <property name="accessible">
         <getter>
