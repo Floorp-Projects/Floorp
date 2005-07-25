@@ -517,7 +517,6 @@ _cairo_win32_surface_release_dest_image (void                   *abstract_surfac
 /* for compatibility with VC++ 5 */
 #if !defined(AC_SRC_OVER)
 #define AC_SRC_OVER                 0x00
-#define AC_SRC_ALPHA                0x01
 #pragma pack(1)
 typedef struct {
     BYTE   BlendOp;
@@ -526,6 +525,11 @@ typedef struct {
     BYTE   AlphaFormat;
 }BLENDFUNCTION;
 #pragma pack()
+#endif
+
+/* for compatibility with VC++ 6 */
+#ifndef AC_SRC_ALPHA
+#define AC_SRC_ALPHA                0x01
 #endif
 
 typedef BOOL (WINAPI *ALPHABLENDPROC)(
@@ -577,7 +581,7 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
 	    gAlphaBlend = (ALPHABLENDPROC)GetProcAddress(LoadLibrary("msimg32"),
 							 "AlphaBlend");
 	}
-	gAlphaBlendChecked = PR_TRUE;
+	gAlphaBlendChecked = TRUE;
     }
 
     if (pattern->type != CAIRO_PATTERN_SURFACE ||

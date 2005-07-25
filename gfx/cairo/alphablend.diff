@@ -1,6 +1,9 @@
---- ../../../../../cairo-cvs/dist/cairo-0.5.0/src/cairo-win32-surface.c	2005-05-11 19:59:13.000000000 -0700
-+++ cairo/src/cairo-win32-surface.c	2005-06-01 22:25:37.000000000 -0700
-@@ -512,6 +512,38 @@
+--- ../../../temp/cairo-0.5.0/src/cairo-win32-surface.c	2005-05-12 02:59:13.000000000 +0000
++++ cairo/src/cairo-win32-surface.c	2005-07-22 15:07:16.713115200 +0000
+@@ -509,12 +509,48 @@ _cairo_win32_surface_release_dest_image 
+ 		 SRCCOPY))
+ 	_cairo_win32_print_gdi_error ("_cairo_win32_surface_release_dest_image");
+ 
      cairo_surface_destroy ((cairo_surface_t *)local);
  }
  
@@ -9,7 +12,6 @@
 +/* for compatibility with VC++ 5 */
 +#if !defined(AC_SRC_OVER)
 +#define AC_SRC_OVER                 0x00
-+#define AC_SRC_ALPHA                0x01
 +#pragma pack(1)
 +typedef struct {
 +    BYTE   BlendOp;
@@ -18,6 +20,11 @@
 +    BYTE   AlphaFormat;
 +}BLENDFUNCTION;
 +#pragma pack()
++#endif
++
++/* for compatibility with VC++ 6 */
++#ifndef AC_SRC_ALPHA
++#define AC_SRC_ALPHA                0x01
 +#endif
 +
 +typedef BOOL (WINAPI *ALPHABLENDPROC)(
@@ -39,7 +46,13 @@
  static cairo_int_status_t
  _cairo_win32_surface_composite (cairo_operator_t	operator,
  				cairo_pattern_t       	*pattern,
-@@ -533,6 +565,21 @@
+ 				cairo_pattern_t		*mask_pattern,
+ 				void			*abstract_dst,
+ 				int			src_x,
+@@ -530,12 +566,27 @@ _cairo_win32_surface_composite (cairo_op
+     cairo_win32_surface_t *src;
+     cairo_surface_pattern_t *src_surface_pattern;
+     int alpha;
      int integer_transform;
      int itx, ity;
  
@@ -55,13 +68,19 @@
 +	    gAlphaBlend = (ALPHABLENDPROC)GetProcAddress(LoadLibrary("msimg32"),
 +							 "AlphaBlend");
 +	}
-+	gAlphaBlendChecked = PR_TRUE;
++	gAlphaBlendChecked = TRUE;
 +    }
 +
      if (pattern->type != CAIRO_PATTERN_SURFACE ||
  	pattern->extend != CAIRO_EXTEND_NONE)
  	return CAIRO_INT_STATUS_UNSUPPORTED;
-@@ -587,7 +634,10 @@
+ 
+     if (mask_pattern) {
+ 	/* FIXME: When we fully support RENDER style 4-channel
+@@ -584,13 +635,16 @@ _cairo_win32_surface_composite (cairo_op
+ 
+ 	blend_function.BlendOp = AC_SRC_OVER;
+ 	blend_function.BlendFlags = 0;
  	blend_function.SourceConstantAlpha = alpha;
  	blend_function.AlphaFormat = src->format == CAIRO_FORMAT_ARGB32 ? AC_SRC_ALPHA : 0;
  
@@ -73,3 +92,6 @@
  			 dst_x, dst_y,
  			 width, height,
  			 src->dc,
+ 			 src_x + itx, src_y + ity,
+ 			 width, height,
+ 			 blend_function))
