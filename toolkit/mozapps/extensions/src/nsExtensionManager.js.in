@@ -2670,7 +2670,7 @@ ExtensionManager.prototype = {
             xpinstallStrings = xpinstallStrings.concat([item.name, 
                                                         getURLSpecFromFile(entry),
                                                         item.iconURL, 
-                                                        commonName]);
+                                                        prettyName]);
             isDirty = true;
           }
         }
