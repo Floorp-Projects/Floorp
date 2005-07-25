@@ -281,7 +281,6 @@ endif
 #	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > brand.dtd
 
 export::
-ifndef MOZ_USE_OFFICIAL_BRANDING
 	$(NSINSTALL) -D $(DIST)/branding
 ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/xulrunner.ico   $(DIST)/branding/xulrunner.ico
@@ -300,7 +299,6 @@ ifeq ($(OS_ARCH),OS2)
 	cp $(srcdir)/xulrunner-os2.ico   $(DIST)/branding/xulrunner.ico
 	cp $(srcdir)/xulrunner-os2.ico   $(DIST)/branding/app.ico
 	cp $(srcdir)/document-os2.ico  $(DIST)/branding/document.ico
-endif
 endif
 
 libs::

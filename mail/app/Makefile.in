@@ -218,7 +218,7 @@ install::
 endif
 
 export::
-ifndef MOZ_USE_OFFICIAL_BRANDING
+ifndef MOZ_BRANDING_DIRECTORY
 	$(NSINSTALL) -D $(DIST)/branding
 ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/thunderbird.ico   $(DIST)/branding/thunderbird.ico

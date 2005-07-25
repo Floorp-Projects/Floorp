@@ -887,18 +887,6 @@ extensions/typeaheadfind/src/Makefile
 extensions/typeaheadfind/Makefile
 "
 
-MAKEFILES_firefox_branding="
-other-licenses/branding/firefox/Makefile
-other-licenses/branding/firefox/content/Makefile
-other-licenses/branding/firefox/locales/Makefile
-"
-
-MAKEFILES_thunderbird_branding="
-other-licenses/branding/thunderbird/Makefile
-other-licenses/branding/thunderbird/content/Makefile
-other-licenses/branding/thunderbird/locales/Makefile
-"
-
 MAKEFILES_phoenix="
 browser/Makefile
 browser/app/Makefile
@@ -1636,9 +1624,6 @@ if test -n "$MOZ_CALENDAR"; then
 fi
 
 if test -n "$MOZ_PHOENIX"; then
-    if test -n "$MOZ_USE_OFFICIAL_BRANDING"; then
-        add_makefiles "$MAKEFILES_firefox_branding"
-    fi
     add_makefiles "$MAKEFILES_phoenix"
 fi
 
@@ -1655,9 +1640,6 @@ if test -n "$MOZ_XULRUNNER"; then
 fi
 
 if test -n "$MOZ_THUNDERBIRD"; then
-    if test -n "$MOZ_USE_OFFICIAL_BRANDING"; then
-        add_makefiles "$MAKEFILES_thunderbird_branding"
-    fi
     add_makefiles "$MAKEFILES_thunderbird"
 fi
 

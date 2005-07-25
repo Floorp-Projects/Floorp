@@ -44,8 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 DEFINES += -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
 
-ifdef MOZ_USE_OFFICIAL_BRANDING
-DEFINES += -DMOZ_USE_OFFICIAL_BRANDING
+ifndef MOZ_USE_OFFICIAL_BRANDING
+DEFINES += -DMOZ_USE_GENERIC_BRANDING
 endif
 
 include $(topsrcdir)/config/rules.mk

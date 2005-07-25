@@ -48,15 +48,15 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
 
-ifdef MOZ_USE_OFFICIAL_BRANDING
-DEFINES += -DMOZ_USE_OFFICIAL_BRANDING
+ifndef MOZ_BRANDING_DIRECTORY
+DEFINES += -DMOZ_USE_GENERIC_BRANDING
 endif
 
 ifneq (,$(filter windows gtk2 mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DHAVE_SHELL_SERVICE=1
 endif
 
-ifndef MOZ_USE_OFFICIAL_BRANDING
+ifndef MOZ_BRANDING_DIRECTORY
 libs locale::
 	$(INSTALL) $(srcdir)/content/browserconfig.properties $(DIST)/bin
 
