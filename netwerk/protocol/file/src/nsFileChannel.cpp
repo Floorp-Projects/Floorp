@@ -50,6 +50,7 @@
 #include "nsIMIMEService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsURLHelper.h"
 
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
@@ -313,8 +314,8 @@ nsFileChannel::SetContentType(const nsACString &aContentType)
     // If someone gives us a type hint we should just use that type instead of
     // doing our guessing.  So we don't care when this is being called.
 
-    // mContentCharset is unchanged if not parsed
-    NS_ParseContentType(aContentType, mContentType, mContentCharset);
+    PRBool dummy;
+    net_ParseContentType(aContentType, mContentType, mContentCharset, &dummy);
     return NS_OK;
 }
 

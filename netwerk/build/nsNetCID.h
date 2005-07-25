@@ -57,6 +57,10 @@
     {0x93, 0x37, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
+// service implementing nsINetUtil
+#define NS_NETUTIL_CONTRACTID \
+    "@mozilla.org/network/util;1"
+
 // service implementing nsIEventTarget.  events dispatched to this event
 // target will be executed on one of necko's background i/o threads.
 #define NS_IOTHREADPOOL_CLASSNAME \

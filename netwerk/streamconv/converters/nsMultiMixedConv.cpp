@@ -48,6 +48,7 @@
 #include "nsIMultiPartChannel.h"
 #include "nsCRT.h"
 #include "nsIHttpChannelInternal.h"
+#include "nsURLHelper.h"
 
 //
 // Helper function for determining the length of data bytes up to
@@ -325,7 +326,8 @@ nsPartChannel::GetContentType(nsACString &aContentType)
 NS_IMETHODIMP
 nsPartChannel::SetContentType(const nsACString &aContentType)
 {
-    NS_ParseContentType(aContentType, mContentType, mContentCharset);
+    PRBool dummy;
+    net_ParseContentType(aContentType, mContentType, mContentCharset, &dummy);
     return NS_OK;
 }
 

@@ -194,6 +194,19 @@ NS_HIDDEN_(char *) net_RFindCharInSet(const char *str, const char *end, const ch
  */
 NS_HIDDEN_(char *) net_RFindCharNotInSet(const char *str, const char *end, const char *set);
 
+/**
+ * Parses a content-type header and returns the content type and
+ * charset (if any).  aCharset is not modified if no charset is
+ * specified in anywhere in aHeaderStr.  In that case (no charset
+ * specified), aHadCharset is set to false.  Otherwise, it's set to
+ * true.  Note that aContentCharset can be empty even if aHadCharset
+ * is true.
+ */
+NS_HIDDEN_(void) net_ParseContentType(const nsACString &aHeaderStr,
+                                      nsACString       &aContentType,
+                                      nsACString       &aContentCharset,
+                                      PRBool*          aHadCharset);
+
 /* inline versions */
 
 /* remember the 64-bit platforms ;-) */

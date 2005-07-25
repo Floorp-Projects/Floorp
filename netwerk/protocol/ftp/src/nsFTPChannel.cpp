@@ -48,6 +48,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIStreamConverterService.h"
 #include "nsISocketTransport.h"
+#include "nsURLHelper.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
@@ -432,7 +433,8 @@ nsFTPChannel::GetContentType(nsACString &aContentType)
 NS_IMETHODIMP
 nsFTPChannel::SetContentType(const nsACString &aContentType)
 {
-    NS_ParseContentType(aContentType, mContentType, mContentCharset);
+    PRBool dummy;
+    net_ParseContentType(aContentType, mContentType, mContentCharset, &dummy);
     return NS_OK;
 }
 

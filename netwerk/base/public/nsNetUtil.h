@@ -86,6 +86,7 @@
 #include "nsISyncStreamListener.h"
 #include "nsInterfaceRequestorAgg.h"
 #include "nsInt64.h"
+#include "nsINetUtil.h"
 
 // Helper, to simplify getting the I/O service.
 inline const nsGetServiceByCIDWithError
@@ -682,24 +683,16 @@ NS_ParseContentType(const nsACString &rawContentType,
                     nsCString        &contentCharset)
 {
     // contentCharset is left untouched if not present in rawContentType
-    nsACString::const_iterator begin, it, end;
-    it = rawContentType.BeginReading(begin);
-    rawContentType.EndReading(end);
-    if (FindCharInReadable(';', it, end)) {
-        contentType = Substring(begin, it);
-        // now look for "charset=FOO" and extract "FOO"
-        begin = ++it;
-        if (FindInReadable(NS_LITERAL_CSTRING("charset="), begin, it = end,
-                           nsCaseInsensitiveCStringComparator())) {
-            contentCharset = Substring(it, end);
-            contentCharset.StripWhitespace();
-        }
-    }
-    else
-        contentType = rawContentType;
-    ToLowerCase(contentType);
-    contentType.StripWhitespace();
-    return NS_OK;
+    nsresult rv;
+    nsCOMPtr<nsINetUtil> util = do_GetIOService(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCString charset;
+    PRBool hadCharset;
+    rv = util->ParseContentType(rawContentType, charset, &hadCharset,
+                                contentType);
+    if (NS_SUCCEEDED(rv) && hadCharset)
+        contentCharset = charset;
+    return rv;
 }
 
 inline nsresult

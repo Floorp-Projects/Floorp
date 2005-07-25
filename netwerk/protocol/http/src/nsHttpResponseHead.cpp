@@ -208,8 +208,12 @@ nsHttpResponseHead::ParseHeaderLine(char *line)
     // handle some special case headers...
     if (hdr == nsHttp::Content_Length)
         PR_sscanf(val, "%lld", &mContentLength);
-    else if (hdr == nsHttp::Content_Type)
-        ParseContentType(val);
+    else if (hdr == nsHttp::Content_Type) {
+        LOG(("ParseContentType [type=%s]\n", val));
+        PRBool dummy;
+        net_ParseContentType(nsDependentCString(val),
+                             mContentType, mContentCharset, &dummy);
+    }
     else if (hdr == nsHttp::Cache_Control)
         ParseCacheControl(val);
     else if (hdr == nsHttp::Pragma)
@@ -615,96 +619,6 @@ nsHttpResponseHead::ParseVersion(const char *str)
     else
         // treat anything else as version 1.0
         mVersion = NS_HTTP_VERSION_1_0;
-}
-
-void
-nsHttpResponseHead::ParseContentType(char *type)
-{
-    LOG(("nsHttpResponseHead::ParseContentType [type=%s]\n", type));
-
-    //
-    // Augmented BNF (from RFC 2616 section 3.7):
-    //
-    //   header-value = media-type *( LWS "," LWS media-type )
-    //   media-type   = type "/" subtype *( LWS ";" LWS parameter )
-    //   type         = token
-    //   subtype      = token
-    //   parameter    = attribute "=" value
-    //   attribute    = token
-    //   value        = token | quoted-string
-    //   
-    //
-    // Examples:
-    //
-    //   text/html
-    //   text/html, text/html
-    //   text/html,text/html; charset=ISO-8859-1
-    //   text/html;charset=ISO-8859-1, text/html
-    //   application/octet-stream
-    //
-
-    // iterate over media-types
-    char *nextType;
-    do {
-        nextType = (char *) strchr(type, ',');
-        if (nextType) {
-            *nextType = '\0';
-            ++nextType;
-        }
-        // type points at this media-type; locate first parameter if any
-        char *charset = "";
-        char *param = (char *) strchr(type, ';');
-        if (param) {
-            *param = '\0';
-            ++param;
-
-            // iterate over parameters
-            char *nextParam;
-            do {
-                nextParam = (char *) strchr(param, ';');
-                if (nextParam) {
-                    *nextParam = '\0';
-                    ++nextParam;
-                }
-                // param points at this parameter
-
-                param = net_FindCharNotInSet(param, HTTP_LWS);
-                if (PL_strncasecmp(param, "charset=", 8) == 0)
-                    charset = param + 8;
-
-            } while ((param = nextParam) != nsnull);
-        }
-
-        // trim LWS leading and trailing whitespace from type and charset.
-        // charset cannot have leading whitespace.  we include '(' in the
-        // trailing trim set to catch media-type comments, which are not
-        // at all standard, but may occur in rare cases.
-
-        type = net_FindCharNotInSet(type, HTTP_LWS);
-
-        char *typeEnd    = net_FindCharInSet(type,    HTTP_LWS "(");
-        char *charsetEnd = net_FindCharInSet(charset, HTTP_LWS "(");
-
-        // force content-type to be lowercase
-        net_ToLowerCase(type, typeEnd - type);
-
-        // if the server sent "*/*", it is meaningless, so do not store it.
-        // also, if type is the same as mContentType, then just update the
-        // charset.  however, if charset is empty and mContentType hasn't
-        // changed, then don't wipe-out an existing mContentCharset.  we
-        // also want to reject a mime-type if it does not include a slash.
-        // some servers give junk after the charset parameter, which may
-        // include a comma, so this check makes us a bit more tolerant.
-
-        if (*type && strcmp(type, "*/*") != 0 && strchr(type, '/')) {
-            PRBool eq = mContentType.Equals(Substring(type, typeEnd));
-            if (!eq)
-                mContentType.Assign(type, typeEnd - type);
-            if (!eq || *charset)
-                mContentCharset.Assign(charset, charsetEnd - charset);
-        }
-
-    } while ((type = nextType) != nsnull);
 }
 
 void
