@@ -135,10 +135,16 @@ GRE_GetGREPathForVersion(const char *aVersion,
   CFBundleRef appBundle = CFBundleGetMainBundle();
   if (appBundle) {
     CFURLRef fwurl = CFBundleCopyPrivateFrameworksURL(appBundle);
+    CFURLRef absfwurl = nsnull;
     if (fwurl) {
+      absfwurl = CFURLCopyAbsoluteURL(fwurl);
+      CFRelease(fwurl);
+    }
+
+    if (absfwurl) {
       CFURLRef xulurl =
-        CFURLCreateCopyAppendingPathComponent(NULL, fwurl,
-                                              CFSTR("XUL"), PR_TRUE);
+        CFURLCreateCopyAppendingPathComponent(NULL, absfwurl,
+                                              CFSTR("XUL.framework"), PR_TRUE);
 
       if (xulurl) {
         CFURLRef xpcomurl =
@@ -147,16 +153,25 @@ GRE_GetGREPathForVersion(const char *aVersion,
                                                 PR_FALSE);
 
         if (xpcomurl) {
-          if (!CFURLGetFileSystemRepresentation(xpcomurl, PR_TRUE,
-                                               (UInt8*) aBuffer, aBufLen) ||
-              access(aBuffer, R_OK | X_OK) != 0)
-            aBuffer[0] = '\0';
+          char tbuffer[MAXPATHLEN];
+
+          if (CFURLGetFileSystemRepresentation(xpcomurl, PR_TRUE,
+                                               (UInt8*) tbuffer,
+                                               sizeof(tbuffer)) &&
+              access(tbuffer, R_OK | X_OK) == 0 &&
+              realpath(tbuffer, aBuffer)) {
+            char *lastslash = strrchr(aBuffer, '/');
+            if (lastslash)
+              *lastslash = '\0';
+          }
+
+          CFRelease(xpcomurl);
         }
 
         CFRelease(xulurl);
       }
 
-      CFRelease(fwurl);
+      CFRelease(absfwurl);
     }
   }
 
@@ -333,8 +348,8 @@ GRE_GetPathFromConfigFile(const char* version, const char* filename,
     // we found a section heading, check to see if it is the one we
     // are interested in.
     if (buffer[0] == '[') {
-      foundHeader == (buffer[versionlen + 1] == ']' &&
-                      strncmp(buffer + 1, version, versionlen) == 0);
+      foundHeader = (buffer[versionlen + 1] == ']' &&
+                     strncmp(buffer + 1, version, versionlen) == 0);
       continue;
     }
 
