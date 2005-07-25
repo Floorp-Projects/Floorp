@@ -37,8 +37,7 @@
 #include "MinimoPrivate.h"
 
 #ifdef _BUILD_STATIC_BIN
-nsStaticModuleInfo const *const kPStaticModules = nsnull;
-PRUint32 const kStaticModuleCount = 0;
+#include "nsStaticComponents.h"
 #endif
 
 // Global variables
