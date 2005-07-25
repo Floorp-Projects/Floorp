@@ -339,10 +339,11 @@ ifneq (,$(filter browser suite,$(MOZ_BUILD_APP)))
 tier_99_dirs += xpfe/components/search
 endif
 
-ifdef MOZ_PHOENIX
-ifdef MOZ_USE_OFFICIAL_BRANDING
-tier_99_dirs  += other-licenses/branding/firefox
+ifdef MOZ_BRANDING_DIRECTORY
+tier_99_dirs += $(MOZ_BRANDING_DIRECTORY)
 endif
+
+ifdef MOZ_PHOENIX
 tier_99_dirs	+= browser xpfe/bootstrap/init.d
 endif
 
@@ -355,9 +356,6 @@ tier_99_dirs	+= editor/ui
 endif
 
 ifdef MOZ_THUNDERBIRD
-ifdef MOZ_USE_OFFICIAL_BRANDING
-tier_99_dirs  += other-licenses/branding/thunderbird
-endif
 tier_99_dirs	+= mail xpfe/bootstrap/init.d
 endif
 
@@ -485,11 +483,14 @@ endif
 
 # Map mozilla targets to standard automake target
 ifdef MOZ_ENABLE_LIBXUL
-tier_50:
+tier_50: $(addsuffix /Makefile, $(filter-out $(STATIC_MAKEFILES), $($@_dirs)))
 	@echo "tier_50: $(tier_50_dirs)"
 	@$(EXIT_ON_ERROR) \
 	for d in $(tier_50_dirs); do \
 	    $(UPDATE_TITLE) \
+	    if test ! -f $$d/Makefile; then \
+	      $(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) $(CYGWIN_TOPSRCDIR) $$d/Makefile; \
+	    fi; \
 	    $(MAKE) -C $$d export; \
 	done ; \
 	for d in $(tier_50_dirs); do \
@@ -504,15 +505,20 @@ tier_50:
 	done;
 endif
 
-tier_%: 
+tier_%:
 	@echo "$@: $($@_dirs)"
 	@$(EXIT_ON_ERROR) \
-		for d in $($@_dirs); do $(UPDATE_TITLE) \
-			$(MAKE) -C $$d export; \
-		done ; \
-		for d in $($@_dirs); do $(UPDATE_TITLE) \
-			$(MAKE) -C $$d libs; \
-		done
+	  for d in $($@_dirs); do \
+	    $(UPDATE_TITLE) \
+	    if test ! -f $$d/Makefile; then \
+	      $(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) $(CYGWIN_TOPSRCDIR) $$d/Makefile; \
+	    fi; \
+	    $(MAKE) -C $$d export; \
+	  done ; \
+	  for d in $($@_dirs); do $(UPDATE_TITLE) \
+	    $(MAKE) -C $$d libs; \
+	  done
+
 #
 # Individual modules
 #

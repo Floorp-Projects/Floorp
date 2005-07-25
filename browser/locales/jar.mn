@@ -65,7 +65,7 @@
     locale/browser/help/tabbed_browsing.xhtml         (%chrome/help/tabbed_browsing.xhtml)
     locale/browser/help/glossary.xhtml                (%chrome/help/glossary.xhtml)
     locale/browser/help/firebird-glossary.rdf         (%chrome/help/firebird-glossary.rdf)
-#ifndef MOZ_USE_OFFICIAL_BRANDING
+#ifdef MOZ_USE_GENERIC_BRANDING
 % locale branding @AB_CD@ %locale/branding/
     locale/branding/brand.dtd         (%chrome/branding/brand.dtd)
     locale/branding/brand.properties  (%chrome/branding/brand.properties)

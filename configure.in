@@ -4067,16 +4067,32 @@ MOZ_ARG_DISABLE_BOOL(ldap,
 dnl ========================================================
 dnl = Trademarked Branding 
 dnl ========================================================
+MOZ_BRANDING_DIRECTORY=
 MOZ_ARG_ENABLE_BOOL(official-branding,
 [  --enable-official-branding Enable Official mozilla.org Branding
                           Do not distribute builds with
                           --enable-official-branding unless you have
                           permission to use trademarks per
                           http://www.mozilla.org/foundation/trademarks/ .],
-    MOZ_USE_OFFICIAL_BRANDING=1,
-    MOZ_USE_OFFICIAL_BRANDING= )
+[case "$MOZ_BUILD_APP" in
+browser)
+    MOZ_BRANDING_DIRECTORY=other-licenses/branding/firefox
+    ;;
 
-AC_SUBST(MOZ_USE_OFFICIAL_BRANDING)
+mail)
+    MOZ_BRANDING_DIRECTORY=other-licenses/branding/thunderbird
+    ;;
+
+*)]
+    AC_MSG_ERROR([Official branding is only available for Firefox and Thunderbird.])
+esac
+)
+
+MOZ_ARG_WITH_STRING(branding,
+[  --enable-branding Enable branding from the specified directory.],
+    MOZ_BRANDING_DIRECTORY=$withval)
+
+AC_SUBST(MOZ_BRANDING_DIRECTORY)
 
 # Rebrand Firefox as DeerPark for unofficial builds.
 if test -z "$MOZ_USE_OFFICIAL_BRANDING" && test "$MOZ_BUILD_APP" = "browser"; then

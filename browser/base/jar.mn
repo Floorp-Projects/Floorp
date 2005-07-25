@@ -43,7 +43,7 @@ browser.jar:
 *       content/browser/jsConsoleOverlay.xul          (content/jsConsoleOverlay.xul)
 #endif
 *       content/browser/viewSourceOverlay.xul         (content/viewSourceOverlay.xul)
-#ifndef MOZ_USE_OFFICIAL_BRANDING
+#ifdef MOZ_USE_GENERIC_BRANDING
 % content branding %content/branding/ xpcnativewrappers=yes
   content/branding/about.png                     (branding/about.png)
   content/branding/aboutCredits.png              (branding/aboutCredits.png)

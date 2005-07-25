@@ -104,7 +104,7 @@ installer:
 include $(topsrcdir)/config/rules.mk
 
 export::
-ifndef MOZ_USE_OFFICIAL_BRANDING
+ifndef MOZ_BRANDING_DIRECTORY
 	$(NSINSTALL) -D $(DIST)/branding
 	cp $(srcdir)/Header.bmp    $(DIST)/branding/Header.bmp
 	cp $(srcdir)/Watermrk.bmp  $(DIST)/branding/Watermrk.bmp

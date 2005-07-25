@@ -80,7 +80,7 @@ installer:
 	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -I$(topsrcdir)/browser/locales/$(AB_CD)/installer/installer.inc $(srcdir)/$$i > instgen/$$i; \
 	done
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -I$(topsrcdir)/browser/locales/$(AB_CD)/defines.inc $(srcdir)/ab-CD.jst > instgen/$(AB_CD).jst
-ifndef MOZ_USE_OFFICIAL_BRANDING
+ifndef MOZ_BRANDING_DIRECTORY
 	$(NSINSTALL) -D $(DIST)/install
 	cp $(srcdir)/header.png $(DIST)/install/header.png
 	cp $(srcdir)/watermark.png $(DIST)/install/watermark.png
