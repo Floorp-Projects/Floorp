@@ -48,6 +48,12 @@
 	padding:1px;
 }
 
+toolbar *, #appcontent * {
+  font-size: 10px ! important;
+  padding: 0px ! important;
+  margin: 0px ! important;
+}
+
 
 * {
   font-size: small ! important;
@@ -74,12 +80,6 @@
   {
 	  list-style-image      : url("chrome://minimo/content/reload.gif");
   }
-
-toolbar *, #appcontent * {
-  font-size: 10px ! important;
-  padding: 0px ! important;
-  margin: 0px ! important;
-}
 
 toolbarbutton {
 }

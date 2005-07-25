@@ -64,7 +64,7 @@
     <toolbar id="nav-bar"  >
 
 <!--
-	<menubar id="sample-menubar">
+	<menubar id="sample-menubar" class="chromeclass-menubar">
 	    <menu id="file-menu" label="?" style="margin:0px;">
 	      <menupopup id="file-popup">
 	        <menuitem label="new Tab" oncommand="addTab()" />
@@ -72,7 +72,9 @@
 	    </menu>
 	</menubar>
 -->
-	  <toolbarbutton id="tabnew" label="+"   onclick="addTab()"/>  
+<!-- try also the following style with the toolbarbutton... type="menu-button"  --> 
+
+	  <toolbarbutton id="tabnew" label="+" oncommand="BrowserAddTab()" />
         <toolbarbutton id="back-button"    image="chrome://minimo/skin/back.gif"    onclick="BrowserBack()"/>  
         <toolbarbutton id="forward-button" image="chrome://minimo/skin/forward.gif" onclick="BrowserForward()"/>  
         <toolbarbutton id="reload-stop-button"  image="chrome://minimo/skin/reload.gif"  onclick="BrowserReload()"/>
@@ -81,9 +83,9 @@
   </toolbox>
 
   <hbox flex="1" >
-    <hbox id="appcontent" flex="1">
-      <hbox id="browser" flex="1">
-        <tabbrowser id="content" flex="1" onnewtab="addTab();"/>
+    <hbox id="appcontent" flex="100%">
+      <hbox id="browser" context="context" flex="1">
+        <tabbrowser context="context" type="content-primary" id="content" src="about:blank" flex="1" onclick="tabbrowserAreaClick(event)" onnewtab="BrowserAddTab()"/>
       </hbox>
     </hbox>
   </hbox>
