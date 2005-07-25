@@ -78,11 +78,13 @@ nsXFormsDispatchElement::HandleAction(nsIDOMEvent* aEvent,
   if (!nsXFormsUtils::IsXFormsEvent(name, cancelable, bubbles)) {
     nsAutoString cancelableStr;
     mElement->GetAttribute(NS_LITERAL_STRING("cancelable"), cancelableStr);
-    cancelable = cancelableStr.EqualsLiteral("true");
+    cancelable = !(cancelableStr.EqualsLiteral("false") ||
+                   cancelableStr.EqualsLiteral("0"));
     
     nsAutoString bubbleStr;
     mElement->GetAttribute(NS_LITERAL_STRING("bubbles"), bubbleStr);
-    bubbles = bubbleStr.EqualsLiteral("true");
+    bubbles = !(bubbleStr.EqualsLiteral("false") ||
+                bubbleStr.EqualsLiteral("0"));
 
     PRBool tmp;
     if (cancelableStr.IsEmpty() && bubbleStr.IsEmpty())
