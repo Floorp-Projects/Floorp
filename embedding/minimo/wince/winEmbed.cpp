@@ -37,9 +37,8 @@
 #include "MinimoPrivate.h"
 
 #ifdef _BUILD_STATIC_BIN
-#include "nsStaticComponent.h"
-nsresult PR_CALLBACK
-app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
+nsStaticModuleInfo const *const kPStaticModules = nsnull;
+PRUint32 const kStaticModuleCount = 0;
 #endif
 
 // Global variables
@@ -224,13 +223,8 @@ int main(int argc, char *argv[])
 
     CreateSplashScreen();
 
-#ifdef _BUILD_STATIC_BIN
-    // Initialize XPCOM's module info table
-    NSGetStaticModuleInfo = app_getModuleInfo;
-#endif
-    
-    NS_InitEmbedding(nsnull, nsnull);
-    
+    NS_InitEmbedding(nsnull, nsnull, kPStaticModules, kStaticModuleCount);
+
     // Choose the new profile
     if (NS_FAILED(StartupProfile()))
         return 1;
