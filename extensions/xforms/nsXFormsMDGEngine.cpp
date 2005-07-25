@@ -198,8 +198,14 @@ nsXFormsMDGEngine::AddMIP(ModelItemPropName         aType,
       if (!dep_domnode) {
         return NS_ERROR_NULL_POINTER;
       }
+
+#ifdef DEBUG_XF_MDG
+      printf("\tDependency #%2d: %p\n", i, (void*) dep_domnode);
+#endif
       
-      dep_gnode = GetNode(dep_domnode, aType);
+      // Get calculate graph node for the dependency (only a calculate
+      // property can influence another MIP).
+      dep_gnode = GetNode(dep_domnode, eModel_calculate);
       if (!dep_gnode) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -209,6 +215,8 @@ nsXFormsMDGEngine::AddMIP(ModelItemPropName         aType,
         continue;
       }
   
+      // Add this node as a successor to the dependency (ie. the dependency
+      // should be (re-)calculated before this node)
       dep_gnode->mSuc.AppendElement(newnode);
       newnode->mCount++;
     }
@@ -541,6 +549,11 @@ nsXFormsMDGEngine::Rebuild()
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
+
+#ifdef DEBUG_XF_MDG
+    printf("\tmGraph.Count() = %2d\n", mGraph.Count());
+    printf("\tmNodesInGraph  = %2d\n", mNodesInGraph);
+#endif
 
   if (mGraph.Count() != mNodesInGraph) {
     NS_WARNING("XForms: There are loops in the MDG\n");
