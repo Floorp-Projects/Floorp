@@ -1257,6 +1257,14 @@ nsEventStateManager::FireContextClick()
                                container);
           if (!container.IsEmpty())
             allowedToDispatch = PR_FALSE;
+
+          // If the toolbar button has an open menu, don't attempt to open
+          // a second menu
+          nsAutoString openAttr;
+          mGestureDownContent->GetAttr(kNameSpaceID_None, nsXULAtoms::open,
+                                       openAttr);
+          if (openAttr.EqualsLiteral("true"))
+            allowedToDispatch = PR_FALSE;
         }
       }
       else if (mGestureDownContent->IsContentOfType(nsIContent::eHTML)) {
@@ -1361,7 +1369,11 @@ nsEventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
 
 #ifdef CLICK_HOLD_CONTEXT_MENUS
   // fire off a timer to track click-hold
-  CreateClickHoldTimer ( aPresContext, inDownFrame, inDownEvent );
+  PRBool bClickHoldContext = PR_TRUE;
+  bClickHoldContext = nsContentUtils::GetBoolPref("ui.click_hold_context_menus",
+                                                  bClickHoldContext);
+  if (bClickHoldContext)
+    CreateClickHoldTimer ( aPresContext, inDownFrame, inDownEvent );
 #endif
 }
 
