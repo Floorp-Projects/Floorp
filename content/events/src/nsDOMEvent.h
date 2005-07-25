@@ -123,8 +123,8 @@ public:
     eDOMEvents_DOMActivate,
     eDOMEvents_DOMFocusIn,
     eDOMEvents_DOMFocusOut,
-    eDOMEvents_PageShow,
-    eDOMEvents_PageHide
+    eDOMEvents_pageshow,
+    eDOMEvents_pagehide
   };
 
   nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent);

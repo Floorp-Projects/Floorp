@@ -131,8 +131,8 @@ function()
     linkToolbarUI.toolbarActive = true;
     document.getElementById("linktoolbar").setAttribute("hasitems", "true");
     var contentArea = document.getElementById("appcontent");
-    contentArea.addEventListener("PageHide", linkToolbarUI.clear, true);
-    contentArea.addEventListener("PageShow", linkToolbarUI.deactivate, true);
+    contentArea.addEventListener("pagehide", linkToolbarUI.clear, true);
+    contentArea.addEventListener("pageshow", linkToolbarUI.deactivate, true);
     contentArea.addEventListener("DOMHeadLoaded", linkToolbarUI.deactivate,
                                  true);
   }
@@ -150,8 +150,8 @@ function()
     linkToolbarUI.toolbarActive = false;
     document.getElementById("linktoolbar").setAttribute("hasitems", "false");
     var contentArea = document.getElementById("appcontent");
-    contentArea.removeEventListener("PageHide", linkToolbarUI.clear, true);
-    contentArea.removeEventListener("PageShow", linkToolbarUI.deactivate, true);
+    contentArea.removeEventListener("pagehide", linkToolbarUI.clear, true);
+    contentArea.removeEventListener("pageshow", linkToolbarUI.deactivate, true);
     contentArea.removeEventListener("DOMHeadLoaded", linkToolbarUI.deactivate,
                                     true);
   }
@@ -249,7 +249,7 @@ function()
   if (!linkToolbarUI.initialized)
   {
     linkToolbarUI.initialized = true;
-    document.removeEventListener("PageShow", linkToolbarUI.initHandlers, true);
+    document.removeEventListener("pageshow", linkToolbarUI.initHandlers, true);
   }
 }
 

@@ -1024,11 +1024,11 @@ nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType,
     *aArrayType = eEventArrayType_Composition;
     *aFlags = NS_EVENT_BITS_COMPOSITION_END;
   }
-  else if (aType == nsLayoutAtoms::onPageShow) {
+  else if (aType == nsLayoutAtoms::onpageshow) {
     *aArrayType = eEventArrayType_PageTransition;
     *aFlags = NS_EVENT_BITS_PAGETRANSITION_SHOW;
   }
-  else if (aType == nsLayoutAtoms::onPageHide) {
+  else if (aType == nsLayoutAtoms::onpagehide) {
     *aArrayType = eEventArrayType_PageTransition;
     *aFlags = NS_EVENT_BITS_PAGETRANSITION_HIDE;
   }

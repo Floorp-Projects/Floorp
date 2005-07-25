@@ -39,8 +39,8 @@
 #include "nsIDOMEvent.idl"
 
 /**
- * The nsIDOMPageTransitionEvent interface is used for the PageShow and
- * PageHide events, which are generic events that apply to both page
+ * The nsIDOMPageTransitionEvent interface is used for the pageshow and
+ * pagehide events, which are generic events that apply to both page
  * load/unload and saving/restoring a document from session history.
  */
 
@@ -54,7 +54,7 @@ interface nsIDOMPageTransitionEvent : nsIDOMEvent
    */
   readonly attribute boolean persisted;
 
-  /* Initialize a new PageShow or PageHide event. */
+  /* Initialize a new pageshow or pagehide event. */
   void initPageTransitionEvent(in DOMString typeArg,
                                in boolean canBubbleArg,
                                in boolean canCancelArg,

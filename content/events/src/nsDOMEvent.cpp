@@ -68,7 +68,7 @@ static const char* const sEventNames[] = {
   "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument",
   "DOMAttrModified", "DOMCharacterDataModified",
   "popupBlocked", "DOMActivate", "DOMFocusIn", "DOMFocusOut",
-  "PageShow", "PageHide"
+  "pageshow", "pagehide"
 }; 
 
 static char *sPopupAllowedEvents;
@@ -459,9 +459,9 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
     else if (atom == nsLayoutAtoms::onDOMFocusOut)
       mEvent->message = NS_UI_FOCUSOUT;
   } else if (mEvent->eventStructType == NS_PAGETRANSITION_EVENT) {
-    if (atom == nsLayoutAtoms::onPageShow)
+    if (atom == nsLayoutAtoms::onpageshow)
       mEvent->message = NS_PAGE_SHOW;
-    else if (atom == nsLayoutAtoms::onPageHide)
+    else if (atom == nsLayoutAtoms::onpagehide)
       mEvent->message = NS_PAGE_HIDE;
   }
 
@@ -897,9 +897,9 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_UI_FOCUSOUT:
     return sEventNames[eDOMEvents_DOMFocusOut];
   case NS_PAGE_SHOW:
-    return sEventNames[eDOMEvents_PageShow];
+    return sEventNames[eDOMEvents_pageshow];
   case NS_PAGE_HIDE:
-    return sEventNames[eDOMEvents_PageHide];
+    return sEventNames[eDOMEvents_pagehide];
   default:
     break;
   }

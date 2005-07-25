@@ -283,7 +283,7 @@ if (window && (wintype == "navigator:browser"))
 {
     var contentArea = window.document.getElementById("appcontent");
     if (contentArea)
-        contentArea.addEventListener("PageShow", charsetLoadListener, true);
+        contentArea.addEventListener("pageshow", charsetLoadListener, true);
 }
 else
 {
@@ -292,14 +292,14 @@ else
     {
         var messageContent = window.document.getElementById("messagepane");
         if (messageContent)
-            messageContent.addEventListener("PageShow", mailCharsetLoadListener, true);
+            messageContent.addEventListener("pageshow", mailCharsetLoadListener, true);
     }
     else
     if (window && arrayOfStrings[0] == "composer") 
     {
         contentArea = window.document.getElementById("appcontent");
         if (contentArea)
-            contentArea.addEventListener("PageShow", composercharsetLoadListener, true);
+            contentArea.addEventListener("pageshow", composercharsetLoadListener, true);
     }
 
 }

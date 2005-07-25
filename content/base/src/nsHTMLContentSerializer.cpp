@@ -476,6 +476,7 @@ nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& a
               || (aAttrNameAtom == nsLayoutAtoms::onfocus)     || (aAttrNameAtom == nsLayoutAtoms::onkeydown)
               || (aAttrNameAtom == nsLayoutAtoms::onkeypress)  || (aAttrNameAtom == nsLayoutAtoms::onkeyup)
               || (aAttrNameAtom == nsLayoutAtoms::onload)      || (aAttrNameAtom == nsLayoutAtoms::onmousedown)
+              || (aAttrNameAtom == nsLayoutAtoms::onpageshow)  || (aAttrNameAtom == nsLayoutAtoms::onpagehide)
               || (aAttrNameAtom == nsLayoutAtoms::onmousemove) || (aAttrNameAtom == nsLayoutAtoms::onmouseout)
               || (aAttrNameAtom == nsLayoutAtoms::onmouseover) || (aAttrNameAtom == nsLayoutAtoms::onmouseup)
               || (aAttrNameAtom == nsLayoutAtoms::onreset)     || (aAttrNameAtom == nsLayoutAtoms::onselect)
