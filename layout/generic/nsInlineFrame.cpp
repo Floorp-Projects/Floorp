@@ -1219,13 +1219,13 @@ nsPositionedInlineFrame::Reflow(nsPresContext*          aPresContext,
   // condition 1.
   if (NS_SUCCEEDED(rv) &&
       mAbsoluteContainer.HasAbsoluteFrames()) {
-    // The containing block for the abs pos kids is formed by our content edge.
-    nscoord containingBlockWidth = aDesiredSize.width -
-      (aReflowState.mComputedBorderPadding.left +
-       aReflowState.mComputedBorderPadding.right);
-    nscoord containingBlockHeight = aDesiredSize.height -
-      (aReflowState.mComputedBorderPadding.top +
-       aReflowState.mComputedBorderPadding.bottom);
+    // The containing block for the abs pos kids is formed by our padding edge.
+    nsMargin computedBorder =
+      aReflowState.mComputedBorderPadding - aReflowState.mComputedPadding;
+    nscoord containingBlockWidth =
+      aDesiredSize.width - computedBorder.LeftRight();
+    nscoord containingBlockHeight =
+      aDesiredSize.height - computedBorder.TopBottom();
 
     // Do any incremental reflows ... would be nice to merge with
     // the reflows below but that would be more work, and more risky

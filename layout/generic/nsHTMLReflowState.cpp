@@ -1014,21 +1014,12 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   aHypotheticalBox.mRight += cbOffset.x;
   
   // The specified offsets are relative to the absolute containing block's
-  // padding edge or content edge, and our current values are relative to the
-  // border edge, so translate.
-  if (NS_FRAME_GET_TYPE(cbrs->mFrameType) == NS_CSS_FRAME_TYPE_INLINE) {
-    // content edge
-    const nsMargin& borderPadding = cbrs->mComputedBorderPadding;
-    aHypotheticalBox.mLeft -= borderPadding.left;
-    aHypotheticalBox.mRight -= borderPadding.right;
-    aHypotheticalBox.mTop -= borderPadding.top;
-  } else {
-    // padding edge
-    nsMargin border = cbrs->mComputedBorderPadding - cbrs->mComputedPadding;
-    aHypotheticalBox.mLeft -= border.left;
-    aHypotheticalBox.mRight -= border.right;
-    aHypotheticalBox.mTop -= border.top;
-  }
+  // padding edge and our current values are relative to the border edge, so
+  // translate.
+  nsMargin border = cbrs->mComputedBorderPadding - cbrs->mComputedPadding;
+  aHypotheticalBox.mLeft -= border.left;
+  aHypotheticalBox.mRight -= border.right;
+  aHypotheticalBox.mTop -= border.top;
 }
 
 void
@@ -1434,16 +1425,6 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
       }
     }
   }
-
-  // Now that we've solved for our auto offsets and so forth, we need to adjust
-  // the offsets to what the rest of layout actually expects them to be.  The
-  // offsets as computed now are relative to the parent's padding edge if the
-  // parent is a block and the parent's content edge if the parent is an
-  // inline.  We need them to be relative to the parent's padding edge for
-  // nsAbsoluteContainer reflow to work right.
-  if (NS_FRAME_GET_TYPE(cbrs->mFrameType) == NS_CSS_FRAME_TYPE_INLINE) {
-    mComputedOffsets += cbrs->mComputedPadding;
-  }
 }
 
 nscoord 
@@ -1604,21 +1585,20 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsPresContext*          aPres
       // the containing block dimensions to our constructor.
       // XXXbz we should be taking the in-flows into account too, but
       // that's very hard.
+      nsMargin computedBorder = aContainingBlockRS->mComputedBorderPadding -
+        aContainingBlockRS->mComputedPadding;
       aContainingBlockWidth = aContainingBlockRS->frame->GetRect().width -
-        (aContainingBlockRS->mComputedBorderPadding.left +
-         aContainingBlockRS->mComputedBorderPadding.right);
+        computedBorder.LeftRight();;
       NS_ASSERTION(aContainingBlockWidth >= 0,
                    "Negative containing block width!");
       aContainingBlockHeight = aContainingBlockRS->frame->GetRect().height -
-        (aContainingBlockRS->mComputedBorderPadding.top +
-         aContainingBlockRS->mComputedBorderPadding.bottom);
+        computedBorder.TopBottom();
       NS_ASSERTION(aContainingBlockHeight >= 0,
                    "Negative containing block height!");
     } else {
       // If the ancestor is block-level, the containing block is formed by the
       // padding edge of the ancestor
-      aContainingBlockWidth += aContainingBlockRS->mComputedPadding.left +
-                               aContainingBlockRS->mComputedPadding.right;
+      aContainingBlockWidth += aContainingBlockRS->mComputedPadding.LeftRight();
 
       // If the containing block is the initial containing block and it has a
       // height that depends on its content, then use the viewport height instead.
@@ -1635,8 +1615,8 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsPresContext*          aPres
         }
 
       } else {
-        aContainingBlockHeight += aContainingBlockRS->mComputedPadding.top +
-                                  aContainingBlockRS->mComputedPadding.bottom;
+        aContainingBlockHeight +=
+          aContainingBlockRS->mComputedPadding.TopBottom();
       }
     }
   } else {
