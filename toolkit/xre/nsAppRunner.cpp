@@ -1451,7 +1451,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     }
 
     // Clear out flags that we handled (or should have handled!) last startup.
-    char *dummy;
+    const char *dummy;
     CheckArg("p", &dummy);
     CheckArg("profile", &dummy);
     CheckArg("profilemanager", &dummy);
