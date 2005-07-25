@@ -597,6 +597,7 @@ enum BWCOpenDest {
     
     if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_STATUSBAR) ) {
       // remove the status bar at the bottom
+      // XXX we should just hide it and allow the user to show it again
       [mStatusBar removeFromSuperview];
       mustResizeChrome = YES;
       
@@ -697,10 +698,6 @@ enum BWCOpenDest {
         pref->RegisterCallback(gTabBarVisiblePref, TabBarVisiblePrefChangedCallback, self);
     }
 
-//  03/03/2002 mlj Changing strategy a bit here.  The addTab: method was
-//  duplicating a lot of the code found here.  I have moved it to that method.
-//  We now remove the IB tab, then add one of our own.
-
     [mTabBrowser removeTabViewItem:[mTabBrowser tabViewItemAtIndex:0]];
     
     // create ourselves a new tab and fill it with the appropriate content. If we
@@ -718,21 +715,11 @@ enum BWCOpenDest {
       mPendingURL = mPendingReferrer = nil;
     }
     
-    if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR) ) {
-      // remove the personal toolbar and adjust the content area upwards. Removing it
-      // from the parent view releases it, so we have to clear out the member var.
-      //float height = [mPersonalToolbar frame].size.height;
-      [mPersonalToolbar removeFromSuperview];
-      mPersonalToolbar = nil;
-      mustResizeChrome = YES;
-    }
-    else
-    {
-      [mPersonalToolbar buildButtonList];
-    
-      if (![self shouldShowBookmarkToolbar])
-        [mPersonalToolbar showBookmarksToolbar:NO];
-    }
+    [mPersonalToolbar buildButtonList];
+
+    BOOL chromeHidesToolbar = (mChromeMask != 0) && !(mChromeMask & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR);
+    if (chromeHidesToolbar || ![self shouldShowBookmarkToolbar])
+      [mPersonalToolbar showBookmarksToolbar:NO];
     
     if (mustResizeChrome)
       [mContentView resizeSubviewsWithOldSize:[mContentView frame].size];
@@ -816,14 +803,20 @@ enum BWCOpenDest {
 
 - (void)setupToolbar
 {
-  if ( !mChromeMask || (mChromeMask & nsIWebBrowserChrome::CHROME_TOOLBAR) ) {  
-    NSToolbar *toolbar = [[[NSToolbar alloc] initWithIdentifier:BrowserToolbarIdentifier] autorelease];
-    
-    [toolbar setDisplayMode:NSToolbarDisplayModeDefault];
-    [toolbar setAllowsUserCustomization:YES];
-    [toolbar setAutosavesConfiguration:YES];
-    [toolbar setDelegate:self];
-    [[self window] setToolbar:toolbar];
+  NSToolbar *toolbar = [[[NSToolbar alloc] initWithIdentifier:BrowserToolbarIdentifier] autorelease];
+  
+  [toolbar setDisplayMode:NSToolbarDisplayModeDefault];
+  [toolbar setAllowsUserCustomization:YES];
+  [toolbar setAutosavesConfiguration:YES];
+  [toolbar setDelegate:self];
+  [[self window] setToolbar:toolbar];
+  
+  // for a chromed window without the toolbar or locationbar flag, hide the toolbar (but allow the user to show it)
+  if (mChromeMask && (!(mChromeMask & nsIWebBrowserChrome::CHROME_TOOLBAR) &&
+                      !(mChromeMask & nsIWebBrowserChrome::CHROME_LOCATIONBAR)))
+  {
+    [toolbar setAutosavesConfiguration:NO]; // make sure this hiding doesn't get saved
+    [toolbar setVisible:NO];
   }
 }
 
@@ -1958,7 +1951,7 @@ enum BWCOpenDest {
 
     NSMutableDictionary* itemInfo = [NSMutableDictionary dictionaryWithObject:hrefString forKey:kAddBookmarkItemURLKey];
 
-    // titlel can be nil (e.g. for text files)
+    // title can be nil (e.g. for text files)
     if (curTitleString)
       [itemInfo setObject:curTitleString forKey:kAddBookmarkItemTitleKey];
     
