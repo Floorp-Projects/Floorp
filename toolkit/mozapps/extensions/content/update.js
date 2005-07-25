@@ -95,7 +95,7 @@ var gUpdateWizard = {
     if (this.items.length == 0) {
       var em = Components.classes["@mozilla.org/extensions/manager;1"]
                          .getService(Components.interfaces.nsIExtensionManager);
-      this.items = em.getUpdateableItemList(nsIUpdateItem.TYPE_ADDON, { });
+      this.items = em.getItemList(nsIUpdateItem.TYPE_ADDON, { });
     }
 
     var pref = 
