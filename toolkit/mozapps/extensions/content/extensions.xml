@@ -73,19 +73,41 @@
   <binding id="extension" extends="chrome://mozapps/content/extensions/extensions.xml#extension-base">
     <content>
       <xul:hbox flex="1">
-        <xul:vbox pack="start">
-          <xul:image class="extension-icon" xbl:inherits="src=image"
-                     style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
-        </xul:vbox>
+        <xul:stack class="extension-icon-stack">
+          <xul:vbox pack="start" align="start">
+            <xul:image class="extension-icon" xbl:inherits="src=image"
+                       style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
+          </xul:vbox>
+          <xul:vbox pack="end" align="end">
+            <xul:image class="extension-badge"/>
+          </xul:vbox>
+        </xul:stack>
         <xul:vbox pack="start" flex="1">
           <xul:hbox>
             <xul:label class="extension-item-name" xbl:inherits="value=name" crop="center"/>
             <xul:label class="extension-item-version" xbl:inherits="value=version"/>
           </xul:hbox>
-          <xul:label class="extension-item-description" xbl:inherits="value=description" crop="right"/>
+          <xul:hbox>
+            <xul:image class=""/>
+            <xul:label class="extension-item-description" xbl:inherits="value=description" crop="right" flex="1"/>
+          </xul:hbox>
+        </xul:vbox>
+        <xul:vbox class="extension-install-button-box" pack="end">
+          <xul:button anonid="extension-install-button" class="extension-install-button" label="&installNow.label;"/>
         </xul:vbox>
       </xul:hbox>
     </content>
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+    </implementation>
+    <handlers>
+      <handler event="command">
+      <![CDATA[
+        if (event.originalTarget.getAttribute("anonid") == "extension-install-button")
+          this.fireEvent("updatenow");
+      ]]>
+      </handler>
+    </handlers>
   </binding>
 
   <binding id="extension-downloading" extends="chrome://mozapps/content/extensions/extensions.xml#extension-base">

@@ -43,7 +43,7 @@
 //
 
 const nsIExtensionManager             = Components.interfaces.nsIExtensionManager;
-const nsIUpdateService                = Components.interfaces.nsIUpdateService;
+const nsIAddonUpdateCheckListener     = Components.interfaces.nsIAddonUpdateCheckListener;
 const nsIUpdateItem                   = Components.interfaces.nsIUpdateItem;
 const nsILocalFile                    = Components.interfaces.nsILocalFile;
 const nsILineInputStream              = Components.interfaces.nsILineInputStream;
@@ -68,6 +68,7 @@ const PREF_DSS_SWITCHPENDING          = "extensions.dss.switchPending";
 const PREF_DSS_SKIN_TO_SELECT         = "extensions.lastSelectedSkin";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
 const PREF_EM_LOGGING_ENABLED         = "extensions.logging.enabled";
+const PREF_EM_UPDATE_INTERVAL         = "extensions.update.interval";
 const PREF_XPINSTALL_STATUS_DLG_SKIN  = "xpinstall.dialog.progress.skin";
 
 const DIR_EXTENSIONS                  = "extensions";
@@ -231,22 +232,25 @@ function EM_I(integer) {
   return gRDF.GetIntLiteral(integer);
 }
 
-function getCharPrefWithDefault(aPrefName, aDefault) {
+/**
+ * Gets a preference value, handling the case where there is no default.
+ * @param   func
+ *          The name of the preference function to call, on nsIPrefBranch
+ * @param   preference
+ *          The name of the preference
+ * @param   defaultValue
+ *          The default value to return in the event the preference has 
+ *          no setting
+ * @returns The value of the preference, or undefined if there was no
+ *          user or default value.
+ */
+function getPref(func, preference, defaultValue) {
   try {
-    return gPref.getCharPref(aPrefName);
+    return gPref[func](preference);
   }
   catch (e) {
-    return aDefault;
   }
-}
-
-function getBoolPrefWithDefault(aPrefName, aDefault) {
-  try {
-    return gPref.getBoolPref(aPrefName);
-  }
-  catch (e) {
-    return aDefault;
-  }
+  return defaultValue;
 }
 
 /**
@@ -1189,8 +1193,14 @@ function WinRegInstallLocation(name, rootKey, restricted, priority) {
   // Reading the registry may throw an exception, and that's ok.  In error
   // cases, we just leave ourselves in the empty state.
   try {
-    this._readReg();
+    var path = this._appKeyPath + "\\Extensions";
+    var key = Components.classes["@mozilla.org/windows-registry-key;1"]
+                        .createInstance(nsIWindowsRegKey);
+    key.open(this._rootKey, path, nsIWindowsRegKey.ACCESS_READ);
+    this._readAddons(key);
   } catch (e) {
+    if (key)
+      key.close();
   }
 }
 WinRegInstallLocation.prototype = {
@@ -1200,12 +1210,11 @@ WinRegInstallLocation.prototype = {
   _priority   : 0,
   _IDToDirMap : null,  // mapping from ID to directory object
   _DirToIDMap : null,  // mapping from directory path to ID
-
+  
   /**
-   * Read the registry and build a mapping between GUID and directory for each
-   * installed item.
+   * Retrieves the path of this Application's data key in the registry.
    */
-  _readReg: function() {
+  get _appKeyPath() {
     var appVendor = gApp.vendor;
     var appName = gApp.name;
 
@@ -1219,12 +1228,16 @@ WinRegInstallLocation.prototype = {
     if (appVendor != "")
       appVendor += "\\";
 
-    var path = "SOFTWARE\\" + appVendor + appName + "\\Extensions";
+    return "SOFTWARE\\" + appVendor + appName;
+  },
 
-    var key = Components.classes["@mozilla.org/windows-registry-key;1"]
-                        .createInstance(nsIWindowsRegKey);
-    key.open(this._rootKey, path, nsIWindowsRegKey.ACCESS_READ);
-
+  /**
+   * Read the registry and build a mapping between GUID and directory for each
+   * installed item.
+   * @param   key
+   *          The key that contains the GUID->path pairs
+   */
+  _readAddons: function(key) {
     var count = key.valueCount; 
     for (var i = 0; i < count; ++i) {
       var id = key.getValueName(i);
@@ -1258,7 +1271,7 @@ WinRegInstallLocation.prototype = {
     return this._restricted;
   },
 
-  // not possible to write to this install location
+  // you should never be able to write to this location
   get canAccess() {
     return false;
   },
@@ -2175,7 +2188,7 @@ function ExtensionManager() {
                    .QueryInterface(Components.interfaces.nsIXULRuntime);
   gPref = Components.classes["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefBranch2);
-  gLoggingEnabled = getBoolPrefWithDefault(PREF_EM_LOGGING_ENABLED, false);
+  gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
   gPref.addObserver(PREF_EM_LOGGING_ENABLED, this, false);
 
   gOS = Components.classes["@mozilla.org/observer-service;1"]
@@ -2266,7 +2279,7 @@ ExtensionManager.prototype = {
    * the preference settting.
    */
   _loggingToggled: function() {
-    gLoggingEnabled = getBoolPrefWithDefault(PREF_EM_LOGGING_ENABLED, false);
+    gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
   },
 
   /**
@@ -2364,11 +2377,34 @@ ExtensionManager.prototype = {
 
     // Extension Changes
     if (isDirty)
-        return this._finishOperations();
+      return this._finishOperations();
+      
+    this._startTimers();
 
     return false;
   },
-
+  
+  /**
+   * Begins all background update check timers
+   */
+  _startTimers: function() {
+    // Register a background update check timer
+    var tm = 
+        Components.classes["@mozilla.org/updates/timer-manager;1"]
+                  .getService(Components.interfaces.nsIUpdateTimerManager);
+    var interval = getPref("getIntPref", PREF_EM_UPDATE_INTERVAL, 86400); 
+    tm.registerTimer("addon-background-update-timer", this, interval);
+  },
+  
+  /**
+   * Notified when a timer fires
+   * @param   timer
+   *          The timer that fired
+   */
+  notify: function(timer) {
+    this.update([], 0, false, null);
+  },
+  
   /**
    * See nsIExtensionManager.idl
    */
@@ -2608,8 +2644,8 @@ ExtensionManager.prototype = {
     }
     
     var isDirty = false;
-    var ignoreMTimeChanges = getBoolPrefWithDefault(PREF_EM_IGNOREMTIMECHANGES,
-                                                    false);
+    var ignoreMTimeChanges = getPref("getBoolPref", PREF_EM_IGNOREMTIMECHANGES,
+                                     false);
     StartupCache.read();
     
     // Array of objects with 'location' and 'id' properties to maybe install.
@@ -3056,9 +3092,9 @@ ExtensionManager.prototype = {
 
     // Check to see if the version of the application that is being started
     // now is the same one that was started last time. 
-    var currAppVersion = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
-                                                gApp.version);
-    var lastAppVersion = getCharPrefWithDefault(PREF_EM_LAST_APP_VERSION, "");
+    var currAppVersion = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
+                                 gApp.version);
+    var lastAppVersion = getPref("getCharPref", PREF_EM_LAST_APP_VERSION, "");
     if (currAppVersion != lastAppVersion) {
       // Version mismatch, we're have to load the extensions datasource
       // and do version checking. Time hit here doesn't matter since this 
@@ -3106,14 +3142,6 @@ ExtensionManager.prototype = {
     else {
       var ary = Components.classes["@mozilla.org/supports-array;1"]
                           .createInstance(Components.interfaces.nsISupportsArray);
-      var updateTypes = Components.classes["@mozilla.org/supports-PRUint8;1"]
-                                  .createInstance(Components.interfaces.nsISupportsPRUint8);
-      updateTypes.data = nsIUpdateItem.TYPE_ADDON;
-      ary.AppendElement(updateTypes);
-      var sourceEvent = Components.classes["@mozilla.org/supports-PRBool;1"]
-                                  .createInstance(Components.interfaces.nsISupportsPRBool);
-      sourceEvent.data = true;
-      ary.AppendElement(sourceEvent);
       for (var i = 0; i < items.length; ++i)
         ary.AppendElement(items[i]);
 
@@ -3238,8 +3266,8 @@ ExtensionManager.prototype = {
     var oldExtensionsDS = gRDF.GetDataSourceBlocking(fileURL);
     var versionChecker = getVersionChecker();
     var ds = this.datasource;
-    var currAppVersion = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
-                                                gApp.version);
+    var currAppVersion = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
+                                 gApp.version);
     var currAppID = gApp.ID;
     for (var i = 0; i < itemsToCheck.length; ++i) {
       var item = ds.getItemForID(itemsToCheck[i]);
@@ -3757,7 +3785,7 @@ ExtensionManager.prototype = {
       _type: nsIUpdateItem.TYPE_ANY,
       _xpi: null,
       _installManifest: null,
-      _iinstallRDF: null,
+      _installRDF: null,
       
       /** 
        * Ask the Extension Update System if there are any version updates for
@@ -3778,13 +3806,6 @@ ExtensionManager.prototype = {
         this._installManifest = installManifest;
         this._installRDF      = installRDF;
         
-        // XXXben - replace with a single notification and a data param or a
-        //          proper notification interface.
-        gOS.addObserver(this, "Update:Extension:Started", false);
-        gOS.addObserver(this, "Update:Extension:Item-Ended", false);
-        gOS.addObserver(this, "Update:Extension:Item-Error", false);
-        gOS.addObserver(this, "Update:Extension:Ended", false);
-        
         var item = makeItem(installData.id, installData.version, 
                             aInstallLocationKey, 
                             installData.currentApp.minVersion, 
@@ -3792,80 +3813,87 @@ ExtensionManager.prototype = {
                             installData.name, "", "", 
                             installData.updateURL || "", 
                             installData.type);
-        em.update([item], 1, true);
+        em.update([item], 1, true, this);
       },
-    
+      
       /**
-       * Update Item metadata if newer a version compatibility range is discovered.
-       * Notified by the Observer Service when various stages of the Update 
-       * Process are complete. 
-       * @param   subject
-       *          nsIUpdateItem representing available updates.
-       * @param   topic
-       *          Extension Update Messages
-       * @param   data
-       *          item update check success and failure
+       * See nsIExtensionManager.idl
        */
-      observe: function(subject, topic, data) {
-        var item = subject.QueryInterface(Components.interfaces.nsIUpdateItem);
-        if (this._id != item.id)
-          return;
+      onUpdateStarted: function() {
+        LOG("Phone Home Listener: Update Started");
+        em.datasource.onUpdateStarted();
+      },
+      
+      /**
+       * See nsIExtensionManager.idl
+       */
+      onUpdateEnded: function() {
+        LOG("Phone Home Listener: Update Ended");
+        // We are responsible for cleaning up this file!
+        this._installRDF.remove(false);
+        em.datasource.onUpdateEnded();
+      },
+      
+      /**
+       * See nsIExtensionManager.idl
+       */
+      onAddonUpdateStarted: function(addon) {
+        LOG("Phone Home Listener: Update For " + addon.id + " started");
+        em.datasource.addIncompatibleUpdateItem(addon.name, this._xpi.path,
+                                                addon.type, addon.version);
+        em.datasource.onAddonUpdateStarted(addon);
+      },
+      
+      /**
+       * See nsIExtensionManager.idl
+       */
+      onAddonUpdateEnded: function(addon, status) {
+        LOG("Phone Home Listener: Update For " + addon.id + " ended, status = " + status); 
+        em.datasource.removeDownload(this._xpi.path);
+        LOG("Version Check Phone Home Completed");
+        if (status & nsIAddonUpdateCheckListener.STATUS_DATA_FOUND) {
+          em.datasource.setTargetApplicationInfo(addon.id, 
+                                                 addon.minAppVersion,
+                                                 addon.maxAppVersion, 
+                                                 this._installManifest);
 
-        switch (topic) {
-        case "Update:Extension:Item-Ended":
-          em.datasource.removeDownload(this._xpi.path);
-          LOG("Version Check Phone Home Completed");
-          if (data == "update-check-success") {
-            em.datasource.setTargetApplicationInfo(item.id, 
-                                                   item.minAppVersion,
-                                                   item.maxAppVersion, 
-                                                   this._installManifest);
+          // Try and install again, but use the updated compatibility DB
+          em.installItemFromFileInternal(this._xpi, aInstallLocationKey, 
+                                         this._installManifest);
 
-            // Try and install again, but use the updated compatibility DB
-            em.installItemFromFileInternal(this._xpi, aInstallLocationKey, 
-                                           this._installManifest);
-
-            // Add the updated compatibility info to the datasource if done
-            if (StartupCache.entries[aInstallLocationKey][item.id].op == OP_NONE) {
-              em.datasource.updateTargetAppInfo(item.id, item.minAppVersion,
-                                                item.maxAppVersion);
-            }
-            else { // needs a restart
-              // Add updatedMinVersion and updatedMaxVersion so it can be used
-              // to update the data sources during the installation or upgrade.
-              em.datasource.setUpdatedTargetAppInfo(item.id, item.minAppVersion,
-                                                    item.maxAppVersion);
-            }
-            // Prevent the datasource file from being lazily recreated after
-            // it is deleted by calling Flush.
-            this._installManifest.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-            this._installManifest.Flush();
+          // Add the updated compatibility info to the datasource if done
+          if (StartupCache.entries[aInstallLocationKey][addon.id].op == OP_NONE) {
+            em.datasource.updateTargetAppInfo(addon.id, addon.minAppVersion,
+                                              addon.maxAppVersion);
           }
-          else {
-            showIncompatibleError(installData);
-            // We are responsible for cleaning up this file!
-            InstallLocations.get(aInstallLocationKey).removeFile(this._xpi);
+          else { // needs a restart
+            // Add updatedMinVersion and updatedMaxVersion so it can be used
+            // to update the data sources during the installation or upgrade.
+            em.datasource.setUpdatedTargetAppInfo(addon.id, addon.minAppVersion,
+                                                  addon.maxAppVersion);
           }
-          break;
-        case "Update:Extension:Ended":
-          gOS.removeObserver(this, "Update:Extension:Started");
-          gOS.removeObserver(this, "Update:Extension:Item-Ended");
-          gOS.removeObserver(this, "Update:Extension:Item-Error");
-          gOS.removeObserver(this, "Update:Extension:Ended");
-          // We are responsible for cleaning up this file!
-          this._installRDF.remove(false);
-          break;
-        case "Update:Extension:Started":
-          em.datasource.addIncompatibleUpdateItem(item.name, this._xpi.path,
-                                                  item.type, item.version);
-          break;
-        case "Update:Extension:Item-Error":
+          // Prevent the datasource file from being lazily recreated after
+          // it is deleted by calling Flush.
+          this._installManifest.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+          this._installManifest.Flush();
+        }
+        else {
           em.datasource.removeDownload(this._xpi.path);
           showIncompatibleError(installData);
           // We are responsible for cleaning up this file!
           InstallLocations.get(aInstallLocationKey).removeFile(this._xpi);
-          break;
         }
+        em.datasource.onAddonUpdateEnded(addon, status);
+      },
+
+      /**
+       * See nsISupports.idl
+       */
+      QueryInterface: function(iid) {
+        if (!iid.equals(Components.interfaces.nsIAddonUpdateCheckListener) &&
+            !iid.equals(Components.interfaces.nsISupports))
+          throw Components.results.NS_ERROR_NO_INTERFACE;
+        return this;
       }
     }
 
@@ -4050,9 +4078,13 @@ ExtensionManager.prototype = {
     var props = { name            : EM_L(getManifestProperty(installManifest, "name")),
                   version         : EM_L(getManifestProperty(installManifest, "version")),
                   installLocation : EM_L(installLocation.name),
-                  type            : EM_I(type) };
+                  type            : EM_I(type),
+                  availableUpdateURL    : null,
+                  availableUpdateVersion: null };
     for (var p in props)
       ds.setItemProperty(id, EM_R(p), props[p]);
+    ds.updateProperty(id, "displayDescription");
+    ds.updateProperty(id, "availableUpdateURL");
     
     this._setOp(id, OP_NEEDS_INSTALL);
     
@@ -4088,9 +4120,13 @@ ExtensionManager.prototype = {
                   name            : EM_L(getManifestProperty(installManifest, "name")),
                   version         : EM_L(getManifestProperty(installManifest, "version")),
                   installLocation : EM_L(installLocation.name),
-                  type            : EM_I(type) };
+                  type            : EM_I(type),
+                  availableUpdateURL      : null,
+                  availableUpdateVersion  : null };
     for (var p in props)
       ds.setItemProperty(id, EM_R(p), props[p]);
+    ds.updateProperty(id, "displayDescription");
+    ds.updateProperty(id, "availableUpdateURL");
 
     this._setOp(id, OP_NEEDS_UPGRADE);
     this._notifyAction(id, EM_ITEM_UPGRADED);
@@ -4356,26 +4392,18 @@ ExtensionManager.prototype = {
   },
   
   /**
-   * Checks for updates to the specified items. 
-   * @param   items
-   *          An array of nsIUpdateItems to check for updates for. If this list 
-   *          is empty, all installed items are checked for updates.
-   * @param   itemCount
-   *          The length of |items|
-   * @param   versionUpdateOnly
-   *          true if we are "phoning home" for version updates only, not newer
-   *          versions of the item, false otherwise.
+   * See nsIExtensionManager.idl
    */
-  update: function(items, itemCount, versionUpdateOnly) {
+  update: function(items, itemCount, versionUpdateOnly, listener) {
     var appID = gApp.ID;
-    var appVersion = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
-                                            gApp.version);
+    var appVersion = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
+                             gApp.version);
 
     if (items.length == 0)
       items = this.getUpdateableItemList(nsIUpdateItem.TYPE_ADDON, { });
 
     var updater = new ExtensionItemUpdater(appID, appVersion, this);
-    updater.checkForUpdates(items, items.length, versionUpdateOnly);
+    updater.checkForUpdates(items, items.length, versionUpdateOnly, listener);
   },
 
   /**
@@ -4582,19 +4610,28 @@ ExtensionManager.prototype = {
   addDownloads: function(items, itemCount) { 
     this._downloadCount += itemCount;
     
+    var urls = [];
     var txn = new ItemDownloadTransaction(this);
     for (var i = 0; i < itemCount; ++i) {
       var currItem = items[i];
       var txnID = Math.round(Math.random() * 100);
-      txn.addDownload(currItem.name, currItem.xpiURL, currItem.iconURL, 
-                      currItem.type, txnID);
+      txn.addDownload(currItem, txnID);
       this._transactions.push(txn);
+      urls.push(currItem.xpiURL);
     }
 
     // Kick off the download process for this transaction
     gOS.addObserver(this, "offline-requested", false);
     gOS.addObserver(this, "quit-application-requested", false);
-    gOS.notifyObservers(txn, "xpinstall-progress", "open");  
+    
+    // Cancel the existing xpimgr...
+    gOS.notifyObservers(txn, "xpinstall-progress", "cancel");  
+    
+    // And start a new one...
+    var xpimgr = 
+        Components.classes["@mozilla.org/xpinstall/install-manager;1"].
+        createInstance(Components.interfaces.nsIXPInstallManager);
+    xpimgr.initManagerFromChrome(urls, urls.length, txn);
   },
   
   /**
@@ -4633,20 +4670,21 @@ ExtensionManager.prototype = {
    * @param   transaction
    *          The ItemDownloadTransaction object receiving the download 
    *          notifications from XPInstall.
-   * @param   url
-   *          The URL the state change applies to
+   * @param   addon
+   *          An object representing nsIUpdateItem for the addon being updated
    * @param   state
    *          The state we are entering
    * @param   value
    *          ???
    */
-  onStateChange: function(transaction, url, state, value) {
+  onStateChange: function(transaction, addon, state, value) {
+    var url = addon.xpiURL;
     if (!(url in this._progressData)) 
       this._progressData[url] = { };
     this._progressData[url].state = state;
     
-    for (var i = 0; i < this._downloadListeners.length; ++i)
-      this._downloadListeners[i].onStateChange(url, state, value);
+    for (var i = 0; i < this._updateListeners.length; ++i)
+      this._updateListeners[i].onStateChange(addon, state, value);
 
     const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
     switch (state) {
@@ -4663,30 +4701,40 @@ ExtensionManager.prototype = {
       }
       break;
     }
+    // If we're updating an installed item for which content is already built,
+    // update the "displayDescription" property so the restart now message is
+    // shown.
+    if (addon.id != addon.xpiURL) {
+      var ds = this.datasource;
+      ds.updateProperty(addon.id, "displayDescription");
+      ds.updateProperty(addon.id, "availableUpdateURL");
+      ds.updateProperty(addon.id, "updateable"); 
+    }
   },
   
   _progressData: { },
-  onProgress: function(url, value, maxValue) {
-    for (var i = 0; i < this._downloadListeners.length; ++i)
-      this._downloadListeners[i].onProgress(url, value, maxValue);
+  onProgress: function(addon, value, maxValue) {
+    for (var i = 0; i < this._updateListeners.length; ++i)
+      this._updateListeners[i].onProgress(addon, value, maxValue);
     
+    var url = addon.xpiURL;
     if (!(url in this._progressData)) 
       this._progressData[url] = { };
     this._progressData[url].progress = Math.round((value / maxValue) * 100);
   },
 
-  _downloadListeners: [],
-  addDownloadListener: function(xpiProgressDialog) {
-    for (var i = 0; i < this._downloadListeners.length; ++i) {
-      if (this._downloadListeners[i] == xpiProgressDialog)
+  _updateListeners: [],
+  addUpdateListener: function(listener) {
+    for (var i = 0; i < this._updateListeners.length; ++i) {
+      if (this._updateListeners[i] == listener)
         return i;
     }
-    this._downloadListeners.push(xpiProgressDialog);
-    return this._downloadListeners.length - 1;
+    this._updateListeners.push(listener);
+    return this._updateListeners.length - 1;
   },
   
-  removeDownloadListenerAt: function(index) {
-    this._downloadListeners.splice(index, 1);
+  removeUpdateListenerAt: function(index) {
+    this._updateListeners.splice(index, 1);
     if (this._downloadCount != 0)
       this.datasource.flushProgressInfo(this._progressData);
   },
@@ -4752,6 +4800,7 @@ ExtensionManager.prototype = {
    */
   QueryInterface: function(iid) {
     if (!iid.equals(Components.interfaces.nsIExtensionManager) &&
+        !iid.equals(Components.interfaces.nsITimerCallback) &&
         !iid.equals(Components.interfaces.nsIObserver) &&
         !iid.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
@@ -4783,20 +4832,14 @@ ItemDownloadTransaction.prototype = {
   
   /**
    * Add a download to this transaction
-   * @param   name
-   *          The display name of this file
-   * @param   url
-   *          The URL being downloaded
-   * @param   iconURL
-   *          The URL to the icon of this file
-   * @param   type
-   *          The nsIUpdateItem type of the item being downloaded
+   * @param   addon
+   *          An object implementing nsIUpdateItem for the item to be downloaded
    * @param   id
    *          The integer identifier of this transaction
    */
-  addDownload: function(name, url, iconURL, type, id) {
-    this._downloads.push({ url: url, type: type, waiting: true });
-    this._manager.datasource.addDownload(name, url, iconURL, type);
+  addDownload: function(addon, id) {
+    this._downloads.push({ addon: addon, waiting: true });
+    this._manager.datasource.addDownload(addon);
     this.id = id;
   },
   
@@ -4813,8 +4856,10 @@ ItemDownloadTransaction.prototype = {
    * Remove all downloads from this transaction
    */
   removeAllDownloads: function() {
-    for (var i = 0; i < this._downloads.length; ++i)
-      this.removeDownload(this._downloads[i].url, this._downloads[i].type);
+    for (var i = 0; i < this._downloads.length; ++i) {
+      var addon = this._downloads[i].addon;
+      this.removeDownload(addon.xpiURL, addon.type);
+    }
   },
   
   /**
@@ -4825,7 +4870,7 @@ ItemDownloadTransaction.prototype = {
    */
   containsURL: function(url) {
     for (var i = 0; i < this._downloads.length; ++i) {
-      if (this._downloads[i].url == url)
+      if (this._downloads[i].addon.xpiURL == url)
         return true;
     }
     return false;
@@ -4835,14 +4880,15 @@ ItemDownloadTransaction.prototype = {
    * See nsIXPIProgressDialog.idl
    */
   onStateChange: function(index, state, value) {
-    this._manager.onStateChange(this, this._downloads[index].url, state, value);
+    this._manager.onStateChange(this, this._downloads[index].addon, 
+                                state, value);
   },
   
   /**
    * See nsIXPIProgressDialog.idl
    */
   onProgress: function(index, value, maxValue) { 
-    this._manager.onProgress(this._downloads[index].url, value, maxValue);
+    this._manager.onProgress(this._downloads[index].addon, value, maxValue);
   },
   
   /////////////////////////////////////////////////////////////////////////////
@@ -4852,6 +4898,43 @@ ItemDownloadTransaction.prototype = {
         !iid.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
+  }
+};
+
+/**
+ * A listener object to the update check process that routes notifications to
+ * the right places and keeps the datasource up to date.
+ */
+function AddonUpdateCheckListener(listener, datasource) {
+  this._listener = listener;
+  this._ds = datasource;
+}
+AddonUpdateCheckListener.prototype = {
+  _listener: null,
+  _ds: null,
+  
+  onUpdateStarted: function() {
+    if (this._listener)
+      this._listener.onUpdateStarted();
+    this._ds.onUpdateStarted();
+  },
+  
+  onUpdateEnded: function() {
+    if (this._listener)
+      this._listener.onUpdateEnded();
+    this._ds.onUpdateEnded();
+  },
+  
+  onAddonUpdateStarted: function(addon) {
+    if (this._listener)
+      this._listener.onAddonUpdateStarted(addon);
+    this._ds.onAddonUpdateStarted(addon);
+  },
+  
+  onAddonUpdateEnded: function(addon, status) {
+    if (this._listener)
+      this._listener.onAddonUpdateEnded(addon, status);
+    this._ds.onAddonUpdateEnded(addon, status);
   }
 };
 
@@ -4876,9 +4959,10 @@ ExtensionItemUpdater.prototype = {
   _em                 : null,
   _versionUpdateOnly  : 0,
   _items              : [],
+  _listener           : null,
   
   /////////////////////////////////////////////////////////////////////////////
-  // nsIExtensionItemUpdater
+  // ExtensionItemUpdater
   //
   // When we check for updates to an item, there are two pieces of information
   // that are returned - 1) info about the newest available version, if any,
@@ -4906,8 +4990,11 @@ ExtensionItemUpdater.prototype = {
   //      we look ONLY for compatibility updates in this case to determine
   //      whether or not the item can be installed.
   //  
-  checkForUpdates: function(aItems, aItemCount, aVersionUpdateOnly) {
-    gOS.notifyObservers(aItems[0], "Update:Extension:Started", "");
+  checkForUpdates: function(aItems, aItemCount, aVersionUpdateOnly, 
+                            aListener) {
+    this._listener = new AddonUpdateCheckListener(aListener, this._emDS);
+    if (this._listener)
+      this._listener.onUpdateStarted();
     this._versionUpdateOnly = aVersionUpdateOnly;
     this._items = aItems;
     this._responseCount = aItemCount;
@@ -4917,7 +5004,8 @@ ExtensionItemUpdater.prototype = {
 
     for (var i = 0; i < aItemCount; ++i) {
       var e = this._items[i];
-      gOS.notifyObservers(e, "Update:Extension:Item-Started", "");
+      if (this._listener)
+        this._listener.onAddonUpdateStarted(e);
       (new RDFItemUpdater(this)).checkForUpdates(e, aVersionUpdateOnly);
     }
   },
@@ -4926,8 +5014,13 @@ ExtensionItemUpdater.prototype = {
   // ExtensionItemUpdater
   _applyVersionUpdates: function(aLocalItem, aRemoteItem) {
     var r = getResourceForID(aLocalItem.id);
-    if (!r) return;
     var targetAppInfo = this._emDS.getTargetApplicationInfo(aLocalItem.id, this._emDS);
+    // If |targetAppInfo| is null, then this item does not exist in the 
+    // datasource yet, probably because this update check operation was spawned
+    // during a Phone Home operation and the item has not yet been installed.
+    // Return!
+    if (!targetAppInfo) 
+      return;
     if (gVersionChecker.compare(targetAppInfo.maxVersion, aRemoteItem.maxAppVersion) < 0) {
       // Remotely specified maxVersion is newer than the maxVersion 
       // for the installed Extension. Apply that change to the datasources.
@@ -4936,14 +5029,16 @@ ExtensionItemUpdater.prototype = {
 
       // If we got here through |checkForMismatches|, this extension has
       // already been disabled, re-enable it.
-      if (this._emDS.getItemProperty(aLocalItem.id, "disabled") == "true") 
+      var op = StartupCache.entries[aLocalItem.installLocationKey][aLocalItem.id].op;
+      if (op == OP_NEEDS_DISABLE ||
+          this._emDS.getItemProperty(aLocalItem.id, "disabled") == "true")
         this._em.enableItem(aLocalItem.id);
     }
   },
   
   _isValidUpdate: function(aLocalItem, aRemoteItem) {
     var appExtensionsVersion =
-      getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION, gApp.version);
+      getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION, gApp.version);
 
     // Check if the update will only run on a newer version of Firefox. 
     if (aRemoteItem.minAppVersion && 
@@ -4958,23 +5053,24 @@ ExtensionItemUpdater.prototype = {
     return true;
   },
   
-  _checkForDone: function() {
-    if (--this._responseCount == 0) {
-      if (!this._versionUpdateOnly)
-        gPref.setIntPref(PREF_UPDATE_COUNT, this._updateCount); 
-          
-      gOS.notifyObservers(this._items[0], "Update:Extension:Ended", "");
+  checkForDone: function(item, status) {
+    if (this._listener) {
+      try {
+        this._listener.onAddonUpdateEnded(item, status);
+      }
+      catch (e) {
+        LOG("ExtensionItemUpdater:checkForDone: Failure in listener's onAddonUpdateEnded: " + e);
+      }
+    }
+    if (--this._responseCount == 0 && this._listener) {
+      try {
+        this._listener.onUpdateEnded();
+      }
+      catch (e) {
+        LOG("ExtensionItemUpdater:checkForDone: Failure in listener's onUpdateEnded: " + e);
+      }
     }
   },
-  
-  /////////////////////////////////////////////////////////////////////////////
-  // nsISupports
-  QueryInterface: function(iid) {
-    if (!iid.equals(Components.interfaces.nsIExtensionItemUpdater) &&
-        !iid.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }  
 };
 
 function RDFItemUpdater(aUpdater) {
@@ -4990,8 +5086,8 @@ RDFItemUpdater.prototype = {
     // A preference setting can disable updating for this item
     try {
       if (!gPref.getBoolPref(PREF_EM_ITEM_UPDATE_ENABLED.replace(/%UUID%/, aItem.id))) {
-        gOS.notifyObservers(aItem, "Update:Extension:Item-Ended", "update-check-disabled");
-        this._updater._checkForDone();
+        var status = nsIAddonUpdateCheckListener.STATUS_DISABLED;
+        this._updater.checkForDone(aItem, status);
         return;
       }
     }
@@ -5034,8 +5130,8 @@ RDFItemUpdater.prototype = {
     catch (e) {
       LOG("RDFItemUpdater:checkForUpdates: There was an error loading the \r\n" + 
           " update datasource for: " + dsURI + ", item = " + aItem.id + ", error: " + e);
-      gOS.notifyObservers(aItem, "Update:Extension:Item-Error", e);
-      this._updater._checkForDone();
+      this._updater.checkForDone(aItem, 
+                                 nsIAddonUpdateCheckListener.STATUS_FAILURE);
       return;
     }
     var rds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource)
@@ -5160,17 +5256,15 @@ RDFItemUpdater.prototype = {
                           aLocalItem.name, 
                           "", "", "", 
                           aLocalItem.type);
-      if (!this._versionUpdateOnly) {
-        if (this._updater._isValidUpdate(aLocalItem, sameItem)) {
-          // Install-time updates are not written to the DS because there is no
-          // entry yet, EM just uses the notifications to ascertain (by hand)
-          // whether or not there is a remote maxVersion tweak that makes the 
-          // item being installed compatible.
-          this._updater._applyVersionUpdates(aLocalItem, sameItem);
-        }
-        else 
-          sameItem = null;
+      if (this._updater._isValidUpdate(aLocalItem, sameItem)) {
+        // Install-time updates are not written to the DS because there is no
+        // entry yet, EM just uses the notifications to ascertain (by hand)
+        // whether or not there is a remote maxVersion tweak that makes the 
+        // item being installed compatible.
+        this._updater._applyVersionUpdates(aLocalItem, sameItem);
       }
+      else 
+        sameItem = null;
     }
     
     if (newerItem) {
@@ -5180,17 +5274,23 @@ RDFItemUpdater.prototype = {
     if (sameItem) {
       LOG("RDFItemUpdater:onDatasourceLoaded: Found info about the installed\r\n" + 
           "version of this item: " + sameItem.objectSource);
-    }    
-    if (!this._versionUpdateOnly && newerItem)
-      gOS.notifyObservers(newerItem, "Update:Extension:Item-Ended", "update-check-success");
-    else if (this._versionUpdateOnly && sameItem)
-      gOS.notifyObservers(sameItem, "Update:Extension:Item-Ended", "update-check-success");
-    else
-      gOS.notifyObservers(aLocalItem, "Update:Extension:Item-Ended", "update-check-no-update");
-    
-    // Only one call of this._updater._checkForDone is needed for RDF 
+    }
+    var item = null, status = nsIAddonUpdateCheckListener.STATUS_NONE;
+    if (!this._versionUpdateOnly && newerItem) {
+      item = newerItem;
+      status = nsIAddonUpdateCheckListener.STATUS_UPDATE;
+    }
+    else if (this._versionUpdateOnly && sameItem) {
+      item = sameItem;
+      status = nsIAddonUpdateCheckListener.STATUS_VERSIONINFO;
+    }
+    else {
+      item = aLocalItem;
+      status = nsIAddonUpdateCheckListener.STATUS_NO_UPDATE;
+    }
+    // Only one call of this._updater.checkForDone is needed for RDF 
     // responses, since there is only one response per item.
-    this._updater._checkForDone();
+    this._updater.checkForDone(item, status);
   },
 
   // Parses Firefox 0.9 update.rdf format  
@@ -5287,13 +5387,6 @@ RDFItemUpdater.prototype = {
     }
   },
   
-  onDatasourceError: function(aItem, aError) {
-    LOG("RDFItemUpdater:onDatasourceError: There was an error loading the \r\n" + 
-        "the update datasource for item " + aItem.id + ", error: " + aError);
-    gOS.notifyObservers(aItem, "Update:Extension:Item-Error", aError);
-    this._updater._checkForDone();
-  },
-
   /////////////////////////////////////////////////////////////////////////////
   // nsIRDFXMLSinkObserver
   onBeginLoad: function(aSink) {
@@ -5319,9 +5412,14 @@ RDFItemUpdater.prototype = {
   onError: function(aSink, aStatus, aErrorMsg) {
     try {
       aSink.removeXMLSinkObserver(this);
-      this.onDatasourceError(this._item, aStatus.toString());
+      LOG("RDFItemUpdater:onError: There was an error loading the \r\n" + 
+          "the update datasource for item " + this._item.id + ", error: " + aErrorMsg);
     }
-    catch (e) { }
+    catch (e) {
+      LOG("RDFItemUpdater:onError: Failure during onAddonUpdateEnded call");
+    }
+    this._updater.checkForDone(this._item,
+                               nsIAddonUpdateCheckListener.STATUS_FAILURE);
   }
 };
 
@@ -5364,11 +5462,9 @@ ExtensionsDataSource.prototype = {
     if (source.EqualsNode(this._defaultTheme))
       return true;
 
-    var appVersion = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
-                                            gApp.version);
     if (version === undefined) {
-      version = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
-                                       gApp.version);
+      version = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
+                        gApp.version);
     }              
     var appID = gApp.ID;
     
@@ -5537,7 +5633,7 @@ ExtensionsDataSource.prototype = {
                     targetAppInfo ? targetAppInfo.minVersion : "",
                     targetAppInfo ? targetAppInfo.maxVersion : "",
                     this.getItemProperty(id, "name"),
-                    "", /* XPI Update URL */
+                    this.getItemProperty(id, "availableUpdateURL"),
                     this.getItemProperty(id, "iconURL"), 
                     this.getItemProperty(id, "updateURL"), 
                     this.getItemProperty(id, "type"));
@@ -5715,17 +5811,21 @@ ExtensionsDataSource.prototype = {
    *                          that this item can run in
    *          "maxVersion"    The maximum version of the target application
    *                          that this item can run in
+   *          or null, if no target application data exists for the specified
+   *          id in the supplied datasource.
    */
   getTargetApplicationInfo: function(id, datasource) {
     // The default theme is always compatible. 
     if (getResourceForID(id).EqualsNode(this._defaultTheme)) {
-      var ver = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
-                                       gApp.version);
+      var ver = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
+                        gApp.version);
       return { minVersion: ver, maxVersion: ver };
     }
     var appID = gApp.ID;
     var r = getResourceForID(id);
     var targetApps = datasource.GetTargets(r, EM_R("targetApplication"), true);
+    if (!targetApps)
+      return null;
     if (!targetApps.hasMoreElements())
       targetApps = datasource.GetTargets(gInstallManifestRoot, EM_R("targetApplication"), true); 
     while (targetApps.hasMoreElements()) {
@@ -6071,22 +6171,19 @@ ExtensionsDataSource.prototype = {
 
   /**
    * Adds an entry representing an active download to the appropriate container
-   * @param   name
-   *          The display name of the file being downloaded
-   * @param   url
-   *          The URL string of the file being downloaded
-   * @param   iconURL
-   *          The URL string of the icon for the file being downloaded
-   * @param   type
-   *          The nsIUpdateItem type of the item
+   * @param   addon
+   *          An object implementing nsIUpdateItem for the addon being 
+   *          downloaded.
    */
-  addDownload: function(name, url, iconURL, type) {
-    var res = gRDF.GetResource(url);
-    this._setProperty(this._inner, res, EM_R("name"), EM_L(name));
-    this._setProperty(this._inner, res, EM_R("version"), EM_L(" "));
-    this._setProperty(this._inner, res, EM_R("iconURL"), EM_L(iconURL));
-    this._setProperty(this._inner, res, EM_R("downloadURL"), EM_L(url));
-    this._setProperty(this._inner, res, EM_R("type"), EM_I(type));
+  addDownload: function(addon) {
+    if (addon.id != addon.xpiURL)
+      return;
+    var res = gRDF.GetResource(addon.xpiURL);
+    this._setProperty(this._inner, res, EM_R("name"), EM_L(addon.name));
+    this._setProperty(this._inner, res, EM_R("version"), EM_L(addon.version));
+    this._setProperty(this._inner, res, EM_R("iconURL"), EM_L(addon.iconURL));
+    this._setProperty(this._inner, res, EM_R("downloadURL"), EM_L(addon.xpiURL));
+    this._setProperty(this._inner, res, EM_R("type"), EM_I(addon.type));
 
     var ctr = getContainer(this._inner, this._itemRoot);
     if (ctr.IndexOf(res) == -1)
@@ -6144,7 +6241,8 @@ ExtensionsDataSource.prototype = {
   removeDownload: function(url) {
     var res = gRDF.GetResource(url);
     var ctr = getContainer(this._inner, this._itemRoot);
-    ctr.RemoveElement(res, true);
+    if (ctr.IndexOf(res) != -1) 
+      ctr.RemoveElement(res, true);
     this._cleanResource(res);
     this.Flush();
   },
@@ -6229,6 +6327,54 @@ ExtensionsDataSource.prototype = {
     this._buildVisibleItemList();
   },
   
+  /**
+   * A hash of Addon IDs that we are currently looking for updates to. 
+   */
+  _updateURLs: { },
+  
+  /**
+   * See nsIExtensionManager.idl
+   */
+  onUpdateStarted: function() {
+    LOG("Datasource: Update Started");
+  },
+  
+  /**
+   * See nsIExtensionManager.idl
+   */
+  onUpdateEnded: function() {
+    LOG("Datasource: Update Ended");
+    this._updateURLs = { };
+  },
+  
+  /**
+   * See nsIExtensionManager.idl
+   */
+  onAddonUpdateStarted: function(addon) {
+    LOG("Datasource: Addon Update Started: " + addon.id);
+    this._updateURLs[addon.id] = addon.id;
+    this.updateProperty(addon.id, "availableUpdateURL");
+    this.updateProperty(addon.id, "displayDescription");
+  },
+  
+  /**
+   * See nsIExtensionManager.idl
+   */
+  onAddonUpdateEnded: function(addon, status) {
+    LOG("Datasource: Addon Update Ended: " + addon.id + ", status: " + status);
+    this._updateURLs[addon.id] = null;
+    var url = null, version = null;
+    var updateAvailable = status == nsIAddonUpdateCheckListener.STATUS_UPDATE;
+    if (updateAvailable) {
+      url = EM_L(addon.xpiURL);
+      version = EM_L(addon.version);
+    }
+    this.setItemProperty(addon.id, EM_R("availableUpdateURL"), url);
+    this.updateProperty(addon.id, "availableUpdateURL");
+    this.setItemProperty(addon.id, EM_R("availableUpdateVersion"), version);
+    this.updateProperty(addon.id, "displayDescription");
+  },
+
   /////////////////////////////////////////////////////////////////////////////
   // nsIRDFDataSource
   get URI() {
@@ -6331,8 +6477,8 @@ ExtensionsDataSource.prototype = {
       return EM_L("false");
     getVersionChecker();
     
-    var appVersion = getCharPrefWithDefault(PREF_EM_APP_EXTENSIONS_VERSION,
-                                            gApp.version);
+    var appVersion = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
+                             gApp.version);
     if (gVersionChecker.compare(targetAppInfo.maxVersion, appVersion) < 0 || 
         gVersionChecker.compare(appVersion, targetAppInfo.minVersion) < 0) {
       // OK, this item is incompatible. 
@@ -6340,6 +6486,17 @@ ExtensionsDataSource.prototype = {
     }
     return EM_L("true");
   }, 
+  
+  /** 
+   * Gets the em:availableUpdateURL - the URL to an XPI update package, if
+   * present, or a literal string "novalue" if there is no update XPI URL.
+   */
+  _rdfGet_availableUpdateURL: function(item, property) {
+    var value = this._inner.GetTarget(item, property, true);
+    if (!value) 
+      return EM_L("none");
+    return value;
+  },
 
   /**
    * Get the em:displayDescription property (description that is displayed 
@@ -6355,6 +6512,14 @@ ExtensionsDataSource.prototype = {
     function getLiteral(key, string1, string2) {
       return EM_L(extensionsStrings.formatStringFromName(key, 
                   [string1, string2], 2));
+    }
+    if (id in this._updateURLs && this._updateURLs[id])
+      return getLiteral("updatingMessage", itemName, BundleManager.appName);
+    var node = this._inner.GetTarget(item, EM_R("availableUpdateURL"), true); 
+    if (node) {
+      var version = this.getItemProperty(id, "availableUpdateVersion");
+      return getLiteral("updateAvailableMessage", itemName, 
+                        version);
     }
     var key = this.getItemProperty(id, "installLocation");
     if (key in StartupCache.entries && id in StartupCache.entries[key] &&
@@ -6481,7 +6646,7 @@ ExtensionsDataSource.prototype = {
     catch (e) { }
 
     var installLocation = InstallLocations.get(this.getInstallLocationKey(id));
-    if (!installLocation.canAccess)
+    if (!installLocation || !installLocation.canAccess)
       return EM_L("false");
 
     return EM_L("true");

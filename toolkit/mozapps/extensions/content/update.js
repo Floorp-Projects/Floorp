@@ -36,7 +36,7 @@
 # ***** END LICENSE BLOCK *****
 
 //
-// window.arguments[1...] is an array of nsIUpdateItem implementing objects 
+// window.arguments[...] is an array of nsIUpdateItem implementing objects 
 // that are to be updated. 
 //  * if the array is empty, all items are updated (like a background update
 //    check)
@@ -65,14 +65,11 @@
 //    In this mode, the wizard is opened to panel 'checking'.
 //
 
-const nsIUpdateItem       = Components.interfaces.nsIUpdateItem;
+const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
+const nsIAUCL = Components.interfaces.nsIAddonUpdateCheckListener;
 
 const PREF_UPDATE_EXTENSIONS_ENABLED            = "extensions.update.enabled";
 const PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED  = "extensions.update.autoUpdateEnabled";
-const PREF_UPDATE_EXTENSIONS_COUNT              = "extensions.update.count";
-const PREF_UPDATE_EXTENSIONS_SEVERITY_THRESHOLD = "extensions.update.severity.threshold";
-
-const PREF_UPDATE_SEVERITY                      = "update.severity";
 
 var gShowMismatch = null;
 var gUpdateTypes  = null;
@@ -94,35 +91,22 @@ var gUpdateWizard = {
   
   init: function ()
   {
-    gUpdateTypes = window.arguments[0];
-    gShowMismatch = window.arguments[1];
-
-    var items = window.arguments;
-    if (window.arguments.length == 2) {
+    this.items = window.arguments;
+    if (this.items.length == 0) {
       var em = Components.classes["@mozilla.org/extensions/manager;1"]
                          .getService(Components.interfaces.nsIExtensionManager);
-      items = [0,0].concat(em.getUpdateableItemList(gUpdateTypes, { }));
+      this.items = em.getUpdateableItemList(nsIUpdateItem.TYPE_ADDON, { });
     }
-    
-    for (var i = 2; i < items.length; ++i)
-      this.items.push(items[i].QueryInterface(nsIUpdateItem));
 
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    this.shouldSuggestAutoChecking = gShowMismatch && 
-                                     !pref.getBoolPref(PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED);
+    var pref = 
+        Components.classes["@mozilla.org/preferences-service;1"].
+        getService(Components.interfaces.nsIPrefBranch);
+    this.shouldSuggestAutoChecking = 
+      gShowMismatch && 
+      !pref.getBoolPref(PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED);
 
-    if (gShowMismatch) 
-      gMismatchPage.init();
-    else
-      document.documentElement.advance();
-  },
-  
-  uninit: function ()
-  {
-    // Ensure all observers are unhooked, just in case something goes wrong or the
-    // user aborts. 
-    gUpdatePage.uninit();  
+    document.documentElement.currentPage = 
+      document.getElementById("versioninfo");
   },
   
   onWizardFinish: function ()
@@ -131,24 +115,6 @@ var gUpdateWizard = {
                          .getService(Components.interfaces.nsIPrefBranch);
     if (this.shouldSuggestAutoChecking)
       pref.setBoolPref(PREF_EXTENSIONS_UPDATE_ENABLED, this.shouldAutoCheck); 
-    
-    if (this.succeeded) {
-      // Downloading and Installed Extension
-      this.clearExtensionUpdatePrefs();
-    }
-
-    // Send an event to refresh any FE notification components. 
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
-    os.notifyObservers(null, "Update:Ended", "1");
-  },
-  
-  clearExtensionUpdatePrefs: function ()
-  {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    if (pref.prefHasUserValue(PREF_UPDATE_EXTENSIONS_COUNT)) 
-      pref.clearUserPref(PREF_UPDATE_EXTENSIONS_COUNT);
   },
   
   _setUpButton: function (aButtonID, aButtonKey, aDisabled)
@@ -211,36 +177,89 @@ var gUpdateWizard = {
   }
 };
 
-var gMismatchPage = {
-  init: function ()
+var gVersionInfoPage = {
+  _completeCount: 0,
+  _totalCount: 0,
+  onPageShow: function ()
   {
-    var incompatible = document.getElementById("mismatch.incompatible");
-    for (var i = 0; i < gUpdateWizard.items.length; ++i) {
-      var item = gUpdateWizard.items[i];
-      var listitem = document.createElement("listitem");
-      listitem.setAttribute("label", item.name + " " + item.version);
-      incompatible.appendChild(listitem);
+    gUpdateWizard.setButtonLabels(null, true, 
+                                  "nextButtonText", true, 
+                                  "cancelButtonText", false);
+    var em = Components.classes["@mozilla.org/extensions/manager;1"]
+                       .getService(Components.interfaces.nsIExtensionManager);
+    em.update(gUpdateWizard.items, gUpdateWizard.items.length, true, this);
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIAddonUpdateCheckListener
+  onUpdateStarted: function() {
+    this._totalCount = gUpdateWizard.items.length;
+  },
+  
+  onUpdateEnded: function() {
+    if (gUpdateWizard.items.length > 0) {
+      // There are still incompatible addons, inform the user.
+      document.documentElement.currentPage = 
+        document.getElementById("mismatch");
+    }
+    else {
+      // VersionInfo compatibility updates resolved all compatibility problems,
+      // close this window and continue starting the application...
+      close();
     }
   },
   
+  onAddonUpdateStarted: function(addon) {
+  },
+  
+  onAddonUpdateEnded: function(addon, status) {
+    if (status == nsIAUCL.STATUS_VERSIONINFO) {
+      for (var i = 0; i < gUpdateWizard.items.length; ++i) {
+        var item = gUpdateWizard.items[i].QueryInterface(nsIUpdateItem);
+        if (addon.id == item.id) {
+          gUpdateWizard.items.splice(i, 1);
+          break;
+        }
+      }
+    }
+    ++this._completeCount;
+
+    // Update the status text and progress bar
+    var progress = document.getElementById("versioninfo.progress");
+    progress.mode = "normal";
+    progress.value = Math.ceil((this._completeCount / this._totalCount) * 100);
+  },
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // nsISupports
+  QueryInterface: function(iid) {
+    if (!iid.equals(Components.interfaces.nsIAddonUpdateCheckListener) && 
+        !iid.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
+
+var gMismatchPage = {
   onPageShow: function ()
   {
     gUpdateWizard.setButtonLabels(null, true, 
                                   "mismatchCheckNow", false, 
                                   "mismatchDontCheck", false);
     document.documentElement.getButton("next").focus();
+
+    var incompatible = document.getElementById("mismatch.incompatible");
+    for (var i = 0; i < gUpdateWizard.items.length; ++i) {
+      var item = gUpdateWizard.items[i].QueryInterface(nsIUpdateItem);
+      var listitem = document.createElement("listitem");
+      listitem.setAttribute("label", item.name + " " + item.version);
+      incompatible.appendChild(listitem);
+    }
   }
 };
 
 var gUpdatePage = {
   _completeCount: 0,
-  _messages: ["Update:Extension:Started", 
-              "Update:Extension:Ended", 
-              "Update:Extension:Item-Started", 
-              "Update:Extension:Item-Ended",
-              "Update:Extension:Item-Error",
-              "Update:Ended"],
-  
   onPageShow: function ()
   {
     gUpdateWizard.setButtonLabels(null, true, 
@@ -248,108 +267,56 @@ var gUpdatePage = {
                                   "cancelButtonText", false);
     document.documentElement.getButton("next").focus();
 
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
-    for (var i = 0; i < this._messages.length; ++i)
-      os.addObserver(this, this._messages[i], false);
-
     gUpdateWizard.errorItems = [];
     
     var em = Components.classes["@mozilla.org/extensions/manager;1"]
                        .getService(Components.interfaces.nsIExtensionManager);
-    em.update(gUpdateWizard.items, gUpdateWizard.items.length, false);
+    em.update(gUpdateWizard.items, gUpdateWizard.items.length, false, this);
   },
 
-  _destroyed: false,  
-  uninit: function ()
-  {
-    if (this._destroyed)
-      return;
-  
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
-    for (var i = 0; i < this._messages.length; ++i)
-      os.removeObserver(this, this._messages[i]);
-
-    this._destroyed = true;
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIAddonUpdateCheckListener
+  onUpdateStarted: function() {
   },
-
-  _totalCount: 0,
-  get totalCount()
-  {
-    if (!this._totalCount) {
-      this._totalCount = gUpdateWizard.items.length;
-      if (this._totalCount == 0) {
-        var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                           .getService(Components.interfaces.nsIExtensionManager);
-        if (!gUpdateTypes)
-          gUpdateTypes = nsIUpdateItem.TYPE_ADDON;
-
-        this._totalCount = em.getUpdateableItemList(gUpdateTypes, {}).length;
-      }
-    }
-    return this._totalCount;
-  },  
   
-  observe: function (aSubject, aTopic, aData)
-  {
-    var canFinish = false;
-    switch (aTopic) {
-    case "Update:Extension:Started":
-      break;
-    case "Update:Extension:Item-Started":
-      break;
-    case "Update:Extension:Item-Ended":
-      var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
-      if (aData == "update-check-success")
-        gUpdateWizard.itemsToUpdate.push(item);
-      ++this._completeCount;
-
-      // Update the status text and progress bar
-      var updateStrings = document.getElementById("updateStrings");
-      var status = document.getElementById("checking.status");
-      var statusString = updateStrings.getFormattedString("checkingPrefix", [item.name]);
-      status.setAttribute("value", statusString);
-
-      var progress = document.getElementById("checking.progress");
-      progress.value = Math.ceil((this._completeCount / this.totalCount) * 100);
+  onUpdateEnded: function() {
+    var nextPage = document.getElementById("noupdates");
+    if (gUpdateWizard.itemsToUpdate.length > 0)
+      nextPage = document.getElementById("found");
+    document.documentElement.currentPage = nextPage;
+  },
+  
+  onAddonUpdateStarted: function(addon) {
+  },
+  
+  onAddonUpdateEnded: function(addon, status) {
+    if (status == nsIAUCL.STATUS_UPDATE)
+      gUpdateWizard.itemsToUpdate.push(addon);
+    else if (status == nsIAUCL.STATE_ERROR)
+      gUpdateWizard.errorItems.push(addon);
       
-      break;
-    case "Update:Extension:Item-Error":
-      var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
-      gUpdateWizard.errorItems.push(item);
-      ++this._completeCount;
+    ++this._completeCount;
 
-      // Update the status text and progress bar
-      var updateStrings = document.getElementById("updateStrings");
-      var status = document.getElementById("checking.status");
-      var statusString = updateStrings.getFormattedString("checkingPrefix", [item.name]);
-      status.setAttribute("value", statusString);
+    // Update the status text and progress bar
+    var updateStrings = document.getElementById("updateStrings");
+    var status = document.getElementById("checking.status");
+    var statusString = updateStrings.getFormattedString("checkingPrefix", [addon.name]);
+    status.setAttribute("value", statusString);
 
-      var progress = document.getElementById("checking.progress");
-      progress.value = Math.ceil((this._completeCount / this.totalCount) * 100);
-
-      break;
-    case "Update:Extension:Ended":
-      canFinish = gUpdateWizard.items.length > 0;
-      break;
-    case "Update:Ended":
-      // If we're doing a general update check, (that is, no specific extensions/themes
-      // were passed in for us to check for updates to), this notification means both
-      // extension and app updates have completed.
-      canFinish = true;
-      break;
-    }
-
-    if (canFinish) {
-      gUpdatePage.uninit();
-      if ((gUpdateTypes & nsIUpdateItem.TYPE_ADDON && gUpdateWizard.itemsToUpdate.length > 0))
-        document.getElementById("checking").setAttribute("next", "found");
-      document.documentElement.advance();
-    }
+    var progress = document.getElementById("checking.progress");
+    progress.value = Math.ceil((this._completeCount / gUpdateWizard.items.length) * 100);
+  },
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // nsISupports
+  QueryInterface: function(iid) {
+    if (!iid.equals(Components.interfaces.nsIAddonUpdateCheckListener) && 
+        !iid.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
   }
 };
-
+ 
 var gFoundPage = {
   _nonAppItems: [],
   
@@ -396,11 +363,8 @@ var gFoundPage = {
     var updates = document.getElementById("found.updates");
     if (!this._initialized) {
       this._initialized = true;
-      
       updates.computeSizes();
-
-      if (gUpdateTypes & nsIUpdateItem.TYPE_ADDON)
-        this.buildAddons();
+      this.buildAddons();
     }
         
     var kids = updates._getRadioChildren();

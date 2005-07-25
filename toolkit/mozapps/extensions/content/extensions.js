@@ -69,10 +69,12 @@ const OP_NEEDS_UNINSTALL              = "needs-uninstall";
 const OP_NEEDS_ENABLE                 = "needs-enable";
 const OP_NEEDS_DISABLE                = "needs-disable";
 
-const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
-
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions 
+
+function LOG(msg) {
+  dump("*** " + msg + "\n");
+}
 
 function getIDFromResourceURI(aURI) 
 {
@@ -136,6 +138,13 @@ function onExtensionSelect(aEvent)
     aEvent.target.removeAttribute("last-selected");
 }
 
+function onExtensionUpdateNow(aEvent)
+{
+  var item = gExtensionManager.getItemForID(getIDFromResourceURI(
+    aEvent.target.id));
+  gExtensionManager.addDownloads([item], 1);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Startup, Shutdown
 function Startup() 
@@ -161,6 +170,7 @@ function Startup()
 
   // This persists the last-selected extension
   gExtensionsView.addEventListener("select", onExtensionSelect, false);
+  gExtensionsView.addEventListener("extension-updatenow", onExtensionUpdateNow, false);
 
   // Finally, update the UI. 
   gExtensionsView.database.AddDataSource(gExtensionManager.datasource);
@@ -227,14 +237,17 @@ function Startup()
                      .getService(Components.interfaces.nsIObserverService);
   os.addObserver(gDownloadManager, "xpinstall-download-started", false);
 
-  gObserverIndex = gExtensionManager.addDownloadListener(gDownloadManager);
+  gObserverIndex = gExtensionManager.addUpdateListener(gDownloadManager);
   
   if ("arguments" in window) {
     try {
       var params = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
       gDownloadManager.addDownloads(params);
     }
-    catch (e) { }
+    catch (e) {
+      if (window.arguments[0] == "updatecheck")
+        performUpdate();
+    }
   }
   
   // Set the tooltips
@@ -253,10 +266,11 @@ function Shutdown()
     gExtensionsView.removeEventListener("select", onThemeSelect, false);
   
   gExtensionsView.removeEventListener("select", onExtensionSelect, false);
+  gExtensionsView.removeEventListener("extension-updatenow", onExtensionUpdateNow, false);
 
   gExtensionsView.database.RemoveDataSource(gExtensionManager.datasource);
 
-  gExtensionManager.removeDownloadListenerAt(gObserverIndex);
+  gExtensionManager.removeUpdateListenerAt(gObserverIndex);
 
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Components.interfaces.nsIObserverService);
@@ -332,18 +346,21 @@ XPInstallDownloadManager.prototype = {
     gExtensionManager.addDownloads(items, items.length);
     gExtensionsView.scrollBoxObject.ensureElementIsVisible(gExtensionsView.lastChild);
   },
-
-  removeDownload: function (aEvent)
+  
+  getElementForAddon: function(aAddon) 
   {
-  
+    var element = document.getElementById(PREFIX_ITEM_URI + aAddon.id);
+    if (aAddon.id == aAddon.xpiURL)
+      element = document.getElementById(aAddon.xpiURL);
+    return element;
   },
-  
+
   /////////////////////////////////////////////////////////////////////////////  
-  // nsIExtensionDownloadListener
-  onStateChange: function (aURL, aState, aValue)
+  // nsIAddonUpdateListener
+  onStateChange: function (aAddon, aState, aValue)
   {
     const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
-    var element = document.getElementById(aURL);
+    var element = this.getElementForAddon(aAddon);
     if (!element) return;
     switch (aState) {
       case nsIXPIProgressDialog.DOWNLOAD_START:
@@ -366,7 +383,7 @@ XPInstallDownloadManager.prototype = {
                              extensionsStrings.getString("installInstalling"));
         break;
       case nsIXPIProgressDialog.INSTALL_DONE:
-        dump("*** state change = " + aURL + ", state = " + aState + ", value = " + aValue + "\n");
+        dump("*** state change = " + aAddon.xpiURL + ", state = " + aState + ", value = " + aValue + "\n");
         element.setAttribute("state", "done");
         extensionsStrings = document.getElementById("extensionsStrings");
         element.setAttribute("description",
@@ -387,7 +404,7 @@ XPInstallDownloadManager.prototype = {
 
           var brandStrings = sbs.createBundle("chrome://branding/locale/brand.properties");
           var brandShortName = brandStrings.GetStringFromName("brandShortName");
-          var params = [brandShortName, aURL, msg];
+          var params = [brandShortName, aAddon.xpiURL, msg];
           var message = extensionStrings.formatStringFromName("errorInstallMsg", params, params.length);
 
           var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
@@ -395,10 +412,11 @@ XPInstallDownloadManager.prototype = {
           ps.alert(window, title, message);
           element.setAttribute("status", msg);
         }
-        // Remove the dummy, since we installed successfully
+        // Remove the dummy, since we installed successfully (only if we're a URL, 
+        // not a download operation on an existing item.
         var type = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION
                                                 : nsIUpdateItem.TYPE_THEME;
-        gExtensionManager.removeDownload(aURL);
+        gExtensionManager.removeDownload(aAddon.xpiURL);
         break;
       case nsIXPIProgressDialog.DIALOG_CLOSE:
         break;
@@ -406,13 +424,13 @@ XPInstallDownloadManager.prototype = {
   },
   
   _urls: { },
-  onProgress: function (aURL, aValue, aMaxValue)
+  onProgress: function (aAddon, aValue, aMaxValue)
   {
-    var element = document.getElementById(aURL);
+    var element = this.getElementForAddon(aAddon);
     if (!element) return;
     var percent = Math.round((aValue / aMaxValue) * 100);
-    if (percent > 1 && !(aURL in this._urls)) {
-      this._urls[aURL] = true;
+    if (percent > 1 && !(aAddon.xpiURL in this._urls)) {
+      this._urls[aAddon.xpiURL] = true;
       element.setAttribute("state", "downloading");
     }
     element.setAttribute("progress", percent);
@@ -467,12 +485,118 @@ XPInstallDownloadManager.prototype = {
   // nsISupports
   QueryInterface: function (aIID) 
   {
-    if (!aIID.equals(Components.interfaces.nsIExtensionDownloadListener) &&
+    if (!aIID.equals(Components.interfaces.nsIAddonUpdateListener) &&
         !aIID.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
   }
 };
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Update Listener
+//
+function UpdateCheckListener() {
+  this._addons = [];
+}
+UpdateCheckListener.prototype = {
+  /**
+   * A list of addons we've found updates to in this update check transaction.
+   */
+  _addons: [],
+  
+  /**
+   * See nsIExtensionManager.idl
+   */
+  onUpdateStarted: function() {
+    LOG("Update Started");
+    var command = document.getElementById("cmd_update");
+    command.setAttribute("disabled", "true");
+  },
+  
+  /**
+   * See nsIExtensionManager.idl
+   */
+  onUpdateEnded: function() {
+    LOG("Update Ended");
+    var command = document.getElementById("cmd_update");
+    gExtensionsViewController.updateCommand(command);
+    
+    // Show message to user listing extensions for which updates are available
+    // and prompt to install now.
+    if (this._addons.length > 1) {
+      var strings = document.getElementById("extensionsStrings");
+      var brandName = document.getElementById("brandStrings").getString("brandShortName");
+      var params = {
+        message1: strings.getFormattedString("updatesAvailableMessage1",
+                                             [brandName]),
+        message2: strings.getString("updatesAvailableMessage2"),
+        title: strings.getString("updatesAvailableTitle"),
+        buttons: {
+          accept: { label: strings.getString("updatesAvailableAccept"),
+                    focused: true },
+          cancel: { label: strings.getString("updatesAvailableCancel") }
+        }
+      }
+      var names = [];
+      for (var i = 0; i < this._addons.length; ++i) {
+        var addon = this._addons[i];
+        var existingItem = gExtensionManager.getItemForID(addon.id);
+        var name = strings.getFormattedString("itemFormat", 
+                                              [this._addons[i].name, 
+                                               existingItem.version,
+                                               this._addons[i].version]);
+        names.push(name);
+      }
+      openDialog("chrome://mozapps/content/extensions/list.xul", "", 
+                 "titlebar,modal", names, params);
+      if (params.result == "accept") 
+        gExtensionManager.addDownloads(this._addons, this._addons.length);
+    }
+  },
+  
+  /**
+   * See nsIExtensionManager.idl
+   */
+  onAddonUpdateStarted: function(addon) {
+    LOG("Addon Update Started: " + addon.id);
+    var element = document.getElementById(PREFIX_ITEM_URI + addon.id);
+    element.setAttribute("loading", "true");
+  },
+  
+  /**
+   * See nsIExtensionManager.idl
+   */
+  onAddonUpdateEnded: function(addon, status) {
+    LOG("Addon Update Ended: " + addon.id + ", status: " + status);
+    var element = document.getElementById(PREFIX_ITEM_URI + addon.id);
+    element.removeAttribute("loading");
+    const nsIAUCL = Components.interfaces.nsIAddonUpdateCheckListener;
+    var strings = document.getElementById("extensionsStrings");
+    switch (status) {
+    case nsIAUCL.STATUS_UPDATE:
+      this._addons.push(addon);
+      break;
+    case nsIAUCL.STATUS_FAILURE:
+      element.setAttribute("description", strings.getString("updateFailedMsg"));
+      break;
+    case nsIAUCL.STATUS_DISABLED:
+      element.setAttribute("description", strings.getString("updateDisabledMsg")); 
+      break;
+    }
+  },
+  
+  /**
+   * See nsISupports.idl
+   */
+  QueryInterface: function(iid) {
+    if (!iid.equals(Components.interfaces.nsIAddonUpdateCheckListener) &&
+        !iid.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -712,6 +836,10 @@ function canWriteToLocation(element)
   return installLocation ? installLocation.canAccess : false;
 }
 
+function performUpdate()
+{
+  gExtensionsViewController.commands.cmd_update(null);
+}
 
 var gExtensionsViewController = {
   supportsCommand: function (aCommand)
@@ -810,13 +938,16 @@ var gExtensionsViewController = {
   onCommandUpdate: function ()
   {
     var extensionsCommands = document.getElementById("extensionsCommands");
-    for (var i = 0; i < extensionsCommands.childNodes.length; ++i) {
-      var command = extensionsCommands.childNodes[i];
-      if (this.isCommandEnabled(command.id))
-        command.removeAttribute("disabled");
-      else
-        command.setAttribute("disabled", "true");
-    }
+    for (var i = 0; i < extensionsCommands.childNodes.length; ++i)
+      this.updateCommand(extensionsCommands.childNodes[i]);
+  },
+  
+  updateCommand: function (command) 
+  {
+    if (this.isCommandEnabled(command.id))
+      command.removeAttribute("disabled");
+    else
+      command.setAttribute("disabled", "true");
   },
   
   commands: { 
@@ -913,29 +1044,15 @@ var gExtensionsViewController = {
     
     cmd_update: function (aSelectedItem)
     { 
-      var id = aSelectedItem ? getIDFromResourceURI(aSelectedItem.id) : null;
-      var itemType = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION : nsIUpdateItem.TYPE_THEME;
-      var items = id ? [gExtensionManager.getItemForID(id)] : [];
-      
-      var ary = Components.classes["@mozilla.org/supports-array;1"]
-                          .createInstance(Components.interfaces.nsISupportsArray);
-      var updateTypes = Components.classes["@mozilla.org/supports-PRUint8;1"]
-                                  .createInstance(Components.interfaces.nsISupportsPRUint8);
-      updateTypes.data = itemType;
-      ary.AppendElement(updateTypes);
-      var sourceEvent = Components.classes["@mozilla.org/supports-PRBool;1"]
-                                  .createInstance(Components.interfaces.nsISupportsPRBool);
-      sourceEvent.data = false;
-      ary.AppendElement(sourceEvent);
-      for (var i = 0; i < items.length; ++i)
-        ary.AppendElement(items[i]);
-
-      var features = "chrome,centerscreen,dialog,titlebar";
-      // This *must* be modal so as not to break startup! This code is invoked before
-      // the main event loop is initiated (via checkForMismatches).
-      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                         .getService(Components.interfaces.nsIWindowWatcher);
-      ww.openWindow(window, URI_EXTENSION_UPDATE_DIALOG, "", features, ary);
+      var items = [];
+      if (!aSelectedItem)
+        items = gExtensionManager.getItemList(gItemType, { });
+      else {
+        var id = getIDFromResourceURI(aSelectedItem.id);
+        items = [gExtensionManager.getItemForID(id)];
+      }
+      var listener = new UpdateCheckListener();
+      gExtensionManager.update(items, items.length, false, listener);
     },
 
     cmd_uninstall: function (aSelectedItem)

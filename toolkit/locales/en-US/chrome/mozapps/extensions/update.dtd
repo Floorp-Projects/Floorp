@@ -79,9 +79,6 @@
 <!ENTITY  resolveMaxVersion.title         "Checking for Compatible Extensions and Themes...">
 <!ENTITY  resolveMaxVersion.intro1.label  "&brandShortName; is checking for compatibility updates to your Extensions and Themes...">
 
-<!ENTITY  restart.title                   "Upgrade Complete">
-<!ENTITY  restart.updated.label           "&brandShortName; successfully downloaded and installed updates. You will have to restart &brandShortName; to complete the update.">
-
-<!ENTITY  resetHomepage.label             "Use &brandShortName; Start as my Home Page">
-<!ENTITY  resetHomepage.accesskey         "H">
+<!ENTITY  versioninfo.title               "Compatibility Updates">
+<!ENTITY  versioninfo.intro               "Checking for compatibility updates to your Extensions...">
 
