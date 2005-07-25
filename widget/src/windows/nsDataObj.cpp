@@ -1249,8 +1249,10 @@ nsDataObj :: BuildPlatformHTML ( const char* inOurHTML, char** outPlatformHTML )
   clipboardString.Append(endFragPrefix);
   clipboardString.Append(nsPrintfCString("%08u", endFragOffset));
 
-  clipboardString.Append(startSourceURLPrefix);
-  clipboardString.Append(mSourceURL);
+  if (kSourceURLLength > 0) {
+    clipboardString.Append(startSourceURLPrefix);
+    clipboardString.Append(mSourceURL);
+  }
 
   clipboardString.Append(endFragTrailer);
 
