@@ -1321,7 +1321,7 @@ UpdateManager.prototype = {
     return this._activeUpdate;
   },
   set activeUpdate(activeUpdate) {
-      this._addUpdate(this._activeUpdate);
+    this._addUpdate(this._activeUpdate);
     this._activeUpdate = activeUpdate;
     if (!activeUpdate) {
       // If |activeUpdate| is null, we have updated both lists - the active list
