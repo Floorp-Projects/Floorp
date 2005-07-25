@@ -20,7 +20,7 @@ released on {$addon->VersionDateAdded|date_format}
 <p>{$addon->Description}</p>
 
 <p class="requires">
-Requires: {$addon->AppName} 1.0 - 1.0+ <img src="{$config.webpath}/img/{$addon->AppName|lower}_icon.png" width="34" height="34" alt="{$addon->AppName}">
+Requires: {$addon->AppName} {$addon->MinAppVer} - {$addon->MaxAppVer} <img src="{$config.webpath}/img/{$addon->AppName|lower}_icon.png" width="34" height="34" alt="{$addon->AppName}">
 </p>
 
 <div class="key-point install-box">
