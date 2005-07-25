@@ -1,4 +1,4 @@
-<!--
+<?xml version="1.0"?>
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,15 +12,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Password Manager.
+# The Original Code is Mozilla.org code.
 #
-# The Initial Developer of the Original Code is
-# Brian Ryner.
-# Portions created by the Initial Developer are Copyright (C) 2003
+# The Initial Developer of the Original Code is Asaf Romano
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
+#   Asaf Romano <mozilla.mano@sent.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,19 +34,17 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
--->
 
-<!ENTITY      windowtitle.label               "Password Manager">
-<!ENTITY      tab.signonsstored.label         "Passwords Saved">
-<!ENTITY      tab.signonsnotstored.label      "Passwords Never Saved">
+<overlay id="downloadManagerOverlay"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<!ENTITY      spiel.signonsstored.label       "Password Manager has saved login information for the following sites:">
-<!ENTITY      spiel.signonsnotstored.label    "Password Manager will never save login information for the following sites:">
+<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
 
-<!ENTITY      treehead.site.label             "Site">
-<!ENTITY      treehead.username.label         "Username">
-<!ENTITY      treehead.password.label         "Password">
-<!ENTITY      remove.label                    "Remove">
-<!ENTITY      remove.accesskey                "R">
-<!ENTITY      removeall.label                 "Remove All">
-<!ENTITY      removeall.accesskey             "A">
+<window id="downloadManager">
+
+#include browserMountPoints.inc
+
+</window>
+
+</overlay>

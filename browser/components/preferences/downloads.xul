@@ -76,9 +76,11 @@
       <radiogroup id="askOnSave" flex="1"
                   preference="browser.download.useDownloadDir"
                   onsyncfrompreference="return gDownloadsPane.onReadUseDownloadDir();">
-        <radio id="alwaysAsk" label="&alwaysAsk.label;" value="false"/>
+        <radio id="alwaysAsk" label="&alwaysAsk.label;"
+               accesskey="&alwaysAsk.accesskey;" value="false"/>
         <vbox flex="1">
-          <radio id="neverAsk" label="&neverAsk.label;" value="true"/>
+          <radio id="neverAsk" label="&neverAsk.label;"
+                 accesskey="&neverAsk.accesskey;" value="true"/>
           <hbox class="indent" align="center">
             <filefield id="downloadFolder" flex="1"
                        preference="browser.download.folderList"
@@ -89,8 +91,10 @@
                     preference="browser.download.folderList"
                     onsynctopreference="return gDownloadsPane.writeFolderList()"
 #ifdef XP_MACSOX
+                    accesskey="&chooseFolderMac.accesskey;"
                     label="&chooseFolderMac.label;"/>
 #else
+                    accesskey="&chooseFolderWin.accesskey;"
                     label="&chooseFolderWin.label;"/>
 #endif
           </hbox>
@@ -101,10 +105,12 @@
     <groupbox align="start">
       <caption label="&downloadManagerWindow.label;"/>
       
-      <checkbox id="showWhenStarting" label="&showWhenStarting.label;" 
+      <checkbox id="showWhenStarting" label="&showWhenStarting.label;"
+                accesskey="&showWhenStarting.accesskey;"
                 preference="browser.download.manager.showWhenStarting"
                 onsyncfrompreference="return gDownloadsPane.readShowWhenStartingPref();"/>
-      <checkbox id="closeWhenDone" label="&closeWhenDone.label;" class="indent"
+      <checkbox id="closeWhenDone" label="&closeWhenDone.label;"
+                accesskey="&closeWhenDone.accesskey;" class="indent"
                 preference="browser.download.manager.closeWhenDone"/>
     </groupbox>
     

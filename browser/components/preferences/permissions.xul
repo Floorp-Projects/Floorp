@@ -70,11 +70,12 @@
                oninput="gPermissionManager.onHostInput(event.target);"
                onkeypress="gPermissionManager.onHostKeyPress(event);"/>
     </hbox>
-    <hbox pack="end">      <button id="btnBlock" disabled="true" label="&block.label;" 
+    <hbox pack="end">
+      <button id="btnBlock" disabled="true" label="&block.label;" accesskey="&block.accesskey;"
               oncommand="gPermissionManager.addPermission(nsIPermissionManager.DENY_ACTION);"/>
-      <button id="btnSession" disabled="true" label="&session.label;" 
+      <button id="btnSession" disabled="true" label="&session.label;" accesskey="&session.accesskey;"
               oncommand="gPermissionManager.addPermission(nsICookiePermission.ACCESS_SESSION);"/>
-      <button id="btnAllow" disabled="true" label="&allow.label;" default="true"
+      <button id="btnAllow" disabled="true" label="&allow.label;" default="true" accesskey="&allow.accesskey;"
               oncommand="gPermissionManager.addPermission(nsIPermissionManager.ALLOW_ACTION);"/>
     </hbox>
     <separator class="thin"/>
@@ -95,10 +96,12 @@
   <hbox align="end">
     <hbox class="actionButtons" flex="1">
       <button id="removePermission" disabled="true"
-              icon="remove" label="&removepermission.label;" 
+              accesskey="&removepermission.accesskey;"
+              icon="remove" label="&removepermission.label;"
               oncommand="gPermissionManager.onPermissionDeleted();"/>
       <button id="removeAllPermissions"
-              icon="clear" label="&removeallpermissions.label;" 
+              icon="clear" label="&removeallpermissions.label;"
+              accesskey="&removeallpermissions.accesskey;" 
               oncommand="gPermissionManager.onAllPermissionsDeleted();"/>
       <spacer flex="1"/>
 #ifndef XP_MACOSX

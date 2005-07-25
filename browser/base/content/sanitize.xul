@@ -138,22 +138,29 @@
     <groupbox orient="vertical" align="start">
       <caption label="&sanitizeItems.label;"/>
       
-      <checkbox label="&itemHistory.label;"   preference="privacy.item.history"
+      <checkbox label="&itemHistory.label;" accesskey="&itemHistory.accesskey;"
+                preference="privacy.item.history"
                 onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <checkbox label="&itemFormData.label;"  preference="privacy.item.formdata"
+      <checkbox label="&itemFormData.label;" accesskey="&itemFormData.accesskey;"
+                preference="privacy.item.formdata"
                 onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <checkbox label="&itemPasswords.label;" preference="privacy.item.passwords"
+      <checkbox label="&itemPasswords.label;" accesskey="&itemPasswords.accesskey;"
+                preference="privacy.item.passwords"
                 onsyncfrompreference="return gSanitizePromptDialog.onReadSanitizePasswords();"/>
-      <checkbox label="&itemDownloads.label;" preference="privacy.item.downloads"
+      <checkbox label="&itemDownloads.label;" accesskey="&itemDownloads.accesskey;"
+                preference="privacy.item.downloads"
                 onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <checkbox label="&itemCookies.label;"   preference="privacy.item.cookies"
+      <checkbox label="&itemCookies.label;" accesskey="&itemCookies.accesskey;"
+                preference="privacy.item.cookies"
                 onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <checkbox label="&itemCache.label;"     preference="privacy.item.cache"
+      <checkbox label="&itemCache.label;" accesskey="&itemCache.accesskey;"
+                preference="privacy.item.cache"
                 onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
     </groupbox>
     
     <groupbox orient="vertical" align="start">
       <checkbox id="promptOnSanitize" label="&promptOnSanitize.label;"
+                accesskey="&promptOnSanitize.accesskey;"
                 preference="privacy.sanitize.promptOnSanitize"/>
     </groupbox>
   </prefpane>

@@ -15,10 +15,14 @@
 <!ENTITY  popupReject.label                 "Block Popup Windows">
 <!ENTITY  popupReject.accesskey             "B">
 <!ENTITY  enableXPInstall.label             "Allow web sites to install software">
-<!ENTITY  enableXPInstall.accesskey         "i">
+<!ENTITY  enableXPInstall.accesskey         "A">
 
-<!ENTITY  allowedSites.label                "Allowed Sites">
+<!ENTITY  allowedSitesPopup.label           "Allowed Sites">
+<!ENTITY  allowedSitesPopup.accesskey       "l">
+<!ENTITY  allowedSitesSoftware.label        "Allowed Sites">
+<!ENTITY  allowedSitesSoftware.accesskey    "o">
 <!ENTITY  exceptions.label                  "Exceptions">
+<!ENTITY  exceptions.accesskey              "E">
 
 <!ENTITY  fonts.caption                     "Fonts &amp; Colors">
 <!ENTITY  advancedFonts.label               "Advanced...">

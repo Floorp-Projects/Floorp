@@ -2,10 +2,17 @@
 
 <!ENTITY sanitizeItems.label          "Clear the following items now:">
 <!ENTITY itemHistory.label            "Browsing History">
+<!ENTITY itemHistory.accesskey        "B">
 <!ENTITY itemFormData.label           "Saved Form Information">
+<!ENTITY itemFormData.accesskey       "F">
 <!ENTITY itemPasswords.label          "Saved Passwords">
+<!ENTITY itemPasswords.accesskey      "P">
 <!ENTITY itemCookies.label            "Cookies">
+<!ENTITY itemCookies.accesskey        "C">
 <!ENTITY itemCache.label              "Cache">
+<!ENTITY itemCache.accesskey          "a">
 <!ENTITY itemDownloads.label          "Download History">
+<!ENTITY itemDownloads.accesskey      "D">
 
 <!ENTITY promptOnSanitize.label       "Ask me before Sanitizing &brandShortName;">
+<!ENTITY promptOnSanitize.accesskey   "k">

@@ -61,13 +61,14 @@
       <caption label="&openExternalLinksIn.label;"/>
       <radiogroup id="tabbedExternalLinks"
                   preference="browser.link.open_external">
-        <radio label="&newWindow.label;" value="2"/>
-        <radio label="&newTabInRecentWindow.label;" value="3"/>
-        <radio label="&recentWindowOrTab.label;" value="1"/>
+        <radio label="&newWindow.label;" accesskey="&newWindow.accesskey;" value="2"/>
+        <radio label="&newTabInRecentWindow.label;" accesskey="&newTabInRecentWindow.accesskey;" value="3"/>
+        <radio label="&recentWindowOrTab.label;" accesskey="&recentWindowOrTab.accesskey;" value="1"/>
       </radiogroup>
     </groupbox>
     <vbox align="start">
       <checkbox id="tabbedOpenForce" label="&forceNewWindowLinks.label;"
+                accesskey="&forceNewWindowLinks.accesskey;"
                 preference="browser.link.open_newwindow"
                 onsynctopreference="return gTabsPane.writeWindowLinksBehavior();"
                 onsyncfrompreference="return gTabsPane.readForceLinks();"/>
@@ -75,14 +76,17 @@
                   preference="browser.link.open_newwindow"
                   onsynctopreference="return gTabsPane.writeWindowLinksBehavior();"
                   onsyncfrompreference="return gTabsPane.readForceLinksMode();">
-        <radio label="&sameTabOrWindow.label;" value="1"/>
-        <radio label="&newTab.label;" value="3"/>
+        <radio label="&sameTabOrWindow.label;" accesskey="sameTabOrWindow.accesskey;" value="1"/>
+        <radio label="&newTab.label;" accesskey="&newTab.accesskey;" value="3"/>
       </radiogroup>
       <checkbox id="hideTabBar" label="&hideTabBar.label;"
+                accesskey="&hideTabBar.accesskey;"
                 preference="browser.tabs.autoHide"/>
       <checkbox id="loadInBackground" label="&loadInBackground.label;"
+                accesskey="&loadBookmarksInBackground.accesskey;"
                 preference="browser.tabs.loadInBackground"/>
       <checkbox id="warnOnClose" label="&warnOnClose.label;"
+                accesskey="&warnOnClose.accesskey;"
                 preference="browser.tabs.warnOnClose"/>
     </vbox>
   </prefpane>
