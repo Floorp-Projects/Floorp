@@ -73,21 +73,6 @@ download[state="5"], download[state="6"] {
   -moz-margin-end: 10px;
 }
 
-.link {
-  text-decoration: underline;
-  color: blue;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.link:hover:active {
-  color: red;
-}
-
-.link:focus {
-  border: 1px dotted black;
-}
-
 #folderIcon {
   width: 16px;
   height: 16px;  

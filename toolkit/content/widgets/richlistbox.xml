@@ -346,7 +346,7 @@
                                               'label');
               var numLabels = labels.length;
               for (count = 0; count < numLabels; count ++) {
-                if (labels[count].className != 'link') {
+                if (labels[count].className != 'text-link') {
                   labelText += labels[count].value + ' ';
                 }
               }

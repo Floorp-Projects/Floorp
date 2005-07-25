@@ -235,12 +235,13 @@
     {
       color                 : blue;
       text-decoration       : underline;
+      border                : 1px solid transparent;
     }
   
   .text-link:focus
     {
       color                 : red;
-      outline: 1px dotted invert;
+      border                : 1px dotted -moz-DialogText;
     }
 
   .text-link:hover

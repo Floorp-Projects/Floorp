@@ -8,7 +8,15 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="link">
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULLinkAccessible(this);
+          ]]>
+        </getter>
+      </property>
       <property name="href"
                 onget="return this.getAttribute('href');"
                 onset="this.setAttribute('href', val); return val;"/>
