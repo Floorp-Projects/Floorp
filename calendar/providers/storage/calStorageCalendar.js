@@ -297,6 +297,10 @@ calStorageCalendar.prototype = {
         this.mURI = aURI;
     },
 
+    refresh: function() {
+        // no-op
+    },
+
     // attribute boolean readOnly;
     get readOnly() { return false; },
     set readOnly() { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },

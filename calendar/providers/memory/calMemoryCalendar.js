@@ -114,6 +114,11 @@ calMemoryCalendar.prototype = {
     get uri() { return this.mUri; },
     set uri(aURI) { this.mUri = aURI; },
 
+
+    refresh: function() {
+        // no-op
+    },
+
     // attribute boolean suppressAlarms;
     get suppressAlarms() { return false; },
     set suppressAlarms(aSuppressAlarms) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },

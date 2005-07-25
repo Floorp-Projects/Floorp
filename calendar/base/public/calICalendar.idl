@@ -275,6 +275,14 @@ interface calICalendar : nsISupports
    * Whether or not alarms for this calendar should be suppressed.
    */
   attribute boolean suppressAlarms;
+
+
+  /**
+   * Refresh the datasource, and call the observers for any changes found.
+   * May call the onLoad function of the observers if the provider doesn't
+   * know the details of the changes.
+   */
+  void refresh();
 };
 
 /** 

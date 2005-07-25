@@ -140,6 +140,10 @@ calDavCalendar.prototype = {
     get uri() { return this.mUri; },
     set uri(aUri) { this.mUri = aUri; },
 
+    refresh: function() {
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+
     // attribute boolean suppressAlarms;
     get suppressAlarms() { return false; },
     set suppressAlarms(aSuppressAlarms) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },

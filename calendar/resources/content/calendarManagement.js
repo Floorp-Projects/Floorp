@@ -230,3 +230,8 @@ function getDefaultCalendar()
    }
    return false;
 }
+
+function reloadCalendars()
+{
+    getDisplayComposite().refresh();
+}

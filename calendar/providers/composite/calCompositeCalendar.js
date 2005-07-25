@@ -292,6 +292,12 @@ calCompositeCalendar.prototype = {
         this.mObservers = this.mObservers.filter( function (v) { return v != aObserver; } );
     },
 
+    refresh: function() {
+        for each (cal in this.mCalendars) {
+            try { cal.refresh(); } catch (e) { }
+        }
+    },
+
     // void modifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem, in calIOperationListener aListener );
     modifyItem: function (aNewItem, aOldItem, aListener) {
         if (aNewItem.calendar == null) {

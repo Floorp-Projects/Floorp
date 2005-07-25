@@ -111,13 +111,16 @@ calICSCalendar.prototype = {
     get uri() { return this.mUri },
     set uri(aUri) {
         this.mMemoryCalendar.uri = this.mUri;
+        this.mUri = aUri;
+        this.refresh();
+    },
+
+    refresh: function() {
         // Lock other changes to the item list.
         this.locked = true;
         // set to prevent writing after loading, without any changes
         this.loading = true;
 
-        this.mUri = aUri;
-        
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                   .getService(Components.interfaces.nsIIOService);
 
