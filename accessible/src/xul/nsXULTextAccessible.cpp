@@ -158,8 +158,10 @@ PRBool nsXULLinkAccessible::IsALink()
   if (!mTempContent) {
     return PR_FALSE;
   }
-  // not a link if there no href attribute
-  if (!mTempContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::href)) {
+
+  // not a link if there is no href attribute or not on a <link> tag
+  if (!mTempContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::href) &&
+      mTempContent->Tag() != nsAccessibilityAtoms::link) {
     return PR_FALSE;
   }
   // it's a link, but can't detect traversed yet (no ILink interface)
