@@ -777,29 +777,31 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
 
   PlaceScrollArea(state);
 
-  PRBool didHaveHScrollbar = mInner.mHasHorizontalScrollbar;
-  PRBool didHaveVScrollbar = mInner.mHasVerticalScrollbar;
-  mInner.mHasHorizontalScrollbar = state.mShowHScrollbar;
-  mInner.mHasVerticalScrollbar = state.mShowVScrollbar;
-  nsRect newScrollAreaBounds = mInner.mScrollableView->View()->GetBounds();
-  nsRect newScrolledAreaBounds = mInner.mScrolledFrame->GetView()->GetBounds();
-  if (reflowHScrollbar || reflowVScrollbar || reflowScrollCorner ||
-      reason != eReflowReason_Incremental ||
-      didHaveHScrollbar != state.mShowHScrollbar ||
-      didHaveVScrollbar != state.mShowVScrollbar ||
-      oldScrollAreaBounds != newScrollAreaBounds ||
-      oldScrolledAreaBounds != newScrolledAreaBounds) {
-    if (mInner.mHasHorizontalScrollbar && !didHaveHScrollbar) {
-      mInner.AdjustHorizontalScrollbar();
+  if (!mInner.mSupppressScrollbarUpdate) {
+    PRBool didHaveHScrollbar = mInner.mHasHorizontalScrollbar;
+    PRBool didHaveVScrollbar = mInner.mHasVerticalScrollbar;
+    mInner.mHasHorizontalScrollbar = state.mShowHScrollbar;
+    mInner.mHasVerticalScrollbar = state.mShowVScrollbar;
+    nsRect newScrollAreaBounds = mInner.mScrollableView->View()->GetBounds();
+    nsRect newScrolledAreaBounds = mInner.mScrolledFrame->GetView()->GetBounds();
+    if (reflowHScrollbar || reflowVScrollbar || reflowScrollCorner ||
+        reason != eReflowReason_Incremental ||
+        didHaveHScrollbar != state.mShowHScrollbar ||
+        didHaveVScrollbar != state.mShowVScrollbar ||
+        oldScrollAreaBounds != newScrollAreaBounds ||
+        oldScrolledAreaBounds != newScrolledAreaBounds) {
+      if (mInner.mHasHorizontalScrollbar && !didHaveHScrollbar) {
+        mInner.AdjustHorizontalScrollbar();
+      }
+      mInner.SetScrollbarVisibility(mInner.mHScrollbarBox, state.mShowHScrollbar);
+      mInner.SetScrollbarVisibility(mInner.mVScrollbarBox, state.mShowVScrollbar);
+      // place and reflow scrollbars
+      nsRect insideBorderArea =
+        nsRect(nsPoint(state.mComputedBorder.left, state.mComputedBorder.top),
+               state.mInsideBorderSize);
+      mInner.LayoutScrollbars(state.mBoxState, insideBorderArea,
+                              oldScrollAreaBounds, state.mScrollPortRect);
     }
-    mInner.SetScrollbarVisibility(mInner.mHScrollbarBox, state.mShowHScrollbar);
-    mInner.SetScrollbarVisibility(mInner.mVScrollbarBox, state.mShowVScrollbar);
-    // place and reflow scrollbars
-    nsRect insideBorderArea =
-      nsRect(nsPoint(state.mComputedBorder.left, state.mComputedBorder.top),
-             state.mInsideBorderSize);
-    mInner.LayoutScrollbars(state.mBoxState, insideBorderArea,
-                            oldScrollAreaBounds, state.mScrollPortRect);
   }
   ScrollToRestoredPosition();
 
@@ -1310,7 +1312,8 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter, PRBool aI
     mViewInitiatedScroll(PR_FALSE),
     mFrameInitiatedScroll(PR_FALSE),
     mDidHistoryRestore(PR_FALSE),
-    mIsRoot(aIsRoot)
+    mIsRoot(aIsRoot),
+    mSupppressScrollbarUpdate(PR_FALSE)
 {
 }
 
@@ -2271,7 +2274,9 @@ nsXULScrollFrame::Layout(nsBoxLayoutState& aState)
     LayoutScrollArea(resizeState, scrollAreaRect);
   }
 
-  mInner.LayoutScrollbars(aState, clientRect, oldScrollAreaBounds, scrollAreaRect);
+  if (!mInner.mSupppressScrollbarUpdate) { 
+    mInner.LayoutScrollbars(aState, clientRect, oldScrollAreaBounds, scrollAreaRect);
+  }
   mInner.ScrollToRestoredPosition();
   return NS_OK;
 }
@@ -2282,6 +2287,9 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
                                         const nsRect& aOldScrollArea,
                                         const nsRect& aScrollArea)
 {
+  NS_ASSERTION(!mSupppressScrollbarUpdate,
+               "This should have been suppressed");
+    
   nsPresContext* presContext = aState.PresContext();
   mOnePixel = presContext->IntScaledPixelsToTwips(1);
   const nsStyleFont* font = mOuter->GetStyleFont();

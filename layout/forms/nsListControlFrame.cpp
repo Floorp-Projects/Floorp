@@ -875,10 +875,19 @@ nsListControlFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   if (mPassId == 0 || mPassId == 1) {
+    if (mPassId == 0) {
+      // We will reflow again, so tell the scrollframe not to scroll-to-restored-position
+      // yet
+      SetSuppressScrollbarUpdate(PR_TRUE);
+    }
     nsresult res = nsHTMLScrollFrame::Reflow(aPresContext, 
                                              scrolledAreaDesiredSize,
                                              firstPassState, 
                                              aStatus);
+    if (mPassId == 0) {
+      SetSuppressScrollbarUpdate(PR_FALSE);
+    }
+    
     if (NS_FAILED(res)) {
       NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
       NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
