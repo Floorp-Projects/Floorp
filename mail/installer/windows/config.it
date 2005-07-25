@@ -554,7 +554,7 @@ Description Long={Component_Offline_Long}
 Archive=offline.xpi
 $InstallSize$:offline
 $InstallSizeArchive$:offline.xpi
-Attributes=SELECTED|FORCE_UPGRADE|VISIBLE
+Attributes=SELECTED|FORCE_UPGRADE|INVISIBLE
 Force Upgrade File0=[SETUP PATH]\chrome\offline.jar
 FileCount=$FileCount$
 
